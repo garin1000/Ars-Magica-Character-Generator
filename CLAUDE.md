@@ -37,6 +37,11 @@ arm-char-gen/
 
 ## Rules source files
 
+All provided rulebooks are released under the **Ars Magica Open License**
+(based on CC-BY-SA 4.0), so the Markdown source text may be redistributed with
+the repository — no proprietary-copyright restrictions apply. Attribution and
+share-alike terms still apply to derived content.
+
 The authoritative Markdown in `rules/source/<lang>/` is the human-readable
 rulebook text. JSON in `rules/core/` and `rules/i18n/` is **generated** from it
 by extraction (hand-authoring the full catalogue is infeasible); the engine's
