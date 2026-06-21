@@ -1,0 +1,23 @@
+{
+  "entity_kind": "character",
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "schema_version": 1,
+  "selections": [
+    {
+      "ref": "flaw.poor_student"
+    },
+    {
+      "ref": "virtue.keen_vision"
+    },
+    {
+      "ref": "virtue.puissant_ability",
+      "params": {
+        "ability": "ability.awareness"
+      }
+    }
+  ],
+  "type_id": "companion"
+}

@@ -1,0 +1,42 @@
+{
+  "flaw.blatant_gift": {
+    "name": "Offensichtliche Gabe",
+    "summary": "Deine Gabe ist extrem verstörend für andere."
+  },
+  "flaw.deficient_technique": {
+    "name": "Schwache {technique}",
+    "summary": "Du bist unfähig, eine Technik effektiv einzusetzen."
+  },
+  "flaw.poor_student": {
+    "name": "Schlechter Schüler",
+    "summary": "Du lernst schlecht aus Büchern und von Lehrern."
+  },
+  "virtue.gentle_gift": {
+    "name": "Sanfte Gabe",
+    "summary": "Deine Gabe verstört andere nicht."
+  },
+  "virtue.hermetic_magus": {
+    "name": "Hermetischer Magus",
+    "summary": "Du bist Mitglied des Ordens des Hermes."
+  },
+  "virtue.keen_vision": {
+    "name": "Scharfe Augen",
+    "summary": "+3 auf sichtbasierte Würfe."
+  },
+  "virtue.large": {
+    "name": "Groß",
+    "summary": "Du bist größer als der Durchschnitt."
+  },
+  "virtue.puissant_ability": {
+    "name": "Versiert in {ability}",
+    "summary": "+2 auf alle Würfe mit einer Fähigkeit."
+  },
+  "virtue.the_gift": {
+    "name": "Die Gabe",
+    "summary": "Du hast die Fähigkeit, Magie zu wirken."
+  },
+  "virtue.tough": {
+    "name": "Zäh",
+    "summary": "+3 auf Widerstandsfähigkeit."
+  }
+}
