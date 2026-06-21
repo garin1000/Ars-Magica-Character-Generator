@@ -1,0 +1,45 @@
+[
+  {
+    "id": "companion",
+    "budget": {
+      "virtue_points": 10,
+      "flaw_points": 10,
+      "max_major_virtues": 1,
+      "max_major_flaws": null
+    },
+    "permitted_categories": ["general", "social_status", "supernatural"],
+    "forbidden_categories": ["hermetic"],
+    "required_traits": [],
+    "forbidden_traits": [],
+    "gift_policy": "forbidden",
+    "creation_phases": [
+      "concept",
+      "type",
+      "characteristics",
+      "virtues_flaws",
+      "abilities",
+      "personality_reputations"
+    ]
+  },
+  {
+    "id": "grog",
+    "budget": {
+      "virtue_points": 3,
+      "flaw_points": 3,
+      "max_major_virtues": 0,
+      "max_major_flaws": 0
+    },
+    "permitted_categories": ["general", "social_status"],
+    "forbidden_categories": ["hermetic", "supernatural"],
+    "required_traits": [],
+    "forbidden_traits": ["virtue.the_gift"],
+    "gift_policy": "forbidden",
+    "creation_phases": [
+      "concept",
+      "type",
+      "characteristics",
+      "virtues_flaws",
+      "abilities"
+    ]
+  }
+]

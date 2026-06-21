@@ -1,0 +1,42 @@
+{
+  "flaw.blatant_gift": {
+    "name": "Blatant Gift",
+    "summary": "Your Gift is extremely disturbing to others."
+  },
+  "flaw.deficient_technique": {
+    "name": "Deficient {technique}",
+    "summary": "You are unable to use one Technique effectively."
+  },
+  "flaw.poor_student": {
+    "name": "Poor Student",
+    "summary": "You are bad at learning from books and teachers."
+  },
+  "virtue.gentle_gift": {
+    "name": "Gentle Gift",
+    "summary": "Your Gift does not disturb others."
+  },
+  "virtue.hermetic_magus": {
+    "name": "Hermetic Magus",
+    "summary": "You are a member of the Order of Hermes."
+  },
+  "virtue.keen_vision": {
+    "name": "Keen Vision",
+    "summary": "+3 to sight-based rolls."
+  },
+  "virtue.large": {
+    "name": "Large",
+    "summary": "You are larger than average."
+  },
+  "virtue.puissant_ability": {
+    "name": "Puissant {ability}",
+    "summary": "+2 to all rolls with one Ability."
+  },
+  "virtue.the_gift": {
+    "name": "The Gift",
+    "summary": "You have the ability to work magic."
+  },
+  "virtue.tough": {
+    "name": "Tough",
+    "summary": "+3 to Soak."
+  }
+}
