@@ -6,8 +6,7 @@
     "category": "hermetic",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.gentle_gift"],
-    "prerequisites": { "has": "virtue.the_gift" },
-    "source": { "book": "ArM5", "page": 37 }
+    "prerequisites": { "has": "virtue.the_gift" }
   },
   {
     "id": "flaw.deficient_technique",
@@ -16,16 +15,14 @@
     "category": "hermetic",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "technique", "type": "ref", "domain": "art" }],
-    "prerequisites": { "has": "virtue.hermetic_magus" },
-    "source": { "book": "ArM5", "page": 38 }
+    "prerequisites": { "has": "virtue.hermetic_magus" }
   },
   {
     "id": "flaw.poor_student",
     "kind": "flaw",
     "magnitude": "minor",
     "category": "general",
-    "entity_kinds": ["character"],
-    "source": { "book": "ArM5", "page": 50 }
+    "entity_kinds": ["character"]
   },
   {
     "id": "virtue.gentle_gift",
@@ -34,8 +31,7 @@
     "category": "hermetic",
     "entity_kinds": ["character"],
     "incompatible_with": ["flaw.blatant_gift"],
-    "prerequisites": { "has": "virtue.hermetic_magus" },
-    "source": { "book": "ArM5", "page": 41 }
+    "prerequisites": { "has": "virtue.hermetic_magus" }
   },
   {
     "id": "virtue.hermetic_magus",
@@ -43,24 +39,21 @@
     "magnitude": "free",
     "category": "social_status",
     "entity_kinds": ["character"],
-    "prerequisites": { "has": "virtue.the_gift" },
-    "source": { "book": "ArM5", "page": 43 }
+    "prerequisites": { "has": "virtue.the_gift" }
   },
   {
     "id": "virtue.keen_vision",
     "kind": "virtue",
     "magnitude": "minor",
     "category": "general",
-    "entity_kinds": ["character"],
-    "source": { "book": "ArM5", "page": 44 }
+    "entity_kinds": ["character"]
   },
   {
     "id": "virtue.large",
     "kind": "virtue",
     "magnitude": "minor",
     "category": "general",
-    "entity_kinds": ["character"],
-    "source": { "book": "ArM5", "page": 44 }
+    "entity_kinds": ["character"]
   },
   {
     "id": "virtue.puissant_ability",
@@ -68,23 +61,20 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
-    "source": { "book": "ArM5", "page": 48 }
+    "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }]
   },
   {
     "id": "virtue.the_gift",
     "kind": "virtue",
     "magnitude": "free",
     "category": "special",
-    "entity_kinds": ["character"],
-    "source": { "book": "ArM5", "page": 36 }
+    "entity_kinds": ["character"]
   },
   {
     "id": "virtue.tough",
     "kind": "virtue",
     "magnitude": "minor",
     "category": "general",
-    "entity_kinds": ["character"],
-    "source": { "book": "ArM5", "page": 49 }
+    "entity_kinds": ["character"]
   }
 ]
