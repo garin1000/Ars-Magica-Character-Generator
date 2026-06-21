@@ -5,3 +5,4 @@ dist/
 *.swp
 *.swo
 tmp/
+.claude/settings.local.json
