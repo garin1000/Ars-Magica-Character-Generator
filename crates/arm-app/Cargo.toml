@@ -1,0 +1,29 @@
+[package]
+name = "arm-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Tauri desktop shell for the Ars Magica character generator"
+
+# Library holds the testable command logic; the binary is a thin launcher.
+[lib]
+name = "arm_app"
+path = "src/lib.rs"
+
+[[bin]]
+name = "arm-app"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+arm-rules = { path = "../arm-rules" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+
+[dev-dependencies]
+pretty_assertions = "1"
+tempfile = "3"
