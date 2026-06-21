@@ -12,9 +12,9 @@ broadening. Every engine type is entity-kind-agnostic from the start.
 - [x] Write `CLAUDE.md`
 - [x] Write `PLAN.md`
 - [x] Initialize Cargo workspace with `arm-rules` crate (lib, no deps beyond serde)
-- [ ] Initialize Tauri 2 app (`arm-app` crate + `ui/` Svelte 5 + Vite)
+- [x] Initialize Tauri 2 app (`arm-app` crate + `ui/` Svelte 5 + Vite)
 - [x] Configure tooling: rustfmt, clippy deny warnings
-- [ ] Configure tooling: prettier, eslint (pending frontend)
+- [x] Configure tooling: prettier, eslint
 - [x] Create directory structure: `rules/core/`, `rules/i18n/`, `rules/source/`,
       `locales/`, `examples/`
 - [x] Initialize git repository
@@ -74,21 +74,25 @@ Scope: wire the engine to a minimal Svelte UI via Tauri commands. Two languages,
 companion type, direct-entry mode only.
 
 ### 2a. Tauri commands
-- [ ] `load_ruleset` command — read JSON files from `rules/`, parse, return metadata
-- [ ] `validate_entity` command — accept entity JSON, return validation results
-- [ ] `save_entity` / `load_entity` commands — file dialog, canonical JSON
-- [ ] Integration tests (Rust side) for commands
+- [x] `load_ruleset` command — read JSON files from `rules/`, parse, return metadata
+- [x] `validate_entity` command — accept entity JSON, return validation results
+- [x] `save_entity` / `load_entity` commands — file dialog, canonical JSON
+- [x] Integration tests (Rust side) for commands (10 tests, webview-free)
 
 ### 2b. Svelte UI — direct entry
-- [ ] Language selector (en/de) with Fluent integration
-- [ ] Basic Fluent `.ftl` files for UI chrome (en, de)
-- [ ] Entity editor: list selected V/F, add/remove, parameter selection
-- [ ] Live validation display (issues list, colored by severity)
-- [ ] Validation mode toggle (Enforced / Advisory / Silent)
-- [ ] Save / Load buttons wired to Tauri commands
+- [x] Language selector (en/de) with Fluent integration
+- [x] Basic Fluent `.ftl` files for UI chrome (en, de)
+- [x] Entity editor: list selected V/F, add/remove, parameter selection
+- [x] Live validation display (issues list, colored by severity)
+- [x] Validation mode toggle (Enforced / Advisory / Silent)
+- [x] Save / Load buttons wired to Tauri commands
 
 ### 2c. E2E test
-- [ ] Headless e2e: load ruleset → add V/F → see validation → save → reload → verify
+- [x] e2e: load ruleset → add V/F → see validation → save → reload → verify.
+      WebdriverIO + tauri-driver against the real production binary
+      (`cargo tauri build --no-bundle`), with an `ARM_E2E_FILE` dialog seam for
+      determinism. Passing. Requires the `webkit2gtk-driver` system package; see
+      `ui/e2e/README.md`.
 
 ## Milestone 3 — Guided creation wizard
 
@@ -148,7 +152,9 @@ companion type, direct-entry mode only.
 
 ---
 
-## Current focus: Milestone 2
+## Current focus: Milestone 3
 
-Engine slice complete (41 tests). Next: Tauri 2 + Svelte 5 scaffolding and
-wiring the engine to a minimal UI.
+Milestones 0, 1, and 2 complete. The Tauri app builds and launches, loads the
+ruleset from bundled resources, validates live, round-trips canonical saves, and
+passes a real-binary tauri-driver e2e. Next: guided creation wizard driven by
+the character type's phase list.

@@ -6,3 +6,10 @@ dist/
 *.swo
 tmp/
 .claude/settings.local.json
+
+# Tauri build-generated permission schemas
+crates/arm-app/gen/
+
+# Playwright e2e artifacts
+ui/playwright-report/
+ui/test-results/
