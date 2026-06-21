@@ -35,6 +35,40 @@ arm-char-gen/
   examples/                  # sample character and covenant saves for tests/demo
 ```
 
+## Rules source files
+
+The authoritative Markdown in `rules/source/<lang>/` is the human-readable
+rulebook text. JSON in `rules/core/` and `rules/i18n/` is **generated** from it
+by extraction (hand-authoring the full catalogue is infeasible); the engine's
+referential-integrity + serde validation is the trust gate. **English is the
+source of truth** — IDs are derived from the English source; other languages
+only fill i18n text against IDs that already exist.
+
+Current English sources (`rules/source/en/`):
+
+```
+Ars Magica - Definitive Edition (Core Rules).md
+Ars Magica 5e - Houses of Hermes - Mystery Cults.md
+Ars Magica 5e - Houses of Hermes - Societates.md
+Ars Magica 5e - Houses of Hermes - True Lineages.md
+Ars Magica 5e - Magic - Hedge Magic (Revised).md
+Ars Magica 5e - Realms of Power - Faerie.md
+Ars Magica 5e - Realms of Power - Magic.md
+Ars Magica 5e - Realms of Power - The Divine (Revised).md
+Ars Magica 5e - Realms of Power - The Infernal.md
+```
+
+**Provenance is per-language.** Each item's `source` field (`SourceRef`:
+`{ file, lines: [start, end] }`) records the file basename plus an inclusive
+line range. The `source` in `rules/core/` always points at the **English**
+file — the canonical source. German source files mirror the English ones
+line-by-line **except in ordered lists** (e.g. Virtues, Flaws, Abilities — not
+exhaustive), which are re-sorted per German rules. So German line numbers
+diverge from English wherever an ordered list appears: a German line reference
+must be computed against the German file, never reused from English. Such
+per-language provenance, when needed, lives in the `rules/i18n/<lang>/` layer,
+not in language-neutral `core/`.
+
 ## Architecture invariants
 
 - **Engine purity.** `arm-rules` has NO dependency on `tauri`, filesystem, or UI.

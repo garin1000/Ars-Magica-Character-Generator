@@ -148,11 +148,18 @@ pub struct ParameterDef {
     pub domain: String,
 }
 
-/// Reference to a source book and page number.
+/// Provenance into the authoritative Markdown rules source: the file name
+/// (relative to `rules/source/<lang>/`, in the canonical-ID language) and the
+/// inclusive `[start, end]` line range the item was extracted from.
+///
+/// Pipeline-generated, never hand-edited: re-running extraction recomputes the
+/// line range, so it self-heals when the source Markdown is reformatted. There
+/// is deliberately no rulebook page number — the Markdown source has lines, not
+/// pages, and the source files are where edits actually happen.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SourceRef {
-    pub book: Id,
-    pub page: u16,
+    pub file: String,
+    pub lines: [u32; 2],
 }
 
 /// A virtue, flaw, boon, or hook with its mechanical metadata.
@@ -378,7 +385,7 @@ mod tests {
           "entity_kinds": ["character"],
           "prerequisites": { "has": "virtue.hermetic_magus" },
           "incompatible_with": ["flaw.blatant_gift"],
-          "source": { "book": "ArM5", "page": 41 }
+          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [120, 135] }
         }"#;
 
         let item: PointItem = serde_json::from_str(json).unwrap();
@@ -398,8 +405,8 @@ mod tests {
         assert_eq!(
             item.source,
             Some(SourceRef {
-                book: Id::new("ArM5"),
-                page: 41
+                file: "Ars Magica - Definitive Edition (Core Rules).md".to_string(),
+                lines: [120, 135]
             })
         );
 
@@ -417,7 +424,7 @@ mod tests {
           "category": "general",
           "entity_kinds": ["character"],
           "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
-          "source": { "book": "ArM5", "page": 41 }
+          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [240, 251] }
         }"#;
 
         let item: PointItem = serde_json::from_str(json).unwrap();
