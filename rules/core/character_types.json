@@ -12,6 +12,8 @@
     "required_traits": [],
     "forbidden_traits": [],
     "gift_policy": "forbidden",
+    "gift_id": "virtue.the_gift",
+    "gift_categories": ["hermetic"],
     "creation_phases": [
       "concept",
       "type",
@@ -34,6 +36,8 @@
     "required_traits": [],
     "forbidden_traits": ["virtue.the_gift"],
     "gift_policy": "forbidden",
+    "gift_id": "virtue.the_gift",
+    "gift_categories": ["hermetic"],
     "creation_phases": [
       "concept",
       "type",

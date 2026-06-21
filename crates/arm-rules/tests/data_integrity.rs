@@ -14,8 +14,8 @@ fn shipped_data_passes_integrity_check() {
     let rs = load_ruleset();
     assert!(rs.point_items.len() >= 5, "should have seed V/F data");
     assert!(
-        rs.character_types.len() >= 1,
-        "should have at least one character type"
+        rs.type_profiles.len() >= 1,
+        "should have at least one type profile"
     );
 }
 
@@ -54,7 +54,7 @@ fn companion_balanced_entity_validates() {
     let entity = Entity {
         schema_version: 1,
         ruleset: RulesetRef {
-            id: "arm5-core".into(),
+            id: Id::new("arm5-core"),
             version: "2024.1".into(),
         },
         entity_kind: EntityKind::Character,
@@ -88,7 +88,7 @@ fn save_load_roundtrip_with_canonical_output() {
     let entity = Entity {
         schema_version: 1,
         ruleset: RulesetRef {
-            id: "arm5-core".into(),
+            id: Id::new("arm5-core"),
             version: "2024.1".into(),
         },
         entity_kind: EntityKind::Character,
@@ -110,7 +110,10 @@ fn save_load_roundtrip_with_canonical_output() {
     let json2 = serde_json::to_string_pretty(&roundtripped).unwrap();
 
     assert_eq!(json1, json2, "canonical serialization should be stable");
-    assert_eq!(entity, roundtripped);
+    // Selections are sorted during serialization, so normalize before comparing.
+    let mut expected = entity;
+    expected.normalize();
+    assert_eq!(expected, roundtripped);
 }
 
 #[test]
@@ -120,7 +123,7 @@ fn grog_type_restricts_major_virtues() {
     let entity = Entity {
         schema_version: 1,
         ruleset: RulesetRef {
-            id: "arm5-core".into(),
+            id: Id::new("arm5-core"),
             version: "2024.1".into(),
         },
         entity_kind: EntityKind::Character,
@@ -146,7 +149,7 @@ fn grog_over_budget() {
     let entity = Entity {
         schema_version: 1,
         ruleset: RulesetRef {
-            id: "arm5-core".into(),
+            id: Id::new("arm5-core"),
             version: "2024.1".into(),
         },
         entity_kind: EntityKind::Character,
