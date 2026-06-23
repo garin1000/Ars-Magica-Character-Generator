@@ -1,7 +1,7 @@
 // Pure helpers deriving display data from the loaded ruleset + entity. Kept out
 // of components so they can be unit-tested and reused.
 
-import type { Entity, LocalizedRuleset, PointItem } from './types';
+import type { Entity, ItemKind, LocalizedRuleset, PointItem } from './types';
 
 /** Rules display name for an item, substituting any `{param}` placeholders. */
 export function displayName(
@@ -18,10 +18,15 @@ export interface CategoryGroup {
   items: PointItem[];
 }
 
-/** All point items grouped by category, both groups and items sorted by id. */
-export function groupByCategory(localized: LocalizedRuleset): CategoryGroup[] {
+/**
+ * Point items grouped by category, both groups and items sorted by id.
+ * When `kinds` is given, only items whose `kind` is in it are kept (used to
+ * split the picker into separate Virtue and Flaw lists).
+ */
+export function groupByCategory(localized: LocalizedRuleset, kinds?: ItemKind[]): CategoryGroup[] {
   const groups = new Map<string, PointItem[]>();
   for (const item of Object.values(localized.ruleset.point_items)) {
+    if (kinds && !kinds.includes(item.kind)) continue;
     const list = groups.get(item.category) ?? [];
     list.push(item);
     groups.set(item.category, list);

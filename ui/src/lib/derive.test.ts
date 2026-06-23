@@ -158,4 +158,19 @@ describe('groupByCategory', () => {
   it('returns an empty array for an empty ruleset', () => {
     expect(groupByCategory(makeRuleset([]))).toEqual([]);
   });
+
+  it('keeps only items whose kind is in the given filter', () => {
+    const ruleset = makeRuleset([
+      item({ id: 'virtue.a', kind: 'virtue', category: 'general' }),
+      item({ id: 'boon.b', kind: 'boon', category: 'general' }),
+      item({ id: 'flaw.c', kind: 'flaw', category: 'general' }),
+      item({ id: 'hook.d', kind: 'hook', category: 'general' }),
+    ]);
+
+    const virtues = groupByCategory(ruleset, ['virtue', 'boon']);
+    expect(virtues.flatMap((g) => g.items.map((i) => i.id))).toEqual(['boon.b', 'virtue.a']);
+
+    const flaws = groupByCategory(ruleset, ['flaw', 'hook']);
+    expect(flaws.flatMap((g) => g.items.map((i) => i.id))).toEqual(['flaw.c', 'hook.d']);
+  });
 });

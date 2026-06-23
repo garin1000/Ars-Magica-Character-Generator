@@ -132,6 +132,13 @@ ul {
   border: 1px solid var(--accent);
   border-radius: 999px;
   padding: 0 0.5rem;
+  white-space: nowrap;
+}
+
+/* Type (category) badge: muted, to distinguish it from the magnitude badge. */
+.badge.type {
+  color: var(--muted);
+  border-color: var(--muted);
 }
 
 .param {
@@ -162,6 +169,23 @@ ul {
 .issue.warning {
   border-left-color: var(--warning);
   background: rgba(216, 166, 87, 0.12);
+}
+
+/* Validation summary docked in the header: right-bound, above the separator. */
+.validation-compact {
+  margin-left: auto;
+  max-width: 28rem;
+  text-align: right;
+}
+
+.validation-compact h2 {
+  margin: 0 0 0.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.validation-compact .issue {
+  text-align: left;
 }
 
 .saveload {

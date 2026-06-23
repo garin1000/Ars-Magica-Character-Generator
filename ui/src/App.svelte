@@ -27,10 +27,11 @@
     <SaveLoadBar />
   </div>
   <BalanceBar />
+  <ValidationPanel compact />
 </header>
 
 <main class="layout">
-  <ItemPicker />
+  <ItemPicker side="virtue" />
+  <ItemPicker side="flaw" />
   <SelectionList />
-  <ValidationPanel />
 </main>
