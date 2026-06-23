@@ -73,6 +73,10 @@ impl fmt::Display for EntityKind {
 
 /// Point cost/grant magnitude. Free = 0, Minor = 1, Major = 3.
 /// Ordered `Free < Minor < Major` to reflect increasing point weight.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2774 ("Major Virtues
+/// cost three points ... Minor Virtues and Flaws cost and grant ... one point");
+/// :2209; Free virtues at :2886-2896.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Magnitude {
@@ -107,6 +111,9 @@ impl fmt::Display for Magnitude {
 
 /// Whether a rules item is positive (costs points) or negative (grants points).
 /// Virtue/Boon are positive; Flaw/Hook are negative. Boon/Hook are covenant-specific.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2774 ("Virtues cost
+/// points, while Flaws grant points").
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ItemKind {

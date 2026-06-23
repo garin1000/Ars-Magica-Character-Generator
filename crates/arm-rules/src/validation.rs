@@ -159,6 +159,14 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     ValidationResult { issues }
 }
 
+/// Enforces that virtue points and flaw points each stay within the type's
+/// budget. Virtues must be balanced by an equal value of Flaws (the budget is
+/// equal for the two by construction in the type profile).
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2774, :2297
+/// (companions), :2303 (magi) — "up to ten points of Flaws, and the same number
+/// of points of Virtues". The per-type point totals themselves are data in
+/// `rules/core/character_types.json` (see RULES.md).
 fn validate_balance(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -229,6 +237,13 @@ pub fn compute_balance(entity: &Entity, ruleset: &Ruleset) -> Balance {
     }
 }
 
+/// Enforces per-type caps on the *count* of Major virtues/flaws (distinct from
+/// the point budget). The caps themselves are data in the type profile.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2857 ("You may not
+/// have more than one Major Hermetic Virtue", magi); grogs may take no Major
+/// Virtues or Flaws at :2824-2830. (The ≤5 Minor Flaws limit at :2774 is a
+/// separate cap, not yet enforced here — see RULES.md.)
 fn validate_caps(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -660,6 +675,13 @@ fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
     }
 }
 
+/// Enforces the type's Gift policy (required / allowed / forbidden). The policy
+/// per type is data; this is the mechanism the book's Gift rules map onto.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2868-2877 (The Gift:
+/// "all magi must have this Virtue"; "Grogs can never have The Gift"); magi must
+/// take The Gift at :2858; only magi may take the Hermetic Magus Social Status
+/// at :2293 and :4067-4069.
 fn validate_gift_policy(
     entity: &Entity,
     ruleset: &Ruleset,
