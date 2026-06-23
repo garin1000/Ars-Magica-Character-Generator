@@ -139,6 +139,65 @@ take Hermetic Virtues at all (`:2834-2840`); the book defines **no** cap on a
 companion's count of Major Virtues. The value was therefore corrected to `null`
 (no cap).
 
+### Characteristics
+
+#### Eight Characteristics
+> "There are eight Characteristics in Ars Magica, each representing one of a
+> given character's inborn attributes."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:1023-1025`.
+- Implementation: `crates/arm-rules/src/characteristics.rs` — `Characteristic`
+  enum (Int, Per, Str, Sta, Pre, Com, Dex, Qik).
+
+#### Point-buy cost table + seven starting points — `rules/core/characteristics.json`
+> "Characteristics are bought on the following table. You start with seven points
+> to spend." Table: +3→6, +2→3, +1→1, 0→0, −1→Gain 1, −2→Gain 3, −3→Gain 6.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2340-2354`.
+- Data: `rules/core/characteristics.json` (`start_points: 7`, `costs`). The
+  rulebook's "Gain N" rows are encoded as **negative** cost (`Gain 1` → `-1`,
+  etc.) — an extraction sign convention. The legal score range (−3..+3) is
+  derived from the table rows, not hardcoded.
+- Implementation: `crates/arm-rules/src/characteristics.rs` —
+  `CharacteristicRules` (`cost_for`, `total_cost`, `min_score`, `max_score`);
+  enforced in `validation.rs` — `validate_characteristics` (out-of-range error,
+  overspent error, points-unspent warning).
+
+### Abilities
+
+#### Ability XP advancement table ("ABILITY To Buy") — `rules/core/abilities.json`
+> Advancement Table, "ABILITY To Buy" column: total XP to reach a score from
+> zero — 1→5, 2→15, 3→30, … (triangular 5·n·(n+1)/2), through 20→1050.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2406-2427` (header
+  `:2406`, data rows `:2408-2427`).
+- Data: `rules/core/abilities.json` `advancement` array (scores 1-20).
+- Implementation: `crates/arm-rules/src/ability.rs` — `AdvancementTable`
+  (`xp_for_score`, `xp_to_raise`). Used to price whole-point steps; a character
+  stores whole bought scores plus a separate `unspent_xp` bank (`types.rs`).
+
+#### Seed Ability catalogue — `rules/core/abilities.json`
+> Ability list grouped by type (General, Academic, Arcane, Martial,
+> Supernatural) at `:7177-7268`; alphabetical descriptions at `:7269-7786`.
+
+- Source: each ability cites its description line range in `abilities.json`
+  (e.g. Awareness `:7325-7328`, Magic Theory `:7646-7649`). The five categories
+  are the book's Ability types (`:7177-7268`).
+- Data: 23 seed abilities covering all five categories and the full early-childhood
+  restricted list (`:2378`: Area Lore, Athletics, Awareness, Brawl, Charm, Folk
+  Ken, Guile, Living Language, Stealth, Survival, Swim). Native language is a
+  *specialty* of `ability.living_language`, not a separate id (`:2378`).
+- Implementation: `crates/arm-rules/src/ability.rs` — `Ability`,
+  `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
+  resolve against it) in `ruleset.rs`; `validate_abilities` in `validation.rs`.
+
+#### Deferred to M4/M5
+The life-stage XP acquisition (early childhood 75+45 xp `:2378`; later life
+15/20/10 xp/yr `:2390-2394`; age→max-score cap `:2368-2374`), the Sample
+Childhood packages (`:2380-2388`), and the effective-score layer (virtue bonuses
+like Puissant Ability added to the bought score) are deferred to M4. `House` /
+`ArtMin` prerequisite evaluation and the Art registry are deferred to M5.
+
 ---
 
 ## Engine framework (book-agnostic, no rulebook source)
