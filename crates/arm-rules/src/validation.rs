@@ -913,6 +913,10 @@ fn validate_gift_policy(
 /// under = a non-blocking "points unspent" warning, mirroring the V/F balance
 /// rule). No-op when the ruleset ships no characteristic rules.
 ///
+/// The point-spend check is skipped entirely when the character has no
+/// Characteristics set: an untouched step is not yet under-spent, so a fresh
+/// character is not nagged. Out-of-range scores are always flagged.
+///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:2340-2354 (the cost
 /// table and the seven starting points). The numbers themselves are data in
 /// `rules/core/characteristics.json` (see RULES.md).
@@ -937,6 +941,11 @@ fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
                 None,
             ));
         }
+    }
+
+    // Don't evaluate the point spend before the user has touched the step.
+    if entity.characteristics.is_empty() {
+        return;
     }
 
     let cost = rules.total_cost(&entity.characteristics);
@@ -2101,6 +2110,18 @@ mod tests {
         entity.characteristics =
             BTreeMap::from([(Characteristic::Int, 3), (Characteristic::Per, 2)]);
         assert!(codes(&validate(&entity, &rs)).contains(&"characteristic_overspent".to_string()));
+    }
+
+    #[test]
+    fn untouched_characteristics_produce_no_points_warning() {
+        let rs = traits_ruleset();
+        let entity = companion_entity(); // no characteristics set
+        let result = validate(&entity, &rs);
+        let warnings: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
+        assert!(
+            !warnings.contains(&"characteristic_points_unspent"),
+            "a fresh character should not be nagged: {warnings:?}"
+        );
     }
 
     #[test]
