@@ -511,9 +511,30 @@ impl Ruleset {
 impl LocalizedRuleset {
     /// Pairs a ruleset with localized text parsed from a JSON id-to-entry map.
     pub fn new(ruleset: Ruleset, i18n_json: &str) -> Result<Self, RulesetError> {
-        let entries: BTreeMap<String, I18nEntry> = serde_json::from_str(i18n_json)?;
-        let i18n: BTreeMap<Id, I18nEntry> =
-            entries.into_iter().map(|(k, v)| (Id::new(k), v)).collect();
+        Self::from_merged(ruleset, &[i18n_json])
+    }
+
+    /// Pairs a ruleset with localized text merged from several JSON id-to-entry
+    /// maps (e.g. one file per rules domain: virtues/flaws, abilities, …).
+    ///
+    /// A given id may appear in only one source; a collision across files is an
+    /// integrity error, since the id namespaces (`virtue.*`, `ability.*`, …) are
+    /// meant to be disjoint.
+    pub fn from_merged(ruleset: Ruleset, i18n_sources: &[&str]) -> Result<Self, RulesetError> {
+        let mut i18n: BTreeMap<Id, I18nEntry> = BTreeMap::new();
+        let mut collisions = Vec::new();
+        for source in i18n_sources {
+            let entries: BTreeMap<String, I18nEntry> = serde_json::from_str(source)?;
+            for (key, value) in entries {
+                let id = Id::new(key);
+                if i18n.insert(id.clone(), value).is_some() {
+                    collisions.push(format!("duplicate i18n entry for '{id}'"));
+                }
+            }
+        }
+        if !collisions.is_empty() {
+            return Err(IntegrityError::new(collisions).into());
+        }
         Ok(Self { ruleset, i18n })
     }
 

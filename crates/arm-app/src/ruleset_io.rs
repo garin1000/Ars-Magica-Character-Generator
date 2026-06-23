@@ -22,15 +22,21 @@ pub const RULESET_VERSION: &str = "2024.1";
 pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRuleset, AppError> {
     let point_items_json = fs::read_to_string(rules_dir.join("core/virtues_flaws.json"))?;
     let type_profiles_json = fs::read_to_string(rules_dir.join("core/character_types.json"))?;
-    let i18n_json = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/virtues_flaws.json")))?;
+    let abilities_json = fs::read_to_string(rules_dir.join("core/abilities.json"))?;
+    let characteristics_json = fs::read_to_string(rules_dir.join("core/characteristics.json"))?;
 
-    let ruleset = Ruleset::from_json(
+    let vf_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/virtues_flaws.json")))?;
+    let ability_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/abilities.json")))?;
+
+    let ruleset = Ruleset::from_core_json(
         RULESET_ID,
         RULESET_VERSION,
         &point_items_json,
         &type_profiles_json,
+        &abilities_json,
+        &characteristics_json,
     )?;
-    let localized = LocalizedRuleset::new(ruleset, &i18n_json)?;
+    let localized = LocalizedRuleset::from_merged(ruleset, &[&vf_i18n, &ability_i18n])?;
     Ok(localized)
 }
 
