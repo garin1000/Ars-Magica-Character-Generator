@@ -6,7 +6,7 @@
     "category": "hermetic",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.gentle_gift"],
-    "prerequisites": { "has": "virtue.the_gift" }
+    "prerequisites": { "kind": "has", "value": "virtue.the_gift" }
   },
   {
     "id": "flaw.deficient_technique",
@@ -15,7 +15,7 @@
     "category": "hermetic",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "technique", "type": "ref", "domain": "art" }],
-    "prerequisites": { "has": "virtue.hermetic_magus" }
+    "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" }
   },
   {
     "id": "flaw.poor_student",
@@ -31,7 +31,7 @@
     "category": "hermetic",
     "entity_kinds": ["character"],
     "incompatible_with": ["flaw.blatant_gift"],
-    "prerequisites": { "has": "virtue.hermetic_magus" }
+    "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" }
   },
   {
     "id": "virtue.hermetic_magus",
@@ -39,7 +39,7 @@
     "magnitude": "free",
     "category": "social_status",
     "entity_kinds": ["character"],
-    "prerequisites": { "has": "virtue.the_gift" }
+    "prerequisites": { "kind": "has", "value": "virtue.the_gift" }
   },
   {
     "id": "virtue.keen_vision",

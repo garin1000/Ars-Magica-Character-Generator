@@ -12,8 +12,8 @@ fn load_ruleset() -> Ruleset {
 #[test]
 fn shipped_data_passes_integrity_check() {
     let rs = load_ruleset();
-    assert_eq!(rs.point_items.len(), 10, "exact shipped V/F count");
-    assert_eq!(rs.type_profiles.len(), 2, "companion + grog");
+    assert_eq!(rs.item_count(), 10, "exact shipped V/F count");
+    assert_eq!(rs.profile_count(), 2, "companion + grog");
     assert!(
         rs.item(&Id::new("virtue.the_gift")).is_some(),
         "virtue.the_gift must be present"
@@ -28,10 +28,11 @@ fn english_i18n_covers_all_items() {
     let i18n_en = include_str!("../../../rules/i18n/en/virtues_flaws.json");
     let loc = LocalizedRuleset::new(rs.clone(), i18n_en).unwrap();
 
-    for id in rs.point_items.keys() {
+    for item in rs.items() {
         assert!(
-            loc.display_name(id).is_some(),
-            "English i18n missing entry for '{id}'"
+            loc.display_name(&item.id).is_some(),
+            "English i18n missing entry for '{}'",
+            item.id
         );
     }
 }
@@ -42,10 +43,11 @@ fn german_i18n_covers_all_items() {
     let i18n_de = include_str!("../../../rules/i18n/de/virtues_flaws.json");
     let loc = LocalizedRuleset::new(rs.clone(), i18n_de).unwrap();
 
-    for id in rs.point_items.keys() {
+    for item in rs.items() {
         assert!(
-            loc.display_name(id).is_some(),
-            "German i18n missing entry for '{id}'"
+            loc.display_name(&item.id).is_some(),
+            "German i18n missing entry for '{}'",
+            item.id
         );
     }
 }
@@ -179,7 +181,7 @@ fn grog_over_budget() {
     };
 
     let result = validate(&entity, &rs);
-    let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
+    let codes: Vec<&str> = result.errors().map(|i| i.code.as_str()).collect();
     assert!(
         codes.contains(&"over_budget_virtues"),
         "grog over budget: {codes:?}"

@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::types::{EntityTypeProfile, I18nEntry, Id, ItemKind, PointItem, Prereq, RulesetRef};
@@ -8,22 +8,22 @@ use crate::types::{EntityTypeProfile, I18nEntry, Id, ItemKind, PointItem, Prereq
 /// Built only via [`Ruleset::from_json`] (which validates referential
 /// integrity), never field-by-field by callers; `PartialEq` is provided for
 /// tests and diffing.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Ruleset {
     /// Stable ruleset identifier (matches [`RulesetRef::id`]).
     pub id: Id,
     /// Ruleset version string.
     pub version: String,
     /// All point items keyed by their id.
-    pub point_items: BTreeMap<Id, PointItem>,
+    pub(crate) point_items: BTreeMap<Id, PointItem>,
     /// All entity type profiles keyed by their id.
-    pub type_profiles: BTreeMap<Id, EntityTypeProfile>,
+    pub(crate) type_profiles: BTreeMap<Id, EntityTypeProfile>,
 }
 
 /// A [`Ruleset`] paired with localized display text for a single language.
 ///
 /// Built only via [`LocalizedRuleset::new`]; `PartialEq` is provided for tests.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LocalizedRuleset {
     /// The language-neutral ruleset.
     pub ruleset: Ruleset,
@@ -98,6 +98,32 @@ impl Serialize for RulesetError {
             }
         }
         map.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for RulesetError {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        /// Mirrors the custom `Serialize` map shape: `{kind, message}` for Parse,
+        /// `{kind, errors}` for Integrity.
+        #[derive(Deserialize)]
+        struct Raw {
+            kind: String,
+            #[serde(default)]
+            message: Option<String>,
+            #[serde(default)]
+            errors: Option<Vec<String>>,
+        }
+
+        let raw = Raw::deserialize(deserializer)?;
+        match raw.kind.as_str() {
+            "parse" => Ok(RulesetError::Parse(raw.message.unwrap_or_default())),
+            "integrity" => Ok(RulesetError::Integrity(IntegrityError::new(
+                raw.errors.unwrap_or_default(),
+            ))),
+            other => Err(serde::de::Error::custom(format!(
+                "unknown RulesetError kind '{other}'"
+            ))),
+        }
     }
 }
 
@@ -192,6 +218,46 @@ impl Ruleset {
 
         ruleset.validate_integrity()?;
         Ok(ruleset)
+    }
+
+    /// Deserializes a previously-serialized [`Ruleset`] and RE-RUNS referential
+    /// integrity validation. Use this for trusted/cached data; untrusted JSON must
+    /// still go through [`Ruleset::from_json`]. Deriving `Deserialize` alone does
+    /// NOT validate integrity — always reconstruct via this method.
+    pub fn from_serialized(json: &str) -> Result<Self, RulesetError> {
+        let ruleset: Ruleset = serde_json::from_str(json)?;
+        ruleset.validate_integrity()?;
+        Ok(ruleset)
+    }
+
+    /// Iterates all point items in id order.
+    pub fn items(&self) -> impl Iterator<Item = &PointItem> {
+        self.point_items.values()
+    }
+
+    /// Iterates all type profiles in id order.
+    pub fn profiles(&self) -> impl Iterator<Item = &EntityTypeProfile> {
+        self.type_profiles.values()
+    }
+
+    /// Number of point items.
+    pub fn item_count(&self) -> usize {
+        self.point_items.len()
+    }
+
+    /// Number of type profiles.
+    pub fn profile_count(&self) -> usize {
+        self.type_profiles.len()
+    }
+
+    /// Sorts each point item's parameters for canonical serialization. The
+    /// ruleset's own maps are already id-ordered (`BTreeMap`); this is the single
+    /// runtime entry point that normalizes the nested item data
+    /// (see [`crate::types::PointItem::normalize`]).
+    pub fn normalize(&mut self) {
+        for item in self.point_items.values_mut() {
+            item.normalize();
+        }
     }
 
     /// Returns a [`RulesetRef`] identifying this ruleset (id + version).
@@ -296,11 +362,13 @@ impl Ruleset {
     /// Recursively validates that prerequisite [`Prereq::Has`] refs resolve to
     /// known point items.
     ///
-    /// `House`, `AbilityMin`, `ArtMin`, and `IsMagus` reference houses, abilities,
-    /// and arts for which no registry yet exists; these refs are INTENTIONALLY
-    /// left unchecked. This narrows the integrity contract explicitly so the gap
-    /// is tracked rather than silent: it must be revisited when those registries
-    /// are added.
+    /// `House`, `AbilityMin`, and `ArtMin` carry refs into house/ability/art
+    /// registries that do not exist yet; those refs are INTENTIONALLY left
+    /// unchecked (a deferred check), narrowing the integrity contract explicitly
+    /// so the gap is tracked rather than silent — it must be revisited when those
+    /// registries are added. `IsMagus` carries no reference at all, so there is
+    /// nothing to check for it. The match arm groups them only for
+    /// exhaustiveness.
     fn validate_prereq_refs(&self, prereq: &Prereq, context_id: &Id, errors: &mut Vec<String>) {
         match prereq {
             Prereq::All(children) | Prereq::Any(children) | Prereq::None(children) => {
@@ -373,7 +441,7 @@ mod tests {
         "magnitude": "free",
         "category": "social_status",
         "entity_kinds": ["character"],
-        "prerequisites": { "has": "virtue.the_gift" }
+        "prerequisites": { "kind": "has", "value": "virtue.the_gift" }
       },
       {
         "id": "virtue.gentle_gift",
@@ -381,7 +449,7 @@ mod tests {
         "magnitude": "major",
         "category": "hermetic",
         "entity_kinds": ["character"],
-        "prerequisites": { "has": "virtue.hermetic_magus" },
+        "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" },
         "incompatible_with": ["flaw.blatant_gift"]
       },
       {
@@ -390,7 +458,7 @@ mod tests {
         "magnitude": "major",
         "category": "hermetic",
         "entity_kinds": ["character"],
-        "prerequisites": { "has": "virtue.the_gift" },
+        "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
         "incompatible_with": ["virtue.gentle_gift"]
       },
       {
@@ -419,8 +487,8 @@ mod tests {
     #[test]
     fn load_valid_ruleset() {
         let rs = Ruleset::from_json("arm5-core", "2024.1", VALID_ITEMS, VALID_TYPES).unwrap();
-        assert_eq!(rs.point_items.len(), 5);
-        assert_eq!(rs.type_profiles.len(), 1);
+        assert_eq!(rs.item_count(), 5);
+        assert_eq!(rs.profile_count(), 1);
         assert_eq!(rs.id, Id::new("arm5-core"));
     }
 
@@ -459,7 +527,7 @@ mod tests {
           "magnitude": "major",
           "category": "hermetic",
           "entity_kinds": ["character"],
-          "prerequisites": { "has": "virtue.nonexistent" }
+          "prerequisites": { "kind": "has", "value": "virtue.nonexistent" }
         }]"#;
 
         let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
@@ -615,7 +683,7 @@ mod tests {
           "magnitude": "minor",
           "category": "general",
           "entity_kinds": ["character"],
-          "prerequisites": {"all": [{"has": "virtue.nonexistent"}]}
+          "prerequisites": {"kind": "all", "value": [{"kind": "has", "value": "virtue.nonexistent"}]}
         }]"#;
 
         let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
@@ -687,7 +755,7 @@ mod tests {
         let integrity_err = Ruleset::from_json(
             "test",
             "1",
-            r#"[{"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": [], "prerequisites": {"has": "virtue.missing"}}]"#,
+            r#"[{"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": [], "prerequisites": {"kind": "has", "value": "virtue.missing"}}]"#,
             "[]",
         )
         .unwrap_err();
@@ -706,7 +774,7 @@ mod tests {
         let integrity_err = Ruleset::from_json(
             "test",
             "1",
-            r#"[{"id":"virtue.a","kind":"virtue","magnitude":"minor","category":"general","entity_kinds":[],"prerequisites":{"has":"virtue.missing"}}]"#,
+            r#"[{"id":"virtue.a","kind":"virtue","magnitude":"minor","category":"general","entity_kinds":[],"prerequisites":{"kind": "has", "value":"virtue.missing"}}]"#,
             "[]",
         )
         .unwrap_err();
@@ -716,8 +784,8 @@ mod tests {
     #[test]
     fn integrity_error_exposes_individual_messages() {
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"has": "virtue.x"}},
-          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"has": "virtue.y"}}
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.x"}},
+          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.y"}}
         ]"#;
         let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
         match err {
@@ -737,7 +805,7 @@ mod tests {
         let integrity_err = Ruleset::from_json(
             "test",
             "1",
-            r#"[{"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": [], "prerequisites": {"has": "virtue.missing"}}]"#,
+            r#"[{"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": [], "prerequisites": {"kind": "has", "value": "virtue.missing"}}]"#,
             "[]",
         )
         .unwrap_err();
@@ -751,5 +819,98 @@ mod tests {
         assert!(ParameterDomain::Item.resolves_against_items());
         assert!(!ParameterDomain::Ability.resolves_against_items());
         assert!(!ParameterDomain::Art.resolves_against_items());
+    }
+
+    #[test]
+    fn from_serialized_roundtrips_valid_ruleset() {
+        let rs = Ruleset::from_json("arm5-core", "2024.1", VALID_ITEMS, VALID_TYPES).unwrap();
+        let json = serde_json::to_string(&rs).unwrap();
+        let restored = Ruleset::from_serialized(&json).unwrap();
+        assert_eq!(rs, restored);
+    }
+
+    #[test]
+    fn from_serialized_rejects_dangling_prereq_ref() {
+        // A serialized ruleset whose JSON carries a dangling Has(...) prereq must
+        // be rejected: from_serialized re-runs referential integrity.
+        let json = r#"{
+          "id": "arm5-core",
+          "version": "2024.1",
+          "point_items": {
+            "virtue.a": {
+              "id": "virtue.a",
+              "kind": "virtue",
+              "magnitude": "minor",
+              "category": "general",
+              "entity_kinds": ["character"],
+              "prerequisites": { "kind": "has", "value": "virtue.missing" }
+            }
+          },
+          "type_profiles": {}
+        }"#;
+        let err = Ruleset::from_serialized(json).unwrap_err();
+        assert_eq!(err.kind(), "integrity");
+        assert!(
+            err.to_string().contains("virtue.missing"),
+            "should name the dangling ref: {err}"
+        );
+    }
+
+    #[test]
+    fn ruleset_error_serde_roundtrip() {
+        let parse_err = Ruleset::from_json("test", "1", "INVALID", "[]").unwrap_err();
+        let json = serde_json::to_string(&parse_err).unwrap();
+        let restored: RulesetError = serde_json::from_str(&json).unwrap();
+        assert_eq!(parse_err, restored);
+
+        let integrity_err = Ruleset::from_json(
+            "test",
+            "1",
+            r#"[{"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": [], "prerequisites": {"kind": "has", "value": "virtue.missing"}}]"#,
+            "[]",
+        )
+        .unwrap_err();
+        let json = serde_json::to_string(&integrity_err).unwrap();
+        let restored: RulesetError = serde_json::from_str(&json).unwrap();
+        assert_eq!(integrity_err, restored);
+
+        // An unknown discriminant is a deserialization error, not a silent default.
+        let err = serde_json::from_str::<RulesetError>(r#"{"kind":"bogus"}"#).unwrap_err();
+        assert!(
+            err.to_string().contains("bogus"),
+            "should name the unknown kind: {err}"
+        );
+    }
+
+    #[test]
+    fn accessors_iterate_in_id_order() {
+        let rs = Ruleset::from_json("arm5-core", "1", VALID_ITEMS, VALID_TYPES).unwrap();
+        let item_ids: Vec<&str> = rs.items().map(|i| i.id.as_str()).collect();
+        let mut sorted = item_ids.clone();
+        sorted.sort_unstable();
+        assert_eq!(item_ids, sorted, "items() iterates in id order");
+        assert_eq!(rs.items().count(), rs.item_count());
+        assert_eq!(rs.profiles().count(), rs.profile_count());
+        assert_eq!(rs.profiles().next().unwrap().id, Id::new("companion"));
+    }
+
+    #[test]
+    fn ruleset_normalize_sorts_item_parameters() {
+        let items = r#"[{
+          "id": "virtue.x",
+          "kind": "virtue",
+          "magnitude": "minor",
+          "category": "general",
+          "entity_kinds": ["character"],
+          "parameters": [
+            { "key": "second", "type": "ref", "domain": "art" },
+            { "key": "first", "type": "ref", "domain": "ability" }
+          ]
+        }]"#;
+        let mut rs = Ruleset::from_json("test", "1", items, "[]").unwrap();
+        rs.normalize();
+        let item = rs.item(&Id::new("virtue.x")).unwrap();
+        let keys: Vec<&str> = item.parameters.iter().map(|p| p.key.as_str()).collect();
+        assert_eq!(keys, vec!["first", "second"]);
     }
 }

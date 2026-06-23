@@ -23,11 +23,54 @@ pub enum IssueSeverity {
 /// Fluent message id the UI localizes), and `args` carries the interpolation
 /// values (offending ids, counts, budgets). The UI renders `code` + `args`
 /// against its `.ftl` catalogue.
+///
+/// # Issue-code contract (the Fluent contract for the frontend)
+///
+/// Every `code` the engine can emit, with the `args` keys it carries. The UI
+/// must define an `issue-<code>` message for each (see the workspace test
+/// `every_validation_code_has_a_fluent_key_in_each_locale`).
+///
+/// | `code` | severity | `args` keys |
+/// |--------|----------|-------------|
+/// | `unknown_type` | error | `type_id` |
+/// | `unknown_ref` | error | `item` |
+/// | `wrong_entity_kind` | error | `item`, `entity_kind` |
+/// | `duplicate_selection` | error | `item`, `count` |
+/// | `over_budget_virtues` | error | `points`, `budget` |
+/// | `over_budget_flaws` | error | `points`, `budget` |
+/// | `unbalanced_virtues` | error | `virtue_points`, `flaw_points` |
+/// | `too_many_major_virtues` | error | `count`, `max` |
+/// | `too_many_major_flaws` | error | `count`, `max` |
+/// | `too_many_minor_flaws` | error | `count`, `max` |
+/// | `too_many_major_<category>_flaws`† | error or warning | `count`, `max` |
+/// | `too_many_<category>_flaws`† | error or warning | `count`, `max` |
+/// | `prereq_not_met` | error | `item` |
+/// | `prereq_unevaluated` | warning | `item` |
+/// | `incompatible` | error | `item`, `other` |
+/// | `category_not_permitted` | error | `item`, `category` |
+/// | `forbidden_category` | error | `item`, `category` |
+/// | `missing_required_trait` | error | `item` |
+/// | `forbidden_trait` | error | `item` |
+/// | `missing_param` | error | `item`, `key` |
+/// | `unexpected_param` | error | `item`, `key` |
+/// | `unknown_param_value` | error | `item`, `key`, `value`, `domain` |
+/// | `gift_required` | error | (none) |
+/// | `gift_forbidden` | error | (none) |
+///
+/// † The per-category flaw caps emit a code derived from the
+/// `flaw_category_caps` entry's category slug (`too_many_<category>_flaws`, or
+/// `too_many_major_<category>_flaws` when the cap is `major_only`); severity
+/// follows the cap's `hard` flag. The shipped `personality`/`story` caps thus
+/// produce `too_many_major_personality_flaws` (error),
+/// `too_many_personality_flaws` (warning), and `too_many_story_flaws`
+/// (warning); a new category requires its matching `issue-<code>` Fluent key.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ValidationIssue {
     /// Error or warning.
     pub severity: IssueSeverity,
-    /// Stable machine key / Fluent message id (e.g. `over_budget_virtues`).
+    /// Stable machine key for this issue. The UI derives the Fluent message id
+    /// as `issue-<code>` (e.g. code `over_budget_virtues` →
+    /// `issue-over_budget_virtues`).
     pub code: String,
     /// Interpolation values for the localized message, keyed by argument name.
     #[serde(default)]
@@ -38,24 +81,29 @@ pub struct ValidationIssue {
 }
 
 impl ValidationIssue {
-    /// Builds an error-severity issue.
-    fn error(code: &str, args: BTreeMap<String, String>, context: Option<Id>) -> Self {
+    /// Builds an issue with the given severity, code, args, and context.
+    pub fn new(
+        severity: IssueSeverity,
+        code: &str,
+        args: BTreeMap<String, String>,
+        context: Option<Id>,
+    ) -> Self {
         Self {
-            severity: IssueSeverity::Error,
+            severity,
             code: code.to_string(),
             args,
             context,
         }
     }
 
+    /// Builds an error-severity issue.
+    pub fn error(code: &str, args: BTreeMap<String, String>, context: Option<Id>) -> Self {
+        Self::new(IssueSeverity::Error, code, args, context)
+    }
+
     /// Builds a warning-severity issue.
-    fn warning(code: &str, args: BTreeMap<String, String>, context: Option<Id>) -> Self {
-        Self {
-            severity: IssueSeverity::Warning,
-            code: code.to_string(),
-            args,
-            context,
-        }
+    pub fn warning(code: &str, args: BTreeMap<String, String>, context: Option<Id>) -> Self {
+        Self::new(IssueSeverity::Warning, code, args, context)
     }
 }
 
@@ -65,13 +113,18 @@ fn args<const N: usize>(pairs: [(&str, String); N]) -> BTreeMap<String, String> 
 }
 
 /// The outcome of validating an entity: a flat list of issues.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ValidationResult {
     /// All findings, errors and warnings intermixed in detection order.
     pub issues: Vec<ValidationIssue>,
 }
 
 impl ValidationResult {
+    /// Builds a result from a list of issues.
+    pub fn new(issues: Vec<ValidationIssue>) -> Self {
+        Self { issues }
+    }
+
     /// Returns `true` if there are no error-severity issues.
     pub fn is_valid(&self) -> bool {
         !self
@@ -80,20 +133,18 @@ impl ValidationResult {
             .any(|i| i.severity == IssueSeverity::Error)
     }
 
-    /// Returns all issues with [`IssueSeverity::Error`].
-    pub fn errors(&self) -> Vec<&ValidationIssue> {
+    /// Iterates all issues with [`IssueSeverity::Error`].
+    pub fn errors(&self) -> impl Iterator<Item = &ValidationIssue> + '_ {
         self.issues
             .iter()
             .filter(|i| i.severity == IssueSeverity::Error)
-            .collect()
     }
 
-    /// Returns all issues with [`IssueSeverity::Warning`].
-    pub fn warnings(&self) -> Vec<&ValidationIssue> {
+    /// Iterates all issues with [`IssueSeverity::Warning`].
+    pub fn warnings(&self) -> impl Iterator<Item = &ValidationIssue> + '_ {
         self.issues
             .iter()
             .filter(|i| i.severity == IssueSeverity::Warning)
-            .collect()
     }
 
     /// Applies a [`ValidationMode`]: `Enforced` keeps issues as-is, `Advisory`
@@ -118,32 +169,22 @@ impl ValidationResult {
 
 /// Validates an Entity against a Ruleset, checking balance, caps, prerequisites,
 /// incompatibilities, categories, traits, parameters, and gift policy.
+///
+/// When `entity.type_id` does not resolve to a type profile, an `unknown_type`
+/// error is emitted and all profile-dependent sub-validators (balance, caps,
+/// prerequisites' `is_magus` resolution, categories, traits, gift policy) are
+/// skipped because they have no profile to check against. A result containing
+/// only `unknown_type` therefore does NOT imply the rest of the entity is legal.
 pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     let mut issues = Vec::new();
 
     let type_profile = ruleset.type_profiles.get(&entity.type_id);
 
-    if type_profile.is_none() {
-        issues.push(ValidationIssue::error(
-            "unknown_type",
-            args([("type_id", entity.type_id.to_string())]),
-            None,
-        ));
-    }
-
     // Computed once and shared by membership-test sub-validators.
     let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
 
-    for selection in &entity.selections {
-        if !ruleset.point_items.contains_key(&selection.item_ref) {
-            issues.push(ValidationIssue::error(
-                "unknown_ref",
-                args([("item", selection.item_ref.to_string())]),
-                Some(selection.item_ref.clone()),
-            ));
-        }
-    }
-
+    validate_known_type(entity, type_profile, &mut issues);
+    validate_known_refs(entity, ruleset, &mut issues);
     validate_entity_kind_applicability(entity, ruleset, &mut issues);
     validate_duplicate_selections(entity, &mut issues);
     validate_balance(entity, ruleset, type_profile, &mut issues);
@@ -158,6 +199,34 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_gift_policy(entity, ruleset, type_profile, &mut issues);
 
     ValidationResult { issues }
+}
+
+/// Emits `unknown_type` when the entity's `type_id` has no matching profile.
+fn validate_known_type(
+    entity: &Entity,
+    type_profile: Option<&EntityTypeProfile>,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    if type_profile.is_none() {
+        issues.push(ValidationIssue::error(
+            "unknown_type",
+            args([("type_id", entity.type_id.to_string())]),
+            None,
+        ));
+    }
+}
+
+/// Emits `unknown_ref` for each selection whose item id is not in the ruleset.
+fn validate_known_refs(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    for selection in &entity.selections {
+        if !ruleset.point_items.contains_key(&selection.item_ref) {
+            issues.push(ValidationIssue::error(
+                "unknown_ref",
+                args([("item", selection.item_ref.to_string())]),
+                Some(selection.item_ref.clone()),
+            ));
+        }
+    }
 }
 
 /// Enforces the two halves of the points rule:
@@ -261,6 +330,10 @@ pub fn compute_balance(entity: &Entity, ruleset: &Ruleset) -> Balance {
 /// a hard rule (error) or a soft guideline (warning) is fixed by the rulebook
 /// and encoded here per cap. A cap left `None`/absent imposes no limit.
 ///
+/// Per-category flaw caps (Personality, Story, ...) are data in the profile's
+/// `flaw_category_caps`: each entry names its category, so no category slug is
+/// hardcoded in the engine.
+///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:2857 ("You may not
 /// have more than one Major Hermetic Virtue", magi); grogs may take no Major
 /// Virtues or Flaws at :2824-2830; ≤5 Minor Flaws (central) at :2774, grogs ≤3
@@ -323,42 +396,37 @@ fn validate_caps(
         }
     }
 
-    if let Some(max) = profile.budget.max_major_personality_flaws {
+    // --- Data-driven per-category flaw caps ---
+    //
+    // Each cap names its flaw category as data, so the engine never hardcodes a
+    // category slug. A `hard` cap is a blocking error; otherwise a non-blocking
+    // warning (the book marks the Personality/Story guidelines as
+    // troupe-overridable). The issue code is derived from the category slug as
+    // `too_many_<category>_flaws` (or `too_many_major_<category>_flaws` when the
+    // cap is Major-only), so the Fluent key follows the category by convention —
+    // no slug is baked into the engine. The shipped `personality`/`story` caps
+    // thus map onto the existing Fluent keys without a hardcoded mapping.
+    for cap in &profile.budget.flaw_category_caps {
         let n = count(&|i| {
             i.kind == ItemKind::Flaw
-                && i.category == "personality"
-                && i.magnitude == Magnitude::Major
+                && i.category == cap.category
+                && (!cap.major_only || i.magnitude == Magnitude::Major)
         });
-        if n > max as usize {
-            issues.push(ValidationIssue::error(
-                "too_many_major_personality_flaws",
-                count_args(n, max),
-                None,
-            ));
+        if n <= cap.max as usize {
+            continue;
         }
-    }
 
-    // --- Soft guidelines ("should not ...") → non-blocking warnings ---
+        let code = if cap.major_only {
+            format!("too_many_major_{}_flaws", cap.category)
+        } else {
+            format!("too_many_{}_flaws", cap.category)
+        };
+        let cap_args = count_args(n, cap.max);
 
-    if let Some(max) = profile.budget.max_personality_flaws {
-        let n = count(&|i| i.kind == ItemKind::Flaw && i.category == "personality");
-        if n > max as usize {
-            issues.push(ValidationIssue::warning(
-                "too_many_personality_flaws",
-                count_args(n, max),
-                None,
-            ));
-        }
-    }
-
-    if let Some(max) = profile.budget.max_story_flaws {
-        let n = count(&|i| i.kind == ItemKind::Flaw && i.category == "story");
-        if n > max as usize {
-            issues.push(ValidationIssue::warning(
-                "too_many_story_flaws",
-                count_args(n, max),
-                None,
-            ));
+        if cap.hard {
+            issues.push(ValidationIssue::error(&code, cap_args, None));
+        } else {
+            issues.push(ValidationIssue::warning(&code, cap_args, None));
         }
     }
 }
@@ -830,7 +898,7 @@ mod tests {
             "magnitude": "free",
             "category": "social_status",
             "entity_kinds": ["character"],
-            "prerequisites": { "has": "virtue.the_gift" }
+            "prerequisites": { "kind": "has", "value": "virtue.the_gift" }
           },
           {
             "id": "virtue.gentle_gift",
@@ -838,7 +906,7 @@ mod tests {
             "magnitude": "major",
             "category": "hermetic",
             "entity_kinds": ["character"],
-            "prerequisites": { "has": "virtue.hermetic_magus" },
+            "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" },
             "incompatible_with": ["flaw.blatant_gift"]
           },
           {
@@ -847,7 +915,7 @@ mod tests {
             "magnitude": "major",
             "category": "hermetic",
             "entity_kinds": ["character"],
-            "prerequisites": { "has": "virtue.the_gift" },
+            "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
             "incompatible_with": ["virtue.gentle_gift"]
           },
           {
@@ -925,7 +993,7 @@ mod tests {
     }
 
     fn codes(result: &ValidationResult) -> Vec<String> {
-        result.errors().iter().map(|i| i.code.clone()).collect()
+        result.errors().map(|i| i.code.clone()).collect()
     }
 
     #[test]
@@ -964,7 +1032,6 @@ mod tests {
         // args carry the structured values.
         let issue = result
             .errors()
-            .into_iter()
             .find(|i| i.code == "over_budget_virtues")
             .unwrap();
         assert_eq!(issue.args.get("points"), Some(&"2".to_string()));
@@ -1031,11 +1098,7 @@ mod tests {
         );
 
         let result = validate(&entity, &rs);
-        let incompat_count = result
-            .errors()
-            .iter()
-            .filter(|i| i.code == "incompatible")
-            .count();
+        let incompat_count = result.errors().filter(|i| i.code == "incompatible").count();
         assert_eq!(
             incompat_count, 1,
             "A<->B mutual incompatibility should fire exactly once"
@@ -1084,7 +1147,7 @@ mod tests {
     }
 
     fn warning_codes(result: &ValidationResult) -> Vec<String> {
-        result.warnings().iter().map(|i| i.code.clone()).collect()
+        result.warnings().map(|i| i.code.clone()).collect()
     }
 
     #[test]
@@ -1203,7 +1266,13 @@ mod tests {
         // pers_major (3) is a Major Personality Flaw; cap of zero forbids it.
         let types = r#"[{
           "id": "capped",
-          "budget": { "virtue_points": 10, "flaw_points": 10, "max_major_personality_flaws": 0 },
+          "budget": {
+            "virtue_points": 10,
+            "flaw_points": 10,
+            "flaw_category_caps": [
+              { "category": "personality", "max": 0, "major_only": true, "hard": true }
+            ]
+          },
           "permitted_categories": ["general", "personality"],
           "creation_phases": []
         }]"#;
@@ -1231,7 +1300,11 @@ mod tests {
         // Two personality flaws over a soft cap of one → non-blocking warning.
         let types = r#"[{
           "id": "capped",
-          "budget": { "virtue_points": 10, "flaw_points": 10, "max_personality_flaws": 1 },
+          "budget": {
+            "virtue_points": 10,
+            "flaw_points": 10,
+            "flaw_category_caps": [{ "category": "personality", "max": 1 }]
+          },
           "permitted_categories": ["general", "personality"],
           "creation_phases": []
         }]"#;
@@ -1263,7 +1336,11 @@ mod tests {
     fn too_many_story_flaws_is_warning() {
         let types = r#"[{
           "id": "capped",
-          "budget": { "virtue_points": 10, "flaw_points": 10, "max_story_flaws": 1 },
+          "budget": {
+            "virtue_points": 10,
+            "flaw_points": 10,
+            "flaw_category_caps": [{ "category": "story", "max": 1 }]
+          },
           "permitted_categories": ["general", "story"],
           "creation_phases": []
         }]"#;
@@ -1426,17 +1503,34 @@ mod tests {
     }
 
     #[test]
+    fn public_constructors_build_issues_and_results() {
+        let issue = ValidationIssue::new(
+            IssueSeverity::Warning,
+            "too_many_story_flaws",
+            BTreeMap::new(),
+            None,
+        );
+        assert_eq!(issue.severity, IssueSeverity::Warning);
+        assert_eq!(issue.code, "too_many_story_flaws");
+
+        let result = ValidationResult::new(vec![
+            ValidationIssue::error("unknown_type", BTreeMap::new(), None),
+            issue,
+        ]);
+        assert!(!result.is_valid(), "an error makes the result invalid");
+        assert_eq!(result.errors().count(), 1);
+        assert_eq!(result.warnings().count(), 1);
+        assert!(ValidationResult::default().issues.is_empty());
+    }
+
+    #[test]
     fn unknown_type_id() {
         let rs = test_ruleset();
         let entity = make_entity("nonexistent_type", vec![]);
 
         let result = validate(&entity, &rs);
         assert!(codes(&result).contains(&"unknown_type".to_string()));
-        let issue = result
-            .errors()
-            .into_iter()
-            .find(|i| i.code == "unknown_type")
-            .unwrap();
+        let issue = result.errors().find(|i| i.code == "unknown_type").unwrap();
         assert_eq!(
             issue.args.get("type_id"),
             Some(&"nonexistent_type".to_string())
@@ -1489,7 +1583,7 @@ mod tests {
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.c", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"all": [{"has": "virtue.a"}, {"has": "virtue.b"}]}}
+           "prerequisites": {"kind": "all", "value": [{"kind": "has", "value": "virtue.a"}, {"kind": "has", "value": "virtue.b"}]}}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -1526,7 +1620,7 @@ mod tests {
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.c", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"any": [{"has": "virtue.a"}, {"has": "virtue.b"}]}}
+           "prerequisites": {"kind": "any", "value": [{"kind": "has", "value": "virtue.a"}, {"kind": "has", "value": "virtue.b"}]}}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -1559,7 +1653,7 @@ mod tests {
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"none": [{"has": "virtue.a"}]}}
+           "prerequisites": {"kind": "none", "value": [{"kind": "has", "value": "virtue.a"}]}}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -1596,7 +1690,7 @@ mod tests {
         // leaf yields Unknown, so no prereq_not_met error fires.
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"none": [{"house": "house.flambeau"}]}}
+           "prerequisites": {"kind": "none", "value": [{"kind": "house", "value": "house.flambeau"}]}}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -1612,7 +1706,7 @@ mod tests {
             !codes(&result).contains(&"prereq_not_met".to_string()),
             "unknown leaf under None must not produce a false failure"
         );
-        let warnings: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        let warnings: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(warnings.contains(&"prereq_unevaluated"));
     }
 
@@ -1624,7 +1718,7 @@ mod tests {
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"any": [{"has": "virtue.a"}, {"house": "house.flambeau"}]}},
+           "prerequisites": {"kind": "any", "value": [{"kind": "has", "value": "virtue.a"}, {"kind": "house", "value": "house.flambeau"}]}},
           {"id": "flaw.x", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "flaw.y", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
@@ -1649,7 +1743,7 @@ mod tests {
 
         let result = validate(&entity, &rs);
         assert!(result.is_valid(), "issues: {:?}", result.issues);
-        let warnings: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        let warnings: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(
             !warnings.contains(&"prereq_unevaluated"),
             "satisfied Any must not warn about its unknown sibling: {warnings:?}"
@@ -1663,7 +1757,7 @@ mod tests {
         let items = r#"[
           {"id": "virtue.dep", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"all": [{"has": "virtue.dep"}, {"house": "house.x"}]}}
+           "prerequisites": {"kind": "all", "value": [{"kind": "has", "value": "virtue.dep"}, {"kind": "house", "value": "house.x"}]}}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -1677,7 +1771,7 @@ mod tests {
 
         let result = validate(&entity, &rs);
         assert!(codes(&result).contains(&"prereq_not_met".to_string()));
-        let warnings: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        let warnings: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(
             !warnings.contains(&"prereq_unevaluated"),
             "known failure should not also warn: {warnings:?}"
@@ -1693,7 +1787,7 @@ mod tests {
         let items = r#"[
           {"id": "virtue.dep", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"any": [{"has": "virtue.dep"}, {"house": "house.flambeau"}]}}
+           "prerequisites": {"kind": "any", "value": [{"kind": "has", "value": "virtue.dep"}, {"kind": "house", "value": "house.flambeau"}]}}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -1711,7 +1805,7 @@ mod tests {
             "Any with an unknown branch must not fail outright: {:?}",
             codes(&result)
         );
-        let warnings: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        let warnings: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(
             warnings.contains(&"prereq_unevaluated"),
             "unresolved Any should warn: {warnings:?}"
@@ -1726,7 +1820,7 @@ mod tests {
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"all": [{"has": "virtue.a"}, {"house": "house.flambeau"}]}}
+           "prerequisites": {"kind": "all", "value": [{"kind": "has", "value": "virtue.a"}, {"kind": "house", "value": "house.flambeau"}]}}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -1743,7 +1837,7 @@ mod tests {
             "satisfied leaf + unknown sibling must not fail: {:?}",
             codes(&result)
         );
-        let warnings: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        let warnings: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(
             warnings.contains(&"prereq_unevaluated"),
             "result hinges on unknown leaf, should warn: {warnings:?}"
@@ -1754,7 +1848,7 @@ mod tests {
     fn prereq_house_produces_unevaluated_warning() {
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"house": "house.bjornaer"}}
+           "prerequisites": {"kind": "house", "value": "house.bjornaer"}}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -1766,7 +1860,7 @@ mod tests {
         let entity = make_entity("test_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
-        let warning_codes: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(warning_codes.contains(&"prereq_unevaluated"));
     }
 
@@ -1774,7 +1868,7 @@ mod tests {
     fn prereq_ability_min_produces_unevaluated_warning() {
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"ability_min": {"ability": "ability.awareness", "score": 3}}}
+           "prerequisites": {"kind": "ability_min", "value": {"ability": "ability.awareness", "score": 3}}}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -1786,7 +1880,7 @@ mod tests {
         let entity = make_entity("test_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
-        let warning_codes: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(warning_codes.contains(&"prereq_unevaluated"));
     }
 
@@ -1794,7 +1888,7 @@ mod tests {
     fn prereq_art_min_produces_unevaluated_warning() {
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"art_min": {"art": "art.creo", "score": 5}}}
+           "prerequisites": {"kind": "art_min", "value": {"art": "art.creo", "score": 5}}}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -1806,7 +1900,7 @@ mod tests {
         let entity = make_entity("test_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
-        let warning_codes: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(warning_codes.contains(&"prereq_unevaluated"));
     }
 
@@ -1815,7 +1909,7 @@ mod tests {
         // A profile flagged `is_magus: true` satisfies IsMagus: no warning, no error.
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": "is_magus"}
+           "prerequisites": {"kind": "is_magus"}}
         ]"#;
         let types = r#"[{
           "id": "magus_type",
@@ -1828,7 +1922,7 @@ mod tests {
         let entity = make_entity("magus_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
-        let warning_codes: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(
             !warning_codes.contains(&"prereq_unevaluated"),
             "IsMagus should be enforced, not unevaluated: {warning_codes:?}"
@@ -1841,7 +1935,7 @@ mod tests {
         // A profile flagged `is_magus: false` makes IsMagus False: prereq_not_met fires.
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": "is_magus"}
+           "prerequisites": {"kind": "is_magus"}}
         ]"#;
         let types = r#"[{
           "id": "grog_type",
@@ -1866,7 +1960,7 @@ mod tests {
         // No matching type profile -> IsMagus is Unknown -> warning.
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": "is_magus"}
+           "prerequisites": {"kind": "is_magus"}}
         ]"#;
         let types = r#"[{
           "id": "some_type",
@@ -1879,7 +1973,7 @@ mod tests {
         let entity = make_entity("no_such_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
-        let warning_codes: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(warning_codes.contains(&"prereq_unevaluated"));
     }
 
@@ -1890,7 +1984,7 @@ mod tests {
         // flag is decoupled from gift_policy.
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": "is_magus"}
+           "prerequisites": {"kind": "is_magus"}}
         ]"#;
         let types = r#"[{
           "id": "ungifted_redcap",
@@ -1918,7 +2012,7 @@ mod tests {
         let items = r#"[
           {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": "is_magus"}
+           "prerequisites": {"kind": "is_magus"}}
         ]"#;
         let types = r#"[{
           "id": "hedge_wizard",
@@ -1950,7 +2044,7 @@ mod tests {
         let items = r#"[
           {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": "is_magus"}
+           "prerequisites": {"kind": "is_magus"}}
         ]"#;
         let types = r#"[{
           "id": "magus_type",
@@ -1965,7 +2059,7 @@ mod tests {
         let entity = make_entity("magus_type", vec![sel("virtue.the_gift"), sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
-        let warning_codes: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(
             !warning_codes.contains(&"prereq_unevaluated"),
             "IsMagus should be enforced: {warning_codes:?}"
@@ -1993,7 +2087,6 @@ mod tests {
         // entity_kind rendered via Display (snake_case), not Debug.
         let issue = result
             .errors()
-            .into_iter()
             .find(|i| i.code == "wrong_entity_kind")
             .unwrap();
         assert_eq!(issue.args.get("entity_kind"), Some(&"covenant".to_string()));
@@ -2478,11 +2571,7 @@ mod tests {
         // unknown_ref: args should contain the bad ID under "item".
         let entity = make_entity("companion", vec![sel("virtue.nonexistent")]);
         let result = validate(&entity, &rs);
-        let unknown_ref = result
-            .errors()
-            .into_iter()
-            .find(|i| i.code == "unknown_ref")
-            .unwrap();
+        let unknown_ref = result.errors().find(|i| i.code == "unknown_ref").unwrap();
         assert_eq!(
             unknown_ref.args.get("item"),
             Some(&"virtue.nonexistent".to_string())
@@ -2491,11 +2580,7 @@ mod tests {
         // unknown_type: args should contain the bad type_id.
         let entity = make_entity("bogus_type", vec![]);
         let result = validate(&entity, &rs);
-        let unknown_type = result
-            .errors()
-            .into_iter()
-            .find(|i| i.code == "unknown_type")
-            .unwrap();
+        let unknown_type = result.errors().find(|i| i.code == "unknown_type").unwrap();
         assert_eq!(
             unknown_type.args.get("type_id"),
             Some(&"bogus_type".to_string())
@@ -2512,8 +2597,8 @@ mod tests {
             ],
         };
 
-        assert_eq!(result.errors().len(), 2);
-        assert_eq!(result.warnings().len(), 1);
+        assert_eq!(result.errors().count(), 2);
+        assert_eq!(result.warnings().count(), 1);
         assert!(!result.is_valid());
     }
 

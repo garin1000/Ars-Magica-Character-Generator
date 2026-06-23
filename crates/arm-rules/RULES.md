@@ -73,26 +73,27 @@ mechanics carry entries; the rest are stubbed at the end.
   `too_many_minor_flaws` (counts `magnitude == Minor` flaws; cap value is data,
   `max_minor_flaws`).
 
-#### Cap on Major Personality Flaws (hard)
-> "A character may not have more than one Major Personality Flaw."
-
-- Source: `Ars Magica - Definitive Edition (Core Rules).md:2820`; restated per
-  type at companion `:2838`, magus `:2851`.
-- Implementation: `crates/arm-rules/src/validation.rs` — `validate_caps`, error
-  `too_many_major_personality_flaws` (counts `category == "personality" &&
-  magnitude == Major` flaws; cap value is data, `max_major_personality_flaws`).
-
-#### Personality / Story Flaw guidelines (soft → warnings)
+#### Per-category flaw caps (Personality hard + Personality/Story soft)
+> "A character may not have more than one Major Personality Flaw." (`:2820`)
 > "A character should normally not have more than two Personality Flaws in
 > total" (`:2820`); "A character should not have more than one Story Flaw"
 > (`:2818`); grogs "should not have Story Flaws" (`:1009`).
 
-- Source: `Ars Magica - Definitive Edition (Core Rules).md:2820`, `:2976`
-  (Personality total); `:2818`, `:2982` (Story); grogs `:1009`/`:2826`.
-- Implementation: `crates/arm-rules/src/validation.rs` — `validate_caps`,
-  **warnings** `too_many_personality_flaws` / `too_many_story_flaws` (the book
-  marks these troupe-overridable, so they are advisory, not blocking). Cap
-  values are data (`max_personality_flaws`, `max_story_flaws`).
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2820` (Major
+  Personality, hard; restated per type at companion `:2838`, magus `:2851`),
+  `:2976` (Personality total), `:2818`/`:2982` (Story), grogs `:1009`/`:2826`.
+- Implementation: `crates/arm-rules/src/validation.rs` — `validate_caps`. These
+  caps are **fully data-driven**: each entry of the profile's
+  `flaw_category_caps` (`PointBudget.flaw_category_caps`, type
+  `FlawCategoryCap { category, max, major_only, hard }`) names the flaw
+  **category as data**, so the engine hardcodes no category slug. A `hard` cap
+  is a blocking error; otherwise a non-blocking warning (the book marks the
+  Personality/Story guidelines troupe-overridable). The issue `code` is derived
+  from the category as `too_many_<category>_flaws` (or
+  `too_many_major_<category>_flaws` when `major_only`), so the shipped
+  `personality`/`story` caps map onto the existing Fluent keys
+  (`too_many_major_personality_flaws`, `too_many_personality_flaws`,
+  `too_many_story_flaws`) by convention rather than a baked-in mapping.
 
 #### The Gift policy — required / forbidden by type
 > "all magi must have this Virtue" ... "Grogs can never have The Gift".
@@ -121,13 +122,11 @@ source:
 | grog | `virtue_points: 3`, `flaw_points: 3` | `:2295`, `:2824-2830`, `:1009` |
 | grog | `max_major_virtues: 0`, `max_major_flaws: 0` | `:2824-2830` ("may not take Major Virtues or Flaws"), `:1009` |
 | grog | `max_minor_flaws: 3` | `:1009` ("no more than three Minor Flaws") |
-| grog | `max_story_flaws: 0` | `:1009` ("grogs should not have Story Flaws") |
-| grog | `max_personality_flaws: 1`, `max_major_personality_flaws: 0` | grogs take one Minor Personality Flaw and no Major Virtues/Flaws `:1009`, `:2824-2830` |
+| grog | `flaw_category_caps`: personality major_only/hard `max: 0`; personality `max: 1`; story `max: 0` | grogs take one Minor Personality Flaw, no Major Flaws, no Story Flaws `:1009`, `:2824-2830` |
 | companion | `virtue_points: 10`, `flaw_points: 10` | `:2297`, `:2834-2840` |
 | companion | `max_major_virtues: null`, `max_major_flaws: null` (no count cap) | no Major-count cap for companions in the book |
 | companion | `max_minor_flaws: 5` | `:2774`, `:2835` |
-| companion | `max_story_flaws: 1` | `:2818`, `:2837` |
-| companion | `max_personality_flaws: 2`, `max_major_personality_flaws: 1` | `:2820`, `:2838` |
+| companion | `flaw_category_caps`: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `:2820`, `:2838` (Major Personality hard); `:2820`/`:2976` (Personality total); `:2818`/`:2837` (Story) |
 
 Magus and mythic-companion profiles are not yet in `character_types.json`. When
 added, cite: magus budget/caps `:2303`, `:2855-2863`; mythic companion

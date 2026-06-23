@@ -7,9 +7,11 @@
       "max_major_virtues": null,
       "max_major_flaws": null,
       "max_minor_flaws": 5,
-      "max_story_flaws": 1,
-      "max_personality_flaws": 2,
-      "max_major_personality_flaws": 1
+      "flaw_category_caps": [
+        { "category": "personality", "max": 1, "major_only": true, "hard": true },
+        { "category": "personality", "max": 2 },
+        { "category": "story", "max": 1 }
+      ]
     },
     "permitted_categories": ["general", "personality", "social_status", "story", "supernatural"],
     "forbidden_categories": ["hermetic"],
@@ -36,9 +38,11 @@
       "max_major_virtues": 0,
       "max_major_flaws": 0,
       "max_minor_flaws": 3,
-      "max_story_flaws": 0,
-      "max_personality_flaws": 1,
-      "max_major_personality_flaws": 0
+      "flaw_category_caps": [
+        { "category": "personality", "max": 0, "major_only": true, "hard": true },
+        { "category": "personality", "max": 1 },
+        { "category": "story", "max": 0 }
+      ]
     },
     "permitted_categories": ["general", "personality", "social_status"],
     "forbidden_categories": ["hermetic", "supernatural"],
