@@ -77,12 +77,55 @@ export interface I18nEntry {
   description?: string | null;
 }
 
+// The eight Characteristics, serialized as their snake_case names.
+export type Characteristic = 'int' | 'per' | 'str' | 'sta' | 'pre' | 'com' | 'dex' | 'qik';
+
+// Canonical Characteristic order (matches the engine's `Characteristic::ALL`).
+export const CHARACTERISTICS: Characteristic[] = [
+  'int',
+  'per',
+  'str',
+  'sta',
+  'pre',
+  'com',
+  'dex',
+  'qik',
+];
+
+export type AbilityCategory = 'general' | 'academic' | 'arcane' | 'martial' | 'supernatural';
+
+export interface Ability {
+  id: string;
+  category: AbilityCategory;
+}
+
+// One row of the Ability XP advancement table ("ABILITY To Buy" column).
+export interface AbilityXpRow {
+  score: number;
+  total_xp: number;
+}
+
+export interface CharacteristicCost {
+  score: number;
+  cost: number;
+}
+
+export interface CharacteristicRules {
+  start_points: number;
+  costs: CharacteristicCost[];
+}
+
 // `Ruleset` serializes its maps as JSON objects keyed by id.
 export interface Ruleset {
   id: string;
   version: string;
   point_items: Record<string, PointItem>;
   type_profiles: Record<string, EntityTypeProfile>;
+  // Present from schema with abilities/characteristics loaded; optional so older
+  // shapes still type-check.
+  abilities?: Record<string, Ability>;
+  advancement?: AbilityXpRow[];
+  characteristic_rules?: CharacteristicRules | null;
 }
 
 export interface LocalizedRuleset {
@@ -100,12 +143,26 @@ export interface Selection {
   params?: Record<string, string>;
 }
 
+// A whole bought Ability score with an optional free-text specialty. Keyed by
+// (ability, specialty): the same parameterized ability may appear more than once.
+export interface AbilityScore {
+  ability: string;
+  score: number;
+  specialty?: string | null;
+}
+
 export interface Entity {
   schema_version: number;
   ruleset: RulesetRef;
   entity_kind: EntityKind;
   type_id: string;
   selections: Selection[];
+  // Chosen Characteristic scores (point-buy). Omitted when empty.
+  characteristics?: Record<Characteristic, number>;
+  // Whole bought Ability scores. Omitted when empty.
+  ability_scores?: AbilityScore[];
+  // Banked XP not yet committed to an ability. Omitted when zero.
+  unspent_xp?: number;
 }
 
 export interface ValidationIssue {

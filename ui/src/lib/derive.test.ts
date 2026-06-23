@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { balance, displayName, groupByCategory } from './derive';
-import type { Entity, LocalizedRuleset, PointItem } from './types';
+import {
+  abilityXpSpent,
+  balance,
+  characteristicPointsUsed,
+  displayName,
+  groupAbilitiesByCategory,
+  groupByCategory,
+} from './derive';
+import type { Ability, CharacteristicRules, Entity, LocalizedRuleset, PointItem } from './types';
 
 // --- Fixtures ---------------------------------------------------------------
 
@@ -190,5 +197,94 @@ describe('groupByCategory', () => {
 
     const flaws = groupByCategory(ruleset, ['flaw', 'hook']);
     expect(flaws.flatMap((g) => g.items.map((i) => i.id))).toEqual(['flaw.c', 'hook.d']);
+  });
+});
+
+// --- characteristicPointsUsed() ---------------------------------------------
+
+describe('characteristicPointsUsed', () => {
+  const rules: CharacteristicRules = {
+    start_points: 7,
+    costs: [
+      { score: 3, cost: 6 },
+      { score: 2, cost: 3 },
+      { score: 1, cost: 1 },
+      { score: 0, cost: 0 },
+      { score: -1, cost: -1 },
+      { score: -2, cost: -3 },
+      { score: -3, cost: -6 },
+    ],
+  };
+
+  it('nets spends against gains', () => {
+    // Int +3 (6) + Per +1 (1) + Pre -3 (-6) + Com -1 (-1) + Qik +2 (3) + Str +2 (3) + Dex +1 (1) = 7
+    expect(
+      characteristicPointsUsed(rules, {
+        int: 3,
+        per: 1,
+        pre: -3,
+        com: -1,
+        qik: 2,
+        str: 2,
+        dex: 1,
+      }),
+    ).toBe(7);
+  });
+
+  it('ignores out-of-range scores (contributes 0)', () => {
+    expect(characteristicPointsUsed(rules, { str: 4 })).toBe(0);
+  });
+
+  it('returns 0 without rules or scores', () => {
+    expect(characteristicPointsUsed(undefined, { int: 3 })).toBe(0);
+    expect(characteristicPointsUsed(rules, undefined)).toBe(0);
+  });
+});
+
+// --- abilityXpSpent() -------------------------------------------------------
+
+describe('abilityXpSpent', () => {
+  const advancement = [
+    { score: 1, total_xp: 5 },
+    { score: 2, total_xp: 15 },
+    { score: 3, total_xp: 30 },
+  ];
+
+  it('sums total XP per whole bought score', () => {
+    expect(abilityXpSpent(advancement, [{ score: 3 }, { score: 2 }])).toBe(45);
+  });
+
+  it('treats score 0 as no XP and skips unknown scores', () => {
+    expect(abilityXpSpent(advancement, [{ score: 0 }, { score: 9 }])).toBe(0);
+  });
+});
+
+// --- groupAbilitiesByCategory() ---------------------------------------------
+
+describe('groupAbilitiesByCategory', () => {
+  function withAbilities(abilities: Ability[]): LocalizedRuleset {
+    const map: Record<string, Ability> = {};
+    for (const a of abilities) map[a.id] = a;
+    return {
+      ruleset: { id: 't', version: '1', point_items: {}, type_profiles: {}, abilities: map },
+      i18n: {},
+    };
+  }
+
+  it('groups by category in book order, sorting each group by id', () => {
+    const groups = groupAbilitiesByCategory(
+      withAbilities([
+        { id: 'ability.magic_theory', category: 'arcane' },
+        { id: 'ability.swim', category: 'general' },
+        { id: 'ability.awareness', category: 'general' },
+        { id: 'ability.second_sight', category: 'supernatural' },
+      ]),
+    );
+    expect(groups.map((g) => g.category)).toEqual(['general', 'arcane', 'supernatural']);
+    expect(groups[0].abilities.map((a) => a.id)).toEqual(['ability.awareness', 'ability.swim']);
+  });
+
+  it('is empty when the ruleset has no abilities', () => {
+    expect(groupAbilitiesByCategory(withAbilities([]))).toEqual([]);
   });
 });
