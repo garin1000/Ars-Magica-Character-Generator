@@ -28,11 +28,14 @@ body {
   color: var(--ink);
 }
 
-/* Fill the whole window: header at its natural height, layout takes the rest. */
+/* Fill the whole window exactly: header at its natural height, layout takes the
+   rest. Bounding to the viewport (not min-height) lets the scrollable regions
+   scroll internally instead of growing the page. */
 #app {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .app-header {
@@ -110,10 +113,13 @@ button:disabled {
 .layout {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr));
+  grid-auto-rows: minmax(0, 1fr);
   gap: 1rem;
   padding: 1rem;
   flex: 1;
-  /* Stretch (default) so source and selected are equal height. */
+  min-height: 0;
+  /* Stretch (default) so source and selected are equal height; min-height:0 +
+     1fr rows keep each region bounded so its content scrolls in place. */
 }
 
 /* Two top-level regions: Available (source) and Selected. */
@@ -122,6 +128,7 @@ button:disabled {
   flex-direction: column;
   gap: 0.5rem;
   min-width: 0;
+  min-height: 0;
 }
 
 .region-title {
@@ -146,9 +153,25 @@ button:disabled {
   flex: 1;
 }
 
-/* Subtle gold frame around the selected V/F only — not the check output. */
+/* The available lists are the full catalogue: each picker scrolls inside its
+   own column so the page never grows past the viewport. */
+.region-source .region-columns {
+  min-height: 0;
+  align-items: stretch;
+}
+
+.region-source .panel {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Subtle gold frame around the selected V/F only — not the check output. The
+   frame scrolls internally so a long selection never pushes the docked
+   validation summary below it. */
 .selected-frame {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--accent);
