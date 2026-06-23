@@ -134,7 +134,11 @@ not in language-neutral `core/`.
   slug-style IDs (`virtue.puissant_ability`).
 - **Strict separation of data kinds.** Mechanics files: zero translatable strings.
   UI strings: only in Fluent `.ftl`. Rules text: only in `rules/i18n/<lang>/`.
-  No user-facing string hardcoded in Rust or Svelte source.
+  No user-facing string hardcoded in Rust or Svelte source. A raw ID or enum
+  value (category, magnitude, kind, …) must **never** be rendered directly as a
+  user-facing label — always map it through a Fluent key
+  (`category-<id>`, `magnitude-<id>`). Rendering the slug itself is the same
+  violation as hardcoding a string.
 
 ## Engineering conventions
 

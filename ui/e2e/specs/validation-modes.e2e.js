@@ -14,8 +14,15 @@ const FORBIDDEN = '[data-testid="add-flaw.blatant_gift"]';
 const MODE_SELECT = '[data-testid="mode-select"]';
 
 async function severities() {
+  // Index-based loop: in webdriverio v9 the awaited `$$` result's `.map` does
+  // not yield a plain iterable, so `Promise.all(items.map(...))` throws. Element
+  // indexing (`items[i]`) and `.length` are stable, so read each in turn.
   const items = await $$('[data-testid="issue-list"] li');
-  return Promise.all(items.map((el) => el.getAttribute('data-severity')));
+  const result = [];
+  for (let i = 0; i < items.length; i++) {
+    result.push(await items[i].getAttribute('data-severity'));
+  }
+  return result;
 }
 
 describe('validation modes', () => {

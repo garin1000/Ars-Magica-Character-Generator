@@ -19,6 +19,10 @@
                 ? displayName(store.ruleset, selection.ref, selection.params)
                 : selection.ref}
             </span>
+            {#if item}
+              <span class="badge type">{store.t(`category-${item.category}`)}</span>
+              <span class="badge">{store.t(`magnitude-${item.magnitude}`)}</span>
+            {/if}
             <button
               type="button"
               onclick={() => store.removeSelection(selection.ref)}

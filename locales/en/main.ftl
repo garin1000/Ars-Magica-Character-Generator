@@ -11,9 +11,21 @@ mode-enforced = Enforced
 mode-advisory = Advisory
 mode-silent = Silent
 
-items-title = Available Virtues & Flaws
+items-virtues-title = Virtues
+items-flaws-title = Flaws
 selections-title = Selections
 validation-title = Validation
+
+# Virtue/Flaw category (type) labels, keyed by the engine's category id.
+category-general = General
+category-hermetic = Hermetic
+category-social_status = Social Status
+category-special = Special
+
+# Magnitude (level) labels, keyed by the engine's magnitude value.
+magnitude-free = Free
+magnitude-minor = Minor
+magnitude-major = Major
 
 balance-virtues = Virtues: { $used } / { $budget }
 balance-flaws = Flaws: { $used } / { $budget }

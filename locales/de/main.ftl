@@ -11,9 +11,21 @@ mode-enforced = Erzwungen
 mode-advisory = Hinweise
 mode-silent = Aus
 
-items-title = Verfügbare Tugenden & Fehler
+items-virtues-title = Tugenden
+items-flaws-title = Fehler
 selections-title = Auswahl
 validation-title = Prüfung
+
+# Kategorie- (Typ-)Bezeichnungen für Tugenden/Fehler, je Kategorie-ID der Engine.
+category-general = Allgemein
+category-hermetic = Hermetisch
+category-social_status = Sozialer Status
+category-special = Spezial
+
+# Stufenbezeichnungen (Magnitude), je Magnitude-Wert der Engine.
+magnitude-free = Frei
+magnitude-minor = Klein
+magnitude-major = Groß
 
 balance-virtues = Tugenden: { $used } / { $budget }
 balance-flaws = Fehler: { $used } / { $budget }
