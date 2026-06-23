@@ -63,6 +63,43 @@ Ars Magica 5e - Realms of Power - The Divine (Revised).md
 Ars Magica 5e - Realms of Power - The Infernal.md
 ```
 
+German sources (`rules/source/de/`) are the **source of truth for German
+translations** — both the full rulebook text and the term mappings used to
+fill `rules/i18n/de/`. The German rulebook file set does **not** match English
+1:1:
+
+```
+Ars Magica Definitive Edition Basisregeln.md            # ↔ Core Rules
+Ars Magica 5e - Häuser des Hermes - Mysterienkulte.md   # ↔ Houses of Hermes - Mystery Cults
+Ars Magica 5e - Häuser des Hermes - Societates.md       # ↔ Houses of Hermes - Societates
+Ars Magica 5e - Häuser des Hermes - Wahre Linien.md     # ↔ Houses of Hermes - True Lineages
+Ars Magica 5e - Magie - Heckenzauber (Überarbeitet).md  # ↔ Magic - Hedge Magic (Revised)
+Ars Magica 5e - Sphären der Macht - Magie.md            # ↔ Realms of Power - Magic
+Ars Magica 5e - Wächter des Waldes - Das Rhein-Tribunal.md  # Rhine Tribunal — no English source in repo
+```
+
+Not yet available in German: Realms of Power — Faerie, The Divine, The
+Infernal. Conversely, the Rhine Tribunal book has no English counterpart here.
+Because English is the source of truth for IDs, German-only books cannot
+introduce new IDs; they only supply i18n text against existing English-derived
+IDs (or wait until the English source is added).
+
+### German translation tables
+
+`rules/source/de/translation-tables/` holds 18 thematic, hand-curated **EN↔DE
+glossary tables** (Markdown tables: `Englisch (EN) | Deutsch (DE) | Anmerkung`),
+distilled from three master tables (main glossary of 22 sections, 30 additional
+terms, 362 spell names). These are the **canonical EN→DE terminology mapping**:
+when generating `rules/i18n/de/` text, the German label for any term whose
+English form appears in a table MUST match the table's `Deutsch (DE)` value.
+`README.md` indexes the tables and records resolved naming conflicts;
+`uebersetzungsregeln.md` gives the prose/formatting rules (natural German
+syntax, `n/a`→`n/v`, Latin terms kept untranslated, etc.). Key conventions:
+Latin terms tagged `(Lat.)` stay untranslated; the type-label `Tainted` →
+`Befleckt` (but the flaw name `Depraved` → `Verdorben`); supernatural abilities
+are marked `*`. The `Anmerkung` column carries gender/number and disambiguation
+notes.
+
 **Provenance is per-language.** Each item's `source` field (`SourceRef`:
 `{ file, lines: [start, end] }`) records the file basename plus an inclusive
 line range. The `source` in `rules/core/` always points at the **English**
