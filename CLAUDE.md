@@ -159,6 +159,8 @@ not in language-neutral `core/`.
 - **Saves store choices, not resolved values.** Record ruleset `id` + `version`.
   Schema-versioned (`schema_version` field).
 - **YAGNI / KISS.** Build what is needed now, nothing speculative.
+- **Committing on `main` is fine.** This repo's workflow commits directly to
+  `main`; do not branch first or open a PR unless explicitly asked.
 
 ## Rules provenance
 
