@@ -35,8 +35,13 @@ loading = Wird geladen…
 # je Code stabil und werden von der UI unverändert weitergereicht.
 issue-over_budget_virtues = Vorzugspunkte ({ $points }) überschreiten das Budget ({ $budget }).
 issue-over_budget_flaws = Schwächenpunkte ({ $points }) überschreiten das Budget ({ $budget }).
+issue-unbalanced_virtues = Vorzugspunkte ({ $virtue_points }) übersteigen die Schwächenpunkte ({ $flaw_points }); Vorzüge müssen durch Schwächen finanziert werden.
 issue-too_many_major_virtues = Zu viele große Vorzüge ({ $count } von max. { $max }).
 issue-too_many_major_flaws = Zu viele große Schwächen ({ $count } von max. { $max }).
+issue-too_many_minor_flaws = Zu viele kleine Schwächen ({ $count } von max. { $max }).
+issue-too_many_major_personality_flaws = Zu viele große Persönlichkeitsschwächen ({ $count } von max. { $max }).
+issue-too_many_personality_flaws = Mehr Persönlichkeitsschwächen als empfohlen ({ $count } von { $max }).
+issue-too_many_story_flaws = Mehr Handlungsschwächen als empfohlen ({ $count } von { $max }).
 issue-prereq_not_met = Voraussetzung für { $item } nicht erfüllt.
 issue-prereq_unevaluated = Voraussetzung für { $item } konnte noch nicht geprüft werden.
 issue-incompatible = { $item } ist mit { $other } unvereinbar.

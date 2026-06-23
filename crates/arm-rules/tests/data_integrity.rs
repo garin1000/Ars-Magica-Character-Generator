@@ -124,16 +124,24 @@ fn grog_type_restricts_major_virtues() {
         },
         entity_kind: EntityKind::Character,
         type_id: Id::new("grog"),
-        selections: vec![Selection {
-            item_ref: Id::new("virtue.keen_vision"),
-            params: BTreeMap::new(),
-        }],
+        // One minor virtue funded by one minor flaw, so the points balance and
+        // the test isolates the Major-virtue restriction.
+        selections: vec![
+            Selection {
+                item_ref: Id::new("virtue.keen_vision"),
+                params: BTreeMap::new(),
+            },
+            Selection {
+                item_ref: Id::new("flaw.poor_student"),
+                params: BTreeMap::new(),
+            },
+        ],
     };
 
     let result = validate(&entity, &rs);
     assert!(
         result.is_valid(),
-        "grog with one minor virtue should be valid: {:?}",
+        "grog with one balanced minor virtue should be valid: {:?}",
         result.issues
     );
 }

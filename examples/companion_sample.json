@@ -10,9 +10,6 @@
       "ref": "flaw.poor_student"
     },
     {
-      "ref": "virtue.keen_vision"
-    },
-    {
       "ref": "virtue.puissant_ability",
       "params": {
         "ability": "ability.awareness"
