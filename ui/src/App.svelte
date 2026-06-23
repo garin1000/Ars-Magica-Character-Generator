@@ -8,6 +8,7 @@
   import BalanceBar from './lib/components/BalanceBar.svelte';
   import ValidationPanel from './lib/components/ValidationPanel.svelte';
   import SaveLoadBar from './lib/components/SaveLoadBar.svelte';
+  import logoUrl from './lib/assets/logo.png';
 
   onMount(() => {
     void store.init();
@@ -20,7 +21,10 @@
 </script>
 
 <header class="app-header">
-  <h1>{store.t('app-title')}</h1>
+  <div class="brand">
+    <img class="app-logo" src={logoUrl} alt={store.t('app-logo-alt')} />
+    <h1>{store.t('app-title')}</h1>
+  </div>
   <div class="controls">
     <LanguageSelector />
     <ModeToggle />

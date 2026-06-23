@@ -3,6 +3,7 @@
 # hier — sie kommen über den Befehl load_ruleset aus rules/i18n/<lang>/.
 
 app-title = Ars-Magica-Charaktergenerator
+app-logo-alt = Logo „Ars Magica Open License“
 
 language-label = Sprache
 mode-label = Prüfung
