@@ -1,5 +1,5 @@
 # Oberflächentexte für den Ars-Magica-Charaktergenerator.
-# Regeltexte (Namen und Zusammenfassungen von Vorzügen/Schwächen) stehen NICHT
+# Regeltexte (Namen und Zusammenfassungen von Tugenden/Fehlern) stehen NICHT
 # hier — sie kommen über den Befehl load_ruleset aus rules/i18n/<lang>/.
 
 app-title = Ars-Magica-Charaktergenerator
@@ -11,12 +11,12 @@ mode-enforced = Erzwungen
 mode-advisory = Hinweise
 mode-silent = Aus
 
-items-title = Verfügbare Vorzüge & Schwächen
+items-title = Verfügbare Tugenden & Fehler
 selections-title = Auswahl
 validation-title = Prüfung
 
-balance-virtues = Vorzüge: { $used } / { $budget }
-balance-flaws = Schwächen: { $used } / { $budget }
+balance-virtues = Tugenden: { $used } / { $budget }
+balance-flaws = Fehler: { $used } / { $budget }
 
 action-add = Hinzufügen
 action-remove = Entfernen
@@ -26,22 +26,22 @@ action-load = Laden
 param-prompt = { $param } wählen
 param-placeholder = ID eingeben
 
-empty-selections = Noch keine Vorzüge oder Schwächen ausgewählt.
+empty-selections = Noch keine Tugenden oder Fehler ausgewählt.
 no-issues = Keine Probleme.
 loading = Wird geladen…
 
 # Ein Schlüssel je Prüfcode der Engine. Jede Nachricht interpoliert die `args`
 # der Engine (siehe crates/arm-rules/src/validation.rs); die Argumentnamen sind
 # je Code stabil und werden von der UI unverändert weitergereicht.
-issue-over_budget_virtues = Vorzugspunkte ({ $points }) überschreiten das Budget ({ $budget }).
-issue-over_budget_flaws = Schwächenpunkte ({ $points }) überschreiten das Budget ({ $budget }).
-issue-unbalanced_virtues = Vorzugspunkte ({ $virtue_points }) übersteigen die Schwächenpunkte ({ $flaw_points }); Vorzüge müssen durch Schwächen finanziert werden.
-issue-too_many_major_virtues = Zu viele große Vorzüge ({ $count } von max. { $max }).
-issue-too_many_major_flaws = Zu viele große Schwächen ({ $count } von max. { $max }).
-issue-too_many_minor_flaws = Zu viele kleine Schwächen ({ $count } von max. { $max }).
-issue-too_many_major_personality_flaws = Zu viele große Persönlichkeitsschwächen ({ $count } von max. { $max }).
-issue-too_many_personality_flaws = Mehr Persönlichkeitsschwächen als empfohlen ({ $count } von { $max }).
-issue-too_many_story_flaws = Mehr Handlungsschwächen als empfohlen ({ $count } von { $max }).
+issue-over_budget_virtues = Tugendpunkte ({ $points }) überschreiten das Budget ({ $budget }).
+issue-over_budget_flaws = Fehlerpunkte ({ $points }) überschreiten das Budget ({ $budget }).
+issue-unbalanced_virtues = Tugendpunkte ({ $virtue_points }) übersteigen die Fehlerpunkte ({ $flaw_points }); Tugenden müssen durch Fehler finanziert werden.
+issue-too_many_major_virtues = Zu viele große Tugenden ({ $count } von max. { $max }).
+issue-too_many_major_flaws = Zu viele große Fehler ({ $count } von max. { $max }).
+issue-too_many_minor_flaws = Zu viele kleine Fehler ({ $count } von max. { $max }).
+issue-too_many_major_personality_flaws = Zu viele große Persönlichkeitsfehler ({ $count } von max. { $max }).
+issue-too_many_personality_flaws = Mehr Persönlichkeitsfehler als empfohlen ({ $count } von { $max }).
+issue-too_many_story_flaws = Mehr Geschichte-Fehler als empfohlen ({ $count } von { $max }).
 issue-prereq_not_met = Voraussetzung für { $item } nicht erfüllt.
 issue-prereq_unevaluated = Voraussetzung für { $item } konnte noch nicht geprüft werden.
 issue-incompatible = { $item } ist mit { $other } unvereinbar.
