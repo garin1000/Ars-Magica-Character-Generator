@@ -1,29 +1,77 @@
 use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ruleset::Ruleset;
-use crate::types::{Entity, Id, ItemKind, Magnitude, Prereq, ValidationMode};
+use crate::types::{
+    Entity, EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, Prereq, ValidationMode,
+};
 
+/// Whether a validation issue blocks (`Error`) or merely advises (`Warning`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum IssueSeverity {
+    /// A rule violation that makes the entity illegal.
     Error,
+    /// A non-blocking advisory (e.g. a prerequisite that cannot be evaluated yet).
     Warning,
 }
 
+/// A single validation finding.
+///
+/// Carries NO user-facing prose: `code` is a stable machine key (also the
+/// Fluent message id the UI localizes), and `args` carries the interpolation
+/// values (offending ids, counts, budgets). The UI renders `code` + `args`
+/// against its `.ftl` catalogue.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ValidationIssue {
+    /// Error or warning.
     pub severity: IssueSeverity,
+    /// Stable machine key / Fluent message id (e.g. `over_budget_virtues`).
     pub code: String,
-    pub message: String,
+    /// Interpolation values for the localized message, keyed by argument name.
+    #[serde(default)]
+    pub args: BTreeMap<String, String>,
+    /// The item id this issue is about, when applicable.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub context: Option<Id>,
 }
 
+impl ValidationIssue {
+    /// Builds an error-severity issue.
+    fn error(code: &str, args: BTreeMap<String, String>, context: Option<Id>) -> Self {
+        Self {
+            severity: IssueSeverity::Error,
+            code: code.to_string(),
+            args,
+            context,
+        }
+    }
+
+    /// Builds a warning-severity issue.
+    fn warning(code: &str, args: BTreeMap<String, String>, context: Option<Id>) -> Self {
+        Self {
+            severity: IssueSeverity::Warning,
+            code: code.to_string(),
+            args,
+            context,
+        }
+    }
+}
+
+/// Convenience: build an `args` map from `(name, Display value)` pairs.
+fn args<const N: usize>(pairs: [(&str, String); N]) -> BTreeMap<String, String> {
+    pairs.into_iter().map(|(k, v)| (k.to_string(), v)).collect()
+}
+
+/// The outcome of validating an entity: a flat list of issues.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ValidationResult {
+    /// All findings, errors and warnings intermixed in detection order.
     pub issues: Vec<ValidationIssue>,
 }
 
 impl ValidationResult {
+    /// Returns `true` if there are no error-severity issues.
     pub fn is_valid(&self) -> bool {
         !self
             .issues
@@ -31,6 +79,7 @@ impl ValidationResult {
             .any(|i| i.severity == IssueSeverity::Error)
     }
 
+    /// Returns all issues with [`IssueSeverity::Error`].
     pub fn errors(&self) -> Vec<&ValidationIssue> {
         self.issues
             .iter()
@@ -46,6 +95,8 @@ impl ValidationResult {
             .collect()
     }
 
+    /// Applies a [`ValidationMode`]: `Enforced` keeps issues as-is, `Advisory`
+    /// downgrades every issue to a warning, `Silent` clears all issues.
     pub fn apply_mode(self, mode: ValidationMode) -> Self {
         match mode {
             ValidationMode::Enforced => self,
@@ -65,42 +116,44 @@ impl ValidationResult {
 }
 
 /// Validates an Entity against a Ruleset, checking balance, caps, prerequisites,
-/// incompatibilities, categories, traits, and gift policy.
+/// incompatibilities, categories, traits, parameters, and gift policy.
 pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     let mut issues = Vec::new();
 
     let type_profile = ruleset.type_profiles.get(&entity.type_id);
 
     if type_profile.is_none() {
-        issues.push(ValidationIssue {
-            severity: IssueSeverity::Error,
-            code: "unknown_type".into(),
-            message: format!("unknown type_id: '{}'", entity.type_id),
-            context: None,
-        });
+        issues.push(ValidationIssue::error(
+            "unknown_type",
+            args([("type_id", entity.type_id.to_string())]),
+            None,
+        ));
     }
+
+    // Computed once and shared by membership-test sub-validators.
+    let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
 
     for selection in &entity.selections {
         if !ruleset.point_items.contains_key(&selection.item_ref) {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Error,
-                code: "unknown_ref".into(),
-                message: format!("unknown item reference: '{}'", selection.item_ref),
-                context: Some(selection.item_ref.clone()),
-            });
+            issues.push(ValidationIssue::error(
+                "unknown_ref",
+                args([("item", selection.item_ref.to_string())]),
+                Some(selection.item_ref.clone()),
+            ));
         }
     }
 
     validate_entity_kind_applicability(entity, ruleset, &mut issues);
-    validate_duplicate_selections(entity, ruleset, &mut issues);
+    validate_duplicate_selections(entity, &mut issues);
     validate_balance(entity, ruleset, type_profile, &mut issues);
     validate_caps(entity, ruleset, type_profile, &mut issues);
-    validate_prerequisites(entity, ruleset, &mut issues);
-    validate_incompatibilities(entity, ruleset, &mut issues);
+    validate_prerequisites(entity, ruleset, type_profile, &selected_ids, &mut issues);
+    validate_incompatibilities(entity, ruleset, &selected_ids, &mut issues);
     validate_permitted_categories(entity, ruleset, type_profile, &mut issues);
     validate_forbidden_categories(entity, ruleset, type_profile, &mut issues);
-    validate_required_traits(entity, type_profile, &mut issues);
-    validate_forbidden_traits(entity, type_profile, &mut issues);
+    validate_required_traits(type_profile, &selected_ids, &mut issues);
+    validate_forbidden_traits(type_profile, &selected_ids, &mut issues);
+    validate_parameters(entity, ruleset, &mut issues);
     validate_gift_policy(entity, ruleset, type_profile, &mut issues);
 
     ValidationResult { issues }
@@ -109,43 +162,53 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
 fn validate_balance(
     entity: &Entity,
     ruleset: &Ruleset,
-    type_profile: Option<&crate::types::EntityTypeProfile>,
+    type_profile: Option<&EntityTypeProfile>,
     issues: &mut Vec<ValidationIssue>,
 ) {
     let Some(profile) = type_profile else {
         return;
     };
 
-    let (virtue_points, flaw_points) = compute_balance(entity, ruleset);
+    let Balance {
+        virtue_points,
+        flaw_points,
+    } = compute_balance(entity, ruleset);
 
     if virtue_points > profile.budget.virtue_points as i32 {
-        issues.push(ValidationIssue {
-            severity: IssueSeverity::Error,
-            code: "over_budget_virtues".into(),
-            message: format!(
-                "virtue points ({virtue_points}) exceed budget ({})",
-                profile.budget.virtue_points
-            ),
-            context: None,
-        });
+        issues.push(ValidationIssue::error(
+            "over_budget_virtues",
+            args([
+                ("points", virtue_points.to_string()),
+                ("budget", profile.budget.virtue_points.to_string()),
+            ]),
+            None,
+        ));
     }
 
     if flaw_points > profile.budget.flaw_points as i32 {
-        issues.push(ValidationIssue {
-            severity: IssueSeverity::Error,
-            code: "over_budget_flaws".into(),
-            message: format!(
-                "flaw points ({flaw_points}) exceed budget ({})",
-                profile.budget.flaw_points
-            ),
-            context: None,
-        });
+        issues.push(ValidationIssue::error(
+            "over_budget_flaws",
+            args([
+                ("points", flaw_points.to_string()),
+                ("budget", profile.budget.flaw_points.to_string()),
+            ]),
+            None,
+        ));
     }
 }
 
+/// The accumulated virtue and flaw point totals for an entity.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Balance {
+    /// Total points spent on positive items (virtues, boons).
+    pub virtue_points: i32,
+    /// Total points granted by negative items (flaws, hooks).
+    pub flaw_points: i32,
+}
+
 /// Computes the total virtue and flaw points for an entity.
-/// Returns (virtue_points, flaw_points).
-pub fn compute_balance(entity: &Entity, ruleset: &Ruleset) -> (i32, i32) {
+/// Unknown item refs are skipped.
+pub fn compute_balance(entity: &Entity, ruleset: &Ruleset) -> Balance {
     let mut virtue_points: i32 = 0;
     let mut flaw_points: i32 = 0;
 
@@ -160,13 +223,16 @@ pub fn compute_balance(entity: &Entity, ruleset: &Ruleset) -> (i32, i32) {
         }
     }
 
-    (virtue_points, flaw_points)
+    Balance {
+        virtue_points,
+        flaw_points,
+    }
 }
 
 fn validate_caps(
     entity: &Entity,
     ruleset: &Ruleset,
-    type_profile: Option<&crate::types::EntityTypeProfile>,
+    type_profile: Option<&EntityTypeProfile>,
     issues: &mut Vec<ValidationIssue>,
 ) {
     let Some(profile) = type_profile else {
@@ -189,117 +255,163 @@ fn validate_caps(
     if let Some(max) = profile.budget.max_major_virtues {
         let count = count_major(ItemKind::Virtue);
         if count > max as usize {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Error,
-                code: "too_many_major_virtues".into(),
-                message: format!("too many Major Virtues ({count}, max {max})"),
-                context: None,
-            });
+            issues.push(ValidationIssue::error(
+                "too_many_major_virtues",
+                args([("count", count.to_string()), ("max", max.to_string())]),
+                None,
+            ));
         }
     }
 
     if let Some(max) = profile.budget.max_major_flaws {
         let count = count_major(ItemKind::Flaw);
         if count > max as usize {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Error,
-                code: "too_many_major_flaws".into(),
-                message: format!("too many Major Flaws ({count}, max {max})"),
-                context: None,
-            });
+            issues.push(ValidationIssue::error(
+                "too_many_major_flaws",
+                args([("count", count.to_string()), ("max", max.to_string())]),
+                None,
+            ));
         }
     }
 }
 
-fn validate_prerequisites(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    let selected_ids: Vec<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
+/// Tri-state outcome of evaluating a prerequisite expression.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Tri {
+    /// Definitely satisfied.
+    True,
+    /// Definitely unsatisfied.
+    False,
+    /// Cannot be evaluated with the data currently on the entity.
+    Unknown,
+}
+
+fn validate_prerequisites(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    type_profile: Option<&EntityTypeProfile>,
+    selected_ids: &BTreeSet<&Id>,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let is_magus = type_profile.map(|p| p.is_magus);
 
     for selection in &entity.selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
 
-        if let Some(ref prereq) = item.prerequisites
-            && !evaluate_prereq(prereq, &selected_ids, &selection.item_ref, issues)
-        {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Error,
-                code: "prereq_not_met".into(),
-                message: format!("'{}' has unmet prerequisites", selection.item_ref),
-                context: Some(selection.item_ref.clone()),
-            });
+        if let Some(ref prereq) = item.prerequisites {
+            let (outcome, depended_on_unknown) = evaluate_prereq(prereq, selected_ids, is_magus);
+            match outcome {
+                Tri::False => {
+                    issues.push(ValidationIssue::error(
+                        "prereq_not_met",
+                        args([("item", selection.item_ref.to_string())]),
+                        Some(selection.item_ref.clone()),
+                    ));
+                }
+                Tri::Unknown if depended_on_unknown => {
+                    issues.push(ValidationIssue::warning(
+                        "prereq_unevaluated",
+                        args([("item", selection.item_ref.to_string())]),
+                        Some(selection.item_ref.clone()),
+                    ));
+                }
+                _ => {}
+            }
         }
     }
 }
 
+/// Evaluates a prerequisite to a tri-state. Returns the outcome plus whether an
+/// unevaluable leaf actually influenced the result (so a warning is only worth
+/// emitting when the answer genuinely hinges on missing data).
 fn evaluate_prereq(
     prereq: &Prereq,
-    selected_ids: &[&Id],
-    context_id: &Id,
-    issues: &mut Vec<ValidationIssue>,
-) -> bool {
+    selected_ids: &BTreeSet<&Id>,
+    is_magus: Option<bool>,
+) -> (Tri, bool) {
     match prereq {
-        Prereq::All(children) => children
-            .iter()
-            .all(|c| evaluate_prereq(c, selected_ids, context_id, issues)),
-        Prereq::Any(children) => children
-            .iter()
-            .any(|c| evaluate_prereq(c, selected_ids, context_id, issues)),
-        Prereq::None(children) => !children
-            .iter()
-            .any(|c| evaluate_prereq(c, selected_ids, context_id, issues)),
-        Prereq::Has(id) => selected_ids.contains(&id),
-        // TODO: Implement when Entity carries house metadata.
-        Prereq::House(house_id) => {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Warning,
-                code: "prereq_unevaluated".into(),
-                message: format!(
-                    "'{}': House prerequisite '{house_id}' cannot be evaluated yet",
-                    context_id
-                ),
-                context: Some(context_id.clone()),
-            });
-            true
+        Prereq::All(children) => {
+            // AND: any False -> False; else any Unknown -> Unknown; else True.
+            let mut depended = false;
+            let mut saw_unknown = false;
+            for child in children {
+                let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus);
+                match outcome {
+                    Tri::False => return (Tri::False, dep),
+                    Tri::Unknown => {
+                        saw_unknown = true;
+                        depended |= dep;
+                    }
+                    Tri::True => {}
+                }
+            }
+            if saw_unknown {
+                (Tri::Unknown, depended)
+            } else {
+                (Tri::True, false)
+            }
         }
-        // TODO: Implement when Entity carries ability/art scores.
-        Prereq::AbilityMin { ability, score } => {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Warning,
-                code: "prereq_unevaluated".into(),
-                message: format!(
-                    "'{}': AbilityMin prerequisite '{ability}' >= {score} cannot be evaluated yet",
-                    context_id
-                ),
-                context: Some(context_id.clone()),
-            });
-            true
+        Prereq::Any(children) => {
+            // OR: any True -> True; else any Unknown -> Unknown; else False.
+            let mut depended = false;
+            let mut saw_unknown = false;
+            for child in children {
+                let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus);
+                match outcome {
+                    Tri::True => return (Tri::True, false),
+                    Tri::Unknown => {
+                        saw_unknown = true;
+                        depended |= dep;
+                    }
+                    Tri::False => {}
+                }
+            }
+            if saw_unknown {
+                (Tri::Unknown, depended)
+            } else {
+                (Tri::False, false)
+            }
         }
-        Prereq::ArtMin { art, score } => {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Warning,
-                code: "prereq_unevaluated".into(),
-                message: format!(
-                    "'{}': ArtMin prerequisite '{art}' >= {score} cannot be evaluated yet",
-                    context_id
-                ),
-                context: Some(context_id.clone()),
-            });
-            true
+        Prereq::None(children) => {
+            // NOR: any True -> False; else any Unknown -> Unknown; else True.
+            let mut depended = false;
+            let mut saw_unknown = false;
+            for child in children {
+                let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus);
+                match outcome {
+                    Tri::True => return (Tri::False, false),
+                    Tri::Unknown => {
+                        saw_unknown = true;
+                        depended |= dep;
+                    }
+                    Tri::False => {}
+                }
+            }
+            if saw_unknown {
+                (Tri::Unknown, depended)
+            } else {
+                (Tri::True, false)
+            }
         }
-        // TODO: Implement by checking entity metadata (e.g. type_id or
-        // selected social status) once the magus detection strategy is decided.
-        Prereq::IsMagus => {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Warning,
-                code: "prereq_unevaluated".into(),
-                message: format!(
-                    "'{}': IsMagus prerequisite cannot be evaluated yet",
-                    context_id
-                ),
-                context: Some(context_id.clone()),
-            });
-            true
+        Prereq::Has(id) => {
+            if selected_ids.contains(id) {
+                (Tri::True, false)
+            } else {
+                (Tri::False, false)
+            }
+        }
+        // IsMagus is enforced against the profile's explicit `is_magus` flag (a
+        // Hermetic-Magus-status type), independent of gift_policy.
+        Prereq::IsMagus => match is_magus {
+            Some(true) => (Tri::True, false),
+            Some(false) => (Tri::False, false),
+            None => (Tri::Unknown, true),
+        },
+        // No house/ability/art metadata on the entity yet: genuinely unknown.
+        Prereq::House(_) | Prereq::AbilityMin { .. } | Prereq::ArtMin { .. } => {
+            (Tri::Unknown, true)
         }
     }
 }
@@ -307,10 +419,10 @@ fn evaluate_prereq(
 fn validate_incompatibilities(
     entity: &Entity,
     ruleset: &Ruleset,
+    selected_ids: &BTreeSet<&Id>,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    let selected_ids: Vec<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
-    let mut reported: std::collections::BTreeSet<(&Id, &Id)> = std::collections::BTreeSet::new();
+    let mut reported: BTreeSet<(&Id, &Id)> = BTreeSet::new();
 
     for selection in &entity.selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
@@ -318,23 +430,23 @@ fn validate_incompatibilities(
         };
 
         for incompat_id in &item.incompatible_with {
-            if selected_ids.contains(&incompat_id) {
-                // Only report when item_ref < incompat_id to avoid duplicate reports.
+            if selected_ids.contains(incompat_id) {
+                // Normalize the pair order so a mutual incompatibility is
+                // reported exactly once.
                 let pair = if selection.item_ref < *incompat_id {
                     (&selection.item_ref, incompat_id)
                 } else {
                     (incompat_id, &selection.item_ref)
                 };
                 if reported.insert(pair) {
-                    issues.push(ValidationIssue {
-                        severity: IssueSeverity::Error,
-                        code: "incompatible".into(),
-                        message: format!(
-                            "'{}' is incompatible with '{incompat_id}'",
-                            selection.item_ref
-                        ),
-                        context: Some(selection.item_ref.clone()),
-                    });
+                    issues.push(ValidationIssue::error(
+                        "incompatible",
+                        args([
+                            ("item", selection.item_ref.to_string()),
+                            ("other", incompat_id.to_string()),
+                        ]),
+                        Some(selection.item_ref.clone()),
+                    ));
                 }
             }
         }
@@ -344,13 +456,14 @@ fn validate_incompatibilities(
 fn validate_permitted_categories(
     entity: &Entity,
     ruleset: &Ruleset,
-    type_profile: Option<&crate::types::EntityTypeProfile>,
+    type_profile: Option<&EntityTypeProfile>,
     issues: &mut Vec<ValidationIssue>,
 ) {
     let Some(profile) = type_profile else {
         return;
     };
 
+    // An empty permitted list means "no category restriction".
     if profile.permitted_categories.is_empty() {
         return;
     }
@@ -361,15 +474,14 @@ fn validate_permitted_categories(
         };
 
         if !profile.permitted_categories.contains(&item.category) {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Error,
-                code: "category_not_permitted".into(),
-                message: format!(
-                    "'{}' belongs to category '{}' which is not permitted",
-                    selection.item_ref, item.category
-                ),
-                context: Some(selection.item_ref.clone()),
-            });
+            issues.push(ValidationIssue::error(
+                "category_not_permitted",
+                args([
+                    ("item", selection.item_ref.to_string()),
+                    ("category", item.category.clone()),
+                ]),
+                Some(selection.item_ref.clone()),
+            ));
         }
     }
 }
@@ -377,7 +489,7 @@ fn validate_permitted_categories(
 fn validate_forbidden_categories(
     entity: &Entity,
     ruleset: &Ruleset,
-    type_profile: Option<&crate::types::EntityTypeProfile>,
+    type_profile: Option<&EntityTypeProfile>,
     issues: &mut Vec<ValidationIssue>,
 ) {
     let Some(profile) = type_profile else {
@@ -394,15 +506,14 @@ fn validate_forbidden_categories(
         };
 
         if profile.forbidden_categories.contains(&item.category) {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Error,
-                code: "forbidden_category".into(),
-                message: format!(
-                    "'{}' belongs to forbidden category '{}'",
-                    selection.item_ref, item.category
-                ),
-                context: Some(selection.item_ref.clone()),
-            });
+            issues.push(ValidationIssue::error(
+                "forbidden_category",
+                args([
+                    ("item", selection.item_ref.to_string()),
+                    ("category", item.category.clone()),
+                ]),
+                Some(selection.item_ref.clone()),
+            ));
         }
     }
 }
@@ -418,28 +529,20 @@ fn validate_entity_kind_applicability(
         };
 
         if !item.entity_kinds.is_empty() && !item.entity_kinds.contains(&entity.entity_kind) {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Error,
-                code: "wrong_entity_kind".into(),
-                message: format!(
-                    "'{}' is not valid for entity kind '{:?}'",
-                    selection.item_ref, entity.entity_kind
-                ),
-                context: Some(selection.item_ref.clone()),
-            });
+            issues.push(ValidationIssue::error(
+                "wrong_entity_kind",
+                args([
+                    ("item", selection.item_ref.to_string()),
+                    ("entity_kind", entity.entity_kind.to_string()),
+                ]),
+                Some(selection.item_ref.clone()),
+            ));
         }
     }
 }
 
-fn validate_duplicate_selections(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let mut seen: std::collections::BTreeMap<
-        (&Id, &std::collections::BTreeMap<String, Id>),
-        usize,
-    > = std::collections::BTreeMap::new();
+fn validate_duplicate_selections(entity: &Entity, issues: &mut Vec<ValidationIssue>) {
+    let mut seen: BTreeMap<(&Id, &BTreeMap<String, Id>), usize> = BTreeMap::new();
 
     for selection in &entity.selections {
         let key = (&selection.item_ref, &selection.params);
@@ -450,76 +553,109 @@ fn validate_duplicate_selections(
         if *count <= 1 {
             continue;
         }
-        let is_parameterized = ruleset
-            .point_items
-            .get(item_ref)
-            .is_some_and(|item| !item.parameters.is_empty());
-        if is_parameterized {
-            // For parameterized items, duplicates with identical params are flagged.
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Error,
-                code: "duplicate_selection".into(),
-                message: format!(
-                    "'{}' selected {count} times with identical parameters",
-                    item_ref
-                ),
-                context: Some((*item_ref).clone()),
-            });
-        } else {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Error,
-                code: "duplicate_selection".into(),
-                message: format!("'{}' selected {count} times", item_ref),
-                context: Some((*item_ref).clone()),
-            });
-        }
+        // Selections are de-duplicated by (item_ref, params): two selections of
+        // the same parameterized item with DIFFERENT params are legal and do
+        // not collide here. Only identical (ref + params) pairs are flagged.
+        issues.push(ValidationIssue::error(
+            "duplicate_selection",
+            args([("item", item_ref.to_string()), ("count", count.to_string())]),
+            Some((*item_ref).clone()),
+        ));
     }
 }
 
 fn validate_required_traits(
-    entity: &Entity,
-    type_profile: Option<&crate::types::EntityTypeProfile>,
+    type_profile: Option<&EntityTypeProfile>,
+    selected_ids: &BTreeSet<&Id>,
     issues: &mut Vec<ValidationIssue>,
 ) {
     let Some(profile) = type_profile else {
         return;
     };
 
-    let selected_ids: std::collections::BTreeSet<&Id> =
-        entity.selections.iter().map(|s| &s.item_ref).collect();
-
     for required_id in &profile.required_traits {
         if !selected_ids.contains(required_id) {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Error,
-                code: "missing_required_trait".into(),
-                message: format!("required trait '{}' is not selected", required_id),
-                context: Some(required_id.clone()),
-            });
+            issues.push(ValidationIssue::error(
+                "missing_required_trait",
+                args([("item", required_id.to_string())]),
+                Some(required_id.clone()),
+            ));
         }
     }
 }
 
 fn validate_forbidden_traits(
-    entity: &Entity,
-    type_profile: Option<&crate::types::EntityTypeProfile>,
+    type_profile: Option<&EntityTypeProfile>,
+    selected_ids: &BTreeSet<&Id>,
     issues: &mut Vec<ValidationIssue>,
 ) {
     let Some(profile) = type_profile else {
         return;
     };
 
-    let selected_ids: std::collections::BTreeSet<&Id> =
-        entity.selections.iter().map(|s| &s.item_ref).collect();
-
     for forbidden_id in &profile.forbidden_traits {
         if selected_ids.contains(forbidden_id) {
-            issues.push(ValidationIssue {
-                severity: IssueSeverity::Error,
-                code: "forbidden_trait".into(),
-                message: format!("trait '{}' is forbidden for this type", forbidden_id),
-                context: Some(forbidden_id.clone()),
-            });
+            issues.push(ValidationIssue::error(
+                "forbidden_trait",
+                args([("item", forbidden_id.to_string())]),
+                Some(forbidden_id.clone()),
+            ));
+        }
+    }
+}
+
+/// Validates that each selection of a parameterized item supplies exactly the
+/// declared parameter keys (no missing, no extra). Param values are accepted
+/// as-is for `ability`/`art` domains (no registry yet); `item`-domain values
+/// are resolved against the ruleset's point items.
+fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    for selection in &entity.selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+
+        let declared: BTreeSet<&str> = item.parameters.iter().map(|p| p.key.as_str()).collect();
+        let provided: BTreeSet<&str> = selection.params.keys().map(String::as_str).collect();
+
+        for missing in declared.difference(&provided) {
+            issues.push(ValidationIssue::error(
+                "missing_param",
+                args([
+                    ("item", selection.item_ref.to_string()),
+                    ("key", missing.to_string()),
+                ]),
+                Some(selection.item_ref.clone()),
+            ));
+        }
+
+        for extra in provided.difference(&declared) {
+            issues.push(ValidationIssue::error(
+                "unexpected_param",
+                args([
+                    ("item", selection.item_ref.to_string()),
+                    ("key", extra.to_string()),
+                ]),
+                Some(selection.item_ref.clone()),
+            ));
+        }
+
+        // Resolve values for domains that have a registry.
+        for param in &item.parameters {
+            let Some(value) = selection.params.get(&param.key) else {
+                continue; // missing already reported above
+            };
+            if param.domain.resolves_against_items() && !ruleset.point_items.contains_key(value) {
+                issues.push(ValidationIssue::error(
+                    "unknown_param_value",
+                    args([
+                        ("item", selection.item_ref.to_string()),
+                        ("key", param.key.clone()),
+                        ("value", value.to_string()),
+                        ("domain", param.domain.to_string()),
+                    ]),
+                    Some(selection.item_ref.clone()),
+                ));
+            }
         }
     }
 }
@@ -527,11 +663,9 @@ fn validate_forbidden_traits(
 fn validate_gift_policy(
     entity: &Entity,
     ruleset: &Ruleset,
-    type_profile: Option<&crate::types::EntityTypeProfile>,
+    type_profile: Option<&EntityTypeProfile>,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    use crate::types::GiftPolicy;
-
     let Some(profile) = type_profile else {
         return;
     };
@@ -540,41 +674,39 @@ fn validate_gift_policy(
         return;
     };
 
-    let has_gift = match profile.gift_id {
+    let has_gift_id = match profile.gift_id {
         Some(ref gift_id) => entity.selections.iter().any(|s| s.item_ref == *gift_id),
         None => false,
     };
 
-    let has_gift_category = if profile.gift_categories.is_empty() {
-        false
-    } else {
-        entity.selections.iter().any(|s| {
+    let has_gift_category = !profile.gift_categories.is_empty()
+        && entity.selections.iter().any(|s| {
             ruleset
                 .point_items
                 .get(&s.item_ref)
                 .is_some_and(|item| profile.gift_categories.contains(&item.category))
-        })
-    };
+        });
+
+    // Symmetric: both branches use the same definition of "has the Gift".
+    let has_gift = has_gift_id || has_gift_category;
 
     match policy {
         GiftPolicy::Required => {
             if !has_gift {
-                issues.push(ValidationIssue {
-                    severity: IssueSeverity::Error,
-                    code: "gift_required".into(),
-                    message: "The Gift is required for this entity type".into(),
-                    context: None,
-                });
+                issues.push(ValidationIssue::error(
+                    "gift_required",
+                    BTreeMap::new(),
+                    None,
+                ));
             }
         }
         GiftPolicy::Forbidden => {
-            if has_gift || has_gift_category {
-                issues.push(ValidationIssue {
-                    severity: IssueSeverity::Error,
-                    code: "gift_forbidden".into(),
-                    message: "The Gift is forbidden for this entity type".into(),
-                    context: None,
-                });
+            if has_gift {
+                issues.push(ValidationIssue::error(
+                    "gift_forbidden",
+                    BTreeMap::new(),
+                    None,
+                ));
             }
         }
         GiftPolicy::Allowed => {}
@@ -686,10 +818,7 @@ mod tests {
     fn make_entity(type_id: &str, selections: Vec<Selection>) -> Entity {
         Entity {
             schema_version: 1,
-            ruleset: RulesetRef {
-                id: Id::new("arm5-core"),
-                version: "2024.1".into(),
-            },
+            ruleset: RulesetRef::new(Id::new("arm5-core"), "2024.1"),
             entity_kind: EntityKind::Character,
             type_id: Id::new(type_id),
             selections,
@@ -697,10 +826,11 @@ mod tests {
     }
 
     fn sel(item_ref: &str) -> Selection {
-        Selection {
-            item_ref: Id::new(item_ref),
-            params: BTreeMap::new(),
-        }
+        Selection::new(Id::new(item_ref))
+    }
+
+    fn codes(result: &ValidationResult) -> Vec<String> {
+        result.errors().iter().map(|i| i.code.clone()).collect()
     }
 
     #[test]
@@ -717,8 +847,6 @@ mod tests {
 
     #[test]
     fn over_budget_virtues() {
-        // Use a type profile with a small budget (1 pt) so 2 minor virtues exceed it
-        // without triggering unrelated errors.
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
@@ -733,11 +861,19 @@ mod tests {
         let entity = make_entity("small_budget", vec![sel("virtue.a"), sel("virtue.b")]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
         assert!(
-            codes.contains(&"over_budget_virtues"),
-            "should flag over budget: {codes:?}"
+            codes(&result).contains(&"over_budget_virtues".to_string()),
+            "should flag over budget: {:?}",
+            codes(&result)
         );
+        // args carry the structured values.
+        let issue = result
+            .errors()
+            .into_iter()
+            .find(|i| i.code == "over_budget_virtues")
+            .unwrap();
+        assert_eq!(issue.args.get("points"), Some(&"2".to_string()));
+        assert_eq!(issue.args.get("budget"), Some(&"1".to_string()));
     }
 
     #[test]
@@ -746,8 +882,7 @@ mod tests {
         let entity = make_entity("companion", vec![sel("virtue.gentle_gift")]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(codes.contains(&"prereq_not_met"), "codes: {codes:?}");
+        assert!(codes(&result).contains(&"prereq_not_met".to_string()));
     }
 
     #[test]
@@ -763,14 +898,10 @@ mod tests {
         );
 
         let result = validate(&entity, &rs);
-        let prereq_issues: Vec<_> = result
-            .issues
-            .iter()
-            .filter(|i| i.code == "prereq_not_met")
-            .collect();
         assert!(
-            prereq_issues.is_empty(),
-            "should have no prereq issues: {prereq_issues:?}"
+            !codes(&result).contains(&"prereq_not_met".to_string()),
+            "should have no prereq issues: {:?}",
+            result.issues
         );
     }
 
@@ -788,14 +919,36 @@ mod tests {
         );
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(codes.contains(&"incompatible"), "codes: {codes:?}");
+        assert!(codes(&result).contains(&"incompatible".to_string()));
+    }
+
+    #[test]
+    fn mutual_incompatibility_reported_once() {
+        let rs = test_ruleset();
+        let entity = make_entity(
+            "companion",
+            vec![
+                sel("virtue.the_gift"),
+                sel("virtue.hermetic_magus"),
+                sel("virtue.gentle_gift"),
+                sel("flaw.blatant_gift"),
+            ],
+        );
+
+        let result = validate(&entity, &rs);
+        let incompat_count = result
+            .errors()
+            .iter()
+            .filter(|i| i.code == "incompatible")
+            .count();
+        assert_eq!(
+            incompat_count, 1,
+            "A<->B mutual incompatibility should fire exactly once"
+        );
     }
 
     #[test]
     fn cap_exceeded_major_virtues() {
-        // Create a type profile that allows hermetic, has max_major_virtues=1,
-        // and select 2 different major virtues.
         let items = r#"[
           {"id": "virtue.major_a", "kind": "virtue", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.major_b", "kind": "virtue", "magnitude": "major", "category": "general", "entity_kinds": ["character"]}
@@ -813,11 +966,7 @@ mod tests {
         );
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            codes.contains(&"too_many_major_virtues"),
-            "codes: {codes:?}"
-        );
+        assert!(codes(&result).contains(&"too_many_major_virtues".to_string()));
     }
 
     #[test]
@@ -833,10 +982,10 @@ mod tests {
         );
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
         assert!(
-            codes.contains(&"forbidden_category"),
-            "companion can't take hermetic: {codes:?}"
+            codes(&result).contains(&"forbidden_category".to_string()),
+            "companion can't take hermetic: {:?}",
+            codes(&result)
         );
     }
 
@@ -887,9 +1036,9 @@ mod tests {
             ],
         );
 
-        let (v, f) = compute_balance(&entity, &rs);
-        assert_eq!(v, 2, "two minor virtues = 2 points");
-        assert_eq!(f, 1, "one minor flaw = 1 point");
+        let balance = compute_balance(&entity, &rs);
+        assert_eq!(balance.virtue_points, 2, "two minor virtues = 2 points");
+        assert_eq!(balance.flaw_points, 1, "one minor flaw = 1 point");
     }
 
     #[test]
@@ -898,13 +1047,30 @@ mod tests {
         let entity = make_entity("companion", vec![sel("virtue.nonexistent")]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(codes.contains(&"unknown_ref"), "codes: {codes:?}");
+        assert!(codes(&result).contains(&"unknown_ref".to_string()));
+    }
+
+    #[test]
+    fn compute_balance_skips_unknown_ref_no_panic() {
+        let rs = test_ruleset();
+        let entity = make_entity(
+            "companion",
+            vec![sel("virtue.keen_vision"), sel("virtue.does_not_exist")],
+        );
+        // Only the known minor virtue counts; unknown ref is skipped silently.
+        let balance = compute_balance(&entity, &rs);
+        assert_eq!(
+            balance,
+            Balance {
+                virtue_points: 1,
+                flaw_points: 0
+            }
+        );
     }
 
     #[test]
     fn entity_save_canonical_roundtrip() {
-        let entity = make_entity(
+        let mut entity = make_entity(
             "companion",
             vec![
                 sel("virtue.puissant_ability"),
@@ -912,22 +1078,34 @@ mod tests {
                 sel("virtue.keen_vision"),
             ],
         );
+        entity.normalize();
 
         let json1 = serde_json::to_string_pretty(&entity).unwrap();
         let roundtripped: Entity = serde_json::from_str(&json1).unwrap();
+        assert_eq!(entity, roundtripped);
 
-        // Selections are sorted during serialization, so roundtripped
-        // selections will be in sorted order.
-        let mut expected = entity.clone();
-        expected.normalize();
-        assert_eq!(expected, roundtripped);
-
-        // Re-serializing the roundtripped entity produces identical JSON.
         let json2 = serde_json::to_string_pretty(&roundtripped).unwrap();
         assert_eq!(json1, json2, "canonical serialization should be stable");
     }
 
-    // --- Finding #1: unknown_type_id ---
+    #[test]
+    fn issue_without_context_omits_field_and_roundtrips() {
+        let issue = ValidationIssue::error("over_budget_virtues", BTreeMap::new(), None);
+
+        let json = serde_json::to_string(&issue).unwrap();
+        assert!(
+            !json.contains("context"),
+            "a None context must be omitted from JSON: {json}"
+        );
+
+        let roundtripped: ValidationIssue = serde_json::from_str(&json).unwrap();
+        assert_eq!(issue, roundtripped);
+
+        // Deserialization must also accept JSON that omits `context` entirely.
+        let without_context = r#"{"severity":"error","code":"over_budget_virtues"}"#;
+        let parsed: ValidationIssue = serde_json::from_str(without_context).unwrap();
+        assert_eq!(parsed.context, None);
+    }
 
     #[test]
     fn unknown_type_id() {
@@ -935,14 +1113,17 @@ mod tests {
         let entity = make_entity("nonexistent_type", vec![]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            codes.contains(&"unknown_type"),
-            "should flag unknown type_id: {codes:?}"
+        assert!(codes(&result).contains(&"unknown_type".to_string()));
+        let issue = result
+            .errors()
+            .into_iter()
+            .find(|i| i.code == "unknown_type")
+            .unwrap();
+        assert_eq!(
+            issue.args.get("type_id"),
+            Some(&"nonexistent_type".to_string())
         );
     }
-
-    // --- Finding #2: over_budget_flaws ---
 
     #[test]
     fn over_budget_flaws() {
@@ -960,14 +1141,8 @@ mod tests {
         let entity = make_entity("small_flaw_budget", vec![sel("flaw.a"), sel("flaw.b")]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            codes.contains(&"over_budget_flaws"),
-            "should flag over budget flaws: {codes:?}"
-        );
+        assert!(codes(&result).contains(&"over_budget_flaws".to_string()));
     }
-
-    // --- Finding #3: too_many_major_flaws ---
 
     #[test]
     fn too_many_major_flaws() {
@@ -988,17 +1163,10 @@ mod tests {
         );
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            codes.contains(&"too_many_major_flaws"),
-            "should flag too many major flaws: {codes:?}"
-        );
+        assert!(codes(&result).contains(&"too_many_major_flaws".to_string()));
     }
 
-    // --- Finding #4: prereq_all ---
-
-    #[test]
-    fn prereq_all_satisfied() {
+    fn all_prereq_ruleset() -> Ruleset {
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
@@ -1011,54 +1179,31 @@ mod tests {
           "permitted_categories": ["general"],
           "creation_phases": []
         }]"#;
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        Ruleset::from_json("test", "1", items, types).unwrap()
+    }
+
+    #[test]
+    fn prereq_all_satisfied() {
+        let rs = all_prereq_ruleset();
         let entity = make_entity(
             "test_type",
             vec![sel("virtue.a"), sel("virtue.b"), sel("virtue.c")],
         );
 
         let result = validate(&entity, &rs);
-        let errors = result.errors();
-        let prereq_errors: Vec<_> = errors
-            .iter()
-            .filter(|i| i.code == "prereq_not_met")
-            .collect();
-        assert!(
-            prereq_errors.is_empty(),
-            "all prereqs met: {prereq_errors:?}"
-        );
+        assert!(!codes(&result).contains(&"prereq_not_met".to_string()));
     }
 
     #[test]
     fn prereq_all_unsatisfied() {
-        let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.c", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"all": [{"has": "virtue.a"}, {"has": "virtue.b"}]}}
-        ]"#;
-        let types = r#"[{
-          "id": "test_type",
-          "budget": { "virtue_points": 10, "flaw_points": 10 },
-          "permitted_categories": ["general"],
-          "creation_phases": []
-        }]"#;
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
-        // Only virtue.a present, missing virtue.b
+        let rs = all_prereq_ruleset();
         let entity = make_entity("test_type", vec![sel("virtue.a"), sel("virtue.c")]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            codes.contains(&"prereq_not_met"),
-            "All prereq not fully satisfied: {codes:?}"
-        );
+        assert!(codes(&result).contains(&"prereq_not_met".to_string()));
     }
 
-    // --- Finding #5: prereq_any ---
-
-    #[test]
-    fn prereq_any_satisfied() {
+    fn any_prereq_ruleset() -> Ruleset {
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
@@ -1071,52 +1216,28 @@ mod tests {
           "permitted_categories": ["general"],
           "creation_phases": []
         }]"#;
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
-        // Only virtue.a present — Any requires at least one
+        Ruleset::from_json("test", "1", items, types).unwrap()
+    }
+
+    #[test]
+    fn prereq_any_satisfied() {
+        let rs = any_prereq_ruleset();
         let entity = make_entity("test_type", vec![sel("virtue.a"), sel("virtue.c")]);
 
         let result = validate(&entity, &rs);
-        let errors = result.errors();
-        let prereq_errors: Vec<_> = errors
-            .iter()
-            .filter(|i| i.code == "prereq_not_met")
-            .collect();
-        assert!(
-            prereq_errors.is_empty(),
-            "any prereq satisfied: {prereq_errors:?}"
-        );
+        assert!(!codes(&result).contains(&"prereq_not_met".to_string()));
     }
 
     #[test]
     fn prereq_any_unsatisfied() {
-        let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.c", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"any": [{"has": "virtue.a"}, {"has": "virtue.b"}]}}
-        ]"#;
-        let types = r#"[{
-          "id": "test_type",
-          "budget": { "virtue_points": 10, "flaw_points": 10 },
-          "permitted_categories": ["general"],
-          "creation_phases": []
-        }]"#;
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
-        // Neither virtue.a nor virtue.b present
+        let rs = any_prereq_ruleset();
         let entity = make_entity("test_type", vec![sel("virtue.c")]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            codes.contains(&"prereq_not_met"),
-            "any prereq not satisfied: {codes:?}"
-        );
+        assert!(codes(&result).contains(&"prereq_not_met".to_string()));
     }
 
-    // --- Finding #6: prereq_none ---
-
-    #[test]
-    fn prereq_none_satisfied() {
+    fn none_prereq_ruleset() -> Ruleset {
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
@@ -1128,28 +1249,36 @@ mod tests {
           "permitted_categories": ["general"],
           "creation_phases": []
         }]"#;
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
-        // virtue.a is absent, so None([Has(A)]) is satisfied
+        Ruleset::from_json("test", "1", items, types).unwrap()
+    }
+
+    #[test]
+    fn prereq_none_satisfied() {
+        let rs = none_prereq_ruleset();
         let entity = make_entity("test_type", vec![sel("virtue.b")]);
 
         let result = validate(&entity, &rs);
-        let errors = result.errors();
-        let prereq_errors: Vec<_> = errors
-            .iter()
-            .filter(|i| i.code == "prereq_not_met")
-            .collect();
-        assert!(
-            prereq_errors.is_empty(),
-            "none prereq satisfied (A absent): {prereq_errors:?}"
-        );
+        assert!(!codes(&result).contains(&"prereq_not_met".to_string()));
     }
 
     #[test]
     fn prereq_none_unsatisfied() {
+        let rs = none_prereq_ruleset();
+        let entity = make_entity("test_type", vec![sel("virtue.a"), sel("virtue.b")]);
+
+        let result = validate(&entity, &rs);
+        assert!(codes(&result).contains(&"prereq_not_met".to_string()));
+    }
+
+    // --- Tri-state composition with unevaluable leaves ---
+
+    #[test]
+    fn prereq_none_with_unknown_leaf_does_not_false_positive() {
+        // None([House]) must NOT collapse to a spurious failure: an unevaluable
+        // leaf yields Unknown, so no prereq_not_met error fires.
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"none": [{"has": "virtue.a"}]}}
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "prerequisites": {"none": [{"house": "house.flambeau"}]}}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -1158,18 +1287,138 @@ mod tests {
           "creation_phases": []
         }]"#;
         let rs = Ruleset::from_json("test", "1", items, types).unwrap();
-        // virtue.a IS present, so None([Has(A)]) fails
+        let entity = make_entity("test_type", vec![sel("virtue.a")]);
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"prereq_not_met".to_string()),
+            "unknown leaf under None must not produce a false failure"
+        );
+        let warnings: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        assert!(warnings.contains(&"prereq_unevaluated"));
+    }
+
+    #[test]
+    fn prereq_any_satisfied_does_not_warn_on_unknown_sibling() {
+        // Any([Has(a)=true, House=unknown]) short-circuits to True; the
+        // unknown sibling must NOT produce a warning since the result does not
+        // depend on it.
+        let items = r#"[
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "prerequisites": {"any": [{"has": "virtue.a"}, {"house": "house.flambeau"}]}}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
         let entity = make_entity("test_type", vec![sel("virtue.a"), sel("virtue.b")]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
+        assert!(result.is_valid(), "issues: {:?}", result.issues);
+        let warnings: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
         assert!(
-            codes.contains(&"prereq_not_met"),
-            "none prereq unsatisfied (A present): {codes:?}"
+            !warnings.contains(&"prereq_unevaluated"),
+            "satisfied Any must not warn about its unknown sibling: {warnings:?}"
         );
     }
 
-    // --- Finding #7: prereq_house/ability_min/art_min/is_magus produce warnings ---
+    #[test]
+    fn prereq_all_with_known_failure_does_not_warn() {
+        // All([Has(missing)=false, House=unknown]) -> False; report
+        // prereq_not_met, NOT an unevaluated warning.
+        let items = r#"[
+          {"id": "virtue.dep", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "prerequisites": {"all": [{"has": "virtue.dep"}, {"house": "house.x"}]}}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        // virtue.dep exists but is NOT selected, so Has(virtue.dep) is False.
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("test_type", vec![sel("virtue.a")]);
+
+        let result = validate(&entity, &rs);
+        assert!(codes(&result).contains(&"prereq_not_met".to_string()));
+        let warnings: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        assert!(
+            !warnings.contains(&"prereq_unevaluated"),
+            "known failure should not also warn: {warnings:?}"
+        );
+    }
+
+    #[test]
+    fn prereq_any_no_true_branch_with_unknown_resolves_to_unevaluated() {
+        // Any([Has(dep)=false, House=unknown]) -> no True branch, one Unknown
+        // branch -> Unknown that depends on the unevaluable leaf. Exercises the
+        // Any Unknown-resolution path: no prereq_not_met, a prereq_unevaluated
+        // warning instead.
+        let items = r#"[
+          {"id": "virtue.dep", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "prerequisites": {"any": [{"has": "virtue.dep"}, {"house": "house.flambeau"}]}}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        // virtue.dep is NOT selected, so Has(virtue.dep) is False.
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("test_type", vec![sel("virtue.a")]);
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"prereq_not_met".to_string()),
+            "Any with an unknown branch must not fail outright: {:?}",
+            codes(&result)
+        );
+        let warnings: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        assert!(
+            warnings.contains(&"prereq_unevaluated"),
+            "unresolved Any should warn: {warnings:?}"
+        );
+    }
+
+    #[test]
+    fn prereq_all_satisfied_leaf_with_unknown_sibling_warns() {
+        // All([Has(a)=true, House=unknown]) -> Unknown that genuinely hinges on
+        // the unevaluable leaf: no prereq_not_met error, but a
+        // prereq_unevaluated warning must fire.
+        let items = r#"[
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "prerequisites": {"all": [{"has": "virtue.a"}, {"house": "house.flambeau"}]}}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("test_type", vec![sel("virtue.a"), sel("virtue.b")]);
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"prereq_not_met".to_string()),
+            "satisfied leaf + unknown sibling must not fail: {:?}",
+            codes(&result)
+        );
+        let warnings: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        assert!(
+            warnings.contains(&"prereq_unevaluated"),
+            "result hinges on unknown leaf, should warn: {warnings:?}"
+        );
+    }
 
     #[test]
     fn prereq_house_produces_unevaluated_warning() {
@@ -1188,10 +1437,7 @@ mod tests {
 
         let result = validate(&entity, &rs);
         let warning_codes: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            warning_codes.contains(&"prereq_unevaluated"),
-            "House prereq should produce unevaluated warning: {warning_codes:?}"
-        );
+        assert!(warning_codes.contains(&"prereq_unevaluated"));
     }
 
     #[test]
@@ -1211,10 +1457,7 @@ mod tests {
 
         let result = validate(&entity, &rs);
         let warning_codes: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            warning_codes.contains(&"prereq_unevaluated"),
-            "AbilityMin prereq should produce unevaluated warning: {warning_codes:?}"
-        );
+        assert!(warning_codes.contains(&"prereq_unevaluated"));
     }
 
     #[test]
@@ -1234,36 +1477,171 @@ mod tests {
 
         let result = validate(&entity, &rs);
         let warning_codes: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            warning_codes.contains(&"prereq_unevaluated"),
-            "ArtMin prereq should produce unevaluated warning: {warning_codes:?}"
-        );
+        assert!(warning_codes.contains(&"prereq_unevaluated"));
     }
 
     #[test]
-    fn prereq_is_magus_produces_unevaluated_warning() {
+    fn prereq_is_magus_satisfied_on_magus_type() {
+        // A profile flagged `is_magus: true` satisfies IsMagus: no warning, no error.
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": "is_magus"}
         ]"#;
         let types = r#"[{
-          "id": "test_type",
+          "id": "magus_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "is_magus": true,
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("magus_type", vec![sel("virtue.a")]);
+
+        let result = validate(&entity, &rs);
+        let warning_codes: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        assert!(
+            !warning_codes.contains(&"prereq_unevaluated"),
+            "IsMagus should be enforced, not unevaluated: {warning_codes:?}"
+        );
+        assert!(!codes(&result).contains(&"prereq_not_met".to_string()));
+    }
+
+    #[test]
+    fn prereq_is_magus_fails_on_non_magus_type() {
+        // A profile flagged `is_magus: false` makes IsMagus False: prereq_not_met fires.
+        let items = r#"[
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "prerequisites": "is_magus"}
+        ]"#;
+        let types = r#"[{
+          "id": "grog_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "is_magus": false,
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("grog_type", vec![sel("virtue.a")]);
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"prereq_not_met".to_string()),
+            "magus-only item must fail on a non-magus type: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn prereq_is_magus_unknown_without_profile() {
+        // No matching type profile -> IsMagus is Unknown -> warning.
+        let items = r#"[
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "prerequisites": "is_magus"}
+        ]"#;
+        let types = r#"[{
+          "id": "some_type",
           "budget": { "virtue_points": 10, "flaw_points": 10 },
           "permitted_categories": ["general"],
           "creation_phases": []
         }]"#;
         let rs = Ruleset::from_json("test", "1", items, types).unwrap();
-        let entity = make_entity("test_type", vec![sel("virtue.a")]);
+        // Entity references a type id with no matching profile.
+        let entity = make_entity("no_such_type", vec![sel("virtue.a")]);
+
+        let result = validate(&entity, &rs);
+        let warning_codes: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
+        assert!(warning_codes.contains(&"prereq_unevaluated"));
+    }
+
+    #[test]
+    fn prereq_is_magus_independent_of_gift_ungifted_redcap() {
+        // An unGifted Redcap is modeled as a companion-style profile: NOT a
+        // magus AND the Gift is forbidden. IsMagus must still fail, proving the
+        // flag is decoupled from gift_policy.
+        let items = r#"[
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "prerequisites": "is_magus"}
+        ]"#;
+        let types = r#"[{
+          "id": "ungifted_redcap",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "is_magus": false,
+          "gift_policy": "forbidden",
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("ungifted_redcap", vec![sel("virtue.a")]);
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"prereq_not_met".to_string()),
+            "an unGifted Redcap is not a magus: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn prereq_is_magus_independent_of_gift_gifted_hedge_wizard() {
+        // A Gifted hedge wizard HAS The Gift but is NOT a magus. Having the Gift
+        // selected must not make IsMagus pass: prereq_not_met still fires.
+        let items = r#"[
+          {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "prerequisites": "is_magus"}
+        ]"#;
+        let types = r#"[{
+          "id": "hedge_wizard",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general", "special"],
+          "is_magus": false,
+          "gift_policy": "allowed",
+          "gift_id": "virtue.the_gift",
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity(
+            "hedge_wizard",
+            vec![sel("virtue.the_gift"), sel("virtue.a")],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"prereq_not_met".to_string()),
+            "having The Gift does not make a magus: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn prereq_is_magus_satisfied_on_magus_type_regardless_of_gift_fields() {
+        // Sanity: the `is_magus` flag drives IsMagus, not the gift fields. A
+        // magus profile with gift_policy=required and the Gift selected passes.
+        let items = r#"[
+          {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "prerequisites": "is_magus"}
+        ]"#;
+        let types = r#"[{
+          "id": "magus_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general", "special"],
+          "is_magus": true,
+          "gift_policy": "required",
+          "gift_id": "virtue.the_gift",
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("magus_type", vec![sel("virtue.the_gift"), sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
         let warning_codes: Vec<&str> = result.warnings().iter().map(|i| i.code.as_str()).collect();
         assert!(
-            warning_codes.contains(&"prereq_unevaluated"),
-            "IsMagus prereq should produce unevaluated warning: {warning_codes:?}"
+            !warning_codes.contains(&"prereq_unevaluated"),
+            "IsMagus should be enforced: {warning_codes:?}"
         );
+        assert!(!codes(&result).contains(&"prereq_not_met".to_string()));
     }
-
-    // --- Finding #8: wrong_entity_kind ---
 
     #[test]
     fn wrong_entity_kind() {
@@ -1277,16 +1655,18 @@ mod tests {
           "creation_phases": []
         }]"#;
         let rs = Ruleset::from_json("test", "1", items, types).unwrap();
-        // Covenant entity selects a character-only item
         let mut entity = make_entity("standard_covenant", vec![sel("virtue.char_only")]);
         entity.entity_kind = EntityKind::Covenant;
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            codes.contains(&"wrong_entity_kind"),
-            "covenant selecting character-only item: {codes:?}"
-        );
+        assert!(codes(&result).contains(&"wrong_entity_kind".to_string()));
+        // entity_kind rendered via Display (snake_case), not Debug.
+        let issue = result
+            .errors()
+            .into_iter()
+            .find(|i| i.code == "wrong_entity_kind")
+            .unwrap();
+        assert_eq!(issue.args.get("entity_kind"), Some(&"covenant".to_string()));
     }
 
     #[test]
@@ -1305,18 +1685,53 @@ mod tests {
         entity.entity_kind = EntityKind::Covenant;
 
         let result = validate(&entity, &rs);
-        let errors = result.errors();
-        let kind_errors: Vec<_> = errors
-            .iter()
-            .filter(|i| i.code == "wrong_entity_kind")
-            .collect();
+        assert!(!codes(&result).contains(&"wrong_entity_kind".to_string()));
+    }
+
+    #[test]
+    fn empty_permitted_categories_permits_any() {
+        let items = r#"[
+          {"id": "virtue.weird", "kind": "virtue", "magnitude": "minor", "category": "obscure", "entity_kinds": ["character"]}
+        ]"#;
+        let types = r#"[{
+          "id": "unrestricted",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("unrestricted", vec![sel("virtue.weird")]);
+
+        let result = validate(&entity, &rs);
         assert!(
-            kind_errors.is_empty(),
-            "empty entity_kinds should be valid for any kind: {kind_errors:?}"
+            !codes(&result).contains(&"category_not_permitted".to_string()),
+            "empty permitted_categories should allow any category: {:?}",
+            codes(&result)
         );
     }
 
-    // --- Finding #9: gift_policy_required ---
+    #[test]
+    fn empty_forbidden_categories_forbids_nothing() {
+        // Mirror of empty_permitted_categories_permits_any: a profile with no
+        // forbidden_categories must not flag any selection, whatever its
+        // category.
+        let items = r#"[
+          {"id": "virtue.hermetic_thing", "kind": "virtue", "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"]}
+        ]"#;
+        let types = r#"[{
+          "id": "unrestricted",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("unrestricted", vec![sel("virtue.hermetic_thing")]);
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"forbidden_category".to_string()),
+            "empty forbidden_categories should forbid nothing: {:?}",
+            codes(&result)
+        );
+    }
 
     #[test]
     fn gift_policy_required_without_gift() {
@@ -1333,15 +1748,10 @@ mod tests {
           "creation_phases": []
         }]"#;
         let rs = Ruleset::from_json("test", "1", items, types).unwrap();
-        // Entity without The Gift
         let entity = make_entity("magus_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            codes.contains(&"gift_required"),
-            "gift required but missing: {codes:?}"
-        );
+        assert!(codes(&result).contains(&"gift_required".to_string()));
     }
 
     #[test]
@@ -1361,37 +1771,105 @@ mod tests {
         let entity = make_entity("magus_type", vec![sel("virtue.the_gift")]);
 
         let result = validate(&entity, &rs);
-        let errors = result.errors();
-        let gift_errors: Vec<_> = errors
-            .iter()
-            .filter(|i| i.code == "gift_required")
-            .collect();
-        assert!(
-            gift_errors.is_empty(),
-            "gift present, no error expected: {gift_errors:?}"
-        );
+        assert!(!codes(&result).contains(&"gift_required".to_string()));
     }
 
-    // --- Finding #10: gift_policy_forbidden ---
+    #[test]
+    fn gift_policy_required_via_category() {
+        // Required gift, no gift_id, gift_categories=[hermetic], a hermetic
+        // selection satisfies it (symmetry: category counts for Required too).
+        let items = r#"[
+          {"id": "virtue.parma", "kind": "virtue", "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"]}
+        ]"#;
+        let types = r#"[{
+          "id": "magus_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["hermetic"],
+          "gift_policy": "required",
+          "gift_categories": ["hermetic"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+
+        // With a hermetic selection: satisfied.
+        let entity = make_entity("magus_type", vec![sel("virtue.parma")]);
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"gift_required".to_string()),
+            "hermetic category should satisfy Required gift: {:?}",
+            codes(&result)
+        );
+
+        // Without it: fails.
+        let empty = make_entity("magus_type", vec![]);
+        let result = validate(&empty, &rs);
+        assert!(codes(&result).contains(&"gift_required".to_string()));
+    }
 
     #[test]
     fn gift_policy_forbidden_with_gift() {
         let rs = test_ruleset();
-        // Companion has gift_policy "forbidden" and gift_id "virtue.the_gift"
         let entity = make_entity("companion", vec![sel("virtue.the_gift")]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
+        assert!(codes(&result).contains(&"gift_forbidden".to_string()));
+    }
+
+    #[test]
+    fn gift_policy_forbidden_via_category() {
+        // Forbidden gift via gift_categories=[hermetic] with NO gift_id: a
+        // hermetic selection must still trip gift_forbidden (category path).
+        let items = r#"[
+          {"id": "virtue.parma", "kind": "virtue", "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"]}
+        ]"#;
+        let types = r#"[{
+          "id": "no_gift_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["hermetic"],
+          "gift_policy": "forbidden",
+          "gift_categories": ["hermetic"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("no_gift_type", vec![sel("virtue.parma")]);
+
+        let result = validate(&entity, &rs);
         assert!(
-            codes.contains(&"gift_forbidden"),
-            "gift forbidden but present: {codes:?}"
+            codes(&result).contains(&"gift_forbidden".to_string()),
+            "hermetic category should trip forbidden gift: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn gift_policy_forbidden_via_category_does_not_fire_on_non_matching_category() {
+        // Forbidden gift, no gift_id, gift_categories=[hermetic]. A selection
+        // whose category is NOT hermetic must NOT trip gift_forbidden: the
+        // category path's negative branch.
+        let items = r#"[
+          {"id": "virtue.mundane", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+        ]"#;
+        let types = r#"[{
+          "id": "no_gift_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "gift_policy": "forbidden",
+          "gift_categories": ["hermetic"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("no_gift_type", vec![sel("virtue.mundane")]);
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"gift_forbidden".to_string()),
+            "a non-hermetic selection must not trip forbidden gift: {:?}",
+            codes(&result)
         );
     }
 
     #[test]
     fn gift_policy_required_without_gift_id() {
-        // Type profile has gift_policy Required but no gift_id configured.
-        // Since gift_id is None, has_gift is always false, so gift_required fires.
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
@@ -1406,14 +1884,8 @@ mod tests {
         let entity = make_entity("no_gift_id_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            codes.contains(&"gift_required"),
-            "gift required but gift_id not set: {codes:?}"
-        );
+        assert!(codes(&result).contains(&"gift_required".to_string()));
     }
-
-    // --- Finding #11: required_traits ---
 
     #[test]
     fn missing_required_trait() {
@@ -1428,18 +1900,11 @@ mod tests {
           "creation_phases": []
         }]"#;
         let rs = Ruleset::from_json("test", "1", items, types).unwrap();
-        // Entity missing the required trait
         let entity = make_entity("strict_type", vec![]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            codes.contains(&"missing_required_trait"),
-            "should flag missing required trait: {codes:?}"
-        );
+        assert!(codes(&result).contains(&"missing_required_trait".to_string()));
     }
-
-    // --- Finding #12: forbidden_traits ---
 
     #[test]
     fn forbidden_trait_selected() {
@@ -1457,14 +1922,8 @@ mod tests {
         let entity = make_entity("restricted_type", vec![sel("virtue.banned")]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            codes.contains(&"forbidden_trait"),
-            "should flag forbidden trait: {codes:?}"
-        );
+        assert!(codes(&result).contains(&"forbidden_trait".to_string()));
     }
-
-    // --- Finding #13: duplicate_selection_non_parameterized ---
 
     #[test]
     fn duplicate_selection_non_parameterized() {
@@ -1475,33 +1934,138 @@ mod tests {
         );
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
-        assert!(
-            codes.contains(&"duplicate_selection"),
-            "two identical non-param selections: {codes:?}"
-        );
+        assert!(codes(&result).contains(&"duplicate_selection".to_string()));
     }
-
-    // --- Finding #14: duplicate_selection_parameterized ---
 
     #[test]
     fn duplicate_selection_parameterized() {
         let rs = test_ruleset();
-        let param_sel = Selection {
-            item_ref: Id::new("virtue.puissant_ability"),
-            params: BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
-        };
+        let param_sel = Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
+        );
         let entity = make_entity("companion", vec![param_sel.clone(), param_sel]);
 
         let result = validate(&entity, &rs);
-        let codes: Vec<&str> = result.errors().iter().map(|i| i.code.as_str()).collect();
+        assert!(codes(&result).contains(&"duplicate_selection".to_string()));
+    }
+
+    #[test]
+    fn parameterized_item_with_different_params_not_duplicate() {
+        let rs = test_ruleset();
+        let a = Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
+        );
+        let b = Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([("ability".into(), Id::new("ability.brawl"))]),
+        );
+        let entity = make_entity("companion", vec![a, b]);
+
+        let result = validate(&entity, &rs);
         assert!(
-            codes.contains(&"duplicate_selection"),
-            "two param selections with same params: {codes:?}"
+            !codes(&result).contains(&"duplicate_selection".to_string()),
+            "same item with different params is legal: {:?}",
+            codes(&result)
         );
     }
 
-    // --- Finding #15: compute_balance_major_and_free ---
+    // --- Parameter validation ---
+
+    #[test]
+    fn missing_required_param() {
+        let rs = test_ruleset();
+        // puissant_ability declares an `ability` param but none provided.
+        let entity = make_entity("companion", vec![sel("virtue.puissant_ability")]);
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"missing_param".to_string()),
+            "should flag missing param: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn unexpected_param() {
+        let rs = test_ruleset();
+        // keen_vision has no params; supplying one is an error.
+        let entity = make_entity(
+            "companion",
+            vec![Selection::with_params(
+                Id::new("virtue.keen_vision"),
+                BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
+            )],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(codes(&result).contains(&"unexpected_param".to_string()));
+    }
+
+    #[test]
+    fn well_formed_param_passes() {
+        let rs = test_ruleset();
+        let entity = make_entity(
+            "companion",
+            vec![Selection::with_params(
+                Id::new("virtue.puissant_ability"),
+                BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
+            )],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"missing_param".to_string())
+                && !codes(&result).contains(&"unexpected_param".to_string()),
+            "well-formed ability param should pass: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn item_domain_param_value_resolved() {
+        // A parameterized item whose domain is `item` must resolve its value
+        // against the point-item registry.
+        let items = r#"[
+          {"id": "virtue.target", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.linked", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "parameters": [{"key": "linked", "type": "ref", "domain": "item"}]}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+
+        // Good value.
+        let good = make_entity(
+            "test_type",
+            vec![Selection::with_params(
+                Id::new("virtue.linked"),
+                BTreeMap::from([("linked".into(), Id::new("virtue.target"))]),
+            )],
+        );
+        assert!(
+            !codes(&validate(&good, &rs)).contains(&"unknown_param_value".to_string()),
+            "valid item-domain value should resolve"
+        );
+
+        // Bad value.
+        let bad = make_entity(
+            "test_type",
+            vec![Selection::with_params(
+                Id::new("virtue.linked"),
+                BTreeMap::from([("linked".into(), Id::new("virtue.ghost"))]),
+            )],
+        );
+        assert!(
+            codes(&validate(&bad, &rs)).contains(&"unknown_param_value".to_string()),
+            "unknown item-domain value should be flagged"
+        );
+    }
 
     #[test]
     fn compute_balance_major_and_free() {
@@ -1522,24 +2086,23 @@ mod tests {
             vec![sel("virtue.major"), sel("virtue.free"), sel("flaw.minor")],
         );
 
-        let (v, f) = compute_balance(&entity, &rs);
-        assert_eq!(v, 3, "one major virtue = 3 pts, one free = 0 pts");
-        assert_eq!(f, 1, "one minor flaw = 1 pt");
+        let balance = compute_balance(&entity, &rs);
+        assert_eq!(
+            balance.virtue_points, 3,
+            "one major virtue = 3 pts, one free = 0 pts"
+        );
+        assert_eq!(balance.flaw_points, 1, "one minor flaw = 1 pt");
     }
-
-    // --- Finding #16: compute_balance_empty ---
 
     #[test]
     fn compute_balance_empty() {
         let rs = test_ruleset();
         let entity = make_entity("companion", vec![]);
 
-        let (v, f) = compute_balance(&entity, &rs);
-        assert_eq!(v, 0);
-        assert_eq!(f, 0);
+        let balance = compute_balance(&entity, &rs);
+        assert_eq!(balance.virtue_points, 0);
+        assert_eq!(balance.flaw_points, 0);
     }
-
-    // --- Finding #17: entity_normalize ---
 
     #[test]
     fn entity_normalize_sorts_selections() {
@@ -1565,8 +2128,6 @@ mod tests {
         );
     }
 
-    // --- Finding #18: empty_entity_validates ---
-
     #[test]
     fn empty_entity_validates() {
         let rs = test_ruleset();
@@ -1580,81 +2141,51 @@ mod tests {
         );
     }
 
-    // --- Finding #19: error_message_content ---
-
     #[test]
-    fn error_message_content() {
+    fn issue_args_carry_offending_ids() {
         let rs = test_ruleset();
 
-        // unknown_ref: message should contain the bad ID
+        // unknown_ref: args should contain the bad ID under "item".
         let entity = make_entity("companion", vec![sel("virtue.nonexistent")]);
         let result = validate(&entity, &rs);
-        let errors = result.errors();
-        let unknown_ref = errors.iter().find(|i| i.code == "unknown_ref").unwrap();
-        assert!(
-            unknown_ref.message.contains("virtue.nonexistent"),
-            "unknown_ref message should contain the ID: {}",
-            unknown_ref.message
+        let unknown_ref = result
+            .errors()
+            .into_iter()
+            .find(|i| i.code == "unknown_ref")
+            .unwrap();
+        assert_eq!(
+            unknown_ref.args.get("item"),
+            Some(&"virtue.nonexistent".to_string())
         );
 
-        // unknown_type: message should contain the bad type_id
+        // unknown_type: args should contain the bad type_id.
         let entity = make_entity("bogus_type", vec![]);
         let result = validate(&entity, &rs);
-        let errors = result.errors();
-        let unknown_type = errors.iter().find(|i| i.code == "unknown_type").unwrap();
-        assert!(
-            unknown_type.message.contains("bogus_type"),
-            "unknown_type message should contain the type ID: {}",
-            unknown_type.message
+        let unknown_type = result
+            .errors()
+            .into_iter()
+            .find(|i| i.code == "unknown_type")
+            .unwrap();
+        assert_eq!(
+            unknown_type.args.get("type_id"),
+            Some(&"bogus_type".to_string())
         );
     }
-
-    // --- Finding #20: validation_result_errors_vs_warnings ---
 
     #[test]
     fn validation_result_errors_vs_warnings() {
         let result = ValidationResult {
             issues: vec![
-                ValidationIssue {
-                    severity: IssueSeverity::Error,
-                    code: "err1".into(),
-                    message: "an error".into(),
-                    context: None,
-                },
-                ValidationIssue {
-                    severity: IssueSeverity::Warning,
-                    code: "warn1".into(),
-                    message: "a warning".into(),
-                    context: None,
-                },
-                ValidationIssue {
-                    severity: IssueSeverity::Error,
-                    code: "err2".into(),
-                    message: "another error".into(),
-                    context: None,
-                },
+                ValidationIssue::error("err1", BTreeMap::new(), None),
+                ValidationIssue::warning("warn1", BTreeMap::new(), None),
+                ValidationIssue::error("err2", BTreeMap::new(), None),
             ],
         };
 
         assert_eq!(result.errors().len(), 2);
         assert_eq!(result.warnings().len(), 1);
         assert!(!result.is_valid());
-
-        assert!(
-            result
-                .errors()
-                .iter()
-                .all(|i| i.severity == IssueSeverity::Error)
-        );
-        assert!(
-            result
-                .warnings()
-                .iter()
-                .all(|i| i.severity == IssueSeverity::Warning)
-        );
     }
-
-    // --- Finding #30: apply_mode preserves issue count in Advisory ---
 
     #[test]
     fn apply_mode_advisory_preserves_issue_count() {
@@ -1666,10 +2197,6 @@ mod tests {
         assert!(original_count > 0, "should have issues to test with");
 
         let advisory = validate(&entity, &rs).apply_mode(ValidationMode::Advisory);
-        assert_eq!(
-            advisory.issues.len(),
-            original_count,
-            "advisory mode should preserve issue count"
-        );
+        assert_eq!(advisory.issues.len(), original_count);
     }
 }

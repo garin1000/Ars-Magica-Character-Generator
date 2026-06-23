@@ -30,7 +30,8 @@ fn sample_entity() -> Entity {
 fn load_ruleset_yields_companion_profile_and_all_items() {
     let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
 
-    assert_eq!(localized.ruleset.id, RULESET_ID);
+    // `Ruleset.id` is now an `Id` newtype; compare its string form.
+    assert_eq!(localized.ruleset.id.as_str(), RULESET_ID);
     assert_eq!(localized.ruleset.version, RULESET_VERSION);
     assert_eq!(localized.ruleset.point_items.len(), 10);
     assert!(
@@ -68,7 +69,56 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
-    assert!(matches!(err, AppError::Ruleset { .. }), "got {err:?}");
+    let AppError::Ruleset {
+        ruleset_kind,
+        errors,
+    } = &err
+    else {
+        panic!("expected ruleset error, got {err:?}");
+    };
+    assert_eq!(ruleset_kind, "parse", "malformed JSON is a parse failure");
+    assert_eq!(errors.len(), 1, "parse failure carries one message");
+
+    // The serialized payload the frontend receives must carry the engine kind
+    // and the per-violation list, not a newline-joined English blob.
+    let json: serde_json::Value = serde_json::to_value(&err).unwrap();
+    assert_eq!(json["kind"], "ruleset");
+    assert_eq!(json["ruleset_kind"], "parse");
+    assert!(json["errors"].is_array(), "errors serialized as a list");
+}
+
+#[test]
+fn integrity_failure_preserves_individual_messages() {
+    // Two distinct unknown-prereq references must survive as two list entries,
+    // with the engine's "integrity" kind preserved (not flattened to English).
+    let tmp = tempfile::tempdir().unwrap();
+    fs::create_dir_all(tmp.path().join("core")).unwrap();
+    fs::create_dir_all(tmp.path().join("i18n/en")).unwrap();
+    fs::write(
+        tmp.path().join("core/virtues_flaws.json"),
+        r#"[
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"has": "virtue.x"}},
+          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"has": "virtue.y"}}
+        ]"#,
+    )
+    .unwrap();
+    fs::write(tmp.path().join("core/character_types.json"), "[]").unwrap();
+    fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
+
+    let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
+    let AppError::Ruleset {
+        ruleset_kind,
+        errors,
+    } = &err
+    else {
+        panic!("expected ruleset error, got {err:?}");
+    };
+    assert_eq!(ruleset_kind, "integrity");
+    assert_eq!(
+        errors.len(),
+        2,
+        "two distinct integrity violations preserved"
+    );
 }
 
 #[test]
@@ -170,9 +220,18 @@ fn validation_codes() -> Vec<String> {
     // Ignore the in-file `#[cfg(test)]` module, whose fixtures use fake codes.
     let src = full.split("mod tests").next().unwrap();
     let mut codes = Vec::new();
-    for fragment in src.split("code: \"").skip(1) {
-        if let Some(end) = fragment.find('"') {
-            codes.push(fragment[..end].to_string());
+    // The engine emits issues via `ValidationIssue::error("code", ...)` /
+    // `::warning("code", ...)`; the code is the first string literal after the
+    // opening paren (it may sit on the next line).
+    for marker in ["::error(", "::warning("] {
+        for fragment in src.split(marker).skip(1) {
+            let Some(open) = fragment.find('"') else {
+                continue;
+            };
+            let rest = &fragment[open + 1..];
+            if let Some(end) = rest.find('"') {
+                codes.push(rest[..end].to_string());
+            }
         }
     }
     codes.sort();

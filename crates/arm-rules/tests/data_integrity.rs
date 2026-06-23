@@ -12,11 +12,14 @@ fn load_ruleset() -> Ruleset {
 #[test]
 fn shipped_data_passes_integrity_check() {
     let rs = load_ruleset();
-    assert!(rs.point_items.len() >= 5, "should have seed V/F data");
+    assert_eq!(rs.point_items.len(), 10, "exact shipped V/F count");
+    assert_eq!(rs.type_profiles.len(), 2, "companion + grog");
     assert!(
-        rs.type_profiles.len() >= 1,
-        "should have at least one type profile"
+        rs.item(&Id::new("virtue.the_gift")).is_some(),
+        "virtue.the_gift must be present"
     );
+    assert!(rs.profile(&Id::new("companion")).is_some());
+    assert!(rs.profile(&Id::new("grog")).is_some());
 }
 
 #[test]
@@ -78,42 +81,35 @@ fn companion_balanced_entity_validates() {
         result.issues
     );
 
-    let (v, f) = compute_balance(&entity, &rs);
-    assert_eq!(v, 1);
-    assert_eq!(f, 1);
+    let balance = compute_balance(&entity, &rs);
+    assert_eq!(balance.virtue_points, 1);
+    assert_eq!(balance.flaw_points, 1);
 }
 
 #[test]
 fn save_load_roundtrip_with_canonical_output() {
-    let entity = Entity {
+    let mut entity = Entity {
         schema_version: 1,
-        ruleset: RulesetRef {
-            id: Id::new("arm5-core"),
-            version: "2024.1".into(),
-        },
+        ruleset: RulesetRef::new(Id::new("arm5-core"), "2024.1"),
         entity_kind: EntityKind::Character,
         type_id: Id::new("companion"),
         selections: vec![
-            Selection {
-                item_ref: Id::new("virtue.puissant_ability"),
-                params: BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
-            },
-            Selection {
-                item_ref: Id::new("flaw.poor_student"),
-                params: BTreeMap::new(),
-            },
+            Selection::with_params(
+                Id::new("virtue.puissant_ability"),
+                BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
+            ),
+            Selection::new(Id::new("flaw.poor_student")),
         ],
     };
+    // Canonical output requires normalize(): Serialize no longer auto-sorts.
+    entity.normalize();
 
     let json1 = serde_json::to_string_pretty(&entity).unwrap();
     let roundtripped: Entity = serde_json::from_str(&json1).unwrap();
     let json2 = serde_json::to_string_pretty(&roundtripped).unwrap();
 
     assert_eq!(json1, json2, "canonical serialization should be stable");
-    // Selections are sorted during serialization, so normalize before comparing.
-    let mut expected = entity;
-    expected.normalize();
-    assert_eq!(expected, roundtripped);
+    assert_eq!(entity, roundtripped);
 }
 
 #[test]
