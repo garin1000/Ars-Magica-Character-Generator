@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::ability::{Ability, AdvancementTable};
 use crate::types::{EntityTypeProfile, I18nEntry, Id, ItemKind, PointItem, Prereq, RulesetRef};
 
 /// Top-level container for all loaded game mechanics.
@@ -18,6 +19,13 @@ pub struct Ruleset {
     pub(crate) point_items: BTreeMap<Id, PointItem>,
     /// All entity type profiles keyed by their id.
     pub(crate) type_profiles: BTreeMap<Id, EntityTypeProfile>,
+    /// All abilities keyed by their id. Defaulted so older serialized rulesets
+    /// (pre-M3, no abilities) still deserialize via [`Ruleset::from_serialized`].
+    #[serde(default)]
+    pub(crate) abilities: BTreeMap<Id, Ability>,
+    /// The Ability XP advancement table.
+    #[serde(default)]
+    pub(crate) advancement: AdvancementTable,
 }
 
 /// A [`Ruleset`] paired with localized display text for a single language.
@@ -157,48 +165,73 @@ impl From<IntegrityError> for RulesetError {
     }
 }
 
+/// On-disk shape of `rules/core/abilities.json`: the advancement table plus the
+/// ability catalogue. Both default to empty so `"{}"` is a valid empty file.
+#[derive(Deserialize)]
+struct AbilitiesFile {
+    #[serde(default)]
+    advancement: AdvancementTable,
+    #[serde(default)]
+    abilities: Vec<Ability>,
+}
+
+/// Pushes a `"duplicate <label> ID: '<id>'"` error for each id seen more than
+/// once.
+fn collect_duplicates<'a>(
+    ids: impl Iterator<Item = &'a Id>,
+    label: &str,
+    errors: &mut Vec<String>,
+) {
+    let mut seen = BTreeSet::new();
+    for id in ids {
+        if !seen.insert(id) {
+            errors.push(format!("duplicate {label} ID: '{id}'"));
+        }
+    }
+}
+
 impl Ruleset {
     /// Parses point items and type profiles from JSON, validates referential
-    /// integrity, and returns a Ruleset.
+    /// integrity, and returns a Ruleset with no abilities.
+    ///
+    /// Convenience wrapper over [`Ruleset::from_json_with_abilities`] for callers
+    /// (and the many tests) that do not exercise the ability registry.
     pub fn from_json(
         id: &str,
         version: &str,
         point_items_json: &str,
         type_profiles_json: &str,
     ) -> Result<Self, RulesetError> {
+        Self::from_json_with_abilities(id, version, point_items_json, type_profiles_json, "{}")
+    }
+
+    /// Parses point items, type profiles, and the abilities file (catalogue +
+    /// advancement table) from JSON, validates referential integrity, and returns
+    /// a Ruleset.
+    ///
+    /// `abilities_json` is an object `{ "advancement": [...], "abilities": [...] }`;
+    /// both keys default to empty, so `"{}"` is a valid empty file.
+    pub fn from_json_with_abilities(
+        id: &str,
+        version: &str,
+        point_items_json: &str,
+        type_profiles_json: &str,
+        abilities_json: &str,
+    ) -> Result<Self, RulesetError> {
         let items: Vec<PointItem> = serde_json::from_str(point_items_json)?;
         let types: Vec<EntityTypeProfile> = serde_json::from_str(type_profiles_json)?;
+        let abilities_file: AbilitiesFile = serde_json::from_str(abilities_json)?;
 
-        // Detect duplicate point item IDs
-        let mut duplicate_items = Vec::new();
-        {
-            let mut seen = BTreeSet::new();
-            for item in &items {
-                if !seen.insert(&item.id) {
-                    duplicate_items.push(item.id.to_string());
-                }
-            }
-        }
-
-        // Detect duplicate type profile IDs
-        let mut duplicate_types = Vec::new();
-        {
-            let mut seen = BTreeSet::new();
-            for t in &types {
-                if !seen.insert(&t.id) {
-                    duplicate_types.push(t.id.to_string());
-                }
-            }
-        }
-
-        if !duplicate_items.is_empty() || !duplicate_types.is_empty() {
-            let mut errors = Vec::new();
-            for dup in &duplicate_items {
-                errors.push(format!("duplicate point item ID: '{dup}'"));
-            }
-            for dup in &duplicate_types {
-                errors.push(format!("duplicate type profile ID: '{dup}'"));
-            }
+        // Detect duplicate IDs across each registry.
+        let mut errors = Vec::new();
+        collect_duplicates(items.iter().map(|i| &i.id), "point item", &mut errors);
+        collect_duplicates(types.iter().map(|t| &t.id), "type profile", &mut errors);
+        collect_duplicates(
+            abilities_file.abilities.iter().map(|a| &a.id),
+            "ability",
+            &mut errors,
+        );
+        if !errors.is_empty() {
             return Err(IntegrityError::new(errors).into());
         }
 
@@ -208,12 +241,19 @@ impl Ruleset {
             .collect();
         let type_profiles: BTreeMap<Id, EntityTypeProfile> =
             types.into_iter().map(|t| (t.id.clone(), t)).collect();
+        let abilities: BTreeMap<Id, Ability> = abilities_file
+            .abilities
+            .into_iter()
+            .map(|a| (a.id.clone(), a))
+            .collect();
 
         let ruleset = Self {
             id: Id::new(id),
             version: version.to_string(),
             point_items,
             type_profiles,
+            abilities,
+            advancement: abilities_file.advancement,
         };
 
         ruleset.validate_integrity()?;
@@ -278,6 +318,26 @@ impl Ruleset {
     /// Looks up an entity type profile by id.
     pub fn profile(&self, id: &Id) -> Option<&EntityTypeProfile> {
         self.type_profiles.get(id)
+    }
+
+    /// Looks up an ability by id.
+    pub fn ability(&self, id: &Id) -> Option<&Ability> {
+        self.abilities.get(id)
+    }
+
+    /// Iterates all abilities in id order.
+    pub fn abilities(&self) -> impl Iterator<Item = &Ability> {
+        self.abilities.values()
+    }
+
+    /// Number of abilities in the catalogue.
+    pub fn ability_count(&self) -> usize {
+        self.abilities.len()
+    }
+
+    /// The Ability XP advancement table.
+    pub fn advancement(&self) -> &AdvancementTable {
+        &self.advancement
     }
 
     /// Iterates over point items of the given [`ItemKind`].
@@ -359,16 +419,15 @@ impl Ruleset {
         }
     }
 
-    /// Recursively validates that prerequisite [`Prereq::Has`] refs resolve to
-    /// known point items.
+    /// Recursively validates that prerequisite refs resolve to known registries:
+    /// [`Prereq::Has`] against point items and [`Prereq::AbilityMin`] against the
+    /// ability catalogue.
     ///
-    /// `House`, `AbilityMin`, and `ArtMin` carry refs into house/ability/art
-    /// registries that do not exist yet; those refs are INTENTIONALLY left
-    /// unchecked (a deferred check), narrowing the integrity contract explicitly
-    /// so the gap is tracked rather than silent — it must be revisited when those
-    /// registries are added. `IsMagus` carries no reference at all, so there is
-    /// nothing to check for it. The match arm groups them only for
-    /// exhaustiveness.
+    /// `House` and `ArtMin` carry refs into house/art registries that do not exist
+    /// yet; those refs are INTENTIONALLY left unchecked (a deferred check),
+    /// narrowing the integrity contract explicitly so the gap is tracked rather
+    /// than silent — it must be revisited when those registries are added (M5).
+    /// `IsMagus` carries no reference at all, so there is nothing to check for it.
     fn validate_prereq_refs(&self, prereq: &Prereq, context_id: &Id, errors: &mut Vec<String>) {
         match prereq {
             Prereq::All(children) | Prereq::Any(children) | Prereq::None(children) => {
@@ -383,11 +442,15 @@ impl Ruleset {
                     ));
                 }
             }
-            // Intentionally unchecked: no house/ability/art registry exists yet.
-            Prereq::House(_)
-            | Prereq::AbilityMin { .. }
-            | Prereq::ArtMin { .. }
-            | Prereq::IsMagus => {}
+            Prereq::AbilityMin { ability, .. } => {
+                if !self.abilities.contains_key(ability) {
+                    errors.push(format!(
+                        "{context_id}: prerequisite references unknown ability '{ability}'"
+                    ));
+                }
+            }
+            // Intentionally unchecked: no house/art registry exists yet (M5).
+            Prereq::House(_) | Prereq::ArtMin { .. } | Prereq::IsMagus => {}
         }
     }
 
@@ -484,12 +547,91 @@ mod tests {
       }
     ]"#;
 
+    const VALID_ABILITIES: &str = r#"{
+      "advancement": [
+        { "score": 1, "total_xp": 5 },
+        { "score": 2, "total_xp": 15 }
+      ],
+      "abilities": [
+        { "id": "ability.awareness", "category": "general" },
+        { "id": "ability.magic_theory", "category": "arcane" }
+      ]
+    }"#;
+
     #[test]
     fn load_valid_ruleset() {
         let rs = Ruleset::from_json("arm5-core", "2024.1", VALID_ITEMS, VALID_TYPES).unwrap();
         assert_eq!(rs.item_count(), 5);
         assert_eq!(rs.profile_count(), 1);
+        assert_eq!(rs.ability_count(), 0);
         assert_eq!(rs.id, Id::new("arm5-core"));
+    }
+
+    #[test]
+    fn from_json_defaults_to_no_abilities() {
+        let rs = Ruleset::from_json("t", "1", VALID_ITEMS, VALID_TYPES).unwrap();
+        assert_eq!(rs.ability_count(), 0);
+        assert_eq!(rs.advancement().rows().len(), 0);
+    }
+
+    #[test]
+    fn load_ability_registry_and_advancement() {
+        let rs = Ruleset::from_json_with_abilities(
+            "arm5-core",
+            "2024.1",
+            VALID_ITEMS,
+            VALID_TYPES,
+            VALID_ABILITIES,
+        )
+        .unwrap();
+        assert_eq!(rs.ability_count(), 2);
+        assert!(rs.ability(&Id::new("ability.awareness")).is_some());
+        assert!(rs.ability(&Id::new("ability.missing")).is_none());
+        assert_eq!(rs.advancement().xp_for_score(2), Some(15));
+    }
+
+    #[test]
+    fn duplicate_ability_id_is_rejected() {
+        let dup = r#"{ "abilities": [
+          { "id": "ability.awareness", "category": "general" },
+          { "id": "ability.awareness", "category": "general" }
+        ] }"#;
+        let err =
+            Ruleset::from_json_with_abilities("t", "1", VALID_ITEMS, VALID_TYPES, dup).unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => {
+                assert!(e.errors().iter().any(|m| m.contains("duplicate ability ID")));
+            }
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn ability_min_prereq_must_resolve() {
+        let items = r#"[{
+          "id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general",
+          "entity_kinds": ["character"],
+          "prerequisites": { "kind": "ability_min", "value": { "ability": "ability.unknown", "score": 2 } }
+        }]"#;
+        let err =
+            Ruleset::from_json_with_abilities("t", "1", items, "[]", VALID_ABILITIES).unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => {
+                assert!(e.errors().iter().any(|m| m.contains("unknown ability")));
+            }
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn ability_min_prereq_resolves_against_registry() {
+        let items = r#"[{
+          "id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general",
+          "entity_kinds": ["character"],
+          "prerequisites": { "kind": "ability_min", "value": { "ability": "ability.awareness", "score": 2 } }
+        }]"#;
+        let rs = Ruleset::from_json_with_abilities("t", "1", items, "[]", VALID_ABILITIES);
+        assert!(rs.is_ok());
     }
 
     #[test]
