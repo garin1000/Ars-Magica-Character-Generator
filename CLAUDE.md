@@ -161,6 +161,10 @@ not in language-neutral `core/`.
 - **YAGNI / KISS.** Build what is needed now, nothing speculative.
 - **Committing on `main` is fine.** This repo's workflow commits directly to
   `main`; do not branch first or open a PR unless explicitly asked.
+- **Keep `README.md` current.** `README.md` is the GitHub-facing project
+  overview. When a change alters what the project does, its status, the tech
+  stack, or the build/run commands, update `README.md` in the same change so it
+  never drifts from reality.
 
 ## Rules provenance
 
