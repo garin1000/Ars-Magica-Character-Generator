@@ -1,0 +1,46 @@
+Ars Magica rulebook content — Ars Magica Open License (CC-BY-SA 4.0)
+===================================================================
+
+This directory (`rules/source/`) contains the human-authored Ars Magica 5th
+Edition rulebook text used as the authoritative source for this project. This
+content is NOT covered by the MIT License that governs the project's source code
+(see the top-level `LICENSE` file).
+
+Attribution
+-----------
+
+Based on the material for Ars Magica, ©1993–2024, licensed by Trident, Inc.
+d/b/a Atlas Games®, under the Creative Commons Attribution-ShareAlike 4.0
+International License ("CC-BY-SA 4.0"):
+
+    https://creativecommons.org/licenses/by-sa/4.0/
+
+This is commonly referred to as the **Ars Magica Open License**.
+
+The Open License Markdown editions in this repository originate from:
+
+  - English: applejuice1965 & OriginalMadman (and contributors)
+    https://github.com/OriginalMadman/Ars-Magica-Open-License
+    via the fork at https://github.com/garin1000/Ars-Magica-Open-License
+
+  - German: garin1000 (and contributors)
+    https://github.com/garin1000/Ars-Magica-Open-License-German
+
+Trademarks
+----------
+
+Ars Magica, Mythic Europe, and the various sourcebook titles are trademarks of
+Trident, Inc. d/b/a Atlas Games. Order of Hermes, Tremere, Doissetep, and
+Grimgroth are trademarks of Paradox Interactive AB and are used with permission.
+These trademarks are NOT licensed under CC-BY-SA 4.0; CC-BY-SA covers the textual
+content only, not the trademarks.
+
+Share-alike obligation
+-----------------------
+
+Under CC-BY-SA 4.0, any adapted or derived version of this rulebook content must
+be distributed under the same license, with attribution preserved. This applies
+to the Markdown in this directory and to any derivative produced from it.
+
+This project is an unofficial fan tool. It is not affiliated with, sponsored by,
+or endorsed by Atlas Games.
