@@ -12,9 +12,9 @@ pub use ability::{Ability, AbilityCategory, AbilityXpRow, AdvancementTable};
 pub use characteristics::{Characteristic, CharacteristicCost, CharacteristicRules};
 pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError};
 pub use types::{
-    Entity, EntityKind, EntityTypeProfile, FlawCategoryCap, GiftPolicy, I18nEntry, Id, ItemKind,
-    LineRange, Magnitude, ParamType, ParameterDef, ParameterDomain, PointBudget, PointItem, Prereq,
-    RulesetRef, Selection, SourceRef, ValidationMode,
+    AbilityScore, Entity, EntityKind, EntityTypeProfile, FlawCategoryCap, GiftPolicy, I18nEntry,
+    Id, ItemKind, LineRange, Magnitude, ParamType, ParameterDef, ParameterDomain, PointBudget,
+    PointItem, Prereq, RulesetRef, SCHEMA_VERSION, Selection, SourceRef, ValidationMode,
 };
 pub use validation::{
     Balance, IssueSeverity, ValidationIssue, ValidationResult, compute_balance, validate,
