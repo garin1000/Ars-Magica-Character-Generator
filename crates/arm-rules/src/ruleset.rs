@@ -1,55 +1,100 @@
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::types::{EntityTypeProfile, I18nEntry, Id, PointItem};
+use crate::types::{EntityTypeProfile, I18nEntry, Id, ItemKind, PointItem, Prereq, RulesetRef};
 
 /// Top-level container for all loaded game mechanics.
-#[derive(Debug, Clone, Serialize)]
+///
+/// Built only via [`Ruleset::from_json`] (which validates referential
+/// integrity), never field-by-field by callers; `PartialEq` is provided for
+/// tests and diffing.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Ruleset {
-    pub id: String,
+    /// Stable ruleset identifier (matches [`RulesetRef::id`]).
+    pub id: Id,
+    /// Ruleset version string.
     pub version: String,
+    /// All point items keyed by their id.
     pub point_items: BTreeMap<Id, PointItem>,
+    /// All entity type profiles keyed by their id.
     pub type_profiles: BTreeMap<Id, EntityTypeProfile>,
 }
 
 /// A [`Ruleset`] paired with localized display text for a single language.
-#[derive(Debug, Clone, Serialize)]
+///
+/// Built only via [`LocalizedRuleset::new`]; `PartialEq` is provided for tests.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct LocalizedRuleset {
+    /// The language-neutral ruleset.
     pub ruleset: Ruleset,
+    /// Localized text keyed by item/profile id.
     pub i18n: BTreeMap<Id, I18nEntry>,
 }
 
+/// A referential-integrity failure raised while loading a [`Ruleset`].
+///
+/// Carries every individual offending message; [`IntegrityError::errors`]
+/// exposes them as a list, and [`std::fmt::Display`] joins them with newlines.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct IntegrityError {
-    pub message: String,
+    /// One human-readable message per detected integrity violation.
+    errors: Vec<String>,
+}
+
+impl IntegrityError {
+    /// Creates an integrity error from a list of messages.
+    pub fn new(errors: Vec<String>) -> Self {
+        Self { errors }
+    }
+
+    /// The individual offending messages, one per violation.
+    pub fn errors(&self) -> &[String] {
+        &self.errors
+    }
 }
 
 impl std::fmt::Display for IntegrityError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.message)
+        f.write_str(&self.errors.join("\n"))
     }
 }
 
 impl std::error::Error for IntegrityError {}
 
-#[derive(Debug)]
+/// An error raised while loading a [`Ruleset`] or [`LocalizedRuleset`].
+///
+/// Does not leak `serde_json::Error`: the parse message is captured as a
+/// `String` so the public surface stays stable. Use [`RulesetError::kind`]
+/// for a machine-stable discriminant.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RulesetError {
-    ParseError(serde_json::Error),
+    /// JSON failed to parse or deserialize. Holds the formatted parse message.
+    Parse(String),
+    /// JSON parsed but referential integrity checks failed.
     Integrity(IntegrityError),
+}
+
+impl RulesetError {
+    /// A stable machine-readable discriminant for this error.
+    pub fn kind(&self) -> &'static str {
+        match self {
+            RulesetError::Parse(_) => "parse",
+            RulesetError::Integrity(_) => "integrity",
+        }
+    }
 }
 
 impl Serialize for RulesetError {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeMap;
         let mut map = serializer.serialize_map(Some(2))?;
+        map.serialize_entry("kind", self.kind())?;
         match self {
-            RulesetError::ParseError(e) => {
-                map.serialize_entry("kind", "parse_error")?;
-                map.serialize_entry("message", &e.to_string())?;
+            RulesetError::Parse(message) => {
+                map.serialize_entry("message", message)?;
             }
             RulesetError::Integrity(e) => {
-                map.serialize_entry("kind", "integrity")?;
-                map.serialize_entry("message", &e.message)?;
+                map.serialize_entry("errors", e.errors())?;
             }
         }
         map.end()
@@ -59,7 +104,7 @@ impl Serialize for RulesetError {
 impl std::fmt::Display for RulesetError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RulesetError::ParseError(e) => write!(f, "parse error: {e}"),
+            RulesetError::Parse(message) => write!(f, "parse error: {message}"),
             RulesetError::Integrity(e) => write!(f, "integrity error: {e}"),
         }
     }
@@ -68,7 +113,7 @@ impl std::fmt::Display for RulesetError {
 impl std::error::Error for RulesetError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            RulesetError::ParseError(e) => Some(e),
+            RulesetError::Parse(_) => None,
             RulesetError::Integrity(e) => Some(e),
         }
     }
@@ -76,7 +121,7 @@ impl std::error::Error for RulesetError {
 
 impl From<serde_json::Error> for RulesetError {
     fn from(e: serde_json::Error) -> Self {
-        RulesetError::ParseError(e)
+        RulesetError::Parse(e.to_string())
     }
 }
 
@@ -128,10 +173,7 @@ impl Ruleset {
             for dup in &duplicate_types {
                 errors.push(format!("duplicate type profile ID: '{dup}'"));
             }
-            return Err(IntegrityError {
-                message: errors.join("\n"),
-            }
-            .into());
+            return Err(IntegrityError::new(errors).into());
         }
 
         let point_items: BTreeMap<Id, PointItem> = items
@@ -142,7 +184,7 @@ impl Ruleset {
             types.into_iter().map(|t| (t.id.clone(), t)).collect();
 
         let ruleset = Self {
-            id: id.to_string(),
+            id: Id::new(id),
             version: version.to_string(),
             point_items,
             type_profiles,
@@ -152,8 +194,43 @@ impl Ruleset {
         Ok(ruleset)
     }
 
+    /// Returns a [`RulesetRef`] identifying this ruleset (id + version).
+    pub fn reference(&self) -> RulesetRef {
+        RulesetRef::new(self.id.clone(), self.version.clone())
+    }
+
+    /// Returns `true` if `reference` names this ruleset by id and version.
+    pub fn matches(&self, reference: &RulesetRef) -> bool {
+        self.id == reference.id && self.version == reference.version
+    }
+
+    /// Looks up a point item by id.
+    pub fn item(&self, id: &Id) -> Option<&PointItem> {
+        self.point_items.get(id)
+    }
+
+    /// Looks up an entity type profile by id.
+    pub fn profile(&self, id: &Id) -> Option<&EntityTypeProfile> {
+        self.type_profiles.get(id)
+    }
+
+    /// Iterates over point items of the given [`ItemKind`].
+    pub fn items_by_kind(&self, kind: ItemKind) -> impl Iterator<Item = &PointItem> {
+        self.point_items.values().filter(move |i| i.kind == kind)
+    }
+
+    /// Iterates over point items in the given category.
+    pub fn items_by_category<'a>(
+        &'a self,
+        category: &'a str,
+    ) -> impl Iterator<Item = &'a PointItem> {
+        self.point_items
+            .values()
+            .filter(move |i| i.category == category)
+    }
+
     /// Checks referential integrity: prerequisite refs, incompatibility symmetry,
-    /// and type profile trait refs.
+    /// type profile trait refs, parameter domain refs, and source line ranges.
     pub fn validate_integrity(&self) -> Result<(), IntegrityError> {
         let mut errors = Vec::new();
 
@@ -168,6 +245,18 @@ impl Ruleset {
                         "{id}: incompatible_with references unknown ID '{incompat_id}'"
                     ));
                 }
+            }
+
+            // Parameter domains are validated at parse time by the
+            // ParameterDomain enum; concrete param VALUES are resolved per
+            // selection in validation::validate_parameters.
+            if let Some(ref source) = item.source
+                && !source.lines.is_valid()
+            {
+                errors.push(format!(
+                    "{id}: source line range start ({}) exceeds end ({})",
+                    source.lines.start, source.lines.end
+                ));
             }
         }
 
@@ -188,24 +277,31 @@ impl Ruleset {
                     ));
                 }
             }
+            if let Some(ref gift_id) = profile.gift_id
+                && !self.point_items.contains_key(gift_id)
+            {
+                errors.push(format!(
+                    "type profile '{type_id}': gift_id references unknown ID '{gift_id}'"
+                ));
+            }
         }
 
         if errors.is_empty() {
             Ok(())
         } else {
-            Err(IntegrityError {
-                message: errors.join("\n"),
-            })
+            Err(IntegrityError::new(errors))
         }
     }
 
-    fn validate_prereq_refs(
-        &self,
-        prereq: &crate::types::Prereq,
-        context_id: &Id,
-        errors: &mut Vec<String>,
-    ) {
-        use crate::types::Prereq;
+    /// Recursively validates that prerequisite [`Prereq::Has`] refs resolve to
+    /// known point items.
+    ///
+    /// `House`, `AbilityMin`, `ArtMin`, and `IsMagus` reference houses, abilities,
+    /// and arts for which no registry yet exists; these refs are INTENTIONALLY
+    /// left unchecked. This narrows the integrity contract explicitly so the gap
+    /// is tracked rather than silent: it must be revisited when those registries
+    /// are added.
+    fn validate_prereq_refs(&self, prereq: &Prereq, context_id: &Id, errors: &mut Vec<String>) {
         match prereq {
             Prereq::All(children) | Prereq::Any(children) | Prereq::None(children) => {
                 for child in children {
@@ -219,8 +315,7 @@ impl Ruleset {
                     ));
                 }
             }
-            // TODO: Validate House IDs when a house registry is added to Ruleset.
-            // TODO: Validate AbilityMin/ArtMin IDs when ability/art registries are added.
+            // Intentionally unchecked: no house/ability/art registry exists yet.
             Prereq::House(_)
             | Prereq::AbilityMin { .. }
             | Prereq::ArtMin { .. }
@@ -244,6 +339,7 @@ impl Ruleset {
 }
 
 impl LocalizedRuleset {
+    /// Pairs a ruleset with localized text parsed from a JSON id-to-entry map.
     pub fn new(ruleset: Ruleset, i18n_json: &str) -> Result<Self, RulesetError> {
         let entries: BTreeMap<String, I18nEntry> = serde_json::from_str(i18n_json)?;
         let i18n: BTreeMap<Id, I18nEntry> =
@@ -251,6 +347,7 @@ impl LocalizedRuleset {
         Ok(Self { ruleset, i18n })
     }
 
+    /// Returns the localized display name for the given id, if present.
     pub fn display_name(&self, id: &Id) -> Option<&str> {
         self.i18n.get(id).map(|e| e.name.as_str())
     }
@@ -259,6 +356,7 @@ impl LocalizedRuleset {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::ParameterDomain;
     use pretty_assertions::assert_eq;
 
     const VALID_ITEMS: &str = r#"[
@@ -323,7 +421,34 @@ mod tests {
         let rs = Ruleset::from_json("arm5-core", "2024.1", VALID_ITEMS, VALID_TYPES).unwrap();
         assert_eq!(rs.point_items.len(), 5);
         assert_eq!(rs.type_profiles.len(), 1);
-        assert_eq!(rs.id, "arm5-core");
+        assert_eq!(rs.id, Id::new("arm5-core"));
+    }
+
+    #[test]
+    fn reference_and_matches() {
+        let rs = Ruleset::from_json("arm5-core", "2024.1", VALID_ITEMS, VALID_TYPES).unwrap();
+        let reference = rs.reference();
+        assert_eq!(reference.id, Id::new("arm5-core"));
+        assert_eq!(reference.version, "2024.1");
+        assert!(rs.matches(&reference));
+        assert!(!rs.matches(&RulesetRef::new(Id::new("arm5-core"), "9.9")));
+    }
+
+    #[test]
+    fn lookup_helpers() {
+        let rs = Ruleset::from_json("arm5-core", "2024.1", VALID_ITEMS, VALID_TYPES).unwrap();
+        assert!(rs.item(&Id::new("virtue.the_gift")).is_some());
+        assert!(rs.item(&Id::new("virtue.missing")).is_none());
+        assert!(rs.profile(&Id::new("companion")).is_some());
+        assert!(rs.profile(&Id::new("nope")).is_none());
+
+        let virtues = rs.items_by_kind(ItemKind::Virtue).count();
+        assert_eq!(virtues, 4);
+        let flaws = rs.items_by_kind(ItemKind::Flaw).count();
+        assert_eq!(flaws, 1);
+
+        let hermetic = rs.items_by_category("hermetic").count();
+        assert_eq!(hermetic, 2);
     }
 
     #[test]
@@ -394,6 +519,25 @@ mod tests {
     }
 
     #[test]
+    fn invalid_source_line_range() {
+        let items = r#"[{
+          "id": "virtue.a",
+          "kind": "virtue",
+          "magnitude": "minor",
+          "category": "general",
+          "entity_kinds": ["character"],
+          "source": { "file": "f.md", "lines": [50, 10] }
+        }]"#;
+
+        let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("line range"),
+            "should flag inverted line range: {msg}"
+        );
+    }
+
+    #[test]
     fn localized_ruleset_display_name() {
         let rs = Ruleset::from_json("arm5-core", "1", VALID_ITEMS, VALID_TYPES).unwrap();
         let i18n = r#"{
@@ -425,7 +569,25 @@ mod tests {
         assert!(msg.contains("virtue.nonexistent"));
     }
 
-    // --- Finding #21: forbidden_traits_unknown_ref ---
+    #[test]
+    fn character_type_unknown_gift_id() {
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "required_traits": [],
+          "forbidden_traits": [],
+          "gift_policy": "required",
+          "gift_id": "virtue.nonexistent_gift",
+          "creation_phases": []
+        }]"#;
+
+        let err = Ruleset::from_json("test", "1", "[]", types).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.nonexistent_gift"),
+            "should flag unknown gift_id ref: {msg}"
+        );
+    }
 
     #[test]
     fn forbidden_traits_unknown_ref() {
@@ -444,8 +606,6 @@ mod tests {
             "should flag unknown forbidden_trait ref: {msg}"
         );
     }
-
-    // --- Finding #22: prereq_refs_recursive ---
 
     #[test]
     fn prereq_refs_recursive() {
@@ -466,20 +626,17 @@ mod tests {
         );
     }
 
-    // --- Finding #23: from_json_invalid_json ---
-
     #[test]
     fn from_json_invalid_json() {
         let result = Ruleset::from_json("test", "1", "NOT VALID JSON", "[]");
         assert!(result.is_err(), "malformed JSON should produce an error");
-        let msg = result.unwrap_err().to_string();
+        let err = result.unwrap_err();
+        assert_eq!(err.kind(), "parse");
         assert!(
-            msg.contains("parse error"),
-            "should be a parse error: {msg}"
+            err.to_string().contains("parse error"),
+            "should be a parse error: {err}"
         );
     }
-
-    // --- Finding #24: localized_ruleset_invalid_json ---
 
     #[test]
     fn localized_ruleset_invalid_json() {
@@ -490,8 +647,6 @@ mod tests {
             "malformed i18n JSON should produce an error"
         );
     }
-
-    // --- Duplicate point item IDs ---
 
     #[test]
     fn duplicate_point_item_ids() {
@@ -508,8 +663,6 @@ mod tests {
         );
     }
 
-    // --- Duplicate type profile IDs ---
-
     #[test]
     fn duplicate_type_profile_ids() {
         let types = r#"[
@@ -525,13 +678,11 @@ mod tests {
         );
     }
 
-    // --- RulesetError Display and source ---
-
     #[test]
-    fn ruleset_error_display() {
+    fn ruleset_error_display_and_kind() {
         let parse_err = Ruleset::from_json("test", "1", "INVALID", "[]").unwrap_err();
-        let msg = format!("{parse_err}");
-        assert!(msg.contains("parse error"), "display: {msg}");
+        assert_eq!(parse_err.kind(), "parse");
+        assert!(format!("{parse_err}").contains("parse error"));
 
         let integrity_err = Ruleset::from_json(
             "test",
@@ -540,16 +691,17 @@ mod tests {
             "[]",
         )
         .unwrap_err();
-        let msg = format!("{integrity_err}");
-        assert!(msg.contains("integrity error"), "display: {msg}");
+        assert_eq!(integrity_err.kind(), "integrity");
+        assert!(format!("{integrity_err}").contains("integrity error"));
     }
 
     #[test]
     fn ruleset_error_source() {
         use std::error::Error;
 
+        // Parse errors no longer leak the underlying serde_json::Error.
         let parse_err = Ruleset::from_json("test", "1", "INVALID", "[]").unwrap_err();
-        assert!(parse_err.source().is_some());
+        assert!(parse_err.source().is_none());
 
         let integrity_err = Ruleset::from_json(
             "test",
@@ -562,10 +714,25 @@ mod tests {
     }
 
     #[test]
+    fn integrity_error_exposes_individual_messages() {
+        let items = r#"[
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"has": "virtue.x"}},
+          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"has": "virtue.y"}}
+        ]"#;
+        let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => {
+                assert_eq!(e.errors().len(), 2, "two distinct integrity errors");
+            }
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    #[test]
     fn ruleset_error_serialize() {
         let parse_err = Ruleset::from_json("test", "1", "INVALID", "[]").unwrap_err();
         let json = serde_json::to_string(&parse_err).unwrap();
-        assert!(json.contains("parse_error"), "serialized: {json}");
+        assert!(json.contains("parse"), "serialized: {json}");
 
         let integrity_err = Ruleset::from_json(
             "test",
@@ -576,5 +743,13 @@ mod tests {
         .unwrap_err();
         let json = serde_json::to_string(&integrity_err).unwrap();
         assert!(json.contains("integrity"), "serialized: {json}");
+        assert!(json.contains("errors"), "serialized errors list: {json}");
+    }
+
+    #[test]
+    fn domain_resolution_classification() {
+        assert!(ParameterDomain::Item.resolves_against_items());
+        assert!(!ParameterDomain::Ability.resolves_against_items());
+        assert!(!ParameterDomain::Art.resolves_against_items());
     }
 }

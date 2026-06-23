@@ -8,10 +8,15 @@ export type EntityKind = 'character' | 'covenant';
 export type ValidationMode = 'enforced' | 'advisory' | 'silent';
 export type IssueSeverity = 'error' | 'warning';
 
+// Closed enums in the engine (`ParamType` / `ParameterDomain`), serialized as
+// their snake_case names.
+export type ParamType = 'ref';
+export type ParameterDomain = 'ability' | 'art' | 'item';
+
 export interface ParameterDef {
   key: string;
-  type: string;
-  domain: string;
+  type: ParamType;
+  domain: ParameterDomain;
 }
 
 export interface PointItem {
@@ -35,6 +40,9 @@ export interface EntityTypeProfile {
   budget: PointBudget;
   permitted_categories: string[];
   forbidden_categories: string[];
+  // Whether this character type is a Hermetic magus. Omitted from JSON when
+  // false (the common case), so optional here.
+  is_magus?: boolean;
   creation_phases: string[];
 }
 
@@ -77,8 +85,10 @@ export interface Entity {
 
 export interface ValidationIssue {
   severity: IssueSeverity;
+  // Stable machine key, also the Fluent message id the UI localizes.
   code: string;
-  message: string;
+  // Interpolation values for the localized message, keyed by argument name.
+  args: Record<string, string>;
   context?: string | null;
 }
 
@@ -86,8 +96,12 @@ export interface ValidationResult {
   issues: ValidationIssue[];
 }
 
-// Tauri command errors are rejected as `{ kind, message? }`.
-export interface AppError {
-  kind: 'io' | 'ruleset' | 'not_loaded' | 'serialize';
-  message?: string;
-}
+// Tauri command errors are rejected as a tagged object whose `kind`
+// discriminates the variant. `io`/`serialize` carry a `message`; `ruleset`
+// preserves the engine's own discriminant (`ruleset_kind`: 'parse' |
+// 'integrity') and the individual violation messages (`errors`).
+export type AppError =
+  | { kind: 'io'; message: string }
+  | { kind: 'ruleset'; ruleset_kind: 'parse' | 'integrity'; errors: string[] }
+  | { kind: 'not_loaded' }
+  | { kind: 'serialize'; message: string };

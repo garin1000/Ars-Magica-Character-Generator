@@ -44,10 +44,14 @@ pub fn validate_loaded(
     validate(entity, ruleset).apply_mode(mode)
 }
 
-/// Writes an entity to `path` as canonical, pretty JSON. The engine sorts
-/// selections and uses `BTreeMap` throughout, so the output is byte-stable.
+/// Writes an entity to `path` as canonical, pretty JSON. The entity is
+/// normalized first (sorting selections and parameters) so the output is
+/// byte-stable for zero-noise git diffs — the engine no longer sorts implicitly
+/// on serialize.
 pub fn save_entity_to_path(entity: &Entity, path: &Path) -> Result<(), AppError> {
-    let json = serde_json::to_string_pretty(entity)?;
+    let mut canonical = entity.clone();
+    canonical.normalize();
+    let json = serde_json::to_string_pretty(&canonical)?;
     fs::write(path, json)?;
     Ok(())
 }

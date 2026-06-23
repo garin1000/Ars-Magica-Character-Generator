@@ -1,6 +1,8 @@
-//! Error type surfaced to the frontend. Serializes as a tagged object
-//! `{ "kind": "...", "message": "..." }` so JS can map `kind` to a Fluent key
-//! without parsing English prose.
+//! Error type surfaced to the frontend. Serializes as a tagged object whose
+//! outer `kind` discriminates the variant, so JS can map a stable key to a
+//! Fluent message without parsing English prose. The `Ruleset` variant further
+//! preserves the engine's own `kind` ("parse"/"integrity") plus the individual
+//! integrity messages, rather than collapsing them into one English blob.
 
 use arm_rules::RulesetError;
 use serde::Serialize;
@@ -11,7 +13,14 @@ pub enum AppError {
     /// A filesystem operation failed (missing rules file, unreadable save, etc.).
     Io { message: String },
     /// A ruleset failed to parse or violated referential integrity.
-    Ruleset { message: String },
+    ///
+    /// `ruleset_kind` carries the engine's stable discriminant
+    /// ([`RulesetError::kind`]: `"parse"` or `"integrity"`) and `errors` carries
+    /// one message per detected violation (a single element for parse failures).
+    Ruleset {
+        ruleset_kind: String,
+        errors: Vec<String>,
+    },
     /// A command needing a loaded ruleset ran before `load_ruleset` succeeded.
     NotLoaded,
     /// (De)serialization of an entity or save file failed.
@@ -22,7 +31,10 @@ impl std::fmt::Display for AppError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             AppError::Io { message } => write!(f, "io error: {message}"),
-            AppError::Ruleset { message } => write!(f, "ruleset error: {message}"),
+            AppError::Ruleset {
+                ruleset_kind,
+                errors,
+            } => write!(f, "ruleset error ({ruleset_kind}): {}", errors.join("; ")),
             AppError::NotLoaded => f.write_str("no ruleset loaded"),
             AppError::Serialize { message } => write!(f, "serialize error: {message}"),
         }
@@ -41,8 +53,14 @@ impl From<std::io::Error> for AppError {
 
 impl From<RulesetError> for AppError {
     fn from(e: RulesetError) -> Self {
+        let ruleset_kind = e.kind().to_string();
+        let errors = match e {
+            RulesetError::Parse(message) => vec![message],
+            RulesetError::Integrity(integrity) => integrity.errors().to_vec(),
+        };
         AppError::Ruleset {
-            message: e.to_string(),
+            ruleset_kind,
+            errors,
         }
     }
 }

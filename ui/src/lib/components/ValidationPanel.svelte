@@ -12,7 +12,10 @@
     <ul class="issue-list" data-testid="issue-list">
       {#each issues as issue (issue.code + (issue.context ?? ''))}
         <li class="issue {issue.severity}" data-severity={issue.severity}>
-          {store.t(`issue-${issue.code}`, issue.context ? { context: issue.context } : undefined)}
+          {store.t(`issue-${issue.code}`, {
+            ...issue.args,
+            ...(issue.context ? { context: issue.context } : {}),
+          })}
         </li>
       {/each}
     </ul>

@@ -109,7 +109,9 @@ not in language-neutral `core/`.
 - **Code style enforced.**
   - Rust: `rustfmt` + `clippy` (warnings as errors: `#![deny(clippy::all)]`)
   - Svelte/TS: `prettier` + `eslint`
-- **English** for all code, identifiers, comments, and commit messages.
+- **English** for all code, identifiers, comments, commit messages, and all
+  assistant communication (chat responses, PR descriptions, status updates) —
+  regardless of the language the user writes in.
 - **Current dependencies.** Latest stable versions. Pin below latest only with
   documented reason.
 - **Canonical serialization.** Sort object keys and arrays by `id`/`ref` before

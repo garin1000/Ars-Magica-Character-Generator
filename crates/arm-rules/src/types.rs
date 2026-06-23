@@ -1,17 +1,20 @@
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
+use std::borrow::Borrow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 /// Slug-style identifier for rules entities (e.g. `virtue.gentle_gift`, `ability.awareness`).
-/// Ordered for use as BTreeMap keys.
+/// Ordered for use as `BTreeMap` keys.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Id(String);
 
 impl Id {
+    /// Creates an identifier from any string-like value.
     pub fn new(s: impl Into<String>) -> Self {
         Self(s.into())
     }
 
+    /// Borrows the identifier as a string slice.
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -35,6 +38,14 @@ impl AsRef<str> for Id {
     }
 }
 
+/// Enables map lookups (`BTreeMap<Id, _>::get`) keyed by a plain `&str` without
+/// allocating an [`Id`].
+impl Borrow<str> for Id {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
+}
+
 impl fmt::Display for Id {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.0)
@@ -45,7 +56,9 @@ impl fmt::Display for Id {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EntityKind {
+    /// A grog, companion, mythic companion, or magus.
     Character,
+    /// A covenant.
     Covenant,
 }
 
@@ -59,15 +72,20 @@ impl fmt::Display for EntityKind {
 }
 
 /// Point cost/grant magnitude. Free = 0, Minor = 1, Major = 3.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// Ordered `Free < Minor < Major` to reflect increasing point weight.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Magnitude {
+    /// Costs/grants 0 points.
     Free,
+    /// Costs/grants 1 point.
     Minor,
+    /// Costs/grants 3 points.
     Major,
 }
 
 impl Magnitude {
+    /// Returns the point weight of this magnitude (Free 0, Minor 1, Major 3).
     pub fn points(self) -> u8 {
         match self {
             Magnitude::Free => 0,
@@ -89,16 +107,21 @@ impl fmt::Display for Magnitude {
 
 /// Whether a rules item is positive (costs points) or negative (grants points).
 /// Virtue/Boon are positive; Flaw/Hook are negative. Boon/Hook are covenant-specific.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ItemKind {
+    /// A character virtue (positive).
     Virtue,
+    /// A character flaw (negative).
     Flaw,
+    /// A covenant boon (positive).
     Boon,
+    /// A covenant hook (negative).
     Hook,
 }
 
 impl ItemKind {
+    /// Returns `true` for kinds that cost points (Virtue, Boon).
     pub fn is_positive(self) -> bool {
         matches!(self, ItemKind::Virtue | ItemKind::Boon)
     }
@@ -117,6 +140,10 @@ impl fmt::Display for ItemKind {
 
 /// Recursive boolean expression tree for prerequisites.
 /// All = AND, Any = OR, None = NOR (none may be present).
+///
+/// `House`, `AbilityMin`, and `ArtMin` reference IDs (house / ability / art)
+/// for which no registry yet exists; those refs are intentionally NOT checked
+/// for referential integrity (see [`crate::ruleset::Ruleset::validate_integrity`]).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Prereq {
@@ -128,29 +155,132 @@ pub enum Prereq {
     None(Vec<Prereq>),
     /// The entity must have the referenced item selected.
     Has(Id),
-    /// The entity must belong to the referenced house.
+    /// The entity must belong to the referenced house. Currently unevaluable
+    /// (the entity carries no house metadata yet).
     House(Id),
     /// The entity must have the referenced ability at or above the given score.
+    /// Currently unevaluable (no ability scores on the entity yet).
     AbilityMin { ability: Id, score: u8 },
     /// The entity must have the referenced art at or above the given score.
+    /// Currently unevaluable (no art scores on the entity yet).
     ArtMin { art: Id, score: u8 },
-    /// The entity must be a magus.
+    /// The entity must be a magus. Evaluated against the type profile's
+    /// explicit `is_magus` flag.
     IsMagus,
 }
 
+/// The kind of value a parameter slot carries.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ParamType {
+    /// The parameter value is a reference to another rules entity (an [`Id`]).
+    Ref,
+}
+
+impl fmt::Display for ParamType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParamType::Ref => f.write_str("ref"),
+        }
+    }
+}
+
+/// The domain a parameter value's [`Id`] must belong to.
+///
+/// `Ability` and `Art` have no in-engine registry yet, so values in those
+/// domains are accepted without referential-integrity checks. `Item` resolves
+/// against the ruleset's point-item registry.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ParameterDomain {
+    /// Value is an ability id (e.g. `ability.awareness`). No registry yet.
+    Ability,
+    /// Value is an art id (e.g. `art.creo`). No registry yet.
+    Art,
+    /// Value is a point-item id; resolved against the ruleset's point items.
+    Item,
+}
+
+impl ParameterDomain {
+    /// Returns `true` if values in this domain are resolved against the
+    /// ruleset's point-item registry. `Ability` and `Art` have no registry yet.
+    pub fn resolves_against_items(self) -> bool {
+        matches!(self, ParameterDomain::Item)
+    }
+}
+
+impl fmt::Display for ParameterDomain {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParameterDomain::Ability => f.write_str("ability"),
+            ParameterDomain::Art => f.write_str("art"),
+            ParameterDomain::Item => f.write_str("item"),
+        }
+    }
+}
+
 /// Describes a parameter slot on a parameterized virtue/flaw
-/// (e.g. Puissant Ability requires an ability parameter).
+/// (e.g. Puissant Ability requires an `ability` parameter).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ParameterDef {
+    /// Stable key the selection's `params` map must use.
     pub key: String,
+    /// The kind of value the parameter carries.
     #[serde(rename = "type")]
-    pub param_type: String,
-    pub domain: String,
+    pub param_type: ParamType,
+    /// The domain the parameter value's id must belong to.
+    pub domain: ParameterDomain,
+}
+
+impl ParameterDef {
+    /// Creates a parameter definition.
+    pub fn new(key: impl Into<String>, param_type: ParamType, domain: ParameterDomain) -> Self {
+        Self {
+            key: key.into(),
+            param_type,
+            domain,
+        }
+    }
+}
+
+/// An inclusive line range `[start, end]` into a Markdown source file.
+/// Serialized as a two-element JSON array to match the shipped rules data.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(from = "[u32; 2]", into = "[u32; 2]")]
+pub struct LineRange {
+    /// First line of the range (inclusive, 1-based).
+    pub start: u32,
+    /// Last line of the range (inclusive, 1-based).
+    pub end: u32,
+}
+
+impl LineRange {
+    /// Creates a line range.
+    pub fn new(start: u32, end: u32) -> Self {
+        Self { start, end }
+    }
+
+    /// Returns `true` if `start <= end`.
+    pub fn is_valid(&self) -> bool {
+        self.start <= self.end
+    }
+}
+
+impl From<[u32; 2]> for LineRange {
+    fn from([start, end]: [u32; 2]) -> Self {
+        Self { start, end }
+    }
+}
+
+impl From<LineRange> for [u32; 2] {
+    fn from(r: LineRange) -> Self {
+        [r.start, r.end]
+    }
 }
 
 /// Provenance into the authoritative Markdown rules source: the file name
 /// (relative to `rules/source/<lang>/`, in the canonical-ID language) and the
-/// inclusive `[start, end]` line range the item was extracted from.
+/// inclusive line range the item was extracted from.
 ///
 /// Pipeline-generated, never hand-edited: re-running extraction recomputes the
 /// line range, so it self-heals when the source Markdown is reformatted. There
@@ -158,35 +288,67 @@ pub struct ParameterDef {
 /// pages, and the source files are where edits actually happen.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SourceRef {
+    /// Basename of the Markdown source file.
     pub file: String,
-    pub lines: [u32; 2],
+    /// Inclusive line range the item was extracted from.
+    pub lines: LineRange,
+}
+
+impl SourceRef {
+    /// Creates a source reference.
+    pub fn new(file: impl Into<String>, lines: LineRange) -> Self {
+        Self {
+            file: file.into(),
+            lines,
+        }
+    }
 }
 
 /// A virtue, flaw, boon, or hook with its mechanical metadata.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PointItem {
+    /// Stable slug identifier.
     pub id: Id,
+    /// Whether this is a virtue, flaw, boon, or hook.
     pub kind: ItemKind,
+    /// Point weight (free/minor/major).
     pub magnitude: Magnitude,
+    /// Grouping category used by type-profile permit/forbid rules
+    /// (e.g. `general`, `hermetic`, `social_status`).
     pub category: String,
-    #[serde(default)]
+    /// Entity kinds this item may be selected for. Empty means any kind.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub entity_kinds: BTreeSet<EntityKind>,
+    /// Prerequisite expression that must hold for this item to be legal.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub prerequisites: Option<Prereq>,
+    /// Items that may not be selected alongside this one (must be symmetric).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub incompatible_with: BTreeSet<Id>,
+    /// Parameter slots a selection of this item must fill.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub parameters: Vec<ParameterDef>,
+    /// Provenance into the Markdown source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
 }
 
+impl PointItem {
+    /// Sorts the `parameters` vector by key for canonical serialization.
+    pub fn normalize(&mut self) {
+        self.parameters.sort_by(|a, b| a.key.cmp(&b.key));
+    }
+}
+
 /// Whether The Gift is required, allowed, or forbidden for an entity type.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GiftPolicy {
+    /// The Gift must be present (the type denotes a magus).
     Required,
+    /// The Gift may optionally be present.
     Allowed,
+    /// The Gift must not be present.
     Forbidden,
 }
 
@@ -203,42 +365,71 @@ impl fmt::Display for GiftPolicy {
 /// Point limits for an entity type profile.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PointBudget {
+    /// Maximum total virtue points.
     pub virtue_points: u8,
+    /// Maximum total flaw points.
     pub flaw_points: u8,
+    /// Optional cap on the number of Major virtues.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_major_virtues: Option<u8>,
+    /// Optional cap on the number of Major flaws.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_major_flaws: Option<u8>,
+}
+
+/// `skip_serializing_if` predicate: omits a `bool` field from canonical JSON
+/// when it holds its `false` default, keeping the common case out of the data.
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 /// Data-driven profile defining constraints for an entity type
 /// (grog, companion, magus, etc.).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EntityTypeProfile {
+    /// Stable slug identifier of the type (e.g. `grog`, `companion`, `magus`).
     pub id: Id,
+    /// Point budget and caps.
     pub budget: PointBudget,
-    #[serde(default)]
+    /// If non-empty, only items whose `category` is listed may be selected.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub permitted_categories: BTreeSet<String>,
-    #[serde(default)]
+    /// Items whose `category` is listed may never be selected.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub forbidden_categories: BTreeSet<String>,
-    #[serde(default)]
+    /// Item ids that must be selected.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub required_traits: BTreeSet<Id>,
-    #[serde(default)]
+    /// Item ids that may never be selected.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub forbidden_traits: BTreeSet<Id>,
+    /// Whether this character type is a Hermetic magus (possesses the Hermetic
+    /// Magus Social Status). Independent of `gift_policy`: an unGifted Redcap is a
+    /// companion (not a magus) and a Gifted hedge wizard has The Gift but is not a
+    /// magus. Drives `Prereq::IsMagus`. Defaults to false.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub is_magus: bool,
+    /// Whether The Gift is required/allowed/forbidden. `None` = not applicable
+    /// (e.g. covenants).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub gift_policy: Option<GiftPolicy>,
+    /// The specific item id that represents The Gift, if any.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub gift_id: Option<Id>,
+    /// Categories that count as carrying The Gift (e.g. `hermetic`).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub gift_categories: BTreeSet<String>,
+    /// Ordered creation phases the guided wizard walks through.
     pub creation_phases: Vec<String>,
 }
 
 /// A user's choice of a virtue/flaw with optional parameters.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Selection {
+    /// The selected item's id.
     #[serde(rename = "ref")]
     pub item_ref: Id,
+    /// Parameter values keyed by [`ParameterDef::key`].
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub params: BTreeMap<String, Id>,
 }
@@ -251,33 +442,30 @@ impl Selection {
             params: BTreeMap::new(),
         }
     }
+
+    /// Creates a new selection with the given parameter values.
+    pub fn with_params(item_ref: Id, params: BTreeMap<String, Id>) -> Self {
+        Self { item_ref, params }
+    }
 }
 
 /// The save format for a character or covenant under construction.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+///
+/// Saves store choices, not resolved values; `selections` is kept sorted on
+/// serialization (see [`Entity::normalize`]) for zero-noise git diffs.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entity {
+    /// Save-format schema version.
     pub schema_version: u32,
+    /// The ruleset (id + version) this entity was built against.
     pub ruleset: RulesetRef,
+    /// Whether this is a character or covenant.
     pub entity_kind: EntityKind,
+    /// The entity type profile id (e.g. `companion`).
     pub type_id: Id,
+    /// The user's selections. Kept sorted via [`Entity::normalize`].
     #[serde(default)]
     pub selections: Vec<Selection>,
-}
-
-impl Serialize for Entity {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use serde::ser::SerializeStruct;
-        let mut sorted_selections = self.selections.clone();
-        sorted_selections.sort();
-
-        let mut state = serializer.serialize_struct("Entity", 5)?;
-        state.serialize_field("schema_version", &self.schema_version)?;
-        state.serialize_field("ruleset", &self.ruleset)?;
-        state.serialize_field("entity_kind", &self.entity_kind)?;
-        state.serialize_field("type_id", &self.type_id)?;
-        state.serialize_field("selections", &sorted_selections)?;
-        state.end()
-    }
 }
 
 impl Entity {
@@ -292,25 +480,40 @@ impl Entity {
         }
     }
 
-    /// Sort selections by `item_ref` for canonical serialization.
+    /// Sort selections by `item_ref` (then params) for canonical serialization.
     pub fn normalize(&mut self) {
         self.selections.sort();
     }
 }
 
-/// Identifies which ruleset version an entity was built against.
+/// Identifies which ruleset (id + version) an entity was built against.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RulesetRef {
+    /// Ruleset identifier.
     pub id: Id,
+    /// Ruleset version string.
     pub version: String,
 }
 
-/// Localized display text for a rules item.
+impl RulesetRef {
+    /// Creates a ruleset reference.
+    pub fn new(id: Id, version: impl Into<String>) -> Self {
+        Self {
+            id,
+            version: version.into(),
+        }
+    }
+}
+
+/// Localized display text for a rules item, keyed elsewhere by [`Id`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct I18nEntry {
+    /// Human-readable display name.
     pub name: String,
+    /// Optional short summary.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub summary: Option<String>,
+    /// Optional full description.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
@@ -361,10 +564,24 @@ mod tests {
     }
 
     #[test]
+    fn id_borrow_str_lookup() {
+        let mut map = BTreeMap::new();
+        map.insert(Id::new("virtue.a"), 1);
+        // Lookup with a plain &str, no Id allocation.
+        assert_eq!(map.get("virtue.a"), Some(&1));
+    }
+
+    #[test]
     fn magnitude_points() {
         assert_eq!(Magnitude::Free.points(), 0);
         assert_eq!(Magnitude::Minor.points(), 1);
         assert_eq!(Magnitude::Major.points(), 3);
+    }
+
+    #[test]
+    fn magnitude_ordering() {
+        assert!(Magnitude::Free < Magnitude::Minor);
+        assert!(Magnitude::Minor < Magnitude::Major);
     }
 
     #[test]
@@ -406,13 +623,20 @@ mod tests {
             item.source,
             Some(SourceRef {
                 file: "Ars Magica - Definitive Edition (Core Rules).md".to_string(),
-                lines: [120, 135]
+                lines: LineRange::new(120, 135)
             })
         );
 
         let reserialized = serde_json::to_string(&item).unwrap();
         let roundtripped: PointItem = serde_json::from_str(&reserialized).unwrap();
         assert_eq!(item, roundtripped);
+    }
+
+    #[test]
+    fn line_range_serializes_as_array() {
+        let source = SourceRef::new("file.md", LineRange::new(10, 20));
+        let json = serde_json::to_string(&source).unwrap();
+        assert!(json.contains("[10,20]"), "lines as array: {json}");
     }
 
     #[test]
@@ -430,7 +654,29 @@ mod tests {
         let item: PointItem = serde_json::from_str(json).unwrap();
         assert_eq!(item.parameters.len(), 1);
         assert_eq!(item.parameters[0].key, "ability");
-        assert_eq!(item.parameters[0].domain, "ability");
+        assert_eq!(item.parameters[0].param_type, ParamType::Ref);
+        assert_eq!(item.parameters[0].domain, ParameterDomain::Ability);
+    }
+
+    #[test]
+    fn point_item_normalize_sorts_parameters() {
+        let mut item: PointItem = serde_json::from_str(
+            r#"{
+              "id": "virtue.x",
+              "kind": "virtue",
+              "magnitude": "minor",
+              "category": "general",
+              "entity_kinds": ["character"],
+              "parameters": [
+                { "key": "second", "type": "ref", "domain": "art" },
+                { "key": "first", "type": "ref", "domain": "ability" }
+              ]
+            }"#,
+        )
+        .unwrap();
+        item.normalize();
+        let keys: Vec<&str> = item.parameters.iter().map(|p| p.key.as_str()).collect();
+        assert_eq!(keys, vec!["first", "second"]);
     }
 
     #[test]
@@ -517,6 +763,42 @@ mod tests {
     }
 
     #[test]
+    fn entity_type_profile_is_magus_defaults_false_and_omitted() {
+        // Absent `is_magus` deserializes to false...
+        let json = r#"{
+          "id": "companion",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "creation_phases": []
+        }"#;
+        let profile: EntityTypeProfile = serde_json::from_str(json).unwrap();
+        assert!(!profile.is_magus);
+
+        // ...and a false flag is omitted from canonical JSON.
+        let serialized = serde_json::to_string(&profile).unwrap();
+        assert!(
+            !serialized.contains("is_magus"),
+            "false is_magus must be omitted: {serialized}"
+        );
+    }
+
+    #[test]
+    fn entity_type_profile_is_magus_true_roundtrip() {
+        let json = r#"{
+          "id": "magus",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "is_magus": true,
+          "creation_phases": []
+        }"#;
+        let profile: EntityTypeProfile = serde_json::from_str(json).unwrap();
+        assert!(profile.is_magus);
+
+        let serialized = serde_json::to_string(&profile).unwrap();
+        assert!(serialized.contains(r#""is_magus":true"#), "{serialized}");
+        let roundtripped: EntityTypeProfile = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(profile, roundtripped);
+    }
+
+    #[test]
     fn entity_type_profile_without_gift_policy() {
         let json = r#"{
           "id": "standard_covenant",
@@ -532,21 +814,18 @@ mod tests {
     fn entity_save_roundtrip() {
         let entity = Entity {
             schema_version: 1,
-            ruleset: RulesetRef {
-                id: Id::new("arm5-core"),
-                version: "2024.1".into(),
-            },
+            ruleset: RulesetRef::new(Id::new("arm5-core"), "2024.1"),
             entity_kind: EntityKind::Character,
             type_id: Id::new("companion"),
             selections: vec![
-                Selection {
-                    item_ref: Id::new("flaw.deficient_technique"),
-                    params: BTreeMap::from([("technique".into(), Id::new("art.creo"))]),
-                },
-                Selection {
-                    item_ref: Id::new("virtue.puissant_ability"),
-                    params: BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
-                },
+                Selection::with_params(
+                    Id::new("flaw.deficient_technique"),
+                    BTreeMap::from([("technique".into(), Id::new("art.creo"))]),
+                ),
+                Selection::with_params(
+                    Id::new("virtue.puissant_ability"),
+                    BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
+                ),
             ],
         };
 
@@ -556,6 +835,35 @@ mod tests {
 
         assert!(json.contains(r#""schema_version": 1"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
+    }
+
+    #[test]
+    fn entity_serializes_selections_sorted() {
+        let entity = Entity {
+            schema_version: 1,
+            ruleset: RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+            entity_kind: EntityKind::Character,
+            type_id: Id::new("companion"),
+            selections: vec![
+                Selection::new(Id::new("virtue.tough")),
+                Selection::new(Id::new("flaw.poor_student")),
+                Selection::new(Id::new("ability.awareness")),
+            ],
+        };
+
+        // Serialization is canonical only after normalize(); derive-based
+        // Serialize emits selections in their in-memory order.
+        let mut normalized = entity.clone();
+        normalized.normalize();
+        let json = serde_json::to_string(&normalized).unwrap();
+
+        let first = json.find("ability.awareness").unwrap();
+        let second = json.find("flaw.poor_student").unwrap();
+        let third = json.find("virtue.tough").unwrap();
+        assert!(
+            first < second && second < third,
+            "selections sorted: {json}"
+        );
     }
 
     #[test]
@@ -610,22 +918,14 @@ mod tests {
         );
     }
 
-    // --- Finding #25: covenant_entity_roundtrip ---
-
     #[test]
     fn covenant_entity_roundtrip() {
         let entity = Entity {
             schema_version: 1,
-            ruleset: RulesetRef {
-                id: Id::new("arm5-core"),
-                version: "2024.1".into(),
-            },
+            ruleset: RulesetRef::new(Id::new("arm5-core"), "2024.1"),
             entity_kind: EntityKind::Covenant,
             type_id: Id::new("standard_covenant"),
-            selections: vec![Selection {
-                item_ref: Id::new("boon.healthy_feature"),
-                params: BTreeMap::new(),
-            }],
+            selections: vec![Selection::new(Id::new("boon.healthy_feature"))],
         };
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
@@ -634,8 +934,6 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
     }
-
-    // --- Finding #26: boon_hook_deserialization ---
 
     #[test]
     fn boon_hook_deserialization() {
@@ -661,8 +959,6 @@ mod tests {
         assert_eq!(hook.kind, ItemKind::Hook);
     }
 
-    // --- Display impls coverage ---
-
     #[test]
     fn entity_kind_display() {
         assert_eq!(format!("{}", EntityKind::Character), "character");
@@ -682,6 +978,14 @@ mod tests {
         assert_eq!(format!("{}", ItemKind::Flaw), "flaw");
         assert_eq!(format!("{}", ItemKind::Boon), "boon");
         assert_eq!(format!("{}", ItemKind::Hook), "hook");
+    }
+
+    #[test]
+    fn param_type_and_domain_display() {
+        assert_eq!(format!("{}", ParamType::Ref), "ref");
+        assert_eq!(format!("{}", ParameterDomain::Ability), "ability");
+        assert_eq!(format!("{}", ParameterDomain::Art), "art");
+        assert_eq!(format!("{}", ParameterDomain::Item), "item");
     }
 
     #[test]
@@ -725,19 +1029,57 @@ mod tests {
     }
 
     #[test]
+    fn selection_with_params() {
+        let sel = Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
+        );
+        assert_eq!(
+            sel.params.get("ability"),
+            Some(&Id::new("ability.awareness"))
+        );
+    }
+
+    #[test]
     fn entity_new() {
         let entity = Entity::new(
             EntityKind::Character,
             Id::new("companion"),
-            RulesetRef {
-                id: Id::new("arm5-core"),
-                version: "1.0".into(),
-            },
+            RulesetRef::new(Id::new("arm5-core"), "1.0"),
         );
         assert_eq!(entity.schema_version, 1);
         assert_eq!(entity.entity_kind, EntityKind::Character);
         assert_eq!(entity.type_id, Id::new("companion"));
         assert!(entity.selections.is_empty());
+    }
+
+    #[test]
+    fn ruleset_ref_new() {
+        let r = RulesetRef::new(Id::new("arm5-core"), "2024.1");
+        assert_eq!(r.id, Id::new("arm5-core"));
+        assert_eq!(r.version, "2024.1");
+    }
+
+    #[test]
+    fn source_ref_new() {
+        let s = SourceRef::new("f.md", LineRange::new(1, 2));
+        assert_eq!(s.file, "f.md");
+        assert_eq!(s.lines, LineRange::new(1, 2));
+    }
+
+    #[test]
+    fn parameter_def_new() {
+        let p = ParameterDef::new("ability", ParamType::Ref, ParameterDomain::Ability);
+        assert_eq!(p.key, "ability");
+        assert_eq!(p.param_type, ParamType::Ref);
+        assert_eq!(p.domain, ParameterDomain::Ability);
+    }
+
+    #[test]
+    fn line_range_validity() {
+        assert!(LineRange::new(1, 5).is_valid());
+        assert!(LineRange::new(5, 5).is_valid());
+        assert!(!LineRange::new(6, 5).is_valid());
     }
 
     #[test]

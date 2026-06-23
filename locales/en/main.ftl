@@ -30,25 +30,29 @@ empty-selections = No virtues or flaws selected yet.
 no-issues = No issues.
 loading = Loading…
 
-# One key per validation issue code emitted by the engine. { $context } is the
-# offending item id when present.
-issue-over_budget_virtues = Too many virtue points spent.
-issue-over_budget_flaws = Too many flaw points taken.
-issue-too_many_major_virtues = Too many Major Virtues.
-issue-too_many_major_flaws = Too many Major Flaws.
-issue-prereq_not_met = Prerequisite not met for { $context }.
-issue-prereq_unevaluated = Prerequisite for { $context } could not be checked yet.
-issue-incompatible = { $context } is incompatible with another selection.
-issue-forbidden_category = { $context } belongs to a forbidden category.
-issue-category_not_permitted = { $context } is not in a permitted category.
-issue-wrong_entity_kind = { $context } cannot be taken by this entity kind.
-issue-duplicate_selection = { $context } is selected more than once.
-issue-missing_required_trait = A required trait is missing: { $context }.
-issue-forbidden_trait = A forbidden trait is present: { $context }.
+# One key per validation issue code emitted by the engine. Each message
+# interpolates the engine's `args` (see crates/arm-rules/src/validation.rs):
+# arg names are stable per code and passed through verbatim by the UI.
+issue-over_budget_virtues = Virtue points ({ $points }) exceed budget ({ $budget }).
+issue-over_budget_flaws = Flaw points ({ $points }) exceed budget ({ $budget }).
+issue-too_many_major_virtues = Too many Major Virtues ({ $count } of max { $max }).
+issue-too_many_major_flaws = Too many Major Flaws ({ $count } of max { $max }).
+issue-prereq_not_met = Prerequisite not met for { $item }.
+issue-prereq_unevaluated = Prerequisite for { $item } could not be checked yet.
+issue-incompatible = { $item } is incompatible with { $other }.
+issue-forbidden_category = { $item } belongs to a forbidden category ({ $category }).
+issue-category_not_permitted = { $item } is not in a permitted category ({ $category }).
+issue-wrong_entity_kind = { $item } cannot be taken by a { $entity_kind }.
+issue-duplicate_selection = { $item } is selected { $count } times.
+issue-missing_required_trait = A required trait is missing: { $item }.
+issue-forbidden_trait = A forbidden trait is present: { $item }.
+issue-missing_param = { $item } is missing the parameter { $key }.
+issue-unexpected_param = { $item } has an unexpected parameter { $key }.
+issue-unknown_param_value = { $item } parameter { $key } has unknown { $domain } value { $value }.
 issue-gift_required = This type requires The Gift.
 issue-gift_forbidden = This type cannot have The Gift.
-issue-unknown_ref = Unknown item reference: { $context }.
-issue-unknown_type = Unknown entity type.
+issue-unknown_ref = Unknown item reference: { $item }.
+issue-unknown_type = Unknown entity type: { $type_id }.
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.
