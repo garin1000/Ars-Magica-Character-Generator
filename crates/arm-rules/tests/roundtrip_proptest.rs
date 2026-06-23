@@ -46,13 +46,9 @@ fn arb_entity() -> impl Strategy<Value = Entity> {
     )
         .prop_map(
             |(schema_version, rs_id, entity_kind, type_id, selections)| {
-                let mut entity = Entity {
-                    schema_version,
-                    ruleset: RulesetRef::new(rs_id, "1"),
-                    entity_kind,
-                    type_id,
-                    selections,
-                };
+                let mut entity = Entity::new(entity_kind, type_id, RulesetRef::new(rs_id, "1"));
+                entity.schema_version = schema_version;
+                entity.selections = selections;
                 entity.normalize();
                 entity
             },

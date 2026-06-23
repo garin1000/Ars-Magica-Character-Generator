@@ -3,6 +3,8 @@ use std::borrow::Borrow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
+use crate::characteristics::Characteristic;
+
 /// Slug-style identifier for rules entities (e.g. `virtue.gentle_gift`, `ability.awareness`).
 /// Ordered for use as `BTreeMap` keys.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -514,10 +516,35 @@ impl Selection {
     }
 }
 
+/// A character's whole bought score in one Ability, with an optional specialty.
+///
+/// The score is the *bought* value (ability XP is spent in whole points, so an
+/// ability never holds partial XP — loose XP sits in [`Entity::unspent_xp`]). The
+/// *effective* score (bought + virtue bonuses) is computed at validation time,
+/// never stored. Keyed by (ability, specialty): the same parameterized Ability
+/// (e.g. Area Lore, Living Language) can appear more than once with different
+/// specialties.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct AbilityScore {
+    /// The ability's id (e.g. `ability.awareness`).
+    pub ability: Id,
+    /// The whole bought score.
+    pub score: u8,
+    /// Free-text specialty (e.g. the spoken language for `ability.living_language`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub specialty: Option<String>,
+}
+
+/// `skip_serializing_if` predicate: omits a `u32` field when it is zero.
+fn is_zero(n: &u32) -> bool {
+    *n == 0
+}
+
 /// The save format for a character or covenant under construction.
 ///
-/// Saves store choices, not resolved values; `selections` is kept sorted on
-/// serialization (see [`Entity::normalize`]) for zero-noise git diffs.
+/// Saves store choices, not resolved values; `selections` and `ability_scores`
+/// are kept sorted on serialization (see [`Entity::normalize`]) for zero-noise
+/// git diffs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entity {
     /// Save-format schema version.
@@ -528,26 +555,46 @@ pub struct Entity {
     pub entity_kind: EntityKind,
     /// The entity type profile id (e.g. `companion`).
     pub type_id: Id,
-    /// The user's selections. Kept sorted via [`Entity::normalize`].
+    /// The user's virtue/flaw selections. Kept sorted via [`Entity::normalize`].
     #[serde(default)]
     pub selections: Vec<Selection>,
+    /// Chosen Characteristic scores (point-buy). Defaults to empty.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub characteristics: BTreeMap<Characteristic, i8>,
+    /// Whole bought Ability scores. Kept sorted via [`Entity::normalize`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ability_scores: Vec<AbilityScore>,
+    /// Banked experience points not yet committed to an Ability. M3 stores and
+    /// round-trips this but does not validate it (there is no XP budget until the
+    /// M4 life-stage flow); a user can record XP set aside for later.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub unspent_xp: u32,
 }
 
+/// Current save-format schema version.
+pub const SCHEMA_VERSION: u32 = 2;
+
 impl Entity {
-    /// Creates a new entity with `schema_version` 1 and empty selections.
+    /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
+    /// data.
     pub fn new(entity_kind: EntityKind, type_id: Id, ruleset_ref: RulesetRef) -> Self {
         Self {
-            schema_version: 1,
+            schema_version: SCHEMA_VERSION,
             ruleset: ruleset_ref,
             entity_kind,
             type_id,
             selections: Vec::new(),
+            characteristics: BTreeMap::new(),
+            ability_scores: Vec::new(),
+            unspent_xp: 0,
         }
     }
 
-    /// Sort selections by `item_ref` (then params) for canonical serialization.
+    /// Sort selections and ability scores for canonical serialization.
+    /// (`characteristics` is a `BTreeMap`, already id-ordered.)
     pub fn normalize(&mut self) {
         self.selections.sort();
+        self.ability_scores.sort();
     }
 }
 
@@ -927,7 +974,7 @@ mod tests {
     #[test]
     fn entity_save_roundtrip() {
         let entity = Entity {
-            schema_version: 1,
+            schema_version: SCHEMA_VERSION,
             ruleset: RulesetRef::new(Id::new("arm5-core"), "2024.1"),
             entity_kind: EntityKind::Character,
             type_id: Id::new("companion"),
@@ -941,20 +988,28 @@ mod tests {
                     BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
                 ),
             ],
+            characteristics: BTreeMap::from([(Characteristic::Int, 2), (Characteristic::Sta, -1)]),
+            ability_scores: vec![AbilityScore {
+                ability: Id::new("ability.awareness"),
+                score: 3,
+                specialty: Some("searching".into()),
+            }],
+            unspent_xp: 7,
         };
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 1"#));
+        assert!(json.contains(r#""schema_version": 2"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
+        assert!(json.contains(r#""unspent_xp": 7"#));
     }
 
     #[test]
     fn entity_serializes_selections_sorted() {
         let entity = Entity {
-            schema_version: 1,
+            schema_version: SCHEMA_VERSION,
             ruleset: RulesetRef::new(Id::new("arm5-core"), "2024.1"),
             entity_kind: EntityKind::Character,
             type_id: Id::new("companion"),
@@ -963,6 +1018,9 @@ mod tests {
                 Selection::new(Id::new("flaw.poor_student")),
                 Selection::new(Id::new("ability.awareness")),
             ],
+            characteristics: BTreeMap::new(),
+            ability_scores: Vec::new(),
+            unspent_xp: 0,
         };
 
         // Serialization is canonical only after normalize(); derive-based
@@ -1034,19 +1092,72 @@ mod tests {
 
     #[test]
     fn covenant_entity_roundtrip() {
-        let entity = Entity {
-            schema_version: 1,
-            ruleset: RulesetRef::new(Id::new("arm5-core"), "2024.1"),
-            entity_kind: EntityKind::Covenant,
-            type_id: Id::new("standard_covenant"),
-            selections: vec![Selection::new(Id::new("boon.healthy_feature"))],
-        };
+        let mut entity = Entity::new(
+            EntityKind::Covenant,
+            Id::new("standard_covenant"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.selections = vec![Selection::new(Id::new("boon.healthy_feature"))];
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
         assert!(json.contains(r#""entity_kind": "covenant""#));
 
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
+    }
+
+    #[test]
+    fn v1_save_without_new_fields_still_loads() {
+        // A schema_version 1 save predates characteristics/ability_scores/unspent_xp.
+        let v1 = r#"{
+          "schema_version": 1,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "selections": [{ "ref": "virtue.tough" }]
+        }"#;
+        let entity: Entity = serde_json::from_str(v1).unwrap();
+        assert_eq!(entity.schema_version, 1);
+        assert!(entity.characteristics.is_empty());
+        assert!(entity.ability_scores.is_empty());
+        assert_eq!(entity.unspent_xp, 0);
+    }
+
+    #[test]
+    fn empty_trait_fields_are_omitted_from_json() {
+        let entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        let json = serde_json::to_string(&entity).unwrap();
+        assert!(!json.contains("characteristics"));
+        assert!(!json.contains("ability_scores"));
+        assert!(!json.contains("unspent_xp"));
+    }
+
+    #[test]
+    fn entity_serializes_ability_scores_sorted() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.ability_scores = vec![
+            AbilityScore {
+                ability: Id::new("ability.swim"),
+                score: 2,
+                specialty: None,
+            },
+            AbilityScore {
+                ability: Id::new("ability.awareness"),
+                score: 3,
+                specialty: None,
+            },
+        ];
+        entity.normalize();
+        let json = serde_json::to_string(&entity).unwrap();
+        assert!(json.find("ability.awareness").unwrap() < json.find("ability.swim").unwrap());
     }
 
     #[test]
@@ -1161,10 +1272,13 @@ mod tests {
             Id::new("companion"),
             RulesetRef::new(Id::new("arm5-core"), "1.0"),
         );
-        assert_eq!(entity.schema_version, 1);
+        assert_eq!(entity.schema_version, SCHEMA_VERSION);
         assert_eq!(entity.entity_kind, EntityKind::Character);
         assert_eq!(entity.type_id, Id::new("companion"));
         assert!(entity.selections.is_empty());
+        assert!(entity.characteristics.is_empty());
+        assert!(entity.ability_scores.is_empty());
+        assert_eq!(entity.unspent_xp, 0);
     }
 
     #[test]

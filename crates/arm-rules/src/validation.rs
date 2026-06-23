@@ -979,13 +979,13 @@ mod tests {
     }
 
     fn make_entity(type_id: &str, selections: Vec<Selection>) -> Entity {
-        Entity {
-            schema_version: 1,
-            ruleset: RulesetRef::new(Id::new("arm5-core"), "2024.1"),
-            entity_kind: EntityKind::Character,
-            type_id: Id::new(type_id),
-            selections,
-        }
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new(type_id),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.selections = selections;
+        entity
     }
 
     fn sel(item_ref: &str) -> Selection {
@@ -1876,9 +1876,9 @@ mod tests {
           "permitted_categories": ["general"],
           "creation_phases": []
         }]"#;
-        let abilities = r#"{ "abilities": [{ "id": "ability.awareness", "category": "general" }] }"#;
-        let rs =
-            Ruleset::from_json_with_abilities("test", "1", items, types, abilities).unwrap();
+        let abilities =
+            r#"{ "abilities": [{ "id": "ability.awareness", "category": "general" }] }"#;
+        let rs = Ruleset::from_json_with_abilities("test", "1", items, types, abilities).unwrap();
         let entity = make_entity("test_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);

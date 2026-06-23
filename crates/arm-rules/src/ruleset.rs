@@ -600,7 +600,11 @@ mod tests {
             Ruleset::from_json_with_abilities("t", "1", VALID_ITEMS, VALID_TYPES, dup).unwrap_err();
         match err {
             RulesetError::Integrity(e) => {
-                assert!(e.errors().iter().any(|m| m.contains("duplicate ability ID")));
+                assert!(
+                    e.errors()
+                        .iter()
+                        .any(|m| m.contains("duplicate ability ID"))
+                );
             }
             other => panic!("expected integrity error, got {other:?}"),
         }

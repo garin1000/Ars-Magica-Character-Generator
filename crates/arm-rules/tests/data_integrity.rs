@@ -9,6 +9,18 @@ fn load_ruleset() -> Ruleset {
     Ruleset::from_json("arm5-core", "2024.1", items, types).unwrap()
 }
 
+/// Builds a character entity of `type_id` with the given selections, at the
+/// current schema version and empty trait data.
+fn entity(type_id: &str, selections: Vec<Selection>) -> Entity {
+    let mut e = Entity::new(
+        EntityKind::Character,
+        Id::new(type_id),
+        RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+    );
+    e.selections = selections;
+    e
+}
+
 #[test]
 fn shipped_data_passes_integrity_check() {
     let rs = load_ruleset();
@@ -56,25 +68,13 @@ fn german_i18n_covers_all_items() {
 fn companion_balanced_entity_validates() {
     let rs = load_ruleset();
 
-    let entity = Entity {
-        schema_version: 1,
-        ruleset: RulesetRef {
-            id: Id::new("arm5-core"),
-            version: "2024.1".into(),
-        },
-        entity_kind: EntityKind::Character,
-        type_id: Id::new("companion"),
-        selections: vec![
-            Selection {
-                item_ref: Id::new("virtue.keen_vision"),
-                params: BTreeMap::new(),
-            },
-            Selection {
-                item_ref: Id::new("flaw.poor_student"),
-                params: BTreeMap::new(),
-            },
+    let entity = entity(
+        "companion",
+        vec![
+            Selection::new(Id::new("virtue.keen_vision")),
+            Selection::new(Id::new("flaw.poor_student")),
         ],
-    };
+    );
 
     let result = validate(&entity, &rs);
     assert!(
@@ -90,19 +90,16 @@ fn companion_balanced_entity_validates() {
 
 #[test]
 fn save_load_roundtrip_with_canonical_output() {
-    let mut entity = Entity {
-        schema_version: 1,
-        ruleset: RulesetRef::new(Id::new("arm5-core"), "2024.1"),
-        entity_kind: EntityKind::Character,
-        type_id: Id::new("companion"),
-        selections: vec![
+    let mut entity = entity(
+        "companion",
+        vec![
             Selection::with_params(
                 Id::new("virtue.puissant_ability"),
                 BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
             ),
             Selection::new(Id::new("flaw.poor_student")),
         ],
-    };
+    );
     // Canonical output requires normalize(): Serialize no longer auto-sorts.
     entity.normalize();
 
@@ -118,27 +115,15 @@ fn save_load_roundtrip_with_canonical_output() {
 fn grog_type_restricts_major_virtues() {
     let rs = load_ruleset();
 
-    let entity = Entity {
-        schema_version: 1,
-        ruleset: RulesetRef {
-            id: Id::new("arm5-core"),
-            version: "2024.1".into(),
-        },
-        entity_kind: EntityKind::Character,
-        type_id: Id::new("grog"),
-        // One minor virtue funded by one minor flaw, so the points balance and
-        // the test isolates the Major-virtue restriction.
-        selections: vec![
-            Selection {
-                item_ref: Id::new("virtue.keen_vision"),
-                params: BTreeMap::new(),
-            },
-            Selection {
-                item_ref: Id::new("flaw.poor_student"),
-                params: BTreeMap::new(),
-            },
+    // One minor virtue funded by one minor flaw, so the points balance and
+    // the test isolates the Major-virtue restriction.
+    let entity = entity(
+        "grog",
+        vec![
+            Selection::new(Id::new("virtue.keen_vision")),
+            Selection::new(Id::new("flaw.poor_student")),
         ],
-    };
+    );
 
     let result = validate(&entity, &rs);
     assert!(
@@ -152,33 +137,15 @@ fn grog_type_restricts_major_virtues() {
 fn grog_over_budget() {
     let rs = load_ruleset();
 
-    let entity = Entity {
-        schema_version: 1,
-        ruleset: RulesetRef {
-            id: Id::new("arm5-core"),
-            version: "2024.1".into(),
-        },
-        entity_kind: EntityKind::Character,
-        type_id: Id::new("grog"),
-        selections: vec![
-            Selection {
-                item_ref: Id::new("virtue.keen_vision"),
-                params: BTreeMap::new(),
-            },
-            Selection {
-                item_ref: Id::new("virtue.large"),
-                params: BTreeMap::new(),
-            },
-            Selection {
-                item_ref: Id::new("virtue.tough"),
-                params: BTreeMap::new(),
-            },
-            Selection {
-                item_ref: Id::new("virtue.puissant_ability"),
-                params: BTreeMap::new(),
-            },
+    let entity = entity(
+        "grog",
+        vec![
+            Selection::new(Id::new("virtue.keen_vision")),
+            Selection::new(Id::new("virtue.large")),
+            Selection::new(Id::new("virtue.tough")),
+            Selection::new(Id::new("virtue.puissant_ability")),
         ],
-    };
+    );
 
     let result = validate(&entity, &rs);
     let codes: Vec<&str> = result.errors().map(|i| i.code.as_str()).collect();
