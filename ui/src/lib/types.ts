@@ -19,13 +19,36 @@ export interface ParameterDef {
   domain: ParameterDomain;
 }
 
+// Prerequisite expression tree. Adjacently tagged by the engine: every variant
+// is a uniform object carrying a `kind` discriminant, with any payload under
+// `value` (the unit variant `is_magus` has no `value`).
+export type Prereq =
+  | { kind: 'all'; value: Prereq[] }
+  | { kind: 'any'; value: Prereq[] }
+  | { kind: 'none'; value: Prereq[] }
+  | { kind: 'has'; value: string }
+  | { kind: 'house'; value: string }
+  | { kind: 'ability_min'; value: { ability: string; score: number } }
+  | { kind: 'art_min'; value: { art: string; score: number } }
+  | { kind: 'is_magus' };
+
 export interface PointItem {
   id: string;
   kind: ItemKind;
   magnitude: Magnitude;
   category: string;
   entity_kinds: EntityKind[];
+  prerequisites?: Prereq;
   parameters?: ParameterDef[];
+}
+
+// Per-category flaw count cap. The category is data, so the engine hardcodes no
+// slug; `major_only`/`hard` default to false and are omitted from JSON then.
+export interface FlawCategoryCap {
+  category: string;
+  max: number;
+  major_only?: boolean;
+  hard?: boolean;
 }
 
 export interface PointBudget {
@@ -33,6 +56,8 @@ export interface PointBudget {
   flaw_points: number;
   max_major_virtues?: number | null;
   max_major_flaws?: number | null;
+  max_minor_flaws?: number | null;
+  flaw_category_caps?: FlawCategoryCap[];
 }
 
 export interface EntityTypeProfile {
