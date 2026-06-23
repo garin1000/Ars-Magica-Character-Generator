@@ -3,8 +3,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ruleset::Ruleset;
 use crate::types::{
-    Entity, EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, PointItem, Prereq,
-    ValidationMode,
+    Entity, EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, ParameterDomain, PointItem,
+    Prereq, ValidationMode,
 };
 
 /// Whether a validation issue blocks (`Error`) or merely advises (`Warning`).
@@ -56,6 +56,11 @@ pub enum IssueSeverity {
 /// | `unknown_param_value` | error | `item`, `key`, `value`, `domain` |
 /// | `gift_required` | error | (none) |
 /// | `gift_forbidden` | error | (none) |
+/// | `characteristic_out_of_range` | error | `characteristic`, `score`, `min`, `max` |
+/// | `characteristic_overspent` | error | `cost`, `points` |
+/// | `characteristic_points_unspent` | warning | `cost`, `points` |
+/// | `unknown_ability` | error | `ability` |
+/// | `duplicate_ability` | error | `ability`, `count` |
 ///
 /// † The per-category flaw caps emit a code derived from the
 /// `flaw_category_caps` entry's category slug (`too_many_<category>_flaws`, or
@@ -197,6 +202,8 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_forbidden_traits(type_profile, &selected_ids, &mut issues);
     validate_parameters(entity, ruleset, &mut issues);
     validate_gift_policy(entity, ruleset, type_profile, &mut issues);
+    validate_characteristics(entity, ruleset, &mut issues);
+    validate_abilities(entity, ruleset, &mut issues);
 
     ValidationResult { issues }
 }
@@ -451,13 +458,22 @@ fn validate_prerequisites(
 ) {
     let is_magus = type_profile.map(|p| p.is_magus);
 
+    // Max bought score per ability (a parameterized ability may appear more than
+    // once with different specialties; the highest score wins for a threshold).
+    let mut ability_scores: BTreeMap<&Id, u8> = BTreeMap::new();
+    for a in &entity.ability_scores {
+        let entry = ability_scores.entry(&a.ability).or_insert(0);
+        *entry = (*entry).max(a.score);
+    }
+
     for selection in &entity.selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
 
         if let Some(ref prereq) = item.prerequisites {
-            let (outcome, depended_on_unknown) = evaluate_prereq(prereq, selected_ids, is_magus);
+            let (outcome, depended_on_unknown) =
+                evaluate_prereq(prereq, selected_ids, is_magus, &ability_scores);
             match outcome {
                 Tri::False => {
                     issues.push(ValidationIssue::error(
@@ -486,6 +502,7 @@ fn evaluate_prereq(
     prereq: &Prereq,
     selected_ids: &BTreeSet<&Id>,
     is_magus: Option<bool>,
+    ability_scores: &BTreeMap<&Id, u8>,
 ) -> (Tri, bool) {
     match prereq {
         Prereq::All(children) => {
@@ -493,7 +510,7 @@ fn evaluate_prereq(
             let mut depended = false;
             let mut saw_unknown = false;
             for child in children {
-                let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus);
+                let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus, ability_scores);
                 match outcome {
                     Tri::False => return (Tri::False, dep),
                     Tri::Unknown => {
@@ -514,7 +531,7 @@ fn evaluate_prereq(
             let mut depended = false;
             let mut saw_unknown = false;
             for child in children {
-                let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus);
+                let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus, ability_scores);
                 match outcome {
                     Tri::True => return (Tri::True, false),
                     Tri::Unknown => {
@@ -535,7 +552,7 @@ fn evaluate_prereq(
             let mut depended = false;
             let mut saw_unknown = false;
             for child in children {
-                let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus);
+                let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus, ability_scores);
                 match outcome {
                     Tri::True => return (Tri::False, false),
                     Tri::Unknown => {
@@ -565,10 +582,19 @@ fn evaluate_prereq(
             Some(false) => (Tri::False, false),
             None => (Tri::Unknown, true),
         },
-        // No house/ability/art metadata on the entity yet: genuinely unknown.
-        Prereq::House(_) | Prereq::AbilityMin { .. } | Prereq::ArtMin { .. } => {
-            (Tri::Unknown, true)
+        // AbilityMin compares against the entity's max *bought* score for that
+        // ability (virtue bonuses are not applied in M3). An ability the entity
+        // does not have counts as score 0, so any positive threshold is False.
+        Prereq::AbilityMin { ability, score } => {
+            let have = ability_scores.get(ability).copied().unwrap_or(0);
+            if have >= *score {
+                (Tri::True, false)
+            } else {
+                (Tri::False, false)
+            }
         }
+        // No house/art metadata on the entity yet: genuinely unknown (M5).
+        Prereq::House(_) | Prereq::ArtMin { .. } => (Tri::Unknown, true),
     }
 }
 
@@ -795,12 +821,18 @@ fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
             ));
         }
 
-        // Resolve values for domains that have a registry.
+        // Resolve values for domains that have a registry (Item -> point items,
+        // Ability -> ability catalogue). Art has no registry yet (M5).
         for param in &item.parameters {
             let Some(value) = selection.params.get(&param.key) else {
                 continue; // missing already reported above
             };
-            if param.domain.resolves_against_items() && !ruleset.point_items.contains_key(value) {
+            let resolves = match param.domain {
+                ParameterDomain::Item => ruleset.point_items.contains_key(value),
+                ParameterDomain::Ability => ruleset.abilities.contains_key(value),
+                ParameterDomain::Art => true,
+            };
+            if !resolves {
                 issues.push(ValidationIssue::error(
                     "unknown_param_value",
                     args([
@@ -876,9 +908,90 @@ fn validate_gift_policy(
     }
 }
 
+/// Validates Characteristic point-buy: each score must be a legal table value,
+/// and the total cost must not exceed the starting points (over = error,
+/// under = a non-blocking "points unspent" warning, mirroring the V/F balance
+/// rule). No-op when the ruleset ships no characteristic rules.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2340-2354 (the cost
+/// table and the seven starting points). The numbers themselves are data in
+/// `rules/core/characteristics.json` (see RULES.md).
+fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    let Some(rules) = ruleset.characteristic_rules() else {
+        return;
+    };
+    let (Some(min), Some(max)) = (rules.min_score(), rules.max_score()) else {
+        return;
+    };
+
+    for (characteristic, &score) in &entity.characteristics {
+        if !rules.is_legal_score(score) {
+            issues.push(ValidationIssue::error(
+                "characteristic_out_of_range",
+                args([
+                    ("characteristic", characteristic.to_string()),
+                    ("score", score.to_string()),
+                    ("min", min.to_string()),
+                    ("max", max.to_string()),
+                ]),
+                None,
+            ));
+        }
+    }
+
+    let cost = rules.total_cost(&entity.characteristics);
+    let budget = rules.start_points as i32;
+    if cost > budget {
+        issues.push(ValidationIssue::error(
+            "characteristic_overspent",
+            args([("cost", cost.to_string()), ("points", budget.to_string())]),
+            None,
+        ));
+    } else if cost < budget {
+        issues.push(ValidationIssue::warning(
+            "characteristic_points_unspent",
+            args([("cost", cost.to_string()), ("points", budget.to_string())]),
+            None,
+        ));
+    }
+}
+
+/// Validates Ability scores: every referenced ability must resolve against the
+/// catalogue, and no (ability, specialty) pair may appear twice. XP budgets and
+/// the age cap are deferred to the M4 life-stage flow.
+fn validate_abilities(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    let mut seen: BTreeMap<(&Id, Option<&str>), u32> = BTreeMap::new();
+
+    for entry in &entity.ability_scores {
+        if !ruleset.abilities.contains_key(&entry.ability) {
+            issues.push(ValidationIssue::error(
+                "unknown_ability",
+                args([("ability", entry.ability.to_string())]),
+                Some(entry.ability.clone()),
+            ));
+        }
+        let key = (&entry.ability, entry.specialty.as_deref());
+        *seen.entry(key).or_insert(0) += 1;
+    }
+
+    for ((ability, _specialty), count) in seen {
+        if count > 1 {
+            issues.push(ValidationIssue::error(
+                "duplicate_ability",
+                args([
+                    ("ability", ability.to_string()),
+                    ("count", count.to_string()),
+                ]),
+                Some(ability.clone()),
+            ));
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::characteristics::Characteristic;
     use crate::types::*;
     use pretty_assertions::assert_eq;
     use std::collections::BTreeMap;
@@ -975,7 +1088,9 @@ mod tests {
           }
         ]"#;
 
-        Ruleset::from_json("arm5-core", "2024.1", items, types).unwrap()
+        let abilities =
+            r#"{ "abilities": [{ "id": "ability.awareness", "category": "general" }] }"#;
+        Ruleset::from_json_with_abilities("arm5-core", "2024.1", items, types, abilities).unwrap()
     }
 
     fn make_entity(type_id: &str, selections: Vec<Selection>) -> Entity {
@@ -1864,8 +1979,8 @@ mod tests {
         assert!(warning_codes.contains(&"prereq_unevaluated"));
     }
 
-    #[test]
-    fn prereq_ability_min_produces_unevaluated_warning() {
+    /// A ruleset whose `virtue.a` requires Awareness 3. Returns (ruleset).
+    fn ability_min_ruleset() -> Ruleset {
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "ability_min", "value": {"ability": "ability.awareness", "score": 3}}}
@@ -1878,12 +1993,192 @@ mod tests {
         }]"#;
         let abilities =
             r#"{ "abilities": [{ "id": "ability.awareness", "category": "general" }] }"#;
-        let rs = Ruleset::from_json_with_abilities("test", "1", items, types, abilities).unwrap();
+        Ruleset::from_json_with_abilities("test", "1", items, types, abilities).unwrap()
+    }
+
+    #[test]
+    fn ability_min_met_when_bought_score_at_or_above_threshold() {
+        let rs = ability_min_ruleset();
+        let mut entity = make_entity("test_type", vec![sel("virtue.a")]);
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 3,
+            specialty: None,
+        }];
+
+        let result = validate(&entity, &rs);
+        // The lone minor virtue is unbalanced (no funding flaw), so the entity is
+        // not fully valid; what matters here is that the prereq itself is met.
+        assert!(
+            !codes(&result).contains(&"prereq_not_met".to_string()),
+            "Awareness 3 satisfies the min: {result:?}"
+        );
+    }
+
+    #[test]
+    fn ability_min_not_met_when_bought_score_below_threshold() {
+        let rs = ability_min_ruleset();
+        let mut entity = make_entity("test_type", vec![sel("virtue.a")]);
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 2,
+            specialty: None,
+        }];
+
+        let result = validate(&entity, &rs);
+        let codes: Vec<String> = codes(&result);
+        assert!(codes.contains(&"prereq_not_met".to_string()), "{codes:?}");
+    }
+
+    #[test]
+    fn ability_min_absent_ability_counts_as_zero_and_fails() {
+        let rs = ability_min_ruleset();
+        // No ability scores at all -> Awareness counts as 0 -> below 3 -> error,
+        // NOT an unevaluated warning (AbilityMin is now decidable).
         let entity = make_entity("test_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
+        let error_codes = codes(&result);
+        assert!(
+            error_codes.contains(&"prereq_not_met".to_string()),
+            "{error_codes:?}"
+        );
         let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
-        assert!(warning_codes.contains(&"prereq_unevaluated"));
+        assert!(!warning_codes.contains(&"prereq_unevaluated"));
+    }
+
+    /// A ruleset carrying the canonical characteristic cost table + a couple of
+    /// abilities, for the characteristic/ability validator tests.
+    fn traits_ruleset() -> Ruleset {
+        let types = r#"[{
+          "id": "companion",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let abilities = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 5 },
+            { "score": 2, "total_xp": 15 },
+            { "score": 3, "total_xp": 30 }
+          ],
+          "abilities": [
+            { "id": "ability.awareness", "category": "general" },
+            { "id": "ability.living_language", "category": "general" }
+          ]
+        }"#;
+        let characteristics = r#"{
+          "start_points": 7,
+          "costs": [
+            { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 }, { "score": 1, "cost": 1 },
+            { "score": 0, "cost": 0 },
+            { "score": -1, "cost": -1 }, { "score": -2, "cost": -3 }, { "score": -3, "cost": -6 }
+          ]
+        }"#;
+        Ruleset::from_core_json("test", "1", "[]", types, abilities, characteristics).unwrap()
+    }
+
+    fn companion_entity() -> Entity {
+        make_entity("companion", vec![])
+    }
+
+    #[test]
+    fn characteristics_balanced_spend_is_valid() {
+        let rs = traits_ruleset();
+        let mut entity = companion_entity();
+        // Int +3 (6) + Per +1 (1) = 7 = start points.
+        entity.characteristics =
+            BTreeMap::from([(Characteristic::Int, 3), (Characteristic::Per, 1)]);
+        let result = validate(&entity, &rs);
+        assert!(result.is_valid(), "exactly 7 points spent: {result:?}");
+    }
+
+    #[test]
+    fn characteristics_overspend_is_error() {
+        let rs = traits_ruleset();
+        let mut entity = companion_entity();
+        // Int +3 (6) + Per +2 (3) = 9 > 7.
+        entity.characteristics =
+            BTreeMap::from([(Characteristic::Int, 3), (Characteristic::Per, 2)]);
+        assert!(codes(&validate(&entity, &rs)).contains(&"characteristic_overspent".to_string()));
+    }
+
+    #[test]
+    fn characteristics_underspend_is_warning() {
+        let rs = traits_ruleset();
+        let mut entity = companion_entity();
+        entity.characteristics = BTreeMap::from([(Characteristic::Int, 1)]); // costs 1 < 7
+        let result = validate(&entity, &rs);
+        assert!(result.is_valid(), "underspend does not block");
+        let warnings: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
+        assert!(
+            warnings.contains(&"characteristic_points_unspent"),
+            "{warnings:?}"
+        );
+    }
+
+    #[test]
+    fn characteristic_out_of_range_is_error() {
+        let rs = traits_ruleset();
+        let mut entity = companion_entity();
+        entity.characteristics = BTreeMap::from([(Characteristic::Str, 4)]); // table max is 3
+        assert!(
+            codes(&validate(&entity, &rs)).contains(&"characteristic_out_of_range".to_string())
+        );
+    }
+
+    #[test]
+    fn unknown_ability_is_error() {
+        let rs = traits_ruleset();
+        let mut entity = companion_entity();
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.nonexistent"),
+            score: 2,
+            specialty: None,
+        }];
+        assert!(codes(&validate(&entity, &rs)).contains(&"unknown_ability".to_string()));
+    }
+
+    #[test]
+    fn duplicate_ability_same_specialty_is_error() {
+        let rs = traits_ruleset();
+        let mut entity = companion_entity();
+        entity.ability_scores = vec![
+            AbilityScore {
+                ability: Id::new("ability.awareness"),
+                score: 2,
+                specialty: None,
+            },
+            AbilityScore {
+                ability: Id::new("ability.awareness"),
+                score: 3,
+                specialty: None,
+            },
+        ];
+        assert!(codes(&validate(&entity, &rs)).contains(&"duplicate_ability".to_string()));
+    }
+
+    #[test]
+    fn same_ability_different_specialty_is_allowed() {
+        let rs = traits_ruleset();
+        let mut entity = companion_entity();
+        // Native and a second language: same catalogue row, distinct specialties.
+        entity.ability_scores = vec![
+            AbilityScore {
+                ability: Id::new("ability.living_language"),
+                score: 5,
+                specialty: Some("German".into()),
+            },
+            AbilityScore {
+                ability: Id::new("ability.living_language"),
+                score: 1,
+                specialty: Some("Latin".into()),
+            },
+        ];
+        assert!(
+            !codes(&validate(&entity, &rs)).contains(&"duplicate_ability".to_string()),
+            "distinct specialties are not duplicates"
+        );
     }
 
     #[test]

@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ability::{Ability, AdvancementTable};
+use crate::characteristics::CharacteristicRules;
 use crate::types::{EntityTypeProfile, I18nEntry, Id, ItemKind, PointItem, Prereq, RulesetRef};
 
 /// Top-level container for all loaded game mechanics.
@@ -26,6 +27,10 @@ pub struct Ruleset {
     /// The Ability XP advancement table.
     #[serde(default)]
     pub(crate) advancement: AdvancementTable,
+    /// The Characteristic point-buy rules (cost table + starting points), if the
+    /// ruleset ships them. `None` for rulesets without a characteristics file.
+    #[serde(default)]
+    pub(crate) characteristic_rules: Option<CharacteristicRules>,
 }
 
 /// A [`Ruleset`] paired with localized display text for a single language.
@@ -205,9 +210,8 @@ impl Ruleset {
         Self::from_json_with_abilities(id, version, point_items_json, type_profiles_json, "{}")
     }
 
-    /// Parses point items, type profiles, and the abilities file (catalogue +
-    /// advancement table) from JSON, validates referential integrity, and returns
-    /// a Ruleset.
+    /// Like [`Ruleset::from_json`] but also loads the abilities file (catalogue +
+    /// advancement table). No characteristic rules.
     ///
     /// `abilities_json` is an object `{ "advancement": [...], "abilities": [...] }`;
     /// both keys default to empty, so `"{}"` is a valid empty file.
@@ -218,9 +222,38 @@ impl Ruleset {
         type_profiles_json: &str,
         abilities_json: &str,
     ) -> Result<Self, RulesetError> {
+        Self::from_core_json(
+            id,
+            version,
+            point_items_json,
+            type_profiles_json,
+            abilities_json,
+            "",
+        )
+    }
+
+    /// Parses every language-neutral core source — point items, type profiles,
+    /// abilities (catalogue + advancement), and the Characteristic point-buy rules
+    /// — validates referential integrity, and returns a Ruleset.
+    ///
+    /// `characteristics_json` is an object `{ "start_points", "costs" }`; an empty
+    /// string means the ruleset ships no characteristic rules.
+    pub fn from_core_json(
+        id: &str,
+        version: &str,
+        point_items_json: &str,
+        type_profiles_json: &str,
+        abilities_json: &str,
+        characteristics_json: &str,
+    ) -> Result<Self, RulesetError> {
         let items: Vec<PointItem> = serde_json::from_str(point_items_json)?;
         let types: Vec<EntityTypeProfile> = serde_json::from_str(type_profiles_json)?;
         let abilities_file: AbilitiesFile = serde_json::from_str(abilities_json)?;
+        let characteristic_rules: Option<CharacteristicRules> = if characteristics_json.is_empty() {
+            None
+        } else {
+            Some(serde_json::from_str(characteristics_json)?)
+        };
 
         // Detect duplicate IDs across each registry.
         let mut errors = Vec::new();
@@ -254,6 +287,7 @@ impl Ruleset {
             type_profiles,
             abilities,
             advancement: abilities_file.advancement,
+            characteristic_rules,
         };
 
         ruleset.validate_integrity()?;
@@ -338,6 +372,11 @@ impl Ruleset {
     /// The Ability XP advancement table.
     pub fn advancement(&self) -> &AdvancementTable {
         &self.advancement
+    }
+
+    /// The Characteristic point-buy rules, if the ruleset ships them.
+    pub fn characteristic_rules(&self) -> Option<&CharacteristicRules> {
+        self.characteristic_rules.as_ref()
     }
 
     /// Iterates over point items of the given [`ItemKind`].
