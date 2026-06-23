@@ -12,9 +12,10 @@ mode-enforced = Erzwungen
 mode-advisory = Hinweise
 mode-silent = Aus
 
+available-title = Verfügbar
 items-virtues-title = Tugenden
 items-flaws-title = Fehler
-selections-title = Auswahl
+selections-title = Gewählt
 validation-title = Prüfung
 
 # Kategorie- (Typ-)Bezeichnungen für Tugenden/Fehler, je Kategorie-ID der Engine.
@@ -31,15 +32,18 @@ magnitude-major = Groß
 balance-virtues = Tugenden: { $used } / { $budget }
 balance-flaws = Fehler: { $used } / { $budget }
 
-action-add = Hinzufügen
-action-remove = Entfernen
 action-save = Speichern
 action-load = Laden
 
 param-prompt = { $param } wählen
 param-placeholder = ID eingeben
+# Hinweis für einen nicht ausgefüllten Parameter-Platzhalter im Namen, z. B. „Begabung in (Fertigkeit)“.
+param-hint = ({ $label })
+# Lokalisierte Parameter-Bezeichnungen, je Parameter-Schlüssel der Engine.
+param-label-ability = Fertigkeit
+param-label-technique = Technik
 
-empty-selections = Noch keine Tugenden oder Fehler ausgewählt.
+empty-selections-side = Noch keine.
 no-issues = Keine Probleme.
 loading = Wird geladen…
 

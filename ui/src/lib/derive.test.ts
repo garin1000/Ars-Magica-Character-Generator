@@ -132,6 +132,24 @@ describe('displayName', () => {
     expect(displayName(ruleset, 'virtue.puissant')).toBe('Puissant {ability}');
   });
 
+  it('uses the placeholder-label resolver for a missing param', () => {
+    const ruleset = makeRuleset([], {
+      i18n: { 'virtue.puissant': { name: 'Puissant {ability}' } },
+    });
+    expect(displayName(ruleset, 'virtue.puissant', undefined, (key) => `(${key})`)).toBe(
+      'Puissant (ability)',
+    );
+  });
+
+  it('prefers a present param over the placeholder-label resolver', () => {
+    const ruleset = makeRuleset([], {
+      i18n: { 'virtue.puissant': { name: 'Puissant {ability}' } },
+    });
+    expect(
+      displayName(ruleset, 'virtue.puissant', { ability: 'Awareness' }, (key) => `(${key})`),
+    ).toBe('Puissant Awareness');
+  });
+
   it('falls back to the ref when there is no i18n entry', () => {
     const ruleset = makeRuleset([], { i18n: {} });
     expect(displayName(ruleset, 'virtue.unknown')).toBe('virtue.unknown');
