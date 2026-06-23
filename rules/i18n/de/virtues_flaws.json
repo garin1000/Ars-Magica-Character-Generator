@@ -1,10 +1,10 @@
 {
   "flaw.blatant_gift": {
-    "name": "Offensichtliche Gabe",
+    "name": "Auffällige Gabe",
     "summary": "Deine Gabe ist extrem verstörend für andere."
   },
   "flaw.deficient_technique": {
-    "name": "Schwache {technique}",
+    "name": "Defizitäre {technique}",
     "summary": "Du bist unfähig, eine Technik effektiv einzusetzen."
   },
   "flaw.poor_student": {
@@ -20,16 +20,16 @@
     "summary": "Du bist Mitglied des Ordens des Hermes."
   },
   "virtue.keen_vision": {
-    "name": "Scharfe Augen",
+    "name": "Scharfe Sicht",
     "summary": "+3 auf sichtbasierte Würfe."
   },
   "virtue.large": {
-    "name": "Groß",
+    "name": "Großgewachsen",
     "summary": "Du bist größer als der Durchschnitt."
   },
   "virtue.puissant_ability": {
-    "name": "Versiert in {ability}",
-    "summary": "+2 auf alle Würfe mit einer Fähigkeit."
+    "name": "Begabung in {ability}",
+    "summary": "+2 auf alle Würfe mit einer Fertigkeit."
   },
   "virtue.the_gift": {
     "name": "Die Gabe",
