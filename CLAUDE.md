@@ -160,6 +160,32 @@ not in language-neutral `core/`.
   Schema-versioned (`schema_version` field).
 - **YAGNI / KISS.** Build what is needed now, nothing speculative.
 
+## Rules provenance
+
+- **Rules backed by source, never memory.** Every rule implemented in code or
+  encoded as data MUST be taken from the authoritative Markdown in
+  `rules/source/<lang>/` (English is the source of truth). This applies to
+  *every* sourcebook, not just the core rules — e.g. hedge-wizard mechanics come
+  from *Hedge Magic (Revised)*, House mysteries from *Houses of Hermes — Mystery
+  Cults*. Implementing a rule from training-data recollection is prohibited: if
+  the passage is not in the source files, the rule is not implemented until the
+  source is added. A rule from a book with no English source in
+  `rules/source/en/` yet (e.g. the Rhine Tribunal book) cannot be implemented,
+  because English is the source of truth for IDs.
+- **Cite the source at the implementation site, by book.** When implementing a
+  mechanic in Rust, add a comment citing the **source file basename** + inclusive
+  line range — the basename identifies which book, e.g.
+  `// Source: Ars Magica - Definitive Edition (Core Rules).md:2774`. Never cite
+  bare line numbers; they are meaningless without the book. Verify every line
+  range against the actual file before committing it — do not trust recalled
+  numbers.
+- **Maintain the traceability map.** `crates/arm-rules/RULES.md` maps each rule
+  → verbatim excerpt → source file:line → implementing function/file (and the
+  JSON data value where the rule's number lives), organized by book. Update it
+  in the same change as any mechanic. JSON files carry no comments, so RULES.md
+  is the provenance home for rule values encoded as data (e.g. character-type
+  budgets in `rules/core/character_types.json`).
+
 ## Build & test commands
 
 ```bash
