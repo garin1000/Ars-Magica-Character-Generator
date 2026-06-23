@@ -94,33 +94,70 @@ companion type, direct-entry mode only.
       determinism. Passing. Requires the `webkit2gtk-driver` system package; see
       `ui/e2e/README.md`.
 
-## Milestone 3 — Guided creation wizard
+## Milestone 3 — Characteristics & Abilities
 
-- [ ] Wizard component driven by character type's phase list
+Scope: the two foundational, type-agnostic trait domains every character needs.
+Built as an engine → data → direct-entry slice (mirroring M1 → M2) so the guided
+wizard (M4) has real phase content to orchestrate. No wizard yet.
+
+### 3a. Engine models (TDD)
+- [ ] Characteristics model (Int, Per, Str, Sta, Pre, Com, Dex, Qik) with point-buy
+- [ ] Abilities model (categories, specialties, XP-to-score table)
+- [ ] Ability registry in the `Ruleset` so `ability` parameter refs and the
+      `ability.*` namespace resolve at load, like point items do today
+- [ ] Life-stage XP acquisition (abilities-only; grog/companion): early
+      childhood = 75 xp fixed to Native Language + 45 xp across a restricted
+      Ability list, then 15 xp/year (Wealthy 20, Poor 10) up to the chosen age;
+      enforce the age → max-Ability-score cap.
+      Source: Core Rules.md:2364-2394
+- [ ] Characteristic + ability scores on `Entity`
+- [ ] Evaluate `AbilityMin` prereq against entity ability scores
+      (currently stubbed as unevaluable — `validation.rs:569`, `types.rs:193`)
+
+### 3b. Data
+- [ ] Characteristics core data + i18n (en, de)
+- [ ] Seed Abilities catalogue (core + i18n, en, de) — enough to exercise
+      categories, specialties, and the XP-to-score table
+- [ ] Sample Childhood packages as data (the rules' prefab 45-xp spreads:
+      Athletic, Exploring, Mischievous, Social, Traveling).
+      Source: Core Rules.md:2380-2388
+
+### 3c. Direct-entry UI
+- [ ] Characteristic point-buy component with live validation
+- [ ] Ability allocation component (score + specialty) with live validation
+
+## Milestone 4 — Guided creation wizard
+
+Scope: wrap the full phase list in a guided flow, reusing the direct-entry
+components from M2 (V/F) and M3 (characteristics, abilities).
+
+- [ ] Wizard component driven by the character type's phase list
 - [ ] Phase navigation (next/back/skip where allowed)
 - [ ] Per-phase validation gating (enforced mode blocks advancing with errors)
+- [ ] Characteristics + abilities phases wired to their M3 components
+- [ ] Abilities phase offers two modes: simple flat allocation, and a
+      "sophisticated" guided life-stage flow — early childhood (Native Language
+      + the 45-xp restricted spread, with an optional Sample Childhood prefab),
+      then 15 xp/year to the chosen age, enforcing the age → max-score cap
 - [ ] Companion wizard flow complete
 - [ ] Grog wizard flow (subset of phases)
 
-## Milestone 4 — Magus support
+## Milestone 5 — Magus support
 
 - [ ] Arts data model (Techniques + Forms, scores)
+- [ ] Art registry in the `Ruleset` so `art` parameter refs and `ArtMin`
+      resolve and evaluate (parallels the M3 ability registry)
 - [ ] House data (id, required/granted virtues)
 - [ ] Spell data model (basic: technique + form + level)
 - [ ] Magus character type profile with extended phases
 - [ ] House selection step (auto-grants free House Virtue)
 - [ ] Arts allocation step
-- [ ] Apprenticeship calculation
-- [ ] Magus wizard flow
+- [ ] Magus wizard flow (extends the M4 wizard framework)
 - [ ] Additional V/F data for Hermetic category
-
-## Milestone 5 — Characteristics & Abilities
-
-- [ ] Characteristics model (Int, Per, Str, Sta, Pre, Com, Dex, Qik) with point-buy
-- [ ] Abilities model (categories, specialties, XP-to-score table)
-- [ ] Characteristic allocation step in wizard
-- [ ] Ability allocation step in wizard
-- [ ] Age & experience system (later life stages)
+- [ ] Magus life stages that spend Art XP (so they land here, not in M3):
+      apprenticeship (240 xp across Arts + Abilities, 120 spell levels) and
+      after-apprenticeship accrual (30 pts/year across Arts, Abilities, spells).
+      Source: Core Rules.md:2433-2435, 2467-2471
 
 ## Milestone 6 — Covenants
 
@@ -156,5 +193,6 @@ companion type, direct-entry mode only.
 
 Milestones 0, 1, and 2 complete. The Tauri app builds and launches, loads the
 ruleset from bundled resources, validates live, round-trips canonical saves, and
-passes a real-binary tauri-driver e2e. Next: guided creation wizard driven by
-the character type's phase list.
+passes a real-binary tauri-driver e2e. Next: characteristics & abilities — the
+foundational trait models every character type needs — built engine-first as a
+direct-entry slice, before the guided wizard (M4) wraps the full phase list.
