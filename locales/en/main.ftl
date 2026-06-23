@@ -3,6 +3,7 @@
 # rules/i18n/<lang>/ via the load_ruleset command.
 
 app-title = Ars Magica Character Generator
+app-logo-alt = Ars Magica Open License logo
 
 language-label = Language
 mode-label = Validation
