@@ -113,13 +113,16 @@ button:disabled {
 .layout {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr));
-  grid-auto-rows: minmax(0, 1fr);
+  grid-auto-rows: minmax(16rem, 1fr);
   gap: 1rem;
   padding: 1rem;
   flex: 1;
   min-height: 0;
-  /* Stretch (default) so source and selected are equal height; min-height:0 +
-     1fr rows keep each region bounded so its content scrolls in place. */
+  overflow-y: auto;
+  /* Rows are equal-height (1fr) and scroll their content in place when they all
+     fit the viewport; each keeps a usable 16rem floor, and the layout itself
+     scrolls when the regions (V/F, characteristics, abilities, selected) exceed
+     the viewport so no control is ever clipped out of reach. */
 }
 
 /* Two top-level regions: Available (source) and Selected. */
@@ -146,23 +149,32 @@ button:disabled {
   align-items: start;
 }
 
-/* Source columns and the selected frame fill the region height so both
+/* Source/traits columns and the selected frame fill the region height so the
    regions stay equal-height; the check output sits below the frame. */
 .region-source .region-columns,
+.region-traits .region-columns,
 .selected-frame .region-columns {
   flex: 1;
 }
 
-/* The available lists are the full catalogue: each picker scrolls inside its
-   own column so the page never grows past the viewport. */
-.region-source .region-columns {
+/* The available and traits lists can be long: each panel scrolls inside its own
+   column so it never overflows its grid cell and overlaps a neighbour. */
+.region-source .region-columns,
+.region-traits .region-columns {
   min-height: 0;
   align-items: stretch;
 }
 
-.region-source .panel {
+.region-source .panel,
+.region-traits .panel {
   min-height: 0;
   overflow-y: auto;
+  /* Inset the content from the right edge so an overflow (overlay) scrollbar
+     never sits on top of the right-aligned add (+) buttons, which would make
+     them unclickable. `scrollbar-gutter` is unreliable on WebKitGTK, so reserve
+     the space with padding. */
+  scrollbar-gutter: stable;
+  padding-right: 1.1rem;
 }
 
 /* Subtle gold frame around the selected V/F only — not the check output. The
