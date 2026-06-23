@@ -382,6 +382,34 @@ pub struct PointBudget {
     /// Optional cap on the number of Major flaws.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_major_flaws: Option<u8>,
+    /// Optional cap on the number of Minor flaws (hard rule).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2774 ("A central
+    /// character may have up to ten points of Flaws, but no more than five Minor
+    /// Flaws"); grogs :1009 ("no more than three Minor Flaws").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_minor_flaws: Option<u8>,
+    /// Optional cap on the number of Story flaws (soft guideline → warning).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2818 ("A
+    /// character should not have more than one Story Flaw"); grogs :1009
+    /// ("grogs should not have Story Flaws").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_story_flaws: Option<u8>,
+    /// Optional cap on the total number of Personality flaws (soft guideline →
+    /// warning).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2820 ("A
+    /// character should normally not have more than two Personality Flaws in
+    /// total").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_personality_flaws: Option<u8>,
+    /// Optional cap on the number of Major Personality flaws (hard rule).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2820 ("A
+    /// character may not have more than one Major Personality Flaw").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_major_personality_flaws: Option<u8>,
 }
 
 /// `skip_serializing_if` predicate: omits a `bool` field from canonical JSON

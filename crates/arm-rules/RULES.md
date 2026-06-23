@@ -42,14 +42,17 @@ mechanics carry entries; the rest are stubbed at the end.
 
 ### Enforcement logic
 
-#### Virtue/Flaw balance — Virtues balanced by an equal value of Flaws
-> "A central character may have up to ten points of Flaws ... and the same
-> number of points of Virtues."
+#### Virtue/Flaw balance — Virtues must be funded by Flaws
+> "Players start with no points for buying Virtues and Flaws, and thus must take
+> Flaws if they want Virtues. A central character may have up to ten points of
+> Flaws ... and the same number of points of Virtues."
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2774`, `:2297`
   (companions), `:2303` (magi).
 - Implementation: `crates/arm-rules/src/validation.rs` — `validate_balance`,
-  `compute_balance`. (Per-type point totals are data; see below.)
+  `compute_balance`. Emits `unbalanced_virtues` (error) when spent virtue points
+  exceed flaw points granted, plus the `over_budget_*` totals. (Per-type point
+  totals are data; see below.)
 
 #### Caps on Major virtues/flaws count
 > "You may not have more than one Major Hermetic Virtue" (magi);
@@ -59,8 +62,37 @@ mechanics carry entries; the rest are stubbed at the end.
   `:2824-2830` (grogs).
 - Implementation: `crates/arm-rules/src/validation.rs` — `validate_caps`
   (counts items with `magnitude == Major`; cap value is data).
-- **Not yet enforced:** the "no more than five Minor Flaws" limit (`:2774`,
-  `:2835`, `:2856`) and the Personality/Story Flaw guidelines (`:2818-2820`).
+
+#### Cap on Minor Flaws count (hard)
+> "A central character may have up to ten points of Flaws, but no more than five
+> Minor Flaws."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2774`; companion
+  `:2835`, magus `:2856`; grogs "no more than three Minor Flaws" `:1009`.
+- Implementation: `crates/arm-rules/src/validation.rs` — `validate_caps`, error
+  `too_many_minor_flaws` (counts `magnitude == Minor` flaws; cap value is data,
+  `max_minor_flaws`).
+
+#### Cap on Major Personality Flaws (hard)
+> "A character may not have more than one Major Personality Flaw."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2820`; restated per
+  type at companion `:2838`, magus `:2851`.
+- Implementation: `crates/arm-rules/src/validation.rs` — `validate_caps`, error
+  `too_many_major_personality_flaws` (counts `category == "personality" &&
+  magnitude == Major` flaws; cap value is data, `max_major_personality_flaws`).
+
+#### Personality / Story Flaw guidelines (soft → warnings)
+> "A character should normally not have more than two Personality Flaws in
+> total" (`:2820`); "A character should not have more than one Story Flaw"
+> (`:2818`); grogs "should not have Story Flaws" (`:1009`).
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2820`, `:2976`
+  (Personality total); `:2818`, `:2982` (Story); grogs `:1009`/`:2826`.
+- Implementation: `crates/arm-rules/src/validation.rs` — `validate_caps`,
+  **warnings** `too_many_personality_flaws` / `too_many_story_flaws` (the book
+  marks these troupe-overridable, so they are advisory, not blocking). Cap
+  values are data (`max_personality_flaws`, `max_story_flaws`).
 
 #### The Gift policy — required / forbidden by type
 > "all magi must have this Virtue" ... "Grogs can never have The Gift".
@@ -88,20 +120,25 @@ source:
 |------|-------|--------|
 | grog | `virtue_points: 3`, `flaw_points: 3` | `:2295`, `:2824-2830`, `:1009` |
 | grog | `max_major_virtues: 0`, `max_major_flaws: 0` | `:2824-2830` ("may not take Major Virtues or Flaws"), `:1009` |
+| grog | `max_minor_flaws: 3` | `:1009` ("no more than three Minor Flaws") |
+| grog | `max_story_flaws: 0` | `:1009` ("grogs should not have Story Flaws") |
+| grog | `max_personality_flaws: 1`, `max_major_personality_flaws: 0` | grogs take one Minor Personality Flaw and no Major Virtues/Flaws `:1009`, `:2824-2830` |
 | companion | `virtue_points: 10`, `flaw_points: 10` | `:2297`, `:2834-2840` |
-| companion | `max_major_flaws: null` (no cap) | no Major-count cap for companions in the book |
+| companion | `max_major_virtues: null`, `max_major_flaws: null` (no count cap) | no Major-count cap for companions in the book |
+| companion | `max_minor_flaws: 5` | `:2774`, `:2835` |
+| companion | `max_story_flaws: 1` | `:2818`, `:2837` |
+| companion | `max_personality_flaws: 2`, `max_major_personality_flaws: 1` | `:2820`, `:2838` |
 
 Magus and mythic-companion profiles are not yet in `character_types.json`. When
 added, cite: magus budget/caps `:2303`, `:2855-2863`; mythic companion
 `:2638`, `:2844-2851`.
 
-#### ⚠ Discrepancy to confirm
-`character_types.json` sets companion `max_major_virtues: 1`. The book's
-"no more than one Major Hermetic Virtue" (`:2857`) is a **magus** rule, and
-companions may not take Hermetic Virtues at all (`:2834-2840`). The book defines
-**no** cap on a companion's count of Major Virtues. This value appears
-unsourced — confirm with the troupe whether it should be `null` (no cap) before
-relying on it.
+#### Resolved: companion `max_major_virtues`
+Earlier data set companion `max_major_virtues: 1`. The book's "no more than one
+Major Hermetic Virtue" (`:2857`) is a **magus** rule, and companions may not
+take Hermetic Virtues at all (`:2834-2840`); the book defines **no** cap on a
+companion's count of Major Virtues. The value was therefore corrected to `null`
+(no cap).
 
 ---
 

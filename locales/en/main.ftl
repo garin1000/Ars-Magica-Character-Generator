@@ -35,8 +35,13 @@ loading = Loading…
 # arg names are stable per code and passed through verbatim by the UI.
 issue-over_budget_virtues = Virtue points ({ $points }) exceed budget ({ $budget }).
 issue-over_budget_flaws = Flaw points ({ $points }) exceed budget ({ $budget }).
+issue-unbalanced_virtues = Virtue points ({ $virtue_points }) exceed Flaw points ({ $flaw_points }); Virtues must be funded by Flaws.
 issue-too_many_major_virtues = Too many Major Virtues ({ $count } of max { $max }).
 issue-too_many_major_flaws = Too many Major Flaws ({ $count } of max { $max }).
+issue-too_many_minor_flaws = Too many Minor Flaws ({ $count } of max { $max }).
+issue-too_many_major_personality_flaws = Too many Major Personality Flaws ({ $count } of max { $max }).
+issue-too_many_personality_flaws = More Personality Flaws than recommended ({ $count } of { $max }).
+issue-too_many_story_flaws = More Story Flaws than recommended ({ $count } of { $max }).
 issue-prereq_not_met = Prerequisite not met for { $item }.
 issue-prereq_unevaluated = Prerequisite for { $item } could not be checked yet.
 issue-incompatible = { $item } is incompatible with { $other }.

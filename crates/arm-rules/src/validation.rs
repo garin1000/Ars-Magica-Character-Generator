@@ -3,7 +3,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ruleset::Ruleset;
 use crate::types::{
-    Entity, EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, Prereq, ValidationMode,
+    Entity, EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, PointItem, Prereq,
+    ValidationMode,
 };
 
 /// Whether a validation issue blocks (`Error`) or merely advises (`Warning`).
@@ -159,14 +160,21 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     ValidationResult { issues }
 }
 
-/// Enforces that virtue points and flaw points each stay within the type's
-/// budget. Virtues must be balanced by an equal value of Flaws (the budget is
-/// equal for the two by construction in the type profile).
+/// Enforces the two halves of the points rule:
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2774, :2297
-/// (companions), :2303 (magi) — "up to ten points of Flaws, and the same number
-/// of points of Virtues". The per-type point totals themselves are data in
-/// `rules/core/character_types.json` (see RULES.md).
+/// 1. Flaw points stay within the type's budget (and virtue points within
+///    theirs as a clear-message backstop).
+/// 2. Virtues must be funded by Flaws: spent virtue points may not exceed the
+///    flaw points granted. A character with 10 virtue points and 0 flaw points
+///    is over budget on neither total yet is illegal — Players "start with no
+///    points for buying Virtues and Flaws, and thus must take Flaws if they
+///    want Virtues."
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2774 ("must take
+/// Flaws if they want Virtues"), :2297 (companions), :2303 (magi) — "up to ten
+/// points of Flaws, and the same number of points of Virtues". The per-type
+/// point totals themselves are data in `rules/core/character_types.json` (see
+/// RULES.md).
 fn validate_balance(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -199,6 +207,17 @@ fn validate_balance(
             args([
                 ("points", flaw_points.to_string()),
                 ("budget", profile.budget.flaw_points.to_string()),
+            ]),
+            None,
+        ));
+    }
+
+    if virtue_points > flaw_points {
+        issues.push(ValidationIssue::error(
+            "unbalanced_virtues",
+            args([
+                ("virtue_points", virtue_points.to_string()),
+                ("flaw_points", flaw_points.to_string()),
             ]),
             None,
         ));
@@ -237,13 +256,17 @@ pub fn compute_balance(entity: &Entity, ruleset: &Ruleset) -> Balance {
     }
 }
 
-/// Enforces per-type caps on the *count* of Major virtues/flaws (distinct from
-/// the point budget). The caps themselves are data in the type profile.
+/// Enforces per-type caps on the *count* of items (distinct from the point
+/// budget). The caps themselves are data in the type profile; whether a cap is
+/// a hard rule (error) or a soft guideline (warning) is fixed by the rulebook
+/// and encoded here per cap. A cap left `None`/absent imposes no limit.
 ///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:2857 ("You may not
 /// have more than one Major Hermetic Virtue", magi); grogs may take no Major
-/// Virtues or Flaws at :2824-2830. (The ≤5 Minor Flaws limit at :2774 is a
-/// separate cap, not yet enforced here — see RULES.md.)
+/// Virtues or Flaws at :2824-2830; ≤5 Minor Flaws (central) at :2774, grogs ≤3
+/// at :1009; ≤1 Major Personality Flaw at :2820; ≤2 Personality Flaws (soft) at
+/// :2820/:2976; ≤1 Story Flaw (soft) at :2818, grogs none at :1009. See
+/// RULES.md.
 fn validate_caps(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -254,36 +277,86 @@ fn validate_caps(
         return;
     };
 
-    let count_major = |kind: ItemKind| -> usize {
+    // Counts selections whose resolved point item matches `pred`.
+    let count = |pred: &dyn Fn(&PointItem) -> bool| -> usize {
         entity
             .selections
             .iter()
-            .filter(|s| {
-                ruleset
-                    .point_items
-                    .get(&s.item_ref)
-                    .is_some_and(|item| item.kind == kind && item.magnitude == Magnitude::Major)
-            })
+            .filter(|s| ruleset.point_items.get(&s.item_ref).is_some_and(pred))
             .count()
     };
 
+    let count_args = |n: usize, max: u8| args([("count", n.to_string()), ("max", max.to_string())]);
+
+    // --- Hard caps ("may not ...") → blocking errors ---
+
     if let Some(max) = profile.budget.max_major_virtues {
-        let count = count_major(ItemKind::Virtue);
-        if count > max as usize {
+        let n = count(&|i| i.kind == ItemKind::Virtue && i.magnitude == Magnitude::Major);
+        if n > max as usize {
             issues.push(ValidationIssue::error(
                 "too_many_major_virtues",
-                args([("count", count.to_string()), ("max", max.to_string())]),
+                count_args(n, max),
                 None,
             ));
         }
     }
 
     if let Some(max) = profile.budget.max_major_flaws {
-        let count = count_major(ItemKind::Flaw);
-        if count > max as usize {
+        let n = count(&|i| i.kind == ItemKind::Flaw && i.magnitude == Magnitude::Major);
+        if n > max as usize {
             issues.push(ValidationIssue::error(
                 "too_many_major_flaws",
-                args([("count", count.to_string()), ("max", max.to_string())]),
+                count_args(n, max),
+                None,
+            ));
+        }
+    }
+
+    if let Some(max) = profile.budget.max_minor_flaws {
+        let n = count(&|i| i.kind == ItemKind::Flaw && i.magnitude == Magnitude::Minor);
+        if n > max as usize {
+            issues.push(ValidationIssue::error(
+                "too_many_minor_flaws",
+                count_args(n, max),
+                None,
+            ));
+        }
+    }
+
+    if let Some(max) = profile.budget.max_major_personality_flaws {
+        let n = count(&|i| {
+            i.kind == ItemKind::Flaw
+                && i.category == "personality"
+                && i.magnitude == Magnitude::Major
+        });
+        if n > max as usize {
+            issues.push(ValidationIssue::error(
+                "too_many_major_personality_flaws",
+                count_args(n, max),
+                None,
+            ));
+        }
+    }
+
+    // --- Soft guidelines ("should not ...") → non-blocking warnings ---
+
+    if let Some(max) = profile.budget.max_personality_flaws {
+        let n = count(&|i| i.kind == ItemKind::Flaw && i.category == "personality");
+        if n > max as usize {
+            issues.push(ValidationIssue::warning(
+                "too_many_personality_flaws",
+                count_args(n, max),
+                None,
+            ));
+        }
+    }
+
+    if let Some(max) = profile.budget.max_story_flaws {
+        let n = count(&|i| i.kind == ItemKind::Flaw && i.category == "story");
+        if n > max as usize {
+            issues.push(ValidationIssue::warning(
+                "too_many_story_flaws",
+                count_args(n, max),
                 None,
             ));
         }
@@ -991,6 +1064,229 @@ mod tests {
         assert!(codes(&result).contains(&"too_many_major_virtues".to_string()));
     }
 
+    /// A ruleset with one minor flaw, one major personality flaw, one minor
+    /// personality flaw, one story flaw, and enough minor virtues to balance —
+    /// plus a type carrying every new cap. Used by the cap tests below.
+    fn caps_ruleset(types: &str) -> Ruleset {
+        let items = r#"[
+          {"id": "flaw.minor_a", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.minor_b", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.pers_major", "kind": "flaw", "magnitude": "major", "category": "personality", "entity_kinds": ["character"]},
+          {"id": "flaw.pers_minor_a", "kind": "flaw", "magnitude": "minor", "category": "personality", "entity_kinds": ["character"]},
+          {"id": "flaw.pers_minor_b", "kind": "flaw", "magnitude": "minor", "category": "personality", "entity_kinds": ["character"]},
+          {"id": "flaw.story_a", "kind": "flaw", "magnitude": "minor", "category": "story", "entity_kinds": ["character"]},
+          {"id": "flaw.story_b", "kind": "flaw", "magnitude": "minor", "category": "story", "entity_kinds": ["character"]},
+          {"id": "virtue.v1", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.v2", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.v3", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+        ]"#;
+        Ruleset::from_json("test", "1", items, types).unwrap()
+    }
+
+    fn warning_codes(result: &ValidationResult) -> Vec<String> {
+        result.warnings().iter().map(|i| i.code.clone()).collect()
+    }
+
+    #[test]
+    fn unbalanced_virtues_more_virtues_than_flaws() {
+        // Two virtue points, no flaw points: legal on both budgets yet unfunded.
+        let rs = test_ruleset();
+        let entity = make_entity(
+            "companion",
+            vec![sel("virtue.keen_vision"), sel("virtue.large")],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"unbalanced_virtues".to_string()),
+            "virtues exceeding flaws must be flagged: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn balanced_virtues_pass() {
+        // Equal virtue and flaw points: balanced and legal.
+        let rs = test_ruleset();
+        let entity = make_entity(
+            "companion",
+            vec![sel("virtue.keen_vision"), sel("flaw.poor_student")],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"unbalanced_virtues".to_string()),
+            "balanced character should not be flagged: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn too_many_minor_flaws() {
+        let types = r#"[{
+          "id": "capped",
+          "budget": { "virtue_points": 10, "flaw_points": 10, "max_minor_flaws": 1 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = caps_ruleset(types);
+        let entity = make_entity(
+            "capped",
+            vec![
+                sel("flaw.minor_a"),
+                sel("flaw.minor_b"),
+                sel("virtue.v1"),
+                sel("virtue.v2"),
+            ],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"too_many_minor_flaws".to_string()),
+            "two minor flaws over a cap of one: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn minor_flaws_at_cap_pass() {
+        let types = r#"[{
+          "id": "capped",
+          "budget": { "virtue_points": 10, "flaw_points": 10, "max_minor_flaws": 5 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = caps_ruleset(types);
+        let entity = make_entity(
+            "capped",
+            vec![sel("flaw.minor_a"), sel("flaw.minor_b"), sel("virtue.v1")],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"too_many_minor_flaws".to_string()),
+            "two minor flaws under a cap of five: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn minor_flaws_no_cap_imposes_no_limit() {
+        // No max_minor_flaws on the type: any number is allowed.
+        let types = r#"[{
+          "id": "uncapped",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = caps_ruleset(types);
+        let entity = make_entity(
+            "uncapped",
+            vec![
+                sel("flaw.minor_a"),
+                sel("flaw.minor_b"),
+                sel("virtue.v1"),
+                sel("virtue.v2"),
+            ],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"too_many_minor_flaws".to_string()),
+            "absent cap should not limit minor flaws: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn too_many_major_personality_flaws_is_error() {
+        // pers_major (3) is a Major Personality Flaw; cap of zero forbids it.
+        let types = r#"[{
+          "id": "capped",
+          "budget": { "virtue_points": 10, "flaw_points": 10, "max_major_personality_flaws": 0 },
+          "permitted_categories": ["general", "personality"],
+          "creation_phases": []
+        }]"#;
+        let rs = caps_ruleset(types);
+        let entity = make_entity(
+            "capped",
+            vec![
+                sel("flaw.pers_major"),
+                sel("virtue.v1"),
+                sel("virtue.v2"),
+                sel("virtue.v3"),
+            ],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"too_many_major_personality_flaws".to_string()),
+            "major personality flaw over a cap of zero (hard error): {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn too_many_personality_flaws_is_warning() {
+        // Two personality flaws over a soft cap of one → non-blocking warning.
+        let types = r#"[{
+          "id": "capped",
+          "budget": { "virtue_points": 10, "flaw_points": 10, "max_personality_flaws": 1 },
+          "permitted_categories": ["general", "personality"],
+          "creation_phases": []
+        }]"#;
+        let rs = caps_ruleset(types);
+        let entity = make_entity(
+            "capped",
+            vec![
+                sel("flaw.pers_minor_a"),
+                sel("flaw.pers_minor_b"),
+                sel("virtue.v1"),
+                sel("virtue.v2"),
+            ],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            warning_codes(&result).contains(&"too_many_personality_flaws".to_string()),
+            "should warn, not error: warnings {:?}, errors {:?}",
+            warning_codes(&result),
+            codes(&result)
+        );
+        assert!(
+            !codes(&result).contains(&"too_many_personality_flaws".to_string()),
+            "soft guideline must not be a blocking error"
+        );
+    }
+
+    #[test]
+    fn too_many_story_flaws_is_warning() {
+        let types = r#"[{
+          "id": "capped",
+          "budget": { "virtue_points": 10, "flaw_points": 10, "max_story_flaws": 1 },
+          "permitted_categories": ["general", "story"],
+          "creation_phases": []
+        }]"#;
+        let rs = caps_ruleset(types);
+        let entity = make_entity(
+            "capped",
+            vec![
+                sel("flaw.story_a"),
+                sel("flaw.story_b"),
+                sel("virtue.v1"),
+                sel("virtue.v2"),
+            ],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            warning_codes(&result).contains(&"too_many_story_flaws".to_string()),
+            "two story flaws over a soft cap of one: warnings {:?}",
+            warning_codes(&result)
+        );
+        assert!(!codes(&result).contains(&"too_many_story_flaws".to_string()));
+    }
+
     #[test]
     fn forbidden_category() {
         let rs = test_ruleset();
@@ -1328,7 +1624,9 @@ mod tests {
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-           "prerequisites": {"any": [{"has": "virtue.a"}, {"house": "house.flambeau"}]}}
+           "prerequisites": {"any": [{"has": "virtue.a"}, {"house": "house.flambeau"}]}},
+          {"id": "flaw.x", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.y", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -1337,7 +1635,17 @@ mod tests {
           "creation_phases": []
         }]"#;
         let rs = Ruleset::from_json("test", "1", items, types).unwrap();
-        let entity = make_entity("test_type", vec![sel("virtue.a"), sel("virtue.b")]);
+        // Two minor virtues balanced by two minor flaws so the test isolates
+        // prerequisite-warning behaviour, not the points balance.
+        let entity = make_entity(
+            "test_type",
+            vec![
+                sel("virtue.a"),
+                sel("virtue.b"),
+                sel("flaw.x"),
+                sel("flaw.y"),
+            ],
+        );
 
         let result = validate(&entity, &rs);
         assert!(result.is_valid(), "issues: {:?}", result.issues);
