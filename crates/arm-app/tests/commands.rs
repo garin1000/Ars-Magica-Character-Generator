@@ -38,6 +38,24 @@ fn load_ruleset_yields_companion_profile_and_all_items() {
 }
 
 #[test]
+fn load_ruleset_yields_abilities_and_characteristics() {
+    let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
+    assert_eq!(localized.ruleset.ability_count(), 23);
+    assert!(
+        localized
+            .ruleset
+            .ability(&Id::new("ability.awareness"))
+            .is_some()
+    );
+    assert!(localized.ruleset.characteristic_rules().is_some());
+    // Ability display names are merged into the localized text alongside V/F.
+    assert_eq!(
+        localized.display_name(&Id::new("ability.awareness")),
+        Some("Awareness")
+    );
+}
+
+#[test]
 fn load_ruleset_localized_names_differ_between_languages() {
     let en = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
     let de = load_ruleset_from_dir(&rules_dir(), "de").unwrap();
@@ -46,6 +64,25 @@ fn load_ruleset_localized_names_differ_between_languages() {
     let en_name = en.display_name(&id).expect("en name present");
     let de_name = de.display_name(&id).expect("de name present");
     assert_ne!(en_name, de_name, "translations should differ");
+
+    // Ability names are localized too (Awareness -> Aufmerksamkeit).
+    let aware = Id::new("ability.awareness");
+    assert_ne!(
+        en.display_name(&aware).unwrap(),
+        de.display_name(&aware).unwrap()
+    );
+}
+
+#[test]
+fn sample_entity_with_characteristics_and_abilities_validates() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let entity = sample_entity();
+    // The shipped sample now carries characteristics, ability scores, and a bank.
+    assert_eq!(entity.schema_version, 2);
+    assert!(!entity.characteristics.is_empty());
+    assert!(!entity.ability_scores.is_empty());
+    let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
+    assert!(result.is_valid(), "unexpected issues: {:?}", result.issues);
 }
 
 #[test]
@@ -61,7 +98,10 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     fs::create_dir_all(tmp.path().join("i18n/en")).unwrap();
     fs::write(tmp.path().join("core/virtues_flaws.json"), "not valid json").unwrap();
     fs::write(tmp.path().join("core/character_types.json"), "[]").unwrap();
+    fs::write(tmp.path().join("core/abilities.json"), "{}").unwrap();
+    fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {
@@ -98,7 +138,10 @@ fn integrity_failure_preserves_individual_messages() {
     )
     .unwrap();
     fs::write(tmp.path().join("core/character_types.json"), "[]").unwrap();
+    fs::write(tmp.path().join("core/abilities.json"), "{}").unwrap();
+    fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {

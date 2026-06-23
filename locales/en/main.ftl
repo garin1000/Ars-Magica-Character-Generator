@@ -17,6 +17,8 @@ items-virtues-title = Virtues
 items-flaws-title = Flaws
 selections-title = Selected
 validation-title = Validation
+characteristics-title = Characteristics
+abilities-title = Abilities
 
 # Virtue/Flaw category (type) labels, keyed by the engine's category id.
 category-general = General
@@ -28,6 +30,30 @@ category-special = Special
 magnitude-free = Free
 magnitude-minor = Minor
 magnitude-major = Major
+
+# The eight Characteristics, keyed by the engine's characteristic value.
+characteristic-int = Intelligence
+characteristic-per = Perception
+characteristic-str = Strength
+characteristic-sta = Stamina
+characteristic-pre = Presence
+characteristic-com = Communication
+characteristic-dex = Dexterity
+characteristic-qik = Quickness
+
+# Ability category labels, keyed by the engine's category value.
+ability-category-general = General
+ability-category-academic = Academic
+ability-category-arcane = Arcane
+ability-category-martial = Martial
+ability-category-supernatural = Supernatural
+
+# Characteristic point-buy readout and the banked-XP field.
+characteristic-points = Points: { $used } / { $budget }
+unspent-xp = Banked XP
+ability-score-label = Score
+ability-specialty-label = Specialty
+ability-add = Add ability
 
 balance-virtues = Virtues: { $used } / { $budget }
 balance-flaws = Flaws: { $used } / { $budget }
@@ -75,6 +101,11 @@ issue-gift_required = This type requires The Gift.
 issue-gift_forbidden = This type cannot have The Gift.
 issue-unknown_ref = Unknown item reference: { $item }.
 issue-unknown_type = Unknown entity type: { $type_id }.
+issue-characteristic_out_of_range = Characteristic { $characteristic } score { $score } is outside the allowed range ({ $min } to { $max }).
+issue-characteristic_overspent = Characteristics cost { $cost } points, over the { $points } available.
+issue-characteristic_points_unspent = Only { $cost } of { $points } Characteristic points spent.
+issue-unknown_ability = Unknown ability: { $ability }.
+issue-duplicate_ability = { $ability } is listed { $count } times with the same specialty.
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.

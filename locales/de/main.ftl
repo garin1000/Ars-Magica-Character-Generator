@@ -17,6 +17,8 @@ items-virtues-title = Tugenden
 items-flaws-title = Fehler
 selections-title = Gewählt
 validation-title = Prüfung
+characteristics-title = Eigenschaften
+abilities-title = Fertigkeiten
 
 # Kategorie- (Typ-)Bezeichnungen für Tugenden/Fehler, je Kategorie-ID der Engine.
 category-general = Allgemein
@@ -28,6 +30,30 @@ category-special = Spezial
 magnitude-free = Frei
 magnitude-minor = Klein
 magnitude-major = Groß
+
+# Die acht Eigenschaften, je Eigenschaftswert der Engine.
+characteristic-int = Intelligenz
+characteristic-per = Wahrnehmung
+characteristic-str = Stärke
+characteristic-sta = Ausdauer
+characteristic-pre = Präsenz
+characteristic-com = Kommunikation
+characteristic-dex = Geschicklichkeit
+characteristic-qik = Schnelligkeit
+
+# Fertigkeitskategorien, je Kategoriewert der Engine.
+ability-category-general = Allgemein
+ability-category-academic = Akademisch
+ability-category-arcane = Arkan
+ability-category-martial = Kampf
+ability-category-supernatural = Übernatürlich
+
+# Eigenschaften-Punkteanzeige und das Feld für gespartes XP.
+characteristic-points = Punkte: { $used } / { $budget }
+unspent-xp = Gespartes XP
+ability-score-label = Wert
+ability-specialty-label = Spezialisierung
+ability-add = Fertigkeit hinzufügen
 
 balance-virtues = Tugenden: { $used } / { $budget }
 balance-flaws = Fehler: { $used } / { $budget }
@@ -75,6 +101,11 @@ issue-gift_required = Dieser Typ erfordert die Gabe.
 issue-gift_forbidden = Dieser Typ darf die Gabe nicht haben.
 issue-unknown_ref = Unbekannte Element-Referenz: { $item }.
 issue-unknown_type = Unbekannte Wesensart: { $type_id }.
+issue-characteristic_out_of_range = Eigenschaft { $characteristic } mit Wert { $score } liegt außerhalb des erlaubten Bereichs ({ $min } bis { $max }).
+issue-characteristic_overspent = Eigenschaften kosten { $cost } Punkte, mehr als die verfügbaren { $points }.
+issue-characteristic_points_unspent = Nur { $cost } von { $points } Eigenschaftspunkten ausgegeben.
+issue-unknown_ability = Unbekannte Fertigkeit: { $ability }.
+issue-duplicate_ability = { $ability } ist { $count }-mal mit derselben Spezialisierung aufgeführt.
 
 # AppError-Arten der Tauri-Befehle.
 error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.
