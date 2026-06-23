@@ -4,6 +4,8 @@
   import LanguageSelector from './lib/components/LanguageSelector.svelte';
   import ModeToggle from './lib/components/ModeToggle.svelte';
   import ItemPicker from './lib/components/ItemPicker.svelte';
+  import CharacteristicPicker from './lib/components/CharacteristicPicker.svelte';
+  import AbilityAllocator from './lib/components/AbilityAllocator.svelte';
   import SelectionList from './lib/components/SelectionList.svelte';
   import BalanceBar from './lib/components/BalanceBar.svelte';
   import ValidationPanel from './lib/components/ValidationPanel.svelte';
@@ -39,6 +41,16 @@
     <div class="region-columns">
       <ItemPicker side="virtue" />
       <ItemPicker side="flaw" />
+    </div>
+  </section>
+
+  <section class="region region-traits">
+    <h2 class="region-title">
+      {store.t('characteristics-title')} &amp; {store.t('abilities-title')}
+    </h2>
+    <div class="region-columns">
+      <CharacteristicPicker />
+      <AbilityAllocator />
     </div>
   </section>
 

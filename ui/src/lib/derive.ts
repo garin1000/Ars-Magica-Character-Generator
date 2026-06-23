@@ -1,7 +1,16 @@
 // Pure helpers deriving display data from the loaded ruleset + entity. Kept out
 // of components so they can be unit-tested and reused.
 
-import type { Entity, ItemKind, LocalizedRuleset, PointItem } from './types';
+import type {
+  Ability,
+  AbilityCategory,
+  Characteristic,
+  CharacteristicRules,
+  Entity,
+  ItemKind,
+  LocalizedRuleset,
+  PointItem,
+} from './types';
 
 /**
  * Rules display name for an item, substituting any `{param}` placeholders.
@@ -76,4 +85,64 @@ export function balance(localized: LocalizedRuleset, entity: Entity): Balance {
     virtueBudget: profile?.budget.virtue_points ?? 0,
     flawBudget: profile?.budget.flaw_points ?? 0,
   };
+}
+
+/**
+ * Total Characteristic points spent for the given scores against the cost table.
+ * Positive cost rows spend points, negative ("Gain N") rows refund them; a score
+ * with no table row contributes 0 (it is reported separately as out-of-range).
+ */
+export function characteristicPointsUsed(
+  rules: CharacteristicRules | null | undefined,
+  characteristics: Partial<Record<Characteristic, number>> | undefined,
+): number {
+  if (!rules || !characteristics) return 0;
+  let total = 0;
+  for (const score of Object.values(characteristics)) {
+    const row = rules.costs.find((c) => c.score === score);
+    if (row) total += row.cost;
+  }
+  return total;
+}
+
+/** Total XP committed across whole bought ability scores (Σ xp_for_score). */
+export function abilityXpSpent(
+  advancement: { score: number; total_xp: number }[] | undefined,
+  scores: { score: number }[] | undefined,
+): number {
+  if (!advancement || !scores) return 0;
+  let total = 0;
+  for (const { score } of scores) {
+    if (score <= 0) continue;
+    const row = advancement.find((r) => r.score === score);
+    if (row) total += row.total_xp;
+  }
+  return total;
+}
+
+export interface AbilityGroup {
+  category: AbilityCategory;
+  abilities: Ability[];
+}
+
+const ABILITY_CATEGORY_ORDER: AbilityCategory[] = [
+  'general',
+  'academic',
+  'arcane',
+  'martial',
+  'supernatural',
+];
+
+/** Catalogue abilities grouped by category in book order, each group sorted by id. */
+export function groupAbilitiesByCategory(localized: LocalizedRuleset): AbilityGroup[] {
+  const groups = new Map<AbilityCategory, Ability[]>();
+  for (const ability of Object.values(localized.ruleset.abilities ?? {})) {
+    const list = groups.get(ability.category) ?? [];
+    list.push(ability);
+    groups.set(ability.category, list);
+  }
+  return ABILITY_CATEGORY_ORDER.filter((c) => groups.has(c)).map((category) => ({
+    category,
+    abilities: groups.get(category)!.sort((a, b) => a.id.localeCompare(b.id)),
+  }));
 }
