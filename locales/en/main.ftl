@@ -12,9 +12,10 @@ mode-enforced = Enforced
 mode-advisory = Advisory
 mode-silent = Silent
 
+available-title = Available
 items-virtues-title = Virtues
 items-flaws-title = Flaws
-selections-title = Selections
+selections-title = Selected
 validation-title = Validation
 
 # Virtue/Flaw category (type) labels, keyed by the engine's category id.
@@ -31,15 +32,18 @@ magnitude-major = Major
 balance-virtues = Virtues: { $used } / { $budget }
 balance-flaws = Flaws: { $used } / { $budget }
 
-action-add = Add
-action-remove = Remove
 action-save = Save
 action-load = Load
 
 param-prompt = Choose { $param }
 param-placeholder = enter an id
+# Hint shown for an unfilled parameter slot in an item name, e.g. "Puissant (Ability)".
+param-hint = ({ $label })
+# Localized parameter labels, keyed by the engine's parameter key.
+param-label-ability = Ability
+param-label-technique = Technique
 
-empty-selections = No virtues or flaws selected yet.
+empty-selections-side = None yet.
 no-issues = No issues.
 loading = Loading…
 

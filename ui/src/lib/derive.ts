@@ -3,14 +3,24 @@
 
 import type { Entity, ItemKind, LocalizedRuleset, PointItem } from './types';
 
-/** Rules display name for an item, substituting any `{param}` placeholders. */
+/**
+ * Rules display name for an item, substituting any `{param}` placeholders.
+ *
+ * A placeholder with no value (e.g. an unfilled parameter in the picker) falls
+ * back to `placeholderLabel(key)` when given — used to show a localized hint
+ * like "(Ability)" instead of the raw `{ability}` token — or to `{key}` if not.
+ */
 export function displayName(
   localized: LocalizedRuleset,
   ref: string,
   params?: Record<string, string>,
+  placeholderLabel?: (key: string) => string,
 ): string {
   const raw = localized.i18n[ref]?.name ?? ref;
-  return raw.replace(/\{(\w+)\}/g, (_match, key: string) => params?.[key] ?? `{${key}}`);
+  return raw.replace(
+    /\{(\w+)\}/g,
+    (_match, key: string) => params?.[key] ?? placeholderLabel?.(key) ?? `{${key}}`,
+  );
 }
 
 export interface CategoryGroup {

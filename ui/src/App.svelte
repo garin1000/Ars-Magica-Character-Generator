@@ -31,11 +31,25 @@
     <SaveLoadBar />
   </div>
   <BalanceBar />
-  <ValidationPanel compact />
 </header>
 
 <main class="layout">
-  <ItemPicker side="virtue" />
-  <ItemPicker side="flaw" />
-  <SelectionList />
+  <section class="region region-source">
+    <h2 class="region-title">{store.t('available-title')}</h2>
+    <div class="region-columns">
+      <ItemPicker side="virtue" />
+      <ItemPicker side="flaw" />
+    </div>
+  </section>
+
+  <section class="region region-selected">
+    <h2 class="region-title">{store.t('selections-title')}</h2>
+    <div class="selected-frame">
+      <div class="region-columns">
+        <SelectionList side="virtue" />
+        <SelectionList side="flaw" />
+      </div>
+    </div>
+    <ValidationPanel docked />
+  </section>
 </main>

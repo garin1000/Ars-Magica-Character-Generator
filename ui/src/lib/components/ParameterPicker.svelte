@@ -12,7 +12,7 @@
 
 {#each params as param (param.key)}
   <label class="param">
-    <span>{store.t('param-prompt', { param: param.key })}</span>
+    <span>{store.t('param-prompt', { param: store.t(`param-label-${param.key}`) })}</span>
     <input
       type="text"
       placeholder={store.t('param-placeholder')}

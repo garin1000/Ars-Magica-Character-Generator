@@ -1,14 +1,14 @@
 <script lang="ts">
   import { store } from '../state.svelte';
 
-  // `compact` drops the boxed panel chrome so the validation summary can sit in
-  // the header, right-bounded above the separator line.
-  let { compact = false }: { compact?: boolean } = $props();
+  // `docked` drops the boxed panel chrome so the validation summary can sit at
+  // the bottom of the Selected region as a fixed-height, scrollable box.
+  let { docked = false }: { docked?: boolean } = $props();
 
   const issues = $derived(store.result?.issues ?? []);
 </script>
 
-<section class={compact ? 'validation-compact' : 'panel'}>
+<section class={docked ? 'validation-docked' : 'panel'}>
   <h2>{store.t('validation-title')}</h2>
   {#if issues.length === 0}
     <p class="muted" data-testid="no-issues">{store.t('no-issues')}</p>

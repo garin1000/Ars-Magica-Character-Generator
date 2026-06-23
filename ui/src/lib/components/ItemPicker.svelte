@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import { displayName, groupByCategory } from '../derive';
+  import { reserveTagSpace } from '../actions';
   import type { ItemKind } from '../types';
 
   // One picker per side: Virtues (virtue/boon) on the left, Flaws (flaw/hook)
@@ -22,15 +23,24 @@
       <ul class="item-list">
         {#each group.items as item (item.id)}
           <li>
-            <span class="item-name">{displayName(store.ruleset, item.id)}</span>
-            <span class="badge">{store.t(`magnitude-${item.magnitude}`)}</span>
+            <span class="name-wrap" use:reserveTagSpace>
+              <span class="badges">
+                <span class="badge">{store.t(`magnitude-${item.magnitude}`)}</span>
+              </span>
+              <span class="item-name">
+                {displayName(store.ruleset, item.id, undefined, (key) =>
+                  store.t('param-hint', { label: store.t(`param-label-${key}`) }),
+                )}
+              </span>
+            </span>
             <button
               type="button"
+              class="icon-btn"
               disabled={selectedRefs.has(item.id)}
               onclick={() => store.addSelection(item.id)}
               data-testid="add-{item.id}"
             >
-              {store.t('action-add')}
+              +
             </button>
           </li>
         {/each}

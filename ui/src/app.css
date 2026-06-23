@@ -6,7 +6,9 @@
   --accent: #b4965a;
   --error: #e2657a;
   --warning: #d8a657;
+  --divider: #4d4974;
   font-family: system-ui, sans-serif;
+  font-size: 14px;
   color-scheme: dark;
 }
 
@@ -14,10 +16,23 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#app {
+  height: 100%;
+}
+
 body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
+}
+
+/* Fill the whole window: header at its natural height, layout takes the rest. */
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .app-header {
@@ -94,29 +109,83 @@ button:disabled {
 
 .layout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr));
   gap: 1rem;
-  padding: 1.5rem;
+  padding: 1rem;
+  flex: 1;
+  /* Stretch (default) so source and selected are equal height. */
+}
+
+/* Two top-level regions: Available (source) and Selected. */
+.region {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.region-title {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.region-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.6rem;
   align-items: start;
+}
+
+/* Source columns and the selected frame fill the region height so both
+   regions stay equal-height; the check output sits below the frame. */
+.region-source .region-columns,
+.selected-frame .region-columns {
+  flex: 1;
+}
+
+/* Subtle gold frame around the selected V/F only — not the check output. */
+.selected-frame {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 0.5rem;
+}
+
+.region-selected .region-title {
+  color: var(--accent);
 }
 
 .panel {
   background: var(--panel);
-  border-radius: 10px;
-  padding: 1rem;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
 }
 
 .panel h2 {
-  margin-top: 0;
-  font-size: 1rem;
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
 }
 
 .category {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--muted);
-  margin: 0.75rem 0 0.25rem;
+  color: var(--accent);
+  margin: 0.6rem 0 0.2rem;
+  padding-top: 0.5rem;
+  border-top: 2px solid var(--divider);
+}
+
+/* The first type group sits right under the panel title — no divider above it. */
+.panel > .category:first-of-type {
+  margin-top: 0.1rem;
+  padding-top: 0;
+  border-top: none;
 }
 
 ul {
@@ -129,20 +198,83 @@ ul {
 .selection-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 0;
+  gap: 0.4rem;
+  padding: 0.25rem 0;
 }
 
-.item-name {
+/* Minor separation between successive V/F entries in each list. */
+.item-list li,
+.selection-list li {
+  border-bottom: 1px solid var(--divider);
+}
+
+.item-list li:last-child,
+.selection-list li:last-child {
+  border-bottom: none;
+}
+
+/* Holds the name with the tags overlaid on its right; positioning context for
+   the absolute tags. min-height fits the stacked tags on single-line rows. */
+.name-wrap {
+  position: relative;
   flex: 1;
+  min-width: 0;
+  min-height: 1.6rem;
 }
 
+/* Selected rows carry two stacked tags — reserve a little more height. */
+.selection-list .name-wrap {
+  min-height: 1.9rem;
+}
+
+/* Block so the JS-reserved padding-right forms a gutter the tags sit in; wraps
+   at word boundaries, and an over-long word overflows under the tags. The
+   padding-right is set per row by the reserveTagSpace action. */
+.item-name {
+  display: block;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+.item-list li button,
+.selection-row button {
+  flex: none;
+  white-space: nowrap;
+}
+
+/* Compact single-glyph +/- action buttons, kept square regardless of glyph. */
+.icon-btn {
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Tags overlay the top-right of the name on a higher z-level; the name wraps
+   full-width underneath and is hidden behind the opaque tags where they meet. */
+.badges {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
+/* Opaque fill so the name behind the tag is hidden, not bleeding through. */
 .badge {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--accent);
+  background: var(--panel);
   border: 1px solid var(--accent);
   border-radius: 999px;
-  padding: 0 0.5rem;
+  padding: 0 0.45rem;
   white-space: nowrap;
 }
 
@@ -182,21 +314,18 @@ ul {
   background: rgba(216, 166, 87, 0.12);
 }
 
-/* Validation summary docked in the header: right-bound, above the separator. */
-.validation-compact {
-  margin-left: auto;
-  max-width: 28rem;
-  text-align: right;
-}
-
-.validation-compact h2 {
-  margin: 0 0 0.25rem;
+/* Validation summary below the selected frame (outside the gold border),
+   same width as the frame: fixed height sized for ~2-3 issues, scrolls when
+   it overflows. */
+.validation-docked h2 {
+  margin: 0 0 0.35rem;
   font-size: 0.8rem;
   color: var(--muted);
 }
 
-.validation-compact .issue {
-  text-align: left;
+.validation-docked .issue-list {
+  max-height: 7.5rem;
+  overflow-y: auto;
 }
 
 .saveload {
