@@ -1876,7 +1876,9 @@ mod tests {
           "permitted_categories": ["general"],
           "creation_phases": []
         }]"#;
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let abilities = r#"{ "abilities": [{ "id": "ability.awareness", "category": "general" }] }"#;
+        let rs =
+            Ruleset::from_json_with_abilities("test", "1", items, types, abilities).unwrap();
         let entity = make_entity("test_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
