@@ -33,13 +33,8 @@ fn load_ruleset_yields_companion_profile_and_all_items() {
     // `Ruleset.id` is now an `Id` newtype; compare its string form.
     assert_eq!(localized.ruleset.id.as_str(), RULESET_ID);
     assert_eq!(localized.ruleset.version, RULESET_VERSION);
-    assert_eq!(localized.ruleset.point_items.len(), 10);
-    assert!(
-        localized
-            .ruleset
-            .type_profiles
-            .contains_key(&Id::new("companion"))
-    );
+    assert_eq!(localized.ruleset.item_count(), 10);
+    assert!(localized.ruleset.profile(&Id::new("companion")).is_some());
 }
 
 #[test]
@@ -97,8 +92,8 @@ fn integrity_failure_preserves_individual_messages() {
     fs::write(
         tmp.path().join("core/virtues_flaws.json"),
         r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"has": "virtue.x"}},
-          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"has": "virtue.y"}}
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.x"}},
+          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.y"}}
         ]"#,
     )
     .unwrap();
@@ -148,7 +143,10 @@ fn forbidden_item_errors_in_enforced_but_downgrades_in_advisory_and_clears_in_si
 
     let advisory = validate_loaded(&entity, &ruleset, ValidationMode::Advisory);
     assert!(advisory.is_valid(), "advisory has no errors");
-    assert!(!advisory.warnings().is_empty(), "advisory keeps warnings");
+    assert!(
+        advisory.warnings().next().is_some(),
+        "advisory keeps warnings"
+    );
 
     let silent = validate_loaded(&entity, &ruleset, ValidationMode::Silent);
     assert!(silent.issues.is_empty(), "silent clears all issues");
@@ -240,9 +238,41 @@ fn validation_codes() -> Vec<String> {
     codes
 }
 
+/// The per-category flaw caps emit codes derived at runtime from the category
+/// slug (`too_many_[major_]<category>_flaws`), so they are not source literals
+/// the scraper above can see. Recompute them from the shipped profiles so the
+/// Fluent coverage check still tracks every code the engine can actually emit.
+fn dynamic_flaw_cap_codes() -> Vec<String> {
+    let json = fs::read_to_string(repo_root().join("rules/core/character_types.json")).unwrap();
+    let profiles: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let mut codes = Vec::new();
+    for profile in profiles.as_array().unwrap() {
+        let caps = profile["budget"]["flaw_category_caps"].as_array();
+        for cap in caps.into_iter().flatten() {
+            let category = cap["category"].as_str().unwrap();
+            let major_only = cap["major_only"].as_bool().unwrap_or(false);
+            codes.push(if major_only {
+                format!("too_many_major_{category}_flaws")
+            } else {
+                format!("too_many_{category}_flaws")
+            });
+        }
+    }
+    codes.sort();
+    codes.dedup();
+    assert!(
+        !codes.is_empty(),
+        "expected shipped flaw-category cap codes"
+    );
+    codes
+}
+
 #[test]
 fn every_validation_code_has_a_fluent_key_in_each_locale() {
-    let codes = validation_codes();
+    let mut codes = validation_codes();
+    codes.extend(dynamic_flaw_cap_codes());
+    codes.sort();
+    codes.dedup();
     for lang in ["en", "de"] {
         let ftl = fs::read_to_string(repo_root().join(format!("locales/{lang}/main.ftl"))).unwrap();
         for code in &codes {

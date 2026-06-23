@@ -151,8 +151,32 @@ impl fmt::Display for ItemKind {
 /// `House`, `AbilityMin`, and `ArtMin` reference IDs (house / ability / art)
 /// for which no registry yet exists; those refs are intentionally NOT checked
 /// for referential integrity (see [`crate::ruleset::Ruleset::validate_integrity`]).
+///
+/// # JSON shape
+///
+/// Adjacently tagged: every variant is a uniform object carrying a `kind`
+/// discriminant, and data variants put their payload under `value`:
+///
+/// ```json
+/// { "kind": "has",   "value": "virtue.x" }
+/// { "kind": "all",   "value": [ /* nested prereqs */ ] }
+/// { "kind": "any",   "value": [ /* ... */ ] }
+/// { "kind": "none",  "value": [ /* ... */ ] }
+/// { "kind": "house", "value": "house.x" }
+/// { "kind": "ability_min", "value": { "ability": "ability.x", "score": 1 } }
+/// { "kind": "art_min",     "value": { "art": "art.x", "score": 1 } }
+/// { "kind": "is_magus" }
+/// ```
+///
+/// Adjacent tagging is used rather than serde's internal tagging
+/// (`#[serde(tag = "kind")]`) because `Has` and `House` are newtype variants
+/// wrapping a scalar (a string `Id`): internal tagging cannot represent a
+/// variant whose content is a non-map value, so it rejects those two variants
+/// at compile time. Adjacent tagging supports every variant shape — unit,
+/// newtype, tuple, and struct — while still giving each variant a uniform
+/// object form with a `kind` discriminant for the TS/Svelte consumer.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(tag = "kind", content = "value", rename_all = "snake_case")]
 pub enum Prereq {
     /// All children must be satisfied (AND).
     All(Vec<Prereq>),
@@ -389,27 +413,32 @@ pub struct PointBudget {
     /// Flaws"); grogs :1009 ("no more than three Minor Flaws").
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_minor_flaws: Option<u8>,
-    /// Optional cap on the number of Story flaws (soft guideline → warning).
-    ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2818 ("A
-    /// character should not have more than one Story Flaw"); grogs :1009
-    /// ("grogs should not have Story Flaws").
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub max_story_flaws: Option<u8>,
-    /// Optional cap on the total number of Personality flaws (soft guideline →
-    /// warning).
+    /// Per-category flaw count caps (e.g. Personality, Story). Each entry names
+    /// the flaw category it applies to as DATA, so the engine never hardcodes a
+    /// category slug. `major_only` restricts the count to Major-magnitude flaws;
+    /// `hard` makes the cap a blocking error (otherwise a non-blocking warning).
     ///
     /// Source: Ars Magica - Definitive Edition (Core Rules).md:2820 ("A
+    /// character may not have more than one Major Personality Flaw"; "A
     /// character should normally not have more than two Personality Flaws in
-    /// total").
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub max_personality_flaws: Option<u8>,
-    /// Optional cap on the number of Major Personality flaws (hard rule).
-    ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2820 ("A
-    /// character may not have more than one Major Personality Flaw").
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub max_major_personality_flaws: Option<u8>,
+    /// total"); :2818 ("A character should not have more than one Story Flaw").
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub flaw_category_caps: Vec<FlawCategoryCap>,
+}
+
+/// A cap on how many flaws of a given category an entity may take.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FlawCategoryCap {
+    /// The flaw category this cap applies to (e.g. `personality`, `story`).
+    pub category: String,
+    /// Maximum allowed count.
+    pub max: u8,
+    /// If true, only Major-magnitude flaws count toward this cap.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub major_only: bool,
+    /// If true the cap is a blocking error; otherwise a non-blocking warning.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub hard: bool,
 }
 
 /// `skip_serializing_if` predicate: omits a `bool` field from canonical JSON
@@ -461,7 +490,8 @@ pub struct EntityTypeProfile {
 /// A user's choice of a virtue/flaw with optional parameters.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Selection {
-    /// The selected item's id.
+    /// The selected item's id. Serialized as `ref` (Rust keyword avoidance) —
+    /// the JSON/save key is `ref`, not `item_ref`.
     #[serde(rename = "ref")]
     pub item_ref: Id,
     /// Parameter values keyed by [`ParameterDef::key`].
@@ -541,6 +571,11 @@ impl RulesetRef {
 }
 
 /// Localized display text for a rules item, keyed elsewhere by [`Id`].
+///
+/// These are **rules-domain** localized strings (the rulebook text the frontend
+/// renders for an item), sourced from `rules/i18n/<lang>/`. They are distinct
+/// from Fluent UI chrome (`locales/<lang>/*.ftl`): the two-file separation in
+/// CLAUDE.md keeps rules text out of the UI-string layer and vice versa.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct I18nEntry {
     /// Human-readable display name.
@@ -579,6 +614,42 @@ impl fmt::Display for ValidationMode {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+
+    /// Guards against drift between a scalar enum's hand-written `Display` and
+    /// its `#[serde(rename_all = "snake_case")]` scalar form. Both feed the
+    /// Fluent key mapping, so they must agree for every variant. Asserts
+    /// `serde scalar == Display` exhaustively.
+    #[test]
+    fn display_matches_serde_scalar_for_every_enum() {
+        fn check<T: Serialize + std::fmt::Display>(variant: T) {
+            let serde_scalar = serde_json::to_value(&variant)
+                .unwrap()
+                .as_str()
+                .expect("scalar enum serializes to a JSON string")
+                .to_string();
+            assert_eq!(serde_scalar, variant.to_string());
+        }
+
+        check(EntityKind::Character);
+        check(EntityKind::Covenant);
+        check(Magnitude::Free);
+        check(Magnitude::Minor);
+        check(Magnitude::Major);
+        check(ItemKind::Virtue);
+        check(ItemKind::Flaw);
+        check(ItemKind::Boon);
+        check(ItemKind::Hook);
+        check(GiftPolicy::Required);
+        check(GiftPolicy::Allowed);
+        check(GiftPolicy::Forbidden);
+        check(ValidationMode::Enforced);
+        check(ValidationMode::Advisory);
+        check(ValidationMode::Silent);
+        check(ParamType::Ref);
+        check(ParameterDomain::Ability);
+        check(ParameterDomain::Art);
+        check(ParameterDomain::Item);
+    }
 
     #[test]
     fn id_display_and_equality() {
@@ -635,7 +706,7 @@ mod tests {
           "magnitude": "major",
           "category": "hermetic",
           "entity_kinds": ["character"],
-          "prerequisites": { "has": "virtue.hermetic_magus" },
+          "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" },
           "incompatible_with": ["flaw.blatant_gift"],
           "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [120, 135] }
         }"#;
@@ -717,11 +788,12 @@ mod tests {
     #[test]
     fn prereq_complex_expression_roundtrip() {
         let json = r#"{
-          "all": [
-            { "has": "virtue.hermetic_magus" },
-            { "any": [
-              { "house": "house.bjornaer" },
-              { "ability_min": { "ability": "ability.animal_ken", "score": 1 } }
+          "kind": "all",
+          "value": [
+            { "kind": "has", "value": "virtue.hermetic_magus" },
+            { "kind": "any", "value": [
+              { "kind": "house", "value": "house.bjornaer" },
+              { "kind": "ability_min", "value": { "ability": "ability.animal_ken", "score": 1 } }
             ]}
           ]
         }"#;
@@ -746,7 +818,8 @@ mod tests {
 
     #[test]
     fn prereq_none_variant() {
-        let json = r#"{ "none": [{ "has": "flaw.blatant_gift" }] }"#;
+        let json =
+            r#"{ "kind": "none", "value": [{ "kind": "has", "value": "flaw.blatant_gift" }] }"#;
         let prereq: Prereq = serde_json::from_str(json).unwrap();
         assert_eq!(
             prereq,
@@ -756,9 +829,15 @@ mod tests {
 
     #[test]
     fn prereq_is_magus() {
-        let json = r#""is_magus""#;
+        let json = r#"{ "kind": "is_magus" }"#;
         let prereq: Prereq = serde_json::from_str(json).unwrap();
         assert_eq!(prereq, Prereq::IsMagus);
+
+        // The unit variant round-trips with no `value` key.
+        let reserialized = serde_json::to_string(&prereq).unwrap();
+        assert_eq!(reserialized, r#"{"kind":"is_magus"}"#);
+        let roundtripped: Prereq = serde_json::from_str(&reserialized).unwrap();
+        assert_eq!(prereq, roundtripped);
     }
 
     #[test]
@@ -1119,7 +1198,7 @@ mod tests {
 
     #[test]
     fn prereq_art_min_roundtrip() {
-        let json = r#"{"art_min": {"art": "art.creo", "score": 5}}"#;
+        let json = r#"{"kind": "art_min", "value": {"art": "art.creo", "score": 5}}"#;
         let prereq: Prereq = serde_json::from_str(json).unwrap();
         assert_eq!(
             prereq,

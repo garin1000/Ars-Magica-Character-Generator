@@ -8,8 +8,8 @@ pub mod validation;
 
 pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError};
 pub use types::{
-    Entity, EntityKind, EntityTypeProfile, GiftPolicy, I18nEntry, Id, ItemKind, LineRange,
-    Magnitude, ParamType, ParameterDef, ParameterDomain, PointBudget, PointItem, Prereq,
+    Entity, EntityKind, EntityTypeProfile, FlawCategoryCap, GiftPolicy, I18nEntry, Id, ItemKind,
+    LineRange, Magnitude, ParamType, ParameterDef, ParameterDomain, PointBudget, PointItem, Prereq,
     RulesetRef, Selection, SourceRef, ValidationMode,
 };
 pub use validation::{
