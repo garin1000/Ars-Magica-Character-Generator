@@ -97,6 +97,10 @@ export type AbilityCategory = 'general' | 'academic' | 'arcane' | 'martial' | 's
 export interface Ability {
   id: string;
   category: AbilityCategory;
+  // For a parameterized ability ((Area) Lore, (Living Language), …): the key of
+  // the player-supplied value, naming the {key} placeholder in the localized name
+  // and the `param-label-<key>` Fluent label. Absent for plain abilities.
+  parameter?: string | null;
 }
 
 // One row of the Ability XP advancement table ("ABILITY To Buy" column).
@@ -149,6 +153,9 @@ export interface AbilityScore {
   ability: string;
   score: number;
   specialty?: string | null;
+  // Player-supplied value for a parameterized ability (e.g. the area for
+  // (Area) Lore). Part of the instance identity, so several can coexist.
+  parameter?: string | null;
 }
 
 export interface Entity {
@@ -159,10 +166,13 @@ export interface Entity {
   selections: Selection[];
   // Chosen Characteristic scores (point-buy). Omitted when empty.
   characteristics?: Record<Characteristic, number>;
+  // Optional free-text description per Characteristic (sheet flavor). Omitted empty.
+  characteristic_descriptions?: Partial<Record<Characteristic, string>>;
   // Whole bought Ability scores. Omitted when empty.
   ability_scores?: AbilityScore[];
-  // Banked XP not yet committed to an ability. Omitted when zero.
-  unspent_xp?: number;
+  // Total XP available to spend on abilities; spent is derived, leftover is the
+  // banked XP. Omitted when zero.
+  xp_pool?: number;
 }
 
 export interface ValidationIssue {

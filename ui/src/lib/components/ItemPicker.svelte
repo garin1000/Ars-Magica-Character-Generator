@@ -23,24 +23,24 @@
       <ul class="item-list">
         {#each group.items as item (item.id)}
           <li>
-            <span class="name-wrap" use:reserveTagSpace>
-              <span class="badges">
-                <span class="badge">{store.t(`magnitude-${item.magnitude}`)}</span>
-              </span>
-              <span class="item-name">
-                {displayName(store.ruleset, item.id, undefined, (key) =>
-                  store.t('param-hint', { label: store.t(`param-label-${key}`) }),
-                )}
-              </span>
-            </span>
             <button
               type="button"
-              class="icon-btn"
+              class="pick-row"
               disabled={selectedRefs.has(item.id)}
               onclick={() => store.addSelection(item.id)}
               data-testid="add-{item.id}"
             >
-              +
+              <span class="name-wrap" use:reserveTagSpace>
+                <span class="badges">
+                  <span class="badge">{store.t(`magnitude-${item.magnitude}`)}</span>
+                </span>
+                <span class="item-name">
+                  {displayName(store.ruleset, item.id, undefined, (key) =>
+                    store.t('param-hint', { label: store.t(`param-label-${key}`) }),
+                  )}
+                </span>
+              </span>
+              <span class="pick-plus" aria-hidden="true">+</span>
             </button>
           </li>
         {/each}

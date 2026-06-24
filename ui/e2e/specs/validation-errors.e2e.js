@@ -16,13 +16,17 @@ import { $, $$, expect } from '@wdio/globals';
 
 describe('validation errors', () => {
   it('shows a localized, error-severity issue for a forbidden-category selection', async () => {
-    // Ruleset load completed once an Add button for a known item appears.
-    const addForbidden = await $('[data-testid="add-flaw.blatant_gift"]');
-    await addForbidden.waitForExist({ timeout: 30000 });
+    // The shared validation bar (bottom) reports for the whole character; the V/F
+    // add buttons live in the Virtues & Flaws tab.
+    const vfTab = await $('[data-testid="tab-virtues_flaws"]');
+    await vfTab.waitForExist({ timeout: 30000 });
 
-    // No issues before the illegal selection.
+    // No issues before any selection.
     await expect($('[data-testid="no-issues"]')).toExist();
 
+    await vfTab.click();
+    const addForbidden = await $('[data-testid="add-flaw.blatant_gift"]');
+    await addForbidden.waitForExist({ timeout: 10000 });
     await addForbidden.click();
 
     // The issue list now contains at least one error-severity issue.

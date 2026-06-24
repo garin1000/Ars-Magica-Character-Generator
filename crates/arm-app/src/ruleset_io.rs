@@ -5,11 +5,43 @@
 //! directory and managed state, then delegate here.
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use arm_rules::{Entity, LocalizedRuleset, Ruleset, ValidationMode, ValidationResult, validate};
+use arm_rules::{
+    Entity, EntityKind, LocalizedRuleset, Ruleset, ValidationMode, ValidationResult, validate,
+};
 
 use crate::error::AppError;
+
+/// File extension for a saved entity of the given kind: `armc` for characters,
+/// `armcov` for covenants ("Ars Magica character/covenant"). They are plain JSON
+/// underneath, but a distinct extension lets the OS associate and filter them.
+pub fn entity_extension(kind: EntityKind) -> &'static str {
+    match kind {
+        EntityKind::Character => "armc",
+        EntityKind::Covenant => "armcov",
+    }
+}
+
+/// Default save file name for a kind, e.g. `character.armc`.
+pub fn default_file_name(kind: EntityKind) -> String {
+    let base = match kind {
+        EntityKind::Character => "character",
+        EntityKind::Covenant => "covenant",
+    };
+    format!("{base}.{}", entity_extension(kind))
+}
+
+/// Appends `ext` when the chosen path has no extension, so a user who types just
+/// "testchar" still gets "testchar.armc". An explicit extension (`.armc`,
+/// `.json`, …) the user typed is respected.
+pub fn ensure_extension(path: PathBuf, ext: &str) -> PathBuf {
+    if path.extension().is_none() {
+        path.with_extension(ext)
+    } else {
+        path
+    }
+}
 
 /// Stable ID + version of the shipped ruleset. These are slug-style identifiers,
 /// not user-facing text, so they live in code rather than Fluent.
@@ -67,4 +99,35 @@ pub fn load_entity_from_path(path: &Path) -> Result<Entity, AppError> {
     let json = fs::read_to_string(path)?;
     let entity: Entity = serde_json::from_str(&json)?;
     Ok(entity)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn extension_and_default_name_per_kind() {
+        assert_eq!(entity_extension(EntityKind::Character), "armc");
+        assert_eq!(entity_extension(EntityKind::Covenant), "armcov");
+        assert_eq!(default_file_name(EntityKind::Character), "character.armc");
+        assert_eq!(default_file_name(EntityKind::Covenant), "covenant.armcov");
+    }
+
+    #[test]
+    fn ensure_extension_only_fills_when_missing() {
+        // No extension -> append the kind's extension.
+        assert_eq!(
+            ensure_extension(PathBuf::from("/tmp/testchar"), "armc"),
+            PathBuf::from("/tmp/testchar.armc")
+        );
+        // An explicit extension the user typed is kept (incl. .armc and .json).
+        assert_eq!(
+            ensure_extension(PathBuf::from("/tmp/testchar.armc"), "armc"),
+            PathBuf::from("/tmp/testchar.armc")
+        );
+        assert_eq!(
+            ensure_extension(PathBuf::from("/tmp/testchar.json"), "armc"),
+            PathBuf::from("/tmp/testchar.json")
+        );
+    }
 }

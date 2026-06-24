@@ -48,12 +48,24 @@ ability-category-arcane = Arkan
 ability-category-martial = Kampf
 ability-category-supernatural = Übernatürlich
 
-# Eigenschaften-Punkteanzeige und das Feld für gespartes XP.
+# Eigenschaften-Punkteanzeige.
 characteristic-points = Punkte: { $used } / { $budget }
-unspent-xp = Gespartes XP
+# Reiter-Bezeichnungen für den Hauptbereich des Editors.
+tab-characteristics = Eigenschaften
+tab-virtues-flaws = Tugenden & Fehler
+tab-abilities = Fertigkeiten
+# XP-Übersicht und Bedienelemente der Fertigkeiten.
+xp-pool = XP-Vorrat
+xp-spent = Ausgegeben: { $spent }
+xp-available = Verfügbar: { $available }
 ability-score-label = Wert
 ability-specialty-label = Spezialisierung
 ability-add = Fertigkeit hinzufügen
+ability-increment = Erhöhen
+ability-decrement = Verringern
+characteristic-increment = Erhöhen
+characteristic-decrement = Verringern
+characteristic-description-label = Beschreibung
 
 balance-virtues = Tugenden: { $used } / { $budget }
 balance-flaws = Fehler: { $used } / { $budget }
@@ -68,6 +80,8 @@ param-hint = ({ $label })
 # Lokalisierte Parameter-Bezeichnungen, je Parameter-Schlüssel der Engine.
 param-label-ability = Fertigkeit
 param-label-technique = Technik
+param-label-area = Gebiet
+param-label-language = Sprache
 
 empty-selections-side = Noch keine.
 no-issues = Keine Probleme.
@@ -106,6 +120,8 @@ issue-characteristic_overspent = Eigenschaften kosten { $cost } Punkte, mehr als
 issue-characteristic_points_unspent = Nur { $cost } von { $points } Eigenschaftspunkten ausgegeben.
 issue-unknown_ability = Unbekannte Fertigkeit: { $ability }.
 issue-duplicate_ability = { $ability } ist { $count }-mal mit derselben Spezialisierung aufgeführt.
+issue-not_enough_xp = Fertigkeiten kosten { $spent } XP, mehr als die { $pool } im Vorrat.
+issue-ability_parameter_required = { $ability } braucht einen Wert (z. B. das konkrete Gebiet oder die Sprache).
 
 # AppError-Arten der Tauri-Befehle.
 error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.

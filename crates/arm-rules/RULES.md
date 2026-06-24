@@ -174,7 +174,10 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Data: `rules/core/abilities.json` `advancement` array (scores 1-20).
 - Implementation: `crates/arm-rules/src/ability.rs` — `AdvancementTable`
   (`xp_for_score`, `xp_to_raise`). Used to price whole-point steps; a character
-  stores whole bought scores plus a separate `unspent_xp` bank (`types.rs`).
+  stores whole bought scores plus an `xp_pool` total (`types.rs`). The XP spent
+  (Σ `xp_for_score`) may not exceed the pool — `validate_abilities` emits
+  `not_enough_xp` otherwise (an error in Advisory/Enforced; the M4 wizard blocks
+  the spend up front). Leftover pool is the character's banked XP.
 
 #### Seed Ability catalogue — `rules/core/abilities.json`
 > Ability list grouped by type (General, Academic, Arcane, Martial,

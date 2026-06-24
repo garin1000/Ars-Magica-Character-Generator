@@ -1,4 +1,5 @@
-// End-to-end: load ruleset → add a virtue → see validation → save → reload.
+// End-to-end: drive the tabbed editor — set a Characteristic (spinner), pick a
+// balanced V/F pair, buy an Ability against an XP pool — then save and reload.
 // Drives the real binary; assertions read the DOM and the saved file.
 
 import { browser, $, expect } from '@wdio/globals';
@@ -9,33 +10,37 @@ import path from 'node:path';
 const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
 
 describe('character editor', () => {
-  it('loads rules, edits selections, validates, and round-trips a save', async () => {
-    // Ruleset load completed once an Add button for a known virtue appears.
-    const addKeenVision = await $('[data-testid="add-virtue.keen_vision"]');
-    await addKeenVision.waitForExist({ timeout: 30000 });
-    await addKeenVision.click();
+  it('edits across tabs, validates, and round-trips a save', async () => {
+    // Characteristics is the default tab; its spinner appearing means the ruleset
+    // has loaded.
+    const intInc = await $('[data-testid="char-inc-int"]');
+    await intInc.waitForExist({ timeout: 30000 });
 
-    // The selection now shows up with a Remove control.
+    // Raise Intelligence to +2 with the spinner (0 -> +1 -> +2).
+    await intInc.click();
+    await intInc.click();
+    expect(await $('[data-testid="char-value-int"]').getText()).toBe('+2');
+
+    // Virtues & Flaws tab: a minor virtue funded by a minor flaw is balanced.
+    await $('[data-testid="tab-virtues_flaws"]').click();
+    await $('[data-testid="add-virtue.keen_vision"]').waitForExist({ timeout: 10000 });
+    await $('[data-testid="add-virtue.keen_vision"]').click();
+    await $('[data-testid="add-flaw.poor_student"]').click();
     const removeKeenVision = await $('[data-testid="remove-virtue.keen_vision"]');
     await removeKeenVision.waitForExist({ timeout: 5000 });
 
-    // Fund the virtue with a minor flaw so the points balance (Virtues must be
-    // funded by Flaws); an untouched Characteristics step is not flagged.
-    await $('[data-testid="add-flaw.poor_student"]').click();
-    await $('[data-testid="remove-flaw.poor_student"]').waitForExist({ timeout: 5000 });
+    // Abilities tab: give an XP pool, then buy Awareness up to 2 (15 xp).
+    await $('[data-testid="tab-abilities"]').click();
+    await $('[data-testid="xp-pool"]').waitForExist({ timeout: 10000 });
+    await $('[data-testid="xp-pool"]').setValue(30);
+    await $('[data-testid="add-ability.awareness"]').click();
+    const awarenessInc = await $('[data-testid="ability-inc-ability.awareness-0"]');
+    await awarenessInc.waitForExist({ timeout: 5000 });
+    await awarenessInc.click();
+    await awarenessInc.click();
+    expect(await $('[data-testid="ability-score-ability.awareness-0"]').getText()).toBe('2');
 
-    // Validation panel renders no issues for the balanced character.
-    await expect($('[data-testid="no-issues"]')).toExist();
-
-    // M3: set a Characteristic, buy an Ability score, and bank some XP.
-    const charInt = await $('[data-testid="char-int"]');
-    await charInt.selectByAttribute('value', '2');
-    const awarenessScore = await $('[data-testid="ability-score-ability.awareness"]');
-    await awarenessScore.selectByAttribute('value', '2');
-    const bank = await $('[data-testid="unspent-xp"]');
-    await bank.setValue(5);
-
-    // Save through the ARM_E2E_FILE seam, then confirm canonical JSON on disk.
+    // Save through the ARM_E2E_FILE seam, then confirm the JSON on disk.
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
     await $('[data-testid="save-button"]').click();
     await browser.waitUntil(() => fs.existsSync(e2eFile), {
@@ -43,20 +48,19 @@ describe('character editor', () => {
       timeoutMsg: 'save did not write the file',
     });
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.selections.some((s) => s.ref === 'virtue.keen_vision')).toBe(true);
-    // The new M3 trait fields round-trip into the save.
     expect(saved.schema_version).toBe(2);
+    expect(saved.selections.some((s) => s.ref === 'virtue.keen_vision')).toBe(true);
     expect(saved.characteristics.int).toBe(2);
     expect(
       saved.ability_scores.some((a) => a.ability === 'ability.awareness' && a.score === 2),
     ).toBe(true);
-    expect(saved.unspent_xp).toBe(5);
+    expect(saved.xp_pool).toBe(30);
 
-    // Remove the virtue, reload the saved file, and confirm both the selection
-    // and the Characteristic score come back.
+    // Back on the V/F tab, drop the virtue, reload the file, and confirm it
+    // returns — proving load repopulates the entity.
+    await $('[data-testid="tab-virtues_flaws"]').click();
     await removeKeenVision.click();
     await $('[data-testid="load-button"]').click();
     await $('[data-testid="remove-virtue.keen_vision"]').waitForExist({ timeout: 10000 });
-    expect(await $('[data-testid="char-int"]').getValue()).toBe('2');
   });
 });

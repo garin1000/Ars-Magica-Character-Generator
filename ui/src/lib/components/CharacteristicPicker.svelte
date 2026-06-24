@@ -3,21 +3,22 @@
   import { characteristicPointsUsed } from '../derive';
   import { CHARACTERISTICS, type Characteristic } from '../types';
 
-  // The point-buy cost table (and thus the legal score range) is data on the
-  // ruleset; fall back to an empty list until it loads.
   const rules = $derived(store.ruleset?.ruleset.characteristic_rules ?? null);
-  const scoreOptions = $derived(
-    rules ? [...rules.costs].map((c) => c.score).sort((a, b) => b - a) : [],
-  );
+  const min = $derived(rules ? Math.min(...rules.costs.map((c) => c.score)) : -3);
+  const max = $derived(rules ? Math.max(...rules.costs.map((c) => c.score)) : 3);
   const used = $derived(characteristicPointsUsed(rules, store.entity.characteristics));
 
   function scoreOf(characteristic: Characteristic): number {
     return store.entity.characteristics?.[characteristic] ?? 0;
   }
 
-  function onChange(characteristic: Characteristic, event: Event) {
-    const value = Number((event.currentTarget as HTMLSelectElement).value);
-    store.setCharacteristic(characteristic, value);
+  function descriptionOf(characteristic: Characteristic): string {
+    return store.entity.characteristic_descriptions?.[characteristic] ?? '';
+  }
+
+  function adjust(characteristic: Characteristic, delta: number) {
+    const next = Math.max(min, Math.min(max, scoreOf(characteristic) + delta));
+    store.setCharacteristic(characteristic, next);
   }
 
   function fmt(score: number): string {
@@ -25,29 +26,53 @@
   }
 </script>
 
-<section class="panel">
-  <h2>{store.t('characteristics-title')}</h2>
+<section class="panel char-panel">
   {#if rules}
     <p class="points" data-testid="characteristic-points">
       {store.t('characteristic-points', { used: String(used), budget: String(rules.start_points) })}
     </p>
-    <ul class="char-list">
+    <div class="char-grid">
       {#each CHARACTERISTICS as characteristic (characteristic)}
-        <li>
-          <label for="char-{characteristic}">{store.t(`characteristic-${characteristic}`)}</label>
-          <select
-            id="char-{characteristic}"
-            value={scoreOf(characteristic)}
-            onchange={(e) => onChange(characteristic, e)}
-            data-testid="char-{characteristic}"
+        <span class="spinner-label">{store.t(`characteristic-${characteristic}`)}</span>
+        <span class="spinner">
+          <button
+            type="button"
+            class="icon-btn"
+            aria-label={store.t('characteristic-decrement')}
+            disabled={scoreOf(characteristic) <= min}
+            onclick={() => adjust(characteristic, -1)}
+            data-testid="char-dec-{characteristic}"
           >
-            {#each scoreOptions as score (score)}
-              <option value={score}>{fmt(score)}</option>
-            {/each}
-          </select>
-        </li>
+            −
+          </button>
+          <span class="spinner-value" data-testid="char-value-{characteristic}">
+            {fmt(scoreOf(characteristic))}
+          </span>
+          <button
+            type="button"
+            class="icon-btn"
+            aria-label={store.t('characteristic-increment')}
+            disabled={scoreOf(characteristic) >= max}
+            onclick={() => adjust(characteristic, 1)}
+            data-testid="char-inc-{characteristic}"
+          >
+            +
+          </button>
+        </span>
+        <input
+          type="text"
+          class="char-description"
+          placeholder={store.t('characteristic-description-label')}
+          value={descriptionOf(characteristic)}
+          oninput={(e) =>
+            store.setCharacteristicDescription(
+              characteristic,
+              (e.currentTarget as HTMLInputElement).value,
+            )}
+          data-testid="char-desc-{characteristic}"
+        />
       {/each}
-    </ul>
+    </div>
   {:else}
     <p>{store.t('loading')}</p>
   {/if}

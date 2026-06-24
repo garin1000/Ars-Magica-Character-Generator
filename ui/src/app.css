@@ -110,22 +110,61 @@ button:disabled {
   font-weight: 600;
 }
 
-.layout {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr));
-  grid-auto-rows: minmax(16rem, 1fr);
-  gap: 1rem;
-  padding: 1rem;
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  /* Rows are equal-height (1fr) and scroll their content in place when they all
-     fit the viewport; each keeps a usable 16rem floor, and the layout itself
-     scrolls when the regions (V/F, characteristics, abilities, selected) exceed
-     the viewport so no control is ever clipped out of reach. */
+/* Tab bar between the header and the tabbed main area. */
+.tabbar {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid #38355a;
 }
 
-/* Two top-level regions: Available (source) and Selected. */
+.tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0.6rem 1rem;
+  color: var(--muted);
+}
+
+.tab.active {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+
+/* The tabbed main area: one concept at a time, bound to the viewport so the gold
+   Selected frame can fill the full available height. Content is centered when it
+   doesn't use the full width (e.g. the Characteristics block). */
+.tab-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* V/F and Abilities tab bodies fill width + height: a bar (balance / XP) above a
+   source-beside-selected row that takes the rest. */
+.vf-tab {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Shared issues panel, pinned below the tabs at the bottom of the viewport. It
+   shows every error/warning for the whole character, not just the active tab. */
+.validation-bar {
+  border-top: 1px solid #38355a;
+  padding: 0.4rem 1.5rem;
+  max-height: 30vh;
+  overflow-y: auto;
+}
+
 .region {
   display: flex;
   flex-direction: column;
@@ -144,51 +183,49 @@ button:disabled {
 
 .region-columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
   gap: 0.6rem;
   align-items: start;
 }
 
-/* Source/traits columns and the selected frame fill the region height so the
-   regions stay equal-height; the check output sits below the frame. */
-.region-source .region-columns,
-.region-traits .region-columns,
-.selected-frame .region-columns {
+/* Source (Available) beside Selected; fills the tab height, wraps when narrow. */
+.region-row {
   flex: 1;
-}
-
-/* The available and traits lists can be long: each panel scrolls inside its own
-   column so it never overflows its grid cell and overlaps a neighbour. */
-.region-source .region-columns,
-.region-traits .region-columns {
   min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  gap: 1rem;
   align-items: stretch;
 }
 
-.region-source .panel,
-.region-traits .panel {
+/* The region's content (source columns / panel, or the gold frame) fills the
+   region height; long lists scroll inside it. */
+.region-source > .region-columns,
+.region-source > .panel,
+.region-selected > .selected-frame {
+  flex: 1;
   min-height: 0;
+}
+
+/* Source columns stretch so each picker panel has a bounded height to scroll in;
+   a reserved gutter keeps the overflow scrollbar off the row controls. */
+.region-source > .region-columns {
+  align-items: stretch;
+}
+
+.region-source .panel {
   overflow-y: auto;
-  /* Inset the content from the right edge so an overflow (overlay) scrollbar
-     never sits on top of the right-aligned add (+) buttons, which would make
-     them unclickable. `scrollbar-gutter` is unreliable on WebKitGTK, so reserve
-     the space with padding. */
   scrollbar-gutter: stable;
   padding-right: 1.1rem;
 }
 
-/* Subtle gold frame around the selected V/F only — not the check output. The
-   frame scrolls internally so a long selection never pushes the docked
-   validation summary below it. */
+/* Gold frame around the Selected lists, full height, scrolls its contents. */
 .selected-frame {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
   border: 1px solid var(--accent);
   border-radius: 10px;
   padding: 0.5rem;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .region-selected .region-title {
@@ -271,10 +308,40 @@ ul {
   word-break: keep-all;
 }
 
-.item-list li button,
 .selection-row button {
   flex: none;
   white-space: nowrap;
+}
+
+/* Whole-row add control for source lists (V/F + abilities): the entire row is
+   clickable, not just a small + button. Looks like a list row, acts like a
+   button; disabled (greyed) once the item is already selected. */
+.pick-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem 0.35rem;
+  color: inherit;
+}
+
+.pick-row:hover:not(:disabled) {
+  background: var(--divider);
+}
+
+.pick-plus {
+  flex: none;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.pick-row:disabled .pick-plus {
+  color: var(--muted);
 }
 
 /* Compact single-glyph +/- action buttons, kept square regardless of glyph. */
@@ -289,12 +356,95 @@ ul {
   line-height: 1;
 }
 
-/* Tags overlay the top-right of the name on a higher z-level; the name wraps
-   full-width underneath and is hidden behind the opaque tags where they meet. */
+/* A points/used readout above a list. */
+.points {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Characteristics: a content-sized two-column grid (label | spinner). The label
+   column sizes to the longest translated label and the block is only as wide as
+   it needs to be — never the full tab width. */
+.char-panel {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.char-grid {
+  display: grid;
+  grid-template-columns: auto auto minmax(8rem, 18rem);
+  align-items: center;
+  column-gap: 1rem;
+  row-gap: 0.35rem;
+}
+
+.char-description {
+  width: 100%;
+}
+
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.spinner-value {
+  min-width: 1.6rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ability lists: the name grows so the +/spinner/specialty/× align right. */
+.item-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.ability-selection li {
+  flex-wrap: wrap;
+}
+
+.ability-selection .specialty,
+.ability-selection .ability-param {
+  flex: 1 1 6rem;
+  min-width: 5rem;
+}
+
+/* Ability XP summary: pool input + derived spent/available. */
+.xp-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.xp-pool {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.xp-pool input {
+  width: 5rem;
+}
+
+.xp-summary .over {
+  color: var(--error);
+  font-weight: 600;
+}
+
+/* Tags overlay the right of the name on a higher z-level, vertically centered on
+   the row; the name wraps full-width underneath, hidden behind the opaque tags
+   where they meet. */
 .badges {
   position: absolute;
-  top: 0;
+  top: 50%;
   right: 0;
+  transform: translateY(-50%);
   z-index: 1;
   display: flex;
   flex-direction: column;

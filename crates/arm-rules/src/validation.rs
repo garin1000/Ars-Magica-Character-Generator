@@ -61,6 +61,8 @@ pub enum IssueSeverity {
 /// | `characteristic_points_unspent` | warning | `cost`, `points` |
 /// | `unknown_ability` | error | `ability` |
 /// | `duplicate_ability` | error | `ability`, `count` |
+/// | `not_enough_xp` | error | `spent`, `pool` |
+/// | `ability_parameter_required` | error | `ability` |
 ///
 /// † The per-category flaw caps emit a code derived from the
 /// `flaw_category_caps` entry's category slug (`too_many_<category>_flaws`, or
@@ -966,24 +968,50 @@ fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
 }
 
 /// Validates Ability scores: every referenced ability must resolve against the
-/// catalogue, and no (ability, specialty) pair may appear twice. XP budgets and
-/// the age cap are deferred to the M4 life-stage flow.
+/// catalogue, no (ability, parameter) pair may appear twice, a parameterized
+/// ability must carry a parameter value, and the total XP the bought scores cost
+/// may not exceed the character's `xp_pool`.
+///
+/// A parameterized ability (e.g. `(Area) Lore`) is identified by its instance
+/// `parameter` (the area / language), so a character may hold several; plain
+/// abilities have no parameter and are deduped by id (one instance).
+///
+/// Overspending is reported as an error rather than blocked: direct-entry allows
+/// the illegal state and surfaces it (the M4 wizard blocks the spend up front).
+/// The age cap is deferred to M4. XP cost per score comes from the advancement
+/// table (`AdvancementTable::xp_for_score`).
 fn validate_abilities(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
     let mut seen: BTreeMap<(&Id, Option<&str>), u32> = BTreeMap::new();
+    let mut spent: u32 = 0;
 
     for entry in &entity.ability_scores {
-        if !ruleset.abilities.contains_key(&entry.ability) {
-            issues.push(ValidationIssue::error(
+        match ruleset.abilities.get(&entry.ability) {
+            None => issues.push(ValidationIssue::error(
                 "unknown_ability",
                 args([("ability", entry.ability.to_string())]),
                 Some(entry.ability.clone()),
-            ));
+            )),
+            Some(ability) => {
+                // A parameterized ability needs its value supplied (which Area?).
+                if ability.parameter.is_some()
+                    && entry.parameter.as_deref().is_none_or(str::is_empty)
+                {
+                    issues.push(ValidationIssue::error(
+                        "ability_parameter_required",
+                        args([("ability", entry.ability.to_string())]),
+                        Some(entry.ability.clone()),
+                    ));
+                }
+            }
         }
-        let key = (&entry.ability, entry.specialty.as_deref());
+        // Unknown scores (outside the advancement table) cost nothing here; the
+        // table covers the legal range and the UI never offers an off-table score.
+        spent += ruleset.advancement.xp_for_score(entry.score).unwrap_or(0);
+        let key = (&entry.ability, entry.parameter.as_deref());
         *seen.entry(key).or_insert(0) += 1;
     }
 
-    for ((ability, _specialty), count) in seen {
+    for ((ability, _parameter), count) in seen {
         if count > 1 {
             issues.push(ValidationIssue::error(
                 "duplicate_ability",
@@ -994,6 +1022,17 @@ fn validate_abilities(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Valid
                 Some(ability.clone()),
             ));
         }
+    }
+
+    if spent > entity.xp_pool {
+        issues.push(ValidationIssue::error(
+            "not_enough_xp",
+            args([
+                ("spent", spent.to_string()),
+                ("pool", entity.xp_pool.to_string()),
+            ]),
+            None,
+        ));
     }
 }
 
@@ -2013,6 +2052,7 @@ mod tests {
             ability: Id::new("ability.awareness"),
             score: 3,
             specialty: None,
+            parameter: None,
         }];
 
         let result = validate(&entity, &rs);
@@ -2032,6 +2072,7 @@ mod tests {
             ability: Id::new("ability.awareness"),
             score: 2,
             specialty: None,
+            parameter: None,
         }];
 
         let result = validate(&entity, &rs);
@@ -2073,7 +2114,8 @@ mod tests {
           ],
           "abilities": [
             { "id": "ability.awareness", "category": "general" },
-            { "id": "ability.living_language", "category": "general" }
+            { "id": "ability.living_language", "category": "general" },
+            { "id": "ability.area_lore", "category": "general", "parameter": "area" }
           ]
         }"#;
         let characteristics = r#"{
@@ -2156,6 +2198,7 @@ mod tests {
             ability: Id::new("ability.nonexistent"),
             score: 2,
             specialty: None,
+            parameter: None,
         }];
         assert!(codes(&validate(&entity, &rs)).contains(&"unknown_ability".to_string()));
     }
@@ -2169,37 +2212,142 @@ mod tests {
                 ability: Id::new("ability.awareness"),
                 score: 2,
                 specialty: None,
+                parameter: None,
             },
             AbilityScore {
                 ability: Id::new("ability.awareness"),
                 score: 3,
                 specialty: None,
+                parameter: None,
             },
         ];
         assert!(codes(&validate(&entity, &rs)).contains(&"duplicate_ability".to_string()));
     }
 
     #[test]
-    fn same_ability_different_specialty_is_allowed() {
+    fn ability_xp_within_pool_is_valid() {
         let rs = traits_ruleset();
         let mut entity = companion_entity();
-        // Native and a second language: same catalogue row, distinct specialties.
+        // Awareness 3 costs 30 xp; pool of 40 covers it.
+        entity.xp_pool = 40;
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 3,
+            specialty: None,
+            parameter: None,
+        }];
+        assert!(
+            !codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()),
+            "30 xp spent within a 40 pool"
+        );
+    }
+
+    #[test]
+    fn overspending_ability_xp_is_error() {
+        let rs = traits_ruleset();
+        let mut entity = companion_entity();
+        // Awareness 3 costs 30 xp; pool of 10 is not enough.
+        entity.xp_pool = 10;
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 3,
+            specialty: None,
+            parameter: None,
+        }];
+        assert!(codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()));
+    }
+
+    #[test]
+    fn raising_an_ability_with_no_pool_is_error() {
+        let rs = traits_ruleset();
+        let mut entity = companion_entity(); // xp_pool defaults to 0
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 1,
+            specialty: None,
+            parameter: None,
+        }];
+        assert!(codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()));
+    }
+
+    #[test]
+    fn selected_ability_at_score_zero_costs_no_xp() {
+        let rs = traits_ruleset();
+        let mut entity = companion_entity(); // no pool
+        // Selecting an ability without raising it (score 0) spends nothing.
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 0,
+            specialty: None,
+            parameter: None,
+        }];
+        assert!(
+            !codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()),
+            "a score-0 ability is free"
+        );
+    }
+
+    #[test]
+    fn same_ability_different_parameter_is_allowed() {
+        let rs = traits_ruleset();
+        let mut entity = companion_entity();
+        entity.xp_pool = 100;
+        // Two languages: same catalogue row, distinct parameter values.
         entity.ability_scores = vec![
             AbilityScore {
                 ability: Id::new("ability.living_language"),
                 score: 5,
-                specialty: Some("German".into()),
+                specialty: None,
+                parameter: Some("German".into()),
             },
             AbilityScore {
                 ability: Id::new("ability.living_language"),
                 score: 1,
-                specialty: Some("Latin".into()),
+                specialty: None,
+                parameter: Some("Latin".into()),
             },
         ];
         assert!(
             !codes(&validate(&entity, &rs)).contains(&"duplicate_ability".to_string()),
-            "distinct specialties are not duplicates"
+            "distinct parameters are not duplicates"
         );
+    }
+
+    #[test]
+    fn duplicate_ability_same_parameter_is_error() {
+        let rs = traits_ruleset();
+        let mut entity = companion_entity();
+        entity.xp_pool = 100;
+        entity.ability_scores = vec![
+            AbilityScore {
+                ability: Id::new("ability.living_language"),
+                score: 5,
+                specialty: None,
+                parameter: Some("German".into()),
+            },
+            AbilityScore {
+                ability: Id::new("ability.living_language"),
+                score: 2,
+                specialty: None,
+                parameter: Some("German".into()),
+            },
+        ];
+        assert!(codes(&validate(&entity, &rs)).contains(&"duplicate_ability".to_string()));
+    }
+
+    #[test]
+    fn parameterized_ability_without_value_is_error() {
+        // traits_ruleset marks ability.area_lore as parameterized.
+        let rs = traits_ruleset();
+        let mut entity = companion_entity();
+        entity.xp_pool = 100;
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.area_lore"),
+            score: 1,
+            specialty: None,
+            parameter: None,
+        }];
+        assert!(codes(&validate(&entity, &rs)).contains(&"ability_parameter_required".to_string()));
     }
 
     #[test]
