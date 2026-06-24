@@ -1,20 +1,30 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt;
 
 use crate::ruleset::Ruleset;
 use crate::types::{
-    Entity, EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, ParameterDomain, PointItem,
-    Prereq, ValidationMode,
+    Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, ParameterDomain,
+    PointItem, Prereq, ValidationMode,
 };
 
 /// Whether a validation issue blocks (`Error`) or merely advises (`Warning`).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum IssueSeverity {
     /// A rule violation that makes the entity illegal.
     Error,
     /// A non-blocking advisory (e.g. a prerequisite that cannot be evaluated yet).
     Warning,
+}
+
+impl fmt::Display for IssueSeverity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            IssueSeverity::Error => f.write_str("error"),
+            IssueSeverity::Warning => f.write_str("warning"),
+        }
+    }
 }
 
 /// A single validation finding.
@@ -63,6 +73,7 @@ pub enum IssueSeverity {
 /// | `duplicate_ability` | error | `ability`, `count` |
 /// | `not_enough_xp` | error | `spent`, `pool` |
 /// | `ability_parameter_required` | error | `ability` |
+/// | `ability_score_out_of_range` | error | `ability`, `score`, `max` |
 ///
 /// † The per-category flaw caps emit a code derived from the
 /// `flaw_category_caps` entry's category slug (`too_many_<category>_flaws`, or
@@ -88,6 +99,73 @@ pub struct ValidationIssue {
 }
 
 impl ValidationIssue {
+    /// The closed set of fixed issue codes the engine emits, exposed as symbols
+    /// so consumers reference a const rather than re-typing a string literal.
+    /// The serialized `code` stays a plain `String` (these consts ARE its
+    /// values); the per-category flaw-cap codes
+    /// (`too_many_<category>_flaws` / `too_many_major_<category>_flaws`) are
+    /// derived from data at runtime and so deliberately have no const here (see
+    /// the issue-code contract table above).
+    pub const CODE_UNKNOWN_TYPE: &'static str = "unknown_type";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_UNKNOWN_REF: &'static str = "unknown_ref";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_WRONG_ENTITY_KIND: &'static str = "wrong_entity_kind";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_DUPLICATE_SELECTION: &'static str = "duplicate_selection";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_OVER_BUDGET_VIRTUES: &'static str = "over_budget_virtues";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_OVER_BUDGET_FLAWS: &'static str = "over_budget_flaws";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_UNBALANCED_VIRTUES: &'static str = "unbalanced_virtues";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_TOO_MANY_MAJOR_VIRTUES: &'static str = "too_many_major_virtues";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_TOO_MANY_MAJOR_FLAWS: &'static str = "too_many_major_flaws";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_TOO_MANY_MINOR_FLAWS: &'static str = "too_many_minor_flaws";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_PREREQ_NOT_MET: &'static str = "prereq_not_met";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_PREREQ_UNEVALUATED: &'static str = "prereq_unevaluated";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_INCOMPATIBLE: &'static str = "incompatible";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_CATEGORY_NOT_PERMITTED: &'static str = "category_not_permitted";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_FORBIDDEN_CATEGORY: &'static str = "forbidden_category";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_MISSING_REQUIRED_TRAIT: &'static str = "missing_required_trait";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_FORBIDDEN_TRAIT: &'static str = "forbidden_trait";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_MISSING_PARAM: &'static str = "missing_param";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_UNEXPECTED_PARAM: &'static str = "unexpected_param";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_UNKNOWN_PARAM_VALUE: &'static str = "unknown_param_value";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_GIFT_REQUIRED: &'static str = "gift_required";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_GIFT_FORBIDDEN: &'static str = "gift_forbidden";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_CHARACTERISTIC_OUT_OF_RANGE: &'static str = "characteristic_out_of_range";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_CHARACTERISTIC_OVERSPENT: &'static str = "characteristic_overspent";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_CHARACTERISTIC_POINTS_UNSPENT: &'static str = "characteristic_points_unspent";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_UNKNOWN_ABILITY: &'static str = "unknown_ability";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_DUPLICATE_ABILITY: &'static str = "duplicate_ability";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_NOT_ENOUGH_XP: &'static str = "not_enough_xp";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_ABILITY_PARAMETER_REQUIRED: &'static str = "ability_parameter_required";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_ABILITY_SCORE_OUT_OF_RANGE: &'static str = "ability_score_out_of_range";
+
     /// Builds an issue with the given severity, code, args, and context.
     pub fn new(
         severity: IssueSeverity,
@@ -204,8 +282,14 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_forbidden_traits(type_profile, &selected_ids, &mut issues);
     validate_parameters(entity, ruleset, &mut issues);
     validate_gift_policy(entity, ruleset, type_profile, &mut issues);
-    validate_characteristics(entity, ruleset, &mut issues);
-    validate_abilities(entity, ruleset, &mut issues);
+
+    // Characteristics and Abilities are character-only concerns; a covenant has
+    // neither. Gate them on the entity kind so the engine respects EntityKind
+    // rather than relying on a covenant happening to carry no such data.
+    if entity.entity_kind == EntityKind::Character {
+        validate_characteristics(entity, ruleset, &mut issues);
+        validate_abilities(entity, ruleset, &mut issues);
+    }
 
     ValidationResult { issues }
 }
@@ -218,7 +302,7 @@ fn validate_known_type(
 ) {
     if type_profile.is_none() {
         issues.push(ValidationIssue::error(
-            "unknown_type",
+            ValidationIssue::CODE_UNKNOWN_TYPE,
             args([("type_id", entity.type_id.to_string())]),
             None,
         ));
@@ -230,7 +314,7 @@ fn validate_known_refs(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
     for selection in &entity.selections {
         if !ruleset.point_items.contains_key(&selection.item_ref) {
             issues.push(ValidationIssue::error(
-                "unknown_ref",
+                ValidationIssue::CODE_UNKNOWN_REF,
                 args([("item", selection.item_ref.to_string())]),
                 Some(selection.item_ref.clone()),
             ));
@@ -270,7 +354,7 @@ fn validate_balance(
 
     if virtue_points > profile.budget.virtue_points as i32 {
         issues.push(ValidationIssue::error(
-            "over_budget_virtues",
+            ValidationIssue::CODE_OVER_BUDGET_VIRTUES,
             args([
                 ("points", virtue_points.to_string()),
                 ("budget", profile.budget.virtue_points.to_string()),
@@ -281,7 +365,7 @@ fn validate_balance(
 
     if flaw_points > profile.budget.flaw_points as i32 {
         issues.push(ValidationIssue::error(
-            "over_budget_flaws",
+            ValidationIssue::CODE_OVER_BUDGET_FLAWS,
             args([
                 ("points", flaw_points.to_string()),
                 ("budget", profile.budget.flaw_points.to_string()),
@@ -292,7 +376,7 @@ fn validate_balance(
 
     if virtue_points > flaw_points {
         issues.push(ValidationIssue::error(
-            "unbalanced_virtues",
+            ValidationIssue::CODE_UNBALANCED_VIRTUES,
             args([
                 ("virtue_points", virtue_points.to_string()),
                 ("flaw_points", flaw_points.to_string()),
@@ -376,7 +460,7 @@ fn validate_caps(
         let n = count(&|i| i.kind == ItemKind::Virtue && i.magnitude == Magnitude::Major);
         if n > max as usize {
             issues.push(ValidationIssue::error(
-                "too_many_major_virtues",
+                ValidationIssue::CODE_TOO_MANY_MAJOR_VIRTUES,
                 count_args(n, max),
                 None,
             ));
@@ -387,7 +471,7 @@ fn validate_caps(
         let n = count(&|i| i.kind == ItemKind::Flaw && i.magnitude == Magnitude::Major);
         if n > max as usize {
             issues.push(ValidationIssue::error(
-                "too_many_major_flaws",
+                ValidationIssue::CODE_TOO_MANY_MAJOR_FLAWS,
                 count_args(n, max),
                 None,
             ));
@@ -398,7 +482,7 @@ fn validate_caps(
         let n = count(&|i| i.kind == ItemKind::Flaw && i.magnitude == Magnitude::Minor);
         if n > max as usize {
             issues.push(ValidationIssue::error(
-                "too_many_minor_flaws",
+                ValidationIssue::CODE_TOO_MANY_MINOR_FLAWS,
                 count_args(n, max),
                 None,
             ));
@@ -479,14 +563,14 @@ fn validate_prerequisites(
             match outcome {
                 Tri::False => {
                     issues.push(ValidationIssue::error(
-                        "prereq_not_met",
+                        ValidationIssue::CODE_PREREQ_NOT_MET,
                         args([("item", selection.item_ref.to_string())]),
                         Some(selection.item_ref.clone()),
                     ));
                 }
                 Tri::Unknown if depended_on_unknown => {
                     issues.push(ValidationIssue::warning(
-                        "prereq_unevaluated",
+                        ValidationIssue::CODE_PREREQ_UNEVALUATED,
                         args([("item", selection.item_ref.to_string())]),
                         Some(selection.item_ref.clone()),
                     ));
@@ -507,69 +591,41 @@ fn evaluate_prereq(
     ability_scores: &BTreeMap<&Id, u8>,
 ) -> (Tri, bool) {
     match prereq {
-        Prereq::All(children) => {
-            // AND: any False -> False; else any Unknown -> Unknown; else True.
-            let mut depended = false;
-            let mut saw_unknown = false;
-            for child in children {
-                let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus, ability_scores);
-                match outcome {
-                    Tri::False => return (Tri::False, dep),
-                    Tri::Unknown => {
-                        saw_unknown = true;
-                        depended |= dep;
-                    }
-                    Tri::True => {}
-                }
-            }
-            if saw_unknown {
-                (Tri::Unknown, depended)
-            } else {
-                (Tri::True, false)
-            }
-        }
-        Prereq::Any(children) => {
-            // OR: any True -> True; else any Unknown -> Unknown; else False.
-            let mut depended = false;
-            let mut saw_unknown = false;
-            for child in children {
-                let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus, ability_scores);
-                match outcome {
-                    Tri::True => return (Tri::True, false),
-                    Tri::Unknown => {
-                        saw_unknown = true;
-                        depended |= dep;
-                    }
-                    Tri::False => {}
-                }
-            }
-            if saw_unknown {
-                (Tri::Unknown, depended)
-            } else {
-                (Tri::False, false)
-            }
-        }
-        Prereq::None(children) => {
-            // NOR: any True -> False; else any Unknown -> Unknown; else True.
-            let mut depended = false;
-            let mut saw_unknown = false;
-            for child in children {
-                let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus, ability_scores);
-                match outcome {
-                    Tri::True => return (Tri::False, false),
-                    Tri::Unknown => {
-                        saw_unknown = true;
-                        depended |= dep;
-                    }
-                    Tri::False => {}
-                }
-            }
-            if saw_unknown {
-                (Tri::Unknown, depended)
-            } else {
-                (Tri::True, false)
-            }
-        }
+        // The three quantifiers share one tri-state fold over their children,
+        // differing only in: which child outcome short-circuits, what the
+        // expression then evaluates to, and the value when every child is known
+        // and none triggered the short-circuit.
+        //   All (AND): trigger on False  -> short-circuit False; all-known -> True
+        //   Any (OR) : trigger on True   -> short-circuit True;  all-known -> False
+        //   Nor      : trigger on True   -> short-circuit False; all-known -> True
+        // In every case a surviving Unknown makes the whole expression Unknown.
+        Prereq::All(children) => fold_children(
+            children,
+            selected_ids,
+            is_magus,
+            ability_scores,
+            Tri::False,
+            Tri::False,
+            Tri::True,
+        ),
+        Prereq::Any(children) => fold_children(
+            children,
+            selected_ids,
+            is_magus,
+            ability_scores,
+            Tri::True,
+            Tri::True,
+            Tri::False,
+        ),
+        Prereq::Nor(children) => fold_children(
+            children,
+            selected_ids,
+            is_magus,
+            ability_scores,
+            Tri::True,
+            Tri::False,
+            Tri::True,
+        ),
         Prereq::Has(id) => {
             if selected_ids.contains(id) {
                 (Tri::True, false)
@@ -600,6 +656,43 @@ fn evaluate_prereq(
     }
 }
 
+/// Tri-state fold shared by the `All`/`Any`/`Nor` quantifiers (see the call
+/// sites for the per-quantifier parameterization).
+///
+/// Walks the children once: if any child evaluates to `trigger`, the whole
+/// expression short-circuits to `short_circuit` (a definite True/False, so its
+/// dependency flag is irrelevant downstream and reported as `false`). Otherwise,
+/// a surviving `Unknown` makes the result `Unknown` (carrying whether that
+/// hinged on genuinely missing data); if every child is known, the result is
+/// `all_known`.
+fn fold_children(
+    children: &[Prereq],
+    selected_ids: &BTreeSet<&Id>,
+    is_magus: Option<bool>,
+    ability_scores: &BTreeMap<&Id, u8>,
+    trigger: Tri,
+    short_circuit: Tri,
+    all_known: Tri,
+) -> (Tri, bool) {
+    let mut depended = false;
+    let mut saw_unknown = false;
+    for child in children {
+        let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus, ability_scores);
+        if outcome == trigger {
+            return (short_circuit, false);
+        }
+        if outcome == Tri::Unknown {
+            saw_unknown = true;
+            depended |= dep;
+        }
+    }
+    if saw_unknown {
+        (Tri::Unknown, depended)
+    } else {
+        (all_known, false)
+    }
+}
+
 fn validate_incompatibilities(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -624,7 +717,7 @@ fn validate_incompatibilities(
                 };
                 if reported.insert(pair) {
                     issues.push(ValidationIssue::error(
-                        "incompatible",
+                        ValidationIssue::CODE_INCOMPATIBLE,
                         args([
                             ("item", selection.item_ref.to_string()),
                             ("other", incompat_id.to_string()),
@@ -659,7 +752,7 @@ fn validate_permitted_categories(
 
         if !profile.permitted_categories.contains(&item.category) {
             issues.push(ValidationIssue::error(
-                "category_not_permitted",
+                ValidationIssue::CODE_CATEGORY_NOT_PERMITTED,
                 args([
                     ("item", selection.item_ref.to_string()),
                     ("category", item.category.clone()),
@@ -691,7 +784,7 @@ fn validate_forbidden_categories(
 
         if profile.forbidden_categories.contains(&item.category) {
             issues.push(ValidationIssue::error(
-                "forbidden_category",
+                ValidationIssue::CODE_FORBIDDEN_CATEGORY,
                 args([
                     ("item", selection.item_ref.to_string()),
                     ("category", item.category.clone()),
@@ -714,7 +807,7 @@ fn validate_entity_kind_applicability(
 
         if !item.entity_kinds.is_empty() && !item.entity_kinds.contains(&entity.entity_kind) {
             issues.push(ValidationIssue::error(
-                "wrong_entity_kind",
+                ValidationIssue::CODE_WRONG_ENTITY_KIND,
                 args([
                     ("item", selection.item_ref.to_string()),
                     ("entity_kind", entity.entity_kind.to_string()),
@@ -741,7 +834,7 @@ fn validate_duplicate_selections(entity: &Entity, issues: &mut Vec<ValidationIss
         // the same parameterized item with DIFFERENT params are legal and do
         // not collide here. Only identical (ref + params) pairs are flagged.
         issues.push(ValidationIssue::error(
-            "duplicate_selection",
+            ValidationIssue::CODE_DUPLICATE_SELECTION,
             args([("item", item_ref.to_string()), ("count", count.to_string())]),
             Some((*item_ref).clone()),
         ));
@@ -760,7 +853,7 @@ fn validate_required_traits(
     for required_id in &profile.required_traits {
         if !selected_ids.contains(required_id) {
             issues.push(ValidationIssue::error(
-                "missing_required_trait",
+                ValidationIssue::CODE_MISSING_REQUIRED_TRAIT,
                 args([("item", required_id.to_string())]),
                 Some(required_id.clone()),
             ));
@@ -780,7 +873,7 @@ fn validate_forbidden_traits(
     for forbidden_id in &profile.forbidden_traits {
         if selected_ids.contains(forbidden_id) {
             issues.push(ValidationIssue::error(
-                "forbidden_trait",
+                ValidationIssue::CODE_FORBIDDEN_TRAIT,
                 args([("item", forbidden_id.to_string())]),
                 Some(forbidden_id.clone()),
             ));
@@ -803,7 +896,7 @@ fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
 
         for missing in declared.difference(&provided) {
             issues.push(ValidationIssue::error(
-                "missing_param",
+                ValidationIssue::CODE_MISSING_PARAM,
                 args([
                     ("item", selection.item_ref.to_string()),
                     ("key", missing.to_string()),
@@ -814,7 +907,7 @@ fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
 
         for extra in provided.difference(&declared) {
             issues.push(ValidationIssue::error(
-                "unexpected_param",
+                ValidationIssue::CODE_UNEXPECTED_PARAM,
                 args([
                     ("item", selection.item_ref.to_string()),
                     ("key", extra.to_string()),
@@ -836,7 +929,7 @@ fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
             };
             if !resolves {
                 issues.push(ValidationIssue::error(
-                    "unknown_param_value",
+                    ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
                     args([
                         ("item", selection.item_ref.to_string()),
                         ("key", param.key.clone()),
@@ -891,7 +984,7 @@ fn validate_gift_policy(
         GiftPolicy::Required => {
             if !has_gift {
                 issues.push(ValidationIssue::error(
-                    "gift_required",
+                    ValidationIssue::CODE_GIFT_REQUIRED,
                     BTreeMap::new(),
                     None,
                 ));
@@ -900,7 +993,7 @@ fn validate_gift_policy(
         GiftPolicy::Forbidden => {
             if has_gift {
                 issues.push(ValidationIssue::error(
-                    "gift_forbidden",
+                    ValidationIssue::CODE_GIFT_FORBIDDEN,
                     BTreeMap::new(),
                     None,
                 ));
@@ -933,7 +1026,7 @@ fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
     for (characteristic, &score) in &entity.characteristics {
         if !rules.is_legal_score(score) {
             issues.push(ValidationIssue::error(
-                "characteristic_out_of_range",
+                ValidationIssue::CODE_CHARACTERISTIC_OUT_OF_RANGE,
                 args([
                     ("characteristic", characteristic.to_string()),
                     ("score", score.to_string()),
@@ -954,13 +1047,13 @@ fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
     let budget = rules.start_points as i32;
     if cost > budget {
         issues.push(ValidationIssue::error(
-            "characteristic_overspent",
+            ValidationIssue::CODE_CHARACTERISTIC_OVERSPENT,
             args([("cost", cost.to_string()), ("points", budget.to_string())]),
             None,
         ));
     } else if cost < budget {
         issues.push(ValidationIssue::warning(
-            "characteristic_points_unspent",
+            ValidationIssue::CODE_CHARACTERISTIC_POINTS_UNSPENT,
             args([("cost", cost.to_string()), ("points", budget.to_string())]),
             None,
         ));
@@ -979,15 +1072,22 @@ fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
 /// Overspending is reported as an error rather than blocked: direct-entry allows
 /// the illegal state and surfaces it (the M4 wizard blocks the spend up front).
 /// The age cap is deferred to M4. XP cost per score comes from the advancement
-/// table (`AdvancementTable::xp_for_score`).
+/// table (`AdvancementTable::xp_for_score`); a non-zero score with no table row
+/// is off-table and flagged `ability_score_out_of_range` (mirroring the
+/// characteristic range check), so an illegal score is never silently priced at
+/// 0 XP.
 fn validate_abilities(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
     let mut seen: BTreeMap<(&Id, Option<&str>), u32> = BTreeMap::new();
     let mut spent: u32 = 0;
+    // The highest score the advancement table prices. A ruleset that ships no
+    // advancement table has no legal score range to check against, so off-table
+    // range checking is skipped (XP still totals to 0 for every score below).
+    let max_score = ruleset.advancement.max_score();
 
     for entry in &entity.ability_scores {
         match ruleset.abilities.get(&entry.ability) {
             None => issues.push(ValidationIssue::error(
-                "unknown_ability",
+                ValidationIssue::CODE_UNKNOWN_ABILITY,
                 args([("ability", entry.ability.to_string())]),
                 Some(entry.ability.clone()),
             )),
@@ -997,16 +1097,34 @@ fn validate_abilities(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Valid
                     && entry.parameter.as_deref().is_none_or(str::is_empty)
                 {
                     issues.push(ValidationIssue::error(
-                        "ability_parameter_required",
+                        ValidationIssue::CODE_ABILITY_PARAMETER_REQUIRED,
                         args([("ability", entry.ability.to_string())]),
                         Some(entry.ability.clone()),
                     ));
                 }
             }
         }
-        // Unknown scores (outside the advancement table) cost nothing here; the
-        // table covers the legal range and the UI never offers an off-table score.
-        spent += ruleset.advancement.xp_for_score(entry.score).unwrap_or(0);
+        // The advancement table covers the legal score range. A non-zero score
+        // with no table row is off-table (illegal) — flag it rather than silently
+        // pricing it at 0 XP, so direct-entry illegal states surface here instead
+        // of relying on the UI to keep them out (mirrors characteristic range
+        // checking).
+        match ruleset.advancement.xp_for_score(entry.score) {
+            Some(xp) => spent += xp,
+            None => {
+                if let Some(max) = max_score {
+                    issues.push(ValidationIssue::error(
+                        ValidationIssue::CODE_ABILITY_SCORE_OUT_OF_RANGE,
+                        args([
+                            ("ability", entry.ability.to_string()),
+                            ("score", entry.score.to_string()),
+                            ("max", max.to_string()),
+                        ]),
+                        Some(entry.ability.clone()),
+                    ));
+                }
+            }
+        }
         let key = (&entry.ability, entry.parameter.as_deref());
         *seen.entry(key).or_insert(0) += 1;
     }
@@ -1014,7 +1132,7 @@ fn validate_abilities(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Valid
     for ((ability, _parameter), count) in seen {
         if count > 1 {
             issues.push(ValidationIssue::error(
-                "duplicate_ability",
+                ValidationIssue::CODE_DUPLICATE_ABILITY,
                 args([
                     ("ability", ability.to_string()),
                     ("count", count.to_string()),
@@ -1026,7 +1144,7 @@ fn validate_abilities(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Valid
 
     if spent > entity.xp_pool {
         issues.push(ValidationIssue::error(
-            "not_enough_xp",
+            ValidationIssue::CODE_NOT_ENOUGH_XP,
             args([
                 ("spent", spent.to_string()),
                 ("pool", entity.xp_pool.to_string()),
@@ -1199,6 +1317,38 @@ mod tests {
             .unwrap();
         assert_eq!(issue.args.get("points"), Some(&"2".to_string()));
         assert_eq!(issue.args.get("budget"), Some(&"1".to_string()));
+    }
+
+    #[test]
+    fn issue_code_consts_match_emitted_codes() {
+        // The emitted `code` string equals the public associated const, so
+        // consumers can reference the symbol instead of a bare literal.
+        assert_eq!(
+            ValidationIssue::CODE_OVER_BUDGET_VIRTUES,
+            "over_budget_virtues"
+        );
+        assert_eq!(ValidationIssue::CODE_UNKNOWN_TYPE, "unknown_type");
+
+        let items = r#"[
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+        ]"#;
+        let types = r#"[{
+          "id": "small_budget",
+          "budget": { "virtue_points": 1, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("small_budget", vec![sel("virtue.a"), sel("virtue.b")]);
+        let result = validate(&entity, &rs);
+        assert!(
+            result
+                .errors()
+                .any(|i| i.code == ValidationIssue::CODE_OVER_BUDGET_VIRTUES),
+            "emitted code should equal the const: {:?}",
+            codes(&result)
+        );
     }
 
     #[test]
@@ -2204,6 +2354,40 @@ mod tests {
     }
 
     #[test]
+    fn covenant_entity_skips_character_only_validation() {
+        // A covenant carries neither Characteristics nor Abilities. Even if stray
+        // character data is present, the engine must not run the character-only
+        // validators for a covenant-kind entity (gating is on EntityKind, not on
+        // data emptiness). The same data on a Character entity DOES get flagged.
+        let rs = traits_ruleset();
+        let mut entity = companion_entity();
+        entity.characteristics = BTreeMap::from([(Characteristic::Str, 4)]); // out of range
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.nonexistent"),
+            score: 2,
+            specialty: None,
+            parameter: None,
+        }];
+
+        // As a character, both stray fields are flagged.
+        let char_codes = codes(&validate(&entity, &rs));
+        assert!(char_codes.contains(&"characteristic_out_of_range".to_string()));
+        assert!(char_codes.contains(&"unknown_ability".to_string()));
+
+        // As a covenant, the character-only validators are skipped entirely.
+        entity.entity_kind = EntityKind::Covenant;
+        let cov_codes = codes(&validate(&entity, &rs));
+        assert!(
+            !cov_codes.contains(&"characteristic_out_of_range".to_string()),
+            "covenant must not get characteristic validation: {cov_codes:?}"
+        );
+        assert!(
+            !cov_codes.contains(&"unknown_ability".to_string()),
+            "covenant must not get ability validation: {cov_codes:?}"
+        );
+    }
+
+    #[test]
     fn duplicate_ability_same_specialty_is_error() {
         let rs = traits_ruleset();
         let mut entity = companion_entity();
@@ -2255,6 +2439,45 @@ mod tests {
             parameter: None,
         }];
         assert!(codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()));
+    }
+
+    #[test]
+    fn off_table_ability_score_is_out_of_range() {
+        let rs = traits_ruleset(); // advancement table tops out at score 3
+        let mut entity = companion_entity();
+        entity.xp_pool = 1000; // generous, so the only finding is the range error
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 9, // far above the table max
+            specialty: None,
+            parameter: None,
+        }];
+        let found = codes(&validate(&entity, &rs));
+        assert_eq!(
+            found
+                .iter()
+                .filter(|c| *c == "ability_score_out_of_range")
+                .count(),
+            1,
+            "exactly one ability_score_out_of_range issue: {found:?}"
+        );
+    }
+
+    #[test]
+    fn in_range_ability_score_is_not_out_of_range() {
+        let rs = traits_ruleset(); // advancement table tops out at score 3
+        let mut entity = companion_entity();
+        entity.xp_pool = 1000;
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 3, // the table's max — in range
+            specialty: None,
+            parameter: None,
+        }];
+        assert!(
+            !codes(&validate(&entity, &rs)).contains(&"ability_score_out_of_range".to_string()),
+            "an in-range score must not be flagged"
+        );
     }
 
     #[test]
@@ -2953,6 +3176,40 @@ mod tests {
         assert!(
             codes(&validate(&bad, &rs)).contains(&"unknown_param_value".to_string()),
             "unknown item-domain value should be flagged"
+        );
+    }
+
+    #[test]
+    fn art_domain_param_value_accepted_without_registry() {
+        // Art has no in-engine registry yet (M5 deferral), so the resolver
+        // accepts any value: an arbitrary Art selection must NOT raise
+        // `unknown_param_value`. This locks in the current accept-all behavior.
+        let items = r#"[{
+          "id": "virtue.puissant_art", "kind": "virtue", "magnitude": "minor",
+          "category": "general", "entity_kinds": ["character"],
+          "parameters": [{"key": "art", "type": "ref", "domain": "art"}]
+        }]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+
+        let entity = make_entity(
+            "test_type",
+            vec![Selection::with_params(
+                Id::new("virtue.puissant_art"),
+                BTreeMap::from([("art".into(), Id::new("art.totally_made_up"))]),
+            )],
+        );
+
+        assert!(
+            !codes(&validate(&entity, &rs))
+                .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "Art-domain values are accepted (no registry yet): {:?}",
+            codes(&validate(&entity, &rs))
         );
     }
 

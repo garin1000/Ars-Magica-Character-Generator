@@ -239,7 +239,7 @@ Combined with `kind` (virtue costs, flaw grants) for balance computation.
 enum Prereq {
     All(Vec<Prereq>),
     Any(Vec<Prereq>),
-    None(Vec<Prereq>),       // NOR — none may be present
+    Nor(Vec<Prereq>),        // NOR — none may be present (serde tag "none")
     Has(Id),
     House(Id),
     AbilityMin { ability: Id, score: u8 },

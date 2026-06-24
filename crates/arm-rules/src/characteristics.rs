@@ -8,7 +8,7 @@
 //!
 //! [`Ruleset`]: crate::ruleset::Ruleset
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::BTreeMap;
 use std::fmt;
 
@@ -82,13 +82,37 @@ pub struct CharacteristicCost {
 /// Loaded as data from `rules/core/characteristics.json`. The legal score range
 /// is derived from the table rows, not hardcoded.
 ///
+/// The `costs` vector is kept sorted ascending by `score`, regardless of input
+/// order, so the serialized array is canonical (project rule: arrays sorted by
+/// id/score). Deserialization enforces this; the lookups search by `score` and
+/// are unaffected by ordering.
+///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:2340-2354.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CharacteristicRules {
     /// Points available to spend at creation (the rulebook's "seven points").
     pub start_points: u8,
-    /// The cost table, one row per legal score.
+    /// The cost table, one row per legal score, sorted ascending by `score`.
     pub costs: Vec<CharacteristicCost>,
+}
+
+impl<'de> Deserialize<'de> for CharacteristicRules {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        struct Raw {
+            start_points: u8,
+            costs: Vec<CharacteristicCost>,
+        }
+        let Raw {
+            start_points,
+            mut costs,
+        } = Raw::deserialize(deserializer)?;
+        costs.sort_by_key(|row| row.score);
+        Ok(Self {
+            start_points,
+            costs,
+        })
+    }
 }
 
 impl CharacteristicRules {
@@ -195,6 +219,26 @@ mod tests {
         assert_eq!(r.max_score(), Some(3));
         assert!(r.is_legal_score(3));
         assert!(!r.is_legal_score(4));
+    }
+
+    #[test]
+    fn costs_serialize_score_sorted_regardless_of_input_order() {
+        // The canonical table above is authored high-to-low; after load the
+        // costs must be ascending by score, and serialization stays canonical.
+        let r = rules();
+        let scores: Vec<i8> = r.costs.iter().map(|c| c.score).collect();
+        assert_eq!(scores, vec![-3, -2, -1, 0, 1, 2, 3]);
+        // Lookups are unaffected by the re-sort.
+        assert_eq!(r.cost_for(3), Some(6));
+        assert_eq!(r.cost_for(-3), Some(-6));
+
+        let json = serde_json::to_string(&r).unwrap();
+        let first = json.find("\"score\":-3").unwrap();
+        let last = json.find("\"score\":3").unwrap();
+        assert!(
+            first < last,
+            "serialized costs must be score-sorted: {json}"
+        );
     }
 
     #[test]

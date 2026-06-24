@@ -254,25 +254,25 @@ fn load_entity_from_missing_path_is_io_error() {
     assert!(matches!(err, AppError::Io { .. }), "got {err:?}");
 }
 
-/// Extracts every `code: "..."` literal from the engine's validation source so
-/// the Fluent coverage check tracks the codes the engine actually emits.
+/// Extracts every fixed issue code from the engine's validation source so the
+/// Fluent coverage check tracks the codes the engine actually emits. The engine
+/// declares the closed set as `pub const CODE_*: &'static str = "...";` and
+/// emits them via `ValidationIssue::CODE_*`, so the code values live in those
+/// const definitions.
 fn validation_codes() -> Vec<String> {
     let full = fs::read_to_string(repo_root().join("crates/arm-rules/src/validation.rs")).unwrap();
     // Ignore the in-file `#[cfg(test)]` module, whose fixtures use fake codes.
     let src = full.split("mod tests").next().unwrap();
     let mut codes = Vec::new();
-    // The engine emits issues via `ValidationIssue::error("code", ...)` /
-    // `::warning("code", ...)`; the code is the first string literal after the
-    // opening paren (it may sit on the next line).
-    for marker in ["::error(", "::warning("] {
-        for fragment in src.split(marker).skip(1) {
-            let Some(open) = fragment.find('"') else {
-                continue;
-            };
-            let rest = &fragment[open + 1..];
-            if let Some(end) = rest.find('"') {
-                codes.push(rest[..end].to_string());
-            }
+    // Each fixed code is the string literal in a `const CODE_* : &'static str =
+    // "code";` definition.
+    for fragment in src.split("const CODE_").skip(1) {
+        let Some(open) = fragment.find('"') else {
+            continue;
+        };
+        let rest = &fragment[open + 1..];
+        if let Some(end) = rest.find('"') {
+            codes.push(rest[..end].to_string());
         }
     }
     codes.sort();

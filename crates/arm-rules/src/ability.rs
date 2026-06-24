@@ -16,7 +16,7 @@
 //! [`xp_to_raise`]: AdvancementTable::xp_to_raise
 //! [`xp_for_score`]: AdvancementTable::xp_for_score
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::fmt;
 
 use crate::types::{Id, SourceRef};
@@ -86,23 +86,54 @@ pub struct AbilityXpRow {
     pub total_xp: u32,
 }
 
-/// The Ability XP advancement table, loaded as data. Serializes transparently as
-/// the JSON array of rows.
-#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+/// The Ability XP advancement table, loaded as data.
+///
+/// # JSON shape
+///
+/// `#[serde(transparent)]` over a `Vec`: the serialized form is a **bare JSON
+/// array** of [`AbilityXpRow`] (NOT an object wrapping a `rows` field), e.g.
+/// `[ { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 } ]`. This
+/// bare-array shape is a stable public contract the frontend binds to.
+///
+/// Rows are kept sorted ascending by `score`, regardless of input order, so the
+/// serialized array is canonical (project rule: arrays sorted by id/score). Both
+/// [`AdvancementTable::new`] and deserialization enforce this; the lookups
+/// ([`xp_for_score`], [`xp_to_raise`]) search by `score` and are unaffected by
+/// ordering.
+///
+/// [`xp_for_score`]: AdvancementTable::xp_for_score
+/// [`xp_to_raise`]: AdvancementTable::xp_to_raise
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize)]
 #[serde(transparent)]
 pub struct AdvancementTable {
     rows: Vec<AbilityXpRow>,
 }
 
+impl<'de> Deserialize<'de> for AdvancementTable {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let rows = Vec::<AbilityXpRow>::deserialize(deserializer)?;
+        Ok(Self::new(rows))
+    }
+}
+
 impl AdvancementTable {
-    /// Builds a table from its rows.
-    pub fn new(rows: Vec<AbilityXpRow>) -> Self {
+    /// Builds a table from its rows, sorting them ascending by `score` so the
+    /// serialized form is canonical regardless of input order.
+    pub fn new(mut rows: Vec<AbilityXpRow>) -> Self {
+        rows.sort_by_key(|row| row.score);
         Self { rows }
     }
 
-    /// The rows, in source order.
+    /// The rows, sorted ascending by `score`.
     pub fn rows(&self) -> &[AbilityXpRow] {
         &self.rows
+    }
+
+    /// The highest score the table prices (the last row, since rows are sorted
+    /// ascending). `None` when the table is empty. Score 0 is always free and is
+    /// not represented by a row, so an empty table still prices score 0.
+    pub fn max_score(&self) -> Option<u8> {
+        self.rows.last().map(|row| row.score)
     }
 
     /// Total XP committed to reach `score` from zero. Score 0 costs 0 XP; a score
@@ -191,6 +222,66 @@ mod tests {
         assert_eq!(t.xp_for_score(5), Some(75));
         assert_eq!(t.xp_for_score(10), Some(275));
         assert_eq!(t.xp_for_score(11), None);
+    }
+
+    #[test]
+    fn rows_serialize_score_sorted_regardless_of_input_order() {
+        // Out-of-order input rows must serialize in ascending-score order.
+        let t: AdvancementTable = serde_json::from_str(
+            r#"[
+              { "score": 3, "total_xp": 30 },
+              { "score": 1, "total_xp": 5 },
+              { "score": 2, "total_xp": 15 }
+            ]"#,
+        )
+        .unwrap();
+        let scores: Vec<u8> = t.rows().iter().map(|r| r.score).collect();
+        assert_eq!(scores, vec![1, 2, 3]);
+
+        // And via the constructor, lookups are unaffected.
+        let built = AdvancementTable::new(t.rows().to_vec());
+        assert_eq!(built.xp_for_score(2), Some(15));
+        assert_eq!(built.xp_to_raise(3), Some(15)); // 30 - 15
+
+        let json = serde_json::to_string(&t).unwrap();
+        assert!(
+            json.find("\"score\":1").unwrap() < json.find("\"score\":2").unwrap()
+                && json.find("\"score\":2").unwrap() < json.find("\"score\":3").unwrap(),
+            "serialized rows must be score-sorted: {json}"
+        );
+    }
+
+    #[test]
+    fn new_sorts_out_of_order_rows_and_lookups_are_correct() {
+        // Build directly via the constructor (not serde) with deliberately
+        // out-of-order rows; the constructor sorts ascending by score and the
+        // lookups read the right values regardless of input order.
+        let t = AdvancementTable::new(vec![
+            AbilityXpRow {
+                score: 3,
+                total_xp: 30,
+            },
+            AbilityXpRow {
+                score: 1,
+                total_xp: 5,
+            },
+            AbilityXpRow {
+                score: 2,
+                total_xp: 15,
+            },
+        ]);
+
+        let scores: Vec<u8> = t.rows().iter().map(|r| r.score).collect();
+        assert_eq!(scores, vec![1, 2, 3], "rows() must be score-sorted");
+
+        assert_eq!(t.xp_for_score(0), Some(0));
+        assert_eq!(t.xp_for_score(2), Some(15));
+        assert_eq!(t.xp_for_score(3), Some(30));
+        assert_eq!(t.xp_for_score(4), None);
+
+        assert_eq!(t.xp_to_raise(1), Some(5)); // 5 - 0
+        assert_eq!(t.xp_to_raise(3), Some(15)); // 30 - 15
+        assert_eq!(t.xp_to_raise(0), None);
     }
 
     #[test]
