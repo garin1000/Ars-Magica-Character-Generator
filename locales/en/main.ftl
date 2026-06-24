@@ -122,6 +122,7 @@ issue-unknown_ability = Unknown ability: { $ability }.
 issue-duplicate_ability = { $ability } is listed { $count } times with the same specialty.
 issue-not_enough_xp = Abilities cost { $spent } XP, more than the { $pool } in the pool.
 issue-ability_parameter_required = { $ability } needs a value (e.g. the specific Area or Language).
+issue-ability_score_out_of_range = Ability { $ability } score { $score } is outside the allowed range (0 to { $max }).
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.

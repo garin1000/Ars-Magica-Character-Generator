@@ -55,7 +55,7 @@ impl From<RulesetError> for AppError {
     fn from(e: RulesetError) -> Self {
         let ruleset_kind = e.kind().to_string();
         let errors = match e {
-            RulesetError::Parse(message) => vec![message],
+            RulesetError::Parse { source, message } => vec![format!("{source}: {message}")],
             RulesetError::Integrity(integrity) => integrity.errors().to_vec(),
         };
         AppError::Ruleset {

@@ -173,11 +173,18 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `:2406`, data rows `:2408-2427`).
 - Data: `rules/core/abilities.json` `advancement` array (scores 1-20).
 - Implementation: `crates/arm-rules/src/ability.rs` — `AdvancementTable`
-  (`xp_for_score`, `xp_to_raise`). Used to price whole-point steps; a character
-  stores whole bought scores plus an `xp_pool` total (`types.rs`). The XP spent
-  (Σ `xp_for_score`) may not exceed the pool — `validate_abilities` emits
-  `not_enough_xp` otherwise (an error in Advisory/Enforced; the M4 wizard blocks
-  the spend up front). Leftover pool is the character's banked XP.
+  (`xp_for_score`, `xp_to_raise`, `max_score`). Used to price whole-point steps;
+  a character stores whole bought scores plus an `xp_pool` total (`types.rs`).
+  The XP spent (Σ `xp_for_score`) may not exceed the pool — `validate_abilities`
+  emits `not_enough_xp` otherwise (an error in Advisory/Enforced; the M4 wizard
+  blocks the spend up front). Leftover pool is the character's banked XP.
+- Engine integrity check (not a sourced rule): a non-zero ability score with no
+  row in the advancement table (`xp_for_score` → `None`) is off-table and
+  flagged `ability_score_out_of_range` by `validate_abilities` rather than
+  silently priced at 0 XP. This mirrors the characteristic out-of-range check
+  (the rulebook gives no explicit ability-score ceiling; the table's highest
+  priced score — `max_score` — is used as the upper bound, lower bound 0). The
+  check is skipped when the ruleset ships no advancement table.
 
 #### Seed Ability catalogue — `rules/core/abilities.json`
 > Ability list grouped by type (General, Academic, Arcane, Martial,

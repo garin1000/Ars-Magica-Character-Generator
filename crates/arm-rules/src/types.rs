@@ -34,6 +34,12 @@ impl From<String> for Id {
     }
 }
 
+impl From<Id> for String {
+    fn from(id: Id) -> Self {
+        id.0
+    }
+}
+
 impl AsRef<str> for Id {
     fn as_ref(&self) -> &str {
         &self.0
@@ -148,7 +154,7 @@ impl fmt::Display for ItemKind {
 }
 
 /// Recursive boolean expression tree for prerequisites.
-/// All = AND, Any = OR, None = NOR (none may be present).
+/// All = AND, Any = OR, Nor = NOR (none may be present; serde tag `"none"`).
 ///
 /// `House`, `AbilityMin`, and `ArtMin` reference IDs (house / ability / art)
 /// for which no registry yet exists; those refs are intentionally NOT checked
@@ -184,8 +190,10 @@ pub enum Prereq {
     All(Vec<Prereq>),
     /// At least one child must be satisfied (OR).
     Any(Vec<Prereq>),
-    /// None of the children may be satisfied (NOR).
-    None(Vec<Prereq>),
+    /// None of the children may be satisfied (NOR). The serde tag stays `"none"`
+    /// (the variant is named `Nor` only to avoid colliding with `Option::None`).
+    #[serde(rename = "none")]
+    Nor(Vec<Prereq>),
     /// The entity must have the referenced item selected.
     Has(Id),
     /// The entity must belong to the referenced house. Currently unevaluable
@@ -451,6 +459,13 @@ fn is_false(b: &bool) -> bool {
 
 /// Data-driven profile defining constraints for an entity type
 /// (grog, companion, magus, etc.).
+///
+/// As with [`Entity`], the character-only fields here (`is_magus`,
+/// `gift_policy`, `gift_id`, `gift_categories`) live flat on this generic
+/// profile type as a deliberate KISS trade-off rather than in a separate
+/// character-specific profile. A covenant type simply leaves them
+/// empty/default/`None`; the engine never assumes a covenant profile populates
+/// them.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EntityTypeProfile {
     /// Stable slug identifier of the type (e.g. `grog`, `companion`, `magus`).
@@ -552,6 +567,18 @@ fn is_zero(n: &u32) -> bool {
 /// Saves store choices, not resolved values; `selections` and `ability_scores`
 /// are kept sorted on serialization (see [`Entity::normalize`]) for zero-noise
 /// git diffs.
+///
+/// # Flat schema for character-only fields (deliberate KISS trade-off)
+///
+/// `Entity` is the single generic buildable-entity type shared by characters and
+/// covenants (see the entity-generic design invariant). The character-only
+/// fields — `characteristics`, `characteristic_descriptions`, `ability_scores`,
+/// `xp_pool` — live flat on this generic type rather than in a separate
+/// character-specific struct. This is intentional, not an oversight: it keeps one
+/// concrete save shape and one validation path. A covenant entity simply leaves
+/// these fields empty/default (and the engine gates the character-only
+/// validators on `entity_kind`, so it never assumes a covenant carries them).
+/// Mirror trade-off on [`EntityTypeProfile`] for the type-level fields.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entity {
     /// Save-format schema version.
@@ -710,6 +737,8 @@ mod tests {
         check(ParameterDomain::Ability);
         check(ParameterDomain::Art);
         check(ParameterDomain::Item);
+        check(crate::validation::IssueSeverity::Error);
+        check(crate::validation::IssueSeverity::Warning);
     }
 
     #[test]
@@ -878,14 +907,28 @@ mod tests {
     }
 
     #[test]
-    fn prereq_none_variant() {
+    fn prereq_nor_variant() {
         let json =
             r#"{ "kind": "none", "value": [{ "kind": "has", "value": "flaw.blatant_gift" }] }"#;
         let prereq: Prereq = serde_json::from_str(json).unwrap();
         assert_eq!(
             prereq,
-            Prereq::None(vec![Prereq::Has(Id::new("flaw.blatant_gift"))])
+            Prereq::Nor(vec![Prereq::Has(Id::new("flaw.blatant_gift"))])
         );
+    }
+
+    #[test]
+    fn prereq_nor_serializes_with_none_tag() {
+        // The variant is named `Nor` in Rust, but the JSON tag MUST remain
+        // `"none"` so saved data and the frontend contract stay stable.
+        let prereq = Prereq::Nor(vec![Prereq::Has(Id::new("flaw.blatant_gift"))]);
+        let json = serde_json::to_string(&prereq).unwrap();
+        assert!(
+            json.contains(r#""kind":"none""#),
+            "serde tag must stay \"none\": {json}"
+        );
+        let roundtripped: Prereq = serde_json::from_str(&json).unwrap();
+        assert_eq!(prereq, roundtripped);
     }
 
     #[test]
@@ -1256,6 +1299,13 @@ mod tests {
     fn id_from_str_ref() {
         let id: Id = Id::from("test.id");
         assert_eq!(id.as_str(), "test.id");
+    }
+
+    #[test]
+    fn string_from_id() {
+        let id = Id::new("test.id");
+        let s: String = id.into();
+        assert_eq!(s, "test.id");
     }
 
     #[test]

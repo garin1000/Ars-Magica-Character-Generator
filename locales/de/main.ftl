@@ -122,6 +122,7 @@ issue-unknown_ability = Unbekannte Fertigkeit: { $ability }.
 issue-duplicate_ability = { $ability } ist { $count }-mal mit derselben Spezialisierung aufgeführt.
 issue-not_enough_xp = Fertigkeiten kosten { $spent } XP, mehr als die { $pool } im Vorrat.
 issue-ability_parameter_required = { $ability } braucht einen Wert (z. B. das konkrete Gebiet oder die Sprache).
+issue-ability_score_out_of_range = Fertigkeit { $ability } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).
 
 # AppError-Arten der Tauri-Befehle.
 error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.

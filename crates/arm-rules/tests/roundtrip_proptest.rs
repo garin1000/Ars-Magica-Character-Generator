@@ -23,7 +23,7 @@ fn arb_prereq() -> impl Strategy<Value = Prereq> {
         prop_oneof![
             prop::collection::vec(inner.clone(), 0..4).prop_map(Prereq::All),
             prop::collection::vec(inner.clone(), 0..4).prop_map(Prereq::Any),
-            prop::collection::vec(inner, 0..4).prop_map(Prereq::None),
+            prop::collection::vec(inner, 0..4).prop_map(Prereq::Nor),
         ]
     })
 }

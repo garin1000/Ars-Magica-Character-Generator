@@ -10,7 +10,7 @@ pub mod validation;
 
 pub use ability::{Ability, AbilityCategory, AbilityXpRow, AdvancementTable};
 pub use characteristics::{Characteristic, CharacteristicCost, CharacteristicRules};
-pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError};
+pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError, RulesetSources};
 pub use types::{
     AbilityScore, Entity, EntityKind, EntityTypeProfile, FlawCategoryCap, GiftPolicy, I18nEntry,
     Id, ItemKind, LineRange, Magnitude, ParamType, ParameterDef, ParameterDomain, PointBudget,
