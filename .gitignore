@@ -13,3 +13,6 @@ crates/arm-app/gen/
 # Playwright e2e artifacts
 ui/playwright-report/
 ui/test-results/
+
+# Local maintenance helper: refreshes rules source from arm-de-translation
+rules/source/sync-sources.sh
