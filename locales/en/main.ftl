@@ -48,12 +48,24 @@ ability-category-arcane = Arcane
 ability-category-martial = Martial
 ability-category-supernatural = Supernatural
 
-# Characteristic point-buy readout and the banked-XP field.
+# Characteristic point-buy readout.
 characteristic-points = Points: { $used } / { $budget }
-unspent-xp = Banked XP
+# Tab labels for the editor's main area.
+tab-characteristics = Characteristics
+tab-virtues-flaws = Virtues & Flaws
+tab-abilities = Abilities
+# Ability XP summary and controls.
+xp-pool = XP pool
+xp-spent = Spent: { $spent }
+xp-available = Available: { $available }
 ability-score-label = Score
 ability-specialty-label = Specialty
 ability-add = Add ability
+ability-increment = Raise
+ability-decrement = Lower
+characteristic-increment = Raise
+characteristic-decrement = Lower
+characteristic-description-label = Description
 
 balance-virtues = Virtues: { $used } / { $budget }
 balance-flaws = Flaws: { $used } / { $budget }
@@ -68,6 +80,8 @@ param-hint = ({ $label })
 # Localized parameter labels, keyed by the engine's parameter key.
 param-label-ability = Ability
 param-label-technique = Technique
+param-label-area = Area
+param-label-language = Language
 
 empty-selections-side = None yet.
 no-issues = No issues.
@@ -106,6 +120,8 @@ issue-characteristic_overspent = Characteristics cost { $cost } points, over the
 issue-characteristic_points_unspent = Only { $cost } of { $points } Characteristic points spent.
 issue-unknown_ability = Unknown ability: { $ability }.
 issue-duplicate_ability = { $ability } is listed { $count } times with the same specialty.
+issue-not_enough_xp = Abilities cost { $spent } XP, more than the { $pool } in the pool.
+issue-ability_parameter_required = { $ability } needs a value (e.g. the specific Area or Language).
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.

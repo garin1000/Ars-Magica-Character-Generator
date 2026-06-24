@@ -120,6 +120,29 @@ export function abilityXpSpent(
   return total;
 }
 
+/** Highest whole score the advancement table can price (the spinner ceiling). */
+export function maxAbilityScore(advancement: { score: number }[] | undefined): number {
+  if (!advancement || advancement.length === 0) return 0;
+  return advancement.reduce((m, r) => Math.max(m, r.score), 0);
+}
+
+/**
+ * Localized ability name with its parameter interpolated. For a parameterized
+ * ability the i18n name is a template ("{area} Lore" / "{area}-Kunde"); the
+ * `{param}` token is filled with `value`, or with a localized hint like "(Area)"
+ * when empty. Plain abilities have no token, so the name is returned as-is.
+ */
+export function abilityDisplayName(
+  localized: LocalizedRuleset,
+  abilityId: string,
+  value: string | null | undefined,
+  placeholderLabel: (key: string) => string,
+): string {
+  const paramKey = localized.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
+  const params = paramKey && value ? { [paramKey]: value } : undefined;
+  return displayName(localized, abilityId, params, placeholderLabel);
+}
+
 export interface AbilityGroup {
   category: AbilityCategory;
   abilities: Ability[];

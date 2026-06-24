@@ -27,8 +27,13 @@ async function severities() {
 
 describe('validation modes', () => {
   it('reports the same illegal entity differently per mode', async () => {
+    // V/F add buttons live in the Virtues & Flaws tab; the mode select and the
+    // shared validation bar are always visible.
+    const vfTab = await $('[data-testid="tab-virtues_flaws"]');
+    await vfTab.waitForExist({ timeout: 30000 });
+    await vfTab.click();
     const addForbidden = await $(FORBIDDEN);
-    await addForbidden.waitForExist({ timeout: 30000 });
+    await addForbidden.waitForExist({ timeout: 10000 });
     await addForbidden.click();
 
     const modeSelect = await $(MODE_SELECT);

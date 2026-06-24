@@ -68,17 +68,24 @@ pub async fn save_entity(entity: Entity, app: AppHandle) -> Result<Option<String
     let path = match e2e_file_override() {
         Some(path) => path,
         None => {
+            let ext = ruleset_io::entity_extension(entity.entity_kind);
             let Some(file) = app
                 .dialog()
                 .file()
-                .add_filter("Character", &["json"])
+                // Ars Magica character/covenant files first (the default save
+                // type), then JSON for interop, then an all-files fallback.
+                .add_filter("Ars Magica character", &["armc", "armcov"])
+                .add_filter("JSON", &["json"])
+                .add_filter("All files", &["*"])
+                .set_file_name(ruleset_io::default_file_name(entity.entity_kind))
                 .blocking_save_file()
             else {
                 return Ok(None);
             };
-            file.into_path().map_err(|e| AppError::Io {
+            let chosen = file.into_path().map_err(|e| AppError::Io {
                 message: e.to_string(),
-            })?
+            })?;
+            ruleset_io::ensure_extension(chosen, ext)
         }
     };
 
@@ -96,7 +103,10 @@ pub async fn load_entity(app: AppHandle) -> Result<Option<Entity>, AppError> {
             let Some(file) = app
                 .dialog()
                 .file()
-                .add_filter("Character", &["json"])
+                // Accept our own extensions and .json, plus an all-files fallback
+                // so a character file is never hidden by the filter.
+                .add_filter("Ars Magica character", &["armc", "armcov", "json"])
+                .add_filter("All files", &["*"])
                 .blocking_pick_file()
             else {
                 return Ok(None);

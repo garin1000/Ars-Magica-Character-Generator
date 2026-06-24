@@ -131,13 +131,18 @@ fn fully_specified_companion_validates() {
             ability: Id::new("ability.awareness"),
             score: 2,
             specialty: Some("searching".into()),
+            parameter: None,
         },
         AbilityScore {
             ability: Id::new("ability.living_language"),
             score: 5,
-            specialty: Some("German".into()),
+            specialty: None,
+            parameter: Some("German".into()),
         },
     ];
+    // Awareness 2 (15 xp) + Living Language 5 (75 xp) = 90 spent; give a pool that
+    // covers it (banking the rest).
+    e.xp_pool = 120;
 
     let result = validate(&e, &rs);
     assert!(

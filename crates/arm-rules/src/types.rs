@@ -519,7 +519,8 @@ impl Selection {
 /// A character's whole bought score in one Ability, with an optional specialty.
 ///
 /// The score is the *bought* value (ability XP is spent in whole points, so an
-/// ability never holds partial XP — loose XP sits in [`Entity::unspent_xp`]). The
+/// ability never holds partial XP — leftover XP is the pool minus what scores
+/// cost, see [`Entity::xp_pool`]). The
 /// *effective* score (bought + virtue bonuses) is computed at validation time,
 /// never stored. Keyed by (ability, specialty): the same parameterized Ability
 /// (e.g. Area Lore, Living Language) can appear more than once with different
@@ -530,9 +531,15 @@ pub struct AbilityScore {
     pub ability: Id,
     /// The whole bought score.
     pub score: u8,
-    /// Free-text specialty (e.g. the spoken language for `ability.living_language`).
+    /// Free-text specialty (e.g. a focus like "searching" for Awareness).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub specialty: Option<String>,
+    /// Player-supplied value for a parameterized ability (e.g. the area for
+    /// `(Area) Lore` or the language for `(Living Language)`). Part of the
+    /// ability's identity: instances with different parameters are distinct, so a
+    /// character may hold several `(Area) Lore`s. `None` for plain abilities.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parameter: Option<String>,
 }
 
 /// `skip_serializing_if` predicate: omits a `u32` field when it is zero.
@@ -561,14 +568,20 @@ pub struct Entity {
     /// Chosen Characteristic scores (point-buy). Defaults to empty.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub characteristics: BTreeMap<Characteristic, i8>,
+    /// Optional free-text description per Characteristic (the character sheet's
+    /// "description" field — flavor, not a rules mechanic). Defaults to empty.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub characteristic_descriptions: BTreeMap<Characteristic, String>,
     /// Whole bought Ability scores. Kept sorted via [`Entity::normalize`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ability_scores: Vec<AbilityScore>,
-    /// Banked experience points not yet committed to an Ability. M3 stores and
-    /// round-trips this but does not validate it (there is no XP budget until the
-    /// M4 life-stage flow); a user can record XP set aside for later.
+    /// Total experience points available to spend on Abilities. The amount
+    /// *spent* is derived (Σ XP-to-reach each bought score); the leftover
+    /// (`xp_pool` − spent) is the character's banked XP. Spending more than the
+    /// pool is an error (surfaced in Advisory/Enforced modes); the M4 life-stage
+    /// flow sets this pool and blocks overspending up front.
     #[serde(default, skip_serializing_if = "is_zero")]
-    pub unspent_xp: u32,
+    pub xp_pool: u32,
 }
 
 /// Current save-format schema version.
@@ -585,8 +598,9 @@ impl Entity {
             type_id,
             selections: Vec::new(),
             characteristics: BTreeMap::new(),
+            characteristic_descriptions: BTreeMap::new(),
             ability_scores: Vec::new(),
-            unspent_xp: 0,
+            xp_pool: 0,
         }
     }
 
@@ -989,12 +1003,14 @@ mod tests {
                 ),
             ],
             characteristics: BTreeMap::from([(Characteristic::Int, 2), (Characteristic::Sta, -1)]),
+            characteristic_descriptions: BTreeMap::new(),
             ability_scores: vec![AbilityScore {
                 ability: Id::new("ability.awareness"),
                 score: 3,
                 specialty: Some("searching".into()),
+                parameter: None,
             }],
-            unspent_xp: 7,
+            xp_pool: 30,
         };
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
@@ -1003,7 +1019,7 @@ mod tests {
 
         assert!(json.contains(r#""schema_version": 2"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
-        assert!(json.contains(r#""unspent_xp": 7"#));
+        assert!(json.contains(r#""xp_pool": 30"#));
     }
 
     #[test]
@@ -1019,8 +1035,9 @@ mod tests {
                 Selection::new(Id::new("ability.awareness")),
             ],
             characteristics: BTreeMap::new(),
+            characteristic_descriptions: BTreeMap::new(),
             ability_scores: Vec::new(),
-            unspent_xp: 0,
+            xp_pool: 0,
         };
 
         // Serialization is canonical only after normalize(); derive-based
@@ -1108,7 +1125,7 @@ mod tests {
 
     #[test]
     fn v1_save_without_new_fields_still_loads() {
-        // A schema_version 1 save predates characteristics/ability_scores/unspent_xp.
+        // A schema_version 1 save predates characteristics/ability_scores/xp_pool.
         let v1 = r#"{
           "schema_version": 1,
           "ruleset": { "id": "arm5-core", "version": "2024.1" },
@@ -1120,7 +1137,7 @@ mod tests {
         assert_eq!(entity.schema_version, 1);
         assert!(entity.characteristics.is_empty());
         assert!(entity.ability_scores.is_empty());
-        assert_eq!(entity.unspent_xp, 0);
+        assert_eq!(entity.xp_pool, 0);
     }
 
     #[test]
@@ -1133,7 +1150,7 @@ mod tests {
         let json = serde_json::to_string(&entity).unwrap();
         assert!(!json.contains("characteristics"));
         assert!(!json.contains("ability_scores"));
-        assert!(!json.contains("unspent_xp"));
+        assert!(!json.contains("xp_pool"));
     }
 
     #[test]
@@ -1148,11 +1165,13 @@ mod tests {
                 ability: Id::new("ability.swim"),
                 score: 2,
                 specialty: None,
+                parameter: None,
             },
             AbilityScore {
                 ability: Id::new("ability.awareness"),
                 score: 3,
                 specialty: None,
+                parameter: None,
             },
         ];
         entity.normalize();
@@ -1278,7 +1297,7 @@ mod tests {
         assert!(entity.selections.is_empty());
         assert!(entity.characteristics.is_empty());
         assert!(entity.ability_scores.is_empty());
-        assert_eq!(entity.unspent_xp, 0);
+        assert_eq!(entity.xp_pool, 0);
     }
 
     #[test]

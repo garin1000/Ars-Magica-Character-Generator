@@ -61,6 +61,13 @@ pub struct Ability {
     pub id: Id,
     /// Which of the five categories this Ability belongs to.
     pub category: AbilityCategory,
+    /// For a parameterized ability (e.g. `(Area) Lore`, `(Living Language)`), the
+    /// key of the player-supplied parameter — `area`, `language`, … This key names
+    /// the `{key}` placeholder in the localized name template and the
+    /// `param-label-<key>` Fluent label. `None` for plain abilities, which then
+    /// allow only one instance per character.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parameter: Option<String>,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,

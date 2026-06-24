@@ -25,8 +25,9 @@ function newEntity(rulesetId: string, version: string): Entity {
     type_id: 'companion',
     selections: [],
     characteristics: {} as Record<Characteristic, number>,
+    characteristic_descriptions: {},
     ability_scores: [],
-    unspent_xp: 0,
+    xp_pool: 0,
   };
 }
 
@@ -93,28 +94,63 @@ class AppStore {
     this.#scheduleValidate();
   }
 
-  /**
-   * Set an ability's whole bought score and specialty in the direct-entry UI.
-   * One entry per ability id (a score of 0 removes it). The engine's data model
-   * also supports multiple entries per ability with distinct specialties, but the
-   * direct-entry UI keeps one row per catalogue ability.
-   */
-  setAbility(ability: string, score: number, specialty?: string): void {
-    const spec = specialty?.trim() ? specialty.trim() : undefined;
-    const rest = (this.entity.ability_scores ?? []).filter((a) => a.ability !== ability);
-    this.entity.ability_scores = score > 0 ? [...rest, { ability, score, specialty: spec }] : rest;
+  /** Set or clear a Characteristic's free-text description (the sheet's flavor). */
+  setCharacteristicDescription(characteristic: Characteristic, text: string): void {
+    const descriptions = { ...(this.entity.characteristic_descriptions ?? {}) };
+    if (text.trim()) {
+      descriptions[characteristic] = text;
+    } else {
+      delete descriptions[characteristic];
+    }
+    this.entity.characteristic_descriptions = descriptions;
     this.#scheduleValidate();
   }
 
-  removeAbility(ability: string): void {
-    this.entity.ability_scores = (this.entity.ability_scores ?? []).filter(
-      (a) => a.ability !== ability,
+  /**
+   * Select an ability (like a virtue/flaw): it enters at score 0, which costs no
+   * XP — the first point is bought by raising it. A parameterized ability (e.g.
+   * (Area) Lore) can be added several times (each instance gets its own value); a
+   * plain ability is added once.
+   */
+  addAbility(ability: string): void {
+    const parameterized = !!this.ruleset?.ruleset.abilities?.[ability]?.parameter;
+    const present = (this.entity.ability_scores ?? []).some((a) => a.ability === ability);
+    if (!parameterized && present) return;
+    this.entity.ability_scores = [...(this.entity.ability_scores ?? []), { ability, score: 0 }];
+    this.#scheduleValidate();
+  }
+
+  /** Ability edits are by row index, since a parameterized ability has several rows. */
+  removeAbilityAt(index: number): void {
+    this.entity.ability_scores = (this.entity.ability_scores ?? []).filter((_, i) => i !== index);
+    this.#scheduleValidate();
+  }
+
+  adjustAbilityAt(index: number, delta: number, max: number): void {
+    this.entity.ability_scores = (this.entity.ability_scores ?? []).map((a, i) =>
+      i === index ? { ...a, score: Math.max(0, Math.min(max, a.score + delta)) } : a,
     );
     this.#scheduleValidate();
   }
 
-  setUnspentXp(xp: number): void {
-    this.entity.unspent_xp = Number.isFinite(xp) && xp > 0 ? Math.floor(xp) : 0;
+  setAbilitySpecialtyAt(index: number, specialty: string): void {
+    const spec = specialty.trim() ? specialty.trim() : undefined;
+    this.entity.ability_scores = (this.entity.ability_scores ?? []).map((a, i) =>
+      i === index ? { ...a, specialty: spec } : a,
+    );
+    this.#scheduleValidate();
+  }
+
+  setAbilityParameterAt(index: number, value: string): void {
+    const param = value.trim() ? value.trim() : undefined;
+    this.entity.ability_scores = (this.entity.ability_scores ?? []).map((a, i) =>
+      i === index ? { ...a, parameter: param } : a,
+    );
+    this.#scheduleValidate();
+  }
+
+  setXpPool(xp: number): void {
+    this.entity.xp_pool = Number.isFinite(xp) && xp > 0 ? Math.floor(xp) : 0;
     this.#scheduleValidate();
   }
 
