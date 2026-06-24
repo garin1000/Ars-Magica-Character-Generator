@@ -49,6 +49,19 @@ impl Characteristic {
         Characteristic::Dex,
         Characteristic::Qik,
     ];
+
+    /// The slug-style id for this Characteristic, e.g. `characteristic.str`.
+    /// Used as a parameter value in the `characteristic` parameter domain.
+    pub fn id(self) -> crate::types::Id {
+        crate::types::Id::new(format!("characteristic.{self}"))
+    }
+
+    /// Parses a `characteristic.<slug>` [`Id`](crate::types::Id) back into a
+    /// Characteristic, or `None` if it is not a valid characteristic id.
+    pub fn from_id(id: &crate::types::Id) -> Option<Self> {
+        let slug = id.as_str().strip_prefix("characteristic.")?;
+        Self::ALL.into_iter().find(|c| c.to_string() == slug)
+    }
 }
 
 impl fmt::Display for Characteristic {
@@ -94,6 +107,11 @@ pub struct CharacteristicRules {
     pub start_points: u8,
     /// The cost table, one row per legal score, sorted ascending by `score`.
     pub costs: Vec<CharacteristicCost>,
+    /// The highest *effective* score reachable via score-boosting virtues (Great
+    /// Characteristic's "+5" ceiling). `None` means no virtue headroom over the
+    /// table maximum. Source: Core Rules.md:3987-3989.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effective_max: Option<i8>,
 }
 
 impl<'de> Deserialize<'de> for CharacteristicRules {
@@ -102,15 +120,19 @@ impl<'de> Deserialize<'de> for CharacteristicRules {
         struct Raw {
             start_points: u8,
             costs: Vec<CharacteristicCost>,
+            #[serde(default)]
+            effective_max: Option<i8>,
         }
         let Raw {
             start_points,
             mut costs,
+            effective_max,
         } = Raw::deserialize(deserializer)?;
         costs.sort_by_key(|row| row.score);
         Ok(Self {
             start_points,
             costs,
+            effective_max,
         })
     }
 }
@@ -143,6 +165,13 @@ impl CharacteristicRules {
     /// The highest legal score in the table, if any.
     pub fn max_score(&self) -> Option<i8> {
         self.costs.iter().map(|row| row.score).max()
+    }
+
+    /// The highest legal *effective* score: the virtue ceiling
+    /// ([`effective_max`](Self::effective_max)) when present, else the table
+    /// maximum. `None` only when the table itself is empty.
+    pub fn effective_max_score(&self) -> Option<i8> {
+        self.effective_max.or_else(|| self.max_score())
     }
 
     /// `true` if `score` has a row in the cost table.
@@ -219,6 +248,40 @@ mod tests {
         assert_eq!(r.max_score(), Some(3));
         assert!(r.is_legal_score(3));
         assert!(!r.is_legal_score(4));
+    }
+
+    #[test]
+    fn effective_max_overrides_table_max_when_present() {
+        // Without an explicit effective_max, the table maximum is the ceiling.
+        assert_eq!(rules().effective_max_score(), Some(3));
+        // With one (Great Characteristic's +5), it raises the ceiling.
+        let r: CharacteristicRules = serde_json::from_str(
+            r#"{ "start_points": 7, "effective_max": 5,
+                 "costs": [{ "score": 3, "cost": 6 }, { "score": 0, "cost": 0 }] }"#,
+        )
+        .unwrap();
+        assert_eq!(r.effective_max_score(), Some(5));
+        assert_eq!(r.max_score(), Some(3));
+    }
+
+    #[test]
+    fn characteristic_id_roundtrips() {
+        for c in Characteristic::ALL {
+            assert_eq!(Characteristic::from_id(&c.id()), Some(c));
+        }
+        assert_eq!(
+            Characteristic::from_id(&crate::types::Id::new("characteristic.str")),
+            Some(Characteristic::Str)
+        );
+        assert_eq!(
+            Characteristic::from_id(&crate::types::Id::new("characteristic.nope")),
+            None
+        );
+        // A non-characteristic namespace is rejected.
+        assert_eq!(
+            Characteristic::from_id(&crate::types::Id::new("ability.awareness")),
+            None
+        );
     }
 
     #[test]

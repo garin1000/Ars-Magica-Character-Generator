@@ -10,6 +10,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             commands::load_ruleset,
             commands::validate_entity,
+            commands::effective_scores,
             commands::save_entity,
             commands::load_entity,
         ])

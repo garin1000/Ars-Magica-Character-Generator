@@ -238,6 +238,9 @@ pub enum ParameterDomain {
     Ability,
     /// Value is an art id (e.g. `art.creo`). No registry yet.
     Art,
+    /// Value is a characteristic id (e.g. `characteristic.str`). Validated by
+    /// parsing into [`crate::characteristics::Characteristic`], not a registry.
+    Characteristic,
     /// Value is a point-item id; resolved against the ruleset's point items.
     Item,
 }
@@ -255,6 +258,7 @@ impl fmt::Display for ParameterDomain {
         match self {
             ParameterDomain::Ability => f.write_str("ability"),
             ParameterDomain::Art => f.write_str("art"),
+            ParameterDomain::Characteristic => f.write_str("characteristic"),
             ParameterDomain::Item => f.write_str("item"),
         }
     }
@@ -282,6 +286,40 @@ impl ParameterDef {
             domain,
         }
     }
+}
+
+/// A mechanical effect a virtue/flaw applies to a character's scores.
+///
+/// Effects are *parameter-relative*: each names the parameter key (see
+/// [`ParameterDef::key`]) whose value on a [`Selection`] identifies the target
+/// ability or characteristic. Bonus amounts and preconditions are data — the
+/// engine hardcodes no virtue IDs. Effective scores are always computed from
+/// these effects, never stored (see [`crate::effective`]).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum Effect {
+    /// Adds `amount` to the effective score of the ability named by the
+    /// selection's `params[param]` (e.g. Puissant Ability, +2).
+    AbilityBonus {
+        /// Parameter key whose value names the target ability.
+        param: String,
+        /// Points added to the effective score.
+        amount: i8,
+    },
+    /// Adds `amount` to the effective score of the characteristic named by the
+    /// selection's `params[param]` (e.g. Great Characteristic, +1).
+    CharacteristicBonus {
+        /// Parameter key whose value names the target characteristic.
+        param: String,
+        /// Points added to the effective score.
+        amount: i8,
+        /// If set, the bonus is legal only when the target characteristic's
+        /// *base* (bought) score is at least this value (Great Characteristic
+        /// requires +3). Parameter-relative, so it lives here rather than in the
+        /// static [`Prereq`] tree.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        min_base: Option<i8>,
+    },
 }
 
 /// An inclusive line range `[start, end]` into a Markdown source file.
@@ -369,9 +407,30 @@ pub struct PointItem {
     /// Parameter slots a selection of this item must fill.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub parameters: Vec<ParameterDef>,
+    /// Score-boosting effects this item applies (e.g. Puissant Ability +2,
+    /// Great Characteristic +1). Empty for items with no score effect.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub effects: Vec<Effect>,
+    /// Maximum number of selections that may share the same `(id, params)`
+    /// target. Default 1 — an item may be taken at most once per distinct
+    /// target; Great Characteristic raises this to 2 per characteristic.
+    #[serde(
+        default = "default_max_per_target",
+        skip_serializing_if = "is_default_max_per_target"
+    )]
+    pub max_per_target: u8,
     /// Provenance into the Markdown source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
+}
+
+/// The default selection multiplicity: an item may be taken once per target.
+fn default_max_per_target() -> u8 {
+    1
+}
+
+fn is_default_max_per_target(value: &u8) -> bool {
+    *value == default_max_per_target()
 }
 
 impl PointItem {
@@ -1250,6 +1309,64 @@ mod tests {
     fn entity_kind_display() {
         assert_eq!(format!("{}", EntityKind::Character), "character");
         assert_eq!(format!("{}", EntityKind::Covenant), "covenant");
+    }
+
+    #[test]
+    fn effects_and_max_per_target_deserialize() {
+        let json = r#"{
+          "id": "virtue.great_characteristic",
+          "kind": "virtue",
+          "magnitude": "minor",
+          "category": "general",
+          "entity_kinds": ["character"],
+          "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
+          "effects": [{ "type": "characteristic_bonus", "param": "characteristic", "amount": 1, "min_base": 3 }],
+          "max_per_target": 2
+        }"#;
+        let item: PointItem = serde_json::from_str(json).unwrap();
+        assert_eq!(item.max_per_target, 2);
+        assert_eq!(
+            item.effects,
+            vec![Effect::CharacteristicBonus {
+                param: "characteristic".into(),
+                amount: 1,
+                min_base: Some(3),
+            }]
+        );
+    }
+
+    #[test]
+    fn max_per_target_defaults_to_one_and_is_omitted_when_default() {
+        let json = r#"{
+          "id": "virtue.keen_vision",
+          "kind": "virtue",
+          "magnitude": "minor",
+          "category": "general"
+        }"#;
+        let item: PointItem = serde_json::from_str(json).unwrap();
+        assert_eq!(item.max_per_target, 1);
+        assert!(item.effects.is_empty());
+        // The default must not appear in canonical output (zero-noise diffs).
+        let out = serde_json::to_string(&item).unwrap();
+        assert!(
+            !out.contains("max_per_target"),
+            "default should be skipped: {out}"
+        );
+        assert!(
+            !out.contains("effects"),
+            "empty effects should be skipped: {out}"
+        );
+    }
+
+    #[test]
+    fn ability_bonus_effect_roundtrips() {
+        let effect = Effect::AbilityBonus {
+            param: "ability".into(),
+            amount: 2,
+        };
+        let json = serde_json::to_string(&effect).unwrap();
+        assert_eq!(serde_json::from_str::<Effect>(&json).unwrap(), effect);
+        assert!(json.contains("\"type\":\"ability_bonus\""));
     }
 
     #[test]

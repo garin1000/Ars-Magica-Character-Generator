@@ -11,13 +11,19 @@ export type IssueSeverity = 'error' | 'warning';
 // Closed enums in the engine (`ParamType` / `ParameterDomain`), serialized as
 // their snake_case names.
 export type ParamType = 'ref';
-export type ParameterDomain = 'ability' | 'art' | 'item';
+export type ParameterDomain = 'ability' | 'art' | 'characteristic' | 'item';
 
 export interface ParameterDef {
   key: string;
   type: ParamType;
   domain: ParameterDomain;
 }
+
+// Score-boosting effect a virtue applies (Puissant Ability +2, Great
+// Characteristic +1). The target is named by the selection's `param` value.
+export type Effect =
+  | { type: 'ability_bonus'; param: string; amount: number }
+  | { type: 'characteristic_bonus'; param: string; amount: number; min_base?: number | null };
 
 // Prerequisite expression tree. Adjacently tagged by the engine: every variant
 // is a uniform object carrying a `kind` discriminant, with any payload under
@@ -40,6 +46,16 @@ export interface PointItem {
   entity_kinds: EntityKind[];
   prerequisites?: Prereq;
   parameters?: ParameterDef[];
+  effects?: Effect[];
+  // Max selections per (id, params) target. Omitted when the default (1).
+  max_per_target?: number;
+}
+
+// Virtue score bonuses for the current entity, computed by the engine. Keys are
+// ability ids / characteristic slugs; only non-zero bonuses are present.
+export interface EffectiveScores {
+  ability_bonuses: Record<string, number>;
+  characteristic_bonuses: Partial<Record<Characteristic, number>>;
 }
 
 // Per-category flaw count cap. The category is data, so the engine hardcodes no

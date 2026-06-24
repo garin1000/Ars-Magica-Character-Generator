@@ -1,5 +1,6 @@
 {
   "start_points": 7,
+  "effective_max": 5,
   "costs": [
     { "score": 3, "cost": 6 },
     { "score": 2, "cost": 3 },

@@ -159,9 +159,12 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   etc.) — an extraction sign convention. The legal score range (−3..+3) is
   derived from the table rows, not hardcoded.
 - Implementation: `crates/arm-rules/src/characteristics.rs` —
-  `CharacteristicRules` (`cost_for`, `total_cost`, `min_score`, `max_score`);
-  enforced in `validation.rs` — `validate_characteristics` (out-of-range error,
-  overspent error, points-unspent warning).
+  `CharacteristicRules` (`cost_for`, `total_cost`, `min_score`, `max_score`,
+  `effective_max_score`); enforced in `validation.rs` —
+  `validate_characteristics` (base out-of-range error, effective-ceiling error,
+  overspent error, points-unspent warning). `effective_max` (=5, the Great
+  Characteristic ceiling) is data in `characteristics.json`; see the
+  effective-score layer below.
 
 ### Abilities
 
@@ -201,12 +204,63 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
   resolve against it) in `ruleset.rs`; `validate_abilities` in `validation.rs`.
 
+### Effective-score layer (score-boosting Virtues)
+
+A character's *effective* score is the bought score plus the bonuses granted by
+score-boosting Virtues. Effective scores are always computed, never stored, and
+are used for `AbilityMin` prerequisites, the characteristic ceiling, and display.
+The mechanic is **data-driven**: a `PointItem` declares `effects` (an `Effect`
+list) and the target ability/characteristic is named by the selection's
+parameter value — the engine hardcodes no Virtue IDs. Computed in
+`crates/arm-rules/src/effective.rs` (`ability_bonus`, `characteristic_bonus`,
+`effective_ability_score`, `effective_characteristic`, plus `*_bonuses` maps for
+the UI).
+
+#### Puissant (Ability) — +2 to one Ability
+> "You are particularly adept with one Ability, and add 2 to its value whenever
+> you use it … You may only take this Virtue once for a given Ability, but may
+> take it more than once for different Abilities."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:4814-4816`.
+- Data: `rules/core/virtues_flaws.json` `virtue.puissant_ability` —
+  `effects: [{ ability_bonus, param: "ability", amount: 2 }]`; `max_per_target`
+  defaults to 1 ("only once for a given Ability").
+- Implementation: `effective.rs::ability_bonus` sums it; `validation.rs`
+  folds it into the score map so `AbilityMin` is met by the effective score.
+
+#### Great (Characteristic) — +1, base ≥ +3, up to +5
+> "You may raise any Characteristic that already has a score of at least +3 by
+> one point, to no more than +5 … You may take this Virtue twice for the same
+> Characteristic, and for more than one Characteristic."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:3987-3989`.
+- Data: `rules/core/virtues_flaws.json` `virtue.great_characteristic` —
+  `characteristic`-domain param; `effects: [{ characteristic_bonus, param:
+  "characteristic", amount: 1, min_base: 3 }]`; `max_per_target: 2`. The +5
+  ceiling is `effective_max` in `rules/core/characteristics.json`.
+- Implementation: `effective.rs::characteristic_bonus` /
+  `effective_characteristic`; `validation.rs::validate_characteristics` flags
+  effective > 5 (`characteristic_effective_out_of_range`);
+  `validate_characteristic_bonuses` flags a target base < `min_base`
+  (`characteristic_bonus_base_too_low`) — the "≥ +3" precondition is
+  parameter-relative, so it lives on the effect, not in the static `Prereq`.
+
+#### Selection multiplicity — `max_per_target`
+The per-`(item, params)` selection cap. `validate_duplicate_selections`
+(`validation.rs`) errors `duplicate_selection` when a target's count exceeds the
+item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
+former hardcoded "at most once" rule and enforces both "Puissant once per
+Ability" (`:4816`) and "Great twice per Characteristic" (`:3989`). Effect
+integrity (`ruleset.rs::validate_effect_refs`) rejects at load any effect whose
+`param` is undeclared or whose domain mismatches the effect kind.
+
 #### Deferred to M4/M5
 The life-stage XP acquisition (early childhood 75+45 xp `:2378`; later life
-15/20/10 xp/yr `:2390-2394`; age→max-score cap `:2368-2374`), the Sample
-Childhood packages (`:2380-2388`), and the effective-score layer (virtue bonuses
-like Puissant Ability added to the bought score) are deferred to M4. `House` /
-`ArtMin` prerequisite evaluation and the Art registry are deferred to M5.
+15/20/10 xp/yr `:2390-2394`; age→max-score cap `:2368-2374`) and the Sample
+Childhood packages (`:2380-2388`) are deferred to M4. *Improved Characteristics*
+(a +3 point-buy pool, not an effective-score bonus) is a separate
+characteristic-budget follow-up. Puissant Art (+3) / `House` / `ArtMin`
+evaluation and the Art registry are deferred to M5 (no Art registry yet).
 
 ---
 

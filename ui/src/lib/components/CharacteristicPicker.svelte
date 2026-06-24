@@ -12,6 +12,10 @@
     return store.entity.characteristics?.[characteristic] ?? 0;
   }
 
+  function bonusOf(characteristic: Characteristic): number {
+    return store.effective?.characteristic_bonuses?.[characteristic] ?? 0;
+  }
+
   function descriptionOf(characteristic: Characteristic): string {
     return store.entity.characteristic_descriptions?.[characteristic] ?? '';
   }
@@ -58,6 +62,13 @@
           >
             +
           </button>
+          {#if bonusOf(characteristic) !== 0}
+            <span class="eff-badge" data-testid="char-eff-{characteristic}">
+              {store.t('effective-score', {
+                score: fmt(scoreOf(characteristic) + bonusOf(characteristic)),
+              })}
+            </span>
+          {/if}
         </span>
         <input
           type="text"

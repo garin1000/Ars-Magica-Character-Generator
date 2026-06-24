@@ -2,10 +2,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
+use crate::characteristics::Characteristic;
 use crate::ruleset::Ruleset;
 use crate::types::{
-    Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude, ParameterDomain,
-    PointItem, Prereq, ValidationMode,
+    Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude,
+    ParameterDomain, PointItem, Prereq, ValidationMode,
 };
 
 /// Whether a validation issue blocks (`Error`) or merely advises (`Warning`).
@@ -165,6 +166,12 @@ impl ValidationIssue {
     pub const CODE_ABILITY_PARAMETER_REQUIRED: &'static str = "ability_parameter_required";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_ABILITY_SCORE_OUT_OF_RANGE: &'static str = "ability_score_out_of_range";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_CHARACTERISTIC_EFFECTIVE_OUT_OF_RANGE: &'static str =
+        "characteristic_effective_out_of_range";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_CHARACTERISTIC_BONUS_BASE_TOO_LOW: &'static str =
+        "characteristic_bonus_base_too_low";
 
     /// Builds an issue with the given severity, code, args, and context.
     pub fn new(
@@ -271,7 +278,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_known_type(entity, type_profile, &mut issues);
     validate_known_refs(entity, ruleset, &mut issues);
     validate_entity_kind_applicability(entity, ruleset, &mut issues);
-    validate_duplicate_selections(entity, &mut issues);
+    validate_duplicate_selections(entity, ruleset, &mut issues);
     validate_balance(entity, ruleset, type_profile, &mut issues);
     validate_caps(entity, ruleset, type_profile, &mut issues);
     validate_prerequisites(entity, ruleset, type_profile, &selected_ids, &mut issues);
@@ -288,6 +295,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     // rather than relying on a covenant happening to carry no such data.
     if entity.entity_kind == EntityKind::Character {
         validate_characteristics(entity, ruleset, &mut issues);
+        validate_characteristic_bonuses(entity, ruleset, &mut issues);
         validate_abilities(entity, ruleset, &mut issues);
     }
 
@@ -544,12 +552,19 @@ fn validate_prerequisites(
 ) {
     let is_magus = type_profile.map(|p| p.is_magus);
 
-    // Max bought score per ability (a parameterized ability may appear more than
-    // once with different specialties; the highest score wins for a threshold).
+    // Effective score per ability: the max bought score (a parameterized ability
+    // may appear more than once with different specialties; the highest wins)
+    // plus any virtue bonus (Puissant Ability +2). `AbilityMin` thresholds are
+    // checked against the effective score so a boosted ability satisfies them.
     let mut ability_scores: BTreeMap<&Id, u8> = BTreeMap::new();
     for a in &entity.ability_scores {
         let entry = ability_scores.entry(&a.ability).or_insert(0);
         *entry = (*entry).max(a.score);
+    }
+    for (ability, score) in ability_scores.iter_mut() {
+        let effective =
+            i32::from(*score) + crate::effective::ability_bonus(entity, ruleset, ability);
+        *score = effective.clamp(0, i32::from(u8::MAX)) as u8;
     }
 
     for selection in &entity.selections {
@@ -818,7 +833,11 @@ fn validate_entity_kind_applicability(
     }
 }
 
-fn validate_duplicate_selections(entity: &Entity, issues: &mut Vec<ValidationIssue>) {
+fn validate_duplicate_selections(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
     let mut seen: BTreeMap<(&Id, &BTreeMap<String, Id>), usize> = BTreeMap::new();
 
     for selection in &entity.selections {
@@ -827,15 +846,24 @@ fn validate_duplicate_selections(entity: &Entity, issues: &mut Vec<ValidationIss
     }
 
     for ((item_ref, _params), count) in &seen {
-        if *count <= 1 {
+        // Selections are grouped by (item_ref, params): two selections of the
+        // same parameterized item with DIFFERENT params are distinct targets and
+        // do not collide here. An item may be taken up to `max_per_target` times
+        // for the same target (default 1; Great Characteristic allows 2).
+        let max = ruleset
+            .point_items
+            .get(*item_ref)
+            .map_or(1, |item| usize::from(item.max_per_target));
+        if *count <= max {
             continue;
         }
-        // Selections are de-duplicated by (item_ref, params): two selections of
-        // the same parameterized item with DIFFERENT params are legal and do
-        // not collide here. Only identical (ref + params) pairs are flagged.
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_DUPLICATE_SELECTION,
-            args([("item", item_ref.to_string()), ("count", count.to_string())]),
+            args([
+                ("item", item_ref.to_string()),
+                ("count", count.to_string()),
+                ("max", max.to_string()),
+            ]),
             Some((*item_ref).clone()),
         ));
     }
@@ -925,6 +953,7 @@ fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
             let resolves = match param.domain {
                 ParameterDomain::Item => ruleset.point_items.contains_key(value),
                 ParameterDomain::Ability => ruleset.abilities.contains_key(value),
+                ParameterDomain::Characteristic => Characteristic::from_id(value).is_some(),
                 ParameterDomain::Art => true,
             };
             if !resolves {
@@ -1038,6 +1067,28 @@ fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
         }
     }
 
+    // Effective-score ceiling: virtue bonuses (Great Characteristic) may raise a
+    // characteristic above the point-buy table maximum, but never past the
+    // effective ceiling (+5). The base score is still bounded by the table check
+    // above; this bounds bought + bonuses. Source: Core Rules.md:3987-3989.
+    if let Some(effective_max) = rules.effective_max_score() {
+        for characteristic in Characteristic::ALL {
+            let effective =
+                crate::effective::effective_characteristic(entity, ruleset, characteristic);
+            if effective > i32::from(effective_max) {
+                issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_CHARACTERISTIC_EFFECTIVE_OUT_OF_RANGE,
+                    args([
+                        ("characteristic", characteristic.to_string()),
+                        ("effective", effective.to_string()),
+                        ("max", effective_max.to_string()),
+                    ]),
+                    None,
+                ));
+            }
+        }
+    }
+
     // Don't evaluate the point spend before the user has touched the step.
     if entity.characteristics.is_empty() {
         return;
@@ -1057,6 +1108,54 @@ fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
             args([("cost", cost.to_string()), ("points", budget.to_string())]),
             None,
         ));
+    }
+}
+
+/// Enforces parameter-relative preconditions on characteristic-bonus effects:
+/// Great Characteristic may only raise a characteristic whose *base* (bought)
+/// score is already at the effect's `min_base` (+3). This is parameter-relative
+/// (it constrains whichever characteristic the selection targets), so it lives
+/// here rather than in the static [`Prereq`] tree.
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:3987-3989.
+fn validate_characteristic_bonuses(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    for selection in &entity.selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            let Effect::CharacteristicBonus {
+                param,
+                min_base: Some(min_base),
+                ..
+            } = effect
+            else {
+                continue;
+            };
+            let Some(target) = selection
+                .params
+                .get(param)
+                .and_then(Characteristic::from_id)
+            else {
+                continue; // unresolved param value is reported by validate_parameters
+            };
+            let base = entity.characteristics.get(&target).copied().unwrap_or(0);
+            if i32::from(base) < i32::from(*min_base) {
+                issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_CHARACTERISTIC_BONUS_BASE_TOO_LOW,
+                    args([
+                        ("item", selection.item_ref.to_string()),
+                        ("characteristic", target.to_string()),
+                        ("base", base.to_string()),
+                        ("min", min_base.to_string()),
+                    ]),
+                    Some(selection.item_ref.clone()),
+                ));
+            }
+        }
     }
 }
 
@@ -1271,6 +1370,20 @@ mod tests {
 
     fn sel(item_ref: &str) -> Selection {
         Selection::new(Id::new(item_ref))
+    }
+
+    fn puissant(ability: &str) -> Selection {
+        Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([("ability".into(), Id::new(ability))]),
+        )
+    }
+
+    fn great(characteristic: Characteristic) -> Selection {
+        Selection::with_params(
+            Id::new("virtue.great_characteristic"),
+            BTreeMap::from([("characteristic".into(), characteristic.id())]),
+        )
     }
 
     fn codes(result: &ValidationResult) -> Vec<String> {
@@ -2245,6 +2358,199 @@ mod tests {
         );
         let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(!warning_codes.contains(&"prereq_unevaluated"));
+    }
+
+    /// A ruleset with Puissant Ability (+2), Great Characteristic (+1, base ≥ 3,
+    /// up to 2/characteristic), a virtue requiring Awareness 3, the canonical
+    /// characteristic table with a +5 effective ceiling, and a funding flaw.
+    /// For the effective-score validation tests.
+    fn effective_ruleset() -> Ruleset {
+        let items = r#"[
+          {"id": "virtue.requires_awareness_3", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "prerequisites": {"kind": "ability_min", "value": {"ability": "ability.awareness", "score": 3}}},
+          {"id": "virtue.puissant_ability", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "parameters": [{"key": "ability", "type": "ref", "domain": "ability"}],
+           "effects": [{"type": "ability_bonus", "param": "ability", "amount": 2}]},
+          {"id": "virtue.great_characteristic", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "parameters": [{"key": "characteristic", "type": "ref", "domain": "characteristic"}],
+           "effects": [{"type": "characteristic_bonus", "param": "characteristic", "amount": 1, "min_base": 3}],
+           "max_per_target": 2},
+          {"id": "flaw.f", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+        ]"#;
+        let types = r#"[{
+          "id": "companion",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let abilities = r#"{ "abilities": [
+          { "id": "ability.awareness", "category": "general" },
+          { "id": "ability.stealth", "category": "general" }
+        ] }"#;
+        let characteristics = r#"{
+          "start_points": 7, "effective_max": 5,
+          "costs": [
+            { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 }, { "score": 1, "cost": 1 },
+            { "score": 0, "cost": 0 },
+            { "score": -1, "cost": -1 }, { "score": -2, "cost": -3 }, { "score": -3, "cost": -6 }
+          ]
+        }"#;
+        Ruleset::from_core_json("test", "1", items, types, abilities, characteristics).unwrap()
+    }
+
+    #[test]
+    fn ability_min_met_via_puissant_bonus() {
+        let rs = effective_ruleset();
+        let mut entity = make_entity(
+            "companion",
+            vec![
+                sel("virtue.requires_awareness_3"),
+                puissant("ability.awareness"),
+            ],
+        );
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 1,
+            specialty: None,
+            parameter: None,
+        }];
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"prereq_not_met".to_string()),
+            "Awareness base 1 + Puissant +2 = 3 meets the min: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn ability_min_not_met_at_base_one_without_bonus() {
+        let rs = effective_ruleset();
+        let mut entity = make_entity("companion", vec![sel("virtue.requires_awareness_3")]);
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 1,
+            specialty: None,
+            parameter: None,
+        }];
+        assert!(codes(&validate(&entity, &rs)).contains(&"prereq_not_met".to_string()));
+    }
+
+    #[test]
+    fn great_characteristic_effective_within_ceiling_is_allowed() {
+        let rs = effective_ruleset();
+        let mut entity = make_entity("companion", vec![sel("flaw.f"), great(Characteristic::Str)]);
+        entity.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
+        let c = codes(&validate(&entity, &rs));
+        assert!(
+            !c.contains(&"characteristic_effective_out_of_range".to_string()),
+            "{c:?}"
+        );
+        assert!(
+            !c.contains(&"characteristic_out_of_range".to_string()),
+            "{c:?}"
+        );
+        assert!(
+            !c.contains(&"characteristic_bonus_base_too_low".to_string()),
+            "{c:?}"
+        );
+    }
+
+    #[test]
+    fn great_characteristic_effective_above_ceiling_is_error() {
+        let rs = effective_ruleset();
+        // base 3 + three Greats = effective 6 > 5 (also trips multiplicity; we
+        // only assert the effective-ceiling error here).
+        let mut entity = make_entity(
+            "companion",
+            vec![
+                great(Characteristic::Str),
+                great(Characteristic::Str),
+                great(Characteristic::Str),
+            ],
+        );
+        entity.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
+        assert!(
+            codes(&validate(&entity, &rs))
+                .contains(&"characteristic_effective_out_of_range".to_string())
+        );
+    }
+
+    #[test]
+    fn characteristic_base_above_table_max_still_out_of_range() {
+        let rs = effective_ruleset();
+        let mut entity = companion_entity_eff();
+        entity.characteristics = BTreeMap::from([(Characteristic::Str, 4)]);
+        let c = codes(&validate(&entity, &rs));
+        assert!(
+            c.contains(&"characteristic_out_of_range".to_string()),
+            "{c:?}"
+        );
+        // 4 <= effective ceiling 5, so the effective check does NOT also fire.
+        assert!(
+            !c.contains(&"characteristic_effective_out_of_range".to_string()),
+            "{c:?}"
+        );
+    }
+
+    #[test]
+    fn great_characteristic_below_base_minimum_is_error() {
+        let rs = effective_ruleset();
+        let mut entity = make_entity("companion", vec![sel("flaw.f"), great(Characteristic::Str)]);
+        entity.characteristics = BTreeMap::from([(Characteristic::Str, 2)]);
+        assert!(
+            codes(&validate(&entity, &rs))
+                .contains(&"characteristic_bonus_base_too_low".to_string())
+        );
+    }
+
+    #[test]
+    fn great_characteristic_twice_same_is_allowed() {
+        let rs = effective_ruleset();
+        let mut entity = make_entity(
+            "companion",
+            vec![great(Characteristic::Str), great(Characteristic::Str)],
+        );
+        entity.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
+        assert!(!codes(&validate(&entity, &rs)).contains(&"duplicate_selection".to_string()));
+    }
+
+    #[test]
+    fn great_characteristic_thrice_same_is_error() {
+        let rs = effective_ruleset();
+        let mut entity = make_entity(
+            "companion",
+            vec![
+                great(Characteristic::Str),
+                great(Characteristic::Str),
+                great(Characteristic::Str),
+            ],
+        );
+        entity.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
+        assert!(codes(&validate(&entity, &rs)).contains(&"duplicate_selection".to_string()));
+    }
+
+    #[test]
+    fn puissant_same_ability_twice_is_error() {
+        let rs = effective_ruleset();
+        let entity = make_entity(
+            "companion",
+            vec![puissant("ability.awareness"), puissant("ability.awareness")],
+        );
+        assert!(codes(&validate(&entity, &rs)).contains(&"duplicate_selection".to_string()));
+    }
+
+    #[test]
+    fn puissant_two_different_abilities_is_allowed() {
+        let rs = effective_ruleset();
+        let entity = make_entity(
+            "companion",
+            vec![puissant("ability.awareness"), puissant("ability.stealth")],
+        );
+        assert!(!codes(&validate(&entity, &rs)).contains(&"duplicate_selection".to_string()));
+    }
+
+    fn companion_entity_eff() -> Entity {
+        make_entity("companion", vec![])
     }
 
     /// A ruleset carrying the canonical characteristic cost table + a couple of

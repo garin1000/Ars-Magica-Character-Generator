@@ -35,7 +35,7 @@ fn entity(type_id: &str, selections: Vec<Selection>) -> Entity {
 #[test]
 fn shipped_data_passes_integrity_check() {
     let rs = load_ruleset();
-    assert_eq!(rs.item_count(), 10, "exact shipped V/F count");
+    assert_eq!(rs.item_count(), 11, "exact shipped V/F count");
     assert_eq!(rs.profile_count(), 2, "companion + grog");
     assert!(
         rs.item(&Id::new("virtue.the_gift")).is_some(),
@@ -270,5 +270,44 @@ fn grog_over_budget() {
     assert!(
         codes.contains(&"over_budget_virtues"),
         "grog over budget: {codes:?}"
+    );
+}
+
+#[test]
+fn shipped_score_effects_apply() {
+    use arm_rules::{effective_ability_score, effective_characteristic};
+    let rs = load_ruleset();
+
+    // Puissant Ability (+2) and Great Characteristic (+1) from the shipped data.
+    let mut e = entity(
+        "companion",
+        vec![
+            Selection::with_params(
+                Id::new("virtue.puissant_ability"),
+                BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
+            ),
+            Selection::with_params(
+                Id::new("virtue.great_characteristic"),
+                BTreeMap::from([("characteristic".into(), Characteristic::Str.id())]),
+            ),
+        ],
+    );
+    e.ability_scores = vec![AbilityScore {
+        ability: Id::new("ability.awareness"),
+        score: 2,
+        specialty: None,
+        parameter: None,
+    }];
+    e.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
+
+    assert_eq!(
+        effective_ability_score(&e, &rs, &Id::new("ability.awareness")),
+        4,
+        "Awareness 2 + Puissant +2"
+    );
+    assert_eq!(
+        effective_characteristic(&e, &rs, Characteristic::Str),
+        4,
+        "Strength 3 + Great +1"
     );
 }

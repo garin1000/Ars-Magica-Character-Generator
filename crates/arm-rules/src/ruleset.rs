@@ -3,7 +3,10 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ability::{Ability, AdvancementTable};
 use crate::characteristics::CharacteristicRules;
-use crate::types::{EntityTypeProfile, I18nEntry, Id, ItemKind, PointItem, Prereq, RulesetRef};
+use crate::types::{
+    Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, ParameterDomain, PointItem, Prereq,
+    RulesetRef,
+};
 
 /// Top-level container for all loaded game mechanics.
 ///
@@ -594,6 +597,8 @@ impl Ruleset {
             // Parameter domains are validated at parse time by the
             // ParameterDomain enum; concrete param VALUES are resolved per
             // selection in validation::validate_parameters.
+            self.validate_effect_refs(item, id, &mut errors);
+
             if let Some(ref source) = item.source
                 && !source.lines.is_valid()
             {
@@ -669,6 +674,36 @@ impl Ruleset {
             }
             // Intentionally unchecked: no house/art registry exists yet (M5).
             Prereq::House(_) | Prereq::ArtMin { .. } | Prereq::IsMagus => {}
+        }
+    }
+
+    /// Validates that every [`Effect`] names a declared parameter whose domain
+    /// matches the effect kind (`ability_bonus` → an `ability`-domain param,
+    /// `characteristic_bonus` → a `characteristic`-domain param). Effective
+    /// scores resolve the target through that parameter, so a missing key or
+    /// domain mismatch would silently never apply — fail loudly at load instead.
+    fn validate_effect_refs(&self, item: &PointItem, id: &Id, errors: &mut Vec<String>) {
+        for effect in &item.effects {
+            let (param, expected, kind) = match effect {
+                Effect::AbilityBonus { param, .. } => {
+                    (param, ParameterDomain::Ability, "ability_bonus")
+                }
+                Effect::CharacteristicBonus { param, .. } => (
+                    param,
+                    ParameterDomain::Characteristic,
+                    "characteristic_bonus",
+                ),
+            };
+            match item.parameters.iter().find(|p| &p.key == param) {
+                None => errors.push(format!(
+                    "{id}: effect '{kind}' references unknown parameter '{param}'"
+                )),
+                Some(def) if def.domain != expected => errors.push(format!(
+                    "{id}: effect '{kind}' parameter '{param}' has domain '{}', expected '{expected}'",
+                    def.domain
+                )),
+                Some(_) => {}
+            }
         }
     }
 
@@ -1038,6 +1073,76 @@ mod tests {
             msg.contains("line range"),
             "should flag inverted line range: {msg}"
         );
+    }
+
+    #[test]
+    fn effect_referencing_unknown_parameter_is_rejected() {
+        let items = r#"[{
+          "id": "virtue.puissant_ability",
+          "kind": "virtue",
+          "magnitude": "minor",
+          "category": "general",
+          "entity_kinds": ["character"],
+          "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }]
+        }]"#;
+        // No `parameters` declared, so the effect's `ability` param is unknown.
+        let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("unknown parameter 'ability'"), "{msg}");
+    }
+
+    #[test]
+    fn effect_with_mismatched_parameter_domain_is_rejected() {
+        let items = r#"[{
+          "id": "virtue.great_characteristic",
+          "kind": "virtue",
+          "magnitude": "minor",
+          "category": "general",
+          "entity_kinds": ["character"],
+          "parameters": [{ "key": "characteristic", "type": "ref", "domain": "ability" }],
+          "effects": [{ "type": "characteristic_bonus", "param": "characteristic", "amount": 1 }]
+        }]"#;
+        // characteristic_bonus needs a characteristic-domain param, not ability.
+        let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("expected 'characteristic'"), "{msg}");
+    }
+
+    #[test]
+    fn characteristic_domain_param_value_resolves() {
+        use crate::types::{EntityKind, RulesetRef, Selection};
+        use std::collections::BTreeMap;
+
+        let items = r#"[{
+          "id": "virtue.great_characteristic",
+          "kind": "virtue",
+          "magnitude": "minor",
+          "category": "general",
+          "entity_kinds": ["character"],
+          "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
+          "effects": [{ "type": "characteristic_bonus", "param": "characteristic", "amount": 1 }]
+        }]"#;
+        let types = r#"[{
+          "id": "companion",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+
+        let mut entity = crate::types::Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        // A valid characteristic id resolves; a bogus one is flagged.
+        entity.selections = vec![Selection::with_params(
+            Id::new("virtue.great_characteristic"),
+            BTreeMap::from([("characteristic".into(), Id::new("characteristic.bogus"))]),
+        )];
+        let result = crate::validation::validate(&entity, &rs);
+        let codes: Vec<&str> = result.errors().map(|i| i.code.as_str()).collect();
+        assert!(codes.contains(&"unknown_param_value"), "{codes:?}");
     }
 
     #[test]

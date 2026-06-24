@@ -10,6 +10,7 @@ use tauri_plugin_dialog::DialogExt;
 
 use crate::error::AppError;
 use crate::ruleset_io;
+use crate::ruleset_io::EffectiveScores;
 
 /// Holds the parsed ruleset so validation does not re-read and re-check the
 /// rules files on every keystroke. `None` until `load_ruleset` succeeds.
@@ -50,6 +51,19 @@ pub fn validate_entity(
     let guard = state.ruleset.read().expect("ruleset lock poisoned");
     let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
     Ok(ruleset_io::validate_loaded(&entity, ruleset, mode))
+}
+
+/// Computes the effective-score bonuses (Puissant Ability, Great Characteristic)
+/// the entity's virtues grant, for the frontend to display alongside the base
+/// scores. Uses the same engine path as validation.
+#[tauri::command]
+pub fn effective_scores(
+    entity: Entity,
+    state: State<'_, AppState>,
+) -> Result<EffectiveScores, AppError> {
+    let guard = state.ruleset.read().expect("ruleset lock poisoned");
+    let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
+    Ok(ruleset_io::effective_scores_loaded(&entity, ruleset))
 }
 
 /// E2E seam: when set, save/load use this fixed path instead of opening a

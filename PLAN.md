@@ -133,6 +133,25 @@ to M4; `House`/`ArtMin` evaluation to M5.
 - [x] Ability allocation component (whole-score steppers + specialty + banked-XP
       field) with live validation
 
+### 3d. Effective-score layer (TDD) — DONE
+Pulled forward from M4: direct entry already lets a character take score-boosting
+Virtues, so the effective score must be correct now (display, `AbilityMin`, caps).
+No wizard dependency.
+- [x] Data-driven `Effect` model on `PointItem` (`ability_bonus` / `characteristic_bonus`)
+      + `max_per_target`; new `ParameterDomain::Characteristic`. Targets named by
+      the selection's param value — no Virtue IDs in engine code.
+- [x] `effective.rs`: bought + virtue bonuses, computed never stored
+- [x] Puissant Ability (+2, ≤1/Ability); `AbilityMin` uses the effective score.
+      Source: Core Rules.md:4814-4816
+- [x] Great Characteristic (+1, base ≥ +3, ≤2/Characteristic, +5 effective ceiling
+      via `effective_max`). Source: Core Rules.md:3987-3989
+- [x] Multiplicity generalized in `validate_duplicate_selections`; effect
+      integrity at load (`ruleset.rs`)
+- [x] UI: read-only "effective" badge beside the base score; Great Characteristic
+      target picker; Fluent + de i18n; real-binary e2e
+- Deferred follow-ups: *Improved Characteristics* (+3 point-buy pool, a budget
+  modifier — not an effective bonus); Puissant Art (+3) waits for the M5 Art registry.
+
 ## Milestone 4 — Guided creation wizard
 
 Scope: wrap the full phase list in a guided flow, reusing the direct-entry
@@ -152,9 +171,6 @@ components from M2 (V/F) and M3 (characteristics, abilities).
 - [ ] Sample Childhood packages (deferred from M3): childhood model + registry +
       load-time integrity (ability refs resolve) + an "apply package" step.
       Source: Core Rules.md:2380-2388
-- [ ] Effective-score layer (deferred from M3): a virtue-effect model on
-      `PointItem` so Puissant Ability (+2) etc. add to the bought ability score;
-      `AbilityMin` and display then use the effective score
 - [ ] Companion wizard flow complete
 - [ ] Grog wizard flow (subset of phases)
 
@@ -207,13 +223,14 @@ components from M2 (V/F) and M3 (characteristics, abilities).
 
 ## Current focus: Milestone 4
 
-Milestones 0–3 complete. The Tauri app builds and launches, loads the ruleset
-(virtues/flaws, characteristics, abilities) from bundled resources, validates
-live, round-trips canonical saves, and passes a real-binary tauri-driver e2e.
-Characters now carry point-buy Characteristics, whole bought Ability scores, and
-an `unspent_xp` bank, edited through direct-entry components.
+Milestones 0–3 complete, plus the effective-score layer (3d) pulled forward from
+M4. The Tauri app builds and launches, loads the ruleset (virtues/flaws,
+characteristics, abilities) from bundled resources, validates live, round-trips
+canonical saves, and passes a real-binary tauri-driver e2e. Characters carry
+point-buy Characteristics, whole bought Ability scores, and an `unspent_xp` bank,
+edited through direct-entry components; score-boosting Virtues (Puissant Ability,
+Great Characteristic) now show an effective score and gate `AbilityMin`/caps.
 
 Next: the guided creation wizard (M4) wraps the full phase list and reuses the
-M2/M3 direct-entry components — and lands the items deferred out of M3: the
-life-stage XP engine (which feeds the bank), the Sample Childhood packages, and
-the effective-score (virtue-bonus) layer.
+M2/M3 direct-entry components — and lands the items still deferred out of M3: the
+life-stage XP engine (which feeds the bank) and the Sample Childhood packages.

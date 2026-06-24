@@ -82,6 +82,10 @@ param-label-ability = Ability
 param-label-technique = Technique
 param-label-area = Area
 param-label-language = Language
+param-label-characteristic = Characteristic
+
+# Effective score shown beside a base score when a virtue bonus applies.
+effective-score = eff { $score }
 
 empty-selections-side = None yet.
 no-issues = No issues.
@@ -105,7 +109,7 @@ issue-incompatible = { $item } is incompatible with { $other }.
 issue-forbidden_category = { $item } belongs to a forbidden category ({ $category }).
 issue-category_not_permitted = { $item } is not in a permitted category ({ $category }).
 issue-wrong_entity_kind = { $item } cannot be taken by a { $entity_kind }.
-issue-duplicate_selection = { $item } is selected { $count } times.
+issue-duplicate_selection = { $item } is selected { $count } times, but may be taken at most { $max } time(s) for the same target.
 issue-missing_required_trait = A required trait is missing: { $item }.
 issue-forbidden_trait = A forbidden trait is present: { $item }.
 issue-missing_param = { $item } is missing the parameter { $key }.
@@ -118,6 +122,8 @@ issue-unknown_type = Unknown entity type: { $type_id }.
 issue-characteristic_out_of_range = Characteristic { $characteristic } score { $score } is outside the allowed range ({ $min } to { $max }).
 issue-characteristic_overspent = Characteristics cost { $cost } points, over the { $points } available.
 issue-characteristic_points_unspent = Only { $cost } of { $points } Characteristic points spent.
+issue-characteristic_effective_out_of_range = Characteristic { $characteristic } effective score { $effective } exceeds the maximum of { $max }.
+issue-characteristic_bonus_base_too_low = { $item } requires { $characteristic } to be at least { $min } (currently { $base }).
 issue-unknown_ability = Unknown ability: { $ability }.
 issue-duplicate_ability = { $ability } is listed { $count } times with the same specialty.
 issue-not_enough_xp = Abilities cost { $spent } XP, more than the { $pool } in the pool.
