@@ -98,14 +98,14 @@
 | Immune to Disease | Immun gegen Krankheit | |
 | Induction | Einflüstern | |
 | Ritual Power | Ritualmacht | Auch als Magische Qualität (Groß); für Nicht-Machtwert-Charaktere: Erschöpfungs- + Selbstvertrauenskosten |
-| Sense Passions | Leidenschaften spüren | |
+| Sense Passions | Gespür für Leidenschaft | |
 | Shapeshifter | Gestaltwandler | |
 | Spiritual Pact | Geistiger Pakt | |
 | Strong Faerie Blood | Starkes Feenblut | |
 | Summon Animals | Tiere rufen | |
 | Supernatural Beauty | Übernatürliche Schönheit | |
 | Transformed (Being) | Verwandeltes (Wesen) | SdM:M; Charakter wird durch Magie in übernatürliches Wesen verwandelt; erhält Machtwert 0 |
-| Whistle Up The Wind | Den Wind heraufpfeifen | |
+| Whistle Up The Wind | Den Wind herbeipfeifen | |
 
 ### Übernatürliche Tugenden, Klein / Supernatural, Minor
 
@@ -140,7 +140,7 @@
 | Protection | Schutz | |
 | Second Sight | Zweites Gesicht | |
 | Sense Holiness/Unholiness | Heiligkeit/Unheiligkeit spüren | |
-| Sense Passions | Leidenschaften spüren | |
+| Sense Passions | Gespür für Leidenschaft | |
 | Skinchanger | Tierwandler | |
 | Summon Animals | Tiere rufen | |
 | Unbound Tongue | Ungebundene Zunge | Kann in nicht-menschlicher Gestalt menschliche Sprachen sprechen und zaubern |

@@ -109,6 +109,7 @@
 | Sigil | – | – | – | – | Sigil | a) Einzigartiger Nebeneffekt; b) Stimmstab |
 | Sodalis | Sodalis | Sodalis | Sodales | Sodales | Sodalis | Kamerad im Orden |
 | Socius / Socia | Socius | Socia | Socii | Sociae | Socius / Socia | Politisch aktives Ordensmitglied |
+| Species (Wahrnehmung) | – | Species | – | Species | Species (Lat.) | Sinnespartikel, die von Gegenständen ausgesandt und von den Sinnesorganen wahrgenommen werden; lat. Fachbegriff, unverändert übernommen. **Nicht** mit „Spezies" (eingedeutschte Form für biologische Art/Gattung) verwechseln |
 | Spell | – | – | – | – | Zauber / Spruch | Einzelner Einsatz von Magie |
 | Spell Mastery | – | – | – | – | Zaubermeisterschaft | |
 | Spontaneous Magic | – | – | – | – | Spontane Magie | Formlose, flexible Magie |
@@ -457,11 +458,11 @@
 | simile (of a class of objects) | Ähnlichkeitsbild | Muster der Variationsbreite einer Gegenstandsklasse |
 | macroture | Makrotur | Vergrößerungsillusion nahe am Auge |
 | anamorph / anamorphic illusion | Anamorph / anamorphe Illusion | Gestaltlose Illusion, die den Betrachter falsch klassifizieren lässt |
-| transparency (illusion type) | Transparenz | Illusion durch Vernichtung von Spezies vor dem Betrachter |
+| transparency (illusion type) | Transparenz | Illusion durch Vernichtung von Species vor dem Betrachter |
 | miniature (illusion type) | Miniatur (Illusionstyp) | Kleine gerichtete Illusion mit Perspektivtrick; nicht verwechseln mit mag. Qualität Miniatur |
-| synaesthesia | Synästhesie / synästhetische Illusion | Umwandlung von Spezies eines Sinnes in einen anderen |
+| synaesthesia | Synästhesie / synästhetische Illusion | Umwandlung von Species eines Sinnes in einen anderen |
 | World of Forms | Welt der Formen | Metaphysischer Ort, aus dem Schöpfungsdetails stammen |
-| mimicry (illusion term) | Mimikry (Illusionstyp) | Illusionäre Gegenstände mit omnidirektionalen Spezies; nicht verwechseln mit Tier-Stimmnachahmung |
+| mimicry (illusion term) | Mimikry (Illusionstyp) | Illusionäre Gegenstände mit omnidirektionalen Species; nicht verwechseln mit Tier-Stimmnachahmung |
 | mimesis / mimetic art | Mimesis / mimetische Kunst | Spiegelbildliche Genauigkeit in der Kunst |
 | proprioception | Propriozeption | Innerer Sinn für Körperposition |
 | Invocation of the Civic Patron | Anrufung des Schutzpatrons der Stadt | Heiligen um Wunderrecht bitten |
@@ -667,7 +668,7 @@
 | House Acclaim Points | Haus-Ansehenspunkte | Punkte, die den Rang innerhalb des Hauses bestimmen |
 | House Utilities | Einrichtungen des Hauses | Sammelbegriff für Ressourcen und Mechaniken eines Hauses |
 | Life Boost | Lebensstärkung | Beispiel-Durchbruch der Hermetischen Integration |
-| Mastered Spell Special Abilities | Spezialfähigkeiten gemeisterter Zauber | Zusätzliche Fähigkeiten durch Zaubermeisterschaft |
+| Mastered Spell Special Abilities | Besondere Fähigkeiten gemeisterter Zauber | Überschrift: „Besondere Fähigkeiten der Zaubermeisterschaft"; Kurzform im Fließtext: „Meisterschaftsfähigkeit(en)"; NICHT „Sonderfertigkeit" oder „Spezialfähigkeit" |
 | Parma Magica Folds | Parma-Magica-Faltungen | Neue Anwendungsweisen der Parma Magica; jede ein Großer Durchbruch |
 | Risk Modifier | Risikomodifikator | +1 bis +3; beeinflusst Tabellenwurf bei Originärer Forschung |
 | Stabilize (a Discovery) | Stabilisieren (einer Entdeckung) | Exakte Wiederholung eines Experiments nach einer Entdeckung |
@@ -698,7 +699,7 @@
 | Defense principle | Verteidigungsvertreter | Partei, die die Verteidigung vor dem Tribunal vertritt |
 | Directed proxy | Gebundene Stimmrechtsvertretung | Stellvertretung mit konkreten Abstimmungsanweisungen |
 | Endorsing testimony | Beglaubigung von Aussagen | Magische Überprüfung der Wahrhaftigkeit durch Quaesitor |
-| Extromission | Extromission | Aussenden magischer Spezies aus den Augen (Wahrnehmungsmethode) |
+| Extromission | Extromission | Aussenden magischer Species aus den Augen (Wahrnehmungsmethode) |
 | Familiar Bond Enchantment | Verzauberung der Vertrautenbindung | Höchste Verzauberung der Vertrautenbindung |
 | Free proxy | Freie Stimmrechtsvertretung | Stellvertretung nach Ermessen des Stellvertreters |
 | Investing items | Bereitung von Artefakten | Strafform: verzauberte Gegenstände (Bereitete Artefakte) anfertigen |
