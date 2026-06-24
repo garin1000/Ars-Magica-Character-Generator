@@ -85,11 +85,13 @@ support is new data plus thin UI — never an engine rewrite.
 
 ## Status
 
-Active development. The engine, Tauri integration, and a minimal direct-entry UI
-are in place and tested end to end (engine unit tests, webview-free command
-integration tests, and a real-binary `tauri-driver` E2E). The guided creation
-wizard, magus support, characteristics/abilities, and full data population are
-the next milestones — see [PLAN.md](PLAN.md) for the milestone breakdown.
+Active development. The engine, Tauri integration, and a direct-entry UI are in
+place and tested end to end (engine unit tests, webview-free command integration
+tests, and a real-binary `tauri-driver` E2E). Characters can be built with
+virtues/flaws, point-buy Characteristics, and whole bought Ability scores plus a
+banked-XP pool, all validated live. The guided creation wizard (with the
+life-stage XP flow), magus support, and full data population are the next
+milestones — see [PLAN.md](PLAN.md) for the milestone breakdown.
 
 ## Getting started
 

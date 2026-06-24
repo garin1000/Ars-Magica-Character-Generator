@@ -100,31 +100,38 @@ Scope: the two foundational, type-agnostic trait domains every character needs.
 Built as an engine → data → direct-entry slice (mirroring M1 → M2) so the guided
 wizard (M4) has real phase content to orchestrate. No wizard yet.
 
-### 3a. Engine models (TDD)
-- [ ] Characteristics model (Int, Per, Str, Sta, Pre, Com, Dex, Qik) with point-buy
-- [ ] Abilities model (categories, specialties, XP-to-score table)
-- [ ] Ability registry in the `Ruleset` so `ability` parameter refs and the
-      `ability.*` namespace resolve at load, like point items do today
-- [ ] Life-stage XP acquisition (abilities-only; grog/companion): early
-      childhood = 75 xp fixed to Native Language + 45 xp across a restricted
-      Ability list, then 15 xp/year (Wealthy 20, Poor 10) up to the chosen age;
-      enforce the age → max-Ability-score cap.
-      Source: Core Rules.md:2364-2394
-- [ ] Characteristic + ability scores on `Entity`
-- [ ] Evaluate `AbilityMin` prereq against entity ability scores
-      (currently stubbed as unevaluable — `validation.rs:569`, `types.rs:193`)
+Decisions made during M3 (see `crates/arm-rules/RULES.md` and the plan archive):
+abilities store the **whole bought score + a single `unspent_xp` bank**, not
+per-ability XP (ability XP is spent in whole points, so loose XP lives in the
+bank; the effective score = bought + virtue bonuses is computed, never stored).
+The life-stage XP flow and the effective-score (virtue-bonus) layer are deferred
+to M4; `House`/`ArtMin` evaluation to M5.
 
-### 3b. Data
-- [ ] Characteristics core data + i18n (en, de)
-- [ ] Seed Abilities catalogue (core + i18n, en, de) — enough to exercise
-      categories, specialties, and the XP-to-score table
-- [ ] Sample Childhood packages as data (the rules' prefab 45-xp spreads:
-      Athletic, Exploring, Mischievous, Social, Traveling).
-      Source: Core Rules.md:2380-2388
+### 3a. Engine models (TDD) — DONE
+- [x] Characteristics model (Int, Per, Str, Sta, Pre, Com, Dex, Qik) with point-buy
+      (`characteristics.rs`; cost table is data in `characteristics.json`)
+- [x] Abilities model + 5 categories + XP advancement table (`ability.rs`)
+- [x] Ability registry in the `Ruleset` (`from_core_json`) so `ability` parameter
+      refs and `AbilityMin` resolve at load
+- [x] Characteristic scores + whole ability scores + `unspent_xp` bank on `Entity`
+      (schema_version 1→2, additive)
+- [x] Evaluate `AbilityMin` against the entity's max bought ability score
+      (`validation.rs`); `House`/`ArtMin` remain deferred (M5)
+- [~] Life-stage XP acquisition (early childhood, 15/20/10 per year, age→max cap)
+      — DEFERRED to M4 with the wizard that drives it. Source: Core Rules.md:2364-2394
 
-### 3c. Direct-entry UI
-- [ ] Characteristic point-buy component with live validation
-- [ ] Ability allocation component (score + specialty) with live validation
+### 3b. Data — DONE
+- [x] Characteristics core data (`characteristics.json`); labels in Fluent (enum)
+- [x] Seed Abilities catalogue (`abilities.json`, 23 abilities across all 5
+      categories + full childhood restricted list) + i18n (en, de)
+- [~] Sample Childhood packages — DEFERRED to M4 (built with the childhood model,
+      loading, integrity, and apply-flow, rather than shipping inert unvalidated
+      data). Source: Core Rules.md:2380-2388
+
+### 3c. Direct-entry UI — DONE
+- [x] Characteristic point-buy component with live points readout + validation
+- [x] Ability allocation component (whole-score steppers + specialty + banked-XP
+      field) with live validation
 
 ## Milestone 4 — Guided creation wizard
 
@@ -139,6 +146,15 @@ components from M2 (V/F) and M3 (characteristics, abilities).
       "sophisticated" guided life-stage flow — early childhood (Native Language
       + the 45-xp restricted spread, with an optional Sample Childhood prefab),
       then 15 xp/year to the chosen age, enforcing the age → max-score cap
+- [ ] Life-stage XP engine (deferred from M3): early-childhood 75+45 xp, later-life
+      15/20/10 xp per year, age→max-Ability-score cap; feeds the `unspent_xp` bank
+      and validates against it. Source: Core Rules.md:2364-2394
+- [ ] Sample Childhood packages (deferred from M3): childhood model + registry +
+      load-time integrity (ability refs resolve) + an "apply package" step.
+      Source: Core Rules.md:2380-2388
+- [ ] Effective-score layer (deferred from M3): a virtue-effect model on
+      `PointItem` so Puissant Ability (+2) etc. add to the bought ability score;
+      `AbilityMin` and display then use the effective score
 - [ ] Companion wizard flow complete
 - [ ] Grog wizard flow (subset of phases)
 
@@ -189,10 +205,15 @@ components from M2 (V/F) and M3 (characteristics, abilities).
 
 ---
 
-## Current focus: Milestone 3
+## Current focus: Milestone 4
 
-Milestones 0, 1, and 2 complete. The Tauri app builds and launches, loads the
-ruleset from bundled resources, validates live, round-trips canonical saves, and
-passes a real-binary tauri-driver e2e. Next: characteristics & abilities — the
-foundational trait models every character type needs — built engine-first as a
-direct-entry slice, before the guided wizard (M4) wraps the full phase list.
+Milestones 0–3 complete. The Tauri app builds and launches, loads the ruleset
+(virtues/flaws, characteristics, abilities) from bundled resources, validates
+live, round-trips canonical saves, and passes a real-binary tauri-driver e2e.
+Characters now carry point-buy Characteristics, whole bought Ability scores, and
+an `unspent_xp` bank, edited through direct-entry components.
+
+Next: the guided creation wizard (M4) wraps the full phase list and reuses the
+M2/M3 direct-entry components — and lands the items deferred out of M3: the
+life-stage XP engine (which feeds the bank), the Sample Childhood packages, and
+the effective-score (virtue-bonus) layer.
