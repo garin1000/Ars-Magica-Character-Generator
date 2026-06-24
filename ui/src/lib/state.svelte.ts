@@ -8,6 +8,7 @@ import * as ipc from './ipc';
 import type {
   AppError,
   Characteristic,
+  EffectiveScores,
   Entity,
   LocalizedRuleset,
   ValidationMode,
@@ -37,6 +38,7 @@ class AppStore {
   entity = $state<Entity>(newEntity('', ''));
   mode = $state<ValidationMode>('enforced');
   result = $state<ValidationResult | null>(null);
+  effective = $state<EffectiveScores | null>(null);
   error = $state<AppError | null>(null);
   loading = $state(false);
 
@@ -180,9 +182,16 @@ class AppStore {
   async revalidate(): Promise<void> {
     if (!this.ruleset) return;
     const seq = ++this.#seq;
+    const snapshot = $state.snapshot(this.entity);
     try {
-      const result = await ipc.validateEntity($state.snapshot(this.entity), this.mode);
-      if (seq === this.#seq) this.result = result;
+      const [result, effective] = await Promise.all([
+        ipc.validateEntity(snapshot, this.mode),
+        ipc.effectiveScores(snapshot),
+      ]);
+      if (seq === this.#seq) {
+        this.result = result;
+        this.effective = effective;
+      }
     } catch (e) {
       this.error = e as AppError;
     }

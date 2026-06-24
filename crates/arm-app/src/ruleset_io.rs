@@ -7,11 +7,38 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use std::collections::BTreeMap;
+
 use arm_rules::{
-    Entity, EntityKind, LocalizedRuleset, Ruleset, ValidationMode, ValidationResult, validate,
+    Characteristic, Entity, EntityKind, LocalizedRuleset, Ruleset, ValidationMode,
+    ValidationResult, ability_bonuses, characteristic_bonuses, validate,
 };
+use serde::Serialize;
 
 use crate::error::AppError;
+
+/// The score bonuses a character's virtues grant, for the frontend to add onto
+/// each displayed bought score. Only non-zero bonuses are present. Ability keys
+/// are ability ids; characteristic keys are the snake_case characteristic names.
+#[derive(Debug, Clone, Serialize)]
+pub struct EffectiveScores {
+    /// Ability id → bonus (e.g. Puissant Ability +2).
+    pub ability_bonuses: BTreeMap<String, i32>,
+    /// Characteristic → bonus (e.g. Great Characteristic +1).
+    pub characteristic_bonuses: BTreeMap<Characteristic, i32>,
+}
+
+/// Computes the virtue score bonuses for `entity` against a loaded ruleset.
+pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveScores {
+    let ability_bonuses = ability_bonuses(entity, ruleset)
+        .into_iter()
+        .map(|(id, bonus)| (id.as_str().to_string(), bonus))
+        .collect();
+    EffectiveScores {
+        ability_bonuses,
+        characteristic_bonuses: characteristic_bonuses(entity, ruleset),
+    }
+}
 
 /// File extension for a saved entity of the given kind: `armc` for characters,
 /// `armcov` for covenants ("Ars Magica character/covenant"). They are plain JSON

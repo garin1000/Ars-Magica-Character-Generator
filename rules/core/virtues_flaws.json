@@ -34,6 +34,17 @@
     "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" }
   },
   {
+    "id": "virtue.great_characteristic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
+    "effects": [{ "type": "characteristic_bonus", "param": "characteristic", "amount": 1, "min_base": 3 }],
+    "max_per_target": 2,
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3987, 3989] }
+  },
+  {
     "id": "virtue.hermetic_magus",
     "kind": "virtue",
     "magnitude": "free",
@@ -61,7 +72,9 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }]
+    "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
+    "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4814, 4816] }
   },
   {
     "id": "virtue.the_gift",

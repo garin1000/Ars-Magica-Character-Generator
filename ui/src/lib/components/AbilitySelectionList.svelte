@@ -16,6 +16,10 @@
       store.t('param-hint', { label: store.t(`param-label-${key}`) }),
     );
   }
+
+  function bonusOf(abilityId: string): number {
+    return store.effective?.ability_bonuses?.[abilityId] ?? 0;
+  }
 </script>
 
 <section class="panel">
@@ -62,6 +66,13 @@
             >
               +
             </button>
+            {#if bonusOf(entry.ability) !== 0}
+              <span class="eff-badge" data-testid="ability-eff-{entry.ability}-{i}">
+                {store.t('effective-score', {
+                  score: String(entry.score + bonusOf(entry.ability)),
+                })}
+              </span>
+            {/if}
           </span>
           <input
             type="text"

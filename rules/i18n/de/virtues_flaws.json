@@ -15,6 +15,10 @@
     "name": "Sanfte Gabe",
     "summary": "Deine Gabe verstört andere nicht."
   },
+  "virtue.great_characteristic": {
+    "name": "Hervorragende {characteristic}",
+    "summary": "+1 auf eine Eigenschaft, die bereits bei +3 liegt, bis höchstens +5."
+  },
   "virtue.hermetic_magus": {
     "name": "Hermetischer Magus",
     "summary": "Du bist Mitglied des Ordens des Hermes."

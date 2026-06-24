@@ -15,6 +15,10 @@
     "name": "Gentle Gift",
     "summary": "Your Gift does not disturb others."
   },
+  "virtue.great_characteristic": {
+    "name": "Great {characteristic}",
+    "summary": "+1 to a Characteristic already at +3, to a maximum of +5."
+  },
   "virtue.hermetic_magus": {
     "name": "Hermetic Magus",
     "summary": "You are a member of the Order of Hermes."

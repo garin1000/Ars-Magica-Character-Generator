@@ -33,7 +33,7 @@ fn load_ruleset_yields_companion_profile_and_all_items() {
     // `Ruleset.id` is now an `Id` newtype; compare its string form.
     assert_eq!(localized.ruleset.id.as_str(), RULESET_ID);
     assert_eq!(localized.ruleset.version, RULESET_VERSION);
-    assert_eq!(localized.ruleset.item_count(), 10);
+    assert_eq!(localized.ruleset.item_count(), 11);
     assert!(localized.ruleset.profile(&Id::new("companion")).is_some());
 }
 

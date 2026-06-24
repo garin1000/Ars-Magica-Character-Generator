@@ -82,6 +82,10 @@ param-label-ability = Fertigkeit
 param-label-technique = Technik
 param-label-area = Gebiet
 param-label-language = Sprache
+param-label-characteristic = Eigenschaft
+
+# Effektiver Wert, neben dem Basiswert angezeigt, wenn ein Tugend-Bonus greift.
+effective-score = eff { $score }
 
 empty-selections-side = Noch keine.
 no-issues = Keine Probleme.
@@ -105,7 +109,7 @@ issue-incompatible = { $item } ist mit { $other } unvereinbar.
 issue-forbidden_category = { $item } gehört zu einer verbotenen Kategorie ({ $category }).
 issue-category_not_permitted = { $item } ist in keiner erlaubten Kategorie ({ $category }).
 issue-wrong_entity_kind = { $item } ist für die Wesensart { $entity_kind } nicht zulässig.
-issue-duplicate_selection = { $item } ist { $count }-mal ausgewählt.
+issue-duplicate_selection = { $item } ist { $count }-mal ausgewählt, darf aber höchstens { $max }-mal für dasselbe Ziel gewählt werden.
 issue-missing_required_trait = Eine erforderliche Eigenschaft fehlt: { $item }.
 issue-forbidden_trait = Eine verbotene Eigenschaft ist vorhanden: { $item }.
 issue-missing_param = { $item } fehlt der Parameter { $key }.
@@ -118,6 +122,8 @@ issue-unknown_type = Unbekannte Wesensart: { $type_id }.
 issue-characteristic_out_of_range = Eigenschaft { $characteristic } mit Wert { $score } liegt außerhalb des erlaubten Bereichs ({ $min } bis { $max }).
 issue-characteristic_overspent = Eigenschaften kosten { $cost } Punkte, mehr als die verfügbaren { $points }.
 issue-characteristic_points_unspent = Nur { $cost } von { $points } Eigenschaftspunkten ausgegeben.
+issue-characteristic_effective_out_of_range = Eigenschaft { $characteristic } mit effektivem Wert { $effective } überschreitet das Maximum von { $max }.
+issue-characteristic_bonus_base_too_low = { $item } erfordert { $characteristic } mindestens auf { $min } (derzeit { $base }).
 issue-unknown_ability = Unbekannte Fertigkeit: { $ability }.
 issue-duplicate_ability = { $ability } ist { $count }-mal mit derselben Spezialisierung aufgeführt.
 issue-not_enough_xp = Fertigkeiten kosten { $spent } XP, mehr als die { $pool } im Vorrat.
