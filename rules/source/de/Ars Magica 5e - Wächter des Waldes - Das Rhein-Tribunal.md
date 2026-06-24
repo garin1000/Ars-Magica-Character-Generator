@@ -57,94 +57,94 @@ Copyright 2005 Trident, Inc. d/b/a Atlas Games. Alle Rechte vorbehalten. Die Ver
 
 
 
-# Inhaltsverzeichnis
+[Inhaltsverzeichnis](#inhaltsverzeichnis)
 
-**Kapitel I: Einleitung**<br>
-Deutschland<br>
-Das Rheintribunal<br>
-Geschichte und Mythos<br>
-Hinweise zur Nutzung dieses Buches
+**[Kapitel I: Einleitung](#kapitel-i-einleitung)**<br>
+[Deutschland](#deutschland)<br>
+[Das Rheintribunal](#das-rheintribunal)<br>
+[Geschichte und Mythos](#geschichte-und-mythos)<br>
+[Hinweise zur Nutzung dieses Buches](#hinweise-zur-nutzung-dieses-buches)
 
-**Kapitel II: Geschichte des Mythischen Deutschlands**<br>
-Germania Magna<br>
-Die Große Wanderung<br>
-Die Merowinger<br>
-Das Fränkische Reich<br>
-Der Aufstieg des Neuen Reiches<br>
-Friedrich Barbarossa
+**[Kapitel II: Geschichte des Mythischen Deutschlands](#kapitel-ii-geschichte-des-mythischen-deutschlands)**<br>
+[Germania Magna](#germania-magna)<br>
+[Die Große Wanderung](#die-große-wanderung)<br>
+[Die Merowinger](#die-merowinger)<br>
+[Das Fränkische Reich](#das-fränkische-reich)<br>
+[Der Aufstieg des Neuen Reiches](#der-aufstieg-des-neuen-reiches)<br>
+[Friedrich Barbarossa](#friedrich-barbarossa)
 
-**Kapitel III: Tribunalsgeschichte \& Bräuche**<br>
-Geschichte<br>
-Über das Dasein als Rhein-Magus<br>
-Tribunalsversammlungen<br>
-Die Gilden des Rheintribunals
+**[Geschichte](#geschichte-8)**<br>
+[Geschichte](#geschichte-8)<br>
+[Über das Dasein als Rheintribunal-Magus](#über-das-dasein-als-rheintribunal-magus)<br>
+[Tribunalsversammlungen](#tribunalsversammlungen)<br>
+[Die Gilden des Rheintribunals](#die-gilden-des-rheintribunals)
 
-**Kapitel IV: Der Wald**<br>
-Der Wald<br>
-Die Pfade durch den Wald
+**[Kapitel IV: Der Wald](#kapitel-iv-der-wald)**<br>
+[Der Wald](#der-wald)<br>
+[Die Pfade durch den Wald](#die-pfade-durch-den-wald)
 
-**Kapitel V: Der Rhein**<br>
-Der Oberrhein<br>
-Oberlothringen<br>
-Der Niederrhein<br>
-Niederlothringen<br>
-Triamore
+**[Kapitel V: Der Rhein](#kapitel-v-der-rhein)**<br>
+[Der Oberrhein](#der-oberrhein)<br>
+[Oberlothringen](#oberlothringen)<br>
+[Der Niederrhein](#der-niederrhein)<br>
+[Niederlothringen](#niederlothringen-1)<br>
+[Triamore](#triamore)
 
-**Kapitel VI: Der Schwarzwald**<br>
-Durenmar<br>
-Dankmar<br>
-Schwaben
+**[Kapitel VI: Der Schwarzwald](#kapitel-vi-der-schwarzwald)**<br>
+[Durenmar](#durenmar-1)<br>
+[Dankmar](#dankmar)<br>
+[Schwaben](#schwaben)
 
-**Kapitel VII: Das Tiefland**<br>
-Friesland<br>
-Waddenzee<br>
-Holstein<br>
-Oculus Septentrionalis<br>
-Sachsen
+**[Kapitel VII: Das Tiefland](#kapitel-vii-das-tiefland)**<br>
+[Friesland](#friesland)<br>
+[Waddenzee](#waddenzee)<br>
+[Holstein](#holstein)<br>
+[Oculus Septentrionalis](#oculus-septentrionalis)<br>
+[Sachsen](#sachsen)
 
-**Kapitel VIII: Mitteldeutschland**<br>
-Der Harz<br>
-Fengheld<br>
-Thüringen<br>
-Franken<br>
-Bayern
+**[Kapitel VIII: Mitteldeutschland](#kapitel-viii-mitteldeutschland)**<br>
+[Die Harzberge](#die-harzberge)<br>
+[Fengheld](#fengheld)<br>
+[Thüringen](#thüringen)<br>
+[Franken](#franken)<br>
+[Bayern](#bayern)
 
-**Kapitel IX: Die Ostmarken**<br>
-Die Ostsee<br>
-Rügen<br>
-Crintera<br>
-Pommern<br>
-Die Markgrafschaft Brandenburg<br>
-Die Markgrafschaft Meißen<br>
-Die Markgrafschaft Lausitz
+**[Kapitel IX: Die Ostmarken](#kapitel-ix-die-ostmarken)**<br>
+[Die Ostsee](#die-ostsee)<br>
+[Rügen](#rügen)<br>
+[Crintera](#crintera)<br>
+[Pommern](#pommern)<br>
+[Die Markgrafschaft Brandenburg](#die-markgrafschaft-brandenburg)<br>
+[Die Markgrafschaft Meißen](#die-markgrafschaft-meißen)<br>
+[Die Markgrafschaft Lausitz](#die-markgrafschaft-lausitz)
 
-**Kapitel X: Böhmen**<br>
-Böhmen<br>
-Irencillia<br>
-Die Markgrafschaft Mähren<br>
-Roznov
+**[Kapitel X: Böhmen](#kapitel-x-böhmen)**<br>
+[Böhmen](#böhmen)<br>
+[Irencillia](#irencillia)<br>
+[Die Markgrafschaft Mähren](#die-markgrafschaft-mähren)<br>
+[Roznov](#roznov)
 
-**Kapitel XI: Rhein-Sagas**<br>
-Die Gründung eures Konvents<br>
-Das Crintera-Schisma<br>
-Wind, Wellen und Eis<br>
-Zwischen Teufel und tiefblauem Meer<br>
-Blaues Meer<br>
-Der verborgene Konvent
+**[Kapitel XI: Rhein-Sagas](#kapitel-xi-rhein-sagas)**<br>
+[Euren Konvent gründen](#euren-konvent-gründen)<br>
+[Das Crintera-Schisma](#das-crintera-schisma)<br>
+[Wind, Woge und Eis](#wind-woge-und-eis)<br>
+[Zwischen Teufel und tiefer](#zwischen-teufel-und-tiefer-see)<br>
+[See](#zwischen-teufel-und-tiefer-see)<br>
+[Der verborgene Konvent](#der-verborgene-konvent)
 
-**Kapitel XII: Der Fluch der Rheinschlucht**<br>
-Hermetische Lokalgeschichte<br>
-Der Beginn der Saga<br>
-Die Rheinschlucht<br>
-Der Westerwald<br>
-Das Moseltal<br>
-Gründung eines Konvents<br>
-Der Fluch
+**[Der Fluch](#der-fluch)**<br>
+[Geschichte](#geschichte-8)<br>
+[Die Saga beginnt](#die-saga-beginnt)<br>
+[Die Rheinschlucht](#die-rheinschlucht-1)<br>
+[Der Westerwald](#der-westerwald)<br>
+[Das Moseltal](#das-moseltal)<br>
+[Einen Konvent gründen](#einen-konvent-gründen)<br>
+[Der Fluch](#der-fluch)
 
-**Anhänge**<br>
-Anhang A: Sprachen und Namen<br>
-Anhang B: Zeittafel<br>
-Anhang C: Bibliographie
+**[Anhänge](#anhänge)**<br>
+[Anhang A: Sprachen und Namen](#anhang-a-sprachen-und-namen)<br>
+[Anhang B: Zeittafel](#anhang-b-zeittafel)<br>
+[Anhang C: Bibliografie](#anhang-c-bibliografie)
 
 
 
@@ -544,7 +544,7 @@ Das Rheintribunal hat vier anerkannte Ränge, nach denen es seine Mitglieder ein
 
 **Lehrling**: Diese Tugend, anwendbar auf jedes Tribunal, kann von einem Kindercharakter gewählt werden, der die Gabe besitzt und von einem erfahrenen hermetischen Magus (im Rheintribunal: einem Meister oder Erzmagus) angenommen wurde, mit Zustimmung des Spielleiters. Du bist ein *discipulus* und wirst eine umfangreiche magische Ausbildung erhalten, mit dem Potenzial, selbst ein hermetischer Magus zu werden. Du musst jedoch den Anordnungen und Aufträgen deines Meisters gehorchen, seine rigorose Ausbildung erdulden und kannst wie ein Sklave behandelt werden.
 
-**Geselle**: Dies entspricht der kostenlosen Status-Tugend Hermetischer Magus (siehe ArM5, Seite 43), die hier aufgrund des besonderen Sozialsystems des Rheintribunals umbenannt wurde. Du bist ein *tyro*, ein junger Magus, und musst in einem rechtmäßigen Streit Magi höheren Ranges nachgeben. Gehörst du jedoch einer Gilde an, darfst du dich der Unterstützung ihrer älteren Mitglieder erfreuen.
+**Geselle**: Dies entspricht der kostenlosen Status-Tugend Hermetischer Magus (siehe ArM5, [Seite 43](<Ars Magica Definitive Edition Basisregeln.md#hermetischer-magus>)), die hier aufgrund des besonderen Sozialsystems des Rheintribunals umbenannt wurde. Du bist ein *tyro*, ein junger Magus, und musst in einem rechtmäßigen Streit Magi höheren Ranges nachgeben. Gehörst du jedoch einer Gilde an, darfst du dich der Unterstützung ihrer älteren Mitglieder erfreuen.
 
 Es gibt zwei weitere kostenlose Sozialer-Status-Tugenden; obwohl sie keine Kosten haben, müssen sie verdient werden. Wenn dein Spielleiter die Erschaffung von Magi erlaubt, die älter als der Standard sind, solltest du mit ihm oder ihr besprechen, ob diese Tugenden genommen werden können:
 
@@ -906,7 +906,7 @@ Alle Waldgeister besitzen die folgenden Mächte.
 
 ### Spezifische Mächte
 
-Jeder Wald besitzt eine Reihe weiterer Mächte, von denen einige Beispiele im Folgenden aufgeführt sind. Der Spielleiter ist eingeladen, einzigartige Mächte für jeden Wald zu entwickeln, den er erschafft. Bei Wäldern mit einem Feenmachtwert ähneln oder gleichen diese Mächte oft denen der Feenbewohner des Waldes. Typische Initiativewerte wurden für jede Macht angegeben, aber manche Geister können schneller oder langsamer sein. Eine hermetische Form wurde dort angegeben, wo die Möglichkeit besteht, dem Effekt zu widerstehen. Diese Mächte verursachen in der Regel Verzerrung (gemäß den Regeln in ArM5, Seite 167), wenn sie direkt auf einen Charakter angewendet werden.
+Jeder Wald besitzt eine Reihe weiterer Mächte, von denen einige Beispiele im Folgenden aufgeführt sind. Der Spielleiter ist eingeladen, einzigartige Mächte für jeden Wald zu entwickeln, den er erschafft. Bei Wäldern mit einem Feenmachtwert ähneln oder gleichen diese Mächte oft denen der Feenbewohner des Waldes. Typische Initiativewerte wurden für jede Macht angegeben, aber manche Geister können schneller oder langsamer sein. Eine hermetische Form wurde dort angegeben, wo die Möglichkeit besteht, dem Effekt zu widerstehen. Diese Mächte verursachen in der Regel Verzerrung (gemäß den Regeln in ArM5, [Seite 167](<Ars Magica Definitive Edition Basisregeln.md#verzerrung-2>)), wenn sie direkt auf einen Charakter angewendet werden.
 
 **Wetter beherrschen** (10 Punkte, Init 0, Auram): Der Waldgeist kann das Wetter über seinem Gebiet in erheblichem Maße verändern, muss jedoch in gewissem Maß dem laufenden Quartal angemessen bleiben, da alle Wälder dem Wandel der Jahreszeiten unterworfen sind.
 
@@ -932,7 +932,7 @@ Jeder Wald besitzt eine Reihe weiterer Mächte, von denen einige Beispiele im Fo
 
 >#### Die Bäume Deutschlands
 >
->Jede der Baumarten, die in Deutschland gefunden werden kann, wurde von den alten Stämmen als von besonderer Bedeutung angesehen, oft mit einem bestimmten Gott verbunden. „Bei Eiche, Esche und Weißdorn" ist ein verbreiteter Schwur, der sich erhalten hat — diese drei waren die wichtigsten Bäume. Jede Holzart hat einen oder mehrere Form- und Materialboni (siehe **Ars Magica** 5. Edition, Seite 110), die den unten aufgeführten Eigenschaften entsprechen. Wird ein gesamter lebender Baum verzaubert, werden alle solchen Boni verdreifacht. (Es ist sehr selten, aber nicht unbekannt, dass ein hermetischer Magus einen lebenden Baum als magischen Gegenstand verzaubert.)
+>Jede der Baumarten, die in Deutschland gefunden werden kann, wurde von den alten Stämmen als von besonderer Bedeutung angesehen, oft mit einem bestimmten Gott verbunden. „Bei Eiche, Esche und Weißdorn" ist ein verbreiteter Schwur, der sich erhalten hat — diese drei waren die wichtigsten Bäume. Jede Holzart hat einen oder mehrere Form- und Materialboni (siehe **Ars Magica** 5. Edition, [Seite 110](<Ars Magica Definitive Edition Basisregeln.md#tabelle-der-form--und-materialboni>)), die den unten aufgeführten Eigenschaften entsprechen. Wird ein gesamter lebender Baum verzaubert, werden alle solchen Boni verdreifacht. (Es ist sehr selten, aber nicht unbekannt, dass ein hermetischer Magus einen lebenden Baum als magischen Gegenstand verzaubert.)
 >
 >**Die Erle** ist ein alter Königsbaum. Da ihr Holz wasserbeständig ist, wurde es für Fundamente verwendet; ihre Rinde liefert einen königlichen roten Farbstoff. *+2 Königlichkeit, +1 Verfall widerstehen*
 >
@@ -1052,7 +1052,7 @@ Es ist auch für Nicht-Magi möglich, diese Mysterien zu verfolgen, aber dies is
 >Wundabzüge: –1 (1–5), –3 (6-10), –5 (11-15), Kampfunfähig (16–20)<br>
 >Fertigkeiten: Athletik 2 (Verfolgern entkommen), Aufmerksamkeit 2 (Reisende), Charme 3 (Männer), Chirurgie 5 (infizierte Wunden), Feenkunde 5 (Feenpflanzen), Magiekunde 4 (magische Kräuter), Zweites Gesicht 4 (Tiere), Schleichen 3 (sich vor Verfolgern verstecken)<br>
 >Mächte:<br>
->*Feennatur:* Als Fee leidet die Holzfrau nicht unter Erschöpfung, noch wird sie von Krankheiten oder Alter beeinträchtigt. Sie kann alle Sprachen verstehen und von jedem verstanden werden. Alle Feen besitzen ebenfalls die Tugend Zweites Gesicht und erhalten die Vor- oder Nachteile jeder übernatürlichen Aura bei der Verwendung ihrer Feenmächte, gemäß der Sphärenwechselwirkungstabelle (siehe **Ars Magica** 5. Edition, Seite 183).
+>*Feennatur:* Als Fee leidet die Holzfrau nicht unter Erschöpfung, noch wird sie von Krankheiten oder Alter beeinträchtigt. Sie kann alle Sprachen verstehen und von jedem verstanden werden. Alle Feen besitzen ebenfalls die Tugend Zweites Gesicht und erhalten die Vor- oder Nachteile jeder übernatürlichen Aura bei der Verwendung ihrer Feenmächte, gemäß der Sphärenwechselwirkungstabelle (siehe **Ars Magica** 5. Edition, [Seite 183](<Ars Magica Definitive Edition Basisregeln.md#tabelle-zur-sphärenwechselwirkung>)).
 >
 >*Verwundbarkeit durch Eisen*: Kaltgeschmiedetes Eisen ist schmerzhaft für eine Holzfrau, und sie werden alles tun, um seine Berührung zu vermeiden. Es kann sie jedoch nicht wirklich verletzen.
 >
@@ -1131,7 +1131,7 @@ Gerüchte über einen Magus, dessen Langlebigkeitsrituale die Auswirkungen des A
 
 #### NEUE GROSSE ALLGEMEINE TUGEND: UNSTERBLICHKEIT DES WALDES
 
-Deine Lebenskraft ist untrennbar mit der des Waldes verbunden, in dem du lebst. Für jedes Jahr, in dem du vollständig innerhalb seiner übernatürlichen Aura verbleibst, würfelst du keinen Alterungswurf, gewinnst aber stattdessen einen Verzerrungspunkt dafür, dass du unter einem dauerhaften mystischen Effekt stehst (gemäß **Ars Magica** 5. Edition, Seite 167).
+Deine Lebenskraft ist untrennbar mit der des Waldes verbunden, in dem du lebst. Für jedes Jahr, in dem du vollständig innerhalb seiner übernatürlichen Aura verbleibst, würfelst du keinen Alterungswurf, gewinnst aber stattdessen einen Verzerrungspunkt dafür, dass du unter einem dauerhaften mystischen Effekt stehst (gemäß **Ars Magica** 5. Edition, [Seite 167](<Ars Magica Definitive Edition Basisregeln.md#verzerrung-2>)).
 
 >#### Pfad des Alterns
 >
@@ -1173,7 +1173,7 @@ Kleon von Criamon verbrachte viele Jahre im abgelegensten und magischsten Teil d
 
 #### NEUE GROSSE HERMETISCHE TUGEND: ZWIELICHT-MEISTERSCHAFT
 
-Wann immer du ein Zwielicht erleidest, kannst du die Auswirkungen des Zwielichts wählen, anstatt sie vom Spielleiter auferlegten zu bekommen. Gelingt es dir nicht, das Zwielicht zu kontrollieren, erhältst du trotzdem einen schlechten Effekt, aber du kannst aus den Optionen auf Seite 89 des ArM5 wählen. Darüber hinaus kannst du jedem Wesen, das du berührst, Verzerrung zufügen; einmal pro Tag kannst du jemandem 2 Verzerrungspunkte gewähren. Dieser Effekt hat eine Penetration von +5, und wenn er auf einen hermetischen Magus angewandt wird, erfordert er einen Wurf auf Zwielicht auf übliche Weise.
+Wann immer du ein Zwielicht erleidest, kannst du die Auswirkungen des Zwielichts wählen, anstatt sie vom Spielleiter auferlegten zu bekommen. Gelingt es dir nicht, das Zwielicht zu kontrollieren, erhältst du trotzdem einen schlechten Effekt, aber du kannst aus den Optionen auf [Seite 89](<Ars Magica Definitive Edition Basisregeln.md#wirkungen-des-zwielichts>) des ArM5 wählen. Darüber hinaus kannst du jedem Wesen, das du berührst, Verzerrung zufügen; einmal pro Tag kannst du jemandem 2 Verzerrungspunkte gewähren. Dieser Effekt hat eine Penetration von +5, und wenn er auf einen hermetischen Magus angewandt wird, erfordert er einen Wurf auf Zwielicht auf übliche Weise.
 
 >#### Pfad der Verzerrung
 >
@@ -1187,7 +1187,7 @@ Wann immer du ein Zwielicht erleidest, kannst du die Auswirkungen des Zwielichts
 
 ### Pfad der Tiergestalt
 
-Einzigartig unter den hier vorgestellten Pfaden wurde dieser Pfad viele hundert Mal beschritten, von jedem Bjornaer-Magus, der eine Lehrzeit im Orden des Hermes absolviert hat. Das Ziel des Pfades ist es, das eigene Herztier zu kontaktieren (siehe **Ars Magica** 5. Edition, Seite 91). Dies ist auch einer der mächtigeren Pfade, da er an die Grenze der Wesentlichen Natur stößt. Das wahre Mysterium ist nicht die Fähigkeit, die Gestalt zu wechseln — selbst viele Heckenzauberer können dies — sondern die Fähigkeit, von einem natürlichen Tier seiner Art vollkommen ununterscheidbar zu sein; das heißt, der Magus erwirbt (oder erweckt) einen völlig neuen Aspekt seiner Wesentlichen Natur. Das Opfer für diese Macht ist die Unfähigkeit, jemals einen Vertrauten zu binden. Der Grund dafür ist unbekannt, kann aber darin liegen, dass eine familiäre Bindung normalerweise zwischen dem Tier und jenem Teil der Seele eines Magus geformt wird, den das Haus Bjornaer erweckt hat. Weitere Informationen zum Mysterium des Herztiers werden in einem zukünftigen Supplement für **Ars Magica** 5. Edition ausgeführt.
+Einzigartig unter den hier vorgestellten Pfaden wurde dieser Pfad viele hundert Mal beschritten, von jedem Bjornaer-Magus, der eine Lehrzeit im Orden des Hermes absolviert hat. Das Ziel des Pfades ist es, das eigene Herztier zu kontaktieren (siehe **Ars Magica** 5. Edition, [Seite 91](<Ars Magica Definitive Edition Basisregeln.md#herztier>)). Dies ist auch einer der mächtigeren Pfade, da er an die Grenze der Wesentlichen Natur stößt. Das wahre Mysterium ist nicht die Fähigkeit, die Gestalt zu wechseln — selbst viele Heckenzauberer können dies — sondern die Fähigkeit, von einem natürlichen Tier seiner Art vollkommen ununterscheidbar zu sein; das heißt, der Magus erwirbt (oder erweckt) einen völlig neuen Aspekt seiner Wesentlichen Natur. Das Opfer für diese Macht ist die Unfähigkeit, jemals einen Vertrauten zu binden. Der Grund dafür ist unbekannt, kann aber darin liegen, dass eine familiäre Bindung normalerweise zwischen dem Tier und jenem Teil der Seele eines Magus geformt wird, den das Haus Bjornaer erweckt hat. Weitere Informationen zum Mysterium des Herztiers werden in einem zukünftigen Supplement für **Ars Magica** 5. Edition ausgeführt.
 
 >#### Abenteueridee: Schwall, Anhänger von Bjornaer
 >
@@ -1197,7 +1197,7 @@ Einzigartig unter den hier vorgestellten Pfaden wurde dieser Pfad viele hundert 
 
 ### Der Arkadische Pfad
 
-Viele im Haus Merinita erwähnen diesen Pfad, aber er bezieht sich fast immer schlicht auf einen der vielen verschiedenen Wege in die Feensphäre Arkadien, statt auf eine Einweihung in Waldmysterien an sich; und er führt zum Erwerb des Mysteriums der Feenmagie (siehe **Ars Magica** 5. Edition, Seite 92), mit einer Aufgabe und einem Opfer, die die Begegnung mit den Feen beinhalten. Weitere Informationen über das Mysterium der Feenmagie werden in einem zukünftigen Supplement für Ars Magica 5. Edition ausgeführt. Serrifuloria von Merinita soll jedoch einen Pfad innerhalb des urzeitlichen arkadischen Waldes selbst entdeckt haben, durch Kontakt und Auseinandersetzung mit einem mächtigen Genius Loci eines abgelegenen winterlichen Waldes an den Abhängen der Alpen. Sie musste sich aller Emotionen entledigen, indem sie jede einzelne als magisches Juwel aus ihrem Körper entfernte; durch das Medium dieser Juwelen gelang es ihr, die Grenze des Wahren Gefühls teilweise zu überwinden. Ob Serrifuloria jedoch noch von einer Fee unterscheidbar ist, steht auf einem anderen Blatt. Es sei darauf hingewiesen, dass sie das Mysterium der Feenmagie bereits erworben hatte; dies war ihr zweiter Schritt auf ihrem Pfad. Das von Serrifuloria erworbene Mysterium ist von höchster Esoterik und wird wahrscheinlich einzigartig für sie bleiben.
+Viele im Haus Merinita erwähnen diesen Pfad, aber er bezieht sich fast immer schlicht auf einen der vielen verschiedenen Wege in die Feensphäre Arkadien, statt auf eine Einweihung in Waldmysterien an sich; und er führt zum Erwerb des Mysteriums der Feenmagie (siehe **Ars Magica** 5. Edition, [Seite 92](<Ars Magica Definitive Edition Basisregeln.md#merinita--feenmagie>)), mit einer Aufgabe und einem Opfer, die die Begegnung mit den Feen beinhalten. Weitere Informationen über das Mysterium der Feenmagie werden in einem zukünftigen Supplement für Ars Magica 5. Edition ausgeführt. Serrifuloria von Merinita soll jedoch einen Pfad innerhalb des urzeitlichen arkadischen Waldes selbst entdeckt haben, durch Kontakt und Auseinandersetzung mit einem mächtigen Genius Loci eines abgelegenen winterlichen Waldes an den Abhängen der Alpen. Sie musste sich aller Emotionen entledigen, indem sie jede einzelne als magisches Juwel aus ihrem Körper entfernte; durch das Medium dieser Juwelen gelang es ihr, die Grenze des Wahren Gefühls teilweise zu überwinden. Ob Serrifuloria jedoch noch von einer Fee unterscheidbar ist, steht auf einem anderen Blatt. Es sei darauf hingewiesen, dass sie das Mysterium der Feenmagie bereits erworben hatte; dies war ihr zweiter Schritt auf ihrem Pfad. Das von Serrifuloria erworbene Mysterium ist von höchster Esoterik und wird wahrscheinlich einzigartig für sie bleiben.
 
 #### NEUER KLEINER PERSÖNLICHKEITS-FEHLER: LEIDENSCHAFTSLOS
 
@@ -1271,7 +1271,7 @@ Das nördliche Drittel von Worms trägt den Namen „Klein-Jerusalem" und ist di
 >
 >Das Dreigestirn der Dome zu Speyer, Worms und Mainz sind ohne Zweifel die drei größten Kirchen Deutschlands. Besucher und Pilger in diesen Städten sind überwältigt von der Majestät und Größe dieser romanischen Meisterwerke. Der Dom zu Speyer ist wohl der anmutigste der drei, aus hellem Sandstein erbaut, mit einem hohen Gewölbe und identischen Viereckstürmen an seinem Ostende. Seine prächtige Krypta, mit Marmor und Säulen geschmückt, ist vielleicht die schönste in der gesamten Christenheit. Der Dom zu Worms ist der dramatischste und ungewöhnlichste, ein gedrungener und doch ragender Bau mit zwei kuppelartigen Chören und seltsamen und exotischen Statuen auf seinen Zinnen. Die höchsten Punkte sind die vier siebengeschossigen kreisrunden Ecktürme, die dem Ganzen ein burgartiges Aussehen verleihen. Tatsächlich ist ein Teil des Gebäudes aus der früheren Burgunderfeste auf demselben Grundstück entstanden, die Karl der Große zu einem Palast umbauen ließ. Der Dom zu Mainz ist ein ausladendes Bauwerk aus rotem Sandstein. In Anlehnung an den Petersdom in Rom, den Sitz des anderen Heiligen Stuhls, ist er von Ost nach West ausgerichtet. An jedem Ende befindet sich ein eigener Chor, der jeweils von drei Türmen verschiedener Höhe umgeben ist, von denen einer dem Klerus und der andere dem Kaiser vorbehalten ist.
 >
->Der Dom zu Mainz hat als Sitz eines Heiligen Stuhls eine Göttliche Aura von 7; die Dome zu Speyer, Worms, Trier, Aachen, Köln und Hildesheim haben Göttliche Auren von 6. Die meisten anderen Dome in Deutschland haben Göttliche Auren von 5, und die meisten Städte haben eine Göttliche Aura von 3 (siehe auch ArM5, Seite 188). Die stärksten Göttlichen Auren sind im Allgemeinen im Rheinland, in Lothringen und in Süddeutschland zu finden, mit den ehrwürdigsten Kirchen, Heiligen und heiligen Stätten. Rund um die Ostsee und in den Ostmarken, wo die Kirche weniger tief verwurzelt ist, sind die meisten Göttlichen Auren etwas schwächer.
+>Der Dom zu Mainz hat als Sitz eines Heiligen Stuhls eine Göttliche Aura von 7; die Dome zu Speyer, Worms, Trier, Aachen, Köln und Hildesheim haben Göttliche Auren von 6. Die meisten anderen Dome in Deutschland haben Göttliche Auren von 5, und die meisten Städte haben eine Göttliche Aura von 3 (siehe auch ArM5, [Seite 188](<Ars Magica Definitive Edition Basisregeln.md#göttliche-auren>)). Die stärksten Göttlichen Auren sind im Allgemeinen im Rheinland, in Lothringen und in Süddeutschland zu finden, mit den ehrwürdigsten Kirchen, Heiligen und heiligen Stätten. Rund um die Ostsee und in den Ostmarken, wo die Kirche weniger tief verwurzelt ist, sind die meisten Göttlichen Auren etwas schwächer.
 
 ### Mainz
 
@@ -1455,7 +1455,7 @@ Den Wald anderswo zu durchqueren ist so gut wie unmöglich, außer vielleicht f�
 >Wundabzüge: –1 (1-4), –3 (5-8), –5 (9-12), Kampfunfähig (13-16)<br>
 >Fertigkeiten: Athletik 3 (Springen), Aufmerksamkeit 3 (Wälder), Schwarzwaldkunde 6 (Wege), Raufen 3 (Klauen), Zweites Gesicht 4 (Glamoure), Schleichen 3 (Wälder), Überleben 6 (Wälder)<br>
 >Kräfte:<br>
->*Feennatur:* Als Feenwesen leidet der Bockmann nicht unter Erschöpfung, noch wird er von Krankheiten oder Alterung betroffen. Alle Feenwesen besitzen zudem die Tugend Zweites Gesicht und erhalten die Boni oder Abzüge einer übernatürlichen Aura beim Einsatz ihrer Feenkräfte gemäß der Sphärenwechselwirkungstabelle (vgl. ArM5, S. 183).<br>
+>*Feennatur:* Als Feenwesen leidet der Bockmann nicht unter Erschöpfung, noch wird er von Krankheiten oder Alterung betroffen. Alle Feenwesen besitzen zudem die Tugend Zweites Gesicht und erhalten die Boni oder Abzüge einer übernatürlichen Aura beim Einsatz ihrer Feenkräfte gemäß der Sphärenwechselwirkungstabelle (vgl. ArM5, [S. 183](<Ars Magica Definitive Edition Basisregeln.md#tabelle-zur-sphärenwechselwirkung>)).<br>
 >
 >*Verwundbarkeit durch Eisen*: Waffen aus Eisen verursachen dem Bockmann 2 zusätzliche Schadenspunkte.
 >
@@ -1808,7 +1808,7 @@ Obwohl sie Quaesitorin ist, ist Winfrida jung, unerfahren und ein wenig ängstli
 
 >Philippus ist das älteste überlebende Mitglied der direkten Abstammungslinie von Apromor filius Flambeau, dem unbestrittenen Meister der zerstörerischen Magie. Als solcher hat er einen Magischen Fokus für alle zerstörerischen Zauber, die gegen übernatürliche Wesen eingesetzt werden, und kann das Vorhandensein von Magie „aufspüren". Er wird von der Abstammungslinie des Apromor im gesamten Orden wegen seines Vertrauten Sordus beneidet. Es dauerte drei Jahre, bis er eine weibliche Basilisk aufgespürt hatte, und ein weiteres Jahr, sie zu überreden, ihm eines ihrer Eier als Vertrauten zu überlassen. Sordus bleibt üblicherweise außer Sichtweite, wegen seiner schrecklichen Zerstörungskraft, tritt aber manchmal langsam in einen Raum und lässt seinen Blick nach links und rechts wandern, als ob er Philippus' Drohungen unterstreichen wollte.
 
->Es sei angemerkt, dass Philippus' Zauber ab 40 Jahren nach der Lehrlingsprüfung als Laborprojekte erlernt wurden (vgl. die Regel in **ArM5**, S. 32). In den 66 Jahreszeiten, die er in seinem Labor verbrachte, hat er alle magischen Gegenstände erschaffen, seinen Vertrauten verzaubert und 720 Stufen an Zaubern erworben.
+>Es sei angemerkt, dass Philippus' Zauber ab 40 Jahren nach der Lehrlingsprüfung als Laborprojekte erlernt wurden (vgl. die Regel in **ArM5**, [S. 32](<Ars Magica Definitive Edition Basisregeln.md#nur-magi--nach-der-lehrlingszeit>)). In den 66 Jahreszeiten, die er in seinem Labor verbrachte, hat er alle magischen Gegenstände erschaffen, seinen Vertrauten verzaubert und 720 Stufen an Zaubern erworben.
 
 > #### Sordus, eine Basilisk
 >Machtwert: 30 (Animal)<br>
@@ -2129,7 +2129,7 @@ Kürzlich hat der Magus Theoderich von Haus Jerbiton (siehe Kapitel 9: Die Ostma
 Alter: 66 (Meister)<br>
 Persönlichkeitseigenschaften: Ehrgeizig +3, Diplomatisch +3, Berechnend +2
 
-Henri de Tours ist ein wohlgenährter und geselliger Mann, prachtvoll gekleidet, wie es seinem Status als wahrscheinlich reichstem Kaufmann Lübecks – und damit einem der reichsten Männer unter den Gemeinen in ganz Deutschland – geziemt. Unter den Bürgern der Stadt gilt er als kultivierter und fähiger Verwalter und Diplomat. Im Normannischen Tribunal zum Magus ausgebildet, trat er dem Konvent kurz nach dessen Gründung bei und amtiert nun als ältestes verbliebenes Mitglied als Disceptator. Er plant, dass seine Familiendynastie den Konvent über viele Generationen hinweg führen wird. Henri ist ein Meister der Mentem-Magie, obwohl er, je mehr er diese Kunst erlernt, desto weniger dazu neigt, sie direkt einzusetzen. Er verwendet Mentem-Effekte höherer Magnitude, um die Subtilität seiner Magie zu steigern, nicht ihre rohe Kraft (siehe seinen Musterspruch auf Seite 72).
+Henri de Tours ist ein wohlgenährter und geselliger Mann, prachtvoll gekleidet, wie es seinem Status als wahrscheinlich reichstem Kaufmann Lübecks – und damit einem der reichsten Männer unter den Gemeinen in ganz Deutschland – geziemt. Unter den Bürgern der Stadt gilt er als kultivierter und fähiger Verwalter und Diplomat. Im Normannischen Tribunal zum Magus ausgebildet, trat er dem Konvent kurz nach dessen Gründung bei und amtiert nun als ältestes verbliebenes Mitglied als Disceptator. Er plant, dass seine Familiendynastie den Konvent über viele Generationen hinweg führen wird. Henri ist ein Meister der Mentem-Magie, obwohl er, je mehr er diese Kunst erlernt, desto weniger dazu neigt, sie direkt einzusetzen. Er verwendet Mentem-Effekte höherer Magnitude, um die Subtilität seiner Magie zu steigern, nicht ihre rohe Kraft (siehe seinen Musterspruch auf [Seite 72](#creo-mentem-zauber)).
 
 Brunhilda, Henris Frau, ist eine mütterliche und einsichtsreiche Frau aus Schweden. Sie begegneten sich erstmals, als Henri ein junger Magus war, frisch in Lübeck angekommen und begierig, die Ostsee zu erkunden. Seine erste Begegnung mit dem magischen Volk Skandinaviens lenkte ihn auf den Weg der Liebe, nicht des Krieges, und die beiden sind seit mehr als dreißig Jahren verheiratet. Brunhilda besitzt die Gabe der Wahrsagung – wie nordische Weise kann sie in Trance fallen und ihren Geist in Tiergestalt weit und breit entsenden –, obwohl ihre magischen Kräfte nicht umfassend genug sind, um sie zur Mitgliedschaft im Orden des Hermes zu qualifizieren. Die Magi des Konvents betrachten sie jedoch größtenteils als ihresgleichen. Tatsächlich ist sie aktiver als Henri in der alltäglichen Organisation des Konvents. Ihre Wahrsagefähigkeiten kommen gut zur Geltung, da Henri eine bemerkenswerte Begabung dafür zeigt, die richtigen Ladungen und die richtigen Häfen zur richtigen Zeit zu wählen.
 
@@ -2805,7 +2805,7 @@ Crintera liegt tief im Stubnitz-Wald im Osten der Insel. Es ist ein schwer errei
 
 Der Stubnitz-Wald ist schwer zu durchqueren, selbst für erfahrene Holzleute. Besucher werden jederzeit beobachtet, sowohl von den Konventsbewohnern Crintegas als auch von ihren tierischen Verbündeten. Es gibt einen Pfad durch den Wald, den Beobachtungspfad. Sein Beginn ist durch zwei bröckelnde, moosbewachsene Steine auf einer Lichtung nahe dem Waldrand markiert, und er führt direkt in das Herz des Waldes, wo Crintera liegt; es ist der Pfad, den Rotkappen und Bjornaer-Magi kennen. Der Wald ist stark mit den Tiermächten verbunden, rätselhaften Wesenheiten, die dieses Gebiet beherrschten, bevor die Bjornaer hierher kamen.
 
-Wer in die Regio eindringt, die Crintera umhüllt, nimmt oft tierische Eigenschaften an, die mit seinem Herztier zusammenhängen. Für jeden Besucher Crintegas, ob Magus oder Sterblicher, sollte ein Herztier bestimmt werden. Diese Tiere sollten zu ihren Persönlichkeiten passen; so könnte ein tapferer Schildgrog das Herztier eines Hirsches haben, ein Troubadour das eines Singvogels und ein verschlagener Magus die Gestalt einer Schlange. Es gibt vier Ebenen der magischen Regio mit Aurastärken von 1, 3, 5 und 8. Jede Regiogrenze bringt das Herztier des betroffenen Charakters näher an die Oberfläche; bei jedem Übergang muss jeder Charakter einem Corpus-Effekt widerstehen, dessen Penetrationssumme dem Schwierigkeitsgrad entspricht, der erforderlich ist, um die nächste Ebene zu sehen (gemäß den Regeln in **ArM**5, Seite 189). Die erste Regiogrenze bewirkt eine Persönlichkeitseigenschaftsänderung, die dem Herztier entspricht, während die zweite, dritte und vierte Grenze kleinere körperliche Veränderungen verursachen. Treten alle vier Effekte auf, besteht bei anderen kein Zweifel mehr an der Natur des Herztieres des Charakters; obwohl er noch deutlich menschlich ist, ist er auch zu einem Viertel bis zu einem Drittel Tier. Magi werden von diesem Effekt selten überwältigt, wenn sie ihre Parma Magica aktiv haben; es gilt jedoch bei den Bewohnern Crintegas als unhöflich, sich dieser Verwandlung aktiv zu widersetzen. Natürlich können Bjornaer-Magi diese Veränderungen mit einem Herztier-Wurf abschütteln, wenn sie es wollen.
+Wer in die Regio eindringt, die Crintera umhüllt, nimmt oft tierische Eigenschaften an, die mit seinem Herztier zusammenhängen. Für jeden Besucher Crintegas, ob Magus oder Sterblicher, sollte ein Herztier bestimmt werden. Diese Tiere sollten zu ihren Persönlichkeiten passen; so könnte ein tapferer Schildgrog das Herztier eines Hirsches haben, ein Troubadour das eines Singvogels und ein verschlagener Magus die Gestalt einer Schlange. Es gibt vier Ebenen der magischen Regio mit Aurastärken von 1, 3, 5 und 8. Jede Regiogrenze bringt das Herztier des betroffenen Charakters näher an die Oberfläche; bei jedem Übergang muss jeder Charakter einem Corpus-Effekt widerstehen, dessen Penetrationssumme dem Schwierigkeitsgrad entspricht, der erforderlich ist, um die nächste Ebene zu sehen (gemäß den Regeln in **ArM**5, [Seite 189](<Ars Magica Definitive Edition Basisregeln.md#regiones>)). Die erste Regiogrenze bewirkt eine Persönlichkeitseigenschaftsänderung, die dem Herztier entspricht, während die zweite, dritte und vierte Grenze kleinere körperliche Veränderungen verursachen. Treten alle vier Effekte auf, besteht bei anderen kein Zweifel mehr an der Natur des Herztieres des Charakters; obwohl er noch deutlich menschlich ist, ist er auch zu einem Viertel bis zu einem Drittel Tier. Magi werden von diesem Effekt selten überwältigt, wenn sie ihre Parma Magica aktiv haben; es gilt jedoch bei den Bewohnern Crintegas als unhöflich, sich dieser Verwandlung aktiv zu widersetzen. Natürlich können Bjornaer-Magi diese Veränderungen mit einem Herztier-Wurf abschütteln, wenn sie es wollen.
 
 Auf der vierten und letzten Ebene der Regio befinden sich einige stabil gebaute Rundhäuser, deren breite, kegelförmige Strohdächer fast bis zum Boden reichen. Diese Hütten sind die Sancta der Ältesten. Im allerletzten Zentrum der Regio liegt eine Lichtung mit einer Plattform aus zusammengebundenen Baumstämmen. In dieser Lichtung, groß genug für fünfzig oder mehr Menschen, findet das Zwölfjährige Treffen statt. Rund um die oberste Ebene der Regio stehen sonderbare Statuen in verblüffender Formenvielfalt. Auf einem Baumstumpf sitzt ein hölzernes Bild eines Eichhörnchens; ein geschnitzter Steinotter liegt inmitten einer Binsenbüschel; eine Schlange aus gefärbten und geflochtenen Binsen liegt zusammengerollt in der Höhlung eines Felsens; ein Tonwolf mit Zähnen aus zerbrochenen Muscheln sitzt neben einem Baumstamm; Steinvögel hocken in den Ästen von Weidensetzlingen, die von federgeschmückten Lederriemen umschlungen werden. Jede Tierart ist vertreten, aber der Bereich wirkt irgendwie nicht überfüllt. Von jedem beliebigen Punkt aus sind nur wenige dieser Fetische sichtbar. Die Konventsbewohner Crintegas nennen diese Bilder die „Tiermächte" und begegnen ihnen mit großem Respekt, indem sie kleine Opfergaben neben dem Fetisch niederlegen, der ihr Herztier darstellt. Die Tiermächte sind wahrhaft uralt, und manche sagen, sie beherbergen ursprüngliche Naturgeister. Wer die Macht berührt, die der eigenen Gestalt entspricht, spürt eine unbeschreibliche, tiefe Verbundenheit. Jene, die den durch die Regiogrenzen bewirkten Veränderungen widerstanden haben, verspüren einen starken Zwang, die Bilder nicht zu berühren, ebenso wie jene, die sich einem Fetisch nähern, der nicht ihr eigenes Herztier darstellt.
 
@@ -3529,7 +3529,7 @@ Lehrlinge im Rheintribunal reisen gewöhnlich nach Durenmar für ihre letzten Au
 
 Die Magi werden von Murion, Prima des Hauses Bonisagus und Praeco des Rheintribunals, im Forum unmittelbar nach der Aufnahmezeremonie begrüßt. Hier wird sie die Grundzüge ihres Plans zur Wiederbesiedlung der Rheinschlucht vorstellen und die Unterstützung und Schirmherrschaft Durenmars für dieses Vorhaben anbieten. Ihr Plan ist entsprechend grandios, wenn auch etwas spärlich an praktischen Einzelheiten. Murion ist eine mächtige und etwas überwältigende Erzmaga, sodass die Charaktere sich in ihrer Gegenwart gehörig eingeschüchtert fühlen sollten und daher wenig geneigt sein dürften, sie mit kleinlichen Fragen zu belästigen.
 
-Als Nächstes müssen die Magi zusammentragen, was sie an Informationen finden können, und sich auf die Erkundung der Rheinschlucht vorbereiten. Es wäre höchst vorteilhaft, die Tribunalsaufzeichnungen in der Großen Bibliothek zu konsultieren; es erfordert ein ganzes Quartal mühsamer Arbeit für einen Magus, die relevanten Informationen (siehe den Kasten auf Seite 116) aus den vielen alten Bänden herauszuarbeiten, die diese Aufzeichnungen bilden. (Sollte einer eurer Spieler-Magi dem Haus Mercere angehören, könnte diese Aufgabe eine geeignete Lehrlingsprüfung darstellen.) Veraltete Wegbeschreibungen zu den ehemaligen Konventen können auch durch Konsultation der Aufzeichnungen des Hauses Mercere gefunden werden (Kasten oben). Dies kann im Voraus vorbereitet worden sein, falls ihr sofort aufbrechen möchtet. Einige Magi in Durenmar (zum Beispiel Occultes) bieten möglicherweise Unterstützung und Ermutigung an, aber die meisten sind mit ihrer eigenen Arbeit beschäftigt. In Durenmar hält sich immer eine Reihe von Gastmagi auf, was die Gelegenheit bietet, Nicht-Spieler-Magi einzuführen, die später in eurer Saga eine Rolle spielen könnten, oder weitere Geschichtshaken einzuführen.
+Als Nächstes müssen die Magi zusammentragen, was sie an Informationen finden können, und sich auf die Erkundung der Rheinschlucht vorbereiten. Es wäre höchst vorteilhaft, die Tribunalsaufzeichnungen in der Großen Bibliothek zu konsultieren; es erfordert ein ganzes Quartal mühsamer Arbeit für einen Magus, die relevanten Informationen (siehe den Kasten auf [Seite 116](#auszüge-aus-den-aufzeichnungen-des-rheintribunals-über-die-konvente-am-mittelrhein)) aus den vielen alten Bänden herauszuarbeiten, die diese Aufzeichnungen bilden. (Sollte einer eurer Spieler-Magi dem Haus Mercere angehören, könnte diese Aufgabe eine geeignete Lehrlingsprüfung darstellen.) Veraltete Wegbeschreibungen zu den ehemaligen Konventen können auch durch Konsultation der Aufzeichnungen des Hauses Mercere gefunden werden (Kasten oben). Dies kann im Voraus vorbereitet worden sein, falls ihr sofort aufbrechen möchtet. Einige Magi in Durenmar (zum Beispiel Occultes) bieten möglicherweise Unterstützung und Ermutigung an, aber die meisten sind mit ihrer eigenen Arbeit beschäftigt. In Durenmar hält sich immer eine Reihe von Gastmagi auf, was die Gelegenheit bietet, Nicht-Spieler-Magi einzuführen, die später in eurer Saga eine Rolle spielen könnten, oder weitere Geschichtshaken einzuführen.
 
 Die Aufgabe, die die Magi nun erwartet — Durenmar hinter sich zu lassen und auf eigene Faust aufzubrechen — kann durchaus beängstigend erscheinen. Sie kann nach verschiedenen Schwierigkeitsgraden angepasst werden. Hier sind zum Beispiel zwei gegensätzliche Möglichkeiten:
 
@@ -3792,7 +3792,7 @@ Die wohlhabende Stadt Oberwesel liegt zwei Kilometer flussabwärts von Kaub am l
 >
 >Wolkan wurde von Baron Schönburg wegen Diebstahls auf der Pfalzinsel inhaftiert. Lord Robert bot ihm die Freiheit aus dem Gefängnis an, wenn er sich freiwillig bereit erklärte, Robert bei der Eintreibung der Zölle zu helfen. Wolkan hat keine Ahnung, dass das, was er tut, ungerecht ist, oder dass Lord Robert mehr ist als er zu sein scheint.
 >
->Wolkan wäre ein guter Grog für einen auf Pfalz angesiedelten Konvent. Er kennt das System zur Zolleintreibung, den Verkauf der Tropfsteine (siehe ihre Beschreibung auf Seite 124) zum Schutz vor der Loreley, und hat Kontakte in Städten sowohl flussaufwärts als auch flussabwärts am Rhein mit einer Reihe kleiner Krimineller und Söldner, die sich für die Magi als nützlich erweisen könnten. Er hat jedoch seine eigene Agenda — die Führung seiner kriminellen Kontakte zu übernehmen und sich an den Erlösen zu bereichern. Er könnte die Ressourcen des Konvents nutzen, um diesen Ehrgeiz voranzutreiben.
+>Wolkan wäre ein guter Grog für einen auf Pfalz angesiedelten Konvent. Er kennt das System zur Zolleintreibung, den Verkauf der Tropfsteine (siehe ihre Beschreibung auf [Seite 124](#tropfstein-chalcedonius)) zum Schutz vor der Loreley, und hat Kontakte in Städten sowohl flussaufwärts als auch flussabwärts am Rhein mit einer Reihe kleiner Krimineller und Söldner, die sich für die Magi als nützlich erweisen könnten. Er hat jedoch seine eigene Agenda — die Führung seiner kriminellen Kontakte zu übernehmen und sich an den Erlösen zu bereichern. Er könnte die Ressourcen des Konvents nutzen, um diesen Ehrgeiz voranzutreiben.
 
 ### Die Sieben Jungfrauen
 
@@ -3830,11 +3830,11 @@ Die Burgruine Rolandseck steht am linken Rheinufer und überblickt die friedlich
 >*Ausweichen:* Init 0, Ang n/v, Vert 0, Sch n/v<br>
 >Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Lähmend (16-20)<br>
 >Kräfte:<br>
->*Feennatur*: Als Feenwesen leidet die Loreley nicht unter Erschöpfung und wird auch nicht von Krankheiten oder dem Alter betroffen. Sie kann alle Sprachen verstehen und von jedermann verstanden werden. Alle Feen haben zudem die Tugend Zweites Gesicht und genießen die Boni oder erleiden die Abzüge jeder übernatürlichen Aura, wenn sie ihre Feenkräfte einsetzen, gemäß der Sphärenwechselwirkungs­tabelle (siehe **Ars Magica** 5. Edition, Seite 183).
+>*Feennatur*: Als Feenwesen leidet die Loreley nicht unter Erschöpfung und wird auch nicht von Krankheiten oder dem Alter betroffen. Sie kann alle Sprachen verstehen und von jedermann verstanden werden. Alle Feen haben zudem die Tugend Zweites Gesicht und genießen die Boni oder erleiden die Abzüge jeder übernatürlichen Aura, wenn sie ihre Feenkräfte einsetzen, gemäß der Sphärenwechselwirkungs­tabelle (siehe **Ars Magica** 5. Edition, [Seite 183](<Ars Magica Definitive Edition Basisregeln.md#tabelle-zur-sphärenwechselwirkung>)).
 >
 >*Verletzlichkeit gegenüber Eisen*: Kalt geschmiedetes Eisen ist für die Loreley äußerst schmerzhaft, und selbst die flüchtigste Berührung verursacht ihr eine Leichte Wunde. Jede Eisenwaffe, die sie trifft (d. h. die nach Abzug ihrer Absorption noch eine positive Schadenssumme ergibt), erhöht ihre Wundstufe um eins.
 >
->*Verliebtheit*, 4 Punkte, Init +0, Imaginem: Die Stimme der Loreley kann in allen, die sie hören, ein starkes Verlangen wecken, sich ihr zu nähern. Sie werden alles in ihrer Macht Stehende tun, um ihr näherzukommen, selbst in den Fluss zu springen und die Klippe emporzuklettern, oder ihr Schiff auf die Felsen zu steuern, wenn das nötig ist. Diese Kraft kann pro Runde bis zu zehn Personen betreffen, denen ein einziger Intelligenz-Stresswurf gegen einen Schwierigkeitsgrad von 9 zusteht, um ihr zu widerstehen. Frauen erhalten einen +3-Bonus auf diesen Wurf, ebenso wie jene, die ihre Ohren mit Wachs verstopft haben. Der Besitz eines Tropfsteins (siehe Seite 124) erlaubt dem Träger, den Gesang zu ignorieren, wenn er einen Wahrnehmungswurf gegen einen Schwierigkeitsgrad von 6 besteht.
+>*Verliebtheit*, 4 Punkte, Init +0, Imaginem: Die Stimme der Loreley kann in allen, die sie hören, ein starkes Verlangen wecken, sich ihr zu nähern. Sie werden alles in ihrer Macht Stehende tun, um ihr näherzukommen, selbst in den Fluss zu springen und die Klippe emporzuklettern, oder ihr Schiff auf die Felsen zu steuern, wenn das nötig ist. Diese Kraft kann pro Runde bis zu zehn Personen betreffen, denen ein einziger Intelligenz-Stresswurf gegen einen Schwierigkeitsgrad von 9 zusteht, um ihr zu widerstehen. Frauen erhalten einen +3-Bonus auf diesen Wurf, ebenso wie jene, die ihre Ohren mit Wachs verstopft haben. Der Besitz eines Tropfsteins (siehe [Seite 124](#tropfstein-chalcedonius)) erlaubt dem Träger, den Gesang zu ignorieren, wenn er einen Wahrnehmungswurf gegen einen Schwierigkeitsgrad von 6 besteht.
 >
 >*Person beherrschen*, 8 Punkte, Init +2, Mentem: Wenn die Loreley jemanden nah genug locken kann, um Augenkontakt herzustellen, kann sie versuchen, seinen Geist zu beherrschen. Diese Kraft wirkt nur auf Männer und kann nur eine Person gleichzeitig betreffen. Das Opfer muss einen Intelligenz-Stresswurf gegen einen Schwierigkeitsgrad von 12 bestehen, oder es tut alles, was die Loreley ihm befiehlt, selbst in den Tod zu springen, wenn sie das begehrt.
 >
@@ -3992,7 +3992,7 @@ Die Kammer des Arliandus von Haus Tremere wird durch einen von ihm geschaffenen 
 
 Einige hundert Meter außerhalb der Stadtmauern nach Osten, entlang einer Straße, die vielleicht nicht zufällig Hermesstraße heißt, liegt ein großes ovales römisches Amphitheater am Fuß des Martinsberg-Hügels. Diese verlassene Ruine hat eine schwache magische Aura von 1. An den Seiten der sandigen Arenafläche führen überwucherte Gänge zu einer kleinen Reihe leerer Kammern im benachbarten Berghang und unmittelbar unterhalb des Amphitheaters, die von den Gladiatoren genutzt wurden. Hier ist die Aura etwas stärker (2); man kann (entweder durch Zaubereinsatz oder mit dem Zweiten Gesicht) die schwache Anwesenheit von Geistern spüren.
 
-Wenn die Trompete der Geisterbeschwörung hier nachts gespielt wird, verdichten sich die Geister von drei Gladiatoren allmählich. Sie legen ihre Waffen und Rüstungen an und marschieren ins Amphitheater hinauf, woraufhin sie jeden Anwesenden kühn zu einem Duell auf Leben und Tod herausfordern. Keines ihrer Gesichter ist zu sehen, aber jeder scheint ein mächtiger Krieger in minimaler Rüstung zu sein, dessen Muskeln im schwachen Licht glänzen. Jeder setzt einen kleinen Gegenstand (wie ein Schmuckstück oder eine Handvoll Römerünzen) auf den Ausgang des Kampfes und jeder Herausforderer muss etwas von ähnlichem Wert entgegensetzen. Dann beginnt der Kampf — die Geister sind hervorragend ausgebildet — der den Teilnehmern tödlich echt erscheint. Die Gladiatoren sind jedoch nicht völlig körperlich, und Zuschauern scheinen ihre Schläge kein Blut zu ziehen — ein tödlicher Treffer macht eine Person lediglich bewusstlos. Obwohl alle Schäden dem Spieler normal mitgeteilt werden sollten, sollte der Spielleiter sie so verfolgen, als handelte es sich um einen nicht-tödlichen Kampf (siehe **Ars Magica** 5. Edition, Seite 174). Erst wenn der Charakter medizinische Versorgung erhalten hat, sollte dem Spieler mitgeteilt werden, welche Wunden sein Charakter wirklich erlitten hat. Wenn ein Gladiator gewinnt, beansprucht er seine Belohnung, bevor er sich feierlich vor seinem gefallenen Gegner verbeugt und ins Nichts schwindet. (Der gewettete Gegenstand kann später begraben im Sand der unterirdischen Kammern gefunden werden, aber von vielen Jahrhunderten verwittert oder verrostet bis zur Nutzlosigkeit.) Wenn ein Gladiator besiegt wird, schwindet er ebenso dahin und hinterlässt seinen gewetteten Gegenstand, der 2 Bauern Mentem-Vis wert ist. Nach seinem Kampf kann jeder Gladiator in diesem Jahr nicht mehr beschworen werden.
+Wenn die Trompete der Geisterbeschwörung hier nachts gespielt wird, verdichten sich die Geister von drei Gladiatoren allmählich. Sie legen ihre Waffen und Rüstungen an und marschieren ins Amphitheater hinauf, woraufhin sie jeden Anwesenden kühn zu einem Duell auf Leben und Tod herausfordern. Keines ihrer Gesichter ist zu sehen, aber jeder scheint ein mächtiger Krieger in minimaler Rüstung zu sein, dessen Muskeln im schwachen Licht glänzen. Jeder setzt einen kleinen Gegenstand (wie ein Schmuckstück oder eine Handvoll Römerünzen) auf den Ausgang des Kampfes und jeder Herausforderer muss etwas von ähnlichem Wert entgegensetzen. Dann beginnt der Kampf — die Geister sind hervorragend ausgebildet — der den Teilnehmern tödlich echt erscheint. Die Gladiatoren sind jedoch nicht völlig körperlich, und Zuschauern scheinen ihre Schläge kein Blut zu ziehen — ein tödlicher Treffer macht eine Person lediglich bewusstlos. Obwohl alle Schäden dem Spieler normal mitgeteilt werden sollten, sollte der Spielleiter sie so verfolgen, als handelte es sich um einen nicht-tödlichen Kampf (siehe **Ars Magica** 5. Edition, [Seite 174](<Ars Magica Definitive Edition Basisregeln.md#nicht-tödlicher-kampf>)). Erst wenn der Charakter medizinische Versorgung erhalten hat, sollte dem Spieler mitgeteilt werden, welche Wunden sein Charakter wirklich erlitten hat. Wenn ein Gladiator gewinnt, beansprucht er seine Belohnung, bevor er sich feierlich vor seinem gefallenen Gegner verbeugt und ins Nichts schwindet. (Der gewettete Gegenstand kann später begraben im Sand der unterirdischen Kammern gefunden werden, aber von vielen Jahrhunderten verwittert oder verrostet bis zur Nutzlosigkeit.) Wenn ein Gladiator besiegt wird, schwindet er ebenso dahin und hinterlässt seinen gewetteten Gegenstand, der 2 Bauern Mentem-Vis wert ist. Nach seinem Kampf kann jeder Gladiator in diesem Jahr nicht mehr beschworen werden.
 
 >#### Abenteueridee: Das Amphitheater
 >Die Hinweise sind vorhanden, die es den Magi ermöglichen könnten, das Geheimnis dieser Stätte zu ergründen und es ihnen zu ermöglichen, hier Vis zu ernten: Der Auszug 1248 AA aus den Tribunalsaufzeichnungen lässt auf eine Vis-Quelle nicht weit von Trier schließen, was sie dazu veranlassen könnte, das Amphitheater zu untersuchen und dabei die schwache magische Aura und die schwachen Geisterspuren zu entdecken. Dies könnte sie wiederum dazu bringen, die im Sanctum des Arliandus gefundene Trompete auszuprobieren.
@@ -4020,7 +4020,7 @@ Wenn die Trompete der Geisterbeschwörung hier nachts gespielt wird, verdichten 
 >*Dreizack und Netz*: Init +7, Ang +12, Vert +14, Sch +7<br>
 >*Netz*: Init +4, Ang +11, Vert +11, Sch +7\*<br>
 >*Dolch*: Init +4, Ang +8, Vert +8, Sch +5<br>
->*\*Als Rauf-Angriff abwickeln (siehe ArM5, Seite 174) zum Festhalten oder Entwaffnen.*<br>
+>*\*Als Rauf-Angriff abwickeln (siehe ArM5, [Seite 174](<Ars Magica Definitive Edition Basisregeln.md#nicht-tödlicher-kampf>)) zum Festhalten oder Entwaffnen.*<br>
 >Absorption: +4<br>
 >Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Lähmend (16-20)<br>
 >Erscheinungsbild: Dieser Kämpfer ist eine drahtige, dunkelhaarige Gestalt, bewaffnet als *Retetarius* mit einem Dreizack und einem Netz. Seine Schulter ist durch einen Galerus (Metallschulterschutz) und sein linker Arm durch eine Manica (schwere Leinenpolsterung) geschützt. Er trägt eine Kupfermaske des Poseidon.
@@ -4140,7 +4140,7 @@ Im 5. Jahrhundert stiegen die Merowinger, große christliche Zaubererkönige, al
 
 #### SPRACHEN IN DEUTSCHLAND
 
-Die folgenden lebenden Sprachen werden in Deutschland und den angrenzenden Ländern gesprochen. Jede besteht aus mehreren eigenständigen regionalen Dialekten, die in Klammern angegeben sind; die meisten Charaktere sollten den passenden Dialekt als Spezialisierung wählen. Bei Westnordisch und Französisch sind nur die Dialekte aufgeführt, die in Deutschland häufig anzutreffen sind. Gebildete oder weitgereiste Sprecher werden sich bemüht haben, ihren Dialekt abzulegen, und können Standardspezialisierungen haben (siehe **Ars Magica** 5th Edition, Seite 66).
+Die folgenden lebenden Sprachen werden in Deutschland und den angrenzenden Ländern gesprochen. Jede besteht aus mehreren eigenständigen regionalen Dialekten, die in Klammern angegeben sind; die meisten Charaktere sollten den passenden Dialekt als Spezialisierung wählen. Bei Westnordisch und Französisch sind nur die Dialekte aufgeführt, die in Deutschland häufig anzutreffen sind. Gebildete oder weitgereiste Sprecher werden sich bemüht haben, ihren Dialekt abzulegen, und können Standardspezialisierungen haben (siehe **Ars Magica** 5th Edition, [Seite 66](<Ars Magica Definitive Edition Basisregeln.md#spezialisierungen>)).
 
 **Hochdeutsch** (Schwäbisch, Fränkisch, Bayerisch, Schweizerdeutsch, Jiddisch)
 

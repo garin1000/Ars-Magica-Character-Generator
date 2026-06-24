@@ -39,7 +39,7 @@
 | Curse-Throwing\* | Übernatürlich | Fluchschleudern | |
 | Divination & Augury\* | Übernatürlich | Weissagung & Zeichendeutung | |
 | Dominion Lore | Arkan | Dominiumkunde | |
-| Dowsing\* | Übernatürlich | Wünschelruten | |
+| Dowsing\* | Übernatürlich | Wünschelrutengehen | |
 | Embitterment\* | Übernatürlich | Verbitterung | |
 | Enchanting (Ability)\* | Übernatürlich | Bezaubernde (Fertigkeit) | |
 | Enigmatic Wisdom\* | Übernatürlich | Enigmatische Weisheit | Criamon |

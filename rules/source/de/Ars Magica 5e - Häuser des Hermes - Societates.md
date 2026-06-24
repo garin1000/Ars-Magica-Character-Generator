@@ -45,335 +45,335 @@ Copyright 2007 Trident, Inc. d/b/a Atlas Games. Alle Rechte vorbehalten. Die Ver
 
 **Saint Paul, Minnesota - info@atlas-games.com - Digitale Ausgabe Version 1.0 - Juli 2009**
 
-# Inhaltsverzeichnis
+[Inhaltsverzeichnis](#inhaltsverzeichnis)
 
-**Einführung: Societates**<br>
+**[Einführung: Societates](#einführung-societates)**<br>
 
-**Kapitel Eins: Haus Flambeau**<br>
-&emsp;Geschichte<br>
-&emsp;&emsp;Flambeau und der Frühe Orden<br>
-&emsp;&emsp;Die Kontroverse um den Krieg der Zauberer<br>
-&emsp;&emsp;Die Zweite Generation<br>
-&emsp;&emsp;Das Ende des Gründers<br>
-&emsp;&emsp;Das Haus unter Apromor<br>
-&emsp;&emsp;Der Schismakrieg<br>
-&emsp;&emsp;Der Aufstieg der Milites<br>
-&emsp;&emsp;Die Normandie-Krise<br>
-&emsp;Haus Flambeau im Jahr 1220<br>
-&emsp;&emsp;Hauskultur<br>
-&emsp;&emsp;Der Primus<br>
-&emsp;&emsp;Domus Magna<br>
-&emsp;&emsp;Beitritt zu Haus Flambeau<br>
-&emsp;&emsp;Societas Flambonis: Die Milites<br>
-&emsp;&emsp;Societas Flambonis: Der Kult des Merkur<br>
-&emsp;&emsp;Societas Flambonis: Die Mithraier<br>
-&emsp;Flambeau-Konzepte<br>
-&emsp;&emsp;Hopliten<br>
-&emsp;&emsp;Kreuzritter<br>
-&emsp;&emsp;Dämonenjäger und Exorzisten<br>
-&emsp;&emsp;Duellanten und Streiter<br>
-&emsp;&emsp;Söldner und Abenteurer<br>
-&emsp;&emsp;Staatsmänner und Redner<br>
-&emsp;&emsp;Jäger und Drachentöter<br>
-&emsp;&emsp;Gesetzlose und Schurken<br>
-&emsp;Flambeau-Turniere<br>
-&emsp;&emsp;Certamen<br>
-&emsp;&emsp;Dimicatio<br>
-&emsp;&emsp;Buhurt der Magier<br>
-&emsp;&emsp;Besondere Herausforderungen<br>
-&emsp;&emsp;Unterhaltung und Nebenveranstaltungen<br>
-&emsp;Krieg der Zauberer<br>
-&emsp;&emsp;Der Krieg der Zauberer und der Orden<br>
-&emsp;&emsp;Gründe, den Krieg der Zauberer zu erklären<br>
-&emsp;&emsp;Vorbereitung auf den Krieg der Zauberer<br>
-&emsp;&emsp;Den Krieg der Zauberer führen<br>
-&emsp;Schulen des Magischen Kampfes<br>
-&emsp;&emsp;Wahl einer Schule<br>
-&emsp;&emsp;Beispielschulen des Magischen Kampfes<br>
-&emsp;&emsp;Die Schule des Gründers<br>
-&emsp;&emsp;Die Schule des Apromor<br>
-&emsp;&emsp;Die Schule des Boreas<br>
-&emsp;&emsp;Die Schule des Ramius<br>
-&emsp;&emsp;Die Schulen des Sebastian<br>
-&emsp;&emsp;Die Schule des Vilano<br>
-&emsp;Regeln für Haus Flambeau<br>
-&emsp;&emsp;Ansehen im Haus<br>
-&emsp;&emsp;Neue Fehler<br>
-&emsp;&emsp;Miles<br>
-&emsp;&emsp;Regeln für Magischen Kampf<br>
-&emsp;&emsp;&emsp;Unsichtbar kämpfen<br>
-&emsp;&emsp;&emsp;Einen unsichtbaren Charakter aufspüren<br>
-&emsp;&emsp;&emsp;Unsichtbarkeit und Gruppenkampf<br>
-&emsp;&emsp;Neue Magieregeln<br>
-&emsp;&emsp;&emsp;Effektmodifikation für verzauberte Gegenstände<br>
-&emsp;&emsp;&emsp;Spezialfähigkeiten der Zaubermeisterschaft<br>
-&emsp;&emsp;&emsp;Neue Zauber<br>
+**[Kapitel Eins: Haus Flambeau](#kapitel-eins-haus-flambeau)**<br>
+&emsp;[Geschichte](#geschichte-10)<br>
+&emsp;&emsp;[Flambeau und der Frühe Orden](#flambeau-und-der-frühe-orden)<br>
+&emsp;&emsp;[Die Kontroverse um den Krieg der Zauberer](#die-kontroverse-um-den-krieg-der-zauberer)<br>
+&emsp;&emsp;[Die Zweite Generation](#die-zweite-generation)<br>
+&emsp;&emsp;[Das Ende des Gründers](#das-ende-des-gründers)<br>
+&emsp;&emsp;[Das Haus unter Apromor](#das-haus-unter-apromor)<br>
+&emsp;&emsp;[Der Schismakrieg](#der-schismakrieg)<br>
+&emsp;&emsp;[Der Aufstieg der Milites](#der-aufstieg-der-milites)<br>
+&emsp;&emsp;[Die Normannische Krise](#die-normannische-krise)<br>
+&emsp;[Haus Flambeau im Jahr 1220](#haus-flambeau-im-jahr-1220)<br>
+&emsp;&emsp;[Hauskultur](#hauskultur)<br>
+&emsp;&emsp;[Der Primus](#der-primus-1)<br>
+&emsp;&emsp;[Domus Magna](#domus-magna)<br>
+&emsp;&emsp;[Beitritt zum Haus Flambeau](#beitritt-zum-haus-flambeau)<br>
+&emsp;&emsp;[Societas Flambonis: Die Milites](#societas-flambonis-die-milites)<br>
+&emsp;&emsp;[Societas Flambonis: Der Kult des Merkur](#societas-flambonis-der-kult-des-merkur)<br>
+&emsp;&emsp;[Societas Flambonis: Die Mithräer](#societas-flambonis-die-mithräer)<br>
+&emsp;[Flambeau-Konzepte](#flambeau-konzepte)<br>
+&emsp;&emsp;[Hopliten](#hopliten)<br>
+&emsp;&emsp;[Kreuzfahrer](#kreuzfahrer)<br>
+&emsp;&emsp;[Dämonenjäger und Exorzisten](#dämonenjäger-und-exorzisten)<br>
+&emsp;&emsp;[Duellanten und Streiter](#duellanten-und-streiter)<br>
+&emsp;&emsp;[Söldner und Abenteurer](#söldner-und-abenteurer)<br>
+&emsp;&emsp;[Staatsmänner und Redner](#staatsmänner-und-redner)<br>
+&emsp;&emsp;[Jäger und Drachentöter](#jäger-und-drachentöter)<br>
+&emsp;&emsp;[Gesetzlose und Schurken](#gesetzlose-und-schurken)<br>
+&emsp;[Flambeau-Turniere](#flambeau-turniere)<br>
+&emsp;&emsp;[Certamen](#certamen)<br>
+&emsp;&emsp;[Dimicatio](#dimicatio)<br>
+&emsp;&emsp;[Buhurt der Magier](#buhurt-der-magier)<br>
+&emsp;&emsp;[Besondere Herausforderungen](#besondere-herausforderungen)<br>
+&emsp;&emsp;[Unterhaltung und Nebenwettbewerbe](#unterhaltung-und-nebenwettbewerbe)<br>
+&emsp;[Krieg der Zauberer](#krieg-der-zauberer)<br>
+&emsp;&emsp;[Der Krieg der Zauberer und der Orden](#der-krieg-der-zauberer-und-der-orden)<br>
+&emsp;&emsp;[Gründe, den Krieg der Zauberer zu erklären](#gründe-den-krieg-der-zauberer-zu-erklären)<br>
+&emsp;&emsp;[Vorbereitung auf den Krieg der Zauberer](#vorbereitung-auf-den-krieg-der-zauberer)<br>
+&emsp;&emsp;[Den Krieg der Zauberer führen](#den-krieg-der-zauberer-führen)<br>
+&emsp;[Schulen des Magischen Kampfes](#schulen-des-magischen-kampfes)<br>
+&emsp;&emsp;[Die Wahl einer Schule](#die-wahl-einer-schule)<br>
+&emsp;&emsp;[Beispielschulen des Magischen Kampfes](#beispielschulen-des-magischen-kampfes)<br>
+&emsp;&emsp;[Die Schule des Gründers](#die-schule-des-gründers)<br>
+&emsp;&emsp;[Die Schule des Apromor](#die-schule-des-apromor)<br>
+&emsp;&emsp;[Die Schule des Boreas](#die-schule-des-boreas)<br>
+&emsp;&emsp;[Die Schule des Ramius](#die-schule-des-ramius)<br>
+&emsp;&emsp;[Die Schulen des Sebastian](#die-schulen-des-sebastian)<br>
+&emsp;&emsp;[Die Schule des Vilano](#die-schule-des-vilano)<br>
+&emsp;[Regeln für Haus Flambeau](#regeln-für-haus-flambeau)<br>
+&emsp;&emsp;[Ansehen im Haus](#ansehen-im-haus)<br>
+&emsp;&emsp;[Neue Fehler](#neue-fehler-3)<br>
+&emsp;&emsp;[Miles](#miles)<br>
+&emsp;&emsp;[Regeln für Magischen Kampf](#regeln-für-magischen-kampf)<br>
+&emsp;&emsp;&emsp;[Unsichtbar kämpfen](#unsichtbar-kämpfen)<br>
+&emsp;&emsp;&emsp;[Einen unsichtbaren Charakter orten](#einen-unsichtbaren-charakter-orten)<br>
+&emsp;&emsp;&emsp;[Unsichtbarkeit und Gruppenkampf](#unsichtbarkeit-und-gruppenkampf)<br>
+&emsp;&emsp;[Neue Magieregeln](#neue-magieregeln)<br>
+&emsp;&emsp;&emsp;[Effektmodifikation für verzauberte Gegenstände](#effektmodifikation-für-verzauberte-gegenstände)<br>
+&emsp;&emsp;&emsp;[Besondere Fähigkeiten der Zaubermeisterschaft](#besondere-fähigkeiten-der-zaubermeisterschaft)<br>
+&emsp;&emsp;&emsp;[Neue Zauber](#neue-zauber-1)<br>
 
-**Kapitel Zwei: Haus Jerbiton**<br>
-&emsp;Die Geschichte des Hauses Jerbiton<br>
-&emsp;&emsp;Flavius von Jerbiton, der Gründer<br>
-&emsp;&emsp;Die Liga der Ikonophilen, die Tradition des Lehrers des Gründers<br>
-&emsp;&emsp;Die Lehrlingszeit des Gründers<br>
-&emsp;&emsp;Die Gründung Valnastiums<br>
-&emsp;&emsp;Die Gründung des Ordens des Hermes<br>
-&emsp;&emsp;Haltung zum Orden<br>
-&emsp;&emsp;Das Haus nach dem Gründer<br>
-&emsp;&emsp;Der Fall von Konstantinopel<br>
-&emsp;&emsp;Die Zukunft und die Antigones<br>
-&emsp;Geschmackvoll leben<br>
-&emsp;&emsp;Schönheit suchen<br>
-&emsp;&emsp;Hässlichkeit vermeiden<br>
-&emsp;&emsp;Geschmack<br>
-&emsp;&emsp;Kunst<br>
-&emsp;&emsp;Orte der Schönheit<br>
-&emsp;&emsp;Muße<br>
-&emsp;&emsp;Genügsamkeit<br>
-&emsp;&emsp;Intrige<br>
-&emsp;&emsp;Familie<br>
-&emsp;&emsp;Einmischung in die Welt der Sterblichen<br>
-&emsp;&emsp;Reisen<br>
-&emsp;&emsp;Fremdlehre<br>
-&emsp;&emsp;Das Itinerarium<br>
-&emsp;Paradoxographie<br>
-&emsp;&emsp;Zurschaustellung<br>
-&emsp;&emsp;Kleidung<br>
-&emsp;&emsp;Tiere<br>
-&emsp;&emsp;Etikette<br>
-&emsp;&emsp;Individuell<br>
-&emsp;&emsp;Wettbewerb<br>
-&emsp;&emsp;Zusammenarbeit<br>
-&emsp;&emsp;Geld und gute Manieren<br>
-&emsp;&emsp;Hermetische Höflichkeit und Gastfreundschaft<br>
-&emsp;Die Struktur des Hauses, so weit vorhanden<br>
-&emsp;&emsp;Der Primus<br>
-&emsp;&emsp;&emsp;Wahl des Primus<br>
-&emsp;&emsp;&emsp;Der Derzeitige Primus und seine Familie<br>
-&emsp;&emsp;&emsp;Die Richtlinien des Primus<br>
-&emsp;&emsp;Valnastium<br>
-&emsp;&emsp;Ligenmitgliedschaft<br>
-&emsp;&emsp;&emsp;Eine Liga entwerfen<br>
-&emsp;&emsp;&emsp;Beispielligen<br>
-&emsp;Gestaltungshinweise für Jerbiton-Magi<br>
-&emsp;&emsp;Weniger intelligente Magi?<br>
-&emsp;&emsp;Freie Tugend<br>
-&emsp;&emsp;Bevorzugte Tugenden und Fehler<br>
-&emsp;&emsp;Neue Tugenden und Fehler<br>
-&emsp;&emsp;&emsp;Neue Tugenden<br>
-&emsp;&emsp;&emsp;&emsp;Muse<br>
-&emsp;&emsp;&emsp;&emsp;Mystische Choreographie<br>
-&emsp;&emsp;&emsp;&emsp;Übernatürliche Schönheit<br>
-&emsp;&emsp;&emsp;Neue Fehler<br>
-&emsp;&emsp;&emsp;&emsp;Brutaler Künstler<br>
-&emsp;&emsp;&emsp;&emsp;Beneidete Schönheit<br>
-&emsp;Stadtmagie<br>
-&emsp;&emsp;Lacunae<br>
-&emsp;&emsp;Kleine Effekte und hohe Penetrationsboni<br>
-&emsp;&emsp;Subtile Zauber<br>
-&emsp;&emsp;Öffentliche Zauber<br>
-&emsp;&emsp;Wildniszauber<br>
-&emsp;&emsp;Zeremonielle Magie<br>
-&emsp;&emsp;Zaubermeisterschaft für städtische Charaktere<br>
-&emsp;&emsp;Arkane Verbindungen<br>
-&emsp;Die Erschaffung schöner Dinge<br>
-&emsp;&emsp;Schöne Gegenstände und detaillierte Illusionen<br>
-&emsp;&emsp;Creo-Magie<br>
-&emsp;&emsp;Rego-Magie<br>
-&emsp;&emsp;Verzierungen<br>
-&emsp;Wahrnehmung und Täuschung<br>
-&emsp;&emsp;Spezies<br>
-&emsp;&emsp;Der Prozess der Wahrnehmung<br>
-&emsp;&emsp;Mimikry: Illusorische Gegenstände erschaffen<br>
-&emsp;&emsp;Reisende Spezies<br>
-&emsp;&emsp;Durchsichtigkeit<br>
-&emsp;&emsp;Die Sinnesorgane treffen<br>
-&emsp;&emsp;Makroturen: Illusionen der Nähe zum Sinnesorgan<br>
-&emsp;&emsp;Synästhesie: Sinnesorgane vertauschen<br>
-&emsp;&emsp;Tricks der Interpretation<br>
-&emsp;&emsp;Anamorphosen<br>
-&emsp;&emsp;Erzeugte emotionale Voreingenommenheit<br>
-&emsp;&emsp;Verminderte geistige Fähigkeit<br>
-&emsp;&emsp;Miniaturen: Tricks mit Perspektive<br>
-&emsp;&emsp;Bewusstseinszustände<br>
-&emsp;&emsp;Gedanken verändern<br>
-&emsp;Erinnerung<br>
-&emsp;&emsp;Eingeschriebene Erinnerungen<br>
-&emsp;&emsp;Prozedurale Erinnerungen<br>
-&emsp;&emsp;Episodische Erinnerungen<br>
-&emsp;&emsp;Die Memorierung erschaffenen Wissens<br>
-&emsp;&emsp;Andere Erinnerungstricks<br>
+**[Kapitel Zwei: Haus Jerbiton](#kapitel-zwei-haus-jerbiton)**<br>
+&emsp;[Die Geschichte des Hauses Jerbiton](#die-geschichte-des-hauses-jerbiton)<br>
+&emsp;&emsp;[Flavius von Jerbiton, der Gründer](#flavius-von-jerbiton-der-gründer)<br>
+&emsp;&emsp;[Die Liga der Ikonophilen, die Tradition der Lehrmeisterin des Gründers](#die-liga-der-ikonophilen-die-tradition-der-lehrmeisterin-des-gründers)<br>
+&emsp;&emsp;[Die Lehrzeit des Gründers](#die-lehrzeit-des-gründers)<br>
+&emsp;&emsp;[Valnastium](#valnastium)<br>
+&emsp;&emsp;[Die Gründung des Ordens des Hermes](#die-gründung-des-ordens-des-hermes)<br>
+&emsp;&emsp;[Haltung gegenüber dem Orden](#haltung-gegenüber-dem-orden)<br>
+&emsp;&emsp;[Das Haus nach dem Gründer](#das-haus-nach-dem-gründer)<br>
+&emsp;&emsp;[Der Fall Konstantinopels](#der-fall-konstantinopels)<br>
+&emsp;&emsp;[Die Zukunft und die Antigonen](#die-zukunft-und-die-antigonen)<br>
+&emsp;[Geschmack](#geschmack)<br>
+&emsp;&emsp;[Suche nach Schönheit](#suche-nach-schönheit)<br>
+&emsp;&emsp;[Hässlichkeit meiden](#hässlichkeit-meiden)<br>
+&emsp;&emsp;[Geschmack](#geschmack)<br>
+&emsp;&emsp;[Kunst](#kunst)<br>
+&emsp;&emsp;[Orte der Schönheit](#orte-der-schönheit)<br>
+&emsp;&emsp;[Muße](#muße)<br>
+&emsp;&emsp;[Genügsamkeit](#genügsamkeit)<br>
+&emsp;&emsp;[Intrige](#intrige-1)<br>
+&emsp;&emsp;[Familie](#familie)<br>
+&emsp;&emsp;[Einmischung in die Angelegenheiten der Sterblichen](#einmischung-in-die-angelegenheiten-der-sterblichen)<br>
+&emsp;&emsp;[Reisen](#reisen)<br>
+&emsp;&emsp;[Fremdlehre](#fremdlehre)<br>
+&emsp;&emsp;[Das Itinerarium](#das-itinerarium)<br>
+&emsp;[Paradoxographie](#paradoxographie)<br>
+&emsp;&emsp;[Zurschaustellung](#zurschaustellung)<br>
+&emsp;&emsp;[Kleidung](#kleidung)<br>
+&emsp;&emsp;[Tiere](#tiere)<br>
+&emsp;&emsp;[Etikette](#etikette)<br>
+&emsp;&emsp;[Individuelle Darbietung](#individuelle-darbietung)<br>
+&emsp;&emsp;[Kompetitiv](#kompetitiv)<br>
+&emsp;&emsp;[Kollaborativ](#kollaborativ)<br>
+&emsp;&emsp;[Geld und gute Manieren](#geld-und-gute-manieren)<br>
+&emsp;&emsp;[Hermetische Höflichkeit und Gastfreundschaft](#hermetische-höflichkeit-und-gastfreundschaft)<br>
+&emsp;[Die Struktur, die das Haus hat](#die-struktur-die-das-haus-hat)<br>
+&emsp;&emsp;[Der Primus](#der-primus-1)<br>
+&emsp;&emsp;&emsp;[Die Wahl des Primus](#die-wahl-des-primus)<br>
+&emsp;&emsp;&emsp;[Der Derzeitige Primus und seine Familie](#der-derzeitige-primus-und-seine-familie)<br>
+&emsp;&emsp;&emsp;[Die Politik des Primus](#die-politik-des-primus)<br>
+&emsp;&emsp;[Valnastium](#valnastium)<br>
+&emsp;&emsp;[Ligamitgliedschaft](#ligamitgliedschaft)<br>
+&emsp;&emsp;&emsp;[Eine Liga entwerfen](#eine-liga-entwerfen)<br>
+&emsp;&emsp;&emsp;[Beispielligen](#beispielligen)<br>
+&emsp;[Gestaltungshinweise für Jerbiton-Magi](#gestaltungshinweise-für-jerbiton-magi)<br>
+&emsp;&emsp;[Weniger intelligente Magi?](#weniger-intelligente-magi)<br>
+&emsp;&emsp;[Freie Tugend](#freie-tugend)<br>
+&emsp;&emsp;[Bevorzugte Tugenden und Fehler](#bevorzugte-tugenden-und-fehler-1)<br>
+&emsp;&emsp;[Neue Tugenden und Fehler](#neue-tugenden-und-fehler)<br>
+&emsp;&emsp;&emsp;[Neue Tugenden](#neue-tugenden-1)<br>
+&emsp;&emsp;&emsp;&emsp;[Muse](#muse)<br>
+&emsp;&emsp;&emsp;&emsp;[Mystische Choreographie](#mystische-choreographie)<br>
+&emsp;&emsp;&emsp;&emsp;[Übernatürliche Schönheit](#übernatürliche-schönheit)<br>
+&emsp;&emsp;&emsp;[Neue Fehler](#neue-fehler-3)<br>
+&emsp;&emsp;&emsp;&emsp;[Brutaler Künstler](#brutaler-künstler)<br>
+&emsp;&emsp;&emsp;&emsp;[Beneidete Schönheit](#beneidete-schönheit)<br>
+&emsp;[Stadtmagie](#stadtmagie)<br>
+&emsp;&emsp;[Lacunae](#lacunae)<br>
+&emsp;&emsp;[Kleine Effekte und hohe Penetrationsboni](#kleine-effekte-und-hohe-penetrationsboni)<br>
+&emsp;&emsp;[Subtile Zauber](#subtile-zauber)<br>
+&emsp;&emsp;[Öffentliche Zauber](#öffentliche-zauber)<br>
+&emsp;&emsp;[Wildniszauber](#wildniszauber)<br>
+&emsp;&emsp;[Zeremonielles Zaubern](#zeremonielles-zaubern)<br>
+&emsp;&emsp;[Zaubermeisterschaft für städtische Charaktere](#zaubermeisterschaft-für-städtische-charaktere)<br>
+&emsp;&emsp;[Arkane Verbindungen](#arkane-verbindungen)<br>
+&emsp;[Die Erschaffung schöner Dinge](#die-erschaffung-schöner-dinge)<br>
+&emsp;&emsp;[Schöne Gegenstände und detaillierte Illusionen](#schöne-gegenstände-und-detaillierte-illusionen)<br>
+&emsp;&emsp;[Creo-Magie](#creo-magie)<br>
+&emsp;&emsp;[Rego-Magie](#rego-magie)<br>
+&emsp;&emsp;[Schnörkel](#schnörkel)<br>
+&emsp;[Wahrnehmung und Täuschung](#wahrnehmung-und-täuschung)<br>
+&emsp;&emsp;[Species](#species)<br>
+&emsp;&emsp;[Der Vorgang der Wahrnehmung](#der-vorgang-der-wahrnehmung)<br>
+&emsp;&emsp;[Mimikry: Illusionäre Gegenstände erschaffen](#mimikry-illusionäre-gegenstände-erschaffen)<br>
+&emsp;&emsp;[Wandernde Species](#wandernde-species)<br>
+&emsp;&emsp;[Transparenz](#transparenz)<br>
+&emsp;&emsp;[Die Sinnesorgane treffen](#die-sinnesorgane-treffen)<br>
+&emsp;&emsp;[Makroturen: Illusionen der Nähe zum Sinnesorgan](#makroturen-illusionen-der-nähe-zum-sinnesorgan)<br>
+&emsp;&emsp;[Synästhesie: Sinnesorgane austauschen](#synästhesie-sinnesorgane-austauschen)<br>
+&emsp;&emsp;[Tricks der Interpretation](#tricks-der-interpretation)<br>
+&emsp;&emsp;[Anamorphe](#anamorphe)<br>
+&emsp;&emsp;[Erzeugte emotionale Voreingenommenheit](#erzeugte-emotionale-voreingenommenheit)<br>
+&emsp;&emsp;[Verminderte geistige Fähigkeit](#verminderte-geistige-fähigkeit)<br>
+&emsp;&emsp;[Miniaturen: Tricks mit Perspektive](#miniaturen-tricks-mit-perspektive)<br>
+&emsp;&emsp;[Bewusstseinszustände](#bewusstseinszustände)<br>
+&emsp;&emsp;[Gedanken verändern](#gedanken-verändern)<br>
+&emsp;[Eingeschriebene Erinnerungen](#eingeschriebene-erinnerungen)<br>
+&emsp;&emsp;[Eingeschriebene Erinnerungen](#eingeschriebene-erinnerungen)<br>
+&emsp;&emsp;[Prozedurale Erinnerungen](#prozedurale-erinnerungen)<br>
+&emsp;&emsp;[Episodische Erinnerungen](#episodische-erinnerungen)<br>
+&emsp;&emsp;[Das Einprägen erschaffenen Wissens](#das-einprägen-erschaffenen-wissens)<br>
+&emsp;&emsp;[Weitere Gedächtnisstricks](#weitere-gedächtnisstricks)<br>
 
-**Kapitel Drei: Haus Tytalus**<br>
-&emsp;Geschichte<br>
-&emsp;&emsp;Tytalus der Zauberer<br>
-&emsp;&emsp;Tytalus der Magus<br>
-&emsp;&emsp;Das Haus nach Tytalus<br>
-&emsp;&emsp;Der Verrat<br>
-&emsp;&emsp;Der Schismakrieg und seine Folgen<br>
-&emsp;&emsp;Primi im Krieg<br>
-&emsp;Die Philosophie des Konflikts<br>
-&emsp;&emsp;Der Antagonismus zwischen Physis und Nomos<br>
-&emsp;&emsp;Kallikleische Ethik<br>
-&emsp;&emsp;Hippianische Ethik<br>
-&emsp;&emsp;Wachstum durch Konflikt<br>
-&emsp;&emsp;Werkzeuge des Konflikts<br>
-&emsp;&emsp;&emsp;Rivalität<br>
-&emsp;&emsp;&emsp;Überredung<br>
-&emsp;&emsp;&emsp;Gewalt<br>
-&emsp;Kultur<br>
-&emsp;&emsp;Verehrung des Gründers<br>
-&emsp;&emsp;Gleichheit<br>
-&emsp;&emsp;Pädagogik<br>
-&emsp;&emsp;Persönlichkeit<br>
-&emsp;&emsp;Geliebte Rivalen<br>
-&emsp;&emsp;Eristische Versammlungen<br>
-&emsp;&emsp;Lehrlingszeit<br>
-&emsp;&emsp;&emsp;Die Lehrlingsprüfung<br>
-&emsp;&emsp;&emsp;Beitritt zu Haus Tytalus<br>
-&emsp;&emsp;Kabalen<br>
-&emsp;Intrige<br>
-&emsp;&emsp;Tytalanische Agenten<br>
-&emsp;&emsp;&emsp;Spione<br>
-&emsp;&emsp;&emsp;Kriminelle Agenten<br>
-&emsp;&emsp;&emsp;Schläger<br>
-&emsp;&emsp;&emsp;Doppelagenten und feindliche Übernahmen<br>
-&emsp;&emsp;Verkleidungen und Personae<br>
-&emsp;&emsp;&emsp;Kurzfristige Verkleidungen<br>
-&emsp;&emsp;&emsp;Deckidentitäten<br>
-&emsp;&emsp;&emsp;Personae<br>
-&emsp;Die Hohe Kunst der Debatte<br>
-&emsp;&emsp;Meinungsverschiedenheiten beilegen<br>
-&emsp;&emsp;Argumente gewinnen<br>
-&emsp;&emsp;Fall-Entscheidungen<br>
-&emsp;Charaktere<br>
-&emsp;&emsp;Neue Tugenden<br>
-&emsp;&emsp;&emsp;Lepra-Magus<br>
-&emsp;&emsp;&emsp;Persona<br>
-&emsp;&emsp;Neue Fehler<br>
-&emsp;&emsp;&emsp;Lepra<br>
-&emsp;&emsp;&emsp;Geliebter Rivale<br>
-&emsp;&emsp;&emsp;Titanoi<br>
-&emsp;&emsp;&emsp;Lepra-Magi<br>
-&emsp;Magie<br>
-&emsp;&emsp;Magie für die Debattierarena<br>
-&emsp;&emsp;Die Magie der Nachahmung<br>
-&emsp;&emsp;Die Magie der Intrige<br>
-&emsp;&emsp;Die Magie der Titanoi<br>
-&emsp;&emsp;Die Magie der Lepra-Magi<br>
+**[Kapitel Drei: Haus Tytalus](#kapitel-drei-haus-tytalus)**<br>
+&emsp;[Geschichte](#geschichte-10)<br>
+&emsp;&emsp;[Tytalus der Zauberer](#tytalus-der-zauberer)<br>
+&emsp;&emsp;[Tytalus der Magus](#tytalus-der-magus)<br>
+&emsp;&emsp;[Das Haus nach Tytalus](#das-haus-nach-tytalus)<br>
+&emsp;&emsp;[Der Verrat](#der-verrat)<br>
+&emsp;&emsp;[Der Schismakrieg und seine Folgen](#der-schismakrieg-und-seine-folgen)<br>
+&emsp;&emsp;[Primi im Krieg](#primi-im-krieg)<br>
+&emsp;[Die Philosophie des Konflikts](#die-philosophie-des-konflikts)<br>
+&emsp;&emsp;[Der Antagonismus zwischen Physis und Nomos](#der-antagonismus-zwischen-physis-und-nomos)<br>
+&emsp;&emsp;[Kallikleische Ethik](#kallikleische-ethik)<br>
+&emsp;&emsp;[Hippianische Ethik](#hippianische-ethik)<br>
+&emsp;&emsp;[Wachstum durch Konflikt](#wachstum-durch-konflikt)<br>
+&emsp;&emsp;[Werkzeuge des Konflikts](#werkzeuge-des-konflikts)<br>
+&emsp;&emsp;&emsp;[Rivalität](#rivalität)<br>
+&emsp;&emsp;&emsp;[Überredung](#überredung)<br>
+&emsp;&emsp;&emsp;[Kraft](#kraft)<br>
+&emsp;[Kultur](#kultur-9)<br>
+&emsp;&emsp;[Verehrung des Gründers](#verehrung-des-gründers)<br>
+&emsp;&emsp;[Gleichheit](#gleichheit)<br>
+&emsp;&emsp;[Pädagogik](#pädagogik)<br>
+&emsp;&emsp;[Persönlichkeit](#persönlichkeit)<br>
+&emsp;&emsp;[Geliebte Rivalen](#geliebte-rivalen)<br>
+&emsp;&emsp;[Eristische Versammlungen](#eristische-versammlungen)<br>
+&emsp;&emsp;[Lehrzeit](#lehrzeit)<br>
+&emsp;&emsp;&emsp;[Die Lehrlingsprüfung](#die-lehrlingsprüfung)<br>
+&emsp;&emsp;&emsp;[Beitritt zu Haus Tytalus](#beitritt-zu-haus-tytalus)<br>
+&emsp;&emsp;[Kabalen](#kabalen)<br>
+&emsp;[Intrige](#intrige-1)<br>
+&emsp;&emsp;[Tytalische Agenturen](#tytalische-agenturen)<br>
+&emsp;&emsp;&emsp;[Spione](#spione)<br>
+&emsp;&emsp;&emsp;[Kriminelle Agenten](#kriminelle-agenten)<br>
+&emsp;&emsp;&emsp;[Schläger](#schläger)<br>
+&emsp;&emsp;&emsp;[Doppelagenten und feindliche Übernahmen](#doppelagenten-und-feindliche-übernahmen)<br>
+&emsp;&emsp;[Verkleidungen und Personae](#verkleidungen-und-personae)<br>
+&emsp;&emsp;&emsp;[Kurzzeitige Verkleidungen](#kurzzeitige-verkleidungen)<br>
+&emsp;&emsp;&emsp;[Deckidentitäten](#deckidentitäten)<br>
+&emsp;&emsp;&emsp;[Personae](#personae)<br>
+&emsp;[Die Hohe Kunst der Debatte](#die-hohe-kunst-der-debatte)<br>
+&emsp;&emsp;[Meinungsverschiedenheiten beilegen](#meinungsverschiedenheiten-beilegen)<br>
+&emsp;&emsp;[Argumente gewinnen](#argumente-gewinnen)<br>
+&emsp;&emsp;[Fall-Entscheidungen](#fall-entscheidungen)<br>
+&emsp;[Charaktere](#charaktere-9)<br>
+&emsp;&emsp;[Neue Tugenden](#neue-tugenden-1)<br>
+&emsp;&emsp;&emsp;[Lepra-Magus](#lepra-magus)<br>
+&emsp;&emsp;&emsp;[Persona](#persona)<br>
+&emsp;&emsp;[Neue Fehler](#neue-fehler-3)<br>
+&emsp;&emsp;&emsp;[Lepra](#lepra)<br>
+&emsp;&emsp;&emsp;[Geliebter Rivale](#geliebter-rivale)<br>
+&emsp;&emsp;&emsp;[Titanoi](#titanoi)<br>
+&emsp;&emsp;&emsp;[Lepra-Magi](#lepra-magi)<br>
+&emsp;[Magie](#magie-1)<br>
+&emsp;&emsp;[Magie für die Debattierarena](#magie-für-die-debattierarena)<br>
+&emsp;&emsp;[Die Magie der Nachahmung](#die-magie-der-nachahmung)<br>
+&emsp;&emsp;[Die Magie der Intrige](#die-magie-der-intrige)<br>
+&emsp;&emsp;[Die Magie der Titanoi](#die-magie-der-titanoi)<br>
+&emsp;&emsp;[Die Magie der Lepra-Magi](#die-magie-der-lepra-magi)<br>
 
-**Kapitel Vier: Haus Ex Miscellanea**<br>
-&emsp;Geschichte<br>
-&emsp;Kultur<br>
-&emsp;&emsp;Regierung des Hauses Ex Miscellanea<br>
-&emsp;Magie<br>
-&emsp;&emsp;Übernatürliche Fertigkeiten<br>
-&emsp;&emsp;&emsp;Die Grundlagen<br>
-&emsp;&emsp;&emsp;Eine übernatürliche Fertigkeit entwerfen<br>
-&emsp;&emsp;&emsp;Beispiele für übernatürliche Fertigkeiten<br>
-&emsp;&emsp;&emsp;Tiere rufen<br>
-&emsp;&emsp;&emsp;Den Wind heraufpfeifen<br>
-&emsp;&emsp;&emsp;Fruchtbarkeit kontrollieren<br>
-&emsp;&emsp;Magi Ex Miscellanea ohne große übernatürliche Fertigkeit<br>
-&emsp;Charaktere<br>
-&emsp;&emsp;Magi Ex Miscellanea<br>
-&emsp;&emsp;Magi Orbi<br>
-&emsp;&emsp;Begabte Gefährten<br>
-&emsp;&emsp;Neue Tugend<br>
-&emsp;&emsp;&emsp;Exotisches Zaubern<br>
-&emsp;&emsp;Neue Fehler<br>
-&emsp;&emsp;&emsp;Fehlerhafte Kräfte<br>
-&emsp;&emsp;&emsp;Anfällig gegen Volksmagie-Tradition<br>
-&emsp;Traditionen des Hauses Ex Miscellanea<br>
-&emsp;&emsp;Bestienmeister<br>
-&emsp;&emsp;Damhadh-Duidsan<br>
-&emsp;&emsp;Hermetische Haruspices<br>
-&emsp;&emsp;Karäer<br>
-&emsp;&emsp;Malocchi<br>
-&emsp;&emsp;Scinnfolk (Begabte Gefährten)<br>
-&emsp;&emsp;Tempestaria (Wetterhexe)<br>
-&emsp;&emsp;Hexen von Thessalien<br>
-&emsp;&emsp;Columbae<br>
-&emsp;&emsp;&emsp;Eckdaten<br>
-&emsp;&emsp;&emsp;Geschichte<br>
-&emsp;&emsp;&emsp;Kultur<br>
-&emsp;&emsp;&emsp;Charaktere<br>
-&emsp;&emsp;&emsp;Große Übernatürliche Tugend: Schutzkreismagie<br>
-&emsp;&emsp;&emsp;Kleine Hermetische Tugend: Ring/Kreis-Magie<br>
-&emsp;&emsp;&emsp;Großer Hermetischer Fehler: Notwendige Bedingung<br>
-&emsp;&emsp;Die Donatores Requietis Aeternae<br>
-&emsp;&emsp;&emsp;Eckdaten<br>
-&emsp;&emsp;&emsp;Geschichte<br>
-&emsp;&emsp;&emsp;Kult der Toten<br>
-&emsp;&emsp;&emsp;Gründung der Tradition<br>
-&emsp;&emsp;&emsp;Aufnahme in den Orden<br>
-&emsp;&emsp;&emsp;Kultur<br>
-&emsp;&emsp;&emsp;Die Ruhelosen Toten besänftigen<br>
-&emsp;&emsp;&emsp;Traditionen der Donatores Requietis Aeternae<br>
-&emsp;&emsp;&emsp;Organisation<br>
-&emsp;&emsp;&emsp;Überwachung durch Haus Guernicus<br>
-&emsp;&emsp;&emsp;Charaktere<br>
-&emsp;&emsp;&emsp;Neue Tugend: Verbannung<br>
-&emsp;&emsp;&emsp;Bevorzugte Tugenden und Fehler<br>
-&emsp;&emsp;&emsp;Bevorzugte Zauber<br>
-&emsp;&emsp;Der Kult des Orpheus<br>
-&emsp;&emsp;&emsp;Eckdaten<br>
-&emsp;&emsp;&emsp;Geschichte<br>
-&emsp;&emsp;&emsp;Kultur<br>
-&emsp;&emsp;&emsp;Charaktere<br>
-&emsp;&emsp;&emsp;Große Allgemeine Tugend: Sanguinischer Segen<br>
-&emsp;&emsp;&emsp;Kleine Hermetische Tugend: Orphische Magie<br>
-&emsp;&emsp;&emsp;Großer Hermetischer Fehler: Einschränkung (Wahres Gefühl)<br>
-&emsp;&emsp;&emsp;Orphische Zauber<br>
-&emsp;&emsp;Die Pharmakopoianer<br>
-&emsp;&emsp;&emsp;Eckdaten<br>
-&emsp;&emsp;&emsp;Geschichte<br>
-&emsp;&emsp;&emsp;Kultur<br>
-&emsp;&emsp;&emsp;Charaktere<br>
-&emsp;&emsp;&emsp;Beruf: Apotheker<br>
-&emsp;&emsp;&emsp;Große Übernatürliche Tugend: Mythisches Kräuterwissen<br>
-&emsp;&emsp;&emsp;Kleine Hermetische Tugend: Wurzelschneiderin<br>
-&emsp;&emsp;Die Abstammungslinie der Pralix<br>
-&emsp;&emsp;&emsp;Eckdaten<br>
-&emsp;&emsp;&emsp;Geschichte<br>
-&emsp;&emsp;&emsp;Kultur<br>
-&emsp;&emsp;&emsp;Aufnahme von Heckenzauberern in den Orden<br>
-&emsp;&emsp;&emsp;Gemeinsame Ausbildung von Lehrlingen<br>
-&emsp;&emsp;&emsp;Charaktere<br>
-&emsp;&emsp;&emsp;Neue Große Übernatürliche Tugend: Magie begreifen<br>
-&emsp;&emsp;&emsp;Neue Übernatürliche Fertigkeit: Magie begreifen*<br>
-&emsp;&emsp;&emsp;Andere magische Interessen<br>
-&emsp;&emsp;&emsp;Neue Zauber<br>
-&emsp;&emsp;&emsp;Neue Meisterschafts-Spezialfähigkeit: Entwirren<br>
-&emsp;&emsp;&emsp;Neue Meisterschafts-Spezialfähigkeit: Widerlegung<br>
-&emsp;&emsp;Rusticani<br>
-&emsp;&emsp;&emsp;Eckdaten<br>
-&emsp;&emsp;&emsp;Geschichte<br>
-&emsp;&emsp;&emsp;Kultur<br>
-&emsp;&emsp;&emsp;Charaktere<br>
-&emsp;&emsp;&emsp;Große Übernatürliche Tugend: Handwerksmagie<br>
-&emsp;&emsp;&emsp;Kleine Hermetische Tugend: Zauberfoki<br>
-&emsp;&emsp;&emsp;Großer Hermetischer Fehler: Schwache Spontane Magie<br>
-&emsp;&emsp;Hermetische Sahirs<br>
-&emsp;&emsp;&emsp;Eckdaten<br>
-&emsp;&emsp;&emsp;Geschichte<br>
-&emsp;&emsp;&emsp;Kultur<br>
-&emsp;&emsp;&emsp;Beziehung zu den nicht-hermetischen Sahirs<br>
-&emsp;&emsp;&emsp;Charaktere<br>
-&emsp;&emsp;&emsp;Große Übernatürliche Tugend: Sihr<br>
-&emsp;&emsp;&emsp;Hermetische Magie<br>
-&emsp;&emsp;Seirenes<br>
-&emsp;&emsp;&emsp;Eckdaten<br>
-&emsp;&emsp;&emsp;Geschichte<br>
-&emsp;&emsp;&emsp;Kultur<br>
-&emsp;&emsp;&emsp;Charaktere<br>
-&emsp;&emsp;&emsp;Sirenengesang<br>
-&emsp;&emsp;&emsp;Agenten werden direkt kontrolliert<br>
-&emsp;&emsp;&emsp;Agenten handeln als Vermittler<br>
-&emsp;&emsp;&emsp;Agenten entwerfen<br>
-&emsp;&emsp;&emsp;Agenten bei der Charaktererschaffung rekrutieren<br>
-&emsp;&emsp;&emsp;Rekrutierte Agenten als Geschichtsbelohnungen<br>
-&emsp;&emsp;&emsp;Agenten einsetzen<br>
-&emsp;&emsp;&emsp;Verwirrende Situationen<br>
-&emsp;&emsp;&emsp;Agenten aufrechterhalten<br>
+**[Kapitel Vier: Haus Ex Miscellanea](#kapitel-vier-haus-ex-miscellanea)**<br>
+&emsp;[Geschichte](#geschichte-10)<br>
+&emsp;[Kultur](#kultur-9)<br>
+&emsp;&emsp;[Die Verwaltung des Hauses Ex Miscellanea](#die-verwaltung-des-hauses-ex-miscellanea)<br>
+&emsp;[Magie](#magie-1)<br>
+&emsp;&emsp;[Übernatürliche Fertigkeiten](#übernatürliche-fertigkeiten)<br>
+&emsp;&emsp;&emsp;[Die Grundlagen](#die-grundlagen)<br>
+&emsp;&emsp;&emsp;[Entwurf einer Übernatürlichen Fertigkeit](#entwurf-einer-übernatürlichen-fertigkeit)<br>
+&emsp;&emsp;&emsp;[Beispiele für übernatürliche Fertigkeiten](#beispiele-für-übernatürliche-fertigkeiten)<br>
+&emsp;&emsp;&emsp;[Tiere rufen](#tiere-rufen)<br>
+&emsp;&emsp;&emsp;[Den Wind herbeipfeifen](#den-wind-herbeipfeifen)<br>
+&emsp;&emsp;&emsp;[Fruchtbarkeit beherrschen](#fruchtbarkeit-beherrschen)<br>
+&emsp;&emsp;[Magi Ex Miscellanea ohne eine Große Übernatürliche Fertigkeit](#magi-ex-miscellanea-ohne-eine-große-übernatürliche-fertigkeit)<br>
+&emsp;[Charaktere](#charaktere-9)<br>
+&emsp;&emsp;[Magi Ex Miscellanea](#magi-ex-miscellanea)<br>
+&emsp;&emsp;[Magi Orbi](#magi-orbi)<br>
+&emsp;&emsp;[Begabte Gefährten](#begabte-gefährten)<br>
+&emsp;&emsp;[Neue Tugend](#neue-tugend)<br>
+&emsp;&emsp;&emsp;[Exotisches Zaubern](#exotisches-zaubern)<br>
+&emsp;&emsp;[Neue Fehler](#neue-fehler-3)<br>
+&emsp;&emsp;&emsp;[Fehlerhafte Kräfte](#fehlerhafte-kräfte)<br>
+&emsp;&emsp;&emsp;[Anfällig für Volkszauber](#anfällig-für-volkszauber)<br>
+&emsp;[Traditionen des Hauses Ex Miscellanea](#traditionen-des-hauses-ex-miscellanea)<br>
+&emsp;&emsp;[Tiermeister](#tiermeister)<br>
+&emsp;&emsp;[Damhadh-Duidsan](#damhadh-duidsan)<br>
+&emsp;&emsp;[Hermetische Haruspexe](#hermetische-haruspexe)<br>
+&emsp;&emsp;[Karäer](#karäer)<br>
+&emsp;&emsp;[Malocchi](#malocchi)<br>
+&emsp;&emsp;[Scinnfolk (Begabte Gefährten)](#scinnfolk-begabte-gefährten)<br>
+&emsp;&emsp;[Tempestaria (Wetterhexe)](#tempestaria-wetterhexe)<br>
+&emsp;&emsp;[Hexen von Thessalien](#hexen-von-thessalien)<br>
+&emsp;&emsp;[Columbae](#columbae)<br>
+&emsp;&emsp;&emsp;[Eckdaten](#eckdaten-10)<br>
+&emsp;&emsp;&emsp;[Geschichte](#geschichte-10)<br>
+&emsp;&emsp;&emsp;[Kultur](#kultur-9)<br>
+&emsp;&emsp;&emsp;[Charaktere](#charaktere-9)<br>
+&emsp;&emsp;&emsp;[Große Übernatürliche Tugend: Schutzkreismagie](#große-übernatürliche-tugend-schutzkreismagie)<br>
+&emsp;&emsp;&emsp;[Kleine Hermetische Tugend: Ring/Kreis-Magie](#kleine-hermetische-tugend-ringkreis-magie)<br>
+&emsp;&emsp;&emsp;[Großer Hermetischer Fehler: Notwendige Bedingung](#großer-hermetischer-fehler-notwendige-bedingung)<br>
+&emsp;&emsp;[Die Donatores Requietis Aeternae](#die-donatores-requietis-aeternae)<br>
+&emsp;&emsp;&emsp;[Eckdaten](#eckdaten-10)<br>
+&emsp;&emsp;&emsp;[Geschichte](#geschichte-10)<br>
+&emsp;&emsp;&emsp;[Kult der Toten](#kult-der-toten)<br>
+&emsp;&emsp;&emsp;[Gründung der Tradition](#gründung-der-tradition)<br>
+&emsp;&emsp;&emsp;[Aufnahme von Heckenzauberern in den Orden](#aufnahme-von-heckenzauberern-in-den-orden)<br>
+&emsp;&emsp;&emsp;[Kultur](#kultur-9)<br>
+&emsp;&emsp;&emsp;[Die ruhelosen Toten zur Ruhe bringen](#die-ruhelosen-toten-zur-ruhe-bringen)<br>
+&emsp;&emsp;&emsp;[Traditionen der Donatores Requietis Aeternae](#traditionen-der-donatores-requietis-aeternae)<br>
+&emsp;&emsp;&emsp;[Organisation](#organisation)<br>
+&emsp;&emsp;&emsp;[Überwachung durch Haus Guernicus](#überwachung-durch-haus-guernicus)<br>
+&emsp;&emsp;&emsp;[Charaktere](#charaktere-9)<br>
+&emsp;&emsp;&emsp;[Neue Tugend: Verbannung](#neue-tugend-verbannung)<br>
+&emsp;&emsp;&emsp;[Bevorzugte Tugenden und Fehler](#bevorzugte-tugenden-und-fehler-1)<br>
+&emsp;&emsp;&emsp;[Bevorzugte Zauber](#bevorzugte-zauber)<br>
+&emsp;&emsp;[Der Kult des Orpheus](#der-kult-des-orpheus)<br>
+&emsp;&emsp;&emsp;[Eckdaten](#eckdaten-10)<br>
+&emsp;&emsp;&emsp;[Geschichte](#geschichte-10)<br>
+&emsp;&emsp;&emsp;[Kultur](#kultur-9)<br>
+&emsp;&emsp;&emsp;[Charaktere](#charaktere-9)<br>
+&emsp;&emsp;&emsp;[Große Allgemeine Tugend, Sanguinischer Segen](#große-allgemeine-tugend-sanguinischer-segen)<br>
+&emsp;&emsp;&emsp;[Kleine Hermetische Tugend: Orphische Magie](#kleine-hermetische-tugend-orphische-magie)<br>
+&emsp;&emsp;&emsp;[Großer Hermetischer Fehler: Einschränkung (Wahres Gefühl)](#großer-hermetischer-fehler-einschränkung-wahres-gefühl)<br>
+&emsp;&emsp;&emsp;[Orphische Zauber](#orphische-zauber)<br>
+&emsp;&emsp;[Die Pharmakopoianer](#die-pharmakopoianer)<br>
+&emsp;&emsp;&emsp;[Eckdaten](#eckdaten-10)<br>
+&emsp;&emsp;&emsp;[Geschichte](#geschichte-10)<br>
+&emsp;&emsp;&emsp;[Kultur](#kultur-9)<br>
+&emsp;&emsp;&emsp;[Charaktere](#charaktere-9)<br>
+&emsp;&emsp;&emsp;[Beruf (Apotheker)](#beruf-apotheker)<br>
+&emsp;&emsp;&emsp;[Große Übernatürliche Tugend: Mythisches Kräuterwissen](#große-übernatürliche-tugend-mythisches-kräuterwissen)<br>
+&emsp;&emsp;&emsp;[Kleine Hermetische Tugend: Wurzelschneiderin](#kleine-hermetische-tugend-wurzelschneiderin)<br>
+&emsp;&emsp;[Die Abstammungslinie der Pralix](#die-abstammungslinie-der-pralix)<br>
+&emsp;&emsp;&emsp;[Eckdaten](#eckdaten-10)<br>
+&emsp;&emsp;&emsp;[Geschichte](#geschichte-10)<br>
+&emsp;&emsp;&emsp;[Kultur](#kultur-9)<br>
+&emsp;&emsp;&emsp;[Aufnahme von Heckenzauberern in den Orden](#aufnahme-von-heckenzauberern-in-den-orden)<br>
+&emsp;&emsp;&emsp;[Gemeinsame Ausbildung von Lehrlingen](#gemeinsame-ausbildung-von-lehrlingen)<br>
+&emsp;&emsp;&emsp;[Charaktere](#charaktere-9)<br>
+&emsp;&emsp;&emsp;[Magie](#magie-1)<br>
+&emsp;&emsp;&emsp;[Magie](#magie-1)<br>
+&emsp;&emsp;&emsp;[Weitere magische Interessen](#weitere-magische-interessen)<br>
+&emsp;&emsp;&emsp;[Neue Zauber](#neue-zauber-1)<br>
+&emsp;&emsp;&emsp;[Neue besondere Meisterschaftsfähigkeit: Entwirren](#neue-besondere-meisterschaftsfähigkeit-entwirren)<br>
+&emsp;&emsp;&emsp;[Neue besondere Meisterschaftsfähigkeit: Erwiderung](#neue-besondere-meisterschaftsfähigkeit-erwiderung)<br>
+&emsp;&emsp;[Rustikale Magi](#rustikale-magi)<br>
+&emsp;&emsp;&emsp;[Eckdaten](#eckdaten-10)<br>
+&emsp;&emsp;&emsp;[Geschichte](#geschichte-10)<br>
+&emsp;&emsp;&emsp;[Kultur](#kultur-9)<br>
+&emsp;&emsp;&emsp;[Charaktere](#charaktere-9)<br>
+&emsp;&emsp;&emsp;[Große Übernatürliche Tugend: Handwerksmagie](#große-übernatürliche-tugend-handwerksmagie)<br>
+&emsp;&emsp;&emsp;[Kleine Hermetische Tugend: Zauberfoki](#kleine-hermetische-tugend-zauberfoki)<br>
+&emsp;&emsp;&emsp;[Großer Hermetischer Fehler: Schwache Spontane Magie](#großer-hermetischer-fehler-schwache-spontane-magie)<br>
+&emsp;&emsp;[Hermetische Sahirs](#hermetische-sahirs)<br>
+&emsp;&emsp;&emsp;[Eckdaten](#eckdaten-10)<br>
+&emsp;&emsp;&emsp;[Geschichte](#geschichte-10)<br>
+&emsp;&emsp;&emsp;[Kultur](#kultur-9)<br>
+&emsp;&emsp;&emsp;[Beziehung zu den nicht-hermetischen Sahirs](#beziehung-zu-den-nicht-hermetischen-sahirs)<br>
+&emsp;&emsp;&emsp;[Charaktere](#charaktere-9)<br>
+&emsp;&emsp;&emsp;[Große Übernatürliche Tugend: Sihr](#große-übernatürliche-tugend-sihr)<br>
+&emsp;&emsp;&emsp;[Hermetische Magie](#hermetische-magie)<br>
+&emsp;&emsp;[Seirenen](#seirenen)<br>
+&emsp;&emsp;&emsp;[Eckdaten](#eckdaten-10)<br>
+&emsp;&emsp;&emsp;[Geschichte](#geschichte-10)<br>
+&emsp;&emsp;&emsp;[Kultur](#kultur-9)<br>
+&emsp;&emsp;&emsp;[Charaktere](#charaktere-9)<br>
+&emsp;&emsp;&emsp;[Sirenengesang](#sirenengesang)<br>
+&emsp;&emsp;&emsp;[Agenten werden direkt geführt](#agenten-werden-direkt-geführt)<br>
+&emsp;&emsp;&emsp;[Agenten als Mittler](#agenten-als-mittler)<br>
+&emsp;&emsp;&emsp;[Agenten entwerfen](#agenten-entwerfen)<br>
+&emsp;&emsp;&emsp;[Agenten bei der Charaktererschaffung rekrutieren](#agenten-bei-der-charaktererschaffung-rekrutieren)<br>
+&emsp;&emsp;&emsp;[Rekrutierte Agenten als Geschichtsbelohnungen](#rekrutierte-agenten-als-geschichtsbelohnungen)<br>
+&emsp;&emsp;&emsp;[Agenten einsetzen](#agenten-einsetzen)<br>
+&emsp;&emsp;&emsp;[Erschwerende Umstände](#erschwerende-umstände)<br>
+&emsp;&emsp;&emsp;[Agenturen pflegen](#agenturen-pflegen)<br>
 
 # Einführung: Societates
 
@@ -523,7 +523,7 @@ Die Art, in der Flambeau seinen zweiten Lehrling ausbildete, scheint eine Reakti
 > 
 > **Liber de Lumine („Buch des Lichts"):** Tractatus über Ignem, Qualität 11. Wie der Titel andeutet, befasst sich dieses Buch mit dem Licht als einem Aspekt der Form Ignem.
 > 
-> **De Magia Sympathetica („Über sympathetische Magie"):** Tractatus über Magietheorie, Qualität 11. Dieses Buch behandelt Arkane Verbindungen und das verwandte Thema der sympathetischen Verbindungen (die einen Penetrationsbonus gewähren; siehe ArMDE, Seite 84). Obwohl von Elaines Forschungen zur Penetration inspiriert, ist sein Inhalt rein theoretisch und auf alle Arten des Zauberns anwendbar. Es ist gleichermaßen scharfsinnig wie rigoros.
+> **De Magia Sympathetica („Über sympathetische Magie"):** Tractatus über Magietheorie, Qualität 11. Dieses Buch behandelt Arkane Verbindungen und das verwandte Thema der sympathetischen Verbindungen (die einen Penetrationsbonus gewähren; siehe ArMDE, [Seite 84](<Ars Magica Definitive Edition Basisregeln.md#sympathetische-verbindungen>)). Obwohl von Elaines Forschungen zur Penetration inspiriert, ist sein Inhalt rein theoretisch und auf alle Arten des Zauberns anwendbar. Es ist gleichermaßen scharfsinnig wie rigoros.
 > 
 > **De Potestate et Obligatione („Über Macht und Verantwortung"):** Tractatus über Philosophiae, Qualität 11. Eine Abhandlung über den verantwortungsvollen und ethischen Einsatz der Magie. Elaine vertritt die Auffassung, dass die Gabe von Gott verliehen wird, um Magi herauszuheben, und ihnen sowohl besondere Kräfte als auch eine besondere Verantwortung gibt, Seinem Willen zu dienen. Ihre Philosophie ist offenkundig vom *Gottesstaat* des heiligen Augustinus beeinflusst.
 
@@ -595,7 +595,7 @@ Am Ende war es Haus Flambeau, das den Konflikt beendete. Angeführt von den Mili
 
 Haus Flambeau hat eine sehr lose innere Organisation. Obwohl es keine formelle Hierarchie und keine Hausämter außer dem des Primus gibt, besteht eine lose Rangordnung, die auf individuellem Ansehen beruht. Flambeau-Magi legen großen Wert auf praktische Fähigkeiten: Wer bedeutende Leistungen erbringt, gewinnt Respekt und Status im Haus. Andererseits können Magi, die wenig erreichen oder einen Widerwillen gegen das Handeln zeigen, an Status verlieren. Die angesehensten Mitglieder des Hauses sind gewöhnlich Magi mittleren Alters, die viele Siege und Errungenschaften vorweisen können, aber in hermetischen Angelegenheiten aktiv und engagiert bleiben.
 
-Um das Prestigesystem innerhalb des Hauses Flambeau abzubilden, stellt der Regelabschnitt dieses Kapitels Mechaniken für das Ansehen im Haus vor, eine Form der Reputation. Es ähnelt dem System des Ansehens im Haus für Haus Bonisagus, das in *Häuser des Hermes: Wahre Linien* (Seite 21) beschrieben wird, ist aber nicht identisch damit.
+Um das Prestigesystem innerhalb des Hauses Flambeau abzubilden, stellt der Regelabschnitt dieses Kapitels Mechaniken für das Ansehen im Haus vor, eine Form der Reputation. Es ähnelt dem System des Ansehens im Haus für Haus Bonisagus, das in *Häuser des Hermes: Wahre Linien* ([Seite 21](<Ars Magica 5e - Häuser des Hermes - Wahre Linien.md#ansehen-im-haus-status-in-haus-bonisagus>)) beschrieben wird, ist aber nicht identisch damit.
 
 Haus Flambeau versucht, häufige Zusammenkünfte abzuhalten. Es wird hauptsächlich durch Korpsgeist zusammengehalten, weshalb Versammlungen als wichtig für den Zusammenhalt des Hauses gelten. Die meisten Haustreffen sind gesellschaftliche Anlässe. Flambeau-Magi erzählen gern Geschichten bei Krügen voll Bier, debattieren über ihre bevorzugten Künste oder Kampftaktiken und halten gelegentlich ein freundschaftliches Certamen ab. Zunehmend umfassen Flambeau-Treffen auch eine organisierte, kampfbezogene Aktivität wie eine Jagd oder ein Turnier, was die Kameradschaft weiter stärkt und den Magi hilft, ihre Kampffertigkeiten zu verfeinern.
 
@@ -795,9 +795,9 @@ Merkurische Riten haben die Bräuche des Ordens des Hermes stark beeinflusst. Vi
 > 
 > **Empfohlene Tugenden:** Makellose Magie, Merkurische Magie; Zyklische Magie, Gemeisterte Zauber, Methodischer Zauberer, Vorahnungen, Student der Magie
 > 
-> **Empfohlene Fehler:** Starre Magie, Schwache Spontane Magie, Heide (siehe *Häuser des Hermes: Wahre Linien*, Seite 109); Zyklische Magie, Schwierige Spontane Magie, Langsamer Zauberer, Anfälligkeit für Göttliche Kraft, Visionen
+> **Empfohlene Fehler:** Starre Magie, Schwache Spontane Magie, Heide (siehe *Häuser des Hermes: Wahre Linien*, [Seite 109](<Ars Magica 5e - Häuser des Hermes - Wahre Linien.md#heide>)); Zyklische Magie, Schwierige Spontane Magie, Langsamer Zauberer, Anfälligkeit für Göttliche Kraft, Visionen
 > 
-> Magi, die dem Kult angehören, haben auch Zugang zu allen speziellen Zaubermeisterschafts-Fähigkeiten, die im Regelabschnitt dieses Kapitels aufgeführt werden.
+> Magi, die dem Kult angehören, haben auch Zugang zu allen besonderen Meisterschaftsfähigkeiten, die im Regelabschnitt dieses Kapitels aufgeführt werden.
 
 Die heidnischen Insignien des Kults werden von vielen als töricht oder gar blasphemisch angesehen, doch nur wenige Merkurier nehmen sie ernst. So wie die meisten Magi nicht glauben, dass der Name „Orden des Hermes" mehr als symbolisch ist, verwenden Merkurier „Götter", „Segen" und „Opfergaben" als Begriffe, die die große Geschichte der Magie heraufbeschwören, nicht als gotteslästerliche Praktiken. Etliche Kultmitglieder betrachten sich sowohl als Christen wie auch als Merkurier.
 
@@ -879,7 +879,7 @@ Flambeau-Magi, die sich auf den Kampf gegen Dämonen spezialisieren, bevorzugen 
 
 Manchmal ist die beste Verteidigung einer Maga dagegen, Ziel eines Krieges der Zauberer zu werden, ein höherrangiger Magus des Hauses Flambeau, der geschworen hat, sie zu rächen. Der Periphere Kodex hindert Magi nicht daran, den Krieg der Zauberer zu erklären, um erschlagene Freunde und Verbündete zu rächen. Flambeau-Magi, besonders jene mit einem Sinn für Ritterlichkeit, sind oft bereit, ein öffentliches Racheschwur abzulegen, um andere Magi davon abzuschrecken, den Krieg zu erklären. Sie schwören, jedem Magus den Krieg der Zauberer zu erklären, der zuerst ihrem Verbündeten den Krieg erklärt.
 
-Die rechtliche Grundlage für diese Praxis geht auf das Normannische Tribunal von 898 n. Chr. zurück, das Dominicus von Haus Jerbiton von Schuld freisprach, als er den Krieg der Zauberer nutzte, um einen Amicus zu rächen, der in einem anderen Krieg der Zauberer getötet worden war (siehe *Häuser des Hermes: Wahre Linien*, Seite 48). Der vorsitzende Quaesitor entschied, dass die Formulierung des Kodex, „keine Vergeltung soll den Magus treffen, der mich erschlägt", nur bedeutet, dass der Orden den Sieger eines Krieges der Zauberer nicht bestrafen wird. Andere Magi, die den Verlierer des Krieges der Zauberer rächen wollen, steht es frei, dies zu tun, sofern sie den Krieg in Übereinstimmung mit dem Peripheren Kodex erklären und führen.
+Die rechtliche Grundlage für diese Praxis geht auf das Normannische Tribunal von 898 n. Chr. zurück, das Dominicus von Haus Jerbiton von Schuld freisprach, als er den Krieg der Zauberer nutzte, um einen Amicus zu rächen, der in einem anderen Krieg der Zauberer getötet worden war (siehe *Häuser des Hermes: Wahre Linien*, [Seite 48](<Ars Magica 5e - Häuser des Hermes - Wahre Linien.md#krieg-der-zauberer>)). Der vorsitzende Quaesitor entschied, dass die Formulierung des Kodex, „keine Vergeltung soll den Magus treffen, der mich erschlägt", nur bedeutet, dass der Orden den Sieger eines Krieges der Zauberer nicht bestrafen wird. Andere Magi, die den Verlierer des Krieges der Zauberer rächen wollen, steht es frei, dies zu tun, sofern sie den Krieg in Übereinstimmung mit dem Peripheren Kodex erklären und führen.
 
 Magi haben verschiedene Gründe, warum sie sich zum Rächer eines anderen Zauberers machen könnten. Sie können enge Freunde (Amici) eines anderen Magus sein und ihn beschützen wollen. Manche Flambeau-Magi sind schlicht etwas blutdürstig und geloben, andere Magi zu rächen, in der Hoffnung, die Chance zu einem Krieg der Zauberer zu erhalten. Andere motiviert ihr Sinn für Ritterlichkeit, schwächere Magi gegen Schikane und Aggression zu verteidigen. Manchmal bietet ein Magus, der Schutz sucht, Bezahlung oder Gefälligkeiten im Gegenzug für einen Racheschwur.
 
@@ -955,7 +955,7 @@ Die normalen Certamen-Regeln werden für Turnierwettbewerbe abgeändert. Der jü
 
 Eine weitere beliebte Turnierdisziplin ist die Dimicatio, was „Wettkampf" oder „Schlacht" bedeutet.
 
-Sie steht in keiner Verbindung zum gewöhnlichen Certamen. Die Wettkämpfer versuchen, echte Zauber aufeinander zu wirken, wobei sie die Option „Kraftloses Zaubern" nutzen (siehe Kasten). Jeder Magus verwendet eine schnellgewirkte Verteidigung (ArM5, Seite 83), um den gegnerischen Zauber abzuwehren. Der Magus, dessen Zauber zuerst die Parma seines Gegners erreicht, ist der Sieger.
+Sie steht in keiner Verbindung zum gewöhnlichen Certamen. Die Wettkämpfer versuchen, echte Zauber aufeinander zu wirken, wobei sie die Option „Kraftloses Zaubern" nutzen (siehe Kasten). Jeder Magus verwendet eine schnellgewirkte Verteidigung (ArM5, [Seite 83](<Ars Magica Definitive Edition Basisregeln.md#worte-und-gesten>)), um den gegnerischen Zauber abzuwehren. Der Magus, dessen Zauber zuerst die Parma seines Gegners erreicht, ist der Sieger.
 
 Selbstverständlich birgt dieser Wettbewerb erhebliche Gefahren. Gezielte Zauber, die die Magieresistenz umgehen, sind streng verboten. Der Wettbewerb wird immer unter streng kontrollierten Bedingungen vor einem Schiedsrichter und vielen Zuschauern ausgetragen. Der Schiedsrichter verwendet einen Intellego-Vim-Zauber wie *Der Blick auf aktive Magien*, um den Sieger zu bestimmen. Wenn ein Zauber eines Magus tatsächlich die Parma seines Gegners durchdringt, gilt dies als Regelverstoß, und es wird umgehend eine hermetische Untersuchung eingeleitet. Die Wettbewerbsregeln erlauben jeden Zauber, der direkt auf den Gegner abzielt – und je höher die Stufe des Zaubers, desto schwieriger ist er abzuwehren. *Kugel der abgründigen Flamme* ist ein wahrer Publikumsliebling.
 
@@ -963,9 +963,9 @@ Da die Dimicatio großes Potenzial für Unfälle oder Regelbruch birgt, wollen e
 
 > ## Die Dimicatio im Detail
 > 
-> Wenn du eine Dimicatio durchspielen möchtest, verwende die normalen Kampfregeln. Die Wettkämpfer beginnen auf Stimme-Reichweite voneinander. Der Wettbewerb beginnt mit einem Glockenschlag oder einem anderen Signal. Beide Wettkämpfer würfeln ihre Initiative, und der Gewinner wirkt den ersten Angriffszauber. Der Verteidiger muss dann eine schnellgewirkte Verteidigung einsetzen. Die Regeln für schnellgewirkte Verteidigung finden sich auf Seite 83 von ArM5.
+> Wenn du eine Dimicatio durchspielen möchtest, verwende die normalen Kampfregeln. Die Wettkämpfer beginnen auf Stimme-Reichweite voneinander. Der Wettbewerb beginnt mit einem Glockenschlag oder einem anderen Signal. Beide Wettkämpfer würfeln ihre Initiative, und der Gewinner wirkt den ersten Angriffszauber. Der Verteidiger muss dann eine schnellgewirkte Verteidigung einsetzen. Die Regeln für schnellgewirkte Verteidigung finden sich auf [Seite 83](<Ars Magica Definitive Edition Basisregeln.md#worte-und-gesten>) von ArM5.
 > 
-> Der Spielleiter muss mit etwas Urteilsvermögen entscheiden, ob eine bestimmte Form-Technik-Kombination als Verteidigung gegen einen bestimmten Zauber wirksam ist, wobei er die Faustregel beachten sollte, dass eine schnellgewirkte Verteidigung mit der Hälfte der Stufe des ankommenden Zaubers gewöhnlich ausreicht. Wenn beispielsweise ein Magus *Kugel der abgründigen Flamme* (CrIg 35) wirkt, könnte sein Gegner sich mit Creo Aquam verteidigen (um das Feuer zu löschen), Rego Ignem (um den Feuerball abzulenken) oder sogar Creo Herbam (um einen Holzschild zu erschaffen). Perdo-Vim-Verteidigungen können funktionieren, müssen aber die normalen Regeln zur Auflösung von Magie erfüllen (ArM5, Seite 160). Das wird schwierig, wenn der Verteidiger die Form nicht identifizieren kann.
+> Der Spielleiter muss mit etwas Urteilsvermögen entscheiden, ob eine bestimmte Form-Technik-Kombination als Verteidigung gegen einen bestimmten Zauber wirksam ist, wobei er die Faustregel beachten sollte, dass eine schnellgewirkte Verteidigung mit der Hälfte der Stufe des ankommenden Zaubers gewöhnlich ausreicht. Wenn beispielsweise ein Magus *Kugel der abgründigen Flamme* (CrIg 35) wirkt, könnte sein Gegner sich mit Creo Aquam verteidigen (um das Feuer zu löschen), Rego Ignem (um den Feuerball abzulenken) oder sogar Creo Herbam (um einen Holzschild zu erschaffen). Perdo-Vim-Verteidigungen können funktionieren, müssen aber die normalen Regeln zur Auflösung von Magie erfüllen (ArM5, [Seite 160](<Ars Magica Definitive Edition Basisregeln.md#auflösung>)). Das wird schwierig, wenn der Verteidiger die Form nicht identifizieren kann.
 > 
 > Gelingt die Verteidigung, darf der Verteidiger in seinem eigenen Zug der Initiativereihenfolge einen Angriffszauber wirken. Der Zyklus wiederholt sich gemäß dem normalen Kampfablauf. Die Wettbewerbsregeln gestatten es Magi, Vis einzusetzen, wenn sie es wünschen.
 
@@ -988,9 +988,9 @@ Das Buhurt der Magier ist ein Turnier *au plaisance*, ein Wettbewerb zum Vergnü
 > 
 > Selbst mit diesen Regeln ist die Gefahr eines versehentlichen Todes oder einer Verletzung so groß, dass viele Quaesitores entsetzt sind, dass diese Disziplin überhaupt existiert.
 
-### Spezialherausforderungen
+### Besondere Herausforderungen
 
-Turniere können auch eine Spezialherausforderung umfassen, die sich der Gastgeber des Turniers ausgedacht hat. Eine grobe Beschreibung der Herausforderung wird im Vorfeld des eigentlichen Turniers angekündigt, damit die Teilnehmer wissen, was sie erwartet, wenn sie die Qualifikationsrunde überstehen. Die Herausforderung kann alles sein, was der Gastgeber zu arrangieren beschließt, doch sie ist in der Regel etwas Dramatisches und möglicherweise Gefährliches. Beispiele wären ein Wettbewerb, ein magisches Juwel zu stehlen, das von Trollen bewacht wird, oder ein Wettrennen durch ein Labyrinth voller magischer Fallen. Auch hier missbilligen gewisse Quaesitores (und andere Magi im Allgemeinen) die Spezialherausforderungen, weil sie oft gefährlich sind und bisweilen die Grenze zur Belästigung der Feen überschreiten.
+Turniere können auch eine besondere Herausforderung umfassen, die sich der Gastgeber des Turniers ausgedacht hat. Eine grobe Beschreibung der Herausforderung wird im Vorfeld des eigentlichen Turniers angekündigt, damit die Teilnehmer wissen, was sie erwartet, wenn sie die Qualifikationsrunde überstehen. Die Herausforderung kann alles sein, was der Gastgeber zu arrangieren beschließt, doch sie ist in der Regel etwas Dramatisches und möglicherweise Gefährliches. Beispiele wären ein Wettbewerb, ein magisches Juwel zu stehlen, das von Trollen bewacht wird, oder ein Wettrennen durch ein Labyrinth voller magischer Fallen. Auch hier missbilligen gewisse Quaesitores (und andere Magi im Allgemeinen) die besonderen Herausforderungen, weil sie oft gefährlich sind und bisweilen die Grenze zur Belästigung der Feen überschreiten.
 
 ### Unterhaltung und Nebenwettbewerbe
 
@@ -1065,7 +1065,7 @@ Die meisten Magi in Kriegen der Zauberer marschieren nicht einfach kühn hinaus,
 
 Zu siegen – oder auch nur zu überleben – im Krieg der Zauberer ist ebenso eine Frage der Gerissenheit wie roher Kampfkraft. Ein Feind kann nicht angreifen, was er nicht finden kann. Flambeau der Gründer war nicht imstande, alle Zauberer aufzuspüren, die seinen Meister getötet hatten, weil er in Intellego schwach war. Der besonnene Magus bleibt verborgen und setzt Zauber ein wie *Der spurlose Schritt*, *Verkleidung des verwandelten Bildes* oder *Schleier der Unsichtbarkeit*. Der Erfolg im Krieg der Zauberer hängt wesentlich davon ab, über eine Kombination von Zaubern für Angriff, Verteidigung, Tarnung und Aufklärung zu verfügen.
 
-Der Ausgang eines Krieges der Zauberer kann davon abhängen, ob ein Magus eine Arkane Verbindung zum anderen erlangt. Der eigentliche Wert einer Arkanen Verbindung liegt im Bonus, den sie auf den Penetrationsmultiplikator gewährt (siehe ArM5, Seite 84). Im Prinzip erlaubt sie auch, Zauber aus der Ferne auf den Feind zu wirken: *Die unerbittliche Suche*, um sein Versteck zu finden, oder *Den immateriellen Tunnel öffnen*, um ihn direkt anzugreifen. In der Praxis sind solche Fernzauber wirkungslos, wenn der Zaubernde keine hohe Penetrationssumme erzielen kann.
+Der Ausgang eines Krieges der Zauberer kann davon abhängen, ob ein Magus eine Arkane Verbindung zum anderen erlangt. Der eigentliche Wert einer Arkanen Verbindung liegt im Bonus, den sie auf den Penetrationsmultiplikator gewährt (siehe ArM5, [Seite 84](<Ars Magica Definitive Edition Basisregeln.md#arkane-verbindungen>)). Im Prinzip erlaubt sie auch, Zauber aus der Ferne auf den Feind zu wirken: *Die unerbittliche Suche*, um sein Versteck zu finden, oder *Den immateriellen Tunnel öffnen*, um ihn direkt anzugreifen. In der Praxis sind solche Fernzauber wirkungslos, wenn der Zaubernde keine hohe Penetrationssumme erzielen kann.
 
 Es ist ein Grundprinzip der Selbstverteidigung, dem Feind keine Arkane Verbindung zu sich selbst zu hinterlassen. Das ist leichter gesagt als getan: ein verlorenes Haar, ein Schweißtropfen oder sogar ein Robenfaden, der an einem Zweig hängen geblieben ist, können allesamt Arkane Verbindungen sein, die Stunden oder Tage andauern. Intellego-Corpus-Zauber können solche Verbindungen wie Haare, Blut und abgestoßene Haut finden. Wenn ein Magus daran denkt, nach Arkanen Verbindungen zu sich selbst zu suchen, kann er sie anschließend mit Perdo-Vim-Magie zerstören.
 
@@ -1121,7 +1121,7 @@ Feuer hat mehrere Vorteile als Waffe. Ignem-Zauber verursachen im Vergleich zu a
 
 Die Schule des Gründers ist aus all diesen Gründen beliebt, doch selbst ihre eifrigsten Anhänger räumen ein, dass sie Schwachstellen hat. Eine der lästigsten besteht darin, dass manche potenziellen Feinde gegen Feuer resistent sind. Drachen beispielsweise sind manchmal feuerresistent, und sogar manche Menschen besitzen eine magisch verliehene Immunität gegen Feuer (die Große Immunität-Übernatürliche Tugend). (Dämonen in **Ars Magica Fifth Edition** sind nicht häufiger feuerresistent als Kreaturen aus anderen übernatürlichen Sphären.) Anhänger der Schule des Gründers müssen gegen feuerresistente Gegner auf alternative Taktiken zurückgreifen.
 
-Obwohl Feuermagie eine gewisse Fähigkeit besitzt, Ziele indirekt zu treffen, müssen die schadensstärkeren Zauber die Magieresistenz durchdringen. „Ignem" ist eine häufige Spezialisierung in der Parma-Magica-Fertigkeit (siehe ArM5, Seite 66). Die Zaubermeisterschafts-Spezialfähigkeit „Magieresistenz" verdoppelt die Magieresistenz eines Magus gegen den gemeisterten Zauber (ArM5, Seite 87). Magi, die sich ernsthaft gegen Feuermagie schützen wollen, meistern vielleicht solche Flambeau-Standardzauber wie *Pilum aus Feuer* und *Kugel der abgründigen Flamme*. Das macht die Schule des Gründers zu einer der Schulen, gegen die feindliche Magi sich am leichtesten verteidigen können.
+Obwohl Feuermagie eine gewisse Fähigkeit besitzt, Ziele indirekt zu treffen, müssen die schadensstärkeren Zauber die Magieresistenz durchdringen. „Ignem" ist eine häufige Spezialisierung in der Parma-Magica-Fertigkeit (siehe ArM5, [Seite 66](<Ars Magica Definitive Edition Basisregeln.md#parma-magica-1>)). Die besondere Meisterschaftsfähigkeit „Magieresistenz" verdoppelt die Magieresistenz eines Magus gegen den gemeisterten Zauber (ArM5, [Seite 87](<Ars Magica Definitive Edition Basisregeln.md#besondere-fähigkeiten-gemeisterter-zauber>)). Magi, die sich ernsthaft gegen Feuermagie schützen wollen, meistern vielleicht solche Flambeau-Standardzauber wie *Pilum aus Feuer* und *Kugel der abgründigen Flamme*. Das macht die Schule des Gründers zu einer der Schulen, gegen die feindliche Magi sich am leichtesten verteidigen können.
 
 Glücklicherweise muss man nur wenige Zauber erlernen (und meistern), da derselbe Zauber gegen so viele verschiedene Arten von Gegnern eingesetzt werden kann und wiederholtes Wirken (oder mehrfaches Wirken) ebenso wirksam ist wie das erste. Besonders für Magi, die über eine Hermetische Tugend verfügen, die ihre Feuerzauber verbessert, ist die Schule des Gründers eine der am leichtesten zu entwickelnden Schulen für einen durchdringungsstarken, geradlinigen, vielseitigen Angriff.
 
@@ -1155,17 +1155,17 @@ Im Vergleich zur Schule des Gründers bietet die Schule des Apromor eine Reihe v
 > 
 > **Verbessere die Penetration-Fertigkeit:** Die Verbesserung von Fertigkeiten ist in Bezug auf Erfahrungspunkte kostspielig, und es mag wirksamer erscheinen, einfach die Künste auszubauen. Doch Penetration ist mächtiger als es auf den ersten Blick scheint. Erstens verbessert die Penetration-Fertigkeit die Penetration aller Zauber, nicht nur derer einer einzelnen Kunst. Zweitens wirken die meisten Boni, die der Penetration helfen, als Multiplikator auf die Penetration-Fertigkeit. Je höher die eigene Penetration-Fertigkeit, desto mehr Nutzen zieht man aus den Boni.
 > 
-> **Nutze die Zaubermeisterschaft:** Ziehe die Spezialfähigkeit „Penetration" in Betracht (ArM5, Seite 87). Zaubermeisterschaft erhöht auch die Zaubersumme des Zaubers, hat also einen zweiten (indirekten) Effekt auf die Penetration.
+> **Nutze die Zaubermeisterschaft:** Ziehe die Meisterschaftsfähigkeit „Penetration" in Betracht (ArM5, [Seite 87](<Ars Magica Definitive Edition Basisregeln.md#besondere-fähigkeiten-gemeisterter-zauber>)). Zaubermeisterschaft erhöht auch die Zaubersumme des Zaubers, hat also einen zweiten (indirekten) Effekt auf die Penetration.
 > 
-> **Beschaffe eine Arkane Verbindung:** Erlange wenn möglich eine Arkane Verbindung zum Ziel. Je nach Dauer der Verbindung kann sie einen Bonus auf die Penetration gewähren (ArM5, Seite 84).
+> **Beschaffe eine Arkane Verbindung:** Erlange wenn möglich eine Arkane Verbindung zum Ziel. Je nach Dauer der Verbindung kann sie einen Bonus auf die Penetration gewähren (ArM5, [Seite 84](<Ars Magica Definitive Edition Basisregeln.md#arkane-verbindungen>)).
 > 
-> **Nutze sympathetische Verbindungen:** Wenn ein Magus eine Arkane Verbindung besitzt, sollte er versuchen, auch eine sympathetische Verbindung zu nutzen (ArM5, Seite 84). Mit etwas Vorbereitung kann man wahrscheinlich den Spitznamen oder den Geburtsnamen des Ziels in Erfahrung bringen, was eine Erhöhung des Penetrationsmultiplikators um +1 einbringt (zur Erinnerung: Taufnamen können nicht als sympathetische Verbindungen genutzt werden). Mit etwas mehr Vorbereitung kann man eine symbolische Darstellung des Ziels anfertigen (sofern man über eine gute Handwerk-Fertigkeit verfügt), die einen weiteren +2 auf den Multiplikator gewährt. Diese Boni sind kumulativ; wenn man also sowohl den Namen als auch ein Bild seines Ziels hat, beträgt der Multiplikator ×4 (×1 als Ausgangswert, +1 für den Namen, +2 für die symbolische Darstellung).
+> **Nutze sympathetische Verbindungen:** Wenn ein Magus eine Arkane Verbindung besitzt, sollte er versuchen, auch eine sympathetische Verbindung zu nutzen (ArM5, [Seite 84](<Ars Magica Definitive Edition Basisregeln.md#sympathetische-verbindungen>)). Mit etwas Vorbereitung kann man wahrscheinlich den Spitznamen oder den Geburtsnamen des Ziels in Erfahrung bringen, was eine Erhöhung des Penetrationsmultiplikators um +1 einbringt (zur Erinnerung: Taufnamen können nicht als sympathetische Verbindungen genutzt werden). Mit etwas mehr Vorbereitung kann man eine symbolische Darstellung des Ziels anfertigen (sofern man über eine gute Handwerk-Fertigkeit verfügt), die einen weiteren +2 auf den Multiplikator gewährt. Diese Boni sind kumulativ; wenn man also sowohl den Namen als auch ein Bild seines Ziels hat, beträgt der Multiplikator ×4 (×1 als Ausgangswert, +1 für den Namen, +2 für die symbolische Darstellung).
 
-Perdo-Zauber sind weniger auffällig als das Schleudern von Feuerblitzen. Wenn Gegner plötzlich blutende Wunden entwickeln oder lautlos tot umfallen, können Umstehende zwar erkennen, dass Magie im Spiel ist, aber sie haben es weitaus schwerer, denjenigen zu identifizieren, der die Zauber gewirkt hat. Im allgemeinen Schlachtgetümmel kann es sogar schwierig sein, bestimmte Perdo-Effekte überhaupt zu bemerken: Ist das Schwert des Ritters durch einen Unfall zerbrochen oder durch Magie? Apromor selbst warf seine Zauber mit Vorliebe ohne Gesten; viele, die seiner Schule folgen, nutzen die Zaubermeisterschafts-Spezialfähigkeit „Stilles Zaubern" (ArM5, Seite 87), um ihre Zauber unauffälliger zu machen. Dies kann weiter getrieben werden, indem man Zauber ohne Stimme wirkt, doch die meisten Standard-Perdo-Zauber haben Reichweite Stimme, und der Zaubernde müsste Varianten mit längerer Reichweite (und höherer Stufe) erfinden, um von solchen Taktiken voll zu profitieren.
+Perdo-Zauber sind weniger auffällig als das Schleudern von Feuerblitzen. Wenn Gegner plötzlich blutende Wunden entwickeln oder lautlos tot umfallen, können Umstehende zwar erkennen, dass Magie im Spiel ist, aber sie haben es weitaus schwerer, denjenigen zu identifizieren, der die Zauber gewirkt hat. Im allgemeinen Schlachtgetümmel kann es sogar schwierig sein, bestimmte Perdo-Effekte überhaupt zu bemerken: Ist das Schwert des Ritters durch einen Unfall zerbrochen oder durch Magie? Apromor selbst warf seine Zauber mit Vorliebe ohne Gesten; viele, die seiner Schule folgen, nutzen die besondere Meisterschaftsfähigkeit „Stilles Zaubern" (ArM5, [Seite 87](<Ars Magica Definitive Edition Basisregeln.md#besondere-fähigkeiten-gemeisterter-zauber>)), um ihre Zauber unauffälliger zu machen. Dies kann weiter getrieben werden, indem man Zauber ohne Stimme wirkt, doch die meisten Standard-Perdo-Zauber haben Reichweite Stimme, und der Zaubernde müsste Varianten mit längerer Reichweite (und höherer Stufe) erfinden, um von solchen Taktiken voll zu profitieren.
 
 Perdo-Zauber beschränken sich nicht auf offensive Anwendungen. Experten in der Technik Perdo können Unsichtbarkeitszauber erlernen oder Perdo-Mentem-Zauber, die helfen, einen Kampf zu vermeiden, wie *Beruhigung des bewegten Herzens*. Es gibt eine Reihe von Perdo-Zaubern, die für indirekte Angriffe genutzt werden können, welche die Magieresistenz des Gegners umgehen. *Grube der klaffenden Erde* ist ein Beispiel, und sie kann auch dazu dienen, Verteidigungsgräben und dergleichen zu schaffen. Das Auflösen von Magie ist ein Perdo-Effekt. Hochstufige Perdo-Effekte können sogar Eigenschaften von Objekten entfernen und sie sich auf ungewöhnliche, aber nützliche Weise verhalten lassen. Zum Beispiel kann ein hochstufiger Perdo-Corpus-Zauber eine Person schwerelos machen.
 
-Trotz ihrer größeren Vielseitigkeit hat die Schule des Apromor Schwächen. Die meisten Angriffe in der Schule des Apromor müssen die Magieresistenz durchdringen. Magi, die dieser Schule folgen, müssen daher knappe Studienzeit der Penetration-Fertigkeit und der Zaubermeisterschaft widmen. Dies wird etwas dadurch ausgeglichen, dass in der Schule des Apromor eine größere Vielfalt an indirekten Angriffen zur Verfügung steht: Wenn man die Parma Magica eines Feindes nicht durchdringen kann, kann man ihn vielleicht verletzen, indem man das Gebäude über ihm zum Einsturz bringt (*Das Ende der mächtigen Burg*, ArM5, Seite 155).
+Trotz ihrer größeren Vielseitigkeit hat die Schule des Apromor Schwächen. Die meisten Angriffe in der Schule des Apromor müssen die Magieresistenz durchdringen. Magi, die dieser Schule folgen, müssen daher knappe Studienzeit der Penetration-Fertigkeit und der Zaubermeisterschaft widmen. Dies wird etwas dadurch ausgeglichen, dass in der Schule des Apromor eine größere Vielfalt an indirekten Angriffen zur Verfügung steht: Wenn man die Parma Magica eines Feindes nicht durchdringen kann, kann man ihn vielleicht verletzen, indem man das Gebäude über ihm zum Einsturz bringt (*Das Ende der mächtigen Burg*, ArM5, [Seite 155](<Ars Magica Definitive Edition Basisregeln.md#das-ende-der-mächtigen-burg>)).
 
 Die Schule des Apromor verlangt von einem Magus, mehrere verschiedene Formen zu erlernen, um verschiedene Arten von Gegnern beeinflussen zu können. Perdo-Corpus-Zauber nützen nichts gegen Dämonen oder Tiere. Anhänger der Schule des Apromor erzielen die besten Penetrationssummen, indem sie versuchen, ihr Studium zwischen Perdo, den Formen und den Fertigkeiten Penetration und Zaubermeisterschaft auszubalancieren. Das macht sie zu einer der studienintensivsten Schulen. Magi müssen Prioritäten setzen und legen oft den Schwerpunkt auf Perdo und Penetration, mit einem sekundären Schwerpunkt auf wichtige Formen und die Meisterschaft bestimmter Zauber. Je enger sich ein Magus auf die Formen konzentriert, desto mehr opfert er von der inhärenten Vielseitigkeit der Schule.
 
@@ -1191,7 +1191,7 @@ Die hauptsächliche Einschränkung der Schule des Boreas ist das sehr begrenzte 
 
 Die Schule des Ramius versucht, die Magieresistenz eines Gegners gänzlich zu ignorieren, indem sie sich auf nichtmagische, physische Angriffe stützt. Die Schule setzt Magie ein, um die eigene Kampffähigkeit des Magus zu verbessern, wobei der Schwerpunkt üblicherweise auf magischer Verteidigung statt auf Angriff liegt. Ramius war ein mittelrangiges Mitglied des Hauses Tremere, das nach der Zertrennung von Tremere im Jahre 848 n. Chr. zum Haus Flambeau überlief. Er war sowohl im weltlichen Waffenhandwerk als auch in der Magie bewandert. Ramius behauptete, die Betonung auf die Überwindung von Magieresistenz führe dazu, dass Magi sich überspezialisierten, was ihre Wirksamkeit sowohl als Zauberer als auch als Krieger verringere. Er ging nach Iberia und schloss sich dem Kampf des Hauses Flambeau gegen die maurischen Zauberer an, wo er seine Methode des Einsatzes weltlicher Angriffe unterstützt durch magische Verstärkungen perfektionierte.
 
-Die Schule des Ramius favorisiert keine Zauber wie *Die Schärfe der Klinge* oder *Klinge der wütenden Flamme*, um die physischen Angriffe eines Magus zu verbessern. Wenn eine Waffe durch solche Zauber verzaubert wird, kann die Magieresistenz sie aufhalten. Stattdessen bevorzugen die Anhänger des Ramius weltlichen Stahl und setzen Magie zur Verbesserung ihrer Verteidigung oder allgemeinen Kampfkraft ein. Einige beliebte Zauber innerhalb der Schule sind *Wams aus undurchdringlicher Seide* (ArM5, Seite 118), *Ross der Rache* (ArM5, Seite 119), *Gabe der Bärenstärke* (ArM5, Seite 131), *Ausdauer der Berserker* (ArM5, S. 134), *Schrei vor dem nahenden Schaft* (ArM5, Seite 136), *Schutz vor Hitze und Flammen* (ArM5, Seite 143) und *Schleier der Unsichtbarkeit* (ArM5, Seite 146). Persönliche Bannzauber (Bannzauber mit den Parametern Persönlich/Sonne/Individuum anstelle von Berührung/Ring/Kreis) werden ebenfalls sehr häufig zum Schutz entweder gegen Waffen oder gegen übernatürliche Kreaturen eingesetzt.
+Die Schule des Ramius favorisiert keine Zauber wie *Die Schärfe der Klinge* oder *Klinge der wütenden Flamme*, um die physischen Angriffe eines Magus zu verbessern. Wenn eine Waffe durch solche Zauber verzaubert wird, kann die Magieresistenz sie aufhalten. Stattdessen bevorzugen die Anhänger des Ramius weltlichen Stahl und setzen Magie zur Verbesserung ihrer Verteidigung oder allgemeinen Kampfkraft ein. Einige beliebte Zauber innerhalb der Schule sind *Wams aus undurchdringlicher Seide* (ArM5, [Seite 118](<Ars Magica Definitive Edition Basisregeln.md#wams-aus-undurchdringlicher-seide>)), *Ross der Rache* (ArM5, [Seite 119](<Ars Magica Definitive Edition Basisregeln.md#ross-der-rache>)), *Gabe der Bärenstärke* (ArM5, [Seite 131](<Ars Magica Definitive Edition Basisregeln.md#gabe-der-bärenstärke>)), *Ausdauer der Berserker* (ArM5, [S. 134](<Ars Magica Definitive Edition Basisregeln.md#ausdauer-der-berserker>)), *Schrei vor dem nahenden Schaft* (ArM5, [Seite 136](<Ars Magica Definitive Edition Basisregeln.md#schrei-vor-dem-nahenden-schaft>)), *Schutz vor Hitze und Flammen* (ArM5, [Seite 143](<Ars Magica Definitive Edition Basisregeln.md#schutz-vor-hitze-und-flammen>)) und *Schleier der Unsichtbarkeit* (ArM5, [Seite 146](<Ars Magica Definitive Edition Basisregeln.md#schleier-der-unsichtbarkeit>)). Persönliche Bannzauber (Bannzauber mit den Parametern Persönlich/Sonne/Individuum anstelle von Berührung/Ring/Kreis) werden ebenfalls sehr häufig zum Schutz entweder gegen Waffen oder gegen übernatürliche Kreaturen eingesetzt.
 
 Einer der Hauptvorteile der Schule des Ramius besteht darin, dass sie von ihren Anhängern keine Spezialisierung in bestimmten Künsten verlangt. Da keine hohen Penetrationssummen nötig sind, können ihre Anhänger eklektischer in ihrer Wahl der Künste und Zauber sein. Anhänger des Ramius tendieren zu Künsten, die normalerweise nicht mit Angriffszaubern verbunden werden: Muto zur Verbesserung ihrer Rüstung und Verteidigung, Rego für persönliche Bannzauber und Corpus für Selbstverbesserung und Heilung.
 
@@ -1203,7 +1203,7 @@ Ein Anhänger des Ramius kann im Kampf noch wirksamer sein, wenn er von einer au
 
 Der Schule des Ramius fehlen magische Angriffe. Sie ist wirkungslos gegen Gegner, die physisch zu mächtig sind, um durch Schwerter Schaden zu nehmen, und eignet sich daher weitaus besser gegen Sterbliche und abtrünnige Zauberer als gegen Riesen oder große Drachen.
 
-Es gibt eine weitere, einzigartige Schwäche der Schule des Ramius: Die eigene Parma Magica des Magus kann ihn daran hindern, Zauber auf sich selbst zu wirken. Zauber mit Reichweite Persönlich umgehen stets die eigene Magieresistenz des Zaubernden (ArM5, Seite 85), doch Zauber mit Reichweite Berührung und Stimme werden widerstanden. Manche Anhänger des Ramius ziehen es vor, Varianten gängiger Zauber mit Reichweite Persönlich zu erlernen oder zu erfinden, obwohl dies die Nützlichkeit der Zauber einschränkt. Eine andere Lösung besteht darin, den Effekt mit Reichweite Persönlich in den eigenen Talisman einzubetten: Ein Talisman gilt als Teil seines Erschaffers, sodass Persönlich-Effekte im Talisman seinen Träger betreffen können (siehe ArM5, Seite 98). Anhänger der Schule des Ramius bevorzugen oft Talismane in Form von Rüstung, Kleidung oder Schmuck, damit beide Hände frei bleiben, um Waffen und Schilde zu führen.
+Es gibt eine weitere, einzigartige Schwäche der Schule des Ramius: Die eigene Parma Magica des Magus kann ihn daran hindern, Zauber auf sich selbst zu wirken. Zauber mit Reichweite Persönlich umgehen stets die eigene Magieresistenz des Zaubernden (ArM5, [Seite 85](<Ars Magica Definitive Edition Basisregeln.md#parma-magica>)), doch Zauber mit Reichweite Berührung und Stimme werden widerstanden. Manche Anhänger des Ramius ziehen es vor, Varianten gängiger Zauber mit Reichweite Persönlich zu erlernen oder zu erfinden, obwohl dies die Nützlichkeit der Zauber einschränkt. Eine andere Lösung besteht darin, den Effekt mit Reichweite Persönlich in den eigenen Talisman einzubetten: Ein Talisman gilt als Teil seines Erschaffers, sodass Persönlich-Effekte im Talisman seinen Träger betreffen können (siehe ArM5, [Seite 98](<Ars Magica Definitive Edition Basisregeln.md#talismanabstimmung>)). Anhänger der Schule des Ramius bevorzugen oft Talismane in Form von Rüstung, Kleidung oder Schmuck, damit beide Hände frei bleiben, um Waffen und Schilde zu führen.
 
 Die Schule des Ramius ist beliebt bei Magi, deren Ehrgefühl sie dazu verleitet, Fernkampfangriffe als unedel zu verachten.
 
@@ -1233,13 +1233,13 @@ Wie die Schulen des Gründers und des Apromor sind die Schulen des Sebastian auf
 > 
 > **Terram:** Klingen, geschmolzenes Metall, Stalagmiten/Stalaktiten
 > 
-> Siehe auch die Beispiele für Große und Kleine Magische Foki in ArM5, Seiten 45 und 46.
+> Siehe auch die Beispiele für Große und Kleine Magische Foki in ArM5, [Seiten 45 und 46](<Ars Magica Definitive Edition Basisregeln.md#großer-magischer-fokus>).
 
 #### Die Schule des Vilano
 
 **Empfohlene Tugend: Begabung in Finesse oder Vorsichtig mit (Finesse)**
 
-Die Schule des Vilano stützt sich auf indirekte Angriffe, die die Magieresistenz umgehen. Ein Beispiel für einen indirekten Angriff ist der Einsatz von Magie, um einen Stein über den Kopf einer Person schweben zu lassen und ihn dann fallen zu lassen. Mehrere Beispiele für indirekte Angriffe finden sich in ArM5, Seite 86.
+Die Schule des Vilano stützt sich auf indirekte Angriffe, die die Magieresistenz umgehen. Ein Beispiel für einen indirekten Angriff ist der Einsatz von Magie, um einen Stein über den Kopf einer Person schweben zu lassen und ihn dann fallen zu lassen. Mehrere Beispiele für indirekte Angriffe finden sich in ArM5, [Seite 86](<Ars Magica Definitive Edition Basisregeln.md#magieresistenz-umgehen>).
 
 Vilano war ein Flambeau-Magus des neunten Jahrhunderts aus Istrien im Transsilvanischen Tribunal. Er litt unter dem Hermetischen Fehler Schwache Magie, war aber entschlossen, sich im Kampf zu beweisen. Vilano war der erste Angehörige des Hauses Flambeau, der ausschließlich mit indirekten Zaubern Erfolg hatte, am berühmtesten, als er den Grünen Drachen von Labin erschlug, indem er ihn mit zwei fallenden Bäumen zerquetschte. Seine Taktiken sind sowohl innerhalb als auch außerhalb seines Hauses vielfach nachgeahmt worden.
 
@@ -1257,41 +1257,41 @@ Die meisten indirekten Zauber verursachen recht wenig Schaden. Sie eignen sich g
 > 
 > Die folgenden Zauber aus **Ars Magica Fifth Edition** können zumindest teilweise wirksam sein, ohne die Magieresistenz durchdringen zu müssen. Einige weitere indirekte Zauber finden sich im Regelabschnitt dieses Kapitels.
 > 
-> *Weberfalle aus Spinnfäden* (CrAn 35, ArM5, Seite 117): Obwohl die Spinnfäden den Magus nicht berühren, umgeben sie ihn und halten ihn fest.
+> *Weberfalle aus Spinnfäden* (CrAn 35, ArM5, [Seite 117](<Ars Magica Definitive Edition Basisregeln.md#weberfalle-aus-spinnfäden>)): Obwohl die Spinnfäden den Magus nicht berühren, umgeben sie ihn und halten ihn fest.
 > 
-> *Spuren schlüpfrigen Öls* (CrAq 5, ArM5, Seite 121): Die Maga kann in das magische Öl treten, so wie sie über eine magisch erschaffene Brücke gehen kann.
+> *Spuren schlüpfrigen Öls* (CrAq 5, ArM5, [Seite 121](<Ars Magica Definitive Edition Basisregeln.md#spuren-schlüpfrigen-öls>)): Die Maga kann in das magische Öl treten, so wie sie über eine magisch erschaffene Brücke gehen kann.
 > 
-> *Wellen des Ertrinkens und Zerschmetterns* (ReAq 30, ArM5, Seite 124): Obwohl die Welle die Maga nicht direkt verletzen kann, kann sie ein Boot, in dem sie fährt, zum Kentern bringen oder eine kleine Brücke, auf der sie steht, wegspülen.
+> *Wellen des Ertrinkens und Zerschmetterns* (ReAq 30, ArM5, [Seite 124](<Ars Magica Definitive Edition Basisregeln.md#wellen-des-ertrinkens-und-zerschmetterns>)): Obwohl die Welle die Maga nicht direkt verletzen kann, kann sie ein Boot, in dem sie fährt, zum Kentern bringen oder eine kleine Brücke, auf der sie steht, wegspülen.
 > 
-> *Zorn des Neptun* (ReAq 40, ArM5, Seite 125): Ähnlich wie *Wellen des Ertrinkens und Zerschmetterns*, aber die Welle ist weit zerstörerischer.
+> *Zorn des Neptun* (ReAq 40, ArM5, [Seite 125](<Ars Magica Definitive Edition Basisregeln.md#zorn-des-neptun>)): Ähnlich wie *Wellen des Ertrinkens und Zerschmetterns*, aber die Welle ist weit zerstörerischer.
 > 
-> *Den schlummernden Leichnam erwecken* (ReCo 25, ArM5, Seite 134): Wenn die Leiche im waffenlosen Kampf angreift, wird sie widerstanden, da der gesamte Leichnam unter einem aktiven magischen Effekt steht, doch wenn sie eine nichtmagische Waffe führt, umgeht die Waffe die Magieresistenz.
+> *Den schlummernden Leichnam erwecken* (ReCo 25, ArM5, [Seite 134](<Ars Magica Definitive Edition Basisregeln.md#den-schlummernden-leichnam-erwecken>)): Wenn die Leiche im waffenlosen Kampf angreift, wird sie widerstanden, da der gesamte Leichnam unter einem aktiven magischen Effekt steht, doch wenn sie eine nichtmagische Waffe führt, umgeht die Waffe die Magieresistenz.
 > 
-> *Fäden der unfreiwilligen Marionette* (ReCo 25, ArM5, Seite 135): Ähnlich wie *Den schlummernden Leichnam erwecken*, siehe oben.
+> *Fäden der unfreiwilligen Marionette* (ReCo 25, ArM5, [Seite 135](<Ars Magica Definitive Edition Basisregeln.md#fäden-der-unfreiwilligen-marionette>)): Ähnlich wie *Den schlummernden Leichnam erwecken*, siehe oben.
 > 
-> *Die wandelnde Leiche* (ReCo 35, ArM5, Seite 135): Ähnlich wie *Den schlummernden Leichnam erwecken*, siehe oben.
+> *Die wandelnde Leiche* (ReCo 35, ArM5, [Seite 135](<Ars Magica Definitive Edition Basisregeln.md#die-wandelnde-leiche>)): Ähnlich wie *Den schlummernden Leichnam erwecken*, siehe oben.
 > 
-> *Falle der schlingenden Ranken* (CrHe 15, ArM5, Seite 135): Die Ranken immobilisieren die Maga nicht vollständig, sondern umgeben sie und hindern sie daran, sich fortzubewegen.
+> *Falle der schlingenden Ranken* (CrHe 15, ArM5, [Seite 135](<Ars Magica Definitive Edition Basisregeln.md#falle-der-schlingenden-ranken>)): Die Ranken immobilisieren die Maga nicht vollständig, sondern umgeben sie und hindern sie daran, sich fortzubewegen.
 > 
-> *Geflecht aus Holz und Dornen* (ReHe 15, ArM5, Seite 138): Dies kann vollständig wirksam sein, da das Holz einen Magus nicht berühren muss, um ihn zu immobilisieren. Der Spielleiter kann einen Bonus auf den Stärkewurf zum Befreien gewähren.
+> *Geflecht aus Holz und Dornen* (ReHe 15, ArM5, [Seite 138](<Ars Magica Definitive Edition Basisregeln.md#geflecht-aus-holz-und-dornen>)): Dies kann vollständig wirksam sein, da das Holz einen Magus nicht berühren muss, um ihn zu immobilisieren. Der Spielleiter kann einen Bonus auf den Stärkewurf zum Befreien gewähren.
 > 
-> *Ranken der umschlingenden Pflanzen* (ReHe 20, ArM5, Seite 138): Ähnlich wie *Weberfalle aus Spinnfäden* oder *Falle der schlingenden Ranken*, siehe oben.
+> *Ranken der umschlingenden Pflanzen* (ReHe 20, ArM5, [Seite 138](<Ars Magica Definitive Edition Basisregeln.md#ranken-der-umschlingenden-pflanzen>)): Ähnlich wie *Weberfalle aus Spinnfäden* oder *Falle der schlingenden Ranken*, siehe oben.
 > 
-> *Zitternder Schwung der Fackelflamme* (ReIg 5, ArM5, Seite 142): Die Bewegung der Flamme ist magisch, aber die Flamme selbst ist es nicht; die Flamme stoppt, als hätte sie den Magus sanft berührt, aber sie verbrennt ihn trotzdem.
+> *Zitternder Schwung der Fackelflamme* (ReIg 5, ArM5, [Seite 142](<Ars Magica Definitive Edition Basisregeln.md#zitternder-schwung-der-fackelflamme>)): Die Bewegung der Flamme ist magisch, aber die Flamme selbst ist es nicht; die Flamme stoppt, als hätte sie den Magus sanft berührt, aber sie verbrennt ihn trotzdem.
 > 
-> *Sprung des Feuers* (ReIg 10, ArM5, Seite 143): Ähnlich wie *Zitternder Schwung der Fackelflamme*.
+> *Sprung des Feuers* (ReIg 10, ArM5, [Seite 143](<Ars Magica Definitive Edition Basisregeln.md#sprung-des-feuers>)): Ähnlich wie *Zitternder Schwung der Fackelflamme*.
 > 
-> *Grube der klaffenden Erde* (PeTe 15, ArM5, Seite 155): Niemand kann sich dagegen wehren, dass sich unter seinen Füßen eine Grube auftut.
+> *Grube der klaffenden Erde* (PeTe 15, ArM5, [Seite 155](<Ars Magica Definitive Edition Basisregeln.md#grube-der-klaffenden-erde>)): Niemand kann sich dagegen wehren, dass sich unter seinen Füßen eine Grube auftut.
 > 
-> *Vernichtung der metallenen Schranke* (PeTe 20, ArM5, Seite 155): Die Metallsplitter werden als Geschosse geschleudert und können die Magieresistenz umgehen.
+> *Vernichtung der metallenen Schranke* (PeTe 20, ArM5, [Seite 155](<Ars Magica Definitive Edition Basisregeln.md#vernichtung-der-metallenen-schranke>)): Die Metallsplitter werden als Geschosse geschleudert und können die Magieresistenz umgehen.
 > 
-> *Das Ende der mächtigen Burg* (PeTe 25, ArM5, Seite 155): Magieresistenz schützt nicht vor nichtmagischem Stein, der aufgrund der Schwerkraft fällt.
+> *Das Ende der mächtigen Burg* (PeTe 25, ArM5, [Seite 155](<Ars Magica Definitive Edition Basisregeln.md#das-ende-der-mächtigen-burg>)): Magieresistenz schützt nicht vor nichtmagischem Stein, der aufgrund der Schwerkraft fällt.
 > 
-> *Der Steinschlag* (PeTe 40, ArM5, Seite 155): Ähnlich wie *Das Ende der mächtigen Burg*, siehe oben.
+> *Der Steinschlag* (PeTe 40, ArM5, [Seite 155](<Ars Magica Definitive Edition Basisregeln.md#der-steinschlag>)): Ähnlich wie *Das Ende der mächtigen Burg*, siehe oben.
 > 
-> *Die Erde bricht auseinander* (ReTe 30, ArM5, Seite 156): Magieresistenz schützt den Magus nicht davor, in die Kluft zu fallen, aber sie schützt ihn davor, zerquetscht zu werden, wenn sie sich schließt. Wenn sich die Kluft langsam statt gewaltsam schließt (siehe Zauberbeschreibung), wird dies nicht widerstanden, aber der Magus kann sich wahrscheinlich während des Vorgangs herausarbeiten.
+> *Die Erde bricht auseinander* (ReTe 30, ArM5, [Seite 156](<Ars Magica Definitive Edition Basisregeln.md#die-erde-bricht-auseinander>)): Magieresistenz schützt den Magus nicht davor, in die Kluft zu fallen, aber sie schützt ihn davor, zerquetscht zu werden, wenn sie sich schließt. Wenn sich die Kluft langsam statt gewaltsam schließt (siehe Zauberbeschreibung), wird dies nicht widerstanden, aber der Magus kann sich wahrscheinlich während des Vorgangs herausarbeiten.
 > 
-> *Der kriechende Abgrund* (ReTe 35, ArM5, Seite 156): Ähnlich wie *Grube der klaffenden Erde*, siehe oben.
+> *Der kriechende Abgrund* (ReTe 35, ArM5, [Seite 156](<Ars Magica Definitive Edition Basisregeln.md#der-kriechende-abgrund>)): Ähnlich wie *Grube der klaffenden Erde*, siehe oben.
 
 Viele Anhänger des Vilano machen neben Zaubern ausgiebigen Gebrauch von verzauberten Gegenständen. Eine der Haupteinschränkungen verzauberter Gegenstände ist ihre im Allgemeinen schwache Penetration, doch die Taktiken dieser Schule umgehen dieses Problem.
 
@@ -1305,7 +1305,7 @@ Magi des Hauses Flambeau messen ihr relatives Ansehen anhand eines informellen S
 
 Das Ansehen im Haus ist eine kostenlose Reputation, die jeder Flambeau-Magus zu Spielbeginn erhält. Die meisten Charaktere starten mit einem Ansehen im Haus von null, doch wer die Tugend Berühmt (oder andere Tugenden, die eine vorteilhafte Reputation gewähren) wählt, kann deren Vorteile auf das Ansehen im Haus anwenden. Anders als das Ansehenssystem von Haus Bonisagus ist das Ansehen von Haus Flambeau eine Hermetische Reputation, die potenziell jedem im Orden bekannt ist.
 
-Bemerkenswerte Taten der Tapferkeit, des Mutes und der Ehre werden mit Erfahrungspunkten in der Reputation Ansehen im Haus belohnt. Allerdings darf sich ein Mitglied von Haus Flambeau niemals auf seinen Lorbeeren ausruhen: Anders als bei anderen Reputationen kann das Ansehen im Haus im Laufe der Zeit abnehmen, wenn der Charakter keine ruhmreiche Laufbahn fortsetzt. Darüber hinaus können unehrenhafte Taten das Ansehen eines Magus im Haus ernsthaft beschädigen. Ein Verlust des Ansehens im Haus wird durch den Abzug statt die Vergabe von Erfahrungspunkten abgebildet. Ein negatives Ansehen im Haus ist nicht möglich, doch wenn ein Magus mit null Ansehenspunkten eine unehrenhafte Tat begeht, erhält er eine schlechte Reputation gemäß den normalen Reputationsregeln (ArM5, Seite 167).
+Bemerkenswerte Taten der Tapferkeit, des Mutes und der Ehre werden mit Erfahrungspunkten in der Reputation Ansehen im Haus belohnt. Allerdings darf sich ein Mitglied von Haus Flambeau niemals auf seinen Lorbeeren ausruhen: Anders als bei anderen Reputationen kann das Ansehen im Haus im Laufe der Zeit abnehmen, wenn der Charakter keine ruhmreiche Laufbahn fortsetzt. Darüber hinaus können unehrenhafte Taten das Ansehen eines Magus im Haus ernsthaft beschädigen. Ein Verlust des Ansehens im Haus wird durch den Abzug statt die Vergabe von Erfahrungspunkten abgebildet. Ein negatives Ansehen im Haus ist nicht möglich, doch wenn ein Magus mit null Ansehenspunkten eine unehrenhafte Tat begeht, erhält er eine schlechte Reputation gemäß den normalen Reputationsregeln (ArM5, [Seite 167](<Ars Magica Definitive Edition Basisregeln.md#reputation-verändern>)).
 
 Damit eine Tat Erfahrungspunkte im Ansehen im Haus gewährt, muss sie vor Zeugen geschehen. Diese müssen keine Mitglieder von Haus Flambeau sein, solange sie glaubwürdig sind und wahrscheinlich von den Leistungen des Magus berichten werden.
 
@@ -1414,7 +1414,7 @@ Charaktere, die einander nicht sehen können, dürfen nicht als Teil einer ausge
 
 Ein unsichtbarer Charakter kann der unausgebildeten Gruppe angehören. Befinden sich in einer unausgebildeten Gruppe unsichtbare Mitglieder, erhält jeder in der Gruppe einen zusätzlichen Patzerwürfel pro unsichtbarem Charakter. Bei einem Patzer können Kämpfer gegen einen unsichtbaren Charakter stolpern oder ihn versehentlich mit ihren Waffen treffen.
 
-Eine Gruppe von Verbündeten kann einen unsichtbaren Charakter nicht beschützen (siehe ArM5, Seite 173), sofern sie nicht über Mittel verfügt zu wissen, wo er sich befindet.
+Eine Gruppe von Verbündeten kann einen unsichtbaren Charakter nicht beschützen (siehe ArM5, [Seite 173](<Ars Magica Definitive Edition Basisregeln.md#beschützer>)), sofern sie nicht über Mittel verfügt zu wissen, wo er sich befindet.
 
 ### Neue Magieregeln
 
@@ -1428,17 +1428,17 @@ Magi von Haus Flambeau haben eine neue Methode entwickelt, magische Gegenstände
 
 Die Wirkung erhält einen Initiativemodifikator von +3. Dies addiert +5 zur Effektstufe.
 
-#### Zaubermeisterschafts-Sonderfähigkeiten
+#### Besondere Fähigkeiten der Zaubermeisterschaft
 
-Die durch Zaubermeisterschaft verliehenen besonderen Fähigkeiten sind im Kampf häufig nützlich. Magi des Hauses Flambeau schätzen alle in der **Ars Magica Definitive Edition** (Seite 87) aufgeführten Zaubermeisterschafts-Sonderfähigkeiten und haben einige weitere eigene entwickelt. Diese stehen Magi aller Häuser zur Verfügung, obwohl sie innerhalb von Haus Flambeau entstanden sind.
+Die Meisterschaftsfähigkeiten sind im Kampf häufig nützlich. Magi des Hauses Flambeau schätzen alle in der **Ars Magica Definitive Edition** ([Seite 87](<Ars Magica Definitive Edition Basisregeln.md#besondere-fähigkeiten-gemeisterter-zauber>)) aufgeführten besonderen Meisterschaftsfähigkeiten und haben einige weitere eigene entwickelt. Diese stehen Magi aller Häuser zur Verfügung, obwohl sie innerhalb von Haus Flambeau entstanden sind.
 
 **Unerschütterliches Zaubern**
 
-Addiere den Meisterschaftswert des Zaubernden zu allen Konzentrationswürfen, die mit dem Zauber zusammenhängen. Dies hilft dabei, Zauber mit Dauer Konzentration inmitten des Kampfchaos aufrechtzuerhalten oder während eines weiteren Zaubers (siehe Konzentrationstabelle, ArM5, Seite 82).
+Addiere den Meisterschaftswert des Zaubernden zu allen Konzentrationswürfen, die mit dem Zauber zusammenhängen. Dies hilft dabei, Zauber mit Dauer Konzentration inmitten des Kampfchaos aufrechtzuerhalten oder während eines weiteren Zaubers (siehe Konzentrationstabelle, ArM5, [Seite 82](<Ars Magica Definitive Edition Basisregeln.md#konzentration-1>)).
 
 **Verschleiertes Zaubern**
 
-Magi können die Form des Zaubers beim Wirken nicht mehr automatisch erkennen. Dadurch wird es ihnen erschwert, schnell gewirkte Zauber als Verteidigung einzusetzen. Sie müssen stets würfeln, um die Form des Zaubers zu bestimmen (siehe ArM5, Seite 83), und müssen den Meisterschaftswert des Zaubernden zum Schwierigkeitsgrad addieren.
+Magi können die Form des Zaubers beim Wirken nicht mehr automatisch erkennen. Dadurch wird es ihnen erschwert, schnell gewirkte Zauber als Verteidigung einzusetzen. Sie müssen stets würfeln, um die Form des Zaubers zu bestimmen (siehe ArM5, [Seite 83](<Ars Magica Definitive Edition Basisregeln.md#worte-und-gesten>)), und müssen den Meisterschaftswert des Zaubernden zum Schwierigkeitsgrad addieren.
 
 **Präzises Zaubern**
 
@@ -1446,7 +1446,7 @@ Alle Finesse-Würfe des Zaubernden mit dem Zauber erhalten einen Bonus von +1, e
 
 **Schnelles Zaubern**
 
-Addiere +1 zum Initiativewert des Zaubernden, wenn er den gemeisterten Zauber wirkt. Hat er zudem die besondere Fähigkeit Schnellzaubern, addiere +1 zu seinen Schnellzauber-Geschwindigkeitswürfen (ArM5, Seite 83), wenn er den Zauber schnell wirkt. Diese Fähigkeit darf nicht für Ritualzauber gewählt werden. Ein Magus kann diese Fähigkeit mehrfach für denselben Zauber wählen.
+Addiere +1 zum Initiativewert des Zaubernden, wenn er den gemeisterten Zauber wirkt. Hat er zudem die Meisterschaftsfähigkeit Schnellzaubern, addiere +1 zu seinen Schnellzauber-Geschwindigkeitswürfen (ArM5, [Seite 83](<Ars Magica Definitive Edition Basisregeln.md#schnellzaubern>)), wenn er den Zauber schnell wirkt. Diese Fähigkeit darf nicht für Ritualzauber gewählt werden. Ein Magus kann diese Fähigkeit mehrfach für denselben Zauber wählen.
 
 ### Neue Zauber
 
@@ -1460,25 +1460,25 @@ Cr(Re)An 25
 
 R: Berührung, D: Durchmesser, T: Individuum
 
-Beschwört eine Natter, die den mentalen Befehlen des Zaubernden magisch gehorcht. Verwende die Werte einer Viper aus dem *Buch der Gewöhnlichen Tiere*, mit dem Unterschied, dass das Gift einer Natter weit tödlicher ist als das einer Viper. Die Wirkungen des Natterngifts werden auf Seite 180 von ArM5 beschrieben. Die Schlange hat keine Macht und daher keine eigene Magieresistenz, da sie jedoch eine magisch erschaffene Kreatur ist, schützt Magieresistenz vor ihrem Angriff (verwende die Penetrationssumme des Zaubernden).
+Beschwört eine Natter, die den mentalen Befehlen des Zaubernden magisch gehorcht. Verwende die Werte einer Viper aus dem *Buch der Gewöhnlichen Tiere*, mit dem Unterschied, dass das Gift einer Natter weit tödlicher ist als das einer Viper. Die Wirkungen des Natterngifts werden auf [Seite 180](<Ars Magica Definitive Edition Basisregeln.md#gifte>) von ArM5 beschrieben. Die Schlange hat keine Macht und daher keine eigene Magieresistenz, da sie jedoch eine magisch erschaffene Kreatur ist, schützt Magieresistenz vor ihrem Angriff (verwende die Penetrationssumme des Zaubernden).
 
 Dieser Zauber wird manchmal von Magi verwendet, die den Schulen des Sebastian folgen, doch andere Flambeau-Magi neigen dazu, ihn als unehrenhafte Angriffsform zu verachten.
 
 (Basis 10, +1 Berührung, +1 Durchmesser, +1 Rego-Requisit)
 
-> ## Merkurische Zaubermeisterschafts-Sonderfähigkeiten
+> ## Merkurische besondere Meisterschaftsfähigkeiten
 > 
-> Der Kult des Merkur lehrt mehrere exklusive Zaubermeisterschafts-Sonderfähigkeiten. Diese Sonderfähigkeiten sind nicht auf Haus Flambeau beschränkt, sondern stehen generell jedem Mitglied des Kultes zur Verfügung (dessen Mitgliedschaft Magi aus vielen verschiedenen Häusern umfasst).
+> Der Kult des Merkur lehrt mehrere exklusive besondere Meisterschaftsfähigkeiten. Diese Meisterschaftsfähigkeiten sind nicht auf Haus Flambeau beschränkt, sondern stehen generell jedem Mitglied des Kultes zur Verfügung (dessen Mitgliedschaft Magi aus vielen verschiedenen Häusern umfasst).
 > 
-> Die folgenden Sonderfähigkeiten wurden ursprünglich in *Häuser des Hermes: Wahre Linien* (Seiten 99–100) veröffentlicht.
+> Die folgenden Meisterschaftsfähigkeiten wurden ursprünglich in *Häuser des Hermes: Wahre Linien* (Seiten 99–100) veröffentlicht.
 > 
-> **Adaptives Zaubern (Kult des Merkur):** Diese Sonderfähigkeit darf nur für Allgemeine Zauber gewählt werden. Der Zaubernde kann seinen Meisterschaftswert und alle mit diesem Zauber verbundenen Sonderfähigkeiten nutzen, wenn er denselben Zauber auf anderen Stufen wirkt.
+> **Adaptives Zaubern (Kult des Merkur):** Diese Meisterschaftsfähigkeit darf nur für Allgemeine Zauber gewählt werden. Der Zaubernde kann seinen Meisterschaftswert und alle mit diesem Zauber verbundenen Meisterschaftsfähigkeiten nutzen, wenn er denselben Zauber auf anderen Stufen wirkt.
 > 
-> **Zeremonielles Zaubern (Kult des Merkur):** Der Zaubernde kann beim Wirken dieses Zaubers zeremonielle Methoden anwenden, wodurch sich die Zauberdauer verlängert und er seine Artes Liberales und Philosophiae zu seiner Zaubersumme addiert. Diese Sonderfähigkeit kann nicht für Ritualzauber gewählt werden, da diese stets zeremonielles Zaubern erfordern.
+> **Zeremonielles Zaubern (Kult des Merkur):** Der Zaubernde kann beim Wirken dieses Zaubers zeremonielle Methoden anwenden, wodurch sich die Zauberdauer verlängert und er seine Artes Liberales und Philosophiae zu seiner Zaubersumme addiert. Diese Meisterschaftsfähigkeit kann nicht für Ritualzauber gewählt werden, da diese stets zeremonielles Zaubern erfordern.
 > 
 > **Getarntes Zaubern (Kult des Merkur):** Beim Wirken dieses Zaubers kann der Zaubernde sein Sigil unterdrücken oder verändern, um seine Identität zu verbergen oder den Zauber so erscheinen zu lassen, als sei er von jemand anderem gewirkt worden. Da dies sein Sigil tatsächlich verändert, ist es für andere unmöglich, ihn daran zu erkennen, wenngleich Magi möglicherweise bemerken können, dass ein gefälschtes Sigil nicht echt ist. Wenn der Zaubernde das Sigil eines anderen Magus nachahmt, addiere seinen Meisterschaftswert zum Wurf, der bestimmt, wie schwer es zu erkennen ist.
 > 
-> **Labormeisterschaft (Kult des Merkur):** Der Zaubernde versteht die Theorie des Zaubers so gründlich, dass er seinen Meisterschaftswert zu seiner Laborsumme addieren kann, wenn er Effekte entwirft, die ihm ähnlich sind (siehe Ähnliche Zauber, ArM5, Seite 101). Dies kommt zum Standard-Bonus für ähnliche Zauber hinzu.
+> **Labormeisterschaft (Kult des Merkur):** Der Zaubernde versteht die Theorie des Zaubers so gründlich, dass er seinen Meisterschaftswert zu seiner Laborsumme addieren kann, wenn er Effekte entwirft, die ihm ähnlich sind (siehe Ähnliche Zauber, ArM5, [Seite 101](<Ars Magica Definitive Edition Basisregeln.md#ähnliche-zauber>)). Dies kommt zum Standard-Bonus für ähnliche Zauber hinzu.
 > 
 > **Aus Fehlern lernen (Kult des Merkur):** Beim ersten Mal in einer Spielsitzung, dass der Zaubernde einen Patzerwurf bei diesem Zauber erleidet oder den Zauberwurf um genau einen Punkt verfehlt, erhält er 5 Erfahrungspunkte für die Meisterschaft dieses Zaubers. Der Wurf muss sich auf natürliche Weise im Verlauf der Geschichte ergeben.
 > 
@@ -1512,9 +1512,9 @@ Einige Magi, die der Schule des Vilano folgen, verwenden diesen Zauber, um Tiere
 > 
 > Die zweite Angriffsform nutzt das, was Philosophen „natürliche Bewegung" nennen: die natürliche Tendenz schwerer Gegenstände, nach unten zu fallen. Ein Magus könnte Rego-Magie einsetzen, um einen Felsen über dem Kopf einer Person schweben zu lassen und dann den Zauber aufzuheben. Der Felsen würde auf natürliche Weise fallen und die Magieresistenz umgehen. Solche Zauber müssen gezielt werden, um ihr Ziel zu treffen.
 > 
-> Die dritte Möglichkeit besteht darin, durch einen kurzen Stoß magischer Kraft ein Geschoss zu schleudern, so wie ein Pfeil vom Bogen geschossen wird. Es gibt im Erstdruck von ArM5 einen Satz, der dies zu verbieten scheint (der letzte Satz des ersten Absatzes auf Seite 86, beginnend mit „Beachte, dass …"), doch dieser Satz wurde durch die offizielle Errata gestrichen. Die mittelalterliche Naturphilosophie bot tatsächlich eine Erklärung dafür, wie ein Pfeil nach dem Verlassen des Bogens weiter fliegen kann. Vereinfacht (im Interesse der Kürze) hat dies mit der Bewegung der Luft um den Pfeil herum zu tun. Magi können Zauber entwickeln, die Geschosse auf diese Weise schleudern: Neue Rego-Leitlinien werden im Regelabschnitt dieses Kapitels bereitgestellt. Nur eigens dafür konzipierte Rego-Zauber können Geschosse auf diese Weise werfen – die Beschreibung des Zaubers muss ausdrücklich angeben, dass er Geschosse schleudern kann (solche Zauber haben eine höhere Magnitude als gewöhnliche Rego-Zauber). Zauber, die ein Geschoss schleudern, geben unmittelbar nach dem Abfeuern die Kontrolle darüber ab. Das Geschoss folgt dann einer natürlichen Flugbahn. Im Spiel bedeutet dies, dass der Zauber gezielt werden muss, das Geschoss aber die Magieresistenz umgeht. Die Reichweite des Zaubers muss nur Berührung betragen (die Magie muss nur im Moment des Schleuderns wirken), aber sobald das Geschoss abgefeuert ist, unterliegt es den natürlichen Bewegungsgesetzen. Der Zielwurf erleidet denselben Entfernungsabzug wie eine Fernkampfwaffe (ArM5, Seite 172), und das Geschoss kann nicht weiter fliegen, als es von einem sehr starken weltlichen Bogen (oder einer Schleuder, einem Katapult oder einem anderen Gerät) geschleudert werden könnte. Die meisten durch Zauber geschleuderten Geschosse haben ein Reichweiteninkrement von 20 Schritten.
+> Die dritte Möglichkeit besteht darin, durch einen kurzen Stoß magischer Kraft ein Geschoss zu schleudern, so wie ein Pfeil vom Bogen geschossen wird. Es gibt im Erstdruck von ArM5 einen Satz, der dies zu verbieten scheint (der letzte Satz des ersten Absatzes auf [Seite 86](<Ars Magica Definitive Edition Basisregeln.md#zielen>), beginnend mit „Beachte, dass …"), doch dieser Satz wurde durch die offizielle Errata gestrichen. Die mittelalterliche Naturphilosophie bot tatsächlich eine Erklärung dafür, wie ein Pfeil nach dem Verlassen des Bogens weiter fliegen kann. Vereinfacht (im Interesse der Kürze) hat dies mit der Bewegung der Luft um den Pfeil herum zu tun. Magi können Zauber entwickeln, die Geschosse auf diese Weise schleudern: Neue Rego-Leitlinien werden im Regelabschnitt dieses Kapitels bereitgestellt. Nur eigens dafür konzipierte Rego-Zauber können Geschosse auf diese Weise werfen – die Beschreibung des Zaubers muss ausdrücklich angeben, dass er Geschosse schleudern kann (solche Zauber haben eine höhere Magnitude als gewöhnliche Rego-Zauber). Zauber, die ein Geschoss schleudern, geben unmittelbar nach dem Abfeuern die Kontrolle darüber ab. Das Geschoss folgt dann einer natürlichen Flugbahn. Im Spiel bedeutet dies, dass der Zauber gezielt werden muss, das Geschoss aber die Magieresistenz umgeht. Die Reichweite des Zaubers muss nur Berührung betragen (die Magie muss nur im Moment des Schleuderns wirken), aber sobald das Geschoss abgefeuert ist, unterliegt es den natürlichen Bewegungsgesetzen. Der Zielwurf erleidet denselben Entfernungsabzug wie eine Fernkampfwaffe (ArM5, [Seite 172](<Ars Magica Definitive Edition Basisregeln.md#fernkampf>)), und das Geschoss kann nicht weiter fliegen, als es von einem sehr starken weltlichen Bogen (oder einer Schleuder, einem Katapult oder einem anderen Gerät) geschleudert werden könnte. Die meisten durch Zauber geschleuderten Geschosse haben ein Reichweiteninkrement von 20 Schritten.
 > 
-> Die Regel unter „Zielen" auf Seite 86 von ArM5 bleibt gültig: „Wenn ein Zauber widerstanden wird … muss er nicht gezielt werden. Wird er nicht widerstanden, muss er gezielt werden."
+> Die Regel unter „Zielen" auf [Seite 86](<Ars Magica Definitive Edition Basisregeln.md#zielen>) von ArM5 bleibt gültig: „Wenn ein Zauber widerstanden wird … muss er nicht gezielt werden. Wird er nicht widerstanden, muss er gezielt werden."
 
 #### Creo-Aquam-Zauber
 
@@ -1548,7 +1548,7 @@ R: Stimme, D: Sonne, T: Teil
 
 Friere einen kreisförmigen Abschnitt eines Gewässers zu festem Eis. Jeder, der im Wasser watet oder schwimmt, wird im Eis gefangen. Magieresistenz verhindert nicht, dass das Eis einen Charakter umschließt und festhält. Der vom Zauber betroffene Bereich entspricht der Größe eines Basisindividuums: ein grob schalenförmiges Volumen von etwa fünf Schritten Durchmesser und zwei Schritten Tiefe in der Mitte.
 
-Da das Eis magisch ist, verursacht es Kälteschaden nur, wenn es die Magieresistenz durchdringt. Regeln für Kälteschaden finden sich in ArM5, Seite 181; das von diesem Zauber erschaffene Eis verursacht einen Basisschaden von +1. Charaktere, die vollständig in Eis eingeschlossen sind, beginnen zu ersticken (siehe ArM5, Seite 180).
+Da das Eis magisch ist, verursacht es Kälteschaden nur, wenn es die Magieresistenz durchdringt. Regeln für Kälteschaden finden sich in ArM5, [Seite 181](<Ars Magica Definitive Edition Basisregeln.md#hitze-und-ätzung>); das von diesem Zauber erschaffene Eis verursacht einen Basisschaden von +1. Charaktere, die vollständig in Eis eingeschlossen sind, beginnen zu ersticken (siehe ArM5, [Seite 180](<Ars Magica Definitive Edition Basisregeln.md#entbehrung>)).
 
 Ein gefangener Charakter kann sich aus dem Eis befreien, indem er einen Stärkewurf ablegt. Charaktere können sich auch mit Werkzeugen oder Waffen aus dem Eis herausschlagen, doch dies
 
@@ -1646,7 +1646,7 @@ R: Berührung, D: Ring, T: Kreis
 
 Hüfthohe Flammen füllen den Zielkreis. Alles innerhalb des Kreises erleidet jede Runde +5 Schaden.
 
-Dieser Zauber ist alten Ursprungs und stammt vermutlich aus einer rituellen Prüfung innerhalb des Kultes des Mithras. Er wurde einst von Flambeau-Magi als Prüfung der Ausdauer verwendet, eine Art Alternative zum Certamen. Die Geprüften (einschließlich gewöhnlich des Zaubernden) standen ohne ihre Parmae Magicae im Kreis und versuchten, den Flammen so lange wie möglich zu widerstehen. Wer den Kreis zuletzt verließ, galt als Sieger. Die Etikette sah vor, dass jemand den Ring brechen und den Zauber beenden sollte, um den Unglücklichen zu retten, falls jemand durch Brandschaden kampfunfähig wurde. Diese Prüfung wird um 1220 kaum noch genutzt, da die meisten Flambeau-Magi das reguläre Certamen bevorzugen; außerdem besitzen einige Mitglieder von Haus Flambeau (wie der Beispielcharakter auf Seite 25 von ArM5) eine übernatürliche Feuerimmunität, die ihnen einen unfairen Vorteil bei der Prüfung verschafft.
+Dieser Zauber ist alten Ursprungs und stammt vermutlich aus einer rituellen Prüfung innerhalb des Kultes des Mithras. Er wurde einst von Flambeau-Magi als Prüfung der Ausdauer verwendet, eine Art Alternative zum Certamen. Die Geprüften (einschließlich gewöhnlich des Zaubernden) standen ohne ihre Parmae Magicae im Kreis und versuchten, den Flammen so lange wie möglich zu widerstehen. Wer den Kreis zuletzt verließ, galt als Sieger. Die Etikette sah vor, dass jemand den Ring brechen und den Zauber beenden sollte, um den Unglücklichen zu retten, falls jemand durch Brandschaden kampfunfähig wurde. Diese Prüfung wird um 1220 kaum noch genutzt, da die meisten Flambeau-Magi das reguläre Certamen bevorzugen; außerdem besitzen einige Mitglieder von Haus Flambeau (wie der Beispielcharakter auf [Seite 25](<Ars Magica Definitive Edition Basisregeln.md#charakter-grundlagen>) von ArM5) eine übernatürliche Feuerimmunität, die ihnen einen unfairen Vorteil bei der Prüfung verschafft.
 
 (Basis 4, +1 Berührung, +2 Ring)
 
@@ -1706,7 +1706,7 @@ CrTe 15
 
 R: Berührung, D: Durchmesser, T: Individuum
 
-Beschwöre ein Langschwert aus Stahl. Das Schwert hält nur zwei Minuten – etwa 20 Kampfrunden –, doch das reicht gewöhnlich aus, um sich in einem einzelnen Scharmützel zu verteidigen. Das magisch erschaffene Schwert muss die Magieresistenz durchdringen, um Gegner mit Magieresistenz zu verletzen. Beachte, dass die Erschaffung künstlicher Dinge durch Magie einen Intelligenz + Finesse-Wurf erfordert, wie auf Seite 77 von ArM5 beschrieben. Ein Schwierigkeitsgrad von 6 genügt für ein Schwert mittelmäßiger, aber brauchbarer Qualität.
+Beschwöre ein Langschwert aus Stahl. Das Schwert hält nur zwei Minuten – etwa 20 Kampfrunden –, doch das reicht gewöhnlich aus, um sich in einem einzelnen Scharmützel zu verteidigen. Das magisch erschaffene Schwert muss die Magieresistenz durchdringen, um Gegner mit Magieresistenz zu verletzen. Beachte, dass die Erschaffung künstlicher Dinge durch Magie einen Intelligenz + Finesse-Wurf erfordert, wie auf [Seite 77](<Ars Magica Definitive Edition Basisregeln.md#creo-cr--ich-erschaffe>) von ArM5 beschrieben. Ein Schwierigkeitsgrad von 6 genügt für ein Schwert mittelmäßiger, aber brauchbarer Qualität.
 
 (Basis 5, +1 Berührung, +1 Durchmesser)
 
@@ -1782,9 +1782,9 @@ R: Stimme, D: Konzentration, T: Individuum
 
 Bewege einen Stein so schnell wie ein fliegender Vogel durch die Luft. Wenn der Zaubernde die Konzentration beendet, fällt der Stein sofort zu Boden.
 
-Der Name des Zaubers deutet auf eine seiner häufigen Anwendungen hin: einen schweren Felsen auf jemanden fallen zu lassen. Da der Stein auf natürliche Weise fällt, unterliegt ein solcher Angriff nicht der Magieresistenz. Stattdessen ist ein Zielwurf erforderlich, um das beabsichtigte Ziel zu treffen (siehe ArM5, Seite 86). Ein Angriff mit diesem Zauber dauert normalerweise zwei Runden: eine, um den Stein über das Ziel zu bewegen, und eine weitere zum Zielen und Fallenlassen.
+Der Name des Zaubers deutet auf eine seiner häufigen Anwendungen hin: einen schweren Felsen auf jemanden fallen zu lassen. Da der Stein auf natürliche Weise fällt, unterliegt ein solcher Angriff nicht der Magieresistenz. Stattdessen ist ein Zielwurf erforderlich, um das beabsichtigte Ziel zu treffen (siehe ArM5, [Seite 86](<Ars Magica Definitive Edition Basisregeln.md#zielen>)). Ein Angriff mit diesem Zauber dauert normalerweise zwei Runden: eine, um den Stein über das Ziel zu bewegen, und eine weitere zum Zielen und Fallenlassen.
 
-Der verursachte Schaden hängt hauptsächlich von der Größe des Steins ab: +5 für einen Stein von der Größe einer Männerfaust, +10 für einen typischen Baustein, bis zu +21 für einen großen Felsbrocken (siehe auch die Aufpralltabelle auf Seite 181 von ArM5). Besonders große Steine können neben Kreaturen auch Bauwerke beschädigen.
+Der verursachte Schaden hängt hauptsächlich von der Größe des Steins ab: +5 für einen Stein von der Größe einer Männerfaust, +10 für einen typischen Baustein, bis zu +21 für einen großen Felsbrocken (siehe auch die Aufpralltabelle auf [Seite 181](<Ars Magica Definitive Edition Basisregeln.md#aufpralltabelle>) von ArM5). Besonders große Steine können neben Kreaturen auch Bauwerke beschädigen.
 
 Die Haupteinschränkung der Kampfwirksamkeit dieses Zaubers ist die Verfügbarkeit großer Steine. Vilano selbst beklagte einst, dass nie ein guter Stein zur Hand war, wenn er einen brauchte!
 
@@ -1796,7 +1796,7 @@ ReTe 10
 
 R: Berührung, D: Momentan, T: Individuum
 
-Schleudere einen Stein (von einer Größe, die mit einer weltlichen Schleuder geworfen werden könnte) auf ein Ziel innerhalb der Reichweite. Anders als die Standardversion von *Trage die unsichtbare Schleuder* (ArM5, Seite 155) schleudert dieser Zauber den Stein als Geschoss. Ein Zielwurf ist erforderlich, um das beabsichtigte Ziel zu treffen, doch bei Erfolg bietet die Magieresistenz keinen Schutz. Der Stein verursacht beim Aufprall +5 Schaden und hat ein Reichweiteninkrement von 20 Schritten.
+Schleudere einen Stein (von einer Größe, die mit einer weltlichen Schleuder geworfen werden könnte) auf ein Ziel innerhalb der Reichweite. Anders als die Standardversion von *Trage die unsichtbare Schleuder* (ArM5, [Seite 155](<Ars Magica Definitive Edition Basisregeln.md#trage-die-unsichtbare-schleuder>)) schleudert dieser Zauber den Stein als Geschoss. Ein Zielwurf ist erforderlich, um das beabsichtigte Ziel zu treffen, doch bei Erfolg bietet die Magieresistenz keinen Schutz. Der Stein verursacht beim Aufprall +5 Schaden und hat ein Reichweiteninkrement von 20 Schritten.
 
 (Basis 5, +1 Berührung)
 
@@ -2350,7 +2350,7 @@ Eine Muse besitzt jene seltene Schönheit, die andere dazu anregt, sich zu Würd
 
 *Hermetisch, Klein*
 
-Die Geschicklichkeit des Magus in der Gestaltung von Form und Bewegung des Körpers ermöglicht es ihm, die für Zeremonielle Magie erforderliche Zeit zu verkürzen. Der Charakter führt Zeremonien wie auf Seite 83 von ArM5 beschrieben durch, benötigt aber nur fünf Minuten pro Magnitude. Wenn der Charakter einen vorbereiteten Raum hat, der regelmäßig für zeremonielles Zaubern genutzt wird, sinkt dies auf eine Minute pro Magnitude.
+Die Geschicklichkeit des Magus in der Gestaltung von Form und Bewegung des Körpers ermöglicht es ihm, die für Zeremonielle Magie erforderliche Zeit zu verkürzen. Der Charakter führt Zeremonien wie auf [Seite 83](<Ars Magica Definitive Edition Basisregeln.md#worte-und-gesten>) von ArM5 beschrieben durch, benötigt aber nur fünf Minuten pro Magnitude. Wenn der Charakter einen vorbereiteten Raum hat, der regelmäßig für zeremonielles Zaubern genutzt wird, sinkt dies auf eine Minute pro Magnitude.
 
 
 #### Übernatürliche Schönheit
@@ -2381,7 +2381,7 @@ Charaktere mit diesem Fehler können seinen Nachteilen entgehen, indem sie sich 
 
 Ein Charakter ohne positiven Präsenzwert darf diesen Fehler nicht besitzen.
 
-## Urbane Magie
+## Stadtmagie
 
 Gefolgsleute des Hauses Jerbiton sind Pioniere. Sie reisen in Städte oder leben sogar in ihnen. Die Städte Europas sind in den letzten 50 Jahren rasant an Größe, Einwohnerzahl und Dominium gewachsen. Jerbiton-Magi glauben, dass diese modernen Städte etwas für den Westen Neues sind: magische Ödlande, völlig anders als die antiken Städte, in denen der Kult des Merkur blühte. Jerbiton-Magi haben an ähnlichen Orten im Osten gelebt, am bemerkenswertesten in Konstantinopel, und nutzen die von ihren Vorfahren entwickelten Techniken, um diese neuen, schönen, schatzreichen Städte zu erkunden.
 
@@ -2429,10 +2429,10 @@ Die niedrigen Stufen dieser Zauber ermöglichen es den Magi, sie trotz schwerer 
 
 Beispiele umfassen:
 
-- Eine Version von *Aura der adligen Erscheinung* mit Persönlicher Reichweite (ArM5, Seite 145)
-- Eine Version von *Der Ruf des Schlummers* mit Berührungs- oder Augenreichweite (ArM5, Seite 151)
-- *Spähende Augen* (ArM5, Seite 144) *•*
-- *Erinnerung an nie gelebte Augenblicke* (ArM5, Seite 149) *•*
+- Eine Version von *Aura der adligen Erscheinung* mit Persönlicher Reichweite (ArM5, [Seite 145](<Ars Magica Definitive Edition Basisregeln.md#aura-der-adligen-erscheinung>))
+- Eine Version von *Der Ruf des Schlummers* mit Berührungs- oder Augenreichweite (ArM5, [Seite 151](<Ars Magica Definitive Edition Basisregeln.md#der-ruf-des-schlummers>))
+- *Spähende Augen* (ArM5, [Seite 144](<Ars Magica Definitive Edition Basisregeln.md#spähende-augen>)) *•*
+- *Erinnerung an nie gelebte Augenblicke* (ArM5, [Seite 149](<Ars Magica Definitive Edition Basisregeln.md#erinnerung-an-nie-gelebte-augenblicke>)) *•*
 
 #### Öffentliche Zauber
 
@@ -2470,7 +2470,7 @@ Die letzte Kategorie, Zauber, bei denen der Magus wenig Spielraum über der nöt
 
 #### Zeremonielles Zaubern
 
-Magi können ihr Verständnis der natürlichen Kräfte der Welt und deren Entsprechung zu mystischen Kräften nutzen, um die Macht ihres Zauberwirkens zu steigern. Regeln für unvorbereitetes zeremonielles Zaubern finden sich auf Seite 83 von ArM5. Charaktere können die Wirksamkeit des zeremoniellen Zauberns auch durch den Einsatz von Requisiten und durch die Nutzung eines vorbereiteten Zauberraums steigern.
+Magi können ihr Verständnis der natürlichen Kräfte der Welt und deren Entsprechung zu mystischen Kräften nutzen, um die Macht ihres Zauberwirkens zu steigern. Regeln für unvorbereitetes zeremonielles Zaubern finden sich auf [Seite 83](<Ars Magica Definitive Edition Basisregeln.md#worte-und-gesten>) von ArM5. Charaktere können die Wirksamkeit des zeremoniellen Zauberns auch durch den Einsatz von Requisiten und durch die Nutzung eines vorbereiteten Zauberraums steigern.
 
 Der Einsatz von Requisiten verlangsamt das zeremonielle Zaubern, bietet aber einen Bonus basierend auf der mystischen Bedeutung der verwendeten Gegenstände. Große Requisiten sind am wirksamsten, aber sehr teuer, da Meisterhandwerker sie aus seltenen Materialien anfertigen müssen. Große Requisiten sind zudem schwer zu transportieren. Mittelgroße Requisiten sind diejenigen, die Magi am leichtesten erschaffen oder beschaffen können. Viele eindrucksvolle Gegenstände, die im Laufe von Geschichten gefunden werden können, sind mittelgroße Requisiten. Winzige Requisiten sind teuer, da sie aus Edelmetallen und Edelsteinen gefertigt werden müssen, die mit den Künsten in Einklang stehen. Requisiten unterstützen die Magie, sind aber keine magischen Gegenstände. Sie können von einem geschickten Handwerker (Fertigkeit 5 oder mehr) unter Anleitung eines Magus hergestellt oder repariert werden, ohne den Magus vom Studium abzulenken.
 
@@ -2504,7 +2504,7 @@ Zauberzeiten bei Nutzung zeremonieller Räume, in Minuten pro Magnitude:
 
 #### Zaubermeisterschaft für städtische Charaktere
 
-Viele Spezialfähigkeiten der Zaubermeisterschaft, die auf den Seiten 86–87 von ArM5 beschrieben werden, sind für städtische Magi nützlich. Sie ermöglichen es dem Magus, die Abzüge für das Wirken von Zaubern ohne Gesten oder Lautäußerungen zu verringern oder zu beseitigen, oder den Penetrationsbonus des Zaubers zu erhöhen. Eine weitere Form der Zaubermeisterschaft, die in *Die Mysterien (Überarbeitete Ausgabe)* beschrieben wird, erlaubt es Charakteren, die Boni des zeremoniellen Zauberns mit einzelnen formulaischen Zaubern zu nutzen. Diese Fähigkeit erfordert keine Einweihung – sie ist kein Mysterium, sondern nur eine unbemerkte Möglichkeit hermetischer Magie – und sie hat sich rasch im Haus Jerbiton verbreitet.
+Viele besondere Fähigkeiten der Zaubermeisterschaft, die auf den Seiten 86–87 von ArM5 beschrieben werden, sind für städtische Magi nützlich. Sie ermöglichen es dem Magus, die Abzüge für das Wirken von Zaubern ohne Gesten oder Lautäußerungen zu verringern oder zu beseitigen, oder den Penetrationsbonus des Zaubers zu erhöhen. Eine weitere Form der Zaubermeisterschaft, die in *Die Mysterien (Überarbeitete Ausgabe)* beschrieben wird, erlaubt es Charakteren, die Boni des zeremoniellen Zauberns mit einzelnen formulaischen Zaubern zu nutzen. Diese Fähigkeit erfordert keine Einweihung – sie ist kein Mysterium, sondern nur eine unbemerkte Möglichkeit hermetischer Magie – und sie hat sich rasch im Haus Jerbiton verbreitet.
 
 #### Arkane Verbindungen
 
@@ -2590,16 +2590,16 @@ Schnörkel sind rein kosmetische Effekte, machen aber die Ausübung der Künste 
 
 Der Gründer war in Magie bewandert, die die Wahrnehmung veränderte. Seine Tradition besteht fort, neben denen vieler anderer, die dem Haus seit seinen Anfängen beigetreten sind. Wahrnehmung ist ein komplexer Vorgang, was sie fragil und in jeder ihrer Phasen leicht von Magi zu manipulieren macht. Der Vorgang, die Wahrnehmung anderer zu verzerren, wird als Täuschung bezeichnet, und die Gefolgsleute des Hauses Jerbiton beanspruchen, ihre Meister zu sein, obwohl geschickte Praktiker der Täuschung in vielen Häusern zu finden sind.
 
-### Spezies
+### Species
 
-Spezies sind Partikel, die ständig von Gegenständen ausgesandt werden und die, wenn sie auf die Sinnesorgane des Körpers treffen, eine Reaktion hervorrufen. Menschen begegnen regelmäßig vier Arten von Spezies:
+Species sind Partikel, die ständig von Gegenständen ausgesandt werden und die, wenn sie auf die Sinnesorgane des Körpers treffen, eine Reaktion hervorrufen. Menschen begegnen regelmäßig vier Arten von Species:
 
-- Ikonische Spezies werden vom Licht getragen und vom Auge interpretiert.
-- Echoische Spezies werden von der Luft getragen und vom Ohr registriert.
-- Haptische Spezies wandern nur durch direkten Kontakt und werden von der Haut wahrgenommen.
-- Olfaktorische und gustatorische Spezies werden entweder in der Luft (über den Geruch) oder im Wasser (über den Geschmack) wahrgenommen. Es handelt sich um dieselben Spezies, die lediglich von zwei verschiedenen Sinnen in zwei Medien erfahren werden.
+- Ikonische Species werden vom Licht getragen und vom Auge interpretiert.
+- Echoische Species werden von der Luft getragen und vom Ohr registriert.
+- Haptische Species wandern nur durch direkten Kontakt und werden von der Haut wahrgenommen.
+- Olfaktorische und gustatorische Species werden entweder in der Luft (über den Geruch) oder im Wasser (über den Geschmack) wahrgenommen. Es handelt sich um dieselben Species, die lediglich von zwei verschiedenen Sinnen in zwei Medien erfahren werden.
 
-Sterbliche Menschen sind nicht in der Lage, Spezies direkt zu manipulieren; stattdessen müssen sie die Gegenstände manipulieren, die Spezies aussenden, damit das Muster der Aussendung angenehm ist. Spezies selbst senden keine weiteren Spezies aus und sind gewichtslos. Das macht die meisten Spezies unsichtbar und nicht greifbar. Sie sind auch unbegrenzt verfügbar, da alle Gegenstände einen kontinuierlichen Strom von Spezies aussenden.
+Sterbliche Menschen sind nicht in der Lage, Species direkt zu manipulieren; stattdessen müssen sie die Gegenstände manipulieren, die Species aussenden, damit das Muster der Aussendung angenehm ist. Species selbst senden keine weiteren Species aus und sind gewichtslos. Das macht die meisten Species unsichtbar und nicht greifbar. Sie sind auch unbegrenzt verfügbar, da alle Gegenstände einen kontinuierlichen Strom von Species aussenden.
 
 > ## Erfolgsstufen für Illusionen
 > 
@@ -2646,27 +2646,27 @@ Sterbliche Menschen sind nicht in der Lage, Spezies direkt zu manipulieren; stat
 >    - ... zur Ausübung einer Fertigkeit verwendet werden, in der der Charakter einen Wert von 5 oder mehr besitzt.
 >    - ... von denen die Spieltruppe meint, dass sie ihnen aufgrund der Geschichte, der Fertigkeiten, des Hintergrunds oder der Tugenden des Charakters bestens bekannt sind.
 
-> ## Speziesmagie-Beispiel
+> ## Speciesmagie-Beispiel
 > 
 > **Zerstreut wie Licht** MuTe(Im) Stufe 30 R: Stimme, D: Mom, Z: Ind
 > 
-> Dieser Zauber verwandelt das Metall in einem Gegenstand, beispielsweise einem Schwert, in ikonische Spezies. Vorbeiströmendes Licht trägt diese Spezies fort, die absorbiert werden, wenn sie auf eine nicht reflektierende Oberfläche treffen. Dieser Zauber desintegriert Gegenstände, hat also offensichtliche Kampfvorteile, wurde aber ursprünglich von einem Künstler erschaffen, der nach einer effizienten Methode zur Metallbeschichtung von Gegenständen suchte. Er platzierte das Metall und den zu beschichtenden Gegenstand schwebend in einem übernatürlich beleuchteten, innen verspiegelten Kasten und nutzte diesen Zauber, um das Metall zunächst in Spezies und dann zurück zu verwandeln. Dies erzeugte eine glatte Metallschicht um den Gegenstand und die Innenseite des Kastens.
+> Dieser Zauber verwandelt das Metall in einem Gegenstand, beispielsweise einem Schwert, in ikonische Species. Vorbeiströmendes Licht trägt diese Species fort, die absorbiert werden, wenn sie auf eine nicht reflektierende Oberfläche treffen. Dieser Zauber desintegriert Gegenstände, hat also offensichtliche Kampfvorteile, wurde aber ursprünglich von einem Künstler erschaffen, der nach einer effizienten Methode zur Metallbeschichtung von Gegenständen suchte. Er platzierte das Metall und den zu beschichtenden Gegenstand schwebend in einem übernatürlich beleuchteten, innen verspiegelten Kasten und nutzte diesen Zauber, um das Metall zunächst in Species und dann zurück zu verwandeln. Dies erzeugte eine glatte Metallschicht um den Gegenstand und die Innenseite des Kastens.
 > 
 > (Basis 5, +2 Stimme, +2 Metall, +1 Requisit)
 
-Magi können mit ihren Künsten entweder die Fähigkeit eines Gegenstands, Spezies zu erzeugen, oder die Spezies selbst manipulieren. Muto-Zauber, die andere Formen in Spezies verwandeln, behandeln diese als leicht unnatürlichen Feststoff, eine Flüssigkeit oder ein Gas und erfordern ein Imaginem-Requisit.
+Magi können mit ihren Künsten entweder die Fähigkeit eines Gegenstands, Species zu erzeugen, oder die Species selbst manipulieren. Muto-Zauber, die andere Formen in Species verwandeln, behandeln diese als leicht unnatürlichen Feststoff, eine Flüssigkeit oder ein Gas und erfordern ein Imaginem-Requisit.
 
-Die folgenden Ziele werden für Spezies verwendet und ergänzen die im Basisregelwerk aufgeführten.
+Die folgenden Ziele werden für Species verwendet und ergänzen die im Basisregelwerk aufgeführten.
 
-- **Individuum:** Genügend Spezies, um eine lebensgroße Illusion eines menschlichen Wesens oder kleineren Gegenstands zu erschaffen und aufrechtzuerhalten, die alle Sinne betrifft.
-- **Teil:** Genügend Spezies, um eine lebensgroße Illusion eines menschlichen Wesens oder kleineren Gegenstands zu erschaffen und aufrechtzuerhalten, die einen Sinn betrifft, oder einen Teil eines Menschen, der alle Sinne betrifft.
-- **Gruppe:** Genügend Spezies, um eine lebensgroße Illusion einer Gruppe von Menschen oder kleineren Gegenständen zu erschaffen und aufrechtzuerhalten.
+- **Individuum:** Genügend Species, um eine lebensgroße Illusion eines menschlichen Wesens oder kleineren Gegenstands zu erschaffen und aufrechtzuerhalten, die alle Sinne betrifft.
+- **Teil:** Genügend Species, um eine lebensgroße Illusion eines menschlichen Wesens oder kleineren Gegenstands zu erschaffen und aufrechtzuerhalten, die einen Sinn betrifft, oder einen Teil eines Menschen, der alle Sinne betrifft.
+- **Gruppe:** Genügend Species, um eine lebensgroße Illusion einer Gruppe von Menschen oder kleineren Gegenständen zu erschaffen und aufrechtzuerhalten.
 
-Hermetische Magi haben noch keinen Weg gefunden, mit Muto-Magie feste Gegenstände aus Spezies herzustellen. Es gibt verschiedene Theorien, warum das so ist, doch viele Denker glauben, es liege an der Schwierigkeit, einen Cluster von Spezies deutlich wahrzunehmen, um ihn zu verwandeln.
+Hermetische Magi haben noch keinen Weg gefunden, mit Muto-Magie feste Gegenstände aus Species herzustellen. Es gibt verschiedene Theorien, warum das so ist, doch viele Denker glauben, es liege an der Schwierigkeit, einen Cluster von Species deutlich wahrzunehmen, um ihn zu verwandeln.
 
 > ## Zusätzliche, nebensächliche Sinne
 > 
-> Der Körper besitzt innere Sinne, die die fünf äußeren Sinne ergänzen. Wie die fünf größeren Sinne kann die Fähigkeit, innere Sinne zu interpretieren, mit Mentem-Magie angegriffen werden, und die Organe, die diese Sinne nutzen, können mit Corpus-Zaubern angegriffen werden. Innere Sinne sind mit Imaginem-Magie von Reichweite größer als Berührung schwer anzugreifen, da die Spezies, die sie nutzen, haptisch sind: das heißt, sie wandern nur durch das Medium des direkten Kontakts auf der Haut, wie die Spezies der Berührung.
+> Der Körper besitzt innere Sinne, die die fünf äußeren Sinne ergänzen. Wie die fünf größeren Sinne kann die Fähigkeit, innere Sinne zu interpretieren, mit Mentem-Magie angegriffen werden, und die Organe, die diese Sinne nutzen, können mit Corpus-Zaubern angegriffen werden. Innere Sinne sind mit Imaginem-Magie von Reichweite größer als Berührung schwer anzugreifen, da die Species, die sie nutzen, haptisch sind: das heißt, sie wandern nur durch das Medium des direkten Kontakts auf der Haut, wie die Species der Berührung.
 > 
 > **Propriozeption** ist der Sinn, den der Körper nutzt, um die Position und Ausrichtung seiner Teile zu überwachen. Sie wird durch Botschaften geregelt, die entlang der Nerven wandern. Der Körper nutzt diesen Sinn zur Regulierung von Bewegung. Er ist für die Koordination von entscheidender Bedeutung, da er den Körperteilen mitteilt, wie weit sie sich bewegen müssen, um angemessen zusammenzuarbeiten. Es gibt kein einzelnes Organ der Propriozeption, aber die Botschaften gehen von den Gelenken aus.
 > 
@@ -2680,26 +2680,26 @@ Hermetische Magi haben noch keinen Weg gefunden, mit Muto-Magie feste Gegenstän
 
 Magi können täuschen, indem sie den Vorgang der Wahrnehmung in jeder seiner vielen Phasen unterbrechen. Die Phasen der Wahrnehmung und die Punkte, an denen Magi den Vorgang stören können, sind:
 
-- Ein Gegenstand existiert und sendet Spezies aus.
-- Die Spezies wandern durch ein Medium.
-- Die Spezies treffen auf ein Sinnesorgan.
+- Ein Gegenstand existiert und sendet Species aus.
+- Die Species wandern durch ein Medium.
+- Die Species treffen auf ein Sinnesorgan.
 - Das Organ sendet ein Signal an das Gehirn. Diese Phase wird in diesem Kapitel nicht weiter erörtert, da sie der Form Corpus angehört.
 - Der Geist interpretiert das Signal und verleiht ihm Bedeutung.
 - Das Signal wird erinnert.
 
 ### Mimikry: Illusionäre Gegenstände erschaffen
 
-Die im Basisregelwerk beschriebenen hermetischen Illusionen basieren fast alle auf Mimikry – dem Fachausdruck für die Erschaffung illusionärer Gegenstände. Mimikry erfordert wenig Finesse, ist aber wenig subtil. Als Beispiel für Mimikry: Ein Magus, der sein Opfer glauben machen will, eine Schlange liege auf seinem Bett, erschafft eine Illusion, die natürliche, nichtmagische Spezies wie die einer Schlange von der Oberfläche des Bettes aussendet. Jeder in der Nähe sieht die illusionäre Schlange und reagiert auf sie, als wäre sie real. Nachgeahmte Bilder haben überzeugende Spiegelbilder, da sie Spezies in alle Richtungen aussenden. Nachgeahmte Bilder werden nicht von der Parma Magica aufgehalten, da ihre Spezies nicht magisch sind.
+Die im Basisregelwerk beschriebenen hermetischen Illusionen basieren fast alle auf Mimikry – dem Fachausdruck für die Erschaffung illusionärer Gegenstände. Mimikry erfordert wenig Finesse, ist aber wenig subtil. Als Beispiel für Mimikry: Ein Magus, der sein Opfer glauben machen will, eine Schlange liege auf seinem Bett, erschafft eine Illusion, die natürliche, nichtmagische Species wie die einer Schlange von der Oberfläche des Bettes aussendet. Jeder in der Nähe sieht die illusionäre Schlange und reagiert auf sie, als wäre sie real. Nachgeahmte Bilder haben überzeugende Spiegelbilder, da sie Species in alle Richtungen aussenden. Nachgeahmte Bilder werden nicht von der Parma Magica aufgehalten, da ihre Species nicht magisch sind.
 
-### Wandernde Spezies
+### Wandernde Species
 
-Magi können die Ströme von Spezies manipulieren, die aus Gegenständen hervorquellen. Die einfachsten Manipulationen ersetzen oder vernichten die von einem Gegenstand erzeugten Spezies. Ein Magus, der ein Blatt wie eine Münze aussehen lässt, ersetzt die Spezies der Münze. Ein Magus, der einen Dolch unsichtbar macht, vernichtet dessen Fähigkeit, optische Spezies zu erzeugen. Es gibt jedoch subtilere Wege, wandernde Spezies zu manipulieren.
+Magi können die Ströme von Species manipulieren, die aus Gegenständen hervorquellen. Die einfachsten Manipulationen ersetzen oder vernichten die von einem Gegenstand erzeugten Species. Ein Magus, der ein Blatt wie eine Münze aussehen lässt, ersetzt die Species der Münze. Ein Magus, der einen Dolch unsichtbar macht, vernichtet dessen Fähigkeit, optische Species zu erzeugen. Es gibt jedoch subtilere Wege, wandernde Species zu manipulieren.
 
 #### Transparenz
 
-Eine Transparenzillusion vernichtet die Spezies eines Gegenstands, bevor sie das Auge oder manchmal das Ohr eines bestimmten Betrachters treffen. Andere Personen können die vom Gegenstand ausgesandten Spezies weiterhin sehen. Transparenzen können nur in relativ statischen Umgebungen aufrechterhalten werden, da der Perspektivtrick, den sie einsetzen, zu schwierig aufrechtzuerhalten ist, wenn er gegen mehrere Betrachter versucht wird, die sich in Bezug auf den Gegenstand und zueinander bewegen.
+Eine Transparenzillusion vernichtet die Species eines Gegenstands, bevor sie das Auge oder manchmal das Ohr eines bestimmten Betrachters treffen. Andere Personen können die vom Gegenstand ausgesandten Species weiterhin sehen. Transparenzen können nur in relativ statischen Umgebungen aufrechterhalten werden, da der Perspektivtrick, den sie einsetzen, zu schwierig aufrechtzuerhalten ist, wenn er gegen mehrere Betrachter versucht wird, die sich in Bezug auf den Gegenstand und zueinander bewegen.
 
-Eine Transparenz hat dieselbe Basisstufe wie der Effekt, den sie nachahmt, wie auf Seite 146 von ArM5 angegeben. Transparenzen verwenden das Ziel Individuum, um den Strom von Spezies zwischen dem verborgenen Gegenstand und dem Betrachter darzustellen. Das Wirken einer Transparenzillusion erfordert einen Wahrnehmung-+-Finesse-Wurf gegen einen Schwierigkeitsgrad von 6. Der Schwierigkeitsgrad wird wie folgt modifiziert:
+Eine Transparenz hat dieselbe Basisstufe wie der Effekt, den sie nachahmt, wie auf [Seite 146](<Ars Magica Definitive Edition Basisregeln.md#schleier-der-unsichtbarkeit>) von ArM5 angegeben. Transparenzen verwenden das Ziel Individuum, um den Strom von Species zwischen dem verborgenen Gegenstand und dem Betrachter darzustellen. Das Wirken einer Transparenzillusion erfordert einen Wahrnehmung-+-Finesse-Wurf gegen einen Schwierigkeitsgrad von 6. Der Schwierigkeitsgrad wird wie folgt modifiziert:
 
 | Mod. | Ziel                                |
 |------|-------------------------------------|
@@ -2717,7 +2717,7 @@ Eine Transparenz hat dieselbe Basisstufe wie der Effekt, den sie nachahmt, wie a
 
 > ## Transparenz-Beispiele
 > 
-> Transparenzen werden nicht von der Parma Magica aufgehalten, da sie die Vernichtung von Spezies beinhalten, bevor diese das Ziel treffen.
+> Transparenzen werden nicht von der Parma Magica aufgehalten, da sie die Vernichtung von Species beinhalten, bevor diese das Ziel treffen.
 > 
 > ##### Hinterhalt an der verlassenen Straße
 > 
@@ -2725,7 +2725,7 @@ Eine Transparenz hat dieselbe Basisstufe wie der Effekt, den sie nachahmt, wie a
 > 
 > R: Berührung, D: Ring, Z: Kreis
 > 
-> Dieser Zauber vernichtet alle Spezies, die die Gruppe von Dingen innerhalb des Kreises in eine einzelne Richtung aussenden. Er kann beispielsweise die Reisegruppe eines Magus aus der Richtung einer anderen Gruppe unsichtbar machen, die sie überfallen wollen. Die Basisstufe dieses Zaubers beinhaltet eine Anpassung, die die Fähigkeit des Magus berücksichtigt, die Wirkungsrichtung sanft zu verschieben, sodass die feindliche Gruppe die verborgene Truppe nicht entdecken kann, wenn sie vorbeizieht. Andere Personen, beispielsweise die Mitglieder der Gesellschaft des Magus, können sich weiterhin gegenseitig sehen, da die Spezies, die ihre Augen erreichen, nicht blockiert werden. Die Transparenz erfordert einen Wahrnehmung-+-Finesse-Wurf gegen einen Schwierigkeitsgrad von 9, um überzeugend zu sein.
+> Dieser Zauber vernichtet alle Species, die die Gruppe von Dingen innerhalb des Kreises in eine einzelne Richtung aussenden. Er kann beispielsweise die Reisegruppe eines Magus aus der Richtung einer anderen Gruppe unsichtbar machen, die sie überfallen wollen. Die Basisstufe dieses Zaubers beinhaltet eine Anpassung, die die Fähigkeit des Magus berücksichtigt, die Wirkungsrichtung sanft zu verschieben, sodass die feindliche Gruppe die verborgene Truppe nicht entdecken kann, wenn sie vorbeizieht. Andere Personen, beispielsweise die Mitglieder der Gesellschaft des Magus, können sich weiterhin gegenseitig sehen, da die Species, die ihre Augen erreichen, nicht blockiert werden. Die Transparenz erfordert einen Wahrnehmung-+-Finesse-Wurf gegen einen Schwierigkeitsgrad von 9, um überzeugend zu sein.
 > 
 > (Basis 5, +1 Berührung, +2 Ring)
 > 
@@ -2735,7 +2735,7 @@ Eine Transparenz hat dieselbe Basisstufe wie der Effekt, den sie nachahmt, wie a
 > 
 > R: Per, D: Sonne, Z: Ind
 > 
-> Dieser Zauber macht den Wirker selektiv unsichtbar. Er vernichtet einen dünnen Kegel der Spezies, die der Magus aussendet, sodass eine einzelne Person den Wirker nicht sehen kann. Personen um den Magus herum, die sich außerhalb des Kegels befinden, sehen den Wirker weiterhin. Dies ist besonders in Stadtmassen nützlich, da es verhindert, dass der Magus von ahnungslosen Passanten angerempelt wird. Beachte, dass dieser Zauber nur funktioniert, wenn der Magus den Standort des einzelnen auszuschließenden Betrachters kennt und sich der Betrachter vorhersehbar bewegt. Wenn der Betrachter sich schnell aus dem Kegel herausbewegt, wird der Magus für ihn sichtbar.
+> Dieser Zauber macht den Wirker selektiv unsichtbar. Er vernichtet einen dünnen Kegel der Species, die der Magus aussendet, sodass eine einzelne Person den Wirker nicht sehen kann. Personen um den Magus herum, die sich außerhalb des Kegels befinden, sehen den Wirker weiterhin. Dies ist besonders in Stadtmassen nützlich, da es verhindert, dass der Magus von ahnungslosen Passanten angerempelt wird. Beachte, dass dieser Zauber nur funktioniert, wenn der Magus den Standort des einzelnen auszuschließenden Betrachters kennt und sich der Betrachter vorhersehbar bewegt. Wenn der Betrachter sich schnell aus dem Kegel herausbewegt, wird der Magus für ihn sichtbar.
 > 
 > Die Transparenz erfordert einen Wahrnehmung-+-Finesse-Wurf gegen einen Schwierigkeitsgrad von 6, um überzeugend zu sein, wenn das Ziel stationär bleibt. Wenn das Ziel sich langsam und vorhersehbar bewegt, wie beispielsweise ein Wachposten auf seiner Route oder ein Fußgänger, der zu einem Tor schlendert, erhöht sich dies auf 9. Er steigt auf 15 für einen Charakter, der sich sehr schnell, aber vorhersehbar bewegt, zum Beispiel einen Reiter auf einer Straße.
 > 
@@ -2743,21 +2743,21 @@ Eine Transparenz hat dieselbe Basisstufe wie der Effekt, den sie nachahmt, wie a
 
 ## Die Sinnesorgane treffen
 
-Ungewöhnliche Effekte können erzielt werden, indem man Spezies leicht modifiziert, bevor sie die Sinne des Ziels treffen.
+Ungewöhnliche Effekte können erzielt werden, indem man Species leicht modifiziert, bevor sie die Sinne des Ziels treffen.
 
 #### Makroturen: Illusionen der Nähe zum Sinnesorgan
 
 Eine Makrotur ist ein über die Möglichkeiten des menschlichen Auges hinaus vergrößertes Bild,
 
-das erzeugt wird, indem die Spezies eines Gegenstands gezwungen werden, das Auge in weniger konzentrierter Weise zu treffen. Diese werden bereits in den Intellego-Imaginem-Leitlinien in ArM5 erörtert (Basisstufe 3). Jerbiton-Magi nutzen Makroturen, um die Methode und Technik von Artefakten anhand der winzigen Spuren zu bestimmen, die die Werkzeuge des Handwerkers hinterlassen haben. Sie nutzen Makroturen auch, um Kunstwerke aus Winkeln zu betrachten, die Sterblichen nicht zugänglich sind, um Gegenstände aus großer Entfernung zu sehen und um die Qualität von Edelsteinmaterialien zu bestimmen, die sie zu erwerben beabsichtigen. Makroturen können auch zur Korrektur von Sehstörungen eingesetzt werden.
+das erzeugt wird, indem die Species eines Gegenstands gezwungen werden, das Auge in weniger konzentrierter Weise zu treffen. Diese werden bereits in den Intellego-Imaginem-Leitlinien in ArM5 erörtert (Basisstufe 3). Jerbiton-Magi nutzen Makroturen, um die Methode und Technik von Artefakten anhand der winzigen Spuren zu bestimmen, die die Werkzeuge des Handwerkers hinterlassen haben. Sie nutzen Makroturen auch, um Kunstwerke aus Winkeln zu betrachten, die Sterblichen nicht zugänglich sind, um Gegenstände aus großer Entfernung zu sehen und um die Qualität von Edelsteinmaterialien zu bestimmen, die sie zu erwerben beabsichtigen. Makroturen können auch zur Korrektur von Sehstörungen eingesetzt werden.
 
 #### Synästhesie: Sinnesorgane austauschen
 
-Mittels synästhetischer Illusionen werden die Spezies eines schwachen Sinnes so verändert, dass ein stärkerer Sinn sie stattdessen wahrnimmt. Beim Menschen ist der Sehsinn der stärkste, sodass die meisten synästhetischen Zauber Spezies weniger leicht wahrnehmbarer Arten sichtbar machen. Spezies für äußere Sinne wie den Sehsinn haben, wenn sie in solche für innere Sinne wie Schmerz verwandelt werden, keine Wirkung, da sie die inneren Organe, die sie wahrnehmen, nicht erreichen können.
+Mittels synästhetischer Illusionen werden die Species eines schwachen Sinnes so verändert, dass ein stärkerer Sinn sie stattdessen wahrnimmt. Beim Menschen ist der Sehsinn der stärkste, sodass die meisten synästhetischen Zauber Species weniger leicht wahrnehmbarer Arten sichtbar machen. Species für äußere Sinne wie den Sehsinn haben, wenn sie in solche für innere Sinne wie Schmerz verwandelt werden, keine Wirkung, da sie die inneren Organe, die sie wahrnehmen, nicht erreichen können.
 
 > ### Synästhesie-Beispiele
 > 
-> Zauber, die die Spezies, die einen Sinn auslösen, in solche verwandeln, die einen anderen auslösen, haben eine Basisstufe von 2.
+> Zauber, die die Species, die einen Sinn auslösen, in solche verwandeln, die einen anderen auslösen, haben eine Basisstufe von 2.
 > 
 > ##### Leuchtende Fußspuren des Diebes
 > 
@@ -2765,7 +2765,7 @@ Mittels synästhetischer Illusionen werden die Spezies eines schwachen Sinnes so
 > 
 > R: Sicht, D: Konz, Z: Gruppe
 > 
-> Dieser Zauber macht die Schweißspuren einer Person sichtbar, indem er den Strom olfaktorischer Spezies des Geruchs der Person in einen Strom ikonischer Spezies verwandelt. Wie dieses Licht erscheint, hängt vom Sigil und der Finesse des Magus ab. Dieser Zauber ist mimetisch, sodass alle nahestehenden Personen die Geruchsspuren sehen können. Beachte, dass der Magus den Geruch des Diebes deutlich wahrnehmen muss, um ein gültiges Ziel für den Zauber zu haben.
+> Dieser Zauber macht die Schweißspuren einer Person sichtbar, indem er den Strom olfaktorischer Species des Geruchs der Person in einen Strom ikonischer Species verwandelt. Wie dieses Licht erscheint, hängt vom Sigil und der Finesse des Magus ab. Dieser Zauber ist mimetisch, sodass alle nahestehenden Personen die Geruchsspuren sehen können. Beachte, dass der Magus den Geruch des Diebes deutlich wahrnehmen muss, um ein gültiges Ziel für den Zauber zu haben.
 > 
 > (Basis 2, +3 Sicht, +1 Konz, +2 Gruppe)
 > 
@@ -2775,7 +2775,7 @@ Mittels synästhetischer Illusionen werden die Spezies eines schwachen Sinnes so
 > 
 > R: Sicht, D: Konz, Z: Gruppe
 > 
-> Obwohl Imaginem-Magie keine Wärme erzeugen kann, senden warme Oberflächen Spezies aus, die Menschen durch Berührung wahrnehmen können. Dieser Zauber verwandelt diese in Spezies, auf die das Auge reagiert. Wie die Wärme gesehen wird, variiert je nach Magus.
+> Obwohl Imaginem-Magie keine Wärme erzeugen kann, senden warme Oberflächen Species aus, die Menschen durch Berührung wahrnehmen können. Dieser Zauber verwandelt diese in Species, auf die das Auge reagiert. Wie die Wärme gesehen wird, variiert je nach Magus.
 > 
 > (Basis 2, +1 Sicht, +1 Konzentration, +4 Gruppe)
 > 
@@ -2785,7 +2785,7 @@ Mittels synästhetischer Illusionen werden die Spezies eines schwachen Sinnes so
 > 
 > R: Berührung, D: Ring, Z: Kreis
 > 
-> Dieser Zauber verwandelt das Ächzen und Knarren beschädigter Ausrüstungsteile in ikonische Spezies, die an das Sigil des Magus erinnern. Dies erleichtert es Magi, die Mängel in beschädigten Teilen zu finden, und gewährt einen Bonus von +3 auf Handwerks- oder Berufswürfe.
+> Dieser Zauber verwandelt das Ächzen und Knarren beschädigter Ausrüstungsteile in ikonische Species, die an das Sigil des Magus erinnern. Dies erleichtert es Magi, die Mängel in beschädigten Teilen zu finden, und gewährt einen Bonus von +3 auf Handwerks- oder Berufswürfe.
 > 
 > (Basis 2, +1 Berührung, +2 Ring)
 
@@ -2807,7 +2807,7 @@ Der Schwierigkeitsgrad des Wahrnehmungswurfs des Opfers ist die Summe aus einem 
 > 
 > R: Berührung, D: Ring, Z: Kreis
 > 
-> Dieser Zauber macht die Spezies, die ein Gegenstand innerhalb des Kreises aussendet, lebhafter, sodass der Magus winzige Details erkennen kann, die sonst unsichtbar sind. Dieser Zauber wurde traditionell zur Untersuchung der physischen Beschaffenheit von Kunstwerken verwendet, aber naturverbundene Jerbiton-Magi haben kürzlich begonnen, ihn zur Untersuchung des Handwerks Gottes einzusetzen, indem sie die winzigen Strukturen der Schöpfung betrachten.
+> Dieser Zauber macht die Species, die ein Gegenstand innerhalb des Kreises aussendet, lebhafter, sodass der Magus winzige Details erkennen kann, die sonst unsichtbar sind. Dieser Zauber wurde traditionell zur Untersuchung der physischen Beschaffenheit von Kunstwerken verwendet, aber naturverbundene Jerbiton-Magi haben kürzlich begonnen, ihn zur Untersuchung des Handwerks Gottes einzusetzen, indem sie die winzigen Strukturen der Schöpfung betrachten.
 > 
 > (Basis 3, +1 Berührung, +2 Ring)
 
@@ -2836,13 +2836,13 @@ Anamorphe täuschen gewöhnlich nur einen einzigen Sinn, indem sie vage visuelle
 
 Magi können die Entscheidungsfähigkeit ihrer Feinde angreifen, indem sie deren Geist mit Emotionen umnebeln, die künstliche Persönlichkeitsmerkmale von +5 erzeugen. Zauber, die extreme Emotionen erzeugen, können mit einem Wurf auf ein beliebiges entgegengesetztes Persönlichkeitsmerkmal gegen einen Schwierigkeitsgrad von 9 widerstanden werden. Zauber, die mildere Emotionen erzeugen, werden mit einem Wurf gegen einen Schwierigkeitsgrad von (4 + dem Wert des künstlichen Persönlichkeitsmerkmals) widerstanden, haben aber dieselbe Stufe wie mächtigere Zauber. Basisstufen-Leitlinien lauten wie folgt:
 
-- Creo-Mentem-Zauber, die auf eine bestimmte Person oder einen bestimmten Gegenstand gerichtete Emotionen erzeugen, haben eine Basisstufe von 4. *Panik des zitternden Herzens* und *Aufwallender Zorn* (beide ArM5, Seite 148) sind Beispiele dieses Zaubertyps.
+- Creo-Mentem-Zauber, die auf eine bestimmte Person oder einen bestimmten Gegenstand gerichtete Emotionen erzeugen, haben eine Basisstufe von 4. *Panik des zitternden Herzens* und *Aufwallender Zorn* (beide ArM5, [Seite 148](<Ars Magica Definitive Edition Basisregeln.md#panik-des-zitternden-herzens>)) sind Beispiele dieses Zaubertyps.
 - Zauber, die eine ungerichtete Neigung zu einer bestimmten Emotion erzeugen, haben eine Basisstufe von 5. Beispielhafte Effekte umfassen einen Zauber, der sein Opfer auf alle Menschen in seiner Umgebung wütend macht, oder einen, der es alles Gesagte urkomisch finden lässt.
 - Zauber, die auf eine allgemeine Klasse von Personen oder Dingen gerichtete Emotionen erzeugen, haben eine Basisstufe von 5. Beispiele umfassen Zauber, die Hass auf Personen lenken, die ein bestimmtes Abzeichen tragen, oder die aus einem bestimmten Ort stammen.
 
 #### Verminderte geistige Fähigkeit
 
-Perdo-Mentem-Zauber ermöglichen es Magi, die geistige Leistungsfähigkeit ihrer Ziele zu vermindern. Dies hat eine Basisstufe von 4, vermerkt auf Seite 150 von ArM5. Das gegebene Beispiel ist *Vertrauen des kindlichen Glaubens*, das das erwachsene Urteilsvermögen bezüglich Wahrheit und Falschheit zerstört. Hermetische Magie kann viele ähnliche Zauber erschaffen, die die geistige Leistungsfähigkeit des Ziels auf zahlreiche andere Weisen vermindern. Mit *Vertrauen des kindlichen Glaubens* als Vorlage können in Perdo Mentem bewanderte Charaktere die Fähigkeit eines Ziels hemmen, eine der folgenden Tätigkeiten auszuführen:
+Perdo-Mentem-Zauber ermöglichen es Magi, die geistige Leistungsfähigkeit ihrer Ziele zu vermindern. Dies hat eine Basisstufe von 4, vermerkt auf [Seite 150](<Ars Magica Definitive Edition Basisregeln.md#den-heimsuchenden-geist-zur-ruhe-betten>) von ArM5. Das gegebene Beispiel ist *Vertrauen des kindlichen Glaubens*, das das erwachsene Urteilsvermögen bezüglich Wahrheit und Falschheit zerstört. Hermetische Magie kann viele ähnliche Zauber erschaffen, die die geistige Leistungsfähigkeit des Ziels auf zahlreiche andere Weisen vermindern. Mit *Vertrauen des kindlichen Glaubens* als Vorlage können in Perdo Mentem bewanderte Charaktere die Fähigkeit eines Ziels hemmen, eine der folgenden Tätigkeiten auszuführen:
 
 - Irrelevante Details ignorieren, um die Kerneigenschaften einer Sache zu finden
 - Worte artikulieren
@@ -2869,13 +2869,13 @@ Perdo-Mentem-Zauber ermöglichen es Magi, die geistige Leistungsfähigkeit ihrer
 
 #### Miniaturen: Tricks mit Perspektive
 
-Eine Miniatur ist eine kleine Illusion, die Spezies nur in eine einzige Richtung aussendet. Sie ist darauf ausgelegt, den Betrachter mit einem Perspektivtrick zu täuschen: dass kleine, nahe Gegenstände genauso aussehen wie größere, entfernte Gegenstände. Miniaturen sind in Städten praktisch, da sie unauffällig sind. Sie erfordern mehr Finesse als gewöhnliche Illusionen, doch dies behindert Jerbiton-Magi nicht.
+Eine Miniatur ist eine kleine Illusion, die Species nur in eine einzige Richtung aussendet. Sie ist darauf ausgelegt, den Betrachter mit einem Perspektivtrick zu täuschen: dass kleine, nahe Gegenstände genauso aussehen wie größere, entfernte Gegenstände. Miniaturen sind in Städten praktisch, da sie unauffällig sind. Sie erfordern mehr Finesse als gewöhnliche Illusionen, doch dies behindert Jerbiton-Magi nicht.
 
 Städtische Magi setzen oft Miniaturen ein, da innerhalb von Gebäuden die Sichtlinien der Ziele eingeschränkt sind. Eine Miniatur an einem Fenster oder einer Tür, die Einzelziele darstellen, kann ein ganzes Panorama zu zeigen scheinen, das bei mimetischen Illusionen ein Grenzenziel erfordern würde. Die Tür oder das Fenster senkt die Magnitude des Zaubers, indem sie eine Oberfläche bietet, auf der ein Kreis und Ring gezeichnet werden können. Selbst ungerahmte Miniaturen können Bilder erzeugen, die dem Betrachter als Raum-, Bauwerks- oder Grenzenziele erscheinen. Die Miniatur behält ihr Einzelziel bei und erfordert stattdessen erhöhte Finesse. Diese Miniaturen betreffen alle Betrachter auf der aktiven Seite der Illusion, sodass sie nicht das Teilziel erfordern, das bei Miniaturen verwendet werden muss, die auf den Kopf eines einzelnen Opfers gerichtet sind.
 
-Miniaturen können auch eingesetzt werden, um Illusionen zu erzeugen, die nur ein einzelnes Opfer wahrnehmen kann. Eine herkömmliche Illusion einer Schlange auf einem Bett kann von allen Personen im Raum gesehen werden. Eine winzige Illusion einer Schlange, die direkt vor den Augen eines Opfers platziert wird und Spezies nur in Richtung seiner Augen aussendet, ist für die anderen Personen im Raum unsichtbar. Ähnliche Tricks können Klang-Illusionen erzeugen und Musik oder Stimmen hervorbringen, die nur das Ziel hören kann.
+Miniaturen können auch eingesetzt werden, um Illusionen zu erzeugen, die nur ein einzelnes Opfer wahrnehmen kann. Eine herkömmliche Illusion einer Schlange auf einem Bett kann von allen Personen im Raum gesehen werden. Eine winzige Illusion einer Schlange, die direkt vor den Augen eines Opfers platziert wird und Species nur in Richtung seiner Augen aussendet, ist für die anderen Personen im Raum unsichtbar. Ähnliche Tricks können Klang-Illusionen erzeugen und Musik oder Stimmen hervorbringen, die nur das Ziel hören kann.
 
-Die meisten Miniaturen sind eine Magnitude höher als die Basisstufe, die in der Tabelle auf Seite 144 von ArM5 angegeben wird. Die zusätzliche Magnitude ermöglicht es der Miniatur, sich leicht zu bewegen, sodass die Kopfbewegungen eines einzelnen Betrachters den für den Erfolg der Miniatur entscheidenden Perspektivtrick nicht ruinieren. Der Wirker einer Miniatur muss einen Wahrnehmung-+-Finesse-Wurf gegen einen Schwierigkeitsgrad von 9 ablegen, um die Illusion erfolgreich zu erzeugen. Der Schwierigkeitsgrad wird wie folgt modifiziert:
+Die meisten Miniaturen sind eine Magnitude höher als die Basisstufe, die in der Tabelle auf [Seite 144](<Ars Magica Definitive Edition Basisregeln.md#intellego-imaginem-leitlinien>) von ArM5 angegeben wird. Die zusätzliche Magnitude ermöglicht es der Miniatur, sich leicht zu bewegen, sodass die Kopfbewegungen eines einzelnen Betrachters den für den Erfolg der Miniatur entscheidenden Perspektivtrick nicht ruinieren. Der Wirker einer Miniatur muss einen Wahrnehmung-+-Finesse-Wurf gegen einen Schwierigkeitsgrad von 9 ablegen, um die Illusion erfolgreich zu erzeugen. Der Schwierigkeitsgrad wird wie folgt modifiziert:
 
 | Modifikator | Umstand                                                   |
 |-------------|-----------------------------------------------------------|
@@ -2886,7 +2886,7 @@ Die meisten Miniaturen sind eine Magnitude höher als die Basisstufe, die in der
 
 #### Bewusstseinszustände
 
-In den Künsten Rego und Mentem bewanderte Magi können Zauber wirken, die den Geisteszustand eines Ziels beeinflussen. Diese Zauber haben eine Basisstufe von 4 (ArM5, Seite 151). In ArM5 gegebene Beispiele umfassen *Der Ruf des Schlummers*, *Schnipsen des Erwachens* und *Verwirrung des betäubten Willens*.
+In den Künsten Rego und Mentem bewanderte Magi können Zauber wirken, die den Geisteszustand eines Ziels beeinflussen. Diese Zauber haben eine Basisstufe von 4 (ArM5, [Seite 151](<Ars Magica Definitive Edition Basisregeln.md#der-ruf-des-schlummers>)). In ArM5 gegebene Beispiele umfassen *Der Ruf des Schlummers*, *Schnipsen des Erwachens* und *Verwirrung des betäubten Willens*.
 
 Ein Geisteszustand wird durch die Wahrnehmung des Ziels von seiner Beziehung zu seiner Umgebung definiert. Das Basisregelwerk gibt wach, schlafend und verwirrt als Geisteszustände an, wobei wach die überlegene, vollständige Form der Wahrnehmung ist; schlafend die gescheiterte Form der Wahrnehmung; und verwirrt etwas dazwischen. Die in ArM5 gegebenen Zauber dienen als Vorlagen für Zauber, die andere Geisteszustände manipulieren.
 
@@ -2903,7 +2903,7 @@ Weitere mögliche Geisteszustände umfassen die folgenden:
 
 > ## Miniatur-Beispiele
 > 
-> Viele der folgenden Zauber haben ein Teilziel. Dies bedeutet, dass der Magus einen Strom von Spezies erzeugt, der auf den Kopf eines einzelnen Betrachters gerichtet ist. Ein Magus, der dies tut, zielt mit einem magischen Medium auf ein Opfer, sodass diese Zauber von der Parma Magica aufgehalten werden.
+> Viele der folgenden Zauber haben ein Teilziel. Dies bedeutet, dass der Magus einen Strom von Species erzeugt, der auf den Kopf eines einzelnen Betrachters gerichtet ist. Ein Magus, der dies tut, zielt mit einem magischen Medium auf ein Opfer, sodass diese Zauber von der Parma Magica aufgehalten werden.
 > 
 > ##### Ein Feind, überflutet vom reinen Sigil des Magus
 > 
@@ -2911,7 +2911,7 @@ Weitere mögliche Geisteszustände umfassen die folgenden:
 > 
 > R: Sicht, D: Konz, Z: Teil
 > 
-> Dieser Zauber überflutet das Ziel mit konzentrierten sichtbaren Spezies und überlastet die Augen. Er erfordert keinen Finesse-Wurf, da die Spezies kein Bild konstruieren. In diesem Fall wird die schiere Menge an Spezies genutzt, um die Kapazität des Auges zu überladen, sodass das Ziel nichts anderes sehen kann. Der Name des Zaubers rührt von seiner Erscheinung her, die stets stark auf dem Sigil des Wirkers basiert. Die Augen des Opfers erholen sich zwei Minuten nach Ende des Zaubers, oder in nur einer Runde, wenn das Opfer daran denkt, seine überlasteten Augen zu schließen, sobald es vom Zauber getroffen wird.
+> Dieser Zauber überflutet das Ziel mit konzentrierten sichtbaren Species und überlastet die Augen. Er erfordert keinen Finesse-Wurf, da die Species kein Bild konstruieren. In diesem Fall wird die schiere Menge an Species genutzt, um die Kapazität des Auges zu überladen, sodass das Ziel nichts anderes sehen kann. Der Name des Zaubers rührt von seiner Erscheinung her, die stets stark auf dem Sigil des Wirkers basiert. Die Augen des Opfers erholen sich zwei Minuten nach Ende des Zaubers, oder in nur einer Runde, wenn das Opfer daran denkt, seine überlasteten Augen zu schließen, sobald es vom Zauber getroffen wird.
 > 
 > Ähnliche Zauber können detaillierte Bilder erzeugen, doch das erfordert Finesse-Würfe.
 > 
@@ -2925,7 +2925,7 @@ Weitere mögliche Geisteszustände umfassen die folgenden:
 > 
 > Dieser Zauber ermöglicht es dem Magus, den Rahmen einer Tür oder eines Fensters nachzuzeichnen und eine Miniatur zu erzeugen, die etwas zu zeigen scheint, das jenseits des Rahmens liegt. Ein Wahrnehmung-+-Finesse-Wurf ist erforderlich, um eine überzeugende Illusion zu erzeugen. Der Schwierigkeitsgrad beträgt 9, wenn das Bild einen Raum zu zeigen scheint, 12, wenn es ein Bauwerk zu zeigen scheint, oder 15, wenn es bis zum Horizont zu reichen scheint. Diese Zahlen beinhalten bereits die Reduktion für die Einschränkung der Sichtlinie des Betrachters, könnten aber durch Vertrautheit mit der dargestellten Szene verringert oder erhöht werden.
 > 
-> Viele Wirker von *Falsches Fenster* fügen eine zusätzliche Magnitude hinzu, damit Figuren im Bild sich zu bewegen scheinen und das Lichtmuster sich der Tageszeit anpasst, aber diese einfachere Version erzeugt nur ein statisches Bild. Dieser Zauber dient auch als Vorlage für ähnliche Zauber für die anderen Sinne: Ein Spiegel, der eine Melodie spielt, sofern seine Fläche nicht zur Wand gedreht ist, ist ein Beispiel. Direkt erzeugte Spezies wie diese werden von der Parma Magica aufgehalten.
+> Viele Wirker von *Falsches Fenster* fügen eine zusätzliche Magnitude hinzu, damit Figuren im Bild sich zu bewegen scheinen und das Lichtmuster sich der Tageszeit anpasst, aber diese einfachere Version erzeugt nur ein statisches Bild. Dieser Zauber dient auch als Vorlage für ähnliche Zauber für die anderen Sinne: Ein Spiegel, der eine Melodie spielt, sofern seine Fläche nicht zur Wand gedreht ist, ist ein Beispiel. Direkt erzeugte Species wie diese werden von der Parma Magica aufgehalten.
 > 
 > (Basis 2, +2 Sonne oder Ring, +1 Individuum)
 > 
@@ -2935,7 +2935,7 @@ Weitere mögliche Geisteszustände umfassen die folgenden:
 > 
 > R: Sicht, D: Mom, Z: Teil
 > 
-> Dieser Zauber erzeugt einen Stoß von Spezies, die der Stimme des Wirkers entsprechen und das Ziel am Kopf treffen. Dieser Zauber erfordert einen Wahrnehmung-+-Finesse-Wurf gegen einen Schwierigkeitsgrad von 6, damit die Stimme überzeugend wie die des Magus klingt (der Basis-Schwierigkeitsgrad ist 9, mit einem Modifikator von –3 für tiefe Vertrautheit), doch selbst wenn der Wurf misslingt, hört das Ziel die Nachricht dennoch. Dieser Zauber wird auf Schlachtfeldern eingesetzt oder um Lehrlingen in der Tribunalkammer Anweisungen zu erteilen. Er nutzt die gerichtete Eigenschaft der Miniaturen, um andere daran zu hindern, seinen Inhalt mitzuhören.
+> Dieser Zauber erzeugt einen Stoß von Species, die der Stimme des Wirkers entsprechen und das Ziel am Kopf treffen. Dieser Zauber erfordert einen Wahrnehmung-+-Finesse-Wurf gegen einen Schwierigkeitsgrad von 6, damit die Stimme überzeugend wie die des Magus klingt (der Basis-Schwierigkeitsgrad ist 9, mit einem Modifikator von –3 für tiefe Vertrautheit), doch selbst wenn der Wurf misslingt, hört das Ziel die Nachricht dennoch. Dieser Zauber wird auf Schlachtfeldern eingesetzt oder um Lehrlingen in der Tribunalkammer Anweisungen zu erteilen. Er nutzt die gerichtete Eigenschaft der Miniaturen, um andere daran zu hindern, seinen Inhalt mitzuhören.
 > 
 > (Basis 2, +3 Sicht, +1 Teil)
 > 
@@ -2945,7 +2945,7 @@ Weitere mögliche Geisteszustände umfassen die folgenden:
 > 
 > R: Sicht, D: Mom, Z: Teil
 > 
-> Ein Magus, der diesen Zauber einsetzt, erzeugt die passenden Spezies für die rasche Bewegung eines kleinen leuchtenden Gegenstands und richtet sie auf den Kopf des Ziels. Praktisch alle Menschen haben einen unwillkürlichen Reflex, der ihre Augen die Bahnen sich bewegender Gegenstände verfolgen lässt, insbesondere solcher, die sie treffen könnten. Der Magus nutzt diesen Reflex gegen das Opfer, denn wenn es dorthin blickt, wo der Gegenstand sein sollte, stellt es Augenkontakt mit dem Magus her. Dies ermöglicht es dem Magus, Zauber mit Augenreichweite auf das Opfer zu wirken.
+> Ein Magus, der diesen Zauber einsetzt, erzeugt die passenden Species für die rasche Bewegung eines kleinen leuchtenden Gegenstands und richtet sie auf den Kopf des Ziels. Praktisch alle Menschen haben einen unwillkürlichen Reflex, der ihre Augen die Bahnen sich bewegender Gegenstände verfolgen lässt, insbesondere solcher, die sie treffen könnten. Der Magus nutzt diesen Reflex gegen das Opfer, denn wenn es dorthin blickt, wo der Gegenstand sein sollte, stellt es Augenkontakt mit dem Magus her. Dies ermöglicht es dem Magus, Zauber mit Augenreichweite auf das Opfer zu wirken.
 > 
 > Dieser Zauber erfordert keinen Finesse-Wurf, da er keinen bestimmten Gegenstand simuliert.
 > 
@@ -2956,7 +2956,7 @@ Weitere mögliche Geisteszustände umfassen die folgenden:
 
 Mentem-Magie kann auf Gedanken zielen. Ein Gedanke ist der Ausdruck einer Idee, die gegenwärtig in einem Geist aktiv ist. Erfahrene Magi können entweder auf einzelne Gedanken oder auf die Denkfähigkeit eines Geistes zielen. Mentem-Magie kann auch die Weise beeinflussen, wie der Geist Sinneseindrücke in Gedanken verwandelt. Magi können dies tun, indem sie die Art verändern, wie Charaktere Sinneseindrücke kategorisieren, oder indem sie den Geist beeinträchtigen, sodass das Opfer eine bestimmte kognitive Fähigkeit verliert.
 
-Das Basisregelwerk enthält Basisstufen für das Erschaffen, Verstehen und Beherrschen von Gedanken. Es ist auch möglich, Gedanken zu verändern und zu zerstören, unter Verwendung derselben Basisstufen wie für Erinnerungen. Beispiele für Zauber, die das Denken beeinträchtigen, finden sich im Basisregelwerk. *Auf der Zungenspitze* (ArM5, Seite 150) beispielsweise betrifft die Fähigkeit, ein Wort zu denken, und nicht die Erinnerung an das Wort, da die Fähigkeit zurückkehrt, wenn der Zauber endet.
+Das Basisregelwerk enthält Basisstufen für das Erschaffen, Verstehen und Beherrschen von Gedanken. Es ist auch möglich, Gedanken zu verändern und zu zerstören, unter Verwendung derselben Basisstufen wie für Erinnerungen. Beispiele für Zauber, die das Denken beeinträchtigen, finden sich im Basisregelwerk. *Auf der Zungenspitze* (ArM5, [Seite 150](<Ars Magica Definitive Edition Basisregeln.md#auf-der-zungenspitze>)) beispielsweise betrifft die Fähigkeit, ein Wort zu denken, und nicht die Erinnerung an das Wort, da die Fähigkeit zurückkehrt, wenn der Zauber endet.
 
 ## Gedächtnis
 
@@ -3069,11 +3069,11 @@ Dies ist kein effektives Lehrmittel, da eine Stunde Arbeit pro Bild oder bedeuts
 
 #### Weitere Gedächtnisstricks
 
-**Speicherung:** Das Basisregelwerk enthält eine Leitlinie für die Verwandlung eines Geistes in ein festes Objekt und gibt als Beispiel einen Vogel an (ArM5, Seite 150 bzw. 149). Ebenso ist es möglich, eine Erinnerung oder ein Gefühl in ein festes Objekt zu verwandeln. Die Basisstufe hierfür ist 5, und es erfordert ein Requisit für die endgültige Form der Erinnerung. Der Urheber kann das Gefühl empfinden oder die Erinnerung abrufen, solange er das Objekt hält, andere Personen hingegen nicht.
+**Speicherung:** Das Basisregelwerk enthält eine Leitlinie für die Verwandlung eines Geistes in ein festes Objekt und gibt als Beispiel einen Vogel an (ArM5, [Seite 150](<Ars Magica Definitive Edition Basisregeln.md#muto-mentem--leitlinien>) bzw. 149). Ebenso ist es möglich, eine Erinnerung oder ein Gefühl in ein festes Objekt zu verwandeln. Die Basisstufe hierfür ist 5, und es erfordert ein Requisit für die endgültige Form der Erinnerung. Der Urheber kann das Gefühl empfinden oder die Erinnerung abrufen, solange er das Objekt hält, andere Personen hingegen nicht.
 
 **Neigungen:** Das Basisregelwerk enthält eine Leitlinie, um eine Person zu einer bestimmten Art von Reaktion zu neigen. Es ist ein Rego-
 
-Mentem-Basiseffekt der Stufe 5 (ArM5, Seite 151). Eine der wichtigsten Neigungen aus Sicht der Magi von Haus Jerbiton ist die Neigung zur Leichtgläubigkeit. Das heißt, Zauber dieser Art werden eingesetzt, um Ziele leichtgläubiger zu machen, sodass andere Illusionen und Halluzinationen eine größere Erfolgschance haben. Eine zweite Neigung, das Desinteresse, ist ebenfalls nützlich. Rego-Mentem-Zauber können keine Erinnerungen zerstören, aber ein Charakter, den schlicht nicht interessiert, was er sieht, wird sich mit deutlich geringerer Wahrscheinlichkeit daran erinnern.
+Mentem-Basiseffekt der Stufe 5 (ArM5, [Seite 151](<Ars Magica Definitive Edition Basisregeln.md#rego-mentem--leitlinien>)). Eine der wichtigsten Neigungen aus Sicht der Magi von Haus Jerbiton ist die Neigung zur Leichtgläubigkeit. Das heißt, Zauber dieser Art werden eingesetzt, um Ziele leichtgläubiger zu machen, sodass andere Illusionen und Halluzinationen eine größere Erfolgschance haben. Eine zweite Neigung, das Desinteresse, ist ebenfalls nützlich. Rego-Mentem-Zauber können keine Erinnerungen zerstören, aber ein Charakter, den schlicht nicht interessiert, was er sieht, wird sich mit deutlich geringerer Wahrscheinlichkeit daran erinnern.
 
 # Kapitel Drei: Haus Tytalus
 
@@ -3103,7 +3103,7 @@ Man hat gesagt, die Geschichte von Haus Tytalus lasse sich in Epochen einteilen,
 
 ### Tytalus der Zauberer
 
-Auf ihrer Suche nach Zauberern, die einen durch Hermetische Magie und die Parma Magica geeinten Orden bilden sollten, besuchte Trianoma die Katakomben von Neapel. Dort fand sie Guorna die Widerliche, vielleicht die mächtigste Nekromantin, die je gelebt hat, und Erbin der Geheimnisse des Todes und der Toten (siehe *Häuser. des. Hermes:. Wahre. Linien*, Seite 112). Mit großem Bangen lud Trianoma die grässliche Nekromantin nach Durenmar ein, um bei Bonisagus zu studieren, damit ihre mächtige Magie in die Hermetische Theorie integriert werden konnte. Ohne Trianomas Wissen waren Guornas drei Schüler — Tytalus, Tremere und ein noch unausgebildetes Mädchen namens Pralix — kürzlich über die Adria nach Dakien geflohen, nachdem sie Guornas grauenhafte Absicht entdeckt hatten, ihre Seele aus ihrem eitergefüllten, von Lepra zerfressenen Körper in einen der ihren zu übertragen.
+Auf ihrer Suche nach Zauberern, die einen durch Hermetische Magie und die Parma Magica geeinten Orden bilden sollten, besuchte Trianoma die Katakomben von Neapel. Dort fand sie Guorna die Widerliche, vielleicht die mächtigste Nekromantin, die je gelebt hat, und Erbin der Geheimnisse des Todes und der Toten (siehe *Häuser. des. Hermes:. Wahre. Linien*, [Seite 112](<Ars Magica 5e - Häuser des Hermes - Wahre Linien.md#vor-dem-orden-1>)). Mit großem Bangen lud Trianoma die grässliche Nekromantin nach Durenmar ein, um bei Bonisagus zu studieren, damit ihre mächtige Magie in die Hermetische Theorie integriert werden konnte. Ohne Trianomas Wissen waren Guornas drei Schüler — Tytalus, Tremere und ein noch unausgebildetes Mädchen namens Pralix — kürzlich über die Adria nach Dakien geflohen, nachdem sie Guornas grauenhafte Absicht entdeckt hatten, ihre Seele aus ihrem eitergefüllten, von Lepra zerfressenen Körper in einen der ihren zu übertragen.
 
 Die drei Lehrlinge sammelten Kräfte, um ihre einstige Lehrmeisterin und Peinigerin zu töten. Tytalus übernahm die Führung; er war der Älteste der drei und hatte fast drei Jahrzehnte unter der Hexe studiert. Er befahl Tremere, Zauberer zur Unterstützung zu finden, während er selbst magische Hilfe suchte, um Guornas eigener Magie entgegenzutreten. Ihre Macht stammte von den Göttern der Toten (trotz der Säkularisierung ihrer Religion), und so suchte Tytalus jene Geister auf, die von diesen Göttern in der Unterwelt eingekerkert waren — Geister voller Groll, Rebellion, Hass und gewaltiger Macht: die Titanen. Er schloss zahlreiche Pakte mit diesen furchtbaren Geistern, und, gestärkt durch die von Tremere angeworbenen nekromantischen Zauberer, zerstörten die beiden die Überreste von Guornas Tradition in Neapel und warteten dann auf die Rückkehr der Hexe selbst aus dem Schwarzwald. Die Falle, die von den beiden Brüdern gestellt worden war, war zu gut geplant, als dass Guorna ihr hätte entgehen können, selbst mit ihren neuen hermetischen Kenntnissen. Tytalus behauptete, seiner Mater den tödlichen Schlag versetzt und ihr Herz aus der eitrigen Brust gerissen zu haben. Doch Guorna hatte ihre Rache: Mit ihrem letzten Atemzug verfluchte sie ihren muttermörderischen Schüler mit ihrer eigenen Krankheit, der Lepra.
 
@@ -3494,7 +3494,7 @@ Wenn die Lehrmethoden des Tytalus nicht den richtigen Kaliber an Schülern hervo
 
 Die Lehrzeit endet, wenn der Lehrling entscheidet, dass er genug hat. Nach 15 Quartalen Ausbildung endet die Unterweisung, doch der Status des Lehrlings ändert sich nicht, wie er vielleicht vermutet. Wenn er fragt, wann die Lehrlingsprüfung abgenommen wird, wird ihm gesagt: „Noch nicht." Zweifellos ist der Lehrling begierig, der Kontrolle seines Meisters zu entkommen, doch was ihm nicht gesagt wird, ist, dass er seinen Meister dazu zwingen muss, ihn als Magus zu akzeptieren; bloßes Bitten genügt nicht. Erst wenn er einen ernsthaften Versuch unternimmt, die Anerkennung zu erzwingen, beruft der Meister eine Eristische Versammlung ein, um vor Zeugen festzustellen, ob die Lehrzeit wirklich vorüber ist. Der Lehrling besteht seine Prüfung, wenn er seinen Meister dazu bringt, ihn als Gleichberechtigten anzuerkennen. Der Lehrling darf die Art des Kampfes wählen, doch wenn er keine Magie in den Konflikt einbringt, wird der Meister es tun. Gemäß der Tradition soll der Meister nicht zu hart gegen seinen Lehrling kämpfen, ihm aber eine echte Herausforderung bieten. Die Tugend Selbstbewusst, die alle Magi teilen, die eine tytalische Lehrzeit durchlitten haben, wird errungen, wenn dieser Peiniger schließlich besiegt wird.
 
-Ein Lehrling, der es schafft, seinen Meister zu irgendeinem Zeitpunkt seiner Lehrzeit zu töten, wird unverzüglich in den Status eines Magus erhoben, ungeachtet des Standes seiner Ausbildung. Da der Kodex festlegt, dass der Meister für alles verantwortlich ist, was ein Lehrling tut, kommt es einem Selbstmord gleich, seinen Lehrling zum Mord zu provozieren. Es ist selten, aber nicht unbekannt. Lehrlinge, die den Fehler begehen, ihren Peiniger zu früh umzubringen, enden möglicherweise mit dem Fehler Schwacher Parens, der ihre unvollständige Lehrzeit widerspiegelt. Dasselbe geschieht, wenn der Lehrling die Prüfung erzwingt (und besteht), bevor seine 15 Quartale abgelaufen sind, weil er die Behandlung durch seinen Meister nicht mehr ertragen kann. Mehr als wenige Meister sind von den „Beweisen" ihrer Lehrlinge nie zufriedengestellt, egal wie oft sie sich ihnen bei einer Versammlung stellen. Nach dem dritten gescheiterten Versuch rät üblicherweise ein anderer tytalischer Magus dem Lehrling, einen Quaesitor aufzusuchen, der die Prüfung stattdessen abnimmt (ArM5, Seite 107), doch dies gilt als unehrenhafte Art, dem Haus beizutreten, und führt häufig zum Fehler Quälender Meister. Dasselbe geschieht, wenn einem Lehrling die Bedingungen, unter denen die Prüfung abgenommen wird, erklärt werden müssen; kein Meister wird Respekt für einen Lehrling haben, der den *nomos* der Lehrzeit ohne Widerspruch hinnimmt.
+Ein Lehrling, der es schafft, seinen Meister zu irgendeinem Zeitpunkt seiner Lehrzeit zu töten, wird unverzüglich in den Status eines Magus erhoben, ungeachtet des Standes seiner Ausbildung. Da der Kodex festlegt, dass der Meister für alles verantwortlich ist, was ein Lehrling tut, kommt es einem Selbstmord gleich, seinen Lehrling zum Mord zu provozieren. Es ist selten, aber nicht unbekannt. Lehrlinge, die den Fehler begehen, ihren Peiniger zu früh umzubringen, enden möglicherweise mit dem Fehler Schwacher Parens, der ihre unvollständige Lehrzeit widerspiegelt. Dasselbe geschieht, wenn der Lehrling die Prüfung erzwingt (und besteht), bevor seine 15 Quartale abgelaufen sind, weil er die Behandlung durch seinen Meister nicht mehr ertragen kann. Mehr als wenige Meister sind von den „Beweisen" ihrer Lehrlinge nie zufriedengestellt, egal wie oft sie sich ihnen bei einer Versammlung stellen. Nach dem dritten gescheiterten Versuch rät üblicherweise ein anderer tytalischer Magus dem Lehrling, einen Quaesitor aufzusuchen, der die Prüfung stattdessen abnimmt (ArM5, [Seite 107](<Ars Magica Definitive Edition Basisregeln.md#die-künste-öffnen>)), doch dies gilt als unehrenhafte Art, dem Haus beizutreten, und führt häufig zum Fehler Quälender Meister. Dasselbe geschieht, wenn einem Lehrling die Bedingungen, unter denen die Prüfung abgenommen wird, erklärt werden müssen; kein Meister wird Respekt für einen Lehrling haben, der den *nomos* der Lehrzeit ohne Widerspruch hinnimmt.
 
 #### Beitritt zu Haus Tytalus
 
@@ -3532,7 +3532,7 @@ Einmal gebildet, haben Kabalen in der Regel eine geschlossene Mitgliedschaft, do
 > 
 > **Die Kabale des Zerbrochenen Ozeans** (Symbol: ein Turbo im Uhrzeigersinn mit vier Linien, die jeweils eine Vierteldrehung machen). Bietet verdeckte Unterstützung für die Heiden Litauens gegen den Deutschen Orden.
 > 
-> **Die Kabale der Erigone** (Symbol: eine dreieckige Clavicula). Entschlossen, Caecilius von Durenmar daran zu hindern, Praeco des Rheintribunals zu werden (siehe *Wächter des Waldes*, Seite 27), obwohl nur die Hälfte ihrer Mitglieder Mitglieder dieses Tribunals sind.
+> **Die Kabale der Erigone** (Symbol: eine dreieckige Clavicula). Entschlossen, Caecilius von Durenmar daran zu hindern, Praeco des Rheintribunals zu werden (siehe *Wächter des Waldes*, [Seite 27](<Ars Magica 5e - Wächter des Waldes - Das Rhein-Tribunal.md#der-praeco-des-rheintribunals>)), obwohl nur die Hälfte ihrer Mitglieder Mitglieder dieses Tribunals sind.
 > 
 > **Die Kabale der Lanze** (Symbol: eine Helix aus einer Kette). Bietet einem neu gegründeten Konvent verdeckt Schutz vor den Intrigen seines Tribunals, wenngleich der Zweck unklar ist. Der von dieser Kabale beschützte Konvent weiß nichts von seinen Beschützern.
 > 
@@ -3662,7 +3662,7 @@ Gelegentlich muss ein Magus eine langfristige Präsenz in einer bestimmten Gemei
 > | Keine Vorbereitung                   | +6          | Weniger als fünf Kampfrunden für die Verkleidung oder nur einfachstes Kostüm verfügbar |
 > 
 
-Deckidentitäten haben Namen, Berufe und Persönlichkeiten, die von denen ihres Schöpfers getrennt sind. Nachdem die Persönlichkeit entwickelt wurde, legt der Magus ein passendes Kostüm an, betritt die Gemeinschaft, in der die Tarnung bestehen soll, und vollbringt eine bemerkenswerte Tat vor Zeugen, die den Charakter in den Köpfen der Bewohner verankert. Diese Tat verleiht eine neue Reputation als die verkleidete Person mit einem Wert von 1 (siehe ArM5, Seite 167). Die erstmalige Etablierung der Reputation erfordert oft einen erfolgreichen Verkleidungswurf, doch ist die Reputation einmal aufgebaut, ersetzt sie die Notwendigkeit weiterer Verkleidungswürfe. Wird es jedoch nötig, dass der Magus andere von der Gültigkeit der Tarnung überzeugt — etwa wenn ein misstrauischer Priester ihn befragt oder er den Fehler eines Kameraden vertuschen muss —, wird der Schwierigkeitsgrad des Verkleidungswurfs um den Wert der Reputation gesenkt.
+Deckidentitäten haben Namen, Berufe und Persönlichkeiten, die von denen ihres Schöpfers getrennt sind. Nachdem die Persönlichkeit entwickelt wurde, legt der Magus ein passendes Kostüm an, betritt die Gemeinschaft, in der die Tarnung bestehen soll, und vollbringt eine bemerkenswerte Tat vor Zeugen, die den Charakter in den Köpfen der Bewohner verankert. Diese Tat verleiht eine neue Reputation als die verkleidete Person mit einem Wert von 1 (siehe ArM5, [Seite 167](<Ars Magica Definitive Edition Basisregeln.md#reputationen>)). Die erstmalige Etablierung der Reputation erfordert oft einen erfolgreichen Verkleidungswurf, doch ist die Reputation einmal aufgebaut, ersetzt sie die Notwendigkeit weiterer Verkleidungswürfe. Wird es jedoch nötig, dass der Magus andere von der Gültigkeit der Tarnung überzeugt — etwa wenn ein misstrauischer Priester ihn befragt oder er den Fehler eines Kameraden vertuschen muss —, wird der Schwierigkeitsgrad des Verkleidungswurfs um den Wert der Reputation gesenkt.
 
 *Beispiel: Carolus Furax beschließt, die Persona eines Söldners zu entwickeln. Er rechnet sich aus, dass dieser Beruf ihm ausreichend Grund gibt, für längere Zeit von seinem Heimatdorf abwesend zu sein, ihm aber auch die Gelegenheit bietet, Kriegsgeschichten mit der Stadtwache auszutauschen und — was für seine aktuellen Pläne noch wichtiger ist — mit den Soldaten des Barons, die eine bestimmte Taverne in der Stadt frequentieren. Daher wählt er den Namen „Reynard", beschafft sich Waffen und Rüstung, und nachdem er einige Zeit die Grogs seines Konvents studiert hat, stolziert er in die Taverne und bestellt sich einen Drink. Er hat arrangiert, dass einige „Räuber" (in Wirklichkeit seine Grogs) angreifen, die ihn zur Verteidigung der Stadtbewohner zurückschlagen lassen. Ist dies vollbracht, hat Carolus eine Lokale Reputation als Reynard der Söldner erworben, mit einem Anfangswert von 1.*
 
@@ -3686,7 +3686,7 @@ Jedes Mal, wenn ein Charakter eine Handlung ausführt, die seine gesellschaftlic
 > 
 > Kein Tytalus wurde jemals dabei ertappt, einen Quaesitor zu imitieren, doch wenn es geschähe, müsste jede Entscheidung, die der „Quaesitor" getroffen hatte, überdacht werden, und es ist unwahrscheinlich, dass der Tytalus einer Rüge durch das Tribunal entginge. Vor dem Normannischen Tribunal wurde ein Fall gegen einen Magus verhandelt, der sich als Rotkappe ausgegeben und so Zugang zu privater Korrespondenz zwischen seinen Rivalen erlangt hatte. Dieser Magus wurde erfolgreich wegen Ausspähens verurteilt, weil er Magie eingesetzt hatte, um das Aussehen der Rotkappe anzunehmen. Hätte er dies nicht getan, gäbe es keine Bestimmung im Kodex, die dies zu einem hermetischen Vergehen machen würde.
 
-Die Gabe ist das größte Hindernis für einen Magus, der eine Deckidentität führen möchte; allerdings lassen die Auswirkungen des durch die Gabe erzeugten Misstrauens und Neids nach, sobald die falsche Identität in einer Gesellschaft bekannt wird (vorausgesetzt, der Charakter tut nichts, um sie zu bestätigen), da die Menschen in seiner Umgebung sich an ihn gewöhnen. Ein Charakter zieht daher seine Reputation vom Malus auf soziale Würfe ab, der durch die Gabe verursacht wird, allerdings nur im Umgang mit Personen, zu denen er regelmäßigen Kontakt hat. Dieser nachlassende Effekt der Gabe gilt nicht für Fremde, sondern nur für diejenigen, die den Magus gut kennenlernen; dies ist eine Formalisierung des Effekts, der normalerweise bei längerem Kontakt mit Begabten zu beobachten ist (ArM5, Seite 75).
+Die Gabe ist das größte Hindernis für einen Magus, der eine Deckidentität führen möchte; allerdings lassen die Auswirkungen des durch die Gabe erzeugten Misstrauens und Neids nach, sobald die falsche Identität in einer Gesellschaft bekannt wird (vorausgesetzt, der Charakter tut nichts, um sie zu bestätigen), da die Menschen in seiner Umgebung sich an ihn gewöhnen. Ein Charakter zieht daher seine Reputation vom Malus auf soziale Würfe ab, der durch die Gabe verursacht wird, allerdings nur im Umgang mit Personen, zu denen er regelmäßigen Kontakt hat. Dieser nachlassende Effekt der Gabe gilt nicht für Fremde, sondern nur für diejenigen, die den Magus gut kennenlernen; dies ist eine Formalisierung des Effekts, der normalerweise bei längerem Kontakt mit Begabten zu beobachten ist (ArM5, [Seite 75](<Ars Magica Definitive Edition Basisregeln.md#die-gabe-2>)).
 
 > ## Abenteueridee: Die wiedergeborene Identität
 > 
@@ -3700,7 +3700,7 @@ Deckidentitäten haben eine begrenzte Lebensdauer. Hört ein Magus auf, die Geme
 
 #### Personae
 
-Ein Magus mit der Kleinen Übernatürlichen Tugend Persona besitzt eine gleichnamige Übernatürliche Fertigkeit (siehe Kasten), die die Fähigkeit verleiht, eine kleine Anzahl makelloser Verkleidungen zu schaffen. Jede dieser Personae erhält automatisch eine Reputation von 1, wenn sie erstmals erschaffen wird, und alle Erfahrungspunkte, die auf die Fertigkeit Persona angewendet werden, gelten in gleicher Höhe auch für die Reputationen aller Personae des Magus. Eine Persona ist mehr als nur eine physische Verkleidung; jede Persona hat ihre eigenen charakteristischen Sprechmuster, eine eigene Persönlichkeit und eigene Eigenheiten. Eine Persona kann kein bestimmtes Individuum imitieren — ein Magus kann beispielsweise nicht zu Herzog Tybol werden —, doch er kann eine Persona entwickeln, die über ausreichende körperliche und verhaltensbezogene Eigenheiten von Herzog Tybol verfügt, um andere davon zu überzeugen, er sei dessen unehelicher Sohn. Obwohl magisch, beinhaltet die Übernatürliche Fertigkeit Persona eine sehr subtile Form der Magie; im Moment der Verwandlung kann sie wie ein Muto-Corpus-Spruch der 10. Stufe entdeckt werden, doch mit jedem Sonnenuntergang oder Sonnenaufgang, der nach der Annahme der Persona verstreicht, sinkt die Magnitude um eins. Negative Magnitudensprüche können nur mit mächtiger Intellego-Vim-Magie entdeckt werden (siehe *Häuser des Hermes: Wahre Linien*, Seite 71). Wird eine äquivalente Spruchstufe für andere Zwecke benötigt (etwa für *Blick auf die wahre Gestalt* oder *Wind der weltlichen Stille*), entspricht die äquivalente Spruchstufe dem Fünffachen des Fertigkeitswerts.
+Ein Magus mit der Kleinen Übernatürlichen Tugend Persona besitzt eine gleichnamige Übernatürliche Fertigkeit (siehe Kasten), die die Fähigkeit verleiht, eine kleine Anzahl makelloser Verkleidungen zu schaffen. Jede dieser Personae erhält automatisch eine Reputation von 1, wenn sie erstmals erschaffen wird, und alle Erfahrungspunkte, die auf die Fertigkeit Persona angewendet werden, gelten in gleicher Höhe auch für die Reputationen aller Personae des Magus. Eine Persona ist mehr als nur eine physische Verkleidung; jede Persona hat ihre eigenen charakteristischen Sprechmuster, eine eigene Persönlichkeit und eigene Eigenheiten. Eine Persona kann kein bestimmtes Individuum imitieren — ein Magus kann beispielsweise nicht zu Herzog Tybol werden —, doch er kann eine Persona entwickeln, die über ausreichende körperliche und verhaltensbezogene Eigenheiten von Herzog Tybol verfügt, um andere davon zu überzeugen, er sei dessen unehelicher Sohn. Obwohl magisch, beinhaltet die Übernatürliche Fertigkeit Persona eine sehr subtile Form der Magie; im Moment der Verwandlung kann sie wie ein Muto-Corpus-Spruch der 10. Stufe entdeckt werden, doch mit jedem Sonnenuntergang oder Sonnenaufgang, der nach der Annahme der Persona verstreicht, sinkt die Magnitude um eins. Negative Magnitudensprüche können nur mit mächtiger Intellego-Vim-Magie entdeckt werden (siehe *Häuser des Hermes: Wahre Linien*, [Seite 71](<Ars Magica 5e - Häuser des Hermes - Wahre Linien.md#zauberspuren-und-sigils>)). Wird eine äquivalente Spruchstufe für andere Zwecke benötigt (etwa für *Blick auf die wahre Gestalt* oder *Wind der weltlichen Stille*), entspricht die äquivalente Spruchstufe dem Fünffachen des Fertigkeitswerts.
 
 ## Die hohe Kunst der Debatte
 
@@ -3892,13 +3892,13 @@ Der Charakter kann eine oder mehrere makellose Verkleidungen annehmen und dabei 
 
 *Groß, Allgemein*
 
-Ein Leprakranker hat einen permanenten Modifikator von –2 auf seine Lebensumstände (mit einem zusätzlichen –1, wenn er in einer Leprakolonie lebt), und immer wenn er eine Alterungskrise erleidet (ArM5, Seite 170), erleidet der Leprakranke zusätzlich zu jedem anderen Ergebnis eine Schwere Wunde. Leprakranke können aufgrund eines durchdringenden Verwesungsgeruchs, den sie verströmen, keine positive Reputation erwerben.
+Ein Leprakranker hat einen permanenten Modifikator von –2 auf seine Lebensumstände (mit einem zusätzlichen –1, wenn er in einer Leprakolonie lebt), und immer wenn er eine Alterungskrise erleidet (ArM5, [Seite 170](<Ars Magica Definitive Edition Basisregeln.md#altern>)), erleidet der Leprakranke zusätzlich zu jedem anderen Ergebnis eine Schwere Wunde. Leprakranke können aufgrund eines durchdringenden Verwesungsgeruchs, den sie verströmen, keine positive Reputation erwerben.
 
 #### Geliebter Rivale
 
 *Klein, Geschichte*
 
-Der Charakter hat einen Rivalen, der ihn einerseits erbittert beschützt und andererseits davon besessen ist, sich ihm bei jeder Gelegenheit entgegenzustellen. Für tytalische Magi ist dieser Rivale gewöhnlich eine ältere Maga, höchstwahrscheinlich die frühere Lehrmeisterin des Magus, oder möglicherweise ein älterer Lehrling seines Meisters. Ähnlich dem Fehler Feinde (ArM5, Seite 53) verursacht der Rivale dem Magus periodisch Ärger; allerdings bewacht sie eifersüchtig das Privileg, dem Magus das Leben schwer zu machen, und greift oft ein, um Hindernisse zu beseitigen, die nicht von ihr selbst stammen. Die Rivalin glaubt aufrichtig, dass ihr Widerstand ihrem Opfer nützt, und wünscht, ihn durch Widrigkeiten gedeihen zu sehen. 
+Der Charakter hat einen Rivalen, der ihn einerseits erbittert beschützt und andererseits davon besessen ist, sich ihm bei jeder Gelegenheit entgegenzustellen. Für tytalische Magi ist dieser Rivale gewöhnlich eine ältere Maga, höchstwahrscheinlich die frühere Lehrmeisterin des Magus, oder möglicherweise ein älterer Lehrling seines Meisters. Ähnlich dem Fehler Feinde (ArM5, [Seite 53](<Ars Magica Definitive Edition Basisregeln.md#feinde>)) verursacht der Rivale dem Magus periodisch Ärger; allerdings bewacht sie eifersüchtig das Privileg, dem Magus das Leben schwer zu machen, und greift oft ein, um Hindernisse zu beseitigen, die nicht von ihr selbst stammen. Die Rivalin glaubt aufrichtig, dass ihr Widerstand ihrem Opfer nützt, und wünscht, ihn durch Widrigkeiten gedeihen zu sehen. 
 
 ### Titanoi
 
@@ -3948,9 +3948,9 @@ Alle Magi Aegroti müssen die Tugend Lepra-Magus und den Fehler Lepra erwerben. 
 
 Die Magi des Tytalus haben unterschiedliche Interessen und daher möglicherweise sehr unterschiedliche Vorlieben in der Magie. Allerdings zeigen alle eine Faszination für Intrigen, was sich gut mit der Praxis der Mentem-Magie verträgt. Die folgenden Abschnitte beschreiben einige nützliche Zauber für Tätigkeiten, in denen tytalische Magi gewöhnlich herausragen.
 
-#### Magie für die Debattenarena
+#### Magie für die Debattierarena
 
-Der Einsatz von Magie in der Debattenarena wird vom Orden des Hermes streng missbilligt. Mehrere Tribunalssitzungen finden unter einer *Aegis des Herdes* statt, die vom Praeco und dem vorsitzenden Quaesitor eigens gewirkt wird, um Magie zu unterbinden, die die demokratischen Prozesse des Ordens beeinflussen könnte. Bei anderen Tribunalen fordern die Quaesitores ausdrücklich dazu auf, in der Debattenarena keine Verzauberungen einzusetzen, und führen regelmäßig Kontrollen dagegen durch. Doch nicht alle Tribunale ergreifen solche Vorsichtsmaßnahmen, und ein Mitglied des Hauses Tytalus kann oft von einem geschickten Einsatz von Debattenmagie profitieren. Magi, die diesen gefährlichen Weg beschreiten, sollten sich auf Magie konzentrieren, die ihre eigenen Fähigkeiten verbessert, anstatt das Publikum direkt zu beeinflussen. Zum Beispiel verändert die *Aura der adligen Erscheinung* das Erscheinungsbild des Magus so, dass er Spezies des Sehens und Hörens ausstrahlt, die ihn überzeugender erscheinen lassen, und gewährt einen +3 Bonus auf alle Verteidigungs-Gesamtwerte der Debatte, die die Fertigkeit Führung verwenden. Tytalische Magi haben ähnliche Zauber entwickelt, die sie sympathischer (und somit Charme-Verteidigungen beeinflussen) oder glaubwürdiger (und somit Täuschungs-Verteidigungen verbessern) erscheinen lassen; siehe die Zauber *Aura des betörenden Erscheinungsbilds* und *Aura der kindlichen Unschuld* weiter unten. Nach Ermessen des Spielleiters könnte die *Aura der adligen Erscheinung* die Manifestation der Gabe in derselben Weise verzerren wie diese beiden Zauber; während sie den üblichen Bonus gegenüber Sterblichen gewährt, drückt der Charakter seine verstärkte Führungskraft als harter Zuchtmeister oder grausamer Herrscher aus.
+Der Einsatz von Magie in der Debattierarena wird vom Orden des Hermes streng missbilligt. Mehrere Tribunalssitzungen finden unter einer *Aegis des Herdes* statt, die vom Praeco und dem vorsitzenden Quaesitor eigens gewirkt wird, um Magie zu unterbinden, die die demokratischen Prozesse des Ordens beeinflussen könnte. Bei anderen Tribunalen fordern die Quaesitores ausdrücklich dazu auf, in der Debattierarena keine Verzauberungen einzusetzen, und führen regelmäßig Kontrollen dagegen durch. Doch nicht alle Tribunale ergreifen solche Vorsichtsmaßnahmen, und ein Mitglied des Hauses Tytalus kann oft von einem geschickten Einsatz von Debattenmagie profitieren. Magi, die diesen gefährlichen Weg beschreiten, sollten sich auf Magie konzentrieren, die ihre eigenen Fähigkeiten verbessert, anstatt das Publikum direkt zu beeinflussen. Zum Beispiel verändert die *Aura der adligen Erscheinung* das Erscheinungsbild des Magus so, dass er Species des Sehens und Hörens ausstrahlt, die ihn überzeugender erscheinen lassen, und gewährt einen +3 Bonus auf alle Verteidigungs-Gesamtwerte der Debatte, die die Fertigkeit Führung verwenden. Tytalische Magi haben ähnliche Zauber entwickelt, die sie sympathischer (und somit Charme-Verteidigungen beeinflussen) oder glaubwürdiger (und somit Täuschungs-Verteidigungen verbessern) erscheinen lassen; siehe die Zauber *Aura des betörenden Erscheinungsbilds* und *Aura der kindlichen Unschuld* weiter unten. Nach Ermessen des Spielleiters könnte die *Aura der adligen Erscheinung* die Manifestation der Gabe in derselben Weise verzerren wie diese beiden Zauber; während sie den üblichen Bonus gegenüber Sterblichen gewährt, drückt der Charakter seine verstärkte Führungskraft als harter Zuchtmeister oder grausamer Herrscher aus.
 
 Andere Magi erheben sofort Protest, wenn sie entdecken, dass solche Zauber während einer Tribunalssitzung eingesetzt wurden, doch es gibt keine Bestimmung im Kodex des Hermes, die diese Taktiken verbieten würde. Sollte ihr Einsatz allerdings weitverbreitet werden, ginge entweder der Vorteil der Tytali verloren, oder es würden magische oder juristische Gegenmaßnahmen ergriffen, um sie zunichte zu machen. Tytalische Magi werden von ihren Parentes ermahnt, diese Zauber mit Bedacht einzusetzen (oder mit einem guten *Den Geruch der Magie verschleiern*-Zauber!).
 
@@ -3978,7 +3978,7 @@ Dieser Zauber ist eine Variante der *Aura der adligen Erscheinung*, bewirkt aber
 
 Magi, die Zeit und Mühe in die Entwicklung von Personae investiert haben, erlernen oder erfinden oft Zauber, die ihnen bei der Aufrechterhaltung dieser getrennten Identitäten helfen. Die meisten tytalischen Magi verlassen sich bei der Verwendung einer Persona nicht auf magische Verkleidungen, da diese regelmäßig erneuert werden müssen und einige Individuen mit dem Zweiten Gesicht oder Magiegespür begabt sind und ihre Tarnung leicht zerstören können. Gleichwohl kann eine magische Verzauberung diese Einschränkungen mit einem konstanten Effekt in einem Artefakt überwinden, insbesondere in Verbindung mit *Den Geruch der Magie verschleiern*. Trotz der Probleme, die mit einer magisch aufrechterhaltenen Persona verbunden sind, setzen manche Magi solche Tricks ein. Gelegentlich ist es notwendig, eine Persona des anderen Geschlechts zu schaffen, mit einem bestimmten Merkmal wie roten Haaren oder Zwergenwuchs, oder sogar mit allen besonderen Merkmalen einer bestimmten realen Person. In solchen Fällen können Zauber wie *Verkleidung des verwandelten Bildes* und *Das Antlitz des Fremden* sehr nützlich sein. Mitglieder des Hauses Tytalus tauschen sogar Labortexte solcher Zauber, die den Zauberer in ein bestimmtes Individuum verwandeln; diese Versionen können nur dazu verwendet werden, die Gestalt der bei der Erfindung des Zaubers bestimmten Person anzunehmen, doch diese Verkleidung ist makellos und erfordert nicht, dass der Zauberer die Person kennt, die er kopiert.
 
-Der tytalische Zauber *Die Maske des Anderen anlegen* erlaubt einem Magus, eine Deckidentität zu erwerben, indem er sie einem anderen stiehlt. Dieser Zauber wird am häufigsten verwendet, um eine Tarnung an einen anderen Magus weiterzugeben, sobald sie für den Magus, der sie ursprünglich entwickelt hat, nicht mehr nützlich ist — vielleicht weil er die Pläne abgeschlossen hat, die ihre Erschaffung veranlassten. In diesem Fall wird der Zauber oft über eine *Communion des Zauberers* gewirkt, und der Zauberer breitet seine Parma um den Spender aus (ArM5, Seite 87), sodass nur der Formwiderstand des Spenders von der Penetration des Zaubers überwunden werden muss. Eine solche Abmachung stellt den neuen Besitzer gewöhnlich in die Schuld des früheren Besitzers. Allerdings kann dieser Zauber auch dazu verwendet werden, eine Persona von einem anderen zu stehlen; mit einem Perdo-Requisit, das dem Zauber bei seiner Erfindung hinzugefügt wird, kann er sogar jede Erinnerung an die Identität aus dem Geist des Spenders tilgen.
+Der tytalische Zauber *Die Maske des Anderen anlegen* erlaubt einem Magus, eine Deckidentität zu erwerben, indem er sie einem anderen stiehlt. Dieser Zauber wird am häufigsten verwendet, um eine Tarnung an einen anderen Magus weiterzugeben, sobald sie für den Magus, der sie ursprünglich entwickelt hat, nicht mehr nützlich ist — vielleicht weil er die Pläne abgeschlossen hat, die ihre Erschaffung veranlassten. In diesem Fall wird der Zauber oft über eine *Communion des Zauberers* gewirkt, und der Zauberer breitet seine Parma um den Spender aus (ArM5, [Seite 87](<Ars Magica Definitive Edition Basisregeln.md#besondere-fähigkeiten-gemeisterter-zauber>)), sodass nur der Formwiderstand des Spenders von der Penetration des Zaubers überwunden werden muss. Eine solche Abmachung stellt den neuen Besitzer gewöhnlich in die Schuld des früheren Besitzers. Allerdings kann dieser Zauber auch dazu verwendet werden, eine Persona von einem anderen zu stehlen; mit einem Perdo-Requisit, das dem Zauber bei seiner Erfindung hinzugefügt wird, kann er sogar jede Erinnerung an die Identität aus dem Geist des Spenders tilgen.
 
 ##### Der Trick des Sukkubus
 
@@ -4016,7 +4016,7 @@ Der Zauberer muss weitere Magie einsetzen, um die physische Ähnlichkeit der Per
 
 #### Die Magie der Intrige
 
-Die Magi des Hauses Tytalus setzen häufig Magie ein, die sie bei ihren Intrigen unterstützt. Das Ausspähen der Agenten und Widersacher seiner Ränke ist ein wichtiger Aspekt tytalischer Intrigen, obwohl der Magus natürlich Vorsicht walten lassen sollte, wenn er andere Mitglieder des Ordens des Hermes in seine Pläne verwickelt hat. Um auf der sicheren Seite zu sein, kann eine Tytalus-Maga kraftloses Zaubern anwenden (*Häuser des Hermes: Wahre Linien*, Seite 72), das sicherstellt, dass ihre Magie nicht einmal eine Magieresistenz von null durchdringen kann. Zauber wie *Spähende Augen* und *Flüsternde Winde* können sehr nützlich sein, ebenso wie *Das enthüllte unsichtbare Auge*, um das Ausspähen des Rivalen zu vereiteln. Tytalische Magi müssen oft herausfinden, in welche Ränke sie ohne ihr Wissen verwickelt wurden, was der Zweck des Zaubers *Verräterisches Flüstern des eifersüchtigen Geistes* ist, der unten beschrieben wird.
+Die Magi des Hauses Tytalus setzen häufig Magie ein, die sie bei ihren Intrigen unterstützt. Das Ausspähen der Agenten und Widersacher seiner Ränke ist ein wichtiger Aspekt tytalischer Intrigen, obwohl der Magus natürlich Vorsicht walten lassen sollte, wenn er andere Mitglieder des Ordens des Hermes in seine Pläne verwickelt hat. Um auf der sicheren Seite zu sein, kann eine Tytalus-Maga kraftloses Zaubern anwenden (*Häuser des Hermes: Wahre Linien*, [Seite 72](<Ars Magica 5e - Häuser des Hermes - Wahre Linien.md#zauberspuren-und-sigils>)), das sicherstellt, dass ihre Magie nicht einmal eine Magieresistenz von null durchdringen kann. Zauber wie *Spähende Augen* und *Flüsternde Winde* können sehr nützlich sein, ebenso wie *Das enthüllte unsichtbare Auge*, um das Ausspähen des Rivalen zu vereiteln. Tytalische Magi müssen oft herausfinden, in welche Ränke sie ohne ihr Wissen verwickelt wurden, was der Zweck des Zaubers *Verräterisches Flüstern des eifersüchtigen Geistes* ist, der unten beschrieben wird.
 
 Tytali kontrollieren die sterblichen Agenten ihrer Pläne selten direkt mit Magie; solche Zauber neigen dazu, die Gedankenfreiheit zu hemmen, und tytalische Magi bevorzugen Agenten, die in der Lage sind, sich einer Situation anzupassen, gegenüber gedankenlosen Automaten. Darüber hinaus verursachen Rego-Mentem-Zauber, die mächtig genug sind, um nützlich zu sein, gewöhnlich Verzerrung, was für jeden Agenten lästig ist, der mehr als einmal eingesetzt werden soll. Subtilere Zauber, etwa solche, die Loyalitätsgefühle wecken oder bösartiges Gerede über einen Rivalen verbreiten (siehe *Brennendes Thema des Tages*, unten), sind weitaus beliebter.
 
@@ -4081,7 +4081,7 @@ Nach dem Wirken dieses Zaubers äußert der Zauberer eine Information (wahr oder
 
 #### Die Magie der Titanoi
 
-Geister sind im Mythischen Europa allgegenwärtig und überall dort zugegen, wo ein Gegenstand existiert, der eine bestimmte Eigenschaft stark zum Ausdruck bringt. So finden sich Feuergeister nahe offenen Flammen und Liebesgeister nahe werbenden Paaren. Diese Geister ähneln Tieren und Pflanzen, besitzen keine persönlichen Namen und mischen sich nicht in die physische Welt ein, es sei denn, sie werden durch Magie dazu gezwungen. Zauber einer bestimmten Form können jeden Geist befehligen, der an diese Form gebunden ist; so kann Ignem beispielsweise jeden Feuergeist befehligen. Mentem-Zauber (unter Verwendung der Rego-Mentem-Leitlinien, ArM5, Seite 151) können jeden Geist mit einem Intelligenzwert befehligen, doch manche Geister besitzen keine Intelligenz, und jene werden von Rego-(Form)-Zaubern beeinflusst.
+Geister sind im Mythischen Europa allgegenwärtig und überall dort zugegen, wo ein Gegenstand existiert, der eine bestimmte Eigenschaft stark zum Ausdruck bringt. So finden sich Feuergeister nahe offenen Flammen und Liebesgeister nahe werbenden Paaren. Diese Geister ähneln Tieren und Pflanzen, besitzen keine persönlichen Namen und mischen sich nicht in die physische Welt ein, es sei denn, sie werden durch Magie dazu gezwungen. Zauber einer bestimmten Form können jeden Geist befehligen, der an diese Form gebunden ist; so kann Ignem beispielsweise jeden Feuergeist befehligen. Mentem-Zauber (unter Verwendung der Rego-Mentem-Leitlinien, ArM5, [Seite 151](<Ars Magica Definitive Edition Basisregeln.md#rego-mentem--leitlinien>)) können jeden Geist mit einem Intelligenzwert befehligen, doch manche Geister besitzen keine Intelligenz, und jene werden von Rego-(Form)-Zaubern beeinflusst.
 
 Die Titanoi interessieren sich auch für die benannten Geister, die Daimonen. Solche Geister sind nicht so leicht zu beherrschen, und nur Eingeweihte des Mysteriums der Theurgie sind darin wahrhaft geschickt. Anders als einfachere Geister kann ein Daimon sich an mehreren Orten gleichzeitig manifestieren, indem er an jedem nur einen Aspekt seiner selbst projiziert. Anstatt einen solchen Geist zu beschwören, schließt der Titanos stattdessen einen Pakt mit einem, der bewirkt, dass dieser einen Aspekt zum Magus entsendet, um im Gegenzug für die durch das Wirken eines Ritualzaubers bereitgestellte geistige Nahrung eine Aufgabe in seinem Auftrag zu erfüllen.
 
@@ -4183,7 +4183,7 @@ CrCo 20
 
 R: Berührung, D: Mond, Z: Individuum
 
-Das Ziel erhält einen Bonus von +9 auf Ausdauerwürfe zur Vermeidung einer Ansteckung mit Krankheiten (siehe ArM5, Entkräftung, Seite 180).
+Das Ziel erhält einen Bonus von +9 auf Ausdauerwürfe zur Vermeidung einer Ansteckung mit Krankheiten (siehe ArM5, Entkräftung, [Seite 180](<Ars Magica Definitive Edition Basisregeln.md#schwächung>)).
 
 (Basis 4, +1 Berührung, +3 Mond)
 
@@ -4207,7 +4207,7 @@ Haus Ex Miscellanea ist das größte der 12 Häuser des Ordens und hat dennoch d
 
 ## Geschichte
 
-Die Geschichte der Gründung des Hauses war ein bedeutendes Ereignis in der Geschichte des Ordens des Hermes und ist allgemein bekannt (ArM5, Seite 10). Kurz zusammengefasst: Pralix, die Schülerin des Tytalus, wurde damit beauftragt, einen nicht-hermetischen Hexenmeister namens Damhan-Allaidh aufzuspüren, der eine Armee aus angelsächsischen Runenmagiern und monströsen Gestaltwandlern rekrutiert hatte und zu Beginn des neunten Jahrhunderts eine Bedrohung für den Orden darstellte. Um bei dieser Aufgabe Unterstützung zu erhalten, benötigte Pralix eine eigene Armee, und so rekrutierte sie einheimische Zauberer von allen Britischen Inseln, die ebenfalls unter diesem Hexenmeister gelitten hatten. An der Spitze dieser Armee stellte sie sich ihrem Feind zuerst bei Loch Leglean in Schottland, dann überall durch Nordengland, bis sie sich schließlich bei Cad Gadu in Wales trafen. Dort, während der Schlacht der Falschen Sonne, wurden Damhan-Allaidh und seine furchteinflößenden Verbündeten endlich besiegt.
+Die Geschichte der Gründung des Hauses war ein bedeutendes Ereignis in der Geschichte des Ordens des Hermes und ist allgemein bekannt (ArM5, [Seite 10](<Ars Magica Definitive Edition Basisregeln.md#damhan-allaidh-und-der-ordo-miscellanea>)). Kurz zusammengefasst: Pralix, die Schülerin des Tytalus, wurde damit beauftragt, einen nicht-hermetischen Hexenmeister namens Damhan-Allaidh aufzuspüren, der eine Armee aus angelsächsischen Runenmagiern und monströsen Gestaltwandlern rekrutiert hatte und zu Beginn des neunten Jahrhunderts eine Bedrohung für den Orden darstellte. Um bei dieser Aufgabe Unterstützung zu erhalten, benötigte Pralix eine eigene Armee, und so rekrutierte sie einheimische Zauberer von allen Britischen Inseln, die ebenfalls unter diesem Hexenmeister gelitten hatten. An der Spitze dieser Armee stellte sie sich ihrem Feind zuerst bei Loch Leglean in Schottland, dann überall durch Nordengland, bis sie sich schließlich bei Cad Gadu in Wales trafen. Dort, während der Schlacht der Falschen Sonne, wurden Damhan-Allaidh und seine furchteinflößenden Verbündeten endlich besiegt.
 
 > ## Eckdaten
 > 
@@ -4253,7 +4253,7 @@ Im Jahr 1220 scheint das Haus zum nahezu ersten Mal eine Chance auf Erneuerung z
 
 Die meisten Traditionen des Hauses Ex Miscellanea haben einen Aspekt ihrer vorhermetischen Kräfte bewahrt, den sie für überlegen gegenüber denen des Ordens halten. Obwohl die vom Orden des Hermes praktizierte Magie allen anderen magischen Traditionen (vergangenen und gegenwärtigen) überlegen ist, geben selbst ihre glühendsten Befürworter zu, dass in manchen Fällen Wirksamkeit zugunsten von Flexibilität geopfert wurde. Neben den Grenzen der Magie gibt es einige Bereiche der Magie, die manchen Zauberern außerordentlich leicht fielen, unter hermetischer Theorie aber ziemlich schwierig sind.
 
-Alle Mitglieder dieses Hauses haben ihre besondere Tradition durch eine Große nicht-hermetische Tugend, einen Großen Hermetischen Fehler und eine Kleine Hermetische Tugend vertreten (ArM5, Seite 30). Diese Tugenden und Fehler sind verpflichtend, gelten zusätzlich zur normalen Zuteilung von Tugenden und Fehlern eines Magus-Charakters und werden von allen Mitgliedern derselben Abstammungslinie geteilt.
+Alle Mitglieder dieses Hauses haben ihre besondere Tradition durch eine Große nicht-hermetische Tugend, einen Großen Hermetischen Fehler und eine Kleine Hermetische Tugend vertreten (ArM5, [Seite 30](<Ars Magica Definitive Edition Basisregeln.md#die-gabe>)). Diese Tugenden und Fehler sind verpflichtend, gelten zusätzlich zur normalen Zuteilung von Tugenden und Fehlern eines Magus-Charakters und werden von allen Mitgliedern derselben Abstammungslinie geteilt.
 
 Die Große Tugend repräsentiert das Vermächtnis der Tradition des Magus vor dem Beitritt zum Orden, und eine Erörterung der verfügbaren Kräfte findet sich unten. Im Gegensatz dazu repräsentiert der Große Fehler die Opfer seiner hermetischen Magie, die erbracht werden mussten, um seine nicht-hermetische Magie zu bewahren. Typischerweise bestehen diese Fehler aus einer Unfähigkeit, einen bestimmten Aspekt hermetischer Magie zu nutzen (Defizitäre Technik, Schwieriges Langlebigkeitsritual, Vis-Verschwender, Schwache Spontane Magie oder Unstrukturierter Zauberer), einer Einschränkung dieser Magie (Notwendige Bedingung, Kurzreichweitige Magie, Einschränkung oder Schwache Magieresistenz) oder einer ungewöhnlichen Reaktion auf den Einsatz hermetischer Magie (Chaotische Magie, Magiesucht, Schmerzhafte Magie oder Zwielicht-anfällig).
 
@@ -4287,7 +4287,7 @@ Ex Miscellanea bildet. Diese Regeln können auch vom Spielleiter verwendet werde
 
 Alle mit diesem System erschaffenen Übernatürlichen Tugenden sind mit einer Übernatürlichen Fertigkeit verbunden, die darstellt, wie viel Beherrschung der Charakter über seine Magie hat. Für Magi Ex Miscellanea wird angenommen, dass diese Fertigkeit der Magiesphäre zugeordnet ist, obwohl sie tatsächlich mit jeder der vier übernatürlichen Sphären verbunden sein kann, wodurch ein Charakter mit mehrfacher Sphärenzugehörigkeit entsteht (da die Gabe selbst immer der Magiesphäre zugeordnet ist).
 
-Um die Fertigkeit in einer bestimmten Situation einzusetzen, muss der Spieler zunächst festlegen, was sein Charakter mit seiner Magie erreichen will. Der Spielleiter weist dieser Aufgabe dann einen Schwierigkeitsgrad zu, und der Spieler würfelt und addiert eine Eigenschaft und seinen Wert in der Übernatürlichen Fertigkeit. Die verwendete Eigenschaft variiert je nach eingesetzter Fertigkeit. Dies entspricht der Zaubersumme eines hermetischen Zaubers. Wird der Schwierigkeitsgrad erreicht, ist der magische Effekt erfolgreich. Beim Einsatz einer Übernatürlichen Fertigkeit tritt kein Erschöpfungsverlust ein, sofern die jeweilige Fertigkeit dies nicht erfordert. Die Berechnung der Penetrationssumme entspricht, falls nötig, der Zaubersumme abzüglich des Schwierigkeitsgrads, zuzüglich des Penetrationsbonus, berechnet wie bei hermetischer Magie (ArM5, Seite 84); Heckenzauber profitiert weiterhin von der Fertigkeit Penetration. Wird die Stufe des magischen Effekts benötigt, zum Beispiel wenn er von *Wind der weltlichen Stille* getroffen wird, setze die Übernatürliche Fertigkeit des Charakters multipliziert mit fünf ein.
+Um die Fertigkeit in einer bestimmten Situation einzusetzen, muss der Spieler zunächst festlegen, was sein Charakter mit seiner Magie erreichen will. Der Spielleiter weist dieser Aufgabe dann einen Schwierigkeitsgrad zu, und der Spieler würfelt und addiert eine Eigenschaft und seinen Wert in der Übernatürlichen Fertigkeit. Die verwendete Eigenschaft variiert je nach eingesetzter Fertigkeit. Dies entspricht der Zaubersumme eines hermetischen Zaubers. Wird der Schwierigkeitsgrad erreicht, ist der magische Effekt erfolgreich. Beim Einsatz einer Übernatürlichen Fertigkeit tritt kein Erschöpfungsverlust ein, sofern die jeweilige Fertigkeit dies nicht erfordert. Die Berechnung der Penetrationssumme entspricht, falls nötig, der Zaubersumme abzüglich des Schwierigkeitsgrads, zuzüglich des Penetrationsbonus, berechnet wie bei hermetischer Magie (ArM5, [Seite 84](<Ars Magica Definitive Edition Basisregeln.md#penetrationssumme>)); Heckenzauber profitiert weiterhin von der Fertigkeit Penetration. Wird die Stufe des magischen Effekts benötigt, zum Beispiel wenn er von *Wind der weltlichen Stille* getroffen wird, setze die Übernatürliche Fertigkeit des Charakters multipliziert mit fünf ein.
 
 > ## Beschleunigte Fertigkeiten
 > 
@@ -4295,7 +4295,7 @@ Um die Fertigkeit in einer bestimmten Situation einzusetzen, muss der Spieler zu
 > 
 > Beschleunigte Fertigkeiten sind jedoch keine Künste. Der wichtige Unterschied zwischen einer Kunst und einer Fertigkeit besteht darin, dass eine Kunst allein nutzlos ist – sie muss mit mindestens einer anderen Kunst kombiniert werden, um einen Effekt zu erzielen (selbst wenn der Wert in dieser Kunst null ist). Eine Fertigkeit hingegen erscheint allein in jeder Summe. In allen Belangen außer Steigerung und äquivalenter Zauberstufe sollte eine Übernatürliche Beschleunigte Fertigkeit wie eine normale Übernatürliche Fertigkeit behandelt werden; zum Beispiel kann eine Beschleunigte Fertigkeit nicht aus Vis studiert werden, erhält nur einen +1-Bonus pro aufgewendetem Bauer Vis und erhält einen +2- statt +3-Bonus durch die Tugend Begabung in (Fertigkeit).
 
-Falls Konzentrationswürfe erforderlich sind, verwende die Regeln für hermetische Magie (ArM5, Seite 82). Rohes Vis kann verwendet werden, um die Zaubersumme zu erhöhen: Die Kunst des Vis muss zur Übernatürlichen Fertigkeit passen, und der Charakter kann nicht mehr Bauern einsetzen als seinen Wert in der Übernatürlichen Fertigkeit. Jeder eingesetzte Bauer erhöht die Zaubersumme um eins und fügt einen zusätzlichen Patzerwürfel hinzu.
+Falls Konzentrationswürfe erforderlich sind, verwende die Regeln für hermetische Magie (ArM5, [Seite 82](<Ars Magica Definitive Edition Basisregeln.md#konzentration-1>)). Rohes Vis kann verwendet werden, um die Zaubersumme zu erhöhen: Die Kunst des Vis muss zur Übernatürlichen Fertigkeit passen, und der Charakter kann nicht mehr Bauern einsetzen als seinen Wert in der Übernatürlichen Fertigkeit. Jeder eingesetzte Bauer erhöht die Zaubersumme um eins und fügt einen zusätzlichen Patzerwürfel hinzu.
 
 **Zaubersumme: Eigenschaft + Fertigkeit + Auramodifikator + Würfelwurf**
 
@@ -4311,13 +4311,13 @@ Falls Konzentrationswürfe erforderlich sind, verwende die Regeln für hermetisc
 
 #### Entwurf einer Übernatürlichen Fertigkeit
 
-Alle nach diesen Regeln entworfenen Übernatürlichen Fertigkeiten sind Große Übernatürliche Tugenden. Jede deckt den Bereich magischer Fähigkeit ab, der üblicherweise in einem Kleinen Magischen Fokus zusammengefasst ist (siehe ArM5, Seite 46 für eine Liste). Übernatürliche Fertigkeiten folgen nicht (und müssen nicht unbedingt) den genauen Umrissen hermetischer Effekte, aber dies ist ein guter Ausgangspunkt.
+Alle nach diesen Regeln entworfenen Übernatürlichen Fertigkeiten sind Große Übernatürliche Tugenden. Jede deckt den Bereich magischer Fähigkeit ab, der üblicherweise in einem Kleinen Magischen Fokus zusammengefasst ist (siehe ArM5, [Seite 46](<Ars Magica Definitive Edition Basisregeln.md#kleiner-magischer-fokus>) für eine Liste). Übernatürliche Fertigkeiten folgen nicht (und müssen nicht unbedingt) den genauen Umrissen hermetischer Effekte, aber dies ist ein guter Ausgangspunkt.
 
 Die Wirkungen aller Übernatürlichen Fertigkeiten können durch dieselben vier Parameter wie ein hermetischer Zauber beschrieben werden – Reichweite, Dauer, Ziel und Basiseffekt-Leitlinie.
 
-*Beispiel 1: Die Fertigkeit Gestaltwandler (ArM5, Seite 67) hat immer Reichweite Persönlich, Dauer Momentan, Ziel Individuum und verwendet die Muto-Corpus-Leitlinie zur Verwandlung in ein Tier.*
+*Beispiel 1: Die Fertigkeit Gestaltwandler (ArM5, [Seite 67](<Ars Magica Definitive Edition Basisregeln.md#gestaltwandler-1>)) hat immer Reichweite Persönlich, Dauer Momentan, Ziel Individuum und verwendet die Muto-Corpus-Leitlinie zur Verwandlung in ein Tier.*
 
-*Beispiel 2: Die Fertigkeit Betörung (ArM5, Seite 65) hat immer Reichweite Auge, Dauer Spezial (ein Befehl), Ziel Individuum und verwendet die Rego-Mentem-Leitlinien zur Kontrolle menschlicher Gefühle und Gedanken.*
+*Beispiel 2: Die Fertigkeit Betörung (ArM5, [Seite 65](<Ars Magica Definitive Edition Basisregeln.md#betörung-1>)) hat immer Reichweite Auge, Dauer Spezial (ein Befehl), Ziel Individuum und verwendet die Rego-Mentem-Leitlinien zur Kontrolle menschlicher Gefühle und Gedanken.*
 
 Alle Übernatürlichen Fertigkeiten legen drei dieser Parameter als unveränderlich fest und erlauben einem, je nach dem Wert in der Fertigkeit oder dem durch die Zaubersumme erreichten Schwierigkeitsgrad zu variieren.
 
@@ -4355,7 +4355,7 @@ Der Charakter kann nicht direkt mit den Tieren kommunizieren, es sei denn, er be
 
 #### Den Wind herbeipfeifen
 
-Ein Charakter mit dieser Fertigkeit ist in der Lage, einen Wind zu erzeugen, der die Wirkungen jedes windbasierten Creo-Auram-Zaubers mit Reichweite Stimme und Ziel Individuum dupliziert; ähnliche Übernatürliche Fertigkeiten existieren für andere Wetterphänomene. Um den Wind herbeizurufen, muss der Charakter buchstäblich pfeifen und legt einen Wurf auf Ausdauer + Den Wind herbeipfeifen gegen den in der Tabelle unten aufgeführten Schwierigkeitsgrad ab. Bei Erfolg beginnt der Wind sofort zu blasen, wie vom Charakter befohlen. Er bläst weiter auf die gleiche Weise, auch wenn der Charakter aufhört zu pfeifen. Ein Charakter, der einen Wind bestimmter Stärke herbeigerufen hat, kann diesen Wind in eine andere Art ähnlicher Stärke umwandeln (etwa von *Kreisende Winde des Schutzes* zu *Besen der Winde*), ihn zu einem schwächeren Effekt abschwächen (etwa *Gemach der Frühlingsbrisen*) oder ganz beenden. Jede dieser Änderungen erfordert einen Wurf auf Kommunikation + Musik mit den Schwierigkeitsgraden für die Aufrechterhaltung der Konzentration auf einen Zauber (ArM5, Seite 82). Eine auf diese Weise gepfiffene neue Melodie kann die Stärke eines Windes nicht erhöhen, noch einen abgeschwächten Wind auf seine frühere Intensität zurückbringen; stattdessen muss der Charakter einen neuen Wurf auf Den Wind herbeipfeifen ablegen. Alle Effekte dieser Fertigkeit schwächen sich bei jedem Sonnenuntergang um die nächstniedrigere Stärke ab, bis sie versiegen.
+Ein Charakter mit dieser Fertigkeit ist in der Lage, einen Wind zu erzeugen, der die Wirkungen jedes windbasierten Creo-Auram-Zaubers mit Reichweite Stimme und Ziel Individuum dupliziert; ähnliche Übernatürliche Fertigkeiten existieren für andere Wetterphänomene. Um den Wind herbeizurufen, muss der Charakter buchstäblich pfeifen und legt einen Wurf auf Ausdauer + Den Wind herbeipfeifen gegen den in der Tabelle unten aufgeführten Schwierigkeitsgrad ab. Bei Erfolg beginnt der Wind sofort zu blasen, wie vom Charakter befohlen. Er bläst weiter auf die gleiche Weise, auch wenn der Charakter aufhört zu pfeifen. Ein Charakter, der einen Wind bestimmter Stärke herbeigerufen hat, kann diesen Wind in eine andere Art ähnlicher Stärke umwandeln (etwa von *Kreisende Winde des Schutzes* zu *Besen der Winde*), ihn zu einem schwächeren Effekt abschwächen (etwa *Gemach der Frühlingsbrisen*) oder ganz beenden. Jede dieser Änderungen erfordert einen Wurf auf Kommunikation + Musik mit den Schwierigkeitsgraden für die Aufrechterhaltung der Konzentration auf einen Zauber (ArM5, [Seite 82](<Ars Magica Definitive Edition Basisregeln.md#konzentration-1>)). Eine auf diese Weise gepfiffene neue Melodie kann die Stärke eines Windes nicht erhöhen, noch einen abgeschwächten Wind auf seine frühere Intensität zurückbringen; stattdessen muss der Charakter einen neuen Wurf auf Den Wind herbeipfeifen ablegen. Alle Effekte dieser Fertigkeit schwächen sich bei jedem Sonnenuntergang um die nächstniedrigere Stärke ab, bis sie versiegen.
 
 | Schwierigkeitsgrad | Stärke des Windes |
 |--------------------|-------------------|
@@ -4391,15 +4391,15 @@ Es gibt eine Reihe verschiedener Charaktertypen innerhalb des Hauses Ex Miscella
 
 #### Magi Ex Miscellanea
 
-Diese Magi bilden die Mehrheit des Hauses und werden nach den hier und in **Ars Magica Definitive Edition** vorgestellten üblichen Mechaniken erschaffen. Wenn eine Übernatürliche Fertigkeit als Teil der Lehrlingsausbildung eines Magus Ex Miscellanea erworben wird (also als seine Haustugend), sollte diese Fertigkeit als seine Bevorzugte Fertigkeit gelten, und der Charakter erleidet keinen Abzug auf die Quellenqualität (ArM5, Seite 166) durch seine Kunstwerte, wenn er nach seiner hermetischen Ausbildung seine Bevorzugte Fertigkeit erlernt.
+Diese Magi bilden die Mehrheit des Hauses und werden nach den hier und in **Ars Magica Definitive Edition** vorgestellten üblichen Mechaniken erschaffen. Wenn eine Übernatürliche Fertigkeit als Teil der Lehrlingsausbildung eines Magus Ex Miscellanea erworben wird (also als seine Haustugend), sollte diese Fertigkeit als seine Bevorzugte Fertigkeit gelten, und der Charakter erleidet keinen Abzug auf die Quellenqualität (ArM5, [Seite 166](<Ars Magica Definitive Edition Basisregeln.md#übernatürliche-fertigkeiten-erlernen>)) durch seine Kunstwerte, wenn er nach seiner hermetischen Ausbildung seine Bevorzugte Fertigkeit erlernt.
 
 > ## Bevorzugte Fertigkeiten
 > 
-> Wenn ein Begabter Charakter Übernatürliche Fertigkeiten erlernt, wird es normalerweise schwieriger, neue hinzuzulernen (ArM5, Seite 166). Allerdings verfügen viele Traditionen über eine Gruppe von **Bevorzugten Fertigkeiten**. Werte in diesen Fertigkeiten bestrafen die Quellenqualität zum Erlernen anderer Bevorzugter Fertigkeiten nicht. Die Quellenqualitäten zum Erlernen Bevorzugter Fertigkeiten werden weiterhin durch Werte in anderen Übernatürlichen Fertigkeiten bestraft, und Werte in Bevorzugten Fertigkeiten bestrafen die Quellenqualität zum Erlernen anderer Übernatürlicher Fertigkeiten. Für die meisten Magi sind die Hermetischen Künste die Bevorzugten Fertigkeiten, obwohl dies, da sie alle in einem einzigen Quartal erschlossen werden, weitgehend eine akademische Unterscheidung ist. Magi Ex Miscellanea behandeln die Hermetischen Künste und die Übernatürliche Fertigkeit ihrer Tradition als Bevorzugte Fertigkeiten.
+> Wenn ein Begabter Charakter Übernatürliche Fertigkeiten erlernt, wird es normalerweise schwieriger, neue hinzuzulernen (ArM5, [Seite 166](<Ars Magica Definitive Edition Basisregeln.md#übernatürliche-fertigkeiten-erlernen>)). Allerdings verfügen viele Traditionen über eine Gruppe von **Bevorzugten Fertigkeiten**. Werte in diesen Fertigkeiten bestrafen die Quellenqualität zum Erlernen anderer Bevorzugter Fertigkeiten nicht. Die Quellenqualitäten zum Erlernen Bevorzugter Fertigkeiten werden weiterhin durch Werte in anderen Übernatürlichen Fertigkeiten bestraft, und Werte in Bevorzugten Fertigkeiten bestrafen die Quellenqualität zum Erlernen anderer Übernatürlicher Fertigkeiten. Für die meisten Magi sind die Hermetischen Künste die Bevorzugten Fertigkeiten, obwohl dies, da sie alle in einem einzigen Quartal erschlossen werden, weitgehend eine akademische Unterscheidung ist. Magi Ex Miscellanea behandeln die Hermetischen Künste und die Übernatürliche Fertigkeit ihrer Tradition als Bevorzugte Fertigkeiten.
 
 > ## Mythische Gefährten
 > 
-> Mythische Gefährten (ein neuer Charaktertyp, der erstmals in *Häuser des Hermes: Wahre Linien*, Seite 104 eingeführt wurde) können ebenfalls die Rolle nicht-hermetischer Magier innerhalb des Ordens ausfüllen, aber diese Charaktere besitzen nicht die Gabe. Stattdessen hat ein Mythischer Gefährte eine Spezielle Tugend ähnlich der Gabe, die eine Kleine Tugend kostenlos gewährt und dann zwei Tugendpunkte für jeden Punkt Fehler gibt, den er nimmt. Ein Mythischer Gefährte hat gewöhnlich Zugang zu starker nicht-hermetischer Magie oder Kräften, die in anderen Quellenbänden für **Ars Magica Definitive Edition** beschrieben werden.
+> Mythische Gefährten (ein neuer Charaktertyp, der erstmals in *Häuser des Hermes: Wahre Linien*, [Seite 104](<Ars Magica 5e - Häuser des Hermes - Wahre Linien.md#heldenblut>) eingeführt wurde) können ebenfalls die Rolle nicht-hermetischer Magier innerhalb des Ordens ausfüllen, aber diese Charaktere besitzen nicht die Gabe. Stattdessen hat ein Mythischer Gefährte eine Spezielle Tugend ähnlich der Gabe, die eine Kleine Tugend kostenlos gewährt und dann zwei Tugendpunkte für jeden Punkt Fehler gibt, den er nimmt. Ein Mythischer Gefährte hat gewöhnlich Zugang zu starker nicht-hermetischer Magie oder Kräften, die in anderen Quellenbänden für **Ars Magica Definitive Edition** beschrieben werden.
 
 #### Magi Orbi
 
@@ -4419,11 +4419,11 @@ Gelegentlich assimiliert das Haus Ex Miscellanea jedoch eine ganze Tradition (od
 
 Beide Situationen sind sehr selten. Ein Spieler, der diese Option wählen möchte, kann seinen Charakter jedoch folgendermaßen erschaffen:
 
-- Nimm die Tugenden Die Gabe und Hermetischer Magus (Sozialer Status). Die Gabe gewährt außerdem eine Übernatürliche Fertigkeit, ohne dass eine weitere Tugend erforderlich ist (ArM5, Seite 36).
+- Nimm die Tugenden Die Gabe und Hermetischer Magus (Sozialer Status). Die Gabe gewährt außerdem eine Übernatürliche Fertigkeit, ohne dass eine weitere Tugend erforderlich ist (ArM5, [Seite 36](<Ars Magica Definitive Edition Basisregeln.md#die-gabe>)).
 - Schließe die Charaktererschaffung als Gefährte ab, aber der Spieler kann Arkane Fertigkeiten wählen. Übernatürliche Fertigkeiten werden empfohlen. Vergib bei der Erfahrungspunktezuteilung Parma Magica 1.
 - Erhalte die Reputation Heckenzauberer 2 (Hermetisch)
 
-Da der Charakter die Gabe besitzt, kann er nach der Charaktererschaffung jede Übernatürliche Fertigkeit erlernen (ArM5, Seite 166), aber es wird angenommen, dass die Erschließung der Künste für hermetische Magie entweder gescheitert ist oder nicht gewünscht wird. Die durch die Gabe gewährte Übernatürliche Fertigkeit sowie alle mit Tugendpunkten bezahlten bilden die Bevorzugten Fertigkeiten des Charakters (siehe oben). Angesichts der zentralen Bedeutung des Ordens des Hermes in einer *Ars Magica*-Saga sollten Spieltruppen erwägen, ob ein Begabter Gefährte den Platz des Magus-Charakters eines Spielers einnehmen sollte, auch wenn er möglicherweise nicht so mächtig ist.
+Da der Charakter die Gabe besitzt, kann er nach der Charaktererschaffung jede Übernatürliche Fertigkeit erlernen (ArM5, [Seite 166](<Ars Magica Definitive Edition Basisregeln.md#übernatürliche-fertigkeiten-erlernen>)), aber es wird angenommen, dass die Erschließung der Künste für hermetische Magie entweder gescheitert ist oder nicht gewünscht wird. Die durch die Gabe gewährte Übernatürliche Fertigkeit sowie alle mit Tugendpunkten bezahlten bilden die Bevorzugten Fertigkeiten des Charakters (siehe oben). Angesichts der zentralen Bedeutung des Ordens des Hermes in einer *Ars Magica*-Saga sollten Spieltruppen erwägen, ob ein Begabter Gefährte den Platz des Magus-Charakters eines Spielers einnehmen sollte, auch wenn er möglicherweise nicht so mächtig ist.
 
 *Beispiel: Die Scinnfolk (siehe unten)*
 
@@ -4435,7 +4435,7 @@ Die folgende Tugend eignet sich besonders für Mitglieder des Hauses Ex Miscella
 
 *Klein, Hermetisch*
 
-Der Magus verwendet nicht-hermetische Methoden, um hermetische Zauber zu wirken. Obwohl er weiterhin offensichtliche rituelle Handlungen einsetzen muss, sind dies nicht dieselben Worte und Gesten, die als Teil der Magietheorie innerhalb des Ordens gelehrt werden, und andere Magi, die mit der Tradition des Magus nicht vertraut sind, finden es sehr schwierig zu erkennen, welchen Zauber er wirkt. Jeder Versuch, die Form seines magischen Effekts zu bestimmen (ArM5, Seite 83), wird gegen einen Schwierigkeitsgrad von 15 abgelegt, ohne dass die Magnitude des Effekts wie üblich von diesem Schwierigkeitsgrad abgezogen wird. Wenn der Charakter Übernatürliche Fertigkeiten besitzt, verwendet er zur Ausübung seiner hermetischen Magie dieselben Methoden wie für seine nicht-hermetische Magie. Der Magus kann sich nicht dafür entscheiden, die hermetischen Standardmethoden anstelle derer seiner einheimischen Tradition zu verwenden, kann aber Worte und Gesten in der üblichen Weise reduzieren oder weglassen (ArM5, Seite 83).
+Der Magus verwendet nicht-hermetische Methoden, um hermetische Zauber zu wirken. Obwohl er weiterhin offensichtliche rituelle Handlungen einsetzen muss, sind dies nicht dieselben Worte und Gesten, die als Teil der Magietheorie innerhalb des Ordens gelehrt werden, und andere Magi, die mit der Tradition des Magus nicht vertraut sind, finden es sehr schwierig zu erkennen, welchen Zauber er wirkt. Jeder Versuch, die Form seines magischen Effekts zu bestimmen (ArM5, [Seite 83](<Ars Magica Definitive Edition Basisregeln.md#worte-und-gesten>)), wird gegen einen Schwierigkeitsgrad von 15 abgelegt, ohne dass die Magnitude des Effekts wie üblich von diesem Schwierigkeitsgrad abgezogen wird. Wenn der Charakter Übernatürliche Fertigkeiten besitzt, verwendet er zur Ausübung seiner hermetischen Magie dieselben Methoden wie für seine nicht-hermetische Magie. Der Magus kann sich nicht dafür entscheiden, die hermetischen Standardmethoden anstelle derer seiner einheimischen Tradition zu verwenden, kann aber Worte und Gesten in der üblichen Weise reduzieren oder weglassen (ArM5, [Seite 83](<Ars Magica Definitive Edition Basisregeln.md#worte-und-gesten>)).
 
 ### Neue Fehler
 
@@ -4537,7 +4537,7 @@ Diese Tradition ist besonders verbreitet in Ländern, die von den Sachsen besied
 
 #### Hexen von Thessalien
 
-Die ursprünglichen Thessalierinnen waren zurückgezogene Verehrerinnen finsterer Unterweltgötter; sie praktizierten Zauberei, Nekromantie und konnten mächtige Flüche auf ihre Feinde schleudern. Trianoma, die berühmte Lehrling des Bonisagus, war ein Mitglied dieser Tradition (siehe *Häuser des Hermes: Wahre Linien*, Seite 6), aber andere Mitglieder ihrer Tradition traten dem Orden erst hundert Jahre später bei. Einige Thessalierinnen stehen noch in Kontakt mit ihren Schwestern, die dem Orden nicht beitraten, den Töchtern der Erictho – was sie gewöhnlich unter großen Verdacht des Diabolismus stellt. Diese nicht-hermetischen Zauberer wohnen in den Kambunischen Bergen an der Nordgrenze Thessaliens, wo sie schnell und leicht zwischen Portalen, die zu Feen-Regiones führen, und ihren Felshöhlen wechseln können. Ihre Wege sind heidnisch, aber diese Riten sind von Natur aus eigennützig und voller dunklen Unfugs, und so ist die Grenze zwischen ihren Praktiken und Dämonenverehrung sehr dünn.
+Die ursprünglichen Thessalierinnen waren zurückgezogene Verehrerinnen finsterer Unterweltgötter; sie praktizierten Zauberei, Nekromantie und konnten mächtige Flüche auf ihre Feinde schleudern. Trianoma, die berühmte Lehrling des Bonisagus, war ein Mitglied dieser Tradition (siehe *Häuser des Hermes: Wahre Linien*, [Seite 6](<Ars Magica 5e - Häuser des Hermes - Wahre Linien.md#die-gründerin-trianoma>)), aber andere Mitglieder ihrer Tradition traten dem Orden erst hundert Jahre später bei. Einige Thessalierinnen stehen noch in Kontakt mit ihren Schwestern, die dem Orden nicht beitraten, den Töchtern der Erictho – was sie gewöhnlich unter großen Verdacht des Diabolismus stellt. Diese nicht-hermetischen Zauberer wohnen in den Kambunischen Bergen an der Nordgrenze Thessaliens, wo sie schnell und leicht zwischen Portalen, die zu Feen-Regiones führen, und ihren Felshöhlen wechseln können. Ihre Wege sind heidnisch, aber diese Riten sind von Natur aus eigennützig und voller dunklen Unfugs, und so ist die Grenze zwischen ihren Praktiken und Dämonenverehrung sehr dünn.
 
 **Große Nicht-Hermetische Tugend:** Beschwörung
 
@@ -4655,7 +4655,7 @@ Darüber hinaus kann eine Columba jede klar definierte Grenze als Kreis behandel
 
 Beim Zeichnen eines Kreises kann eine Columba auf ihre schnellere Wirkzeit und ihre Fähigkeit verzichten, einfach den Umfang des Kreises zu markieren, und stattdessen die mit Schutzkreismagie verbundenen magischen Symbole hinzufügen, wodurch sie Dinge bestimmter Form oder bestimmten Materials gezielt ein- oder ausschließen kann, genau wie beim Einsatz ihrer Schutzkreismagie-Kraft. Dies erlaubt ihr auch, eine Arkane Verbindung in den Zauber einzuarbeiten, um ihre Penetration gegen ein bestimmtes Wesen zu erhöhen. Zum Beispiel könnte ein Intellego-Vim-Zauber, der die Zaubernde warnen soll, wann immer Feen den Ring betreten, stattdessen mit einer Arkanen Verbindung zu einer besonders mächtigen Fee gewirkt werden, wodurch der Effekt auf diese Fee beschränkt wird, aber sichergestellt ist, dass der Zauber deren Feenmacht durchdringt.
 
-Columbae können diese Vorteile nur nutzen, wenn sie hermetische Zauber mit Reichweite Berührung, Dauer Ring und Ziel Kreis wirken (ArM5, Seite 114) – jede Abweichung von diesen Parametern macht diese Tugend wirkungslos. Sie können sie nicht auf ihre Schutzkreismagie-Kraft anwenden, da sie Wege darstellen, auf denen das tiefe Verständnis ihrer Tradition von magischen Schutzkreisen ihre hermetische Magie verbessert hat.
+Columbae können diese Vorteile nur nutzen, wenn sie hermetische Zauber mit Reichweite Berührung, Dauer Ring und Ziel Kreis wirken (ArM5, [Seite 114](<Ars Magica Definitive Edition Basisregeln.md#magische-schutzkreise>)) – jede Abweichung von diesen Parametern macht diese Tugend wirkungslos. Sie können sie nicht auf ihre Schutzkreismagie-Kraft anwenden, da sie Wege darstellen, auf denen das tiefe Verständnis ihrer Tradition von magischen Schutzkreisen ihre hermetische Magie verbessert hat.
 
 > ## Leitlinien für Schutzkreise
 > 
@@ -4856,11 +4856,11 @@ Wenn die Verbannung penetriert, verbannt der Charakter alle Kreaturen der gewäh
 | 6           | Bauwerk |
 | 9           | Grenze  |
 
-Ein erfolgreicher Verbannungsversuch vertreibt alle Kreaturen der entsprechenden Sphäre aus dem bezeichneten Gebiet, gleich ob der Charakter von ihnen weiß oder nicht. Die einzige Möglichkeit, befreundete Kreaturen derselben Sphäre wie die angepeilte zu verschonen, besteht darin, den Wahren Namen des Ziels der Verbannung einzubeziehen. (Siehe *Sphären der Macht: Das Infernale*, Seite 34.)
+Ein erfolgreicher Verbannungsversuch vertreibt alle Kreaturen der entsprechenden Sphäre aus dem bezeichneten Gebiet, gleich ob der Charakter von ihnen weiß oder nicht. Die einzige Möglichkeit, befreundete Kreaturen derselben Sphäre wie die angepeilte zu verschonen, besteht darin, den Wahren Namen des Ziels der Verbannung einzubeziehen. (Siehe *Sphären der Macht: Das Infernale*, [Seite 34](<Ars Magica 5e - Sphären der Macht - Das Infernale.md#wahre-namen>).)
 
-Eine verbannte Kreatur muss den bezeichneten Ort auf dem schnellsten verfügbaren Weg verlassen. Die Kreatur kann versuchen, zum bezeichneten Ort zurückzukehren, indem sie einen Ausdauer + (Sphären-)Kunde-Wurf gegen einen Schwierigkeitsgrad von 12 besteht, wobei die anwendbare (Sphären-)Kunde der Ursprung der Verbannungsfertigkeit des Charakters ist. Befindet sich der bezeichnete Ort innerhalb einer Aura, die mit der Verbannungsfertigkeit des Charakters übereinstimmt, wird der Wurf der Kreatur durch die Sphärenwechselwirkungstabelle auf S. 183 in ArM5 modifiziert. Gelingt der Kreatur der Wurf, darf sie den bezeichneten Ort betreten, doch ihr Machtwert wird um die Hälfte des Verbannungswerts des Charakters reduziert. Würde der Machtwert der Kreatur auf null oder weniger reduziert, darf die Kreatur das Gebiet nicht betreten. Verlässt die Kreatur den bezeichneten Ort, normalisiert sich ihr Machtwert.
+Eine verbannte Kreatur muss den bezeichneten Ort auf dem schnellsten verfügbaren Weg verlassen. Die Kreatur kann versuchen, zum bezeichneten Ort zurückzukehren, indem sie einen Ausdauer + (Sphären-)Kunde-Wurf gegen einen Schwierigkeitsgrad von 12 besteht, wobei die anwendbare (Sphären-)Kunde der Ursprung der Verbannungsfertigkeit des Charakters ist. Befindet sich der bezeichnete Ort innerhalb einer Aura, die mit der Verbannungsfertigkeit des Charakters übereinstimmt, wird der Wurf der Kreatur durch die Sphärenwechselwirkungstabelle auf [S. 183](<Ars Magica Definitive Edition Basisregeln.md#tabelle-zur-sphärenwechselwirkung>) in ArM5 modifiziert. Gelingt der Kreatur der Wurf, darf sie den bezeichneten Ort betreten, doch ihr Machtwert wird um die Hälfte des Verbannungswerts des Charakters reduziert. Würde der Machtwert der Kreatur auf null oder weniger reduziert, darf die Kreatur das Gebiet nicht betreten. Verlässt die Kreatur den bezeichneten Ort, normalisiert sich ihr Machtwert.
 
-Solange sich eine betroffene Kreatur im bezeichneten Gebiet aufhält, ist ihr Machtwert reduziert, und sie erleidet überwältigende Schmerzen und Unbehagen (und negative Modifikatoren), wie unter *Gewicht von tausend Höllen* (ArM5, Seite 148) beschrieben. Dieses extreme Unbehagen führt dazu, dass die meisten Kreaturen eine tiefe Feindschaft gegen den Charakter entwickeln, der sie verbannt hat. Infernale und andere Kreaturen entsprechenden Temperaments können eine Besessenheit entwickeln, Rache am Charakter zu nehmen. Wenn eine Kreatur nicht in der Lage ist, eine Verbannung zu rächen, sucht sie oft Verbündete oder Hilfe, um den Charakter zu bestrafen. Befreundete Kreaturen gehen möglicherweise nicht so weit für ihre Vergeltung, aber nur wenige freuen sich über die Qual der Verbannung.
+Solange sich eine betroffene Kreatur im bezeichneten Gebiet aufhält, ist ihr Machtwert reduziert, und sie erleidet überwältigende Schmerzen und Unbehagen (und negative Modifikatoren), wie unter *Gewicht von tausend Höllen* (ArM5, [Seite 148](<Ars Magica Definitive Edition Basisregeln.md#gewicht-von-tausend-höllen>)) beschrieben. Dieses extreme Unbehagen führt dazu, dass die meisten Kreaturen eine tiefe Feindschaft gegen den Charakter entwickeln, der sie verbannt hat. Infernale und andere Kreaturen entsprechenden Temperaments können eine Besessenheit entwickeln, Rache am Charakter zu nehmen. Wenn eine Kreatur nicht in der Lage ist, eine Verbannung zu rächen, sucht sie oft Verbündete oder Hilfe, um den Charakter zu bestrafen. Befreundete Kreaturen gehen möglicherweise nicht so weit für ihre Vergeltung, aber nur wenige freuen sich über die Qual der Verbannung.
 
 Obwohl alle Verbannungskräfte der Donatores mit dem Göttlichen verbunden sind, kann Verbannung mit jeder Sphäre verbunden sein. Ein Charakter kann Verbannung gegen Kreaturen einsetzen, die derselben Sphäre wie seine Verbannungsfertigkeit angehören, doch es ist schwierig, eine gleichgesphärische Kreatur vom bezeichneten Gebiet fernzuhalten. Göttliche Kreaturen sind natürlich gegen die Wirkung der Verbannung immun, wenn sie Gottes göttliche Pläne erfüllen.
 
@@ -4952,7 +4952,7 @@ Die Große Hermetische Tugend Merkurische Magie ist für orphische Magoi passend
 > 
 > Es geht das Gerücht innerhalb und außerhalb des Kults um, dass ihre Anführer Zugang zu einem Ritual haben, das dem Pfad des Orpheus in die Unterwelt folgt. Die ursprüngliche Reise des Orpheus mag Spuren hinterlassen haben, denen spätere *Magoi* folgen könnten, um ihre eigenen Geliebten (oder Verhassten) in die Welt der Lebenden zurückzuholen.
 > 
-> Wenn dieses Ritual existierte, würde es wie die Rituale Fenicils (siehe *Häuser des Hermes: Wahre Linien*, Seite 76) funktionieren, mit einem Schwierigkeitsgrad von 78, Reichweite *Adelphixis*, Dauer Momentan und Ziel Individuum; weder der Kult des Orpheus noch Haus Guernicus weiß, dass die jeweils andere Gruppe über solches Wissen verfügt. Für jene ohne *Wahre Linien*: Dies ist ein großes Ritual, das den Einsatz Dutzender Bauern Rohes Vis und die Koordination
+> Wenn dieses Ritual existierte, würde es wie die Rituale Fenicils (siehe *Häuser des Hermes: Wahre Linien*, [Seite 76](<Ars Magica 5e - Häuser des Hermes - Wahre Linien.md#fenicils-rituale>)) funktionieren, mit einem Schwierigkeitsgrad von 78, Reichweite *Adelphixis*, Dauer Momentan und Ziel Individuum; weder der Kult des Orpheus noch Haus Guernicus weiß, dass die jeweils andere Gruppe über solches Wissen verfügt. Für jene ohne *Wahre Linien*: Dies ist ein großes Ritual, das den Einsatz Dutzender Bauern Rohes Vis und die Koordination
 > 
 > mehrerer Magi gleichzeitig erfordert, die alle den Zauber *Communion des Zauberers* beherrschen müssen. Während des Wirkens wird der Ritualleiter in eine Sphäre gezogen, die der griechischen Unterwelt zu gleichen scheint, wo er von Hades selbst auf die Probe gestellt wird, seine Würdigkeit zu beweisen, bevor der König die Seele freigibt.
 > 
@@ -5161,7 +5161,7 @@ Pralix trat dem Haus, das sie geschaffen hatte, offiziell nie bei, und da sie de
 
 ### Kultur
 
-Pralicische Magi (die sich auch Filii Pralicis nennen, die Kinder der Pralix) sind fasziniert von exotischer Magie. Einige studieren sie in der Hoffnung, dass ihre Erkenntnisse den Fortschritt der hermetischen Theorie voranbringen können, und von allen Magi außerhalb von Haus Bonisagus sind sie als Gruppe am ehesten geneigt, Originäre Forschung zu betreiben (siehe *Häuser des Hermes: Wahre Linien*, Seite 26). Neben lebenden Traditionen interessieren sich Pralicier auch für Magie, die keine lebenden Praktizierenden mehr hat, und sie verfolgen oft Gerüchte und Legenden über längst verstorbene Magier.
+Pralicische Magi (die sich auch Filii Pralicis nennen, die Kinder der Pralix) sind fasziniert von exotischer Magie. Einige studieren sie in der Hoffnung, dass ihre Erkenntnisse den Fortschritt der hermetischen Theorie voranbringen können, und von allen Magi außerhalb von Haus Bonisagus sind sie als Gruppe am ehesten geneigt, Originäre Forschung zu betreiben (siehe *Häuser des Hermes: Wahre Linien*, [Seite 26](<Ars Magica 5e - Häuser des Hermes - Wahre Linien.md#originäre-forschung>)). Neben lebenden Traditionen interessieren sich Pralicier auch für Magie, die keine lebenden Praktizierenden mehr hat, und sie verfolgen oft Gerüchte und Legenden über längst verstorbene Magier.
 
 Neben diesem theoretischen Interesse an exotischer Magie ist die Abstammungslinie der Pralix auch daran interessiert, neue magische Traditionen aufzuspüren und ihnen durch Haus Ex Miscellanea den Weg in den Orden zu ebnen. Solche Magi verabscheuen den Gedanken, dass eine Magietradition für immer verloren gehen könnte, und sie sind ungewöhnlich geschickt darin, exotische Magie in ihre hermetischen Entsprechungen zu übersetzen. Wenn eine neue Tradition Haus Ex Miscellanea betritt, sind die Mitglieder dieser Linie oft maßgeblich daran beteiligt, den Heckenzauberern bei der Ausbildung der zweiten Schülergeneration zu helfen und die Akzeptanz hermetischer Magie zu fördern, während die ursprüngliche Magie bewahrt wird.
 
@@ -5241,11 +5241,11 @@ Der Wert der Verständnissumme sollte mit dem passenden Schwierigkeitsgrad vergl
 
 Übernatürliche Tugenden, die keine entsprechende Fertigkeit verleihen, werden so behandelt, als hätten sie einen Fertigkeitswert von 3 bei einer Kleinen Tugend oder 5 bei einer Großen Tugend. Ein erfolgreicher Wurf identifiziert die An- oder Abwesenheit von Magie. Konzentriert sich der Charakter eine weitere Runde, kann er auch die Art der Magie bestimmen, die untersucht wird: hermetische Magie, Fluchmagie und so weiter. Eine zweite Runde des Studiums enthüllt die ungefähre Funktion eines laufenden Zaubers, einer Kraft oder eines verzauberten Gegenstands (in Form der entsprechenden Hermetischen Künste), oder bei einem Wesen die Hermetische Form, die am stärksten mit seiner magischen Fähigkeit übereinstimmt. Wenn der Charakter mit anderen Magiearten als der hermetischen Magie vertraut ist, kann er die Art der Magie stattdessen in diesem Bezugsrahmen bestimmen. Eine dritte Runde des Studiums enthüllt die ungefähre Magnitude der beobachteten Magie.
 
-Obwohl die Feststellung der Anwesenheit von Magie nur einen Moment der Beobachtung erfordert, muss der Charakter die Konzentration aufrechterhalten (ArM5, Seite 82), um die weitergehenden Informationen zu erhalten. Beim Beobachten eines Wesens mit Magieresistenz muss diese Kraft wie üblich penetrieren; doch selbst wenn die Penetrationssumme nicht ausreicht, ist sich der Charakter der Anwesenheit von Magie bewusst, wenn der Schwierigkeitsgrad erreicht wurde.
+Obwohl die Feststellung der Anwesenheit von Magie nur einen Moment der Beobachtung erfordert, muss der Charakter die Konzentration aufrechterhalten (ArM5, [Seite 82](<Ars Magica Definitive Edition Basisregeln.md#konzentration-1>)), um die weitergehenden Informationen zu erhalten. Beim Beobachten eines Wesens mit Magieresistenz muss diese Kraft wie üblich penetrieren; doch selbst wenn die Penetrationssumme nicht ausreicht, ist sich der Charakter der Anwesenheit von Magie bewusst, wenn der Schwierigkeitsgrad erreicht wurde.
 
 Nach drei Runden der Beobachtung verfügt der Charakter über genügend Informationen, um die gewonnenen Erkenntnisse zu nutzen, um seine Magie wirksamer zu gestalten. Jeder Erkenntnisbonus gilt nur für die spezifische Kreatur oder Magie, die studiert wurde; selbst wenn eine identische Kreatur später angetroffen wird, muss sie erneut studiert werden, um diesen Bonus zu erhalten. Der Beobachter darf das Doppelte seines Magie-verstehen-Werts zur Zaubersumme jedes spontanen Muto-, Perdo- oder Rego-Vim-Zaubers addieren, der gegen das untersuchte Objekt oder die Kreatur eingesetzt wird.
 
-Wenn der Beobachter im Labor Verzauberungen untersucht (ArM5, Seite 100), kann er zudem seine Magietheorie mit seinem Magie-verstehen-Wert multiplizieren, bevor er das Ergebnis auf die Laborsumme anwendet. Nach Ermessen des Spielleiters kann diese Fertigkeit auch Einsichten in die Anpassung nicht-hermetischer Magie an die Magietheorie geben.
+Wenn der Beobachter im Labor Verzauberungen untersucht (ArM5, [Seite 100](<Ars Magica Definitive Edition Basisregeln.md#verzauberungen-untersuchen>)), kann er zudem seine Magietheorie mit seinem Magie-verstehen-Wert multiplizieren, bevor er das Ergebnis auf die Laborsumme anwendet. Nach Ermessen des Spielleiters kann diese Fertigkeit auch Einsichten in die Anpassung nicht-hermetischer Magie an die Magietheorie geben.
 
 **Spezialisierungen**: magische Wesen, bestimmte Art von Magie (Übernatürlich)
 
@@ -5288,13 +5288,13 @@ Das Ziel dieses Zaubers kann keine Fluchmagie mit einer Stufe kleiner oder gleic
 > 
 > **Allgemein:** Einen Zauber oder Zauber einer bestimmten Art, die von einem anderen gewirkt wurden, mit einer Stufe kleiner oder gleich der Stufe + 2 Magnituden des Vim-Zaubers aufrechterhalten oder unterdrücken. Beispiele für bestimmte Arten umfassen Hermetische Terram-Magie und schamanische Geisterkontrollmagie. Diese Richtlinie kann auf den Zauber selbst oder auf den Wirkenden der Zauber angewandt werden.
 
-#### Neue Zaubermeisterschafts-Sonderfertigkeit: Entwirren
+#### Neue besondere Meisterschaftsfähigkeit: Entwirren
 
-Diese Zaubermeisterschafts-Sonderfertigkeit kann auf jeden Perdo-Vim-Zauber angewendet werden, der darauf ausgelegt ist, Magie zu schwächen oder zu zerstören. Der Magus darf das Dreifache seines Zaubermeisterschaftswerts zur effektiven Stufe des Perdo-Vim-Zaubers addieren, wenn bestimmt wird, ob er den angepeilten Zauber zerstören kann. So kann ein *Wind der weltlichen Stille* der Stufe 20, gewirkt von einem Charakter mit dieser Zaubermeisterschafts-Sonderfertigkeit und einem Wert von 3, die Wirkungen eines Zaubers aufheben, wenn er die Stufe des Zaubers mit (29 + Stresswürfel) statt (20 + Stresswürfel) verdoppeln kann.
+Diese besondere Meisterschaftsfähigkeit kann auf jeden Perdo-Vim-Zauber angewendet werden, der darauf ausgelegt ist, Magie zu schwächen oder zu zerstören. Der Magus darf das Dreifache seines Zaubermeisterschaftswerts zur effektiven Stufe des Perdo-Vim-Zaubers addieren, wenn bestimmt wird, ob er den angepeilten Zauber zerstören kann. So kann ein *Wind der weltlichen Stille* der Stufe 20, gewirkt von einem Charakter mit dieser besonderen Meisterschaftsfähigkeit und einem Wert von 3, die Wirkungen eines Zaubers aufheben, wenn er die Stufe des Zaubers mit (29 + Stresswürfel) statt (20 + Stresswürfel) verdoppeln kann.
 
-#### Neue Zaubermeisterschafts-Sonderfertigkeit: Erwiderung
+#### Neue besondere Meisterschaftsfähigkeit: Erwiderung
 
-Diese Zaubermeisterschafts-Sonderfertigkeit kann auf jeden Muto- oder Rego-Vim-Zauber angewendet werden, der darauf ausgelegt ist, einen Zauber oder eine Kraft eines anderen Wesens zu beeinflussen (somit sind *Schub des Zauberers* oder *Den anspruchsvollen Zauber aufrechterhalten* nicht geeignet, wohl aber *Spiegel der Umkehrung [Form]*). Der Magus darf das Dreifache seines Zaubermeisterschaftswerts zur effektiven Stufe des Vim-Zaubers addieren, wenn bestimmt wird, ob er die fremde Magie verändern oder kontrollieren kann. So verhindert eine *Fluchende Zunge beschwichtigen* der Stufe 25, begleitet von einem Zaubermeisterschaftswert von 2, das Wirken von Fluchmagie mit einer äquivalenten Stufe von 21, statt 15.
+Diese besondere Meisterschaftsfähigkeit kann auf jeden Muto- oder Rego-Vim-Zauber angewendet werden, der darauf ausgelegt ist, einen Zauber oder eine Kraft eines anderen Wesens zu beeinflussen (somit sind *Schub des Zauberers* oder *Den anspruchsvollen Zauber aufrechterhalten* nicht geeignet, wohl aber *Spiegel der Umkehrung [Form]*). Der Magus darf das Dreifache seines Zaubermeisterschaftswerts zur effektiven Stufe des Vim-Zaubers addieren, wenn bestimmt wird, ob er die fremde Magie verändern oder kontrollieren kann. So verhindert eine *Fluchende Zunge beschwichtigen* der Stufe 25, begleitet von einem Zaubermeisterschaftswert von 2, das Wirken von Fluchmagie mit einer äquivalenten Stufe von 21, statt 15.
 
 ## Rustikale Magi
 
@@ -5342,13 +5342,13 @@ Erstens kann der Charakter auf alle notwendigen Worte und Gesten oder andere Han
 
 Zweitens kann der Charakter beim Anfertigen eines Zaubers die Form und das Material des gefertigten Objekts nutzen, was ihm einen Bonus auf seine Effektsumme gibt, obwohl dieser Bonus seinen Handwerkswert nicht überschreiten darf. Dieser Bonus kann auch eine Gestaltung oder Inschrift umfassen, eine weitere Art von Verzauberungsbonus, die Charaktere mit dieser Tugend nutzen können (siehe den Kasten „Gestaltungs- und Inschriftenboni").
 
-*Beispiel: Ein Holzschnitzer mit sowohl Handwerksmagie als auch der Fertigkeit Wünschelruten sucht nach Wasser und fertigt sich eine Haselrute an. Hasel hat einen Form- und Materialbonus von +3 für Wahrsagung, und so gibt dies ihm einen +3 Bonus auf seine Wünschelruten-Summe. Er ritzt auch seinen Namen in die Rute, was ihm einen +4 Gestaltungs- und Inschriftenbonus für „Nutzung auf den Wirkenden beschränkt" gibt. Sein Handwerk: Holzschnitzerei-Wert beträgt jedoch nur 6, sodass der Gesamtbonus auf +6 statt +7 begrenzt ist. Alles in allem beträgt seine Rutengänger-Summe 11, was bedeutet, dass die Herstellung und Beschriftung seiner Wünschelrute mindestens 20 Minuten dauern wird.*
+*Beispiel: Ein Holzschnitzer mit sowohl Handwerksmagie als auch der Fertigkeit Wünschelrutengehen sucht nach Wasser und fertigt sich eine Haselrute an. Hasel hat einen Form- und Materialbonus von +3 für Wahrsagung, und so gibt dies ihm einen +3 Bonus auf seine Wünschelrutengehen-Summe. Er ritzt auch seinen Namen in die Rute, was ihm einen +4 Gestaltungs- und Inschriftenbonus für „Nutzung auf den Wirkenden beschränkt" gibt. Sein Handwerk: Holzschnitzerei-Wert beträgt jedoch nur 6, sodass der Gesamtbonus auf +6 statt +7 begrenzt ist. Alles in allem beträgt seine Rutengänger-Summe 11, was bedeutet, dass die Herstellung und Beschriftung seiner Wünschelrute mindestens 20 Minuten dauern wird.*
 
 Drittens kann der Charakter Aufgeladene Artefakte auf dieselbe Weise wie hermetische Magi herstellen (siehe Aufgeladene Artefakte, ArM5 Seiten 96–97), ohne eine ganze Jahreszeit aufwenden zu müssen. Stattdessen benötigt er die Standardzeit für das Anfertigen eines Zaubers, wie oben beschrieben, multipliziert mit der Anzahl der hergestellten Gegenstände. Verwende die Zaubersumme des Charakters oder das Ergebnis des Übernatürliche-Fertigkeit-Wurfs, als wäre es eine Laborsumme, um die Stufe des Effekts und die Anzahl der Ladungen zu bestimmen (sodass ein außergewöhnlicher Wurf es dem Charakter ermöglichen könnte, weit mehr Ladungen als üblich zu verzaubern). Diese Anwendung der Handwerksmagie erlaubt es einem Charakter mit einer Übernatürlichen Fertigkeit oder Tugend, die nur ihn selbst betrifft, auch Gegenstände anzufertigen, die andere Charaktere für denselben Effekt verwenden können, allerdings nur, wenn die Aktivität den gefertigten Gegenstand zur Ausübung erfordert. Erfordert die Kraft keinen Würfelwurf zur Aktivierung, lege stattdessen einen passenden Handwerkswurf ab, und die Basisstufe des Effekts beträgt 5.
 
 *Beispiel: Ein Rustikaner, der Rüstungsschmied ist, hat Handwerksmagie und Begabung in Einzelwaffe. Er will einen meisterhaften Kampfschild schmieden, der, wenn er enthüllt wird, dem Träger für den Rest des Tages den Nutzen seiner Tugend Begabung in Einzelwaffe verleiht. Dies ist ein Effekt der Stufe 20 (Basis 5, +1 Berührung, +2 Sonne). Seine Geschicklichkeit beträgt +4, sein Handwerk: Rüstung-Wert ist 8. Er darf 5 für den „+5 Schutz"-Bonus des Schildes addieren und gibt einen Vertrauenspunkt aus, um die letzten +3 Steigerung zu erhalten. Seine Summe beträgt 20, gerade genug, um einen Schild herzustellen. Dies dauert etwa neun Tage; würde er die Dauer des Effekts auf Durchmesser reduzieren, könnte er zwei Schilde mit demselben Effekt herstellen, aber es würde länger dauern.*
 
-Schließlich kann der Charakter Objekte, die bereits Rohes Vis enthalten, zu magischen Gegenständen mit Schlichten Verzauberungen verarbeiten (siehe ArM5, Seite 96, Schlichte Artefakte). Das Vis muss Teil des verzauberten Objekts sein, und auch dies erfordert keine Jahreszeit, sondern einen gefertigten Effekt wie oben beschrieben. Verwende die Zaubersumme des Charakters anstelle seiner Laborsumme, aber wenn eine Übernatürliche Fertigkeit in den Gegenstand eingebettet wird, muss dieses Ergebnis nur gleich oder größer als die Stufe des Effekts sein, nicht das Doppelte wie bei Zaubereffekten. Außerdem darf die Stufe des eingebetteten Effekts nicht das Fünffache der Anzahl der Vis-Bauern im Objekt überschreiten. (Dies unterscheidet sich von hermetischer Magie insofern, als Magi weniger Vis verwenden und das Vis, das sie verwenden, nicht Teil des zu verzaubernden Objekts sein muss.)
+Schließlich kann der Charakter Objekte, die bereits Rohes Vis enthalten, zu magischen Gegenständen mit Schlichten Verzauberungen verarbeiten (siehe ArM5, [Seite 96](<Ars Magica Definitive Edition Basisregeln.md#schlichte-artefakte>), Schlichte Artefakte). Das Vis muss Teil des verzauberten Objekts sein, und auch dies erfordert keine Jahreszeit, sondern einen gefertigten Effekt wie oben beschrieben. Verwende die Zaubersumme des Charakters anstelle seiner Laborsumme, aber wenn eine Übernatürliche Fertigkeit in den Gegenstand eingebettet wird, muss dieses Ergebnis nur gleich oder größer als die Stufe des Effekts sein, nicht das Doppelte wie bei Zaubereffekten. Außerdem darf die Stufe des eingebetteten Effekts nicht das Fünffache der Anzahl der Vis-Bauern im Objekt überschreiten. (Dies unterscheidet sich von hermetischer Magie insofern, als Magi weniger Vis verwenden und das Vis, das sie verwenden, nicht Teil des zu verzaubernden Objekts sein muss.)
 
 *Beispiel: Ein Gerber mit Bezaubernder Musik und Handwerksmagie erhält das Fell einer magischen Bestie, das 3 Bauern Vis enthält. Er fertigt daraus eine große Trommel und verzaubert sie mit einem Effekt, der diejenigen, die sie hören, in große Angst versetzt. Er muss die Trommel nicht spielen, um den Effekt zu erzeugen, sondern verzaubert sie, während er sie herstellt. Seine Kommunikation beträgt +2 und seine Bezaubernde Musik 5. Sein Handwerk: Gerber beträgt mindestens 2, also darf er +2 für den Form- und Materialbonus der Trommel (+2 Furcht verursachen) addieren. Er muss würfeln, um sicherzustellen, dass er nicht patzt, aber wenn er Erfolg hat, erzeugt er ein verzaubertes Instrument, das jeder für einen Bezaubernde-Musik-Effekt mit einer Zaubersumme von 9 aktivieren kann.*
 
@@ -5739,7 +5739,7 @@ Agenturen sind keine statischen Gebilde. Der Tod ist ein unvermeidlicher Teil de
 - Ein Agent könnte eines Verbrechens angeklagt werden, das bei einem Schuldspruch mit dem Tode bestraft wird.
 - Je nachdem, wie diese Geschichten gelöst werden, kann die Bindungsstärke des betroffenen Agenten um einen oder mehrere Punkte sinken, und sollte eine Bindungsstärke unter null fallen, stellt der Agent seine Arbeit für den Auftraggeber ein. Bindungsstärken können nur durch aktive Beteiligung des Auftraggebers steigen, und es gibt zwei Hauptmethoden: Gefälligkeiten und Geld.
 
-**Gefälligkeiten** sind eine wirksame Methode, einen Agenten zu pflegen und seine Bindungsstärke zu erhöhen. Der Spieler des Auftraggebers muss sich einen Weg überlegen, wie sein Charakter den Agenten unterstützen kann, möglicherweise mit Rat des Spielleiters. Nachdem die Geschichte ausgespielt wurde, vergibt der Spielleiter Abenteuer-Erfahrungspunkte in der üblichen Weise, und eine gleiche Anzahl von Agentur-Erfahrungspunkten wird direkt auf die Bindungsstärke angewendet, wobei derselbe Steigerungsverlauf wie bei den Künsten in der Fortschrittstabelle (ArM5, Seite 31) verwendet wird. Solche Geschichten können sich stark auf einen Charakter konzentrieren, daher möchte der Spielleiter sie vielleicht getrennt vom regulären Spielabend durchführen oder die anderen Spieler als Antagonisten (oder sogar Protagonisten) einbeziehen.
+**Gefälligkeiten** sind eine wirksame Methode, einen Agenten zu pflegen und seine Bindungsstärke zu erhöhen. Der Spieler des Auftraggebers muss sich einen Weg überlegen, wie sein Charakter den Agenten unterstützen kann, möglicherweise mit Rat des Spielleiters. Nachdem die Geschichte ausgespielt wurde, vergibt der Spielleiter Abenteuer-Erfahrungspunkte in der üblichen Weise, und eine gleiche Anzahl von Agentur-Erfahrungspunkten wird direkt auf die Bindungsstärke angewendet, wobei derselbe Steigerungsverlauf wie bei den Künsten in der Fortschrittstabelle (ArM5, [Seite 31](<Ars Magica Definitive Edition Basisregeln.md#fortschrittstabelle>)) verwendet wird. Solche Geschichten können sich stark auf einen Charakter konzentrieren, daher möchte der Spielleiter sie vielleicht getrennt vom regulären Spielabend durchführen oder die anderen Spieler als Antagonisten (oder sogar Protagonisten) einbeziehen.
 
 *Beispiel: Banditen stehlen regelmäßig Godfrois Vorräte, also setzt Carolus Gedankenlesezauber ein, um herauszufinden, welcher von Godfrois Angestellten die Routen der Karawane an die Banditen verkauft hat, und arrangiert dann einen Hinterhalt. Dies bringt dem Magus drei Abenteuer-Erfahrungspunkte ein. Der Magus gibt die drei Punkte normal aus, aber die rücksichtslose Art, in der er die Angelegenheit geregelt hat, hat ihm auch drei Agentur-Erfahrungspunkte für Godfrois Bindungsstärke eingebracht, was ausreicht, um seine Furcht (vor Carolus) von +2 auf +3 zu erhöhen.*
 
