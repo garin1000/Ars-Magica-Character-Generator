@@ -213,8 +213,10 @@ The mechanic is **data-driven**: a `PointItem` declares `effects` (an `Effect`
 list) and the target ability/characteristic is named by the selection's
 parameter value — the engine hardcodes no Virtue IDs. Computed in
 `crates/arm-rules/src/effective.rs` (`ability_bonus`, `characteristic_bonus`,
-`effective_ability_score`, `effective_characteristic`, plus `*_bonuses` maps for
-the UI).
+`effective_ability_score`, `effective_characteristic`; `characteristic_bonuses`
+returns a map and `ability_bonuses` a per-instance `Vec<AbilityBonus>` for the
+UI). Ability bonuses are **per instance** `(ability, parameter)`, not per id, so a
+Puissant on one (Area) Lore does not bleed onto the character's other areas.
 
 #### Puissant (Ability) — +2 to one Ability
 > "You are particularly adept with one Ability, and add 2 to its value whenever
@@ -225,8 +227,25 @@ the UI).
 - Data: `rules/core/virtues_flaws.json` `virtue.puissant_ability` —
   `effects: [{ ability_bonus, param: "ability", amount: 2 }]`; `max_per_target`
   defaults to 1 ("only once for a given Ability").
-- Implementation: `effective.rs::ability_bonus` sums it; `validation.rs`
-  folds it into the score map so `AbilityMin` is met by the effective score.
+- **Targets one ability instance.** The selection stores the ability id under
+  `ability`; for a *parameterized* ability ((Area) Lore) it also stores the
+  instance value (the area/language) under the ability's own param key, e.g.
+  `params: { ability: "ability.area_lore", area: "Brandenburg" }`. Each (Area)
+  Lore is a distinct Ability (`:4816`), so "Puissant Brandenburg Lore" boosts
+  that row alone, not "Berlin Lore".
+- Implementation: `effective.rs::ability_bonus(.., parameter)` matches
+  `(ability, parameter)` — a plain ability by id, a parameterized one only when
+  the selection names the same instance; a selection missing the instance key
+  matches nothing. `ability_bonuses` returns a per-instance `Vec<AbilityBonus>`
+  (transported as `AbilityBonusEntry` in `arm-app::ruleset_io`). `validation.rs`
+  folds the per-instance bonus into the score map so `AbilityMin` is met by the
+  strongest instance.
+- Validation: `validate_parameters` makes the expected param-key set
+  target-aware — a parameterized ability target also expects its instance key
+  (else `missing_param`; a stray instance key on a plain target is
+  `unexpected_param`). `validate_ability_bonus_targets` flags
+  `ability_bonus_dangling_target` when the targeted `(ability, parameter)` is not
+  among the character's bought abilities (e.g. the ability was later removed).
 
 #### Great (Characteristic) — +1, base ≥ +3, up to +5
 > "You may raise any Characteristic that already has a score of at least +3 by

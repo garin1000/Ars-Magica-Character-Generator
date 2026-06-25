@@ -26,7 +26,9 @@ describe('character editor', () => {
     await $('[data-testid="add-virtue.keen_vision"]').waitForExist({ timeout: 10000 });
     await $('[data-testid="add-virtue.keen_vision"]').click();
     await $('[data-testid="add-flaw.poor_student"]').click();
-    const removeKeenVision = await $('[data-testid="remove-virtue.keen_vision"]');
+    // Match by testid prefix: the suffix is the entity-array index, which shifts
+    // after canonical save/load reordering of selections.
+    const removeKeenVision = await $('[data-testid^="remove-virtue.keen_vision"]');
     await removeKeenVision.waitForExist({ timeout: 5000 });
 
     // Abilities tab: give an XP pool, then buy Awareness up to 2 (15 xp).
@@ -61,6 +63,6 @@ describe('character editor', () => {
     await $('[data-testid="tab-virtues_flaws"]').click();
     await removeKeenVision.click();
     await $('[data-testid="load-button"]').click();
-    await $('[data-testid="remove-virtue.keen_vision"]').waitForExist({ timeout: 10000 });
+    await $('[data-testid^="remove-virtue.keen_vision"]').waitForExist({ timeout: 10000 });
   });
 });

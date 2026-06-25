@@ -66,21 +66,48 @@ class AppStore {
     await this.revalidate();
   }
 
+  /**
+   * Add a virtue/flaw selection. A repeatable item — one carrying parameters
+   * (e.g. Great Characteristic) or with `max_per_target > 1` — can be added
+   * several times, each instance choosing its own target; a plain item is added
+   * once. Mirrors {@link addAbility}.
+   */
   addSelection(ref: string): void {
-    if (this.entity.selections.some((s) => s.ref === ref)) return;
+    const item = this.ruleset?.ruleset.point_items[ref];
+    const repeatable = !!item?.parameters?.length || (item?.max_per_target ?? 1) > 1;
+    const present = this.entity.selections.some((s) => s.ref === ref);
+    if (!repeatable && present) return;
     this.entity.selections.push({ ref });
     this.#scheduleValidate();
   }
 
-  removeSelection(ref: string): void {
-    this.entity.selections = this.entity.selections.filter((s) => s.ref !== ref);
+  /** Selection edits are by row index, since a repeatable item has several rows. */
+  removeSelectionAt(index: number): void {
+    this.entity.selections = this.entity.selections.filter((_, i) => i !== index);
     this.#scheduleValidate();
   }
 
-  setParam(ref: string, key: string, value: string): void {
-    const selection = this.entity.selections.find((s) => s.ref === ref);
-    if (!selection) return;
-    selection.params = { ...(selection.params ?? {}), [key]: value };
+  setParamAt(index: number, key: string, value: string): void {
+    this.entity.selections = this.entity.selections.map((s, i) =>
+      i === index ? { ...s, params: { ...(s.params ?? {}), [key]: value } } : s,
+    );
+    this.#scheduleValidate();
+  }
+
+  /**
+   * Point an ability-bonus selection (Puissant Ability) at a specific ability
+   * *instance*. The ability id goes under the `ability` param; for a
+   * parameterized ability the instance value (the area/language) goes under the
+   * ability's own param key (so the bonus attaches to that one row). Switching to
+   * a plain ability drops any stale instance key.
+   */
+  setAbilityBonusTarget(index: number, abilityId: string, parameter?: string | null): void {
+    const instanceKey = this.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
+    const params: Record<string, string> = { ability: abilityId };
+    if (instanceKey && parameter) params[instanceKey] = parameter;
+    this.entity.selections = this.entity.selections.map((s, i) =>
+      i === index ? { ...s, params } : s,
+    );
     this.#scheduleValidate();
   }
 

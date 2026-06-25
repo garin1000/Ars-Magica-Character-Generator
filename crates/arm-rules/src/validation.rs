@@ -75,6 +75,7 @@ impl fmt::Display for IssueSeverity {
 /// | `not_enough_xp` | error | `spent`, `pool` |
 /// | `ability_parameter_required` | error | `ability` |
 /// | `ability_score_out_of_range` | error | `ability`, `score`, `max` |
+/// | `ability_bonus_dangling_target` | error | `item`, `ability`, `parameter` |
 ///
 /// † The per-category flaw caps emit a code derived from the
 /// `flaw_category_caps` entry's category slug (`too_many_<category>_flaws`, or
@@ -172,6 +173,8 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_CHARACTERISTIC_BONUS_BASE_TOO_LOW: &'static str =
         "characteristic_bonus_base_too_low";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_ABILITY_BONUS_DANGLING_TARGET: &'static str = "ability_bonus_dangling_target";
 
     /// Builds an issue with the given severity, code, args, and context.
     pub fn new(
@@ -288,6 +291,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_required_traits(type_profile, &selected_ids, &mut issues);
     validate_forbidden_traits(type_profile, &selected_ids, &mut issues);
     validate_parameters(entity, ruleset, &mut issues);
+    validate_ability_bonus_targets(entity, ruleset, &mut issues);
     validate_gift_policy(entity, ruleset, type_profile, &mut issues);
 
     // Characteristics and Abilities are character-only concerns; a covenant has
@@ -558,13 +562,13 @@ fn validate_prerequisites(
     // checked against the effective score so a boosted ability satisfies them.
     let mut ability_scores: BTreeMap<&Id, u8> = BTreeMap::new();
     for a in &entity.ability_scores {
+        // Per-instance bonus (Puissant targets one (ability, parameter)); an
+        // `AbilityMin` is keyed by id, so the strongest instance wins.
+        let bonus =
+            crate::effective::ability_bonus(entity, ruleset, &a.ability, a.parameter.as_deref());
+        let effective = (i32::from(a.score) + bonus).clamp(0, i32::from(u8::MAX)) as u8;
         let entry = ability_scores.entry(&a.ability).or_insert(0);
-        *entry = (*entry).max(a.score);
-    }
-    for (ability, score) in ability_scores.iter_mut() {
-        let effective =
-            i32::from(*score) + crate::effective::ability_bonus(entity, ruleset, ability);
-        *score = effective.clamp(0, i32::from(u8::MAX)) as u8;
+        *entry = (*entry).max(effective);
     }
 
     for selection in &entity.selections {
@@ -922,7 +926,22 @@ fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
         let declared: BTreeSet<&str> = item.parameters.iter().map(|p| p.key.as_str()).collect();
         let provided: BTreeSet<&str> = selection.params.keys().map(String::as_str).collect();
 
-        for missing in declared.difference(&provided) {
+        // A parameter targeting a PARAMETERIZED ability also expects the instance
+        // discriminator, supplied under the target ability's own param key
+        // ((Area) Lore → "area"). So Puissant on (Area) Lore needs both keys; on a
+        // plain ability the instance key would be an unexpected extra.
+        let mut expected = declared.clone();
+        for param in &item.parameters {
+            if matches!(param.domain, ParameterDomain::Ability)
+                && let Some(target) = selection.params.get(&param.key)
+                && let Some(ability) = ruleset.abilities.get(target)
+                && let Some(instance_key) = ability.parameter.as_deref()
+            {
+                expected.insert(instance_key);
+            }
+        }
+
+        for missing in expected.difference(&provided) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_MISSING_PARAM,
                 args([
@@ -933,7 +952,7 @@ fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
             ));
         }
 
-        for extra in provided.difference(&declared) {
+        for extra in provided.difference(&expected) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_UNEXPECTED_PARAM,
                 args([
@@ -964,6 +983,54 @@ fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
                         ("key", param.key.clone()),
                         ("value", value.to_string()),
                         ("domain", param.domain.to_string()),
+                    ]),
+                    Some(selection.item_ref.clone()),
+                ));
+            }
+        }
+    }
+}
+
+/// Validates that every ability-bonus effect (e.g. Puissant Ability +2) targets
+/// an ability instance the character actually holds. The target is
+/// `(ability, parameter)`: for a parameterized ability ((Area) Lore) the instance
+/// value is read from the selection's matching key, so Puissant "Brandenburg Lore"
+/// must have a bought Brandenburg Lore row. A dangling target (e.g. the ability was
+/// removed) means the +2 attaches to nothing, so flag it. Effect-driven — no virtue
+/// id is hardcoded.
+fn validate_ability_bonus_targets(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    for selection in &entity.selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            let Effect::AbilityBonus { param, .. } = effect else {
+                continue;
+            };
+            let Some(target) = selection.params.get(param) else {
+                continue; // missing ability key already reported by validate_parameters
+            };
+            // The instance discriminator, if the target ability is parameterized.
+            let instance = ruleset
+                .abilities
+                .get(target)
+                .and_then(|a| a.parameter.as_deref())
+                .and_then(|key| selection.params.get(key).map(Id::as_str));
+            let has_instance = entity
+                .ability_scores
+                .iter()
+                .any(|a| &a.ability == target && a.parameter.as_deref() == instance);
+            if !has_instance {
+                issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_ABILITY_BONUS_DANGLING_TARGET,
+                    args([
+                        ("item", selection.item_ref.to_string()),
+                        ("ability", target.to_string()),
+                        ("parameter", instance.unwrap_or("").to_string()),
                     ]),
                     Some(selection.item_ref.clone()),
                 ));
@@ -2385,7 +2452,8 @@ mod tests {
         }]"#;
         let abilities = r#"{ "abilities": [
           { "id": "ability.awareness", "category": "general" },
-          { "id": "ability.stealth", "category": "general" }
+          { "id": "ability.stealth", "category": "general" },
+          { "id": "ability.area_lore", "category": "general", "parameter": "area" }
         ] }"#;
         let characteristics = r#"{
           "start_points": 7, "effective_max": 5,
@@ -2547,6 +2615,128 @@ mod tests {
             vec![puissant("ability.awareness"), puissant("ability.stealth")],
         );
         assert!(!codes(&validate(&entity, &rs)).contains(&"duplicate_selection".to_string()));
+    }
+
+    /// Puissant on a parameterized ability instance: ability id + the instance
+    /// value under the ability's own param key (`area`).
+    fn puissant_instance(ability: &str, key: &str, value: &str) -> Selection {
+        Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([
+                ("ability".into(), Id::new(ability)),
+                (key.into(), Id::new(value)),
+            ]),
+        )
+    }
+
+    fn lore_score(area: &str, score: u8) -> AbilityScore {
+        AbilityScore {
+            ability: Id::new("ability.area_lore"),
+            score,
+            specialty: None,
+            parameter: Some(area.to_string()),
+        }
+    }
+
+    #[test]
+    fn puissant_dangling_when_target_ability_not_held() {
+        let rs = effective_ruleset();
+        // Puissant Awareness but the character never bought Awareness.
+        let entity = make_entity("companion", vec![puissant("ability.awareness")]);
+        assert!(
+            codes(&validate(&entity, &rs)).contains(&"ability_bonus_dangling_target".to_string()),
+            "a Puissant whose target ability is absent should dangle: {:?}",
+            codes(&validate(&entity, &rs))
+        );
+    }
+
+    #[test]
+    fn puissant_plain_target_held_is_not_dangling() {
+        let rs = effective_ruleset();
+        let mut entity = make_entity("companion", vec![puissant("ability.awareness")]);
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 2,
+            specialty: None,
+            parameter: None,
+        }];
+        assert!(
+            !codes(&validate(&entity, &rs)).contains(&"ability_bonus_dangling_target".to_string()),
+        );
+    }
+
+    #[test]
+    fn puissant_parameterized_requires_the_instance_key() {
+        let rs = effective_ruleset();
+        // (Area) Lore is parameterized: naming only the ability id, not the area,
+        // is a missing param.
+        let mut entity = make_entity("companion", vec![puissant("ability.area_lore")]);
+        entity.ability_scores = vec![lore_score("Brandenburg", 2)];
+        assert!(
+            codes(&validate(&entity, &rs)).contains(&"missing_param".to_string()),
+            "a parameterized Puissant target needs its instance key: {:?}",
+            codes(&validate(&entity, &rs))
+        );
+    }
+
+    #[test]
+    fn puissant_parameterized_matching_instance_is_clean() {
+        let rs = effective_ruleset();
+        let mut entity = make_entity(
+            "companion",
+            vec![puissant_instance(
+                "ability.area_lore",
+                "area",
+                "Brandenburg",
+            )],
+        );
+        entity.ability_scores = vec![lore_score("Brandenburg", 2)];
+        let cs = codes(&validate(&entity, &rs));
+        assert!(
+            !cs.contains(&"missing_param".to_string())
+                && !cs.contains(&"unexpected_param".to_string())
+                && !cs.contains(&"ability_bonus_dangling_target".to_string()),
+            "a Puissant naming a held instance should be clean: {cs:?}"
+        );
+    }
+
+    #[test]
+    fn puissant_parameterized_dangles_when_that_instance_absent() {
+        let rs = effective_ruleset();
+        // Targets Brandenburg Lore, but only Berlin Lore is held.
+        let mut entity = make_entity(
+            "companion",
+            vec![puissant_instance(
+                "ability.area_lore",
+                "area",
+                "Brandenburg",
+            )],
+        );
+        entity.ability_scores = vec![lore_score("Berlin", 2)];
+        assert!(
+            codes(&validate(&entity, &rs)).contains(&"ability_bonus_dangling_target".to_string()),
+        );
+    }
+
+    #[test]
+    fn stray_instance_key_on_plain_target_is_unexpected() {
+        let rs = effective_ruleset();
+        // Awareness is plain; an extra `area` key is not expected.
+        let mut entity = make_entity(
+            "companion",
+            vec![puissant_instance(
+                "ability.awareness",
+                "area",
+                "Brandenburg",
+            )],
+        );
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 2,
+            specialty: None,
+            parameter: None,
+        }];
+        assert!(codes(&validate(&entity, &rs)).contains(&"unexpected_param".to_string()));
     }
 
     fn companion_entity_eff() -> Entity {

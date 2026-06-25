@@ -396,13 +396,12 @@ ul {
   font-variant-numeric: tabular-nums;
 }
 
-/* Read-only effective-score badge shown when a virtue bonus applies. */
+/* Read-only effective score shown when a virtue bonus applies: an important
+   value, so a large plain accent number rather than a small pill. */
 .eff-badge {
-  font-size: 0.78rem;
+  font-size: 1.05rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  padding: 0.05rem 0.35rem;
-  border-radius: 0.5rem;
-  background: var(--accent-soft, rgba(80, 140, 255, 0.18));
   color: var(--accent, #3b6fd4);
   white-space: nowrap;
 }

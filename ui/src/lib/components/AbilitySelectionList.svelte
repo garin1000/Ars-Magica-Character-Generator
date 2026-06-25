@@ -17,8 +17,12 @@
     );
   }
 
-  function bonusOf(abilityId: string): number {
-    return store.effective?.ability_bonuses?.[abilityId] ?? 0;
+  function bonusOf(abilityId: string, parameter: string | null | undefined): number {
+    return (
+      store.effective?.ability_bonuses?.find(
+        (b) => b.ability === abilityId && (b.parameter ?? null) === (parameter ?? null),
+      )?.bonus ?? 0
+    );
   }
 </script>
 
@@ -66,10 +70,10 @@
             >
               +
             </button>
-            {#if bonusOf(entry.ability) !== 0}
+            {#if bonusOf(entry.ability, entry.parameter) !== 0}
               <span class="eff-badge" data-testid="ability-eff-{entry.ability}-{i}">
                 {store.t('effective-score', {
-                  score: String(entry.score + bonusOf(entry.ability)),
+                  score: String(entry.score + bonusOf(entry.ability, entry.parameter)),
                 })}
               </span>
             {/if}

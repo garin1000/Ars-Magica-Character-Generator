@@ -17,13 +17,25 @@ use serde::Serialize;
 
 use crate::error::AppError;
 
+/// One ability-score bonus, targeting a single ability instance. A parameterized
+/// ability ((Area) Lore) is identified by `(ability, parameter)`; `parameter` is
+/// `None` for a plain ability. Mirrors the engine's `AbilityBonus`.
+#[derive(Debug, Clone, Serialize)]
+pub struct AbilityBonusEntry {
+    pub ability: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parameter: Option<String>,
+    pub bonus: i32,
+}
+
 /// The score bonuses a character's virtues grant, for the frontend to add onto
-/// each displayed bought score. Only non-zero bonuses are present. Ability keys
-/// are ability ids; characteristic keys are the snake_case characteristic names.
+/// each displayed bought score. Only non-zero bonuses are present. Ability bonuses
+/// are per-instance (a Puissant on "Brandenburg Lore" attaches to that row alone);
+/// characteristic keys are the snake_case characteristic names.
 #[derive(Debug, Clone, Serialize)]
 pub struct EffectiveScores {
-    /// Ability id → bonus (e.g. Puissant Ability +2).
-    pub ability_bonuses: BTreeMap<String, i32>,
+    /// One entry per boosted ability instance (e.g. Puissant Ability +2).
+    pub ability_bonuses: Vec<AbilityBonusEntry>,
     /// Characteristic → bonus (e.g. Great Characteristic +1).
     pub characteristic_bonuses: BTreeMap<Characteristic, i32>,
 }
@@ -32,7 +44,11 @@ pub struct EffectiveScores {
 pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveScores {
     let ability_bonuses = ability_bonuses(entity, ruleset)
         .into_iter()
-        .map(|(id, bonus)| (id.as_str().to_string(), bonus))
+        .map(|b| AbilityBonusEntry {
+            ability: b.ability.as_str().to_string(),
+            parameter: b.parameter,
+            bonus: b.bonus,
+        })
         .collect();
     EffectiveScores {
         ability_bonuses,

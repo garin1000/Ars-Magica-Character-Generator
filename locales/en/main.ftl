@@ -85,7 +85,7 @@ param-label-language = Language
 param-label-characteristic = Characteristic
 
 # Effective score shown beside a base score when a virtue bonus applies.
-effective-score = eff { $score }
+effective-score = { $score }
 
 empty-selections-side = None yet.
 no-issues = No issues.
@@ -129,6 +129,7 @@ issue-duplicate_ability = { $ability } is listed { $count } times with the same 
 issue-not_enough_xp = Abilities cost { $spent } XP, more than the { $pool } in the pool.
 issue-ability_parameter_required = { $ability } needs a value (e.g. the specific Area or Language).
 issue-ability_score_out_of_range = Ability { $ability } score { $score } is outside the allowed range (0 to { $max }).
+issue-ability_bonus_dangling_target = { $item } targets an Ability the character does not have ({ $ability } { $parameter }); add it first.
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.

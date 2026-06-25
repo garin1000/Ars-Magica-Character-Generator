@@ -7,6 +7,7 @@ import {
   displayName,
   groupAbilitiesByCategory,
   groupByCategory,
+  paramValueUsage,
 } from './derive';
 import type { Ability, CharacteristicRules, Entity, LocalizedRuleset, PointItem } from './types';
 
@@ -160,6 +161,62 @@ describe('displayName', () => {
   it('falls back to the ref when there is no i18n entry', () => {
     const ruleset = makeRuleset([], { i18n: {} });
     expect(displayName(ruleset, 'virtue.unknown')).toBe('virtue.unknown');
+  });
+
+  it('resolves a present param value through resolveValue (slug -> label)', () => {
+    const ruleset = makeRuleset([], {
+      i18n: { 'virtue.great': { name: 'Great {characteristic}' } },
+    });
+    const resolve = (_key: string, value: string) =>
+      value === 'characteristic.per' ? 'Perception' : value;
+    expect(
+      displayName(
+        ruleset,
+        'virtue.great',
+        { characteristic: 'characteristic.per' },
+        undefined,
+        resolve,
+      ),
+    ).toBe('Great Perception');
+  });
+
+  it('does not call resolveValue for an empty param (uses placeholder hint)', () => {
+    const ruleset = makeRuleset([], {
+      i18n: { 'virtue.great': { name: 'Great {characteristic}' } },
+    });
+    const resolve = () => 'should not be used';
+    expect(displayName(ruleset, 'virtue.great', {}, (key) => `(${key})`, resolve)).toBe(
+      'Great (characteristic)',
+    );
+  });
+});
+
+// --- paramValueUsage() ------------------------------------------------------
+
+describe('paramValueUsage', () => {
+  const sel = (ref: string, value?: string) => ({
+    ref,
+    params: value ? { characteristic: value } : undefined,
+  });
+
+  it('counts other selections of the same item per value, excluding the row itself', () => {
+    const selections = [
+      sel('virtue.great', 'characteristic.per'),
+      sel('virtue.great', 'characteristic.per'),
+      sel('virtue.great', 'characteristic.str'),
+      sel('virtue.other', 'characteristic.per'), // different item, ignored
+    ];
+    // From row 0's perspective: one other 'per' (row 1) and one 'str' (row 2).
+    const usage = paramValueUsage(selections, 'virtue.great', 'characteristic', 0);
+    expect(usage.get('characteristic.per')).toBe(1);
+    expect(usage.get('characteristic.str')).toBe(1);
+  });
+
+  it('ignores rows with no value for the key', () => {
+    const selections = [sel('virtue.great'), sel('virtue.great', 'characteristic.per')];
+    const usage = paramValueUsage(selections, 'virtue.great', 'characteristic', 0);
+    expect(usage.get('characteristic.per')).toBe(1);
+    expect(usage.size).toBe(1);
   });
 });
 

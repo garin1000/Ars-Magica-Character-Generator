@@ -19,7 +19,9 @@ describe('effective-score badges', () => {
     const addGreat = await $('[data-testid="add-virtue.great_characteristic"]');
     await addGreat.waitForExist({ timeout: 10000 });
     await addGreat.click();
-    const charParam = await $('[data-testid="param-virtue.great_characteristic-characteristic"]');
+    // Match by testid prefix: the index suffix is the entity-array position,
+    // which depends on what else is selected, so don't pin it.
+    const charParam = await $('[data-testid^="param-virtue.great_characteristic-characteristic"]');
     await charParam.waitForExist({ timeout: 5000 });
     await charParam.selectByAttribute('value', 'characteristic.str');
 
@@ -44,9 +46,9 @@ describe('effective-score badges', () => {
 
     await $('[data-testid="tab-virtues_flaws"]').click();
     await $('[data-testid="add-virtue.puissant_ability"]').click();
-    const abilityParam = await $('[data-testid="param-virtue.puissant_ability-ability"]');
+    const abilityParam = await $('[data-testid^="param-virtue.puissant_ability-ability"]');
     await abilityParam.waitForExist({ timeout: 5000 });
-    await abilityParam.setValue('ability.awareness');
+    await abilityParam.selectByAttribute('value', 'ability.awareness');
 
     // Back on Abilities: Awareness shows effective 4 (base 2, Puissant +2).
     await $('[data-testid="tab-abilities"]').click();
