@@ -51,10 +51,20 @@ export interface PointItem {
   max_per_target?: number;
 }
 
-// Virtue score bonuses for the current entity, computed by the engine. Keys are
-// ability ids / characteristic slugs; only non-zero bonuses are present.
+// One ability-score bonus, targeting a single ability instance. A parameterized
+// ability ((Area) Lore) is identified by (ability, parameter); `parameter` is
+// absent for a plain ability. Mirrors the engine's `AbilityBonus`.
+export interface AbilityBonus {
+  ability: string;
+  parameter?: string | null;
+  bonus: number;
+}
+
+// Virtue score bonuses for the current entity, computed by the engine. Ability
+// bonuses are per-instance; characteristic bonuses are keyed by slug. Only
+// non-zero bonuses are present.
 export interface EffectiveScores {
-  ability_bonuses: Record<string, number>;
+  ability_bonuses: AbilityBonus[];
   characteristic_bonuses: Partial<Record<Characteristic, number>>;
 }
 

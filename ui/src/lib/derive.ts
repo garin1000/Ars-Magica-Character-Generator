@@ -18,18 +18,49 @@ import type {
  * A placeholder with no value (e.g. an unfilled parameter in the picker) falls
  * back to `placeholderLabel(key)` when given — used to show a localized hint
  * like "(Ability)" instead of the raw `{ability}` token — or to `{key}` if not.
+ *
+ * A present value is a raw ref slug (e.g. `characteristic.per`); pass
+ * `resolveValue` to turn it into a display label ("Perception") so the result
+ * reads "Great Perception" rather than "Great characteristic.per".
  */
 export function displayName(
   localized: LocalizedRuleset,
   ref: string,
   params?: Record<string, string>,
   placeholderLabel?: (key: string) => string,
+  resolveValue?: (key: string, value: string) => string,
 ): string {
   const raw = localized.i18n[ref]?.name ?? ref;
-  return raw.replace(
-    /\{(\w+)\}/g,
-    (_match, key: string) => params?.[key] ?? placeholderLabel?.(key) ?? `{${key}}`,
-  );
+  return raw.replace(/\{(\w+)\}/g, (_match, key: string) => {
+    const value = params?.[key];
+    if (value !== undefined && value !== '') {
+      return resolveValue ? resolveValue(key, value) : value;
+    }
+    return placeholderLabel?.(key) ?? `{${key}}`;
+  });
+}
+
+/**
+ * How many *other* selections of `itemRef` already use each parameter value, for
+ * the param `key`. Used to gray out a target that has hit the item's
+ * `max_per_target` cap (e.g. Perception, once Great Characteristic was taken for
+ * it twice). The selection at `exceptIndex` is excluded so its own current value
+ * always stays selectable.
+ */
+export function paramValueUsage(
+  selections: { ref: string; params?: Record<string, string> }[],
+  itemRef: string,
+  key: string,
+  exceptIndex: number,
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  selections.forEach((selection, i) => {
+    if (i === exceptIndex || selection.ref !== itemRef) return;
+    const value = selection.params?.[key];
+    if (!value) return;
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+  });
+  return counts;
 }
 
 export interface CategoryGroup {

@@ -85,7 +85,7 @@ param-label-language = Sprache
 param-label-characteristic = Eigenschaft
 
 # Effektiver Wert, neben dem Basiswert angezeigt, wenn ein Tugend-Bonus greift.
-effective-score = eff { $score }
+effective-score = { $score }
 
 empty-selections-side = Noch keine.
 no-issues = Keine Probleme.
@@ -129,6 +129,7 @@ issue-duplicate_ability = { $ability } ist { $count }-mal mit derselben Speziali
 issue-not_enough_xp = Fertigkeiten kosten { $spent } XP, mehr als die { $pool } im Vorrat.
 issue-ability_parameter_required = { $ability } braucht einen Wert (z. B. das konkrete Gebiet oder die Sprache).
 issue-ability_score_out_of_range = Fertigkeit { $ability } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).
+issue-ability_bonus_dangling_target = { $item } zielt auf eine Fertigkeit, die der Charakter nicht hat ({ $ability } { $parameter }); füge sie zuerst hinzu.
 
 # AppError-Arten der Tauri-Befehle.
 error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.

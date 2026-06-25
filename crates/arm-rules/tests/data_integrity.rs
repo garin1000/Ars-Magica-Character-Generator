@@ -301,7 +301,7 @@ fn shipped_score_effects_apply() {
     e.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
 
     assert_eq!(
-        effective_ability_score(&e, &rs, &Id::new("ability.awareness")),
+        effective_ability_score(&e, &rs, &Id::new("ability.awareness"), None),
         4,
         "Awareness 2 + Puissant +2"
     );

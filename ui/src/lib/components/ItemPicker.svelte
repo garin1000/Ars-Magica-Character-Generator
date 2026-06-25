@@ -2,7 +2,7 @@
   import { store } from '../state.svelte';
   import { displayName, groupByCategory } from '../derive';
   import { reserveTagSpace } from '../actions';
-  import type { ItemKind } from '../types';
+  import type { ItemKind, PointItem } from '../types';
 
   // One picker per side: Virtues (virtue/boon) on the left, Flaws (flaw/hook)
   // next. Mirrors the virtue/flaw split used by balance().
@@ -13,6 +13,13 @@
 
   const groups = $derived(store.ruleset ? groupByCategory(store.ruleset, kinds) : []);
   const selectedRefs = $derived(new Set(store.entity.selections.map((s) => s.ref)));
+
+  // A repeatable item (one with a target parameter, or with max_per_target > 1)
+  // can be added several times, so its Add button never deactivates. Mirrors the
+  // predicate in store.addSelection.
+  function repeatable(item: PointItem): boolean {
+    return !!item.parameters?.length || (item.max_per_target ?? 1) > 1;
+  }
 </script>
 
 <section class="panel">
@@ -26,7 +33,7 @@
             <button
               type="button"
               class="pick-row"
-              disabled={selectedRefs.has(item.id)}
+              disabled={!repeatable(item) && selectedRefs.has(item.id)}
               onclick={() => store.addSelection(item.id)}
               data-testid="add-{item.id}"
             >
