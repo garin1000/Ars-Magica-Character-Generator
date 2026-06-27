@@ -48,17 +48,6 @@
           <span class="item-name" use:tooltip={tip(entry.ability)}
             >{name(entry.ability, entry.parameter)}</span
           >
-          {#if key}
-            <input
-              type="text"
-              class="ability-param"
-              placeholder={store.t(`param-label-${key}`)}
-              value={entry.parameter ?? ''}
-              oninput={(e) =>
-                store.setAbilityParameterAt(i, (e.currentTarget as HTMLInputElement).value)}
-              data-testid="ability-param-{entry.ability}-{i}"
-            />
-          {/if}
           <span class="spinner">
             <button
               type="button"
@@ -109,6 +98,17 @@
           >
             ×
           </button>
+          {#if key}
+            <input
+              type="text"
+              class="ability-param"
+              placeholder={store.t(`param-label-${key}`)}
+              value={entry.parameter ?? ''}
+              oninput={(e) =>
+                store.setAbilityParameterAt(i, (e.currentTarget as HTMLInputElement).value)}
+              data-testid="ability-param-{entry.ability}-{i}"
+            />
+          {/if}
         </li>
       {/each}
     </ul>

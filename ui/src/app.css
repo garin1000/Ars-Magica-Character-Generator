@@ -424,10 +424,17 @@ ul {
   flex-wrap: wrap;
 }
 
-.ability-selection .specialty,
-.ability-selection .ability-param {
+.ability-selection .specialty {
   flex: 1 1 6rem;
   min-width: 5rem;
+}
+
+/* The (Area)/Craft/etc. parameter field gets its own full-width line beneath
+   the rest of the row (name, score spinner, specialty, ×). flex-basis: 100%
+   forces a wrap onto a new line; it is last in DOM order so it lands below. */
+.ability-selection .ability-param {
+  flex: 1 0 100%;
+  min-width: 0;
 }
 
 /* Ability XP summary: pool input + derived spent/available. */
