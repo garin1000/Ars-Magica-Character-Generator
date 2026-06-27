@@ -164,7 +164,7 @@ wizard yet — the guided flow (M5) wraps these components afterward.
 
 In scope: Arts, spells, Houses + specialisations, Hermetic V/F, all
 creation-relevant V/F effect mechanics (see 4f), Confidence, Personality Traits,
-Reputations, age + age→cap. Deferred (sheet/export, M8+): lab totals,
+Reputations, age + age→cap. Deferred (sheet/export, M6+): lab totals,
 casting/spell totals, Twilight, Longevity Ritual, Decrepitude-in-play, and the
 in-play-only V/F effects (Magical Focus, Method Caster, study Source-Quality
 bonuses, Deficient Technique/Form total-halving) — these don't change a creation
@@ -216,7 +216,7 @@ number.
 - [ ] Spell data model (technique + form + level; depends on the 4a Art registry
       for T+F refs)
 - [ ] Spell-levels budget concept for direct validation of a magus's spell list
-- [ ] `rules/core/spells.json` seed + i18n (full catalogue stays M7; German spell
+- [ ] `rules/core/spells.json` seed + i18n (full catalogue stays M8; German spell
       names must follow the curated translation tables)
 - [ ] Spell direct-entry component (add/remove, pick T+F+level), Fluent-labelled
 
@@ -261,7 +261,7 @@ creation number must be a data-driven `Effect`, so direct entry builds a correct
 character and the XP-bank accounting is right. Extend the `Effect` model +
 `validate_effect_refs` (`effective.rs`, `ruleset.rs`) and the
 XP-spent-vs-available computation (`validation.rs`). Seed one or two
-representative items per family; the full catalogue is data-only (M7).
+representative items per family; the full catalogue is data-only (M8).
 - [ ] XP-COST modifier — Affinity with (Ability) and Affinity with (Art): XP put
       into the target is increased by half (rounded up) at creation (the target
       is cheaper), and the target may exceed the normal age/recommended cap. The
@@ -271,7 +271,7 @@ representative items per family; the full catalogue is data-only (M7).
       Arcane Lore, Well-Traveled, …: each adds a fixed XP pool spendable only on a
       defined Ability set; the available-XP side tracks restricted pools, not just
       the single `unspent_xp` bank. Seed Educated/Warrior/Privileged Upbringing;
-      the ~30-item long tail is M7 data. Source: Core Rules.md:3711-3713,
+      the ~30-item long tail is M8 data. Source: Core Rules.md:3711-3713,
       5227-5229, 4806-4808, 3430-3432, 5239-5241
 - [ ] Flat ART score bonus — Puissant Art (+3): the `art_bonus` effect from 4a,
       alongside the existing Puissant Ability (+2). Source: Core Rules.md:4818-4820, 4814-4816
@@ -280,7 +280,7 @@ representative items per family; the full catalogue is data-only (M7).
 - [ ] STARTING-SCORE grant — `ability_score_grant` effect: a V/F that confers an
       Ability at score 1 (Mystery-House Virtues, overlapping 4b; plus the
       Supernatural-Ability Virtues: Second Sight, Premonitions, Dowsing, Animal
-      Ken, …). Seed a couple; full catalogue M7. Source: Core Rules.md:3414-3416,
+      Ken, …). Seed a couple; full catalogue M8. Source: Core Rules.md:3414-3416,
       4059-4061, 4888-4890
 - [ ] CAP composition: Great Characteristic's +5 ceiling already exists (M3d);
       ensure the Affinity cap-exemption and the age→cap (4e) compose correctly
@@ -327,7 +327,54 @@ this milestone adds orchestration, gating, and the guided life-stage flows.
 - [ ] Mythic companion wizard flow
 - [ ] Magus wizard flow
 
-## Milestone 6 — Covenants
+## Milestone 6 — Character sheet window
+
+Scope: an optional, read-only **second app window** that renders a formatted
+character sheet and recomputes live as the character is edited in the main
+window. Which calculated values appear is **driven by the character-type
+profile**, not hardcoded per type. This is the interactive in-app view; the
+static file export (PDF/Markdown) remains M9 and can reuse this layout.
+
+- [ ] Second Tauri window (label `character-sheet`), created hidden
+      (`visible: false`) and opened/closed on demand. A toggle control in the
+      main window ("show character sheet") is the only entry point — the window
+      is optional. (`crates/arm-app/tauri.conf.json` windows array + a thin
+      window command in `crates/arm-app/src/commands.rs`, or `WebviewWindow`
+      from JS — currently there is no multi-window code at all.)
+- [ ] Separate Vite entry point for the sheet (`ui/sheet.html` +
+      `ui/src/sheet.ts` mounting a new `CharacterSheet.svelte` root), wired via
+      Vite multi-page `build.rollupOptions.input`. Main window keeps `index.html`.
+- [ ] State sync main→sheet: the main window emits the current `entity`
+      (plus `lang` and `mode`) on change via Tauri events (`emit`/`listen`);
+      the sheet window listens and re-renders. Each Svelte instance has its own
+      rune store (`ui/src/lib/state.svelte.ts`), so cross-window state must go
+      through events (or a shared backend cache) — events are the idiomatic
+      Tauri 2 choice. The sheet is **read-only**: no editing surfaces.
+- [ ] Shared sections rendered for every type, reusing existing engine output
+      (no new computation): identity + type, Characteristics (score with
+      effective cap/floor from `effective_scores`), Virtues & Flaws with point
+      balance, Abilities (bought + effective score + specialty), XP pool.
+- [ ] Type-dependent sections, gated by the `EntityTypeProfile` (e.g.
+      `is_magus`, permitted categories, `creation_phases`) — never an
+      `if type == "magus"` ladder in the UI:
+      - companion / mythic companion / magus: Personality Traits, Reputations,
+        Confidence (all land in M4/M5)
+      - magus only: Arts (score + effective), House + specialisation/free Virtue,
+        Spells (Technique+Form, level), age→max-score cap
+      - grog: minimal subset (Characteristics, Abilities, V/F)
+- [ ] All sheet labels via Fluent (`locales/{en,de}/main.ftl`, new `sheet-*`
+      keys); no user-facing string hardcoded in Svelte/Rust, and no raw ID/enum
+      slug rendered directly — derived-value and section labels map through
+      Fluent keys. German labels follow the translation tables.
+- [ ] Reuse existing commands (`load_ruleset`, `effective_scores`,
+      `validate_entity`) for everything the sheet shows. If a genuinely
+      sheet-only derived value is ever required (e.g. a combat/Soak total), the
+      rule must first be added to `arm-rules` from the authoritative source with
+      a citation — the sheet does not compute mechanics in the UI.
+- [ ] Extend the tauri-driver e2e to open the window and assert it reflects an
+      edit made in the main window (where feasible).
+
+## Milestone 7 — Covenants
 
 - [ ] Boons & Hooks data (same PointItem structure, EntityKind::Covenant)
 - [ ] Covenant entity type profile
@@ -335,7 +382,7 @@ this milestone adds orchestration, gating, and the guided life-stage flows.
 - [ ] Covenant wizard flow
 - [ ] Covenant UI
 
-## Milestone 7 — Full data population
+## Milestone 8 — Full data population
 
 - [ ] Complete V/F catalogue from ArM5 core book
 - [ ] Complete Abilities catalogue
@@ -347,20 +394,21 @@ this milestone adds orchestration, gating, and the guided life-stage flows.
       `rules/core/abilities.json` and `rules/i18n/{en,de}/abilities.json`, then
       restore the `78`/`21`/`50` counts in `tests/data_integrity.rs` and the `78`
       in `crates/arm-app/tests/commands.rs`.
-- [ ] Complete Arts text — all 15 Arts ship in M4; M7 adds their descriptions /
+- [ ] Complete Arts text — all 15 Arts ship in M4; M8 adds their descriptions /
       lab text (the mechanics are already complete)
-- [ ] Complete Houses detail — all 12 core Houses ship in M4; M7 adds the
+- [ ] Complete Houses detail — all 12 core Houses ship in M4; M8 adds the
       Mystery/Societas House detail and any supplement-only Houses
 - [ ] Complete V/F effect-mechanic catalogues — the effect families land in M4/4f
-      with seed items; M7 fills the long tails (the ~30 XP-grant Virtues, the
+      with seed items; M8 fills the long tails (the ~30 XP-grant Virtues, the
       Supernatural-Ability starting-score Virtues) as data-only widening
 - [ ] Complete Boons & Hooks
 - [ ] All data in en + de (+ additional languages as available)
 - [ ] Markdown source files for all rules content
 
-## Milestone 8 — Export & polish
+## Milestone 9 — Export & polish
 
-- [ ] Character sheet export (PDF and/or Markdown)
+- [ ] Character sheet export (PDF and/or Markdown) — reuses the M6 character-sheet
+      window layout/components, rendering the same sections to a static file
 - [ ] Covenant sheet export
 - [ ] Ruleset versioning & save migration
 - [ ] Multiple rulebook/supplement support
@@ -390,7 +438,7 @@ profiles, a character-type selector, age + age→cap, Confidence, Personality Tr
 and Reputations — all in direct-validated/direct-unchecked mode. The guided wizard
 moves to **M5**, where it wraps these surfaces and adds the guided life-stage flows
 (life-stage XP engine, Sample Childhood packages, magus apprenticeship XP, and the
-aging engine for characters over 35). Covenants remain M6.
+aging engine for characters over 35). Covenants remain M7.
 
 Next: M4/4a — the Arts engine (registry, Art-XP bank, `ArtMin`/`art`-domain
 resolution, Puissant Art) and its direct-entry component.
