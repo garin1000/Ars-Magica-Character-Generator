@@ -214,14 +214,41 @@ cargo fmt --check
 # Frontend dev server
 cd ui && npm run dev
 
+# Frontend type-check (svelte-check) — vitest does NOT type-check
+cd ui && npm run check
+
 # Frontend lint/format
 cd ui && npm run lint && npm run format:check
+
+# Frontend unit tests
+cd ui && npm run test:unit
 
 # Full Tauri dev build
 cargo tauri dev
 
 # E2E tests (headless)
 cd ui && npm run test:e2e
+```
+
+### Required gate (must pass before any commit / "done" claim)
+
+A change is not verified until **all** of these pass. The last command is the
+authoritative one and is mandatory — it is the only step that exercises the
+shipped production code path.
+
+```bash
+cargo test --workspace
+cargo clippy --workspace -- -D warnings
+cargo fmt --check
+cd ui && npm run test:unit && npm run lint && npm run format:check && cd ..
+
+# FULL RELEASE APP COMPILE — non-negotiable final gate.
+# Runs the frontend build (svelte-check type-check + vite) via beforeBuildCommand
+# AND compiles the release binary. `cargo test`/`clippy` and `npm run test:unit`
+# (vitest) do NOT type-check the frontend or build the production app, so type
+# errors and production-only breakage slip past every other gate — only this
+# command catches them. This is what `./arm-char-gen.sh` runs to launch.
+cargo tauri build --no-bundle
 ```
 
 ## Data model quick reference
