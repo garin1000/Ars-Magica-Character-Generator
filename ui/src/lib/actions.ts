@@ -1,5 +1,104 @@
 import type { Action } from 'svelte/action';
 
+/** Rich tooltip content: a main paragraph plus an optional labelled list. */
+export interface TooltipContent {
+  text?: string;
+  listLabel?: string;
+  list?: string[];
+}
+
+let tooltipSeq = 0;
+
+/**
+ * Show a styled, high-contrast tooltip on hover or keyboard focus. The popup is
+ * appended to `document.body` and positioned with `getBoundingClientRect`, so it
+ * is never clipped by a scrolling panel. Reveals on `mouseenter`/`focusin`,
+ * hides on `mouseleave`/`focusout`/click and on scroll or resize. A no-op when
+ * there is no content, so plain rows stay tooltip-free.
+ */
+export const tooltip: Action<HTMLElement, TooltipContent | undefined> = (node, content) => {
+  let current: TooltipContent | undefined = content;
+  let pop: HTMLDivElement | null = null;
+  const id = `tooltip-${(tooltipSeq += 1)}`;
+
+  const hasContent = (c: TooltipContent | undefined): boolean =>
+    !!c && (!!c.text || (!!c.list && c.list.length > 0));
+
+  const position = () => {
+    if (!pop) return;
+    const rect = node.getBoundingClientRect();
+    const margin = 8;
+    const left = Math.max(
+      margin,
+      Math.min(rect.left, window.innerWidth - pop.offsetWidth - margin),
+    );
+    let top = rect.bottom + 6;
+    if (top + pop.offsetHeight > window.innerHeight - margin) {
+      top = Math.max(margin, rect.top - pop.offsetHeight - 6);
+    }
+    pop.style.left = `${left}px`;
+    pop.style.top = `${top}px`;
+  };
+
+  const show = () => {
+    if (pop || !hasContent(current)) return;
+    pop = document.createElement('div');
+    pop.className = 'tooltip-pop';
+    pop.id = id;
+    pop.setAttribute('role', 'tooltip');
+    if (current?.text) {
+      const p = document.createElement('p');
+      p.className = 'tooltip-text';
+      p.textContent = current.text;
+      pop.appendChild(p);
+    }
+    if (current?.list && current.list.length > 0) {
+      const list = document.createElement('p');
+      list.className = 'tooltip-list';
+      const label = current.listLabel ? `${current.listLabel}: ` : '';
+      list.textContent = `${label}${current.list.join(', ')}`;
+      pop.appendChild(list);
+    }
+    document.body.appendChild(pop);
+    node.setAttribute('aria-describedby', id);
+    position();
+  };
+
+  const hide = () => {
+    pop?.remove();
+    pop = null;
+    node.removeAttribute('aria-describedby');
+  };
+
+  node.addEventListener('mouseenter', show);
+  node.addEventListener('mouseleave', hide);
+  node.addEventListener('focusin', show);
+  node.addEventListener('focusout', hide);
+  node.addEventListener('click', hide);
+  window.addEventListener('scroll', hide, true);
+  window.addEventListener('resize', hide);
+
+  return {
+    update(next: TooltipContent | undefined) {
+      current = next;
+      if (pop) {
+        hide();
+        show();
+      }
+    },
+    destroy() {
+      hide();
+      node.removeEventListener('mouseenter', show);
+      node.removeEventListener('mouseleave', hide);
+      node.removeEventListener('focusin', show);
+      node.removeEventListener('focusout', hide);
+      node.removeEventListener('click', hide);
+      window.removeEventListener('scroll', hide, true);
+      window.removeEventListener('resize', hide);
+    },
+  };
+};
+
 /**
  * Reserve a right-edge gutter on the `.item-name` equal to the width of the
  * `.badges` overlaid on top of it. The name then word-wraps within the narrower

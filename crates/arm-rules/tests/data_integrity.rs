@@ -1,3 +1,4 @@
+use arm_rules::AbilityCategory;
 use arm_rules::Characteristic;
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset};
 use arm_rules::types::*;
@@ -48,7 +49,8 @@ fn shipped_data_passes_integrity_check() {
 #[test]
 fn shipped_abilities_and_characteristics_load() {
     let rs = load_ruleset();
-    assert_eq!(rs.ability_count(), 23, "exact shipped ability count");
+    // The full Core Rules ability catalogue ships (Abilities chapter, page 159+).
+    assert_eq!(rs.ability_count(), 78, "exact shipped ability count");
     assert!(rs.ability(&Id::new("ability.awareness")).is_some());
     // The whole childhood restricted list ships (Core Rules 2378).
     for id in [
@@ -66,6 +68,31 @@ fn shipped_abilities_and_characteristics_load() {
     ] {
         assert!(rs.ability(&Id::new(id)).is_some(), "missing {id}");
     }
+
+    // Supernatural Abilities ship and carry the supernatural category (the data
+    // truth behind the UI's '*' marker).
+    for id in [
+        "ability.second_sight",
+        "ability.dowsing",
+        "ability.entrancement",
+        "ability.shapeshifter",
+    ] {
+        let ability = rs
+            .ability(&Id::new(id))
+            .expect("supernatural ability present");
+        assert_eq!(
+            ability.category,
+            AbilityCategory::Supernatural,
+            "{id} must be supernatural"
+        );
+    }
+    assert_eq!(
+        rs.abilities()
+            .filter(|a| a.category == AbilityCategory::Supernatural)
+            .count(),
+        21,
+        "exact shipped supernatural ability count"
+    );
 
     let chars = rs
         .characteristic_rules()

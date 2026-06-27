@@ -202,17 +202,36 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `checked_sub` (returns `None`) as defense-in-depth for tables built outside the
   load gate.
 
-#### Seed Ability catalogue — `rules/core/abilities.json`
+#### Ability catalogue (full Core Rules set) — `rules/core/abilities.json`
 > Ability list grouped by type (General, Academic, Arcane, Martial,
-> Supernatural) at `:7177-7268`; alphabetical descriptions at `:7269-7786`.
+> Supernatural) at `:7177-7268`; alphabetical descriptions at `:7269-7789`.
 
 - Source: each ability cites its description line range in `abilities.json`
   (e.g. Awareness `:7325-7328`, Magic Theory `:7646-7649`). The five categories
-  are the book's Ability types (`:7177-7268`).
-- Data: 23 seed abilities covering all five categories and the full early-childhood
-  restricted list (`:2378`: Area Lore, Athletics, Awareness, Brawl, Charm, Folk
-  Ken, Guile, Living Language, Stealth, Survival, Swim). Native language is a
-  *specialty* of `ability.living_language`, not a separate id (`:2378`).
+  are the book's Ability types (`:7177-7268`), taken from each entry's trailing
+  `(Type)` label.
+- Data: the **complete Core Rules catalogue — 78 abilities** (General 29,
+  Academic 12, Arcane 12, Martial 4, Supernatural 21), extracted from the
+  Abilities chapter. Parameterized abilities carry a `parameter` key: `area`
+  ((Area) Lore), `language` ((Living/Dead Language)), `organization`
+  ((Organization) Lore), `mystery_cult` ((Mystery Cult) Lore), `craft`
+  (Craft (Type)), `profession` (Profession (Type)). The early-childhood
+  restricted list (`:2378`) is a subset; native language is a *specialty* of
+  `ability.living_language`, not a separate id.
+- Category vs. the `*` marker: the engine's `category` is the book's `(Type)`
+  label (English source of truth). The German translation table
+  (`rules/source/de/translation-tables/fertigkeiten.md`) marks some abilities
+  with `*` that the Core Rules type as **Arcane** (Heartbeast, Faerie Magic,
+  Enigmatic Wisdom) or **General** (Legerdemain); the English category governs,
+  so those are not stored as Supernatural. The UI renders a trailing `*` for the
+  Supernatural category only (`ability-supernatural-marker` Fluent key).
+- i18n: `rules/i18n/{en,de}/abilities.json` carry per-ability `name`,
+  a 1–2 sentence `description` (an authored condensation of the whole rulebook
+  entry), and example `specialties`. German names follow the canonical
+  translation table; German text is drawn from the same line range in
+  `Ars Magica Definitive Edition Basisregeln.md` (which mirrors the English file
+  line-by-line). `I18nEntry.specialties` (`types.rs`) holds the list;
+  `LocalizedRuleset::specialties` exposes it.
 - Implementation: `crates/arm-rules/src/ability.rs` — `Ability`,
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
   resolve against it) in `ruleset.rs`; `validate_abilities` in `validation.rs`.

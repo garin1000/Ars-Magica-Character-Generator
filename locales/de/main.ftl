@@ -40,6 +40,15 @@ characteristic-pre = Präsenz
 characteristic-com = Kommunikation
 characteristic-dex = Geschicklichkeit
 characteristic-qik = Schnelligkeit
+# Kurze Tooltip-Beschreibungen, verdichtet aus dem Kapitel Eigenschaften der Basisregeln.
+characteristic-desc-int = Die Fähigkeit, Konzepte zu analysieren und zu synthetisieren, sowie einfaches Gedächtnis; ausschlaggebend für die Hermetischen Künste.
+characteristic-desc-per = Die Fähigkeit, Dinge zu bemerken, sowie die Kraft der Intuition; wichtig für Aufmerksamkeit, Jagen und Menschenkenntnis.
+characteristic-desc-str = Körperliche Kraft – Heben, Stoßen und Bewegen – und die Wucht hinter einer Nahkampfwaffe.
+characteristic-desc-sta = Geistiges und körperliches Durchhaltevermögen; Zauberwirken, Lastentragen und Wundenwiderstand stützen sich darauf.
+characteristic-desc-pre = Erscheinung, Auftreten und Charisma – Eindruck machen, führen und einschüchtern.
+characteristic-desc-com = Die Begabung zum Selbstausdruck – andere beeinflussen und mit ihnen kommunizieren.
+characteristic-desc-dex = Gewandtheit und präzises, kunstfertiges Handhaben von Objekten; Hand-Augen-Koordination und körperliche Anmut.
+characteristic-desc-qik = Reaktionsgeschwindigkeit und Reflexe – wer in der Eile zuerst handelt; durch Belastung modifiziert.
 
 # Fertigkeitskategorien, je Kategoriewert der Engine.
 ability-category-general = Allgemein
@@ -47,6 +56,8 @@ ability-category-academic = Akademisch
 ability-category-arcane = Arkan
 ability-category-martial = Kampf
 ability-category-supernatural = Übernatürlich
+# Nachgestellte Markierung hinter dem Namen einer Übernatürlichen Fertigkeit, gemäß Regelwerk.
+ability-supernatural-marker = *
 
 # Eigenschaften-Punkteanzeige.
 characteristic-points = Punkte: { $used } / { $budget }
@@ -60,6 +71,8 @@ xp-spent = Ausgegeben: { $spent }
 xp-available = Verfügbar: { $available }
 ability-score-label = Wert
 ability-specialty-label = Spezialisierung
+# Überschrift für die im Auswahlbereich gezeigten Beispiel-Spezialisierungen.
+ability-specialties-label = Spezialisierungen
 ability-add = Fertigkeit hinzufügen
 ability-increment = Erhöhen
 ability-decrement = Verringern
@@ -83,6 +96,10 @@ param-label-technique = Technik
 param-label-area = Gebiet
 param-label-language = Sprache
 param-label-characteristic = Eigenschaft
+param-label-organization = Organisation
+param-label-mystery_cult = Mysterienkult
+param-label-craft = Handwerk
+param-label-profession = Beruf
 
 # Effektiver Wert, neben dem Basiswert angezeigt, wenn ein Tugend-Bonus greift.
 effective-score = { $score }

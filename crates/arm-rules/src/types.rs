@@ -758,6 +758,10 @@ pub struct I18nEntry {
     /// Optional full description.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// Example specialties for the item (e.g. an Ability's example
+    /// specializations). Empty when none are given.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub specialties: Vec<String>,
 }
 
 /// Controls how validation results are enforced.

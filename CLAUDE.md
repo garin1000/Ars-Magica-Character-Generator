@@ -104,12 +104,12 @@ notes.
 `{ file, lines: [start, end] }`) records the file basename plus an inclusive
 line range. The `source` in `rules/core/` always points at the **English**
 file — the canonical source. German source files mirror the English ones
-line-by-line **except in ordered lists** (e.g. Virtues, Flaws, Abilities — not
-exhaustive), which are re-sorted per German rules. So German line numbers
-diverge from English wherever an ordered list appears: a German line reference
-must be computed against the German file, never reused from English. Such
-per-language provenance, when needed, lives in the `rules/i18n/<lang>/` layer,
-not in language-neutral `core/`.
+**line-by-line throughout** — even lists that are alphabetically ordered in
+English (e.g. Virtues, Flaws, Abilities) are **not** re-sorted into German
+alphabetical order; each German entry keeps the same line position as its
+English counterpart. So a German line number corresponds to the same item as
+the English line number. Such per-language provenance, when needed, lives in
+the `rules/i18n/<lang>/` layer, not in language-neutral `core/`.
 
 ## Architecture invariants
 
