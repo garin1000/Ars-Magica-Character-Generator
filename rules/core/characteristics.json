@@ -1,13 +1,20 @@
 {
   "start_points": 7,
+  "base_max": 3,
+  "base_min": -3,
   "effective_max": 5,
+  "effective_min": -5,
   "costs": [
+    { "score": 5, "cost": 15 },
+    { "score": 4, "cost": 10 },
     { "score": 3, "cost": 6 },
     { "score": 2, "cost": 3 },
     { "score": 1, "cost": 1 },
     { "score": 0, "cost": 0 },
     { "score": -1, "cost": -1 },
     { "score": -2, "cost": -3 },
-    { "score": -3, "cost": -6 }
+    { "score": -3, "cost": -6 },
+    { "score": -4, "cost": -10 },
+    { "score": -5, "cost": -15 }
   ]
 }

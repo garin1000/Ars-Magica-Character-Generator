@@ -7,6 +7,10 @@
     "name": "Defizitäre {technique}",
     "summary": "Du bist unfähig, eine Technik effektiv einzusetzen."
   },
+  "flaw.poor_characteristic": {
+    "name": "Schlechte {characteristic}",
+    "summary": "Senke eine Eigenschaft, die bereits bei −3 liegt, bis mindestens −5; die Punkte erhältst du weiterhin."
+  },
   "flaw.poor_student": {
     "name": "Schlechter Schüler",
     "summary": "Du lernst schlecht aus Büchern und von Lehrern."
@@ -17,7 +21,7 @@
   },
   "virtue.great_characteristic": {
     "name": "Hervorragende {characteristic}",
-    "summary": "+1 auf eine Eigenschaft, die bereits bei +3 liegt, bis höchstens +5."
+    "summary": "Erhöhe eine Eigenschaft, die bereits bei +3 liegt, bis höchstens +5; die Punkte zahlst du weiterhin."
   },
   "virtue.hermetic_magus": {
     "name": "Hermetischer Magus",

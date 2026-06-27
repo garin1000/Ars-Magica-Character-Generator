@@ -7,6 +7,10 @@
     "name": "Deficient {technique}",
     "summary": "You are unable to use one Technique effectively."
   },
+  "flaw.poor_characteristic": {
+    "name": "Poor {characteristic}",
+    "summary": "Lower a Characteristic already at −3 down to −5; you still gain the points."
+  },
   "flaw.poor_student": {
     "name": "Poor Student",
     "summary": "You are bad at learning from books and teachers."
@@ -17,7 +21,7 @@
   },
   "virtue.great_characteristic": {
     "name": "Great {characteristic}",
-    "summary": "+1 to a Characteristic already at +3, to a maximum of +5."
+    "summary": "Raise a Characteristic already at +3 up to +5; you still pay the points."
   },
   "virtue.hermetic_magus": {
     "name": "Hermetic Magus",

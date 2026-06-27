@@ -11,29 +11,35 @@ use std::collections::BTreeMap;
 
 use arm_rules::{
     AbilityBonus, Characteristic, Entity, EntityKind, LocalizedRuleset, Ruleset, RulesetSources,
-    ValidationMode, ValidationResult, ability_bonuses, characteristic_bonuses, validate,
+    ValidationMode, ValidationResult, ability_bonuses, characteristic_caps, characteristic_floors,
+    validate,
 };
 use serde::Serialize;
 
 use crate::error::AppError;
 
-/// The score bonuses a character's virtues grant, for the frontend to add onto
-/// each displayed bought score. Only non-zero bonuses are present. Ability bonuses
-/// are per-instance (a Puissant on "Brandenburg Lore" attaches to that row alone);
-/// characteristic keys are the snake_case characteristic names.
+/// The score effects a character's virtues/flaws produce, for the frontend.
+/// Ability bonuses are per-instance and only the non-zero ones are present (a
+/// Puissant on "Brandenburg Lore" attaches to that row alone). Characteristic
+/// caps/floors are the per-characteristic buy limits — keyed by the snake_case
+/// characteristic name and present for all eight — that Great/Poor
+/// (Characteristic) widen, so the UI clamps the spinners to them.
 #[derive(Debug, Clone, Serialize)]
 pub struct EffectiveScores {
     /// One entry per boosted ability instance (e.g. Puissant Ability +2).
     pub ability_bonuses: Vec<AbilityBonus>,
-    /// Characteristic → bonus (e.g. Great Characteristic +1).
-    pub characteristic_bonuses: BTreeMap<Characteristic, i32>,
+    /// Characteristic → highest buyable score (Great Characteristic raises it).
+    pub characteristic_caps: BTreeMap<Characteristic, i32>,
+    /// Characteristic → lowest buyable score (Poor Characteristic lowers it).
+    pub characteristic_floors: BTreeMap<Characteristic, i32>,
 }
 
-/// Computes the virtue score bonuses for `entity` against a loaded ruleset.
+/// Computes the score effects for `entity` against a loaded ruleset.
 pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveScores {
     EffectiveScores {
         ability_bonuses: ability_bonuses(entity, ruleset),
-        characteristic_bonuses: characteristic_bonuses(entity, ruleset),
+        characteristic_caps: characteristic_caps(entity, ruleset),
+        characteristic_floors: characteristic_floors(entity, ruleset),
     }
 }
 

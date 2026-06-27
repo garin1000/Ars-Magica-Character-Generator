@@ -19,11 +19,14 @@ export interface ParameterDef {
   domain: ParameterDomain;
 }
 
-// Score-boosting effect a virtue applies (Puissant Ability +2, Great
-// Characteristic +1). The target is named by the selection's `param` value.
+// Mechanical effect a virtue/flaw applies. `ability_bonus` adds to an ability's
+// effective score (Puissant Ability +2); `characteristic_limit` shifts a
+// characteristic's buy limit (Great Characteristic +1 raises the cap, Poor
+// Characteristic −1 lowers the floor). The target is named by the selection's
+// `param` value.
 export type Effect =
   | { type: 'ability_bonus'; param: string; amount: number }
-  | { type: 'characteristic_bonus'; param: string; amount: number; min_base?: number | null };
+  | { type: 'characteristic_limit'; param: string; amount: number };
 
 // Prerequisite expression tree. Adjacently tagged by the engine: every variant
 // is a uniform object carrying a `kind` discriminant, with any payload under
@@ -60,12 +63,14 @@ export interface AbilityBonus {
   bonus: number;
 }
 
-// Virtue score bonuses for the current entity, computed by the engine. Ability
-// bonuses are per-instance; characteristic bonuses are keyed by slug. Only
-// non-zero bonuses are present.
+// Score effects for the current entity, computed by the engine. Ability bonuses
+// are per-instance (only non-zero ones present). Characteristic caps/floors are
+// the per-characteristic buy limits (Great/Poor Characteristic widen them),
+// present for all eight characteristics.
 export interface EffectiveScores {
   ability_bonuses: AbilityBonus[];
-  characteristic_bonuses: Partial<Record<Characteristic, number>>;
+  characteristic_caps: Partial<Record<Characteristic, number>>;
+  characteristic_floors: Partial<Record<Characteristic, number>>;
 }
 
 // Per-category flaw count cap. The category is data, so the engine hardcodes no
@@ -149,6 +154,11 @@ export interface CharacteristicCost {
 export interface CharacteristicRules {
   start_points: number;
   costs: CharacteristicCost[];
+  // The no-virtue buy cap/floor (±3). The spinner falls back to these until the
+  // engine's entity-dependent caps/floors (which Great/Poor Characteristic
+  // widen) arrive. Omitted by rulesets that don't distinguish them.
+  base_max?: number | null;
+  base_min?: number | null;
 }
 
 // `Ruleset` serializes its maps as JSON objects keyed by id.

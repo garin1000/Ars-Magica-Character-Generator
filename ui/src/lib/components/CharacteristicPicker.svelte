@@ -5,16 +5,25 @@
   import { CHARACTERISTICS, type Characteristic } from '../types';
 
   const rules = $derived(store.ruleset?.ruleset.characteristic_rules ?? null);
-  const min = $derived(rules ? Math.min(...rules.costs.map((c) => c.score)) : -3);
-  const max = $derived(rules ? Math.max(...rules.costs.map((c) => c.score)) : 3);
+  // The cost table spans the absolute ±5 range; the *buyable* range per
+  // characteristic is the base cap/floor, widened by Great/Poor Characteristic.
+  const tableMax = $derived(rules ? Math.max(...rules.costs.map((c) => c.score)) : 3);
+  const tableMin = $derived(rules ? Math.min(...rules.costs.map((c) => c.score)) : -3);
   const used = $derived(characteristicPointsUsed(rules, store.entity.characteristics));
 
   function scoreOf(characteristic: Characteristic): number {
     return store.entity.characteristics?.[characteristic] ?? 0;
   }
 
-  function bonusOf(characteristic: Characteristic): number {
-    return store.effective?.characteristic_bonuses?.[characteristic] ?? 0;
+  // Per-characteristic buy limits from the engine (entity-dependent: Great raises
+  // the cap, Poor lowers the floor). Until they arrive, fall back to the
+  // ruleset's base cap/floor, then to the table bounds.
+  function capOf(characteristic: Characteristic): number {
+    return store.effective?.characteristic_caps?.[characteristic] ?? rules?.base_max ?? tableMax;
+  }
+
+  function floorOf(characteristic: Characteristic): number {
+    return store.effective?.characteristic_floors?.[characteristic] ?? rules?.base_min ?? tableMin;
   }
 
   function descriptionOf(characteristic: Characteristic): string {
@@ -22,7 +31,10 @@
   }
 
   function adjust(characteristic: Characteristic, delta: number) {
-    const next = Math.max(min, Math.min(max, scoreOf(characteristic) + delta));
+    const next = Math.max(
+      floorOf(characteristic),
+      Math.min(capOf(characteristic), scoreOf(characteristic) + delta),
+    );
     store.setCharacteristic(characteristic, next);
   }
 
@@ -48,7 +60,7 @@
             type="button"
             class="icon-btn"
             aria-label={store.t('characteristic-decrement')}
-            disabled={scoreOf(characteristic) <= min}
+            disabled={scoreOf(characteristic) <= floorOf(characteristic)}
             onclick={() => adjust(characteristic, -1)}
             data-testid="char-dec-{characteristic}"
           >
@@ -61,19 +73,12 @@
             type="button"
             class="icon-btn"
             aria-label={store.t('characteristic-increment')}
-            disabled={scoreOf(characteristic) >= max}
+            disabled={scoreOf(characteristic) >= capOf(characteristic)}
             onclick={() => adjust(characteristic, 1)}
             data-testid="char-inc-{characteristic}"
           >
             +
           </button>
-          {#if bonusOf(characteristic) !== 0}
-            <span class="eff-badge" data-testid="char-eff-{characteristic}">
-              {store.t('effective-score', {
-                score: fmt(scoreOf(characteristic) + bonusOf(characteristic)),
-              })}
-            </span>
-          {/if}
         </span>
         <input
           type="text"

@@ -9,7 +9,9 @@ import type { Ability, Entity, LocalizedRuleset, PointItem } from './types';
 vi.mock('./ipc', () => ({
   loadRuleset: vi.fn(),
   validateEntity: vi.fn().mockResolvedValue({ issues: [] }),
-  effectiveScores: vi.fn().mockResolvedValue({ ability_bonuses: [], characteristic_bonuses: {} }),
+  effectiveScores: vi
+    .fn()
+    .mockResolvedValue({ ability_bonuses: [], characteristic_caps: {}, characteristic_floors: {} }),
   saveEntity: vi.fn(),
   loadEntity: vi.fn(),
 }));

@@ -1,18 +1,20 @@
-// End-to-end: a virtue's score bonus shows as an "effective" badge in direct
-// entry. Great Characteristic (+1) on Strength and Puissant Ability (+2) on
-// Awareness each add to the displayed base score. Drives the real binary.
+// End-to-end: Great Characteristic raises a Characteristic's buy cap (it grants
+// no free point — the score must be bought past +3), and Puissant Ability (+2)
+// shows as an "effective" badge on its target ability. Drives the real binary.
 
 import { $, expect } from '@wdio/globals';
 
-describe('effective-score badges', () => {
-  it('shows Great Characteristic and Puissant Ability bonuses', async () => {
-    // Characteristics is the default tab; raise Strength to +3 (Great's minimum).
+describe('characteristic cap + ability bonus', () => {
+  it('Great Characteristic opens the cap, Puissant shows a badge', async () => {
+    // Characteristics is the default tab; raise Strength to its base cap of +3.
     const strInc = await $('[data-testid="char-inc-str"]');
     await strInc.waitForExist({ timeout: 30000 });
     await strInc.click();
     await strInc.click();
     await strInc.click();
     expect(await $('[data-testid="char-value-str"]').getText()).toBe('+3');
+    // At the base cap the increment button is disabled — no headroom yet.
+    expect(await strInc.isEnabled()).toBe(false);
 
     // Add Great Characteristic and target Strength via the characteristic picker.
     await $('[data-testid="tab-virtues_flaws"]').click();
@@ -25,13 +27,15 @@ describe('effective-score badges', () => {
     await charParam.waitForExist({ timeout: 5000 });
     await charParam.selectByAttribute('value', 'characteristic.str');
 
-    // Back on Characteristics: Strength shows effective +4 (base +3, Great +1).
-    // Fluent wraps the placeholder in bidi isolation marks, so match the value
-    // as a substring rather than the exact string.
+    // Back on Characteristics: the cap is now +4, so increment is enabled again
+    // and clicking it buys Strength up to +4 (no free point was granted).
     await $('[data-testid="tab-characteristics"]').click();
-    const strBadge = await $('[data-testid="char-eff-str"]');
-    await strBadge.waitForExist({ timeout: 10000 });
-    expect(await strBadge.getText()).toContain('+4');
+    const strInc2 = await $('[data-testid="char-inc-str"]');
+    await strInc2.waitForClickable({ timeout: 10000 });
+    await strInc2.click();
+    expect(await $('[data-testid="char-value-str"]').getText()).toBe('+4');
+    // +4 is the cap with one Great; the button disables again.
+    expect(await strInc2.isEnabled()).toBe(false);
 
     // Buy Awareness up to 2, then add Puissant Ability targeting it.
     await $('[data-testid="tab-abilities"]').click();

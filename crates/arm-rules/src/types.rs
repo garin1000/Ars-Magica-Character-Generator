@@ -321,19 +321,20 @@ pub enum Effect {
         /// Points added to the effective score.
         amount: i8,
     },
-    /// Adds `amount` to the effective score of the characteristic named by the
-    /// selection's `params[param]` (e.g. Great Characteristic, +1).
-    CharacteristicBonus {
+    /// Shifts a base-score *limit* for the characteristic named by the
+    /// selection's `params[param]`, by `amount` per selection. A positive amount
+    /// raises the buy cap (Great Characteristic, +1 → up to +5); a negative
+    /// amount lowers the buy floor (Poor Characteristic, −1 → down to −5). It
+    /// grants no points: the score must still be bought/sold against the cost
+    /// table. The "must already be at ±3" precondition is parameter-relative and
+    /// derived from the ruleset's base cap/floor by the sign of `amount`, so it
+    /// is enforced in validation rather than stored here.
+    CharacteristicLimit {
         /// Parameter key whose value names the target characteristic.
         param: String,
-        /// Points added to the effective score.
+        /// Limit shift per selection: positive raises the cap, negative lowers
+        /// the floor.
         amount: i8,
-        /// If set, the bonus is legal only when the target characteristic's
-        /// *base* (bought) score is at least this value (Great Characteristic
-        /// requires +3). Parameter-relative, so it lives here rather than in the
-        /// static [`Prereq`] tree.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        min_base: Option<i8>,
     },
 }
 
@@ -422,8 +423,8 @@ pub struct PointItem {
     /// Parameter slots a selection of this item must fill.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub parameters: Vec<ParameterDef>,
-    /// Score-boosting effects this item applies (e.g. Puissant Ability +2,
-    /// Great Characteristic +1). Empty for items with no score effect.
+    /// Mechanical effects this item applies (e.g. Puissant Ability +2, Great
+    /// Characteristic raising a buy cap). Empty for items with no effect.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub effects: Vec<Effect>,
     /// Maximum number of selections that may share the same `(id, params)`
@@ -1384,17 +1385,16 @@ mod tests {
           "category": "general",
           "entity_kinds": ["character"],
           "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
-          "effects": [{ "type": "characteristic_bonus", "param": "characteristic", "amount": 1, "min_base": 3 }],
+          "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }],
           "max_per_target": 2
         }"#;
         let item: PointItem = serde_json::from_str(json).unwrap();
         assert_eq!(item.max_per_target, 2);
         assert_eq!(
             item.effects,
-            vec![Effect::CharacteristicBonus {
+            vec![Effect::CharacteristicLimit {
                 param: "characteristic".into(),
                 amount: 1,
-                min_base: Some(3),
             }]
         );
     }
