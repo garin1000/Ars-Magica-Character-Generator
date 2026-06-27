@@ -65,11 +65,12 @@ mechanics carry entries; the rest are stubbed at the end.
 - Implementation: `crates/arm-rules/src/validation.rs` — `validate_caps`
   (counts items with `magnitude == Major`; cap value is data via
   `max_major_virtues` / `max_major_flaws`).
-- **Deferred (not implemented):** the magus rule "You may not have more than one
-  Major Hermetic Virtue" (`:2857`) is a *category-restricted* cap (Hermetic Major
-  Virtues only), not a plain Major-count cap. `PointBudget` has no
-  virtue-category cap and no magus profile exists, so it is not enforced. See the
-  "Resolved: companion `max_major_virtues`" note below.
+- **Deferred to M4/4b (not yet implemented):** the magus rule "You may not have
+  more than one Major Hermetic Virtue" (`:2857`) is a *category-restricted* cap
+  (Hermetic Major Virtues only), not a plain Major-count cap. `PointBudget` has no
+  virtue-category cap and no magus profile exists yet; M4/4b adds a data-driven
+  `virtue_category_caps` (mirroring `flaw_category_caps`) and the magus profile.
+  See the "Resolved: companion `max_major_virtues`" note below.
 
 #### Cap on Minor Flaws count (hard)
 > "A central character may have up to ten points of Flaws, but no more than five
@@ -194,7 +195,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   (`xp_for_score`, `xp_to_raise`, `max_score`). Used to price whole-point steps;
   a character stores whole bought scores plus an `xp_pool` total (`types.rs`).
   The XP spent (Σ `xp_for_score`) may not exceed the pool — `validate_abilities`
-  emits `not_enough_xp` otherwise (an error in Advisory/Enforced; the M4 wizard
+  emits `not_enough_xp` otherwise (an error in Advisory/Enforced; the M5 wizard
   blocks the spend up front). Leftover pool is the character's banked XP.
 - Engine integrity check (not a sourced rule): a non-zero ability score with no
   row in the advancement table (`xp_for_score` → `None`) is off-table and
@@ -363,13 +364,28 @@ Ability" (`:4816`) and "Great twice per Characteristic" (`:3989`). Effect
 integrity (`ruleset.rs::validate_effect_refs`) rejects at load any effect whose
 `param` is undeclared or whose domain mismatches the effect kind.
 
-#### Deferred to M4/M5
-The life-stage XP acquisition (early childhood 75+45 xp `:2378`; later life
-15/20/10 xp/yr `:2390-2394`; age→max-score cap `:2368-2374`) and the Sample
-Childhood packages (`:2380-2388`) are deferred to M4. *Improved Characteristics*
-(a +3 point-buy pool, not an effective-score bonus) is a separate
-characteristic-budget follow-up. Puissant Art (+3) / `House` / `ArtMin`
-evaluation and the Art registry are deferred to M5 (no Art registry yet).
+#### Deferred — milestone assignments
+The plan was reordered so all input for all character types lands in M4 (direct
+entry) before the guided wizard in M5. Accordingly:
+
+- **M4/4a (Arts):** the Art registry, `House`/`ArtMin` evaluation, and registry-
+  backed `ParameterDomain::Art` resolution (replacing the `true` stub). Puissant
+  Art (+3) lands here too (M4/4f), now that the Art registry exists — it was only
+  ever blocked on the registry, not on the wizard.
+- **M4/4b (Houses):** the *category-restricted* magus cap "≤1 Major Hermetic
+  Virtue" (`:2857`) via a new data-driven `virtue_category_caps` (see the cap
+  note above).
+- **M4/4f (V/F effect families):** *Improved Characteristics* (a +3 point-buy
+  pool, not an effective-score bonus), Affinity with Ability/Art (XP-cost
+  modifier `:3372-3378`), restricted XP-grant pools (Educated/Warrior/Privileged
+  Upbringing), and `ability_score_grant` starting-score effects.
+- **M5 (guided wizard):** the life-stage XP acquisition (early childhood 75+45 xp
+  `:2378`; later life 15/20/10 xp/yr `:2390-2394`; age→max-score cap
+  `:2368-2374`), the Sample Childhood packages (`:2380-2388`), the magus
+  apprenticeship/post-apprenticeship Art-XP flow (`:2433-2471`), and the aging
+  engine for characters over 35 (`:16563-16640`). The age→max-score *cap* itself
+  is enforced as direct-entry validation in M4/4e; only the XP *acquisition* and
+  aging *rolls* are M5.
 
 ---
 
