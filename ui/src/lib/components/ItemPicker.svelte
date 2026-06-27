@@ -1,7 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import { displayName, groupByCategory } from '../derive';
-  import { reserveTagSpace } from '../actions';
+  import { reserveTagSpace, tooltip, type TooltipContent } from '../actions';
   import type { ItemKind, PointItem } from '../types';
 
   // One picker per side: Virtues (virtue/boon) on the left, Flaws (flaw/hook)
@@ -20,6 +20,13 @@
   function repeatable(item: PointItem): boolean {
     return !!item.parameters?.length || (item.max_per_target ?? 1) > 1;
   }
+
+  // Tooltip from the item's localized rules text (full description if present,
+  // else the short summary). A no-op when neither exists.
+  function tip(itemId: string): TooltipContent {
+    const entry = store.ruleset?.i18n[itemId];
+    return { text: entry?.description ?? entry?.summary ?? undefined };
+  }
 </script>
 
 <section class="panel">
@@ -35,6 +42,7 @@
               class="pick-row"
               disabled={!repeatable(item) && selectedRefs.has(item.id)}
               onclick={() => store.addSelection(item.id)}
+              use:tooltip={tip(item.id)}
               data-testid="add-{item.id}"
             >
               <span class="name-wrap" use:reserveTagSpace>

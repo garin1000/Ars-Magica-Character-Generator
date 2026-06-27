@@ -202,17 +202,52 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `checked_sub` (returns `None`) as defense-in-depth for tables built outside the
   load gate.
 
-#### Seed Ability catalogue — `rules/core/abilities.json`
+#### Ability catalogue (seed set) — `rules/core/abilities.json`
 > Ability list grouped by type (General, Academic, Arcane, Martial,
-> Supernatural) at `:7177-7268`; alphabetical descriptions at `:7269-7786`.
+> Supernatural) at `:7177-7268`; alphabetical descriptions at `:7269-7789`.
+
+> **Partial-catalogue note.** This branch ships the **23-ability seed set**, not
+> the complete Core Rules catalogue. The full 78-ability catalogue (General 29,
+> Academic 12, Arcane 12, Martial 4, Supernatural 21) — with all descriptions,
+> specialties, and `requires_training` flags — already exists on the
+> `full-abilities` branch and is **pulled over later in the plan** (it widens the
+> data only; the engine, i18n schema, and UI here already support it). When you
+> pull it in, restore the `78`/`21`/`50` counts in
+> `tests/data_integrity.rs` and `commands.rs`. See also the project memory note
+> on the deferred ability catalogue.
 
 - Source: each ability cites its description line range in `abilities.json`
   (e.g. Awareness `:7325-7328`, Magic Theory `:7646-7649`). The five categories
-  are the book's Ability types (`:7177-7268`).
-- Data: 23 seed abilities covering all five categories and the full early-childhood
-  restricted list (`:2378`: Area Lore, Athletics, Awareness, Brawl, Charm, Folk
-  Ken, Guile, Living Language, Stealth, Survival, Swim). Native language is a
-  *specialty* of `ability.living_language`, not a separate id (`:2378`).
+  are the book's Ability types (`:7177-7268`), taken from each entry's trailing
+  `(Type)` label.
+- Data: 23 seed abilities covering all five categories and the full
+  early-childhood restricted list (`:2378`: Area Lore, Athletics, Awareness,
+  Brawl, Charm, Folk Ken, Guile, Living Language, Stealth, Survival, Swim).
+  Native language is a *specialty* of `ability.living_language`, not a separate
+  id. Parameterized abilities carry a `parameter` key (`area` for (Area) Lore,
+  `language` for the (Living/Dead Language) abilities).
+- The `*` marker (`requires_training` flag): an *asterisked* Ability cannot be
+  used without at least one experience point in it — there is no untrained roll.
+  > "Characters without this Virtue cannot even attempt rolls on an asterisked
+  > Ability without at least one experience point in it." — Jack of All Trades,
+  > `Ars Magica - Definitive Edition (Core Rules).md:4157`.
+
+  This is an **independent per-ability property, not derived from `category`**:
+  it spans General (e.g. (Area) Lore), Academic, Arcane, and all Supernatural
+  abilities — 8 of the 23 seed abilities are asterisked. Notably Penetration and
+  most combat/General abilities are *not* asterisked. The flag is set from the
+  `*` on each ability's `####` heading (`:7273-7786`); `Ability.requires_training`
+  (`ability.rs`) stores it and the UI renders the trailing `*` via the
+  `ability-requires-training-marker` Fluent key. (The German translation table's
+  `*` legend carries the same meaning; its `Typ` column is informational — the
+  English `(Type)` label remains the source of truth for `category`.)
+- i18n: `rules/i18n/{en,de}/abilities.json` carry per-ability `name`,
+  a 1–2 sentence `description` (an authored condensation of the whole rulebook
+  entry), and example `specialties`. German names follow the canonical
+  translation table; German text is drawn from the same line range in
+  `Ars Magica Definitive Edition Basisregeln.md` (which mirrors the English file
+  line-by-line). `I18nEntry.specialties` (`types.rs`) holds the list;
+  `LocalizedRuleset::specialties` exposes it.
 - Implementation: `crates/arm-rules/src/ability.rs` — `Ability`,
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
   resolve against it) in `ruleset.rs`; `validate_abilities` in `validation.rs`.

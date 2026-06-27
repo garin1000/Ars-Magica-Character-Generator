@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import { characteristicPointsUsed } from '../derive';
+  import { tooltip } from '../actions';
   import { CHARACTERISTICS, type Characteristic } from '../types';
 
   const rules = $derived(store.ruleset?.ruleset.characteristic_rules ?? null);
@@ -37,7 +38,11 @@
     </p>
     <div class="char-grid">
       {#each CHARACTERISTICS as characteristic (characteristic)}
-        <span class="spinner-label">{store.t(`characteristic-${characteristic}`)}</span>
+        <span
+          class="spinner-label"
+          use:tooltip={{ text: store.t(`characteristic-desc-${characteristic}`) }}
+          >{store.t(`characteristic-${characteristic}`)}</span
+        >
         <span class="spinner">
           <button
             type="button"

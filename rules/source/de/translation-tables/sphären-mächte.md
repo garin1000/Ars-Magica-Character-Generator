@@ -268,102 +268,7 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 | Infernal Reputation | Infernale Reputation | Reputationen von Dämonen innerhalb der Hierarchie |
 | Corrupt Beast | Verdorbene Bestie | Kreaturentyp; infernal korrumpiertes Tier |
 
-### Allgemeine Dämonenkräfte / Common Demon Powers
-
-| Englisch (EN) | Deutsch (DE) | Ordnung / Anmerkung |
-|---|---|---|
-| Shroud the Stench of the Pit | Den Gestank der Grube verhüllen | Falsche Götter |
-| The Wealth of Nations | Der Reichtum der Nationen | Falsche Götter |
-| His Master's Voice | Die Stimme seines Herrn | Falsche Götter |
-| Change Form | Gestaltwandel | Geister des Betrugs |
-| Trust of the Innocent | Vertrauen des Unschuldigen | Geister des Betrugs |
-| Forked Tongue of the Serpent | Gespaltene Zunge der Schlange | Geister des Betrugs |
-| The Serpent's Oracle | Das Orakel der Schlange | Geister des Betrugs |
-| Form of Wickedness | Gestalt der Verruchtheit | Gefäße der Bosheit |
-| Form of Man | Menschengestalt | Gefäße der Bosheit |
-| Contagious Obsession | Ansteckende Besessenheit | Gefäße der Bosheit |
-| Punish the Sinner | Den Sünder bestrafen | Rächer des Bösen |
-| Delusion | Verblendung | Verführer |
-| Duplicate the Magi's Creation | Die Schöpfung der Magi duplizieren | Verführer |
-| Elemental Control | Elementare Beherrschung | Luftmächte |
-| Recalcitrance | Aufsässigkeit | Luftmächte |
-| Waxing Tide of Humors | Anschwellende Flut der Säfte | Furien |
-| Berserker Rage | Berserkerrausch | Furien |
-| Endurance of the Enraged | Ausdauer der Rasenden | Furien |
-| Betrayal of the Heart | Verrat des Herzens | Ankläger |
-| Whispers Behind the Back | Flüstern hinter dem Rücken | Ankläger |
-| Scourging the Infernal | Geißelung des Infernalen | Reliquienkraft |
-| Coagulation | Koagulation | Allg. Dämonenkraft; physische Manifestation |
-| Enervators | Blender | Verführer-Unterfamilie; täuschen stärkere Magie vor |
-| Infernal Dragons | Infernale Drachen | Meister der Geister des Betrugs |
-| Men of Good Intent | Männer guter Absicht | Geister-des-Betrugs-Unterfamilie |
-| Spirits of Solomon | Geister Salomons | Verführer-Unterfamilie |
-| Watchers (Demons) | Wächter | Herzöge der Verführer (Grigori) |
-| Miser's Pot | Topf des Knausers | Ankläger-Dämon |
-| Deceiver's Boost | Schub des Betrügers | Blender-Kraft |
-| Nails of the Cuckold's Vengeance | Nägel der Rache des Gehörnten | Andrew |
-| Ennoble the Base | Das Niedrige erheben | Berith |
-| Face of the Count | Antlitz des Grafen | Berith |
-| Seven Leagues in One Night | Sieben Wegstunden in einer Nacht | Berith |
-| Crushing the Will | Den Willen brechen | Bordelon |
-| Chastise the Disobedient | Den Ungehorsamen züchtigen | Bordelon |
-| Hide from Mortal Sight | Vor sterblichem Blick verbergen | Forcas |
-| Retrieve That Which is Lost | Das Verlorene zurückholen | Forcas |
-| Body of Brass | Leib aus Messing | Topf des Knausers |
-| Seize the Miser's Hoard | Den Hort des Geizhalses ergreifen | Topf des Knausers |
-| Idea | Idee | Topf des Knausers |
-| The Wordless Conversation | Das Wortlose Gespräch | Wächter |
-| Corrupted Knowledge | Korrumpiertes Wissen | Wächter |
-| The Worst You Can Be | Das Schlimmste, das du sein kannst | Geister Salomons |
-| The Abandoned Corpse | Der zurückgelassene Leichnam | Premnemosyne |
-| Aethnici | Aethnici | Luftmächte-Familie; lat. Eigenname |
-| Demons of the Fifth Trump | Dämonen der Fünften Posaune | Furien-Familie; Offb. 9 |
-| Dibbukim | Dibbukim | Furien-Familie; hebr. Eigenname |
-| Lord of the Furies | Fürst der Furien | Hierarchie-Titel; Bael |
-| Master of the Furies | Meister der Furien | Hierarchie-Titel; Architectus |
-| Command the Four Hosts of Builders | Gebiete den vier Heerscharen der Erbauer | Architectus |
-| Eyes of Stone Demons | Augen der Steindämonen | Architectus |
-| Form of the Serpent | Schlangengestalt | Aethnici |
-| Elemental Control of Fire | Elementare Beherrschung des Feuers | Aethnici |
-| Seething Resentment | Brodelnder Groll | Bael |
-| Worm of the Mind | Wurm des Geistes | Bael |
-| Inescapable | Unentrinnbar | Dämonen der Fünften Posaune |
-| Scorpion's Tail | Skorpionschwanz | Dämonen der Fünften Posaune |
-| Fictiles / Fictilis | Fictiles / Fictilis | Lat. Eigenname; Luftmächte aus nassem Ton |
-| Lilin / Lil | Lilin / Lil | Hebr. Eigenname; Nachtgeister, Verführer |
-| Lucifuges | Lucifuges | Lat. „Lichtflüchtige"; Luftmächte in der Erde |
-| Maggots / Astasian | Maden / Astasian | Winzige Verführer |
-| Merry Devils | Lustige Teufel | Gefäße der Bosheit |
-| Reveners | Wiedergänger | Gefäße der Bosheit; beleben Leichname |
-| Mazzikim / Mazzik | Mazzikim / Mazzik | Hebr.; Schädiger des Menschen |
-| Khrafstar | Khrafstar | Pers.; schädliche Kreaturen |
-| Daevas | Daevas | Zoroastrische böse Geister |
-| Spentas | Spentas | Zoroastrische Geister der Güte |
-| Blight the Household | Den Hausstand verderben | Fictiles |
-| Cloud of Pepper | Pfefferwolke | Gourmand |
-| Conjure Spices | Gewürze herbeizaubern | Gourmand |
-| Hide Flavor | Geschmack verbergen | Gourmand |
-| Pleasant Clouds in the Mind | Angenehme Wolken im Geist | Lustige Teufel |
-| Endurance of the Gluttonous | Ausdauer der Gefräßigen | Mahonin |
-| Grant Victory | Sieg verleihen | Morrighu |
-| Shout | Ruf | Hulikang |
-| A Murder of Crows | Ein Schwarm von Krähen | Sabaoth |
-| Piercing Eye | Durchdringender Blick | Sabaoth |
-| Fear of the Wilderness | Furcht der Wildnis | Mazzikim |
-| Steal Life | Leben stehlen | Lilin |
-| Mass Hallucination | Massenhalluzination | Lilin |
-| Steal Blood | Blut stehlen | Lucifuges |
-| Steal Thoughts | Gedanken stehlen | Lucifuges |
-| The Dead That Walk Again | Die Toten, die wieder wandeln | Wiedergänger |
-| The Tempest's Fury | Des Sturmes Zorn | Naonhaithya |
-| Calling the Khrafstar | Die Khrafstar rufen | Naonhaithya |
-| Mastery of the Oceans | Herrschaft über die Ozeane | Rahab |
-| Wrath of the Oceans | Zorn der Ozeane | Rahab |
-| Waxing Size of the Swelling Ocean | Wachsende Größe des schwellenden Ozeans | Rahab |
-| Breath of the Desert | Atem der Wüste | Xaphan |
-| Breath of the Bellows | Atem des Blasebalgs | Xaphan |
-| Burning Curse | Brennender Fluch | Xaphan |
-| Ways of the Ocean | Wege des Ozeans | Tugend; Rahab |
+→ Infernale Kräfte und Wesen: ausgelagert nach [infernale-kraefte.md](infernale-kraefte.md)
 
 ### Infernale Tugenden und Fehler / Infernal Virtues and Flaws
 
@@ -437,4 +342,87 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 
 ---
 
-*Quellen: Ars Magica Definitive Edition Core Rules (Atlas Games, 2024) · Ars Magica 5e – Sphären der Macht: Magie (Atlas Games) · Ars Magica 5e – Sphären der Macht: Das Infernale (Atlas Games) · Deutsche Übersetzung (ArsMagica_DE_Gesamt_work.md)*
+## Ergänzungen aus Sphären der Macht: Das Göttliche (SdM:D)
+
+### Göttliche Auren und Regiones / Divine Auras and Regiones
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Empyreal (adj.) | empyreisch | Göttliche Aura, die nicht aus Anbetung stammt, sondern aus Reliquien, Wundern oder göttlichen Kreaturen |
+| Celestial (adj.) | celestisch | Kosmologisch-göttlich; bezogen auf Himmelssphären und göttliche Regiones; nicht verwechseln mit „himmlisch" (rein religiös) |
+| Terrestrial (adj.) | irdisch | Bezogen auf irdische göttliche Regiones |
+| Dominion rite | Dominiumritus | Ritual zur Erschaffung einer Dominiumaura; Kommunikation + Theologie/Dominiumkunde + Stresswurf vs. SG 6 |
+| Celestial Disorientation | Celestische Desorientierung | Zustand beim Betreten celestischer Regiones; Ausdauer + Dominiumkunde vs. SG = Regiostärke × 3 |
+| Pole Lords | Polherrscher | Göttliche Wesen, die über celestische Bewegungen wachen; bewohnen celestische Regiones |
+| Faith Point | Glaubenspunkt | Wie Selbstvertrauenspunkte einsetzbar; gewonnen durch Sakramente, Pilgerreisen usw. |
+| True Faith Score | Wahrer-Glauben-Wert | Wert des Wahren Glaubens; bestimmt max. Glaubenspunkte pro Einsatz und Magieresistenz (× 10) |
+
+### Göttliche Spielmechanik / Divine Game Mechanics
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Holy Method | Heilige Methode | Übernatürliche Methode des göttlichen Zauberns |
+| Holy Power | Heilige Kraft | Übernatürliche Kraft des göttlichen Zauberns |
+| Temper | Temperung | Göttliche Eigenschaft einer Dominiumaura; tugendhafte Persönlichkeitseigenschaft |
+| Tempering (an aura) | Temperieren (einer Aura) | Einer Aura eine tugendhafte Persönlichkeitseigenschaft verleihen |
+| tempered (aura) | temperiert(e Aura) | Aura mit aktiver Temperung |
+| tragedy of hubris | Tragödie der Hybris | Fehlschlag bei heiliger Wirkung; Analogon zur Verzerrung |
+| holy connection | heilige Verbindung | Pendant zur Arkanen Verbindung für heilige Wirkungen |
+| holy tradition | heilige Tradition | Gruppe Gleichgesinnter mit gemeinsamen Bevorzugten Fertigkeiten |
+| Divine Ascent | Göttlicher Aufstieg | Göttliches Äquivalent zum Zwielicht; religionsneutral |
+| brandea | Brandea | Lat.; Behältnisse/Hüllen von Reliquien, die selbst Heiligkeit aufnehmen |
+| Divine Warping | Göttliche Verzerrung | Verzerrung durch göttliche Quellen |
+| Divine Gloom | Göttliche Düsternis | Form des Göttlichen Aufstiegs; Verlust weltlichen Wissens |
+| Divine Form | Göttliche Gestalt | Form des Göttlichen Aufstiegs; engelhaftes Erscheinungsbild |
+| Divine Unity | Göttliche Einheit | Form des Göttlichen Aufstiegs; Verkörperung einer Tugend |
+| Miraculous Abilities | Wundersame Fertigkeiten | Oberbegriff für Heilige Kräfte als Übernatürliche Fertigkeiten |
+| Holy Societates | Heilige Societates | Traditionen, die Heilige Magie als Bevorzugte Fertigkeit lehren |
+
+### Heilige Reichweiten, Dauern und Ziele / Holy R/D/T
+
+| Englisch (EN) | Deutsch (DE) | Äquivalent | Anmerkung |
+|---|---|---|---|
+| Presence (Range) | Präsenz | Stimme | Heilige Reichweite |
+| Communion (Range) | Kommunion | Arkane Verbindung | Heilige Reichweite |
+| Recitation (Duration) | Rezitation | Konzentration | Heilige Dauer |
+| Office (Duration) | Offizium | Durchmesser | Heilige Dauer |
+| Devotion (Duration) | Andacht | Sonne | Heilige Dauer |
+| Sabbath (Duration) | Sabbat | Sonne | Heilige Dauer |
+| 40 (Duration) | 40 | Mond | Heilige Dauer |
+| Fast (Duration) | Fasten | Mond | Heilige Dauer |
+| Grace (Duration) | Gnade | Jahr | Heilige Dauer |
+| Sin (Target) | Sünde | Individuum | Heiliges Ziel |
+| Faith (Target) | Glaube | Gruppe | Heiliges Ziel |
+| Dominion (Target) | Dominium | Grenze | Heiliges Ziel |
+
+### Heilige und Heiligenkategorien / Saints
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Patron Saint | Schutzpatron | Persönlicher Heiliger eines Charakters |
+| Greater Saint | Großer Heiliger | Göttliche Macht 75 |
+| Area Saint | Gebietsheiliger | Göttliche Macht 50 |
+| Local Saint | Lokaler Heiliger | Göttliche Macht 25 |
+| Trial by Ordeal | Gottesurteil | Gerichtliche Prüfung durch göttliches Eingreifen |
+
+### Ars Notoria / Ars Notoria
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Recitation Score | Rezitationswert | Int + Ars Notoria + Modifikator |
+| Recitation Total | Rezitationssumme | Rezitationswert + Stresswurf |
+| Ring (of Solomon) | Ring (Salomons) | Stufe der Ars-Notoria-Weisheit (1–7) |
+| notae | notae | Lat.; Einzelformeln der Ars Notoria |
+| Oration | Oration | Gebete der Ars Notoria |
+
+### Traditionen und Eigennamen / Traditions
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Cantores / Cantor | Cantores / Cantor | Lat.; christliche Musikertradition |
+| Neriusians | Nerianer | Anhänger des Priorats des Hl. Nerius |
+| The Neriusian Portal | Das Nerianische Portal | CrVi65; Ritualzauber, erzeugt irdische Regio |
+
+---
+
+*Quellen: Ars Magica Definitive Edition Core Rules (Atlas Games, 2024) · Ars Magica 5e – Sphären der Macht: Magie (Atlas Games) · Ars Magica 5e – Sphären der Macht: Das Infernale (Atlas Games) · Ars Magica 5e – Sphären der Macht: Das Göttliche (Atlas Games) · Deutsche Übersetzung (ArsMagica_DE_Gesamt_work.md)*

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { abilityDisplayName, groupAbilitiesByCategory } from '../derive';
+  import { abilityLabel, groupAbilitiesByCategory } from '../derive';
+  import { tooltip, type TooltipContent } from '../actions';
 
   const groups = $derived(store.ruleset ? groupAbilitiesByCategory(store.ruleset) : []);
   const selected = $derived(new Set((store.entity.ability_scores ?? []).map((a) => a.ability)));
@@ -13,9 +14,24 @@
 
   function name(abilityId: string): string {
     if (!store.ruleset) return abilityId;
-    return abilityDisplayName(store.ruleset, abilityId, undefined, (key) =>
-      store.t('param-hint', { label: store.t(`param-label-${key}`) }),
+    return abilityLabel(
+      store.ruleset,
+      abilityId,
+      undefined,
+      (key) => store.t('param-hint', { label: store.t(`param-label-${key}`) }),
+      store.t('ability-requires-training-marker'),
     );
+  }
+
+  // Description + example specialties surface as a hover/focus tooltip, keeping
+  // each row a single compact line.
+  function tip(abilityId: string): TooltipContent {
+    const entry = store.ruleset?.i18n[abilityId];
+    return {
+      text: entry?.description ?? undefined,
+      listLabel: store.t('ability-specialties-label'),
+      list: entry?.specialties ?? [],
+    };
   }
 </script>
 
@@ -31,6 +47,7 @@
               class="pick-row"
               disabled={!isParameterized(ability.id) && selected.has(ability.id)}
               onclick={() => store.addAbility(ability.id)}
+              use:tooltip={tip(ability.id)}
               data-testid="add-{ability.id}"
             >
               <span class="item-name">{name(ability.id)}</span>
