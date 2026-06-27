@@ -93,7 +93,17 @@ Prompt context (paste PROJECT_CONTEXT below + this):
 > Run: cargo test, cargo clippy (warnings as errors), cargo fmt --check,
 > cargo tarpaulin -p arm-rules --out json --output-dir tmp/
 >
-> If ui/ exists, also run its tests/lint/format. If not, skip — do NOT report it.
+> If ui/ exists, also run its type-check, tests, lint, and format:
+> `cd ui && npm run check && npm run test:unit && npm run lint && npm run format:check`.
+> `npm run check` (svelte-check) is MANDATORY: vitest does NOT type-check, so TS
+> type errors (including in test files) pass `test:unit` yet break the build.
+> If ui/ does not exist, skip — do NOT report it.
+>
+> Then run the FULL RELEASE APP COMPILE (mandatory, the authoritative gate):
+> `cargo tauri build --no-bundle`. This runs the frontend build (svelte-check +
+> vite) via beforeBuildCommand AND compiles the release binary — the only step
+> that exercises the shipped production code path. A failure here is ALWAYS a
+> critical finding, even if every other gate is green.
 >
 > Check for ALL of the following:
 > 1. Test coverage must reach 95%. Report exact percentage. List uncovered functions.
@@ -106,6 +116,8 @@ Prompt context (paste PROJECT_CONTEXT below + this):
 > 8. Test naming
 > 9. Missing roundtrip/property tests for serialization
 > 10. Missing tests for error message content
+> 11. Frontend type-check (`npm run check`) clean
+> 12. Full release app compile (`cargo tauri build --no-bundle`) succeeds
 
 ### After reviews complete
 
@@ -130,15 +142,22 @@ For each category (architecture, API surface, QA) that has findings:
 4. Repeat for API surface and QA fixers.
 
 Each fixer agent must run `cargo test -p arm-rules` after fixing and ensure tests pass.
-The QA fixer must also run clippy, fmt, and tarpaulin.
+A fixer that touched ui/ must also run `cd ui && npm run check` (svelte-check) so TS
+type errors are caught — vitest does not type-check. The QA fixer must also run clippy,
+fmt, and tarpaulin.
 
 ### Phase 4: Verify
 
 Run a verification agent (or bash commands directly) to confirm:
-1. `cargo test -p arm-rules` — all pass
-2. `cargo clippy -p arm-rules -- -D warnings` — clean
-3. `cargo fmt -p arm-rules -- --check` — clean
+1. `cargo test --workspace` — all pass
+2. `cargo clippy --workspace -- -D warnings` — clean
+3. `cargo fmt --check` — clean
 4. `cargo tarpaulin -p arm-rules --out json --output-dir tmp/` — coverage percentage
+5. If ui/ exists: `cd ui && npm run check && npm run test:unit && npm run lint && npm run format:check` — all clean
+6. **FULL RELEASE APP COMPILE (mandatory): `cargo tauri build --no-bundle`** — must
+   succeed. This is the only gate that type-checks the frontend and builds the
+   production app/binary; `cargo test`/`clippy` and vitest do not. Convergence
+   (Phase 5) MUST NOT be declared unless this passes.
 
 Post results to chat.
 
