@@ -19,7 +19,7 @@
       abilityId,
       undefined,
       (key) => store.t('param-hint', { label: store.t(`param-label-${key}`) }),
-      store.t('ability-supernatural-marker'),
+      store.t('ability-requires-training-marker'),
     );
   }
 

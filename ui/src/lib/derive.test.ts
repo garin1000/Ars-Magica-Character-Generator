@@ -481,16 +481,29 @@ describe('abilityLabel', () => {
 
   const placeholder = (key: string) => `(${key})`;
 
-  it('appends the supernatural marker for a Supernatural Ability', () => {
-    const ruleset = withAbilityNames([{ id: 'ability.second_sight', category: 'supernatural' }], {
-      'ability.second_sight': { name: 'Second Sight' },
-    });
+  it('appends the marker for an asterisked (requires_training) ability', () => {
+    const ruleset = withAbilityNames(
+      [{ id: 'ability.second_sight', category: 'supernatural', requires_training: true }],
+      {
+        'ability.second_sight': { name: 'Second Sight' },
+      },
+    );
     expect(abilityLabel(ruleset, 'ability.second_sight', undefined, placeholder, '*')).toBe(
       'Second Sight*',
     );
   });
 
-  it('does not mark a non-supernatural ability', () => {
+  it('marks an asterisked ability that is not Supernatural (driven by the flag, not category)', () => {
+    const ruleset = withAbilityNames(
+      [{ id: 'ability.artes_liberales', category: 'academic', requires_training: true }],
+      { 'ability.artes_liberales': { name: 'Artes Liberales' } },
+    );
+    expect(abilityLabel(ruleset, 'ability.artes_liberales', undefined, placeholder, '*')).toBe(
+      'Artes Liberales*',
+    );
+  });
+
+  it('does not mark an ability usable untrained', () => {
     const ruleset = withAbilityNames([{ id: 'ability.awareness', category: 'general' }], {
       'ability.awareness': { name: 'Awareness' },
     });

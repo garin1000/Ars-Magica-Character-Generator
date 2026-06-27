@@ -56,8 +56,11 @@ ability-category-academic = Akademisch
 ability-category-arcane = Arkan
 ability-category-martial = Kampf
 ability-category-supernatural = Übernatürlich
-# Nachgestellte Markierung hinter dem Namen einer Übernatürlichen Fertigkeit, gemäß Regelwerk.
-ability-supernatural-marker = *
+# Nachgestellte Markierung hinter dem Namen einer „mit Stern“ versehenen
+# Fertigkeit – einer Fertigkeit, die ohne mindestens 1 Erfahrungspunkt nicht
+# einsetzbar ist (kein ungelernter Wurf), gemäß Regelwerk. Betrifft allgemeine,
+# akademische, arkane und übernatürliche Fertigkeiten.
+ability-requires-training-marker = *
 
 # Eigenschaften-Punkteanzeige.
 characteristic-points = Punkte: { $used } / { $budget }

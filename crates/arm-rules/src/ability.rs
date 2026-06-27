@@ -19,7 +19,7 @@
 use serde::{Deserialize, Deserializer, Serialize};
 use std::fmt;
 
-use crate::types::{Id, SourceRef};
+use crate::types::{Id, SourceRef, is_false};
 
 /// The five Ability categories.
 ///
@@ -68,6 +68,20 @@ pub struct Ability {
     /// allow only one instance per character.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parameter: Option<String>,
+    /// Whether this Ability is "asterisked" in the rulebook: it cannot be used
+    /// without at least one experience point in it — there is no untrained roll.
+    /// This is an independent per-ability property, **not** derived from
+    /// `category`: it is true for ~50 Core abilities spanning General (e.g.
+    /// (Area) Lore, Chirurgy), Academic, Arcane, and all Supernatural abilities.
+    /// The UI renders a trailing `*` after the name when this is set.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4157 (the Jack of
+    /// All Trades Virtue spells out the rule: "Characters without this Virtue
+    /// cannot even attempt rolls on an asterisked Ability without at least one
+    /// experience point in it."). Each asterisked ability's `####` heading in the
+    /// Abilities chapter (`:7273-7786`) carries the `*` that sets this flag.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub requires_training: bool,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
@@ -248,7 +262,28 @@ mod tests {
         let ability: Ability = serde_json::from_str(json).unwrap();
         assert_eq!(ability.id, Id::new("ability.awareness"));
         assert_eq!(ability.category, AbilityCategory::General);
+        // Absent `requires_training` defaults to false (Awareness is usable untrained).
+        assert!(!ability.requires_training);
         let back = serde_json::to_string(&ability).unwrap();
+        assert_eq!(serde_json::from_str::<Ability>(&back).unwrap(), ability);
+        // A non-asterisked ability omits the flag from canonical JSON.
+        assert!(!back.contains("requires_training"));
+    }
+
+    #[test]
+    fn requires_training_roundtrips_and_is_independent_of_category() {
+        // Artes Liberales is Academic and asterisked; the flag is its own property.
+        let json = r#"{
+          "id": "ability.artes_liberales",
+          "category": "academic",
+          "requires_training": true,
+          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7307, 7320] }
+        }"#;
+        let ability: Ability = serde_json::from_str(json).unwrap();
+        assert!(ability.requires_training);
+        assert_eq!(ability.category, AbilityCategory::Academic);
+        let back = serde_json::to_string(&ability).unwrap();
+        assert!(back.contains("\"requires_training\":true"));
         assert_eq!(serde_json::from_str::<Ability>(&back).unwrap(), ability);
     }
 

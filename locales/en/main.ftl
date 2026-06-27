@@ -56,8 +56,10 @@ ability-category-academic = Academic
 ability-category-arcane = Arcane
 ability-category-martial = Martial
 ability-category-supernatural = Supernatural
-# Trailing marker shown after a Supernatural Ability's name, per the rulebook.
-ability-supernatural-marker = *
+# Trailing marker shown after the name of an "asterisked" Ability — one that
+# cannot be used without at least one experience point in it (no untrained roll),
+# per the rulebook. Spans General, Academic, Arcane, and Supernatural abilities.
+ability-requires-training-marker = *
 
 # Characteristic point-buy readout.
 characteristic-points = Points: { $used } / { $budget }

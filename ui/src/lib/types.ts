@@ -129,6 +129,10 @@ export interface Ability {
   // the player-supplied value, naming the {key} placeholder in the localized name
   // and the `param-label-<key>` Fluent label. Absent for plain abilities.
   parameter?: string | null;
+  // "Asterisked" in the rulebook: cannot be used without at least one experience
+  // point in it (no untrained roll). Independent of category; drives the trailing
+  // `*` marker. Absent/false for abilities usable untrained.
+  requires_training?: boolean;
 }
 
 // One row of the Ability XP advancement table ("ABILITY To Buy" column).
