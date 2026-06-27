@@ -791,7 +791,8 @@ impl LocalizedRuleset {
     /// Use this when the caller needs more than the display name (name, summary,
     /// and description together); the field-specific helpers
     /// ([`LocalizedRuleset::display_name`], [`LocalizedRuleset::summary`],
-    /// [`LocalizedRuleset::description`]) are thin wrappers over it.
+    /// [`LocalizedRuleset::description`], [`LocalizedRuleset::specialties`]) are
+    /// thin wrappers over it.
     pub fn entry(&self, id: &Id) -> Option<&I18nEntry> {
         self.i18n.get(id)
     }
@@ -811,6 +812,15 @@ impl LocalizedRuleset {
     /// and its (optional) description are present.
     pub fn description(&self, id: &Id) -> Option<&str> {
         self.i18n.get(id).and_then(|e| e.description.as_deref())
+    }
+
+    /// Returns the localized example specialties for the given id. Yields an
+    /// empty slice when the entry is missing or lists no specialties.
+    pub fn specialties(&self, id: &Id) -> &[String] {
+        self.i18n
+            .get(id)
+            .map(|e| e.specialties.as_slice())
+            .unwrap_or(&[])
     }
 }
 
@@ -1273,6 +1283,37 @@ mod tests {
         assert_eq!(loc.description(&Id::new("virtue.puissant_ability")), None);
         // A missing id returns None for all helpers.
         assert_eq!(loc.summary(&Id::new("virtue.nonexistent")), None);
+    }
+
+    #[test]
+    fn localized_ruleset_specialties() {
+        let rs = Ruleset::from_json("arm5-core", "1", VALID_ITEMS, VALID_TYPES).unwrap();
+        let i18n = r#"{
+          "virtue.gentle_gift": {
+            "name": "Gentle Gift",
+            "specialties": ["alertness", "searching"]
+          },
+          "virtue.puissant_ability": { "name": "Puissant (Ability)" }
+        }"#;
+        let loc = LocalizedRuleset::new(rs, i18n).unwrap();
+
+        // Specialties round-trip through the entry and the helper.
+        assert_eq!(
+            loc.entry(&Id::new("virtue.gentle_gift"))
+                .unwrap()
+                .specialties,
+            vec!["alertness".to_string(), "searching".to_string()]
+        );
+        assert_eq!(
+            loc.specialties(&Id::new("virtue.gentle_gift")),
+            &["alertness".to_string(), "searching".to_string()]
+        );
+        // An entry that omits specialties yields an empty slice, as does a miss.
+        assert!(
+            loc.specialties(&Id::new("virtue.puissant_ability"))
+                .is_empty()
+        );
+        assert!(loc.specialties(&Id::new("virtue.nonexistent")).is_empty());
     }
 
     #[test]

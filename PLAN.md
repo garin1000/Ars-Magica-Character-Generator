@@ -203,6 +203,14 @@ components from M2 (V/F) and M3 (characteristics, abilities).
 
 - [ ] Complete V/F catalogue from ArM5 core book
 - [ ] Complete Abilities catalogue
+      — **staged on the `full-abilities` branch**: the full 78-ability Core Rules
+      catalogue (en + de descriptions, specialties, `requires_training` flags) is
+      already authored there. The engine, i18n schema, and UI on `main` already
+      support it; `main` currently ships only the 23-ability seed set. Pulling it
+      over is a data-only widening — re-add the dropped ability entries to
+      `rules/core/abilities.json` and `rules/i18n/{en,de}/abilities.json`, then
+      restore the `78`/`21`/`50` counts in `tests/data_integrity.rs` and the `78`
+      in `crates/arm-app/tests/commands.rs`.
 - [ ] Complete Arts
 - [ ] Complete Houses
 - [ ] Complete Boons & Hooks

@@ -69,9 +69,20 @@ export interface CategoryGroup {
 }
 
 /**
- * Point items grouped by category, both groups and items sorted by id.
- * When `kinds` is given, only items whose `kind` is in it are kept (used to
- * split the picker into separate Virtue and Flaw lists).
+ * Sort key for an item/ability: its localized display name, so lists order
+ * alphabetically in the active language (German names sort as German words).
+ * Parameter placeholders are unwrapped (`{area} Lore` → `area Lore`) so a
+ * parameterized entry sorts by its visible word, not the `{` glyph.
+ */
+function localizedSortKey(localized: LocalizedRuleset, id: string): string {
+  return (localized.i18n[id]?.name ?? id).replace(/[{}]/g, '');
+}
+
+/**
+ * Point items grouped by category; groups by category id, items alphabetically
+ * by localized name within each group. When `kinds` is given, only items whose
+ * `kind` is in it are kept (used to split the picker into separate Virtue and
+ * Flaw lists).
  */
 export function groupByCategory(localized: LocalizedRuleset, kinds?: ItemKind[]): CategoryGroup[] {
   const groups = new Map<string, PointItem[]>();
@@ -84,7 +95,9 @@ export function groupByCategory(localized: LocalizedRuleset, kinds?: ItemKind[])
   return [...groups.entries()]
     .map(([category, items]) => ({
       category,
-      items: items.sort((a, b) => a.id.localeCompare(b.id)),
+      items: items.sort((a, b) =>
+        localizedSortKey(localized, a.id).localeCompare(localizedSortKey(localized, b.id)),
+      ),
     }))
     .sort((a, b) => a.category.localeCompare(b.category));
 }
@@ -174,6 +187,27 @@ export function abilityDisplayName(
   return displayName(localized, abilityId, params, placeholderLabel);
 }
 
+/**
+ * Localized ability name with a trailing marker (the rulebook's `*`) appended
+ * for "asterisked" abilities — those that cannot be used without at least one
+ * experience point in it (the ability's `requires_training` flag). This spans
+ * General, Academic, Arcane, and all Supernatural abilities, so it is driven by
+ * the per-ability flag, not by category. The marker text is passed in (from the
+ * `ability-requires-training-marker` Fluent string) so no glyph is hardcoded
+ * here. Abilities usable untrained are returned unmarked.
+ */
+export function abilityLabel(
+  localized: LocalizedRuleset,
+  abilityId: string,
+  value: string | null | undefined,
+  placeholderLabel: (key: string) => string,
+  trainingMarker: string,
+): string {
+  const name = abilityDisplayName(localized, abilityId, value, placeholderLabel);
+  const requiresTraining = localized.ruleset.abilities?.[abilityId]?.requires_training ?? false;
+  return requiresTraining ? `${name}${trainingMarker}` : name;
+}
+
 export interface AbilityGroup {
   category: AbilityCategory;
   abilities: Ability[];
@@ -187,7 +221,10 @@ const ABILITY_CATEGORY_ORDER: AbilityCategory[] = [
   'supernatural',
 ];
 
-/** Catalogue abilities grouped by category in book order, each group sorted by id. */
+/**
+ * Catalogue abilities grouped by category in book order (the original type
+ * ordering), each group sorted alphabetically by localized name.
+ */
 export function groupAbilitiesByCategory(localized: LocalizedRuleset): AbilityGroup[] {
   const groups = new Map<AbilityCategory, Ability[]>();
   for (const ability of Object.values(localized.ruleset.abilities ?? {})) {
@@ -197,6 +234,10 @@ export function groupAbilitiesByCategory(localized: LocalizedRuleset): AbilityGr
   }
   return ABILITY_CATEGORY_ORDER.filter((c) => groups.has(c)).map((category) => ({
     category,
-    abilities: groups.get(category)!.sort((a, b) => a.id.localeCompare(b.id)),
+    abilities: groups
+      .get(category)!
+      .sort((a, b) =>
+        localizedSortKey(localized, a.id).localeCompare(localizedSortKey(localized, b.id)),
+      ),
   }));
 }

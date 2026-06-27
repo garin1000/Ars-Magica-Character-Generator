@@ -1,3 +1,4 @@
+use arm_rules::AbilityCategory;
 use arm_rules::Characteristic;
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset};
 use arm_rules::types::*;
@@ -48,6 +49,10 @@ fn shipped_data_passes_integrity_check() {
 #[test]
 fn shipped_abilities_and_characteristics_load() {
     let rs = load_ruleset();
+    // The seed Ability catalogue ships (23 abilities covering all five categories
+    // and the full early-childhood restricted list). The complete Core Rules
+    // catalogue (78 abilities) is staged on the `full-abilities` branch and is
+    // pulled over later in the plan — see crates/arm-rules/RULES.md.
     assert_eq!(rs.ability_count(), 23, "exact shipped ability count");
     assert!(rs.ability(&Id::new("ability.awareness")).is_some());
     // The whole childhood restricted list ships (Core Rules 2378).
@@ -66,6 +71,52 @@ fn shipped_abilities_and_characteristics_load() {
     ] {
         assert!(rs.ability(&Id::new(id)).is_some(), "missing {id}");
     }
+
+    // Supernatural Abilities ship and carry the supernatural category.
+    for id in [
+        "ability.second_sight",
+        "ability.premonitions",
+        "ability.animal_ken",
+    ] {
+        let ability = rs
+            .ability(&Id::new(id))
+            .expect("supernatural ability present");
+        assert_eq!(
+            ability.category,
+            AbilityCategory::Supernatural,
+            "{id} must be supernatural"
+        );
+    }
+    assert_eq!(
+        rs.abilities()
+            .filter(|a| a.category == AbilityCategory::Supernatural)
+            .count(),
+        3,
+        "exact shipped supernatural ability count"
+    );
+
+    // The `*` marker is the per-ability `requires_training` flag (cannot be used
+    // untrained), NOT the supernatural category: it spans General/Academic/Arcane
+    // too. Source: Core Rules :4157 (Jack of All Trades) — heading asterisks set it.
+    for (id, expected) in [
+        ("ability.artes_liberales", true), // Academic, asterisked
+        ("ability.magic_theory", true),    // Arcane, asterisked
+        ("ability.area_lore", true),       // General, asterisked
+        ("ability.second_sight", true),    // Supernatural, asterisked
+        ("ability.awareness", false),      // General, usable untrained
+        ("ability.penetration", false),    // Arcane but explicitly not asterisked
+    ] {
+        let ability = rs.ability(&Id::new(id)).expect("ability present");
+        assert_eq!(
+            ability.requires_training, expected,
+            "{id} requires_training must be {expected}"
+        );
+    }
+    assert_eq!(
+        rs.abilities().filter(|a| a.requires_training).count(),
+        8,
+        "exact shipped count of asterisked (requires_training) abilities"
+    );
 
     let chars = rs
         .characteristic_rules()

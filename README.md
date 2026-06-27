@@ -89,7 +89,10 @@ Active development. The engine, Tauri integration, and a direct-entry UI are in
 place and tested end to end (engine unit tests, webview-free command integration
 tests, and a real-binary `tauri-driver` E2E). Characters can be built with
 virtues/flaws, point-buy Characteristics, and whole bought Ability scores plus a
-banked-XP pool, all validated live. Score-boosting Virtues (Puissant Ability,
+banked-XP pool, all validated live. A seed Ability catalogue (English + German)
+ships with localized descriptions, example specialties, and the "cannot be used
+untrained" marker; the complete Core Rules catalogue is staged for a later
+milestone. Score-boosting Virtues (Puissant Ability,
 Great Characteristic) compute an effective score that drives prerequisites, the
 +5 characteristic ceiling, and a read-only display badge. The guided creation
 wizard (with the life-stage XP flow), magus support, and full data population are

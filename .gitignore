@@ -1,6 +1,7 @@
 /target
 node_modules/
 dist/
+dist-win/
 .DS_Store
 *.swp
 *.swo

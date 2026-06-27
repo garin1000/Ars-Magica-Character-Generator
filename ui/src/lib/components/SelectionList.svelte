@@ -1,7 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import { abilityDisplayName, displayName } from '../derive';
-  import { reserveTagSpace } from '../actions';
+  import { reserveTagSpace, tooltip, type TooltipContent } from '../actions';
   import type { ItemKind } from '../types';
   import ParameterPicker from './ParameterPicker.svelte';
 
@@ -25,6 +25,12 @@
 
   function hint(key: string): string {
     return store.t('param-hint', { label: store.t(`param-label-${key}`) });
+  }
+
+  // Tooltip from the item's localized rules text (description, else summary).
+  function tip(itemId: string): TooltipContent {
+    const entry = store.ruleset?.i18n[itemId];
+    return { text: entry?.description ?? entry?.summary ?? undefined };
   }
 
   // Resolve a filled param value (a ref slug) to its display label so the tag
@@ -60,7 +66,7 @@
         {@const item = store.ruleset?.ruleset.point_items[selection.ref]}
         <li>
           <div class="selection-row">
-            <span class="name-wrap" use:reserveTagSpace>
+            <span class="name-wrap" use:reserveTagSpace use:tooltip={tip(selection.ref)}>
               {#if item}
                 <span class="badges">
                   <span class="badge type">{store.t(`category-${item.category}`)}</span>

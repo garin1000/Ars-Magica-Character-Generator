@@ -40,6 +40,15 @@ characteristic-pre = Presence
 characteristic-com = Communication
 characteristic-dex = Dexterity
 characteristic-qik = Quickness
+# Short tooltip descriptions, condensed from the Core Rules Characteristics chapter.
+characteristic-desc-int = The power to analyze and synthesize concepts, plus simple memory; paramount for the Hermetic Arts.
+characteristic-desc-per = The ability to notice things and powers of intuition; key to Awareness, Hunt, and Folk Ken.
+characteristic-desc-str = Physical power — lifting, pushing, and moving — and the force behind a melee weapon.
+characteristic-desc-sta = Staying power of body and mind; spellcasting, carrying loads, and withstanding wounds all rely on it.
+characteristic-desc-pre = Appearance, demeanor, and charisma — making an impression, leading, and intimidating.
+characteristic-desc-com = The aptitude for self-expression — influencing and communicating with others.
+characteristic-desc-dex = Agility and skillful, accurate handling of objects; hand-eye coordination and bodily grace.
+characteristic-desc-qik = Reaction speed and reflexes — who acts first in haste; modified by Encumbrance.
 
 # Ability category labels, keyed by the engine's category value.
 ability-category-general = General
@@ -47,6 +56,10 @@ ability-category-academic = Academic
 ability-category-arcane = Arcane
 ability-category-martial = Martial
 ability-category-supernatural = Supernatural
+# Trailing marker shown after the name of an "asterisked" Ability — one that
+# cannot be used without at least one experience point in it (no untrained roll),
+# per the rulebook. Spans General, Academic, Arcane, and Supernatural abilities.
+ability-requires-training-marker = *
 
 # Characteristic point-buy readout.
 characteristic-points = Points: { $used } / { $budget }
@@ -60,6 +73,8 @@ xp-spent = Spent: { $spent }
 xp-available = Available: { $available }
 ability-score-label = Score
 ability-specialty-label = Specialty
+# Heading for the rulebook's list of example specialties shown in the picker.
+ability-specialties-label = Specialties
 ability-add = Add ability
 ability-increment = Raise
 ability-decrement = Lower
@@ -83,6 +98,10 @@ param-label-technique = Technique
 param-label-area = Area
 param-label-language = Language
 param-label-characteristic = Characteristic
+param-label-organization = Organization
+param-label-mystery_cult = Mystery Cult
+param-label-craft = Craft
+param-label-profession = Profession
 
 # Effective score shown beside a base score when a virtue bonus applies.
 effective-score = { $score }
