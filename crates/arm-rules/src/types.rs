@@ -522,7 +522,7 @@ pub struct FlawCategoryCap {
 
 /// `skip_serializing_if` predicate: omits a `bool` field from canonical JSON
 /// when it holds its `false` default, keeping the common case out of the data.
-fn is_false(b: &bool) -> bool {
+pub(crate) fn is_false(b: &bool) -> bool {
     !*b
 }
 

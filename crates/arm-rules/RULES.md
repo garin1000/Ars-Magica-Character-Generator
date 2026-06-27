@@ -218,13 +218,22 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   (Craft (Type)), `profession` (Profession (Type)). The early-childhood
   restricted list (`:2378`) is a subset; native language is a *specialty* of
   `ability.living_language`, not a separate id.
-- Category vs. the `*` marker: the engine's `category` is the book's `(Type)`
-  label (English source of truth). The German translation table
-  (`rules/source/de/translation-tables/fertigkeiten.md`) marks some abilities
-  with `*` that the Core Rules type as **Arcane** (Heartbeast, Faerie Magic,
-  Enigmatic Wisdom) or **General** (Legerdemain); the English category governs,
-  so those are not stored as Supernatural. The UI renders a trailing `*` for the
-  Supernatural category only (`ability-supernatural-marker` Fluent key).
+- The `*` marker (`requires_training` flag): an *asterisked* Ability cannot be
+  used without at least one experience point in it — there is no untrained roll.
+  > "Characters without this Virtue cannot even attempt rolls on an asterisked
+  > Ability without at least one experience point in it." — Jack of All Trades,
+  > `Ars Magica - Definitive Edition (Core Rules).md:4157`.
+
+  This is an **independent per-ability property, not derived from `category`**:
+  50 of the 78 Core abilities are asterisked, spanning General (e.g. (Area) Lore,
+  Chirurgy, Legerdemain), Academic, Arcane, and all Supernatural abilities.
+  Notably Penetration and most combat/General abilities are *not* asterisked,
+  while Parma Magica is. The flag is set from the `*` on each ability's `####`
+  heading (`:7273-7786`); `Ability.requires_training` (`ability.rs`) stores it and
+  the UI renders the trailing `*` via the `ability-requires-training-marker`
+  Fluent key. (The German translation table's `*` legend carries the same
+  meaning; its `Typ` column is informational — the English `(Type)` label remains
+  the source of truth for `category`.)
 - i18n: `rules/i18n/{en,de}/abilities.json` carry per-ability `name`,
   a 1–2 sentence `description` (an authored condensation of the whole rulebook
   entry), and example `specialties`. German names follow the canonical

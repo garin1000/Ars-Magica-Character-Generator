@@ -188,21 +188,24 @@ export function abilityDisplayName(
 }
 
 /**
- * Localized ability name with a trailing supernatural marker (the rulebook's
- * `*`) appended for Supernatural Abilities only. The marker text is passed in
- * (from the `ability-supernatural-marker` Fluent string) so no glyph is
- * hardcoded here. Non-supernatural abilities are returned unmarked.
+ * Localized ability name with a trailing marker (the rulebook's `*`) appended
+ * for "asterisked" abilities — those that cannot be used without at least one
+ * experience point in it (the ability's `requires_training` flag). This spans
+ * General, Academic, Arcane, and all Supernatural abilities, so it is driven by
+ * the per-ability flag, not by category. The marker text is passed in (from the
+ * `ability-requires-training-marker` Fluent string) so no glyph is hardcoded
+ * here. Abilities usable untrained are returned unmarked.
  */
 export function abilityLabel(
   localized: LocalizedRuleset,
   abilityId: string,
   value: string | null | undefined,
   placeholderLabel: (key: string) => string,
-  supernaturalMarker: string,
+  trainingMarker: string,
 ): string {
   const name = abilityDisplayName(localized, abilityId, value, placeholderLabel);
-  const category = localized.ruleset.abilities?.[abilityId]?.category;
-  return category === 'supernatural' ? `${name}${supernaturalMarker}` : name;
+  const requiresTraining = localized.ruleset.abilities?.[abilityId]?.requires_training ?? false;
+  return requiresTraining ? `${name}${trainingMarker}` : name;
 }
 
 export interface AbilityGroup {

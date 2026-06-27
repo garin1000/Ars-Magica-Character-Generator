@@ -33,7 +33,11 @@ Thematisch gegliederte Übersetzungstabellen für die deutsche Ausgabe von Ars M
 | [kampf.md](kampf.md) | Kampfbegriffe, Formeln, Wundstufen, Erschöpfung, Manöver, Gruppenregeln, Rüstungen, Waffentabellen | Core Rules + ArsMagica_DE_Gesamt_work.md |
 | [konvent-boons-hooks.md](konvent-boons-hooks.md) | Konventsvorzüge und -haken: Mechanik, vollständige Liste aller Kleinen/Großen Vorzüge und Haken nach Kategorie | Core Rules + ArsMagica_DE_Gesamt_work.md |
 | [tiere-kreaturen.md](tiere-kreaturen.md) | Tiere und Kreaturen: Statblock-Begriffe, Größentabelle, vollständige Eigenschaftsliste (Tiertugenden), natürliche Waffen, Grundfertigkeiten | Core Rules + ArsMagica_DE_Gesamt_work.md |
-| [magische-qualitaeten.md](magische-qualitaeten.md) | Magische Qualitäten und Mängel: alle Großen/Kleinen Qualitäten und Mängel, häufige magische Kräfte | RoP:M Kap. 4 |
+| [magische-qualitaeten.md](magische-qualitaeten.md) | Magische Qualitäten und Mängel: alle Großen/Kleinen Qualitäten und Mängel | RoP:M Kap. 4 |
+| [kreaturenkraefte.md](kreaturenkraefte.md) | Häufige Kreaturenkräfte (sphärenunabhängig) | RoP:M |
+| [goettliche-kraefte.md](goettliche-kraefte.md) | Göttliche Kräfte: Engelskräfte nach Chor, allgemeine Engel-Mechaniken, Reliquienkräfte | RoP:D |
+| [infernale-kraefte.md](infernale-kraefte.md) | Infernale Kräfte und Wesen: Dämonenkräfte nach Ordnung/Familie, Dämonentypen | RoP:I |
+| [islamische-begriffe.md](islamische-begriffe.md) | Islamische Fachbegriffe: religiöse Grundbegriffe, Fünf Säulen, Recht, Mystik, Konfessionen | RoP:D Kap. 5 |
 
 ---
 

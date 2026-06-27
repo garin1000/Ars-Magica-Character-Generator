@@ -69,8 +69,7 @@ fn shipped_abilities_and_characteristics_load() {
         assert!(rs.ability(&Id::new(id)).is_some(), "missing {id}");
     }
 
-    // Supernatural Abilities ship and carry the supernatural category (the data
-    // truth behind the UI's '*' marker).
+    // Supernatural Abilities ship and carry the supernatural category.
     for id in [
         "ability.second_sight",
         "ability.dowsing",
@@ -92,6 +91,29 @@ fn shipped_abilities_and_characteristics_load() {
             .count(),
         21,
         "exact shipped supernatural ability count"
+    );
+
+    // The `*` marker is the per-ability `requires_training` flag (cannot be used
+    // untrained), NOT the supernatural category: it spans General/Academic/Arcane
+    // too. Source: Core Rules :4157 (Jack of All Trades) — heading asterisks set it.
+    for (id, expected) in [
+        ("ability.artes_liberales", true), // Academic, asterisked
+        ("ability.parma_magica", true),    // Arcane, asterisked
+        ("ability.area_lore", true),       // General, asterisked
+        ("ability.second_sight", true),    // Supernatural, asterisked
+        ("ability.awareness", false),      // General, usable untrained
+        ("ability.penetration", false),    // Arcane but explicitly not asterisked
+    ] {
+        let ability = rs.ability(&Id::new(id)).expect("ability present");
+        assert_eq!(
+            ability.requires_training, expected,
+            "{id} requires_training must be {expected}"
+        );
+    }
+    assert_eq!(
+        rs.abilities().filter(|a| a.requires_training).count(),
+        50,
+        "exact shipped count of asterisked (requires_training) abilities"
     );
 
     let chars = rs
