@@ -162,6 +162,11 @@ export interface Ruleset {
   abilities?: Record<string, Ability>;
   advancement?: AbilityXpRow[];
   characteristic_rules?: CharacteristicRules | null;
+  // Derived taxonomy surfaced by the engine so the UI never re-hardcodes the
+  // magnitude point weights or the ability-category order. Source of truth is the
+  // Rust `Magnitude::points` / `AbilityCategory::ALL`.
+  magnitude_points: Record<Magnitude, number>;
+  ability_category_order: AbilityCategory[];
 }
 
 export interface LocalizedRuleset {

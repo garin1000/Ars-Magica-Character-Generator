@@ -113,6 +113,18 @@ the `rules/i18n/<lang>/` layer, not in language-neutral `core/`.
 
 ## Architecture invariants
 
+- **Catalogue size is data, never code.** The engine and UI must never assume the
+  *number* of Abilities, Virtues/Flaws, or any catalogue entry. Catalogue size is
+  purely a function of the rules JSON, so Abilities and V/F are added by editing
+  `rules/core/*.json` + `rules/i18n/<lang>/*.json` with **zero code changes** —
+  this is what keeps the executable and the rules separable (e.g. pulling the full
+  ability catalogue from the `full-abilities` branch is a data-only change). Tests
+  assert structural invariants (a known item is present, a flag/category is read
+  correctly), **never exact catalogue totals**. Fixed *taxonomies* the rules define
+  (magnitude tiers, ability categories) stay Rust enums, but the UI must not
+  re-hardcode their values — the engine surfaces them (`Magnitude::points` →
+  `Ruleset.magnitude_points`, `AbilityCategory::ALL` → `Ruleset.ability_category_order`)
+  so there is a single source of truth.
 - **Engine purity.** `arm-rules` has NO dependency on `tauri`, filesystem, or UI.
   It operates on in-memory data (`&str` / `&[u8]`), parses rulesets and entities,
   evaluates them, and returns results. Fully testable with `cargo test`.

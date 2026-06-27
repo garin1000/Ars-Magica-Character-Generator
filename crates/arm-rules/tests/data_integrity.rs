@@ -36,7 +36,8 @@ fn entity(type_id: &str, selections: Vec<Selection>) -> Entity {
 #[test]
 fn shipped_data_passes_integrity_check() {
     let rs = load_ruleset();
-    assert_eq!(rs.item_count(), 11, "exact shipped V/F count");
+    // Catalogue size is data, not code: assert key items are present, never an
+    // exact V/F total (which would break when any item is added to the JSON).
     assert_eq!(rs.profile_count(), 2, "companion + grog");
     assert!(
         rs.item(&Id::new("virtue.the_gift")).is_some(),
@@ -49,11 +50,10 @@ fn shipped_data_passes_integrity_check() {
 #[test]
 fn shipped_abilities_and_characteristics_load() {
     let rs = load_ruleset();
-    // The seed Ability catalogue ships (23 abilities covering all five categories
-    // and the full early-childhood restricted list). The complete Core Rules
-    // catalogue (78 abilities) is staged on the `full-abilities` branch and is
-    // pulled over later in the plan — see crates/arm-rules/RULES.md.
-    assert_eq!(rs.ability_count(), 23, "exact shipped ability count");
+    // Catalogue size is data, not code: assert the seed items the engine relies
+    // on are present and read correctly, never an exact ability total. The full
+    // Core Rules catalogue (staged on `full-abilities`) must be pullable as a
+    // data-only change — see crates/arm-rules/RULES.md.
     assert!(rs.ability(&Id::new("ability.awareness")).is_some());
     // The whole childhood restricted list ships (Core Rules 2378).
     for id in [
@@ -87,13 +87,6 @@ fn shipped_abilities_and_characteristics_load() {
             "{id} must be supernatural"
         );
     }
-    assert_eq!(
-        rs.abilities()
-            .filter(|a| a.category == AbilityCategory::Supernatural)
-            .count(),
-        3,
-        "exact shipped supernatural ability count"
-    );
 
     // The `*` marker is the per-ability `requires_training` flag (cannot be used
     // untrained), NOT the supernatural category: it spans General/Academic/Arcane
@@ -112,11 +105,6 @@ fn shipped_abilities_and_characteristics_load() {
             "{id} requires_training must be {expected}"
         );
     }
-    assert_eq!(
-        rs.abilities().filter(|a| a.requires_training).count(),
-        8,
-        "exact shipped count of asterisked (requires_training) abilities"
-    );
 
     let chars = rs
         .characteristic_rules()
