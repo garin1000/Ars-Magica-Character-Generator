@@ -40,7 +40,7 @@ fn load_ruleset_yields_companion_profile_and_all_items() {
 #[test]
 fn load_ruleset_yields_abilities_and_characteristics() {
     let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
-    assert_eq!(localized.ruleset.ability_count(), 23);
+    assert_eq!(localized.ruleset.ability_count(), 78);
     assert!(
         localized
             .ruleset

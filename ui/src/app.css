@@ -1,14 +1,16 @@
 :root {
-  --bg: #1b1a2e;
+  --bg: #16152a;
   --panel: #26243d;
-  --ink: #ece9f5;
-  --muted: #9b97b8;
-  --accent: #b4965a;
-  --error: #e2657a;
-  --warning: #d8a657;
-  --divider: #4d4974;
+  --ink: #f3f1fb;
+  --muted: #c3bfde;
+  --accent: #d0ac63;
+  --error: #f07a8d;
+  --warning: #e6b466;
+  --divider: #57537e;
   font-family: system-ui, sans-serif;
-  font-size: 14px;
+  /* Base size tuned for readability (the audience skews middle-aged); all rem
+     sizes scale from here. */
+  font-size: 16px;
   color-scheme: dark;
 }
 
@@ -244,7 +246,7 @@ button:disabled {
 }
 
 .category {
-  font-size: 0.7rem;
+  font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--accent);
@@ -412,7 +414,13 @@ ul {
   min-width: 0;
 }
 
+/* Selected ability rows are flex so the name grows and the spinner/specialty/×
+   sit to its right on one line; they wrap to a second line only when the panel
+   is too narrow to fit them. */
 .ability-selection li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   flex-wrap: wrap;
 }
 
@@ -464,7 +472,7 @@ ul {
 
 /* Opaque fill so the name behind the tag is hidden, not bleeding through. */
 .badge {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--accent);
   background: var(--panel);
   border: 1px solid var(--accent);
@@ -532,4 +540,33 @@ ul {
 .error {
   color: var(--error);
   font-size: 0.85rem;
+}
+
+/* Hover/focus tooltip carrying an item's description + example specialties
+   (see actions.ts `tooltip`). Appended to <body> and positioned in viewport
+   coordinates, so it is never clipped by a scrolling panel. High contrast and a
+   comfortable reading size. */
+.tooltip-pop {
+  position: fixed;
+  z-index: 1000;
+  max-width: 24rem;
+  background: #100f1f;
+  color: var(--ink);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+.tooltip-pop .tooltip-text {
+  margin: 0;
+}
+
+.tooltip-pop .tooltip-list {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-style: italic;
 }

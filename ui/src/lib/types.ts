@@ -101,6 +101,8 @@ export interface I18nEntry {
   name: string;
   summary?: string | null;
   description?: string | null;
+  // Example specialties (e.g. an Ability's example specializations). Omitted when empty.
+  specialties?: string[];
 }
 
 // The eight Characteristics, serialized as their snake_case names.

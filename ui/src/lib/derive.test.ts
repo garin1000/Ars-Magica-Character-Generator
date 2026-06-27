@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   abilityDisplayName,
+  abilityLabel,
   abilityXpSpent,
   balance,
   characteristicPointsUsed,
@@ -225,18 +226,42 @@ describe('paramValueUsage', () => {
 // --- groupByCategory() ------------------------------------------------------
 
 describe('groupByCategory', () => {
-  it('groups items by category, sorting groups and items by id', () => {
-    const ruleset = makeRuleset([
-      item({ id: 'virtue.b_general', category: 'general' }),
-      item({ id: 'virtue.a_general', category: 'general' }),
-      item({ id: 'virtue.z_hermetic', category: 'hermetic' }),
-      item({ id: 'virtue.m_hermetic', category: 'hermetic' }),
-    ]);
+  it('groups items by category, sorting items by localized name (not id)', () => {
+    // ids are in one order; localized names invert it within each group, so a
+    // name-based sort must reorder them.
+    const ruleset = makeRuleset(
+      [
+        item({ id: 'virtue.a_general', category: 'general' }),
+        item({ id: 'virtue.b_general', category: 'general' }),
+        item({ id: 'virtue.m_hermetic', category: 'hermetic' }),
+        item({ id: 'virtue.z_hermetic', category: 'hermetic' }),
+      ],
+      {
+        i18n: {
+          'virtue.a_general': { name: 'Zeal' },
+          'virtue.b_general': { name: 'Affinity' },
+          'virtue.m_hermetic': { name: 'Verditius' },
+          'virtue.z_hermetic': { name: 'Bonisagus' },
+        },
+      },
+    );
     const groups = groupByCategory(ruleset);
 
     expect(groups.map((g) => g.category)).toEqual(['general', 'hermetic']);
-    expect(groups[0].items.map((i) => i.id)).toEqual(['virtue.a_general', 'virtue.b_general']);
-    expect(groups[1].items.map((i) => i.id)).toEqual(['virtue.m_hermetic', 'virtue.z_hermetic']);
+    // Sorted by name: Affinity < Zeal, Bonisagus < Verditius.
+    expect(groups[0].items.map((i) => i.id)).toEqual(['virtue.b_general', 'virtue.a_general']);
+    expect(groups[1].items.map((i) => i.id)).toEqual(['virtue.z_hermetic', 'virtue.m_hermetic']);
+  });
+
+  it('falls back to id ordering when names are absent', () => {
+    const ruleset = makeRuleset([
+      item({ id: 'virtue.b_general', category: 'general' }),
+      item({ id: 'virtue.a_general', category: 'general' }),
+    ]);
+    expect(groupByCategory(ruleset)[0].items.map((i) => i.id)).toEqual([
+      'virtue.a_general',
+      'virtue.b_general',
+    ]);
   });
 
   it('returns an empty array for an empty ruleset', () => {
@@ -321,26 +346,54 @@ describe('abilityXpSpent', () => {
 // --- groupAbilitiesByCategory() ---------------------------------------------
 
 describe('groupAbilitiesByCategory', () => {
-  function withAbilities(abilities: Ability[]): LocalizedRuleset {
+  function withAbilities(
+    abilities: Ability[],
+    i18n: LocalizedRuleset['i18n'] = {},
+  ): LocalizedRuleset {
     const map: Record<string, Ability> = {};
     for (const a of abilities) map[a.id] = a;
     return {
       ruleset: { id: 't', version: '1', point_items: {}, type_profiles: {}, abilities: map },
-      i18n: {},
+      i18n,
     };
   }
 
-  it('groups by category in book order, sorting each group by id', () => {
+  it('groups by category in book order, sorting each group by localized name', () => {
     const groups = groupAbilitiesByCategory(
-      withAbilities([
-        { id: 'ability.magic_theory', category: 'arcane' },
-        { id: 'ability.swim', category: 'general' },
-        { id: 'ability.awareness', category: 'general' },
-        { id: 'ability.second_sight', category: 'supernatural' },
-      ]),
+      withAbilities(
+        [
+          { id: 'ability.magic_theory', category: 'arcane' },
+          { id: 'ability.swim', category: 'general' },
+          { id: 'ability.awareness', category: 'general' },
+          { id: 'ability.second_sight', category: 'supernatural' },
+        ],
+        {
+          // German names: "Schwimmen" < "Aufmerksamkeit"? No — A < S, so Awareness
+          // (Aufmerksamkeit) sorts before Swim (Schwimmen).
+          'ability.swim': { name: 'Schwimmen' },
+          'ability.awareness': { name: 'Aufmerksamkeit' },
+        },
+      ),
     );
     expect(groups.map((g) => g.category)).toEqual(['general', 'arcane', 'supernatural']);
     expect(groups[0].abilities.map((a) => a.id)).toEqual(['ability.awareness', 'ability.swim']);
+  });
+
+  it('sorts by name even when it inverts id order', () => {
+    const groups = groupAbilitiesByCategory(
+      withAbilities(
+        [
+          { id: 'ability.awareness', category: 'general' },
+          { id: 'ability.bargain', category: 'general' },
+        ],
+        {
+          'ability.awareness': { name: 'Wachsamkeit' },
+          'ability.bargain': { name: 'Feilschen' },
+        },
+      ),
+    );
+    // Feilschen < Wachsamkeit, so bargain comes first despite the id order.
+    expect(groups[0].abilities.map((a) => a.id)).toEqual(['ability.bargain', 'ability.awareness']);
   });
 
   it('is empty when the ruleset has no abilities', () => {
@@ -406,6 +459,42 @@ describe('abilityDisplayName', () => {
       'ability.awareness': { name: 'Awareness' },
     });
     expect(abilityDisplayName(ruleset, 'ability.awareness', 'ignored', placeholder)).toBe(
+      'Awareness',
+    );
+  });
+});
+
+// --- abilityLabel() ---------------------------------------------------------
+
+describe('abilityLabel', () => {
+  function withAbilityNames(
+    abilities: Ability[],
+    i18n: LocalizedRuleset['i18n'],
+  ): LocalizedRuleset {
+    const map: Record<string, Ability> = {};
+    for (const a of abilities) map[a.id] = a;
+    return {
+      ruleset: { id: 't', version: '1', point_items: {}, type_profiles: {}, abilities: map },
+      i18n,
+    };
+  }
+
+  const placeholder = (key: string) => `(${key})`;
+
+  it('appends the supernatural marker for a Supernatural Ability', () => {
+    const ruleset = withAbilityNames([{ id: 'ability.second_sight', category: 'supernatural' }], {
+      'ability.second_sight': { name: 'Second Sight' },
+    });
+    expect(abilityLabel(ruleset, 'ability.second_sight', undefined, placeholder, '*')).toBe(
+      'Second Sight*',
+    );
+  });
+
+  it('does not mark a non-supernatural ability', () => {
+    const ruleset = withAbilityNames([{ id: 'ability.awareness', category: 'general' }], {
+      'ability.awareness': { name: 'Awareness' },
+    });
+    expect(abilityLabel(ruleset, 'ability.awareness', undefined, placeholder, '*')).toBe(
       'Awareness',
     );
   });

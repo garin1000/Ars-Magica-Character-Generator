@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import { abilityDisplayName, maxAbilityScore } from '../derive';
+  import { tooltip, type TooltipContent } from '../actions';
 
   const advancement = $derived(store.ruleset?.ruleset.advancement ?? []);
   const max = $derived(maxAbilityScore(advancement));
@@ -24,6 +25,16 @@
       )?.bonus ?? 0
     );
   }
+
+  // Description + example specialties as a hover/focus tooltip, matching the picker.
+  function tip(abilityId: string): TooltipContent {
+    const entry = store.ruleset?.i18n[abilityId];
+    return {
+      text: entry?.description ?? undefined,
+      listLabel: store.t('ability-specialties-label'),
+      list: entry?.specialties ?? [],
+    };
+  }
 </script>
 
 <section class="panel">
@@ -34,7 +45,9 @@
       {#each scores as entry, i (i)}
         {@const key = paramKey(entry.ability)}
         <li>
-          <span class="item-name">{name(entry.ability, entry.parameter)}</span>
+          <span class="item-name" use:tooltip={tip(entry.ability)}
+            >{name(entry.ability, entry.parameter)}</span
+          >
           {#if key}
             <input
               type="text"
