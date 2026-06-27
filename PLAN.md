@@ -408,13 +408,28 @@ static file export (PDF/Markdown) remains M9 and can reuse this layout.
 ## Milestone 9 — Export & polish
 
 - [ ] Character sheet export (PDF and/or Markdown) — reuses the M6 character-sheet
-      window layout/components, rendering the same sections to a static file
+      window layout/components, rendering the same sections to a static file.
+      PDF path may use the Scribus fillable template — see M10 /
+      `docs/scribus-character-sheet.md`.
 - [ ] Covenant sheet export
 - [ ] Ruleset versioning & save migration
 - [ ] Multiple rulebook/supplement support
 - [ ] UI polish, accessibility
 - [ ] CI pipeline (cargo test, clippy, fmt, frontend lint, e2e)
 - [ ] Release packaging for Windows, macOS, Linux
+
+## Milestone 10 — Scribus fillable-PDF character sheet (bilingual export target)
+
+**Depends on: M5** (wizard complete). Reuses M6 sheet sections + engine derived
+values; realizes the M9 PDF-export item via a hand-maintained fillable template.
+Full detail, field inventory, and quirks: **`docs/scribus-character-sheet.md`**.
+
+- [ ] Field-ID schema & map (DE `ANNAME` → English-ASCII ID → engine slug)
+- [ ] Atomic rename of field names + all `getField()` references
+- [ ] Audit & fix the AcroForm JS (math + Scribus calculation order)
+- [ ] Extend missing fields vs the official copy-template
+- [ ] Bilingual label skins (DE + EN; field names/JS shared)
+- [ ] Export integration: arm-char-gen → FDF/XFDF keyed by the English field IDs
 
 ---
 
