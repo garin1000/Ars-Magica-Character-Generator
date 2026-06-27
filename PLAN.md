@@ -104,9 +104,10 @@ Decisions made during M3 (see `crates/arm-rules/RULES.md` and the plan archive):
 abilities store the **whole bought score + a single `unspent_xp` bank**, not
 per-ability XP (ability XP is spent in whole points, so loose XP lives in the
 bank; the effective score = bought + virtue bonuses is computed, never stored).
-The effective-score (virtue-bonus) layer was pulled forward into M3 (3d); the
-life-stage XP flow is deferred to the M5 wizard; `House`/`ArtMin` evaluation and
-the Art registry move to M4 (4a/4b).
+The effective-score & characteristic buy-limit layer (Puissant Ability's effective
+bonus; Great/Poor Characteristic shifting the buy cap/floor) was pulled forward
+into M3 (3d); the life-stage XP flow is deferred to the M5 wizard; `House`/`ArtMin`
+evaluation and the Art registry move to M4 (4a/4b).
 
 ### 3a. Engine models (TDD) — DONE
 - [x] Characteristics model (Int, Per, Str, Sta, Pre, Com, Dex, Qik) with point-buy
@@ -134,22 +135,35 @@ the Art registry move to M4 (4a/4b).
 - [x] Ability allocation component (whole-score steppers + specialty + banked-XP
       field) with live validation
 
-### 3d. Effective-score layer (TDD) — DONE
+### 3d. Effective-score & characteristic buy-limit layer (TDD) — DONE
 Pulled forward from M4: direct entry already lets a character take score-boosting
-Virtues, so the effective score must be correct now (display, `AbilityMin`, caps).
-No wizard dependency.
-- [x] Data-driven `Effect` model on `PointItem` (`ability_bonus` / `characteristic_bonus`)
-      + `max_per_target`; new `ParameterDomain::Characteristic`. Targets named by
-      the selection's param value — no Virtue IDs in engine code.
-- [x] `effective.rs`: bought + virtue bonuses, computed never stored
-- [x] Puissant Ability (+2, ≤1/Ability); `AbilityMin` uses the effective score.
+Virtues and characteristic-limit Virtues/Flaws, so effective scores and buy
+limits must be correct now (display, `AbilityMin`, caps/floors). No wizard
+dependency.
+- [x] Data-driven `Effect` model on `PointItem` (`ability_bonus` /
+      `characteristic_limit`) + `max_per_target`; new
+      `ParameterDomain::Characteristic`. Targets named by the selection's param
+      value — no Virtue IDs in engine code.
+- [x] `effective.rs`: ability effective score = bought + virtue bonuses;
+      characteristic cap/floor = base bound widened by limit shifts, clamped to
+      the `effective_max`/`effective_min` ceiling. Computed, never stored.
+- [x] Puissant Ability (+2 effective, ≤1/Ability via the default
+      `max_per_target` of 1); `AbilityMin` uses the effective score.
       Source: Core Rules.md:4814-4816
-- [x] Great Characteristic (+1, base ≥ +3, ≤2/Characteristic, +5 effective ceiling
-      via `effective_max`). Source: Core Rules.md:3987-3989
-- [x] Multiplicity generalized in `validate_duplicate_selections`; effect
-      integrity at load (`ruleset.rs`)
-- [x] UI: read-only "effective" badge beside the base score; Great Characteristic
-      target picker; Fluent + de i18n; real-binary e2e
+- [x] Great Characteristic — buy-limit shifter (+1 to the cap; base must already
+      be at +3; ≤2/Characteristic; raises the buy cap up to the +5 `effective_max`
+      ceiling; grants no effective bonus). Source: Core Rules.md:3987-3989
+- [x] Poor Characteristic — buy-limit shifter (−1 to the floor; base must already
+      be at −3; ≤2/Characteristic; lowers the buy floor down to the −5
+      `effective_min`). Source: Core Rules.md:6598-6600
+- [x] Multiplicity generalized in `validate_duplicate_selections` (default
+      1/target, grouped by `(item, params)`); parameter-relative precondition in
+      `validate_characteristic_limit_preconditions`; effect integrity at load
+      (`ruleset.rs`)
+- [x] UI: read-only "effective" badge beside abilities (Puissant); characteristic
+      steppers widen their min/max from `characteristic_caps` /
+      `characteristic_floors`; Great/Poor Characteristic target picker;
+      Fluent + de i18n; real-binary e2e
 - Deferred follow-ups, now both scheduled for **M4/4f**: *Improved Characteristics*
   (+3 point-buy pool, a budget modifier — not an effective bonus) and *Puissant
   Art* (+3, which needed the Art registry — moved forward to M4/4a with it).
