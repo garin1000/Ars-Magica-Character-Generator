@@ -55,13 +55,17 @@ mechanics carry entries; the rest are stubbed at the end.
   totals are data; see below.)
 
 #### Caps on Major virtues/flaws count
-> "You may not have more than one Major Hermetic Virtue" (magi);
 > "You may not take Major Virtues or Flaws" (grogs).
 
-- Source: `Ars Magica - Definitive Edition (Core Rules).md:2857` (magi),
-  `:2824-2830` (grogs).
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2824-2830` (grogs).
 - Implementation: `crates/arm-rules/src/validation.rs` — `validate_caps`
-  (counts items with `magnitude == Major`; cap value is data).
+  (counts items with `magnitude == Major`; cap value is data via
+  `max_major_virtues` / `max_major_flaws`).
+- **Deferred (not implemented):** the magus rule "You may not have more than one
+  Major Hermetic Virtue" (`:2857`) is a *category-restricted* cap (Hermetic Major
+  Virtues only), not a plain Major-count cap. `PointBudget` has no
+  virtue-category cap and no magus profile exists, so it is not enforced. See the
+  "Resolved: companion `max_major_virtues`" note below.
 
 #### Cap on Minor Flaws count (hard)
 > "A central character may have up to ten points of Flaws, but no more than five
@@ -188,6 +192,15 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   (the rulebook gives no explicit ability-score ceiling; the table's highest
   priced score — `max_score` — is used as the upper bound, lower bound 0). The
   check is skipped when the ruleset ships no advancement table.
+- Load-time data-integrity invariant (not a sourced rule): the advancement table
+  must have unique scores and a non-decreasing `total_xp` column (the "To Buy"
+  totals only ever grow). This is the precondition that makes `xp_to_raise`'s
+  step subtraction (`to - from`) sound. `AdvancementTable::validation_errors`
+  enforces it from `Ruleset::validate_integrity`, so a malformed `advancement`
+  array is rejected at load with a clear message naming the offending scores
+  rather than wrapping/panicking on first use. `xp_to_raise` additionally uses
+  `checked_sub` (returns `None`) as defense-in-depth for tables built outside the
+  load gate.
 
 #### Seed Ability catalogue — `rules/core/abilities.json`
 > Ability list grouped by type (General, Academic, Arcane, Martial,
@@ -237,7 +250,7 @@ Puissant on one (Area) Lore does not bleed onto the character's other areas.
   `(ability, parameter)` — a plain ability by id, a parameterized one only when
   the selection names the same instance; a selection missing the instance key
   matches nothing. `ability_bonuses` returns a per-instance `Vec<AbilityBonus>`
-  (transported as `AbilityBonusEntry` in `arm-app::ruleset_io`). `validation.rs`
+  (serialized directly to the frontend by `arm-app::ruleset_io`). `validation.rs`
   folds the per-instance bonus into the score map so `AbilityMin` is met by the
   strongest instance.
 - Validation: `validate_parameters` makes the expected param-key set

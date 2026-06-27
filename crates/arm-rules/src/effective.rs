@@ -12,15 +12,25 @@
 use crate::characteristics::Characteristic;
 use crate::ruleset::Ruleset;
 use crate::types::{Effect, Entity, Id};
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 /// A non-zero ability-score bonus targeting one ability *instance*. For a
 /// parameterized ability ((Area) Lore) the instance is identified by
 /// `(ability, parameter)`; a plain ability has `parameter: None`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+///
+/// Serializes for the frontend as `{ "ability": "<id>", "bonus": N }`, with
+/// `parameter` added only when present (`None` is omitted, never `null`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AbilityBonus {
+    /// The slug id of the boosted ability (e.g. `ability.area_lore`).
     pub ability: Id,
+    /// The instance discriminator for a parameterized ability ((Area) Lore →
+    /// the area name); `None` for a plain ability, which has a single instance.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub parameter: Option<String>,
+    /// The summed bonus for this instance: all matching ability-bonus effects
+    /// (e.g. Puissant Ability +2) added together, so stacking virtues combine.
     pub bonus: i32,
 }
 
@@ -52,21 +62,28 @@ pub fn ability_bonus(
             continue;
         };
         for effect in &item.effects {
-            if let Effect::AbilityBonus { param, amount } = effect
-                && selection.params.get(param) == Some(ability)
-            {
-                let matches = match instance_key {
-                    None => true,
-                    // The selection must name this instance; one that omits the
-                    // instance key targets no parameterized instance at all.
-                    Some(key) => match selection.params.get(key) {
-                        Some(named) => Some(named.as_str()) == parameter,
-                        None => false,
-                    },
-                };
-                if matches {
-                    bonus += i32::from(*amount);
+            // Exhaustive match so adding an Effect variant is a compile error
+            // here, not a silently-ignored bonus.
+            match effect {
+                Effect::AbilityBonus { param, amount }
+                    if selection.params.get(param) == Some(ability) =>
+                {
+                    let matches = match instance_key {
+                        None => true,
+                        // The selection must name this instance; one that omits
+                        // the instance key targets no parameterized instance at
+                        // all.
+                        Some(key) => match selection.params.get(key) {
+                            Some(named) => Some(named.as_str()) == parameter,
+                            None => false,
+                        },
+                    };
+                    if matches {
+                        bonus += i32::from(*amount);
+                    }
                 }
+                // Not an ability bonus for this target; contributes nothing here.
+                Effect::AbilityBonus { .. } | Effect::CharacteristicBonus { .. } => {}
             }
         }
     }
@@ -105,14 +122,20 @@ pub fn characteristic_bonus(
             continue;
         };
         for effect in &item.effects {
-            if let Effect::CharacteristicBonus { param, amount, .. } = effect {
-                let target = selection
-                    .params
-                    .get(param)
-                    .and_then(Characteristic::from_id);
-                if target == Some(characteristic) {
-                    bonus += i32::from(*amount);
+            // Exhaustive match so adding an Effect variant is a compile error
+            // here, not a silently-ignored bonus.
+            match effect {
+                Effect::CharacteristicBonus { param, amount, .. } => {
+                    let target = selection
+                        .params
+                        .get(param)
+                        .and_then(Characteristic::from_id);
+                    if target == Some(characteristic) {
+                        bonus += i32::from(*amount);
+                    }
                 }
+                // Not a characteristic bonus; contributes nothing here.
+                Effect::AbilityBonus { .. } => {}
             }
         }
     }

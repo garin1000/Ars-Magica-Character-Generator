@@ -1,3 +1,11 @@
+//! Entity validation: the single evaluation path.
+//!
+//! [`validate`] always computes every rule result and returns them as
+//! [`ValidationIssue`]s; [`ValidationMode`] governs enforcement at the caller
+//! level, not which checks run. The set of
+//! emittable issue codes and their interpolation args is documented as a
+//! contract on [`ValidationIssue`] for the Fluent frontend.
+
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
@@ -46,7 +54,7 @@ impl fmt::Display for IssueSeverity {
 /// | `unknown_type` | error | `type_id` |
 /// | `unknown_ref` | error | `item` |
 /// | `wrong_entity_kind` | error | `item`, `entity_kind` |
-/// | `duplicate_selection` | error | `item`, `count` |
+/// | `duplicate_selection` | error | `item`, `count`, `max` |
 /// | `over_budget_virtues` | error | `points`, `budget` |
 /// | `over_budget_flaws` | error | `points`, `budget` |
 /// | `unbalanced_virtues` | error | `virtue_points`, `flaw_points` |
@@ -68,6 +76,8 @@ impl fmt::Display for IssueSeverity {
 /// | `gift_required` | error | (none) |
 /// | `gift_forbidden` | error | (none) |
 /// | `characteristic_out_of_range` | error | `characteristic`, `score`, `min`, `max` |
+/// | `characteristic_effective_out_of_range` | error | `characteristic`, `effective`, `max` |
+/// | `characteristic_bonus_base_too_low` | error | `item`, `characteristic`, `base`, `min` |
 /// | `characteristic_overspent` | error | `cost`, `points` |
 /// | `characteristic_points_unspent` | warning | `cost`, `points` |
 /// | `unknown_ability` | error | `ability` |
@@ -439,12 +449,11 @@ pub fn compute_balance(entity: &Entity, ruleset: &Ruleset) -> Balance {
 /// `flaw_category_caps`: each entry names its category, so no category slug is
 /// hardcoded in the engine.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2857 ("You may not
-/// have more than one Major Hermetic Virtue", magi); grogs may take no Major
-/// Virtues or Flaws at :2824-2830; ≤5 Minor Flaws (central) at :2774, grogs ≤3
-/// at :1009; ≤1 Major Personality Flaw at :2820; ≤2 Personality Flaws (soft) at
-/// :2820/:2976; ≤1 Story Flaw (soft) at :2818, grogs none at :1009. See
-/// RULES.md.
+/// Source: grogs may take no Major Virtues or Flaws (the `max_major_*` count
+/// caps) at Ars Magica - Definitive Edition (Core Rules).md:2824-2830; ≤5 Minor
+/// Flaws (central) at :2774, grogs ≤3 at :1009; ≤1 Major Personality Flaw at
+/// :2820; ≤2 Personality Flaws (soft) at :2820/:2976; ≤1 Story Flaw (soft) at
+/// :2818, grogs none at :1009. See RULES.md.
 fn validate_caps(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -659,9 +668,10 @@ fn evaluate_prereq(
             Some(false) => (Tri::False, false),
             None => (Tri::Unknown, true),
         },
-        // AbilityMin compares against the entity's max *bought* score for that
-        // ability (virtue bonuses are not applied in M3). An ability the entity
-        // does not have counts as score 0, so any positive threshold is False.
+        // AbilityMin compares against the entity's max *effective* score for
+        // that ability (bought score plus virtue bonuses such as Puissant
+        // Ability), as supplied by the caller. An ability the entity does not
+        // have counts as score 0, so any positive threshold is False.
         Prereq::AbilityMin { ability, score } => {
             let have = ability_scores.get(ability).copied().unwrap_or(0);
             if have >= *score {
@@ -1008,8 +1018,11 @@ fn validate_ability_bonus_targets(
             continue;
         };
         for effect in &item.effects {
-            let Effect::AbilityBonus { param, .. } = effect else {
-                continue;
+            // Exhaustive match so adding an Effect variant is a compile error
+            // here, not a silently-skipped target check.
+            let param = match effect {
+                Effect::AbilityBonus { param, .. } => param,
+                Effect::CharacteristicBonus { .. } => continue,
             };
             let Some(target) = selection.params.get(param) else {
                 continue; // missing ability key already reported by validate_parameters
@@ -1194,13 +1207,17 @@ fn validate_characteristic_bonuses(
             continue;
         };
         for effect in &item.effects {
-            let Effect::CharacteristicBonus {
-                param,
-                min_base: Some(min_base),
-                ..
-            } = effect
-            else {
-                continue;
+            // Exhaustive match so adding an Effect variant is a compile error
+            // here, not a silently-skipped base-score check. Only a
+            // characteristic bonus that carries a `min_base` precondition is
+            // checked; everything else contributes no constraint.
+            let (param, min_base) = match effect {
+                Effect::CharacteristicBonus {
+                    param,
+                    min_base: Some(min_base),
+                    ..
+                } => (param, min_base),
+                Effect::CharacteristicBonus { .. } | Effect::AbilityBonus { .. } => continue,
             };
             let Some(target) = selection
                 .params

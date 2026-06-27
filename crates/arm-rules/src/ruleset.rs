@@ -1,3 +1,13 @@
+//! The ruleset container and its JSON loaders.
+//!
+//! [`Ruleset`] holds the language-neutral mechanics (point items, abilities,
+//! characteristic rules, type profiles, advancement table).
+//! [`Ruleset::from_sources`] is the canonical loader; the other constructors
+//! are convenience wrappers over it. Loading validates referential integrity
+//! and fails loudly on unresolved refs, asymmetric incompatibilities, or
+//! malformed data ([`RulesetError`]). [`LocalizedRuleset`] joins a ruleset
+//! with an i18n layer for display.
+
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -10,9 +20,11 @@ use crate::types::{
 
 /// Top-level container for all loaded game mechanics.
 ///
-/// Built only via [`Ruleset::from_json`] (which validates referential
-/// integrity), never field-by-field by callers; `PartialEq` is provided for
-/// tests and diffing.
+/// Built via the validating loaders ([`Ruleset::from_sources`] is the
+/// canonical one; `from_json`, `from_core_json`, and `from_json_with_abilities`
+/// are convenience wrappers, and `from_serialized` reloads trusted cached
+/// JSON), never field-by-field by callers; `PartialEq` is provided for tests
+/// and diffing.
 ///
 /// # JSON shape
 ///
@@ -94,7 +106,9 @@ pub struct RulesetSources<'a> {
 
 /// A [`Ruleset`] paired with localized display text for a single language.
 ///
-/// Built only via [`LocalizedRuleset::new`]; `PartialEq` is provided for tests.
+/// Built via [`LocalizedRuleset::new`] (single i18n source) or
+/// [`LocalizedRuleset::from_merged`] (merging several); `PartialEq` is provided
+/// for tests.
 ///
 /// # JSON shape
 ///
@@ -301,7 +315,7 @@ impl std::error::Error for RulesetError {
 
 impl From<serde_json::Error> for RulesetError {
     /// Blanket conversion used where the failing input is not named; prefer
-    /// [`RulesetError::parse`] at call sites that know which input failed.
+    /// `RulesetError::parse` at call sites that know which input failed.
     fn from(e: serde_json::Error) -> Self {
         RulesetError::parse(parse_source::UNKNOWN, e)
     }
@@ -342,8 +356,8 @@ impl Ruleset {
     /// Parses point items and type profiles from JSON, validates referential
     /// integrity, and returns a Ruleset with no abilities.
     ///
-    /// Convenience wrapper over [`Ruleset::from_json_with_abilities`] for callers
-    /// (and the many tests) that do not exercise the ability registry.
+    /// Convenience constructor over [`Ruleset::from_sources`] for the many tests
+    /// that do not exercise the ability registry.
     pub fn from_json(
         id: &str,
         version: &str,
@@ -403,15 +417,17 @@ impl Ruleset {
             type_profiles: type_profiles_json,
             abilities: Some(abilities_json),
             // Preserve the existing sentinel: an empty string means "no
-            // characteristic rules" for this back-compat wrapper.
+            // characteristic rules" for this convenience constructor.
             characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
         })
     }
 
     /// Parses every language-neutral core source named in `sources`, validates
     /// referential integrity, and returns a Ruleset. This is the canonical
-    /// loader; [`Ruleset::from_json`], [`Ruleset::from_json_with_abilities`], and
-    /// [`Ruleset::from_core_json`] are thin back-compat wrappers over it.
+    /// loader (used in production by `arm-app`); [`Ruleset::from_json`],
+    /// [`Ruleset::from_json_with_abilities`], and [`Ruleset::from_core_json`] are
+    /// thin convenience constructors over it for tests that need only a subset of
+    /// the sources.
     pub fn from_sources(sources: RulesetSources) -> Result<Self, RulesetError> {
         let RulesetSources {
             id,
@@ -514,6 +530,9 @@ impl Ruleset {
         for item in self.point_items.values_mut() {
             item.normalize();
         }
+        for profile in self.type_profiles.values_mut() {
+            profile.normalize();
+        }
     }
 
     /// Returns a [`RulesetRef`] identifying this ruleset (id + version).
@@ -611,6 +630,10 @@ impl Ruleset {
 
         self.validate_incompatibility_symmetry(&mut errors);
 
+        // The advancement table must have unique scores and non-decreasing
+        // total_xp, or xp_to_raise's step subtraction would underflow later.
+        errors.extend(self.advancement.validation_errors());
+
         for (type_id, profile) in &self.type_profiles {
             for trait_id in &profile.required_traits {
                 if !self.point_items.contains_key(trait_id) {
@@ -633,6 +656,17 @@ impl Ruleset {
                     "type profile '{type_id}': gift_id references unknown ID '{gift_id}'"
                 ));
             }
+            // Intentionally unchecked: the profile's category-typed fields
+            // (`permitted_categories`, `forbidden_categories`, `gift_categories`,
+            // and the budget's `flaw_category_caps`) are NOT validated against the
+            // set of categories carried by point items. Categories are an open,
+            // forward-declared namespace: the `point_items` catalogue is extracted
+            // incrementally from the rules source, so a profile legitimately names
+            // a category (e.g. `personality`, `story`, `supernatural`) before any
+            // item in that category has been extracted yet — the shipped
+            // `rules/core` data does exactly this. Requiring a backing item would
+            // reject valid data, so this referential check is deliberately omitted
+            // (tracked here rather than left silent).
         }
 
         if errors.is_empty() {
@@ -928,6 +962,48 @@ mod tests {
                     e.errors()
                         .iter()
                         .any(|m| m.contains("duplicate ability ID"))
+                );
+            }
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn non_monotonic_advancement_table_is_rejected_at_load() {
+        // total_xp must not decrease as score rises; otherwise xp_to_raise would
+        // underflow. A malformed table must fail loudly at load.
+        let bad = r#"{ "abilities": [], "advancement": [
+          { "score": 1, "total_xp": 15 },
+          { "score": 2, "total_xp": 5 }
+        ] }"#;
+        let err =
+            Ruleset::from_json_with_abilities("t", "1", VALID_ITEMS, VALID_TYPES, bad).unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => {
+                assert!(
+                    e.errors().iter().any(|m| m.contains("total_xp decreases")),
+                    "expected a decreasing-total_xp error, got {:?}",
+                    e.errors()
+                );
+            }
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn duplicate_advancement_score_is_rejected_at_load() {
+        let bad = r#"{ "abilities": [], "advancement": [
+          { "score": 1, "total_xp": 5 },
+          { "score": 1, "total_xp": 5 }
+        ] }"#;
+        let err =
+            Ruleset::from_json_with_abilities("t", "1", VALID_ITEMS, VALID_TYPES, bad).unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => {
+                assert!(
+                    e.errors().iter().any(|m| m.contains("duplicate score")),
+                    "expected a duplicate-score error, got {:?}",
+                    e.errors()
                 );
             }
             other => panic!("expected integrity error, got {other:?}"),
