@@ -159,20 +159,27 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 
 #### Point-buy cost table + seven starting points — `rules/core/characteristics.json`
 > "Characteristics are bought on the following table. You start with seven points
-> to spend." Table: +3→6, +2→3, +1→1, 0→0, −1→Gain 1, −2→Gain 3, −3→Gain 6.
+> to spend." Printed table: +3→6, +2→3, +1→1, 0→0, −1→Gain 1, −2→Gain 3, −3→Gain 6.
 
-- Source: `Ars Magica - Definitive Edition (Core Rules).md:2340-2354`.
-- Data: `rules/core/characteristics.json` (`start_points: 7`, `costs`). The
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2340-2354` (printed
+  table), `:4105` (the +3 base cap "unless you take … Great Characteristic").
+- Data: `rules/core/characteristics.json` (`start_points: 7`, `costs`,
+  `base_max: 3`, `base_min: -3`, `effective_max: 5`, `effective_min: -5`). The
   rulebook's "Gain N" rows are encoded as **negative** cost (`Gain 1` → `-1`,
-  etc.) — an extraction sign convention. The legal score range (−3..+3) is
-  derived from the table rows, not hardcoded.
+  etc.) — an extraction sign convention. The printed table stops at ±3=±6; the
+  ±4/±5 rows (+4→10, +5→15, −4→Gain 10, −5→Gain 15) **continue the table's own
+  triangular progression** (marginal cost of level n is n) so the scores Great /
+  Poor (Characteristic) unlock can be priced — the rulebook does not print them.
+  The **base** limits (±3) are the no-virtue buy range; the **effective** limits
+  (±5) are the absolute ceiling/floor those virtues/flaws open. The legal table
+  range is now −5..+5.
 - Implementation: `crates/arm-rules/src/characteristics.rs` —
   `CharacteristicRules` (`cost_for`, `total_cost`, `min_score`, `max_score`,
-  `effective_max_score`); enforced in `validation.rs` —
-  `validate_characteristics` (base out-of-range error, effective-ceiling error,
-  overspent error, points-unspent warning). `effective_max` (=5, the Great
-  Characteristic ceiling) is data in `characteristics.json`; see the
-  effective-score layer below.
+  `base_max_score`, `base_min_score`, `effective_max_score`,
+  `effective_min_score`); enforced in `validation.rs` —
+  `validate_characteristics` (off-table out-of-range error, above-cap /
+  below-floor errors against the per-characteristic buy range, overspent error,
+  points-unspent warning). See the Great/Poor (Characteristic) layer below.
 
 ### Abilities
 
@@ -256,19 +263,25 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
   resolve against it) in `ruleset.rs`; `validate_abilities` in `validation.rs`.
 
-### Effective-score layer (score-boosting Virtues)
+### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
-A character's *effective* score is the bought score plus the bonuses granted by
-score-boosting Virtues. Effective scores are always computed, never stored, and
-are used for `AbilityMin` prerequisites, the characteristic ceiling, and display.
-The mechanic is **data-driven**: a `PointItem` declares `effects` (an `Effect`
-list) and the target ability/characteristic is named by the selection's
-parameter value — the engine hardcodes no Virtue IDs. Computed in
-`crates/arm-rules/src/effective.rs` (`ability_bonus`, `characteristic_bonus`,
-`effective_ability_score`, `effective_characteristic`; `characteristic_bonuses`
-returns a map and `ability_bonuses` a per-instance `Vec<AbilityBonus>` for the
-UI). Ability bonuses are **per instance** `(ability, parameter)`, not per id, so a
-Puissant on one (Area) Lore does not bleed onto the character's other areas.
+Two `Effect` kinds, both **data-driven** (a `PointItem` declares `effects` and the
+target ability/characteristic is named by the selection's parameter value — the
+engine hardcodes no Virtue/Flaw IDs):
+
+- `ability_bonus` — adds to an ability's *effective* score (bought + bonus,
+  always computed, never stored), used for `AbilityMin` prerequisites and display.
+- `characteristic_limit` — shifts a characteristic's *buy limit*. It grants no
+  points: the score must still be bought against the cost table. A positive
+  amount raises the cap (Great Characteristic), a negative one lowers the floor
+  (Poor Characteristic).
+
+Computed in `crates/arm-rules/src/effective.rs` (`ability_bonus`,
+`effective_ability_score`, `ability_bonuses`; `characteristic_cap`,
+`characteristic_floor`, and the all-eight `characteristic_caps` /
+`characteristic_floors` maps for the UI). Ability bonuses are **per instance**
+`(ability, parameter)`, not per id, so a Puissant on one (Area) Lore does not
+bleed onto the character's other areas.
 
 #### Puissant (Ability) — +2 to one Ability
 > "You are particularly adept with one Ability, and add 2 to its value whenever
@@ -299,22 +312,47 @@ Puissant on one (Area) Lore does not bleed onto the character's other areas.
   `ability_bonus_dangling_target` when the targeted `(ability, parameter)` is not
   among the character's bought abilities (e.g. the ability was later removed).
 
-#### Great (Characteristic) — +1, base ≥ +3, up to +5
+#### Great (Characteristic) — raise the buy cap to +4/+5
 > "You may raise any Characteristic that already has a score of at least +3 by
 > one point, to no more than +5 … You may take this Virtue twice for the same
 > Characteristic, and for more than one Characteristic."
 
-- Source: `Ars Magica - Definitive Edition (Core Rules).md:3987-3989`.
+Great Characteristic grants **no free point**: it raises the buy *cap* (+3 → +4
+→ +5; line 4105 confirms +3 is the cap "unless you take … Great Characteristic"),
+and the score is still bought against the cost table.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:3987-3989` (and
+  `:4105`).
 - Data: `rules/core/virtues_flaws.json` `virtue.great_characteristic` —
-  `characteristic`-domain param; `effects: [{ characteristic_bonus, param:
-  "characteristic", amount: 1, min_base: 3 }]`; `max_per_target: 2`. The +5
-  ceiling is `effective_max` in `rules/core/characteristics.json`.
-- Implementation: `effective.rs::characteristic_bonus` /
-  `effective_characteristic`; `validation.rs::validate_characteristics` flags
-  effective > 5 (`characteristic_effective_out_of_range`);
-  `validate_characteristic_bonuses` flags a target base < `min_base`
-  (`characteristic_bonus_base_too_low`) — the "≥ +3" precondition is
-  parameter-relative, so it lives on the effect, not in the static `Prereq`.
+  `characteristic`-domain param; `effects: [{ characteristic_limit, param:
+  "characteristic", amount: 1 }]`; `max_per_target: 2`. The base cap (+3) and the
+  +5 ceiling are `base_max` / `effective_max` in `rules/core/characteristics.json`.
+- Implementation: `effective.rs::characteristic_cap` =
+  `min(base_max + Σ positive amounts, effective_max)`;
+  `validation.rs::validate_characteristics` flags a bought score above the cap
+  (`characteristic_above_cap`); `validate_characteristic_limit_preconditions`
+  flags a target base below the base cap (`characteristic_max_base_too_low`) —
+  the "≥ +3" precondition is parameter-relative, derived from `base_max` by the
+  amount's sign, so it lives on the effect, not in the static `Prereq`.
+
+#### Poor (Characteristic) — lower the buy floor to −4/−5
+> "lower one which is already −3 or lower by one point … You may take this Flaw
+> twice for a single Characteristic, lowering it to −5, and multiple times for
+> different Characteristics."
+
+The exact sign-mirror of Great: a `flaw`, `amount: -1`, lowering the buy *floor*
+(−3 → −4 → −5) without granting/removing points beyond the score's own cost.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:6598-6600`.
+- Data: `rules/core/virtues_flaws.json` `flaw.poor_characteristic` —
+  `characteristic`-domain param; `effects: [{ characteristic_limit, param:
+  "characteristic", amount: -1 }]`; `max_per_target: 2`. The base floor (−3) and
+  the −5 floor are `base_min` / `effective_min` in `characteristics.json`.
+- Implementation: `effective.rs::characteristic_floor` =
+  `max(base_min + Σ negative amounts, effective_min)`;
+  `validate_characteristics` flags a bought score below the floor
+  (`characteristic_below_floor`); `validate_characteristic_limit_preconditions`
+  flags a target base above the base floor (`characteristic_min_base_too_high`).
 
 #### Selection multiplicity — `max_per_target`
 The per-`(item, params)` selection cap. `validate_duplicate_selections`

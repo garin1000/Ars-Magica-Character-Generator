@@ -18,6 +18,17 @@
     "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" }
   },
   {
+    "id": "flaw.poor_characteristic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
+    "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": -1 }],
+    "max_per_target": 2,
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6598, 6600] }
+  },
+  {
     "id": "flaw.poor_student",
     "kind": "flaw",
     "magnitude": "minor",
@@ -40,7 +51,7 @@
     "category": "general",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
-    "effects": [{ "type": "characteristic_bonus", "param": "characteristic", "amount": 1, "min_base": 3 }],
+    "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }],
     "max_per_target": 2,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3987, 3989] }
   },

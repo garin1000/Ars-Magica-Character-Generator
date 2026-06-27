@@ -110,8 +110,14 @@ fn shipped_abilities_and_characteristics_load() {
         .characteristic_rules()
         .expect("characteristic rules present");
     assert_eq!(chars.start_points, 7);
-    assert_eq!(chars.min_score(), Some(-3));
-    assert_eq!(chars.max_score(), Some(3));
+    // The cost table spans the absolute ±5 range (Great/Poor headroom)...
+    assert_eq!(chars.min_score(), Some(-5));
+    assert_eq!(chars.max_score(), Some(5));
+    // ...while the no-virtue base limits are ±3.
+    assert_eq!(chars.base_max_score(), Some(3));
+    assert_eq!(chars.base_min_score(), Some(-3));
+    assert_eq!(chars.effective_max_score(), Some(5));
+    assert_eq!(chars.effective_min_score(), Some(-5));
 
     // Advancement table is triangular: score 5 costs 75 xp total.
     assert_eq!(rs.advancement().xp_for_score(5), Some(75));
@@ -314,10 +320,11 @@ fn grog_over_budget() {
 
 #[test]
 fn shipped_score_effects_apply() {
-    use arm_rules::{effective_ability_score, effective_characteristic};
+    use arm_rules::{characteristic_cap, characteristic_floor, effective_ability_score};
     let rs = load_ruleset();
 
-    // Puissant Ability (+2) and Great Characteristic (+1) from the shipped data.
+    // Puissant Ability (+2 bonus) and Great/Poor Characteristic (limit shifts)
+    // from the shipped data.
     let mut e = entity(
         "companion",
         vec![
@@ -329,6 +336,10 @@ fn shipped_score_effects_apply() {
                 Id::new("virtue.great_characteristic"),
                 BTreeMap::from([("characteristic".into(), Characteristic::Str.id())]),
             ),
+            Selection::with_params(
+                Id::new("flaw.poor_characteristic"),
+                BTreeMap::from([("characteristic".into(), Characteristic::Qik.id())]),
+            ),
         ],
     );
     e.ability_scores = vec![AbilityScore {
@@ -337,16 +348,26 @@ fn shipped_score_effects_apply() {
         specialty: None,
         parameter: None,
     }];
-    e.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
+    e.characteristics = BTreeMap::from([(Characteristic::Str, 3), (Characteristic::Qik, -3)]);
 
+    // Puissant adds to the effective ability score.
     assert_eq!(
         effective_ability_score(&e, &rs, &Id::new("ability.awareness"), None),
         4,
         "Awareness 2 + Puissant +2"
     );
+    // Great raises Strength's buy cap (no free point); Poor lowers Quickness's
+    // buy floor. Untargeted characteristics keep the base ±3 limits.
     assert_eq!(
-        effective_characteristic(&e, &rs, Characteristic::Str),
+        characteristic_cap(&e, &rs, Characteristic::Str),
         4,
-        "Strength 3 + Great +1"
+        "Great raises the Strength cap to +4"
     );
+    assert_eq!(
+        characteristic_floor(&e, &rs, Characteristic::Qik),
+        -4,
+        "Poor lowers the Quickness floor to -4"
+    );
+    assert_eq!(characteristic_cap(&e, &rs, Characteristic::Int), 3);
+    assert_eq!(characteristic_floor(&e, &rs, Characteristic::Int), -3);
 }

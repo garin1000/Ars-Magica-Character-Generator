@@ -76,8 +76,10 @@ impl fmt::Display for IssueSeverity {
 /// | `gift_required` | error | (none) |
 /// | `gift_forbidden` | error | (none) |
 /// | `characteristic_out_of_range` | error | `characteristic`, `score`, `min`, `max` |
-/// | `characteristic_effective_out_of_range` | error | `characteristic`, `effective`, `max` |
-/// | `characteristic_bonus_base_too_low` | error | `item`, `characteristic`, `base`, `min` |
+/// | `characteristic_above_cap` | error | `characteristic`, `score`, `cap` |
+/// | `characteristic_below_floor` | error | `characteristic`, `score`, `floor` |
+/// | `characteristic_max_base_too_low` | error | `item`, `characteristic`, `base`, `min` |
+/// | `characteristic_min_base_too_high` | error | `item`, `characteristic`, `base`, `max` |
 /// | `characteristic_overspent` | error | `cost`, `points` |
 /// | `characteristic_points_unspent` | warning | `cost`, `points` |
 /// | `unknown_ability` | error | `ability` |
@@ -178,11 +180,15 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_ABILITY_SCORE_OUT_OF_RANGE: &'static str = "ability_score_out_of_range";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
-    pub const CODE_CHARACTERISTIC_EFFECTIVE_OUT_OF_RANGE: &'static str =
-        "characteristic_effective_out_of_range";
+    pub const CODE_CHARACTERISTIC_ABOVE_CAP: &'static str = "characteristic_above_cap";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
-    pub const CODE_CHARACTERISTIC_BONUS_BASE_TOO_LOW: &'static str =
-        "characteristic_bonus_base_too_low";
+    pub const CODE_CHARACTERISTIC_BELOW_FLOOR: &'static str = "characteristic_below_floor";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_CHARACTERISTIC_MAX_BASE_TOO_LOW: &'static str =
+        "characteristic_max_base_too_low";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_CHARACTERISTIC_MIN_BASE_TOO_HIGH: &'static str =
+        "characteristic_min_base_too_high";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_ABILITY_BONUS_DANGLING_TARGET: &'static str = "ability_bonus_dangling_target";
 
@@ -309,7 +315,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     // rather than relying on a covenant happening to carry no such data.
     if entity.entity_kind == EntityKind::Character {
         validate_characteristics(entity, ruleset, &mut issues);
-        validate_characteristic_bonuses(entity, ruleset, &mut issues);
+        validate_characteristic_limit_preconditions(entity, ruleset, &mut issues);
         validate_abilities(entity, ruleset, &mut issues);
     }
 
@@ -1022,7 +1028,7 @@ fn validate_ability_bonus_targets(
             // here, not a silently-skipped target check.
             let param = match effect {
                 Effect::AbilityBonus { param, .. } => param,
-                Effect::CharacteristicBonus { .. } => continue,
+                Effect::CharacteristicLimit { .. } => continue,
             };
             let Some(target) = selection.params.get(param) else {
                 continue; // missing ability key already reported by validate_parameters
@@ -1112,17 +1118,27 @@ fn validate_gift_policy(
     }
 }
 
-/// Validates Characteristic point-buy: each score must be a legal table value,
-/// and the total cost must not exceed the starting points (over = error,
-/// under = a non-blocking "points unspent" warning, mirroring the V/F balance
-/// rule). No-op when the ruleset ships no characteristic rules.
+/// Validates Characteristic point-buy: each score must be a legal table value
+/// and within the characteristic's per-target buy range, and the total cost must
+/// not exceed the starting points (over = error, under = a non-blocking "points
+/// unspent" warning, mirroring the V/F balance rule). No-op when the ruleset
+/// ships no characteristic rules.
+///
+/// The buy range is the base ±3 by default, widened upward by Great
+/// (Characteristic) and downward by Poor (Characteristic) (see
+/// [`characteristic_cap`](crate::effective::characteristic_cap) /
+/// [`characteristic_floor`](crate::effective::characteristic_floor)). The cost
+/// table itself spans the absolute ±5 range so the higher/lower scores can be
+/// priced; without the virtue/flaw they are legal table values but above the cap
+/// / below the floor.
 ///
 /// The point-spend check is skipped entirely when the character has no
 /// Characteristics set: an untouched step is not yet under-spent, so a fresh
 /// character is not nagged. Out-of-range scores are always flagged.
 ///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:2340-2354 (the cost
-/// table and the seven starting points). The numbers themselves are data in
+/// table and the seven starting points), :4105 (the +3 base cap), :3987-3989
+/// (Great's +5), :6598-6600 (Poor's −5). The numbers themselves are data in
 /// `rules/core/characteristics.json` (see RULES.md).
 fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
     let Some(rules) = ruleset.characteristic_rules() else {
@@ -1132,7 +1148,7 @@ fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
         return;
     };
 
-    for (characteristic, &score) in &entity.characteristics {
+    for (&characteristic, &score) in &entity.characteristics {
         if !rules.is_legal_score(score) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_CHARACTERISTIC_OUT_OF_RANGE,
@@ -1144,28 +1160,32 @@ fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
                 ]),
                 None,
             ));
+            continue;
         }
-    }
-
-    // Effective-score ceiling: virtue bonuses (Great Characteristic) may raise a
-    // characteristic above the point-buy table maximum, but never past the
-    // effective ceiling (+5). The base score is still bounded by the table check
-    // above; this bounds bought + bonuses. Source: Core Rules.md:3987-3989.
-    if let Some(effective_max) = rules.effective_max_score() {
-        for characteristic in Characteristic::ALL {
-            let effective =
-                crate::effective::effective_characteristic(entity, ruleset, characteristic);
-            if effective > i32::from(effective_max) {
-                issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_CHARACTERISTIC_EFFECTIVE_OUT_OF_RANGE,
-                    args([
-                        ("characteristic", characteristic.to_string()),
-                        ("effective", effective.to_string()),
-                        ("max", effective_max.to_string()),
-                    ]),
-                    None,
-                ));
-            }
+        // A legal table value still has to sit within the range that this
+        // character's Great/Poor (Characteristic) choices open for the target.
+        let cap = crate::effective::characteristic_cap(entity, ruleset, characteristic);
+        let floor = crate::effective::characteristic_floor(entity, ruleset, characteristic);
+        if i32::from(score) > cap {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_CHARACTERISTIC_ABOVE_CAP,
+                args([
+                    ("characteristic", characteristic.to_string()),
+                    ("score", score.to_string()),
+                    ("cap", cap.to_string()),
+                ]),
+                None,
+            ));
+        } else if i32::from(score) < floor {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_CHARACTERISTIC_BELOW_FLOOR,
+                args([
+                    ("characteristic", characteristic.to_string()),
+                    ("score", score.to_string()),
+                    ("floor", floor.to_string()),
+                ]),
+                None,
+            ));
         }
     }
 
@@ -1191,50 +1211,75 @@ fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
     }
 }
 
-/// Enforces parameter-relative preconditions on characteristic-bonus effects:
-/// Great Characteristic may only raise a characteristic whose *base* (bought)
-/// score is already at the effect's `min_base` (+3). This is parameter-relative
-/// (it constrains whichever characteristic the selection targets), so it lives
-/// here rather than in the static [`Prereq`] tree.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3987-3989.
-fn validate_characteristic_bonuses(
+/// Enforces the parameter-relative precondition on `characteristic_limit`
+/// effects: a limit-shift may only be taken on a characteristic whose *base*
+/// (bought) score is already at the limit being extended. Great (Characteristic,
+/// positive amount) needs base ≥ the base cap (+3); Poor (Characteristic,
+/// negative amount) needs base ≤ the base floor (−3). The threshold is derived
+/// from the ruleset's base cap/floor by the sign of the amount, so no per-effect
+/// number is stored. This is parameter-relative (it constrains whichever
+/// characteristic the selection targets), so it lives here rather than in the
+/// static [`Prereq`] tree.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:3987-3989 (Great,
+/// "already … at least +3"), :6598-6600 (Poor, "already −3 or lower").
+fn validate_characteristic_limit_preconditions(
     entity: &Entity,
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
 ) {
+    let Some(rules) = ruleset.characteristic_rules() else {
+        return;
+    };
+    let base_max = rules.base_max_score();
+    let base_min = rules.base_min_score();
     for selection in &entity.selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
         for effect in &item.effects {
             // Exhaustive match so adding an Effect variant is a compile error
-            // here, not a silently-skipped base-score check. Only a
-            // characteristic bonus that carries a `min_base` precondition is
-            // checked; everything else contributes no constraint.
-            let (param, min_base) = match effect {
-                Effect::CharacteristicBonus {
-                    param,
-                    min_base: Some(min_base),
-                    ..
-                } => (param, min_base),
-                Effect::CharacteristicBonus { .. } | Effect::AbilityBonus { .. } => continue,
+            // here, not a silently-skipped precondition check.
+            let (amount, target, base) = match effect {
+                Effect::CharacteristicLimit { param, amount } => {
+                    let Some(target) = selection
+                        .params
+                        .get(param)
+                        .and_then(Characteristic::from_id)
+                    else {
+                        continue; // unresolved param value is reported by validate_parameters
+                    };
+                    let base = entity.characteristics.get(&target).copied().unwrap_or(0);
+                    (*amount, target, base)
+                }
+                Effect::AbilityBonus { .. } => continue,
             };
-            let Some(target) = selection
-                .params
-                .get(param)
-                .and_then(Characteristic::from_id)
-            else {
-                continue; // unresolved param value is reported by validate_parameters
-            };
-            let base = entity.characteristics.get(&target).copied().unwrap_or(0);
-            if i32::from(base) < i32::from(*min_base) {
+            if amount > 0 {
+                if let Some(cap) = base_max
+                    && i32::from(base) < i32::from(cap)
+                {
+                    issues.push(ValidationIssue::error(
+                        ValidationIssue::CODE_CHARACTERISTIC_MAX_BASE_TOO_LOW,
+                        args([
+                            ("item", selection.item_ref.to_string()),
+                            ("characteristic", target.to_string()),
+                            ("base", base.to_string()),
+                            ("min", cap.to_string()),
+                        ]),
+                        Some(selection.item_ref.clone()),
+                    ));
+                }
+            } else if amount < 0
+                && let Some(floor) = base_min
+                && i32::from(base) > i32::from(floor)
+            {
                 issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_CHARACTERISTIC_BONUS_BASE_TOO_LOW,
+                    ValidationIssue::CODE_CHARACTERISTIC_MIN_BASE_TOO_HIGH,
                     args([
                         ("item", selection.item_ref.to_string()),
                         ("characteristic", target.to_string()),
                         ("base", base.to_string()),
-                        ("min", min_base.to_string()),
+                        ("max", floor.to_string()),
                     ]),
                     Some(selection.item_ref.clone()),
                 ));
@@ -1466,6 +1511,13 @@ mod tests {
     fn great(characteristic: Characteristic) -> Selection {
         Selection::with_params(
             Id::new("virtue.great_characteristic"),
+            BTreeMap::from([("characteristic".into(), characteristic.id())]),
+        )
+    }
+
+    fn poor(characteristic: Characteristic) -> Selection {
+        Selection::with_params(
+            Id::new("flaw.poor_characteristic"),
             BTreeMap::from([("characteristic".into(), characteristic.id())]),
         )
     }
@@ -2444,10 +2496,11 @@ mod tests {
         assert!(!warning_codes.contains(&"prereq_unevaluated"));
     }
 
-    /// A ruleset with Puissant Ability (+2), Great Characteristic (+1, base ≥ 3,
-    /// up to 2/characteristic), a virtue requiring Awareness 3, the canonical
-    /// characteristic table with a +5 effective ceiling, and a funding flaw.
-    /// For the effective-score validation tests.
+    /// A ruleset with Puissant Ability (+2), Great Characteristic (raises the buy
+    /// cap, up to 2/characteristic), Poor Characteristic (lowers the buy floor),
+    /// a virtue requiring Awareness 3, the characteristic table extended to ±5
+    /// with base limits ±3 and effective limits ±5, and a funding flaw. For the
+    /// characteristic-limit validation tests.
     fn effective_ruleset() -> Ruleset {
         let items = r#"[
           {"id": "virtue.requires_awareness_3", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
@@ -2457,7 +2510,11 @@ mod tests {
            "effects": [{"type": "ability_bonus", "param": "ability", "amount": 2}]},
           {"id": "virtue.great_characteristic", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "parameters": [{"key": "characteristic", "type": "ref", "domain": "characteristic"}],
-           "effects": [{"type": "characteristic_bonus", "param": "characteristic", "amount": 1, "min_base": 3}],
+           "effects": [{"type": "characteristic_limit", "param": "characteristic", "amount": 1}],
+           "max_per_target": 2},
+          {"id": "flaw.poor_characteristic", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "parameters": [{"key": "characteristic", "type": "ref", "domain": "characteristic"}],
+           "effects": [{"type": "characteristic_limit", "param": "characteristic", "amount": -1}],
            "max_per_target": 2},
           {"id": "flaw.f", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
@@ -2473,11 +2530,14 @@ mod tests {
           { "id": "ability.area_lore", "category": "general", "parameter": "area" }
         ] }"#;
         let characteristics = r#"{
-          "start_points": 7, "effective_max": 5,
+          "start_points": 7,
+          "base_max": 3, "base_min": -3, "effective_max": 5, "effective_min": -5,
           "costs": [
+            { "score": 5, "cost": 15 }, { "score": 4, "cost": 10 },
             { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 }, { "score": 1, "cost": 1 },
             { "score": 0, "cost": 0 },
-            { "score": -1, "cost": -1 }, { "score": -2, "cost": -3 }, { "score": -3, "cost": -6 }
+            { "score": -1, "cost": -1 }, { "score": -2, "cost": -3 }, { "score": -3, "cost": -6 },
+            { "score": -4, "cost": -10 }, { "score": -5, "cost": -15 }
           ]
         }"#;
         Ruleset::from_core_json("test", "1", items, types, abilities, characteristics).unwrap()
@@ -2521,13 +2581,40 @@ mod tests {
     }
 
     #[test]
-    fn great_characteristic_effective_within_ceiling_is_allowed() {
+    fn score_four_without_great_is_above_cap_not_off_table() {
+        // +4 is a legal table value (it must be priced), but the default cap is
+        // +3, so buying it without Great Characteristic is "above cap", NOT
+        // "out of range".
         let rs = effective_ruleset();
-        let mut entity = make_entity("companion", vec![sel("flaw.f"), great(Characteristic::Str)]);
-        entity.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
+        let mut entity = companion_entity_eff();
+        entity.characteristics = BTreeMap::from([(Characteristic::Str, 4)]);
+        let c = codes(&validate(&entity, &rs));
+        assert!(c.contains(&"characteristic_above_cap".to_string()), "{c:?}");
+        assert!(
+            !c.contains(&"characteristic_out_of_range".to_string()),
+            "{c:?}"
+        );
+    }
+
+    #[test]
+    fn score_six_is_off_table_out_of_range() {
+        let rs = effective_ruleset();
+        let mut entity = companion_entity_eff();
+        entity.characteristics = BTreeMap::from([(Characteristic::Str, 6)]);
+        assert!(
+            codes(&validate(&entity, &rs)).contains(&"characteristic_out_of_range".to_string())
+        );
+    }
+
+    #[test]
+    fn score_four_with_one_great_is_within_cap() {
+        // base 4 (≥ +3 precondition met) + one Great → cap +4, score +4 fits.
+        let rs = effective_ruleset();
+        let mut entity = make_entity("companion", vec![great(Characteristic::Str)]);
+        entity.characteristics = BTreeMap::from([(Characteristic::Str, 4)]);
         let c = codes(&validate(&entity, &rs));
         assert!(
-            !c.contains(&"characteristic_effective_out_of_range".to_string()),
+            !c.contains(&"characteristic_above_cap".to_string()),
             "{c:?}"
         );
         assert!(
@@ -2535,56 +2622,89 @@ mod tests {
             "{c:?}"
         );
         assert!(
-            !c.contains(&"characteristic_bonus_base_too_low".to_string()),
+            !c.contains(&"characteristic_max_base_too_low".to_string()),
             "{c:?}"
         );
     }
 
     #[test]
-    fn great_characteristic_effective_above_ceiling_is_error() {
+    fn score_five_needs_two_greats() {
         let rs = effective_ruleset();
-        // base 3 + three Greats = effective 6 > 5 (also trips multiplicity; we
-        // only assert the effective-ceiling error here).
-        let mut entity = make_entity(
+        // One Great only opens the cap to +4, so +5 is still above cap...
+        let mut one = make_entity("companion", vec![great(Characteristic::Str)]);
+        one.characteristics = BTreeMap::from([(Characteristic::Str, 5)]);
+        assert!(
+            codes(&validate(&one, &rs)).contains(&"characteristic_above_cap".to_string()),
+            "one Great should leave +5 above cap"
+        );
+        // ...two Greats open it to +5.
+        let mut two = make_entity(
             "companion",
-            vec![
-                great(Characteristic::Str),
-                great(Characteristic::Str),
-                great(Characteristic::Str),
-            ],
+            vec![great(Characteristic::Str), great(Characteristic::Str)],
         );
-        entity.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
+        two.characteristics = BTreeMap::from([(Characteristic::Str, 5)]);
         assert!(
-            codes(&validate(&entity, &rs))
-                .contains(&"characteristic_effective_out_of_range".to_string())
+            !codes(&validate(&two, &rs)).contains(&"characteristic_above_cap".to_string()),
+            "two Greats should allow +5"
         );
     }
 
     #[test]
-    fn characteristic_base_above_table_max_still_out_of_range() {
-        let rs = effective_ruleset();
-        let mut entity = companion_entity_eff();
-        entity.characteristics = BTreeMap::from([(Characteristic::Str, 4)]);
-        let c = codes(&validate(&entity, &rs));
-        assert!(
-            c.contains(&"characteristic_out_of_range".to_string()),
-            "{c:?}"
-        );
-        // 4 <= effective ceiling 5, so the effective check does NOT also fire.
-        assert!(
-            !c.contains(&"characteristic_effective_out_of_range".to_string()),
-            "{c:?}"
-        );
-    }
-
-    #[test]
-    fn great_characteristic_below_base_minimum_is_error() {
+    fn great_on_base_two_is_max_base_too_low() {
         let rs = effective_ruleset();
         let mut entity = make_entity("companion", vec![sel("flaw.f"), great(Characteristic::Str)]);
         entity.characteristics = BTreeMap::from([(Characteristic::Str, 2)]);
         assert!(
+            codes(&validate(&entity, &rs)).contains(&"characteristic_max_base_too_low".to_string())
+        );
+    }
+
+    #[test]
+    fn score_minus_four_without_poor_is_below_floor_not_off_table() {
+        let rs = effective_ruleset();
+        let mut entity = companion_entity_eff();
+        entity.characteristics = BTreeMap::from([(Characteristic::Qik, -4)]);
+        let c = codes(&validate(&entity, &rs));
+        assert!(
+            c.contains(&"characteristic_below_floor".to_string()),
+            "{c:?}"
+        );
+        assert!(
+            !c.contains(&"characteristic_out_of_range".to_string()),
+            "{c:?}"
+        );
+    }
+
+    #[test]
+    fn score_minus_five_needs_two_poors() {
+        let rs = effective_ruleset();
+        // One Poor only opens the floor to −4, so −5 is still below floor...
+        let mut one = make_entity("companion", vec![poor(Characteristic::Qik)]);
+        one.characteristics = BTreeMap::from([(Characteristic::Qik, -5)]);
+        assert!(
+            codes(&validate(&one, &rs)).contains(&"characteristic_below_floor".to_string()),
+            "one Poor should leave −5 below floor"
+        );
+        // ...two Poors open it to −5.
+        let mut two = make_entity(
+            "companion",
+            vec![poor(Characteristic::Qik), poor(Characteristic::Qik)],
+        );
+        two.characteristics = BTreeMap::from([(Characteristic::Qik, -5)]);
+        assert!(
+            !codes(&validate(&two, &rs)).contains(&"characteristic_below_floor".to_string()),
+            "two Poors should allow −5"
+        );
+    }
+
+    #[test]
+    fn poor_on_base_minus_two_is_min_base_too_high() {
+        let rs = effective_ruleset();
+        let mut entity = make_entity("companion", vec![sel("flaw.f"), poor(Characteristic::Qik)]);
+        entity.characteristics = BTreeMap::from([(Characteristic::Qik, -2)]);
+        assert!(
             codes(&validate(&entity, &rs))
-                .contains(&"characteristic_bonus_base_too_low".to_string())
+                .contains(&"characteristic_min_base_too_high".to_string())
         );
     }
 

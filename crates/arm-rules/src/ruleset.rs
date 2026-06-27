@@ -744,19 +744,19 @@ impl Ruleset {
 
     /// Validates that every [`Effect`] names a declared parameter whose domain
     /// matches the effect kind (`ability_bonus` → an `ability`-domain param,
-    /// `characteristic_bonus` → a `characteristic`-domain param). Effective
-    /// scores resolve the target through that parameter, so a missing key or
-    /// domain mismatch would silently never apply — fail loudly at load instead.
+    /// `characteristic_limit` → a `characteristic`-domain param). Effects resolve
+    /// the target through that parameter, so a missing key or domain mismatch
+    /// would silently never apply — fail loudly at load instead.
     fn validate_effect_refs(&self, item: &PointItem, id: &Id, errors: &mut Vec<String>) {
         for effect in &item.effects {
             let (param, expected, kind) = match effect {
                 Effect::AbilityBonus { param, .. } => {
                     (param, ParameterDomain::Ability, "ability_bonus")
                 }
-                Effect::CharacteristicBonus { param, .. } => (
+                Effect::CharacteristicLimit { param, .. } => (
                     param,
                     ParameterDomain::Characteristic,
-                    "characteristic_bonus",
+                    "characteristic_limit",
                 ),
             };
             match item.parameters.iter().find(|p| &p.key == param) {
@@ -1217,9 +1217,9 @@ mod tests {
           "category": "general",
           "entity_kinds": ["character"],
           "parameters": [{ "key": "characteristic", "type": "ref", "domain": "ability" }],
-          "effects": [{ "type": "characteristic_bonus", "param": "characteristic", "amount": 1 }]
+          "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }]
         }]"#;
-        // characteristic_bonus needs a characteristic-domain param, not ability.
+        // characteristic_limit needs a characteristic-domain param, not ability.
         let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("expected 'characteristic'"), "{msg}");
@@ -1237,7 +1237,7 @@ mod tests {
           "category": "general",
           "entity_kinds": ["character"],
           "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
-          "effects": [{ "type": "characteristic_bonus", "param": "characteristic", "amount": 1 }]
+          "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }]
         }]"#;
         let types = r#"[{
           "id": "companion",

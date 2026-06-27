@@ -12,8 +12,8 @@ pub mod validation;
 pub use ability::{Ability, AbilityCategory, AbilityXpRow, AdvancementTable};
 pub use characteristics::{Characteristic, CharacteristicCost, CharacteristicRules};
 pub use effective::{
-    AbilityBonus, ability_bonus, ability_bonuses, characteristic_bonus, characteristic_bonuses,
-    effective_ability_score, effective_characteristic,
+    AbilityBonus, ability_bonus, ability_bonuses, characteristic_cap, characteristic_caps,
+    characteristic_floor, characteristic_floors, effective_ability_score,
 };
 pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError, RulesetSources};
 pub use types::{
