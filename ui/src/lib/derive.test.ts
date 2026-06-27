@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  abilityDisplayName,
   abilityXpSpent,
   balance,
   characteristicPointsUsed,
   displayName,
   groupAbilitiesByCategory,
   groupByCategory,
+  maxAbilityScore,
   paramValueUsage,
 } from './derive';
 import type { Ability, CharacteristicRules, Entity, LocalizedRuleset, PointItem } from './types';
@@ -343,5 +345,68 @@ describe('groupAbilitiesByCategory', () => {
 
   it('is empty when the ruleset has no abilities', () => {
     expect(groupAbilitiesByCategory(withAbilities([]))).toEqual([]);
+  });
+});
+
+// --- maxAbilityScore() ------------------------------------------------------
+
+describe('maxAbilityScore', () => {
+  it('returns 0 for undefined or empty advancement', () => {
+    expect(maxAbilityScore(undefined)).toBe(0);
+    expect(maxAbilityScore([])).toBe(0);
+  });
+
+  it('returns the highest score the table can price', () => {
+    expect(maxAbilityScore([{ score: 1 }, { score: 5 }, { score: 3 }])).toBe(5);
+  });
+});
+
+// --- abilityDisplayName() ---------------------------------------------------
+
+describe('abilityDisplayName', () => {
+  function withAbilityNames(
+    abilities: Ability[],
+    i18n: LocalizedRuleset['i18n'],
+  ): LocalizedRuleset {
+    const map: Record<string, Ability> = {};
+    for (const a of abilities) map[a.id] = a;
+    return {
+      ruleset: { id: 't', version: '1', point_items: {}, type_profiles: {}, abilities: map },
+      i18n,
+    };
+  }
+
+  const placeholder = (key: string) => `(${key})`;
+
+  it('interpolates the parameter value for a parameterized ability', () => {
+    const ruleset = withAbilityNames(
+      [{ id: 'ability.area_lore', category: 'general', parameter: 'area' }],
+      {
+        'ability.area_lore': { name: '{area} Lore' },
+      },
+    );
+    expect(abilityDisplayName(ruleset, 'ability.area_lore', 'Rhine', placeholder)).toBe(
+      'Rhine Lore',
+    );
+  });
+
+  it('uses the placeholder label when the param value is empty', () => {
+    const ruleset = withAbilityNames(
+      [{ id: 'ability.area_lore', category: 'general', parameter: 'area' }],
+      {
+        'ability.area_lore': { name: '{area} Lore' },
+      },
+    );
+    expect(abilityDisplayName(ruleset, 'ability.area_lore', '', placeholder)).toBe('(area) Lore');
+    expect(abilityDisplayName(ruleset, 'ability.area_lore', null, placeholder)).toBe('(area) Lore');
+  });
+
+  it('returns the plain name for a non-parameterized ability', () => {
+    const ruleset = withAbilityNames([{ id: 'ability.awareness', category: 'general' }], {
+      'ability.awareness': { name: 'Awareness' },
+    });
+    expect(abilityDisplayName(ruleset, 'ability.awareness', 'ignored', placeholder)).toBe(
+      'Awareness',
+    );
   });
 });

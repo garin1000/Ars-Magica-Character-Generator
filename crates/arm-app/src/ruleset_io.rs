@@ -10,23 +10,12 @@ use std::path::{Path, PathBuf};
 use std::collections::BTreeMap;
 
 use arm_rules::{
-    Characteristic, Entity, EntityKind, LocalizedRuleset, Ruleset, ValidationMode,
-    ValidationResult, ability_bonuses, characteristic_bonuses, validate,
+    AbilityBonus, Characteristic, Entity, EntityKind, LocalizedRuleset, Ruleset, RulesetSources,
+    ValidationMode, ValidationResult, ability_bonuses, characteristic_bonuses, validate,
 };
 use serde::Serialize;
 
 use crate::error::AppError;
-
-/// One ability-score bonus, targeting a single ability instance. A parameterized
-/// ability ((Area) Lore) is identified by `(ability, parameter)`; `parameter` is
-/// `None` for a plain ability. Mirrors the engine's `AbilityBonus`.
-#[derive(Debug, Clone, Serialize)]
-pub struct AbilityBonusEntry {
-    pub ability: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub parameter: Option<String>,
-    pub bonus: i32,
-}
 
 /// The score bonuses a character's virtues grant, for the frontend to add onto
 /// each displayed bought score. Only non-zero bonuses are present. Ability bonuses
@@ -35,23 +24,15 @@ pub struct AbilityBonusEntry {
 #[derive(Debug, Clone, Serialize)]
 pub struct EffectiveScores {
     /// One entry per boosted ability instance (e.g. Puissant Ability +2).
-    pub ability_bonuses: Vec<AbilityBonusEntry>,
+    pub ability_bonuses: Vec<AbilityBonus>,
     /// Characteristic → bonus (e.g. Great Characteristic +1).
     pub characteristic_bonuses: BTreeMap<Characteristic, i32>,
 }
 
 /// Computes the virtue score bonuses for `entity` against a loaded ruleset.
 pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveScores {
-    let ability_bonuses = ability_bonuses(entity, ruleset)
-        .into_iter()
-        .map(|b| AbilityBonusEntry {
-            ability: b.ability.as_str().to_string(),
-            parameter: b.parameter,
-            bonus: b.bonus,
-        })
-        .collect();
     EffectiveScores {
-        ability_bonuses,
+        ability_bonuses: ability_bonuses(entity, ruleset),
         characteristic_bonuses: characteristic_bonuses(entity, ruleset),
     }
 }
@@ -103,14 +84,17 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     let vf_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/virtues_flaws.json")))?;
     let ability_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/abilities.json")))?;
 
-    let ruleset = Ruleset::from_core_json(
-        RULESET_ID,
-        RULESET_VERSION,
-        &point_items_json,
-        &type_profiles_json,
-        &abilities_json,
-        &characteristics_json,
-    )?;
+    let ruleset = Ruleset::from_sources(RulesetSources {
+        id: RULESET_ID,
+        version: RULESET_VERSION,
+        point_items: &point_items_json,
+        type_profiles: &type_profiles_json,
+        abilities: Some(&abilities_json),
+        // An empty characteristics file means the ruleset ships no characteristic
+        // rules (the `Option` is the engine's honest "absent" signal).
+        characteristics: (!characteristics_json.is_empty())
+            .then_some(characteristics_json.as_str()),
+    })?;
     let localized = LocalizedRuleset::from_merged(ruleset, &[&vf_i18n, &ability_i18n])?;
     Ok(localized)
 }

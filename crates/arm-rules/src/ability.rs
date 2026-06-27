@@ -151,13 +151,51 @@ impl AdvancementTable {
     /// The XP cost of the single whole-point step from `score - 1` to `score`
     /// (the rulebook's "To Raise" value). Returns `None` for score 0 or a score
     /// the table does not cover.
+    ///
+    /// Load-time validation ([`validation_errors`]) guarantees `total_xp` is
+    /// non-decreasing, so the subtraction never underflows for a table that came
+    /// through [`Ruleset::from_sources`]. `checked_sub` is belt-and-braces: a
+    /// table built outside that gate degrades to `None` instead of panicking.
+    ///
+    /// [`validation_errors`]: AdvancementTable::validation_errors
+    /// [`Ruleset::from_sources`]: crate::ruleset::Ruleset::from_sources
     pub fn xp_to_raise(&self, score: u8) -> Option<u32> {
         if score == 0 {
             return None;
         }
         let to = self.xp_for_score(score)?;
         let from = self.xp_for_score(score - 1)?;
-        Some(to - from)
+        to.checked_sub(from)
+    }
+
+    /// Data-integrity check on the table itself, returning one message per
+    /// violation (empty when valid). The table is valid iff scores are unique and
+    /// `total_xp` is non-decreasing as `score` increases — the precondition that
+    /// makes [`xp_to_raise`]'s step subtraction sound. Called from
+    /// [`Ruleset::validate_integrity`] so malformed data fails loudly at load
+    /// rather than underflow-panicking on first use.
+    ///
+    /// Rows are score-sorted at construction, so a single forward pass suffices.
+    ///
+    /// [`xp_to_raise`]: AdvancementTable::xp_to_raise
+    /// [`Ruleset::validate_integrity`]: crate::ruleset::Ruleset::validate_integrity
+    pub fn validation_errors(&self) -> Vec<String> {
+        let mut errors = Vec::new();
+        for pair in self.rows.windows(2) {
+            let (prev, curr) = (&pair[0], &pair[1]);
+            if curr.score == prev.score {
+                errors.push(format!(
+                    "advancement table: duplicate score {} ({} and {} total_xp)",
+                    curr.score, prev.total_xp, curr.total_xp
+                ));
+            } else if curr.total_xp < prev.total_xp {
+                errors.push(format!(
+                    "advancement table: total_xp decreases from score {} ({}) to score {} ({})",
+                    prev.score, prev.total_xp, curr.score, curr.total_xp
+                ));
+            }
+        }
+        errors
     }
 }
 
@@ -293,5 +331,58 @@ mod tests {
         assert_eq!(t.xp_to_raise(5), Some(25)); // 75 - 50
         assert_eq!(t.xp_to_raise(10), Some(50)); // 275 - 225
         assert_eq!(t.xp_to_raise(11), None);
+    }
+
+    #[test]
+    fn canonical_table_has_no_validation_errors() {
+        assert!(table().validation_errors().is_empty());
+    }
+
+    #[test]
+    fn non_monotonic_total_xp_is_an_error() {
+        // total_xp drops from score 2 (15) to score 3 (10): xp_to_raise(3) would
+        // underflow, so this must be reported at validation time.
+        let t = AdvancementTable::new(vec![
+            AbilityXpRow {
+                score: 1,
+                total_xp: 5,
+            },
+            AbilityXpRow {
+                score: 2,
+                total_xp: 15,
+            },
+            AbilityXpRow {
+                score: 3,
+                total_xp: 10,
+            },
+        ]);
+        let errors = t.validation_errors();
+        assert!(
+            errors.iter().any(|m| m.contains("total_xp decreases")
+                && m.contains("score 2")
+                && m.contains("score 3")),
+            "expected a decreasing-total_xp error naming scores 2 and 3, got {errors:?}"
+        );
+    }
+
+    #[test]
+    fn duplicate_score_is_an_error() {
+        let t = AdvancementTable::new(vec![
+            AbilityXpRow {
+                score: 1,
+                total_xp: 5,
+            },
+            AbilityXpRow {
+                score: 1,
+                total_xp: 5,
+            },
+        ]);
+        let errors = t.validation_errors();
+        assert!(
+            errors
+                .iter()
+                .any(|m| m.contains("duplicate score") && m.contains('1')),
+            "expected a duplicate-score error naming score 1, got {errors:?}"
+        );
     }
 }

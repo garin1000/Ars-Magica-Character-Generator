@@ -1,3 +1,11 @@
+//! Core data model: the language-neutral types every other module builds on.
+//!
+//! Defines stable slug-style [`Id`]s, the entity-generic [`Entity`] and its
+//! [`EntityTypeProfile`], the [`PointItem`] catalogue (virtues, flaws,
+//! abilities, …), the recursive [`Prereq`] expression tree, and [`Effect`]s
+//! that feed the effective-score layer. Carries no user-facing prose — all
+//! translatable text lives in the Fluent/i18n layers, keyed by these ids.
+
 use serde::{Deserialize, Serialize};
 use std::borrow::Borrow;
 use std::collections::{BTreeMap, BTreeSet};
@@ -200,7 +208,9 @@ pub enum Prereq {
     /// (the entity carries no house metadata yet).
     House(Id),
     /// The entity must have the referenced ability at or above the given score.
-    /// Currently unevaluable (no ability scores on the entity yet).
+    /// Evaluated against the entity's effective ability score (bought score
+    /// plus virtue bonuses such as Puissant Ability); an ability the entity
+    /// lacks counts as 0.
     AbilityMin { ability: Id, score: u8 },
     /// The entity must have the referenced art at or above the given score.
     /// Currently unevaluable (no art scores on the entity yet).
@@ -560,7 +570,22 @@ pub struct EntityTypeProfile {
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub gift_categories: BTreeSet<String>,
     /// Ordered creation phases the guided wizard walks through.
+    // Order-significant (the wizard walks them in sequence): intentionally
+    // exempt from `normalize`'s canonical sorting.
     pub creation_phases: Vec<String>,
+}
+
+impl EntityTypeProfile {
+    /// Sorts the profile's unordered nested vectors for canonical
+    /// serialization. The category/trait sets are `BTreeSet`s (already
+    /// id-ordered), and `creation_phases` is order-significant and so left
+    /// untouched; the only unordered vector is the budget's
+    /// `flaw_category_caps`, sorted here by category.
+    pub fn normalize(&mut self) {
+        self.budget
+            .flaw_category_caps
+            .sort_by(|a, b| a.category.cmp(&b.category));
+    }
 }
 
 /// A user's choice of a virtue/flaw with optional parameters.
@@ -796,6 +821,7 @@ mod tests {
         check(ParameterDomain::Ability);
         check(ParameterDomain::Art);
         check(ParameterDomain::Item);
+        check(ParameterDomain::Characteristic);
         check(crate::validation::IssueSeverity::Error);
         check(crate::validation::IssueSeverity::Warning);
     }
@@ -932,6 +958,35 @@ mod tests {
         item.normalize();
         let keys: Vec<&str> = item.parameters.iter().map(|p| p.key.as_str()).collect();
         assert_eq!(keys, vec!["first", "second"]);
+    }
+
+    #[test]
+    fn entity_type_profile_normalize_sorts_flaw_category_caps() {
+        let mut profile: EntityTypeProfile = serde_json::from_str(
+            r#"{
+              "id": "companion",
+              "budget": {
+                "virtue_points": 10,
+                "flaw_points": 10,
+                "flaw_category_caps": [
+                  { "category": "story", "max": 1 },
+                  { "category": "personality", "max": 2 }
+                ]
+              },
+              "creation_phases": ["concept", "boons_hooks"]
+            }"#,
+        )
+        .unwrap();
+        profile.normalize();
+        let cats: Vec<&str> = profile
+            .budget
+            .flaw_category_caps
+            .iter()
+            .map(|c| c.category.as_str())
+            .collect();
+        assert_eq!(cats, vec!["personality", "story"]);
+        // Order-significant phases stay in their declared order.
+        assert_eq!(profile.creation_phases, vec!["concept", "boons_hooks"]);
     }
 
     #[test]
@@ -1389,6 +1444,10 @@ mod tests {
         assert_eq!(format!("{}", ParamType::Ref), "ref");
         assert_eq!(format!("{}", ParameterDomain::Ability), "ability");
         assert_eq!(format!("{}", ParameterDomain::Art), "art");
+        assert_eq!(
+            format!("{}", ParameterDomain::Characteristic),
+            "characteristic"
+        );
         assert_eq!(format!("{}", ParameterDomain::Item), "item");
     }
 
