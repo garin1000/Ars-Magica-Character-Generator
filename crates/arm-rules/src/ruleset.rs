@@ -11,11 +11,11 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::ability::{Ability, AdvancementTable};
+use crate::ability::{Ability, AbilityCategory, AdvancementTable};
 use crate::characteristics::CharacteristicRules;
 use crate::types::{
-    Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, ParameterDomain, PointItem, Prereq,
-    RulesetRef,
+    Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, Magnitude, ParameterDomain, PointItem,
+    Prereq, RulesetRef,
 };
 
 /// Top-level container for all loaded game mechanics.
@@ -43,7 +43,9 @@ use crate::types::{
 ///   "type_profiles": { "magus": { /* EntityTypeProfile */ } },
 ///   "abilities": { "ability.awareness": { /* Ability */ } },
 ///   "advancement": [ { "score": 1, "total_xp": 5 } ],
-///   "characteristic_rules": { /* CharacteristicRules */ }
+///   "characteristic_rules": { /* CharacteristicRules */ },
+///   "magnitude_points": { "free": 0, "minor": 1, "major": 3 },
+///   "ability_category_order": [ "general", "academic", "arcane", "martial", "supernatural" ]
 /// }
 /// ```
 ///
@@ -78,6 +80,28 @@ pub struct Ruleset {
     /// a stable public contract.
     #[serde(default)]
     pub(crate) characteristic_rules: Option<CharacteristicRules>,
+    /// Magnitude→point-weight table, derived from [`Magnitude::points`]. Serialized
+    /// to the frontend so the UI reads point values from the engine instead of
+    /// re-hardcoding them. Derived data, not authored: populated at construction
+    /// and re-derived in [`Ruleset::from_serialized`], never trusted from input
+    /// JSON. The `magnitude_points` field name is a stable public contract.
+    #[serde(default)]
+    pub(crate) magnitude_points: BTreeMap<Magnitude, u8>,
+    /// Ability categories in canonical book order, derived from
+    /// [`AbilityCategory::ALL`]. Serialized to the frontend so the UI orders
+    /// ability groups from engine data instead of re-hardcoding the order. Derived
+    /// data, not authored (see `magnitude_points`). The `ability_category_order`
+    /// field name is a stable public contract.
+    #[serde(default)]
+    pub(crate) ability_category_order: Vec<AbilityCategory>,
+}
+
+/// The magnitude→points table, derived from the canonical [`Magnitude::points`].
+fn derived_magnitude_points() -> BTreeMap<Magnitude, u8> {
+    Magnitude::ALL
+        .into_iter()
+        .map(|m| (m, m.points()))
+        .collect()
 }
 
 /// The set of language-neutral JSON source strings a [`Ruleset`] is built from.
@@ -486,6 +510,8 @@ impl Ruleset {
             abilities,
             advancement: abilities_file.advancement,
             characteristic_rules,
+            magnitude_points: derived_magnitude_points(),
+            ability_category_order: AbilityCategory::ALL.to_vec(),
         };
 
         ruleset.validate_integrity()?;
@@ -497,7 +523,12 @@ impl Ruleset {
     /// still go through [`Ruleset::from_json`]. Deriving `Deserialize` alone does
     /// NOT validate integrity — always reconstruct via this method.
     pub fn from_serialized(json: &str) -> Result<Self, RulesetError> {
-        let ruleset: Ruleset = serde_json::from_str(json)?;
+        let mut ruleset: Ruleset = serde_json::from_str(json)?;
+        // These are derived constants, not authored data: re-derive them rather
+        // than trusting the incoming JSON, so an older payload missing the fields
+        // still yields a correct, non-empty ruleset.
+        ruleset.magnitude_points = derived_magnitude_points();
+        ruleset.ability_category_order = AbilityCategory::ALL.to_vec();
         ruleset.validate_integrity()?;
         Ok(ruleset)
     }
@@ -1559,9 +1590,11 @@ mod tests {
             keys,
             vec![
                 "abilities",
+                "ability_category_order",
                 "advancement",
                 "characteristic_rules",
                 "id",
+                "magnitude_points",
                 "point_items",
                 "type_profiles",
                 "version",
@@ -1573,6 +1606,10 @@ mod tests {
         assert!(obj["type_profiles"].is_object());
         assert!(obj["abilities"].is_object());
         assert!(obj["advancement"].is_array());
+        // Derived taxonomy surfaced to the UI: points map keyed by magnitude slug,
+        // categories as an ordered array.
+        assert_eq!(obj["magnitude_points"]["minor"], 1);
+        assert!(obj["ability_category_order"].is_array());
 
         // And the whole thing round-trips back through the validating loader.
         let restored = Ruleset::from_serialized(&serde_json::to_string(&rs).unwrap()).unwrap();

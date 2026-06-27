@@ -40,6 +40,18 @@ pub enum AbilityCategory {
     Supernatural,
 }
 
+impl AbilityCategory {
+    /// All categories in canonical book order. The single source the serialized
+    /// category-ordering is derived from, so the UI never re-hardcodes the order.
+    pub const ALL: [AbilityCategory; 5] = [
+        AbilityCategory::General,
+        AbilityCategory::Academic,
+        AbilityCategory::Arcane,
+        AbilityCategory::Martial,
+        AbilityCategory::Supernatural,
+    ];
+}
+
 impl fmt::Display for AbilityCategory {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {

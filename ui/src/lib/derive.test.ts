@@ -16,6 +16,12 @@ import type { Ability, CharacteristicRules, Entity, LocalizedRuleset, PointItem 
 
 // --- Fixtures ---------------------------------------------------------------
 
+/** Engine-derived taxonomy the real backend ships on every Ruleset payload. */
+const DERIVED_TAXONOMY = {
+  magnitude_points: { free: 0, minor: 1, major: 3 },
+  ability_category_order: ['general', 'academic', 'arcane', 'martial', 'supernatural'],
+} satisfies Pick<LocalizedRuleset['ruleset'], 'magnitude_points' | 'ability_category_order'>;
+
 function item(overrides: Partial<PointItem> & Pick<PointItem, 'id'>): PointItem {
   return {
     kind: 'virtue',
@@ -42,6 +48,7 @@ function makeRuleset(
       version: '1',
       point_items,
       type_profiles: opts.profiles ?? {},
+      ...DERIVED_TAXONOMY,
     },
     i18n: opts.i18n ?? {},
   };
@@ -353,7 +360,14 @@ describe('groupAbilitiesByCategory', () => {
     const map: Record<string, Ability> = {};
     for (const a of abilities) map[a.id] = a;
     return {
-      ruleset: { id: 't', version: '1', point_items: {}, type_profiles: {}, abilities: map },
+      ruleset: {
+        id: 't',
+        version: '1',
+        point_items: {},
+        type_profiles: {},
+        abilities: map,
+        ...DERIVED_TAXONOMY,
+      },
       i18n,
     };
   }
@@ -424,7 +438,14 @@ describe('abilityDisplayName', () => {
     const map: Record<string, Ability> = {};
     for (const a of abilities) map[a.id] = a;
     return {
-      ruleset: { id: 't', version: '1', point_items: {}, type_profiles: {}, abilities: map },
+      ruleset: {
+        id: 't',
+        version: '1',
+        point_items: {},
+        type_profiles: {},
+        abilities: map,
+        ...DERIVED_TAXONOMY,
+      },
       i18n,
     };
   }
@@ -474,7 +495,14 @@ describe('abilityLabel', () => {
     const map: Record<string, Ability> = {};
     for (const a of abilities) map[a.id] = a;
     return {
-      ruleset: { id: 't', version: '1', point_items: {}, type_profiles: {}, abilities: map },
+      ruleset: {
+        id: 't',
+        version: '1',
+        point_items: {},
+        type_profiles: {},
+        abilities: map,
+        ...DERIVED_TAXONOMY,
+      },
       i18n,
     };
   }

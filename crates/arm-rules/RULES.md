@@ -33,6 +33,10 @@ mechanics carry entries; the rest are stubbed at the end.
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2774` (also stated at
   `:2209`). Free (0-point) virtues: `:2886-2896`.
 - Implementation: `crates/arm-rules/src/types.rs` — `Magnitude` / `Magnitude::points()`.
+  These weights are also surfaced to the UI verbatim as `Ruleset.magnitude_points`
+  (derived from `Magnitude::points()` in `crates/arm-rules/src/ruleset.rs`); this
+  introduces no new rule value — it is the same number, exposed so the frontend
+  reads it from the engine instead of re-hardcoding it.
 
 #### Virtue/Flaw polarity — Virtues cost, Flaws grant
 > "Virtues cost points, while Flaws grant points."

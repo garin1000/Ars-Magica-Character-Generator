@@ -46,6 +46,9 @@ function installRuleset(items: PointItem[], abilities: Ability[] = []): Localize
       point_items,
       type_profiles: {},
       abilities: abilityMap,
+      // Engine-derived taxonomy the real backend ships on every Ruleset payload.
+      magnitude_points: { free: 0, minor: 1, major: 3 },
+      ability_category_order: ['general', 'academic', 'arcane', 'martial', 'supernatural'],
     },
     i18n: {},
   };

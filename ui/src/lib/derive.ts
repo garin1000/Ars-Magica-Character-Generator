@@ -109,17 +109,16 @@ export interface Balance {
   flawBudget: number;
 }
 
-const MAGNITUDE_POINTS = { free: 0, minor: 1, major: 3 } as const;
-
 /** Sum selected virtue/flaw points against the active type profile's budget. */
 export function balance(localized: LocalizedRuleset, entity: Entity): Balance {
   const profile = localized.ruleset.type_profiles[entity.type_id];
+  const magnitudePoints = localized.ruleset.magnitude_points;
   let virtuePoints = 0;
   let flawPoints = 0;
   for (const selection of entity.selections) {
     const item = localized.ruleset.point_items[selection.ref];
     if (!item) continue;
-    const points = MAGNITUDE_POINTS[item.magnitude];
+    const points = magnitudePoints[item.magnitude] ?? 0;
     if (item.kind === 'virtue' || item.kind === 'boon') virtuePoints += points;
     else flawPoints += points;
   }
@@ -213,17 +212,11 @@ export interface AbilityGroup {
   abilities: Ability[];
 }
 
-const ABILITY_CATEGORY_ORDER: AbilityCategory[] = [
-  'general',
-  'academic',
-  'arcane',
-  'martial',
-  'supernatural',
-];
-
 /**
  * Catalogue abilities grouped by category in book order (the original type
- * ordering), each group sorted alphabetically by localized name.
+ * ordering), each group sorted alphabetically by localized name. The category
+ * order comes from the engine payload (`ability_category_order`), so the UI never
+ * re-hardcodes it.
  */
 export function groupAbilitiesByCategory(localized: LocalizedRuleset): AbilityGroup[] {
   const groups = new Map<AbilityCategory, Ability[]>();
@@ -232,12 +225,14 @@ export function groupAbilitiesByCategory(localized: LocalizedRuleset): AbilityGr
     list.push(ability);
     groups.set(ability.category, list);
   }
-  return ABILITY_CATEGORY_ORDER.filter((c) => groups.has(c)).map((category) => ({
-    category,
-    abilities: groups
-      .get(category)!
-      .sort((a, b) =>
-        localizedSortKey(localized, a.id).localeCompare(localizedSortKey(localized, b.id)),
-      ),
-  }));
+  return localized.ruleset.ability_category_order
+    .filter((c) => groups.has(c))
+    .map((category) => ({
+      category,
+      abilities: groups
+        .get(category)!
+        .sort((a, b) =>
+          localizedSortKey(localized, a.id).localeCompare(localizedSortKey(localized, b.id)),
+        ),
+    }));
 }

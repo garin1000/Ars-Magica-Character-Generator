@@ -105,6 +105,11 @@ pub enum Magnitude {
 }
 
 impl Magnitude {
+    /// All magnitudes in canonical (ascending point-weight) order. The single
+    /// source the serialized magnitude→points table is derived from, so the UI
+    /// never re-hardcodes the 0/1/3 values.
+    pub const ALL: [Magnitude; 3] = [Magnitude::Free, Magnitude::Minor, Magnitude::Major];
+
     /// Returns the point weight of this magnitude (Free 0, Minor 1, Major 3).
     pub fn points(self) -> u8 {
         match self {

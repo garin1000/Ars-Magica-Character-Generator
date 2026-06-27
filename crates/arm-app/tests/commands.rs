@@ -33,14 +33,22 @@ fn load_ruleset_yields_companion_profile_and_all_items() {
     // `Ruleset.id` is now an `Id` newtype; compare its string form.
     assert_eq!(localized.ruleset.id.as_str(), RULESET_ID);
     assert_eq!(localized.ruleset.version, RULESET_VERSION);
-    assert_eq!(localized.ruleset.item_count(), 11);
+    // Catalogue size is data, not code: prove a known item loaded, never an exact
+    // V/F total (which would break when any item is added to the JSON).
+    assert!(
+        localized
+            .ruleset
+            .item(&Id::new("virtue.the_gift"))
+            .is_some()
+    );
     assert!(localized.ruleset.profile(&Id::new("companion")).is_some());
 }
 
 #[test]
 fn load_ruleset_yields_abilities_and_characteristics() {
     let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
-    assert_eq!(localized.ruleset.ability_count(), 23);
+    // Catalogue size is data, not code: prove the catalogue loaded via a known
+    // ability, never an exact count (the full catalogue is a data-only add).
     assert!(
         localized
             .ruleset
