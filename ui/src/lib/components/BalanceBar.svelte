@@ -7,10 +7,10 @@
 
 {#if b}
   <div class="balance" data-testid="balance">
-    <span class:over={b.virtuePoints > b.virtueBudget}>
+    <span class:over={b.virtuePoints > b.virtueBudget} data-testid="balance-virtues">
       {store.t('balance-virtues', { used: b.virtuePoints, budget: b.virtueBudget })}
     </span>
-    <span class:over={b.flawPoints > b.flawBudget}>
+    <span class:over={b.flawPoints > b.flawBudget} data-testid="balance-flaws">
       {store.t('balance-flaws', { used: b.flawPoints, budget: b.flawBudget })}
     </span>
   </div>

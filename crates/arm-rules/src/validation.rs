@@ -402,7 +402,10 @@ fn validate_balance(
         ));
     }
 
-    if virtue_points > flaw_points {
+    // Each flaw point funds `virtue_points_per_flaw_point` virtue points (1 for
+    // most types; 2 for Mythic Companions). Source: Core Rules.md:2638.
+    let funded_virtue_points = flaw_points * profile.budget.virtue_points_per_flaw_point as i32;
+    if virtue_points > funded_virtue_points {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_UNBALANCED_VIRTUES,
             args([
@@ -1742,6 +1745,59 @@ mod tests {
         assert!(
             !codes(&result).contains(&"unbalanced_virtues".to_string()),
             "balanced character should not be flagged: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn mythic_flaw_points_fund_double_virtues() {
+        // Mythic Companions: each Flaw point funds two Virtue points. Two virtue
+        // points on one flaw point is balanced here, but unbalanced at the
+        // default 1:1 rate. Source: Core Rules.md:2638.
+        let types = r#"[{
+          "id": "mythic",
+          "budget": { "virtue_points": 20, "flaw_points": 10, "virtue_points_per_flaw_point": 2 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = caps_ruleset(types);
+        let entity = make_entity(
+            "mythic",
+            vec![sel("virtue.v1"), sel("virtue.v2"), sel("flaw.minor_a")],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"unbalanced_virtues".to_string()),
+            "2 virtue points funded by 1 flaw point at the 2:1 rate is balanced: {:?}",
+            codes(&result)
+        );
+    }
+
+    #[test]
+    fn mythic_virtues_beyond_double_are_unbalanced() {
+        // Three virtue points on one flaw point exceeds even the 2:1 funding.
+        let types = r#"[{
+          "id": "mythic",
+          "budget": { "virtue_points": 20, "flaw_points": 10, "virtue_points_per_flaw_point": 2 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = caps_ruleset(types);
+        let entity = make_entity(
+            "mythic",
+            vec![
+                sel("virtue.v1"),
+                sel("virtue.v2"),
+                sel("virtue.v3"),
+                sel("flaw.minor_a"),
+            ],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"unbalanced_virtues".to_string()),
+            "3 virtue points exceed 1 flaw point's 2:1 funding: {:?}",
             codes(&result)
         );
     }

@@ -38,13 +38,29 @@ fn shipped_data_passes_integrity_check() {
     let rs = load_ruleset();
     // Catalogue size is data, not code: assert key items are present, never an
     // exact V/F total (which would break when any item is added to the JSON).
-    assert_eq!(rs.profile_count(), 2, "companion + grog");
     assert!(
         rs.item(&Id::new("virtue.the_gift")).is_some(),
         "virtue.the_gift must be present"
     );
+    // All four character-type profiles must load.
     assert!(rs.profile(&Id::new("companion")).is_some());
     assert!(rs.profile(&Id::new("grog")).is_some());
+    assert!(rs.profile(&Id::new("magus")).is_some());
+    assert!(rs.profile(&Id::new("mythic_companion")).is_some());
+    // The magus is the only seeded Hermetic type.
+    assert!(
+        rs.profile(&Id::new("magus")).unwrap().is_magus,
+        "magus profile must carry is_magus"
+    );
+    // Mythic Companions convert each Flaw point into two Virtue points.
+    assert_eq!(
+        rs.profile(&Id::new("mythic_companion"))
+            .unwrap()
+            .budget
+            .virtue_points_per_flaw_point,
+        2,
+        "mythic companion funds virtues at 2:1"
+    );
 }
 
 #[test]

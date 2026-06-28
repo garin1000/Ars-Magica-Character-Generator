@@ -59,5 +59,71 @@
       "virtues_flaws",
       "abilities"
     ]
+  },
+  {
+    "id": "magus",
+    "budget": {
+      "virtue_points": 10,
+      "flaw_points": 10,
+      "max_major_virtues": null,
+      "max_major_flaws": null,
+      "max_minor_flaws": 5,
+      "flaw_category_caps": [
+        { "category": "personality", "max": 1, "major_only": true, "hard": true },
+        { "category": "personality", "max": 2 },
+        { "category": "story", "max": 1 }
+      ]
+    },
+    "permitted_categories": ["general", "personality", "social_status", "story", "supernatural", "hermetic"],
+    "forbidden_categories": [],
+    "required_traits": ["virtue.hermetic_magus"],
+    "forbidden_traits": [],
+    "is_magus": true,
+    "gift_policy": "required",
+    "gift_id": "virtue.the_gift",
+    "gift_categories": ["hermetic"],
+    "creation_phases": [
+      "concept",
+      "type",
+      "characteristics",
+      "house_specialisation",
+      "virtues_flaws",
+      "abilities",
+      "arts",
+      "spells",
+      "personality_reputations"
+    ]
+  },
+  {
+    "id": "mythic_companion",
+    "budget": {
+      "virtue_points": 20,
+      "flaw_points": 10,
+      "virtue_points_per_flaw_point": 2,
+      "max_major_virtues": null,
+      "max_major_flaws": null,
+      "max_minor_flaws": 5,
+      "flaw_category_caps": [
+        { "category": "personality", "max": 1, "major_only": true, "hard": true },
+        { "category": "personality", "max": 2 },
+        { "category": "story", "max": 1 }
+      ]
+    },
+    "permitted_categories": ["general", "personality", "social_status", "story", "supernatural"],
+    "forbidden_categories": ["hermetic"],
+    "required_traits": [],
+    "forbidden_traits": [],
+    "is_magus": false,
+    "gift_policy": "forbidden",
+    "gift_id": "virtue.the_gift",
+    "gift_categories": ["hermetic"],
+    "creation_phases": [
+      "concept",
+      "type",
+      "characteristics",
+      "virtues_flaws",
+      "abilities",
+      "personality_reputations"
+    ]
   }
 ]

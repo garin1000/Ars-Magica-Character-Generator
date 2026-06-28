@@ -146,6 +146,10 @@ This project deliberately separates two bodies of work under two licenses:
   [`rules/source/LICENSE`](rules/source/LICENSE). The authoritative Markdown lives
   in `rules/source/<lang>/`; the JSON in `rules/core/` and `rules/i18n/` is
   generated from it.
+- **Rule provenance** — every implemented mechanic is traced back to its source
+  passage (book + line range) in
+  [`crates/arm-rules/RULES.md`](crates/arm-rules/RULES.md), the single
+  traceability map for the engine.
 
 The rulebook Markdown originates from these Open License repositories:
 

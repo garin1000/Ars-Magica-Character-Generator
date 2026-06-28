@@ -67,6 +67,22 @@ class AppStore {
   }
 
   /**
+   * Switch the character type in place. Selections, characteristics and
+   * abilities are kept; live validation then flags anything the new type's
+   * budget/category rules forbid (e.g. a Hermetic flaw on a grog). The available
+   * direct-entry sections (Arts/Spells/House) follow the new profile's
+   * capability flags, never the type id.
+   */
+  async setType(typeId: string): Promise<void> {
+    if (this.entity.type_id === typeId) return;
+    this.entity.type_id = typeId;
+    // A type switch is a discrete action (not rapid typing), so validate
+    // immediately rather than through the debounce — mirrors setMode and avoids
+    // a stale debounced result from the prior type winning the race.
+    await this.revalidate();
+  }
+
+  /**
    * Add a virtue/flaw selection. A repeatable item — one carrying parameters
    * (e.g. Great Characteristic) or with `max_per_target > 1` — can be added
    * several times, each instance choosing its own target; a plain item is added

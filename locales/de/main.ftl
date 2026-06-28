@@ -12,6 +12,12 @@ mode-enforced = Erzwungen
 mode-advisory = Hinweise
 mode-silent = Aus
 
+type-label = Charaktertyp
+type-grog = Grog
+type-companion = Gefährte
+type-mythic_companion = Mythischer Gefährte
+type-magus = Magus
+
 available-title = Verfügbar
 items-virtues-title = Tugenden
 items-flaws-title = Fehler

@@ -12,6 +12,12 @@ mode-enforced = Enforced
 mode-advisory = Advisory
 mode-silent = Silent
 
+type-label = Character type
+type-grog = Grog
+type-companion = Companion
+type-mythic_companion = Mythic Companion
+type-magus = Magus
+
 available-title = Available
 items-virtues-title = Virtues
 items-flaws-title = Flaws

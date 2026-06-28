@@ -449,6 +449,15 @@ fn is_default_max_per_target(value: &u8) -> bool {
     *value == default_max_per_target()
 }
 
+/// The default virtue/flaw conversion: one Flaw point funds one Virtue point.
+fn default_virtue_points_per_flaw_point() -> u8 {
+    1
+}
+
+fn is_default_virtue_points_per_flaw_point(value: &u8) -> bool {
+    *value == default_virtue_points_per_flaw_point()
+}
+
 impl PointItem {
     /// Sorts the `parameters` vector by key for canonical serialization.
     pub fn normalize(&mut self) {
@@ -485,6 +494,19 @@ pub struct PointBudget {
     pub virtue_points: u8,
     /// Maximum total flaw points.
     pub flaw_points: u8,
+    /// How many virtue points each flaw point funds. Default 1 (one Flaw point
+    /// buys one Virtue point). Mythic Companions get 2 (each Flaw point is worth
+    /// two Virtue points). Data-driven so the engine never hardcodes a type.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2638 ("you may
+    /// take up to ten points of Flaws, and each point of Flaws is worth two
+    /// points of Virtues. This produces a maximum of 21 points of Virtues and 10
+    /// points of Flaws").
+    #[serde(
+        default = "default_virtue_points_per_flaw_point",
+        skip_serializing_if = "is_default_virtue_points_per_flaw_point"
+    )]
+    pub virtue_points_per_flaw_point: u8,
     /// Optional cap on the number of Major virtues.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_major_virtues: Option<u8>,

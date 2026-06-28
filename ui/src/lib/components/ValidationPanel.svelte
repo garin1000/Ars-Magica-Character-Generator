@@ -29,7 +29,7 @@
   {:else}
     <ul class="issue-list" data-testid="issue-list">
       {#each issues as issue (`${issue.code}|${issue.context ?? ''}|${JSON.stringify(issue.args)}`)}
-        <li class="issue {issue.severity}" data-severity={issue.severity}>
+        <li class="issue {issue.severity}" data-severity={issue.severity} data-code={issue.code}>
           {store.t(`issue-${issue.code}`, {
             ...issue.args,
             ...(issue.context ? { context: issue.context } : {}),
