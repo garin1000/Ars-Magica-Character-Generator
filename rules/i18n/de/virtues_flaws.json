@@ -39,6 +39,10 @@
     "name": "Begabung in {ability}",
     "summary": "+2 auf alle Würfe mit einer Fertigkeit."
   },
+  "virtue.puissant_art": {
+    "name": "Begabung in {art}",
+    "summary": "+3 auf alle Summen mit einer Kunst. Kann zweimal gewählt werden, für zwei Künste."
+  },
   "virtue.the_gift": {
     "name": "Die Gabe",
     "summary": "Du hast die Fähigkeit, Magie zu wirken."

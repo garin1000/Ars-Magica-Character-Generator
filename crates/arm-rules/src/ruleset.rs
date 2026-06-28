@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ability::{Ability, AbilityCategory, AdvancementTable};
+use crate::art::{Art, ArtType, ArtsFile};
 use crate::characteristics::CharacteristicRules;
 use crate::types::{
     Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, Magnitude, ParameterDomain, PointItem,
@@ -94,6 +95,23 @@ pub struct Ruleset {
     /// field name is a stable public contract.
     #[serde(default)]
     pub(crate) ability_category_order: Vec<AbilityCategory>,
+    /// All Hermetic Arts keyed by their id. Defaulted so older serialized
+    /// rulesets (no arts) still deserialize. Serialized whole to the frontend;
+    /// the `arts` field name is a stable public contract.
+    #[serde(default)]
+    pub(crate) arts: BTreeMap<Id, Art>,
+    /// The Art XP advancement table (the cheaper triangular "ART To Buy" curve).
+    /// Serialized whole to the frontend; the `art_advancement` field name is a
+    /// stable public contract.
+    #[serde(default)]
+    pub(crate) art_advancement: AdvancementTable,
+    /// Art classes (Technique, Form) in canonical book order, derived from
+    /// [`ArtType::ALL`]. Serialized to the frontend so the UI orders Art groups
+    /// from engine data instead of re-hardcoding the order. Derived data, not
+    /// authored (see `magnitude_points`). The `art_type_order` field name is a
+    /// stable public contract.
+    #[serde(default)]
+    pub(crate) art_type_order: Vec<ArtType>,
 }
 
 /// The magnitude→points table, derived from the canonical [`Magnitude::points`].
@@ -123,6 +141,9 @@ pub struct RulesetSources<'a> {
     /// Abilities-file JSON (`{ "advancement": [...], "abilities": [...] }`), or
     /// `None` for a ruleset without an ability registry.
     pub abilities: Option<&'a str>,
+    /// Arts-file JSON (`{ "advancement": [...], "arts": [...] }`), or `None` for
+    /// a ruleset without an Art registry.
+    pub arts: Option<&'a str>,
     /// Characteristic point-buy JSON (`{ "start_points", "costs" }`), or `None`
     /// for a ruleset that ships no characteristic rules.
     pub characteristics: Option<&'a str>,
@@ -229,6 +250,7 @@ pub(crate) mod parse_source {
     pub const POINT_ITEMS: &str = "point items";
     pub const TYPE_PROFILES: &str = "type profiles";
     pub const ABILITIES: &str = "abilities";
+    pub const ARTS: &str = "arts";
     pub const CHARACTERISTICS: &str = "characteristics";
     pub const I18N: &str = "i18n";
     /// Fallback used by the blanket `From<serde_json::Error>` conversion, where
@@ -394,12 +416,13 @@ impl Ruleset {
             point_items: point_items_json,
             type_profiles: type_profiles_json,
             abilities: None,
+            arts: None,
             characteristics: None,
         })
     }
 
     /// Like [`Ruleset::from_json`] but also loads the abilities file (catalogue +
-    /// advancement table). No characteristic rules.
+    /// advancement table). No arts or characteristic rules.
     ///
     /// `abilities_json` is an object `{ "advancement": [...], "abilities": [...] }`;
     /// both keys default to empty, so `"{}"` is a valid empty file.
@@ -416,6 +439,7 @@ impl Ruleset {
             point_items: point_items_json,
             type_profiles: type_profiles_json,
             abilities: Some(abilities_json),
+            arts: None,
             characteristics: None,
         })
     }
@@ -440,8 +464,35 @@ impl Ruleset {
             point_items: point_items_json,
             type_profiles: type_profiles_json,
             abilities: Some(abilities_json),
+            arts: None,
             // Preserve the existing sentinel: an empty string means "no
             // characteristic rules" for this convenience constructor.
+            characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
+        })
+    }
+
+    /// Like [`Ruleset::from_core_json`] but also loads the Arts file (catalogue +
+    /// Art advancement table). For tests that exercise the Art registry.
+    ///
+    /// `arts_json` is an object `{ "advancement": [...], "arts": [...] }`; both
+    /// keys default to empty, so `"{}"` is a valid empty file.
+    #[allow(clippy::too_many_arguments)]
+    pub fn from_core_json_with_arts(
+        id: &str,
+        version: &str,
+        point_items_json: &str,
+        type_profiles_json: &str,
+        abilities_json: &str,
+        arts_json: &str,
+        characteristics_json: &str,
+    ) -> Result<Self, RulesetError> {
+        Self::from_sources(RulesetSources {
+            id,
+            version,
+            point_items: point_items_json,
+            type_profiles: type_profiles_json,
+            abilities: Some(abilities_json),
+            arts: Some(arts_json),
             characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
         })
     }
@@ -459,6 +510,7 @@ impl Ruleset {
             point_items: point_items_json,
             type_profiles: type_profiles_json,
             abilities,
+            arts,
             characteristics,
         } = sources;
 
@@ -469,6 +521,9 @@ impl Ruleset {
         // An absent abilities file is equivalent to an empty `"{}"`.
         let abilities_file: AbilitiesFile = serde_json::from_str(abilities.unwrap_or("{}"))
             .map_err(|e| RulesetError::parse(parse_source::ABILITIES, e))?;
+        // An absent arts file is equivalent to an empty `"{}"`.
+        let arts_file: ArtsFile = serde_json::from_str(arts.unwrap_or("{}"))
+            .map_err(|e| RulesetError::parse(parse_source::ARTS, e))?;
         let characteristic_rules: Option<CharacteristicRules> = match characteristics {
             None => None,
             Some(json) => Some(
@@ -486,6 +541,7 @@ impl Ruleset {
             "ability",
             &mut errors,
         );
+        collect_duplicates(arts_file.arts.iter().map(|a| &a.id), "art", &mut errors);
         if !errors.is_empty() {
             return Err(IntegrityError::new(errors).into());
         }
@@ -501,6 +557,11 @@ impl Ruleset {
             .into_iter()
             .map(|a| (a.id.clone(), a))
             .collect();
+        let arts: BTreeMap<Id, Art> = arts_file
+            .arts
+            .into_iter()
+            .map(|a| (a.id.clone(), a))
+            .collect();
 
         let ruleset = Self {
             id: Id::new(id),
@@ -512,6 +573,9 @@ impl Ruleset {
             characteristic_rules,
             magnitude_points: derived_magnitude_points(),
             ability_category_order: AbilityCategory::ALL.to_vec(),
+            arts,
+            art_advancement: arts_file.advancement,
+            art_type_order: ArtType::ALL.to_vec(),
         };
 
         ruleset.validate_integrity()?;
@@ -529,6 +593,7 @@ impl Ruleset {
         // still yields a correct, non-empty ruleset.
         ruleset.magnitude_points = derived_magnitude_points();
         ruleset.ability_category_order = AbilityCategory::ALL.to_vec();
+        ruleset.art_type_order = ArtType::ALL.to_vec();
         ruleset.validate_integrity()?;
         Ok(ruleset)
     }
@@ -606,6 +671,26 @@ impl Ruleset {
         &self.advancement
     }
 
+    /// Looks up an Art by id.
+    pub fn art(&self, id: &Id) -> Option<&Art> {
+        self.arts.get(id)
+    }
+
+    /// Iterates all Arts in id order.
+    pub fn arts(&self) -> impl Iterator<Item = &Art> {
+        self.arts.values()
+    }
+
+    /// Number of Arts in the catalogue.
+    pub fn art_count(&self) -> usize {
+        self.arts.len()
+    }
+
+    /// The Art XP advancement table.
+    pub fn art_advancement(&self) -> &AdvancementTable {
+        &self.art_advancement
+    }
+
     /// The Characteristic point-buy rules, if the ruleset ships them.
     pub fn characteristic_rules(&self) -> Option<&CharacteristicRules> {
         self.characteristic_rules.as_ref()
@@ -664,6 +749,8 @@ impl Ruleset {
         // The advancement table must have unique scores and non-decreasing
         // total_xp, or xp_to_raise's step subtraction would underflow later.
         errors.extend(self.advancement.validation_errors());
+        // Same invariant for the Art advancement table.
+        errors.extend(self.art_advancement.validation_errors());
 
         for (type_id, profile) in &self.type_profiles {
             for trait_id in &profile.required_traits {
@@ -708,14 +795,14 @@ impl Ruleset {
     }
 
     /// Recursively validates that prerequisite refs resolve to known registries:
-    /// [`Prereq::Has`] against point items and [`Prereq::AbilityMin`] against the
-    /// ability catalogue.
+    /// [`Prereq::Has`] against point items, [`Prereq::AbilityMin`] against the
+    /// ability catalogue, and [`Prereq::ArtMin`] against the Art catalogue.
     ///
-    /// `House` and `ArtMin` carry refs into house/art registries that do not exist
-    /// yet; those refs are INTENTIONALLY left unchecked (a deferred check),
-    /// narrowing the integrity contract explicitly so the gap is tracked rather
-    /// than silent — it must be revisited when those registries are added (M5).
-    /// `IsMagus` carries no reference at all, so there is nothing to check for it.
+    /// `House` carries a ref into a house registry that does not exist yet; that
+    /// ref is INTENTIONALLY left unchecked (a deferred check), narrowing the
+    /// integrity contract explicitly so the gap is tracked rather than silent — it
+    /// must be revisited when that registry is added (Phase 4). `IsMagus` carries
+    /// no reference at all, so there is nothing to check for it.
     fn validate_prereq_refs(&self, prereq: &Prereq, context_id: &Id, errors: &mut Vec<String>) {
         match prereq {
             Prereq::All(children) | Prereq::Any(children) | Prereq::Nor(children) => {
@@ -737,8 +824,15 @@ impl Ruleset {
                     ));
                 }
             }
-            // Intentionally unchecked: no house/art registry exists yet (M5).
-            Prereq::House(_) | Prereq::ArtMin { .. } | Prereq::IsMagus => {}
+            Prereq::ArtMin { art, .. } => {
+                if !self.arts.contains_key(art) {
+                    errors.push(format!(
+                        "{context_id}: prerequisite references unknown art '{art}'"
+                    ));
+                }
+            }
+            // Intentionally unchecked: no house registry exists yet (Phase 4).
+            Prereq::House(_) | Prereq::IsMagus => {}
         }
     }
 
@@ -758,6 +852,7 @@ impl Ruleset {
                     ParameterDomain::Characteristic,
                     "characteristic_limit",
                 ),
+                Effect::ArtBonus { param, .. } => (param, ParameterDomain::Art, "art_bonus"),
             };
             match item.parameters.iter().find(|p| &p.key == param) {
                 None => errors.push(format!(
@@ -946,6 +1041,7 @@ mod tests {
             point_items: VALID_ITEMS,
             type_profiles: VALID_TYPES,
             abilities: Some(VALID_ABILITIES),
+            arts: None,
             characteristics: None,
         })
         .unwrap();
@@ -960,6 +1056,7 @@ mod tests {
             point_items: VALID_ITEMS,
             type_profiles: VALID_TYPES,
             abilities: None,
+            arts: None,
             characteristics: None,
         })
         .unwrap();
@@ -1578,6 +1675,7 @@ mod tests {
             point_items: VALID_ITEMS,
             type_profiles: VALID_TYPES,
             abilities: Some(VALID_ABILITIES),
+            arts: None,
             characteristics: None,
         })
         .unwrap();
@@ -1592,6 +1690,9 @@ mod tests {
                 "abilities",
                 "ability_category_order",
                 "advancement",
+                "art_advancement",
+                "art_type_order",
+                "arts",
                 "characteristic_rules",
                 "id",
                 "magnitude_points",

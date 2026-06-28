@@ -74,6 +74,7 @@ characteristic-points = Punkte: { $used } / { $budget }
 tab-characteristics = Eigenschaften
 tab-virtues-flaws = Tugenden & Fehler
 tab-abilities = Fertigkeiten
+tab-arts = Künste
 # XP-Übersicht und Bedienelemente der Fertigkeiten.
 xp-pool = XP-Vorrat
 xp-spent = Ausgegeben: { $spent }
@@ -85,6 +86,13 @@ ability-specialties-label = Spezialisierungen
 ability-add = Fertigkeit hinzufügen
 ability-increment = Erhöhen
 ability-decrement = Verringern
+# Hermetische Künste: die beiden Klassen und die Bedienelemente. Künste teilen
+# sich den XP-Vorrat der Fertigkeiten (Schlüssel `xp-pool`).
+art-type-technique = Techniken
+art-type-form = Formen
+art-add = Kunst hinzufügen
+art-increment = Erhöhen
+art-decrement = Verringern
 characteristic-increment = Erhöhen
 characteristic-decrement = Verringern
 characteristic-description-label = Beschreibung
@@ -158,6 +166,9 @@ issue-not_enough_xp = Fertigkeiten kosten { $spent } XP, mehr als die { $pool } 
 issue-ability_parameter_required = { $ability } braucht einen Wert (z. B. das konkrete Gebiet oder die Sprache).
 issue-ability_score_out_of_range = Fertigkeit { $ability } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).
 issue-ability_bonus_dangling_target = { $item } zielt auf eine Fertigkeit, die der Charakter nicht hat ({ $ability } { $parameter }); füge sie zuerst hinzu.
+issue-unknown_art = Unbekannte Kunst: { $art }.
+issue-duplicate_art = { $art } ist { $count }-mal aufgeführt.
+issue-art_score_out_of_range = Kunst { $art } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).
 
 # AppError-Arten der Tauri-Befehle.
 error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.

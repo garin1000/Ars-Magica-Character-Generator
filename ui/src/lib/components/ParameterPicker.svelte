@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { abilityDisplayName, paramValueUsage } from '../derive';
+  import { abilityDisplayName, artLabel, groupArtsByType, paramValueUsage } from '../derive';
   import { CHARACTERISTICS, type ParameterDef, type Selection } from '../types';
 
   let {
@@ -47,6 +47,20 @@
     const raw = (event.currentTarget as HTMLSelectElement).value;
     const [abilityId, parameter] = raw.split(SEP);
     store.setAbilityBonusTarget(index, abilityId, parameter);
+  }
+
+  // Every catalogue Art (Techniques then Forms) — the legal Puissant Art targets.
+  // Unlike abilities, an Art need not be on the sheet to be a Puissant target.
+  const artOptions = $derived(
+    store.ruleset
+      ? groupArtsByType(store.ruleset).flatMap((group) =>
+          group.arts.map((art) => ({ value: art.id, label: artLabel(store.ruleset!, art.id) })),
+        )
+      : [],
+  );
+
+  function onSelectArt(event: Event) {
+    store.setArtBonusTarget(index, (event.currentTarget as HTMLSelectElement).value);
   }
 
   // How many other selections of this same item already claim each target, so a
@@ -112,6 +126,21 @@
         {#each abilityInstances as instance (instance.value)}
           <option value={instance.value} disabled={full(usedAbilityTargets, instance.value)}>
             {instance.label}
+          </option>
+        {/each}
+      </select>
+    {:else if param.domain === 'art'}
+      <!-- Targets a Hermetic Art (Puissant Art). Any catalogue Art is a legal
+           target; max_per_target keeps the same Art from being picked twice. -->
+      <select
+        value={selection.params?.[param.key] ?? ''}
+        onchange={onSelectArt}
+        data-testid="param-{selection.ref}-{param.key}-{index}"
+      >
+        <option value="" disabled>{store.t('param-placeholder')}</option>
+        {#each artOptions as art (art.value)}
+          <option value={art.value} disabled={full(used, art.value)}>
+            {art.label}
           </option>
         {/each}
       </select>

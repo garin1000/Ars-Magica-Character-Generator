@@ -10,9 +10,9 @@ use std::path::{Path, PathBuf};
 use std::collections::BTreeMap;
 
 use arm_rules::{
-    AbilityBonus, Characteristic, Entity, EntityKind, LocalizedRuleset, Ruleset, RulesetSources,
-    ValidationMode, ValidationResult, ability_bonuses, characteristic_caps, characteristic_floors,
-    validate,
+    AbilityBonus, ArtBonus, Characteristic, Entity, EntityKind, LocalizedRuleset, Ruleset,
+    RulesetSources, ValidationMode, ValidationResult, ability_bonuses, art_bonuses,
+    characteristic_caps, characteristic_floors, validate,
 };
 use serde::Serialize;
 
@@ -28,6 +28,8 @@ use crate::error::AppError;
 pub struct EffectiveScores {
     /// One entry per boosted ability instance (e.g. Puissant Ability +2).
     pub ability_bonuses: Vec<AbilityBonus>,
+    /// One entry per boosted Art (e.g. Puissant Art +3).
+    pub art_bonuses: Vec<ArtBonus>,
     /// Characteristic → highest buyable score (Great Characteristic raises it).
     pub characteristic_caps: BTreeMap<Characteristic, i32>,
     /// Characteristic → lowest buyable score (Poor Characteristic lowers it).
@@ -38,6 +40,7 @@ pub struct EffectiveScores {
 pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveScores {
     EffectiveScores {
         ability_bonuses: ability_bonuses(entity, ruleset),
+        art_bonuses: art_bonuses(entity, ruleset),
         characteristic_caps: characteristic_caps(entity, ruleset),
         characteristic_floors: characteristic_floors(entity, ruleset),
     }
@@ -85,10 +88,12 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     let point_items_json = fs::read_to_string(rules_dir.join("core/virtues_flaws.json"))?;
     let type_profiles_json = fs::read_to_string(rules_dir.join("core/character_types.json"))?;
     let abilities_json = fs::read_to_string(rules_dir.join("core/abilities.json"))?;
+    let arts_json = fs::read_to_string(rules_dir.join("core/arts.json"))?;
     let characteristics_json = fs::read_to_string(rules_dir.join("core/characteristics.json"))?;
 
     let vf_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/virtues_flaws.json")))?;
     let ability_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/abilities.json")))?;
+    let art_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/arts.json")))?;
 
     let ruleset = Ruleset::from_sources(RulesetSources {
         id: RULESET_ID,
@@ -96,12 +101,13 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         point_items: &point_items_json,
         type_profiles: &type_profiles_json,
         abilities: Some(&abilities_json),
+        arts: Some(&arts_json),
         // An empty characteristics file means the ruleset ships no characteristic
         // rules (the `Option` is the engine's honest "absent" signal).
         characteristics: (!characteristics_json.is_empty())
             .then_some(characteristics_json.as_str()),
     })?;
-    let localized = LocalizedRuleset::from_merged(ruleset, &[&vf_i18n, &ability_i18n])?;
+    let localized = LocalizedRuleset::from_merged(ruleset, &[&vf_i18n, &ability_i18n, &art_i18n])?;
     Ok(localized)
 }
 

@@ -210,9 +210,10 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/ability.rs` — `AdvancementTable`
   (`xp_for_score`, `xp_to_raise`, `max_score`). Used to price whole-point steps;
   a character stores whole bought scores plus an `xp_pool` total (`types.rs`).
-  The XP spent (Σ `xp_for_score`) may not exceed the pool — `validate_abilities`
-  emits `not_enough_xp` otherwise (an error in Advisory/Enforced; the M5 wizard
-  blocks the spend up front). Leftover pool is the character's banked XP.
+  This pool is **shared with Arts** (see the Arts section): the combined Ability +
+  Art cost may not exceed it — `validate_xp_pool` emits `not_enough_xp` otherwise
+  (an error in Advisory/Enforced; the M4 wizard blocks the spend up front).
+  Leftover pool is the character's banked XP.
 - Engine integrity check (not a sourced rule): a non-zero ability score with no
   row in the advancement table (`xp_for_score` → `None`) is off-table and
   flagged `ability_score_out_of_range` by `validate_abilities` rather than
@@ -280,6 +281,54 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
   resolve against it) in `ruleset.rs`; `validate_abilities` in `validation.rs`.
 
+### Arts
+
+#### Art XP advancement table ("ART To Buy") — `rules/core/arts.json`
+> Advancement Table, "ART To Buy" column: total XP to reach a score from zero —
+> 1→1, 2→3, 3→6, 4→10, 5→15, … (triangular n·(n+1)/2), through 20→210. Cheaper
+> than the Ability column (which is 5× these values).
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2406-2427` (header
+  `:2406`, data rows `:2408-2427` — the "ART To Buy" / "To Raise" columns).
+- Data: `rules/core/arts.json` `advancement` array (scores 1-20).
+- Implementation: reuses `crates/arm-rules/src/ability.rs` — `AdvancementTable`
+  (the same generic table type as Abilities). Surfaced on `Ruleset` as
+  `art_advancement`. A character stores whole bought Art scores
+  (`Entity::art_scores`) priced from this table.
+- **Shared XP pool.** Abilities and Arts are bought from **one** bank
+  (`Entity::xp_pool`): the rules give apprenticeship experience as a single pool
+  the magus splits freely between Arts and Abilities ("These experience points
+  can be spent on Arts or Abilities", `:2429-2433`). So there is no Art-specific
+  pool — `validate_xp_pool` sums the Ability cost (Ability table) and the Art cost
+  (Art table) and emits `not_enough_xp` if the total exceeds `xp_pool`. The
+  per-domain validators (`validate_abilities` / `validate_arts`) own only the
+  structural checks (unknown/duplicate/off-table); `xp_spent` does the pricing.
+- Engine integrity checks (not sourced rules): an off-table Art score is flagged
+  `art_score_out_of_range`; the table's unique-score + non-decreasing-`total_xp`
+  invariant is enforced from `Ruleset::validate_integrity` (same as the Ability
+  table).
+
+#### Art catalogue (15 Arts) — `rules/core/arts.json`
+> The Hermetic Arts: 5 Techniques (Creo, Intellego, Muto, Perdo, Rego) and 10
+> Forms (Animal, Aquam, Auram, Corpus, Herbam, Ignem, Imaginem, Mentem, Terram,
+> Vim).
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:8833-8982` — chapter
+  intro `:8833`, Techniques `:8845-8897`, Forms `:8899-8982`. Each Art entry cites
+  its own description line range (e.g. Creo `:8847-8863`, Ignem `:8941-8945`).
+- Data: 15 Arts, each `{ id, art_type }` where `art_type` is `technique` or
+  `form`. Arts are **not** parameterized and carry no specialty. The complete Core
+  Art set, so unlike the ability seed this is the full catalogue.
+- i18n: `rules/i18n/{en,de}/arts.json` carry per-Art `name`, two-letter
+  `abbreviation` (Cr, In, … Vi), and a condensed `description`. Art **names stay
+  Latin** in both languages (untranslated per `uebersetzungsregeln.md`); German
+  descriptions are drawn from the same line range in `Ars Magica Definitive
+  Edition Basisregeln.md`. EN↔DE Art glossary: `translation-tables/magie-regeln.md`.
+- Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
+  `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
+  Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
+  `ruleset.rs`; `validate_arts` in `validation.rs`.
+
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
 Two `Effect` kinds, both **data-driven** (a `PointItem` declares `effects` and the
@@ -328,6 +377,23 @@ bleed onto the character's other areas.
   `unexpected_param`). `validate_ability_bonus_targets` flags
   `ability_bonus_dangling_target` when the targeted `(ability, parameter)` is not
   among the character's bought abilities (e.g. the ability was later removed).
+
+#### Puissant (Art) — +3 to one Art
+> "You add 3 to the value of one Art whenever you use it. This means all totals in
+> which the score of the Art is part of the total. … You may take this Virtue
+> twice, for two different Arts."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:4818-4820`.
+- Data: `rules/core/virtues_flaws.json` `virtue.puissant_art` —
+  `category: hermetic`, `art`-domain param, `effects: [{ art_bonus, param: "art",
+  amount: 3 }]`; `max_per_target` defaults to 1 ("once for a given Art"). Taking
+  it for two Arts is two selections with different targets (repeatable by the
+  parameterized-item rule). Being Hermetic, only magus profiles permit it.
+- The `art_bonus` effect adds to an Art's *effective* score (Arts are not
+  parameterized, so the target is matched by id alone). Implementation:
+  `effective.rs::art_bonus`, `effective_art_score`, `art_bonuses` (serialized to
+  the frontend by `arm-app::ruleset_io`). `validation.rs` folds the bonus into the
+  Art score map so `ArtMin` is met by the boosted score.
 
 #### Great (Characteristic) — raise the buy cap to +4/+5
 > "You may raise any Characteristic that already has a score of at least +3 by

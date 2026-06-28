@@ -16,7 +16,7 @@ import type {
 } from './types';
 
 const VALIDATE_DEBOUNCE_MS = 150;
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 function newEntity(rulesetId: string, version: string): Entity {
   return {
@@ -29,6 +29,7 @@ function newEntity(rulesetId: string, version: string): Entity {
     characteristic_descriptions: {},
     ability_scores: [],
     xp_pool: 0,
+    art_scores: [],
   };
 }
 
@@ -196,6 +197,38 @@ class AppStore {
 
   setXpPool(xp: number): void {
     this.entity.xp_pool = Number.isFinite(xp) && xp > 0 ? Math.floor(xp) : 0;
+    this.#scheduleValidate();
+  }
+
+  /**
+   * Select an Art: it enters at score 0, which costs no Art-XP — the first point
+   * is bought by raising it. Arts are not parameterized, so each can be added
+   * once.
+   */
+  addArt(art: string): void {
+    const present = (this.entity.art_scores ?? []).some((a) => a.art === art);
+    if (present) return;
+    this.entity.art_scores = [...(this.entity.art_scores ?? []), { art, score: 0 }];
+    this.#scheduleValidate();
+  }
+
+  removeArtAt(index: number): void {
+    this.entity.art_scores = (this.entity.art_scores ?? []).filter((_, i) => i !== index);
+    this.#scheduleValidate();
+  }
+
+  adjustArtAt(index: number, delta: number, max: number): void {
+    this.entity.art_scores = (this.entity.art_scores ?? []).map((a, i) =>
+      i === index ? { ...a, score: Math.max(0, Math.min(max, a.score + delta)) } : a,
+    );
+    this.#scheduleValidate();
+  }
+
+  /** Point an art-bonus selection (Puissant Art) at a specific Art (by id). */
+  setArtBonusTarget(index: number, artId: string): void {
+    this.entity.selections = this.entity.selections.map((s, i) =>
+      i === index ? { ...s, params: { art: artId } } : s,
+    );
     this.#scheduleValidate();
   }
 

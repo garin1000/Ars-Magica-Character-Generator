@@ -39,6 +39,10 @@
     "name": "Puissant {ability}",
     "summary": "+2 to all rolls with one Ability."
   },
+  "virtue.puissant_art": {
+    "name": "Puissant {art}",
+    "summary": "+3 to all totals using one Art. May be taken twice, for two Arts."
+  },
   "virtue.the_gift": {
     "name": "The Gift",
     "summary": "You have the ability to work magic."

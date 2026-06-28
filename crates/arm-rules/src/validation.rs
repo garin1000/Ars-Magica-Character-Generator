@@ -180,6 +180,12 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_ABILITY_SCORE_OUT_OF_RANGE: &'static str = "ability_score_out_of_range";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_UNKNOWN_ART: &'static str = "unknown_art";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_DUPLICATE_ART: &'static str = "duplicate_art";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_ART_SCORE_OUT_OF_RANGE: &'static str = "art_score_out_of_range";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_CHARACTERISTIC_ABOVE_CAP: &'static str = "characteristic_above_cap";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_CHARACTERISTIC_BELOW_FLOOR: &'static str = "characteristic_below_floor";
@@ -317,6 +323,8 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_characteristics(entity, ruleset, &mut issues);
         validate_characteristic_limit_preconditions(entity, ruleset, &mut issues);
         validate_abilities(entity, ruleset, &mut issues);
+        validate_arts(entity, ruleset, &mut issues);
+        validate_xp_pool(entity, ruleset, &mut issues);
     }
 
     ValidationResult { issues }
@@ -589,14 +597,29 @@ fn validate_prerequisites(
         *entry = (*entry).max(effective);
     }
 
+    // Effective score per Art: max bought score plus any virtue bonus (Puissant
+    // Art +3). `ArtMin` thresholds are checked against the effective score.
+    let mut art_scores: BTreeMap<&Id, u8> = BTreeMap::new();
+    for a in &entity.art_scores {
+        let bonus = crate::effective::art_bonus(entity, ruleset, &a.art);
+        let effective = (i32::from(a.score) + bonus).clamp(0, i32::from(u8::MAX)) as u8;
+        let entry = art_scores.entry(&a.art).or_insert(0);
+        *entry = (*entry).max(effective);
+    }
+
+    let ctx = PrereqCtx {
+        selected_ids,
+        is_magus,
+        ability_scores: &ability_scores,
+        art_scores: &art_scores,
+    };
     for selection in &entity.selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
 
         if let Some(ref prereq) = item.prerequisites {
-            let (outcome, depended_on_unknown) =
-                evaluate_prereq(prereq, selected_ids, is_magus, &ability_scores);
+            let (outcome, depended_on_unknown) = evaluate_prereq(prereq, &ctx);
             match outcome {
                 Tri::False => {
                     issues.push(ValidationIssue::error(
@@ -618,15 +641,22 @@ fn validate_prerequisites(
     }
 }
 
+/// The read-only context a prerequisite is evaluated against: which items are
+/// selected, whether the type is a magus, and the effective Ability/Art score
+/// maps the `AbilityMin`/`ArtMin` thresholds compare against. Bundled so the
+/// recursive evaluator and its fold helper take one context rather than a long
+/// positional argument list.
+struct PrereqCtx<'a> {
+    selected_ids: &'a BTreeSet<&'a Id>,
+    is_magus: Option<bool>,
+    ability_scores: &'a BTreeMap<&'a Id, u8>,
+    art_scores: &'a BTreeMap<&'a Id, u8>,
+}
+
 /// Evaluates a prerequisite to a tri-state. Returns the outcome plus whether an
 /// unevaluable leaf actually influenced the result (so a warning is only worth
 /// emitting when the answer genuinely hinges on missing data).
-fn evaluate_prereq(
-    prereq: &Prereq,
-    selected_ids: &BTreeSet<&Id>,
-    is_magus: Option<bool>,
-    ability_scores: &BTreeMap<&Id, u8>,
-) -> (Tri, bool) {
+fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx) -> (Tri, bool) {
     match prereq {
         // The three quantifiers share one tri-state fold over their children,
         // differing only in: which child outcome short-circuits, what the
@@ -636,35 +666,11 @@ fn evaluate_prereq(
         //   Any (OR) : trigger on True   -> short-circuit True;  all-known -> False
         //   Nor      : trigger on True   -> short-circuit False; all-known -> True
         // In every case a surviving Unknown makes the whole expression Unknown.
-        Prereq::All(children) => fold_children(
-            children,
-            selected_ids,
-            is_magus,
-            ability_scores,
-            Tri::False,
-            Tri::False,
-            Tri::True,
-        ),
-        Prereq::Any(children) => fold_children(
-            children,
-            selected_ids,
-            is_magus,
-            ability_scores,
-            Tri::True,
-            Tri::True,
-            Tri::False,
-        ),
-        Prereq::Nor(children) => fold_children(
-            children,
-            selected_ids,
-            is_magus,
-            ability_scores,
-            Tri::True,
-            Tri::False,
-            Tri::True,
-        ),
+        Prereq::All(children) => fold_children(children, ctx, Tri::False, Tri::False, Tri::True),
+        Prereq::Any(children) => fold_children(children, ctx, Tri::True, Tri::True, Tri::False),
+        Prereq::Nor(children) => fold_children(children, ctx, Tri::True, Tri::False, Tri::True),
         Prereq::Has(id) => {
-            if selected_ids.contains(id) {
+            if ctx.selected_ids.contains(id) {
                 (Tri::True, false)
             } else {
                 (Tri::False, false)
@@ -672,7 +678,7 @@ fn evaluate_prereq(
         }
         // IsMagus is enforced against the profile's explicit `is_magus` flag (a
         // Hermetic-Magus-status type), independent of gift_policy.
-        Prereq::IsMagus => match is_magus {
+        Prereq::IsMagus => match ctx.is_magus {
             Some(true) => (Tri::True, false),
             Some(false) => (Tri::False, false),
             None => (Tri::Unknown, true),
@@ -682,15 +688,25 @@ fn evaluate_prereq(
         // Ability), as supplied by the caller. An ability the entity does not
         // have counts as score 0, so any positive threshold is False.
         Prereq::AbilityMin { ability, score } => {
-            let have = ability_scores.get(ability).copied().unwrap_or(0);
+            let have = ctx.ability_scores.get(ability).copied().unwrap_or(0);
             if have >= *score {
                 (Tri::True, false)
             } else {
                 (Tri::False, false)
             }
         }
-        // No house/art metadata on the entity yet: genuinely unknown (M5).
-        Prereq::House(_) | Prereq::ArtMin { .. } => (Tri::Unknown, true),
+        // ArtMin compares against the entity's max *effective* Art score (bought
+        // plus Puissant Art). An Art the entity does not have counts as 0.
+        Prereq::ArtMin { art, score } => {
+            let have = ctx.art_scores.get(art).copied().unwrap_or(0);
+            if have >= *score {
+                (Tri::True, false)
+            } else {
+                (Tri::False, false)
+            }
+        }
+        // No house metadata on the entity yet: genuinely unknown (Phase 4).
+        Prereq::House(_) => (Tri::Unknown, true),
     }
 }
 
@@ -705,9 +721,7 @@ fn evaluate_prereq(
 /// `all_known`.
 fn fold_children(
     children: &[Prereq],
-    selected_ids: &BTreeSet<&Id>,
-    is_magus: Option<bool>,
-    ability_scores: &BTreeMap<&Id, u8>,
+    ctx: &PrereqCtx,
     trigger: Tri,
     short_circuit: Tri,
     all_known: Tri,
@@ -715,7 +729,7 @@ fn fold_children(
     let mut depended = false;
     let mut saw_unknown = false;
     for child in children {
-        let (outcome, dep) = evaluate_prereq(child, selected_ids, is_magus, ability_scores);
+        let (outcome, dep) = evaluate_prereq(child, ctx);
         if outcome == trigger {
             return (short_circuit, false);
         }
@@ -983,7 +997,7 @@ fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
         }
 
         // Resolve values for domains that have a registry (Item -> point items,
-        // Ability -> ability catalogue). Art has no registry yet (M5).
+        // Ability -> ability catalogue, Art -> art catalogue).
         for param in &item.parameters {
             let Some(value) = selection.params.get(&param.key) else {
                 continue; // missing already reported above
@@ -992,7 +1006,7 @@ fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
                 ParameterDomain::Item => ruleset.point_items.contains_key(value),
                 ParameterDomain::Ability => ruleset.abilities.contains_key(value),
                 ParameterDomain::Characteristic => Characteristic::from_id(value).is_some(),
-                ParameterDomain::Art => true,
+                ParameterDomain::Art => ruleset.arts.contains_key(value),
             };
             if !resolves {
                 issues.push(ValidationIssue::error(
@@ -1031,7 +1045,10 @@ fn validate_ability_bonus_targets(
             // here, not a silently-skipped target check.
             let param = match effect {
                 Effect::AbilityBonus { param, .. } => param,
-                Effect::CharacteristicLimit { .. } => continue,
+                // Art bonuses are not parameterized instances; their target is
+                // resolved by validate_parameters (domain check). Characteristic
+                // limits are handled elsewhere.
+                Effect::CharacteristicLimit { .. } | Effect::ArtBonus { .. } => continue,
             };
             let Some(target) = selection.params.get(param) else {
                 continue; // missing ability key already reported by validate_parameters
@@ -1255,7 +1272,7 @@ fn validate_characteristic_limit_preconditions(
                     let base = entity.characteristics.get(&target).copied().unwrap_or(0);
                     (*amount, target, base)
                 }
-                Effect::AbilityBonus { .. } => continue,
+                Effect::AbilityBonus { .. } | Effect::ArtBonus { .. } => continue,
             };
             if amount > 0 {
                 if let Some(cap) = base_max
@@ -1300,19 +1317,17 @@ fn validate_characteristic_limit_preconditions(
 /// `parameter` (the area / language), so a character may hold several; plain
 /// abilities have no parameter and are deduped by id (one instance).
 ///
-/// Overspending is reported as an error rather than blocked: direct-entry allows
-/// the illegal state and surfaces it (the M4 wizard blocks the spend up front).
 /// The age cap is deferred to M4. XP cost per score comes from the advancement
 /// table (`AdvancementTable::xp_for_score`); a non-zero score with no table row
 /// is off-table and flagged `ability_score_out_of_range` (mirroring the
 /// characteristic range check), so an illegal score is never silently priced at
-/// 0 XP.
+/// 0 XP. The XP a score costs is summed against the shared pool by
+/// [`validate_xp_pool`], not here.
 fn validate_abilities(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
     let mut seen: BTreeMap<(&Id, Option<&str>), u32> = BTreeMap::new();
-    let mut spent: u32 = 0;
     // The highest score the advancement table prices. A ruleset that ships no
     // advancement table has no legal score range to check against, so off-table
-    // range checking is skipped (XP still totals to 0 for every score below).
+    // range checking is skipped.
     let max_score = ruleset.advancement.max_score();
 
     for entry in &entity.ability_scores {
@@ -1340,21 +1355,21 @@ fn validate_abilities(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Valid
         // pricing it at 0 XP, so direct-entry illegal states surface here instead
         // of relying on the UI to keep them out (mirrors characteristic range
         // checking).
-        match ruleset.advancement.xp_for_score(entry.score) {
-            Some(xp) => spent += xp,
-            None => {
-                if let Some(max) = max_score {
-                    issues.push(ValidationIssue::error(
-                        ValidationIssue::CODE_ABILITY_SCORE_OUT_OF_RANGE,
-                        args([
-                            ("ability", entry.ability.to_string()),
-                            ("score", entry.score.to_string()),
-                            ("max", max.to_string()),
-                        ]),
-                        Some(entry.ability.clone()),
-                    ));
-                }
-            }
+        // A non-zero score with no table row is off-table (illegal) — flag it
+        // rather than silently pricing it at 0 XP, so direct-entry illegal states
+        // surface here (mirrors characteristic range checking).
+        if ruleset.advancement.xp_for_score(entry.score).is_none()
+            && let Some(max) = max_score
+        {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_ABILITY_SCORE_OUT_OF_RANGE,
+                args([
+                    ("ability", entry.ability.to_string()),
+                    ("score", entry.score.to_string()),
+                    ("max", max.to_string()),
+                ]),
+                Some(entry.ability.clone()),
+            ));
         }
         let key = (&entry.ability, entry.parameter.as_deref());
         *seen.entry(key).or_insert(0) += 1;
@@ -1372,7 +1387,81 @@ fn validate_abilities(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Valid
             ));
         }
     }
+}
 
+/// Validates Hermetic Art scores (mirrors [`validate_abilities`], minus the
+/// parameter logic — Arts are not parameterized): every referenced Art must
+/// resolve against the catalogue, no Art may appear twice, and every bought score
+/// must be priced by the Art advancement table. The XP a score costs is summed
+/// against the shared pool by [`validate_xp_pool`], not here.
+fn validate_arts(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    let mut seen: BTreeMap<&Id, u32> = BTreeMap::new();
+    // The highest score the Art advancement table prices. A ruleset that ships no
+    // Art advancement table has no legal score range to check against, so
+    // off-table range checking is skipped.
+    let max_score = ruleset.art_advancement.max_score();
+
+    for entry in &entity.art_scores {
+        if !ruleset.arts.contains_key(&entry.art) {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_UNKNOWN_ART,
+                args([("art", entry.art.to_string())]),
+                Some(entry.art.clone()),
+            ));
+        }
+        // A non-zero score with no table row is off-table (illegal) — flag it
+        // rather than silently pricing it at 0 XP.
+        if ruleset.art_advancement.xp_for_score(entry.score).is_none()
+            && let Some(max) = max_score
+        {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_ART_SCORE_OUT_OF_RANGE,
+                args([
+                    ("art", entry.art.to_string()),
+                    ("score", entry.score.to_string()),
+                    ("max", max.to_string()),
+                ]),
+                Some(entry.art.clone()),
+            ));
+        }
+        *seen.entry(&entry.art).or_insert(0) += 1;
+    }
+
+    for (art, count) in seen {
+        if count > 1 {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_DUPLICATE_ART,
+                args([("art", art.to_string()), ("count", count.to_string())]),
+                Some(art.clone()),
+            ));
+        }
+    }
+}
+
+/// Total XP an entity has committed across Abilities and Arts, each priced from
+/// its own advancement table. A score the table cannot price (off-table, already
+/// flagged by [`validate_abilities`] / [`validate_arts`]) contributes 0 rather
+/// than being counted at a wrong price.
+fn xp_spent(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    let abilities: u32 = entity
+        .ability_scores
+        .iter()
+        .filter_map(|a| ruleset.advancement.xp_for_score(a.score))
+        .sum();
+    let arts: u32 = entity
+        .art_scores
+        .iter()
+        .filter_map(|a| ruleset.art_advancement.xp_for_score(a.score))
+        .sum();
+    abilities + arts
+}
+
+/// Validates the shared experience pool: Abilities and Arts are bought from one
+/// bank (`Entity::xp_pool`), so their combined cost may not exceed it.
+/// Overspending is reported as an error rather than blocked: direct-entry allows
+/// the illegal state and surfaces it (the M4 wizard blocks the spend up front).
+fn validate_xp_pool(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    let spent = xp_spent(entity, ruleset);
     if spent > entity.xp_pool {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_NOT_ENOUGH_XP,
@@ -3130,6 +3219,149 @@ mod tests {
         assert!(codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()));
     }
 
+    /// A minimal ruleset carrying both an Ability and an Art registry (each with a
+    /// triangular advancement table, scores 1-5) for the shared-pool tests. The
+    /// companion profile permits the general category so the entity has no
+    /// unrelated findings.
+    fn arts_ruleset() -> Ruleset {
+        let items = r#"[
+          {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]}
+        ]"#;
+        let types = r#"[{
+          "id": "companion",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "gift_policy": "forbidden",
+          "gift_id": "virtue.the_gift",
+          "creation_phases": []
+        }]"#;
+        let abilities = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },
+            { "score": 3, "total_xp": 30 }, { "score": 4, "total_xp": 50 },
+            { "score": 5, "total_xp": 75 }
+          ],
+          "abilities": [ { "id": "ability.awareness", "category": "general" } ]
+        }"#;
+        let arts = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 1 }, { "score": 2, "total_xp": 3 },
+            { "score": 3, "total_xp": 6 }, { "score": 4, "total_xp": 10 },
+            { "score": 5, "total_xp": 15 }
+          ],
+          "arts": [
+            { "id": "art.creo", "art_type": "technique" },
+            { "id": "art.ignem", "art_type": "form" }
+          ]
+        }"#;
+        Ruleset::from_core_json_with_arts("test", "1", items, types, abilities, arts, "").unwrap()
+    }
+
+    #[test]
+    fn art_xp_within_pool_is_valid() {
+        let rs = arts_ruleset();
+        let mut e = make_entity("companion", vec![]);
+        // Creo 5 (15) + Ignem 3 (6) = 21 xp; the shared pool of 21 is enough.
+        e.xp_pool = 21;
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 5,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 3,
+            },
+        ];
+        let found = codes(&validate(&e, &rs));
+        assert!(!found.contains(&"not_enough_xp".to_string()), "{found:?}");
+    }
+
+    #[test]
+    fn overspending_art_xp_is_error() {
+        let rs = arts_ruleset();
+        let mut e = make_entity("companion", vec![]);
+        // Creo 5 costs 15 xp; the shared pool of 10 is not enough.
+        e.xp_pool = 10;
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.creo"),
+            score: 5,
+        }];
+        assert!(codes(&validate(&e, &rs)).contains(&"not_enough_xp".to_string()));
+    }
+
+    #[test]
+    fn abilities_and_arts_share_one_pool() {
+        // Awareness 2 (15) + Creo 3 (6) = 21 drawn from the same bank; a pool of
+        // 20 overspends by 1, a pool of 21 does not.
+        let rs = arts_ruleset();
+        let mut e = make_entity("companion", vec![]);
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 2,
+            specialty: None,
+            parameter: None,
+        }];
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.creo"),
+            score: 3,
+        }];
+        e.xp_pool = 20;
+        assert!(codes(&validate(&e, &rs)).contains(&"not_enough_xp".to_string()));
+        e.xp_pool = 21;
+        assert!(!codes(&validate(&e, &rs)).contains(&"not_enough_xp".to_string()));
+    }
+
+    #[test]
+    fn unknown_art_is_flagged() {
+        let rs = arts_ruleset();
+        let mut e = make_entity("companion", vec![]);
+        e.xp_pool = 100;
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.made_up"),
+            score: 1,
+        }];
+        assert!(codes(&validate(&e, &rs)).contains(&"unknown_art".to_string()));
+    }
+
+    #[test]
+    fn duplicate_art_is_flagged() {
+        let rs = arts_ruleset();
+        let mut e = make_entity("companion", vec![]);
+        e.xp_pool = 100;
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 2,
+            },
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 3,
+            },
+        ];
+        assert!(codes(&validate(&e, &rs)).contains(&"duplicate_art".to_string()));
+    }
+
+    #[test]
+    fn off_table_art_score_is_out_of_range() {
+        let rs = arts_ruleset(); // Art table tops out at score 5
+        let mut e = make_entity("companion", vec![]);
+        e.xp_pool = 1000;
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.creo"),
+            score: 9,
+        }];
+        let found = codes(&validate(&e, &rs));
+        assert_eq!(
+            found
+                .iter()
+                .filter(|c| *c == "art_score_out_of_range")
+                .count(),
+            1,
+            "exactly one art_score_out_of_range issue: {found:?}"
+        );
+    }
+
     #[test]
     fn off_table_ability_score_is_out_of_range() {
         let rs = traits_ruleset(); // advancement table tops out at score 3
@@ -3262,8 +3494,9 @@ mod tests {
         assert!(codes(&validate(&entity, &rs)).contains(&"ability_parameter_required".to_string()));
     }
 
-    #[test]
-    fn prereq_art_min_produces_unevaluated_warning() {
+    /// A ruleset whose `virtue.a` requires Creo ≥ 5, with an Art registry so the
+    /// ArtMin prereq is genuinely evaluable.
+    fn art_min_ruleset() -> Ruleset {
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "art_min", "value": {"art": "art.creo", "score": 5}}}
@@ -3274,12 +3507,45 @@ mod tests {
           "permitted_categories": ["general"],
           "creation_phases": []
         }]"#;
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
-        let entity = make_entity("test_type", vec![sel("virtue.a")]);
+        let arts = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 1 }, { "score": 2, "total_xp": 3 },
+            { "score": 3, "total_xp": 6 }, { "score": 4, "total_xp": 10 },
+            { "score": 5, "total_xp": 15 }, { "score": 6, "total_xp": 21 }
+          ],
+          "arts": [ { "id": "art.creo", "art_type": "technique" } ]
+        }"#;
+        Ruleset::from_core_json_with_arts("test", "1", items, types, "{}", arts, "").unwrap()
+    }
 
-        let result = validate(&entity, &rs);
-        let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
-        assert!(warning_codes.contains(&"prereq_unevaluated"));
+    #[test]
+    fn prereq_art_min_is_evaluated_against_effective_score() {
+        let rs = art_min_ruleset();
+
+        // Creo 5 satisfies the threshold: no prereq error or unevaluated warning.
+        let mut met = make_entity("test_type", vec![sel("virtue.a")]);
+        met.xp_pool = 100;
+        met.art_scores = vec![ArtScore {
+            art: Id::new("art.creo"),
+            score: 5,
+        }];
+        let result = validate(&met, &rs);
+        assert!(!codes(&result).contains(&"prereq_not_met".to_string()));
+        assert!(
+            !result
+                .warnings()
+                .any(|i| i.code.as_str() == "prereq_unevaluated"),
+            "ArtMin should be enforced, not unevaluated"
+        );
+
+        // Creo 4 falls short: prereq_not_met fires (it is evaluated, not deferred).
+        let mut unmet = make_entity("test_type", vec![sel("virtue.a")]);
+        unmet.xp_pool = 100;
+        unmet.art_scores = vec![ArtScore {
+            art: Id::new("art.creo"),
+            score: 4,
+        }];
+        assert!(codes(&validate(&unmet, &rs)).contains(&"prereq_not_met".to_string()));
     }
 
     #[test]
@@ -3869,14 +4135,14 @@ mod tests {
     }
 
     #[test]
-    fn art_domain_param_value_accepted_without_registry() {
-        // Art has no in-engine registry yet (M5 deferral), so the resolver
-        // accepts any value: an arbitrary Art selection must NOT raise
-        // `unknown_param_value`. This locks in the current accept-all behavior.
+    fn art_domain_param_value_resolves_against_registry() {
+        // Art-domain parameter values are now resolved against the Art catalogue:
+        // a real Art passes, a made-up one raises `unknown_param_value`.
         let items = r#"[{
           "id": "virtue.puissant_art", "kind": "virtue", "magnitude": "minor",
           "category": "general", "entity_kinds": ["character"],
-          "parameters": [{"key": "art", "type": "ref", "domain": "art"}]
+          "parameters": [{"key": "art", "type": "ref", "domain": "art"}],
+          "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }]
         }]"#;
         let types = r#"[{
           "id": "test_type",
@@ -3884,21 +4150,36 @@ mod tests {
           "permitted_categories": ["general"],
           "creation_phases": []
         }]"#;
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let arts = r#"{ "arts": [ { "id": "art.creo", "art_type": "technique" } ] }"#;
+        let rs =
+            Ruleset::from_core_json_with_arts("test", "1", items, types, "{}", arts, "").unwrap();
 
-        let entity = make_entity(
+        let good = make_entity(
+            "test_type",
+            vec![Selection::with_params(
+                Id::new("virtue.puissant_art"),
+                BTreeMap::from([("art".into(), Id::new("art.creo"))]),
+            )],
+        );
+        assert!(
+            !codes(&validate(&good, &rs))
+                .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "a real Art-domain value must resolve: {:?}",
+            codes(&validate(&good, &rs))
+        );
+
+        let bad = make_entity(
             "test_type",
             vec![Selection::with_params(
                 Id::new("virtue.puissant_art"),
                 BTreeMap::from([("art".into(), Id::new("art.totally_made_up"))]),
             )],
         );
-
         assert!(
-            !codes(&validate(&entity, &rs))
+            codes(&validate(&bad, &rs))
                 .contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
-            "Art-domain values are accepted (no registry yet): {:?}",
-            codes(&validate(&entity, &rs))
+            "an unknown Art-domain value must be flagged: {:?}",
+            codes(&validate(&bad, &rs))
         );
     }
 

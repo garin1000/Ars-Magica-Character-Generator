@@ -88,6 +88,16 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4814, 4816] }
   },
   {
+    "id": "virtue.puissant_art",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
+    "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4818, 4820] }
+  },
+  {
     "id": "virtue.the_gift",
     "kind": "virtue",
     "magnitude": "free",

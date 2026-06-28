@@ -73,6 +73,7 @@ characteristic-points = Points: { $used } / { $budget }
 tab-characteristics = Characteristics
 tab-virtues-flaws = Virtues & Flaws
 tab-abilities = Abilities
+tab-arts = Arts
 # Ability XP summary and controls.
 xp-pool = XP pool
 xp-spent = Spent: { $spent }
@@ -84,6 +85,13 @@ ability-specialties-label = Specialties
 ability-add = Add ability
 ability-increment = Raise
 ability-decrement = Lower
+# Hermetic Arts: the two classes and the spinner controls. Arts share the
+# Abilities XP pool (the `xp-pool` key), so no Art-specific pool label.
+art-type-technique = Techniques
+art-type-form = Forms
+art-add = Add Art
+art-increment = Raise
+art-decrement = Lower
 characteristic-increment = Raise
 characteristic-decrement = Lower
 characteristic-description-label = Description
@@ -157,6 +165,9 @@ issue-not_enough_xp = Abilities cost { $spent } XP, more than the { $pool } in t
 issue-ability_parameter_required = { $ability } needs a value (e.g. the specific Area or Language).
 issue-ability_score_out_of_range = Ability { $ability } score { $score } is outside the allowed range (0 to { $max }).
 issue-ability_bonus_dangling_target = { $item } targets an Ability the character does not have ({ $ability } { $parameter }); add it first.
+issue-unknown_art = Unknown Art: { $art }.
+issue-duplicate_art = { $art } is listed { $count } times.
+issue-art_score_out_of_range = Art { $art } score { $score } is outside the allowed range (0 to { $max }).
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.

@@ -1,0 +1,41 @@
+{
+  "advancement": [
+    { "score": 1, "total_xp": 1 },
+    { "score": 2, "total_xp": 3 },
+    { "score": 3, "total_xp": 6 },
+    { "score": 4, "total_xp": 10 },
+    { "score": 5, "total_xp": 15 },
+    { "score": 6, "total_xp": 21 },
+    { "score": 7, "total_xp": 28 },
+    { "score": 8, "total_xp": 36 },
+    { "score": 9, "total_xp": 45 },
+    { "score": 10, "total_xp": 55 },
+    { "score": 11, "total_xp": 66 },
+    { "score": 12, "total_xp": 78 },
+    { "score": 13, "total_xp": 91 },
+    { "score": 14, "total_xp": 105 },
+    { "score": 15, "total_xp": 120 },
+    { "score": 16, "total_xp": 136 },
+    { "score": 17, "total_xp": 153 },
+    { "score": 18, "total_xp": 171 },
+    { "score": 19, "total_xp": 190 },
+    { "score": 20, "total_xp": 210 }
+  ],
+  "arts": [
+    { "id": "art.animal", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8901, 8907] } },
+    { "id": "art.aquam", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8909, 8915] } },
+    { "id": "art.auram", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8917, 8923] } },
+    { "id": "art.corpus", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8925, 8931] } },
+    { "id": "art.creo", "art_type": "technique", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8847, 8863] } },
+    { "id": "art.herbam", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8933, 8939] } },
+    { "id": "art.ignem", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8941, 8945] } },
+    { "id": "art.imaginem", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8947, 8959] } },
+    { "id": "art.intellego", "art_type": "technique", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8865, 8869] } },
+    { "id": "art.mentem", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8961, 8967] } },
+    { "id": "art.muto", "art_type": "technique", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8871, 8879] } },
+    { "id": "art.perdo", "art_type": "technique", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8881, 8889] } },
+    { "id": "art.rego", "art_type": "technique", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8891, 8897] } },
+    { "id": "art.terram", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8969, 8975] } },
+    { "id": "art.vim", "art_type": "form", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8977, 8982] } }
+  ]
+}

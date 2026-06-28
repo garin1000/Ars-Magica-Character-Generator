@@ -1,0 +1,77 @@
+{
+  "art.animal": {
+    "name": "Animal",
+    "abbreviation": "An",
+    "description": "Tiere aller Art, von den Fischen des Meeres bis zu den Vögeln des Himmels. Animal-Zauber können keine Menschen beeinflussen."
+  },
+  "art.aquam": {
+    "name": "Aquam",
+    "abbreviation": "Aq",
+    "description": "Wasser und alle Arten von Flüssigkeiten sowie die Eigenschaften der Flüssigkeit."
+  },
+  "art.auram": {
+    "name": "Auram",
+    "abbreviation": "Au",
+    "description": "Luft, Wind und Wetter; beherrscht auch gasförmige Erscheinungsformen im Allgemeinen."
+  },
+  "art.corpus": {
+    "name": "Corpus",
+    "abbreviation": "Co",
+    "description": "Der menschliche Körper — lebend, tot sowie die Körper magischer oder feenhafter Wesen, die wie Menschen aussehen."
+  },
+  "art.creo": {
+    "name": "Creo",
+    "abbreviation": "Cr",
+    "description": "„Ich erschaffe\". Macht Dinge zu besseren Exemplaren ihrer Art, einschließlich ihrer Erschaffung aus dem Nichts und ihrer Heilung."
+  },
+  "art.herbam": {
+    "name": "Herbam",
+    "abbreviation": "He",
+    "description": "Pflanzen und Bäume, einschließlich Pflanzenmaterial, das nicht mehr lebt, wie totes Holz und Leinen."
+  },
+  "art.ignem": {
+    "name": "Ignem",
+    "abbreviation": "Ig",
+    "description": "Feuer, Wärme und Licht."
+  },
+  "art.imaginem": {
+    "name": "Imaginem",
+    "abbreviation": "Im",
+    "description": "Die Species, auf die die Sinne reagieren — das Erscheinungsbild von Sehen, Hören, Riechen, Schmecken und Fühlen — ohne die tatsächlichen Wirkungen eines Objekts zu verändern."
+  },
+  "art.intellego": {
+    "name": "Intellego",
+    "abbreviation": "In",
+    "description": "„Ich erkenne\". Die Kunst der Wahrnehmung: gewinnt Informationen direkt aus den Formen der Dinge, ungetäuscht von weltlichen Verkleidungen."
+  },
+  "art.mentem": {
+    "name": "Mentem",
+    "abbreviation": "Me",
+    "description": "Geister, Gedanken und Seelen; auch die „Körper\" unkörperlicher Wesen wie Geister."
+  },
+  "art.muto": {
+    "name": "Muto",
+    "abbreviation": "Mu",
+    "description": "„Ich verändere\". Verleiht oder entzieht Eigenschaften, die ein Ding von Natur aus nicht haben kann, etwa einer Person Flügel zu geben."
+  },
+  "art.perdo": {
+    "name": "Perdo",
+    "abbreviation": "Pe",
+    "description": "„Ich zerstöre\". Das Gegenteil von Creo: macht Dinge zu schlechteren Exemplaren ihrer Art oder entfernt sie aus der Existenz."
+  },
+  "art.rego": {
+    "name": "Rego",
+    "abbreviation": "Re",
+    "description": "„Ich beherrsche\". Ändert den Zustand eines Dings in einen anderen, den es von Natur aus haben kann, etwa es zu bewegen oder eine Person einzuschläfern."
+  },
+  "art.terram": {
+    "name": "Terram",
+    "abbreviation": "Te",
+    "description": "Feststoffe, insbesondere Erde und Gestein."
+  },
+  "art.vim": {
+    "name": "Vim",
+    "abbreviation": "Vi",
+    "description": "Rohe magische Kraft; beeinflusst zudem magische, infernale, göttliche und feenhafte Wesen."
+  }
+}

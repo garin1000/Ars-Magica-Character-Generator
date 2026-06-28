@@ -49,18 +49,28 @@ Notes / deferred to later phases (as planned):
 - the mythic free Minor status Virtue (+1, raising 20→21) is M8 catalogue data;
   the `virtue_points: 20` ceiling is the balanced max without it.
 
-## Phase 2 — Arts (PLAN.md 4a)
+## Phase 2 — Arts (PLAN.md 4a) ✅
 e2e: `ui/e2e/specs/arts.e2e.js`
 
-- [ ] Art data model: whole bought score + banked Art-XP; effective computed
-- [ ] Art registry in `Ruleset`; `ParameterDomain::Art` registry-backed (drop the
-      `true` stub in `validation.rs`); un-skip Art integrity check in `ruleset.rs`;
+- [x] Art data model: whole bought score; effective computed (`ArtScore`,
+      `Entity::art_scores`; schema_version bumped 2→3). Arts draw from the shared
+      `xp_pool` alongside Abilities (one apprenticeship bank, per the rules)
+- [x] Art registry in `Ruleset`; `ParameterDomain::Art` registry-backed (dropped the
+      `true` stub in `validation.rs`); un-skipped Art integrity check in `ruleset.rs`;
       `ArtMin` against effective score
-- [ ] Puissant Art (+3) `art_bonus` effect; `validate_effect_refs` accepts an
+- [x] Puissant Art (+3) `art_bonus` effect; `validate_effect_refs` accepts an
       `art`-domain param
-- [ ] `rules/core/arts.json` + i18n (en, de): 15 Arts (structural invariants only)
-- [ ] `ArtPicker.svelte` (steppers + Art-XP bank), Fluent `art-<id>`, shown per flag
-- [ ] e2e spec green; PLAN.md 4a box updated; gate passes
+- [x] `rules/core/arts.json` + i18n (en, de): 15 Arts (structural invariants only)
+- [x] `ArtPicker.svelte` (steppers + Art-XP bank), Fluent `art-<id>`, shown per flag
+      (Arts tab gated on the profile `is_magus`; ParameterPicker grows an `art`-domain
+      select so Puissant Art targets a catalogue Art)
+- [x] e2e spec green (3× stable); PLAN.md 4a box updated; gate passes
+
+Notes:
+- Abilities and Arts share **one** `xp_pool` (the rules' single apprenticeship
+  bank); `validate_xp_pool` checks the combined Ability + Art cost. Arts still
+  price from the cheaper triangular curve (`art_advancement`).
+- Form bonus (Form score/5) is a derived combat stat — deferred (M5+).
 
 ## Phase 3 — V/F mechanical effect model (PLAN.md 4f)
 e2e: `ui/e2e/specs/vf-effects.e2e.js`
