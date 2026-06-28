@@ -283,27 +283,29 @@ describe('setXpPool', () => {
 // --- Art actions ------------------------------------------------------------
 
 describe('art actions', () => {
-  it('adds an Art at score 0 and dedups a second add', () => {
-    store.addArt('art.creo');
-    store.addArt('art.creo');
-    expect(store.entity.art_scores).toEqual([{ art: 'art.creo', score: 0 }]);
-  });
-
-  it('adjusts an Art score, clamping to [0, max]', () => {
-    store.addArt('art.ignem');
-    store.adjustArtAt(0, 3, 20);
-    expect(store.entity.art_scores?.[0].score).toBe(3);
-    store.adjustArtAt(0, -10, 20); // clamps at 0
-    expect(store.entity.art_scores?.[0].score).toBe(0);
-    store.adjustArtAt(0, 99, 20); // clamps at max
+  it('upserts an Art score by id, clamping to [0, max]', () => {
+    // First raise creates the entry; all 15 Arts are always present in the UI, so
+    // there is no separate "add" step.
+    store.adjustArt('art.ignem', 3, 20);
+    expect(store.entity.art_scores).toEqual([{ art: 'art.ignem', score: 3 }]);
+    store.adjustArt('art.ignem', 99, 20); // clamps at max
     expect(store.entity.art_scores?.[0].score).toBe(20);
   });
 
-  it('removes an Art by index', () => {
-    store.addArt('art.creo');
-    store.addArt('art.ignem');
-    store.removeArtAt(0);
-    expect(store.entity.art_scores).toEqual([{ art: 'art.ignem', score: 0 }]);
+  it('drops an Art entry when its score returns to 0 (sparse save)', () => {
+    store.adjustArt('art.creo', 2, 20);
+    expect(store.entity.art_scores).toEqual([{ art: 'art.creo', score: 2 }]);
+    store.adjustArt('art.creo', -5, 20); // clamps at 0 and removes the entry
+    expect(store.entity.art_scores).toEqual([]);
+  });
+
+  it('tracks several Arts independently', () => {
+    store.adjustArt('art.creo', 2, 20);
+    store.adjustArt('art.ignem', 4, 20);
+    expect(store.entity.art_scores).toEqual([
+      { art: 'art.creo', score: 2 },
+      { art: 'art.ignem', score: 4 },
+    ]);
   });
 
   it('points a Puissant Art selection at an Art by id', () => {

@@ -61,9 +61,11 @@ e2e: `ui/e2e/specs/arts.e2e.js`
 - [x] Puissant Art (+3) `art_bonus` effect; `validate_effect_refs` accepts an
       `art`-domain param
 - [x] `rules/core/arts.json` + i18n (en, de): 15 Arts (structural invariants only)
-- [x] `ArtPicker.svelte` (steppers + Art-XP bank), Fluent `art-<id>`, shown per flag
-      (Arts tab gated on the profile `is_magus`; ParameterPicker grows an `art`-domain
-      select so Puissant Art targets a catalogue Art)
+- [x] `ArtGrid.svelte` — all 15 Arts always shown (no pick step) as the sheet's
+      three columns (Techniques | Forms 1-5 | Forms 6-10) with score steppers +
+      effective badge; `ArtXpBar` shows the shared pool. Arts tab gated on the
+      profile `is_magus`; ParameterPicker grows an `art`-domain select so Puissant
+      Art targets a catalogue Art
 - [x] e2e spec green (3× stable); PLAN.md 4a box updated; gate passes
 
 Notes:

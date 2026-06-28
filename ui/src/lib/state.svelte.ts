@@ -201,26 +201,22 @@ class AppStore {
   }
 
   /**
-   * Select an Art: it enters at score 0, which costs no Art-XP — the first point
-   * is bought by raising it. Arts are not parameterized, so each can be added
-   * once.
+   * Adjust an Art's bought score by `delta`, clamped to [0, max]. All 15 Arts are
+   * always present for a magus, so an Art is addressed by id (not a row index)
+   * and upserted: the score is stored only while non-zero (score 0 is the default
+   * and is dropped to keep saves sparse and canonical).
    */
-  addArt(art: string): void {
-    const present = (this.entity.art_scores ?? []).some((a) => a.art === art);
-    if (present) return;
-    this.entity.art_scores = [...(this.entity.art_scores ?? []), { art, score: 0 }];
-    this.#scheduleValidate();
-  }
-
-  removeArtAt(index: number): void {
-    this.entity.art_scores = (this.entity.art_scores ?? []).filter((_, i) => i !== index);
-    this.#scheduleValidate();
-  }
-
-  adjustArtAt(index: number, delta: number, max: number): void {
-    this.entity.art_scores = (this.entity.art_scores ?? []).map((a, i) =>
-      i === index ? { ...a, score: Math.max(0, Math.min(max, a.score + delta)) } : a,
-    );
+  adjustArt(art: string, delta: number, max: number): void {
+    const scores = this.entity.art_scores ?? [];
+    const current = scores.find((a) => a.art === art)?.score ?? 0;
+    const next = Math.max(0, Math.min(max, current + delta));
+    if (next === 0) {
+      this.entity.art_scores = scores.filter((a) => a.art !== art);
+    } else if (scores.some((a) => a.art === art)) {
+      this.entity.art_scores = scores.map((a) => (a.art === art ? { ...a, score: next } : a));
+    } else {
+      this.entity.art_scores = [...scores, { art, score: next }];
+    }
     this.#scheduleValidate();
   }
 

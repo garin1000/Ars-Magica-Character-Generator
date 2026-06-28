@@ -198,8 +198,9 @@ number.
 - [x] `rules/core/arts.json` + i18n (en, de): all 15 Arts (5 Techniques + 10
       Forms). Technique/Form is the fixed taxonomy (enum surfaced via the
       ruleset); Art entries are data — assert structural invariants, never counts
-- [x] Direct-entry Art allocation component (whole-score steppers + Art-XP bank),
-      labelled via Fluent keys (`art-<id>`)
+- [x] Direct-entry Art allocation component — all 15 Arts always shown as the
+      sheet's three columns (Techniques | Forms ×2) with whole-score steppers,
+      labelled from `rules/i18n` Art names
 
 ### 4b. Houses, House specialisations & Hermetic V/F
 - [ ] House data model + registry (id, free Minor House Virtue, optional named
