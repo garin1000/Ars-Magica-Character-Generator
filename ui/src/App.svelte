@@ -10,19 +10,34 @@
   import AbilityPicker from './lib/components/AbilityPicker.svelte';
   import AbilitySelectionList from './lib/components/AbilitySelectionList.svelte';
   import AbilityXpBar from './lib/components/AbilityXpBar.svelte';
+  import ArtPicker from './lib/components/ArtPicker.svelte';
+  import ArtSelectionList from './lib/components/ArtSelectionList.svelte';
+  import ArtXpBar from './lib/components/ArtXpBar.svelte';
   import BalanceBar from './lib/components/BalanceBar.svelte';
   import ValidationPanel from './lib/components/ValidationPanel.svelte';
   import SaveLoadBar from './lib/components/SaveLoadBar.svelte';
   import logoUrl from './lib/assets/logo.png';
 
-  type Tab = 'characteristics' | 'virtues_flaws' | 'abilities';
-  // Left-to-right: Characteristics, Virtues & Flaws, Abilities.
-  const tabs: { id: Tab; key: string }[] = [
+  type Tab = 'characteristics' | 'virtues_flaws' | 'abilities' | 'arts';
+  // Left-to-right: Characteristics, Virtues & Flaws, Abilities, then Arts —
+  // the Arts tab only for magi, gated on the profile's capability flag (never
+  // the type id), so any future magus-capable type gets it automatically.
+  const isMagus = $derived(
+    store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.is_magus ?? false,
+  );
+  const tabs = $derived<{ id: Tab; key: string }[]>([
     { id: 'characteristics', key: 'tab-characteristics' },
     { id: 'virtues_flaws', key: 'tab-virtues-flaws' },
     { id: 'abilities', key: 'tab-abilities' },
-  ];
+    ...(isMagus ? [{ id: 'arts' as Tab, key: 'tab-arts' }] : []),
+  ]);
   let tab = $state<Tab>('characteristics');
+
+  // If the active tab disappears (e.g. switching away from magus on the Arts
+  // tab), fall back to Characteristics so the content area is never blank.
+  $effect(() => {
+    if (!tabs.some((t) => t.id === tab)) tab = 'characteristics';
+  });
 
   onMount(() => {
     void store.init();
@@ -88,7 +103,7 @@
         </section>
       </div>
     </div>
-  {:else}
+  {:else if tab === 'abilities'}
     <div class="vf-tab">
       <AbilityXpBar />
       <div class="region-row">
@@ -100,6 +115,22 @@
           <h2 class="region-title">{store.t('selections-title')}</h2>
           <div class="selected-frame">
             <AbilitySelectionList />
+          </div>
+        </section>
+      </div>
+    </div>
+  {:else}
+    <div class="vf-tab">
+      <ArtXpBar />
+      <div class="region-row">
+        <section class="region region-source">
+          <h2 class="region-title">{store.t('available-title')}</h2>
+          <ArtPicker />
+        </section>
+        <section class="region region-selected">
+          <h2 class="region-title">{store.t('selections-title')}</h2>
+          <div class="selected-frame">
+            <ArtSelectionList />
           </div>
         </section>
       </div>

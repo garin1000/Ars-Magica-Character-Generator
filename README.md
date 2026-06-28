@@ -88,15 +88,19 @@ support is new data plus thin UI — never an engine rewrite.
 Active development. The engine, Tauri integration, and a direct-entry UI are in
 place and tested end to end (engine unit tests, webview-free command integration
 tests, and a real-binary `tauri-driver` E2E). Characters can be built with
-virtues/flaws, point-buy Characteristics, and whole bought Ability scores plus a
-banked-XP pool, all validated live. A seed Ability catalogue (English + German)
-ships with localized descriptions, example specialties, and the "cannot be used
-untrained" marker; the complete Core Rules catalogue is staged for a later
-milestone. Score-boosting Virtues (Puissant Ability,
-Great Characteristic) compute an effective score that drives prerequisites, the
-+5 characteristic ceiling, and a read-only display badge. The guided creation
-wizard (with the life-stage XP flow), magus support, and full data population are
-the next milestones — see [PLAN.md](PLAN.md) for the milestone breakdown.
+virtues/flaws, point-buy Characteristics, whole bought Ability scores, and — for
+magi — whole bought Hermetic Art scores, with Abilities and Arts drawing from one
+shared experience pool, all validated live. A character-type selector switches
+between grog, companion, mythic companion, and magus; the Arts tab appears only
+for magus-capable types. A seed Ability catalogue and the full 15-Art catalogue
+(English + German) ship with localized descriptions; abilities also carry example
+specialties and the "cannot be used untrained" marker. The complete Core Rules
+ability catalogue is staged for a later milestone. Score-boosting Virtues
+(Puissant Ability, Puissant Art +3, Great Characteristic) compute an effective
+score that drives prerequisites, the +5 characteristic ceiling, and a read-only
+display badge. The guided creation wizard (with the life-stage XP flow), Houses,
+spells, and full data population are the next milestones — see
+[PLAN.md](PLAN.md) for the milestone breakdown.
 
 ## Getting started
 

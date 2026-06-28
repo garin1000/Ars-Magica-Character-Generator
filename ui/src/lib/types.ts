@@ -26,7 +26,8 @@ export interface ParameterDef {
 // `param` value.
 export type Effect =
   | { type: 'ability_bonus'; param: string; amount: number }
-  | { type: 'characteristic_limit'; param: string; amount: number };
+  | { type: 'characteristic_limit'; param: string; amount: number }
+  | { type: 'art_bonus'; param: string; amount: number };
 
 // Prerequisite expression tree. Adjacently tagged by the engine: every variant
 // is a uniform object carrying a `kind` discriminant, with any payload under
@@ -63,12 +64,20 @@ export interface AbilityBonus {
   bonus: number;
 }
 
+// One Art-score bonus (e.g. Puissant Art +3). Arts are not parameterized, so the
+// target is identified by id alone. Mirrors the engine's `ArtBonus`.
+export interface ArtBonus {
+  art: string;
+  bonus: number;
+}
+
 // Score effects for the current entity, computed by the engine. Ability bonuses
-// are per-instance (only non-zero ones present). Characteristic caps/floors are
-// the per-characteristic buy limits (Great/Poor Characteristic widen them),
-// present for all eight characteristics.
+// are per-instance (only non-zero ones present). Art bonuses are per-Art (only
+// non-zero ones present). Characteristic caps/floors are the per-characteristic
+// buy limits (Great/Poor Characteristic widen them), present for all eight.
 export interface EffectiveScores {
   ability_bonuses: AbilityBonus[];
+  art_bonuses: ArtBonus[];
   characteristic_caps: Partial<Record<Characteristic, number>>;
   characteristic_floors: Partial<Record<Characteristic, number>>;
 }
@@ -109,6 +118,8 @@ export interface I18nEntry {
   name: string;
   summary?: string | null;
   description?: string | null;
+  // Two-letter Art abbreviation (e.g. "Cr"); present only for Arts.
+  abbreviation?: string | null;
   // Example specialties (e.g. an Ability's example specializations). Omitted when empty.
   specialties?: string[];
 }
@@ -149,6 +160,14 @@ export interface AbilityXpRow {
   total_xp: number;
 }
 
+// The two classes of Hermetic Art, serialized as their snake_case names.
+export type ArtType = 'technique' | 'form';
+
+export interface Art {
+  id: string;
+  art_type: ArtType;
+}
+
 export interface CharacteristicCost {
   score: number;
   cost: number;
@@ -174,12 +193,17 @@ export interface Ruleset {
   // shapes still type-check.
   abilities?: Record<string, Ability>;
   advancement?: AbilityXpRow[];
+  // Present from schema with arts loaded; optional so older shapes still
+  // type-check. `art_advancement` reuses the Ability XP-row shape.
+  arts?: Record<string, Art>;
+  art_advancement?: AbilityXpRow[];
   characteristic_rules?: CharacteristicRules | null;
   // Derived taxonomy surfaced by the engine so the UI never re-hardcodes the
-  // magnitude point weights or the ability-category order. Source of truth is the
-  // Rust `Magnitude::points` / `AbilityCategory::ALL`.
+  // magnitude point weights or the ability-category / art-type order. Source of
+  // truth is the Rust `Magnitude::points` / `AbilityCategory::ALL` / `ArtType::ALL`.
   magnitude_points: Record<Magnitude, number>;
   ability_category_order: AbilityCategory[];
+  art_type_order?: ArtType[];
 }
 
 export interface LocalizedRuleset {
@@ -208,6 +232,13 @@ export interface AbilityScore {
   parameter?: string | null;
 }
 
+// A whole bought Art score (magi only). Arts are not parameterized and carry no
+// specialty, so an Art is identified by id alone.
+export interface ArtScore {
+  art: string;
+  score: number;
+}
+
 export interface Entity {
   schema_version: number;
   ruleset: RulesetRef;
@@ -220,9 +251,12 @@ export interface Entity {
   characteristic_descriptions?: Partial<Record<Characteristic, string>>;
   // Whole bought Ability scores. Omitted when empty.
   ability_scores?: AbilityScore[];
-  // Total XP available to spend on abilities; spent is derived, leftover is the
-  // banked XP. Omitted when zero.
+  // Total XP available to spend on Abilities AND Arts — one shared bank. Spent
+  // is derived (ability + art cost), leftover is the banked XP. Omitted when zero.
   xp_pool?: number;
+  // Whole bought Art scores (magi only). Priced against the shared xp_pool.
+  // Omitted when empty.
+  art_scores?: ArtScore[];
 }
 
 export interface ValidationIssue {

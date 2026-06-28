@@ -7,11 +7,12 @@ use std::path::PathBuf;
 
 use arm_app::error::AppError;
 use arm_app::ruleset_io::{
-    RULESET_ID, RULESET_VERSION, load_entity_from_path, load_ruleset_from_dir, save_entity_to_path,
-    validate_loaded,
+    RULESET_ID, RULESET_VERSION, effective_scores_loaded, load_entity_from_path,
+    load_ruleset_from_dir, save_entity_to_path, validate_loaded,
 };
-use arm_rules::{Entity, Id, Ruleset, ValidationMode};
+use arm_rules::{ArtScore, Entity, Id, Ruleset, Selection, ValidationMode};
 use pretty_assertions::assert_eq;
+use std::collections::BTreeMap;
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -86,7 +87,7 @@ fn sample_entity_with_characteristics_and_abilities_validates() {
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
     let entity = sample_entity();
     // The shipped sample now carries characteristics, ability scores, and a bank.
-    assert_eq!(entity.schema_version, 2);
+    assert_eq!(entity.schema_version, 3);
     assert!(!entity.characteristics.is_empty());
     assert!(!entity.ability_scores.is_empty());
     let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
@@ -107,9 +108,11 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     fs::write(tmp.path().join("core/virtues_flaws.json"), "not valid json").unwrap();
     fs::write(tmp.path().join("core/character_types.json"), "[]").unwrap();
     fs::write(tmp.path().join("core/abilities.json"), "{}").unwrap();
+    fs::write(tmp.path().join("core/arts.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {
@@ -147,9 +150,11 @@ fn integrity_failure_preserves_individual_messages() {
     .unwrap();
     fs::write(tmp.path().join("core/character_types.json"), "[]").unwrap();
     fs::write(tmp.path().join("core/abilities.json"), "{}").unwrap();
+    fs::write(tmp.path().join("core/arts.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {
@@ -254,6 +259,56 @@ fn save_then_load_round_trips_with_byte_stable_canonical_json() {
     save_entity_to_path(&reloaded, &path).unwrap();
     let second = fs::read_to_string(&path).unwrap();
     assert_eq!(first, second, "canonical output must be byte-stable");
+}
+
+#[test]
+fn arts_round_trip_and_puissant_art_reports_bonus() {
+    // The shipped ruleset carries the Art registry and Puissant Art.
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    assert!(ruleset.art(&Id::new("art.ignem")).is_some());
+    assert!(ruleset.art(&Id::new("art.creo")).is_some());
+
+    // A character with two Arts and Puissant (Ignem). Arts draw from the shared
+    // `xp_pool` alongside abilities (the sample already sets a pool).
+    let mut entity = sample_entity();
+    entity.art_scores = vec![
+        ArtScore {
+            art: Id::new("art.creo"),
+            score: 3, // 6 xp
+        },
+        ArtScore {
+            art: Id::new("art.ignem"),
+            score: 5, // 15 xp
+        },
+    ];
+    entity.selections.push(Selection::with_params(
+        Id::new("virtue.puissant_art"),
+        BTreeMap::from([("art".into(), Id::new("art.ignem"))]),
+    ));
+
+    // Puissant (Ignem) surfaces as a +3 bonus on Ignem only.
+    let effective = effective_scores_loaded(&entity, &ruleset);
+    let ignem = effective
+        .art_bonuses
+        .iter()
+        .find(|b| b.art == Id::new("art.ignem"))
+        .expect("Ignem bonus present");
+    assert_eq!(ignem.bonus, 3);
+    assert!(
+        !effective
+            .art_bonuses
+            .iter()
+            .any(|b| b.art == Id::new("art.creo")),
+        "Creo is unboosted and omitted"
+    );
+
+    // The Arts survive a canonical save/load round trip at schema v3.
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("magus.json");
+    save_entity_to_path(&entity, &path).unwrap();
+    let reloaded = load_entity_from_path(&path).unwrap();
+    assert_eq!(reloaded.schema_version, 3);
+    assert_eq!(reloaded.art_scores, entity.art_scores);
 }
 
 #[test]

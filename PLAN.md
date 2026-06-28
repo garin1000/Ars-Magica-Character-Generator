@@ -184,21 +184,21 @@ in-play-only V/F effects (Magical Focus, Method Caster, study Source-Quality
 bonuses, Deficient Technique/Form total-halving) — these don't change a creation
 number.
 
-### 4a. Arts (engine + data + direct entry)
-- [ ] Arts data model: whole bought Art score + a banked Art-XP total; effective
-      score = bought + bonuses, computed never stored (mirrors the Ability
-      `xp_pool` precedent)
-- [ ] Art registry in the `Ruleset` so `art` parameter refs and `ArtMin` resolve;
+### 4a. Arts (engine + data + direct entry) ✅
+- [x] Arts data model: whole bought Art score, bought from the shared `xp_pool`
+      (one apprenticeship bank for Abilities + Arts); effective score = bought +
+      bonuses, computed never stored
+- [x] Art registry in the `Ruleset` so `art` parameter refs and `ArtMin` resolve;
       make `ParameterDomain::Art` registry-backed (replace the `true` stub in
       `validation.rs`), un-skip the integrity check in `ruleset.rs`, and evaluate
       `ArtMin` against the effective Art score
-- [ ] Puissant Art (+3): `art_bonus` effect (deferred from M3d "until the Art
+- [x] Puissant Art (+3): `art_bonus` effect (deferred from M3d "until the Art
       registry"); extend `validate_effect_refs` to accept an `art`-domain param.
       Source: Core Rules.md:4818-4820
-- [ ] `rules/core/arts.json` + i18n (en, de): all 15 Arts (5 Techniques + 10
+- [x] `rules/core/arts.json` + i18n (en, de): all 15 Arts (5 Techniques + 10
       Forms). Technique/Form is the fixed taxonomy (enum surfaced via the
       ruleset); Art entries are data — assert structural invariants, never counts
-- [ ] Direct-entry Art allocation component (whole-score steppers + Art-XP bank),
+- [x] Direct-entry Art allocation component (whole-score steppers + Art-XP bank),
       labelled via Fluent keys (`art-<id>`)
 
 ### 4b. Houses, House specialisations & Hermetic V/F

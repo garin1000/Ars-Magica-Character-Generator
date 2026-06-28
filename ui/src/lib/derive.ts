@@ -4,6 +4,8 @@
 import type {
   Ability,
   AbilityCategory,
+  Art,
+  ArtType,
   Characteristic,
   CharacteristicRules,
   Entity,
@@ -235,4 +237,67 @@ export function groupAbilitiesByCategory(localized: LocalizedRuleset): AbilityGr
           localizedSortKey(localized, a.id).localeCompare(localizedSortKey(localized, b.id)),
         ),
     }));
+}
+
+/** Localized Art name (e.g. "Creo", "Ignem"). Arts carry no parameter. */
+export function artLabel(localized: LocalizedRuleset, artId: string): string {
+  return localized.i18n[artId]?.name ?? artId;
+}
+
+/** Two-letter Art abbreviation (e.g. "Cr"), or empty string when absent. */
+export function artAbbreviation(localized: LocalizedRuleset, artId: string): string {
+  return localized.i18n[artId]?.abbreviation ?? '';
+}
+
+export interface ArtGroup {
+  artType: ArtType;
+  arts: Art[];
+}
+
+/**
+ * Catalogue Arts grouped by class (Technique, Form) in book order, each group
+ * sorted alphabetically by localized name. The class order comes from the engine
+ * payload (`art_type_order`), so the UI never re-hardcodes it.
+ */
+export function groupArtsByType(localized: LocalizedRuleset): ArtGroup[] {
+  const groups = new Map<ArtType, Art[]>();
+  for (const art of Object.values(localized.ruleset.arts ?? {})) {
+    const list = groups.get(art.art_type) ?? [];
+    list.push(art);
+    groups.set(art.art_type, list);
+  }
+  return (localized.ruleset.art_type_order ?? [])
+    .filter((t) => groups.has(t))
+    .map((artType) => ({
+      artType,
+      arts: groups
+        .get(artType)!
+        .sort((a, b) =>
+          localizedSortKey(localized, a.id).localeCompare(localizedSortKey(localized, b.id)),
+        ),
+    }));
+}
+
+/** Total XP committed across whole bought Art scores (Σ xp_for_score). */
+export function artXpSpent(
+  artAdvancement: { score: number; total_xp: number }[] | undefined,
+  scores: { score: number }[] | undefined,
+): number {
+  return abilityXpSpent(artAdvancement, scores);
+}
+
+/** Highest whole Art score the advancement table can price (the spinner ceiling). */
+export function maxArtScore(artAdvancement: { score: number }[] | undefined): number {
+  return maxAbilityScore(artAdvancement);
+}
+
+/**
+ * Total XP committed across Abilities and Arts together — they draw from one
+ * shared bank (`entity.xp_pool`), each priced from its own advancement table.
+ */
+export function totalXpSpent(localized: LocalizedRuleset, entity: Entity): number {
+  return (
+    abilityXpSpent(localized.ruleset.advancement, entity.ability_scores) +
+    artXpSpent(localized.ruleset.art_advancement, entity.art_scores)
+  );
 }

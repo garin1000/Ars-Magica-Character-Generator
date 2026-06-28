@@ -4,15 +4,27 @@ import {
   abilityDisplayName,
   abilityLabel,
   abilityXpSpent,
+  artAbbreviation,
+  artLabel,
+  artXpSpent,
   balance,
   characteristicPointsUsed,
   displayName,
   groupAbilitiesByCategory,
+  groupArtsByType,
   groupByCategory,
   maxAbilityScore,
+  maxArtScore,
   paramValueUsage,
 } from './derive';
-import type { Ability, CharacteristicRules, Entity, LocalizedRuleset, PointItem } from './types';
+import type {
+  Ability,
+  Art,
+  CharacteristicRules,
+  Entity,
+  LocalizedRuleset,
+  PointItem,
+} from './types';
 
 // --- Fixtures ---------------------------------------------------------------
 
@@ -538,5 +550,78 @@ describe('abilityLabel', () => {
     expect(abilityLabel(ruleset, 'ability.awareness', undefined, placeholder, '*')).toBe(
       'Awareness',
     );
+  });
+});
+
+// --- Arts: groupArtsByType / artLabel / artAbbreviation / xp ----------------
+
+describe('art helpers', () => {
+  function withArts(arts: Art[], i18n: LocalizedRuleset['i18n'] = {}): LocalizedRuleset {
+    const map: Record<string, Art> = {};
+    for (const a of arts) map[a.id] = a;
+    return {
+      ruleset: {
+        id: 't',
+        version: '1',
+        point_items: {},
+        type_profiles: {},
+        arts: map,
+        art_advancement: [
+          { score: 1, total_xp: 1 },
+          { score: 2, total_xp: 3 },
+          { score: 3, total_xp: 6 },
+          { score: 4, total_xp: 10 },
+          { score: 5, total_xp: 15 },
+        ],
+        art_type_order: ['technique', 'form'],
+        ...DERIVED_TAXONOMY,
+      },
+      i18n,
+    };
+  }
+
+  it('groups Techniques before Forms, sorting each by localized name', () => {
+    const groups = groupArtsByType(
+      withArts(
+        [
+          { id: 'art.ignem', art_type: 'form' },
+          { id: 'art.creo', art_type: 'technique' },
+          { id: 'art.animal', art_type: 'form' },
+          { id: 'art.rego', art_type: 'technique' },
+        ],
+        {
+          'art.ignem': { name: 'Ignem' },
+          'art.creo': { name: 'Creo' },
+          'art.animal': { name: 'Animal' },
+          'art.rego': { name: 'Rego' },
+        },
+      ),
+    );
+    expect(groups.map((g) => g.artType)).toEqual(['technique', 'form']);
+    expect(groups[0].arts.map((a) => a.id)).toEqual(['art.creo', 'art.rego']);
+    expect(groups[1].arts.map((a) => a.id)).toEqual(['art.animal', 'art.ignem']);
+  });
+
+  it('is empty when the ruleset has no arts', () => {
+    expect(groupArtsByType(withArts([]))).toEqual([]);
+  });
+
+  it('resolves the localized name and abbreviation', () => {
+    const rs = withArts([{ id: 'art.creo', art_type: 'technique' }], {
+      'art.creo': { name: 'Creo', abbreviation: 'Cr' },
+    });
+    expect(artLabel(rs, 'art.creo')).toBe('Creo');
+    expect(artAbbreviation(rs, 'art.creo')).toBe('Cr');
+    // Missing abbreviation falls back to empty, name falls back to the id.
+    expect(artAbbreviation(rs, 'art.unknown')).toBe('');
+    expect(artLabel(rs, 'art.unknown')).toBe('art.unknown');
+  });
+
+  it('prices Art XP from the (triangular) Art table and reports the ceiling', () => {
+    const rs = withArts([]);
+    const adv = rs.ruleset.art_advancement;
+    // Creo 5 (15) + Ignem 3 (6) = 21; score 0 is free.
+    expect(artXpSpent(adv, [{ score: 5 }, { score: 3 }, { score: 0 }])).toBe(21);
+    expect(maxArtScore(adv)).toBe(5);
   });
 });

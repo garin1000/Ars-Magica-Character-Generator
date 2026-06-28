@@ -90,7 +90,9 @@ pub fn ability_bonus(
                     }
                 }
                 // Not an ability bonus for this target; contributes nothing here.
-                Effect::AbilityBonus { .. } | Effect::CharacteristicLimit { .. } => {}
+                Effect::AbilityBonus { .. }
+                | Effect::CharacteristicLimit { .. }
+                | Effect::ArtBonus { .. } => {}
             }
         }
     }
@@ -114,6 +116,76 @@ pub fn effective_ability_score(
         .max()
         .unwrap_or(0);
     bought + ability_bonus(entity, ruleset, ability, parameter)
+}
+
+/// A non-zero score bonus targeting one Art. Serializes for the frontend as
+/// `{ "art": "<id>", "bonus": N }`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ArtBonus {
+    /// The slug id of the boosted Art (e.g. `art.ignem`).
+    pub art: Id,
+    /// The summed bonus: all matching art-bonus effects (e.g. Puissant Art +3)
+    /// added together, so stacking virtues combine.
+    pub bonus: i32,
+}
+
+/// Sum of all art-bonus effects (e.g. Puissant Art) targeting one Art. Arts are
+/// not parameterized, so the target is matched by id alone. Two virtues boosting
+/// the same Art stack.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:4818-4820 (Puissant
+/// Art, +3; may be taken twice, for two different Arts).
+pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
+    let mut bonus = 0;
+    for selection in &entity.selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            // Exhaustive match so adding an Effect variant is a compile error
+            // here, not a silently-ignored bonus.
+            match effect {
+                Effect::ArtBonus { param, amount } if selection.params.get(param) == Some(art) => {
+                    bonus += i32::from(*amount);
+                }
+                // Not an art bonus for this target; contributes nothing here.
+                Effect::ArtBonus { .. }
+                | Effect::AbilityBonus { .. }
+                | Effect::CharacteristicLimit { .. } => {}
+            }
+        }
+    }
+    bonus
+}
+
+/// The effective score of `art`: the highest bought score the entity holds for
+/// it plus its bonus. An Art the entity has not bought counts as 0.
+pub fn effective_art_score(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
+    let bought = entity
+        .art_scores
+        .iter()
+        .filter(|a| &a.art == art)
+        .map(|a| i32::from(a.score))
+        .max()
+        .unwrap_or(0);
+    bought + art_bonus(entity, ruleset, art)
+}
+
+/// Non-zero art bonuses, one per bought Art, for the UI to add onto each
+/// displayed bought score. Arts with no bonus are omitted. Order follows
+/// `art_scores`.
+pub fn art_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<ArtBonus> {
+    let mut out = Vec::new();
+    for a in &entity.art_scores {
+        let bonus = art_bonus(entity, ruleset, &a.art);
+        if bonus != 0 {
+            out.push(ArtBonus {
+                art: a.art.clone(),
+                bonus,
+            });
+        }
+    }
+    out
 }
 
 /// Net limit shift for `characteristic` from `CharacteristicLimit` effects whose
@@ -147,7 +219,9 @@ fn characteristic_limit_shift(
                     }
                 }
                 // Wrong sign, or not a limit shift; contributes nothing here.
-                Effect::CharacteristicLimit { .. } | Effect::AbilityBonus { .. } => {}
+                Effect::CharacteristicLimit { .. }
+                | Effect::AbilityBonus { .. }
+                | Effect::ArtBonus { .. } => {}
             }
         }
     }
@@ -236,7 +310,7 @@ pub fn characteristic_floors(entity: &Entity, ruleset: &Ruleset) -> BTreeMap<Cha
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{AbilityScore, EntityKind, RulesetRef, Selection};
+    use crate::types::{AbilityScore, ArtScore, EntityKind, RulesetRef, Selection};
     use pretty_assertions::assert_eq;
     use std::collections::BTreeMap;
 
@@ -281,6 +355,15 @@ mod tests {
             "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
             "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": -1 }],
             "max_per_target": 2
+          },
+          {
+            "id": "virtue.puissant_art",
+            "kind": "virtue",
+            "magnitude": "minor",
+            "category": "general",
+            "entity_kinds": ["character"],
+            "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
+            "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }]
           }
         ]"#;
         let types = r#"[
@@ -302,6 +385,17 @@ mod tests {
           { "id": "ability.stealth", "category": "general" },
           { "id": "ability.area_lore", "category": "general", "parameter": "area" }
         ] }"#;
+        let arts = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 1 }, { "score": 2, "total_xp": 3 },
+            { "score": 3, "total_xp": 6 }, { "score": 4, "total_xp": 10 },
+            { "score": 5, "total_xp": 15 }
+          ],
+          "arts": [
+            { "id": "art.creo", "art_type": "technique" },
+            { "id": "art.ignem", "art_type": "form" }
+          ]
+        }"#;
         let characteristics = r#"{
           "start_points": 7,
           "base_max": 3, "base_min": -3,
@@ -315,12 +409,13 @@ mod tests {
             { "score": -5, "cost": -15 }
           ]
         }"#;
-        Ruleset::from_core_json(
+        Ruleset::from_core_json_with_arts(
             "arm5-core",
             "2024.1",
             items,
             types,
             abilities,
+            arts,
             characteristics,
         )
         .unwrap()
@@ -583,6 +678,70 @@ mod tests {
         assert_eq!(caps[&Characteristic::Int], 3);
         assert_eq!(floors[&Characteristic::Qik], -4);
         assert_eq!(floors[&Characteristic::Int], -3);
+    }
+
+    fn puissant_art(art: &str) -> Selection {
+        Selection::with_params(
+            Id::new("virtue.puissant_art"),
+            BTreeMap::from([("art".into(), Id::new(art))]),
+        )
+    }
+
+    #[test]
+    fn puissant_art_adds_three_to_its_target() {
+        let rs = ruleset();
+        let mut e = entity(vec![puissant_art("art.ignem")]);
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.ignem"),
+            score: 5,
+        }];
+        assert_eq!(art_bonus(&e, &rs, &Id::new("art.ignem")), 3);
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.ignem")), 8);
+    }
+
+    #[test]
+    fn art_bonus_zero_for_non_targeted_art() {
+        let rs = ruleset();
+        let e = entity(vec![puissant_art("art.ignem")]);
+        assert_eq!(art_bonus(&e, &rs, &Id::new("art.creo")), 0);
+        // No bought score and no matching bonus => effective 0.
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.creo")), 0);
+    }
+
+    #[test]
+    fn puissant_art_twice_for_one_art_stacks() {
+        // Two Puissant Art selections on the same Art stack (+6). The rules forbid
+        // this (take twice for two *different* Arts), but the bonus calc must stay
+        // sound; the legality is a validation concern.
+        let rs = ruleset();
+        let e = entity(vec![puissant_art("art.ignem"), puissant_art("art.ignem")]);
+        assert_eq!(art_bonus(&e, &rs, &Id::new("art.ignem")), 6);
+    }
+
+    #[test]
+    fn art_bonuses_returns_one_entry_per_boosted_art() {
+        let rs = ruleset();
+        let mut e = entity(vec![puissant_art("art.ignem")]);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 3,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 2,
+            },
+        ];
+        // Only Ignem is boosted; Creo has no bonus and is omitted.
+        assert_eq!(
+            art_bonuses(&e, &rs),
+            vec![ArtBonus {
+                art: Id::new("art.ignem"),
+                bonus: 3,
+            }]
+        );
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.ignem")), 5);
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.creo")), 3);
     }
 
     #[test]

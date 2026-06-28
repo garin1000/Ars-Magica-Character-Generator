@@ -9,9 +9,12 @@ import type { Ability, Entity, LocalizedRuleset, PointItem } from './types';
 vi.mock('./ipc', () => ({
   loadRuleset: vi.fn(),
   validateEntity: vi.fn().mockResolvedValue({ issues: [] }),
-  effectiveScores: vi
-    .fn()
-    .mockResolvedValue({ ability_bonuses: [], characteristic_caps: {}, characteristic_floors: {} }),
+  effectiveScores: vi.fn().mockResolvedValue({
+    ability_bonuses: [],
+    art_bonuses: [],
+    characteristic_caps: {},
+    characteristic_floors: {},
+  }),
   saveEntity: vi.fn(),
   loadEntity: vi.fn(),
 }));
@@ -51,6 +54,7 @@ function installRuleset(items: PointItem[], abilities: Ability[] = []): Localize
       // Engine-derived taxonomy the real backend ships on every Ruleset payload.
       magnitude_points: { free: 0, minor: 1, major: 3 },
       ability_category_order: ['general', 'academic', 'arcane', 'martial', 'supernatural'],
+      art_type_order: ['technique', 'form'],
     },
     i18n: {},
   };
@@ -61,7 +65,7 @@ function installRuleset(items: PointItem[], abilities: Ability[] = []): Localize
 /** Reset the shared singleton's entity to a clean character before each test. */
 function resetEntity(): void {
   store.entity = {
-    schema_version: 2,
+    schema_version: 3,
     ruleset: { id: 'test', version: '1' },
     entity_kind: 'character',
     type_id: 'companion',
@@ -70,6 +74,7 @@ function resetEntity(): void {
     characteristic_descriptions: {},
     ability_scores: [],
     xp_pool: 0,
+    art_scores: [],
   };
 }
 
@@ -272,6 +277,47 @@ describe('setXpPool', () => {
     expect(store.entity.xp_pool).toBe(0);
     store.setXpPool(Number.NaN);
     expect(store.entity.xp_pool).toBe(0);
+  });
+});
+
+// --- Art actions ------------------------------------------------------------
+
+describe('art actions', () => {
+  it('adds an Art at score 0 and dedups a second add', () => {
+    store.addArt('art.creo');
+    store.addArt('art.creo');
+    expect(store.entity.art_scores).toEqual([{ art: 'art.creo', score: 0 }]);
+  });
+
+  it('adjusts an Art score, clamping to [0, max]', () => {
+    store.addArt('art.ignem');
+    store.adjustArtAt(0, 3, 20);
+    expect(store.entity.art_scores?.[0].score).toBe(3);
+    store.adjustArtAt(0, -10, 20); // clamps at 0
+    expect(store.entity.art_scores?.[0].score).toBe(0);
+    store.adjustArtAt(0, 99, 20); // clamps at max
+    expect(store.entity.art_scores?.[0].score).toBe(20);
+  });
+
+  it('removes an Art by index', () => {
+    store.addArt('art.creo');
+    store.addArt('art.ignem');
+    store.removeArtAt(0);
+    expect(store.entity.art_scores).toEqual([{ art: 'art.ignem', score: 0 }]);
+  });
+
+  it('points a Puissant Art selection at an Art by id', () => {
+    installRuleset([
+      item({
+        id: 'virtue.puissant_art',
+        category: 'hermetic',
+        parameters: [{ key: 'art', type: 'ref', domain: 'art' }],
+        effects: [{ type: 'art_bonus', param: 'art', amount: 3 }],
+      }),
+    ]);
+    store.addSelection('virtue.puissant_art');
+    store.setArtBonusTarget(0, 'art.ignem');
+    expect(store.entity.selections[0].params).toEqual({ art: 'art.ignem' });
   });
 });
 

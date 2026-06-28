@@ -336,6 +336,15 @@ pub enum Effect {
         /// the floor.
         amount: i8,
     },
+    /// Adds `amount` to the effective score of the Art named by the selection's
+    /// `params[param]` (e.g. Puissant Art, +3). Arts are not parameterized, so the
+    /// target is matched by Art id alone.
+    ArtBonus {
+        /// Parameter key whose value names the target Art.
+        param: String,
+        /// Points added to the effective score.
+        amount: i8,
+    },
 }
 
 /// An inclusive line range `[start, end]` into a Markdown source file.
@@ -669,6 +678,20 @@ pub struct AbilityScore {
     pub parameter: Option<String>,
 }
 
+/// A whole bought Hermetic Art score. Arts are not parameterized and carry no
+/// specialty, so an instance is identified by `art` alone. Like Abilities, the XP
+/// to reach the score is priced from the ruleset's *Art* advancement table (a
+/// separate, cheaper curve), and the leftover XP banks against
+/// [`Entity::art_xp_pool`]. The *effective* score (bought + Puissant Art) is
+/// computed at validation time, never stored.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct ArtScore {
+    /// The Art's id (e.g. `art.creo`).
+    pub art: Id,
+    /// The whole bought score.
+    pub score: u8,
+}
+
 /// `skip_serializing_if` predicate: omits a `u32` field when it is zero.
 fn is_zero(n: &u32) -> bool {
     *n == 0
@@ -714,17 +737,25 @@ pub struct Entity {
     /// Whole bought Ability scores. Kept sorted via [`Entity::normalize`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ability_scores: Vec<AbilityScore>,
-    /// Total experience points available to spend on Abilities. The amount
-    /// *spent* is derived (Σ XP-to-reach each bought score); the leftover
-    /// (`xp_pool` − spent) is the character's banked XP. Spending more than the
-    /// pool is an error (surfaced in Advisory/Enforced modes); the M4 life-stage
-    /// flow sets this pool and blocks overspending up front.
+    /// Total experience points available to spend on Abilities **and** Arts —
+    /// one shared bank (the rules give apprenticeship XP as a single pool the
+    /// magus splits freely between the two). The amount *spent* is derived
+    /// (Σ XP-to-reach each bought Ability score, priced from the Ability
+    /// advancement table, plus each bought Art score, priced from the Art table);
+    /// the leftover (`xp_pool` − spent) is the character's banked XP. Spending
+    /// more than the pool is an error (surfaced in Advisory/Enforced modes); the
+    /// M4 life-stage flow sets this pool and blocks overspending up front.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub xp_pool: u32,
+    /// Whole bought Hermetic Art scores (magi only). Kept sorted via
+    /// [`Entity::normalize`]. Defaults to empty. Priced from the Art advancement
+    /// table against the shared [`Entity::xp_pool`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub art_scores: Vec<ArtScore>,
 }
 
 /// Current save-format schema version.
-pub const SCHEMA_VERSION: u32 = 2;
+pub const SCHEMA_VERSION: u32 = 3;
 
 impl Entity {
     /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
@@ -740,14 +771,16 @@ impl Entity {
             characteristic_descriptions: BTreeMap::new(),
             ability_scores: Vec::new(),
             xp_pool: 0,
+            art_scores: Vec::new(),
         }
     }
 
-    /// Sort selections and ability scores for canonical serialization.
-    /// (`characteristics` is a `BTreeMap`, already id-ordered.)
+    /// Sort selections, ability scores and art scores for canonical
+    /// serialization. (`characteristics` is a `BTreeMap`, already id-ordered.)
     pub fn normalize(&mut self) {
         self.selections.sort();
         self.ability_scores.sort();
+        self.art_scores.sort();
     }
 }
 
@@ -786,6 +819,10 @@ pub struct I18nEntry {
     /// Optional full description.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// Two-letter Art abbreviation (e.g. "Cr"). Present only for Arts; `None`
+    /// for every other item kind.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub abbreviation: Option<String>,
     /// Example specialties for the item (e.g. an Ability's example
     /// specializations). Empty when none are given.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1200,15 +1237,20 @@ mod tests {
                 parameter: None,
             }],
             xp_pool: 30,
+            art_scores: vec![ArtScore {
+                art: Id::new("art.creo"),
+                score: 5,
+            }],
         };
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 2"#));
+        assert!(json.contains(r#""schema_version": 3"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
+        assert!(json.contains(r#""art": "art.creo""#));
     }
 
     #[test]
@@ -1227,6 +1269,7 @@ mod tests {
             characteristic_descriptions: BTreeMap::new(),
             ability_scores: Vec::new(),
             xp_pool: 0,
+            art_scores: Vec::new(),
         };
 
         // Serialization is canonical only after normalize(); derive-based

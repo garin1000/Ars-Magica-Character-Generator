@@ -1,0 +1,77 @@
+{
+  "art.animal": {
+    "name": "Animal",
+    "abbreviation": "An",
+    "description": "Animals of all kinds, from the fish of the sea to the birds of the air. Animal spells cannot affect people."
+  },
+  "art.aquam": {
+    "name": "Aquam",
+    "abbreviation": "Aq",
+    "description": "Water and all manner of liquids, as well as the properties of liquidity."
+  },
+  "art.auram": {
+    "name": "Auram",
+    "abbreviation": "Au",
+    "description": "Air, wind, and weather; also gaseous forms in general."
+  },
+  "art.corpus": {
+    "name": "Corpus",
+    "abbreviation": "Co",
+    "description": "Human bodies — living, dead, and those of magical or faerie creatures that look human."
+  },
+  "art.creo": {
+    "name": "Creo",
+    "abbreviation": "Cr",
+    "description": "\"I create\". Makes things better examples of their kind, including bringing them into existence from nothing and healing them."
+  },
+  "art.herbam": {
+    "name": "Herbam",
+    "abbreviation": "He",
+    "description": "Plants and trees, including plant matter that is no longer alive, such as dead wood and linens."
+  },
+  "art.ignem": {
+    "name": "Ignem",
+    "abbreviation": "Ig",
+    "description": "Fire, heat, and light."
+  },
+  "art.imaginem": {
+    "name": "Imaginem",
+    "abbreviation": "Im",
+    "description": "The species the senses respond to — appearances of sight, sound, smell, taste, and touch — without changing an object's actual effects."
+  },
+  "art.intellego": {
+    "name": "Intellego",
+    "abbreviation": "In",
+    "description": "\"I perceive\". The Art of perception: gathers information directly from the forms of things, undeceived by mundane disguises."
+  },
+  "art.mentem": {
+    "name": "Mentem",
+    "abbreviation": "Me",
+    "description": "Minds, thoughts, and spirits; also the \"bodies\" of noncorporeal beings such as ghosts."
+  },
+  "art.muto": {
+    "name": "Muto",
+    "abbreviation": "Mu",
+    "description": "\"I transform\". Grants or removes properties something cannot naturally have, such as giving a person wings."
+  },
+  "art.perdo": {
+    "name": "Perdo",
+    "abbreviation": "Pe",
+    "description": "\"I destroy\". The opposite of Creo: makes things worse examples of their kind, or removes them from existence."
+  },
+  "art.rego": {
+    "name": "Rego",
+    "abbreviation": "Re",
+    "description": "\"I control\". Changes the state of a thing to another state it can naturally have, such as moving it or putting a person to sleep."
+  },
+  "art.terram": {
+    "name": "Terram",
+    "abbreviation": "Te",
+    "description": "Solids, especially earth and stone."
+  },
+  "art.vim": {
+    "name": "Vim",
+    "abbreviation": "Vi",
+    "description": "Raw magical power; also affects magical, infernal, divine, and faerie creatures."
+  }
+}
