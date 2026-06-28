@@ -437,6 +437,39 @@ ul {
   min-width: 0;
 }
 
+/* Arts: all 15 are always shown (no pick step), as the character sheet's three
+   columns — Techniques, then the Forms split into two halves of five. */
+.art-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .art-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.art-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Each Art row: name grows so the spinner/effective badge align right. */
+.art-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.art-abbr {
+  color: var(--muted, #6b7280);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Ability XP summary: pool input + derived spent/available. */
 .xp-summary {
   display: flex;

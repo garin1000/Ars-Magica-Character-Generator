@@ -40,13 +40,13 @@ describe('hermetic arts', () => {
     await setType('magus');
     await $(ARTS_TAB).click();
 
-    // Fund the shared pool, add Creo, raise it to 5 (triangular cost = 15 XP).
+    // Fund the shared pool. All 15 Arts are always shown — raise Creo to 5
+    // directly (no pick step); triangular cost = 15 XP.
     const pool = await $('[data-testid="art-xp-pool"]');
     await pool.waitForExist({ timeout: 10000 });
     await pool.setValue('20');
 
-    await $('[data-testid="add-art.creo"]').click();
-    const inc = await $('[data-testid^="art-inc-art.creo-"]');
+    const inc = await $('[data-testid="art-inc-art.creo"]');
     await inc.waitForExist({ timeout: 5000 });
     for (let i = 0; i < 5; i++) await inc.click();
 
@@ -69,15 +69,14 @@ describe('hermetic arts', () => {
     await target.waitForExist({ timeout: 5000 });
     await target.selectByAttribute('value', 'art.ignem');
 
-    // Add Ignem on the Arts tab and raise it to 2 → effective 2 + 3 = 5.
+    // Raise Ignem to 2 on the Arts tab → effective 2 + 3 = 5.
     await $(ARTS_TAB).click();
-    await $('[data-testid="add-art.ignem"]').click();
-    const inc = await $('[data-testid^="art-inc-art.ignem-"]');
+    const inc = await $('[data-testid="art-inc-art.ignem"]');
     await inc.waitForExist({ timeout: 5000 });
     await inc.click();
     await inc.click();
 
-    const eff = await $('[data-testid^="art-eff-art.ignem-"]');
+    const eff = await $('[data-testid="art-eff-art.ignem"]');
     await eff.waitForExist({ timeout: 5000 });
     await browser.waitUntil(async () => clean(await eff.getText()).includes('5'), {
       timeout: 5000,
