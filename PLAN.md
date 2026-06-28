@@ -235,8 +235,9 @@ number.
 - [ ] Spell direct-entry component (add/remove, pick T+F+level), Fluent-labelled
 
 ### 4d. Character types: profiles, selector & type-specific V/F + Ability rules
-- [ ] All four type profiles in `character_types.json` with budgets/caps/required
+- [x] All four type profiles in `character_types.json` with budgets/caps/required
       & forbidden traits. Source: Core Rules.md:2205-2222, 2293-2305, 2633-2639, 2855-2859
+      (magus `≤1 Major Hermetic Virtue` + free House Virtue deferred to 4b)
       - Grog: ≤3 points, Minor only, no Story Flaws, no Gift. Source: Core Rules.md:2295
       - Companion: ≤10 points; Hermetic V/F only with The Gift (free). Source: Core Rules.md:2297-2299
       - Mythic companion (new): free Minor "status" Virtue + 10 Flaw points where
@@ -252,10 +253,10 @@ number.
       (e.g. "requires <Virtue>") rather than hidden. The engine surfaces why an
       ability is unavailable; the selector reads that, never hardcoding which
       abilities are supernatural. Source: Core Rules.md:2392, 2874
-- [ ] Character-type selector UI (replaces the hardcoded `companion` in
-      `App.svelte` / `newEntity()`). Direct-entry sections render Arts/Spells/House
-      only for the magus profile, driven by the profile (e.g. `is_magus`), not
-      hardcoded. Type labels via Fluent, never the slug
+- [x] Character-type selector UI (replaces the hardcoded `companion` in
+      `App.svelte` / `newEntity()`). Type labels via Fluent (`type-<id>`), never
+      the slug; the profile `is_magus` flag is wired for conditional sections.
+      (The Arts/Spells/House sections themselves render as 4a/4c/4b land.)
 
 ### 4e. Remaining per-character input fields
 - [ ] Age field + age → max-Ability-score cap validation: <30→5, 30-35→6, 36-40→7,

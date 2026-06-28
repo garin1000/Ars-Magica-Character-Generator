@@ -85,6 +85,9 @@ export interface FlawCategoryCap {
 export interface PointBudget {
   virtue_points: number;
   flaw_points: number;
+  // How many virtue points each flaw point funds. Omitted from JSON when 1 (the
+  // common case), so optional here; Mythic Companions carry 2.
+  virtue_points_per_flaw_point?: number;
   max_major_virtues?: number | null;
   max_major_flaws?: number | null;
   max_minor_flaws?: number | null;

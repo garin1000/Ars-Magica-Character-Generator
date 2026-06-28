@@ -85,6 +85,25 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+// --- setType() --------------------------------------------------------------
+
+describe('setType', () => {
+  it('switches the entity type id in place, keeping selections', () => {
+    installRuleset([item({ id: 'virtue.plain' })]);
+    store.addSelection('virtue.plain');
+    store.setType('magus');
+    expect(store.entity.type_id).toBe('magus');
+    expect(store.entity.selections).toEqual([{ ref: 'virtue.plain' }]);
+  });
+
+  it('is a no-op when the type is unchanged', () => {
+    const before = store.entity;
+    store.setType('companion');
+    expect(store.entity).toBe(before);
+    expect(store.entity.type_id).toBe('companion');
+  });
+});
+
 // --- addSelection() ---------------------------------------------------------
 
 describe('addSelection', () => {

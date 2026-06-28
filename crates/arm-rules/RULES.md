@@ -136,10 +136,26 @@ source:
 | companion | `max_major_virtues: null`, `max_major_flaws: null` (no count cap) | no Major-count cap for companions in the book |
 | companion | `max_minor_flaws: 5` | `:2774`, `:2835` |
 | companion | `flaw_category_caps`: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `:2820`, `:2838` (Major Personality hard); `:2820`/`:2976` (Personality total); `:2818`/`:2837` (Story) |
+| magus | `virtue_points: 10`, `flaw_points: 10` | `:2303` ("Like companions, magi may take up to ten points of Flaws, and the same number of points of Virtues"), `:2855` ("up to 10 points of Flaws, and an equal number of points of Virtues") |
+| magus | `max_minor_flaws: 5` | `:2856` ("may not have more than 5 Minor Flaws") |
+| magus | `is_magus: true`, `gift_policy: required`, `required_traits: [virtue.hermetic_magus]` | `:2858` ("must take The Gift and the Hermetic Magus Social Status Virtue"), `:2293` (only magi may take the Hermetic Magus Status) |
+| magus | `flaw_category_caps`: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `:2862` ("should not take more than two Personality Flaws, and may not take more than one Major Personality Flaw"); `:2861` ("should not take more than one Story Flaw") |
+| mythic_companion | `virtue_points: 20`, `flaw_points: 10`, `virtue_points_per_flaw_point: 2` | `:2638` ("up to ten points of Flaws, and each point of Flaws is worth two points of Virtues. This produces a maximum of 21 points of Virtues and 10 points of Flaws") |
+| mythic_companion | `forbidden_categories: [hermetic]`, `gift_policy: forbidden` | `:2637` (Mythic Companion status Virtues "are incompatible … with The Gift"); generated as Companions `:2635` |
 
-Magus and mythic-companion profiles are not yet in `character_types.json`. When
-added, cite: magus budget/caps `:2303`, `:2855-2863`; mythic companion
-`:2638`, `:2844-2851`.
+Deferred for `magus` (later M4 phases, not in the Phase-1 profile):
+`max ≤1 Major Hermetic Virtue` needs `virtue_category_caps` (Phase 4b, `:2857`);
+the free Minor House Virtue (`:2859`) and the "≥1 Hermetic Flaw" guideline
+(`:2860`) land with Houses (Phase 4b). The Mythic Companion's free Minor status
+Virtue (`:2638`, raising the balanced max from 20 to 21) is M8 catalogue data;
+the `virtue_points: 20` ceiling here is the balanced maximum without it.
+
+#### Virtue/Flaw funding rate — `virtue_points_per_flaw_point`
+Each Flaw point funds one Virtue point by default; Mythic Companions fund two.
+Modelled as the data-driven `PointBudget.virtue_points_per_flaw_point` (default
+1), applied in `validation.rs::validate_balance` (the `unbalanced_virtues` check
+compares virtue points against `flaw_points * virtue_points_per_flaw_point`).
+Source: Core Rules.md:2638.
 
 #### Resolved: companion `max_major_virtues`
 Earlier data set companion `max_major_virtues: 1`. The book's "no more than one

@@ -3,6 +3,7 @@
   import { store } from './lib/state.svelte';
   import LanguageSelector from './lib/components/LanguageSelector.svelte';
   import ModeToggle from './lib/components/ModeToggle.svelte';
+  import CharacterTypeSelector from './lib/components/CharacterTypeSelector.svelte';
   import ItemPicker from './lib/components/ItemPicker.svelte';
   import SelectionList from './lib/components/SelectionList.svelte';
   import CharacteristicPicker from './lib/components/CharacteristicPicker.svelte';
@@ -39,6 +40,7 @@
     <h1>{store.t('app-title')}</h1>
   </div>
   <div class="controls">
+    <CharacterTypeSelector />
     <LanguageSelector />
     <ModeToggle />
     <SaveLoadBar />
