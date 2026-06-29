@@ -446,6 +446,99 @@ Ability" (`:4816`) and "Great twice per Characteristic" (`:3989`). Effect
 integrity (`ruleset.rs::validate_effect_refs`) rejects at load any effect whose
 `param` is undeclared or whose domain mismatches the effect kind.
 
+#### Affinity with (Ability) — creation XP counts for half again
+> "All Advancement Totals for one Ability are increased by half, rounded up, as
+> are any experience points you put in that Ability at character creation. … If
+> you take this Virtue for an Ability, you may exceed the normal age-based cap
+> during character generation … by two points for that Ability."
+
+The "counts as 1½×" rule is modelled as a cost reduction: to reach a score whose
+table cost is `T`, the XP *charged* is the smallest `c` with `ceil(c·3/2) ≥ T`,
+i.e. `charged = ceil(T·2/3)`. The cap exemption is read off the effect's presence
+(age cap itself is M4/4e).
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:3372-3374`.
+- Data: `rules/core/virtues_flaws.json` `virtue.affinity_ability` —
+  `category: general`, `ability`-domain param, `effects: [{ affinity_ability_cost,
+  param: "ability", counts_as_num: 3, counts_as_den: 2 }]`.
+- Implementation: `effective.rs::charged_cost` (the `ceil(T·den/num)` arithmetic,
+  verified against the worked example below) + `ability_affinity`, folded into
+  `effective.rs::xp_allocation` and so into `validation.rs::validate_xp_pool`.
+
+#### Affinity with (Art) — creation XP counts for half again
+> "Your Advancement Totals for one Hermetic Art are increased by one half, rounded
+> up. At character creation, any experience points you put into that Art are also
+> increased by one half (rounded up) … You may take this Virtue twice, for two
+> different Arts."
+
+Worked example (`:2443`): "He spends 37 points on Perdo, which his affinity turns
+into 56 points, so that he has Perdo 10 (1)" — Perdo 10 needs 55 on the Art table,
+and `charged_cost(55, 3/2) = ceil(55·2/3) = 37`. (Perdo is a Technique/Art; the
+identical rule applies to Abilities but against the 5×-larger Ability table.)
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:3376-3378`, example
+  `:2443`.
+- Data: `rules/core/virtues_flaws.json` `virtue.affinity_art` — `category:
+  hermetic`, `art`-domain param, `effects: [{ affinity_art_cost, param: "art",
+  counts_as_num: 3, counts_as_den: 2 }]`.
+- Implementation: `effective.rs::charged_cost` + `art_affinity`, via
+  `xp_allocation`.
+
+#### Educated / Warrior / Privileged Upbringing — restricted XP pools
+> Educated: "you get an additional 50 experience points, which must be spent on
+> Latin and Artes Liberales." Warrior: "gain an additional 50 experience points
+> which must be spent on Martial Abilities." Privileged Upbringing: "an additional
+> 50 experience points, which may be spent on General, Academic, or Martial
+> Abilities."
+
+Each grants a pool spendable only on its eligible Abilities (never Arts); the
+general `xp_pool` covers anything; unused restricted XP is wasted (a non-blocking
+warning). Eligibility is by ability id **or** category. Latin is modelled as the
+parameterized `ability.dead_language`, so Educated lists `ability.dead_language` +
+`ability.artes_liberales` (any Dead Language qualifies — a deliberate seed
+approximation of "Latin").
+
+- Source: `:3711-3713` (Educated), `:5227-5229` (Warrior), `:4806-4808`
+  (Privileged Upbringing).
+- Data: `rules/core/virtues_flaws.json` `virtue.educated` /`virtue.warrior` /
+  `virtue.privileged_upbringing` — `effects: [{ restricted_ability_xp, amount: 50,
+  abilities | categories }]`. The `50` lives here.
+- Implementation: `effective.rs::xp_allocation` builds a bipartite **max-flow**
+  feasibility graph (general pool + one node per restricted pool → eligible spends
+  → sink). A greedy assignment is incorrect under overlapping eligibility
+  (Educated's academic ids overlap Privileged's `academic` category), so flow is
+  used. `validation.rs::validate_xp_pool` reports `not_enough_xp` (with
+  `shortfall`) and `restricted_xp_unspent` (warning).
+- Permission unlock (Academic/Martial purchasable only with such a Virtue) is
+  **deferred** — not enforced in this phase.
+
+#### Improved Characteristics — +3 Characteristic-buy points
+> "You have an additional three points to spend on buying Characteristics … You
+> may take this Virtue multiple times."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:4103-4105`.
+- Data: `rules/core/virtues_flaws.json` `virtue.improved_characteristics` —
+  `effects: [{ characteristic_points, amount: 3 }]`. The `3` lives here.
+- Implementation: `effective.rs::characteristic_points_granted` sums the grants;
+  `validation.rs::validate_characteristics` budget = `start_points + granted`. The
+  per-characteristic +3 *cap* is unchanged (only Great Characteristic widens it).
+
+#### Second Sight / Premonitions — free starting Ability score (`ability_score_grant`)
+> Second Sight: "Choosing this Virtue confers the Ability Second Sight 1."
+> Premonitions: "Choosing this Virtue confers the Ability Premonitions 1."
+
+A free bought-score *floor*, costing no XP: effective score = `max(bought, grant)
++ bonuses`. The target Ability is fixed by the Virtue (not player-chosen), so the
+effect stores the ability id directly (`ability`), not a selection parameter.
+
+- Source: `:4888-4890` (Second Sight), `:4788-4790` (Premonitions).
+- Data: `rules/core/virtues_flaws.json` `virtue.second_sight` /
+  `virtue.premonitions` — `category: supernatural`, `effects: [{ ability_score_grant,
+  ability: "ability.second_sight" | "ability.premonitions", amount: 1 }]`.
+- Implementation: `effective.rs::granted_ability_floor`, folded into
+  `effective_ability_score`; `ruleset.rs::validate_effect_refs` checks the
+  ability id resolves against the catalogue.
+
 #### Deferred — milestone assignments
 The plan was reordered so all input for all character types lands in M4 (direct
 entry) before the guided wizard in M5. Accordingly:
@@ -457,10 +550,10 @@ entry) before the guided wizard in M5. Accordingly:
 - **M4/4b (Houses):** the *category-restricted* magus cap "≤1 Major Hermetic
   Virtue" (`:2857`) via a new data-driven `virtue_category_caps` (see the cap
   note above).
-- **M4/4f (V/F effect families):** *Improved Characteristics* (a +3 point-buy
-  pool, not an effective-score bonus), Affinity with Ability/Art (XP-cost
-  modifier `:3372-3378`), restricted XP-grant pools (Educated/Warrior/Privileged
-  Upbringing), and `ability_score_grant` starting-score effects.
+- **M4/4f (V/F effect families):** *done* — Affinity with Ability/Art (XP-cost
+  modifier), restricted XP-grant pools (Educated/Warrior/Privileged Upbringing),
+  Improved Characteristics (+3 point-buy pool), and `ability_score_grant`
+  starting-score effects. See the effect-layer subsections above.
 - **M5 (guided wizard):** the life-stage XP acquisition (early childhood 75+45 xp
   `:2378`; later life 15/20/10 xp/yr `:2390-2394`; age→max-score cap
   `:2368-2374`), the Sample Childhood packages (`:2380-2388`), the magus

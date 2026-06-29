@@ -74,15 +74,36 @@ Notes:
   price from the cheaper triangular curve (`art_advancement`).
 - Form bonus (Form score/5) is a derived combat stat — deferred (M5+).
 
-## Phase 3 — V/F mechanical effect model (PLAN.md 4f)
+## Phase 3 — V/F mechanical effect model (PLAN.md 4f) ✅
 e2e: `ui/e2e/specs/vf-effects.e2e.js`
 
-- [ ] XP-COST modifier — Affinity with (Ability)/(Art): +half XP cost, cap-exempt
-- [ ] XP-GRANT restricted pools — seed Educated/Warrior/Privileged Upbringing
-- [ ] POINT-BUY pool — Improved Characteristics (+3 to char pool, stackable)
-- [ ] STARTING-SCORE grant — `ability_score_grant` effect (seed a couple)
-- [ ] Puissant Art composes; Affinity cap-exemption composes with age→cap
-- [ ] e2e spec green; PLAN.md 4f box updated; gate passes
+- [x] XP-COST modifier — Affinity with (Ability)/(Art): creation XP "counts as
+      1½×", modelled as `charged = ceil(table_xp·2/3)` (verified vs the Perdo
+      37→56 worked example `:2443`). Two effect variants (`affinity_ability_cost`
+      / `affinity_art_cost`) keep the one-domain-per-effect invariant
+- [x] XP-GRANT restricted pools — Educated/Warrior/Privileged Upbringing
+      (`restricted_ability_xp`, eligible by ability id OR category). Feasibility
+      is a bipartite **max-flow** in `effective.rs::xp_allocation` (greedy is
+      wrong under overlapping eligibility); leftover restricted XP → non-blocking
+      `restricted_xp_unspent` warning
+- [x] POINT-BUY pool — Improved Characteristics (`characteristic_points` +3,
+      stackable); `validate_characteristics` budget = `start_points + granted`
+- [x] STARTING-SCORE grant — `ability_score_grant` (fixed ability id, free
+      floor, 0 XP); seeded Second Sight + Premonitions
+- [x] Affinity cap-exemption is implicit (Phase-6 age-cap reads the effect's
+      presence); permission-unlock (Academic/Martial purchasable) deferred
+- [x] e2e spec green (3× stable); PLAN.md 4f box updated; full gate passes
+
+Notes:
+- Engine surfaces the authoritative XP spend (`xp_total_demand`, per-pool
+  `used`/`amount`) and the granted floors via `EffectiveScores`; the XP bars and
+  ability rows read those (no Affinity/flow recompute in TS). Restricted-pool
+  labels go through Fluent (`ability-category-<id>`), never raw slugs.
+- Latin is the parameterized `ability.dead_language`; Educated lists it +
+  `ability.artes_liberales` (any Dead Language qualifies — a seed approximation).
+- Full ability-grant UI (auto-conferring the ability, Gift→Supernatural) lands
+  with the supernatural-ability work in Phase 6; Phase 3 shows the floor on a
+  manually-added granted ability.
 
 ## Phase 4 — Houses, specialisations & Hermetic V/F (PLAN.md 4b)
 e2e: `ui/e2e/specs/houses.e2e.js`

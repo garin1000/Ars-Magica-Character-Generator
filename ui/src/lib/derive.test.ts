@@ -16,6 +16,7 @@ import {
   maxAbilityScore,
   maxArtScore,
   paramValueUsage,
+  restrictedPoolLabel,
 } from './derive';
 import type {
   Ability,
@@ -623,5 +624,47 @@ describe('art helpers', () => {
     // Creo 5 (15) + Ignem 3 (6) = 21; score 0 is free.
     expect(artXpSpent(adv, [{ score: 5 }, { score: 3 }, { score: 0 }])).toBe(21);
     expect(maxArtScore(adv)).toBe(5);
+  });
+});
+
+describe('restrictedPoolLabel', () => {
+  const t = (key: string) =>
+    (
+      ({
+        'ability-category-martial': 'Martial',
+        'ability-category-academic': 'Academic',
+        'restricted-xp-list-separator': ',',
+      }) as Record<string, string>
+    )[key] ?? key;
+
+  it('labels a category pool by localized category names', () => {
+    const rs = makeRuleset([]);
+    const label = restrictedPoolLabel(rs, { amount: 50, used: 0, categories: ['martial'] }, t);
+    expect(label).toBe('Martial');
+  });
+
+  it('labels a multi-category pool, separator-joined', () => {
+    const rs = makeRuleset([]);
+    const label = restrictedPoolLabel(
+      rs,
+      { amount: 50, used: 0, categories: ['academic', 'martial'] },
+      t,
+    );
+    expect(label).toBe('Academic, Martial');
+  });
+
+  it('labels an ability pool by localized ability names', () => {
+    const rs = makeRuleset([], {
+      i18n: {
+        'ability.latin': { name: 'Latin' },
+        'ability.artes_liberales': { name: 'Artes Liberales' },
+      },
+    });
+    const label = restrictedPoolLabel(
+      rs,
+      { amount: 50, used: 30, abilities: ['ability.latin', 'ability.artes_liberales'] },
+      t,
+    );
+    expect(label).toBe('Latin, Artes Liberales');
   });
 });

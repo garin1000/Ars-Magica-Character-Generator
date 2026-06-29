@@ -36,6 +36,45 @@
     "entity_kinds": ["character"]
   },
   {
+    "id": "virtue.affinity_ability",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
+    "effects": [
+      { "type": "affinity_ability_cost", "param": "ability", "counts_as_num": 3, "counts_as_den": 2 }
+    ],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3372, 3374] }
+  },
+  {
+    "id": "virtue.affinity_art",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
+    "effects": [
+      { "type": "affinity_art_cost", "param": "art", "counts_as_num": 3, "counts_as_den": 2 }
+    ],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3376, 3378] }
+  },
+  {
+    "id": "virtue.educated",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "effects": [
+      {
+        "type": "restricted_ability_xp",
+        "amount": 50,
+        "abilities": ["ability.artes_liberales", "ability.dead_language"]
+      }
+    ],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3711, 3713] }
+  },
+  {
     "id": "virtue.gentle_gift",
     "kind": "virtue",
     "magnitude": "major",
@@ -64,6 +103,15 @@
     "prerequisites": { "kind": "has", "value": "virtue.the_gift" }
   },
   {
+    "id": "virtue.improved_characteristics",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "characteristic_points", "amount": 3 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4103, 4105] }
+  },
+  {
     "id": "virtue.keen_vision",
     "kind": "virtue",
     "magnitude": "minor",
@@ -76,6 +124,30 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"]
+  },
+  {
+    "id": "virtue.premonitions",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.premonitions", "amount": 1 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4788, 4790] }
+  },
+  {
+    "id": "virtue.privileged_upbringing",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "effects": [
+      {
+        "type": "restricted_ability_xp",
+        "amount": 50,
+        "categories": ["general", "academic", "martial"]
+      }
+    ],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4806, 4808] }
   },
   {
     "id": "virtue.puissant_ability",
@@ -98,6 +170,15 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4818, 4820] }
   },
   {
+    "id": "virtue.second_sight",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.second_sight", "amount": 1 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4888, 4890] }
+  },
+  {
     "id": "virtue.the_gift",
     "kind": "virtue",
     "magnitude": "free",
@@ -110,5 +191,14 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"]
+  },
+  {
+    "id": "virtue.warrior",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5227, 5229] }
   }
 ]

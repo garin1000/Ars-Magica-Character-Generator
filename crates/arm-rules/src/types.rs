@@ -11,6 +11,7 @@ use std::borrow::Borrow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
+use crate::ability::AbilityCategory;
 use crate::characteristics::Characteristic;
 
 /// Slug-style identifier for rules entities (e.g. `virtue.gentle_gift`, `ability.awareness`).
@@ -344,6 +345,78 @@ pub enum Effect {
         param: String,
         /// Points added to the effective score.
         amount: i8,
+    },
+    /// Affinity with (Ability): creation experience points put into the ability
+    /// named by the selection's `params[param]` count as `counts_as_num /
+    /// counts_as_den` of themselves (Affinity = 3/2, "increased by one half,
+    /// rounded up"), so the XP *charged* against the pool for a bought score is
+    /// `ceil(table_xp · counts_as_den / counts_as_num)`. A rational (two `u8`s),
+    /// not a float, so [`Effect`] keeps deriving `Eq`. The age-cap exemption the
+    /// same Virtue grants is read off the presence of this effect (Phase 6).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3372-3374.
+    AffinityAbilityCost {
+        /// Parameter key whose value names the target ability.
+        param: String,
+        /// Numerator of the "counts as" multiplier (Affinity = 3).
+        counts_as_num: u8,
+        /// Denominator of the "counts as" multiplier (Affinity = 2).
+        counts_as_den: u8,
+    },
+    /// Affinity with (Art): the Art analogue of [`Effect::AffinityAbilityCost`],
+    /// targeting the Art named by the selection's `params[param]`.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3376-3378.
+    AffinityArtCost {
+        /// Parameter key whose value names the target Art.
+        param: String,
+        /// Numerator of the "counts as" multiplier (Affinity = 3).
+        counts_as_num: u8,
+        /// Denominator of the "counts as" multiplier (Affinity = 2).
+        counts_as_den: u8,
+    },
+    /// A restricted pool of experience points, spendable only on Abilities (never
+    /// Arts) the grant is eligible for: an ability qualifies if its id is in
+    /// `abilities` **or** its category is in `categories`. The general
+    /// [`Entity::xp_pool`] still covers anything; unused restricted XP is wasted.
+    /// Stacks across selections. Educated (specific ids), Warrior / Privileged
+    /// Upbringing (categories).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3711-3713
+    /// (Educated), `:5227-5229` (Warrior), `:4806-4808` (Privileged Upbringing).
+    RestrictedAbilityXp {
+        /// Points granted to this restricted pool.
+        amount: u32,
+        /// Eligible ability ids (Educated: Latin + Artes Liberales).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        abilities: Vec<Id>,
+        /// Eligible ability categories (Warrior: Martial; Privileged: General,
+        /// Academic, Martial).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        categories: Vec<AbilityCategory>,
+    },
+    /// Adds `amount` points to the Characteristic-buy budget (on top of
+    /// [`crate::characteristics::CharacteristicRules::start_points`]). Improved
+    /// Characteristics grants +3 and may be taken multiple times, so the grants
+    /// from every matching selection are summed.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4103-4105.
+    CharacteristicPoints {
+        /// Points added to the characteristic budget per selection.
+        amount: u8,
+    },
+    /// Grants a free bought-score *floor* of `amount` in a fixed `ability`,
+    /// costing no experience: the effective score is `max(bought, amount) +
+    /// bonuses`, and an ability with no bought row still shows the granted score
+    /// at 0 XP. The target is fixed by the virtue (Second Sight always confers
+    /// Second Sight 1), not player-chosen — so the ability id is stored directly,
+    /// not read from a selection parameter. (Phase 4 Mystery Houses reuse this to
+    /// seed a Supernatural Ability at 1.)
+    AbilityScoreGrant {
+        /// The ability granted a free starting score.
+        ability: Id,
+        /// The free bought-score floor granted.
+        amount: u8,
     },
 }
 

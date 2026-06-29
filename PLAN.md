@@ -270,7 +270,7 @@ number.
 - [ ] Reputations: input only when granted by a Virtue/Flaw (score + content +
       type Local/Ecclesiastical/Hermetic). Source: Core Rules.md:2220, 1091-1101, 2512-2518
 
-### 4f. Generalise the V/F mechanical effect model (all creation-relevant families)
+### 4f. Generalise the V/F mechanical effect model (all creation-relevant families) ✅
 The engine today models only two `Effect` kinds (`ability_bonus`,
 `characteristic_bonus`). Before the wizard, every V/F mechanic that changes a
 creation number must be a data-driven `Effect`, so direct entry builds a correct
@@ -278,28 +278,28 @@ character and the XP-bank accounting is right. Extend the `Effect` model +
 `validate_effect_refs` (`effective.rs`, `ruleset.rs`) and the
 XP-spent-vs-available computation (`validation.rs`). Seed one or two
 representative items per family; the full catalogue is data-only (M8).
-- [ ] XP-COST modifier — Affinity with (Ability) and Affinity with (Art): XP put
-      into the target is increased by half (rounded up) at creation (the target
-      is cheaper), and the target may exceed the normal age/recommended cap. The
-      XP-spent calc applies the per-target multiplier + cap-exemption. Source:
+- [x] XP-COST modifier — Affinity with (Ability) and Affinity with (Art): XP put
+      into the target counts as 1½× at creation (modelled as a reduced charged
+      cost, `ceil(table_xp·2/3)`), and the target may exceed the age/recommended
+      cap. `effective.rs::xp_allocation` applies the per-target multiplier;
+      cap-exemption is implicit (read off the effect; age→cap is 4e). Source:
       Core Rules.md:3372-3374 (Ability), 3376-3378 (Art)
-- [ ] XP-GRANT restricted pools — Educated, Warrior, Privileged Upbringing,
-      Arcane Lore, Well-Traveled, …: each adds a fixed XP pool spendable only on a
-      defined Ability set; the available-XP side tracks restricted pools, not just
-      the single `unspent_xp` bank. Seed Educated/Warrior/Privileged Upbringing;
-      the ~30-item long tail is M8 data. Source: Core Rules.md:3711-3713,
-      5227-5229, 4806-4808, 3430-3432, 5239-5241
-- [ ] Flat ART score bonus — Puissant Art (+3): the `art_bonus` effect from 4a,
-      alongside the existing Puissant Ability (+2). Source: Core Rules.md:4818-4820, 4814-4816
-- [ ] POINT-BUY pool — Improved Characteristics (+3 to the Characteristics pool,
-      stackable); deferred from M3d. Source: Core Rules.md:4103-4105
-- [ ] STARTING-SCORE grant — `ability_score_grant` effect: a V/F that confers an
-      Ability at score 1 (Mystery-House Virtues, overlapping 4b; plus the
-      Supernatural-Ability Virtues: Second Sight, Premonitions, Dowsing, Animal
-      Ken, …). Seed a couple; full catalogue M8. Source: Core Rules.md:3414-3416,
-      4059-4061, 4888-4890
-- [ ] CAP composition: Great Characteristic's +5 ceiling already exists (M3d);
-      ensure the Affinity cap-exemption and the age→cap (4e) compose correctly
+- [x] XP-GRANT restricted pools — Educated, Warrior, Privileged Upbringing:
+      each adds a fixed XP pool spendable only on a defined Ability set
+      (`restricted_ability_xp`, eligible by id OR category). The available-XP side
+      is a bipartite max-flow over the general pool + restricted pools; leftover
+      restricted XP warns (`restricted_xp_unspent`). The long tail is M8 data.
+      Source: Core Rules.md:3711-3713, 5227-5229, 4806-4808
+- [x] Flat ART score bonus — Puissant Art (+3): the `art_bonus` effect (done in
+      4a), alongside the existing Puissant Ability (+2). Source: Core Rules.md:4818-4820, 4814-4816
+- [x] POINT-BUY pool — Improved Characteristics (`characteristic_points` +3 to
+      the Characteristics budget, stackable); deferred from M3d. Source: Core Rules.md:4103-4105
+- [x] STARTING-SCORE grant — `ability_score_grant` effect (fixed ability id, free
+      floor, 0 XP): seeded Second Sight + Premonitions. Mystery-House grants reuse
+      it in 4b; full catalogue M8. Source: Core Rules.md:4888-4890, 4788-4790
+- [x] CAP composition: Great Characteristic's +5 ceiling already exists (M3d);
+      the Affinity cap-exemption is carried implicitly so the age→cap (4e)
+      composes with it when 4e lands
 - [ ] NOT modelled here (no creation-number effect; selectable but inert at
       creation): Deficient Technique/Form (halve in-play totals only — Deficient
       Technique stays in the seed as a valid Hermetic Flaw satisfying the magus

@@ -853,6 +853,25 @@ impl Ruleset {
                     "characteristic_limit",
                 ),
                 Effect::ArtBonus { param, .. } => (param, ParameterDomain::Art, "art_bonus"),
+                Effect::AffinityAbilityCost { param, .. } => {
+                    (param, ParameterDomain::Ability, "affinity_ability_cost")
+                }
+                Effect::AffinityArtCost { param, .. } => {
+                    (param, ParameterDomain::Art, "affinity_art_cost")
+                }
+                // Fixed target: validate the directly-stored ability id resolves.
+                Effect::AbilityScoreGrant { ability, .. } => {
+                    if !self.abilities.contains_key(ability) {
+                        errors.push(format!(
+                            "{id}: effect 'ability_score_grant' references unknown ability '{ability}'"
+                        ));
+                    }
+                    continue;
+                }
+                // No parameter to resolve: eligibility/amount are intrinsic.
+                Effect::RestrictedAbilityXp { .. } | Effect::CharacteristicPoints { .. } => {
+                    continue;
+                }
             };
             match item.parameters.iter().find(|p| &p.key == param) {
                 None => errors.push(format!(

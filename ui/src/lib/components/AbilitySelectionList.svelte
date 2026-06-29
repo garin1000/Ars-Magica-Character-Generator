@@ -26,6 +26,22 @@
     );
   }
 
+  // A virtue-granted free starting score (e.g. Second Sight 1) is a floor on the
+  // bought score, so it raises the effective score; granted abilities are plain.
+  function floorOf(abilityId: string, parameter: string | null | undefined): number {
+    if (parameter != null) return 0;
+    return store.effective?.ability_score_floors?.find((f) => f.ability === abilityId)?.floor ?? 0;
+  }
+
+  // The effective score shown: max(bought, granted floor) + bonus.
+  function effectiveOf(
+    score: number,
+    abilityId: string,
+    parameter: string | null | undefined,
+  ): number {
+    return Math.max(score, floorOf(abilityId, parameter)) + bonusOf(abilityId, parameter);
+  }
+
   // Description + example specialties as a hover/focus tooltip, matching the picker.
   function tip(abilityId: string): TooltipContent {
     const entry = store.ruleset?.i18n[abilityId];
@@ -72,10 +88,10 @@
             >
               +
             </button>
-            {#if bonusOf(entry.ability, entry.parameter) !== 0}
+            {#if effectiveOf(entry.score, entry.ability, entry.parameter) !== entry.score}
               <span class="eff-badge" data-testid="ability-eff-{entry.ability}-{i}">
                 {store.t('effective-score', {
-                  score: String(entry.score + bonusOf(entry.ability, entry.parameter)),
+                  score: String(effectiveOf(entry.score, entry.ability, entry.parameter)),
                 })}
               </span>
             {/if}

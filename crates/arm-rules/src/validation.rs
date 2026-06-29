@@ -197,6 +197,10 @@ impl ValidationIssue {
         "characteristic_min_base_too_high";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_ABILITY_BONUS_DANGLING_TARGET: &'static str = "ability_bonus_dangling_target";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a restricted XP grant
+    /// (Educated/Warrior/Privileged) has experience the character left unspent on
+    /// its eligible Abilities; the rules waste it.
+    pub const CODE_RESTRICTED_XP_UNSPENT: &'static str = "restricted_xp_unspent";
 
     /// Builds an issue with the given severity, code, args, and context.
     pub fn new(
@@ -1044,11 +1048,23 @@ fn validate_ability_bonus_targets(
             // Exhaustive match so adding an Effect variant is a compile error
             // here, not a silently-skipped target check.
             let param = match effect {
-                Effect::AbilityBonus { param, .. } => param,
+                // Affinity reduces the cost of buying one ability, so it too must
+                // target a held instance — the cost break attaches to nothing
+                // otherwise, exactly like a dangling Puissant.
+                Effect::AbilityBonus { param, .. } | Effect::AffinityAbilityCost { param, .. } => {
+                    param
+                }
                 // Art bonuses are not parameterized instances; their target is
                 // resolved by validate_parameters (domain check). Characteristic
-                // limits are handled elsewhere.
-                Effect::CharacteristicLimit { .. } | Effect::ArtBonus { .. } => continue,
+                // limits are handled elsewhere. AbilityScoreGrant *creates* the
+                // score, so it needs no pre-existing bought row. The XP-pool and
+                // characteristic-budget grants carry no target.
+                Effect::CharacteristicLimit { .. }
+                | Effect::ArtBonus { .. }
+                | Effect::AffinityArtCost { .. }
+                | Effect::RestrictedAbilityXp { .. }
+                | Effect::CharacteristicPoints { .. }
+                | Effect::AbilityScoreGrant { .. } => continue,
             };
             let Some(target) = selection.params.get(param) else {
                 continue; // missing ability key already reported by validate_parameters
@@ -1215,7 +1231,10 @@ fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
     }
 
     let cost = rules.total_cost(&entity.characteristics);
-    let budget = rules.start_points as i32;
+    // Improved Characteristics (+3 each, stackable) raises the buy budget above
+    // the ruleset's base start_points.
+    let granted = crate::effective::characteristic_points_granted(entity, ruleset);
+    let budget = i32::from(rules.start_points) + granted as i32;
     if cost > budget {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_CHARACTERISTIC_OVERSPENT,
@@ -1272,7 +1291,13 @@ fn validate_characteristic_limit_preconditions(
                     let base = entity.characteristics.get(&target).copied().unwrap_or(0);
                     (*amount, target, base)
                 }
-                Effect::AbilityBonus { .. } | Effect::ArtBonus { .. } => continue,
+                Effect::AbilityBonus { .. }
+                | Effect::ArtBonus { .. }
+                | Effect::AffinityAbilityCost { .. }
+                | Effect::AffinityArtCost { .. }
+                | Effect::RestrictedAbilityXp { .. }
+                | Effect::CharacteristicPoints { .. }
+                | Effect::AbilityScoreGrant { .. } => continue,
             };
             if amount > 0 {
                 if let Some(cap) = base_max
@@ -1438,39 +1463,41 @@ fn validate_arts(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Validation
     }
 }
 
-/// Total XP an entity has committed across Abilities and Arts, each priced from
-/// its own advancement table. A score the table cannot price (off-table, already
-/// flagged by [`validate_abilities`] / [`validate_arts`]) contributes 0 rather
-/// than being counted at a wrong price.
-fn xp_spent(entity: &Entity, ruleset: &Ruleset) -> u32 {
-    let abilities: u32 = entity
-        .ability_scores
-        .iter()
-        .filter_map(|a| ruleset.advancement.xp_for_score(a.score))
-        .sum();
-    let arts: u32 = entity
-        .art_scores
-        .iter()
-        .filter_map(|a| ruleset.art_advancement.xp_for_score(a.score))
-        .sum();
-    abilities + arts
-}
-
-/// Validates the shared experience pool: Abilities and Arts are bought from one
-/// bank (`Entity::xp_pool`), so their combined cost may not exceed it.
-/// Overspending is reported as an error rather than blocked: direct-entry allows
-/// the illegal state and surfaces it (the M4 wizard blocks the spend up front).
+/// Validates the experience pools: Abilities and Arts are bought from the shared
+/// general bank (`Entity::xp_pool`) plus any restricted grants (Educated/Warrior/
+/// Privileged), each Affinity-reduced. Feasibility is a max-flow solve over the
+/// general pool + restricted pools; an infeasible allocation overspends. Reported
+/// as an error rather than blocked: direct-entry allows the illegal state and
+/// surfaces it (the M4 wizard blocks the spend up front). Leftover restricted XP
+/// the rules waste raises a non-blocking warning.
 fn validate_xp_pool(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    let spent = xp_spent(entity, ruleset);
-    if spent > entity.xp_pool {
+    let allocation = crate::effective::xp_allocation(entity, ruleset);
+    if allocation.total_demand > allocation.max_flow {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_NOT_ENOUGH_XP,
             args([
-                ("spent", spent.to_string()),
+                ("spent", allocation.total_demand.to_string()),
                 ("pool", entity.xp_pool.to_string()),
+                (
+                    "shortfall",
+                    (allocation.total_demand - allocation.max_flow).to_string(),
+                ),
             ]),
             None,
         ));
+    }
+    for pool in &allocation.restricted {
+        if pool.used < pool.amount {
+            issues.push(ValidationIssue::warning(
+                ValidationIssue::CODE_RESTRICTED_XP_UNSPENT,
+                args([
+                    ("amount", pool.amount.to_string()),
+                    ("used", pool.used.to_string()),
+                    ("unspent", (pool.amount - pool.used).to_string()),
+                ]),
+                None,
+            ));
+        }
     }
 }
 
@@ -2657,6 +2684,8 @@ mod tests {
            "parameters": [{"key": "characteristic", "type": "ref", "domain": "characteristic"}],
            "effects": [{"type": "characteristic_limit", "param": "characteristic", "amount": 1}],
            "max_per_target": 2},
+          {"id": "virtue.improved_characteristics", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "effects": [{"type": "characteristic_points", "amount": 3}]},
           {"id": "flaw.poor_characteristic", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "parameters": [{"key": "characteristic", "type": "ref", "domain": "characteristic"}],
            "effects": [{"type": "characteristic_limit", "param": "characteristic", "amount": -1}],
@@ -2877,6 +2906,25 @@ mod tests {
         );
         entity.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
         assert!(codes(&validate(&entity, &rs)).contains(&"duplicate_selection".to_string()));
+    }
+
+    #[test]
+    fn improved_characteristics_raises_the_buy_budget() {
+        let rs = effective_ruleset();
+        // Str 4 costs 10; the base budget is 7, so this overspends by 3 — unless
+        // Improved Characteristics (+3) lifts the budget to 10.
+        let spend = BTreeMap::from([(Characteristic::Str, 4)]);
+        let mut bare = make_entity("companion", vec![]);
+        bare.characteristics = spend.clone();
+        assert!(codes(&validate(&bare, &rs)).contains(&"characteristic_overspent".to_string()));
+
+        let mut improved = make_entity("companion", vec![sel("virtue.improved_characteristics")]);
+        improved.characteristics = spend;
+        let codes = codes(&validate(&improved, &rs));
+        assert!(
+            !codes.contains(&"characteristic_overspent".to_string()),
+            "{codes:?}"
+        );
     }
 
     #[test]
@@ -3310,6 +3358,105 @@ mod tests {
         assert!(codes(&validate(&e, &rs)).contains(&"not_enough_xp".to_string()));
         e.xp_pool = 21;
         assert!(!codes(&validate(&e, &rs)).contains(&"not_enough_xp".to_string()));
+    }
+
+    /// Arts ruleset plus the Phase-3 restricted-pool and Affinity virtues, with
+    /// Latin/Artes-Liberales (academic) and Awareness (general) abilities.
+    fn restricted_xp_ruleset() -> Ruleset {
+        let items = r#"[
+          {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
+          {"id": "virtue.educated", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.latin", "ability.artes_liberales"] }]},
+          {"id": "virtue.affinity_art", "kind": "virtue", "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+           "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
+           "effects": [{ "type": "affinity_art_cost", "param": "art", "counts_as_num": 3, "counts_as_den": 2 }]}
+        ]"#;
+        let types = r#"[{
+          "id": "companion",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general", "hermetic"],
+          "gift_policy": "forbidden",
+          "gift_id": "virtue.the_gift",
+          "creation_phases": []
+        }]"#;
+        let abilities = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },
+            { "score": 3, "total_xp": 30 }, { "score": 4, "total_xp": 50 },
+            { "score": 5, "total_xp": 75 }
+          ],
+          "abilities": [
+            { "id": "ability.latin", "category": "academic" },
+            { "id": "ability.artes_liberales", "category": "academic" },
+            { "id": "ability.awareness", "category": "general" }
+          ]
+        }"#;
+        let arts = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 1 }, { "score": 2, "total_xp": 3 },
+            { "score": 3, "total_xp": 6 }, { "score": 4, "total_xp": 10 },
+            { "score": 5, "total_xp": 15 }
+          ],
+          "arts": [ { "id": "art.creo", "art_type": "technique" } ]
+        }"#;
+        Ruleset::from_core_json_with_arts("test", "1", items, types, abilities, arts, "").unwrap()
+    }
+
+    #[test]
+    fn restricted_xp_left_unspent_warns() {
+        // Educated grants 50 XP restricted to Latin/Artes Liberales; with none of
+        // it spent, the rules waste it — a non-blocking warning, not an error.
+        let rs = restricted_xp_ruleset();
+        let mut e = make_entity("companion", vec![sel("virtue.educated")]);
+        e.xp_pool = 0;
+        let result = validate(&e, &rs);
+        assert!(
+            warning_codes(&result).contains(&"restricted_xp_unspent".to_string()),
+            "{:?}",
+            warning_codes(&result)
+        );
+        assert!(!codes(&result).contains(&"not_enough_xp".to_string()));
+    }
+
+    #[test]
+    fn restricted_pool_cannot_fund_an_ineligible_ability() {
+        // Educated's 50 can only buy Latin/Artes Lib; Awareness (general) must come
+        // from the general pool, which is empty → overspend.
+        let rs = restricted_xp_ruleset();
+        let mut e = make_entity("companion", vec![sel("virtue.educated")]);
+        e.xp_pool = 0;
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 2, // 15 xp
+            specialty: None,
+            parameter: None,
+        }];
+        assert!(codes(&validate(&e, &rs)).contains(&"not_enough_xp".to_string()));
+    }
+
+    #[test]
+    fn affinity_makes_an_otherwise_overspent_art_fit() {
+        let rs = restricted_xp_ruleset();
+        let creo5 = vec![ArtScore {
+            art: Id::new("art.creo"),
+            score: 5, // table cost 15
+        }];
+        // Without Affinity, Creo 5 costs 15 and a pool of 10 overspends.
+        let mut bare = make_entity("companion", vec![]);
+        bare.xp_pool = 10;
+        bare.art_scores = creo5.clone();
+        assert!(codes(&validate(&bare, &rs)).contains(&"not_enough_xp".to_string()));
+        // With Affinity with Creo, the charged cost drops to ceil(15·2/3)=10 → fits.
+        let mut affined = make_entity(
+            "companion",
+            vec![Selection::with_params(
+                Id::new("virtue.affinity_art"),
+                BTreeMap::from([("art".into(), Id::new("art.creo"))]),
+            )],
+        );
+        affined.xp_pool = 10;
+        affined.art_scores = creo5;
+        assert!(!codes(&validate(&affined, &rs)).contains(&"not_enough_xp".to_string()));
     }
 
     #[test]
