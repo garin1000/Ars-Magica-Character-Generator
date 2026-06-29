@@ -79,6 +79,10 @@ tab-arts = Künste
 xp-pool = XP-Vorrat
 xp-spent = Ausgegeben: { $spent }
 xp-available = Verfügbar: { $available }
+# Eingeschränkte XP-Vorräte (Gebildet/Krieger/Privilegierte Erziehung): zusätzliche
+# XP, nur für die aufgeführten Fertigkeiten/Kategorien. `$eligibility` ist eine Liste.
+restricted-xp-pool = { $eligibility }: { $used } / { $amount }
+restricted-xp-list-separator = ,
 ability-score-label = Wert
 ability-specialty-label = Spezialisierung
 # Überschrift für die im Auswahlbereich gezeigten Beispiel-Spezialisierungen.
@@ -163,6 +167,7 @@ issue-characteristic_min_base_too_high = { $item } erfordert { $characteristic }
 issue-unknown_ability = Unbekannte Fertigkeit: { $ability }.
 issue-duplicate_ability = { $ability } ist { $count }-mal mit derselben Spezialisierung aufgeführt.
 issue-not_enough_xp = Fertigkeiten kosten { $spent } XP, mehr als die { $pool } im Vorrat.
+issue-restricted_xp_unspent = { $unspent } von { $amount } eingeschränkten Erfahrungspunkten sind nicht ausgegeben und verfallen.
 issue-ability_parameter_required = { $ability } braucht einen Wert (z. B. das konkrete Gebiet oder die Sprache).
 issue-ability_score_out_of_range = Fertigkeit { $ability } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).
 issue-ability_bonus_dangling_target = { $item } zielt auf eine Fertigkeit, die der Charakter nicht hat ({ $ability } { $parameter }); füge sie zuerst hinzu.

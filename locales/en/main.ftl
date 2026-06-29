@@ -78,6 +78,10 @@ tab-arts = Arts
 xp-pool = XP pool
 xp-spent = Spent: { $spent }
 xp-available = Available: { $available }
+# Restricted experience pools (Educated/Warrior/Privileged): extra XP spendable
+# only on the listed Abilities/categories. `$eligibility` is a localized list.
+restricted-xp-pool = { $eligibility }: { $used } / { $amount }
+restricted-xp-list-separator = ,
 ability-score-label = Score
 ability-specialty-label = Specialty
 # Heading for the rulebook's list of example specialties shown in the picker.
@@ -162,6 +166,7 @@ issue-characteristic_min_base_too_high = { $item } requires { $characteristic } 
 issue-unknown_ability = Unknown ability: { $ability }.
 issue-duplicate_ability = { $ability } is listed { $count } times with the same specialty.
 issue-not_enough_xp = Abilities cost { $spent } XP, more than the { $pool } in the pool.
+issue-restricted_xp_unspent = { $unspent } of { $amount } restricted experience points are unspent and will be wasted.
 issue-ability_parameter_required = { $ability } needs a value (e.g. the specific Area or Language).
 issue-ability_score_out_of_range = Ability { $ability } score { $score } is outside the allowed range (0 to { $max }).
 issue-ability_bonus_dangling_target = { $item } targets an Ability the character does not have ({ $ability } { $parameter }); add it first.

@@ -15,6 +15,18 @@
     "name": "Schlechter Schüler",
     "summary": "Du lernst schlecht aus Büchern und von Lehrern."
   },
+  "virtue.affinity_ability": {
+    "name": "Affinität zu {ability}",
+    "summary": "Erfahrung, die du in eine Fertigkeit steckst, zählt anderthalbfach, und diese Fertigkeit ist von der altersbedingten Obergrenze ausgenommen."
+  },
+  "virtue.affinity_art": {
+    "name": "Affinität zu {art}",
+    "summary": "Erfahrung, die du in eine Kunst steckst, zählt anderthalbfach. Kann zweimal gewählt werden, für zwei Künste."
+  },
+  "virtue.educated": {
+    "name": "Gebildet",
+    "summary": "+50 Erfahrungspunkte, nur für Latein und Artes Liberales. Du darfst Akademische Fertigkeiten erwerben."
+  },
   "virtue.gentle_gift": {
     "name": "Sanfte Gabe",
     "summary": "Deine Gabe verstört andere nicht."
@@ -27,6 +39,10 @@
     "name": "Hermetischer Magus",
     "summary": "Du bist Mitglied des Ordens des Hermes."
   },
+  "virtue.improved_characteristics": {
+    "name": "Verbesserte Eigenschaften",
+    "summary": "+3 Punkte zum Kauf von Eigenschaften. Kann mehrfach gewählt werden."
+  },
   "virtue.keen_vision": {
     "name": "Scharfe Sicht",
     "summary": "+3 auf sichtbasierte Würfe."
@@ -34,6 +50,14 @@
   "virtue.large": {
     "name": "Großgewachsen",
     "summary": "Du bist größer als der Durchschnitt."
+  },
+  "virtue.premonitions": {
+    "name": "Vorahnungen",
+    "summary": "Du spürst, wenn etwas schiefzugehen droht. Verleiht die Fertigkeit Vorahnungen auf 1."
+  },
+  "virtue.privileged_upbringing": {
+    "name": "Privilegierte Erziehung",
+    "summary": "+50 Erfahrungspunkte, nur für Allgemeine, Akademische oder Kampf-Fertigkeiten."
   },
   "virtue.puissant_ability": {
     "name": "Begabung in {ability}",
@@ -43,6 +67,10 @@
     "name": "Begabung in {art}",
     "summary": "+3 auf alle Summen mit einer Kunst. Kann zweimal gewählt werden, für zwei Künste."
   },
+  "virtue.second_sight": {
+    "name": "Zweites Gesicht",
+    "summary": "Du durchschaust Illusion und Verhüllung und nimmst unsichtbare Dinge wahr. Verleiht die Fertigkeit Zweites Gesicht auf 1."
+  },
   "virtue.the_gift": {
     "name": "Die Gabe",
     "summary": "Du hast die Fähigkeit, Magie zu wirken."
@@ -50,5 +78,9 @@
   "virtue.tough": {
     "name": "Zäh",
     "summary": "+3 auf Widerstandsfähigkeit."
+  },
+  "virtue.warrior": {
+    "name": "Krieger",
+    "summary": "+50 Erfahrungspunkte, nur für Kampf-Fertigkeiten, die du bei der Charaktererschaffung erwerben darfst."
   }
 }

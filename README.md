@@ -98,7 +98,13 @@ specialties and the "cannot be used untrained" marker. The complete Core Rules
 ability catalogue is staged for a later milestone. Score-boosting Virtues
 (Puissant Ability, Puissant Art +3, Great Characteristic) compute an effective
 score that drives prerequisites, the +5 characteristic ceiling, and a read-only
-display badge. The guided creation wizard (with the life-stage XP flow), Houses,
+display badge. Virtues with experience effects are modelled too: Affinity
+(Ability/Art) reduces the XP charged for its target, the restricted-pool Virtues
+(Educated, Warrior, Privileged Upbringing) grant experience spendable only on
+eligible Abilities (allocated by a max-flow solve so overlapping pools resolve
+correctly), Improved Characteristics raises the Characteristic-buy budget, and
+starting-score Virtues (Second Sight, Premonitions) confer their Ability at a
+free floor. The guided creation wizard (with the life-stage XP flow), Houses,
 spells, and full data population are the next milestones — see
 [PLAN.md](PLAN.md) for the milestone breakdown.
 

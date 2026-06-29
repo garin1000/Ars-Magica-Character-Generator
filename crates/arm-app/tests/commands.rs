@@ -212,14 +212,29 @@ fn forbidden_item_errors_in_enforced_but_downgrades_in_advisory_and_clears_in_si
 fn over_budget_virtues_is_reported() {
     // A deliberately tiny type profile (1 virtue point) forces an overrun the
     // shipped companion profile can't express with the current catalogue.
-    let items = fs::read_to_string(rules_dir().join("core/virtues_flaws.json")).unwrap();
+    let core = rules_dir().join("core");
+    let items = fs::read_to_string(core.join("virtues_flaws.json")).unwrap();
+    let abilities = fs::read_to_string(core.join("abilities.json")).unwrap();
+    let arts = fs::read_to_string(core.join("arts.json")).unwrap();
+    let characteristics = fs::read_to_string(core.join("characteristics.json")).unwrap();
     let tiny_type = r#"[{
         "id": "tiny",
         "budget": { "virtue_points": 1, "flaw_points": 10 },
         "permitted_categories": ["general"],
         "creation_phases": ["virtues_flaws"]
     }]"#;
-    let ruleset = Ruleset::from_json(RULESET_ID, RULESET_VERSION, &items, tiny_type).unwrap();
+    // The catalogue's ability_score_grant effects reference abilities, so the
+    // ruleset must carry the ability registry for referential integrity to pass.
+    let ruleset = Ruleset::from_core_json_with_arts(
+        RULESET_ID,
+        RULESET_VERSION,
+        &items,
+        tiny_type,
+        &abilities,
+        &arts,
+        &characteristics,
+    )
+    .unwrap();
 
     let entity: Entity = serde_json::from_str(&format!(
         r#"{{

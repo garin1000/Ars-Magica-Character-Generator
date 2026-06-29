@@ -10,9 +10,10 @@ use std::path::{Path, PathBuf};
 use std::collections::BTreeMap;
 
 use arm_rules::{
-    AbilityBonus, ArtBonus, Characteristic, Entity, EntityKind, LocalizedRuleset, Ruleset,
-    RulesetSources, ValidationMode, ValidationResult, ability_bonuses, art_bonuses,
-    characteristic_caps, characteristic_floors, validate,
+    AbilityBonus, AbilityFloor, ArtBonus, Characteristic, Entity, EntityKind, LocalizedRuleset,
+    RestrictedXpPool, Ruleset, RulesetSources, ValidationMode, ValidationResult, ability_bonuses,
+    ability_score_floors, art_bonuses, characteristic_caps, characteristic_floors,
+    characteristic_points_granted, validate, xp_allocation,
 };
 use serde::Serialize;
 
@@ -34,15 +35,37 @@ pub struct EffectiveScores {
     pub characteristic_caps: BTreeMap<Characteristic, i32>,
     /// Characteristic → lowest buyable score (Poor Characteristic lowers it).
     pub characteristic_floors: BTreeMap<Characteristic, i32>,
+    /// Total experience the entity's Ability+Art spends demand, after Affinity
+    /// reductions — the authoritative "spent" the UI shows (it must not recompute
+    /// it without Affinity).
+    pub xp_total_demand: u32,
+    /// Experience drawn from the general pool (`Entity::xp_pool`) by the
+    /// allocation; restricted pools cover the rest.
+    pub xp_general_used: u32,
+    /// The restricted experience pools (Educated/Warrior/Privileged) with how
+    /// much of each the allocation consumes, for the per-pool XP bar.
+    pub restricted_xp_pools: Vec<RestrictedXpPool>,
+    /// Extra Characteristic-buy points granted by Improved Characteristics, on
+    /// top of the ruleset's base `start_points`.
+    pub characteristic_points_granted: u32,
+    /// Free starting-score floors a virtue grants to an ability (e.g. Second
+    /// Sight → Second Sight 1), for the ability row's effective-score display.
+    pub ability_score_floors: Vec<AbilityFloor>,
 }
 
 /// Computes the score effects for `entity` against a loaded ruleset.
 pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveScores {
+    let allocation = xp_allocation(entity, ruleset);
     EffectiveScores {
         ability_bonuses: ability_bonuses(entity, ruleset),
         art_bonuses: art_bonuses(entity, ruleset),
         characteristic_caps: characteristic_caps(entity, ruleset),
         characteristic_floors: characteristic_floors(entity, ruleset),
+        xp_total_demand: allocation.total_demand,
+        xp_general_used: allocation.general_used,
+        restricted_xp_pools: allocation.restricted,
+        characteristic_points_granted: characteristic_points_granted(entity, ruleset),
+        ability_score_floors: ability_score_floors(entity, ruleset),
     }
 }
 

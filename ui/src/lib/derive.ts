@@ -12,6 +12,7 @@ import type {
   ItemKind,
   LocalizedRuleset,
   PointItem,
+  RestrictedXpPool,
 } from './types';
 
 /**
@@ -207,6 +208,23 @@ export function abilityLabel(
   const name = abilityDisplayName(localized, abilityId, value, placeholderLabel);
   const requiresTraining = localized.ruleset.abilities?.[abilityId]?.requires_training ?? false;
   return requiresTraining ? `${name}${trainingMarker}` : name;
+}
+
+/**
+ * Human-readable eligibility label for a restricted XP pool: its eligible
+ * ability names (localized) and category names (via `ability-category-<id>`
+ * Fluent keys), separator-joined. Never renders a raw category slug — categories
+ * go through `t`, abilities through their i18n name (with the usual id fallback).
+ */
+export function restrictedPoolLabel(
+  localized: LocalizedRuleset,
+  pool: RestrictedXpPool,
+  t: (key: string, args?: Record<string, string>) => string,
+): string {
+  const parts: string[] = [];
+  for (const id of pool.abilities ?? []) parts.push(displayName(localized, id));
+  for (const c of pool.categories ?? []) parts.push(t(`ability-category-${c}`));
+  return parts.join(`${t('restricted-xp-list-separator')} `);
 }
 
 export interface AbilityGroup {

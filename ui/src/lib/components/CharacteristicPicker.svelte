@@ -10,6 +10,11 @@
   const tableMax = $derived(rules ? Math.max(...rules.costs.map((c) => c.score)) : 3);
   const tableMin = $derived(rules ? Math.min(...rules.costs.map((c) => c.score)) : -3);
   const used = $derived(characteristicPointsUsed(rules, store.entity.characteristics));
+  // Improved Characteristics raises the buy budget above the ruleset base; the
+  // engine reports the grant (0 until the effective-scores call returns).
+  const budget = $derived(
+    (rules?.start_points ?? 0) + (store.effective?.characteristic_points_granted ?? 0),
+  );
 
   function scoreOf(characteristic: Characteristic): number {
     return store.entity.characteristics?.[characteristic] ?? 0;
@@ -46,7 +51,7 @@
 <section class="panel char-panel">
   {#if rules}
     <p class="points" data-testid="characteristic-points">
-      {store.t('characteristic-points', { used: String(used), budget: String(rules.start_points) })}
+      {store.t('characteristic-points', { used: String(used), budget: String(budget) })}
     </p>
     <div class="char-grid">
       {#each CHARACTERISTICS as characteristic (characteristic)}

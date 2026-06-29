@@ -27,7 +27,12 @@ export interface ParameterDef {
 export type Effect =
   | { type: 'ability_bonus'; param: string; amount: number }
   | { type: 'characteristic_limit'; param: string; amount: number }
-  | { type: 'art_bonus'; param: string; amount: number };
+  | { type: 'art_bonus'; param: string; amount: number }
+  | { type: 'affinity_ability_cost'; param: string; counts_as_num: number; counts_as_den: number }
+  | { type: 'affinity_art_cost'; param: string; counts_as_num: number; counts_as_den: number }
+  | { type: 'restricted_ability_xp'; amount: number; abilities?: string[]; categories?: string[] }
+  | { type: 'characteristic_points'; amount: number }
+  | { type: 'ability_score_grant'; ability: string; amount: number };
 
 // Prerequisite expression tree. Adjacently tagged by the engine: every variant
 // is a uniform object carrying a `kind` discriminant, with any payload under
@@ -71,15 +76,39 @@ export interface ArtBonus {
   bonus: number;
 }
 
+// A free starting-score floor a virtue grants to an ability (e.g. Second Sight →
+// Second Sight 1). Mirrors the engine's `AbilityFloor`.
+export interface AbilityFloor {
+  ability: string;
+  floor: number;
+}
+
+// One restricted experience pool (Educated/Warrior/Privileged) with how much of
+// it the allocation consumes. Mirrors the engine's `RestrictedXpPool`. Eligible
+// by ability id OR ability category; empty arrays are omitted by the engine.
+export interface RestrictedXpPool {
+  amount: number;
+  used: number;
+  abilities?: string[];
+  categories?: string[];
+}
+
 // Score effects for the current entity, computed by the engine. Ability bonuses
 // are per-instance (only non-zero ones present). Art bonuses are per-Art (only
 // non-zero ones present). Characteristic caps/floors are the per-characteristic
-// buy limits (Great/Poor Characteristic widen them), present for all eight.
+// buy limits (Great/Poor Characteristic widen them), present for all eight. The
+// XP fields are the authoritative spend after Affinity and restricted-pool
+// allocation — the UI must not recompute spend without them.
 export interface EffectiveScores {
   ability_bonuses: AbilityBonus[];
   art_bonuses: ArtBonus[];
   characteristic_caps: Partial<Record<Characteristic, number>>;
   characteristic_floors: Partial<Record<Characteristic, number>>;
+  xp_total_demand: number;
+  xp_general_used: number;
+  restricted_xp_pools: RestrictedXpPool[];
+  characteristic_points_granted: number;
+  ability_score_floors: AbilityFloor[];
 }
 
 // Per-category flaw count cap. The category is data, so the engine hardcodes no
