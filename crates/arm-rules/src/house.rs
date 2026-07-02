@@ -20,7 +20,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
-use crate::types::{Id, ItemKind, Magnitude, Selection, SourceRef};
+use crate::ruleset::Ruleset;
+use crate::types::{Entity, Id, ItemKind, Magnitude, Selection, SourceRef};
 
 /// The three structural classes of Hermetic House. Flavor/grouping only — drives
 /// no mechanics; mirrors [`crate::art::ArtType`].
@@ -134,6 +135,54 @@ pub struct HousesFile {
     /// The twelve core Houses.
     #[serde(default)]
     pub houses: Vec<House>,
+}
+
+/// Derives the free-Virtue [`Selection`] rows the entity's House grants, from
+/// the stored `(house, house_choices)` choices — the single source of the
+/// derived grant model. The save never persists these resolved rows; every
+/// effect / prerequisite consumer that must "see" grants folds this list into
+/// `entity.selections` (see [`crate::effective`]), while balance and caps stay
+/// on the bought selections alone so grants are free and uncapped.
+///
+/// Resolution per grant kind:
+/// - **Fixed** → the granted item with its fixed params.
+/// - **Choice** → the player's pick keyed by `choice_key`, but only if it is one
+///   of the offered `options`; an absent or off-menu pick emits nothing (the
+///   discrepancy surfaces as a validation error, not here).
+/// - **Open** → the player's pick keyed by `choice_key`, verbatim; eligibility
+///   against the `constraint` is checked in validation, not here.
+///
+/// An entity with no House, or one naming a House absent from the ruleset,
+/// grants nothing.
+pub fn granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
+    let Some(house_id) = &entity.house else {
+        return Vec::new();
+    };
+    let Some(house) = ruleset.house(house_id) else {
+        return Vec::new();
+    };
+    house
+        .grants
+        .iter()
+        .filter_map(|grant| resolve_grant(grant, &entity.house_choices))
+        .collect()
+}
+
+/// Resolves one grant to the [`Selection`] it contributes, if any.
+fn resolve_grant(grant: &HouseGrant, choices: &BTreeMap<String, Selection>) -> Option<Selection> {
+    match grant {
+        HouseGrant::Fixed { item, params } => {
+            Some(Selection::with_params(item.clone(), params.clone()))
+        }
+        HouseGrant::Choice {
+            choice_key,
+            options,
+        } => {
+            let pick = choices.get(choice_key)?;
+            options.contains(pick).then(|| pick.clone())
+        }
+        HouseGrant::Open { choice_key, .. } => choices.get(choice_key).cloned(),
+    }
 }
 
 #[cfg(test)]
@@ -264,5 +313,144 @@ mod tests {
     fn empty_houses_file_defaults_to_no_houses() {
         let file: HousesFile = serde_json::from_str("{}").unwrap();
         assert!(file.houses.is_empty());
+    }
+
+    // --- granted_selections resolver -------------------------------------
+
+    use crate::ruleset::{Ruleset, RulesetSources};
+    use crate::types::{Entity, EntityKind, RulesetRef};
+
+    /// Point items the grant-resolver test houses reference — enough for the
+    /// `validate_house_refs` integrity check (Fixed.item + Choice.options[].ref)
+    /// to pass at load.
+    const GRANT_ITEMS: &str = r#"[
+        { "id": "virtue.self_confident", "kind": "virtue", "magnitude": "minor",
+          "category": "general", "entity_kinds": ["character"] },
+        { "id": "virtue.puissant_art", "kind": "virtue", "magnitude": "minor",
+          "category": "hermetic", "entity_kinds": ["character"],
+          "parameters": [{ "key": "art", "type": "ref", "domain": "art" }] },
+        { "id": "virtue.affinity_with_art", "kind": "virtue", "magnitude": "minor",
+          "category": "hermetic", "entity_kinds": ["character"],
+          "parameters": [{ "key": "art", "type": "ref", "domain": "art" }] }
+    ]"#;
+
+    /// Houses exercising each grant kind: a fixed Virtue (Tytalus), a Choice
+    /// between two Puissant Arts (Flambeau), and an Open Minor Virtue (Jerbiton).
+    const GRANT_HOUSES: &str = r#"{ "houses": [
+        { "id": "house.tytalus", "lineage_type": "societas",
+          "grants": [ { "kind": "fixed", "item": "virtue.self_confident" } ] },
+        { "id": "house.flambeau", "lineage_type": "societas",
+          "grants": [ { "kind": "choice", "choice_key": "flambeau_puissant", "options": [
+            { "ref": "virtue.puissant_art", "params": { "art": "art.perdo" } },
+            { "ref": "virtue.puissant_art", "params": { "art": "art.ignem" } }
+          ] } ] },
+        { "id": "house.jerbiton", "lineage_type": "societas",
+          "grants": [ { "kind": "open", "choice_key": "jerbiton_virtue",
+            "constraint": { "kind": "virtue", "magnitude": "minor" } } ] }
+    ] }"#;
+
+    fn grant_ruleset() -> Ruleset {
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: GRANT_ITEMS,
+            type_profiles: "[]",
+            abilities: None,
+            arts: None,
+            houses: Some(GRANT_HOUSES),
+            characteristics: None,
+        })
+        .unwrap()
+    }
+
+    fn magus_in(house: &str) -> Entity {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.house = Some(Id::new(house));
+        entity
+    }
+
+    fn puissant_art(art: &str) -> Selection {
+        Selection::with_params(
+            Id::new("virtue.puissant_art"),
+            BTreeMap::from([("art".to_string(), Id::new(art))]),
+        )
+    }
+
+    #[test]
+    fn no_house_grants_nothing() {
+        let rs = grant_ruleset();
+        let mut entity = magus_in("house.tytalus");
+        entity.house = None;
+        assert!(granted_selections(&entity, &rs).is_empty());
+    }
+
+    #[test]
+    fn unknown_house_grants_nothing() {
+        let rs = grant_ruleset();
+        let entity = magus_in("house.does_not_exist");
+        assert!(granted_selections(&entity, &rs).is_empty());
+    }
+
+    #[test]
+    fn fixed_grant_emits_the_item() {
+        let rs = grant_ruleset();
+        let entity = magus_in("house.tytalus");
+        assert_eq!(
+            granted_selections(&entity, &rs),
+            vec![Selection::new(Id::new("virtue.self_confident"))]
+        );
+    }
+
+    #[test]
+    fn choice_grant_emits_the_pick_when_it_is_an_option() {
+        let rs = grant_ruleset();
+        let mut entity = magus_in("house.flambeau");
+        entity
+            .house_choices
+            .insert("flambeau_puissant".to_string(), puissant_art("art.ignem"));
+        assert_eq!(
+            granted_selections(&entity, &rs),
+            vec![puissant_art("art.ignem")]
+        );
+    }
+
+    #[test]
+    fn choice_grant_emits_nothing_when_pick_absent() {
+        let rs = grant_ruleset();
+        let entity = magus_in("house.flambeau");
+        assert!(granted_selections(&entity, &rs).is_empty());
+    }
+
+    #[test]
+    fn choice_grant_emits_nothing_when_pick_not_an_option() {
+        let rs = grant_ruleset();
+        let mut entity = magus_in("house.flambeau");
+        // Puissant Creo is not one of the offered options (Perdo / Ignem).
+        entity
+            .house_choices
+            .insert("flambeau_puissant".to_string(), puissant_art("art.creo"));
+        assert!(granted_selections(&entity, &rs).is_empty());
+    }
+
+    #[test]
+    fn open_grant_emits_the_pick_verbatim() {
+        let rs = grant_ruleset();
+        let mut entity = magus_in("house.jerbiton");
+        let pick = Selection::new(Id::new("virtue.affinity_with_art"));
+        entity
+            .house_choices
+            .insert("jerbiton_virtue".to_string(), pick.clone());
+        assert_eq!(granted_selections(&entity, &rs), vec![pick]);
+    }
+
+    #[test]
+    fn open_grant_emits_nothing_when_pick_absent() {
+        let rs = grant_ruleset();
+        let entity = magus_in("house.jerbiton");
+        assert!(granted_selections(&entity, &rs).is_empty());
     }
 }
