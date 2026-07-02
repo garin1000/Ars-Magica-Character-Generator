@@ -1,0 +1,125 @@
+{
+  "houses": [
+    {
+      "id": "house.bjornaer",
+      "lineage_type": "mystery_cult",
+      "grants": [{ "kind": "fixed", "item": "virtue.heartbeast" }],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+    },
+    {
+      "id": "house.bonisagus",
+      "lineage_type": "true_lineage",
+      "grants": [
+        {
+          "kind": "choice",
+          "choice_key": "bonisagus_puissant",
+          "options": [
+            { "ref": "virtue.puissant_ability", "params": { "ability": "ability.magic_theory" } },
+            { "ref": "virtue.puissant_ability", "params": { "ability": "ability.intrigue" } }
+          ]
+        }
+      ],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+    },
+    {
+      "id": "house.criamon",
+      "lineage_type": "mystery_cult",
+      "grants": [{ "kind": "fixed", "item": "virtue.the_enigma" }],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+    },
+    {
+      "id": "house.ex_miscellanea",
+      "lineage_type": "societas",
+      "grants": [
+        {
+          "kind": "open",
+          "choice_key": "ex_misc_minor_virtue",
+          "constraint": { "kind": "virtue", "magnitude": "minor", "require_categories": ["hermetic"] }
+        },
+        {
+          "kind": "open",
+          "choice_key": "ex_misc_major_virtue",
+          "constraint": { "kind": "virtue", "magnitude": "major", "forbid_categories": ["hermetic"] }
+        },
+        {
+          "kind": "open",
+          "choice_key": "ex_misc_major_flaw",
+          "constraint": { "kind": "flaw", "magnitude": "major", "require_categories": ["hermetic"] }
+        }
+      ],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+    },
+    {
+      "id": "house.flambeau",
+      "lineage_type": "societas",
+      "grants": [
+        {
+          "kind": "choice",
+          "choice_key": "flambeau_puissant",
+          "options": [
+            { "ref": "virtue.puissant_art", "params": { "art": "art.perdo" } },
+            { "ref": "virtue.puissant_art", "params": { "art": "art.ignem" } }
+          ]
+        }
+      ],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+    },
+    {
+      "id": "house.guernicus",
+      "lineage_type": "true_lineage",
+      "grants": [{ "kind": "fixed", "item": "virtue.hermetic_prestige" }],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+    },
+    {
+      "id": "house.jerbiton",
+      "lineage_type": "societas",
+      "grants": [
+        {
+          "kind": "open",
+          "choice_key": "jerbiton_minor_virtue",
+          "constraint": { "kind": "virtue", "magnitude": "minor" }
+        }
+      ],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+    },
+    {
+      "id": "house.mercere",
+      "lineage_type": "true_lineage",
+      "grants": [
+        {
+          "kind": "choice",
+          "choice_key": "mercere_puissant",
+          "options": [
+            { "ref": "virtue.puissant_art", "params": { "art": "art.creo" } },
+            { "ref": "virtue.puissant_art", "params": { "art": "art.muto" } }
+          ]
+        }
+      ],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+    },
+    {
+      "id": "house.merinita",
+      "lineage_type": "mystery_cult",
+      "grants": [{ "kind": "fixed", "item": "virtue.faerie_magic" }],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+    },
+    {
+      "id": "house.tremere",
+      "lineage_type": "true_lineage",
+      "grants": [{ "kind": "fixed", "item": "virtue.minor_magical_focus" }],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+    },
+    {
+      "id": "house.tytalus",
+      "lineage_type": "societas",
+      "grants": [{ "kind": "fixed", "item": "virtue.self_confident" }],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+    },
+    {
+      "id": "house.verditius",
+      "lineage_type": "mystery_cult",
+      "grants": [{ "kind": "fixed", "item": "virtue.verditius_magic" }],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+    }
+  ]
+}

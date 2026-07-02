@@ -65,7 +65,7 @@ function installRuleset(items: PointItem[], abilities: Ability[] = []): Localize
 /** Reset the shared singleton's entity to a clean character before each test. */
 function resetEntity(): void {
   store.entity = {
-    schema_version: 3,
+    schema_version: 4,
     ruleset: { id: 'test', version: '1' },
     entity_kind: 'character',
     type_id: 'companion',

@@ -16,7 +16,7 @@ import type {
 } from './types';
 
 const VALIDATE_DEBOUNCE_MS = 150;
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 function newEntity(rulesetId: string, version: string): Entity {
   return {
@@ -30,6 +30,7 @@ function newEntity(rulesetId: string, version: string): Entity {
     ability_scores: [],
     xp_pool: 0,
     art_scores: [],
+    house: null,
   };
 }
 

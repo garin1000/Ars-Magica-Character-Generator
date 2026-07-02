@@ -6,6 +6,7 @@ pub mod ability;
 pub mod art;
 pub mod characteristics;
 pub mod effective;
+pub mod house;
 pub mod ruleset;
 pub mod types;
 pub mod validation;
@@ -20,6 +21,7 @@ pub use effective::{
     characteristic_points_granted, effective_ability_score, effective_art_score,
     restricted_xp_pools, xp_allocation,
 };
+pub use house::{GrantConstraint, House, HouseGrant, HousesFile, LineageType};
 pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError, RulesetSources};
 pub use types::{
     AbilityScore, ArtScore, Effect, Entity, EntityKind, EntityTypeProfile, FlawCategoryCap,

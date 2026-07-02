@@ -286,6 +286,11 @@ export interface Entity {
   // Whole bought Art scores (magi only). Priced against the shared xp_pool.
   // Omitted when empty.
   art_scores?: ArtScore[];
+  // The Hermetic House (magi only). Stores only the choice; the free House
+  // Virtue is derived engine-side, never persisted. Omitted when unset.
+  house?: string | null;
+  // House specialisation picks, keyed by each grant's choice_key. Omitted empty.
+  house_choices?: Record<string, Selection>;
 }
 
 export interface ValidationIssue {
