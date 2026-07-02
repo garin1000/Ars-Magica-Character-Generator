@@ -14,6 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::ability::{Ability, AbilityCategory, AdvancementTable};
 use crate::art::{Art, ArtType, ArtsFile};
 use crate::characteristics::CharacteristicRules;
+use crate::house::{House, HouseGrant, HousesFile};
 use crate::types::{
     Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, Magnitude, ParameterDomain, PointItem,
     Prereq, RulesetRef,
@@ -112,6 +113,11 @@ pub struct Ruleset {
     /// stable public contract.
     #[serde(default)]
     pub(crate) art_type_order: Vec<ArtType>,
+    /// All Hermetic Houses keyed by their id. Defaulted so older serialized
+    /// rulesets (no houses) still deserialize. Serialized whole to the frontend;
+    /// the `houses` field name is a stable public contract.
+    #[serde(default)]
+    pub(crate) houses: BTreeMap<Id, House>,
 }
 
 /// The magnitude→points table, derived from the canonical [`Magnitude::points`].
@@ -144,6 +150,9 @@ pub struct RulesetSources<'a> {
     /// Arts-file JSON (`{ "advancement": [...], "arts": [...] }`), or `None` for
     /// a ruleset without an Art registry.
     pub arts: Option<&'a str>,
+    /// Houses-file JSON (`{ "houses": [...] }`), or `None` for a ruleset without
+    /// a House registry.
+    pub houses: Option<&'a str>,
     /// Characteristic point-buy JSON (`{ "start_points", "costs" }`), or `None`
     /// for a ruleset that ships no characteristic rules.
     pub characteristics: Option<&'a str>,
@@ -251,6 +260,7 @@ pub(crate) mod parse_source {
     pub const TYPE_PROFILES: &str = "type profiles";
     pub const ABILITIES: &str = "abilities";
     pub const ARTS: &str = "arts";
+    pub const HOUSES: &str = "houses";
     pub const CHARACTERISTICS: &str = "characteristics";
     pub const I18N: &str = "i18n";
     /// Fallback used by the blanket `From<serde_json::Error>` conversion, where
@@ -417,6 +427,7 @@ impl Ruleset {
             type_profiles: type_profiles_json,
             abilities: None,
             arts: None,
+            houses: None,
             characteristics: None,
         })
     }
@@ -440,6 +451,7 @@ impl Ruleset {
             type_profiles: type_profiles_json,
             abilities: Some(abilities_json),
             arts: None,
+            houses: None,
             characteristics: None,
         })
     }
@@ -465,6 +477,7 @@ impl Ruleset {
             type_profiles: type_profiles_json,
             abilities: Some(abilities_json),
             arts: None,
+            houses: None,
             // Preserve the existing sentinel: an empty string means "no
             // characteristic rules" for this convenience constructor.
             characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
@@ -493,6 +506,7 @@ impl Ruleset {
             type_profiles: type_profiles_json,
             abilities: Some(abilities_json),
             arts: Some(arts_json),
+            houses: None,
             characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
         })
     }
@@ -511,6 +525,7 @@ impl Ruleset {
             type_profiles: type_profiles_json,
             abilities,
             arts,
+            houses,
             characteristics,
         } = sources;
 
@@ -524,6 +539,9 @@ impl Ruleset {
         // An absent arts file is equivalent to an empty `"{}"`.
         let arts_file: ArtsFile = serde_json::from_str(arts.unwrap_or("{}"))
             .map_err(|e| RulesetError::parse(parse_source::ARTS, e))?;
+        // An absent houses file is equivalent to an empty `"{}"`.
+        let houses_file: HousesFile = serde_json::from_str(houses.unwrap_or("{}"))
+            .map_err(|e| RulesetError::parse(parse_source::HOUSES, e))?;
         let characteristic_rules: Option<CharacteristicRules> = match characteristics {
             None => None,
             Some(json) => Some(
@@ -542,6 +560,11 @@ impl Ruleset {
             &mut errors,
         );
         collect_duplicates(arts_file.arts.iter().map(|a| &a.id), "art", &mut errors);
+        collect_duplicates(
+            houses_file.houses.iter().map(|h| &h.id),
+            "house",
+            &mut errors,
+        );
         if !errors.is_empty() {
             return Err(IntegrityError::new(errors).into());
         }
@@ -562,6 +585,11 @@ impl Ruleset {
             .into_iter()
             .map(|a| (a.id.clone(), a))
             .collect();
+        let houses: BTreeMap<Id, House> = houses_file
+            .houses
+            .into_iter()
+            .map(|h| (h.id.clone(), h))
+            .collect();
 
         let ruleset = Self {
             id: Id::new(id),
@@ -576,6 +604,7 @@ impl Ruleset {
             arts,
             art_advancement: arts_file.advancement,
             art_type_order: ArtType::ALL.to_vec(),
+            houses,
         };
 
         ruleset.validate_integrity()?;
@@ -679,6 +708,21 @@ impl Ruleset {
     /// Iterates all Arts in id order.
     pub fn arts(&self) -> impl Iterator<Item = &Art> {
         self.arts.values()
+    }
+
+    /// Looks up a House by id.
+    pub fn house(&self, id: &Id) -> Option<&House> {
+        self.houses.get(id)
+    }
+
+    /// Iterates all Houses in id order.
+    pub fn houses(&self) -> impl Iterator<Item = &House> {
+        self.houses.values()
+    }
+
+    /// Number of Houses in the catalogue.
+    pub fn house_count(&self) -> usize {
+        self.houses.len()
     }
 
     /// Number of Arts in the catalogue.
@@ -787,6 +831,10 @@ impl Ruleset {
             // (tracked here rather than left silent).
         }
 
+        for house in self.houses.values() {
+            self.validate_house_refs(house, &mut errors);
+        }
+
         if errors.is_empty() {
             Ok(())
         } else {
@@ -794,15 +842,56 @@ impl Ruleset {
         }
     }
 
+    /// Validates a House record: every Virtue/Flaw it can grant must resolve to a
+    /// known point item, and its source line range (if any) must be well-formed.
+    ///
+    /// A `Fixed` grant and each `Choice` option name a concrete point-item id, so
+    /// those are integrity-checked here. An `Open` grant carries no item id (the
+    /// player picks one at runtime, validated against its `GrantConstraint` in
+    /// [`crate::validation`]), so there is nothing to resolve at load. Grant
+    /// `params` values (the `ability`/`art` a Puissant targets) are deliberately
+    /// NOT registry-checked, mirroring the forward-declared Ability/Art-domain
+    /// policy on parameter values elsewhere.
+    fn validate_house_refs(&self, house: &House, errors: &mut Vec<String>) {
+        let id = &house.id;
+        for grant in &house.grants {
+            match grant {
+                HouseGrant::Fixed { item, .. } => {
+                    if !self.point_items.contains_key(item) {
+                        errors.push(format!(
+                            "house '{id}': fixed grant references unknown item '{item}'"
+                        ));
+                    }
+                }
+                HouseGrant::Choice { options, .. } => {
+                    for option in options {
+                        if !self.point_items.contains_key(&option.item_ref) {
+                            errors.push(format!(
+                                "house '{id}': choice option references unknown item '{}'",
+                                option.item_ref
+                            ));
+                        }
+                    }
+                }
+                // Open grants resolve to a player pick at runtime — nothing here.
+                HouseGrant::Open { .. } => {}
+            }
+        }
+        if let Some(ref source) = house.source
+            && !source.lines.is_valid()
+        {
+            errors.push(format!(
+                "house '{id}': source line range start ({}) exceeds end ({})",
+                source.lines.start, source.lines.end
+            ));
+        }
+    }
+
     /// Recursively validates that prerequisite refs resolve to known registries:
     /// [`Prereq::Has`] against point items, [`Prereq::AbilityMin`] against the
-    /// ability catalogue, and [`Prereq::ArtMin`] against the Art catalogue.
-    ///
-    /// `House` carries a ref into a house registry that does not exist yet; that
-    /// ref is INTENTIONALLY left unchecked (a deferred check), narrowing the
-    /// integrity contract explicitly so the gap is tracked rather than silent — it
-    /// must be revisited when that registry is added (Phase 4). `IsMagus` carries
-    /// no reference at all, so there is nothing to check for it.
+    /// ability catalogue, [`Prereq::ArtMin`] against the Art catalogue, and
+    /// [`Prereq::House`] against the House registry. `IsMagus` carries no
+    /// reference at all, so there is nothing to check for it.
     fn validate_prereq_refs(&self, prereq: &Prereq, context_id: &Id, errors: &mut Vec<String>) {
         match prereq {
             Prereq::All(children) | Prereq::Any(children) | Prereq::Nor(children) => {
@@ -831,8 +920,15 @@ impl Ruleset {
                     ));
                 }
             }
-            // Intentionally unchecked: no house registry exists yet (Phase 4).
-            Prereq::House(_) | Prereq::IsMagus => {}
+            Prereq::House(ref_id) => {
+                if !self.houses.contains_key(ref_id) {
+                    errors.push(format!(
+                        "{context_id}: prerequisite references unknown house '{ref_id}'"
+                    ));
+                }
+            }
+            // IsMagus carries no reference at all, so there is nothing to check.
+            Prereq::IsMagus => {}
         }
     }
 
@@ -1061,6 +1157,7 @@ mod tests {
             type_profiles: VALID_TYPES,
             abilities: Some(VALID_ABILITIES),
             arts: None,
+            houses: None,
             characteristics: None,
         })
         .unwrap();
@@ -1076,10 +1173,199 @@ mod tests {
             type_profiles: VALID_TYPES,
             abilities: None,
             arts: None,
+            houses: None,
             characteristics: None,
         })
         .unwrap();
         assert_eq!(no_abilities.ability_count(), 0);
+    }
+
+    const VALID_HOUSES: &str = r#"{
+      "houses": [
+        { "id": "house.tytalus", "lineage_type": "societas", "grants": [
+          { "kind": "fixed", "item": "virtue.puissant_ability" } ] },
+        { "id": "house.bonisagus", "lineage_type": "true_lineage" }
+      ]
+    }"#;
+
+    #[test]
+    fn from_sources_loads_house_registry() {
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: Some(VALID_ABILITIES),
+            arts: None,
+            houses: Some(VALID_HOUSES),
+            characteristics: None,
+        })
+        .unwrap();
+        assert_eq!(rs.house_count(), 2);
+        assert!(rs.house(&Id::new("house.tytalus")).is_some());
+        assert!(rs.house(&Id::new("house.missing")).is_none());
+        assert_eq!(rs.houses().count(), 2);
+
+        // Omitting houses yields an empty registry.
+        let none = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: None,
+            characteristics: None,
+        })
+        .unwrap();
+        assert_eq!(none.house_count(), 0);
+    }
+
+    #[test]
+    fn duplicate_house_id_is_rejected() {
+        let dup = r#"{ "houses": [
+          { "id": "house.tytalus", "lineage_type": "societas" },
+          { "id": "house.tytalus", "lineage_type": "societas" }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: Some(dup),
+            characteristics: None,
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => {
+                assert!(
+                    e.errors().iter().any(|m| m.contains("duplicate house ID")),
+                    "expected a duplicate-house error, got {:?}",
+                    e.errors()
+                );
+            }
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    /// A `Prereq::House` ref into the registry must resolve, now that a House
+    /// registry exists (Phase 4 un-skips the previously-deferred check).
+    #[test]
+    fn prereq_house_ref_to_unknown_house_is_rejected() {
+        let items = r#"[
+          { "id": "virtue.tester", "kind": "virtue", "magnitude": "minor", "category": "general",
+            "prerequisites": { "kind": "house", "value": "house.missing" } }
+        ]"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: items,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: Some(VALID_HOUSES),
+            characteristics: None,
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("unknown house 'house.missing'")),
+                "expected an unknown-house prereq error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn house_fixed_grant_to_unknown_item_is_rejected() {
+        let houses = r#"{ "houses": [
+          { "id": "house.tytalus", "lineage_type": "societas", "grants": [
+            { "kind": "fixed", "item": "virtue.does_not_exist" } ] }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: Some(houses),
+            characteristics: None,
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("house.tytalus") && m.contains("virtue.does_not_exist")),
+                "expected an unknown grant-item error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn house_choice_option_to_unknown_item_is_rejected() {
+        let houses = r#"{ "houses": [
+          { "id": "house.flambeau", "lineage_type": "societas", "grants": [
+            { "kind": "choice", "choice_key": "x", "options": [
+              { "ref": "virtue.puissant_ability" },
+              { "ref": "virtue.nope" } ] } ] }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: Some(houses),
+            characteristics: None,
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors().iter().any(|m| m.contains("virtue.nope")),
+                "expected an unknown choice-option error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn house_invalid_source_range_is_rejected() {
+        let houses = r#"{ "houses": [
+          { "id": "house.tytalus", "lineage_type": "societas",
+            "source": { "file": "x.md", "lines": [50, 10] } }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: Some(houses),
+            characteristics: None,
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("house.tytalus") && m.contains("source line range")),
+                "expected a source-range error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
     }
 
     #[test]
@@ -1695,6 +1981,7 @@ mod tests {
             type_profiles: VALID_TYPES,
             abilities: Some(VALID_ABILITIES),
             arts: None,
+            houses: None,
             characteristics: None,
         })
         .unwrap();
@@ -1713,6 +2000,7 @@ mod tests {
                 "art_type_order",
                 "arts",
                 "characteristic_rules",
+                "houses",
                 "id",
                 "magnitude_points",
                 "point_items",

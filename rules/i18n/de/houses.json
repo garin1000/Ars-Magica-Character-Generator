@@ -1,0 +1,14 @@
+{
+  "house.bjornaer": { "name": "Bjornaer", "description": "Magi, die ebenso Tiere wie Menschen sind." },
+  "house.bonisagus": { "name": "Bonisagus", "description": "Geteilt zwischen Forschern und Politikern." },
+  "house.criamon": { "name": "Criamon", "description": "Mystische Philosophen und Meister der Rätsel." },
+  "house.ex_miscellanea": { "name": "Ex Miscellanea", "description": "Viele Magi aus verschiedenen Traditionen, nicht alle vollständig hermetisch." },
+  "house.flambeau": { "name": "Flambeau", "description": "Kriegerische Meister des Feuers und der Zerstörung." },
+  "house.guernicus": { "name": "Guernicus", "description": "Ermittler, Anwälte und Vermittler." },
+  "house.jerbiton": { "name": "Jerbiton", "description": "Adlige, Gelehrte und Künstler." },
+  "house.mercere": { "name": "Mercere", "description": "Boten des Ordens." },
+  "house.merinita": { "name": "Merinita", "description": "Feenmagi." },
+  "house.tremere": { "name": "Tremere", "description": "Ein hierarchisches und diszipliniertes Haus." },
+  "house.tytalus": { "name": "Tytalus", "description": "Magi, die in Konflikten jeder Art aufblühen." },
+  "house.verditius": { "name": "Verditius", "description": "Schöpfer verzauberter Gegenstände." }
+}

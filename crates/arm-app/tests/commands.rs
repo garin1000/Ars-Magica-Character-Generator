@@ -46,6 +46,37 @@ fn load_ruleset_yields_companion_profile_and_all_items() {
 }
 
 #[test]
+fn load_ruleset_yields_houses_with_localized_names() {
+    // The shipped houses.json + its i18n must load through the real production
+    // path (from_core_json in the engine tests does not exercise houses). Prove a
+    // known House loaded and its display name is merged, never an exact count.
+    let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
+    assert!(
+        localized
+            .ruleset
+            .house(&Id::new("house.bjornaer"))
+            .is_some()
+    );
+    assert_eq!(
+        localized.display_name(&Id::new("house.bjornaer")),
+        Some("Bjornaer")
+    );
+    // The House-granted Virtues and the Mystery abilities they seed also loaded.
+    assert!(
+        localized
+            .ruleset
+            .item(&Id::new("virtue.heartbeast"))
+            .is_some()
+    );
+    assert!(
+        localized
+            .ruleset
+            .ability(&Id::new("ability.heartbeast"))
+            .is_some()
+    );
+}
+
+#[test]
 fn load_ruleset_yields_abilities_and_characteristics() {
     let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
     // Catalogue size is data, not code: prove the catalogue loaded via a known
@@ -109,10 +140,12 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     fs::write(tmp.path().join("core/character_types.json"), "[]").unwrap();
     fs::write(tmp.path().join("core/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/arts.json"), "{}").unwrap();
+    fs::write(tmp.path().join("core/houses.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/houses.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {
@@ -151,10 +184,12 @@ fn integrity_failure_preserves_individual_messages() {
     fs::write(tmp.path().join("core/character_types.json"), "[]").unwrap();
     fs::write(tmp.path().join("core/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/arts.json"), "{}").unwrap();
+    fs::write(tmp.path().join("core/houses.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/houses.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {

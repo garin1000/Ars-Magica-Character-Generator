@@ -614,6 +614,7 @@ fn validate_prerequisites(
     let ctx = PrereqCtx {
         selected_ids,
         is_magus,
+        house: entity.house.as_ref(),
         ability_scores: &ability_scores,
         art_scores: &art_scores,
     };
@@ -653,6 +654,10 @@ fn validate_prerequisites(
 struct PrereqCtx<'a> {
     selected_ids: &'a BTreeSet<&'a Id>,
     is_magus: Option<bool>,
+    /// The entity's own Hermetic House, if any. `Prereq::House` compares against
+    /// it: matching → True, differing → False, absent → Unknown (mirrors how
+    /// `is_magus` yields Unknown when the profile is missing).
+    house: Option<&'a Id>,
     ability_scores: &'a BTreeMap<&'a Id, u8>,
     art_scores: &'a BTreeMap<&'a Id, u8>,
 }
@@ -709,8 +714,14 @@ fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx) -> (Tri, bool) {
                 (Tri::False, false)
             }
         }
-        // No house metadata on the entity yet: genuinely unknown (Phase 4).
-        Prereq::House(_) => (Tri::Unknown, true),
+        // House matches against the entity's own house: a known house that
+        // matches is True, a known house that differs is False, and no house at
+        // all (non-magus or an unset magus) is genuinely Unknown.
+        Prereq::House(id) => match ctx.house {
+            Some(h) if h == id => (Tri::True, false),
+            Some(_) => (Tri::False, false),
+            None => (Tri::Unknown, true),
+        },
     }
 }
 
@@ -1620,6 +1631,32 @@ mod tests {
         Selection::new(Id::new(item_ref))
     }
 
+    /// The houses the `Prereq::House` composition tests reference. They exist
+    /// only so the ruleset passes load integrity (which now resolves House
+    /// refs); the tests still exercise House as an *unevaluable* leaf because the
+    /// entity carries no `house`, so eval yields `Unknown`.
+    const TEST_HOUSES: &str = r#"{ "houses": [
+        { "id": "house.flambeau", "lineage_type": "societas" },
+        { "id": "house.x", "lineage_type": "societas" },
+        { "id": "house.bjornaer", "lineage_type": "mystery_cult" }
+    ] }"#;
+
+    /// Builds a test ruleset that registers [`TEST_HOUSES`], so `Prereq::House`
+    /// refs resolve at load (mirrors `Ruleset::from_json` otherwise).
+    fn rs_with_houses(items: &str, types: &str) -> Ruleset {
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: types,
+            abilities: None,
+            arts: None,
+            houses: Some(TEST_HOUSES),
+            characteristics: None,
+        })
+        .unwrap()
+    }
+
     fn puissant(ability: &str) -> Selection {
         Selection::with_params(
             Id::new("virtue.puissant_ability"),
@@ -2432,7 +2469,7 @@ mod tests {
           "permitted_categories": ["general"],
           "creation_phases": []
         }]"#;
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let rs = rs_with_houses(items, types);
         let entity = make_entity("test_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
@@ -2462,7 +2499,7 @@ mod tests {
           "permitted_categories": ["general"],
           "creation_phases": []
         }]"#;
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let rs = rs_with_houses(items, types);
         // Two minor virtues balanced by two minor flaws so the test isolates
         // prerequisite-warning behaviour, not the points balance.
         let entity = make_entity(
@@ -2500,7 +2537,7 @@ mod tests {
           "creation_phases": []
         }]"#;
         // virtue.dep exists but is NOT selected, so Has(virtue.dep) is False.
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let rs = rs_with_houses(items, types);
         let entity = make_entity("test_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
@@ -2530,7 +2567,7 @@ mod tests {
           "creation_phases": []
         }]"#;
         // virtue.dep is NOT selected, so Has(virtue.dep) is False.
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let rs = rs_with_houses(items, types);
         let entity = make_entity("test_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
@@ -2562,7 +2599,7 @@ mod tests {
           "permitted_categories": ["general"],
           "creation_phases": []
         }]"#;
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let rs = rs_with_houses(items, types);
         let entity = make_entity("test_type", vec![sel("virtue.a"), sel("virtue.b")]);
 
         let result = validate(&entity, &rs);
@@ -2590,12 +2627,74 @@ mod tests {
           "permitted_categories": ["general"],
           "creation_phases": []
         }]"#;
-        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let rs = rs_with_houses(items, types);
         let entity = make_entity("test_type", vec![sel("virtue.a")]);
 
         let result = validate(&entity, &rs);
         let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
         assert!(warning_codes.contains(&"prereq_unevaluated"));
+    }
+
+    #[test]
+    fn prereq_house_met_when_entity_belongs_to_that_house() {
+        // House(bjornaer) is satisfied when the entity's own house matches: the
+        // leaf is now evaluable (True), so no error and no unevaluated warning.
+        let items = r#"[
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "prerequisites": {"kind": "house", "value": "house.bjornaer"}}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = rs_with_houses(items, types);
+        let mut entity = make_entity("test_type", vec![sel("virtue.a")]);
+        entity.house = Some(Id::new("house.bjornaer"));
+
+        let result = validate(&entity, &rs);
+        let all_codes = codes(&result);
+        let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
+        assert!(
+            !all_codes.contains(&"prereq_not_met".to_string()),
+            "matching house satisfies the prereq: {all_codes:?}"
+        );
+        assert!(
+            !warning_codes.contains(&"prereq_unevaluated"),
+            "an evaluable house leaf must not warn: {warning_codes:?}"
+        );
+    }
+
+    #[test]
+    fn prereq_house_not_met_when_entity_belongs_to_a_different_house() {
+        // The entity is in house.x but the virtue requires house.bjornaer: the
+        // leaf is a definite False, so a hard prereq error fires (no warning).
+        let items = r#"[
+          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "prerequisites": {"kind": "house", "value": "house.bjornaer"}}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = rs_with_houses(items, types);
+        let mut entity = make_entity("test_type", vec![sel("virtue.a")]);
+        entity.house = Some(Id::new("house.x"));
+
+        let result = validate(&entity, &rs);
+        let all_codes = codes(&result);
+        let warning_codes: Vec<&str> = result.warnings().map(|i| i.code.as_str()).collect();
+        assert!(
+            all_codes.contains(&"prereq_not_met".to_string()),
+            "a different house is a definite failure: {all_codes:?}"
+        );
+        assert!(
+            !warning_codes.contains(&"prereq_unevaluated"),
+            "a definite False must not warn: {warning_codes:?}"
+        );
     }
 
     /// A ruleset whose `virtue.a` requires Awareness 3. Returns (ruleset).

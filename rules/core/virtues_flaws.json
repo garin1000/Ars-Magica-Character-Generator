@@ -75,6 +75,15 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3711, 3713] }
   },
   {
+    "id": "virtue.faerie_magic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.faerie_magic", "amount": 1 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3825, 3827] }
+  },
+  {
     "id": "virtue.gentle_gift",
     "kind": "virtue",
     "magnitude": "major",
@@ -95,12 +104,29 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3987, 3989] }
   },
   {
+    "id": "virtue.heartbeast",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.heartbeast", "amount": 1 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4059, 4061] }
+  },
+  {
     "id": "virtue.hermetic_magus",
     "kind": "virtue",
     "magnitude": "free",
     "category": "social_status",
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.the_gift" }
+  },
+  {
+    "id": "virtue.hermetic_prestige",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4071, 4073] }
   },
   {
     "id": "virtue.improved_characteristics",
@@ -124,6 +150,14 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"]
+  },
+  {
+    "id": "virtue.minor_magical_focus",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4536, 4538] }
   },
   {
     "id": "virtue.premonitions",
@@ -179,6 +213,23 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4888, 4890] }
   },
   {
+    "id": "virtue.self_confident",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4900, 4902] }
+  },
+  {
+    "id": "virtue.the_enigma",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.enigmatic_wisdom", "amount": 1 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3759, 3761] }
+  },
+  {
     "id": "virtue.the_gift",
     "kind": "virtue",
     "magnitude": "free",
@@ -191,6 +242,14 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"]
+  },
+  {
+    "id": "virtue.verditius_magic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5215, 5217] }
   },
   {
     "id": "virtue.warrior",

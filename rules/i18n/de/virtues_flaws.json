@@ -27,6 +27,10 @@
     "name": "Gebildet",
     "summary": "+50 Erfahrungspunkte, nur für Latein und Artes Liberales. Du darfst Akademische Fertigkeiten erwerben."
   },
+  "virtue.faerie_magic": {
+    "name": "Feenmagie",
+    "summary": "Einweihung in das Äußere Mysterium des Hauses Merinita. Verleiht die Fertigkeit Feenmagie auf 1."
+  },
   "virtue.gentle_gift": {
     "name": "Sanfte Gabe",
     "summary": "Deine Gabe verstört andere nicht."
@@ -35,9 +39,17 @@
     "name": "Hervorragende {characteristic}",
     "summary": "Erhöhe eine Eigenschaft, die bereits bei +3 liegt, bis höchstens +5; die Punkte zahlst du weiterhin."
   },
+  "virtue.heartbeast": {
+    "name": "Herztier",
+    "summary": "Einweihung in das Äußere Mysterium des Hauses Bjornaer. Verleiht die Fertigkeit Herztier auf 1."
+  },
   "virtue.hermetic_magus": {
     "name": "Hermetischer Magus",
     "summary": "Du bist Mitglied des Ordens des Hermes."
+  },
+  "virtue.hermetic_prestige": {
+    "name": "Hermetisches Ansehen",
+    "summary": "Andere Magi blicken zu dir auf. Du erhältst ein Ansehen der Stufe 4 innerhalb des Ordens."
   },
   "virtue.improved_characteristics": {
     "name": "Verbesserte Eigenschaften",
@@ -50,6 +62,10 @@
   "virtue.large": {
     "name": "Großgewachsen",
     "summary": "Du bist größer als der Durchschnitt."
+  },
+  "virtue.minor_magical_focus": {
+    "name": "Kleiner Magischer Fokus",
+    "summary": "Deine Magie ist auf ein enges Gebiet abgestimmt; innerhalb davon zählt der niedrigste anwendbare Kunstwert doppelt."
   },
   "virtue.premonitions": {
     "name": "Vorahnungen",
@@ -71,6 +87,14 @@
     "name": "Zweites Gesicht",
     "summary": "Du durchschaust Illusion und Verhüllung und nimmst unsichtbare Dinge wahr. Verleiht die Fertigkeit Zweites Gesicht auf 1."
   },
+  "virtue.self_confident": {
+    "name": "Selbstbewusst",
+    "summary": "Du hast einen Selbstvertrauenswert von 2 und beginnst mit fünf Selbstvertrauenspunkten statt drei."
+  },
+  "virtue.the_enigma": {
+    "name": "Das Enigma",
+    "summary": "Einweihung in das Äußere Mysterium des Hauses Criamon. Verleiht Enigmatische Weisheit auf 1."
+  },
   "virtue.the_gift": {
     "name": "Die Gabe",
     "summary": "Du hast die Fähigkeit, Magie zu wirken."
@@ -78,6 +102,10 @@
   "virtue.tough": {
     "name": "Zäh",
     "summary": "+3 auf Widerstandsfähigkeit."
+  },
+  "virtue.verditius_magic": {
+    "name": "Verditius-Magie",
+    "summary": "Einweihung in das Äußere Mysterium des Hauses Verditius, das das Wirken von Verzauberungen durch Handwerk ermöglicht."
   },
   "virtue.warrior": {
     "name": "Krieger",

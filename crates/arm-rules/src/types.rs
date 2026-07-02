@@ -825,10 +825,22 @@ pub struct Entity {
     /// table against the shared [`Entity::xp_pool`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub art_scores: Vec<ArtScore>,
+    /// The Hermetic House this entity belongs to (magi only). The save stores
+    /// only the choice; the free House Virtue is derived at eval time, never
+    /// persisted (honors "saves store choices, not resolved values"). `None` for
+    /// non-magi and for a magus who has not yet picked a House.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub house: Option<Id>,
+    /// The House specialisation picks, keyed by each grant's `choice_key` (e.g.
+    /// Flambeau's Puissant Perdo-or-Ignem choice, or an Ex Miscellanea open
+    /// grant). Empty when the House has no player choices. The derived grant
+    /// resolver reads these to emit the granted selections.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub house_choices: BTreeMap<String, Selection>,
 }
 
 /// Current save-format schema version.
-pub const SCHEMA_VERSION: u32 = 3;
+pub const SCHEMA_VERSION: u32 = 4;
 
 impl Entity {
     /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
@@ -845,6 +857,8 @@ impl Entity {
             ability_scores: Vec::new(),
             xp_pool: 0,
             art_scores: Vec::new(),
+            house: None,
+            house_choices: BTreeMap::new(),
         }
     }
 
@@ -1314,13 +1328,15 @@ mod tests {
                 art: Id::new("art.creo"),
                 score: 5,
             }],
+            house: None,
+            house_choices: BTreeMap::new(),
         };
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 3"#));
+        assert!(json.contains(r#""schema_version": 4"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -1343,6 +1359,8 @@ mod tests {
             ability_scores: Vec::new(),
             xp_pool: 0,
             art_scores: Vec::new(),
+            house: None,
+            house_choices: BTreeMap::new(),
         };
 
         // Serialization is canonical only after normalize(); derive-based
@@ -1426,6 +1444,43 @@ mod tests {
 
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
+    }
+
+    #[test]
+    fn house_and_choices_roundtrip_and_default_absent() {
+        // A magus save carries a House plus its specialisation picks, keyed by
+        // grant `choice_key`. Both must survive a serde round-trip.
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.house = Some(Id::new("house.flambeau"));
+        entity.house_choices = BTreeMap::from([(
+            "flambeau_puissant".to_string(),
+            Selection::with_params(
+                Id::new("virtue.puissant_art"),
+                BTreeMap::from([("art".into(), Id::new("art.ignem"))]),
+            ),
+        )]);
+
+        let json = serde_json::to_string_pretty(&entity).unwrap();
+        assert!(json.contains(r#""house": "house.flambeau""#));
+        assert!(json.contains(r#""flambeau_puissant""#));
+
+        let roundtripped: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(entity, roundtripped);
+
+        // A fresh non-magus entity leaves both empty and omits them from JSON.
+        let fresh = Entity::new(
+            EntityKind::Covenant,
+            Id::new("covenant"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        assert_eq!(fresh.house, None);
+        assert!(fresh.house_choices.is_empty());
+        let fresh_json = serde_json::to_string(&fresh).unwrap();
+        assert!(!fresh_json.contains("house"));
     }
 
     #[test]

@@ -27,6 +27,10 @@
     "name": "Educated",
     "summary": "+50 experience points, spent only on Latin and Artes Liberales. You may buy Academic Abilities."
   },
+  "virtue.faerie_magic": {
+    "name": "Faerie Magic",
+    "summary": "Initiation into the Outer Mystery of House Merinita. Confers the Faerie Magic Ability at 1."
+  },
   "virtue.gentle_gift": {
     "name": "Gentle Gift",
     "summary": "Your Gift does not disturb others."
@@ -35,9 +39,17 @@
     "name": "Great {characteristic}",
     "summary": "Raise a Characteristic already at +3 up to +5; you still pay the points."
   },
+  "virtue.heartbeast": {
+    "name": "Heartbeast",
+    "summary": "Initiation into the Outer Mystery of House Bjornaer. Confers the Heartbeast Ability at 1."
+  },
   "virtue.hermetic_magus": {
     "name": "Hermetic Magus",
     "summary": "You are a member of the Order of Hermes."
+  },
+  "virtue.hermetic_prestige": {
+    "name": "Hermetic Prestige",
+    "summary": "Other magi look up to you. You gain a Reputation of level 4 within the Order."
   },
   "virtue.improved_characteristics": {
     "name": "Improved Characteristics",
@@ -50,6 +62,10 @@
   "virtue.large": {
     "name": "Large",
     "summary": "You are larger than average."
+  },
+  "virtue.minor_magical_focus": {
+    "name": "Minor Magical Focus",
+    "summary": "Your magic is attuned to a narrow field; add the lowest applicable Art score twice within it."
   },
   "virtue.premonitions": {
     "name": "Premonitions",
@@ -71,6 +87,14 @@
     "name": "Second Sight",
     "summary": "You see through illusion and concealment and perceive invisible things. Confers the Second Sight Ability at 1."
   },
+  "virtue.self_confident": {
+    "name": "Self-Confident",
+    "summary": "You have a Confidence Score of 2 and start with five Confidence Points instead of three."
+  },
+  "virtue.the_enigma": {
+    "name": "The Enigma",
+    "summary": "Initiation into the Outer Mystery of House Criamon. Confers Enigmatic Wisdom at 1."
+  },
   "virtue.the_gift": {
     "name": "The Gift",
     "summary": "You have the ability to work magic."
@@ -78,6 +102,10 @@
   "virtue.tough": {
     "name": "Tough",
     "summary": "+3 to Soak."
+  },
+  "virtue.verditius_magic": {
+    "name": "Verditius Magic",
+    "summary": "Initiation into the Outer Mystery of House Verditius, enabling the casting of enchantments through craft."
   },
   "virtue.warrior": {
     "name": "Warrior",
