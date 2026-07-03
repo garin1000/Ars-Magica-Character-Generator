@@ -1819,6 +1819,49 @@ mod tests {
         );
     }
 
+    // --- Phase 4 (step 9): grants are free of the point budget & count caps ---
+
+    #[test]
+    fn house_granted_virtue_is_free_of_the_point_budget() {
+        // Regression lock: `compute_balance` iterates bought `entity.selections`
+        // only, so Bjornaer's granted (Major, 3-point) Heartbeast contributes
+        // nothing to the virtue-point tally. A leak into the combined list would
+        // read 3 here.
+        let rs = rs_with_grant_houses(GRANT_TEST_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![]);
+        entity.house = Some(Id::new("house.bjornaer"));
+
+        let balance = compute_balance(&entity, &rs);
+        assert_eq!(
+            balance.virtue_points, 0,
+            "a House-granted Virtue must not spend from the point budget"
+        );
+    }
+
+    #[test]
+    fn house_granted_major_virtue_does_not_count_toward_the_major_virtue_cap() {
+        // Regression lock: a profile capping Major Virtues at 0 must not fire on
+        // Bjornaer's *granted* Major Heartbeast — `validate_caps` counts bought
+        // rows only, so grants are uncapped by construction.
+        let types = r#"[{
+            "id": "magus",
+            "budget": { "virtue_points": 10, "flaw_points": 10, "max_major_virtues": 0 },
+            "permitted_categories": ["general", "hermetic", "special", "social_status"],
+            "is_magus": true,
+            "creation_phases": []
+        }]"#;
+        let rs = rs_with_grant_houses(GRANT_TEST_ITEMS, types);
+        let mut entity = make_entity("magus", vec![]);
+        entity.house = Some(Id::new("house.bjornaer"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"too_many_major_virtues".to_string()),
+            "a granted Major Virtue must not trip the Major-Virtue count cap: {:?}",
+            result.issues
+        );
+    }
+
     fn puissant(ability: &str) -> Selection {
         Selection::with_params(
             Id::new("virtue.puissant_ability"),
