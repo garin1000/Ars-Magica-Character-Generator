@@ -588,31 +588,55 @@ fn validate_prerequisites(
 
     // Effective score per ability: the max bought score (a parameterized ability
     // may appear more than once with different specialties; the highest wins)
-    // plus any virtue bonus (Puissant Ability +2). `AbilityMin` thresholds are
-    // checked against the effective score so a boosted ability satisfies them.
-    let mut ability_scores: BTreeMap<&Id, u8> = BTreeMap::new();
+    // plus any virtue bonus (Puissant Ability +2, which now includes a
+    // House-granted Puissant via the combined selection list). `AbilityMin`
+    // thresholds are checked against the effective score so a boosted ability
+    // satisfies them. Keyed by owned `Id` so House-granted ability *floors*
+    // (below) can be folded in even for abilities that were never bought.
+    let mut ability_scores: BTreeMap<Id, u8> = BTreeMap::new();
     for a in &entity.ability_scores {
         // Per-instance bonus (Puissant targets one (ability, parameter)); an
         // `AbilityMin` is keyed by id, so the strongest instance wins.
         let bonus =
             crate::effective::ability_bonus(entity, ruleset, &a.ability, a.parameter.as_deref());
         let effective = (i32::from(a.score) + bonus).clamp(0, i32::from(u8::MAX)) as u8;
-        let entry = ability_scores.entry(&a.ability).or_insert(0);
+        let entry = ability_scores.entry(a.ability.clone()).or_insert(0);
+        *entry = (*entry).max(effective);
+    }
+    // A free ability-score floor from an `AbilityScoreGrant` effect — including a
+    // House-granted Mystery Ability (Bjornaer → Heartbeast 1) — counts toward
+    // `AbilityMin` even with no bought row, so fold each granted floor in.
+    for floor in crate::effective::ability_score_floors(entity, ruleset) {
+        let bonus = crate::effective::ability_bonus(entity, ruleset, &floor.ability, None);
+        let effective = (floor.floor + bonus).clamp(0, i32::from(u8::MAX)) as u8;
+        let entry = ability_scores.entry(floor.ability).or_insert(0);
         *entry = (*entry).max(effective);
     }
 
     // Effective score per Art: max bought score plus any virtue bonus (Puissant
-    // Art +3). `ArtMin` thresholds are checked against the effective score.
-    let mut art_scores: BTreeMap<&Id, u8> = BTreeMap::new();
+    // Art +3, including a House-granted Puissant). `ArtMin` thresholds are
+    // checked against the effective score.
+    let mut art_scores: BTreeMap<Id, u8> = BTreeMap::new();
     for a in &entity.art_scores {
         let bonus = crate::effective::art_bonus(entity, ruleset, &a.art);
         let effective = (i32::from(a.score) + bonus).clamp(0, i32::from(u8::MAX)) as u8;
-        let entry = art_scores.entry(&a.art).or_insert(0);
+        let entry = art_scores.entry(a.art.clone()).or_insert(0);
         *entry = (*entry).max(effective);
     }
 
+    // `Prereq::Has` resolves against bought AND House-granted rows (a granted
+    // Heartbeast satisfies `Has(virtue.heartbeast)`), so build a grants-inclusive
+    // id set. This is deliberately distinct from the bought-only `selected_ids`
+    // that the forbidden-trait / incompatibility validators use — grants must
+    // never reach those (review finding B1).
+    let granted = crate::house::granted_selections(entity, ruleset);
+    let mut present_ids: BTreeSet<&Id> = selected_ids.iter().copied().collect();
+    for g in &granted {
+        present_ids.insert(&g.item_ref);
+    }
+
     let ctx = PrereqCtx {
-        selected_ids,
+        present_ids: &present_ids,
         is_magus,
         house: entity.house.as_ref(),
         ability_scores: &ability_scores,
@@ -652,14 +676,17 @@ fn validate_prerequisites(
 /// recursive evaluator and its fold helper take one context rather than a long
 /// positional argument list.
 struct PrereqCtx<'a> {
-    selected_ids: &'a BTreeSet<&'a Id>,
+    /// The grants-inclusive id set (bought selections ++ House-granted rows) that
+    /// `Prereq::Has` tests against — NOT the bought-only `selected_ids` used by
+    /// the forbidden-trait / incompatibility checks (review finding B1).
+    present_ids: &'a BTreeSet<&'a Id>,
     is_magus: Option<bool>,
     /// The entity's own Hermetic House, if any. `Prereq::House` compares against
     /// it: matching → True, differing → False, absent → Unknown (mirrors how
     /// `is_magus` yields Unknown when the profile is missing).
     house: Option<&'a Id>,
-    ability_scores: &'a BTreeMap<&'a Id, u8>,
-    art_scores: &'a BTreeMap<&'a Id, u8>,
+    ability_scores: &'a BTreeMap<Id, u8>,
+    art_scores: &'a BTreeMap<Id, u8>,
 }
 
 /// Evaluates a prerequisite to a tri-state. Returns the outcome plus whether an
@@ -679,7 +706,7 @@ fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx) -> (Tri, bool) {
         Prereq::Any(children) => fold_children(children, ctx, Tri::True, Tri::True, Tri::False),
         Prereq::Nor(children) => fold_children(children, ctx, Tri::True, Tri::False, Tri::True),
         Prereq::Has(id) => {
-            if ctx.selected_ids.contains(id) {
+            if ctx.present_ids.contains(id) {
                 (Tri::True, false)
             } else {
                 (Tri::False, false)
@@ -1655,6 +1682,141 @@ mod tests {
             characteristics: None,
         })
         .unwrap()
+    }
+
+    // --- Phase 4 (step 8): House-granted Virtues in the two id-sets ----------
+
+    /// Abilities the grant-bearing test Houses seed. Registered so the
+    /// `AbilityMin` prereq ref and the `AbilityScoreGrant` effect resolve at load.
+    const GRANT_ABILITIES: &str = r#"{ "abilities": [
+        { "id": "ability.heartbeast", "category": "supernatural", "requires_training": true }
+    ] }"#;
+
+    /// A House (Bjornaer) whose fixed grant is the (Major, Hermetic) Heartbeast,
+    /// which also seeds the Heartbeast Ability at 1.
+    const GRANT_HOUSES: &str = r#"{ "houses": [
+        { "id": "house.bjornaer", "lineage_type": "mystery_cult",
+          "grants": [ { "kind": "fixed", "item": "virtue.heartbeast" } ] }
+    ] }"#;
+
+    /// Items the two-set-split tests use: the granted Heartbeast, two virtues
+    /// gated on it (by `Has` and by `AbilityMin`), and one mutually incompatible
+    /// with it (for the B1 guard).
+    const GRANT_TEST_ITEMS: &str = r#"[
+        { "id": "virtue.the_gift", "kind": "virtue", "magnitude": "free",
+          "category": "special", "entity_kinds": ["character"] },
+        { "id": "virtue.heartbeast", "kind": "virtue", "magnitude": "major",
+          "category": "hermetic", "entity_kinds": ["character"],
+          "effects": [{ "type": "ability_score_grant", "ability": "ability.heartbeast", "amount": 1 }],
+          "incompatible_with": ["virtue.foe_of_heartbeast"] },
+        { "id": "virtue.needs_heartbeast", "kind": "virtue", "magnitude": "minor",
+          "category": "hermetic", "entity_kinds": ["character"],
+          "prerequisites": { "kind": "has", "value": "virtue.heartbeast" } },
+        { "id": "virtue.needs_heartbeast_ability", "kind": "virtue", "magnitude": "minor",
+          "category": "hermetic", "entity_kinds": ["character"],
+          "prerequisites": { "kind": "ability_min", "value": { "ability": "ability.heartbeast", "score": 1 } } },
+        { "id": "virtue.foe_of_heartbeast", "kind": "virtue", "magnitude": "minor",
+          "category": "hermetic", "entity_kinds": ["character"],
+          "incompatible_with": ["virtue.heartbeast"] }
+    ]"#;
+
+    /// A magus profile permitting the test categories (`is_magus` so it is a
+    /// legal House-bearer).
+    const GRANT_MAGUS_TYPE: &str = r#"[{
+        "id": "magus",
+        "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["general", "hermetic", "special", "social_status"],
+        "is_magus": true,
+        "creation_phases": []
+    }]"#;
+
+    fn rs_with_grant_houses(items: &str, types: &str) -> Ruleset {
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some(GRANT_ABILITIES),
+            arts: None,
+            houses: Some(GRANT_HOUSES),
+            characteristics: None,
+        })
+        .unwrap()
+    }
+
+    #[test]
+    fn has_prereq_satisfied_by_a_house_granted_virtue() {
+        // A Bjornaer magus is granted Heartbeast; a bought virtue whose
+        // prerequisite is `Has(virtue.heartbeast)` is satisfied by that grant,
+        // though Heartbeast was never bought (it lives in `present_ids`, not
+        // `selected_ids`).
+        let rs = rs_with_grant_houses(GRANT_TEST_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![sel("virtue.needs_heartbeast")]);
+        entity.house = Some(Id::new("house.bjornaer"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"prereq_not_met".to_string()),
+            "granted Heartbeast should satisfy Has(virtue.heartbeast): {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn ability_min_prereq_satisfied_by_a_house_granted_ability_floor() {
+        // Bjornaer's Heartbeast seeds the Heartbeast Ability at 1, which meets an
+        // `AbilityMin(ability.heartbeast, 1)` prerequisite with no bought score.
+        let rs = rs_with_grant_houses(GRANT_TEST_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![sel("virtue.needs_heartbeast_ability")]);
+        entity.house = Some(Id::new("house.bjornaer"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"prereq_not_met".to_string()),
+            "granted Heartbeast Ability floor should satisfy AbilityMin(1): {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn house_grant_does_not_trip_an_incompatibility() {
+        // B1 guard: grants stay out of the bought-only set the incompatibility
+        // check uses. Buying foe_of_heartbeast while granted the mutually
+        // incompatible Heartbeast must NOT fire `incompatible`.
+        let rs = rs_with_grant_houses(GRANT_TEST_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![sel("virtue.foe_of_heartbeast")]);
+        entity.house = Some(Id::new("house.bjornaer"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"incompatible".to_string()),
+            "a granted virtue must not collide with a bought one: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn house_grant_does_not_trip_a_forbidden_trait() {
+        // B1 guard: a profile forbidding Heartbeast must not flag the House
+        // *grant* of it — forbidden-trait checks bought rows only.
+        let types = r#"[{
+            "id": "magus",
+            "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general", "hermetic", "special", "social_status"],
+            "forbidden_traits": ["virtue.heartbeast"],
+            "is_magus": true,
+            "creation_phases": []
+        }]"#;
+        let rs = rs_with_grant_houses(GRANT_TEST_ITEMS, types);
+        let mut entity = make_entity("magus", vec![]);
+        entity.house = Some(Id::new("house.bjornaer"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"forbidden_trait".to_string()),
+            "a granted virtue must not trip forbidden_trait: {:?}",
+            result.issues
+        );
     }
 
     fn puissant(ability: &str) -> Selection {

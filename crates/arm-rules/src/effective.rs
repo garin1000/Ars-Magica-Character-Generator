@@ -19,9 +19,32 @@
 use crate::ability::AbilityCategory;
 use crate::characteristics::Characteristic;
 use crate::ruleset::Ruleset;
-use crate::types::{Effect, Entity, Id};
+use crate::types::{Effect, Entity, Id, Selection};
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::collections::{BTreeMap, VecDeque};
+
+/// The selection list every effect / score computation iterates: the entity's
+/// bought selections plus any Virtue rows its Hermetic House grants (see
+/// [`crate::house::granted_selections`]). Borrows `entity.selections` untouched
+/// when the House grants nothing — the common case (any non-magus, or a magus
+/// whose House has no resolved grant), so no allocation. Otherwise returns the
+/// concatenation `bought ++ granted`.
+///
+/// Balance and caps deliberately do **not** route through this — they stay on
+/// `entity.selections` so House grants are free of the point budget and exempt
+/// from the count caps (a granted Major Hermetic Virtue cannot trip the
+/// `≤1 Major Hermetic Virtue` cap).
+pub fn selections_for_effects<'a>(entity: &'a Entity, ruleset: &Ruleset) -> Cow<'a, [Selection]> {
+    let granted = crate::house::granted_selections(entity, ruleset);
+    if granted.is_empty() {
+        Cow::Borrowed(&entity.selections)
+    } else {
+        let mut combined = entity.selections.clone();
+        combined.extend(granted);
+        Cow::Owned(combined)
+    }
+}
 
 /// A non-zero ability-score bonus targeting one ability *instance*. For a
 /// parameterized ability ((Area) Lore) the instance is identified by
@@ -65,7 +88,8 @@ pub fn ability_bonus(
         .get(ability)
         .and_then(|a| a.parameter.as_deref());
     let mut bonus = 0;
-    for selection in &entity.selections {
+    let selections = selections_for_effects(entity, ruleset);
+    for selection in selections.iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
@@ -143,7 +167,8 @@ pub fn granted_ability_floor(
         return 0;
     }
     let mut floor = 0;
-    for selection in &entity.selections {
+    let selections = selections_for_effects(entity, ruleset);
+    for selection in selections.iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
@@ -180,7 +205,8 @@ pub struct ArtBonus {
 /// Art, +3; may be taken twice, for two different Arts).
 pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
     let mut bonus = 0;
-    for selection in &entity.selections {
+    let selections = selections_for_effects(entity, ruleset);
+    for selection in selections.iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
@@ -247,7 +273,8 @@ fn characteristic_limit_shift(
     raising: bool,
 ) -> i32 {
     let mut shift = 0;
-    for selection in &entity.selections {
+    let selections = selections_for_effects(entity, ruleset);
+    for selection in selections.iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
@@ -407,7 +434,8 @@ fn ability_affinity(
         .abilities
         .get(ability)
         .and_then(|a| a.parameter.as_deref());
-    let found = entity.selections.iter().flat_map(|selection| {
+    let selections = selections_for_effects(entity, ruleset);
+    let found = selections.iter().flat_map(|selection| {
         let item = ruleset.point_items.get(&selection.item_ref);
         item.into_iter()
             .flat_map(|item| &item.effects)
@@ -432,7 +460,8 @@ fn ability_affinity(
 /// The Affinity multiplier applying to one Art, if any
 /// ([`Effect::AffinityArtCost`] targeting it). Arts are matched by id alone.
 fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)> {
-    let found = entity.selections.iter().flat_map(|selection| {
+    let selections = selections_for_effects(entity, ruleset);
+    let found = selections.iter().flat_map(|selection| {
         let item = ruleset.point_items.get(&selection.item_ref);
         item.into_iter()
             .flat_map(|item| &item.effects)
@@ -538,7 +567,8 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
 
     // Restricted pools, one node per RestrictedAbilityXp effect instance.
     let mut restricted: Vec<RestrictedXpPool> = Vec::new();
-    for selection in &entity.selections {
+    let selections = selections_for_effects(entity, ruleset);
+    for selection in selections.iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
@@ -661,7 +691,8 @@ pub struct AbilityFloor {
 /// show the floor as the ability's effective score without recomputing it.
 pub fn ability_score_floors(entity: &Entity, ruleset: &Ruleset) -> Vec<AbilityFloor> {
     let mut floors: BTreeMap<Id, i32> = BTreeMap::new();
-    for selection in &entity.selections {
+    let selections = selections_for_effects(entity, ruleset);
+    for selection in selections.iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
@@ -682,7 +713,8 @@ pub fn ability_score_floors(entity: &Entity, ruleset: &Ruleset) -> Vec<AbilityFl
 /// (Improved Characteristics, +3 each, stackable), summed across selections.
 pub fn characteristic_points_granted(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut total = 0;
-    for selection in &entity.selections {
+    let selections = selections_for_effects(entity, ruleset);
+    for selection in selections.iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
@@ -1455,5 +1487,120 @@ mod tests {
             effective_ability_score(&e, &rs, &Id::new("ability.second_sight"), None),
             3
         );
+    }
+
+    // ---- Phase 4 (step 8): House-granted Virtues feed the effect scanners ----
+
+    use crate::ruleset::RulesetSources;
+
+    /// A ruleset with grant-bearing Houses: Bjornaer grants the (Major, Hermetic)
+    /// Heartbeast, whose `AbilityScoreGrant` seeds the Heartbeast Ability at 1;
+    /// Flambeau offers a Puissant Art choice (Perdo / Ignem, +3).
+    fn house_ruleset() -> Ruleset {
+        let items = r#"[
+          { "id": "virtue.the_gift", "kind": "virtue", "magnitude": "free",
+            "category": "special", "entity_kinds": ["character"] },
+          { "id": "virtue.heartbeast", "kind": "virtue", "magnitude": "major",
+            "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "ability_score_grant", "ability": "ability.heartbeast", "amount": 1 }] },
+          { "id": "virtue.puissant_art", "kind": "virtue", "magnitude": "minor",
+            "category": "hermetic", "entity_kinds": ["character"],
+            "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
+            "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }] }
+        ]"#;
+        let abilities = r#"{ "abilities": [
+          { "id": "ability.heartbeast", "category": "supernatural", "requires_training": true }
+        ] }"#;
+        let arts = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 1 }, { "score": 2, "total_xp": 3 },
+            { "score": 3, "total_xp": 6 }, { "score": 4, "total_xp": 10 },
+            { "score": 5, "total_xp": 15 }
+          ],
+          "arts": [
+            { "id": "art.creo", "art_type": "technique" },
+            { "id": "art.perdo", "art_type": "technique" },
+            { "id": "art.ignem", "art_type": "form" }
+          ]
+        }"#;
+        let houses = r#"{ "houses": [
+          { "id": "house.bjornaer", "lineage_type": "mystery_cult",
+            "grants": [ { "kind": "fixed", "item": "virtue.heartbeast" } ] },
+          { "id": "house.flambeau", "lineage_type": "societas",
+            "grants": [ { "kind": "choice", "choice_key": "flambeau_puissant", "options": [
+              { "ref": "virtue.puissant_art", "params": { "art": "art.perdo" } },
+              { "ref": "virtue.puissant_art", "params": { "art": "art.ignem" } }
+            ] } ] }
+        ] }"#;
+        Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: items,
+            type_profiles: "[]",
+            abilities: Some(abilities),
+            arts: Some(arts),
+            houses: Some(houses),
+            characteristics: None,
+        })
+        .unwrap()
+    }
+
+    fn magus_in_house(house: &str) -> Entity {
+        let mut e = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        e.house = Some(Id::new(house));
+        e
+    }
+
+    #[test]
+    fn selections_for_effects_borrows_without_grants_and_combines_with_them() {
+        let rs = house_ruleset();
+        // No House → the bought selections, borrowed unchanged (no clone).
+        let mut e = magus_in_house("house.bjornaer");
+        e.house = None;
+        e.selections = vec![Selection::new(Id::new("virtue.the_gift"))];
+        assert_eq!(selections_for_effects(&e, &rs).len(), 1);
+        // Bjornaer → the bought row plus the granted Heartbeast row, appended.
+        let g = magus_in_house("house.bjornaer");
+        let combined = selections_for_effects(&g, &rs);
+        assert_eq!(combined.len(), 1);
+        assert_eq!(combined[0].item_ref, Id::new("virtue.heartbeast"));
+    }
+
+    #[test]
+    fn house_grant_seeds_a_mystery_ability_floor() {
+        let rs = house_ruleset();
+        let e = magus_in_house("house.bjornaer");
+        // Bjornaer grants Heartbeast, whose AbilityScoreGrant floors the
+        // Heartbeast Ability at 1 — no bought row, no XP charged.
+        assert_eq!(
+            effective_ability_score(&e, &rs, &Id::new("ability.heartbeast"), None),
+            1
+        );
+        assert_eq!(xp_allocation(&e, &rs).total_demand, 0);
+    }
+
+    #[test]
+    fn granted_puissant_art_adds_to_effective_art_score() {
+        let rs = house_ruleset();
+        let mut e = magus_in_house("house.flambeau");
+        e.house_choices.insert(
+            "flambeau_puissant".into(),
+            Selection::with_params(
+                Id::new("virtue.puissant_art"),
+                BTreeMap::from([("art".into(), Id::new("art.ignem"))]),
+            ),
+        );
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.ignem"),
+            score: 2,
+        }];
+        // The House-granted Puissant Ignem (+3) stacks on the bought score.
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.ignem")), 5);
+        // A non-targeted Art is untouched by the grant.
+        assert_eq!(art_bonus(&e, &rs, &Id::new("art.perdo")), 0);
     }
 }
