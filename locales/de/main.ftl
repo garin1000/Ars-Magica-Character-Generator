@@ -136,6 +136,7 @@ issue-over_budget_virtues = Tugendpunkte ({ $points }) überschreiten das Budget
 issue-over_budget_flaws = Fehlerpunkte ({ $points }) überschreiten das Budget ({ $budget }).
 issue-unbalanced_virtues = Tugendpunkte ({ $virtue_points }) übersteigen die Fehlerpunkte ({ $flaw_points }); Tugenden müssen durch Fehler finanziert werden.
 issue-too_many_major_virtues = Zu viele große Tugenden ({ $count } von max. { $max }).
+issue-too_many_major_hermetic_virtues = Zu viele große hermetische Tugenden ({ $count } von max. { $max }).
 issue-too_many_major_flaws = Zu viele große Fehler ({ $count } von max. { $max }).
 issue-too_many_minor_flaws = Zu viele kleine Fehler ({ $count } von max. { $max }).
 issue-too_many_major_personality_flaws = Zu viele große Persönlichkeitsfehler ({ $count } von max. { $max }).

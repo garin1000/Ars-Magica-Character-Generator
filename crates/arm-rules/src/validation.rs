@@ -564,6 +564,41 @@ fn validate_caps(
             issues.push(ValidationIssue::warning(&code, cap_args, None));
         }
     }
+
+    // --- Data-driven per-category *virtue* caps ---
+    //
+    // Same shape as the flaw caps above but counts `Virtue`-kind items. The
+    // magus type's `≤1 Major Hermetic Virtue` rule lives here as data. Counts
+    // `entity.selections` only, so House-granted Virtues (which never enter the
+    // bought list) are exempt — Bjornaer's Major Hermetic Heartbeast cannot
+    // trip this cap. The code is derived as `too_many_<category>_virtues` (or
+    // `too_many_major_<category>_virtues` when Major-only), matching the Fluent
+    // key by convention with no slug baked into the engine.
+    //
+    // Source: Ars Magica - Definitive Edition (Core Rules).md:2855-2861.
+    for cap in &profile.budget.virtue_category_caps {
+        let n = count(&|i| {
+            i.kind == ItemKind::Virtue
+                && i.category == cap.category
+                && (!cap.major_only || i.magnitude == Magnitude::Major)
+        });
+        if n <= cap.max as usize {
+            continue;
+        }
+
+        let code = if cap.major_only {
+            format!("too_many_major_{}_virtues", cap.category)
+        } else {
+            format!("too_many_{}_virtues", cap.category)
+        };
+        let cap_args = count_args(n, cap.max);
+
+        if cap.hard {
+            issues.push(ValidationIssue::error(&code, cap_args, None));
+        } else {
+            issues.push(ValidationIssue::warning(&code, cap_args, None));
+        }
+    }
 }
 
 /// Tri-state outcome of evaluating a prerequisite expression.
@@ -1858,6 +1893,67 @@ mod tests {
         assert!(
             !codes(&result).contains(&"too_many_major_virtues".to_string()),
             "a granted Major Virtue must not trip the Major-Virtue count cap: {:?}",
+            result.issues
+        );
+    }
+
+    // --- Phase 4 (step 10): per-category *virtue* count caps -----------------
+
+    /// Two Major Hermetic virtues plus the granted-Heartbeast fixture, so a
+    /// magus can buy two distinct Major Hermetic Virtues (to trip the cap) while
+    /// Bjornaer's grant supplies a third that must stay exempt.
+    const CAP_ITEMS: &str = r#"[
+        { "id": "virtue.the_gift", "kind": "virtue", "magnitude": "free",
+          "category": "special", "entity_kinds": ["character"] },
+        { "id": "virtue.gentle_gift", "kind": "virtue", "magnitude": "major",
+          "category": "hermetic", "entity_kinds": ["character"] },
+        { "id": "virtue.mythic_blood", "kind": "virtue", "magnitude": "major",
+          "category": "hermetic", "entity_kinds": ["character"] },
+        { "id": "virtue.heartbeast", "kind": "virtue", "magnitude": "major",
+          "category": "hermetic", "entity_kinds": ["character"] }
+    ]"#;
+
+    /// A magus profile capping Major Hermetic Virtues at 1 (hard), mirroring the
+    /// shipped `≤1 Major Hermetic Virtue` rule (Core Rules.md:2855-2861).
+    const CAP_MAGUS_TYPE: &str = r#"[{
+        "id": "magus",
+        "budget": { "virtue_points": 30, "flaw_points": 30,
+          "virtue_category_caps": [
+            { "category": "hermetic", "max": 1, "major_only": true, "hard": true } ] },
+        "permitted_categories": ["general", "hermetic", "special", "social_status"],
+        "is_magus": true,
+        "creation_phases": []
+    }]"#;
+
+    #[test]
+    fn two_bought_major_hermetic_virtues_trip_the_virtue_category_cap() {
+        let rs = rs_with_grant_houses(CAP_ITEMS, CAP_MAGUS_TYPE);
+        let entity = make_entity(
+            "magus",
+            vec![sel("virtue.gentle_gift"), sel("virtue.mythic_blood")],
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"too_many_major_hermetic_virtues".to_string()),
+            "two bought Major Hermetic Virtues should trip the cap: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn house_granted_major_hermetic_virtue_alone_does_not_trip_the_virtue_category_cap() {
+        // One bought Major Hermetic Virtue is legal (cap is 1); Bjornaer's
+        // granted Major Hermetic Heartbeast is exempt, so the pair must NOT trip
+        // the cap even though two Major Hermetic Virtues are "present".
+        let rs = rs_with_grant_houses(CAP_ITEMS, CAP_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![sel("virtue.gentle_gift")]);
+        entity.house = Some(Id::new("house.bjornaer"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"too_many_major_hermetic_virtues".to_string()),
+            "a granted Major Hermetic Virtue must not count toward the cap: {:?}",
             result.issues
         );
     }

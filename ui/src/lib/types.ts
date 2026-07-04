@@ -113,7 +113,9 @@ export interface EffectiveScores {
 
 // Per-category flaw count cap. The category is data, so the engine hardcodes no
 // slug; `major_only`/`hard` default to false and are omitted from JSON then.
-export interface FlawCategoryCap {
+// Shared by flaw and virtue category caps; the item kind counted is fixed by
+// which budget list the cap lives in.
+export interface CategoryCap {
   category: string;
   max: number;
   major_only?: boolean;
@@ -129,7 +131,8 @@ export interface PointBudget {
   max_major_virtues?: number | null;
   max_major_flaws?: number | null;
   max_minor_flaws?: number | null;
-  flaw_category_caps?: FlawCategoryCap[];
+  flaw_category_caps?: CategoryCap[];
+  virtue_category_caps?: CategoryCap[];
 }
 
 export interface EntityTypeProfile {

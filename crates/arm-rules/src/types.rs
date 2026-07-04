@@ -612,17 +612,29 @@ pub struct PointBudget {
     /// character should normally not have more than two Personality Flaws in
     /// total"); :2818 ("A character should not have more than one Story Flaw").
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub flaw_category_caps: Vec<FlawCategoryCap>,
+    pub flaw_category_caps: Vec<CategoryCap>,
+    /// Per-category *virtue* count caps. Structurally identical to
+    /// `flaw_category_caps` but counts `Virtue`-kind items. The magus type uses
+    /// this for the `≤1 Major Hermetic Virtue` rule.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2855-2861 ("You
+    /// may take a maximum of one Major Hermetic Virtue during character
+    /// creation").
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub virtue_category_caps: Vec<CategoryCap>,
 }
 
-/// A cap on how many flaws of a given category an entity may take.
+/// A cap on how many items of a given category an entity may take. Shared by
+/// `flaw_category_caps` and `virtue_category_caps`; the kind counted is fixed by
+/// which list the cap lives in, not by the cap itself.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct FlawCategoryCap {
-    /// The flaw category this cap applies to (e.g. `personality`, `story`).
+pub struct CategoryCap {
+    /// The category this cap applies to (e.g. `personality`, `story`,
+    /// `hermetic`).
     pub category: String,
     /// Maximum allowed count.
     pub max: u8,
-    /// If true, only Major-magnitude flaws count toward this cap.
+    /// If true, only Major-magnitude items count toward this cap.
     #[serde(default, skip_serializing_if = "is_false")]
     pub major_only: bool,
     /// If true the cap is a blocking error; otherwise a non-blocking warning.
@@ -689,11 +701,14 @@ impl EntityTypeProfile {
     /// Sorts the profile's unordered nested vectors for canonical
     /// serialization. The category/trait sets are `BTreeSet`s (already
     /// id-ordered), and `creation_phases` is order-significant and so left
-    /// untouched; the only unordered vector is the budget's
-    /// `flaw_category_caps`, sorted here by category.
+    /// untouched; the unordered vectors are the budget's `flaw_category_caps`
+    /// and `virtue_category_caps`, sorted here by category.
     pub fn normalize(&mut self) {
         self.budget
             .flaw_category_caps
+            .sort_by(|a, b| a.category.cmp(&b.category));
+        self.budget
+            .virtue_category_caps
             .sort_by(|a, b| a.category.cmp(&b.category));
     }
 }

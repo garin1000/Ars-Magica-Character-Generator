@@ -72,6 +72,9 @@
         { "category": "personality", "max": 1, "major_only": true, "hard": true },
         { "category": "personality", "max": 2 },
         { "category": "story", "max": 1 }
+      ],
+      "virtue_category_caps": [
+        { "category": "hermetic", "max": 1, "major_only": true, "hard": true }
       ]
     },
     "permitted_categories": ["general", "personality", "social_status", "story", "supernatural", "hermetic"],

@@ -423,10 +423,40 @@ fn dynamic_flaw_cap_codes() -> Vec<String> {
     codes
 }
 
+/// The per-category *virtue* caps emit codes derived at runtime from the
+/// category slug (`too_many_[major_]<category>_virtues`) — the virtue analog of
+/// [`dynamic_flaw_cap_codes`]. The magus `≤1 Major Hermetic Virtue` cap lives
+/// here, so recompute it from the shipped profiles for the Fluent coverage check.
+fn dynamic_virtue_cap_codes() -> Vec<String> {
+    let json = fs::read_to_string(repo_root().join("rules/core/character_types.json")).unwrap();
+    let profiles: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let mut codes = Vec::new();
+    for profile in profiles.as_array().unwrap() {
+        let caps = profile["budget"]["virtue_category_caps"].as_array();
+        for cap in caps.into_iter().flatten() {
+            let category = cap["category"].as_str().unwrap();
+            let major_only = cap["major_only"].as_bool().unwrap_or(false);
+            codes.push(if major_only {
+                format!("too_many_major_{category}_virtues")
+            } else {
+                format!("too_many_{category}_virtues")
+            });
+        }
+    }
+    codes.sort();
+    codes.dedup();
+    assert!(
+        !codes.is_empty(),
+        "expected shipped virtue-category cap codes"
+    );
+    codes
+}
+
 #[test]
 fn every_validation_code_has_a_fluent_key_in_each_locale() {
     let mut codes = validation_codes();
     codes.extend(dynamic_flaw_cap_codes());
+    codes.extend(dynamic_virtue_cap_codes());
     codes.sort();
     codes.dedup();
     for lang in ["en", "de"] {
