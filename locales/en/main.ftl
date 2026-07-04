@@ -135,6 +135,7 @@ issue-over_budget_virtues = Virtue points ({ $points }) exceed budget ({ $budget
 issue-over_budget_flaws = Flaw points ({ $points }) exceed budget ({ $budget }).
 issue-unbalanced_virtues = Virtue points ({ $virtue_points }) exceed Flaw points ({ $flaw_points }); Virtues must be funded by Flaws.
 issue-too_many_major_virtues = Too many Major Virtues ({ $count } of max { $max }).
+issue-too_many_major_hermetic_virtues = Too many Major Hermetic Virtues ({ $count } of max { $max }).
 issue-too_many_major_flaws = Too many Major Flaws ({ $count } of max { $max }).
 issue-too_many_minor_flaws = Too many Minor Flaws ({ $count } of max { $max }).
 issue-too_many_major_personality_flaws = Too many Major Personality Flaws ({ $count } of max { $max }).

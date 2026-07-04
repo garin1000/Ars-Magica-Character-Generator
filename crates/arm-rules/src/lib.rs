@@ -24,10 +24,10 @@ pub use effective::{
 pub use house::{GrantConstraint, House, HouseGrant, HousesFile, LineageType};
 pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError, RulesetSources};
 pub use types::{
-    AbilityScore, ArtScore, Effect, Entity, EntityKind, EntityTypeProfile, FlawCategoryCap,
-    GiftPolicy, I18nEntry, Id, ItemKind, LineRange, Magnitude, ParamType, ParameterDef,
-    ParameterDomain, PointBudget, PointItem, Prereq, RulesetRef, SCHEMA_VERSION, Selection,
-    SourceRef, ValidationMode,
+    AbilityScore, ArtScore, CategoryCap, Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy,
+    I18nEntry, Id, ItemKind, LineRange, Magnitude, ParamType, ParameterDef, ParameterDomain,
+    PointBudget, PointItem, Prereq, RulesetRef, SCHEMA_VERSION, Selection, SourceRef,
+    ValidationMode,
 };
 pub use validation::{
     Balance, IssueSeverity, ValidationIssue, ValidationResult, compute_balance, validate,
