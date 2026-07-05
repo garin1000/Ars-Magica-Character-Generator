@@ -21,7 +21,7 @@ pub use effective::{
     characteristic_points_granted, effective_ability_score, effective_art_score,
     restricted_xp_pools, xp_allocation,
 };
-pub use house::{GrantConstraint, House, HouseGrant, HousesFile, LineageType};
+pub use house::{GrantConstraint, House, HouseGrant, HousesFile, LineageType, granted_selections};
 pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError, RulesetSources};
 pub use types::{
     AbilityScore, ArtScore, CategoryCap, Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy,

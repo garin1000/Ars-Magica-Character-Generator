@@ -109,6 +109,9 @@ export interface EffectiveScores {
   restricted_xp_pools: RestrictedXpPool[];
   characteristic_points_granted: number;
   ability_score_floors: AbilityFloor[];
+  // Virtue/Flaw Selections the entity's House grants (derived, never persisted),
+  // in the House's declared grant order, so the V/F view renders them read-only.
+  granted_selections: Selection[];
 }
 
 // Per-category flaw count cap. The category is data, so the engine hardcodes no
