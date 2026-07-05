@@ -11,10 +11,11 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 use crate::characteristics::Characteristic;
+use crate::house::{GrantConstraint, HouseGrant};
 use crate::ruleset::Ruleset;
 use crate::types::{
     Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude,
-    ParameterDomain, PointItem, Prereq, ValidationMode,
+    ParameterDomain, PointItem, Prereq, Selection, ValidationMode,
 };
 
 /// Whether a validation issue blocks (`Error`) or merely advises (`Warning`).
@@ -88,6 +89,10 @@ impl fmt::Display for IssueSeverity {
 /// | `ability_parameter_required` | error | `ability` |
 /// | `ability_score_out_of_range` | error | `ability`, `score`, `max` |
 /// | `ability_bonus_dangling_target` | error | `item`, `ability`, `parameter` |
+/// | `house_choice_unresolved` | error | `house`, `choice_key` |
+/// | `house_grant_constraint` | error | `house`, `choice_key`, `item` |
+/// | `house_unset` | warning | (none) |
+/// | `missing_hermetic_flaw` | warning | (none) |
 ///
 /// † The per-category flaw caps emit a code derived from the
 /// `flaw_category_caps` entry's category slug (`too_many_<category>_flaws`, or
@@ -201,6 +206,18 @@ impl ValidationIssue {
     /// (Educated/Warrior/Privileged) has experience the character left unspent on
     /// its eligible Abilities; the rules waste it.
     pub const CODE_RESTRICTED_XP_UNSPENT: &'static str = "restricted_xp_unspent";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a magus's House Choice
+    /// grant has no pick, or a pick that is not one of the offered options.
+    pub const CODE_HOUSE_CHOICE_UNRESOLVED: &'static str = "house_choice_unresolved";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a magus's House Open
+    /// grant pick violates the grant's constraint (kind/magnitude/category).
+    pub const CODE_HOUSE_GRANT_CONSTRAINT: &'static str = "house_grant_constraint";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a magus has no
+    /// Hermetic House (a "should", not a hard rule).
+    pub const CODE_HOUSE_UNSET: &'static str = "house_unset";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a magus has taken no
+    /// Hermetic Flaw (the rules recommend at least one).
+    pub const CODE_MISSING_HERMETIC_FLAW: &'static str = "missing_hermetic_flaw";
 
     /// Builds an issue with the given severity, code, args, and context.
     pub fn new(
@@ -319,6 +336,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_parameters(entity, ruleset, &mut issues);
     validate_ability_bonus_targets(entity, ruleset, &mut issues);
     validate_gift_policy(entity, ruleset, type_profile, &mut issues);
+    validate_house(entity, ruleset, type_profile, &mut issues);
 
     // Characteristics and Abilities are character-only concerns; a covenant has
     // neither. Gate them on the entity kind so the engine respects EntityKind
@@ -599,6 +617,148 @@ fn validate_caps(
             issues.push(ValidationIssue::warning(&code, cap_args, None));
         }
     }
+}
+
+/// Validates a magus's Hermetic House and its specialisation picks. Runs only
+/// for a magus type (`is_magus`); no other type has a House.
+///
+/// - A magus with no House gets a soft `house_unset` warning — belonging to a
+///   House is a "should" the troupe can waive, not a hard rule.
+/// - Each `Choice` grant's pick (keyed by `choice_key`) must be present and one
+///   of the offered options, else `house_choice_unresolved`.
+/// - Each `Open` grant's pick must be present (else `house_choice_unresolved`)
+///   and satisfy the grant's declarative `GrantConstraint` (kind, magnitude,
+///   category allow/deny lists), else `house_grant_constraint`.
+/// - A magus with no Flaw in a Hermetic category gets a soft
+///   `missing_hermetic_flaw` warning. "Hermetic" is the type's `gift_categories`
+///   (data), so no category slug is hardcoded.
+///
+/// The picks are validated here rather than as ordinary selections because the
+/// derived grant is never stored on `entity.selections`; the grant option refs
+/// are integrity-checked at load (see `validate_house_refs`).
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2855-2861 (the free
+/// House Virtue and the recommendation to take a Hermetic Flaw).
+fn validate_house(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    type_profile: Option<&EntityTypeProfile>,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    // Houses are a magus-only concern; a non-magus (or an unknown type) has none.
+    let Some(profile) = type_profile else {
+        return;
+    };
+    if !profile.is_magus {
+        return;
+    }
+
+    // A magus should take at least one Hermetic Flaw. "Hermetic" is the type's
+    // declared gift category (data), so no slug is hardcoded here; skip the
+    // guideline entirely when the type names no gift category.
+    if !profile.gift_categories.is_empty() {
+        let has_hermetic_flaw = entity.selections.iter().any(|s| {
+            ruleset.point_items.get(&s.item_ref).is_some_and(|item| {
+                item.kind == ItemKind::Flaw && profile.gift_categories.contains(&item.category)
+            })
+        });
+        if !has_hermetic_flaw {
+            issues.push(ValidationIssue::warning(
+                ValidationIssue::CODE_MISSING_HERMETIC_FLAW,
+                args([]),
+                None,
+            ));
+        }
+    }
+
+    // No House: a soft warning, and there are no grants to resolve.
+    let Some(house_id) = &entity.house else {
+        issues.push(ValidationIssue::warning(
+            ValidationIssue::CODE_HOUSE_UNSET,
+            args([]),
+            None,
+        ));
+        return;
+    };
+
+    // An unknown House id resolves to no grants; nothing further to check.
+    let Some(house) = ruleset.house(house_id) else {
+        return;
+    };
+
+    let unresolved = |choice_key: &str| {
+        ValidationIssue::error(
+            ValidationIssue::CODE_HOUSE_CHOICE_UNRESOLVED,
+            args([
+                ("house", house_id.to_string()),
+                ("choice_key", choice_key.to_string()),
+            ]),
+            None,
+        )
+    };
+
+    for grant in &house.grants {
+        match grant {
+            // A fixed grant carries no player choice, so nothing to validate.
+            HouseGrant::Fixed { .. } => {}
+            HouseGrant::Choice {
+                choice_key,
+                options,
+            } => {
+                let pick = entity.house_choices.get(choice_key);
+                if !pick.is_some_and(|p| options.contains(p)) {
+                    issues.push(unresolved(choice_key));
+                }
+            }
+            HouseGrant::Open {
+                choice_key,
+                constraint,
+            } => {
+                let Some(pick) = entity.house_choices.get(choice_key) else {
+                    issues.push(unresolved(choice_key));
+                    continue;
+                };
+                if !open_pick_satisfies(pick, constraint, ruleset) {
+                    issues.push(ValidationIssue::error(
+                        ValidationIssue::CODE_HOUSE_GRANT_CONSTRAINT,
+                        args([
+                            ("house", house_id.to_string()),
+                            ("choice_key", choice_key.clone()),
+                            ("item", pick.item_ref.to_string()),
+                        ]),
+                        Some(pick.item_ref.clone()),
+                    ));
+                }
+            }
+        }
+    }
+}
+
+/// Whether an Open grant's pick satisfies its constraint: the picked item must
+/// resolve and match the required kind, the magnitude (when the constraint fixes
+/// one), and the category allow/deny lists. An unresolvable pick fails — it
+/// cannot satisfy anything.
+fn open_pick_satisfies(pick: &Selection, constraint: &GrantConstraint, ruleset: &Ruleset) -> bool {
+    let Some(item) = ruleset.point_items.get(&pick.item_ref) else {
+        return false;
+    };
+    if item.kind != constraint.kind {
+        return false;
+    }
+    if let Some(magnitude) = constraint.magnitude
+        && item.magnitude != magnitude
+    {
+        return false;
+    }
+    if !constraint.require_categories.is_empty()
+        && !constraint.require_categories.contains(&item.category)
+    {
+        return false;
+    }
+    if constraint.forbid_categories.contains(&item.category) {
+        return false;
+    }
+    true
 }
 
 /// Tri-state outcome of evaluating a prerequisite expression.
@@ -1954,6 +2114,239 @@ mod tests {
         assert!(
             !codes(&result).contains(&"too_many_major_hermetic_virtues".to_string()),
             "a granted Major Hermetic Virtue must not count toward the cap: {:?}",
+            result.issues
+        );
+    }
+
+    // --- Phase 4 (step 11): validate_house -----------------------------------
+
+    /// Items for the House-validation tests: a minor and a major Virtue (for the
+    /// open-grant magnitude constraint), a Puissant Art (a Choice option), a
+    /// non-Hermetic Flaw and a Hermetic Flaw (for the ≥1-Hermetic-Flaw guideline).
+    const HOUSE_ITEMS: &str = r#"[
+        { "id": "virtue.the_gift", "kind": "virtue", "magnitude": "free",
+          "category": "special", "entity_kinds": ["character"] },
+        { "id": "virtue.puissant_art", "kind": "virtue", "magnitude": "minor",
+          "category": "hermetic", "entity_kinds": ["character"],
+          "parameters": [{ "key": "art", "type": "ref", "domain": "art" }] },
+        { "id": "virtue.self_confident", "kind": "virtue", "magnitude": "minor",
+          "category": "general", "entity_kinds": ["character"] },
+        { "id": "virtue.wealthy", "kind": "virtue", "magnitude": "major",
+          "category": "general", "entity_kinds": ["character"] },
+        { "id": "flaw.optimistic", "kind": "flaw", "magnitude": "minor",
+          "category": "general", "entity_kinds": ["character"] },
+        { "id": "flaw.deficient_technique", "kind": "flaw", "magnitude": "major",
+          "category": "hermetic", "entity_kinds": ["character"] }
+    ]"#;
+
+    /// Two Houses exercising the player-choice grant kinds: Flambeau's Choice
+    /// between two Puissant Arts, and Jerbiton's Open Minor Virtue.
+    const HOUSE_VALIDATE_HOUSES: &str = r#"{ "houses": [
+        { "id": "house.flambeau", "lineage_type": "societas",
+          "grants": [ { "kind": "choice", "choice_key": "flambeau_puissant", "options": [
+            { "ref": "virtue.puissant_art", "params": { "art": "art.perdo" } },
+            { "ref": "virtue.puissant_art", "params": { "art": "art.ignem" } }
+          ] } ] },
+        { "id": "house.jerbiton", "lineage_type": "societas",
+          "grants": [ { "kind": "open", "choice_key": "jerbiton_virtue",
+            "constraint": { "kind": "virtue", "magnitude": "minor" } } ] }
+    ] }"#;
+
+    /// A magus profile whose Hermetic gift category tells `missing_hermetic_flaw`
+    /// which category is Hermetic, permitting the test categories.
+    const HOUSE_MAGUS_TYPE: &str = r#"[{
+        "id": "magus",
+        "budget": { "virtue_points": 30, "flaw_points": 30 },
+        "permitted_categories": ["general", "hermetic", "special", "social_status"],
+        "is_magus": true,
+        "gift_categories": ["hermetic"],
+        "creation_phases": []
+    }]"#;
+
+    fn rs_for_house_validation() -> Ruleset {
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: HOUSE_ITEMS,
+            type_profiles: HOUSE_MAGUS_TYPE,
+            abilities: None,
+            arts: None,
+            houses: Some(HOUSE_VALIDATE_HOUSES),
+            characteristics: None,
+        })
+        .unwrap()
+    }
+
+    /// A magus in the given House, carrying one Hermetic Flaw so the
+    /// `missing_hermetic_flaw` guideline stays quiet unless a test wants it.
+    fn magus_with_house(house: &str) -> Entity {
+        let mut entity = make_entity("magus", vec![sel("flaw.deficient_technique")]);
+        entity.house = Some(Id::new(house));
+        entity
+    }
+
+    fn puissant_art(art: &str) -> Selection {
+        Selection::with_params(
+            Id::new("virtue.puissant_art"),
+            BTreeMap::from([("art".into(), Id::new(art))]),
+        )
+    }
+
+    #[test]
+    fn magus_without_a_house_gets_the_house_unset_warning() {
+        let rs = rs_for_house_validation();
+        let entity = make_entity("magus", vec![sel("flaw.deficient_technique")]);
+
+        let result = validate(&entity, &rs);
+        assert!(
+            warning_codes(&result).contains(&"house_unset".to_string()),
+            "a magus with no House should warn house_unset: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn a_choice_grant_with_no_pick_is_unresolved() {
+        let rs = rs_for_house_validation();
+        let entity = magus_with_house("house.flambeau");
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"house_choice_unresolved".to_string()),
+            "an unpicked Choice grant should error house_choice_unresolved: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn a_choice_grant_pick_off_the_menu_is_unresolved() {
+        let rs = rs_for_house_validation();
+        let mut entity = magus_with_house("house.flambeau");
+        // Puissant Creo is not one of the offered options (Perdo / Ignem).
+        entity
+            .house_choices
+            .insert("flambeau_puissant".to_string(), puissant_art("art.creo"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"house_choice_unresolved".to_string()),
+            "an off-menu Choice pick should error house_choice_unresolved: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn a_resolved_choice_grant_has_no_unresolved_error() {
+        let rs = rs_for_house_validation();
+        let mut entity = magus_with_house("house.flambeau");
+        entity
+            .house_choices
+            .insert("flambeau_puissant".to_string(), puissant_art("art.ignem"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"house_choice_unresolved".to_string()),
+            "a valid Choice pick must not error house_choice_unresolved: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn an_open_grant_with_no_pick_is_unresolved() {
+        let rs = rs_for_house_validation();
+        let entity = magus_with_house("house.jerbiton");
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"house_choice_unresolved".to_string()),
+            "an unpicked Open grant should error house_choice_unresolved: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn an_open_grant_pick_violating_its_constraint_is_an_error() {
+        let rs = rs_for_house_validation();
+        let mut entity = magus_with_house("house.jerbiton");
+        // Jerbiton's grant demands a Minor Virtue; Wealthy is Major.
+        entity
+            .house_choices
+            .insert("jerbiton_virtue".to_string(), sel("virtue.wealthy"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&"house_grant_constraint".to_string()),
+            "a Major Virtue pick should violate the Minor-Virtue constraint: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn an_open_grant_pick_satisfying_its_constraint_has_no_error() {
+        let rs = rs_for_house_validation();
+        let mut entity = magus_with_house("house.jerbiton");
+        // Self-Confident is a Minor Virtue, satisfying the constraint.
+        entity
+            .house_choices
+            .insert("jerbiton_virtue".to_string(), sel("virtue.self_confident"));
+
+        let result = validate(&entity, &rs);
+        let codes = codes(&result);
+        assert!(
+            !codes.contains(&"house_grant_constraint".to_string())
+                && !codes.contains(&"house_choice_unresolved".to_string()),
+            "a Minor Virtue pick must satisfy the Open grant: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn a_magus_with_no_hermetic_flaw_is_warned() {
+        let rs = rs_for_house_validation();
+        let mut entity = make_entity("magus", vec![sel("flaw.optimistic")]);
+        entity.house = Some(Id::new("house.jerbiton"));
+        entity
+            .house_choices
+            .insert("jerbiton_virtue".to_string(), sel("virtue.self_confident"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            warning_codes(&result).contains(&"missing_hermetic_flaw".to_string()),
+            "a magus whose only Flaw is non-Hermetic should warn missing_hermetic_flaw: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn a_magus_with_a_hermetic_flaw_is_not_warned() {
+        let rs = rs_for_house_validation();
+        let mut entity = make_entity("magus", vec![sel("flaw.deficient_technique")]);
+        entity.house = Some(Id::new("house.jerbiton"));
+        entity
+            .house_choices
+            .insert("jerbiton_virtue".to_string(), sel("virtue.self_confident"));
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !warning_codes(&result).contains(&"missing_hermetic_flaw".to_string()),
+            "a magus with a Hermetic Flaw must not warn missing_hermetic_flaw: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn a_non_magus_gets_no_house_warnings() {
+        // A companion is not a House-bearer, so neither house_unset nor
+        // missing_hermetic_flaw applies even with no House and no Hermetic Flaw.
+        let rs = test_ruleset();
+        let entity = make_entity("companion", vec![sel("flaw.poor_student")]);
+
+        let result = validate(&entity, &rs);
+        let warnings = warning_codes(&result);
+        assert!(
+            !warnings.contains(&"house_unset".to_string())
+                && !warnings.contains(&"missing_hermetic_flaw".to_string()),
+            "House guidelines must not apply to a non-magus: {:?}",
             result.issues
         );
     }
