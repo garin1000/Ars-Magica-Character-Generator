@@ -87,14 +87,17 @@ describe('character type selector', () => {
       timeoutMsg: 'companion should forbid the Hermetic flaw',
     });
 
-    // As a magus, the Hermetic category is permitted: that error clears, and
-    // magus-specific issues (the required Hermetic Magus status is missing)
-    // appear — a positive signal that the switch applied, not just an absence.
+    // As a magus, the Hermetic category is permitted: that error clears, and a
+    // magus-specific issue (no House chosen yet → `house_unset`) appears — a
+    // positive signal that the switch applied, not just an absence. (The
+    // required Hermetic Magus status is auto-added on the switch, so
+    // `missing_required_trait` no longer fires — that is the point of the
+    // mandatory-trait auto-selection.)
     await setType('magus');
     await browser.waitUntil(
       async () => {
         const seen = await codes();
-        return !seen.includes('forbidden_category') && seen.includes('missing_required_trait');
+        return !seen.includes('forbidden_category') && seen.includes('house_unset');
       },
       { timeout: 5000, timeoutMsg: 'magus profile rules did not apply after switching type' },
     );

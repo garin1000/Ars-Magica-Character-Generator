@@ -75,23 +75,17 @@
   }
 </script>
 
-<!-- `marker` is `string | undefined` rather than optional (`marker?`): the `?:`
-     optional-param token in an inline snippet signature breaks the production
-     Svelte build (svelte-check tolerates it). Both call sites pass all three. -->
-{#snippet nameWrap(
-  ref: string,
-  params: Record<string, string> | undefined,
-  marker: string | undefined,
-)}
+<!-- Only the item's two intrinsic tags (category + magnitude) stack in the
+     right-edge overlay; a provenance marker (Required/Granted) is rendered as a
+     separate inline chip in the row (see below), so the vertical stack never
+     grows past two and bleeds into neighbouring rows. -->
+{#snippet nameWrap(ref: string, params: Record<string, string> | undefined)}
   {@const item = store.ruleset?.ruleset.point_items[ref]}
   <span class="name-wrap" use:reserveTagSpace use:tooltip={tip(ref)}>
     {#if item}
       <span class="badges">
         <span class="badge type">{store.t(`category-${item.category}`)}</span>
         <span class="badge">{store.t(`magnitude-${item.magnitude}`)}</span>
-        {#if marker}
-          <span class="badge granted">{marker}</span>
-        {/if}
       </span>
     {/if}
     <span class="item-name">
@@ -115,12 +109,10 @@
         {@const required = mandatory.has(selection.ref)}
         <li>
           <div class="selection-row">
-            {@render nameWrap(
-              selection.ref,
-              selection.params,
-              required ? store.t('selection-required-label') : undefined,
-            )}
-            {#if !required}
+            {@render nameWrap(selection.ref, selection.params)}
+            {#if required}
+              <span class="row-marker">{store.t('selection-required-label')}</span>
+            {:else}
               <button
                 type="button"
                 class="icon-btn"
@@ -139,7 +131,8 @@
       {#each granted as grant (grant.ref)}
         <li data-testid="granted-selection-{grant.ref}">
           <div class="selection-row">
-            {@render nameWrap(grant.ref, grant.params, store.t('house-granted-label'))}
+            {@render nameWrap(grant.ref, grant.params)}
+            <span class="row-marker">{store.t('house-granted-label')}</span>
           </div>
         </li>
       {/each}

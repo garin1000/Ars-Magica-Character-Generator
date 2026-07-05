@@ -39,7 +39,11 @@ function ability(id: string, parameter?: string): Ability {
 }
 
 /** Build a localized ruleset from items + abilities and install it on the store. */
-function installRuleset(items: PointItem[], abilities: Ability[] = []): LocalizedRuleset {
+function installRuleset(
+  items: PointItem[],
+  abilities: Ability[] = [],
+  profiles: LocalizedRuleset['ruleset']['type_profiles'] = {},
+): LocalizedRuleset {
   const point_items: Record<string, PointItem> = {};
   for (const it of items) point_items[it.id] = it;
   const abilityMap: Record<string, Ability> = {};
@@ -49,7 +53,7 @@ function installRuleset(items: PointItem[], abilities: Ability[] = []): Localize
       id: 'test',
       version: '1',
       point_items,
-      type_profiles: {},
+      type_profiles: profiles,
       abilities: abilityMap,
       // Engine-derived taxonomy the real backend ships on every Ruleset payload.
       magnitude_points: { free: 0, minor: 1, major: 3 },
@@ -106,6 +110,49 @@ describe('setType', () => {
     store.setType('companion');
     expect(store.entity).toBe(before);
     expect(store.entity.type_id).toBe('companion');
+  });
+
+  // A profile that mandates The Gift + Hermetic Magus (both free, profile-declared).
+  const magusProfiles = {
+    magus: {
+      id: 'magus',
+      budget: { virtue_points: 10, flaw_points: 10 },
+      permitted_categories: [],
+      forbidden_categories: [],
+      required_traits: ['virtue.hermetic_magus'],
+      gift_policy: 'required' as const,
+      gift_id: 'virtue.the_gift',
+      is_magus: true,
+      creation_phases: [],
+    },
+  };
+  const gift = () => item({ id: 'virtue.the_gift', magnitude: 'free', category: 'special' });
+  const hermeticMagus = () =>
+    item({ id: 'virtue.hermetic_magus', magnitude: 'free', category: 'social_status' });
+
+  it("auto-selects a magus's mandatory free traits (The Gift + Hermetic Magus)", () => {
+    installRuleset([gift(), hermeticMagus()], [], magusProfiles);
+    store.setType('magus');
+    const refs = store.entity.selections.map((s) => s.ref).sort();
+    expect(refs).toEqual(['virtue.hermetic_magus', 'virtue.the_gift']);
+  });
+
+  it('does not duplicate a mandatory trait the user already selected', () => {
+    installRuleset([gift(), hermeticMagus()], [], magusProfiles);
+    store.addSelection('virtue.the_gift');
+    store.setType('magus');
+    const gifts = store.entity.selections.filter((s) => s.ref === 'virtue.the_gift');
+    expect(gifts).toHaveLength(1);
+  });
+
+  it("drops the previous type's mandatory traits when they aren't mandated anymore", () => {
+    installRuleset([gift(), hermeticMagus(), item({ id: 'virtue.plain' })], [], magusProfiles);
+    store.addSelection('virtue.plain');
+    store.setType('magus');
+    store.setType('companion');
+    const refs = store.entity.selections.map((s) => s.ref);
+    // The user's own pick survives; the auto-added mandatory traits are gone.
+    expect(refs).toEqual(['virtue.plain']);
   });
 });
 
