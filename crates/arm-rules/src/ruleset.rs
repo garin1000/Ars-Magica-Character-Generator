@@ -14,7 +14,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::ability::{Ability, AbilityCategory, AdvancementTable};
 use crate::art::{Art, ArtType, ArtsFile};
 use crate::characteristics::CharacteristicRules;
-use crate::house::{House, HouseGrant, HousesFile};
+use crate::grant::Grant;
+use crate::house::{House, HousesFile};
+use crate::mythic_companion::{MythicCompanionType, MythicCompanionTypesFile};
 use crate::types::{
     Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, Magnitude, ParameterDomain, PointItem,
     Prereq, RulesetRef,
@@ -122,6 +124,12 @@ pub struct Ruleset {
     /// the `houses` field name is a stable public contract.
     #[serde(default)]
     pub(crate) houses: BTreeMap<Id, House>,
+    /// All Mythic Companion types keyed by their id. Defaulted so older
+    /// serialized rulesets (no mythic types) still deserialize. Serialized whole
+    /// to the frontend; the `mythic_companion_types` field name is a stable
+    /// public contract.
+    #[serde(default)]
+    pub(crate) mythic_companion_types: BTreeMap<Id, MythicCompanionType>,
 }
 
 /// The magnitude→points table, derived from the canonical [`Magnitude::points`].
@@ -157,6 +165,9 @@ pub struct RulesetSources<'a> {
     /// Houses-file JSON (`{ "houses": [...] }`), or `None` for a ruleset without
     /// a House registry.
     pub houses: Option<&'a str>,
+    /// Mythic-companion-types JSON (`{ "types": [...] }`), or `None` for a
+    /// ruleset without a Mythic Companion type registry.
+    pub mythic_types: Option<&'a str>,
     /// Characteristic point-buy JSON (`{ "start_points", "costs" }`), or `None`
     /// for a ruleset that ships no characteristic rules.
     pub characteristics: Option<&'a str>,
@@ -265,6 +276,7 @@ pub(crate) mod parse_source {
     pub const ABILITIES: &str = "abilities";
     pub const ARTS: &str = "arts";
     pub const HOUSES: &str = "houses";
+    pub const MYTHIC_TYPES: &str = "mythic companion types";
     pub const CHARACTERISTICS: &str = "characteristics";
     pub const I18N: &str = "i18n";
     /// Fallback used by the blanket `From<serde_json::Error>` conversion, where
@@ -437,6 +449,7 @@ impl Ruleset {
             abilities: None,
             arts: None,
             houses: None,
+            mythic_types: None,
             characteristics: None,
         })
     }
@@ -461,6 +474,7 @@ impl Ruleset {
             abilities: Some(abilities_json),
             arts: None,
             houses: None,
+            mythic_types: None,
             characteristics: None,
         })
     }
@@ -487,6 +501,7 @@ impl Ruleset {
             abilities: Some(abilities_json),
             arts: None,
             houses: None,
+            mythic_types: None,
             // Preserve the existing sentinel: an empty string means "no
             // characteristic rules" for this convenience constructor.
             characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
@@ -516,6 +531,7 @@ impl Ruleset {
             abilities: Some(abilities_json),
             arts: Some(arts_json),
             houses: None,
+            mythic_types: None,
             characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
         })
     }
@@ -535,6 +551,7 @@ impl Ruleset {
             abilities,
             arts,
             houses,
+            mythic_types,
             characteristics,
         } = sources;
 
@@ -551,6 +568,10 @@ impl Ruleset {
         // An absent houses file is equivalent to an empty `"{}"`.
         let houses_file: HousesFile = serde_json::from_str(houses.unwrap_or("{}"))
             .map_err(|e| RulesetError::parse(parse_source::HOUSES, e))?;
+        // An absent mythic-types file is equivalent to an empty `"{}"`.
+        let mythic_types_file: MythicCompanionTypesFile =
+            serde_json::from_str(mythic_types.unwrap_or("{}"))
+                .map_err(|e| RulesetError::parse(parse_source::MYTHIC_TYPES, e))?;
         let characteristic_rules: Option<CharacteristicRules> = match characteristics {
             None => None,
             Some(json) => Some(
@@ -572,6 +593,11 @@ impl Ruleset {
         collect_duplicates(
             houses_file.houses.iter().map(|h| &h.id),
             "house",
+            &mut errors,
+        );
+        collect_duplicates(
+            mythic_types_file.types.iter().map(|t| &t.id),
+            "mythic companion type",
             &mut errors,
         );
         if !errors.is_empty() {
@@ -599,6 +625,11 @@ impl Ruleset {
             .into_iter()
             .map(|h| (h.id.clone(), h))
             .collect();
+        let mythic_companion_types: BTreeMap<Id, MythicCompanionType> = mythic_types_file
+            .types
+            .into_iter()
+            .map(|t| (t.id.clone(), t))
+            .collect();
 
         let ruleset = Self {
             id: Id::new(id),
@@ -614,6 +645,7 @@ impl Ruleset {
             art_advancement: arts_file.advancement,
             art_type_order: ArtType::ALL.to_vec(),
             houses,
+            mythic_companion_types,
         };
 
         ruleset.validate_integrity()?;
@@ -661,12 +693,13 @@ impl Ruleset {
     /// runtime entry point that normalizes the nested item data
     /// (see [`crate::types::PointItem::normalize`]).
     ///
-    /// The `houses` catalogue is intentionally exempt: a `House`'s `grants`
-    /// (and each `HouseGrant::Choice`'s `options`) are order-significant authored
-    /// data — like `creation_phases` — sourced from the already-canonical,
-    /// pipeline-generated `rules/core/houses.json`, and the assembled `Ruleset`
-    /// is only ever a transient frontend payload, never written back to disk. So
-    /// there is no canonical-write to normalize for and no `House::normalize`.
+    /// The `houses` and `mythic_companion_types` catalogues are intentionally
+    /// exempt: a grant's list (and each `Grant::Choice`'s `options`), and a
+    /// mythic type's required package, are order-significant authored data — like
+    /// `creation_phases` — sourced from the already-canonical, pipeline-generated
+    /// `rules/core/*.json`, and the assembled `Ruleset` is only ever a transient
+    /// frontend payload, never written back to disk. So there is no
+    /// canonical-write to normalize for.
     pub fn normalize(&mut self) {
         for item in self.point_items.values_mut() {
             item.normalize();
@@ -739,6 +772,21 @@ impl Ruleset {
     /// Number of Houses in the catalogue.
     pub fn house_count(&self) -> usize {
         self.houses.len()
+    }
+
+    /// Looks up a Mythic Companion type by id.
+    pub fn mythic_type(&self, id: &Id) -> Option<&MythicCompanionType> {
+        self.mythic_companion_types.get(id)
+    }
+
+    /// Iterates all Mythic Companion types in id order.
+    pub fn mythic_types(&self) -> impl Iterator<Item = &MythicCompanionType> {
+        self.mythic_companion_types.values()
+    }
+
+    /// Number of Mythic Companion types in the catalogue.
+    pub fn mythic_type_count(&self) -> usize {
+        self.mythic_companion_types.len()
     }
 
     /// Number of Arts in the catalogue.
@@ -851,6 +899,10 @@ impl Ruleset {
             self.validate_house_refs(house, &mut errors);
         }
 
+        for mtype in self.mythic_companion_types.values() {
+            self.validate_mythic_type_refs(mtype, &mut errors);
+        }
+
         if errors.is_empty() {
             Ok(())
         } else {
@@ -870,34 +922,87 @@ impl Ruleset {
     /// policy on parameter values elsewhere.
     fn validate_house_refs(&self, house: &House, errors: &mut Vec<String>) {
         let id = &house.id;
-        for grant in &house.grants {
+        self.validate_grant_refs("house", id, &house.grants, errors);
+        if let Some(ref source) = house.source
+            && !source.lines.is_valid()
+        {
+            errors.push(format!(
+                "house '{id}': source line range start ({}) exceeds end ({})",
+                source.lines.start, source.lines.end
+            ));
+        }
+    }
+
+    /// Validates that every concrete item id a grant list names resolves. A
+    /// `Fixed` grant and each `Choice` option name a point-item id; an `Open`
+    /// grant carries none (checked at runtime against its `GrantConstraint`).
+    /// Shared by House and Mythic-Companion-type integrity checks; `kind` and
+    /// `owner` label the offending record in the error message. Grant `params`
+    /// values are deliberately NOT registry-checked, mirroring the
+    /// forward-declared Ability/Art-domain policy on parameter values elsewhere.
+    fn validate_grant_refs(
+        &self,
+        kind: &str,
+        owner: &Id,
+        grants: &[Grant],
+        errors: &mut Vec<String>,
+    ) {
+        for grant in grants {
             match grant {
-                HouseGrant::Fixed { item, .. } => {
+                Grant::Fixed { item, .. } => {
                     if !self.point_items.contains_key(item) {
                         errors.push(format!(
-                            "house '{id}': fixed grant references unknown item '{item}'"
+                            "{kind} '{owner}': fixed grant references unknown item '{item}'"
                         ));
                     }
                 }
-                HouseGrant::Choice { options, .. } => {
+                Grant::Choice { options, .. } => {
                     for option in options {
                         if !self.point_items.contains_key(&option.item_ref) {
                             errors.push(format!(
-                                "house '{id}': choice option references unknown item '{}'",
+                                "{kind} '{owner}': choice option references unknown item '{}'",
                                 option.item_ref
                             ));
                         }
                     }
                 }
                 // Open grants resolve to a player pick at runtime — nothing here.
-                HouseGrant::Open { .. } => {}
+                Grant::Open { .. } => {}
             }
         }
-        if let Some(ref source) = house.source
+    }
+
+    /// Validates a Mythic Companion type: every grant item, every required Virtue,
+    /// and every required Flaw's default must resolve to a known point item, and
+    /// its source line range (if any) must be well-formed. This is the load-time
+    /// trust gate that a type's package can only ship once all its items are
+    /// seeded. Required-flaw substitute *constraints* name categories (an open,
+    /// forward-declared namespace), so they are not registry-checked — mirroring
+    /// the profile category-field policy above.
+    fn validate_mythic_type_refs(&self, mtype: &MythicCompanionType, errors: &mut Vec<String>) {
+        let id = &mtype.id;
+        self.validate_grant_refs("mythic companion type", id, &mtype.grants, errors);
+        for req in &mtype.required_virtues {
+            if !self.point_items.contains_key(&req.item_ref) {
+                errors.push(format!(
+                    "mythic companion type '{id}': required virtue references unknown item '{}'",
+                    req.item_ref
+                ));
+            }
+        }
+        for flaw in &mtype.required_flaws {
+            if !self.point_items.contains_key(&flaw.default.item_ref) {
+                errors.push(format!(
+                    "mythic companion type '{id}': required flaw default references unknown item '{}'",
+                    flaw.default.item_ref
+                ));
+            }
+        }
+        if let Some(ref source) = mtype.source
             && !source.lines.is_valid()
         {
             errors.push(format!(
-                "house '{id}': source line range start ({}) exceeds end ({})",
+                "mythic companion type '{id}': source line range start ({}) exceeds end ({})",
                 source.lines.start, source.lines.end
             ));
         }
@@ -1188,6 +1293,7 @@ mod tests {
             abilities: Some(VALID_ABILITIES),
             arts: None,
             houses: None,
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap();
@@ -1204,6 +1310,7 @@ mod tests {
             abilities: None,
             arts: None,
             houses: None,
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap();
@@ -1228,6 +1335,7 @@ mod tests {
             abilities: Some(VALID_ABILITIES),
             arts: None,
             houses: Some(VALID_HOUSES),
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap();
@@ -1245,6 +1353,7 @@ mod tests {
             abilities: None,
             arts: None,
             houses: None,
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap();
@@ -1271,6 +1380,7 @@ mod tests {
             abilities: None,
             arts: Some(VALID_ARTS),
             houses: None,
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap();
@@ -1296,6 +1406,7 @@ mod tests {
             abilities: None,
             arts: None,
             houses: Some(dup),
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -1327,6 +1438,7 @@ mod tests {
             abilities: None,
             arts: None,
             houses: Some(VALID_HOUSES),
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -1356,6 +1468,7 @@ mod tests {
             abilities: None,
             arts: None,
             houses: Some(houses),
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -1387,6 +1500,7 @@ mod tests {
             abilities: None,
             arts: None,
             houses: Some(houses),
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -1414,6 +1528,7 @@ mod tests {
             abilities: None,
             arts: None,
             houses: Some(houses),
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -2067,6 +2182,7 @@ mod tests {
             abilities: Some(VALID_ABILITIES),
             arts: None,
             houses: None,
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap();
@@ -2088,6 +2204,7 @@ mod tests {
                 "houses",
                 "id",
                 "magnitude_points",
+                "mythic_companion_types",
                 "point_items",
                 "type_profiles",
                 "version",

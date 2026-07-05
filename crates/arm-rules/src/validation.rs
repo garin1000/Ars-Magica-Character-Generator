@@ -11,11 +11,11 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 use crate::characteristics::Characteristic;
-use crate::house::{GrantConstraint, HouseGrant};
+use crate::grant::{Grant, open_pick_satisfies};
 use crate::ruleset::Ruleset;
 use crate::types::{
     CategoryCap, Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind,
-    Magnitude, ParameterDomain, PointItem, Prereq, Selection, ValidationMode,
+    Magnitude, ParameterDomain, PointItem, Prereq, ValidationMode,
 };
 
 /// Whether a validation issue blocks (`Error`) or merely advises (`Warning`).
@@ -99,6 +99,10 @@ impl fmt::Display for IssueSeverity {
 /// | `house_grant_constraint` | error | `house`, `choice_key`, `item` |
 /// | `house_unset` | warning | (none) |
 /// | `missing_hermetic_flaw` | warning | (none) |
+/// | `mythic_type_unset` | warning | (none) |
+/// | `mythic_choice_unresolved` | error | `mythic_type`, `choice_key` |
+/// | `mythic_grant_constraint` | error | `mythic_type`, `choice_key`, `item` |
+/// | `mythic_required_trait_missing` | warning | `item` |
 ///
 /// † The per-category caps emit a code derived from the `flaw_category_caps` /
 /// `virtue_category_caps` entry's category slug: `too_many_<category>_flaws` /
@@ -231,6 +235,21 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a magus has taken no
     /// Hermetic Flaw (the rules recommend at least one).
     pub const CODE_MISSING_HERMETIC_FLAW: &'static str = "missing_hermetic_flaw";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a mythic-companion
+    /// type has not been chosen yet (its free status/Minor Virtue + package are
+    /// unresolved).
+    pub const CODE_MYTHIC_TYPE_UNSET: &'static str = "mythic_type_unset";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Mythic Companion
+    /// type's Choice/Open grant has no pick, or one not among the offered
+    /// options.
+    pub const CODE_MYTHIC_CHOICE_UNRESOLVED: &'static str = "mythic_choice_unresolved";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Mythic Companion
+    /// type's Open grant pick violates the grant's constraint.
+    pub const CODE_MYTHIC_GRANT_CONSTRAINT: &'static str = "mythic_grant_constraint";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a Mythic Companion
+    /// type's required Virtue/Flaw (or a suitable substitute) is not selected (a
+    /// "should", overridable by troupe agreement — never a hard block).
+    pub const CODE_MYTHIC_REQUIRED_TRAIT_MISSING: &'static str = "mythic_required_trait_missing";
 
     /// Builds an issue with the given severity, code, args, and context.
     pub fn new(
@@ -350,6 +369,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_ability_bonus_targets(entity, ruleset, &mut issues);
     validate_gift_policy(entity, ruleset, type_profile, &mut issues);
     validate_house(entity, ruleset, type_profile, &mut issues);
+    validate_mythic_type(entity, ruleset, type_profile, &mut issues);
 
     // Characteristics and Abilities are character-only concerns; a covenant has
     // neither. Gate them on the entity kind so the engine respects EntityKind
@@ -423,32 +443,31 @@ fn validate_balance(
         flaw_points,
     } = compute_balance(entity, ruleset);
 
-    if virtue_points > profile.budget.virtue_points as i32 {
+    let budget = effective_budget(entity, ruleset, profile);
+
+    if virtue_points > budget.virtue_ceiling {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_OVER_BUDGET_VIRTUES,
             args([
                 ("points", virtue_points.to_string()),
-                ("budget", profile.budget.virtue_points.to_string()),
+                ("budget", budget.virtue_ceiling.to_string()),
             ]),
             None,
         ));
     }
 
-    if flaw_points > profile.budget.flaw_points as i32 {
+    if flaw_points > budget.flaw_ceiling {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_OVER_BUDGET_FLAWS,
             args([
                 ("points", flaw_points.to_string()),
-                ("budget", profile.budget.flaw_points.to_string()),
+                ("budget", budget.flaw_ceiling.to_string()),
             ]),
             None,
         ));
     }
 
-    // Each flaw point funds `virtue_points_per_flaw_point` virtue points (1 for
-    // most types; 2 for Mythic Companions). Source: Core Rules.md:2638.
-    let funded_virtue_points = flaw_points * profile.budget.virtue_points_per_flaw_point as i32;
-    if virtue_points > funded_virtue_points {
+    if virtue_points > budget.funded(flaw_points) {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_UNBALANCED_VIRTUES,
             args([
@@ -457,6 +476,61 @@ fn validate_balance(
             ]),
             None,
         ));
+    }
+}
+
+/// The virtue/flaw point ceilings the balance check enforces, folding in the
+/// selected Mythic Companion type's per-type bonus points on top of the
+/// profile's base budget. For any non-mythic type (no `mythic_type`, or a type
+/// carrying no bonuses) both bonuses are 0 and this reduces **exactly** to the
+/// profile's own budget — `flaw_ceiling = flaw_points`,
+/// `virtue_ceiling = virtue_points`, `funded = flaw · rate`.
+///
+/// The extra Flaw points each still fund virtue points at the type's rate, so
+/// they raise the virtue ceiling by `bonus_flaw · rate` (not just the flaw
+/// ceiling); `bonus_free_virtue_points` is unfunded headroom that also lifts the
+/// funded floor. Source: Core Rules.md:2664 (Devil Child +3 free V / +7 F);
+/// Realms of Power - Magic.md:5486 (Spirit Votary +7 F).
+struct EffectiveBudget {
+    virtue_ceiling: i32,
+    flaw_ceiling: i32,
+    bonus_free_virtue_points: i32,
+    rate: i32,
+}
+
+impl EffectiveBudget {
+    /// Virtue points fundable by `flaw_points` taken, plus the free headroom.
+    fn funded(&self, flaw_points: i32) -> i32 {
+        flaw_points * self.rate + self.bonus_free_virtue_points
+    }
+}
+
+fn effective_budget(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    profile: &EntityTypeProfile,
+) -> EffectiveBudget {
+    let rate = profile.budget.virtue_points_per_flaw_point as i32;
+    // Only a mythic-capable profile applies a type's bonus points — a stray
+    // `mythic_type` on some other profile (hand-edited save) must not inflate its
+    // budget (validate conditionally, mirroring `validate_mythic_type`'s gate).
+    let (bonus_flaw, bonus_free_virtue) = profile
+        .has_mythic_type
+        .then_some(entity.mythic_type.as_ref())
+        .flatten()
+        .and_then(|id| ruleset.mythic_type(id))
+        .map(|t| {
+            (
+                t.bonus_flaw_points as i32,
+                t.bonus_free_virtue_points as i32,
+            )
+        })
+        .unwrap_or((0, 0));
+    EffectiveBudget {
+        virtue_ceiling: profile.budget.virtue_points as i32 + bonus_flaw * rate + bonus_free_virtue,
+        flaw_ceiling: profile.budget.flaw_points as i32 + bonus_flaw,
+        bonus_free_virtue_points: bonus_free_virtue,
+        rate,
     }
 }
 
@@ -690,8 +764,8 @@ fn validate_house(
     for grant in &house.grants {
         match grant {
             // A fixed grant carries no player choice, so nothing to validate.
-            HouseGrant::Fixed { .. } => {}
-            HouseGrant::Choice {
+            Grant::Fixed { .. } => {}
+            Grant::Choice {
                 choice_key,
                 options,
             } => {
@@ -700,7 +774,7 @@ fn validate_house(
                     issues.push(unresolved(choice_key));
                 }
             }
-            HouseGrant::Open {
+            Grant::Open {
                 choice_key,
                 constraint,
             } => {
@@ -724,31 +798,127 @@ fn validate_house(
     }
 }
 
-/// Whether an Open grant's pick satisfies its constraint: the picked item must
-/// resolve and match the required kind, the magnitude (when the constraint fixes
-/// one), and the category allow/deny lists. An unresolvable pick fails — it
-/// cannot satisfy anything.
-fn open_pick_satisfies(pick: &Selection, constraint: &GrantConstraint, ruleset: &Ruleset) -> bool {
-    let Some(item) = ruleset.point_items.get(&pick.item_ref) else {
-        return false;
+/// Validates a Mythic Companion's chosen *type* (Devil Child, Faerie Doctor, …):
+/// its free-Virtue grants resolve and its required V/F package is present. Gated
+/// on the profile's `has_mythic_type` capability flag (never a hardcoded type
+/// id), mirroring how [`validate_house`] gates on `is_magus`.
+///
+/// - No type chosen → `mythic_type_unset` warning (a "should", not a hard rule).
+/// - Each `Choice`/`Open` grant pick is resolved from `entity.mythic_choices`
+///   (identical machinery to House grants); a missing/off-menu pick →
+///   `mythic_choice_unresolved`, an Open pick violating its constraint →
+///   `mythic_grant_constraint`.
+/// - The required package (fixed Virtues + each required Flaw's default OR a
+///   "suitable substitute agreed with the troupe") is checked against the bought
+///   `entity.selections`; a missing slot → a non-blocking
+///   `mythic_required_trait_missing` warning, so Enforced mode never hard-blocks
+///   a legal-with-substitute build. Required Virtues match by full `Selection`
+///   (ref + params) so parameterized/duplicated requirements — Nephilim's two
+///   distinct Great Characteristics, Puissant Guile — are matched precisely.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2635-2639, 2842-2851.
+fn validate_mythic_type(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    type_profile: Option<&EntityTypeProfile>,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    // Mythic types are a mythic-companion-only concern; gated on the capability
+    // flag so no type id is hardcoded here.
+    let Some(profile) = type_profile else {
+        return;
     };
-    if item.kind != constraint.kind {
-        return false;
+    if !profile.has_mythic_type {
+        return;
     }
-    if let Some(magnitude) = constraint.magnitude
-        && item.magnitude != magnitude
-    {
-        return false;
+
+    // No type chosen: a soft warning, and there are no grants/package to resolve.
+    let Some(type_id) = &entity.mythic_type else {
+        issues.push(ValidationIssue::warning(
+            ValidationIssue::CODE_MYTHIC_TYPE_UNSET,
+            args([]),
+            None,
+        ));
+        return;
+    };
+
+    // An unknown type id resolves to nothing; nothing further to check.
+    let Some(mtype) = ruleset.mythic_type(type_id) else {
+        return;
+    };
+
+    // --- Free-Virtue grant picks (Choice/Open), mirroring validate_house. ---
+    let unresolved = |choice_key: &str| {
+        ValidationIssue::error(
+            ValidationIssue::CODE_MYTHIC_CHOICE_UNRESOLVED,
+            args([
+                ("mythic_type", type_id.to_string()),
+                ("choice_key", choice_key.to_string()),
+            ]),
+            None,
+        )
+    };
+    for grant in &mtype.grants {
+        match grant {
+            Grant::Fixed { .. } => {}
+            Grant::Choice {
+                choice_key,
+                options,
+            } => {
+                let pick = entity.mythic_choices.get(choice_key);
+                if !pick.is_some_and(|p| options.contains(p)) {
+                    issues.push(unresolved(choice_key));
+                }
+            }
+            Grant::Open {
+                choice_key,
+                constraint,
+            } => {
+                let Some(pick) = entity.mythic_choices.get(choice_key) else {
+                    issues.push(unresolved(choice_key));
+                    continue;
+                };
+                if !open_pick_satisfies(pick, constraint, ruleset) {
+                    issues.push(ValidationIssue::error(
+                        ValidationIssue::CODE_MYTHIC_GRANT_CONSTRAINT,
+                        args([
+                            ("mythic_type", type_id.to_string()),
+                            ("choice_key", choice_key.clone()),
+                            ("item", pick.item_ref.to_string()),
+                        ]),
+                        Some(pick.item_ref.clone()),
+                    ));
+                }
+            }
+        }
     }
-    if !constraint.require_categories.is_empty()
-        && !constraint.require_categories.contains(&item.category)
-    {
-        return false;
+
+    // --- Required package (non-blocking warnings; substitutes allowed). ---
+    let missing = |item: &Id| {
+        ValidationIssue::warning(
+            ValidationIssue::CODE_MYTHIC_REQUIRED_TRAIT_MISSING,
+            args([("item", item.to_string())]),
+            Some(item.clone()),
+        )
+    };
+    // Fixed required Virtues: matched by full Selection (ref + params).
+    for req in &mtype.required_virtues {
+        if !entity.selections.contains(req) {
+            issues.push(missing(&req.item_ref));
+        }
     }
-    if constraint.forbid_categories.contains(&item.category) {
-        return false;
+    // Required Flaws: the default, or any bought selection satisfying the
+    // substitute constraint (kind/magnitude/category) — the troupe-substitute
+    // allowance.
+    for flaw in &mtype.required_flaws {
+        let satisfied = entity
+            .selections
+            .iter()
+            .any(|s| open_pick_satisfies(s, &flaw.constraint, ruleset));
+        if !satisfied {
+            issues.push(missing(&flaw.default.item_ref));
+        }
     }
-    true
 }
 
 /// Tri-state outcome of evaluating a prerequisite expression.
@@ -809,12 +979,13 @@ fn validate_prerequisites(
         *entry = (*entry).max(effective);
     }
 
-    // `Prereq::Has` resolves against bought AND House-granted rows (a granted
-    // Heartbeast satisfies `Has(virtue.heartbeast)`), so build a grants-inclusive
-    // id set. This is deliberately distinct from the bought-only `selected_ids`
-    // that the forbidden-trait / incompatibility validators use — grants must
-    // never reach those (review finding B1).
-    let granted = crate::house::granted_selections(entity, ruleset);
+    // `Prereq::Has` resolves against bought AND granted rows (a granted
+    // Heartbeast/Dowsing satisfies `Has(...)`), so build a grants-inclusive id
+    // set spanning House and Mythic-Companion-type grants. This is deliberately
+    // distinct from the bought-only `selected_ids` that the forbidden-trait /
+    // incompatibility validators use — grants must never reach those (review
+    // finding B1).
+    let granted = crate::effective::entity_grants(entity, ruleset);
     let mut present_ids: BTreeSet<&Id> = selected_ids.iter().copied().collect();
     for g in &granted {
         present_ids.insert(&g.item_ref);
@@ -1738,6 +1909,8 @@ fn validate_xp_pool(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Validat
 mod tests {
     use super::*;
     use crate::characteristics::Characteristic;
+    use crate::grant::GrantConstraint;
+    use crate::ruleset::RulesetSources;
     use crate::types::*;
     use pretty_assertions::assert_eq;
     use std::collections::BTreeMap;
@@ -1874,6 +2047,7 @@ mod tests {
             abilities: None,
             arts: None,
             houses: Some(TEST_HOUSES),
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap()
@@ -1934,6 +2108,7 @@ mod tests {
             abilities: Some(GRANT_ABILITIES),
             arts: None,
             houses: Some(GRANT_HOUSES),
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap()
@@ -2172,6 +2347,7 @@ mod tests {
             abilities: None,
             arts: None,
             houses: Some(HOUSE_VALIDATE_HOUSES),
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap()
@@ -2435,6 +2611,11 @@ mod tests {
 
     fn codes(result: &ValidationResult) -> Vec<String> {
         result.errors().map(|i| i.code.clone()).collect()
+    }
+
+    /// All issue codes (errors AND warnings), for tests asserting on warnings.
+    fn all_codes(result: &ValidationResult) -> Vec<String> {
+        result.issues.iter().map(|i| i.code.clone()).collect()
     }
 
     #[test]
@@ -5336,5 +5517,167 @@ mod tests {
 
         let advisory = validate(&entity, &rs).apply_mode(ValidationMode::Advisory);
         assert_eq!(advisory.issues.len(), original_count);
+    }
+
+    // --- Mythic Companion types: effective budget + validate_mythic_type -----
+
+    /// A ruleset with a mythic-companion profile (`has_mythic_type`), a plain
+    /// companion profile (base 10/10), and two types: Devil Child (+3 free V,
+    /// +7 F) and Faerie Doctor (no bonus).
+    fn mythic_ruleset() -> Ruleset {
+        const ITEMS: &str = r#"[
+            { "id": "virtue.devil_child", "kind": "virtue", "magnitude": "free",
+              "category": "social_status", "entity_kinds": ["character"] },
+            { "id": "virtue.demonic_might", "kind": "virtue", "magnitude": "minor",
+              "category": "supernatural", "entity_kinds": ["character"] },
+            { "id": "virtue.demonic_powers", "kind": "virtue", "magnitude": "minor",
+              "category": "supernatural", "entity_kinds": ["character"] },
+            { "id": "virtue.demonic_blood", "kind": "virtue", "magnitude": "major",
+              "category": "supernatural", "entity_kinds": ["character"] },
+            { "id": "flaw.tragic_life", "kind": "flaw", "magnitude": "major",
+              "category": "supernatural", "entity_kinds": ["character"] },
+            { "id": "flaw.other_supernatural", "kind": "flaw", "magnitude": "major",
+              "category": "supernatural", "entity_kinds": ["character"] }
+        ]"#;
+        const PROFILES: &str = r#"[
+            { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+              "creation_phases": [] },
+            { "id": "mythic_companion", "has_mythic_type": true,
+              "budget": { "virtue_points": 20, "flaw_points": 10, "virtue_points_per_flaw_point": 2 },
+              "permitted_categories": ["general", "supernatural", "social_status"],
+              "creation_phases": [] }
+        ]"#;
+        const TYPES: &str = r#"{ "types": [
+            { "id": "mythic_type.devil_child",
+              "grants": [
+                { "kind": "fixed", "item": "virtue.devil_child" },
+                { "kind": "choice", "choice_key": "devil_child_might", "options": [
+                  { "ref": "virtue.demonic_might" }, { "ref": "virtue.demonic_powers" } ] } ],
+              "required_virtues": [ { "ref": "virtue.demonic_blood" } ],
+              "required_flaws": [ { "default": { "ref": "flaw.tragic_life" },
+                "constraint": { "kind": "flaw", "magnitude": "major", "require_categories": ["supernatural"] } } ],
+              "bonus_flaw_points": 7, "bonus_free_virtue_points": 3 },
+            { "id": "mythic_type.faerie_doctor" }
+        ] }"#;
+        Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: ITEMS,
+            type_profiles: PROFILES,
+            abilities: None,
+            arts: None,
+            houses: None,
+            mythic_types: Some(TYPES),
+            characteristics: None,
+        })
+        .unwrap()
+    }
+
+    fn mythic_entity(type_id: &str) -> Entity {
+        let mut e = make_entity("mythic_companion", vec![]);
+        e.mythic_type = Some(Id::new(type_id));
+        e
+    }
+
+    #[test]
+    fn effective_budget_folds_devil_child_bonuses() {
+        let rs = mythic_ruleset();
+        let profile = rs.profile(&Id::new("mythic_companion")).unwrap();
+        let e = mythic_entity("mythic_type.devil_child");
+        let b = effective_budget(&e, &rs, profile);
+        // 20 + 7·2 + 3 = 37; 10 + 7 = 17; funded(17) = 17·2 + 3 = 37; the free
+        // headroom funds 3 virtue points with no flaws.
+        assert_eq!(b.virtue_ceiling, 37);
+        assert_eq!(b.flaw_ceiling, 17);
+        assert_eq!(b.funded(17), 37);
+        assert_eq!(b.funded(0), 3);
+    }
+
+    #[test]
+    fn effective_budget_is_base_when_type_has_no_bonus() {
+        let rs = mythic_ruleset();
+        let profile = rs.profile(&Id::new("mythic_companion")).unwrap();
+        let e = mythic_entity("mythic_type.faerie_doctor");
+        let b = effective_budget(&e, &rs, profile);
+        assert_eq!(b.virtue_ceiling, 20);
+        assert_eq!(b.flaw_ceiling, 10);
+        assert_eq!(b.funded(10), 20); // rate 2, no free headroom
+        assert_eq!(b.funded(0), 0);
+    }
+
+    #[test]
+    fn effective_budget_reduces_to_profile_for_non_mythic() {
+        let rs = mythic_ruleset();
+        let profile = rs.profile(&Id::new("companion")).unwrap();
+        let e = make_entity("companion", vec![]); // no mythic_type
+        let b = effective_budget(&e, &rs, profile);
+        assert_eq!(b.virtue_ceiling, 10);
+        assert_eq!(b.flaw_ceiling, 10);
+        assert_eq!(b.funded(10), 10); // rate 1
+        assert_eq!(b.funded(0), 0);
+    }
+
+    #[test]
+    fn unchosen_mythic_type_warns() {
+        let rs = mythic_ruleset();
+        let e = make_entity("mythic_companion", vec![]); // has_mythic_type but no type
+        let codes = all_codes(&validate(&e, &rs));
+        assert!(codes.contains(&ValidationIssue::CODE_MYTHIC_TYPE_UNSET.to_string()));
+    }
+
+    #[test]
+    fn missing_required_package_warns_and_clears_when_present() {
+        let rs = mythic_ruleset();
+        // Devil Child chosen, Might/Powers picked, but no required package bought.
+        let mut e = mythic_entity("mythic_type.devil_child");
+        e.mythic_choices.insert(
+            "devil_child_might".to_string(),
+            Selection::new(Id::new("virtue.demonic_might")),
+        );
+        let before = all_codes(&validate(&e, &rs));
+        assert!(before.contains(&ValidationIssue::CODE_MYTHIC_REQUIRED_TRAIT_MISSING.to_string()));
+
+        // Buy Demonic Blood + Tragic Life → the required-package warning clears.
+        e.selections = vec![sel("virtue.demonic_blood"), sel("flaw.tragic_life")];
+        let after = all_codes(&validate(&e, &rs));
+        assert!(!after.contains(&ValidationIssue::CODE_MYTHIC_REQUIRED_TRAIT_MISSING.to_string()));
+    }
+
+    #[test]
+    fn a_substitute_flaw_satisfies_the_required_flaw() {
+        let rs = mythic_ruleset();
+        let mut e = mythic_entity("mythic_type.devil_child");
+        // A different Major Supernatural flaw substitutes for Tragic Life.
+        e.selections = vec![sel("virtue.demonic_blood"), sel("flaw.other_supernatural")];
+        let codes = all_codes(&validate(&e, &rs));
+        // The required-flaw slot is satisfied by the substitute (no missing warning
+        // referencing tragic_life); only the still-unbought status choice, if any,
+        // would surface — Demonic Blood + a Major Supernatural flaw cover the
+        // package.
+        assert!(!codes.contains(&ValidationIssue::CODE_MYTHIC_REQUIRED_TRAIT_MISSING.to_string()));
+    }
+
+    #[test]
+    fn unresolved_mythic_choice_is_an_error() {
+        let rs = mythic_ruleset();
+        // Devil Child with the Might/Powers choice unset.
+        let e = mythic_entity("mythic_type.devil_child");
+        let codes = all_codes(&validate(&e, &rs));
+        assert!(codes.contains(&ValidationIssue::CODE_MYTHIC_CHOICE_UNRESOLVED.to_string()));
+    }
+
+    #[test]
+    fn mythic_bonus_ignored_for_non_mythic_profile() {
+        // A stray mythic_type on a plain companion (hand-edited save) must not
+        // inflate its budget: effective_budget gates the type's bonuses on the
+        // profile's `has_mythic_type`, so the companion budget stays 10/10.
+        let rs = mythic_ruleset();
+        let mut e = make_entity("companion", vec![]);
+        e.mythic_type = Some(Id::new("mythic_type.devil_child"));
+        let profile = rs.profile(&Id::new("companion")).unwrap();
+        let b = effective_budget(&e, &rs, profile);
+        assert_eq!(b.flaw_ceiling, 10);
+        assert_eq!(b.virtue_ceiling, 10);
+        assert_eq!(b.rate, 1);
     }
 }

@@ -39,7 +39,7 @@ pub(crate) fn selections_for_effects<'a>(
     entity: &'a Entity,
     ruleset: &Ruleset,
 ) -> Cow<'a, [Selection]> {
-    let granted = crate::house::granted_selections(entity, ruleset);
+    let granted = entity_grants(entity, ruleset);
     if granted.is_empty() {
         Cow::Borrowed(&entity.selections)
     } else {
@@ -47,6 +47,19 @@ pub(crate) fn selections_for_effects<'a>(
         combined.extend(granted);
         Cow::Owned(combined)
     }
+}
+
+/// All free-Virtue [`Selection`] rows the entity's type-linked profiles grant:
+/// its Hermetic House (magi) plus its Mythic Companion type (mythic companions),
+/// in that order. A character is a magus **or** a mythic companion, never both,
+/// so in practice at most one source contributes — but unioning both is correct
+/// and keeps the single grant-fold path uniform. The single entry point every
+/// grant consumer (effects, prerequisites, the frontend's read-only granted
+/// rows) uses so House and mythic grants are always treated identically.
+pub fn entity_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
+    let mut granted = crate::house::granted_selections(entity, ruleset);
+    granted.extend(crate::mythic_companion::granted_selections(entity, ruleset));
+    granted
 }
 
 /// A non-zero ability-score bonus targeting one ability *instance*. For a
@@ -1583,6 +1596,7 @@ mod tests {
             abilities: Some(abilities),
             arts: Some(arts),
             houses: Some(houses),
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap()

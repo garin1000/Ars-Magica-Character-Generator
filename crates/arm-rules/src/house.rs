@@ -2,13 +2,13 @@
 //! free Virtue(s) each grants a magus at character creation.
 //!
 //! A House grant is **data**, not code: each [`House`] carries a list of
-//! [`HouseGrant`]s describing what the House gives (a fixed Virtue, a choice
-//! between options, or an open player-chosen Virtue/Flaw constrained by
-//! category/magnitude). The engine resolves those grants into ordinary
-//! [`Selection`]s at evaluation time (see [`crate::effective`]); the save stores
-//! only the chosen House plus the player's specialisation picks, never the
-//! resolved free-Virtue rows (the "saves store choices, not resolved values"
-//! invariant).
+//! [`Grant`]s (the shared grant model in [`crate::grant`]) describing what the
+//! House gives (a fixed Virtue, a choice between options, or an open
+//! player-chosen Virtue/Flaw constrained by category/magnitude). The engine
+//! resolves those grants into ordinary [`Selection`]s at evaluation time (see
+//! [`crate::effective`]); the save stores only the chosen House plus the
+//! player's specialisation picks, never the resolved free-Virtue rows (the
+//! "saves store choices, not resolved values" invariant).
 //!
 //! The three lineage classes (True Lineage, Mystery Cult, Societas) are a fixed
 //! taxonomy and so an enum; the Houses and their grants are data.
@@ -17,11 +17,11 @@
 //! benefit table), :2855-2861 (the magus's free House Virtue).
 
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
+use crate::grant::{Grant, resolve_grants};
 use crate::ruleset::Ruleset;
-use crate::types::{Entity, Id, ItemKind, Magnitude, Selection, SourceRef};
+use crate::types::{Entity, Id, Selection, SourceRef};
 
 /// The three structural classes of Hermetic House. Flavor/grouping only — drives
 /// no mechanics; mirrors [`crate::art::ArtType`].
@@ -59,60 +59,6 @@ impl fmt::Display for LineageType {
     }
 }
 
-/// A constraint on a player-chosen open grant: the kind of item, an optional
-/// magnitude, and category allow/deny lists. Purely declarative — enforced in
-/// [`crate::validation`], with no House id hardcoded.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct GrantConstraint {
-    /// The item kind the open pick must be (Virtue or Flaw).
-    pub kind: ItemKind,
-    /// Required magnitude, if any (e.g. `major`). `None` = any magnitude.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub magnitude: Option<Magnitude>,
-    /// If non-empty, the pick's category must be one of these.
-    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-    pub require_categories: BTreeSet<String>,
-    /// The pick's category must not be any of these.
-    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-    pub forbid_categories: BTreeSet<String>,
-}
-
-/// One thing a House grants its magi at creation.
-///
-/// Internally tagged on `kind` so each grant is a self-describing object in
-/// `houses.json` (`{ "kind": "fixed", "item": … }`).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
-pub enum HouseGrant {
-    /// A fixed free Virtue (optionally parameterized), e.g. Tytalus →
-    /// Self-Confident, or Tremere → Minor Magical Focus (certamen).
-    Fixed {
-        /// The granted point-item id.
-        item: Id,
-        /// Parameter values the grant fixes (e.g. `focus` = `certamen`).
-        #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-        params: BTreeMap<String, Id>,
-    },
-    /// A choice between a fixed set of options, e.g. Flambeau → Puissant Perdo
-    /// **or** Puissant Ignem. The player's pick is stored on the entity keyed by
-    /// `choice_key` and must be one of `options`.
-    Choice {
-        /// Stable key the entity's `house_choices` map uses for the pick.
-        choice_key: String,
-        /// The selectable options.
-        options: Vec<Selection>,
-    },
-    /// An open, player-chosen Virtue/Flaw constrained by `constraint`, e.g.
-    /// Jerbiton's free Minor Virtue, or Ex Miscellanea's Major non-Hermetic
-    /// Virtue. The pick is a full [`Selection`] stored under `choice_key`.
-    Open {
-        /// Stable key the entity's `house_choices` map uses for the pick.
-        choice_key: String,
-        /// What the open pick must satisfy.
-        constraint: GrantConstraint,
-    },
-}
-
 /// A single Hermetic House in the catalogue. Its display name and description
 /// live in `rules/i18n`, keyed by `id`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -123,7 +69,7 @@ pub struct House {
     pub lineage_type: LineageType,
     /// The free Virtue(s)/Flaw(s) this House grants at creation.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub grants: Vec<HouseGrant>,
+    pub grants: Vec<Grant>,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
@@ -142,22 +88,9 @@ pub(crate) struct HousesFile {
 }
 
 /// Derives the free-Virtue [`Selection`] rows the entity's House grants, from
-/// the stored `(house, house_choices)` choices — the single source of the
-/// derived grant model. The save never persists these resolved rows; every
-/// effect / prerequisite consumer that must "see" grants folds this list into
-/// `entity.selections` (see [`crate::effective`]), while balance and caps stay
-/// on the bought selections alone so grants are free and uncapped.
-///
-/// Resolution per grant kind:
-/// - **Fixed** → the granted item with its fixed params.
-/// - **Choice** → the player's pick keyed by `choice_key`, but only if it is one
-///   of the offered `options`; an absent or off-menu pick emits nothing (the
-///   discrepancy surfaces as a validation error, not here).
-/// - **Open** → the player's pick keyed by `choice_key`, verbatim; eligibility
-///   against the `constraint` is checked in validation, not here.
-///
-/// An entity with no House, or one naming a House absent from the ruleset,
-/// grants nothing.
+/// the stored `(house, house_choices)` choices. Thin wrapper over the shared
+/// [`crate::grant::resolve_grants`]: an entity with no House, or one naming a
+/// House absent from the ruleset, grants nothing.
 pub fn granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
     let Some(house_id) = &entity.house else {
         return Vec::new();
@@ -165,28 +98,7 @@ pub fn granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> 
     let Some(house) = ruleset.house(house_id) else {
         return Vec::new();
     };
-    house
-        .grants
-        .iter()
-        .filter_map(|grant| resolve_grant(grant, &entity.house_choices))
-        .collect()
-}
-
-/// Resolves one grant to the [`Selection`] it contributes, if any.
-fn resolve_grant(grant: &HouseGrant, choices: &BTreeMap<String, Selection>) -> Option<Selection> {
-    match grant {
-        HouseGrant::Fixed { item, params } => {
-            Some(Selection::with_params(item.clone(), params.clone()))
-        }
-        HouseGrant::Choice {
-            choice_key,
-            options,
-        } => {
-            let pick = choices.get(choice_key)?;
-            options.contains(pick).then(|| pick.clone())
-        }
-        HouseGrant::Open { choice_key, .. } => choices.get(choice_key).cloned(),
-    }
+    resolve_grants(&house.grants, &entity.house_choices)
 }
 
 #[cfg(test)]
@@ -213,69 +125,6 @@ mod tests {
             ]
         );
         assert!(LineageType::TrueLineage < LineageType::Societas);
-    }
-
-    #[test]
-    fn fixed_grant_roundtrips() {
-        let json = r#"{ "kind": "fixed", "item": "virtue.self_confident" }"#;
-        let grant: HouseGrant = serde_json::from_str(json).unwrap();
-        assert_eq!(
-            grant,
-            HouseGrant::Fixed {
-                item: Id::new("virtue.self_confident"),
-                params: BTreeMap::new(),
-            }
-        );
-        let back = serde_json::to_string(&grant).unwrap();
-        assert_eq!(serde_json::from_str::<HouseGrant>(&back).unwrap(), grant);
-    }
-
-    #[test]
-    fn fixed_grant_carries_params() {
-        let json = r#"{ "kind": "fixed", "item": "virtue.minor_magical_focus",
-                        "params": { "focus": "certamen" } }"#;
-        let HouseGrant::Fixed { item, params } = serde_json::from_str(json).unwrap() else {
-            panic!("expected a fixed grant");
-        };
-        assert_eq!(item, Id::new("virtue.minor_magical_focus"));
-        assert_eq!(params.get("focus"), Some(&Id::new("certamen")));
-    }
-
-    #[test]
-    fn choice_grant_roundtrips_with_ref_keyed_options() {
-        let json = r#"{ "kind": "choice", "choice_key": "flambeau_puissant", "options": [
-            { "ref": "virtue.puissant_art", "params": { "art": "art.perdo" } },
-            { "ref": "virtue.puissant_art", "params": { "art": "art.ignem" } }
-        ] }"#;
-        let HouseGrant::Choice {
-            choice_key,
-            options,
-        } = serde_json::from_str(json).unwrap()
-        else {
-            panic!("expected a choice grant");
-        };
-        assert_eq!(choice_key, "flambeau_puissant");
-        assert_eq!(options.len(), 2);
-        assert_eq!(options[0].item_ref, Id::new("virtue.puissant_art"));
-        assert_eq!(options[1].params.get("art"), Some(&Id::new("art.ignem")));
-    }
-
-    #[test]
-    fn open_grant_carries_constraint() {
-        let json = r#"{ "kind": "open", "choice_key": "ex_misc_major_flaw",
-            "constraint": { "kind": "flaw", "magnitude": "major", "require_categories": ["hermetic"] } }"#;
-        let HouseGrant::Open {
-            choice_key,
-            constraint,
-        } = serde_json::from_str(json).unwrap()
-        else {
-            panic!("expected an open grant");
-        };
-        assert_eq!(choice_key, "ex_misc_major_flaw");
-        assert_eq!(constraint.kind, ItemKind::Flaw);
-        assert_eq!(constraint.magnitude, Some(Magnitude::Major));
-        assert!(constraint.require_categories.contains("hermetic"));
-        assert!(constraint.forbid_categories.is_empty());
     }
 
     #[test]
@@ -323,6 +172,7 @@ mod tests {
 
     use crate::ruleset::{Ruleset, RulesetSources};
     use crate::types::{Entity, EntityKind, RulesetRef};
+    use std::collections::BTreeMap;
 
     /// Point items the grant-resolver test houses reference — enough for the
     /// `validate_house_refs` integrity check (Fixed.item + Choice.options[].ref)
@@ -362,6 +212,7 @@ mod tests {
             abilities: None,
             arts: None,
             houses: Some(GRANT_HOUSES),
+            mythic_types: None,
             characteristics: None,
         })
         .unwrap()

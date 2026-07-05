@@ -193,6 +193,10 @@ issue-house_choice_unresolved = Haus { $house } hat eine offene Spezialisierungs
 issue-house_grant_constraint = Haus { $house }: Die Wahl { $choice_key } fällt auf { $item }, was die Vorgabe nicht erfüllt.
 issue-house_unset = Ein Magus sollte einem hermetischen Haus angehören.
 issue-missing_hermetic_flaw = Ein Magus sollte mindestens einen hermetischen Fehler wählen.
+issue-mythic_type_unset = Ein mythischer Gefährte sollte einen Typ wählen.
+issue-mythic_choice_unresolved = Der mythische Gefährtentyp { $mythic_type } hat eine offene Wahl ({ $choice_key }).
+issue-mythic_grant_constraint = Mythischer Gefährtentyp { $mythic_type }: Die Wahl { $choice_key } fällt auf { $item }, was die Vorgabe nicht erfüllt.
+issue-mythic_required_trait_missing = Eine erforderliche Tugend oder ein erforderlicher Fehler (oder ein geeigneter Ersatz) fehlt: { $item }.
 
 # AppError-Arten der Tauri-Befehle.
 error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.
