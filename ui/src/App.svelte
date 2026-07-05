@@ -12,15 +12,16 @@
   import AbilityXpBar from './lib/components/AbilityXpBar.svelte';
   import ArtGrid from './lib/components/ArtGrid.svelte';
   import ArtXpBar from './lib/components/ArtXpBar.svelte';
+  import HouseSelector from './lib/components/HouseSelector.svelte';
   import BalanceBar from './lib/components/BalanceBar.svelte';
   import ValidationPanel from './lib/components/ValidationPanel.svelte';
   import SaveLoadBar from './lib/components/SaveLoadBar.svelte';
   import logoUrl from './lib/assets/logo.png';
 
-  type Tab = 'characteristics' | 'virtues_flaws' | 'abilities' | 'arts';
-  // Left-to-right: Characteristics, Virtues & Flaws, Abilities, then Arts —
-  // the Arts tab only for magi, gated on the profile's capability flag (never
-  // the type id), so any future magus-capable type gets it automatically.
+  type Tab = 'characteristics' | 'virtues_flaws' | 'abilities' | 'arts' | 'house_specialisation';
+  // Left-to-right: Characteristics, Virtues & Flaws, Abilities, then the two
+  // magus-only tabs (Arts, House) — gated on the profile's capability flag
+  // (never the type id), so any future magus-capable type gets them automatically.
   const isMagus = $derived(
     store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.is_magus ?? false,
   );
@@ -28,7 +29,12 @@
     { id: 'characteristics', key: 'tab-characteristics' },
     { id: 'virtues_flaws', key: 'tab-virtues-flaws' },
     { id: 'abilities', key: 'tab-abilities' },
-    ...(isMagus ? [{ id: 'arts' as Tab, key: 'tab-arts' }] : []),
+    ...(isMagus
+      ? [
+          { id: 'arts' as Tab, key: 'tab-arts' },
+          { id: 'house_specialisation' as Tab, key: 'tab-house-specialisation' },
+        ]
+      : []),
   ]);
   let tab = $state<Tab>('characteristics');
 
@@ -118,10 +124,14 @@
         </section>
       </div>
     </div>
-  {:else}
+  {:else if tab === 'arts'}
     <div class="vf-tab">
       <ArtXpBar />
       <ArtGrid />
+    </div>
+  {:else}
+    <div class="vf-tab">
+      <HouseSelector />
     </div>
   {/if}
 </main>

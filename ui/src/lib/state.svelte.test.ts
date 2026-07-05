@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Ability, Entity, LocalizedRuleset, PointItem } from './types';
+import type { Ability, Entity, House, LocalizedRuleset, PointItem } from './types';
 
 // The AppStore methods under test are synchronous; they only *schedule* a
 // debounced revalidate via setTimeout, which calls into the Tauri IPC bridge.
@@ -320,6 +320,125 @@ describe('art actions', () => {
     store.addSelection('virtue.puissant_art');
     store.setArtBonusTarget(0, 'art.ignem');
     expect(store.entity.selections[0].params).toEqual({ art: 'art.ignem' });
+  });
+});
+
+// --- House actions ----------------------------------------------------------
+
+// Houses exercising each grant kind: a fixed Virtue (Tytalus), a Choice between
+// two Puissant Arts (Flambeau), and an open Minor Virtue (Jerbiton).
+const HOUSES: House[] = [
+  {
+    id: 'house.tytalus',
+    lineage_type: 'societas',
+    grants: [{ kind: 'fixed', item: 'virtue.self_confident' }],
+  },
+  {
+    id: 'house.flambeau',
+    lineage_type: 'societas',
+    grants: [
+      {
+        kind: 'choice',
+        choice_key: 'flambeau_puissant',
+        options: [
+          { ref: 'virtue.puissant_art', params: { art: 'art.perdo' } },
+          { ref: 'virtue.puissant_art', params: { art: 'art.ignem' } },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'house.jerbiton',
+    lineage_type: 'societas',
+    grants: [
+      {
+        kind: 'open',
+        choice_key: 'jerbiton_virtue',
+        constraint: { kind: 'virtue', magnitude: 'minor' },
+      },
+    ],
+  },
+];
+
+/** Install a House catalogue on the already-installed ruleset. */
+function installHouses(houses: House[]): void {
+  const map: Record<string, House> = {};
+  for (const h of houses) map[h.id] = h;
+  store.ruleset!.ruleset.houses = map;
+}
+
+describe('setHouse', () => {
+  beforeEach(() => {
+    installRuleset([]);
+    installHouses(HOUSES);
+  });
+
+  it('sets the chosen house id', async () => {
+    await store.setHouse('house.flambeau');
+    expect(store.entity.house).toBe('house.flambeau');
+  });
+
+  it('clears the house and all its choices with null', async () => {
+    await store.setHouse('house.flambeau');
+    store.setHouseChoice('flambeau_puissant', {
+      ref: 'virtue.puissant_art',
+      params: { art: 'art.ignem' },
+    });
+    await store.setHouse(null);
+    expect(store.entity.house).toBeNull();
+    expect(store.entity.house_choices).toEqual({});
+  });
+
+  it('drops choices whose choice_key the new house no longer defines', async () => {
+    await store.setHouse('house.flambeau');
+    store.setHouseChoice('flambeau_puissant', {
+      ref: 'virtue.puissant_art',
+      params: { art: 'art.ignem' },
+    });
+    // Tytalus grants only a fixed Virtue — no choice keys — so the stale
+    // Flambeau pick must not linger.
+    await store.setHouse('house.tytalus');
+    expect(store.entity.house).toBe('house.tytalus');
+    expect(store.entity.house_choices).toEqual({});
+  });
+
+  it('is a no-op when the house is unchanged', async () => {
+    await store.setHouse('house.jerbiton');
+    const before = store.entity.house_choices;
+    await store.setHouse('house.jerbiton');
+    // Same reference: the second call returned early rather than re-pruning.
+    expect(store.entity.house_choices).toBe(before);
+  });
+});
+
+describe('setHouseChoice', () => {
+  it('stores a pick under the choice key', () => {
+    const pick = { ref: 'virtue.puissant_art', params: { art: 'art.ignem' } };
+    store.setHouseChoice('flambeau_puissant', pick);
+    expect(store.entity.house_choices).toEqual({ flambeau_puissant: pick });
+  });
+
+  it('replaces an existing pick for the same key', () => {
+    store.setHouseChoice('flambeau_puissant', {
+      ref: 'virtue.puissant_art',
+      params: { art: 'art.perdo' },
+    });
+    store.setHouseChoice('flambeau_puissant', {
+      ref: 'virtue.puissant_art',
+      params: { art: 'art.ignem' },
+    });
+    expect(store.entity.house_choices).toEqual({
+      flambeau_puissant: { ref: 'virtue.puissant_art', params: { art: 'art.ignem' } },
+    });
+  });
+
+  it('keeps picks for other keys independently', () => {
+    store.setHouseChoice('a', { ref: 'virtue.x' });
+    store.setHouseChoice('b', { ref: 'virtue.y' });
+    expect(store.entity.house_choices).toEqual({
+      a: { ref: 'virtue.x' },
+      b: { ref: 'virtue.y' },
+    });
   });
 });
 

@@ -74,6 +74,7 @@ tab-characteristics = Characteristics
 tab-virtues-flaws = Virtues & Flaws
 tab-abilities = Abilities
 tab-arts = Arts
+tab-house-specialisation = House
 # Ability XP summary and controls.
 xp-pool = XP pool
 xp-spent = Spent: { $spent }
@@ -99,6 +100,15 @@ art-decrement = Lower
 characteristic-increment = Raise
 characteristic-decrement = Lower
 characteristic-description-label = Description
+
+# Hermetic House selector + per-grant specialisation pickers. House display
+# names come from the rules i18n (keyed by house id), not from these chrome keys.
+house-label = House
+house-none = — None —
+# A fixed grant shown read-only (e.g. Bjornaer's Heartbeast).
+house-granted-label = Granted
+# Prompt shown as the empty option of a choice/open specialisation picker.
+house-choose-prompt = Choose…
 
 balance-virtues = Virtues: { $used } / { $budget }
 balance-flaws = Flaws: { $used } / { $budget }

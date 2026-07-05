@@ -75,6 +75,7 @@ tab-characteristics = Eigenschaften
 tab-virtues-flaws = Tugenden & Fehler
 tab-abilities = Fertigkeiten
 tab-arts = Künste
+tab-house-specialisation = Haus
 # XP-Übersicht und Bedienelemente der Fertigkeiten.
 xp-pool = XP-Vorrat
 xp-spent = Ausgegeben: { $spent }
@@ -100,6 +101,16 @@ art-decrement = Verringern
 characteristic-increment = Erhöhen
 characteristic-decrement = Verringern
 characteristic-description-label = Beschreibung
+
+# Auswahl des hermetischen Hauses + Spezialisierungs-Auswahl je Gewährung. Die
+# Anzeigenamen der Häuser stammen aus der Regel-i18n (per Haus-ID), nicht aus
+# diesen Oberflächen-Schlüsseln.
+house-label = Haus
+house-none = — Keines —
+# Eine feste Gewährung, schreibgeschützt angezeigt (z. B. Bjornaers Herztier).
+house-granted-label = Gewährt
+# Text der leeren Option einer Spezialisierungs-Auswahl.
+house-choose-prompt = Wählen…
 
 balance-virtues = Tugenden: { $used } / { $budget }
 balance-flaws = Fehler: { $used } / { $budget }
