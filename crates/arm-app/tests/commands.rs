@@ -362,6 +362,36 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
 }
 
 #[test]
+fn effective_scores_surface_house_grants_read_only() {
+    // The V/F view renders House grants read-only, so effective scores must carry
+    // the derived grant Selections without the UI re-deriving them. A Bjornaer
+    // magus is granted Heartbeast (a fixed grant), free of the point budget.
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut entity = sample_entity();
+    entity.house = Some(Id::new("house.bjornaer"));
+
+    let effective = effective_scores_loaded(&entity, &ruleset);
+    assert!(
+        effective
+            .granted_selections
+            .iter()
+            .any(|s| s.item_ref == Id::new("virtue.heartbeast")),
+        "Bjornaer's granted Heartbeast should appear in granted_selections, got {:?}",
+        effective.granted_selections
+    );
+
+    // A character with no House is granted nothing.
+    let mut houseless = sample_entity();
+    houseless.house = None;
+    assert!(
+        effective_scores_loaded(&houseless, &ruleset)
+            .granted_selections
+            .is_empty(),
+        "a character with no House has no granted selections"
+    );
+}
+
+#[test]
 fn load_entity_from_missing_path_is_io_error() {
     let err = load_entity_from_path(&repo_root().join("does/not/exist.json")).unwrap_err();
     assert!(matches!(err, AppError::Io { .. }), "got {err:?}");

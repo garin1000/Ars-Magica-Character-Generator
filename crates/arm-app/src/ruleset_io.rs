@@ -11,9 +11,9 @@ use std::collections::BTreeMap;
 
 use arm_rules::{
     AbilityBonus, AbilityFloor, ArtBonus, Characteristic, Entity, EntityKind, LocalizedRuleset,
-    RestrictedXpPool, Ruleset, RulesetSources, ValidationMode, ValidationResult, ability_bonuses,
-    ability_score_floors, art_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, validate, xp_allocation,
+    RestrictedXpPool, Ruleset, RulesetSources, Selection, ValidationMode, ValidationResult,
+    ability_bonuses, ability_score_floors, art_bonuses, characteristic_caps, characteristic_floors,
+    characteristic_points_granted, granted_selections, validate, xp_allocation,
 };
 use serde::Serialize;
 
@@ -51,6 +51,10 @@ pub struct EffectiveScores {
     /// Free starting-score floors a virtue grants to an ability (e.g. Second
     /// Sight → Second Sight 1), for the ability row's effective-score display.
     pub ability_score_floors: Vec<AbilityFloor>,
+    /// Virtue/Flaw Selections the entity's House grants (derived, never persisted),
+    /// so the V/F view renders them read-only without re-deriving. Emitted in the
+    /// House's declared grant order for a stable UI + snapshot ordering.
+    pub granted_selections: Vec<Selection>,
 }
 
 /// Computes the score effects for `entity` against a loaded ruleset.
@@ -66,6 +70,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         restricted_xp_pools: allocation.restricted,
         characteristic_points_granted: characteristic_points_granted(entity, ruleset),
         ability_score_floors: ability_score_floors(entity, ruleset),
+        granted_selections: granted_selections(entity, ruleset),
     }
 }
 
