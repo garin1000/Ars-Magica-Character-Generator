@@ -119,6 +119,28 @@ e2e: `ui/e2e/specs/houses.e2e.js`
 ## Phase 5 — Mythic Companion types & free V/F system (PLAN.md 4d)
 e2e: `ui/e2e/specs/mythic-companion.e2e.js`
 
+**Status (in progress):** engine + app plumbing DONE & committed (`cdabf2e`),
+green through `cargo tauri build --no-bundle` with an **empty** type registry
+(dormant). Done: `grant.rs` extraction (`HouseGrant`→`Grant`, shared
+`resolve_grants`/`open_pick_satisfies`); `mythic_companion.rs`
+(`MythicCompanionType`, `RequiredFlaw`, per-type `bonus_flaw_points` /
+`bonus_free_virtue_points`); ruleset registry + `validate_mythic_type_refs`;
+`Entity.mythic_type`/`mythic_choices` (schema 4→5); `effective::entity_grants`
+union; `has_mythic_type` flag; effective-budget in `validate_balance`;
+`validate_mythic_type` + issue codes + Fluent keys; `ruleset_io` load path.
+**Remaining:** (a) author the 4 types + ~16 sourced V/F + 3 abilities + en/de
+i18n + RULES.md — provenance corrections already found: **Tragic Life is `Major,
+Story` (Tainted), not Supernatural** (Core:6855); Devil Child is `Special`/free
+(Infernal:4144); Demonic Blood `Major, Supernatural, Tainted` (Infernal:4116);
+authoritative per-type packages live in the RoP "Mythic Companions: X" sections
+(Divine:3485, Faerie:6692, Magic: search "Votary"). (b) UI: `types.ts`, store
+`setMythicType`/`setMythicRequiredFlaw`/`setMythicChoice`, a
+`MythicCompanionTypeSelector.svelte` (cloned from `HouseSelector`, with a swap
+dropdown per required flaw), App `mythic_type` tab gated on `has_mythic_type`,
+Fluent chrome. (c) `mythic-companion.e2e.js`. Then set `has_mythic_type: true`
++ a `mythic_type` creation phase on the `mythic_companion` profile.
+
+
 Parallels the Magus House system (Phase 4): a Mythic Companion's *type* (Devil
 Child, Faerie Doctor, Nephilim, Spirit Votary) is a data-driven profile that
 grants a free "status" Virtue **plus** a free Minor Virtue and imposes a required
