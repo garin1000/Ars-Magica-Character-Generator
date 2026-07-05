@@ -175,6 +175,10 @@ issue-ability_bonus_dangling_target = { $item } zielt auf eine Fertigkeit, die d
 issue-unknown_art = Unbekannte Kunst: { $art }.
 issue-duplicate_art = { $art } ist { $count }-mal aufgeführt.
 issue-art_score_out_of_range = Kunst { $art } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).
+issue-house_choice_unresolved = Haus { $house } hat eine offene Spezialisierungswahl ({ $choice_key }).
+issue-house_grant_constraint = Haus { $house }: Die Wahl { $choice_key } fällt auf { $item }, was die Vorgabe nicht erfüllt.
+issue-house_unset = Ein Magus sollte einem hermetischen Haus angehören.
+issue-missing_hermetic_flaw = Ein Magus sollte mindestens einen hermetischen Fehler wählen.
 
 # AppError-Arten der Tauri-Befehle.
 error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.

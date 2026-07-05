@@ -174,6 +174,10 @@ issue-ability_bonus_dangling_target = { $item } targets an Ability the character
 issue-unknown_art = Unknown Art: { $art }.
 issue-duplicate_art = { $art } is listed { $count } times.
 issue-art_score_out_of_range = Art { $art } score { $score } is outside the allowed range (0 to { $max }).
+issue-house_choice_unresolved = House { $house } has an unresolved specialisation choice ({ $choice_key }).
+issue-house_grant_constraint = The House { $house } grant { $choice_key } picks { $item }, which does not meet its constraint.
+issue-house_unset = A magus should belong to a Hermetic House.
+issue-missing_hermetic_flaw = A magus should take at least one Hermetic Flaw.
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.
