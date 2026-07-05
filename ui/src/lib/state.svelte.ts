@@ -11,6 +11,7 @@ import type {
   EffectiveScores,
   Entity,
   LocalizedRuleset,
+  Selection,
   ValidationMode,
   ValidationResult,
 } from './types';
@@ -82,6 +83,50 @@ class AppStore {
     // immediately rather than through the debounce — mirrors setMode and avoids
     // a stale debounced result from the prior type winning the race.
     await this.revalidate();
+  }
+
+  /**
+   * Select the Hermetic House (or clear it with `null`). A discrete action, so
+   * it validates immediately like {@link setType}. Switching House drops any
+   * specialisation picks whose `choice_key` the new House no longer defines, so
+   * a stale pick from the previous House can't linger in the save; clearing the
+   * House drops them all.
+   */
+  async setHouse(house: string | null): Promise<void> {
+    if ((this.entity.house ?? null) === house) return;
+    this.entity.house = house;
+    this.entity.house_choices = this.#prunedHouseChoices(house);
+    await this.revalidate();
+  }
+
+  /**
+   * Set the specialisation pick for one of the current House's grants, keyed by
+   * the grant's `choice_key` (a menu option for a `choice` grant, or a chosen
+   * Virtue/Flaw for an `open` one). Debounced like the other picker edits.
+   */
+  setHouseChoice(choiceKey: string, selection: Selection): void {
+    this.entity.house_choices = { ...(this.entity.house_choices ?? {}), [choiceKey]: selection };
+    this.#scheduleValidate();
+  }
+
+  /** The `choice_key`s the given House's `choice`/`open` grants define. */
+  #houseChoiceKeys(house: string | null): Set<string> {
+    const keys = new Set<string>();
+    if (!house) return keys;
+    for (const grant of this.ruleset?.ruleset.houses?.[house]?.grants ?? []) {
+      if (grant.kind === 'choice' || grant.kind === 'open') keys.add(grant.choice_key);
+    }
+    return keys;
+  }
+
+  /** Existing picks kept only where the target House still defines their key. */
+  #prunedHouseChoices(house: string | null): Record<string, Selection> {
+    const valid = this.#houseChoiceKeys(house);
+    const kept: Record<string, Selection> = {};
+    for (const [key, pick] of Object.entries(this.entity.house_choices ?? {})) {
+      if (valid.has(key)) kept[key] = pick;
+    }
+    return kept;
   }
 
   /**

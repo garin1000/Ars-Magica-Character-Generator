@@ -218,12 +218,47 @@ export interface CharacteristicRules {
   base_min?: number | null;
 }
 
+// The three structural classes of Hermetic House, serialized as their
+// snake_case names. Flavor/grouping only — drives no mechanics.
+export type LineageType = 'true_lineage' | 'mystery_cult' | 'societas';
+
+// Constraint on an open, player-chosen House grant (Jerbiton's free Minor
+// Virtue, Ex Miscellanea's Major non-Hermetic Virtue). Declarative; empty
+// category lists are omitted by the engine. Mirrors the engine's `GrantConstraint`.
+export interface GrantConstraint {
+  kind: ItemKind;
+  magnitude?: Magnitude;
+  require_categories?: string[];
+  forbid_categories?: string[];
+}
+
+// One thing a House grants its magi at creation, internally tagged on `kind`.
+// `fixed` gives a set Virtue (with any fixed params); `choice` offers a menu of
+// Selections keyed by `choice_key`; `open` is a player-chosen Virtue/Flaw the
+// `constraint` bounds. Mirrors the engine's `HouseGrant`.
+export type HouseGrant =
+  | { kind: 'fixed'; item: string; params?: Record<string, string> }
+  | { kind: 'choice'; choice_key: string; options: Selection[] }
+  | { kind: 'open'; choice_key: string; constraint: GrantConstraint };
+
+// A Hermetic House. Display name/description live in the rules i18n map, keyed
+// by `id` (like Arts) — not in Fluent. Mirrors the engine's `House` (the
+// provenance `source` field is not surfaced to the UI).
+export interface House {
+  id: string;
+  lineage_type: LineageType;
+  grants?: HouseGrant[];
+}
+
 // `Ruleset` serializes its maps as JSON objects keyed by id.
 export interface Ruleset {
   id: string;
   version: string;
   point_items: Record<string, PointItem>;
   type_profiles: Record<string, EntityTypeProfile>;
+  // Present from schema with houses loaded; optional so older shapes still
+  // type-check. Keyed by House id (e.g. `house.bjornaer`).
+  houses?: Record<string, House>;
   // Present from schema with abilities/characteristics loaded; optional so older
   // shapes still type-check.
   abilities?: Record<string, Ability>;
