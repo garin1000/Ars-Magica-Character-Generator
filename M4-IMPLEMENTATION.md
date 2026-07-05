@@ -116,7 +116,52 @@ e2e: `ui/e2e/specs/houses.e2e.js`
 - [x] `HouseSelector.svelte`; selecting auto-grants the free Minor House Virtue
 - [x] e2e spec green; PLAN.md 4b box updated; gate passes
 
-## Phase 5 — Spells (PLAN.md 4c)
+## Phase 5 — Mythic Companion types & free V/F system (PLAN.md 4d)
+e2e: `ui/e2e/specs/mythic-companion.e2e.js`
+
+Parallels the Magus House system (Phase 4): a Mythic Companion's *type* (Devil
+Child, Faerie Doctor, Nephilim, Spirit Votary) is a data-driven profile that
+grants a free "status" Virtue **plus** a free Minor Virtue and imposes a required
+V/F package — the same auto-grant + free-Virtue machinery Houses already use
+(`granted_selections`, `setHouse`/`setHouseChoice`). Phase 1 shipped only the
+mythic budget ceiling (20 V / 10 F at 2:1) and deferred the free status Virtue to
+"M8 catalogue data"; this phase pulls it forward so mythic-companion input is
+genuinely complete in M4 (the milestone's own promise: "complete input for all
+character types").
+
+- [ ] Mythic-companion-type data model + registry (mirrors the House registry):
+      each type carries its free status Virtue, its free Minor Virtue, and its
+      required V/F package. Source: Core Rules.md:2635-2639
+- [ ] Free "status" Virtue: 0-cost, mutually incompatible, incompatible with The
+      Gift, forbidden to grogs (reuse the symmetric `incompatible_with` +
+      profile permitted/forbidden check). Source: Core Rules.md:2637
+- [ ] Auto-grant the type's free Minor Virtue (un-balanced, +1 → 21 V ceiling);
+      reuses the Phase-4 free-Virtue grant path. Source: Core Rules.md:2638, 2847
+- [ ] Required V/F packages count against the budget, incl. per-type bonus points
+      (e.g. Devil Child +3 V / +7 F to offset the compulsory Major Flaw; Nephilim
+      5 F required + 5 more granting 10 V). Source: Core Rules.md:2638, 2664, 2731
+- [ ] `rules/core/mythic_companion_types.json` + i18n (en, de): the 4 core types
+      with their packages; required Supernatural Virtues seeded as they exist in
+      the core V/F chapter, long tail / full effects M8 (same graceful degradation
+      as Mystery-House abilities). Source: Core Rules.md:2643-2765, 3329
+- [ ] Mythic-companion V/F guidelines: ≥1 Social Status, ≤5 Minor Flaws, ≤1 Story
+      Flaw, ≤2 Personality Flaws (≤1 Major). Source: Core Rules.md:2842-2851
+- [ ] `MythicCompanionTypeSelector.svelte` (mirrors `HouseSelector`), gated on the
+      profile — shown when the selected type is `mythic_companion`, read off the
+      profile, never a hardcoded id
+- [ ] e2e spec green; PLAN.md 4d box updated; gate passes
+
+Notes:
+- Supersedes the Phase-1 deferral ("the mythic free Minor status Virtue … is M8
+  catalogue data"): the free status/Minor Virtue mechanism lands here; only the
+  long tail of Supernatural-Virtue *effects* remains M8.
+- The ~90-xp minimum-Ability set (Core Rules.md:2639) is a *guided* constraint
+  and stays with the magus 90-xp min-ability work in M5, not here.
+- Supplement Supernatural abilities (Demonic Might, Curse-Throwing, Blood of the
+  Nephilim) whose full mechanics live in Realms of Power books are seeded
+  structurally; their in-play effects are out of scope until those sources exist.
+
+## Phase 6 — Spells (PLAN.md 4c)
 e2e: `ui/e2e/specs/spells.e2e.js`
 
 - [ ] Spell data model (T+F+level; uses Phase 2 Art registry) + spell-levels budget
@@ -124,7 +169,7 @@ e2e: `ui/e2e/specs/spells.e2e.js`
 - [ ] `SpellPicker.svelte` (add/remove, pick T+F+level), Fluent-labelled
 - [ ] e2e spec green; PLAN.md 4c box updated; gate passes
 
-## Phase 6 — Gift/supernatural rules + per-character fields (PLAN.md 4d-rest, 4e)
+## Phase 7 — Gift/supernatural rules + per-character fields (PLAN.md 4d-rest, 4e)
 e2e: `ui/e2e/specs/character-fields.e2e.js`
 
 - [ ] The Gift → one free Supernatural Ability (further ones need the Virtue)
