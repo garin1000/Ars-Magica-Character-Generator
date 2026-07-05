@@ -14,8 +14,8 @@ use crate::characteristics::Characteristic;
 use crate::house::{GrantConstraint, HouseGrant};
 use crate::ruleset::Ruleset;
 use crate::types::{
-    Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind, Magnitude,
-    ParameterDomain, PointItem, Prereq, Selection, ValidationMode,
+    CategoryCap, Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind,
+    Magnitude, ParameterDomain, PointItem, Prereq, Selection, ValidationMode,
 };
 
 /// Whether a validation issue blocks (`Error`) or merely advises (`Warning`).
@@ -64,6 +64,8 @@ impl fmt::Display for IssueSeverity {
 /// | `too_many_minor_flaws` | error | `count`, `max` |
 /// | `too_many_major_<category>_flaws`† | error or warning | `count`, `max` |
 /// | `too_many_<category>_flaws`† | error or warning | `count`, `max` |
+/// | `too_many_major_<category>_virtues`† | error or warning | `count`, `max` |
+/// | `too_many_<category>_virtues`† | error or warning | `count`, `max` |
 /// | `prereq_not_met` | error | `item` |
 /// | `prereq_unevaluated` | warning | `item` |
 /// | `incompatible` | error | `item`, `other` |
@@ -85,22 +87,28 @@ impl fmt::Display for IssueSeverity {
 /// | `characteristic_points_unspent` | warning | `cost`, `points` |
 /// | `unknown_ability` | error | `ability` |
 /// | `duplicate_ability` | error | `ability`, `count` |
-/// | `not_enough_xp` | error | `spent`, `pool` |
+/// | `not_enough_xp` | error | `spent`, `pool`, `shortfall` |
+/// | `restricted_xp_unspent` | warning | `amount`, `used`, `unspent` |
 /// | `ability_parameter_required` | error | `ability` |
 /// | `ability_score_out_of_range` | error | `ability`, `score`, `max` |
 /// | `ability_bonus_dangling_target` | error | `item`, `ability`, `parameter` |
+/// | `unknown_art` | error | `art` |
+/// | `duplicate_art` | error | `art`, `count` |
+/// | `art_score_out_of_range` | error | `art`, `score`, `max` |
 /// | `house_choice_unresolved` | error | `house`, `choice_key` |
 /// | `house_grant_constraint` | error | `house`, `choice_key`, `item` |
 /// | `house_unset` | warning | (none) |
 /// | `missing_hermetic_flaw` | warning | (none) |
 ///
-/// † The per-category flaw caps emit a code derived from the
-/// `flaw_category_caps` entry's category slug (`too_many_<category>_flaws`, or
-/// `too_many_major_<category>_flaws` when the cap is `major_only`); severity
-/// follows the cap's `hard` flag. The shipped `personality`/`story` caps thus
-/// produce `too_many_major_personality_flaws` (error),
-/// `too_many_personality_flaws` (warning), and `too_many_story_flaws`
-/// (warning); a new category requires its matching `issue-<code>` Fluent key.
+/// † The per-category caps emit a code derived from the `flaw_category_caps` /
+/// `virtue_category_caps` entry's category slug: `too_many_<category>_flaws` /
+/// `too_many_<category>_virtues` (or the `too_many_major_<category>_…` form when
+/// the cap is `major_only`); severity follows the cap's `hard` flag. The shipped
+/// `personality`/`story` flaw caps thus produce `too_many_major_personality_flaws`
+/// (error), `too_many_personality_flaws` (warning), and `too_many_story_flaws`
+/// (warning), and the magus `hermetic` virtue cap produces
+/// `too_many_major_hermetic_virtues` (error); a new category requires its
+/// matching `issue-<code>` Fluent key.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ValidationIssue {
     /// Error or warning.
@@ -110,6 +118,11 @@ pub struct ValidationIssue {
     /// `issue-over_budget_virtues`).
     pub code: String,
     /// Interpolation values for the localized message, keyed by argument name.
+    /// Always emitted, even when empty (no `skip_serializing_if`): a
+    /// `ValidationResult` is a transient frontend payload, never a git-tracked
+    /// file, so the zero-noise-diff rule does not apply; and the UI's
+    /// `issue.args` contract (spread into the Fluent interpolation) relies on the
+    /// field being a defined object rather than possibly absent.
     #[serde(default)]
     pub args: BTreeMap<String, String>,
     /// The item id this issue is about, when applicable.
@@ -549,74 +562,51 @@ fn validate_caps(
         }
     }
 
-    // --- Data-driven per-category flaw caps ---
+    // --- Data-driven per-category caps ---
     //
-    // Each cap names its flaw category as data, so the engine never hardcodes a
+    // Each cap names its category as data, so the engine never hardcodes a
     // category slug. A `hard` cap is a blocking error; otherwise a non-blocking
     // warning (the book marks the Personality/Story guidelines as
     // troupe-overridable). The issue code is derived from the category slug as
-    // `too_many_<category>_flaws` (or `too_many_major_<category>_flaws` when the
-    // cap is Major-only), so the Fluent key follows the category by convention —
-    // no slug is baked into the engine. The shipped `personality`/`story` caps
-    // thus map onto the existing Fluent keys without a hardcoded mapping.
-    for cap in &profile.budget.flaw_category_caps {
-        let n = count(&|i| {
-            i.kind == ItemKind::Flaw
-                && i.category == cap.category
-                && (!cap.major_only || i.magnitude == Magnitude::Major)
-        });
-        if n <= cap.max as usize {
-            continue;
-        }
-
-        let code = if cap.major_only {
-            format!("too_many_major_{}_flaws", cap.category)
-        } else {
-            format!("too_many_{}_flaws", cap.category)
-        };
-        let cap_args = count_args(n, cap.max);
-
-        if cap.hard {
-            issues.push(ValidationIssue::error(&code, cap_args, None));
-        } else {
-            issues.push(ValidationIssue::warning(&code, cap_args, None));
-        }
-    }
-
-    // --- Data-driven per-category *virtue* caps ---
-    //
-    // Same shape as the flaw caps above but counts `Virtue`-kind items. The
-    // magus type's `≤1 Major Hermetic Virtue` rule lives here as data. Counts
-    // `entity.selections` only, so House-granted Virtues (which never enter the
-    // bought list) are exempt — Bjornaer's Major Hermetic Heartbeast cannot
-    // trip this cap. The code is derived as `too_many_<category>_virtues` (or
-    // `too_many_major_<category>_virtues` when Major-only), matching the Fluent
-    // key by convention with no slug baked into the engine.
+    // `too_many_<category>_<noun>` (or `too_many_major_<category>_<noun>` when
+    // the cap is Major-only), so the Fluent key follows the category by
+    // convention — no slug is baked into the engine. Counts `entity.selections`
+    // only, so House-granted items (which never enter the bought list) are
+    // exempt — Bjornaer's Major Hermetic Heartbeast cannot trip a virtue cap.
     //
     // Source: Ars Magica - Definitive Edition (Core Rules).md:2855-2861.
-    for cap in &profile.budget.virtue_category_caps {
-        let n = count(&|i| {
-            i.kind == ItemKind::Virtue
-                && i.category == cap.category
-                && (!cap.major_only || i.magnitude == Magnitude::Major)
-        });
-        if n <= cap.max as usize {
-            continue;
-        }
+    let mut push_category_cap_issues = |caps: &[CategoryCap], kind: ItemKind, noun: &str| {
+        for cap in caps {
+            let n = count(&|i| {
+                i.kind == kind
+                    && i.category == cap.category
+                    && (!cap.major_only || i.magnitude == Magnitude::Major)
+            });
+            if n <= cap.max as usize {
+                continue;
+            }
 
-        let code = if cap.major_only {
-            format!("too_many_major_{}_virtues", cap.category)
-        } else {
-            format!("too_many_{}_virtues", cap.category)
-        };
-        let cap_args = count_args(n, cap.max);
+            let code = if cap.major_only {
+                format!("too_many_major_{}_{}", cap.category, noun)
+            } else {
+                format!("too_many_{}_{}", cap.category, noun)
+            };
+            let cap_args = count_args(n, cap.max);
 
-        if cap.hard {
-            issues.push(ValidationIssue::error(&code, cap_args, None));
-        } else {
-            issues.push(ValidationIssue::warning(&code, cap_args, None));
+            if cap.hard {
+                issues.push(ValidationIssue::error(&code, cap_args, None));
+            } else {
+                issues.push(ValidationIssue::warning(&code, cap_args, None));
+            }
         }
-    }
+    };
+
+    push_category_cap_issues(&profile.budget.flaw_category_caps, ItemKind::Flaw, "flaws");
+    push_category_cap_issues(
+        &profile.budget.virtue_category_caps,
+        ItemKind::Virtue,
+        "virtues",
+    );
 }
 
 /// Validates a magus's Hermetic House and its specialisation picks. Runs only
@@ -1035,6 +1025,14 @@ fn validate_permitted_categories(
     }
 
     for selection in &entity.selections {
+        // The profile's own gift is governed solely by `validate_gift_policy`
+        // (required/allowed/forbidden). Exempt it here: it is contradictory for a
+        // profile to mandate a trait via `gift_policy` yet reject its category
+        // (The Gift is `special`), so gifted profiles need not whitelist it.
+        if profile.gift_id.as_ref() == Some(&selection.item_ref) {
+            continue;
+        }
+
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
@@ -1184,9 +1182,11 @@ fn validate_forbidden_traits(
 }
 
 /// Validates that each selection of a parameterized item supplies exactly the
-/// declared parameter keys (no missing, no extra). Param values are accepted
-/// as-is for `ability`/`art` domains (no registry yet); `item`-domain values
-/// are resolved against the ruleset's point items.
+/// declared parameter keys (no missing, no extra) and that each provided value
+/// resolves against its domain's registry: `item` → point items, `ability` →
+/// the ability catalogue, `art` → the art catalogue, `characteristic` →
+/// [`Characteristic::from_id`]. A value that does not resolve emits
+/// `unknown_param_value`.
 fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
     for selection in &entity.selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
@@ -2298,6 +2298,67 @@ mod tests {
             "a Minor Virtue pick must satisfy the Open grant: {:?}",
             result.issues
         );
+    }
+
+    #[test]
+    fn open_pick_satisfies_rejects_every_way_a_pick_can_violate_its_constraint() {
+        use std::collections::BTreeSet;
+        let rs = rs_for_house_validation();
+        // Baseline: a Minor Virtue (self_confident, category "general") satisfies
+        // a Minor-Virtue constraint whose allow-list includes its category.
+        let ok = GrantConstraint {
+            kind: ItemKind::Virtue,
+            magnitude: Some(Magnitude::Minor),
+            require_categories: BTreeSet::from(["general".to_string()]),
+            forbid_categories: BTreeSet::new(),
+        };
+        assert!(open_pick_satisfies(&sel("virtue.self_confident"), &ok, &rs));
+
+        // 1. Unresolvable pick: the item id is not in the ruleset.
+        assert!(!open_pick_satisfies(
+            &sel("virtue.does_not_exist"),
+            &ok,
+            &rs
+        ));
+
+        // 2. Wrong kind: a Virtue pick against a Flaw constraint.
+        let wants_flaw = GrantConstraint {
+            kind: ItemKind::Flaw,
+            magnitude: None,
+            require_categories: BTreeSet::new(),
+            forbid_categories: BTreeSet::new(),
+        };
+        assert!(!open_pick_satisfies(
+            &sel("virtue.self_confident"),
+            &wants_flaw,
+            &rs
+        ));
+
+        // 3. Category absent from a non-empty require list.
+        let wants_hermetic = GrantConstraint {
+            kind: ItemKind::Virtue,
+            magnitude: None,
+            require_categories: BTreeSet::from(["hermetic".to_string()]),
+            forbid_categories: BTreeSet::new(),
+        };
+        assert!(!open_pick_satisfies(
+            &sel("virtue.self_confident"),
+            &wants_hermetic,
+            &rs
+        ));
+
+        // 4. Category on the forbid list.
+        let forbids_general = GrantConstraint {
+            kind: ItemKind::Virtue,
+            magnitude: None,
+            require_categories: BTreeSet::new(),
+            forbid_categories: BTreeSet::from(["general".to_string()]),
+        };
+        assert!(!open_pick_satisfies(
+            &sel("virtue.self_confident"),
+            &forbids_general,
+            &rs
+        ));
     }
 
     #[test]
@@ -4693,6 +4754,35 @@ mod tests {
 
         let result = validate(&entity, &rs);
         assert!(!codes(&result).contains(&"wrong_entity_kind".to_string()));
+    }
+
+    #[test]
+    fn profile_mandated_gift_is_exempt_from_permitted_categories() {
+        // Regression: a profile that REQUIRES The Gift (via gift_policy) but does
+        // not list the Gift's `special` category in permitted_categories must not
+        // reject the very trait it mandates. The Gift is governed solely by
+        // validate_gift_policy; the category check exempts the profile's gift_id.
+        let items = r#"[
+          {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]}
+        ]"#;
+        let types = r#"[{
+          "id": "magus_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general", "hermetic"],
+          "is_magus": true,
+          "gift_policy": "required",
+          "gift_id": "virtue.the_gift",
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity("magus_type", vec![sel("virtue.the_gift")]);
+
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&"category_not_permitted".to_string()),
+            "a profile's mandated gift must be exempt from the category check: {:?}",
+            codes(&result)
+        );
     }
 
     #[test]

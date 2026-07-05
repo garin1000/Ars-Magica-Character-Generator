@@ -170,9 +170,10 @@ impl fmt::Display for ItemKind {
 /// Recursive boolean expression tree for prerequisites.
 /// All = AND, Any = OR, Nor = NOR (none may be present; serde tag `"none"`).
 ///
-/// `House`, `AbilityMin`, and `ArtMin` reference IDs (house / ability / art)
-/// for which no registry yet exists; those refs are intentionally NOT checked
-/// for referential integrity (see [`crate::ruleset::Ruleset::validate_integrity`]).
+/// `Has`, `House`, `AbilityMin`, and `ArtMin` reference IDs that ARE checked for
+/// referential integrity at load: each must resolve against its registry (point
+/// items / houses / abilities / arts) or the ruleset fails to load
+/// (see [`crate::ruleset::Ruleset::validate_integrity`]).
 ///
 /// # JSON shape
 ///
@@ -210,8 +211,10 @@ pub enum Prereq {
     Nor(Vec<Prereq>),
     /// The entity must have the referenced item selected.
     Has(Id),
-    /// The entity must belong to the referenced house. Currently unevaluable
-    /// (the entity carries no house metadata yet).
+    /// The entity must belong to the referenced house. Evaluated against the
+    /// entity's own house: a matching house satisfies it, a different house does
+    /// not, and no house at all (a non-magus, or a magus who has not picked one)
+    /// is genuinely unknown.
     House(Id),
     /// The entity must have the referenced ability at or above the given score.
     /// Evaluated against the entity's effective ability score (bought score
@@ -219,7 +222,8 @@ pub enum Prereq {
     /// lacks counts as 0.
     AbilityMin { ability: Id, score: u8 },
     /// The entity must have the referenced art at or above the given score.
-    /// Currently unevaluable (no art scores on the entity yet).
+    /// Evaluated against the entity's max effective Art score (bought score plus
+    /// virtue bonuses such as Puissant Art); an art the entity lacks counts as 0.
     ArtMin { art: Id, score: u8 },
     /// The entity must be a magus. Evaluated against the type profile's
     /// explicit `is_magus` flag.
@@ -244,15 +248,18 @@ impl fmt::Display for ParamType {
 
 /// The domain a parameter value's [`Id`] must belong to.
 ///
-/// `Ability` and `Art` have no in-engine registry yet, so values in those
-/// domains are accepted without referential-integrity checks. `Item` resolves
-/// against the ruleset's point-item registry.
+/// Every domain is resolved when a selection's parameter values are validated:
+/// `Item` against the point-item registry, `Ability` against the ability
+/// catalogue, `Art` against the art catalogue, and `Characteristic` by parsing
+/// into [`crate::characteristics::Characteristic`]. A value that does not resolve
+/// raises `unknown_param_value` (see `validation::validate_parameters`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ParameterDomain {
-    /// Value is an ability id (e.g. `ability.awareness`). No registry yet.
+    /// Value is an ability id (e.g. `ability.awareness`); resolved against the
+    /// ability catalogue.
     Ability,
-    /// Value is an art id (e.g. `art.creo`). No registry yet.
+    /// Value is an art id (e.g. `art.creo`); resolved against the art catalogue.
     Art,
     /// Value is a characteristic id (e.g. `characteristic.str`). Validated by
     /// parsing into [`crate::characteristics::Characteristic`], not a registry.
@@ -262,8 +269,10 @@ pub enum ParameterDomain {
 }
 
 impl ParameterDomain {
-    /// Returns `true` if values in this domain are resolved against the
-    /// ruleset's point-item registry. `Ability` and `Art` have no registry yet.
+    /// Returns `true` if values in this domain resolve against the ruleset's
+    /// point-item registry specifically (i.e. `Item`). Other domains resolve
+    /// against their own registries (ability / art catalogue, Characteristic
+    /// parsing); see `validation::validate_parameters`.
     pub fn resolves_against_items(self) -> bool {
         matches!(self, ParameterDomain::Item)
     }
@@ -813,7 +822,7 @@ pub struct Entity {
     /// The entity type profile id (e.g. `companion`).
     pub type_id: Id,
     /// The user's virtue/flaw selections. Kept sorted via [`Entity::normalize`].
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub selections: Vec<Selection>,
     /// Chosen Characteristic scores (point-buy). Defaults to empty.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]

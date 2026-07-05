@@ -33,9 +33,9 @@ use crate::types::{
 /// Serialized whole as a Tauri command return value, so the frontend binds
 /// directly to these top-level field names — they are a **stable public
 /// contract**; renaming any silently breaks the TS consumer with no Rust error.
-/// The data maps (`point_items`, `type_profiles`, `abilities`,
-/// `characteristic_rules`) serialize as JSON objects keyed by id; `advancement`
-/// is a bare array (see [`AdvancementTable`]):
+/// The data maps (`point_items`, `type_profiles`, `abilities`, `arts`,
+/// `houses`, `characteristic_rules`) serialize as JSON objects keyed by id;
+/// `advancement` / `art_advancement` are bare arrays (see [`AdvancementTable`]):
 ///
 /// ```json
 /// {
@@ -47,7 +47,11 @@ use crate::types::{
 ///   "advancement": [ { "score": 1, "total_xp": 5 } ],
 ///   "characteristic_rules": { /* CharacteristicRules */ },
 ///   "magnitude_points": { "free": 0, "minor": 1, "major": 3 },
-///   "ability_category_order": [ "general", "academic", "arcane", "martial", "supernatural" ]
+///   "ability_category_order": [ "general", "academic", "arcane", "martial", "supernatural" ],
+///   "arts": { "art.creo": { /* Art */ } },
+///   "art_advancement": [ { "score": 1, "total_xp": 1 } ],
+///   "art_type_order": [ "technique", "form" ],
+///   "houses": { "house.bonisagus": { /* House */ } }
 /// }
 /// ```
 ///
@@ -385,6 +389,11 @@ impl From<IntegrityError> for RulesetError {
 
 /// On-disk shape of `rules/core/abilities.json`: the advancement table plus the
 /// ability catalogue. Both default to empty so `"{}"` is a valid empty file.
+/// Internal deserialize-only wrapper, like the sibling arts/houses file shapes:
+/// never part of the crate's public API (consumers see the assembled
+/// [`Ruleset`], not raw file shapes). Kept module-private here because — unlike
+/// `ArtsFile`/`HousesFile`, which live in their catalogue modules and are read
+/// across the module boundary — it is parsed only within this module.
 #[derive(Deserialize)]
 struct AbilitiesFile {
     #[serde(default)]
@@ -651,6 +660,13 @@ impl Ruleset {
     /// ruleset's own maps are already id-ordered (`BTreeMap`); this is the single
     /// runtime entry point that normalizes the nested item data
     /// (see [`crate::types::PointItem::normalize`]).
+    ///
+    /// The `houses` catalogue is intentionally exempt: a `House`'s `grants`
+    /// (and each `HouseGrant::Choice`'s `options`) are order-significant authored
+    /// data — like `creation_phases` — sourced from the already-canonical,
+    /// pipeline-generated `rules/core/houses.json`, and the assembled `Ruleset`
+    /// is only ever a transient frontend payload, never written back to disk. So
+    /// there is no canonical-write to normalize for and no `House::normalize`.
     pub fn normalize(&mut self) {
         for item in self.point_items.values_mut() {
             item.normalize();
@@ -964,8 +980,22 @@ impl Ruleset {
                     }
                     continue;
                 }
-                // No parameter to resolve: eligibility/amount are intrinsic.
-                Effect::RestrictedAbilityXp { .. } | Effect::CharacteristicPoints { .. } => {
+                // Fixed eligibility list: validate each named ability id
+                // resolves, like AbilityScoreGrant.ability and AbilityMin. The
+                // eligible categories are a loose namespace matched at eval, not
+                // a registry, so they are not checked here.
+                Effect::RestrictedAbilityXp { abilities, .. } => {
+                    for ability in abilities {
+                        if !self.abilities.contains_key(ability) {
+                            errors.push(format!(
+                                "{id}: effect 'restricted_ability_xp' references unknown ability '{ability}'"
+                            ));
+                        }
+                    }
+                    continue;
+                }
+                // No parameter or ref to resolve: the point grant is intrinsic.
+                Effect::CharacteristicPoints { .. } => {
                     continue;
                 }
             };
@@ -1219,6 +1249,37 @@ mod tests {
         })
         .unwrap();
         assert_eq!(none.house_count(), 0);
+    }
+
+    #[test]
+    fn from_sources_exposes_the_art_catalogue_accessors() {
+        const VALID_ARTS: &str = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 1 },
+            { "score": 2, "total_xp": 3 }
+          ],
+          "arts": [
+            { "id": "art.creo", "art_type": "technique" },
+            { "id": "art.ignem", "art_type": "form" }
+          ]
+        }"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: Some(VALID_ARTS),
+            houses: None,
+            characteristics: None,
+        })
+        .unwrap();
+        assert_eq!(rs.art_count(), 2);
+        assert!(rs.art(&Id::new("art.creo")).is_some());
+        assert!(rs.art(&Id::new("art.missing")).is_none());
+        assert_eq!(rs.arts().count(), 2);
+        // The Art advancement table loads independently of the Ability table.
+        assert_eq!(rs.art_advancement().xp_for_score(2), Some(3));
     }
 
     #[test]
@@ -1608,6 +1669,30 @@ mod tests {
         let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("unknown parameter 'ability'"), "{msg}");
+    }
+
+    #[test]
+    fn restricted_ability_xp_referencing_unknown_ability_is_rejected() {
+        let items = r#"[{
+          "id": "virtue.educated",
+          "kind": "virtue",
+          "magnitude": "minor",
+          "category": "general",
+          "entity_kinds": ["character"],
+          "effects": [{ "type": "restricted_ability_xp", "amount": 50,
+                        "abilities": ["ability.latin", "ability.does_not_exist"] }]
+        }]"#;
+        let abilities = r#"{ "advancement": [{ "score": 1, "total_xp": 5 }],
+          "abilities": [{ "id": "ability.latin", "category": "academic" }] }"#;
+        // The restricted pool's eligibility list names a non-existent ability;
+        // like AbilityScoreGrant.ability and AbilityMin, it must fail at load.
+        let err =
+            Ruleset::from_json_with_abilities("test", "1", items, "[]", abilities).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("unknown ability 'ability.does_not_exist'"),
+            "{msg}"
+        );
     }
 
     #[test]
