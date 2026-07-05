@@ -118,12 +118,15 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     let abilities_json = fs::read_to_string(rules_dir.join("core/abilities.json"))?;
     let arts_json = fs::read_to_string(rules_dir.join("core/arts.json"))?;
     let houses_json = fs::read_to_string(rules_dir.join("core/houses.json"))?;
+    let mythic_types_json = fs::read_to_string(rules_dir.join("core/mythic_companion_types.json"))?;
     let characteristics_json = fs::read_to_string(rules_dir.join("core/characteristics.json"))?;
 
     let vf_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/virtues_flaws.json")))?;
     let ability_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/abilities.json")))?;
     let art_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/arts.json")))?;
     let house_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/houses.json")))?;
+    let mythic_i18n =
+        fs::read_to_string(rules_dir.join(format!("i18n/{lang}/mythic_companion_types.json")))?;
 
     let ruleset = Ruleset::from_sources(RulesetSources {
         id: RULESET_ID,
@@ -133,13 +136,22 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         abilities: Some(&abilities_json),
         arts: Some(&arts_json),
         houses: Some(&houses_json),
+        mythic_types: Some(&mythic_types_json),
         // An empty characteristics file means the ruleset ships no characteristic
         // rules (the `Option` is the engine's honest "absent" signal).
         characteristics: (!characteristics_json.is_empty())
             .then_some(characteristics_json.as_str()),
     })?;
-    let localized =
-        LocalizedRuleset::from_merged(ruleset, &[&vf_i18n, &ability_i18n, &art_i18n, &house_i18n])?;
+    let localized = LocalizedRuleset::from_merged(
+        ruleset,
+        &[
+            &vf_i18n,
+            &ability_i18n,
+            &art_i18n,
+            &house_i18n,
+            &mythic_i18n,
+        ],
+    )?;
     Ok(localized)
 }
 

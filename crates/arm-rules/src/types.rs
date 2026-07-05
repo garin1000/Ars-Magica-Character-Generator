@@ -690,6 +690,13 @@ pub struct EntityTypeProfile {
     /// magus. Drives `Prereq::IsMagus`. Defaults to false.
     #[serde(default, skip_serializing_if = "is_false")]
     pub is_magus: bool,
+    /// Whether this character type chooses a Mythic Companion *type* (which
+    /// confers a free status/Minor Virtue and a required V/F package). A
+    /// capability flag parallel to `is_magus`; the type selector and
+    /// `validate_mythic_type` read it, never a hardcoded type id. Defaults to
+    /// false.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub has_mythic_type: bool,
     /// Whether The Gift is required/allowed/forbidden. `None` = not applicable
     /// (e.g. covenants).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -861,10 +868,24 @@ pub struct Entity {
     /// resolver reads these to emit the granted selections.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub house_choices: BTreeMap<String, Selection>,
+    /// The Mythic Companion type this entity is (mythic companions only). The
+    /// save stores only the choice; the free status/Minor Virtue is derived at
+    /// eval time, never persisted (honors "saves store choices, not resolved
+    /// values"). `None` for non-mythic-companions and for one not yet chosen.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mythic_type: Option<Id>,
+    /// The Mythic Companion type's grant picks, keyed by each grant's
+    /// `choice_key` (e.g. Devil Child's Demonic Might-or-Powers choice). Empty
+    /// when the type has no player choices. The derived grant resolver reads
+    /// these to emit the granted selections. Parallel to `house_choices`; the two
+    /// are mutually exclusive by profile (a character is a magus or a mythic
+    /// companion, never both).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub mythic_choices: BTreeMap<String, Selection>,
 }
 
 /// Current save-format schema version.
-pub const SCHEMA_VERSION: u32 = 4;
+pub const SCHEMA_VERSION: u32 = 5;
 
 impl Entity {
     /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
@@ -883,6 +904,8 @@ impl Entity {
             art_scores: Vec::new(),
             house: None,
             house_choices: BTreeMap::new(),
+            mythic_type: None,
+            mythic_choices: BTreeMap::new(),
         }
     }
 
@@ -1354,13 +1377,15 @@ mod tests {
             }],
             house: None,
             house_choices: BTreeMap::new(),
+            mythic_type: None,
+            mythic_choices: BTreeMap::new(),
         };
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 4"#));
+        assert!(json.contains(r#""schema_version": 5"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -1385,6 +1410,8 @@ mod tests {
             art_scores: Vec::new(),
             house: None,
             house_choices: BTreeMap::new(),
+            mythic_type: None,
+            mythic_choices: BTreeMap::new(),
         };
 
         // Serialization is canonical only after normalize(); derive-based

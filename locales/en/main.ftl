@@ -191,6 +191,10 @@ issue-house_choice_unresolved = House { $house } has an unresolved specialisatio
 issue-house_grant_constraint = The House { $house } grant { $choice_key } picks { $item }, which does not meet its constraint.
 issue-house_unset = A magus should belong to a Hermetic House.
 issue-missing_hermetic_flaw = A magus should take at least one Hermetic Flaw.
+issue-mythic_type_unset = A Mythic Companion should choose a type.
+issue-mythic_choice_unresolved = The Mythic Companion type { $mythic_type } has an unresolved choice ({ $choice_key }).
+issue-mythic_grant_constraint = The Mythic Companion type { $mythic_type } grant { $choice_key } picks { $item }, which does not meet its constraint.
+issue-mythic_required_trait_missing = A required Virtue or Flaw (or a suitable substitute) is missing: { $item }.
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.
