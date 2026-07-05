@@ -1,6 +1,11 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { abilityDisplayName, displayName } from '../derive';
+  import {
+    abilityDisplayName,
+    displayName,
+    grantedSelectionsForSide,
+    mandatoryTraitRefs,
+  } from '../derive';
   import { reserveTagSpace, tooltip, type TooltipContent } from '../actions';
   import type { ItemKind } from '../types';
   import ParameterPicker from './ParameterPicker.svelte';
@@ -21,6 +26,20 @@
         const item = store.ruleset?.ruleset.point_items[selection.ref];
         return item ? kinds.includes(item.kind) : false;
       }),
+  );
+
+  // Traits the character type mandates (a magus's The Gift + Hermetic Magus):
+  // auto-selected, shown with a "Required" marker and no remove button.
+  const mandatory = $derived(
+    mandatoryTraitRefs(store.ruleset?.ruleset.type_profiles[store.entity.type_id]),
+  );
+
+  // House-granted rows on this side (e.g. Bonisagus → Puissant Magic Theory):
+  // derived at eval, not stored, so they show read-only below the chosen ones.
+  const granted = $derived(
+    store.ruleset
+      ? grantedSelectionsForSide(store.ruleset, store.effective?.granted_selections, side)
+      : [],
   );
 
   function hint(key: string): string {
@@ -56,47 +75,72 @@
   }
 </script>
 
+<!-- `marker` is `string | undefined` rather than optional (`marker?`): the `?:`
+     optional-param token in an inline snippet signature breaks the production
+     Svelte build (svelte-check tolerates it). Both call sites pass all three. -->
+{#snippet nameWrap(
+  ref: string,
+  params: Record<string, string> | undefined,
+  marker: string | undefined,
+)}
+  {@const item = store.ruleset?.ruleset.point_items[ref]}
+  <span class="name-wrap" use:reserveTagSpace use:tooltip={tip(ref)}>
+    {#if item}
+      <span class="badges">
+        <span class="badge type">{store.t(`category-${item.category}`)}</span>
+        <span class="badge">{store.t(`magnitude-${item.magnitude}`)}</span>
+        {#if marker}
+          <span class="badge granted">{marker}</span>
+        {/if}
+      </span>
+    {/if}
+    <span class="item-name">
+      {store.ruleset
+        ? displayName(store.ruleset, ref, params, hint, (_key, value) =>
+            resolveParamValue(params, value),
+          )
+        : ref}
+    </span>
+  </span>
+{/snippet}
+
 <section class="panel">
   <h2>{store.t(titleKey)}</h2>
-  {#if selections.length === 0}
+  {#if selections.length === 0 && granted.length === 0}
     <p class="muted">{store.t('empty-selections-side')}</p>
   {:else}
     <ul class="selection-list" data-testid="selection-list-{side}">
       {#each selections as { selection, index } (index)}
         {@const item = store.ruleset?.ruleset.point_items[selection.ref]}
+        {@const required = mandatory.has(selection.ref)}
         <li>
           <div class="selection-row">
-            <span class="name-wrap" use:reserveTagSpace use:tooltip={tip(selection.ref)}>
-              {#if item}
-                <span class="badges">
-                  <span class="badge type">{store.t(`category-${item.category}`)}</span>
-                  <span class="badge">{store.t(`magnitude-${item.magnitude}`)}</span>
-                </span>
-              {/if}
-              <span class="item-name">
-                {store.ruleset
-                  ? displayName(
-                      store.ruleset,
-                      selection.ref,
-                      selection.params,
-                      hint,
-                      (_key, value) => resolveParamValue(selection.params, value),
-                    )
-                  : selection.ref}
-              </span>
-            </span>
-            <button
-              type="button"
-              class="icon-btn"
-              onclick={() => store.removeSelectionAt(index)}
-              data-testid="remove-{selection.ref}-{index}"
-            >
-              −
-            </button>
+            {@render nameWrap(
+              selection.ref,
+              selection.params,
+              required ? store.t('selection-required-label') : undefined,
+            )}
+            {#if !required}
+              <button
+                type="button"
+                class="icon-btn"
+                onclick={() => store.removeSelectionAt(index)}
+                data-testid="remove-{selection.ref}-{index}"
+              >
+                −
+              </button>
+            {/if}
           </div>
           {#if item?.parameters && item.parameters.length > 0}
             <ParameterPicker {selection} {index} params={item.parameters} />
           {/if}
+        </li>
+      {/each}
+      {#each granted as grant (grant.ref)}
+        <li data-testid="granted-selection-{grant.ref}">
+          <div class="selection-row">
+            {@render nameWrap(grant.ref, grant.params, store.t('house-granted-label'))}
+          </div>
         </li>
       {/each}
     </ul>

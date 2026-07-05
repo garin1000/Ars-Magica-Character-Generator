@@ -12,7 +12,7 @@ pub mod types;
 pub mod validation;
 
 pub use ability::{Ability, AbilityCategory, AbilityXpRow, AdvancementTable};
-pub use art::{Art, ArtType, ArtsFile};
+pub use art::{Art, ArtType};
 pub use characteristics::{Characteristic, CharacteristicCost, CharacteristicRules};
 pub use effective::{
     AbilityBonus, AbilityFloor, ArtBonus, RestrictedXpPool, XpAllocation, ability_bonus,
@@ -21,7 +21,7 @@ pub use effective::{
     characteristic_points_granted, effective_ability_score, effective_art_score,
     restricted_xp_pools, xp_allocation,
 };
-pub use house::{GrantConstraint, House, HouseGrant, HousesFile, LineageType, granted_selections};
+pub use house::{GrantConstraint, House, HouseGrant, LineageType, granted_selections};
 pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError, RulesetSources};
 pub use types::{
     AbilityScore, ArtScore, CategoryCap, Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy,

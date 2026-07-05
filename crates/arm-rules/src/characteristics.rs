@@ -130,7 +130,7 @@ pub struct CharacteristicRules {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub effective_max: Option<i8>,
     /// The lowest base score reachable once Poor (Characteristic) lowers the
-    /// floor (the "−5" ceiling). `None` falls back to the table minimum. Source:
+    /// floor (the "−5" floor). `None` falls back to the table minimum. Source:
     /// Core Rules.md:6598-6600.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub effective_min: Option<i8>,

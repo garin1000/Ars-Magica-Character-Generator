@@ -65,9 +65,13 @@ pub struct Art {
 }
 
 /// The on-disk shape of `rules/core/arts.json`: the Art-XP advancement table and
-/// the Art catalogue, mirroring the abilities file.
+/// the Art catalogue, mirroring the abilities file. Internal deserialize-only
+/// wrapper (`pub(crate)`): parsed by [`crate::ruleset`] at load, never part of
+/// the crate's public API — consumers see the assembled [`crate::Ruleset`], not
+/// the raw file shapes. Matches the visibility of the sibling abilities/houses
+/// file wrappers.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-pub struct ArtsFile {
+pub(crate) struct ArtsFile {
     /// The "ART To Buy" advancement table (triangular costs).
     #[serde(default)]
     pub advancement: AdvancementTable,

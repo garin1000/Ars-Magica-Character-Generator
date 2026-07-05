@@ -129,9 +129,13 @@ pub struct House {
     pub source: Option<SourceRef>,
 }
 
-/// The on-disk shape of `rules/core/houses.json`: the House catalogue.
+/// The on-disk shape of `rules/core/houses.json`: the House catalogue. Internal
+/// deserialize-only wrapper (`pub(crate)`): parsed by [`crate::ruleset`] at
+/// load, never part of the crate's public API — consumers see the assembled
+/// [`crate::Ruleset`], not the raw file shapes. Matches the visibility of the
+/// sibling abilities/arts file wrappers.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-pub struct HousesFile {
+pub(crate) struct HousesFile {
     /// The twelve core Houses.
     #[serde(default)]
     pub houses: Vec<House>,

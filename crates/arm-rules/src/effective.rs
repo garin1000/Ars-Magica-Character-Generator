@@ -35,7 +35,10 @@ use std::collections::{BTreeMap, VecDeque};
 /// `entity.selections` so House grants are free of the point budget and exempt
 /// from the count caps (a granted Major Hermetic Virtue cannot trip the
 /// `≤1 Major Hermetic Virtue` cap).
-pub fn selections_for_effects<'a>(entity: &'a Entity, ruleset: &Ruleset) -> Cow<'a, [Selection]> {
+pub(crate) fn selections_for_effects<'a>(
+    entity: &'a Entity,
+    ruleset: &Ruleset,
+) -> Cow<'a, [Selection]> {
     let granted = crate::house::granted_selections(entity, ruleset);
     if granted.is_empty() {
         Cow::Borrowed(&entity.selections)
@@ -157,7 +160,7 @@ pub fn effective_ability_score(
 /// abilities are plain (single-instance), so only the parameter-less instance
 /// receives the floor. Grants do not stack — a higher grant wins — so this is a
 /// `max`, not a sum, and it costs no experience (see [`crate::validation`]).
-pub fn granted_ability_floor(
+pub(crate) fn granted_ability_floor(
     entity: &Entity,
     ruleset: &Ruleset,
     ability: &Id,
@@ -411,13 +414,15 @@ pub(crate) fn charged_cost(table_xp: u32, affinity: Option<(u8, u8)>) -> u32 {
 }
 
 /// Of several Affinity multipliers on one target, the one giving the greatest
-/// cost reduction (largest `den/num`). Affinities do not stack, so the single
-/// most generous wins. Compares `d1/n1` vs `d2/n2` as `d1·n2` vs `d2·n1`.
+/// cost reduction. Affinities do not stack, so the single most generous wins.
+/// A score "counts as `num/den` of itself", charged `table·den/num`, so a larger
+/// `num/den` is cheaper — the most generous is `max(num/den)`. Compares
+/// `n1/d1` vs `n2/d2` as `n1·d2` vs `n2·d1` to stay in integer arithmetic.
 fn best_affinity(multipliers: impl Iterator<Item = (u8, u8)>) -> Option<(u8, u8)> {
     multipliers.reduce(|a, b| {
         let (an, ad) = (u32::from(a.0), u32::from(a.1));
         let (bn, bd) = (u32::from(b.0), u32::from(b.1));
-        if ad * bn >= bd * an { a } else { b }
+        if an * bd >= bn * ad { a } else { b }
     })
 }
 
@@ -439,6 +444,8 @@ fn ability_affinity(
         let item = ruleset.point_items.get(&selection.item_ref);
         item.into_iter()
             .flat_map(|item| &item.effects)
+            // Exhaustive match so adding an Effect variant is a compile error
+            // here, not a silently-ignored cost reduction.
             .filter_map(move |effect| match effect {
                 Effect::AffinityAbilityCost {
                     param,
@@ -451,7 +458,15 @@ fn ability_affinity(
                     };
                     matches.then_some((*counts_as_num, *counts_as_den))
                 }
-                _ => None,
+                // Not an Affinity for this ability instance; no reduction here.
+                Effect::AffinityAbilityCost { .. }
+                | Effect::AbilityBonus { .. }
+                | Effect::CharacteristicLimit { .. }
+                | Effect::ArtBonus { .. }
+                | Effect::AffinityArtCost { .. }
+                | Effect::RestrictedAbilityXp { .. }
+                | Effect::CharacteristicPoints { .. }
+                | Effect::AbilityScoreGrant { .. } => None,
             })
     });
     best_affinity(found)
@@ -465,6 +480,8 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
         let item = ruleset.point_items.get(&selection.item_ref);
         item.into_iter()
             .flat_map(|item| &item.effects)
+            // Exhaustive match so adding an Effect variant is a compile error
+            // here, not a silently-ignored cost reduction.
             .filter_map(move |effect| match effect {
                 Effect::AffinityArtCost {
                     param,
@@ -473,7 +490,15 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 } if selection.params.get(param) == Some(art) => {
                     Some((*counts_as_num, *counts_as_den))
                 }
-                _ => None,
+                // Not an Affinity for this Art; no reduction here.
+                Effect::AffinityArtCost { .. }
+                | Effect::AbilityBonus { .. }
+                | Effect::CharacteristicLimit { .. }
+                | Effect::ArtBonus { .. }
+                | Effect::AffinityAbilityCost { .. }
+                | Effect::RestrictedAbilityXp { .. }
+                | Effect::CharacteristicPoints { .. }
+                | Effect::AbilityScoreGrant { .. } => None,
             })
     });
     best_affinity(found)
@@ -500,7 +525,12 @@ pub struct RestrictedXpPool {
 /// pool and any restricted pools (Educated/Warrior/Privileged). Computed by a
 /// max-flow feasibility solve; `total_demand > max_flow` means the spends cannot
 /// all be funded (overspend by `total_demand - max_flow`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+///
+/// Serializes like its sibling result types (`RestrictedXpPool`, `AbilityBonus`,
+/// `Balance`, …) so a Tauri command can hand the full allocation to the frontend
+/// directly — including `max_flow`/`general_pool`, which let the UI surface the
+/// overspend delta — rather than reshaping a subset of fields at the IPC edge.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct XpAllocation {
     /// Sum of every spend's charged cost (post-Affinity).
     pub total_demand: u32,
@@ -1376,6 +1406,19 @@ mod tests {
         e.ability_scores = vec![plain("ability.awareness", 5)]; // table 75
         let alloc = xp_allocation(&e, &rs);
         assert_eq!(alloc.total_demand, 50); // ceil(75·2/3) = 50
+    }
+
+    #[test]
+    fn best_affinity_keeps_the_most_generous_multiplier() {
+        // Affinities do not stack; the single most generous wins. A score
+        // "counts as num/den of itself" is charged `table·den/num`, so a larger
+        // num/den is cheaper: "counts as 2/1" (charged table·1/2) beats the
+        // standard "counts as 3/2" (charged table·2/3). Order must not matter.
+        assert_eq!(best_affinity([(3, 2), (2, 1)].into_iter()), Some((2, 1)));
+        assert_eq!(best_affinity([(2, 1), (3, 2)].into_iter()), Some((2, 1)));
+        // The chosen ratio is the one that actually charges least.
+        assert_eq!(charged_cost(15, Some((2, 1))), 8); // ceil(15·1/2)
+        assert_eq!(charged_cost(15, Some((3, 2))), 10); // ceil(15·2/3)
     }
 
     #[test]
