@@ -9,10 +9,12 @@ import type {
   Characteristic,
   CharacteristicRules,
   Entity,
+  EntityTypeProfile,
   ItemKind,
   LocalizedRuleset,
   PointItem,
   RestrictedXpPool,
+  Selection,
 } from './types';
 
 /**
@@ -103,6 +105,37 @@ export function groupByCategory(localized: LocalizedRuleset, kinds?: ItemKind[])
       ),
     }))
     .sort((a, b) => a.category.localeCompare(b.category));
+}
+
+/**
+ * Item ids the given type profile mandates: its `required_traits` plus its
+ * `gift_id` when the Gift is `required`. These are the free, profile-declared
+ * traits the store auto-selects (The Gift, Hermetic Magus for a magus) and the
+ * V/F list shows non-removable — data-driven, so no id is hardcoded in the UI.
+ */
+export function mandatoryTraitRefs(profile: EntityTypeProfile | undefined): Set<string> {
+  const refs = new Set<string>();
+  if (!profile) return refs;
+  for (const ref of profile.required_traits ?? []) refs.add(ref);
+  if (profile.gift_policy === 'required' && profile.gift_id) refs.add(profile.gift_id);
+  return refs;
+}
+
+/**
+ * House-granted selections that belong on one V/F side (virtue/boon vs
+ * flaw/hook), by resolving each grant's kind against the ruleset. Grants whose
+ * item is unknown are dropped. Rendered read-only in the selected list.
+ */
+export function grantedSelectionsForSide(
+  localized: LocalizedRuleset,
+  granted: Selection[] | undefined,
+  side: 'virtue' | 'flaw',
+): Selection[] {
+  const kinds: ItemKind[] = side === 'virtue' ? ['virtue', 'boon'] : ['flaw', 'hook'];
+  return (granted ?? []).filter((sel) => {
+    const item = localized.ruleset.point_items[sel.ref];
+    return item ? kinds.includes(item.kind) : false;
+  });
 }
 
 export interface Balance {

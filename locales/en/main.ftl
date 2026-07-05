@@ -22,6 +22,9 @@ available-title = Available
 items-virtues-title = Virtues
 items-flaws-title = Flaws
 selections-title = Selected
+# Marker on a selected row the character type requires (e.g. a magus's The Gift
+# and Hermetic Magus) — auto-selected and not removable.
+selection-required-label = Required
 validation-title = Validation
 characteristics-title = Characteristics
 abilities-title = Abilities

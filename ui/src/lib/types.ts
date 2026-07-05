@@ -143,9 +143,15 @@ export interface EntityTypeProfile {
   budget: PointBudget;
   permitted_categories: string[];
   forbidden_categories: string[];
+  // Item ids that must / may never be selected. Omitted from JSON when empty.
+  required_traits?: string[];
+  forbidden_traits?: string[];
   // Whether this character type is a Hermetic magus. Omitted from JSON when
   // false (the common case), so optional here.
   is_magus?: boolean;
+  // The Gift policy and the id representing The Gift. Omitted when not applicable.
+  gift_policy?: 'required' | 'allowed' | 'forbidden';
+  gift_id?: string;
   creation_phases: string[];
 }
 

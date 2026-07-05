@@ -3,6 +3,7 @@
 // validation result, and the active language/mode — and drives the live
 // validation loop with debouncing plus a sequence guard against stale results.
 
+import { mandatoryTraitRefs } from './derive';
 import { buildBundle, translate, type Lang, type TranslateArgs } from './i18n';
 import * as ipc from './ipc';
 import type {
@@ -78,11 +79,33 @@ class AppStore {
    */
   async setType(typeId: string): Promise<void> {
     if (this.entity.type_id === typeId) return;
+    const previousMandatory = this.#mandatoryTraitRefs(this.entity.type_id);
     this.entity.type_id = typeId;
+    const nextMandatory = this.#mandatoryTraitRefs(typeId);
+    // Auto-manage the type's mandatory free traits (a magus's The Gift + Hermetic
+    // Magus): drop the previous type's that the new type doesn't mandate, then
+    // add any the new type mandates but that aren't already selected. Both are
+    // free, so this never touches the point budget; it makes a direct-entry magus
+    // legal without hand-picking them. The set is data-driven (profile
+    // required_traits + required gift_id), so no id is hardcoded here.
+    this.entity.selections = this.entity.selections.filter(
+      (s) => !(previousMandatory.has(s.ref) && !nextMandatory.has(s.ref)),
+    );
+    for (const ref of nextMandatory) {
+      if (!this.entity.selections.some((s) => s.ref === ref)) {
+        this.entity.selections.push({ ref });
+      }
+    }
     // A type switch is a discrete action (not rapid typing), so validate
     // immediately rather than through the debounce — mirrors setMode and avoids
     // a stale debounced result from the prior type winning the race.
     await this.revalidate();
+  }
+
+  /** The item ids the given type profile mandates (required traits + required Gift). */
+  #mandatoryTraitRefs(typeId: string | undefined): Set<string> {
+    const profile = typeId ? this.ruleset?.ruleset.type_profiles[typeId] : undefined;
+    return mandatoryTraitRefs(profile);
   }
 
   /**

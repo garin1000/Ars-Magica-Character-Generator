@@ -22,6 +22,9 @@ available-title = Verfügbar
 items-virtues-title = Tugenden
 items-flaws-title = Fehler
 selections-title = Gewählt
+# Kennzeichnung einer gewählten Zeile, die der Charaktertyp erfordert (z. B. Die
+# Gabe und Hermetischer Magus eines Magus) — automatisch gewählt, nicht entfernbar.
+selection-required-label = Erforderlich
 validation-title = Prüfung
 characteristics-title = Eigenschaften
 abilities-title = Fertigkeiten

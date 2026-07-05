@@ -527,6 +527,22 @@ ul {
   border-color: var(--muted);
 }
 
+/* Provenance chip (Required / Granted) shown inline at the row's right edge, in
+   the gutter the remove button occupies on editable rows — a flex sibling, not a
+   third stacked overlay badge, so the right-edge tag stack stays two tall and
+   never bleeds vertically into neighbouring rows. */
+.row-marker {
+  flex: none;
+  align-self: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+  background: var(--panel);
+  border: 1px solid var(--muted);
+  border-radius: 999px;
+  padding: 0 0.45rem;
+  white-space: nowrap;
+}
+
 .param {
   display: flex;
   flex-direction: column;

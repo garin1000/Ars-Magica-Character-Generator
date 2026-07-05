@@ -10,9 +10,11 @@ import {
   balance,
   characteristicPointsUsed,
   displayName,
+  grantedSelectionsForSide,
   groupAbilitiesByCategory,
   groupArtsByType,
   groupByCategory,
+  mandatoryTraitRefs,
   maxAbilityScore,
   maxArtScore,
   paramValueUsage,
@@ -23,6 +25,7 @@ import type {
   Art,
   CharacteristicRules,
   Entity,
+  EntityTypeProfile,
   LocalizedRuleset,
   PointItem,
 } from './types';
@@ -135,6 +138,79 @@ describe('balance', () => {
     expect(result.flawBudget).toBe(0);
     // points are still summed even without a profile
     expect(result.virtuePoints).toBe(1);
+  });
+});
+
+// --- mandatoryTraitRefs() ---------------------------------------------------
+
+describe('mandatoryTraitRefs', () => {
+  function profile(overrides: Partial<EntityTypeProfile>): EntityTypeProfile {
+    return {
+      id: 't',
+      budget: { virtue_points: 10, flaw_points: 10 },
+      permitted_categories: [],
+      forbidden_categories: [],
+      creation_phases: [],
+      ...overrides,
+    };
+  }
+
+  it('includes required traits and the required Gift', () => {
+    const refs = mandatoryTraitRefs(
+      profile({
+        required_traits: ['virtue.hermetic_magus'],
+        gift_policy: 'required',
+        gift_id: 'virtue.the_gift',
+      }),
+    );
+    expect(refs.has('virtue.hermetic_magus')).toBe(true);
+    expect(refs.has('virtue.the_gift')).toBe(true);
+    expect(refs.size).toBe(2);
+  });
+
+  it('omits the Gift when its policy is not required', () => {
+    const refs = mandatoryTraitRefs(
+      profile({ gift_policy: 'forbidden', gift_id: 'virtue.the_gift' }),
+    );
+    expect(refs.has('virtue.the_gift')).toBe(false);
+    expect(refs.size).toBe(0);
+  });
+
+  it('is empty for a profile with no required traits or Gift', () => {
+    expect(mandatoryTraitRefs(profile({})).size).toBe(0);
+    expect(mandatoryTraitRefs(undefined).size).toBe(0);
+  });
+});
+
+// --- grantedSelectionsForSide() ---------------------------------------------
+
+describe('grantedSelectionsForSide', () => {
+  const ruleset = makeRuleset([
+    item({ id: 'virtue.puissant', kind: 'virtue' }),
+    item({ id: 'flaw.dark_secret', kind: 'flaw' }),
+  ]);
+
+  it('keeps only virtue/boon grants on the virtue side', () => {
+    const rows = grantedSelectionsForSide(
+      ruleset,
+      [{ ref: 'virtue.puissant' }, { ref: 'flaw.dark_secret' }],
+      'virtue',
+    );
+    expect(rows.map((r) => r.ref)).toEqual(['virtue.puissant']);
+  });
+
+  it('keeps only flaw/hook grants on the flaw side', () => {
+    const rows = grantedSelectionsForSide(
+      ruleset,
+      [{ ref: 'virtue.puissant' }, { ref: 'flaw.dark_secret' }],
+      'flaw',
+    );
+    expect(rows.map((r) => r.ref)).toEqual(['flaw.dark_secret']);
+  });
+
+  it('drops grants whose item ref is unknown, and tolerates no grants', () => {
+    expect(grantedSelectionsForSide(ruleset, [{ ref: 'nope' }], 'virtue')).toEqual([]);
+    expect(grantedSelectionsForSide(ruleset, undefined, 'virtue')).toEqual([]);
   });
 });
 
