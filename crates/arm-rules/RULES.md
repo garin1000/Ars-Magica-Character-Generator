@@ -65,12 +65,11 @@ mechanics carry entries; the rest are stubbed at the end.
 - Implementation: `crates/arm-rules/src/validation.rs` — `validate_caps`
   (counts items with `magnitude == Major`; cap value is data via
   `max_major_virtues` / `max_major_flaws`).
-- **Deferred to M4/4b (not yet implemented):** the magus rule "You may not have
-  more than one Major Hermetic Virtue" (`:2857`) is a *category-restricted* cap
-  (Hermetic Major Virtues only), not a plain Major-count cap. `PointBudget` has no
-  virtue-category cap and no magus profile exists yet; M4/4b adds a data-driven
-  `virtue_category_caps` (mirroring `flaw_category_caps`) and the magus profile.
-  See the "Resolved: companion `max_major_virtues`" note below.
+- The magus rule "You may not have more than one Major Hermetic Virtue" (`:2857`)
+  is a *category-restricted* cap (Hermetic Major Virtues only), not a plain
+  Major-count cap. Implemented in M4/4b via the data-driven
+  `virtue_category_caps` (mirroring `flaw_category_caps`) — see the **Houses**
+  section below and the "Resolved: companion `max_major_virtues`" note.
 
 #### Cap on Minor Flaws count (hard)
 > "A central character may have up to ten points of Flaws, but no more than five
@@ -140,13 +139,14 @@ source:
 | magus | `max_minor_flaws: 5` | `:2856` ("may not have more than 5 Minor Flaws") |
 | magus | `is_magus: true`, `gift_policy: required`, `required_traits: [virtue.hermetic_magus]` | `:2858` ("must take The Gift and the Hermetic Magus Social Status Virtue"), `:2293` (only magi may take the Hermetic Magus Status) |
 | magus | `flaw_category_caps`: personality major_only/hard `max: 1`; personality `max: 2`; story `max: 1` | `:2862` ("should not take more than two Personality Flaws, and may not take more than one Major Personality Flaw"); `:2861` ("should not take more than one Story Flaw") |
+| magus | `virtue_category_caps`: hermetic major_only/hard `max: 1` | `:2857` ("may not have more than one Major Hermetic Virtue") — see the Houses section |
 | mythic_companion | `virtue_points: 20`, `flaw_points: 10`, `virtue_points_per_flaw_point: 2` | `:2638` ("up to ten points of Flaws, and each point of Flaws is worth two points of Virtues. This produces a maximum of 21 points of Virtues and 10 points of Flaws") |
 | mythic_companion | `forbidden_categories: [hermetic]`, `gift_policy: forbidden` | `:2637` (Mythic Companion status Virtues "are incompatible … with The Gift"); generated as Companions `:2635` |
 
-Deferred for `magus` (later M4 phases, not in the Phase-1 profile):
-`max ≤1 Major Hermetic Virtue` needs `virtue_category_caps` (Phase 4b, `:2857`);
-the free Minor House Virtue (`:2859`) and the "≥1 Hermetic Flaw" guideline
-(`:2860`) land with Houses (Phase 4b). The Mythic Companion's free Minor status
+Landed for `magus` in M4/4b (Houses; see the Houses section): the `≤1 Major
+Hermetic Virtue` cap (`:2857`) via `virtue_category_caps`, the free Minor House
+Virtue (`:2859`) via the derived-grant model, and the "≥1 Hermetic Flaw"
+guideline (`:2860`) via the `missing_hermetic_flaw` warning. The Mythic Companion's free Minor status
 Virtue (`:2638`, raising the balanced max from 20 to 21) is M8 catalogue data;
 the `virtue_points: 20` ceiling here is the balanced maximum without it.
 
@@ -543,13 +543,15 @@ effect stores the ability id directly (`ability`), not a selection parameter.
 The plan was reordered so all input for all character types lands in M4 (direct
 entry) before the guided wizard in M5. Accordingly:
 
-- **M4/4a (Arts):** the Art registry, `House`/`ArtMin` evaluation, and registry-
-  backed `ParameterDomain::Art` resolution (replacing the `true` stub). Puissant
+- **M4/4a (Arts):** the Art registry, `ArtMin` evaluation, and registry-
+  backed `ParameterDomain::Art` resolution (replacing the `true` stub).
+  (`Prereq::House` evaluation lands in M4/4b — see below.) Puissant
   Art (+3) lands here too (M4/4f), now that the Art registry exists — it was only
   ever blocked on the registry, not on the wizard.
-- **M4/4b (Houses):** the *category-restricted* magus cap "≤1 Major Hermetic
-  Virtue" (`:2857`) via a new data-driven `virtue_category_caps` (see the cap
-  note above).
+- **M4/4b (Houses):** *done* — the twelve Hermetic Houses, the derived
+  free-House-Virtue grant model, `Prereq::House` evaluation, `validate_house`,
+  and the *category-restricted* magus cap "≤1 Major Hermetic Virtue" (`:2857`)
+  via the data-driven `virtue_category_caps`. See the **Houses** section above.
 - **M4/4f (V/F effect families):** *done* — Affinity with Ability/Art (XP-cost
   modifier), restricted XP-grant pools (Educated/Warrior/Privileged Upbringing),
   Improved Characteristics (+3 point-buy pool), and `ability_score_grant`
@@ -561,6 +563,116 @@ entry) before the guided wizard in M5. Accordingly:
   engine for characters over 35 (`:16563-16640`). The age→max-score *cap* itself
   is enforced as direct-entry validation in M4/4e; only the XP *acquisition* and
   aging *rolls* are M5.
+
+### Houses (magus-only)
+
+Every magus belongs to one of the twelve Hermetic Houses. A House confers a free
+benefit — a Virtue that "you need not balance with a Flaw" (`:2859`). The save
+stores only `Entity::house` + the specialisation `house_choices` (choices, not
+resolved values); the free Virtue is **derived** at eval by
+`house.rs::granted_selections`, never persisted.
+
+#### House benefit table
+> The twelve Houses and their benefits — Bjornaer → Heartbeast (score 1);
+> Bonisagus → Puissant Magic Theory *or* Intrigue; Criamon → The Enigma
+> (Enigmatic Wisdom 1); Ex Miscellanea → a free Minor Hermetic Virtue, a free
+> Major non-Hermetic Virtue, and a compulsory Major Hermetic Flaw "in addition
+> to the normal allowance"; Flambeau → Puissant Perdo *or* Ignem; Guernicus →
+> Hermetic Prestige; Jerbiton → a Minor Virtue; Mercere → Puissant Creo *or*
+> Muto; Merinita → Faerie Magic (score 1); Tremere → Minor Magical Focus
+> (certamen); Tytalus → Self-Confident; Verditius → Verditius Magic.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2270-2283` (the House
+  table). Every house in `rules/core/houses.json` cites this range.
+- Data: `rules/core/houses.json` — each `House { id, lineage_type, grants }`.
+  A grant is `fixed` (a named Virtue), `choice` (pick one of listed options), or
+  `open` (pick any item satisfying a declarative `GrantConstraint`). Ex Miscellanea
+  is three `open` grants (Minor Hermetic Virtue / Major non-Hermetic Virtue /
+  Major Hermetic Flaw); Jerbiton is one broad `open` (Minor Virtue, troupe-judged
+  per the rule's own wording). `lineage_type` (True Lineage / Mystery Cult /
+  Societas) is the book's grouping, flavor only — no mechanics hang off it.
+- Implementation: `crates/arm-rules/src/house.rs` — `House`, `LineageType`,
+  `HouseGrant`, `GrantConstraint`, `HousesFile`, and `granted_selections`.
+  Registry `Ruleset::houses` + integrity `validate_house_refs` (every `Fixed.item`
+  / `Choice.options[].ref` resolves against `point_items`; `House.source` range is
+  valid) in `ruleset.rs`; `Prereq::House` evaluation and the `validate_house` pass
+  in `validation.rs`. `Bonisagus`/`Mercere`/`Flambeau` reuse the generic
+  `virtue.puissant_ability` / `virtue.puissant_art` (target via param) — no new
+  Puissant items.
+
+#### The free House Virtue is budget-free and uncapped
+> "You receive one free Minor Virtue from your choice of House, which you need
+> not balance with a Flaw."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2859`.
+- Implementation: the derived grant model. `effective.rs::selections_for_effects`
+  returns `entity.selections ++ granted_selections` so a granted Virtue's effects
+  (e.g. a Mystery Ability floor) participate, but `compute_balance` and
+  `validate_caps` stay on `entity.selections` (bought only) — commented as the
+  line that makes grants free and uncapped. So a granted Virtue never costs points
+  and never trips a virtue-count cap, and Ex Miscellanea's three grants are "in
+  addition to the normal allowance" (`:2273`) purely by construction.
+
+#### ≤1 Major Hermetic Virtue (magus cap) — `virtue_category_caps`
+> "You may not have more than one Major Hermetic Virtue."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2857`.
+- This is a *category-restricted* virtue-count cap (Hermetic Major Virtues only),
+  with no prior analogue — the flaw side had `flaw_category_caps`, virtues had
+  none. Modelled by extracting the shared `CategoryCap { category, max, major_only,
+  hard }` (byte-identical to the former `FlawCategoryCap`) and adding
+  `PointBudget.virtue_category_caps`.
+- Data: magus profile in `rules/core/character_types.json` —
+  `virtue_category_caps: [{ "category": "hermetic", "max": 1, "major_only": true,
+  "hard": true }]`. The cap *value* lives here.
+- Implementation: `validation.rs::validate_caps` gains a virtue loop mirroring the
+  flaw loop, counting `entity.selections` only (granted Hermetic Virtues exempt),
+  emitting `too_many_major_hermetic_virtues` (code derived as
+  `too_many_[major_]<category>_virtues`). Fluent key `issue-too_many_major_hermetic_virtues`
+  in both locales; `dynamic_virtue_cap_codes()` extends the Fluent-coverage test.
+
+#### ≥1 Hermetic Flaw (magus guideline)
+> "You should take at least one Hermetic Flaw."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2860`.
+- A "should", so a **soft warning** — `validation.rs::validate_house` emits
+  `missing_hermetic_flaw` when a magus has no selected Flaw whose category is in
+  the profile's Gift categories (data-driven, not a hardcoded `"hermetic"`).
+
+#### `validate_house` — specialisation resolution
+- `house_choice_unresolved` (error): a `Choice` pick missing or not among its
+  `options`, or an `Open` pick missing.
+- `house_grant_constraint` (error): an `Open` pick violating its `GrantConstraint`
+  (kind / magnitude / require- / forbid-categories, all read from data).
+- `house_unset` (warning): a magus with no House chosen.
+
+#### House-granted Virtue/Ability definitions
+The named Virtues a House grants, and the Mystery Abilities their
+`ability_score_grant` seeds at score 1, are all defined in the Core Rules
+(this edition folds the House virtues into the core V/F list). Each new
+`rules/core/virtues_flaws.json` item and `rules/core/abilities.json` entry cites:
+
+| Item | Kind | Source (Core Rules.md) |
+|------|------|------------------------|
+| `virtue.the_enigma` (grants `ability.enigmatic_wisdom` 1) | Minor, Hermetic | `:3759-3761` |
+| `virtue.faerie_magic` (grants `ability.faerie_magic` 1) | Minor, Hermetic | `:3825-3827` |
+| `virtue.heartbeast` (grants `ability.heartbeast` 1) | Minor, Hermetic | `:4059-4061` |
+| `virtue.verditius_magic` (no creation-number effect) | Minor, Hermetic | `:5215-5217` |
+| `virtue.hermetic_prestige` (Reputation → M5, no creation effect) | Minor, Hermetic | `:4071-4073` |
+| `virtue.minor_magical_focus` (in-play casting, no creation effect) | Minor, Hermetic | `:4536-4542` |
+| `virtue.self_confident` (Confidence → M5, no creation effect) | Minor, General | `:4900-4902` |
+| `ability.intrigue` | General | `:7590-7592` |
+| `ability.enigmatic_wisdom` (requires_training) | Arcane | `:7454-7455` |
+| `ability.faerie_magic` (requires_training) | Arcane | `:7478-7479` |
+| `ability.heartbeast` (requires_training) | Arcane | `:7501-7502` |
+
+All four Mystery Virtues (The Enigma, Faerie Magic, Heartbeast, Verditius Magic)
+are **Minor** — the free House Virtue is Minor per `:2859`, so none of them can
+trip the ≤1-Major-Hermetic-Virtue cap even when granted. Magical Focus's field is
+freeform prose (doesn't fit the ref-only param model), so Tremere grants a plain
+`fixed virtue.minor_magical_focus` with no param. Ex Miscellanea's Minor Hermetic
+Virtue is player-chosen (`open`), not a fixed item, so there is no invented
+`virtue.ex_misc_minor_hermetic`.
 
 ---
 

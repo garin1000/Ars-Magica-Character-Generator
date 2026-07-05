@@ -203,12 +203,12 @@ number.
       labelled from `rules/i18n` Art names
 
 ### 4b. Houses, House specialisations & Hermetic V/F
-- [ ] House data model + registry (id, free Minor House Virtue, optional named
+- [x] House data model + registry (id, free Minor House Virtue, optional named
       specialisations/lineages); evaluate the `House` prereq (un-skip the
       deferral in `validation.rs`)
-- [ ] `rules/core/houses.json` + i18n: all 12 core Houses with their free Virtues.
+- [x] `rules/core/houses.json` + i18n: all 12 core Houses with their free Virtues.
       Source: Core Rules.md:2270-2283, 2859, 10986
-- [ ] Specialisation choice that determines the free Virtue, data-driven (no House
+- [x] Specialisation choice that determines the free Virtue, data-driven (no House
       IDs hardcoded in engine logic):
       - Bonisagus → Bonisagus (Puissant Magic Theory) vs Trianomae (Puissant
         Intrigue). Source: Core Rules.md:2271; Houses of Hermes — True Lineages.md:509, 531
@@ -220,12 +220,12 @@ number.
       - Mystery Houses (Bjornaer, Criamon, Merinita, Verditius) grant a Virtue
         that also sets a starting Supernatural-Ability score of 1. Source:
         Core Rules.md:4061, 3761, 3827, 5217; Mystery Cults.md:1378
-- [ ] House selection + specialisation as direct-entry fields; selecting them
+- [x] House selection + specialisation as direct-entry fields; selecting them
       auto-grants the free Minor House Virtue (engine/data, so direct entry yields
       a legal magus). The guided step wrapper is M5
-- [ ] `virtue_category_caps` (new, data-driven, mirroring `flaw_category_caps` /
+- [x] `virtue_category_caps` (new, data-driven, mirroring `flaw_category_caps` /
       `FlawCategoryCap`) to enforce "≤1 Major Hermetic Virtue". Source: Core Rules.md:2857
-- [ ] Additional Hermetic-category V/F data (the special magus Virtues/Flaws)
+- [x] Additional Hermetic-category V/F data (the special magus Virtues/Flaws)
 
 ### 4c. Spells (engine + data + direct entry)
 - [ ] Spell data model (technique + form + level; depends on the 4a Art registry

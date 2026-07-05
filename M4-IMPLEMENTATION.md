@@ -108,13 +108,13 @@ Notes:
 ## Phase 4 — Houses, specialisations & Hermetic V/F (PLAN.md 4b)
 e2e: `ui/e2e/specs/houses.e2e.js`
 
-- [ ] House data model + registry; evaluate the `House` prereq (un-skip)
-- [ ] `rules/core/houses.json` + i18n: 12 core Houses + free Virtues
-- [ ] data-driven specialisation→free-Virtue (incl. Mystery Houses seeding a
+- [x] House data model + registry; evaluate the `House` prereq (un-skip)
+- [x] `rules/core/houses.json` + i18n: 12 core Houses + free Virtues
+- [x] data-driven specialisation→free-Virtue (incl. Mystery Houses seeding a
       Supernatural Ability at 1 via `ability_score_grant`)
-- [ ] `virtue_category_caps` (≤1 Major Hermetic Virtue); special-magus V/F data
-- [ ] `HouseSelector.svelte`; selecting auto-grants the free Minor House Virtue
-- [ ] e2e spec green; PLAN.md 4b box updated; gate passes
+- [x] `virtue_category_caps` (≤1 Major Hermetic Virtue); special-magus V/F data
+- [x] `HouseSelector.svelte`; selecting auto-grants the free Minor House Virtue
+- [x] e2e spec green; PLAN.md 4b box updated; gate passes
 
 ## Phase 5 — Spells (PLAN.md 4c)
 e2e: `ui/e2e/specs/spells.e2e.js`
