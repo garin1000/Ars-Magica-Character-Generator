@@ -1,1 +1,18 @@
-{}
+{
+  "mythic_type.devil_child": {
+    "description": "Von dämonischen Eltern geboren und mit infernalischen Kräften begabt.",
+    "name": "Teufelskind"
+  },
+  "mythic_type.faerie_doctor": {
+    "description": "Ein menschlicher Vermittler zwischen den Bauern und den Feen.",
+    "name": "Feendoktor"
+  },
+  "mythic_type.nephilim": {
+    "description": "Ein göttlicher Riese, der von den Helden der alten Mythen abstammt.",
+    "name": "Nephilim"
+  },
+  "mythic_type.spirit_votary": {
+    "description": "Ein ergebener Verehrer, dem ein magischer Geist Macht verleiht.",
+    "name": "Geistverehrer"
+  }
+}

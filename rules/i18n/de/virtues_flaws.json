@@ -7,6 +7,18 @@
     "name": "Defizitäre {technique}",
     "summary": "Du bist unfähig, eine Technik effektiv einzusetzen."
   },
+  "flaw.dutybound": {
+    "name": "Pflichtgebunden",
+    "summary": "Du folgst aus Schuld oder Furcht einem einschränkenden Verhaltenskodex."
+  },
+  "flaw.faerie_friend": {
+    "name": "Feenfreund",
+    "summary": "Du hast einen Verbündeten unter den Feen — ein Segen, der auch zur Last werden kann."
+  },
+  "flaw.pagan": {
+    "name": "Heide",
+    "summary": "Du folgst nicht der Kirche und wurdest nie getauft."
+  },
   "flaw.poor_characteristic": {
     "name": "Schlechte {characteristic}",
     "summary": "Senke eine Eigenschaft, die bereits bei −3 liegt, bis mindestens −5; die Punkte erhältst du weiterhin."
@@ -14,6 +26,10 @@
   "flaw.poor_student": {
     "name": "Schlechter Schüler",
     "summary": "Du lernst schlecht aus Büchern und von Lehrern."
+  },
+  "flaw.tragic_life": {
+    "name": "Tragisches Leben",
+    "summary": "Dämonen haben dein Leben zu deinem Nachteil manipuliert; du bist befleckt."
   },
   "virtue.affinity_ability": {
     "name": "Affinität zu {ability}",
@@ -23,9 +39,41 @@
     "name": "Affinität zu {art}",
     "summary": "Erfahrung, die du in eine Kunst steckst, zählt anderthalbfach. Kann zweimal gewählt werden, für zwei Künste."
   },
+  "virtue.blood_of_the_nephilim": {
+    "name": "Blut der Nephilim",
+    "summary": "Du stammst von den Nephilim ab; deine Größe wächst und du alterst sehr langsam."
+  },
+  "virtue.curse_throwing": {
+    "name": "Fluchschleudern",
+    "summary": "Heile Krankheiten und entferne Flüche, indem du sie auf eine andere Person überträgst. Verleiht die Fähigkeit Fluchschleudern."
+  },
+  "virtue.demonic_blood": {
+    "name": "Dämonisches Blut",
+    "summary": "Ein Elternteil ist ein Dämon; du besitzt einen infernalischen Machtwert und infernalische Kräfte."
+  },
+  "virtue.demonic_might": {
+    "name": "Dämonische Macht",
+    "summary": "Erhöht deinen infernalischen Machtwert. Erfordert Dämonisches Blut."
+  },
+  "virtue.demonic_powers": {
+    "name": "Dämonische Kräfte",
+    "summary": "Verleiht zusätzliche Stufen infernalischer Kräfte. Erfordert Dämonisches Blut."
+  },
+  "virtue.devil_child": {
+    "name": "Teufelskind",
+    "summary": "Freie Status-Tugend für einen mythischen Gefährten dämonischer Abstammung; unvereinbar mit der Gabe."
+  },
+  "virtue.dowsing": {
+    "name": "Wünschelrutengehen",
+    "summary": "Finde nahe Dinge mit einer Wünschelrute. Verleiht die Fähigkeit Wünschelrutengehen."
+  },
   "virtue.educated": {
     "name": "Gebildet",
     "summary": "+50 Erfahrungspunkte, nur für Latein und Artes Liberales. Du darfst Akademische Fertigkeiten erwerben."
+  },
+  "virtue.faerie_doctor": {
+    "name": "Feendoktor",
+    "summary": "Freie Status-Tugend für einen mythischen Gefährten, der zwischen Menschen und Feen vermittelt; unvereinbar mit der Gabe."
   },
   "virtue.faerie_magic": {
     "name": "Feenmagie",
@@ -38,6 +86,10 @@
   "virtue.great_characteristic": {
     "name": "Hervorragende {characteristic}",
     "summary": "Erhöhe eine Eigenschaft, die bereits bei +3 liegt, bis höchstens +5; die Punkte zahlst du weiterhin."
+  },
+  "virtue.greater_immunity": {
+    "name": "Große Immunität",
+    "summary": "Du bist gegen eine verbreitete, potenziell tödliche Gefahr völlig immun."
   },
   "virtue.heartbeast": {
     "name": "Herztier",
@@ -67,6 +119,10 @@
     "name": "Kleiner Magischer Fokus",
     "summary": "Deine Magie ist auf ein enges Gebiet abgestimmt; innerhalb davon zählt der niedrigste anwendbare Kunstwert doppelt."
   },
+  "virtue.nephilim": {
+    "name": "Nephilim",
+    "summary": "Freie Status-Tugend für einen göttlichen Riesen der alten Mythen; unvereinbar mit der Gabe."
+  },
   "virtue.premonitions": {
     "name": "Vorahnungen",
     "summary": "Du spürst, wenn etwas schiefzugehen droht. Verleiht die Fertigkeit Vorahnungen auf 1."
@@ -91,6 +147,22 @@
     "name": "Selbstbewusst",
     "summary": "Du hast einen Selbstvertrauenswert von 2 und beginnst mit fünf Selbstvertrauenspunkten statt drei."
   },
+  "virtue.sense_holiness_and_unholiness": {
+    "name": "Gespür für Heiliges und Unheiliges",
+    "summary": "Spüre die Gegenwart von Gut und Böse. Verleiht die gleichnamige Fähigkeit."
+  },
+  "virtue.spirit_votary": {
+    "name": "Geistverehrer",
+    "summary": "Freie Status-Tugend für einen ergebenen Verehrer eines magischen Geistes; unvereinbar mit der Gabe."
+  },
+  "virtue.spiritual_pact": {
+    "name": "Geistiger Pakt",
+    "summary": "Ein Pakt mit einem mächtigen magischen Geist, der Zugang zu dessen Macht gewährt."
+  },
+  "virtue.strong_angelic_heritage": {
+    "name": "Starkes Engelserbe",
+    "summary": "Dein Engelserbe verleiht einen göttlichen Machtwert und heilige Kräfte. Erfordert Blut der Nephilim."
+  },
   "virtue.the_enigma": {
     "name": "Das Enigma",
     "summary": "Einweihung in das Äußere Mysterium des Hauses Criamon. Verleiht Enigmatische Weisheit auf 1."
@@ -110,5 +182,9 @@
   "virtue.warrior": {
     "name": "Krieger",
     "summary": "+50 Erfahrungspunkte, nur für Kampf-Fertigkeiten, die du bei der Charaktererschaffung erwerben darfst."
+  },
+  "virtue.wise_one": {
+    "name": "Weise Frau / Weiser Mann",
+    "summary": "Ein Mystiker, Seher oder Heiler von gutem Ansehen in der Gemeinschaft."
   }
 }

@@ -676,6 +676,106 @@ Virtue is player-chosen (`open`), not a fixed item, so there is no invented
 
 ---
 
+## Mythic Companion types (M4/4d)
+
+A Mythic Companion picks a **type** (Devil Child, Faerie Doctor, Nephilim, Spirit
+Votary) that grants a free "status" Virtue **plus** a free Minor Virtue (both
+point-free grants, via the shared `grant.rs` model), imposes a required V/F
+package that counts against the budget normally, and may raise the budget
+ceilings with per-type bonus points. Data: `rules/core/mythic_companion_types.json`
++ `rules/i18n/<lang>/mythic_companion_types.json`; engine `mythic_companion.rs`
+(`MythicCompanionType`, `RequiredFlaw`); validation `validate_mythic_type` +
+the effective-budget fold in `validate_balance`. The general rules are Core
+Rules.md `:2635-2639`; the V/F guidelines `:2842-2851`.
+
+#### General mechanism & per-type budgets
+> `:2637` "All Mythic Companions take a Free Virtue which specifies their status.
+> These Virtues are incompatible with each other, and with The Gift, and are not
+> available to grogs." `:2638` "You gain a free Minor Virtue… you may take up to
+> ten points of Flaws, and each point of Flaws is worth two points of Virtues…
+> Most Mythic Companion Virtues require you to take some particular Virtues and
+> Flaws, these count against your maximum."
+
+The four status Virtues carry a symmetric `incompatible_with` web (each other +
+`virtue.the_gift`). The free status Virtue's category is `social_status` (a
+"status" Virtue); the free Minor and required Virtues keep their own book
+categories. Per-type bonus points fold into the balance ceilings via
+`EffectiveBudget` (`validation.rs`): `flaw_ceiling = base + bonus_flaw`,
+`virtue_ceiling = base + bonus_flaw·rate + bonus_free_virtue`,
+`funded = flaw·rate + bonus_free_virtue` (rate = 2). Zero for a non-mythic type,
+so the check reduces exactly to the base budget.
+
+| Type | free status | free Minor | required Virtues (budgeted) | required Flaw (default) | bonus | Source |
+|------|-------------|-----------|------------------------------|--------------------------|-------|--------|
+| Devil Child | `virtue.devil_child` | Demonic Might **or** Powers | Demonic Blood, Puissant (Guile) | Tragic Life | +7 F, **+3 free V** | Core `:2643-2666` |
+| Faerie Doctor | `virtue.faerie_doctor` | Dowsing | Wise One, Curse-Throwing | Faerie Friend, Dutybound | none | Core `:2668-2704` |
+| Nephilim | `virtue.nephilim` | Strong Angelic Heritage | Blood of the Nephilim, Greater Immunity, Great Sta, Great Str, Improved Characteristics, Sense Holiness | — (5 F fund the +10 V) | none | Core `:2714-2739` |
+| Spirit Votary | `virtue.spirit_votary` | Second Sight | Spiritual Pact (+ 1 Major/3 Minor Supernatural, **advisory**) | Pagan | +7 F | Core `:2741-2764` |
+
+- Devil Child's **+3 free V / +7 F**: Core `:2664` ("three more points of Virtues
+  at no cost… and an additional seven points of Flaws"). Verified maxed budget:
+  flaw 17, virtue `20 + 14 + 3 = 37`.
+- Spirit Votary's **+7 F**: *Realms of Power — Magic.md*`:5486` ("may take up to 7
+  more points of Flaws, each point granting 2 points"). The Core mythic section
+  is silent on this bonus — RoP Magic is the authority; the discrepancy is noted
+  here.
+- **Nephilim** has no bonus: its "5 points of Flaws to pay for these virtues"
+  (`:2731`) is a consequence of funding 10 pts of required Virtues at 2:1 within
+  the base 10 F / 20 V, not a budget change.
+- The `20`-vs-`21` inconsistency (`:2638` "21" vs `:2844` "20"): the ceiling is
+  `20`; the free Minor status Virtue is a point-free grant that never consumes
+  budget (same treatment as the free House Virtue).
+- **Required-package enforcement is advisory** (`mythic_required_trait_missing`
+  warning): the rules permit "a suitable substitute agreed with the troupe" for
+  the required Flaws (`:2660`, `:2689`, `:2754`), so a missing/substituted slot
+  never hard-blocks. Required Virtues are matched by full `Selection` (ref +
+  params), so parameterized/duplicated requirements are exact — Nephilim's two
+  distinct Great Characteristics (`great_characteristic` with
+  `characteristic.sta` / `.str`) and Puissant Guile (`puissant_ability` +
+  `ability.guile`) — an approximation matching only the seeded default target.
+- Spirit Votary's open "1 Major OR 3 Minor Supernatural" requirement is left
+  **advisory** (unenforced) for M4 — a candidate for a future "minimum category
+  points" rule (M8).
+
+#### New V/F & Ability definitions (structural; full in-play effects M8)
+Per CLAUDE.md each is sourced from the authoritative Markdown by book. Only the
+*structural* item (kind/magnitude/category) is seeded now; the full supernatural
+effects (Infernal Might, Divine Might, immunity target, etc.) are M8.
+
+| Item | Kind | Source |
+|------|------|--------|
+| `virtue.devil_child` | Special/Free, Social Status | *Infernal*`:4144-4149` |
+| `virtue.demonic_blood` | Major, Supernatural (Tainted) | *Infernal*`:4116-4131` |
+| `virtue.demonic_might` (req. Demonic Blood) | Minor, Supernatural | *Infernal*`:4132-4137` |
+| `virtue.demonic_powers` (req. Demonic Blood) | Minor, Supernatural | *Infernal*`:4138-4143` |
+| `flaw.tragic_life` | **Major, Story** (Tainted) | Core `:6855-6870` |
+| `virtue.faerie_doctor` | Special/Free, Social Status | *Faerie*`:6394-6399` |
+| `virtue.dowsing` (grants `ability.dowsing` 1) | Minor, Supernatural | Core `:3703-3706` |
+| `virtue.curse_throwing` (grants `ability.curse_throwing` 1) | Major, Supernatural | *Faerie*`:6342-6347` |
+| `virtue.wise_one` | Minor, Social Status | Core `:5257-5260` |
+| `flaw.faerie_friend` | Minor, Story | Core `:6052-6055` |
+| `flaw.dutybound` | Minor, Personality | Core `:5992-5995` |
+| `virtue.nephilim` | Free, Social Status | *Divine*`:3485-3513` |
+| `virtue.blood_of_the_nephilim` | Major, Supernatural | *Divine*`:1941-1954` |
+| `virtue.strong_angelic_heritage` (req. Blood of the Nephilim) | Minor, Supernatural | *Divine*`:1969-1980` |
+| `virtue.greater_immunity` (plain; "Disease" is an in-play target, no param) | Major, Supernatural | Core `:4009-4016` |
+| `virtue.sense_holiness_and_unholiness` (grants `ability.sense_holiness_and_unholiness` 1) | Minor, Supernatural | Core `:4926-4929` |
+| `virtue.spirit_votary` | Free, Supernatural (→ Social Status) | *Magic*`:5480-5486` |
+| `virtue.spiritual_pact` | Major, Supernatural | *Magic*`:5488-5502` |
+| `flaw.pagan` (Major or Minor; seeded Major) | Major, Personality | Core `:6570-6573` |
+| `ability.curse_throwing` (requires_training) | Supernatural | Core `:7396-7430` |
+| `ability.dowsing` (requires_training) | Supernatural | Core `:7439-7442` |
+| `ability.sense_holiness_and_unholiness` (requires_training) | Supernatural | Core `:7720-7723` |
+
+Reused existing items: `virtue.great_characteristic` (Great Sta/Str),
+`virtue.improved_characteristics`, `virtue.second_sight`,
+`virtue.puissant_ability` (+ `ability.guile`). **Greater Immunity** is seeded
+without a parameter: the `ParamType` model is ref-domain-only and there is no
+"hazard" registry, so the specific "Disease" target is an in-play/sheet detail
+(M8), and the Nephilim requirement matches it by ref alone.
+
+---
+
 ## Engine framework (book-agnostic, no rulebook source)
 
 These checks are structural integrity, not Ars Magica rules, and intentionally

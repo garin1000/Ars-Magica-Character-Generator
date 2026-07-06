@@ -1,3 +1,87 @@
 {
-  "types": []
+  "types": [
+    {
+      "id": "mythic_type.devil_child",
+      "grants": [
+        { "kind": "fixed", "item": "virtue.devil_child" },
+        {
+          "kind": "choice",
+          "choice_key": "devil_child_free_minor",
+          "options": [
+            { "ref": "virtue.demonic_might" },
+            { "ref": "virtue.demonic_powers" }
+          ]
+        }
+      ],
+      "required_virtues": [
+        { "ref": "virtue.demonic_blood" },
+        { "ref": "virtue.puissant_ability", "params": { "ability": "ability.guile" } }
+      ],
+      "required_flaws": [
+        {
+          "default": { "ref": "flaw.tragic_life" },
+          "constraint": { "kind": "flaw", "magnitude": "major" }
+        }
+      ],
+      "bonus_flaw_points": 7,
+      "bonus_free_virtue_points": 3,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2643, 2666] }
+    },
+    {
+      "id": "mythic_type.faerie_doctor",
+      "grants": [
+        { "kind": "fixed", "item": "virtue.faerie_doctor" },
+        { "kind": "fixed", "item": "virtue.dowsing" }
+      ],
+      "required_virtues": [
+        { "ref": "virtue.wise_one" },
+        { "ref": "virtue.curse_throwing" }
+      ],
+      "required_flaws": [
+        {
+          "default": { "ref": "flaw.faerie_friend" },
+          "constraint": { "kind": "flaw", "magnitude": "minor", "require_categories": ["story"] }
+        },
+        {
+          "default": { "ref": "flaw.dutybound" },
+          "constraint": { "kind": "flaw", "magnitude": "minor", "require_categories": ["personality"] }
+        }
+      ],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2668, 2704] }
+    },
+    {
+      "id": "mythic_type.nephilim",
+      "grants": [
+        { "kind": "fixed", "item": "virtue.nephilim" },
+        { "kind": "fixed", "item": "virtue.strong_angelic_heritage" }
+      ],
+      "required_virtues": [
+        { "ref": "virtue.blood_of_the_nephilim" },
+        { "ref": "virtue.greater_immunity" },
+        { "ref": "virtue.great_characteristic", "params": { "characteristic": "characteristic.sta" } },
+        { "ref": "virtue.great_characteristic", "params": { "characteristic": "characteristic.str" } },
+        { "ref": "virtue.improved_characteristics" },
+        { "ref": "virtue.sense_holiness_and_unholiness" }
+      ],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2714, 2739] }
+    },
+    {
+      "id": "mythic_type.spirit_votary",
+      "grants": [
+        { "kind": "fixed", "item": "virtue.spirit_votary" },
+        { "kind": "fixed", "item": "virtue.second_sight" }
+      ],
+      "required_virtues": [
+        { "ref": "virtue.spiritual_pact" }
+      ],
+      "required_flaws": [
+        {
+          "default": { "ref": "flaw.pagan" },
+          "constraint": { "kind": "flaw", "magnitude": "major", "require_categories": ["personality"] }
+        }
+      ],
+      "bonus_flaw_points": 7,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2741, 2764] }
+    }
+  ]
 }
