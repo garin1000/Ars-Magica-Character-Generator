@@ -18,6 +18,30 @@
     "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" }
   },
   {
+    "id": "flaw.dutybound",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5992, 5995] }
+  },
+  {
+    "id": "flaw.faerie_friend",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6052, 6055] }
+  },
+  {
+    "id": "flaw.pagan",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6570, 6573] }
+  },
+  {
     "id": "flaw.poor_characteristic",
     "kind": "flaw",
     "magnitude": "minor",
@@ -34,6 +58,14 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"]
+  },
+  {
+    "id": "flaw.tragic_life",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6855, 6870] }
   },
   {
     "id": "virtue.affinity_ability",
@@ -60,6 +92,67 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3376, 3378] }
   },
   {
+    "id": "virtue.blood_of_the_nephilim",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica 5e - Realms of Power - The Divine (Revised).md", "lines": [1941, 1954] }
+  },
+  {
+    "id": "virtue.curse_throwing",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.curse_throwing", "amount": 1 }],
+    "source": { "file": "Ars Magica 5e - Realms of Power - Faerie.md", "lines": [6342, 6347] }
+  },
+  {
+    "id": "virtue.demonic_blood",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica 5e - Realms of Power - The Infernal.md", "lines": [4116, 4131] }
+  },
+  {
+    "id": "virtue.demonic_might",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
+    "source": { "file": "Ars Magica 5e - Realms of Power - The Infernal.md", "lines": [4132, 4137] }
+  },
+  {
+    "id": "virtue.demonic_powers",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
+    "source": { "file": "Ars Magica 5e - Realms of Power - The Infernal.md", "lines": [4138, 4143] }
+  },
+  {
+    "id": "virtue.devil_child",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.faerie_doctor", "virtue.nephilim", "virtue.spirit_votary", "virtue.the_gift"],
+    "source": { "file": "Ars Magica 5e - Realms of Power - The Infernal.md", "lines": [4144, 4149] }
+  },
+  {
+    "id": "virtue.dowsing",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.dowsing", "amount": 1 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3703, 3706] }
+  },
+  {
     "id": "virtue.educated",
     "kind": "virtue",
     "magnitude": "minor",
@@ -73,6 +166,15 @@
       }
     ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3711, 3713] }
+  },
+  {
+    "id": "virtue.faerie_doctor",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.devil_child", "virtue.nephilim", "virtue.spirit_votary", "virtue.the_gift"],
+    "source": { "file": "Ars Magica 5e - Realms of Power - Faerie.md", "lines": [6394, 6399] }
   },
   {
     "id": "virtue.faerie_magic",
@@ -102,6 +204,14 @@
     "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }],
     "max_per_target": 2,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3987, 3989] }
+  },
+  {
+    "id": "virtue.greater_immunity",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4009, 4016] }
   },
   {
     "id": "virtue.heartbeast",
@@ -158,6 +268,15 @@
     "category": "hermetic",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4536, 4538] }
+  },
+  {
+    "id": "virtue.nephilim",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.spirit_votary", "virtue.the_gift"],
+    "source": { "file": "Ars Magica 5e - Realms of Power - The Divine (Revised).md", "lines": [3485, 3513] }
   },
   {
     "id": "virtue.premonitions",
@@ -221,6 +340,41 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4900, 4902] }
   },
   {
+    "id": "virtue.sense_holiness_and_unholiness",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.sense_holiness_and_unholiness", "amount": 1 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4926, 4929] }
+  },
+  {
+    "id": "virtue.spirit_votary",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.nephilim", "virtue.the_gift"],
+    "source": { "file": "Ars Magica 5e - Realms of Power - Magic.md", "lines": [5480, 5486] }
+  },
+  {
+    "id": "virtue.spiritual_pact",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica 5e - Realms of Power - Magic.md", "lines": [5488, 5502] }
+  },
+  {
+    "id": "virtue.strong_angelic_heritage",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "prerequisites": { "kind": "has", "value": "virtue.blood_of_the_nephilim" },
+    "source": { "file": "Ars Magica 5e - Realms of Power - The Divine (Revised).md", "lines": [1969, 1980] }
+  },
+  {
     "id": "virtue.the_enigma",
     "kind": "virtue",
     "magnitude": "minor",
@@ -234,7 +388,8 @@
     "kind": "virtue",
     "magnitude": "free",
     "category": "special",
-    "entity_kinds": ["character"]
+    "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.nephilim", "virtue.spirit_votary"]
   },
   {
     "id": "virtue.tough",
@@ -259,5 +414,13 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5227, 5229] }
+  },
+  {
+    "id": "virtue.wise_one",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5257, 5260] }
   }
 ]

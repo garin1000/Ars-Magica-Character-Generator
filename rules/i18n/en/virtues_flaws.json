@@ -7,6 +7,18 @@
     "name": "Deficient {technique}",
     "summary": "You are unable to use one Technique effectively."
   },
+  "flaw.dutybound": {
+    "name": "Dutybound",
+    "summary": "You follow a restrictive code of conduct out of guilt or fear."
+  },
+  "flaw.faerie_friend": {
+    "name": "Faerie Friend",
+    "summary": "You have an ally among the fay, a boon that can also be a burden."
+  },
+  "flaw.pagan": {
+    "name": "Pagan",
+    "summary": "You do not follow the Church and have never been baptized."
+  },
   "flaw.poor_characteristic": {
     "name": "Poor {characteristic}",
     "summary": "Lower a Characteristic already at −3 down to −5; you still gain the points."
@@ -14,6 +26,10 @@
   "flaw.poor_student": {
     "name": "Poor Student",
     "summary": "You are bad at learning from books and teachers."
+  },
+  "flaw.tragic_life": {
+    "name": "Tragic Life",
+    "summary": "Demons have manipulated your life to your own detriment; you are Tainted."
   },
   "virtue.affinity_ability": {
     "name": "Affinity with {ability}",
@@ -23,9 +39,41 @@
     "name": "Affinity with {art}",
     "summary": "Experience put into one Art counts for half again. May be taken twice, for two Arts."
   },
+  "virtue.blood_of_the_nephilim": {
+    "name": "Blood of the Nephilim",
+    "summary": "You descend from the Nephilim; your Size grows and you age very slowly."
+  },
+  "virtue.curse_throwing": {
+    "name": "Curse-Throwing",
+    "summary": "Cure diseases and remove curses by transferring them to another. Confers the Curse-Throwing Ability."
+  },
+  "virtue.demonic_blood": {
+    "name": "Demonic Blood",
+    "summary": "A demon is your parent; you have an Infernal Might and Infernal Powers."
+  },
+  "virtue.demonic_might": {
+    "name": "Demonic Might",
+    "summary": "Increases your Infernal Might. Requires Demonic Blood."
+  },
+  "virtue.demonic_powers": {
+    "name": "Demonic Powers",
+    "summary": "Grants extra levels of Infernal Powers. Requires Demonic Blood."
+  },
+  "virtue.devil_child": {
+    "name": "Devil Child",
+    "summary": "Free status Virtue for a Mythic Companion born of demonic parents; incompatible with The Gift."
+  },
+  "virtue.dowsing": {
+    "name": "Dowsing",
+    "summary": "Find nearby things with a dowsing rod. Confers the Dowsing Ability."
+  },
   "virtue.educated": {
     "name": "Educated",
     "summary": "+50 experience points, spent only on Latin and Artes Liberales. You may buy Academic Abilities."
+  },
+  "virtue.faerie_doctor": {
+    "name": "Faerie Doctor",
+    "summary": "Free status Virtue for a Mythic Companion who mediates between humans and the fae; incompatible with The Gift."
   },
   "virtue.faerie_magic": {
     "name": "Faerie Magic",
@@ -38,6 +86,10 @@
   "virtue.great_characteristic": {
     "name": "Great {characteristic}",
     "summary": "Raise a Characteristic already at +3 up to +5; you still pay the points."
+  },
+  "virtue.greater_immunity": {
+    "name": "Greater Immunity",
+    "summary": "You are completely immune to one common, potentially deadly hazard."
   },
   "virtue.heartbeast": {
     "name": "Heartbeast",
@@ -67,6 +119,10 @@
     "name": "Minor Magical Focus",
     "summary": "Your magic is attuned to a narrow field; add the lowest applicable Art score twice within it."
   },
+  "virtue.nephilim": {
+    "name": "Nephilim",
+    "summary": "Free status Virtue for a divine giant of ancient myth; incompatible with The Gift."
+  },
   "virtue.premonitions": {
     "name": "Premonitions",
     "summary": "You sense when something is about to go wrong. Confers the Premonitions Ability at 1."
@@ -91,6 +147,22 @@
     "name": "Self-Confident",
     "summary": "You have a Confidence Score of 2 and start with five Confidence Points instead of three."
   },
+  "virtue.sense_holiness_and_unholiness": {
+    "name": "Sense Holiness and Unholiness",
+    "summary": "Feel the presence of good and evil. Confers the Sense Holiness and Unholiness Ability."
+  },
+  "virtue.spirit_votary": {
+    "name": "Spirit Votary",
+    "summary": "Free status Virtue for a devoted worshipper of a magical spirit; incompatible with The Gift."
+  },
+  "virtue.spiritual_pact": {
+    "name": "Spiritual Pact",
+    "summary": "A pact with a powerful Magical spirit that grants access to its power."
+  },
+  "virtue.strong_angelic_heritage": {
+    "name": "Strong Angelic Heritage",
+    "summary": "Your angelic heritage grants a Divine Might and holy powers. Requires Blood of the Nephilim."
+  },
   "virtue.the_enigma": {
     "name": "The Enigma",
     "summary": "Initiation into the Outer Mystery of House Criamon. Confers Enigmatic Wisdom at 1."
@@ -110,5 +182,9 @@
   "virtue.warrior": {
     "name": "Warrior",
     "summary": "+50 experience points, spent only on Martial Abilities, which you may acquire at character creation."
+  },
+  "virtue.wise_one": {
+    "name": "Wise One",
+    "summary": "A mystic, seer, or healer of good standing in the community."
   }
 }

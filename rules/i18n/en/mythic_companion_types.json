@@ -1,1 +1,18 @@
-{}
+{
+  "mythic_type.devil_child": {
+    "description": "Born of demonic parents, wielding Infernal powers.",
+    "name": "Devil Child"
+  },
+  "mythic_type.faerie_doctor": {
+    "description": "A human intermediary between the peasants and the fae.",
+    "name": "Faerie Doctor"
+  },
+  "mythic_type.nephilim": {
+    "description": "A divine giant descended from the heroes of ancient myth.",
+    "name": "Nephilim"
+  },
+  "mythic_type.spirit_votary": {
+    "description": "A devoted worshipper granted power by a magical spirit.",
+    "name": "Spirit Votary"
+  }
+}
