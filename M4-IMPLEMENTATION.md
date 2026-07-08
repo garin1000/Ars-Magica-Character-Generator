@@ -119,9 +119,11 @@ e2e: `ui/e2e/specs/houses.e2e.js`
 ## Phase 5 — Mythic Companion types & free V/F system (PLAN.md 4d)
 e2e: `ui/e2e/specs/mythic-companion.e2e.js`
 
-**Status (in progress):** engine + app plumbing DONE & committed (`cdabf2e`),
-green through `cargo tauri build --no-bundle` with an **empty** type registry
-(dormant). Done: `grant.rs` extraction (`HouseGrant`→`Grant`, shared
+**Status: DONE.** Engine, data, UI, and e2e complete; full gate + release build
++ `mythic-companion.e2e.js` green (11/11 suite). Committed across `cdabf2e`
+(engine+plumbing), `699d43b` (sourced data), and the UI/enable commit.
+Historical note (engine+plumbing landed first via `cdabf2e` with a dormant empty
+registry). Done: `grant.rs` extraction (`HouseGrant`→`Grant`, shared
 `resolve_grants`/`open_pick_satisfies`); `mythic_companion.rs`
 (`MythicCompanionType`, `RequiredFlaw`, per-type `bonus_flaw_points` /
 `bonus_free_virtue_points`); ruleset registry + `validate_mythic_type_refs`;
@@ -151,27 +153,36 @@ mythic budget ceiling (20 V / 10 F at 2:1) and deferred the free status Virtue t
 genuinely complete in M4 (the milestone's own promise: "complete input for all
 character types").
 
-- [ ] Mythic-companion-type data model + registry (mirrors the House registry):
-      each type carries its free status Virtue, its free Minor Virtue, and its
-      required V/F package. Source: Core Rules.md:2635-2639
-- [ ] Free "status" Virtue: 0-cost, mutually incompatible, incompatible with The
-      Gift, forbidden to grogs (reuse the symmetric `incompatible_with` +
-      profile permitted/forbidden check). Source: Core Rules.md:2637
-- [ ] Auto-grant the type's free Minor Virtue (un-balanced, +1 → 21 V ceiling);
-      reuses the Phase-4 free-Virtue grant path. Source: Core Rules.md:2638, 2847
-- [ ] Required V/F packages count against the budget, incl. per-type bonus points
-      (e.g. Devil Child +3 V / +7 F to offset the compulsory Major Flaw; Nephilim
-      5 F required + 5 more granting 10 V). Source: Core Rules.md:2638, 2664, 2731
-- [ ] `rules/core/mythic_companion_types.json` + i18n (en, de): the 4 core types
-      with their packages; required Supernatural Virtues seeded as they exist in
-      the core V/F chapter, long tail / full effects M8 (same graceful degradation
-      as Mystery-House abilities). Source: Core Rules.md:2643-2765, 3329
-- [ ] Mythic-companion V/F guidelines: ≥1 Social Status, ≤5 Minor Flaws, ≤1 Story
-      Flaw, ≤2 Personality Flaws (≤1 Major). Source: Core Rules.md:2842-2851
-- [ ] `MythicCompanionTypeSelector.svelte` (mirrors `HouseSelector`), gated on the
-      profile — shown when the selected type is `mythic_companion`, read off the
-      profile, never a hardcoded id
-- [ ] e2e spec green; PLAN.md 4d box updated; gate passes
+- [x] Mythic-companion-type data model + registry (`mythic_companion.rs`,
+      mirrors the House registry via the shared `grant.rs`): each type carries its
+      free status Virtue, its free Minor Virtue, and its required V/F package.
+      Source: Core Rules.md:2635-2639
+- [x] Free "status" Virtue: 0-cost, mutually incompatible, incompatible with The
+      Gift (symmetric `incompatible_with` web incl. `virtue.the_gift`); not for
+      grogs (grants only via the mythic type, which grogs cannot pick).
+      Source: Core Rules.md:2637
+- [x] Auto-grant the type's free Minor Virtue (point-free grant; a `choice`
+      free-Minor defaults to its first option); reuses the shared grant path.
+      Source: Core Rules.md:2638, 2847
+- [x] Required V/F packages count against the budget, incl. per-type bonus points
+      folded into the balance ceilings (Devil Child +3 V / +7 F; Spirit Votary
+      +7 F per RoP Magic:5486; Nephilim/Faerie Doctor none). Required Flaws are
+      swappable for a substitute (advisory). Source: Core Rules.md:2638, 2664, 2731
+- [x] `rules/core/mythic_companion_types.json` + i18n (en, de): the 4 core types
+      with their packages; ~19 required/free V/F seeded structurally from Core +
+      RoP Infernal/Divine/Faerie/Magic with verified citations (Tragic Life
+      corrected to Major *Story*), full supernatural effects M8. Source:
+      Core Rules.md:2643-2765 + RoP books (see RULES.md)
+- [~] Mythic-companion V/F guidelines: ≤5 Minor Flaws / ≤1 Story / ≤2 Personality
+      (≤1 Major) enforced via the Phase-1 mythic profile budget caps; **≥1 Social
+      Status is NOT enforced** (deferred — a guideline; the status Virtue is a
+      grant, and no ≥1-category-count rule exists yet). Source: Core Rules.md:2842-2851
+- [x] `MythicCompanionTypeSelector.svelte` (mirrors `HouseSelector`) + store
+      `setMythicType`/`setMythicChoice`/`setMythicRequiredFlaw`, gated on the
+      profile's `has_mythic_type` flag (never a hardcoded id); balance bar shows
+      the engine-authoritative effective ceilings
+- [x] e2e spec `mythic-companion.e2e.js` green (11/11 suite); PLAN.md 4d box
+      updated; full gate + release build passes
 
 Notes:
 - Supersedes the Phase-1 deferral ("the mythic free Minor status Virtue … is M8

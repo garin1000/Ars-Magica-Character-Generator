@@ -69,7 +69,7 @@ function installRuleset(
 /** Reset the shared singleton's entity to a clean character before each test. */
 function resetEntity(): void {
   store.entity = {
-    schema_version: 4,
+    schema_version: 5,
     ruleset: { id: 'test', version: '1' },
     entity_kind: 'character',
     type_id: 'companion',
@@ -635,5 +635,110 @@ describe('setAbilityParameterAt', () => {
     store.setAbilityParameterAt(0, 'Rhine');
     store.setAbilityParameterAt(0, '   ');
     expect(store.entity.ability_scores![0].parameter).toBeUndefined();
+  });
+});
+
+// --- Mythic Companion type selection ----------------------------------------
+
+describe('setMythicType / required package', () => {
+  // A mythic profile plus a Devil-Child-like type: a fixed status grant, a
+  // `choice` free-Minor, two required Virtues (one parameterized), and one
+  // required Flaw with a substitute constraint.
+  function installMythic(): void {
+    installRuleset(
+      [
+        item({ id: 'virtue.status', magnitude: 'free', category: 'social_status' }),
+        item({ id: 'virtue.min_a', category: 'supernatural' }),
+        item({ id: 'virtue.min_b', category: 'supernatural' }),
+        item({ id: 'virtue.req_major', magnitude: 'major', category: 'supernatural' }),
+        item({
+          id: 'virtue.puissant',
+          category: 'general',
+          parameters: [{ key: 'ability', type: 'ref', domain: 'ability' }],
+        }),
+        item({ id: 'flaw.default_major', kind: 'flaw', magnitude: 'major', category: 'story' }),
+        item({ id: 'flaw.other_major', kind: 'flaw', magnitude: 'major', category: 'story' }),
+      ],
+      [],
+      {
+        mythic_companion: {
+          id: 'mythic_companion',
+          budget: { virtue_points: 20, flaw_points: 10, virtue_points_per_flaw_point: 2 },
+          permitted_categories: [],
+          forbidden_categories: [],
+          has_mythic_type: true,
+          creation_phases: [],
+        },
+      },
+    );
+    store.ruleset!.ruleset.mythic_companion_types = {
+      'mythic_type.devil': {
+        id: 'mythic_type.devil',
+        grants: [
+          { kind: 'fixed', item: 'virtue.status' },
+          {
+            kind: 'choice',
+            choice_key: 'free_minor',
+            options: [{ ref: 'virtue.min_a' }, { ref: 'virtue.min_b' }],
+          },
+        ],
+        required_virtues: [
+          { ref: 'virtue.req_major' },
+          { ref: 'virtue.puissant', params: { ability: 'ability.guile' } },
+        ],
+        required_flaws: [
+          {
+            default: { ref: 'flaw.default_major' },
+            constraint: { kind: 'flaw', magnitude: 'major', require_categories: ['story'] },
+          },
+        ],
+      },
+      'mythic_type.other': {
+        id: 'mythic_type.other',
+        grants: [{ kind: 'fixed', item: 'virtue.status' }],
+        required_virtues: [{ ref: 'virtue.req_major' }],
+      },
+    };
+    store.entity.type_id = 'mythic_companion';
+  }
+
+  beforeEach(installMythic);
+
+  it('seeds the required package (with params) and defaults the free-Minor choice', async () => {
+    await store.setMythicType('mythic_type.devil');
+    expect(store.entity.mythic_type).toBe('mythic_type.devil');
+    // Required Virtues (incl. the parameterized Puissant) + the default Flaw are seeded.
+    expect(store.entity.selections).toContainEqual({ ref: 'virtue.req_major' });
+    expect(store.entity.selections).toContainEqual({
+      ref: 'virtue.puissant',
+      params: { ability: 'ability.guile' },
+    });
+    expect(store.entity.selections).toContainEqual({ ref: 'flaw.default_major' });
+    // The free status/Minor Virtues are grants, never bought selections.
+    expect(store.entity.selections.some((s) => s.ref === 'virtue.status')).toBe(false);
+    // The `choice` free-Minor defaults to its first option.
+    expect(store.entity.mythic_choices?.free_minor).toEqual({ ref: 'virtue.min_a' });
+  });
+
+  it('swaps the package when the type changes and drops it when cleared', async () => {
+    await store.setMythicType('mythic_type.devil');
+    await store.setMythicType('mythic_type.other');
+    // Devil-only rows (Puissant, the default Flaw) are dropped; the shared
+    // req_major stays; the stale free_minor choice is pruned.
+    expect(store.entity.selections.some((s) => s.ref === 'virtue.puissant')).toBe(false);
+    expect(store.entity.selections.some((s) => s.ref === 'flaw.default_major')).toBe(false);
+    expect(store.entity.selections).toContainEqual({ ref: 'virtue.req_major' });
+    expect(store.entity.mythic_choices?.free_minor).toBeUndefined();
+
+    await store.setMythicType(null);
+    expect(store.entity.mythic_type).toBeNull();
+    expect(store.entity.selections.some((s) => s.ref === 'virtue.req_major')).toBe(false);
+  });
+
+  it('swaps a required Flaw for a substitute', async () => {
+    await store.setMythicType('mythic_type.devil');
+    await store.setMythicRequiredFlaw('flaw.default_major', 'flaw.other_major');
+    expect(store.entity.selections.some((s) => s.ref === 'flaw.default_major')).toBe(false);
+    expect(store.entity.selections).toContainEqual({ ref: 'flaw.other_major' });
   });
 });

@@ -78,6 +78,7 @@ tab-virtues-flaws = Virtues & Flaws
 tab-abilities = Abilities
 tab-arts = Arts
 tab-house-specialisation = House
+tab-mythic-type = Type
 # Ability XP summary and controls.
 xp-pool = XP pool
 xp-spent = Spent: { $spent }
@@ -112,6 +113,17 @@ house-none = — None —
 house-granted-label = Granted
 # Prompt shown as the empty option of a choice/open specialisation picker.
 house-choose-prompt = Choose…
+
+# Mythic Companion type selector (mythic-companion-only). Type names come from
+# the rules i18n (keyed by mythic_type id), not from these chrome keys.
+mythic-type-label = Mythic Companion type
+mythic-type-none = — None —
+# A free status/Minor Virtue the type grants, shown read-only.
+mythic-granted-label = Granted
+# Prompt shown as the empty option of the free-Minor choice picker.
+mythic-choose-prompt = Choose…
+# Label beside a required Flaw whose default may be swapped for a substitute.
+mythic-required-flaw-label = Required Flaw
 
 balance-virtues = Virtues: { $used } / { $budget }
 balance-flaws = Flaws: { $used } / { $budget }

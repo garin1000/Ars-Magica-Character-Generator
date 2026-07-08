@@ -13,17 +13,28 @@
   import ArtGrid from './lib/components/ArtGrid.svelte';
   import ArtXpBar from './lib/components/ArtXpBar.svelte';
   import HouseSelector from './lib/components/HouseSelector.svelte';
+  import MythicCompanionTypeSelector from './lib/components/MythicCompanionTypeSelector.svelte';
   import BalanceBar from './lib/components/BalanceBar.svelte';
   import ValidationPanel from './lib/components/ValidationPanel.svelte';
   import SaveLoadBar from './lib/components/SaveLoadBar.svelte';
   import logoUrl from './lib/assets/logo.png';
 
-  type Tab = 'characteristics' | 'virtues_flaws' | 'abilities' | 'arts' | 'house_specialisation';
+  type Tab =
+    | 'characteristics'
+    | 'virtues_flaws'
+    | 'abilities'
+    | 'arts'
+    | 'house_specialisation'
+    | 'mythic_type';
   // Left-to-right: Characteristics, Virtues & Flaws, Abilities, then the two
-  // magus-only tabs (Arts, House) — gated on the profile's capability flag
-  // (never the type id), so any future magus-capable type gets them automatically.
+  // magus-only tabs (Arts, House) and the mythic-companion-only Type tab — each
+  // gated on the profile's capability flag (never the type id), so any future
+  // capable type gets them automatically.
   const isMagus = $derived(
     store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.is_magus ?? false,
+  );
+  const hasMythicType = $derived(
+    store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.has_mythic_type ?? false,
   );
   const tabs = $derived<{ id: Tab; key: string }[]>([
     { id: 'characteristics', key: 'tab-characteristics' },
@@ -35,6 +46,7 @@
           { id: 'house_specialisation' as Tab, key: 'tab-house-specialisation' },
         ]
       : []),
+    ...(hasMythicType ? [{ id: 'mythic_type' as Tab, key: 'tab-mythic-type' }] : []),
   ]);
   let tab = $state<Tab>('characteristics');
 
@@ -128,6 +140,10 @@
     <div class="vf-tab">
       <ArtXpBar />
       <ArtGrid />
+    </div>
+  {:else if tab === 'mythic_type'}
+    <div class="vf-tab">
+      <MythicCompanionTypeSelector />
     </div>
   {:else}
     <div class="vf-tab">

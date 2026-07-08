@@ -246,7 +246,7 @@ number.
       - Magus (new): must take The Gift + Hermetic Magus (both free), ≥1 Hermetic
         Flaw required, ≤5 Minor Flaws, ≤1 Major Hermetic Virtue, one free Minor
         House Virtue (un-balanced). Source: Core Rules.md:2303, 2855-2859
-- [ ] Mythic Companion *types* & free V/F system (parallels the Magus House
+- [x] Mythic Companion *types* & free V/F system (parallels the Magus House
       system, 4b): each type (Devil Child, Faerie Doctor, Nephilim, Spirit Votary)
       is a data-driven profile granting a free "status" Virtue (mutually
       incompatible, incompatible with The Gift, not for grogs) + a free Minor

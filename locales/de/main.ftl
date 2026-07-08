@@ -79,6 +79,7 @@ tab-virtues-flaws = Tugenden & Fehler
 tab-abilities = Fertigkeiten
 tab-arts = Künste
 tab-house-specialisation = Haus
+tab-mythic-type = Typ
 # XP-Übersicht und Bedienelemente der Fertigkeiten.
 xp-pool = XP-Vorrat
 xp-spent = Ausgegeben: { $spent }
@@ -114,6 +115,17 @@ house-none = — Keines —
 house-granted-label = Gewährt
 # Text der leeren Option einer Spezialisierungs-Auswahl.
 house-choose-prompt = Wählen…
+
+# Typ-Wähler für mythische Gefährten. Typnamen stammen aus der Regel-i18n
+# (per mythic_type-ID), nicht aus diesen Oberflächenschlüsseln.
+mythic-type-label = Typ des mythischen Gefährten
+mythic-type-none = — Keiner —
+# Eine gewährte freie Status-/Neben-Tugend, schreibgeschützt angezeigt.
+mythic-granted-label = Gewährt
+# Text der leeren Option der Neben-Tugend-Auswahl.
+mythic-choose-prompt = Wählen…
+# Bezeichnung neben einem erforderlichen Fehler, dessen Vorgabe ersetzt werden darf.
+mythic-required-flaw-label = Erforderlicher Fehler
 
 balance-virtues = Tugenden: { $used } / { $budget }
 balance-flaws = Fehler: { $used } / { $budget }

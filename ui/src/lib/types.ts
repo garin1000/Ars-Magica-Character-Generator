@@ -112,6 +112,10 @@ export interface EffectiveScores {
   // Virtue/Flaw Selections the entity's House grants (derived, never persisted),
   // in the House's declared grant order, so the V/F view renders them read-only.
   granted_selections: Selection[];
+  // Effective virtue/flaw point ceilings (base budget + Mythic Companion type
+  // bonus), so the balance bar shows the true budget (Devil Child 37/17).
+  virtue_budget: number;
+  flaw_budget: number;
 }
 
 // Per-category flaw count cap. The category is data, so the engine hardcodes no
@@ -149,6 +153,9 @@ export interface EntityTypeProfile {
   // Whether this character type is a Hermetic magus. Omitted from JSON when
   // false (the common case), so optional here.
   is_magus?: boolean;
+  // Whether this type chooses a Mythic Companion type (free status/Minor Virtue
+  // + required package). Capability flag parallel to is_magus. Omitted when false.
+  has_mythic_type?: boolean;
   // The Gift policy and the id representing The Gift. Omitted when not applicable.
   gift_policy?: 'required' | 'allowed' | 'forbidden';
   gift_id?: string;
@@ -238,11 +245,12 @@ export interface GrantConstraint {
   forbid_categories?: string[];
 }
 
-// One thing a House grants its magi at creation, internally tagged on `kind`.
-// `fixed` gives a set Virtue (with any fixed params); `choice` offers a menu of
-// Selections keyed by `choice_key`; `open` is a player-chosen Virtue/Flaw the
-// `constraint` bounds. Mirrors the engine's `HouseGrant`.
-export type HouseGrant =
+// One thing a type-linked profile (House or Mythic Companion type) grants at
+// creation, internally tagged on `kind`. `fixed` gives a set Virtue (with any
+// fixed params); `choice` offers a menu of Selections keyed by `choice_key`;
+// `open` is a player-chosen Virtue/Flaw the `constraint` bounds. Mirrors the
+// engine's `Grant`.
+export type Grant =
   | { kind: 'fixed'; item: string; params?: Record<string, string> }
   | { kind: 'choice'; choice_key: string; options: Selection[] }
   | { kind: 'open'; choice_key: string; constraint: GrantConstraint };
@@ -253,7 +261,28 @@ export type HouseGrant =
 export interface House {
   id: string;
   lineage_type: LineageType;
-  grants?: HouseGrant[];
+  grants?: Grant[];
+}
+
+// A required Flaw a Mythic Companion type imposes: the rules-specified `default`
+// plus the `constraint` a "suitable substitute agreed with the troupe" must
+// satisfy. Mirrors the engine's `RequiredFlaw`.
+export interface RequiredFlaw {
+  default: Selection;
+  constraint: GrantConstraint;
+}
+
+// A Mythic Companion type (Devil Child, Faerie Doctor, Nephilim, Spirit Votary).
+// `grants` are point-free (free status + free Minor Virtue); `required_virtues`
+// and each `required_flaws[].default` count against the budget. Mirrors the
+// engine's `MythicCompanionType`; name/description live in the rules i18n map.
+export interface MythicCompanionType {
+  id: string;
+  grants?: Grant[];
+  required_virtues?: Selection[];
+  required_flaws?: RequiredFlaw[];
+  bonus_flaw_points?: number;
+  bonus_free_virtue_points?: number;
 }
 
 // `Ruleset` serializes its maps as JSON objects keyed by id.
@@ -265,6 +294,8 @@ export interface Ruleset {
   // Present from schema with houses loaded; optional so older shapes still
   // type-check. Keyed by House id (e.g. `house.bjornaer`).
   houses?: Record<string, House>;
+  // Keyed by Mythic Companion type id (e.g. `mythic_type.devil_child`).
+  mythic_companion_types?: Record<string, MythicCompanionType>;
   // Present from schema with abilities/characteristics loaded; optional so older
   // shapes still type-check.
   abilities?: Record<string, Ability>;
@@ -338,6 +369,11 @@ export interface Entity {
   house?: string | null;
   // House specialisation picks, keyed by each grant's choice_key. Omitted empty.
   house_choices?: Record<string, Selection>;
+  // The Mythic Companion type (mythic companions only). Stores only the choice;
+  // free status/Minor Virtue derived engine-side. Omitted when unset.
+  mythic_type?: string | null;
+  // Mythic type grant picks, keyed by each grant's choice_key. Omitted empty.
+  mythic_choices?: Record<string, Selection>;
 }
 
 export interface ValidationIssue {
