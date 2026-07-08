@@ -3,7 +3,7 @@
 // validation result, and the active language/mode — and drives the live
 // validation loop with debouncing plus a sequence guard against stale results.
 
-import { mandatoryTraitRefs } from './derive';
+import { mandatoryTraitRefs, sameSelection } from './derive';
 import { buildBundle, translate, type Lang, type TranslateArgs } from './i18n';
 import * as ipc from './ipc';
 import type {
@@ -33,6 +33,7 @@ function newEntity(rulesetId: string, version: string): Entity {
     xp_pool: 0,
     art_scores: [],
     house: null,
+    mythic_type: null,
   };
 }
 
@@ -148,6 +149,101 @@ class AppStore {
     const kept: Record<string, Selection> = {};
     for (const [key, pick] of Object.entries(this.entity.house_choices ?? {})) {
       if (valid.has(key)) kept[key] = pick;
+    }
+    return kept;
+  }
+
+  /**
+   * Select the Mythic Companion type (or clear it with `null`). A discrete
+   * action, so it validates immediately. Switching auto-manages the type's
+   * required package: it removes the previous type's seeded required Virtues/
+   * Flaws that the new type doesn't require, then seeds the new type's package
+   * (its required Virtues + each required Flaw's rules default) as ordinary
+   * budgeted selections — so a direct-entry mythic companion starts legal, with
+   * the required Flaws swappable via {@link setMythicRequiredFlaw}. The free
+   * status/Minor Virtue are point-free grants derived engine-side (never in
+   * `selections`); a `choice` free-Minor (Devil Child's Might/Powers) defaults to
+   * its first option. Mirrors {@link setHouse} + {@link setType}.
+   */
+  async setMythicType(mythicType: string | null): Promise<void> {
+    if ((this.entity.mythic_type ?? null) === mythicType) return;
+    const previousPackage = this.#mythicPackage(this.entity.mythic_type ?? null);
+    const nextPackage = this.#mythicPackage(mythicType);
+    // Drop the previous type's seeded package rows the new type doesn't require.
+    this.entity.selections = this.entity.selections.filter(
+      (s) =>
+        !(
+          previousPackage.some((p) => sameSelection(p, s)) &&
+          !nextPackage.some((p) => sameSelection(p, s))
+        ),
+    );
+    this.entity.mythic_type = mythicType;
+    this.entity.mythic_choices = this.#defaultedMythicChoices(mythicType);
+    // Seed the new type's required package (budgeted) where not already present.
+    for (const pkg of nextPackage) {
+      if (!this.entity.selections.some((s) => sameSelection(s, pkg))) {
+        this.entity.selections.push(pkg);
+      }
+    }
+    await this.revalidate();
+  }
+
+  /**
+   * Set a Mythic Companion type grant pick keyed by the grant's `choice_key`
+   * (e.g. Devil Child's Demonic Might-or-Powers free Minor). Debounced like the
+   * other picker edits. Mirrors {@link setHouseChoice}.
+   */
+  setMythicChoice(choiceKey: string, selection: Selection): void {
+    this.entity.mythic_choices = {
+      ...(this.entity.mythic_choices ?? {}),
+      [choiceKey]: selection,
+    };
+    this.#scheduleValidate();
+  }
+
+  /**
+   * Swap a required Flaw for a "suitable substitute agreed with the troupe":
+   * removes the currently-selected required Flaw (`previousRef`) and adds the
+   * chosen substitute (`nextRef`) as a budgeted selection. A discrete dropdown
+   * action, so it validates immediately.
+   */
+  async setMythicRequiredFlaw(previousRef: string, nextRef: string): Promise<void> {
+    if (previousRef === nextRef) return;
+    const idx = this.entity.selections.findIndex((s) => s.ref === previousRef);
+    if (idx >= 0) this.entity.selections.splice(idx, 1);
+    if (!this.entity.selections.some((s) => s.ref === nextRef)) {
+      this.entity.selections.push({ ref: nextRef });
+    }
+    this.entity.selections = [...this.entity.selections];
+    await this.revalidate();
+  }
+
+  /** The budgeted required package (required Virtues + each Flaw's default). */
+  #mythicPackage(mythicType: string | null): Selection[] {
+    if (!mythicType) return [];
+    const t = this.ruleset?.ruleset.mythic_companion_types?.[mythicType];
+    if (!t) return [];
+    return [...(t.required_virtues ?? []), ...(t.required_flaws ?? []).map((f) => f.default)];
+  }
+
+  /**
+   * Mythic-type grant picks kept where the target type still defines their key,
+   * with each `choice` grant defaulted to its first option so the free Minor
+   * Virtue is granted without an extra step.
+   */
+  #defaultedMythicChoices(mythicType: string | null): Record<string, Selection> {
+    const grants = mythicType
+      ? (this.ruleset?.ruleset.mythic_companion_types?.[mythicType]?.grants ?? [])
+      : [];
+    const validKeys = new Set(
+      grants.filter((g) => g.kind === 'choice' || g.kind === 'open').map((g) => g.choice_key),
+    );
+    const kept: Record<string, Selection> = {};
+    for (const [key, pick] of Object.entries(this.entity.mythic_choices ?? {})) {
+      if (validKeys.has(key)) kept[key] = pick;
+    }
+    for (const g of grants) {
+      if (g.kind === 'choice' && !kept[g.choice_key]) kept[g.choice_key] = g.options[0];
     }
     return kept;
   }

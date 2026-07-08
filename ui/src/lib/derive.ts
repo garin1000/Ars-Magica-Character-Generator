@@ -122,6 +122,22 @@ export function mandatoryTraitRefs(profile: EntityTypeProfile | undefined): Set<
 }
 
 /**
+ * Whether two selections are the same instance: same item ref and same
+ * parameter values (order-independent). Used when auto-seeding/removing a Mythic
+ * Companion type's required package, where a parameterized requirement (Great
+ * Characteristic, Puissant Guile) must match on both ref and params.
+ */
+export function sameSelection(a: Selection, b: Selection): boolean {
+  if (a.ref !== b.ref) return false;
+  const pa = a.params ?? {};
+  const pb = b.params ?? {};
+  const ka = Object.keys(pa).sort();
+  const kb = Object.keys(pb).sort();
+  if (ka.length !== kb.length) return false;
+  return ka.every((k, i) => k === kb[i] && pa[k] === pb[k]);
+}
+
+/**
  * House-granted selections that belong on one V/F side (virtue/boon vs
  * flaw/hook), by resolving each grant's kind against the ruleset. Grants whose
  * item is unknown are dropped. Rendered read-only in the selected list.

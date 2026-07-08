@@ -34,5 +34,6 @@ pub use types::{
     ValidationMode,
 };
 pub use validation::{
-    Balance, IssueSeverity, ValidationIssue, ValidationResult, compute_balance, validate,
+    Balance, IssueSeverity, ValidationIssue, ValidationResult, compute_balance,
+    effective_point_ceilings, validate,
 };

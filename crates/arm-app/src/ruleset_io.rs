@@ -13,7 +13,8 @@ use arm_rules::{
     AbilityBonus, AbilityFloor, ArtBonus, Characteristic, Entity, EntityKind, LocalizedRuleset,
     RestrictedXpPool, Ruleset, RulesetSources, Selection, ValidationMode, ValidationResult,
     ability_bonuses, ability_score_floors, art_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, granted_selections, validate, xp_allocation,
+    characteristic_points_granted, effective_point_ceilings, granted_selections, validate,
+    xp_allocation,
 };
 use serde::Serialize;
 
@@ -55,11 +56,17 @@ pub struct EffectiveScores {
     /// so the V/F view renders them read-only without re-deriving. Emitted in the
     /// House's declared grant order for a stable UI + snapshot ordering.
     pub granted_selections: Vec<Selection>,
+    /// Effective virtue/flaw point ceilings (base budget + Mythic Companion type
+    /// bonus) so the balance bar shows the true budget (a Devil Child's 37/17,
+    /// not the base 20/10). Budget numbers stay engine-authoritative.
+    pub virtue_budget: u32,
+    pub flaw_budget: u32,
 }
 
 /// Computes the score effects for `entity` against a loaded ruleset.
 pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveScores {
     let allocation = xp_allocation(entity, ruleset);
+    let (virtue_budget, flaw_budget) = effective_point_ceilings(entity, ruleset).unwrap_or((0, 0));
     EffectiveScores {
         ability_bonuses: ability_bonuses(entity, ruleset),
         art_bonuses: art_bonuses(entity, ruleset),
@@ -71,6 +78,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         characteristic_points_granted: characteristic_points_granted(entity, ruleset),
         ability_score_floors: ability_score_floors(entity, ruleset),
         granted_selections: granted_selections(entity, ruleset),
+        virtue_budget,
+        flaw_budget,
     }
 }
 

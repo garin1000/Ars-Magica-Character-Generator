@@ -534,6 +534,17 @@ fn effective_budget(
     }
 }
 
+/// The effective virtue/flaw point ceilings `(virtue, flaw)` for the entity's
+/// type — the profile's base budget plus any Mythic Companion type bonus — for
+/// the frontend's balance display (so the bar shows a Devil Child's 37/17, not
+/// the base 20/10). `None` when the type profile is unknown. Keeps the budget
+/// numbers engine-authoritative rather than recomputed in TS.
+pub fn effective_point_ceilings(entity: &Entity, ruleset: &Ruleset) -> Option<(u32, u32)> {
+    let profile = ruleset.profile(&entity.type_id)?;
+    let b = effective_budget(entity, ruleset, profile);
+    Some((b.virtue_ceiling.max(0) as u32, b.flaw_ceiling.max(0) as u32))
+}
+
 /// The accumulated virtue and flaw point totals for an entity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Balance {
@@ -5615,6 +5626,19 @@ mod tests {
         assert_eq!(b.flaw_ceiling, 10);
         assert_eq!(b.funded(10), 10); // rate 1
         assert_eq!(b.funded(0), 0);
+    }
+
+    #[test]
+    fn effective_point_ceilings_surface_the_display_budget() {
+        let rs = mythic_ruleset();
+        // Devil Child: 37 V / 17 F (base 20/10 + 7·2 + 3 free / +7 F).
+        let devil = mythic_entity("mythic_type.devil_child");
+        assert_eq!(effective_point_ceilings(&devil, &rs), Some((37, 17)));
+        // Faerie Doctor (no bonus) and a plain companion stay at their base.
+        let faerie = mythic_entity("mythic_type.faerie_doctor");
+        assert_eq!(effective_point_ceilings(&faerie, &rs), Some((20, 10)));
+        let companion = make_entity("companion", vec![]);
+        assert_eq!(effective_point_ceilings(&companion, &rs), Some((10, 10)));
     }
 
     #[test]
