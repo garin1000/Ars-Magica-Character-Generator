@@ -1,0 +1,101 @@
+{
+  "spells": [
+    {
+      "id": "spell.aegis_of_the_hearth",
+      "technique": "art.rego",
+      "form": "art.vim",
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [15870, 15890] }
+    },
+    {
+      "id": "spell.ball_of_abysmal_flame",
+      "technique": "art.creo",
+      "form": "art.ignem",
+      "level": 35,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [14270, 14273] }
+    },
+    {
+      "id": "spell.bind_wound",
+      "technique": "art.creo",
+      "form": "art.corpus",
+      "level": 10,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [13387, 13390] }
+    },
+    {
+      "id": "spell.circular_ward_against_demons",
+      "technique": "art.rego",
+      "form": "art.vim",
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [15892, 15895] }
+    },
+    {
+      "id": "spell.coat_of_flame",
+      "technique": "art.creo",
+      "form": "art.ignem",
+      "level": 25,
+      "requisites": ["art.rego"],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [14262, 14266] }
+    },
+    {
+      "id": "spell.flash_of_the_scarlet_flames",
+      "technique": "art.creo",
+      "form": "art.ignem",
+      "level": 15,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [14243, 14246] }
+    },
+    {
+      "id": "spell.invisible_sling_of_vilano",
+      "technique": "art.rego",
+      "form": "art.terram",
+      "level": 10,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [15510, 15513] }
+    },
+    {
+      "id": "spell.moonbeam",
+      "technique": "art.creo",
+      "form": "art.ignem",
+      "level": 3,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [14212, 14215] }
+    },
+    {
+      "id": "spell.palm_of_flame",
+      "technique": "art.creo",
+      "form": "art.ignem",
+      "level": 5,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [14219, 14222] }
+    },
+    {
+      "id": "spell.pilum_of_fire",
+      "technique": "art.creo",
+      "form": "art.ignem",
+      "level": 20,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [14250, 14253] }
+    },
+    {
+      "id": "spell.soothe_pains_of_the_beast",
+      "technique": "art.creo",
+      "form": "art.animal",
+      "level": 20,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [12430, 12434] }
+    },
+    {
+      "id": "spell.the_chirurgeons_healing_touch",
+      "technique": "art.creo",
+      "form": "art.corpus",
+      "level": 20,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [13399, 13402] }
+    },
+    {
+      "id": "spell.the_wizards_mount",
+      "technique": "art.creo",
+      "form": "art.animal",
+      "level": 35,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [12448, 12451] }
+    },
+    {
+      "id": "spell.unseen_arm",
+      "technique": "art.rego",
+      "form": "art.terram",
+      "level": 5,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [15498, 15501] }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "spell.aegis_of_the_hearth": { "name": "Aegis of the Hearth" },
+  "spell.ball_of_abysmal_flame": { "name": "Ball of Abysmal Flame" },
+  "spell.bind_wound": { "name": "Bind Wound" },
+  "spell.circular_ward_against_demons": { "name": "Circular Ward against Demons" },
+  "spell.coat_of_flame": { "name": "Coat of Flame" },
+  "spell.flash_of_the_scarlet_flames": { "name": "Flash of the Scarlet Flames" },
+  "spell.invisible_sling_of_vilano": { "name": "Invisible Sling of Vilano" },
+  "spell.moonbeam": { "name": "Moonbeam" },
+  "spell.palm_of_flame": { "name": "Palm of Flame" },
+  "spell.pilum_of_fire": { "name": "Pilum of Fire" },
+  "spell.soothe_pains_of_the_beast": { "name": "Soothe Pains of the Beast" },
+  "spell.the_chirurgeons_healing_touch": { "name": "The Chirurgeon's Healing Touch" },
+  "spell.the_wizards_mount": { "name": "The Wizard's Mount" },
+  "spell.unseen_arm": { "name": "Unseen Arm" }
+}

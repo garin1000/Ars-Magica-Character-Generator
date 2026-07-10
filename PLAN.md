@@ -227,13 +227,22 @@ number.
       `FlawCategoryCap`) to enforce "≤1 Major Hermetic Virtue". Source: Core Rules.md:2857
 - [x] Additional Hermetic-category V/F data (the special magus Virtues/Flaws)
 
-### 4c. Spells (engine + data + direct entry)
-- [ ] Spell data model (technique + form + level; depends on the 4a Art registry
-      for T+F refs)
-- [ ] Spell-levels budget concept for direct validation of a magus's spell list
-- [ ] `rules/core/spells.json` seed + i18n (full catalogue stays M8; German spell
-      names must follow the curated translation tables)
-- [ ] Spell direct-entry component (add/remove, pick T+F+level), Fluent-labelled
+### 4c. Spells (engine + data + direct entry) ✅
+- [x] Spell data model (technique + form + level; depends on the 4a Art registry
+      for T+F refs). `spell.rs` `Spell { technique, form, level: Option<u8>,
+      requisites }` + `Entity::spells` (`SpellSelection`); `None` level = General.
+      Source: Core Rules.md:12329-12358
+- [x] Spell-levels budget concept for direct validation of a magus's spell list:
+      120 levels (`EntityTypeProfile.spell_levels`) + per-spell cap ≤ Tech + Form
+      + Int + Magic Theory + 3, both in `validate_spells`. Skilled/Weak Parens
+      modify both the spell budget (`Effect::SpellLevels`) and the general XP pool
+      (`Effect::GeneralXp`). Source: Core Rules.md:2215-2216, 2435, 2465, 4964-4966, 7072-7074
+- [x] `rules/core/spells.json` seed (14 spells across Creo/Rego × several Forms) +
+      i18n (en, de); German names from the `zauber-nach-form.md` table. Full
+      catalogue stays M8
+- [x] Spell direct-entry component (`SpellPicker.svelte`: Technique/Form filter,
+      add/remove, General-level input, spell-levels bar), Fluent-labelled; Spells
+      tab gated on the profile `is_magus`
 
 ### 4d. Character types: profiles, selector & type-specific V/F + Ability rules
 - [x] All four type profiles in `character_types.json` with budgets/caps/required

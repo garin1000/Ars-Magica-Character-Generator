@@ -1,0 +1,16 @@
+{
+  "spell.aegis_of_the_hearth": { "name": "Aegis des Herdes" },
+  "spell.ball_of_abysmal_flame": { "name": "Kugel der abgründigen Flamme" },
+  "spell.bind_wound": { "name": "Wunde verbinden" },
+  "spell.circular_ward_against_demons": { "name": "Schutzkreis gegen Dämonen" },
+  "spell.coat_of_flame": { "name": "Feuerkleid" },
+  "spell.flash_of_the_scarlet_flames": { "name": "Blitz scharlachroter Flammen" },
+  "spell.invisible_sling_of_vilano": { "name": "Die unsichtbare Schleuder des Vilano" },
+  "spell.moonbeam": { "name": "Mondstrahl" },
+  "spell.palm_of_flame": { "name": "Flamme in der Hand" },
+  "spell.pilum_of_fire": { "name": "Pilum aus Feuer" },
+  "spell.soothe_pains_of_the_beast": { "name": "Linderung der Schmerzen des Tieres" },
+  "spell.the_chirurgeons_healing_touch": { "name": "Des Chirurgen heilende Berührung" },
+  "spell.the_wizards_mount": { "name": "Das Reittier des Zauberers" },
+  "spell.unseen_arm": { "name": "Der unsichtbare Arm" }
+}

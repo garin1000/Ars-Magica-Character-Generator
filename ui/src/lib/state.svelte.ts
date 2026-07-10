@@ -18,7 +18,7 @@ import type {
 } from './types';
 
 const VALIDATE_DEBOUNCE_MS = 150;
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 6;
 
 function newEntity(rulesetId: string, version: string): Entity {
   return {
@@ -32,6 +32,7 @@ function newEntity(rulesetId: string, version: string): Entity {
     ability_scores: [],
     xp_pool: 0,
     art_scores: [],
+    spells: [],
     house: null,
     mythic_type: null,
   };
@@ -390,6 +391,31 @@ class AppStore {
     this.entity.selections = this.entity.selections.map((s, i) =>
       i === index ? { ...s, params: { art: artId } } : s,
     );
+    this.#scheduleValidate();
+  }
+
+  /**
+   * Add a spell to the magus's list. `level` is passed only for a General spell
+   * (the chosen level); a fixed spell derives its level from the catalogue. The
+   * same (spell, level) pair is not added twice — different General levels are
+   * different spells, so they may coexist.
+   */
+  addSpell(spellId: string, level?: number | null): void {
+    const lvl = typeof level === 'number' ? level : undefined;
+    const present = (this.entity.spells ?? []).some(
+      (s) => s.spell === spellId && (s.level ?? undefined) === lvl,
+    );
+    if (present) return;
+    this.entity.spells = [
+      ...(this.entity.spells ?? []),
+      lvl === undefined ? { spell: spellId } : { spell: spellId, level: lvl },
+    ];
+    this.#scheduleValidate();
+  }
+
+  /** Spell edits are by row index, since a General spell can appear at several levels. */
+  removeSpellAt(index: number): void {
+    this.entity.spells = (this.entity.spells ?? []).filter((_, i) => i !== index);
     this.#scheduleValidate();
   }
 

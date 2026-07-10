@@ -82,6 +82,7 @@
     "required_traits": ["virtue.hermetic_magus"],
     "forbidden_traits": [],
     "is_magus": true,
+    "spell_levels": 120,
     "gift_policy": "required",
     "gift_id": "virtue.the_gift",
     "gift_categories": ["hermetic"],

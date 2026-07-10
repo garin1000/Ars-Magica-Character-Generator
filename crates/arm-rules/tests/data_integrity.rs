@@ -1,6 +1,6 @@
 use arm_rules::AbilityCategory;
 use arm_rules::Characteristic;
-use arm_rules::ruleset::{LocalizedRuleset, Ruleset};
+use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
 use arm_rules::validation::{compute_balance, validate};
 use std::collections::BTreeMap;
@@ -18,6 +18,24 @@ fn load_ruleset() -> Ruleset {
         abilities,
         characteristics,
     )
+    .unwrap()
+}
+
+/// The full shipped ruleset including Arts and the spell catalogue — the spell
+/// tests need Arts loaded so each spell's Technique/Form resolves.
+fn load_ruleset_with_spells() -> Ruleset {
+    Ruleset::from_sources(RulesetSources {
+        id: "arm5-core",
+        version: "2024.1",
+        point_items: include_str!("../../../rules/core/virtues_flaws.json"),
+        type_profiles: include_str!("../../../rules/core/character_types.json"),
+        abilities: Some(include_str!("../../../rules/core/abilities.json")),
+        arts: Some(include_str!("../../../rules/core/arts.json")),
+        houses: None,
+        mythic_types: None,
+        spells: Some(include_str!("../../../rules/core/spells.json")),
+        characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+    })
     .unwrap()
 }
 
@@ -166,6 +184,59 @@ fn german_i18n_covers_all_abilities() {
             ability.id
         );
     }
+}
+
+#[test]
+fn english_i18n_covers_all_spells() {
+    let rs = load_ruleset_with_spells();
+    let i18n_en = include_str!("../../../rules/i18n/en/spells.json");
+    let loc = LocalizedRuleset::new(rs.clone(), i18n_en).unwrap();
+    for spell in rs.spells() {
+        assert!(
+            loc.display_name(&spell.id).is_some(),
+            "English i18n missing spell '{}'",
+            spell.id
+        );
+    }
+}
+
+#[test]
+fn german_i18n_covers_all_spells() {
+    let rs = load_ruleset_with_spells();
+    let i18n_de = include_str!("../../../rules/i18n/de/spells.json");
+    let loc = LocalizedRuleset::new(rs.clone(), i18n_de).unwrap();
+    for spell in rs.spells() {
+        assert!(
+            loc.display_name(&spell.id).is_some(),
+            "German i18n missing spell '{}'",
+            spell.id
+        );
+    }
+}
+
+/// The shipped Skilled Parens raises *both* the spell-levels budget (+30) and the
+/// general apprenticeship XP pool (+60), proving its two-effect package is wired
+/// end-to-end against real data (Core:4964-4966).
+#[test]
+fn shipped_skilled_parens_raises_both_budgets() {
+    let rs = load_ruleset_with_spells();
+    let mut e = entity(
+        "magus",
+        vec![Selection::new(Id::new("virtue.skilled_parens"))],
+    );
+    e.xp_pool = 240;
+    assert_eq!(arm_rules::spell_levels_budget(120, &e, &rs), 150);
+    assert_eq!(arm_rules::xp_allocation(&e, &rs).general_pool, 300);
+}
+
+/// The shipped Weak Parens lowers both budgets (Core:7072-7074).
+#[test]
+fn shipped_weak_parens_lowers_both_budgets() {
+    let rs = load_ruleset_with_spells();
+    let mut e = entity("magus", vec![Selection::new(Id::new("flaw.weak_parens"))]);
+    e.xp_pool = 240;
+    assert_eq!(arm_rules::spell_levels_budget(120, &e, &rs), 90);
+    assert_eq!(arm_rules::xp_allocation(&e, &rs).general_pool, 180);
 }
 
 #[test]

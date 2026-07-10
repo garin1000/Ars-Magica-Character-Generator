@@ -79,6 +79,7 @@ tab-abilities = Abilities
 tab-arts = Arts
 tab-house-specialisation = House
 tab-mythic-type = Type
+tab-spells = Spells
 # Ability XP summary and controls.
 xp-pool = XP pool
 xp-spent = Spent: { $spent }
@@ -101,6 +102,17 @@ art-type-form = Forms
 art-add = Add Art
 art-increment = Raise
 art-decrement = Lower
+# Spell picker (magi only). Spell display names come from the rules i18n (keyed
+# by spell id), not from these chrome keys. Filter a spell by Technique + Form,
+# then add it; a General spell prompts for its learned level.
+spell-technique-label = Technique
+spell-form-label = Form
+spell-level-label = Level
+spell-add = Add spell
+spell-none = — Select a spell —
+# The spell-levels budget bar: how many of the magus's levels are used.
+spell-levels-used = Spell levels: { $used } / { $budget }
+spell-remove = Remove
 characteristic-increment = Raise
 characteristic-decrement = Lower
 characteristic-description-label = Description
@@ -207,6 +219,11 @@ issue-mythic_type_unset = A Mythic Companion should choose a type.
 issue-mythic_choice_unresolved = The Mythic Companion type { $mythic_type } has an unresolved choice ({ $choice_key }).
 issue-mythic_grant_constraint = The Mythic Companion type { $mythic_type } grant { $choice_key } picks { $item }, which does not meet its constraint.
 issue-mythic_required_trait_missing = A required Virtue or Flaw (or a suitable substitute) is missing: { $item }.
+issue-unknown_spell = Unknown spell: { $spell }.
+issue-duplicate_spell = { $spell } is listed { $count } times.
+issue-spell_level_unresolved = General spell { $spell } has no chosen level yet.
+issue-over_spell_levels = Spells total { $used } levels, over the budget of { $budget } (by { $over }).
+issue-spell_level_exceeds_cap = Spell { $spell } is level { $level }, above the maximum you can learn ({ $cap }).
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.

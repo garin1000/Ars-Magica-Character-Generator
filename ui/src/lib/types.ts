@@ -32,7 +32,9 @@ export type Effect =
   | { type: 'affinity_art_cost'; param: string; counts_as_num: number; counts_as_den: number }
   | { type: 'restricted_ability_xp'; amount: number; abilities?: string[]; categories?: string[] }
   | { type: 'characteristic_points'; amount: number }
-  | { type: 'ability_score_grant'; ability: string; amount: number };
+  | { type: 'ability_score_grant'; ability: string; amount: number }
+  | { type: 'spell_levels'; amount: number }
+  | { type: 'general_xp'; amount: number };
 
 // Prerequisite expression tree. Adjacently tagged by the engine: every variant
 // is a uniform object carrying a `kind` discriminant, with any payload under
@@ -116,6 +118,10 @@ export interface EffectiveScores {
   // bonus), so the balance bar shows the true budget (Devil Child 37/17).
   virtue_budget: number;
   flaw_budget: number;
+  // The magus's effective spell-levels budget (profile base + Skilled/Weak
+  // Parens) and how many levels the chosen spells consume — the spell bar.
+  spell_levels_budget: number;
+  spell_levels_used: number;
 }
 
 // Per-category flaw count cap. The category is data, so the engine hardcodes no
@@ -156,6 +162,9 @@ export interface EntityTypeProfile {
   // Whether this type chooses a Mythic Companion type (free status/Minor Virtue
   // + required package). Capability flag parallel to is_magus. Omitted when false.
   has_mythic_type?: boolean;
+  // The magus's starting spell-levels budget (120). Omitted from JSON when 0
+  // (every non-magus type), so optional here.
+  spell_levels?: number;
   // The Gift policy and the id representing The Gift. Omitted when not applicable.
   gift_policy?: 'required' | 'allowed' | 'forbidden';
   gift_id?: string;
@@ -214,6 +223,23 @@ export type ArtType = 'technique' | 'form';
 export interface Art {
   id: string;
   art_type: ArtType;
+}
+
+// A spell in the catalogue. `level` is a fixed number, or omitted for a General
+// spell (learned at a per-character level). Technique/Form are Art ids.
+export interface Spell {
+  id: string;
+  technique: string;
+  form: string;
+  level?: number | null;
+  requisites?: string[];
+}
+
+// A spell the character knows. `level` is set only for a General spell (the
+// chosen level); for a fixed spell the catalogue level is authoritative.
+export interface SpellSelection {
+  spell: string;
+  level?: number | null;
 }
 
 export interface CharacteristicCost {
@@ -304,6 +330,9 @@ export interface Ruleset {
   // type-check. `art_advancement` reuses the Ability XP-row shape.
   arts?: Record<string, Art>;
   art_advancement?: AbilityXpRow[];
+  // Present from schema with spells loaded; optional so older shapes still
+  // type-check. Keyed by spell id (e.g. `spell.pilum_of_fire`).
+  spells?: Record<string, Spell>;
   characteristic_rules?: CharacteristicRules | null;
   // Derived taxonomy surfaced by the engine so the UI never re-hardcodes the
   // magnitude point weights or the ability-category / art-type order. Source of
@@ -364,6 +393,9 @@ export interface Entity {
   // Whole bought Art scores (magi only). Priced against the shared xp_pool.
   // Omitted when empty.
   art_scores?: ArtScore[];
+  // The spells the character knows (magi only). Each consumes the spell-levels
+  // budget. Omitted when empty.
+  spells?: SpellSelection[];
   // The Hermetic House (magi only). Stores only the choice; the free House
   // Virtue is derived engine-side, never persisted. Omitted when unset.
   house?: string | null;

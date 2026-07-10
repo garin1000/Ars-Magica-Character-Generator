@@ -776,6 +776,79 @@ without a parameter: the `ParamType` model is ref-domain-only and there is no
 
 ---
 
+## Spells (magus-only, M4/4c)
+
+A starting magus knows a list of spells, each drawn from the catalogue in
+`rules/core/spells.json` (`spell.rs`: `Spell { technique, form, level,
+requisites }`, with `level: None` marking a **General** spell learned at a
+per-character level). The chosen spells live on `Entity::spells`
+(`SpellSelection { spell, level }`); `validate_spells` (`validation.rs`) enforces
+two sourced constraints, both magus-only (gated on the profile `is_magus`).
+
+**Spell-levels budget — 120 at creation.**
+
+> `:2215-2216` "**Hermetic Magi Only: Apprenticeship.** … Take 120 levels of
+> spells, of no higher level than Technique + Form + Intelligence + Magic Theory
+> +3."
+> `:2435` "The fifteen years of apprenticeship give the character 240 experience
+> points, and 120 levels of spells."
+
+Encoded as `EntityTypeProfile.spell_levels: 120` on the magus profile
+(`rules/core/character_types.json`; JSON has no comments, so the value's
+provenance lives here). The sum of the chosen spells' levels must not exceed the
+effective budget → `over_spell_levels`. Value lives in data; the engine never
+hardcodes 120.
+
+**Per-spell cap — Technique + Form + Intelligence + Magic Theory + 3.**
+
+> `:2465` "The highest level spell you can learn is equal to Technique + Form +
+> Intelligence + Magic Theory +3 … If the spell has requisites … they apply to
+> this total as well."
+
+`spell_level_cap` (`validation.rs`) computes it from the effective Art scores,
+the Intelligence characteristic, and effective Magic Theory → a spell above it
+emits `spell_level_exceeds_cap`. **Approximation:** requisite-Art reduction is a
+lab-total nuance out of M4 scope — requisites are stored on the spell for display
+but not folded into the cap.
+
+**General spells.**
+
+> `:12349-12353` "Some spells are General spells (abbreviated to Gen), which
+> means that they may be learned at any level … different levels of a General
+> level spell are still different spells."
+
+A General spell's catalogue `level` is `None`; the learned level is the
+per-character `SpellSelection.level`. Identity (and the dedup key) is
+`(spell, level)`; an unresolved General spell (no chosen level) warns
+(`spell_level_unresolved`) and is excluded from the budget sum.
+
+**Budget-modifier Virtues/Flaws (Skilled/Weak Parens).** Two Hermetic V/F modify
+the apprenticeship grant, each via *two* `Effect`s
+(`spell_levels` ± and `general_xp` ±, both signed, summed and clamped at 0):
+
+| Item | magnitude/category | effects | source |
+|------|--------------------|---------|--------|
+| `virtue.skilled_parens` | Minor, Hermetic | `spell_levels +30`, `general_xp +60` | `:4964-4966` |
+| `flaw.weak_parens` | Minor, Hermetic | `spell_levels -30`, `general_xp -60` | `:7072-7074` |
+
+> `:4966` (Skilled Parens) "You gain an additional 60 experience points and 30
+> spell levels during apprenticeship."
+> `:7074` (Weak Parens) "You gain 60 fewer experience points and 30 fewer spell
+> levels from apprenticeship, for a total of 180 experience points and 90 levels
+> of spells."
+
+`Effect::SpellLevels` folds into the spell budget (`effective::spell_levels_budget`);
+`Effect::GeneralXp` folds into the general apprenticeship pool
+(`effective::xp_allocation`'s `general_pool`). Both are ref-free effects
+(`validate_effect_refs`). Seeded spells (14, spread across Creo/Rego × several
+Forms, incl. one requisite spell and two General spells) each cite their Core
+Rules line range in `spells.json`; the full catalogue stays M8. German spell
+names follow `rules/source/de/translation-tables/zauber-nach-form.md`; the two
+Parens follow `tugenden-fehler.md` (Skilled → *Erfahrener Parens*; Weak →
+*Schwacher Parens*, the Latin *Parens* kept per the Latin-term convention).
+
+---
+
 ## Engine framework (book-agnostic, no rulebook source)
 
 These checks are structural integrity, not Ars Magica rules, and intentionally

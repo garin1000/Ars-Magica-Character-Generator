@@ -69,7 +69,7 @@ function installRuleset(
 /** Reset the shared singleton's entity to a clean character before each test. */
 function resetEntity(): void {
   store.entity = {
-    schema_version: 5,
+    schema_version: 6,
     ruleset: { id: 'test', version: '1' },
     entity_kind: 'character',
     type_id: 'companion',
@@ -190,6 +190,42 @@ describe('addSelection', () => {
     store.addSelection('virtue.unknown');
     store.addSelection('virtue.unknown');
     expect(store.entity.selections).toEqual([{ ref: 'virtue.unknown' }]);
+  });
+});
+
+// --- addSpell() / removeSpellAt() -------------------------------------------
+
+describe('addSpell', () => {
+  it('adds a fixed spell without a level', () => {
+    store.addSpell('spell.pilum_of_fire');
+    expect(store.entity.spells).toEqual([{ spell: 'spell.pilum_of_fire' }]);
+  });
+
+  it('dedups the same (spell, level) pair', () => {
+    store.addSpell('spell.pilum_of_fire');
+    store.addSpell('spell.pilum_of_fire');
+    expect(store.entity.spells).toEqual([{ spell: 'spell.pilum_of_fire' }]);
+  });
+
+  it('stores the chosen level for a General spell', () => {
+    store.addSpell('spell.aegis_of_the_hearth', 20);
+    expect(store.entity.spells).toEqual([{ spell: 'spell.aegis_of_the_hearth', level: 20 }]);
+  });
+
+  it('lets the same General spell coexist at different levels', () => {
+    store.addSpell('spell.aegis_of_the_hearth', 20);
+    store.addSpell('spell.aegis_of_the_hearth', 25);
+    expect(store.entity.spells).toHaveLength(2);
+  });
+});
+
+describe('removeSpellAt', () => {
+  it('removes only the row at the given index, keeping order', () => {
+    store.addSpell('spell.a');
+    store.addSpell('spell.b');
+    store.addSpell('spell.c');
+    store.removeSpellAt(1);
+    expect((store.entity.spells ?? []).map((s) => s.spell)).toEqual(['spell.a', 'spell.c']);
   });
 });
 

@@ -17,6 +17,7 @@ use crate::characteristics::CharacteristicRules;
 use crate::grant::Grant;
 use crate::house::{House, HousesFile};
 use crate::mythic_companion::{MythicCompanionType, MythicCompanionTypesFile};
+use crate::spell::{Spell, SpellsFile};
 use crate::types::{
     Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, Magnitude, ParameterDomain, PointItem,
     Prereq, RulesetRef,
@@ -53,7 +54,8 @@ use crate::types::{
 ///   "arts": { "art.creo": { /* Art */ } },
 ///   "art_advancement": [ { "score": 1, "total_xp": 1 } ],
 ///   "art_type_order": [ "technique", "form" ],
-///   "houses": { "house.bonisagus": { /* House */ } }
+///   "houses": { "house.bonisagus": { /* House */ } },
+///   "spells": { "spell.pilum_of_fire": { /* Spell */ } }
 /// }
 /// ```
 ///
@@ -130,6 +132,11 @@ pub struct Ruleset {
     /// public contract.
     #[serde(default)]
     pub(crate) mythic_companion_types: BTreeMap<Id, MythicCompanionType>,
+    /// All Hermetic spells keyed by their id. Defaulted so older serialized
+    /// rulesets (no spells) still deserialize. Serialized whole to the frontend;
+    /// the `spells` field name is a stable public contract.
+    #[serde(default)]
+    pub(crate) spells: BTreeMap<Id, Spell>,
 }
 
 /// The magnitude→points table, derived from the canonical [`Magnitude::points`].
@@ -168,6 +175,9 @@ pub struct RulesetSources<'a> {
     /// Mythic-companion-types JSON (`{ "types": [...] }`), or `None` for a
     /// ruleset without a Mythic Companion type registry.
     pub mythic_types: Option<&'a str>,
+    /// Spells-file JSON (`{ "spells": [...] }`), or `None` for a ruleset without
+    /// a spell catalogue.
+    pub spells: Option<&'a str>,
     /// Characteristic point-buy JSON (`{ "start_points", "costs" }`), or `None`
     /// for a ruleset that ships no characteristic rules.
     pub characteristics: Option<&'a str>,
@@ -277,6 +287,7 @@ pub(crate) mod parse_source {
     pub const ARTS: &str = "arts";
     pub const HOUSES: &str = "houses";
     pub const MYTHIC_TYPES: &str = "mythic companion types";
+    pub const SPELLS: &str = "spells";
     pub const CHARACTERISTICS: &str = "characteristics";
     pub const I18N: &str = "i18n";
     /// Fallback used by the blanket `From<serde_json::Error>` conversion, where
@@ -450,6 +461,7 @@ impl Ruleset {
             arts: None,
             houses: None,
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
     }
@@ -475,6 +487,7 @@ impl Ruleset {
             arts: None,
             houses: None,
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
     }
@@ -502,6 +515,7 @@ impl Ruleset {
             arts: None,
             houses: None,
             mythic_types: None,
+            spells: None,
             // Preserve the existing sentinel: an empty string means "no
             // characteristic rules" for this convenience constructor.
             characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
@@ -532,6 +546,7 @@ impl Ruleset {
             arts: Some(arts_json),
             houses: None,
             mythic_types: None,
+            spells: None,
             characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
         })
     }
@@ -552,6 +567,7 @@ impl Ruleset {
             arts,
             houses,
             mythic_types,
+            spells,
             characteristics,
         } = sources;
 
@@ -572,6 +588,9 @@ impl Ruleset {
         let mythic_types_file: MythicCompanionTypesFile =
             serde_json::from_str(mythic_types.unwrap_or("{}"))
                 .map_err(|e| RulesetError::parse(parse_source::MYTHIC_TYPES, e))?;
+        // An absent spells file is equivalent to an empty `"{}"`.
+        let spells_file: SpellsFile = serde_json::from_str(spells.unwrap_or("{}"))
+            .map_err(|e| RulesetError::parse(parse_source::SPELLS, e))?;
         let characteristic_rules: Option<CharacteristicRules> = match characteristics {
             None => None,
             Some(json) => Some(
@@ -598,6 +617,11 @@ impl Ruleset {
         collect_duplicates(
             mythic_types_file.types.iter().map(|t| &t.id),
             "mythic companion type",
+            &mut errors,
+        );
+        collect_duplicates(
+            spells_file.spells.iter().map(|s| &s.id),
+            "spell",
             &mut errors,
         );
         if !errors.is_empty() {
@@ -630,6 +654,11 @@ impl Ruleset {
             .into_iter()
             .map(|t| (t.id.clone(), t))
             .collect();
+        let spells: BTreeMap<Id, Spell> = spells_file
+            .spells
+            .into_iter()
+            .map(|s| (s.id.clone(), s))
+            .collect();
 
         let ruleset = Self {
             id: Id::new(id),
@@ -646,6 +675,7 @@ impl Ruleset {
             art_type_order: ArtType::ALL.to_vec(),
             houses,
             mythic_companion_types,
+            spells,
         };
 
         ruleset.validate_integrity()?;
@@ -789,6 +819,21 @@ impl Ruleset {
         self.mythic_companion_types.len()
     }
 
+    /// Looks up a spell by id.
+    pub fn spell(&self, id: &Id) -> Option<&Spell> {
+        self.spells.get(id)
+    }
+
+    /// Iterates all spells in id order.
+    pub fn spells(&self) -> impl Iterator<Item = &Spell> {
+        self.spells.values()
+    }
+
+    /// Number of spells in the catalogue.
+    pub fn spell_count(&self) -> usize {
+        self.spells.len()
+    }
+
     /// Number of Arts in the catalogue.
     pub fn art_count(&self) -> usize {
         self.arts.len()
@@ -903,6 +948,10 @@ impl Ruleset {
             self.validate_mythic_type_refs(mtype, &mut errors);
         }
 
+        for spell in self.spells.values() {
+            self.validate_spell_refs(spell, &mut errors);
+        }
+
         if errors.is_empty() {
             Ok(())
         } else {
@@ -1008,6 +1057,51 @@ impl Ruleset {
         }
     }
 
+    /// Validates a spell: its Technique must resolve to a Technique-class Art, its
+    /// Form to a Form-class Art, every requisite to a known Art, and its source
+    /// line range (if any) must be well-formed. This is the load-time trust gate
+    /// that a spell can only ship once its Arts exist.
+    fn validate_spell_refs(&self, spell: &Spell, errors: &mut Vec<String>) {
+        let id = &spell.id;
+        match self.arts.get(&spell.technique) {
+            None => errors.push(format!(
+                "spell '{id}': technique references unknown art '{}'",
+                spell.technique
+            )),
+            Some(art) if art.art_type != ArtType::Technique => errors.push(format!(
+                "spell '{id}': technique '{}' is not a Technique-class Art",
+                spell.technique
+            )),
+            Some(_) => {}
+        }
+        match self.arts.get(&spell.form) {
+            None => errors.push(format!(
+                "spell '{id}': form references unknown art '{}'",
+                spell.form
+            )),
+            Some(art) if art.art_type != ArtType::Form => errors.push(format!(
+                "spell '{id}': form '{}' is not a Form-class Art",
+                spell.form
+            )),
+            Some(_) => {}
+        }
+        for req in &spell.requisites {
+            if !self.arts.contains_key(req) {
+                errors.push(format!(
+                    "spell '{id}': requisite references unknown art '{req}'"
+                ));
+            }
+        }
+        if let Some(ref source) = spell.source
+            && !source.lines.is_valid()
+        {
+            errors.push(format!(
+                "spell '{id}': source line range start ({}) exceeds end ({})",
+                source.lines.start, source.lines.end
+            ));
+        }
+    }
+
     /// Recursively validates that prerequisite refs resolve to known registries:
     /// [`Prereq::Has`] against point items, [`Prereq::AbilityMin`] against the
     /// ability catalogue, [`Prereq::ArtMin`] against the Art catalogue, and
@@ -1099,8 +1193,10 @@ impl Ruleset {
                     }
                     continue;
                 }
-                // No parameter or ref to resolve: the point grant is intrinsic.
-                Effect::CharacteristicPoints { .. } => {
+                // No parameter or ref to resolve: the grant is intrinsic.
+                Effect::CharacteristicPoints { .. }
+                | Effect::SpellLevels { .. }
+                | Effect::GeneralXp { .. } => {
                     continue;
                 }
             };
@@ -1294,6 +1390,7 @@ mod tests {
             arts: None,
             houses: None,
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap();
@@ -1311,6 +1408,7 @@ mod tests {
             arts: None,
             houses: None,
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap();
@@ -1336,6 +1434,7 @@ mod tests {
             arts: None,
             houses: Some(VALID_HOUSES),
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap();
@@ -1354,6 +1453,7 @@ mod tests {
             arts: None,
             houses: None,
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap();
@@ -1381,6 +1481,7 @@ mod tests {
             arts: Some(VALID_ARTS),
             houses: None,
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap();
@@ -1390,6 +1491,82 @@ mod tests {
         assert_eq!(rs.arts().count(), 2);
         // The Art advancement table loads independently of the Ability table.
         assert_eq!(rs.art_advancement().xp_for_score(2), Some(3));
+    }
+
+    const SPELL_ARTS: &str = r#"{ "arts": [
+      { "id": "art.creo", "art_type": "technique" },
+      { "id": "art.rego", "art_type": "technique" },
+      { "id": "art.ignem", "art_type": "form" }
+    ] }"#;
+
+    fn ruleset_with_spells(spells: &str) -> Result<Ruleset, RulesetError> {
+        Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: Some(SPELL_ARTS),
+            houses: None,
+            mythic_types: None,
+            spells: Some(spells),
+            characteristics: None,
+        })
+    }
+
+    #[test]
+    fn from_sources_exposes_the_spell_catalogue_accessors() {
+        let rs = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.pilum_of_fire", "technique": "art.creo", "form": "art.ignem", "level": 20 }
+            ] }"#,
+        )
+        .unwrap();
+        assert_eq!(rs.spell_count(), 1);
+        assert!(rs.spell(&Id::new("spell.pilum_of_fire")).is_some());
+        assert!(rs.spell(&Id::new("spell.missing")).is_none());
+        assert_eq!(rs.spells().count(), 1);
+    }
+
+    #[test]
+    fn spell_with_form_as_technique_is_rejected() {
+        // art.ignem is a Form, so using it as the Technique must fail integrity.
+        let err = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.bad", "technique": "art.ignem", "form": "art.ignem", "level": 5 }
+            ] }"#,
+        )
+        .unwrap_err();
+        assert!(
+            format!("{err:?}").contains("not a Technique-class Art"),
+            "{err:?}"
+        );
+    }
+
+    #[test]
+    fn spell_with_unknown_form_is_rejected() {
+        let err = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.bad", "technique": "art.creo", "form": "art.missing", "level": 5 }
+            ] }"#,
+        )
+        .unwrap_err();
+        assert!(
+            format!("{err:?}").contains("unknown art 'art.missing'"),
+            "{err:?}"
+        );
+    }
+
+    #[test]
+    fn duplicate_spell_id_is_rejected() {
+        let err = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.x", "technique": "art.creo", "form": "art.ignem", "level": 5 },
+              { "id": "spell.x", "technique": "art.creo", "form": "art.ignem", "level": 10 }
+            ] }"#,
+        )
+        .unwrap_err();
+        assert!(format!("{err:?}").contains("spell"), "{err:?}");
     }
 
     #[test]
@@ -1407,6 +1584,7 @@ mod tests {
             arts: None,
             houses: Some(dup),
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -1439,6 +1617,7 @@ mod tests {
             arts: None,
             houses: Some(VALID_HOUSES),
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -1469,6 +1648,7 @@ mod tests {
             arts: None,
             houses: Some(houses),
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -1501,6 +1681,7 @@ mod tests {
             arts: None,
             houses: Some(houses),
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -1529,6 +1710,7 @@ mod tests {
             arts: None,
             houses: Some(houses),
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -2183,6 +2365,7 @@ mod tests {
             arts: None,
             houses: None,
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap();
@@ -2206,6 +2389,7 @@ mod tests {
                 "magnitude_points",
                 "mythic_companion_types",
                 "point_items",
+                "spells",
                 "type_profiles",
                 "version",
             ],

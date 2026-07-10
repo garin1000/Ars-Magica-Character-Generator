@@ -19,7 +19,7 @@
 use crate::ability::AbilityCategory;
 use crate::characteristics::Characteristic;
 use crate::ruleset::Ruleset;
-use crate::types::{Effect, Entity, Id, Selection};
+use crate::types::{Effect, Entity, Id, Selection, SpellSelection};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::{BTreeMap, VecDeque};
@@ -140,7 +140,9 @@ pub fn ability_bonus(
                 | Effect::AffinityArtCost { .. }
                 | Effect::RestrictedAbilityXp { .. }
                 | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. } => {}
+                | Effect::AbilityScoreGrant { .. }
+                | Effect::SpellLevels { .. }
+                | Effect::GeneralXp { .. } => {}
             }
         }
     }
@@ -241,7 +243,9 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::AffinityArtCost { .. }
                 | Effect::RestrictedAbilityXp { .. }
                 | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. } => {}
+                | Effect::AbilityScoreGrant { .. }
+                | Effect::SpellLevels { .. }
+                | Effect::GeneralXp { .. } => {}
             }
         }
     }
@@ -319,7 +323,9 @@ fn characteristic_limit_shift(
                 | Effect::AffinityArtCost { .. }
                 | Effect::RestrictedAbilityXp { .. }
                 | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. } => {}
+                | Effect::AbilityScoreGrant { .. }
+                | Effect::SpellLevels { .. }
+                | Effect::GeneralXp { .. } => {}
             }
         }
     }
@@ -479,7 +485,9 @@ fn ability_affinity(
                 | Effect::AffinityArtCost { .. }
                 | Effect::RestrictedAbilityXp { .. }
                 | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. } => None,
+                | Effect::AbilityScoreGrant { .. }
+                | Effect::SpellLevels { .. }
+                | Effect::GeneralXp { .. } => None,
             })
     });
     best_affinity(found)
@@ -511,7 +519,9 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::AffinityAbilityCost { .. }
                 | Effect::RestrictedAbilityXp { .. }
                 | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. } => None,
+                | Effect::AbilityScoreGrant { .. }
+                | Effect::SpellLevels { .. }
+                | Effect::GeneralXp { .. } => None,
             })
     });
     best_affinity(found)
@@ -633,7 +643,9 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
     }
 
     let total_demand: u32 = spends.iter().map(|s| s.cost).sum();
-    let general_pool = entity.xp_pool;
+    // Skilled/Weak Parens (and any GeneralXp effect) adjust the apprenticeship
+    // pool; a net-negative grant clamps at 0 rather than underflowing.
+    let general_pool = clamp_to_u32(i64::from(entity.xp_pool) + general_xp_bonus(entity, ruleset));
 
     // Flow graph: source(0) → sink(1); general(2) and restricted pools
     // (3..3+R) are pool nodes; spends follow. cap is the residual matrix.
@@ -776,6 +788,78 @@ pub fn restricted_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<Restricted
     xp_allocation(entity, ruleset).restricted
 }
 
+/// Clamps a signed budget total to a non-negative `u32` (a net-negative grant
+/// floors at 0 rather than underflowing).
+fn clamp_to_u32(n: i64) -> u32 {
+    u32::try_from(n.max(0)).unwrap_or(u32::MAX)
+}
+
+/// Sums the [`Effect::SpellLevels`] amounts across the entity's selections (may
+/// be negative; Skilled Parens +30, Weak Parens −30).
+fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
+    sum_signed_effect(entity, ruleset, |e| match e {
+        Effect::SpellLevels { amount } => Some(*amount),
+        _ => None,
+    })
+}
+
+/// Sums the [`Effect::GeneralXp`] amounts across the entity's selections (may be
+/// negative; Skilled Parens +60, Weak Parens −60).
+fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
+    sum_signed_effect(entity, ruleset, |e| match e {
+        Effect::GeneralXp { amount } => Some(*amount),
+        _ => None,
+    })
+}
+
+/// Sums a signed per-selection effect amount across everything that feeds the
+/// effective layer (selections + derived grants).
+fn sum_signed_effect(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    pick: impl Fn(&Effect) -> Option<i16>,
+) -> i64 {
+    let mut total: i64 = 0;
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Some(amount) = pick(effect) {
+                total += i64::from(amount);
+            }
+        }
+    }
+    total
+}
+
+/// The magus's effective spell-levels budget: the type profile's base plus any
+/// [`Effect::SpellLevels`] modifiers, clamped at 0.
+pub fn spell_levels_budget(base: u32, entity: &Entity, ruleset: &Ruleset) -> u32 {
+    clamp_to_u32(i64::from(base) + spell_levels_bonus(entity, ruleset))
+}
+
+/// The learned level of a chosen spell: the catalogue's fixed level, or — for a
+/// **General** spell — the per-character chosen level. `None` if the spell is
+/// unknown to the catalogue, or a General spell has no chosen level yet.
+pub fn resolved_spell_level(sel: &SpellSelection, ruleset: &Ruleset) -> Option<u32> {
+    let spell = ruleset.spell(&sel.spell)?;
+    match spell.level {
+        Some(fixed) => Some(u32::from(fixed)),
+        None => sel.level.map(u32::from),
+    }
+}
+
+/// Total spell levels the entity's chosen spells consume. Unresolved General
+/// spells (no chosen level) and unknown spells contribute 0.
+pub fn spell_levels_used(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    entity
+        .spells
+        .iter()
+        .filter_map(|s| resolved_spell_level(s, ruleset))
+        .sum()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -833,6 +917,28 @@ mod tests {
             "entity_kinds": ["character"],
             "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
             "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }]
+          },
+          {
+            "id": "virtue.skilled_parens",
+            "kind": "virtue",
+            "magnitude": "minor",
+            "category": "general",
+            "entity_kinds": ["character"],
+            "effects": [
+              { "type": "spell_levels", "amount": 30 },
+              { "type": "general_xp", "amount": 60 }
+            ]
+          },
+          {
+            "id": "flaw.weak_parens",
+            "kind": "flaw",
+            "magnitude": "minor",
+            "category": "general",
+            "entity_kinds": ["character"],
+            "effects": [
+              { "type": "spell_levels", "amount": -30 },
+              { "type": "general_xp", "amount": -60 }
+            ]
           }
         ]"#;
         let types = r#"[
@@ -898,6 +1004,24 @@ mod tests {
         );
         e.selections = selections;
         e
+    }
+
+    /// Skilled Parens's +60 XP folds into the general apprenticeship pool.
+    #[test]
+    fn skilled_parens_raises_general_xp_pool() {
+        let rs = ruleset();
+        let mut e = entity(vec![Selection::new(Id::new("virtue.skilled_parens"))]);
+        e.xp_pool = 30;
+        assert_eq!(xp_allocation(&e, &rs).general_pool, 90);
+    }
+
+    /// A GeneralXp modifier deeper than the base pool clamps at 0, not underflow.
+    #[test]
+    fn negative_general_xp_clamps_at_zero() {
+        let rs = ruleset();
+        let mut e = entity(vec![Selection::new(Id::new("flaw.weak_parens"))]);
+        e.xp_pool = 10;
+        assert_eq!(xp_allocation(&e, &rs).general_pool, 0);
     }
 
     fn puissant(ability: &str) -> Selection {
@@ -1597,6 +1721,7 @@ mod tests {
             arts: Some(arts),
             houses: Some(houses),
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap()

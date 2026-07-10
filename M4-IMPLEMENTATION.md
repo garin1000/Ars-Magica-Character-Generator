@@ -194,13 +194,35 @@ Notes:
   Nephilim) whose full mechanics live in Realms of Power books are seeded
   structurally; their in-play effects are out of scope until those sources exist.
 
-## Phase 6 — Spells (PLAN.md 4c)
+## Phase 6 — Spells (PLAN.md 4c) ✅
 e2e: `ui/e2e/specs/spells.e2e.js`
 
-- [ ] Spell data model (T+F+level; uses Phase 2 Art registry) + spell-levels budget
-- [ ] `rules/core/spells.json` seed + i18n (German names per translation tables)
-- [ ] `SpellPicker.svelte` (add/remove, pick T+F+level), Fluent-labelled
-- [ ] e2e spec green; PLAN.md 4c box updated; gate passes
+**Status: DONE.** Engine, data, UI, and e2e complete; full gate + release build +
+`spells.e2e.js` (7 tests) green, full e2e suite 12/12 files.
+
+- [x] Spell data model (T+F+level; uses Phase 2 Art registry) + spell-levels budget.
+      `spell.rs` (`Spell`, `SpellsFile`), `Entity::spells` (`SpellSelection`,
+      schema 5→6), spells registry + `validate_spell_refs` in `ruleset.rs`,
+      `validate_spells` (budget + per-spell cap + 5 issue codes) in `validation.rs`
+- [x] `rules/core/spells.json` seed (14 spells, verified Core line ranges) + i18n
+      (en, de); German names per `zauber-nach-form.md`. Skilled/Weak Parens V/F
+      added with `spell_levels` + `general_xp` effects (both budgets), per user
+      directive that all V/F effects be implemented in full
+- [x] `SpellPicker.svelte` (Technique/Form filter, add/remove, General-level input,
+      spell-levels bar), Fluent-labelled; Spells tab gated on `is_magus`
+- [x] e2e spec green; PLAN.md 4c box updated; gate passes
+
+Provenance facts (verified): magus spell budget **120 levels** (Core:2215-2216,
+2435); per-spell cap **Tech + Form + Int + Magic Theory + 3** (Core:2465); General
+spells learned at a chosen level, different levels are different spells
+(Core:12349-12353); **Skilled Parens** Minor Hermetic +60 XP/+30 levels
+(Core:4964-4966), **Weak Parens** Minor Hermetic −60/−30 (Core:7072-7074).
+
+Architecture notes for Phase 7+: two new ref-free `Effect` variants (`SpellLevels`,
+`GeneralXp`, signed, summed + clamped at 0) fold into `effective::spell_levels_budget`
+and `xp_allocation`'s `general_pool` respectively; `PointItem.effects` being a
+`Vec` lets one V/F carry both. Requisite-Art reduction in the per-spell cap is a
+documented M4 approximation (out of scope; requisites stored for display only).
 
 ## Phase 7 — Gift/supernatural rules + per-character fields (PLAN.md 4d-rest, 4e)
 e2e: `ui/e2e/specs/character-fields.e2e.js`

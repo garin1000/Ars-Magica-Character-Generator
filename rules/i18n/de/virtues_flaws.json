@@ -31,6 +31,10 @@
     "name": "Tragisches Leben",
     "summary": "Dämonen haben dein Leben zu deinem Nachteil manipuliert; du bist befleckt."
   },
+  "flaw.weak_parens": {
+    "name": "Schwacher Parens",
+    "summary": "Du erhältst aus deiner Lehrzeit 60 Erfahrungspunkte und 30 Zauberstufen weniger."
+  },
   "virtue.affinity_ability": {
     "name": "Affinität zu {ability}",
     "summary": "Erfahrung, die du in eine Fertigkeit steckst, zählt anderthalbfach, und diese Fertigkeit ist von der altersbedingten Obergrenze ausgenommen."
@@ -150,6 +154,10 @@
   "virtue.sense_holiness_and_unholiness": {
     "name": "Gespür für Heiliges und Unheiliges",
     "summary": "Spüre die Gegenwart von Gut und Böse. Verleiht die gleichnamige Fähigkeit."
+  },
+  "virtue.skilled_parens": {
+    "name": "Erfahrener Parens",
+    "summary": "Du erhältst während deiner Lehrzeit 60 zusätzliche Erfahrungspunkte und 30 zusätzliche Zauberstufen."
   },
   "virtue.spirit_votary": {
     "name": "Geistverehrer",
