@@ -13,8 +13,8 @@ use arm_rules::{
     AbilityBonus, AbilityFloor, ArtBonus, Characteristic, Entity, EntityKind, LocalizedRuleset,
     RestrictedXpPool, Ruleset, RulesetSources, Selection, ValidationMode, ValidationResult,
     ability_bonuses, ability_score_floors, art_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, effective_point_ceilings, granted_selections, validate,
-    xp_allocation,
+    characteristic_points_granted, effective_point_ceilings, granted_selections,
+    spell_levels_budget, spell_levels_used, validate, xp_allocation,
 };
 use serde::Serialize;
 
@@ -61,12 +61,21 @@ pub struct EffectiveScores {
     /// not the base 20/10). Budget numbers stay engine-authoritative.
     pub virtue_budget: u32,
     pub flaw_budget: u32,
+    /// The magus's effective spell-levels budget (profile base + Skilled/Weak
+    /// Parens modifiers) — the "available" side of the spell-levels bar.
+    pub spell_levels_budget: u32,
+    /// The spell levels the chosen spells consume — the "used" side of the bar.
+    pub spell_levels_used: u32,
 }
 
 /// Computes the score effects for `entity` against a loaded ruleset.
 pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveScores {
     let allocation = xp_allocation(entity, ruleset);
     let (virtue_budget, flaw_budget) = effective_point_ceilings(entity, ruleset).unwrap_or((0, 0));
+    let spell_base = ruleset
+        .profile(&entity.type_id)
+        .map(|p| p.spell_levels)
+        .unwrap_or(0);
     EffectiveScores {
         ability_bonuses: ability_bonuses(entity, ruleset),
         art_bonuses: art_bonuses(entity, ruleset),
@@ -80,6 +89,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         granted_selections: granted_selections(entity, ruleset),
         virtue_budget,
         flaw_budget,
+        spell_levels_budget: spell_levels_budget(spell_base, entity, ruleset),
+        spell_levels_used: spell_levels_used(entity, ruleset),
     }
 }
 
@@ -128,6 +139,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     let arts_json = fs::read_to_string(rules_dir.join("core/arts.json"))?;
     let houses_json = fs::read_to_string(rules_dir.join("core/houses.json"))?;
     let mythic_types_json = fs::read_to_string(rules_dir.join("core/mythic_companion_types.json"))?;
+    let spells_json = fs::read_to_string(rules_dir.join("core/spells.json"))?;
     let characteristics_json = fs::read_to_string(rules_dir.join("core/characteristics.json"))?;
 
     let vf_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/virtues_flaws.json")))?;
@@ -136,6 +148,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     let house_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/houses.json")))?;
     let mythic_i18n =
         fs::read_to_string(rules_dir.join(format!("i18n/{lang}/mythic_companion_types.json")))?;
+    let spell_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/spells.json")))?;
 
     let ruleset = Ruleset::from_sources(RulesetSources {
         id: RULESET_ID,
@@ -146,6 +159,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         arts: Some(&arts_json),
         houses: Some(&houses_json),
         mythic_types: Some(&mythic_types_json),
+        spells: Some(&spells_json),
         // An empty characteristics file means the ruleset ships no characteristic
         // rules (the `Option` is the engine's honest "absent" signal).
         characteristics: (!characteristics_json.is_empty())
@@ -159,6 +173,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
             &art_i18n,
             &house_i18n,
             &mythic_i18n,
+            &spell_i18n,
         ],
     )?;
     Ok(localized)

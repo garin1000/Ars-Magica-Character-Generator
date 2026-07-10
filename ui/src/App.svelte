@@ -12,6 +12,7 @@
   import AbilityXpBar from './lib/components/AbilityXpBar.svelte';
   import ArtGrid from './lib/components/ArtGrid.svelte';
   import ArtXpBar from './lib/components/ArtXpBar.svelte';
+  import SpellPicker from './lib/components/SpellPicker.svelte';
   import HouseSelector from './lib/components/HouseSelector.svelte';
   import MythicCompanionTypeSelector from './lib/components/MythicCompanionTypeSelector.svelte';
   import BalanceBar from './lib/components/BalanceBar.svelte';
@@ -24,6 +25,7 @@
     | 'virtues_flaws'
     | 'abilities'
     | 'arts'
+    | 'spells'
     | 'house_specialisation'
     | 'mythic_type';
   // Left-to-right: Characteristics, Virtues & Flaws, Abilities, then the two
@@ -43,6 +45,7 @@
     ...(isMagus
       ? [
           { id: 'arts' as Tab, key: 'tab-arts' },
+          { id: 'spells' as Tab, key: 'tab-spells' },
           { id: 'house_specialisation' as Tab, key: 'tab-house-specialisation' },
         ]
       : []),
@@ -140,6 +143,10 @@
     <div class="vf-tab">
       <ArtXpBar />
       <ArtGrid />
+    </div>
+  {:else if tab === 'spells'}
+    <div class="vf-tab">
+      <SpellPicker />
     </div>
   {:else if tab === 'mythic_type'}
     <div class="vf-tab">

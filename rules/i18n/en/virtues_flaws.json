@@ -31,6 +31,10 @@
     "name": "Tragic Life",
     "summary": "Demons have manipulated your life to your own detriment; you are Tainted."
   },
+  "flaw.weak_parens": {
+    "name": "Weak Parens",
+    "summary": "You gain 60 fewer experience points and 30 fewer spell levels from apprenticeship."
+  },
   "virtue.affinity_ability": {
     "name": "Affinity with {ability}",
     "summary": "Experience put into one Ability counts for half again, and that Ability is exempt from the age-based cap."
@@ -150,6 +154,10 @@
   "virtue.sense_holiness_and_unholiness": {
     "name": "Sense Holiness and Unholiness",
     "summary": "Feel the presence of good and evil. Confers the Sense Holiness and Unholiness Ability."
+  },
+  "virtue.skilled_parens": {
+    "name": "Skilled Parens",
+    "summary": "You gain 60 more experience points and 30 more spell levels during apprenticeship."
   },
   "virtue.spirit_votary": {
     "name": "Spirit Votary",

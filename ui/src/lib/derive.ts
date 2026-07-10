@@ -316,6 +316,11 @@ export function artAbbreviation(localized: LocalizedRuleset, artId: string): str
   return localized.i18n[artId]?.abbreviation ?? '';
 }
 
+/** Localized spell name (e.g. "Pilum of Fire"), falling back to the id. */
+export function spellName(localized: LocalizedRuleset, spellId: string): string {
+  return localized.i18n[spellId]?.name ?? spellId;
+}
+
 export interface ArtGroup {
   artType: ArtType;
   arts: Art[];

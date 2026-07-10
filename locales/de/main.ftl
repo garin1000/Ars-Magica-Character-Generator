@@ -80,6 +80,7 @@ tab-abilities = Fertigkeiten
 tab-arts = Künste
 tab-house-specialisation = Haus
 tab-mythic-type = Typ
+tab-spells = Zauber
 # XP-Übersicht und Bedienelemente der Fertigkeiten.
 xp-pool = XP-Vorrat
 xp-spent = Ausgegeben: { $spent }
@@ -102,6 +103,16 @@ art-type-form = Formen
 art-add = Kunst hinzufügen
 art-increment = Erhöhen
 art-decrement = Verringern
+# Zauberauswahl (nur Magi). Die Zaubernamen stammen aus den Regel-i18n (nach
+# Zauber-ID), nicht aus diesen Oberflächen-Schlüsseln. Filtere einen Zauber nach
+# Technik + Form; ein Gen-Zauber fragt nach der erlernten Stufe.
+spell-technique-label = Technik
+spell-form-label = Form
+spell-level-label = Stufe
+spell-add = Zauber hinzufügen
+spell-none = — Zauber wählen —
+spell-levels-used = Zauberstufen: { $used } / { $budget }
+spell-remove = Entfernen
 characteristic-increment = Erhöhen
 characteristic-decrement = Verringern
 characteristic-description-label = Beschreibung
@@ -209,6 +220,11 @@ issue-mythic_type_unset = Ein mythischer Gefährte sollte einen Typ wählen.
 issue-mythic_choice_unresolved = Der mythische Gefährtentyp { $mythic_type } hat eine offene Wahl ({ $choice_key }).
 issue-mythic_grant_constraint = Mythischer Gefährtentyp { $mythic_type }: Die Wahl { $choice_key } fällt auf { $item }, was die Vorgabe nicht erfüllt.
 issue-mythic_required_trait_missing = Eine erforderliche Tugend oder ein erforderlicher Fehler (oder ein geeigneter Ersatz) fehlt: { $item }.
+issue-unknown_spell = Unbekannter Zauber: { $spell }.
+issue-duplicate_spell = { $spell } ist { $count }-mal aufgeführt.
+issue-spell_level_unresolved = Der Gen-Zauber { $spell } hat noch keine gewählte Stufe.
+issue-over_spell_levels = Die Zauber ergeben { $used } Stufen und überschreiten das Budget von { $budget } (um { $over }).
+issue-spell_level_exceeds_cap = Zauber { $spell } hat Stufe { $level }, über der höchsten erlernbaren Stufe ({ $cap }).
 
 # AppError-Arten der Tauri-Befehle.
 error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.

@@ -427,6 +427,29 @@ pub enum Effect {
         /// The free bought-score floor granted.
         amount: u8,
     },
+    /// Adds `amount` levels to the magus's spell-levels budget (on top of the
+    /// type profile's [`PointBudget`]-adjacent `spell_levels`). Signed: Skilled
+    /// Parens grants +30, Weak Parens −30. The grants from every matching
+    /// selection are summed and the total is clamped at 0.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4964-4966 (Skilled
+    /// Parens), `:7072-7074` (Weak Parens).
+    SpellLevels {
+        /// Spell levels added to the budget per selection (may be negative).
+        amount: i16,
+    },
+    /// Adds `amount` experience points to the general apprenticeship XP pool
+    /// (spendable on Arts *or* Abilities, on top of [`Entity::xp_pool`]). Signed:
+    /// Skilled Parens grants +60, Weak Parens −60. Summed across selections and
+    /// clamped at 0.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4964-4966 (Skilled
+    /// Parens), `:7072-7074` (Weak Parens).
+    GeneralXp {
+        /// Experience points added to the general pool per selection (may be
+        /// negative).
+        amount: i16,
+    },
 }
 
 /// An inclusive line range `[start, end]` into a Markdown source file.
@@ -697,6 +720,12 @@ pub struct EntityTypeProfile {
     /// false.
     #[serde(default, skip_serializing_if = "is_false")]
     pub has_mythic_type: bool,
+    /// The magus's starting spell-levels budget (the sum of the levels of spells
+    /// he may know at creation). 120 for the magus profile (Core Rules.md:2215-2216,
+    /// 2435); 0 (omitted) for every non-magus type, which cannot take spells.
+    /// Modified per-character by [`Effect::SpellLevels`] (Skilled/Weak Parens).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub spell_levels: u32,
     /// Whether The Gift is required/allowed/forbidden. `None` = not applicable
     /// (e.g. covenants).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -796,6 +825,22 @@ pub struct ArtScore {
     pub score: u8,
 }
 
+/// A spell the character knows (magi only). Saves store the choice, not the
+/// resolved value: the catalogue supplies a fixed spell's level, so `level` is
+/// `Some` only for a **General** spell — the per-character learned level. Two
+/// General versions of one spell at different levels are distinct spells
+/// (Core Rules.md:12349-12353), so identity is (spell, level). Kept sorted via
+/// [`Entity::normalize`].
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct SpellSelection {
+    /// The spell's id (e.g. `spell.pilum_of_fire`).
+    pub spell: Id,
+    /// The learned level for a General spell; `None` for a fixed-level spell (the
+    /// catalogue level is authoritative — a stray value here is ignored at eval).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level: Option<u8>,
+}
+
 /// `skip_serializing_if` predicate: omits a `u32` field when it is zero.
 fn is_zero(n: &u32) -> bool {
     *n == 0
@@ -856,6 +901,11 @@ pub struct Entity {
     /// table against the shared [`Entity::xp_pool`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub art_scores: Vec<ArtScore>,
+    /// The spells the character knows (magi only). Each entry consumes the magus's
+    /// spell-levels budget; kept sorted via [`Entity::normalize`]. Defaults to
+    /// empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub spells: Vec<SpellSelection>,
     /// The Hermetic House this entity belongs to (magi only). The save stores
     /// only the choice; the free House Virtue is derived at eval time, never
     /// persisted (honors "saves store choices, not resolved values"). `None` for
@@ -885,7 +935,7 @@ pub struct Entity {
 }
 
 /// Current save-format schema version.
-pub const SCHEMA_VERSION: u32 = 5;
+pub const SCHEMA_VERSION: u32 = 6;
 
 impl Entity {
     /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
@@ -902,6 +952,7 @@ impl Entity {
             ability_scores: Vec::new(),
             xp_pool: 0,
             art_scores: Vec::new(),
+            spells: Vec::new(),
             house: None,
             house_choices: BTreeMap::new(),
             mythic_type: None,
@@ -909,12 +960,13 @@ impl Entity {
         }
     }
 
-    /// Sort selections, ability scores and art scores for canonical
+    /// Sort selections, ability scores, art scores and spells for canonical
     /// serialization. (`characteristics` is a `BTreeMap`, already id-ordered.)
     pub fn normalize(&mut self) {
         self.selections.sort();
         self.ability_scores.sort();
         self.art_scores.sort();
+        self.spells.sort();
     }
 }
 
@@ -1375,6 +1427,10 @@ mod tests {
                 art: Id::new("art.creo"),
                 score: 5,
             }],
+            spells: vec![SpellSelection {
+                spell: Id::new("spell.pilum_of_fire"),
+                level: None,
+            }],
             house: None,
             house_choices: BTreeMap::new(),
             mythic_type: None,
@@ -1385,10 +1441,41 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 5"#));
+        assert!(json.contains(r#""schema_version": 6"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
+        assert!(json.contains(r#""spell": "spell.pilum_of_fire""#));
+    }
+
+    /// A General spell round-trips its chosen level, and `normalize` sorts the
+    /// spell list canonically (by spell id, then level).
+    #[test]
+    fn entity_spells_normalize_and_general_level_roundtrip() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.spells = vec![
+            SpellSelection {
+                spell: Id::new("spell.unseen_arm"),
+                level: None,
+            },
+            SpellSelection {
+                spell: Id::new("spell.aegis_of_the_hearth"),
+                level: Some(20),
+            },
+        ];
+        entity.normalize();
+        // Sorted by spell id: aegis before unseen_arm.
+        assert_eq!(entity.spells[0].spell, Id::new("spell.aegis_of_the_hearth"));
+        assert_eq!(entity.spells[0].level, Some(20));
+
+        let json = serde_json::to_string(&entity).unwrap();
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(entity, back);
+        assert!(json.contains(r#""level":20"#));
     }
 
     #[test]
@@ -1408,6 +1495,7 @@ mod tests {
             ability_scores: Vec::new(),
             xp_pool: 0,
             art_scores: Vec::new(),
+            spells: Vec::new(),
             house: None,
             house_choices: BTreeMap::new(),
             mythic_type: None,

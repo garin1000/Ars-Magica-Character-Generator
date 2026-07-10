@@ -77,6 +77,50 @@ fn load_ruleset_yields_houses_with_localized_names() {
 }
 
 #[test]
+fn load_ruleset_yields_spells_with_localized_names() {
+    // The shipped spells.json + its i18n must load through the real production
+    // path. Prove a known spell loaded, its Technique/Form resolve, and its
+    // display name is merged (localized) — never an exact count.
+    let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
+    let spell = localized
+        .ruleset
+        .spell(&Id::new("spell.pilum_of_fire"))
+        .expect("Pilum of Fire loaded");
+    assert_eq!(spell.technique, Id::new("art.creo"));
+    assert_eq!(spell.form, Id::new("art.ignem"));
+    assert_eq!(spell.level, Some(20));
+    assert_eq!(
+        localized.display_name(&Id::new("spell.pilum_of_fire")),
+        Some("Pilum of Fire")
+    );
+    // A General spell loads with no fixed level.
+    assert_eq!(
+        localized
+            .ruleset
+            .spell(&Id::new("spell.aegis_of_the_hearth"))
+            .and_then(|s| s.level),
+        None
+    );
+    // The magus profile carries the 120-level spell budget.
+    assert_eq!(
+        localized
+            .ruleset
+            .profile(&Id::new("magus"))
+            .map(|p| p.spell_levels),
+        Some(120)
+    );
+}
+
+#[test]
+fn load_ruleset_localizes_spell_names_in_german() {
+    let localized = load_ruleset_from_dir(&rules_dir(), "de").unwrap();
+    assert_eq!(
+        localized.display_name(&Id::new("spell.pilum_of_fire")),
+        Some("Pilum aus Feuer")
+    );
+}
+
+#[test]
 fn load_ruleset_yields_abilities_and_characteristics() {
     let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
     // Catalogue size is data, not code: prove the catalogue loaded via a known
@@ -142,12 +186,14 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     fs::write(tmp.path().join("core/arts.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/houses.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/mythic_companion_types.json"), "{}").unwrap();
+    fs::write(tmp.path().join("core/spells.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/houses.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/mythic_companion_types.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/spells.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {
@@ -188,12 +234,14 @@ fn integrity_failure_preserves_individual_messages() {
     fs::write(tmp.path().join("core/arts.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/houses.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/mythic_companion_types.json"), "{}").unwrap();
+    fs::write(tmp.path().join("core/spells.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/houses.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/mythic_companion_types.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/spells.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {

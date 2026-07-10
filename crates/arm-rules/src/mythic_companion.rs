@@ -159,6 +159,7 @@ mod tests {
             arts: None,
             houses: None,
             mythic_types: Some(TYPES),
+            spells: None,
             characteristics: None,
         })
         .unwrap()

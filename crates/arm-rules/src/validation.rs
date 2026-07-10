@@ -103,6 +103,11 @@ impl fmt::Display for IssueSeverity {
 /// | `mythic_choice_unresolved` | error | `mythic_type`, `choice_key` |
 /// | `mythic_grant_constraint` | error | `mythic_type`, `choice_key`, `item` |
 /// | `mythic_required_trait_missing` | warning | `item` |
+/// | `unknown_spell` | error | `spell` |
+/// | `duplicate_spell` | error | `spell`, `count` |
+/// | `spell_level_unresolved` | warning | `spell` |
+/// | `over_spell_levels` | error | `used`, `budget`, `over` |
+/// | `spell_level_exceeds_cap` | error | `spell`, `level`, `cap` |
 ///
 /// † The per-category caps emit a code derived from the `flaw_category_caps` /
 /// `virtue_category_caps` entry's category slug: `too_many_<category>_flaws` /
@@ -250,6 +255,21 @@ impl ValidationIssue {
     /// type's required Virtue/Flaw (or a suitable substitute) is not selected (a
     /// "should", overridable by troupe agreement — never a hard block).
     pub const CODE_MYTHIC_REQUIRED_TRAIT_MISSING: &'static str = "mythic_required_trait_missing";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a chosen spell's id does
+    /// not resolve against the spell catalogue.
+    pub const CODE_UNKNOWN_SPELL: &'static str = "unknown_spell";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the same spell (at the
+    /// same level) is listed more than once.
+    pub const CODE_DUPLICATE_SPELL: &'static str = "duplicate_spell";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a General spell has no
+    /// chosen level yet, so it is excluded from the spell-levels budget.
+    pub const CODE_SPELL_LEVEL_UNRESOLVED: &'static str = "spell_level_unresolved";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the sum of the chosen
+    /// spells' levels exceeds the magus's spell-levels budget (Core:2215-2216).
+    pub const CODE_OVER_SPELL_LEVELS: &'static str = "over_spell_levels";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a spell's level exceeds
+    /// Technique + Form + Intelligence + Magic Theory + 3 (Core:2465).
+    pub const CODE_SPELL_LEVEL_EXCEEDS_CAP: &'static str = "spell_level_exceeds_cap";
 
     /// Builds an issue with the given severity, code, args, and context.
     pub fn new(
@@ -379,6 +399,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_characteristic_limit_preconditions(entity, ruleset, &mut issues);
         validate_abilities(entity, ruleset, &mut issues);
         validate_arts(entity, ruleset, &mut issues);
+        validate_spells(entity, ruleset, type_profile, &mut issues);
         validate_xp_pool(entity, ruleset, &mut issues);
     }
 
@@ -1479,7 +1500,9 @@ fn validate_ability_bonus_targets(
                 | Effect::AffinityArtCost { .. }
                 | Effect::RestrictedAbilityXp { .. }
                 | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. } => continue,
+                | Effect::AbilityScoreGrant { .. }
+                | Effect::SpellLevels { .. }
+                | Effect::GeneralXp { .. } => continue,
             };
             let Some(target) = selection.params.get(param) else {
                 continue; // missing ability key already reported by validate_parameters
@@ -1712,7 +1735,9 @@ fn validate_characteristic_limit_preconditions(
                 | Effect::AffinityArtCost { .. }
                 | Effect::RestrictedAbilityXp { .. }
                 | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. } => continue,
+                | Effect::AbilityScoreGrant { .. }
+                | Effect::SpellLevels { .. }
+                | Effect::GeneralXp { .. } => continue,
             };
             if amount > 0 {
                 if let Some(cap) = base_max
@@ -1876,6 +1901,120 @@ fn validate_arts(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Validation
             ));
         }
     }
+}
+
+/// Validates a magus's spell list: every referenced spell must resolve; the same
+/// spell at the same level may not appear twice (different General levels are
+/// different spells, Core:12353); a General spell with no chosen level is excluded
+/// from the budget and warned; the sum of chosen levels must not exceed the
+/// effective spell-levels budget (Core:2215-2216, 2435); and no spell's level may
+/// exceed Technique + Form + Intelligence + Magic Theory + 3 (Core:2465).
+///
+/// The budget and per-spell cap apply only to magi (`profile.is_magus`); a stray
+/// spell on a non-magus is ref- and dedup-checked only (spells are magus-only).
+fn validate_spells(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    type_profile: Option<&EntityTypeProfile>,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let is_magus = type_profile.is_some_and(|p| p.is_magus);
+    let mut seen: BTreeMap<(&Id, Option<u32>), u32> = BTreeMap::new();
+
+    for sel in &entity.spells {
+        let Some(spell) = ruleset.spell(&sel.spell) else {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_UNKNOWN_SPELL,
+                args([("spell", sel.spell.to_string())]),
+                Some(sel.spell.clone()),
+            ));
+            continue;
+        };
+        let resolved = crate::effective::resolved_spell_level(sel, ruleset);
+        // A General spell (catalogue level None) with no chosen level cannot be
+        // budgeted yet — warn, don't block.
+        if spell.level.is_none() && sel.level.is_none() {
+            issues.push(ValidationIssue::warning(
+                ValidationIssue::CODE_SPELL_LEVEL_UNRESOLVED,
+                args([("spell", sel.spell.to_string())]),
+                Some(sel.spell.clone()),
+            ));
+        }
+        *seen.entry((&sel.spell, resolved)).or_insert(0) += 1;
+
+        if is_magus && let Some(level) = resolved {
+            let cap = spell_level_cap(entity, ruleset, spell);
+            if i64::from(level) > cap {
+                issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_SPELL_LEVEL_EXCEEDS_CAP,
+                    args([
+                        ("spell", sel.spell.to_string()),
+                        ("level", level.to_string()),
+                        ("cap", cap.max(0).to_string()),
+                    ]),
+                    Some(sel.spell.clone()),
+                ));
+            }
+        }
+    }
+
+    for ((spell, _level), count) in seen {
+        if count > 1 {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_DUPLICATE_SPELL,
+                args([("spell", spell.to_string()), ("count", count.to_string())]),
+                Some(spell.clone()),
+            ));
+        }
+    }
+
+    if is_magus {
+        let base = type_profile.map(|p| p.spell_levels).unwrap_or(0);
+        let budget = crate::effective::spell_levels_budget(base, entity, ruleset);
+        let used = crate::effective::spell_levels_used(entity, ruleset);
+        if used > budget {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_OVER_SPELL_LEVELS,
+                args([
+                    ("used", used.to_string()),
+                    ("budget", budget.to_string()),
+                    ("over", (used - budget).to_string()),
+                ]),
+                None,
+            ));
+        }
+    }
+}
+
+/// The maximum level a magus may learn of a spell: the sum of Technique, Form,
+/// Intelligence, Magic Theory and 3 (Core:2465), using effective Art/Ability
+/// scores. Returns an `i64` (small or negative for a beginning magus).
+/// Requisite-Art reduction is a lab-total nuance out of M4 scope.
+fn spell_level_cap(entity: &Entity, ruleset: &Ruleset, spell: &crate::spell::Spell) -> i64 {
+    let tech = i64::from(crate::effective::effective_art_score(
+        entity,
+        ruleset,
+        &spell.technique,
+    ));
+    let form = i64::from(crate::effective::effective_art_score(
+        entity,
+        ruleset,
+        &spell.form,
+    ));
+    let int = i64::from(
+        entity
+            .characteristics
+            .get(&Characteristic::Int)
+            .copied()
+            .unwrap_or(0),
+    );
+    let magic_theory = i64::from(crate::effective::effective_ability_score(
+        entity,
+        ruleset,
+        &Id::new("ability.magic_theory"),
+        None,
+    ));
+    tech + form + int + magic_theory + 3
 }
 
 /// Validates the experience pools: Abilities and Arts are bought from the shared
@@ -2059,6 +2198,7 @@ mod tests {
             arts: None,
             houses: Some(TEST_HOUSES),
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap()
@@ -2120,6 +2260,7 @@ mod tests {
             arts: None,
             houses: Some(GRANT_HOUSES),
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap()
@@ -2359,6 +2500,7 @@ mod tests {
             arts: None,
             houses: Some(HOUSE_VALIDATE_HOUSES),
             mythic_types: None,
+            spells: None,
             characteristics: None,
         })
         .unwrap()
@@ -5579,6 +5721,7 @@ mod tests {
             arts: None,
             houses: None,
             mythic_types: Some(TYPES),
+            spells: None,
             characteristics: None,
         })
         .unwrap()
@@ -5703,5 +5846,175 @@ mod tests {
         assert_eq!(b.flaw_ceiling, 10);
         assert_eq!(b.virtue_ceiling, 10);
         assert_eq!(b.rate, 1);
+    }
+
+    // --- Spells -----------------------------------------------------------
+
+    const SPELL_ITEMS: &str = r#"[
+        { "id": "virtue.skilled_parens", "kind": "virtue", "magnitude": "minor",
+          "category": "hermetic", "entity_kinds": ["character"],
+          "effects": [ { "type": "spell_levels", "amount": 30 },
+                       { "type": "general_xp", "amount": 60 } ] }
+    ]"#;
+    const SPELL_ARTS: &str = r#"{ "arts": [
+        { "id": "art.creo", "art_type": "technique" },
+        { "id": "art.ignem", "art_type": "form" },
+        { "id": "art.rego", "art_type": "technique" },
+        { "id": "art.vim", "art_type": "form" }
+    ] }"#;
+    const SPELL_ABILITIES: &str = r#"{ "abilities": [
+        { "id": "ability.magic_theory", "category": "arcane" }
+    ] }"#;
+    const SPELL_CATALOGUE: &str = r#"{ "spells": [
+        { "id": "spell.pilum_of_fire", "technique": "art.creo", "form": "art.ignem", "level": 20 },
+        { "id": "spell.ball_of_abysmal_flame", "technique": "art.creo", "form": "art.ignem", "level": 35 },
+        { "id": "spell.aegis_of_the_hearth", "technique": "art.rego", "form": "art.vim" }
+    ] }"#;
+    // spell_levels 50 keeps the budget small enough to trip in tests.
+    const SPELL_MAGUS_TYPE: &str = r#"[
+        { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["hermetic"], "is_magus": true,
+          "spell_levels": 50, "creation_phases": [] },
+        { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "creation_phases": [] }
+    ]"#;
+
+    fn spell_rs() -> Ruleset {
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: SPELL_ITEMS,
+            type_profiles: SPELL_MAGUS_TYPE,
+            abilities: Some(SPELL_ABILITIES),
+            arts: Some(SPELL_ARTS),
+            houses: None,
+            mythic_types: None,
+            spells: Some(SPELL_CATALOGUE),
+            characteristics: None,
+        })
+        .unwrap()
+    }
+
+    fn spell(id: &str, level: Option<u8>) -> SpellSelection {
+        SpellSelection {
+            spell: Id::new(id),
+            level,
+        }
+    }
+
+    /// A magus whose chosen spell levels stay within budget (and each within its
+    /// per-spell cap, given high Arts) validates clean.
+    #[test]
+    fn spells_within_budget_and_cap_are_clean() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        // Cr 20 / Ig 20 / Int 3 / MT 5 → cap 51, so Pilum (20) is legal.
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 20,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 20,
+            },
+        ];
+        e.characteristics.insert(Characteristic::Int, 3);
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.magic_theory"),
+            score: 5,
+            specialty: None,
+            parameter: None,
+        }];
+        e.xp_pool = 1000; // cover the Art/MT costs so no not_enough_xp noise
+        e.spells = vec![spell("spell.pilum_of_fire", None)];
+        let codes = all_codes(&validate(&e, &rs));
+        assert!(
+            !codes
+                .iter()
+                .any(|c| c.starts_with("spell") || c.starts_with("over_spell")),
+            "expected no spell issues, got {codes:?}"
+        );
+    }
+
+    /// The sum of chosen spell levels exceeding the budget emits over_spell_levels.
+    #[test]
+    fn spells_over_budget_flag_over_spell_levels() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        // Budget 50; Pilum(20)+Ball(35)=55 > 50.
+        e.spells = vec![
+            spell("spell.pilum_of_fire", None),
+            spell("spell.ball_of_abysmal_flame", None),
+        ];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"over_spell_levels".to_string()));
+    }
+
+    /// Skilled Parens's +30 raises the budget from 50 to 80, making 55 legal.
+    #[test]
+    fn skilled_parens_raises_the_spell_budget() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![sel("virtue.skilled_parens")]);
+        e.spells = vec![
+            spell("spell.pilum_of_fire", None),
+            spell("spell.ball_of_abysmal_flame", None),
+        ];
+        assert!(!all_codes(&validate(&e, &rs)).contains(&"over_spell_levels".to_string()));
+    }
+
+    /// A spell above Tech+Form+Int+MagicTheory+3 emits spell_level_exceeds_cap.
+    #[test]
+    fn spell_above_per_spell_cap_is_flagged() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        // Zero Arts/Int/MT → cap = 3; Pilum (20) exceeds it.
+        e.spells = vec![spell("spell.pilum_of_fire", None)];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"spell_level_exceeds_cap".to_string()));
+    }
+
+    /// A General spell with no chosen level warns and is excluded from the budget.
+    #[test]
+    fn general_spell_without_level_warns_and_is_free() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![spell("spell.aegis_of_the_hearth", None)];
+        let codes = all_codes(&validate(&e, &rs));
+        assert!(codes.contains(&"spell_level_unresolved".to_string()));
+        assert!(!codes.contains(&"over_spell_levels".to_string()));
+    }
+
+    /// The same spell at the same level twice emits duplicate_spell.
+    #[test]
+    fn duplicate_spell_is_flagged() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![
+            spell("spell.pilum_of_fire", None),
+            spell("spell.pilum_of_fire", None),
+        ];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"duplicate_spell".to_string()));
+    }
+
+    /// Spells on a non-magus are ref-checked but never budget/cap-checked.
+    #[test]
+    fn spells_on_non_magus_are_not_budgeted() {
+        let rs = spell_rs();
+        let mut e = make_entity("companion", vec![]);
+        e.spells = vec![
+            spell("spell.pilum_of_fire", None),
+            spell("spell.ball_of_abysmal_flame", None),
+        ];
+        let codes = all_codes(&validate(&e, &rs));
+        assert!(!codes.contains(&"over_spell_levels".to_string()));
+        assert!(!codes.contains(&"spell_level_exceeds_cap".to_string()));
+    }
+
+    /// An unknown spell id is an error.
+    #[test]
+    fn unknown_spell_is_flagged() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![spell("spell.does_not_exist", None)];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"unknown_spell".to_string()));
     }
 }
