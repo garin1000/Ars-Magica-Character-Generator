@@ -603,6 +603,21 @@ approximation of "Latin").
   score; Size shows via Fluent `characteristic-size`. The stored `characteristic`
   id is validated to resolve in `ruleset.rs::validate_effect_refs`.
 
+#### Warped by Magic — Warping Score + Points (`warping_grant`)
+> "He has five Warping Points and a Warping Score of 1, including a Minor Flaw
+> (which is not balanced by a Virtue) … His encounters allow you to spend
+> experience points on Magic Lore during character creation."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:7019-7021`.
+- Data: `flaw.warped_by_magic` — `effects: [{ warping_grant, score: 1, points: 5 }]`.
+- Implementation: `Effect::WarpingGrant { score, points }` → `effective.rs::warping`
+  (derived `(score, points)`, base 0 each, summed across grants — never stored, like
+  Confidence). Surfaced as `EffectiveScores.warping_{score,points}` and shown on the
+  sheet via Fluent `warping-label`/`warping-readout` (DE "Verzerrung", per the
+  glossary). **Deferred (separate machinery):** the free unbalanced Minor Flaw
+  (nested-grant, B6) and the "spend XP on Magic Lore" purchase permission are not
+  part of this numeric effect.
+
 #### Second Sight / Premonitions — free starting Ability score (`ability_score_grant`)
 > Second Sight: "Choosing this Virtue confers the Ability Second Sight 1."
 > Premonitions: "Choosing this Virtue confers the Ability Premonitions 1."

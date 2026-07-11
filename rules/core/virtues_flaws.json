@@ -2618,6 +2618,7 @@
     "magnitude": "minor",
     "category": "supernatural",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "warping_grant", "score": 1, "points": 5 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7019, 7022] }
   },
   {

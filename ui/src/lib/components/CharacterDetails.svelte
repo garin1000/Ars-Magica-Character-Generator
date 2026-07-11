@@ -7,6 +7,10 @@
   const confScore = $derived(store.effective?.confidence_score ?? 0);
   const confPoints = $derived(store.effective?.confidence_points ?? 0);
   const showConfidence = $derived(confScore > 0 || confPoints > 0);
+  // Warping is derived from V/F (Warped by Magic → 1/5); hidden when 0/0.
+  const warpScore = $derived(store.effective?.warping_score ?? 0);
+  const warpPoints = $derived(store.effective?.warping_points ?? 0);
+  const showWarping = $derived(warpScore > 0 || warpPoints > 0);
   const traits = $derived(store.entity.personality_traits ?? []);
   const reputations = $derived(store.entity.reputations ?? []);
   // Reputation input is offered only for the kinds a V/F grants (Core:2514).
@@ -41,6 +45,15 @@
         <span class="detail-label">{store.t('confidence-label')}</span>
         <span data-testid="confidence-readout">
           {store.t('confidence-readout', { score: String(confScore), points: String(confPoints) })}
+        </span>
+      </div>
+    {/if}
+
+    {#if showWarping}
+      <div class="detail-field">
+        <span class="detail-label">{store.t('warping-label')}</span>
+        <span data-testid="warping-readout">
+          {store.t('warping-readout', { score: String(warpScore), points: String(warpPoints) })}
         </span>
       </div>
     {/if}

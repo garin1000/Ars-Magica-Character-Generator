@@ -16,7 +16,7 @@ use arm_rules::{
     art_bonuses, characteristic_bonuses, characteristic_caps, characteristic_floors,
     characteristic_points_granted, confidence, effective_point_ceilings, granted_selections,
     reputation_grants, size, spell_levels_budget, spell_levels_used, supernatural_free_slots,
-    validate, xp_allocation,
+    validate, warping, xp_allocation,
 };
 use serde::Serialize;
 
@@ -91,6 +91,10 @@ pub struct EffectiveScores {
     /// The Reputation grants the character's V/F confer, so the UI only offers a
     /// Reputation add-control (pre-filled kind/score) when one exists.
     pub reputation_grants: Vec<ReputationGrant>,
+    /// Derived Warping Score / Points granted by V/F (Warped by Magic → 1 / 5),
+    /// for the character-sheet Warping readout. 0/0 when nothing grants Warping.
+    pub warping_score: u8,
+    pub warping_points: u8,
 }
 
 /// A Reputation a Virtue/Flaw authorizes the character to start with (the UI
@@ -114,6 +118,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
     let (supernatural_free_total, supernatural_free_used) = profile
         .map(|p| supernatural_free_slots(entity, ruleset, p))
         .unwrap_or((0, 0));
+    let (warping_score, warping_points) = warping(entity, ruleset);
     EffectiveScores {
         ability_bonuses: ability_bonuses(entity, ruleset),
         art_bonuses: art_bonuses(entity, ruleset),
@@ -140,6 +145,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
             .into_iter()
             .map(|(kind, score)| ReputationGrant { kind, score })
             .collect(),
+        warping_score,
+        warping_points,
     }
 }
 
