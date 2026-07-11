@@ -78,6 +78,7 @@ ability-requires-training-marker = *
 
 # Characteristic point-buy readout.
 characteristic-points = Points: { $used } / { $budget }
+characteristic-size = Size: { $size }
 # Tab labels for the editor's main area.
 tab-characteristics = Characteristics
 tab-virtues-flaws = Virtues & Flaws

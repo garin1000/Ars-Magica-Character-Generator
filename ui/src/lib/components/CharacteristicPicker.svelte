@@ -46,6 +46,18 @@
   function fmt(score: number): string {
     return score > 0 ? `+${score}` : `${score}`;
   }
+
+  // Free effective-score bonus (Giant Blood +1 Str/Sta, Dwarf -1), shown next to
+  // the bought score. 0 when no virtue/flaw affects this characteristic.
+  function bonusOf(characteristic: Characteristic): number {
+    return (
+      store.effective?.characteristic_bonuses?.find((b) => b.characteristic === characteristic)
+        ?.bonus ?? 0
+    );
+  }
+
+  // Derived Size (base 0), shown only when a virtue/flaw moves it off 0.
+  const size = $derived(store.effective?.size ?? 0);
 </script>
 
 <section class="panel char-panel">
@@ -73,6 +85,10 @@
           </button>
           <span class="spinner-value" data-testid="char-value-{characteristic}">
             {fmt(scoreOf(characteristic))}
+            {#if bonusOf(characteristic) !== 0}<span
+                class="char-bonus"
+                data-testid="char-bonus-{characteristic}">({fmt(bonusOf(characteristic))})</span
+              >{/if}
           </span>
           <button
             type="button"
@@ -99,6 +115,11 @@
         />
       {/each}
     </div>
+    {#if size !== 0}
+      <p class="size-readout" data-testid="characteristic-size">
+        {store.t('characteristic-size', { size: fmt(size) })}
+      </p>
+    {/if}
   {:else}
     <p>{store.t('loading')}</p>
   {/if}

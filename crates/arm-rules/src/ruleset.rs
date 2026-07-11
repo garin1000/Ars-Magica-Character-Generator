@@ -1193,8 +1193,19 @@ impl Ruleset {
                     }
                     continue;
                 }
+                // Fixed target: validate the directly-stored characteristic id
+                // resolves to one of the eight Characteristics.
+                Effect::CharacteristicScoreDelta { characteristic, .. } => {
+                    if crate::characteristics::Characteristic::from_id(characteristic).is_none() {
+                        errors.push(format!(
+                            "{id}: effect 'characteristic_score_delta' references unknown characteristic '{characteristic}'"
+                        ));
+                    }
+                    continue;
+                }
                 // No parameter or ref to resolve: the grant is intrinsic.
-                Effect::CharacteristicPoints { .. }
+                Effect::SizeDelta { .. }
+                | Effect::CharacteristicPoints { .. }
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }

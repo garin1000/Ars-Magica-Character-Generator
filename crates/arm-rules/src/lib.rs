@@ -18,12 +18,13 @@ pub use ability::{Ability, AbilityCategory, AbilityXpRow, AdvancementTable};
 pub use art::{Art, ArtType};
 pub use characteristics::{Characteristic, CharacteristicCost, CharacteristicRules};
 pub use effective::{
-    AbilityBonus, AbilityFloor, ArtBonus, RestrictedXpPool, XpAllocation, ability_bonus,
-    ability_bonuses, ability_score_floors, age_ability_cap, age_max_ability_score, art_bonus,
-    art_bonuses, characteristic_cap, characteristic_caps, characteristic_floor,
-    characteristic_floors, characteristic_points_granted, confidence, effective_ability_score,
-    effective_art_score, entity_grants, reputation_grants, resolved_spell_level,
-    restricted_xp_pools, spell_levels_budget, spell_levels_used, supernatural_free_slots,
+    AbilityBonus, AbilityFloor, ArtBonus, CharacteristicBonus, RestrictedXpPool, XpAllocation,
+    ability_bonus, ability_bonuses, ability_score_floors, age_ability_cap, age_max_ability_score,
+    art_bonus, art_bonuses, characteristic_bonuses, characteristic_cap, characteristic_caps,
+    characteristic_floor, characteristic_floors, characteristic_points_granted,
+    characteristic_score_bonus, confidence, effective_ability_score, effective_art_score,
+    effective_characteristic_score, entity_grants, reputation_grants, resolved_spell_level,
+    restricted_xp_pools, size, spell_levels_budget, spell_levels_used, supernatural_free_slots,
     xp_allocation,
 };
 pub use grant::{Grant, GrantConstraint, open_pick_satisfies, resolve_grants};

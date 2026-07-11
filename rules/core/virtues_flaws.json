@@ -699,6 +699,12 @@
     "magnitude": "major",
     "category": "general",
     "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.small_frame", "virtue.giant_blood", "virtue.large"],
+    "effects": [
+      { "type": "size_delta", "amount": -2 },
+      { "type": "characteristic_score_delta", "characteristic": "characteristic.str", "amount": -1 },
+      { "type": "characteristic_score_delta", "characteristic": "characteristic.sta", "amount": -1 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5996, 5999] }
   },
   {
@@ -2188,6 +2194,8 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.dwarf", "virtue.giant_blood", "virtue.large"],
+    "effects": [{ "type": "size_delta", "amount": -1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6767, 6770] }
   },
   {
@@ -3628,6 +3636,12 @@
     "magnitude": "major",
     "category": "general",
     "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.dwarf", "flaw.small_frame", "virtue.large"],
+    "effects": [
+      { "type": "size_delta", "amount": 2 },
+      { "type": "characteristic_score_delta", "characteristic": "characteristic.str", "amount": 1 },
+      { "type": "characteristic_score_delta", "characteristic": "characteristic.sta", "amount": 1 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3975, 3978] }
   },
   {
@@ -4001,7 +4015,10 @@
     "kind": "virtue",
     "magnitude": "minor",
     "category": "general",
-    "entity_kinds": ["character"]
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.dwarf", "flaw.small_frame", "virtue.giant_blood"],
+    "effects": [{ "type": "size_delta", "amount": 1 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4229, 4231] }
   },
   {
     "id": "virtue.lasiq",

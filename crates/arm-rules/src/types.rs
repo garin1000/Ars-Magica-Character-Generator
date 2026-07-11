@@ -465,6 +465,34 @@ pub enum Effect {
         /// Confidence Points added per selection.
         points: i8,
     },
+    /// Adds `amount` to the character's derived Size (base 0). Size is not a
+    /// bought Characteristic; it is a separate racial stat modified only by these
+    /// grants (Large +1, Giant Blood +2, Small Frame −1, Dwarf −2). Summed across
+    /// selections.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3975-3978 (Giant
+    /// Blood +2), `:4229-4231` (Large +1), `:6767-6769` (Small Frame −1),
+    /// `:5996-5998` (Dwarf −2).
+    SizeDelta {
+        /// Size adjustment per selection (may be negative).
+        amount: i8,
+    },
+    /// Adds a free `amount` bonus to the effective score of a fixed Characteristic
+    /// (`characteristic.<slug>`), costing no buy points. Unlike the bought score
+    /// (capped ±3, or ±5 with Great/Poor), this bonus stacks on top and may raise
+    /// the effective score beyond the normal ceiling — Giant Blood's +1 to
+    /// Strength/Stamina "may raise your scores … as high as +6". The target is
+    /// fixed by the virtue, so the id is stored directly (not read from a param).
+    /// Summed across selections.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3975-3978 (Giant
+    /// Blood, +1 Str/Sta to +6), `:5996-5998` (Dwarf, −1 Str/Sta to −6).
+    CharacteristicScoreDelta {
+        /// The Characteristic id (`characteristic.str`, …) this bonus targets.
+        characteristic: Id,
+        /// The free effective-score bonus per selection (may be negative).
+        amount: i8,
+    },
     /// Authorizes the character to start with one Reputation of the given `kind`
     /// at the given `score` (content is player-supplied). A starting Reputation is
     /// legal only if backed by such a grant (Core:2514).

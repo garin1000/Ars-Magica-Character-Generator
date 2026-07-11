@@ -1572,6 +1572,8 @@ fn validate_ability_bonus_targets(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SizeDelta { .. }
+                | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. } => continue,
             };
             let Some(target) = selection.params.get(param) else {
@@ -1797,6 +1799,8 @@ fn validate_characteristic_limit_preconditions(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SizeDelta { .. }
+                | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. } => continue,
             };
             if amount > 0 {
