@@ -146,6 +146,7 @@ pub fn ability_bonus(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
@@ -265,6 +266,7 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
@@ -350,6 +352,7 @@ fn characteristic_limit_shift(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
@@ -518,6 +521,7 @@ pub(crate) fn ability_affinity(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
@@ -557,6 +561,7 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
@@ -1025,6 +1030,24 @@ pub fn confidence(base_score: u8, base_points: u8, entity: &Entity, ruleset: &Ru
     }
     let clamp = |n: i32| u8::try_from(n.max(0)).unwrap_or(u8::MAX);
     (clamp(score), clamp(points))
+}
+
+/// The character's derived True Faith Score: base 0 plus every
+/// [`Effect::TrueFaithGrant`] (True Faith Virtue → 1), summed and clamped to
+/// `u8`. Derived, never stored. Source: Core Rules.md:5169-5171.
+pub fn true_faith(entity: &Entity, ruleset: &Ruleset) -> u8 {
+    let mut score = 0u32;
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::TrueFaithGrant { score: s } = effect {
+                score += u32::from(*s);
+            }
+        }
+    }
+    u8::try_from(score).unwrap_or(u8::MAX)
 }
 
 /// The character's derived Warping as `(score, points)`: base 0 each, plus every
@@ -1727,6 +1750,12 @@ mod tests {
             "kind": "flaw", "magnitude": "minor", "category": "supernatural",
             "entity_kinds": ["character"],
             "effects": [{ "type": "warping_grant", "score": 1, "points": 5 }]
+          },
+          {
+            "id": "virtue.true_faith",
+            "kind": "virtue", "magnitude": "major", "category": "general",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "true_faith_grant", "score": 1 }]
           }
         ]"#;
         let types = r#"[
@@ -1923,6 +1952,18 @@ mod tests {
             sel("virtue.improved_characteristics"),
         ]);
         assert_eq!(characteristic_points_granted(&e, &rs), 6);
+    }
+
+    #[test]
+    fn true_faith_grant_sums_score() {
+        // True Faith grants a derived True Faith Score of 1 (Core:5169-5171),
+        // base 0, summed across grants.
+        let rs = xp_ruleset();
+        assert_eq!(true_faith(&xp_entity(vec![]), &rs), 0);
+        assert_eq!(
+            true_faith(&xp_entity(vec![sel("virtue.true_faith")]), &rs),
+            1
+        );
     }
 
     #[test]

@@ -37,6 +37,7 @@ export type Effect =
   | { type: 'general_xp'; amount: number }
   | { type: 'confidence_bonus'; score: number; points: number }
   | { type: 'warping_grant'; score: number; points: number }
+  | { type: 'true_faith_grant'; score: number }
   | { type: 'size_delta'; amount: number }
   | { type: 'characteristic_score_delta'; characteristic: string; amount: number }
   | { type: 'grants_reputation'; kind: ReputationType; score: number };
@@ -161,6 +162,8 @@ export interface EffectiveScores {
   // when nothing grants Warping.
   warping_score: number;
   warping_points: number;
+  // Derived True Faith Score granted by V/F (True Faith 1); 0 when none.
+  true_faith_score: number;
 }
 
 export interface ReputationGrant {
