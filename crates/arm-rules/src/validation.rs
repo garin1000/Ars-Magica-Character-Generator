@@ -1730,7 +1730,7 @@ fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
     // Improved Characteristics (+3 each, stackable) raises the buy budget above
     // the ruleset's base start_points.
     let granted = crate::effective::characteristic_points_granted(entity, ruleset);
-    let budget = i32::from(rules.start_points) + granted as i32;
+    let budget = i32::from(rules.start_points) + granted;
     if cost > budget {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_CHARACTERISTIC_OVERSPENT,

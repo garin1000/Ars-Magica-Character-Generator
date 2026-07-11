@@ -2642,6 +2642,8 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "characteristic_points", "amount": -3 }],
+    "max_per_target": 2,
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7056, 7059] }
   },
   {
