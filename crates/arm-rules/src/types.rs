@@ -465,6 +465,15 @@ pub enum Effect {
         /// Confidence Points added per selection.
         points: i8,
     },
+    /// Grants a derived True Faith Score (base 0, summed across grants). True
+    /// Faith is a special score with its own rules, not a Supernatural Ability.
+    /// The True Faith Virtue confers Score 1.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5169-5171.
+    TrueFaithGrant {
+        /// True Faith Score added.
+        score: u8,
+    },
     /// Grants a derived Warping Score and Warping Points (base 0 each, summed
     /// across grants). Warped by Magic confers Warping Score 1 + 5 Warping Points.
     ///

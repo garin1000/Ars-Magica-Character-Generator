@@ -11,6 +11,8 @@
   const warpScore = $derived(store.effective?.warping_score ?? 0);
   const warpPoints = $derived(store.effective?.warping_points ?? 0);
   const showWarping = $derived(warpScore > 0 || warpPoints > 0);
+  // True Faith is derived from V/F (True Faith → 1); hidden when 0.
+  const trueFaith = $derived(store.effective?.true_faith_score ?? 0);
   const traits = $derived(store.entity.personality_traits ?? []);
   const reputations = $derived(store.entity.reputations ?? []);
   // Reputation input is offered only for the kinds a V/F grants (Core:2514).
@@ -54,6 +56,15 @@
         <span class="detail-label">{store.t('warping-label')}</span>
         <span data-testid="warping-readout">
           {store.t('warping-readout', { score: String(warpScore), points: String(warpPoints) })}
+        </span>
+      </div>
+    {/if}
+
+    {#if trueFaith > 0}
+      <div class="detail-field">
+        <span class="detail-label">{store.t('true-faith-label')}</span>
+        <span data-testid="true-faith-readout">
+          {store.t('true-faith-readout', { score: String(trueFaith) })}
         </span>
       </div>
     {/if}

@@ -5215,6 +5215,7 @@
     "magnitude": "major",
     "category": "general",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "true_faith_grant", "score": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5169, 5172] }
   },
   {

@@ -16,7 +16,7 @@ use arm_rules::{
     art_bonuses, characteristic_bonuses, characteristic_caps, characteristic_floors,
     characteristic_points_granted, confidence, effective_point_ceilings, granted_selections,
     reputation_grants, size, spell_levels_budget, spell_levels_used, supernatural_free_slots,
-    validate, warping, xp_allocation,
+    true_faith, validate, warping, xp_allocation,
 };
 use serde::Serialize;
 
@@ -95,6 +95,8 @@ pub struct EffectiveScores {
     /// for the character-sheet Warping readout. 0/0 when nothing grants Warping.
     pub warping_score: u8,
     pub warping_points: u8,
+    /// Derived True Faith Score granted by V/F (True Faith → 1); 0 when none.
+    pub true_faith_score: u8,
 }
 
 /// A Reputation a Virtue/Flaw authorizes the character to start with (the UI
@@ -147,6 +149,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
             .collect(),
         warping_score,
         warping_points,
+        true_faith_score: true_faith(entity, ruleset),
     }
 }
 

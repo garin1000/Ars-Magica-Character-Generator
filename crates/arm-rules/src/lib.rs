@@ -25,7 +25,7 @@ pub use effective::{
     characteristic_score_bonus, confidence, effective_ability_score, effective_art_score,
     effective_characteristic_score, entity_grants, reputation_grants, resolved_spell_level,
     restricted_xp_pools, size, spell_levels_budget, spell_levels_used, supernatural_free_slots,
-    warping, xp_allocation,
+    true_faith, warping, xp_allocation,
 };
 pub use grant::{Grant, GrantConstraint, open_pick_satisfies, resolve_grants};
 pub use house::{House, LineageType, granted_selections};

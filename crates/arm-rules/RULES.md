@@ -618,6 +618,19 @@ approximation of "Latin").
   (nested-grant, B6) and the "spend XP on Magic Lore" purchase permission are not
   part of this numeric effect.
 
+#### True Faith — special derived score (`true_faith_grant`)
+> "You have a True Faith score of 1 and can gain more."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:5169-5171`.
+- Data: `virtue.true_faith` — `effects: [{ true_faith_grant, score: 1 }]`.
+- Implementation: `Effect::TrueFaithGrant { score }` → `effective.rs::true_faith`
+  (derived, base 0 + Σ, like Warping). True Faith is a special score with its own
+  rules (Core p.419), **not** a Supernatural Ability, so it is not modelled via
+  `ability_score_grant`. Surfaced as `EffectiveScores.true_faith_score` and shown on
+  the sheet (Fluent `true-faith-label/readout`, DE "Wahrer Glaube" per glossary).
+  `flaw`/`virtue.relic` grants a *possessed* holy item with True Faith 1 — the
+  character's own score stays 0 — so Relic is item-possession, left structural.
+
 #### Second Sight / Premonitions — free starting Ability score (`ability_score_grant`)
 > Second Sight: "Choosing this Virtue confers the Ability Second Sight 1."
 > Premonitions: "Choosing this Virtue confers the Ability Premonitions 1."

@@ -1572,6 +1572,7 @@ fn validate_ability_bonus_targets(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
@@ -1800,6 +1801,7 @@ fn validate_characteristic_limit_preconditions(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
