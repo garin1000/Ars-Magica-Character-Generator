@@ -465,6 +465,16 @@ pub enum Effect {
         /// Confidence Points added per selection.
         points: i8,
     },
+    /// Grants a derived Warping Score and Warping Points (base 0 each, summed
+    /// across grants). Warped by Magic confers Warping Score 1 + 5 Warping Points.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:7019-7021.
+    WarpingGrant {
+        /// Warping Score added.
+        score: u8,
+        /// Warping Points added.
+        points: u8,
+    },
     /// Adds `amount` to the character's derived Size (base 0). Size is not a
     /// bought Characteristic; it is a separate racial stat modified only by these
     /// grants (Large +1, Giant Blood +2, Small Frame −1, Dwarf −2). Summed across

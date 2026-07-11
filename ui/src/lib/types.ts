@@ -36,6 +36,7 @@ export type Effect =
   | { type: 'spell_levels'; amount: number }
   | { type: 'general_xp'; amount: number }
   | { type: 'confidence_bonus'; score: number; points: number }
+  | { type: 'warping_grant'; score: number; points: number }
   | { type: 'size_delta'; amount: number }
   | { type: 'characteristic_score_delta'; characteristic: string; amount: number }
   | { type: 'grants_reputation'; kind: ReputationType; score: number };
@@ -156,6 +157,10 @@ export interface EffectiveScores {
   // Reputation grants the character's V/F confer (kind + score), so the UI only
   // offers a Reputation add-control when one exists.
   reputation_grants: ReputationGrant[];
+  // Derived Warping Score / Points granted by V/F (Warped by Magic 1 / 5); 0/0
+  // when nothing grants Warping.
+  warping_score: number;
+  warping_points: number;
 }
 
 export interface ReputationGrant {

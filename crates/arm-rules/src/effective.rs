@@ -146,6 +146,7 @@ pub fn ability_bonus(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. } => {}
@@ -264,6 +265,7 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. } => {}
@@ -348,6 +350,7 @@ fn characteristic_limit_shift(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. } => {}
@@ -515,6 +518,7 @@ pub(crate) fn ability_affinity(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. } => None,
@@ -553,6 +557,7 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. } => None,
@@ -1020,6 +1025,32 @@ pub fn confidence(base_score: u8, base_points: u8, entity: &Entity, ruleset: &Ru
     }
     let clamp = |n: i32| u8::try_from(n.max(0)).unwrap_or(u8::MAX);
     (clamp(score), clamp(points))
+}
+
+/// The character's derived Warping as `(score, points)`: base 0 each, plus every
+/// [`Effect::WarpingGrant`] (Warped by Magic → Score 1 + 5 Points), summed and
+/// clamped to `u8`. Derived, never stored. Source: Core Rules.md:7019-7021.
+pub fn warping(entity: &Entity, ruleset: &Ruleset) -> (u8, u8) {
+    let (mut score, mut points) = (0u32, 0u32);
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::WarpingGrant {
+                score: s,
+                points: p,
+            } = effect
+            {
+                score += u32::from(*s);
+                points += u32::from(*p);
+            }
+        }
+    }
+    (
+        u8::try_from(score).unwrap_or(u8::MAX),
+        u8::try_from(points).unwrap_or(u8::MAX),
+    )
 }
 
 /// The Reputation grants a character holds (`(kind, score)` per
@@ -1690,6 +1721,12 @@ mod tests {
               { "type": "characteristic_score_delta", "characteristic": "characteristic.str", "amount": -1 },
               { "type": "characteristic_score_delta", "characteristic": "characteristic.sta", "amount": -1 }
             ]
+          },
+          {
+            "id": "flaw.warped_by_magic",
+            "kind": "flaw", "magnitude": "minor", "category": "supernatural",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "warping_grant", "score": 1, "points": 5 }]
           }
         ]"#;
         let types = r#"[
@@ -1886,6 +1923,18 @@ mod tests {
             sel("virtue.improved_characteristics"),
         ]);
         assert_eq!(characteristic_points_granted(&e, &rs), 6);
+    }
+
+    #[test]
+    fn warping_grant_sums_score_and_points() {
+        // Warped by Magic grants Warping Score 1 + 5 Warping Points; both are
+        // derived (base 0), summed across grants. Core:7019-7021.
+        let rs = xp_ruleset();
+        assert_eq!(warping(&xp_entity(vec![]), &rs), (0, 0));
+        assert_eq!(
+            warping(&xp_entity(vec![sel("flaw.warped_by_magic")]), &rs),
+            (1, 5)
+        );
     }
 
     #[test]
