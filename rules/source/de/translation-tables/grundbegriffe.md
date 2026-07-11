@@ -214,7 +214,7 @@
 | Realms of Power | Sphären der Macht | Supplementreihe; Abk. EN **RoP**, DE **SdM** |
 | Realms of Power: Magic | Sphären der Macht: Magie | Abk. EN **RoP:M**, DE **SdM:M** |
 | Realms of Power: Faerie | Sphären der Macht: Feenwelt | Abk. EN **RoP:F**, DE **SdM:F** |
-| Realms of Power: The Divine | Sphären der Macht: Das Göttliche | Abk. EN **RoP:D**, DE **SdM:D** |
+| Realms of Power: The Divine | Sphären der Macht: Das Göttliche | Abk. EN **RoP:D**, DE **SdM:G** |
 | Realms of Power: The Infernal | Sphären der Macht: Das Infernale | Abk. EN **RoP:I**, DE **SdM:I** |
 | Houses of Hermes: Mystery Cults | Häuser des Hermes: Mysterienkulte | Supplementband; Abk. EN **HoH:MC**, DE **HdH:MK** |
 | Houses of Hermes: Societates | Häuser des Hermes: Societates | Supplementband; Abk. EN **HoH:S**, DE **HdH:S**; lat. „Gemeinschaften" |
@@ -365,7 +365,7 @@
 | Order of Suleiman | Orden Suleimans | Muslimischer Magierorden |
 | Cabal Legacy | Kabalen-Vermächtnis | Tugend; Verweis auf DM:ÜA S. 20 |
 | Method Caster | Methodischer Zauberer | Tugend; feste Zauberroutine |
-| Adjuration | Adjuration | Göttliche Kraft: Beschwören, Beherrschen, Bannen übernatürlicher Wesen; Eigenname beibehalten (SdM:D) |
+| Adjuration | Adjuration | Göttliche Kraft: Beschwören, Beherrschen, Bannen übernatürlicher Wesen; Eigenname beibehalten (SdM:G) |
 | flamen (pl. flamines) | Flamen (Pl. Flamines) | Lat.; merkurischer Priester |
 | Dimicatio | Dimicatio | Lat. Eigenname; Flambeau-Turnierdisziplin (magischer Einzelkampf) |
 | Wizards' Melee | Buhurt der Magier | Flambeau-Turnierdisziplin (Gruppenkampf Magus + Grogs) |
@@ -411,8 +411,8 @@
 | Control Fertility | Fruchtbarkeit beherrschen | Übernatürliche Fertigkeit |
 | Hermetic Haruspexes | Hermetische Haruspexe | Ex-Misc.-Tradition; Sg. Haruspex |
 | Karaites / Karaite Magic | Karäer / Karäische Magie | Ex-Misc.-Tradition |
-| Holy Magic | Heilige Magie | Große Tugend; Verweis auf SdM:D |
-| Craft Amulets | Amulette fertigen | Kleine Tugend; Verweis auf SdM:D |
+| Holy Magic | Heilige Magie | Große Tugend; Verweis auf SdM:G |
+| Craft Amulets | Amulette fertigen | Kleine Tugend; Verweis auf SdM:G |
 | Corrguineach | Corrguineach | Gäl. Eigenname; Ex-Misc.-Tradition |
 | Donatores Requietis Aeternae | Donatores Requietis Aeternae | Lat. Eigenname; Ex-Misc.-Tradition |
 | Cult of Orpheus | Kult des Orpheus | Ex-Misc.-Tradition |

@@ -284,7 +284,7 @@
 | Eyes Of The Eagle | Augen des Adlers | InIm25 | |
 | Aura Of Ennobled Presence | Aura der adligen Erscheinung | MuIm10 | |
 | Summoning The Distant Image | Beschwörung des fernen Bildes | InIm25 | |
-| Image Phantom | Bildphantom | MuIm20 | |
+| Image Phantom | Truggestalt | MuIm20 | |
 | Ear For Distant Voices, The | Das Ohr für entfernte Stimmen | InIm20 | |
 | Image From The Wizard Torn | Das vom Zauberer losgelöste Bild | ReIm35 | |
 | Shadow Of Human Life, The | Der Schatten menschlichen Lebens | CrIm40 | |

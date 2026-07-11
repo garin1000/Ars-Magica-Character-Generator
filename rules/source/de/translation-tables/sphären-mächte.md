@@ -342,7 +342,7 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 
 ---
 
-## Ergänzungen aus Sphären der Macht: Das Göttliche (SdM:D)
+## Ergänzungen aus Sphären der Macht: Das Göttliche (SdM:G)
 
 ### Göttliche Auren und Regiones / Divine Auras and Regiones
 
@@ -422,7 +422,172 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 | Cantores / Cantor | Cantores / Cantor | Lat.; christliche Musikertradition |
 | Neriusians | Nerianer | Anhänger des Priorats des Hl. Nerius |
 | The Neriusian Portal | Das Nerianische Portal | CrVi65; Ritualzauber, erzeugt irdische Regio |
+| Circle of the Unique Cherub | Kreis des Einzigartigen Cherubs | Kleine Kabbalistengruppe |
+
+### Jüdische Mystik / Jewish Mysticism
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Shinnui Shem | Shinnui Shem | Namensänderung für Alterungsbonus |
+| Awaken Golem Total | Golem-Erweckungssumme | Würfelsumme für Golem-Belebung |
+| Empower Golem Total | Golem-Ermächtigungssumme | Würfelsumme für Golem-Stärkung |
+| Chariot Mysteries | Mysterien des Thronwagens | Merkavah-Praxis |
+| Worn (Duration) | Getragen (Dauer) | Heilige Dauer; äquivalent zu Sonne; für Amulette |
 
 ---
 
-*Quellen: Ars Magica Definitive Edition Core Rules (Atlas Games, 2024) · Ars Magica 5e – Sphären der Macht: Magie (Atlas Games) · Ars Magica 5e – Sphären der Macht: Das Infernale (Atlas Games) · Ars Magica 5e – Sphären der Macht: Das Göttliche (Atlas Games) · Deutsche Übersetzung (ArsMagica_DE_Gesamt_work.md)*
+## Ergänzungen aus Sphären der Macht: Feenwelt (SdM:F)
+
+### Allgemeine Feenbegriffe / General Faerie Terms
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Fable Point | Fabelpunkt | Spielmechanik: Punkte, die in der Feensphäre gesammelt werden |
+| Faerie Boon | Feengabe | Geschenk/Belohnung einer Fee |
+| Spirit Away (power) | Hinwegführen | Große Feenkraft: Sterbliche über die Schwelle in/aus der Feensphäre befördern |
+| Trods | Feenpfade | Geographische Grenzverläufe (Flussufer, Waldränder) mit Feenaura; Wege in die Feensphäre |
+| Stock Characters | Stehende Figuren | Klischeehafte Rollen, die Feenwesen bei der Nachahmung von Menschen annehmen |
+| Mother Road | Mutterstraße | Hauptweg durch die Feensphäre |
+| Ars Fabulosa | Ars Fabulosa | Lat. Eigenname: Kunst der Feenverhandlung |
+
+### Feenkonzepte / Faerie Concepts
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Glamour | Glamour | Spirituelle Energie/Regelwerk, das Feenwesen zusammenhält und ihre Natur definiert; von schott. „Grammar" |
+| Extend Glamour (Power) | Glamour Ausdehnen | Feenkraft: Glamour über ein Gebiet ausdehnen, erzeugt Feenaura |
+| spiritual anchor | Geistiger Anker | Kern, um den eine Fee ihren Körper aufbaut; enthält ihr Vis |
+| principal faerie | Hauptfee | Dominierendes Feenwesen eines Gebiets; sein Glamour erzeugt die lokale Aura |
+| threshold faerie | Schwellenfee | Fee, die den Eingang zu einer Regio oder zur Feenwelt bewacht |
+| faerie roads | Feenstraßen | Von Feen benutzte Pfade mit Wegerecht; Leichenwege als häufigste Form |
+| corpse roads | Leichenwege | Traditionelle Wege zum Leichentransport; häufigste Form der Feenstraße |
+| Guardian of the Threshold | Wächter der Schwelle | Erstes Wesen, dem man beim Betreten der Feensphäre begegnet |
+| Passive Guardian | Passiver Wächter | Wächter in Form eines physischen Hindernisses |
+| kerberoi / kerberos | Kerberoi / Kerberos | Furchterregende Ungeheuerwächter (griech., beibehalten) |
+| Path of Chance | Pfad des Zufalls | Weg durch Arkadien (reine Abenteuer) |
+| Path of Destiny | Pfad des Schicksals | Weg durch Elysium (allegorische Geschichten) |
+| Path of Choice / Forked Path | Pfad der Wahl / Gegabelter Pfad | Weg durch Eudokia (persönliche Entwicklung) |
+| Summer Kingdom | Sommerreich | Beispielreich in einer Feengeschichte |
+| Elysian (adj.) | elysisch | Adjektivform zu Elysium, z. B. „elysische Geschichte" |
+| Eudokian (adj.) | eudokisch | Adjektivform zu Eudokia, z. B. „eudokische Geschichte" |
+| dramatis persona/personae | handelnde Figur(en) | Rollenfiguren in Feengeschichten |
+| Barking Beast | Bellende Bestie | Kreaturenname (Kap. 4: Feenbestiarium) |
+| External Vis | Externes Vis | Vis, das außerhalb des Feenwesens existiert; bereits in Basisregeln etabliert |
+| Faerie Beast | Feentier | Feenwesen in Tiergestalt; bereits in HdH:MK, HZ:ÜA etabliert |
+
+### Feensphären-Spielmechanik / Faerie Realm Mechanics
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| fable score | Fabelwert | Wert, der die Kontrolle des Charakters über die Feensphäre misst |
+| Threshold | Schwelle | Gleichzeitige Anziehung/Abstoßung der Feensphäre gegenüber der irdischen Welt |
+| Threshold strength | Schwellenstärke | Formel: (13 − Auramodifikator) × 3 |
+| Threshold points | Schwellenpunkte | Punkte, die angesammelt werden müssen, um die Feensphäre zu betreten |
+| Threshold total | Schwellensumme | Gesamtsumme der angesammelten Schwellenpunkte |
+| Offer Total | Angebotssumme | Würfelsumme für kreative Veränderungen in der Feensphäre |
+| Offer Modifier | Angebotsmodifikator | Modifikator auf die Angebotssumme |
+| Promise Modifier | Versprechensmodifikator | Modifikator für das Dienstversprechen |
+| Change Modifier | Veränderungsmodifikator | Modifikator für die Art der gewünschten Veränderung |
+| Threat Level | Bedrohungsstufe | Klassifizierung von Bedrohungen (Trivial bis Überwältigend) |
+| plot device | Schicksalsspruch | Sprichwort/Phrase, die ein Spieler einmal pro Abenteuer einsetzen kann |
+
+### Feensphären-Erzähltechnik / Faerie Storytelling
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| player-driven stories | Spielergesteuerte Geschichten | Spieler bestimmen die Szenerie, Spielleiter kontrolliert den Plot |
+| player-influenced stories | Spielerbeeinflusste Geschichten | Spieler beeinflussen einzelne Szenen über Schicksalssprüche |
+| audience participation | Publikumsbeteiligung | Methode, Spieler in Feengeschichten einzubinden |
+
+### Feenvis-Typen / Faerie Vis Types
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| encased vis | Umhülltes Vis | Vis, das eine Fee mit Glamour umhüllt/beansprucht hat |
+| accrued vis | Angesammeltes Vis | Vis, das beim Ende einer Feenrolle aus Glamourfragmenten entsteht |
+| anchored vis | Verankertes Vis | Vis im Geistigen Anker eines Feenwesens |
+| sleeping vis | Schlafendes Vis | Vis mit Glamour aber ohne Vitalität; kann zu einer Fee erweckt werden |
+| abstract vis | Abstraktes Vis | Glamour, der als Vis erscheint, aber keines enthält; nur im Herrschaftsbereich des Erzeugers wirksam |
+
+### Feenmethoden / Faerie Methods
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Evocation | Evokation | Feenmethode |
+
+### Feenkräfte / Faerie Powers
+
+#### Feenmagie-Kräfte (Kap. 6)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Beguile | Umgarnen | Feenkraft |
+| Conjure | Beschwören | Feenkraft |
+| Portage | Versetzen | Feenkraft: Teleportation durch Feenpfade |
+| Ware | Wacht | Feenkraft: Schutz/Abwehr |
+| Weal | Wohl | Feenkraft: Heilung/Wohlbefinden |
+| Woe | Wehe | Feenkraft: Schaden/Fluch |
+
+#### Große Feenkräfte (Kap. 3)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Adhere | Haftung | |
+| Allure | Verlockung | +3 auf Beeindrucken/Überzeugen |
+| Cause Drowsiness | Schläfrigkeit verursachen | |
+| Cause Sickness | Krankheit verursachen | |
+| Craft Magical Trinket | Magisches Schmuckstück herstellen | Rituelle Feenkraft |
+| Enthralling Sound | Fesselnder Klang | Erzeugt Emotionen in einer Gruppe (CrMe) |
+| Enthrallment | Unterwerfung | Vollständige Geisteskontrolle (ReMe) |
+| Fearful Flaming Eyes | Furchtbare flammende Augen | Lähmt bei Augenkontakt |
+| Hound | Wittern | Richtung/Entfernung zur Beute kennen |
+| Illusionary Home | Illusorisches Heim | |
+| Kiss of Forgetfulness | Kuss des Vergessens | Ziel vergisst sein sterbliches Leben |
+| Kiss of Frost | Kuss des Frosts | |
+| Kiss of the Mermaid | Kuss der Meerjungfrau | |
+| Pine Away | Dahinsiechen | Langsamer Verfall als schwere Krankheit |
+| Repel Animals | Tiere fernhalten | Wie Kreis der Bestienabwehr |
+| Send Message | Nachricht senden | |
+| Spreading a Mantle of Snow | Schneeschleier ausbreiten | |
+| Steal Judgment | Urteilskraft rauben | |
+| Torrent from the Lungs | Sturzbach aus den Lungen | |
+
+#### Fokussierte Kräfte (Kap. 3)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Domestic Work | Hausarbeit | |
+| Father of Serpents | Vater der Schlangen | |
+| Manifestation | Manifestation | |
+| Shrinking | Schrumpfung | |
+| Smithying | Schmiedekunst | |
+| Miser's Midas | Geizhals-Midas | |
+
+#### Persönliche Kräfte (Kap. 3)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Appear Human | Menschlich erscheinen | |
+| Extended Glamour | Ausgedehnter Glamour | |
+| Immateriality | Unkörperlichkeit | |
+| Shift Human Shapes | Menschliche Gestalt wechseln | |
+| Silent Motion | Lautlose Bewegung | |
+| Size Reduction | Verkleinerung | |
+| Supernatural Agility | Übernatürliche Beweglichkeit | |
+
+### Feenhandel / Faerie Bargaining
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Captivating | Vereinnahmung | Feenhandel: Körpertausch mit einem Feenwesen |
+
+### Heidnische Traditionen / Pagan Traditions
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Borrowers | Entleiher | Heidnische Tradition (Feenmagie) |
+| Ollamhain | Ollamhain | Irische heidnische Tradition; Eigenname |
+
+---
+
+*Quellen: Ars Magica Definitive Edition Core Rules (Atlas Games, 2024) · Ars Magica 5e – Sphären der Macht: Magie (Atlas Games) · Ars Magica 5e – Sphären der Macht: Das Infernale (Atlas Games) · Ars Magica 5e – Sphären der Macht: Das Göttliche (Atlas Games) · Ars Magica 5e – Sphären der Macht: Feenwelt (Atlas Games) · Deutsche Übersetzung (ArsMagica_DE_Gesamt_work.md)*
