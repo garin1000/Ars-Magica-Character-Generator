@@ -849,6 +849,81 @@ Parens follow `tugenden-fehler.md` (Skilled → *Erfahrener Parens*; Weak →
 
 ---
 
+## Per-character fields (M4/4d-rest, 4e)
+
+The final M4 phase adds age, Confidence, Personality Traits, Reputations, and the
+Gift/Supernatural gate — the remaining Core character-generation surfaces.
+
+**Age → max Ability score.** `effective::age_max_ability_score` encodes the table
+(a fixed taxonomy, like `Magnitude::points`; surfaced via
+`EffectiveScores.age_ability_cap` so the UI never re-hardcodes it):
+
+> `:2366-2376` "Your character's age determines the maximum score … | under 30 |
+> 5 | | 30-35 | 6 | | 36-40 | 7 | | 41-45 | 8 | | 46+ | 9 |"
+
+`validate_abilities` flags a bought Ability above this cap (`ability_above_age_cap`).
+An Ability carrying an Affinity may exceed it **by +2** — not without limit:
+
+> `:3374` (Affinity with (Ability)) "you may exceed the normal age-based cap
+> during character generation … by two points for that Ability."
+
+Virtues that *raise* the cap generally are deferred (none seeded); only the
+Affinity +2 is modelled.
+
+**The Gift → one free Supernatural Ability.** A Supernatural Ability normally
+requires a granting Virtue (an `ability_score_grant` effect seeds it — Second
+Sight, etc.). The Gift lets a Gifted **non-magus** take one such Ability with no
+Virtue; a **magus** gets none (his free supernatural ability is Hermetic magic):
+
+> `:2874` "Characters who have The Gift may start play with a single Supernatural
+> Ability, without having to take any other Virtue … The ability to cast Hermetic
+> magic is the single supernatural ability possessed by Hermetic magi in virtue
+> of The Gift".
+
+`effective::supernatural_free_slots` = `(has_the_gift && !is_magus ? 1 : 0, used)`;
+`validate_supernatural_abilities` errors on uncovered Supernatural abilities beyond
+the free allowance (`supernatural_ability_requires_virtue`). **Companion
+`gift_policy` is `allowed`** (was `forbidden`) so a Gifted companion is legal
+(`:2872` "companions should only have The Gift if they are intended to become
+magi, or … other magical traditions"); grog/mythic stay `forbidden`.
+**Approximation:** "covered" = "has an `ability_score_grant` floor", a proxy for
+"has a granting Virtue" — exact for the current seed; `ability.animal_ken` has no
+granting Virtue, so it is takeable only via the free slot.
+
+**Confidence** (derived, never stored: type-profile default + `ConfidenceBonus`
+effects, via `effective::confidence`):
+
+> `:2521` "Companions and Magi start with a Confidence Score of 1 and 3 Confidence
+> Points … Grogs do not have Confidence Points."
+
+`character_types.json` sets `confidence_score:1`/`confidence_points:3` on
+companion/magus/mythic; grog omits (0/0). **Self-Confident** (`:4900-4902`, Minor
+General) → `confidence_bonus {score:1, points:2}` (raising the default to 2/5).
+
+**Personality Traits** (`Entity.personality_traits`, `validate_personality_traits`):
+
+> `:2500-2503` "attach a value between -3 and +3 … a Major Personality Flaw
+> should have a Personality Trait of +6 or -6."
+
+Each trait `|value| ≤ 3`; up to one trait per selected Major Personality Flaw
+(`category == personality`, `magnitude == major`) may reach ±6; `|value| > 6`
+never. The grog-Loyal / warrior-Brave "should" is guided (M5), not enforced here.
+
+**Reputations** (`Entity.reputations`, `ReputationType` = Local / Ecclesiastical /
+Hermetic, `:1091-1101`):
+
+> `:2514` "Characters only start with a Reputation if they choose a Virtue or Flaw
+> that grants one, but all characters can develop them in play."
+
+`Effect::GrantsReputation {kind, score}` authorizes one starting Reputation;
+`validate_reputations` errors on any reputation beyond the grants of its kind
+(`reputation_not_granted`). Seeded granters: **Infamous** (`:6310-6312`, Minor
+General, `grants_reputation {local, 4}`) and **Black Sheep** (`:5703-5705`, Major
+Story, `{local, 2}`). Only Local granters exist in Core; Hermetic/Ecclesiastical
+granters (e.g. Hermetic Prestige, not in the Core source) are M8.
+
+---
+
 ## Engine framework (book-agnostic, no rulebook source)
 
 These checks are structural integrity, not Ars Magica rules, and intentionally

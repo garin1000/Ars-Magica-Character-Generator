@@ -69,7 +69,7 @@ function installRuleset(
 /** Reset the shared singleton's entity to a clean character before each test. */
 function resetEntity(): void {
   store.entity = {
-    schema_version: 6,
+    schema_version: 7,
     ruleset: { id: 'test', version: '1' },
     entity_kind: 'character',
     type_id: 'companion',
@@ -79,6 +79,8 @@ function resetEntity(): void {
     ability_scores: [],
     xp_pool: 0,
     art_scores: [],
+    personality_traits: [],
+    reputations: [],
   };
 }
 
@@ -226,6 +228,46 @@ describe('removeSpellAt', () => {
     store.addSpell('spell.c');
     store.removeSpellAt(1);
     expect((store.entity.spells ?? []).map((s) => s.spell)).toEqual(['spell.a', 'spell.c']);
+  });
+});
+
+// --- Phase 7: age, personality traits, reputations -------------------------
+
+describe('setAge', () => {
+  it('stores a positive integer and clears on null', () => {
+    store.setAge(30);
+    expect(store.entity.age).toBe(30);
+    store.setAge(null);
+    expect(store.entity.age).toBe(null);
+  });
+
+  it('clamps non-positive/non-finite to null', () => {
+    store.setAge(0);
+    expect(store.entity.age).toBe(null);
+  });
+});
+
+describe('personality traits', () => {
+  it('adds, names, values (clamped to ±6), and removes by index', () => {
+    store.addPersonalityTrait();
+    store.setPersonalityTraitName(0, 'Brave');
+    store.setPersonalityTraitValue(0, 9);
+    expect(store.entity.personality_traits).toEqual([{ name: 'Brave', value: 6 }]);
+    store.addPersonalityTrait();
+    store.removePersonalityTraitAt(0);
+    expect(store.entity.personality_traits).toHaveLength(1);
+  });
+});
+
+describe('reputations', () => {
+  it('adds from a grant (kind + score), edits content, removes by index', () => {
+    store.addReputation('local', 4);
+    store.setReputationContent(0, 'dragon slayer');
+    expect(store.entity.reputations).toEqual([
+      { kind: 'local', score: 4, content: 'dragon slayer' },
+    ]);
+    store.removeReputationAt(0);
+    expect(store.entity.reputations).toEqual([]);
   });
 });
 

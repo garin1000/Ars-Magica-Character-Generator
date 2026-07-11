@@ -1,4 +1,8 @@
 {
+  "flaw.black_sheep": {
+    "name": "Black Sheep",
+    "summary": "Estranged from a prestigious family; a bad Reputation at level 2 among those who respect them."
+  },
   "flaw.blatant_gift": {
     "name": "Blatant Gift",
     "summary": "Your Gift is extremely disturbing to others."
@@ -14,6 +18,10 @@
   "flaw.faerie_friend": {
     "name": "Faerie Friend",
     "summary": "You have an ally among the fay, a boon that can also be a burden."
+  },
+  "flaw.infamous": {
+    "name": "Infamous",
+    "summary": "A level-4 bad Reputation for horrible deeds of your choosing."
   },
   "flaw.pagan": {
     "name": "Pagan",

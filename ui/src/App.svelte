@@ -13,6 +13,7 @@
   import ArtGrid from './lib/components/ArtGrid.svelte';
   import ArtXpBar from './lib/components/ArtXpBar.svelte';
   import SpellPicker from './lib/components/SpellPicker.svelte';
+  import CharacterDetails from './lib/components/CharacterDetails.svelte';
   import HouseSelector from './lib/components/HouseSelector.svelte';
   import MythicCompanionTypeSelector from './lib/components/MythicCompanionTypeSelector.svelte';
   import BalanceBar from './lib/components/BalanceBar.svelte';
@@ -27,7 +28,8 @@
     | 'arts'
     | 'spells'
     | 'house_specialisation'
-    | 'mythic_type';
+    | 'mythic_type'
+    | 'details';
   // Left-to-right: Characteristics, Virtues & Flaws, Abilities, then the two
   // magus-only tabs (Arts, House) and the mythic-companion-only Type tab — each
   // gated on the profile's capability flag (never the type id), so any future
@@ -50,6 +52,8 @@
         ]
       : []),
     ...(hasMythicType ? [{ id: 'mythic_type' as Tab, key: 'tab-mythic-type' }] : []),
+    // Age, Confidence, Personality Traits and Reputations apply to every type.
+    { id: 'details', key: 'tab-details' },
   ]);
   let tab = $state<Tab>('characteristics');
 
@@ -147,6 +151,10 @@
   {:else if tab === 'spells'}
     <div class="vf-tab">
       <SpellPicker />
+    </div>
+  {:else if tab === 'details'}
+    <div class="vf-tab">
+      <CharacterDetails />
     </div>
   {:else if tab === 'mythic_type'}
     <div class="vf-tab">

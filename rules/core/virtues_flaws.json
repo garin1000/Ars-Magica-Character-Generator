@@ -1,5 +1,14 @@
 [
   {
+    "id": "flaw.black_sheep",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 2 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5703, 5705] }
+  },
+  {
     "id": "flaw.blatant_gift",
     "kind": "flaw",
     "magnitude": "major",
@@ -32,6 +41,15 @@
     "category": "story",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6052, 6055] }
+  },
+  {
+    "id": "flaw.infamous",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 4 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6310, 6312] }
   },
   {
     "id": "flaw.pagan",
@@ -349,6 +367,7 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "confidence_bonus", "score": 1, "points": 2 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4900, 4902] }
   },
   {

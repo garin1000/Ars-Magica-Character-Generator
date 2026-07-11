@@ -11,10 +11,11 @@ use std::collections::BTreeMap;
 
 use arm_rules::{
     AbilityBonus, AbilityFloor, ArtBonus, Characteristic, Entity, EntityKind, LocalizedRuleset,
-    RestrictedXpPool, Ruleset, RulesetSources, Selection, ValidationMode, ValidationResult,
-    ability_bonuses, ability_score_floors, art_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, effective_point_ceilings, granted_selections,
-    spell_levels_budget, spell_levels_used, validate, xp_allocation,
+    ReputationType, RestrictedXpPool, Ruleset, RulesetSources, Selection, ValidationMode,
+    ValidationResult, ability_bonuses, ability_score_floors, age_ability_cap, art_bonuses,
+    characteristic_caps, characteristic_floors, characteristic_points_granted, confidence,
+    effective_point_ceilings, granted_selections, reputation_grants, spell_levels_budget,
+    spell_levels_used, supernatural_free_slots, validate, xp_allocation,
 };
 use serde::Serialize;
 
@@ -66,16 +67,45 @@ pub struct EffectiveScores {
     pub spell_levels_budget: u32,
     /// The spell levels the chosen spells consume — the "used" side of the bar.
     pub spell_levels_used: u32,
+    /// Effective Confidence Score / Points (type default + V/F), for the read-only
+    /// Confidence readout. 0/0 for grogs (who have no Confidence).
+    pub confidence_score: u8,
+    pub confidence_points: u8,
+    /// The Gift's free Supernatural-Ability slots: how many the character has
+    /// (1 for a Gifted non-magus, else 0) and how many are already used. The
+    /// ability picker greys a Supernatural Ability when `used >= total` and it is
+    /// not already granted by a Virtue.
+    pub supernatural_free_total: u8,
+    pub supernatural_free_used: u8,
+    /// The character's age → max-Ability-score cap (base, before Affinity's +2),
+    /// surfaced so the UI shows one source of truth. `None` when age is unset.
+    pub age_ability_cap: Option<u8>,
+    /// The Reputation grants the character's V/F confer, so the UI only offers a
+    /// Reputation add-control (pre-filled kind/score) when one exists.
+    pub reputation_grants: Vec<ReputationGrant>,
+}
+
+/// A Reputation a Virtue/Flaw authorizes the character to start with (the UI
+/// pre-fills a new Reputation row from this; content is player-supplied).
+#[derive(Debug, Clone, Serialize)]
+pub struct ReputationGrant {
+    pub kind: ReputationType,
+    pub score: u8,
 }
 
 /// Computes the score effects for `entity` against a loaded ruleset.
 pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveScores {
     let allocation = xp_allocation(entity, ruleset);
     let (virtue_budget, flaw_budget) = effective_point_ceilings(entity, ruleset).unwrap_or((0, 0));
-    let spell_base = ruleset
-        .profile(&entity.type_id)
-        .map(|p| p.spell_levels)
-        .unwrap_or(0);
+    let profile = ruleset.profile(&entity.type_id);
+    let spell_base = profile.map(|p| p.spell_levels).unwrap_or(0);
+    // Confidence is derived (type default + V/F); 0/0 when there is no profile.
+    let (confidence_score, confidence_points) = profile
+        .map(|p| confidence(p.confidence_score, p.confidence_points, entity, ruleset))
+        .unwrap_or((0, 0));
+    let (supernatural_free_total, supernatural_free_used) = profile
+        .map(|p| supernatural_free_slots(entity, ruleset, p))
+        .unwrap_or((0, 0));
     EffectiveScores {
         ability_bonuses: ability_bonuses(entity, ruleset),
         art_bonuses: art_bonuses(entity, ruleset),
@@ -91,6 +121,15 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         flaw_budget,
         spell_levels_budget: spell_levels_budget(spell_base, entity, ruleset),
         spell_levels_used: spell_levels_used(entity, ruleset),
+        confidence_score,
+        confidence_points,
+        supernatural_free_total,
+        supernatural_free_used,
+        age_ability_cap: age_ability_cap(entity),
+        reputation_grants: reputation_grants(entity, ruleset)
+            .into_iter()
+            .map(|(kind, score)| ReputationGrant { kind, score })
+            .collect(),
     }
 }
 
