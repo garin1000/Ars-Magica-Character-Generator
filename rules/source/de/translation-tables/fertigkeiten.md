@@ -13,7 +13,7 @@
 | Englisch (EN) | Typ | Deutsch (DE) | Anmerkung |
 |---|---|---|---|
 | (Area) Lore\* | Allgemein | (Gebiets-)Kunde | auch Gebietskunde (Spezialisierung) |
-| Ars Notoria\* | Übernatürlich | Ars Notoria | SdM:D; Salomons heilige Kunst; Lat. beibehalten |
+| Ars Notoria\* | Übernatürlich | Ars Notoria | SdM:G; Salomons heilige Kunst; Lat. beibehalten |
 | (Dead Language)\* | Akademisch | (Tote Sprache) | |
 | (Living Language)\* | Allgemein | (Lebende Sprache) | |
 | (Mystery Cult) Lore\* | Allgemein | (Mysterienkult-)Kunde | auch Myterienkultkunde (Spezialisierung) |
@@ -59,7 +59,7 @@
 | Induction\* | Übernatürlich | Einflüstern | |
 | Infernal Lore\* | Arkan | Infernalkunde | |
 | Intrigue | Allgemein | Intrige | |
-| Israel Lore | Arkan | Israel-Kunde | SdM:D; Geschichte und Geheimnisse Israels |
+| Israel Lore | Arkan | Israel-Kunde | SdM:G; Geschichte und Geheimnisse Israels |
 | Islamic Law\* | Akademisch | Islamisches Recht | |
 | Judaic Lore\* | Allgemein | Jüdische Kunde | |
 | Leadership | Allgemein | Führung | |
@@ -110,26 +110,31 @@
 |---|---|---|---|
 | Legion Lore | Arkane | Legionskunde | HoH:TL; Wissen über römische Legionsstrukturen (Geisterarmeen) |
 
-### Ergänzungen aus Sphären der Macht: Das Göttliche (SdM:D)
+### Ergänzungen aus Sphären der Macht: Das Göttliche (SdM:G)
 
 | Englisch (EN) | Typ | Deutsch (DE) | Anmerkung |
 |---|---|---|---|
-| Adjuration\* | Übernatürlich | Adjuration | SdM:D; Heilige Kraft; übernatürliche Wesen befehligen/kontrollieren/bannen |
-| Blessing\* | Übernatürlich | Segnen | SdM:D; Heilige Kraft; schützende und inspirierende Effekte |
-| Ceremony\* | Übernatürlich | Zeremonie | SdM:D; Hilfsfertigk.; Gruppe auf heiliges Gebet fokussieren |
-| Cursing\* | Übernatürlich | Verfluchen | SdM:D; Heilige Kraft; negative Effekte des göttlichen Zorns |
-| Intervention\* | Übernatürlich | Intervention | SdM:D; Heilige Kraft; Göttliches in der Welt manifestieren |
-| Invocation\* | Übernatürlich | Anrufung | SdM:D; Heilige Methode; heilige Worte und Gebete |
-| Meditation\* | Übernatürlich | Meditation | SdM:D; Heilige Methode; ekstatischer Zustand |
-| Purity\* | Übernatürlich | Reinheit | SdM:D; Heilige Methode; körperliche Anstrengung und Wille |
-| Transcendence\* | Übernatürlich | Transzendenz | SdM:D; Heilige Kraft; Grenzen der physischen Welt überwinden |
-| Understanding\* | Übernatürlich | Verständnis | SdM:D; Heilige Kraft; heilige Visionen empfangen |
-| Wonders\* | Übernatürlich | Wunder | SdM:D; Heilige Kraft; Kreaturen, Gegenstände, Naturkräfte manifestieren |
-| Church Lore | Allgemein | Kirchenkunde | SdM:D; Wissen über Kirchenstruktur, -geschichte |
-| Divine Lore | Arkan | Göttliche Kunde | SdM:D; Wissen über die Göttliche Sphäre |
-| Holy Magic\* | Übernatürlich | Heilige Magie | SdM:D; ersetzt Magietheorie für göttliche Magie |
-| Orthodox Church Lore | Allgemein | Orthodoxe Kirchenkunde | SdM:D; Wissen über die orthodoxe Kirche |
-| Holy Music\* | Übernatürlich | Heilige Musik | SdM:D; präsenzbasierte Meditationsvariante |
+| Adjuration\* | Übernatürlich | Adjuration | SdM:G; Heilige Kraft; übernatürliche Wesen befehligen/kontrollieren/bannen |
+| Blessing\* | Übernatürlich | Segnen | SdM:G; Heilige Kraft; schützende und inspirierende Effekte |
+| Ceremony\* | Übernatürlich | Zeremonie | SdM:G; Hilfsfertigk.; Gruppe auf heiliges Gebet fokussieren |
+| Cursing\* | Übernatürlich | Verfluchen | SdM:G; Heilige Kraft; negative Effekte des göttlichen Zorns |
+| Intervention\* | Übernatürlich | Intervention | SdM:G; Heilige Kraft; Göttliches in der Welt manifestieren |
+| Invocation\* | Übernatürlich | Anrufung | SdM:G; Heilige Methode; heilige Worte und Gebete |
+| Meditation\* | Übernatürlich | Meditation | SdM:G; Heilige Methode; ekstatischer Zustand |
+| Purity\* | Übernatürlich | Reinheit | SdM:G; Heilige Methode; körperliche Anstrengung und Wille |
+| Transcendence\* | Übernatürlich | Transzendenz | SdM:G; Heilige Kraft; Grenzen der physischen Welt überwinden |
+| Understanding\* | Übernatürlich | Verständnis | SdM:G; Heilige Kraft; heilige Visionen empfangen |
+| Wonders\* | Übernatürlich | Wunder | SdM:G; Heilige Kraft; Kreaturen, Gegenstände, Naturkräfte manifestieren |
+| Church Lore | Allgemein | Kirchenkunde | SdM:G; Wissen über Kirchenstruktur, -geschichte |
+| Divine Lore | Arkan | Göttliche Kunde | SdM:G; Wissen über die Göttliche Sphäre |
+| Holy Magic\* | Übernatürlich | Heilige Magie | SdM:G; ersetzt Magietheorie für göttliche Magie |
+| Orthodox Church Lore | Allgemein | Orthodoxe Kirchenkunde | SdM:G; Wissen über die orthodoxe Kirche |
+| Holy Music\* | Übernatürlich | Heilige Musik | SdM:G; präsenzbasierte Meditationsvariante |
+| Dream Interpretation\* | Übernatürlich | Traumdeutung | SdM:G; Heilige Methode (ersetzt Meditation) |
+| Craft Amulets\* | Übernatürlich | Amulette fertigen | SdM:G; Kap. 6; jüdische Amulett-Fertigung |
+| Gematria\* | Übernatürlich | Gematria | SdM:G; Kap. 6; hebräische Zahlenmystik |
+| Kabbalah\* | Übernatürlich | Kabbalah | SdM:G; Kap. 6; jüdische Mystik |
+| Merkavah\* | Übernatürlich | Merkavah | SdM:G; Kap. 6; Mysterien des Thronwagens |
 
 ---
 

@@ -38,6 +38,7 @@ Thematisch gegliederte Übersetzungstabellen für die deutsche Ausgabe von Ars M
 | [goettliche-kraefte.md](goettliche-kraefte.md) | Göttliche Kräfte: Engelskräfte nach Chor, allgemeine Engel-Mechaniken, Reliquienkräfte | RoP:D |
 | [infernale-kraefte.md](infernale-kraefte.md) | Infernale Kräfte und Wesen: Dämonenkräfte nach Ordnung/Familie, Dämonentypen | RoP:I |
 | [islamische-begriffe.md](islamische-begriffe.md) | Islamische Fachbegriffe: religiöse Grundbegriffe, Fünf Säulen, Recht, Mystik, Konfessionen | RoP:D Kap. 5 |
+| [juedische-begriffe.md](juedische-begriffe.md) | Jüdische Fachbegriffe: Feiertage, religiöse/gesellschaftliche Begriffe, Personen, Orte/Texte | RoP:D Kap. 6 |
 
 ---
 

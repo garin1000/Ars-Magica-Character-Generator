@@ -666,7 +666,7 @@ Magi des Hauses Criamon suchen das „Enigma", das andere Magi als eine Art myst
 
 Selbst unter den Mysterienkulten ist Haus Criamon für Außenstehende schwer zu begreifen.
 
-Seine Prima ist Muscaria, die in der Domus Magna, der Höhle der Zuckenden Schatten im Tribunal der Hohen Alpen, residiert. Sie ist eine junge und ausgesprochen pragmatische Maga, wenig dem gängigen Bild ihres Hauses entsprechend. Zu wichtigen früheren Magi gehören Vederis, der die *Reisen des Fedoso* verfasste, einen allegorischen oder zumindest esoterischen Text, der im Haus und darüber hinaus beliebt ist, und Abdkypris, der wichtige Verbindungen zwischen den Mysterien des Hauses und den Überzeugungen der Sufis, einer Tradition innerhalb des Islam, fand. Sanctus Nerius (siehe [*Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*, Seite 91](<Ars Magica 5e - Realms of Power - The Divine (Revised).md#saint-nerius>)), ein Magus, der für seine christliche Frömmigkeit und Heiligkeit berühmt ist, soll gemeinhin ein Mitglied des Hauses Criamon gewesen sein.
+Seine Prima ist Muscaria, die in der Domus Magna, der Höhle der Zuckenden Schatten im Tribunal der Hohen Alpen, residiert. Sie ist eine junge und ausgesprochen pragmatische Maga, wenig dem gängigen Bild ihres Hauses entsprechend. Zu wichtigen früheren Magi gehören Vederis, der die *Reisen des Fedoso* verfasste, einen allegorischen oder zumindest esoterischen Text, der im Haus und darüber hinaus beliebt ist, und Abdkypris, der wichtige Verbindungen zwischen den Mysterien des Hauses und den Überzeugungen der Sufis, einer Tradition innerhalb des Islam, fand. Sanctus Nerius (siehe [*Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*, Seite 91](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#heiliger-nerius>)), ein Magus, der für seine christliche Frömmigkeit und Heiligkeit berühmt ist, soll gemeinhin ein Mitglied des Hauses Criamon gewesen sein.
 
 Dieses Haus ist ein Mysterienkult, und das Mysterium im Herzen des Kultes ist das Enigma (siehe [Seite 233](#criamon--das-enigma)).
 
@@ -2039,7 +2039,7 @@ Belastung: 0 (0)
 Bekannte Zauber:
 - [Phantasmisches Tier](#phantasmisches-tier) (CrIm 20/+17)
 - [Phantasma der menschlichen Gestalt](#phantasma-der-menschlichen-gestalt) (CrIm 25/+17)
-- [Bildphantom](#bildphantom) (MuIm 20/+17)
+- [Truggestalt](#truggestalt) (MuIm 20/+17)
 - [Schleier der Unsichtbarkeit](#schleier-der-unsichtbarkeit) (PeIm 20/+14)
 - [Des Zauberers Schritt zur Seite](#des-zauberers-schritt-zur-seite) (ReIm 10/+17)
 - [Panik des zitternden Herzens](#panik-des-zitternden-herzens) (CrMe 15/+9)
@@ -3514,7 +3514,7 @@ Du alterst unglaublich langsam und kannst Hunderte von Jahren leben. Du musst er
 
 Aufgrund deiner gewaltigen Größe musst du riesige Mengen Nahrung zu dir nehmen (entsprechend dem Tagesbedarf von drei normalen Menschen) und hast den Kleinen Persönlichkeits-Fehler Gierig (der als einer deiner normalen Fehler zählt). Wenn du auch nur einen einzigen Tag ohne Nahrung bleibst, verfällst du in einen tiefen Schlaf, eine Art übernatürlichen Winterschlaf. Du verhungerst in (2 + dein Göttlicher Machtwert) Tagen, sofern du nicht mit deinem eigenen Körpergewicht an Nahrung versorgt wirst. Nach dem Erwachen erleidest du eine Anzahl verlorener Langzeiterschöpfungsstufen, die der Anzahl der Tage entspricht, an denen du ohne Nahrung warst. (Zu beachten ist, dass diese Tugend selbst keinen Göttlichen Machtwert verleiht; siehe Starkes Engelserbe weiter unten.)
 
-Du kannst nicht die Gabe oder Wahren Glauben, Hermetische Tugenden oder Fehler, Methoden oder Kräfte (siehe *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*, Seiten 46–56), Tugenden wie Riesen-, Mythisches oder Feenblut, Fehler wie Schnelles Altern oder Werwolf, oder Tugenden oder Fehler nehmen, die deine Größe beeinflussen. Ein Nachkomme der Nephilim ohne Göttlichen Machtwert könnte theoretisch übernatürliche Kräfte (außer Göttlichen Methoden und Kräften) aus irgendeiner Sphäre erlernen, aber das ist sehr selten. Magi und Grogs dürfen diese Tugend nicht nehmen.
+Du kannst nicht die Gabe oder Wahren Glauben, Hermetische Tugenden oder Fehler, Methoden oder Kräfte (siehe *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*, [Seiten 46–56](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#wundersame-wirkungen>)), Tugenden wie Riesen-, Mythisches oder Feenblut, Fehler wie Schnelles Altern oder Werwolf, oder Tugenden oder Fehler nehmen, die deine Größe beeinflussen. Ein Nachkomme der Nephilim ohne Göttlichen Machtwert könnte theoretisch übernatürliche Kräfte (außer Göttlichen Methoden und Kräften) aus irgendeiner Sphäre erlernen, aber das ist sehr selten. Magi und Grogs dürfen diese Tugend nicht nehmen.
 
 #### Bücherwurm
 *Klein, Allgemein*<br>
@@ -3592,7 +3592,7 @@ Der Charakter besitzt eine Kraft, die dem Hermetischen Zauber Aura der Rechtmä�
 
 Päpstliche Legaten sind Vertreter des Papstes. Wenn der Legatus missus – ein niedrigerer Rang mit begrenzten Vollmachten – seine Mission verzögert oder von ihr abweicht, hört seine Befehlsaura auf zu wirken, bis er Buße getan hat. Die Befehlsaura geht auch verloren, wenn ein Legatus missus seine Mission abschließt.
 
-Einige weltliche Herrscher, die vom Papst ordiniert wurden (hauptsächlich Könige und Kaiser), haben ebenfalls eine Befehlsaura. Siehe *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*, Seite 42.
+Einige weltliche Herrscher, die vom Papst ordiniert wurden (hauptsächlich Könige und Kaiser), haben ebenfalls eine Befehlsaura. Siehe *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*, [Seite 42](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#die-befehlende-aura>).
 
 #### Gesunder Menschenverstand
 *Klein, Allgemein*<br>
@@ -4631,7 +4631,7 @@ Für eine bestimmte Ware und daraus hergestellte Produkte kann der Charakter nie
 
 #### Perfectus
 *Klein, Sozialer Status*<br>
-Du bist einer der Anführer der Katharer-Häretiker, die hauptsächlich in Südfrankreich zu finden sind. Zu deinen Pflichten gehören das Predigen des Evangeliums, das Enthalten von Fleisch und Milchprodukten, von Sex und Romantik sowie von anderen Handlungen, die dich in der sündigen Welt verstricken. Du solltest normalerweise den Fehler Gelübde nehmen, um deine feierlichen religiösen Verpflichtungen darzustellen. Du darfst die Tugend Wohlhabend nicht nehmen, da du von den Zehnten und Beiträgen deiner Gemeinden unterstützt wirst. Als Häretiker bist du in großer Gefahr seitens der Kirche, die dich hinrichten wird, wenn du gefasst wirst und weigerst, deinen Glauben zu widerrufen. Aufgrund deiner Ausbildung darfst du beim Erschaffen Akademische Fertigkeiten nehmen. Du kannst die Übernatürlichen Fertigkeiten Reinheit und Transzendenz aus *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)* (Seite 53) nehmen, wenn dein Charakter die Tugend Echter Glaube besitzt; dies sind jedoch keine freien Tugenden. Du darfst sie jedoch als Tugenden nehmen, wie normal. Weitere Details zu den Katharern finden sich in *Faith and Flame* ab Seite 13.
+Du bist einer der Anführer der Katharer-Häretiker, die hauptsächlich in Südfrankreich zu finden sind. Zu deinen Pflichten gehören das Predigen des Evangeliums, das Enthalten von Fleisch und Milchprodukten, von Sex und Romantik sowie von anderen Handlungen, die dich in der sündigen Welt verstricken. Du solltest normalerweise den Fehler Gelübde nehmen, um deine feierlichen religiösen Verpflichtungen darzustellen. Du darfst die Tugend Wohlhabend nicht nehmen, da du von den Zehnten und Beiträgen deiner Gemeinden unterstützt wirst. Als Häretiker bist du in großer Gefahr seitens der Kirche, die dich hinrichten wird, wenn du gefasst wirst und weigerst, deinen Glauben zu widerrufen. Aufgrund deiner Ausbildung darfst du beim Erschaffen Akademische Fertigkeiten nehmen. Du kannst die Übernatürlichen Fertigkeiten Reinheit und Transzendenz aus *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)* ([Seite 53](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#reinheit-1>)) nehmen, wenn dein Charakter die Tugend Echter Glaube besitzt; dies sind jedoch keine freien Tugenden. Du darfst sie jedoch als Tugenden nehmen, wie normal. Weitere Details zu den Katharern finden sich in *Faith and Flame* ab Seite 13.
 
 > #### Beispiel
 >
@@ -4781,7 +4781,7 @@ Eine Maga mit Potenter Magie kann außerdem neue Potente Zauber innerhalb ihres 
 
 #### Mächtiges Relikt
 *Groß, Allgemein*<br>
-Du besitzt ein ungewöhnlich mächtiges Relikt mit einem Wahren-Glauben-Wert von 3. Das Relikt besitzt außerdem eine Kraft, die in Absprache mit dem Spielleiter festgelegt werden sollte (siehe Relikte, [Seite 419](#reliquien)). Wie bei der Kleinen Allgemeinen Tugend Relikt kann der Gegenstand in jeden anderen Gegenstand eingebaut werden, den Du besitzt, etwa in ein Schwert oder ein Amulett.
+Du besitzt ein ungewöhnlich mächtiges Relikt mit einem Wahrer-Glaube-Wert von 3. Das Relikt besitzt außerdem eine Kraft, die in Absprache mit dem Spielleiter festgelegt werden sollte (siehe Relikte, [Seite 419](#reliquien)). Wie bei der Kleinen Allgemeinen Tugend Relikt kann der Gegenstand in jeden anderen Gegenstand eingebaut werden, den Du besitzt, etwa in ein Schwert oder ein Amulett.
 
 Ein so mächtiges Relikt zu besitzen ist eine große Verantwortung, und Dein Charakter sollte sich entsprechend verhalten. Wenn Du Dich jemals gottlos verhältst (nach Beurteilung des Spielleiters), hört das Relikt auf zu funktionieren, bis angemessene Buße geleistet wurde.
 
@@ -4851,7 +4851,7 @@ Du wirst von Deinem Konvent versorgt, daher kannst Du weder die Tugend Wohlhaben
 
 #### Relikt
 *Klein, Allgemein*<br>
-Du besitzt ein heiliges Relikt, etwa den Fingerknöchelknochen eines Heiligen, mit einem Wahren-Glauben-Wert von 1. Es kann in jeden anderen Gegenstand eingebaut werden, den Du besitzt (zum Beispiel ein Schwert). Das Relikt besitzt keine zusätzlichen Kräfte. Regeln für Relikte und Wahren Glauben findest Du in Kapitel 12: Sphären.
+Du besitzt ein heiliges Relikt, etwa den Fingerknöchelknochen eines Heiligen, mit einem Wahrer-Glaube-Wert von 1. Es kann in jeden anderen Gegenstand eingebaut werden, den Du besitzt (zum Beispiel ein Schwert). Das Relikt besitzt keine zusätzlichen Kräfte. Regeln für Relikte und Wahren Glauben findest Du in Kapitel 12: Sphären.
 
 #### Ordensangehöriger
 *Klein, Sozialer Status*<br>
@@ -5025,7 +5025,7 @@ Dein Engelserbe ist reiner und verleiht dir einen Göttlichen Machtwert sowie ü
 
 Du bist ein göttliches Wesen und besitzt einen Göttlichen Machtwert (Corpus) gleich deinem Alter geteilt durch 20, der mit zunehmendem Alter steigt. Dieser Wert verleiht dir Magieresistenz. Du trägst eine Anzahl von Bauern Corpus-Vis in dir gleich deinem Göttlichen Machtwert geteilt durch 10 (abgerundet, mindestens jedoch ein Bauer), die nur nach deinem Tod gewonnen werden können. Du bist gegen jede Art von Verzerrung immun und darfst keine übernatürlichen Kräfte besitzen, die aus einer anderen Sphäre als dem Göttlichen stammen.
 
-Du verfügst über bis zu dreißig Stufen heiliger Kräfte, die durch den Einsatz von Machtpunkten aktiviert werden können. Gestalte die Wirkungen der Kräfte mithilfe der Leitlinien für hermetische Zauber (oder der Leitlinien für Heilige Kräfte in Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), ab Seite 46). Die Machtkosten für jede Kraft entsprechen ihrer Magnitude geteilt durch zwei (abgerundet, mindestens jedoch ein Punkt). Der Initiativewert der Kraft entspricht deiner Schnelligkeit.
+Du verfügst über bis zu dreißig Stufen heiliger Kräfte, die durch den Einsatz von Machtpunkten aktiviert werden können. Gestalte die Wirkungen der Kräfte mithilfe der Leitlinien für hermetische Zauber (oder der Leitlinien für Heilige Kräfte in Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), ab [Seite 46](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#wundersame-wirkungen>)). Die Machtkosten für jede Kraft entsprechen ihrer Magnitude geteilt durch zwei (abgerundet, mindestens jedoch ein Punkt). Der Initiativewert der Kraft entspricht deiner Schnelligkeit.
 
 Du kannst diese Tugend mehrfach wählen. Jedes weitere Mal, das du sie wählst, erhöht sich die Anzahl der Stufen heiliger Kräfte, die du aktivieren kannst, um dreißig, hat jedoch sonst keine weitere Wirkung – insbesondere erhöht sie deinen Göttlichen Machtwert nicht.
 
@@ -5076,7 +5076,7 @@ Du kannst Zauber ohne Gesten wirken, ohne einen Malus zu erleiden. Du profitiers
 
 #### Sufi
 *Klein, Sozialer Status, Übernatürlich*<br>
-Du bist ein muslimischer Mystiker, der durch Askese und Rituale eine engere Vereinigung mit Gott anstrebt. Du bist Mitglied einer Tariga von Sufis, die von einem Scheich angeführt wird. Während die Gruppe dich in Zeiten der Not unterstützt, erwartet dein Scheich von dir ein gleichwertiges Engagement gegenüber ihm oder ihr und den anderen Mitgliedern: Wähle einen passenden Kleinen Geschichte-Fehler, etwa Mentor, der keine Punkte für den Erwerb von Tugenden einbringt. Einzelheiten zu den übernatürlichen Kräften einiger Sufis findest du in Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), Seite 116. Es ist auch möglich, ein vollständig weltlicher Sufi zu sein; in diesem Fall solltest du diese Tugend als Sozialer-Status-Tugend wählen.
+Du bist ein muslimischer Mystiker, der durch Askese und Rituale eine engere Vereinigung mit Gott anstrebt. Du bist Mitglied einer Tariga von Sufis, die von einem Scheich angeführt wird. Während die Gruppe dich in Zeiten der Not unterstützt, erwartet dein Scheich von dir ein gleichwertiges Engagement gegenüber ihm oder ihr und den anderen Mitgliedern: Wähle einen passenden Kleinen Geschichte-Fehler, etwa Mentor, der keine Punkte für den Erwerb von Tugenden einbringt. Einzelheiten zu den übernatürlichen Kräften einiger Sufis findest du in Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), [Seite 116](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#heilige-tradition-sufis>). Es ist auch möglich, ein vollständig weltlicher Sufi zu sein; in diesem Fall solltest du diese Tugend als Sozialer-Status-Tugend wählen.
 
 Die meisten Muslime begegnen dir mit Respekt für deinen frommen Lebensstil. Du kannst die Fertigkeiten Theologie: Islam, Islamisches Recht und Dominiumkunde bei der Charaktererschaffung erwerben.
 
@@ -5953,7 +5953,7 @@ Der Charakter ist einem Elternteil oder Kind außerordentlich zugetan. Wohin er 
 
 #### Dhimmi
 *Klein, Allgemein*<br>
-Du bist ein Nicht-Muslim, der unter muslimischer Herrschaft lebt. Wenn du erwachsen und männlich bist, musst du die Kopfsteuer Jizya entrichten, und alle Dhimmis müssen bestimmte gesellschaftliche Einschränkungen einhalten (beschrieben in den Quellenbänden für diese Gebiete des Mythischen Europa – siehe Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), The Cradle and the Crescent, Between Sand and Sea und Lands of the Nile), wofür sie im Gegenzug Duldung und Schutz durch die muslimischen Behörden erhalten. Der tatsächliche Betrag, den ein Dhimmi an Jizya zahlen muss, schwankt, übersteigt aber selten einen Dinar (eine Goldmünze) pro Jahr.
+Du bist ein Nicht-Muslim, der unter muslimischer Herrschaft lebt. Wenn du erwachsen und männlich bist, musst du die Kopfsteuer Jizya entrichten, und alle Dhimmis müssen bestimmte gesellschaftliche Einschränkungen einhalten (beschrieben in den Quellenbänden für diese Gebiete des Mythischen Europa – siehe [Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#dhimmi>), The Cradle and the Crescent, Between Sand and Sea und Lands of the Nile), wofür sie im Gegenzug Duldung und Schutz durch die muslimischen Behörden erhalten. Der tatsächliche Betrag, den ein Dhimmi an Jizya zahlen muss, schwankt, übersteigt aber selten einen Dinar (eine Goldmünze) pro Jahr.
 
 #### Diabolische Vergangenheit
 *Groß, Geschichte*<br>
@@ -6898,7 +6898,7 @@ Du darfst diesen Fehler nicht mehr als einmal nehmen; Charaktere, die für mehr 
 
 #### Unsicherer Glaube
 *Klein, Allgemein*<br>
-Ob durch einen Mangel im Verständnis der Lehre des Charakters, eine moralische Zerrissenheit, die entmutigende Absolution wiederholter Sünden oder die Exposition gegenüber widersprüchlichen Philosophien — er hat Schwierigkeiten, seine Hingabe an seinen Glauben vollständig auszudrücken. Ein Element des Zweifels steht zwischen ihm und dem Göttlichen, und alle Würfe für heiligen Einfluss, das Mildern einer Aura, das Anrufen von Gottes Hilfe oder das Anrufen eines Heiligen oder einer Baraka (siehe Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), Seiten 38–41, 87 und 103) erleiden einen –3-Abzug.
+Ob durch einen Mangel im Verständnis der Lehre des Charakters, eine moralische Zerrissenheit, die entmutigende Absolution wiederholter Sünden oder die Exposition gegenüber widersprüchlichen Philosophien — er hat Schwierigkeiten, seine Hingabe an seinen Glauben vollständig auszudrücken. Ein Element des Zweifels steht zwischen ihm und dem Göttlichen, und alle Würfe für heiligen Einfluss, das Mildern einer Aura, das Anrufen von Gottes Hilfe oder das Anrufen eines Heiligen oder einer Baraka (siehe Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), [Seiten 38–41](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#temperungen>), 87 und 103) erleiden einen –3-Abzug.
 
 Der Charakter hat auch einen Persönlichkeitszug „Unsicherer Glaube" bei +1, der diesen Konflikt oder Zweifel beschreibt, der Dämonen immer eine Gelegenheit gibt, durch ihre Besessenheitsmacht (Sphären der Macht: Das Infernale, [Seite 31](<Ars Magica 5e - Sphären der Macht - Das Infernale.md#dämonische-kräfte>)) weiteren Zweifel zu säen.
 
@@ -7728,7 +7728,7 @@ Der Charakter kann das Wesen und die Begierden eines vernunftbegabten Wesens ers
 
 Durch sorgfältige Beobachtung kann der Charakter auch Leidenschaften in Personen im allgemeinen Umkreis erkennen, sodass er sich in Sichtweite auf die mächtigste Empfindungsquelle einlassen kann, gewöhnlich auf den Charakter mit der höchsten (oder niedrigsten) Persönlichkeitseigenschaft. Dies erfordert eine 12 oder mehr beim Wurf auf Gespür für Leidenschaft.
 
-Der Charakter kann auch erkennen, ob eine Aura einen Makel (siehe *Sphären der Macht: Das Infernale*, [Seite 13](<Ars Magica 5e - Sphären der Macht - Das Infernale.md#makel>)) oder ein Gemüt (siehe *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*, Seite 38) trägt, sowie deren Art oder Arten, wenn er einen Schwierigkeitsgrad von 6 überwindet.
+Der Charakter kann auch erkennen, ob eine Aura einen Makel (siehe *Sphären der Macht: Das Infernale*, [Seite 13](<Ars Magica 5e - Sphären der Macht - Das Infernale.md#makel>)) oder ein Gemüt (siehe *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*, [Seite 38](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#temperungen>)) trägt, sowie deren Art oder Arten, wenn er einen Schwierigkeitsgrad von 6 überwindet.
 
 Durch das Erspüren von Leidenschaften kann der Charakter oft körperlose Geister erkennen. Du darfst Gespür für Leidenschaft wie Zweites Gesicht behandeln, wenn du versuchst, die Anwesenheit unsichtbarer oder körperloser Wesen zu erkennen. Dies erlaubt ihr jedoch nicht, durch Illusionen zu sehen, selbst nicht durch Illusionen starker Empfindungen, und sie kann die Geister nicht tatsächlich sehen, sondern nur ihre Nähe erspüren.
 
@@ -14685,7 +14685,7 @@ Lässt jemanden anders aussehen, klingen, sich anfühlen und riechen — wenn au
 
 #### STUFE 20
 
-##### Bildphantom
+##### Truggestalt
 R: Berührung, D: Sonne, Z: Ind.<br>
 Jedes Ding — auch ein lebendes Wesen — kann so aussehen, als wäre es etwas anderes von annähernd gleicher Form und Größe. Die Illusion kann nicht auf Dinge gewirkt werden, deren Form oder Größe für das gewünschte Erscheinungsbild ungeeignet ist. Bewegt sich das Ziel auf eine Weise, die der Illusion widerspricht, wirkt das Ergebnis äußerst seltsam.<br>
 (Grundstufe 5, +1 Berührung, +2 Sonne)
@@ -17582,7 +17582,7 @@ In seiner besten Form erlaubt das Dominium der menschlichen Seele, ihre tiefste 
 
 Die Macht der Kirche und die Grenzen, die sie dem Orden des Hermes auferlegt, veranlassen manche Magi dazu, das Göttliche zu verachten. Einige bevorzugen heidnische Religionen, die auf Feen- oder Magiekraft gründen, während andere einfach so wenig wie möglich mit Religion zu tun haben wollen. Dennoch sind viele Magi Christen, mit einer Minderheit von Juden und einer beachtlichen Zahl von Muslimen in jenen Tribunalen, die sich über islamische Länder erstrecken. Einige Magi besitzen sogar Wahren Glauben (siehe [Seite 113](#wahrer-glaube)), der ihrer Magie offenbar keinen Abbruch tut.
 
-Weitere Einzelheiten zu den übernatürlichen Aspekten des Göttlichen finden sich in *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*, zusammen mit Informationen über die drei bedeutendsten göttlichen Religionen im Mythischen Europa: Christentum, Islam und Judentum.
+Weitere Einzelheiten zu den übernatürlichen Aspekten des Göttlichen finden sich in [*Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md>), zusammen mit Informationen über die drei bedeutendsten göttlichen Religionen im Mythischen Europa: Christentum, Islam und Judentum.
 
 ### Göttliche Auren
 
@@ -17598,33 +17598,33 @@ Göttliche Auren können durch die Aktivitäten oder die Anwesenheit heiliger We
 
 Höhere göttliche Auren sind räumlich sehr begrenzt. Die Kapelle, in der die Reliquien eines sehr bedeutenden Heiligen aufbewahrt werden, könnte eine Aura von 6 haben, oder 7 bei Reliquien Christi oder der Jungfrau Maria. Der Ort eines Heiligenmartyriums hat im Allgemeinen eine Aura von 8, bei einem Apostelmartyrium eine von 9. Göttliche Auren von 10 entstehen an Orten, an denen Gott selbst auf direkte Weise eingegriffen hat. Das Heilige Grab, in dem Christus begraben wurde, die Kaaba in Mekka und die letzten Überreste des jüdischen Tempels in Jerusalem sind Beispiele dafür. Es gibt gelegentlich auch andere solche Orte – so wurde etwa die Lady Chapel der Glastonbury Abbey in England ursprünglich von Christus selbst geweiht und besitzt eine Aura von 10.
 
-Besondere göttliche Auren können von diesen Richtlinien abweichen, da Gott sie nach seinem Willen und Ermessen entstehen lässt. Die hier genannten Richtlinien sind jedoch jene, die er normalerweise zu befolgen scheint. Obwohl er die göttliche Aura einer Kathedrale vollständig entziehen könnte, tut er dies so gut wie nie. Weitere Einzelheiten zu göttlichen Auren finden sich in *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*, Seiten 10–17.
+Besondere göttliche Auren können von diesen Richtlinien abweichen, da Gott sie nach seinem Willen und Ermessen entstehen lässt. Die hier genannten Richtlinien sind jedoch jene, die er normalerweise zu befolgen scheint. Obwohl er die göttliche Aura einer Kathedrale vollständig entziehen könnte, tut er dies so gut wie nie. Weitere Einzelheiten zu göttlichen Auren finden sich in *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*, [Seiten 10–17](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#göttliche-auren-im-spiel>).
 
 ### Wahrer Glaube
 
 Wer weltliche Belange vollständig aufgibt und sein Leben selbstlos einem heiligen Lebenswandel widmet, kommt in den Genuss des Wahren Glaubens. Wahrer Glaube wird in Glaubenspunkten gemessen, die die Verbindung einer Person zu Gott darstellen. Jene mit Wahrem Glauben können Juden, Christen oder Muslime sein und müssen dabei, so scheint es, nicht vollständig rechtgläubig sein.
 
-Wahrer Glaube hat, wie Selbstvertrauen, sowohl einen Wert als auch Punkte. Die Große Tugend Wahrer Glaube verleiht einen Wahren-Glauben-Wert von 1 und einen einzelnen Glaubenspunkt. Nur wer die Große Tugend Wahrer Glaube besitzt, kann einen Wahren-Glauben-Wert haben. Jeder Charakter kann eine beliebige Anzahl von Glaubenspunkten besitzen (gewonnen durch Sakramente, eine Pilgerreise oder andere fromme Taten); einmal ausgegeben, kehren sie nicht zurück.
+Wahrer Glaube hat, wie Selbstvertrauen, sowohl einen Wert als auch Punkte. Die Große Tugend Wahrer Glaube verleiht einen Wahrer-Glaube-Wert von 1 und einen einzelnen Glaubenspunkt. Nur wer die Große Tugend Wahrer Glaube besitzt, kann einen Wahrer-Glaube-Wert haben. Jeder Charakter kann eine beliebige Anzahl von Glaubenspunkten besitzen (gewonnen durch Sakramente, eine Pilgerreise oder andere fromme Taten); einmal ausgegeben, kehren sie nicht zurück.
 
-Glaubenspunkte dürfen wie Selbstvertrauenspunkte ausgegeben werden (und es dürfen dabei so viele Glaubenspunkte auf einmal eingesetzt werden, wie der Wahre-Glauben-Wert beträgt), solange man im Einklang mit Gottes Willen handelt. Wer keinen Wahren-Glauben-Wert besitzt, darf jeweils nur einen Glaubenspunkt auf einmal einsetzen.
+Glaubenspunkte dürfen wie Selbstvertrauenspunkte ausgegeben werden (und es dürfen dabei so viele Glaubenspunkte auf einmal eingesetzt werden, wie der Wahrer-Glaube-Wert beträgt), solange man im Einklang mit Gottes Willen handelt. Wer keinen Wahrer-Glaube-Wert besitzt, darf jeweils nur einen Glaubenspunkt auf einmal einsetzen.
 
-Ein Charakter mit Glaubenspunkten, aber ohne Wahren-Glauben-Wert, erhält keine Magieresistenz. Ein Charakter mit einem Wahren-Glauben-Wert erhält Magieresistenz in Höhe dieses Wertes multipliziert mit zehn.
+Ein Charakter mit Glaubenspunkten, aber ohne Wahrer-Glaube-Wert, erhält keine Magieresistenz. Ein Charakter mit einem Wahrer-Glaube-Wert erhält Magieresistenz in Höhe dieses Wertes multipliziert mit zehn.
 
-**MAGIERESISTENZ DURCH WAHREN GLAUBEN: Wahrer-Glauben-Wert × 10**
+**MAGIERESISTENZ DURCH WAHREN GLAUBEN: Wahrer-Glaube-Wert × 10**
 
-Mit jedem Morgengrauen werden Glaubenspunkte bis zur Höhe des Wahren-Glauben-Wertes aufgefrischt. Wer bereits mehr Glaubenspunkte hat als sein Wahrer-Glauben-Wert beträgt, erhält keine zusätzlichen Punkte.
+Mit jedem Morgengrauen werden Glaubenspunkte bis zur Höhe des Wahrer-Glaube-Wertes aufgefrischt. Wer bereits mehr Glaubenspunkte hat als sein Wahrer-Glaube-Wert beträgt, erhält keine zusätzlichen Punkte.
 
-Weitere Einzelheiten zum Wahren Glauben finden sich in *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*, Seite 56.
+Weitere Einzelheiten zum Wahren Glauben finden sich in *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*, [Seite 56](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#wahrer-glaube>).
 
 ### Reliquien
 
 Reliquien sind körperliche Gegenstände, die auf irgendeine Weise einen Teil der göttlichen Macht in sich tragen. Sie sind am häufigsten im Christentum anzutreffen und bestehen oft aus Körperteilen verstorbener Heiliger. Alle Reliquien besitzen eine Reihe gemeinsamer Kräfte, die im Folgenden aufgelistet sind:
 
-1. GLAUBE: Jede Reliquie enthält einen Wahren-Glauben-Wert und damit Glaubenspunkte, die ihr Träger wie Selbstvertrauen einsetzen darf. Eine Reliquie verleiht ihrem Träger zudem Magieresistenz in Höhe des Zehnfachen ihres Wahren-Glauben-Wertes. Eine Person kann immer nur von einer einzigen Reliquie profitieren; der Versuch, von mehreren gleichzeitig zu profitieren, ist eine Sünde und führt dazu, dass die Vorteile aller Reliquien verloren gehen. Es ist jedoch erlaubt, weitere Reliquien demütig zu tragen, solange man sich bei den Vorteilen nur auf eine einzige verlässt. Ein Charakter, der gewöhnlich auf eine bestimmte Reliquie vertraut, bräuchte einen sehr triftigen Grund, um sie gegen eine andere zu tauschen.
+1. GLAUBE: Jede Reliquie enthält einen Wahrer-Glaube-Wert und damit Glaubenspunkte, die ihr Träger wie Selbstvertrauen einsetzen darf. Eine Reliquie verleiht ihrem Träger zudem Magieresistenz in Höhe des Zehnfachen ihres Wahrer-Glaube-Wertes. Eine Person kann immer nur von einer einzigen Reliquie profitieren; der Versuch, von mehreren gleichzeitig zu profitieren, ist eine Sünde und führt dazu, dass die Vorteile aller Reliquien verloren gehen. Es ist jedoch erlaubt, weitere Reliquien demütig zu tragen, solange man sich bei den Vorteilen nur auf eine einzige verlässt. Ein Charakter, der gewöhnlich auf eine bestimmte Reliquie vertraut, bräuchte einen sehr triftigen Grund, um sie gegen eine andere zu tauschen.
 2. GÖTTLICHE MACHT: Alle Reliquien besitzen einen Göttliche-Macht-Wert, der regelt, wie oft ihre Kräfte eingesetzt werden dürfen (und damit verhindert, dass Charaktere ihre Kräfte übermäßig nutzen). Der Machtwert dient der Reliquie auch als Magieresistenz gegen alle Zauber oder übernatürliche Effekte, die sie direkt betreffen. Die Göttliche Macht einer Reliquie ist gleich ihrem Glaubenswert (bzw. dem höchsten Glaubenswert, wenn mehr als einer zutrifft) multipliziert mit 10; der Machtvorrat wird mit jedem Sonnenaufgang aufgefrischt.
 3. GEISSELUNG DES INFERNALEN: Als höchst heilige Gegenstände sind Reliquien Dämonen und ihren Anhängern ein Gräuel. Reliquien strahlen eine feindliche Aura gegenüber solchen Wesen aus, die sich über eine Anzahl von Fuß erstreckt, die dem Machtwert der Reliquie entspricht. Kreaturen, die der Höllensphäre angehören und versuchen, in diese Aura einzudringen, können dies nicht, wenn ihr Infernaler Machtwert den Göttlichen Machtwert der Reliquie nicht übersteigt. Gelingt es ihnen dennoch, in die Aura einzudringen, werden sie in jeder Runde, in der sie sich darin aufhalten, von göttlicher Energie heimgesucht, die Schaden in Höhe des Machtwertes der Reliquie verursacht – obwohl ihre Absorption sie wie gewohnt schützt. Der Angriff wird von passend dramatischen visuellen Effekten begleitet, wie heiliges Feuer, Blitze oder was der Spielleiter sonst für angemessen hält. Er endet, sobald sie die Aura verlassen. Diese Kraft wirkt nicht gegen Charaktere oder Kreaturen, die der Höllensphäre lediglich zugehörig sind, obwohl diese Unbehagen empfinden werden, wenn sie die Reliquien über längere Zeit handhaben.
 
-Darüber hinaus besitzen manche Reliquien spezifische Kräfte. Bei Reliquien von Heiligen entsprechen diese Kräfte gewöhnlich jenen des Heiligen, dem sie einst gehörten. Bei anderen Reliquien werden die Kräfte unmittelbar durch den Göttlichen Willen verliehen. Zwei Beispielkräfte werden hier genannt; weitere finden sich auf den Seiten 88 und 89 von *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*.
+Darüber hinaus besitzen manche Reliquien spezifische Kräfte. Bei Reliquien von Heiligen entsprechen diese Kräfte gewöhnlich jenen des Heiligen, dem sie einst gehörten. Bei anderen Reliquien werden die Kräfte unmittelbar durch den Göttlichen Willen verliehen. Zwei Beispielkräfte werden hier genannt; weitere finden sich auf den [Seiten 88](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#die-kräfte-der-reliquien>) und [89](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#die-kräfte-der-reliquien>) von *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*.
 
 > #### Beispielhafte Reliquienkräfte
 >
@@ -20504,7 +20504,7 @@ Dämonen können durch hermetische Magie herbeigerufen und gezwungen werden, obw
 
 #### Dämonische Schwächen
 
-Alle Dämonen sind anfällig für Ausdrücke göttlicher Macht, sei es durch die Sakramente eines Glaubens, das Gebet eines frommen Gläubigen oder die Reliquie eines Heiligen. Reliquien sind als höchste heilige Gegenstände den Dämonen ein Gräuel, wie im Kapitel über die Herrschaftssphären beschrieben ([Seite 419](#wahrer-glaube-1)). Ein Charakter, der einen Fokus für seine Gebete besitzt (etwa einen Rosenkranz, eine Phylakterie o. ä.) und erfolgreich Gottes Beistand gegen einen Dämon anruft (siehe *Sphären der Macht: Das Göttliche*, Seite 41), erhält den doppelten normalen Bonus. Jeder Gegenstand, der wesentlicher Bestandteil der göttlichen Liturgie ist, ohne selbst eine Reliquie zu sein (etwa eine Kirchenbibel, die Hostie, die Schriften der Tora), gilt für alle Dämonen als Verwundbarkeit (siehe unten).
+Alle Dämonen sind anfällig für Ausdrücke göttlicher Macht, sei es durch die Sakramente eines Glaubens, das Gebet eines frommen Gläubigen oder die Reliquie eines Heiligen. Reliquien sind als höchste heilige Gegenstände den Dämonen ein Gräuel, wie im Kapitel über die Herrschaftssphären beschrieben ([[Seite 41](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#gottes-hilfe-anrufen>)9](#wahrer-glaube-1)). Ein Charakter, der einen Fokus für seine Gebete besitzt (etwa einen Rosenkranz, eine Phylakterie o. ä.) und erfolgreich Gottes Beistand gegen einen Dämon anruft (siehe *Sphären der Macht: Das Göttliche*, Seite 41), erhält den doppelten normalen Bonus. Jeder Gegenstand, der wesentlicher Bestandteil der göttlichen Liturgie ist, ohne selbst eine Reliquie zu sein (etwa eine Kirchenbibel, die Hostie, die Schriften der Tora), gilt für alle Dämonen als Verwundbarkeit (siehe unten).
 
 Alle Dämonen haben eine weitere Schwäche. Diese kann Einschränkungen auferlegen, was ein Dämon in jeder Form tun oder lassen kann, oder sie kann unter bestimmten Umständen Wunden verursachen – in letzterem Fall ist nur die körperliche Form betroffen. Um festzustellen, ob ein Charakter die Schwäche eines bestimmten Dämons kennt, muss er zuvor Zugang zu Wissen über diesen Dämon gehabt haben (etwa durch das Studium eines Dämonenkatalogs) und einen Intelligenz + Infernalkundewurf gegen einen Schwierigkeitsgrad von 9 + (Macht / 5) schaffen. Der Schwierigkeitsgrad wird um 3 gesenkt, wenn der Dämon zu einer Familie gehört, da alle Familienmitglieder dieselbe Schwäche teilen. Bei Misserfolg kennt der Charakter die Schwäche dieses Dämons nicht, kann aber einen erneuten Versuch unternehmen, sobald sein Wert in Infernalkunde gestiegen ist.
 
@@ -21465,7 +21465,7 @@ Die in diesem Abschnitt enthaltenen Informationen sind am genauesten für das Ja
 
 > ### Jenseits Westeuropas
 >
-> Die Informationen in diesem Kapitel konzentrieren sich auf Westeuropa – die Region, die von Christen regiert wurde, die den Papst als Oberhaupt der Kirche auf Erden anerkannten. Das ist bereits ein vielfältiges Gebiet, doch Mythisches Europa hat noch weit mehr zu bieten, und Ergänzungsbände haben es ausführlicher behandelt. *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)* enthält weiterführende Informationen zum Christentum sowie zum Islam und Judentum. *Against the Dark* und *The Sundered Eagle* bieten Einblicke in Osteuropa und die orthodoxe Kirche. *The Cradle and the Crescent* behandelt den Nahen Osten, während *Between Sand & Sea* und *Lands of the Nile* Nordafrika bis hinunter nach Äthiopien abdecken.
+> Die Informationen in diesem Kapitel konzentrieren sich auf Westeuropa – die Region, die von Christen regiert wurde, die den Papst als Oberhaupt der Kirche auf Erden anerkannten. Das ist bereits ein vielfältiges Gebiet, doch Mythisches Europa hat noch weit mehr zu bieten, und Ergänzungsbände haben es ausführlicher behandelt. [*Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md>) enthält weiterführende Informationen zum Christentum sowie zum Islam und Judentum. *Against the Dark* und *The Sundered Eagle* bieten Einblicke in Osteuropa und die orthodoxe Kirche. *The Cradle and the Crescent* behandelt den Nahen Osten, während *Between Sand & Sea* und *Lands of the Nile* Nordafrika bis hinunter nach Äthiopien abdecken.
 
 ## Die Kirche
 
@@ -21878,7 +21878,7 @@ In manchen Gebieten wie Frankreich, Kastilien und Teilen des Heiligen Römischen
 
 ### Nonnen
 
-Ein dritter Weg zur Macht – und einer, den die jüngeren Töchter mancher Adligen durchaus zu schätzen wissen –, ist die Kirche. Die Rolle der Frauenklöster wird in den Ergänzungsbänden *Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)* und *Die Kirche* ausführlicher behandelt. Nonnen gelten als Mündel des Bischofs und Bräute Christi. Sie können in der Regel nicht zur Heirat gezwungen werden und sind ihren Vätern oder anderen örtlichen Herren gegenüber nicht rechenschaftspflichtig. Nonnen besitzen im Mythischen Europa beträchtlichen Grundbesitz, der nicht durch Erbschaft aufgeteilt wird.
+Ein dritter Weg zur Macht – und einer, den die jüngeren Töchter mancher Adligen durchaus zu schätzen wissen –, ist die Kirche. Die Rolle der Frauenklöster wird in den Ergänzungsbänden [*Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe)*](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md>) und *Die Kirche* ausführlicher behandelt. Nonnen gelten als Mündel des Bischofs und Bräute Christi. Sie können in der Regel nicht zur Heirat gezwungen werden und sind ihren Vätern oder anderen örtlichen Herren gegenüber nicht rechenschaftspflichtig. Nonnen besitzen im Mythischen Europa beträchtlichen Grundbesitz, der nicht durch Erbschaft aufgeteilt wird.
 
 Junge Frauen können zeitlich begrenzte Gelübde ablegen, die es ihnen ermöglichen, sich in das Leben einer Nonne zurückzuziehen, während in der weltlichen Welt die Ereignisse ihren Lauf nehmen. Es ist einem hinreichend einflussreichen Adligen möglich, eine Frau aus dem Kloster zu holen und zur Heirat zu zwingen, doch ist dies selten. Es ist jedoch üblich, dass die weiblichen Verwandten eines im Krieg unterlegenen Mannes in Frauenklöster fliehen, um nicht der Gnade der Sieger ausgeliefert zu sein.
 
@@ -23846,7 +23846,7 @@ ALTERUNGSSUMME: Stresswürfel (kein Patzer) + Alter/10 (aufgerundet) – Lebensu
 | Illusion des verschobenen Bildes (Illusion Of The Shifted Image) | ReIm | 10 | [352](#illusion-des-verschobenen-bildes) |
 | Das vom Zauberer losgelöste Bild (Image From The Wizard Torn) | ReIm | 35 | [352](#das-vom-zauberer-losgelöste-bild) |
 | Bild des Tieres (Image Of The Beast) | InAn | 5 | [316](#bild-des-tieres) |
-| Bildphantom (Image Phantom) | MuIm | 20 | [350](#bildphantom) |
+| Truggestalt (Image Phantom) | MuIm | 20 | [350](#truggestalt) |
 | Die Beschwörung des Blitzes (Incantation Of Lightning, The) | CrAu | 35 | [327](#die-beschwörung-des-blitzes) |
 | Beschwörung des faulen Weines (Incantation Of Putrid Wine) | MuAq | 15 | [322](#beschwörung-des-faulen-weines) |
 | Beschwörung der Toten (Incantation Of Summoning The Dead) | ReMe | 40 | [358](#beschwörung-der-toten) |

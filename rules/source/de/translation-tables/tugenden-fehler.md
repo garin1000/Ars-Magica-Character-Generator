@@ -719,65 +719,163 @@
 
 ---
 
-### Ergänzungen aus Sphären der Macht: Das Göttliche (SdM:D)
+### Ergänzungen aus Sphären der Macht: Das Göttliche (SdM:G)
 
-#### Übernatürliche Tugenden, Groß / Supernatural, Major (SdM:D)
-
-| Englisch (EN) | Deutsch (DE) | Anmerkung |
-|---|---|---|
-| Adjuration | Adjuration | SdM:D; Heilige Kraft; übernatürliche Wesen befehligen und kontrollieren |
-| Blessing | Segnen | SdM:D; Heilige Kraft; schützende und inspirierende Aspekte des Göttlichen |
-| Cursing | Verfluchen | SdM:D; Heilige Kraft; Feinde des Göttlichen Willens verfluchen |
-| Intervention | Intervention | SdM:D; Heilige Kraft; das Göttliche in der physischen Welt manifestieren |
-| Invocation | Anrufung | SdM:D; Heilige Methode; heilige Worte und Gebete |
-| Meditation | Meditation | SdM:D; Heilige Methode; ekstatischer Zustand durch Gesang oder Fokus |
-| Purity | Reinheit | SdM:D; Heilige Methode; intensive körperliche Anstrengung und Wille |
-| Transcendence | Transzendenz | SdM:D; Heilige Kraft; Grenzen der physischen Welt überwinden |
-| Understanding | Verständnis | SdM:D; Heilige Kraft; heilige Visionen empfangen |
-| Wonders | Wunder | SdM:D; Heilige Kraft; heilige Gegenstände, Kreaturen und Elemente manifestieren |
-
-#### Übernatürliche Tugenden, Klein / Supernatural, Minor (SdM:D)
+#### Übernatürliche Tugenden, Groß / Supernatural, Major (SdM:G)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Ceremony | Zeremonie | SdM:D; Heilige Fertigkeit; Gruppe auf heiliges Gebet fokussieren |
-| Nephilim | Nephilim | SdM:D; Frei; Mythischer-Gefährten-Tugend |
-| Strong Angelic Heritage | Starkes Engelserbe | SdM:D; verleiht Göttlichen Machtwert |
+| Adjuration | Adjuration | SdM:G; Heilige Kraft; übernatürliche Wesen befehligen und kontrollieren |
+| Blessing | Segnen | SdM:G; Heilige Kraft; schützende und inspirierende Aspekte des Göttlichen |
+| Cursing | Verfluchen | SdM:G; Heilige Kraft; Feinde des Göttlichen Willens verfluchen |
+| Intervention | Intervention | SdM:G; Heilige Kraft; das Göttliche in der physischen Welt manifestieren |
+| Invocation | Anrufung | SdM:G; Heilige Methode; heilige Worte und Gebete |
+| Meditation | Meditation | SdM:G; Heilige Methode; ekstatischer Zustand durch Gesang oder Fokus |
+| Purity | Reinheit | SdM:G; Heilige Methode; intensive körperliche Anstrengung und Wille |
+| Transcendence | Transzendenz | SdM:G; Heilige Kraft; Grenzen der physischen Welt überwinden |
+| Understanding | Verständnis | SdM:G; Heilige Kraft; heilige Visionen empfangen |
+| Wonders | Wunder | SdM:G; Heilige Kraft; heilige Gegenstände, Kreaturen und Elemente manifestieren |
 
-#### Sozialer-Status-Tugenden / Social Status Virtues (SdM:D)
+#### Übernatürliche Tugenden, Klein / Supernatural, Minor (SdM:G)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Eastern Priest | Östlicher Priester | SdM:D; Klein; wie Priester, ohne Zölibatspflicht |
-| Perfectus / Perfecti | Perfectus / Perfecti | SdM:D; Frei; Mythischer-Gefährten-Tugend; Lat. beibehalten |
+| Ceremony | Zeremonie | SdM:G; Heilige Fertigkeit; Gruppe auf heiliges Gebet fokussieren |
+| Nephilim | Nephilim | SdM:G; Frei; Mythischer-Gefährten-Tugend |
+| Strong Angelic Heritage | Starkes Engelserbe | SdM:G; verleiht Göttlichen Machtwert |
+
+#### Sozialer-Status-Tugenden / Social Status Virtues (SdM:G)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Eastern Priest | Östlicher Priester | SdM:G; Klein; wie Priester, ohne Zölibatspflicht |
+| Perfectus / Perfecti | Perfectus / Perfecti | SdM:G; Frei; Mythischer-Gefährten-Tugend; Lat. beibehalten |
 | Senior Clergy | Höherer Klerus | Groß; Bischof/Abt/Erzpriester (Tabellenkorrektur: nicht "Hoher Klerus") |
 
-#### Geschichte-Fehler, Groß / Story, Major (SdM:D)
+#### Geschichte-Fehler, Groß / Story, Major (SdM:G)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Excommunicate | Exkommuniziert | SdM:D; aus der Kirche ausgestoßen |
-| Unbaptized | Ungetauft | SdM:D; nie getauft trotz christlichen Glaubens |
+| Excommunicate | Exkommuniziert | SdM:G; aus der Kirche ausgestoßen |
+| Unbaptized | Ungetauft | SdM:G; nie getauft trotz christlichen Glaubens |
 
-#### Übernatürliche Fehler, Groß / Supernatural, Major (SdM:D)
-
-| Englisch (EN) | Deutsch (DE) | Anmerkung |
-|---|---|---|
-| Eremite | Eremit | SdM:D; gehört keiner heiligen Tradition an |
-| Raised from the Dead | Von den Toten Auferweckt | SdM:D; durch ein Wunder vom Tod zurückgebracht |
-
-#### Allgemeine Fehler, Klein / General, Minor (SdM:D)
+#### Übernatürliche Fehler, Groß / Supernatural, Major (SdM:G)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Apostate | Apostat | SdM:D; von einem Glauben zu einem anderen konvertiert |
+| Eremite | Eremit | SdM:G; gehört keiner heiligen Tradition an |
+| Raised from the Dead | Von den Toten Auferweckt | SdM:G; durch ein Wunder vom Tod zurückgebracht |
 
-#### Übernatürliche Fehler, Klein / Supernatural, Minor (SdM:D)
+#### Allgemeine Fehler, Klein / General, Minor (SdM:G)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Non-traditional | Nicht-Traditionell | SdM:D; Praktiken zu ungewöhnlich für eine Tradition |
+| Apostate | Apostat | SdM:G; von einem Glauben zu einem anderen konvertiert |
+
+#### Übernatürliche Tugenden, Klein / Supernatural, Minor (SdM:G, Kap. 6)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Astrological Magic | Astrologische Magie | SdM:G; addiert Artes Liberales zu Kabbalah |
+| Philosophic Magic | Philosophische Magie | SdM:G; addiert Philosophiae zu Kabbalah |
+
+#### Übernatürliche Tugenden, Groß / Supernatural, Major (SdM:G, Kap. 6)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Dream Interpretation | Traumdeutung | SdM:G; Heilige Methode (ersetzt Meditation) |
+
+#### Allgemeine Tugenden, Klein / General, Minor (SdM:G, Kap. 6)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Educated (Hebrew) | Gebildet (Hebräisch) | SdM:G; Zugang zu Akademischen Fertigkeiten |
+
+#### Geschichte-Fehler, Groß / Story, Major (SdM:G, Kap. 6)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Tzadik Nistar | Tzadik Nistar | SdM:G; Pl. Tzadikim Nistarim; verborgener Gerechter |
+
+#### Übernatürliche Fehler, Klein / Supernatural, Minor (SdM:G)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Evil Eye | Böser Blick | SdM:G; zusätzlicher Patzerwürfel |
+| Non-traditional | Nicht-Traditionell | SdM:G; Praktiken zu ungewöhnlich für eine Tradition |
 
 ---
 
-*Quellen: Ars Magica Definitive Edition Core Rules (Atlas Games, 2024; GitHub: OriginalMadman/Ars-Magica-Open-License); Hedge Magic Revised Edition (Atlas Games, 2011); Houses of Hermes: True Lineages (Atlas Games, 2005); Realms of Power: The Divine (Atlas Games, 2011)*
+### Ergänzungen aus Basisregeln (Feenwesen-Statblöcke)
+
+#### Feenfehler / Faerie Flaws (Basisregeln)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Traditional Ward | Traditionelle Abwehr | Klein; Fee darf durch Abwehr Geschütztes nicht mit Glamour berühren; keine Machtpunkt-Regeneration in Anwesenheit |
+| Sovereign Ward | Souveräne Abwehr | Groß; Fee kann Geschütztem nicht schaden; direkter Kontakt vernichtet den Feenkörper |
+
+---
+
+### Ergänzungen aus Sphären der Macht: Feenwelt (SdM:F)
+
+#### Feentugenden / Faerie Virtues (SdM:F)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Humanoid Faerie | Humanoide Fee | SdM:F; Spezial; verleiht einen Glamour-Körper |
+| Increased Might | Erhöhte Macht | SdM:F; gewährt einen Machtvorrat |
+
+#### Feentugenden / Faerie Virtues (SdM:F, Kap. 3)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Humanoid Faerie | Humanoide Fee | SdM:F; Spezial; verleiht einen Glamour-Körper |
+| Increased Might | Erhöhte Macht | SdM:F; Klein/Groß, Übernatürlich; +5 (Klein) oder +15 (Groß) auf Machtwert |
+| Fast Might Recovery | Schnelle Machterholung | SdM:F; Klein, Übernatürlich |
+| Feast of the Fae | Mahl der Feen | SdM:F; Klein, Übernatürlich; erholt 5 Macht durch traditionelle Opfergaben |
+| Feast of the Dead | Mahl der Toten | SdM:F; Klein, Übernatürlich; erholt 2 Macht durch Erschöpfung/Verwundung von Menschen |
+| Time or Place of Power | Zeit oder Ort der Macht | SdM:F; Klein, Übernatürlich |
+| Hybrid Form | Hybridgestalt | SdM:F; Klein, Übernatürlich |
+| Immune to (Source of Damage) | Immun gegen (Schadensquelle) | SdM:F; Klein/Groß, Übernatürlich |
+| Puissant Pretense | Begabung in Täuschung | SdM:F; Klein, Übernatürlich; konsistent mit „Begabung in (X)"-Muster |
+| Residual Power | Restkraft | SdM:F; Klein, Übernatürlich |
+| Huge | Riesig | SdM:F; Groß, Allgemein; nur Feen |
+| Positive Folktales | Positive Volkserzählungen | SdM:F; Klein, Sozial |
+| Infiltrator | Infiltrator | SdM:F; Klein/Groß, Sozial |
+| Passes for Human | Geht als Mensch durch | SdM:F; Kostenlos, Sozial |
+| Pretentious | Menschelnd | SdM:F; Klein, Allgemein; Fee lebt nah an Menschen, verbessert Täuschungen schneller |
+| Ostentatious | Prahlerisch | SdM:F; Tugend (Kap. 3) |
+
+#### Feenfehler / Faerie Flaws (SdM:F, Kap. 3)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Decreased Might | Verringerte Macht | SdM:F; Klein, Übernatürlich |
+| Slow Might Recovery | Langsame Machterholung | SdM:F; Groß, Übernatürlich |
+| Might Recovery Requires Vitality | Machterholung erfordert Vitalität | SdM:F; Groß, Übernatürlich |
+| Little | Winzig | SdM:F; Groß, Allgemein; nur Feen |
+| Intangible Flesh | Körperloses Fleisch | SdM:F; Groß, Übernatürlich |
+| Poor Combatant | Schlechter Kämpfer | SdM:F; Klein, Übernatürlich |
+| Reduced Damage | Verringerter Schaden | SdM:F; Klein, Übernatürlich |
+| Role Requires Suffering | Rolle erfordert Leiden | SdM:F; Klein, Übernatürlich |
+| Negative Reaction | Negative Reaktion | SdM:F; Klein, Sozial |
+| Aloof | Gleichgültig | SdM:F; Klein, Allgemein; Fee findet Menschen uninteressant, verbessert Täuschungen langsamer |
+| Loosely Material | Locker Materiell | SdM:F; Feenkraft |
+| Freshly Sprung | Frisch Entsprungen | SdM:F; Klein, Übernatürlich; −50 EP aus Täuschungspool |
+| Lesser Charm | Kleine Feenverzauberung | SdM:F; Klein; geheimes Ritual/Objekt, das eine feenverliehene Tugend aktiviert |
+| Greater Charm | Große Feenverzauberung | SdM:F; Groß; wie Kleine Feenverzauberung, aber schwerer wiederherzustellen |
+
+#### Feentugenden/-fehler – Mechanik (SdM:F, Kap. 3)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Reputation as Confidence | Reputation als Selbstvertrauen | SdM:F; Kleine Tugend |
+| Faerie Instructor | Feeninstruktor | SdM:F; Klein, Übernatürlich; lehrt Täuschungen |
+| Faerie Trainer | Feenausbilder | SdM:F; Frei, Übernatürlich; trainiert Täuschungen |
+| Pretense multiplier | Täuschungsmultiplikator | SdM:F; Mechanik zur Berechnung der Täuschungspunkte |
+| Pretence Cost | Täuschungskosten | SdM:F; Kosten für Feenentwicklung durch Wandel |
+
+---
+
+*Quellen: Ars Magica Definitive Edition Core Rules (Atlas Games, 2024; GitHub: OriginalMadman/Ars-Magica-Open-License); Hedge Magic Revised Edition (Atlas Games, 2011); Houses of Hermes: True Lineages (Atlas Games, 2005); Realms of Power: The Divine (Atlas Games, 2011); Realms of Power: Faerie (Atlas Games, 2011)*
