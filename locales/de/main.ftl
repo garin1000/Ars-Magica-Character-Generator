@@ -32,13 +32,19 @@ abilities-title = Fertigkeiten
 # Kategorie- (Typ-)Bezeichnungen für Tugenden/Fehler, je Kategorie-ID der Engine.
 category-general = Allgemein
 category-hermetic = Hermetisch
+category-personality = Persönlichkeit
 category-social_status = Sozialer Status
 category-special = Spezial
+category-story = Geschichte
+category-supernatural = Übernatürlich
 
 # Stufenbezeichnungen (Magnitude), je Magnitude-Wert der Engine.
 magnitude-free = Frei
 magnitude-minor = Klein
 magnitude-major = Groß
+
+# Typ-Label für Tugenden/Fehler: eine befleckte (infernal-assoziierte) Tugend/Fehler.
+vf-tag-tainted = Befleckt
 
 # Die acht Eigenschaften, je Eigenschaftswert der Engine.
 characteristic-int = Intelligenz
@@ -198,6 +204,8 @@ issue-too_many_minor_flaws = Zu viele kleine Fehler ({ $count } von max. { $max 
 issue-too_many_major_personality_flaws = Zu viele große Persönlichkeitsfehler ({ $count } von max. { $max }).
 issue-too_many_personality_flaws = Mehr Persönlichkeitsfehler als empfohlen ({ $count } von { $max }).
 issue-too_many_story_flaws = Mehr Geschichte-Fehler als empfohlen ({ $count } von { $max }).
+issue-too_many_tainted_virtues = Mehr als die Hälfte deiner Tugendpunkte sind befleckt ({ $tainted } von { $total }).
+issue-too_many_tainted_flaws = Mehr als die Hälfte deiner Fehlerpunkte sind befleckt ({ $tainted } von { $total }).
 issue-prereq_not_met = Voraussetzung für { $item } nicht erfüllt.
 issue-prereq_unevaluated = Voraussetzung für { $item } konnte noch nicht geprüft werden.
 issue-incompatible = { $item } ist mit { $other } unvereinbar.

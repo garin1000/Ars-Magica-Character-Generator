@@ -60,6 +60,8 @@ export interface PointItem {
   kind: ItemKind;
   magnitude: Magnitude;
   category: string;
+  // Descriptor "Type" tag: a Tainted (Infernal-associated) V/F. Omitted when false.
+  tainted?: boolean;
   entity_kinds: EntityKind[];
   prerequisites?: Prereq;
   parameters?: ParameterDef[];

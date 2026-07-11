@@ -103,6 +103,26 @@ mechanics carry entries; the rest are stubbed at the end.
   (`too_many_major_personality_flaws`, `too_many_personality_flaws`,
   `too_many_story_flaws`) by convention rather than a baked-in mapping.
 
+#### Tainted Virtues/Flaws — the "Type" tag + half-of-taken cap
+> "Tainted Virtues and Flaws are associated with the Infernal realm ... no more
+> than half a character's Virtues should be tainted, and similarly for Flaws. ...
+> Supernatural abilities granted by Tainted Virtues or Flaws are always Infernal
+> powers." (`:3000`)
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2998-3002`.
+- Data: the descriptor's optional "Type" token maps to `PointItem.tainted`
+  (`bool`, default false) in `rules/core/virtues_flaws.json`.
+- Implementation: `crates/arm-rules/src/validation.rs` — `validate_tainted_cap`.
+  The book frames the limit as a "should", so it is a **non-blocking warning**,
+  measured against the points **actually taken** (not the type budget): a side
+  warns when `2·tainted_points > total_points` for that side (Virtue / Flaw).
+  Free items contribute 0 points and never affect the ratio. Codes
+  `too_many_tainted_virtues` / `too_many_tainted_flaws` (Fluent
+  `issue-too_many_tainted_*`, args `$tainted`/`$total`). The tag itself renders
+  via Fluent `vf-tag-tainted` (EN "Tainted" / DE "Befleckt", per the glossary's
+  type-label rule). The parenthetical "(five points ... ten for a Mythic
+  Companion ...)" is illustrative of a maxed build, not a separate flat cap.
+
 #### The Gift policy — required / forbidden by type
 > "all magi must have this Virtue" ... "Grogs can never have The Gift".
 
