@@ -1196,7 +1196,9 @@ impl Ruleset {
                 // No parameter or ref to resolve: the grant is intrinsic.
                 Effect::CharacteristicPoints { .. }
                 | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. } => {
+                | Effect::GeneralXp { .. }
+                | Effect::ConfidenceBonus { .. }
+                | Effect::GrantsReputation { .. } => {
                     continue;
                 }
             };

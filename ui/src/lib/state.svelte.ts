@@ -12,13 +12,14 @@ import type {
   EffectiveScores,
   Entity,
   LocalizedRuleset,
+  ReputationType,
   Selection,
   ValidationMode,
   ValidationResult,
 } from './types';
 
 const VALIDATE_DEBOUNCE_MS = 150;
-const SCHEMA_VERSION = 6;
+const SCHEMA_VERSION = 7;
 
 function newEntity(rulesetId: string, version: string): Entity {
   return {
@@ -35,6 +36,9 @@ function newEntity(rulesetId: string, version: string): Entity {
     spells: [],
     house: null,
     mythic_type: null,
+    age: null,
+    personality_traits: [],
+    reputations: [],
   };
 }
 
@@ -416,6 +420,60 @@ class AppStore {
   /** Spell edits are by row index, since a General spell can appear at several levels. */
   removeSpellAt(index: number): void {
     this.entity.spells = (this.entity.spells ?? []).filter((_, i) => i !== index);
+    this.#scheduleValidate();
+  }
+
+  /** Set (or clear) the character's age; drives the age → Ability-cap check. */
+  setAge(age: number | null): void {
+    this.entity.age = age != null && Number.isFinite(age) && age > 0 ? Math.floor(age) : null;
+    this.#scheduleValidate();
+  }
+
+  addPersonalityTrait(): void {
+    this.entity.personality_traits = [
+      ...(this.entity.personality_traits ?? []),
+      { name: '', value: 0 },
+    ];
+    this.#scheduleValidate();
+  }
+
+  removePersonalityTraitAt(index: number): void {
+    this.entity.personality_traits = (this.entity.personality_traits ?? []).filter(
+      (_, i) => i !== index,
+    );
+    this.#scheduleValidate();
+  }
+
+  setPersonalityTraitName(index: number, name: string): void {
+    this.entity.personality_traits = (this.entity.personality_traits ?? []).map((t, i) =>
+      i === index ? { ...t, name } : t,
+    );
+    this.#scheduleValidate();
+  }
+
+  setPersonalityTraitValue(index: number, value: number): void {
+    const clamped = Math.max(-6, Math.min(6, Math.trunc(value)));
+    this.entity.personality_traits = (this.entity.personality_traits ?? []).map((t, i) =>
+      i === index ? { ...t, value: clamped } : t,
+    );
+    this.#scheduleValidate();
+  }
+
+  /** Add a Reputation from a granting V/F (kind + score come from the grant). */
+  addReputation(kind: ReputationType, score: number): void {
+    this.entity.reputations = [...(this.entity.reputations ?? []), { kind, score, content: '' }];
+    this.#scheduleValidate();
+  }
+
+  removeReputationAt(index: number): void {
+    this.entity.reputations = (this.entity.reputations ?? []).filter((_, i) => i !== index);
+    this.#scheduleValidate();
+  }
+
+  setReputationContent(index: number, content: string): void {
+    this.entity.reputations = (this.entity.reputations ?? []).map((r, i) =>
+      i === index ? { ...r, content } : r,
+    );
     this.#scheduleValidate();
   }
 

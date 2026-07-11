@@ -1,4 +1,8 @@
 {
+  "flaw.black_sheep": {
+    "name": "Schwarzes Schaf",
+    "summary": "Von einer angesehenen Familie entfremdet; ein schlechter Ruf der Stufe 2 bei denen, die sie achten."
+  },
   "flaw.blatant_gift": {
     "name": "Auffällige Gabe",
     "summary": "Deine Gabe ist extrem verstörend für andere."
@@ -14,6 +18,10 @@
   "flaw.faerie_friend": {
     "name": "Feenfreund",
     "summary": "Du hast einen Verbündeten unter den Feen — ein Segen, der auch zur Last werden kann."
+  },
+  "flaw.infamous": {
+    "name": "Berüchtigt",
+    "summary": "Ein schlechter Ruf der Stufe 4 für frei wählbare schändliche Taten."
   },
   "flaw.pagan": {
     "name": "Heide",

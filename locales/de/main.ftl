@@ -81,6 +81,7 @@ tab-arts = Künste
 tab-house-specialisation = Haus
 tab-mythic-type = Typ
 tab-spells = Zauber
+tab-details = Details
 # XP-Übersicht und Bedienelemente der Fertigkeiten.
 xp-pool = XP-Vorrat
 xp-spent = Ausgegeben: { $spent }
@@ -113,6 +114,24 @@ spell-add = Zauber hinzufügen
 spell-none = — Zauber wählen —
 spell-levels-used = Zauberstufen: { $used } / { $budget }
 spell-remove = Entfernen
+# Details-Reiter: Alter, Selbstvertrauen (abgeleitet, schreibgeschützt), Persönlichkeit, Ruf.
+age-label = Alter
+age-cap-note = Maximaler Fertigkeitswert: { $cap }
+confidence-label = Selbstvertrauen
+confidence-readout = Wert { $score }, { $points } Punkte
+personality-label = Persönlichkeitsmerkmale
+personality-name-placeholder = Merkmal
+personality-add = Merkmal hinzufügen
+personality-empty = Noch keine Persönlichkeitsmerkmale.
+reputations-label = Ruf
+reputation-content-placeholder = Wofür
+reputation-add = { $kind }-Ruf hinzufügen (Stufe { $score })
+reputation-empty = Kein Ruf verfügbar (nimm eine Tugend oder einen Fehler, der einen verleiht).
+reputation-type-local = Lokal
+reputation-type-ecclesiastical = Kirchlich
+reputation-type-hermetic = Hermetisch
+# Grund, warum eine übernatürliche Fähigkeit im Auswähler ausgegraut ist.
+ability-requires-virtue = Erfordert eine verleihende Tugend (oder die eine freie Fähigkeit der Gabe)
 characteristic-increment = Erhöhen
 characteristic-decrement = Verringern
 characteristic-description-label = Beschreibung
@@ -225,6 +244,10 @@ issue-duplicate_spell = { $spell } ist { $count }-mal aufgeführt.
 issue-spell_level_unresolved = Der Gen-Zauber { $spell } hat noch keine gewählte Stufe.
 issue-over_spell_levels = Die Zauber ergeben { $used } Stufen und überschreiten das Budget von { $budget } (um { $over }).
 issue-spell_level_exceeds_cap = Zauber { $spell } hat Stufe { $level }, über der höchsten erlernbaren Stufe ({ $cap }).
+issue-ability_above_age_cap = { $ability } mit Wert { $score } überschreitet das Maximum von { $cap } für Alter { $age }.
+issue-supernatural_ability_requires_virtue = { $ability } ist eine übernatürliche Fähigkeit und erfordert eine verleihende Tugend (oder die eine freie Fähigkeit der Gabe).
+issue-personality_trait_out_of_range = Persönlichkeitsmerkmal { $name } ({ $value }) liegt außerhalb des zulässigen Bereichs (±{ $max }).
+issue-reputation_not_granted = Ein Ruf ({ $kind }, { $content }) benötigt eine Tugend oder einen Fehler, der ihn verleiht.
 
 # AppError-Arten der Tauri-Befehle.
 error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.

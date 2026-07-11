@@ -34,7 +34,13 @@ export type Effect =
   | { type: 'characteristic_points'; amount: number }
   | { type: 'ability_score_grant'; ability: string; amount: number }
   | { type: 'spell_levels'; amount: number }
-  | { type: 'general_xp'; amount: number };
+  | { type: 'general_xp'; amount: number }
+  | { type: 'confidence_bonus'; score: number; points: number }
+  | { type: 'grants_reputation'; kind: ReputationType; score: number };
+
+// The audience a Reputation reaches (a fixed rules taxonomy, rendered via Fluent
+// `reputation-type-<id>`, never as a raw slug).
+export type ReputationType = 'local' | 'ecclesiastical' | 'hermetic';
 
 // Prerequisite expression tree. Adjacently tagged by the engine: every variant
 // is a uniform object carrying a `kind` discriminant, with any payload under
@@ -122,6 +128,24 @@ export interface EffectiveScores {
   // Parens) and how many levels the chosen spells consume — the spell bar.
   spell_levels_budget: number;
   spell_levels_used: number;
+  // Derived Confidence (type default + V/F); 0/0 for grogs.
+  confidence_score: number;
+  confidence_points: number;
+  // The Gift's free Supernatural-Ability slots (1 for a Gifted non-magus, else 0)
+  // and how many are used, so the ability picker greys unavailable ones.
+  supernatural_free_total: number;
+  supernatural_free_used: number;
+  // The character's age → max-Ability-score cap (base, pre-Affinity). Null when
+  // age is unset.
+  age_ability_cap?: number | null;
+  // Reputation grants the character's V/F confer (kind + score), so the UI only
+  // offers a Reputation add-control when one exists.
+  reputation_grants: ReputationGrant[];
+}
+
+export interface ReputationGrant {
+  kind: ReputationType;
+  score: number;
 }
 
 // Per-category flaw count cap. The category is data, so the engine hardcodes no
@@ -165,6 +189,10 @@ export interface EntityTypeProfile {
   // The magus's starting spell-levels budget (120). Omitted from JSON when 0
   // (every non-magus type), so optional here.
   spell_levels?: number;
+  // Starting Confidence Score / Points (companions/magi/mythic = 1/3, grog 0).
+  // Omitted from JSON when 0.
+  confidence_score?: number;
+  confidence_points?: number;
   // The Gift policy and the id representing The Gift. Omitted when not applicable.
   gift_policy?: 'required' | 'allowed' | 'forbidden';
   gift_id?: string;
@@ -240,6 +268,19 @@ export interface Spell {
 export interface SpellSelection {
   spell: string;
   level?: number | null;
+}
+
+// A named Personality Trait with a value in ±3 (±6 for a Major Personality Flaw).
+export interface PersonalityTrait {
+  name: string;
+  value: number;
+}
+
+// A starting Reputation (only legal when a V/F grants one).
+export interface Reputation {
+  kind: ReputationType;
+  score: number;
+  content: string;
 }
 
 export interface CharacteristicCost {
@@ -406,6 +447,12 @@ export interface Entity {
   mythic_type?: string | null;
   // Mythic type grant picks, keyed by each grant's choice_key. Omitted empty.
   mythic_choices?: Record<string, Selection>;
+  // The character's age (drives the age → max-Ability-score cap). Omitted unset.
+  age?: number | null;
+  // Named Personality Traits. Omitted when empty.
+  personality_traits?: PersonalityTrait[];
+  // Starting Reputations (each backed by a granting V/F). Omitted when empty.
+  reputations?: Reputation[];
 }
 
 export interface ValidationIssue {

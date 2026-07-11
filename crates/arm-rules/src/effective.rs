@@ -19,10 +19,12 @@
 use crate::ability::AbilityCategory;
 use crate::characteristics::Characteristic;
 use crate::ruleset::Ruleset;
-use crate::types::{Effect, Entity, Id, Selection, SpellSelection};
+use crate::types::{
+    Effect, Entity, EntityTypeProfile, Id, ReputationType, Selection, SpellSelection,
+};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 /// The selection list every effect / score computation iterates: the entity's
 /// bought selections plus any Virtue rows its Hermetic House grants (see
@@ -142,7 +144,9 @@ pub fn ability_bonus(
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. } => {}
+                | Effect::GeneralXp { .. }
+                | Effect::ConfidenceBonus { .. }
+                | Effect::GrantsReputation { .. } => {}
             }
         }
     }
@@ -245,7 +249,9 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. } => {}
+                | Effect::GeneralXp { .. }
+                | Effect::ConfidenceBonus { .. }
+                | Effect::GrantsReputation { .. } => {}
             }
         }
     }
@@ -325,7 +331,9 @@ fn characteristic_limit_shift(
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. } => {}
+                | Effect::GeneralXp { .. }
+                | Effect::ConfidenceBonus { .. }
+                | Effect::GrantsReputation { .. } => {}
             }
         }
     }
@@ -447,8 +455,9 @@ fn best_affinity(multipliers: impl Iterator<Item = (u8, u8)>) -> Option<(u8, u8)
 
 /// The Affinity multiplier applying to one ability instance, if any
 /// ([`Effect::AffinityAbilityCost`] targeting it). Matches the instance exactly,
-/// like [`ability_bonus`].
-fn ability_affinity(
+/// like [`ability_bonus`]. `pub(crate)` so the age-cap validator can read whether
+/// an Ability carries an Affinity (which raises its age cap by +2, Core:3374).
+pub(crate) fn ability_affinity(
     entity: &Entity,
     ruleset: &Ruleset,
     ability: &Id,
@@ -487,7 +496,9 @@ fn ability_affinity(
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. } => None,
+                | Effect::GeneralXp { .. }
+                | Effect::ConfidenceBonus { .. }
+                | Effect::GrantsReputation { .. } => None,
             })
     });
     best_affinity(found)
@@ -521,7 +532,9 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. } => None,
+                | Effect::GeneralXp { .. }
+                | Effect::ConfidenceBonus { .. }
+                | Effect::GrantsReputation { .. } => None,
             })
     });
     best_affinity(found)
@@ -858,6 +871,124 @@ pub fn spell_levels_used(entity: &Entity, ruleset: &Ruleset) -> u32 {
         .iter()
         .filter_map(|s| resolved_spell_level(s, ruleset))
         .sum()
+}
+
+// --- Phase 7: Gift/Supernatural, Confidence, Reputations, age cap ---
+
+/// Whether the entity "has The Gift" per its type profile: a selection matching
+/// the profile's `gift_id`, or one whose item category is in `gift_categories`.
+/// Shared with `validate_gift_policy` so both use one definition.
+pub(crate) fn has_the_gift(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    profile: &EntityTypeProfile,
+) -> bool {
+    let by_id = profile
+        .gift_id
+        .as_ref()
+        .is_some_and(|gid| entity.selections.iter().any(|s| &s.item_ref == gid));
+    let by_category = !profile.gift_categories.is_empty()
+        && entity.selections.iter().any(|s| {
+            ruleset
+                .point_items
+                .get(&s.item_ref)
+                .is_some_and(|item| profile.gift_categories.contains(&item.category))
+        });
+    by_id || by_category
+}
+
+/// The character's effective Confidence `(score, points)`: the type profile's
+/// base plus every [`Effect::ConfidenceBonus`], clamped at 0. Confidence is
+/// derived, never stored. Source: Core Rules.md:2520-2526, 4900-4902.
+pub fn confidence(base_score: u8, base_points: u8, entity: &Entity, ruleset: &Ruleset) -> (u8, u8) {
+    let mut score = i32::from(base_score);
+    let mut points = i32::from(base_points);
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::ConfidenceBonus {
+                score: s,
+                points: p,
+            } = effect
+            {
+                score += i32::from(*s);
+                points += i32::from(*p);
+            }
+        }
+    }
+    let clamp = |n: i32| u8::try_from(n.max(0)).unwrap_or(u8::MAX);
+    (clamp(score), clamp(points))
+}
+
+/// The Reputation grants a character holds (`(kind, score)` per
+/// [`Effect::GrantsReputation`]), authorizing starting Reputations. Source: Core
+/// Rules.md:2512-2514.
+pub fn reputation_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<(ReputationType, u8)> {
+    let mut grants = Vec::new();
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::GrantsReputation { kind, score } = effect {
+                grants.push((*kind, *score));
+            }
+        }
+    }
+    grants
+}
+
+/// The Gift's free Supernatural-Ability slots as `(total, used)`. A Gifted
+/// non-magus gets one free slot; a magus gets none (his free ability is Hermetic
+/// magic itself). `used` counts the Supernatural abilities the entity holds that
+/// no granting Virtue covers (a granting Virtue seeds an `ability_score_grant`
+/// floor). Source: Core Rules.md:2874.
+pub fn supernatural_free_slots(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    profile: &EntityTypeProfile,
+) -> (u8, u8) {
+    let total = if has_the_gift(entity, ruleset, profile) && !profile.is_magus {
+        1
+    } else {
+        0
+    };
+    let covered: BTreeSet<Id> = ability_score_floors(entity, ruleset)
+        .into_iter()
+        .map(|f| f.ability)
+        .collect();
+    let used = entity
+        .ability_scores
+        .iter()
+        .filter(|a| {
+            ruleset
+                .ability(&a.ability)
+                .is_some_and(|ab| ab.category == AbilityCategory::Supernatural)
+        })
+        .filter(|a| !covered.contains(&a.ability))
+        .count();
+    (total, u8::try_from(used).unwrap_or(u8::MAX))
+}
+
+/// The base age → maximum-Ability-score cap (Core Rules.md:2366-2376). A fixed
+/// rules taxonomy, encoded here like [`crate::types::Magnitude::points`] and
+/// surfaced via `EffectiveScores` so the UI never re-hardcodes the table. An
+/// Ability with an Affinity may exceed this by +2 (applied in validation).
+pub fn age_max_ability_score(age: u32) -> u8 {
+    match age {
+        0..=29 => 5,
+        30..=35 => 6,
+        36..=40 => 7,
+        41..=45 => 8,
+        _ => 9,
+    }
+}
+
+/// The character's base age → Ability-score cap, if `age` is set.
+pub fn age_ability_cap(entity: &Entity) -> Option<u8> {
+    entity.age.map(age_max_ability_score)
 }
 
 #[cfg(test)]

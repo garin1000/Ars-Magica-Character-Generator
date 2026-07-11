@@ -261,29 +261,37 @@ number.
       incompatible, incompatible with The Gift, not for grogs) + a free Minor
       Virtue (un-balanced, → 21 V ceiling) + a required V/F package with per-type
       bonus points; type selector gated on the profile. Source: Core Rules.md:2635-2639, 2643-2765, 2842-2851
-- [ ] The Gift → one free Supernatural Ability (without the granting Virtue;
-      further ones still require the Virtue). Engine validation, available in
-      direct entry. Source: Core Rules.md:2874
-- [ ] Ability selector reflects selectability of Supernatural Abilities: one the
-      character cannot currently take is shown disabled/greyed with the reason
-      (e.g. "requires <Virtue>") rather than hidden. The engine surfaces why an
-      ability is unavailable; the selector reads that, never hardcoding which
-      abilities are supernatural. Source: Core Rules.md:2392, 2874
+- [x] The Gift → one free Supernatural Ability (without the granting Virtue;
+      further ones still require the Virtue; a magus gets none — his free one is
+      Hermetic magic). `validate_supernatural_abilities` +
+      `effective::supernatural_free_slots`; companion `gift_policy` flipped to
+      `allowed`. Source: Core Rules.md:2872, 2874
+- [x] Ability selector greys an unavailable Supernatural Ability with the reason
+      ("requires a Virtue"); the engine surfaces the free-slot counts
+      (`EffectiveScores.supernatural_free_total/used`) + granting effects, and
+      `AbilityPicker` reads them, never hardcoding which abilities are
+      supernatural. Source: Core Rules.md:2392, 2874
 - [x] Character-type selector UI (replaces the hardcoded `companion` in
       `App.svelte` / `newEntity()`). Type labels via Fluent (`type-<id>`), never
       the slug; the profile `is_magus` flag is wired for conditional sections.
       (The Arts/Spells/House sections themselves render as 4a/4c/4b land.)
 
-### 4e. Remaining per-character input fields
-- [ ] Age field + age → max-Ability-score cap validation: <30→5, 30-35→6, 36-40→7,
-      41-45→8, 46+→9 (raised by some Virtues). Validation only — the XP
-      acquisition and aging rolls are M5. Source: Core Rules.md:2366-2374
-- [ ] Confidence: default Score 1 + 3 points for companions & magi, none for
-      grogs, modifiable by V/F. Source: Core Rules.md:2221, 2520-2526
-- [ ] Personality Traits: input list, range ±3 (±6 with a Major Personality
-      Flaw); grogs should have Loyal, warrior grogs Brave. Source: Core Rules.md:2217-2219, 1071-1089, 2500-2506
-- [ ] Reputations: input only when granted by a Virtue/Flaw (score + content +
-      type Local/Ecclesiastical/Hermetic). Source: Core Rules.md:2220, 1091-1101, 2512-2518
+### 4e. Remaining per-character input fields ✅
+- [x] Age field + age → max-Ability-score cap validation: <30→5, 30-35→6, 36-40→7,
+      41-45→8, 46+→9. `Entity.age` + `age_max_ability_score` + the cap check in
+      `validate_abilities`; an Affinity Ability may exceed it by +2 (Core:3374),
+      not without limit. Validation only — XP acquisition/aging is M5. Virtue
+      cap-raisers deferred. Source: Core Rules.md:2366-2376
+- [x] Confidence: derived (not stored) — default Score 1 + 3 points for companions
+      /magi/mythic, none for grogs, modifiable by V/F (`ConfidenceBonus`; Self-
+      Confident → 2/5). Surfaced read-only via `EffectiveScores`. Source: Core Rules.md:2520-2526
+- [x] Personality Traits: `Entity.personality_traits` (name + ±value) list, range
+      ±3, widened to ±6 by a Major Personality Flaw (one trait per flaw). Grog
+      Loyal / warrior Brave soft "should" deferred to the M5 guided flow.
+      Source: Core Rules.md:2500-2503
+- [x] Reputations: `Entity.reputations` (score + content + type
+      Local/Ecclesiastical/Hermetic), input only when a V/F grants one
+      (`GrantsReputation`; Infamous/Black Sheep seeded). Source: Core Rules.md:1091-1101, 2512-2514
 
 ### 4f. Generalise the V/F mechanical effect model (all creation-relevant families) ✅
 The engine today models only two `Effect` kinds (`ability_bonus`,

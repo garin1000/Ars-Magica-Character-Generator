@@ -224,22 +224,45 @@ and `xp_allocation`'s `general_pool` respectively; `PointItem.effects` being a
 `Vec` lets one V/F carry both. Requisite-Art reduction in the per-spell cap is a
 documented M4 approximation (out of scope; requisites stored for display only).
 
-## Phase 7 — Gift/supernatural rules + per-character fields (PLAN.md 4d-rest, 4e)
+## Phase 7 — Gift/supernatural rules + per-character fields (PLAN.md 4d-rest, 4e) ✅
 e2e: `ui/e2e/specs/character-fields.e2e.js`
 
-- [ ] The Gift → one free Supernatural Ability (further ones need the Virtue)
-- [ ] Ability selector greys an unavailable Supernatural Ability with the reason
-      (engine surfaces *why*; selector reads it, no hardcoding)
-- [ ] Age field + age→max-Ability-score cap (<30→5 … 46+→9), composes with caps
-- [ ] Confidence default by type (1+3 companion/magi, none grog), V/F-modifiable
-- [ ] Personality Traits ±3 (±6 with Major Personality Flaw); grog Loyal/Brave
-- [ ] Reputations input only when granted by a V/F (score + content + type)
-- [ ] e2e spec green; PLAN.md 4d+4e boxes updated; gate passes
+**Status: DONE — M4 COMPLETE.** Engine, data, UI, e2e; full gate + release build
++ e2e 13/13 spec files green. All five features shipped in one phase.
+
+- [x] The Gift → one free Supernatural Ability (further ones need the Virtue; a
+      magus gets none — his free one is Hermetic magic). `validate_supernatural_abilities`
+      + `effective::supernatural_free_slots`; companion `gift_policy` flipped
+      `forbidden`→`allowed` (Core:2872) so a Gifted companion is legal
+- [x] Ability selector greys an unavailable Supernatural Ability ("requires a
+      Virtue"); `EffectiveScores.supernatural_free_total/used` surfaced, `AbilityPicker`
+      reads them + selected virtues' grant effects (synchronous, no hardcoding)
+- [x] Age field + age→max-Ability-score cap (Core:2366-2376); Affinity Ability
+      exceeds by +2 (Core:3374), not exempt; surfaced as `age_ability_cap`
+- [x] Confidence derived (type default 1/3, grog none) + `ConfidenceBonus`
+      (Self-Confident → 2/5); read-only readout, hidden for grogs
+- [x] Personality Traits ±3, widened to ±6 per selected Major Personality Flaw;
+      grog Loyal/warrior Brave soft rule deferred to M5
+- [x] Reputations gated on a granting V/F (`GrantsReputation`; Infamous/Black
+      Sheep seeded, Local type); `ReputationType` = Local/Ecclesiastical/Hermetic
+- [x] e2e spec green (6 tests); PLAN.md 4d-rest+4e boxes updated; gate passes
+
+Provenance/architecture facts (verified): two ref-free `Effect` variants
+`ConfidenceBonus {score,points}` + `GrantsReputation {kind,score}`; `ReputationType`
+enum (fixed taxonomy like `ArtType`); Confidence is **derived, never stored**
+(profile default + effects); the Supernatural "covered = has an `ability_score_grant`
+floor" is a documented proxy for "has a granting Virtue" (exact for the seed;
+`animal_ken` has no granting Virtue → free-slot only); `has_the_gift` extracted
+and shared by `validate_gift_policy` + the free-slot count. schema 6→7.
 
 ---
 
-## End-of-M4 acceptance
+## End-of-M4 acceptance ✅
 
-Build a legal character of each of the four types in direct-validated mode (and
-the illegal-then-fixed flow under each ValidationMode), save, reload, confirm the
-canonical JSON round-trips — end-to-end through the real binary.
+All four character types (grog, companion, mythic companion, magus) are now fully
+buildable in direct entry — Characteristics, Abilities, Arts, Spells, Houses,
+Mythic types, V/F with the full effect model, age/Confidence/Personality/
+Reputations, and the Gift/Supernatural gate — validated live, saved and reloaded
+canonically, verified end-to-end through the real binary (e2e 13/13 spec files).
+M5 (guided wizard) is next: it wraps these direct-entry surfaces with the
+life-stage XP flows.

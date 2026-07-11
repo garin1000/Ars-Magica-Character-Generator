@@ -108,6 +108,10 @@ impl fmt::Display for IssueSeverity {
 /// | `spell_level_unresolved` | warning | `spell` |
 /// | `over_spell_levels` | error | `used`, `budget`, `over` |
 /// | `spell_level_exceeds_cap` | error | `spell`, `level`, `cap` |
+/// | `ability_above_age_cap` | error | `ability`, `score`, `cap`, `age` |
+/// | `supernatural_ability_requires_virtue` | error | `ability` |
+/// | `personality_trait_out_of_range` | error | `name`, `value`, `max` |
+/// | `reputation_not_granted` | error | `kind`, `content` |
 ///
 /// † The per-category caps emit a code derived from the `flaw_category_caps` /
 /// `virtue_category_caps` entry's category slug: `too_many_<category>_flaws` /
@@ -270,6 +274,19 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a spell's level exceeds
     /// Technique + Form + Intelligence + Magic Theory + 3 (Core:2465).
     pub const CODE_SPELL_LEVEL_EXCEEDS_CAP: &'static str = "spell_level_exceeds_cap";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a bought Ability exceeds
+    /// the character's age-based maximum (Core:2366-2376; Affinity raises it +2).
+    pub const CODE_ABILITY_ABOVE_AGE_CAP: &'static str = "ability_above_age_cap";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Supernatural Ability is
+    /// held with no granting Virtue and no free Gift slot (Core:2874).
+    pub const CODE_SUPERNATURAL_ABILITY_REQUIRES_VIRTUE: &'static str =
+        "supernatural_ability_requires_virtue";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Personality Trait is
+    /// outside ±3 (or beyond the ±6 allowance a Major Personality Flaw grants).
+    pub const CODE_PERSONALITY_TRAIT_OUT_OF_RANGE: &'static str = "personality_trait_out_of_range";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a starting Reputation is
+    /// not backed by a granting Virtue/Flaw (Core:2514).
+    pub const CODE_REPUTATION_NOT_GRANTED: &'static str = "reputation_not_granted";
 
     /// Builds an issue with the given severity, code, args, and context.
     pub fn new(
@@ -400,6 +417,9 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_abilities(entity, ruleset, &mut issues);
         validate_arts(entity, ruleset, &mut issues);
         validate_spells(entity, ruleset, type_profile, &mut issues);
+        validate_supernatural_abilities(entity, ruleset, type_profile, &mut issues);
+        validate_personality_traits(entity, ruleset, &mut issues);
+        validate_reputations(entity, ruleset, &mut issues);
         validate_xp_pool(entity, ruleset, &mut issues);
     }
 
@@ -1502,7 +1522,9 @@ fn validate_ability_bonus_targets(
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. } => continue,
+                | Effect::GeneralXp { .. }
+                | Effect::ConfidenceBonus { .. }
+                | Effect::GrantsReputation { .. } => continue,
             };
             let Some(target) = selection.params.get(param) else {
                 continue; // missing ability key already reported by validate_parameters
@@ -1553,21 +1575,9 @@ fn validate_gift_policy(
         return;
     };
 
-    let has_gift_id = match profile.gift_id {
-        Some(ref gift_id) => entity.selections.iter().any(|s| s.item_ref == *gift_id),
-        None => false,
-    };
-
-    let has_gift_category = !profile.gift_categories.is_empty()
-        && entity.selections.iter().any(|s| {
-            ruleset
-                .point_items
-                .get(&s.item_ref)
-                .is_some_and(|item| profile.gift_categories.contains(&item.category))
-        });
-
-    // Symmetric: both branches use the same definition of "has the Gift".
-    let has_gift = has_gift_id || has_gift_category;
+    // Shared with the Supernatural free-slot computation so both use one
+    // definition of "has The Gift".
+    let has_gift = crate::effective::has_the_gift(entity, ruleset, profile);
 
     match policy {
         GiftPolicy::Required => {
@@ -1737,7 +1747,9 @@ fn validate_characteristic_limit_preconditions(
                 | Effect::CharacteristicPoints { .. }
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. } => continue,
+                | Effect::GeneralXp { .. }
+                | Effect::ConfidenceBonus { .. }
+                | Effect::GrantsReputation { .. } => continue,
             };
             if amount > 0 {
                 if let Some(cap) = base_max
@@ -1836,6 +1848,33 @@ fn validate_abilities(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Valid
                 Some(entry.ability.clone()),
             ));
         }
+        // Age → max-Ability-score cap (Core:2366-2376). An Ability carrying an
+        // Affinity may exceed it by +2 (Core:3374), not without limit.
+        if let Some(age) = entity.age {
+            let mut cap = u32::from(crate::effective::age_max_ability_score(age));
+            if crate::effective::ability_affinity(
+                entity,
+                ruleset,
+                &entry.ability,
+                entry.parameter.as_deref(),
+            )
+            .is_some()
+            {
+                cap += 2;
+            }
+            if u32::from(entry.score) > cap {
+                issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_ABILITY_ABOVE_AGE_CAP,
+                    args([
+                        ("ability", entry.ability.to_string()),
+                        ("score", entry.score.to_string()),
+                        ("cap", cap.to_string()),
+                        ("age", age.to_string()),
+                    ]),
+                    Some(entry.ability.clone()),
+                ));
+            }
+        }
         let key = (&entry.ability, entry.parameter.as_deref());
         *seen.entry(key).or_insert(0) += 1;
     }
@@ -1849,6 +1888,129 @@ fn validate_abilities(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Valid
                     ("count", count.to_string()),
                 ]),
                 Some(ability.clone()),
+            ));
+        }
+    }
+}
+
+/// Validates that every held Supernatural Ability is legal: it must be covered by
+/// a granting Virtue (an `ability_score_grant` floor) or fit within the Gift's
+/// free slot (one for a Gifted non-magus, none for a magus). Uncovered instances
+/// beyond the free allowance emit `supernatural_ability_requires_virtue`
+/// (deterministic by sorted id). Source: Core Rules.md:2874.
+fn validate_supernatural_abilities(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    type_profile: Option<&EntityTypeProfile>,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let Some(profile) = type_profile else {
+        return;
+    };
+    let (free_total, _used) = crate::effective::supernatural_free_slots(entity, ruleset, profile);
+    // A granting Virtue seeds an `ability_score_grant` floor; such abilities are
+    // "covered" and never consume the free slot.
+    let floors: std::collections::BTreeSet<Id> =
+        crate::effective::ability_score_floors(entity, ruleset)
+            .into_iter()
+            .map(|f| f.ability)
+            .collect();
+    let mut uncovered: Vec<&Id> = entity
+        .ability_scores
+        .iter()
+        .filter(|a| {
+            ruleset
+                .abilities
+                .get(&a.ability)
+                .is_some_and(|ab| ab.category == crate::ability::AbilityCategory::Supernatural)
+        })
+        .map(|a| &a.ability)
+        .filter(|id| !floors.contains(*id))
+        .collect();
+    uncovered.sort();
+    uncovered.dedup();
+    // The first `free_total` uncovered abilities occupy the free Gift slot(s); the
+    // rest require a granting Virtue.
+    for ability in uncovered.into_iter().skip(usize::from(free_total)) {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_SUPERNATURAL_ABILITY_REQUIRES_VIRTUE,
+            args([("ability", ability.to_string())]),
+            Some(ability.clone()),
+        ));
+    }
+}
+
+/// Validates Personality Traits: `|value|` never exceeds 6, and at most one trait
+/// per selected Major Personality Flaw may exceed ±3 (a Major Personality Flaw is
+/// represented by a single ±6 trait; others stay ±3). Source: Core Rules.md:2500-2503.
+fn validate_personality_traits(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let major_personality_flaws = entity
+        .selections
+        .iter()
+        .filter(|s| {
+            ruleset.point_items.get(&s.item_ref).is_some_and(|item| {
+                item.category == "personality" && item.magnitude == Magnitude::Major
+            })
+        })
+        .count();
+
+    // Traits are sorted by name (normalize) for a deterministic "excess" choice.
+    let mut traits: Vec<&crate::types::PersonalityTrait> =
+        entity.personality_traits.iter().collect();
+    traits.sort_by(|a, b| a.name.cmp(&b.name));
+    let mut over_three_budget = major_personality_flaws;
+    for trait_ in traits {
+        let magnitude = trait_.value.unsigned_abs();
+        if magnitude > 6 {
+            issues.push(personality_out_of_range(trait_, 6));
+        } else if magnitude > 3 {
+            if over_three_budget > 0 {
+                over_three_budget -= 1;
+            } else {
+                issues.push(personality_out_of_range(trait_, 3));
+            }
+        }
+    }
+}
+
+fn personality_out_of_range(trait_: &crate::types::PersonalityTrait, max: i8) -> ValidationIssue {
+    ValidationIssue::error(
+        ValidationIssue::CODE_PERSONALITY_TRAIT_OUT_OF_RANGE,
+        args([
+            ("name", trait_.name.clone()),
+            ("value", trait_.value.to_string()),
+            ("max", max.to_string()),
+        ]),
+        None,
+    )
+}
+
+/// Validates that every starting Reputation is backed by a granting Virtue/Flaw:
+/// the count of reputations of each `kind` must not exceed the grants of that kind
+/// (`Effect::GrantsReputation`). Excess reputations emit `reputation_not_granted`.
+/// Source: Core Rules.md:2514.
+fn validate_reputations(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    use crate::types::ReputationType;
+    let mut remaining: BTreeMap<ReputationType, usize> = BTreeMap::new();
+    for (kind, _score) in crate::effective::reputation_grants(entity, ruleset) {
+        *remaining.entry(kind).or_insert(0) += 1;
+    }
+    for reputation in &entity.reputations {
+        let slot = remaining.entry(reputation.kind).or_insert(0);
+        if *slot > 0 {
+            *slot -= 1;
+        } else {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_REPUTATION_NOT_GRANTED,
+                args([
+                    ("kind", reputation.kind.to_string()),
+                    ("content", reputation.content.clone()),
+                ]),
+                None,
             ));
         }
     }
@@ -6016,5 +6178,207 @@ mod tests {
         let mut e = make_entity("magus", vec![]);
         e.spells = vec![spell("spell.does_not_exist", None)];
         assert!(all_codes(&validate(&e, &rs)).contains(&"unknown_spell".to_string()));
+    }
+
+    // --- Phase 7: age cap, Supernatural gate, Personality, Reputations -------
+
+    const P7_ITEMS: &str = r#"[
+        { "id": "virtue.the_gift", "kind": "virtue", "magnitude": "free",
+          "category": "special", "entity_kinds": ["character"] },
+        { "id": "virtue.second_sight", "kind": "virtue", "magnitude": "minor",
+          "category": "supernatural", "entity_kinds": ["character"],
+          "effects": [{ "type": "ability_score_grant", "ability": "ability.second_sight", "amount": 1 }] },
+        { "id": "virtue.affinity_awareness", "kind": "virtue", "magnitude": "minor",
+          "category": "general", "entity_kinds": ["character"],
+          "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
+          "effects": [{ "type": "affinity_ability_cost", "param": "ability", "counts_as_num": 3, "counts_as_den": 2 }] },
+        { "id": "virtue.self_confident", "kind": "virtue", "magnitude": "minor",
+          "category": "general", "entity_kinds": ["character"],
+          "effects": [{ "type": "confidence_bonus", "score": 1, "points": 2 }] },
+        { "id": "flaw.infamous", "kind": "flaw", "magnitude": "minor",
+          "category": "general", "entity_kinds": ["character"],
+          "effects": [{ "type": "grants_reputation", "kind": "local", "score": 4 }] },
+        { "id": "flaw.major_personality", "kind": "flaw", "magnitude": "major",
+          "category": "personality", "entity_kinds": ["character"] }
+    ]"#;
+    const P7_ABILITIES: &str = r#"{ "advancement": [
+        { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },
+        { "score": 3, "total_xp": 30 }, { "score": 4, "total_xp": 50 },
+        { "score": 5, "total_xp": 75 }, { "score": 6, "total_xp": 105 },
+        { "score": 7, "total_xp": 140 }, { "score": 8, "total_xp": 180 } ],
+        "abilities": [
+        { "id": "ability.awareness", "category": "general" },
+        { "id": "ability.second_sight", "category": "supernatural", "requires_training": true },
+        { "id": "ability.animal_ken", "category": "supernatural", "requires_training": true } ] }"#;
+    const P7_TYPES: &str = r#"[
+        { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "gift_policy": "allowed", "gift_id": "virtue.the_gift",
+          "confidence_score": 1, "confidence_points": 3, "creation_phases": [] },
+        { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "is_magus": true, "gift_policy": "required", "gift_id": "virtue.the_gift",
+          "confidence_score": 1, "confidence_points": 3, "creation_phases": [] },
+        { "id": "grog", "budget": { "virtue_points": 3, "flaw_points": 3 },
+          "creation_phases": [] }
+    ]"#;
+
+    fn p7_rs() -> Ruleset {
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: P7_ITEMS,
+            type_profiles: P7_TYPES,
+            abilities: Some(P7_ABILITIES),
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            characteristics: None,
+        })
+        .unwrap()
+    }
+
+    fn ability(id: &str, score: u8) -> AbilityScore {
+        AbilityScore {
+            ability: Id::new(id),
+            score,
+            specialty: None,
+            parameter: None,
+        }
+    }
+
+    #[test]
+    fn ability_over_age_cap_is_flagged() {
+        let rs = p7_rs();
+        let mut e = make_entity("companion", vec![]);
+        e.age = Some(25); // cap 5
+        e.ability_scores = vec![ability("ability.awareness", 6)];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"ability_above_age_cap".to_string()));
+    }
+
+    #[test]
+    fn ability_at_age_cap_is_clean() {
+        let rs = p7_rs();
+        let mut e = make_entity("companion", vec![]);
+        e.age = Some(40); // cap 7
+        e.ability_scores = vec![ability("ability.awareness", 7)];
+        assert!(!all_codes(&validate(&e, &rs)).contains(&"ability_above_age_cap".to_string()));
+    }
+
+    #[test]
+    fn affinity_raises_the_age_cap_by_two_but_no_more() {
+        let rs = p7_rs();
+        let affinity = Selection::with_params(
+            Id::new("virtue.affinity_awareness"),
+            BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
+        );
+        // Age 25 → base cap 5; Affinity lifts it to 7. Score 7 is legal, 8 is not.
+        let mut ok = make_entity("companion", vec![affinity.clone()]);
+        ok.age = Some(25);
+        ok.ability_scores = vec![ability("ability.awareness", 7)];
+        assert!(!all_codes(&validate(&ok, &rs)).contains(&"ability_above_age_cap".to_string()));
+
+        let mut over = make_entity("companion", vec![affinity]);
+        over.age = Some(25);
+        over.ability_scores = vec![ability("ability.awareness", 8)];
+        assert!(all_codes(&validate(&over, &rs)).contains(&"ability_above_age_cap".to_string()));
+    }
+
+    #[test]
+    fn supernatural_ability_without_gift_or_virtue_is_flagged() {
+        let rs = p7_rs();
+        let mut e = make_entity("companion", vec![]);
+        e.ability_scores = vec![ability("ability.animal_ken", 2)];
+        assert!(
+            all_codes(&validate(&e, &rs))
+                .contains(&"supernatural_ability_requires_virtue".to_string())
+        );
+    }
+
+    #[test]
+    fn gifted_companion_gets_one_free_supernatural_ability() {
+        let rs = p7_rs();
+        let mut e = make_entity("companion", vec![sel("virtue.the_gift")]);
+        e.ability_scores = vec![ability("ability.animal_ken", 2)];
+        // One uncovered supernatural ability fits the single free Gift slot.
+        assert!(
+            !all_codes(&validate(&e, &rs))
+                .contains(&"supernatural_ability_requires_virtue".to_string())
+        );
+        // A second uncovered one exceeds the allowance.
+        e.ability_scores.push(ability("ability.second_sight", 2));
+        assert!(
+            all_codes(&validate(&e, &rs))
+                .contains(&"supernatural_ability_requires_virtue".to_string())
+        );
+    }
+
+    #[test]
+    fn magus_gets_no_free_supernatural_slot() {
+        let rs = p7_rs();
+        // A magus must select The Gift (required) but still gets 0 free slots.
+        let mut e = make_entity("magus", vec![sel("virtue.the_gift")]);
+        e.ability_scores = vec![ability("ability.animal_ken", 2)];
+        assert!(
+            all_codes(&validate(&e, &rs))
+                .contains(&"supernatural_ability_requires_virtue".to_string())
+        );
+    }
+
+    #[test]
+    fn granting_virtue_covers_its_supernatural_ability() {
+        let rs = p7_rs();
+        // Second Sight (virtue) grants the ability; holding it needs no free slot.
+        let mut e = make_entity("companion", vec![sel("virtue.second_sight")]);
+        e.ability_scores = vec![ability("ability.second_sight", 2)];
+        assert!(
+            !all_codes(&validate(&e, &rs))
+                .contains(&"supernatural_ability_requires_virtue".to_string())
+        );
+    }
+
+    #[test]
+    fn personality_trait_over_three_needs_a_major_personality_flaw() {
+        let rs = p7_rs();
+        let mut e = make_entity("companion", vec![]);
+        e.personality_traits = vec![PersonalityTrait {
+            name: "Brave".into(),
+            value: 4,
+        }];
+        assert!(
+            all_codes(&validate(&e, &rs)).contains(&"personality_trait_out_of_range".to_string())
+        );
+        // A Major Personality Flaw lifts one trait to ±6.
+        e.selections = vec![sel("flaw.major_personality")];
+        assert!(
+            !all_codes(&validate(&e, &rs)).contains(&"personality_trait_out_of_range".to_string())
+        );
+    }
+
+    #[test]
+    fn personality_trait_beyond_six_is_always_illegal() {
+        let rs = p7_rs();
+        let mut e = make_entity("companion", vec![sel("flaw.major_personality")]);
+        e.personality_traits = vec![PersonalityTrait {
+            name: "Wrathful".into(),
+            value: 7,
+        }];
+        assert!(
+            all_codes(&validate(&e, &rs)).contains(&"personality_trait_out_of_range".to_string())
+        );
+    }
+
+    #[test]
+    fn reputation_without_a_grant_is_flagged() {
+        let rs = p7_rs();
+        let mut e = make_entity("companion", vec![]);
+        e.reputations = vec![Reputation {
+            kind: ReputationType::Local,
+            score: 4,
+            content: "dragon slayer".into(),
+        }];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"reputation_not_granted".to_string()));
+        // Infamous grants a Local reputation, covering it.
+        e.selections = vec![sel("flaw.infamous")];
+        assert!(!all_codes(&validate(&e, &rs)).contains(&"reputation_not_granted".to_string()));
     }
 }

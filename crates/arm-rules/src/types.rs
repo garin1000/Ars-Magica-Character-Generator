@@ -450,6 +450,64 @@ pub enum Effect {
         /// negative).
         amount: i16,
     },
+    /// Adjusts the character's derived Confidence Score and Points (on top of the
+    /// type profile's defaults). Signed and additive; e.g. Self-Confident grants
+    /// `{ score: 1, points: 2 }` (raising the 1/3 default to 2/5). Confidence is
+    /// never stored on the entity — it is `profile default + Σ this effect`.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4900-4902 (Self-Confident).
+    ConfidenceBonus {
+        /// Confidence Score added per selection.
+        score: i8,
+        /// Confidence Points added per selection.
+        points: i8,
+    },
+    /// Authorizes the character to start with one Reputation of the given `kind`
+    /// at the given `score` (content is player-supplied). A starting Reputation is
+    /// legal only if backed by such a grant (Core:2514).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:6310-6312 (Infamous),
+    /// `:5703-5705` (Black Sheep).
+    GrantsReputation {
+        /// Which audience the granted Reputation reaches.
+        kind: ReputationType,
+        /// The level of the granted Reputation.
+        score: u8,
+    },
+}
+
+/// The audience a Reputation reaches — a fixed rules taxonomy (so an enum, like
+/// [`crate::art::ArtType`]), rendered via Fluent, never as a raw slug.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:1091-1101.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ReputationType {
+    /// Known to those who live near the character (the default).
+    Local,
+    /// Known within the Church.
+    Ecclesiastical,
+    /// Known within the Order of Hermes.
+    Hermetic,
+}
+
+impl ReputationType {
+    /// All types in book order (the single source of the serialized ordering).
+    pub const ALL: [ReputationType; 3] = [
+        ReputationType::Local,
+        ReputationType::Ecclesiastical,
+        ReputationType::Hermetic,
+    ];
+}
+
+impl std::fmt::Display for ReputationType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            ReputationType::Local => "local",
+            ReputationType::Ecclesiastical => "ecclesiastical",
+            ReputationType::Hermetic => "hermetic",
+        })
+    }
 }
 
 /// An inclusive line range `[start, end]` into a Markdown source file.
@@ -726,6 +784,16 @@ pub struct EntityTypeProfile {
     /// Modified per-character by [`Effect::SpellLevels`] (Skilled/Weak Parens).
     #[serde(default, skip_serializing_if = "is_zero")]
     pub spell_levels: u32,
+    /// The character type's starting Confidence Score (Core:2521). Companions,
+    /// magi and mythic companions start at 1; grogs have no Confidence (0/omitted).
+    /// The effective score folds in `Effect::ConfidenceBonus`; Confidence is
+    /// derived, never stored on the entity.
+    #[serde(default, skip_serializing_if = "is_zero_u8")]
+    pub confidence_score: u8,
+    /// The character type's starting Confidence Points (Core:2521): 3 for
+    /// companions/magi/mythic, 0 for grogs.
+    #[serde(default, skip_serializing_if = "is_zero_u8")]
+    pub confidence_points: u8,
     /// Whether The Gift is required/allowed/forbidden. `None` = not applicable
     /// (e.g. covenants).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -841,8 +909,37 @@ pub struct SpellSelection {
     pub level: Option<u8>,
 }
 
+/// A named Personality Trait with a value in −3..+3 (or ±6 for the trait
+/// representing a Major Personality Flaw). Free-text name, kept sorted by name in
+/// [`Entity::normalize`]. Source: Core Rules.md:2500-2503.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct PersonalityTrait {
+    /// Free-text trait name (e.g. "Brave", "Loyal").
+    pub name: String,
+    /// Trait value; ±3 normally, ±6 for a Major Personality Flaw's trait.
+    pub value: i8,
+}
+
+/// A starting Reputation: score + free-text content + audience type. Only legal
+/// when backed by a granting Virtue/Flaw ([`Effect::GrantsReputation`]).
+/// Source: Core Rules.md:1091-1101, 2512-2514.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct Reputation {
+    /// Which audience the Reputation reaches.
+    pub kind: ReputationType,
+    /// The Reputation's level.
+    pub score: u8,
+    /// Free-text description of what the Reputation is for.
+    pub content: String,
+}
+
 /// `skip_serializing_if` predicate: omits a `u32` field when it is zero.
 fn is_zero(n: &u32) -> bool {
+    *n == 0
+}
+
+/// `skip_serializing_if` predicate: omits a `u8` field when it is zero.
+fn is_zero_u8(n: &u8) -> bool {
     *n == 0
 }
 
@@ -932,10 +1029,22 @@ pub struct Entity {
     /// companion, never both).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub mythic_choices: BTreeMap<String, Selection>,
+    /// The character's age in years. Drives the age → max-Ability-score cap
+    /// (Core:2366-2376). `None` when unset (no cap enforced yet).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub age: Option<u32>,
+    /// Named Personality Traits (value ±3, or ±6 for a Major Personality Flaw's
+    /// trait). Kept sorted by name via [`Entity::normalize`]. Defaults to empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub personality_traits: Vec<PersonalityTrait>,
+    /// Starting Reputations (each backed by a granting Virtue/Flaw). Kept sorted
+    /// via [`Entity::normalize`]. Defaults to empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub reputations: Vec<Reputation>,
 }
 
 /// Current save-format schema version.
-pub const SCHEMA_VERSION: u32 = 6;
+pub const SCHEMA_VERSION: u32 = 7;
 
 impl Entity {
     /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
@@ -957,16 +1066,22 @@ impl Entity {
             house_choices: BTreeMap::new(),
             mythic_type: None,
             mythic_choices: BTreeMap::new(),
+            age: None,
+            personality_traits: Vec::new(),
+            reputations: Vec::new(),
         }
     }
 
-    /// Sort selections, ability scores, art scores and spells for canonical
-    /// serialization. (`characteristics` is a `BTreeMap`, already id-ordered.)
+    /// Sort selections, ability scores, art scores, spells, personality traits and
+    /// reputations for canonical serialization. (`characteristics` is a
+    /// `BTreeMap`, already id-ordered.)
     pub fn normalize(&mut self) {
         self.selections.sort();
         self.ability_scores.sort();
         self.art_scores.sort();
         self.spells.sort();
+        self.personality_traits.sort();
+        self.reputations.sort();
     }
 }
 
@@ -1435,17 +1550,72 @@ mod tests {
             house_choices: BTreeMap::new(),
             mythic_type: None,
             mythic_choices: BTreeMap::new(),
+            age: Some(25),
+            personality_traits: vec![PersonalityTrait {
+                name: "Brave".into(),
+                value: 3,
+            }],
+            reputations: Vec::new(),
         };
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 6"#));
+        assert!(json.contains(r#""schema_version": 7"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
         assert!(json.contains(r#""spell": "spell.pilum_of_fire""#));
+        assert!(json.contains(r#""age": 25"#));
+        assert!(json.contains(r#""name": "Brave""#));
+    }
+
+    /// Reputations round-trip with a snake_case `kind`, and `normalize` sorts both
+    /// personality traits (by name) and reputations canonically.
+    #[test]
+    fn entity_reputations_and_personality_normalize_roundtrip() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.personality_traits = vec![
+            PersonalityTrait {
+                name: "Loyal".into(),
+                value: 2,
+            },
+            PersonalityTrait {
+                name: "Brave".into(),
+                value: -1,
+            },
+        ];
+        entity.reputations = vec![Reputation {
+            kind: ReputationType::Hermetic,
+            score: 3,
+            content: "Dedicated Hoplite".into(),
+        }];
+        entity.normalize();
+        // Traits sorted by name: Brave before Loyal.
+        assert_eq!(entity.personality_traits[0].name, "Brave");
+
+        let json = serde_json::to_string(&entity).unwrap();
+        assert!(json.contains(r#""kind":"hermetic""#), "{json}");
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(entity, back);
+    }
+
+    /// ReputationType serializes to its snake_case scalar for every variant.
+    #[test]
+    fn reputation_type_serde_roundtrip() {
+        for kind in ReputationType::ALL {
+            let json = serde_json::to_string(&kind).unwrap();
+            assert_eq!(serde_json::from_str::<ReputationType>(&json).unwrap(), kind);
+        }
+        assert_eq!(
+            serde_json::to_string(&ReputationType::Ecclesiastical).unwrap(),
+            r#""ecclesiastical""#
+        );
     }
 
     /// A General spell round-trips its chosen level, and `normalize` sorts the
@@ -1500,6 +1670,9 @@ mod tests {
             house_choices: BTreeMap::new(),
             mythic_type: None,
             mythic_choices: BTreeMap::new(),
+            age: None,
+            personality_traits: Vec::new(),
+            reputations: Vec::new(),
         };
 
         // Serialization is canonical only after normalize(); derive-based

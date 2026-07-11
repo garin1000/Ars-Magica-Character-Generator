@@ -449,6 +449,63 @@ fn load_entity_from_missing_path_is_io_error() {
     assert!(matches!(err, AppError::Io { .. }), "got {err:?}");
 }
 
+#[test]
+fn effective_scores_surface_confidence_and_supernatural_slots() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut companion = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("companion"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+
+    // Companion default: Confidence 1/3, no free Supernatural slot (unGifted).
+    let base = effective_scores_loaded(&companion, &ruleset);
+    assert_eq!((base.confidence_score, base.confidence_points), (1, 3));
+    assert_eq!(base.supernatural_free_total, 0);
+
+    // Self-Confident raises Confidence to 2/5 (the shipped V/F).
+    companion
+        .selections
+        .push(Selection::new(Id::new("virtue.self_confident")));
+    let confident = effective_scores_loaded(&companion, &ruleset);
+    assert_eq!(
+        (confident.confidence_score, confident.confidence_points),
+        (2, 5)
+    );
+
+    // Taking The Gift opens exactly one free Supernatural-Ability slot.
+    companion
+        .selections
+        .push(Selection::new(Id::new("virtue.the_gift")));
+    assert_eq!(
+        effective_scores_loaded(&companion, &ruleset).supernatural_free_total,
+        1
+    );
+
+    // Infamous surfaces a Local reputation grant for the UI add-control.
+    companion
+        .selections
+        .push(Selection::new(Id::new("flaw.infamous")));
+    let grants = effective_scores_loaded(&companion, &ruleset).reputation_grants;
+    assert!(
+        grants
+            .iter()
+            .any(|g| g.kind == arm_rules::ReputationType::Local && g.score == 4),
+        "Infamous grants a level-4 Local reputation"
+    );
+
+    // A magus gets no free Supernatural slot (his free ability is Hermetic magic).
+    let magus = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("magus"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+    assert_eq!(
+        effective_scores_loaded(&magus, &ruleset).supernatural_free_total,
+        0
+    );
+}
+
 /// Extracts every fixed issue code from the engine's validation source so the
 /// Fluent coverage check tracks the codes the engine actually emits. The engine
 /// declares the closed set as `pub const CODE_*: &'static str = "...";` and

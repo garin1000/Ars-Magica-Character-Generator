@@ -80,6 +80,7 @@ tab-arts = Arts
 tab-house-specialisation = House
 tab-mythic-type = Type
 tab-spells = Spells
+tab-details = Details
 # Ability XP summary and controls.
 xp-pool = XP pool
 xp-spent = Spent: { $spent }
@@ -113,6 +114,24 @@ spell-none = — Select a spell —
 # The spell-levels budget bar: how many of the magus's levels are used.
 spell-levels-used = Spell levels: { $used } / { $budget }
 spell-remove = Remove
+# Details tab: age, Confidence (read-only, derived), Personality Traits, Reputations.
+age-label = Age
+age-cap-note = Max Ability score: { $cap }
+confidence-label = Confidence
+confidence-readout = Score { $score }, { $points } points
+personality-label = Personality Traits
+personality-name-placeholder = Trait
+personality-add = Add trait
+personality-empty = No Personality Traits yet.
+reputations-label = Reputations
+reputation-content-placeholder = What it is for
+reputation-add = Add { $kind } Reputation (level { $score })
+reputation-empty = No Reputation is granted (take a Virtue or Flaw that grants one).
+reputation-type-local = Local
+reputation-type-ecclesiastical = Ecclesiastical
+reputation-type-hermetic = Hermetic
+# Shown as the reason a Supernatural Ability is greyed in the picker.
+ability-requires-virtue = Requires a granting Virtue (or the Gift's one free Ability)
 characteristic-increment = Raise
 characteristic-decrement = Lower
 characteristic-description-label = Description
@@ -224,6 +243,10 @@ issue-duplicate_spell = { $spell } is listed { $count } times.
 issue-spell_level_unresolved = General spell { $spell } has no chosen level yet.
 issue-over_spell_levels = Spells total { $used } levels, over the budget of { $budget } (by { $over }).
 issue-spell_level_exceeds_cap = Spell { $spell } is level { $level }, above the maximum you can learn ({ $cap }).
+issue-ability_above_age_cap = { $ability } score { $score } exceeds the age-{ $age } maximum of { $cap }.
+issue-supernatural_ability_requires_virtue = { $ability } is a Supernatural Ability and requires a granting Virtue (or the Gift's one free Ability).
+issue-personality_trait_out_of_range = Personality Trait { $name } ({ $value }) is outside the allowed range (±{ $max }).
+issue-reputation_not_granted = A { $kind } Reputation ({ $content }) needs a Virtue or Flaw that grants one.
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.
