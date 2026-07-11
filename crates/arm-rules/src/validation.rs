@@ -396,6 +396,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_duplicate_selections(entity, ruleset, &mut issues);
     validate_balance(entity, ruleset, type_profile, &mut issues);
     validate_caps(entity, ruleset, type_profile, &mut issues);
+    validate_tainted_cap(entity, ruleset, &mut issues);
     validate_prerequisites(entity, ruleset, type_profile, &selected_ids, &mut issues);
     validate_incompatibilities(entity, ruleset, &selected_ids, &mut issues);
     validate_permitted_categories(entity, ruleset, type_profile, &mut issues);
@@ -733,6 +734,53 @@ fn validate_caps(
         ItemKind::Virtue,
         "virtues",
     );
+}
+
+/// Warns when more than half the Virtue points a character has taken are Tainted
+/// (and likewise for Flaws). The rulebook frames this as a "should" ("no more
+/// than half a character's Virtues should be tainted, and similarly for Flaws"),
+/// so it is a non-blocking warning; the limit is measured against the points
+/// actually taken, not the type's budget. Free items contribute 0 points and so
+/// never affect the ratio.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2998-3002.
+fn validate_tainted_cap(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    let (mut tainted_virtue, mut total_virtue) = (0i32, 0i32);
+    let (mut tainted_flaw, mut total_flaw) = (0i32, 0i32);
+    for selection in &entity.selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        let pts = item.magnitude.points() as i32;
+        if item.kind.is_positive() {
+            total_virtue += pts;
+            if item.tainted {
+                tainted_virtue += pts;
+            }
+        } else {
+            total_flaw += pts;
+            if item.tainted {
+                tainted_flaw += pts;
+            }
+        }
+    }
+
+    let mut warn = |tainted: i32, total: i32, code: &str| {
+        // "No more than half": tainted may equal half but not exceed it. The
+        // integer form `2·tainted > total` sidesteps any rounding choice.
+        if tainted * 2 > total {
+            issues.push(ValidationIssue::warning(
+                code,
+                args([
+                    ("tainted", tainted.to_string()),
+                    ("total", total.to_string()),
+                ]),
+                None,
+            ));
+        }
+    };
+    warn(tainted_virtue, total_virtue, "too_many_tainted_virtues");
+    warn(tainted_flaw, total_flaw, "too_many_tainted_flaws");
 }
 
 /// Validates a magus's Hermetic House and its specialisation picks. Runs only
@@ -2603,6 +2651,101 @@ mod tests {
         assert!(
             !codes(&result).contains(&"too_many_major_hermetic_virtues".to_string()),
             "a granted Major Hermetic Virtue must not count toward the cap: {:?}",
+            result.issues
+        );
+    }
+
+    // --- Tainted V/F half-budget point cap (Core Rules.md:2998-3002) ---------
+
+    /// Items carrying the Tainted flag: two Major tainted virtues (3 pts each),
+    /// an untainted Major virtue, and two Major tainted flaws. The cap is
+    /// half of the points *actually taken* on each side, so an untainted virtue
+    /// balances a tainted one.
+    const TAINTED_ITEMS: &str = r#"[
+        { "id": "virtue.the_gift", "kind": "virtue", "magnitude": "free",
+          "category": "special", "entity_kinds": ["character"] },
+        { "id": "virtue.tainted_a", "kind": "virtue", "magnitude": "major",
+          "category": "supernatural", "entity_kinds": ["character"], "tainted": true },
+        { "id": "virtue.tainted_b", "kind": "virtue", "magnitude": "major",
+          "category": "supernatural", "entity_kinds": ["character"], "tainted": true },
+        { "id": "virtue.plain", "kind": "virtue", "magnitude": "major",
+          "category": "general", "entity_kinds": ["character"] },
+        { "id": "flaw.tainted_c", "kind": "flaw", "magnitude": "major",
+          "category": "story", "entity_kinds": ["character"], "tainted": true },
+        { "id": "flaw.tainted_d", "kind": "flaw", "magnitude": "major",
+          "category": "story", "entity_kinds": ["character"], "tainted": true }
+    ]"#;
+
+    /// A companion profile permitting the Tainted-cap test categories.
+    const TAINTED_TYPE: &str = r#"[{
+        "id": "companion",
+        "budget": { "virtue_points": 30, "flaw_points": 30 },
+        "permitted_categories": ["general", "supernatural", "special", "story"],
+        "creation_phases": []
+    }]"#;
+
+    #[test]
+    fn tainted_field_defaults_false_and_parses_true() {
+        let rs = rs_with_houses(TAINTED_ITEMS, TAINTED_TYPE);
+        assert!(
+            rs.point_items
+                .get(&Id::new("virtue.tainted_a"))
+                .unwrap()
+                .tainted
+        );
+        assert!(
+            !rs.point_items
+                .get(&Id::new("virtue.the_gift"))
+                .unwrap()
+                .tainted
+        );
+    }
+
+    #[test]
+    fn tainted_virtue_points_over_half_of_taken_warn() {
+        // Taken: 2 Major tainted (6) + 0 untainted → tainted is all of it,
+        // which is more than half, so it warns.
+        let rs = rs_with_houses(TAINTED_ITEMS, TAINTED_TYPE);
+        let entity = make_entity(
+            "companion",
+            vec![sel("virtue.tainted_a"), sel("virtue.tainted_b")],
+        );
+        let result = validate(&entity, &rs);
+        assert!(
+            all_codes(&result).contains(&"too_many_tainted_virtues".to_string()),
+            "all-tainted Virtue points (over half of those taken) should warn: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn tainted_flaw_points_over_half_of_taken_warn() {
+        let rs = rs_with_houses(TAINTED_ITEMS, TAINTED_TYPE);
+        let entity = make_entity(
+            "companion",
+            vec![sel("flaw.tainted_c"), sel("flaw.tainted_d")],
+        );
+        let result = validate(&entity, &rs);
+        assert!(
+            all_codes(&result).contains(&"too_many_tainted_flaws".to_string()),
+            "all-tainted Flaw points (over half of those taken) should warn: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn tainted_at_exactly_half_of_taken_is_clean() {
+        // Taken: 1 Major tainted (3) + 1 Major untainted (3) = 6 total,
+        // 3 tainted = exactly half → "no more than half" holds, no warning.
+        let rs = rs_with_houses(TAINTED_ITEMS, TAINTED_TYPE);
+        let entity = make_entity(
+            "companion",
+            vec![sel("virtue.tainted_a"), sel("virtue.plain")],
+        );
+        let result = validate(&entity, &rs);
+        assert!(
+            !all_codes(&result).contains(&"too_many_tainted_virtues".to_string()),
+            "tainted points at exactly half of those taken must not warn: {:?}",
             result.issues
         );
     }

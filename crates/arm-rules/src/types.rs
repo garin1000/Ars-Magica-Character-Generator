@@ -583,6 +583,15 @@ pub struct PointItem {
     /// Grouping category used by type-profile permit/forbid rules
     /// (e.g. `general`, `hermetic`, `social_status`).
     pub category: String,
+    /// The descriptor's optional "Type" tag. `true` for a Tainted Virtue/Flaw:
+    /// associated with the Infernal realm, and any Supernatural Ability it grants
+    /// is an Infernal power. Drives the half-of-taken-points Tainted cap
+    /// (no more than half a character's Virtue points — and likewise Flaw points —
+    /// may be Tainted).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2998-3002.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub tainted: bool,
     /// Entity kinds this item may be selected for. Empty means any kind.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub entity_kinds: BTreeSet<EntityKind>,

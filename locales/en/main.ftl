@@ -32,13 +32,19 @@ abilities-title = Abilities
 # Virtue/Flaw category (type) labels, keyed by the engine's category id.
 category-general = General
 category-hermetic = Hermetic
+category-personality = Personality
 category-social_status = Social Status
 category-special = Special
+category-story = Story
+category-supernatural = Supernatural
 
 # Magnitude (level) labels, keyed by the engine's magnitude value.
 magnitude-free = Free
 magnitude-minor = Minor
 magnitude-major = Major
+
+# Virtue/Flaw "Type" tag: a Tainted (Infernal-associated) Virtue or Flaw.
+vf-tag-tainted = Tainted
 
 # The eight Characteristics, keyed by the engine's characteristic value.
 characteristic-int = Intelligence
@@ -197,6 +203,8 @@ issue-too_many_minor_flaws = Too many Minor Flaws ({ $count } of max { $max }).
 issue-too_many_major_personality_flaws = Too many Major Personality Flaws ({ $count } of max { $max }).
 issue-too_many_personality_flaws = More Personality Flaws than recommended ({ $count } of { $max }).
 issue-too_many_story_flaws = More Story Flaws than recommended ({ $count } of { $max }).
+issue-too_many_tainted_virtues = More than half your Virtue points are Tainted ({ $tainted } of { $total }).
+issue-too_many_tainted_flaws = More than half your Flaw points are Tainted ({ $tainted } of { $total }).
 issue-prereq_not_met = Prerequisite not met for { $item }.
 issue-prereq_unevaluated = Prerequisite for { $item } could not be checked yet.
 issue-incompatible = { $item } is incompatible with { $other }.
