@@ -123,6 +123,35 @@ mechanics carry entries; the rest are stubbed at the end.
   type-label rule). The parenthetical "(five points ... ten for a Mythic
   Companion ...)" is illustrative of a maxed build, not a separate flat cap.
 
+#### Full core Virtue/Flaw catalogue — `rules/core/virtues_flaws.json`
+> Virtues: `## Virtues` detailed entries `:3360-5282`; Flaws: `## Flaws`
+> `:5639-7119`. Each entry is `#### Name` + an italic `*Magnitude, Category[,
+> Type]*` descriptor + prose.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:3360-5282` (Virtues),
+  `:5639-7119` (Flaws); each item's own `source` field carries its line range.
+- Data: the full core catalogue (653 items) lives in
+  `rules/core/virtues_flaws.json`, with EN/DE display text in
+  `rules/i18n/{en,de}/virtues_flaws.json`. This widens the data only — the engine,
+  i18n schema, and UI already support any catalogue size (catalogue size is data).
+- Extraction conventions (structural fields; effects/prereqs authored per mechanic
+  elsewhere): magnitude/category parsed from the descriptor; category slugged
+  (`Social Status`→`social_status`, source typo `Subernatural`→`supernatural`,
+  compound labels like `General and Hermetic` take the **earliest-listed**
+  category). The optional `Type` token sets `tainted` (see the Tainted note above).
+- **Dual-magnitude split.** A `*Major or Minor*` item becomes two entries,
+  `<id>_minor` and `<id>_major`, marked mutually `incompatible_with` (so exactly
+  one magnitude is chosen), disambiguated in i18n as "Name (Minor/Major)" /
+  "Name (Klein/Groß)". 32 core items split this way.
+- **German provenance.** DE names/summaries come from the line-mirrored German
+  source (`Ars Magica Definitive Edition Basisregeln.md`, same line positions),
+  cross-checked against `rules/source/de/translation-tables/tugenden-fehler.md`
+  (glossary wins on any term mismatch). The DE descriptor uses `Kostenlos` as well
+  as `Frei` for Free.
+- Referential integrity + EN/DE i18n coverage are asserted structurally by
+  `tests/data_integrity.rs` (`shipped_data_passes_integrity_check`,
+  `english/german_i18n_covers_all_items`) — never an exact catalogue total.
+
 #### The Gift policy — required / forbidden by type
 > "all magi must have this Virtue" ... "Grogs can never have The Gift".
 
