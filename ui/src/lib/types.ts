@@ -36,6 +36,8 @@ export type Effect =
   | { type: 'spell_levels'; amount: number }
   | { type: 'general_xp'; amount: number }
   | { type: 'confidence_bonus'; score: number; points: number }
+  | { type: 'size_delta'; amount: number }
+  | { type: 'characteristic_score_delta'; characteristic: string; amount: number }
   | { type: 'grants_reputation'; kind: ReputationType; score: number };
 
 // The audience a Reputation reaches (a fixed rules taxonomy, rendered via Fluent
@@ -86,6 +88,13 @@ export interface ArtBonus {
   bonus: number;
 }
 
+// A free effective-score bonus to a Characteristic (Giant Blood +1 Str/Sta,
+// Dwarf -1). Mirrors the engine's `CharacteristicBonus`.
+export interface CharacteristicBonus {
+  characteristic: Characteristic;
+  bonus: number;
+}
+
 // A free starting-score floor a virtue grants to an ability (e.g. Second Sight →
 // Second Sight 1). Mirrors the engine's `AbilityFloor`.
 export interface AbilityFloor {
@@ -119,6 +128,10 @@ export interface EffectiveScores {
   restricted_xp_pools: RestrictedXpPool[];
   characteristic_points_granted: number;
   ability_score_floors: AbilityFloor[];
+  // Derived Size (base 0; Large +1, Giant Blood +2, Small Frame -1, Dwarf -2).
+  size: number;
+  // Free effective-score bonuses to Characteristics (Giant Blood +1 Str/Sta, Dwarf -1).
+  characteristic_bonuses: CharacteristicBonus[];
   // Virtue/Flaw Selections the entity's House grants (derived, never persisted),
   // in the House's declared grant order, so the V/F view renders them read-only.
   granted_selections: Selection[];

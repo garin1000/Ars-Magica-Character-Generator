@@ -572,6 +572,37 @@ approximation of "Latin").
   `validation.rs::validate_characteristics` budget = `start_points + granted`. The
   per-characteristic +3 *cap* is unchanged (only Great Characteristic widens it).
 
+#### Weak Characteristics — −3 Characteristic-buy points (`characteristic_points`, signed)
+> "You have three fewer points to spend buying Characteristics … You may take
+> this Flaw twice, leaving you with only one point to spend."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:7056-7058`.
+- Data: `flaw.weak_characteristics` — `effects: [{ characteristic_points, amount:
+  -3 }]`, `max_per_target: 2`. `Effect::CharacteristicPoints.amount` is `i8`
+  (signed) and `characteristic_points_granted` returns `i32`, so Weak nets against
+  Improved (+3 and −3 cancel). The budget clamps naturally via the cost check.
+
+#### Giant Blood / Large / Dwarf / Small Frame — Size + free Characteristic bonus
+> Giant Blood: "Your Size is +2 … gain +1 to both Strength and Stamina. This
+> bonus may raise your scores … as high as +6." Dwarf: "Your Size is −2 … −1 to
+> each of Strength and Stamina … as low as −6." Large: Size +1. Small Frame: Size −1.
+> Each lists the other three as mutually exclusive.
+
+- Source: `:3975-3978` (Giant Blood), `:4229-4231` (Large), `:5996-5998` (Dwarf),
+  `:6767-6769` (Small Frame).
+- Data: `virtue.giant_blood` / `virtue.large` / `flaw.dwarf` / `flaw.small_frame`,
+  each with a `size_delta` effect (and Giant Blood/Dwarf a `characteristic_score_delta`
+  for Str and Sta), plus a symmetric `incompatible_with` clique across all four.
+- Implementation: two new effects. `Effect::SizeDelta { amount }` →
+  `effective.rs::size` (base 0 + Σ, no cost/cap; surfaced as `EffectiveScores.size`).
+  `Effect::CharacteristicScoreDelta { characteristic, amount }` →
+  `characteristic_score_bonus` / `effective_characteristic_score` — a **free**
+  effective-score bonus (separate from the bought score, no buy-budget cost) that
+  may push the effective score past ±5 to ±6. Surfaced as
+  `EffectiveScores.characteristic_bonuses` and shown in the sheet next to the bought
+  score; Size shows via Fluent `characteristic-size`. The stored `characteristic`
+  id is validated to resolve in `ruleset.rs::validate_effect_refs`.
+
 #### Second Sight / Premonitions — free starting Ability score (`ability_score_grant`)
 > Second Sight: "Choosing this Virtue confers the Ability Second Sight 1."
 > Premonitions: "Choosing this Virtue confers the Ability Premonitions 1."

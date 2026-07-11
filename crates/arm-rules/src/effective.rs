@@ -146,6 +146,8 @@ pub fn ability_bonus(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SizeDelta { .. }
+                | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. } => {}
             }
         }
@@ -219,6 +221,17 @@ pub struct ArtBonus {
     pub bonus: i32,
 }
 
+/// A non-zero free effective-score bonus targeting one Characteristic (Giant
+/// Blood +1 Str/Sta, Dwarf −1). Serializes for the frontend as
+/// `{ "characteristic": "str", "bonus": N }`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CharacteristicBonus {
+    /// The affected Characteristic.
+    pub characteristic: Characteristic,
+    /// The summed free bonus (may be negative).
+    pub bonus: i32,
+}
+
 /// Sum of all art-bonus effects (e.g. Puissant Art) targeting one Art. Arts are
 /// not parameterized, so the target is matched by id alone. Two virtues boosting
 /// the same Art stack.
@@ -251,6 +264,8 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SizeDelta { .. }
+                | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. } => {}
             }
         }
@@ -333,6 +348,8 @@ fn characteristic_limit_shift(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SizeDelta { .. }
+                | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. } => {}
             }
         }
@@ -498,6 +515,8 @@ pub(crate) fn ability_affinity(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SizeDelta { .. }
+                | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. } => None,
             })
     });
@@ -534,6 +553,8 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SizeDelta { .. }
+                | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. } => None,
             })
     });
@@ -794,6 +815,84 @@ pub fn characteristic_points_granted(entity: &Entity, ruleset: &Ruleset) -> i32 
         }
     }
     total
+}
+
+/// The character's derived Size: base 0 plus every [`Effect::SizeDelta`]
+/// (Large +1, Giant Blood +2, Small Frame −1, Dwarf −2), summed across
+/// selections. Size is not a bought Characteristic — it has no cost and no buy
+/// cap. Source: Core Rules.md:3975-3978, :4229-4231, :5996-5998, :6767-6769.
+pub fn size(entity: &Entity, ruleset: &Ruleset) -> i32 {
+    let mut total = 0;
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::SizeDelta { amount } = effect {
+                total += i32::from(*amount);
+            }
+        }
+    }
+    total
+}
+
+/// The free effective-score bonus a virtue/flaw grants to `characteristic`
+/// ([`Effect::CharacteristicScoreDelta`], e.g. Giant Blood +1 Str/Sta), summed
+/// across selections. Costs no buy points and stacks on top of the bought score.
+pub fn characteristic_score_bonus(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    characteristic: Characteristic,
+) -> i32 {
+    let mut bonus = 0;
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::CharacteristicScoreDelta {
+                characteristic: target,
+                amount,
+            } = effect
+                && Characteristic::from_id(target) == Some(characteristic)
+            {
+                bonus += i32::from(*amount);
+            }
+        }
+    }
+    bonus
+}
+
+/// The effective score of `characteristic`: the bought score plus any free
+/// [`Effect::CharacteristicScoreDelta`] bonus. The bonus may push the effective
+/// score beyond the normal ±5 ceiling (Giant Blood's +1 reaches +6).
+pub fn effective_characteristic_score(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    characteristic: Characteristic,
+) -> i32 {
+    let bought = entity
+        .characteristics
+        .get(&characteristic)
+        .copied()
+        .map_or(0, i32::from);
+    bought + characteristic_score_bonus(entity, ruleset, characteristic)
+}
+
+/// Non-zero characteristic bonuses, one per affected Characteristic (canonical
+/// order), for the UI to show alongside the bought score. Characteristics with
+/// no bonus are omitted.
+pub fn characteristic_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<CharacteristicBonus> {
+    Characteristic::ALL
+        .into_iter()
+        .filter_map(|c| {
+            let bonus = characteristic_score_bonus(entity, ruleset, c);
+            (bonus != 0).then_some(CharacteristicBonus {
+                characteristic: c,
+                bonus,
+            })
+        })
+        .collect()
 }
 
 /// The restricted XP pools an entity holds, with their consumed amounts (for the
@@ -1571,6 +1670,26 @@ mod tests {
             "kind": "virtue", "magnitude": "minor", "category": "supernatural",
             "entity_kinds": ["character"],
             "effects": [{ "type": "ability_score_grant", "ability": "ability.second_sight", "amount": 1 }]
+          },
+          {
+            "id": "virtue.giant_blood",
+            "kind": "virtue", "magnitude": "major", "category": "general",
+            "entity_kinds": ["character"],
+            "effects": [
+              { "type": "size_delta", "amount": 2 },
+              { "type": "characteristic_score_delta", "characteristic": "characteristic.str", "amount": 1 },
+              { "type": "characteristic_score_delta", "characteristic": "characteristic.sta", "amount": 1 }
+            ]
+          },
+          {
+            "id": "flaw.dwarf",
+            "kind": "flaw", "magnitude": "major", "category": "general",
+            "entity_kinds": ["character"],
+            "effects": [
+              { "type": "size_delta", "amount": -2 },
+              { "type": "characteristic_score_delta", "characteristic": "characteristic.str", "amount": -1 },
+              { "type": "characteristic_score_delta", "characteristic": "characteristic.sta", "amount": -1 }
+            ]
           }
         ]"#;
         let types = r#"[
@@ -1767,6 +1886,31 @@ mod tests {
             sel("virtue.improved_characteristics"),
         ]);
         assert_eq!(characteristic_points_granted(&e, &rs), 6);
+    }
+
+    #[test]
+    fn size_delta_sums_from_virtues_and_flaws() {
+        // Size is a derived stat (base 0) modified by SizeDelta effects
+        // (Giant Blood +2, Dwarf -2). Core:3975-3978, :5996-5998.
+        let rs = xp_ruleset();
+        assert_eq!(size(&xp_entity(vec![]), &rs), 0);
+        assert_eq!(size(&xp_entity(vec![sel("virtue.giant_blood")]), &rs), 2);
+        assert_eq!(size(&xp_entity(vec![sel("flaw.dwarf")]), &rs), -2);
+    }
+
+    #[test]
+    fn giant_blood_grants_free_characteristic_bonus_reaching_six() {
+        // Giant Blood adds a free +1 to Str and Sta that may raise the effective
+        // score as high as +6 (Core:3975-3978). The bought score is untouched.
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("virtue.giant_blood")]);
+        e.characteristics = BTreeMap::from([(Characteristic::Str, 5)]);
+        assert_eq!(characteristic_score_bonus(&e, &rs, Characteristic::Str), 1);
+        assert_eq!(characteristic_score_bonus(&e, &rs, Characteristic::Qik), 0);
+        assert_eq!(
+            effective_characteristic_score(&e, &rs, Characteristic::Str),
+            6
+        );
     }
 
     #[test]

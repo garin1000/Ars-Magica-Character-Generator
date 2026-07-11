@@ -10,12 +10,13 @@ use std::path::{Path, PathBuf};
 use std::collections::BTreeMap;
 
 use arm_rules::{
-    AbilityBonus, AbilityFloor, ArtBonus, Characteristic, Entity, EntityKind, LocalizedRuleset,
-    ReputationType, RestrictedXpPool, Ruleset, RulesetSources, Selection, ValidationMode,
-    ValidationResult, ability_bonuses, ability_score_floors, age_ability_cap, art_bonuses,
-    characteristic_caps, characteristic_floors, characteristic_points_granted, confidence,
-    effective_point_ceilings, granted_selections, reputation_grants, spell_levels_budget,
-    spell_levels_used, supernatural_free_slots, validate, xp_allocation,
+    AbilityBonus, AbilityFloor, ArtBonus, Characteristic, CharacteristicBonus, Entity, EntityKind,
+    LocalizedRuleset, ReputationType, RestrictedXpPool, Ruleset, RulesetSources, Selection,
+    ValidationMode, ValidationResult, ability_bonuses, ability_score_floors, age_ability_cap,
+    art_bonuses, characteristic_bonuses, characteristic_caps, characteristic_floors,
+    characteristic_points_granted, confidence, effective_point_ceilings, granted_selections,
+    reputation_grants, size, spell_levels_budget, spell_levels_used, supernatural_free_slots,
+    validate, xp_allocation,
 };
 use serde::Serialize;
 
@@ -53,6 +54,13 @@ pub struct EffectiveScores {
     /// Free starting-score floors a virtue grants to an ability (e.g. Second
     /// Sight → Second Sight 1), for the ability row's effective-score display.
     pub ability_score_floors: Vec<AbilityFloor>,
+    /// The character's derived Size (base 0; Large +1, Giant Blood +2, Small
+    /// Frame −1, Dwarf −2), for the character-sheet Size readout.
+    pub size: i32,
+    /// Free effective-score bonuses to Characteristics (Giant Blood +1 Str/Sta,
+    /// Dwarf −1), one per affected Characteristic, for the sheet to show the
+    /// effective score alongside the bought one.
+    pub characteristic_bonuses: Vec<CharacteristicBonus>,
     /// Virtue/Flaw Selections the entity's House grants (derived, never persisted),
     /// so the V/F view renders them read-only without re-deriving. Emitted in the
     /// House's declared grant order for a stable UI + snapshot ordering.
@@ -116,6 +124,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         restricted_xp_pools: allocation.restricted,
         characteristic_points_granted: characteristic_points_granted(entity, ruleset),
         ability_score_floors: ability_score_floors(entity, ruleset),
+        size: size(entity, ruleset),
+        characteristic_bonuses: characteristic_bonuses(entity, ruleset),
         granted_selections: granted_selections(entity, ruleset),
         virtue_budget,
         flaw_budget,

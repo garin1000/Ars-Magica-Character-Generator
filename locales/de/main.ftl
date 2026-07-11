@@ -79,6 +79,7 @@ ability-requires-training-marker = *
 
 # Eigenschaften-Punkteanzeige.
 characteristic-points = Punkte: { $used } / { $budget }
+characteristic-size = Größe: { $size }
 # Reiter-Bezeichnungen für den Hauptbereich des Editors.
 tab-characteristics = Eigenschaften
 tab-virtues-flaws = Tugenden & Fehler
