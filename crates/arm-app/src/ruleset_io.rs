@@ -47,9 +47,9 @@ pub struct EffectiveScores {
     /// The restricted experience pools (Educated/Warrior/Privileged) with how
     /// much of each the allocation consumes, for the per-pool XP bar.
     pub restricted_xp_pools: Vec<RestrictedXpPool>,
-    /// Extra Characteristic-buy points granted by Improved Characteristics, on
-    /// top of the ruleset's base `start_points`.
-    pub characteristic_points_granted: u32,
+    /// Net Characteristic-buy points granted by Improved / Weak Characteristics,
+    /// on top of the ruleset's base `start_points`. Signed (Weak subtracts).
+    pub characteristic_points_granted: i32,
     /// Free starting-score floors a virtue grants to an ability (e.g. Second
     /// Sight → Second Sight 1), for the ability row's effective-score display.
     pub ability_score_floors: Vec<AbilityFloor>,

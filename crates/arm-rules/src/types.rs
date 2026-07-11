@@ -404,15 +404,18 @@ pub enum Effect {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         categories: Vec<AbilityCategory>,
     },
-    /// Adds `amount` points to the Characteristic-buy budget (on top of
-    /// [`crate::characteristics::CharacteristicRules::start_points`]). Improved
-    /// Characteristics grants +3 and may be taken multiple times, so the grants
-    /// from every matching selection are summed.
+    /// Adjusts the Characteristic-buy budget by `amount` (on top of
+    /// [`crate::characteristics::CharacteristicRules::start_points`]). Signed:
+    /// Improved Characteristics grants +3 (`:4103-4105`), Weak Characteristics
+    /// removes 3 (`:7056-7058`); both stack, so the grants from every matching
+    /// selection are summed.
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4103-4105.
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4103-4105 (Improved),
+    /// `:7056-7058` (Weak).
     CharacteristicPoints {
-        /// Points added to the characteristic budget per selection.
-        amount: u8,
+        /// Points added to (or, when negative, removed from) the characteristic
+        /// budget per selection.
+        amount: i8,
     },
     /// Grants a free bought-score *floor* of `amount` in a fixed `ability`,
     /// costing no experience: the effective score is `max(bought, amount) +

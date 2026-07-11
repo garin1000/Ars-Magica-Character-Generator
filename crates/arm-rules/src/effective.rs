@@ -777,9 +777,10 @@ pub fn ability_score_floors(entity: &Entity, ruleset: &Ruleset) -> Vec<AbilityFl
         .collect()
 }
 
-/// Total Characteristic-buy points granted by [`Effect::CharacteristicPoints`]
-/// (Improved Characteristics, +3 each, stackable), summed across selections.
-pub fn characteristic_points_granted(entity: &Entity, ruleset: &Ruleset) -> u32 {
+/// Net Characteristic-buy points granted by [`Effect::CharacteristicPoints`],
+/// summed across selections. Signed: Improved Characteristics adds +3 each, Weak
+/// Characteristics subtracts 3 each; both stack, so the net may be negative.
+pub fn characteristic_points_granted(entity: &Entity, ruleset: &Ruleset) -> i32 {
     let mut total = 0;
     let selections = selections_for_effects(entity, ruleset);
     for selection in selections.iter() {
@@ -788,7 +789,7 @@ pub fn characteristic_points_granted(entity: &Entity, ruleset: &Ruleset) -> u32 
         };
         for effect in &item.effects {
             if let Effect::CharacteristicPoints { amount } = effect {
-                total += u32::from(*amount);
+                total += i32::from(*amount);
             }
         }
     }
@@ -1560,6 +1561,12 @@ mod tests {
             "effects": [{ "type": "characteristic_points", "amount": 3 }]
           },
           {
+            "id": "flaw.weak_characteristics",
+            "kind": "flaw", "magnitude": "minor", "category": "general",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "characteristic_points", "amount": -3 }]
+          },
+          {
             "id": "virtue.second_sight",
             "kind": "virtue", "magnitude": "minor", "category": "supernatural",
             "entity_kinds": ["character"],
@@ -1760,6 +1767,20 @@ mod tests {
             sel("virtue.improved_characteristics"),
         ]);
         assert_eq!(characteristic_points_granted(&e, &rs), 6);
+    }
+
+    #[test]
+    fn weak_characteristics_grants_negative_points_and_nets_with_improved() {
+        // Weak Characteristics removes 3 budget points (Core:7056-7058); the grant
+        // is signed and nets against Improved Characteristics (+3).
+        let rs = xp_ruleset();
+        let weak = xp_entity(vec![sel("flaw.weak_characteristics")]);
+        assert_eq!(characteristic_points_granted(&weak, &rs), -3);
+        let netted = xp_entity(vec![
+            sel("virtue.improved_characteristics"),
+            sel("flaw.weak_characteristics"),
+        ]);
+        assert_eq!(characteristic_points_granted(&netted, &rs), 0);
     }
 
     #[test]
