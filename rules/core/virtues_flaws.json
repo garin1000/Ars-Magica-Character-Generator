@@ -1,5 +1,147 @@
 [
   {
+    "id": "flaw.a_deal_with_the_devil",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5905, 5908] }
+  },
+  {
+    "id": "flaw.abandoned_apprentice",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5641, 5650] }
+  },
+  {
+    "id": "flaw.ability_block",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5651, 5654] }
+  },
+  {
+    "id": "flaw.afflicted_tongue",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5655, 5658] }
+  },
+  {
+    "id": "flaw.age_quickly",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5659, 5662] }
+  },
+  {
+    "id": "flaw.ambitious_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.ambitious_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5663, 5666] }
+  },
+  {
+    "id": "flaw.ambitious_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.ambitious_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5663, 5666] }
+  },
+  {
+    "id": "flaw.anchored_to_the_land",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5667, 5670] }
+  },
+  {
+    "id": "flaw.animal_companion",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5671, 5674] }
+  },
+  {
+    "id": "flaw.apostate",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5675, 5678] }
+  },
+  {
+    "id": "flaw.arthritis",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5679, 5682] }
+  },
+  {
+    "id": "flaw.avaricious_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.avaricious_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5683, 5686] }
+  },
+  {
+    "id": "flaw.avaricious_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.avaricious_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5683, 5686] }
+  },
+  {
+    "id": "flaw.baneful_circumstances",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5687, 5690] }
+  },
+  {
+    "id": "flaw.beloved_rival_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.beloved_rival_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5691, 5698] }
+  },
+  {
+    "id": "flaw.beloved_rival_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.beloved_rival_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5691, 5698] }
+  },
+  {
+    "id": "flaw.bigamist",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5699, 5702] }
+  },
+  {
     "id": "flaw.black_sheep",
     "kind": "flaw",
     "magnitude": "major",
@@ -7,6 +149,14 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "grants_reputation", "kind": "local", "score": 2 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5703, 5705] }
+  },
+  {
+    "id": "flaw.blackmail",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5707, 5710] }
   },
   {
     "id": "flaw.blatant_gift",
@@ -18,6 +168,359 @@
     "prerequisites": { "kind": "has", "value": "virtue.the_gift" }
   },
   {
+    "id": "flaw.blatant_magical_air",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5715, 5718] }
+  },
+  {
+    "id": "flaw.blind",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5719, 5722] }
+  },
+  {
+    "id": "flaw.bound_casting_tools",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5723, 5726] }
+  },
+  {
+    "id": "flaw.bound_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5727, 5730] }
+  },
+  {
+    "id": "flaw.bound_to_realm",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5731, 5734] }
+  },
+  {
+    "id": "flaw.bound_to_role_role",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5735, 5748] }
+  },
+  {
+    "id": "flaw.branded_criminal",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5749, 5752] }
+  },
+  {
+    "id": "flaw.broken_vessel",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5753, 5756] }
+  },
+  {
+    "id": "flaw.brutal_artist",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5757, 5760] }
+  },
+  {
+    "id": "flaw.busybody",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5761, 5764] }
+  },
+  {
+    "id": "flaw.carefree",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5765, 5768] }
+  },
+  {
+    "id": "flaw.careless_sorcerer",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5769, 5772] }
+  },
+  {
+    "id": "flaw.careless_with_ability",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5773, 5776] }
+  },
+  {
+    "id": "flaw.castratus",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5777, 5780] }
+  },
+  {
+    "id": "flaw.ceremonial_spontaneous_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5781, 5784] }
+  },
+  {
+    "id": "flaw.chaotic_magic",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5785, 5788] }
+  },
+  {
+    "id": "flaw.church_upbringing",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5789, 5792] }
+  },
+  {
+    "id": "flaw.close_family_ties",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5793, 5796] }
+  },
+  {
+    "id": "flaw.clumsy",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5797, 5800] }
+  },
+  {
+    "id": "flaw.clumsy_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5801, 5804] }
+  },
+  {
+    "id": "flaw.companion_animal",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5805, 5808] }
+  },
+  {
+    "id": "flaw.compassionate_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.compassionate_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5809, 5812] }
+  },
+  {
+    "id": "flaw.compassionate_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.compassionate_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5809, 5812] }
+  },
+  {
+    "id": "flaw.compulsion_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.compulsion_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5813, 5816] }
+  },
+  {
+    "id": "flaw.compulsion_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.compulsion_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5813, 5816] }
+  },
+  {
+    "id": "flaw.compulsive_lying_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.compulsive_lying_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5817, 5820] }
+  },
+  {
+    "id": "flaw.compulsive_lying_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.compulsive_lying_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5817, 5820] }
+  },
+  {
+    "id": "flaw.consumed_casting_tools",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5839, 5842] }
+  },
+  {
+    "id": "flaw.continence",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5843, 5846] }
+  },
+  {
+    "id": "flaw.corrupted_abilities",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5847, 5852] }
+  },
+  {
+    "id": "flaw.corrupted_arts",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5853, 5858] }
+  },
+  {
+    "id": "flaw.corrupted_spells",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5859, 5864] }
+  },
+  {
+    "id": "flaw.covenant_upbringing",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5865, 5868] }
+  },
+  {
+    "id": "flaw.craving_for_travel",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5869, 5872] }
+  },
+  {
+    "id": "flaw.creative_block",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5873, 5876] }
+  },
+  {
+    "id": "flaw.crippled",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5877, 5880] }
+  },
+  {
+    "id": "flaw.curse_of_slander",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5881, 5884] }
+  },
+  {
+    "id": "flaw.curse_of_venus",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5885, 5888] }
+  },
+  {
+    "id": "flaw.cursed_guile",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5889, 5892] }
+  },
+  {
+    "id": "flaw.cyclic_magic_negative",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5893, 5896] }
+  },
+  {
+    "id": "flaw.dark_secret",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5897, 5900] }
+  },
+  {
+    "id": "flaw.deaf",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5901, 5904] }
+  },
+  {
+    "id": "flaw.deficient_form",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5909, 5912] }
+  },
+  {
     "id": "flaw.deficient_technique",
     "kind": "flaw",
     "magnitude": "major",
@@ -25,6 +528,162 @@
     "entity_kinds": ["character"],
     "parameters": [{ "key": "technique", "type": "ref", "domain": "art" }],
     "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" }
+  },
+  {
+    "id": "flaw.deleterious_circumstances",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5917, 5920] }
+  },
+  {
+    "id": "flaw.delusion",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5921, 5925] }
+  },
+  {
+    "id": "flaw.demonic_familiar",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5926, 5931] }
+  },
+  {
+    "id": "flaw.dependent",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5932, 5935] }
+  },
+  {
+    "id": "flaw.depraved_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.depraved_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5936, 5939] }
+  },
+  {
+    "id": "flaw.depraved_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.depraved_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5936, 5939] }
+  },
+  {
+    "id": "flaw.depressed",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5940, 5943] }
+  },
+  {
+    "id": "flaw.deteriorating_power",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5944, 5949] }
+  },
+  {
+    "id": "flaw.devoted_parent",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5950, 5953] }
+  },
+  {
+    "id": "flaw.dhimmi",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5954, 5957] }
+  },
+  {
+    "id": "flaw.diabolic_past",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5958, 5961] }
+  },
+  {
+    "id": "flaw.difficult_longevity_ritual",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5962, 5965] }
+  },
+  {
+    "id": "flaw.difficult_spontaneous_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5966, 5971] }
+  },
+  {
+    "id": "flaw.difficult_underlings",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5976, 5979] }
+  },
+  {
+    "id": "flaw.disfigured",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5980, 5983] }
+  },
+  {
+    "id": "flaw.disjointed_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5972, 5975] }
+  },
+  {
+    "id": "flaw.disorientating_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5984, 5987] }
+  },
+  {
+    "id": "flaw.driven_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.driven_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5988, 5991] }
+  },
+  {
+    "id": "flaw.driven_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.driven_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5988, 5991] }
   },
   {
     "id": "flaw.dutybound",
@@ -35,12 +694,578 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5992, 5995] }
   },
   {
+    "id": "flaw.dwarf",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5996, 5999] }
+  },
+  {
+    "id": "flaw.employed_by_company",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6000, 6003] }
+  },
+  {
+    "id": "flaw.enemies",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6004, 6007] }
+  },
+  {
+    "id": "flaw.enfeebled",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6008, 6011] }
+  },
+  {
+    "id": "flaw.envied_beauty",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6012, 6015] }
+  },
+  {
+    "id": "flaw.envious_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.envious_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6016, 6019] }
+  },
+  {
+    "id": "flaw.envious_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.envious_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6016, 6019] }
+  },
+  {
+    "id": "flaw.environmental_magic_condition",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6020, 6023] }
+  },
+  {
+    "id": "flaw.environmental_sensitivity",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6024, 6027] }
+  },
+  {
+    "id": "flaw.evil_destiny",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6028, 6035] }
+  },
+  {
+    "id": "flaw.evil_eye",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6036, 6039] }
+  },
+  {
+    "id": "flaw.exciting_experimentation",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6040, 6043] }
+  },
+  {
+    "id": "flaw.excommunicate",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6044, 6047] }
+  },
+  {
+    "id": "flaw.exiled_atlantean",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6048, 6051] }
+  },
+  {
     "id": "flaw.faerie_friend",
     "kind": "flaw",
     "magnitude": "minor",
     "category": "story",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6052, 6055] }
+  },
+  {
+    "id": "flaw.faerie_upbringing",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6056, 6059] }
+  },
+  {
+    "id": "flaw.failed_journeyman",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6060, 6063] }
+  },
+  {
+    "id": "flaw.failed_master",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6064, 6067] }
+  },
+  {
+    "id": "flaw.failed_monk",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6068, 6071] }
+  },
+  {
+    "id": "flaw.failed_student",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6072, 6075] }
+  },
+  {
+    "id": "flaw.false_power",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "supernatural",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6080, 6097] }
+  },
+  {
+    "id": "flaw.favors",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6098, 6101] }
+  },
+  {
+    "id": "flaw.fear",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6102, 6105] }
+  },
+  {
+    "id": "flaw.feral_scent",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6106, 6109] }
+  },
+  {
+    "id": "flaw.feral_upbringing",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6110, 6113] }
+  },
+  {
+    "id": "flaw.fettered_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6114, 6117] }
+  },
+  {
+    "id": "flaw.feud",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6118, 6121] }
+  },
+  {
+    "id": "flaw.fickle_nature",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6122, 6125] }
+  },
+  {
+    "id": "flaw.fish_out_of_water_terrain",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6126, 6133] }
+  },
+  {
+    "id": "flaw.flashbacks",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6134, 6141] }
+  },
+  {
+    "id": "flaw.flawed_parma_magica",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6142, 6145] }
+  },
+  {
+    "id": "flaw.flawed_powers",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6146, 6149] }
+  },
+  {
+    "id": "flaw.fluctuating_fortune",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6150, 6153] }
+  },
+  {
+    "id": "flaw.follower",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6154, 6157] }
+  },
+  {
+    "id": "flaw.foreign_upbringing",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6158, 6161] }
+  },
+  {
+    "id": "flaw.form_monstrosity",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6162, 6185] }
+  },
+  {
+    "id": "flaw.fragile_constitution",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6186, 6189] }
+  },
+  {
+    "id": "flaw.frail",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6190, 6193] }
+  },
+  {
+    "id": "flaw.fury",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6194, 6197] }
+  },
+  {
+    "id": "flaw.gabai",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6198, 6201] }
+  },
+  {
+    "id": "flaw.gender_nonconforming_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.gender_nonconforming_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6202, 6205] }
+  },
+  {
+    "id": "flaw.gender_nonconforming_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.gender_nonconforming_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6202, 6205] }
+  },
+  {
+    "id": "flaw.generous_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.generous_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6206, 6209] }
+  },
+  {
+    "id": "flaw.generous_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.generous_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6206, 6209] }
+  },
+  {
+    "id": "flaw.greater_malediction",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6210, 6213] }
+  },
+  {
+    "id": "flaw.greedy_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.greedy_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6214, 6217] }
+  },
+  {
+    "id": "flaw.greedy_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.greedy_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6214, 6217] }
+  },
+  {
+    "id": "flaw.grudge",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6218, 6221] }
+  },
+  {
+    "id": "flaw.gullible",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6222, 6225] }
+  },
+  {
+    "id": "flaw.hallucinations",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6226, 6229] }
+  },
+  {
+    "id": "flaw.harmless_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6230, 6235] }
+  },
+  {
+    "id": "flaw.hatred_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.hatred_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6236, 6239] }
+  },
+  {
+    "id": "flaw.hatred_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.hatred_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6236, 6239] }
+  },
+  {
+    "id": "flaw.hedge_wizard",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6240, 6243] }
+  },
+  {
+    "id": "flaw.heir",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6244, 6247] }
+  },
+  {
+    "id": "flaw.hermetic_patron",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6248, 6255] }
+  },
+  {
+    "id": "flaw.higher_purpose_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.higher_purpose_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6256, 6259] }
+  },
+  {
+    "id": "flaw.higher_purpose_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.higher_purpose_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6256, 6259] }
+  },
+  {
+    "id": "flaw.hobbled",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6260, 6263] }
+  },
+  {
+    "id": "flaw.horrifying_appearance_snake_legs",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6264, 6267] }
+  },
+  {
+    "id": "flaw.humble",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6268, 6271] }
+  },
+  {
+    "id": "flaw.hunchback",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6272, 6275] }
+  },
+  {
+    "id": "flaw.hunger_for_form_magic",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6276, 6279] }
+  },
+  {
+    "id": "flaw.imagined_folk_tradition_vulnerability",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6280, 6283] }
+  },
+  {
+    "id": "flaw.impious_friend",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6284, 6289] }
+  },
+  {
+    "id": "flaw.incompatible_arts",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6290, 6293] }
+  },
+  {
+    "id": "flaw.incomprehensible",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6294, 6297] }
+  },
+  {
+    "id": "flaw.inconstant_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6298, 6301] }
+  },
+  {
+    "id": "flaw.independent_craftsman",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6302, 6305] }
+  },
+  {
+    "id": "flaw.indiscreet",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6306, 6309] }
   },
   {
     "id": "flaw.infamous",
@@ -52,12 +1277,549 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6310, 6312] }
   },
   {
+    "id": "flaw.infamous_master",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6314, 6317] }
+  },
+  {
+    "id": "flaw.inscribed_shadow",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6318, 6321] }
+  },
+  {
+    "id": "flaw.jinxed",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6322, 6325] }
+  },
+  {
+    "id": "flaw.judged_unfairly",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6326, 6329] }
+  },
+  {
+    "id": "flaw.lame",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6330, 6333] }
+  },
+  {
+    "id": "flaw.lecherous_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.lecherous_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6334, 6337] }
+  },
+  {
+    "id": "flaw.lecherous_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.lecherous_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6334, 6337] }
+  },
+  {
+    "id": "flaw.leprosy",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6338, 6341] }
+  },
+  {
+    "id": "flaw.lesser_malediction",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6342, 6345] }
+  },
+  {
+    "id": "flaw.limited_magic_resistance",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6346, 6349] }
+  },
+  {
+    "id": "flaw.lingering_injury",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6350, 6353] }
+  },
+  {
+    "id": "flaw.loose_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6354, 6357] }
+  },
+  {
+    "id": "flaw.lost_love",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6358, 6361] }
+  },
+  {
+    "id": "flaw.low_self_esteem",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6362, 6365] }
+  },
+  {
+    "id": "flaw.low_tolerance",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6366, 6369] }
+  },
+  {
+    "id": "flaw.lycanthrope",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6370, 6377] }
+  },
+  {
+    "id": "flaw.magic_addiction",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6378, 6381] }
+  },
+  {
+    "id": "flaw.magical_air",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6382, 6385] }
+  },
+  {
+    "id": "flaw.magical_being_companion",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6386, 6391] }
+  },
+  {
+    "id": "flaw.magical_fascination",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6392, 6395] }
+  },
+  {
+    "id": "flaw.manifest_sin",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6396, 6407] }
+  },
+  {
+    "id": "flaw.manufactured_ignorance",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6408, 6413] }
+  },
+  {
+    "id": "flaw.many_marriageable_daughters",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6414, 6417] }
+  },
+  {
+    "id": "flaw.master_of_none",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6418, 6421] }
+  },
+  {
+    "id": "flaw.meddler_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.meddler_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6422, 6425] }
+  },
+  {
+    "id": "flaw.meddler_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.meddler_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6422, 6425] }
+  },
+  {
+    "id": "flaw.mentor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6426, 6429] }
+  },
+  {
+    "id": "flaw.missing_ear",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6430, 6433] }
+  },
+  {
+    "id": "flaw.missing_eye",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6434, 6437] }
+  },
+  {
+    "id": "flaw.missing_hand",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6438, 6441] }
+  },
+  {
+    "id": "flaw.mistaken_identity",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6442, 6445] }
+  },
+  {
+    "id": "flaw.monastic_vows",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6446, 6449] }
+  },
+  {
+    "id": "flaw.monastic_vows_hermetic",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6450, 6453] }
+  },
+  {
+    "id": "flaw.monstrous_blood",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6454, 6467] }
+  },
+  {
+    "id": "flaw.motion_sickness",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6468, 6471] }
+  },
+  {
+    "id": "flaw.mute",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6472, 6475] }
+  },
+  {
+    "id": "flaw.necessary_condition",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6476, 6479] }
+  },
+  {
+    "id": "flaw.necessary_realm_aura_for_ability",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6480, 6487] }
+  },
+  {
+    "id": "flaw.night_terrors",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6488, 6495] }
+  },
+  {
+    "id": "flaw.no_hands",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6496, 6499] }
+  },
+  {
+    "id": "flaw.no_sense_of_direction",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6500, 6503] }
+  },
+  {
+    "id": "flaw.nocturnal",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6504, 6507] }
+  },
+  {
+    "id": "flaw.noncombatant",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6508, 6511] }
+  },
+  {
+    "id": "flaw.oath_of_fealty",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6512, 6515] }
+  },
+  {
+    "id": "flaw.obese",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6516, 6519] }
+  },
+  {
+    "id": "flaw.obsessed_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.obsessed_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6520, 6523] }
+  },
+  {
+    "id": "flaw.obsessed_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.obsessed_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6520, 6523] }
+  },
+  {
+    "id": "flaw.offensive_to_beings",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6524, 6533] }
+  },
+  {
+    "id": "flaw.optimistic_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.optimistic_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6534, 6537] }
+  },
+  {
+    "id": "flaw.optimistic_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.optimistic_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6534, 6537] }
+  },
+  {
+    "id": "flaw.outcast",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6538, 6541] }
+  },
+  {
+    "id": "flaw.outlaw",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6542, 6545] }
+  },
+  {
+    "id": "flaw.outlaw_leader",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6546, 6549] }
+  },
+  {
+    "id": "flaw.outsider_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.outsider_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6550, 6561] }
+  },
+  {
+    "id": "flaw.outsider_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.outsider_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6550, 6561] }
+  },
+  {
+    "id": "flaw.overconfident_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.overconfident_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6562, 6565] }
+  },
+  {
+    "id": "flaw.overconfident_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.overconfident_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6562, 6565] }
+  },
+  {
+    "id": "flaw.oversensitive_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.oversensitive_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6566, 6569] }
+  },
+  {
+    "id": "flaw.oversensitive_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.oversensitive_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6566, 6569] }
+  },
+  {
     "id": "flaw.pagan",
     "kind": "flaw",
     "magnitude": "major",
     "category": "personality",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6570, 6573] }
+  },
+  {
+    "id": "flaw.painful_magic",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6574, 6577] }
+  },
+  {
+    "id": "flaw.palsied_hands",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6578, 6581] }
+  },
+  {
+    "id": "flaw.pessimistic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6582, 6585] }
+  },
+  {
+    "id": "flaw.pious_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.pious_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6586, 6589] }
+  },
+  {
+    "id": "flaw.pious_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.pious_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6586, 6589] }
+  },
+  {
+    "id": "flaw.plagued_by_supernatural_entity",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6590, 6593] }
   },
   {
     "id": "flaw.poor_characteristic",
@@ -71,11 +1833,531 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6598, 6600] }
   },
   {
+    "id": "flaw.poor_concentration",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6602, 6605] }
+  },
+  {
+    "id": "flaw.poor_eyesight",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6606, 6609] }
+  },
+  {
+    "id": "flaw.poor_formulaic_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6610, 6613] }
+  },
+  {
+    "id": "flaw.poor_hearing",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6614, 6617] }
+  },
+  {
+    "id": "flaw.poor_living_conditions",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6618, 6621] }
+  },
+  {
+    "id": "flaw.poor_memory",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6622, 6625] }
+  },
+  {
     "id": "flaw.poor_student",
     "kind": "flaw",
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"]
+  },
+  {
+    "id": "flaw.primitive_equipment",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6630, 6633] }
+  },
+  {
+    "id": "flaw.primogeniture_lineage",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6634, 6637] }
+  },
+  {
+    "id": "flaw.prohibition",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6638, 6641] }
+  },
+  {
+    "id": "flaw.proud_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.proud_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6642, 6645] }
+  },
+  {
+    "id": "flaw.proud_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.proud_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6642, 6645] }
+  },
+  {
+    "id": "flaw.raised_from_the_dead",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6646, 6649] }
+  },
+  {
+    "id": "flaw.raised_in_the_gutter",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6650, 6653] }
+  },
+  {
+    "id": "flaw.realm_stigmatic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6654, 6658] }
+  },
+  {
+    "id": "flaw.rebellious_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.rebellious_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6659, 6662] }
+  },
+  {
+    "id": "flaw.rebellious_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.rebellious_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6659, 6662] }
+  },
+  {
+    "id": "flaw.reckless_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.reckless_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6663, 6666] }
+  },
+  {
+    "id": "flaw.reckless_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.reckless_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6663, 6666] }
+  },
+  {
+    "id": "flaw.reclusive",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6667, 6670] }
+  },
+  {
+    "id": "flaw.rector",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6671, 6674] }
+  },
+  {
+    "id": "flaw.regular",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6675, 6678] }
+  },
+  {
+    "id": "flaw.repellent",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "general",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6679, 6682] }
+  },
+  {
+    "id": "flaw.restricted_learning",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6683, 6686] }
+  },
+  {
+    "id": "flaw.restricted_power",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6687, 6690] }
+  },
+  {
+    "id": "flaw.restriction",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6691, 6694] }
+  },
+  {
+    "id": "flaw.rigid_magic",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6695, 6698] }
+  },
+  {
+    "id": "flaw.rolling_stone",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6699, 6702] }
+  },
+  {
+    "id": "flaw.savantism",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6703, 6708] }
+  },
+  {
+    "id": "flaw.secretive",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6709, 6712] }
+  },
+  {
+    "id": "flaw.seeker",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6713, 6716] }
+  },
+  {
+    "id": "flaw.servant_of_the_land",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6717, 6720] }
+  },
+  {
+    "id": "flaw.sheltered_upbringing",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6721, 6724] }
+  },
+  {
+    "id": "flaw.short_attention_span",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6725, 6728] }
+  },
+  {
+    "id": "flaw.short_lived_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6729, 6732] }
+  },
+  {
+    "id": "flaw.short_of_breath",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6733, 6736] }
+  },
+  {
+    "id": "flaw.short_ranged_magic",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6737, 6740] }
+  },
+  {
+    "id": "flaw.simple_minded",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6741, 6744] }
+  },
+  {
+    "id": "flaw.sleep_disorder",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6745, 6750] }
+  },
+  {
+    "id": "flaw.slothful",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6751, 6754] }
+  },
+  {
+    "id": "flaw.slow_caster",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6755, 6758] }
+  },
+  {
+    "id": "flaw.slow_power",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6759, 6762] }
+  },
+  {
+    "id": "flaw.slow_reflexes",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6763, 6766] }
+  },
+  {
+    "id": "flaw.small_frame",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6767, 6770] }
+  },
+  {
+    "id": "flaw.social_handicap",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6771, 6774] }
+  },
+  {
+    "id": "flaw.soft_hearted",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6775, 6778] }
+  },
+  {
+    "id": "flaw.spontaneous_casting_tools",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6779, 6782] }
+  },
+  {
+    "id": "flaw.stigmatic_catalyst",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6783, 6786] }
+  },
+  {
+    "id": "flaw.stockade_parma_magica",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6787, 6790] }
+  },
+  {
+    "id": "flaw.stuck_in_your_ways",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6791, 6794] }
+  },
+  {
+    "id": "flaw.study_requirement",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6795, 6798] }
+  },
+  {
+    "id": "flaw.supernatural_nuisance",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6799, 6802] }
+  },
+  {
+    "id": "flaw.suppressed_gift",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6803, 6810] }
+  },
+  {
+    "id": "flaw.surgical_empiricus",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6811, 6814] }
+  },
+  {
+    "id": "flaw.susceptibility_to_divine_power",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6815, 6818] }
+  },
+  {
+    "id": "flaw.susceptibility_to_faerie_power",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6819, 6822] }
+  },
+  {
+    "id": "flaw.susceptibility_to_infernal_power",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6823, 6826] }
+  },
+  {
+    "id": "flaw.susceptibility_to_sunlight",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6827, 6830] }
+  },
+  {
+    "id": "flaw.susceptibility_to_warping",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6831, 6838] }
+  },
+  {
+    "id": "flaw.tainted_offspring",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6839, 6842] }
+  },
+  {
+    "id": "flaw.tainted_with_evil",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6843, 6846] }
+  },
+  {
+    "id": "flaw.temperate",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6847, 6850] }
+  },
+  {
+    "id": "flaw.the_constant_expression",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5821, 5838] }
+  },
+  {
+    "id": "flaw.the_falling_evil",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6076, 6079] }
+  },
+  {
+    "id": "flaw.tormenting_master",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6851, 6854] }
   },
   {
     "id": "flaw.tragic_life",
@@ -84,6 +2366,307 @@
     "category": "story",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6855, 6870] }
+  },
+  {
+    "id": "flaw.true_love_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.true_love_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6871, 6878] }
+  },
+  {
+    "id": "flaw.true_love_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.true_love_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6871, 6878] }
+  },
+  {
+    "id": "flaw.twilight_prone",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6879, 6882] }
+  },
+  {
+    "id": "flaw.tzadik_nistar",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6883, 6886] }
+  },
+  {
+    "id": "flaw.unbaptized",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6887, 6890] }
+  },
+  {
+    "id": "flaw.unbearable_to_beings",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6891, 6898] }
+  },
+  {
+    "id": "flaw.uncertain_faith",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6899, 6906] }
+  },
+  {
+    "id": "flaw.uncontrollable_strength",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6907, 6910] }
+  },
+  {
+    "id": "flaw.unhappily_married",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6911, 6914] }
+  },
+  {
+    "id": "flaw.unimaginative_learner",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6915, 6918] }
+  },
+  {
+    "id": "flaw.uninspirational",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6919, 6922] }
+  },
+  {
+    "id": "flaw.university_dean",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6923, 6926] }
+  },
+  {
+    "id": "flaw.unlucky",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6927, 6930] }
+  },
+  {
+    "id": "flaw.unnatural_magic",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6931, 6934] }
+  },
+  {
+    "id": "flaw.unpredictable_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6935, 6938] }
+  },
+  {
+    "id": "flaw.unruly_air",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6939, 6942] }
+  },
+  {
+    "id": "flaw.unspecialized",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6943, 6946] }
+  },
+  {
+    "id": "flaw.unstructured_caster",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6947, 6950] }
+  },
+  {
+    "id": "flaw.usurer",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6951, 6954] }
+  },
+  {
+    "id": "flaw.vendetta",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6955, 6958] }
+  },
+  {
+    "id": "flaw.vengeful_powers",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6959, 6976] }
+  },
+  {
+    "id": "flaw.viaticarus",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6977, 6984] }
+  },
+  {
+    "id": "flaw.visions",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6985, 6988] }
+  },
+  {
+    "id": "flaw.vow_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.vow_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6989, 6992] }
+  },
+  {
+    "id": "flaw.vow_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.vow_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6989, 6992] }
+  },
+  {
+    "id": "flaw.vulnerable_casting",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6993, 7004] }
+  },
+  {
+    "id": "flaw.vulnerable_magic",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7005, 7010] }
+  },
+  {
+    "id": "flaw.vulnerable_to_folk_tradition",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7011, 7014] }
+  },
+  {
+    "id": "flaw.wanderlust",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "story",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7015, 7018] }
+  },
+  {
+    "id": "flaw.warped_by_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7019, 7022] }
+  },
+  {
+    "id": "flaw.warped_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7023, 7026] }
+  },
+  {
+    "id": "flaw.warped_senses",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7027, 7051] }
+  },
+  {
+    "id": "flaw.waster_of_vis",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7052, 7055] }
+  },
+  {
+    "id": "flaw.weak_characteristics",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7056, 7059] }
+  },
+  {
+    "id": "flaw.weak_enchanter",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7060, 7063] }
+  },
+  {
+    "id": "flaw.weak_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7064, 7067] }
+  },
+  {
+    "id": "flaw.weak_magic_resistance",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7068, 7071] }
   },
   {
     "id": "flaw.weak_parens",
@@ -96,6 +2679,107 @@
       { "type": "general_xp", "amount": -60 }
     ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7072, 7074] }
+  },
+  {
+    "id": "flaw.weak_personality",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7076, 7079] }
+  },
+  {
+    "id": "flaw.weak_scholar",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7080, 7083] }
+  },
+  {
+    "id": "flaw.weak_spontaneous_magic",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7084, 7089] }
+  },
+  {
+    "id": "flaw.weak_willed",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7094, 7097] }
+  },
+  {
+    "id": "flaw.weakness_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.weakness_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7090, 7093] }
+  },
+  {
+    "id": "flaw.weakness_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.weakness_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7090, 7093] }
+  },
+  {
+    "id": "flaw.weird_magic",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7098, 7101] }
+  },
+  {
+    "id": "flaw.witch_marks",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "general",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7102, 7105] }
+  },
+  {
+    "id": "flaw.wrathful_major",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.wrathful_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7106, 7119] }
+  },
+  {
+    "id": "flaw.wrathful_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "category": "personality",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.wrathful_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7106, 7119] }
+  },
+  {
+    "id": "virtue.academic_concentration_subject",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3362, 3367] }
+  },
+  {
+    "id": "virtue.adept_laboratory_student",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3368, 3371] }
   },
   {
     "id": "virtue.affinity_ability",
@@ -122,12 +2806,347 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3376, 3378] }
   },
   {
+    "id": "virtue.alim",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3380, 3383] }
+  },
+  {
+    "id": "virtue.all_according_to_plan",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3384, 3387] }
+  },
+  {
+    "id": "virtue.alluring_to_beings",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3388, 3395] }
+  },
+  {
+    "id": "virtue.almogaten",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3396, 3403] }
+  },
+  {
+    "id": "virtue.almogavar",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3404, 3409] }
+  },
+  {
+    "id": "virtue.amorphous_major",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.amorphous_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3410, 3413] }
+  },
+  {
+    "id": "virtue.amorphous_minor",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.amorphous_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3410, 3413] }
+  },
+  {
+    "id": "virtue.animal_ken",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3414, 3417] }
+  },
+  {
+    "id": "virtue.apprentice",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3418, 3421] }
+  },
+  {
+    "id": "virtue.apt_student",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3422, 3425] }
+  },
+  {
+    "id": "virtue.aptitude_for_sin",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3426, 3429] }
+  },
+  {
+    "id": "virtue.arcane_lore",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3430, 3435] }
+  },
+  {
+    "id": "virtue.archieunuch",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3436, 3439] }
+  },
+  {
+    "id": "virtue.aristotelian_training",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3440, 3443] }
+  },
+  {
+    "id": "virtue.atlantean_magic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3444, 3469] }
+  },
+  {
+    "id": "virtue.baccalaureus",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3470, 3475] }
+  },
+  {
+    "id": "virtue.beadle",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3480, 3483] }
+  },
+  {
+    "id": "virtue.bee_king",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3484, 3499] }
+  },
+  {
+    "id": "virtue.berserk",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3500, 3503] }
+  },
+  {
     "id": "virtue.blood_of_the_nephilim",
     "kind": "virtue",
     "magnitude": "major",
     "category": "supernatural",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica 5e - Realms of Power - The Divine (Revised).md", "lines": [1941, 1954] }
+  },
+  {
+    "id": "virtue.book_learner",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3519, 3522] }
+  },
+  {
+    "id": "virtue.boosted_magic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3523, 3528] }
+  },
+  {
+    "id": "virtue.brother_chaplain",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3529, 3532] }
+  },
+  {
+    "id": "virtue.brother_knight",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3533, 3536] }
+  },
+  {
+    "id": "virtue.brother_sergeant",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3537, 3540] }
+  },
+  {
+    "id": "virtue.bureaucrat",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3541, 3544] }
+  },
+  {
+    "id": "virtue.capo",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3545, 3548] }
+  },
+  {
+    "id": "virtue.cathedral_school_master",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3549, 3554] }
+  },
+  {
+    "id": "virtue.cautious_sorcerer",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3555, 3558] }
+  },
+  {
+    "id": "virtue.cautious_with_ability",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3559, 3562] }
+  },
+  {
+    "id": "virtue.clan_ilfetu",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3566] }
+  },
+  {
+    "id": "virtue.clear_thinker",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3567, 3570] }
+  },
+  {
+    "id": "virtue.clerk",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3571, 3574] }
+  },
+  {
+    "id": "virtue.command_animals",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3575, 3578] }
+  },
+  {
+    "id": "virtue.commanding_aura",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3579, 3596] }
+  },
+  {
+    "id": "virtue.common_sense",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3597, 3600] }
+  },
+  {
+    "id": "virtue.convoluted_mind",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3601, 3604] }
+  },
+  {
+    "id": "virtue.corpse_magic",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3605, 3608] }
+  },
+  {
+    "id": "virtue.covenfolk",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3609, 3612] }
+  },
+  {
+    "id": "virtue.craft_guild_training",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3613, 3616] }
+  },
+  {
+    "id": "virtue.crafters_healing",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3617, 3620] }
+  },
+  {
+    "id": "virtue.craftsman",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3621, 3624] }
   },
   {
     "id": "virtue.curse_throwing",
@@ -137,6 +3156,38 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "ability_score_grant", "ability": "ability.curse_throwing", "amount": 1 }],
     "source": { "file": "Ars Magica 5e - Realms of Power - Faerie.md", "lines": [6342, 6347] }
+  },
+  {
+    "id": "virtue.custos",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3629, 3634] }
+  },
+  {
+    "id": "virtue.cyclic_magic_positive",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3635, 3638] }
+  },
+  {
+    "id": "virtue.death_prophecy",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3639, 3644] }
+  },
+  {
+    "id": "virtue.deft_form",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3645, 3648] }
   },
   {
     "id": "virtue.demonic_blood",
@@ -174,6 +3225,30 @@
     "source": { "file": "Ars Magica 5e - Realms of Power - The Infernal.md", "lines": [4144, 4149] }
   },
   {
+    "id": "virtue.diedne_magic",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3675, 3682] }
+  },
+  {
+    "id": "virtue.doctor_in_faculty",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3683, 3698] }
+  },
+  {
+    "id": "virtue.domestic_animal",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3699, 3702] }
+  },
+  {
     "id": "virtue.dowsing",
     "kind": "virtue",
     "magnitude": "minor",
@@ -181,6 +3256,14 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "ability_score_grant", "ability": "ability.dowsing", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3703, 3706] }
+  },
+  {
+    "id": "virtue.dust_devil",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3707, 3710] }
   },
   {
     "id": "virtue.educated",
@@ -196,6 +3279,127 @@
       }
     ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3711, 3713] }
+  },
+  {
+    "id": "virtue.elemental_magic",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3731, 3738] }
+  },
+  {
+    "id": "virtue.embitterment",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3739, 3742] }
+  },
+  {
+    "id": "virtue.emir",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3743, 3746] }
+  },
+  {
+    "id": "virtue.enchanting_ability",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3747, 3750] }
+  },
+  {
+    "id": "virtue.enduring_constitution",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3751, 3754] }
+  },
+  {
+    "id": "virtue.enduring_magic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3755, 3758] }
+  },
+  {
+    "id": "virtue.enticer_of_multitudes",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3763, 3766] }
+  },
+  {
+    "id": "virtue.entrancement",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3767, 3770] }
+  },
+  {
+    "id": "virtue.eunuch",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3771, 3774] }
+  },
+  {
+    "id": "virtue.exotic_casting",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3775, 3778] }
+  },
+  {
+    "id": "virtue.extractor_of_form_vis",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3779, 3782] }
+  },
+  {
+    "id": "virtue.eye_of_hephaestus",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3783, 3788] }
+  },
+  {
+    "id": "virtue.fabric_ripper",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3789, 3792] }
+  },
+  {
+    "id": "virtue.factor",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3793, 3796] }
+  },
+  {
+    "id": "virtue.faerie_blood",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3797, 3820] }
   },
   {
     "id": "virtue.faerie_doctor",
@@ -216,6 +3420,182 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3825, 3827] }
   },
   {
+    "id": "virtue.faerie_raised_magic",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3829, 3842] }
+  },
+  {
+    "id": "virtue.failed_apprentice",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3843, 3846] }
+  },
+  {
+    "id": "virtue.falconer",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3847, 3852] }
+  },
+  {
+    "id": "virtue.falls_like_a_cat",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3853, 3856] }
+  },
+  {
+    "id": "virtue.familiarity_with_the_fae",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3857, 3860] }
+  },
+  {
+    "id": "virtue.famous",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3861, 3864] }
+  },
+  {
+    "id": "virtue.fast_caster",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3865, 3868] }
+  },
+  {
+    "id": "virtue.feather_messenger",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3869, 3872] }
+  },
+  {
+    "id": "virtue.ferocity",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3873, 3876] }
+  },
+  {
+    "id": "virtue.fidai",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3877, 3882] }
+  },
+  {
+    "id": "virtue.finding_hidden_loot",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3883, 3886] }
+  },
+  {
+    "id": "virtue.flawless_magic",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3887, 3890] }
+  },
+  {
+    "id": "virtue.flexible_formulaic_magic",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3891, 3894] }
+  },
+  {
+    "id": "virtue.focus_power",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3895, 3906] }
+  },
+  {
+    "id": "virtue.folk_magic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3907, 3920] }
+  },
+  {
+    "id": "virtue.font_of_knowledge",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3921, 3924] }
+  },
+  {
+    "id": "virtue.forge_companion",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3925, 3928] }
+  },
+  {
+    "id": "virtue.forgettable_face",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3929, 3932] }
+  },
+  {
+    "id": "virtue.free_expression",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3933, 3936] }
+  },
+  {
+    "id": "virtue.free_study",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3937, 3940] }
+  },
+  {
+    "id": "virtue.frightful_presence",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3941, 3950] }
+  },
+  {
+    "id": "virtue.gender_shift",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3951, 3954] }
+  },
+  {
     "id": "virtue.gentle_gift",
     "kind": "virtue",
     "magnitude": "major",
@@ -223,6 +3603,54 @@
     "entity_kinds": ["character"],
     "incompatible_with": ["flaw.blatant_gift"],
     "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" }
+  },
+  {
+    "id": "virtue.gentleman",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3959, 3962] }
+  },
+  {
+    "id": "virtue.ghostly_warder",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3963, 3966] }
+  },
+  {
+    "id": "virtue.giant_blood",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3975, 3978] }
+  },
+  {
+    "id": "virtue.good_teacher",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3971, 3974] }
+  },
+  {
+    "id": "virtue.gorgiastic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3979, 3982] }
+  },
+  {
+    "id": "virtue.gossip",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3983, 3986] }
   },
   {
     "id": "virtue.great_characteristic",
@@ -236,12 +3664,84 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3987, 3989] }
   },
   {
+    "id": "virtue.greater_benediction",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3991, 4008] }
+  },
+  {
     "id": "virtue.greater_immunity",
     "kind": "virtue",
     "magnitude": "major",
     "category": "supernatural",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4009, 4016] }
+  },
+  {
+    "id": "virtue.greater_power",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4017, 4026] }
+  },
+  {
+    "id": "virtue.greater_purifying_touch",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4027, 4030] }
+  },
+  {
+    "id": "virtue.guardian_angel",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4031, 4036] }
+  },
+  {
+    "id": "virtue.guest_of_house_criamon",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4037, 4040] }
+  },
+  {
+    "id": "virtue.guild_apprentice",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4041, 4044] }
+  },
+  {
+    "id": "virtue.guild_dean",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4045, 4048] }
+  },
+  {
+    "id": "virtue.guild_master",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4049, 4052] }
+  },
+  {
+    "id": "virtue.harnessed_magic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4053, 4058] }
   },
   {
     "id": "virtue.heartbeast",
@@ -251,6 +3751,14 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "ability_score_grant", "ability": "ability.heartbeast", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4059, 4061] }
+  },
+  {
+    "id": "virtue.hermetic_experience",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4063, 4066] }
   },
   {
     "id": "virtue.hermetic_magus",
@@ -269,6 +3777,47 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4071, 4073] }
   },
   {
+    "id": "virtue.hex",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4075, 4078] }
+  },
+  {
+    "id": "virtue.homing_instinct",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4079, 4084] }
+  },
+  {
+    "id": "virtue.imbued_with_the_spirit_of_form",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4085, 4094] }
+  },
+  {
+    "id": "virtue.immune_to_disease",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4095, 4098] }
+  },
+  {
+    "id": "virtue.immunity_to_cold",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4099, 4102] }
+  },
+  {
     "id": "virtue.improved_characteristics",
     "kind": "virtue",
     "magnitude": "minor",
@@ -278,11 +3827,172 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4103, 4105] }
   },
   {
+    "id": "virtue.independent_study",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4115, 4118] }
+  },
+  {
+    "id": "virtue.indescribable_face",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4107, 4114] }
+  },
+  {
+    "id": "virtue.induction",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4119, 4122] }
+  },
+  {
+    "id": "virtue.ineslemen",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4123, 4126] }
+  },
+  {
+    "id": "virtue.infernal_heirloom",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4127, 4132] }
+  },
+  {
+    "id": "virtue.inoffensive_to_beings",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4133, 4142] }
+  },
+  {
+    "id": "virtue.inspirational",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4143, 4146] }
+  },
+  {
+    "id": "virtue.intuition",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4147, 4150] }
+  },
+  {
+    "id": "virtue.inventive_genius",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4151, 4154] }
+  },
+  {
+    "id": "virtue.jack_of_all_trades",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4155, 4158] }
+  },
+  {
+    "id": "virtue.journeyman",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4159, 4162] }
+  },
+  {
+    "id": "virtue.jurist",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4163, 4168] }
+  },
+  {
+    "id": "virtue.just_an_instant",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4169, 4172] }
+  },
+  {
+    "id": "virtue.kassalan_exorcism",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4173, 4186] }
+  },
+  {
+    "id": "virtue.keen_sense_of_smell",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4191, 4194] }
+  },
+  {
     "id": "virtue.keen_vision",
     "kind": "virtue",
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"]
+  },
+  {
+    "id": "virtue.knight",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4195, 4198] }
+  },
+  {
+    "id": "virtue.knows_people",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4199, 4206] }
+  },
+  {
+    "id": "virtue.laborer",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4207, 4210] }
+  },
+  {
+    "id": "virtue.land_regio_network",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4211, 4218] }
+  },
+  {
+    "id": "virtue.landed_noble",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4219, 4228] }
   },
   {
     "id": "virtue.large",
@@ -292,12 +4002,455 @@
     "entity_kinds": ["character"]
   },
   {
+    "id": "virtue.lasiq",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4233, 4236] }
+  },
+  {
+    "id": "virtue.latent_magic_ability",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4237, 4240] }
+  },
+  {
+    "id": "virtue.learn_ability_from_mistakes",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4241, 4244] }
+  },
+  {
+    "id": "virtue.leather_ripper",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4245, 4248] }
+  },
+  {
+    "id": "virtue.leper_magus",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4249, 4252] }
+  },
+  {
+    "id": "virtue.lesser_benediction",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4253, 4274] }
+  },
+  {
+    "id": "virtue.lesser_immunity",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4275, 4278] }
+  },
+  {
+    "id": "virtue.lesser_power",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4279, 4286] }
+  },
+  {
+    "id": "virtue.lesser_purifying_touch",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4287, 4290] }
+  },
+  {
+    "id": "virtue.license_of_absence",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4291, 4294] }
+  },
+  {
+    "id": "virtue.life_boost",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4295, 4298] }
+  },
+  {
+    "id": "virtue.life_linked_spontaneous_magic",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4299, 4306] }
+  },
+  {
+    "id": "virtue.light_touch",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4307, 4310] }
+  },
+  {
+    "id": "virtue.lightning_reflexes",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4311, 4314] }
+  },
+  {
+    "id": "virtue.linguist",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4315, 4318] }
+  },
+  {
+    "id": "virtue.lone_redcap",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4319, 4326] }
+  },
+  {
+    "id": "virtue.long_winded",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4327, 4330] }
+  },
+  {
+    "id": "virtue.luck",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4331, 4334] }
+  },
+  {
+    "id": "virtue.lupus_the_wolf",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4335, 4338] }
+  },
+  {
+    "id": "virtue.magian_lineage_major",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.magian_lineage_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4339, 4346] }
+  },
+  {
+    "id": "virtue.magian_lineage_minor",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.magian_lineage_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4339, 4346] }
+  },
+  {
+    "id": "virtue.magic_items",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4347, 4350] }
+  },
+  {
+    "id": "virtue.magic_sensitivity",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4351, 4354] }
+  },
+  {
+    "id": "virtue.magical_blood",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4359, 4372] }
+  },
+  {
+    "id": "virtue.magical_memory",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4355, 4358] }
+  },
+  {
+    "id": "virtue.magical_mount",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4373, 4376] }
+  },
+  {
+    "id": "virtue.magical_warder",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4377, 4384] }
+  },
+  {
+    "id": "virtue.magister_in_artibus",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4385, 4394] }
+  },
+  {
+    "id": "virtue.magister_in_medicina",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4395, 4398] }
+  },
+  {
+    "id": "virtue.major_magical_focus",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4399, 4422] }
+  },
+  {
+    "id": "virtue.maker_of_textured_vessels",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4423, 4430] }
+  },
+  {
+    "id": "virtue.maker_of_water_vessels",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4431, 4438] }
+  },
+  {
+    "id": "virtue.male_guild_sponsor",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4439, 4442] }
+  },
+  {
+    "id": "virtue.mamluk",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4443, 4448] }
+  },
+  {
+    "id": "virtue.marshal",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4449, 4456] }
+  },
+  {
+    "id": "virtue.master_bard",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4457, 4462] }
+  },
+  {
+    "id": "virtue.master_of_form_creatures",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4463, 4466] }
+  },
+  {
+    "id": "virtue.master_of_kennels",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4467, 4470] }
+  },
+  {
+    "id": "virtue.mastered_spells",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4471, 4475] }
+  },
+  {
+    "id": "virtue.masterpiece",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4476, 4479] }
+  },
+  {
+    "id": "virtue.mazdean_priest",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4480, 4487] }
+  },
+  {
+    "id": "virtue.mendicant_friar",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4488, 4495] }
+  },
+  {
+    "id": "virtue.mentored_by_demons",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4496, 4499] }
+  },
+  {
+    "id": "virtue.mercenary_captain",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4500, 4505] }
+  },
+  {
+    "id": "virtue.merchant",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4506, 4509] }
+  },
+  {
+    "id": "virtue.merchant_adventurer",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4510, 4513] }
+  },
+  {
+    "id": "virtue.mercurian_magic",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4514, 4523] }
+  },
+  {
+    "id": "virtue.method_caster",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4524, 4527] }
+  },
+  {
+    "id": "virtue.mild_aging",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4528, 4531] }
+  },
+  {
+    "id": "virtue.minor_enchantments",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4532, 4535] }
+  },
+  {
     "id": "virtue.minor_magical_focus",
     "kind": "virtue",
     "magnitude": "minor",
     "category": "hermetic",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4536, 4538] }
+  },
+  {
+    "id": "virtue.muqta_muq_ta",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4559, 4562] }
+  },
+  {
+    "id": "virtue.muse",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4563, 4566] }
+  },
+  {
+    "id": "virtue.mystical_choreography",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4567, 4572] }
+  },
+  {
+    "id": "virtue.mythic_blood",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4573, 4589] }
+  },
+  {
+    "id": "virtue.natural_leader",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4590, 4593] }
   },
   {
     "id": "virtue.nephilim",
@@ -309,6 +4462,144 @@
     "source": { "file": "Ars Magica 5e - Realms of Power - The Divine (Revised).md", "lines": [3485, 3513] }
   },
   {
+    "id": "virtue.notary",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4598, 4601] }
+  },
+  {
+    "id": "virtue.nuntius",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4602, 4605] }
+  },
+  {
+    "id": "virtue.paid_rights",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4606, 4615] }
+  },
+  {
+    "id": "virtue.partner",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4616, 4619] }
+  },
+  {
+    "id": "virtue.peasant",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4620, 4623] }
+  },
+  {
+    "id": "virtue.perfect_balance",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4624, 4627] }
+  },
+  {
+    "id": "virtue.perfect_eye_for_commodity",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4628, 4631] }
+  },
+  {
+    "id": "virtue.perfectus",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4632, 4641] }
+  },
+  {
+    "id": "virtue.performance_magic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4642, 4709] }
+  },
+  {
+    "id": "virtue.persona",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4710, 4713] }
+  },
+  {
+    "id": "virtue.personal_power",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4714, 4727] }
+  },
+  {
+    "id": "virtue.personal_vis_source",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4728, 4731] }
+  },
+  {
+    "id": "virtue.physician_of_salerno",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4732, 4735] }
+  },
+  {
+    "id": "virtue.piercing_gaze",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4736, 4739] }
+  },
+  {
+    "id": "virtue.potent_magic_major",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.potent_magic_minor"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4740, 4781] }
+  },
+  {
+    "id": "virtue.potent_magic_minor",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.potent_magic_major"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4740, 4781] }
+  },
+  {
+    "id": "virtue.powerful_relic",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4782, 4787] }
+  },
+  {
     "id": "virtue.premonitions",
     "kind": "virtue",
     "magnitude": "minor",
@@ -316,6 +4607,22 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "ability_score_grant", "ability": "ability.premonitions", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4788, 4790] }
+  },
+  {
+    "id": "virtue.prestigious_student",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4792, 4795] }
+  },
+  {
+    "id": "virtue.priest",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4796, 4805] }
   },
   {
     "id": "virtue.privileged_upbringing",
@@ -331,6 +4638,14 @@
       }
     ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4806, 4808] }
+  },
+  {
+    "id": "virtue.protection",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4810, 4813] }
   },
   {
     "id": "virtue.puissant_ability",
@@ -353,6 +4668,110 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4818, 4820] }
   },
   {
+    "id": "virtue.quiet_magic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4822, 4827] }
+  },
+  {
+    "id": "virtue.rabbi",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4828, 4833] }
+  },
+  {
+    "id": "virtue.rapid_convalescence",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4834, 4837] }
+  },
+  {
+    "id": "virtue.rard",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3476, 3479] }
+  },
+  {
+    "id": "virtue.rat_up_a_drainpipe",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4838, 4841] }
+  },
+  {
+    "id": "virtue.redcap",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4842, 4851] }
+  },
+  {
+    "id": "virtue.relic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4852, 4855] }
+  },
+  {
+    "id": "virtue.religious",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4856, 4861] }
+  },
+  {
+    "id": "virtue.reserves_of_strength",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4862, 4865] }
+  },
+  {
+    "id": "virtue.ripper",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4866, 4869] }
+  },
+  {
+    "id": "virtue.ritual_power",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4870, 4877] }
+  },
+  {
+    "id": "virtue.rosh_beth_din",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4878, 4883] }
+  },
+  {
+    "id": "virtue.schooled_in_crime",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4884, 4887] }
+  },
+  {
     "id": "virtue.second_sight",
     "kind": "virtue",
     "magnitude": "minor",
@@ -360,6 +4779,22 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "ability_score_grant", "ability": "ability.second_sight", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4888, 4890] }
+  },
+  {
+    "id": "virtue.secondary_insight",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4892, 4895] }
+  },
+  {
+    "id": "virtue.see_in_darkness",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4896, 4899] }
   },
   {
     "id": "virtue.self_confident",
@@ -371,6 +4806,30 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4900, 4902] }
   },
   {
+    "id": "virtue.senior_bard",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4904, 4909] }
+  },
+  {
+    "id": "virtue.senior_clergy",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4910, 4921] }
+  },
+  {
+    "id": "virtue.senior_master",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4922, 4925] }
+  },
+  {
     "id": "virtue.sense_holiness_and_unholiness",
     "kind": "virtue",
     "magnitude": "minor",
@@ -378,6 +4837,62 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "ability_score_grant", "ability": "ability.sense_holiness_and_unholiness", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4926, 4929] }
+  },
+  {
+    "id": "virtue.sense_passions",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4930, 4933] }
+  },
+  {
+    "id": "virtue.shadchan",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4934, 4939] }
+  },
+  {
+    "id": "virtue.shamash",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4940, 4945] }
+  },
+  {
+    "id": "virtue.shapeshifter",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4946, 4949] }
+  },
+  {
+    "id": "virtue.sharp_ears",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4950, 4953] }
+  },
+  {
+    "id": "virtue.side_effect",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4954, 4957] }
+  },
+  {
+    "id": "virtue.simple_student",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4958, 4963] }
   },
   {
     "id": "virtue.skilled_parens",
@@ -390,6 +4905,62 @@
       { "type": "general_xp", "amount": 60 }
     ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4964, 4966] }
+  },
+  {
+    "id": "virtue.skilled_smuggler",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4968, 4971] }
+  },
+  {
+    "id": "virtue.skinchanger",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4972, 4975] }
+  },
+  {
+    "id": "virtue.skinchanger_dove",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4976, 4987] }
+  },
+  {
+    "id": "virtue.social_contacts",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4988, 4991] }
+  },
+  {
+    "id": "virtue.sofer",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4992, 4997] }
+  },
+  {
+    "id": "virtue.special_circumstances",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4998, 5001] }
+  },
+  {
+    "id": "virtue.spell_improvisation",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5002, 5005] }
   },
   {
     "id": "virtue.spirit_votary",
@@ -418,6 +4989,151 @@
     "source": { "file": "Ars Magica 5e - Realms of Power - The Divine (Revised).md", "lines": [1969, 1980] }
   },
   {
+    "id": "virtue.strong_faerie_blood",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5032, 5047] }
+  },
+  {
+    "id": "virtue.strong_willed",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5048, 5051] }
+  },
+  {
+    "id": "virtue.student_of_realm",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5052, 5055] }
+  },
+  {
+    "id": "virtue.study_bonus",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5056, 5072] }
+  },
+  {
+    "id": "virtue.subtle_magic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5073, 5076] }
+  },
+  {
+    "id": "virtue.sufi",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5077, 5084] }
+  },
+  {
+    "id": "virtue.summon_animals",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5085, 5088] }
+  },
+  {
+    "id": "virtue.supernatural_beauty",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5089, 5096] }
+  },
+  {
+    "id": "virtue.tainted_treasure",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "tainted": true,
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5097, 5108] }
+  },
+  {
+    "id": "virtue.templar_administrator",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5109, 5112] }
+  },
+  {
+    "id": "virtue.templar_commander",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5113, 5116] }
+  },
+  {
+    "id": "virtue.templar_confrere_or_consoeur",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5117, 5120] }
+  },
+  {
+    "id": "virtue.templar_office_holder",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5121, 5124] }
+  },
+  {
+    "id": "virtue.templar_prestige",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5125, 5128] }
+  },
+  {
+    "id": "virtue.templar_servant",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5129, 5132] }
+  },
+  {
+    "id": "virtue.templar_specialist",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5133, 5136] }
+  },
+  {
+    "id": "virtue.temporal_influence",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5137, 5140] }
+  },
+  {
+    "id": "virtue.tethered_magic",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5141, 5144] }
+  },
+  {
     "id": "virtue.the_enigma",
     "kind": "virtue",
     "magnitude": "minor",
@@ -442,12 +5158,140 @@
     "entity_kinds": ["character"]
   },
   {
+    "id": "virtue.town_magistrate",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5149, 5152] }
+  },
+  {
+    "id": "virtue.trained_assassin",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5153, 5156] }
+  },
+  {
+    "id": "virtue.troubadour",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5157, 5164] }
+  },
+  {
+    "id": "virtue.troupe_upbringing",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5165, 5168] }
+  },
+  {
+    "id": "virtue.true_faith",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5169, 5172] }
+  },
+  {
+    "id": "virtue.true_love_pc",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5173, 5178] }
+  },
+  {
+    "id": "virtue.turb_trained",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5179, 5182] }
+  },
+  {
+    "id": "virtue.unaffected_by_the_gift",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5183, 5186] }
+  },
+  {
+    "id": "virtue.unaging",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5187, 5190] }
+  },
+  {
+    "id": "virtue.unbound_tongue",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5191, 5194] }
+  },
+  {
+    "id": "virtue.university_grammar_teacher",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5195, 5198] }
+  },
+  {
+    "id": "virtue.variable_power",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5199, 5206] }
+  },
+  {
+    "id": "virtue.venditor",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5207, 5210] }
+  },
+  {
+    "id": "virtue.venus_blessing",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5211, 5214] }
+  },
+  {
     "id": "virtue.verditius_magic",
     "kind": "virtue",
     "magnitude": "minor",
     "category": "hermetic",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5215, 5217] }
+  },
+  {
+    "id": "virtue.voice_of_the_land",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5219, 5222] }
+  },
+  {
+    "id": "virtue.wanderer",
+    "kind": "virtue",
+    "magnitude": "free",
+    "category": "social_status",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5223, 5226] }
   },
   {
     "id": "virtue.warrior",
@@ -459,11 +5303,67 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5227, 5229] }
   },
   {
+    "id": "virtue.ways_of_the_land",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5231, 5234] }
+  },
+  {
+    "id": "virtue.wealthy",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5235, 5238] }
+  },
+  {
+    "id": "virtue.well_traveled",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "general",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5239, 5242] }
+  },
+  {
+    "id": "virtue.whistle_up_the_wind",
+    "kind": "virtue",
+    "magnitude": "major",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5243, 5246] }
+  },
+  {
+    "id": "virtue.wilderness_sense",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5247, 5250] }
+  },
+  {
+    "id": "virtue.wisdom_from_ignorance",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "supernatural",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5251, 5256] }
+  },
+  {
     "id": "virtue.wise_one",
     "kind": "virtue",
     "magnitude": "minor",
     "category": "social_status",
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5257, 5260] }
+  },
+  {
+    "id": "virtue.withstand_casting",
+    "kind": "virtue",
+    "magnitude": "minor",
+    "category": "hermetic",
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5261, 5282] }
   }
 ]

@@ -1,47 +1,1355 @@
 {
+  "flaw.a_deal_with_the_devil": {
+    "name": "Ein Pakt mit dem Teufel",
+    "summary": "Der Charakter hat seine Seele dem Teufel verkauft und sieht sich nun der ewigen Verdammnis geweiht."
+  },
+  "flaw.abandoned_apprentice": {
+    "name": "Verlassener Lehrling",
+    "summary": "Der Charakter wurde von seinem Meister mitten in seiner hermetischen Ausbildung im Stich gelassen."
+  },
+  "flaw.ability_block": {
+    "name": "Fähigkeitsblock",
+    "summary": "Du bist aus irgendeinem Grund völlig unfähig, eine bestimmte Klasse von Fertigkeiten zu erlernen."
+  },
+  "flaw.afflicted_tongue": {
+    "name": "Sprachfehler",
+    "summary": "Du hast einen Sprachfehler, etwa ein Lispeln, Stottern oder fehlende Zähne."
+  },
+  "flaw.age_quickly": {
+    "name": "Schnelles Altern",
+    "summary": "Wahrscheinlich infolge eines Fluches oder eines magischen Unglücks alterst du doppelt so schnell wie normale Menschen."
+  },
+  "flaw.ambitious_major": {
+    "name": "Ehrgeizig (Groß)",
+    "summary": "Du willst in irgendeiner Hinsicht die erfolgreichste oder mächtigste Person der Welt sein."
+  },
+  "flaw.ambitious_minor": {
+    "name": "Ehrgeizig (Klein)",
+    "summary": "Du willst in irgendeiner Hinsicht die erfolgreichste oder mächtigste Person der Welt sein."
+  },
+  "flaw.anchored_to_the_land": {
+    "name": "Verwurzelt im (Land)",
+    "summary": "Der Charakter leidet unter Einsamkeit und Niedergeschlagenheit, wenn er eine bestimmte Art von Umgebung weder sehen noch hören kann."
+  },
+  "flaw.animal_companion": {
+    "name": "Tierbegleiter",
+    "summary": "Du wirst von einem treuen, klugen (aber gewöhnlichen) Tier begleitet, das einfache Befehle befolgen kann."
+  },
+  "flaw.apostate": {
+    "name": "Apostat",
+    "summary": "Du bist von einem Glauben zu einem anderen oder von einem Überzeugungssystem zum anderen übergetreten."
+  },
+  "flaw.arthritis": {
+    "name": "Arthritis",
+    "summary": "Deine Gelenke sind steif und oft schmerzhaft, was fast jede anhaltende Bewegung beschwerlich macht."
+  },
+  "flaw.avaricious_major": {
+    "name": "Habgierig (Groß)",
+    "summary": "Du willst Geld, viel Geld."
+  },
+  "flaw.avaricious_minor": {
+    "name": "Habgierig (Klein)",
+    "summary": "Du willst Geld, viel Geld."
+  },
+  "flaw.baneful_circumstances": {
+    "name": "Schädliche Umstände",
+    "summary": "Irgendetwas an der übernatürlichen Natur des Charakters schwächt ihn unter relativ häufigen Umständen, etwa beim Berühren des Bodens oder in Gegenwart von Frauen."
+  },
+  "flaw.beloved_rival_major": {
+    "name": "Geliebter Rivale (Groß)",
+    "summary": "Für einen Kleinen Geschichte-Fehler hat der Charakter einen Rivalen, der ihn einerseits fieberhaft beschützt und andererseits besessen daran ist, ihm auf Schritt und Tritt entgegenzutreten."
+  },
+  "flaw.beloved_rival_minor": {
+    "name": "Geliebter Rivale (Klein)",
+    "summary": "Für einen Kleinen Geschichte-Fehler hat der Charakter einen Rivalen, der ihn einerseits fieberhaft beschützt und andererseits besessen daran ist, ihm auf Schritt und Tritt entgegenzutreten."
+  },
+  "flaw.bigamist": {
+    "name": "Bigamist",
+    "summary": "Der Charakter führt zwei völlig getrennte Leben in zwei Städten und wechselt unter einem Vorwand zwischen ihnen hin und her, höchstwahrscheinlich als Händler."
+  },
   "flaw.black_sheep": {
     "name": "Schwarzes Schaf",
     "summary": "Von einer angesehenen Familie entfremdet; ein schlechter Ruf der Stufe 2 bei denen, die sie achten."
+  },
+  "flaw.blackmail": {
+    "name": "Erpressung",
+    "summary": "Du besitzt Informationen, die eine mächtige Person lieber verborgen wüsste."
   },
   "flaw.blatant_gift": {
     "name": "Auffällige Gabe",
     "summary": "Deine Gabe ist extrem verstörend für andere."
   },
+  "flaw.blatant_magical_air": {
+    "name": "Auffällige Magische Ausstrahlung",
+    "summary": "Nur Charaktere mit einer Magischen Aura oder der Gabe dürfen diesen Fehler nehmen."
+  },
+  "flaw.blind": {
+    "name": "Blind",
+    "summary": "Du hast wenig oder gar keine Sehkraft."
+  },
+  "flaw.bound_casting_tools": {
+    "name": "Gebundene Zauberwerkzeuge",
+    "summary": "Die Zauberwerkzeuge des Magus, wie sie von Haus Verditius verwendet werden, sind so persönlich, dass sie zu dauerhaften Arkanen Verbindungen zu ihm werden."
+  },
+  "flaw.bound_magic": {
+    "name": "Gebundene Magie",
+    "summary": "Wenn du stirbst, enden alle deine Zauber abrupt, und alle magischen Artefakte, die du erschaffen hast, hören auf zu funktionieren."
+  },
+  "flaw.bound_to_realm": {
+    "name": "Gebunden an (Sphäre)",
+    "summary": "Der Charakter ist nicht mehr in der Lage, in der weltlichen Welt zu überleben, und erkrankt, wenn er sich über längere Zeit außerhalb einer bestimmten Art übernatürlicher Aura aufhält."
+  },
+  "flaw.bound_to_role_role": {
+    "name": "Gebunden an (Rolle)",
+    "summary": "Dieser Charakter ist physisch an eine bestimmte Art von Gerät gebunden, sei es durch ein mystisches Ereignis, jahrelange Exposition und Verzerrung oder die Eingriffe eines experimentierenden Magus."
+  },
+  "flaw.branded_criminal": {
+    "name": "Gebrandmarkter Verbrecher",
+    "summary": "Als Strafe für ein vergangenes Verbrechen wurde dir ein Zeichen in die Wange gebrannt."
+  },
+  "flaw.broken_vessel": {
+    "name": "Zerbrochenes Gefäß",
+    "summary": "Der Charakter ist sich stets bewusst, dass seine übernatürlichen Kräfte möglicherweise nur vorübergehend sind."
+  },
+  "flaw.brutal_artist": {
+    "name": "Brutaler Künstler",
+    "summary": "Dieser Fehler steht nur Magi des Hauses Jerbiton zur Verfügung."
+  },
+  "flaw.busybody": {
+    "name": "Klatschbase",
+    "summary": "Du weißt gewöhnlich über alles Bescheid, was unter deinen Freunden und Bekannten vorgeht, besonders in privaten Angelegenheiten."
+  },
+  "flaw.carefree": {
+    "name": "Sorglos",
+    "summary": "Du bist unter allen Umständen unerschütterlich heiter und glücklich."
+  },
+  "flaw.careless_sorcerer": {
+    "name": "Nachlässiger Zauberer",
+    "summary": "Du gehst nachlässig mit magischer Kraft um und musst beim Wirken von Zaubern zwei Patzerwürfel mehr als normal würfeln."
+  },
+  "flaw.careless_with_ability": {
+    "name": "Nachlässig mit (Fertigkeit)",
+    "summary": "Der Charakter ist in Bezug auf eine bestimmte Fertigkeit, die bei der Aufnahme dieser Tugend gewählt wird, besonders leichtsinnig."
+  },
+  "flaw.castratus": {
+    "name": "Kastrat",
+    "summary": "Du wurdest vor der Pubertät kastriert, was dich bartlos und im Vergleich zu den meisten Männern etwas feminin wirken lässt."
+  },
+  "flaw.ceremonial_spontaneous_magic": {
+    "name": "Zeremonielle Spontane Magie",
+    "summary": "Du brauchst Zeit und Aufwand, um deine Spontane Magie zu fokussieren."
+  },
+  "flaw.chaotic_magic": {
+    "name": "Chaotische Magie",
+    "summary": "Deine Magie ist sehr unkontrolliert."
+  },
+  "flaw.church_upbringing": {
+    "name": "Kirchliche Erziehung",
+    "summary": "Dieser Fehler betrifft Kinder, die von der Kirche unterrichtet und größtenteils von Klerikern aufgezogen wurden – ein Schicksal, das einige Waisen, uneheliche Kinder, Begabte Kinder und andere Außenseiter trifft."
+  },
+  "flaw.close_family_ties": {
+    "name": "Enge Familienbande",
+    "summary": "Deine Familie ist eines der wichtigsten Dinge in deinem Leben und unterstützt und hilft dir, wann immer es möglich ist, selbst auf eigenes Risiko hin."
+  },
+  "flaw.clumsy": {
+    "name": "Ungeschickt",
+    "summary": "Du bist nicht sehr anmutig und neigst dazu, Dinge fallen zu lassen – du hast eine –3-Strafe auf alle damit zusammenhängenden Würfe."
+  },
+  "flaw.clumsy_magic": {
+    "name": "Plumpe Magie",
+    "summary": "Du hast Schwierigkeiten, deine Zauber genau zu zielen."
+  },
+  "flaw.companion_animal": {
+    "name": "Begleittier",
+    "summary": "Der Charakter ist das Tierbegleittier eines anderen Charakters (entweder ein Spielercharakter oder ein Spielleitercharakter) und hat daher wenig Kontrolle über sein eigenes Leben."
+  },
+  "flaw.compassionate_major": {
+    "name": "Mitfühlend (Groß)",
+    "summary": "Du hilfst jedem, der verwundet oder in Not ist."
+  },
+  "flaw.compassionate_minor": {
+    "name": "Mitfühlend (Klein)",
+    "summary": "Du hilfst jedem, der verwundet oder in Not ist."
+  },
+  "flaw.compulsion_major": {
+    "name": "Zwang (Groß)",
+    "summary": "Du hast einen unglückseligen Drang, dem du kaum widerstehen kannst."
+  },
+  "flaw.compulsion_minor": {
+    "name": "Zwang (Klein)",
+    "summary": "Du hast einen unglückseligen Drang, dem du kaum widerstehen kannst."
+  },
+  "flaw.compulsive_lying_major": {
+    "name": "Zwanghaftes Lügen (Groß)",
+    "summary": "Die Wahrheit zu sagen fällt diesem Charakter wirklich schwer."
+  },
+  "flaw.compulsive_lying_minor": {
+    "name": "Zwanghaftes Lügen (Klein)",
+    "summary": "Die Wahrheit zu sagen fällt diesem Charakter wirklich schwer."
+  },
+  "flaw.consumed_casting_tools": {
+    "name": "Verbrauchende Zauberwerkzeuge",
+    "summary": "Die Zauberwerkzeuge des Charakters werden nach ihrer Verwendung magisch verbraucht."
+  },
+  "flaw.continence": {
+    "name": "Enthaltsamkeit",
+    "summary": "Du übst keine sexuelle Aktivität aus."
+  },
+  "flaw.corrupted_abilities": {
+    "name": "Verderbte Fertigkeiten",
+    "summary": "Eine oder mehrere der Fertigkeiten des Charakters wurden ihr von einem Dämon beigebracht oder stammen aus einer anderen verderbten Quelle."
+  },
+  "flaw.corrupted_arts": {
+    "name": "Verderbte Künste",
+    "summary": "Der Charakter hat eine der Hermetischen Künste aus einer verderbten Quelle studiert."
+  },
+  "flaw.corrupted_spells": {
+    "name": "Verderbte Zauber",
+    "summary": "Der Charakter hat mindestens 30 Stufen formulaischer Zauber aus einer auf irgendeine Weise verderbten Quelle erlernt."
+  },
+  "flaw.covenant_upbringing": {
+    "name": "Konventsprägung",
+    "summary": "Du wurdest in einem großen, alten Konvent aufgezogen, der wenig Kontakt zur Außenwelt hat."
+  },
+  "flaw.craving_for_travel": {
+    "name": "Reiselust",
+    "summary": "Der Charakter leidet unter Einsamkeit, Langeweile und Niedergeschlagenheit, wenn er sich nicht neuen Erfahrungen aussetzt."
+  },
+  "flaw.creative_block": {
+    "name": "Schaffensblockade",
+    "summary": "Du hast Probleme damit, neue Dinge im Labor zu erschaffen."
+  },
+  "flaw.crippled": {
+    "name": "Verkrüppelt",
+    "summary": "Du hast entweder keine Beine, oder deine Beine sind vollständig unbrauchbar."
+  },
+  "flaw.curse_of_slander": {
+    "name": "Verleumdungsfluch",
+    "summary": "Überall, wo er sich aufhält, beginnen innerhalb kurzer Zeit unangenehme Gerüchte und ungünstige Geschichten über diesen Charakter zu kursieren."
+  },
+  "flaw.curse_of_venus": {
+    "name": "Fluch der Venus",
+    "summary": "Du bist für Menschen sehr attraktiv, die du nicht anziehen möchtest."
+  },
+  "flaw.cursed_guile": {
+    "name": "Verfluchte Täuschung",
+    "summary": "Dies ist der Fehler für „den Jungen, der Wolf rief\", und resultiert wahrscheinlich aus infernalischem Einfluss."
+  },
+  "flaw.cyclic_magic_negative": {
+    "name": "Zyklische Magie (negativ)",
+    "summary": "Wie bei der hermetischen Tugend ist deine Magie auf einen Naturzyklus abgestimmt und zu bestimmten Zeiten weniger potent."
+  },
+  "flaw.dark_secret": {
+    "name": "Dunkles Geheimnis",
+    "summary": "Du wirst von etwas heimgesucht, das, wenn es entdeckt würde, zu Schande, Ablehnung und möglicherweise Rache führen würde."
+  },
+  "flaw.deaf": {
+    "name": "Taub",
+    "summary": "Du kannst überhaupt nichts hören."
+  },
+  "flaw.deficient_form": {
+    "name": "Defizitäre Form",
+    "summary": "Fast alle Gesamtwerte (einschließlich Zaubersummen und Laborsummen, jedoch ausgenommen Magieresistenz), zu denen eine bestimmte Form addiert wird, werden halbiert."
+  },
   "flaw.deficient_technique": {
     "name": "Defizitäre {technique}",
     "summary": "Du bist unfähig, eine Technik effektiv einzusetzen."
+  },
+  "flaw.deleterious_circumstances": {
+    "name": "Abträgliche Umstände",
+    "summary": "Alle deine Magie-Gesamtwerte, ausgenommen Magieresistenz, werden unter bestimmten seltenen Umständen halbiert."
+  },
+  "flaw.delusion": {
+    "name": "Wahnvorstellung",
+    "summary": "Du glaubst von ganzem Herzen an etwas, das schlicht nicht der Wahrheit entspricht."
+  },
+  "flaw.demonic_familiar": {
+    "name": "Dämonischer Vertrauter",
+    "summary": "Der Charakter ist an einen Famulus gebunden, einen vertrauten Dämon, der von einem Tier Besitz ergreift und dem Charakter seine Sinne leihen oder den bösen Makel ihrer Mächte verbergen kann."
+  },
+  "flaw.dependent": {
+    "name": "Schützling",
+    "summary": "Du fühlst dich für jemanden verantwortlich und bist verpflichtet zu helfen, wenn er in Schwierigkeiten gerät."
+  },
+  "flaw.depraved_major": {
+    "name": "Verdorben (Groß)",
+    "summary": "Der Charakter versucht, wann immer möglich die Religion zu untergraben, und meidet im Allgemeinen das Dominium."
+  },
+  "flaw.depraved_minor": {
+    "name": "Verdorben (Klein)",
+    "summary": "Der Charakter versucht, wann immer möglich die Religion zu untergraben, und meidet im Allgemeinen das Dominium."
+  },
+  "flaw.depressed": {
+    "name": "Depressiv",
+    "summary": "Du hast eine düstere Lebenseinstellung, siehst kaum einen Sinn im Handeln und findest an nichts, was geschieht, Freude."
+  },
+  "flaw.deteriorating_power": {
+    "name": "Schwindende Macht",
+    "summary": "Ähnlich wie die Tugend Variable Mächte verringert dieser Fehler die Wirksamkeit einer der Mächte des Charakters (Große, Mindere oder Ritualmacht) im Laufe der Zeit."
+  },
+  "flaw.devoted_parent": {
+    "name": "Hingebungsvolles Elternteil/Kind",
+    "summary": "Der Charakter ist einem Elternteil oder Kind außerordentlich zugetan."
+  },
+  "flaw.dhimmi": {
+    "name": "Dhimmi",
+    "summary": "Du bist ein Nicht-Muslim, der unter muslimischer Herrschaft lebt."
+  },
+  "flaw.diabolic_past": {
+    "name": "Diabolische Vergangenheit",
+    "summary": "Du warst mit Diabolisten in Verbindung, und obwohl du dich von ihren bösen Wegen gelöst hast, wirst du noch immer von deiner Erziehung und der Erinnerung an Taten verfolgt, über die man besser schweigt."
+  },
+  "flaw.difficult_longevity_ritual": {
+    "name": "Schwieriges Langlebigkeitsritual",
+    "summary": "Etwas in deiner magischen Natur macht es schwierig, ein wirksames Langlebigkeitsritual für dich zu erschaffen."
+  },
+  "flaw.difficult_spontaneous_magic": {
+    "name": "Schwierige Spontane Magie",
+    "summary": "Spontane Magie erfordert für dich stets Anstrengung."
+  },
+  "flaw.difficult_underlings": {
+    "name": "Schwierige Untergebene",
+    "summary": "Du darfst diesen Geschichte-Fehler nur nehmen, wenn dein Charakter Untergebene hat und auch weiterhin haben wird."
+  },
+  "flaw.disfigured": {
+    "name": "Entstellt",
+    "summary": "Eine sichtbare Entstellung macht dich hässlich und leicht erkennbar."
+  },
+  "flaw.disjointed_magic": {
+    "name": "Zusammenhanglose Magie",
+    "summary": "Du kannst früheres Wissen nicht zur Unterstützung deiner Magie heranziehen."
+  },
+  "flaw.disorientating_magic": {
+    "name": "Desorientierende Magie",
+    "summary": "Nach dem Wirken eines Zaubers musst du eine Runde lang nichts tun außer deine geistigen Kräfte zu sammeln."
+  },
+  "flaw.driven_major": {
+    "name": "Getrieben (Groß)",
+    "summary": "Du verfolgst ein Ziel, das du mit aller Entschlossenheit verwirklichen willst."
+  },
+  "flaw.driven_minor": {
+    "name": "Getrieben (Klein)",
+    "summary": "Du verfolgst ein Ziel, das du mit aller Entschlossenheit verwirklichen willst."
   },
   "flaw.dutybound": {
     "name": "Pflichtgebunden",
     "summary": "Du folgst aus Schuld oder Furcht einem einschränkenden Verhaltenskodex."
   },
+  "flaw.dwarf": {
+    "name": "Zwerg",
+    "summary": "Du hast die Größe eines Kindes."
+  },
+  "flaw.employed_by_company": {
+    "name": "Angestellt bei einem Unternehmen",
+    "summary": "Charaktere mit diesem Fehler sind angestellte Mitarbeiter, die einem Arbeitgeber – in der Regel einem Handelsunternehmen – gegenüber rechenschaftspflichtig sind."
+  },
+  "flaw.enemies": {
+    "name": "Feinde",
+    "summary": "Jemand macht dir das Leben schwer, etwa ein örtlicher Baron oder Bischof, eine Räuberbande oder ein besonders unangenehmer Gastwirt."
+  },
+  "flaw.enfeebled": {
+    "name": "Geschwächt",
+    "summary": "Du kannst dich nicht länger als ein paar Sekunden anstrengen."
+  },
+  "flaw.envied_beauty": {
+    "name": "Beneidete Schönheit",
+    "summary": "Die Schönheit des Charakters weckt Abneigung und Eifersucht."
+  },
+  "flaw.envious_major": {
+    "name": "Neidisch (Groß)",
+    "summary": "Du glaubst, dass es jedem anderen besser geht als dir, und dass diese ihr Glück nicht verdienen, während du es verdienst."
+  },
+  "flaw.envious_minor": {
+    "name": "Neidisch (Klein)",
+    "summary": "Du glaubst, dass es jedem anderen besser geht als dir, und dass diese ihr Glück nicht verdienen, während du es verdienst."
+  },
+  "flaw.environmental_magic_condition": {
+    "name": "Magische Umweltbedingung",
+    "summary": "Alle Zauber- und Laborsummen des Charakters werden unter bestimmten häufigen Umständen, die mit seiner Umgebung zusammenhängen, halbiert – beispielsweise immer dann, wenn er sich in einem Gebäude befindet."
+  },
+  "flaw.environmental_sensitivity": {
+    "name": "Umweltempfindlichkeit",
+    "summary": "Der Charakter reagiert ungewöhnlich empfindlich auf ein seltenes Umweltmerkmal, wie schlechte Luft, Salzwasser oder extreme Temperaturen."
+  },
+  "flaw.evil_destiny": {
+    "name": "Böses Schicksal",
+    "summary": "Die Höllensphäre hat ein Interesse an dem Charakter entwickelt, doch er weiß nicht wie oder warum."
+  },
+  "flaw.evil_eye": {
+    "name": "Böser Blick",
+    "summary": "Dein Charakter trägt den Bösen Blick, das unkontrollierte Potenzial, anderen in seiner Umgebung Schaden zuzufügen."
+  },
+  "flaw.exciting_experimentation": {
+    "name": "Aufregendes Experimentieren",
+    "summary": "Die Experimente deines Charakters neigen zu einer gewissen ..."
+  },
+  "flaw.excommunicate": {
+    "name": "Exkommuniziert",
+    "summary": "Für deine Vergehen gegen Gott und die Kirche wurdest du aus deinem Glauben ausgestoßen, deine Taufe wurde rückgängig gemacht und du wurdest aus deiner Glaubensgemeinschaft vertrieben."
+  },
+  "flaw.exiled_atlantean": {
+    "name": "Verbannter Atlantier",
+    "summary": "Der Charakter ist ein verbannter Atlantier; er ist durch seinen Kontakt mit der Oberwelt befleckt und kann nicht in seine magische Regio zurückkehren."
+  },
   "flaw.faerie_friend": {
     "name": "Feenfreund",
     "summary": "Du hast einen Verbündeten unter den Feen — ein Segen, der auch zur Last werden kann."
+  },
+  "flaw.faerie_upbringing": {
+    "name": "Feenaufwuchs",
+    "summary": "Vielleicht wurdest du von deiner wahren Familie verlassen, und die Feen fanden dich."
+  },
+  "flaw.failed_journeyman": {
+    "name": "Gescheiterter Geselle",
+    "summary": "Der Charakter wurde aufgrund früherer illegaler oder zweifelhafter Praktiken aus einer Zunft ausgeschlossen."
+  },
+  "flaw.failed_master": {
+    "name": "Gescheiterter Meister",
+    "summary": "Durch schlechtes Management oder illegale Geschäftspraktiken hat der Charakter seine Werkstatt in den Ruin getrieben."
+  },
+  "flaw.failed_monk": {
+    "name": "Gescheiterter Mönch",
+    "summary": "Du warst einst Mitglied eines klösterlichen Ordens, wurdest aber wegen einer großen Sünde oder groben Unfähigkeit ausgestoßen, oder du bist vielleicht geflohen und dein Abt würde dich nach einer angemessenen Buße möglicherweise zurückkehren"
+  },
+  "flaw.failed_student": {
+    "name": "Gescheiterter Student",
+    "summary": "Der Charakter hat für eine bestimmte Universitätslizenz studiert und sein Abschlussexamen nicht bestanden."
+  },
+  "flaw.false_power": {
+    "name": "Falsche Macht",
+    "summary": "Eine der Übernatürlichen Tugenden des Charakters ist mit der Höllensphäre verbunden, zusätzlich zu der Sphäre, mit der sie normalerweise verbunden wäre, was dazu führt, dass sie unheilig erscheint, wenn sie einer göttlichen oder infernalen"
+  },
+  "flaw.favors": {
+    "name": "Gefälligkeiten",
+    "summary": "Du schuldest jemandem (oder einer Vielzahl von Menschen) einen Gefallen und kannst jederzeit gebeten werden, ihn zu erwidern."
+  },
+  "flaw.fear": {
+    "name": "Angst",
+    "summary": "Du hast Angst vor etwas, dem du ziemlich oft begegnen wirst."
+  },
+  "flaw.feral_scent": {
+    "name": "Wilder Geruch",
+    "summary": "Vielleicht aufgrund seines Tierbluts oder seiner wilden Erziehung hat der Charakter den starken natürlichen Geruch eines wilden Tieres."
+  },
+  "flaw.feral_upbringing": {
+    "name": "Wilde Erziehung",
+    "summary": "Du bist in der Wildnis aufgewachsen, entweder von wilden Tieren großgezogen oder auf eigene Faust überlebt."
+  },
+  "flaw.fettered_magic": {
+    "name": "Gefesselte Magie",
+    "summary": "Alle deine Zauber und die Wirkungen aller Magieartefakte, die du aktivierst, sind Arkane Verbindungen zu dir."
+  },
+  "flaw.feud": {
+    "name": "Fehde",
+    "summary": "Deine Familie ist in eine Fehde verwickelt."
+  },
+  "flaw.fickle_nature": {
+    "name": "Launenhaftes Wesen",
+    "summary": "Der Charakter schwankt zwischen zwei diametral entgegengesetzten Verhaltensweisen."
+  },
+  "flaw.fish_out_of_water_terrain": {
+    "name": "Fremd im (Gelände)",
+    "summary": "Dieser Charakter hat eine Affinität zu einer Art von Gelände, sei es auf dem Meer, im Wald, in den Hügeln oder in der städtischen Landschaft von Städten und Gemeinden, und fühlt sich unwohl und unbeholfen, wenn er sich fernab von seinem bev"
+  },
+  "flaw.flashbacks": {
+    "name": "Rückblenden",
+    "summary": "Wenn der Charakter in einen Kampf oder eine ähnlich gewalttätige und angespannte Situation verwickelt wird, könnte der Stress eine Rückblende auf die Schrecken vergangener Schlachten auslösen, durch die dieser Charakter seelische Narben dav"
+  },
+  "flaw.flawed_parma_magica": {
+    "name": "Fehlerhafte Parma Magica",
+    "summary": "Deine Parma Magica ist fehlerhaft und bietet gegen eine bestimmte Form nur halb so viel Magieresistenz wie normal."
+  },
+  "flaw.flawed_powers": {
+    "name": "Fehlerhafte Kräfte",
+    "summary": "Der Charakter muss mindestens eine Große Übernatürliche Tugend besitzen, um diesen Fehler zu nehmen."
+  },
+  "flaw.fluctuating_fortune": {
+    "name": "Schwankendes Glück",
+    "summary": "Die Finanzen des Charakters steigen und fallen wie die Gezeiten, unabhängig davon, wie erfolgreich er ist oder welche Vorsorgemaßnahmen er trifft."
+  },
+  "flaw.follower": {
+    "name": "Mitläufer",
+    "summary": "Der Charakter ist ein Mitläufer, kein Anführer."
+  },
+  "flaw.foreign_upbringing": {
+    "name": "Fremde Erziehung",
+    "summary": "Dieser Fehler ähnelt in gewissem Maße der Konventsprägung, bedeutet jedoch, dass der Charakter ein Ausländer ist und aus einem abgelegenen oder isolierten Winkel des Mythischen Europas stammt."
+  },
+  "flaw.form_monstrosity": {
+    "name": "(Form) Missgeburt",
+    "summary": "Dieser Fehler ist in erster Linie für Tiercharaktere gedacht, kann aber mit Zustimmung der Spieltruppe auch für Charaktere gewählt werden, die im Wesentlichen menschlich sind."
+  },
+  "flaw.fragile_constitution": {
+    "name": "Gebrechliche Konstitution",
+    "summary": "Du bist kränklich und schwach."
+  },
+  "flaw.frail": {
+    "name": "Hinfällig",
+    "summary": "Der Charakter ist von schwacher Statur und verletzt sich leicht bei körperlichen Aktivitäten."
+  },
+  "flaw.fury": {
+    "name": "Raserei",
+    "summary": "Ein jähzorniges Temperament überwältigt dich bisweilen und versetzt dich in eine zerstörerische, unkontrollierbare Wut."
+  },
+  "flaw.gabai": {
+    "name": "Gabai",
+    "summary": "Vom Gemeinderat ernannt, ist der Gabai der örtliche Steuereintreiber."
+  },
+  "flaw.gender_nonconforming_major": {
+    "name": "Geschlechtsnichtkonform (Groß)",
+    "summary": "Du entsprichst nicht dem erwarteten Verhalten für eine Person des Geschlechts, das die Gesellschaft dir in Abwesenheit sozialer Hinweise wie Kleidung und Verhalten zuweisen würde."
+  },
+  "flaw.gender_nonconforming_minor": {
+    "name": "Geschlechtsnichtkonform (Klein)",
+    "summary": "Du entsprichst nicht dem erwarteten Verhalten für eine Person des Geschlechts, das die Gesellschaft dir in Abwesenheit sozialer Hinweise wie Kleidung und Verhalten zuweisen würde."
+  },
+  "flaw.generous_major": {
+    "name": "Großzügig (Groß)",
+    "summary": "Du gibst dein Eigentum bereitwillig an jeden, der es begehrt, selbst wenn er es nicht besonders verdient."
+  },
+  "flaw.generous_minor": {
+    "name": "Großzügig (Klein)",
+    "summary": "Du gibst dein Eigentum bereitwillig an jeden, der es begehrt, selbst wenn er es nicht besonders verdient."
+  },
+  "flaw.greater_malediction": {
+    "name": "Große Verfluchung",
+    "summary": "Du wurdest von einer übernatürlichen Macht verflucht, und zwar auf eine Weise, die dich erheblich behindert."
+  },
+  "flaw.greedy_major": {
+    "name": "Gierig (Groß)",
+    "summary": "Du isst und trinkst gerne und tust dies im Übermaß, wann immer sich die Gelegenheit bietet."
+  },
+  "flaw.greedy_minor": {
+    "name": "Gierig (Klein)",
+    "summary": "Du isst und trinkst gerne und tust dies im Übermaß, wann immer sich die Gelegenheit bietet."
+  },
+  "flaw.grudge": {
+    "name": "Groll",
+    "summary": "Aus irgendeinem Grund, der auf einem vergangenen Ereignis beruht, hegt der Charakter einen starken Groll gegen jemanden, der Teil seines normalen sozialen Umfelds ist und mit dem er freundschaftliche Beziehungen pflegen sollte."
+  },
+  "flaw.gullible": {
+    "name": "Leichtgläubig",
+    "summary": "Von denen wird ständig einer geboren – und das ist dieser Charakter!"
+  },
+  "flaw.hallucinations": {
+    "name": "Halluzinationen",
+    "summary": "Der Charakter leidet unter lebhaften Halluzinationen, die wie echte Visionen erscheinen, aber anstatt von einer höheren Macht zu kommen, sind sie Ausgeburten seiner Vorstellungskraft und Phantasie."
+  },
+  "flaw.harmless_magic": {
+    "name": "Harmlose Magie",
+    "summary": "Die Perdo-Zauber des Charakters können nichts dauerhaft zerstören; sie stören das Ziel vorübergehend, ähnlich wie Perdo-Imaginem-Magie, aber sobald die Dauer verstrichen ist, kehrt das Ziel in seinen natürlichen Zustand zurück, als wäre nic"
+  },
+  "flaw.hatred_major": {
+    "name": "Hass (Groß)",
+    "summary": "Du hasst jemanden oder eine Gruppe so sehr, dass es dein Leben beherrscht, diese zu schädigen."
+  },
+  "flaw.hatred_minor": {
+    "name": "Hass (Klein)",
+    "summary": "Du hasst jemanden oder eine Gruppe so sehr, dass es dein Leben beherrscht, diese zu schädigen."
+  },
+  "flaw.hedge_wizard": {
+    "name": "Heckenzauberer",
+    "summary": "Aufgrund deiner esoterischen Magie misstrauen dir andere Magi und geben dir vor allem keinen Respekt."
+  },
+  "flaw.heir": {
+    "name": "Erbe",
+    "summary": "Du besitzt jetzt wenig Macht oder Reichtum, aber du sollst Land und möglicherweise Geld erben."
+  },
+  "flaw.hermetic_patron": {
+    "name": "Hermetischer Patron",
+    "summary": "Du musst eine Rotkappe oder ein Magus sein, um diesen Fehler zu wählen."
+  },
+  "flaw.higher_purpose_major": {
+    "name": "Höheres Ziel (Groß)",
+    "summary": "Anderen mögen Kleinigkeiten beschäftigen, du verfolgst ein edleres Ziel."
+  },
+  "flaw.higher_purpose_minor": {
+    "name": "Höheres Ziel (Klein)",
+    "summary": "Anderen mögen Kleinigkeiten beschäftigen, du verfolgst ein edleres Ziel."
+  },
+  "flaw.hobbled": {
+    "name": "Humpelnd",
+    "summary": "Beide Beine des Charakters sind stark beschädigt."
+  },
+  "flaw.horrifying_appearance_snake_legs": {
+    "name": "Schreckliches Äußeres – Schlangenbeine",
+    "summary": "Du hast keine Beine, stattdessen gehen von deinen Hüften zwei oder mehr schlangenartige Schwänze aus; du solltest dir überlegen, wie du die Kindheit mit dieser schrecklichen Missgestalt überlebt hast."
+  },
+  "flaw.humble": {
+    "name": "Demütig",
+    "summary": "Du bist bescheiden und immer bereit zu glauben, dass andere geschickter und besser sind als du."
+  },
+  "flaw.hunchback": {
+    "name": "Bucklig",
+    "summary": "Du hast einen missgebildeten Körper, der dir ein groteskes Äußeres verleiht und deine Bewegungen behindert."
+  },
+  "flaw.hunger_for_form_magic": {
+    "name": "Hunger nach (Form)-Magie",
+    "summary": "Der Charakter wurde wiederholt Magie ausgesetzt und ist dadurch auf Magie zum Überleben angewiesen."
+  },
+  "flaw.imagined_folk_tradition_vulnerability": {
+    "name": "Eingebildete Volksüberlieferungsanfälligkeit",
+    "summary": "Obwohl dieser Fehler einer Wahnvorstellung ähnelt, hat die Eingebildete Volksüberlieferungsanfälligkeit auch andere spielmechanische Auswirkungen."
+  },
+  "flaw.impious_friend": {
+    "name": "Gottloser Freund",
+    "summary": "Ein kleiner Dämon gibt sich als Freund des Charakters aus."
+  },
+  "flaw.incompatible_arts": {
+    "name": "Unvereinbare Künste",
+    "summary": "Aus irgendeinem Grund bist du völlig außerstande, zwei Kombinationen von Techniken und Formen zu verwenden."
+  },
+  "flaw.incomprehensible": {
+    "name": "Unverständlich",
+    "summary": "Du bist fast völlig außerstande, das Wissen und das Verständnis zu vermitteln, das du besitzt."
+  },
+  "flaw.inconstant_magic": {
+    "name": "Unbeständige Magie",
+    "summary": "Die Magie des Charakters ist leicht ablenkbar und stottert und stockt."
+  },
+  "flaw.independent_craftsman": {
+    "name": "Unabhängiger Handwerker",
+    "summary": "Dieser Charakter hat seine eigene Art zu arbeiten und mag es nicht, wenn andere ihm in die Quere kommen."
+  },
+  "flaw.indiscreet": {
+    "name": "Indiskret",
+    "summary": "Du kannst kein Geheimnis bewahren."
   },
   "flaw.infamous": {
     "name": "Berüchtigt",
     "summary": "Ein schlechter Ruf der Stufe 4 für frei wählbare schändliche Taten."
   },
+  "flaw.infamous_master": {
+    "name": "Berüchtigter Meister",
+    "summary": "Dein Meister war ein Diabolist, ein Stümper, ein Narr, weithin verachtet oder aus einem anderen Grund in schlechtem Ansehen."
+  },
+  "flaw.inscribed_shadow": {
+    "name": "Eingeschriebener Schatten",
+    "summary": "Die Stigmata des Charakters spiegeln sich als leuchtende Symbole in seinem Schatten wider."
+  },
+  "flaw.jinxed": {
+    "name": "Verhext",
+    "summary": "Der Charakter ist ein Magnet für jedes Unglück."
+  },
+  "flaw.judged_unfairly": {
+    "name": "Ungerecht beurteilt",
+    "summary": "Irgendwie wirkst du auf Menschen falsch, und sie misstrauen dir und unterschätzen dich allgemein."
+  },
+  "flaw.lame": {
+    "name": "Lahm",
+    "summary": "Eines deiner Beine ist geschwächt, sei es von Geburt an oder durch einen Unfall."
+  },
+  "flaw.lecherous_major": {
+    "name": "Wollüstig (Groß)",
+    "summary": "Du strebst nach sexuellem Kontakt mit möglichst vielen Menschen."
+  },
+  "flaw.lecherous_minor": {
+    "name": "Wollüstig (Klein)",
+    "summary": "Du strebst nach sexuellem Kontakt mit möglichst vielen Menschen."
+  },
+  "flaw.leprosy": {
+    "name": "Lepra",
+    "summary": "Der Charakter hat Lepra."
+  },
+  "flaw.lesser_malediction": {
+    "name": "Kleine Verfluchung",
+    "summary": "Du wurdest von einer übernatürlichen Macht verflucht."
+  },
+  "flaw.limited_magic_resistance": {
+    "name": "Begrenzte Magieresistenz",
+    "summary": "Du bist weniger in der Lage, Magie zu widerstehen als andere Magi."
+  },
+  "flaw.lingering_injury": {
+    "name": "Anhaltende Verletzung",
+    "summary": "Der Charakter leidet unter einer alten Verletzung, die nicht richtig heilt, was zu einem –1-Malus auf alle Würfe für körperliche Aktivitäten führt."
+  },
+  "flaw.loose_magic": {
+    "name": "Lose Magie",
+    "summary": "Dein Fortschrittssumme wird halbiert, wann immer du versuchst, Zauber zu meistern."
+  },
+  "flaw.lost_love": {
+    "name": "Verlorene Liebe",
+    "summary": "Du hast deine wahre Liebe durch Tod, Entfernung oder Heirat verloren."
+  },
+  "flaw.low_self_esteem": {
+    "name": "Geringes Selbstwertgefühl",
+    "summary": "Du hast eine gedämpfte Meinung von deinem eigenen Selbstwert."
+  },
+  "flaw.low_tolerance": {
+    "name": "Geringe Toleranz",
+    "summary": "Der Charakter kann Schmerz und Erschöpfung nicht leicht ertragen."
+  },
+  "flaw.lycanthrope": {
+    "name": "Lykanthrop",
+    "summary": "Du wurdest verflucht, dich bei Vollmond (oder ähnlichen, monatlichen astronomischen Ereignissen) in ein gefährliches Raubtier (z.B."
+  },
+  "flaw.magic_addiction": {
+    "name": "Magiesucht",
+    "summary": "Du sehnst dich nach dem Rausch des Zauberns und dem Machterlebnis über die Magie."
+  },
+  "flaw.magical_air": {
+    "name": "Magische Ausstrahlung",
+    "summary": "Menschen und Tiere reagieren auf dich, als hättest du die Gabe."
+  },
+  "flaw.magical_being_companion": {
+    "name": "Magischer (Wesen)-Gefährte",
+    "summary": "Der Charakter wird von einem intelligenten magischen Wesen begleitet, das klug genug ist, Befehlen zu folgen oder sie auf eigene Initiative zu verweigern, und für das der Charakter regelmäßig sorgen muss."
+  },
+  "flaw.magical_fascination": {
+    "name": "Magische Faszination",
+    "summary": "Dieser Charakter ist intensiv an übernatürlichen und magischen Phänomenen interessiert, unter Ausschluss aller anderen Motivationen."
+  },
+  "flaw.manifest_sin": {
+    "name": "Offenbarte Sünde",
+    "summary": "Eine Sünde oder ein Verbrechen, das dieser Charakter in der Vergangenheit begangen hat, befleckt seinen Geist und ist für diejenigen sichtbar, die Dinge wahrnehmen können, die sterblichen Sinnen verborgen sind."
+  },
+  "flaw.manufactured_ignorance": {
+    "name": "Fabrizierte Unwissenheit",
+    "summary": "Die verdorbene Person leidet an einer Wahnvorstellung, aber ihr irrtümlicher Glaube wird von einer Gruppe kleiner Dämonen aufrechterhalten, die eine Reihe von Belegen dafür liefern."
+  },
+  "flaw.many_marriageable_daughters": {
+    "name": "Viele heiratsfähige Töchter",
+    "summary": "Der Charakter hat viele Töchter und muss an Geschichten teilnehmen, um sie standesgemäß zu verheiraten."
+  },
+  "flaw.master_of_none": {
+    "name": "Meister von nichts",
+    "summary": "Ob aus eigenem Willen oder aus äußeren Umständen, dieser Charakter scheint nie länger als eine Jahreszeit bei einer Aufgabe oder einem Beruf zu bleiben, meistens folgt er der Arbeit, wie sie durch das Jahr wandert."
+  },
+  "flaw.meddler_major": {
+    "name": "Einmischer (Groß)",
+    "summary": "Du möchtest das Leben anderer Menschen in Ordnung bringen: Ehen vermitteln, Kinder das „richtige\" Nähen lehren oder Kranke pflegen."
+  },
+  "flaw.meddler_minor": {
+    "name": "Einmischer (Klein)",
+    "summary": "Du möchtest das Leben anderer Menschen in Ordnung bringen: Ehen vermitteln, Kinder das „richtige\" Nähen lehren oder Kranke pflegen."
+  },
+  "flaw.mentor": {
+    "name": "Mentor",
+    "summary": "Eine Person von einigem Ansehen, Reichtum oder Weisheit hat sich für dein Leben interessiert und gibt dir gelegentlich kleine materielle Hilfe und Ratschläge."
+  },
+  "flaw.missing_ear": {
+    "name": "Fehlendes Ohr",
+    "summary": "Du kannst die Richtung von Geräuschen nicht genau orten und erleidest –3 auf Hörwürfe."
+  },
+  "flaw.missing_eye": {
+    "name": "Fehlendes Auge",
+    "summary": "Du kannst kurze Abstände nicht leicht einschätzen und erhältst –3 auf Angriffswürfe mit Fernkampfwaffen und Zielwürfe für Zauber."
+  },
+  "flaw.missing_hand": {
+    "name": "Fehlende Hand",
+    "summary": "Vielleicht war es ein Unfall oder eine Strafe in deiner Vergangenheit, die dich eine deiner Hände gekostet hat."
+  },
+  "flaw.mistaken_identity": {
+    "name": "Verwechslung",
+    "summary": "Jemand, der genau so aussieht wie du und dem du und deine Gefährten höchstwahrscheinlich nie begegnen werdet, lebt in deiner Nähe und ist für eine Vielzahl anhaltender Gewalttaten, Gesetzesbrüche, Obszönitäten oder peinlicher Vorfälle veran"
+  },
+  "flaw.monastic_vows": {
+    "name": "Klostergelübde",
+    "summary": "Du hast Gelübde der Armut, der Keuschheit und des Gehorsams gegenüber einem geistlichen Vorgesetzten abgelegt."
+  },
+  "flaw.monastic_vows_hermetic": {
+    "name": "Klostergelübde (Hermetisch)",
+    "summary": "Du hast Gelübde der Armut, der Keuschheit und des Gehorsams gegenüber einem geistlichen Vorgesetzten abgelegt, was bedeutet, dass du kein Vis besitzen und nur funktionale Magieartefakte haben darfst."
+  },
+  "flaw.monstrous_blood": {
+    "name": "Monströses Blut",
+    "summary": "Die essentielle Natur des Charakters wurde durch den Kontakt mit der Magiesphäre verändert – häufig infolge einer Beziehung zu einem magischen Wesen –, was seiner wahren Gestalt unglückselige übernatürliche Eigenschaften verleiht."
+  },
+  "flaw.motion_sickness": {
+    "name": "Reisekrankheit",
+    "summary": "Das Reiten auf einem Pferd, das Fahren in einem Karren oder das Segeln auf einem Schiff macht dich schwer krank."
+  },
+  "flaw.mute": {
+    "name": "Stumm",
+    "summary": "Du kannst nicht sprechen; möglicherweise wurde dir die Zunge herausgeschnitten."
+  },
+  "flaw.necessary_condition": {
+    "name": "Notwendige Bedingung",
+    "summary": "Damit deine Magie funktioniert, musst du beim Wirken jedes Zaubers eine bestimmte Handlung ausführen."
+  },
+  "flaw.necessary_realm_aura_for_ability": {
+    "name": "Notwendige (Sphäre)-Aura für (Fertigkeit)",
+    "summary": "Aufgrund einer Verbindung mit einer bestimmten übernatürlichen Sphäre wirkt sich das Fehlen einer entsprechenden übernatürlichen Aura deutlich auf die Fähigkeit des Charakters aus, sich auf bestimmte Aufgaben zu konzentrieren."
+  },
+  "flaw.night_terrors": {
+    "name": "Nachtschrecken",
+    "summary": "Dieser Charakter wird viel zu oft von schrecklichen Albträumen und Schreianfällen im Schlaf heimgesucht."
+  },
+  "flaw.no_hands": {
+    "name": "Keine Hände",
+    "summary": "Du hast keine Hände."
+  },
+  "flaw.no_sense_of_direction": {
+    "name": "Kein Orientierungssinn",
+    "summary": "Du bist völlig unfähig, Richtungsangaben zu folgen."
+  },
+  "flaw.nocturnal": {
+    "name": "Nachtmensch",
+    "summary": "Dein natürlicher Körperrhythmus versucht, dich bis zum Mittag schlafen zu lassen."
+  },
+  "flaw.noncombatant": {
+    "name": "Nichtkämpfer",
+    "summary": "Du hast kein Interesse am Kampf und auch keine Fähigkeit dazu."
+  },
+  "flaw.oath_of_fealty": {
+    "name": "Treueeid",
+    "summary": "Du hast jemandem außerhalb des Konvents einen Eid der Loyalität und Unterstützung geschworen, und manchmal werden sie dich auffordern, deinen Schwur einzuhalten."
+  },
+  "flaw.obese": {
+    "name": "Fettleibig",
+    "summary": "Du bist wegen Fett groß, nicht wegen Muskeln."
+  },
+  "flaw.obsessed_major": {
+    "name": "Besessen (Groß)",
+    "summary": "Du bist auf ein begehrtes Objekt, eine Handlung oder ein Ideal fixiert."
+  },
+  "flaw.obsessed_minor": {
+    "name": "Besessen (Klein)",
+    "summary": "Du bist auf ein begehrtes Objekt, eine Handlung oder ein Ideal fixiert."
+  },
+  "flaw.offensive_to_beings": {
+    "name": "Abstoßend für (Wesen)",
+    "summary": "Dieser Fehler ist mit einer von sechs Klassen von Wesen verbunden: Tiere, sterbliche Menschen, göttliche Wesen, Feen, Dämonen oder magische Kreaturen."
+  },
+  "flaw.optimistic_major": {
+    "name": "Optimistisch (Groß)",
+    "summary": "Du bist überzeugt, dass alles zum Besten ausgeht."
+  },
+  "flaw.optimistic_minor": {
+    "name": "Optimistisch (Klein)",
+    "summary": "Du bist überzeugt, dass alles zum Besten ausgeht."
+  },
+  "flaw.outcast": {
+    "name": "Ausgestoßener",
+    "summary": "Du hast die schwierige Aufgabe, allein klarzukommen – die normale Gesellschaft lehnt dich ab, und du bist nicht an einen Konvent gebunden."
+  },
+  "flaw.outlaw": {
+    "name": "Geächteter",
+    "summary": "Du wurdest geächtet und musst außerhalb der Gesellschaft mit deinem Verstand überleben."
+  },
+  "flaw.outlaw_leader": {
+    "name": "Anführer von Geächteten",
+    "summary": "Du befehligst eine kleine Gruppe (drei bis sechs Personen) von Geächteten."
+  },
+  "flaw.outsider_major": {
+    "name": "Außenseiter (Groß)",
+    "summary": "Du gehörst einer Gruppe an, die sowohl leicht erkennbar als auch misstrauisch behandelt oder ungemocht wird."
+  },
+  "flaw.outsider_minor": {
+    "name": "Außenseiter (Klein)",
+    "summary": "Du gehörst einer Gruppe an, die sowohl leicht erkennbar als auch misstrauisch behandelt oder ungemocht wird."
+  },
+  "flaw.overconfident_major": {
+    "name": "Überheblich (Groß)",
+    "summary": "Du hast einen völlig unerschütterlichen Glauben an deine eigenen Fähigkeiten."
+  },
+  "flaw.overconfident_minor": {
+    "name": "Überheblich (Klein)",
+    "summary": "Du hast einen völlig unerschütterlichen Glauben an deine eigenen Fähigkeiten."
+  },
+  "flaw.oversensitive_major": {
+    "name": "Überempfindlich (Groß)",
+    "summary": "Etwas, das andere nur unangenehm finden, hältst du für unerträglich."
+  },
+  "flaw.oversensitive_minor": {
+    "name": "Überempfindlich (Klein)",
+    "summary": "Etwas, das andere nur unangenehm finden, hältst du für unerträglich."
+  },
   "flaw.pagan": {
     "name": "Heide",
     "summary": "Du folgst nicht der Kirche und wurdest nie getauft."
+  },
+  "flaw.painful_magic": {
+    "name": "Schmerzhafte Magie",
+    "summary": "Das Wirken von Zaubern verursacht dir das Äquivalent einer Erschöpfungsstufe an Schmerz für jeden Zauber, den du wirkst."
+  },
+  "flaw.palsied_hands": {
+    "name": "Zitternde Hände",
+    "summary": "Deine Hände zittern unkontrollierbar, was das Wirken von Zaubern oder das Halten von Gegenständen erschwert."
+  },
+  "flaw.pessimistic": {
+    "name": "Pessimistisch",
+    "summary": "Du erwartest immer das Schlimmste."
+  },
+  "flaw.pious_major": {
+    "name": "Fromm (Groß)",
+    "summary": "Du bist ein glühender Anhänger deiner Religion."
+  },
+  "flaw.pious_minor": {
+    "name": "Fromm (Klein)",
+    "summary": "Du bist ein glühender Anhänger deiner Religion."
+  },
+  "flaw.plagued_by_supernatural_entity": {
+    "name": "Von übernatürlichem Wesen geplagt",
+    "summary": "Ein übernatürliches Wesen mischt sich regelmäßig in dein Leben ein."
   },
   "flaw.poor_characteristic": {
     "name": "Schlechte {characteristic}",
     "summary": "Senke eine Eigenschaft, die bereits bei −3 liegt, bis mindestens −5; die Punkte erhältst du weiterhin."
   },
+  "flaw.poor_concentration": {
+    "name": "Schlechte Konzentration",
+    "summary": "Obwohl der Charakter vielleicht einen Geist hat, der schnell Entscheidungen trifft, hat er eine kurze Aufmerksamkeitsspanne."
+  },
+  "flaw.poor_eyesight": {
+    "name": "Schlechtes Sehvermögen",
+    "summary": "Verschwommenes Sehen beeinträchtigt deine Leistung."
+  },
+  "flaw.poor_formulaic_magic": {
+    "name": "Schwache Formulaische Magie",
+    "summary": "Du bist einfach nicht gut in Formulaischer Magie."
+  },
+  "flaw.poor_hearing": {
+    "name": "Schlechtes Hörvermögen",
+    "summary": "Ziehe 3 von Würfen ab, die das Hören beinhalten."
+  },
+  "flaw.poor_living_conditions": {
+    "name": "Schlechte Lebensbedingungen",
+    "summary": "Entweder aufgrund der eigenen schlechten Lebensbedingungen des Charakters oder jener von Personen, mit denen er häufig in Kontakt steht, ist er anfälliger für die Beschwerlichkeiten des täglichen Lebens."
+  },
+  "flaw.poor_memory": {
+    "name": "Schlechtes Gedächtnis",
+    "summary": "Du hast große Schwierigkeiten, eine bestimmte Art von Dingen zu erinnern, etwa Namen, Gesichter oder Orte."
+  },
   "flaw.poor_student": {
     "name": "Schlechter Schüler",
     "summary": "Du lernst schlecht aus Büchern und von Lehrern."
+  },
+  "flaw.primitive_equipment": {
+    "name": "Primitive Ausrüstung",
+    "summary": "Der Charakter ist nur in der Lage, die einfachsten Werkzeuge und Ausrüstungen zu verwenden."
+  },
+  "flaw.primogeniture_lineage": {
+    "name": "Erstgeburts-Abstammung",
+    "summary": "Der Charakter steht in der Nachfolge für den Primus von Haus Verditius."
+  },
+  "flaw.prohibition": {
+    "name": "Verbot",
+    "summary": "Dir wurde ein Bedingter Fluch (auch als „Geis\" bekannt) auferlegt und du musst die Einschränkungen deines Verbots befolgen oder durch den Fluch bestraft werden."
+  },
+  "flaw.proud_major": {
+    "name": "Stolz (Groß)",
+    "summary": "Du glaubst, dass du wichtiger bist als fast alle anderen, und erwartest den entsprechenden Respekt."
+  },
+  "flaw.proud_minor": {
+    "name": "Stolz (Klein)",
+    "summary": "Du glaubst, dass du wichtiger bist als fast alle anderen, und erwartest den entsprechenden Respekt."
+  },
+  "flaw.raised_from_the_dead": {
+    "name": "Vom Tode auferstanden",
+    "summary": "Du bist gestorben und durch ein heiliges Wunder ins Leben zurückgebracht worden."
+  },
+  "flaw.raised_in_the_gutter": {
+    "name": "In der Gosse aufgewachsen",
+    "summary": "Dieser Charakter wurde am Rand der Gesellschaft großgezogen."
+  },
+  "flaw.realm_stigmatic": {
+    "name": "(Sphäre)-Stigmatisierter",
+    "summary": "Der Charakter manifestiert gelegentlich in Gegenwart übernatürlicher Kräfte körperliche Phänomene."
+  },
+  "flaw.rebellious_major": {
+    "name": "Aufsässig (Groß)",
+    "summary": "Du reagierst nachteilig auf jeden Versuch, Autorität über dich auszuüben, und arbeitest gegen jene, die das Kommando haben."
+  },
+  "flaw.rebellious_minor": {
+    "name": "Aufsässig (Klein)",
+    "summary": "Du reagierst nachteilig auf jeden Versuch, Autorität über dich auszuüben, und arbeitest gegen jene, die das Kommando haben."
+  },
+  "flaw.reckless_major": {
+    "name": "Rücksichtslos (Groß)",
+    "summary": "Du neigst dazu, bedrohliche Situationen nicht zu bemerken, und überlegst schon gar nicht, ob sie es sein könnten."
+  },
+  "flaw.reckless_minor": {
+    "name": "Rücksichtslos (Klein)",
+    "summary": "Du neigst dazu, bedrohliche Situationen nicht zu bemerken, und überlegst schon gar nicht, ob sie es sein könnten."
+  },
+  "flaw.reclusive": {
+    "name": "Zurückgezogen",
+    "summary": "Du magst es nicht, gestört oder unterbrochen zu werden."
+  },
+  "flaw.rector": {
+    "name": "Rektor/Prorektor",
+    "summary": "Der Charakter ist der gewählte Sprecher seiner Fakultät oder Nation an einer Universität, je nachdem, ob er Magister oder Student ist."
+  },
+  "flaw.regular": {
+    "name": "Regelmäßig",
+    "summary": "Der Charakter lebt nach einer strengen religiösen Regel, die wenig Zeit für andere Aktivitäten lässt."
+  },
+  "flaw.repellent": {
+    "name": "Abstoßend",
+    "summary": "Der Charakter hat eines der körperlichen Merkmale seines dämonischen Schöpfers entwickelt, das bei normalen Menschen Furcht und Abscheu hervorruft."
+  },
+  "flaw.restricted_learning": {
+    "name": "Eingeschränktes Lernen",
+    "summary": "Der Charakter ist unfähig, ohne Unterstützung neue Dinge zu erlernen."
+  },
+  "flaw.restricted_power": {
+    "name": "Eingeschränkte Macht",
+    "summary": "Dieser Fehler schränkt die Nutzung einer übernatürlichen Kraft ein, die normalerweise nach Belieben eingesetzt werden kann, wie etwa jene, die durch die Tugenden Fokussierte Macht, Große Macht, Mindere Macht, Persönliche Kraft und Ritualmac"
+  },
+  "flaw.restriction": {
+    "name": "Einschränkung",
+    "summary": "Du kannst unter bestimmten, seltenen Bedingungen überhaupt keine Zauber wirken."
+  },
+  "flaw.rigid_magic": {
+    "name": "Starre Magie",
+    "summary": "Du kannst beim Wirken von Zaubern keine Vis verwenden."
+  },
+  "flaw.rolling_stone": {
+    "name": "Rastloser Wanderer",
+    "summary": "Der rollende Stein setzt kein Moos an, und dieser Charakter auch nicht."
+  },
+  "flaw.savantism": {
+    "name": "Savantismus",
+    "summary": "Die Familie des Charakters wurde von Feen verflucht; seine Mutter stolperte während der Schwangerschaft über einen Hasen; oder er wurde auf dem Rücken eines Pferdes geboren."
+  },
+  "flaw.secretive": {
+    "name": "Geheimniskrämerisch",
+    "summary": "Der Charakter neigt dazu, Geheimnisse vor seinen Sodales zu bewahren."
+  },
+  "flaw.seeker": {
+    "name": "Sucher",
+    "summary": "Du bist ein selbsternanntes Mitglied der Sucher, einer losen Organisation konkurrierender Magi, die nach alter Magie und arkanen Artefakten suchen."
+  },
+  "flaw.servant_of_the_land": {
+    "name": "Diener des (Landes)",
+    "summary": "Eine mächtige magische Kreatur hat den Charakter vor dem Tod bewahrt oder eine ähnliche Wohltat gewährt, und als Gegenleistung wurde dem Charakter eine Aufgabe übertragen."
+  },
+  "flaw.sheltered_upbringing": {
+    "name": "Behütete Kindheit",
+    "summary": "Du bist vollständig von der Gesellschaft getrennt aufgewachsen und kanntest nur deine Eltern oder deinen Mentor."
+  },
+  "flaw.short_attention_span": {
+    "name": "Kurze Aufmerksamkeitsspanne",
+    "summary": "Du hast Schwierigkeiten, dich zu konzentrieren."
+  },
+  "flaw.short_lived_magic": {
+    "name": "Kurzlebige Magie",
+    "summary": "Deine Zauber dauern nicht so lange, wie sie sollten."
+  },
+  "flaw.short_of_breath": {
+    "name": "Kurzatmig",
+    "summary": "Der Charakter kann beim Anstrengen nicht so lange durchhalten wie andere und ermüdet bei längerer körperlicher Aktivität schnell."
+  },
+  "flaw.short_ranged_magic": {
+    "name": "Kurzreichweitige Magie",
+    "summary": "Halbiere deine Zaubersummen, wenn du das Ziel des Zaubers nicht berührst."
+  },
+  "flaw.simple_minded": {
+    "name": "Einfältig",
+    "summary": "Du kannst immer nur an eine Sache gleichzeitig denken – die Brücke bewachen, nach einem fehlenden Ring suchen oder sich in den Bäumen verstecken."
+  },
+  "flaw.sleep_disorder": {
+    "name": "Schlafstörung",
+    "summary": "Mehr als nicht, ist dieser Charakter nachts unfähig, ruhig zu schlafen."
+  },
+  "flaw.slothful": {
+    "name": "Träge",
+    "summary": "Der Charakter ist faul und indolent und genießt nichts mehr, als so wenig wie möglich zu tun."
+  },
+  "flaw.slow_caster": {
+    "name": "Langsamer Zauberer",
+    "summary": "Deine Magie benötigt mehr Zeit zur Vorbereitung und Ausführung als die anderer Magi."
+  },
+  "flaw.slow_power": {
+    "name": "Langsame Kraft",
+    "summary": "Eine der übernatürlichen Kräfte des Charakters ist sehr langsam, sodass sie eine zusätzliche Vorbereitungsrunde zur Aktivierung benötigt."
+  },
+  "flaw.slow_reflexes": {
+    "name": "Langsame Reflexe",
+    "summary": "Der Charakter reagiert nicht gut auf Überraschungen."
+  },
+  "flaw.small_frame": {
+    "name": "Zierlicher Körperbau",
+    "summary": "Du hast einen leichter als durchschnittlichen Körperbau."
+  },
+  "flaw.social_handicap": {
+    "name": "Sozialer Makel",
+    "summary": "Du besitzt eine Eigenart, die es dir erschwert, mit anderen Menschen umzugehen."
+  },
+  "flaw.soft_hearted": {
+    "name": "Weiches Herz",
+    "summary": "Du kannst es nicht ertragen, Leid mit anzusehen, und es zuzufügen raubt dir den Schlaf."
+  },
+  "flaw.spontaneous_casting_tools": {
+    "name": "Spontane Zauberwerkzeuge",
+    "summary": "Der Charakter muss Zauberwerkzeuge einsetzen, um spontane Zauber zu wirken, genauso wie er es für formulaische Zauber tut."
+  },
+  "flaw.stigmatic_catalyst": {
+    "name": "Stigma-Katalysator",
+    "summary": "Die Anwesenheit des Charakters verursacht manchmal, dass symbolische Male auf den Körpern von Menschen in der Nähe erscheinen, die keine Magieresistenz besitzen."
+  },
+  "flaw.stockade_parma_magica": {
+    "name": "Palisaden-Parma Magica",
+    "summary": "Aufgrund deines eingeschränkten Verständnisses der Parma Magica kannst du deine Parma nicht unterdrücken, sobald du sie errichtet hast."
+  },
+  "flaw.stuck_in_your_ways": {
+    "name": "Festgefahren",
+    "summary": "Da dieser Charakter aus einem Konvent stammt, weiß er, wie die Dinge getan werden müssen, um den Bedürfnissen von Konventsbewohnern und Magi gleichermaßen am besten zu dienen."
+  },
+  "flaw.study_requirement": {
+    "name": "Studienbedingung",
+    "summary": "Du bist nicht in der Lage, Magie allein aus Büchern oder Vis zu studieren."
+  },
+  "flaw.supernatural_nuisance": {
+    "name": "Übernatürliche Plage",
+    "summary": "Übernatürliche Wesen einer bestimmten Art mischen sich auf geringfügige Weise in dein Leben ein, wann immer du dich in ihrer Nähe befindest."
+  },
+  "flaw.suppressed_gift": {
+    "name": "Unterdrückte Gabe",
+    "summary": "Der Charakter besitzt die Gabe, kann aber nicht auf ihre Kraft zugreifen, da er seine magische Fähigkeit vorübergehend durch einen Missgeschick oder ein anderes Unglück verloren hat."
+  },
+  "flaw.surgical_empiricus": {
+    "name": "Chirurgischer Empiriker",
+    "summary": "Du bist von Beruf Chirurg, hast aber nie eine breite Grundausbildung in diesem Fach erhalten; vielmehr hat sich deine Ausbildung nur auf einen einzigen Aspekt der Chirurgie konzentriert."
+  },
+  "flaw.susceptibility_to_divine_power": {
+    "name": "Anfälligkeit für Göttliche Macht",
+    "summary": "Du bist besonders empfindlich gegenüber dem Dominium und erleidest doppelt so starke normale Strafen (wie Zauberwirkungsmodifikatoren und Patzerwürfel) auf deine Magie, wenn du dich in einer göttlichen Aura befindest."
+  },
+  "flaw.susceptibility_to_faerie_power": {
+    "name": "Anfälligkeit für Feenmacht",
+    "summary": "Du bist besonders anfällig gegenüber Feen und ihrer Magie."
+  },
+  "flaw.susceptibility_to_infernal_power": {
+    "name": "Anfälligkeit für Höllische Macht",
+    "summary": "Du bist besonders anfällig gegenüber den dunklen Mächten."
+  },
+  "flaw.susceptibility_to_sunlight": {
+    "name": "Anfälligkeit für Sonnenlicht",
+    "summary": "Direktes, helles Sonnenlicht verursacht dir spürbaren Schmerz und erschöpft dich."
+  },
+  "flaw.susceptibility_to_warping": {
+    "name": "Anfälligkeit für Verzerrung",
+    "summary": "Die ständige Exposition des Charakters gegenüber Magie hat ihn anfälliger für übernatürliche Verzerrung gemacht, als er es sonst wäre."
+  },
+  "flaw.tainted_offspring": {
+    "name": "Befleckter Nachwuchs",
+    "summary": "Der Charakter hat ein Kind, das von einem mächtigen Dämon für große, aber unangenehme Dinge bestimmt wurde."
+  },
+  "flaw.tainted_with_evil": {
+    "name": "Mit dem Bösen befleckt",
+    "summary": "Eine Aura der Verdorbenheit umgibt dich als Folge von etwas, das du, deine Eltern oder deine Vorfahren getan haben."
+  },
+  "flaw.temperate": {
+    "name": "Gemäßigt",
+    "summary": "Du fröhnst keinem sinnlichen Vergnügen übermäßig."
+  },
+  "flaw.the_constant_expression": {
+    "name": "Der Stete Ausdruck",
+    "summary": "Die Maga bildet den Mittelpunkt eines magischen Mahlstroms und wirkt fortwährend nicht-ermüdende Spontane Magie-Effekte."
+  },
+  "flaw.the_falling_evil": {
+    "name": "Fallsucht",
+    "summary": "Der Charakter leidet gelegentlich unter Krämpfen und Ohnmachtsanfällen."
+  },
+  "flaw.tormenting_master": {
+    "name": "Quälender Meister",
+    "summary": "Dein Meister glaubt nicht, dass du die Lehrlingsprüfung (die Prüfung zum Magus) erfolgreich bestanden hast."
   },
   "flaw.tragic_life": {
     "name": "Tragisches Leben",
     "summary": "Dämonen haben dein Leben zu deinem Nachteil manipuliert; du bist befleckt."
   },
+  "flaw.true_love_major": {
+    "name": "Wahre Liebe (Groß)",
+    "summary": "Du hast den einen Menschen gefunden, der in der ganzen Schöpfung für dich bestimmt ist, und die Verbindung zwischen euch beiden kann nicht zerrissen werden."
+  },
+  "flaw.true_love_minor": {
+    "name": "Wahre Liebe (Klein)",
+    "summary": "Du hast den einen Menschen gefunden, der in der ganzen Schöpfung für dich bestimmt ist, und die Verbindung zwischen euch beiden kann nicht zerrissen werden."
+  },
+  "flaw.twilight_prone": {
+    "name": "Zwielicht-anfällig",
+    "summary": "Du genießt es entweder, übermäßige Mengen an Magie durch dich hindurchfließen zu lassen, wenn du Zauber wirkst, oder du kannst es nicht verhindern."
+  },
+  "flaw.tzadik_nistar": {
+    "name": "Tzadik Nistar",
+    "summary": "Dein Charakter ist einer der Tzadikim Nistarim, einer der 36 verborgenen Gerechten, von denen der Fortbestand der Welt abhängt."
+  },
+  "flaw.unbaptized": {
+    "name": "Ungetauft",
+    "summary": "Du bist ein Christ, der aus welchem Grund auch immer nie getauft wurde, vielleicht weil du einen übernatürlichen Hintergrund hast, der durch die Zeremonie zunichte gemacht werden könnte — viele Magi glauben, dass die Taufe die Gabe beeinträ"
+  },
+  "flaw.unbearable_to_beings": {
+    "name": "Unerträglich für (Wesen)",
+    "summary": "Dieser Fehler ist mit einer von drei Klassen von Wesen verbunden: sterbliche Menschen, Dämonen oder göttliche Wesen."
+  },
+  "flaw.uncertain_faith": {
+    "name": "Unsicherer Glaube",
+    "summary": "Ob durch einen Mangel im Verständnis der Lehre des Charakters, eine moralische Zerrissenheit, die entmutigende Absolution wiederholter Sünden oder die Exposition gegenüber widersprüchlichen Philosophien — er hat Schwierigkeiten, seine Hinga"
+  },
+  "flaw.uncontrollable_strength": {
+    "name": "Unkontrollierbare Stärke",
+    "summary": "Dieser Charakter kennt seine eigene Kraft nicht und hat manchmal Schwierigkeiten, sie zu kontrollieren."
+  },
+  "flaw.unhappily_married": {
+    "name": "Unglücklich verheiratet",
+    "summary": "Junge Kaufleute heiraten oft aus finanziellen Gründen."
+  },
+  "flaw.unimaginative_learner": {
+    "name": "Einfallsloser Lerner",
+    "summary": "Du hast Schwierigkeiten, Dinge selbst herauszufinden."
+  },
+  "flaw.uninspirational": {
+    "name": "Uninspirierend",
+    "summary": "Dieser Charakter ist farblos, langweilig und schlicht, mit fast keiner Chance, jemals aufzufallen oder jemanden zu begeistern."
+  },
+  "flaw.university_dean": {
+    "name": "Universitätsdekan",
+    "summary": "Der Charakter ist der Leiter einer Universität und hat bereits seinen Doktor in (Fachbereich) erworben."
+  },
+  "flaw.unlucky": {
+    "name": "Unglücklich",
+    "summary": "Der Charakter ist außergewöhnlich unglücklich und bekommt von den Mächten des Zufalls häufig eine schlechte Hand zugeteilt."
+  },
+  "flaw.unnatural_magic": {
+    "name": "Unnatürliche Magie",
+    "summary": "Aufgrund der unwirklichen und illusionären Natur der Magie des Charakters haben keine seiner Creo-Rituale einen dauerhaften Effekt."
+  },
+  "flaw.unpredictable_magic": {
+    "name": "Unberechenbare Magie",
+    "summary": "Du würfelst beim Einsetzen von Magie immer einen Stresswürfel, auch wenn du völlig entspannt bist."
+  },
+  "flaw.unruly_air": {
+    "name": "Ungebändigte Ausstrahlung",
+    "summary": "Der Charakter hat eine Neigung, Situationen aufzurühren, angenehme Ereignisse zu verbessern und unangenehme zu verschlimmern."
+  },
+  "flaw.unspecialized": {
+    "name": "Nicht spezialisiert",
+    "summary": "Der Charakter hat keine Spezialisierungen in irgendeiner seiner Fertigkeiten."
+  },
+  "flaw.unstructured_caster": {
+    "name": "Unstrukturierter Zauberer",
+    "summary": "Du hast die Feinheiten des Zauberwirkens nie wirklich gemeistert und bist nicht in der Lage, Formulaische Magie ohne extreme Anstrengung zu wirken."
+  },
+  "flaw.usurer": {
+    "name": "Wucherer",
+    "summary": "Du verleiht oft Silber oder andere Wertsachen an Menschen zu Zinssätzen, die viele als missbräuchlich betrachten."
+  },
+  "flaw.vendetta": {
+    "name": "Vendetta",
+    "summary": "Der Magus ist in eine der Vendettas des Hauses Verditius verwickelt und führt höchstwahrscheinlich die Vendetta seines Parens gegen einen anderen Verditius-Magus fort."
+  },
+  "flaw.vengeful_powers": {
+    "name": "Rachsüchtige Mächte",
+    "summary": "Der Charakter hat eine oder mehrere nicht-höllische Mächte, an denen die Höllische Sphäre ein persönliches Interesse genommen hat."
+  },
+  "flaw.viaticarus": {
+    "name": "Viaticarus",
+    "summary": "Zu einem Zeitpunkt in der Vergangenheit des Charakters war er dem Tode nahe, und infolgedessen spendete ihm ein Priester das Sakrament der Letzten Ölung."
+  },
+  "flaw.visions": {
+    "name": "Visionen",
+    "summary": "Du siehst oft Bilder, die mit emotional oder magisch aufgeladenen Ereignissen zusammenhängen."
+  },
+  "flaw.vow_major": {
+    "name": "Gelübde (Groß)",
+    "summary": "Du hast geschworen, etwas Schwieriges zu tun, und das Brechen deines Gelübdes ist eine ernsthafte Angelegenheit."
+  },
+  "flaw.vow_minor": {
+    "name": "Gelübde (Klein)",
+    "summary": "Du hast geschworen, etwas Schwieriges zu tun, und das Brechen deines Gelübdes ist eine ernsthafte Angelegenheit."
+  },
+  "flaw.vulnerable_casting": {
+    "name": "Anfälliges Zaubern",
+    "summary": "Manche Magi können den Erschöpfungsverlust durch das Wirken von Zaubern besser verkraften, andere weniger."
+  },
+  "flaw.vulnerable_magic": {
+    "name": "Anfällige Magie",
+    "summary": "Die Magie des Charakters wird unter bestimmten ungewöhnlichen Umständen automatisch aufgelöst."
+  },
+  "flaw.vulnerable_to_folk_tradition": {
+    "name": "Anfällig für Volksüberlieferungen",
+    "summary": "Die Magie des Magus ist anfällig gegenüber verschiedenen Volksheilmitteln zur Abwehr feindlicher Zauber."
+  },
+  "flaw.wanderlust": {
+    "name": "Wanderlust",
+    "summary": "Der Charakter fühlt sich getrieben zu reisen mit einer Leidenschaft, die so stark ist, dass er nicht mehr als ein Quartal an demselben Ort verbringen kann."
+  },
+  "flaw.warped_by_magic": {
+    "name": "Durch Magie Verzerrt",
+    "summary": "Die Abenteuer des Charakters haben ihn mächtigen magischen Kräften ausgesetzt, die eine Spur an ihm hinterlassen haben."
+  },
+  "flaw.warped_magic": {
+    "name": "Verzerrte Magie",
+    "summary": "Deine Magie wird von einem unangenehmen Nebeneffekt begleitet, der sich immer auf dieselbe Weise manifestiert, aber mit zunehmender Intensität entsprechend der Stufe des Zaubers."
+  },
+  "flaw.warped_senses": {
+    "name": "Verzerrte Sinne",
+    "summary": "Der Charakter ist gegenüber Umgebungsbedingungen zu empfindlich geworden, was sein Verhalten in bestimmten ungewöhnlichen Umständen beeinflusst."
+  },
+  "flaw.waster_of_vis": {
+    "name": "Vis-Verschwender",
+    "summary": "Wenn du rohes Vis einsetzt, verschwendest du ein Viertel (aufgerundet) der angewendeten Bauern."
+  },
+  "flaw.weak_characteristics": {
+    "name": "Schwache Eigenschaften",
+    "summary": "Du hast drei Punkte weniger, um Eigenschaften zu kaufen, als die meisten Charaktere."
+  },
+  "flaw.weak_enchanter": {
+    "name": "Schwacher Verzauberer",
+    "summary": "Deine Gabe ist schlecht dazu geeignet, verzauberte Gegenstände zu erschaffen."
+  },
+  "flaw.weak_magic": {
+    "name": "Schwache Magie",
+    "summary": "Deine Magie ist besonders schlecht darin, Magieresistenz zu durchdringen."
+  },
+  "flaw.weak_magic_resistance": {
+    "name": "Schwache Magieresistenz",
+    "summary": "Jede Form von Magieresistenz, die du erzeugst, ist unter relativ häufigen Umständen, die ein Gegner leicht nutzen kann, viel schwächer — etwa wenn du nass bist oder dem Zaubernden den Rücken zukehrst."
+  },
   "flaw.weak_parens": {
     "name": "Schwacher Parens",
     "summary": "Du erhältst aus deiner Lehrzeit 60 Erfahrungspunkte und 30 Zauberstufen weniger."
+  },
+  "flaw.weak_personality": {
+    "name": "Schwache Persönlichkeit",
+    "summary": "Dieser Charakter empfindet weder stark für noch gegen irgendetwas und mangelt an den einzigartigen Eigenschaften, die die meisten Menschen wirklich hervorstechen lassen."
+  },
+  "flaw.weak_scholar": {
+    "name": "Schwacher Gelehrter",
+    "summary": "Du verstehst Labortexte nicht sehr gut."
+  },
+  "flaw.weak_spontaneous_magic": {
+    "name": "Schwache Spontane Magie",
+    "summary": "Du darfst dich beim Wirken von Spontanmagie nicht anstrengen, teilst also deinen Zauberwert immer durch fünf."
+  },
+  "flaw.weak_willed": {
+    "name": "Willensschwach",
+    "summary": "Du suchst bei anderen nach Orientierung statt bei dir selbst."
+  },
+  "flaw.weakness_major": {
+    "name": "Schwäche (Groß)",
+    "summary": "Du hast eine Schwäche für eine bestimmte Art von Objekt oder Person."
+  },
+  "flaw.weakness_minor": {
+    "name": "Schwäche (Klein)",
+    "summary": "Du hast eine Schwäche für eine bestimmte Art von Objekt oder Person."
+  },
+  "flaw.weird_magic": {
+    "name": "Sonderbare Magie",
+    "summary": "Deine Kontrolle über Magie ist etwas locker, vielleicht aufgrund von Zwielichteffekten oder einer eigenwilligen Ausbildung."
+  },
+  "flaw.witch_marks": {
+    "name": "Hexenmale",
+    "summary": "Der Charakter hat kleinere Entstellungen, die von denjenigen, die mit Volksüberlieferungen vertraut sind, als zu Diabolisten gehörend erkannt werden."
+  },
+  "flaw.wrathful_major": {
+    "name": "Jähzornig (Groß)",
+    "summary": "Du neigst dazu, über die kleinsten Angelegenheiten in Wut zu geraten, und deine Raserei, wenn du in einer wichtigen Sache durchkreuzt wirst, ist fürchterlich anzusehen."
+  },
+  "flaw.wrathful_minor": {
+    "name": "Jähzornig (Klein)",
+    "summary": "Du neigst dazu, über die kleinsten Angelegenheiten in Wut zu geraten, und deine Raserei, wenn du in einer wichtigen Sache durchkreuzt wirst, ist fürchterlich anzusehen."
+  },
+  "virtue.academic_concentration_subject": {
+    "name": "Akademische Vertiefung (Fach)",
+    "summary": "Der Charakter hat sich auf eines der sieben Fächer der Artes Liberales spezialisiert und die anderen sechs dabei vernachlässigt."
+  },
+  "virtue.adept_laboratory_student": {
+    "name": "Begabter Laborlehrling",
+    "summary": "Du verarbeitest die Anweisungen anderer sehr leicht."
   },
   "virtue.affinity_ability": {
     "name": "Affinität zu {ability}",
@@ -51,13 +1359,193 @@
     "name": "Affinität zu {art}",
     "summary": "Erfahrung, die du in eine Kunst steckst, zählt anderthalbfach. Kann zweimal gewählt werden, für zwei Künste."
   },
+  "virtue.alim": {
+    "name": "'Alim",
+    "summary": "Du bist ein Mitglied der religiösen Elite."
+  },
+  "virtue.all_according_to_plan": {
+    "name": "Alles nach Plan",
+    "summary": "Einmal pro Spielsitzung kann ein Spieler, dessen Charakter diese Tugend hat, einen Patzerwürfel neu würfeln."
+  },
+  "virtue.alluring_to_beings": {
+    "name": "Anziehend auf (Wesen)",
+    "summary": "Diese Tugend ist mit einer von drei Klassen von Wesen verbunden: gewöhnlichen Tieren, Feen oder magischen Wesen."
+  },
+  "virtue.almogaten": {
+    "name": "Almogaten",
+    "summary": "Der Charakter ist der Anführer einer Schar von Almogavaren, der von seinen Gefährten aufgrund seiner Fähigkeiten und Erfahrung gewählt wurde."
+  },
+  "virtue.almogavar": {
+    "name": "Almogavar",
+    "summary": "Der Charakter ist ein Mitglied einer Söldner- und Räuberschar und lebt ein Leben voller Abenteuer nach einem Ehrenkodex und strikter Disziplin."
+  },
+  "virtue.amorphous_major": {
+    "name": "Amorph (Groß)",
+    "summary": "Der Charakter kann jede menschliche Gestalt annehmen, solange sie nicht erkennbar zu einem bestimmten Menschen gehört."
+  },
+  "virtue.amorphous_minor": {
+    "name": "Amorph (Klein)",
+    "summary": "Der Charakter kann jede menschliche Gestalt annehmen, solange sie nicht erkennbar zu einem bestimmten Menschen gehört."
+  },
+  "virtue.animal_ken": {
+    "name": "Tierverständnis",
+    "summary": "Du kannst mit Tieren kommunizieren, als wären sie Menschen."
+  },
+  "virtue.apprentice": {
+    "name": "Lehrling",
+    "summary": "Diese Tugend kann von einem Kindercharakter genommen werden, der die Gabe besitzt und mit Zustimmung der Spieltruppe von einem erfahrenen hermetischen Magus angenommen wurde."
+  },
+  "virtue.apt_student": {
+    "name": "Begabter Schüler",
+    "summary": "Du lernst besonders gut von anderen."
+  },
+  "virtue.aptitude_for_sin": {
+    "name": "Begabung für (Sünde)",
+    "summary": "Diese Sammel-Tugend steht für jene kleineren Wirkungen, die Dämonen ihren Opfern verleihen, damit sie effektiver sündigen können – und daher häufiger."
+  },
+  "virtue.arcane_lore": {
+    "name": "Arkanes Wissen",
+    "summary": "Du kannst während der Charaktererschaffung Arkane Fertigkeiten erwerben."
+  },
+  "virtue.archieunuch": {
+    "name": "Archieunuch",
+    "summary": "Du hast den Status und die Privilegien der bedeutendsten und talentiertesten Eunuchen, der Archieunuchen, erreicht."
+  },
+  "virtue.aristotelian_training": {
+    "name": "Aristotelische Ausbildung",
+    "summary": "Der Charakter wurde in der Neuen Aristotelischen Lehre ausgebildet und hat seinen Unterricht von einem Lehrer erhalten, der kürzlich übersetzte Aristoteles-Texte anstelle des üblichen Lehrplans verwendet."
+  },
+  "virtue.atlantean_magic": {
+    "name": "Atlantische Magie",
+    "summary": "Der Magus – oder ein Vorfahre in seiner Linie – hat die Magie verbannter Atlantier studiert und dabei mehrere nützliche Erweiterungen der hermetischen Magie entwickelt."
+  },
+  "virtue.baccalaureus": {
+    "name": "Baccalaureus",
+    "summary": "Der Charakter hat ein dreijähriges Studium an einer Universität abgeschlossen und den Baccalaureus Artium (Bakkalaureat der Künste) erworben."
+  },
+  "virtue.beadle": {
+    "name": "Pedell",
+    "summary": "Der Charakter ist ein Assistent eines Universitätsdekans."
+  },
+  "virtue.bee_king": {
+    "name": "Bienenkönig",
+    "summary": "Das Bienenkönigstum ist das Ergebnis einer Abstammung von bestimmten Feen und damit eine Form von Feenblut."
+  },
+  "virtue.berserk": {
+    "name": "Berserker",
+    "summary": "Du bist in der Lage, in Kampfsituationen oder bei frustrierenden Umständen in einen blinden Wutanfall zu verfallen."
+  },
   "virtue.blood_of_the_nephilim": {
     "name": "Blut der Nephilim",
     "summary": "Du stammst von den Nephilim ab; deine Größe wächst und du alterst sehr langsam."
   },
+  "virtue.book_learner": {
+    "name": "Bücherwurm",
+    "summary": "Du hast ein Talent für das Verstehen der Schriften anderer."
+  },
+  "virtue.boosted_magic": {
+    "name": "Verstärkte Magie",
+    "summary": "Indem du beim Wirken von Formulaischen Zaubern einen Bauern Vis ausgibst, kannst du Reichweite, Dauer, Ziel oder Größe des Effekts um eine Magnitude „verstärken\"."
+  },
+  "virtue.brother_chaplain": {
+    "name": "Bruder Kaplan",
+    "summary": "Du bist Priester eines Kreuzzugsritterordens, was ähnlich ist wie bei anderen Priestern, außer dass dein Gelübde neben der Keuschheit auch Gehorsam und Armut umfassen sollte."
+  },
+  "virtue.brother_knight": {
+    "name": "Bruder Ritter",
+    "summary": "Du bist Ritter in einem heiligen Kreuzzugsorden, und es ist deine Pflicht, jederzeit bereit zu sein, gegen die Ungläubigen zu kämpfen."
+  },
+  "virtue.brother_sergeant": {
+    "name": "Bruder Sergeant",
+    "summary": "Du bist Mitglied eines Kreuzzugsritterordens, aber weder Ritter noch Adliger."
+  },
+  "virtue.bureaucrat": {
+    "name": "Bürokrat",
+    "summary": "Du bist Mitglied der Zivilbehörde, wahrscheinlich ein Katib (Schreiber oder Sekretär) oder Watha'iqi (Verfasser von Rechtsdokumenten)."
+  },
+  "virtue.capo": {
+    "name": "Capo",
+    "summary": "Der Charakter leitet ein Handelsunternehmen, das Niederlassungen in mindestens zwei Städten hat."
+  },
+  "virtue.cathedral_school_master": {
+    "name": "Domschulmeister",
+    "summary": "Der Charakter unterrichtet an einer Domschule, einer der vielen, die das Mythische Europa durchziehen."
+  },
+  "virtue.cautious_sorcerer": {
+    "name": "Vorsichtiger Zauberer",
+    "summary": "Du gehst sehr sorgfältig mit Magie um und scheitest weniger leicht auf spektakuläre Weise, wenn du doch scheiterst."
+  },
+  "virtue.cautious_with_ability": {
+    "name": "Vorsichtig mit (Fertigkeit)",
+    "summary": "Du gehst mit einer bestimmten Fertigkeit sehr sorgfältig um und scheitest bei ihrer Anwendung weniger leicht auf spektakuläre Weise."
+  },
+  "virtue.clan_ilfetu": {
+    "name": "Clan Ilfetu",
+    "summary": "Der Charakter ist Mitglied des Clans Ilfetu innerhalb des Hauses Bjornaer und hat eine zusätzliche Ausbildung in den Ritualen des Hauses erhalten."
+  },
+  "virtue.clear_thinker": {
+    "name": "Klarer Denker",
+    "summary": "Du denkst logisch und rational."
+  },
+  "virtue.clerk": {
+    "name": "Kleriker",
+    "summary": "Du bist Mitglied des gebildeten Standes und entweder ein professioneller Schreiber, Buchhalter, Anwalt, Student oder Amtsträger."
+  },
+  "virtue.command_animals": {
+    "name": "Tiere befehligen",
+    "summary": "Der Charakter hat die Fähigkeit, gewöhnliche Vertreter einer Tierart mental zu befehligen, die in der Regel mit dem Dämon assoziiert wird, der ihn gezeichnet hat."
+  },
+  "virtue.commanding_aura": {
+    "name": "Befehlende Aura",
+    "summary": "Diese übernatürliche Kraft wird Charakteren entweder vom Papst oder direkt vom Göttlichen verliehen."
+  },
+  "virtue.common_sense": {
+    "name": "Gesunder Menschenverstand",
+    "summary": "Wann immer du dabei bist, etwas zu tun, das dem gesunden Menschenverstand im Spielumfeld widerspricht, macht dich der gesunde Menschenverstand (der Spielleiter) auf den Fehler aufmerksam."
+  },
+  "virtue.convoluted_mind": {
+    "name": "Verschlungener Geist",
+    "summary": "Der Charakter ist so häufig den Machenschaften von Dämonen ausgesetzt, dass er ein Gespür dafür entwickelt hat, wie ihre Gedanken funktionieren."
+  },
+  "virtue.corpse_magic": {
+    "name": "Leichenmagie",
+    "summary": "Diese Tugend verleiht dem Charakter die Übernatürliche Fertigkeit Leichenmagie mit einem Wert von 1."
+  },
+  "virtue.covenfolk": {
+    "name": "Konventsbewohner",
+    "summary": "Du bist Mitglied des Konventspersonals und hast dort möglicherweise dein ganzes Leben verbracht."
+  },
+  "virtue.craft_guild_training": {
+    "name": "Zunftausbildung",
+    "summary": "Dieser Charakter hat während seiner Lehre eine überdurchschnittliche Ausbildung von einem Handwerksmeister oder einer professionellen Zunft erhalten."
+  },
+  "virtue.crafters_healing": {
+    "name": "Handwerkerheiler",
+    "summary": "Wie die Schmiede der alten Überlieferungen kann der Charakter Wunden auf magische Weise heilen, indem er sie mit den Werkzeugen seines Handwerks berührt."
+  },
+  "virtue.craftsman": {
+    "name": "Handwerker",
+    "summary": "Du lebst davon, Waren herzustellen und zu verkaufen."
+  },
   "virtue.curse_throwing": {
     "name": "Fluchschleudern",
     "summary": "Heile Krankheiten und entferne Flüche, indem du sie auf eine andere Person überträgst. Verleiht die Fähigkeit Fluchschleudern."
+  },
+  "virtue.custos": {
+    "name": "Custos",
+    "summary": "Du bist Angestellter eines Konvents, hast aber innerhalb seiner Mauern einen hohen Status."
+  },
+  "virtue.cyclic_magic_positive": {
+    "name": "Zyklische Magie (positiv)",
+    "summary": "Deine Magie ist auf einen Naturzyklus abgestimmt (z."
+  },
+  "virtue.death_prophecy": {
+    "name": "Todesprophezeiung",
+    "summary": "Du bist in Bezug auf dein Schicksal gesegnet oder verflucht."
+  },
+  "virtue.deft_form": {
+    "name": "Gewandte Form",
+    "summary": "Du bist mit einer Form besonders geschickt."
   },
   "virtue.demonic_blood": {
     "name": "Dämonisches Blut",
@@ -75,13 +1563,89 @@
     "name": "Teufelskind",
     "summary": "Freie Status-Tugend für einen mythischen Gefährten dämonischer Abstammung; unvereinbar mit der Gabe."
   },
+  "virtue.diedne_magic": {
+    "name": "Diedne-Magie",
+    "summary": "Deine magische Abstammung und Tradition stammt von den Druiden und dem unterworfenen ehemaligen Haus Diedne, was dich besonders geschickt in Spontaner Magie macht."
+  },
+  "virtue.doctor_in_faculty": {
+    "name": "Doktor der (Fakultät)",
+    "summary": "Der Charakter hat eine der höheren Fakultäten einer Universität in Medizin, Zivil- oder Kanonischem Recht oder Theologie abgeschlossen, nachdem er bereits seine Magister-in-Artibus-Lizenz erworben hat, und darf Kommilitonen unterrichten."
+  },
+  "virtue.domestic_animal": {
+    "name": "Haustier",
+    "summary": "Der Charakter ist ein Tier, das Eigentum eines Konvents oder Charakters ist und mit Nahrung und Unterkunft versorgt wird."
+  },
   "virtue.dowsing": {
     "name": "Wünschelrutengehen",
     "summary": "Finde nahe Dinge mit einer Wünschelrute. Verleiht die Fähigkeit Wünschelrutengehen."
   },
+  "virtue.dust_devil": {
+    "name": "Staubwirbel",
+    "summary": "Diese Variante der Tierwandler-Tugend erlaubt es dem Charakter, die Gestalt eines Tamzawit – also eines Staubteufels, eines kleinen Wirbelwinds, der Staub mit sich trägt – anzunehmen."
+  },
   "virtue.educated": {
     "name": "Gebildet",
     "summary": "+50 Erfahrungspunkte, nur für Latein und Artes Liberales. Du darfst Akademische Fertigkeiten erwerben."
+  },
+  "virtue.elemental_magic": {
+    "name": "Elementarmagie",
+    "summary": "Du wurdest in der Fähigkeit ausgebildet, rohe elementare Formen (Aquam, Auram, Ignem und Terram) zu manipulieren, und betrachtest sie als zusammenhängendes Ganzes statt als vier getrennte Künste."
+  },
+  "virtue.embitterment": {
+    "name": "Verbitterung",
+    "summary": "Du kannst jemanden gegenüber einem Ziel deiner Wahl feindlich stimmen."
+  },
+  "virtue.emir": {
+    "name": "Emir",
+    "summary": "Dies entspricht der Ritter-Tugend, doch aufgrund der recht anderen Erziehung muslimischer Emire bist du wahrscheinlich ebenso versiert in Jagd, religiösen Lehren und Kultur wie in kriegerischen Belangen."
+  },
+  "virtue.enchanting_ability": {
+    "name": "Bezaubernde (Fertigkeit)",
+    "summary": "Wenn du dich darauf konzentrierst, kannst du mit einer bestimmten Art künstlerischen Ausdrucks magisch Gefühle und Überzeugungen in anderen hervorrufen: Musik, Tanz, Zeichnen, Geschichtenerzählen oder sogar Handwerk."
+  },
+  "virtue.enduring_constitution": {
+    "name": "Ausdauernde Konstitution",
+    "summary": "Du kannst Schmerz und Erschöpfung ertragen."
+  },
+  "virtue.enduring_magic": {
+    "name": "Anhaltende Magie",
+    "summary": "Die Effekte deiner Zauber dauern in der Regel länger als gewöhnlich an (obwohl Konzentrations-, Momentan- und Ringzauber genau das bleiben)."
+  },
+  "virtue.enticer_of_multitudes": {
+    "name": "Verführer der Massen",
+    "summary": "Der Charakter besitzt eine Version der Inspirierend-Tugend, die jedoch ausschließlich dazu eingesetzt werden kann, Menschen zu bösen Taten zu verleiten."
+  },
+  "virtue.entrancement": {
+    "name": "Betörung",
+    "summary": "Du besitzt die Macht, den Willen einer anderen Person zu beherrschen, indem du ihr in die Augen starrst und ihr einen verbalen Befehl erteilst."
+  },
+  "virtue.eunuch": {
+    "name": "Eunuch",
+    "summary": "Du wurdest ausgebildet und trainiert, um der byzantinischen Adelsschicht als Hofbeamter, Verwalter, Kammerherr, Schreiber, Jurist oder Buchhalter zu dienen."
+  },
+  "virtue.exotic_casting": {
+    "name": "Exotisches Zaubern",
+    "summary": "Der Magus verwendet nicht-hermetische Methoden, um hermetische Zauber zu wirken."
+  },
+  "virtue.extractor_of_form_vis": {
+    "name": "Vis-Gewinner der (Form)",
+    "summary": "Der Magus kann (Form)-Vis aus einer Magiesphären-Aura gewinnen, jedoch nur, wenn die Merkmale der Aura die Form verkörpern."
+  },
+  "virtue.eye_of_hephaestus": {
+    "name": "Auge des Hephaistos",
+    "summary": "Der Charakter kann die Qualität eines gefertigten Gegenstands intuitiv einschätzen."
+  },
+  "virtue.fabric_ripper": {
+    "name": "Stoffreißer",
+    "summary": "Der Charakter besitzt die übernatürliche Fähigkeit, jedes gefertigte Ding zu zerreißen, das aus Pflanzen- oder Tierfasern besteht."
+  },
+  "virtue.factor": {
+    "name": "Faktor",
+    "summary": "Der Charakter verwaltet die Interessen eines Handelshauses in einer einzigen Stadt."
+  },
+  "virtue.faerie_blood": {
+    "name": "Feenblut",
+    "summary": "Irgendwo in deiner Ahnenreihe findet sich eine Fee, und diese Verwandtschaft verleiht dir ein intuitives Gespür für die Beweggründe und Persönlichkeiten dieser übernatürlichen Wesen."
   },
   "virtue.faerie_doctor": {
     "name": "Feendoktor",
@@ -91,21 +1655,173 @@
     "name": "Feenmagie",
     "summary": "Einweihung in das Äußere Mysterium des Hauses Merinita. Verleiht die Fertigkeit Feenmagie auf 1."
   },
+  "virtue.faerie_raised_magic": {
+    "name": "Feengeprägte Magie",
+    "summary": "Die Erfahrungen des Charakters mit Feen und der Feensphäre haben ihn dazu gebracht, Zauber sehr schnell zu erfinden; für ihn wirken formulaische Zauber wie angeborene Kräfte, die man durch Beobachtung und Experimentieren erlernen kann."
+  },
+  "virtue.failed_apprentice": {
+    "name": "Gescheiterter Lehrling",
+    "summary": "Du warst einst bei einem Magus in der Lehre, aber irgendetwas hat dich daran gehindert, deine Ausbildung abzuschließen."
+  },
+  "virtue.falconer": {
+    "name": "Falkner",
+    "summary": "Der Charakter dressiert Falken und Habichte für einen adeligen Gönner und ist für die Ausbildung, Zucht und Gesundheit der Tiere verantwortlich."
+  },
+  "virtue.falls_like_a_cat": {
+    "name": "Fällt wie eine Katze",
+    "summary": "Der Charakter wird durch Stürze aus bis zur dreifachen eigenen Körperhöhe nicht verletzt, oder bis zur sechsfachen Höhe, wenn er seinen Fall abfedern kann, indem er sich an Fenstersimsen festhält, durch Markisen bricht oder auf dem Weg nach"
+  },
+  "virtue.familiarity_with_the_fae": {
+    "name": "Vertrautheit mit den Feen",
+    "summary": "Du besitzt ein natürliches Verständnis für die Eigenheiten der Feen, vielleicht weil du Zeit unter ihnen verbracht hast."
+  },
+  "virtue.famous": {
+    "name": "Berühmt",
+    "summary": "Du hast eine gute Reputation der Stufe 4."
+  },
+  "virtue.fast_caster": {
+    "name": "Schneller Zauberer",
+    "summary": "Deine Magie erfordert weniger Zeit als die anderer Magi."
+  },
+  "virtue.feather_messenger": {
+    "name": "Federbote",
+    "summary": "Diese Tugend steht nur einem Charakter zur Verfügung, der die Form eines Vogels annehmen kann (was auch ihre natürliche Form sein kann)."
+  },
+  "virtue.ferocity": {
+    "name": "Wildheit",
+    "summary": "Wie Gefährten- und Magus-Charaktere besitzt dieser Charakter Selbstvertrauenspunkte."
+  },
+  "virtue.fidai": {
+    "name": "Fida'i",
+    "summary": "Der Charakter ist ein Attentäter der Nizari-Ismaeliten."
+  },
+  "virtue.finding_hidden_loot": {
+    "name": "Verstecktes Diebesgut finden",
+    "summary": "Ein Charakter mit dieser Tugend erhält +9 Bonus auf Wahrnehmungswürfe beim Durchsuchen eines abgegrenzten Raumes nach versteckten Gegenständen, sofern er den Inhalt des Raumes ungestört umherräumen kann."
+  },
+  "virtue.flawless_magic": {
+    "name": "Makellose Magie",
+    "summary": "Du meisterst automatisch jeden Zauber, den du lernst."
+  },
+  "virtue.flexible_formulaic_magic": {
+    "name": "Flexible Formulaische Magie",
+    "summary": "Du kannst die Effekte formulaischer Zauber in geringem Maße variieren und dabei dennoch die Vorteile des Wirkens bekannter Magie nutzen."
+  },
+  "virtue.focus_power": {
+    "name": "Fokussierte Macht",
+    "summary": "Der Charakter besitzt eine übernatürliche Macht mit einem engen Wirkungsbereich, wie beispielsweise die Fähigkeit, Spontane Zauber zu wirken, die mit einem einzigen Magietyp verbunden sind."
+  },
+  "virtue.folk_magic": {
+    "name": "Volksmagie",
+    "summary": "Der Charakter ist in der Lage, durch sein Wissen von Bruchstücken okkulten Wissens sehr geringe Magie zu wirken."
+  },
+  "virtue.font_of_knowledge": {
+    "name": "Quell des Wissens",
+    "summary": "Du hast übernatürlichen Zugang zu Informationen, die du nie erlernt hast."
+  },
+  "virtue.forge_companion": {
+    "name": "Schmiedegefährte",
+    "summary": "Der Charakter ist ein unBegabter Handwerker, der einem Verditius-Magus angegliedert ist und für ihn in seinem Labor arbeitet."
+  },
+  "virtue.forgettable_face": {
+    "name": "Unscheinbares Gesicht",
+    "summary": "Dieser Charakter wird niemals der sein, der auffällt oder aus einer Menge herausgesucht wird."
+  },
+  "virtue.free_expression": {
+    "name": "Freie Ausdrucksfähigkeit",
+    "summary": "Du besitzt die Vorstellungskraft und Kreativität, die benötigt werden, um eine neue Ballade zu komponieren oder ein originelles Bild zu malen, und hast das Potenzial, ein großer Künstler zu werden."
+  },
+  "virtue.free_study": {
+    "name": "Freies Studium",
+    "summary": "Du bist besser darin, Dinge selbst herauszufinden, als Bücher zu wälzen."
+  },
+  "virtue.frightful_presence": {
+    "name": "Furchteinflößende Erscheinung",
+    "summary": "Du bist in der Lage, durch dein Auftreten großes Entsetzen zu wecken."
+  },
+  "virtue.gender_shift": {
+    "name": "Geschlechtswechsel",
+    "summary": "Jeden Mitternacht kann der Charakter wählen, das Geschlecht zu wechseln."
+  },
   "virtue.gentle_gift": {
     "name": "Sanfte Gabe",
     "summary": "Deine Gabe verstört andere nicht."
+  },
+  "virtue.gentleman": {
+    "name": "Edelmann / Edelfrau",
+    "summary": "Du bist ein rangniederes Mitglied (möglicherweise unehelich) einer Adelsfamilie."
+  },
+  "virtue.ghostly_warder": {
+    "name": "Geisterhafter Hüter",
+    "summary": "Ein Geist wacht über dich."
+  },
+  "virtue.giant_blood": {
+    "name": "Riesenblut",
+    "summary": "Das Blut der alten Völker der Riesen fließt in deinen Adern."
+  },
+  "virtue.good_teacher": {
+    "name": "Guter Lehrer",
+    "summary": "Du kannst neue Konzepte und Fähigkeiten mit großer Leichtigkeit vermitteln."
+  },
+  "virtue.gorgiastic": {
+    "name": "Gorgiast",
+    "summary": "Diese Magi oder ihre Vorfahren haben die Lehren des Hauses Criamon abgelehnt und das Haus verlassen."
+  },
+  "virtue.gossip": {
+    "name": "Klatschbase",
+    "summary": "Du verfügst über regelmäßige soziale Kontakte in der Gegend, die dir allerlei Informationen über lokale gesellschaftliche und politische Vorgänge liefern."
   },
   "virtue.great_characteristic": {
     "name": "Hervorragende {characteristic}",
     "summary": "Erhöhe eine Eigenschaft, die bereits bei +3 liegt, bis höchstens +5; die Punkte zahlst du weiterhin."
   },
+  "virtue.greater_benediction": {
+    "name": "Große Segnung",
+    "summary": "Du wurdest von einer übernatürlichen Macht gesegnet."
+  },
   "virtue.greater_immunity": {
     "name": "Große Immunität",
     "summary": "Du bist gegen eine verbreitete, potenziell tödliche Gefahr völlig immun."
   },
+  "virtue.greater_power": {
+    "name": "Große Macht",
+    "summary": "Der Charakter besitzt eine übernatürliche Macht, die er nach Belieben aktivieren kann."
+  },
+  "virtue.greater_purifying_touch": {
+    "name": "Große Reinigende Berührung",
+    "summary": "Du kannst mit einer Berührung und dem Aufwand einer Erschöpfungsstufe eine einzelne schwere Krankheit heilen."
+  },
+  "virtue.guardian_angel": {
+    "name": "Schutzengel",
+    "summary": "Du hast gelernt, die Worte eines göttlichen Wächters zu vernehmen, der dir praktische und spirituelle Ratschläge erteilt."
+  },
+  "virtue.guest_of_house_criamon": {
+    "name": "Gast des Hauses Criamon",
+    "summary": "Magi mit dieser Tugend sind politisch gesehen Mitglieder des Hauses Criamon, können jedoch nach den Regeln für jedes andere Haus erschaffen werden."
+  },
+  "virtue.guild_apprentice": {
+    "name": "Gilden-Lehrling",
+    "summary": "Der Charakter ist ein Jugendlicher im Alter zwischen 10 und 20 Jahren, der bei einem Gildenmeister oder Gesellen sein Handwerk erlernt."
+  },
+  "virtue.guild_dean": {
+    "name": "Gildendekan",
+    "summary": "Der Charakter ist die oberste Autorität seiner Gilde, derjenige, der viele der wichtigen Entscheidungen trifft, mit denen die Gilde konfrontiert wird, und der sie politisch vertritt."
+  },
+  "virtue.guild_master": {
+    "name": "Gildenmeister",
+    "summary": "Der Charakter ist ein Gildenmeister und darf sein Handwerk legal in der Stadt ausüben sowie Gesellen für sich arbeiten lassen."
+  },
+  "virtue.harnessed_magic": {
+    "name": "Gezügelte Magie",
+    "summary": "Du hast große Kontrolle über deine Zauber."
+  },
   "virtue.heartbeast": {
     "name": "Herztier",
     "summary": "Einweihung in das Äußere Mysterium des Hauses Bjornaer. Verleiht die Fertigkeit Herztier auf 1."
+  },
+  "virtue.hermetic_experience": {
+    "name": "Hermetische Erfahrung",
+    "summary": "Der Charakter hat Erfahrung mit den Magi des Ordens des Hermes."
   },
   "virtue.hermetic_magus": {
     "name": "Hermetischer Magus",
@@ -115,33 +1831,433 @@
     "name": "Hermetisches Ansehen",
     "summary": "Andere Magi blicken zu dir auf. Du erhältst ein Ansehen der Stufe 4 innerhalb des Ordens."
   },
+  "virtue.hex": {
+    "name": "Verhexung",
+    "summary": "Der Charakter hat die Fähigkeit, ihre Feinde zu verfluchen, indem sie unheilvolle Prophezeiungen über deren Zukunft ausspricht, die sich zu bewahrheiten pflegen."
+  },
+  "virtue.homing_instinct": {
+    "name": "Heimfindungsinstinkt",
+    "summary": "Der Charakter weiß stets genau, wie er von seinem aktuellen Standort zu einer Anzahl von Orten gelangt, die seinem Intelligenzwert entspricht (mindestens jedoch 1)."
+  },
+  "virtue.imbued_with_the_spirit_of_form": {
+    "name": "Durchdrungen vom Geist der (Form)",
+    "summary": "Der Magus hat einen Teil der Kräfte eines Elementarwesens oder eines anderen magischen Objekts absorbiert (vielleicht durch Verzehr)."
+  },
+  "virtue.immune_to_disease": {
+    "name": "Immun gegen Krankheit",
+    "summary": "Der Charakter ist als Eigentum eines sehr mächtigen Dämons gekennzeichnet, und die niederen Dämonen, die die meisten Krankheiten verursachen, weigern sich, ihm Schaden zuzufügen."
+  },
+  "virtue.immunity_to_cold": {
+    "name": "Unempfindlichkeit gegen Kälte",
+    "summary": "Normale Kälte schadet dir nicht, noch bereitet sie dir Unbehagen."
+  },
   "virtue.improved_characteristics": {
     "name": "Verbesserte Eigenschaften",
     "summary": "+3 Punkte zum Kauf von Eigenschaften. Kann mehrfach gewählt werden."
+  },
+  "virtue.independent_study": {
+    "name": "Unabhängiges Studium",
+    "summary": "Der Charakter entwickelt neue Fertigkeiten auf eigene Faust außerordentlich schnell."
+  },
+  "virtue.indescribable_face": {
+    "name": "Unscheinbares Gesicht",
+    "summary": "Nachdem andere Charaktere diesen Charakter getroffen haben, fällt es ihnen in der Regel schwer, ihn so zu beschreiben, dass er sich hinreichend von anderen unterscheiden ließe."
+  },
+  "virtue.induction": {
+    "name": "Einflüstern",
+    "summary": "Der Charakter hat die übernatürliche Fähigkeit, Menschen Dinge erleben zu lassen, die nicht vorhanden sind."
+  },
+  "virtue.ineslemen": {
+    "name": "Ineslemen",
+    "summary": "Dieser Charakter ist Mitglied eines der designierten religiösen Stämme der Tuareg und genießt daher eine gewisse Autorität in Streitfragen sowie Immunität gegenüber den üblichen feudalen Forderungen der Adligen."
+  },
+  "virtue.infernal_heirloom": {
+    "name": "Infernales Erbstück",
+    "summary": "Infernale Erbstücke sind magische Gegenstände, die der Charakter von einem Diabolisten erbt oder, seltener, findet."
+  },
+  "virtue.inoffensive_to_beings": {
+    "name": "Für (Wesen) ungefährlich",
+    "summary": "Diese Tugend ist mit einer von fünf Klassen von Wesen verbunden: Tieren, göttlichen Wesen, Feen, Dämonen oder magischen Kreaturen."
+  },
+  "virtue.inspirational": {
+    "name": "Inspirierend",
+    "summary": "Du bist ein mitreißender Redner oder eine Heldenfigur und kannst Menschen zu großen Leistungen anspornen."
+  },
+  "virtue.intuition": {
+    "name": "Intuition",
+    "summary": "Du besitzt eine natürliche Feinfühligkeit, die es dir erlaubt, häufiger die richtigen Entscheidungen zu treffen, als das Glück erklären könnte."
+  },
+  "virtue.inventive_genius": {
+    "name": "Erfinderisches Genie",
+    "summary": "Erfinden liegt dir im Blut."
+  },
+  "virtue.jack_of_all_trades": {
+    "name": "Alleskönner",
+    "summary": "Der Charakter kann sich fast allem zuwenden."
+  },
+  "virtue.journeyman": {
+    "name": "Geselle",
+    "summary": "Der Charakter ist ein ausgebildeter Gildenhandwerker und darf sein Handwerk in der Stadt unter Gildenaufsicht ausüben."
+  },
+  "virtue.jurist": {
+    "name": "Jurist",
+    "summary": "Der Charakter ist Richter, Anwalt oder Prokurator – im Wesentlichen ein mittelalterlicher Rechtsgelehrter in irgendeiner Funktion."
+  },
+  "virtue.just_an_instant": {
+    "name": "Nur einen Moment",
+    "summary": "Ein Charakter mit dieser Tugend, der einige Sekunden Zeit hatte, einen Raum zu überblicken, muss keine Wahrnehmungswürfe ablegen, um etwas Interessantes auf den zugänglichen Oberflächen des Raumes zu entdecken oder sich daran zu erinnern."
+  },
+  "virtue.kassalan_exorcism": {
+    "name": "Kassalanischer Exorzismus",
+    "summary": "Du bist in der Lage, kleinere Exorzismus-Zauber durch dein Wissen über die Riten der Bestattungsgesellschaft von Kassala in Alodia auszuführen, dem abgelegensten der drei nubischen Königreiche an den südlichen Ausläufern des Nils."
+  },
+  "virtue.keen_sense_of_smell": {
+    "name": "Feiner Geruchssinn",
+    "summary": "Die Nase des Charakters ist empfindlicher als bei einem normalen Menschen."
   },
   "virtue.keen_vision": {
     "name": "Scharfe Sicht",
     "summary": "+3 auf sichtbasierte Würfe."
   },
+  "virtue.knight": {
+    "name": "Ritter",
+    "summary": "Du bist ein Ritter, ein Angehöriger des Adels und einer der Elitekrieger Europas."
+  },
+  "virtue.knows_people": {
+    "name": "Kennt die richtigen Leute",
+    "summary": "Deine sozialen Kontakte sind nicht wegen dem wichtig, was sie dir direkt verschaffen: Sie sind wichtig, weil sie dir ermöglichen, die Wünsche deiner verschiedenen Bekannten zusammenzuführen."
+  },
+  "virtue.laborer": {
+    "name": "Tagelöhner",
+    "summary": "Der Charakter ist ein ausgebildeter Arbeiter, der ein Handwerk ausübt, das eine wertvolle Dienstleistung für seine Gemeinschaft darstellt, bei dem jedoch kein fertiges Produkt hergestellt wird."
+  },
+  "virtue.land_regio_network": {
+    "name": "(Land-)Regio-Netz",
+    "summary": "Der Charakter hat Zugang zu einem ausgedehnten Netz von Regiones, die sich vielleicht in den Tiefen vieler Seen im Mythischen Europa befinden, hoch über den Wolken am Himmel verborgen sind oder in unterirdischen Höhlen unter der Erde liegen"
+  },
+  "virtue.landed_noble": {
+    "name": "Landadliger",
+    "summary": "Du schuldest einem höheren Adligen Lehnseid und Dienst und hast die Kontrolle über Land, Leibeigene und Bewaffnete."
+  },
   "virtue.large": {
     "name": "Großgewachsen",
     "summary": "Du bist größer als der Durchschnitt."
+  },
+  "virtue.lasiq": {
+    "name": "Lasiq",
+    "summary": "Der Charakter ist ein erfahrener Attentäter der Nizari-Ismailis, der erfolgreich sieben Morde auf Befehl seines Großmeisters begangen hat und eine kleine Truppe von bis zu sechs Fida'is anführt."
+  },
+  "virtue.latent_magic_ability": {
+    "name": "Latente Magische Fähigkeit",
+    "summary": "Du besitzt eine magische Eigenschaft, die sich noch nicht manifestiert hat."
+  },
+  "virtue.learn_ability_from_mistakes": {
+    "name": "(Fertigkeit) durch Fehler lernen",
+    "summary": "Du bist in der Lage, eine bestimmte Fertigkeit durch wiederholtes Scheitern zu verbessern."
+  },
+  "virtue.leather_ripper": {
+    "name": "Lederreißer",
+    "summary": "Dieser Charakter hat die übernatürliche Fähigkeit, eine Gruppe von Ledergegenständen zu zerstören."
+  },
+  "virtue.leper_magus": {
+    "name": "Lepra-Magus",
+    "summary": "Diese Tugend beschreibt das mystische Erbe, das von Tytalus über den Vektor der Lepra an Haristes Linie weitergegeben wurde."
+  },
+  "virtue.lesser_benediction": {
+    "name": "Kleine Segnung",
+    "summary": "Du wurdest von einer übernatürlichen Macht gesegnet."
+  },
+  "virtue.lesser_immunity": {
+    "name": "Mindere Immunität",
+    "summary": "Du bist immun gegen eine Gefahr, die entweder selten oder nicht tödlich ist – oder beides."
+  },
+  "virtue.lesser_power": {
+    "name": "Mindere Macht",
+    "summary": "Der Charakter hat eine übernatürliche Kraft, die er nach Belieben aktivieren kann."
+  },
+  "virtue.lesser_purifying_touch": {
+    "name": "Mindere Reinigende Berührung",
+    "summary": "Du kannst durch eine Berührung und den Aufwand einer Erschöpfungsstufe eine bestimmte Krankheit heilen."
+  },
+  "virtue.license_of_absence": {
+    "name": "Beurlaubungslizenz",
+    "summary": "Dieser Priestercharakter hat eine Beurlaubungslizenz, die ihn von einigen Pflichten befreit."
+  },
+  "virtue.life_boost": {
+    "name": "Lebensstärkung",
+    "summary": "Du kannst deine Zaubersummen für Formulaische oder Ritualzauber steigern, indem du zusätzliche Erschöpfungsstufen aufwendest."
+  },
+  "virtue.life_linked_spontaneous_magic": {
+    "name": "Lebensgebundene Spontane Magie",
+    "summary": "Du kannst mit spontaner Magie mehr erreichen als die meisten Magi, auf Kosten deiner eigenen Lebensenergie."
+  },
+  "virtue.light_touch": {
+    "name": "Leichte Berührung",
+    "summary": "Du hast eine besonders gute Hand-Auge-Koordination und eine große Geschicklichkeit im präzisen, schnellen Umgang mit deinen Händen."
+  },
+  "virtue.lightning_reflexes": {
+    "name": "Blitzreflexe",
+    "summary": "Du reagierst auf Überraschungen fast augenblicklich."
+  },
+  "virtue.linguist": {
+    "name": "Sprachbegabt",
+    "summary": "Du bist außerordentlich begabt darin, neue Sprachen zu erlernen."
+  },
+  "virtue.lone_redcap": {
+    "name": "Einsame Rotkappe",
+    "summary": "Du bist eine Rotkappe, die keine Bindungen an ein Mercere-Haus unterhält und daher weder Zauberartefakte noch Langlebigkeitsrituale erhält."
+  },
+  "virtue.long_winded": {
+    "name": "Ausdauernd",
+    "summary": "Du kannst dich länger anstrengen als die meisten und erhältst +3 auf alle deine Erschöpfungswürfe."
+  },
+  "virtue.luck": {
+    "name": "Glück",
+    "summary": "Du erzielst gute Ergebnisse in Situationen, in denen Glück mehr eine Rolle spielt als Können oder Talent."
+  },
+  "virtue.lupus_the_wolf": {
+    "name": "Lupus (der Wolf)",
+    "summary": "Der Charakter ist von einer Universität angestellt, um die Studenten zu beaufsichtigen und sicherzustellen, dass sie in ihren Kollegien und Wohnheimen nur Latein sprechen."
+  },
+  "virtue.magian_lineage_major": {
+    "name": "Magische Abstammung (Groß)",
+    "summary": "Diese Tugend macht den Charakter zu einem echten Blutsnachkommen des medischen Stammes der Magier, der ursprünglichen Priesterkaste Persiens."
+  },
+  "virtue.magian_lineage_minor": {
+    "name": "Magische Abstammung (Klein)",
+    "summary": "Diese Tugend macht den Charakter zu einem echten Blutsnachkommen des medischen Stammes der Magier, der ursprünglichen Priesterkaste Persiens."
+  },
+  "virtue.magic_items": {
+    "name": "Zauberartefakte",
+    "summary": "Du beginnst mit 25 zusätzlichen Startstufen an Zauberartefakten im Vergleich zu dem, was du sonst hättest, und die Rate, mit der deine Artefakte verbessert werden, erhöht sich um eine Stufe pro Jahr."
+  },
+  "virtue.magic_sensitivity": {
+    "name": "Magiegespür",
+    "summary": "Du kannst einen Ort oder Gegenstand häufig als magisch identifizieren."
+  },
+  "virtue.magical_blood": {
+    "name": "Magisches Blut",
+    "summary": "Das Wesen des Charakters wurde durch den Kontakt mit der Magiesphäre verbessert – oft durch ein magisches Wesen –, was seiner wahren Gestalt besondere übernatürliche Eigenschaften verleiht."
+  },
+  "virtue.magical_memory": {
+    "name": "Magisches Gedächtnis",
+    "summary": "Dein Gedächtnis wurde entwickelt, um magische statt alltägliche Dinge zu behalten."
+  },
+  "virtue.magical_mount": {
+    "name": "Magisches Reittier",
+    "summary": "Der Charakter besitzt ein Reittier, Lasttier oder einen „Wachhund\" – eine Kreatur, die Scharfsinn statt Intelligenz besitzt und einen Machtwert von bis zu 25."
+  },
+  "virtue.magical_warder": {
+    "name": "Magischer Hüter",
+    "summary": "Der Charakter wird von einem magischen Wesen begleitet, das über ihn wacht und darauf achtet, dass ihm kein Schaden widerfährt."
+  },
+  "virtue.magister_in_artibus": {
+    "name": "Magister in Artibus",
+    "summary": "Du hast an einer der Universitäten Europas (Paris, Bologna, Oxford, Cambridge, Montpellier, Arezzo oder Salamanca) den Magister Artium abgelegt und deine obligatorischen zwei Jahre als Regent gelehrt."
+  },
+  "virtue.magister_in_medicina": {
+    "name": "Magister in Medicina",
+    "summary": "Der Charakter hat an einer der medizinischen Schulen Europas (Salerno, Cremona, Montpellier oder Bologna) einen Doktortitel in Medizin erlangt und seine obligatorischen zwei Jahre Pflichtlehre absolviert."
+  },
+  "virtue.major_magical_focus": {
+    "name": "Großer Magischer Fokus",
+    "summary": "Deine Magie ist in einem recht begrenzten Bereich deutlich wirkungsvoller, etwa Wetter, Nekromantie, Vögel oder Gefühle."
+  },
+  "virtue.maker_of_textured_vessels": {
+    "name": "Hersteller gemusterter Gefäße",
+    "summary": "Gemusterte Gefäße sind solche, in deren Oberflächen vor dem Brennen mystische Muster eingedrückt wurden."
+  },
+  "virtue.maker_of_water_vessels": {
+    "name": "Hersteller von Wassergefäßen",
+    "summary": "Ein Charakter, der aus einem magischen Wassergefäß trinkt, das von einem Charakter mit dieser Tugend hergestellt wurde, darf einen Fertigkeitswert gegen den Handwerk: Töpfer-Wert des Herstellers zum Zeitpunkt der Herstellung des Gefäßes tau"
+  },
+  "virtue.male_guild_sponsor": {
+    "name": "Männlicher Gildensponsor",
+    "summary": "Der Vater oder Ehemann des Charakters ist ein Gildenhandwerker und hat ihr den Eintritt in seinen Arbeitsbereich erlaubt, der andernfalls Männern vorbehalten ist."
+  },
+  "virtue.mamluk": {
+    "name": "Mamluk",
+    "summary": "Du bist ein ehemaliger Militärsklave, als Kind gekauft, in einer Militärschule ausgebildet, im Islam erzogen und beim Erwachsenwerden freigelassen."
+  },
+  "virtue.marshal": {
+    "name": "Marschall",
+    "summary": "Die Ställe eines Adligen benötigen einen Spezialisten, der die Pflege, Fütterung und das Wohl der Tiere koordiniert."
+  },
+  "virtue.master_bard": {
+    "name": "Meisterbarde",
+    "summary": "Der Charakter hat mindestens neun Jahre an einer Bardenschule studiert und ist ein Meister seines Handwerks, genannt Anruth."
+  },
+  "virtue.master_of_form_creatures": {
+    "name": "Meister der (Form)-Kreaturen",
+    "summary": "Der Charakter kann Tiere und andere unintelligente Wesen zähmen, deren Machtwert einer bestimmten Form zugeordnet ist."
+  },
+  "virtue.master_of_kennels": {
+    "name": "Meister der Hundezwinger",
+    "summary": "Der Charakter verwaltet die Hundezwinger eines adligen Gönners und ist für das Training, die Zucht und die Gesundheit der Tiere verantwortlich."
+  },
+  "virtue.mastered_spells": {
+    "name": "Gemeisterte Zauber",
+    "summary": "Du hast fünfzig Erfahrungspunkte, um Zauber zu meistern, die du kennst."
+  },
+  "virtue.masterpiece": {
+    "name": "Meisterstück",
+    "summary": "Aus einem wohlwollenden Grund hat der Parens des Magus ihm erlaubt, das Schlichte Artefakt zu behalten, das er zur Demonstration seiner Fähigkeiten als Magus für seine Lehrlingsprüfung hergestellt hat."
+  },
+  "virtue.mazdean_priest": {
+    "name": "Mazdeanischer Priester",
+    "summary": "Dein Charakter ist ein ordinierter mazdeanischer Priester, eingeweiht als Mobed."
+  },
+  "virtue.mendicant_friar": {
+    "name": "Bettelbruder",
+    "summary": "Du bist ein Anhänger des heiligen Franziskus oder des heiligen Dominikus, unterwegs unter Reichen und Armen, verbreitest das Wort Gottes und bringst Trost den Kranken, Obdachlosen, Hungernden oder Sterbenden."
+  },
+  "virtue.mentored_by_demons": {
+    "name": "Von Dämonen betreut",
+    "summary": "Ein von Dämonen betreuter Charakter lernt schneller als Menschen, die von menschlichen Lehrern unterrichtet werden; doch Dämonen lehren nur jene Fertigkeiten, die ihren Plänen für den Charakter entsprechen."
+  },
+  "virtue.mercenary_captain": {
+    "name": "Söldnerhauptmann",
+    "summary": "Du führst eine kleine Söldnertruppe (5 bis 10 Mann), die dem Meistbietenden gedungen wird."
+  },
+  "virtue.merchant": {
+    "name": "Händler",
+    "summary": "Du lebst vom Kauf und Verkauf von Waren."
+  },
+  "virtue.merchant_adventurer": {
+    "name": "Handelsabenteurer",
+    "summary": "Der Charakter befehligt ein Schiff und eine Besatzung."
+  },
+  "virtue.mercurian_magic": {
+    "name": "Merkurische Magie",
+    "summary": "Deine magische Abstammung und Tradition stammt von den römischen Priestern des Merkur, die dem Orden des Hermes vorausgingen, was dich besonders im Bereich der Ritualmagie und der gemeinschaftlich genutzten Magie begabt."
+  },
+  "virtue.method_caster": {
+    "name": "Methodischer Zauberer",
+    "summary": "Du bist hervorragend im Wirken formulaischer Zauber, da du eine beständige und präzise Methode zu deren Ausführung perfektioniert hast."
+  },
+  "virtue.mild_aging": {
+    "name": "Leichtes Altern",
+    "summary": "Die Alterungswürfe des Charakters profitieren von einem +1-Bonus auf den Lebensumstände-Modifikator, zusätzlich zu dem, was sein sozialer Stand normalerweise bietet."
+  },
+  "virtue.minor_enchantments": {
+    "name": "Kleine Verzauberungen",
+    "summary": "Der Charakter besitzt ein oder mehrere Gegenstände mit magischen Kräften."
   },
   "virtue.minor_magical_focus": {
     "name": "Kleiner Magischer Fokus",
     "summary": "Deine Magie ist auf ein enges Gebiet abgestimmt; innerhalb davon zählt der niedrigste anwendbare Kunstwert doppelt."
   },
+  "virtue.muqta_muq_ta": {
+    "name": "Muqta'",
+    "summary": "Du bist ein bedeutender Emir, dem ein Iqta' (vergleichbar einem feudalen Lehen) anvertraut wurde."
+  },
+  "virtue.muse": {
+    "name": "Muse",
+    "summary": "Eine Muse besitzt jene seltene Schönheit, die andere dazu anregt, sich zu Würdigem aufzuschwingen."
+  },
+  "virtue.mystical_choreography": {
+    "name": "Mystische Choreographie",
+    "summary": "Die Geschicklichkeit des Magus im Umgang mit Körperhaltung und -bewegung ermöglicht es ihm, die für die Durchführung Zeremonieller Magie benötigte Zeit zu verkürzen."
+  },
+  "virtue.mythic_blood": {
+    "name": "Mythisches Blut",
+    "summary": "Du bist ein Blutsnachkomme entweder eines Zauberers der Legende (möglicherweise eines der Zwölf Gründer oder eines anderen uralten und mächtigen Zauberers) oder eines übernatürlichen Wesens (wie eines Drachen)."
+  },
+  "virtue.natural_leader": {
+    "name": "Natürlicher Anführer",
+    "summary": "Der Charakter ist eine dominante Persönlichkeit mit einem Auftreten, das andere dazu bringt, zu tun, was er sagt."
+  },
   "virtue.nephilim": {
     "name": "Nephilim",
     "summary": "Freie Status-Tugend für einen göttlichen Riesen der alten Mythen; unvereinbar mit der Gabe."
+  },
+  "virtue.notary": {
+    "name": "Notar",
+    "summary": "Notare sind Rechtsbeamte im Dienst von Herrschaften oder Städten."
+  },
+  "virtue.nuntius": {
+    "name": "Nuntius",
+    "summary": "Der Charakter ist ein Nuntius (Bote), beauftragt, Nachrichten, Post und Geldspenden zwischen Studenten und ihren Familien zu überbringen."
+  },
+  "virtue.paid_rights": {
+    "name": "Erkaufte Rechte",
+    "summary": "Die mittelalterliche Gesellschaft hat viele Verbote gegen Frauen, die Autorität innehaben, was sich in der Beschränkung vieler Sozialer-Status-Tugenden auf Männer widerspiegelt."
+  },
+  "virtue.partner": {
+    "name": "Partner",
+    "summary": "Der Charakter hat einen großen finanziellen Anteil an einem wohlhabenden Handelsunternehmen."
+  },
+  "virtue.peasant": {
+    "name": "Bauer",
+    "summary": "Du lebst davon, das Land zu bestellen."
+  },
+  "virtue.perfect_balance": {
+    "name": "Vollkommenes Gleichgewicht",
+    "summary": "Du beherrschst es, dein Gleichgewicht zu halten, besonders auf schmalen Vorsprüngen oder Seilen."
+  },
+  "virtue.perfect_eye_for_commodity": {
+    "name": "Untrüglicher Blick für (Ware)",
+    "summary": "Für eine bestimmte Ware und daraus hergestellte Produkte kann der Charakter niemals eine ungenaue Werteinschätzung vornehmen."
+  },
+  "virtue.perfectus": {
+    "name": "Perfectus",
+    "summary": "Du bist einer der Anführer der Katharer-Häretiker, die hauptsächlich in Südfrankreich zu finden sind."
+  },
+  "virtue.performance_magic": {
+    "name": "Aufführungsmagie",
+    "summary": "Im Mythischen Europa haben viele hermetische Magi gelernt, ihre magischen Praktiken zu verschleiern, indem sie diese vollständig in eine gewöhnliche Tätigkeit oder Handlung einbetten, in der sie hervorragend sind."
+  },
+  "virtue.persona": {
+    "name": "Persona",
+    "summary": "Der Charakter kann eine oder mehrere makellose Verkleidungen annehmen und dabei sowohl sein äußeres Erscheinungsbild als auch sein Auftreten verändern."
+  },
+  "virtue.personal_power": {
+    "name": "Persönliche Kraft",
+    "summary": "Der Charakter besitzt eine übernatürliche Kraft, die er nach Belieben aktivieren kann."
+  },
+  "virtue.personal_vis_source": {
+    "name": "Persönliche Vis-Quelle",
+    "summary": "Du hast exklusiven Zugang zu einer Versorgung mit rohem Vis."
+  },
+  "virtue.physician_of_salerno": {
+    "name": "Arzt von Salerno",
+    "summary": "Der Charakter hat die berühmte Schule von Salerno besucht, die bedeutendste Stätte medizinischen Wissens."
+  },
+  "virtue.piercing_gaze": {
+    "name": "Durchdringender Blick",
+    "summary": "Wenn Du Menschen eindringlich anschaust, vermittelst Du ihnen das unbehagliche Gefühl, als würdest Du in ihre Seelen blicken."
+  },
+  "virtue.potent_magic_major": {
+    "name": "Potente Magie (Groß)",
+    "summary": "Die Magie der Maga ist in einem engen Bereich besonders ausgeprägt, ähnlich wie bei einem Magischen Fokus."
+  },
+  "virtue.potent_magic_minor": {
+    "name": "Potente Magie (Klein)",
+    "summary": "Die Magie der Maga ist in einem engen Bereich besonders ausgeprägt, ähnlich wie bei einem Magischen Fokus."
+  },
+  "virtue.powerful_relic": {
+    "name": "Mächtiges Relikt",
+    "summary": "Du besitzt ein ungewöhnlich mächtiges Relikt mit einem Wahrer-Glaube-Wert von 3."
   },
   "virtue.premonitions": {
     "name": "Vorahnungen",
     "summary": "Du spürst, wenn etwas schiefzugehen droht. Verleiht die Fertigkeit Vorahnungen auf 1."
   },
+  "virtue.prestigious_student": {
+    "name": "Angesehener Student",
+    "summary": "Der Charakter ist der Sohn eines Adligen oder eines wohlhabenden Kaufmanns und an einer Universität eingeschrieben, die auf Zivilrecht oder Medizin spezialisiert ist."
+  },
+  "virtue.priest": {
+    "name": "Priester",
+    "summary": "Du wurdest zum Priester geweiht, was bedeutet, dass Du die Sakramente der Messe, der Beichte und der Letzten Ölung vollziehen kannst."
+  },
   "virtue.privileged_upbringing": {
     "name": "Privilegierte Erziehung",
     "summary": "+50 Erfahrungspunkte, nur für Allgemeine, Akademische oder Kampf-Fertigkeiten."
+  },
+  "virtue.protection": {
+    "name": "Schutz",
+    "summary": "Du stehst unter der Schirmherrschaft einer mächtigen Person, normalerweise eines Adligen oder eines hochrangigen Kirchenwürdenträgers (andere Möglichkeiten sind denkbar, sofern der Spielleiter zustimmt)."
   },
   "virtue.puissant_ability": {
     "name": "Begabung in {ability}",
@@ -151,21 +2267,149 @@
     "name": "Begabung in {art}",
     "summary": "+3 auf alle Summen mit einer Kunst. Kann zweimal gewählt werden, für zwei Künste."
   },
+  "virtue.quiet_magic": {
+    "name": "Stille Magie",
+    "summary": "Du kannst Zauber ohne Abzug mit nur leiser Stimme wirken und erhältst nur einen Abzug von –5, wenn Du überhaupt nicht sprichst."
+  },
+  "virtue.rabbi": {
+    "name": "Rabbi",
+    "summary": "Dein Charakter ist ein ordinierter Rabbi, ein Lehrer und weiser Mann der jüdischen Gemeinschaft."
+  },
+  "virtue.rapid_convalescence": {
+    "name": "Schnelle Genesung",
+    "summary": "Dein Körper kann schnell heilen."
+  },
+  "virtue.rard": {
+    "name": "Barde",
+    "summary": "Der Charakter hat eine Bardenschule besucht und nach vier Jahren die Prüfung bestanden, wodurch er den Titel Fili im Rang des Dos erlangt hat."
+  },
+  "virtue.rat_up_a_drainpipe": {
+    "name": "Ratte im Abflussrohr",
+    "summary": "Durch eine Mischung aus Akrobatik, Klettern und Ausweichen kann dieser Charakter durch städtische Gebiete laufen, als ob er ungehindert wäre."
+  },
+  "virtue.redcap": {
+    "name": "Rotkappe",
+    "summary": "Obwohl Du nicht die Gabe besitzt und keine hermetische Magie wirken kannst, bist Du ein vollwertiges Mitglied des Ordens des Hermes und des Hauses Mercere (siehe [Seite 15](#haus-mercere))."
+  },
+  "virtue.relic": {
+    "name": "Relikt",
+    "summary": "Du besitzt ein heiliges Relikt, etwa den Fingerknöchelknochen eines Heiligen, mit einem Wahrer-Glaube-Wert von 1."
+  },
+  "virtue.religious": {
+    "name": "Ordensangehöriger",
+    "summary": "Der Charakter ist ein Mönch, eine Nonne, eine Begine, eine Klausnerin oder ein Klausner, ein heiliger Einsiedler oder Ähnliches."
+  },
+  "virtue.reserves_of_strength": {
+    "name": "Kraftreserven",
+    "summary": "Einmal pro Tag kannst Du in der Not eine außergewöhnliche Kraftleistung vollbringen."
+  },
+  "virtue.ripper": {
+    "name": "Aufschlitzer",
+    "summary": "Ein Aufschlitzer besitzt zwei Kräfte."
+  },
+  "virtue.ritual_power": {
+    "name": "Ritualmacht",
+    "summary": "Der Charakter besitzt eine übernatürliche Kraft, die er nach Belieben aktivieren kann."
+  },
+  "virtue.rosh_beth_din": {
+    "name": "Rosh Beth Din",
+    "summary": "Der Rosh Beth Din, oder Vorsitzender des Gerichts, führt den Vorsitz am rabbinischen Gericht Beth Din."
+  },
+  "virtue.schooled_in_crime": {
+    "name": "In der Kriminalität geschult",
+    "summary": "Der Charakter wurde ausgiebig in kriminellen Künsten ausgebildet und erhält 50 zusätzliche Erfahrungspunkte für Fertigkeiten, die mit Diebstahl in Verbindung stehen."
+  },
   "virtue.second_sight": {
     "name": "Zweites Gesicht",
     "summary": "Du durchschaust Illusion und Verhüllung und nimmst unsichtbare Dinge wahr. Verleiht die Fertigkeit Zweites Gesicht auf 1."
+  },
+  "virtue.secondary_insight": {
+    "name": "Nebenerkenntnis",
+    "summary": "Deine Methode des magischen Studiums ist besonders vielseitig."
+  },
+  "virtue.see_in_darkness": {
+    "name": "Im Dunkeln sehen",
+    "summary": "Du kannst in vollständiger Dunkelheit sehen."
   },
   "virtue.self_confident": {
     "name": "Selbstbewusst",
     "summary": "Du hast einen Selbstvertrauenswert von 2 und beginnst mit fünf Selbstvertrauenspunkten statt drei."
   },
+  "virtue.senior_bard": {
+    "name": "Älterer Barde",
+    "summary": "Der Charakter hat fünf oder sechs Jahre an einer Bardenschule verbracht und ist entsprechend als Cano oder Cli eingestuft."
+  },
+  "virtue.senior_clergy": {
+    "name": "Höherer Klerus",
+    "summary": "Der Charakter ist ein Erzbischof, Bischof, Abt, eine Äbtissin oder ein anderes höheres Mitglied der Kirche."
+  },
+  "virtue.senior_master": {
+    "name": "Älterer Meister",
+    "summary": "Der Charakter ist seit einigen Jahren ein wohlhabender Zunftmeister und hat eine Autoritätsstellung in seiner Zunft erreicht."
+  },
   "virtue.sense_holiness_and_unholiness": {
     "name": "Gespür für Heiliges und Unheiliges",
     "summary": "Spüre die Gegenwart von Gut und Böse. Verleiht die gleichnamige Fähigkeit."
   },
+  "virtue.sense_passions": {
+    "name": "Gespür für Leidenschaft",
+    "summary": "Der Charakter kann in die Herzen und Gedanken anderer blicken und ihre Schwächen, Ängste und bösen Gedanken erkennen."
+  },
+  "virtue.shadchan": {
+    "name": "Schadchen",
+    "summary": "Der Schadchen ist ein Heiratsvermittler, dem von den zukünftigen Eltern vertraut wird, die beste eheliche Verbindung für ihre Söhne und Töchter zu finden."
+  },
+  "virtue.shamash": {
+    "name": "Schamasch",
+    "summary": "Der Schamasch ist der Diener der Synagoge und für ihr Wohlergehen verantwortlich."
+  },
+  "virtue.shapeshifter": {
+    "name": "Gestaltwandler",
+    "summary": "Du kannst Deine Gestalt in die eines oder mehrerer gewöhnlicher Tiere verwandeln."
+  },
+  "virtue.sharp_ears": {
+    "name": "Scharfe Ohren",
+    "summary": "Du hörst besser als die meisten Menschen."
+  },
+  "virtue.side_effect": {
+    "name": "Nebeneffekt",
+    "summary": "Deine Magie hat ein beiläufiges Merkmal, das im Allgemeinen nützlich, gelegentlich aber lästig ist."
+  },
+  "virtue.simple_student": {
+    "name": "Einfacher Student",
+    "summary": "Der Charakter ist ein Universitätsstudent, der noch keinen Abschluss erworben hat."
+  },
   "virtue.skilled_parens": {
     "name": "Erfahrener Parens",
     "summary": "Du erhältst während deiner Lehrzeit 60 zusätzliche Erfahrungspunkte und 30 zusätzliche Zauberstufen."
+  },
+  "virtue.skilled_smuggler": {
+    "name": "Erfahrener Schmugler",
+    "summary": "Der Charakter kann einen Gegenstand an seiner Person verbergen, und Versuche, ihn zu finden, erleiden einen Abzug von –9 auf Wahrnehmungswürfe."
+  },
+  "virtue.skinchanger": {
+    "name": "Tierwandler",
+    "summary": "Du besitzt einen magischen Umhang, eine Tierhaut oder einen ähnlichen Gegenstand aus einem Tier."
+  },
+  "virtue.skinchanger_dove": {
+    "name": "Tierwandler (Taube)",
+    "summary": "Dies ist eine mächtigere Variante der Kleinen Tugend oben."
+  },
+  "virtue.social_contacts": {
+    "name": "Soziale Kontakte",
+    "summary": "Du verfügst über ein breites Netzwerk an Bekannten in einem bestimmten gesellschaftlichen Umfeld (das beim Erwerb dieser Tugend festgelegt wird), das du dir über Jahre des Reisens und der Geselligkeit aufgebaut hast."
+  },
+  "virtue.sofer": {
+    "name": "Sofer",
+    "summary": "Der Sofer ist der Schreiber, dessen Aufgabe darin besteht, eine neue Sefer Torah zu erstellen oder Verblassungen oder Schäden an einer bestehenden Schriftrolle zu beheben."
+  },
+  "virtue.special_circumstances": {
+    "name": "Besondere Umstände",
+    "summary": "Du kannst in bestimmten ungewöhnlichen Situationen besser zaubern (etwa während eines Sturms oder während du das Ziel berührst) und erhältst einen Bonus von +3 auf deinen Zauberwert und deine Magieresistenz."
+  },
+  "virtue.spell_improvisation": {
+    "name": "Zauberimprovisation",
+    "summary": "Der Magus kann die Magnitude eines formulaischen Zaubers, den er kennt, als Bonus auf seine Zaubersumme addieren, wenn er spontan einen ähnlichen Zauber wirkt (siehe Ähnliche Zauber, [Seite 260](#ähnliche-zauber))."
   },
   "virtue.spirit_votary": {
     "name": "Geistverehrer",
@@ -179,6 +2423,78 @@
     "name": "Starkes Engelserbe",
     "summary": "Dein Engelserbe verleiht einen göttlichen Machtwert und heilige Kräfte. Erfordert Blut der Nephilim."
   },
+  "virtue.strong_faerie_blood": {
+    "name": "Starkes Feenblut",
+    "summary": "Das Blut der Feen ist stark in dir."
+  },
+  "virtue.strong_willed": {
+    "name": "Willensstark",
+    "summary": "Du lässt dich nicht leicht zu Handlungen, Überzeugungen oder Gefühlen zwingen."
+  },
+  "virtue.student_of_realm": {
+    "name": "Student der (Sphäre)",
+    "summary": "Du wurdest in den mystischen Aspekten einer der vier Machtsphären (Göttlich, Feen, Infernal oder Magie) unterwiesen und erhältst einen Bonus von +2 auf alle Verwendungen der entsprechenden Kundefertigkeiten."
+  },
+  "virtue.study_bonus": {
+    "name": "Studierbonus",
+    "summary": "Wenn du die Gelegenheit erhältst, eine Kunst aus Büchern oder rohem Vis in Anwesenheit der betreffenden Form oder Technik zu studieren, verleiht dir deine Umgebung neue Einsichten in dein Studium."
+  },
+  "virtue.subtle_magic": {
+    "name": "Subtile Magie",
+    "summary": "Du kannst Zauber ohne Gesten wirken, ohne einen Malus zu erleiden."
+  },
+  "virtue.sufi": {
+    "name": "Sufi",
+    "summary": "Du bist ein muslimischer Mystiker, der durch Askese und Rituale eine engere Vereinigung mit Gott anstrebt."
+  },
+  "virtue.summon_animals": {
+    "name": "Tiere rufen",
+    "summary": "Du bist in der Lage, Tiere zu dir zu rufen."
+  },
+  "virtue.supernatural_beauty": {
+    "name": "Übernatürliche Schönheit",
+    "summary": "Der Charakter besitzt jene Art von mystischer Schönheit, die, wenn sie bedroht wird, königliche Macht, Volksmagie und Heldentum zu ihrer Verteidigung auf den Plan ruft."
+  },
+  "virtue.tainted_treasure": {
+    "name": "Verfluchter Schatz",
+    "summary": "Der Charakter hat eine riesige Menge Schatz geerbt oder erworben, doch dieser ist verflucht, Schaden anzurichten."
+  },
+  "virtue.templar_administrator": {
+    "name": "Templerverwalter",
+    "summary": "Der Charakter ist technisch gesehen ein Bruder-Ritter oder Bruder-Sergeant der Armen Ritter Christi und des Tempels zu Salomon, fungiert jedoch in Wirklichkeit als Verwalter für die vielen Besitzungen und Aktivitäten des Ordens."
+  },
+  "virtue.templar_commander": {
+    "name": "Templerkommandeur",
+    "summary": "Der Charakter ist ein Kommandeur der Armen Ritter Christi und des Tempels zu Salomon und hat Autorität über alle Aspekte des Ordens in einer Provinz oder Komturei."
+  },
+  "virtue.templar_confrere_or_consoeur": {
+    "name": "Tempelritter-Konfrater oder Konsoeur",
+    "summary": "Der Charakter ist ein assoziiertes Mitglied der Armen Ritter Christi und des Tempels zu Salomon und hat ein oder zwei der Tempelrittergelübde abgelegt."
+  },
+  "virtue.templar_office_holder": {
+    "name": "Templerstelleninhaber",
+    "summary": "Der Charakter bekleidet eine Position in der lokalen Hierarchie der Armen Ritter Christi und des Tempels zu Salomon, etwa als stellvertretender Kommandeur, Marschall oder Krankenmeister."
+  },
+  "virtue.templar_prestige": {
+    "name": "Templerrang",
+    "summary": "Als Mitglied der Armen Ritter Christi und des Tempels zu Salomon genießt der Charakter große Wertschätzung und Bewunderung unter seinen Ordensbrüdern."
+  },
+  "virtue.templar_servant": {
+    "name": "Templerdiener",
+    "summary": "Der Charakter ist ein Diener, der in einer Komturei der Armen Ritter Christi und des Tempels zu Salomon tätig ist."
+  },
+  "virtue.templar_specialist": {
+    "name": "Templerexperte",
+    "summary": "Der Charakter arbeitet als qualifizierter Angestellter der Armen Ritter Christi und des Tempels zu Salomon und füllt eine entscheidende Rolle aus, für die die Tempelritter kein Voll- oder assoziiertes Mitglied haben, etwa als Handwerker, Sc"
+  },
+  "virtue.temporal_influence": {
+    "name": "Zeitlicher Einfluss",
+    "summary": "Durch Geburt oder eine Vertrauensstellung genießt du einiges politisches Gewicht in der Gesellschaft."
+  },
+  "virtue.tethered_magic": {
+    "name": "Gefesselte Magie",
+    "summary": "Du kannst die Kontrolle über deine Nicht-Ritual-Zauber an andere weitergeben, so als wären sie der Wirkende, und die Magie für die Dauer des Zaubers an sie „fesseln\"."
+  },
   "virtue.the_enigma": {
     "name": "Das Enigma",
     "summary": "Einweihung in das Äußere Mysterium des Hauses Criamon. Verleiht Enigmatische Weisheit auf 1."
@@ -191,16 +2507,108 @@
     "name": "Zäh",
     "summary": "+3 auf Widerstandsfähigkeit."
   },
+  "virtue.town_magistrate": {
+    "name": "Stadtrichter",
+    "summary": "Der Charakter hat eine richterliche Verantwortungsposition in einer Stadt mit einem kleinen Stab von untergeordneten Beamten (bis zu fünf Personen)."
+  },
+  "virtue.trained_assassin": {
+    "name": "Ausgebildeter Attentäter",
+    "summary": "Diese Tugend steht nur Charakteren mit einer der Sozialer-Status-Tugenden der Nizaris zur Verfügung."
+  },
+  "virtue.troubadour": {
+    "name": "Troubadour/Trobairitz",
+    "summary": "Troubadoure sind wandernde Minnesänger und Dichter („Trobairitz\" ist die weibliche Form)."
+  },
+  "virtue.troupe_upbringing": {
+    "name": "Zirkuserziehung",
+    "summary": "Du wurdest in einer Gruppe von Unterhaltungskünstlern aufgezogen und verbrachtest einen Großteil deiner Kindheit damit, von Stadt zu Stadt zu reisen."
+  },
+  "virtue.true_faith": {
+    "name": "Wahrer Glaube",
+    "summary": "Durch Frömmigkeit und heilige Hingabe hast du einen Glauben, der Berge versetzt."
+  },
+  "virtue.true_love_pc": {
+    "name": "Wahre Liebe (SC)",
+    "summary": "Du hast die eine Person gefunden, die in der gesamten Schöpfung für dich bestimmt ist, und die Bindung zwischen euch kann nicht getrennt werden."
+  },
+  "virtue.turb_trained": {
+    "name": "Turba-Ausgebildet",
+    "summary": "Dieser Charakter ist im Konvent aufgewachsen, wurde für den Kampf in der Turba ausgebildet und hat einiges von den vertrauenswürdigen Dienern der Magi aufgeschnappt."
+  },
+  "virtue.unaffected_by_the_gift": {
+    "name": "Unbeeindruckt von der Gabe",
+    "summary": "Der Charakter ist von den negativen Auswirkungen der Gabe oder des Magischen Flairs anderer nicht betroffen."
+  },
+  "virtue.unaging": {
+    "name": "Nicht alternd",
+    "summary": "Du leidest nicht unter den Auswirkungen des Alterns."
+  },
+  "virtue.unbound_tongue": {
+    "name": "Ungebundene Zunge",
+    "summary": "Wann immer der Charakter in eine nicht-menschliche Form verwandelt wird (ob durch Zauber, magisches Artefakt, Fluch oder ein Herztier), kann er alle menschlichen Sprachen, die er kennt, ohne Einschränkung sprechen."
+  },
+  "virtue.university_grammar_teacher": {
+    "name": "Universitätsgrammatiklehrer",
+    "summary": "Der Charakter ist von einer Universität angestellt, um deren jüngeren Mitgliedern Grammatik zu unterrichten."
+  },
+  "virtue.variable_power": {
+    "name": "Variable Kraft",
+    "summary": "Eine der magischen Kräfte des Charakters (Groß, Gering, Persönlich oder Ritual) wird im Laufe der Zeit stärker, basierend auf entweder (Alter / 10), (Machtwert / 5), dem Verzerrungswert oder seinem Wert in einer passenden Fertigkeit."
+  },
+  "virtue.venditor": {
+    "name": "Venditor",
+    "summary": "Der Charakter ist ein Venditor, ein Verkaufsagent für eine Verditius-Maga, der ihre Waren an andere interessierte weltliche Parteien verhandelt."
+  },
+  "virtue.venus_blessing": {
+    "name": "Venussegen",
+    "summary": "Menschen fühlen sich oft zu dir hingezogen."
+  },
   "virtue.verditius_magic": {
     "name": "Verditius-Magie",
     "summary": "Einweihung in das Äußere Mysterium des Hauses Verditius, das das Wirken von Verzauberungen durch Handwerk ermöglicht."
+  },
+  "virtue.voice_of_the_land": {
+    "name": "Stimme des (Landes)",
+    "summary": "Der Charakter kann mit jedem Wesen sprechen, dessen natürlicher Lebensraum eine bestimmte, mit dieser Tugend verknüpfte Umgebung ist (einschließlich Tieren und magischen Wesen), und der Charakter wird von diesen Wesen normalerweise weder al"
+  },
+  "virtue.wanderer": {
+    "name": "Wanderer",
+    "summary": "Du bist an keine Gemeinschaft gebunden und lebst von gelegentlichen Arbeiten irgendwelcher Art."
   },
   "virtue.warrior": {
     "name": "Krieger",
     "summary": "+50 Erfahrungspunkte, nur für Kampf-Fertigkeiten, die du bei der Charaktererschaffung erwerben darfst."
   },
+  "virtue.ways_of_the_land": {
+    "name": "Wege des (Landes)",
+    "summary": "Du hast ein tiefes Verständnis für eine bestimmte Art von Terrain und fühlst dich dort natürlicher und heimischer als sonst irgendwo."
+  },
+  "virtue.wealthy": {
+    "name": "Wohlhabend",
+    "summary": "Du bist ein wohlhabendes Mitglied deines Standes."
+  },
+  "virtue.well_traveled": {
+    "name": "Vielgereist",
+    "summary": "Du hast diesen Teil der Welt ausgiebig bereist und kommst gut mit Menschen in der gesamten Region aus."
+  },
+  "virtue.whistle_up_the_wind": {
+    "name": "Den Wind herbeipfeifen",
+    "summary": "Du kannst durch Pfeifen Winde erzeugen."
+  },
+  "virtue.wilderness_sense": {
+    "name": "Natursinn",
+    "summary": "Du bist auf mystische Weise mit der Natur der Wildnis verbunden."
+  },
+  "virtue.wisdom_from_ignorance": {
+    "name": "Weisheit aus Unwissen",
+    "summary": "Eine in Ägypten beheimatete Sufi-Schule interessiert sich besonders für Kalligraphie und die Ästhetik des Enigmas."
+  },
   "virtue.wise_one": {
     "name": "Weise Frau / Weiser Mann",
     "summary": "Ein Mystiker, Seher oder Heiler von gutem Ansehen in der Gemeinschaft."
+  },
+  "virtue.withstand_casting": {
+    "name": "Zaubern aushalten",
+    "summary": "Wenn ein Magus diese Tugend besitzt, verliert er, wann immer er durch das Zaubern eines Spruchs eine Erschöpfungsstufe zu verlieren droht, eine Erschöpfungsstufe weniger als üblich, mit einem Minimum von 1 Erschöpfungsstufe – wenn der Zaube"
   }
 }
