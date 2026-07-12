@@ -1,11 +1,13 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { artAbbreviation, artLabel, groupArtsByType, spellName } from '../derive';
+  import { artAbbreviation, artLabel, filterSpells, groupArtsByType, spellName } from '../derive';
   import type { Art, Spell } from '../types';
 
   // Technique/Form filters, built from the Art registry (same split ArtGrid uses).
   let technique = $state('');
   let form = $state('');
+  let search = $state('');
+  let levelFilter = $state('');
   let picked = $state('');
   let generalLevel = $state(15);
 
@@ -18,15 +20,17 @@
     return groupArtsByType(store.ruleset).find((g) => g.artType === 'form')?.arts ?? [];
   });
 
-  // Catalogue spells matching the current Technique/Form filters, sorted by name.
+  // Catalogue spells matching the Technique/Form (separate and combined), text
+  // search, and level filters, sorted by name.
   const candidates = $derived.by((): Spell[] => {
     const rs = store.ruleset;
     if (!rs) return [];
-    return Object.values(rs.ruleset.spells ?? {})
-      .filter(
-        (s) => (technique === '' || s.technique === technique) && (form === '' || s.form === form),
-      )
-      .sort((a, b) => spellName(rs, a.id).localeCompare(spellName(rs, b.id)));
+    return filterSpells(rs, Object.values(rs.ruleset.spells ?? {}), {
+      text: search,
+      technique: technique || undefined,
+      form: form || undefined,
+      level: levelFilter === '' ? undefined : Number(levelFilter),
+    }).sort((a, b) => spellName(rs, a.id).localeCompare(spellName(rs, b.id)));
   });
 
   const pickedSpell = $derived(candidates.find((s) => s.id === picked) ?? null);
@@ -76,6 +80,20 @@
 <section class="panel spell-picker">
   {#if store.ruleset}
     <div class="spell-controls">
+      <label class="field">
+        <span>{store.t('filter-search-placeholder')}</span>
+        <input type="search" bind:value={search} data-testid="spell-search" />
+      </label>
+      <label class="field">
+        <span>{store.t('spell-level-label')}</span>
+        <input
+          type="number"
+          min="1"
+          step="1"
+          bind:value={levelFilter}
+          data-testid="spell-level-filter"
+        />
+      </label>
       <label class="field">
         <span>{store.t('spell-technique-label')}</span>
         <select bind:value={technique} data-testid="spell-technique-filter">

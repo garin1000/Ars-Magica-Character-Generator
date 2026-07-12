@@ -12,10 +12,105 @@ import type {
   EntityTypeProfile,
   ItemKind,
   LocalizedRuleset,
+  Magnitude,
   PointItem,
   RestrictedXpPool,
   Selection,
+  Spell,
 } from './types';
+
+/**
+ * Case- and diacritic-insensitive search normalization, so "Übernatürlich"
+ * matches "ubernaturlich" and "Größe" matches "grosse"-ish. Strips combining
+ * marks (NFD) and lowercases; the search text and haystack pass through the same
+ * normalizer, so a filter is language-agnostic.
+ */
+function normalizeSearch(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
+/** The localized name + summary of an item id, normalized for text search. */
+function searchHaystack(localized: LocalizedRuleset, id: string): string {
+  const entry = localized.i18n[id];
+  const name = (entry?.name ?? id).replace(/[{}]/g, '');
+  return normalizeSearch(`${name} ${entry?.summary ?? ''}`);
+}
+
+/** Facets a Virtue/Flaw list can be filtered by. All optional; omitted = no constraint. */
+export interface ItemFilter {
+  text?: string;
+  categories?: string[];
+  magnitudes?: Magnitude[];
+  tainted?: boolean;
+}
+
+/**
+ * Virtues/Flaws matching every supplied facet (facets AND together): free-text
+ * over the localized name/summary, category, magnitude, and the Tainted tag.
+ * Order is preserved, so callers group/sort afterward as before.
+ */
+export function filterItems(
+  localized: LocalizedRuleset,
+  items: PointItem[],
+  filter: ItemFilter,
+): PointItem[] {
+  const text = filter.text ? normalizeSearch(filter.text) : '';
+  return items.filter((it) => {
+    if (text && !searchHaystack(localized, it.id).includes(text)) return false;
+    if (filter.categories?.length && !filter.categories.includes(it.category)) return false;
+    if (filter.magnitudes?.length && !filter.magnitudes.includes(it.magnitude)) return false;
+    if (filter.tainted && !it.tainted) return false;
+    return true;
+  });
+}
+
+/** Facets an Ability list can be filtered by. */
+export interface AbilityFilter {
+  text?: string;
+  categories?: AbilityCategory[];
+}
+
+/** Abilities matching the text (localized name) and category facets. */
+export function filterAbilities(
+  localized: LocalizedRuleset,
+  abilities: Ability[],
+  filter: AbilityFilter,
+): Ability[] {
+  const text = filter.text ? normalizeSearch(filter.text) : '';
+  return abilities.filter((a) => {
+    if (text && !searchHaystack(localized, a.id).includes(text)) return false;
+    if (filter.categories?.length && !filter.categories.includes(a.category)) return false;
+    return true;
+  });
+}
+
+/** Facets a Spell list can be filtered by (Technique/Form separate and combined). */
+export interface SpellFilter {
+  text?: string;
+  technique?: string;
+  form?: string;
+  level?: number | null;
+}
+
+/**
+ * Spells matching the text (localized name), Technique and Form (each optional,
+ * so they filter separately or combined), and exact level. A `level` of `null`
+ * (or a General spell) is matched only when the filter's `level` is `null`.
+ */
+export function filterSpells(
+  localized: LocalizedRuleset,
+  spells: Spell[],
+  filter: SpellFilter,
+): Spell[] {
+  const text = filter.text ? normalizeSearch(filter.text) : '';
+  return spells.filter((s) => {
+    if (text && !normalizeSearch(spellName(localized, s.id)).includes(text)) return false;
+    if (filter.technique && s.technique !== filter.technique) return false;
+    if (filter.form && s.form !== filter.form) return false;
+    if (filter.level !== undefined && (s.level ?? null) !== filter.level) return false;
+    return true;
+  });
+}
 
 /**
  * Rules display name for an item, substituting any `{param}` placeholders.

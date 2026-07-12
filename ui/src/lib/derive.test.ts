@@ -10,6 +10,9 @@ import {
   balance,
   characteristicPointsUsed,
   displayName,
+  filterAbilities,
+  filterItems,
+  filterSpells,
   grantedSelectionsForSide,
   groupAbilitiesByCategory,
   groupArtsByType,
@@ -79,6 +82,101 @@ function entity(refs: string[], typeId = 'companion'): Entity {
     selections: refs.map((ref) => ({ ref })),
   };
 }
+
+// --- filterItems() / filterAbilities() / filterSpells() ---------------------
+
+describe('filterItems', () => {
+  const items = [
+    item({ id: 'virtue.brave', category: 'general', magnitude: 'minor' }),
+    item({ id: 'virtue.giant', category: 'general', magnitude: 'major' }),
+    item({ id: 'virtue.corrupt', category: 'supernatural', magnitude: 'minor', tainted: true }),
+    item({ id: 'flaw.dark', kind: 'flaw', category: 'story', magnitude: 'major' }),
+  ];
+  const i18n = {
+    'virtue.brave': { name: 'Brave', summary: 'Fearless in danger.' },
+    'virtue.giant': { name: 'Giant Blood', summary: 'Descended from giants.' },
+    'virtue.corrupt': { name: 'Corrupted', summary: 'Tainted by demons.' },
+    'flaw.dark': { name: 'Dark Secret', summary: 'A hidden shame.' },
+  };
+  const rs = makeRuleset(items, { i18n });
+
+  it('returns all items when the filter is empty', () => {
+    expect(filterItems(rs, items, {}).map((i) => i.id)).toHaveLength(4);
+  });
+
+  it('matches the localized name or summary, case/diacritic-insensitively', () => {
+    expect(filterItems(rs, items, { text: 'giant' }).map((i) => i.id)).toEqual(['virtue.giant']);
+    // summary match
+    expect(filterItems(rs, items, { text: 'demons' }).map((i) => i.id)).toEqual(['virtue.corrupt']);
+  });
+
+  it('filters by category, magnitude, and tainted', () => {
+    expect(filterItems(rs, items, { categories: ['general'] }).map((i) => i.id)).toEqual([
+      'virtue.brave',
+      'virtue.giant',
+    ]);
+    expect(filterItems(rs, items, { magnitudes: ['major'] }).map((i) => i.id)).toEqual([
+      'virtue.giant',
+      'flaw.dark',
+    ]);
+    expect(filterItems(rs, items, { tainted: true }).map((i) => i.id)).toEqual(['virtue.corrupt']);
+  });
+
+  it('ANDs facets together', () => {
+    expect(
+      filterItems(rs, items, { categories: ['general'], magnitudes: ['minor'] }).map((i) => i.id),
+    ).toEqual(['virtue.brave']);
+  });
+});
+
+describe('filterAbilities', () => {
+  const abilities: Ability[] = [
+    { id: 'ability.awareness', category: 'general' },
+    { id: 'ability.latin', category: 'academic' },
+    { id: 'ability.magic_theory', category: 'arcane' },
+  ];
+  const i18n = {
+    'ability.awareness': { name: 'Awareness' },
+    'ability.latin': { name: 'Latin' },
+    'ability.magic_theory': { name: 'Magic Theory' },
+  };
+  const rs = makeRuleset([], { i18n });
+
+  it('filters by text and by category', () => {
+    expect(filterAbilities(rs, abilities, { text: 'lat' }).map((a) => a.id)).toEqual([
+      'ability.latin',
+    ]);
+    expect(filterAbilities(rs, abilities, { categories: ['arcane'] }).map((a) => a.id)).toEqual([
+      'ability.magic_theory',
+    ]);
+  });
+});
+
+describe('filterSpells', () => {
+  const spells = [
+    { id: 'spell.pilum', technique: 'art.creo', form: 'art.ignem', level: 20 },
+    { id: 'spell.veil', technique: 'art.perdo', form: 'art.imaginem', level: 15 },
+    { id: 'spell.ward', technique: 'art.rego', form: 'art.ignem', level: null },
+  ];
+  const i18n = {
+    'spell.pilum': { name: 'Pilum of Fire' },
+    'spell.veil': { name: 'Veil of Invisibility' },
+    'spell.ward': { name: 'Ward Against Heat' },
+  };
+  const rs = makeRuleset([], { i18n });
+
+  it('filters by technique, form (separate and combined), text, and level', () => {
+    expect(filterSpells(rs, spells, { form: 'art.ignem' }).map((s) => s.id)).toEqual([
+      'spell.pilum',
+      'spell.ward',
+    ]);
+    expect(
+      filterSpells(rs, spells, { technique: 'art.creo', form: 'art.ignem' }).map((s) => s.id),
+    ).toEqual(['spell.pilum']);
+    expect(filterSpells(rs, spells, { text: 'veil' }).map((s) => s.id)).toEqual(['spell.veil']);
+    expect(filterSpells(rs, spells, { level: 20 }).map((s) => s.id)).toEqual(['spell.pilum']);
+  });
+});
 
 // --- balance() --------------------------------------------------------------
 
