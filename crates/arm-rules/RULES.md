@@ -618,6 +618,20 @@ approximation of "Latin").
   (nested-grant, B6) and the "spend XP on Magic Lore" purchase permission are not
   part of this numeric effect.
 
+#### Magic Items / Redcap — starting enchanted-device level budget (`item_level_budget`)
+> Magic Items: "You begin with 25 more starting levels of magic items … you may
+> take it more than once." Redcap: "enchanted devices with fifty levels of effect."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:4347-4349` (Magic
+  Items), `:4842-4846` (Redcap).
+- Data: `virtue.magic_items` — `item_level_budget: 25` + `prerequisites: Has
+  virtue.redcap` ("You must be a Redcap"); `virtue.redcap` — `item_level_budget: 50`.
+- Implementation: `Effect::ItemLevelBudget { amount: u16 }` →
+  `effective.rs::item_level_budget` (derived, base 0 + Σ). Surfaced as
+  `EffectiveScores.item_level_budget` and shown on the sheet (Fluent
+  `item-levels-label/readout`; DE "Zauberartefakte"). The device-crafting subsystem
+  is out of scope; the granted budget is tracked (full scope of the *Virtue*).
+
 #### True Faith — special derived score (`true_faith_grant`)
 > "You have a True Faith score of 1 and can gain more."
 

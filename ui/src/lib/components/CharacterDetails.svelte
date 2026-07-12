@@ -13,6 +13,8 @@
   const showWarping = $derived(warpScore > 0 || warpPoints > 0);
   // True Faith is derived from V/F (True Faith → 1); hidden when 0.
   const trueFaith = $derived(store.effective?.true_faith_score ?? 0);
+  // Starting enchanted-device level budget (Magic Items/Redcap); hidden when 0.
+  const itemLevels = $derived(store.effective?.item_level_budget ?? 0);
   const traits = $derived(store.entity.personality_traits ?? []);
   const reputations = $derived(store.entity.reputations ?? []);
   // Reputation input is offered only for the kinds a V/F grants (Core:2514).
@@ -65,6 +67,15 @@
         <span class="detail-label">{store.t('true-faith-label')}</span>
         <span data-testid="true-faith-readout">
           {store.t('true-faith-readout', { score: String(trueFaith) })}
+        </span>
+      </div>
+    {/if}
+
+    {#if itemLevels > 0}
+      <div class="detail-field">
+        <span class="detail-label">{store.t('item-levels-label')}</span>
+        <span data-testid="item-levels-readout">
+          {store.t('item-levels-readout', { levels: String(itemLevels) })}
         </span>
       </div>
     {/if}

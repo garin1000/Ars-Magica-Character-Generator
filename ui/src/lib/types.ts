@@ -38,6 +38,7 @@ export type Effect =
   | { type: 'confidence_bonus'; score: number; points: number }
   | { type: 'warping_grant'; score: number; points: number }
   | { type: 'true_faith_grant'; score: number }
+  | { type: 'item_level_budget'; amount: number }
   | { type: 'size_delta'; amount: number }
   | { type: 'characteristic_score_delta'; characteristic: string; amount: number }
   | { type: 'grants_reputation'; kind: ReputationType; score: number };
@@ -164,6 +165,9 @@ export interface EffectiveScores {
   warping_points: number;
   // Derived True Faith Score granted by V/F (True Faith 1); 0 when none.
   true_faith_score: number;
+  // Derived starting enchanted-device level budget (Magic Items +25, Redcap 50);
+  // 0 when none.
+  item_level_budget: number;
 }
 
 export interface ReputationGrant {

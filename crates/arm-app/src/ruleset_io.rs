@@ -15,8 +15,8 @@ use arm_rules::{
     ValidationMode, ValidationResult, ability_bonuses, ability_score_floors, age_ability_cap,
     art_bonuses, characteristic_bonuses, characteristic_caps, characteristic_floors,
     characteristic_points_granted, confidence, effective_point_ceilings, granted_selections,
-    reputation_grants, size, spell_levels_budget, spell_levels_used, supernatural_free_slots,
-    true_faith, validate, warping, xp_allocation,
+    item_level_budget, reputation_grants, size, spell_levels_budget, spell_levels_used,
+    supernatural_free_slots, true_faith, validate, warping, xp_allocation,
 };
 use serde::Serialize;
 
@@ -97,6 +97,9 @@ pub struct EffectiveScores {
     pub warping_points: u8,
     /// Derived True Faith Score granted by V/F (True Faith → 1); 0 when none.
     pub true_faith_score: u8,
+    /// Derived starting enchanted-device level budget (Magic Items +25, Redcap
+    /// 50); 0 when none. The character starts with this many levels of devices.
+    pub item_level_budget: u32,
 }
 
 /// A Reputation a Virtue/Flaw authorizes the character to start with (the UI
@@ -150,6 +153,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         warping_score,
         warping_points,
         true_faith_score: true_faith(entity, ruleset),
+        item_level_budget: item_level_budget(entity, ruleset),
     }
 }
 

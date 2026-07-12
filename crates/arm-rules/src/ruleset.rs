@@ -1204,7 +1204,8 @@ impl Ruleset {
                     continue;
                 }
                 // No parameter or ref to resolve: the grant is intrinsic.
-                Effect::TrueFaithGrant { .. }
+                Effect::ItemLevelBudget { .. }
+                | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicPoints { .. }

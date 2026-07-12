@@ -4197,6 +4197,8 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "has", "value": "virtue.redcap" },
+    "effects": [{ "type": "item_level_budget", "amount": 25 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4347, 4350] }
   },
   {
@@ -4733,6 +4735,7 @@
     "magnitude": "major",
     "category": "social_status",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "item_level_budget", "amount": 50 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4842, 4851] }
   },
   {
