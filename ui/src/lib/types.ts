@@ -39,6 +39,7 @@ export type Effect =
   | { type: 'warping_grant'; score: number; points: number }
   | { type: 'true_faith_grant'; score: number }
   | { type: 'item_level_budget'; amount: number }
+  | { type: 'grants_selection'; items: string[] }
   | { type: 'size_delta'; amount: number }
   | { type: 'characteristic_score_delta'; characteristic: string; amount: number }
   | { type: 'grants_reputation'; kind: ReputationType; score: number };

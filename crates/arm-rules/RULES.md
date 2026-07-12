@@ -618,6 +618,24 @@ approximation of "Latin").
   (nested-grant, B6) and the "spend XP on Magic Lore" purchase permission are not
   part of this numeric effect.
 
+#### Templar Commander — fixed nested free Virtue grant (`grants_selection`)
+> "This Virtue also grants the Temporal Influence Minor Virtue … This Virtue
+> includes the effects of the Brother-Knight Virtue."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:5113-5116`.
+- Data: `virtue.templar_commander` — `grants_selection: [virtue.brother_knight,
+  virtue.temporal_influence]`.
+- Implementation: `Effect::GrantsSelection { items }` →
+  `effective.rs::vf_granted_selections`, folded into `entity_grants` alongside House
+  and Mythic grants (budget-exempt, one level of nesting — a granted item's own
+  `grants_selection` is not re-applied). Each granted id is validated to resolve in
+  `ruleset.rs::validate_effect_refs`. The granted rows now surface through
+  `EffectiveScores.granted_selections` (switched from House-only to `entity_grants`)
+  so the UI shows them read-only, and their own effects apply. This is the source's
+  **fixed** nested grant; the Definitive Edition's Mythic Blood does not grant a
+  player-chosen free Focus/Flaw (that is a different edition), so no choice-grant
+  machinery is needed here.
+
 #### Magic Items / Redcap — starting enchanted-device level budget (`item_level_budget`)
 > Magic Items: "You begin with 25 more starting levels of magic items … you may
 > take it more than once." Redcap: "enchanted devices with fifty levels of effect."

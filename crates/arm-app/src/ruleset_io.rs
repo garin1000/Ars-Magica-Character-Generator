@@ -14,7 +14,7 @@ use arm_rules::{
     LocalizedRuleset, ReputationType, RestrictedXpPool, Ruleset, RulesetSources, Selection,
     ValidationMode, ValidationResult, ability_bonuses, ability_score_floors, age_ability_cap,
     art_bonuses, characteristic_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, confidence, effective_point_ceilings, granted_selections,
+    characteristic_points_granted, confidence, effective_point_ceilings, entity_grants,
     item_level_budget, reputation_grants, size, spell_levels_budget, spell_levels_used,
     supernatural_free_slots, true_faith, validate, warping, xp_allocation,
 };
@@ -136,7 +136,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         ability_score_floors: ability_score_floors(entity, ruleset),
         size: size(entity, ruleset),
         characteristic_bonuses: characteristic_bonuses(entity, ruleset),
-        granted_selections: granted_selections(entity, ruleset),
+        granted_selections: entity_grants(entity, ruleset),
         virtue_budget,
         flaw_budget,
         spell_levels_budget: spell_levels_budget(spell_base, entity, ruleset),

@@ -5098,6 +5098,7 @@
     "magnitude": "major",
     "category": "social_status",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_selection", "items": ["virtue.brother_knight", "virtue.temporal_influence"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5113, 5116] }
   },
   {

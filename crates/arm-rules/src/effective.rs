@@ -61,7 +61,28 @@ pub(crate) fn selections_for_effects<'a>(
 pub fn entity_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
     let mut granted = crate::house::granted_selections(entity, ruleset);
     granted.extend(crate::mythic_companion::granted_selections(entity, ruleset));
+    granted.extend(vf_granted_selections(entity, ruleset));
     granted
+}
+
+/// Free Virtue/Flaw [`Selection`] rows granted by an [`Effect::GrantsSelection`]
+/// on a bought selection (Templar Commander → Brother-Knight + Temporal
+/// Influence). Scans `entity.selections` (bought only) so a granted item's own
+/// `grants_selection` is not applied recursively — one level of nesting. The
+/// rows are budget-exempt, exactly like House grants.
+fn vf_granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
+    let mut out = Vec::new();
+    for selection in &entity.selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::GrantsSelection { items } = effect {
+                out.extend(items.iter().cloned().map(Selection::new));
+            }
+        }
+    }
+    out
 }
 
 /// A non-zero ability-score bonus targeting one ability *instance*. For a
@@ -146,6 +167,7 @@ pub fn ability_bonus(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
@@ -267,6 +289,7 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
@@ -354,6 +377,7 @@ fn characteristic_limit_shift(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
@@ -524,6 +548,7 @@ pub(crate) fn ability_affinity(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
@@ -565,6 +590,7 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
@@ -1785,6 +1811,12 @@ mod tests {
             "kind": "virtue", "magnitude": "minor", "category": "general",
             "entity_kinds": ["character"],
             "effects": [{ "type": "item_level_budget", "amount": 25 }]
+          },
+          {
+            "id": "virtue.granter",
+            "kind": "virtue", "magnitude": "minor", "category": "general",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "grants_selection", "items": ["virtue.second_sight"] }]
           }
         ]"#;
         let types = r#"[
@@ -1981,6 +2013,27 @@ mod tests {
             sel("virtue.improved_characteristics"),
         ]);
         assert_eq!(characteristic_points_granted(&e, &rs), 6);
+    }
+
+    #[test]
+    fn grants_selection_folds_free_items_into_grants() {
+        // A Virtue that grants another Virtue for free (Templar Commander →
+        // Brother-Knight + Temporal Influence; Core:5113-5116) folds the granted
+        // items into entity_grants (budget-exempt), and their effects apply.
+        let rs = xp_ruleset();
+        let e = xp_entity(vec![sel("virtue.granter")]);
+        let grants = entity_grants(&e, &rs);
+        assert!(
+            grants
+                .iter()
+                .any(|s| s.item_ref == Id::new("virtue.second_sight")),
+            "granted Second Sight should be in entity_grants: {grants:?}"
+        );
+        // The free-granted Second Sight seeds its ability floor at no XP cost.
+        assert_eq!(
+            effective_ability_score(&e, &rs, &Id::new("ability.second_sight"), None),
+            1
+        );
     }
 
     #[test]
