@@ -120,6 +120,8 @@ spell-add = Add spell
 spell-none = — Select a spell —
 # The spell-levels budget bar: how many of the magus's levels are used.
 spell-levels-used = Spell levels: { $used } / { $budget }
+spell-mastery-xp = Mastery XP: { $xp }
+spell-mastery-floor = All spells mastered at { $score }
 spell-remove = Remove
 # Details tab: age, Confidence (read-only, derived), Personality Traits, Reputations.
 age-label = Age

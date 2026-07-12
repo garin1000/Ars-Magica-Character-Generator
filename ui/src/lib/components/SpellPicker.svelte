@@ -37,6 +37,9 @@
   // fallback for the first frame before effective scores arrive.
   const budget = $derived(store.effective?.spell_levels_budget ?? 0);
   const used = $derived(store.effective?.spell_levels_used ?? 0);
+  // Spell-Mastery: XP pool (Mastered Spells) + auto-mastery floor (Flawless Magic).
+  const masteryXp = $derived(store.effective?.spell_mastery_xp ?? 0);
+  const masteryFloor = $derived(store.effective?.spell_mastery_floor ?? 0);
 
   function abbr(artId: string): string {
     return store.ruleset ? artAbbreviation(store.ruleset, artId) : '';
@@ -120,6 +123,18 @@
     <p class="spell-levels" class:over={used > budget} data-testid="spell-levels-used">
       {store.t('spell-levels-used', { used: String(used), budget: String(budget) })}
     </p>
+
+    {#if masteryXp > 0 || masteryFloor > 0}
+      <p class="spell-mastery" data-testid="spell-mastery-info">
+        {#if masteryXp > 0}{store.t('spell-mastery-xp', {
+            xp: String(masteryXp),
+          })}{/if}{#if masteryXp > 0 && masteryFloor > 0}
+          ·
+        {/if}{#if masteryFloor > 0}{store.t('spell-mastery-floor', {
+            score: String(masteryFloor),
+          })}{/if}
+      </p>
+    {/if}
 
     <ul class="spell-list" data-testid="spell-list">
       {#each store.entity.spells ?? [] as chosen, i (`${chosen.spell}:${chosen.level ?? ''}:${i}`)}
