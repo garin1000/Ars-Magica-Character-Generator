@@ -384,6 +384,21 @@ pub enum Effect {
         /// Denominator of the "counts as" multiplier (Affinity = 2).
         counts_as_den: u8,
     },
+    /// An Affinity applying to a fixed *group* of Abilities (matched by id, any
+    /// instance), rather than a single player-chosen one. Linguist gives a 5/4
+    /// Affinity to every Language (Living and Dead), so XP put into any language
+    /// "counts as" `num/den` of itself, exactly like [`Self::AffinityAbilityCost`]
+    /// but auto-applied to the whole group.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4315-4317 (Linguist).
+    GroupAffinityCost {
+        /// The Ability ids the Affinity covers (Linguist: living + dead language).
+        abilities: std::collections::BTreeSet<Id>,
+        /// Numerator of the "counts as" multiplier (Linguist = 5).
+        counts_as_num: u8,
+        /// Denominator of the "counts as" multiplier (Linguist = 4).
+        counts_as_den: u8,
+    },
     /// A restricted pool of experience points, spendable only on Abilities (never
     /// Arts) the grant is eligible for: an ability qualifies if its id is in
     /// `abilities` **or** its category is in `categories`. The general

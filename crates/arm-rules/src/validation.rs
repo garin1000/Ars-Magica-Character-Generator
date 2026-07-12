@@ -1580,6 +1580,7 @@ fn validate_ability_bonus_targets(
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
+                | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. } => continue,
             };
             let Some(target) = selection.params.get(param) else {
@@ -1813,6 +1814,7 @@ fn validate_characteristic_limit_preconditions(
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
+                | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. } => continue,
             };
             if amount > 0 {

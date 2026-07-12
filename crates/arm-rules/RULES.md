@@ -618,6 +618,32 @@ approximation of "Latin").
   (nested-grant, B6) and the "spend XP on Magic Lore" purchase permission are not
   part of this numeric effect.
 
+#### Linguist — group Affinity over all Languages (`group_affinity_cost`)
+> "All Advancement Totals for any Language are increased by a quarter, rounded up
+> … Both Living and Dead languages are augmented with this Virtue."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:4315-4317`.
+- Data: `virtue.linguist` — `group_affinity_cost: { abilities: [ability.dead_language,
+  ability.living_language], counts_as_num: 5, counts_as_den: 4 }`.
+- Implementation: `Effect::GroupAffinityCost { abilities, counts_as_num,
+  counts_as_den }` — an Affinity auto-applied to a fixed set of ability ids (any
+  instance), vs. `AffinityAbilityCost`'s single player-chosen target. Handled in
+  `effective.rs::ability_affinity`, so it feeds the XP-cost reduction
+  (`charged_cost`) and the +2 age-cap exemption exactly like a normal Affinity. The
+  ability ids are validated to resolve in `ruleset.rs::validate_effect_refs`.
+
+#### Elemental Magic — DEFERRED (bespoke gen-time Art-XP redistribution)
+> "assign half the experience points assigned to each of the elemental Forms to
+> each of the other elemental Forms" (`:3731-3737`).
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:3731-3737`.
+- `virtue.elemental_magic` stays **structural** (no effect). The mechanic
+  redistributes *assigned Art experience* among Aquam/Auram/Ignem/Terram, but the
+  engine stores whole bought Art **scores** + a shared XP pool, not per-Art XP
+  assignments — so this needs an Art-XP-assignment model that does not exist yet.
+  Implementing it is a separate subsystem, not a single effect; deferred and flagged
+  here rather than approximated.
+
 #### Mastered Spells / Flawless Magic — Spell Mastery (`spell_mastery_xp`, `grants_spell_mastery`)
 > Mastered Spells: "You have fifty experience points to spend on mastering spells
 > that you know … You may take this Virtue multiple times." Flawless Magic: "All
