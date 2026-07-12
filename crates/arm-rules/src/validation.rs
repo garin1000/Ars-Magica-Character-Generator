@@ -201,6 +201,8 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_CHARACTERISTIC_POINTS_UNSPENT: &'static str = "characteristic_points_unspent";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
+    pub const CODE_MULTIPLE_MAGICAL_FOCI: &'static str = "multiple_magical_foci";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_UNKNOWN_ABILITY: &'static str = "unknown_ability";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_DUPLICATE_ABILITY: &'static str = "duplicate_ability";
@@ -409,6 +411,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_forbidden_traits(type_profile, &selected_ids, &mut issues);
     validate_parameters(entity, ruleset, &mut issues);
     validate_ability_bonus_targets(entity, ruleset, &mut issues);
+    validate_magical_focus(entity, ruleset, &mut issues);
     validate_gift_policy(entity, ruleset, type_profile, &mut issues);
     validate_house(entity, ruleset, type_profile, &mut issues);
     validate_mythic_type(entity, ruleset, type_profile, &mut issues);
@@ -1519,6 +1522,17 @@ fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
                 ParameterDomain::Ability => ruleset.abilities.contains_key(value),
                 ParameterDomain::Characteristic => Characteristic::from_id(value).is_some(),
                 ParameterDomain::Art => ruleset.arts.contains_key(value),
+                // Technique/Form resolve against the art catalogue *and* enforce
+                // the art class, so Deficient Technique cannot target a Form and
+                // Deficient Form cannot target a Technique (Core Rules.md:5909-5915).
+                ParameterDomain::Technique => ruleset
+                    .arts
+                    .get(value)
+                    .is_some_and(|a| a.art_type == crate::art::ArtType::Technique),
+                ParameterDomain::Form => ruleset
+                    .arts
+                    .get(value)
+                    .is_some_and(|a| a.art_type == crate::art::ArtType::Form),
                 // Free text: any provided value is legal (no registry).
                 ParameterDomain::Text => true,
             };
@@ -1587,7 +1601,22 @@ fn validate_ability_bonus_targets(
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. } => continue,
+                | Effect::GrantsReputation { .. }
+                // M5/5b in-play effects: consumed by derived.rs (5i). They carry
+                // no ability/characteristic creation target to check here.
+                | Effect::MagicalFocus { .. }
+                | Effect::CastingTotalMod { .. }
+                | Effect::LabTotalMod { .. }
+                | Effect::DeficientArt { .. }
+                | Effect::MagicTotalHalving { .. }
+                | Effect::SoakMod { .. }
+                | Effect::CombatMod { .. }
+                | Effect::HealthMod { .. }
+                | Effect::MagicResistanceMod { .. }
+                | Effect::AgingMod { .. }
+                | Effect::AdvancementMod { .. }
+                | Effect::SpecialCastingMod { .. }
+                | Effect::AbilityRollMod { .. } => continue,
             };
             let Some(target) = selection.params.get(param) else {
                 continue; // missing ability key already reported by validate_parameters
@@ -1614,6 +1643,34 @@ fn validate_ability_bonus_targets(
                 ));
             }
         }
+    }
+}
+
+/// Enforces the "one Magical Focus per magus" limit (Core Rules.md:4542) by
+/// counting [`Effect::MagicalFocus`] across everything that feeds the effective
+/// layer (bought selections plus House / Mythic-type grants, e.g. Mythic Blood's
+/// bundled Minor Focus). More than one Focus is illegal. This counts the *effect*
+/// rather than using pairwise `incompatible_with`, so it also catches two Minor
+/// Foci with different descriptors (distinct selections that no incompatibility
+/// pair would flag). Effect-driven — no virtue id is hardcoded.
+fn validate_magical_focus(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    let mut foci = 0usize;
+    for selection in crate::effective::selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        foci += item
+            .effects
+            .iter()
+            .filter(|e| matches!(e, Effect::MagicalFocus { .. }))
+            .count();
+    }
+    if foci > 1 {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_MULTIPLE_MAGICAL_FOCI,
+            args([("count", foci.to_string())]),
+            None,
+        ));
     }
 }
 
@@ -1821,7 +1878,22 @@ fn validate_characteristic_limit_preconditions(
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. } => continue,
+                | Effect::GrantsReputation { .. }
+                // M5/5b in-play effects: consumed by derived.rs (5i). They carry
+                // no ability/characteristic creation target to check here.
+                | Effect::MagicalFocus { .. }
+                | Effect::CastingTotalMod { .. }
+                | Effect::LabTotalMod { .. }
+                | Effect::DeficientArt { .. }
+                | Effect::MagicTotalHalving { .. }
+                | Effect::SoakMod { .. }
+                | Effect::CombatMod { .. }
+                | Effect::HealthMod { .. }
+                | Effect::MagicResistanceMod { .. }
+                | Effect::AgingMod { .. }
+                | Effect::AdvancementMod { .. }
+                | Effect::SpecialCastingMod { .. }
+                | Effect::AbilityRollMod { .. } => continue,
             };
             if amount > 0 {
                 if let Some(cap) = base_max

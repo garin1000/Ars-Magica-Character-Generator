@@ -33,6 +33,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "casting_total_mod", "amount": -2, "scope": "all" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5655, 5658] }
   },
   {
@@ -42,6 +43,7 @@
     "category": "supernatural",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": 0 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5659, 5662] }
   },
   {
@@ -128,6 +130,7 @@
     "category": "supernatural",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": 0 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5687, 5690] }
   },
   {
@@ -242,6 +245,7 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "role", "type": "ref", "domain": "text" }],
+    "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5735, 5748] }
   },
   {
@@ -486,6 +490,7 @@
     "classification": "in_play_effect",
     "tainted": true,
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "circumstantial" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5859, 5864] }
   },
   {
@@ -513,6 +518,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "lab_total_mod", "amount": -3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5873, 5876] }
   },
   {
@@ -558,6 +564,10 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "casting_total_mod", "amount": -3, "scope": "all" },
+      { "type": "lab_total_mod", "amount": -3 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5893, 5896] }
   },
   {
@@ -585,6 +595,8 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
+    "effects": [{ "type": "deficient_art", "param": "form" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5909, 5912] }
   },
   {
@@ -594,8 +606,9 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "technique", "type": "ref", "domain": "art" }],
+    "parameters": [{ "key": "technique", "type": "ref", "domain": "technique" }],
     "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" },
+    "effects": [{ "type": "deficient_art", "param": "technique" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5913, 5915] }
   },
   {
@@ -605,6 +618,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "circumstantial" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5917, 5920] }
   },
   {
@@ -706,6 +720,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "magic_total_halving", "total": "lab_longevity" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5962, 5965] }
   },
   {
@@ -742,6 +757,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "circumstantial" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5972, 5975] }
   },
   {
@@ -860,6 +876,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "circumstantial" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6020, 6023] }
   },
   {
@@ -1069,6 +1086,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "magic_total_halving", "total": "magic_resistance" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6142, 6145] }
   },
   {
@@ -1124,6 +1142,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "health_mod", "track": "recovery", "amount": -3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6186, 6189] }
   },
   {
@@ -1133,6 +1152,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "soak_mod", "amount": -3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6190, 6193] }
   },
   {
@@ -1332,6 +1352,10 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "combat_mod", "amount": -6, "target": "attack" },
+      { "type": "combat_mod", "amount": -6, "target": "defense" }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6260, 6263] }
   },
   {
@@ -1406,6 +1430,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "advancement_mod", "source": "teaching", "amount": 0 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6294, 6297] }
   },
   {
@@ -1488,6 +1513,10 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "combat_mod", "amount": -1, "target": "attack" },
+      { "type": "combat_mod", "amount": -1, "target": "defense" }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6330, 6333] }
   },
   {
@@ -1517,6 +1546,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "aging_mod", "kind": "living_conditions", "amount": -2 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6338, 6341] }
   },
   {
@@ -1535,6 +1565,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "magic_resistance_mod", "kind": "no_form_bonus" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6346, 6349] }
   },
   {
@@ -1553,6 +1584,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "advancement_mod", "source": "spell_mastery", "amount": 0 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6354, 6357] }
   },
   {
@@ -1580,6 +1612,10 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "health_mod", "track": "wound_penalty", "amount": -1 },
+      { "type": "health_mod", "track": "fatigue_penalty", "amount": -1 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6366, 6369] }
   },
   {
@@ -1710,6 +1746,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "combat_mod", "amount": -1, "target": "attack" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6434, 6437] }
   },
   {
@@ -1719,6 +1756,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "combat_mod", "amount": -3, "target": "attack" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6438, 6441] }
   },
   {
@@ -1755,6 +1793,7 @@
     "category": "supernatural",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": -1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6454, 6467] }
   },
   {
@@ -1855,6 +1894,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "health_mod", "track": "fatigue_roll", "amount": -3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6516, 6519] }
   },
   {
@@ -2010,6 +2050,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "health_mod", "track": "casting_fatigue", "amount": -1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6574, 6577] }
   },
   {
@@ -2019,6 +2060,10 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "combat_mod", "amount": -2, "target": "attack" },
+      { "type": "combat_mod", "amount": -2, "target": "defense" }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6578, 6581] }
   },
   {
@@ -2087,6 +2132,10 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "combat_mod", "amount": -3, "target": "attack" },
+      { "type": "combat_mod", "amount": -3, "target": "defense" }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6606, 6609] }
   },
   {
@@ -2096,6 +2145,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "casting_total_mod", "amount": -5, "scope": "formulaic" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6610, 6613] }
   },
   {
@@ -2114,6 +2164,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "aging_mod", "kind": "living_conditions", "amount": -1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6618, 6621] }
   },
   {
@@ -2132,6 +2183,10 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "advancement_mod", "source": "taught", "amount": -3 },
+      { "type": "advancement_mod", "source": "book", "amount": -3 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6626, 6628] }
   },
   {
@@ -2402,6 +2457,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "health_mod", "track": "fatigue_roll", "amount": -3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6733, 6736] }
   },
   {
@@ -2411,6 +2467,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "circumstantial" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6737, 6740] }
   },
   {
@@ -2465,6 +2522,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "combat_mod", "amount": -3, "target": "initiative" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6763, 6766] }
   },
   {
@@ -2575,6 +2633,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "magic_resistance_mod", "kind": "susceptible_divine" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6815, 6818] }
   },
   {
@@ -2584,6 +2643,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "magic_resistance_mod", "kind": "susceptible_faerie" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6819, 6822] }
   },
   {
@@ -2593,6 +2653,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "magic_resistance_mod", "kind": "susceptible_infernal" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6823, 6826] }
   },
   {
@@ -2648,6 +2709,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "lab_total_mod", "amount": -3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5821, 5838] }
   },
   {
@@ -2768,6 +2830,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "advancement_mod", "source": "vis", "amount": -3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6915, 6918] }
   },
   {
@@ -2915,6 +2978,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "health_mod", "track": "casting_fatigue", "amount": -1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6993, 7004] }
   },
   {
@@ -2999,6 +3063,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "magic_total_halving", "total": "lab_enchanting" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7060, 7063] }
   },
   {
@@ -3008,6 +3073,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "magic_total_halving", "total": "penetration" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7064, 7067] }
   },
   {
@@ -3017,6 +3083,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "magic_total_halving", "total": "magic_resistance" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7068, 7071] }
   },
   {
@@ -3048,6 +3115,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "lab_total_mod", "amount": -6 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7080, 7083] }
   },
   {
@@ -3057,6 +3125,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "magic_total_halving", "total": "spontaneous_casting" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7084, 7089] }
   },
   {
@@ -3135,6 +3204,7 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "subject", "type": "ref", "domain": "text" }],
+    "effects": [{ "type": "ability_roll_mod", "param": "subject", "amount": 3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3362, 3367] }
   },
   {
@@ -3144,6 +3214,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "lab_total_mod", "amount": 6 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3368, 3371] }
   },
   {
@@ -3265,6 +3336,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "advancement_mod", "source": "taught", "amount": 5 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3422, 3425] }
   },
   {
@@ -3303,6 +3375,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "lab_total_mod", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3440, 3443] }
   },
   {
@@ -3339,6 +3412,7 @@
     "category": "supernatural",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3484, 3499] }
   },
   {
@@ -3348,6 +3422,11 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "combat_mod", "amount": 2, "target": "attack" },
+      { "type": "combat_mod", "amount": -2, "target": "defense" },
+      { "type": "soak_mod", "amount": 2 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3500, 3503] }
   },
   {
@@ -3366,6 +3445,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "advancement_mod", "source": "book", "amount": 3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3519, 3522] }
   },
   {
@@ -3494,6 +3574,7 @@
     "category": "supernatural",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "magic_resistance_mod", "kind": "aura_bonus" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3579, 3596] }
   },
   {
@@ -3586,6 +3667,10 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "casting_total_mod", "amount": 3, "scope": "all" },
+      { "type": "lab_total_mod", "amount": 3 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3635, 3638] }
   },
   {
@@ -3604,6 +3689,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "deft_form" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3645, 3648] }
   },
   {
@@ -3652,6 +3738,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "diedne" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3675, 3682] }
   },
   {
@@ -3752,6 +3839,10 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "health_mod", "track": "wound_penalty", "amount": 1 },
+      { "type": "health_mod", "track": "fatigue_penalty", "amount": 1 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3751, 3754] }
   },
   {
@@ -3844,6 +3935,7 @@
     "category": "supernatural",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": -1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3797, 3820] }
   },
   {
@@ -3873,6 +3965,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "faerie_raised" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3829, 3842] }
   },
   {
@@ -3927,6 +4020,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "combat_mod", "amount": 3, "target": "initiative" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3865, 3868] }
   },
   {
@@ -4045,6 +4139,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "advancement_mod", "source": "vis", "amount": 3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3937, 3940] }
   },
   {
@@ -4115,6 +4210,10 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "advancement_mod", "source": "teaching", "amount": 5 },
+      { "type": "advancement_mod", "source": "book", "amount": 3 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3971, 3974] }
   },
   {
@@ -4338,6 +4437,10 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "advancement_mod", "source": "practice", "amount": 2 },
+      { "type": "advancement_mod", "source": "adventure", "amount": 3 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4115, 4118] }
   },
   {
@@ -4412,6 +4515,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "lab_total_mod", "amount": 3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4151, 4154] }
   },
   {
@@ -4577,6 +4681,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "life_boost" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4249, 4252] }
   },
   {
@@ -4631,6 +4736,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "life_boost" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4295, 4298] }
   },
   {
@@ -4640,6 +4746,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "life_linked_spontaneous" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4299, 4306] }
   },
   {
@@ -4658,6 +4765,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "combat_mod", "amount": 9, "target": "initiative" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4311, 4314] }
   },
   {
@@ -4686,6 +4794,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "health_mod", "track": "fatigue_roll", "amount": 3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4327, 4330] }
   },
   {
@@ -4714,6 +4823,7 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.magian_lineage_minor"],
+    "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": -1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4339, 4346] }
   },
   {
@@ -4724,6 +4834,7 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.magian_lineage_major"],
+    "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": -1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4339, 4346] }
   },
   {
@@ -4753,6 +4864,7 @@
     "category": "supernatural",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": -1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4359, 4372] }
   },
   {
@@ -4807,6 +4919,8 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
+    "effects": [{ "type": "magical_focus", "param": "focus", "major": true }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4399, 4422] }
   },
   {
@@ -4963,6 +5077,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "mercurian" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4514, 4523] }
   },
   {
@@ -4972,6 +5087,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "casting_total_mod", "amount": 3, "scope": "formulaic_ritual" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4524, 4527] }
   },
   {
@@ -4981,6 +5097,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "aging_mod", "kind": "living_conditions", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4528, 4531] }
   },
   {
@@ -4999,6 +5116,8 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
+    "effects": [{ "type": "magical_focus", "param": "focus", "major": false }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4536, 4538] }
   },
   {
@@ -5035,6 +5154,8 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
+    "effects": [{ "type": "magical_focus", "param": "focus", "major": false }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4573, 4589] }
   },
   {
@@ -5191,6 +5312,10 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.potent_magic_minor"],
+    "effects": [
+      { "type": "casting_total_mod", "amount": 6, "scope": "all" },
+      { "type": "lab_total_mod", "amount": 6 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4740, 4781] }
   },
   {
@@ -5201,6 +5326,10 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.potent_magic_major"],
+    "effects": [
+      { "type": "casting_total_mod", "amount": 3, "scope": "all" },
+      { "type": "lab_total_mod", "amount": 3 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4740, 4781] }
   },
   {
@@ -5294,6 +5423,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "quiet_words" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4822, 4827] }
   },
   {
@@ -5312,6 +5442,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "health_mod", "track": "recovery", "amount": 3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4834, 4837] }
   },
   {
@@ -5422,6 +5553,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "advancement_mod", "source": "insight", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4892, 4895] }
   },
   {
@@ -5608,6 +5740,10 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "casting_total_mod", "amount": 3, "scope": "all" },
+      { "type": "magic_resistance_mod", "kind": "aura_bonus" }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4998, 5001] }
   },
   {
@@ -5617,6 +5753,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "spell_improvisation" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5002, 5005] }
   },
   {
@@ -5683,6 +5820,10 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "advancement_mod", "source": "vis", "amount": 2 },
+      { "type": "advancement_mod", "source": "book", "amount": 2 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5056, 5072] }
   },
   {
@@ -5692,6 +5833,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "special_casting_mod", "kind": "subtle_gestures" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5073, 5076] }
   },
   {
@@ -5839,6 +5981,7 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "soak_mod", "amount": 3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5145, 5147] }
   },
   {
@@ -5921,6 +6064,7 @@
     "category": "supernatural",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5187, 5190] }
   },
   {
@@ -6014,6 +6158,7 @@
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "land", "type": "ref", "domain": "text" }],
+    "effects": [{ "type": "casting_total_mod", "amount": 3, "scope": "all" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5231, 5234] }
   },
   {
@@ -6077,6 +6222,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "health_mod", "track": "casting_fatigue", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5261, 5282] }
   }
 ]

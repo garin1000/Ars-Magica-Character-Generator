@@ -11,7 +11,14 @@ export type IssueSeverity = 'error' | 'warning';
 // Closed enums in the engine (`ParamType` / `ParameterDomain`), serialized as
 // their snake_case names.
 export type ParamType = 'ref';
-export type ParameterDomain = 'ability' | 'art' | 'characteristic' | 'item' | 'text';
+export type ParameterDomain =
+  | 'ability'
+  | 'art'
+  | 'technique'
+  | 'form'
+  | 'characteristic'
+  | 'item'
+  | 'text';
 
 export interface ParameterDef {
   key: string;
@@ -50,7 +57,70 @@ export type Effect =
   | { type: 'grants_selection'; items: string[] }
   | { type: 'size_delta'; amount: number }
   | { type: 'characteristic_score_delta'; characteristic: string; amount: number }
-  | { type: 'grants_reputation'; kind: ReputationType; score: number };
+  | { type: 'grants_reputation'; kind: ReputationType; score: number }
+  // M5/5b in-play effects (consumed by the derived-totals read-out, slice 5i).
+  | { type: 'magical_focus'; param: string; major: boolean }
+  | { type: 'casting_total_mod'; amount: number; scope: CastingScope }
+  | { type: 'lab_total_mod'; amount: number }
+  | { type: 'deficient_art'; param: string }
+  | { type: 'magic_total_halving'; total: HalvableTotal }
+  | { type: 'soak_mod'; amount: number }
+  | { type: 'combat_mod'; amount: number; target: CombatStat }
+  | { type: 'health_mod'; track: HealthTrack; amount: number }
+  | { type: 'magic_resistance_mod'; kind: MagicResistanceEffect }
+  | { type: 'aging_mod'; kind: AgingEffect; amount: number }
+  | { type: 'advancement_mod'; source: AdvancementSource; amount: number }
+  | { type: 'special_casting_mod'; kind: SpecialCasting }
+  | { type: 'ability_roll_mod'; param: string; amount: number };
+
+// M5/5b scalar enums mirroring the engine (rendered via Fluent in slice 5i).
+export type CastingScope = 'all' | 'formulaic' | 'ritual' | 'formulaic_ritual' | 'spontaneous';
+export type HalvableTotal =
+  | 'spontaneous_casting'
+  | 'lab_enchanting'
+  | 'lab_longevity'
+  | 'penetration'
+  | 'magic_resistance';
+export type CombatStat = 'initiative' | 'attack' | 'defense' | 'damage';
+export type HealthTrack =
+  | 'fatigue_penalty'
+  | 'wound_penalty'
+  | 'fatigue_roll'
+  | 'casting_fatigue'
+  | 'recovery';
+export type MagicResistanceEffect =
+  | 'no_form_bonus'
+  | 'aura_bonus'
+  | 'susceptible_divine'
+  | 'susceptible_faerie'
+  | 'susceptible_infernal';
+export type AgingEffect =
+  | 'aging_roll'
+  | 'longevity_bonus'
+  | 'no_aging'
+  | 'decrepitude'
+  | 'living_conditions';
+export type AdvancementSource =
+  | 'taught'
+  | 'book'
+  | 'vis'
+  | 'practice'
+  | 'adventure'
+  | 'insight'
+  | 'teaching'
+  | 'spell_mastery'
+  | 'all';
+export type SpecialCasting =
+  | 'quiet_words'
+  | 'subtle_gestures'
+  | 'deft_form'
+  | 'diedne'
+  | 'faerie_raised'
+  | 'life_linked_spontaneous'
+  | 'spell_improvisation'
+  | 'mercurian'
+  | 'life_boost'
+  | 'circumstantial';
 
 // The audience a Reputation reaches (a fixed rules taxonomy, rendered via Fluent
 // `reputation-type-<id>`, never as a raw slug).
