@@ -28,7 +28,7 @@
     "summary": "Du willst in irgendeiner Hinsicht die erfolgreichste oder mächtigste Person der Welt sein."
   },
   "flaw.anchored_to_the_land": {
-    "name": "Verwurzelt im (Land)",
+    "name": "Verwurzelt im {land}",
     "summary": "Der Charakter leidet unter Einsamkeit und Niedergeschlagenheit, wenn er eine bestimmte Art von Umgebung weder sehen noch hören kann."
   },
   "flaw.animal_companion": {
@@ -96,11 +96,11 @@
     "summary": "Wenn du stirbst, enden alle deine Zauber abrupt, und alle magischen Artefakte, die du erschaffen hast, hören auf zu funktionieren."
   },
   "flaw.bound_to_realm": {
-    "name": "Gebunden an (Sphäre)",
+    "name": "Gebunden an {realm}",
     "summary": "Der Charakter ist nicht mehr in der Lage, in der weltlichen Welt zu überleben, und erkrankt, wenn er sich über längere Zeit außerhalb einer bestimmten Art übernatürlicher Aura aufhält."
   },
   "flaw.bound_to_role_role": {
-    "name": "Gebunden an (Rolle)",
+    "name": "Gebunden an {role}",
     "summary": "Dieser Charakter ist physisch an eine bestimmte Art von Gerät gebunden, sei es durch ein mystisches Ereignis, jahrelange Exposition und Verzerrung oder die Eingriffe eines experimentierenden Magus."
   },
   "flaw.branded_criminal": {
@@ -448,7 +448,7 @@
     "summary": "Der Charakter schwankt zwischen zwei diametral entgegengesetzten Verhaltensweisen."
   },
   "flaw.fish_out_of_water_terrain": {
-    "name": "Fremd im (Gelände)",
+    "name": "Fremd im {terrain}",
     "summary": "Dieser Charakter hat eine Affinität zu einer Art von Gelände, sei es auf dem Meer, im Wald, in den Hügeln oder in der städtischen Landschaft von Städten und Gemeinden, und fühlt sich unwohl und unbeholfen, wenn er sich fernab von seinem bev"
   },
   "flaw.flashbacks": {
@@ -476,7 +476,7 @@
     "summary": "Dieser Fehler ähnelt in gewissem Maße der Konventsprägung, bedeutet jedoch, dass der Charakter ein Ausländer ist und aus einem abgelegenen oder isolierten Winkel des Mythischen Europas stammt."
   },
   "flaw.form_monstrosity": {
-    "name": "(Form) Missgeburt",
+    "name": "{form} Missgeburt",
     "summary": "Dieser Fehler ist in erster Linie für Tiercharaktere gedacht, kann aber mit Zustimmung der Spieltruppe auch für Charaktere gewählt werden, die im Wesentlichen menschlich sind."
   },
   "flaw.fragile_constitution": {
@@ -584,7 +584,7 @@
     "summary": "Du hast einen missgebildeten Körper, der dir ein groteskes Äußeres verleiht und deine Bewegungen behindert."
   },
   "flaw.hunger_for_form_magic": {
-    "name": "Hunger nach (Form)-Magie",
+    "name": "Hunger nach {form}-Magie",
     "summary": "Der Charakter wurde wiederholt Magie ausgesetzt und ist dadurch auf Magie zum Überleben angewiesen."
   },
   "flaw.imagined_folk_tradition_vulnerability": {
@@ -692,7 +692,7 @@
     "summary": "Menschen und Tiere reagieren auf dich, als hättest du die Gabe."
   },
   "flaw.magical_being_companion": {
-    "name": "Magischer (Wesen)-Gefährte",
+    "name": "Magischer {being}-Gefährte",
     "summary": "Der Charakter wird von einem intelligenten magischen Wesen begleitet, das klug genug ist, Befehlen zu folgen oder sie auf eigene Initiative zu verweigern, und für das der Charakter regelmäßig sorgen muss."
   },
   "flaw.magical_fascination": {
@@ -768,7 +768,7 @@
     "summary": "Damit deine Magie funktioniert, musst du beim Wirken jedes Zaubers eine bestimmte Handlung ausführen."
   },
   "flaw.necessary_realm_aura_for_ability": {
-    "name": "Notwendige (Sphäre)-Aura für (Fertigkeit)",
+    "name": "Notwendige {realm}-Aura für {ability}",
     "summary": "Aufgrund einer Verbindung mit einer bestimmten übernatürlichen Sphäre wirkt sich das Fehlen einer entsprechenden übernatürlichen Aura deutlich auf die Fähigkeit des Charakters aus, sich auf bestimmte Aufgaben zu konzentrieren."
   },
   "flaw.night_terrors": {
@@ -808,7 +808,7 @@
     "summary": "Du bist auf ein begehrtes Objekt, eine Handlung oder ein Ideal fixiert."
   },
   "flaw.offensive_to_beings": {
-    "name": "Abstoßend für (Wesen)",
+    "name": "Abstoßend für {being}",
     "summary": "Dieser Fehler ist mit einer von sechs Klassen von Wesen verbunden: Tiere, sterbliche Menschen, göttliche Wesen, Feen, Dämonen oder magische Kreaturen."
   },
   "flaw.optimistic_major": {
@@ -944,7 +944,7 @@
     "summary": "Dieser Charakter wurde am Rand der Gesellschaft großgezogen."
   },
   "flaw.realm_stigmatic": {
-    "name": "(Sphäre)-Stigmatisierter",
+    "name": "{realm}-Stigmatisierter",
     "summary": "Der Charakter manifestiert gelegentlich in Gegenwart übernatürlicher Kräfte körperliche Phänomene."
   },
   "flaw.rebellious_major": {
@@ -1012,7 +1012,7 @@
     "summary": "Du bist ein selbsternanntes Mitglied der Sucher, einer losen Organisation konkurrierender Magi, die nach alter Magie und arkanen Artefakten suchen."
   },
   "flaw.servant_of_the_land": {
-    "name": "Diener des (Landes)",
+    "name": "Diener des {land}",
     "summary": "Eine mächtige magische Kreatur hat den Charakter vor dem Tod bewahrt oder eine ähnliche Wohltat gewährt, und als Gegenleistung wurde dem Charakter eine Aufgabe übertragen."
   },
   "flaw.sheltered_upbringing": {
@@ -1172,7 +1172,7 @@
     "summary": "Du bist ein Christ, der aus welchem Grund auch immer nie getauft wurde, vielleicht weil du einen übernatürlichen Hintergrund hast, der durch die Zeremonie zunichte gemacht werden könnte — viele Magi glauben, dass die Taufe die Gabe beeinträ"
   },
   "flaw.unbearable_to_beings": {
-    "name": "Unerträglich für (Wesen)",
+    "name": "Unerträglich für {being}",
     "summary": "Dieser Fehler ist mit einer von drei Klassen von Wesen verbunden: sterbliche Menschen, Dämonen oder göttliche Wesen."
   },
   "flaw.uncertain_faith": {
@@ -1344,7 +1344,7 @@
     "summary": "Du neigst dazu, über die kleinsten Angelegenheiten in Wut zu geraten, und deine Raserei, wenn du in einer wichtigen Sache durchkreuzt wirst, ist fürchterlich anzusehen."
   },
   "virtue.academic_concentration_subject": {
-    "name": "Akademische Vertiefung (Fach)",
+    "name": "Akademische Vertiefung {subject}",
     "summary": "Der Charakter hat sich auf eines der sieben Fächer der Artes Liberales spezialisiert und die anderen sechs dabei vernachlässigt."
   },
   "virtue.adept_laboratory_student": {
@@ -1368,7 +1368,7 @@
     "summary": "Einmal pro Spielsitzung kann ein Spieler, dessen Charakter diese Tugend hat, einen Patzerwürfel neu würfeln."
   },
   "virtue.alluring_to_beings": {
-    "name": "Anziehend auf (Wesen)",
+    "name": "Anziehend auf {being}",
     "summary": "Diese Tugend ist mit einer von drei Klassen von Wesen verbunden: gewöhnlichen Tieren, Feen oder magischen Wesen."
   },
   "virtue.almogaten": {
@@ -1400,7 +1400,7 @@
     "summary": "Du lernst besonders gut von anderen."
   },
   "virtue.aptitude_for_sin": {
-    "name": "Begabung für (Sünde)",
+    "name": "Begabung für {sin}",
     "summary": "Diese Sammel-Tugend steht für jene kleineren Wirkungen, die Dämonen ihren Opfern verleihen, damit sie effektiver sündigen können – und daher häufiger."
   },
   "virtue.arcane_lore": {
@@ -1568,7 +1568,7 @@
     "summary": "Deine magische Abstammung und Tradition stammt von den Druiden und dem unterworfenen ehemaligen Haus Diedne, was dich besonders geschickt in Spontaner Magie macht."
   },
   "virtue.doctor_in_faculty": {
-    "name": "Doktor der (Fakultät)",
+    "name": "Doktor der {faculty}",
     "summary": "Der Charakter hat eine der höheren Fakultäten einer Universität in Medizin, Zivil- oder Kanonischem Recht oder Theologie abgeschlossen, nachdem er bereits seine Magister-in-Artibus-Lizenz erworben hat, und darf Kommilitonen unterrichten."
   },
   "virtue.domestic_animal": {
@@ -1628,7 +1628,7 @@
     "summary": "Der Magus verwendet nicht-hermetische Methoden, um hermetische Zauber zu wirken."
   },
   "virtue.extractor_of_form_vis": {
-    "name": "Vis-Gewinner der (Form)",
+    "name": "Vis-Gewinner der {form}",
     "summary": "Der Magus kann (Form)-Vis aus einer Magiesphären-Aura gewinnen, jedoch nur, wenn die Merkmale der Aura die Form verkörpern."
   },
   "virtue.eye_of_hephaestus": {
@@ -1840,7 +1840,7 @@
     "summary": "Der Charakter weiß stets genau, wie er von seinem aktuellen Standort zu einer Anzahl von Orten gelangt, die seinem Intelligenzwert entspricht (mindestens jedoch 1)."
   },
   "virtue.imbued_with_the_spirit_of_form": {
-    "name": "Durchdrungen vom Geist der (Form)",
+    "name": "Durchdrungen vom Geist der {form}",
     "summary": "Der Magus hat einen Teil der Kräfte eines Elementarwesens oder eines anderen magischen Objekts absorbiert (vielleicht durch Verzehr)."
   },
   "virtue.immune_to_disease": {
@@ -1876,7 +1876,7 @@
     "summary": "Infernale Erbstücke sind magische Gegenstände, die der Charakter von einem Diabolisten erbt oder, seltener, findet."
   },
   "virtue.inoffensive_to_beings": {
-    "name": "Für (Wesen) ungefährlich",
+    "name": "Für {being} ungefährlich",
     "summary": "Diese Tugend ist mit einer von fünf Klassen von Wesen verbunden: Tieren, göttlichen Wesen, Feen, Dämonen oder magischen Kreaturen."
   },
   "virtue.inspirational": {
@@ -1932,7 +1932,7 @@
     "summary": "Der Charakter ist ein ausgebildeter Arbeiter, der ein Handwerk ausübt, das eine wertvolle Dienstleistung für seine Gemeinschaft darstellt, bei dem jedoch kein fertiges Produkt hergestellt wird."
   },
   "virtue.land_regio_network": {
-    "name": "(Land-)Regio-Netz",
+    "name": "{land}Regio-Netz",
     "summary": "Der Charakter hat Zugang zu einem ausgedehnten Netz von Regiones, die sich vielleicht in den Tiefen vieler Seen im Mythischen Europa befinden, hoch über den Wolken am Himmel verborgen sind oder in unterirdischen Höhlen unter der Erde liegen"
   },
   "virtue.landed_noble": {
@@ -1952,7 +1952,7 @@
     "summary": "Du besitzt eine magische Eigenschaft, die sich noch nicht manifestiert hat."
   },
   "virtue.learn_ability_from_mistakes": {
-    "name": "(Fertigkeit) durch Fehler lernen",
+    "name": "{ability} durch Fehler lernen",
     "summary": "Du bist in der Lage, eine bestimmte Fertigkeit durch wiederholtes Scheitern zu verbessern."
   },
   "virtue.leather_ripper": {
@@ -2088,7 +2088,7 @@
     "summary": "Der Charakter hat mindestens neun Jahre an einer Bardenschule studiert und ist ein Meister seines Handwerks, genannt Anruth."
   },
   "virtue.master_of_form_creatures": {
-    "name": "Meister der (Form)-Kreaturen",
+    "name": "Meister der {form}-Kreaturen",
     "summary": "Der Charakter kann Tiere und andere unintelligente Wesen zähmen, deren Machtwert einer bestimmten Form zugeordnet ist."
   },
   "virtue.master_of_kennels": {
@@ -2196,7 +2196,7 @@
     "summary": "Du beherrschst es, dein Gleichgewicht zu halten, besonders auf schmalen Vorsprüngen oder Seilen."
   },
   "virtue.perfect_eye_for_commodity": {
-    "name": "Untrüglicher Blick für (Ware)",
+    "name": "Untrüglicher Blick für {commodity}",
     "summary": "Für eine bestimmte Ware und daraus hergestellte Produkte kann der Charakter niemals eine ungenaue Werteinschätzung vornehmen."
   },
   "virtue.perfectus": {
@@ -2432,7 +2432,7 @@
     "summary": "Du lässt dich nicht leicht zu Handlungen, Überzeugungen oder Gefühlen zwingen."
   },
   "virtue.student_of_realm": {
-    "name": "Student der (Sphäre)",
+    "name": "Student der {realm}",
     "summary": "Du wurdest in den mystischen Aspekten einer der vier Machtsphären (Göttlich, Feen, Infernal oder Magie) unterwiesen und erhältst einen Bonus von +2 auf alle Verwendungen der entsprechenden Kundefertigkeiten."
   },
   "virtue.study_bonus": {
@@ -2568,7 +2568,7 @@
     "summary": "Einweihung in das Äußere Mysterium des Hauses Verditius, das das Wirken von Verzauberungen durch Handwerk ermöglicht."
   },
   "virtue.voice_of_the_land": {
-    "name": "Stimme des (Landes)",
+    "name": "Stimme des {land}",
     "summary": "Der Charakter kann mit jedem Wesen sprechen, dessen natürlicher Lebensraum eine bestimmte, mit dieser Tugend verknüpfte Umgebung ist (einschließlich Tieren und magischen Wesen), und der Charakter wird von diesen Wesen normalerweise weder al"
   },
   "virtue.wanderer": {
@@ -2580,7 +2580,7 @@
     "summary": "+50 Erfahrungspunkte, nur für Kampf-Fertigkeiten, die du bei der Charaktererschaffung erwerben darfst."
   },
   "virtue.ways_of_the_land": {
-    "name": "Wege des (Landes)",
+    "name": "Wege des {land}",
     "summary": "Du hast ein tiefes Verständnis für eine bestimmte Art von Terrain und fühlst dich dort natürlicher und heimischer als sonst irgendwo."
   },
   "virtue.wealthy": {

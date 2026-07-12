@@ -11,7 +11,7 @@ export type IssueSeverity = 'error' | 'warning';
 // Closed enums in the engine (`ParamType` / `ParameterDomain`), serialized as
 // their snake_case names.
 export type ParamType = 'ref';
-export type ParameterDomain = 'ability' | 'art' | 'characteristic' | 'item';
+export type ParameterDomain = 'ability' | 'art' | 'characteristic' | 'item' | 'text';
 
 export interface ParameterDef {
   key: string;

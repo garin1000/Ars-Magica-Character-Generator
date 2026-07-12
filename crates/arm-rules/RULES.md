@@ -124,20 +124,26 @@ mechanics carry entries; the rest are stubbed at the end.
   Companion ...)" is illustrative of a maxed build, not a separate flat cap.
 
 #### Parameterized Virtues/Flaws — `{param}` slots
-The picker binds a structured value for items whose name carries a `{param}`
-placeholder (resolved by `displayName`), via a `parameters` entry
-(`{ key, type: "ref", domain }`). Domains that resolve against a catalogue —
-`ability`, `art`, `characteristic` — are wired: e.g. `flaw.careless_with_ability`,
-`virtue.cautious_with_ability`, `virtue.enchanting_ability` bind an `ability`.
-The hand-authored effect items (Puissant, Affinity, Great/Poor) already used this.
+The picker binds a value for items whose name carries a `{param}` placeholder
+(resolved by `displayName`), via a `parameters` entry (`{ key, type: "ref",
+domain }`). `ParameterPicker.svelte` renders a **dropdown** for registry-resolved
+domains and a **free-text input** for `domain: "text"` (its `{:else}` branch).
 
-- **Deferred (needs a free-text param type):** items whose parenthetical is a
-  free choice, not a catalogue ref — `(Realm)`, `(Land)`, `(Subject)`, `(Sin)`,
-  `(Beings)`, `(Terrain)`, `(Commodity)`, `(Faculty)`, `(Form)` (a Form-only
-  subset of Arts), and the mixed `Necessary (Realm) Aura for (Ability)`. These keep
-  their literal parenthetical name until a free-text `ParamType` + selection widget
-  is added. Name-qualifier parentheticals that are *not* params — `(Dove)`,
-  `(the Wolf)`, `(Muq-Ta')`, `(Hermetic)`, `(PC)` — stay literal by design.
+- **Catalogue-ref domains** (`ability`, `art`, `characteristic`, `item`): the value
+  must resolve; e.g. the `(Ability)` items (`flaw.careless_with_ability`, …) and the
+  `(Form)` items (`(Form)`→`art`: `flaw.form_monstrosity`,
+  `virtue.imbued_with_the_spirit_of_form`, …). Puissant/Affinity/Great/Poor already
+  used this. (`art` for a `(Form)` is a Form-only subset of Arts; the dropdown offers
+  all 15 Arts — the one remaining imprecision.)
+- **Free-text domain** (`ParameterDomain::Text`, serde `"text"`): the parenthetical
+  is a free choice with no registry — `(Realm)`, `(Land)`, `(Subject)`, `(Sin)`,
+  `(Beings)`, `(Terrain)`, `(Commodity)`, `(Faculty)`, `(Role)`, plus the mixed
+  `Necessary (Realm) Aura for (Ability)` (a `text` + an `ability`). `validate_parameters`
+  accepts any value for a `text` param (no resolution); the UI text input already
+  existed. Param hints come from Fluent `param-label-<key>`.
+- **Name-qualifiers — not params, stay literal by design:** `(Dove)`, `(the Wolf)`,
+  `(Muq-Ta')`, `(Hermetic)`, `(PC)`, and the `(positive)`/`(negative)` Cyclic Magic
+  disambiguators.
 
 #### Full core Virtue/Flaw catalogue — `rules/core/virtues_flaws.json`
 > Virtues: `## Virtues` detailed entries `:3360-5282`; Flaws: `## Flaws`

@@ -28,7 +28,7 @@
     "summary": "You want to be the most successful or powerful person in the world in some respect."
   },
   "flaw.anchored_to_the_land": {
-    "name": "Anchored to the (Land)",
+    "name": "Anchored to the {land}",
     "summary": "The character suffers from feelings of loneliness and depression when she cannot see or hear a particular type of environment."
   },
   "flaw.animal_companion": {
@@ -96,11 +96,11 @@
     "summary": "When you die, all of your spells end abruptly and any magic items that you created cease to function."
   },
   "flaw.bound_to_realm": {
-    "name": "Bound to (Realm)",
+    "name": "Bound to {realm}",
     "summary": "The character is no longer able to survive in the mundane world, and sickens if it is outside a particular sort of supernatural aura for an extended period of time."
   },
   "flaw.bound_to_role_role": {
-    "name": "Bound to (Role) Role",
+    "name": "Bound to {role} Role",
     "summary": "This character is physically bonded to some form of device, whether through a mystic event, long years of exposure and warping, or the ministrations of an experimental magus."
   },
   "flaw.branded_criminal": {
@@ -448,7 +448,7 @@
     "summary": "The character swings between two types of personality behaviors that are directly opposite."
   },
   "flaw.fish_out_of_water_terrain": {
-    "name": "Fish Out of Water (Terrain)",
+    "name": "Fish Out of Water {terrain}",
     "summary": "This character has an affinity with one type of terrain, whether this is at sea, in the woods, the rolling hills, or in the urban landscape of towns and cities, and feels uncomfortable and awkward when away from where he wants to be."
   },
   "flaw.flashbacks": {
@@ -476,7 +476,7 @@
     "summary": "This Flaw is somewhat similar to Covenant Upbringing, but means that the character is a foreigner and comes from a remote or isolated corner of Mythic Europe."
   },
   "flaw.form_monstrosity": {
-    "name": "(Form) Monstrosity",
+    "name": "{form} Monstrosity",
     "summary": "This Flaw is primarily intended for animal characters, but may be taken for characters who are basically human with the approval of the troupe."
   },
   "flaw.fragile_constitution": {
@@ -584,7 +584,7 @@
     "summary": "You have a deformed body that gives you a grotesque appearance and hinders your movements."
   },
   "flaw.hunger_for_form_magic": {
-    "name": "Hunger for (Form) Magic",
+    "name": "Hunger for {form} Magic",
     "summary": "The character has been repeatedly exposed to magic and has thus become dependent upon magic to survive."
   },
   "flaw.imagined_folk_tradition_vulnerability": {
@@ -692,7 +692,7 @@
     "summary": "People and animals react to you as if you had The Gift."
   },
   "flaw.magical_being_companion": {
-    "name": "Magical (Being) Companion",
+    "name": "Magical {being} Companion",
     "summary": "The character is accompanied by an intelligent magical being, one that is smart enough to follow orders or disobey them on its own initiative, which the character must regularly look after."
   },
   "flaw.magical_fascination": {
@@ -768,7 +768,7 @@
     "summary": "In order for your magic to work, you must perform a specific action while casting any spell."
   },
   "flaw.necessary_realm_aura_for_ability": {
-    "name": "Necessary (Realm) Aura for (Ability)",
+    "name": "Necessary {realm} Aura for {ability}",
     "summary": "Due to some connection with a given supernatural realm, the absence of a given supernatural aura has a pronounced effect upon the character's ability to focus on certain tasks."
   },
   "flaw.night_terrors": {
@@ -808,7 +808,7 @@
     "summary": "You are fixated on some prized object, action, or ideal."
   },
   "flaw.offensive_to_beings": {
-    "name": "Offensive to (Beings)",
+    "name": "Offensive to {being}",
     "summary": "This Flaw is associated with one of six classes of beings: animals, mundane humans, divine beings, faeries, demons, or magical creatures."
   },
   "flaw.optimistic_major": {
@@ -944,7 +944,7 @@
     "summary": "This character was raised on the margins of society."
   },
   "flaw.realm_stigmatic": {
-    "name": "(Realm) Stigmatic",
+    "name": "{realm} Stigmatic",
     "summary": "The character occasionally manifests physical phenomena in the presence of supernatural powers."
   },
   "flaw.rebellious_major": {
@@ -1012,7 +1012,7 @@
     "summary": "You are a self-proclaimed member of the Seekers, a loose organization of competitive magi searching for ancient magic and arcane artifacts."
   },
   "flaw.servant_of_the_land": {
-    "name": "Servant of the (Land)",
+    "name": "Servant of the {land}",
     "summary": "Some powerful magical creature has saved the character from death or granted a similar boon, and in return the character has been set a task."
   },
   "flaw.sheltered_upbringing": {
@@ -1172,7 +1172,7 @@
     "summary": "You are a Christian who has never been baptized for whatever reason, perhaps because you have some kind of supernatural background that might be undone by the ceremony — many magi believe that baptism impairs The Gift."
   },
   "flaw.unbearable_to_beings": {
-    "name": "Unbearable to (Beings)",
+    "name": "Unbearable to {being}",
     "summary": "This Flaw is associated with one of three classes of beings: mundane humans, demons, or divine beings."
   },
   "flaw.uncertain_faith": {
@@ -1344,7 +1344,7 @@
     "summary": "You are prone to anger over the smallest issues, and your rage when you are thwarted in something major is terrible to behold."
   },
   "virtue.academic_concentration_subject": {
-    "name": "Academic Concentration (Subject)",
+    "name": "Academic Concentration {subject}",
     "summary": "The character has concentrated in one of the seven subjects of Artes Liberales, in preference to the other six."
   },
   "virtue.adept_laboratory_student": {
@@ -1368,7 +1368,7 @@
     "summary": "Once per session, a player whose character has this Virtue can reroll a botch die."
   },
   "virtue.alluring_to_beings": {
-    "name": "Alluring to (Beings)",
+    "name": "Alluring to {being}",
     "summary": "This Virtue is associated with one of three classes of beings: mundane animals, faeries, or magical beings."
   },
   "virtue.almogaten": {
@@ -1400,7 +1400,7 @@
     "summary": "You are particularly good at learning from others."
   },
   "virtue.aptitude_for_sin": {
-    "name": "Aptitude for (Sin)",
+    "name": "Aptitude for {sin}",
     "summary": "This catch-all Virtue is for those minor effects which demons grant to their victims to allow them to sin more effectively, and so more often."
   },
   "virtue.arcane_lore": {
@@ -1568,7 +1568,7 @@
     "summary": "Your magic lineage and traditions are from the druids and the vanquished former house of Diedne, making you especially skilled with Spontaneous magic."
   },
   "virtue.doctor_in_faculty": {
-    "name": "Doctor in (Faculty)",
+    "name": "Doctor in {faculty}",
     "summary": "The character has graduated from one of the higher faculties of a university, in medicine, civil or canon law, or theology, having already received his magister in artibus license, and may instruct fellow students."
   },
   "virtue.domestic_animal": {
@@ -1628,7 +1628,7 @@
     "summary": "The magus uses non-Hermetic methods to cast Hermetic spells."
   },
   "virtue.extractor_of_form_vis": {
-    "name": "Extractor of (Form) Vis",
+    "name": "Extractor of {form} Vis",
     "summary": "The magus can extract (Form) vis from a Magic aura, but only if the features of the aura exemplify the Form."
   },
   "virtue.eye_of_hephaestus": {
@@ -1840,7 +1840,7 @@
     "summary": "The character always knows precisely how to get from where she is to a number of locations equal to her Intelligence Score (a minimum of 1)."
   },
   "virtue.imbued_with_the_spirit_of_form": {
-    "name": "Imbued with the Spirit of (Form)",
+    "name": "Imbued with the Spirit of {form}",
     "summary": "The magus has absorbed some of the powers of an elemental or other magic object (perhaps by consuming it)."
   },
   "virtue.immune_to_disease": {
@@ -1876,7 +1876,7 @@
     "summary": "Infernal heirlooms are magical items that the character inherits from a diabolist, or, more rarely, finds."
   },
   "virtue.inoffensive_to_beings": {
-    "name": "Inoffensive to (Beings)",
+    "name": "Inoffensive to {being}",
     "summary": "This Virtue is associated with one of five classes of beings: animals, divine beings, faeries, demons, or magical creatures."
   },
   "virtue.inspirational": {
@@ -1932,7 +1932,7 @@
     "summary": "The character is a trained worker who practices a trade that is a valuable service to his community, but by which no finished good is produced."
   },
   "virtue.land_regio_network": {
-    "name": "(Land) Regio Network",
+    "name": "{land} Regio Network",
     "summary": "The character has access to an extensive network of regiones, perhaps located in the depths of many lakes throughout Mythic Europe, or hidden above the clouds in the sky, or buried in subterranean caves under the ground."
   },
   "virtue.landed_noble": {
@@ -1952,7 +1952,7 @@
     "summary": "You have a magical quality that has not yet manifested itself."
   },
   "virtue.learn_ability_from_mistakes": {
-    "name": "Learn (Ability) From Mistakes",
+    "name": "Learn {ability} From Mistakes",
     "summary": "You are able to improve a particular Ability through the expedient of repeated failure."
   },
   "virtue.leather_ripper": {
@@ -2088,7 +2088,7 @@
     "summary": "The character has spent at least nine years of study at a bardic school and is a master of the trade, called an Anruth."
   },
   "virtue.master_of_form_creatures": {
-    "name": "Master of (Form) Creatures",
+    "name": "Master of {form} Creatures",
     "summary": "The character can tame animals and other unintelligent beings whose Magic Might is aligned with a particular Form."
   },
   "virtue.master_of_kennels": {
@@ -2196,7 +2196,7 @@
     "summary": "You are skilled at keeping your balance, especially on narrow ledges or tightropes."
   },
   "virtue.perfect_eye_for_commodity": {
-    "name": "Perfect Eye for (Commodity)",
+    "name": "Perfect Eye for {commodity}",
     "summary": "For one commodity, and products manufactured from it, the character never fails to make an accurate assessment of value."
   },
   "virtue.perfectus": {
@@ -2432,7 +2432,7 @@
     "summary": "You cannot easily be coerced into activities, beliefs, or feelings."
   },
   "virtue.student_of_realm": {
-    "name": "Student of (Realm)",
+    "name": "Student of {realm}",
     "summary": "You have been trained in the mystical aspects of one of the four realms of power (Divine, Faerie, Infernal, or Magic), and you have a +2 bonus on all uses of the appropriate Lore."
   },
   "virtue.study_bonus": {
@@ -2568,7 +2568,7 @@
     "summary": "Initiation into the Outer Mystery of House Verditius, enabling the casting of enchantments through craft."
   },
   "virtue.voice_of_the_land": {
-    "name": "Voice of the (Land)",
+    "name": "Voice of the {land}",
     "summary": "The character can speak with any creature whose natural habitat is a particular environment associated with this Virtue (including animals and magic beings), and the character is not normally perceived as either a threat or a prey object by"
   },
   "virtue.wanderer": {
@@ -2580,7 +2580,7 @@
     "summary": "+50 experience points, spent only on Martial Abilities, which you may acquire at character creation."
   },
   "virtue.ways_of_the_land": {
-    "name": "Ways Of The (Land)",
+    "name": "Ways Of The {land}",
     "summary": "You have a deep understanding of a type of terrain, feeling more natural and at home there than anywhere else."
   },
   "virtue.wealthy": {
