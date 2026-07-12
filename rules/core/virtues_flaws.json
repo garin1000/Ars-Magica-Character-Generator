@@ -63,6 +63,7 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "land", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5667, 5670] }
   },
   {
@@ -205,6 +206,7 @@
     "magnitude": "major",
     "category": "supernatural",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "realm", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5731, 5734] }
   },
   {
@@ -213,6 +215,7 @@
     "magnitude": "minor",
     "category": "supernatural",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "role", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5735, 5748] }
   },
   {
@@ -933,6 +936,7 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "terrain", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6126, 6133] }
   },
   {
@@ -989,6 +993,7 @@
     "magnitude": "minor",
     "category": "supernatural",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "form", "type": "ref", "domain": "art" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6162, 6185] }
   },
   {
@@ -1215,6 +1220,7 @@
     "magnitude": "major",
     "category": "supernatural",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "form", "type": "ref", "domain": "art" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6276, 6279] }
   },
   {
@@ -1435,6 +1441,7 @@
     "magnitude": "minor",
     "category": "story",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6386, 6391] }
   },
   {
@@ -1590,6 +1597,7 @@
     "magnitude": "minor",
     "category": "supernatural",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "realm", "type": "ref", "domain": "text" }, { "key": "ability", "type": "ref", "domain": "ability" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6480, 6487] }
   },
   {
@@ -1672,6 +1680,7 @@
     "magnitude": "minor",
     "category": "hermetic",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6524, 6533] }
   },
   {
@@ -1958,6 +1967,7 @@
     "magnitude": "minor",
     "category": "supernatural",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "realm", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6654, 6658] }
   },
   {
@@ -2099,6 +2109,7 @@
     "magnitude": "major",
     "category": "story",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "land", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6717, 6720] }
   },
   {
@@ -2424,6 +2435,7 @@
     "magnitude": "minor",
     "category": "hermetic",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6891, 6898] }
   },
   {
@@ -2783,6 +2795,7 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "subject", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3362, 3367] }
   },
   {
@@ -2839,6 +2852,7 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3388, 3395] }
   },
   {
@@ -2908,6 +2922,7 @@
     "category": "general",
     "tainted": true,
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "sin", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3426, 3429] }
   },
   {
@@ -3251,6 +3266,7 @@
     "magnitude": "major",
     "category": "social_status",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "faculty", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3683, 3698] }
   },
   {
@@ -3381,6 +3397,7 @@
     "magnitude": "minor",
     "category": "hermetic",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "form", "type": "ref", "domain": "art" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3779, 3782] }
   },
   {
@@ -3819,6 +3836,7 @@
     "magnitude": "minor",
     "category": "hermetic",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "form", "type": "ref", "domain": "art" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4085, 4094] }
   },
   {
@@ -3894,6 +3912,7 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4133, 4142] }
   },
   {
@@ -4005,6 +4024,7 @@
     "magnitude": "minor",
     "category": "supernatural",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "land", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4211, 4218] }
   },
   {
@@ -4047,6 +4067,7 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4241, 4244] }
   },
   {
@@ -4324,6 +4345,7 @@
     "magnitude": "minor",
     "category": "supernatural",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "form", "type": "ref", "domain": "art" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4463, 4466] }
   },
   {
@@ -4543,6 +4565,7 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "commodity", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4628, 4631] }
   },
   {
@@ -5039,6 +5062,7 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "realm", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5052, 5055] }
   },
   {
@@ -5314,6 +5338,7 @@
     "magnitude": "minor",
     "category": "supernatural",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "land", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5219, 5222] }
   },
   {
@@ -5339,6 +5364,7 @@
     "magnitude": "major",
     "category": "general",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "land", "type": "ref", "domain": "text" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5231, 5234] }
   },
   {

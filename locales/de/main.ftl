@@ -197,6 +197,16 @@ param-label-organization = Organisation
 param-label-mystery_cult = Mysterienkult
 param-label-craft = Handwerk
 param-label-profession = Beruf
+param-label-form = Form
+param-label-realm = Sphäre
+param-label-land = Land
+param-label-being = Wesen
+param-label-terrain = Gelände
+param-label-subject = Fach
+param-label-sin = Sünde
+param-label-faculty = Fakultät
+param-label-commodity = Ware
+param-label-role = Rolle
 
 # Effektiver Wert, neben dem Basiswert angezeigt, wenn ein Tugend-Bonus greift.
 effective-score = { $score }

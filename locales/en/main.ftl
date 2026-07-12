@@ -196,6 +196,16 @@ param-label-organization = Organization
 param-label-mystery_cult = Mystery Cult
 param-label-craft = Craft
 param-label-profession = Profession
+param-label-form = Form
+param-label-realm = Realm
+param-label-land = Land
+param-label-being = Beings
+param-label-terrain = Terrain
+param-label-subject = Subject
+param-label-sin = Sin
+param-label-faculty = Faculty
+param-label-commodity = Commodity
+param-label-role = Role
 
 # Effective score shown beside a base score when a virtue bonus applies.
 effective-score = { $score }

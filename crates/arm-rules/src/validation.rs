@@ -1515,6 +1515,8 @@ fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Vali
                 ParameterDomain::Ability => ruleset.abilities.contains_key(value),
                 ParameterDomain::Characteristic => Characteristic::from_id(value).is_some(),
                 ParameterDomain::Art => ruleset.arts.contains_key(value),
+                // Free text: any provided value is legal (no registry).
+                ParameterDomain::Text => true,
             };
             if !resolves {
                 issues.push(ValidationIssue::error(
@@ -5818,6 +5820,34 @@ mod tests {
         assert!(
             codes(&validate(&bad, &rs)).contains(&"unknown_param_value".to_string()),
             "unknown item-domain value should be flagged"
+        );
+    }
+
+    #[test]
+    fn text_domain_param_accepts_any_free_text_value() {
+        // A `text` domain is a free-text slot (e.g. Aptitude for (Sin)): any
+        // non-empty value the player types is legal — no registry resolution.
+        let items = r#"[
+          {"id": "virtue.aptitude", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+           "parameters": [{"key": "sin", "type": "ref", "domain": "text"}]}
+        ]"#;
+        let types = r#"[{
+          "id": "test_type",
+          "budget": { "virtue_points": 10, "flaw_points": 10 },
+          "permitted_categories": ["general"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let e = make_entity(
+            "test_type",
+            vec![Selection::with_params(
+                Id::new("virtue.aptitude"),
+                BTreeMap::from([("sin".into(), Id::new("Pride"))]),
+            )],
+        );
+        assert!(
+            !codes(&validate(&e, &rs)).contains(&"unknown_param_value".to_string()),
+            "a free-text value must not be resolved against any registry"
         );
     }
 

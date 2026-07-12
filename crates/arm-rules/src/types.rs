@@ -266,6 +266,10 @@ pub enum ParameterDomain {
     Characteristic,
     /// Value is a point-item id; resolved against the ruleset's point items.
     Item,
+    /// Value is free text the player types (e.g. Aptitude for (Sin), Necessary
+    /// (Realm) Aura, a (Land)). It references no registry, so any non-empty value
+    /// is legal — the picker shows a text input rather than a dropdown.
+    Text,
 }
 
 impl ParameterDomain {
@@ -285,6 +289,7 @@ impl fmt::Display for ParameterDomain {
             ParameterDomain::Art => f.write_str("art"),
             ParameterDomain::Characteristic => f.write_str("characteristic"),
             ParameterDomain::Item => f.write_str("item"),
+            ParameterDomain::Text => f.write_str("text"),
         }
     }
 }
