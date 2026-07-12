@@ -2135,18 +2135,26 @@ fn personality_out_of_range(trait_: &crate::types::PersonalityTrait, max: i8) ->
 
 /// Validates that every starting Reputation is backed by a granting Virtue/Flaw:
 /// the count of reputations of each `kind` must not exceed the grants of that kind
-/// (`Effect::GrantsReputation`). Excess reputations emit `reputation_not_granted`.
-/// Source: Core Rules.md:2514.
+/// (`Effect::GrantsReputation`). A player-chosen-kind grant (`kind == None`, e.g.
+/// Famous) is a wildcard authorizing one Reputation of *any* type; a Reputation
+/// consumes a matching concrete-kind slot first, falling back to a wildcard slot.
+/// Excess reputations emit `reputation_not_granted`. Source: Core Rules.md:2514.
 fn validate_reputations(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
     use crate::types::ReputationType;
     let mut remaining: BTreeMap<ReputationType, usize> = BTreeMap::new();
+    let mut wildcard: usize = 0;
     for (kind, _score) in crate::effective::reputation_grants(entity, ruleset) {
-        *remaining.entry(kind).or_insert(0) += 1;
+        match kind {
+            Some(kind) => *remaining.entry(kind).or_insert(0) += 1,
+            None => wildcard += 1,
+        }
     }
     for reputation in &entity.reputations {
         let slot = remaining.entry(reputation.kind).or_insert(0);
         if *slot > 0 {
             *slot -= 1;
+        } else if wildcard > 0 {
+            wildcard -= 1;
         } else {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_REPUTATION_NOT_GRANTED,

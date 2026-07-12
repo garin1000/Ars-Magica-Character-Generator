@@ -57,7 +57,7 @@ export type Effect =
   | { type: 'grants_selection'; items: string[] }
   | { type: 'size_delta'; amount: number }
   | { type: 'characteristic_score_delta'; characteristic: string; amount: number }
-  | { type: 'grants_reputation'; kind: ReputationType; score: number }
+  | { type: 'grants_reputation'; kind?: ReputationType; score: number }
   // M5/5b in-play effects (consumed by the derived-totals read-out, slice 5i).
   | { type: 'magical_focus'; param: string; major: boolean }
   | { type: 'casting_total_mod'; amount: number; scope: CastingScope }
@@ -124,7 +124,7 @@ export type SpecialCasting =
 
 // The audience a Reputation reaches (a fixed rules taxonomy, rendered via Fluent
 // `reputation-type-<id>`, never as a raw slug).
-export type ReputationType = 'local' | 'ecclesiastical' | 'hermetic';
+export type ReputationType = 'local' | 'ecclesiastical' | 'hermetic' | 'academic';
 
 // Prerequisite expression tree. Adjacently tagged by the engine: every variant
 // is a uniform object carrying a `kind` discriminant, with any payload under

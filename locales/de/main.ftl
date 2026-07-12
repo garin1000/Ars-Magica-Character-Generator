@@ -154,6 +154,7 @@ reputation-empty = Kein Ruf verfügbar (nimm eine Tugend oder einen Fehler, der 
 reputation-type-local = Lokal
 reputation-type-ecclesiastical = Kirchlich
 reputation-type-hermetic = Hermetisch
+reputation-type-academic = Akademisch
 # Grund, warum eine übernatürliche Fähigkeit im Auswähler ausgegraut ist.
 ability-requires-virtue = Erfordert eine verleihende Tugend (oder die eine freie Fähigkeit der Gabe)
 characteristic-increment = Erhöhen

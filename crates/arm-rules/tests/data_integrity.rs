@@ -676,3 +676,168 @@ fn in_play_effects_do_not_perturb_creation_totals() {
         "in-play effects must not change effective ability scores"
     );
 }
+
+// --- M5 slice 5a-wire: creation-effect wiring on the shipped catalogue ---
+
+/// Helper: does an entity's reputation set raise `reputation_not_granted`?
+fn reputation_ungranted(entity: &Entity, rs: &Ruleset) -> bool {
+    issue_codes(entity, rs).contains(&"reputation_not_granted".to_string())
+}
+
+/// Builds a companion holding a single virtue/flaw (no params) plus one
+/// player-declared Reputation of `kind`/`score`, to check the grant authorizes it.
+fn companion_with_reputation(item: &str, kind: ReputationType, score: u8) -> Entity {
+    let mut e = entity("companion", vec![Selection::new(Id::new(item))]);
+    e.reputations = vec![Reputation {
+        kind,
+        score,
+        content: "test".into(),
+    }];
+    e
+}
+
+#[test]
+fn shipped_reputation_granters_authorize_their_kind() {
+    let rs = load_ruleset();
+    // Hermetic Prestige → a Hermetic Reputation at 4 (Core:4071-4073).
+    let hp = companion_with_reputation("virtue.hermetic_prestige", ReputationType::Hermetic, 4);
+    assert!(
+        !reputation_ungranted(&hp, &rs),
+        "Hermetic Prestige grants Hermetic"
+    );
+    // Baccalaureus → an Academic Reputation (Core:3472).
+    let bac = companion_with_reputation("virtue.baccalaureus", ReputationType::Academic, 1);
+    assert!(
+        !reputation_ungranted(&bac, &rs),
+        "Baccalaureus grants Academic"
+    );
+    // A Local reputation is NOT authorized by Hermetic Prestige alone.
+    let wrong = companion_with_reputation("virtue.hermetic_prestige", ReputationType::Local, 4);
+    assert!(
+        reputation_ungranted(&wrong, &rs),
+        "Hermetic Prestige does not grant Local"
+    );
+}
+
+#[test]
+fn shipped_famous_authorizes_any_reputation_kind() {
+    let rs = load_ruleset();
+    // Famous (Core:3861-3863): player chooses the type — any single type is legal.
+    for kind in ReputationType::ALL {
+        let e = companion_with_reputation("virtue.famous", kind, 4);
+        assert!(
+            !reputation_ungranted(&e, &rs),
+            "Famous authorizes a {kind} Reputation",
+        );
+    }
+    // But only ONE: two reputations exceed the single wildcard grant.
+    let mut two = companion_with_reputation("virtue.famous", ReputationType::Local, 4);
+    two.reputations.push(Reputation {
+        kind: ReputationType::Hermetic,
+        score: 4,
+        content: "second".into(),
+    });
+    assert!(
+        reputation_ungranted(&two, &rs),
+        "Famous grants only one Reputation"
+    );
+}
+
+#[test]
+fn shipped_supernatural_virtues_grant_starting_score() {
+    use arm_rules::effective_ability_score;
+    let rs = load_ruleset();
+    for (item, ability) in [
+        ("virtue.animal_ken", "ability.animal_ken"),
+        ("virtue.shapeshifter", "ability.shapeshifter"),
+        ("virtue.enchanting_ability", "ability.enchanting"),
+        ("virtue.wilderness_sense", "ability.wilderness_sense"),
+    ] {
+        let e = entity("companion", vec![Selection::new(Id::new(item))]);
+        assert_eq!(
+            effective_ability_score(&e, &rs, &Id::new(ability), None),
+            1,
+            "{item} grants {ability} at 1",
+        );
+    }
+    // Strong Faerie Blood grants the Second Sight *Virtue* for free (Core:5038),
+    // which in turn floors Second Sight at 1.
+    let sfb = entity(
+        "companion",
+        vec![Selection::new(Id::new("virtue.strong_faerie_blood"))],
+    );
+    assert_eq!(
+        effective_ability_score(&sfb, &rs, &Id::new("ability.second_sight"), None),
+        1,
+        "Strong Faerie Blood grants Second Sight via a nested Virtue grant",
+    );
+}
+
+#[test]
+fn shipped_xp_granters_add_restricted_pool() {
+    use arm_rules::restricted_xp_pools;
+    let rs = load_ruleset();
+    // Arcane Lore → +50 XP restricted to Arcane abilities (Core:3432).
+    let e = entity(
+        "companion",
+        vec![Selection::new(Id::new("virtue.arcane_lore"))],
+    );
+    let pools = restricted_xp_pools(&e, &rs);
+    assert!(
+        pools
+            .iter()
+            .any(|p| p.amount == 50 && p.categories.contains(&AbilityCategory::Arcane)),
+        "Arcane Lore grants a 50-xp Arcane-restricted pool",
+    );
+    // Feral Upbringing → 120 XP on a fixed ability list (Core:6112).
+    let fu = entity(
+        "companion",
+        vec![Selection::new(Id::new("flaw.feral_upbringing"))],
+    );
+    assert!(
+        restricted_xp_pools(&fu, &rs)
+            .iter()
+            .any(|p| p.amount == 120),
+        "Feral Upbringing grants a 120-xp restricted pool",
+    );
+}
+
+#[test]
+fn shipped_confidence_true_faith_and_size_granters() {
+    use arm_rules::{confidence, size, true_faith};
+    let rs = load_ruleset();
+    // Ferocity → +1 Confidence Score / +3 Points (Core:3875) over the base.
+    let fer = entity(
+        "companion",
+        vec![Selection::new(Id::new("virtue.ferocity"))],
+    );
+    assert_eq!(confidence(1, 3, &fer, &rs), (2, 6), "Ferocity adds 1/3");
+    // Low Self-Esteem → removes the standard 1/3 Confidence (Core:6364).
+    let lse = entity(
+        "companion",
+        vec![Selection::new(Id::new("flaw.low_self_esteem"))],
+    );
+    assert_eq!(
+        confidence(1, 3, &lse, &rs),
+        (0, 0),
+        "Low Self-Esteem zeroes Confidence"
+    );
+    // Relic → True Faith 1 (Core:4854); Powerful Relic → 3 (Core:4783).
+    let relic = entity("companion", vec![Selection::new(Id::new("virtue.relic"))]);
+    assert_eq!(true_faith(&relic, &rs), 1);
+    let prelic = entity(
+        "companion",
+        vec![Selection::new(Id::new("virtue.powerful_relic"))],
+    );
+    assert_eq!(true_faith(&prelic, &rs), 3);
+    // Blood of the Nephilim → Size +1 (Divine:1945).
+    let bon = entity(
+        "companion",
+        vec![Selection::new(Id::new("virtue.blood_of_the_nephilim"))],
+    );
+    assert_eq!(
+        size(&bon, &rs),
+        1,
+        "Blood of the Nephilim raises Size to +1"
+    );
+}

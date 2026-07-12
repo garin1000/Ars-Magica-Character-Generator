@@ -1269,7 +1269,7 @@ pub fn warping(entity: &Entity, ruleset: &Ruleset) -> (u8, u8) {
 /// The Reputation grants a character holds (`(kind, score)` per
 /// [`Effect::GrantsReputation`]), authorizing starting Reputations. Source: Core
 /// Rules.md:2512-2514.
-pub fn reputation_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<(ReputationType, u8)> {
+pub fn reputation_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<(Option<ReputationType>, u8)> {
     let mut grants = Vec::new();
     for selection in selections_for_effects(entity, ruleset).iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
