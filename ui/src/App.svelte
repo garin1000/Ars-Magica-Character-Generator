@@ -14,6 +14,7 @@
   import ArtXpBar from './lib/components/ArtXpBar.svelte';
   import SpellPicker from './lib/components/SpellPicker.svelte';
   import MagicPossessions from './lib/components/MagicPossessions.svelte';
+  import EquipmentPicker from './lib/components/EquipmentPicker.svelte';
   import CharacterDetails from './lib/components/CharacterDetails.svelte';
   import HouseSelector from './lib/components/HouseSelector.svelte';
   import MythicCompanionTypeSelector from './lib/components/MythicCompanionTypeSelector.svelte';
@@ -31,6 +32,7 @@
     | 'possessions'
     | 'house_specialisation'
     | 'mythic_type'
+    | 'equipment'
     | 'details';
   // Left-to-right: Characteristics, Virtues & Flaws, Abilities, then the two
   // magus-only tabs (Arts, House) and the mythic-companion-only Type tab — each
@@ -55,7 +57,9 @@
         ]
       : []),
     ...(hasMythicType ? [{ id: 'mythic_type' as Tab, key: 'tab-mythic-type' }] : []),
-    // Age, Confidence, Personality Traits and Reputations apply to every type.
+    // Equipment, Age, Confidence, Personality Traits and Reputations apply to
+    // every type (grogs especially carry weapons and armor).
+    { id: 'equipment', key: 'tab-equipment' },
     { id: 'details', key: 'tab-details' },
   ]);
   let tab = $state<Tab>('characteristics');
@@ -158,6 +162,10 @@
   {:else if tab === 'possessions'}
     <div class="vf-tab">
       <MagicPossessions />
+    </div>
+  {:else if tab === 'equipment'}
+    <div class="vf-tab">
+      <EquipmentPicker />
     </div>
   {:else if tab === 'details'}
     <div class="vf-tab">

@@ -2566,6 +2566,7 @@ mod tests {
             houses: Some(houses),
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap()

@@ -14,6 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::ability::{Ability, AbilityCategory, AdvancementTable};
 use crate::art::{Art, ArtType, ArtsFile};
 use crate::characteristics::CharacteristicRules;
+use crate::equipment::{Armor, EquipmentFile, Shield, Weapon};
 use crate::grant::Grant;
 use crate::house::{House, HousesFile};
 use crate::mythic_companion::{MythicCompanionType, MythicCompanionTypesFile};
@@ -55,7 +56,10 @@ use crate::types::{
 ///   "art_advancement": [ { "score": 1, "total_xp": 1 } ],
 ///   "art_type_order": [ "technique", "form" ],
 ///   "houses": { "house.bonisagus": { /* House */ } },
-///   "spells": { "spell.pilum_of_fire": { /* Spell */ } }
+///   "spells": { "spell.pilum_of_fire": { /* Spell */ } },
+///   "weapons": { "weapon.long_sword": { /* Weapon */ } },
+///   "shields": { "shield.heater": { /* Shield */ } },
+///   "armor": { "armor.chain_mail_full": { /* Armor */ } }
 /// }
 /// ```
 ///
@@ -137,6 +141,19 @@ pub struct Ruleset {
     /// the `spells` field name is a stable public contract.
     #[serde(default)]
     pub(crate) spells: BTreeMap<Id, Spell>,
+    /// All weapons keyed by their id. Defaulted so older serialized rulesets (no
+    /// equipment) still deserialize. Serialized whole to the frontend; the
+    /// `weapons` field name is a stable public contract.
+    #[serde(default)]
+    pub(crate) weapons: BTreeMap<Id, Weapon>,
+    /// All shields keyed by their id. Defaulted like `weapons`. Serialized whole
+    /// to the frontend; the `shields` field name is a stable public contract.
+    #[serde(default)]
+    pub(crate) shields: BTreeMap<Id, Shield>,
+    /// All armor keyed by their id. Defaulted like `weapons`. Serialized whole to
+    /// the frontend; the `armor` field name is a stable public contract.
+    #[serde(default)]
+    pub(crate) armor: BTreeMap<Id, Armor>,
 }
 
 /// The magnitude→points table, derived from the canonical [`Magnitude::points`].
@@ -178,6 +195,9 @@ pub struct RulesetSources<'a> {
     /// Spells-file JSON (`{ "spells": [...] }`), or `None` for a ruleset without
     /// a spell catalogue.
     pub spells: Option<&'a str>,
+    /// Equipment-file JSON (`{ "weapons": [...], "shields": [...], "armor": [...] }`),
+    /// or `None` for a ruleset without an equipment catalogue.
+    pub equipment: Option<&'a str>,
     /// Characteristic point-buy JSON (`{ "start_points", "costs" }`), or `None`
     /// for a ruleset that ships no characteristic rules.
     pub characteristics: Option<&'a str>,
@@ -288,6 +308,7 @@ pub(crate) mod parse_source {
     pub const HOUSES: &str = "houses";
     pub const MYTHIC_TYPES: &str = "mythic companion types";
     pub const SPELLS: &str = "spells";
+    pub const EQUIPMENT: &str = "equipment";
     pub const CHARACTERISTICS: &str = "characteristics";
     pub const I18N: &str = "i18n";
     /// Fallback used by the blanket `From<serde_json::Error>` conversion, where
@@ -462,6 +483,7 @@ impl Ruleset {
             houses: None,
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
     }
@@ -488,6 +510,7 @@ impl Ruleset {
             houses: None,
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
     }
@@ -516,6 +539,7 @@ impl Ruleset {
             houses: None,
             mythic_types: None,
             spells: None,
+            equipment: None,
             // Preserve the existing sentinel: an empty string means "no
             // characteristic rules" for this convenience constructor.
             characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
@@ -547,6 +571,7 @@ impl Ruleset {
             houses: None,
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
         })
     }
@@ -568,6 +593,7 @@ impl Ruleset {
             houses,
             mythic_types,
             spells,
+            equipment,
             characteristics,
         } = sources;
 
@@ -591,6 +617,9 @@ impl Ruleset {
         // An absent spells file is equivalent to an empty `"{}"`.
         let spells_file: SpellsFile = serde_json::from_str(spells.unwrap_or("{}"))
             .map_err(|e| RulesetError::parse(parse_source::SPELLS, e))?;
+        // An absent equipment file is equivalent to an empty `"{}"`.
+        let equipment_file: EquipmentFile = serde_json::from_str(equipment.unwrap_or("{}"))
+            .map_err(|e| RulesetError::parse(parse_source::EQUIPMENT, e))?;
         let characteristic_rules: Option<CharacteristicRules> = match characteristics {
             None => None,
             Some(json) => Some(
@@ -622,6 +651,21 @@ impl Ruleset {
         collect_duplicates(
             spells_file.spells.iter().map(|s| &s.id),
             "spell",
+            &mut errors,
+        );
+        collect_duplicates(
+            equipment_file.weapons.iter().map(|w| &w.id),
+            "weapon",
+            &mut errors,
+        );
+        collect_duplicates(
+            equipment_file.shields.iter().map(|s| &s.id),
+            "shield",
+            &mut errors,
+        );
+        collect_duplicates(
+            equipment_file.armor.iter().map(|a| &a.id),
+            "armor",
             &mut errors,
         );
         if !errors.is_empty() {
@@ -659,6 +703,21 @@ impl Ruleset {
             .into_iter()
             .map(|s| (s.id.clone(), s))
             .collect();
+        let weapons: BTreeMap<Id, Weapon> = equipment_file
+            .weapons
+            .into_iter()
+            .map(|w| (w.id.clone(), w))
+            .collect();
+        let shields: BTreeMap<Id, Shield> = equipment_file
+            .shields
+            .into_iter()
+            .map(|s| (s.id.clone(), s))
+            .collect();
+        let armor: BTreeMap<Id, Armor> = equipment_file
+            .armor
+            .into_iter()
+            .map(|a| (a.id.clone(), a))
+            .collect();
 
         let ruleset = Self {
             id: Id::new(id),
@@ -676,6 +735,9 @@ impl Ruleset {
             houses,
             mythic_companion_types,
             spells,
+            weapons,
+            shields,
+            armor,
         };
 
         ruleset.validate_integrity()?;
@@ -834,6 +896,51 @@ impl Ruleset {
         self.spells.len()
     }
 
+    /// Looks up a weapon by id.
+    pub fn weapon(&self, id: &Id) -> Option<&Weapon> {
+        self.weapons.get(id)
+    }
+
+    /// Iterates all weapons in id order.
+    pub fn weapons(&self) -> impl Iterator<Item = &Weapon> {
+        self.weapons.values()
+    }
+
+    /// Number of weapons in the catalogue.
+    pub fn weapon_count(&self) -> usize {
+        self.weapons.len()
+    }
+
+    /// Looks up a shield by id.
+    pub fn shield(&self, id: &Id) -> Option<&Shield> {
+        self.shields.get(id)
+    }
+
+    /// Iterates all shields in id order.
+    pub fn shields(&self) -> impl Iterator<Item = &Shield> {
+        self.shields.values()
+    }
+
+    /// Number of shields in the catalogue.
+    pub fn shield_count(&self) -> usize {
+        self.shields.len()
+    }
+
+    /// Looks up an armor entry by id.
+    pub fn armor_item(&self, id: &Id) -> Option<&Armor> {
+        self.armor.get(id)
+    }
+
+    /// Iterates all armor entries in id order.
+    pub fn armor(&self) -> impl Iterator<Item = &Armor> {
+        self.armor.values()
+    }
+
+    /// Number of armor entries in the catalogue.
+    pub fn armor_count(&self) -> usize {
+        self.armor.len()
+    }
+
     /// Number of Arts in the catalogue.
     pub fn art_count(&self) -> usize {
         self.arts.len()
@@ -950,6 +1057,30 @@ impl Ruleset {
 
         for spell in self.spells.values() {
             self.validate_spell_refs(spell, &mut errors);
+        }
+
+        for weapon in self.weapons.values() {
+            self.validate_weapon_refs(weapon, &mut errors);
+        }
+        for shield in self.shields.values() {
+            if let Some(ref source) = shield.source
+                && !source.lines.is_valid()
+            {
+                errors.push(format!(
+                    "shield '{}': source line range start ({}) exceeds end ({})",
+                    shield.id, source.lines.start, source.lines.end
+                ));
+            }
+        }
+        for armor in self.armor.values() {
+            if let Some(ref source) = armor.source
+                && !source.lines.is_valid()
+            {
+                errors.push(format!(
+                    "armor '{}': source line range start ({}) exceeds end ({})",
+                    armor.id, source.lines.start, source.lines.end
+                ));
+            }
         }
 
         if errors.is_empty() {
@@ -1135,6 +1266,46 @@ impl Ruleset {
         {
             errors.push(format!(
                 "spell '{id}': source line range start ({}) exceeds end ({})",
+                source.lines.start, source.lines.end
+            ));
+        }
+    }
+
+    /// Validates a weapon: its combat `ability` must resolve to a known Ability and
+    /// be a combat-appropriate one (a Martial Ability, or Brawl — which the rules
+    /// categorize as General but which is the combat Ability for unarmed and
+    /// improvised weapons); and its source line range (if any) must be well-formed.
+    /// This is the load-time trust gate that a weapon can only ship once its combat
+    /// Ability exists. Source: Ars Magica - Definitive Edition (Core Rules).md:16988
+    /// (the "Ability" column names the Weapon Ability needed to use the weapon).
+    fn validate_weapon_refs(&self, weapon: &Weapon, errors: &mut Vec<String>) {
+        let id = &weapon.id;
+        // Brawl is the combat Ability for body/improvised weapons; it is a General
+        // Ability rather than Martial, so it is accepted explicitly alongside the
+        // Martial category. Referencing the id here is registry logic, not a
+        // user-facing label.
+        let brawl = Id::new("ability.brawl");
+        match self.abilities.get(&weapon.ability) {
+            None => errors.push(format!(
+                "weapon '{id}': ability references unknown ability '{}'",
+                weapon.ability
+            )),
+            Some(ability)
+                if ability.category != crate::ability::AbilityCategory::Martial
+                    && weapon.ability != brawl =>
+            {
+                errors.push(format!(
+                    "weapon '{id}': ability '{}' is not a combat Ability (must be Martial or Brawl)",
+                    weapon.ability
+                ))
+            }
+            Some(_) => {}
+        }
+        if let Some(ref source) = weapon.source
+            && !source.lines.is_valid()
+        {
+            errors.push(format!(
+                "weapon '{id}': source line range start ({}) exceeds end ({})",
                 source.lines.start, source.lines.end
             ));
         }
@@ -1516,6 +1687,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap();
@@ -1534,6 +1706,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap();
@@ -1560,6 +1733,7 @@ mod tests {
             houses: Some(VALID_HOUSES),
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap();
@@ -1579,6 +1753,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap();
@@ -1607,6 +1782,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap();
@@ -1637,6 +1813,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: Some(spells),
+            equipment: None,
             characteristics: None,
         })
     }
@@ -1793,6 +1970,7 @@ mod tests {
             houses: Some(dup),
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -1826,6 +2004,7 @@ mod tests {
             houses: Some(VALID_HOUSES),
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -1857,6 +2036,7 @@ mod tests {
             houses: Some(houses),
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -1890,6 +2070,7 @@ mod tests {
             houses: Some(houses),
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -1919,6 +2100,7 @@ mod tests {
             houses: Some(houses),
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap_err();
@@ -2584,6 +2766,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap();
@@ -2598,6 +2781,7 @@ mod tests {
                 "abilities",
                 "ability_category_order",
                 "advancement",
+                "armor",
                 "art_advancement",
                 "art_type_order",
                 "arts",
@@ -2607,9 +2791,11 @@ mod tests {
                 "magnitude_points",
                 "mythic_companion_types",
                 "point_items",
+                "shields",
                 "spells",
                 "type_profiles",
                 "version",
+                "weapons",
             ],
             "Ruleset top-level field names are a stable public contract"
         );

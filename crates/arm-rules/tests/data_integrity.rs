@@ -34,6 +34,26 @@ fn load_ruleset_with_spells() -> Ruleset {
         houses: None,
         mythic_types: None,
         spells: Some(include_str!("../../../rules/core/spells.json")),
+        equipment: None,
+        characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+    })
+    .unwrap()
+}
+
+/// The full shipped ruleset including the equipment catalogue — the equipment
+/// tests need Abilities loaded so each weapon's combat Ability resolves.
+fn load_ruleset_with_equipment() -> Ruleset {
+    Ruleset::from_sources(RulesetSources {
+        id: "arm5-core",
+        version: "2024.1",
+        point_items: include_str!("../../../rules/core/virtues_flaws.json"),
+        type_profiles: include_str!("../../../rules/core/character_types.json"),
+        abilities: Some(include_str!("../../../rules/core/abilities.json")),
+        arts: Some(include_str!("../../../rules/core/arts.json")),
+        houses: None,
+        mythic_types: None,
+        spells: None,
+        equipment: Some(include_str!("../../../rules/core/equipment.json")),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
     })
     .unwrap()
@@ -212,6 +232,186 @@ fn german_i18n_covers_all_spells() {
             spell.id
         );
     }
+}
+
+#[test]
+fn shipped_equipment_loads_and_exposes_accessors() {
+    let rs = load_ruleset_with_equipment();
+    // Catalogue size is data, not code: assert representative items are present
+    // and read correctly, never exact totals.
+    let sword = rs
+        .weapon(&Id::new("weapon.sword_long"))
+        .expect("weapon.sword_long present");
+    assert_eq!(sword.attack_mod, Some(4));
+    assert_eq!(sword.damage_mod, Some(6));
+    assert_eq!(sword.ability, Id::new("ability.single_weapon"));
+    assert!(sword.range.is_none(), "melee weapon has no range");
+    // A missile weapon carries a Range and uses Bows.
+    let bow = rs
+        .weapon(&Id::new("weapon.bow_long"))
+        .expect("weapon.bow_long present");
+    assert_eq!(bow.range, Some(30));
+    assert_eq!(bow.ability, Id::new("ability.bows"));
+    // Dodge has no attack/damage/min-Strength (n/a cells).
+    let dodge = rs.weapon(&Id::new("weapon.dodge")).expect("dodge present");
+    assert_eq!(dodge.attack_mod, None);
+    assert_eq!(dodge.min_strength, None);
+    // Shields and armor resolve through their own accessors.
+    assert_eq!(rs.shield(&Id::new("shield.heater")).unwrap().defense_mod, 3);
+    assert_eq!(
+        rs.armor_item(&Id::new("armor.chain_mail_full"))
+            .unwrap()
+            .protection,
+        9
+    );
+    assert!(rs.weapon_count() > 0 && rs.shield_count() > 0 && rs.armor_count() > 0);
+}
+
+/// A weapon whose combat `ability` names something that is neither Martial nor
+/// Brawl is rejected at load (referential-integrity trust gate).
+#[test]
+fn weapon_with_non_combat_ability_rejected_at_load() {
+    let equipment = r#"{ "weapons": [
+      { "id": "weapon.bad", "kind": "melee", "init_mod": 0, "defense_mod": 0,
+        "load": 1, "ability": "ability.awareness" }
+    ] }"#;
+    let err = Ruleset::from_sources(RulesetSources {
+        id: "arm5-core",
+        version: "2024.1",
+        point_items: include_str!("../../../rules/core/virtues_flaws.json"),
+        type_profiles: include_str!("../../../rules/core/character_types.json"),
+        abilities: Some(include_str!("../../../rules/core/abilities.json")),
+        arts: None,
+        houses: None,
+        mythic_types: None,
+        spells: None,
+        equipment: Some(equipment),
+        characteristics: None,
+    })
+    .unwrap_err();
+    assert!(
+        err.to_string().contains("not a combat Ability"),
+        "expected combat-ability rejection, got: {err}"
+    );
+}
+
+/// A weapon naming a wholly unknown ability id is also rejected at load.
+#[test]
+fn weapon_with_unknown_ability_rejected_at_load() {
+    let equipment = r#"{ "weapons": [
+      { "id": "weapon.bad", "kind": "melee", "init_mod": 0, "defense_mod": 0,
+        "load": 1, "ability": "ability.nonexistent" }
+    ] }"#;
+    let err = Ruleset::from_sources(RulesetSources {
+        id: "arm5-core",
+        version: "2024.1",
+        point_items: include_str!("../../../rules/core/virtues_flaws.json"),
+        type_profiles: include_str!("../../../rules/core/character_types.json"),
+        abilities: Some(include_str!("../../../rules/core/abilities.json")),
+        arts: None,
+        houses: None,
+        mythic_types: None,
+        spells: None,
+        equipment: Some(equipment),
+        characteristics: None,
+    })
+    .unwrap_err();
+    assert!(
+        err.to_string().contains("unknown ability"),
+        "expected unknown-ability rejection, got: {err}"
+    );
+}
+
+#[test]
+fn english_i18n_covers_all_equipment() {
+    let rs = load_ruleset_with_equipment();
+    let i18n_en = include_str!("../../../rules/i18n/en/equipment.json");
+    let loc = LocalizedRuleset::new(rs.clone(), i18n_en).unwrap();
+    for id in rs
+        .weapons()
+        .map(|w| &w.id)
+        .chain(rs.shields().map(|s| &s.id))
+        .chain(rs.armor().map(|a| &a.id))
+    {
+        assert!(
+            loc.display_name(id).is_some(),
+            "English i18n missing equipment '{id}'"
+        );
+    }
+}
+
+#[test]
+fn german_i18n_covers_all_equipment() {
+    let rs = load_ruleset_with_equipment();
+    let i18n_de = include_str!("../../../rules/i18n/de/equipment.json");
+    let loc = LocalizedRuleset::new(rs.clone(), i18n_de).unwrap();
+    for id in rs
+        .weapons()
+        .map(|w| &w.id)
+        .chain(rs.shields().map(|s| &s.id))
+        .chain(rs.armor().map(|a| &a.id))
+    {
+        assert!(
+            loc.display_name(id).is_some(),
+            "German i18n missing equipment '{id}'"
+        );
+    }
+}
+
+/// An [`EquipmentSlot`] referencing an unknown catalogue id errors in validate;
+/// an over-heavy equipped weapon warns (advisory, non-blocking); normalize sorts.
+#[test]
+fn validate_equipment_unknown_ref_and_min_strength() {
+    let rs = load_ruleset_with_equipment();
+    let mut e = entity("grog", vec![]);
+    // Unknown id → error.
+    e.equipment = vec![EquipmentSlot {
+        item: Id::new("weapon.nonexistent"),
+        equipped: true,
+    }];
+    let result = validate(&e, &rs);
+    assert!(
+        result.issues.iter().any(|i| i.code == "unknown_equipment"),
+        "unknown equipment id must error"
+    );
+
+    // A Warhammer (min-Strength +2) equipped by a Strength −1 grog warns, not errors.
+    e.characteristics.insert(Characteristic::Str, -1);
+    e.equipment = vec![EquipmentSlot {
+        item: Id::new("weapon.warhammer"),
+        equipped: true,
+    }];
+    let result = validate(&e, &rs);
+    assert!(
+        result
+            .issues
+            .iter()
+            .any(|i| i.code == "equipment_min_strength"
+                && i.severity == arm_rules::IssueSeverity::Warning),
+        "over-heavy equipped weapon must warn"
+    );
+    assert!(
+        !result.issues.iter().any(|i| i.code == "unknown_equipment"),
+        "a known weapon must not report unknown_equipment"
+    );
+}
+
+#[test]
+fn normalize_sorts_equipment() {
+    let mut e = entity("grog", vec![]);
+    e.equipment = vec![
+        EquipmentSlot {
+            item: Id::new("weapon.warhammer"),
+            equipped: false,
+        },
+        EquipmentSlot {
+            item: Id::new("armor.chain_mail_full"),
+            equipped: true,
+        },
+    ];
+    e.normalize();
+    assert_eq!(e.equipment[0].item, Id::new("armor.chain_mail_full"));
+    assert_eq!(e.equipment[1].item, Id::new("weapon.warhammer"));
 }
 
 /// The shipped Skilled Parens raises *both* the spell-levels budget (+30) and the
