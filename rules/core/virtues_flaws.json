@@ -3524,6 +3524,7 @@
     "magnitude": "major",
     "category": "hermetic",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_spell_mastery", "score": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3887, 3890] }
   },
   {
@@ -4335,6 +4336,7 @@
     "magnitude": "minor",
     "category": "hermetic",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "spell_mastery_xp", "amount": 50 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4471, 4475] }
   },
   {

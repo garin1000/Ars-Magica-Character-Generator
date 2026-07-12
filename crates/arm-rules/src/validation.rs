@@ -1572,6 +1572,8 @@ fn validate_ability_bonus_targets(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SpellMasteryXp { .. }
+                | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
@@ -1803,6 +1805,8 @@ fn validate_characteristic_limit_preconditions(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SpellMasteryXp { .. }
+                | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
@@ -6216,6 +6220,7 @@ mod tests {
         SpellSelection {
             spell: Id::new(id),
             level,
+            mastery: None,
         }
     }
 

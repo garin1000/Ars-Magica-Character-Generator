@@ -120,6 +120,8 @@ spell-level-label = Stufe
 spell-add = Zauber hinzufügen
 spell-none = — Zauber wählen —
 spell-levels-used = Zauberstufen: { $used } / { $budget }
+spell-mastery-xp = Meisterschafts-EP: { $xp }
+spell-mastery-floor = Alle Zauber gemeistert auf { $score }
 spell-remove = Entfernen
 # Details-Reiter: Alter, Selbstvertrauen (abgeleitet, schreibgeschützt), Persönlichkeit, Ruf.
 age-label = Alter

@@ -39,6 +39,8 @@ export type Effect =
   | { type: 'warping_grant'; score: number; points: number }
   | { type: 'true_faith_grant'; score: number }
   | { type: 'item_level_budget'; amount: number }
+  | { type: 'spell_mastery_xp'; amount: number }
+  | { type: 'grants_spell_mastery'; score: number }
   | { type: 'grants_selection'; items: string[] }
   | { type: 'size_delta'; amount: number }
   | { type: 'characteristic_score_delta'; characteristic: string; amount: number }
@@ -169,6 +171,10 @@ export interface EffectiveScores {
   // Derived starting enchanted-device level budget (Magic Items +25, Redcap 50);
   // 0 when none.
   item_level_budget: number;
+  // Derived Spell-Mastery XP pool (Mastered Spells +50 each); 0 when none.
+  spell_mastery_xp: number;
+  // Mastery-score floor every known spell gets (Flawless Magic 1); 0 = none.
+  spell_mastery_floor: number;
 }
 
 export interface ReputationGrant {
@@ -296,6 +302,9 @@ export interface Spell {
 export interface SpellSelection {
   spell: string;
   level?: number | null;
+  // Bought Spell Mastery Ability score (spent from the mastery-XP pool);
+  // omitted/0 = unmastered. Effective mastery = max(this, mastery floor).
+  mastery?: number | null;
 }
 
 // A named Personality Trait with a value in ±3 (±6 for a Major Personality Flaw).

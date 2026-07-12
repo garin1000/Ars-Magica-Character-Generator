@@ -618,6 +618,28 @@ approximation of "Latin").
   (nested-grant, B6) and the "spend XP on Magic Lore" purchase permission are not
   part of this numeric effect.
 
+#### Mastered Spells / Flawless Magic — Spell Mastery (`spell_mastery_xp`, `grants_spell_mastery`)
+> Mastered Spells: "You have fifty experience points to spend on mastering spells
+> that you know … You may take this Virtue multiple times." Flawless Magic: "All
+> your spells start with a score of 1 in the corresponding Spell Mastery Ability
+> … all your Advancement Totals for Spell Mastery Abilities are doubled."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:4471-4474` (Mastered
+  Spells), `:3887-3889` (Flawless Magic).
+- Data: `virtue.mastered_spells` — `spell_mastery_xp: 50`; `virtue.flawless_magic`
+  — `grants_spell_mastery: 1`. `SpellSelection` gains an optional `mastery` field
+  (bought Spell Mastery score); `SCHEMA_VERSION` bumped 7 → 8 (backward-compatible
+  — old saves default `mastery: None`).
+- Implementation: `Effect::SpellMasteryXp { amount }` → `effective.rs::spell_mastery_xp`
+  (restricted pool, summed). `Effect::GrantsSpellMastery { score }` →
+  `spell_mastery_floor` (max grant); `effective_spell_mastery(sel)` =
+  `max(bought, floor)`. Surfaced as `EffectiveScores.spell_mastery_{xp,floor}` and on
+  the sheet (Fluent `spell-mastery-xp`/`spell-mastery-floor`; DE "Meisterschaft").
+  **Deferred:** exact mastery-XP spend validation (5×new level per point) and the
+  doubled-advancement rate are in-play/advancement mechanics, not gen-time budget;
+  "may take multiple times" follows the existing `max_per_target: 1` convention
+  (as Improved Characteristics).
+
 #### Templar Commander — fixed nested free Virtue grant (`grants_selection`)
 > "This Virtue also grants the Temporal Influence Minor Virtue … This Virtue
 > includes the effects of the Brother-Knight Virtue."

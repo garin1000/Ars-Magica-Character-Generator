@@ -1216,7 +1216,9 @@ impl Ruleset {
                     continue;
                 }
                 // No parameter or ref to resolve: the grant is intrinsic.
-                Effect::ItemLevelBudget { .. }
+                Effect::SpellMasteryXp { .. }
+                | Effect::GrantsSpellMastery { .. }
+                | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }

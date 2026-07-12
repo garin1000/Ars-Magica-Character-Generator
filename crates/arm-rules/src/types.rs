@@ -465,6 +465,24 @@ pub enum Effect {
         /// Confidence Points added per selection.
         points: i8,
     },
+    /// Grants `amount` experience points to spend on Spell Mastery Abilities (a
+    /// restricted pool, distinct from the general/ability XP pools — mastery is
+    /// spent per known spell). Mastered Spells grants 50, stackable.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4471-4474.
+    SpellMasteryXp {
+        /// Mastery experience points granted per selection.
+        amount: u16,
+    },
+    /// Floors the Spell Mastery Ability score of *every* known spell at `score`.
+    /// Flawless Magic auto-masters every spell learned (Mastery 1); the effective
+    /// mastery of a spell is `max(bought, this floor)`.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3887-3889.
+    GrantsSpellMastery {
+        /// The mastery-score floor granted to every known spell.
+        score: u8,
+    },
     /// Grants the listed Virtues/Flaws for free (budget-exempt), folded into the
     /// entity's derived grants like a House grant. A fixed nested grant — e.g.
     /// Templar Commander "grants the Temporal Influence Minor Virtue" and
@@ -988,6 +1006,12 @@ pub struct SpellSelection {
     /// catalogue level is authoritative — a stray value here is ignored at eval).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub level: Option<u8>,
+    /// The bought Spell Mastery Ability score for this spell, spent from the
+    /// mastery-XP pool (Mastered Spells). `None`/0 = unmastered. The effective
+    /// mastery is `max(this, granted floor)` — Flawless Magic floors every spell
+    /// at 1. Source: Core Rules.md:4471-4474, :3887-3889.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mastery: Option<u8>,
 }
 
 /// A named Personality Trait with a value in −3..+3 (or ±6 for the trait
@@ -1125,7 +1149,7 @@ pub struct Entity {
 }
 
 /// Current save-format schema version.
-pub const SCHEMA_VERSION: u32 = 7;
+pub const SCHEMA_VERSION: u32 = 8;
 
 impl Entity {
     /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
@@ -1626,6 +1650,7 @@ mod tests {
             spells: vec![SpellSelection {
                 spell: Id::new("spell.pilum_of_fire"),
                 level: None,
+                mastery: None,
             }],
             house: None,
             house_choices: BTreeMap::new(),
@@ -1643,7 +1668,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 7"#));
+        assert!(json.contains(r#""schema_version": 8"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -1712,10 +1737,12 @@ mod tests {
             SpellSelection {
                 spell: Id::new("spell.unseen_arm"),
                 level: None,
+                mastery: None,
             },
             SpellSelection {
                 spell: Id::new("spell.aegis_of_the_hearth"),
                 level: Some(20),
+                mastery: None,
             },
         ];
         entity.normalize();

@@ -167,6 +167,8 @@ pub fn ability_bonus(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SpellMasteryXp { .. }
+                | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
@@ -289,6 +291,8 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SpellMasteryXp { .. }
+                | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
@@ -377,6 +381,8 @@ fn characteristic_limit_shift(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SpellMasteryXp { .. }
+                | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
@@ -548,6 +554,8 @@ pub(crate) fn ability_affinity(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SpellMasteryXp { .. }
+                | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
@@ -590,6 +598,8 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::SpellMasteryXp { .. }
+                | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
@@ -1002,6 +1012,50 @@ pub fn resolved_spell_level(sel: &SpellSelection, ruleset: &Ruleset) -> Option<u
         Some(fixed) => Some(u32::from(fixed)),
         None => sel.level.map(u32::from),
     }
+}
+
+/// The character's Spell-Mastery XP pool: the sum of every
+/// [`Effect::SpellMasteryXp`] (Mastered Spells +50, stackable). A restricted pool
+/// spent only on per-spell Spell Mastery Abilities. Source: Core Rules.md:4471-4474.
+pub fn spell_mastery_xp(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    let mut total = 0u32;
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::SpellMasteryXp { amount } = effect {
+                total += u32::from(*amount);
+            }
+        }
+    }
+    total
+}
+
+/// The mastery-score floor every known spell receives from
+/// [`Effect::GrantsSpellMastery`] (Flawless Magic → 1). The highest floor wins.
+/// Source: Core Rules.md:3887-3889.
+pub fn spell_mastery_floor(entity: &Entity, ruleset: &Ruleset) -> u8 {
+    let mut floor = 0u8;
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::GrantsSpellMastery { score } = effect {
+                floor = floor.max(*score);
+            }
+        }
+    }
+    floor
+}
+
+/// The effective Spell Mastery score of one chosen spell: the higher of its
+/// bought mastery and the granted floor (Flawless Magic auto-masters at 1).
+pub fn effective_spell_mastery(sel: &SpellSelection, entity: &Entity, ruleset: &Ruleset) -> u8 {
+    sel.mastery
+        .unwrap_or(0)
+        .max(spell_mastery_floor(entity, ruleset))
 }
 
 /// Total spell levels the entity's chosen spells consume. Unresolved General
@@ -1817,6 +1871,18 @@ mod tests {
             "kind": "virtue", "magnitude": "minor", "category": "general",
             "entity_kinds": ["character"],
             "effects": [{ "type": "grants_selection", "items": ["virtue.second_sight"] }]
+          },
+          {
+            "id": "virtue.mastered_spells",
+            "kind": "virtue", "magnitude": "minor", "category": "hermetic",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "spell_mastery_xp", "amount": 50 }]
+          },
+          {
+            "id": "virtue.flawless_magic",
+            "kind": "virtue", "magnitude": "major", "category": "hermetic",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "grants_spell_mastery", "score": 1 }]
           }
         ]"#;
         let types = r#"[
@@ -2013,6 +2079,36 @@ mod tests {
             sel("virtue.improved_characteristics"),
         ]);
         assert_eq!(characteristic_points_granted(&e, &rs), 6);
+    }
+
+    #[test]
+    fn spell_mastery_pool_and_floor() {
+        // Mastered Spells grants 50 mastery XP (stackable, Core:4471-4474);
+        // Flawless Magic floors every spell's mastery at 1 (Core:3887-3889).
+        let rs = xp_ruleset();
+        let masters = xp_entity(vec![
+            sel("virtue.mastered_spells"),
+            sel("virtue.mastered_spells"),
+        ]);
+        assert_eq!(spell_mastery_xp(&masters, &rs), 100);
+        assert_eq!(spell_mastery_floor(&masters, &rs), 0);
+
+        let flawless = xp_entity(vec![sel("virtue.flawless_magic")]);
+        assert_eq!(spell_mastery_floor(&flawless, &rs), 1);
+        // A spell with no bought mastery still has effective mastery 1 under the
+        // floor; a higher bought mastery wins.
+        let unbought = SpellSelection {
+            spell: Id::new("spell.x"),
+            level: None,
+            mastery: None,
+        };
+        assert_eq!(effective_spell_mastery(&unbought, &flawless, &rs), 1);
+        let bought = SpellSelection {
+            spell: Id::new("spell.x"),
+            level: None,
+            mastery: Some(3),
+        };
+        assert_eq!(effective_spell_mastery(&bought, &flawless, &rs), 3);
     }
 
     #[test]
