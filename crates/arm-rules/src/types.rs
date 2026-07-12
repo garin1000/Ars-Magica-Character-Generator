@@ -624,13 +624,19 @@ pub enum Effect {
     },
     /// Authorizes the character to start with one Reputation of the given `kind`
     /// at the given `score` (content is player-supplied). A starting Reputation is
-    /// legal only if backed by such a grant (Core:2514).
+    /// legal only if backed by such a grant (Core:2514). A `kind` of `None` is a
+    /// **player-chosen-type** grant (Famous, Core:3861-3863: "Choose … one type"):
+    /// it authorizes one Reputation of *any* type. Concrete-kind grants authorize
+    /// only that type; an item with two audiences (e.g. Senior Clergy, both local
+    /// and Church) carries two `GrantsReputation` effects.
     ///
     /// Source: Ars Magica - Definitive Edition (Core Rules).md:6310-6312 (Infamous),
-    /// `:5703-5705` (Black Sheep).
+    /// `:5703-5705` (Black Sheep), `:3861-3863` (Famous, player-chosen kind).
     GrantsReputation {
-        /// Which audience the granted Reputation reaches.
-        kind: ReputationType,
+        /// Which audience the granted Reputation reaches; `None` = player-chosen
+        /// (any type).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        kind: Option<ReputationType>,
         /// The level of the granted Reputation.
         score: u8,
     },
@@ -1085,14 +1091,20 @@ pub enum ReputationType {
     Ecclesiastical,
     /// Known within the Order of Hermes.
     Hermetic,
+    /// Known within scholarly / university circles (the "Academic Reputation" the
+    /// scholastic Social-Status Virtues confer — Baccalaureus, Magister in
+    /// Artibus, Doctor in (Faculty), …). Core names it as a Reputation type
+    /// alongside the three "main" types at `:1097` ("The most basic type is …").
+    Academic,
 }
 
 impl ReputationType {
     /// All types in book order (the single source of the serialized ordering).
-    pub const ALL: [ReputationType; 3] = [
+    pub const ALL: [ReputationType; 4] = [
         ReputationType::Local,
         ReputationType::Ecclesiastical,
         ReputationType::Hermetic,
+        ReputationType::Academic,
     ];
 }
 
@@ -1102,6 +1114,7 @@ impl std::fmt::Display for ReputationType {
             ReputationType::Local => "local",
             ReputationType::Ecclesiastical => "ecclesiastical",
             ReputationType::Hermetic => "hermetic",
+            ReputationType::Academic => "academic",
         })
     }
 }

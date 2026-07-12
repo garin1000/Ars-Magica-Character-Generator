@@ -1152,22 +1152,28 @@ Each trait `|value| ≤ 3`; up to one trait per selected Major Personality Flaw
 never. The grog-Loyal / warrior-Brave "should" is guided (M6), not enforced here.
 
 **Reputations** (`Entity.reputations`, `ReputationType` = Local / Ecclesiastical /
-Hermetic, `:1091-1101`):
+Hermetic / **Academic**, `:1091-1101`; `:1097` names Local as "the most basic"
+type with the others alongside):
 
 > `:2514` "Characters only start with a Reputation if they choose a Virtue or Flaw
 > that grants one, but all characters can develop them in play."
 
-`Effect::GrantsReputation {kind, score}` authorizes one starting Reputation;
-`validate_reputations` errors on any reputation beyond the grants of its kind
-(`reputation_not_granted`). Seeded granters: **Infamous** (`:6310-6312`, Minor
-General, `grants_reputation {local, 4}`) and **Black Sheep** (`:5703-5705`, Major
-Story, `{local, 2}`). **Correction (M5/5a):** the earlier "only Local granters
-exist in Core" claim was wrong. **Hermetic Prestige** *is* in Core at `:4071-4073`
-(Hermetic Reputation level **4** — the Darius example at `:2518` says 3, an errata
-slip; the Virtue text's 4 is authoritative), and **Famous** (`:3861-3863`) grants a
-**player-chosen-type** Reputation at level 4. These reputation-granting
-`creation_effect` V/F are catalogued in the M5/5a audit below and wired in slice
-5a-wire (Famous may need a player-selected `kind` param on `GrantsReputation`).
+`Effect::GrantsReputation {kind: Option<ReputationType>, score}` authorizes one
+starting Reputation; `validate_reputations` errors on any reputation beyond the
+grants of its kind (`reputation_not_granted`). A grant with `kind == None` is a
+**player-chosen-type** wildcard (Famous, `:3861-3863` — "Choose … one type"): it
+authorizes one Reputation of *any* type; concrete-kind grants authorize only that
+type (a Reputation consumes a matching concrete slot first, then a wildcard). Seed
+granters: **Infamous** (`:6310-6312`, `{local, 4}`) and **Black Sheep**
+(`:5703-5705`, `{local, 2}`). **Correction (M5/5a):** the earlier "only Local
+granters exist in Core" claim was wrong. **Hermetic Prestige** *is* in Core at
+`:4071-4073` (Hermetic Reputation level **4** — the Darius `:2518` example's 3 is
+an errata slip; the Virtue text's 4 is authoritative). The full set of
+reputation-granting `creation_effect` V/F is wired in slice 5a-wire (see below).
+`ReputationType::Academic` was added because six scholastic Social-Status Virtues
+(Baccalaureus, Cathedral School Master, Doctor in (Faculty), Magister in
+Artibus/Medicina, Failed Student) confer an "Academic Reputation" — a named type
+in the source. Fluent `reputation-type-academic` (en `Academic`, de `Akademisch`).
 
 ---
 
@@ -1289,7 +1295,60 @@ potent magic, special circumstances, missing_eye's ranged −3, etc.) are shown 
 toggleable/labelled addends in 5i rather than always-on numbers.
 
 
-### `creation_effect` V/F not yet wired (input to slice 5a-wire)
+### `creation_effect` V/F wiring (M5/5a-wire) — implemented
+
+Slice 5a-wire wired **68 of the 79** previously-unwired `creation_effect` V/F to
+existing `Effect` variants (plus `ReputationType::Academic` and an optional
+`kind` on `GrantsReputation`; **no new `Effect` variant**). Green under the full
+gate; tested in `data_integrity.rs` (`shipped_reputation_granters_authorize_their_kind`,
+`shipped_famous_authorizes_any_reputation_kind`, `shipped_supernatural_virtues_grant_starting_score`,
+`shipped_xp_granters_add_restricted_pool`, `shipped_confidence_true_faith_and_size_granters`).
+
+**Variants reused:** Supernatural starting scores → `ability_score_grant {ability, 1}`
+(the Second Sight pattern; each id verified in `abilities.json`, e.g.
+Enchanting (Ability) → `ability.enchanting`). Reputation granters →
+`grants_reputation {kind?, score}` with source-verified audience+level (Famous →
+`{score:4}` wildcard; Hermetic Prestige → `{hermetic,4}`; the six scholastic
+Virtues → `{academic,N}`; two-audience items Failed Monk and Senior Clergy carry
+*two* effects, one per audience). XP grants → `restricted_ability_xp {amount,
+abilities?, categories?}` scoped to the source's eligible list (Arcane Lore →
+`{50, [arcane]}`; Feral Upbringing → `{120, …}`; "any Ability" items — Mentored
+by Demons, Lone Redcap's 300 apprenticeship xp — use all five categories).
+Confidence → `confidence_bonus` (Ferocity `{+1,+3}`; Low Self-Esteem `{-1,-3}`,
+which cancels the standard 1/3 default; note: additive, so it zeroes only the
+default). True Faith → `true_faith_grant` (Relic 1, Powerful Relic 3). Size →
+`size_delta` (Blood of the Nephilim +1). Nested V/F grants → `grants_selection`
+(Faerie Doctor → Dowsing; Strong Faerie Blood & Spirit Votary → Second Sight;
+Ineslemen → Noncombatant Flaw; Lone Redcap → Well-Traveled; Rosh Beth Din →
+Social Contacts).
+
+**Famous player-chosen kind** is modeled by making `GrantsReputation.kind` an
+`Option<ReputationType>` (`None` = any type), rather than a new param domain:
+`validate_reputations` treats a `None` grant as a single any-type slot, and
+`arm-app`'s `EffectiveScores` expands it to one `ReputationGrant` per type for the
+UI's add-controls (so the app/UI boundary keeps a concrete `kind`).
+
+**Deferred (11), source-not-present or no clean creation number:**
+- **Might / power budget (4)** — Demonic Blood/Might/Powers (*Infernal*), Strong
+  Angelic Heritage (*Divine*): Might is a supernatural-creature stat in the Realms
+  of Power supplements; Core defines no character-creation Might *budget* mechanic
+  and there is no `Effect` variant for it. Not invented (per the source-backed
+  rule); left `creation_effect`, wiring deferred.
+- **Devil Child, Nephilim (2 nested grants)** — Devil Child (*Infernal*:4144-4149)
+  says only "See Devil Children, below" without naming a granted Virtue in the
+  cited range; Nephilim (*Divine*:3485-3513) lists the Mythic-Companion *required*
+  Virtues (which must be **paid for**, not free-granted) — a type-profile concern,
+  not a `grants_selection`. Deferred pending a concrete cited grant.
+- **Masterpiece (item-level, 1)** — Core:4476-4479 grants "one lesser enchanted
+  item you could make based on your Lab Totals", i.e. a Lab-Total-derived level,
+  not a fixed grantable number; no source figure to put in `item_level_budget`.
+- **Savantism, Simple Student, Corrupted Arts, Elemental Magic (4 XP)** — Savantism
+  (:6703) *halves* starting XP (multiplicative; no variant); Simple Student (:4958)
+  is 30 xp *per finished year* (age/life-stage, M6); Corrupted Arts (:5853) has no
+  creation XP figure (its ±3 casting swing / ±5 Art xp are in-play); Elemental
+  Magic (:3731) is the bespoke Art-XP redistribution already deferred to slice 5c.
+
+The per-item audit that fed this wiring follows (source line-ranges retained).
 
 **Confidence:**
 - `flaw.low_self_esteem` (Core:6362-6365) — Confidence (no score/points)

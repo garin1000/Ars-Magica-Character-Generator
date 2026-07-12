@@ -156,6 +156,7 @@ reputation-empty = No Reputation is granted (take a Virtue or Flaw that grants o
 reputation-type-local = Local
 reputation-type-ecclesiastical = Ecclesiastical
 reputation-type-hermetic = Hermetic
+reputation-type-academic = Academic
 # Shown as the reason a Supernatural Ability is greyed in the picker.
 ability-requires-virtue = Requires a granting Virtue (or the Gift's one free Ability)
 characteristic-increment = Raise

@@ -92,6 +92,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "ecclesiastical", "score": 4 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5675, 5678] }
   },
   {
@@ -958,6 +959,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 2 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6060, 6063] }
   },
   {
@@ -967,6 +969,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 4 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6064, 6067] }
   },
   {
@@ -976,6 +979,10 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "grants_reputation", "kind": "local", "score": 2 },
+      { "type": "grants_reputation", "kind": "ecclesiastical", "score": 2 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6068, 6071] }
   },
   {
@@ -985,6 +992,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "academic", "score": 2 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6072, 6075] }
   },
   {
@@ -1022,6 +1030,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 2 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6106, 6109] }
   },
   {
@@ -1031,6 +1040,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 120, "abilities": ["ability.animal_handling", "ability.area_lore", "ability.athletics", "ability.awareness", "ability.brawl", "ability.hunt", "ability.stealth", "ability.survival", "ability.swim"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6110, 6113] }
   },
   {
@@ -1171,6 +1181,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 2 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6198, 6201] }
   },
   {
@@ -1305,6 +1316,7 @@
     "category": "hermetic",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "hermetic", "score": 3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6240, 6243] }
   },
   {
@@ -1477,6 +1489,7 @@
     "category": "hermetic",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "hermetic", "score": 3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6314, 6317] }
   },
   {
@@ -1603,6 +1616,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "confidence_bonus", "score": -1, "points": -3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6362, 6365] }
   },
   {
@@ -1963,6 +1977,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 2 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6542, 6545] }
   },
   {
@@ -1972,6 +1987,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6546, 6549] }
   },
   {
@@ -1982,6 +1998,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["flaw.outsider_minor"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6550, 6561] }
   },
   {
@@ -1992,6 +2009,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["flaw.outsider_major"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6550, 6561] }
   },
   {
@@ -2912,6 +2930,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 4 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6951, 6954] }
   },
   {
@@ -3318,6 +3337,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.animal_ken", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3414, 3417] }
   },
   {
@@ -3357,6 +3377,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["arcane"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3430, 3435] }
   },
   {
@@ -3394,6 +3415,10 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "grants_reputation", "kind": "academic", "score": 1 },
+      { "type": "restricted_ability_xp", "amount": 90, "abilities": ["ability.artes_liberales", "ability.dead_language"] }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3470, 3475] }
   },
   {
@@ -3436,6 +3461,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "size_delta", "amount": 1 }],
     "source": { "file": "Ars Magica 5e - Realms of Power - The Divine (Revised).md", "lines": [1941, 1954] }
   },
   {
@@ -3509,6 +3535,10 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "grants_reputation", "kind": "academic", "score": 2 },
+      { "type": "restricted_ability_xp", "amount": 240, "abilities": ["ability.teaching"], "categories": ["academic"] }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3549, 3554] }
   },
   {
@@ -3537,6 +3567,7 @@
     "category": "hermetic",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.dead_language", "ability.magic_lore", "ability.organization_lore"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3566] }
   },
   {
@@ -3603,6 +3634,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.corpse_magic", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3605, 3608] }
   },
   {
@@ -3621,6 +3653,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.bargain", "ability.craft", "ability.organization_lore", "ability.profession"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3613, 3616] }
   },
   {
@@ -3630,6 +3663,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.crafters_healing", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3617, 3620] }
   },
   {
@@ -3749,6 +3783,10 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "faculty", "type": "ref", "domain": "text" }],
+    "effects": [
+      { "type": "grants_reputation", "kind": "academic", "score": 3 },
+      { "type": "restricted_ability_xp", "amount": 300, "categories": ["academic"] }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3683, 3698] }
   },
   {
@@ -3811,6 +3849,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.embitterment", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3739, 3742] }
   },
   {
@@ -3830,6 +3869,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.enchanting", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3747, 3750] }
   },
   {
@@ -3871,6 +3911,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.entrancement", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3767, 3770] }
   },
   {
@@ -3946,6 +3987,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.devil_child", "virtue.nephilim", "virtue.spirit_votary", "virtue.the_gift"],
+    "effects": [{ "type": "grants_selection", "items": ["virtue.dowsing"] }],
     "source": { "file": "Ars Magica 5e - Realms of Power - Faerie.md", "lines": [6394, 6399] }
   },
   {
@@ -3984,6 +4026,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.animal_handling", "ability.area_lore", "ability.dead_language", "ability.etiquette", "ability.hunt", "ability.profession", "ability.ride"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3847, 3852] }
   },
   {
@@ -4011,6 +4054,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "score": 4 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3861, 3864] }
   },
   {
@@ -4039,6 +4083,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "confidence_bonus", "score": 1, "points": 3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3873, 3876] }
   },
   {
@@ -4103,6 +4148,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.font_of_knowledge", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3921, 3924] }
   },
   {
@@ -4112,6 +4158,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.craft"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3925, 3928] }
   },
   {
@@ -4353,6 +4400,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.dead_language", "ability.magic_lore", "ability.organization_lore"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4063, 4066] }
   },
   {
@@ -4371,6 +4419,7 @@
     "category": "hermetic",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "hermetic", "score": 4 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4071, 4073] }
   },
   {
@@ -4380,6 +4429,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.hex", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4075, 4078] }
   },
   {
@@ -4459,6 +4509,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.induction", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4119, 4122] }
   },
   {
@@ -4468,6 +4519,10 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.dominion_lore", "ability.faerie_lore", "ability.infernal_lore", "ability.islamic_law", "ability.magic_lore", "ability.theology_islam"] },
+      { "type": "grants_selection", "items": ["flaw.noncombatant"] }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4123, 4126] }
   },
   {
@@ -4785,6 +4840,11 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "grants_reputation", "kind": "hermetic", "score": 2 },
+      { "type": "restricted_ability_xp", "amount": 300, "categories": ["academic", "arcane", "general", "martial", "supernatural"] },
+      { "type": "grants_selection", "items": ["virtue.well_traveled"] }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4319, 4326] }
   },
   {
@@ -4855,6 +4915,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.magic_sensitivity", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4351, 4354] }
   },
   {
@@ -4901,6 +4962,10 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "grants_reputation", "kind": "academic", "score": 2 },
+      { "type": "restricted_ability_xp", "amount": 240, "abilities": ["ability.teaching"], "categories": ["academic"] }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4385, 4394] }
   },
   {
@@ -4910,6 +4975,10 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "grants_reputation", "kind": "academic", "score": 3 },
+      { "type": "restricted_ability_xp", "amount": 300, "categories": ["academic"] }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4395, 4398] }
   },
   {
@@ -4966,6 +5035,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.animal_handling", "ability.dead_language", "ability.etiquette", "ability.hunt", "ability.profession", "ability.ride"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4449, 4456] }
   },
   {
@@ -4975,6 +5045,10 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "grants_reputation", "kind": "local", "score": 3 },
+      { "type": "restricted_ability_xp", "amount": 240, "abilities": ["ability.area_lore", "ability.art_of_memory", "ability.faerie_lore", "ability.magic_lore", "ability.organization_lore", "ability.profession"] }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4457, 4462] }
   },
   {
@@ -4994,6 +5068,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.animal_handling", "ability.dead_language", "ability.etiquette", "ability.hunt", "ability.profession", "ability.ride"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4467, 4470] }
   },
   {
@@ -5041,6 +5116,7 @@
     "classification": "creation_effect",
     "tainted": true,
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["academic", "arcane", "general", "martial", "supernatural"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4496, 4499] }
   },
   {
@@ -5266,6 +5342,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.persona", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4710, 4713] }
   },
   {
@@ -5293,6 +5370,10 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "grants_reputation", "kind": "local", "score": 2 },
+      { "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.medicine", "ability.philosophiae"] }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4732, 4735] }
   },
   {
@@ -5339,6 +5420,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "true_faith_grant", "score": 3 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4782, 4787] }
   },
   {
@@ -5452,6 +5534,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3476, 3479] }
   },
   {
@@ -5480,6 +5563,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "true_faith_grant", "score": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4852, 4855] }
   },
   {
@@ -5525,6 +5609,11 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "grants_reputation", "kind": "local", "score": 2 },
+      { "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.dead_language", "ability.rabbinic_law", "ability.theology_judaism"] },
+      { "type": "grants_selection", "items": ["virtue.social_contacts"] }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4878, 4883] }
   },
   {
@@ -5534,6 +5623,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.area_lore", "ability.athletics", "ability.awareness", "ability.bargain", "ability.brawl", "ability.charm", "ability.guile", "ability.legerdemain", "ability.stealth"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4884, 4887] }
   },
   {
@@ -5582,6 +5672,10 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "grants_reputation", "kind": "local", "score": 2 },
+      { "type": "restricted_ability_xp", "amount": 90, "abilities": ["ability.area_lore", "ability.art_of_memory", "ability.faerie_lore", "ability.magic_lore", "ability.organization_lore", "ability.profession"] }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4904, 4909] }
   },
   {
@@ -5591,6 +5685,10 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "grants_reputation", "kind": "local", "score": 4 },
+      { "type": "grants_reputation", "kind": "ecclesiastical", "score": 4 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4910, 4921] }
   },
   {
@@ -5619,6 +5717,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.sense_passions", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4930, 4933] }
   },
   {
@@ -5628,6 +5727,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.area_lore", "ability.bargain", "ability.charm", "ability.etiquette", "ability.folk_ken", "ability.guile", "ability.intrigue", "ability.leadership"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4934, 4939] }
   },
   {
@@ -5646,6 +5746,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.shapeshifter", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4946, 4949] }
   },
   {
@@ -5764,6 +5865,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.nephilim", "virtue.the_gift"],
+    "effects": [{ "type": "grants_selection", "items": ["virtue.second_sight"] }],
     "source": { "file": "Ars Magica 5e - Realms of Power - Magic.md", "lines": [5480, 5486] }
   },
   {
@@ -5792,6 +5894,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_selection", "items": ["virtue.second_sight"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5032, 5047] }
   },
   {
@@ -5852,6 +5955,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.summon_animals", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5085, 5088] }
   },
   {
@@ -5908,6 +6012,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 2 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5121, 5124] }
   },
   {
@@ -6000,6 +6105,7 @@
     "category": "general",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.athletics", "ability.guile", "ability.stealth"], "categories": ["martial"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5153, 5156] }
   },
   {
@@ -6101,6 +6207,7 @@
     "category": "social_status",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.bargain", "ability.charm", "ability.folk_ken", "ability.guile", "ability.intrigue", "ability.living_language"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5207, 5210] }
   },
   {
@@ -6186,6 +6293,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.whistle_up_the_wind", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5243, 5246] }
   },
   {
@@ -6195,6 +6303,7 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_score_grant", "ability": "ability.wilderness_sense", "amount": 1 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5247, 5250] }
   },
   {

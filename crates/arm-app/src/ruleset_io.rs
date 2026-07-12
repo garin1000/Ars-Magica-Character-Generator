@@ -151,9 +151,19 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         supernatural_free_total,
         supernatural_free_used,
         age_ability_cap: age_ability_cap(entity),
+        // A player-chosen-kind grant (`kind == None`, e.g. Famous) authorizes any
+        // type, so it is surfaced to the UI as one add-control per Reputation
+        // type; concrete-kind grants pass through unchanged. Validation still
+        // enforces the single-slot count (see `validate_reputations`).
         reputation_grants: reputation_grants(entity, ruleset)
             .into_iter()
-            .map(|(kind, score)| ReputationGrant { kind, score })
+            .flat_map(|(kind, score)| match kind {
+                Some(kind) => vec![ReputationGrant { kind, score }],
+                None => ReputationType::ALL
+                    .into_iter()
+                    .map(|kind| ReputationGrant { kind, score })
+                    .collect(),
+            })
             .collect(),
         warping_score,
         warping_points,
