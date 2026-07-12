@@ -46,7 +46,7 @@ Notes / deferred to later phases (as planned):
   added by Phases 2/4/5 when those sections exist.
 - magus `≤1 Major Hermetic Virtue` (needs `virtue_category_caps`), the free
   House Virtue, and the `≥1 Hermetic Flaw` guideline land in Phase 4.
-- the mythic free Minor status Virtue (+1, raising 20→21) is M8 catalogue data;
+- the mythic free Minor status Virtue (+1, raising 20→21) is M5 catalogue data;
   the `virtue_points: 20` ceiling is the balanced max without it.
 
 ## Phase 2 — Arts (PLAN.md 4a) ✅
@@ -72,7 +72,7 @@ Notes:
 - Abilities and Arts share **one** `xp_pool` (the rules' single apprenticeship
   bank); `validate_xp_pool` checks the combined Ability + Art cost. Arts still
   price from the cheaper triangular curve (`art_advancement`).
-- Form bonus (Form score/5) is a derived combat stat — deferred (M5+).
+- Form bonus (Form score/5) is a derived combat stat — deferred (M5/5i).
 
 ## Phase 3 — V/F mechanical effect model (PLAN.md 4f) ✅
 e2e: `ui/e2e/specs/vf-effects.e2e.js`
@@ -149,7 +149,7 @@ grants a free "status" Virtue **plus** a free Minor Virtue and imposes a require
 V/F package — the same auto-grant + free-Virtue machinery Houses already use
 (`granted_selections`, `setHouse`/`setHouseChoice`). Phase 1 shipped only the
 mythic budget ceiling (20 V / 10 F at 2:1) and deferred the free status Virtue to
-"M8 catalogue data"; this phase pulls it forward so mythic-companion input is
+"M5 catalogue data"; this phase pulls it forward so mythic-companion input is
 genuinely complete in M4 (the milestone's own promise: "complete input for all
 character types").
 
@@ -171,7 +171,7 @@ character types").
 - [x] `rules/core/mythic_companion_types.json` + i18n (en, de): the 4 core types
       with their packages; ~19 required/free V/F seeded structurally from Core +
       RoP Infernal/Divine/Faerie/Magic with verified citations (Tragic Life
-      corrected to Major *Story*), full supernatural effects M8. Source:
+      corrected to Major *Story*), full supernatural effects M9 (supplement). Source:
       Core Rules.md:2643-2765 + RoP books (see RULES.md)
 - [~] Mythic-companion V/F guidelines: ≤5 Minor Flaws / ≤1 Story / ≤2 Personality
       (≤1 Major) enforced via the Phase-1 mythic profile budget caps; **≥1 Social
@@ -185,11 +185,11 @@ character types").
       updated; full gate + release build passes
 
 Notes:
-- Supersedes the Phase-1 deferral ("the mythic free Minor status Virtue … is M8
+- Supersedes the Phase-1 deferral ("the mythic free Minor status Virtue … is M5
   catalogue data"): the free status/Minor Virtue mechanism lands here; only the
-  long tail of Supernatural-Virtue *effects* remains M8.
+  long tail of core Supernatural-Virtue *effects* remains M5 (5a).
 - The ~90-xp minimum-Ability set (Core Rules.md:2639) is a *guided* constraint
-  and stays with the magus 90-xp min-ability work in M5, not here.
+  and stays with the magus 90-xp min-ability work in M6, not here.
 - Supplement Supernatural abilities (Demonic Might, Curse-Throwing, Blood of the
   Nephilim) whose full mechanics live in Realms of Power books are seeded
   structurally; their in-play effects are out of scope until those sources exist.
@@ -242,7 +242,7 @@ e2e: `ui/e2e/specs/character-fields.e2e.js`
 - [x] Confidence derived (type default 1/3, grog none) + `ConfidenceBonus`
       (Self-Confident → 2/5); read-only readout, hidden for grogs
 - [x] Personality Traits ±3, widened to ±6 per selected Major Personality Flaw;
-      grog Loyal/warrior Brave soft rule deferred to M5
+      grog Loyal/warrior Brave soft rule deferred to M6
 - [x] Reputations gated on a granting V/F (`GrantsReputation`; Infamous/Black
       Sheep seeded, Local type); `ReputationType` = Local/Ecclesiastical/Hermetic
 - [x] e2e spec green (6 tests); PLAN.md 4d-rest+4e boxes updated; gate passes
@@ -264,5 +264,7 @@ buildable in direct entry — Characteristics, Abilities, Arts, Spells, Houses,
 Mythic types, V/F with the full effect model, age/Confidence/Personality/
 Reputations, and the Gift/Supernatural gate — validated live, saved and reloaded
 canonically, verified end-to-end through the real binary (e2e 13/13 spec files).
-M5 (guided wizard) is next: it wraps these direct-entry surfaces with the
-life-stage XP flows.
+M5 (full mechanical & data completeness) is next — closing the effect-wiring,
+catalogue, and derived-total gaps so any core-rules character is fully enterable
+and computable. The guided wizard (M6) then wraps these direct-entry surfaces with
+the life-stage XP flows.

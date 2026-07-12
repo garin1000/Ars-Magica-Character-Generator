@@ -98,7 +98,7 @@ companion type, direct-entry mode only.
 
 Scope: the two foundational, type-agnostic trait domains every character needs.
 Built as an engine → data → direct-entry slice (mirroring M1 → M2) so the guided
-wizard (M5) has real phase content to orchestrate. No wizard yet.
+wizard (M6) has real phase content to orchestrate. No wizard yet.
 
 Decisions made during M3 (see `crates/arm-rules/RULES.md` and the plan archive):
 abilities store the **whole bought score + a single `unspent_xp` bank**, not
@@ -106,7 +106,7 @@ per-ability XP (ability XP is spent in whole points, so loose XP lives in the
 bank; the effective score = bought + virtue bonuses is computed, never stored).
 The effective-score & characteristic buy-limit layer (Puissant Ability's effective
 bonus; Great/Poor Characteristic shifting the buy cap/floor) was pulled forward
-into M3 (3d); the life-stage XP flow is deferred to the M5 wizard; `House`/`ArtMin`
+into M3 (3d); the life-stage XP flow is deferred to the M6 wizard; `House`/`ArtMin`
 evaluation and the Art registry move to M4 (4a/4b).
 
 ### 3a. Engine models (TDD) — DONE
@@ -120,13 +120,13 @@ evaluation and the Art registry move to M4 (4a/4b).
 - [x] Evaluate `AbilityMin` against the entity's max bought ability score
       (`validation.rs`); `House`/`ArtMin` remain deferred (M4)
 - [~] Life-stage XP acquisition (early childhood, 15/20/10 per year, age→max cap)
-      — DEFERRED to the M5 wizard that drives it. Source: Core Rules.md:2364-2394
+      — DEFERRED to the M6 wizard that drives it. Source: Core Rules.md:2364-2394
 
 ### 3b. Data — DONE
 - [x] Characteristics core data (`characteristics.json`); labels in Fluent (enum)
 - [x] Seed Abilities catalogue (`abilities.json`, 23 abilities across all 5
       categories + full childhood restricted list) + i18n (en, de)
-- [~] Sample Childhood packages — DEFERRED to the M5 wizard (built with the
+- [~] Sample Childhood packages — DEFERRED to the M6 wizard (built with the
       childhood model, loading, integrity, and apply-flow, rather than shipping inert unvalidated
       data). Source: Core Rules.md:2380-2388
 
@@ -174,15 +174,15 @@ Scope: make every one of the four character types — grog, companion, mythic
 companion, magus — fully buildable in direct-validated and direct-unchecked
 modes, including Arts, spells, Houses, Hermetic V/F, and all creation-relevant
 V/F effect mechanics. Engine → data → direct-entry slices (mirroring M1→M3). No
-wizard yet — the guided flow (M5) wraps these components afterward.
+wizard yet — the guided flow (M6) wraps these components afterward.
 
 In scope: Arts, spells, Houses + specialisations, Hermetic V/F, all
 creation-relevant V/F effect mechanics (see 4f), Confidence, Personality Traits,
-Reputations, age + age→cap. Deferred (sheet/export, M6+): lab totals,
-casting/spell totals, Twilight, Longevity Ritual, Decrepitude-in-play, and the
-in-play-only V/F effects (Magical Focus, Method Caster, study Source-Quality
-bonuses, Deficient Technique/Form total-halving) — these don't change a creation
-number.
+Reputations, age + age→cap. Moved to **M5** (the pre-wizard completeness gate):
+lab/casting/spell totals, Longevity Ritual, Decrepitude and Warping (points +
+their effects), and the in-play-only V/F effects (Magical Focus, Method Caster,
+study Source-Quality bonuses, Deficient Technique/Form total-halving) — direct
+entry must represent them all before the wizard.
 
 ### 4a. Arts (engine + data + direct entry) ✅
 - [x] Arts data model: whole bought Art score, bought from the shared `xp_pool`
@@ -222,7 +222,7 @@ number.
         Core Rules.md:4061, 3761, 3827, 5217; Mystery Cults.md:1378
 - [x] House selection + specialisation as direct-entry fields; selecting them
       auto-grants the free Minor House Virtue (engine/data, so direct entry yields
-      a legal magus). The guided step wrapper is M5
+      a legal magus). The guided step wrapper is M6
 - [x] `virtue_category_caps` (new, data-driven, mirroring `flaw_category_caps` /
       `FlawCategoryCap`) to enforce "≤1 Major Hermetic Virtue". Source: Core Rules.md:2857
 - [x] Additional Hermetic-category V/F data (the special magus Virtues/Flaws)
@@ -239,7 +239,7 @@ number.
       (`Effect::GeneralXp`). Source: Core Rules.md:2215-2216, 2435, 2465, 4964-4966, 7072-7074
 - [x] `rules/core/spells.json` seed (14 spells across Creo/Rego × several Forms) +
       i18n (en, de); German names from the `zauber-nach-form.md` table. Full
-      catalogue stays M8
+      catalogue lands in M5 (5d)
 - [x] Spell direct-entry component (`SpellPicker.svelte`: Technique/Form filter,
       add/remove, General-level input, spell-levels bar), Fluent-labelled; Spells
       tab gated on the profile `is_magus`
@@ -280,14 +280,14 @@ number.
 - [x] Age field + age → max-Ability-score cap validation: <30→5, 30-35→6, 36-40→7,
       41-45→8, 46+→9. `Entity.age` + `age_max_ability_score` + the cap check in
       `validate_abilities`; an Affinity Ability may exceed it by +2 (Core:3374),
-      not without limit. Validation only — XP acquisition/aging is M5. Virtue
+      not without limit. Validation only — XP acquisition/aging is M6. Virtue
       cap-raisers deferred. Source: Core Rules.md:2366-2376
 - [x] Confidence: derived (not stored) — default Score 1 + 3 points for companions
       /magi/mythic, none for grogs, modifiable by V/F (`ConfidenceBonus`; Self-
       Confident → 2/5). Surfaced read-only via `EffectiveScores`. Source: Core Rules.md:2520-2526
 - [x] Personality Traits: `Entity.personality_traits` (name + ±value) list, range
       ±3, widened to ±6 by a Major Personality Flaw (one trait per flaw). Grog
-      Loyal / warrior Brave soft "should" deferred to the M5 guided flow.
+      Loyal / warrior Brave soft "should" deferred to the M6 guided flow.
       Source: Core Rules.md:2500-2503
 - [x] Reputations: `Entity.reputations` (score + content + type
       Local/Ecclesiastical/Hermetic), input only when a V/F grants one
@@ -300,7 +300,7 @@ creation number must be a data-driven `Effect`, so direct entry builds a correct
 character and the XP-bank accounting is right. Extend the `Effect` model +
 `validate_effect_refs` (`effective.rs`, `ruleset.rs`) and the
 XP-spent-vs-available computation (`validation.rs`). Seed one or two
-representative items per family; the full catalogue is data-only (M8).
+representative items per family; the full catalogue is wired in M5 (5a).
 - [x] XP-COST modifier — Affinity with (Ability) and Affinity with (Art): XP put
       into the target counts as 1½× at creation (modelled as a reduced charged
       cost, `ceil(table_xp·2/3)`), and the target may exceed the age/recommended
@@ -311,7 +311,7 @@ representative items per family; the full catalogue is data-only (M8).
       each adds a fixed XP pool spendable only on a defined Ability set
       (`restricted_ability_xp`, eligible by id OR category). The available-XP side
       is a bipartite max-flow over the general pool + restricted pools; leftover
-      restricted XP warns (`restricted_xp_unspent`). The long tail is M8 data.
+      restricted XP warns (`restricted_xp_unspent`). The long tail is wired in M5 (5a).
       Source: Core Rules.md:3711-3713, 5227-5229, 4806-4808
 - [x] Flat ART score bonus — Puissant Art (+3): the `art_bonus` effect (done in
       4a), alongside the existing Puissant Ability (+2). Source: Core Rules.md:4818-4820, 4814-4816
@@ -319,21 +319,109 @@ representative items per family; the full catalogue is data-only (M8).
       the Characteristics budget, stackable); deferred from M3d. Source: Core Rules.md:4103-4105
 - [x] STARTING-SCORE grant — `ability_score_grant` effect (fixed ability id, free
       floor, 0 XP): seeded Second Sight + Premonitions. Mystery-House grants reuse
-      it in 4b; full catalogue M8. Source: Core Rules.md:4888-4890, 4788-4790
+      it in 4b; full catalogue M5 (5a). Source: Core Rules.md:4888-4890, 4788-4790
 - [x] CAP composition: Great Characteristic's +5 ceiling already exists (M3d);
       the Affinity cap-exemption is carried implicitly so the age→cap (4e)
       composes with it when 4e lands
-- [ ] NOT modelled here (no creation-number effect; selectable but inert at
-      creation): Deficient Technique/Form (halve in-play totals only — Deficient
-      Technique stays in the seed as a valid Hermetic Flaw satisfying the magus
-      "≥1 Hermetic Flaw" requirement), Magical Focus, Method Caster, and study
-      Source-Quality bonuses (Apt Student, Book Learner, Free Study, Independent
-      Study, Secondary Insight). Source: Core Rules.md:5909-5915
+- [ ] Moved to **M5/5b** — the in-play-only effects (no creation-number change,
+      but modelled at full scope there): Deficient Technique/Form (halves in-play
+      totals — Deficient Technique stays in the seed as a valid Hermetic Flaw
+      satisfying the magus "≥1 Hermetic Flaw" requirement), Magical Focus, Method
+      Caster, and study Source-Quality bonuses (Apt Student, Book Learner, Free
+      Study, Independent Study, Secondary Insight). Source: Core Rules.md:5909-5915
 
-## Milestone 5 — Guided creation wizard
+## Milestone 5 — Full mechanical & data completeness (direct-entry gate)
+
+Scope: before the guided wizard, make **every** core-rules-conforming character
+fully enterable AND fully computable in direct entry — no mechanic, catalogue, or
+input field deferred past this point. M4 shipped only seed mechanics (~36 of 653
+V/F wired); M5 closes the long tail so the wizard (M6) merely orchestrates. Engine
+→ data → direct-entry slices (mirroring M1→M4); TDD + `RULES.md` provenance
+throughout. Reviewed by a Fable agent (P1–P9 folded in).
+
+Carve-out: the *guided* life-stage/aging derivation stays in M6, but every raw
+value it would produce — final scores, Decrepitude/aging points, Warping points,
+and the effects those carry — is directly enterable here.
+
+### 5a. V/F audit + creation-effect wiring
+- [ ] Classify **all** V/F as narrative / creation-effect / in-play-effect with
+      per-book `RULES.md` provenance; acceptance = no V/F unclassified. Personality,
+      Story, and most Social-Status items are narrative by design — never given
+      invented effects.
+- [ ] Wire the **creation-effect** subset: Supernatural-Ability starting scores,
+      fixed-subject Puissant/Affinity, XP-grant + XP-rate Virtues (Wealthy/Poor
+      20/10 xp/yr), Confidence, size/characteristic deltas, and all
+      reputation-granters (Famous, Hermetic Prestige, …). Reconcile the
+      `RULES.md:1133`↔`:871` disagreement on Hermetic Prestige against the file.
+
+### 5b. In-play-only V/F effects modeled at full scope
+- [ ] `Effect` variants + storage for Magical Focus, Method Caster, Deficient
+      Technique/Form, and study Source-Quality bonuses — no creation-number change,
+      but represented fully. Acceptance surface = the 5i casting/lab totals consume
+      them (the exhaustive `match` enforces wiring). Source: Core Rules.md:5909-5915
+
+### 5c. Elemental Magic — Art-XP redistribution
+- [ ] Model the creation-time Art-XP redistribution across the four elemental
+      Forms. Requires reconciling with the settled whole-bought-score storage model
+      (per-Art XP assignment vs derived leftover) — a design revision, not a routine
+      `Effect`. Source: Core Rules.md:3731-3737
+
+### 5d. Full core catalogues (abilities + spells)
+- [ ] Pull the full **78-ability** Core catalogue onto the shipped data (staged on
+      the `full-abilities` branch): re-add the dropped entries to
+      `rules/core/abilities.json` + `rules/i18n/{en,de}/abilities.json` and restore
+      the `78`/`21`/`50` counts in `tests/data_integrity.rs` and the `78` in
+      `crates/arm-app/tests/commands.rs`. Data-only widening.
+- [ ] Ship the **full core spell catalogue**; extend the `Spell` model with a
+      `ritual` flag + the ritual creation-legality rule (cited). Source: Core Rules
+      spell list.
+
+### 5e. Enchanted devices, familiar, talisman & Longevity entry
+- [ ] `Entity` storage + direct-entry UI for starting enchanted devices (spending
+      the item-level budget), the familiar (bond + Gold/Silver/Bronze cord scores,
+      which feed 5i lab/Soak/aging totals), talisman attunements, and a Longevity
+      Ritual/potion the character carries — a field (bonus + source), self-made or
+      provided by another magus. 5i computes a self-made ritual's bonus; the field
+      accepts an externally-provided one.
+
+### 5f. Per-spell mastery input
+- [ ] UI control to spend the mastery-XP pool on individual spells (storage, pool,
+      and floor already exist from M4).
+
+### 5g. Directly-enterable state, effects & identity fields
+- [ ] Every point-bearing state enterable **with the effects it carries**, not just
+      the count: Decrepitude/aging points + the resulting Characteristic reductions;
+      Warping points + Twilight scars (schema change). Guided derivation stays M6;
+      M5 lets the user type both directly, so an already-warped or already-aged
+      character is fully representable. Source: Core Rules aging/warping.
+- [ ] Identity/flavor fields: name, gender, birth year, Wizard's sigil, covenant
+      name, parens.
+
+### 5h. Equipment / weapons / armor / encumbrance
+- [ ] New `rules/core/equipment.json` weapons/armor table (per-row provenance) +
+      direct-entry input surface. Sequenced **before 5i** (feeds Soak/combat/
+      encumbrance). Source: Core Rules combat/equipment.
+
+### 5i. Derived totals computed in-engine (read-only)
+- [ ] In `arm-rules`, from cited source: **magic totals** (casting, penetration,
+      lab total, Longevity-ritual bonus — gated on the aura input), then **combat**
+      (Init/Atk/Def/Dam), **Soak**, **encumbrance**, Size-derived **wound-penalty
+      ranges**, and Decrepitude/Warping **score** from points. Consumes 5b.
+- [ ] A numeric **aura** input field (covenant auras arrive in M8).
+- [ ] Rendered in a **main-window read-out panel**; the M7 sheet window later
+      re-renders the same computed values (the "UI computes no mechanics" invariant
+      holds). Twilight-episode / >35-aging *rolls* are guided (M6) / out of app
+      scope; their results are enterable in 5g.
+
+### 5j. Provenance & full gate
+- [ ] `RULES.md` updated per book; full required gate (`cargo test --workspace`,
+      clippy, fmt, `npm run test:unit`/lint/format, and the authoritative
+      `cargo tauri build --no-bundle`).
+
+## Milestone 6 — Guided creation wizard
 
 Scope: wrap the full phase list for every character type in a guided flow,
-reusing the direct-entry components from M2–M4. All input surfaces already exist;
+reusing the direct-entry components from M2–M5. All input surfaces already exist;
 this milestone adds orchestration, gating, and the guided life-stage flows.
 
 - [ ] Wizard component driven by the character type's `creation_phases` list
@@ -366,13 +454,15 @@ this milestone adds orchestration, gating, and the guided life-stage flows.
 - [ ] Mythic companion wizard flow
 - [ ] Magus wizard flow
 
-## Milestone 6 — Character sheet window
+## Milestone 7 — Character sheet window
 
 Scope: an optional, read-only **second app window** that renders a formatted
 character sheet and recomputes live as the character is edited in the main
 window. Which calculated values appear is **driven by the character-type
-profile**, not hardcoded per type. This is the interactive in-app view; the
-static file export (PDF/Markdown) remains M9 and can reuse this layout.
+profile**, not hardcoded per type. The derived values themselves are computed in
+**M5** (`arm-rules`); this window only re-renders them. This is the interactive
+in-app view; the static file export (PDF/Markdown) remains M10 and can reuse this
+layout.
 
 - [ ] Second Tauri window (label `character-sheet`), created hidden
       (`visible: false`) and opened/closed on demand. A toggle control in the
@@ -397,7 +487,7 @@ static file export (PDF/Markdown) remains M9 and can reuse this layout.
       `is_magus`, permitted categories, `creation_phases`) — never an
       `if type == "magus"` ladder in the UI:
       - companion / mythic companion / magus: Personality Traits, Reputations,
-        Confidence (all land in M4/M5)
+        Confidence (all land in M4/M6)
       - magus only: Arts (score + effective), House + specialisation/free Virtue,
         Spells (Technique+Form, level), age→max-score cap
       - grog: minimal subset (Characteristics, Abilities, V/F)
@@ -413,7 +503,7 @@ static file export (PDF/Markdown) remains M9 and can reuse this layout.
 - [ ] Extend the tauri-driver e2e to open the window and assert it reflects an
       edit made in the main window (where feasible).
 
-## Milestone 7 — Covenants
+## Milestone 8 — Covenants
 
 - [ ] Boons & Hooks data (same PointItem structure, EntityKind::Covenant)
 - [ ] Covenant entity type profile
@@ -421,34 +511,27 @@ static file export (PDF/Markdown) remains M9 and can reuse this layout.
 - [ ] Covenant wizard flow
 - [ ] Covenant UI
 
-## Milestone 8 — Full data population
+## Milestone 9 — Full data population (descriptive text & supplements)
 
-- [ ] Complete V/F catalogue from ArM5 core book
-- [ ] Complete Abilities catalogue
-      — **staged on the `full-abilities` branch**: the full 78-ability Core Rules
-      catalogue (en + de descriptions, specialties, `requires_training` flags) is
-      already authored there. The engine, i18n schema, and UI on `main` already
-      support it; `main` currently ships only the 23-ability seed set. Pulling it
-      over is a data-only widening — re-add the dropped ability entries to
-      `rules/core/abilities.json` and `rules/i18n/{en,de}/abilities.json`, then
-      restore the `78`/`21`/`50` counts in `tests/data_integrity.rs` and the `78`
-      in `crates/arm-app/tests/commands.rs`.
-- [ ] Complete Arts text — all 15 Arts ship in M4; M8 adds their descriptions /
-      lab text (the mechanics are already complete)
-- [ ] Complete Houses detail — all 12 core Houses ship in M4; M8 adds the
+Mechanical completeness — the full V/F effect wiring + audit, the full ability +
+spell catalogues, and all creation-relevant and in-play V/F effects — lands in
+**M5**. M9 is now purely descriptive breadth and supplement content:
+
+- [ ] Complete Arts descriptions / lab text — the 15 Arts and their mechanics ship
+      in M4/M5; M9 adds their prose descriptions
+- [ ] Complete Houses detail — all 12 core Houses ship in M4; M9 adds the
       Mystery/Societas House detail and any supplement-only Houses
-- [ ] Complete V/F effect-mechanic catalogues — the effect families land in M4/4f
-      with seed items; M8 fills the long tails (the ~30 XP-grant Virtues, the
-      Supernatural-Ability starting-score Virtues) as data-only widening
+- [ ] Supplement V/F beyond the core catalogue (the core catalogue and its effect
+      wiring are M4/M5)
 - [ ] Complete Boons & Hooks
 - [ ] All data in en + de (+ additional languages as available)
 - [ ] Markdown source files for all rules content
 
-## Milestone 9 — Export & polish
+## Milestone 10 — Export & polish
 
-- [ ] Character sheet export (PDF and/or Markdown) — reuses the M6 character-sheet
+- [ ] Character sheet export (PDF and/or Markdown) — reuses the M7 character-sheet
       window layout/components, rendering the same sections to a static file.
-      PDF path may use the Scribus fillable template — see M10 /
+      PDF path may use the Scribus fillable template — see M11 /
       `docs/scribus-character-sheet.md`.
 - [ ] Covenant sheet export
 - [ ] Ruleset versioning & save migration
@@ -457,10 +540,10 @@ static file export (PDF/Markdown) remains M9 and can reuse this layout.
 - [ ] CI pipeline (cargo test, clippy, fmt, frontend lint, e2e)
 - [ ] Release packaging for Windows, macOS, Linux
 
-## Milestone 10 — Scribus fillable-PDF character sheet (bilingual export target)
+## Milestone 11 — Scribus fillable-PDF character sheet (bilingual export target)
 
-**Depends on: M5** (wizard complete). Reuses M6 sheet sections + engine derived
-values; realizes the M9 PDF-export item via a hand-maintained fillable template.
+**Depends on: M6** (wizard complete). Reuses M7 sheet sections + engine derived
+values; realizes the M10 PDF-export item via a hand-maintained fillable template.
 Full detail, field inventory, and quirks: **`docs/scribus-character-sheet.md`**.
 
 - [ ] Field-ID schema & map (DE `ANNAME` → English-ASCII ID → engine slug)
@@ -472,27 +555,26 @@ Full detail, field inventory, and quirks: **`docs/scribus-character-sheet.md`**.
 
 ---
 
-## Current focus: Milestone 4
+## Current focus: Milestone 5
 
-Milestones 0–3 complete, plus the effective-score layer (3d) pulled forward from
-M4. The Tauri app builds and launches, loads the ruleset (virtues/flaws,
-characteristics, abilities) from bundled resources, validates live, round-trips
-canonical saves, and passes a real-binary tauri-driver e2e. Characters carry
-point-buy Characteristics, whole bought Ability scores, and an `unspent_xp` bank,
-edited through direct-entry components; score-boosting Virtues (Puissant Ability,
-Great Characteristic) now show an effective score and gate `AbilityMin`/caps.
+Milestones 0–4 complete: the Tauri app builds and launches, loads the ruleset,
+validates live, round-trips canonical saves, and passes a real-binary tauri-driver
+e2e. Every one of the four character types is buildable in direct-validated /
+direct-unchecked mode — Characteristics, Abilities (whole score + `unspent_xp`
+bank), Arts, spells, Houses + specialisation/free-Virtue, Hermetic V/F, the seed
+V/F effect mechanics, the character-type selector, age + age→cap, Confidence,
+Personality Traits, and Reputations. But M4 shipped only *seed* mechanics: ~36 of
+653 V/F carry an `Effect`, and the full catalogues + derived totals were deferred.
 
-The plan was reordered so that **all input for all four character types is
-possible before the guided wizard is built**. M4 (renamed from "Guided creation
-wizard") now completes every input surface — Arts, spells, Houses + their
-specialisation/free-Virtue choice, Hermetic V/F, the full set of creation-relevant
-V/F effect mechanics (Affinity, restricted XP-grant pools, Improved
-Characteristics, starting-score grants, Puissant Art), the magus + mythic-companion
-profiles, a character-type selector, age + age→cap, Confidence, Personality Traits,
-and Reputations — all in direct-validated/direct-unchecked mode. The guided wizard
-moves to **M5**, where it wraps these surfaces and adds the guided life-stage flows
-(life-stage XP engine, Sample Childhood packages, magus apprenticeship XP, and the
-aging engine for characters over 35). Covenants remain M7.
+The plan was reordered again (per user directive): **before** the guided wizard,
+**everything** needed to enter AND compute any core-rules-conforming character must
+be complete — no deferrals. New **M5** (this focus) is that completeness gate: full
+V/F effect wiring + audit, in-play-only effects, Elemental Magic, the full ability
++ spell catalogues, enchanted-device/familiar/talisman/Longevity entry, per-spell
+mastery, directly-enterable state (Decrepitude/Warping points + their effects) and
+identity fields, equipment, and the derived combat/Soak/casting/lab totals. The
+guided wizard is now **M6** (it only orchestrates these surfaces + adds the guided
+life-stage/aging derivation); character-sheet window **M7**, Covenants **M8**, full
+descriptive data **M9**, export **M10**, Scribus **M11**.
 
-Next: M4/4a — the Arts engine (registry, Art-XP bank, `ArtMin`/`art`-domain
-resolution, Puissant Art) and its direct-entry component.
+Next: M5/5a — the V/F audit + creation-effect wiring across the full catalogue.
