@@ -465,6 +465,19 @@ pub enum Effect {
         /// Confidence Points added per selection.
         points: i8,
     },
+    /// Grants the listed Virtues/Flaws for free (budget-exempt), folded into the
+    /// entity's derived grants like a House grant. A fixed nested grant — e.g.
+    /// Templar Commander "grants the Temporal Influence Minor Virtue" and
+    /// "includes the effects of the Brother-Knight Virtue". Each id must resolve
+    /// to a point item. Only bought selections are scanned for this effect (one
+    /// level of nesting; a granted item's own `grants_selection` is not applied).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5113-5116 (Templar
+    /// Commander).
+    GrantsSelection {
+        /// The Virtue/Flaw ids granted for free.
+        items: std::collections::BTreeSet<Id>,
+    },
     /// Grants `amount` starting levels of enchanted devices (base 0, summed).
     /// Magic Items grants +25 (stackable), Redcap 50.
     ///

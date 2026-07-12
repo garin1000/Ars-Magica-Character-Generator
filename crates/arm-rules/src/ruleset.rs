@@ -1193,6 +1193,18 @@ impl Ruleset {
                     }
                     continue;
                 }
+                // Fixed nested grant: every granted id must resolve to a point
+                // item (a Virtue/Flaw), like a House grant's `item`.
+                Effect::GrantsSelection { items } => {
+                    for granted in items {
+                        if !self.point_items.contains_key(granted) {
+                            errors.push(format!(
+                                "{id}: effect 'grants_selection' references unknown item '{granted}'"
+                            ));
+                        }
+                    }
+                    continue;
+                }
                 // Fixed target: validate the directly-stored characteristic id
                 // resolves to one of the eight Characteristics.
                 Effect::CharacteristicScoreDelta { characteristic, .. } => {
