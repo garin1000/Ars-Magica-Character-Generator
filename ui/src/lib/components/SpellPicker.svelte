@@ -1,6 +1,15 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { artAbbreviation, artLabel, filterSpells, groupArtsByType, spellName } from '../derive';
+  import {
+    artAbbreviation,
+    artLabel,
+    effectiveSpellMastery,
+    filterSpells,
+    groupArtsByType,
+    maxAbilityScore,
+    spellMasteryXpSpent,
+    spellName,
+  } from '../derive';
   import type { Art, Spell } from '../types';
 
   // Technique/Form filters, built from the Art registry (same split ArtGrid uses).
@@ -44,6 +53,11 @@
   // Spell-Mastery: XP pool (Mastered Spells) + auto-mastery floor (Flawless Magic).
   const masteryXp = $derived(store.effective?.spell_mastery_xp ?? 0);
   const masteryFloor = $derived(store.effective?.spell_mastery_floor ?? 0);
+  // The Mastery Ability rises like an Ability, so it is priced from the Ability
+  // advancement table (data, not a hardcoded mechanic — same path as abilities).
+  const advancement = $derived(store.ruleset?.ruleset.advancement ?? []);
+  const masteryMax = $derived(maxAbilityScore(advancement));
+  const masteryUsed = $derived(spellMasteryXpSpent(advancement, store.entity.spells ?? []));
 
   function abbr(artId: string): string {
     return store.ruleset ? artAbbreviation(store.ruleset, artId) : '';
@@ -143,9 +157,14 @@
     </p>
 
     {#if masteryXp > 0 || masteryFloor > 0}
-      <p class="spell-mastery" data-testid="spell-mastery-info">
-        {#if masteryXp > 0}{store.t('spell-mastery-xp', {
-            xp: String(masteryXp),
+      <p
+        class="spell-mastery"
+        class:over={masteryUsed > masteryXp}
+        data-testid="spell-mastery-info"
+      >
+        {#if masteryXp > 0}{store.t('spell-mastery-pool', {
+            used: String(masteryUsed),
+            pool: String(masteryXp),
           })}{/if}{#if masteryXp > 0 && masteryFloor > 0}
           ·
         {/if}{#if masteryFloor > 0}{store.t('spell-mastery-floor', {
@@ -158,6 +177,41 @@
       {#each store.entity.spells ?? [] as chosen, i (`${chosen.spell}:${chosen.level ?? ''}:${i}`)}
         <li>
           <span class="item-name">{rowLabel(chosen.spell, chosen.level)}</span>
+          {#if masteryXp > 0 || masteryFloor > 0}
+            <span class="spinner" data-testid="spell-mastery-{chosen.spell}-{i}">
+              <span class="spinner-label">{store.t('spell-mastery-label')}</span>
+              <button
+                type="button"
+                class="icon-btn"
+                aria-label={store.t('spell-mastery-decrement')}
+                disabled={(chosen.mastery ?? 0) <= 0}
+                onclick={() => store.adjustSpellMasteryAt(i, -1, masteryMax)}
+                data-testid="spell-mastery-dec-{chosen.spell}-{i}"
+              >
+                −
+              </button>
+              <span class="spinner-value" data-testid="spell-mastery-score-{chosen.spell}-{i}">
+                {chosen.mastery ?? 0}
+              </span>
+              <button
+                type="button"
+                class="icon-btn"
+                aria-label={store.t('spell-mastery-increment')}
+                disabled={(chosen.mastery ?? 0) >= masteryMax}
+                onclick={() => store.adjustSpellMasteryAt(i, 1, masteryMax)}
+                data-testid="spell-mastery-inc-{chosen.spell}-{i}"
+              >
+                +
+              </button>
+              {#if effectiveSpellMastery(chosen.mastery, masteryFloor) !== (chosen.mastery ?? 0)}
+                <span class="eff-badge" data-testid="spell-mastery-eff-{chosen.spell}-{i}">
+                  {store.t('effective-score', {
+                    score: String(effectiveSpellMastery(chosen.mastery, masteryFloor)),
+                  })}
+                </span>
+              {/if}
+            </span>
+          {/if}
           <button
             type="button"
             class="icon-btn"
