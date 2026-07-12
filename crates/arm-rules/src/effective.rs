@@ -146,6 +146,7 @@ pub fn ability_bonus(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
@@ -266,6 +267,7 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
@@ -352,6 +354,7 @@ fn characteristic_limit_shift(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
@@ -521,6 +524,7 @@ pub(crate) fn ability_affinity(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
@@ -561,6 +565,7 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
+                | Effect::ItemLevelBudget { .. }
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
@@ -1030,6 +1035,24 @@ pub fn confidence(base_score: u8, base_points: u8, entity: &Entity, ruleset: &Ru
     }
     let clamp = |n: i32| u8::try_from(n.max(0)).unwrap_or(u8::MAX);
     (clamp(score), clamp(points))
+}
+
+/// The character's derived enchanted-device level budget: base 0 plus every
+/// [`Effect::ItemLevelBudget`] (Magic Items +25, Redcap 50), summed. Source:
+/// Core Rules.md:4347-4349, :4842-4846.
+pub fn item_level_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    let mut total = 0u32;
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::ItemLevelBudget { amount } = effect {
+                total += u32::from(*amount);
+            }
+        }
+    }
+    total
 }
 
 /// The character's derived True Faith Score: base 0 plus every
@@ -1756,6 +1779,12 @@ mod tests {
             "kind": "virtue", "magnitude": "major", "category": "general",
             "entity_kinds": ["character"],
             "effects": [{ "type": "true_faith_grant", "score": 1 }]
+          },
+          {
+            "id": "virtue.magic_items",
+            "kind": "virtue", "magnitude": "minor", "category": "general",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "item_level_budget", "amount": 25 }]
           }
         ]"#;
         let types = r#"[
@@ -1952,6 +1981,21 @@ mod tests {
             sel("virtue.improved_characteristics"),
         ]);
         assert_eq!(characteristic_points_granted(&e, &rs), 6);
+    }
+
+    #[test]
+    fn item_level_budget_sums_grants() {
+        // Magic Items grants +25 starting levels of enchanted devices, stackable
+        // (Core:4347-4349); Redcap 50 (Core:4842-4846).
+        let rs = xp_ruleset();
+        assert_eq!(item_level_budget(&xp_entity(vec![]), &rs), 0);
+        assert_eq!(
+            item_level_budget(
+                &xp_entity(vec![sel("virtue.magic_items"), sel("virtue.magic_items")]),
+                &rs
+            ),
+            50
+        );
     }
 
     #[test]

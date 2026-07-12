@@ -465,6 +465,15 @@ pub enum Effect {
         /// Confidence Points added per selection.
         points: i8,
     },
+    /// Grants `amount` starting levels of enchanted devices (base 0, summed).
+    /// Magic Items grants +25 (stackable), Redcap 50.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4347-4349 (Magic
+    /// Items), `:4842-4846` (Redcap).
+    ItemLevelBudget {
+        /// Levels of enchanted devices added.
+        amount: u16,
+    },
     /// Grants a derived True Faith Score (base 0, summed across grants). True
     /// Faith is a special score with its own rules, not a Supernatural Ability.
     /// The True Faith Virtue confers Score 1.
