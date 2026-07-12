@@ -1247,30 +1247,103 @@ pub fn true_faith(entity: &Entity, ruleset: &Ruleset) -> u8 {
     u8::try_from(score).unwrap_or(u8::MAX)
 }
 
-/// The character's derived Warping as `(score, points)`: base 0 each, plus every
-/// [`Effect::WarpingGrant`] (Warped by Magic → Score 1 + 5 Points), summed and
-/// clamped to `u8`. Derived, never stored. Source: Core Rules.md:7019-7021.
-pub fn warping(entity: &Entity, ruleset: &Ruleset) -> (u8, u8) {
-    let (mut score, mut points) = (0u32, 0u32);
+/// The Warping Points granted by [`Effect::WarpingGrant`] (Warped by Magic → 5),
+/// summed across selections and derived grants. The grant's declared *score* field
+/// is **not** read here — the Warping Score is derived by inverting the advancement
+/// curve over the point total (see [`warping_score`]), so the score is computed
+/// from points alone and the two can never disagree.
+fn warping_grant_points(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    let mut points = 0u32;
     for selection in selections_for_effects(entity, ruleset).iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
         for effect in &item.effects {
             if let Effect::WarpingGrant {
-                score: s,
+                score: _,
                 points: p,
             } = effect
             {
-                score += u32::from(*s);
                 points += u32::from(*p);
             }
         }
     }
+    points
+}
+
+/// The character's total Warping Points: the stored [`Entity::warping_points`] plus
+/// every grant-derived point ([`warping_grant_points`]). The single point total the
+/// Warping Score is derived from, so stored and granted points can never be
+/// double-counted or diverge. Source: Core Rules.md:16464-16475.
+pub fn warping_points_total(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    entity
+        .warping_points
+        .saturating_add(warping_grant_points(entity, ruleset))
+}
+
+/// The character's derived Warping Score: [`warping_points_total`] inverted through
+/// the (Ability) advancement curve (Warping rises "like an Ability": cumulative
+/// 5/15/30/50/75, so 15 points → Warping Score 2). Source: Core Rules.md:16464-16475.
+pub fn warping_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
+    ruleset
+        .advancement
+        .score_for_xp(warping_points_total(entity, ruleset))
+}
+
+/// The character's derived Warping as `(score, points)` — the unified readout: the
+/// score from [`warping_score`], the points from [`warping_points_total`]. Derived,
+/// never stored on the entity as a resolved value. Source: Core Rules.md:7019-7021,
+/// :16464-16475.
+pub fn warping(entity: &Entity, ruleset: &Ruleset) -> (u8, u32) {
     (
-        u8::try_from(score).unwrap_or(u8::MAX),
-        u8::try_from(points).unwrap_or(u8::MAX),
+        warping_score(entity, ruleset),
+        warping_points_total(entity, ruleset),
     )
+}
+
+/// The character's total accrued aging points across every Characteristic — the
+/// character's Decrepitude XP (every aging point is 1 XP toward Decrepitude).
+/// Source: Core Rules.md:16617.
+pub fn decrepitude_points_total(entity: &Entity) -> u32 {
+    entity.aging_points.values().map(|p| u32::from(*p)).sum()
+}
+
+/// The character's derived Decrepitude Score: [`decrepitude_points_total`] inverted
+/// through the (Ability) advancement curve (Decrepitude rises "like an Ability",
+/// 5×new score, so 17 aging points → Decrepitude 2). Source: Core Rules.md:16617.
+pub fn decrepitude_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
+    ruleset
+        .advancement
+        .score_for_xp(decrepitude_points_total(entity))
+}
+
+/// The effective value of `characteristic` after aging: the bought score minus the
+/// completed aging/Decrepitude drops in [`Entity::aging_reductions`], floored at the
+/// rules effective minimum (−5). This is what DERIVED / play stats consume; it is
+/// deliberately **not** what creation-legality reads (the point-buy budget check in
+/// `validation.rs` reads the un-aged bought score from `entity.characteristics`), so
+/// entering an already-aged character cannot retroactively make its point-buy
+/// illegal. `derived.rs` (slice 5i) will consume this. Source: Core Rules.md:16579.
+pub fn effective_characteristic_after_aging(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    characteristic: Characteristic,
+) -> i32 {
+    let bought = entity
+        .characteristics
+        .get(&characteristic)
+        .copied()
+        .map_or(0, i32::from);
+    let reduction = entity
+        .aging_reductions
+        .get(&characteristic)
+        .copied()
+        .map_or(0, i32::from);
+    let floor = ruleset
+        .characteristic_rules()
+        .and_then(|r| r.effective_min_score())
+        .map_or(i32::MIN, i32::from);
+    (bought - reduction).max(floor)
 }
 
 /// The Reputation grants a character holds (`(kind, score)` per
@@ -2291,13 +2364,75 @@ mod tests {
 
     #[test]
     fn warping_grant_sums_score_and_points() {
-        // Warped by Magic grants Warping Score 1 + 5 Warping Points; both are
-        // derived (base 0), summed across grants. Core:7019-7021.
+        // Warped by Magic grants 5 Warping Points; the score is DERIVED by
+        // inverting the advancement curve (5 points → Warping Score 1), not read
+        // from the grant's declared score. Core:7019-7021, :16464-16475.
         let rs = xp_ruleset();
         assert_eq!(warping(&xp_entity(vec![]), &rs), (0, 0));
         assert_eq!(
             warping(&xp_entity(vec![sel("flaw.warped_by_magic")]), &rs),
             (1, 5)
+        );
+    }
+
+    /// `warping_score`/`warping_points_total` UNIFY stored + grant-derived points
+    /// through one path, then invert the advancement curve. Stored 10 + Warped by
+    /// Magic's 5 = 15 points → Warping Score 2 (Core:16464-16475: cumulative
+    /// 5/15/30/50/75).
+    #[test]
+    fn warping_sums_stored_and_granted_points_then_inverts() {
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("flaw.warped_by_magic")]); // +5 points
+        e.warping_points = 10; // stored
+        assert_eq!(warping_points_total(&e, &rs), 15);
+        assert_eq!(warping_score(&e, &rs), 2);
+        // `warping()` reports the unified (score, total points).
+        assert_eq!(warping(&e, &rs), (2, 15));
+
+        // Stored points alone also invert (no grant).
+        let mut only_stored = xp_entity(vec![]);
+        only_stored.warping_points = 15;
+        assert_eq!(warping_score(&only_stored, &rs), 2);
+    }
+
+    /// Decrepitude XP is the sum of aging points across every Characteristic,
+    /// inverted through the (Ability) advancement curve: 17 points → Decrepitude 2
+    /// (15 ≤ 17 < 30). Core:16617.
+    #[test]
+    fn decrepitude_score_sums_aging_points_and_inverts() {
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![]);
+        assert_eq!(decrepitude_score(&e, &rs), 0);
+        e.aging_points.insert(Characteristic::Str, 10);
+        e.aging_points.insert(Characteristic::Qik, 7);
+        assert_eq!(decrepitude_points_total(&e), 17);
+        assert_eq!(decrepitude_score(&e, &rs), 2);
+    }
+
+    /// Aging reductions LOWER the effective Characteristic that derived/play stats
+    /// use, floored at the rules minimum, but the bought score creation-legality
+    /// reads is untouched.
+    #[test]
+    fn aging_reductions_lower_derived_but_not_creation() {
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![]);
+        e.characteristics.insert(Characteristic::Str, 3);
+        e.aging_reductions.insert(Characteristic::Str, 2);
+        // Derived (aged-down) value is bought − reduction.
+        assert_eq!(
+            effective_characteristic_after_aging(&e, &rs, Characteristic::Str),
+            1
+        );
+        // Creation-legality still reads the un-aged bought score.
+        assert_eq!(
+            e.characteristics.get(&Characteristic::Str).copied(),
+            Some(3)
+        );
+        // The floor clamps at the rules effective minimum (−5), never below.
+        e.aging_reductions.insert(Characteristic::Str, 20);
+        assert_eq!(
+            effective_characteristic_after_aging(&e, &rs, Characteristic::Str),
+            -5
         );
     }
 

@@ -142,8 +142,28 @@ warping-label = Verzerrung
 warping-readout = Wert { $score }, { $points } Punkte
 true-faith-label = Wahrer Glaube
 true-faith-readout = Wert { $score }
+decrepitude-label = Gebrechlichkeit
+decrepitude-readout = Wert { $score }
 item-levels-label = Zauberartefakte
 item-levels-readout = { $levels } Stufen
+# Identitäts-/Hintergrundfelder (Freitext, keine mechanische Wirkung).
+identity-label = Identität
+identity-name = Name
+identity-gender = Geschlecht
+identity-birth-year = Geburtsjahr
+identity-sigil = Signum
+identity-covenant = Bund
+identity-parens = Parens
+# Direkt eingegebener gealterter / verzerrter Zustand. Die angezeigten Werte für
+# Gebrechlichkeit und Verzerrung berechnet die Engine aus diesen Punkten.
+aging-label = Alterung
+aging-points-heading = Alterungspunkte pro Eigenschaft
+aging-reductions-heading = Eigenschaftsminderungen
+warping-points-label = Verzerrungspunkte
+twilight-scars-label = Zwielichtnarben
+twilight-scar-placeholder = Beschreibe die Narbe
+twilight-scar-add = Zwielichtnarbe hinzufügen
+twilight-scars-empty = Noch keine Zwielichtnarben.
 personality-label = Persönlichkeitsmerkmale
 personality-name-placeholder = Merkmal
 personality-add = Merkmal hinzufügen
@@ -319,6 +339,8 @@ issue-supernatural_ability_requires_virtue = { $ability } ist eine übernatürli
 issue-personality_trait_out_of_range = Persönlichkeitsmerkmal { $name } ({ $value }) liegt außerhalb des zulässigen Bereichs (±{ $max }).
 issue-reputation_not_granted = Ein Ruf ({ $kind }, { $content }) benötigt eine Tugend oder einen Fehler, der ihn verleiht.
 issue-over_item_level = Zauberartefakte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
+issue-excessive_aging_reduction = Alterungsminderungen für { $characteristic } ({ $reduction }) würden den Wert unter das Minimum ({ $min }) senken.
+issue-aging_points_force_drop = { $characteristic } hat { $points } Alterungspunkte, mehr als der Wert ({ $score }) — eine Wertminderung steht an.
 
 # AppError-Arten der Tauri-Befehle.
 error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.

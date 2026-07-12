@@ -755,6 +755,66 @@ precedent as `SpellSelection.mastery`'s 7 → 8 bump). Nothing is derived here
   `display_matches_serde_scalar_for_every_enum`); the UI renders every enum through
   a Fluent key (`longevity-source-{self_made,external}`), never the raw slug.
 
+#### M5/5g — aged / warped state, effects & identity Entity storage
+Direct-entry storage (plus the derived scores computed from points) for an
+already-aged / already-warped character, and free-text identity/flavor fields. All
+new `Entity` fields are additive `serde(default, skip_serializing_if)` — no
+`SCHEMA_VERSION` bump (still 9); a v8 (pre-5e) **and** a v9 (5e) save both load
+unchanged. Aging *rolls* stay in M6; M5 only makes the raw state + effects
+enterable and computes the scores from points.
+
+- **Aging points** — `Entity.aging_points: BTreeMap<Characteristic, u8>`: accrued
+  aging points *per Characteristic* (the sheet prints these). Source:
+  `Ars Magica - Definitive Edition (Core Rules).md:16579`.
+- **Aging reductions** — `Entity.aging_reductions: BTreeMap<Characteristic, u8>`:
+  the completed Characteristic drops from aging / Decrepitude. Source: `:16579`.
+- **Warping points** — `Entity.warping_points: u32`: accrued Warping Points.
+- **Twilight scars** — `Entity.twilight_scars: Vec<TwilightScar { description }>`
+  (free-text; `TwilightScar` derives `Ord`, so `Entity::normalize()` sorts them for
+  zero-noise diffs). Source: `:9731`, `:9743`.
+- **Identity/flavor** — `name`, `gender`, `sigil`, `covenant_name`, `parens`
+  (`String`, skip-if-empty) and `birth_year: Option<i32>`. No mechanical effect.
+
+**Derived-score formulas** (in `effective.rs`; slice 5i's `derived.rs` re-exports /
+consumes them). Both invert the **Ability** advancement table via the new
+`AdvancementTable::score_for_xp(xp)` (the highest score whose cumulative `total_xp
+≤ xp`) — the ×5 curve is never hand-rolled:
+
+- **Decrepitude** — `decrepitude_score(entity, ruleset) = advancement.score_for_xp(
+  Σ aging_points)`. Every aging point is 1 XP toward Decrepitude, which rises like
+  an Ability (5×new score): 17 aging points → 15 ≤ 17 < 30 → **Decrepitude 2**.
+  Source: `:16617`.
+- **Warping (unified)** — `warping_points_total(entity, ruleset) =
+  entity.warping_points + Σ WarpingGrant.points`, then `warping_score =
+  advancement.score_for_xp(points_total)` (cumulative 5/15/30/50/75: 15 points →
+  **Warping Score 2**). The two warping sources are routed through **one** function:
+  `warping()` now returns `(warping_score, warping_points_total)`, and the
+  `WarpingGrant.score` field is **ignored** for the derived score (it is asserted
+  consistent — Warped by Magic's declared Score 1 equals `score_for_xp(5)`). Source:
+  `:16464-16475`; grant at `:7019-7021`.
+
+**Aging lowers derived, not creation.** `effective_characteristic_after_aging(entity,
+ruleset, char) = bought − reduction`, floored at the rules effective minimum (−5).
+This is what DERIVED / play stats consume (5i); creation-legality validators keep
+reading the **un-aged bought score** from `entity.characteristics`, so entering an
+aged-down character can never retroactively make its point-buy illegal. Source:
+`:16579`.
+
+**Validation (advisory, single path).** `validation.rs::validate_aging` emits two
+**warnings** (never blocking): `excessive_aging_reduction` (a Characteristic's
+reductions would drop it below the −5 floor) and `aging_points_force_drop` (a
+Characteristic's accrued points exceed the magnitude of its aged-down score, which
+per `:16579` should already have forced a drop — kept non-blocking because a
+character may be entered mid-accrual). Fluent keys
+`issue-{excessive_aging_reduction,aging_points_force_drop}` (en/de).
+
+App/UI: `EffectiveScores` gains `decrepitude_score: u8` and widens `warping_points`
+to `u32`; the Details tab (`CharacterDetails.svelte`) enters identity fields, aging
+points + reductions per Characteristic, Warping Points, and twilight scars, and
+shows the engine-computed Decrepitude / Warping **scores** (never recomputed in JS).
+Fluent keys en/de: identity + aging block (`identity-*`, `aging-*`,
+`warping-points-label`, `twilight-*`, `decrepitude-{label,readout}`).
+
 #### True Faith — special derived score (`true_faith_grant`)
 > "You have a True Faith score of 1 and can gain more."
 

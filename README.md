@@ -107,7 +107,13 @@ display badge. Virtues with experience effects are modelled too: Affinity
 eligible Abilities (allocated by a max-flow solve so overlapping pools resolve
 correctly), Improved Characteristics raises the Characteristic-buy budget, and
 starting-score Virtues (Second Sight, Premonitions) confer their Ability at a
-free floor. Next comes full mechanical completeness (the remaining V/F effects,
+free floor. The Details tab captures identity/flavor fields (name, gender, birth
+year, Wizard's sigil, covenant, parens) and an already-aged / already-warped
+character's raw state — aging points and completed Characteristic reductions,
+Warping Points, and free-text Twilight Scars — from which the engine derives the
+Decrepitude and Warping scores (aging reductions lower derived/play stats but never
+the point-buy the creation checks read). Next comes full mechanical completeness
+(the remaining V/F effects,
 the full ability + spell catalogues, and derived combat/casting/lab totals), so
 any core-rules character is fully enterable and computable in direct entry; the
 guided creation wizard with its life-stage XP flow follows — see
