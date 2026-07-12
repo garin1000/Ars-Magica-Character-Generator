@@ -1,6 +1,6 @@
 # Scribus fillable-PDF character sheet
 
-Reference detail for **PLAN.md Milestone 10**. Tracks the work to translate,
+Reference detail for **PLAN.md Milestone 11**. Tracks the work to translate,
 extend, audit, and integrate the existing Scribus character sheet as a bilingual,
 auto-fillable PDF export target for arm-char-gen.
 
@@ -59,7 +59,7 @@ Combat fields follow the same style (e.g. attack total = Qik + Skill + WeaponAtk
 5. **Bilingual label skins.** Translate visible `ITEXT` + tooltips. EN follows the
    English source of truth; DE follows the German translation tables
    (`rules/source/de/translation-tables/`).
-6. **Export integration (ties to M9).** arm-char-gen emits FDF/XFDF (or a filled
+6. **Export integration (ties to M10).** arm-char-gen emits FDF/XFDF (or a filled
    PDF) keyed by the canonical English field IDs, mapping engine output → field
    IDs via the schema in step 1.
 

@@ -104,8 +104,10 @@ display badge. Virtues with experience effects are modelled too: Affinity
 eligible Abilities (allocated by a max-flow solve so overlapping pools resolve
 correctly), Improved Characteristics raises the Characteristic-buy budget, and
 starting-score Virtues (Second Sight, Premonitions) confer their Ability at a
-free floor. The guided creation wizard (with the life-stage XP flow), Houses,
-spells, and full data population are the next milestones — see
+free floor. Next comes full mechanical completeness (the remaining V/F effects,
+the full ability + spell catalogues, and derived combat/casting/lab totals), so
+any core-rules character is fully enterable and computable in direct entry; the
+guided creation wizard with its life-stage XP flow follows — see
 [PLAN.md](PLAN.md) for the milestone breakdown.
 
 ## Getting started

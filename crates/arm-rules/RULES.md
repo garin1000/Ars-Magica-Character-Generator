@@ -218,7 +218,7 @@ Landed for `magus` in M4/4b (Houses; see the Houses section): the `≤1 Major
 Hermetic Virtue` cap (`:2857`) via `virtue_category_caps`, the free Minor House
 Virtue (`:2859`) via the derived-grant model, and the "≥1 Hermetic Flaw"
 guideline (`:2860`) via the `missing_hermetic_flaw` warning. The Mythic Companion's free Minor status
-Virtue (`:2638`, raising the balanced max from 20 to 21) is M8 catalogue data;
+Virtue (`:2638`, raising the balanced max from 20 to 21) is M5 catalogue data;
 the `virtue_points: 20` ceiling here is the balanced maximum without it.
 
 #### Virtue/Flaw funding rate — `virtue_points_per_flaw_point`
@@ -283,7 +283,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   a character stores whole bought scores plus an `xp_pool` total (`types.rs`).
   This pool is **shared with Arts** (see the Arts section): the combined Ability +
   Art cost may not exceed it — `validate_xp_pool` emits `not_enough_xp` otherwise
-  (an error in Advisory/Enforced; the M4 wizard blocks the spend up front).
+  (an error in Advisory/Enforced; the M6 wizard blocks the spend up front).
   Leftover pool is the character's banked XP.
 - Engine integrity check (not a sourced rule): a non-zero ability score with no
   row in the advancement table (`xp_for_score` → `None`) is off-table and
@@ -751,7 +751,7 @@ effect stores the ability id directly (`ability`), not a selection parameter.
 
 #### Deferred — milestone assignments
 The plan was reordered so all input for all character types lands in M4 (direct
-entry) before the guided wizard in M5. Accordingly:
+entry) before the guided wizard in M6. Accordingly:
 
 - **M4/4a (Arts):** the Art registry, `ArtMin` evaluation, and registry-
   backed `ParameterDomain::Art` resolution (replacing the `true` stub).
@@ -766,13 +766,13 @@ entry) before the guided wizard in M5. Accordingly:
   modifier), restricted XP-grant pools (Educated/Warrior/Privileged Upbringing),
   Improved Characteristics (+3 point-buy pool), and `ability_score_grant`
   starting-score effects. See the effect-layer subsections above.
-- **M5 (guided wizard):** the life-stage XP acquisition (early childhood 75+45 xp
+- **M6 (guided wizard):** the life-stage XP acquisition (early childhood 75+45 xp
   `:2378`; later life 15/20/10 xp/yr `:2390-2394`; age→max-score cap
   `:2368-2374`), the Sample Childhood packages (`:2380-2388`), the magus
   apprenticeship/post-apprenticeship Art-XP flow (`:2433-2471`), and the aging
   engine for characters over 35 (`:16563-16640`). The age→max-score *cap* itself
   is enforced as direct-entry validation in M4/4e; only the XP *acquisition* and
-  aging *rolls* are M5.
+  aging *rolls* are M6.
 
 ### Houses (magus-only)
 
@@ -945,12 +945,13 @@ so the check reduces exactly to the base budget.
   `ability.guile`) — an approximation matching only the seeded default target.
 - Spirit Votary's open "1 Major OR 3 Minor Supernatural" requirement is left
   **advisory** (unenforced) for M4 — a candidate for a future "minimum category
-  points" rule (M8).
+  points" rule (M5).
 
-#### New V/F & Ability definitions (structural; full in-play effects M8)
+#### New V/F & Ability definitions (structural; core effects M5, supplement effects M9)
 Per CLAUDE.md each is sourced from the authoritative Markdown by book. Only the
 *structural* item (kind/magnitude/category) is seeded now; the full supernatural
-effects (Infernal Might, Divine Might, immunity target, etc.) are M8.
+effects (Infernal Might, Divine Might, etc.) are M9 (supplement books); the core
+in-play details (e.g. the Greater Immunity target) are M5/5b.
 
 | Item | Kind | Source |
 |------|------|--------|
@@ -982,7 +983,7 @@ Reused existing items: `virtue.great_characteristic` (Great Sta/Str),
 `virtue.puissant_ability` (+ `ability.guile`). **Greater Immunity** is seeded
 without a parameter: the `ParamType` model is ref-domain-only and there is no
 "hazard" registry, so the specific "Disease" target is an in-play/sheet detail
-(M8), and the Nephilim requirement matches it by ref alone.
+(M5/5b), and the Nephilim requirement matches it by ref alone.
 
 ---
 
@@ -1052,7 +1053,7 @@ the apprenticeship grant, each via *two* `Effect`s
 (`effective::xp_allocation`'s `general_pool`). Both are ref-free effects
 (`validate_effect_refs`). Seeded spells (14, spread across Creo/Rego × several
 Forms, incl. one requisite spell and two General spells) each cite their Core
-Rules line range in `spells.json`; the full catalogue stays M8. German spell
+Rules line range in `spells.json`; the full catalogue lands in M5 (5d). German spell
 names follow `rules/source/de/translation-tables/zauber-nach-form.md`; the two
 Parens follow `tugenden-fehler.md` (Skilled → *Erfahrener Parens*; Weak →
 *Schwacher Parens*, the Latin *Parens* kept per the Latin-term convention).
@@ -1117,7 +1118,7 @@ General) → `confidence_bonus {score:1, points:2}` (raising the default to 2/5)
 
 Each trait `|value| ≤ 3`; up to one trait per selected Major Personality Flaw
 (`category == personality`, `magnitude == major`) may reach ±6; `|value| > 6`
-never. The grog-Loyal / warrior-Brave "should" is guided (M5), not enforced here.
+never. The grog-Loyal / warrior-Brave "should" is guided (M6), not enforced here.
 
 **Reputations** (`Entity.reputations`, `ReputationType` = Local / Ecclesiastical /
 Hermetic, `:1091-1101`):
@@ -1130,7 +1131,8 @@ Hermetic, `:1091-1101`):
 (`reputation_not_granted`). Seeded granters: **Infamous** (`:6310-6312`, Minor
 General, `grants_reputation {local, 4}`) and **Black Sheep** (`:5703-5705`, Major
 Story, `{local, 2}`). Only Local granters exist in Core; Hermetic/Ecclesiastical
-granters (e.g. Hermetic Prestige, not in the Core source) are M8.
+granters (Hermetic Prestige is at Core `:4071-4073` per the House-V/F table above;
+the "not in Core source" claim here is to be reconciled in M5/5a) are M5 (5a).
 
 ---
 
