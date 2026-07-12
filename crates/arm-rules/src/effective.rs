@@ -175,6 +175,7 @@ pub fn ability_bonus(
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
+                | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. } => {}
             }
         }
@@ -299,6 +300,7 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
+                | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. } => {}
             }
         }
@@ -389,6 +391,7 @@ fn characteristic_limit_shift(
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
+                | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. } => {}
             }
         }
@@ -542,6 +545,13 @@ pub(crate) fn ability_affinity(
                     };
                     matches.then_some((*counts_as_num, *counts_as_den))
                 }
+                // A group Affinity (Linguist) covers a fixed set of ability ids,
+                // any instance — so it matches by id regardless of `parameter`.
+                Effect::GroupAffinityCost {
+                    abilities,
+                    counts_as_num,
+                    counts_as_den,
+                } if abilities.contains(ability) => Some((*counts_as_num, *counts_as_den)),
                 // Not an Affinity for this ability instance; no reduction here.
                 Effect::AffinityAbilityCost { .. }
                 | Effect::AbilityBonus { .. }
@@ -562,6 +572,7 @@ pub(crate) fn ability_affinity(
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
+                | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. } => None,
             })
     });
@@ -606,6 +617,7 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
+                | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. } => None,
             })
     });
@@ -1883,6 +1895,12 @@ mod tests {
             "kind": "virtue", "magnitude": "major", "category": "hermetic",
             "entity_kinds": ["character"],
             "effects": [{ "type": "grants_spell_mastery", "score": 1 }]
+          },
+          {
+            "id": "virtue.linguist",
+            "kind": "virtue", "magnitude": "minor", "category": "general",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "group_affinity_cost", "abilities": ["ability.living_language"], "counts_as_num": 5, "counts_as_den": 4 }]
           }
         ]"#;
         let types = r#"[
@@ -1907,6 +1925,7 @@ mod tests {
             { "id": "ability.artes_liberales", "category": "academic" },
             { "id": "ability.single_weapon", "category": "martial" },
             { "id": "ability.awareness", "category": "general" },
+            { "id": "ability.living_language", "category": "general", "parameter": "language" },
             { "id": "ability.second_sight", "category": "supernatural", "requires_training": true }
           ]
         }"#;
@@ -2079,6 +2098,28 @@ mod tests {
             sel("virtue.improved_characteristics"),
         ]);
         assert_eq!(characteristic_points_granted(&e, &rs), 6);
+    }
+
+    #[test]
+    fn linguist_group_affinity_applies_to_every_language_instance() {
+        // Linguist gives a 5/4 Affinity to any Language, matched by id for every
+        // instance (Core:4315-4317), unlike a param-chosen single-target Affinity.
+        let rs = xp_ruleset();
+        let e = xp_entity(vec![sel("virtue.linguist")]);
+        let lang = Id::new("ability.living_language");
+        assert_eq!(
+            ability_affinity(&e, &rs, &lang, Some("German")),
+            Some((5, 4))
+        );
+        assert_eq!(
+            ability_affinity(&e, &rs, &lang, Some("Gaelic")),
+            Some((5, 4))
+        );
+        // A non-language ability is unaffected.
+        assert_eq!(
+            ability_affinity(&e, &rs, &Id::new("ability.awareness"), None),
+            None
+        );
     }
 
     #[test]

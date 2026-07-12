@@ -31,6 +31,12 @@ export type Effect =
   | { type: 'affinity_ability_cost'; param: string; counts_as_num: number; counts_as_den: number }
   | { type: 'affinity_art_cost'; param: string; counts_as_num: number; counts_as_den: number }
   | { type: 'restricted_ability_xp'; amount: number; abilities?: string[]; categories?: string[] }
+  | {
+      type: 'group_affinity_cost';
+      abilities: string[];
+      counts_as_num: number;
+      counts_as_den: number;
+    }
   | { type: 'characteristic_points'; amount: number }
   | { type: 'ability_score_grant'; ability: string; amount: number }
   | { type: 'spell_levels'; amount: number }

@@ -1193,6 +1193,17 @@ impl Ruleset {
                     }
                     continue;
                 }
+                // Fixed group of abilities the Affinity covers (Linguist).
+                Effect::GroupAffinityCost { abilities, .. } => {
+                    for ability in abilities {
+                        if !self.abilities.contains_key(ability) {
+                            errors.push(format!(
+                                "{id}: effect 'group_affinity_cost' references unknown ability '{ability}'"
+                            ));
+                        }
+                    }
+                    continue;
+                }
                 // Fixed nested grant: every granted id must resolve to a point
                 // item (a Virtue/Flaw), like a House grant's `item`.
                 Effect::GrantsSelection { items } => {

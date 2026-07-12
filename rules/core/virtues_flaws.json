@@ -4140,6 +4140,7 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "group_affinity_cost", "abilities": ["ability.dead_language", "ability.living_language"], "counts_as_num": 5, "counts_as_den": 4 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4315, 4318] }
   },
   {
