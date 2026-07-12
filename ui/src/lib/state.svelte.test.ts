@@ -29,6 +29,7 @@ function item(overrides: Partial<PointItem> & Pick<PointItem, 'id'>): PointItem 
     kind: 'virtue',
     magnitude: 'minor',
     category: 'general',
+    classification: 'narrative',
     entity_kinds: ['character'],
     ...overrides,
   };

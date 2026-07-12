@@ -1276,6 +1276,7 @@ mod tests {
           {
             "id": "virtue.the_gift",
             "kind": "virtue",
+            "classification": "narrative",
             "magnitude": "free",
             "category": "special",
             "entity_kinds": ["character"]
@@ -1283,6 +1284,7 @@ mod tests {
           {
             "id": "virtue.puissant_ability",
             "kind": "virtue",
+            "classification": "narrative",
             "magnitude": "minor",
             "category": "general",
             "entity_kinds": ["character"],
@@ -1292,6 +1294,7 @@ mod tests {
           {
             "id": "virtue.great_characteristic",
             "kind": "virtue",
+            "classification": "narrative",
             "magnitude": "minor",
             "category": "general",
             "entity_kinds": ["character"],
@@ -1302,6 +1305,7 @@ mod tests {
           {
             "id": "flaw.poor_characteristic",
             "kind": "flaw",
+            "classification": "narrative",
             "magnitude": "minor",
             "category": "general",
             "entity_kinds": ["character"],
@@ -1312,6 +1316,7 @@ mod tests {
           {
             "id": "virtue.puissant_art",
             "kind": "virtue",
+            "classification": "narrative",
             "magnitude": "minor",
             "category": "general",
             "entity_kinds": ["character"],
@@ -1321,6 +1326,7 @@ mod tests {
           {
             "id": "virtue.skilled_parens",
             "kind": "virtue",
+            "classification": "narrative",
             "magnitude": "minor",
             "category": "general",
             "entity_kinds": ["character"],
@@ -1332,6 +1338,7 @@ mod tests {
           {
             "id": "flaw.weak_parens",
             "kind": "flaw",
+            "classification": "narrative",
             "magnitude": "minor",
             "category": "general",
             "entity_kinds": ["character"],
@@ -1787,62 +1794,62 @@ mod tests {
         let items = r#"[
           {
             "id": "virtue.the_gift",
-            "kind": "virtue", "magnitude": "free", "category": "special",
+            "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special",
             "entity_kinds": ["character"]
           },
           {
             "id": "virtue.affinity_ability",
-            "kind": "virtue", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
             "entity_kinds": ["character"],
             "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
             "effects": [{ "type": "affinity_ability_cost", "param": "ability", "counts_as_num": 3, "counts_as_den": 2 }]
           },
           {
             "id": "virtue.affinity_art",
-            "kind": "virtue", "magnitude": "minor", "category": "hermetic",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "hermetic",
             "entity_kinds": ["character"],
             "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
             "effects": [{ "type": "affinity_art_cost", "param": "art", "counts_as_num": 3, "counts_as_den": 2 }]
           },
           {
             "id": "virtue.educated",
-            "kind": "virtue", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
             "entity_kinds": ["character"],
             "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.latin", "ability.artes_liberales"] }]
           },
           {
             "id": "virtue.warrior",
-            "kind": "virtue", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
             "entity_kinds": ["character"],
             "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }]
           },
           {
             "id": "virtue.privileged_upbringing",
-            "kind": "virtue", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
             "entity_kinds": ["character"],
             "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["general", "academic", "martial"] }]
           },
           {
             "id": "virtue.improved_characteristics",
-            "kind": "virtue", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
             "entity_kinds": ["character"],
             "effects": [{ "type": "characteristic_points", "amount": 3 }]
           },
           {
             "id": "flaw.weak_characteristics",
-            "kind": "flaw", "magnitude": "minor", "category": "general",
+            "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general",
             "entity_kinds": ["character"],
             "effects": [{ "type": "characteristic_points", "amount": -3 }]
           },
           {
             "id": "virtue.second_sight",
-            "kind": "virtue", "magnitude": "minor", "category": "supernatural",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "supernatural",
             "entity_kinds": ["character"],
             "effects": [{ "type": "ability_score_grant", "ability": "ability.second_sight", "amount": 1 }]
           },
           {
             "id": "virtue.giant_blood",
-            "kind": "virtue", "magnitude": "major", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "general",
             "entity_kinds": ["character"],
             "effects": [
               { "type": "size_delta", "amount": 2 },
@@ -1852,7 +1859,7 @@ mod tests {
           },
           {
             "id": "flaw.dwarf",
-            "kind": "flaw", "magnitude": "major", "category": "general",
+            "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "general",
             "entity_kinds": ["character"],
             "effects": [
               { "type": "size_delta", "amount": -2 },
@@ -1862,43 +1869,43 @@ mod tests {
           },
           {
             "id": "flaw.warped_by_magic",
-            "kind": "flaw", "magnitude": "minor", "category": "supernatural",
+            "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "supernatural",
             "entity_kinds": ["character"],
             "effects": [{ "type": "warping_grant", "score": 1, "points": 5 }]
           },
           {
             "id": "virtue.true_faith",
-            "kind": "virtue", "magnitude": "major", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "general",
             "entity_kinds": ["character"],
             "effects": [{ "type": "true_faith_grant", "score": 1 }]
           },
           {
             "id": "virtue.magic_items",
-            "kind": "virtue", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
             "entity_kinds": ["character"],
             "effects": [{ "type": "item_level_budget", "amount": 25 }]
           },
           {
             "id": "virtue.granter",
-            "kind": "virtue", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
             "entity_kinds": ["character"],
             "effects": [{ "type": "grants_selection", "items": ["virtue.second_sight"] }]
           },
           {
             "id": "virtue.mastered_spells",
-            "kind": "virtue", "magnitude": "minor", "category": "hermetic",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "hermetic",
             "entity_kinds": ["character"],
             "effects": [{ "type": "spell_mastery_xp", "amount": 50 }]
           },
           {
             "id": "virtue.flawless_magic",
-            "kind": "virtue", "magnitude": "major", "category": "hermetic",
+            "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "hermetic",
             "entity_kinds": ["character"],
             "effects": [{ "type": "grants_spell_mastery", "score": 1 }]
           },
           {
             "id": "virtue.linguist",
-            "kind": "virtue", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
             "entity_kinds": ["character"],
             "effects": [{ "type": "group_affinity_cost", "abilities": ["ability.living_language"], "counts_as_num": 5, "counts_as_den": 4 }]
           }
@@ -2298,12 +2305,12 @@ mod tests {
     /// Flambeau offers a Puissant Art choice (Perdo / Ignem, +3).
     fn house_ruleset() -> Ruleset {
         let items = r#"[
-          { "id": "virtue.the_gift", "kind": "virtue", "magnitude": "free",
+          { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
             "category": "special", "entity_kinds": ["character"] },
-          { "id": "virtue.heartbeast", "kind": "virtue", "magnitude": "major",
+          { "id": "virtue.heartbeast", "kind": "virtue", "classification": "narrative", "magnitude": "major",
             "category": "hermetic", "entity_kinds": ["character"],
             "effects": [{ "type": "ability_score_grant", "ability": "ability.heartbeast", "amount": 1 }] },
-          { "id": "virtue.puissant_art", "kind": "virtue", "magnitude": "minor",
+          { "id": "virtue.puissant_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
             "category": "hermetic", "entity_kinds": ["character"],
             "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
             "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }] }

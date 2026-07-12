@@ -34,10 +34,11 @@ pub use mythic_companion::{MythicCompanionType, RequiredFlaw};
 pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError, RulesetSources};
 pub use spell::Spell;
 pub use types::{
-    AbilityScore, ArtScore, CategoryCap, Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy,
-    I18nEntry, Id, ItemKind, LineRange, Magnitude, ParamType, ParameterDef, ParameterDomain,
-    PersonalityTrait, PointBudget, PointItem, Prereq, Reputation, ReputationType, RulesetRef,
-    SCHEMA_VERSION, Selection, SourceRef, SpellSelection, ValidationMode,
+    AbilityScore, ArtScore, CategoryCap, Classification, Effect, Entity, EntityKind,
+    EntityTypeProfile, GiftPolicy, I18nEntry, Id, ItemKind, LineRange, Magnitude, ParamType,
+    ParameterDef, ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Reputation,
+    ReputationType, RulesetRef, SCHEMA_VERSION, Selection, SourceRef, SpellSelection,
+    ValidationMode,
 };
 pub use validation::{
     Balance, IssueSeverity, ValidationIssue, ValidationResult, compute_balance,

@@ -125,15 +125,15 @@ mod tests {
     /// Point items the test types reference, enough for `validate_mythic_type_refs`
     /// (grant items + required virtue/flaw refs) to pass at load.
     const ITEMS: &str = r#"[
-        { "id": "virtue.devil_child", "kind": "virtue", "magnitude": "free",
+        { "id": "virtue.devil_child", "kind": "virtue", "classification": "narrative", "magnitude": "free",
           "category": "social_status", "entity_kinds": ["character"] },
-        { "id": "virtue.demonic_might", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.demonic_might", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "supernatural", "entity_kinds": ["character"] },
-        { "id": "virtue.demonic_powers", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.demonic_powers", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "supernatural", "entity_kinds": ["character"] },
-        { "id": "virtue.demonic_blood", "kind": "virtue", "magnitude": "major",
+        { "id": "virtue.demonic_blood", "kind": "virtue", "classification": "narrative", "magnitude": "major",
           "category": "supernatural", "entity_kinds": ["character"] },
-        { "id": "flaw.tragic_life", "kind": "flaw", "magnitude": "major",
+        { "id": "flaw.tragic_life", "kind": "flaw", "classification": "narrative", "magnitude": "major",
           "category": "supernatural", "entity_kinds": ["character"] }
     ]"#;
 
