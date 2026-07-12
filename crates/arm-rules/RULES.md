@@ -1033,6 +1033,37 @@ per-character `SpellSelection.level`. Identity (and the dedup key) is
 `(spell, level)`; an unresolved General spell (no chosen level) warns
 (`spell_level_unresolved`) and is excluded from the budget sum.
 
+**Ritual legality — Range/Duration/Target + `ritual`/`creates_lasting` (5d).**
+A spell carries a `ritual: bool` plus optional RDT (`SpellRange`/`SpellDuration`/
+`SpellTarget`, snake_case scalars) and a `creates_lasting` marker (`spell.rs`).
+
+> `:12283` "Formulaic and Spontaneous spells may not have Year duration"
+> `:12284` "Formulaic and Spontaneous spells may not have Boundary target. They
+> may have Vision target, if they are magical sense spells."
+> `:12285` "Formulaic and Spontaneous spells may not have a level greater than 50.
+> (Note that they may have a level of 50, but not 51 or higher.)"
+> `:12290` "If the spell is a Momentary Creo spell creating a lasting thing, it
+> must be a Ritual."
+> `:12293` "Ritual spells are always at least level 20, even if the level
+> calculation would make them lower."
+> `:12055` "**Year:** … A spell with this duration must be ritual."
+> `:12077` "**Boundary:** … A spell with this target must be a Ritual."
+> `:12099` "**Vision**: … unlike Boundary, it does not require Ritual magic."
+> `:12039`/`:12115` A Momentary Creo spell creating a lasting thing must be a
+> Ritual (the Creo/Momentary interaction).
+
+Two-level enforcement:
+
+- **Load-time** (`Ruleset::validate_spell_refs`, `ruleset.rs`): for a fixed
+  `level`, ritual ⇒ `level ≥ 20`, non-ritual ⇒ `level ≤ 50`; a non-ritual spell
+  may not have `duration = Year` or `target = Boundary`, nor be a Momentary Creo
+  spell with `creates_lasting`. Vision target is exempt from the Boundary rule.
+- **Per-entity** (`validate_spells`, `validation.rs`): the *resolved* learned
+  level (General chosen level or fixed) must obey the same ≥20 / ≤50 bounds — a
+  violation emits `spell_ritual_legality` (`CODE_SPELL_RITUAL_LEGALITY`). This
+  bites for General spells whose chosen level is illegal; fixed-level spells are
+  already caught at load.
+
 **Budget-modifier Virtues/Flaws (Skilled/Weak Parens).** Two Hermetic V/F modify
 the apprenticeship grant, each via *two* `Effect`s
 (`spell_levels` ± and `general_xp` ±, both signed, summed and clamped at 0):

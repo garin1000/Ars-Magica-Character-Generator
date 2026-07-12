@@ -274,6 +274,10 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a spell's level exceeds
     /// Technique + Form + Intelligence + Magic Theory + 3 (Core:2465).
     pub const CODE_SPELL_LEVEL_EXCEEDS_CAP: &'static str = "spell_level_exceeds_cap";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a spell's resolved learned
+    /// level violates the ritual level bounds — a ritual learned below level 20, or a
+    /// non-ritual learned above level 50 (Core:12279-12295, :12283).
+    pub const CODE_SPELL_RITUAL_LEGALITY: &'static str = "spell_ritual_legality";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a bought Ability exceeds
     /// the character's age-based maximum (Core:2366-2376; Affinity raises it +2).
     pub const CODE_ABILITY_ABOVE_AGE_CAP: &'static str = "ability_above_age_cap";
@@ -2171,6 +2175,26 @@ fn validate_spells(
             ));
         }
         *seen.entry((&sel.spell, resolved)).or_insert(0) += 1;
+
+        // Ritual level bounds apply to the resolved learned level regardless of
+        // budget: a ritual must be learned at level >= 20, a non-ritual at <= 50
+        // (Core Rules.md:12279-12295, :12283). For fixed-level spells this is
+        // already enforced at load; it bites here for General spells whose chosen
+        // level is illegal.
+        if let Some(level) = resolved {
+            let ritual_too_low = spell.ritual && level < 20;
+            let non_ritual_too_high = !spell.ritual && level > 50;
+            if ritual_too_low || non_ritual_too_high {
+                issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_SPELL_RITUAL_LEGALITY,
+                    args([
+                        ("spell", sel.spell.to_string()),
+                        ("level", level.to_string()),
+                    ]),
+                    Some(sel.spell.clone()),
+                ));
+            }
+        }
 
         if is_magus && let Some(level) = resolved {
             let cap = spell_level_cap(entity, ruleset, spell);
@@ -6221,7 +6245,8 @@ mod tests {
     const SPELL_CATALOGUE: &str = r#"{ "spells": [
         { "id": "spell.pilum_of_fire", "technique": "art.creo", "form": "art.ignem", "level": 20 },
         { "id": "spell.ball_of_abysmal_flame", "technique": "art.creo", "form": "art.ignem", "level": 35 },
-        { "id": "spell.aegis_of_the_hearth", "technique": "art.rego", "form": "art.vim" }
+        { "id": "spell.aegis_of_the_hearth", "technique": "art.rego", "form": "art.vim", "ritual": true },
+        { "id": "spell.general_ward", "technique": "art.rego", "form": "art.vim" }
     ] }"#;
     // spell_levels 50 keeps the budget small enough to trip in tests.
     const SPELL_MAGUS_TYPE: &str = r#"[
@@ -6361,6 +6386,35 @@ mod tests {
         let codes = all_codes(&validate(&e, &rs));
         assert!(!codes.contains(&"over_spell_levels".to_string()));
         assert!(!codes.contains(&"spell_level_exceeds_cap".to_string()));
+    }
+
+    /// A General ritual spell learned below level 20 is a ritual-legality error
+    /// (Core Rules.md:12279-12295).
+    #[test]
+    fn ritual_spell_learned_below_20_is_flagged() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![spell("spell.aegis_of_the_hearth", Some(15))];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"spell_ritual_legality".to_string()));
+    }
+
+    /// A General non-ritual spell learned above level 50 is a ritual-legality error
+    /// (Core Rules.md:12283).
+    #[test]
+    fn non_ritual_spell_learned_above_50_is_flagged() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![spell("spell.general_ward", Some(55))];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"spell_ritual_legality".to_string()));
+    }
+
+    /// A General ritual spell learned at exactly level 20 is legal.
+    #[test]
+    fn ritual_spell_learned_at_20_is_clean() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![spell("spell.aegis_of_the_hearth", Some(20))];
+        assert!(!all_codes(&validate(&e, &rs)).contains(&"spell_ritual_legality".to_string()));
     }
 
     /// An unknown spell id is an error.

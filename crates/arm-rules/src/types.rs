@@ -1319,6 +1319,12 @@ mod tests {
         check(ParameterDomain::Characteristic);
         check(crate::validation::IssueSeverity::Error);
         check(crate::validation::IssueSeverity::Warning);
+        check(crate::spell::SpellRange::ArcaneConnection);
+        check(crate::spell::SpellRange::Personal);
+        check(crate::spell::SpellDuration::Year);
+        check(crate::spell::SpellDuration::Momentary);
+        check(crate::spell::SpellTarget::Boundary);
+        check(crate::spell::SpellTarget::Vision);
     }
 
     #[test]

@@ -14,9 +14,138 @@
 //! Core Rules.md:2215-2216, 2435), a currency distinct from the shared Ability/Art
 //! XP pool. Enforcement lives in [`crate::validation`].
 
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 use crate::types::{Id, SourceRef};
+
+/// A spell's Range — how far the target may be from the caster. Ordered least- to
+/// most-difficult, matching the RDT chart. Its label lives in Fluent
+/// (`spell-range-<scalar>`), never rendered as the raw slug.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:12001-12027.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SpellRange {
+    /// Affects only the caster.
+    Personal,
+    /// The caster or anything he touches.
+    Touch,
+    /// A target the caster has eye contact with (same difficulty as Touch).
+    Eye,
+    /// Anything the caster's voice carries to.
+    Voice,
+    /// Anything the caster can see.
+    Sight,
+    /// Anything the caster has an Arcane Connection to.
+    ArcaneConnection,
+}
+
+impl fmt::Display for SpellRange {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            SpellRange::Personal => "personal",
+            SpellRange::Touch => "touch",
+            SpellRange::Eye => "eye",
+            SpellRange::Voice => "voice",
+            SpellRange::Sight => "sight",
+            SpellRange::ArcaneConnection => "arcane_connection",
+        })
+    }
+}
+
+/// A spell's Duration — how long the effect lasts. Year Duration forces a Ritual
+/// (Core Rules.md:12055).
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:12001-12055.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SpellDuration {
+    /// Lasts a moment then dissipates.
+    Momentary,
+    /// Lasts while the caster concentrates (same difficulty as Diameter).
+    Concentration,
+    /// Lasts about two minutes.
+    Diameter,
+    /// Lasts until the sun next rises or sets.
+    Sun,
+    /// Lasts until the target leaves, or the ring is broken (as Sun difficulty).
+    Ring,
+    /// Lasts until both new and full moon have set.
+    Moon,
+    /// Lasts until the fourth season-boundary; must be Ritual.
+    Year,
+}
+
+impl fmt::Display for SpellDuration {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            SpellDuration::Momentary => "momentary",
+            SpellDuration::Concentration => "concentration",
+            SpellDuration::Diameter => "diameter",
+            SpellDuration::Sun => "sun",
+            SpellDuration::Ring => "ring",
+            SpellDuration::Moon => "moon",
+            SpellDuration::Year => "year",
+        })
+    }
+}
+
+/// A spell's Target — what the effect can affect: objects (Individual, Part,
+/// Group), containers (Circle, Room, Structure, Boundary), and magical senses
+/// (Taste, Touch, Smell, Hearing, Vision). Boundary forces a Ritual
+/// (Core Rules.md:12077); Vision, though equally difficult, does not
+/// (Core Rules.md:12099).
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:12001-12099.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SpellTarget {
+    /// A single discrete thing (object Target).
+    Individual,
+    /// Everything within a drawn circle (container Target, as Individual level).
+    Circle,
+    /// A part of a discrete thing (object Target).
+    Part,
+    /// A group of close-together things (object Target).
+    Group,
+    /// Everything within a chamber (container Target, as Group level).
+    Room,
+    /// Everything within a single structure (container Target).
+    Structure,
+    /// Everything within a natural/man-made boundary (container Target); Ritual.
+    Boundary,
+    /// Magical sense via taste (as Individual level).
+    Taste,
+    /// Magical sense via touch (as Part level).
+    Touch,
+    /// Magical sense via smell (as Group level).
+    Smell,
+    /// Magical sense via hearing (as Structure level).
+    Hearing,
+    /// Magical sense via sight (as Boundary level, but no Ritual required).
+    Vision,
+}
+
+impl fmt::Display for SpellTarget {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            SpellTarget::Individual => "individual",
+            SpellTarget::Circle => "circle",
+            SpellTarget::Part => "part",
+            SpellTarget::Group => "group",
+            SpellTarget::Room => "room",
+            SpellTarget::Structure => "structure",
+            SpellTarget::Boundary => "boundary",
+            SpellTarget::Taste => "taste",
+            SpellTarget::Touch => "touch",
+            SpellTarget::Smell => "smell",
+            SpellTarget::Hearing => "hearing",
+            SpellTarget::Vision => "vision",
+        })
+    }
+}
 
 /// A single spell in the catalogue. Its display name and description live in
 /// `rules/i18n`, keyed by `id`.
@@ -36,6 +165,24 @@ pub struct Spell {
     /// not factored into the per-spell level cap.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub requisites: Vec<Id>,
+    /// Whether this spell is a Ritual: longer to cast, requires vis, floored at
+    /// level 20 (Core Rules.md:12279-12295).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub ritual: bool,
+    /// The spell's Range. `None` in the seed data until the full catalogue (5d)
+    /// populates it; RDT-dependent legality is checked only when present.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub range: Option<SpellRange>,
+    /// The spell's Duration.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub duration: Option<SpellDuration>,
+    /// The spell's Target.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target: Option<SpellTarget>,
+    /// True when a Momentary Creo spell creates a lasting thing — which, per
+    /// Core Rules.md:12039/:12115, forces the spell to be a Ritual.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub creates_lasting: bool,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
@@ -100,6 +247,11 @@ mod tests {
             form: Id::new("art.vim"),
             level: None,
             requisites: Vec::new(),
+            ritual: false,
+            range: None,
+            duration: None,
+            target: None,
+            creates_lasting: false,
             source: None,
         };
         let out = serde_json::to_string(&spell).unwrap();
@@ -110,6 +262,47 @@ mod tests {
         assert!(
             !out.contains("requisites"),
             "empty requisites skipped: {out}"
+        );
+        // Model-completeness (5d): boolean flags default false and are skipped;
+        // absent Range/Duration/Target stay None.
+        assert!(
+            !out.contains("ritual"),
+            "default-false ritual skipped: {out}"
+        );
+        assert!(
+            !out.contains("creates_lasting"),
+            "default-false creates_lasting skipped: {out}"
+        );
+    }
+
+    /// A spell carrying full Range/Duration/Target + ritual flag round-trips.
+    /// Source (RDT chart): Core Rules.md:12001-12009.
+    #[test]
+    fn spell_with_rdt_and_ritual_roundtrips() {
+        let json = r#"{
+          "id": "spell.aegis_of_the_hearth",
+          "technique": "art.rego",
+          "form": "art.vim",
+          "ritual": true,
+          "range": "touch",
+          "duration": "year",
+          "target": "boundary"
+        }"#;
+        let spell: Spell = serde_json::from_str(json).unwrap();
+        assert!(spell.ritual);
+        assert_eq!(spell.range, Some(SpellRange::Touch));
+        assert_eq!(spell.duration, Some(SpellDuration::Year));
+        assert_eq!(spell.target, Some(SpellTarget::Boundary));
+        let back = serde_json::to_string(&spell).unwrap();
+        assert_eq!(serde_json::from_str::<Spell>(&back).unwrap(), spell);
+    }
+
+    /// `arcane_connection` is the only multi-word RDT scalar; guard its casing.
+    #[test]
+    fn arcane_connection_range_scalar() {
+        assert_eq!(
+            serde_json::to_value(SpellRange::ArcaneConnection).unwrap(),
+            serde_json::json!("arcane_connection")
         );
     }
 }

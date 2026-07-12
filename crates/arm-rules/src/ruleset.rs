@@ -17,7 +17,7 @@ use crate::characteristics::CharacteristicRules;
 use crate::grant::Grant;
 use crate::house::{House, HousesFile};
 use crate::mythic_companion::{MythicCompanionType, MythicCompanionTypesFile};
-use crate::spell::{Spell, SpellsFile};
+use crate::spell::{Spell, SpellDuration, SpellTarget, SpellsFile};
 use crate::types::{
     Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, Magnitude, ParameterDomain, PointItem,
     Prereq, RulesetRef,
@@ -1092,6 +1092,44 @@ impl Ruleset {
                 ));
             }
         }
+        // Ritual creation-legality (Core Rules.md:12279-12295, :12055, :12077,
+        // :12039/:12115). Rituals are floored at level 20; Formulaic/Spontaneous
+        // spells are capped at level 50; Year duration and Boundary target each
+        // force a Ritual; a Momentary Creo spell that creates a lasting thing must
+        // be a Ritual. Vision, though Boundary-level in difficulty, does NOT
+        // (Core Rules.md:12099).
+        if let Some(level) = spell.level {
+            if spell.ritual && level < 20 {
+                errors.push(format!(
+                    "spell '{id}': a ritual spell must be at least level 20 (has {level})"
+                ));
+            }
+            if !spell.ritual && level > 50 {
+                errors.push(format!(
+                    "spell '{id}': a non-ritual spell may not exceed level 50 (has {level})"
+                ));
+            }
+        }
+        if !spell.ritual {
+            if spell.duration == Some(SpellDuration::Year) {
+                errors.push(format!(
+                    "spell '{id}': Year duration requires the spell to be a ritual"
+                ));
+            }
+            if spell.target == Some(SpellTarget::Boundary) {
+                errors.push(format!(
+                    "spell '{id}': Boundary target requires the spell to be a ritual"
+                ));
+            }
+            if spell.duration == Some(SpellDuration::Momentary)
+                && spell.technique == Id::new("art.creo")
+                && spell.creates_lasting
+            {
+                errors.push(format!(
+                    "spell '{id}': a Momentary Creo spell that creates a lasting effect must be a ritual"
+                ));
+            }
+        }
         if let Some(ref source) = spell.source
             && !source.lines.is_valid()
         {
@@ -1536,8 +1574,10 @@ mod tests {
 
     const SPELL_ARTS: &str = r#"{ "arts": [
       { "id": "art.creo", "art_type": "technique" },
+      { "id": "art.intellego", "art_type": "technique" },
       { "id": "art.rego", "art_type": "technique" },
-      { "id": "art.ignem", "art_type": "form" }
+      { "id": "art.ignem", "art_type": "form" },
+      { "id": "art.vim", "art_type": "form" }
     ] }"#;
 
     fn ruleset_with_spells(spells: &str) -> Result<Ruleset, RulesetError> {
@@ -1608,6 +1648,87 @@ mod tests {
         )
         .unwrap_err();
         assert!(format!("{err:?}").contains("spell"), "{err:?}");
+    }
+
+    // --- Ritual creation-legality (5d). Source: Core Rules.md:12279-12295, :12055,
+    //     :12077, :12039/:12115. ---
+
+    #[test]
+    fn ritual_spell_below_level_20_is_rejected() {
+        let err = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.bad", "technique": "art.creo", "form": "art.ignem", "level": 15, "ritual": true }
+            ] }"#,
+        )
+        .unwrap_err();
+        assert!(format!("{err:?}").contains("ritual"), "{err:?}");
+    }
+
+    #[test]
+    fn ritual_spell_at_level_20_loads() {
+        let rs = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.ok", "technique": "art.creo", "form": "art.ignem", "level": 20, "ritual": true }
+            ] }"#,
+        );
+        assert!(rs.is_ok(), "{rs:?}");
+    }
+
+    #[test]
+    fn non_ritual_spell_above_level_50_is_rejected() {
+        let err = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.bad", "technique": "art.creo", "form": "art.ignem", "level": 55 }
+            ] }"#,
+        )
+        .unwrap_err();
+        assert!(format!("{err:?}").contains("50"), "{err:?}");
+    }
+
+    #[test]
+    fn year_duration_requires_ritual() {
+        let err = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.bad", "technique": "art.creo", "form": "art.ignem", "level": 30, "duration": "year" }
+            ] }"#,
+        )
+        .unwrap_err();
+        assert!(format!("{err:?}").contains("Year"), "{err:?}");
+    }
+
+    #[test]
+    fn boundary_target_requires_ritual() {
+        let err = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.bad", "technique": "art.creo", "form": "art.ignem", "level": 30, "target": "boundary" }
+            ] }"#,
+        )
+        .unwrap_err();
+        assert!(format!("{err:?}").contains("Boundary"), "{err:?}");
+    }
+
+    /// Vision target is Boundary-level in difficulty but, unlike Boundary, does
+    /// NOT require Ritual (Core Rules.md:12099).
+    #[test]
+    fn vision_target_does_not_require_ritual() {
+        let rs = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.ok", "technique": "art.intellego", "form": "art.ignem", "level": 30, "target": "vision" }
+            ] }"#,
+        );
+        assert!(rs.is_ok(), "{rs:?}");
+    }
+
+    #[test]
+    fn momentary_creo_creating_lasting_requires_ritual() {
+        let err = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.bad", "technique": "art.creo", "form": "art.ignem", "level": 30,
+                "duration": "momentary", "creates_lasting": true }
+            ] }"#,
+        )
+        .unwrap_err();
+        assert!(format!("{err:?}").contains("ritual"), "{err:?}");
     }
 
     #[test]
