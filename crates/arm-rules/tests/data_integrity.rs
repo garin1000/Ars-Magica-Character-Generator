@@ -311,13 +311,26 @@ fn every_vf_is_classified() {
     assert!(narrative > 0, "some V/F must be narrative");
     assert!(creation > 0, "some V/F must be creation_effect");
     assert!(in_play > 0, "some V/F must be in_play_effect");
-    // Every entry already carrying `effects` is a creation-number change.
+    // An entry carrying `effects` is mechanical, never narrative: it either
+    // changes a creation number (creation_effect) or modifies an in-play/derived
+    // total (in_play_effect, M5/5b). Narrative items are never given an effect.
     for item in rs.items() {
         if !item.effects.is_empty() {
-            assert_eq!(
+            assert_ne!(
                 item.classification,
-                Classification::CreationEffect,
-                "{} carries effects so must be creation_effect",
+                Classification::Narrative,
+                "{} carries effects so must not be narrative",
+                item.id
+            );
+        }
+    }
+    // M5/5b acceptance: every in_play_effect V/F is wired to at least one
+    // derived-total Effect variant (the 93-item in-play audit is fully wired).
+    for item in rs.items() {
+        if item.classification == Classification::InPlayEffect {
+            assert!(
+                !item.effects.is_empty(),
+                "{} is in_play_effect but carries no effect",
                 item.id
             );
         }
@@ -497,4 +510,169 @@ fn shipped_score_effects_apply() {
     );
     assert_eq!(characteristic_cap(&e, &rs, Characteristic::Int), 3);
     assert_eq!(characteristic_floor(&e, &rs, Characteristic::Int), -3);
+}
+
+// --- M5 slice 5b: in-play effect variants ---
+
+/// Helper: the set of issue codes `validate` emits for an entity.
+fn issue_codes(entity: &Entity, rs: &Ruleset) -> Vec<String> {
+    validate(entity, rs)
+        .issues
+        .into_iter()
+        .map(|i| i.code)
+        .collect()
+}
+
+/// A magus may hold at most one Magical Focus (Core Rules.md:4542): two Minor
+/// Foci (distinct descriptors, so not a duplicate selection) trip the
+/// `multiple_magical_foci` rule, which counts the `MagicalFocus` effect rather
+/// than relying on pairwise incompatibility (which cannot catch two Minors).
+#[test]
+fn two_magical_foci_are_rejected() {
+    let rs = load_ruleset();
+    let e = entity(
+        "magus",
+        vec![
+            Selection::with_params(
+                Id::new("virtue.minor_magical_focus"),
+                BTreeMap::from([("focus".into(), Id::new("necromancy"))]),
+            ),
+            Selection::with_params(
+                Id::new("virtue.minor_magical_focus"),
+                BTreeMap::from([("focus".into(), Id::new("weather"))]),
+            ),
+        ],
+    );
+    assert!(
+        issue_codes(&e, &rs).contains(&"multiple_magical_foci".to_string()),
+        "two foci must be rejected"
+    );
+}
+
+/// A single Magical Focus is legal — the one-focus rule does not fire.
+#[test]
+fn one_magical_focus_is_allowed() {
+    let rs = load_ruleset();
+    let e = entity(
+        "magus",
+        vec![Selection::with_params(
+            Id::new("virtue.major_magical_focus"),
+            BTreeMap::from([("focus".into(), Id::new("necromancy"))]),
+        )],
+    );
+    assert!(
+        !issue_codes(&e, &rs).contains(&"multiple_magical_foci".to_string()),
+        "one focus must be allowed"
+    );
+}
+
+/// Deficient Form's parameter is Form-domain, so targeting a Technique (art.creo)
+/// fails parameter resolution — the art-class restriction the slice requires.
+#[test]
+fn deficient_form_cannot_target_a_technique() {
+    let rs = load_ruleset_with_spells();
+    let e = entity(
+        "magus",
+        vec![Selection::with_params(
+            Id::new("flaw.deficient_form"),
+            BTreeMap::from([("form".into(), Id::new("art.creo"))]),
+        )],
+    );
+    assert!(
+        issue_codes(&e, &rs).contains(&"unknown_param_value".to_string()),
+        "Deficient Form targeting a Technique must be rejected"
+    );
+    // A Form target (art.ignem) resolves cleanly.
+    let ok = entity(
+        "magus",
+        vec![Selection::with_params(
+            Id::new("flaw.deficient_form"),
+            BTreeMap::from([("form".into(), Id::new("art.ignem"))]),
+        )],
+    );
+    assert!(
+        !issue_codes(&ok, &rs).contains(&"unknown_param_value".to_string()),
+        "Deficient Form targeting a Form must be accepted"
+    );
+}
+
+/// Deficient Technique's parameter is Technique-domain, so targeting a Form
+/// (art.ignem) fails; a Technique (art.creo) resolves.
+#[test]
+fn deficient_technique_cannot_target_a_form() {
+    let rs = load_ruleset_with_spells();
+    let bad = entity(
+        "magus",
+        vec![Selection::with_params(
+            Id::new("flaw.deficient_technique"),
+            BTreeMap::from([("technique".into(), Id::new("art.ignem"))]),
+        )],
+    );
+    assert!(
+        issue_codes(&bad, &rs).contains(&"unknown_param_value".to_string()),
+        "Deficient Technique targeting a Form must be rejected"
+    );
+    let ok = entity(
+        "magus",
+        vec![Selection::with_params(
+            Id::new("flaw.deficient_technique"),
+            BTreeMap::from([("technique".into(), Id::new("art.creo"))]),
+        )],
+    );
+    assert!(
+        !issue_codes(&ok, &rs).contains(&"unknown_param_value".to_string()),
+        "Deficient Technique targeting a Technique must be accepted"
+    );
+}
+
+/// In-play effects (Tough/Soak, Method Caster, Enduring Constitution, a Magical
+/// Focus, Deficient Form) never perturb creation-legality totals: adding them
+/// leaves the XP allocation, characteristic caps, and effective ability scores
+/// exactly as they were. They cost/grant only the point-balance their magnitude
+/// dictates, computed elsewhere.
+#[test]
+fn in_play_effects_do_not_perturb_creation_totals() {
+    use arm_rules::{characteristic_cap, effective_ability_score, xp_allocation};
+    let rs = load_ruleset_with_spells();
+
+    let mut base = entity("magus", vec![]);
+    base.xp_pool = 15;
+    base.ability_scores = vec![AbilityScore {
+        ability: Id::new("ability.awareness"),
+        score: 3,
+        specialty: None,
+        parameter: None,
+    }];
+    base.characteristics = BTreeMap::from([(Characteristic::Int, 2)]);
+
+    let mut with_effects = base.clone();
+    with_effects.selections = vec![
+        Selection::new(Id::new("virtue.tough")),
+        Selection::new(Id::new("virtue.method_caster")),
+        Selection::new(Id::new("virtue.enduring_constitution")),
+        Selection::with_params(
+            Id::new("virtue.major_magical_focus"),
+            BTreeMap::from([("focus".into(), Id::new("necromancy"))]),
+        ),
+        Selection::with_params(
+            Id::new("flaw.deficient_form"),
+            BTreeMap::from([("form".into(), Id::new("art.ignem"))]),
+        ),
+    ];
+
+    assert_eq!(
+        xp_allocation(&base, &rs).total_demand,
+        xp_allocation(&with_effects, &rs).total_demand,
+        "in-play effects must not change XP demand"
+    );
+    assert_eq!(
+        characteristic_cap(&base, &rs, Characteristic::Int),
+        characteristic_cap(&with_effects, &rs, Characteristic::Int),
+        "in-play effects must not change characteristic caps"
+    );
+    assert_eq!(
+        effective_ability_score(&base, &rs, &Id::new("ability.awareness"), None),
+        effective_ability_score(&with_effects, &rs, &Id::new("ability.awareness"), None),
+        "in-play effects must not change effective ability scores"
+    );
 }

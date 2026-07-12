@@ -1208,6 +1208,35 @@ impl Ruleset {
                 Effect::AffinityArtCost { param, .. } => {
                     (param, ParameterDomain::Art, "affinity_art_cost")
                 }
+                // Magical Focus / Academic Concentration name a free-text
+                // descriptor the player types (a sub-Art focus, a study field).
+                Effect::MagicalFocus { param, .. } => {
+                    (param, ParameterDomain::Text, "magical_focus")
+                }
+                Effect::AbilityRollMod { param, .. } => {
+                    (param, ParameterDomain::Text, "ability_roll_mod")
+                }
+                // Deficient Art targets a Technique OR a Form; the declared
+                // param's domain (technique/form) is what fixes the class, so
+                // accept either here rather than a single expected domain.
+                Effect::DeficientArt { param } => {
+                    match item.parameters.iter().find(|p| &p.key == param) {
+                        None => errors.push(format!(
+                            "{id}: effect 'deficient_art' references unknown parameter '{param}'"
+                        )),
+                        Some(def)
+                            if def.domain != ParameterDomain::Technique
+                                && def.domain != ParameterDomain::Form =>
+                        {
+                            errors.push(format!(
+                                "{id}: effect 'deficient_art' parameter '{param}' has domain '{}', expected 'technique' or 'form'",
+                                def.domain
+                            ))
+                        }
+                        Some(_) => {}
+                    }
+                    continue;
+                }
                 // Fixed target: validate the directly-stored ability id resolves.
                 Effect::AbilityScoreGrant { ability, .. } => {
                     if !self.abilities.contains_key(ability) {
@@ -1275,7 +1304,19 @@ impl Ruleset {
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
-                | Effect::GrantsReputation { .. } => {
+                | Effect::GrantsReputation { .. }
+                // M5/5b in-play effects with no parameter or ref to resolve:
+                // consumed intrinsically by derived.rs (5i).
+                | Effect::CastingTotalMod { .. }
+                | Effect::LabTotalMod { .. }
+                | Effect::MagicTotalHalving { .. }
+                | Effect::SoakMod { .. }
+                | Effect::CombatMod { .. }
+                | Effect::HealthMod { .. }
+                | Effect::MagicResistanceMod { .. }
+                | Effect::AgingMod { .. }
+                | Effect::AdvancementMod { .. }
+                | Effect::SpecialCastingMod { .. } => {
                     continue;
                 }
             };

@@ -301,6 +301,14 @@ pub enum ParameterDomain {
     Ability,
     /// Value is an art id (e.g. `art.creo`); resolved against the art catalogue.
     Art,
+    /// Value is a **Technique** art id (e.g. `art.creo`); resolved against the art
+    /// catalogue and additionally required to be a Technique (`ArtType::Technique`).
+    /// Used by Deficient Technique so it cannot target a Form.
+    Technique,
+    /// Value is a **Form** art id (e.g. `art.ignem`); resolved against the art
+    /// catalogue and additionally required to be a Form (`ArtType::Form`). Used by
+    /// Deficient Form so it cannot target a Technique.
+    Form,
     /// Value is a characteristic id (e.g. `characteristic.str`). Validated by
     /// parsing into [`crate::characteristics::Characteristic`], not a registry.
     Characteristic,
@@ -327,6 +335,8 @@ impl fmt::Display for ParameterDomain {
         match self {
             ParameterDomain::Ability => f.write_str("ability"),
             ParameterDomain::Art => f.write_str("art"),
+            ParameterDomain::Technique => f.write_str("technique"),
+            ParameterDomain::Form => f.write_str("form"),
             ParameterDomain::Characteristic => f.write_str("characteristic"),
             ParameterDomain::Item => f.write_str("item"),
             ParameterDomain::Text => f.write_str("text"),
@@ -624,6 +634,442 @@ pub enum Effect {
         /// The level of the granted Reputation.
         score: u8,
     },
+
+    // --- M5 slice 5b: in-play effect variants ---
+    //
+    // These modify an in-play / derived total (computed by `derived.rs`, slice
+    // 5i), never a character-creation number. Every one is a deliberate no-op in
+    // `effective.rs` (balance / caps / XP) — asserted by tests — so wiring them
+    // onto V/F cannot perturb creation legality. Variants tagged "surfaced-only"
+    // carry data 5i *presents* in the read-out (labelled through Fluent) rather
+    // than folding into a simulated number, because the app does not simulate
+    // that subsystem (advancement, aging rolls, non-standard casting, recovery).
+    /// A Hermetic Magical Focus. Within the descriptor named by the selection's
+    /// `params[param]` — a [`ParameterDomain::Text`] sub-Art descriptor such as
+    /// "necromancy", **not** an Art (a focus is sub-Art and may span Arts) — the
+    /// lowest applicable Art score (which *may* be a requisite) is added twice to
+    /// casting and lab totals. `major` distinguishes a Major from a Minor Focus.
+    /// A magus may hold **at most one** Focus, enforced by
+    /// `validation::validate_magical_focus` (counting this effect), not by
+    /// pairwise incompatibility (which cannot catch two Minor foci). Computed by
+    /// `derived.rs` (5i) via a per-total "focus applies" toggle, since descriptor
+    /// applicability cannot be auto-derived.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4399-4422 (Major),
+    /// `:4536-4542` (Minor, one-focus limit at `:4542`).
+    MagicalFocus {
+        /// Parameter key whose free-text value names the focus descriptor.
+        param: String,
+        /// `true` for a Major Focus, `false` for a Minor Focus.
+        major: bool,
+    },
+    /// A flat modifier to a magus's Casting Total, restricted to spells of the
+    /// given `scope` (Method Caster: +3 to formulaic and ritual totals). Some
+    /// carriers are circumstantial (Cyclic Magic, Special Circumstances); 5i
+    /// surfaces those as toggleable addends. Computed by `derived.rs` (5i).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4524-4527 (Method
+    /// Caster).
+    CastingTotalMod {
+        /// Points added to (or, when negative, removed from) the Casting Total.
+        amount: i8,
+        /// Which spells the modifier applies to.
+        scope: CastingScope,
+    },
+    /// A flat modifier to a magus's Lab Total (Inventive Genius +3). Computed by
+    /// `derived.rs` (5i).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4151-4154.
+    LabTotalMod {
+        /// Points added to (or, when negative, removed from) the Lab Total.
+        amount: i8,
+    },
+    /// Deficient Art: all casting and lab totals that add the Technique or Form
+    /// named by the selection's `params[param]` are **halved** (Deficient Form
+    /// excludes Magic Resistance). The param's domain is [`ParameterDomain::Technique`]
+    /// or [`ParameterDomain::Form`], so the class restriction (Deficient Technique
+    /// cannot target a Form, and vice-versa) is enforced by parameter-domain
+    /// resolution; the halving *scope* is derived at compute time from the
+    /// targeted Art's `ArtType`. Computed by `derived.rs` (5i).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5913-5915
+    /// (Technique), `:5909-5912` (Form).
+    DeficientArt {
+        /// Parameter key whose value names the deficient Technique or Form.
+        param: String,
+    },
+    /// Halves a whole in-play total of the given kind (Weak Enchanter halves lab
+    /// totals for enchanting; Weak Magic halves penetration; Flawed Parma halves
+    /// Magic Resistance). Computed by `derived.rs` (5i).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:7060-7063 (Weak
+    /// Enchanter), `:7064-7067` (Weak Magic), `:6142-6145` (Flawed Parma).
+    MagicTotalHalving {
+        /// Which in-play total is halved.
+        total: HalvableTotal,
+    },
+    /// A flat modifier to Soak (Tough +3, Frail −1). Consumed by `derived.rs`
+    /// `soak()` (5i).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5145-5147 (Tough),
+    /// `:6190-6193` (Frail).
+    SoakMod {
+        /// Points added to (or, when negative, removed from) Soak.
+        amount: i8,
+    },
+    /// A flat modifier to one combat total (Berserk, Lame, Missing Hand). An item
+    /// may carry several (one per affected `target`). Consumed by `derived.rs`
+    /// `combat_totals()` (5i).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3500-3503 (Berserk).
+    CombatMod {
+        /// Points added to (or, when negative, removed from) the combat total.
+        amount: i8,
+        /// Which combat total the modifier affects.
+        target: CombatStat,
+    },
+    /// A modifier to the penalty on a health track (Enduring Constitution reduces
+    /// wound and fatigue penalties). `Recovery` is surfaced-only (the app does not
+    /// simulate recovery rolls); the wound and fatigue tracks are consumed by
+    /// `derived.rs` wound/fatigue read-outs (5i).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3751-3754 (Enduring
+    /// Constitution).
+    HealthMod {
+        /// Which health track the modifier affects.
+        track: HealthTrack,
+        /// Signed modifier to that track's penalty (positive reduces the penalty
+        /// magnitude in 5i's read-out; the sign convention is pinned there).
+        amount: i8,
+    },
+    /// A non-halving Magic Resistance modifier (Limited Magic Resistance drops the
+    /// Form bonus; Susceptibility adds a penalty against one realm; Commanding
+    /// Aura adds a bonus while in a matching aura). Halving MR effects use
+    /// [`Effect::MagicTotalHalving`]. Consumed by `derived.rs` `magic_resistance()`
+    /// (5i).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:6346-6349 (Limited),
+    /// `:6819-6826` (Susceptibility), `:3579-3596` (Commanding Aura).
+    MagicResistanceMod {
+        /// Which Magic Resistance modifier this is.
+        kind: MagicResistanceEffect,
+    },
+    /// An aging / longevity modifier — **surfaced-only**: the app does not
+    /// simulate aging rolls. `kind` selects the aging subsystem, `amount` the
+    /// signed modifier (Unaging → no aging rolls). 5i surfaces these labelled.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5187-5190 (Unaging).
+    AgingMod {
+        /// Which aging / longevity subsystem the modifier touches.
+        kind: AgingEffect,
+        /// Signed modifier (0 when `kind` is itself the whole effect, e.g. no
+        /// aging rolls).
+        amount: i8,
+    },
+    /// A study / advancement source-quality modifier — **surfaced-only**: the app
+    /// does not simulate advancement. `source` names the advancement source,
+    /// `amount` the modifier (Apt Student +5 when taught). 5i surfaces these
+    /// labelled.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3422-3425 (Apt
+    /// Student).
+    AdvancementMod {
+        /// The advancement source the modifier applies to.
+        source: AdvancementSource,
+        /// Signed modifier to that source's Source Quality / advancement total.
+        amount: i8,
+    },
+    /// A special casting-style quirk the app **surfaces** rather than simulates
+    /// (surfaced-only): non-standard-casting penalty removal (Deft/Quiet/Subtle),
+    /// spontaneous-magic variants (Diedne, Faerie-Raised, Life-Linked), and
+    /// circumstantial casting penalties. `kind` names the quirk; 5i surfaces it
+    /// labelled.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3645-3648 (Deft
+    /// Form), `:3675-3682` (Diedne Magic), `:5917-5920` (Deleterious Circumstances).
+    SpecialCastingMod {
+        /// Which casting-style quirk this is.
+        kind: SpecialCasting,
+    },
+    /// A flat modifier to rolls of a specific Ability in the free-text subject
+    /// named by the selection's `params[param]` (Academic Concentration: a bonus
+    /// to Concentration for one field of study). **Surfaced-only**: it modifies
+    /// rolls, not the bought/effective Ability score, so it never perturbs
+    /// creation. 5i surfaces it labelled.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3362-3367.
+    AbilityRollMod {
+        /// Parameter key whose free-text value names the subject/field.
+        param: String,
+        /// Points added to rolls of the ability in that subject.
+        amount: i8,
+    },
+}
+
+/// Which spells a [`Effect::CastingTotalMod`] applies to. A fixed rules taxonomy
+/// (so an enum, rendered via Fluent, never as a raw slug).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CastingScope {
+    /// Every casting total (formulaic, ritual, and spontaneous).
+    All,
+    /// Formulaic spells only.
+    Formulaic,
+    /// Ritual spells only.
+    Ritual,
+    /// Formulaic and ritual spells (Method Caster).
+    FormulaicRitual,
+    /// Spontaneous magic only.
+    Spontaneous,
+}
+
+impl fmt::Display for CastingScope {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            CastingScope::All => "all",
+            CastingScope::Formulaic => "formulaic",
+            CastingScope::Ritual => "ritual",
+            CastingScope::FormulaicRitual => "formulaic_ritual",
+            CastingScope::Spontaneous => "spontaneous",
+        })
+    }
+}
+
+/// An in-play total a [`Effect::MagicTotalHalving`] halves. A fixed rules
+/// taxonomy, rendered via Fluent, never as a raw slug.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum HalvableTotal {
+    /// Spontaneous casting totals (Weak Spontaneous Magic).
+    SpontaneousCasting,
+    /// Lab totals for making enchanted items (Weak Enchanter).
+    LabEnchanting,
+    /// Lab totals for longevity rituals (Difficult Longevity Ritual).
+    LabLongevity,
+    /// Penetration totals (Weak Magic).
+    Penetration,
+    /// Magic Resistance (Flawed Parma Magica, Weak Magic Resistance).
+    MagicResistance,
+}
+
+impl fmt::Display for HalvableTotal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            HalvableTotal::SpontaneousCasting => "spontaneous_casting",
+            HalvableTotal::LabEnchanting => "lab_enchanting",
+            HalvableTotal::LabLongevity => "lab_longevity",
+            HalvableTotal::Penetration => "penetration",
+            HalvableTotal::MagicResistance => "magic_resistance",
+        })
+    }
+}
+
+/// A combat total a [`Effect::CombatMod`] modifies. A fixed rules taxonomy,
+/// rendered via Fluent, never as a raw slug.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CombatStat {
+    /// Initiative total.
+    Initiative,
+    /// Attack total.
+    Attack,
+    /// Defense total.
+    Defense,
+    /// Damage total.
+    Damage,
+}
+
+impl fmt::Display for CombatStat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            CombatStat::Initiative => "initiative",
+            CombatStat::Attack => "attack",
+            CombatStat::Defense => "defense",
+            CombatStat::Damage => "damage",
+        })
+    }
+}
+
+/// A health track a [`Effect::HealthMod`] modifies. A fixed rules taxonomy,
+/// rendered via Fluent, never as a raw slug.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum HealthTrack {
+    /// The penalty imposed by reduced Fatigue levels (Enduring Constitution
+    /// reduces it, Low Tolerance increases it). Computed by 5i.
+    FatiguePenalty,
+    /// The total penalty imposed by wounds (Enduring Constitution reduces it).
+    /// Computed by 5i.
+    WoundPenalty,
+    /// Fatigue / Stamina rolls to avoid fatigue (Long-Winded +3, Obese/Short of
+    /// Breath −3). Surfaced-only.
+    FatigueRoll,
+    /// Fatigue levels lost per spell cast (Vulnerable Casting +1, Withstand
+    /// Casting −1, Painful Magic). Surfaced-only.
+    CastingFatigue,
+    /// Wound-recovery rolls (Rapid Convalescence +3, Fragile Constitution −3).
+    /// Surfaced-only.
+    Recovery,
+}
+
+impl fmt::Display for HealthTrack {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            HealthTrack::FatiguePenalty => "fatigue_penalty",
+            HealthTrack::WoundPenalty => "wound_penalty",
+            HealthTrack::FatigueRoll => "fatigue_roll",
+            HealthTrack::CastingFatigue => "casting_fatigue",
+            HealthTrack::Recovery => "recovery",
+        })
+    }
+}
+
+/// A non-halving Magic Resistance modifier ([`Effect::MagicResistanceMod`]). A
+/// fixed rules taxonomy, rendered via Fluent, never as a raw slug.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MagicResistanceEffect {
+    /// The relevant Form's contribution to Magic Resistance is dropped (Limited
+    /// Magic Resistance: resistance from Parma alone).
+    NoFormBonus,
+    /// A bonus to Magic Resistance while in a matching aura (Commanding Aura).
+    AuraBonus,
+    /// A penalty to Magic Resistance against Divine power (Susceptibility).
+    SusceptibleDivine,
+    /// A penalty to Magic Resistance against Faerie power (Susceptibility).
+    SusceptibleFaerie,
+    /// A penalty to Magic Resistance against Infernal power (Susceptibility).
+    SusceptibleInfernal,
+}
+
+impl fmt::Display for MagicResistanceEffect {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            MagicResistanceEffect::NoFormBonus => "no_form_bonus",
+            MagicResistanceEffect::AuraBonus => "aura_bonus",
+            MagicResistanceEffect::SusceptibleDivine => "susceptible_divine",
+            MagicResistanceEffect::SusceptibleFaerie => "susceptible_faerie",
+            MagicResistanceEffect::SusceptibleInfernal => "susceptible_infernal",
+        })
+    }
+}
+
+/// Which aging / longevity subsystem an [`Effect::AgingMod`] touches
+/// (surfaced-only). A fixed rules taxonomy, rendered via Fluent.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AgingEffect {
+    /// A modifier to aging rolls.
+    AgingRoll,
+    /// A modifier to the longevity-ritual bonus.
+    LongevityBonus,
+    /// The character does not age normally / aging points do not reduce
+    /// Characteristics (Unaging, Bee King, Bound to Role).
+    NoAging,
+    /// A modifier to accrued Decrepitude.
+    Decrepitude,
+    /// A modifier to the Living Conditions Modifier that feeds aging rolls
+    /// (Poor Living Conditions −1, Leprosy −2, Mild Aging +1).
+    LivingConditions,
+}
+
+impl fmt::Display for AgingEffect {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            AgingEffect::AgingRoll => "aging_roll",
+            AgingEffect::LongevityBonus => "longevity_bonus",
+            AgingEffect::NoAging => "no_aging",
+            AgingEffect::Decrepitude => "decrepitude",
+            AgingEffect::LivingConditions => "living_conditions",
+        })
+    }
+}
+
+/// The advancement source an [`Effect::AdvancementMod`] applies to
+/// (surfaced-only). A fixed rules taxonomy, rendered via Fluent.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AdvancementSource {
+    /// Being taught (Apt Student, Poor Student).
+    Taught,
+    /// Learning from a book (Book Learner).
+    Book,
+    /// Studying from raw vis (Free Study).
+    Vis,
+    /// Practice (Independent Study).
+    Practice,
+    /// Adventure experience (Independent Study).
+    Adventure,
+    /// Insight into a magical topic (Secondary Insight).
+    Insight,
+    /// The character teaching others (Good Teacher, Incomprehensible).
+    Teaching,
+    /// Mastering spells (Loose Magic halves this advancement).
+    SpellMastery,
+    /// Every advancement source (Study Bonus; Unimaginative Learner).
+    All,
+}
+
+impl fmt::Display for AdvancementSource {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            AdvancementSource::Taught => "taught",
+            AdvancementSource::Book => "book",
+            AdvancementSource::Vis => "vis",
+            AdvancementSource::Practice => "practice",
+            AdvancementSource::Adventure => "adventure",
+            AdvancementSource::Insight => "insight",
+            AdvancementSource::Teaching => "teaching",
+            AdvancementSource::SpellMastery => "spell_mastery",
+            AdvancementSource::All => "all",
+        })
+    }
+}
+
+/// A special casting-style quirk an [`Effect::SpecialCastingMod`] names
+/// (surfaced-only). A fixed rules taxonomy, rendered via Fluent.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SpecialCasting {
+    /// Cast without the normal words penalty (Quiet Magic).
+    QuietWords,
+    /// Cast without the normal gestures penalty (Subtle Magic).
+    SubtleGestures,
+    /// No requisite penalty for one Form (Deft Form).
+    DeftForm,
+    /// Diedne Magic spontaneous-casting method.
+    Diedne,
+    /// Faerie-Raised Magic spontaneous-casting method.
+    FaerieRaised,
+    /// Life-Linked Spontaneous Magic.
+    LifeLinkedSpontaneous,
+    /// Spell Improvisation (spontaneous flexibility).
+    SpellImprovisation,
+    /// Mercurian Magic ritual/spontaneous method.
+    Mercurian,
+    /// Life Boost (spend fatigue to raise a casting total).
+    LifeBoost,
+    /// A circumstantial casting/lab penalty tied to a described condition
+    /// (Deleterious Circumstances, Environmental Magic, Short-Ranged Magic,
+    /// Corrupted Spells).
+    Circumstantial,
+}
+
+impl fmt::Display for SpecialCasting {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            SpecialCasting::QuietWords => "quiet_words",
+            SpecialCasting::SubtleGestures => "subtle_gestures",
+            SpecialCasting::DeftForm => "deft_form",
+            SpecialCasting::Diedne => "diedne",
+            SpecialCasting::FaerieRaised => "faerie_raised",
+            SpecialCasting::LifeLinkedSpontaneous => "life_linked_spontaneous",
+            SpecialCasting::SpellImprovisation => "spell_improvisation",
+            SpecialCasting::Mercurian => "mercurian",
+            SpecialCasting::LifeBoost => "life_boost",
+            SpecialCasting::Circumstantial => "circumstantial",
+        })
+    }
 }
 
 /// The audience a Reputation reaches — a fixed rules taxonomy (so an enum, like
@@ -1361,8 +1807,59 @@ mod tests {
         check(ParamType::Ref);
         check(ParameterDomain::Ability);
         check(ParameterDomain::Art);
+        check(ParameterDomain::Technique);
+        check(ParameterDomain::Form);
         check(ParameterDomain::Item);
         check(ParameterDomain::Characteristic);
+        check(ParameterDomain::Text);
+        check(CastingScope::All);
+        check(CastingScope::Formulaic);
+        check(CastingScope::Ritual);
+        check(CastingScope::FormulaicRitual);
+        check(CastingScope::Spontaneous);
+        check(HalvableTotal::SpontaneousCasting);
+        check(HalvableTotal::LabEnchanting);
+        check(HalvableTotal::LabLongevity);
+        check(HalvableTotal::Penetration);
+        check(HalvableTotal::MagicResistance);
+        check(CombatStat::Initiative);
+        check(CombatStat::Attack);
+        check(CombatStat::Defense);
+        check(CombatStat::Damage);
+        check(HealthTrack::FatiguePenalty);
+        check(HealthTrack::WoundPenalty);
+        check(HealthTrack::FatigueRoll);
+        check(HealthTrack::CastingFatigue);
+        check(HealthTrack::Recovery);
+        check(MagicResistanceEffect::NoFormBonus);
+        check(MagicResistanceEffect::AuraBonus);
+        check(MagicResistanceEffect::SusceptibleDivine);
+        check(MagicResistanceEffect::SusceptibleFaerie);
+        check(MagicResistanceEffect::SusceptibleInfernal);
+        check(AgingEffect::AgingRoll);
+        check(AgingEffect::LongevityBonus);
+        check(AgingEffect::NoAging);
+        check(AgingEffect::Decrepitude);
+        check(AgingEffect::LivingConditions);
+        check(AdvancementSource::Taught);
+        check(AdvancementSource::Book);
+        check(AdvancementSource::Vis);
+        check(AdvancementSource::Practice);
+        check(AdvancementSource::Adventure);
+        check(AdvancementSource::Insight);
+        check(AdvancementSource::Teaching);
+        check(AdvancementSource::SpellMastery);
+        check(AdvancementSource::All);
+        check(SpecialCasting::QuietWords);
+        check(SpecialCasting::SubtleGestures);
+        check(SpecialCasting::DeftForm);
+        check(SpecialCasting::Diedne);
+        check(SpecialCasting::FaerieRaised);
+        check(SpecialCasting::LifeLinkedSpontaneous);
+        check(SpecialCasting::SpellImprovisation);
+        check(SpecialCasting::Mercurian);
+        check(SpecialCasting::LifeBoost);
+        check(SpecialCasting::Circumstantial);
         check(crate::validation::IssueSeverity::Error);
         check(crate::validation::IssueSeverity::Warning);
         check(crate::spell::SpellRange::ArcaneConnection);
@@ -1371,6 +1868,64 @@ mod tests {
         check(crate::spell::SpellDuration::Momentary);
         check(crate::spell::SpellTarget::Boundary);
         check(crate::spell::SpellTarget::Vision);
+    }
+
+    #[test]
+    fn in_play_effects_roundtrip() {
+        // Every M5/5b in-play Effect variant survives a JSON round-trip with its
+        // `type`-tagged serde form (and, for scalar-enum payloads, the snake_case
+        // scalar). Guards the shape the shipped virtues_flaws.json wires against.
+        let effects = vec![
+            Effect::MagicalFocus {
+                param: "focus".into(),
+                major: true,
+            },
+            Effect::CastingTotalMod {
+                amount: 3,
+                scope: CastingScope::FormulaicRitual,
+            },
+            Effect::LabTotalMod { amount: 3 },
+            Effect::DeficientArt {
+                param: "technique".into(),
+            },
+            Effect::MagicTotalHalving {
+                total: HalvableTotal::Penetration,
+            },
+            Effect::SoakMod { amount: 3 },
+            Effect::CombatMod {
+                amount: -2,
+                target: CombatStat::Defense,
+            },
+            Effect::HealthMod {
+                track: HealthTrack::WoundPenalty,
+                amount: 1,
+            },
+            Effect::MagicResistanceMod {
+                kind: MagicResistanceEffect::NoFormBonus,
+            },
+            Effect::AgingMod {
+                kind: AgingEffect::AgingRoll,
+                amount: -1,
+            },
+            Effect::AdvancementMod {
+                source: AdvancementSource::Taught,
+                amount: 5,
+            },
+            Effect::SpecialCastingMod {
+                kind: SpecialCasting::Diedne,
+            },
+            Effect::AbilityRollMod {
+                param: "subject".into(),
+                amount: 3,
+            },
+        ];
+        let json = serde_json::to_string(&effects).unwrap();
+        let back: Vec<Effect> = serde_json::from_str(&json).unwrap();
+        assert_eq!(effects, back);
+        // The serde tag is the snake_case variant name.
+        assert!(json.contains("\"type\":\"magical_focus\""));
+        assert!(json.contains("\"scope\":\"formulaic_ritual\""));
+        assert!(json.contains("\"total\":\"penetration\""));
     }
 
     #[test]

@@ -176,7 +176,22 @@ pub fn ability_bonus(
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. } => {}
+                | Effect::GrantsReputation { .. }
+                // M5/5b in-play effects: consumed by derived.rs (5i); they never
+                // alter a creation-legality total, so they are no-ops here.
+                | Effect::MagicalFocus { .. }
+                | Effect::CastingTotalMod { .. }
+                | Effect::LabTotalMod { .. }
+                | Effect::DeficientArt { .. }
+                | Effect::MagicTotalHalving { .. }
+                | Effect::SoakMod { .. }
+                | Effect::CombatMod { .. }
+                | Effect::HealthMod { .. }
+                | Effect::MagicResistanceMod { .. }
+                | Effect::AgingMod { .. }
+                | Effect::AdvancementMod { .. }
+                | Effect::SpecialCastingMod { .. }
+                | Effect::AbilityRollMod { .. } => {}
             }
         }
     }
@@ -301,7 +316,22 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. } => {}
+                | Effect::GrantsReputation { .. }
+                // M5/5b in-play effects: consumed by derived.rs (5i); they never
+                // alter a creation-legality total, so they are no-ops here.
+                | Effect::MagicalFocus { .. }
+                | Effect::CastingTotalMod { .. }
+                | Effect::LabTotalMod { .. }
+                | Effect::DeficientArt { .. }
+                | Effect::MagicTotalHalving { .. }
+                | Effect::SoakMod { .. }
+                | Effect::CombatMod { .. }
+                | Effect::HealthMod { .. }
+                | Effect::MagicResistanceMod { .. }
+                | Effect::AgingMod { .. }
+                | Effect::AdvancementMod { .. }
+                | Effect::SpecialCastingMod { .. }
+                | Effect::AbilityRollMod { .. } => {}
             }
         }
     }
@@ -392,7 +422,22 @@ fn characteristic_limit_shift(
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. } => {}
+                | Effect::GrantsReputation { .. }
+                // M5/5b in-play effects: consumed by derived.rs (5i); they never
+                // alter a creation-legality total, so they are no-ops here.
+                | Effect::MagicalFocus { .. }
+                | Effect::CastingTotalMod { .. }
+                | Effect::LabTotalMod { .. }
+                | Effect::DeficientArt { .. }
+                | Effect::MagicTotalHalving { .. }
+                | Effect::SoakMod { .. }
+                | Effect::CombatMod { .. }
+                | Effect::HealthMod { .. }
+                | Effect::MagicResistanceMod { .. }
+                | Effect::AgingMod { .. }
+                | Effect::AdvancementMod { .. }
+                | Effect::SpecialCastingMod { .. }
+                | Effect::AbilityRollMod { .. } => {}
             }
         }
     }
@@ -573,7 +618,22 @@ pub(crate) fn ability_affinity(
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. } => None,
+                | Effect::GrantsReputation { .. }
+                // M5/5b in-play effects: consumed by derived.rs (5i); not an
+                // Affinity, so no cost reduction here.
+                | Effect::MagicalFocus { .. }
+                | Effect::CastingTotalMod { .. }
+                | Effect::LabTotalMod { .. }
+                | Effect::DeficientArt { .. }
+                | Effect::MagicTotalHalving { .. }
+                | Effect::SoakMod { .. }
+                | Effect::CombatMod { .. }
+                | Effect::HealthMod { .. }
+                | Effect::MagicResistanceMod { .. }
+                | Effect::AgingMod { .. }
+                | Effect::AdvancementMod { .. }
+                | Effect::SpecialCastingMod { .. }
+                | Effect::AbilityRollMod { .. } => None,
             })
     });
     best_affinity(found)
@@ -618,7 +678,22 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. } => None,
+                | Effect::GrantsReputation { .. }
+                // M5/5b in-play effects: consumed by derived.rs (5i); not an
+                // Affinity, so no cost reduction here.
+                | Effect::MagicalFocus { .. }
+                | Effect::CastingTotalMod { .. }
+                | Effect::LabTotalMod { .. }
+                | Effect::DeficientArt { .. }
+                | Effect::MagicTotalHalving { .. }
+                | Effect::SoakMod { .. }
+                | Effect::CombatMod { .. }
+                | Effect::HealthMod { .. }
+                | Effect::MagicResistanceMod { .. }
+                | Effect::AgingMod { .. }
+                | Effect::AdvancementMod { .. }
+                | Effect::SpecialCastingMod { .. }
+                | Effect::AbilityRollMod { .. } => None,
             })
     });
     best_affinity(found)

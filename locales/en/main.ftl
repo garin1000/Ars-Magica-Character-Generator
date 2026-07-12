@@ -247,6 +247,7 @@ issue-forbidden_trait = A forbidden trait is present: { $item }.
 issue-missing_param = { $item } is missing the parameter { $key }.
 issue-unexpected_param = { $item } has an unexpected parameter { $key }.
 issue-unknown_param_value = { $item } parameter { $key } has unknown { $domain } value { $value }.
+issue-multiple_magical_foci = A magus may have only one Magical Focus, but { $count } are selected.
 issue-gift_required = This type requires The Gift.
 issue-gift_forbidden = This type cannot have The Gift.
 issue-unknown_ref = Unknown item reference: { $item }.
