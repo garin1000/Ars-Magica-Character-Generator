@@ -1640,9 +1640,24 @@ pub struct LongevityRitual {
     pub bonus: Option<i8>,
 }
 
+/// A Twilight Scar: a minor magical trait (beneficial or annoying) a magus
+/// acquires from experiencing Twilight. Free-text — the rules give no mechanical
+/// number, only a description — and kept sorted via [`Entity::normalize`].
+/// Source: Core Rules.md:9731, :9743.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct TwilightScar {
+    /// Free-text description of the scar.
+    pub description: String,
+}
+
 /// `skip_serializing_if` predicate: omits a `u32` field when it is zero.
 fn is_zero(n: &u32) -> bool {
     *n == 0
+}
+
+/// `skip_serializing_if` predicate: omits a `String` field when it is empty.
+fn is_empty_str(s: &str) -> bool {
+    s.is_empty()
 }
 
 /// `skip_serializing_if` predicate: omits an `i32` field when it is zero.
@@ -1772,6 +1787,47 @@ pub struct Entity {
     /// The magus's Longevity Ritual. `None` when there is none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub longevity_ritual: Option<LongevityRitual>,
+    /// Accrued aging points per Characteristic (the sheet prints these). Their sum
+    /// across all Characteristics is the character's Decrepitude XP; a single
+    /// Characteristic's points feed the "would have forced a drop" advisory. Not
+    /// itself a score — the drops actually applied live in [`Self::aging_reductions`].
+    /// Source: Core Rules.md:16579.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub aging_points: BTreeMap<Characteristic, u8>,
+    /// Completed Characteristic drops from aging / Decrepitude, per Characteristic
+    /// (the sheet prints these). These LOWER the effective Characteristic used by
+    /// derived / play stats (see [`crate::effective::effective_characteristic_after_aging`])
+    /// but never the bought score creation-legality checks read, so entering an aged
+    /// character cannot retroactively make its point-buy illegal. Source: Core Rules.md:16579.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub aging_reductions: BTreeMap<Characteristic, u8>,
+    /// Accrued Warping Points. Summed with any grant-derived Warping Points (Warped
+    /// by Magic, …) and inverted through the advancement curve to the Warping Score
+    /// by [`crate::effective::warping_score`]. Source: Core Rules.md:16464-16475.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub warping_points: u32,
+    /// Twilight Scars the magus has acquired (free-text). Kept sorted via
+    /// [`Entity::normalize`]. Source: Core Rules.md:9731, :9743.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub twilight_scars: Vec<TwilightScar>,
+    /// The character's name (free-text; no mechanical effect).
+    #[serde(default, skip_serializing_if = "is_empty_str")]
+    pub name: String,
+    /// The character's gender (free-text; no mechanical effect).
+    #[serde(default, skip_serializing_if = "is_empty_str")]
+    pub gender: String,
+    /// The character's birth year (flavor; no mechanical effect). `None` when unset.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub birth_year: Option<i32>,
+    /// The magus's Wizard's sigil (free-text; no mechanical effect).
+    #[serde(default, skip_serializing_if = "is_empty_str")]
+    pub sigil: String,
+    /// The character's covenant name (free-text; no mechanical effect).
+    #[serde(default, skip_serializing_if = "is_empty_str")]
+    pub covenant_name: String,
+    /// The magus's parens / master (free-text; no mechanical effect).
+    #[serde(default, skip_serializing_if = "is_empty_str")]
+    pub parens: String,
 }
 
 /// Current save-format schema version.
@@ -1805,12 +1861,23 @@ impl Entity {
             familiar: None,
             talisman_attunements: Vec::new(),
             longevity_ritual: None,
+            aging_points: BTreeMap::new(),
+            aging_reductions: BTreeMap::new(),
+            warping_points: 0,
+            twilight_scars: Vec::new(),
+            name: String::new(),
+            gender: String::new(),
+            birth_year: None,
+            sigil: String::new(),
+            covenant_name: String::new(),
+            parens: String::new(),
         }
     }
 
     /// Sort selections, ability scores, art scores, spells, personality traits,
-    /// reputations, devices and talisman attunements for canonical serialization.
-    /// (`characteristics` is a `BTreeMap`, already id-ordered.)
+    /// reputations, devices, talisman attunements and twilight scars for canonical
+    /// serialization. (`characteristics`, `aging_points`, `aging_reductions` are
+    /// `BTreeMap`s, already id-ordered.)
     pub fn normalize(&mut self) {
         self.selections.sort();
         self.ability_scores.sort();
@@ -1820,6 +1887,7 @@ impl Entity {
         self.reputations.sort();
         self.devices.sort();
         self.talisman_attunements.sort();
+        self.twilight_scars.sort();
     }
 }
 
@@ -2424,6 +2492,16 @@ mod tests {
             familiar: None,
             talisman_attunements: Vec::new(),
             longevity_ritual: None,
+            aging_points: BTreeMap::new(),
+            aging_reductions: BTreeMap::new(),
+            warping_points: 0,
+            twilight_scars: Vec::new(),
+            name: String::new(),
+            gender: String::new(),
+            birth_year: None,
+            sigil: String::new(),
+            covenant_name: String::new(),
+            parens: String::new(),
         };
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
@@ -2548,6 +2626,16 @@ mod tests {
             familiar: None,
             talisman_attunements: Vec::new(),
             longevity_ritual: None,
+            aging_points: BTreeMap::new(),
+            aging_reductions: BTreeMap::new(),
+            warping_points: 0,
+            twilight_scars: Vec::new(),
+            name: String::new(),
+            gender: String::new(),
+            birth_year: None,
+            sigil: String::new(),
+            covenant_name: String::new(),
+            parens: String::new(),
         };
 
         // Serialization is canonical only after normalize(); derive-based
@@ -2791,6 +2879,95 @@ mod tests {
         entity.normalize();
         assert_eq!(entity.devices[0].name, "Amulet");
         assert_eq!(entity.talisman_attunements[0].description, "Aegis");
+    }
+
+    /// The M5/5g fields (aging points + reductions, warping points, twilight scars,
+    /// identity/flavor) round-trip through JSON unchanged at the current version.
+    #[test]
+    fn entity_aged_and_identity_fields_roundtrip() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.aging_points.insert(Characteristic::Str, 7);
+        entity.aging_reductions.insert(Characteristic::Qik, 1);
+        entity.warping_points = 15;
+        entity.twilight_scars = vec![TwilightScar {
+            description: "Eyes glow faintly in the dark".into(),
+        }];
+        entity.name = "Marcus".into();
+        entity.gender = "male".into();
+        entity.birth_year = Some(1194);
+        entity.sigil = "the smell of ozone".into();
+        entity.covenant_name = "Durenmar".into();
+        entity.parens = "Bonisagus of Durenmar".into();
+
+        let json = serde_json::to_string_pretty(&entity).unwrap();
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(entity, back);
+        assert!(json.contains(r#""schema_version": 9"#));
+        assert!(json.contains(r#""warping_points": 15"#));
+        assert!(json.contains(r#""name": "Marcus""#));
+        assert!(json.contains(r#""birth_year": 1194"#));
+    }
+
+    /// A slice-5e v9 save that predates the 5g fields still loads: the additive
+    /// `serde(default)` fields fill in empty/None/0.
+    #[test]
+    fn v9_5e_save_without_aged_or_identity_fields_still_loads() {
+        let v9 = r#"{
+          "schema_version": 9,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "aura": -3,
+          "selections": [{ "ref": "virtue.the_gift" }]
+        }"#;
+        let entity: Entity = serde_json::from_str(v9).unwrap();
+        assert_eq!(entity.aura, -3);
+        assert!(entity.aging_points.is_empty());
+        assert!(entity.aging_reductions.is_empty());
+        assert_eq!(entity.warping_points, 0);
+        assert!(entity.twilight_scars.is_empty());
+        assert!(entity.name.is_empty());
+        assert_eq!(entity.birth_year, None);
+    }
+
+    /// `normalize()` sorts twilight scars (by description) deterministically, and
+    /// empty aged/identity fields are omitted from canonical JSON.
+    #[test]
+    fn entity_normalize_sorts_twilight_scars() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.twilight_scars = vec![
+            TwilightScar {
+                description: "Zealous devotion to symmetry".into(),
+            },
+            TwilightScar {
+                description: "A silver streak in the hair".into(),
+            },
+        ];
+        entity.normalize();
+        assert_eq!(
+            entity.twilight_scars[0].description,
+            "A silver streak in the hair"
+        );
+
+        let empty = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        let json = serde_json::to_string(&empty).unwrap();
+        assert!(!json.contains("aging_points"));
+        assert!(!json.contains("warping_points"));
+        assert!(!json.contains("twilight_scars"));
+        assert!(!json.contains("\"name\""));
+        assert!(!json.contains("birth_year"));
     }
 
     #[test]

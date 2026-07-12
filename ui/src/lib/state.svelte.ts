@@ -607,6 +607,82 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  // --- Aged / warped state + identity (directly-entered; effects computed by
+  // the engine, never here) ---
+
+  /** Set accrued aging points for a Characteristic (0 removes the entry). */
+  setAgingPoints(characteristic: Characteristic, points: number): void {
+    this.entity.aging_points = this.#withCharCount(
+      this.entity.aging_points,
+      characteristic,
+      points,
+    );
+    this.#scheduleValidate();
+  }
+
+  /** Set completed aging reductions for a Characteristic (0 removes the entry). */
+  setAgingReduction(characteristic: Characteristic, reduction: number): void {
+    this.entity.aging_reductions = this.#withCharCount(
+      this.entity.aging_reductions,
+      characteristic,
+      reduction,
+    );
+    this.#scheduleValidate();
+  }
+
+  /** Shared helper: set a non-negative per-Characteristic count, pruning zeros. */
+  #withCharCount(
+    map: Partial<Record<Characteristic, number>> | undefined,
+    characteristic: Characteristic,
+    value: number,
+  ): Partial<Record<Characteristic, number>> {
+    const next = { ...(map ?? {}) };
+    const clamped = Math.max(0, Math.trunc(value));
+    if (clamped === 0) {
+      delete next[characteristic];
+    } else {
+      next[characteristic] = clamped;
+    }
+    return next;
+  }
+
+  /** Set accrued Warping Points (the engine derives the Warping Score). */
+  setWarpingPoints(points: number): void {
+    this.entity.warping_points = Math.max(0, Math.trunc(points));
+    this.#scheduleValidate();
+  }
+
+  addTwilightScar(): void {
+    this.entity.twilight_scars = [...(this.entity.twilight_scars ?? []), { description: '' }];
+    this.#scheduleValidate();
+  }
+
+  removeTwilightScarAt(index: number): void {
+    this.entity.twilight_scars = (this.entity.twilight_scars ?? []).filter((_, i) => i !== index);
+    this.#scheduleValidate();
+  }
+
+  setTwilightScarDescription(index: number, description: string): void {
+    this.entity.twilight_scars = (this.entity.twilight_scars ?? []).map((s, i) =>
+      i === index ? { ...s, description } : s,
+    );
+    this.#scheduleValidate();
+  }
+
+  /** Set a free-text identity/flavor field (no mechanical effect). */
+  setIdentity(
+    field: 'name' | 'gender' | 'sigil' | 'covenant_name' | 'parens',
+    value: string,
+  ): void {
+    this.entity[field] = value;
+    this.#scheduleValidate();
+  }
+
+  setBirthYear(year: number | null): void {
+    this.entity.birth_year = year != null && Number.isFinite(year) ? Math.trunc(year) : null;
+    this.#scheduleValidate();
+  }
+
   async save(): Promise<void> {
     this.error = null;
     try {

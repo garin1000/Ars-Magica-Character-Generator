@@ -298,6 +298,16 @@ impl ValidationIssue {
     /// character's enchanted devices exceeds the item-level budget the character's
     /// Virtues grant (Magic Items +25, Redcap 50; Core:4347-4349, :4842-4846).
     pub const CODE_OVER_ITEM_LEVEL: &'static str = "over_item_level";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a Characteristic's
+    /// completed aging/Decrepitude reductions would push its effective score below
+    /// the rules effective minimum (−5). Advisory — the engine still clamps the
+    /// derived score at the floor (Core:16579).
+    pub const CODE_EXCESSIVE_AGING_REDUCTION: &'static str = "excessive_aging_reduction";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a Characteristic's
+    /// accrued aging points exceed the magnitude of its (aged-down) score, which
+    /// per the rules should already have forced a drop. Non-blocking: the user may
+    /// be entering a character mid-accrual (Core:16579).
+    pub const CODE_AGING_POINTS_FORCE_DROP: &'static str = "aging_points_force_drop";
 
     /// Builds an issue with the given severity, code, args, and context.
     pub fn new(
@@ -434,6 +444,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_personality_traits(entity, ruleset, &mut issues);
         validate_reputations(entity, ruleset, &mut issues);
         validate_devices(entity, ruleset, &mut issues);
+        validate_aging(entity, ruleset, &mut issues);
         validate_xp_pool(entity, ruleset, &mut issues);
     }
 
@@ -2196,6 +2207,81 @@ fn validate_devices(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Validat
     }
 }
 
+/// Validates a directly-entered aged character's aging state (advisory). Aging is
+/// derived by the guided flow in M6; M5 only makes the raw state enterable, so both
+/// findings here are **warnings**, never blocking:
+///
+/// - `excessive_aging_reduction`: a Characteristic's completed drops
+///   ([`Entity::aging_reductions`]) would push its effective score below the rules
+///   effective minimum (−5). The derived score is clamped regardless; this only
+///   flags an implausible entry.
+/// - `aging_points_force_drop`: a Characteristic's accrued points
+///   ([`Entity::aging_points`]) exceed the magnitude of its aged-down score, which
+///   per the rules would already have forced a drop and reset. Kept non-blocking
+///   because a character may be entered mid-accrual.
+///
+/// Reads the un-aged bought score plus the reductions; it never touches the
+/// point-buy budget check (which is what keeps aging from perturbing creation
+/// legality). Source: Core Rules.md:16579.
+fn validate_aging(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    let bought = |c: &Characteristic| {
+        entity
+            .characteristics
+            .get(c)
+            .copied()
+            .map_or(0i32, i32::from)
+    };
+    let reduction = |c: &Characteristic| {
+        entity
+            .aging_reductions
+            .get(c)
+            .copied()
+            .map_or(0i32, i32::from)
+    };
+
+    let effective_min = ruleset
+        .characteristic_rules()
+        .and_then(|r| r.effective_min_score())
+        .map(i32::from);
+
+    if let Some(min) = effective_min {
+        for (characteristic, drop) in &entity.aging_reductions {
+            if *drop == 0 {
+                continue;
+            }
+            if bought(characteristic) - i32::from(*drop) < min {
+                issues.push(ValidationIssue::warning(
+                    ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION,
+                    args([
+                        ("characteristic", characteristic.to_string()),
+                        ("reduction", drop.to_string()),
+                        ("min", min.to_string()),
+                    ]),
+                    None,
+                ));
+            }
+        }
+    }
+
+    for (characteristic, points) in &entity.aging_points {
+        if *points == 0 {
+            continue;
+        }
+        let aged = bought(characteristic) - reduction(characteristic);
+        if u32::from(*points) > aged.unsigned_abs() {
+            issues.push(ValidationIssue::warning(
+                ValidationIssue::CODE_AGING_POINTS_FORCE_DROP,
+                args([
+                    ("characteristic", characteristic.to_string()),
+                    ("points", points.to_string()),
+                    ("score", aged.to_string()),
+                ]),
+                None,
+            ));
+        }
+    }
+}
+
 /// Validates Hermetic Art scores (mirrors [`validate_abilities`], minus the
 /// parameter logic — Arts are not parameterized): every referenced Art must
 /// resolve against the catalogue, no Art may appear twice, and every bought score
@@ -3301,6 +3387,97 @@ mod tests {
         entity.devices = vec![device("Wand", 5)]; // budget 0
         let result = validate(&entity, &rs);
         assert!(codes(&result).contains(&ValidationIssue::CODE_OVER_ITEM_LEVEL.to_string()));
+    }
+
+    /// A minimal ruleset carrying characteristic rules (effective range ±5), so the
+    /// aging-reduction floor check has a minimum to compare against.
+    fn aging_ruleset() -> Ruleset {
+        let items = r#"[
+          { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
+            "category": "special", "entity_kinds": ["character"] }
+        ]"#;
+        let types = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["special"], "forbidden_categories": [], "required_traits": [],
+            "forbidden_traits": [], "gift_policy": "forbidden", "gift_id": "virtue.the_gift",
+            "gift_categories": [], "creation_phases": ["concept"] }
+        ]"#;
+        let characteristics = r#"{
+          "start_points": 7, "base_max": 3, "base_min": -3,
+          "effective_max": 5, "effective_min": -5,
+          "costs": [
+            { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 }, { "score": 1, "cost": 1 },
+            { "score": 0, "cost": 0 }, { "score": -1, "cost": -1 }, { "score": -2, "cost": -3 },
+            { "score": -3, "cost": -6 }
+          ]
+        }"#;
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: types,
+            abilities: None,
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            characteristics: Some(characteristics),
+        })
+        .unwrap()
+    }
+
+    /// A plausible aged character (points within score magnitude, reduction within
+    /// the floor) raises no aging advisory.
+    #[test]
+    fn plausible_aging_state_has_no_warnings() {
+        let rs = aging_ruleset();
+        let mut entity = make_entity("companion", vec![]);
+        entity.characteristics.insert(Characteristic::Str, 3);
+        entity.aging_reductions.insert(Characteristic::Str, 1); // 3 − 1 = 2 ≥ −5
+        entity.aging_points.insert(Characteristic::Str, 1); // 1 ≤ |2|
+        let result = validate(&entity, &rs);
+        let codes = all_codes(&result);
+        assert!(!codes.contains(&ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION.to_string()));
+        assert!(!codes.contains(&ValidationIssue::CODE_AGING_POINTS_FORCE_DROP.to_string()));
+    }
+
+    /// A reduction that would drive the effective Characteristic below the rules
+    /// floor warns (non-blocking).
+    #[test]
+    fn excessive_aging_reduction_warns() {
+        let rs = aging_ruleset();
+        let mut entity = make_entity("companion", vec![]);
+        entity.characteristics.insert(Characteristic::Str, 0);
+        entity.aging_reductions.insert(Characteristic::Str, 6); // 0 − 6 = −6 < −5
+        let result = validate(&entity, &rs);
+        assert!(
+            all_codes(&result)
+                .contains(&ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION.to_string())
+        );
+        // Advisory only — never an error.
+        assert!(
+            result.errors().next().is_none(),
+            "issues: {:?}",
+            result.issues
+        );
+    }
+
+    /// Aging points exceeding the (aged-down) score magnitude warn but never block.
+    #[test]
+    fn aging_points_exceeding_score_warns_but_is_nonblocking() {
+        let rs = aging_ruleset();
+        let mut entity = make_entity("companion", vec![]);
+        entity.characteristics.insert(Characteristic::Sta, 1);
+        entity.aging_points.insert(Characteristic::Sta, 3); // 3 > |1|
+        let result = validate(&entity, &rs);
+        assert!(
+            all_codes(&result).contains(&ValidationIssue::CODE_AGING_POINTS_FORCE_DROP.to_string())
+        );
+        assert!(
+            result.errors().next().is_none(),
+            "issues: {:?}",
+            result.issues
+        );
     }
 
     #[test]

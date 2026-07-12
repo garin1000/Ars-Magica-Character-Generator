@@ -14,10 +14,10 @@ use arm_rules::{
     LocalizedRuleset, ReputationType, RestrictedXpPool, Ruleset, RulesetSources, Selection,
     ValidationMode, ValidationResult, ability_bonuses, ability_score_floors, age_ability_cap,
     art_bonuses, characteristic_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, confidence, effective_point_ceilings, entity_grants,
-    item_level_budget, item_level_used, reputation_grants, size, spell_levels_budget,
-    spell_levels_used, spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith,
-    validate, warping, xp_allocation,
+    characteristic_points_granted, confidence, decrepitude_score, effective_point_ceilings,
+    entity_grants, item_level_budget, item_level_used, reputation_grants, size,
+    spell_levels_budget, spell_levels_used, spell_mastery_floor, spell_mastery_xp,
+    supernatural_free_slots, true_faith, validate, warping, xp_allocation,
 };
 use serde::Serialize;
 
@@ -92,10 +92,16 @@ pub struct EffectiveScores {
     /// The Reputation grants the character's V/F confer, so the UI only offers a
     /// Reputation add-control (pre-filled kind/score) when one exists.
     pub reputation_grants: Vec<ReputationGrant>,
-    /// Derived Warping Score / Points granted by V/F (Warped by Magic → 1 / 5),
-    /// for the character-sheet Warping readout. 0/0 when nothing grants Warping.
+    /// Derived Warping Score / Points: the UNIFIED total of stored Warping Points
+    /// (`Entity::warping_points`) plus any granted by V/F (Warped by Magic → +5),
+    /// with the score derived by inverting the advancement curve (15 points → 2).
+    /// 0/0 when there is no Warping. Engine-authoritative; never recomputed in JS.
     pub warping_score: u8,
-    pub warping_points: u8,
+    pub warping_points: u32,
+    /// Derived Decrepitude Score: the sum of accrued aging points across all
+    /// Characteristics (`Entity::aging_points`) inverted through the advancement
+    /// curve (17 aging points → Decrepitude 2). 0 when there are no aging points.
+    pub decrepitude_score: u8,
     /// Derived True Faith Score granted by V/F (True Faith → 1); 0 when none.
     pub true_faith_score: u8,
     /// Derived starting enchanted-device level budget (Magic Items +25, Redcap
@@ -170,6 +176,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
             .collect(),
         warping_score,
         warping_points,
+        decrepitude_score: decrepitude_score(entity, ruleset),
         true_faith_score: true_faith(entity, ruleset),
         item_level_budget: item_level_budget(entity, ruleset),
         item_level_used: item_level_used(entity),

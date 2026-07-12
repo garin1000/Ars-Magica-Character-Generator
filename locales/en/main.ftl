@@ -144,8 +144,28 @@ warping-label = Warping
 warping-readout = Score { $score }, { $points } points
 true-faith-label = True Faith
 true-faith-readout = Score { $score }
+decrepitude-label = Decrepitude
+decrepitude-readout = Score { $score }
 item-levels-label = Enchanted Devices
 item-levels-readout = { $levels } levels
+# Identity / flavor fields (free-text, no mechanical effect).
+identity-label = Identity
+identity-name = Name
+identity-gender = Gender
+identity-birth-year = Birth year
+identity-sigil = Wizard's sigil
+identity-covenant = Covenant
+identity-parens = Parens
+# Directly-entered aged / warped state. The Decrepitude and Warping scores shown
+# are computed by the engine from these points, never recomputed here.
+aging-label = Aging
+aging-points-heading = Aging points per Characteristic
+aging-reductions-heading = Characteristic reductions
+warping-points-label = Warping points
+twilight-scars-label = Twilight Scars
+twilight-scar-placeholder = Describe the scar
+twilight-scar-add = Add Twilight Scar
+twilight-scars-empty = No Twilight Scars yet.
 personality-label = Personality Traits
 personality-name-placeholder = Trait
 personality-add = Add trait
@@ -320,6 +340,8 @@ issue-supernatural_ability_requires_virtue = { $ability } is a Supernatural Abil
 issue-personality_trait_out_of_range = Personality Trait { $name } ({ $value }) is outside the allowed range (±{ $max }).
 issue-reputation_not_granted = A { $kind } Reputation ({ $content }) needs a Virtue or Flaw that grants one.
 issue-over_item_level = Enchanted devices total { $used } levels, over the budget of { $budget } (by { $over }).
+issue-excessive_aging_reduction = Aging reductions to { $characteristic } ({ $reduction }) would drop it below the minimum score ({ $min }).
+issue-aging_points_force_drop = { $characteristic } has { $points } aging points, more than its score ({ $score }) — a Characteristic drop is due.
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.

@@ -354,6 +354,50 @@ describe('magic possessions', () => {
   });
 });
 
+describe('aged / warped state + identity', () => {
+  it('sets per-Characteristic aging points and prunes zeros', () => {
+    store.setAgingPoints('str', 7);
+    store.setAgingPoints('qik', -3); // clamps to 0 → removed
+    expect(store.entity.aging_points).toEqual({ str: 7 });
+    store.setAgingPoints('str', 0); // back to 0 → removed
+    expect(store.entity.aging_points).toEqual({});
+  });
+
+  it('sets per-Characteristic aging reductions and prunes zeros', () => {
+    store.setAgingReduction('sta', 2);
+    expect(store.entity.aging_reductions).toEqual({ sta: 2 });
+    store.setAgingReduction('sta', 0);
+    expect(store.entity.aging_reductions).toEqual({});
+  });
+
+  it('sets non-negative stored Warping Points', () => {
+    store.setWarpingPoints(15);
+    expect(store.entity.warping_points).toBe(15);
+    store.setWarpingPoints(-4);
+    expect(store.entity.warping_points).toBe(0);
+  });
+
+  it('adds, edits and removes Twilight Scars by index', () => {
+    store.addTwilightScar();
+    store.setTwilightScarDescription(0, 'Silver streak in the hair');
+    expect(store.entity.twilight_scars).toEqual([{ description: 'Silver streak in the hair' }]);
+    store.addTwilightScar();
+    store.removeTwilightScarAt(0);
+    expect(store.entity.twilight_scars).toEqual([{ description: '' }]);
+  });
+
+  it('sets free-text identity fields and birth year', () => {
+    store.setIdentity('name', 'Marcus');
+    store.setIdentity('sigil', 'the smell of ozone');
+    store.setBirthYear(1194);
+    expect(store.entity.name).toBe('Marcus');
+    expect(store.entity.sigil).toBe('the smell of ozone');
+    expect(store.entity.birth_year).toBe(1194);
+    store.setBirthYear(null);
+    expect(store.entity.birth_year).toBeNull();
+  });
+});
+
 // --- removeSelectionAt() ----------------------------------------------------
 
 describe('removeSelectionAt', () => {

@@ -243,10 +243,15 @@ export interface EffectiveScores {
   // Reputation grants the character's V/F confer (kind + score), so the UI only
   // offers a Reputation add-control when one exists.
   reputation_grants: ReputationGrant[];
-  // Derived Warping Score / Points granted by V/F (Warped by Magic 1 / 5); 0/0
-  // when nothing grants Warping.
+  // Derived Warping: the unified total of stored Warping Points plus any granted
+  // by V/F, with the score derived by inverting the advancement curve (15 points
+  // 2). 0/0 when there is no Warping. Engine-authoritative; never recomputed here.
   warping_score: number;
   warping_points: number;
+  // Derived Decrepitude Score: the sum of accrued aging points across all
+  // Characteristics inverted through the advancement curve (17 points 2); 0 when
+  // there are no aging points. Engine-authoritative; never recomputed here.
+  decrepitude_score: number;
   // Derived True Faith Score granted by V/F (True Faith 1); 0 when none.
   true_faith_score: number;
   // Derived starting enchanted-device level budget (Magic Items +25, Redcap 50);
@@ -423,6 +428,12 @@ export interface Familiar {
 export interface TalismanAttunement {
   description: string;
   bonus: number;
+}
+
+// A Twilight Scar: a minor magical trait a magus acquires from Twilight
+// (free-text; no mechanical number).
+export interface TwilightScar {
+  description: string;
 }
 
 // Where a Longevity Ritual comes from (rendered via Fluent, never as a raw slug).
@@ -616,6 +627,24 @@ export interface Entity {
   talisman_attunements?: TalismanAttunement[];
   // The magus's Longevity Ritual. Omitted when none.
   longevity_ritual?: LongevityRitual | null;
+  // Accrued aging points per Characteristic (their sum is Decrepitude XP).
+  // Omitted when empty.
+  aging_points?: Partial<Record<Characteristic, number>>;
+  // Completed Characteristic drops from aging/Decrepitude. Lower the effective
+  // (derived) score, never the bought score creation-legality reads. Omitted empty.
+  aging_reductions?: Partial<Record<Characteristic, number>>;
+  // Accrued Warping Points (summed with grant points, inverted to the score by
+  // the engine). Omitted when 0.
+  warping_points?: number;
+  // Twilight Scars (free-text). Omitted when empty.
+  twilight_scars?: TwilightScar[];
+  // Identity / flavor fields (free-text, no mechanical effect). Omitted when empty.
+  name?: string;
+  gender?: string;
+  birth_year?: number | null;
+  sigil?: string;
+  covenant_name?: string;
+  parens?: string;
 }
 
 export interface ValidationIssue {
