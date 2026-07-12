@@ -310,6 +310,31 @@ export function abilityXpSpent(
   return total;
 }
 
+/**
+ * Total XP committed to per-spell Spell Mastery Abilities (Σ xp_for_score of each
+ * spell's bought mastery). A spell's Mastery rises like an Ability, so it is
+ * priced from the same advancement table; unmastered spells (0/null) cost
+ * nothing. Spent from the restricted Spell-Mastery pool (Mastered Spells +50).
+ */
+export function spellMasteryXpSpent(
+  advancement: { score: number; total_xp: number }[] | undefined,
+  spells: { mastery?: number | null }[] | undefined,
+): number {
+  return abilityXpSpent(
+    advancement,
+    (spells ?? []).map((s) => ({ score: s.mastery ?? 0 })),
+  );
+}
+
+/**
+ * A spell's effective Spell Mastery score: the higher of its bought mastery and
+ * the granted floor (Flawless Magic auto-masters every spell at 1). Mirrors the
+ * engine's `effective_spell_mastery`.
+ */
+export function effectiveSpellMastery(bought: number | null | undefined, floor: number): number {
+  return Math.max(bought ?? 0, floor);
+}
+
 /** Highest whole score the advancement table can price (the spinner ceiling). */
 export function maxAbilityScore(advancement: { score: number }[] | undefined): number {
   if (!advancement || advancement.length === 0) return 0;

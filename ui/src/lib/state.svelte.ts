@@ -417,6 +417,19 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /**
+   * Adjust the bought Spell Mastery score of the spell at `index` by `delta`,
+   * clamped to [0, max]. Spent from the restricted Spell-Mastery XP pool; the
+   * granted floor (Flawless Magic) is applied on top when computing the effective
+   * mastery, so it is not stored here. Mirrors {@link adjustAbilityAt}.
+   */
+  adjustSpellMasteryAt(index: number, delta: number, max: number): void {
+    this.entity.spells = (this.entity.spells ?? []).map((s, i) =>
+      i === index ? { ...s, mastery: Math.max(0, Math.min(max, (s.mastery ?? 0) + delta)) } : s,
+    );
+    this.#scheduleValidate();
+  }
+
   /** Spell edits are by row index, since a General spell can appear at several levels. */
   removeSpellAt(index: number): void {
     this.entity.spells = (this.entity.spells ?? []).filter((_, i) => i !== index);

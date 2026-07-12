@@ -231,6 +231,30 @@ describe('removeSpellAt', () => {
   });
 });
 
+// --- adjustSpellMasteryAt() -------------------------------------------------
+
+describe('adjustSpellMasteryAt', () => {
+  it('raises the bought mastery of the spell at the given index', () => {
+    store.addSpell('spell.pilum_of_fire');
+    store.adjustSpellMasteryAt(0, 2, 5);
+    expect(store.entity.spells?.[0].mastery).toBe(2);
+  });
+
+  it('clamps at 0 (never negative) and at the given max', () => {
+    store.addSpell('spell.pilum_of_fire');
+    store.adjustSpellMasteryAt(0, -3, 5); // floors at 0
+    expect(store.entity.spells?.[0].mastery).toBe(0);
+    store.adjustSpellMasteryAt(0, 99, 5); // clamps at max
+    expect(store.entity.spells?.[0].mastery).toBe(5);
+  });
+
+  it('ignores an out-of-range index', () => {
+    store.addSpell('spell.pilum_of_fire');
+    store.adjustSpellMasteryAt(9, 1, 5);
+    expect(store.entity.spells?.[0].mastery ?? 0).toBe(0);
+  });
+});
+
 // --- Phase 7: age, personality traits, reputations -------------------------
 
 describe('setAge', () => {

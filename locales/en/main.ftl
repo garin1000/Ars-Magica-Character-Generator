@@ -126,7 +126,13 @@ spell-none = — Select a spell —
 # The spell-levels budget bar: how many of the magus's levels are used.
 spell-levels-used = Spell levels: { $used } / { $budget }
 spell-mastery-xp = Mastery XP: { $xp }
+# The per-spell Spell-Mastery XP pool bar: how much of the pool is spent.
+spell-mastery-pool = Mastery XP: { $used } / { $pool }
 spell-mastery-floor = All spells mastered at { $score }
+# The per-spell Spell-Mastery stepper.
+spell-mastery-label = Mastery
+spell-mastery-increment = Increase spell mastery
+spell-mastery-decrement = Decrease spell mastery
 spell-remove = Remove
 # Details tab: age, Confidence (read-only, derived), Personality Traits, Reputations.
 age-label = Age

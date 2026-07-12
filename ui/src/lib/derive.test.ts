@@ -4,6 +4,8 @@ import {
   abilityDisplayName,
   abilityLabel,
   abilityXpSpent,
+  effectiveSpellMastery,
+  spellMasteryXpSpent,
   artAbbreviation,
   artLabel,
   artXpSpent,
@@ -534,6 +536,43 @@ describe('abilityXpSpent', () => {
 
   it('treats score 0 as no XP and skips unknown scores', () => {
     expect(abilityXpSpent(advancement, [{ score: 0 }, { score: 9 }])).toBe(0);
+  });
+});
+
+// --- spellMasteryXpSpent() / effectiveSpellMastery() ------------------------
+
+describe('spellMasteryXpSpent', () => {
+  const advancement = [
+    { score: 1, total_xp: 5 },
+    { score: 2, total_xp: 15 },
+    { score: 3, total_xp: 30 },
+  ];
+
+  it('sums the mastery-Ability XP across every known spell', () => {
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }, { mastery: 2 }])).toBe(45);
+  });
+
+  it('treats unmastered spells (0/null/undefined) as no XP', () => {
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 0 }, { mastery: null }, {}])).toBe(0);
+  });
+
+  it('surfaces over-pool spending (used exceeds a 50-XP pool)', () => {
+    // Two spells at mastery 3 cost 60 XP > the single Mastered Spells pool of 50.
+    const used = spellMasteryXpSpent(advancement, [{ mastery: 3 }, { mastery: 3 }]);
+    expect(used).toBe(60);
+    expect(used > 50).toBe(true);
+  });
+});
+
+describe('effectiveSpellMastery', () => {
+  it('takes the granted floor when it beats the bought mastery', () => {
+    expect(effectiveSpellMastery(0, 1)).toBe(1);
+    expect(effectiveSpellMastery(null, 1)).toBe(1);
+  });
+
+  it('keeps the bought mastery when it beats the floor', () => {
+    expect(effectiveSpellMastery(3, 1)).toBe(3);
+    expect(effectiveSpellMastery(2, 0)).toBe(2);
   });
 });
 
