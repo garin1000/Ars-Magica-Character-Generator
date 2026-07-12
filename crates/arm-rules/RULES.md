@@ -1161,11 +1161,180 @@ Hermetic, `:1091-1101`):
 `validate_reputations` errors on any reputation beyond the grants of its kind
 (`reputation_not_granted`). Seeded granters: **Infamous** (`:6310-6312`, Minor
 General, `grants_reputation {local, 4}`) and **Black Sheep** (`:5703-5705`, Major
-Story, `{local, 2}`). Only Local granters exist in Core; Hermetic/Ecclesiastical
-granters (Hermetic Prestige is at Core `:4071-4073` per the House-V/F table above;
-the "not in Core source" claim here is to be reconciled in M5/5a) are M5 (5a).
+Story, `{local, 2}`). **Correction (M5/5a):** the earlier "only Local granters
+exist in Core" claim was wrong. **Hermetic Prestige** *is* in Core at `:4071-4073`
+(Hermetic Reputation level **4** — the Darius example at `:2518` says 3, an errata
+slip; the Virtue text's 4 is authoritative), and **Famous** (`:3861-3863`) grants a
+**player-chosen-type** Reputation at level 4. These reputation-granting
+`creation_effect` V/F are catalogued in the M5/5a audit below and wired in slice
+5a-wire (Famous may need a player-selected `kind` param on `GrantsReputation`).
 
 ---
+
+## Virtue/Flaw classification (M5/5a)
+
+Every entry in `rules/core/virtues_flaws.json` carries a required `classification`
+field (engine enum `Classification`, serde `snake_case`; no serde default — an
+unclassified entry fails to load, and `tests/data_integrity.rs::every_vf_is_classified`
+guards the acceptance criterion). This slice adds **no mechanical effects**; it is a
+data-tagging + provenance pass whose output finalizes the slice-4/5b `Effect`
+variant set and the slice-5a-wire creation-number wiring. The three disjoint
+classes:
+
+- **`narrative`** — no mechanical creation number and no in-play/derived-total
+  effect. Personality, Story, and most Social-Status V/F are narrative by design;
+  they are **never** given an invented effect. No source citation is required for a
+  narrative item.
+- **`creation_effect`** — changes a character-creation number/state (starting
+  scores, XP grants, Confidence, Size/characteristic deltas, reputation grants,
+  spell-levels, item-level budget, True Faith / Might scores, a free starting
+  Supernatural Ability score, …). Includes every entry that already carries
+  `effects`.
+- **`in_play_effect`** — no creation-number change, but modifies an in-play/derived
+  total the engine computes in slice 5i (casting / lab / penetration / magic
+  resistance / combat / soak / study / aging-longevity).
+
+Counts over the shipped catalogue (structural, not asserted as exact totals in
+tests): **narrative 445**, **creation_effect 115**
+(of which 36 already wired via `effects`,
+79 not yet wired),
+**in_play_effect 93**. Total 653.
+
+### Roadmap corrections applied here
+
+- **Wealthy / Poor are `narrative`.** Core defines only advancement-*season*
+  effects for them (`:5235-5237`, `:6594-6596`); there is no creation XP-per-year
+  figure, so no invented creation effect is assigned (the season effect is an M6
+  life-stage concern).
+- **Hermetic Prestige `creation_effect`** — Core `:4071-4073`, a Hermetic
+  Reputation at level **4** (the `:2518` Darius example's 3 is an errata slip; the
+  Virtue text's 4 is authoritative). The stale "not in Core / Local-only" claim in
+  the Reputations section above is corrected.
+- **Famous `creation_effect`** — Core `:3861-3863`, a **player-chosen-type**
+  Reputation at level 4 (5a-wire may add a player-selected `kind` param to
+  `GrantsReputation`).
+
+### In-play effect families (definitive input to slice 4 / 5b)
+
+- **Magical Focus (major/minor)** — `virtue.major_magical_focus` (Core:4399-4422), `virtue.minor_magical_focus` (Core:4536-4538), `virtue.mythic_blood` (Core:4573-4589)
+- **Flat casting-total bonus/penalty** — `virtue.method_caster` (Core:4524-4527), `flaw.poor_formulaic_magic` (Core:6610-6613), `flaw.afflicted_tongue` (Core:5655-5658), `virtue.life_boost` (Core:4295-4298), `virtue.leper_magus` (Core:4249-4252), `virtue.cyclic_magic_positive` (Core:3635-3638), `flaw.cyclic_magic_negative` (Core:5893-5896), `virtue.special_circumstances` (Core:4998-5001), `virtue.ways_of_the_land` (Core:5231-5234), `flaw.corrupted_spells` (Core:5859-5864), `flaw.susceptibility_to_divine_power` (Core:6815-6818)
+- **Spontaneous-magic casting modifier** — `flaw.weak_spontaneous_magic` (Core:7084-7089), `virtue.diedne_magic` (Core:3675-3682), `virtue.faerie_raised_magic` (Core:3829-3842), `virtue.spell_improvisation` (Core:5002-5005), `virtue.life_linked_spontaneous_magic` (Core:4299-4306)
+- **Art-halving (Technique / Form)** — `flaw.deficient_technique` (Core:5913-5915), `flaw.deficient_form` (Core:5909-5912)
+- **Circumstantial casting/lab halving** — `flaw.deleterious_circumstances` (Core:5917-5920), `flaw.environmental_magic_condition` (Core:6020-6023), `flaw.short_ranged_magic` (Core:6737-6740)
+- **Flat lab-total bonus/penalty** — `virtue.adept_laboratory_student` (Core:3368-3371), `virtue.aristotelian_training` (Core:3440-3443), `virtue.inventive_genius` (Core:4151-4154), `flaw.creative_block` (Core:5873-5876), `flaw.weak_scholar` (Core:7080-7083), `flaw.disjointed_magic` (Core:5972-5975), `flaw.the_constant_expression` (Core:5821-5838), `virtue.potent_magic_major` (Core:4740-4781), `virtue.potent_magic_minor` (Core:4740-4781)
+- **Lab-total halving** — `flaw.weak_enchanter` (Core:7060-7063), `flaw.difficult_longevity_ritual` (Core:5962-5965)
+- **Ritual effective-level bonus** — `virtue.mercurian_magic` (Core:4514-4523)
+- **Penetration-total modifier** — `flaw.weak_magic` (Core:7064-7067)
+- **Magic-resistance modifier** — `flaw.flawed_parma_magica` (Core:6142-6145), `flaw.limited_magic_resistance` (Core:6346-6349), `flaw.weak_magic_resistance` (Core:7068-7071), `flaw.susceptibility_to_faerie_power` (Core:6819-6822), `flaw.susceptibility_to_infernal_power` (Core:6823-6826), `virtue.commanding_aura` (Core:3579-3596)
+- **Flat Soak bonus/penalty** — `virtue.tough` (Core:5145-5147), `flaw.frail` (Core:6190-6193)
+- **Wound/fatigue penalty delta** — `virtue.enduring_constitution` (Core:3751-3754), `flaw.low_tolerance` (Core:6366-6369), `flaw.painful_magic` (Core:6574-6577), `flaw.vulnerable_casting` (Core:6993-7004), `virtue.withstand_casting` (Core:5261-5282), `flaw.obese` (Core:6516-6519), `flaw.short_of_breath` (Core:6733-6736), `virtue.long_winded` (Core:4327-4330)
+- **Wound-recovery modifier** — `flaw.fragile_constitution` (Core:6186-6189), `virtue.rapid_convalescence` (Core:4834-4837)
+- **Combat total modifier (atk/def/init/dam)** — `virtue.berserk` (Core:3500-3503), `flaw.hobbled` (Core:6260-6263), `flaw.lame` (Core:6330-6333), `flaw.missing_hand` (Core:6438-6441), `flaw.missing_eye` (Core:6434-6437), `flaw.poor_eyesight` (Core:6606-6609), `flaw.palsied_hands` (Core:6578-6581), `flaw.slow_reflexes` (Core:6763-6766), `virtue.lightning_reflexes` (Core:4311-4314), `virtue.fast_caster` (Core:3865-3868)
+- **Study source-quality / advancement modifier** — `virtue.apt_student` (Core:3422-3425), `virtue.book_learner` (Core:3519-3522), `virtue.free_study` (Core:3937-3940), `virtue.good_teacher` (Core:3971-3974), `virtue.independent_study` (Core:4115-4118), `virtue.study_bonus` (Core:5056-5072), `flaw.unimaginative_learner` (Core:6915-6918), `flaw.poor_student` (Core:6626-6628), `flaw.incomprehensible` (Core:6294-6297), `virtue.secondary_insight` (Core:4892-4895), `flaw.loose_magic` (Core:6354-6357)
+- **Aging / longevity modifier** — `flaw.age_quickly` (Core:5659-5662), `flaw.baneful_circumstances` (Core:5687-5690), `flaw.monstrous_blood` (Core:6454-6467), `virtue.bee_king` (Core:3484-3499), `virtue.faerie_blood` (Core:3797-3820), `virtue.magical_blood` (Core:4359-4372), `virtue.unaging` (Core:5187-5190), `flaw.bound_to_role_role` (Core:5735-5748), `flaw.leprosy` (Core:6338-6341), `flaw.poor_living_conditions` (Core:6618-6621), `virtue.mild_aging` (Core:4528-4531), `virtue.magian_lineage_major` (Core:4339-4346), `virtue.magian_lineage_minor` (Core:4339-4346)
+- **Non-standard-casting penalty removal (Deft/Quiet/Subtle)** — `virtue.deft_form` (Core:3645-3648), `virtue.quiet_magic` (Core:4822-4827), `virtue.subtle_magic` (Core:5073-5076)
+- **Flat ability-total bonus (Concentration)** — `virtue.academic_concentration_subject` (Core:3362-3367)
+
+
+### `creation_effect` V/F not yet wired (input to slice 5a-wire)
+
+**Confidence:**
+- `flaw.low_self_esteem` (Core:6362-6365) — Confidence (no score/points)
+- `virtue.ferocity` (Core:3873-3876) — Confidence score 1 points 3
+
+**Free nested V/F grant:**
+- `virtue.devil_child` (Realms of Power - The Infernal:4144-4149) — grants free Minor Virtue
+- `virtue.faerie_doctor` (Realms of Power - Faerie:6394-6399) — grants free Virtue (Dowsing)
+- `virtue.nephilim` (Realms of Power - The Divine (Revised):3485-3513) — grants free Virtue
+
+**Free starting Supernatural Ability score:**
+- `virtue.animal_ken` (Core:3414-3417) — free starting Supernatural Ability score
+- `virtue.corpse_magic` (Core:3605-3608) — free starting Supernatural Ability score
+- `virtue.crafters_healing` (Core:3617-3620) — free starting Supernatural Ability score
+- `virtue.embitterment` (Core:3739-3742) — free starting Supernatural Ability score
+- `virtue.enchanting_ability` (Core:3747-3750) — free starting Supernatural Ability score
+- `virtue.entrancement` (Core:3767-3770) — free starting Supernatural Ability score
+- `virtue.font_of_knowledge` (Core:3921-3924) — free starting Supernatural Ability score
+- `virtue.hex` (Core:4075-4078) — free starting Supernatural Ability score
+- `virtue.induction` (Core:4119-4122) — free starting Supernatural Ability score
+- `virtue.magic_sensitivity` (Core:4351-4354) — free starting Supernatural Ability score
+- `virtue.persona` (Core:4710-4713) — free starting Supernatural Ability score
+- `virtue.sense_passions` (Core:4930-4933) — free starting Supernatural Ability score
+- `virtue.shapeshifter` (Core:4946-4949) — free starting Supernatural Ability score
+- `virtue.spirit_votary` (Realms of Power - Magic:5480-5486) — grants free Virtue (Second Sight)
+- `virtue.strong_faerie_blood` (Core:5032-5047) — free starting Second Sight ability
+- `virtue.summon_animals` (Core:5085-5088) — free starting Supernatural Ability score
+- `virtue.whistle_up_the_wind` (Core:5243-5246) — free starting Supernatural Ability score
+- `virtue.wilderness_sense` (Core:5247-5250) — free starting Supernatural Ability score
+
+**Item-level budget:**
+- `virtue.masterpiece` (Core:4476-4479) — item-level budget grant
+
+**Might / power budget:**
+- `virtue.demonic_blood` (Realms of Power - The Infernal:4116-4131) — Infernal Might score + powers
+- `virtue.demonic_might` (Realms of Power - The Infernal:4132-4137) — Infernal Might +2
+- `virtue.demonic_powers` (Realms of Power - The Infernal:4138-4143) — Infernal Powers budget
+- `virtue.strong_angelic_heritage` (Realms of Power - The Divine (Revised):1969-1980) — Divine Might + powers
+
+**Reputation grant:**
+- `flaw.apostate` (Core:5675-5678) — reputation grant bad score 4
+- `flaw.failed_journeyman` (Core:6060-6063) — reputation grant bad score 2
+- `flaw.failed_master` (Core:6064-6067) — reputation grant bad score 4
+- `flaw.failed_monk` (Core:6068-6071) — reputation grant poor score 2
+- `flaw.failed_student` (Core:6072-6075) — reputation grant academic score 2
+- `flaw.feral_scent` (Core:6106-6109) — reputation grant negative score 2
+- `flaw.gabai` (Core:6198-6201) — reputation grant negative score 2
+- `flaw.hedge_wizard` (Core:6240-6243) — reputation grant hermetic score 3
+- `flaw.infamous_master` (Core:6314-6317) — reputation grant hermetic score 3
+- `flaw.outlaw` (Core:6542-6545) — reputation grant score 2
+- `flaw.outlaw_leader` (Core:6546-6549) — reputation grant score 3
+- `flaw.outsider_major` (Core:6550-6561) — reputation grant bad score 1-3
+- `flaw.outsider_minor` (Core:6550-6561) — reputation grant bad score 1-3
+- `flaw.usurer` (Core:6951-6954) — reputation grant poor score 4
+- `virtue.baccalaureus` (Core:3470-3475) — XP grant 90 + reputation grant academic score 1
+- `virtue.cathedral_school_master` (Core:3549-3554) — XP grant 240 + reputation grant academic score 2
+- `virtue.doctor_in_faculty` (Core:3683-3698) — XP grant 300 + reputation grant academic score 3
+- `virtue.famous` (Core:3861-3864) — reputation grant player-chosen score 4
+- `virtue.hermetic_prestige` (Core:4071-4073) — reputation grant hermetic score 4
+- `virtue.lone_redcap` (Core:4319-4326) — XP grant 300 + grants Virtue + reputation grant poor score 2
+- `virtue.magister_in_artibus` (Core:4385-4394) — XP grant 240 + reputation grant academic score 2
+- `virtue.magister_in_medicina` (Core:4395-4398) — XP grant 300 + reputation grant academic score 3
+- `virtue.master_bard` (Core:4457-4462) — XP grant 240 + reputation grant local score 3
+- `virtue.physician_of_salerno` (Core:4732-4735) — XP grant 50 + reputation 2
+- `virtue.rard` (Core:3476-3479) — reputation grant local score 1
+- `virtue.rosh_beth_din` (Core:4878-4883) — XP grant 50 + reputation grant good score 2 + grants Virtue
+- `virtue.senior_bard` (Core:4904-4909) — XP grant 90 + reputation grant local score 2
+- `virtue.senior_clergy` (Core:4910-4921) — reputation grant score 4
+- `virtue.templar_office_holder` (Core:5121-5124) — reputation grant score 2
+
+**Size/characteristic delta:**
+- `virtue.blood_of_the_nephilim` (Realms of Power - The Divine (Revised):1941-1954) — size delta + Dominion Lore
+
+**True Faith score:**
+- `virtue.powerful_relic` (Core:4782-4787) — True Faith score 3
+- `virtue.relic` (Core:4852-4855) — True Faith score 1
+
+**XP grant:**
+- `flaw.corrupted_arts` (Core:5853-5858) — grants XP swing at creation + situational casting
+- `flaw.feral_upbringing` (Core:6110-6113) — XP grant 120
+- `flaw.savantism` (Core:6703-6708) — halves starting XP
+- `virtue.arcane_lore` (Core:3430-3435) — XP grant 50
+- `virtue.clan_ilfetu` (Core:3563-3566) — XP grant 50
+- `virtue.craft_guild_training` (Core:3613-3616) — XP grant 50
+- `virtue.elemental_magic` (Core:3731-3738) — Art XP distribution at creation
+- `virtue.falconer` (Core:3847-3852) — XP grant 50
+- `virtue.forge_companion` (Core:3925-3928) — XP grant 50
+- `virtue.hermetic_experience` (Core:4063-4066) — XP grant 50
+- `virtue.ineslemen` (Core:4123-4126) — XP grant 50 + grants Minor Flaw
+- `virtue.marshal` (Core:4449-4456) — XP grant 50
+- `virtue.master_of_kennels` (Core:4467-4470) — XP grant 50
+- `virtue.mentored_by_demons` (Core:4496-4499) — XP grant 50
+- `virtue.schooled_in_crime` (Core:4884-4887) — XP grant 50
+- `virtue.shadchan` (Core:4934-4939) — XP grant 50
+- `virtue.simple_student` (Core:4958-4963) — XP grant 30/yr
+- `virtue.trained_assassin` (Core:5153-5156) — XP grant 50
+- `virtue.venditor` (Core:5207-5210) — XP grant 50
+
 
 ## Engine framework (book-agnostic, no rulebook source)
 

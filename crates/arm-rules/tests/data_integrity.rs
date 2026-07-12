@@ -284,6 +284,46 @@ fn fully_specified_companion_validates() {
     );
 }
 
+/// Acceptance criterion for M5 slice 5a: every shipped Virtue/Flaw carries a
+/// `classification`. The field is required (no serde default), so an unclassified
+/// entry would already fail `load_ruleset()`; this test additionally asserts the
+/// catalogue is non-trivial and that all three classes are actually used, so the
+/// classification pass can never silently collapse to a single bucket.
+#[test]
+fn every_vf_is_classified() {
+    let rs = load_ruleset();
+    let mut narrative = 0usize;
+    let mut creation = 0usize;
+    let mut in_play = 0usize;
+    for item in rs.items() {
+        match item.classification {
+            Classification::Narrative => narrative += 1,
+            Classification::CreationEffect => creation += 1,
+            Classification::InPlayEffect => in_play += 1,
+        }
+    }
+    // Catalogue size is data, not code: assert only that the catalogue is large
+    // and every class is represented, never exact per-class totals.
+    assert!(
+        narrative + creation + in_play > 600,
+        "expected the full V/F catalogue to load"
+    );
+    assert!(narrative > 0, "some V/F must be narrative");
+    assert!(creation > 0, "some V/F must be creation_effect");
+    assert!(in_play > 0, "some V/F must be in_play_effect");
+    // Every entry already carrying `effects` is a creation-number change.
+    for item in rs.items() {
+        if !item.effects.is_empty() {
+            assert_eq!(
+                item.classification,
+                Classification::CreationEffect,
+                "{} carries effects so must be creation_effect",
+                item.id
+            );
+        }
+    }
+}
+
 #[test]
 fn english_i18n_covers_all_items() {
     let rs = load_ruleset();

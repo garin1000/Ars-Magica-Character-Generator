@@ -2324,6 +2324,7 @@ mod tests {
           {
             "id": "virtue.the_gift",
             "kind": "virtue",
+            "classification": "narrative",
             "magnitude": "free",
             "category": "special",
             "entity_kinds": ["character"]
@@ -2331,6 +2332,7 @@ mod tests {
           {
             "id": "virtue.hermetic_magus",
             "kind": "virtue",
+            "classification": "narrative",
             "magnitude": "free",
             "category": "social_status",
             "entity_kinds": ["character"],
@@ -2339,6 +2341,7 @@ mod tests {
           {
             "id": "virtue.gentle_gift",
             "kind": "virtue",
+            "classification": "narrative",
             "magnitude": "major",
             "category": "hermetic",
             "entity_kinds": ["character"],
@@ -2348,6 +2351,7 @@ mod tests {
           {
             "id": "flaw.blatant_gift",
             "kind": "flaw",
+            "classification": "narrative",
             "magnitude": "major",
             "category": "hermetic",
             "entity_kinds": ["character"],
@@ -2357,6 +2361,7 @@ mod tests {
           {
             "id": "virtue.puissant_ability",
             "kind": "virtue",
+            "classification": "narrative",
             "magnitude": "minor",
             "category": "general",
             "entity_kinds": ["character"],
@@ -2365,6 +2370,7 @@ mod tests {
           {
             "id": "flaw.poor_student",
             "kind": "flaw",
+            "classification": "narrative",
             "magnitude": "minor",
             "category": "general",
             "entity_kinds": ["character"]
@@ -2372,6 +2378,7 @@ mod tests {
           {
             "id": "virtue.keen_vision",
             "kind": "virtue",
+            "classification": "narrative",
             "magnitude": "minor",
             "category": "general",
             "entity_kinds": ["character"]
@@ -2379,6 +2386,7 @@ mod tests {
           {
             "id": "virtue.large",
             "kind": "virtue",
+            "classification": "narrative",
             "magnitude": "minor",
             "category": "general",
             "entity_kinds": ["character"]
@@ -2386,6 +2394,7 @@ mod tests {
           {
             "id": "virtue.tough",
             "kind": "virtue",
+            "classification": "narrative",
             "magnitude": "minor",
             "category": "general",
             "entity_kinds": ["character"]
@@ -2477,19 +2486,19 @@ mod tests {
     /// gated on it (by `Has` and by `AbilityMin`), and one mutually incompatible
     /// with it (for the B1 guard).
     const GRANT_TEST_ITEMS: &str = r#"[
-        { "id": "virtue.the_gift", "kind": "virtue", "magnitude": "free",
+        { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
           "category": "special", "entity_kinds": ["character"] },
-        { "id": "virtue.heartbeast", "kind": "virtue", "magnitude": "major",
+        { "id": "virtue.heartbeast", "kind": "virtue", "classification": "narrative", "magnitude": "major",
           "category": "hermetic", "entity_kinds": ["character"],
           "effects": [{ "type": "ability_score_grant", "ability": "ability.heartbeast", "amount": 1 }],
           "incompatible_with": ["virtue.foe_of_heartbeast"] },
-        { "id": "virtue.needs_heartbeast", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.needs_heartbeast", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "hermetic", "entity_kinds": ["character"],
           "prerequisites": { "kind": "has", "value": "virtue.heartbeast" } },
-        { "id": "virtue.needs_heartbeast_ability", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.needs_heartbeast_ability", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "hermetic", "entity_kinds": ["character"],
           "prerequisites": { "kind": "ability_min", "value": { "ability": "ability.heartbeast", "score": 1 } } },
-        { "id": "virtue.foe_of_heartbeast", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.foe_of_heartbeast", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "hermetic", "entity_kinds": ["character"],
           "incompatible_with": ["virtue.heartbeast"] }
     ]"#;
@@ -2644,13 +2653,13 @@ mod tests {
     /// magus can buy two distinct Major Hermetic Virtues (to trip the cap) while
     /// Bjornaer's grant supplies a third that must stay exempt.
     const CAP_ITEMS: &str = r#"[
-        { "id": "virtue.the_gift", "kind": "virtue", "magnitude": "free",
+        { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
           "category": "special", "entity_kinds": ["character"] },
-        { "id": "virtue.gentle_gift", "kind": "virtue", "magnitude": "major",
+        { "id": "virtue.gentle_gift", "kind": "virtue", "classification": "narrative", "magnitude": "major",
           "category": "hermetic", "entity_kinds": ["character"] },
-        { "id": "virtue.mythic_blood", "kind": "virtue", "magnitude": "major",
+        { "id": "virtue.mythic_blood", "kind": "virtue", "classification": "narrative", "magnitude": "major",
           "category": "hermetic", "entity_kinds": ["character"] },
-        { "id": "virtue.heartbeast", "kind": "virtue", "magnitude": "major",
+        { "id": "virtue.heartbeast", "kind": "virtue", "classification": "narrative", "magnitude": "major",
           "category": "hermetic", "entity_kinds": ["character"] }
     ]"#;
 
@@ -2706,17 +2715,17 @@ mod tests {
     /// half of the points *actually taken* on each side, so an untainted virtue
     /// balances a tainted one.
     const TAINTED_ITEMS: &str = r#"[
-        { "id": "virtue.the_gift", "kind": "virtue", "magnitude": "free",
+        { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
           "category": "special", "entity_kinds": ["character"] },
-        { "id": "virtue.tainted_a", "kind": "virtue", "magnitude": "major",
+        { "id": "virtue.tainted_a", "kind": "virtue", "classification": "narrative", "magnitude": "major",
           "category": "supernatural", "entity_kinds": ["character"], "tainted": true },
-        { "id": "virtue.tainted_b", "kind": "virtue", "magnitude": "major",
+        { "id": "virtue.tainted_b", "kind": "virtue", "classification": "narrative", "magnitude": "major",
           "category": "supernatural", "entity_kinds": ["character"], "tainted": true },
-        { "id": "virtue.plain", "kind": "virtue", "magnitude": "major",
+        { "id": "virtue.plain", "kind": "virtue", "classification": "narrative", "magnitude": "major",
           "category": "general", "entity_kinds": ["character"] },
-        { "id": "flaw.tainted_c", "kind": "flaw", "magnitude": "major",
+        { "id": "flaw.tainted_c", "kind": "flaw", "classification": "narrative", "magnitude": "major",
           "category": "story", "entity_kinds": ["character"], "tainted": true },
-        { "id": "flaw.tainted_d", "kind": "flaw", "magnitude": "major",
+        { "id": "flaw.tainted_d", "kind": "flaw", "classification": "narrative", "magnitude": "major",
           "category": "story", "entity_kinds": ["character"], "tainted": true }
     ]"#;
 
@@ -2800,18 +2809,18 @@ mod tests {
     /// open-grant magnitude constraint), a Puissant Art (a Choice option), a
     /// non-Hermetic Flaw and a Hermetic Flaw (for the ≥1-Hermetic-Flaw guideline).
     const HOUSE_ITEMS: &str = r#"[
-        { "id": "virtue.the_gift", "kind": "virtue", "magnitude": "free",
+        { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
           "category": "special", "entity_kinds": ["character"] },
-        { "id": "virtue.puissant_art", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.puissant_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "hermetic", "entity_kinds": ["character"],
           "parameters": [{ "key": "art", "type": "ref", "domain": "art" }] },
-        { "id": "virtue.self_confident", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.self_confident", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "general", "entity_kinds": ["character"] },
-        { "id": "virtue.wealthy", "kind": "virtue", "magnitude": "major",
+        { "id": "virtue.wealthy", "kind": "virtue", "classification": "narrative", "magnitude": "major",
           "category": "general", "entity_kinds": ["character"] },
-        { "id": "flaw.optimistic", "kind": "flaw", "magnitude": "minor",
+        { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
           "category": "general", "entity_kinds": ["character"] },
-        { "id": "flaw.deficient_technique", "kind": "flaw", "magnitude": "major",
+        { "id": "flaw.deficient_technique", "kind": "flaw", "classification": "narrative", "magnitude": "major",
           "category": "hermetic", "entity_kinds": ["character"] }
     ]"#;
 
@@ -3135,8 +3144,8 @@ mod tests {
     #[test]
     fn over_budget_virtues() {
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "small_budget",
@@ -3173,8 +3182,8 @@ mod tests {
         assert_eq!(ValidationIssue::CODE_UNKNOWN_TYPE, "unknown_type");
 
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "small_budget",
@@ -3264,8 +3273,8 @@ mod tests {
     #[test]
     fn cap_exceeded_major_virtues() {
         let items = r#"[
-          {"id": "virtue.major_a", "kind": "virtue", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.major_b", "kind": "virtue", "magnitude": "major", "category": "general", "entity_kinds": ["character"]}
+          {"id": "virtue.major_a", "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.major_b", "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "capped_type",
@@ -3288,16 +3297,16 @@ mod tests {
     /// plus a type carrying every new cap. Used by the cap tests below.
     fn caps_ruleset(types: &str) -> Ruleset {
         let items = r#"[
-          {"id": "flaw.minor_a", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "flaw.minor_b", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "flaw.pers_major", "kind": "flaw", "magnitude": "major", "category": "personality", "entity_kinds": ["character"]},
-          {"id": "flaw.pers_minor_a", "kind": "flaw", "magnitude": "minor", "category": "personality", "entity_kinds": ["character"]},
-          {"id": "flaw.pers_minor_b", "kind": "flaw", "magnitude": "minor", "category": "personality", "entity_kinds": ["character"]},
-          {"id": "flaw.story_a", "kind": "flaw", "magnitude": "minor", "category": "story", "entity_kinds": ["character"]},
-          {"id": "flaw.story_b", "kind": "flaw", "magnitude": "minor", "category": "story", "entity_kinds": ["character"]},
-          {"id": "virtue.v1", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.v2", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.v3", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+          {"id": "flaw.minor_a", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.minor_b", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.pers_major", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"]},
+          {"id": "flaw.pers_minor_a", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "personality", "entity_kinds": ["character"]},
+          {"id": "flaw.pers_minor_b", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "personality", "entity_kinds": ["character"]},
+          {"id": "flaw.story_a", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "story", "entity_kinds": ["character"]},
+          {"id": "flaw.story_b", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "story", "entity_kinds": ["character"]},
+          {"id": "virtue.v1", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.v2", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.v3", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         Ruleset::from_json("test", "1", items, types).unwrap()
     }
@@ -3749,8 +3758,8 @@ mod tests {
     #[test]
     fn over_budget_flaws() {
         let items = r#"[
-          {"id": "flaw.a", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "flaw.b", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+          {"id": "flaw.a", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.b", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "small_flaw_budget",
@@ -3768,8 +3777,8 @@ mod tests {
     #[test]
     fn too_many_major_flaws() {
         let items = r#"[
-          {"id": "flaw.major_a", "kind": "flaw", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
-          {"id": "flaw.major_b", "kind": "flaw", "magnitude": "major", "category": "general", "entity_kinds": ["character"]}
+          {"id": "flaw.major_a", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.major_b", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "capped_flaws",
@@ -3789,9 +3798,9 @@ mod tests {
 
     fn all_prereq_ruleset() -> Ruleset {
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.c", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.c", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "all", "value": [{"kind": "has", "value": "virtue.a"}, {"kind": "has", "value": "virtue.b"}]}}
         ]"#;
         let types = r#"[{
@@ -3826,9 +3835,9 @@ mod tests {
 
     fn any_prereq_ruleset() -> Ruleset {
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.c", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.c", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "any", "value": [{"kind": "has", "value": "virtue.a"}, {"kind": "has", "value": "virtue.b"}]}}
         ]"#;
         let types = r#"[{
@@ -3860,8 +3869,8 @@ mod tests {
 
     fn none_prereq_ruleset() -> Ruleset {
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "none", "value": [{"kind": "has", "value": "virtue.a"}]}}
         ]"#;
         let types = r#"[{
@@ -3898,7 +3907,7 @@ mod tests {
         // None([House]) must NOT collapse to a spurious failure: an unevaluable
         // leaf yields Unknown, so no prereq_not_met error fires.
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "none", "value": [{"kind": "house", "value": "house.flambeau"}]}}
         ]"#;
         let types = r#"[{
@@ -3925,11 +3934,11 @@ mod tests {
         // unknown sibling must NOT produce a warning since the result does not
         // depend on it.
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "any", "value": [{"kind": "has", "value": "virtue.a"}, {"kind": "house", "value": "house.flambeau"}]}},
-          {"id": "flaw.x", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "flaw.y", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+          {"id": "flaw.x", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.y", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -3964,8 +3973,8 @@ mod tests {
         // All([Has(missing)=false, House=unknown]) -> False; report
         // prereq_not_met, NOT an unevaluated warning.
         let items = r#"[
-          {"id": "virtue.dep", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.dep", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "all", "value": [{"kind": "has", "value": "virtue.dep"}, {"kind": "house", "value": "house.x"}]}}
         ]"#;
         let types = r#"[{
@@ -3994,8 +4003,8 @@ mod tests {
         // Any Unknown-resolution path: no prereq_not_met, a prereq_unevaluated
         // warning instead.
         let items = r#"[
-          {"id": "virtue.dep", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.dep", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "any", "value": [{"kind": "has", "value": "virtue.dep"}, {"kind": "house", "value": "house.flambeau"}]}}
         ]"#;
         let types = r#"[{
@@ -4027,8 +4036,8 @@ mod tests {
         // the unevaluable leaf: no prereq_not_met error, but a
         // prereq_unevaluated warning must fire.
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.b", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "all", "value": [{"kind": "has", "value": "virtue.a"}, {"kind": "house", "value": "house.flambeau"}]}}
         ]"#;
         let types = r#"[{
@@ -4056,7 +4065,7 @@ mod tests {
     #[test]
     fn prereq_house_produces_unevaluated_warning() {
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "house", "value": "house.bjornaer"}}
         ]"#;
         let types = r#"[{
@@ -4078,7 +4087,7 @@ mod tests {
         // House(bjornaer) is satisfied when the entity's own house matches: the
         // leaf is now evaluable (True), so no error and no unevaluated warning.
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "house", "value": "house.bjornaer"}}
         ]"#;
         let types = r#"[{
@@ -4109,7 +4118,7 @@ mod tests {
         // The entity is in house.x but the virtue requires house.bjornaer: the
         // leaf is a definite False, so a hard prereq error fires (no warning).
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "house", "value": "house.bjornaer"}}
         ]"#;
         let types = r#"[{
@@ -4138,7 +4147,7 @@ mod tests {
     /// A ruleset whose `virtue.a` requires Awareness 3. Returns (ruleset).
     fn ability_min_ruleset() -> Ruleset {
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "ability_min", "value": {"ability": "ability.awareness", "score": 3}}}
         ]"#;
         let types = r#"[{
@@ -4212,22 +4221,22 @@ mod tests {
     /// characteristic-limit validation tests.
     fn effective_ruleset() -> Ruleset {
         let items = r#"[
-          {"id": "virtue.requires_awareness_3", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.requires_awareness_3", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "ability_min", "value": {"ability": "ability.awareness", "score": 3}}},
-          {"id": "virtue.puissant_ability", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.puissant_ability", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "parameters": [{"key": "ability", "type": "ref", "domain": "ability"}],
            "effects": [{"type": "ability_bonus", "param": "ability", "amount": 2}]},
-          {"id": "virtue.great_characteristic", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.great_characteristic", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "parameters": [{"key": "characteristic", "type": "ref", "domain": "characteristic"}],
            "effects": [{"type": "characteristic_limit", "param": "characteristic", "amount": 1}],
            "max_per_target": 2},
-          {"id": "virtue.improved_characteristics", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.improved_characteristics", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "effects": [{"type": "characteristic_points", "amount": 3}]},
-          {"id": "flaw.poor_characteristic", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "flaw.poor_characteristic", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "parameters": [{"key": "characteristic", "type": "ref", "domain": "characteristic"}],
            "effects": [{"type": "characteristic_limit", "param": "characteristic", "amount": -1}],
            "max_per_target": 2},
-          {"id": "flaw.f", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+          {"id": "flaw.f", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "companion",
@@ -4810,7 +4819,7 @@ mod tests {
     /// unrelated findings.
     fn arts_ruleset() -> Ruleset {
         let items = r#"[
-          {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]}
+          {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "companion",
@@ -4901,10 +4910,10 @@ mod tests {
     /// Latin/Artes-Liberales (academic) and Awareness (general) abilities.
     fn restricted_xp_ruleset() -> Ruleset {
         let items = r#"[
-          {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
-          {"id": "virtue.educated", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
+          {"id": "virtue.educated", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.latin", "ability.artes_liberales"] }]},
-          {"id": "virtue.affinity_art", "kind": "virtue", "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+          {"id": "virtue.affinity_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
            "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
            "effects": [{ "type": "affinity_art_cost", "param": "art", "counts_as_num": 3, "counts_as_den": 2 }]}
         ]"#;
@@ -5182,7 +5191,7 @@ mod tests {
     /// ArtMin prereq is genuinely evaluable.
     fn art_min_ruleset() -> Ruleset {
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "art_min", "value": {"art": "art.creo", "score": 5}}}
         ]"#;
         let types = r#"[{
@@ -5236,7 +5245,7 @@ mod tests {
     fn prereq_is_magus_satisfied_on_magus_type() {
         // A profile flagged `is_magus: true` satisfies IsMagus: no warning, no error.
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "is_magus"}}
         ]"#;
         let types = r#"[{
@@ -5262,7 +5271,7 @@ mod tests {
     fn prereq_is_magus_fails_on_non_magus_type() {
         // A profile flagged `is_magus: false` makes IsMagus False: prereq_not_met fires.
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "is_magus"}}
         ]"#;
         let types = r#"[{
@@ -5287,7 +5296,7 @@ mod tests {
     fn prereq_is_magus_unknown_without_profile() {
         // No matching type profile -> IsMagus is Unknown -> warning.
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "is_magus"}}
         ]"#;
         let types = r#"[{
@@ -5311,7 +5320,7 @@ mod tests {
         // magus AND the Gift is forbidden. IsMagus must still fail, proving the
         // flag is decoupled from gift_policy.
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "is_magus"}}
         ]"#;
         let types = r#"[{
@@ -5338,8 +5347,8 @@ mod tests {
         // A Gifted hedge wizard HAS The Gift but is NOT a magus. Having the Gift
         // selected must not make IsMagus pass: prereq_not_met still fires.
         let items = r#"[
-          {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "is_magus"}}
         ]"#;
         let types = r#"[{
@@ -5370,8 +5379,8 @@ mod tests {
         // Sanity: the `is_magus` flag drives IsMagus, not the gift fields. A
         // magus profile with gift_policy=required and the Gift selected passes.
         let items = r#"[
-          {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "is_magus"}}
         ]"#;
         let types = r#"[{
@@ -5398,7 +5407,7 @@ mod tests {
     #[test]
     fn wrong_entity_kind() {
         let items = r#"[
-          {"id": "virtue.char_only", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+          {"id": "virtue.char_only", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "standard_covenant",
@@ -5423,7 +5432,7 @@ mod tests {
     #[test]
     fn empty_entity_kinds_valid_for_any_kind() {
         let items = r#"[
-          {"id": "virtue.universal", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": []}
+          {"id": "virtue.universal", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": []}
         ]"#;
         let types = r#"[{
           "id": "standard_covenant",
@@ -5446,7 +5455,7 @@ mod tests {
         // reject the very trait it mandates. The Gift is governed solely by
         // validate_gift_policy; the category check exempts the profile's gift_id.
         let items = r#"[
-          {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]}
+          {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "magus_type",
@@ -5471,7 +5480,7 @@ mod tests {
     #[test]
     fn empty_permitted_categories_permits_any() {
         let items = r#"[
-          {"id": "virtue.weird", "kind": "virtue", "magnitude": "minor", "category": "obscure", "entity_kinds": ["character"]}
+          {"id": "virtue.weird", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "obscure", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "unrestricted",
@@ -5495,7 +5504,7 @@ mod tests {
         // forbidden_categories must not flag any selection, whatever its
         // category.
         let items = r#"[
-          {"id": "virtue.hermetic_thing", "kind": "virtue", "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"]}
+          {"id": "virtue.hermetic_thing", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "unrestricted",
@@ -5516,8 +5525,8 @@ mod tests {
     #[test]
     fn gift_policy_required_without_gift() {
         let items = r#"[
-          {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+          {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "magus_type",
@@ -5537,7 +5546,7 @@ mod tests {
     #[test]
     fn gift_policy_required_with_gift() {
         let items = r#"[
-          {"id": "virtue.the_gift", "kind": "virtue", "magnitude": "free", "category": "special", "entity_kinds": ["character"]}
+          {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "magus_type",
@@ -5559,7 +5568,7 @@ mod tests {
         // Required gift, no gift_id, gift_categories=[hermetic], a hermetic
         // selection satisfies it (symmetry: category counts for Required too).
         let items = r#"[
-          {"id": "virtue.parma", "kind": "virtue", "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"]}
+          {"id": "virtue.parma", "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "magus_type",
@@ -5600,7 +5609,7 @@ mod tests {
         // Forbidden gift via gift_categories=[hermetic] with NO gift_id: a
         // hermetic selection must still trip gift_forbidden (category path).
         let items = r#"[
-          {"id": "virtue.parma", "kind": "virtue", "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"]}
+          {"id": "virtue.parma", "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "no_gift_type",
@@ -5627,7 +5636,7 @@ mod tests {
         // whose category is NOT hermetic must NOT trip gift_forbidden: the
         // category path's negative branch.
         let items = r#"[
-          {"id": "virtue.mundane", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+          {"id": "virtue.mundane", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "no_gift_type",
@@ -5651,7 +5660,7 @@ mod tests {
     #[test]
     fn gift_policy_required_without_gift_id() {
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "no_gift_id_type",
@@ -5670,7 +5679,7 @@ mod tests {
     #[test]
     fn missing_required_trait() {
         let items = r#"[
-          {"id": "virtue.mandatory", "kind": "virtue", "magnitude": "free", "category": "general", "entity_kinds": ["character"]}
+          {"id": "virtue.mandatory", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "strict_type",
@@ -5689,7 +5698,7 @@ mod tests {
     #[test]
     fn forbidden_trait_selected() {
         let items = r#"[
-          {"id": "virtue.banned", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+          {"id": "virtue.banned", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "restricted_type",
@@ -5808,8 +5817,8 @@ mod tests {
         // A parameterized item whose domain is `item` must resolve its value
         // against the point-item registry.
         let items = r#"[
-          {"id": "virtue.target", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.linked", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.target", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.linked", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "parameters": [{"key": "linked", "type": "ref", "domain": "item"}]}
         ]"#;
         let types = r#"[{
@@ -5852,7 +5861,7 @@ mod tests {
         // A `text` domain is a free-text slot (e.g. Aptitude for (Sin)): any
         // non-empty value the player types is legal — no registry resolution.
         let items = r#"[
-          {"id": "virtue.aptitude", "kind": "virtue", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+          {"id": "virtue.aptitude", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "parameters": [{"key": "sin", "type": "ref", "domain": "text"}]}
         ]"#;
         let types = r#"[{
@@ -5880,7 +5889,7 @@ mod tests {
         // Art-domain parameter values are now resolved against the Art catalogue:
         // a real Art passes, a made-up one raises `unknown_param_value`.
         let items = r#"[{
-          "id": "virtue.puissant_art", "kind": "virtue", "magnitude": "minor",
+          "id": "virtue.puissant_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "general", "entity_kinds": ["character"],
           "parameters": [{"key": "art", "type": "ref", "domain": "art"}],
           "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }]
@@ -5927,9 +5936,9 @@ mod tests {
     #[test]
     fn compute_balance_major_and_free() {
         let items = r#"[
-          {"id": "virtue.major", "kind": "virtue", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.free", "kind": "virtue", "magnitude": "free", "category": "general", "entity_kinds": ["character"]},
-          {"id": "flaw.minor", "kind": "flaw", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+          {"id": "virtue.major", "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.free", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.minor", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
           "id": "test_type",
@@ -6056,17 +6065,17 @@ mod tests {
     /// +7 F) and Faerie Doctor (no bonus).
     fn mythic_ruleset() -> Ruleset {
         const ITEMS: &str = r#"[
-            { "id": "virtue.devil_child", "kind": "virtue", "magnitude": "free",
+            { "id": "virtue.devil_child", "kind": "virtue", "classification": "narrative", "magnitude": "free",
               "category": "social_status", "entity_kinds": ["character"] },
-            { "id": "virtue.demonic_might", "kind": "virtue", "magnitude": "minor",
+            { "id": "virtue.demonic_might", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
               "category": "supernatural", "entity_kinds": ["character"] },
-            { "id": "virtue.demonic_powers", "kind": "virtue", "magnitude": "minor",
+            { "id": "virtue.demonic_powers", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
               "category": "supernatural", "entity_kinds": ["character"] },
-            { "id": "virtue.demonic_blood", "kind": "virtue", "magnitude": "major",
+            { "id": "virtue.demonic_blood", "kind": "virtue", "classification": "narrative", "magnitude": "major",
               "category": "supernatural", "entity_kinds": ["character"] },
-            { "id": "flaw.tragic_life", "kind": "flaw", "magnitude": "major",
+            { "id": "flaw.tragic_life", "kind": "flaw", "classification": "narrative", "magnitude": "major",
               "category": "supernatural", "entity_kinds": ["character"] },
-            { "id": "flaw.other_supernatural", "kind": "flaw", "magnitude": "major",
+            { "id": "flaw.other_supernatural", "kind": "flaw", "classification": "narrative", "magnitude": "major",
               "category": "supernatural", "entity_kinds": ["character"] }
         ]"#;
         const PROFILES: &str = r#"[
@@ -6228,7 +6237,7 @@ mod tests {
     // --- Spells -----------------------------------------------------------
 
     const SPELL_ITEMS: &str = r#"[
-        { "id": "virtue.skilled_parens", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.skilled_parens", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "hermetic", "entity_kinds": ["character"],
           "effects": [ { "type": "spell_levels", "amount": 30 },
                        { "type": "general_xp", "amount": 60 } ] }
@@ -6429,22 +6438,22 @@ mod tests {
     // --- Phase 7: age cap, Supernatural gate, Personality, Reputations -------
 
     const P7_ITEMS: &str = r#"[
-        { "id": "virtue.the_gift", "kind": "virtue", "magnitude": "free",
+        { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
           "category": "special", "entity_kinds": ["character"] },
-        { "id": "virtue.second_sight", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.second_sight", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "supernatural", "entity_kinds": ["character"],
           "effects": [{ "type": "ability_score_grant", "ability": "ability.second_sight", "amount": 1 }] },
-        { "id": "virtue.affinity_awareness", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.affinity_awareness", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "general", "entity_kinds": ["character"],
           "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
           "effects": [{ "type": "affinity_ability_cost", "param": "ability", "counts_as_num": 3, "counts_as_den": 2 }] },
-        { "id": "virtue.self_confident", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.self_confident", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "general", "entity_kinds": ["character"],
           "effects": [{ "type": "confidence_bonus", "score": 1, "points": 2 }] },
-        { "id": "flaw.infamous", "kind": "flaw", "magnitude": "minor",
+        { "id": "flaw.infamous", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
           "category": "general", "entity_kinds": ["character"],
           "effects": [{ "type": "grants_reputation", "kind": "local", "score": 4 }] },
-        { "id": "flaw.major_personality", "kind": "flaw", "magnitude": "major",
+        { "id": "flaw.major_personality", "kind": "flaw", "classification": "narrative", "magnitude": "major",
           "category": "personality", "entity_kinds": ["character"] }
     ]"#;
     const P7_ABILITIES: &str = r#"{ "advancement": [

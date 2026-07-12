@@ -178,12 +178,12 @@ mod tests {
     /// `validate_house_refs` integrity check (Fixed.item + Choice.options[].ref)
     /// to pass at load.
     const GRANT_ITEMS: &str = r#"[
-        { "id": "virtue.self_confident", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.self_confident", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "general", "entity_kinds": ["character"] },
-        { "id": "virtue.puissant_art", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.puissant_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "hermetic", "entity_kinds": ["character"],
           "parameters": [{ "key": "art", "type": "ref", "domain": "art" }] },
-        { "id": "virtue.affinity_with_art", "kind": "virtue", "magnitude": "minor",
+        { "id": "virtue.affinity_with_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "hermetic", "entity_kinds": ["character"],
           "parameters": [{ "key": "art", "type": "ref", "domain": "art" }] }
     ]"#;

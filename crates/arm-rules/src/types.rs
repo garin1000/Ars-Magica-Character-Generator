@@ -167,6 +167,46 @@ impl fmt::Display for ItemKind {
     }
 }
 
+/// Coarse classification of a Virtue/Flaw by *what kind of mechanical impact* it
+/// has, assigned to every catalogue entry (M5 slice 5a). It partitions the whole
+/// V/F catalogue into three disjoint classes and is the definitive input to the
+/// effect-wiring slices: `creation_effect` items feed the creation-number wiring
+/// (slice 5a-wire), `in_play_effect` items feed the derived-totals `Effect`
+/// variant set (slice 5b / `derived.rs`), and `narrative` items are deliberately
+/// left with no mechanical effect.
+///
+/// Required on [`PointItem`] (no serde default): a catalogue entry that omits it
+/// fails to load, so "every V/F is classified" is enforced at load time, not only
+/// by the data-integrity test.
+///
+/// Source: classification scheme documented in `crates/arm-rules/RULES.md` (M5/5a).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Classification {
+    /// No mechanical creation number and no in-play/derived-total effect: pure
+    /// personality, story, or social-status flavor. Never given an invented effect.
+    Narrative,
+    /// Changes a character-creation number or state (starting scores, XP grants,
+    /// Confidence, Size/characteristic deltas, reputation grants, spell-levels,
+    /// item-level budget, free starting Supernatural Ability score, …). Includes
+    /// every entry that already carries `effects`.
+    CreationEffect,
+    /// Does not change a creation number, but modifies an in-play/derived total the
+    /// engine computes (casting, lab, penetration, magic resistance, combat, Soak,
+    /// wound/fatigue penalties, study source-quality, aging/longevity).
+    InPlayEffect,
+}
+
+impl fmt::Display for Classification {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Classification::Narrative => f.write_str("narrative"),
+            Classification::CreationEffect => f.write_str("creation_effect"),
+            Classification::InPlayEffect => f.write_str("in_play_effect"),
+        }
+    }
+}
+
 /// Recursive boolean expression tree for prerequisites.
 /// All = AND, Any = OR, Nor = NOR (none may be present; serde tag `"none"`).
 ///
@@ -693,6 +733,9 @@ pub struct PointItem {
     /// Grouping category used by type-profile permit/forbid rules
     /// (e.g. `general`, `hermetic`, `social_status`).
     pub category: String,
+    /// How this V/F impacts a character mechanically (M5 slice 5a). Required (no
+    /// serde default): an unclassified entry fails to load. See [`Classification`].
+    pub classification: Classification,
     /// The descriptor's optional "Type" tag. `true` for a Tainted Virtue/Flaw:
     /// associated with the Infernal realm, and any Supernatural Ability it grants
     /// is an Infernal power. Drives the half-of-taken-points Tainted cap
@@ -1306,6 +1349,9 @@ mod tests {
         check(ItemKind::Flaw);
         check(ItemKind::Boon);
         check(ItemKind::Hook);
+        check(Classification::Narrative);
+        check(Classification::CreationEffect);
+        check(Classification::InPlayEffect);
         check(GiftPolicy::Required);
         check(GiftPolicy::Allowed);
         check(GiftPolicy::Forbidden);
@@ -1381,6 +1427,7 @@ mod tests {
           "kind": "virtue",
           "magnitude": "major",
           "category": "hermetic",
+          "classification": "narrative",
           "entity_kinds": ["character"],
           "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" },
           "incompatible_with": ["flaw.blatant_gift"],
@@ -1392,6 +1439,7 @@ mod tests {
         assert_eq!(item.kind, ItemKind::Virtue);
         assert_eq!(item.magnitude, Magnitude::Major);
         assert_eq!(item.category, "hermetic");
+        assert_eq!(item.classification, Classification::Narrative);
         assert_eq!(item.entity_kinds, BTreeSet::from([EntityKind::Character]));
         assert_eq!(
             item.prerequisites,
@@ -1426,6 +1474,7 @@ mod tests {
         let json = r#"{
           "id": "virtue.puissant_ability",
           "kind": "virtue",
+          "classification": "narrative",
           "magnitude": "minor",
           "category": "general",
           "entity_kinds": ["character"],
@@ -1446,6 +1495,7 @@ mod tests {
             r#"{
               "id": "virtue.x",
               "kind": "virtue",
+              "classification": "narrative",
               "magnitude": "minor",
               "category": "general",
               "entity_kinds": ["character"],
@@ -1990,6 +2040,7 @@ mod tests {
         let boon_json = r#"{
           "id": "boon.healthy_feature",
           "kind": "boon",
+          "classification": "narrative",
           "magnitude": "minor",
           "category": "site",
           "entity_kinds": ["covenant"]
@@ -2001,6 +2052,7 @@ mod tests {
         let hook_json = r#"{
           "id": "hook.road",
           "kind": "hook",
+          "classification": "narrative",
           "magnitude": "minor",
           "category": "site",
           "entity_kinds": ["covenant"]
@@ -2020,6 +2072,7 @@ mod tests {
         let json = r#"{
           "id": "virtue.great_characteristic",
           "kind": "virtue",
+          "classification": "narrative",
           "magnitude": "minor",
           "category": "general",
           "entity_kinds": ["character"],
@@ -2043,6 +2096,7 @@ mod tests {
         let json = r#"{
           "id": "virtue.keen_vision",
           "kind": "virtue",
+          "classification": "narrative",
           "magnitude": "minor",
           "category": "general"
         }"#;

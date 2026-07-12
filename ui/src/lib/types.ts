@@ -69,11 +69,16 @@ export type Prereq =
   | { kind: 'art_min'; value: { art: string; score: number } }
   | { kind: 'is_magus' };
 
+// How a V/F impacts a character mechanically (M5 slice 5a). Mirrors the engine's
+// `Classification`. Required on every PointItem.
+export type Classification = 'narrative' | 'creation_effect' | 'in_play_effect';
+
 export interface PointItem {
   id: string;
   kind: ItemKind;
   magnitude: Magnitude;
   category: string;
+  classification: Classification;
   // Descriptor "Type" tag: a Tainted (Infernal-associated) V/F. Omitted when false.
   tainted?: boolean;
   entity_kinds: EntityKind[];
