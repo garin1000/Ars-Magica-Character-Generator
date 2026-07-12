@@ -128,7 +128,7 @@
     "summary": "Du gehst nachlässig mit magischer Kraft um und musst beim Wirken von Zaubern zwei Patzerwürfel mehr als normal würfeln."
   },
   "flaw.careless_with_ability": {
-    "name": "Nachlässig mit (Fertigkeit)",
+    "name": "Nachlässig mit {ability}",
     "summary": "Der Charakter ist in Bezug auf eine bestimmte Fertigkeit, die bei der Aufnahme dieser Tugend gewählt wird, besonders leichtsinnig."
   },
   "flaw.castratus": {
@@ -1476,7 +1476,7 @@
     "summary": "Du gehst sehr sorgfältig mit Magie um und scheitest weniger leicht auf spektakuläre Weise, wenn du doch scheiterst."
   },
   "virtue.cautious_with_ability": {
-    "name": "Vorsichtig mit (Fertigkeit)",
+    "name": "Vorsichtig mit {ability}",
     "summary": "Du gehst mit einer bestimmten Fertigkeit sehr sorgfältig um und scheitest bei ihrer Anwendung weniger leicht auf spektakuläre Weise."
   },
   "virtue.clan_ilfetu": {
@@ -1600,7 +1600,7 @@
     "summary": "Dies entspricht der Ritter-Tugend, doch aufgrund der recht anderen Erziehung muslimischer Emire bist du wahrscheinlich ebenso versiert in Jagd, religiösen Lehren und Kultur wie in kriegerischen Belangen."
   },
   "virtue.enchanting_ability": {
-    "name": "Bezaubernde (Fertigkeit)",
+    "name": "Bezaubernde {ability}",
     "summary": "Wenn du dich darauf konzentrierst, kannst du mit einer bestimmten Art künstlerischen Ausdrucks magisch Gefühle und Überzeugungen in anderen hervorrufen: Musik, Tanz, Zeichnen, Geschichtenerzählen oder sogar Handwerk."
   },
   "virtue.enduring_constitution": {

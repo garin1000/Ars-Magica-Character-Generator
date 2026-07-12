@@ -269,6 +269,7 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5773, 5776] }
   },
   {
@@ -3059,6 +3060,7 @@
     "magnitude": "minor",
     "category": "general",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3559, 3562] }
   },
   {
@@ -3321,6 +3323,7 @@
     "magnitude": "minor",
     "category": "supernatural",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3747, 3750] }
   },
   {

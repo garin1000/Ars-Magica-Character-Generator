@@ -123,6 +123,22 @@ mechanics carry entries; the rest are stubbed at the end.
   type-label rule). The parenthetical "(five points ... ten for a Mythic
   Companion ...)" is illustrative of a maxed build, not a separate flat cap.
 
+#### Parameterized Virtues/Flaws — `{param}` slots
+The picker binds a structured value for items whose name carries a `{param}`
+placeholder (resolved by `displayName`), via a `parameters` entry
+(`{ key, type: "ref", domain }`). Domains that resolve against a catalogue —
+`ability`, `art`, `characteristic` — are wired: e.g. `flaw.careless_with_ability`,
+`virtue.cautious_with_ability`, `virtue.enchanting_ability` bind an `ability`.
+The hand-authored effect items (Puissant, Affinity, Great/Poor) already used this.
+
+- **Deferred (needs a free-text param type):** items whose parenthetical is a
+  free choice, not a catalogue ref — `(Realm)`, `(Land)`, `(Subject)`, `(Sin)`,
+  `(Beings)`, `(Terrain)`, `(Commodity)`, `(Faculty)`, `(Form)` (a Form-only
+  subset of Arts), and the mixed `Necessary (Realm) Aura for (Ability)`. These keep
+  their literal parenthetical name until a free-text `ParamType` + selection widget
+  is added. Name-qualifier parentheticals that are *not* params — `(Dove)`,
+  `(the Wolf)`, `(Muq-Ta')`, `(Hermetic)`, `(PC)` — stay literal by design.
+
 #### Full core Virtue/Flaw catalogue — `rules/core/virtues_flaws.json`
 > Virtues: `## Virtues` detailed entries `:3360-5282`; Flaws: `## Flaws`
 > `:5639-7119`. Each entry is `#### Name` + an italic `*Magnitude, Category[,

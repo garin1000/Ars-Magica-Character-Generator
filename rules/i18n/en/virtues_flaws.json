@@ -128,7 +128,7 @@
     "summary": "You are slapdash in your use of magical power, and must roll two more botch dice than normal when casting spells."
   },
   "flaw.careless_with_ability": {
-    "name": "Careless with (Ability)",
+    "name": "Careless with {ability}",
     "summary": "The character is particularly reckless when it comes to a particular Ability, chosen when this Virtue is taken."
   },
   "flaw.castratus": {
@@ -1476,7 +1476,7 @@
     "summary": "You are very careful with magic, and are less likely to fail spectacularly if you do fail."
   },
   "virtue.cautious_with_ability": {
-    "name": "Cautious with (Ability)",
+    "name": "Cautious with {ability}",
     "summary": "You are very careful with a specific Ability, and are less likely to fail spectacularly if you do fail when using it."
   },
   "virtue.clan_ilfetu": {
@@ -1600,7 +1600,7 @@
     "summary": "This is the same as the Knight Virtue, though due to the rather different upbringing of Muslim emirs, you are likely to be as skilled with hunting, religious teachings, and culture as you are with martial pursuits."
   },
   "virtue.enchanting_ability": {
-    "name": "Enchanting (Ability)",
+    "name": "Enchanting {ability}",
     "summary": "When you set your mind to it, you can magically induce emotions and beliefs in others with a particular kind of artistic expression: music, dance, drawing, storytelling, even craftwork."
   },
   "virtue.enduring_constitution": {
