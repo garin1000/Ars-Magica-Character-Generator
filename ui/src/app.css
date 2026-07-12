@@ -479,6 +479,27 @@ ul {
   margin-bottom: 0.6rem;
 }
 
+/* Filter/search bar for long selectable lists (V/F, Abilities). */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.filter-search {
+  flex: 1 1 8rem;
+  min-width: 6rem;
+}
+
+.filter-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
 .spell-select-field {
   flex: 1 1 16rem;
 }

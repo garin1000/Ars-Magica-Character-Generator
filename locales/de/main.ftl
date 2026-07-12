@@ -46,6 +46,11 @@ magnitude-major = Groß
 # Typ-Label für Tugenden/Fehler: eine befleckte (infernal-assoziierte) Tugend/Fehler.
 vf-tag-tainted = Befleckt
 
+# Filter-/Suchsteuerung für lange Auswahllisten.
+filter-search-placeholder = Suchen…
+filter-magnitude-all = Alle Stufen
+filter-category-all = Alle Typen
+
 # Die acht Eigenschaften, je Eigenschaftswert der Engine.
 characteristic-int = Intelligenz
 characteristic-per = Wahrnehmung

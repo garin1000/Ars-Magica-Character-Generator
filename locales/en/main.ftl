@@ -46,6 +46,11 @@ magnitude-major = Major
 # Virtue/Flaw "Type" tag: a Tainted (Infernal-associated) Virtue or Flaw.
 vf-tag-tainted = Tainted
 
+# Filter/search controls for long selectable lists.
+filter-search-placeholder = Search…
+filter-magnitude-all = All levels
+filter-category-all = All types
+
 # The eight Characteristics, keyed by the engine's characteristic value.
 characteristic-int = Intelligence
 characteristic-per = Perception

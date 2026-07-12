@@ -1,9 +1,25 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { abilityLabel, groupAbilitiesByCategory } from '../derive';
+  import { abilityLabel, filterAbilities, groupAbilitiesByCategory } from '../derive';
   import { tooltip, type TooltipContent } from '../actions';
+  import type { AbilityCategory } from '../types';
 
-  const groups = $derived(store.ruleset ? groupAbilitiesByCategory(store.ruleset) : []);
+  // Filter state: free-text + category. Categories from the engine-surfaced order.
+  let search = $state('');
+  let category = $state('');
+  const categories = $derived(store.ruleset?.ruleset.ability_category_order ?? []);
+
+  const groups = $derived.by(() => {
+    const rs = store.ruleset;
+    if (!rs) return [];
+    const filter = {
+      text: search,
+      categories: category ? [category as AbilityCategory] : undefined,
+    };
+    return groupAbilitiesByCategory(rs)
+      .map((g) => ({ category: g.category, abilities: filterAbilities(rs, g.abilities, filter) }))
+      .filter((g) => g.abilities.length > 0);
+  });
   const selected = $derived(new Set((store.entity.ability_scores ?? []).map((a) => a.ability)));
 
   // Supernatural Abilities are unlocked by a granting Virtue (one whose
@@ -83,6 +99,21 @@
 
 <section class="panel">
   {#if store.ruleset}
+    <div class="filter-bar">
+      <input
+        type="search"
+        class="filter-search"
+        placeholder={store.t('filter-search-placeholder')}
+        bind:value={search}
+        data-testid="ability-search"
+      />
+      <select bind:value={category} data-testid="ability-category-filter">
+        <option value="">{store.t('filter-category-all')}</option>
+        {#each categories as c (c)}
+          <option value={c}>{store.t(`ability-category-${c}`)}</option>
+        {/each}
+      </select>
+    </div>
     {#each groups as group (group.category)}
       <h3 class="category">{store.t(`ability-category-${group.category}`)}</h3>
       <ul class="item-list">
