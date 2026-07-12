@@ -6,6 +6,7 @@ pub mod ability;
 pub mod art;
 pub mod characteristics;
 pub mod effective;
+pub mod equipment;
 pub mod grant;
 pub mod house;
 pub mod mythic_companion;
@@ -30,6 +31,7 @@ pub use effective::{
     supernatural_free_slots, true_faith, warping, warping_points_total, warping_score,
     xp_allocation,
 };
+pub use equipment::{Armor, Shield, Weapon, WeaponKind};
 pub use grant::{Grant, GrantConstraint, open_pick_satisfies, resolve_grants};
 pub use house::{House, LineageType, granted_selections};
 pub use mythic_companion::{MythicCompanionType, RequiredFlaw};
@@ -37,11 +39,11 @@ pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError, Rules
 pub use spell::Spell;
 pub use types::{
     AbilityScore, ArtScore, CategoryCap, Classification, Effect, EnchantedDevice, Entity,
-    EntityKind, EntityTypeProfile, Familiar, GiftPolicy, I18nEntry, Id, ItemKind, LineRange,
-    LongevityRitual, LongevitySource, Magnitude, ParamType, ParameterDef, ParameterDomain,
-    PersonalityTrait, PointBudget, PointItem, Prereq, Reputation, ReputationType, RulesetRef,
-    SCHEMA_VERSION, Selection, SourceRef, SpellSelection, TalismanAttunement, TwilightScar,
-    ValidationMode,
+    EntityKind, EntityTypeProfile, EquipmentSlot, Familiar, GiftPolicy, I18nEntry, Id, ItemKind,
+    LineRange, LongevityRitual, LongevitySource, Magnitude, ParamType, ParameterDef,
+    ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Reputation, ReputationType,
+    RulesetRef, SCHEMA_VERSION, Selection, SourceRef, SpellSelection, TalismanAttunement,
+    TwilightScar, ValidationMode,
 };
 pub use validation::{
     Balance, IssueSeverity, ValidationIssue, ValidationResult, compute_balance,

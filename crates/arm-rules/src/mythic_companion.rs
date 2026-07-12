@@ -160,6 +160,7 @@ mod tests {
             houses: None,
             mythic_types: Some(TYPES),
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap()

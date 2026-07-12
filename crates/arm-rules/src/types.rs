@@ -1536,6 +1536,22 @@ pub struct SpellSelection {
     pub mastery: Option<u8>,
 }
 
+/// A piece of equipment the character carries: a reference to a catalogue weapon,
+/// shield, or armor id, plus whether it is currently equipped (wielded / worn).
+/// Only the choice is stored — combat totals, Soak, and Encumbrance are derived
+/// downstream (5i) from the referenced catalogue row. Kept sorted via
+/// [`Entity::normalize`]. Source: Core Rules.md:16944-17011 (the equipment tables),
+/// :17103-17123 (Encumbrance, computed in the derived-totals slice).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct EquipmentSlot {
+    /// The catalogue id of the item (a `weapon.*`, `shield.*`, or `armor.*` id).
+    pub item: Id,
+    /// Whether the item is currently equipped (wielded/worn). Unequipped items
+    /// still count toward carried Load but not toward combat/Soak lines (5i).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub equipped: bool,
+}
+
 /// A named Personality Trait with a value in −3..+3 (or ±6 for the trait
 /// representing a Major Personality Flaw). Free-text name, kept sorted by name in
 /// [`Entity::normalize`]. Source: Core Rules.md:2500-2503.
@@ -1828,6 +1844,12 @@ pub struct Entity {
     /// The magus's parens / master (free-text; no mechanical effect).
     #[serde(default, skip_serializing_if = "is_empty_str")]
     pub parens: String,
+    /// The weapons, shields, and armor the character carries (each a reference to
+    /// a catalogue id). Kept sorted via [`Entity::normalize`]. Defaults to empty.
+    /// The derived-totals slice (5i) consumes these to compute combat lines, Soak,
+    /// and Encumbrance. Source: Core Rules.md:16944-17011.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub equipment: Vec<EquipmentSlot>,
 }
 
 /// Current save-format schema version.
@@ -1871,13 +1893,14 @@ impl Entity {
             sigil: String::new(),
             covenant_name: String::new(),
             parens: String::new(),
+            equipment: Vec::new(),
         }
     }
 
     /// Sort selections, ability scores, art scores, spells, personality traits,
-    /// reputations, devices, talisman attunements and twilight scars for canonical
-    /// serialization. (`characteristics`, `aging_points`, `aging_reductions` are
-    /// `BTreeMap`s, already id-ordered.)
+    /// reputations, devices, talisman attunements, twilight scars and equipment for
+    /// canonical serialization. (`characteristics`, `aging_points`,
+    /// `aging_reductions` are `BTreeMap`s, already id-ordered.)
     pub fn normalize(&mut self) {
         self.selections.sort();
         self.ability_scores.sort();
@@ -1888,6 +1911,7 @@ impl Entity {
         self.devices.sort();
         self.talisman_attunements.sort();
         self.twilight_scars.sort();
+        self.equipment.sort();
     }
 }
 
@@ -2502,6 +2526,7 @@ mod tests {
             sigil: String::new(),
             covenant_name: String::new(),
             parens: String::new(),
+            equipment: Vec::new(),
         };
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
@@ -2636,6 +2661,7 @@ mod tests {
             sigil: String::new(),
             covenant_name: String::new(),
             parens: String::new(),
+            equipment: Vec::new(),
         };
 
         // Serialization is canonical only after normalize(); derive-based

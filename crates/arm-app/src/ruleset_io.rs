@@ -231,6 +231,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     let houses_json = fs::read_to_string(rules_dir.join("core/houses.json"))?;
     let mythic_types_json = fs::read_to_string(rules_dir.join("core/mythic_companion_types.json"))?;
     let spells_json = fs::read_to_string(rules_dir.join("core/spells.json"))?;
+    let equipment_json = fs::read_to_string(rules_dir.join("core/equipment.json"))?;
     let characteristics_json = fs::read_to_string(rules_dir.join("core/characteristics.json"))?;
 
     let vf_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/virtues_flaws.json")))?;
@@ -240,6 +241,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     let mythic_i18n =
         fs::read_to_string(rules_dir.join(format!("i18n/{lang}/mythic_companion_types.json")))?;
     let spell_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/spells.json")))?;
+    let equipment_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/equipment.json")))?;
 
     let ruleset = Ruleset::from_sources(RulesetSources {
         id: RULESET_ID,
@@ -251,6 +253,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         houses: Some(&houses_json),
         mythic_types: Some(&mythic_types_json),
         spells: Some(&spells_json),
+        equipment: Some(&equipment_json),
         // An empty characteristics file means the ruleset ships no characteristic
         // rules (the `Option` is the engine's honest "absent" signal).
         characteristics: (!characteristics_json.is_empty())
@@ -265,6 +268,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
             &house_i18n,
             &mythic_i18n,
             &spell_i18n,
+            &equipment_i18n,
         ],
     )?;
     Ok(localized)

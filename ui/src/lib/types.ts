@@ -446,6 +446,51 @@ export interface LongevityRitual {
   bonus?: number | null;
 }
 
+// Which weapon table a Weapon comes from (rendered via Fluent `weapon-kind-<id>`,
+// never as a raw slug). Thrown and missile weapons carry a Range.
+export type WeaponKind = 'melee' | 'missile' | 'thrown';
+
+// A catalogue weapon. Attack/Damage/min-Strength are absent for the n/a cells
+// (Dodge has no attack/damage; body attacks have no min-Strength). All modifiers
+// are signed; combat totals are computed downstream (slice 5i), never in JS.
+export interface Weapon {
+  id: string;
+  kind: WeaponKind;
+  init_mod: number;
+  attack_mod?: number | null;
+  defense_mod: number;
+  damage_mod?: number | null;
+  min_strength?: number | null;
+  load: number;
+  range?: number | null;
+  ability: string;
+}
+
+// A catalogue shield. Its modifiers add to the wielded weapon's line (slice 5i).
+export interface Shield {
+  id: string;
+  init_mod: number;
+  attack_mod: number;
+  defense_mod: number;
+  load: number;
+  min_strength: number;
+}
+
+// A catalogue armor row (one per material and coverage). Protection is the Soak
+// bonus; Load feeds Encumbrance (slice 5i).
+export interface Armor {
+  id: string;
+  protection: number;
+  load: number;
+}
+
+// A piece of equipment the character carries: a reference to a catalogue weapon,
+// shield, or armor id, plus whether it is currently equipped (wielded/worn).
+export interface EquipmentSlot {
+  item: string;
+  equipped?: boolean;
+}
+
 export interface CharacteristicCost {
   score: number;
   cost: number;
@@ -537,6 +582,11 @@ export interface Ruleset {
   // Present from schema with spells loaded; optional so older shapes still
   // type-check. Keyed by spell id (e.g. `spell.pilum_of_fire`).
   spells?: Record<string, Spell>;
+  // Present from schema with equipment loaded; optional so older shapes still
+  // type-check. Keyed by catalogue id (`weapon.*`, `shield.*`, `armor.*`).
+  weapons?: Record<string, Weapon>;
+  shields?: Record<string, Shield>;
+  armor?: Record<string, Armor>;
   characteristic_rules?: CharacteristicRules | null;
   // Derived taxonomy surfaced by the engine so the UI never re-hardcodes the
   // magnitude point weights or the ability-category / art-type order. Source of
@@ -645,6 +695,9 @@ export interface Entity {
   sigil?: string;
   covenant_name?: string;
   parens?: string;
+  // Carried weapons, shields, and armor (references to catalogue ids). Combat
+  // totals, Soak, and Encumbrance are derived downstream (slice 5i). Omitted empty.
+  equipment?: EquipmentSlot[];
 }
 
 export interface ValidationIssue {

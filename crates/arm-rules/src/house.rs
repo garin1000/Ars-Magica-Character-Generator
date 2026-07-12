@@ -214,6 +214,7 @@ mod tests {
             houses: Some(GRANT_HOUSES),
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap()

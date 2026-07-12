@@ -1186,6 +1186,67 @@ Parens follow `tugenden-fehler.md` (Skilled → *Erfahrener Parens*; Weak →
 
 ---
 
+## Equipment: weapons / shields / armor (M5/5h)
+
+The equipment catalogue (`equipment.rs` + `rules/core/equipment.json`) defines
+weapons, shields, and armor as language-neutral records with per-row provenance.
+This slice stores the character's choices (`Entity::equipment`, a `Vec<EquipmentSlot
+{ item, equipped }>`) and validates references; it does **not** compute combat
+totals, Soak, or Encumbrance — that lands in the derived-totals slice (5i), which
+consumes these rows. The data shape is deliberately rich enough for 5i.
+
+**Armor Table** (each material split into partial / full rows; full is `n/a` for
+Quilted/Fur and Heavy Leather):
+
+> `:16944-16949` "| Quilted/Fur | 1 | 2 | n/a | n/a … | Chain Mail | 6 | 4 | 9 | 6 |"
+
+`Armor { protection, load }` — Prot is the Soak bonus, Load feeds Encumbrance.
+10 armor rows in `equipment.json`.
+
+**Melee Weapon Statistics** (Ability, Init, Atk, Dfn, Dam, Str, Load; shields are
+rows in this table but modeled as their own `Shield` type):
+
+> `:16959-16986` "| Dodge | Brawl | 0 | n/a | 0 | n/a | n/a | 0 … | Warhammer |
+> Great | 0 | +6 | 0 | +12 | +2 | 3 |"
+
+`:16988` names the "Ability" column ("The Weapon Ability needed to use this
+weapon"). `validate_weapon_refs` (in `ruleset.rs`) requires each weapon's
+`ability` to resolve to a Martial Ability, or Brawl (the combat Ability for
+unarmed/improvised weapons, which the rules class as General). 25 melee weapons +
+3 shields.
+
+**Missile Weapon Statistics** (adds a Range column; Thrown-Ability rows are
+`WeaponKind::Thrown`, Bow-Ability rows `Missile`):
+
+> `:17005-17011` "| Axe, Throwing | Thrown | 0 | +2 | 0 | +6 | 5 | 0 | 1 … | Bow,
+> Short | Bow | –1 | +3 | 0 | +6 | 15 | –1 | 2 |"
+
+7 missile-table weapons (32 weapons total).
+
+**`n/a` cells** are `Option::None`: Dodge has no Attack/Damage; the body attacks
+(Dodge/Fist/Kick) have no minimum-Strength — distinct from a real `0` (Fist's `+0`
+Attack). `min_strength` for a weapon and a shield are met separately (`:16993`).
+
+**Weapon + shield combine** — a weapon+shield combatant **adds both** rows'
+modifiers (computed in 5i):
+
+> `:16656` "If wielding a shield as well as a weapon, add the modifiers from the
+> shield to those from the weapon."
+
+**Encumbrance** (the Load→Burden table; Encumbrance = `max(0, Burden − max(0,Str))`)
+is defined at `:17103-17123` and **computed in 5i**, not here:
+
+> `:17109-17123` "| Total Load | Burden | | 0 | 0 | | 1 | 1 | … | 55 | 10 |"
+
+`validate_equipment` (in `validation.rs`) emits `unknown_equipment` (error) for a
+slot whose id resolves to no catalogue row, and `equipment_min_strength` (advisory
+warning) when an equipped weapon/shield's min-Strength exceeds the character's
+(aged) Strength — never blocking, since wielding an over-heavy weapon is a
+storyguide call. German equipment names follow
+`rules/source/de/translation-tables/kampf.md`.
+
+---
+
 ## Per-character fields (M4/4d-rest, 4e)
 
 The final M4 phase adds age, Confidence, Personality Traits, Reputations, and the

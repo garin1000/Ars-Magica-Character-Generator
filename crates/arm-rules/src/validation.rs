@@ -308,6 +308,15 @@ impl ValidationIssue {
     /// per the rules should already have forced a drop. Non-blocking: the user may
     /// be entering a character mid-accrual (Core:16579).
     pub const CODE_AGING_POINTS_FORCE_DROP: &'static str = "aging_points_force_drop";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: an equipment slot names an
+    /// id that does not resolve to any catalogue weapon, shield, or armor
+    /// (Core:16944-17011).
+    pub const CODE_UNKNOWN_EQUIPMENT: &'static str = "unknown_equipment";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: an equipped weapon or
+    /// shield's minimum-Strength requirement exceeds the character's Strength
+    /// (Core:16993). Advisory — the character may still carry/wield it, at the
+    /// storyguide's discretion, so this never blocks.
+    pub const CODE_EQUIPMENT_MIN_STRENGTH: &'static str = "equipment_min_strength";
 
     /// Builds an issue with the given severity, code, args, and context.
     pub fn new(
@@ -444,6 +453,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_personality_traits(entity, ruleset, &mut issues);
         validate_reputations(entity, ruleset, &mut issues);
         validate_devices(entity, ruleset, &mut issues);
+        validate_equipment(entity, ruleset, &mut issues);
         validate_aging(entity, ruleset, &mut issues);
         validate_xp_pool(entity, ruleset, &mut issues);
     }
@@ -2207,6 +2217,56 @@ fn validate_devices(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Validat
     }
 }
 
+/// Validates the character's carried equipment. Each [`EquipmentSlot`] must name a
+/// catalogue weapon, shield, or armor id (`unknown_equipment`, error). For an
+/// **equipped** weapon or shield whose minimum-Strength requirement exceeds the
+/// character's (aged) Strength, an advisory `equipment_min_strength` warning is
+/// raised — never blocking, since carrying/wielding an over-heavy weapon is a
+/// storyguide call, not an illegal creation state (Core:16993). Armor carries no
+/// minimum-Strength requirement. Combat totals, Soak, and Encumbrance are computed
+/// downstream (slice 5i), not here.
+fn validate_equipment(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    let strength = crate::effective::effective_characteristic_after_aging(
+        entity,
+        ruleset,
+        Characteristic::Str,
+    );
+    for slot in &entity.equipment {
+        let item = &slot.item;
+        // Resolve the id against exactly one of the three catalogues, and (for an
+        // equipped weapon/shield) capture its min-Strength for the advisory.
+        let min_strength: Option<i32> = if let Some(weapon) = ruleset.weapon(item) {
+            weapon.min_strength.map(i32::from)
+        } else if let Some(shield) = ruleset.shield(item) {
+            Some(i32::from(shield.min_strength))
+        } else if ruleset.armor_item(item).is_some() {
+            None
+        } else {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_UNKNOWN_EQUIPMENT,
+                args([("item", item.to_string())]),
+                Some(item.clone()),
+            ));
+            continue;
+        };
+
+        if slot.equipped
+            && let Some(required) = min_strength
+            && required > strength
+        {
+            issues.push(ValidationIssue::warning(
+                ValidationIssue::CODE_EQUIPMENT_MIN_STRENGTH,
+                args([
+                    ("item", item.to_string()),
+                    ("required", required.to_string()),
+                    ("strength", strength.to_string()),
+                ]),
+                Some(item.clone()),
+            ));
+        }
+    }
+}
+
 /// Validates a directly-entered aged character's aging state (advisory). Aging is
 /// derived by the guided flow in M6; M5 only makes the raw state enterable, so both
 /// findings here are **warnings**, never blocking:
@@ -2656,6 +2716,7 @@ mod tests {
             houses: Some(TEST_HOUSES),
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap()
@@ -2718,6 +2779,7 @@ mod tests {
             houses: Some(GRANT_HOUSES),
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap()
@@ -3053,6 +3115,7 @@ mod tests {
             houses: Some(HOUSE_VALIDATE_HOUSES),
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap()
@@ -3421,6 +3484,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: Some(characteristics),
         })
         .unwrap()
@@ -6447,6 +6511,7 @@ mod tests {
             houses: None,
             mythic_types: Some(TYPES),
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap()
@@ -6616,6 +6681,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: Some(SPELL_CATALOGUE),
+            equipment: None,
             characteristics: None,
         })
         .unwrap()
@@ -6826,6 +6892,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            equipment: None,
             characteristics: None,
         })
         .unwrap()

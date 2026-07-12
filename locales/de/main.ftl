@@ -94,6 +94,7 @@ tab-house-specialisation = Haus
 tab-mythic-type = Typ
 tab-spells = Zauber
 tab-possessions = Magische Gegenstände
+tab-equipment = Ausrüstung
 tab-details = Details
 # XP-Übersicht und Bedienelemente der Fertigkeiten.
 xp-pool = XP-Vorrat
@@ -341,6 +342,25 @@ issue-reputation_not_granted = Ein Ruf ({ $kind }, { $content }) benötigt eine 
 issue-over_item_level = Zauberartefakte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
 issue-excessive_aging_reduction = Alterungsminderungen für { $characteristic } ({ $reduction }) würden den Wert unter das Minimum ({ $min }) senken.
 issue-aging_points_force_drop = { $characteristic } hat { $points } Alterungspunkte, mehr als der Wert ({ $score }) — eine Wertminderung steht an.
+issue-unknown_equipment = Ausrüstung '{ $item }' passt zu keiner Waffe, keinem Schild und keiner Rüstung.
+issue-equipment_min_strength = { $item } benötigt Stärke { $required }, aber dieser Charakter hat { $strength }.
+
+# Ausrüstung (Waffen / Schilde / Rüstungen). Kampfwerte, Absorption und Belastung
+# werden in einem späteren Schritt berechnet; diese Oberfläche erfasst nur die
+# getragenen Gegenstände.
+weapon-kind-melee = Nahkampf
+weapon-kind-missile = Fernkampf
+weapon-kind-thrown = Wurf
+equipment-add-label = Ausrüstung hinzufügen
+equipment-none = Gegenstand wählen…
+equipment-group-weapons = Waffen
+equipment-group-shields = Schilde
+equipment-group-armor = Rüstungen
+equipment-add = Hinzufügen
+equipment-carried-label = Getragene Ausrüstung
+equipment-equipped-label = Ausgerüstet
+equipment-remove = Ausrüstung entfernen
+equipment-empty = Keine Ausrüstung.
 
 # AppError-Arten der Tauri-Befehle.
 error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.

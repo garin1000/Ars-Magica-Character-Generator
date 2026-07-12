@@ -669,6 +669,25 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /** Add a carried equipment slot referencing a catalogue weapon/shield/armor id. */
+  addEquipment(item: string): void {
+    if (!item) return;
+    this.entity.equipment = [...(this.entity.equipment ?? []), { item, equipped: true }];
+    this.#scheduleValidate();
+  }
+
+  removeEquipmentAt(index: number): void {
+    this.entity.equipment = (this.entity.equipment ?? []).filter((_, i) => i !== index);
+    this.#scheduleValidate();
+  }
+
+  setEquipmentEquipped(index: number, equipped: boolean): void {
+    this.entity.equipment = (this.entity.equipment ?? []).map((slot, i) =>
+      i === index ? { ...slot, equipped } : slot,
+    );
+    this.#scheduleValidate();
+  }
+
   /** Set a free-text identity/flavor field (no mechanical effect). */
   setIdentity(
     field: 'name' | 'gender' | 'sigil' | 'covenant_name' | 'parens',

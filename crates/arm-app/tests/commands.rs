@@ -187,6 +187,7 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     fs::write(tmp.path().join("core/houses.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/mythic_companion_types.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/spells.json"), "{}").unwrap();
+    fs::write(tmp.path().join("core/equipment.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
@@ -194,6 +195,7 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     fs::write(tmp.path().join("i18n/en/houses.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/mythic_companion_types.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/spells.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/equipment.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {
@@ -235,6 +237,7 @@ fn integrity_failure_preserves_individual_messages() {
     fs::write(tmp.path().join("core/houses.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/mythic_companion_types.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/spells.json"), "{}").unwrap();
+    fs::write(tmp.path().join("core/equipment.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
@@ -242,6 +245,7 @@ fn integrity_failure_preserves_individual_messages() {
     fs::write(tmp.path().join("i18n/en/houses.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/mythic_companion_types.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/spells.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/equipment.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {

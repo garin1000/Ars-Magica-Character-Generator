@@ -93,6 +93,7 @@ tab-house-specialisation = House
 tab-mythic-type = Type
 tab-spells = Spells
 tab-possessions = Magic Items
+tab-equipment = Equipment
 tab-details = Details
 # Ability XP summary and controls.
 xp-pool = XP pool
@@ -342,6 +343,24 @@ issue-reputation_not_granted = A { $kind } Reputation ({ $content }) needs a Vir
 issue-over_item_level = Enchanted devices total { $used } levels, over the budget of { $budget } (by { $over }).
 issue-excessive_aging_reduction = Aging reductions to { $characteristic } ({ $reduction }) would drop it below the minimum score ({ $min }).
 issue-aging_points_force_drop = { $characteristic } has { $points } aging points, more than its score ({ $score }) — a Characteristic drop is due.
+issue-unknown_equipment = Equipment '{ $item }' does not match any weapon, shield, or armor.
+issue-equipment_min_strength = { $item } needs Strength { $required }, but this character has { $strength }.
+
+# Equipment (weapons / shields / armor). Combat totals, Soak, and Encumbrance
+# are computed in a later slice; this surface only records the carried items.
+weapon-kind-melee = Melee
+weapon-kind-missile = Missile
+weapon-kind-thrown = Thrown
+equipment-add-label = Add equipment
+equipment-none = Select an item…
+equipment-group-weapons = Weapons
+equipment-group-shields = Shields
+equipment-group-armor = Armor
+equipment-add = Add
+equipment-carried-label = Carried equipment
+equipment-equipped-label = Equipped
+equipment-remove = Remove equipment
+equipment-empty = No equipment.
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.

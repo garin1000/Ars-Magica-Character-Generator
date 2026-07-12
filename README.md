@@ -95,7 +95,11 @@ between grog, companion, mythic companion, and magus; the Arts, Spells, and Magi
 Items tabs appear only for magus-capable types. The Magic Items tab stores a
 magus's starting possessions — aura, enchanted devices (charged against the
 item-level budget their Virtues grant), a familiar with its Gold/Silver/Bronze
-bond cords, talisman attunements, and a self-made or external Longevity Ritual. A seed Ability catalogue and the full 15-Art catalogue
+bond cords, talisman attunements, and a self-made or external Longevity Ritual. An
+Equipment tab — available to every character type — records the weapons, shields,
+and armor a character carries from the Core Rules equipment catalogue (English +
+German), marking each equipped; combat totals, Soak, and Encumbrance are computed
+in a later milestone. A seed Ability catalogue and the full 15-Art catalogue
 (English + German) ship with localized descriptions; abilities also carry example
 specialties and the "cannot be used untrained" marker. The complete Core Rules
 ability catalogue is staged for a later milestone. Score-boosting Virtues
