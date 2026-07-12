@@ -112,6 +112,7 @@ impl fmt::Display for IssueSeverity {
 /// | `supernatural_ability_requires_virtue` | error | `ability` |
 /// | `personality_trait_out_of_range` | error | `name`, `value`, `max` |
 /// | `reputation_not_granted` | error | `kind`, `content` |
+/// | `over_item_level` | error | `used`, `budget`, `over` |
 ///
 /// † The per-category caps emit a code derived from the `flaw_category_caps` /
 /// `virtue_category_caps` entry's category slug: `too_many_<category>_flaws` /
@@ -293,6 +294,10 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a starting Reputation is
     /// not backed by a granting Virtue/Flaw (Core:2514).
     pub const CODE_REPUTATION_NOT_GRANTED: &'static str = "reputation_not_granted";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the total level of the
+    /// character's enchanted devices exceeds the item-level budget the character's
+    /// Virtues grant (Magic Items +25, Redcap 50; Core:4347-4349, :4842-4846).
+    pub const CODE_OVER_ITEM_LEVEL: &'static str = "over_item_level";
 
     /// Builds an issue with the given severity, code, args, and context.
     pub fn new(
@@ -428,6 +433,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_supernatural_abilities(entity, ruleset, type_profile, &mut issues);
         validate_personality_traits(entity, ruleset, &mut issues);
         validate_reputations(entity, ruleset, &mut issues);
+        validate_devices(entity, ruleset, &mut issues);
         validate_xp_pool(entity, ruleset, &mut issues);
     }
 
@@ -2168,6 +2174,28 @@ fn validate_reputations(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Val
     }
 }
 
+/// Validates a character's starting enchanted devices: the total device level may
+/// not exceed the item-level budget the character's Virtues grant (Magic Items
+/// +25, Redcap 50). A device requires budget, so a device on a character with no
+/// granting Virtue (budget 0) is flagged — consistent with how a starting
+/// Reputation requires a granting Virtue. Source: Core Rules.md:4347-4349,
+/// :4842-4846.
+fn validate_devices(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    let used = crate::effective::item_level_used(entity);
+    let budget = crate::effective::item_level_budget(entity, ruleset);
+    if used > budget {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_OVER_ITEM_LEVEL,
+            args([
+                ("used", used.to_string()),
+                ("budget", budget.to_string()),
+                ("over", (used - budget).to_string()),
+            ]),
+            None,
+        ));
+    }
+}
+
 /// Validates Hermetic Art scores (mirrors [`validate_abilities`], minus the
 /// parameter logic — Arts are not parameterized): every referenced Art must
 /// resolve against the catalogue, no Art may appear twice, and every bought score
@@ -3219,6 +3247,60 @@ mod tests {
 
         let result = validate(&entity, &rs);
         assert!(result.is_valid(), "issues: {:?}", result.issues);
+    }
+
+    /// A magus profile permitting the categories the device tests use, with the
+    /// Magic Items Virtue granting a +25 item-level budget.
+    const DEVICE_ITEMS: &str = r#"[
+        { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
+          "category": "special", "entity_kinds": ["character"] },
+        { "id": "virtue.magic_items", "kind": "virtue", "classification": "creation_effect", "magnitude": "minor",
+          "category": "hermetic", "entity_kinds": ["character"],
+          "effects": [{ "type": "item_level_budget", "amount": 25 }] }
+    ]"#;
+
+    fn device(name: &str, level: u16) -> EnchantedDevice {
+        EnchantedDevice {
+            name: name.into(),
+            level,
+        }
+    }
+
+    #[test]
+    fn devices_within_item_level_budget_pass() {
+        let rs = rs_with_houses(DEVICE_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity(
+            "magus",
+            vec![sel("virtue.the_gift"), sel("virtue.magic_items")],
+        );
+        entity.devices = vec![device("Wand", 15), device("Ring", 10)]; // 25 == budget
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&ValidationIssue::CODE_OVER_ITEM_LEVEL.to_string()),
+            "issues: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn devices_over_item_level_budget_error() {
+        let rs = rs_with_houses(DEVICE_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity(
+            "magus",
+            vec![sel("virtue.the_gift"), sel("virtue.magic_items")],
+        );
+        entity.devices = vec![device("Wand", 20), device("Ring", 10)]; // 30 > 25
+        let result = validate(&entity, &rs);
+        assert!(codes(&result).contains(&ValidationIssue::CODE_OVER_ITEM_LEVEL.to_string()));
+    }
+
+    #[test]
+    fn device_with_no_budget_grant_error() {
+        let rs = rs_with_houses(DEVICE_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![sel("virtue.the_gift")]);
+        entity.devices = vec![device("Wand", 5)]; // budget 0
+        let result = validate(&entity, &rs);
+        assert!(codes(&result).contains(&ValidationIssue::CODE_OVER_ITEM_LEVEL.to_string()));
     }
 
     #[test]

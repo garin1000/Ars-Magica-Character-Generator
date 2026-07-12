@@ -12,6 +12,7 @@ import type {
   EffectiveScores,
   Entity,
   LocalizedRuleset,
+  LongevitySource,
   ReputationType,
   Selection,
   ValidationMode,
@@ -487,6 +488,122 @@ class AppStore {
     this.entity.reputations = (this.entity.reputations ?? []).map((r, i) =>
       i === index ? { ...r, content } : r,
     );
+    this.#scheduleValidate();
+  }
+
+  // --- Magic Items tab: aura, devices, familiar, talisman, longevity ---
+
+  /** Set the realm aura modifier (signed; Divine can be a penalty). */
+  setAura(aura: number | null): void {
+    this.entity.aura = aura != null && Number.isFinite(aura) ? Math.trunc(aura) : 0;
+    this.#scheduleValidate();
+  }
+
+  addDevice(): void {
+    this.entity.devices = [...(this.entity.devices ?? []), { name: '', level: 0 }];
+    this.#scheduleValidate();
+  }
+
+  removeDeviceAt(index: number): void {
+    this.entity.devices = (this.entity.devices ?? []).filter((_, i) => i !== index);
+    this.#scheduleValidate();
+  }
+
+  setDeviceName(index: number, name: string): void {
+    this.entity.devices = (this.entity.devices ?? []).map((d, i) =>
+      i === index ? { ...d, name } : d,
+    );
+    this.#scheduleValidate();
+  }
+
+  setDeviceLevel(index: number, level: number): void {
+    const clamped = Math.max(0, Math.trunc(level));
+    this.entity.devices = (this.entity.devices ?? []).map((d, i) =>
+      i === index ? { ...d, level: clamped } : d,
+    );
+    this.#scheduleValidate();
+  }
+
+  addFamiliar(): void {
+    this.entity.familiar = { name: '', cord_gold: 0, cord_silver: 0, cord_bronze: 0 };
+    this.#scheduleValidate();
+  }
+
+  removeFamiliar(): void {
+    this.entity.familiar = null;
+    this.#scheduleValidate();
+  }
+
+  setFamiliarName(name: string): void {
+    if (!this.entity.familiar) return;
+    this.entity.familiar = { ...this.entity.familiar, name };
+    this.#scheduleValidate();
+  }
+
+  setFamiliarCord(cord: 'gold' | 'silver' | 'bronze', value: number): void {
+    if (!this.entity.familiar) return;
+    const clamped = Math.max(0, Math.trunc(value));
+    const key = `cord_${cord}` as const;
+    this.entity.familiar = { ...this.entity.familiar, [key]: clamped };
+    this.#scheduleValidate();
+  }
+
+  addTalismanAttunement(): void {
+    this.entity.talisman_attunements = [
+      ...(this.entity.talisman_attunements ?? []),
+      { description: '', bonus: 0 },
+    ];
+    this.#scheduleValidate();
+  }
+
+  removeTalismanAttunementAt(index: number): void {
+    this.entity.talisman_attunements = (this.entity.talisman_attunements ?? []).filter(
+      (_, i) => i !== index,
+    );
+    this.#scheduleValidate();
+  }
+
+  setTalismanDescription(index: number, description: string): void {
+    this.entity.talisman_attunements = (this.entity.talisman_attunements ?? []).map((t, i) =>
+      i === index ? { ...t, description } : t,
+    );
+    this.#scheduleValidate();
+  }
+
+  setTalismanBonus(index: number, bonus: number): void {
+    this.entity.talisman_attunements = (this.entity.talisman_attunements ?? []).map((t, i) =>
+      i === index ? { ...t, bonus: Math.trunc(bonus) } : t,
+    );
+    this.#scheduleValidate();
+  }
+
+  /** Add a Longevity Ritual; a self-made one leaves the bonus for the engine. */
+  addLongevityRitual(source: LongevitySource): void {
+    this.entity.longevity_ritual = { source, bonus: source === 'external' ? 0 : null };
+    this.#scheduleValidate();
+  }
+
+  removeLongevityRitual(): void {
+    this.entity.longevity_ritual = null;
+    this.#scheduleValidate();
+  }
+
+  /** Switch the ritual source; self-made clears the (computed) bonus. */
+  setLongevitySource(source: LongevitySource): void {
+    if (!this.entity.longevity_ritual) return;
+    this.entity.longevity_ritual = {
+      source,
+      bonus: source === 'external' ? (this.entity.longevity_ritual.bonus ?? 0) : null,
+    };
+    this.#scheduleValidate();
+  }
+
+  setLongevityBonus(bonus: number): void {
+    if (!this.entity.longevity_ritual) return;
+    this.entity.longevity_ritual = {
+      ...this.entity.longevity_ritual,
+      bonus: Math.trunc(bonus),
+    };
     this.#scheduleValidate();
   }
 

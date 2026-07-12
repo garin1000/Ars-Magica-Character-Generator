@@ -252,6 +252,9 @@ export interface EffectiveScores {
   // Derived starting enchanted-device level budget (Magic Items +25, Redcap 50);
   // 0 when none.
   item_level_budget: number;
+  // Total device level the entity's devices consume — the "used" side of the
+  // item-level budget bar (engine-authoritative; never recomputed in JS).
+  item_level_used: number;
   // Derived Spell-Mastery XP pool (Mastered Spells +50 each); 0 when none.
   spell_mastery_xp: number;
   // Mastery-score floor every known spell gets (Flawless Magic 1); 0 = none.
@@ -399,6 +402,37 @@ export interface Reputation {
   kind: ReputationType;
   score: number;
   content: string;
+}
+
+// A starting enchanted device (magi). `level` is charged against the item-level
+// budget the character's Magic Items / Redcap Virtues grant.
+export interface EnchantedDevice {
+  name: string;
+  level: number;
+}
+
+// A magus's familiar and its three bond-cord scores. Omitted cords default to 0.
+export interface Familiar {
+  name: string;
+  cord_gold?: number;
+  cord_silver?: number;
+  cord_bronze?: number;
+}
+
+// A talisman attunement: a free-text descriptor and the bonus it confers.
+export interface TalismanAttunement {
+  description: string;
+  bonus: number;
+}
+
+// Where a Longevity Ritual comes from (rendered via Fluent, never as a raw slug).
+export type LongevitySource = 'self_made' | 'external';
+
+// A magus's Longevity Ritual. `self_made` leaves `bonus` unset (computed
+// downstream); `external` carries a player-entered bonus.
+export interface LongevityRitual {
+  source: LongevitySource;
+  bonus?: number | null;
 }
 
 export interface CharacteristicCost {
@@ -571,6 +605,17 @@ export interface Entity {
   personality_traits?: PersonalityTrait[];
   // Starting Reputations (each backed by a granting V/F). Omitted when empty.
   reputations?: Reputation[];
+  // The realm aura modifier the magus starts under (signed). Omitted when 0.
+  aura?: number;
+  // Starting enchanted devices (magi); each level is charged against the
+  // item-level budget. Omitted when empty.
+  devices?: EnchantedDevice[];
+  // The magus's familiar and bond cords. Omitted when none.
+  familiar?: Familiar | null;
+  // Talisman attunements (magi). Omitted when empty.
+  talisman_attunements?: TalismanAttunement[];
+  // The magus's Longevity Ritual. Omitted when none.
+  longevity_ritual?: LongevityRitual | null;
 }
 
 export interface ValidationIssue {

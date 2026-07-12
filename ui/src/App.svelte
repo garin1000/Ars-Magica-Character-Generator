@@ -13,6 +13,7 @@
   import ArtGrid from './lib/components/ArtGrid.svelte';
   import ArtXpBar from './lib/components/ArtXpBar.svelte';
   import SpellPicker from './lib/components/SpellPicker.svelte';
+  import MagicPossessions from './lib/components/MagicPossessions.svelte';
   import CharacterDetails from './lib/components/CharacterDetails.svelte';
   import HouseSelector from './lib/components/HouseSelector.svelte';
   import MythicCompanionTypeSelector from './lib/components/MythicCompanionTypeSelector.svelte';
@@ -27,6 +28,7 @@
     | 'abilities'
     | 'arts'
     | 'spells'
+    | 'possessions'
     | 'house_specialisation'
     | 'mythic_type'
     | 'details';
@@ -48,6 +50,7 @@
       ? [
           { id: 'arts' as Tab, key: 'tab-arts' },
           { id: 'spells' as Tab, key: 'tab-spells' },
+          { id: 'possessions' as Tab, key: 'tab-possessions' },
           { id: 'house_specialisation' as Tab, key: 'tab-house-specialisation' },
         ]
       : []),
@@ -151,6 +154,10 @@
   {:else if tab === 'spells'}
     <div class="vf-tab">
       <SpellPicker />
+    </div>
+  {:else if tab === 'possessions'}
+    <div class="vf-tab">
+      <MagicPossessions />
     </div>
   {:else if tab === 'details'}
     <div class="vf-tab">
