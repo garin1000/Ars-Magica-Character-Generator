@@ -276,6 +276,7 @@ issue-duplicate_spell = { $spell } ist { $count }-mal aufgeführt.
 issue-spell_level_unresolved = Der Gen-Zauber { $spell } hat noch keine gewählte Stufe.
 issue-over_spell_levels = Die Zauber ergeben { $used } Stufen und überschreiten das Budget von { $budget } (um { $over }).
 issue-spell_level_exceeds_cap = Zauber { $spell } hat Stufe { $level }, über der höchsten erlernbaren Stufe ({ $cap }).
+issue-spell_ritual_legality = Zauber { $spell } wird auf Stufe { $level } erlernt und verletzt die Ritualgrenzen (Rituale mindestens 20, Nicht-Rituale höchstens 50).
 issue-ability_above_age_cap = { $ability } mit Wert { $score } überschreitet das Maximum von { $cap } für Alter { $age }.
 issue-supernatural_ability_requires_virtue = { $ability } ist eine übernatürliche Fähigkeit und erfordert eine verleihende Tugend (oder die eine freie Fähigkeit der Gabe).
 issue-personality_trait_out_of_range = Persönlichkeitsmerkmal { $name } ({ $value }) liegt außerhalb des zulässigen Bereichs (±{ $max }).

@@ -275,6 +275,7 @@ issue-duplicate_spell = { $spell } is listed { $count } times.
 issue-spell_level_unresolved = General spell { $spell } has no chosen level yet.
 issue-over_spell_levels = Spells total { $used } levels, over the budget of { $budget } (by { $over }).
 issue-spell_level_exceeds_cap = Spell { $spell } is level { $level }, above the maximum you can learn ({ $cap }).
+issue-spell_ritual_legality = Spell { $spell } is learned at level { $level }, which breaks the ritual level bounds (rituals at least 20, non-rituals at most 50).
 issue-ability_above_age_cap = { $ability } score { $score } exceeds the age-{ $age } maximum of { $cap }.
 issue-supernatural_ability_requires_virtue = { $ability } is a Supernatural Ability and requires a granting Virtue (or the Gift's one free Ability).
 issue-personality_trait_out_of_range = Personality Trait { $name } ({ $value }) is outside the allowed range (±{ $max }).
