@@ -24,9 +24,9 @@ pub use effective::{
     characteristic_floor, characteristic_floors, characteristic_points_granted,
     characteristic_score_bonus, confidence, effective_ability_score, effective_art_score,
     effective_characteristic_score, effective_spell_mastery, entity_grants, item_level_budget,
-    reputation_grants, resolved_spell_level, restricted_xp_pools, size, spell_levels_budget,
-    spell_levels_used, spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith,
-    warping, xp_allocation,
+    item_level_used, reputation_grants, resolved_spell_level, restricted_xp_pools, size,
+    spell_levels_budget, spell_levels_used, spell_mastery_floor, spell_mastery_xp,
+    supernatural_free_slots, true_faith, warping, xp_allocation,
 };
 pub use grant::{Grant, GrantConstraint, open_pick_satisfies, resolve_grants};
 pub use house::{House, LineageType, granted_selections};
@@ -34,11 +34,11 @@ pub use mythic_companion::{MythicCompanionType, RequiredFlaw};
 pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError, RulesetSources};
 pub use spell::Spell;
 pub use types::{
-    AbilityScore, ArtScore, CategoryCap, Classification, Effect, Entity, EntityKind,
-    EntityTypeProfile, GiftPolicy, I18nEntry, Id, ItemKind, LineRange, Magnitude, ParamType,
-    ParameterDef, ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Reputation,
-    ReputationType, RulesetRef, SCHEMA_VERSION, Selection, SourceRef, SpellSelection,
-    ValidationMode,
+    AbilityScore, ArtScore, CategoryCap, Classification, Effect, EnchantedDevice, Entity,
+    EntityKind, EntityTypeProfile, Familiar, GiftPolicy, I18nEntry, Id, ItemKind, LineRange,
+    LongevityRitual, LongevitySource, Magnitude, ParamType, ParameterDef, ParameterDomain,
+    PersonalityTrait, PointBudget, PointItem, Prereq, Reputation, ReputationType, RulesetRef,
+    SCHEMA_VERSION, Selection, SourceRef, SpellSelection, TalismanAttunement, ValidationMode,
 };
 pub use validation::{
     Balance, IssueSeverity, ValidationIssue, ValidationResult, compute_balance,

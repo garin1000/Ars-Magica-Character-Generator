@@ -296,6 +296,64 @@ describe('reputations', () => {
   });
 });
 
+describe('magic possessions', () => {
+  it('sets a signed aura and clears to 0 on null', () => {
+    store.setAura(-3);
+    expect(store.entity.aura).toBe(-3);
+    store.setAura(null);
+    expect(store.entity.aura).toBe(0);
+  });
+
+  it('adds, edits (name + non-negative level) and removes devices by index', () => {
+    store.addDevice();
+    store.setDeviceName(0, 'Wand');
+    store.setDeviceLevel(0, -5);
+    expect(store.entity.devices).toEqual([{ name: 'Wand', level: 0 }]);
+    store.setDeviceLevel(0, 20);
+    store.addDevice();
+    store.removeDeviceAt(1);
+    expect(store.entity.devices).toEqual([{ name: 'Wand', level: 20 }]);
+  });
+
+  it('adds a familiar, edits name and cords, and removes it', () => {
+    store.addFamiliar();
+    store.setFamiliarName('Corax');
+    store.setFamiliarCord('bronze', 3);
+    store.setFamiliarCord('gold', -2);
+    expect(store.entity.familiar).toEqual({
+      name: 'Corax',
+      cord_gold: 0,
+      cord_silver: 0,
+      cord_bronze: 3,
+    });
+    store.removeFamiliar();
+    expect(store.entity.familiar).toBeNull();
+  });
+
+  it('adds, edits and removes talisman attunements by index', () => {
+    store.addTalismanAttunement();
+    store.setTalismanDescription(0, 'Attuned to fire');
+    store.setTalismanBonus(0, 5);
+    expect(store.entity.talisman_attunements).toEqual([
+      { description: 'Attuned to fire', bonus: 5 },
+    ]);
+    store.removeTalismanAttunementAt(0);
+    expect(store.entity.talisman_attunements).toEqual([]);
+  });
+
+  it('adds a self-made longevity ritual (no bonus) and switches to external', () => {
+    store.addLongevityRitual('self_made');
+    expect(store.entity.longevity_ritual).toEqual({ source: 'self_made', bonus: null });
+    store.setLongevitySource('external');
+    store.setLongevityBonus(4);
+    expect(store.entity.longevity_ritual).toEqual({ source: 'external', bonus: 4 });
+    store.setLongevitySource('self_made');
+    expect(store.entity.longevity_ritual).toEqual({ source: 'self_made', bonus: null });
+    store.removeLongevityRitual();
+    expect(store.entity.longevity_ritual).toBeNull();
+  });
+});
+
 // --- removeSelectionAt() ----------------------------------------------------
 
 describe('removeSelectionAt', () => {

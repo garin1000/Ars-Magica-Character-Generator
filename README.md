@@ -91,8 +91,11 @@ tests, and a real-binary `tauri-driver` E2E). Characters can be built with
 virtues/flaws, point-buy Characteristics, whole bought Ability scores, and — for
 magi — whole bought Hermetic Art scores, with Abilities and Arts drawing from one
 shared experience pool, all validated live. A character-type selector switches
-between grog, companion, mythic companion, and magus; the Arts tab appears only
-for magus-capable types. A seed Ability catalogue and the full 15-Art catalogue
+between grog, companion, mythic companion, and magus; the Arts, Spells, and Magic
+Items tabs appear only for magus-capable types. The Magic Items tab stores a
+magus's starting possessions — aura, enchanted devices (charged against the
+item-level budget their Virtues grant), a familiar with its Gold/Silver/Bronze
+bond cords, talisman attunements, and a self-made or external Longevity Ritual. A seed Ability catalogue and the full 15-Art catalogue
 (English + German) ship with localized descriptions; abilities also carry example
 specialties and the "cannot be used untrained" marker. The complete Core Rules
 ability catalogue is staged for a later milestone. Score-boosting Virtues

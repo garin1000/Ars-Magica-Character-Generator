@@ -92,6 +92,7 @@ tab-arts = Arts
 tab-house-specialisation = House
 tab-mythic-type = Type
 tab-spells = Spells
+tab-possessions = Magic Items
 tab-details = Details
 # Ability XP summary and controls.
 xp-pool = XP pool
@@ -157,6 +158,36 @@ reputation-type-local = Local
 reputation-type-ecclesiastical = Ecclesiastical
 reputation-type-hermetic = Hermetic
 reputation-type-academic = Academic
+# Magic Items tab (magi): aura, enchanted devices, familiar bond cords, talisman
+# attunements and the Longevity Ritual. The item-level budget used/remaining comes
+# from the engine, never recomputed here.
+aura-label = Aura
+possessions-devices-label = Enchanted Devices
+device-name-placeholder = Device name
+device-level-label = Level
+device-add = Add device
+devices-empty = No enchanted devices yet.
+item-level-used = Item levels: { $used } / { $budget }
+familiar-label = Familiar
+familiar-name-placeholder = Familiar name
+familiar-cord-gold = Gold cord
+familiar-cord-silver = Silver cord
+familiar-cord-bronze = Bronze cord
+familiar-add = Add familiar
+familiar-remove = Remove familiar
+talisman-label = Talisman Attunements
+talisman-desc-placeholder = What it enhances
+talisman-bonus-label = Bonus
+talisman-add = Add attunement
+talisman-empty = No talisman attunements yet.
+longevity-label = Longevity Ritual
+longevity-source-label = Source
+longevity-source-self_made = Self-made
+longevity-source-external = External
+longevity-bonus-label = Aging bonus
+longevity-add = Add Longevity Ritual
+longevity-remove = Remove Longevity Ritual
+longevity-self-made-note = Bonus is computed from your Creo + Corpus Lab Total.
 # Shown as the reason a Supernatural Ability is greyed in the picker.
 ability-requires-virtue = Requires a granting Virtue (or the Gift's one free Ability)
 characteristic-increment = Raise
@@ -288,6 +319,7 @@ issue-ability_above_age_cap = { $ability } score { $score } exceeds the age-{ $a
 issue-supernatural_ability_requires_virtue = { $ability } is a Supernatural Ability and requires a granting Virtue (or the Gift's one free Ability).
 issue-personality_trait_out_of_range = Personality Trait { $name } ({ $value }) is outside the allowed range (±{ $max }).
 issue-reputation_not_granted = A { $kind } Reputation ({ $content }) needs a Virtue or Flaw that grants one.
+issue-over_item_level = Enchanted devices total { $used } levels, over the budget of { $budget } (by { $over }).
 
 # AppError kinds returned by Tauri commands.
 error-io = A file could not be read or written.

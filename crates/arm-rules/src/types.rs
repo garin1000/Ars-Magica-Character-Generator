@@ -1560,8 +1560,93 @@ pub struct Reputation {
     pub content: String,
 }
 
+/// An enchanted device a magus starts with. Only the choice is stored (name +
+/// total effect level); the `level` is charged against the item-level budget the
+/// character's Magic Items / Redcap Virtues grant (see
+/// [`crate::effective::item_level_budget`]). Kept sorted via [`Entity::normalize`].
+/// Source: Core Rules.md:4347-4349 (Magic Items), :4842-4846 (Redcap).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct EnchantedDevice {
+    /// Free-text device name.
+    pub name: String,
+    /// Total effect level, charged against the item-level budget.
+    pub level: u16,
+}
+
+/// A magus's bond with a familiar: the three bond-cord scores. Gold reduces botch
+/// dice, Silver aids Personality/mental resistance, Bronze adds to Soak and
+/// aging-resistance (the latter feed the derived-totals slice). Only the choice is
+/// stored; nothing is derived here. Source: Core Rules.md:10840-10844.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Familiar {
+    /// Free-text familiar name.
+    pub name: String,
+    /// Gold cord score (reduces botch dice).
+    #[serde(default, skip_serializing_if = "is_zero_u8")]
+    pub cord_gold: u8,
+    /// Silver cord score (Personality / mental resistance).
+    #[serde(default, skip_serializing_if = "is_zero_u8")]
+    pub cord_silver: u8,
+    /// Bronze cord score (Soak & aging-resistance).
+    #[serde(default, skip_serializing_if = "is_zero_u8")]
+    pub cord_bronze: u8,
+}
+
+/// A talisman attunement: a free-text descriptor plus the bonus it confers. Only
+/// the choice is stored; the derived-totals slice decides where each bonus
+/// applies. Kept sorted via [`Entity::normalize`]. Source: Core Rules.md (talisman
+/// attunement shape bonuses).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct TalismanAttunement {
+    /// Free-text description of the attunement (what it enhances).
+    pub description: String,
+    /// The bonus the attunement confers.
+    pub bonus: i8,
+}
+
+/// Where a magus's Longevity Ritual comes from — a fixed rules taxonomy, rendered
+/// via Fluent, never as a raw slug.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LongevitySource {
+    /// The magus made their own ritual; its bonus is computed from the Creo+Corpus
+    /// Lab Total (so `bonus` is `None`, filled by the derived-totals slice).
+    SelfMade,
+    /// An external ritual (e.g. bought or cast by another); the player enters the
+    /// bonus directly.
+    External,
+}
+
+impl fmt::Display for LongevitySource {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            LongevitySource::SelfMade => "self_made",
+            LongevitySource::External => "external",
+        })
+    }
+}
+
+/// A magus's Longevity Ritual. `SelfMade` rituals leave `bonus` `None` (the
+/// derived-totals slice computes it as +1 aging bonus per 5 points, rounded up, of
+/// the Creo+Corpus Lab Total); `External` rituals carry a player-entered `bonus`.
+/// Source: Core Rules.md:10662-10672.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LongevityRitual {
+    /// Whether the ritual is self-made or externally provided.
+    pub source: LongevitySource,
+    /// The aging bonus; `None` for a self-made ritual (computed downstream), a
+    /// player-entered value for an external one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bonus: Option<i8>,
+}
+
 /// `skip_serializing_if` predicate: omits a `u32` field when it is zero.
 fn is_zero(n: &u32) -> bool {
+    *n == 0
+}
+
+/// `skip_serializing_if` predicate: omits an `i32` field when it is zero.
+fn is_zero_i32(n: &i32) -> bool {
     *n == 0
 }
 
@@ -1668,10 +1753,29 @@ pub struct Entity {
     /// via [`Entity::normalize`]. Defaults to empty.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub reputations: Vec<Reputation>,
+    /// The realm aura modifier the magus starts under (signed; a Divine aura can be
+    /// a penalty). Persisted so the derived-totals slice can reproduce self-made
+    /// Longevity / lab totals. Defaults to 0.
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub aura: i32,
+    /// Starting enchanted devices (magi only); each `level` is charged against the
+    /// item-level budget. Kept sorted via [`Entity::normalize`]. Defaults to empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub devices: Vec<EnchantedDevice>,
+    /// The magus's familiar and its bond-cord scores. `None` when there is none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub familiar: Option<Familiar>,
+    /// Talisman attunements (magi only). Kept sorted via [`Entity::normalize`].
+    /// Defaults to empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub talisman_attunements: Vec<TalismanAttunement>,
+    /// The magus's Longevity Ritual. `None` when there is none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub longevity_ritual: Option<LongevityRitual>,
 }
 
 /// Current save-format schema version.
-pub const SCHEMA_VERSION: u32 = 8;
+pub const SCHEMA_VERSION: u32 = 9;
 
 impl Entity {
     /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
@@ -1696,12 +1800,17 @@ impl Entity {
             age: None,
             personality_traits: Vec::new(),
             reputations: Vec::new(),
+            aura: 0,
+            devices: Vec::new(),
+            familiar: None,
+            talisman_attunements: Vec::new(),
+            longevity_ritual: None,
         }
     }
 
-    /// Sort selections, ability scores, art scores, spells, personality traits and
-    /// reputations for canonical serialization. (`characteristics` is a
-    /// `BTreeMap`, already id-ordered.)
+    /// Sort selections, ability scores, art scores, spells, personality traits,
+    /// reputations, devices and talisman attunements for canonical serialization.
+    /// (`characteristics` is a `BTreeMap`, already id-ordered.)
     pub fn normalize(&mut self) {
         self.selections.sort();
         self.ability_scores.sort();
@@ -1709,6 +1818,8 @@ impl Entity {
         self.spells.sort();
         self.personality_traits.sort();
         self.reputations.sort();
+        self.devices.sort();
+        self.talisman_attunements.sort();
     }
 }
 
@@ -1873,6 +1984,8 @@ mod tests {
         check(SpecialCasting::Mercurian);
         check(SpecialCasting::LifeBoost);
         check(SpecialCasting::Circumstantial);
+        check(LongevitySource::SelfMade);
+        check(LongevitySource::External);
         check(crate::validation::IssueSeverity::Error);
         check(crate::validation::IssueSeverity::Warning);
         check(crate::spell::SpellRange::ArcaneConnection);
@@ -2306,13 +2419,18 @@ mod tests {
                 value: 3,
             }],
             reputations: Vec::new(),
+            aura: 0,
+            devices: Vec::new(),
+            familiar: None,
+            talisman_attunements: Vec::new(),
+            longevity_ritual: None,
         };
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 8"#));
+        assert!(json.contains(r#""schema_version": 9"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -2425,6 +2543,11 @@ mod tests {
             age: None,
             personality_traits: Vec::new(),
             reputations: Vec::new(),
+            aura: 0,
+            devices: Vec::new(),
+            familiar: None,
+            talisman_attunements: Vec::new(),
+            longevity_ritual: None,
         };
 
         // Serialization is canonical only after normalize(); derive-based
@@ -2562,6 +2685,112 @@ mod tests {
         assert!(entity.characteristics.is_empty());
         assert!(entity.ability_scores.is_empty());
         assert_eq!(entity.xp_pool, 0);
+    }
+
+    /// A v8 save (predating the M5/5e magic-possessions fields) still deserializes:
+    /// the additive `serde(default)` fields fill in as empty/None/0, so no migration
+    /// is needed (the same precedent as `v1_save_without_new_fields_still_loads`).
+    #[test]
+    fn v8_save_without_magic_possessions_still_loads() {
+        let v8 = r#"{
+          "schema_version": 8,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "selections": [{ "ref": "virtue.the_gift" }]
+        }"#;
+        let entity: Entity = serde_json::from_str(v8).unwrap();
+        assert_eq!(entity.schema_version, 8);
+        assert_eq!(entity.aura, 0);
+        assert!(entity.devices.is_empty());
+        assert!(entity.familiar.is_none());
+        assert!(entity.talisman_attunements.is_empty());
+        assert!(entity.longevity_ritual.is_none());
+    }
+
+    /// An Entity carrying every new magic-possession field round-trips through JSON
+    /// unchanged, at the current schema version.
+    #[test]
+    fn entity_magic_possessions_roundtrip() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.aura = -3;
+        entity.devices = vec![EnchantedDevice {
+            name: "Ring of Warding".into(),
+            level: 20,
+        }];
+        entity.familiar = Some(Familiar {
+            name: "Corax".into(),
+            cord_gold: 2,
+            cord_silver: 1,
+            cord_bronze: 3,
+        });
+        entity.talisman_attunements = vec![TalismanAttunement {
+            description: "Attuned to fire".into(),
+            bonus: 5,
+        }];
+        entity.longevity_ritual = Some(LongevityRitual {
+            source: LongevitySource::External,
+            bonus: Some(4),
+        });
+
+        let json = serde_json::to_string_pretty(&entity).unwrap();
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(entity, back);
+        assert!(json.contains(r#""schema_version": 9"#));
+        assert!(json.contains(r#""aura": -3"#));
+        assert!(json.contains(r#""source": "external""#));
+    }
+
+    /// A self-made Longevity Ritual keeps `bonus` `None` and round-trips.
+    #[test]
+    fn self_made_longevity_ritual_roundtrip() {
+        let ritual = LongevityRitual {
+            source: LongevitySource::SelfMade,
+            bonus: None,
+        };
+        let json = serde_json::to_string(&ritual).unwrap();
+        assert!(json.contains(r#""source":"self_made""#), "{json}");
+        assert!(!json.contains("bonus"), "{json}");
+        let back: LongevityRitual = serde_json::from_str(&json).unwrap();
+        assert_eq!(ritual, back);
+    }
+
+    /// `normalize()` sorts devices (by name) and talisman attunements (by
+    /// description) deterministically.
+    #[test]
+    fn entity_normalize_sorts_devices_and_talismans() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.devices = vec![
+            EnchantedDevice {
+                name: "Wand".into(),
+                level: 10,
+            },
+            EnchantedDevice {
+                name: "Amulet".into(),
+                level: 15,
+            },
+        ];
+        entity.talisman_attunements = vec![
+            TalismanAttunement {
+                description: "Zephyr".into(),
+                bonus: 2,
+            },
+            TalismanAttunement {
+                description: "Aegis".into(),
+                bonus: 3,
+            },
+        ];
+        entity.normalize();
+        assert_eq!(entity.devices[0].name, "Amulet");
+        assert_eq!(entity.talisman_attunements[0].description, "Aegis");
     }
 
     #[test]

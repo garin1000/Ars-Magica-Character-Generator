@@ -93,6 +93,7 @@ tab-arts = Künste
 tab-house-specialisation = Haus
 tab-mythic-type = Typ
 tab-spells = Zauber
+tab-possessions = Magische Gegenstände
 tab-details = Details
 # XP-Übersicht und Bedienelemente der Fertigkeiten.
 xp-pool = XP-Vorrat
@@ -155,6 +156,36 @@ reputation-type-local = Lokal
 reputation-type-ecclesiastical = Kirchlich
 reputation-type-hermetic = Hermetisch
 reputation-type-academic = Akademisch
+# Tab "Magische Gegenstände" (Magi): Aura, Zauberartefakte, Vertrautenbindung,
+# Talismanabstimmungen und das Langlebigkeitsritual. Das genutzte/verbleibende
+# Artefaktbudget stammt aus der Engine, wird hier nie neu berechnet.
+aura-label = Aura
+possessions-devices-label = Zauberartefakte
+device-name-placeholder = Name des Artefakts
+device-level-label = Stufe
+device-add = Artefakt hinzufügen
+devices-empty = Noch keine Zauberartefakte.
+item-level-used = Artefaktstufen: { $used } / { $budget }
+familiar-label = Vertrauter
+familiar-name-placeholder = Name des Vertrauten
+familiar-cord-gold = Goldene Kordel
+familiar-cord-silver = Silberne Kordel
+familiar-cord-bronze = Bronzene Kordel
+familiar-add = Vertrauten hinzufügen
+familiar-remove = Vertrauten entfernen
+talisman-label = Talismanabstimmungen
+talisman-desc-placeholder = Was verstärkt wird
+talisman-bonus-label = Bonus
+talisman-add = Abstimmung hinzufügen
+talisman-empty = Noch keine Talismanabstimmungen.
+longevity-label = Langlebigkeitsritual
+longevity-source-label = Herkunft
+longevity-source-self_made = Selbst erstellt
+longevity-source-external = Extern
+longevity-bonus-label = Alterungsbonus
+longevity-add = Langlebigkeitsritual hinzufügen
+longevity-remove = Langlebigkeitsritual entfernen
+longevity-self-made-note = Der Bonus wird aus deinem Creo-+-Corpus-Labortotal berechnet.
 # Grund, warum eine übernatürliche Fähigkeit im Auswähler ausgegraut ist.
 ability-requires-virtue = Erfordert eine verleihende Tugend (oder die eine freie Fähigkeit der Gabe)
 characteristic-increment = Erhöhen
@@ -287,6 +318,7 @@ issue-ability_above_age_cap = { $ability } mit Wert { $score } überschreitet da
 issue-supernatural_ability_requires_virtue = { $ability } ist eine übernatürliche Fähigkeit und erfordert eine verleihende Tugend (oder die eine freie Fähigkeit der Gabe).
 issue-personality_trait_out_of_range = Persönlichkeitsmerkmal { $name } ({ $value }) liegt außerhalb des zulässigen Bereichs (±{ $max }).
 issue-reputation_not_granted = Ein Ruf ({ $kind }, { $content }) benötigt eine Tugend oder einen Fehler, der ihn verleiht.
+issue-over_item_level = Zauberartefakte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
 
 # AppError-Arten der Tauri-Befehle.
 error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.

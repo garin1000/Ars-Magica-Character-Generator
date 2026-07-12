@@ -1222,6 +1222,13 @@ pub fn item_level_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
     total
 }
 
+/// The total enchanted-device level the entity's `devices` consume — the "used"
+/// side of the item-level budget bar. Summed across every device. Source: Core
+/// Rules.md:4347-4349.
+pub fn item_level_used(entity: &Entity) -> u32 {
+    entity.devices.iter().map(|d| u32::from(d.level)).sum()
+}
+
 /// The character's derived True Faith Score: base 0 plus every
 /// [`Effect::TrueFaithGrant`] (True Faith Virtue → 1), summed and clamped to
 /// `u8`. Derived, never stored. Source: Core Rules.md:5169-5171.

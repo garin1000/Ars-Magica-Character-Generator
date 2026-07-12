@@ -719,6 +719,41 @@ approximation of "Latin").
   `EffectiveScores.item_level_budget` and shown on the sheet (Fluent
   `item-levels-label/readout`; DE "Zauberartefakte"). The device-crafting subsystem
   is out of scope; the granted budget is tracked (full scope of the *Virtue*).
+- **M5/5e — starting enchanted devices stored & charged.** `Entity.devices:
+  Vec<EnchantedDevice { name, level: u16 }>` records the player's chosen starting
+  devices; the total `level` is charged against `item_level_budget()`.
+  `effective.rs::item_level_used` sums the device levels (surfaced as
+  `EffectiveScores.item_level_used`), and `validation.rs::validate_devices` emits
+  `over_item_level` (Fluent `issue-over_item_level`) when `used > budget`. A device
+  therefore requires a granting Virtue, exactly as a starting Reputation does.
+
+#### M5/5e — magic-possession Entity storage (aura, familiar, talisman, longevity)
+Direct-entry storage for a magus's starting magic possessions. `SCHEMA_VERSION`
+bumped 8 → 9 (single bump; all new fields `serde(default, skip_serializing_if)`,
+so v≤8 saves load unchanged — **no migration function**, the same additive
+precedent as `SpellSelection.mastery`'s 7 → 8 bump). Nothing is derived here
+(that is 5i); these fields only *store* the choices.
+
+- **Aura** — `Entity.aura: i32` (signed; a Divine aura can be a penalty).
+  Persisted so 5i's self-made Longevity / lab totals are reproducible. Casting
+  Score adds the aura (Core:9089); Longevity Lab Total is aura-gated (below).
+- **Familiar cords** — `Entity.familiar: Option<Familiar { name, cord_gold,
+  cord_silver, cord_bronze: u8 }>`. Gold = −botch dice; Silver = +Personality /
+  mental resistance; **Bronze = +Soak & aging-resistance** (feeds 5i Soak /
+  longevity). Source: `Ars Magica - Definitive Edition (Core Rules).md:10840-10844`.
+- **Talisman attunements** — `Entity.talisman_attunements: Vec<TalismanAttunement {
+  description, bonus: i8 }>`; free-text descriptor + its shape bonus (5i decides
+  where each bonus applies).
+- **Longevity Ritual** — `Entity.longevity_ritual: Option<LongevityRitual { source:
+  LongevitySource (SelfMade|External), bonus: Option<i8> }>`. `SelfMade` leaves
+  `bonus` `None` (5i computes +1 aging bonus per 5 points, round up, of the
+  Creo+Corpus Lab Total); `External` carries the player-entered bonus. Source:
+  `Ars Magica - Definitive Edition (Core Rules).md:10662-10672`.
+- `EnchantedDevice`/`TalismanAttunement` derive `Ord` so `Entity::normalize()`
+  sorts `devices` (by name) and `talisman_attunements` (by description) for
+  zero-noise diffs. `LongevitySource` gets snake_case serde + `Display` (guarded by
+  `display_matches_serde_scalar_for_every_enum`); the UI renders every enum through
+  a Fluent key (`longevity-source-{self_made,external}`), never the raw slug.
 
 #### True Faith — special derived score (`true_faith_grant`)
 > "You have a True Faith score of 1 and can gain more."

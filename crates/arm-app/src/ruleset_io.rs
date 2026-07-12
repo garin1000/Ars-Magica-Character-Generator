@@ -15,9 +15,9 @@ use arm_rules::{
     ValidationMode, ValidationResult, ability_bonuses, ability_score_floors, age_ability_cap,
     art_bonuses, characteristic_bonuses, characteristic_caps, characteristic_floors,
     characteristic_points_granted, confidence, effective_point_ceilings, entity_grants,
-    item_level_budget, reputation_grants, size, spell_levels_budget, spell_levels_used,
-    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, validate, warping,
-    xp_allocation,
+    item_level_budget, item_level_used, reputation_grants, size, spell_levels_budget,
+    spell_levels_used, spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith,
+    validate, warping, xp_allocation,
 };
 use serde::Serialize;
 
@@ -101,6 +101,9 @@ pub struct EffectiveScores {
     /// Derived starting enchanted-device level budget (Magic Items +25, Redcap
     /// 50); 0 when none. The character starts with this many levels of devices.
     pub item_level_budget: u32,
+    /// The total device level the entity's `devices` consume — the "used" side of
+    /// the item-level budget bar (engine-authoritative; the UI never recomputes it).
+    pub item_level_used: u32,
     /// Derived Spell-Mastery XP pool (Mastered Spells +50 each); 0 when none.
     pub spell_mastery_xp: u32,
     /// Mastery-score floor every known spell gets (Flawless Magic → 1); 0 = none.
@@ -169,6 +172,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         warping_points,
         true_faith_score: true_faith(entity, ruleset),
         item_level_budget: item_level_budget(entity, ruleset),
+        item_level_used: item_level_used(entity),
         spell_mastery_xp: spell_mastery_xp(entity, ruleset),
         spell_mastery_floor: spell_mastery_floor(entity, ruleset),
     }
