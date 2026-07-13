@@ -1623,6 +1623,7 @@ fn validate_ability_bonus_targets(
                 | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
+                | Effect::MasterpieceItem
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
@@ -1902,6 +1903,7 @@ fn validate_characteristic_limit_preconditions(
                 | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
+                | Effect::MasterpieceItem
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }

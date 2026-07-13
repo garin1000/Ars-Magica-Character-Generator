@@ -575,6 +575,17 @@ pub enum Effect {
         /// Levels of enchanted devices added.
         amount: u16,
     },
+    /// Marks the character as holding the **Masterpiece** Virtue: at Gauntlet the
+    /// magus kept one *lesser enchanted item* his parens let him keep, which he
+    /// designed "based on his Lab Totals at character generation". A read-only
+    /// marker — the engine surfaces the derived item-level cap (best Lab Total ÷ 2,
+    /// per the lesser-enchantment rule) in `derived.rs`; the actual device is still
+    /// entered by hand under Magic Items. Consumed only by [`crate::derived`]; a
+    /// no-op for effective scores, validation, and referential checks.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4476-4479 (Virtue),
+    /// :10410 (lesser-enchantment Lab-Total-≥-2×level rule).
+    MasterpieceItem,
     /// Grants a derived True Faith Score (base 0, summed across grants). True
     /// Faith is a special score with its own rules, not a Supernatural Ability.
     /// The True Faith Virtue confers Score 1.
@@ -2174,6 +2185,7 @@ mod tests {
                     Id::new("art.terram"),
                 ]),
             },
+            Effect::MasterpieceItem,
         ];
         let json = serde_json::to_string(&effects).unwrap();
         let back: Vec<Effect> = serde_json::from_str(&json).unwrap();
@@ -2183,6 +2195,7 @@ mod tests {
         assert!(json.contains("\"scope\":\"formulaic_ritual\""));
         assert!(json.contains("\"total\":\"penetration\""));
         assert!(json.contains("\"type\":\"elemental_magic\""));
+        assert!(json.contains("\"type\":\"masterpiece_item\""));
     }
 
     #[test]

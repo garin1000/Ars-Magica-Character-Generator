@@ -1485,6 +1485,7 @@ impl Ruleset {
                 Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
                 | Effect::ItemLevelBudget { .. }
+                | Effect::MasterpieceItem
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }

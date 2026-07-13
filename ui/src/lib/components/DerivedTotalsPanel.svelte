@@ -188,6 +188,20 @@
           </p>
         </div>
       {/if}
+
+      <!-- Masterpiece (lesser enchanted item cap) -->
+      {#if d.masterpiece}
+        <div class="detail-section">
+          <h3 class="detail-label">{store.t('derived-section-masterpiece')}</h3>
+          <p data-testid="derived-masterpiece">
+            {store.t('derived-masterpiece-cap')}: {d.masterpiece.cap}
+            ({store.t('derived-lab-total')}
+            {d.masterpiece.lab_total} ·
+            {name(d.masterpiece.technique)} / {name(d.masterpiece.form)})
+          </p>
+          <p class="hint">{store.t('derived-masterpiece-note')}</p>
+        </div>
+      {/if}
     {/if}
 
     <!-- Combat lines -->
@@ -340,5 +354,10 @@
   }
   .empty {
     opacity: 0.7;
+  }
+  .hint {
+    opacity: 0.7;
+    font-size: 0.85em;
+    font-style: italic;
   }
 </style>

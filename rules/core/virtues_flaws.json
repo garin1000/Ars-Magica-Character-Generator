@@ -5095,6 +5095,7 @@
     "category": "hermetic",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "masterpiece_item" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4476, 4479] }
   },
   {

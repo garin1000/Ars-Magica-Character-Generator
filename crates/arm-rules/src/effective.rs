@@ -171,6 +171,7 @@ pub fn ability_bonus(
                 | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
+                | Effect::MasterpieceItem
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
@@ -314,6 +315,7 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
+                | Effect::MasterpieceItem
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
@@ -489,6 +491,7 @@ fn characteristic_limit_shift(
                 | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
+                | Effect::MasterpieceItem
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
@@ -688,6 +691,7 @@ pub(crate) fn ability_affinity(
                 | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
+                | Effect::MasterpieceItem
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
@@ -751,6 +755,7 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::GrantsSpellMastery { .. }
                 | Effect::GrantsSelection { .. }
                 | Effect::ItemLevelBudget { .. }
+                | Effect::MasterpieceItem
                 | Effect::TrueFaithGrant { .. }
                 | Effect::WarpingGrant { .. }
                 | Effect::SizeDelta { .. }
