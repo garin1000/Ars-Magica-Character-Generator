@@ -302,25 +302,25 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `checked_sub` (returns `None`) as defense-in-depth for tables built outside the
   load gate.
 
-#### Ability catalogue (seed set) — `rules/core/abilities.json`
+#### Ability catalogue (full Core set) — `rules/core/abilities.json`
 > Ability list grouped by type (General, Academic, Arcane, Martial,
 > Supernatural) at `:7177-7268`; alphabetical descriptions at `:7269-7789`.
 
-> **Partial-catalogue note.** This branch ships the **23-ability seed set**, not
-> the complete Core Rules catalogue. The full 78-ability catalogue (General 29,
-> Academic 12, Arcane 12, Martial 4, Supernatural 21) — with all descriptions,
-> specialties, and `requires_training` flags — already exists on the
-> `full-abilities` branch and is **pulled over later in the plan** (it widens the
-> data only; the engine, i18n schema, and UI here already support it). When you
-> pull it in, restore the `78`/`21`/`50` counts in
-> `tests/data_integrity.rs` and `commands.rs`. See also the project memory note
-> on the deferred ability catalogue.
+> **Full-catalogue note.** `main` ships the **complete 78-ability Core Rules
+> catalogue** (General 29, Academic 12, Arcane 12, Martial 4, Supernatural 21) —
+> with all descriptions, specialties, and `requires_training` flags. (The former
+> 23-ability *seed* set and the `full-abilities` staging branch are obsolete: the
+> full catalogue landed on `main` before M5 — commit `185d064` — and is a
+> data-only widening the engine, i18n schema, and UI already supported. No
+> per-catalogue-total is asserted in tests; `tests/data_integrity.rs` checks only
+> that known items and each category are present, per the catalogue-size-is-data
+> invariant.)
 
 - Source: each ability cites its description line range in `abilities.json`
   (e.g. Awareness `:7325-7328`, Magic Theory `:7646-7649`). The five categories
   are the book's Ability types (`:7177-7268`), taken from each entry's trailing
   `(Type)` label.
-- Data: 23 seed abilities covering all five categories and the full
+- Data: 78 abilities covering all five categories, including the full
   early-childhood restricted list (`:2378`: Area Lore, Athletics, Awareness,
   Brawl, Charm, Folk Ken, Guile, Living Language, Stealth, Survival, Swim).
   Native language is a *specialty* of `ability.living_language`, not a separate
@@ -334,8 +334,8 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 
   This is an **independent per-ability property, not derived from `category`**:
   it spans General (e.g. (Area) Lore), Academic, Arcane, and all Supernatural
-  abilities — 8 of the 23 seed abilities are asterisked. Notably Penetration and
-  most combat/General abilities are *not* asterisked. The flag is set from the
+  abilities. Notably Penetration and most combat/General abilities are *not*
+  asterisked. The flag is set from the
   `*` on each ability's `####` heading (`:7273-7786`); `Ability.requires_training`
   (`ability.rs`) stores it and the UI renders the trailing `*` via the
   `ability-requires-training-marker` Fluent key. (The German translation table's
@@ -1325,7 +1325,7 @@ these numbers.** The `derived_totals` Tauri command mirrors `effective_scores`.
 | Lab Total | `:4143-4154` | Int + Magic Theory + Technique + Form + Aura + flat LabTotalMod (+ focus / halving as casting) |
 | Penetration | `:9159-9161` | per known spell: Casting Total − Level + Penetration score |
 | Weak Magic | `:7064-7067` | halves Penetration **after** subtracting level (not the casting total) |
-| Magic Resistance | `:9391-9401` | per Form: Form + 5 × Parma Magica; Limited MR drops the Form bonus, Flawed Parma halves |
+| Magic Resistance | `:9390-9398` | per Form: Form + 5 × Parma Magica (Form-base rule `:9390`, Parma "five times" `:9398`); Limited MR drops the Form bonus, Flawed Parma halves |
 | Longevity | `:10662-10672` | self-made: +1 per 5 points (round **up**) of Creo+Corpus Lab Total (aura-gated); external: entered bonus passthrough. Bronze cord noted for aging-resistance (`:10840-10844`) |
 | Combat | `:16658-16670` | Init = Qik + WpnInit − Enc + CombatMod; Attack = Dex + Ability + WpnAtk + CombatMod; Defense = Qik + Ability + WpnDef + CombatMod; Damage = Str + WpnDam + CombatMod |
 | Weapon+shield | `:16656` | one `CombatLine` per equipped weapon, combining every equipped shield's Init/Atk/Def mods |
@@ -1476,9 +1476,9 @@ classes:
 
 Counts over the shipped catalogue (structural, not asserted as exact totals in
 tests): **narrative 445**, **creation_effect 115**
-(of which 36 already wired via `effects`,
-79 not yet wired),
-**in_play_effect 93**. Total 653.
+(36 wired via `effects` before 5a; 68 more wired in 5a-wire; **11 deferred** —
+see the 5a-wire section for the itemized deferrals),
+**in_play_effect 93** (all wired in 5b). Total 653.
 
 ### Roadmap corrections applied here
 

@@ -344,40 +344,54 @@ value it would produce — final scores, Decrepitude/aging points, Warping point
 and the effects those carry — is directly enterable here.
 
 ### 5a. V/F audit + creation-effect wiring
-- [ ] Classify **all** V/F as narrative / creation-effect / in-play-effect with
+- [x] Classify **all** V/F as narrative / creation-effect / in-play-effect with
       per-book `RULES.md` provenance; acceptance = no V/F unclassified. Personality,
       Story, and most Social-Status items are narrative by design — never given
-      invented effects.
-- [ ] Wire the **creation-effect** subset: Supernatural-Ability starting scores,
-      fixed-subject Puissant/Affinity, XP-grant + XP-rate Virtues (Wealthy/Poor
-      20/10 xp/yr), Confidence, size/characteristic deltas, and all
-      reputation-granters (Famous, Hermetic Prestige, …). Reconcile the
-      `RULES.md:1133`↔`:871` disagreement on Hermetic Prestige against the file.
+      invented effects. (Done: narrative 445 / creation_effect 115 / in_play_effect 93.)
+- [x] Wire the **creation-effect** subset: Supernatural-Ability starting scores,
+      fixed-subject Puissant/Affinity, XP-grant Virtues, Confidence,
+      size/characteristic deltas, and all reputation-granters (Famous,
+      Hermetic Prestige, …). (68 of 79 wired in 5a-wire; **11 deferred** — 4 Might/
+      power budgets and 2 nested grants from Realms-of-Power supplements with no
+      Core creation number, Masterpiece's Lab-Total-derived item level, and 3
+      XP-rate Virtues that are multiplicative or per-year — see RULES.md.)
+      **Correction applied:** **Wealthy/Poor are narrative** — Core (`:5235-5237`,
+      `:6594-6596`) defines only advancement *seasons* (3 free/yr, −1/yr), no
+      creation XP-per-year figure; the invented "20/10 xp/yr" was dropped.
+      **Hermetic Prestige reconciled against the file:** it *is* in Core at
+      `:4071-4073`, a Hermetic Reputation at level **4** (the `:2518` Darius
+      example's 3 is an errata slip); the stale "not in Core / Local-only" claim is
+      removed in RULES.md.
 
 ### 5b. In-play-only V/F effects modeled at full scope
-- [ ] `Effect` variants + storage for Magical Focus, Method Caster, Deficient
+- [x] `Effect` variants + storage for Magical Focus, Method Caster, Deficient
       Technique/Form, and study Source-Quality bonuses — no creation-number change,
       but represented fully. Acceptance surface = the 5i casting/lab totals consume
-      them (the exhaustive `match` enforces wiring). Source: Core Rules.md:5909-5915
+      them (the exhaustive `match` enforces wiring). (Done: 13 `Effect` variants
+      cover all 18 in-play families; all 93 `in_play_effect` V/F wired.)
+      Source: Major/Minor Magical Focus Core Rules.md:4399-4422 / :4536-4542;
+      Method Caster :4524-4527; Deficient Technique/Form :5909-5915.
 
 ### 5c. Elemental Magic — Art-XP redistribution
-- [ ] Model the creation-time Art-XP redistribution across the four elemental
+- [x] Model the creation-time Art-XP redistribution across the four elemental
       Forms. Requires reconciling with the settled whole-bought-score storage model
       (per-Art XP assignment vs derived leftover) — a design revision, not a routine
-      `Effect`. Source: Core Rules.md:3731-3737
+      `Effect`. Source: Core Rules.md:3731-3737. (Done as an XP-space `ArtBonus`;
+      documented leftover-XP limitation — redistribution uses the table-XP of the
+      bought score, so a by-hand assignment with leftover XP won't reproduce exactly.)
 
-### 5d. Full core catalogues (abilities + spells)
-- [ ] Pull the full **78-ability** Core catalogue onto the shipped data (staged on
-      the `full-abilities` branch): re-add the dropped entries to
-      `rules/core/abilities.json` + `rules/i18n/{en,de}/abilities.json` and restore
-      the `78`/`21`/`50` counts in `tests/data_integrity.rs` and the `78` in
-      `crates/arm-app/tests/commands.rs`. Data-only widening.
-- [ ] Ship the **full core spell catalogue**; extend the `Spell` model with a
-      `ritual` flag + the ritual creation-legality rule (cited). Source: Core Rules
-      spell list.
+### 5d. Full core spell catalogue
+- [x] Ship the **full core spell catalogue** (360 spells via a Python extractor,
+      `scripts/extract_spells.py`); extend the `Spell` model with a `ritual` flag +
+      the ritual creation-legality rule (cited). Source: Core Rules spell list.
+      (**Roadmap correction:** the "pull the 78-ability catalogue / restore the
+      78/21/50 counts" bullet was **dropped** — the full 78-ability catalogue
+      already landed on `main` before M5 (commit `185d064`) and the `full-abilities`
+      branch is obsolete; catalogue totals are no longer asserted in tests, per the
+      catalogue-size-is-data invariant.)
 
 ### 5e. Enchanted devices, familiar, talisman & Longevity entry
-- [ ] `Entity` storage + direct-entry UI for starting enchanted devices (spending
+- [x] `Entity` storage + direct-entry UI for starting enchanted devices (spending
       the item-level budget), the familiar (bond + Gold/Silver/Bronze cord scores,
       which feed 5i lab/Soak/aging totals), talisman attunements, and a Longevity
       Ritual/potion the character carries — a field (bonus + source), self-made or
@@ -385,36 +399,39 @@ and the effects those carry — is directly enterable here.
       accepts an externally-provided one.
 
 ### 5f. Per-spell mastery input
-- [ ] UI control to spend the mastery-XP pool on individual spells (storage, pool,
+- [x] UI control to spend the mastery-XP pool on individual spells (storage, pool,
       and floor already exist from M4).
 
 ### 5g. Directly-enterable state, effects & identity fields
-- [ ] Every point-bearing state enterable **with the effects it carries**, not just
+- [x] Every point-bearing state enterable **with the effects it carries**, not just
       the count: Decrepitude/aging points + the resulting Characteristic reductions;
       Warping points + Twilight scars (schema change). Guided derivation stays M6;
       M5 lets the user type both directly, so an already-warped or already-aged
       character is fully representable. Source: Core Rules aging/warping.
-- [ ] Identity/flavor fields: name, gender, birth year, Wizard's sigil, covenant
+- [x] Identity/flavor fields: name, gender, birth year, Wizard's sigil, covenant
       name, parens.
 
 ### 5h. Equipment / weapons / armor / encumbrance
-- [ ] New `rules/core/equipment.json` weapons/armor table (per-row provenance) +
+- [x] New `rules/core/equipment.json` weapons/armor table (per-row provenance) +
       direct-entry input surface. Sequenced **before 5i** (feeds Soak/combat/
       encumbrance). Source: Core Rules combat/equipment.
 
 ### 5i. Derived totals computed in-engine (read-only)
-- [ ] In `arm-rules`, from cited source: **magic totals** (casting, penetration,
+- [x] In `arm-rules`, from cited source: **magic totals** (casting, penetration,
       lab total, Longevity-ritual bonus — gated on the aura input), then **combat**
       (Init/Atk/Def/Dam), **Soak**, **encumbrance**, Size-derived **wound-penalty
       ranges**, and Decrepitude/Warping **score** from points. Consumes 5b.
-- [ ] A numeric **aura** input field (covenant auras arrive in M8).
-- [ ] Rendered in a **main-window read-out panel**; the M7 sheet window later
+      (Done in `derived.rs`; families the app does not simulate — study/aging-roll/
+      non-standard-casting/wound-recovery — are **surfaced** as labelled modifiers
+      rather than folded into a number.)
+- [x] A numeric **aura** input field (covenant auras arrive in M8).
+- [x] Rendered in a **main-window read-out panel**; the M7 sheet window later
       re-renders the same computed values (the "UI computes no mechanics" invariant
       holds). Twilight-episode / >35-aging *rolls* are guided (M6) / out of app
       scope; their results are enterable in 5g.
 
 ### 5j. Provenance & full gate
-- [ ] `RULES.md` updated per book; full required gate (`cargo test --workspace`,
+- [x] `RULES.md` updated per book; full required gate (`cargo test --workspace`,
       clippy, fmt, `npm run test:unit`/lint/format, and the authoritative
       `cargo tauri build --no-bundle`).
 

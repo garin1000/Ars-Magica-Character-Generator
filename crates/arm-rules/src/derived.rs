@@ -580,7 +580,7 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
 
 /// A per-Form Magic Resistance line.
 ///
-/// Magic Resistance = Form + 5 × Parma Magica (Core:9391-9401). Limited Magic
+/// Magic Resistance = Form + 5 × Parma Magica (Core:9390-9398). Limited Magic
 /// Resistance drops the Form bonus; Flawed Parma / Weak Magic Resistance halve it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MagicResistance {
@@ -592,7 +592,7 @@ pub struct MagicResistance {
     pub total: i32,
 }
 
-/// Per-Form Magic Resistance. Source: Core:9391-9401, :6142-6145, :6346-6349.
+/// Per-Form Magic Resistance. Source: Core:9390-9398, :6142-6145, :6346-6349.
 pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistance> {
     let mods = in_play_mods(entity, ruleset);
     let parma = ability(entity, ruleset, "ability.parma_magica");
@@ -1388,7 +1388,7 @@ mod tests {
         assert_eq!(perdo.formulaic, 4);
     }
 
-    /// Per-Form Magic Resistance = Form + 5 × Parma (Core:9391-9401).
+    /// Per-Form Magic Resistance = Form + 5 × Parma (Core:9390-9398).
     #[test]
     fn magic_resistance_is_form_plus_five_parma() {
         let rs = ruleset();
