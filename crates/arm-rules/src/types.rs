@@ -810,6 +810,20 @@ pub enum Effect {
         /// Points added to rolls of the ability in that subject.
         amount: i8,
     },
+    /// Elemental Magic (Major Hermetic): a **creation-time Art-XP redistribution**
+    /// marker over the four elemental Forms named by `forms` (Aquam, Auram, Ignem,
+    /// Terram — data, never hardcoded). It stores no value; at derive time each
+    /// listed Form's effective score is boosted by giving it **half (rounded up)**
+    /// of every other listed Form's assigned XP. Consumed by
+    /// [`crate::effective::effective_art_score`] as an XP-space bonus (nonlinear in
+    /// the bought score, unlike a flat [`Effect::ArtBonus`]); a no-op everywhere
+    /// else.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3731-3737.
+    ElementalMagic {
+        /// The elemental Form ids the redistribution pools over.
+        forms: std::collections::BTreeSet<Id>,
+    },
 }
 
 /// Which spells a [`Effect::CastingTotalMod`] applies to. A fixed rules taxonomy
@@ -2136,6 +2150,14 @@ mod tests {
                 param: "subject".into(),
                 amount: 3,
             },
+            Effect::ElementalMagic {
+                forms: std::collections::BTreeSet::from([
+                    Id::new("art.aquam"),
+                    Id::new("art.auram"),
+                    Id::new("art.ignem"),
+                    Id::new("art.terram"),
+                ]),
+            },
         ];
         let json = serde_json::to_string(&effects).unwrap();
         let back: Vec<Effect> = serde_json::from_str(&json).unwrap();
@@ -2144,6 +2166,7 @@ mod tests {
         assert!(json.contains("\"type\":\"magical_focus\""));
         assert!(json.contains("\"scope\":\"formulaic_ritual\""));
         assert!(json.contains("\"total\":\"penetration\""));
+        assert!(json.contains("\"type\":\"elemental_magic\""));
     }
 
     #[test]

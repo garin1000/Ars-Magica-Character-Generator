@@ -1454,6 +1454,23 @@ impl Ruleset {
                     }
                     continue;
                 }
+                // Fixed target set: every elemental Form id the redistribution
+                // pools over must resolve to a known Art. Only checked when the
+                // Arts catalogue is loaded (the point-items file is loaded even in
+                // the Arts-less `from_core_json` path; the full app + spell paths
+                // load Arts and do enforce this), exactly like validate_spell_refs.
+                Effect::ElementalMagic { forms } => {
+                    if !self.arts.is_empty() {
+                        for form in forms {
+                            if !self.arts.contains_key(form) {
+                                errors.push(format!(
+                                    "{id}: effect 'elemental_magic' references unknown art '{form}'"
+                                ));
+                            }
+                        }
+                    }
+                    continue;
+                }
                 // Fixed target: validate the directly-stored characteristic id
                 // resolves to one of the eight Characteristics.
                 Effect::CharacteristicScoreDelta { characteristic, .. } => {

@@ -1,5 +1,6 @@
 use arm_rules::AbilityCategory;
 use arm_rules::Characteristic;
+use arm_rules::effective_art_score;
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
 use arm_rules::validation::{compute_balance, validate};
@@ -427,6 +428,37 @@ fn shipped_skilled_parens_raises_both_budgets() {
     e.xp_pool = 240;
     assert_eq!(arm_rules::spell_levels_budget(120, &e, &rs), 150);
     assert_eq!(arm_rules::xp_allocation(&e, &rs).general_pool, 300);
+}
+
+/// The shipped Elemental Magic (Core:3731-3737) redistributes Art-XP over the four
+/// elemental Forms against the real Arts catalogue: each Form gains half (rounded
+/// up) of every other Form's table-XP. With Ignem/Auram/Terram at score 6 (21 XP)
+/// and Aquam at score 4 (10 XP), the boosted effective scores are 9/9/9 and 8,
+/// while a non-elemental Form (Corpus) at score 6 is untouched.
+#[test]
+fn shipped_elemental_magic_redistributes_art_xp() {
+    let rs = load_ruleset_with_spells();
+    let mut e = entity(
+        "magus",
+        vec![Selection::new(Id::new("virtue.elemental_magic"))],
+    );
+    let row = |art: &str, score: u8| ArtScore {
+        art: Id::new(art),
+        score,
+    };
+    e.art_scores = vec![
+        row("art.aquam", 4),
+        row("art.auram", 6),
+        row("art.ignem", 6),
+        row("art.terram", 6),
+        row("art.corpus", 6),
+    ];
+    assert_eq!(effective_art_score(&e, &rs, &Id::new("art.aquam")), 8);
+    assert_eq!(effective_art_score(&e, &rs, &Id::new("art.auram")), 9);
+    assert_eq!(effective_art_score(&e, &rs, &Id::new("art.ignem")), 9);
+    assert_eq!(effective_art_score(&e, &rs, &Id::new("art.terram")), 9);
+    // A non-elemental Form is never touched by the redistribution.
+    assert_eq!(effective_art_score(&e, &rs, &Id::new("art.corpus")), 6);
 }
 
 /// The shipped Weak Parens lowers both budgets (Core:7072-7074).
