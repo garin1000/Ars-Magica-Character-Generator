@@ -98,11 +98,11 @@ item-level budget their Virtues grant), a familiar with its Gold/Silver/Bronze
 bond cords, talisman attunements, and a self-made or external Longevity Ritual. An
 Equipment tab — available to every character type — records the weapons, shields,
 and armor a character carries from the Core Rules equipment catalogue (English +
-German), marking each equipped; combat totals, Soak, and Encumbrance are computed
-in a later milestone. A seed Ability catalogue and the full 15-Art catalogue
-(English + German) ship with localized descriptions; abilities also carry example
-specialties and the "cannot be used untrained" marker. The complete Core Rules
-ability catalogue is staged for a later milestone. Score-boosting Virtues
+German), marking each equipped. The full Core Rules Ability catalogue and the
+full 15-Art catalogue (English + German) ship with localized descriptions;
+abilities also carry example specialties and the "cannot be used untrained"
+marker, and the complete Core Rules spell catalogue ships with each spell's
+Range/Duration/Target and ritual legality. Score-boosting Virtues
 (Puissant Ability, Puissant Art +3, Great Characteristic) compute an effective
 score that drives prerequisites, the +5 characteristic ceiling, and a read-only
 display badge. Virtues with experience effects are modelled too: Affinity
@@ -116,12 +116,17 @@ year, Wizard's sigil, covenant, parens) and an already-aged / already-warped
 character's raw state — aging points and completed Characteristic reductions,
 Warping Points, and free-text Twilight Scars — from which the engine derives the
 Decrepitude and Warping scores (aging reductions lower derived/play stats but never
-the point-buy the creation checks read). Next comes full mechanical completeness
-(the remaining V/F effects,
-the full ability + spell catalogues, and derived combat/casting/lab totals), so
-any core-rules character is fully enterable and computable in direct entry; the
-guided creation wizard with its life-stage XP flow follows — see
-[PLAN.md](PLAN.md) for the milestone breakdown.
+the point-buy the creation checks read). Every in-play Virtue/Flaw effect
+(Magical Focus, Method Caster, Deficient Technique/Form, Tough, and the rest of
+the 653-entry catalogue) is modelled, and a read-out panel computes the full
+in-play totals in-engine — per-Technique/Form Lab and Casting Totals, per-spell
+Penetration, per-Form Magic Resistance, combat lines (weapon + shield), Soak,
+Encumbrance, fatigue and wound ranges, and a self-made or external Longevity
+bonus — from a numeric aura input. With this any core-rules character is fully
+enterable **and** fully computable in direct entry (milestone M5 complete). Next
+comes the guided creation wizard with its life-stage XP flow, which merely
+orchestrates these existing input surfaces — see [PLAN.md](PLAN.md) for the
+milestone breakdown.
 
 ## Getting started
 

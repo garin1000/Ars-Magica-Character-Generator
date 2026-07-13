@@ -105,10 +105,11 @@ fn shipped_data_passes_integrity_check() {
 #[test]
 fn shipped_abilities_and_characteristics_load() {
     let rs = load_ruleset();
-    // Catalogue size is data, not code: assert the seed items the engine relies
-    // on are present and read correctly, never an exact ability total. The full
-    // Core Rules catalogue (staged on `full-abilities`) must be pullable as a
-    // data-only change — see crates/arm-rules/RULES.md.
+    // Catalogue size is data, not code: assert the items the engine relies
+    // on are present and read correctly, never an exact ability total. `main`
+    // ships the full 78-ability Core Rules catalogue; the check stays
+    // total-agnostic so a future catalogue edit needs no test change — see
+    // crates/arm-rules/RULES.md.
     assert!(rs.ability(&Id::new("ability.awareness")).is_some());
     // The whole childhood restricted list ships (Core Rules 2378).
     for id in [
@@ -1072,4 +1073,214 @@ fn shipped_confidence_true_faith_and_size_granters() {
         1,
         "Blood of the Nephilim raises Size to +1"
     );
+}
+
+/// The full shipped ruleset — every catalogue loaded, exactly as the app ships
+/// it (`ruleset_io.rs`). This is the production data the derived-totals end-to-end
+/// test runs against.
+fn load_full_ruleset() -> Ruleset {
+    Ruleset::from_sources(RulesetSources {
+        id: "arm5-core",
+        version: "2024.1",
+        point_items: include_str!("../../../rules/core/virtues_flaws.json"),
+        type_profiles: include_str!("../../../rules/core/character_types.json"),
+        abilities: Some(include_str!("../../../rules/core/abilities.json")),
+        arts: Some(include_str!("../../../rules/core/arts.json")),
+        houses: Some(include_str!("../../../rules/core/houses.json")),
+        mythic_types: Some(include_str!(
+            "../../../rules/core/mythic_companion_types.json"
+        )),
+        spells: Some(include_str!("../../../rules/core/spells.json")),
+        equipment: Some(include_str!("../../../rules/core/equipment.json")),
+        characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+    })
+    .unwrap()
+}
+
+/// End-to-end proof of the M5 headline capability: a fully-specified magus built
+/// on the **real shipped ruleset** is fully *computable* in direct entry. Wires
+/// together the whole 5b→5i chain — aura, a Major Magical Focus, Method Caster,
+/// Tough, Enduring Constitution, a weapon + shield + armor, a familiar with a
+/// Bronze cord, a self-made Longevity Ritual, and stored warping / aging points —
+/// then calls `derived_totals` and asserts every play-stat block is populated and
+/// internally self-consistent. Numbers are pinned to the shipped catalogue values
+/// (verified against `rules/core/*.json`).
+#[test]
+fn full_magus_derived_totals_are_populated_and_consistent() {
+    let rs = load_full_ruleset();
+    let mut e = entity(
+        "magus",
+        vec![
+            Selection::new(Id::new("virtue.the_gift")),
+            Selection::new(Id::new("virtue.hermetic_magus")),
+            Selection::new(Id::new("virtue.method_caster")),
+            Selection::new(Id::new("virtue.tough")),
+            Selection::new(Id::new("virtue.enduring_constitution")),
+            // A Major Magical Focus with a free-text descriptor ("fire").
+            Selection::with_params(
+                Id::new("virtue.major_magical_focus"),
+                BTreeMap::from([("focus".to_string(), Id::new("fire"))]),
+            ),
+        ],
+    );
+
+    // Characteristics.
+    for (c, v) in [
+        (Characteristic::Int, 3),
+        (Characteristic::Sta, 2),
+        (Characteristic::Str, 2),
+        (Characteristic::Qik, 1),
+        (Characteristic::Dex, 2),
+    ] {
+        e.characteristics.insert(c, v);
+    }
+
+    // Abilities the totals read (Magic Theory, Parma, Penetration, Single Weapon).
+    let ab = |id: &str, score: u8| AbilityScore {
+        ability: Id::new(id),
+        parameter: None,
+        specialty: None,
+        score,
+    };
+    e.ability_scores = vec![
+        ab("ability.magic_theory", 4),
+        ab("ability.parma_magica", 3),
+        ab("ability.penetration", 2),
+        ab("ability.single_weapon", 4),
+    ];
+
+    // Arts: Creo 10, Ignem 8, Corpus 12.
+    let art = |id: &str, score: u8| ArtScore {
+        art: Id::new(id),
+        score,
+    };
+    e.art_scores = vec![
+        art("art.creo", 10),
+        art("art.ignem", 8),
+        art("art.corpus", 12),
+    ];
+
+    e.aura = 3;
+    e.spells = vec![SpellSelection {
+        spell: Id::new("spell.blade_of_the_virulent_flame"),
+        level: None,
+        mastery: None,
+    }];
+    e.equipment = vec![
+        EquipmentSlot {
+            item: Id::new("weapon.axe"),
+            equipped: true,
+        },
+        EquipmentSlot {
+            item: Id::new("shield.round"),
+            equipped: true,
+        },
+        EquipmentSlot {
+            item: Id::new("armor.chain_mail_partial"),
+            equipped: true,
+        },
+    ];
+    e.familiar = Some(Familiar {
+        name: "Corvus".to_string(),
+        cord_gold: 1,
+        cord_silver: 1,
+        cord_bronze: 2,
+    });
+    e.longevity_ritual = Some(LongevityRitual {
+        source: LongevitySource::SelfMade,
+        bonus: None,
+    });
+    e.warping_points = 15;
+    e.aging_points = BTreeMap::from([(Characteristic::Sta, 10), (Characteristic::Qik, 7)]);
+
+    let d = arm_rules::derived_totals(&e, &rs);
+
+    // --- Magic totals present (magus) ------------------------------------
+    assert!(d.is_magus, "magus profile drives magic totals");
+    assert!(!d.lab_totals.is_empty(), "lab totals populated");
+    assert!(!d.casting_totals.is_empty(), "casting totals populated");
+
+    // Lab Total (Creo, Corpus) = Int 3 + Magic Theory 4 + Creo 10 + Corpus 12 + Aura 3 = 32.
+    let cr_co = d
+        .lab_totals
+        .iter()
+        .find(|l| l.technique.as_str() == "art.creo" && l.form.as_str() == "art.corpus")
+        .expect("Creo/Corpus lab cell present");
+    assert_eq!(cr_co.total, 32, "Creo+Corpus Lab Total");
+
+    // Casting (Creo, Ignem) formulaic = 10 + 8 + Sta 2 − Enc 1 + Aura 3 + Method Caster 3 = 25.
+    let cr_ig = d
+        .casting_totals
+        .iter()
+        .find(|c| c.technique.as_str() == "art.creo" && c.form.as_str() == "art.ignem")
+        .expect("Creo/Ignem casting cell present");
+    assert_eq!(cr_ig.formulaic, 25, "Creo+Ignem formulaic casting total");
+    // Within the focus, the lower applicable Art (Ignem 8) is added again → 33.
+    let wf = cr_ig.within_focus.as_ref().expect("focus present on cell");
+    assert_eq!(
+        wf.formulaic, 33,
+        "within-focus adds the lower Art (Ignem 8)"
+    );
+
+    // Encumbrance: Load 7 (axe 1 + round shield 2 + partial chain 4) → Burden 3; Str 2 → 1.
+    assert_eq!(d.encumbrance.total, 1, "Encumbrance = Burden 3 − Str 2");
+
+    // Per-Form Magic Resistance (Ignem) = Form 8 + 5 × Parma 3 = 23.
+    let mr_ig = d
+        .magic_resistance
+        .iter()
+        .find(|m| m.form.as_str() == "art.ignem")
+        .expect("Ignem magic resistance present");
+    assert_eq!(mr_ig.total, 23, "Ignem MR = Form + 5×Parma");
+
+    // Penetration for the known spell = casting total − level 15 + Penetration 2.
+    let pen = d
+        .penetration
+        .iter()
+        .find(|p| p.spell.as_str() == "spell.blade_of_the_virulent_flame")
+        .expect("penetration line for the known spell");
+    assert_eq!(
+        pen.total,
+        cr_ig.formulaic - 15 + 2,
+        "penetration self-consistent"
+    );
+    assert_eq!(pen.total, 12);
+
+    // Combat line for the axe, with the round shield's mods combined in.
+    let axe = d
+        .combat
+        .iter()
+        .find(|c| c.weapon.as_str() == "weapon.axe")
+        .expect("axe combat line present");
+    assert_eq!(axe.initiative, 1, "Init = Qik 1 + wpn 1 + shield 0 − Enc 1");
+    assert_eq!(
+        axe.attack,
+        Some(10),
+        "Attack = Dex 2 + Ability 4 + wpn 4 + shield 0"
+    );
+    assert_eq!(
+        axe.defense, 7,
+        "Defense = Qik 1 + Ability 4 + wpn 0 + shield 2"
+    );
+    assert_eq!(axe.damage, Some(8), "Damage = Str 2 + wpn 6");
+
+    // Soak = Sta 2 + Armor 6 + Tough 3 + Bronze cord 2 = 13.
+    assert_eq!(d.soak.total, 13, "Soak = Sta + Armor + Tough + Bronze cord");
+
+    // Fatigue and wound tracks populated; Enduring Constitution eases the wound penalty.
+    assert!(!d.fatigue.is_empty(), "fatigue levels populated");
+    assert!(!d.wounds.is_empty(), "wound ranges populated");
+
+    // Longevity: self-made bonus = ceil(CrCo Lab Total 32 / 5) = 7; bronze cord surfaced.
+    let lon = d
+        .longevity
+        .expect("longevity present for a magus with a ritual");
+    assert_eq!(lon.lab_total, Some(32));
+    assert_eq!(lon.bonus, 7, "self-made Longevity bonus = ceil(32/5)");
+    assert_eq!(lon.bronze_cord, 2);
+
+    // Warping Score 2 from 15 stored points; Decrepitude 2 from 17 aging points.
+    assert_eq!(d.warping_points, 15);
+    assert_eq!(d.warping_score, 2, "15 points → Warping Score 2");
+    assert_eq!(d.decrepitude_score, 2, "17 aging points → Decrepitude 2");
 }
