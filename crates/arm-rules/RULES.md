@@ -1177,12 +1177,41 @@ the apprenticeship grant, each via *two* `Effect`s
 `Effect::SpellLevels` folds into the spell budget (`effective::spell_levels_budget`);
 `Effect::GeneralXp` folds into the general apprenticeship pool
 (`effective::xp_allocation`'s `general_pool`). Both are ref-free effects
-(`validate_effect_refs`). Seeded spells (14, spread across Creo/Rego × several
-Forms, incl. one requisite spell and two General spells) each cite their Core
-Rules line range in `spells.json`; the full catalogue lands in M5 (5d). German spell
-names follow `rules/source/de/translation-tables/zauber-nach-form.md`; the two
-Parens follow `tugenden-fehler.md` (Skilled → *Erfahrener Parens*; Weak →
-*Schwacher Parens*, the Latin *Parens* kept per the Latin-term convention).
+(`validate_effect_refs`). The two Parens follow `tugenden-fehler.md`
+(Skilled → *Erfahrener Parens*; Weak → *Schwacher Parens*, the Latin *Parens*
+kept per the Latin-term convention).
+
+**Full core spell catalogue (5d-data).** The catalogue is the complete Core Rules
+spell list, extracted from the **Spells chapter** (`:12385-15941`, from
+`## Animal Spells` to the line before `# Chapter 10: Long Term Events`) by the
+dev/build tool `scripts/extract_spells.py` (never loaded at runtime; see
+`scripts/README.md`). Each spell is organised by `### <Technique> <Form>` section
+(the source is inconsistent — one `## Creo Mentem Spells` uses two hashes, and
+`### Rego Corpus Svells` is a typo — so the extractor keys a section on
+Technique+Form regardless of the trailing word). The parser reads level from the
+`#### LEVEL n` / `#### GENERAL` header and the mechanics from the
+`R: … D: … T: …[, Ritual]` line: **ritual** = the word `Ritual` on that line (it
+co-occurs with every Year/Boundary spell, and forced by them at load anyway);
+`creates_lasting` = a Momentary Creo ritual. Abbreviations map to the enum
+scalars (Per→personal, Arc→arcane_connection, Mom→momentary, Diam→diameter,
+Ind→individual, Bound→boundary, Str→structure, …); `Special`/`Spec`
+duration/target have no enum scalar and become `None`. Levels are usually
+multiples of 5 but the source has individual levels 2/3/4 (e.g. Moonbeam = 3);
+the load-time check does **not** require multiple-of-5. The extractor's in-loop
+checks mirror the load-time gate (Technique/Form resolve to the right Art class,
+requisites known, ritual⇒≥20, non-ritual⇒≤50, Year/Boundary⇒ritual, unique ids,
+source ranges in-bounds) and it reports per-Technique/Form counts + ritual count.
+Output is canonically sorted by id with stable formatting (deterministic
+re-runs; zero-noise diffs). **The engine's load-time referential-integrity +
+ritual-legality check over the whole catalogue is the trust gate.** The 14
+original seed ids are all present (same spells), so `examples/`, `types.rs`, and
+UI tests keep resolving. **Residual risk (recorded):** only ~10 % of entries
+were hand-checked against the Markdown (36/360, spread across every
+Technique/Form — all correct); transcription errors integrity cannot catch may
+remain. German spell names come from
+`rules/source/de/translation-tables/zauber-nach-form.md` (360/360 matched, 0 EN
+fallbacks; two book-vs-table spelling variants — "Thread"/"Tread",
+"Unravelling"/"Unraveling" — are bridged by an explicit alias in the extractor).
 
 ---
 
