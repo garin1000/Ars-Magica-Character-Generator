@@ -267,6 +267,13 @@ export interface EffectiveScores {
   spell_mastery_xp: number;
   // Mastery-score floor every known spell gets (Flawless Magic 1); 0 = none.
   spell_mastery_floor: number;
+  // The being's effective Might Score + Realm (base + same-Realm grants), or null
+  // for an ordinary character. Engine-authoritative; never recomputed in JS.
+  might: MightScore | null;
+  // Derived power-levels budget the being's Might Virtues grant; 0 when none.
+  power_levels_budget: number;
+  // Total power level the being's powers consume — the "used" side of the bar.
+  power_levels_used: number;
 }
 
 // --- Derived play-stat totals (M5/5i), mirrored from `arm_rules::derived`.
@@ -575,6 +582,22 @@ export interface EnchantedDevice {
   level: number;
 }
 
+// The four supernatural Realms a being's Might can be aligned to.
+export type Realm = 'magic' | 'faerie' | 'divine' | 'infernal';
+
+// A supernatural being's base Might Score + Realm (Virtue grants add on top).
+export interface MightScore {
+  realm: Realm;
+  score: number;
+}
+
+// A supernatural power a Might-being holds. `level` is charged against the
+// power-levels budget the being's Might Virtues grant (like a device vs item level).
+export interface SupernaturalPower {
+  name: string;
+  level: number;
+}
+
 // A magus's familiar and its three bond-cord scores. Omitted cords default to 0.
 export interface Familiar {
   name: string;
@@ -857,6 +880,12 @@ export interface Entity {
   // Carried weapons, shields, and armor (references to catalogue ids). Combat
   // totals, Soak, and Encumbrance are derived downstream (slice 5i). Omitted empty.
   equipment?: EquipmentSlot[];
+  // A supernatural being's base Might Score + Realm (grog/companion/mythic
+  // companion with a Might Virtue). Omitted for ordinary characters.
+  might?: MightScore | null;
+  // The being's supernatural powers; each level is charged against the
+  // power-levels budget its Might Virtues grant. Omitted when empty.
+  powers?: SupernaturalPower[];
 }
 
 export interface ValidationIssue {

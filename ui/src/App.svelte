@@ -14,6 +14,7 @@
   import ArtXpBar from './lib/components/ArtXpBar.svelte';
   import SpellPicker from './lib/components/SpellPicker.svelte';
   import MagicPossessions from './lib/components/MagicPossessions.svelte';
+  import SupernaturalBeing from './lib/components/SupernaturalBeing.svelte';
   import EquipmentPicker from './lib/components/EquipmentPicker.svelte';
   import CharacterDetails from './lib/components/CharacterDetails.svelte';
   import DerivedTotalsPanel from './lib/components/DerivedTotalsPanel.svelte';
@@ -33,6 +34,7 @@
     | 'possessions'
     | 'house_specialisation'
     | 'mythic_type'
+    | 'supernatural'
     | 'equipment'
     | 'details'
     | 'totals';
@@ -45,6 +47,12 @@
   );
   const hasMythicType = $derived(
     store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.has_mythic_type ?? false,
+  );
+  // The Supernatural (Might) tab appears for a mythic-companion-capable type
+  // (Devil Child, Nephilim) or once the character has an effective Might (any type
+  // that took a Might Virtue such as Demonic Blood). Magi never have Might.
+  const hasMight = $derived(
+    !isMagus && (hasMythicType || (store.effective?.might ?? null) !== null),
   );
   const tabs = $derived<{ id: Tab; key: string }[]>([
     { id: 'characteristics', key: 'tab-characteristics' },
@@ -59,6 +67,7 @@
         ]
       : []),
     ...(hasMythicType ? [{ id: 'mythic_type' as Tab, key: 'tab-mythic-type' }] : []),
+    ...(hasMight ? [{ id: 'supernatural' as Tab, key: 'tab-supernatural' }] : []),
     // Equipment, Age, Confidence, Personality Traits and Reputations apply to
     // every type (grogs especially carry weapons and armor).
     { id: 'equipment', key: 'tab-equipment' },
@@ -182,6 +191,10 @@
   {:else if tab === 'mythic_type'}
     <div class="vf-tab">
       <MythicCompanionTypeSelector />
+    </div>
+  {:else if tab === 'supernatural'}
+    <div class="vf-tab">
+      <SupernaturalBeing />
     </div>
   {:else}
     <div class="vf-tab">

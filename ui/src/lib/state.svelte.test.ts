@@ -358,6 +358,28 @@ describe('magic possessions', () => {
     expect(store.entity.talisman_attunements).toEqual([]);
   });
 
+  it('sets Might realm + non-negative score, and clears Might', () => {
+    store.setMightRealm('infernal');
+    expect(store.entity.might).toEqual({ realm: 'infernal', score: 0 });
+    store.setMightScore(-4);
+    expect(store.entity.might).toEqual({ realm: 'infernal', score: 0 });
+    store.setMightScore(5);
+    expect(store.entity.might).toEqual({ realm: 'infernal', score: 5 });
+    store.clearMight();
+    expect(store.entity.might ?? null).toBeNull();
+  });
+
+  it('adds, edits (name + non-negative level) and removes supernatural powers', () => {
+    store.addPower();
+    store.setPowerName(0, 'Curse');
+    store.setPowerLevel(0, -5);
+    expect(store.entity.powers).toEqual([{ name: 'Curse', level: 0 }]);
+    store.setPowerLevel(0, 20);
+    store.addPower();
+    store.removePowerAt(1);
+    expect(store.entity.powers).toEqual([{ name: 'Curse', level: 20 }]);
+  });
+
   it('adds a self-made longevity ritual (no bonus) and switches to external', () => {
     store.addLongevityRitual('self_made');
     expect(store.entity.longevity_ritual).toEqual({ source: 'self_made', bonus: null });
