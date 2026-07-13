@@ -3,6 +3,7 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import type {
+  DerivedTotals,
   EffectiveScores,
   Entity,
   LocalizedRuleset,
@@ -20,6 +21,10 @@ export function validateEntity(entity: Entity, mode: ValidationMode): Promise<Va
 
 export function effectiveScores(entity: Entity): Promise<EffectiveScores> {
   return invoke('effective_scores', { entity });
+}
+
+export function derivedTotals(entity: Entity): Promise<DerivedTotals> {
+  return invoke('derived_totals', { entity });
 }
 
 export function saveEntity(entity: Entity): Promise<string | null> {
