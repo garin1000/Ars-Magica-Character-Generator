@@ -89,18 +89,20 @@ fn load_ruleset_yields_spells_with_localized_names() {
     assert_eq!(spell.technique, Id::new("art.creo"));
     assert_eq!(spell.form, Id::new("art.ignem"));
     assert_eq!(spell.level, Some(20));
+    // A known non-ritual reads ritual = false (Pilum of Fire is Formulaic).
+    assert!(!spell.ritual, "Pilum of Fire is not a ritual");
     assert_eq!(
         localized.display_name(&Id::new("spell.pilum_of_fire")),
         Some("Pilum of Fire")
     );
-    // A General spell loads with no fixed level.
-    assert_eq!(
-        localized
-            .ruleset
-            .spell(&Id::new("spell.aegis_of_the_hearth"))
-            .and_then(|s| s.level),
-        None
-    );
+    // A General spell loads with no fixed level, and a known ritual reads
+    // ritual = true (Aegis of the Hearth is a Year/Boundary ritual).
+    let aegis = localized
+        .ruleset
+        .spell(&Id::new("spell.aegis_of_the_hearth"))
+        .expect("Aegis of the Hearth loaded");
+    assert_eq!(aegis.level, None);
+    assert!(aegis.ritual, "Aegis of the Hearth is a ritual");
     // The magus profile carries the 120-level spell budget.
     assert_eq!(
         localized
