@@ -14,6 +14,7 @@ import type {
   Entity,
   LocalizedRuleset,
   LongevitySource,
+  Realm,
   ReputationType,
   Selection,
   ValidationMode,
@@ -522,6 +523,53 @@ class AppStore {
     const clamped = Math.max(0, Math.trunc(level));
     this.entity.devices = (this.entity.devices ?? []).map((d, i) =>
       i === index ? { ...d, level: clamped } : d,
+    );
+    this.#scheduleValidate();
+  }
+
+  // --- Supernatural being: Might Score + Realm, powers (Devil Child / Nephilim) ---
+
+  /** Set the being's Might Realm (creating the base Might at score 0 if absent). */
+  setMightRealm(realm: Realm): void {
+    const score = this.entity.might?.score ?? 0;
+    this.entity.might = { realm, score };
+    this.#scheduleValidate();
+  }
+
+  /** Set the being's base Might Score (non-negative; keeps the current Realm). */
+  setMightScore(score: number): void {
+    const realm = this.entity.might?.realm ?? 'magic';
+    this.entity.might = { realm, score: Math.max(0, Math.trunc(score)) };
+    this.#scheduleValidate();
+  }
+
+  /** Remove the being's base Might (Virtue-granted Might is unaffected). */
+  clearMight(): void {
+    this.entity.might = null;
+    this.#scheduleValidate();
+  }
+
+  addPower(): void {
+    this.entity.powers = [...(this.entity.powers ?? []), { name: '', level: 0 }];
+    this.#scheduleValidate();
+  }
+
+  removePowerAt(index: number): void {
+    this.entity.powers = (this.entity.powers ?? []).filter((_, i) => i !== index);
+    this.#scheduleValidate();
+  }
+
+  setPowerName(index: number, name: string): void {
+    this.entity.powers = (this.entity.powers ?? []).map((p, i) =>
+      i === index ? { ...p, name } : p,
+    );
+    this.#scheduleValidate();
+  }
+
+  setPowerLevel(index: number, level: number): void {
+    const clamped = Math.max(0, Math.trunc(level));
+    this.entity.powers = (this.entity.powers ?? []).map((p, i) =>
+      i === index ? { ...p, level: clamped } : p,
     );
     this.#scheduleValidate();
   }
