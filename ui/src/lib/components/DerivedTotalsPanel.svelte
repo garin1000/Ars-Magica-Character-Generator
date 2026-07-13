@@ -121,6 +121,19 @@
                     <td>{cell.within_focus.spontaneous_non_fatiguing}</td>
                   </tr>
                 {/if}
+                <tr class="non-standard">
+                  <th
+                    >{store.t('derived-cast-non-standard')}{cell.non_standard.deft_form
+                      ? ' ' + store.t('derived-deft-form')
+                      : ''}</th
+                  >
+                  <td>{store.t('derived-cast-silent')}: {cell.non_standard.silent}</td>
+                  <td>{store.t('derived-cast-still')}: {cell.non_standard.still}</td>
+                  <td colspan="2"
+                    >{store.t('derived-cast-silent-still')}: {cell.non_standard
+                      .silent_and_still}</td
+                  >
+                </tr>
               {/each}
             </tbody>
           </table>

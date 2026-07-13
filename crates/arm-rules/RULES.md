@@ -1320,6 +1320,10 @@ these numbers.** The `derived_totals` Tauri command mirrors `effective_scores`.
 | Casting Score | `:9089` | Technique + Form + Stamina − Encumbrance + Aura |
 | Cast types | `:9103-9145` | Formulaic = score; Ritual = score + Artes Liberales + Philosophiae; Spont fatiguing = ÷2; non-fatiguing = ÷5 |
 | Method Caster | `:4524-4527` | +3 flat, Formulaic/Ritual scope only |
+| Non-standard casting | `:9236-9245` | Words/Gestures penalties (Formulaic/Spont, not Ritual): no voice −10, no gestures −5. Per cell, `NonStandardCasting` exposes `silent` (Formulaic − residual voice penalty), `still` (− residual gesture penalty), `silent_and_still`; residuals clamp at 0 |
+| Quiet Magic | `:4822-4826` | reduces the no-voice penalty +5 per casting (soft voice → 0, no voice → −5; a second casting eliminates it) |
+| Subtle Magic | `:5073-5076` | reduces the no-gesture penalty +5 (no gestures → 0) |
+| Deft Form | `:3645-3648` | casting in the named Form suffers **no** non-standard voice/gesture penalty (both residuals 0 for that Form's cells) |
 | Magical Focus | `:4399-4422` | within focus, add the **lower** applicable Art again (per-`(Te,Fo)` `within_focus` value; applicability is user-judged, never auto-detected) |
 | Deficient Art | `:5909-5915` | totals adding that Technique/Form **halved** (Form excludes Magic Resistance) |
 | Lab Total | `:4143-4154` | Int + Magic Theory + Technique + Form + Aura + flat LabTotalMod (+ focus / halving as casting) |
@@ -1357,11 +1361,19 @@ Soak with Tough + Bronze cord; Encumbrance from Load; wound ranges Size 0 / +1;
 Enduring Constitution penalty reduction; Decrepitude 17→2 & Warping 15→2 via the
 reused functions; purity.
 
-**Surfaced-only families** (study / aging-roll / non-standard-casting /
-wound-recovery: `AdvancementMod`, `AgingMod`, `SpecialCastingMod`,
-`AbilityRollMod`, and the `HealthTrack::{FatigueRoll, CastingFatigue, Recovery}`
-tracks) are **listed** as labelled `SurfacedModifier`s, not folded into a simulated
-number, because the app does not simulate those subsystems.
+**Non-standard casting is computed** (no longer surfaced-only). The three penalty
+relievers — Quiet Magic (`quiet_words`), Subtle Magic (`subtle_gestures`), Deft
+Form (`deft_form`, now Form-parameterized) — are folded by `in_play_mods` into a
+voice reduction, a gesture reduction, and a Deft-Form set, and each casting cell
+carries a `NonStandardCasting` variant (`silent` / `still` / `silent_and_still`,
+residuals clamped at 0). Every **other** `SpecialCastingMod` kind (spontaneous-magic
+variants, circumstantial halvings) stays surfaced-only.
+
+**Surfaced-only families** (study / aging-roll / conditional-casting /
+wound-recovery: `AdvancementMod`, `AgingMod`, the non-computed `SpecialCastingMod`
+kinds, `AbilityRollMod`, and the `HealthTrack::{FatigueRoll, CastingFatigue,
+Recovery}` tracks) are **listed** as labelled `SurfacedModifier`s, not folded into a
+simulated number, because the app does not simulate those subsystems.
 
 ---
 
@@ -1512,7 +1524,7 @@ see the 5a-wire section for the itemized deferrals),
 - **Combat total modifier (atk/def/init/dam)** — `virtue.berserk` (Core:3500-3503), `flaw.hobbled` (Core:6260-6263), `flaw.lame` (Core:6330-6333), `flaw.missing_hand` (Core:6438-6441), `flaw.missing_eye` (Core:6434-6437), `flaw.poor_eyesight` (Core:6606-6609), `flaw.palsied_hands` (Core:6578-6581), `flaw.slow_reflexes` (Core:6763-6766), `virtue.lightning_reflexes` (Core:4311-4314), `virtue.fast_caster` (Core:3865-3868)
 - **Study source-quality / advancement modifier** — `virtue.apt_student` (Core:3422-3425), `virtue.book_learner` (Core:3519-3522), `virtue.free_study` (Core:3937-3940), `virtue.good_teacher` (Core:3971-3974), `virtue.independent_study` (Core:4115-4118), `virtue.study_bonus` (Core:5056-5072), `flaw.unimaginative_learner` (Core:6915-6918), `flaw.poor_student` (Core:6626-6628), `flaw.incomprehensible` (Core:6294-6297), `virtue.secondary_insight` (Core:4892-4895), `flaw.loose_magic` (Core:6354-6357)
 - **Aging / longevity modifier** — `flaw.age_quickly` (Core:5659-5662), `flaw.baneful_circumstances` (Core:5687-5690), `flaw.monstrous_blood` (Core:6454-6467), `virtue.bee_king` (Core:3484-3499), `virtue.faerie_blood` (Core:3797-3820), `virtue.magical_blood` (Core:4359-4372), `virtue.unaging` (Core:5187-5190), `flaw.bound_to_role_role` (Core:5735-5748), `flaw.leprosy` (Core:6338-6341), `flaw.poor_living_conditions` (Core:6618-6621), `virtue.mild_aging` (Core:4528-4531), `virtue.magian_lineage_major` (Core:4339-4346), `virtue.magian_lineage_minor` (Core:4339-4346)
-- **Non-standard-casting penalty removal (Deft/Quiet/Subtle)** — `virtue.deft_form` (Core:3645-3648), `virtue.quiet_magic` (Core:4822-4827), `virtue.subtle_magic` (Core:5073-5076)
+- **Non-standard-casting penalty removal (Deft/Quiet/Subtle)** — **computed** into per-cell `NonStandardCasting` variants (`derived.rs`), not surfaced-only. Base Words/Gestures penalties `:9236-9245` (no voice −10, no gestures −5). `virtue.quiet_magic` (Core:4822-4826, +5 voice per casting, second casting eliminates), `virtue.subtle_magic` (Core:5073-5076, +5 gesture), `virtue.deft_form` (Core:3645-3648, Form-parameterized, waives both for that Form). Residuals clamp at 0.
 - **Flat ability-total bonus (Concentration)** — `virtue.academic_concentration_subject` (Core:3362-3367)
 
 
@@ -1553,7 +1565,7 @@ distinct descriptors, which pairwise `incompatible_with` could not.
 | `MagicResistanceMod { kind }` | Non-halving MR — limited_magic_resistance (no_form_bonus), susceptibility faerie/infernal/divine, commanding_aura & special_circumstances (aura_bonus) | Core:6346-6349, 6819-6826, 6815-6818, 3579-3596 | computed/surfaced |
 | `AgingMod { kind, amount }` | Aging/longevity — age_quickly, baneful_circumstances, monstrous_blood (−1), bee_king, faerie_blood (−1), magical_blood (−1), unaging, bound_to_role, leprosy, poor_living_conditions, mild_aging, magian_lineage major/minor | Core:5659-5662, 5687-5690, 6454-6467, 3484-3499, 3797-3820, 4359-4372, 5187-5190, 5735-5748, 6338-6341, 6618-6621, 4528-4531, 4339-4346 | surfaced (app does not simulate aging rolls) |
 | `AdvancementMod { source, amount }` | Study/teaching — apt_student (+5 taught), book_learner (+3 book), free_study (+3 vis), good_teacher, independent_study, study_bonus, secondary_insight, unimaginative_learner, poor_student, incomprehensible, loose_magic | Core:3422-3425, 3519-3522, 3937-3940, 3971-3974, 4115-4118, 5056-5072, 4892-4895, 6915-6918, 6626-6628, 6294-6297, 6354-6357 | surfaced (app does not simulate advancement) |
-| `SpecialCastingMod { kind }` | Casting-style quirks — deft_form, quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, and circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, corrupted_spells, disjointed_magic) | Core:3645-3648, 4822-4827, 5073-5076, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5859-5864, 5972-5975 | surfaced (non-standard casting / conditional penalties) |
+| `SpecialCastingMod { kind, param? }` | Casting-style quirks — deft_form (Form-parameterized), quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, and circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, corrupted_spells, disjointed_magic) | Core:3645-3648, 4822-4826, 5073-5076, 9236-9245, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5859-5864, 5972-5975 | **deft_form/quiet_magic/subtle_magic computed** into per-cell `NonStandardCasting` (silent/still/silent_and_still); all other kinds surfaced (conditional penalties) |
 | `AbilityRollMod { param(Text), amount }` | Ability-roll bonus in a subject — academic_concentration_subject (+3) | Core:3362-3367 | surfaced |
 
 **Modeling notes / accepted approximations** (each surfaced in 5i's labelled
