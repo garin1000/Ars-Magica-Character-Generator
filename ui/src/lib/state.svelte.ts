@@ -9,6 +9,7 @@ import * as ipc from './ipc';
 import type {
   AppError,
   Characteristic,
+  DerivedTotals,
   EffectiveScores,
   Entity,
   LocalizedRuleset,
@@ -50,6 +51,7 @@ class AppStore {
   mode = $state<ValidationMode>('enforced');
   result = $state<ValidationResult | null>(null);
   effective = $state<EffectiveScores | null>(null);
+  derived = $state<DerivedTotals | null>(null);
   error = $state<AppError | null>(null);
   loading = $state(false);
 
@@ -730,13 +732,15 @@ class AppStore {
     const seq = ++this.#seq;
     const snapshot = $state.snapshot(this.entity);
     try {
-      const [result, effective] = await Promise.all([
+      const [result, effective, derived] = await Promise.all([
         ipc.validateEntity(snapshot, this.mode),
         ipc.effectiveScores(snapshot),
+        ipc.derivedTotals(snapshot),
       ]);
       if (seq === this.#seq) {
         this.result = result;
         this.effective = effective;
+        this.derived = derived;
       }
     } catch (e) {
       this.error = e as AppError;

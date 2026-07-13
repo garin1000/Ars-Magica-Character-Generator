@@ -269,6 +269,142 @@ export interface EffectiveScores {
   spell_mastery_floor: number;
 }
 
+// --- Derived play-stat totals (M5/5i), mirrored from `arm_rules::derived`.
+// Read-only: the panel renders these numbers and computes no mechanics itself.
+// Every `label`/`level`/`family`/`detail` is a stable slug mapped through a
+// Fluent `derived-*` key — never rendered raw.
+
+// A labelled term in a breakdown.
+export interface Addend {
+  label: string;
+  value: number;
+}
+
+// A Lab Total for one (Technique, Form) grid cell.
+export interface LabTotal {
+  technique: string;
+  form: string;
+  addends: Addend[];
+  total: number;
+  within_focus?: number | null;
+  deficient: boolean;
+}
+
+// The within-focus counterparts of a CastingTotal's four cast types.
+export interface CastingWithinFocus {
+  focus_art: number;
+  formulaic: number;
+  ritual: number;
+  spontaneous_fatiguing: number;
+  spontaneous_non_fatiguing: number;
+}
+
+// A Casting Total for one (Technique, Form) cell, split into four cast types.
+export interface CastingTotal {
+  technique: string;
+  form: string;
+  addends: Addend[];
+  ritual_addends: Addend[];
+  formulaic: number;
+  ritual: number;
+  spontaneous_fatiguing: number;
+  spontaneous_non_fatiguing: number;
+  within_focus?: CastingWithinFocus | null;
+  deficient: boolean;
+}
+
+// A per-known-spell Penetration line.
+export interface PenetrationLine {
+  spell: string;
+  level: number;
+  casting_total: number;
+  penetration_ability: number;
+  total: number;
+  within_focus?: number | null;
+  weak_magic: boolean;
+}
+
+// A per-Form Magic Resistance line.
+export interface MagicResistance {
+  form: string;
+  addends: Addend[];
+  total: number;
+}
+
+// The Encumbrance read-out.
+export interface EncumbranceTotal {
+  load: number;
+  burden: number;
+  total: number;
+}
+
+// One combat line for an equipped weapon (shield combined in).
+export interface CombatLine {
+  weapon: string;
+  ability: string;
+  initiative: number;
+  attack?: number | null;
+  defense: number;
+  damage?: number | null;
+  range?: number | null;
+}
+
+// The Soak read-out.
+export interface SoakTotal {
+  addends: Addend[];
+  total: number;
+}
+
+// A Fatigue level and its penalty.
+export interface FatigueLevel {
+  level: string;
+  penalty: number;
+}
+
+// A wound band with its inclusive range and per-wound penalty.
+export interface WoundRange {
+  level: string;
+  min: number;
+  max?: number | null;
+  penalty?: number | null;
+}
+
+// The Longevity Ritual bonus read-out.
+export interface LongevityBonus {
+  source: 'self_made' | 'external';
+  bonus: number;
+  lab_total?: number | null;
+  bronze_cord: number;
+  aura_present: boolean;
+}
+
+// A surfaced-only modifier (listed, not simulated).
+export interface SurfacedModifier {
+  family: string;
+  detail: string;
+  amount: number;
+}
+
+// The full read-only play-stat read-out returned by the `derived_totals` command.
+export interface DerivedTotals {
+  is_magus: boolean;
+  lab_totals: LabTotal[];
+  casting_totals: CastingTotal[];
+  penetration: PenetrationLine[];
+  magic_resistance: MagicResistance[];
+  longevity?: LongevityBonus | null;
+  combat: CombatLine[];
+  soak: SoakTotal;
+  encumbrance: EncumbranceTotal;
+  fatigue: FatigueLevel[];
+  wounds: WoundRange[];
+  size: number;
+  decrepitude_score: number;
+  warping_score: number;
+  warping_points: number;
+  surfaced_modifiers: SurfacedModifier[];
+}
+
 export interface ReputationGrant {
   kind: ReputationType;
   score: number;

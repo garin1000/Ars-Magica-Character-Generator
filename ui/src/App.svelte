@@ -16,6 +16,7 @@
   import MagicPossessions from './lib/components/MagicPossessions.svelte';
   import EquipmentPicker from './lib/components/EquipmentPicker.svelte';
   import CharacterDetails from './lib/components/CharacterDetails.svelte';
+  import DerivedTotalsPanel from './lib/components/DerivedTotalsPanel.svelte';
   import HouseSelector from './lib/components/HouseSelector.svelte';
   import MythicCompanionTypeSelector from './lib/components/MythicCompanionTypeSelector.svelte';
   import BalanceBar from './lib/components/BalanceBar.svelte';
@@ -33,7 +34,8 @@
     | 'house_specialisation'
     | 'mythic_type'
     | 'equipment'
-    | 'details';
+    | 'details'
+    | 'totals';
   // Left-to-right: Characteristics, Virtues & Flaws, Abilities, then the two
   // magus-only tabs (Arts, House) and the mythic-companion-only Type tab — each
   // gated on the profile's capability flag (never the type id), so any future
@@ -61,6 +63,8 @@
     // every type (grogs especially carry weapons and armor).
     { id: 'equipment', key: 'tab-equipment' },
     { id: 'details', key: 'tab-details' },
+    // The derived play-stat read-out applies to every type (read-only totals).
+    { id: 'totals', key: 'tab-totals' },
   ]);
   let tab = $state<Tab>('characteristics');
 
@@ -170,6 +174,10 @@
   {:else if tab === 'details'}
     <div class="vf-tab">
       <CharacterDetails />
+    </div>
+  {:else if tab === 'totals'}
+    <div class="vf-tab">
+      <DerivedTotalsPanel />
     </div>
   {:else if tab === 'mythic_type'}
     <div class="vf-tab">
