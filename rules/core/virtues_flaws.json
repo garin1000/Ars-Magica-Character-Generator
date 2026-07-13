@@ -3723,7 +3723,8 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "special_casting_mod", "kind": "deft_form" }],
+    "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
+    "effects": [{ "type": "special_casting_mod", "kind": "deft_form", "param": "form" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3645, 3648] }
   },
   {

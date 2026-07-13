@@ -299,6 +299,16 @@ export interface CastingWithinFocus {
   spontaneous_non_fatiguing: number;
 }
 
+// The non-standard-casting (silent / still) variants of a cell's Formulaic total.
+export interface NonStandardCasting {
+  voice_penalty: number;
+  gesture_penalty: number;
+  silent: number;
+  still: number;
+  silent_and_still: number;
+  deft_form: boolean;
+}
+
 // A Casting Total for one (Technique, Form) cell, split into four cast types.
 export interface CastingTotal {
   technique: string;
@@ -310,6 +320,7 @@ export interface CastingTotal {
   spontaneous_fatiguing: number;
   spontaneous_non_fatiguing: number;
   within_focus?: CastingWithinFocus | null;
+  non_standard: NonStandardCasting;
   deficient: boolean;
 }
 

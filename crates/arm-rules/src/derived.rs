@@ -47,8 +47,24 @@ use crate::effective::{
 use crate::ruleset::Ruleset;
 use crate::types::{
     CastingScope, CombatStat, Effect, Entity, HalvableTotal, HealthTrack, Id, LongevitySource,
-    MagicResistanceEffect,
+    MagicResistanceEffect, SpecialCasting,
 };
+
+// --- Non-standard-casting penalty constants (Core:9243-9245) ---------------
+
+/// Casting-Score penalty for casting with **no voice** at all (the "None" Words
+/// row). Source: Core:9245.
+const NO_VOICE_PENALTY: i32 = -10;
+/// Casting-Score penalty for casting with **no gestures** at all (the "None"
+/// Gestures row). Source: Core:9245.
+const NO_GESTURE_PENALTY: i32 = -5;
+/// The no-voice-penalty reduction one casting of Quiet Magic grants (soft voice →
+/// no penalty, no voice → −5, i.e. +5; a second casting eliminates it). Source:
+/// Core:4822-4826.
+const QUIET_MAGIC_VOICE_REDUCTION: i32 = 5;
+/// The no-gesture-penalty reduction Subtle Magic grants (no gestures → no
+/// penalty, i.e. +5). Source: Core:5073-5076.
+const SUBTLE_MAGIC_GESTURE_REDUCTION: i32 = 5;
 
 /// A single labelled term in a breakdown. `label` is a **stable slug id**
 /// (`"technique"`, `"stamina"`, `"aura"`, …), mapped to a display string through a
@@ -106,6 +122,14 @@ struct InPlayMods {
     health_mods: BTreeMap<HealthTrack, i32>,
     /// Non-halving Magic-Resistance modifiers (Limited MR, Susceptibility, …).
     mr_mods: Vec<MagicResistanceEffect>,
+    /// Total no-voice-penalty reduction from Quiet Magic (+5 per casting; a second
+    /// casting eliminates the penalty once clamped).
+    voice_reduction: i32,
+    /// Total no-gesture-penalty reduction from Subtle Magic (+5).
+    gesture_reduction: i32,
+    /// Forms with Deft Form: casting in them suffers no non-standard voicing or
+    /// gesture penalty at all.
+    deft_forms: BTreeSet<Id>,
     /// Surfaced-only families, listed rather than folded into a number.
     surfaced: Vec<SurfacedModifier>,
 }
@@ -154,11 +178,30 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     detail: source.to_string(),
                     amount: i32::from(*amount),
                 }),
-                Effect::SpecialCastingMod { kind } => m.surfaced.push(SurfacedModifier {
-                    family: "special_casting".to_string(),
-                    detail: kind.to_string(),
-                    amount: 0,
-                }),
+                // Non-standard-casting relievers are computed into the per-cell
+                // NonStandardCasting variants; every other quirk stays surfaced.
+                Effect::SpecialCastingMod { kind, param } => match kind {
+                    SpecialCasting::QuietWords => m.voice_reduction += QUIET_MAGIC_VOICE_REDUCTION,
+                    SpecialCasting::SubtleGestures => {
+                        m.gesture_reduction += SUBTLE_MAGIC_GESTURE_REDUCTION
+                    }
+                    SpecialCasting::DeftForm => {
+                        if let Some(form) = param.as_ref().and_then(|p| selection.params.get(p)) {
+                            m.deft_forms.insert(form.clone());
+                        }
+                    }
+                    SpecialCasting::Diedne
+                    | SpecialCasting::FaerieRaised
+                    | SpecialCasting::LifeLinkedSpontaneous
+                    | SpecialCasting::SpellImprovisation
+                    | SpecialCasting::Mercurian
+                    | SpecialCasting::LifeBoost
+                    | SpecialCasting::Circumstantial => m.surfaced.push(SurfacedModifier {
+                        family: "special_casting".to_string(),
+                        detail: kind.to_string(),
+                        amount: 0,
+                    }),
+                },
                 Effect::AbilityRollMod { param, amount } => m.surfaced.push(SurfacedModifier {
                     family: "ability_roll".to_string(),
                     detail: selection
@@ -211,6 +254,27 @@ impl InPlayMods {
     /// Whether either Art of a `(technique, form)` pair is a Deficient Art.
     fn deficient(&self, technique: &Id, form: &Id) -> bool {
         self.deficient_arts.contains(technique) || self.deficient_arts.contains(form)
+    }
+
+    /// The residual Casting-Score penalty for casting a `form` spell with no voice:
+    /// Deft Form waives it entirely, else the −10 base plus Quiet Magic reduction,
+    /// clamped so a Virtue can never turn it into a bonus. Source: Core:9245,
+    /// :4822-4826, :3645-3648.
+    fn residual_voice_penalty(&self, form: &Id) -> i32 {
+        if self.deft_forms.contains(form) {
+            return 0;
+        }
+        (NO_VOICE_PENALTY + self.voice_reduction).min(0)
+    }
+
+    /// The residual Casting-Score penalty for casting a `form` spell with no
+    /// gestures: Deft Form waives it, else the −5 base plus Subtle Magic reduction,
+    /// clamped at 0. Source: Core:9245, :5073-5076, :3645-3648.
+    fn residual_gesture_penalty(&self, form: &Id) -> i32 {
+        if self.deft_forms.contains(form) {
+            return 0;
+        }
+        (NO_GESTURE_PENALTY + self.gesture_reduction).min(0)
     }
 }
 
@@ -339,6 +403,29 @@ pub struct CastingWithinFocus {
     pub spontaneous_non_fatiguing: i32,
 }
 
+/// The non-standard-casting variants of a cell's **Formulaic** Casting Total:
+/// casting with no voice ("silent") and/or no gestures ("still"). The Words and
+/// Gestures penalties apply to Formulaic and Spontaneous casting, never to Ritual
+/// (Core:9236); these variants adjust the Formulaic total. Quiet Magic reduces the
+/// no-voice penalty, Subtle Magic the no-gesture penalty, and Deft Form waives
+/// both for spells in its Form; each residual penalty clamps at 0. Source:
+/// Core:9236-9245, :4822-4826, :5073-5076, :3645-3648.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NonStandardCasting {
+    /// Residual no-voice penalty (≤ 0) after Quiet Magic / Deft Form.
+    pub voice_penalty: i32,
+    /// Residual no-gesture penalty (≤ 0) after Subtle Magic / Deft Form.
+    pub gesture_penalty: i32,
+    /// Formulaic total cast with no voice: `formulaic + voice_penalty`.
+    pub silent: i32,
+    /// Formulaic total cast with no gestures: `formulaic + gesture_penalty`.
+    pub still: i32,
+    /// Formulaic total cast with neither voice nor gestures.
+    pub silent_and_still: i32,
+    /// Whether Deft Form applies to this cell's Form (both penalties waived).
+    pub deft_form: bool,
+}
+
 /// The Casting Total for one `(Technique, Form)` cell, split into the four cast
 /// types from one shared breakdown.
 ///
@@ -370,6 +457,8 @@ pub struct CastingTotal {
     /// The within-focus variants; `None` when the magus holds no Magical Focus.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub within_focus: Option<CastingWithinFocus>,
+    /// The non-standard-casting (silent / still) variants of the Formulaic total.
+    pub non_standard: NonStandardCasting,
     /// Whether a Deficient Art halved these totals.
     pub deficient: bool,
 }
@@ -458,6 +547,16 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
             };
 
             let base = variant(false);
+            let voice_penalty = mods.residual_voice_penalty(&form);
+            let gesture_penalty = mods.residual_gesture_penalty(&form);
+            let non_standard = NonStandardCasting {
+                voice_penalty,
+                gesture_penalty,
+                silent: base.formulaic + voice_penalty,
+                still: base.formulaic + gesture_penalty,
+                silent_and_still: base.formulaic + voice_penalty + gesture_penalty,
+                deft_form: mods.deft_forms.contains(&form),
+            };
             let within_focus = mods.has_focus.then(|| {
                 let f = variant(true);
                 CastingWithinFocus {
@@ -479,6 +578,7 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                 spontaneous_fatiguing: base.spontaneous_fatiguing,
                 spontaneous_non_fatiguing: base.spontaneous_non_fatiguing,
                 within_focus,
+                non_standard,
                 deficient,
             });
         }
@@ -1167,7 +1267,17 @@ mod tests {
             ] },
           { "id": "virtue.apt_student", "kind": "virtue", "classification": "in_play_effect",
             "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-            "effects": [{ "type": "advancement_mod", "source": "taught", "amount": 5 }] }
+            "effects": [{ "type": "advancement_mod", "source": "taught", "amount": 5 }] },
+          { "id": "virtue.quiet_magic", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "special_casting_mod", "kind": "quiet_words" }] },
+          { "id": "virtue.subtle_magic", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "special_casting_mod", "kind": "subtle_gestures" }] },
+          { "id": "virtue.deft_form", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
+            "effects": [{ "type": "special_casting_mod", "kind": "deft_form", "param": "form" }] }
         ]"#;
         let types = r#"[
           { "id": "magus", "is_magus": true,
@@ -1386,6 +1496,98 @@ mod tests {
         let perdo = find_casting(&totals, "art.perdo", "art.ignem");
         assert!(!perdo.deficient);
         assert_eq!(perdo.formulaic, 4);
+    }
+
+    /// With no relevant Virtue, casting with no voice takes −10 and with no
+    /// gestures −5 off the Formulaic total (Core:9243-9245); combined −15.
+    #[test]
+    fn non_standard_casting_penalties_without_virtue() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 2);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 5,
+            },
+        ];
+        let totals = casting_totals(&e, &rs);
+        let cell = find_casting(&totals, "art.creo", "art.ignem");
+        let f = cell.formulaic;
+        let nc = &cell.non_standard;
+        assert_eq!(nc.voice_penalty, -10);
+        assert_eq!(nc.gesture_penalty, -5);
+        assert_eq!(nc.silent, f - 10);
+        assert_eq!(nc.still, f - 5);
+        assert_eq!(nc.silent_and_still, f - 15);
+        assert!(!nc.deft_form);
+    }
+
+    /// Quiet Magic cuts the no-voice penalty to −5; a second casting eliminates it
+    /// (the residual clamps at 0). Core:4822-4826.
+    #[test]
+    fn quiet_magic_reduces_then_eliminates_voice_penalty() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.quiet_magic"))];
+        let totals = casting_totals(&e, &rs);
+        let c = find_casting(&totals, "art.creo", "art.ignem");
+        assert_eq!(c.non_standard.voice_penalty, -5);
+        assert_eq!(c.non_standard.silent, c.formulaic - 5);
+        // Gestures are untouched by Quiet Magic.
+        assert_eq!(c.non_standard.gesture_penalty, -5);
+
+        // Taken twice → no-voice penalty eliminated altogether (clamp at 0).
+        e.selections = vec![
+            Selection::new(Id::new("virtue.quiet_magic")),
+            Selection::new(Id::new("virtue.quiet_magic")),
+        ];
+        let totals = casting_totals(&e, &rs);
+        let c = find_casting(&totals, "art.creo", "art.ignem");
+        assert_eq!(c.non_standard.voice_penalty, 0);
+        assert_eq!(c.non_standard.silent, c.formulaic);
+    }
+
+    /// Subtle Magic removes the no-gesture penalty; voice is untouched.
+    /// Core:5073-5076.
+    #[test]
+    fn subtle_magic_removes_gesture_penalty() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.subtle_magic"))];
+        let totals = casting_totals(&e, &rs);
+        let c = find_casting(&totals, "art.creo", "art.ignem");
+        assert_eq!(c.non_standard.gesture_penalty, 0);
+        assert_eq!(c.non_standard.still, c.formulaic);
+        assert_eq!(c.non_standard.voice_penalty, -10);
+    }
+
+    /// Deft Form waives both penalties, but only for spells in that Form.
+    /// Core:3645-3648.
+    #[test]
+    fn deft_form_waives_both_penalties_in_that_form_only() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.deft_form"),
+            BTreeMap::from([("form".into(), Id::new("art.ignem"))]),
+        )];
+        let totals = casting_totals(&e, &rs);
+        let ignem = find_casting(&totals, "art.creo", "art.ignem");
+        assert!(ignem.non_standard.deft_form);
+        assert_eq!(ignem.non_standard.voice_penalty, 0);
+        assert_eq!(ignem.non_standard.gesture_penalty, 0);
+        assert_eq!(ignem.non_standard.silent, ignem.formulaic);
+        assert_eq!(ignem.non_standard.still, ignem.formulaic);
+        // A different Form is unaffected.
+        let corpus = find_casting(&totals, "art.creo", "art.corpus");
+        assert!(!corpus.non_standard.deft_form);
+        assert_eq!(corpus.non_standard.voice_penalty, -10);
+        assert_eq!(corpus.non_standard.gesture_penalty, -5);
     }
 
     /// Per-Form Magic Resistance = Form + 5 × Parma (Core:9390-9398).

@@ -785,17 +785,28 @@ pub enum Effect {
         /// Signed modifier to that source's Source Quality / advancement total.
         amount: i8,
     },
-    /// A special casting-style quirk the app **surfaces** rather than simulates
-    /// (surfaced-only): non-standard-casting penalty removal (Deft/Quiet/Subtle),
-    /// spontaneous-magic variants (Diedne, Faerie-Raised, Life-Linked), and
-    /// circumstantial casting penalties. `kind` names the quirk; 5i surfaces it
-    /// labelled.
+    /// A special casting-style quirk. `kind` names the quirk. The three
+    /// non-standard-casting penalty relievers (`quiet_words`, `subtle_gestures`,
+    /// `deft_form`) are **computed** by 5i into the per-cell
+    /// [`crate::derived::NonStandardCasting`] variants (the residual no-voice /
+    /// no-gesture penalties); every other quirk — spontaneous-magic variants
+    /// (Diedne, Faerie-Raised, Life-Linked) and circumstantial casting penalties —
+    /// is **surfaced-only**, listed labelled rather than simulated.
     ///
     /// Source: Ars Magica - Definitive Edition (Core Rules).md:3645-3648 (Deft
-    /// Form), `:3675-3682` (Diedne Magic), `:5917-5920` (Deleterious Circumstances).
+    /// Form), :4822-4826 (Quiet Magic), :5073-5076 (Subtle Magic), :9243-9245
+    /// (Words/Gestures penalties), `:3675-3682` (Diedne Magic), `:5917-5920`
+    /// (Deleterious Circumstances).
     SpecialCastingMod {
         /// Which casting-style quirk this is.
         kind: SpecialCasting,
+        /// For the Form-scoped `deft_form` quirk, the parameter key whose value
+        /// names the affected Form (resolved against the selection's params, as
+        /// [`Effect::DeficientArt`] resolves its Art). `None` for the unscoped
+        /// quirks (Quiet/Subtle Magic apply to every casting), which carry no
+        /// parameter.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        param: Option<String>,
     },
     /// A flat modifier to rolls of a specific Ability in the free-text subject
     /// named by the selection's `params[param]` (Academic Concentration: a bonus
@@ -2145,6 +2156,11 @@ mod tests {
             },
             Effect::SpecialCastingMod {
                 kind: SpecialCasting::Diedne,
+                param: None,
+            },
+            Effect::SpecialCastingMod {
+                kind: SpecialCasting::DeftForm,
+                param: Some("form".into()),
             },
             Effect::AbilityRollMod {
                 param: "subject".into(),
