@@ -20,7 +20,8 @@ use crate::ability::AbilityCategory;
 use crate::characteristics::Characteristic;
 use crate::ruleset::Ruleset;
 use crate::types::{
-    Effect, Entity, EntityTypeProfile, Id, ReputationType, Selection, SpellSelection,
+    Effect, Entity, EntityTypeProfile, Id, MightScore, Realm, ReputationType, Selection,
+    SpellSelection,
 };
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -178,6 +179,8 @@ pub fn ability_bonus(
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. }
+                | Effect::MightGrant { .. }
+                | Effect::PowerLevels { .. }
                 // M5/5b in-play effects: consumed by derived.rs (5i); they never
                 // alter a creation-legality total, so they are no-ops here.
                 | Effect::MagicalFocus { .. }
@@ -322,6 +325,8 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. }
+                | Effect::MightGrant { .. }
+                | Effect::PowerLevels { .. }
                 // M5/5b in-play effects: consumed by derived.rs (5i); they never
                 // alter a creation-legality total, so they are no-ops here.
                 | Effect::MagicalFocus { .. }
@@ -498,6 +503,8 @@ fn characteristic_limit_shift(
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. }
+                | Effect::MightGrant { .. }
+                | Effect::PowerLevels { .. }
                 // M5/5b in-play effects: consumed by derived.rs (5i); they never
                 // alter a creation-legality total, so they are no-ops here.
                 | Effect::MagicalFocus { .. }
@@ -698,6 +705,8 @@ pub(crate) fn ability_affinity(
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. }
+                | Effect::MightGrant { .. }
+                | Effect::PowerLevels { .. }
                 // M5/5b in-play effects: consumed by derived.rs (5i); not an
                 // Affinity, so no cost reduction here.
                 | Effect::MagicalFocus { .. }
@@ -762,6 +771,8 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. }
+                | Effect::MightGrant { .. }
+                | Effect::PowerLevels { .. }
                 // M5/5b in-play effects: consumed by derived.rs (5i); not an
                 // Affinity, so no cost reduction here.
                 | Effect::MagicalFocus { .. }
@@ -1315,6 +1326,71 @@ pub fn item_level_used(entity: &Entity) -> u32 {
     entity.devices.iter().map(|d| u32::from(d.level)).sum()
 }
 
+/// The character's derived power-levels budget: base 0 plus every
+/// [`Effect::PowerLevels`] grant (Demonic Blood 30, Demonic Powers +20, Strong
+/// Angelic Heritage 30), summed. The being's `powers` are charged against it,
+/// mirroring [`item_level_budget`]. Source: Realms of Power - The Infernal.md:4122,
+/// :4142; The Divine (Revised).md:1977.
+pub fn power_levels_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    let mut total = 0u32;
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::PowerLevels { amount } = effect {
+                total += u32::from(*amount);
+            }
+        }
+    }
+    total
+}
+
+/// The total power level the being's `powers` consume — the "used" side of the
+/// power-levels budget bar. Source: Realms of Power - The Infernal.md:4122.
+pub fn powers_used(entity: &Entity) -> u32 {
+    entity.powers.iter().map(|p| u32::from(p.level)).sum()
+}
+
+/// Every [`Effect::MightGrant`] a being's Virtues confer, as `(realm, score)`
+/// pairs (selections + derived grants).
+fn might_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<(Realm, u8)> {
+    let mut grants = Vec::new();
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::MightGrant { realm, score } = effect {
+                grants.push((*realm, *score));
+            }
+        }
+    }
+    grants
+}
+
+/// The being's **effective Might Score**, or `None` if it is not a supernatural
+/// being (no base Might and no [`Effect::MightGrant`]). The Realm comes from the
+/// entity's base Might if entered, else from its Might Virtue grants; the score is
+/// the entered base (may be 0) plus every same-Realm grant. Demonic Blood grants
+/// Infernal Might 5, Demonic Might +2 → effective 7. Source: Realms of Power -
+/// Magic.md:1470-1472; The Infernal.md:4120, :4136.
+pub fn effective_might(entity: &Entity, ruleset: &Ruleset) -> Option<MightScore> {
+    let grants = might_grants(entity, ruleset);
+    let realm = entity
+        .might
+        .map(|m| m.realm)
+        .or_else(|| grants.first().map(|(realm, _)| *realm))?;
+    let base = entity.might.map(|m| m.score).unwrap_or(0);
+    let granted: u32 = grants
+        .iter()
+        .filter(|(r, _)| *r == realm)
+        .map(|(_, s)| u32::from(*s))
+        .sum();
+    let score = u8::try_from(u32::from(base) + granted).unwrap_or(u8::MAX);
+    Some(MightScore { realm, score })
+}
+
 /// The character's derived True Faith Score: base 0 plus every
 /// [`Effect::TrueFaithGrant`] (True Faith Virtue → 1), summed and clamped to
 /// `u8`. Derived, never stored. Source: Core Rules.md:5169-5171.
@@ -1504,7 +1580,9 @@ pub fn age_ability_cap(entity: &Entity) -> Option<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{AbilityScore, ArtScore, EntityKind, RulesetRef, Selection};
+    use crate::types::{
+        AbilityScore, ArtScore, EntityKind, RulesetRef, Selection, SupernaturalPower,
+    };
     use pretty_assertions::assert_eq;
     use std::collections::BTreeMap;
 
@@ -2149,6 +2227,27 @@ mod tests {
             "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
             "entity_kinds": ["character"],
             "effects": [{ "type": "group_affinity_cost", "abilities": ["ability.living_language"], "counts_as_num": 5, "counts_as_den": 4 }]
+          },
+          {
+            "id": "virtue.demonic_blood",
+            "kind": "virtue", "classification": "creation_effect", "magnitude": "major", "category": "supernatural",
+            "entity_kinds": ["character"],
+            "effects": [
+              { "type": "might_grant", "realm": "infernal", "score": 5 },
+              { "type": "power_levels", "amount": 30 }
+            ]
+          },
+          {
+            "id": "virtue.demonic_might",
+            "kind": "virtue", "classification": "creation_effect", "magnitude": "minor", "category": "supernatural",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "might_grant", "realm": "infernal", "score": 2 }]
+          },
+          {
+            "id": "virtue.demonic_powers",
+            "kind": "virtue", "classification": "creation_effect", "magnitude": "minor", "category": "supernatural",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "power_levels", "amount": 20 }]
           }
         ]"#;
         let types = r#"[
@@ -2434,6 +2533,54 @@ mod tests {
             ),
             50
         );
+    }
+
+    #[test]
+    fn demonic_blood_grants_infernal_might_5_and_30_power_levels() {
+        // Demonic Blood confers Infernal Might (Corpus) 5 (RoP:Infernal:4120) and
+        // up to 30 levels of Infernal Powers (RoP:Infernal:4122). Effective Might =
+        // entity base (0 here) + Σ MightGrant of the same realm.
+        let rs = xp_ruleset();
+        let e = xp_entity(vec![sel("virtue.demonic_blood")]);
+        let might = effective_might(&e, &rs).expect("a Demonic-Blooded being has Might");
+        assert_eq!(might.realm, Realm::Infernal);
+        assert_eq!(might.score, 5);
+        assert_eq!(power_levels_budget(&e, &rs), 30);
+    }
+
+    #[test]
+    fn demonic_might_adds_two_and_powers_add_twenty() {
+        // Demonic Might: Infernal Might +2 (RoP:Infernal:4136). Demonic Powers:
+        // +20 power levels (RoP:Infernal:4142). Both stack on Demonic Blood.
+        let rs = xp_ruleset();
+        let e = xp_entity(vec![
+            sel("virtue.demonic_blood"),
+            sel("virtue.demonic_might"),
+            sel("virtue.demonic_powers"),
+        ]);
+        assert_eq!(effective_might(&e, &rs).unwrap().score, 7);
+        assert_eq!(power_levels_budget(&e, &rs), 50);
+    }
+
+    #[test]
+    fn effective_might_adds_grants_to_user_entered_base() {
+        // A being that enters its own base Might (Strong Angelic Heritage's Divine
+        // Might = age/20 is entered by hand) keeps that base; grants of the same
+        // realm add on top. Powers-used sums the entered powers' levels.
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("virtue.demonic_might")]);
+        e.might = Some(MightScore {
+            realm: Realm::Infernal,
+            score: 4,
+        });
+        e.powers = vec![SupernaturalPower {
+            name: "P".into(),
+            level: 12,
+        }];
+        assert_eq!(effective_might(&e, &rs).unwrap().score, 6); // 4 base + 2 grant
+        assert_eq!(powers_used(&e), 12);
+        // No might at all → None.
+        assert!(effective_might(&xp_entity(vec![]), &rs).is_none());
     }
 
     #[test]

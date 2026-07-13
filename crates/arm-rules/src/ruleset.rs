@@ -1494,6 +1494,8 @@ impl Ruleset {
                 | Effect::GeneralXp { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::GrantsReputation { .. }
+                | Effect::MightGrant { .. }
+                | Effect::PowerLevels { .. }
                 // M5/5b in-play effects with no parameter or ref to resolve:
                 // consumed intrinsically by derived.rs (5i).
                 | Effect::CastingTotalMod { .. }

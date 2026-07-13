@@ -298,6 +298,16 @@ impl ValidationIssue {
     /// character's enchanted devices exceeds the item-level budget the character's
     /// Virtues grant (Magic Items +25, Redcap 50; Core:4347-4349, :4842-4846).
     pub const CODE_OVER_ITEM_LEVEL: &'static str = "over_item_level";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the total level of the
+    /// being's supernatural powers exceeds the power-levels budget its Might
+    /// Virtues grant (Demonic Blood 30, Demonic Powers +20; RoP:Infernal:4122,
+    /// :4142). A power with no granting Virtue (budget 0) is flagged, mirroring
+    /// enchanted devices.
+    pub const CODE_OVER_POWER_LEVELS: &'static str = "over_power_levels";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: the entity's base Might
+    /// Realm disagrees with the Realm its Might Virtues grant (a supernatural being
+    /// belongs to exactly one Realm; Core:2623-2625).
+    pub const CODE_MIGHT_REALM_MISMATCH: &'static str = "might_realm_mismatch";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a Characteristic's
     /// completed aging/Decrepitude reductions would push its effective score below
     /// the rules effective minimum (−5). Advisory — the engine still clamps the
@@ -453,6 +463,8 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_personality_traits(entity, ruleset, &mut issues);
         validate_reputations(entity, ruleset, &mut issues);
         validate_devices(entity, ruleset, &mut issues);
+        validate_powers(entity, ruleset, &mut issues);
+        validate_might(entity, ruleset, &mut issues);
         validate_equipment(entity, ruleset, &mut issues);
         validate_aging(entity, ruleset, &mut issues);
         validate_xp_pool(entity, ruleset, &mut issues);
@@ -1630,6 +1642,8 @@ fn validate_ability_bonus_targets(
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. }
+                | Effect::MightGrant { .. }
+                | Effect::PowerLevels { .. }
                 // M5/5b in-play effects: consumed by derived.rs (5i). They carry
                 // no ability/characteristic creation target to check here.
                 | Effect::MagicalFocus { .. }
@@ -1910,6 +1924,8 @@ fn validate_characteristic_limit_preconditions(
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GroupAffinityCost { .. }
                 | Effect::GrantsReputation { .. }
+                | Effect::MightGrant { .. }
+                | Effect::PowerLevels { .. }
                 // M5/5b in-play effects: consumed by derived.rs (5i). They carry
                 // no ability/characteristic creation target to check here.
                 | Effect::MagicalFocus { .. }
@@ -2221,6 +2237,62 @@ fn validate_devices(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<Validat
             None,
         ));
     }
+}
+
+/// Validates a supernatural being's powers: the total power level may not exceed
+/// the power-levels budget its Might Virtues grant (Demonic Blood 30, Demonic
+/// Powers +20). A power on a being with no granting Virtue (budget 0) is flagged,
+/// mirroring [`validate_devices`]. Source: RoP:Infernal:4122, :4142.
+fn validate_powers(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    let used = crate::effective::powers_used(entity);
+    let budget = crate::effective::power_levels_budget(entity, ruleset);
+    if used > budget {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_OVER_POWER_LEVELS,
+            args([
+                ("used", used.to_string()),
+                ("budget", budget.to_string()),
+                ("over", (used - budget).to_string()),
+            ]),
+            None,
+        ));
+    }
+}
+
+/// Sanity-checks a being's Might: its entered base Realm must agree with the Realm
+/// its Might Virtues grant (a being belongs to exactly one Realm; Core:2623-2625).
+/// A warning, never a block — the troupe may be modelling an unusual creature.
+fn validate_might(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+    let Some(base) = entity.might else {
+        return;
+    };
+    let Some(granted) = ruleset_might_grant_realm(entity, ruleset) else {
+        return;
+    };
+    if granted != base.realm {
+        issues.push(ValidationIssue::warning(
+            ValidationIssue::CODE_MIGHT_REALM_MISMATCH,
+            args([
+                ("base", base.realm.to_string()),
+                ("granted", granted.to_string()),
+            ]),
+            None,
+        ));
+    }
+}
+
+/// The Realm of the first [`Effect::MightGrant`] the being's Virtues confer, if
+/// any. Used only for the [`validate_might`] realm-agreement sanity check.
+fn ruleset_might_grant_realm(entity: &Entity, ruleset: &Ruleset) -> Option<crate::types::Realm> {
+    for selection in crate::effective::selections_for_effects(entity, ruleset).iter() {
+        let item = ruleset.point_items.get(&selection.item_ref)?;
+        for effect in &item.effects {
+            if let Effect::MightGrant { realm, .. } = effect {
+                return Some(*realm);
+            }
+        }
+    }
+    None
 }
 
 /// Validates the character's carried equipment. Each [`EquipmentSlot`] must name a
@@ -3456,6 +3528,64 @@ mod tests {
         entity.devices = vec![device("Wand", 5)]; // budget 0
         let result = validate(&entity, &rs);
         assert!(codes(&result).contains(&ValidationIssue::CODE_OVER_ITEM_LEVEL.to_string()));
+    }
+
+    /// A profile whose Demonic Blood Virtue grants Infernal Might 5 + 30 power
+    /// levels (RoP:Infernal:4120-4122).
+    const MIGHT_ITEMS: &str = r#"[
+        { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
+          "category": "special", "entity_kinds": ["character"] },
+        { "id": "virtue.demonic_blood", "kind": "virtue", "classification": "creation_effect", "magnitude": "major",
+          "category": "supernatural", "entity_kinds": ["character"],
+          "effects": [
+            { "type": "might_grant", "realm": "infernal", "score": 5 },
+            { "type": "power_levels", "amount": 30 }
+          ] }
+    ]"#;
+
+    fn power(name: &str, level: u16) -> SupernaturalPower {
+        SupernaturalPower {
+            name: name.into(),
+            level,
+        }
+    }
+
+    #[test]
+    fn powers_within_power_levels_budget_pass() {
+        let rs = rs_with_houses(MIGHT_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![sel("virtue.demonic_blood")]);
+        entity.powers = vec![power("Curse", 20), power("Shape", 10)]; // 30 == budget
+        let result = validate(&entity, &rs);
+        assert!(
+            !codes(&result).contains(&ValidationIssue::CODE_OVER_POWER_LEVELS.to_string()),
+            "issues: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn powers_over_power_levels_budget_error() {
+        let rs = rs_with_houses(MIGHT_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![sel("virtue.demonic_blood")]);
+        entity.powers = vec![power("Curse", 25), power("Shape", 10)]; // 35 > 30
+        let result = validate(&entity, &rs);
+        assert!(codes(&result).contains(&ValidationIssue::CODE_OVER_POWER_LEVELS.to_string()));
+    }
+
+    #[test]
+    fn might_realm_mismatch_warns() {
+        let rs = rs_with_houses(MIGHT_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![sel("virtue.demonic_blood")]);
+        // Grant realm is Infernal, but the entity's base Might claims Magic.
+        entity.might = Some(MightScore {
+            realm: Realm::Magic,
+            score: 2,
+        });
+        let result = validate(&entity, &rs);
+        assert!(
+            warning_codes(&result)
+                .contains(&ValidationIssue::CODE_MIGHT_REALM_MISMATCH.to_string())
+        );
     }
 
     /// A minimal ruleset carrying characteristic rules (effective range ±5), so the

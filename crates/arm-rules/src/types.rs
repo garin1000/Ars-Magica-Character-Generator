@@ -651,6 +651,37 @@ pub enum Effect {
         /// The level of the granted Reputation.
         score: u8,
     },
+    /// Grants a supernatural **Might Score** of `score` in the given `realm` (base
+    /// 0, summed across grants of the same Realm on top of any base the entity
+    /// enters). Demonic Blood grants Infernal Might 5; Demonic Might adds +2 more.
+    /// A being's Magic Resistance is derived from its effective Might Score
+    /// ([`crate::derived::magic_resistance`]). A grant of `score` 0 establishes the
+    /// Realm + Might without adding points (Strong Angelic Heritage, whose Divine
+    /// Might = age ÷ 20 is entered by hand). Consumed by
+    /// [`crate::effective::effective_might`]; a no-op for buy budgets / XP.
+    ///
+    /// Source: Ars Magica 5e - Realms of Power - The Infernal.md:4120 (Demonic
+    /// Blood, Infernal Might 5), `:4136` (Demonic Might, +2); The Divine
+    /// (Revised).md:1975 (Strong Angelic Heritage, Divine Might age ÷ 20).
+    MightGrant {
+        /// The Realm the granted Might is aligned to.
+        realm: Realm,
+        /// Might Score points granted (0 = establish Realm without adding points).
+        score: u8,
+    },
+    /// Grants `amount` levels of **supernatural powers** (base 0, summed) — the
+    /// power-levels budget the being's `powers` are charged against, mirroring
+    /// [`Effect::ItemLevelBudget`] for enchanted devices. Demonic Blood grants 30,
+    /// Demonic Powers +20, Strong Angelic Heritage 30. Consumed by
+    /// [`crate::effective::power_levels_budget`].
+    ///
+    /// Source: Ars Magica 5e - Realms of Power - The Infernal.md:4122 (Demonic
+    /// Blood, 30 levels), `:4142` (Demonic Powers, +20); The Divine
+    /// (Revised).md:1977 (Strong Angelic Heritage, 30 levels).
+    PowerLevels {
+        /// Levels of supernatural powers added to the budget.
+        amount: u16,
+    },
 
     // --- M5 slice 5b: in-play effect variants ---
     //
@@ -1625,6 +1656,64 @@ pub struct EnchantedDevice {
     pub level: u16,
 }
 
+/// The four supernatural Realms of Mythic Europe. A being's Might is aligned to
+/// exactly one Realm, which determines its Magic Resistance and what powers it may
+/// hold. A fixed rules taxonomy, rendered via Fluent, never as a raw slug.
+/// Source: Realms of Power - Magic.md:1470-1472; Core Rules.md:2623-2631.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Realm {
+    /// The Magic Realm (magical beasts, spirits, elementals).
+    Magic,
+    /// The Faerie Realm.
+    Faerie,
+    /// The Divine Realm (angels, Nephilim, holy creatures).
+    Divine,
+    /// The Infernal Realm (demons, demon-blooded beings).
+    Infernal,
+}
+
+impl fmt::Display for Realm {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Realm::Magic => "magic",
+            Realm::Faerie => "faerie",
+            Realm::Divine => "divine",
+            Realm::Infernal => "infernal",
+        })
+    }
+}
+
+/// A supernatural being's **Might Score** and the Realm it is aligned to. A Might
+/// Score grants blanket Magic Resistance equal to the score (Realms of Power -
+/// Magic.md:1472). Only the choice is stored; the effective score (base + Virtue
+/// grants) and its Magic Resistance are derived. Optional on [`Entity`]: a being
+/// may enter a base score (e.g. Strong Angelic Heritage's Divine Might = age ÷ 20,
+/// which the engine cannot fix as a constant grant), which Virtue [`Effect::MightGrant`]s
+/// of the same Realm add to. Source: Realms of Power - Magic.md:1470-1472.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct MightScore {
+    /// The Realm the being's Might is aligned to.
+    pub realm: Realm,
+    /// The base Might Score the player entered (Virtue grants add on top).
+    pub score: u8,
+}
+
+/// A supernatural power a Might-being holds. Only the choice is stored (free-text
+/// name + total level); the `level` is charged against the power-levels budget the
+/// being's Might Virtues grant (see [`crate::effective::power_levels_budget`]),
+/// exactly as an [`EnchantedDevice`] is charged against the item-level budget. The
+/// engine is not a power *designer* — powers are entered by hand, like spells.
+/// Kept sorted via [`Entity::normalize`]. Source: Realms of Power - The
+/// Infernal.md:4122; The Divine (Revised).md:1977.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct SupernaturalPower {
+    /// Free-text power name.
+    pub name: String,
+    /// Total power level, charged against the power-levels budget.
+    pub level: u16,
+}
+
 /// A magus's bond with a familiar: the three bond-cord scores. Gold reduces botch
 /// dice, Silver aids Personality/mental resistance, Bronze adds to Soak and
 /// aging-resistance (the latter feed the derived-totals slice). Only the choice is
@@ -1886,6 +1975,18 @@ pub struct Entity {
     /// and Encumbrance. Source: Core Rules.md:16944-17011.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub equipment: Vec<EquipmentSlot>,
+    /// The supernatural being's base Might Score + Realm (grog/companion/mythic
+    /// companion with a Might Virtue). `None` for ordinary characters. The
+    /// effective Might is this base plus same-Realm [`Effect::MightGrant`]s (see
+    /// [`crate::effective::effective_might`]). Source: Realms of Power - Magic.md:1470-1472.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub might: Option<MightScore>,
+    /// The being's supernatural powers; each `level` is charged against the
+    /// power-levels budget its Might Virtues grant. Kept sorted via
+    /// [`Entity::normalize`]. Defaults to empty. Source: Realms of Power - The
+    /// Infernal.md:4122; The Divine (Revised).md:1977.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub powers: Vec<SupernaturalPower>,
 }
 
 /// Current save-format schema version.
@@ -1930,6 +2031,8 @@ impl Entity {
             covenant_name: String::new(),
             parens: String::new(),
             equipment: Vec::new(),
+            might: None,
+            powers: Vec::new(),
         }
     }
 
@@ -1948,6 +2051,7 @@ impl Entity {
         self.talisman_attunements.sort();
         self.twilight_scars.sort();
         self.equipment.sort();
+        self.powers.sort();
     }
 }
 
@@ -2122,6 +2226,60 @@ mod tests {
         check(crate::spell::SpellDuration::Momentary);
         check(crate::spell::SpellTarget::Boundary);
         check(crate::spell::SpellTarget::Vision);
+        check(Realm::Magic);
+        check(Realm::Faerie);
+        check(Realm::Divine);
+        check(Realm::Infernal);
+    }
+
+    #[test]
+    fn might_and_powers_round_trip() {
+        // A supernatural-being's Might score + realm and its free-text powers
+        // survive a JSON round-trip on the entity.
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("mythic_companion"),
+            RulesetRef {
+                id: Id::new("test"),
+                version: "1".into(),
+            },
+        );
+        entity.might = Some(MightScore {
+            realm: Realm::Infernal,
+            score: 5,
+        });
+        entity.powers = vec![
+            SupernaturalPower {
+                name: "Curse of Misfortune".into(),
+                level: 20,
+            },
+            SupernaturalPower {
+                name: "Coagulation".into(),
+                level: 10,
+            },
+        ];
+        let json = serde_json::to_string(&entity).unwrap();
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(entity, back);
+        assert!(json.contains("\"realm\":\"infernal\""));
+    }
+
+    #[test]
+    fn might_effects_round_trip() {
+        // The two Might/power-budget Effect variants survive a `type`-tagged
+        // JSON round-trip. Guards the shape virtues_flaws.json wires against.
+        let effects = vec![
+            Effect::MightGrant {
+                realm: Realm::Infernal,
+                score: 5,
+            },
+            Effect::PowerLevels { amount: 30 },
+        ];
+        let json = serde_json::to_string(&effects).unwrap();
+        let back: Vec<Effect> = serde_json::from_str(&json).unwrap();
+        assert_eq!(effects, back);
+        assert!(json.contains("\"type\":\"might_grant\""));
+        assert!(json.contains("\"type\":\"power_levels\""));
     }
 
     #[test]
@@ -2579,6 +2737,8 @@ mod tests {
             covenant_name: String::new(),
             parens: String::new(),
             equipment: Vec::new(),
+            might: None,
+            powers: Vec::new(),
         };
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
@@ -2714,6 +2874,8 @@ mod tests {
             covenant_name: String::new(),
             parens: String::new(),
             equipment: Vec::new(),
+            might: None,
+            powers: Vec::new(),
         };
 
         // Serialization is canonical only after normalize(); derive-based

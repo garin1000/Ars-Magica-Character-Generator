@@ -3734,6 +3734,10 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      { "type": "might_grant", "realm": "infernal", "score": 5 },
+      { "type": "power_levels", "amount": 30 }
+    ],
     "source": { "file": "Ars Magica 5e - Realms of Power - The Infernal.md", "lines": [4116, 4131] }
   },
   {
@@ -3744,6 +3748,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
+    "effects": [{ "type": "might_grant", "realm": "infernal", "score": 2 }],
     "source": { "file": "Ars Magica 5e - Realms of Power - The Infernal.md", "lines": [4132, 4137] }
   },
   {
@@ -3754,6 +3759,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
+    "effects": [{ "type": "power_levels", "amount": 20 }],
     "source": { "file": "Ars Magica 5e - Realms of Power - The Infernal.md", "lines": [4138, 4143] }
   },
   {
@@ -5893,6 +5899,10 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.blood_of_the_nephilim" },
+    "effects": [
+      { "type": "might_grant", "realm": "divine", "score": 0 },
+      { "type": "power_levels", "amount": 30 }
+    ],
     "source": { "file": "Ars Magica 5e - Realms of Power - The Divine (Revised).md", "lines": [1969, 1980] }
   },
   {

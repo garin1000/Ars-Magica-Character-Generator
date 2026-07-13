@@ -1067,10 +1067,11 @@ so the check reduces exactly to the base budget.
   points" rule (M5).
 
 #### New V/F & Ability definitions (structural; core effects M5, supplement effects M9)
-Per CLAUDE.md each is sourced from the authoritative Markdown by book. Only the
-*structural* item (kind/magnitude/category) is seeded now; the full supernatural
-effects (Infernal Might, Divine Might, etc.) are M9 (supplement books); the core
-in-play details (e.g. the Greater Immunity target) are M5/5b.
+Per CLAUDE.md each is sourced from the authoritative Markdown by book. The
+supernatural **Might** effects (Infernal/Divine Might + power levels) for Demonic
+Blood/Might/Powers and Strong Angelic Heritage are now **wired** (see Supernatural
+Might & Magic Resistance below); the core in-play details (e.g. the Greater
+Immunity target) are M5/5b.
 
 | Item | Kind | Source |
 |------|------|--------|
@@ -1615,22 +1616,66 @@ Social Contacts).
 `arm-app`'s `EffectiveScores` expands it to one `ReputationGrant` per type for the
 UI's add-controls (so the app/UI boundary keeps a concrete `kind`).
 
-**Deferred (11), source-not-present or no clean creation number:**
-- **Might / power budget (4)** — Demonic Blood/Might/Powers (*Infernal*), Strong
-  Angelic Heritage (*Divine*): Might is a supernatural-creature stat in the Realms
-  of Power supplements; Core defines no character-creation Might *budget* mechanic
-  and there is no `Effect` variant for it. Not invented (per the source-backed
-  rule); left `creation_effect`, wiring deferred.
-- **Devil Child, Nephilim (2 nested grants)** — Devil Child (*Infernal*:4144-4149)
-  says only "See Devil Children, below" without naming a granted Virtue in the
-  cited range; Nephilim (*Divine*:3485-3513) lists the Mythic-Companion *required*
-  Virtues (which must be **paid for**, not free-granted) — a type-profile concern,
-  not a `grants_selection`. Deferred pending a concrete cited grant.
+**Now wired — supernatural Might (4):** Demonic Blood/Might/Powers (*Infernal*),
+Strong Angelic Heritage (*Divine*) are wired via the `might_grant` / `power_levels`
+`Effect` variants added in this slice — see **Supernatural Might & Magic
+Resistance** below. Devil Child and Nephilim are modelled as Mythic-Companion type
+profiles (`mythic_companion_types.json`, M4 Phase 4/5); with the 4 V/F now carrying
+real Might/power effects, a Devil Child resolves end-to-end to a nonzero effective
+Infernal Might + power-levels budget (tested in `arm-app`'s
+`devil_child_resolves_infernal_might_and_power_budget_end_to_end`).
+
+**Deferred (3), source-not-present or no clean creation number:**
 - **Savantism, Simple Student, Corrupted Arts (3 XP)** — Savantism
   (:6703) *halves* starting XP (multiplicative; no variant); Simple Student (:4958)
   is 30 xp *per finished year* (age/life-stage, M6); Corrupted Arts (:5853) has no
   creation XP figure (its ±3 casting swing / ±5 Art xp are in-play). (Elemental
   Magic, :3731, is now implemented in slice 5c — see its section above.)
+
+#### Supernatural Might & Magic Resistance (RoP: Magic / Infernal / Divine)
+
+A supernatural being has a **Might Score** aligned to one **Realm** (`Realm::{Magic,
+Faerie, Divine, Infernal}`). The general rule:
+
+> "Magic Might gives the character innate Magic Resistance equal to its Might
+> Score, and this does not stack with other forms of resistance … they must use
+> either their Parma or their Might for their base Magic Resistance."
+> — *Realms of Power: Magic.md:1472* (general; also Core:2623-2631, :2627 "these
+> totals do not stack … use the higher total").
+
+**MR-from-Might formula** (`derived::magic_resistance`): per Form, `total = Form
+bonus + max(5 × Parma, Might Score)`. Might and Parma do **not** stack — the higher
+is the base (labelled `might` or `parma` addend); the Form bonus is compatible with
+either. A pure being (no Parma, Art 0) therefore gets a flat blanket MR = Might
+Score on every Form. `derived_totals` now surfaces Magic Resistance for a
+Might-being, not only a magus.
+
+**Data model.** `Entity.might: Option<MightScore{realm, score}>` is the base the
+player enters (may be 0); `Entity.powers: Vec<SupernaturalPower{name, level}>` are
+free-text powers charged against a power-levels budget (mirroring `devices` vs
+`item_level_budget` — the engine is not a power *designer*). Two additive `Effect`
+variants (SCHEMA_VERSION unchanged at 9 — both `#[serde(default)]`, old saves load):
+- `Effect::MightGrant{realm, score}` — summed (same Realm) on top of the entered
+  base by `effective::effective_might`; a `score` 0 grant establishes the Realm
+  without adding points.
+- `Effect::PowerLevels{amount}` — summed by `effective::power_levels_budget`.
+
+**The four V/F grants (verified against source):**
+
+| Virtue | Grant | Source (file:line) |
+|--------|-------|--------------------|
+| `virtue.demonic_blood` (Major) | Infernal Might **5** + **30** power levels | *Infernal*:4120, :4122 |
+| `virtue.demonic_might` (Minor, req. Demonic Blood) | Infernal Might **+2** | *Infernal*:4136 |
+| `virtue.demonic_powers` (Minor, req. Demonic Blood) | **+20** power levels | *Infernal*:4142 |
+| `virtue.strong_angelic_heritage` (Minor, req. Blood of the Nephilim) | Divine Might = **age ÷ 20** (entered by hand) + **30** power levels | *Divine*:1975, :1977 |
+
+Effective Might = entered base (may be 0/None) + Σ same-Realm `MightGrant` scores.
+So Demonic Blood alone → Infernal Might 5; with Demonic Might → 7. Strong Angelic
+Heritage's Divine Might is age-derived (no fixed constant), so it grants
+`might_grant{divine,0}` (establishing the Realm + MR) plus its 30 power levels; the
+player enters the age÷20 base. Validation: `validate_powers` (used ≤ budget →
+`over_power_levels` error, mirroring devices); `validate_might` (base Realm vs
+granted Realm → `might_realm_mismatch` warning).
 
 The per-item audit that fed this wiring follows (source line-ranges retained).
 
@@ -1666,11 +1711,11 @@ The per-item audit that fed this wiring follows (source line-ranges retained).
 **Item-level budget:**
 - (Magic Items / Redcap wire `item_level_budget`; see slice 5e.)
 
-**Might / power budget:**
-- `virtue.demonic_blood` (Realms of Power - The Infernal:4116-4131) — Infernal Might score + powers
-- `virtue.demonic_might` (Realms of Power - The Infernal:4132-4137) — Infernal Might +2
-- `virtue.demonic_powers` (Realms of Power - The Infernal:4138-4143) — Infernal Powers budget
-- `virtue.strong_angelic_heritage` (Realms of Power - The Divine (Revised):1969-1980) — Divine Might + powers
+**Might / power budget (wired, this slice):**
+- `virtue.demonic_blood` (Realms of Power - The Infernal:4120, :4122) — `might_grant{infernal,5}` + `power_levels{30}`
+- `virtue.demonic_might` (Realms of Power - The Infernal:4136) — `might_grant{infernal,2}` (adds +2)
+- `virtue.demonic_powers` (Realms of Power - The Infernal:4142) — `power_levels{20}`
+- `virtue.strong_angelic_heritage` (Realms of Power - The Divine (Revised):1975, :1977) — `might_grant{divine,0}` + `power_levels{30}` (Divine Might = age÷20 entered by hand; grant establishes Realm)
 
 **Reputation grant:**
 - `flaw.apostate` (Core:5675-5678) — reputation grant bad score 4
