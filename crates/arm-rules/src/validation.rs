@@ -1643,7 +1643,9 @@ fn validate_ability_bonus_targets(
                 | Effect::AgingMod { .. }
                 | Effect::AdvancementMod { .. }
                 | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. } => continue,
+                | Effect::AbilityRollMod { .. }
+                // Elemental Magic carries no ability/characteristic creation target.
+                | Effect::ElementalMagic { .. } => continue,
             };
             let Some(target) = selection.params.get(param) else {
                 continue; // missing ability key already reported by validate_parameters
@@ -1920,7 +1922,9 @@ fn validate_characteristic_limit_preconditions(
                 | Effect::AgingMod { .. }
                 | Effect::AdvancementMod { .. }
                 | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. } => continue,
+                | Effect::AbilityRollMod { .. }
+                // Elemental Magic carries no ability/characteristic creation target.
+                | Effect::ElementalMagic { .. } => continue,
             };
             if amount > 0 {
                 if let Some(cap) = base_max

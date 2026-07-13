@@ -654,17 +654,41 @@ approximation of "Latin").
   (`charged_cost`) and the +2 age-cap exemption exactly like a normal Affinity. The
   ability ids are validated to resolve in `ruleset.rs::validate_effect_refs`.
 
-#### Elemental Magic — DEFERRED (bespoke gen-time Art-XP redistribution)
-> "assign half the experience points assigned to each of the elemental Forms to
-> each of the other elemental Forms" (`:3731-3737`).
+#### Elemental Magic — `Effect::ElementalMagic { forms }` (XP-space Art boost, slice 5c)
+> "During character creation, assign all your experience points in Arts. Then
+> assign half the experience points assigned to each of the elemental Forms
+> [Aquam, Auram, Ignem, Terram] to each of the other elemental Forms." Worked
+> example: 21 XP in Ignem → **11** bonus XP to each of the other three
+> (`ceil(21/2) = 11`); 10 XP → 5 each. (`:3731-3737`.)
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:3731-3737`.
-- `virtue.elemental_magic` stays **structural** (no effect). The mechanic
-  redistributes *assigned Art experience* among Aquam/Auram/Ignem/Terram, but the
-  engine stores whole bought Art **scores** + a shared XP pool, not per-Art XP
-  assignments — so this needs an Art-XP-assignment model that does not exist yet.
-  Implementing it is a separate subsystem, not a single effect; deferred and flagged
-  here rather than approximated.
+- Data value: `virtue.elemental_magic` in `rules/core/virtues_flaws.json` carries
+  `{ "type": "elemental_magic", "forms": ["art.aquam","art.auram","art.ignem","art.terram"] }`
+  — the four elemental Form ids are **data**, never hardcoded in the engine. The
+  `forms` set is validated to resolve to known Arts in
+  `ruleset.rs::validate_effect_refs` (only when the Arts catalogue is loaded, like
+  `validate_spell_refs`).
+- Implementation: `effective.rs::elemental_form_bonus` (folded into
+  `effective_art_score`; surfaced via `art_bonuses`). For each listed Form `F`,
+  reconstruct its table-XP from its bought score via
+  `art_advancement.xp_for_score`, add `bonus_xp(F) = Σ_{G≠F} ceil(xp(G)/2)`, and
+  invert the sum back to a score with `art_advancement.score_for_xp`; the
+  effective-over-bought delta is the boost (then flat Puissant Art stacks on top).
+- **Rounding is UP** (`u32::div_ceil(2)`), matching the worked example (21 → 11).
+- **Scoping**: the boost applies **only** to the four elemental Forms — never a
+  Technique or a non-elemental Form (Corpus etc.), enforced by the `forms.contains`
+  guard.
+- This is the one **XP-space** `ArtBonus` — nonlinear in the bought score, unlike
+  every flat `Effect::ArtBonus`. It is a free derived bonus: it adds **no XP-pool
+  demand** (`xp_allocation` prices only bought scores).
+- **Documented limitation (whole-score storage):** the engine stores whole bought
+  Art **scores** + a shared XP pool, not per-Art raw XP assignments. So the
+  redistribution operates on the **table-XP of the bought score**, not the raw
+  assigned XP; leftover XP sitting between two score thresholds is not represented.
+  A by-hand assignment that left such leftover XP will not reproduce exactly.
+  Verification therefore uses scores at **clean XP thresholds** only (tests in
+  `effective.rs` and `data_integrity.rs`: three Forms at score 6 = 21 XP, one at
+  score 4 = 10 XP → boosted 9/9/9 and 8 on the triangular Art curve).
 
 #### Mastered Spells / Flawless Magic — Spell Mastery (`spell_mastery_xp`, `grants_spell_mastery`)
 > Mastered Spells: "You have fifty experience points to spend on mastering spells
@@ -1527,11 +1551,11 @@ UI's add-controls (so the app/UI boundary keeps a concrete `kind`).
 - **Masterpiece (item-level, 1)** — Core:4476-4479 grants "one lesser enchanted
   item you could make based on your Lab Totals", i.e. a Lab-Total-derived level,
   not a fixed grantable number; no source figure to put in `item_level_budget`.
-- **Savantism, Simple Student, Corrupted Arts, Elemental Magic (4 XP)** — Savantism
+- **Savantism, Simple Student, Corrupted Arts (3 XP)** — Savantism
   (:6703) *halves* starting XP (multiplicative; no variant); Simple Student (:4958)
   is 30 xp *per finished year* (age/life-stage, M6); Corrupted Arts (:5853) has no
-  creation XP figure (its ±3 casting swing / ±5 Art xp are in-play); Elemental
-  Magic (:3731) is the bespoke Art-XP redistribution already deferred to slice 5c.
+  creation XP figure (its ±3 casting swing / ±5 Art xp are in-play). (Elemental
+  Magic, :3731, is now implemented in slice 5c — see its section above.)
 
 The per-item audit that fed this wiring follows (source line-ranges retained).
 
@@ -1618,7 +1642,7 @@ The per-item audit that fed this wiring follows (source line-ranges retained).
 - `virtue.arcane_lore` (Core:3430-3435) — XP grant 50
 - `virtue.clan_ilfetu` (Core:3563-3566) — XP grant 50
 - `virtue.craft_guild_training` (Core:3613-3616) — XP grant 50
-- `virtue.elemental_magic` (Core:3731-3738) — Art XP distribution at creation
+- `virtue.elemental_magic` (Core:3731-3738) — Art XP distribution at creation (implemented, slice 5c: `Effect::ElementalMagic` XP-space Art boost — see section above)
 - `virtue.falconer` (Core:3847-3852) — XP grant 50
 - `virtue.forge_companion` (Core:3925-3928) — XP grant 50
 - `virtue.hermetic_experience` (Core:4063-4066) — XP grant 50

@@ -71,7 +71,10 @@ export type Effect =
   | { type: 'aging_mod'; kind: AgingEffect; amount: number }
   | { type: 'advancement_mod'; source: AdvancementSource; amount: number }
   | { type: 'special_casting_mod'; kind: SpecialCasting }
-  | { type: 'ability_roll_mod'; param: string; amount: number };
+  | { type: 'ability_roll_mod'; param: string; amount: number }
+  // Elemental Magic (5c): creation-time Art-XP redistribution over the four
+  // elemental Forms. Surfaced through the effective art bonus, not rendered raw.
+  | { type: 'elemental_magic'; forms: string[] };
 
 // M5/5b scalar enums mirroring the engine (rendered via Fluent in slice 5i).
 export type CastingScope = 'all' | 'formulaic' | 'ritual' | 'formulaic_ritual' | 'spontaneous';

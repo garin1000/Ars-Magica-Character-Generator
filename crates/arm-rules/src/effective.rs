@@ -191,7 +191,10 @@ pub fn ability_bonus(
                 | Effect::AgingMod { .. }
                 | Effect::AdvancementMod { .. }
                 | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. } => {}
+                | Effect::AbilityRollMod { .. }
+                // Elemental Magic is an XP-space Art boost applied in
+                // effective_art_score, not a flat per-effect bonus; no-op here.
+                | Effect::ElementalMagic { .. } => {}
             }
         }
     }
@@ -331,33 +334,102 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::AgingMod { .. }
                 | Effect::AdvancementMod { .. }
                 | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. } => {}
+                | Effect::AbilityRollMod { .. }
+                // Elemental Magic is an XP-space Art boost applied in
+                // effective_art_score, not a flat per-effect bonus; no-op here.
+                | Effect::ElementalMagic { .. } => {}
             }
         }
     }
     bonus
 }
 
-/// The effective score of `art`: the highest bought score the entity holds for
-/// it plus its bonus. An Art the entity has not bought counts as 0.
-pub fn effective_art_score(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
-    let bought = entity
+/// The highest whole bought score the entity holds for `art` (0 if unbought).
+fn bought_art_score(entity: &Entity, art: &Id) -> u8 {
+    entity
         .art_scores
         .iter()
         .filter(|a| &a.art == art)
-        .map(|a| i32::from(a.score))
+        .map(|a| a.score)
         .max()
-        .unwrap_or(0);
-    bought + art_bonus(entity, ruleset, art)
+        .unwrap_or(0)
+}
+
+/// The set of elemental Form ids the entity's Elemental Magic marker pools over,
+/// if it carries one ([`Effect::ElementalMagic`]). `None` for a character without
+/// the Virtue — the overwhelmingly common case, so the redistribution path is
+/// skipped entirely.
+fn elemental_magic_forms(entity: &Entity, ruleset: &Ruleset) -> Option<BTreeSet<Id>> {
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::ElementalMagic { forms } = effect {
+                return Some(forms.clone());
+            }
+        }
+    }
+    None
+}
+
+/// The **score-space** boost Elemental Magic confers on one elemental Form: 0 for
+/// a non-elemental Art or an entity without the marker. Reconstructs each pooled
+/// Form's table-XP from its bought score, gives `art` half (rounded up) of every
+/// *other* pooled Form's XP, and inverts the sum back to a score — the delta over
+/// the bought score is the boost.
+///
+/// This is an XP-space bonus, nonlinear in the bought score, so unlike every flat
+/// [`Effect::ArtBonus`] it cannot be a single stored amount. Redistribution
+/// operates on the table-XP of the *whole bought score* (storage keeps no raw
+/// assigned XP), so leftover XP between score thresholds is not represented — see
+/// RULES.md.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:3731-3737 (21 XP → 11
+/// bonus each: `ceil(21/2)`, so rounding is **up**).
+fn elemental_form_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
+    let Some(forms) = elemental_magic_forms(entity, ruleset) else {
+        return 0;
+    };
+    if !forms.contains(art) {
+        return 0;
+    }
+    let table = &ruleset.art_advancement;
+    let own_score = bought_art_score(entity, art);
+    let own_xp = table.xp_for_score(own_score).unwrap_or(0);
+    let mut bonus_xp = 0u32;
+    for other in &forms {
+        if other == art {
+            continue;
+        }
+        let other_xp = table
+            .xp_for_score(bought_art_score(entity, other))
+            .unwrap_or(0);
+        // Half, rounded up (Core:3731 worked example: 21 → 11).
+        bonus_xp += other_xp.div_ceil(2);
+    }
+    let boosted = table.score_for_xp(own_xp + bonus_xp);
+    i32::from(boosted) - i32::from(own_score)
+}
+
+/// The effective score of `art`: the highest bought score the entity holds for
+/// it, plus any flat bonus (Puissant Art) and any Elemental Magic XP-space boost.
+/// An Art the entity has not bought counts as 0.
+pub fn effective_art_score(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
+    let bought = i32::from(bought_art_score(entity, art));
+    bought + art_bonus(entity, ruleset, art) + elemental_form_bonus(entity, ruleset, art)
 }
 
 /// Non-zero art bonuses, one per bought Art, for the UI to add onto each
-/// displayed bought score. Arts with no bonus are omitted. Order follows
-/// `art_scores`.
+/// displayed bought score. Each is the full effective-over-bought delta — flat
+/// Puissant Art *and* any Elemental Magic XP-space boost — so the UI surfaces the
+/// elemental redistribution exactly like a Puissant bonus. Arts with no bonus are
+/// omitted. Order follows `art_scores`.
 pub fn art_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<ArtBonus> {
     let mut out = Vec::new();
     for a in &entity.art_scores {
-        let bonus = art_bonus(entity, ruleset, &a.art);
+        let bonus = effective_art_score(entity, ruleset, &a.art)
+            - i32::from(bought_art_score(entity, &a.art));
         if bonus != 0 {
             out.push(ArtBonus {
                 art: a.art.clone(),
@@ -437,7 +509,10 @@ fn characteristic_limit_shift(
                 | Effect::AgingMod { .. }
                 | Effect::AdvancementMod { .. }
                 | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. } => {}
+                | Effect::AbilityRollMod { .. }
+                // Elemental Magic is an XP-space Art boost applied in
+                // effective_art_score, not a flat per-effect bonus; no-op here.
+                | Effect::ElementalMagic { .. } => {}
             }
         }
     }
@@ -633,7 +708,10 @@ pub(crate) fn ability_affinity(
                 | Effect::AgingMod { .. }
                 | Effect::AdvancementMod { .. }
                 | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. } => None,
+                | Effect::AbilityRollMod { .. }
+                // Elemental Magic is an XP-space Art boost, not an Affinity/cost
+                // reduction; no-op here.
+                | Effect::ElementalMagic { .. } => None,
             })
     });
     best_affinity(found)
@@ -693,7 +771,10 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::AgingMod { .. }
                 | Effect::AdvancementMod { .. }
                 | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. } => None,
+                | Effect::AbilityRollMod { .. }
+                // Elemental Magic is an XP-space Art boost, not an Affinity/cost
+                // reduction; no-op here.
+                | Effect::ElementalMagic { .. } => None,
             })
     });
     best_affinity(found)
@@ -2629,5 +2710,209 @@ mod tests {
         assert_eq!(effective_art_score(&e, &rs, &Id::new("art.ignem")), 5);
         // A non-targeted Art is untouched by the grant.
         assert_eq!(art_bonus(&e, &rs, &Id::new("art.perdo")), 0);
+    }
+
+    // --- Elemental Magic (5c): XP-space Art-XP redistribution ---
+
+    /// A ruleset with the four elemental Forms (Aquam, Auram, Ignem, Terram) plus a
+    /// non-elemental Form (Corpus) and a Technique (Creo), the full triangular Art
+    /// advancement curve out to score 10, `virtue.elemental_magic` carrying the
+    /// `ElementalMagic` marker over the four Forms, and Puissant Art.
+    fn elemental_ruleset() -> Ruleset {
+        let items = r#"[
+          {
+            "id": "virtue.elemental_magic",
+            "kind": "virtue",
+            "classification": "creation_effect",
+            "magnitude": "major",
+            "category": "hermetic",
+            "entity_kinds": ["character"],
+            "effects": [{
+              "type": "elemental_magic",
+              "forms": ["art.aquam", "art.auram", "art.ignem", "art.terram"]
+            }]
+          },
+          {
+            "id": "virtue.puissant_art",
+            "kind": "virtue",
+            "classification": "narrative",
+            "magnitude": "minor",
+            "category": "general",
+            "entity_kinds": ["character"],
+            "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
+            "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }]
+          }
+        ]"#;
+        let types = r#"[
+          {
+            "id": "companion",
+            "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general", "hermetic"],
+            "forbidden_categories": [],
+            "required_traits": [],
+            "forbidden_traits": [],
+            "gift_policy": "allowed",
+            "gift_categories": [],
+            "creation_phases": ["concept"]
+          }
+        ]"#;
+        let abilities = r#"{ "abilities": [
+          { "id": "ability.awareness", "category": "general" }
+        ] }"#;
+        let arts = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 1 }, { "score": 2, "total_xp": 3 },
+            { "score": 3, "total_xp": 6 }, { "score": 4, "total_xp": 10 },
+            { "score": 5, "total_xp": 15 }, { "score": 6, "total_xp": 21 },
+            { "score": 7, "total_xp": 28 }, { "score": 8, "total_xp": 36 },
+            { "score": 9, "total_xp": 45 }, { "score": 10, "total_xp": 55 }
+          ],
+          "arts": [
+            { "id": "art.creo", "art_type": "technique" },
+            { "id": "art.aquam", "art_type": "form" },
+            { "id": "art.auram", "art_type": "form" },
+            { "id": "art.corpus", "art_type": "form" },
+            { "id": "art.ignem", "art_type": "form" },
+            { "id": "art.terram", "art_type": "form" }
+          ]
+        }"#;
+        let characteristics = r#"{
+          "start_points": 7,
+          "base_max": 3, "base_min": -3,
+          "effective_max": 5, "effective_min": -5,
+          "costs": [
+            { "score": 3, "cost": 6 }, { "score": 2, "cost": 3 },
+            { "score": 1, "cost": 1 }, { "score": 0, "cost": 0 },
+            { "score": -1, "cost": -1 }, { "score": -2, "cost": -3 },
+            { "score": -3, "cost": -6 }
+          ]
+        }"#;
+        Ruleset::from_core_json_with_arts(
+            "arm5-core",
+            "2024.1",
+            items,
+            types,
+            abilities,
+            arts,
+            characteristics,
+        )
+        .unwrap()
+    }
+
+    fn art_row(art: &str, score: u8) -> ArtScore {
+        ArtScore {
+            art: Id::new(art),
+            score,
+        }
+    }
+
+    /// Three elemental Forms bought at score 6 (21 table-XP each) and one at score 4
+    /// (10 table-XP): the boosted effective scores match the ceil-rounded
+    /// redistribution hand-computed from the worked example (Core:3731-3737).
+    ///
+    /// bonus_xp(F) = Σ_{G≠F} ceil(xp(G)/2):
+    ///   Aquam/Auram/Ignem (own 21): 11 + 11 + 5 = 27 → 48 XP → score 9.
+    ///   Terram (own 10):            11 + 11 + 11 = 33 → 43 XP → score 8.
+    #[test]
+    fn elemental_magic_redistributes_art_xp_rounded_up() {
+        let rs = elemental_ruleset();
+        let mut e = entity(vec![Selection::new(Id::new("virtue.elemental_magic"))]);
+        e.art_scores = vec![
+            art_row("art.aquam", 6),
+            art_row("art.auram", 6),
+            art_row("art.ignem", 6),
+            art_row("art.terram", 4),
+        ];
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.aquam")), 9);
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.auram")), 9);
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.ignem")), 9);
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.terram")), 8);
+        // The boost surfaces through art_bonuses (delta over the bought score), so
+        // the UI shows it like a Puissant Art bonus.
+        let bonuses = art_bonuses(&e, &rs);
+        let bonus = |art: &str| {
+            bonuses
+                .iter()
+                .find(|b| b.art == Id::new(art))
+                .map(|b| b.bonus)
+        };
+        assert_eq!(bonus("art.aquam"), Some(3));
+        assert_eq!(bonus("art.terram"), Some(4));
+    }
+
+    /// A magus without the marker gets no redistribution: effective == bought.
+    #[test]
+    fn non_elemental_magus_unaffected_by_redistribution() {
+        let rs = elemental_ruleset();
+        let mut e = entity(vec![]);
+        e.art_scores = vec![
+            art_row("art.aquam", 6),
+            art_row("art.ignem", 6),
+            art_row("art.terram", 4),
+        ];
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.aquam")), 6);
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.ignem")), 6);
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.terram")), 4);
+        assert!(art_bonuses(&e, &rs).is_empty());
+    }
+
+    /// Redistribution touches ONLY the four elemental Forms — never a Technique or a
+    /// non-elemental Form, even when they carry a score that would earn a big bonus.
+    #[test]
+    fn elemental_magic_scoped_to_the_four_forms() {
+        let rs = elemental_ruleset();
+        let mut e = entity(vec![Selection::new(Id::new("virtue.elemental_magic"))]);
+        e.art_scores = vec![
+            art_row("art.aquam", 6),
+            art_row("art.auram", 6),
+            art_row("art.ignem", 6),
+            art_row("art.terram", 6),
+            art_row("art.corpus", 6),
+            art_row("art.creo", 6),
+        ];
+        // Corpus (non-elemental Form) and Creo (Technique) stay at their bought score.
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.corpus")), 6);
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.creo")), 6);
+    }
+
+    /// Puissant Art (a flat XP-free bonus) stacks on top of the XP-space boost.
+    #[test]
+    fn elemental_boost_and_puissant_stack() {
+        let rs = elemental_ruleset();
+        let mut e = entity(vec![
+            Selection::new(Id::new("virtue.elemental_magic")),
+            puissant_art("art.ignem"),
+        ]);
+        e.art_scores = vec![
+            art_row("art.aquam", 6),
+            art_row("art.auram", 6),
+            art_row("art.ignem", 6),
+            art_row("art.terram", 4),
+        ];
+        // Ignem: boosted to 9 by redistribution, then +3 Puissant = 12.
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.ignem")), 12);
+    }
+
+    /// The redistribution is a free derived bonus — it adds no XP-pool demand.
+    #[test]
+    fn elemental_magic_does_not_perturb_xp_pool_spend() {
+        let rs = elemental_ruleset();
+        let scores = vec![
+            art_row("art.aquam", 6),
+            art_row("art.auram", 6),
+            art_row("art.ignem", 6),
+            art_row("art.terram", 4),
+        ];
+        let mut with = entity(vec![Selection::new(Id::new("virtue.elemental_magic"))]);
+        with.art_scores = scores.clone();
+        let mut without = entity(vec![]);
+        without.art_scores = scores;
+        // Same bought scores fund the same demand with or without the marker
+        // (21+21+21+10 = 73), so the free boost never inflates the pool cost.
+        assert_eq!(xp_allocation(&with, &rs).total_demand, 73);
+        assert_eq!(
+            xp_allocation(&with, &rs).total_demand,
+            xp_allocation(&without, &rs).total_demand
+        );
     }
 }

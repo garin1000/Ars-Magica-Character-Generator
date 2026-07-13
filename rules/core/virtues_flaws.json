@@ -3840,6 +3840,12 @@
     "category": "hermetic",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [
+      {
+        "type": "elemental_magic",
+        "forms": ["art.aquam", "art.auram", "art.ignem", "art.terram"]
+      }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3731, 3738] }
   },
   {
