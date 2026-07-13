@@ -598,6 +598,38 @@ fn dynamic_virtue_cap_codes() -> Vec<String> {
 }
 
 #[test]
+fn devil_child_resolves_infernal_might_and_power_budget_end_to_end() {
+    // Building a Devil Child mythic companion against the shipped rules must yield
+    // a nonzero effective Infernal Might and power-levels budget: the type requires
+    // Demonic Blood (Infernal Might 5 + 30 power levels, RoP:Infernal:4120-4122) and
+    // grants a choice of Demonic Might (+2) or Demonic Powers (+20 levels).
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut entity = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("mythic_companion"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+    entity.mythic_type = Some(Id::new("mythic_type.devil_child"));
+    // Demonic Blood is a *required* Virtue (user-selected), not a type grant.
+    entity
+        .selections
+        .push(Selection::new(Id::new("virtue.demonic_blood")));
+    // Pick Demonic Might for the type's free-Minor choice (+2 Infernal Might).
+    entity.mythic_choices.insert(
+        "devil_child_free_minor".into(),
+        Selection::new(Id::new("virtue.demonic_might")),
+    );
+
+    let scores = effective_scores_loaded(&entity, &ruleset);
+    let might = scores
+        .might
+        .expect("a Devil Child has an effective Might score");
+    assert_eq!(might.realm, arm_rules::Realm::Infernal);
+    assert_eq!(might.score, 7); // 5 (Demonic Blood) + 2 (Demonic Might grant)
+    assert_eq!(scores.power_levels_budget, 30); // Demonic Blood's 30 levels
+}
+
+#[test]
 fn every_validation_code_has_a_fluent_key_in_each_locale() {
     let mut codes = validation_codes();
     codes.extend(dynamic_flaw_cap_codes());

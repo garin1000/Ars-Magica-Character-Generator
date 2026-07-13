@@ -237,6 +237,8 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::SizeDelta { .. }
                 | Effect::CharacteristicScoreDelta { .. }
                 | Effect::GrantsReputation { .. }
+                | Effect::MightGrant { .. }
+                | Effect::PowerLevels { .. }
                 | Effect::ElementalMagic { .. } => {}
             }
         }
@@ -683,32 +685,44 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
 
 /// A per-Form Magic Resistance line.
 ///
-/// Magic Resistance = Form + 5 × Parma Magica (Core:9390-9398). Limited Magic
+/// A magus's Magic Resistance = Form + 5 × Parma Magica (Core:9390-9398). A
+/// supernatural being uses its **Might Score** as a blanket resistance instead of
+/// Parma — the two do not stack; the higher is the base (RoP:Magic:1472;
+/// Core:2627), and the Form bonus is compatible with either. Limited Magic
 /// Resistance drops the Form bonus; Flawed Parma / Weak Magic Resistance halve it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MagicResistance {
     /// The Form Art id.
     pub form: Id,
-    /// The labelled breakdown (form, parma).
+    /// The labelled breakdown (form, and one of parma/might).
     pub addends: Vec<Addend>,
     /// The Magic Resistance total.
     pub total: i32,
 }
 
-/// Per-Form Magic Resistance. Source: Core:9390-9398, :6142-6145, :6346-6349.
+/// Per-Form Magic Resistance. Source: Core:9390-9398, :6142-6145, :6346-6349;
+/// RoP:Magic:1472 (Might grants MR = Might Score, not stacking with Parma).
 pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistance> {
     let mods = in_play_mods(entity, ruleset);
     let parma = ability(entity, ruleset, "ability.parma_magica");
+    let parma_mr = 5 * parma;
+    // A Might-being's blanket resistance = its effective Might Score. Might and
+    // Parma do not stack; the higher is the base (RoP:Magic:1472, Core:2627).
+    let might = crate::effective::effective_might(entity, ruleset)
+        .map(|m| i32::from(m.score))
+        .unwrap_or(0);
     let no_form = mods.mr_mods.contains(&MagicResistanceEffect::NoFormBonus);
     let halved = mods.halvings.contains(&HalvableTotal::MagicResistance);
     let mut out = Vec::new();
     for form in arts_of(ruleset, ArtType::Form) {
         let fo = effective_art_score(entity, ruleset, &form);
         let form_bonus = if no_form { 0 } else { fo };
-        let addends = vec![
-            Addend::new("form", form_bonus),
-            Addend::new("parma", 5 * parma),
-        ];
+        let base_addend = if might > parma_mr {
+            Addend::new("might", might)
+        } else {
+            Addend::new("parma", parma_mr)
+        };
+        let addends = vec![Addend::new("form", form_bonus), base_addend];
         let mut total = sum(&addends);
         if halved {
             total = halve(total);
@@ -1226,6 +1240,9 @@ pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
         .profile(&entity.type_id)
         .map(|p| p.is_magus)
         .unwrap_or(false);
+    // A supernatural being (Might Score) has Magic Resistance too, even though it
+    // is not a magus. Source: RoP:Magic:1472.
+    let has_might = crate::effective::effective_might(entity, ruleset).is_some();
     DerivedTotals {
         is_magus,
         lab_totals: if is_magus {
@@ -1243,7 +1260,7 @@ pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
         } else {
             Vec::new()
         },
-        magic_resistance: if is_magus {
+        magic_resistance: if is_magus || has_might {
             magic_resistance(entity, ruleset)
         } else {
             Vec::new()
@@ -1746,6 +1763,46 @@ mod tests {
         let ignem = mr.iter().find(|m| m.form.as_str() == "art.ignem").unwrap();
         // (4 + 15) / 2 = 9.
         assert_eq!(ignem.total, 9);
+    }
+
+    /// A supernatural being's Magic Resistance equals its Might Score, blanket
+    /// across every Form; it does not stack with Parma — the higher is used
+    /// (RoP:Magic:1472; Core:2627).
+    #[test]
+    fn might_being_magic_resistance_is_might_score() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.might = Some(crate::types::MightScore {
+            realm: crate::types::Realm::Infernal,
+            score: 5,
+        });
+        let mr = magic_resistance(&e, &rs);
+        // No Parma, no Arts: every Form's MR is the Might Score (5), via a "might"
+        // addend (not "parma").
+        let ignem = mr.iter().find(|m| m.form.as_str() == "art.ignem").unwrap();
+        assert_eq!(ignem.total, 5);
+        assert!(ignem.addends.iter().any(|a| a.label == "might"));
+    }
+
+    /// Might and Parma do not stack: the base uses whichever is higher (Core:2627).
+    #[test]
+    fn might_does_not_stack_with_parma_uses_higher() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.might = Some(crate::types::MightScore {
+            realm: crate::types::Realm::Magic,
+            score: 30,
+        });
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.parma_magica"),
+            parameter: None,
+            specialty: None,
+            score: 3, // 5×3 = 15 < 30
+        }];
+        let mr = magic_resistance(&e, &rs);
+        let corpus = mr.iter().find(|m| m.form.as_str() == "art.corpus").unwrap();
+        // max(15, 30) + Corpus 0 = 30.
+        assert_eq!(corpus.total, 30);
     }
 
     /// Per-known-spell penetration = Casting Total − Level + Penetration score;

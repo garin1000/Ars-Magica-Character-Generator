@@ -33,11 +33,11 @@ pub use effective::{
     characteristic_floor, characteristic_floors, characteristic_points_granted,
     characteristic_score_bonus, confidence, decrepitude_points_total, decrepitude_score,
     effective_ability_score, effective_art_score, effective_characteristic_after_aging,
-    effective_characteristic_score, effective_spell_mastery, entity_grants, item_level_budget,
-    item_level_used, reputation_grants, resolved_spell_level, restricted_xp_pools, size,
-    spell_levels_budget, spell_levels_used, spell_mastery_floor, spell_mastery_xp,
-    supernatural_free_slots, true_faith, warping, warping_points_total, warping_score,
-    xp_allocation,
+    effective_characteristic_score, effective_might, effective_spell_mastery, entity_grants,
+    item_level_budget, item_level_used, power_levels_budget, powers_used, reputation_grants,
+    resolved_spell_level, restricted_xp_pools, size, spell_levels_budget, spell_levels_used,
+    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, warping,
+    warping_points_total, warping_score, xp_allocation,
 };
 pub use equipment::{Armor, Shield, Weapon, WeaponKind};
 pub use grant::{Grant, GrantConstraint, open_pick_satisfies, resolve_grants};
@@ -48,10 +48,10 @@ pub use spell::Spell;
 pub use types::{
     AbilityScore, ArtScore, CategoryCap, Classification, Effect, EnchantedDevice, Entity,
     EntityKind, EntityTypeProfile, EquipmentSlot, Familiar, GiftPolicy, I18nEntry, Id, ItemKind,
-    LineRange, LongevityRitual, LongevitySource, Magnitude, ParamType, ParameterDef,
-    ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Reputation, ReputationType,
-    RulesetRef, SCHEMA_VERSION, Selection, SourceRef, SpellSelection, TalismanAttunement,
-    TwilightScar, ValidationMode,
+    LineRange, LongevityRitual, LongevitySource, Magnitude, MightScore, ParamType, ParameterDef,
+    ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Realm, Reputation,
+    ReputationType, RulesetRef, SCHEMA_VERSION, Selection, SourceRef, SpellSelection,
+    SupernaturalPower, TalismanAttunement, TwilightScar, ValidationMode,
 };
 pub use validation::{
     Balance, IssueSeverity, ValidationIssue, ValidationResult, compute_balance,
