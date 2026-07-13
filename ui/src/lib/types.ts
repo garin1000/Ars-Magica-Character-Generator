@@ -389,6 +389,14 @@ export interface LongevityBonus {
   aura_present: boolean;
 }
 
+// The Masterpiece lesser enchanted item cap (best Lab Total / 2).
+export interface MasterpieceCap {
+  technique: string;
+  form: string;
+  lab_total: number;
+  cap: number;
+}
+
 // A surfaced-only modifier (listed, not simulated).
 export interface SurfacedModifier {
   family: string;
@@ -404,6 +412,7 @@ export interface DerivedTotals {
   penetration: PenetrationLine[];
   magic_resistance: MagicResistance[];
   longevity?: LongevityBonus | null;
+  masterpiece?: MasterpieceCap | null;
   combat: CombatLine[];
   soak: SoakTotal;
   encumbrance: EncumbranceTotal;

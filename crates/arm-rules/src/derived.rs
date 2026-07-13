@@ -106,6 +106,8 @@ fn halve(x: i32) -> i32 {
 struct InPlayMods {
     /// The magus holds a Magical Focus (a within-focus total is computed).
     has_focus: bool,
+    /// The magus holds the Masterpiece Virtue (a lesser-item cap is surfaced).
+    has_masterpiece: bool,
     /// Flat Casting-Total modifiers with their scope (Method Caster +3, …).
     casting_mods: Vec<(i32, CastingScope)>,
     /// Flat Lab-Total modifier (Inventive Genius +3, summed).
@@ -147,6 +149,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
         for effect in &item.effects {
             match effect {
                 Effect::MagicalFocus { .. } => m.has_focus = true,
+                Effect::MasterpieceItem => m.has_masterpiece = true,
                 Effect::CastingTotalMod { amount, scope } => {
                     m.casting_mods.push((i32::from(*amount), *scope));
                 }
@@ -1084,6 +1087,54 @@ fn creo_corpus_lab_total(entity: &Entity, ruleset: &Ruleset) -> i32 {
         + mods.lab_mod
 }
 
+// --- Masterpiece (lesser enchanted item cap) -------------------------------
+
+/// The Masterpiece read-out: the best-Lab-Total lesser enchanted item cap.
+///
+/// The Masterpiece Virtue lets the magus keep one *lesser enchanted item* he
+/// designed "based on his Lab Totals at character generation, following the
+/// regular rules for construction of such a device" (Core:4476-4479). The
+/// regular lesser-enchantment rule caps a single-season instillation at
+/// `Lab Total ≥ 2 × effect level`, i.e. the effect level may not exceed
+/// `Lab Total ÷ 2` (Core:10410). Vis costs are ignored (the parens provided
+/// them), so the only bound the engine can honestly compute is that Lab-Total
+/// cap. The best base `(Technique, Form)` Lab Total is used — the magus is free
+/// to pick the Technique/Form that maximises it — without any Magical-Focus
+/// doubling (a focus applies only to items within its narrow field).
+///
+/// This is **read-only guidance**: the engine does not auto-create a device or
+/// spend an item-level budget. The player still enters the actual item under
+/// Magic Items.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MasterpieceCap {
+    /// The Technique Art of the best Lab Total.
+    pub technique: Id,
+    /// The Form Art of the best Lab Total.
+    pub form: Id,
+    /// The best base `(Technique, Form)` Lab Total (no focus doubling).
+    pub lab_total: i32,
+    /// The maximum lesser-enchantment effect level: `lab_total ÷ 2` (Core:10410).
+    pub cap: i32,
+}
+
+/// The Masterpiece lesser-item cap, or `None` when the magus lacks the Virtue.
+/// Source: Core:4476-4479 (Virtue), :10410 (lesser-enchantment cap).
+pub fn masterpiece_item_cap(entity: &Entity, ruleset: &Ruleset) -> Option<MasterpieceCap> {
+    if !in_play_mods(entity, ruleset).has_masterpiece {
+        return None;
+    }
+    // Best base Lab Total across the grid; the magus picks the Te/Fo that maxes it.
+    lab_totals(entity, ruleset)
+        .into_iter()
+        .max_by_key(|lt| lt.total)
+        .map(|lt| MasterpieceCap {
+            technique: lt.technique,
+            form: lt.form,
+            lab_total: lt.total,
+            cap: halve(lt.total),
+        })
+}
+
 // --- Surfaced-only modifiers -----------------------------------------------
 
 /// A surfaced-only 5b modifier the app **lists** rather than simulates (study /
@@ -1141,6 +1192,9 @@ pub struct DerivedTotals {
     /// The Longevity Ritual bonus (magi only; `None` otherwise).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub longevity: Option<LongevityBonus>,
+    /// The Masterpiece lesser-item cap (magi with the Virtue only; `None` otherwise).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub masterpiece: Option<MasterpieceCap>,
     /// One combat line per equipped weapon.
     pub combat: Vec<CombatLine>,
     /// The Soak total.
@@ -1196,6 +1250,11 @@ pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
         },
         longevity: if is_magus {
             longevity_bonus(entity, ruleset)
+        } else {
+            None
+        },
+        masterpiece: if is_magus {
+            masterpiece_item_cap(entity, ruleset)
         } else {
             None
         },
@@ -1277,7 +1336,10 @@ mod tests {
           { "id": "virtue.deft_form", "kind": "virtue", "classification": "in_play_effect",
             "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
             "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
-            "effects": [{ "type": "special_casting_mod", "kind": "deft_form", "param": "form" }] }
+            "effects": [{ "type": "special_casting_mod", "kind": "deft_form", "param": "form" }] },
+          { "id": "virtue.masterpiece", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "masterpiece_item" }] }
         ]"#;
         let types = r#"[
           { "id": "magus", "is_magus": true,
@@ -1414,6 +1476,53 @@ mod tests {
         let lb = longevity_bonus(&e, &rs).expect("has ritual");
         assert_eq!(lb.lab_total, Some(35));
         assert_eq!(lb.bonus, 7);
+    }
+
+    /// Masterpiece: the best (Technique, Form) Lab Total bounds the lesser
+    /// enchanted item the magus could make — level ≤ Lab Total ÷ 2 (Core:10410).
+    /// Int 3 + Magic Theory 4 + Creo 10 + Corpus 13 + Aura 5 = 35 → cap 17.
+    #[test]
+    fn masterpiece_cap_is_best_lab_total_halved() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Int, 3);
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.magic_theory"),
+            parameter: None,
+            specialty: None,
+            score: 4,
+        }];
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.corpus"),
+                score: 13,
+            },
+        ];
+        e.aura = 5;
+        e.selections = vec![Selection::new(Id::new("virtue.masterpiece"))];
+        let cap = masterpiece_item_cap(&e, &rs).expect("has masterpiece");
+        assert_eq!(cap.lab_total, 35);
+        assert_eq!(cap.cap, 17);
+        assert_eq!(cap.technique.as_str(), "art.creo");
+        assert_eq!(cap.form.as_str(), "art.corpus");
+    }
+
+    /// Without the Masterpiece Virtue there is no item cap.
+    #[test]
+    fn masterpiece_cap_absent_without_virtue() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Int, 3);
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.creo"),
+            score: 10,
+        }];
+        assert!(masterpiece_item_cap(&e, &rs).is_none());
+        assert!(derived_totals(&e, &rs).masterpiece.is_none());
     }
 
     /// A casting total with Encumbrance and a Magical Focus: base vs within-focus,

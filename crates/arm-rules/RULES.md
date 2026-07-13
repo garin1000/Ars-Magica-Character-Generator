@@ -1331,6 +1331,7 @@ these numbers.** The `derived_totals` Tauri command mirrors `effective_scores`.
 | Weak Magic | `:7064-7067` | halves Penetration **after** subtracting level (not the casting total) |
 | Magic Resistance | `:9390-9398` | per Form: Form + 5 × Parma Magica (Form-base rule `:9390`, Parma "five times" `:9398`); Limited MR drops the Form bonus, Flawed Parma halves |
 | Longevity | `:10662-10672` | self-made: +1 per 5 points (round **up**) of Creo+Corpus Lab Total (aura-gated); external: entered bonus passthrough. Bronze cord noted for aging-resistance (`:10840-10844`) |
+| Masterpiece | `:4476-4479`, `:10410` | magus with the Masterpiece Virtue (`Effect::MasterpieceItem` marker) surfaces a **read-only** lesser-enchanted-item cap = **best base `(Te,Fo)` Lab Total ÷ 2** (the lesser-enchantment rule caps single-season instillation at Lab Total ≥ 2×effect level, `:10410`; vis costs ignored per the Virtue). The best Lab Total is used (magus picks the Te/Fo), no focus doubling. The engine does **not** create the device or spend an item-level budget — the player still enters the actual lesser enchanted item by hand under Magic Items; this is guidance only. `masterpiece_item_cap` / `DerivedTotals.masterpiece` |
 | Combat | `:16658-16670` | Init = Qik + WpnInit − Enc + CombatMod; Attack = Dex + Ability + WpnAtk + CombatMod; Defense = Qik + Ability + WpnDef + CombatMod; Damage = Str + WpnDam + CombatMod |
 | Weapon+shield | `:16656` | one `CombatLine` per equipped weapon, combining every equipped shield's Init/Atk/Def mods |
 | Enc-exempt | `:17105` | Attack/Defense are **not** Encumbrance-penalized; Init **is** |
@@ -1625,9 +1626,6 @@ UI's add-controls (so the app/UI boundary keeps a concrete `kind`).
   cited range; Nephilim (*Divine*:3485-3513) lists the Mythic-Companion *required*
   Virtues (which must be **paid for**, not free-granted) — a type-profile concern,
   not a `grants_selection`. Deferred pending a concrete cited grant.
-- **Masterpiece (item-level, 1)** — Core:4476-4479 grants "one lesser enchanted
-  item you could make based on your Lab Totals", i.e. a Lab-Total-derived level,
-  not a fixed grantable number; no source figure to put in `item_level_budget`.
 - **Savantism, Simple Student, Corrupted Arts (3 XP)** — Savantism
   (:6703) *halves* starting XP (multiplicative; no variant); Simple Student (:4958)
   is 30 xp *per finished year* (age/life-stage, M6); Corrupted Arts (:5853) has no
@@ -1666,7 +1664,7 @@ The per-item audit that fed this wiring follows (source line-ranges retained).
 - `virtue.wilderness_sense` (Core:5247-5250) — free starting Supernatural Ability score
 
 **Item-level budget:**
-- `virtue.masterpiece` (Core:4476-4479) — item-level budget grant
+- (Magic Items / Redcap wire `item_level_budget`; see slice 5e.)
 
 **Might / power budget:**
 - `virtue.demonic_blood` (Realms of Power - The Infernal:4116-4131) — Infernal Might score + powers
