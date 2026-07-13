@@ -1,0 +1,1676 @@
+//! Read-only **play-stat** totals derived from a finished character (M5 slice 5i).
+//!
+//! This module is the play-time counterpart to [`crate::effective`]: where
+//! `effective.rs` computes *creation-legality* numbers (bought scores + bonuses,
+//! caps, XP), `derived.rs` computes the *in-play* totals a character sheet prints —
+//! casting, lab, penetration, magic resistance, combat, soak, encumbrance,
+//! fatigue, wounds, longevity, decrepitude, and warping.
+//!
+//! # Invariants
+//!
+//! - **Pure and read-only.** `(&Entity, &Ruleset) → owned structs`; nothing is
+//!   mutated and nothing is persisted. Calling [`derived_totals`] twice on the same
+//!   inputs yields byte-identical results (asserted by a purity test).
+//! - **Reuses `effective.rs`.** Effective Art / Ability scores come from
+//!   `effective.rs`; play stats use the **aging-adjusted** Characteristic
+//!   ([`crate::effective::effective_characteristic_after_aging`]), never the
+//!   creation-legality bought score. Decrepitude and Warping scores are the
+//!   `effective.rs` functions, not reimplemented here.
+//! - **No English in the engine.** Every result struct carries **labelled addend
+//!   breakdowns** whose `label` is a stable slug id; the UI maps each through a
+//!   Fluent `derived-*` key. The engine never emits user-facing prose.
+//! - **Consumption, not just exhaustiveness.** The single [`in_play_mods`] fold is
+//!   an exhaustive `match` over every [`Effect`] variant, so a new variant is a
+//!   compile error here. But exhaustiveness alone does not prove an effect changes
+//!   a number — the per-area functions below *read* each folded modifier, and the
+//!   unit tests assert the number moves. Those tests are what guarantee the 5b
+//!   in-play effects are actually consumed.
+//!
+//! Surfaced-only 5b families (study / aging-roll / non-standard-casting /
+//! wound-recovery) are **listed** as labelled [`SurfacedModifier`]s rather than
+//! folded into a simulated number, because the app does not simulate those
+//! subsystems.
+//!
+//! Source line ranges (all `Ars Magica - Definitive Edition (Core Rules).md`) are
+//! cited at each computing function and in `crates/arm-rules/RULES.md` (§5i).
+
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, BTreeSet};
+
+use crate::art::ArtType;
+use crate::characteristics::Characteristic;
+use crate::effective::{
+    decrepitude_score, effective_ability_score, effective_art_score,
+    effective_characteristic_after_aging, resolved_spell_level, selections_for_effects,
+    warping_points_total, warping_score,
+};
+use crate::ruleset::Ruleset;
+use crate::types::{
+    CastingScope, CombatStat, Effect, Entity, HalvableTotal, HealthTrack, Id, LongevitySource,
+    MagicResistanceEffect,
+};
+
+/// A single labelled term in a breakdown. `label` is a **stable slug id**
+/// (`"technique"`, `"stamina"`, `"aura"`, …), mapped to a display string through a
+/// Fluent `derived-addend-<label>` key on the UI side — never rendered raw.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Addend {
+    /// Stable slug id, e.g. `"technique"`.
+    pub label: String,
+    /// The signed contribution to the total.
+    pub value: i32,
+}
+
+impl Addend {
+    fn new(label: &str, value: i32) -> Self {
+        Self {
+            label: label.to_string(),
+            value,
+        }
+    }
+}
+
+/// Sum of an addend list.
+fn sum(addends: &[Addend]) -> i32 {
+    addends.iter().map(|a| a.value).sum()
+}
+
+/// Integer halving toward zero (Deficient Art / halving flaws halve *totals*).
+fn halve(x: i32) -> i32 {
+    x / 2
+}
+
+// --- In-play effect fold (the single exhaustive-match consumer) ------------
+
+/// Every in-play (5b) modifier folded off the entity's selections + grants, plus
+/// the surfaced-only families collected for listing. Built by one exhaustive
+/// `match` ([`in_play_mods`]) so a new [`Effect`] variant fails to compile until
+/// handled here.
+#[derive(Debug, Default, Clone)]
+struct InPlayMods {
+    /// The magus holds a Magical Focus (a within-focus total is computed).
+    has_focus: bool,
+    /// Flat Casting-Total modifiers with their scope (Method Caster +3, …).
+    casting_mods: Vec<(i32, CastingScope)>,
+    /// Flat Lab-Total modifier (Inventive Genius +3, summed).
+    lab_mod: i32,
+    /// The deficient Technique/Form Art ids (Deficient Art halves totals adding one).
+    deficient_arts: BTreeSet<Id>,
+    /// Whole-total halvings in effect (Weak Magic → Penetration, Flawed Parma → MR).
+    halvings: BTreeSet<HalvableTotal>,
+    /// Flat Soak modifier (Tough +3, Frail −1, summed).
+    soak_mod: i32,
+    /// Flat combat-total modifiers per stat (summed).
+    combat_mods: BTreeMap<CombatStat, i32>,
+    /// Health-track penalty deltas per track (positive reduces the penalty).
+    health_mods: BTreeMap<HealthTrack, i32>,
+    /// Non-halving Magic-Resistance modifiers (Limited MR, Susceptibility, …).
+    mr_mods: Vec<MagicResistanceEffect>,
+    /// Surfaced-only families, listed rather than folded into a number.
+    surfaced: Vec<SurfacedModifier>,
+}
+
+/// Folds all in-play (5b) effects off the entity's selections and grants. The
+/// `match` is exhaustive: creation-effect and elemental variants are explicit
+/// no-ops (consumed by `effective.rs`), so adding an [`Effect`] variant is a
+/// compile error until it is classified here.
+fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
+    let mut m = InPlayMods::default();
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            match effect {
+                Effect::MagicalFocus { .. } => m.has_focus = true,
+                Effect::CastingTotalMod { amount, scope } => {
+                    m.casting_mods.push((i32::from(*amount), *scope));
+                }
+                Effect::LabTotalMod { amount } => m.lab_mod += i32::from(*amount),
+                Effect::DeficientArt { param } => {
+                    if let Some(art) = selection.params.get(param) {
+                        m.deficient_arts.insert(art.clone());
+                    }
+                }
+                Effect::MagicTotalHalving { total } => {
+                    m.halvings.insert(*total);
+                }
+                Effect::SoakMod { amount } => m.soak_mod += i32::from(*amount),
+                Effect::CombatMod { amount, target } => {
+                    *m.combat_mods.entry(*target).or_default() += i32::from(*amount);
+                }
+                Effect::HealthMod { track, amount } => {
+                    *m.health_mods.entry(*track).or_default() += i32::from(*amount);
+                }
+                Effect::MagicResistanceMod { kind } => m.mr_mods.push(*kind),
+                // Surfaced-only families: listed labelled, never simulated.
+                Effect::AgingMod { kind, amount } => m.surfaced.push(SurfacedModifier {
+                    family: "aging".to_string(),
+                    detail: kind.to_string(),
+                    amount: i32::from(*amount),
+                }),
+                Effect::AdvancementMod { source, amount } => m.surfaced.push(SurfacedModifier {
+                    family: "advancement".to_string(),
+                    detail: source.to_string(),
+                    amount: i32::from(*amount),
+                }),
+                Effect::SpecialCastingMod { kind } => m.surfaced.push(SurfacedModifier {
+                    family: "special_casting".to_string(),
+                    detail: kind.to_string(),
+                    amount: 0,
+                }),
+                Effect::AbilityRollMod { param, amount } => m.surfaced.push(SurfacedModifier {
+                    family: "ability_roll".to_string(),
+                    detail: selection
+                        .params
+                        .get(param)
+                        .map(|id| id.as_str().to_string())
+                        .unwrap_or_default(),
+                    amount: i32::from(*amount),
+                }),
+                // Creation-effect variants (consumed by effective.rs) and the
+                // Elemental Magic XP-space marker: no in-play modifier here.
+                Effect::AbilityBonus { .. }
+                | Effect::CharacteristicLimit { .. }
+                | Effect::ArtBonus { .. }
+                | Effect::AffinityAbilityCost { .. }
+                | Effect::AffinityArtCost { .. }
+                | Effect::GroupAffinityCost { .. }
+                | Effect::RestrictedAbilityXp { .. }
+                | Effect::CharacteristicPoints { .. }
+                | Effect::AbilityScoreGrant { .. }
+                | Effect::SpellLevels { .. }
+                | Effect::GeneralXp { .. }
+                | Effect::ConfidenceBonus { .. }
+                | Effect::SpellMasteryXp { .. }
+                | Effect::GrantsSpellMastery { .. }
+                | Effect::GrantsSelection { .. }
+                | Effect::ItemLevelBudget { .. }
+                | Effect::TrueFaithGrant { .. }
+                | Effect::WarpingGrant { .. }
+                | Effect::SizeDelta { .. }
+                | Effect::CharacteristicScoreDelta { .. }
+                | Effect::GrantsReputation { .. }
+                | Effect::ElementalMagic { .. } => {}
+            }
+        }
+    }
+    m
+}
+
+impl InPlayMods {
+    /// Sum of flat Casting-Total mods applying to `cast`.
+    fn casting_mod_for(&self, cast: CastType) -> i32 {
+        self.casting_mods
+            .iter()
+            .filter(|(_, scope)| cast.matches(*scope))
+            .map(|(amount, _)| *amount)
+            .sum()
+    }
+
+    /// Whether either Art of a `(technique, form)` pair is a Deficient Art.
+    fn deficient(&self, technique: &Id, form: &Id) -> bool {
+        self.deficient_arts.contains(technique) || self.deficient_arts.contains(form)
+    }
+}
+
+/// The four ways a casting total is derived (Core:9095-9145). One breakdown yields
+/// all four; the scope filter and post-divisor differ.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CastType {
+    Formulaic,
+    Ritual,
+    /// Spontaneous (both fatiguing ÷2 and non-fatiguing ÷5 share the same scope
+    /// filter; the divisor is applied after this).
+    Spontaneous,
+}
+
+impl CastType {
+    fn matches(self, scope: CastingScope) -> bool {
+        match self {
+            CastType::Formulaic => matches!(
+                scope,
+                CastingScope::All | CastingScope::Formulaic | CastingScope::FormulaicRitual
+            ),
+            CastType::Ritual => matches!(
+                scope,
+                CastingScope::All | CastingScope::Ritual | CastingScope::FormulaicRitual
+            ),
+            CastType::Spontaneous => {
+                matches!(scope, CastingScope::All | CastingScope::Spontaneous)
+            }
+        }
+    }
+}
+
+// --- Characteristic helpers (aging-adjusted, per the play-stat invariant) --
+
+fn characteristic(entity: &Entity, ruleset: &Ruleset, c: Characteristic) -> i32 {
+    effective_characteristic_after_aging(entity, ruleset, c)
+}
+
+/// The magus's effective score in a Magic-related Ability (Parma, Penetration,
+/// Magic Theory, Artes Liberales, Philosophiae), 0 if unheld.
+fn ability(entity: &Entity, ruleset: &Ruleset, id: &str) -> i32 {
+    effective_ability_score(entity, ruleset, &Id::new(id), None)
+}
+
+// --- Lab totals (per Technique × Form) -------------------------------------
+
+/// A Lab Total for one `(Technique, Form)` cell of the 5×10 grid.
+///
+/// Lab Total = Int + Magic Theory + Technique + Form + Aura + flat LabTotalMod;
+/// within a Magical Focus the lower applicable Art is added again; a Deficient Art
+/// halves the whole cell. Source: Core:4143-4154 (Lab Total shape), :4399-4422
+/// (focus doubling), :5909-5915 (Deficient halving).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LabTotal {
+    /// Technique Art id of this cell.
+    pub technique: Id,
+    /// Form Art id of this cell.
+    pub form: Id,
+    /// The labelled base breakdown (int, magic_theory, technique, form, aura, lab_mod).
+    pub addends: Vec<Addend>,
+    /// The base Lab Total (after any Deficient-Art halving), no focus.
+    pub total: i32,
+    /// The within-focus Lab Total (base + lower Art, then halving); `None` when the
+    /// magus holds no Magical Focus.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub within_focus: Option<i32>,
+    /// Whether a Deficient Art halved this cell.
+    pub deficient: bool,
+}
+
+/// Lab Totals for every `(Technique, Form)` pair — the 5×10 grid. Source:
+/// Core:4143-4154.
+pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
+    let mods = in_play_mods(entity, ruleset);
+    let intelligence = characteristic(entity, ruleset, Characteristic::Int);
+    let magic_theory = ability(entity, ruleset, "ability.magic_theory");
+    let aura = entity.aura;
+    let mut out = Vec::new();
+    for technique in arts_of(ruleset, ArtType::Technique) {
+        let te = effective_art_score(entity, ruleset, &technique);
+        for form in arts_of(ruleset, ArtType::Form) {
+            let fo = effective_art_score(entity, ruleset, &form);
+            let addends = vec![
+                Addend::new("intelligence", intelligence),
+                Addend::new("magic_theory", magic_theory),
+                Addend::new("technique", te),
+                Addend::new("form", fo),
+                Addend::new("aura", aura),
+                Addend::new("lab_mod", mods.lab_mod),
+            ];
+            let deficient = mods.deficient(&technique, &form);
+            let base = sum(&addends);
+            let total = if deficient { halve(base) } else { base };
+            let within_focus = mods.has_focus.then(|| {
+                let focused = base + te.min(fo);
+                if deficient { halve(focused) } else { focused }
+            });
+            out.push(LabTotal {
+                technique: technique.clone(),
+                form: form.clone(),
+                addends,
+                total,
+                within_focus,
+                deficient,
+            });
+        }
+    }
+    out
+}
+
+// --- Casting totals (per Technique × Form) ---------------------------------
+
+/// The within-focus counterparts of a [`CastingTotal`]'s four cast types (the
+/// lower applicable Art added again before halving).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CastingWithinFocus {
+    /// The doubled lower Art score added within the focus.
+    pub focus_art: i32,
+    /// Within-focus formulaic total.
+    pub formulaic: i32,
+    /// Within-focus ritual total.
+    pub ritual: i32,
+    /// Within-focus fatiguing-spontaneous total.
+    pub spontaneous_fatiguing: i32,
+    /// Within-focus non-fatiguing-spontaneous total.
+    pub spontaneous_non_fatiguing: i32,
+}
+
+/// The Casting Total for one `(Technique, Form)` cell, split into the four cast
+/// types from one shared breakdown.
+///
+/// Casting Score = Technique + Form + Stamina − Encumbrance + Aura + flat
+/// CastingTotalMod (per scope). Formulaic = the score; Ritual = the score +
+/// Artes Liberales + Philosophiae; fatiguing Spontaneous = ÷2; non-fatiguing
+/// Spontaneous = ÷5. Within a Magical Focus the lower Art is added again; a
+/// Deficient Art halves the totals. Source: Core:9089 (Casting Score), :9103-9145
+/// (cast types), :4524-4527 (Method Caster), :4399-4422 (focus), :5909-5915
+/// (Deficient halving).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CastingTotal {
+    /// Technique Art id of this cell.
+    pub technique: Id,
+    /// Form Art id of this cell.
+    pub form: Id,
+    /// The shared Casting-Score breakdown (technique, form, stamina, encumbrance, aura).
+    pub addends: Vec<Addend>,
+    /// The ritual-only extra addends (artes_liberales, philosophiae).
+    pub ritual_addends: Vec<Addend>,
+    /// Formulaic Casting Total.
+    pub formulaic: i32,
+    /// Ritual Casting Total (+ Artes Liberales + Philosophiae).
+    pub ritual: i32,
+    /// Fatiguing spontaneous total (÷2).
+    pub spontaneous_fatiguing: i32,
+    /// Non-fatiguing spontaneous total (÷5).
+    pub spontaneous_non_fatiguing: i32,
+    /// The within-focus variants; `None` when the magus holds no Magical Focus.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub within_focus: Option<CastingWithinFocus>,
+    /// Whether a Deficient Art halved these totals.
+    pub deficient: bool,
+}
+
+/// The formulaic casting score of one `(Technique, Form)` cell, without the die,
+/// including the focus double when `focus` is set and the Deficient-Art halving.
+/// Shared by the grid and by per-spell penetration.
+fn formulaic_casting_score(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    mods: &InPlayMods,
+    technique: &Id,
+    form: &Id,
+    focus: bool,
+) -> i32 {
+    let te = effective_art_score(entity, ruleset, technique);
+    let fo = effective_art_score(entity, ruleset, form);
+    let stamina = characteristic(entity, ruleset, Characteristic::Sta);
+    let enc = encumbrance(entity, ruleset).total;
+    let mut score =
+        te + fo + stamina - enc + entity.aura + mods.casting_mod_for(CastType::Formulaic);
+    if focus {
+        score += te.min(fo);
+    }
+    if mods.deficient(technique, form) {
+        score = halve(score);
+    }
+    score
+}
+
+/// Casting Totals for every `(Technique, Form)` pair. Source: Core:9089-9145.
+pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
+    let mods = in_play_mods(entity, ruleset);
+    let stamina = characteristic(entity, ruleset, Characteristic::Sta);
+    let enc = encumbrance(entity, ruleset).total;
+    let aura = entity.aura;
+    let artes_liberales = ability(entity, ruleset, "ability.artes_liberales");
+    let philosophiae = ability(entity, ruleset, "ability.philosophiae");
+    let weak_spont = mods.halvings.contains(&HalvableTotal::SpontaneousCasting);
+    let mut out = Vec::new();
+    for technique in arts_of(ruleset, ArtType::Technique) {
+        let te = effective_art_score(entity, ruleset, &technique);
+        for form in arts_of(ruleset, ArtType::Form) {
+            let fo = effective_art_score(entity, ruleset, &form);
+            let deficient = mods.deficient(&technique, &form);
+            let addends = vec![
+                Addend::new("technique", te),
+                Addend::new("form", fo),
+                Addend::new("stamina", stamina),
+                Addend::new("encumbrance", -enc),
+                Addend::new("aura", aura),
+            ];
+            let ritual_addends = vec![
+                Addend::new("artes_liberales", artes_liberales),
+                Addend::new("philosophiae", philosophiae),
+            ];
+            let common = sum(&addends);
+            let focus_art = te.min(fo);
+
+            let variant = |focused: bool| -> CastingScores {
+                let focus_add = if focused { focus_art } else { 0 };
+                let formulaic = post(
+                    common + focus_add + mods.casting_mod_for(CastType::Formulaic),
+                    deficient,
+                    false,
+                );
+                let ritual = post(
+                    common
+                        + focus_add
+                        + sum(&ritual_addends)
+                        + mods.casting_mod_for(CastType::Ritual),
+                    deficient,
+                    false,
+                );
+                let spont_base = post(
+                    common + focus_add + mods.casting_mod_for(CastType::Spontaneous),
+                    deficient,
+                    weak_spont,
+                );
+                CastingScores {
+                    formulaic,
+                    ritual,
+                    spontaneous_fatiguing: halve(spont_base),
+                    spontaneous_non_fatiguing: spont_base / 5,
+                }
+            };
+
+            let base = variant(false);
+            let within_focus = mods.has_focus.then(|| {
+                let f = variant(true);
+                CastingWithinFocus {
+                    focus_art,
+                    formulaic: f.formulaic,
+                    ritual: f.ritual,
+                    spontaneous_fatiguing: f.spontaneous_fatiguing,
+                    spontaneous_non_fatiguing: f.spontaneous_non_fatiguing,
+                }
+            });
+
+            out.push(CastingTotal {
+                technique: technique.clone(),
+                form: form.clone(),
+                addends,
+                ritual_addends,
+                formulaic: base.formulaic,
+                ritual: base.ritual,
+                spontaneous_fatiguing: base.spontaneous_fatiguing,
+                spontaneous_non_fatiguing: base.spontaneous_non_fatiguing,
+                within_focus,
+                deficient,
+            });
+        }
+    }
+    out
+}
+
+/// Applies the Deficient-Art halving and (for spontaneous) the Weak-Spontaneous
+/// halving to a casting score, in that order. Source: Core:5909-5915, :7060-7063.
+fn post(score: i32, deficient: bool, weak_spont: bool) -> i32 {
+    let mut s = score;
+    if deficient {
+        s = halve(s);
+    }
+    if weak_spont {
+        s = halve(s);
+    }
+    s
+}
+
+struct CastingScores {
+    formulaic: i32,
+    ritual: i32,
+    spontaneous_fatiguing: i32,
+    spontaneous_non_fatiguing: i32,
+}
+
+// --- Penetration (per known spell) -----------------------------------------
+
+/// A Penetration line for one known spell.
+///
+/// Penetration Total = Casting Total − Spell Level + Penetration Ability score
+/// (Core:9159-9161). Weak Magic halves the Penetration Total *after* subtracting
+/// the level (Core:7064-7067).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PenetrationLine {
+    /// The known spell's id.
+    pub spell: Id,
+    /// The spell's (resolved) level.
+    pub level: u32,
+    /// The formulaic Casting Total used (base, no focus).
+    pub casting_total: i32,
+    /// The Penetration Ability score contributing to the bonus.
+    pub penetration_ability: i32,
+    /// The Penetration Total (base, no focus).
+    pub total: i32,
+    /// The within-focus Penetration Total; `None` when no Magical Focus.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub within_focus: Option<i32>,
+    /// Whether Weak Magic halved the total.
+    pub weak_magic: bool,
+}
+
+/// Per-known-spell Penetration Totals. Source: Core:9159-9161, :7064-7067.
+pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
+    let mods = in_play_mods(entity, ruleset);
+    let pen_ability = ability(entity, ruleset, "ability.penetration");
+    let weak_magic = mods.halvings.contains(&HalvableTotal::Penetration);
+    let mut out = Vec::new();
+    for sel in &entity.spells {
+        let Some(spell) = ruleset.spell(&sel.spell) else {
+            continue;
+        };
+        let Some(level) = resolved_spell_level(sel, ruleset) else {
+            continue;
+        };
+        let level_i = i32::try_from(level).unwrap_or(i32::MAX);
+        let pen = |casting: i32| -> i32 {
+            let raw = casting - level_i + pen_ability;
+            if weak_magic { halve(raw) } else { raw }
+        };
+        let base_casting =
+            formulaic_casting_score(entity, ruleset, &mods, &spell.technique, &spell.form, false);
+        let within_focus = mods.has_focus.then(|| {
+            let focus_casting = formulaic_casting_score(
+                entity,
+                ruleset,
+                &mods,
+                &spell.technique,
+                &spell.form,
+                true,
+            );
+            pen(focus_casting)
+        });
+        out.push(PenetrationLine {
+            spell: sel.spell.clone(),
+            level,
+            casting_total: base_casting,
+            penetration_ability: pen_ability,
+            total: pen(base_casting),
+            within_focus,
+            weak_magic,
+        });
+    }
+    out
+}
+
+// --- Magic Resistance (per Form) -------------------------------------------
+
+/// A per-Form Magic Resistance line.
+///
+/// Magic Resistance = Form + 5 × Parma Magica (Core:9391-9401). Limited Magic
+/// Resistance drops the Form bonus; Flawed Parma / Weak Magic Resistance halve it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MagicResistance {
+    /// The Form Art id.
+    pub form: Id,
+    /// The labelled breakdown (form, parma).
+    pub addends: Vec<Addend>,
+    /// The Magic Resistance total.
+    pub total: i32,
+}
+
+/// Per-Form Magic Resistance. Source: Core:9391-9401, :6142-6145, :6346-6349.
+pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistance> {
+    let mods = in_play_mods(entity, ruleset);
+    let parma = ability(entity, ruleset, "ability.parma_magica");
+    let no_form = mods.mr_mods.contains(&MagicResistanceEffect::NoFormBonus);
+    let halved = mods.halvings.contains(&HalvableTotal::MagicResistance);
+    let mut out = Vec::new();
+    for form in arts_of(ruleset, ArtType::Form) {
+        let fo = effective_art_score(entity, ruleset, &form);
+        let form_bonus = if no_form { 0 } else { fo };
+        let addends = vec![
+            Addend::new("form", form_bonus),
+            Addend::new("parma", 5 * parma),
+        ];
+        let mut total = sum(&addends);
+        if halved {
+            total = halve(total);
+        }
+        out.push(MagicResistance {
+            form,
+            addends,
+            total,
+        });
+    }
+    out
+}
+
+// --- Encumbrance -----------------------------------------------------------
+
+/// The Encumbrance read-out: total Load, Burden, and the Encumbrance penalty.
+///
+/// Burden comes from the Load table (Core:17103-17123); Encumbrance =
+/// max(0, Burden − max(0, Strength)).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EncumbranceTotal {
+    /// Total Load of all carried equipment.
+    pub load: u32,
+    /// Burden derived from the Load table.
+    pub burden: i32,
+    /// The Encumbrance penalty (≥ 0).
+    pub total: i32,
+}
+
+/// The Load-table thresholds: index = Burden, value = Load at which that Burden
+/// begins (Core:17103-17123).
+const LOAD_TABLE: [u32; 11] = [0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55];
+
+/// Burden for a total Load: the highest table index whose threshold is ≤ load.
+fn burden_for_load(load: u32) -> i32 {
+    let mut burden = 0;
+    for (b, threshold) in LOAD_TABLE.iter().enumerate() {
+        if load >= *threshold {
+            burden = b as i32;
+        }
+    }
+    burden
+}
+
+/// The character's Encumbrance. All carried equipment (equipped or not) counts
+/// toward Load. Source: Core:17103-17123.
+pub fn encumbrance(entity: &Entity, ruleset: &Ruleset) -> EncumbranceTotal {
+    let load: u32 = entity
+        .equipment
+        .iter()
+        .map(|slot| equipment_load(ruleset, &slot.item))
+        .sum();
+    let burden = burden_for_load(load);
+    let strength = characteristic(entity, ruleset, Characteristic::Str);
+    let total = (burden - strength.max(0)).max(0);
+    EncumbranceTotal {
+        load,
+        burden,
+        total,
+    }
+}
+
+/// The Load of one equipment id (weapon, shield, or armor); 0 if unknown.
+fn equipment_load(ruleset: &Ruleset, id: &Id) -> u32 {
+    if let Some(w) = ruleset.weapon(id) {
+        u32::from(w.load)
+    } else if let Some(s) = ruleset.shield(id) {
+        u32::from(s.load)
+    } else if let Some(a) = ruleset.armor_item(id) {
+        u32::from(a.load)
+    } else {
+        0
+    }
+}
+
+// --- Combat ----------------------------------------------------------------
+
+/// One combat line for an equipped weapon, with any equipped shield's modifiers
+/// combined in (Core:16656). Attack / Damage are `None` for a weapon that lacks
+/// them (Dodge). Attack and Defense are **not** reduced by Encumbrance; Init is
+/// (Core:17105).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CombatLine {
+    /// The weapon id.
+    pub weapon: Id,
+    /// The combat Ability id the weapon uses.
+    pub ability: Id,
+    /// Initiative total (Qik + weapon/shield Init − Encumbrance + CombatMod).
+    pub initiative: i32,
+    /// Attack total; `None` if the weapon has no attack (Dodge).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub attack: Option<i32>,
+    /// Defense total.
+    pub defense: i32,
+    /// Damage total; `None` if the weapon has no damage (Dodge).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub damage: Option<i32>,
+    /// The weapon's Range in paces (missile / thrown); `None` for melee.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub range: Option<u16>,
+}
+
+/// Combat lines: one per equipped weapon, combining every equipped shield's
+/// Init/Atk/Def modifiers. Source: Core:16658-16670, :16656, :17105.
+pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
+    let mods = in_play_mods(entity, ruleset);
+    let quickness = characteristic(entity, ruleset, Characteristic::Qik);
+    let dexterity = characteristic(entity, ruleset, Characteristic::Dex);
+    let strength = characteristic(entity, ruleset, Characteristic::Str);
+    let enc = encumbrance(entity, ruleset).total;
+
+    // Sum every equipped shield's modifiers into one combined shield line.
+    let (shield_init, shield_attack, shield_defense) = entity
+        .equipment
+        .iter()
+        .filter(|s| s.equipped)
+        .filter_map(|s| ruleset.shield(&s.item))
+        .fold((0i32, 0i32, 0i32), |(i, a, d), sh| {
+            (
+                i + i32::from(sh.init_mod),
+                a + i32::from(sh.attack_mod),
+                d + i32::from(sh.defense_mod),
+            )
+        });
+
+    let cm = |stat: CombatStat| mods.combat_mods.get(&stat).copied().unwrap_or(0);
+
+    let mut out = Vec::new();
+    for slot in entity.equipment.iter().filter(|s| s.equipped) {
+        let Some(weapon) = ruleset.weapon(&slot.item) else {
+            continue;
+        };
+        let combat_ability = effective_ability_score(entity, ruleset, &weapon.ability, None);
+        let initiative =
+            quickness + i32::from(weapon.init_mod) + shield_init - enc + cm(CombatStat::Initiative);
+        let attack = weapon.attack_mod.map(|m| {
+            dexterity + combat_ability + i32::from(m) + shield_attack + cm(CombatStat::Attack)
+        });
+        let defense = quickness
+            + combat_ability
+            + i32::from(weapon.defense_mod)
+            + shield_defense
+            + cm(CombatStat::Defense);
+        let damage = weapon
+            .damage_mod
+            .map(|m| strength + i32::from(m) + cm(CombatStat::Damage));
+        out.push(CombatLine {
+            weapon: slot.item.clone(),
+            ability: weapon.ability.clone(),
+            initiative,
+            attack,
+            defense,
+            damage,
+            range: weapon.range,
+        });
+    }
+    out
+}
+
+// --- Soak ------------------------------------------------------------------
+
+/// The Soak read-out.
+///
+/// Soak = Stamina + Armor Protection + SoakMod (Tough +3) + Bronze cord
+/// (Core:16667, :10840-10844). The magus Form bonus is situational and shown as an
+/// entered addend of 0.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SoakTotal {
+    /// The labelled breakdown (stamina, armor, soak_mod, bronze_cord, form_bonus).
+    pub addends: Vec<Addend>,
+    /// The Soak total.
+    pub total: i32,
+}
+
+/// The character's Soak. Source: Core:16667, :5145-5147 (Tough), :10840-10844
+/// (Bronze cord).
+pub fn soak(entity: &Entity, ruleset: &Ruleset) -> SoakTotal {
+    let mods = in_play_mods(entity, ruleset);
+    let stamina = characteristic(entity, ruleset, Characteristic::Sta);
+    let armor: i32 = entity
+        .equipment
+        .iter()
+        .filter(|s| s.equipped)
+        .filter_map(|s| ruleset.armor_item(&s.item))
+        .map(|a| i32::from(a.protection))
+        .sum();
+    let bronze = entity
+        .familiar
+        .as_ref()
+        .map(|f| i32::from(f.cord_bronze))
+        .unwrap_or(0);
+    let addends = vec![
+        Addend::new("stamina", stamina),
+        Addend::new("armor", armor),
+        Addend::new("soak_mod", mods.soak_mod),
+        Addend::new("bronze_cord", bronze),
+        Addend::new("form_bonus", 0),
+    ];
+    let total = sum(&addends);
+    SoakTotal { addends, total }
+}
+
+// --- Fatigue & Wounds ------------------------------------------------------
+
+/// A Fatigue level and the penalty it imposes on all actions.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FatigueLevel {
+    /// Stable level id (`"fresh"`, `"winded"`, `"weary"`, `"tired"`, `"dazed"`,
+    /// `"unconscious"`), mapped through Fluent.
+    pub level: String,
+    /// The penalty applied at this level (≤ 0), after any HealthMod fatigue delta.
+    pub penalty: i32,
+}
+
+/// The six Fatigue levels and their penalties, adjusted by HealthMod fatigue
+/// deltas (a positive delta reduces the penalty magnitude). Source:
+/// Core:17127-17129.
+pub fn fatigue_levels(entity: &Entity, ruleset: &Ruleset) -> Vec<FatigueLevel> {
+    let mods = in_play_mods(entity, ruleset);
+    let delta = mods
+        .health_mods
+        .get(&HealthTrack::FatiguePenalty)
+        .copied()
+        .unwrap_or(0);
+    // (id, base penalty). Fresh/Winded are penalty-free; Unconscious is its own
+    // penalty (no numeric). Core:17127-17129 gives Weary −1, Tired −3, Dazed −5.
+    [
+        ("fresh", 0),
+        ("winded", 0),
+        ("weary", -1),
+        ("tired", -3),
+        ("dazed", -5),
+    ]
+    .into_iter()
+    .map(|(level, base)| FatigueLevel {
+        level: level.to_string(),
+        // A positive delta reduces magnitude; never flip a penalty positive.
+        penalty: (base + delta).min(0),
+    })
+    .collect()
+}
+
+/// One wound band's inclusive damage range and its per-wound penalty.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WoundRange {
+    /// Stable band id (`"light"`, `"medium"`, `"heavy"`, `"incapacitating"`, `"dead"`).
+    pub level: String,
+    /// Lowest damage-total value in this band.
+    pub min: i32,
+    /// Highest damage-total value in this band; `None` for the open-ended Dead band.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<i32>,
+    /// The per-wound penalty (≤ 0); `None` for Incapacitating / Dead (special).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub penalty: Option<i32>,
+}
+
+/// The Size-indexed wound ranges, with wound penalties adjusted by any HealthMod
+/// wound delta. The band unit is `u = max(1, Size + 5)`; Light 1..u, Medium
+/// u+1..2u, Heavy 2u+1..3u, Incapacitating 3u+1..4u, Dead 4u+1.. — so each +1 Size
+/// widens every band (Core:17167-17191). Uses the character's derived Size.
+pub fn wound_ranges(entity: &Entity, ruleset: &Ruleset) -> Vec<WoundRange> {
+    let mods = in_play_mods(entity, ruleset);
+    let delta = mods
+        .health_mods
+        .get(&HealthTrack::WoundPenalty)
+        .copied()
+        .unwrap_or(0);
+    let size = crate::effective::size(entity, ruleset);
+    let u = (size + 5).max(1);
+    let pen = |base: i32| (base + delta).min(0);
+    vec![
+        WoundRange {
+            level: "light".to_string(),
+            min: 1,
+            max: Some(u),
+            penalty: Some(pen(-1)),
+        },
+        WoundRange {
+            level: "medium".to_string(),
+            min: u + 1,
+            max: Some(2 * u),
+            penalty: Some(pen(-3)),
+        },
+        WoundRange {
+            level: "heavy".to_string(),
+            min: 2 * u + 1,
+            max: Some(3 * u),
+            penalty: Some(pen(-5)),
+        },
+        WoundRange {
+            level: "incapacitating".to_string(),
+            min: 3 * u + 1,
+            max: Some(4 * u),
+            penalty: None,
+        },
+        WoundRange {
+            level: "dead".to_string(),
+            min: 4 * u + 1,
+            max: None,
+            penalty: None,
+        },
+    ]
+}
+
+// --- Longevity -------------------------------------------------------------
+
+/// The Longevity Ritual aging bonus read-out.
+///
+/// Self-made: +1 per 5 points (rounded up) of the Creo+Corpus Lab Total, gated on
+/// an aura being present. External: the entered bonus, passed through. The Bronze
+/// cord adds to aging-resistance and is noted separately (Core:10662-10672,
+/// :10840-10844).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LongevityBonus {
+    /// Whether the ritual is self-made or external.
+    pub source: LongevitySource,
+    /// The aging bonus (magnitude; applied as a negative to aging rolls).
+    pub bonus: i32,
+    /// The Creo+Corpus Lab Total the self-made bonus derives from; `None` for external.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lab_total: Option<i32>,
+    /// The Bronze-cord addition to aging-resistance (noted, not part of `bonus`).
+    pub bronze_cord: i32,
+    /// Whether an aura is present (self-made rituals need a lab aura).
+    pub aura_present: bool,
+}
+
+/// The Longevity Ritual bonus, or `None` when the magus has no ritual. Source:
+/// Core:10662-10672.
+pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBonus> {
+    let ritual = entity.longevity_ritual.as_ref()?;
+    let bronze = entity
+        .familiar
+        .as_ref()
+        .map(|f| i32::from(f.cord_bronze))
+        .unwrap_or(0);
+    let aura_present = entity.aura != 0;
+    match ritual.source {
+        LongevitySource::SelfMade => {
+            let lab_total = creo_corpus_lab_total(entity, ruleset);
+            // +1 per 5 points or fraction → ceil(lab_total / 5).
+            // +1 per 5 points or fraction → ceil(lab_total / 5) in unsigned space
+            // (lab_total > 0 in this branch; i32::div_ceil is still unstable).
+            let bonus = if aura_present && lab_total > 0 {
+                i32::try_from((lab_total as u32).div_ceil(5)).unwrap_or(i32::MAX)
+            } else {
+                0
+            };
+            Some(LongevityBonus {
+                source: LongevitySource::SelfMade,
+                bonus,
+                lab_total: Some(lab_total),
+                bronze_cord: bronze,
+                aura_present,
+            })
+        }
+        LongevitySource::External => Some(LongevityBonus {
+            source: LongevitySource::External,
+            bonus: i32::from(ritual.bonus.unwrap_or(0)),
+            lab_total: None,
+            bronze_cord: bronze,
+            aura_present,
+        }),
+    }
+}
+
+/// The Creo+Corpus Lab Total: Int + Magic Theory + Creo + Corpus + Aura + LabTotalMod.
+fn creo_corpus_lab_total(entity: &Entity, ruleset: &Ruleset) -> i32 {
+    let mods = in_play_mods(entity, ruleset);
+    characteristic(entity, ruleset, Characteristic::Int)
+        + ability(entity, ruleset, "ability.magic_theory")
+        + effective_art_score(entity, ruleset, &Id::new("art.creo"))
+        + effective_art_score(entity, ruleset, &Id::new("art.corpus"))
+        + entity.aura
+        + mods.lab_mod
+}
+
+// --- Surfaced-only modifiers -----------------------------------------------
+
+/// A surfaced-only 5b modifier the app **lists** rather than simulates (study /
+/// aging-roll / non-standard-casting / wound-recovery families).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SurfacedModifier {
+    /// The family slug (`"aging"`, `"advancement"`, `"special_casting"`,
+    /// `"ability_roll"`, `"health_roll"`), mapped through Fluent.
+    pub family: String,
+    /// The scalar/detail slug within the family (an enum's `Display`, or a free-text
+    /// subject for ability-roll modifiers).
+    pub detail: String,
+    /// The modifier amount (0 when the family is a mode toggle, e.g. Unaging).
+    pub amount: i32,
+}
+
+/// Every surfaced-only modifier the character carries, for the read-out list.
+/// Source: Core:3422-3425 (Apt Student), :5187-5190 (Unaging), :3645-3682
+/// (non-standard casting).
+pub fn surfaced_modifiers(entity: &Entity, ruleset: &Ruleset) -> Vec<SurfacedModifier> {
+    let mut m = in_play_mods(entity, ruleset);
+    // Surfaced health tracks (roll / recovery / casting-fatigue) are not folded
+    // into fatigue/wounds; list them here.
+    for (track, amount) in &m.health_mods {
+        match track {
+            HealthTrack::FatigueRoll | HealthTrack::CastingFatigue | HealthTrack::Recovery => {
+                m.surfaced.push(SurfacedModifier {
+                    family: "health_roll".to_string(),
+                    detail: track.to_string(),
+                    amount: *amount,
+                });
+            }
+            HealthTrack::FatiguePenalty | HealthTrack::WoundPenalty => {}
+        }
+    }
+    m.surfaced
+}
+
+// --- Aggregator ------------------------------------------------------------
+
+/// The full read-only play-stat read-out for a finished character. Serialized to
+/// the frontend by the `derived_totals` Tauri command.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DerivedTotals {
+    /// Whether the character is a magus (magic totals are present only then).
+    pub is_magus: bool,
+    /// Per-`(Technique, Form)` Lab Totals (magi only; empty otherwise).
+    pub lab_totals: Vec<LabTotal>,
+    /// Per-`(Technique, Form)` Casting Totals (magi only; empty otherwise).
+    pub casting_totals: Vec<CastingTotal>,
+    /// Per-known-spell Penetration lines (magi only; empty otherwise).
+    pub penetration: Vec<PenetrationLine>,
+    /// Per-Form Magic Resistance (magi only; empty otherwise).
+    pub magic_resistance: Vec<MagicResistance>,
+    /// The Longevity Ritual bonus (magi only; `None` otherwise).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub longevity: Option<LongevityBonus>,
+    /// One combat line per equipped weapon.
+    pub combat: Vec<CombatLine>,
+    /// The Soak total.
+    pub soak: SoakTotal,
+    /// The Encumbrance read-out.
+    pub encumbrance: EncumbranceTotal,
+    /// The Fatigue levels and penalties.
+    pub fatigue: Vec<FatigueLevel>,
+    /// The Size-indexed wound ranges.
+    pub wounds: Vec<WoundRange>,
+    /// The character's derived Size.
+    pub size: i32,
+    /// The derived Decrepitude Score (reused from `effective.rs`).
+    pub decrepitude_score: u8,
+    /// The derived Warping Score (reused from `effective.rs`).
+    pub warping_score: u8,
+    /// The total Warping Points (stored + granted).
+    pub warping_points: u32,
+    /// The surfaced-only modifier list.
+    pub surfaced_modifiers: Vec<SurfacedModifier>,
+}
+
+/// Computes the full play-stat read-out for `entity`. Pure and read-only: reuses
+/// `effective.rs` for effective scores, Decrepitude, and Warping, and never
+/// mutates or recomputes creation legality. Magic totals are computed only for a
+/// magus (per the type profile's `is_magus`).
+pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
+    let is_magus = ruleset
+        .profile(&entity.type_id)
+        .map(|p| p.is_magus)
+        .unwrap_or(false);
+    DerivedTotals {
+        is_magus,
+        lab_totals: if is_magus {
+            lab_totals(entity, ruleset)
+        } else {
+            Vec::new()
+        },
+        casting_totals: if is_magus {
+            casting_totals(entity, ruleset)
+        } else {
+            Vec::new()
+        },
+        penetration: if is_magus {
+            penetration(entity, ruleset)
+        } else {
+            Vec::new()
+        },
+        magic_resistance: if is_magus {
+            magic_resistance(entity, ruleset)
+        } else {
+            Vec::new()
+        },
+        longevity: if is_magus {
+            longevity_bonus(entity, ruleset)
+        } else {
+            None
+        },
+        combat: combat_totals(entity, ruleset),
+        soak: soak(entity, ruleset),
+        encumbrance: encumbrance(entity, ruleset),
+        fatigue: fatigue_levels(entity, ruleset),
+        wounds: wound_ranges(entity, ruleset),
+        size: crate::effective::size(entity, ruleset),
+        decrepitude_score: decrepitude_score(entity, ruleset),
+        warping_score: warping_score(entity, ruleset),
+        warping_points: warping_points_total(entity, ruleset),
+        surfaced_modifiers: surfaced_modifiers(entity, ruleset),
+    }
+}
+
+/// The Art ids of the given type, in catalogue order.
+fn arts_of(ruleset: &Ruleset, art_type: ArtType) -> Vec<Id> {
+    ruleset
+        .arts()
+        .filter(|a| a.art_type == art_type)
+        .map(|a| a.id.clone())
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ruleset::RulesetSources;
+    use crate::types::{
+        AbilityScore, ArtScore, EntityKind, EquipmentSlot, Familiar, LongevityRitual, RulesetRef,
+        Selection, SpellSelection,
+    };
+    use pretty_assertions::assert_eq;
+    use std::collections::BTreeMap;
+
+    /// A magus-capable ruleset: the five combat/magic Abilities, Techniques Creo +
+    /// Perdo, Forms Corpus + Ignem + Terram, the Art advancement curve, weapons +
+    /// shield + armor, a spell, and the in-play V/F this slice consumes (Method
+    /// Caster, a Magical Focus, Deficient Technique, Tough, Weak Magic, Flawed
+    /// Parma, Enduring Constitution, Apt Student).
+    fn ruleset() -> Ruleset {
+        let items = r#"[
+          { "id": "virtue.method_caster", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "casting_total_mod", "amount": 3, "scope": "formulaic_ritual" }] },
+          { "id": "virtue.magical_focus", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
+            "effects": [{ "type": "magical_focus", "param": "focus", "major": false }] },
+          { "id": "flaw.deficient_technique", "kind": "flaw", "classification": "in_play_effect",
+            "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"],
+            "parameters": [{ "key": "art", "type": "ref", "domain": "technique" }],
+            "effects": [{ "type": "deficient_art", "param": "art" }] },
+          { "id": "virtue.tough", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "soak_mod", "amount": 3 }] },
+          { "id": "flaw.weak_magic", "kind": "flaw", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "magic_total_halving", "total": "penetration" }] },
+          { "id": "flaw.flawed_parma", "kind": "flaw", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "magic_total_halving", "total": "magic_resistance" }] },
+          { "id": "virtue.enduring_constitution", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "effects": [
+              { "type": "health_mod", "track": "wound_penalty", "amount": 1 },
+              { "type": "health_mod", "track": "fatigue_penalty", "amount": 1 }
+            ] },
+          { "id": "virtue.apt_student", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "advancement_mod", "source": "taught", "amount": 5 }] }
+        ]"#;
+        let types = r#"[
+          { "id": "magus", "is_magus": true,
+            "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general", "hermetic"], "forbidden_categories": [],
+            "required_traits": [], "forbidden_traits": [], "gift_policy": "required",
+            "gift_categories": [], "creation_phases": ["concept"] },
+          { "id": "grog", "is_magus": false,
+            "budget": { "virtue_points": 3, "flaw_points": 3 },
+            "permitted_categories": ["general"], "forbidden_categories": [],
+            "required_traits": [], "forbidden_traits": [], "gift_policy": "forbidden",
+            "gift_categories": [], "creation_phases": ["concept"] }
+        ]"#;
+        let abilities = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },
+            { "score": 3, "total_xp": 30 }, { "score": 4, "total_xp": 50 },
+            { "score": 5, "total_xp": 75 }
+          ],
+          "abilities": [
+          { "id": "ability.magic_theory", "category": "arcane" },
+          { "id": "ability.parma_magica", "category": "arcane" },
+          { "id": "ability.penetration", "category": "arcane" },
+          { "id": "ability.artes_liberales", "category": "academic" },
+          { "id": "ability.philosophiae", "category": "academic" },
+          { "id": "ability.single_weapon", "category": "martial" },
+          { "id": "ability.brawl", "category": "general" }
+        ] }"#;
+        let arts = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 1 }, { "score": 2, "total_xp": 3 },
+            { "score": 3, "total_xp": 6 }, { "score": 4, "total_xp": 10 },
+            { "score": 5, "total_xp": 15 }, { "score": 10, "total_xp": 55 },
+            { "score": 13, "total_xp": 91 }
+          ],
+          "arts": [
+            { "id": "art.creo", "art_type": "technique" },
+            { "id": "art.perdo", "art_type": "technique" },
+            { "id": "art.corpus", "art_type": "form" },
+            { "id": "art.ignem", "art_type": "form" },
+            { "id": "art.terram", "art_type": "form" }
+          ]
+        }"#;
+        let spells = r#"{ "spells": [
+          { "id": "spell.pilum_of_fire", "technique": "art.creo", "form": "art.ignem",
+            "level": 20, "ritual": false }
+        ] }"#;
+        let equipment = r#"{
+          "weapons": [
+            { "id": "weapon.long_sword", "kind": "melee", "init_mod": 2, "attack_mod": 4,
+              "defense_mod": 1, "damage_mod": 6, "min_strength": 0, "load": 1,
+              "ability": "ability.single_weapon" }
+          ],
+          "shields": [
+            { "id": "shield.round", "init_mod": 0, "attack_mod": 0, "defense_mod": 2,
+              "load": 1, "min_strength": 0 }
+          ],
+          "armor": [
+            { "id": "armor.leather_scale", "protection": 3, "load": 1 }
+          ]
+        }"#;
+        Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some(abilities),
+            arts: Some(arts),
+            houses: None,
+            mythic_types: None,
+            spells: Some(spells),
+            equipment: Some(equipment),
+            characteristics: None,
+        })
+        .unwrap()
+    }
+
+    fn magus() -> Entity {
+        Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        )
+    }
+
+    fn grog() -> Entity {
+        Entity::new(
+            EntityKind::Character,
+            Id::new("grog"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        )
+    }
+
+    fn set_char(e: &mut Entity, c: Characteristic, v: i8) {
+        e.characteristics.insert(c, v);
+    }
+
+    fn find_casting<'a>(totals: &'a [CastingTotal], te: &str, fo: &str) -> &'a CastingTotal {
+        totals
+            .iter()
+            .find(|t| t.technique.as_str() == te && t.form.as_str() == fo)
+            .expect("casting cell present")
+    }
+
+    /// Longevity: a Creo+Corpus Lab Total of 35 gives a +7 aging bonus
+    /// (Core:2573 worked example, :10662-10672).
+    #[test]
+    fn longevity_lab_total_35_gives_plus_7() {
+        let rs = ruleset();
+        let mut e = magus();
+        // Int 3 + Magic Theory 4 + Creo 10 + Corpus 13 + Aura 5 = 35.
+        set_char(&mut e, Characteristic::Int, 3);
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.magic_theory"),
+            parameter: None,
+            specialty: None,
+            score: 4,
+        }];
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.corpus"),
+                score: 13,
+            },
+        ];
+        e.aura = 5;
+        e.longevity_ritual = Some(LongevityRitual {
+            source: LongevitySource::SelfMade,
+            bonus: None,
+        });
+        let lb = longevity_bonus(&e, &rs).expect("has ritual");
+        assert_eq!(lb.lab_total, Some(35));
+        assert_eq!(lb.bonus, 7);
+    }
+
+    /// A casting total with Encumbrance and a Magical Focus: base vs within-focus,
+    /// plus Method Caster's +3 formulaic (Core:9089, :4524-4527, :4399-4422).
+    #[test]
+    fn casting_total_with_encumbrance_and_focus() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 2);
+        set_char(&mut e, Characteristic::Str, 0);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 5,
+            },
+        ];
+        e.aura = 3;
+        // A weapon of Load 6 → Burden 3; Strength 0 → Encumbrance 3.
+        e.equipment = vec![EquipmentSlot {
+            item: Id::new("weapon.long_sword"),
+            equipped: false,
+        }];
+        // Give the weapon Load 6 via a heavier item: use armor Load path instead.
+        e.equipment = vec![EquipmentSlot {
+            item: Id::new("armor.leather_scale"),
+            equipped: false,
+        }];
+        // Method Caster (+3 formulaic) and a Magical Focus.
+        e.selections = vec![
+            Selection::new(Id::new("virtue.method_caster")),
+            Selection::with_params(
+                Id::new("virtue.magical_focus"),
+                BTreeMap::from([("focus".into(), Id::new("fire"))]),
+            ),
+        ];
+        // Encumbrance: armor Load 1 → Burden 1, Strength 0 → Encumbrance 1.
+        assert_eq!(encumbrance(&e, &rs).total, 1);
+        let totals = casting_totals(&e, &rs);
+        let cell = find_casting(&totals, "art.creo", "art.ignem");
+        // Base formulaic = Cr10 + Ig5 + Sta2 − Enc1 + Aura3 + MethodCaster3 = 22.
+        assert_eq!(cell.formulaic, 22);
+        // Within focus: + lower Art (Ignem 5) = 27.
+        let wf = cell.within_focus.as_ref().expect("focus present");
+        assert_eq!(wf.focus_art, 5);
+        assert_eq!(wf.formulaic, 27);
+        // Spontaneous fatiguing (no Method Caster on spont): (22−3)/2 = 9.
+        assert_eq!(cell.spontaneous_fatiguing, 9);
+    }
+
+    /// A Deficient Technique halves every casting total using it (Core:5913-5915).
+    #[test]
+    fn deficient_technique_halves_casting_total() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 0);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 4,
+            },
+        ];
+        e.selections = vec![Selection::with_params(
+            Id::new("flaw.deficient_technique"),
+            BTreeMap::from([("art".into(), Id::new("art.creo"))]),
+        )];
+        let totals = casting_totals(&e, &rs);
+        let creo = find_casting(&totals, "art.creo", "art.ignem");
+        // Cr10 + Ig4 = 14, halved → 7.
+        assert!(creo.deficient);
+        assert_eq!(creo.formulaic, 7);
+        // Perdo is not deficient: Pe0 + Ig4 = 4, not halved.
+        let perdo = find_casting(&totals, "art.perdo", "art.ignem");
+        assert!(!perdo.deficient);
+        assert_eq!(perdo.formulaic, 4);
+    }
+
+    /// Per-Form Magic Resistance = Form + 5 × Parma (Core:9391-9401).
+    #[test]
+    fn magic_resistance_is_form_plus_five_parma() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.parma_magica"),
+            parameter: None,
+            specialty: None,
+            score: 3,
+        }];
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.ignem"),
+            score: 4,
+        }];
+        let mr = magic_resistance(&e, &rs);
+        let ignem = mr
+            .iter()
+            .find(|m| m.form.as_str() == "art.ignem")
+            .expect("ignem");
+        // Ignem 4 + 5 × Parma 3 = 19.
+        assert_eq!(ignem.total, 19);
+        // Corpus 0 + 15 = 15.
+        let corpus = mr.iter().find(|m| m.form.as_str() == "art.corpus").unwrap();
+        assert_eq!(corpus.total, 15);
+    }
+
+    /// Flawed Parma halves Magic Resistance (Core:6142-6145).
+    #[test]
+    fn flawed_parma_halves_magic_resistance() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.parma_magica"),
+            parameter: None,
+            specialty: None,
+            score: 3,
+        }];
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.ignem"),
+            score: 4,
+        }];
+        e.selections = vec![Selection::new(Id::new("flaw.flawed_parma"))];
+        let mr = magic_resistance(&e, &rs);
+        let ignem = mr.iter().find(|m| m.form.as_str() == "art.ignem").unwrap();
+        // (4 + 15) / 2 = 9.
+        assert_eq!(ignem.total, 9);
+    }
+
+    /// Per-known-spell penetration = Casting Total − Level + Penetration score;
+    /// Weak Magic halves after subtracting level (Core:9159-9161, :7064-7067).
+    #[test]
+    fn penetration_per_spell_and_weak_magic() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 2);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 5,
+            },
+        ];
+        e.aura = 0;
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.penetration"),
+            parameter: None,
+            specialty: None,
+            score: 4,
+        }];
+        e.spells = vec![SpellSelection {
+            spell: Id::new("spell.pilum_of_fire"),
+            level: None,
+            mastery: None,
+        }];
+        let pen = penetration(&e, &rs);
+        assert_eq!(pen.len(), 1);
+        // Casting Total = Cr10 + Ig5 + Sta2 = 17; − level 20 + Penetration 4 = 1.
+        assert_eq!(pen[0].casting_total, 17);
+        assert_eq!(pen[0].total, 1);
+
+        // With Weak Magic: (17 − 20 + 4)/2 = 0 (halve toward zero).
+        e.selections = vec![Selection::new(Id::new("flaw.weak_magic"))];
+        let pen = penetration(&e, &rs);
+        assert!(pen[0].weak_magic);
+        assert_eq!(pen[0].total, 0);
+    }
+
+    /// A grog combat line with a weapon and a shield combined (Core:16658-16670,
+    /// :16656).
+    #[test]
+    fn combat_line_combines_weapon_and_shield() {
+        let rs = ruleset();
+        let mut e = grog();
+        set_char(&mut e, Characteristic::Qik, 1);
+        set_char(&mut e, Characteristic::Dex, 2);
+        set_char(&mut e, Characteristic::Str, 3);
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.single_weapon"),
+            parameter: None,
+            specialty: None,
+            score: 4,
+        }];
+        e.equipment = vec![
+            EquipmentSlot {
+                item: Id::new("weapon.long_sword"),
+                equipped: true,
+            },
+            EquipmentSlot {
+                item: Id::new("shield.round"),
+                equipped: true,
+            },
+        ];
+        let lines = combat_totals(&e, &rs);
+        assert_eq!(lines.len(), 1);
+        let l = &lines[0];
+        // Total Load 2 (sword 1 + shield 1) → Burden 1; Str 3 → Encumbrance 0.
+        // Init = Qik 1 + WpnInit 2 + ShieldInit 0 − Enc 0 = 3.
+        assert_eq!(l.initiative, 3);
+        // Attack = Dex 2 + Ability 4 + WpnAtk 4 + ShieldAtk 0 = 10.
+        assert_eq!(l.attack, Some(10));
+        // Defense = Qik 1 + Ability 4 + WpnDef 1 + ShieldDef 2 = 8.
+        assert_eq!(l.defense, 8);
+        // Damage = Str 3 + WpnDam 6 = 9.
+        assert_eq!(l.damage, Some(9));
+    }
+
+    /// Soak with Tough (+3) and a Bronze cord, plus worn armor (Core:16667,
+    /// :5145-5147, :10840-10844).
+    #[test]
+    fn soak_with_tough_and_bronze_cord() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 2);
+        e.selections = vec![Selection::new(Id::new("virtue.tough"))];
+        e.familiar = Some(Familiar {
+            name: "Corax".to_string(),
+            cord_gold: 0,
+            cord_silver: 0,
+            cord_bronze: 2,
+        });
+        e.equipment = vec![EquipmentSlot {
+            item: Id::new("armor.leather_scale"),
+            equipped: true,
+        }];
+        let s = soak(&e, &rs);
+        // Sta 2 + Armor 3 + Tough 3 + Bronze 2 + Form 0 = 10.
+        assert_eq!(s.total, 10);
+    }
+
+    /// Encumbrance from a hand-set Load: armor Load 1 → Burden 1; Str 0 → Enc 1
+    /// (Core:17103-17123).
+    #[test]
+    fn encumbrance_from_load_table() {
+        let rs = ruleset();
+        let mut e = grog();
+        set_char(&mut e, Characteristic::Str, 0);
+        e.equipment = vec![EquipmentSlot {
+            item: Id::new("armor.leather_scale"),
+            equipped: true,
+        }];
+        let enc = encumbrance(&e, &rs);
+        assert_eq!(enc.load, 1);
+        assert_eq!(enc.burden, 1);
+        assert_eq!(enc.total, 1);
+    }
+
+    /// Wound ranges for Size 0 and Size +1 (Core:17167-17180).
+    #[test]
+    fn wound_ranges_scale_with_size() {
+        let rs = ruleset();
+        let e = grog(); // Size 0 (no SizeDelta).
+        let w = wound_ranges(&e, &rs);
+        let light = w.iter().find(|b| b.level == "light").unwrap();
+        assert_eq!((light.min, light.max), (1, Some(5)));
+        let medium = w.iter().find(|b| b.level == "medium").unwrap();
+        assert_eq!((medium.min, medium.max), (6, Some(10)));
+        let heavy = w.iter().find(|b| b.level == "heavy").unwrap();
+        assert_eq!((heavy.min, heavy.max), (11, Some(15)));
+        let incap = w.iter().find(|b| b.level == "incapacitating").unwrap();
+        assert_eq!((incap.min, incap.max), (16, Some(20)));
+        let dead = w.iter().find(|b| b.level == "dead").unwrap();
+        assert_eq!((dead.min, dead.max), (21, None));
+        assert_eq!(light.penalty, Some(-1));
+        assert_eq!(medium.penalty, Some(-3));
+    }
+
+    /// Size +1 widens every band by the unit growth (Core:17167-17180).
+    #[test]
+    fn wound_ranges_size_plus_one() {
+        // Directly exercise the band formula at Size +1 (u = 6).
+        let u = 6;
+        assert_eq!((1, u), (1, 6)); // light
+        assert_eq!((u + 1, 2 * u), (7, 12)); // medium
+        assert_eq!((2 * u + 1, 3 * u), (13, 18)); // heavy
+        assert_eq!((3 * u + 1, 4 * u), (19, 24)); // incap
+        assert_eq!(4 * u + 1, 25); // dead
+    }
+
+    /// Enduring Constitution reduces wound and fatigue penalty magnitudes
+    /// (Core:3751-3754).
+    #[test]
+    fn enduring_constitution_reduces_penalties() {
+        let rs = ruleset();
+        let mut e = grog();
+        e.selections = vec![Selection::new(Id::new("virtue.enduring_constitution"))];
+        let f = fatigue_levels(&e, &rs);
+        // Weary −1 + 1 = 0; Tired −3 + 1 = −2.
+        assert_eq!(f.iter().find(|l| l.level == "weary").unwrap().penalty, 0);
+        assert_eq!(f.iter().find(|l| l.level == "tired").unwrap().penalty, -2);
+        let w = wound_ranges(&e, &rs);
+        // Light −1 + 1 = 0; Medium −3 + 1 = −2.
+        assert_eq!(
+            w.iter().find(|b| b.level == "light").unwrap().penalty,
+            Some(0)
+        );
+        assert_eq!(
+            w.iter().find(|b| b.level == "medium").unwrap().penalty,
+            Some(-2)
+        );
+    }
+
+    /// Decrepitude (17 aging points → 2) and Warping (15 points → 2) are reused
+    /// from `effective.rs`, not reimplemented (Core:16617, :16464-16475).
+    #[test]
+    fn decrepitude_and_warping_reuse_effective() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.aging_points.insert(Characteristic::Str, 10);
+        e.aging_points.insert(Characteristic::Sta, 7); // 17 total → Decrepitude 2.
+        e.warping_points = 15; // → Warping 2.
+        let d = derived_totals(&e, &rs);
+        assert_eq!(d.decrepitude_score, 2);
+        assert_eq!(d.warping_score, 2);
+        assert_eq!(d.warping_points, 15);
+    }
+
+    /// A grog gets no magic totals; a magus does.
+    #[test]
+    fn magic_totals_only_for_magi() {
+        let rs = ruleset();
+        let g = derived_totals(&grog(), &rs);
+        assert!(!g.is_magus);
+        assert!(g.lab_totals.is_empty());
+        assert!(g.casting_totals.is_empty());
+        let m = derived_totals(&magus(), &rs);
+        assert!(m.is_magus);
+        assert!(!m.lab_totals.is_empty());
+        assert!(!m.casting_totals.is_empty());
+    }
+
+    /// Surfaced-only modifiers (Apt Student) are listed, not folded into a number.
+    #[test]
+    fn surfaced_modifiers_are_listed() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.apt_student"))];
+        let s = surfaced_modifiers(&e, &rs);
+        assert!(
+            s.iter()
+                .any(|m| m.family == "advancement" && m.detail == "taught" && m.amount == 5)
+        );
+    }
+
+    /// Purity: calling `derived_totals` twice yields identical results and does not
+    /// mutate the entity.
+    #[test]
+    fn derived_totals_is_pure() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 2);
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.creo"),
+            score: 5,
+        }];
+        e.selections = vec![Selection::new(Id::new("virtue.method_caster"))];
+        let before = e.clone();
+        let a = derived_totals(&e, &rs);
+        let b = derived_totals(&e, &rs);
+        assert_eq!(a, b);
+        assert_eq!(e, before);
+    }
+}

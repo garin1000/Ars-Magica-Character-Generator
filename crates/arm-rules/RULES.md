@@ -1300,6 +1300,71 @@ storyguide call. German equipment names follow
 
 ---
 
+## Derived play-stat totals (M5/5i) — `derived.rs`
+
+`derived.rs` is the **read-only, pure** play-stat layer: `(&Entity, &Ruleset) →
+owned structs`. It computes the in-play totals a character sheet prints (casting,
+lab, penetration, magic resistance, combat, soak, encumbrance, fatigue, wounds,
+longevity) and reuses `effective.rs` for effective Art/Ability scores, the
+aging-adjusted Characteristic, Decrepitude, and Warping. It mutates nothing and
+recomputes no creation-legality; a purity test asserts two calls are byte-equal
+and leave the entity untouched. Result structs carry **labelled addend
+breakdowns** (stable slug ids, mapped through Fluent `derived-*` keys on the UI
+side) — the engine never emits English. **The UI computes no mechanics: it renders
+these numbers.** The `derived_totals` Tauri command mirrors `effective_scores`.
+
+**Formulas** (all `Ars Magica - Definitive Edition (Core Rules).md`):
+
+| Total | Source | Formula |
+|---|---|---|
+| Casting Score | `:9089` | Technique + Form + Stamina − Encumbrance + Aura |
+| Cast types | `:9103-9145` | Formulaic = score; Ritual = score + Artes Liberales + Philosophiae; Spont fatiguing = ÷2; non-fatiguing = ÷5 |
+| Method Caster | `:4524-4527` | +3 flat, Formulaic/Ritual scope only |
+| Magical Focus | `:4399-4422` | within focus, add the **lower** applicable Art again (per-`(Te,Fo)` `within_focus` value; applicability is user-judged, never auto-detected) |
+| Deficient Art | `:5909-5915` | totals adding that Technique/Form **halved** (Form excludes Magic Resistance) |
+| Lab Total | `:4143-4154` | Int + Magic Theory + Technique + Form + Aura + flat LabTotalMod (+ focus / halving as casting) |
+| Penetration | `:9159-9161` | per known spell: Casting Total − Level + Penetration score |
+| Weak Magic | `:7064-7067` | halves Penetration **after** subtracting level (not the casting total) |
+| Magic Resistance | `:9391-9401` | per Form: Form + 5 × Parma Magica; Limited MR drops the Form bonus, Flawed Parma halves |
+| Longevity | `:10662-10672` | self-made: +1 per 5 points (round **up**) of Creo+Corpus Lab Total (aura-gated); external: entered bonus passthrough. Bronze cord noted for aging-resistance (`:10840-10844`) |
+| Combat | `:16658-16670` | Init = Qik + WpnInit − Enc + CombatMod; Attack = Dex + Ability + WpnAtk + CombatMod; Defense = Qik + Ability + WpnDef + CombatMod; Damage = Str + WpnDam + CombatMod |
+| Weapon+shield | `:16656` | one `CombatLine` per equipped weapon, combining every equipped shield's Init/Atk/Def mods |
+| Enc-exempt | `:17105` | Attack/Defense are **not** Encumbrance-penalized; Init **is** |
+| Soak | `:16667` | Stamina + Armor Protection + SoakMod (Tough +3) + Bronze cord; Form bonus situational (entered 0) |
+| Encumbrance | `:17103-17123` | Burden from Load table `[0,1,3,6,10,15,21,28,36,45,55]→[0..10]`; Enc = `max(0, Burden − max(0,Str))` |
+| Fatigue | `:17127-17129` | Winded/Weary −1, Tired −3, Dazed −5, adjusted by HealthMod fatigue delta |
+| Wounds | `:17167-17191` | Size unit `u = max(1, Size+5)`; Light 1..u, Medium u+1..2u, Heavy 2u+1..3u, Incap 3u+1..4u, Dead 4u+1.. ; penalties −1/−3/−5 adjusted by HealthMod wound delta |
+| Decrepitude / Warping | `:16617`, `:16464-16475` | **reused** from `effective.rs` (`decrepitude_score`, `warping_score`), not reimplemented |
+
+**Order of operations** (pinned + unit-tested): base casting/lab score → + flat
+CastingTotalMod/LabTotalMod → within-focus adds the lower Art → **halve** (Deficient
+Art / halving flaws) → for penetration, **− spell level** then Weak-Magic halve.
+Because a Magical Focus is a free-text descriptor the engine cannot auto-detect
+applicability, each `(Technique, Form)` cell carries **both** a base and a
+`within_focus` value; the reader picks whichever applies (no stored per-total
+toggle).
+
+**Exhaustiveness ≠ consumption.** A single `in_play_mods` fold is an exhaustive
+`match` over every `Effect` variant (so a new variant is a compile error in
+`derived.rs`), but exhaustiveness alone does not prove an effect moves a number.
+The per-area functions *read* each folded modifier and the unit tests assert the
+number changes — those reducers **and tests** are what guarantee the 5b in-play
+effects are actually consumed. Worked-example tests: Longevity Lab Total 35 → +7
+(`:2573`); casting total with Encumbrance + Focus (base vs within-focus, Method
+Caster +3); Deficient Technique halving; per-Form Magic Resistance = Form + 5×Parma;
+Flawed Parma halving; per-spell penetration + Weak Magic; weapon+shield combat line;
+Soak with Tough + Bronze cord; Encumbrance from Load; wound ranges Size 0 / +1;
+Enduring Constitution penalty reduction; Decrepitude 17→2 & Warping 15→2 via the
+reused functions; purity.
+
+**Surfaced-only families** (study / aging-roll / non-standard-casting /
+wound-recovery: `AdvancementMod`, `AgingMod`, `SpecialCastingMod`,
+`AbilityRollMod`, and the `HealthTrack::{FatigueRoll, CastingFatigue, Recovery}`
+tracks) are **listed** as labelled `SurfacedModifier`s, not folded into a simulated
+number, because the app does not simulate those subsystems.
+
+---
+
 ## Per-character fields (M4/4d-rest, 4e)
 
 The final M4 phase adds age, Confidence, Personality Traits, Reputations, and the

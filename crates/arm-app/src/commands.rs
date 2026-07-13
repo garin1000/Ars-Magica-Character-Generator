@@ -8,6 +8,8 @@ use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::DialogExt;
 
+use arm_rules::DerivedTotals;
+
 use crate::error::AppError;
 use crate::ruleset_io;
 use crate::ruleset_io::EffectiveScores;
@@ -64,6 +66,21 @@ pub fn effective_scores(
     let guard = state.ruleset.read().expect("ruleset lock poisoned");
     let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
     Ok(ruleset_io::effective_scores_loaded(&entity, ruleset))
+}
+
+/// Computes the read-only play-stat totals (casting, lab, penetration, magic
+/// resistance, combat, soak, encumbrance, fatigue, wounds, longevity,
+/// decrepitude, warping) the character sheet displays. Pure engine path, mirrors
+/// [`effective_scores`]; the frontend renders these numbers and computes no
+/// mechanics itself.
+#[tauri::command]
+pub fn derived_totals(
+    entity: Entity,
+    state: State<'_, AppState>,
+) -> Result<DerivedTotals, AppError> {
+    let guard = state.ruleset.read().expect("ruleset lock poisoned");
+    let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
+    Ok(arm_rules::derived_totals(&entity, ruleset))
 }
 
 /// E2E seam: when set, save/load use this fixed path instead of opening a

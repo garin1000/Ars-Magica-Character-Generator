@@ -5,6 +5,7 @@
 pub mod ability;
 pub mod art;
 pub mod characteristics;
+pub mod derived;
 pub mod effective;
 pub mod equipment;
 pub mod grant;
@@ -18,6 +19,13 @@ pub mod validation;
 pub use ability::{Ability, AbilityCategory, AbilityXpRow, AdvancementTable};
 pub use art::{Art, ArtType};
 pub use characteristics::{Characteristic, CharacteristicCost, CharacteristicRules};
+pub use derived::{
+    Addend, CastingTotal, CastingWithinFocus, CombatLine, DerivedTotals, EncumbranceTotal,
+    FatigueLevel, LabTotal, LongevityBonus, MagicResistance, PenetrationLine, SoakTotal,
+    SurfacedModifier, WoundRange, casting_totals, combat_totals, derived_totals, encumbrance,
+    fatigue_levels, lab_totals, longevity_bonus, magic_resistance, penetration, soak,
+    surfaced_modifiers, wound_ranges,
+};
 pub use effective::{
     AbilityBonus, AbilityFloor, ArtBonus, CharacteristicBonus, RestrictedXpPool, XpAllocation,
     ability_bonus, ability_bonuses, ability_score_floors, age_ability_cap, age_max_ability_score,
