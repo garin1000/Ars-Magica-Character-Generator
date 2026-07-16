@@ -10,15 +10,15 @@ use std::path::{Path, PathBuf};
 use std::collections::BTreeMap;
 
 use arm_rules::{
-    AbilityBonus, AbilityFloor, ArtBonus, Characteristic, CharacteristicBonus, Entity, EntityKind,
-    LocalizedRuleset, MightScore, ReputationType, RestrictedXpPool, Ruleset, RulesetSources,
-    Selection, ValidationMode, ValidationResult, ability_bonuses, ability_score_floors,
-    age_ability_cap, art_bonuses, characteristic_bonuses, characteristic_caps,
-    characteristic_floors, characteristic_points_granted, confidence, decrepitude_score,
-    effective_might, effective_point_ceilings, entity_grants, item_level_budget, item_level_used,
-    power_levels_budget, powers_used, reputation_grants, size, spell_levels_budget,
-    spell_levels_used, spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith,
-    validate, warping, xp_allocation,
+    AbilityBonus, AbilityFloor, ArtBonus, Characteristic, CharacteristicBonus, Confidence, Entity,
+    EntityKind, LocalizedRuleset, MightScore, PointCeilings, ReputationType, RestrictedXpPool,
+    Ruleset, RulesetSources, Selection, SupernaturalFreeSlots, ValidationMode, ValidationResult,
+    ability_bonuses, ability_score_floors, age_ability_cap, art_bonuses, characteristic_bonuses,
+    characteristic_caps, characteristic_floors, characteristic_points_granted, confidence,
+    decrepitude_score, effective_might, effective_point_ceilings, entity_grants, item_level_budget,
+    item_level_used, power_levels_budget, powers_used, reputation_grants, size,
+    spell_levels_budget, spell_levels_used, spell_mastery_floor, spell_mastery_xp,
+    supernatural_free_slots, true_faith, validate, warping, xp_allocation,
 };
 use serde::Serialize;
 
@@ -137,17 +137,23 @@ pub struct ReputationGrant {
 /// Computes the score effects for `entity` against a loaded ruleset.
 pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveScores {
     let allocation = xp_allocation(entity, ruleset);
-    let (virtue_budget, flaw_budget) = effective_point_ceilings(entity, ruleset).unwrap_or((0, 0));
+    let ceilings = effective_point_ceilings(entity, ruleset).unwrap_or(PointCeilings {
+        virtue_ceiling: 0,
+        flaw_ceiling: 0,
+    });
     let profile = ruleset.profile(&entity.type_id);
     let spell_base = profile.map(|p| p.spell_levels).unwrap_or(0);
     // Confidence is derived (type default + V/F); 0/0 when there is no profile.
-    let (confidence_score, confidence_points) = profile
+    let confidence = profile
         .map(|p| confidence(p.confidence_score, p.confidence_points, entity, ruleset))
-        .unwrap_or((0, 0));
-    let (supernatural_free_total, supernatural_free_used) = profile
+        .unwrap_or(Confidence {
+            score: 0,
+            points: 0,
+        });
+    let supernatural_free = profile
         .map(|p| supernatural_free_slots(entity, ruleset, p))
-        .unwrap_or((0, 0));
-    let (warping_score, warping_points) = warping(entity, ruleset);
+        .unwrap_or(SupernaturalFreeSlots { total: 0, used: 0 });
+    let warping = warping(entity, ruleset);
     EffectiveScores {
         ability_bonuses: ability_bonuses(entity, ruleset),
         art_bonuses: art_bonuses(entity, ruleset),
@@ -161,31 +167,37 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         size: size(entity, ruleset),
         characteristic_bonuses: characteristic_bonuses(entity, ruleset),
         granted_selections: entity_grants(entity, ruleset),
-        virtue_budget,
-        flaw_budget,
+        virtue_budget: ceilings.virtue_ceiling,
+        flaw_budget: ceilings.flaw_ceiling,
         spell_levels_budget: spell_levels_budget(spell_base, entity, ruleset),
         spell_levels_used: spell_levels_used(entity, ruleset),
-        confidence_score,
-        confidence_points,
-        supernatural_free_total,
-        supernatural_free_used,
-        age_ability_cap: age_ability_cap(entity),
+        confidence_score: confidence.score,
+        confidence_points: confidence.points,
+        supernatural_free_total: supernatural_free.total,
+        supernatural_free_used: supernatural_free.used,
+        age_ability_cap: age_ability_cap(entity, ruleset),
         // A player-chosen-kind grant (`kind == None`, e.g. Famous) authorizes any
         // type, so it is surfaced to the UI as one add-control per Reputation
         // type; concrete-kind grants pass through unchanged. Validation still
         // enforces the single-slot count (see `validate_reputations`).
         reputation_grants: reputation_grants(entity, ruleset)
             .into_iter()
-            .flat_map(|(kind, score)| match kind {
-                Some(kind) => vec![ReputationGrant { kind, score }],
+            .flat_map(|grant| match grant.reputation_type {
+                Some(kind) => vec![ReputationGrant {
+                    kind,
+                    score: grant.score,
+                }],
                 None => ReputationType::ALL
                     .into_iter()
-                    .map(|kind| ReputationGrant { kind, score })
+                    .map(|kind| ReputationGrant {
+                        kind,
+                        score: grant.score,
+                    })
                     .collect(),
             })
             .collect(),
-        warping_score,
-        warping_points,
+        warping_score: warping.score,
+        warping_points: warping.points,
         decrepitude_score: decrepitude_score(entity, ruleset),
         true_faith_score: true_faith(entity, ruleset),
         item_level_budget: item_level_budget(entity, ruleset),

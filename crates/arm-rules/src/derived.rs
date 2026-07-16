@@ -44,7 +44,10 @@ use crate::effective::{
     effective_characteristic_after_aging, resolved_spell_level, selections_for_effects,
     warping_points_total, warping_score,
 };
-use crate::ruleset::Ruleset;
+use crate::ruleset::{
+    ID_ARTES_LIBERALES, ID_CORPUS, ID_CREO, ID_MAGIC_THEORY, ID_PARMA_MAGICA, ID_PENETRATION,
+    ID_PHILOSOPHIAE, Ruleset,
+};
 use crate::types::{
     CastingScope, CombatStat, Effect, Entity, HalvableTotal, HealthTrack, Id, LongevitySource,
     MagicResistanceEffect, SpecialCasting,
@@ -324,6 +327,12 @@ fn ability(entity: &Entity, ruleset: &Ruleset, id: &str) -> i32 {
     effective_ability_score(entity, ruleset, &Id::new(id), None)
 }
 
+/// The magus's effective score in an Art (Creo, Corpus, …), by bare slug — the
+/// Art-side counterpart of [`ability`], so both catalogue lookups read the same.
+fn art(entity: &Entity, ruleset: &Ruleset, id: &str) -> i32 {
+    effective_art_score(entity, ruleset, &Id::new(id))
+}
+
 // --- Lab totals (per Technique × Form) -------------------------------------
 
 /// A Lab Total for one `(Technique, Form)` cell of the 5×10 grid.
@@ -355,7 +364,7 @@ pub struct LabTotal {
 pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
     let mods = in_play_mods(entity, ruleset);
     let intelligence = characteristic(entity, ruleset, Characteristic::Int);
-    let magic_theory = ability(entity, ruleset, "ability.magic_theory");
+    let magic_theory = ability(entity, ruleset, ID_MAGIC_THEORY);
     let aura = entity.aura;
     let mut out = Vec::new();
     for technique in arts_of(ruleset, ArtType::Technique) {
@@ -500,8 +509,8 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
     let stamina = characteristic(entity, ruleset, Characteristic::Sta);
     let enc = encumbrance(entity, ruleset).total;
     let aura = entity.aura;
-    let artes_liberales = ability(entity, ruleset, "ability.artes_liberales");
-    let philosophiae = ability(entity, ruleset, "ability.philosophiae");
+    let artes_liberales = ability(entity, ruleset, ID_ARTES_LIBERALES);
+    let philosophiae = ability(entity, ruleset, ID_PHILOSOPHIAE);
     let weak_spont = mods.halvings.contains(&HalvableTotal::SpontaneousCasting);
     let mut out = Vec::new();
     for technique in arts_of(ruleset, ArtType::Technique) {
@@ -640,7 +649,7 @@ pub struct PenetrationLine {
 /// Per-known-spell Penetration Totals. Source: Core:9159-9161, :7064-7067.
 pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
     let mods = in_play_mods(entity, ruleset);
-    let pen_ability = ability(entity, ruleset, "ability.penetration");
+    let pen_ability = ability(entity, ruleset, ID_PENETRATION);
     let weak_magic = mods.halvings.contains(&HalvableTotal::Penetration);
     let mut out = Vec::new();
     for sel in &entity.spells {
@@ -704,7 +713,7 @@ pub struct MagicResistance {
 /// RoP:Magic:1472 (Might grants MR = Might Score, not stacking with Parma).
 pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistance> {
     let mods = in_play_mods(entity, ruleset);
-    let parma = ability(entity, ruleset, "ability.parma_magica");
+    let parma = ability(entity, ruleset, ID_PARMA_MAGICA);
     let parma_mr = 5 * parma;
     // A Might-being's blanket resistance = its effective Might Score. Might and
     // Parma do not stack; the higher is the base (RoP:Magic:1472, Core:2627).
@@ -930,15 +939,17 @@ pub fn soak(entity: &Entity, ruleset: &Ruleset) -> SoakTotal {
 /// A Fatigue level and the penalty it imposes on all actions.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FatigueLevel {
-    /// Stable level id (`"fresh"`, `"winded"`, `"weary"`, `"tired"`, `"dazed"`,
-    /// `"unconscious"`), mapped through Fluent.
+    /// Stable level id (`"fresh"`, `"winded"`, `"weary"`, `"tired"`, `"dazed"`),
+    /// mapped through Fluent. `"unconscious"` is a game state with no action
+    /// penalty and is intentionally not surfaced as a penalty row here.
     pub level: String,
     /// The penalty applied at this level (≤ 0), after any HealthMod fatigue delta.
     pub penalty: i32,
 }
 
-/// The six Fatigue levels and their penalties, adjusted by HealthMod fatigue
-/// deltas (a positive delta reduces the penalty magnitude). Source:
+/// The five penalty-bearing Fatigue levels and their penalties, adjusted by
+/// HealthMod fatigue deltas (a positive delta reduces the penalty magnitude).
+/// Unconscious is omitted (it is a state, not an action penalty). Source:
 /// Core:17127-17129.
 pub fn fatigue_levels(entity: &Entity, ruleset: &Ruleset) -> Vec<FatigueLevel> {
     let mods = in_play_mods(entity, ruleset);
@@ -1094,9 +1105,9 @@ pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBo
 fn creo_corpus_lab_total(entity: &Entity, ruleset: &Ruleset) -> i32 {
     let mods = in_play_mods(entity, ruleset);
     characteristic(entity, ruleset, Characteristic::Int)
-        + ability(entity, ruleset, "ability.magic_theory")
-        + effective_art_score(entity, ruleset, &Id::new("art.creo"))
-        + effective_art_score(entity, ruleset, &Id::new("art.corpus"))
+        + ability(entity, ruleset, ID_MAGIC_THEORY)
+        + art(entity, ruleset, ID_CREO)
+        + art(entity, ruleset, ID_CORPUS)
         + entity.aura
         + mods.lab_mod
 }
@@ -1356,7 +1367,37 @@ mod tests {
             "effects": [{ "type": "special_casting_mod", "kind": "deft_form", "param": "form" }] },
           { "id": "virtue.masterpiece", "kind": "virtue", "classification": "creation_effect",
             "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
-            "effects": [{ "type": "masterpiece_item" }] }
+            "effects": [{ "type": "masterpiece_item" }] },
+          { "id": "virtue.inventive_genius", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "lab_total_mod", "amount": 3 }] },
+          { "id": "flaw.lame", "kind": "flaw", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "combat_mod", "amount": -3, "target": "initiative" }] },
+          { "id": "flaw.limited_magic_resistance", "kind": "flaw", "classification": "in_play_effect",
+            "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "magic_resistance_mod", "kind": "no_form_bonus" }] },
+          { "id": "virtue.unaging", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }] },
+          { "id": "virtue.diedne_magic", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "special_casting_mod", "kind": "diedne" }] },
+          { "id": "virtue.life_boost", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "special_casting_mod", "kind": "life_boost" }] },
+          { "id": "virtue.academic_concentration", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "parameters": [{ "key": "subject", "type": "ref", "domain": "text" }],
+            "effects": [{ "type": "ability_roll_mod", "param": "subject", "amount": 3 }] },
+          { "id": "flaw.weak_spontaneous", "kind": "flaw", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "magic_total_halving", "total": "spontaneous_casting" }] },
+          { "id": "virtue.long_winded", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "health_mod", "track": "fatigue_roll", "amount": 3 }] },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "major", "category": "personality", "entity_kinds": ["character"] }
         ]"#;
         let types = r#"[
           { "id": "magus", "is_magus": true,
@@ -2021,6 +2062,256 @@ mod tests {
             s.iter()
                 .any(|m| m.family == "advancement" && m.detail == "taught" && m.amount == 5)
         );
+    }
+
+    /// Inventive Genius folds a flat +3 into the Lab-Total `lab_mod` addend of
+    /// every cell (Core:4151-4154).
+    #[test]
+    fn lab_total_mod_adds_to_every_cell() {
+        let rs = ruleset();
+        let mut e = magus();
+        // All scores 0, aura 0, so the only contribution is the lab_mod.
+        e.selections = vec![Selection::new(Id::new("virtue.inventive_genius"))];
+        let totals = lab_totals(&e, &rs);
+        let cell = totals
+            .iter()
+            .find(|t| t.technique.as_str() == "art.creo" && t.form.as_str() == "art.corpus")
+            .expect("lab cell present");
+        let lab_mod = cell.addends.iter().find(|a| a.label == "lab_mod").unwrap();
+        assert_eq!(lab_mod.value, 3);
+        assert_eq!(cell.total, 3);
+    }
+
+    /// A CombatMod (Lame, −3 Initiative) folds into the Initiative combat total.
+    #[test]
+    fn combat_mod_adjusts_initiative() {
+        let rs = ruleset();
+        let mut e = grog();
+        set_char(&mut e, Characteristic::Qik, 1);
+        set_char(&mut e, Characteristic::Str, 3); // Str 3 → Encumbrance 0 with Load 1.
+        e.equipment = vec![EquipmentSlot {
+            item: Id::new("weapon.long_sword"),
+            equipped: true,
+        }];
+        // Baseline Init = Qik 1 + WpnInit 2 − Enc 0 = 3.
+        assert_eq!(combat_totals(&e, &rs)[0].initiative, 3);
+        e.selections = vec![Selection::new(Id::new("flaw.lame"))];
+        // With Lame (−3 Initiative): 3 − 3 = 0.
+        assert_eq!(combat_totals(&e, &rs)[0].initiative, 0);
+    }
+
+    /// Limited Magic Resistance (a MagicResistanceMod NoFormBonus) drops the Form
+    /// contribution, leaving resistance from Parma alone (Core:6346-6349).
+    #[test]
+    fn limited_magic_resistance_drops_form_bonus() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.parma_magica"),
+            parameter: None,
+            specialty: None,
+            score: 3,
+        }];
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.ignem"),
+            score: 4,
+        }];
+        e.selections = vec![Selection::new(Id::new("flaw.limited_magic_resistance"))];
+        let mr = magic_resistance(&e, &rs);
+        let ignem = mr.iter().find(|m| m.form.as_str() == "art.ignem").unwrap();
+        // Form bonus dropped: 0 + 5 × Parma 3 = 15 (not 19).
+        assert_eq!(ignem.total, 15);
+        let form_addend = ignem.addends.iter().find(|a| a.label == "form").unwrap();
+        assert_eq!(form_addend.value, 0);
+    }
+
+    /// An AgingMod (Unaging → no_aging) is surfaced with amount 0, not simulated.
+    #[test]
+    fn aging_mod_is_surfaced() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.unaging"))];
+        let s = surfaced_modifiers(&e, &rs);
+        assert!(
+            s.iter()
+                .any(|m| m.family == "aging" && m.detail == "no_aging" && m.amount == 0)
+        );
+    }
+
+    /// The multi-variant SpecialCasting arm (Diedne + Life Boost) is surfaced
+    /// labelled, one entry per variant, amount 0.
+    #[test]
+    fn special_casting_cluster_is_surfaced() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![
+            Selection::new(Id::new("virtue.diedne_magic")),
+            Selection::new(Id::new("virtue.life_boost")),
+        ];
+        let s = surfaced_modifiers(&e, &rs);
+        assert!(
+            s.iter()
+                .any(|m| m.family == "special_casting" && m.detail == "diedne" && m.amount == 0)
+        );
+        assert!(
+            s.iter().any(|m| m.family == "special_casting"
+                && m.detail == "life_boost"
+                && m.amount == 0)
+        );
+    }
+
+    /// An AbilityRollMod (Academic Concentration) is surfaced with the free-text
+    /// subject as its detail and the bonus as its amount (Core:3362-3367).
+    #[test]
+    fn ability_roll_mod_is_surfaced_with_subject() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.academic_concentration"),
+            BTreeMap::from([("subject".into(), Id::new("theology"))]),
+        )];
+        let s = surfaced_modifiers(&e, &rs);
+        assert!(
+            s.iter()
+                .any(|m| m.family == "ability_roll" && m.detail == "theology" && m.amount == 3)
+        );
+    }
+
+    /// Weak Spontaneous Magic halves the spontaneous totals only; the formulaic
+    /// total is untouched (Core:7060-7063).
+    #[test]
+    fn weak_spontaneous_magic_halves_spontaneous_totals() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 2);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 5,
+            },
+        ];
+        e.selections = vec![Selection::new(Id::new("flaw.weak_spontaneous"))];
+        let totals = casting_totals(&e, &rs);
+        let cell = find_casting(&totals, "art.creo", "art.ignem");
+        // spont base = halve(Cr10 + Ig5 + Sta2) = halve(17) = 8; fatiguing = 4,
+        // non-fatiguing = 8/5 = 1.
+        assert_eq!(cell.spontaneous_fatiguing, 4);
+        assert_eq!(cell.spontaneous_non_fatiguing, 1);
+        // Formulaic is not a spontaneous total and is not halved.
+        assert_eq!(cell.formulaic, 17);
+    }
+
+    /// Deficient Art and Weak Spontaneous stack on spontaneous totals: halved
+    /// twice; the formulaic total is halved once (Deficient only).
+    #[test]
+    fn deficient_art_and_weak_spontaneous_combine() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 2);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 5,
+            },
+        ];
+        e.selections = vec![
+            Selection::with_params(
+                Id::new("flaw.deficient_technique"),
+                BTreeMap::from([("art".into(), Id::new("art.creo"))]),
+            ),
+            Selection::new(Id::new("flaw.weak_spontaneous")),
+        ];
+        let totals = casting_totals(&e, &rs);
+        let cell = find_casting(&totals, "art.creo", "art.ignem");
+        assert!(cell.deficient);
+        // Formulaic: Deficient only → halve(17) = 8.
+        assert_eq!(cell.formulaic, 8);
+        // Spontaneous base = halve(halve(17)) = halve(8) = 4; fatiguing = 2,
+        // non-fatiguing = 4/5 = 0.
+        assert_eq!(cell.spontaneous_fatiguing, 2);
+        assert_eq!(cell.spontaneous_non_fatiguing, 0);
+    }
+
+    /// The per-spell penetration path halves the casting score for a Deficient Art
+    /// (`formulaic_casting_score`, Core:5913-5915).
+    #[test]
+    fn deficient_art_halves_penetration_casting_score() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Sta, 2);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 5,
+            },
+        ];
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.penetration"),
+            parameter: None,
+            specialty: None,
+            score: 4,
+        }];
+        e.spells = vec![SpellSelection {
+            spell: Id::new("spell.pilum_of_fire"),
+            level: None,
+            mastery: None,
+        }];
+        e.selections = vec![Selection::with_params(
+            Id::new("flaw.deficient_technique"),
+            BTreeMap::from([("art".into(), Id::new("art.creo"))]),
+        )];
+        let pen = penetration(&e, &rs);
+        // Casting score = halve(Cr10 + Ig5 + Sta2) = halve(17) = 8 (Deficient).
+        assert_eq!(pen[0].casting_total, 8);
+        // Penetration = 8 − level 20 + Penetration 4 = −8.
+        assert_eq!(pen[0].total, -8);
+    }
+
+    /// A surfaced-only health-roll track (Long-Winded → fatigue_roll +3) is listed
+    /// under family "health_roll", and does not perturb the folded Fatigue
+    /// penalties (Core:17127-17129).
+    #[test]
+    fn health_roll_track_is_surfaced_not_folded() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.long_winded"))];
+        let s = surfaced_modifiers(&e, &rs);
+        assert!(
+            s.iter()
+                .any(|m| m.family == "health_roll" && m.detail == "fatigue_roll" && m.amount == 3)
+        );
+        // The fatigue-penalty track is untouched: Weary stays −1.
+        let f = fatigue_levels(&e, &rs);
+        assert_eq!(f.iter().find(|l| l.level == "weary").unwrap().penalty, -1);
+    }
+
+    /// An External longevity ritual passes the entered bonus straight through, with
+    /// no self-made Lab Total (Core:10662-10672).
+    #[test]
+    fn external_longevity_passes_through_entered_bonus() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.aura = 5;
+        e.longevity_ritual = Some(LongevityRitual {
+            source: LongevitySource::External,
+            bonus: Some(6),
+        });
+        let lb = longevity_bonus(&e, &rs).expect("has ritual");
+        assert_eq!(lb.source, LongevitySource::External);
+        assert_eq!(lb.bonus, 6);
+        assert_eq!(lb.lab_total, None);
     }
 
     /// Purity: calling `derived_totals` twice yields identical results and does not

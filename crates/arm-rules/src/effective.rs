@@ -1147,7 +1147,45 @@ fn clamp_to_u32(n: i64) -> u32 {
 fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
     sum_signed_effect(entity, ruleset, |e| match e {
         Effect::SpellLevels { amount } => Some(*amount),
-        _ => None,
+        // Exhaustive so adding an Effect variant is a compile error here, not a
+        // silently-ignored contribution to the spell-levels budget.
+        Effect::AbilityBonus { .. }
+        | Effect::CharacteristicLimit { .. }
+        | Effect::ArtBonus { .. }
+        | Effect::AffinityAbilityCost { .. }
+        | Effect::AffinityArtCost { .. }
+        | Effect::RestrictedAbilityXp { .. }
+        | Effect::CharacteristicPoints { .. }
+        | Effect::AbilityScoreGrant { .. }
+        | Effect::GeneralXp { .. }
+        | Effect::ConfidenceBonus { .. }
+        | Effect::SpellMasteryXp { .. }
+        | Effect::GrantsSpellMastery { .. }
+        | Effect::GrantsSelection { .. }
+        | Effect::ItemLevelBudget { .. }
+        | Effect::MasterpieceItem
+        | Effect::TrueFaithGrant { .. }
+        | Effect::WarpingGrant { .. }
+        | Effect::SizeDelta { .. }
+        | Effect::CharacteristicScoreDelta { .. }
+        | Effect::GroupAffinityCost { .. }
+        | Effect::GrantsReputation { .. }
+        | Effect::MightGrant { .. }
+        | Effect::PowerLevels { .. }
+        | Effect::MagicalFocus { .. }
+        | Effect::CastingTotalMod { .. }
+        | Effect::LabTotalMod { .. }
+        | Effect::DeficientArt { .. }
+        | Effect::MagicTotalHalving { .. }
+        | Effect::SoakMod { .. }
+        | Effect::CombatMod { .. }
+        | Effect::HealthMod { .. }
+        | Effect::MagicResistanceMod { .. }
+        | Effect::AgingMod { .. }
+        | Effect::AdvancementMod { .. }
+        | Effect::SpecialCastingMod { .. }
+        | Effect::AbilityRollMod { .. }
+        | Effect::ElementalMagic { .. } => None,
     })
 }
 
@@ -1156,7 +1194,45 @@ fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
 fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
     sum_signed_effect(entity, ruleset, |e| match e {
         Effect::GeneralXp { amount } => Some(*amount),
-        _ => None,
+        // Exhaustive so adding an Effect variant is a compile error here, not a
+        // silently-ignored contribution to the general XP pool.
+        Effect::AbilityBonus { .. }
+        | Effect::CharacteristicLimit { .. }
+        | Effect::ArtBonus { .. }
+        | Effect::AffinityAbilityCost { .. }
+        | Effect::AffinityArtCost { .. }
+        | Effect::RestrictedAbilityXp { .. }
+        | Effect::CharacteristicPoints { .. }
+        | Effect::AbilityScoreGrant { .. }
+        | Effect::SpellLevels { .. }
+        | Effect::ConfidenceBonus { .. }
+        | Effect::SpellMasteryXp { .. }
+        | Effect::GrantsSpellMastery { .. }
+        | Effect::GrantsSelection { .. }
+        | Effect::ItemLevelBudget { .. }
+        | Effect::MasterpieceItem
+        | Effect::TrueFaithGrant { .. }
+        | Effect::WarpingGrant { .. }
+        | Effect::SizeDelta { .. }
+        | Effect::CharacteristicScoreDelta { .. }
+        | Effect::GroupAffinityCost { .. }
+        | Effect::GrantsReputation { .. }
+        | Effect::MightGrant { .. }
+        | Effect::PowerLevels { .. }
+        | Effect::MagicalFocus { .. }
+        | Effect::CastingTotalMod { .. }
+        | Effect::LabTotalMod { .. }
+        | Effect::DeficientArt { .. }
+        | Effect::MagicTotalHalving { .. }
+        | Effect::SoakMod { .. }
+        | Effect::CombatMod { .. }
+        | Effect::HealthMod { .. }
+        | Effect::MagicResistanceMod { .. }
+        | Effect::AgingMod { .. }
+        | Effect::AdvancementMod { .. }
+        | Effect::SpecialCastingMod { .. }
+        | Effect::AbilityRollMod { .. }
+        | Effect::ElementalMagic { .. } => None,
     })
 }
 
@@ -1276,10 +1352,26 @@ pub(crate) fn has_the_gift(
     by_id || by_category
 }
 
-/// The character's effective Confidence `(score, points)`: the type profile's
-/// base plus every [`Effect::ConfidenceBonus`], clamped at 0. Confidence is
-/// derived, never stored. Source: Core Rules.md:2520-2526, 4900-4902.
-pub fn confidence(base_score: u8, base_points: u8, entity: &Entity, ruleset: &Ruleset) -> (u8, u8) {
+/// A character's effective Confidence: the derived Confidence Score and the
+/// Confidence Points backing it. Serializes like its sibling result types
+/// (`Balance`, `AbilityBonus`) as `{ "score": N, "points": N }`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Confidence {
+    /// The Confidence Score (spent per die roll).
+    pub score: u8,
+    /// The Confidence Points available to refresh the score.
+    pub points: u8,
+}
+
+/// The character's effective Confidence: the type profile's base plus every
+/// [`Effect::ConfidenceBonus`], clamped at 0. Confidence is derived, never
+/// stored. Source: Core Rules.md:2520-2526, 4900-4902.
+pub fn confidence(
+    base_score: u8,
+    base_points: u8,
+    entity: &Entity,
+    ruleset: &Ruleset,
+) -> Confidence {
     let mut score = i32::from(base_score);
     let mut points = i32::from(base_points);
     for selection in selections_for_effects(entity, ruleset).iter() {
@@ -1298,7 +1390,10 @@ pub fn confidence(base_score: u8, base_points: u8, entity: &Entity, ruleset: &Ru
         }
     }
     let clamp = |n: i32| u8::try_from(n.max(0)).unwrap_or(u8::MAX);
-    (clamp(score), clamp(points))
+    Confidence {
+        score: clamp(score),
+        points: clamp(points),
+    }
 }
 
 /// The character's derived enchanted-device level budget: base 0 plus every
@@ -1452,15 +1547,26 @@ pub fn warping_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
         .score_for_xp(warping_points_total(entity, ruleset))
 }
 
-/// The character's derived Warping as `(score, points)` — the unified readout: the
-/// score from [`warping_score`], the points from [`warping_points_total`]. Derived,
-/// never stored on the entity as a resolved value. Source: Core Rules.md:7019-7021,
+/// A character's derived Warping: the Warping Score and the Warping Points it is
+/// derived from. Serializes like its sibling result types as
+/// `{ "score": N, "points": N }`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Warping {
+    /// The Warping Score (advancement curve inverted over the point total).
+    pub score: u8,
+    /// The total accrued Warping Points (stored plus V/F grants).
+    pub points: u32,
+}
+
+/// The character's derived Warping — the unified readout: the score from
+/// [`warping_score`], the points from [`warping_points_total`]. Derived, never
+/// stored on the entity as a resolved value. Source: Core Rules.md:7019-7021,
 /// :16464-16475.
-pub fn warping(entity: &Entity, ruleset: &Ruleset) -> (u8, u32) {
-    (
-        warping_score(entity, ruleset),
-        warping_points_total(entity, ruleset),
-    )
+pub fn warping(entity: &Entity, ruleset: &Ruleset) -> Warping {
+    Warping {
+        score: warping_score(entity, ruleset),
+        points: warping_points_total(entity, ruleset),
+    }
 }
 
 /// The character's total accrued aging points across every Characteristic — the
@@ -1508,10 +1614,20 @@ pub fn effective_characteristic_after_aging(
     (bought - reduction).max(floor)
 }
 
-/// The Reputation grants a character holds (`(kind, score)` per
-/// [`Effect::GrantsReputation`]), authorizing starting Reputations. Source: Core
-/// Rules.md:2512-2514.
-pub fn reputation_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<(Option<ReputationType>, u8)> {
+/// A Reputation a character's Virtue/Flaw authorizes them to start with. A
+/// `reputation_type` of `None` means the grant leaves the type to the player
+/// (e.g. Famous). Serializes as `{ "reputation_type": <type>|null, "score": N }`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ReputationGrant {
+    /// The Reputation type the grant fixes, or `None` when player-chosen.
+    pub reputation_type: Option<ReputationType>,
+    /// The starting Reputation score the grant confers.
+    pub score: u8,
+}
+
+/// The Reputation grants a character holds (one per [`Effect::GrantsReputation`]),
+/// authorizing starting Reputations. Source: Core Rules.md:2512-2514.
+pub fn reputation_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<ReputationGrant> {
     let mut grants = Vec::new();
     for selection in selections_for_effects(entity, ruleset).iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
@@ -1519,23 +1635,37 @@ pub fn reputation_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<(Option<Repu
         };
         for effect in &item.effects {
             if let Effect::GrantsReputation { kind, score } = effect {
-                grants.push((*kind, *score));
+                grants.push(ReputationGrant {
+                    reputation_type: *kind,
+                    score: *score,
+                });
             }
         }
     }
     grants
 }
 
-/// The Gift's free Supernatural-Ability slots as `(total, used)`. A Gifted
-/// non-magus gets one free slot; a magus gets none (his free ability is Hermetic
-/// magic itself). `used` counts the Supernatural abilities the entity holds that
-/// no granting Virtue covers (a granting Virtue seeds an `ability_score_grant`
-/// floor). Source: Core Rules.md:2874.
+/// A character's Gift-granted free Supernatural-Ability slots: how many the Gift
+/// confers and how many the entity currently consumes. Serializes like its
+/// sibling result types as `{ "total": N, "used": N }`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SupernaturalFreeSlots {
+    /// The number of free Supernatural-Ability slots the Gift confers.
+    pub total: u8,
+    /// The Supernatural abilities the entity holds that no granting Virtue covers.
+    pub used: u8,
+}
+
+/// The Gift's free Supernatural-Ability slots. A Gifted non-magus gets one free
+/// slot; a magus gets none (his free ability is Hermetic magic itself). `used`
+/// counts the Supernatural abilities the entity holds that no granting Virtue
+/// covers (a granting Virtue seeds an `ability_score_grant` floor).
+/// Source: Core Rules.md:2874.
 pub fn supernatural_free_slots(
     entity: &Entity,
     ruleset: &Ruleset,
     profile: &EntityTypeProfile,
-) -> (u8, u8) {
+) -> SupernaturalFreeSlots {
     let total = if has_the_gift(entity, ruleset, profile) && !profile.is_magus {
         1
     } else {
@@ -1555,26 +1685,26 @@ pub fn supernatural_free_slots(
         })
         .filter(|a| !covered.contains(&a.ability))
         .count();
-    (total, u8::try_from(used).unwrap_or(u8::MAX))
-}
-
-/// The base age → maximum-Ability-score cap (Core Rules.md:2366-2376). A fixed
-/// rules taxonomy, encoded here like [`crate::types::Magnitude::points`] and
-/// surfaced via `EffectiveScores` so the UI never re-hardcodes the table. An
-/// Ability with an Affinity may exceed this by +2 (applied in validation).
-pub fn age_max_ability_score(age: u32) -> u8 {
-    match age {
-        0..=29 => 5,
-        30..=35 => 6,
-        36..=40 => 7,
-        41..=45 => 8,
-        _ => 9,
+    SupernaturalFreeSlots {
+        total,
+        used: u8::try_from(used).unwrap_or(u8::MAX),
     }
 }
 
-/// The character's base age → Ability-score cap, if `age` is set.
-pub fn age_ability_cap(entity: &Entity) -> Option<u8> {
-    entity.age.map(age_max_ability_score)
+/// The base age → maximum-Ability-score cap for `age`, read from the ruleset's
+/// age band table (Core Rules.md:2366-2374). Data, not hardcoded: the bands live
+/// in `rules/core/abilities.json` (`age_ability_caps`) and are surfaced via
+/// `EffectiveScores` so the UI never re-hardcodes the table. `None` when the
+/// ruleset ships no age caps. An Ability with an Affinity may exceed this by +2
+/// (applied in validation).
+pub fn age_max_ability_score(ruleset: &Ruleset, age: u32) -> Option<u8> {
+    ruleset.age_ability_caps().max_ability_score(age)
+}
+
+/// The character's base age → Ability-score cap, if `age` is set and the ruleset
+/// ships an age band table.
+pub fn age_ability_cap(entity: &Entity, ruleset: &Ruleset) -> Option<u8> {
+    age_max_ability_score(ruleset, entity.age?)
 }
 
 #[cfg(test)]
@@ -1665,7 +1795,9 @@ mod tests {
               { "type": "spell_levels", "amount": -30 },
               { "type": "general_xp", "amount": -60 }
             ]
-          }
+          },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "major", "category": "personality", "entity_kinds": ["character"] }
         ]"#;
         let types = r#"[
           {
@@ -2248,7 +2380,9 @@ mod tests {
             "kind": "virtue", "classification": "creation_effect", "magnitude": "minor", "category": "supernatural",
             "entity_kinds": ["character"],
             "effects": [{ "type": "power_levels", "amount": 20 }]
-          }
+          },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "major", "category": "personality", "entity_kinds": ["character"] }
         ]"#;
         let types = r#"[
           {
@@ -2601,10 +2735,19 @@ mod tests {
         // inverting the advancement curve (5 points → Warping Score 1), not read
         // from the grant's declared score. Core:7019-7021, :16464-16475.
         let rs = xp_ruleset();
-        assert_eq!(warping(&xp_entity(vec![]), &rs), (0, 0));
+        assert_eq!(
+            warping(&xp_entity(vec![]), &rs),
+            Warping {
+                score: 0,
+                points: 0
+            }
+        );
         assert_eq!(
             warping(&xp_entity(vec![sel("flaw.warped_by_magic")]), &rs),
-            (1, 5)
+            Warping {
+                score: 1,
+                points: 5
+            }
         );
     }
 
@@ -2620,7 +2763,13 @@ mod tests {
         assert_eq!(warping_points_total(&e, &rs), 15);
         assert_eq!(warping_score(&e, &rs), 2);
         // `warping()` reports the unified (score, total points).
-        assert_eq!(warping(&e, &rs), (2, 15));
+        assert_eq!(
+            warping(&e, &rs),
+            Warping {
+                score: 2,
+                points: 15
+            }
+        );
 
         // Stored points alone also invert (no grant).
         let mut only_stored = xp_entity(vec![]);
@@ -2763,7 +2912,9 @@ mod tests {
           { "id": "virtue.puissant_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
             "category": "hermetic", "entity_kinds": ["character"],
             "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
-            "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }] }
+            "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }] },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "major", "category": "personality", "entity_kinds": ["character"] }
         ]"#;
         let abilities = r#"{ "abilities": [
           { "id": "ability.heartbeast", "category": "supernatural", "requires_training": true }
@@ -2893,7 +3044,9 @@ mod tests {
             "entity_kinds": ["character"],
             "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
             "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }]
-          }
+          },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "major", "category": "personality", "entity_kinds": ["character"] }
         ]"#;
         let types = r#"[
           {

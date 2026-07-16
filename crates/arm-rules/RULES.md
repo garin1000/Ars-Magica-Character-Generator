@@ -260,7 +260,8 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   Poor (Characteristic) unlock can be priced — the rulebook does not print them.
   The **base** limits (±3) are the no-virtue buy range; the **effective** limits
   (±5) are the absolute ceiling/floor those virtues/flaws open. The legal table
-  range is now −5..+5.
+  range is now −5..+5. (The age → max-Ability-score bands live in
+  `rules/core/abilities.json`, not here — see "Age → max Ability score" below.)
 - Implementation: `crates/arm-rules/src/characteristics.rs` —
   `CharacteristicRules` (`cost_for`, `total_cost`, `min_score`, `max_score`,
   `base_max_score`, `base_min_score`, `effective_max_score`,
@@ -1265,9 +1266,19 @@ rows in this table but modeled as their own `Shield` type):
 
 `:16988` names the "Ability" column ("The Weapon Ability needed to use this
 weapon"). `validate_weapon_refs` (in `ruleset.rs`) requires each weapon's
-`ability` to resolve to a Martial Ability, or Brawl (the combat Ability for
-unarmed/improvised weapons, which the rules class as General). 25 melee weapons +
-3 shields.
+`ability` to resolve to a Martial Ability, or an Ability flagged
+`combat_ability` in data — Brawl (the combat Ability for unarmed/improvised
+weapons, which the rules class as General). 25 melee weapons + 3 shields.
+
+**`Ability.combat_ability` data flag** (`rules/core/abilities.json`, set on
+`ability.brawl`; consumed by `validate_weapon_refs`): Brawl is the non-Martial
+combat Ability, so the engine drives the weapon-Ability exception from this flag
+rather than a hardcoded `ability.brawl` slug (a ruleset that slugs unarmed combat
+differently just sets the flag).
+
+> `:7337-7340` "**Brawl** Fighting hand-to-hand without weapons, or with the
+> sorts of improvised weapons you just pick up, including knives. Brawl is also
+> the Ability used to dodge attacks if you have no Martial Abilities."
 
 **Missile Weapon Statistics** (adds a Range column; Thrown-Ability rows are
 `WeaponKind::Thrown`, Bow-Ability rows `Missile`):
@@ -1384,11 +1395,17 @@ simulated number, because the app does not simulate those subsystems.
 The final M4 phase adds age, Confidence, Personality Traits, Reputations, and the
 Gift/Supernatural gate — the remaining Core character-generation surfaces.
 
-**Age → max Ability score.** `effective::age_max_ability_score` encodes the table
-(a fixed taxonomy, like `Magnitude::points`; surfaced via
-`EffectiveScores.age_ability_cap` so the UI never re-hardcodes it):
+**Age → max Ability score.** The band table is **data**, not code: because it caps
+*Ability* scores by age (not any Characteristic), it lives in
+`rules/core/abilities.json` as `age_ability_caps` (parsed into
+`AgeAbilityCaps` in `ability.rs`; each band is `{ max_age?, max_score }`, the
+open-ended 46+ band omitting `max_age`). `AgeAbilityCaps::max_ability_score` reads
+it; `effective::age_max_ability_score(ruleset, age)` and
+`age_ability_cap(entity, ruleset)` surface it via `EffectiveScores.age_ability_cap`
+so the UI never re-hardcodes it. A ruleset that ships no bands cannot enforce the
+cap (returns `None`).
 
-> `:2366-2376` "Your character's age determines the maximum score … | under 30 |
+> `:2366-2374` "Your character's age determines the maximum score … | under 30 |
 > 5 | | 30-35 | 6 | | 36-40 | 7 | | 41-45 | 8 | | 46+ | 9 |"
 
 `validate_abilities` flags a bought Ability above this cap (`ability_above_age_cap`).
@@ -1438,6 +1455,12 @@ General) → `confidence_bonus {score:1, points:2}` (raising the default to 2/5)
 Each trait `|value| ≤ 3`; up to one trait per selected Major Personality Flaw
 (`category == personality`, `magnitude == major`) may reach ±6; `|value| > 6`
 never. The grog-Loyal / warrior-Brave "should" is guided (M6), not enforced here.
+The `personality` category is an **engine invariant**
+(`ENGINE_REQUIRED_CATEGORY_PERSONALITY` in `ruleset.rs`): because the rule keys
+off this exact slug, `Ruleset::validate_integrity` fails loudly at load if a
+ruleset that ships a V/F catalogue (non-empty `point_items`) declares no item in
+the category — mirroring the `ENGINE_REQUIRED_ABILITIES`/`ARTS` role checks, so a
+renamed/dropped category cannot silently make the engine count zero.
 
 **Reputations** (`Entity.reputations`, `ReputationType` = Local / Ecclesiastical /
 Hermetic / **Academic**, `:1091-1101`; `:1097` names Local as "the most basic"
@@ -1567,7 +1590,7 @@ distinct descriptors, which pairwise `incompatible_with` could not.
 | `MagicResistanceMod { kind }` | Non-halving MR — limited_magic_resistance (no_form_bonus), susceptibility faerie/infernal/divine, commanding_aura & special_circumstances (aura_bonus) | Core:6346-6349, 6819-6826, 6815-6818, 3579-3596 | computed/surfaced |
 | `AgingMod { kind, amount }` | Aging/longevity — age_quickly, baneful_circumstances, monstrous_blood (−1), bee_king, faerie_blood (−1), magical_blood (−1), unaging, bound_to_role, leprosy, poor_living_conditions, mild_aging, magian_lineage major/minor | Core:5659-5662, 5687-5690, 6454-6467, 3484-3499, 3797-3820, 4359-4372, 5187-5190, 5735-5748, 6338-6341, 6618-6621, 4528-4531, 4339-4346 | surfaced (app does not simulate aging rolls) |
 | `AdvancementMod { source, amount }` | Study/teaching — apt_student (+5 taught), book_learner (+3 book), free_study (+3 vis), good_teacher, independent_study, study_bonus, secondary_insight, unimaginative_learner, poor_student, incomprehensible, loose_magic | Core:3422-3425, 3519-3522, 3937-3940, 3971-3974, 4115-4118, 5056-5072, 4892-4895, 6915-6918, 6626-6628, 6294-6297, 6354-6357 | surfaced (app does not simulate advancement) |
-| `SpecialCastingMod { kind, param? }` | Casting-style quirks — deft_form (Form-parameterized), quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, and circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, corrupted_spells, disjointed_magic) | Core:3645-3648, 4822-4826, 5073-5076, 9236-9245, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5859-5864, 5972-5975 | **deft_form/quiet_magic/subtle_magic computed** into per-cell `NonStandardCasting` (silent/still/silent_and_still); all other kinds surfaced (conditional penalties) |
+| `SpecialCastingMod { kind, param? }` | Casting-style quirks — deft_form (Form-parameterized), quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, and circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, corrupted_spells, disjointed_magic) | Core:3645-3648, 4822-4826, 5073-5076, 9236-9245, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5859-5864, 5972-5975 | **deft_form/quiet_magic/subtle_magic computed** into per-cell `NonStandardCasting` (silent/still/silent_and_still); all other kinds surfaced (conditional penalties). `deft_form`'s `param` names the affected Form and is load-validated (`validate_effect_refs`, `ParameterDomain::Form` required) exactly as `DeficientArt`'s param, so a missing/wrong-domain key fails loudly instead of silently voiding the waiver in `in_play_mods` |
 | `AbilityRollMod { param(Text), amount }` | Ability-roll bonus in a subject — academic_concentration_subject (+3) | Core:3362-3367 | surfaced |
 
 **Modeling notes / accepted approximations** (each surfaced in 5i's labelled

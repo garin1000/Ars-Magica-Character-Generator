@@ -11,7 +11,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::ability::{Ability, AbilityCategory, AdvancementTable};
+use crate::ability::{Ability, AbilityCategory, AdvancementTable, AgeAbilityCaps};
 use crate::art::{Art, ArtType, ArtsFile};
 use crate::characteristics::CharacteristicRules;
 use crate::equipment::{Armor, EquipmentFile, Shield, Weapon};
@@ -21,7 +21,7 @@ use crate::mythic_companion::{MythicCompanionType, MythicCompanionTypesFile};
 use crate::spell::{Spell, SpellDuration, SpellTarget, SpellsFile};
 use crate::types::{
     Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, Magnitude, ParameterDomain, PointItem,
-    Prereq, RulesetRef,
+    Prereq, RulesetRef, SpecialCasting,
 };
 
 /// Top-level container for all loaded game mechanics.
@@ -39,7 +39,8 @@ use crate::types::{
 /// contract**; renaming any silently breaks the TS consumer with no Rust error.
 /// The data maps (`point_items`, `type_profiles`, `abilities`, `arts`,
 /// `houses`, `characteristic_rules`) serialize as JSON objects keyed by id;
-/// `advancement` / `art_advancement` are bare arrays (see [`AdvancementTable`]):
+/// `advancement` / `art_advancement` / `age_ability_caps` are bare arrays (see
+/// [`AdvancementTable`]):
 ///
 /// ```json
 /// {
@@ -49,7 +50,9 @@ use crate::types::{
 ///   "type_profiles": { "magus": { /* EntityTypeProfile */ } },
 ///   "abilities": { "ability.awareness": { /* Ability */ } },
 ///   "advancement": [ { "score": 1, "total_xp": 5 } ],
+///   "age_ability_caps": [ { "max_age": 29, "max_score": 5 } ],
 ///   "characteristic_rules": { /* CharacteristicRules */ },
+///   "mythic_companion_types": { "mythic.x": { /* MythicCompanionType */ } },
 ///   "magnitude_points": { "free": 0, "minor": 1, "major": 3 },
 ///   "ability_category_order": [ "general", "academic", "arcane", "martial", "supernatural" ],
 ///   "arts": { "art.creo": { /* Art */ } },
@@ -88,6 +91,13 @@ pub struct Ruleset {
     /// `advancement` field name is a stable public contract.
     #[serde(default)]
     pub(crate) advancement: AdvancementTable,
+    /// The age → maximum-Ability-score band table (Core:2366-2374). Caps *Ability*
+    /// scores by age, loaded from `rules/core/abilities.json` beside the Ability
+    /// advancement table. Empty for a ruleset that ships no age caps. Serialized
+    /// whole to the frontend; the `age_ability_caps` field name is a stable public
+    /// contract.
+    #[serde(default)]
+    pub(crate) age_ability_caps: AgeAbilityCaps,
     /// The Characteristic point-buy rules (cost table + starting points), if the
     /// ruleset ships them. `None` for rulesets without a characteristics file.
     /// Serialized whole to the frontend; the `characteristic_rules` field name is
@@ -444,6 +454,10 @@ struct AbilitiesFile {
     advancement: AdvancementTable,
     #[serde(default)]
     abilities: Vec<Ability>,
+    /// The age → maximum-Ability-score band table (Core:2366-2374). Caps *Ability*
+    /// scores by age, so it lives beside the Ability advancement table.
+    #[serde(default)]
+    age_ability_caps: AgeAbilityCaps,
 }
 
 /// Pushes a `"duplicate <label> ID: '<id>'"` error for each id seen more than
@@ -460,6 +474,54 @@ fn collect_duplicates<'a>(
         }
     }
 }
+
+/// Abilities the engine dereferences by hardcoded id when computing a magus's
+/// play-time totals (`derived.rs`: Casting/Lab Totals, Magic Resistance,
+/// Penetration; `validation.rs`: the spell-level cap). These are **engine
+/// invariants, not catalogue data**: the code looks them up by these exact
+/// slugs, so a Hermetic ruleset that renames or omits one would silently compute
+/// wrong numbers (e.g. Magic Resistance as if Parma Magica = 0) rather than fail.
+/// [`Ruleset::validate_integrity`] enforces their presence for any ruleset that
+/// declares a magus profile and ships an Arts catalogue. Kept sorted for a
+/// deterministic error order.
+/// Artes Liberales — ritual-casting bonus (`derived.rs`).
+pub(crate) const ID_ARTES_LIBERALES: &str = "ability.artes_liberales";
+/// Magic Theory — Lab Total addend (`derived.rs`) and the spell-level cap
+/// (`validation/magus.rs`).
+pub(crate) const ID_MAGIC_THEORY: &str = "ability.magic_theory";
+/// Parma Magica — Magic Resistance base (`derived.rs`).
+pub(crate) const ID_PARMA_MAGICA: &str = "ability.parma_magica";
+/// Penetration — Penetration Total addend (`derived.rs`).
+pub(crate) const ID_PENETRATION: &str = "ability.penetration";
+/// Philosophiae — ritual-casting bonus (`derived.rs`).
+pub(crate) const ID_PHILOSOPHIAE: &str = "ability.philosophiae";
+const ENGINE_REQUIRED_ABILITIES: [&str; 5] = [
+    ID_ARTES_LIBERALES,
+    ID_MAGIC_THEORY,
+    ID_PARMA_MAGICA,
+    ID_PENETRATION,
+    ID_PHILOSOPHIAE,
+];
+
+/// Arts the engine dereferences by hardcoded id (`derived.rs` reads Creo+Corpus
+/// for the self-made-Longevity-Ritual Lab Total). Engine invariants like
+/// [`ENGINE_REQUIRED_ABILITIES`]; enforced under the same condition.
+/// Corpus — self-made-Longevity-Ritual Lab Total (`derived.rs`).
+pub(crate) const ID_CORPUS: &str = "art.corpus";
+/// Creo — self-made-Longevity-Ritual Lab Total (`derived.rs`) and the
+/// Momentary-Creo lasting-effect ritual check (`validate_spell_refs`).
+pub(crate) const ID_CREO: &str = "art.creo";
+const ENGINE_REQUIRED_ARTS: [&str; 2] = [ID_CORPUS, ID_CREO];
+
+/// V/F category slug the engine dereferences by hardcoded string:
+/// `validation/scores.rs` keys the Major-Personality-Flaw rule (each Major
+/// Personality Flaw permits one personality trait with `|value|` up to ±6;
+/// Core:2500-2503, :2820) off this exact category. Engine invariant like
+/// [`ENGINE_REQUIRED_ABILITIES`] — a ruleset that renamed or dropped it would make
+/// the engine silently count zero Major Personality Flaws and wrongly reject every
+/// ±6 trait, so [`Ruleset::validate_integrity`] enforces its presence for any
+/// ruleset that ships a V/F catalogue.
+pub(crate) const ENGINE_REQUIRED_CATEGORY_PERSONALITY: &str = "personality";
 
 impl Ruleset {
     /// Parses point items and type profiles from JSON, validates referential
@@ -726,6 +788,7 @@ impl Ruleset {
             type_profiles,
             abilities,
             advancement: abilities_file.advancement,
+            age_ability_caps: abilities_file.age_ability_caps,
             characteristic_rules,
             magnitude_points: derived_magnitude_points(),
             ability_category_order: AbilityCategory::ALL.to_vec(),
@@ -839,6 +902,12 @@ impl Ruleset {
     /// The Ability XP advancement table.
     pub fn advancement(&self) -> &AdvancementTable {
         &self.advancement
+    }
+
+    /// The age → maximum-Ability-score band table (Core:2366-2374). Empty when the
+    /// ruleset ships no age caps.
+    pub fn age_ability_caps(&self) -> &AgeAbilityCaps {
+        &self.age_ability_caps
     }
 
     /// Looks up an Art by id.
@@ -1083,10 +1152,71 @@ impl Ruleset {
             }
         }
 
+        self.validate_engine_required_roles(&mut errors);
+        self.validate_engine_required_categories(&mut errors);
+
         if errors.is_empty() {
             Ok(())
         } else {
             Err(IntegrityError::new(errors))
+        }
+    }
+
+    /// Checks that every engine-required Hermetic role ([`ENGINE_REQUIRED_ABILITIES`],
+    /// [`ENGINE_REQUIRED_ARTS`]) resolves, failing loudly with the offending id.
+    ///
+    /// Gated on the ruleset declaring a magus profile **and** shipping an Arts
+    /// catalogue — the exact condition under which the engine computes a magus's
+    /// play-stats and dereferences these ids. A minimal or non-Hermetic fixture
+    /// (no magus, or no Arts) needs none of them, so it is exempt; this keeps the
+    /// guard from rejecting valid partial rulesets while still catching a real
+    /// Hermetic ruleset that renamed or dropped one of the roles.
+    fn validate_engine_required_roles(&self, errors: &mut Vec<String>) {
+        let has_magus = self.type_profiles.values().any(|p| p.is_magus);
+        if !has_magus || self.arts.is_empty() {
+            return;
+        }
+        for required in ENGINE_REQUIRED_ABILITIES {
+            let id = Id::new(required);
+            if !self.abilities.contains_key(&id) {
+                errors.push(format!(
+                    "engine-required ability '{id}' is missing from the catalogue"
+                ));
+            }
+        }
+        for required in ENGINE_REQUIRED_ARTS {
+            let id = Id::new(required);
+            if !self.arts.contains_key(&id) {
+                errors.push(format!(
+                    "engine-required art '{id}' is missing from the catalogue"
+                ));
+            }
+        }
+    }
+
+    /// Checks that a ruleset shipping a V/F catalogue carries the engine-required
+    /// personality category ([`ENGINE_REQUIRED_CATEGORY_PERSONALITY`]), failing
+    /// loudly with the category name if no point item declares it.
+    ///
+    /// Gated on the ruleset shipping any point items — the exact condition under
+    /// which the engine's Major-Personality-Flaw rule (`validation/scores.rs`)
+    /// dereferences the category. An empty V/F catalogue (a minimal or non-standard
+    /// fixture) ships no Personality Flaws and needs none of it, so it is exempt;
+    /// this mirrors how the Hermetic-role check is gated on the ruleset actually
+    /// shipping the relevant catalogue.
+    fn validate_engine_required_categories(&self, errors: &mut Vec<String>) {
+        if self.point_items.is_empty() {
+            return;
+        }
+        let has_personality = self
+            .point_items
+            .values()
+            .any(|item| item.category == ENGINE_REQUIRED_CATEGORY_PERSONALITY);
+        if !has_personality {
+            errors.push(format!(
+                "engine-required V/F category '{ENGINE_REQUIRED_CATEGORY_PERSONALITY}' \
+                 is missing from the catalogue"
+            ));
         }
     }
 
@@ -1253,7 +1383,7 @@ impl Ruleset {
                 ));
             }
             if spell.duration == Some(SpellDuration::Momentary)
-                && spell.technique == Id::new("art.creo")
+                && spell.technique == Id::new(ID_CREO)
                 && spell.creates_lasting
             {
                 errors.push(format!(
@@ -1272,19 +1402,18 @@ impl Ruleset {
     }
 
     /// Validates a weapon: its combat `ability` must resolve to a known Ability and
-    /// be a combat-appropriate one (a Martial Ability, or Brawl — which the rules
-    /// categorize as General but which is the combat Ability for unarmed and
-    /// improvised weapons); and its source line range (if any) must be well-formed.
-    /// This is the load-time trust gate that a weapon can only ship once its combat
-    /// Ability exists. Source: Ars Magica - Definitive Edition (Core Rules).md:16988
-    /// (the "Ability" column names the Weapon Ability needed to use the weapon).
+    /// be a combat-appropriate one (a Martial Ability, or an Ability flagged
+    /// `combat_ability` in data — Brawl, which the rules categorize as General but
+    /// which is the combat Ability for unarmed and improvised weapons); and its
+    /// source line range (if any) must be well-formed. This is the load-time trust
+    /// gate that a weapon can only ship once its combat Ability exists. Source: Ars
+    /// Magica - Definitive Edition (Core Rules).md:16988 (the "Ability" column names
+    /// the Weapon Ability needed to use the weapon).
     fn validate_weapon_refs(&self, weapon: &Weapon, errors: &mut Vec<String>) {
         let id = &weapon.id;
-        // Brawl is the combat Ability for body/improvised weapons; it is a General
-        // Ability rather than Martial, so it is accepted explicitly alongside the
-        // Martial category. Referencing the id here is registry logic, not a
-        // user-facing label.
-        let brawl = Id::new("ability.brawl");
+        // The non-Martial combat Abilities (Brawl) are marked in data by the
+        // `combat_ability` flag rather than a hardcoded slug, so a ruleset that
+        // slugs unarmed combat differently just sets the flag.
         match self.abilities.get(&weapon.ability) {
             None => errors.push(format!(
                 "weapon '{id}': ability references unknown ability '{}'",
@@ -1292,7 +1421,7 @@ impl Ruleset {
             )),
             Some(ability)
                 if ability.category != crate::ability::AbilityCategory::Martial
-                    && weapon.ability != brawl =>
+                    && !ability.combat_ability =>
             {
                 errors.push(format!(
                     "weapon '{id}': ability '{}' is not a combat Ability (must be Martial or Brawl)",
@@ -1356,11 +1485,105 @@ impl Ruleset {
         }
     }
 
+    /// Fails if `ability` does not resolve to a known Ability, naming the effect
+    /// `kind` in the message. Shared by the fixed-ability-target effects.
+    fn validate_ability_ref(&self, ability: &Id, kind: &str, id: &Id, errors: &mut Vec<String>) {
+        if !self.abilities.contains_key(ability) {
+            errors.push(format!(
+                "{id}: effect '{kind}' references unknown ability '{ability}'"
+            ));
+        }
+    }
+
+    /// Fails for every id in a fixed ability list that does not resolve
+    /// (`restricted_ability_xp`, `group_affinity_cost`).
+    fn validate_ability_list_effect<'a>(
+        &self,
+        abilities: impl IntoIterator<Item = &'a Id>,
+        kind: &str,
+        id: &Id,
+        errors: &mut Vec<String>,
+    ) {
+        for ability in abilities {
+            self.validate_ability_ref(ability, kind, id, errors);
+        }
+    }
+
+    /// Fails for every id in a fixed point-item list that does not resolve
+    /// (`grants_selection`).
+    fn validate_item_list_effect<'a>(
+        &self,
+        items: impl IntoIterator<Item = &'a Id>,
+        kind: &str,
+        id: &Id,
+        errors: &mut Vec<String>,
+    ) {
+        for granted in items {
+            if !self.point_items.contains_key(granted) {
+                errors.push(format!(
+                    "{id}: effect '{kind}' references unknown item '{granted}'"
+                ));
+            }
+        }
+    }
+
+    /// Fails for every Form id in a fixed Art list that does not resolve
+    /// (`elemental_magic`). Only checked when the Arts catalogue is loaded (the
+    /// point-items file loads even in the Arts-less `from_core_json` path; the full
+    /// app + spell paths load Arts and do enforce this), exactly like
+    /// `validate_spell_refs`.
+    fn validate_art_list_effect<'a>(
+        &self,
+        forms: impl IntoIterator<Item = &'a Id>,
+        kind: &str,
+        id: &Id,
+        errors: &mut Vec<String>,
+    ) {
+        if self.arts.is_empty() {
+            return;
+        }
+        for form in forms {
+            if !self.arts.contains_key(form) {
+                errors.push(format!(
+                    "{id}: effect '{kind}' references unknown art '{form}'"
+                ));
+            }
+        }
+    }
+
+    /// Validates a `deficient_art` effect: its declared parameter must exist and
+    /// carry a Technique- or Form-domain (either fixes the class).
+    fn validate_deficient_art_effect(
+        &self,
+        item: &PointItem,
+        param: &str,
+        id: &Id,
+        errors: &mut Vec<String>,
+    ) {
+        match item.parameters.iter().find(|p| p.key.as_str() == param) {
+            None => errors.push(format!(
+                "{id}: effect 'deficient_art' references unknown parameter '{param}'"
+            )),
+            Some(def)
+                if def.domain != ParameterDomain::Technique
+                    && def.domain != ParameterDomain::Form =>
+            {
+                errors.push(format!(
+                    "{id}: effect 'deficient_art' parameter '{param}' has domain '{}', expected 'technique' or 'form'",
+                    def.domain
+                ))
+            }
+            Some(_) => {}
+        }
+    }
+
     /// Validates that every [`Effect`] names a declared parameter whose domain
     /// matches the effect kind (`ability_bonus` → an `ability`-domain param,
     /// `characteristic_limit` → a `characteristic`-domain param). Effects resolve
     /// the target through that parameter, so a missing key or domain mismatch
-    /// would silently never apply — fail loudly at load instead.
+    /// would silently never apply — fail loudly at load instead. Effects that carry
+    /// a directly-stored ref instead of a parameter are validated inline via the
+    /// small `validate_*_effect` helpers.
     fn validate_effect_refs(&self, item: &PointItem, id: &Id, errors: &mut Vec<String>) {
         for effect in &item.effects {
             let (param, expected, kind) = match effect {
@@ -1388,87 +1611,44 @@ impl Ruleset {
                     (param, ParameterDomain::Text, "ability_roll_mod")
                 }
                 // Deficient Art targets a Technique OR a Form; the declared
-                // param's domain (technique/form) is what fixes the class, so
-                // accept either here rather than a single expected domain.
+                // param's domain (technique/form) is what fixes the class.
                 Effect::DeficientArt { param } => {
-                    match item.parameters.iter().find(|p| &p.key == param) {
-                        None => errors.push(format!(
-                            "{id}: effect 'deficient_art' references unknown parameter '{param}'"
-                        )),
-                        Some(def)
-                            if def.domain != ParameterDomain::Technique
-                                && def.domain != ParameterDomain::Form =>
-                        {
-                            errors.push(format!(
-                                "{id}: effect 'deficient_art' parameter '{param}' has domain '{}', expected 'technique' or 'form'",
-                                def.domain
-                            ))
-                        }
-                        Some(_) => {}
-                    }
+                    self.validate_deficient_art_effect(item, param, id, errors);
                     continue;
                 }
                 // Fixed target: validate the directly-stored ability id resolves.
                 Effect::AbilityScoreGrant { ability, .. } => {
-                    if !self.abilities.contains_key(ability) {
-                        errors.push(format!(
-                            "{id}: effect 'ability_score_grant' references unknown ability '{ability}'"
-                        ));
-                    }
+                    self.validate_ability_ref(ability, "ability_score_grant", id, errors);
                     continue;
                 }
-                // Fixed eligibility list: validate each named ability id
-                // resolves, like AbilityScoreGrant.ability and AbilityMin. The
-                // eligible categories are a loose namespace matched at eval, not
-                // a registry, so they are not checked here.
+                // Fixed eligibility list: validate each named ability id resolves,
+                // like AbilityScoreGrant.ability and AbilityMin. The eligible
+                // categories are a loose namespace matched at eval, not a registry,
+                // so they are not checked here.
                 Effect::RestrictedAbilityXp { abilities, .. } => {
-                    for ability in abilities {
-                        if !self.abilities.contains_key(ability) {
-                            errors.push(format!(
-                                "{id}: effect 'restricted_ability_xp' references unknown ability '{ability}'"
-                            ));
-                        }
-                    }
+                    self.validate_ability_list_effect(
+                        abilities,
+                        "restricted_ability_xp",
+                        id,
+                        errors,
+                    );
                     continue;
                 }
                 // Fixed group of abilities the Affinity covers (Linguist).
                 Effect::GroupAffinityCost { abilities, .. } => {
-                    for ability in abilities {
-                        if !self.abilities.contains_key(ability) {
-                            errors.push(format!(
-                                "{id}: effect 'group_affinity_cost' references unknown ability '{ability}'"
-                            ));
-                        }
-                    }
+                    self.validate_ability_list_effect(abilities, "group_affinity_cost", id, errors);
                     continue;
                 }
-                // Fixed nested grant: every granted id must resolve to a point
-                // item (a Virtue/Flaw), like a House grant's `item`.
+                // Fixed nested grant: every granted id must resolve to a point item
+                // (a Virtue/Flaw), like a House grant's `item`.
                 Effect::GrantsSelection { items } => {
-                    for granted in items {
-                        if !self.point_items.contains_key(granted) {
-                            errors.push(format!(
-                                "{id}: effect 'grants_selection' references unknown item '{granted}'"
-                            ));
-                        }
-                    }
+                    self.validate_item_list_effect(items, "grants_selection", id, errors);
                     continue;
                 }
-                // Fixed target set: every elemental Form id the redistribution
-                // pools over must resolve to a known Art. Only checked when the
-                // Arts catalogue is loaded (the point-items file is loaded even in
-                // the Arts-less `from_core_json` path; the full app + spell paths
-                // load Arts and do enforce this), exactly like validate_spell_refs.
+                // Fixed target set: every elemental Form id the redistribution pools
+                // over must resolve to a known Art.
                 Effect::ElementalMagic { forms } => {
-                    if !self.arts.is_empty() {
-                        for form in forms {
-                            if !self.arts.contains_key(form) {
-                                errors.push(format!(
-                                    "{id}: effect 'elemental_magic' references unknown art '{form}'"
-                                ));
-                            }
-                        }
-                    }
+                    self.validate_art_list_effect(forms, "elemental_magic", id, errors);
                     continue;
                 }
                 // Fixed target: validate the directly-stored characteristic id
@@ -1481,7 +1661,31 @@ impl Ruleset {
                     }
                     continue;
                 }
-                // No parameter or ref to resolve: the grant is intrinsic.
+                // The Form-scoped `deft_form` quirk names a Form via its param,
+                // resolved against the selection's params exactly as
+                // `deficient_art` resolves its Art (see the SpecialCastingMod doc
+                // in types.rs); the declared param must exist and carry the Form
+                // domain. A missing key or non-Form domain would make the waiver
+                // silently never apply in derived.rs::in_play_mods.
+                Effect::SpecialCastingMod {
+                    kind: SpecialCasting::DeftForm,
+                    param: Some(p),
+                } => (p, ParameterDomain::Form, "special_casting_mod"),
+                // deft_form REQUIRES a param naming the affected Form:
+                // derived.rs::in_play_mods guards on `param.as_ref()`, so a
+                // param-less deft_form would silently never apply its waiver.
+                // Fail loudly rather than fall into the param-less catch-all.
+                Effect::SpecialCastingMod {
+                    kind: SpecialCasting::DeftForm,
+                    param: None,
+                } => {
+                    errors.push(format!(
+                        "{id}: effect 'special_casting_mod' kind 'deft_form' requires a param naming the affected Form"
+                    ));
+                    continue;
+                }
+                // No parameter or ref to resolve: the grant is intrinsic. The
+                // param-less / non-`deft_form` SpecialCasting quirks fall here.
                 Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
                 | Effect::ItemLevelBudget { .. }
@@ -1659,6 +1863,14 @@ mod tests {
         "category": "general",
         "entity_kinds": ["character"],
         "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }]
+      },
+      {
+        "id": "flaw.optimistic",
+        "kind": "flaw",
+        "classification": "narrative",
+        "magnitude": "major",
+        "category": "personality",
+        "entity_kinds": ["character"]
       }
     ]"#;
 
@@ -1689,7 +1901,7 @@ mod tests {
     #[test]
     fn load_valid_ruleset() {
         let rs = Ruleset::from_json("arm5-core", "2024.1", VALID_ITEMS, VALID_TYPES).unwrap();
-        assert_eq!(rs.item_count(), 5);
+        assert_eq!(rs.item_count(), 6);
         assert_eq!(rs.profile_count(), 1);
         assert_eq!(rs.ability_count(), 0);
         assert_eq!(rs.id, Id::new("arm5-core"));
@@ -1711,7 +1923,7 @@ mod tests {
             characteristics: None,
         })
         .unwrap();
-        assert_eq!(rs.item_count(), 5);
+        assert_eq!(rs.item_count(), 6);
         assert_eq!(rs.ability_count(), 2);
         assert_eq!(rs.id, Id::new("arm5-core"));
 
@@ -1731,6 +1943,73 @@ mod tests {
         })
         .unwrap();
         assert_eq!(no_abilities.ability_count(), 0);
+    }
+
+    #[test]
+    fn weapon_accepts_data_flagged_combat_ability() {
+        // A non-Martial Ability flagged `combat_ability` in data is accepted as a
+        // weapon's combat Ability, driven by the flag rather than a hardcoded slug.
+        let abilities = r#"{
+          "advancement": [],
+          "abilities": [
+            { "id": "ability.unarmed", "category": "general", "combat_ability": true }
+          ]
+        }"#;
+        let equipment = r#"{ "weapons": [
+          { "id": "weapon.fist", "kind": "melee", "init_mod": 0, "defense_mod": 0,
+            "load": 0, "ability": "ability.unarmed" }
+        ] }"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: Some(abilities),
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            equipment: Some(equipment),
+            characteristics: None,
+        });
+        assert!(
+            rs.is_ok(),
+            "a data-flagged combat Ability should be accepted: {rs:?}"
+        );
+    }
+
+    #[test]
+    fn weapon_rejects_unflagged_non_martial_ability() {
+        // A non-Martial Ability without the `combat_ability` flag is not a valid
+        // weapon Ability.
+        let abilities = r#"{
+          "advancement": [],
+          "abilities": [
+            { "id": "ability.chatter", "category": "general" }
+          ]
+        }"#;
+        let equipment = r#"{ "weapons": [
+          { "id": "weapon.bad", "kind": "melee", "init_mod": 0, "defense_mod": 0,
+            "load": 0, "ability": "ability.chatter" }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: Some(abilities),
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            equipment: Some(equipment),
+            characteristics: None,
+        })
+        .unwrap_err();
+        assert!(
+            err.to_string().contains("not a combat Ability"),
+            "expected combat-ability rejection, got: {err}"
+        );
     }
 
     const VALID_HOUSES: &str = r#"{
@@ -2240,11 +2519,13 @@ mod tests {
 
     #[test]
     fn ability_min_prereq_resolves_against_registry() {
-        let items = r#"[{
-          "id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
-          "entity_kinds": ["character"],
-          "prerequisites": { "kind": "ability_min", "value": { "ability": "ability.awareness", "score": 2 } }
-        }]"#;
+        let items = r#"[
+          { "id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
+            "entity_kinds": ["character"],
+            "prerequisites": { "kind": "ability_min", "value": { "ability": "ability.awareness", "score": 2 } } },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+            "category": "personality", "entity_kinds": ["character"] }
+        ]"#;
         let rs = Ruleset::from_json_with_abilities("t", "1", items, "[]", VALID_ABILITIES);
         assert!(rs.is_ok());
     }
@@ -2270,7 +2551,7 @@ mod tests {
         let virtues = rs.items_by_kind(ItemKind::Virtue).count();
         assert_eq!(virtues, 4);
         let flaws = rs.items_by_kind(ItemKind::Flaw).count();
-        assert_eq!(flaws, 1);
+        assert_eq!(flaws, 2);
 
         let hermetic = rs.items_by_category("hermetic").count();
         assert_eq!(hermetic, 2);
@@ -2428,20 +2709,118 @@ mod tests {
     }
 
     #[test]
+    fn deft_form_effect_referencing_unknown_parameter_is_rejected() {
+        // A `deft_form` SpecialCastingMod names a Form via its `param`, resolved
+        // against the selection's params exactly as `deficient_art` resolves its
+        // Art. A param key that is not declared would silently never resolve, so
+        // it must fail loudly at load.
+        let items = r#"[
+          { "id": "virtue.deft_form",
+            "kind": "virtue",
+            "classification": "in_play_effect",
+            "magnitude": "minor",
+            "category": "hermetic",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "special_casting_mod", "kind": "deft_form", "param": "form" }] },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+            "category": "personality", "entity_kinds": ["character"] }
+        ]"#;
+        // No `parameters` declared, so the effect's `form` param is unknown.
+        let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("special_casting_mod") && msg.contains("unknown parameter 'form'"),
+            "{msg}"
+        );
+    }
+
+    #[test]
+    fn deft_form_effect_with_mismatched_parameter_domain_is_rejected() {
+        // deft_form names a Form; a param declared with a non-Form domain would
+        // point the waiver at the wrong kind of Art (or none), so reject it.
+        let items = r#"[
+          { "id": "virtue.deft_form",
+            "kind": "virtue",
+            "classification": "in_play_effect",
+            "magnitude": "minor",
+            "category": "hermetic",
+            "entity_kinds": ["character"],
+            "parameters": [{ "key": "form", "type": "ref", "domain": "technique" }],
+            "effects": [{ "type": "special_casting_mod", "kind": "deft_form", "param": "form" }] },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+            "category": "personality", "entity_kinds": ["character"] }
+        ]"#;
+        let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("special_casting_mod") && msg.contains("expected 'form'"),
+            "{msg}"
+        );
+    }
+
+    #[test]
+    fn well_formed_deft_form_effect_loads() {
+        // A `form`-domain param backing the deft_form quirk is well formed and
+        // must load clean, mirroring production `virtue.deft_form`.
+        let items = r#"[
+          { "id": "virtue.deft_form",
+            "kind": "virtue",
+            "classification": "in_play_effect",
+            "magnitude": "minor",
+            "category": "hermetic",
+            "entity_kinds": ["character"],
+            "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
+            "effects": [{ "type": "special_casting_mod", "kind": "deft_form", "param": "form" }] },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+            "category": "personality", "entity_kinds": ["character"] }
+        ]"#;
+        let rs = Ruleset::from_json("test", "1", items, "[]");
+        assert!(rs.is_ok(), "{:?}", rs.err());
+    }
+
+    #[test]
+    fn deft_form_effect_without_a_parameter_is_rejected() {
+        // deft_form REQUIRES a param naming the affected Form: derived.rs's
+        // in_play_mods guards on `param.as_ref()`, so a param-less deft_form
+        // would silently never apply its waiver. It must fail loudly at load.
+        let items = r#"[
+          { "id": "virtue.deft_form",
+            "kind": "virtue",
+            "classification": "in_play_effect",
+            "magnitude": "minor",
+            "category": "hermetic",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "special_casting_mod", "kind": "deft_form" }] },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+            "category": "personality", "entity_kinds": ["character"] }
+        ]"#;
+        let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("special_casting_mod")
+                && msg.contains("deft_form")
+                && msg.contains("requires a param naming the affected Form"),
+            "{msg}"
+        );
+    }
+
+    #[test]
     fn characteristic_domain_param_value_resolves() {
         use crate::types::{EntityKind, RulesetRef, Selection};
         use std::collections::BTreeMap;
 
-        let items = r#"[{
-          "id": "virtue.great_characteristic",
-          "kind": "virtue",
-          "classification": "narrative",
-          "magnitude": "minor",
-          "category": "general",
-          "entity_kinds": ["character"],
-          "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
-          "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }]
-        }]"#;
+        let items = r#"[
+          { "id": "virtue.great_characteristic",
+            "kind": "virtue",
+            "classification": "narrative",
+            "magnitude": "minor",
+            "category": "general",
+            "entity_kinds": ["character"],
+            "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
+            "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }] },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+            "category": "personality", "entity_kinds": ["character"] }
+        ]"#;
         let types = r#"[{
           "id": "companion",
           "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -2734,9 +3113,12 @@ mod tests {
 
     #[test]
     fn integrity_error_exposes_individual_messages() {
+        // Carries a personality-category item so the only integrity failures are
+        // the two unresolved prerequisites (not a missing-category error).
         let items = r#"[
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.x"}},
-          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.y"}}
+          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.y"}},
+          {"id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"]}
         ]"#;
         let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
         match err {
@@ -2801,6 +3183,7 @@ mod tests {
                 "abilities",
                 "ability_category_order",
                 "advancement",
+                "age_ability_caps",
                 "armor",
                 "art_advancement",
                 "art_type_order",
@@ -2824,6 +3207,7 @@ mod tests {
         assert!(obj["type_profiles"].is_object());
         assert!(obj["abilities"].is_object());
         assert!(obj["advancement"].is_array());
+        assert!(obj["age_ability_caps"].is_array());
         // Derived taxonomy surfaced to the UI: points map keyed by magnitude slug,
         // categories as an ordered array.
         assert_eq!(obj["magnitude_points"]["minor"], 1);
@@ -2983,22 +3367,300 @@ mod tests {
 
     #[test]
     fn ruleset_normalize_sorts_item_parameters() {
-        let items = r#"[{
-          "id": "virtue.x",
-          "kind": "virtue",
-          "classification": "narrative",
-          "magnitude": "minor",
-          "category": "general",
-          "entity_kinds": ["character"],
-          "parameters": [
-            { "key": "second", "type": "ref", "domain": "art" },
-            { "key": "first", "type": "ref", "domain": "ability" }
-          ]
-        }]"#;
+        let items = r#"[
+          { "id": "virtue.x",
+            "kind": "virtue",
+            "classification": "narrative",
+            "magnitude": "minor",
+            "category": "general",
+            "entity_kinds": ["character"],
+            "parameters": [
+              { "key": "second", "type": "ref", "domain": "art" },
+              { "key": "first", "type": "ref", "domain": "ability" }
+            ] },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+            "category": "personality", "entity_kinds": ["character"] }
+        ]"#;
         let mut rs = Ruleset::from_json("test", "1", items, "[]").unwrap();
         rs.normalize();
         let item = rs.item(&Id::new("virtue.x")).unwrap();
         let keys: Vec<&str> = item.parameters.iter().map(|p| p.key.as_str()).collect();
         assert_eq!(keys, vec!["first", "second"]);
+    }
+
+    // --- Engine-required Hermetic roles (Finding A) --------------------------
+
+    /// A magus type profile. Shipping this alongside an Arts catalogue is what
+    /// makes the engine-required Hermetic role check fire.
+    const MAGUS_TYPE: &str = r#"[{
+      "id": "magus", "is_magus": true,
+      "budget": { "virtue_points": 10, "flaw_points": 10 },
+      "permitted_categories": ["general", "hermetic"],
+      "gift_policy": "required",
+      "creation_phases": []
+    }]"#;
+
+    /// An abilities catalogue carrying every engine-required Hermetic ability.
+    const HERMETIC_ABILITIES: &str = r#"{ "abilities": [
+      { "id": "ability.artes_liberales", "category": "academic" },
+      { "id": "ability.magic_theory", "category": "arcane" },
+      { "id": "ability.parma_magica", "category": "arcane" },
+      { "id": "ability.penetration", "category": "arcane" },
+      { "id": "ability.philosophiae", "category": "academic" }
+    ] }"#;
+
+    /// An Arts catalogue carrying every engine-required Art (Creo + Corpus).
+    const HERMETIC_ARTS: &str = r#"{ "arts": [
+      { "id": "art.creo", "art_type": "technique" },
+      { "id": "art.corpus", "art_type": "form" }
+    ] }"#;
+
+    #[test]
+    fn complete_hermetic_ruleset_passes_engine_role_check() {
+        Ruleset::from_core_json_with_arts(
+            "t",
+            "1",
+            VALID_ITEMS,
+            MAGUS_TYPE,
+            HERMETIC_ABILITIES,
+            HERMETIC_ARTS,
+            "",
+        )
+        .expect("a complete Hermetic ruleset must load");
+    }
+
+    #[test]
+    fn missing_engine_required_ability_fails_integrity() {
+        // An otherwise-complete Hermetic ruleset with Parma Magica removed.
+        let abilities = r#"{ "abilities": [
+          { "id": "ability.artes_liberales", "category": "academic" },
+          { "id": "ability.magic_theory", "category": "arcane" },
+          { "id": "ability.penetration", "category": "arcane" },
+          { "id": "ability.philosophiae", "category": "academic" }
+        ] }"#;
+        let err = Ruleset::from_core_json_with_arts(
+            "t",
+            "1",
+            VALID_ITEMS,
+            MAGUS_TYPE,
+            abilities,
+            HERMETIC_ARTS,
+            "",
+        )
+        .expect_err("a Hermetic ruleset missing Parma Magica must fail integrity");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("ability.parma_magica"),
+            "the error must name the offending id, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn missing_engine_required_art_fails_integrity() {
+        let arts = r#"{ "arts": [ { "id": "art.creo", "art_type": "technique" } ] }"#;
+        let err = Ruleset::from_core_json_with_arts(
+            "t",
+            "1",
+            VALID_ITEMS,
+            MAGUS_TYPE,
+            HERMETIC_ABILITIES,
+            arts,
+            "",
+        )
+        .expect_err("a Hermetic ruleset missing Corpus must fail integrity");
+        assert!(
+            err.to_string().contains("art.corpus"),
+            "the error must name the offending id"
+        );
+    }
+
+    #[test]
+    fn engine_role_check_skips_non_hermetic_ruleset() {
+        // A non-magus ruleset shipping a single Art (to exercise Art mechanics)
+        // needs none of the Hermetic engine roles: the check is gated on a magus
+        // profile being present.
+        let arts = r#"{ "arts": [ { "id": "art.creo", "art_type": "technique" } ] }"#;
+        Ruleset::from_core_json_with_arts("t", "1", VALID_ITEMS, VALID_TYPES, "{}", arts, "")
+            .expect("a non-Hermetic ruleset must not require the engine roles");
+    }
+
+    // --- Engine-required V/F category (personality) --------------------------
+
+    #[test]
+    fn missing_engine_required_personality_category_fails_integrity() {
+        // A V/F catalogue that ships point items but none in the personality
+        // category: the Major-Personality-Flaw rule (validation/scores.rs) would
+        // silently count zero and wrongly reject every ±6 trait, so load must fail.
+        let items = r#"[
+          { "id": "virtue.keen_vision", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"] }
+        ]"#;
+        let err = Ruleset::from_json("t", "1", items, VALID_TYPES)
+            .expect_err("a V/F catalogue lacking the personality category must fail integrity");
+        let msg = err.to_string();
+        assert!(
+            msg.contains(ENGINE_REQUIRED_CATEGORY_PERSONALITY),
+            "the error must name the missing category, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn personality_category_check_skips_empty_vf_catalogue() {
+        // An empty V/F catalogue ships no Personality Flaws, so the category is
+        // not engine-required — mirroring how the Hermetic-role check is gated on
+        // the ruleset actually shipping the relevant catalogue.
+        Ruleset::from_json("t", "1", "[]", "[]")
+            .expect("an empty V/F catalogue must not require the personality category");
+    }
+
+    #[test]
+    fn vf_catalogue_with_personality_category_passes() {
+        // The standard example fixture carries a personality-category item, so it
+        // satisfies the engine-required-category check.
+        Ruleset::from_json("arm5-core", "2024.1", VALID_ITEMS, VALID_TYPES)
+            .expect("a V/F catalogue carrying the personality category must load");
+    }
+
+    // --- Negative "fail loudly" tests for effect / grant / source-range refs. ---
+    // Each fixture is otherwise integrity-valid (a personality-category Flaw is
+    // present, no magus profile / Arts) so ONLY the intended defect triggers.
+
+    /// A `grants_selection` effect naming an item that is not in the catalogue
+    /// must fail integrity at load.
+    #[test]
+    fn grants_selection_effect_referencing_unknown_item_is_rejected() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+            "category": "personality", "entity_kinds": ["character"] },
+          { "id": "virtue.templar", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
+            "category": "general", "entity_kinds": ["character"],
+            "effects": [ { "type": "grants_selection", "items": ["virtue.does_not_exist"] } ] }
+        ]"#;
+        let err = Ruleset::from_json("t", "1", items, VALID_TYPES).unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("grants_selection") && m.contains("virtue.does_not_exist")),
+                "expected an unknown grants_selection-item error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    /// A `characteristic_score_delta` effect naming an id that is not one of the
+    /// eight Characteristics must fail integrity at load.
+    #[test]
+    fn characteristic_score_delta_effect_referencing_unknown_characteristic_is_rejected() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+            "category": "personality", "entity_kinds": ["character"] },
+          { "id": "virtue.giant_blood", "kind": "virtue", "classification": "narrative", "magnitude": "major",
+            "category": "general", "entity_kinds": ["character"],
+            "effects": [ { "type": "characteristic_score_delta", "characteristic": "characteristic.bogus", "amount": 1 } ] }
+        ]"#;
+        let err = Ruleset::from_json("t", "1", items, VALID_TYPES).unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("characteristic_score_delta")
+                        && m.contains("characteristic.bogus")),
+                "expected an unknown-characteristic error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    /// A Mythic Companion type whose `required_virtues` names an item not in the
+    /// catalogue must fail integrity at load.
+    #[test]
+    fn mythic_type_required_virtue_referencing_unknown_item_is_rejected() {
+        let mythic = r#"{ "types": [
+          { "id": "mythic_type.test", "required_virtues": [ { "ref": "virtue.does_not_exist" } ] }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: None,
+            mythic_types: Some(mythic),
+            spells: None,
+            equipment: None,
+            characteristics: None,
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("required virtue") && m.contains("virtue.does_not_exist")),
+                "expected an unknown required-virtue error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    /// A shield whose source line range is inverted (start > end) must fail
+    /// integrity at load.
+    #[test]
+    fn shield_invalid_source_range_is_rejected() {
+        let equipment = r#"{ "shields": [
+          { "id": "shield.heater", "init_mod": 0, "attack_mod": 0, "defense_mod": 2, "load": 1,
+            "min_strength": 0, "source": { "file": "x.md", "lines": [50, 10] } }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            equipment: Some(equipment),
+            characteristics: None,
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("shield.heater") && m.contains("source line range")),
+                "expected a shield source-range error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    /// A spell whose source line range is inverted (start > end) must fail
+    /// integrity at load.
+    #[test]
+    fn spell_invalid_source_range_is_rejected() {
+        let err = ruleset_with_spells(
+            r#"{ "spells": [
+              { "id": "spell.ok", "technique": "art.creo", "form": "art.ignem", "level": 20,
+                "source": { "file": "x.md", "lines": [50, 10] } }
+            ] }"#,
+        )
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("spell.ok") && m.contains("source line range")),
+                "expected a spell source-range error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
     }
 }

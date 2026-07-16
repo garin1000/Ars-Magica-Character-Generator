@@ -1,9 +1,9 @@
 //! Abilities: the catalogue of learned skills and the experience-point
 //! advancement table that converts XP into whole Ability scores.
 //!
-//! The five Ability categories are a fixed enum. Individual abilities and the
-//! XP advancement table are data, loaded into the [`Ruleset`] from
-//! `rules/core/abilities.json`.
+//! The five Ability categories are a fixed enum. Individual abilities, the XP
+//! advancement table, and the age → maximum-Ability-score band table are data,
+//! loaded into the [`Ruleset`] from `rules/core/abilities.json`.
 //!
 //! Ability XP is spent in whole points — there is no partial progress *on* an
 //! ability; loose XP sits in a character's bank until it can buy the next whole
@@ -94,6 +94,20 @@ pub struct Ability {
     /// Abilities chapter (`:7273-7786`) carries the `*` that sets this flag.
     #[serde(default, skip_serializing_if = "is_false")]
     pub requires_training: bool,
+    /// Whether this Ability may be used as a weapon's combat Ability. True for
+    /// the Martial Abilities and — as a data flag rather than a hardcoded slug —
+    /// for Brawl, the General Ability used for unarmed and improvised weapons and
+    /// for dodging without a Martial Ability. Drives the weapon load-time trust
+    /// gate ([`Ruleset::validate_weapon_refs`](crate::ruleset::Ruleset)) so a
+    /// ruleset that slugs unarmed combat differently just sets the flag rather
+    /// than mis-rejecting.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:7337-7340 (Brawl:
+    /// "Fighting hand-to-hand without weapons, or with the sorts of improvised
+    /// weapons you just pick up … also the Ability used to dodge attacks if you
+    /// have no Martial Abilities.").
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub combat_ability: bool,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
@@ -242,6 +256,87 @@ impl AdvancementTable {
             }
         }
         errors
+    }
+}
+
+/// One band of the age → maximum-Ability-score table: a character aged `max_age`
+/// or younger caps every Ability at `max_score` at character creation. The final,
+/// open-ended band omits `max_age` and covers every older character.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2366-2374.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AgeAbilityCap {
+    /// Inclusive upper age bound of this band; `None` for the open-ended band.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_age: Option<u32>,
+    /// The maximum Ability score for a character in this band.
+    pub max_score: u8,
+}
+
+/// The age → maximum-Ability-score band table, loaded as data.
+///
+/// # JSON shape
+///
+/// `#[serde(transparent)]` over a `Vec`: the serialized form is a **bare JSON
+/// array** of [`AgeAbilityCap`] (NOT an object), e.g.
+/// `[ { "max_age": 29, "max_score": 5 }, { "max_score": 9 } ]`.
+///
+/// Bands are kept sorted ascending by age with the open-ended band (no `max_age`)
+/// last, regardless of input order, so the serialized array is canonical (project
+/// rule: arrays sorted by id/score). Both [`AgeAbilityCaps::new`] and
+/// deserialization enforce this; [`max_ability_score`] walks this order and takes
+/// the first covering band.
+///
+/// This table lives beside the Ability advancement table because it caps *Ability*
+/// scores by age (the Core Rules "Age | Maximum Ability" table), not any
+/// Characteristic.
+///
+/// [`max_ability_score`]: AgeAbilityCaps::max_ability_score
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize)]
+#[serde(transparent)]
+pub struct AgeAbilityCaps {
+    bands: Vec<AgeAbilityCap>,
+}
+
+impl<'de> Deserialize<'de> for AgeAbilityCaps {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let bands = Vec::<AgeAbilityCap>::deserialize(deserializer)?;
+        Ok(Self::new(bands))
+    }
+}
+
+impl AgeAbilityCaps {
+    /// Builds the table from its bands, sorting them ascending by age with the
+    /// open-ended band (no `max_age`) last, so the serialized form is canonical
+    /// regardless of input order.
+    pub fn new(mut bands: Vec<AgeAbilityCap>) -> Self {
+        bands.sort_by_key(|band| (band.max_age.unwrap_or(u32::MAX), band.max_score));
+        Self { bands }
+    }
+
+    /// The bands, in canonical order (age-ascending, open-ended band last).
+    pub fn bands(&self) -> &[AgeAbilityCap] {
+        &self.bands
+    }
+
+    /// `true` when the ruleset ships no age bands (the cap is then unknowable and
+    /// not enforced).
+    pub fn is_empty(&self) -> bool {
+        self.bands.is_empty()
+    }
+
+    /// The maximum Ability score a character of `age` may buy at creation, per the
+    /// age band table (Core:2366-2374), or `None` if the ruleset ships no age caps
+    /// (the cap is then unknowable and not enforced). The bands are age-ascending
+    /// with the open-ended band last, so the first band whose `max_age` covers
+    /// `age` — or the open-ended band — gives the cap. Some Virtues raise this
+    /// limit; that is applied by the caller (e.g. Affinity's +2 in validation).
+    pub fn max_ability_score(&self, age: u32) -> Option<u8> {
+        self.bands.iter().find_map(|band| match band.max_age {
+            Some(max) if age <= max => Some(band.max_score),
+            None => Some(band.max_score),
+            _ => None,
+        })
     }
 }
 
@@ -468,5 +563,52 @@ mod tests {
                 .any(|m| m.contains("duplicate score") && m.contains('1')),
             "expected a duplicate-score error naming score 1, got {errors:?}"
         );
+    }
+
+    /// The shipped age → max-Ability-score bands (Core:2366-2374), authored out of
+    /// order so the sort-on-load is exercised.
+    fn age_caps() -> AgeAbilityCaps {
+        serde_json::from_str(
+            r#"[
+              { "max_age": 45, "max_score": 8 },
+              { "max_age": 29, "max_score": 5 },
+              { "max_score": 9 },
+              { "max_age": 35, "max_score": 6 },
+              { "max_age": 40, "max_score": 7 }
+            ]"#,
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn age_ability_cap_reads_the_band_covering_the_age() {
+        let caps = age_caps();
+        assert_eq!(caps.max_ability_score(0), Some(5));
+        assert_eq!(caps.max_ability_score(29), Some(5));
+        assert_eq!(caps.max_ability_score(30), Some(6));
+        assert_eq!(caps.max_ability_score(35), Some(6));
+        assert_eq!(caps.max_ability_score(36), Some(7));
+        assert_eq!(caps.max_ability_score(40), Some(7));
+        assert_eq!(caps.max_ability_score(41), Some(8));
+        assert_eq!(caps.max_ability_score(45), Some(8));
+        assert_eq!(caps.max_ability_score(46), Some(9));
+        assert_eq!(caps.max_ability_score(200), Some(9));
+    }
+
+    #[test]
+    fn age_ability_caps_sort_ascending_by_age_open_band_last() {
+        // Authored out of order above; after load the bands are age-ascending with
+        // the open-ended (no max_age) band last, so the array is canonical.
+        let caps = age_caps();
+        let ages: Vec<Option<u32>> = caps.bands().iter().map(|b| b.max_age).collect();
+        assert_eq!(ages, vec![Some(29), Some(35), Some(40), Some(45), None]);
+    }
+
+    #[test]
+    fn age_ability_cap_absent_table_yields_none() {
+        // A ruleset that ships no age bands; the cap is then unknowable.
+        let caps = AgeAbilityCaps::default();
+        assert!(caps.is_empty());
+        assert_eq!(caps.max_ability_score(25), None);
     }
 }

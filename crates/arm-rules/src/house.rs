@@ -40,8 +40,11 @@ pub enum LineageType {
 }
 
 impl LineageType {
-    /// All three classes in a stable canonical order, the single source the
-    /// serialized ordering is derived from.
+    /// All three classes in a stable canonical order, for exhaustive iteration in
+    /// the module's guard tests (serde-scalar/Display agreement, canonical-order
+    /// check). No `Ruleset` field surfaces a lineage-type ordering — nothing
+    /// consumes one — so unlike `ability_category_order` / `art_type_order` this is
+    /// a test-only taxonomy enumeration, not a serialized-ordering source.
     pub const ALL: [LineageType; 3] = [
         LineageType::TrueLineage,
         LineageType::MysteryCult,
@@ -185,7 +188,9 @@ mod tests {
           "parameters": [{ "key": "art", "type": "ref", "domain": "art" }] },
         { "id": "virtue.affinity_with_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "hermetic", "entity_kinds": ["character"],
-          "parameters": [{ "key": "art", "type": "ref", "domain": "art" }] }
+          "parameters": [{ "key": "art", "type": "ref", "domain": "art" }] },
+        { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+          "category": "personality", "entity_kinds": ["character"] }
     ]"#;
 
     /// Houses exercising each grant kind: a fixed Virtue (Tytalus), a Choice

@@ -49,7 +49,11 @@ pub enum WeaponKind {
 }
 
 impl WeaponKind {
-    /// Every kind, for exhaustive iteration in guard tests and UI ordering.
+    /// Every kind, for exhaustive iteration in the module's guard test
+    /// (serde-scalar/Display agreement). No `Ruleset` field surfaces a weapon-kind
+    /// ordering — nothing consumes one — so unlike `ability_category_order` /
+    /// `art_type_order` this is a test-only taxonomy enumeration, not a
+    /// serialized-ordering source.
     pub const ALL: [WeaponKind; 3] = [WeaponKind::Melee, WeaponKind::Missile, WeaponKind::Thrown];
 }
 

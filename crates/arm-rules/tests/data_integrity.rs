@@ -398,6 +398,65 @@ fn validate_equipment_unknown_ref_and_min_strength() {
     );
 }
 
+/// Exercises the shield and armor arms of `validate_equipment`. An equipped shield
+/// whose min-Strength exceeds the wielder's Strength raises the same advisory
+/// `equipment_min_strength` warning as a weapon (shield arm), while armor — which
+/// carries no min-Strength requirement — never warns however weak the wearer (armor
+/// arm's `None`). Core:16993.
+#[test]
+fn validate_equipment_shield_warns_and_armor_never_warns() {
+    let rs = load_ruleset_with_equipment();
+    let mut e = entity("grog", vec![]);
+
+    // A Heater shield (min-Strength 0) equipped by a Strength −1 grog warns.
+    e.characteristics.insert(Characteristic::Str, -1);
+    e.equipment = vec![EquipmentSlot {
+        item: Id::new("shield.heater"),
+        equipped: true,
+    }];
+    let result = validate(&e, &rs);
+    let warnings: Vec<_> = result
+        .issues
+        .iter()
+        .filter(|i| i.code == "equipment_min_strength")
+        .collect();
+    assert_eq!(
+        warnings.len(),
+        1,
+        "exactly one shield min-Strength advisory"
+    );
+    let warning = warnings[0];
+    assert_eq!(warning.severity, arm_rules::IssueSeverity::Warning);
+    assert_eq!(
+        warning.args.get("item").map(String::as_str),
+        Some("shield.heater")
+    );
+    assert_eq!(warning.args.get("required").map(String::as_str), Some("0"));
+    assert_eq!(warning.args.get("strength").map(String::as_str), Some("-1"));
+    assert_eq!(warning.context.as_ref(), Some(&Id::new("shield.heater")));
+
+    // Full chain mail equipped by a much weaker grog never warns: armor has no
+    // min-Strength requirement (armor arm returns `None`), so no advisory is raised
+    // and a known armor id must not be reported as unknown.
+    e.characteristics.insert(Characteristic::Str, -5);
+    e.equipment = vec![EquipmentSlot {
+        item: Id::new("armor.chain_mail_full"),
+        equipped: true,
+    }];
+    let result = validate(&e, &rs);
+    assert!(
+        !result
+            .issues
+            .iter()
+            .any(|i| i.code == "equipment_min_strength"),
+        "armor carries no min-Strength requirement, so it must never warn"
+    );
+    assert!(
+        !result.issues.iter().any(|i| i.code == "unknown_equipment"),
+        "a known armor id must not report unknown_equipment"
+    );
+}
+
 #[test]
 fn normalize_sorts_equipment() {
     let mut e = entity("grog", vec![]);
@@ -1037,14 +1096,21 @@ fn shipped_xp_granters_add_restricted_pool() {
 
 #[test]
 fn shipped_confidence_true_faith_and_size_granters() {
-    use arm_rules::{confidence, size, true_faith};
+    use arm_rules::{Confidence, confidence, size, true_faith};
     let rs = load_ruleset();
     // Ferocity → +1 Confidence Score / +3 Points (Core:3875) over the base.
     let fer = entity(
         "companion",
         vec![Selection::new(Id::new("virtue.ferocity"))],
     );
-    assert_eq!(confidence(1, 3, &fer, &rs), (2, 6), "Ferocity adds 1/3");
+    assert_eq!(
+        confidence(1, 3, &fer, &rs),
+        Confidence {
+            score: 2,
+            points: 6
+        },
+        "Ferocity adds 1/3"
+    );
     // Low Self-Esteem → removes the standard 1/3 Confidence (Core:6364).
     let lse = entity(
         "companion",
@@ -1052,7 +1118,10 @@ fn shipped_confidence_true_faith_and_size_granters() {
     );
     assert_eq!(
         confidence(1, 3, &lse, &rs),
-        (0, 0),
+        Confidence {
+            score: 0,
+            points: 0
+        },
         "Low Self-Esteem zeroes Confidence"
     );
     // Relic → True Faith 1 (Core:4854); Powerful Relic → 3 (Core:4783).
