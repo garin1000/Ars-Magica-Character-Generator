@@ -134,6 +134,32 @@ describe('filterItems', () => {
       filterItems(rs, items, { categories: ['general'], magnitudes: ['minor'] }).map((i) => i.id),
     ).toEqual(['virtue.brave']);
   });
+
+  it('shows every category when the category facet is omitted', () => {
+    expect(filterItems(rs, items, { categories: [] }).map((i) => i.id)).toHaveLength(4);
+  });
+
+  it('combines the type (category) facet with magnitude and text', () => {
+    // Two general virtues, then narrow by magnitude, then by text.
+    expect(filterItems(rs, items, { categories: ['general'] }).map((i) => i.id)).toEqual([
+      'virtue.brave',
+      'virtue.giant',
+    ]);
+    expect(
+      filterItems(rs, items, { categories: ['general'], magnitudes: ['major'] }).map((i) => i.id),
+    ).toEqual(['virtue.giant']);
+    expect(
+      filterItems(rs, items, {
+        categories: ['general'],
+        magnitudes: ['major'],
+        text: 'giant',
+      }).map((i) => i.id),
+    ).toEqual(['virtue.giant']);
+    // A type filter that excludes the only text match yields nothing.
+    expect(
+      filterItems(rs, items, { categories: ['story'], text: 'giant' }).map((i) => i.id),
+    ).toEqual([]);
+  });
 });
 
 describe('filterAbilities', () => {

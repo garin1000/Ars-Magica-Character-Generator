@@ -24,6 +24,54 @@ import type {
 const VALIDATE_DEBOUNCE_MS = 150;
 const SCHEMA_VERSION = 7;
 
+/** Live filter/search state of the Virtue/Flaw picker (one per side). */
+export interface VfFilterState {
+  search: string;
+  magnitude: string;
+  category: string;
+  taintedOnly: boolean;
+}
+
+/** Live filter/search state of the Ability picker. */
+export interface AbilityFilterState {
+  search: string;
+  category: string;
+}
+
+/** Live filter/search state of the Spell picker. */
+export interface SpellFilterState {
+  search: string;
+  technique: string;
+  form: string;
+  level: string;
+}
+
+/**
+ * Per-picker filter/search state, lifted out of the picker components so it
+ * survives tab switches. Each `{#if tab === …}` panel in `App.svelte` unmounts
+ * its picker, which would discard any component-local `$state`; holding it here
+ * (keyed by picker identity) restores the search/filter when the tab returns.
+ * Language-neutral (search text + ids), so it is never reset on a ruleset reload
+ * and never enters the saved entity.
+ */
+export interface PickerFilters {
+  vf: Record<'virtue' | 'flaw', VfFilterState>;
+  abilities: AbilityFilterState;
+  spells: SpellFilterState;
+}
+
+/** A fresh, all-empty set of picker filters (the initial/reset state). */
+export function defaultPickerFilters(): PickerFilters {
+  return {
+    vf: {
+      virtue: { search: '', magnitude: '', category: '', taintedOnly: false },
+      flaw: { search: '', magnitude: '', category: '', taintedOnly: false },
+    },
+    abilities: { search: '', category: '' },
+    spells: { search: '', technique: '', form: '', level: '' },
+  };
+}
+
 function newEntity(rulesetId: string, version: string): Entity {
   return {
     schema_version: SCHEMA_VERSION,
@@ -55,6 +103,9 @@ class AppStore {
   derived = $state<DerivedTotals | null>(null);
   error = $state<AppError | null>(null);
   loading = $state(false);
+  // Per-picker filter/search state; persists across tab switches (see
+  // {@link PickerFilters}). Not part of the entity, so it is never saved.
+  filters = $state<PickerFilters>(defaultPickerFilters());
 
   #bundle = $derived(buildBundle(this.lang));
   #timer: ReturnType<typeof setTimeout> | undefined;

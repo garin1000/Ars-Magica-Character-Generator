@@ -11,25 +11,29 @@
   const kinds: ItemKind[] = $derived(side === 'virtue' ? ['virtue', 'boon'] : ['flaw', 'hook']);
   const titleKey = $derived(side === 'virtue' ? 'items-virtues-title' : 'items-flaws-title');
 
-  // Filter state (component-local; mirrors SpellPicker's approach). Magnitude
-  // options come from the engine-surfaced taxonomy, never hardcoded.
-  let search = $state('');
-  let magnitude = $state('');
-  let taintedOnly = $state(false);
+  // Filter state lives on the store (per side), so it survives tab switches that
+  // unmount this component. Magnitude options come from the engine-surfaced
+  // taxonomy; the type (category) options reuse the same category source the
+  // grouped display uses (`groupByCategory`), never a hardcoded list.
+  const filter = $derived(store.filters.vf[side]);
   const magnitudes = $derived(
     store.ruleset ? Object.keys(store.ruleset.ruleset.magnitude_points) : [],
+  );
+  const categories = $derived(
+    store.ruleset ? groupByCategory(store.ruleset, kinds).map((g) => g.category) : [],
   );
 
   const groups = $derived.by(() => {
     const rs = store.ruleset;
     if (!rs) return [];
-    const filter = {
-      text: search,
-      magnitudes: magnitude ? [magnitude as Magnitude] : undefined,
-      tainted: taintedOnly || undefined,
+    const itemFilter = {
+      text: filter.search,
+      categories: filter.category ? [filter.category] : undefined,
+      magnitudes: filter.magnitude ? [filter.magnitude as Magnitude] : undefined,
+      tainted: filter.taintedOnly || undefined,
     };
     return groupByCategory(rs, kinds)
-      .map((g) => ({ category: g.category, items: filterItems(rs, g.items, filter, store.t) }))
+      .map((g) => ({ category: g.category, items: filterItems(rs, g.items, itemFilter, store.t) }))
       .filter((g) => g.items.length > 0);
   });
   const selectedRefs = $derived(new Set(store.entity.selections.map((s) => s.ref)));
@@ -57,17 +61,27 @@
         type="search"
         class="filter-search"
         placeholder={store.t('filter-search-placeholder')}
-        bind:value={search}
+        bind:value={filter.search}
         data-testid="vf-search-{side}"
       />
-      <select bind:value={magnitude} data-testid="vf-magnitude-filter-{side}">
+      <select bind:value={filter.category} data-testid="vf-category-filter-{side}">
+        <option value="">{store.t('filter-category-all')}</option>
+        {#each categories as c (c)}
+          <option value={c}>{store.t(`category-${c}`)}</option>
+        {/each}
+      </select>
+      <select bind:value={filter.magnitude} data-testid="vf-magnitude-filter-{side}">
         <option value="">{store.t('filter-magnitude-all')}</option>
         {#each magnitudes as m (m)}
           <option value={m}>{store.t(`magnitude-${m}`)}</option>
         {/each}
       </select>
       <label class="filter-check">
-        <input type="checkbox" bind:checked={taintedOnly} data-testid="vf-tainted-filter-{side}" />
+        <input
+          type="checkbox"
+          bind:checked={filter.taintedOnly}
+          data-testid="vf-tainted-filter-{side}"
+        />
         {store.t('vf-tag-tainted')}
       </label>
     </div>
