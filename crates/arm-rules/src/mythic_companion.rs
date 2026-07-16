@@ -134,7 +134,9 @@ mod tests {
         { "id": "virtue.demonic_blood", "kind": "virtue", "classification": "narrative", "magnitude": "major",
           "category": "supernatural", "entity_kinds": ["character"] },
         { "id": "flaw.tragic_life", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-          "category": "supernatural", "entity_kinds": ["character"] }
+          "category": "supernatural", "entity_kinds": ["character"] },
+        { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+          "category": "personality", "entity_kinds": ["character"] }
     ]"#;
 
     const TYPES: &str = r#"{ "types": [
@@ -231,6 +233,20 @@ mod tests {
         let rs = ruleset();
         let mut e = devil_child();
         e.mythic_type = None;
+        assert!(granted_selections(&e, &rs).is_empty());
+    }
+
+    /// A `mythic_type` id absent from the ruleset resolves to no grants (the
+    /// `ruleset.mythic_type(...)` lookup returns `None`), never a panic.
+    #[test]
+    fn unknown_type_grants_nothing() {
+        let rs = ruleset();
+        let mut e = devil_child();
+        e.mythic_type = Some(Id::new("mythic_type.does_not_exist"));
+        assert!(
+            rs.mythic_type(&Id::new("mythic_type.does_not_exist"))
+                .is_none()
+        );
         assert!(granted_selections(&e, &rs).is_empty());
     }
 

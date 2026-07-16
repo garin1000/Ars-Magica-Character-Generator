@@ -305,4 +305,64 @@ mod tests {
             serde_json::json!("arcane_connection")
         );
     }
+
+    /// Every RDT `Display` impl renders each variant as its snake_case slug. The
+    /// per-variant lists are exhaustive, so a variant added without a `Display`
+    /// arm is a compile error in the `impl`, and a mis-wired slug fails here.
+    #[test]
+    fn rdt_display_renders_every_variant_as_slug() {
+        let ranges = [
+            (SpellRange::Personal, "personal"),
+            (SpellRange::Touch, "touch"),
+            (SpellRange::Eye, "eye"),
+            (SpellRange::Voice, "voice"),
+            (SpellRange::Sight, "sight"),
+            (SpellRange::ArcaneConnection, "arcane_connection"),
+        ];
+        for (variant, slug) in ranges {
+            assert_eq!(variant.to_string(), slug);
+        }
+
+        let durations = [
+            (SpellDuration::Momentary, "momentary"),
+            (SpellDuration::Concentration, "concentration"),
+            (SpellDuration::Diameter, "diameter"),
+            (SpellDuration::Sun, "sun"),
+            (SpellDuration::Ring, "ring"),
+            (SpellDuration::Moon, "moon"),
+            (SpellDuration::Year, "year"),
+        ];
+        for (variant, slug) in durations {
+            assert_eq!(variant.to_string(), slug);
+        }
+
+        let targets = [
+            (SpellTarget::Individual, "individual"),
+            (SpellTarget::Circle, "circle"),
+            (SpellTarget::Part, "part"),
+            (SpellTarget::Group, "group"),
+            (SpellTarget::Room, "room"),
+            (SpellTarget::Structure, "structure"),
+            (SpellTarget::Boundary, "boundary"),
+            (SpellTarget::Taste, "taste"),
+            (SpellTarget::Touch, "touch"),
+            (SpellTarget::Smell, "smell"),
+            (SpellTarget::Hearing, "hearing"),
+            (SpellTarget::Vision, "vision"),
+        ];
+        for (variant, slug) in targets {
+            assert_eq!(variant.to_string(), slug);
+        }
+
+        // The Display slug must match the serde scalar for every variant.
+        for (variant, slug) in ranges {
+            assert_eq!(serde_json::to_value(variant).unwrap(), slug);
+        }
+        for (variant, slug) in durations {
+            assert_eq!(serde_json::to_value(variant).unwrap(), slug);
+        }
+        for (variant, slug) in targets {
+            assert_eq!(serde_json::to_value(variant).unwrap(), slug);
+        }
+    }
 }

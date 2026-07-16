@@ -227,9 +227,12 @@ fn integrity_failure_preserves_individual_messages() {
     fs::create_dir_all(tmp.path().join("i18n/en")).unwrap();
     fs::write(
         tmp.path().join("core/virtues_flaws.json"),
+        // Carries a personality-category item so the only integrity failures are
+        // the two unresolved prerequisites (not the engine-required-category check).
         r#"[
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.x"}},
-          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.y"}}
+          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.y"}},
+          {"id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"]}
         ]"#,
     )
     .unwrap();
@@ -518,19 +521,29 @@ fn effective_scores_surface_confidence_and_supernatural_slots() {
 /// emits them via `ValidationIssue::CODE_*`, so the code values live in those
 /// const definitions.
 fn validation_codes() -> Vec<String> {
-    let full = fs::read_to_string(repo_root().join("crates/arm-rules/src/validation.rs")).unwrap();
-    // Ignore the in-file `#[cfg(test)]` module, whose fixtures use fake codes.
-    let src = full.split("mod tests").next().unwrap();
+    // The engine's `validation` module was split into a directory
+    // (`validation/mod.rs` + cohesive submodules); scan every `.rs` file in it so
+    // codes declared in any submodule are still tracked.
+    let dir = repo_root().join("crates/arm-rules/src/validation");
     let mut codes = Vec::new();
-    // Each fixed code is the string literal in a `const CODE_* : &'static str =
-    // "code";` definition.
-    for fragment in src.split("const CODE_").skip(1) {
-        let Some(open) = fragment.find('"') else {
+    for entry in fs::read_dir(&dir).unwrap() {
+        let path = entry.unwrap().path();
+        if path.extension().and_then(|e| e.to_str()) != Some("rs") {
             continue;
-        };
-        let rest = &fragment[open + 1..];
-        if let Some(end) = rest.find('"') {
-            codes.push(rest[..end].to_string());
+        }
+        let full = fs::read_to_string(&path).unwrap();
+        // Ignore each file's `#[cfg(test)]` module, whose fixtures use fake codes.
+        let src = full.split("mod tests").next().unwrap();
+        // Each fixed code is the string literal in a `const CODE_* : &'static str =
+        // "code";` definition.
+        for fragment in src.split("const CODE_").skip(1) {
+            let Some(open) = fragment.find('"') else {
+                continue;
+            };
+            let rest = &fragment[open + 1..];
+            if let Some(end) = rest.find('"') {
+                codes.push(rest[..end].to_string());
+            }
         }
     }
     codes.sort();

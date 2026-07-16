@@ -422,6 +422,33 @@ mod tests {
         );
     }
 
+    /// The custom `Deserialize` normalizes `costs` by `score` ascending even when
+    /// the input rows arrive in an arbitrary, non-monotonic order.
+    #[test]
+    fn deserialize_sorts_costs_from_shuffled_input() {
+        let r: CharacteristicRules = serde_json::from_str(
+            r#"{
+              "start_points": 7,
+              "costs": [
+                { "score": 0, "cost": 0 },
+                { "score": 3, "cost": 6 },
+                { "score": -2, "cost": -3 },
+                { "score": 1, "cost": 1 },
+                { "score": -3, "cost": -6 },
+                { "score": 2, "cost": 3 },
+                { "score": -1, "cost": -1 }
+              ]
+            }"#,
+        )
+        .unwrap();
+        let scores: Vec<i8> = r.costs.iter().map(|c| c.score).collect();
+        assert_eq!(scores, vec![-3, -2, -1, 0, 1, 2, 3]);
+        // The row values stayed paired with their scores through the sort.
+        assert_eq!(r.cost_for(3), Some(6));
+        assert_eq!(r.cost_for(-2), Some(-3));
+        assert_eq!(r.cost_for(0), Some(0));
+    }
+
     #[test]
     fn rules_roundtrip() {
         let r = rules();

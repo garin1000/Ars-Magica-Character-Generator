@@ -21,6 +21,13 @@
     { "score": 19, "total_xp": 950 },
     { "score": 20, "total_xp": 1050 }
   ],
+  "age_ability_caps": [
+    { "max_age": 29, "max_score": 5 },
+    { "max_age": 35, "max_score": 6 },
+    { "max_age": 40, "max_score": 7 },
+    { "max_age": 45, "max_score": 8 },
+    { "max_score": 9 }
+  ],
   "abilities": [
     { "id": "ability.animal_handling", "category": "general", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7273, 7276] } },
     { "id": "ability.animal_ken", "category": "supernatural", "requires_training": true, "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7277, 7280] } },
@@ -31,7 +38,7 @@
     { "id": "ability.awareness", "category": "general", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7325, 7328] } },
     { "id": "ability.bargain", "category": "general", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7329, 7332] } },
     { "id": "ability.bows", "category": "martial", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7333, 7336] } },
-    { "id": "ability.brawl", "category": "general", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7337, 7340] } },
+    { "id": "ability.brawl", "category": "general", "combat_ability": true, "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7337, 7340] } },
     { "id": "ability.carouse", "category": "general", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7341, 7344] } },
     { "id": "ability.charm", "category": "general", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7345, 7348] } },
     { "id": "ability.chirurgy", "category": "general", "requires_training": true, "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7349, 7352] } },

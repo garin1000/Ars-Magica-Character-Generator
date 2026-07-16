@@ -18,6 +18,28 @@ use crate::types::{
     Magnitude, ParameterDomain, PointItem, Prereq, ValidationMode,
 };
 
+mod aging;
+mod balance;
+mod caps;
+mod equipment;
+mod magus;
+mod might;
+mod prereq;
+mod scores;
+mod selections;
+
+use aging::*;
+use balance::*;
+use caps::*;
+use equipment::*;
+use magus::*;
+use might::*;
+use prereq::*;
+use scores::*;
+use selections::*;
+
+pub use balance::{Balance, PointCeilings, compute_balance, effective_point_ceilings};
+
 /// Whether a validation issue blocks (`Error`) or merely advises (`Warning`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -62,6 +84,8 @@ impl fmt::Display for IssueSeverity {
 /// | `too_many_major_virtues` | error | `count`, `max` |
 /// | `too_many_major_flaws` | error | `count`, `max` |
 /// | `too_many_minor_flaws` | error | `count`, `max` |
+/// | `too_many_tainted_virtues` | warning | `tainted`, `total` |
+/// | `too_many_tainted_flaws` | warning | `tainted`, `total` |
 /// | `too_many_major_<category>_flaws`† | error or warning | `count`, `max` |
 /// | `too_many_<category>_flaws`† | error or warning | `count`, `max` |
 /// | `too_many_major_<category>_virtues`† | error or warning | `count`, `max` |
@@ -113,6 +137,14 @@ impl fmt::Display for IssueSeverity {
 /// | `personality_trait_out_of_range` | error | `name`, `value`, `max` |
 /// | `reputation_not_granted` | error | `kind`, `content` |
 /// | `over_item_level` | error | `used`, `budget`, `over` |
+/// | `multiple_magical_foci` | error | `count` |
+/// | `spell_ritual_legality` | error | `spell`, `level` |
+/// | `over_power_levels` | error | `used`, `budget`, `over` |
+/// | `might_realm_mismatch` | warning | `base`, `granted` |
+/// | `excessive_aging_reduction` | warning | `characteristic`, `reduction`, `min` |
+/// | `aging_points_force_drop` | warning | `characteristic`, `points`, `score` |
+/// | `unknown_equipment` | error | `item` |
+/// | `equipment_min_strength` | warning | `item`, `required`, `strength` |
 ///
 /// † The per-category caps emit a code derived from the `flaw_category_caps` /
 /// `virtue_category_caps` entry's category slug: `too_many_<category>_flaws` /
@@ -171,6 +203,12 @@ impl ValidationIssue {
     pub const CODE_TOO_MANY_MAJOR_FLAWS: &'static str = "too_many_major_flaws";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_TOO_MANY_MINOR_FLAWS: &'static str = "too_many_minor_flaws";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: more than half a
+    /// character's Virtue points are Tainted (Core:2998-3002).
+    pub const CODE_TOO_MANY_TAINTED_VIRTUES: &'static str = "too_many_tainted_virtues";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: more than half a
+    /// character's Flaw points are Tainted (Core:2998-3002).
+    pub const CODE_TOO_MANY_TAINTED_FLAWS: &'static str = "too_many_tainted_flaws";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_PREREQ_NOT_MET: &'static str = "prereq_not_met";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
@@ -474,7 +512,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
 }
 
 /// Emits `unknown_type` when the entity's `type_id` has no matching profile.
-fn validate_known_type(
+pub(crate) fn validate_known_type(
     entity: &Entity,
     type_profile: Option<&EntityTypeProfile>,
     issues: &mut Vec<ValidationIssue>,
@@ -489,2153 +527,17 @@ fn validate_known_type(
 }
 
 /// Emits `unknown_ref` for each selection whose item id is not in the ruleset.
-fn validate_known_refs(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
+pub(crate) fn validate_known_refs(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
     for selection in &entity.selections {
         if !ruleset.point_items.contains_key(&selection.item_ref) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_UNKNOWN_REF,
                 args([("item", selection.item_ref.to_string())]),
                 Some(selection.item_ref.clone()),
-            ));
-        }
-    }
-}
-
-/// Enforces the two halves of the points rule:
-///
-/// 1. Flaw points stay within the type's budget (and virtue points within
-///    theirs as a clear-message backstop).
-/// 2. Virtues must be funded by Flaws: spent virtue points may not exceed the
-///    flaw points granted. A character with 10 virtue points and 0 flaw points
-///    is over budget on neither total yet is illegal — Players "start with no
-///    points for buying Virtues and Flaws, and thus must take Flaws if they
-///    want Virtues."
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2774 ("must take
-/// Flaws if they want Virtues"), :2297 (companions), :2303 (magi) — "up to ten
-/// points of Flaws, and the same number of points of Virtues". The per-type
-/// point totals themselves are data in `rules/core/character_types.json` (see
-/// RULES.md).
-fn validate_balance(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    type_profile: Option<&EntityTypeProfile>,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let Some(profile) = type_profile else {
-        return;
-    };
-
-    let Balance {
-        virtue_points,
-        flaw_points,
-    } = compute_balance(entity, ruleset);
-
-    let budget = effective_budget(entity, ruleset, profile);
-
-    if virtue_points > budget.virtue_ceiling {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_OVER_BUDGET_VIRTUES,
-            args([
-                ("points", virtue_points.to_string()),
-                ("budget", budget.virtue_ceiling.to_string()),
-            ]),
-            None,
-        ));
-    }
-
-    if flaw_points > budget.flaw_ceiling {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_OVER_BUDGET_FLAWS,
-            args([
-                ("points", flaw_points.to_string()),
-                ("budget", budget.flaw_ceiling.to_string()),
-            ]),
-            None,
-        ));
-    }
-
-    if virtue_points > budget.funded(flaw_points) {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_UNBALANCED_VIRTUES,
-            args([
-                ("virtue_points", virtue_points.to_string()),
-                ("flaw_points", flaw_points.to_string()),
-            ]),
-            None,
-        ));
-    }
-}
-
-/// The virtue/flaw point ceilings the balance check enforces, folding in the
-/// selected Mythic Companion type's per-type bonus points on top of the
-/// profile's base budget. For any non-mythic type (no `mythic_type`, or a type
-/// carrying no bonuses) both bonuses are 0 and this reduces **exactly** to the
-/// profile's own budget — `flaw_ceiling = flaw_points`,
-/// `virtue_ceiling = virtue_points`, `funded = flaw · rate`.
-///
-/// The extra Flaw points each still fund virtue points at the type's rate, so
-/// they raise the virtue ceiling by `bonus_flaw · rate` (not just the flaw
-/// ceiling); `bonus_free_virtue_points` is unfunded headroom that also lifts the
-/// funded floor. Source: Core Rules.md:2664 (Devil Child +3 free V / +7 F);
-/// Realms of Power - Magic.md:5486 (Spirit Votary +7 F).
-struct EffectiveBudget {
-    virtue_ceiling: i32,
-    flaw_ceiling: i32,
-    bonus_free_virtue_points: i32,
-    rate: i32,
-}
-
-impl EffectiveBudget {
-    /// Virtue points fundable by `flaw_points` taken, plus the free headroom.
-    fn funded(&self, flaw_points: i32) -> i32 {
-        flaw_points * self.rate + self.bonus_free_virtue_points
-    }
-}
-
-fn effective_budget(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    profile: &EntityTypeProfile,
-) -> EffectiveBudget {
-    let rate = profile.budget.virtue_points_per_flaw_point as i32;
-    // Only a mythic-capable profile applies a type's bonus points — a stray
-    // `mythic_type` on some other profile (hand-edited save) must not inflate its
-    // budget (validate conditionally, mirroring `validate_mythic_type`'s gate).
-    let (bonus_flaw, bonus_free_virtue) = profile
-        .has_mythic_type
-        .then_some(entity.mythic_type.as_ref())
-        .flatten()
-        .and_then(|id| ruleset.mythic_type(id))
-        .map(|t| {
-            (
-                t.bonus_flaw_points as i32,
-                t.bonus_free_virtue_points as i32,
-            )
-        })
-        .unwrap_or((0, 0));
-    EffectiveBudget {
-        virtue_ceiling: profile.budget.virtue_points as i32 + bonus_flaw * rate + bonus_free_virtue,
-        flaw_ceiling: profile.budget.flaw_points as i32 + bonus_flaw,
-        bonus_free_virtue_points: bonus_free_virtue,
-        rate,
-    }
-}
-
-/// The effective virtue/flaw point ceilings `(virtue, flaw)` for the entity's
-/// type — the profile's base budget plus any Mythic Companion type bonus — for
-/// the frontend's balance display (so the bar shows a Devil Child's 37/17, not
-/// the base 20/10). `None` when the type profile is unknown. Keeps the budget
-/// numbers engine-authoritative rather than recomputed in TS.
-pub fn effective_point_ceilings(entity: &Entity, ruleset: &Ruleset) -> Option<(u32, u32)> {
-    let profile = ruleset.profile(&entity.type_id)?;
-    let b = effective_budget(entity, ruleset, profile);
-    Some((b.virtue_ceiling.max(0) as u32, b.flaw_ceiling.max(0) as u32))
-}
-
-/// The accumulated virtue and flaw point totals for an entity.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Balance {
-    /// Total points spent on positive items (virtues, boons).
-    pub virtue_points: i32,
-    /// Total points granted by negative items (flaws, hooks).
-    pub flaw_points: i32,
-}
-
-/// Computes the total virtue and flaw points for an entity.
-/// Unknown item refs are skipped.
-pub fn compute_balance(entity: &Entity, ruleset: &Ruleset) -> Balance {
-    let mut virtue_points: i32 = 0;
-    let mut flaw_points: i32 = 0;
-
-    for selection in &entity.selections {
-        if let Some(item) = ruleset.point_items.get(&selection.item_ref) {
-            let pts = item.magnitude.points() as i32;
-            if item.kind.is_positive() {
-                virtue_points += pts;
-            } else {
-                flaw_points += pts;
-            }
-        }
-    }
-
-    Balance {
-        virtue_points,
-        flaw_points,
-    }
-}
-
-/// Enforces per-type caps on the *count* of items (distinct from the point
-/// budget). The caps themselves are data in the type profile; whether a cap is
-/// a hard rule (error) or a soft guideline (warning) is fixed by the rulebook
-/// and encoded here per cap. A cap left `None`/absent imposes no limit.
-///
-/// Per-category flaw caps (Personality, Story, ...) are data in the profile's
-/// `flaw_category_caps`: each entry names its category, so no category slug is
-/// hardcoded in the engine.
-///
-/// Source: grogs may take no Major Virtues or Flaws (the `max_major_*` count
-/// caps) at Ars Magica - Definitive Edition (Core Rules).md:2824-2830; ≤5 Minor
-/// Flaws (central) at :2774, grogs ≤3 at :1009; ≤1 Major Personality Flaw at
-/// :2820; ≤2 Personality Flaws (soft) at :2820/:2976; ≤1 Story Flaw (soft) at
-/// :2818, grogs none at :1009. See RULES.md.
-fn validate_caps(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    type_profile: Option<&EntityTypeProfile>,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let Some(profile) = type_profile else {
-        return;
-    };
-
-    // Counts selections whose resolved point item matches `pred`.
-    let count = |pred: &dyn Fn(&PointItem) -> bool| -> usize {
-        entity
-            .selections
-            .iter()
-            .filter(|s| ruleset.point_items.get(&s.item_ref).is_some_and(pred))
-            .count()
-    };
-
-    let count_args = |n: usize, max: u8| args([("count", n.to_string()), ("max", max.to_string())]);
-
-    // --- Hard caps ("may not ...") → blocking errors ---
-
-    if let Some(max) = profile.budget.max_major_virtues {
-        let n = count(&|i| i.kind == ItemKind::Virtue && i.magnitude == Magnitude::Major);
-        if n > max as usize {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_TOO_MANY_MAJOR_VIRTUES,
-                count_args(n, max),
-                None,
-            ));
-        }
-    }
-
-    if let Some(max) = profile.budget.max_major_flaws {
-        let n = count(&|i| i.kind == ItemKind::Flaw && i.magnitude == Magnitude::Major);
-        if n > max as usize {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_TOO_MANY_MAJOR_FLAWS,
-                count_args(n, max),
-                None,
-            ));
-        }
-    }
-
-    if let Some(max) = profile.budget.max_minor_flaws {
-        let n = count(&|i| i.kind == ItemKind::Flaw && i.magnitude == Magnitude::Minor);
-        if n > max as usize {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_TOO_MANY_MINOR_FLAWS,
-                count_args(n, max),
-                None,
-            ));
-        }
-    }
-
-    // --- Data-driven per-category caps ---
-    //
-    // Each cap names its category as data, so the engine never hardcodes a
-    // category slug. A `hard` cap is a blocking error; otherwise a non-blocking
-    // warning (the book marks the Personality/Story guidelines as
-    // troupe-overridable). The issue code is derived from the category slug as
-    // `too_many_<category>_<noun>` (or `too_many_major_<category>_<noun>` when
-    // the cap is Major-only), so the Fluent key follows the category by
-    // convention — no slug is baked into the engine. Counts `entity.selections`
-    // only, so House-granted items (which never enter the bought list) are
-    // exempt — Bjornaer's Major Hermetic Heartbeast cannot trip a virtue cap.
-    //
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:2855-2861.
-    let mut push_category_cap_issues = |caps: &[CategoryCap], kind: ItemKind, noun: &str| {
-        for cap in caps {
-            let n = count(&|i| {
-                i.kind == kind
-                    && i.category == cap.category
-                    && (!cap.major_only || i.magnitude == Magnitude::Major)
-            });
-            if n <= cap.max as usize {
-                continue;
-            }
-
-            let code = if cap.major_only {
-                format!("too_many_major_{}_{}", cap.category, noun)
-            } else {
-                format!("too_many_{}_{}", cap.category, noun)
-            };
-            let cap_args = count_args(n, cap.max);
-
-            if cap.hard {
-                issues.push(ValidationIssue::error(&code, cap_args, None));
-            } else {
-                issues.push(ValidationIssue::warning(&code, cap_args, None));
-            }
-        }
-    };
-
-    push_category_cap_issues(&profile.budget.flaw_category_caps, ItemKind::Flaw, "flaws");
-    push_category_cap_issues(
-        &profile.budget.virtue_category_caps,
-        ItemKind::Virtue,
-        "virtues",
-    );
-}
-
-/// Warns when more than half the Virtue points a character has taken are Tainted
-/// (and likewise for Flaws). The rulebook frames this as a "should" ("no more
-/// than half a character's Virtues should be tainted, and similarly for Flaws"),
-/// so it is a non-blocking warning; the limit is measured against the points
-/// actually taken, not the type's budget. Free items contribute 0 points and so
-/// never affect the ratio.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2998-3002.
-fn validate_tainted_cap(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    let (mut tainted_virtue, mut total_virtue) = (0i32, 0i32);
-    let (mut tainted_flaw, mut total_flaw) = (0i32, 0i32);
-    for selection in &entity.selections {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        let pts = item.magnitude.points() as i32;
-        if item.kind.is_positive() {
-            total_virtue += pts;
-            if item.tainted {
-                tainted_virtue += pts;
-            }
-        } else {
-            total_flaw += pts;
-            if item.tainted {
-                tainted_flaw += pts;
-            }
-        }
-    }
-
-    let mut warn = |tainted: i32, total: i32, code: &str| {
-        // "No more than half": tainted may equal half but not exceed it. The
-        // integer form `2·tainted > total` sidesteps any rounding choice.
-        if tainted * 2 > total {
-            issues.push(ValidationIssue::warning(
-                code,
-                args([
-                    ("tainted", tainted.to_string()),
-                    ("total", total.to_string()),
-                ]),
-                None,
-            ));
-        }
-    };
-    warn(tainted_virtue, total_virtue, "too_many_tainted_virtues");
-    warn(tainted_flaw, total_flaw, "too_many_tainted_flaws");
-}
-
-/// Validates a magus's Hermetic House and its specialisation picks. Runs only
-/// for a magus type (`is_magus`); no other type has a House.
-///
-/// - A magus with no House gets a soft `house_unset` warning — belonging to a
-///   House is a "should" the troupe can waive, not a hard rule.
-/// - Each `Choice` grant's pick (keyed by `choice_key`) must be present and one
-///   of the offered options, else `house_choice_unresolved`.
-/// - Each `Open` grant's pick must be present (else `house_choice_unresolved`)
-///   and satisfy the grant's declarative `GrantConstraint` (kind, magnitude,
-///   category allow/deny lists), else `house_grant_constraint`.
-/// - A magus with no Flaw in a Hermetic category gets a soft
-///   `missing_hermetic_flaw` warning. "Hermetic" is the type's `gift_categories`
-///   (data), so no category slug is hardcoded.
-///
-/// The picks are validated here rather than as ordinary selections because the
-/// derived grant is never stored on `entity.selections`; the grant option refs
-/// are integrity-checked at load (see `validate_house_refs`).
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2855-2861 (the free
-/// House Virtue and the recommendation to take a Hermetic Flaw).
-fn validate_house(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    type_profile: Option<&EntityTypeProfile>,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    // Houses are a magus-only concern; a non-magus (or an unknown type) has none.
-    let Some(profile) = type_profile else {
-        return;
-    };
-    if !profile.is_magus {
-        return;
-    }
-
-    // A magus should take at least one Hermetic Flaw. "Hermetic" is the type's
-    // declared gift category (data), so no slug is hardcoded here; skip the
-    // guideline entirely when the type names no gift category.
-    if !profile.gift_categories.is_empty() {
-        let has_hermetic_flaw = entity.selections.iter().any(|s| {
-            ruleset.point_items.get(&s.item_ref).is_some_and(|item| {
-                item.kind == ItemKind::Flaw && profile.gift_categories.contains(&item.category)
-            })
-        });
-        if !has_hermetic_flaw {
-            issues.push(ValidationIssue::warning(
-                ValidationIssue::CODE_MISSING_HERMETIC_FLAW,
-                args([]),
-                None,
-            ));
-        }
-    }
-
-    // No House: a soft warning, and there are no grants to resolve.
-    let Some(house_id) = &entity.house else {
-        issues.push(ValidationIssue::warning(
-            ValidationIssue::CODE_HOUSE_UNSET,
-            args([]),
-            None,
-        ));
-        return;
-    };
-
-    // An unknown House id resolves to no grants; nothing further to check.
-    let Some(house) = ruleset.house(house_id) else {
-        return;
-    };
-
-    let unresolved = |choice_key: &str| {
-        ValidationIssue::error(
-            ValidationIssue::CODE_HOUSE_CHOICE_UNRESOLVED,
-            args([
-                ("house", house_id.to_string()),
-                ("choice_key", choice_key.to_string()),
-            ]),
-            None,
-        )
-    };
-
-    for grant in &house.grants {
-        match grant {
-            // A fixed grant carries no player choice, so nothing to validate.
-            Grant::Fixed { .. } => {}
-            Grant::Choice {
-                choice_key,
-                options,
-            } => {
-                let pick = entity.house_choices.get(choice_key);
-                if !pick.is_some_and(|p| options.contains(p)) {
-                    issues.push(unresolved(choice_key));
-                }
-            }
-            Grant::Open {
-                choice_key,
-                constraint,
-            } => {
-                let Some(pick) = entity.house_choices.get(choice_key) else {
-                    issues.push(unresolved(choice_key));
-                    continue;
-                };
-                if !open_pick_satisfies(pick, constraint, ruleset) {
-                    issues.push(ValidationIssue::error(
-                        ValidationIssue::CODE_HOUSE_GRANT_CONSTRAINT,
-                        args([
-                            ("house", house_id.to_string()),
-                            ("choice_key", choice_key.clone()),
-                            ("item", pick.item_ref.to_string()),
-                        ]),
-                        Some(pick.item_ref.clone()),
-                    ));
-                }
-            }
-        }
-    }
-}
-
-/// Validates a Mythic Companion's chosen *type* (Devil Child, Faerie Doctor, …):
-/// its free-Virtue grants resolve and its required V/F package is present. Gated
-/// on the profile's `has_mythic_type` capability flag (never a hardcoded type
-/// id), mirroring how [`validate_house`] gates on `is_magus`.
-///
-/// - No type chosen → `mythic_type_unset` warning (a "should", not a hard rule).
-/// - Each `Choice`/`Open` grant pick is resolved from `entity.mythic_choices`
-///   (identical machinery to House grants); a missing/off-menu pick →
-///   `mythic_choice_unresolved`, an Open pick violating its constraint →
-///   `mythic_grant_constraint`.
-/// - The required package (fixed Virtues + each required Flaw's default OR a
-///   "suitable substitute agreed with the troupe") is checked against the bought
-///   `entity.selections`; a missing slot → a non-blocking
-///   `mythic_required_trait_missing` warning, so Enforced mode never hard-blocks
-///   a legal-with-substitute build. Required Virtues match by full `Selection`
-///   (ref + params) so parameterized/duplicated requirements — Nephilim's two
-///   distinct Great Characteristics, Puissant Guile — are matched precisely.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2635-2639, 2842-2851.
-fn validate_mythic_type(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    type_profile: Option<&EntityTypeProfile>,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    // Mythic types are a mythic-companion-only concern; gated on the capability
-    // flag so no type id is hardcoded here.
-    let Some(profile) = type_profile else {
-        return;
-    };
-    if !profile.has_mythic_type {
-        return;
-    }
-
-    // No type chosen: a soft warning, and there are no grants/package to resolve.
-    let Some(type_id) = &entity.mythic_type else {
-        issues.push(ValidationIssue::warning(
-            ValidationIssue::CODE_MYTHIC_TYPE_UNSET,
-            args([]),
-            None,
-        ));
-        return;
-    };
-
-    // An unknown type id resolves to nothing; nothing further to check.
-    let Some(mtype) = ruleset.mythic_type(type_id) else {
-        return;
-    };
-
-    // --- Free-Virtue grant picks (Choice/Open), mirroring validate_house. ---
-    let unresolved = |choice_key: &str| {
-        ValidationIssue::error(
-            ValidationIssue::CODE_MYTHIC_CHOICE_UNRESOLVED,
-            args([
-                ("mythic_type", type_id.to_string()),
-                ("choice_key", choice_key.to_string()),
-            ]),
-            None,
-        )
-    };
-    for grant in &mtype.grants {
-        match grant {
-            Grant::Fixed { .. } => {}
-            Grant::Choice {
-                choice_key,
-                options,
-            } => {
-                let pick = entity.mythic_choices.get(choice_key);
-                if !pick.is_some_and(|p| options.contains(p)) {
-                    issues.push(unresolved(choice_key));
-                }
-            }
-            Grant::Open {
-                choice_key,
-                constraint,
-            } => {
-                let Some(pick) = entity.mythic_choices.get(choice_key) else {
-                    issues.push(unresolved(choice_key));
-                    continue;
-                };
-                if !open_pick_satisfies(pick, constraint, ruleset) {
-                    issues.push(ValidationIssue::error(
-                        ValidationIssue::CODE_MYTHIC_GRANT_CONSTRAINT,
-                        args([
-                            ("mythic_type", type_id.to_string()),
-                            ("choice_key", choice_key.clone()),
-                            ("item", pick.item_ref.to_string()),
-                        ]),
-                        Some(pick.item_ref.clone()),
-                    ));
-                }
-            }
-        }
-    }
-
-    // --- Required package (non-blocking warnings; substitutes allowed). ---
-    let missing = |item: &Id| {
-        ValidationIssue::warning(
-            ValidationIssue::CODE_MYTHIC_REQUIRED_TRAIT_MISSING,
-            args([("item", item.to_string())]),
-            Some(item.clone()),
-        )
-    };
-    // Fixed required Virtues: matched by full Selection (ref + params).
-    for req in &mtype.required_virtues {
-        if !entity.selections.contains(req) {
-            issues.push(missing(&req.item_ref));
-        }
-    }
-    // Required Flaws: the default, or any bought selection satisfying the
-    // substitute constraint (kind/magnitude/category) — the troupe-substitute
-    // allowance.
-    for flaw in &mtype.required_flaws {
-        let satisfied = entity
-            .selections
-            .iter()
-            .any(|s| open_pick_satisfies(s, &flaw.constraint, ruleset));
-        if !satisfied {
-            issues.push(missing(&flaw.default.item_ref));
-        }
-    }
-}
-
-/// Tri-state outcome of evaluating a prerequisite expression.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Tri {
-    /// Definitely satisfied.
-    True,
-    /// Definitely unsatisfied.
-    False,
-    /// Cannot be evaluated with the data currently on the entity.
-    Unknown,
-}
-
-fn validate_prerequisites(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    type_profile: Option<&EntityTypeProfile>,
-    selected_ids: &BTreeSet<&Id>,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let is_magus = type_profile.map(|p| p.is_magus);
-
-    // Effective score per ability: the max bought score (a parameterized ability
-    // may appear more than once with different specialties; the highest wins)
-    // plus any virtue bonus (Puissant Ability +2, which now includes a
-    // House-granted Puissant via the combined selection list). `AbilityMin`
-    // thresholds are checked against the effective score so a boosted ability
-    // satisfies them. Keyed by owned `Id` so House-granted ability *floors*
-    // (below) can be folded in even for abilities that were never bought.
-    let mut ability_scores: BTreeMap<Id, u8> = BTreeMap::new();
-    for a in &entity.ability_scores {
-        // Per-instance bonus (Puissant targets one (ability, parameter)); an
-        // `AbilityMin` is keyed by id, so the strongest instance wins.
-        let bonus =
-            crate::effective::ability_bonus(entity, ruleset, &a.ability, a.parameter.as_deref());
-        let effective = (i32::from(a.score) + bonus).clamp(0, i32::from(u8::MAX)) as u8;
-        let entry = ability_scores.entry(a.ability.clone()).or_insert(0);
-        *entry = (*entry).max(effective);
-    }
-    // A free ability-score floor from an `AbilityScoreGrant` effect — including a
-    // House-granted Mystery Ability (Bjornaer → Heartbeast 1) — counts toward
-    // `AbilityMin` even with no bought row, so fold each granted floor in.
-    for floor in crate::effective::ability_score_floors(entity, ruleset) {
-        let bonus = crate::effective::ability_bonus(entity, ruleset, &floor.ability, None);
-        let effective = (floor.floor + bonus).clamp(0, i32::from(u8::MAX)) as u8;
-        let entry = ability_scores.entry(floor.ability).or_insert(0);
-        *entry = (*entry).max(effective);
-    }
-
-    // Effective score per Art: max bought score plus any virtue bonus (Puissant
-    // Art +3, including a House-granted Puissant). `ArtMin` thresholds are
-    // checked against the effective score.
-    let mut art_scores: BTreeMap<Id, u8> = BTreeMap::new();
-    for a in &entity.art_scores {
-        let bonus = crate::effective::art_bonus(entity, ruleset, &a.art);
-        let effective = (i32::from(a.score) + bonus).clamp(0, i32::from(u8::MAX)) as u8;
-        let entry = art_scores.entry(a.art.clone()).or_insert(0);
-        *entry = (*entry).max(effective);
-    }
-
-    // `Prereq::Has` resolves against bought AND granted rows (a granted
-    // Heartbeast/Dowsing satisfies `Has(...)`), so build a grants-inclusive id
-    // set spanning House and Mythic-Companion-type grants. This is deliberately
-    // distinct from the bought-only `selected_ids` that the forbidden-trait /
-    // incompatibility validators use — grants must never reach those (review
-    // finding B1).
-    let granted = crate::effective::entity_grants(entity, ruleset);
-    let mut present_ids: BTreeSet<&Id> = selected_ids.iter().copied().collect();
-    for g in &granted {
-        present_ids.insert(&g.item_ref);
-    }
-
-    let ctx = PrereqCtx {
-        present_ids: &present_ids,
-        is_magus,
-        house: entity.house.as_ref(),
-        ability_scores: &ability_scores,
-        art_scores: &art_scores,
-    };
-    for selection in &entity.selections {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-
-        if let Some(ref prereq) = item.prerequisites {
-            let (outcome, depended_on_unknown) = evaluate_prereq(prereq, &ctx);
-            match outcome {
-                Tri::False => {
-                    issues.push(ValidationIssue::error(
-                        ValidationIssue::CODE_PREREQ_NOT_MET,
-                        args([("item", selection.item_ref.to_string())]),
-                        Some(selection.item_ref.clone()),
-                    ));
-                }
-                Tri::Unknown if depended_on_unknown => {
-                    issues.push(ValidationIssue::warning(
-                        ValidationIssue::CODE_PREREQ_UNEVALUATED,
-                        args([("item", selection.item_ref.to_string())]),
-                        Some(selection.item_ref.clone()),
-                    ));
-                }
-                _ => {}
-            }
-        }
-    }
-}
-
-/// The read-only context a prerequisite is evaluated against: which items are
-/// selected, whether the type is a magus, and the effective Ability/Art score
-/// maps the `AbilityMin`/`ArtMin` thresholds compare against. Bundled so the
-/// recursive evaluator and its fold helper take one context rather than a long
-/// positional argument list.
-struct PrereqCtx<'a> {
-    /// The grants-inclusive id set (bought selections ++ House-granted rows) that
-    /// `Prereq::Has` tests against — NOT the bought-only `selected_ids` used by
-    /// the forbidden-trait / incompatibility checks (review finding B1).
-    present_ids: &'a BTreeSet<&'a Id>,
-    is_magus: Option<bool>,
-    /// The entity's own Hermetic House, if any. `Prereq::House` compares against
-    /// it: matching → True, differing → False, absent → Unknown (mirrors how
-    /// `is_magus` yields Unknown when the profile is missing).
-    house: Option<&'a Id>,
-    ability_scores: &'a BTreeMap<Id, u8>,
-    art_scores: &'a BTreeMap<Id, u8>,
-}
-
-/// Evaluates a prerequisite to a tri-state. Returns the outcome plus whether an
-/// unevaluable leaf actually influenced the result (so a warning is only worth
-/// emitting when the answer genuinely hinges on missing data).
-fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx) -> (Tri, bool) {
-    match prereq {
-        // The three quantifiers share one tri-state fold over their children,
-        // differing only in: which child outcome short-circuits, what the
-        // expression then evaluates to, and the value when every child is known
-        // and none triggered the short-circuit.
-        //   All (AND): trigger on False  -> short-circuit False; all-known -> True
-        //   Any (OR) : trigger on True   -> short-circuit True;  all-known -> False
-        //   Nor      : trigger on True   -> short-circuit False; all-known -> True
-        // In every case a surviving Unknown makes the whole expression Unknown.
-        Prereq::All(children) => fold_children(children, ctx, Tri::False, Tri::False, Tri::True),
-        Prereq::Any(children) => fold_children(children, ctx, Tri::True, Tri::True, Tri::False),
-        Prereq::Nor(children) => fold_children(children, ctx, Tri::True, Tri::False, Tri::True),
-        Prereq::Has(id) => {
-            if ctx.present_ids.contains(id) {
-                (Tri::True, false)
-            } else {
-                (Tri::False, false)
-            }
-        }
-        // IsMagus is enforced against the profile's explicit `is_magus` flag (a
-        // Hermetic-Magus-status type), independent of gift_policy.
-        Prereq::IsMagus => match ctx.is_magus {
-            Some(true) => (Tri::True, false),
-            Some(false) => (Tri::False, false),
-            None => (Tri::Unknown, true),
-        },
-        // AbilityMin compares against the entity's max *effective* score for
-        // that ability (bought score plus virtue bonuses such as Puissant
-        // Ability), as supplied by the caller. An ability the entity does not
-        // have counts as score 0, so any positive threshold is False.
-        Prereq::AbilityMin { ability, score } => {
-            let have = ctx.ability_scores.get(ability).copied().unwrap_or(0);
-            if have >= *score {
-                (Tri::True, false)
-            } else {
-                (Tri::False, false)
-            }
-        }
-        // ArtMin compares against the entity's max *effective* Art score (bought
-        // plus Puissant Art). An Art the entity does not have counts as 0.
-        Prereq::ArtMin { art, score } => {
-            let have = ctx.art_scores.get(art).copied().unwrap_or(0);
-            if have >= *score {
-                (Tri::True, false)
-            } else {
-                (Tri::False, false)
-            }
-        }
-        // House matches against the entity's own house: a known house that
-        // matches is True, a known house that differs is False, and no house at
-        // all (non-magus or an unset magus) is genuinely Unknown.
-        Prereq::House(id) => match ctx.house {
-            Some(h) if h == id => (Tri::True, false),
-            Some(_) => (Tri::False, false),
-            None => (Tri::Unknown, true),
-        },
-    }
-}
-
-/// Tri-state fold shared by the `All`/`Any`/`Nor` quantifiers (see the call
-/// sites for the per-quantifier parameterization).
-///
-/// Walks the children once: if any child evaluates to `trigger`, the whole
-/// expression short-circuits to `short_circuit` (a definite True/False, so its
-/// dependency flag is irrelevant downstream and reported as `false`). Otherwise,
-/// a surviving `Unknown` makes the result `Unknown` (carrying whether that
-/// hinged on genuinely missing data); if every child is known, the result is
-/// `all_known`.
-fn fold_children(
-    children: &[Prereq],
-    ctx: &PrereqCtx,
-    trigger: Tri,
-    short_circuit: Tri,
-    all_known: Tri,
-) -> (Tri, bool) {
-    let mut depended = false;
-    let mut saw_unknown = false;
-    for child in children {
-        let (outcome, dep) = evaluate_prereq(child, ctx);
-        if outcome == trigger {
-            return (short_circuit, false);
-        }
-        if outcome == Tri::Unknown {
-            saw_unknown = true;
-            depended |= dep;
-        }
-    }
-    if saw_unknown {
-        (Tri::Unknown, depended)
-    } else {
-        (all_known, false)
-    }
-}
-
-fn validate_incompatibilities(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    selected_ids: &BTreeSet<&Id>,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let mut reported: BTreeSet<(&Id, &Id)> = BTreeSet::new();
-
-    for selection in &entity.selections {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-
-        for incompat_id in &item.incompatible_with {
-            if selected_ids.contains(incompat_id) {
-                // Normalize the pair order so a mutual incompatibility is
-                // reported exactly once.
-                let pair = if selection.item_ref < *incompat_id {
-                    (&selection.item_ref, incompat_id)
-                } else {
-                    (incompat_id, &selection.item_ref)
-                };
-                if reported.insert(pair) {
-                    issues.push(ValidationIssue::error(
-                        ValidationIssue::CODE_INCOMPATIBLE,
-                        args([
-                            ("item", selection.item_ref.to_string()),
-                            ("other", incompat_id.to_string()),
-                        ]),
-                        Some(selection.item_ref.clone()),
-                    ));
-                }
-            }
-        }
-    }
-}
-
-fn validate_permitted_categories(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    type_profile: Option<&EntityTypeProfile>,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let Some(profile) = type_profile else {
-        return;
-    };
-
-    // An empty permitted list means "no category restriction".
-    if profile.permitted_categories.is_empty() {
-        return;
-    }
-
-    for selection in &entity.selections {
-        // The profile's own gift is governed solely by `validate_gift_policy`
-        // (required/allowed/forbidden). Exempt it here: it is contradictory for a
-        // profile to mandate a trait via `gift_policy` yet reject its category
-        // (The Gift is `special`), so gifted profiles need not whitelist it.
-        if profile.gift_id.as_ref() == Some(&selection.item_ref) {
-            continue;
-        }
-
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-
-        if !profile.permitted_categories.contains(&item.category) {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_CATEGORY_NOT_PERMITTED,
-                args([
-                    ("item", selection.item_ref.to_string()),
-                    ("category", item.category.clone()),
-                ]),
-                Some(selection.item_ref.clone()),
-            ));
-        }
-    }
-}
-
-fn validate_forbidden_categories(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    type_profile: Option<&EntityTypeProfile>,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let Some(profile) = type_profile else {
-        return;
-    };
-
-    if profile.forbidden_categories.is_empty() {
-        return;
-    }
-
-    for selection in &entity.selections {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-
-        if profile.forbidden_categories.contains(&item.category) {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_FORBIDDEN_CATEGORY,
-                args([
-                    ("item", selection.item_ref.to_string()),
-                    ("category", item.category.clone()),
-                ]),
-                Some(selection.item_ref.clone()),
-            ));
-        }
-    }
-}
-
-fn validate_entity_kind_applicability(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    for selection in &entity.selections {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-
-        if !item.entity_kinds.is_empty() && !item.entity_kinds.contains(&entity.entity_kind) {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_WRONG_ENTITY_KIND,
-                args([
-                    ("item", selection.item_ref.to_string()),
-                    ("entity_kind", entity.entity_kind.to_string()),
-                ]),
-                Some(selection.item_ref.clone()),
-            ));
-        }
-    }
-}
-
-fn validate_duplicate_selections(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let mut seen: BTreeMap<(&Id, &BTreeMap<String, Id>), usize> = BTreeMap::new();
-
-    for selection in &entity.selections {
-        let key = (&selection.item_ref, &selection.params);
-        *seen.entry(key).or_insert(0) += 1;
-    }
-
-    for ((item_ref, _params), count) in &seen {
-        // Selections are grouped by (item_ref, params): two selections of the
-        // same parameterized item with DIFFERENT params are distinct targets and
-        // do not collide here. An item may be taken up to `max_per_target` times
-        // for the same target (default 1; Great Characteristic allows 2).
-        let max = ruleset
-            .point_items
-            .get(*item_ref)
-            .map_or(1, |item| usize::from(item.max_per_target));
-        if *count <= max {
-            continue;
-        }
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_DUPLICATE_SELECTION,
-            args([
-                ("item", item_ref.to_string()),
-                ("count", count.to_string()),
-                ("max", max.to_string()),
-            ]),
-            Some((*item_ref).clone()),
-        ));
-    }
-}
-
-fn validate_required_traits(
-    type_profile: Option<&EntityTypeProfile>,
-    selected_ids: &BTreeSet<&Id>,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let Some(profile) = type_profile else {
-        return;
-    };
-
-    for required_id in &profile.required_traits {
-        if !selected_ids.contains(required_id) {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_MISSING_REQUIRED_TRAIT,
-                args([("item", required_id.to_string())]),
-                Some(required_id.clone()),
-            ));
-        }
-    }
-}
-
-fn validate_forbidden_traits(
-    type_profile: Option<&EntityTypeProfile>,
-    selected_ids: &BTreeSet<&Id>,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let Some(profile) = type_profile else {
-        return;
-    };
-
-    for forbidden_id in &profile.forbidden_traits {
-        if selected_ids.contains(forbidden_id) {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_FORBIDDEN_TRAIT,
-                args([("item", forbidden_id.to_string())]),
-                Some(forbidden_id.clone()),
-            ));
-        }
-    }
-}
-
-/// Validates that each selection of a parameterized item supplies exactly the
-/// declared parameter keys (no missing, no extra) and that each provided value
-/// resolves against its domain's registry: `item` → point items, `ability` →
-/// the ability catalogue, `art` → the art catalogue, `characteristic` →
-/// [`Characteristic::from_id`]. A value that does not resolve emits
-/// `unknown_param_value`.
-fn validate_parameters(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    for selection in &entity.selections {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-
-        let declared: BTreeSet<&str> = item.parameters.iter().map(|p| p.key.as_str()).collect();
-        let provided: BTreeSet<&str> = selection.params.keys().map(String::as_str).collect();
-
-        // A parameter targeting a PARAMETERIZED ability also expects the instance
-        // discriminator, supplied under the target ability's own param key
-        // ((Area) Lore → "area"). So Puissant on (Area) Lore needs both keys; on a
-        // plain ability the instance key would be an unexpected extra.
-        let mut expected = declared.clone();
-        for param in &item.parameters {
-            if matches!(param.domain, ParameterDomain::Ability)
-                && let Some(target) = selection.params.get(&param.key)
-                && let Some(ability) = ruleset.abilities.get(target)
-                && let Some(instance_key) = ability.parameter.as_deref()
-            {
-                expected.insert(instance_key);
-            }
-        }
-
-        for missing in expected.difference(&provided) {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_MISSING_PARAM,
-                args([
-                    ("item", selection.item_ref.to_string()),
-                    ("key", missing.to_string()),
-                ]),
-                Some(selection.item_ref.clone()),
-            ));
-        }
-
-        for extra in provided.difference(&expected) {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_UNEXPECTED_PARAM,
-                args([
-                    ("item", selection.item_ref.to_string()),
-                    ("key", extra.to_string()),
-                ]),
-                Some(selection.item_ref.clone()),
-            ));
-        }
-
-        // Resolve values for domains that have a registry (Item -> point items,
-        // Ability -> ability catalogue, Art -> art catalogue).
-        for param in &item.parameters {
-            let Some(value) = selection.params.get(&param.key) else {
-                continue; // missing already reported above
-            };
-            let resolves = match param.domain {
-                ParameterDomain::Item => ruleset.point_items.contains_key(value),
-                ParameterDomain::Ability => ruleset.abilities.contains_key(value),
-                ParameterDomain::Characteristic => Characteristic::from_id(value).is_some(),
-                ParameterDomain::Art => ruleset.arts.contains_key(value),
-                // Technique/Form resolve against the art catalogue *and* enforce
-                // the art class, so Deficient Technique cannot target a Form and
-                // Deficient Form cannot target a Technique (Core Rules.md:5909-5915).
-                ParameterDomain::Technique => ruleset
-                    .arts
-                    .get(value)
-                    .is_some_and(|a| a.art_type == crate::art::ArtType::Technique),
-                ParameterDomain::Form => ruleset
-                    .arts
-                    .get(value)
-                    .is_some_and(|a| a.art_type == crate::art::ArtType::Form),
-                // Free text: any provided value is legal (no registry).
-                ParameterDomain::Text => true,
-            };
-            if !resolves {
-                issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
-                    args([
-                        ("item", selection.item_ref.to_string()),
-                        ("key", param.key.clone()),
-                        ("value", value.to_string()),
-                        ("domain", param.domain.to_string()),
-                    ]),
-                    Some(selection.item_ref.clone()),
-                ));
-            }
-        }
-    }
-}
-
-/// Validates that every ability-bonus effect (e.g. Puissant Ability +2) targets
-/// an ability instance the character actually holds. The target is
-/// `(ability, parameter)`: for a parameterized ability ((Area) Lore) the instance
-/// value is read from the selection's matching key, so Puissant "Brandenburg Lore"
-/// must have a bought Brandenburg Lore row. A dangling target (e.g. the ability was
-/// removed) means the +2 attaches to nothing, so flag it. Effect-driven — no virtue
-/// id is hardcoded.
-fn validate_ability_bonus_targets(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    for selection in &entity.selections {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            // Exhaustive match so adding an Effect variant is a compile error
-            // here, not a silently-skipped target check.
-            let param = match effect {
-                // Affinity reduces the cost of buying one ability, so it too must
-                // target a held instance — the cost break attaches to nothing
-                // otherwise, exactly like a dangling Puissant.
-                Effect::AbilityBonus { param, .. } | Effect::AffinityAbilityCost { param, .. } => {
-                    param
-                }
-                // Art bonuses are not parameterized instances; their target is
-                // resolved by validate_parameters (domain check). Characteristic
-                // limits are handled elsewhere. AbilityScoreGrant *creates* the
-                // score, so it needs no pre-existing bought row. The XP-pool and
-                // characteristic-budget grants carry no target.
-                Effect::CharacteristicLimit { .. }
-                | Effect::ArtBonus { .. }
-                | Effect::AffinityArtCost { .. }
-                | Effect::RestrictedAbilityXp { .. }
-                | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. }
-                | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. }
-                | Effect::ConfidenceBonus { .. }
-                | Effect::SpellMasteryXp { .. }
-                | Effect::GrantsSpellMastery { .. }
-                | Effect::GrantsSelection { .. }
-                | Effect::ItemLevelBudget { .. }
-                | Effect::MasterpieceItem
-                | Effect::TrueFaithGrant { .. }
-                | Effect::WarpingGrant { .. }
-                | Effect::SizeDelta { .. }
-                | Effect::CharacteristicScoreDelta { .. }
-                | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. }
-                | Effect::MightGrant { .. }
-                | Effect::PowerLevels { .. }
-                // M5/5b in-play effects: consumed by derived.rs (5i). They carry
-                // no ability/characteristic creation target to check here.
-                | Effect::MagicalFocus { .. }
-                | Effect::CastingTotalMod { .. }
-                | Effect::LabTotalMod { .. }
-                | Effect::DeficientArt { .. }
-                | Effect::MagicTotalHalving { .. }
-                | Effect::SoakMod { .. }
-                | Effect::CombatMod { .. }
-                | Effect::HealthMod { .. }
-                | Effect::MagicResistanceMod { .. }
-                | Effect::AgingMod { .. }
-                | Effect::AdvancementMod { .. }
-                | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. }
-                // Elemental Magic carries no ability/characteristic creation target.
-                | Effect::ElementalMagic { .. } => continue,
-            };
-            let Some(target) = selection.params.get(param) else {
-                continue; // missing ability key already reported by validate_parameters
-            };
-            // The instance discriminator, if the target ability is parameterized.
-            let instance = ruleset
-                .abilities
-                .get(target)
-                .and_then(|a| a.parameter.as_deref())
-                .and_then(|key| selection.params.get(key).map(Id::as_str));
-            let has_instance = entity
-                .ability_scores
-                .iter()
-                .any(|a| &a.ability == target && a.parameter.as_deref() == instance);
-            if !has_instance {
-                issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_ABILITY_BONUS_DANGLING_TARGET,
-                    args([
-                        ("item", selection.item_ref.to_string()),
-                        ("ability", target.to_string()),
-                        ("parameter", instance.unwrap_or("").to_string()),
-                    ]),
-                    Some(selection.item_ref.clone()),
-                ));
-            }
-        }
-    }
-}
-
-/// Enforces the "one Magical Focus per magus" limit (Core Rules.md:4542) by
-/// counting [`Effect::MagicalFocus`] across everything that feeds the effective
-/// layer (bought selections plus House / Mythic-type grants, e.g. Mythic Blood's
-/// bundled Minor Focus). More than one Focus is illegal. This counts the *effect*
-/// rather than using pairwise `incompatible_with`, so it also catches two Minor
-/// Foci with different descriptors (distinct selections that no incompatibility
-/// pair would flag). Effect-driven — no virtue id is hardcoded.
-fn validate_magical_focus(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    let mut foci = 0usize;
-    for selection in crate::effective::selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        foci += item
-            .effects
-            .iter()
-            .filter(|e| matches!(e, Effect::MagicalFocus { .. }))
-            .count();
-    }
-    if foci > 1 {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_MULTIPLE_MAGICAL_FOCI,
-            args([("count", foci.to_string())]),
-            None,
-        ));
-    }
-}
-
-/// Enforces the type's Gift policy (required / allowed / forbidden). The policy
-/// per type is data; this is the mechanism the book's Gift rules map onto.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2868-2877 (The Gift:
-/// "all magi must have this Virtue"; "Grogs can never have The Gift"); magi must
-/// take The Gift at :2858; only magi may take the Hermetic Magus Social Status
-/// at :2293 and :4067-4069.
-fn validate_gift_policy(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    type_profile: Option<&EntityTypeProfile>,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let Some(profile) = type_profile else {
-        return;
-    };
-
-    let Some(policy) = profile.gift_policy else {
-        return;
-    };
-
-    // Shared with the Supernatural free-slot computation so both use one
-    // definition of "has The Gift".
-    let has_gift = crate::effective::has_the_gift(entity, ruleset, profile);
-
-    match policy {
-        GiftPolicy::Required => {
-            if !has_gift {
-                issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_GIFT_REQUIRED,
-                    BTreeMap::new(),
-                    None,
-                ));
-            }
-        }
-        GiftPolicy::Forbidden => {
-            if has_gift {
-                issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_GIFT_FORBIDDEN,
-                    BTreeMap::new(),
-                    None,
-                ));
-            }
-        }
-        GiftPolicy::Allowed => {}
-    }
-}
-
-/// Validates Characteristic point-buy: each score must be a legal table value
-/// and within the characteristic's per-target buy range, and the total cost must
-/// not exceed the starting points (over = error, under = a non-blocking "points
-/// unspent" warning, mirroring the V/F balance rule). No-op when the ruleset
-/// ships no characteristic rules.
-///
-/// The buy range is the base ±3 by default, widened upward by Great
-/// (Characteristic) and downward by Poor (Characteristic) (see
-/// [`characteristic_cap`](crate::effective::characteristic_cap) /
-/// [`characteristic_floor`](crate::effective::characteristic_floor)). The cost
-/// table itself spans the absolute ±5 range so the higher/lower scores can be
-/// priced; without the virtue/flaw they are legal table values but above the cap
-/// / below the floor.
-///
-/// The point-spend check is skipped entirely when the character has no
-/// Characteristics set: an untouched step is not yet under-spent, so a fresh
-/// character is not nagged. Out-of-range scores are always flagged.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2340-2354 (the cost
-/// table and the seven starting points), :4105 (the +3 base cap), :3987-3989
-/// (Great's +5), :6598-6600 (Poor's −5). The numbers themselves are data in
-/// `rules/core/characteristics.json` (see RULES.md).
-fn validate_characteristics(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    let Some(rules) = ruleset.characteristic_rules() else {
-        return;
-    };
-    let (Some(min), Some(max)) = (rules.min_score(), rules.max_score()) else {
-        return;
-    };
-
-    for (&characteristic, &score) in &entity.characteristics {
-        if !rules.is_legal_score(score) {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_CHARACTERISTIC_OUT_OF_RANGE,
-                args([
-                    ("characteristic", characteristic.to_string()),
-                    ("score", score.to_string()),
-                    ("min", min.to_string()),
-                    ("max", max.to_string()),
-                ]),
-                None,
-            ));
-            continue;
-        }
-        // A legal table value still has to sit within the range that this
-        // character's Great/Poor (Characteristic) choices open for the target.
-        let cap = crate::effective::characteristic_cap(entity, ruleset, characteristic);
-        let floor = crate::effective::characteristic_floor(entity, ruleset, characteristic);
-        if i32::from(score) > cap {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_CHARACTERISTIC_ABOVE_CAP,
-                args([
-                    ("characteristic", characteristic.to_string()),
-                    ("score", score.to_string()),
-                    ("cap", cap.to_string()),
-                ]),
-                None,
-            ));
-        } else if i32::from(score) < floor {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_CHARACTERISTIC_BELOW_FLOOR,
-                args([
-                    ("characteristic", characteristic.to_string()),
-                    ("score", score.to_string()),
-                    ("floor", floor.to_string()),
-                ]),
-                None,
-            ));
-        }
-    }
-
-    // Don't evaluate the point spend before the user has touched the step.
-    if entity.characteristics.is_empty() {
-        return;
-    }
-
-    let cost = rules.total_cost(&entity.characteristics);
-    // Improved Characteristics (+3 each, stackable) raises the buy budget above
-    // the ruleset's base start_points.
-    let granted = crate::effective::characteristic_points_granted(entity, ruleset);
-    let budget = i32::from(rules.start_points) + granted;
-    if cost > budget {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_CHARACTERISTIC_OVERSPENT,
-            args([("cost", cost.to_string()), ("points", budget.to_string())]),
-            None,
-        ));
-    } else if cost < budget {
-        issues.push(ValidationIssue::warning(
-            ValidationIssue::CODE_CHARACTERISTIC_POINTS_UNSPENT,
-            args([("cost", cost.to_string()), ("points", budget.to_string())]),
-            None,
-        ));
-    }
-}
-
-/// Enforces the parameter-relative precondition on `characteristic_limit`
-/// effects: a limit-shift may only be taken on a characteristic whose *base*
-/// (bought) score is already at the limit being extended. Great (Characteristic,
-/// positive amount) needs base ≥ the base cap (+3); Poor (Characteristic,
-/// negative amount) needs base ≤ the base floor (−3). The threshold is derived
-/// from the ruleset's base cap/floor by the sign of the amount, so no per-effect
-/// number is stored. This is parameter-relative (it constrains whichever
-/// characteristic the selection targets), so it lives here rather than in the
-/// static [`Prereq`] tree.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3987-3989 (Great,
-/// "already … at least +3"), :6598-6600 (Poor, "already −3 or lower").
-fn validate_characteristic_limit_preconditions(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let Some(rules) = ruleset.characteristic_rules() else {
-        return;
-    };
-    let base_max = rules.base_max_score();
-    let base_min = rules.base_min_score();
-    for selection in &entity.selections {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            // Exhaustive match so adding an Effect variant is a compile error
-            // here, not a silently-skipped precondition check.
-            let (amount, target, base) = match effect {
-                Effect::CharacteristicLimit { param, amount } => {
-                    let Some(target) = selection
-                        .params
-                        .get(param)
-                        .and_then(Characteristic::from_id)
-                    else {
-                        continue; // unresolved param value is reported by validate_parameters
-                    };
-                    let base = entity.characteristics.get(&target).copied().unwrap_or(0);
-                    (*amount, target, base)
-                }
-                Effect::AbilityBonus { .. }
-                | Effect::ArtBonus { .. }
-                | Effect::AffinityAbilityCost { .. }
-                | Effect::AffinityArtCost { .. }
-                | Effect::RestrictedAbilityXp { .. }
-                | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. }
-                | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. }
-                | Effect::ConfidenceBonus { .. }
-                | Effect::SpellMasteryXp { .. }
-                | Effect::GrantsSpellMastery { .. }
-                | Effect::GrantsSelection { .. }
-                | Effect::ItemLevelBudget { .. }
-                | Effect::MasterpieceItem
-                | Effect::TrueFaithGrant { .. }
-                | Effect::WarpingGrant { .. }
-                | Effect::SizeDelta { .. }
-                | Effect::CharacteristicScoreDelta { .. }
-                | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. }
-                | Effect::MightGrant { .. }
-                | Effect::PowerLevels { .. }
-                // M5/5b in-play effects: consumed by derived.rs (5i). They carry
-                // no ability/characteristic creation target to check here.
-                | Effect::MagicalFocus { .. }
-                | Effect::CastingTotalMod { .. }
-                | Effect::LabTotalMod { .. }
-                | Effect::DeficientArt { .. }
-                | Effect::MagicTotalHalving { .. }
-                | Effect::SoakMod { .. }
-                | Effect::CombatMod { .. }
-                | Effect::HealthMod { .. }
-                | Effect::MagicResistanceMod { .. }
-                | Effect::AgingMod { .. }
-                | Effect::AdvancementMod { .. }
-                | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. }
-                // Elemental Magic carries no ability/characteristic creation target.
-                | Effect::ElementalMagic { .. } => continue,
-            };
-            if amount > 0 {
-                if let Some(cap) = base_max
-                    && i32::from(base) < i32::from(cap)
-                {
-                    issues.push(ValidationIssue::error(
-                        ValidationIssue::CODE_CHARACTERISTIC_MAX_BASE_TOO_LOW,
-                        args([
-                            ("item", selection.item_ref.to_string()),
-                            ("characteristic", target.to_string()),
-                            ("base", base.to_string()),
-                            ("min", cap.to_string()),
-                        ]),
-                        Some(selection.item_ref.clone()),
-                    ));
-                }
-            } else if amount < 0
-                && let Some(floor) = base_min
-                && i32::from(base) > i32::from(floor)
-            {
-                issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_CHARACTERISTIC_MIN_BASE_TOO_HIGH,
-                    args([
-                        ("item", selection.item_ref.to_string()),
-                        ("characteristic", target.to_string()),
-                        ("base", base.to_string()),
-                        ("max", floor.to_string()),
-                    ]),
-                    Some(selection.item_ref.clone()),
-                ));
-            }
-        }
-    }
-}
-
-/// Validates Ability scores: every referenced ability must resolve against the
-/// catalogue, no (ability, parameter) pair may appear twice, a parameterized
-/// ability must carry a parameter value, and the total XP the bought scores cost
-/// may not exceed the character's `xp_pool`.
-///
-/// A parameterized ability (e.g. `(Area) Lore`) is identified by its instance
-/// `parameter` (the area / language), so a character may hold several; plain
-/// abilities have no parameter and are deduped by id (one instance).
-///
-/// The age cap is deferred to M4. XP cost per score comes from the advancement
-/// table (`AdvancementTable::xp_for_score`); a non-zero score with no table row
-/// is off-table and flagged `ability_score_out_of_range` (mirroring the
-/// characteristic range check), so an illegal score is never silently priced at
-/// 0 XP. The XP a score costs is summed against the shared pool by
-/// [`validate_xp_pool`], not here.
-fn validate_abilities(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    let mut seen: BTreeMap<(&Id, Option<&str>), u32> = BTreeMap::new();
-    // The highest score the advancement table prices. A ruleset that ships no
-    // advancement table has no legal score range to check against, so off-table
-    // range checking is skipped.
-    let max_score = ruleset.advancement.max_score();
-
-    for entry in &entity.ability_scores {
-        match ruleset.abilities.get(&entry.ability) {
-            None => issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_UNKNOWN_ABILITY,
-                args([("ability", entry.ability.to_string())]),
-                Some(entry.ability.clone()),
-            )),
-            Some(ability) => {
-                // A parameterized ability needs its value supplied (which Area?).
-                if ability.parameter.is_some()
-                    && entry.parameter.as_deref().is_none_or(str::is_empty)
-                {
-                    issues.push(ValidationIssue::error(
-                        ValidationIssue::CODE_ABILITY_PARAMETER_REQUIRED,
-                        args([("ability", entry.ability.to_string())]),
-                        Some(entry.ability.clone()),
-                    ));
-                }
-            }
-        }
-        // The advancement table covers the legal score range. A non-zero score
-        // with no table row is off-table (illegal) — flag it rather than silently
-        // pricing it at 0 XP, so direct-entry illegal states surface here instead
-        // of relying on the UI to keep them out (mirrors characteristic range
-        // checking).
-        // A non-zero score with no table row is off-table (illegal) — flag it
-        // rather than silently pricing it at 0 XP, so direct-entry illegal states
-        // surface here (mirrors characteristic range checking).
-        if ruleset.advancement.xp_for_score(entry.score).is_none()
-            && let Some(max) = max_score
-        {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_ABILITY_SCORE_OUT_OF_RANGE,
-                args([
-                    ("ability", entry.ability.to_string()),
-                    ("score", entry.score.to_string()),
-                    ("max", max.to_string()),
-                ]),
-                Some(entry.ability.clone()),
-            ));
-        }
-        // Age → max-Ability-score cap (Core:2366-2376). An Ability carrying an
-        // Affinity may exceed it by +2 (Core:3374), not without limit.
-        if let Some(age) = entity.age {
-            let mut cap = u32::from(crate::effective::age_max_ability_score(age));
-            if crate::effective::ability_affinity(
-                entity,
-                ruleset,
-                &entry.ability,
-                entry.parameter.as_deref(),
-            )
-            .is_some()
-            {
-                cap += 2;
-            }
-            if u32::from(entry.score) > cap {
-                issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_ABILITY_ABOVE_AGE_CAP,
-                    args([
-                        ("ability", entry.ability.to_string()),
-                        ("score", entry.score.to_string()),
-                        ("cap", cap.to_string()),
-                        ("age", age.to_string()),
-                    ]),
-                    Some(entry.ability.clone()),
-                ));
-            }
-        }
-        let key = (&entry.ability, entry.parameter.as_deref());
-        *seen.entry(key).or_insert(0) += 1;
-    }
-
-    for ((ability, _parameter), count) in seen {
-        if count > 1 {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_DUPLICATE_ABILITY,
-                args([
-                    ("ability", ability.to_string()),
-                    ("count", count.to_string()),
-                ]),
-                Some(ability.clone()),
-            ));
-        }
-    }
-}
-
-/// Validates that every held Supernatural Ability is legal: it must be covered by
-/// a granting Virtue (an `ability_score_grant` floor) or fit within the Gift's
-/// free slot (one for a Gifted non-magus, none for a magus). Uncovered instances
-/// beyond the free allowance emit `supernatural_ability_requires_virtue`
-/// (deterministic by sorted id). Source: Core Rules.md:2874.
-fn validate_supernatural_abilities(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    type_profile: Option<&EntityTypeProfile>,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let Some(profile) = type_profile else {
-        return;
-    };
-    let (free_total, _used) = crate::effective::supernatural_free_slots(entity, ruleset, profile);
-    // A granting Virtue seeds an `ability_score_grant` floor; such abilities are
-    // "covered" and never consume the free slot.
-    let floors: std::collections::BTreeSet<Id> =
-        crate::effective::ability_score_floors(entity, ruleset)
-            .into_iter()
-            .map(|f| f.ability)
-            .collect();
-    let mut uncovered: Vec<&Id> = entity
-        .ability_scores
-        .iter()
-        .filter(|a| {
-            ruleset
-                .abilities
-                .get(&a.ability)
-                .is_some_and(|ab| ab.category == crate::ability::AbilityCategory::Supernatural)
-        })
-        .map(|a| &a.ability)
-        .filter(|id| !floors.contains(*id))
-        .collect();
-    uncovered.sort();
-    uncovered.dedup();
-    // The first `free_total` uncovered abilities occupy the free Gift slot(s); the
-    // rest require a granting Virtue.
-    for ability in uncovered.into_iter().skip(usize::from(free_total)) {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_SUPERNATURAL_ABILITY_REQUIRES_VIRTUE,
-            args([("ability", ability.to_string())]),
-            Some(ability.clone()),
-        ));
-    }
-}
-
-/// Validates Personality Traits: `|value|` never exceeds 6, and at most one trait
-/// per selected Major Personality Flaw may exceed ±3 (a Major Personality Flaw is
-/// represented by a single ±6 trait; others stay ±3). Source: Core Rules.md:2500-2503.
-fn validate_personality_traits(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let major_personality_flaws = entity
-        .selections
-        .iter()
-        .filter(|s| {
-            ruleset.point_items.get(&s.item_ref).is_some_and(|item| {
-                item.category == "personality" && item.magnitude == Magnitude::Major
-            })
-        })
-        .count();
-
-    // Traits are sorted by name (normalize) for a deterministic "excess" choice.
-    let mut traits: Vec<&crate::types::PersonalityTrait> =
-        entity.personality_traits.iter().collect();
-    traits.sort_by(|a, b| a.name.cmp(&b.name));
-    let mut over_three_budget = major_personality_flaws;
-    for trait_ in traits {
-        let magnitude = trait_.value.unsigned_abs();
-        if magnitude > 6 {
-            issues.push(personality_out_of_range(trait_, 6));
-        } else if magnitude > 3 {
-            if over_three_budget > 0 {
-                over_three_budget -= 1;
-            } else {
-                issues.push(personality_out_of_range(trait_, 3));
-            }
-        }
-    }
-}
-
-fn personality_out_of_range(trait_: &crate::types::PersonalityTrait, max: i8) -> ValidationIssue {
-    ValidationIssue::error(
-        ValidationIssue::CODE_PERSONALITY_TRAIT_OUT_OF_RANGE,
-        args([
-            ("name", trait_.name.clone()),
-            ("value", trait_.value.to_string()),
-            ("max", max.to_string()),
-        ]),
-        None,
-    )
-}
-
-/// Validates that every starting Reputation is backed by a granting Virtue/Flaw:
-/// the count of reputations of each `kind` must not exceed the grants of that kind
-/// (`Effect::GrantsReputation`). A player-chosen-kind grant (`kind == None`, e.g.
-/// Famous) is a wildcard authorizing one Reputation of *any* type; a Reputation
-/// consumes a matching concrete-kind slot first, falling back to a wildcard slot.
-/// Excess reputations emit `reputation_not_granted`. Source: Core Rules.md:2514.
-fn validate_reputations(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    use crate::types::ReputationType;
-    let mut remaining: BTreeMap<ReputationType, usize> = BTreeMap::new();
-    let mut wildcard: usize = 0;
-    for (kind, _score) in crate::effective::reputation_grants(entity, ruleset) {
-        match kind {
-            Some(kind) => *remaining.entry(kind).or_insert(0) += 1,
-            None => wildcard += 1,
-        }
-    }
-    for reputation in &entity.reputations {
-        let slot = remaining.entry(reputation.kind).or_insert(0);
-        if *slot > 0 {
-            *slot -= 1;
-        } else if wildcard > 0 {
-            wildcard -= 1;
-        } else {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_REPUTATION_NOT_GRANTED,
-                args([
-                    ("kind", reputation.kind.to_string()),
-                    ("content", reputation.content.clone()),
-                ]),
-                None,
-            ));
-        }
-    }
-}
-
-/// Validates a character's starting enchanted devices: the total device level may
-/// not exceed the item-level budget the character's Virtues grant (Magic Items
-/// +25, Redcap 50). A device requires budget, so a device on a character with no
-/// granting Virtue (budget 0) is flagged — consistent with how a starting
-/// Reputation requires a granting Virtue. Source: Core Rules.md:4347-4349,
-/// :4842-4846.
-fn validate_devices(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    let used = crate::effective::item_level_used(entity);
-    let budget = crate::effective::item_level_budget(entity, ruleset);
-    if used > budget {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_OVER_ITEM_LEVEL,
-            args([
-                ("used", used.to_string()),
-                ("budget", budget.to_string()),
-                ("over", (used - budget).to_string()),
-            ]),
-            None,
-        ));
-    }
-}
-
-/// Validates a supernatural being's powers: the total power level may not exceed
-/// the power-levels budget its Might Virtues grant (Demonic Blood 30, Demonic
-/// Powers +20). A power on a being with no granting Virtue (budget 0) is flagged,
-/// mirroring [`validate_devices`]. Source: RoP:Infernal:4122, :4142.
-fn validate_powers(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    let used = crate::effective::powers_used(entity);
-    let budget = crate::effective::power_levels_budget(entity, ruleset);
-    if used > budget {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_OVER_POWER_LEVELS,
-            args([
-                ("used", used.to_string()),
-                ("budget", budget.to_string()),
-                ("over", (used - budget).to_string()),
-            ]),
-            None,
-        ));
-    }
-}
-
-/// Sanity-checks a being's Might: its entered base Realm must agree with the Realm
-/// its Might Virtues grant (a being belongs to exactly one Realm; Core:2623-2625).
-/// A warning, never a block — the troupe may be modelling an unusual creature.
-fn validate_might(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    let Some(base) = entity.might else {
-        return;
-    };
-    let Some(granted) = ruleset_might_grant_realm(entity, ruleset) else {
-        return;
-    };
-    if granted != base.realm {
-        issues.push(ValidationIssue::warning(
-            ValidationIssue::CODE_MIGHT_REALM_MISMATCH,
-            args([
-                ("base", base.realm.to_string()),
-                ("granted", granted.to_string()),
-            ]),
-            None,
-        ));
-    }
-}
-
-/// The Realm of the first [`Effect::MightGrant`] the being's Virtues confer, if
-/// any. Used only for the [`validate_might`] realm-agreement sanity check.
-fn ruleset_might_grant_realm(entity: &Entity, ruleset: &Ruleset) -> Option<crate::types::Realm> {
-    for selection in crate::effective::selections_for_effects(entity, ruleset).iter() {
-        let item = ruleset.point_items.get(&selection.item_ref)?;
-        for effect in &item.effects {
-            if let Effect::MightGrant { realm, .. } = effect {
-                return Some(*realm);
-            }
-        }
-    }
-    None
-}
-
-/// Validates the character's carried equipment. Each [`EquipmentSlot`] must name a
-/// catalogue weapon, shield, or armor id (`unknown_equipment`, error). For an
-/// **equipped** weapon or shield whose minimum-Strength requirement exceeds the
-/// character's (aged) Strength, an advisory `equipment_min_strength` warning is
-/// raised — never blocking, since carrying/wielding an over-heavy weapon is a
-/// storyguide call, not an illegal creation state (Core:16993). Armor carries no
-/// minimum-Strength requirement. Combat totals, Soak, and Encumbrance are computed
-/// downstream (slice 5i), not here.
-fn validate_equipment(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    let strength = crate::effective::effective_characteristic_after_aging(
-        entity,
-        ruleset,
-        Characteristic::Str,
-    );
-    for slot in &entity.equipment {
-        let item = &slot.item;
-        // Resolve the id against exactly one of the three catalogues, and (for an
-        // equipped weapon/shield) capture its min-Strength for the advisory.
-        let min_strength: Option<i32> = if let Some(weapon) = ruleset.weapon(item) {
-            weapon.min_strength.map(i32::from)
-        } else if let Some(shield) = ruleset.shield(item) {
-            Some(i32::from(shield.min_strength))
-        } else if ruleset.armor_item(item).is_some() {
-            None
-        } else {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_UNKNOWN_EQUIPMENT,
-                args([("item", item.to_string())]),
-                Some(item.clone()),
-            ));
-            continue;
-        };
-
-        if slot.equipped
-            && let Some(required) = min_strength
-            && required > strength
-        {
-            issues.push(ValidationIssue::warning(
-                ValidationIssue::CODE_EQUIPMENT_MIN_STRENGTH,
-                args([
-                    ("item", item.to_string()),
-                    ("required", required.to_string()),
-                    ("strength", strength.to_string()),
-                ]),
-                Some(item.clone()),
-            ));
-        }
-    }
-}
-
-/// Validates a directly-entered aged character's aging state (advisory). Aging is
-/// derived by the guided flow in M6; M5 only makes the raw state enterable, so both
-/// findings here are **warnings**, never blocking:
-///
-/// - `excessive_aging_reduction`: a Characteristic's completed drops
-///   ([`Entity::aging_reductions`]) would push its effective score below the rules
-///   effective minimum (−5). The derived score is clamped regardless; this only
-///   flags an implausible entry.
-/// - `aging_points_force_drop`: a Characteristic's accrued points
-///   ([`Entity::aging_points`]) exceed the magnitude of its aged-down score, which
-///   per the rules would already have forced a drop and reset. Kept non-blocking
-///   because a character may be entered mid-accrual.
-///
-/// Reads the un-aged bought score plus the reductions; it never touches the
-/// point-buy budget check (which is what keeps aging from perturbing creation
-/// legality). Source: Core Rules.md:16579.
-fn validate_aging(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    let bought = |c: &Characteristic| {
-        entity
-            .characteristics
-            .get(c)
-            .copied()
-            .map_or(0i32, i32::from)
-    };
-    let reduction = |c: &Characteristic| {
-        entity
-            .aging_reductions
-            .get(c)
-            .copied()
-            .map_or(0i32, i32::from)
-    };
-
-    let effective_min = ruleset
-        .characteristic_rules()
-        .and_then(|r| r.effective_min_score())
-        .map(i32::from);
-
-    if let Some(min) = effective_min {
-        for (characteristic, drop) in &entity.aging_reductions {
-            if *drop == 0 {
-                continue;
-            }
-            if bought(characteristic) - i32::from(*drop) < min {
-                issues.push(ValidationIssue::warning(
-                    ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION,
-                    args([
-                        ("characteristic", characteristic.to_string()),
-                        ("reduction", drop.to_string()),
-                        ("min", min.to_string()),
-                    ]),
-                    None,
-                ));
-            }
-        }
-    }
-
-    for (characteristic, points) in &entity.aging_points {
-        if *points == 0 {
-            continue;
-        }
-        let aged = bought(characteristic) - reduction(characteristic);
-        if u32::from(*points) > aged.unsigned_abs() {
-            issues.push(ValidationIssue::warning(
-                ValidationIssue::CODE_AGING_POINTS_FORCE_DROP,
-                args([
-                    ("characteristic", characteristic.to_string()),
-                    ("points", points.to_string()),
-                    ("score", aged.to_string()),
-                ]),
-                None,
-            ));
-        }
-    }
-}
-
-/// Validates Hermetic Art scores (mirrors [`validate_abilities`], minus the
-/// parameter logic — Arts are not parameterized): every referenced Art must
-/// resolve against the catalogue, no Art may appear twice, and every bought score
-/// must be priced by the Art advancement table. The XP a score costs is summed
-/// against the shared pool by [`validate_xp_pool`], not here.
-fn validate_arts(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    let mut seen: BTreeMap<&Id, u32> = BTreeMap::new();
-    // The highest score the Art advancement table prices. A ruleset that ships no
-    // Art advancement table has no legal score range to check against, so
-    // off-table range checking is skipped.
-    let max_score = ruleset.art_advancement.max_score();
-
-    for entry in &entity.art_scores {
-        if !ruleset.arts.contains_key(&entry.art) {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_UNKNOWN_ART,
-                args([("art", entry.art.to_string())]),
-                Some(entry.art.clone()),
-            ));
-        }
-        // A non-zero score with no table row is off-table (illegal) — flag it
-        // rather than silently pricing it at 0 XP.
-        if ruleset.art_advancement.xp_for_score(entry.score).is_none()
-            && let Some(max) = max_score
-        {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_ART_SCORE_OUT_OF_RANGE,
-                args([
-                    ("art", entry.art.to_string()),
-                    ("score", entry.score.to_string()),
-                    ("max", max.to_string()),
-                ]),
-                Some(entry.art.clone()),
-            ));
-        }
-        *seen.entry(&entry.art).or_insert(0) += 1;
-    }
-
-    for (art, count) in seen {
-        if count > 1 {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_DUPLICATE_ART,
-                args([("art", art.to_string()), ("count", count.to_string())]),
-                Some(art.clone()),
-            ));
-        }
-    }
-}
-
-/// Validates a magus's spell list: every referenced spell must resolve; the same
-/// spell at the same level may not appear twice (different General levels are
-/// different spells, Core:12353); a General spell with no chosen level is excluded
-/// from the budget and warned; the sum of chosen levels must not exceed the
-/// effective spell-levels budget (Core:2215-2216, 2435); and no spell's level may
-/// exceed Technique + Form + Intelligence + Magic Theory + 3 (Core:2465).
-///
-/// The budget and per-spell cap apply only to magi (`profile.is_magus`); a stray
-/// spell on a non-magus is ref- and dedup-checked only (spells are magus-only).
-fn validate_spells(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    type_profile: Option<&EntityTypeProfile>,
-    issues: &mut Vec<ValidationIssue>,
-) {
-    let is_magus = type_profile.is_some_and(|p| p.is_magus);
-    let mut seen: BTreeMap<(&Id, Option<u32>), u32> = BTreeMap::new();
-
-    for sel in &entity.spells {
-        let Some(spell) = ruleset.spell(&sel.spell) else {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_UNKNOWN_SPELL,
-                args([("spell", sel.spell.to_string())]),
-                Some(sel.spell.clone()),
-            ));
-            continue;
-        };
-        let resolved = crate::effective::resolved_spell_level(sel, ruleset);
-        // A General spell (catalogue level None) with no chosen level cannot be
-        // budgeted yet — warn, don't block.
-        if spell.level.is_none() && sel.level.is_none() {
-            issues.push(ValidationIssue::warning(
-                ValidationIssue::CODE_SPELL_LEVEL_UNRESOLVED,
-                args([("spell", sel.spell.to_string())]),
-                Some(sel.spell.clone()),
-            ));
-        }
-        *seen.entry((&sel.spell, resolved)).or_insert(0) += 1;
-
-        // Ritual level bounds apply to the resolved learned level regardless of
-        // budget: a ritual must be learned at level >= 20, a non-ritual at <= 50
-        // (Core Rules.md:12279-12295, :12283). For fixed-level spells this is
-        // already enforced at load; it bites here for General spells whose chosen
-        // level is illegal.
-        if let Some(level) = resolved {
-            let ritual_too_low = spell.ritual && level < 20;
-            let non_ritual_too_high = !spell.ritual && level > 50;
-            if ritual_too_low || non_ritual_too_high {
-                issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_SPELL_RITUAL_LEGALITY,
-                    args([
-                        ("spell", sel.spell.to_string()),
-                        ("level", level.to_string()),
-                    ]),
-                    Some(sel.spell.clone()),
-                ));
-            }
-        }
-
-        if is_magus && let Some(level) = resolved {
-            let cap = spell_level_cap(entity, ruleset, spell);
-            if i64::from(level) > cap {
-                issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_SPELL_LEVEL_EXCEEDS_CAP,
-                    args([
-                        ("spell", sel.spell.to_string()),
-                        ("level", level.to_string()),
-                        ("cap", cap.max(0).to_string()),
-                    ]),
-                    Some(sel.spell.clone()),
-                ));
-            }
-        }
-    }
-
-    for ((spell, _level), count) in seen {
-        if count > 1 {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_DUPLICATE_SPELL,
-                args([("spell", spell.to_string()), ("count", count.to_string())]),
-                Some(spell.clone()),
-            ));
-        }
-    }
-
-    if is_magus {
-        let base = type_profile.map(|p| p.spell_levels).unwrap_or(0);
-        let budget = crate::effective::spell_levels_budget(base, entity, ruleset);
-        let used = crate::effective::spell_levels_used(entity, ruleset);
-        if used > budget {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_OVER_SPELL_LEVELS,
-                args([
-                    ("used", used.to_string()),
-                    ("budget", budget.to_string()),
-                    ("over", (used - budget).to_string()),
-                ]),
-                None,
-            ));
-        }
-    }
-}
-
-/// The maximum level a magus may learn of a spell: the sum of Technique, Form,
-/// Intelligence, Magic Theory and 3 (Core:2465), using effective Art/Ability
-/// scores. Returns an `i64` (small or negative for a beginning magus).
-/// Requisite-Art reduction is a lab-total nuance out of M4 scope.
-fn spell_level_cap(entity: &Entity, ruleset: &Ruleset, spell: &crate::spell::Spell) -> i64 {
-    let tech = i64::from(crate::effective::effective_art_score(
-        entity,
-        ruleset,
-        &spell.technique,
-    ));
-    let form = i64::from(crate::effective::effective_art_score(
-        entity,
-        ruleset,
-        &spell.form,
-    ));
-    let int = i64::from(
-        entity
-            .characteristics
-            .get(&Characteristic::Int)
-            .copied()
-            .unwrap_or(0),
-    );
-    let magic_theory = i64::from(crate::effective::effective_ability_score(
-        entity,
-        ruleset,
-        &Id::new("ability.magic_theory"),
-        None,
-    ));
-    tech + form + int + magic_theory + 3
-}
-
-/// Validates the experience pools: Abilities and Arts are bought from the shared
-/// general bank (`Entity::xp_pool`) plus any restricted grants (Educated/Warrior/
-/// Privileged), each Affinity-reduced. Feasibility is a max-flow solve over the
-/// general pool + restricted pools; an infeasible allocation overspends. Reported
-/// as an error rather than blocked: direct-entry allows the illegal state and
-/// surfaces it (the M4 wizard blocks the spend up front). Leftover restricted XP
-/// the rules waste raises a non-blocking warning.
-fn validate_xp_pool(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
-    let allocation = crate::effective::xp_allocation(entity, ruleset);
-    if allocation.total_demand > allocation.max_flow {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_NOT_ENOUGH_XP,
-            args([
-                ("spent", allocation.total_demand.to_string()),
-                ("pool", entity.xp_pool.to_string()),
-                (
-                    "shortfall",
-                    (allocation.total_demand - allocation.max_flow).to_string(),
-                ),
-            ]),
-            None,
-        ));
-    }
-    for pool in &allocation.restricted {
-        if pool.used < pool.amount {
-            issues.push(ValidationIssue::warning(
-                ValidationIssue::CODE_RESTRICTED_XP_UNSPENT,
-                args([
-                    ("amount", pool.amount.to_string()),
-                    ("used", pool.used.to_string()),
-                    ("unspent", (pool.amount - pool.used).to_string()),
-                ]),
-                None,
             ));
         }
     }
@@ -2653,6 +555,7 @@ mod tests {
 
     fn test_ruleset() -> Ruleset {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {
             "id": "virtue.the_gift",
             "kind": "virtue",
@@ -2819,6 +722,7 @@ mod tests {
     /// gated on it (by `Has` and by `AbilityMin`), and one mutually incompatible
     /// with it (for the B1 guard).
     const GRANT_TEST_ITEMS: &str = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
         { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
           "category": "special", "entity_kinds": ["character"] },
         { "id": "virtue.heartbeast", "kind": "virtue", "classification": "narrative", "magnitude": "major",
@@ -2987,6 +891,7 @@ mod tests {
     /// magus can buy two distinct Major Hermetic Virtues (to trip the cap) while
     /// Bjornaer's grant supplies a third that must stay exempt.
     const CAP_ITEMS: &str = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
         { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
           "category": "special", "entity_kinds": ["character"] },
         { "id": "virtue.gentle_gift", "kind": "virtue", "classification": "narrative", "magnitude": "major",
@@ -3049,6 +954,7 @@ mod tests {
     /// half of the points *actually taken* on each side, so an untainted virtue
     /// balances a tainted one.
     const TAINTED_ITEMS: &str = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
         { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
           "category": "special", "entity_kinds": ["character"] },
         { "id": "virtue.tainted_a", "kind": "virtue", "classification": "narrative", "magnitude": "major",
@@ -3143,6 +1049,7 @@ mod tests {
     /// open-grant magnitude constraint), a Puissant Art (a Choice option), a
     /// non-Hermetic Flaw and a Hermetic Flaw (for the ≥1-Hermetic-Flaw guideline).
     const HOUSE_ITEMS: &str = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
         { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
           "category": "special", "entity_kinds": ["character"] },
         { "id": "virtue.puissant_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
@@ -3152,7 +1059,7 @@ mod tests {
           "category": "general", "entity_kinds": ["character"] },
         { "id": "virtue.wealthy", "kind": "virtue", "classification": "narrative", "magnitude": "major",
           "category": "general", "entity_kinds": ["character"] },
-        { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
+        { "id": "flaw.driven", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
           "category": "general", "entity_kinds": ["character"] },
         { "id": "flaw.deficient_technique", "kind": "flaw", "classification": "narrative", "magnitude": "major",
           "category": "hermetic", "entity_kinds": ["character"] }
@@ -3386,7 +1293,7 @@ mod tests {
     #[test]
     fn a_magus_with_no_hermetic_flaw_is_warned() {
         let rs = rs_for_house_validation();
-        let mut entity = make_entity("magus", vec![sel("flaw.optimistic")]);
+        let mut entity = make_entity("magus", vec![sel("flaw.driven")]);
         entity.house = Some(Id::new("house.jerbiton"));
         entity
             .house_choices
@@ -3479,6 +1386,7 @@ mod tests {
     /// A magus profile permitting the categories the device tests use, with the
     /// Magic Items Virtue granting a +25 item-level budget.
     const DEVICE_ITEMS: &str = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
         { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
           "category": "special", "entity_kinds": ["character"] },
         { "id": "virtue.magic_items", "kind": "virtue", "classification": "creation_effect", "magnitude": "minor",
@@ -3533,6 +1441,7 @@ mod tests {
     /// A profile whose Demonic Blood Virtue grants Infernal Might 5 + 30 power
     /// levels (RoP:Infernal:4120-4122).
     const MIGHT_ITEMS: &str = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
         { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
           "category": "special", "entity_kinds": ["character"] },
         { "id": "virtue.demonic_blood", "kind": "virtue", "classification": "creation_effect", "magnitude": "major",
@@ -3588,10 +1497,68 @@ mod tests {
         );
     }
 
+    /// The over-budget power error carries the real used / budget / over values.
+    #[test]
+    fn over_power_levels_reports_used_budget_over() {
+        let rs = rs_with_houses(MIGHT_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![sel("virtue.demonic_blood")]);
+        entity.powers = vec![power("Curse", 25), power("Shape", 10)]; // 35 > 30
+        let result = validate(&entity, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_OVER_POWER_LEVELS)
+            .expect("over_power_levels present");
+        assert_eq!(issue.args.get("used").map(String::as_str), Some("35"));
+        assert_eq!(issue.args.get("budget").map(String::as_str), Some("30"));
+        assert_eq!(issue.args.get("over").map(String::as_str), Some("5"));
+    }
+
+    /// A power on a being with no Might-granting Virtue is charged against a 0
+    /// budget and flagged over (mirrors the device-budget check).
+    #[test]
+    fn power_without_granting_virtue_is_over_zero_budget() {
+        let rs = rs_with_houses(MIGHT_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![]); // no Demonic Blood → budget 0
+        entity.powers = vec![power("Curse", 5)];
+        let result = validate(&entity, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_OVER_POWER_LEVELS)
+            .expect("over_power_levels present");
+        assert_eq!(issue.args.get("budget").map(String::as_str), Some("0"));
+        assert_eq!(issue.args.get("used").map(String::as_str), Some("5"));
+        assert_eq!(issue.args.get("over").map(String::as_str), Some("5"));
+    }
+
+    /// The realm-mismatch warning carries the base and granted realm slugs.
+    #[test]
+    fn might_realm_mismatch_reports_base_and_granted() {
+        let rs = rs_with_houses(MIGHT_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![sel("virtue.demonic_blood")]);
+        entity.might = Some(MightScore {
+            realm: Realm::Magic,
+            score: 2,
+        });
+        let result = validate(&entity, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_MIGHT_REALM_MISMATCH)
+            .expect("might_realm_mismatch present");
+        assert_eq!(issue.args.get("base").map(String::as_str), Some("magic"));
+        assert_eq!(
+            issue.args.get("granted").map(String::as_str),
+            Some("infernal")
+        );
+    }
+
     /// A minimal ruleset carrying characteristic rules (effective range ±5), so the
     /// aging-reduction floor check has a minimum to compare against.
     fn aging_ruleset() -> Ruleset {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
             "category": "special", "entity_kinds": ["character"] }
         ]"#;
@@ -3683,6 +1650,7 @@ mod tests {
     #[test]
     fn over_budget_virtues() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
@@ -3721,6 +1689,7 @@ mod tests {
         assert_eq!(ValidationIssue::CODE_UNKNOWN_TYPE, "unknown_type");
 
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
@@ -3740,6 +1709,52 @@ mod tests {
             "emitted code should equal the const: {:?}",
             codes(&result)
         );
+    }
+
+    #[test]
+    fn every_issue_code_const_is_documented_in_the_contract_table() {
+        // Guards the `ValidationIssue` doc-comment contract table against drift:
+        // every `CODE_*` const declared anywhere in the `validation/` module must
+        // have a matching row in the table, so a newly-added code can't silently
+        // ship undocumented.
+        // Dynamic per-category cap codes are built with `format!`, not consts, and
+        // are covered by the table's `†` footnote rather than a literal row.
+        // Scans the whole `validation/` directory (mod.rs + submodules) so a code
+        // introduced in any submodule is still checked against the table.
+        let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/src/validation");
+        let mut src = String::new();
+        for entry in std::fs::read_dir(dir).expect("read validation dir") {
+            let path = entry.expect("dir entry").path();
+            if path.extension().and_then(|e| e.to_str()) == Some("rs") {
+                src.push_str(&std::fs::read_to_string(&path).expect("read validation source"));
+                src.push('\n');
+            }
+        }
+        let src = src.as_str();
+        // Extract the string value of every issue-code const declaration (handles
+        // multi-line declarations: the first quoted string after it wins).
+        let marker = concat!("const ", "CODE_");
+        let codes: Vec<String> = src
+            .split(marker)
+            .skip(1)
+            .filter_map(|seg| {
+                let start = seg.find('"')? + 1;
+                let end = seg[start..].find('"')? + start;
+                Some(seg[start..end].to_string())
+            })
+            .collect();
+        assert!(
+            codes.len() >= 40,
+            "expected to find the issue-code consts, found {}",
+            codes.len()
+        );
+        for code in &codes {
+            let row = format!("| `{code}` |");
+            assert!(
+                src.contains(&row),
+                "issue code `{code}` has no row in the ValidationIssue contract table"
+            );
+        }
     }
 
     #[test]
@@ -3812,6 +1827,7 @@ mod tests {
     #[test]
     fn cap_exceeded_major_virtues() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.major_a", "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.major_b", "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]}
         ]"#;
@@ -4297,6 +2313,7 @@ mod tests {
     #[test]
     fn over_budget_flaws() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "flaw.a", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "flaw.b", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
@@ -4316,6 +2333,7 @@ mod tests {
     #[test]
     fn too_many_major_flaws() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "flaw.major_a", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
           {"id": "flaw.major_b", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]}
         ]"#;
@@ -4337,6 +2355,7 @@ mod tests {
 
     fn all_prereq_ruleset() -> Ruleset {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.c", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
@@ -4374,6 +2393,7 @@ mod tests {
 
     fn any_prereq_ruleset() -> Ruleset {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.c", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
@@ -4408,6 +2428,7 @@ mod tests {
 
     fn none_prereq_ruleset() -> Ruleset {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "none", "value": [{"kind": "has", "value": "virtue.a"}]}}
@@ -4446,6 +2467,7 @@ mod tests {
         // None([House]) must NOT collapse to a spurious failure: an unevaluable
         // leaf yields Unknown, so no prereq_not_met error fires.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "none", "value": [{"kind": "house", "value": "house.flambeau"}]}}
         ]"#;
@@ -4473,6 +2495,7 @@ mod tests {
         // unknown sibling must NOT produce a warning since the result does not
         // depend on it.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "any", "value": [{"kind": "has", "value": "virtue.a"}, {"kind": "house", "value": "house.flambeau"}]}},
@@ -4512,6 +2535,7 @@ mod tests {
         // All([Has(missing)=false, House=unknown]) -> False; report
         // prereq_not_met, NOT an unevaluated warning.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.dep", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "all", "value": [{"kind": "has", "value": "virtue.dep"}, {"kind": "house", "value": "house.x"}]}}
@@ -4542,6 +2566,7 @@ mod tests {
         // Any Unknown-resolution path: no prereq_not_met, a prereq_unevaluated
         // warning instead.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.dep", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "any", "value": [{"kind": "has", "value": "virtue.dep"}, {"kind": "house", "value": "house.flambeau"}]}}
@@ -4575,6 +2600,7 @@ mod tests {
         // the unevaluable leaf: no prereq_not_met error, but a
         // prereq_unevaluated warning must fire.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "all", "value": [{"kind": "has", "value": "virtue.a"}, {"kind": "house", "value": "house.flambeau"}]}}
@@ -4604,6 +2630,7 @@ mod tests {
     #[test]
     fn prereq_house_produces_unevaluated_warning() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "house", "value": "house.bjornaer"}}
         ]"#;
@@ -4626,6 +2653,7 @@ mod tests {
         // House(bjornaer) is satisfied when the entity's own house matches: the
         // leaf is now evaluable (True), so no error and no unevaluated warning.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "house", "value": "house.bjornaer"}}
         ]"#;
@@ -4657,6 +2685,7 @@ mod tests {
         // The entity is in house.x but the virtue requires house.bjornaer: the
         // leaf is a definite False, so a hard prereq error fires (no warning).
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "house", "value": "house.bjornaer"}}
         ]"#;
@@ -4686,6 +2715,7 @@ mod tests {
     /// A ruleset whose `virtue.a` requires Awareness 3. Returns (ruleset).
     fn ability_min_ruleset() -> Ruleset {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "ability_min", "value": {"ability": "ability.awareness", "score": 3}}}
         ]"#;
@@ -4760,6 +2790,7 @@ mod tests {
     /// characteristic-limit validation tests.
     fn effective_ruleset() -> Ruleset {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.requires_awareness_3", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "ability_min", "value": {"ability": "ability.awareness", "score": 3}}},
           {"id": "virtue.puissant_ability", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
@@ -5358,6 +3389,7 @@ mod tests {
     /// unrelated findings.
     fn arts_ruleset() -> Ruleset {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
@@ -5449,6 +3481,7 @@ mod tests {
     /// Latin/Artes-Liberales (academic) and Awareness (general) abilities.
     fn restricted_xp_ruleset() -> Ruleset {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
           {"id": "virtue.educated", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.latin", "ability.artes_liberales"] }]},
@@ -5730,6 +3763,7 @@ mod tests {
     /// ArtMin prereq is genuinely evaluable.
     fn art_min_ruleset() -> Ruleset {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "art_min", "value": {"art": "art.creo", "score": 5}}}
         ]"#;
@@ -5784,6 +3818,7 @@ mod tests {
     fn prereq_is_magus_satisfied_on_magus_type() {
         // A profile flagged `is_magus: true` satisfies IsMagus: no warning, no error.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "is_magus"}}
         ]"#;
@@ -5810,6 +3845,7 @@ mod tests {
     fn prereq_is_magus_fails_on_non_magus_type() {
         // A profile flagged `is_magus: false` makes IsMagus False: prereq_not_met fires.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "is_magus"}}
         ]"#;
@@ -5835,6 +3871,7 @@ mod tests {
     fn prereq_is_magus_unknown_without_profile() {
         // No matching type profile -> IsMagus is Unknown -> warning.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "is_magus"}}
         ]"#;
@@ -5859,6 +3896,7 @@ mod tests {
         // magus AND the Gift is forbidden. IsMagus must still fail, proving the
         // flag is decoupled from gift_policy.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "is_magus"}}
         ]"#;
@@ -5886,6 +3924,7 @@ mod tests {
         // A Gifted hedge wizard HAS The Gift but is NOT a magus. Having the Gift
         // selected must not make IsMagus pass: prereq_not_met still fires.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "is_magus"}}
@@ -5918,6 +3957,7 @@ mod tests {
         // Sanity: the `is_magus` flag drives IsMagus, not the gift fields. A
         // magus profile with gift_policy=required and the Gift selected passes.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "prerequisites": {"kind": "is_magus"}}
@@ -5946,6 +3986,7 @@ mod tests {
     #[test]
     fn wrong_entity_kind() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.char_only", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
@@ -5971,6 +4012,7 @@ mod tests {
     #[test]
     fn empty_entity_kinds_valid_for_any_kind() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.universal", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": []}
         ]"#;
         let types = r#"[{
@@ -5994,6 +4036,7 @@ mod tests {
         // reject the very trait it mandates. The Gift is governed solely by
         // validate_gift_policy; the category check exempts the profile's gift_id.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
@@ -6019,6 +4062,7 @@ mod tests {
     #[test]
     fn empty_permitted_categories_permits_any() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.weird", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "obscure", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
@@ -6043,6 +4087,7 @@ mod tests {
         // forbidden_categories must not flag any selection, whatever its
         // category.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.hermetic_thing", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
@@ -6064,6 +4109,7 @@ mod tests {
     #[test]
     fn gift_policy_required_without_gift() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]},
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
@@ -6085,6 +4131,7 @@ mod tests {
     #[test]
     fn gift_policy_required_with_gift() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
@@ -6107,6 +4154,7 @@ mod tests {
         // Required gift, no gift_id, gift_categories=[hermetic], a hermetic
         // selection satisfies it (symmetry: category counts for Required too).
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.parma", "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
@@ -6148,6 +4196,7 @@ mod tests {
         // Forbidden gift via gift_categories=[hermetic] with NO gift_id: a
         // hermetic selection must still trip gift_forbidden (category path).
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.parma", "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
@@ -6175,6 +4224,7 @@ mod tests {
         // whose category is NOT hermetic must NOT trip gift_forbidden: the
         // category path's negative branch.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.mundane", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
@@ -6199,6 +4249,7 @@ mod tests {
     #[test]
     fn gift_policy_required_without_gift_id() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
@@ -6218,6 +4269,7 @@ mod tests {
     #[test]
     fn missing_required_trait() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.mandatory", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
@@ -6237,6 +4289,7 @@ mod tests {
     #[test]
     fn forbidden_trait_selected() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.banned", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
         ]"#;
         let types = r#"[{
@@ -6356,6 +4409,7 @@ mod tests {
         // A parameterized item whose domain is `item` must resolve its value
         // against the point-item registry.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.target", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.linked", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "parameters": [{"key": "linked", "type": "ref", "domain": "item"}]}
@@ -6400,6 +4454,7 @@ mod tests {
         // A `text` domain is a free-text slot (e.g. Aptitude for (Sin)): any
         // non-empty value the player types is legal — no registry resolution.
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.aptitude", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
            "parameters": [{"key": "sin", "type": "ref", "domain": "text"}]}
         ]"#;
@@ -6427,12 +4482,14 @@ mod tests {
     fn art_domain_param_value_resolves_against_registry() {
         // Art-domain parameter values are now resolved against the Art catalogue:
         // a real Art passes, a made-up one raises `unknown_param_value`.
-        let items = r#"[{
-          "id": "virtue.puissant_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
-          "category": "general", "entity_kinds": ["character"],
-          "parameters": [{"key": "art", "type": "ref", "domain": "art"}],
-          "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }]
-        }]"#;
+        let items = r#"[
+          { "id": "virtue.puissant_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
+            "category": "general", "entity_kinds": ["character"],
+            "parameters": [{"key": "art", "type": "ref", "domain": "art"}],
+            "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }] },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
+            "category": "personality", "entity_kinds": ["character"] }
+        ]"#;
         let types = r#"[{
           "id": "test_type",
           "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -6475,6 +4532,7 @@ mod tests {
     #[test]
     fn compute_balance_major_and_free() {
         let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           {"id": "virtue.major", "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
           {"id": "virtue.free", "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "general", "entity_kinds": ["character"]},
           {"id": "flaw.minor", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
@@ -6604,6 +4662,7 @@ mod tests {
     /// +7 F) and Faerie Doctor (no bonus).
     fn mythic_ruleset() -> Ruleset {
         const ITEMS: &str = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
             { "id": "virtue.devil_child", "kind": "virtue", "classification": "narrative", "magnitude": "free",
               "category": "social_status", "entity_kinds": ["character"] },
             { "id": "virtue.demonic_might", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
@@ -6635,7 +4694,11 @@ mod tests {
               "required_flaws": [ { "default": { "ref": "flaw.tragic_life" },
                 "constraint": { "kind": "flaw", "magnitude": "major", "require_categories": ["supernatural"] } } ],
               "bonus_flaw_points": 7, "bonus_free_virtue_points": 3 },
-            { "id": "mythic_type.faerie_doctor" }
+            { "id": "mythic_type.faerie_doctor" },
+            { "id": "mythic_type.open_child",
+              "grants": [
+                { "kind": "open", "choice_key": "open_child_virtue",
+                  "constraint": { "kind": "virtue", "magnitude": "minor", "require_categories": ["supernatural"] } } ] }
         ] }"#;
         Ruleset::from_sources(RulesetSources {
             id: "arm5-core",
@@ -6702,12 +4765,30 @@ mod tests {
         let rs = mythic_ruleset();
         // Devil Child: 37 V / 17 F (base 20/10 + 7·2 + 3 free / +7 F).
         let devil = mythic_entity("mythic_type.devil_child");
-        assert_eq!(effective_point_ceilings(&devil, &rs), Some((37, 17)));
+        assert_eq!(
+            effective_point_ceilings(&devil, &rs),
+            Some(PointCeilings {
+                virtue_ceiling: 37,
+                flaw_ceiling: 17
+            })
+        );
         // Faerie Doctor (no bonus) and a plain companion stay at their base.
         let faerie = mythic_entity("mythic_type.faerie_doctor");
-        assert_eq!(effective_point_ceilings(&faerie, &rs), Some((20, 10)));
+        assert_eq!(
+            effective_point_ceilings(&faerie, &rs),
+            Some(PointCeilings {
+                virtue_ceiling: 20,
+                flaw_ceiling: 10
+            })
+        );
         let companion = make_entity("companion", vec![]);
-        assert_eq!(effective_point_ceilings(&companion, &rs), Some((10, 10)));
+        assert_eq!(
+            effective_point_ceilings(&companion, &rs),
+            Some(PointCeilings {
+                virtue_ceiling: 10,
+                flaw_ceiling: 10
+            })
+        );
     }
 
     #[test]
@@ -6760,6 +4841,56 @@ mod tests {
     }
 
     #[test]
+    fn unresolved_open_grant_reports_its_choice_key() {
+        let rs = mythic_ruleset();
+        // Open Child's open grant left unpicked → the unresolved-pick error names
+        // the grant's choice_key (the Grant::Open absent-pick wiring).
+        let e = mythic_entity("mythic_type.open_child");
+        let issue = validate(&e, &rs)
+            .issues
+            .into_iter()
+            .find(|i| i.code == ValidationIssue::CODE_MYTHIC_CHOICE_UNRESOLVED)
+            .expect("unresolved mythic choice present");
+        assert_eq!(
+            issue.args.get("mythic_type").map(String::as_str),
+            Some("mythic_type.open_child")
+        );
+        assert_eq!(
+            issue.args.get("choice_key").map(String::as_str),
+            Some("open_child_virtue")
+        );
+    }
+
+    #[test]
+    fn open_grant_pick_violating_its_constraint_errors_with_args() {
+        let rs = mythic_ruleset();
+        // Open Child requires a Minor Supernatural *virtue*; a flaw pick violates
+        // the constraint → CODE_MYTHIC_GRANT_CONSTRAINT carrying type/key/item.
+        let mut e = mythic_entity("mythic_type.open_child");
+        e.mythic_choices.insert(
+            "open_child_virtue".to_string(),
+            Selection::new(Id::new("flaw.optimistic")),
+        );
+        let issue = validate(&e, &rs)
+            .issues
+            .into_iter()
+            .find(|i| i.code == ValidationIssue::CODE_MYTHIC_GRANT_CONSTRAINT)
+            .expect("mythic grant constraint violation present");
+        assert_eq!(
+            issue.args.get("mythic_type").map(String::as_str),
+            Some("mythic_type.open_child")
+        );
+        assert_eq!(
+            issue.args.get("choice_key").map(String::as_str),
+            Some("open_child_virtue")
+        );
+        assert_eq!(
+            issue.args.get("item").map(String::as_str),
+            Some("flaw.optimistic")
+        );
+    }
+
+    #[test]
     fn mythic_bonus_ignored_for_non_mythic_profile() {
         // A stray mythic_type on a plain companion (hand-edited save) must not
         // inflate its budget: effective_budget gates the type's bonuses on the
@@ -6777,6 +4908,7 @@ mod tests {
     // --- Spells -----------------------------------------------------------
 
     const SPELL_ITEMS: &str = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
         { "id": "virtue.skilled_parens", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "hermetic", "entity_kinds": ["character"],
           "effects": [ { "type": "spell_levels", "amount": 30 },
@@ -6784,12 +4916,19 @@ mod tests {
     ]"#;
     const SPELL_ARTS: &str = r#"{ "arts": [
         { "id": "art.creo", "art_type": "technique" },
+        { "id": "art.corpus", "art_type": "form" },
         { "id": "art.ignem", "art_type": "form" },
         { "id": "art.rego", "art_type": "technique" },
         { "id": "art.vim", "art_type": "form" }
     ] }"#;
+    // The magus profile + Arts catalogue trigger the engine-required-role check,
+    // so every engine-required Hermetic ability must be present.
     const SPELL_ABILITIES: &str = r#"{ "abilities": [
-        { "id": "ability.magic_theory", "category": "arcane" }
+        { "id": "ability.artes_liberales", "category": "academic" },
+        { "id": "ability.magic_theory", "category": "arcane" },
+        { "id": "ability.parma_magica", "category": "arcane" },
+        { "id": "ability.penetration", "category": "arcane" },
+        { "id": "ability.philosophiae", "category": "academic" }
     ] }"#;
     const SPELL_CATALOGUE: &str = r#"{ "spells": [
         { "id": "spell.pilum_of_fire", "technique": "art.creo", "form": "art.ignem", "level": 20 },
@@ -6997,11 +5136,19 @@ mod tests {
         { "id": "flaw.major_personality", "kind": "flaw", "classification": "narrative", "magnitude": "major",
           "category": "personality", "entity_kinds": ["character"] }
     ]"#;
+    // Carries the age → max-Ability-score bands (Core:2366-2374), so the age-cap
+    // checks below are exercised against ruleset data.
     const P7_ABILITIES: &str = r#"{ "advancement": [
         { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },
         { "score": 3, "total_xp": 30 }, { "score": 4, "total_xp": 50 },
         { "score": 5, "total_xp": 75 }, { "score": 6, "total_xp": 105 },
         { "score": 7, "total_xp": 140 }, { "score": 8, "total_xp": 180 } ],
+        "age_ability_caps": [
+          { "max_age": 29, "max_score": 5 },
+          { "max_age": 35, "max_score": 6 },
+          { "max_age": 40, "max_score": 7 },
+          { "max_age": 45, "max_score": 8 },
+          { "max_score": 9 } ],
         "abilities": [
         { "id": "ability.awareness", "category": "general" },
         { "id": "ability.second_sight", "category": "supernatural", "requires_training": true },
@@ -7017,6 +5164,11 @@ mod tests {
           "creation_phases": [] }
     ]"#;
 
+    const P7_CHARACTERISTICS: &str = r#"{
+        "start_points": 7,
+        "costs": [ { "score": 0, "cost": 0 } ]
+      }"#;
+
     fn p7_rs() -> Ruleset {
         Ruleset::from_sources(crate::ruleset::RulesetSources {
             id: "arm5-core",
@@ -7029,7 +5181,7 @@ mod tests {
             mythic_types: None,
             spells: None,
             equipment: None,
-            characteristics: None,
+            characteristics: Some(P7_CHARACTERISTICS),
         })
         .unwrap()
     }
