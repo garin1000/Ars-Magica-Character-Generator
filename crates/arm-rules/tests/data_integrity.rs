@@ -1260,7 +1260,11 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
         bonus: None,
     });
     e.warping_points = 15;
-    e.aging_points = BTreeMap::from([(Characteristic::Sta, 10), (Characteristic::Qik, 7)]);
+    // Decrepitude is the SUM of aging points across Characteristics; the drops they
+    // force now lower the effective Characteristic (derived from aging_points), so
+    // they are placed in Per/Com — which no asserted magic/combat total reads — to
+    // exercise Decrepitude without perturbing those totals. 10 + 7 = 17 → Decrepitude 2.
+    e.aging_points = BTreeMap::from([(Characteristic::Per, 10), (Characteristic::Com, 7)]);
 
     let d = arm_rules::derived_totals(&e, &rs);
 

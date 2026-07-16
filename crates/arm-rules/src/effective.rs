@@ -866,8 +866,20 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
         let Some(table) = ruleset.advancement.xp_for_score(a.score) else {
             continue;
         };
+        // A Virtue-granted Supernatural-Ability floor (e.g. Second Sight 1) is
+        // free: the player "will not need to spend experience points for the
+        // first point". So only the score above the granted floor is charged —
+        // the floor's own table cost is subtracted before Affinity is applied.
+        // Source: Ars Magica - Definitive Edition (Core Rules).md:2639.
+        let floor = granted_ability_floor(entity, ruleset, &a.ability, a.parameter.as_deref());
+        let floor_table = u8::try_from(floor)
+            .ok()
+            .filter(|f| *f > 0)
+            .and_then(|f| ruleset.advancement.xp_for_score(f))
+            .unwrap_or(0);
+        let payable = table.saturating_sub(floor_table);
         let cost = charged_cost(
-            table,
+            payable,
             ability_affinity(entity, ruleset, &a.ability, a.parameter.as_deref()),
         );
         let ability = ruleset
@@ -927,7 +939,6 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
     let (source, sink) = (0usize, 1usize);
 
     let mut cap = vec![vec![0u32; n]; n];
-    cap[source][general_node] = general_pool;
     for (i, pool) in restricted.iter().enumerate() {
         cap[source][pool_node(i)] = pool.amount;
     }
@@ -942,7 +953,17 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
         }
     }
 
-    let max_flow = max_flow(n, source, sink, &mut cap);
+    // Two-phase fill on the shared residual matrix, so a spend the restricted
+    // pools *can* cover drains them before the general pool (Educated/Warrior/
+    // Privileged XP is free-but-earmarked; the general pool must stay available
+    // and no restricted XP should be wasted while eligible spends exist).
+    // Phase 1: restricted-only max flow — the source→general edge stays closed.
+    let restricted_flow = max_flow(n, source, sink, &mut cap);
+    // Phase 2: open the source→general edge and continue Edmonds-Karp on the
+    // same residuals. The sum is the true max flow with restricted usage
+    // maximized, i.e. minimum general used.
+    cap[source][general_node] = general_pool;
+    let max_flow = restricted_flow + max_flow(n, source, sink, &mut cap);
 
     // Residual on source→pool tells how much each pool funded.
     let general_used = general_pool - cap[source][general_node];
@@ -1585,13 +1606,50 @@ pub fn decrepitude_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
         .score_for_xp(decrepitude_points_total(entity))
 }
 
-/// The effective value of `characteristic` after aging: the bought score minus the
-/// completed aging/Decrepitude drops in [`Entity::aging_reductions`], floored at the
-/// rules effective minimum (−5). This is what DERIVED / play stats consume; it is
-/// deliberately **not** what creation-legality reads (the point-buy budget check in
-/// `validation.rs` reads the un-aged bought score from `entity.characteristics`), so
-/// entering an already-aged character cannot retroactively make its point-buy
-/// illegal. `derived.rs` (slice 5i) will consume this. Source: Core Rules.md:16579.
+/// The number of Characteristic drops the accrued aging points force, DERIVED
+/// from [`Entity::aging_points`] (never stored). Per the rule, once a
+/// Characteristic's accrued points *exceed* the absolute value of its (already
+/// aged-down) score it drops by one and its aging points reset. Simulated over
+/// the lifetime point total: each drop consumes `|score| + 1` points and lowers
+/// the score by one, so the threshold shrinks toward 0 and then grows again.
+/// Worked examples: a Communication of +2 drops on its 3rd aging point; a
+/// Stamina of −3 on its 4th.
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16579, :16613.
+pub fn aging_drops(entity: &Entity, characteristic: Characteristic) -> u32 {
+    let bought = entity
+        .characteristics
+        .get(&characteristic)
+        .copied()
+        .map_or(0i64, i64::from);
+    let mut remaining = entity
+        .aging_points
+        .get(&characteristic)
+        .copied()
+        .map_or(0u32, u32::from);
+    let mut drops = 0u32;
+    loop {
+        let aged = bought - i64::from(drops);
+        let threshold = u32::try_from(aged.unsigned_abs()).unwrap_or(u32::MAX);
+        if remaining > threshold {
+            remaining -= threshold + 1;
+            drops += 1;
+        } else {
+            return drops;
+        }
+    }
+}
+
+/// The effective value of `characteristic` after aging: the bought score lowered
+/// by the DERIVED aging drops ([`aging_drops`]) and floored at the rules effective
+/// minimum (−5), with any free [`Effect::CharacteristicScoreDelta`] bonus (Giant
+/// Blood +1 Str/Sta, Dwarf −1) then added on top — so an aged Giant-Blood score
+/// can still reach ±6. The aging drop lowers the *bought* score (its threshold is
+/// the bought score); the free delta is a separate additive layer. This is what
+/// DERIVED / play stats consume; it is deliberately **not** what creation-legality
+/// reads (the point-buy budget check in `validation.rs` reads the un-aged bought
+/// score from `entity.characteristics`), so entering an already-aged character
+/// cannot retroactively make its point-buy illegal.
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16579.
 pub fn effective_characteristic_after_aging(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -1602,16 +1660,13 @@ pub fn effective_characteristic_after_aging(
         .get(&characteristic)
         .copied()
         .map_or(0, i32::from);
-    let reduction = entity
-        .aging_reductions
-        .get(&characteristic)
-        .copied()
-        .map_or(0, i32::from);
+    let drops = i32::try_from(aging_drops(entity, characteristic)).unwrap_or(i32::MAX);
     let floor = ruleset
         .characteristic_rules()
         .and_then(|r| r.effective_min_score())
         .map_or(i32::MIN, i32::from);
-    (bought - reduction).max(floor)
+    let aged = bought.saturating_sub(drops).max(floor);
+    aged + characteristic_score_bonus(entity, ruleset, characteristic)
 }
 
 /// A Reputation a character's Virtue/Flaw authorizes them to start with. A
@@ -2525,6 +2580,70 @@ mod tests {
     }
 
     #[test]
+    fn granted_supernatural_first_point_is_free_second_costs_ten() {
+        // A2: a Virtue-granted Supernatural Ability floor (Second Sight 1) is free
+        // — the XP charge subtracts the granted floor's table cost, so the first
+        // point costs 0 and score 2 costs the normal 1→2 step (15 − 5 = 10). The
+        // effective score is unchanged (still the stored sheet score).
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("virtue.second_sight")]);
+        e.ability_scores = vec![plain("ability.second_sight", 1)];
+        let alloc = xp_allocation(&e, &rs);
+        assert_eq!(alloc.total_demand, 0, "first granted point is free");
+        assert_eq!(
+            effective_ability_score(&e, &rs, &Id::new("ability.second_sight"), None),
+            1
+        );
+
+        e.ability_scores = vec![plain("ability.second_sight", 2)];
+        let alloc = xp_allocation(&e, &rs);
+        assert_eq!(alloc.total_demand, 10, "score 2 costs the 1→2 step only");
+        assert_eq!(
+            effective_ability_score(&e, &rs, &Id::new("ability.second_sight"), None),
+            2
+        );
+    }
+
+    #[test]
+    fn ungranted_supernatural_ability_still_costs_full_table() {
+        // Without a granting Virtue there is no free floor: the full table applies.
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![]);
+        e.ability_scores = vec![plain("ability.second_sight", 1)];
+        assert_eq!(xp_allocation(&e, &rs).total_demand, 5);
+    }
+
+    #[test]
+    fn restricted_pool_is_spent_before_general_when_both_can_cover() {
+        // A3: Educated's 50 restricted XP could be covered by the 100-pt general
+        // pool too, but the eligible spend must drain the restricted pool first so
+        // the general pool stays available and no restricted XP is wasted.
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("virtue.educated")]);
+        e.xp_pool = 100;
+        e.ability_scores = vec![plain("ability.artes_liberales", 4)]; // 50 XP
+        let alloc = xp_allocation(&e, &rs);
+        assert_eq!(alloc.total_demand, 50);
+        assert_eq!(alloc.max_flow, 50);
+        assert_eq!(alloc.general_used, 0, "general pool untouched");
+        assert_eq!(alloc.restricted[0].used, 50, "restricted pool fully spent");
+    }
+
+    #[test]
+    fn general_pool_covers_the_overflow_beyond_the_restricted_pool() {
+        // The restricted pool is filled first; only the excess spills to general.
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("virtue.educated")]);
+        e.xp_pool = 100;
+        e.ability_scores = vec![plain("ability.artes_liberales", 5)]; // 75 XP
+        let alloc = xp_allocation(&e, &rs);
+        assert_eq!(alloc.total_demand, 75);
+        assert_eq!(alloc.max_flow, 75);
+        assert_eq!(alloc.restricted[0].used, 50, "restricted maxed out");
+        assert_eq!(alloc.general_used, 25, "general covers only the overflow");
+    }
+
+    #[test]
     fn educated_pool_cannot_fund_an_ineligible_ability() {
         let rs = xp_ruleset();
         // Single Weapon (martial, 15) is NOT eligible for Educated; no general XP.
@@ -2795,12 +2914,14 @@ mod tests {
     /// use, floored at the rules minimum, but the bought score creation-legality
     /// reads is untouched.
     #[test]
-    fn aging_reductions_lower_derived_but_not_creation() {
+    fn aging_points_derive_the_drop_but_not_creation() {
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![]);
         e.characteristics.insert(Characteristic::Str, 3);
-        e.aging_reductions.insert(Characteristic::Str, 2);
-        // Derived (aged-down) value is bought − reduction.
+        // Minimal points that force two drops on a +3 score: (|3|+1)+(|2|+1) = 7.
+        e.aging_points.insert(Characteristic::Str, 7);
+        assert_eq!(aging_drops(&e, Characteristic::Str), 2);
+        // Derived (aged-down) value is bought − derived drops.
         assert_eq!(
             effective_characteristic_after_aging(&e, &rs, Characteristic::Str),
             1
@@ -2811,10 +2932,64 @@ mod tests {
             Some(3)
         );
         // The floor clamps at the rules effective minimum (−5), never below.
-        e.aging_reductions.insert(Characteristic::Str, 20);
+        e.aging_points.insert(Characteristic::Str, 200);
         assert_eq!(
             effective_characteristic_after_aging(&e, &rs, Characteristic::Str),
             -5
+        );
+    }
+
+    #[test]
+    fn aging_drops_match_the_worked_examples() {
+        // Core Rules.md:16613: a Communication of +2 drops to +1 in the year it
+        // gains its THIRD aging point; a Stamina of −3 drops to −4 on its FOURTH.
+        let rs = xp_ruleset();
+        let mut com = xp_entity(vec![]);
+        com.characteristics.insert(Characteristic::Com, 2);
+        com.aging_points.insert(Characteristic::Com, 2); // ≤ |2|, no drop yet
+        assert_eq!(aging_drops(&com, Characteristic::Com), 0);
+        assert_eq!(
+            effective_characteristic_after_aging(&com, &rs, Characteristic::Com),
+            2
+        );
+        com.aging_points.insert(Characteristic::Com, 3); // the third point drops it
+        assert_eq!(aging_drops(&com, Characteristic::Com), 1);
+        assert_eq!(
+            effective_characteristic_after_aging(&com, &rs, Characteristic::Com),
+            1
+        );
+
+        let mut sta = xp_entity(vec![]);
+        sta.characteristics.insert(Characteristic::Sta, -3);
+        sta.aging_points.insert(Characteristic::Sta, 3); // ≤ |−3|, no drop yet
+        assert_eq!(aging_drops(&sta, Characteristic::Sta), 0);
+        sta.aging_points.insert(Characteristic::Sta, 4); // the fourth point drops it
+        assert_eq!(aging_drops(&sta, Characteristic::Sta), 1);
+        assert_eq!(
+            effective_characteristic_after_aging(&sta, &rs, Characteristic::Sta),
+            -4
+        );
+    }
+
+    #[test]
+    fn aging_drop_applies_to_bought_score_then_free_delta_stacks_on_top() {
+        // Decision: the aging drop lowers the *bought* score (its threshold uses
+        // the bought score per Core Rules.md:16579/:16613); the free
+        // CharacteristicScoreDelta bonus (Giant Blood +1 Str) is then added on
+        // top, so an aged Giant-Blood Strength can still reach +6.
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("virtue.giant_blood")]);
+        e.characteristics.insert(Characteristic::Str, 5); // bought 5, +1 delta = 6
+        assert_eq!(
+            effective_characteristic_after_aging(&e, &rs, Characteristic::Str),
+            6
+        );
+        // One drop: bought 5 → 4, plus the +1 delta = 5.
+        e.aging_points.insert(Characteristic::Str, 6); // |5| = 5, sixth point drops
+        assert_eq!(aging_drops(&e, Characteristic::Str), 1);
+        assert_eq!(
+            effective_characteristic_after_aging(&e, &rs, Characteristic::Str),
+            5
         );
     }
 

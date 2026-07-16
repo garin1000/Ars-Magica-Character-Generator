@@ -484,12 +484,20 @@ export function maxArtScore(artAdvancement: { score: number }[] | undefined): nu
 }
 
 /**
- * Total XP committed across Abilities and Arts together — they draw from one
- * shared bank (`entity.xp_pool`), each priced from its own advancement table.
+ * First-frame placeholder for total XP committed, used only until the engine's
+ * authoritative `XpAllocation` (`store.effective.xp_total_demand`) arrives.
+ *
+ * It deliberately does NOT re-derive the allocation in TS: pricing here would
+ * fork the engine's single evaluation path and ignore Affinity (½× cost) and the
+ * restricted/general split, so it could momentarily flash a wrong figure. A
+ * neutral `0` placeholder is shown for the one frame before `store.effective`
+ * replaces it. Parameters are kept for the call sites; they are intentionally
+ * unused.
  */
 export function totalXpSpent(localized: LocalizedRuleset, entity: Entity): number {
-  return (
-    abilityXpSpent(localized.ruleset.advancement, entity.ability_scores) +
-    artXpSpent(localized.ruleset.art_advancement, entity.art_scores)
-  );
+  // Params retained for the call sites but intentionally unused: pricing here is
+  // deliberately avoided (see doc comment above).
+  void localized;
+  void entity;
+  return 0;
 }

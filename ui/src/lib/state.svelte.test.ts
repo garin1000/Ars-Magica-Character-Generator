@@ -402,13 +402,6 @@ describe('aged / warped state + identity', () => {
     expect(store.entity.aging_points).toEqual({});
   });
 
-  it('sets per-Characteristic aging reductions and prunes zeros', () => {
-    store.setAgingReduction('sta', 2);
-    expect(store.entity.aging_reductions).toEqual({ sta: 2 });
-    store.setAgingReduction('sta', 0);
-    expect(store.entity.aging_reductions).toEqual({});
-  });
-
   it('sets non-negative stored Warping Points', () => {
     store.setWarpingPoints(15);
     expect(store.entity.warping_points).toBe(15);

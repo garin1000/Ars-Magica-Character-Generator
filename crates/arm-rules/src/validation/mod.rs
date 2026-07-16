@@ -142,7 +142,7 @@ impl fmt::Display for IssueSeverity {
 /// | `over_power_levels` | error | `used`, `budget`, `over` |
 /// | `might_realm_mismatch` | warning | `base`, `granted` |
 /// | `excessive_aging_reduction` | warning | `characteristic`, `reduction`, `min` |
-/// | `aging_points_force_drop` | warning | `characteristic`, `points`, `score` |
+/// | `aging_points_force_drop` | warning | `characteristic`, `points`, `drops`, `score` |
 /// | `unknown_equipment` | error | `item` |
 /// | `equipment_min_strength` | warning | `item`, `required`, `strength` |
 ///
@@ -1593,29 +1593,29 @@ mod tests {
         .unwrap()
     }
 
-    /// A plausible aged character (points within score magnitude, reduction within
-    /// the floor) raises no aging advisory.
+    /// A plausible aged character whose accrued points have not yet forced a drop
+    /// (points within score magnitude) raises no aging advisory.
     #[test]
     fn plausible_aging_state_has_no_warnings() {
         let rs = aging_ruleset();
         let mut entity = make_entity("companion", vec![]);
         entity.characteristics.insert(Characteristic::Str, 3);
-        entity.aging_reductions.insert(Characteristic::Str, 1); // 3 − 1 = 2 ≥ −5
-        entity.aging_points.insert(Characteristic::Str, 1); // 1 ≤ |2|
+        entity.aging_points.insert(Characteristic::Str, 1); // 1 ≤ |3|, no drop
         let result = validate(&entity, &rs);
         let codes = all_codes(&result);
         assert!(!codes.contains(&ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION.to_string()));
         assert!(!codes.contains(&ValidationIssue::CODE_AGING_POINTS_FORCE_DROP.to_string()));
     }
 
-    /// A reduction that would drive the effective Characteristic below the rules
-    /// floor warns (non-blocking).
+    /// Derived drops that would drive the effective Characteristic below the rules
+    /// floor warn (non-blocking); the score is clamped regardless.
     #[test]
     fn excessive_aging_reduction_warns() {
         let rs = aging_ruleset();
         let mut entity = make_entity("companion", vec![]);
         entity.characteristics.insert(Characteristic::Str, 0);
-        entity.aging_reductions.insert(Characteristic::Str, 6); // 0 − 6 = −6 < −5
+        // From a 0 score, 21 points force 6 drops (1+2+3+4+5+6) → −6 < −5.
+        entity.aging_points.insert(Characteristic::Str, 21);
         let result = validate(&entity, &rs);
         assert!(
             all_codes(&result)
@@ -1629,13 +1629,14 @@ mod tests {
         );
     }
 
-    /// Aging points exceeding the (aged-down) score magnitude warn but never block.
+    /// Accrued points that force a drop raise the informational auto-applied note
+    /// but never block.
     #[test]
-    fn aging_points_exceeding_score_warns_but_is_nonblocking() {
+    fn aging_points_forcing_a_drop_note_is_nonblocking() {
         let rs = aging_ruleset();
         let mut entity = make_entity("companion", vec![]);
         entity.characteristics.insert(Characteristic::Sta, 1);
-        entity.aging_points.insert(Characteristic::Sta, 3); // 3 > |1|
+        entity.aging_points.insert(Characteristic::Sta, 3); // 3 > |1| → drops
         let result = validate(&entity, &rs);
         assert!(
             all_codes(&result).contains(&ValidationIssue::CODE_AGING_POINTS_FORCE_DROP.to_string())
@@ -3530,6 +3531,29 @@ mod tests {
         let result = validate(&e, &rs);
         assert!(
             warning_codes(&result).contains(&"restricted_xp_unspent".to_string()),
+            "{:?}",
+            warning_codes(&result)
+        );
+        assert!(!codes(&result).contains(&"not_enough_xp".to_string()));
+    }
+
+    #[test]
+    fn restricted_xp_unspent_does_not_fire_when_eligible_spend_fills_it() {
+        // A3: an eligible Artes Liberales spend the restricted pool fully covers
+        // must consume the restricted pool (not the general pool), so no
+        // restricted_xp_unspent warning fires despite a large general pool.
+        let rs = restricted_xp_ruleset();
+        let mut e = make_entity("companion", vec![sel("virtue.educated")]);
+        e.xp_pool = 100;
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.artes_liberales"),
+            score: 4, // 50 xp = the whole Educated pool
+            specialty: None,
+            parameter: None,
+        }];
+        let result = validate(&e, &rs);
+        assert!(
+            !warning_codes(&result).contains(&"restricted_xp_unspent".to_string()),
             "{:?}",
             warning_codes(&result)
         );

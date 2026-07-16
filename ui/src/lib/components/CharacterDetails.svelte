@@ -25,7 +25,6 @@
   // Reputation input is offered only for the kinds a V/F grants (Core:2514).
   const grants = $derived(store.effective?.reputation_grants ?? []);
   const agingPoints = $derived(store.entity.aging_points ?? {});
-  const agingReductions = $derived(store.entity.aging_reductions ?? {});
   const twilightScars = $derived(store.entity.twilight_scars ?? []);
 
   function onAge(event: Event) {
@@ -181,21 +180,9 @@
           </li>
         {/each}
       </ul>
-      <p class="detail-label">{store.t('aging-reductions-heading')}</p>
-      <ul class="aging-list" data-testid="aging-reductions-list">
-        {#each CHARACTERISTICS as characteristic (characteristic)}
-          <li>
-            <span class="char-name">{charLabel(characteristic)}</span>
-            <input
-              type="number"
-              min="0"
-              value={agingReductions[characteristic] ?? 0}
-              oninput={(e) => store.setAgingReduction(characteristic, numValue(e))}
-              data-testid="aging-reduction-{characteristic}"
-            />
-          </li>
-        {/each}
-      </ul>
+      <p class="detail-label" data-testid="aging-points-note">
+        {store.t('aging-points-note')}
+      </p>
       <label class="field">
         <span>{store.t('warping-points-label')}</span>
         <input

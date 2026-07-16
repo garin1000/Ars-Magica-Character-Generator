@@ -670,16 +670,6 @@ class AppStore {
     this.#scheduleValidate();
   }
 
-  /** Set completed aging reductions for a Characteristic (0 removes the entry). */
-  setAgingReduction(characteristic: Characteristic, reduction: number): void {
-    this.entity.aging_reductions = this.#withCharCount(
-      this.entity.aging_reductions,
-      characteristic,
-      reduction,
-    );
-    this.#scheduleValidate();
-  }
-
   /** Shared helper: set a non-negative per-Characteristic count, pruning zeros. */
   #withCharCount(
     map: Partial<Record<Characteristic, number>> | undefined,

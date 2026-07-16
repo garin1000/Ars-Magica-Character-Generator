@@ -162,7 +162,7 @@ identity-parens = Parens
 # are computed by the engine from these points, never recomputed here.
 aging-label = Aging
 aging-points-heading = Aging points per Characteristic
-aging-reductions-heading = Characteristic reductions
+aging-points-note = Characteristic drops are applied automatically once accrued points exceed the Characteristic's score; the drop shows in the derived totals.
 warping-points-label = Warping points
 twilight-scars-label = Twilight Scars
 twilight-scar-placeholder = Describe the scar
@@ -364,8 +364,8 @@ issue-reputation_not_granted = A { $kind } Reputation ({ $content }) needs a Vir
 issue-over_item_level = Enchanted devices total { $used } levels, over the budget of { $budget } (by { $over }).
 issue-over_power_levels = Supernatural powers total { $used } levels, over the budget of { $budget } (by { $over }).
 issue-might_realm_mismatch = The entered Might Realm ({ $base }) disagrees with the Realm its Virtues grant ({ $granted }).
-issue-excessive_aging_reduction = Aging reductions to { $characteristic } ({ $reduction }) would drop it below the minimum score ({ $min }).
-issue-aging_points_force_drop = { $characteristic } has { $points } aging points, more than its score ({ $score }) — a Characteristic drop is due.
+issue-excessive_aging_reduction = The aging drops to { $characteristic } ({ $reduction }) would fall below the minimum score ({ $min }); it is clamped there.
+issue-aging_points_force_drop = { $characteristic } has { $points } aging points, which automatically lowered it by { $drops } to { $score }.
 issue-unknown_equipment = Equipment '{ $item }' does not match any weapon, shield, or armor.
 issue-equipment_min_strength = { $item } needs Strength { $required }, but this character has { $strength }.
 
