@@ -13,12 +13,13 @@ use arm_rules::{
     AbilityBonus, AbilityFloor, ArtBonus, Characteristic, CharacteristicBonus, Confidence, Entity,
     EntityKind, LocalizedRuleset, MightScore, PointCeilings, ReputationType, RestrictedXpPool,
     Ruleset, RulesetSources, Selection, SupernaturalFreeSlots, ValidationMode, ValidationResult,
-    ability_bonuses, ability_score_floors, age_ability_cap, art_bonuses, characteristic_bonuses,
-    characteristic_caps, characteristic_floors, characteristic_points_granted, confidence,
-    decrepitude_score, effective_might, effective_point_ceilings, entity_grants, item_level_budget,
-    item_level_used, power_levels_budget, powers_used, reputation_grants, size,
-    spell_levels_budget, spell_levels_used, spell_mastery_floor, spell_mastery_xp,
-    supernatural_free_slots, true_faith, validate, warping, xp_allocation,
+    ability_bonuses, ability_score_floors, age_ability_cap, art_bonuses,
+    characteristic_aging_drops, characteristic_bonuses, characteristic_caps, characteristic_floors,
+    characteristic_points_granted, confidence, decrepitude_score, effective_characteristics,
+    effective_might, effective_point_ceilings, entity_grants, item_level_budget, item_level_used,
+    power_levels_budget, powers_used, reputation_grants, size, spell_levels_budget,
+    spell_levels_used, spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith,
+    validate, warping, xp_allocation,
 };
 use serde::Serialize;
 
@@ -63,6 +64,14 @@ pub struct EffectiveScores {
     /// Dwarf −1), one per affected Characteristic, for the sheet to show the
     /// effective score alongside the bought one.
     pub characteristic_bonuses: Vec<CharacteristicBonus>,
+    /// Effective Characteristic score after aging drops AND free virtue deltas,
+    /// keyed by Characteristic — only the entries that differ from the bought
+    /// score (the UI falls back to the bought score for the rest). The engine
+    /// owns the floor clamp, so the UI never re-implements it.
+    pub characteristic_effective: BTreeMap<Characteristic, i32>,
+    /// Aging-drop count per Characteristic (only the non-zero entries), for the
+    /// effective-score tooltip breakdown.
+    pub characteristic_aging_drops: BTreeMap<Characteristic, u32>,
     /// Virtue/Flaw Selections the entity's House grants (derived, never persisted),
     /// so the V/F view renders them read-only without re-deriving. Emitted in the
     /// House's declared grant order for a stable UI + snapshot ordering.
@@ -166,6 +175,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         ability_score_floors: ability_score_floors(entity, ruleset),
         size: size(entity, ruleset),
         characteristic_bonuses: characteristic_bonuses(entity, ruleset),
+        characteristic_effective: effective_characteristics(entity, ruleset),
+        characteristic_aging_drops: characteristic_aging_drops(entity),
         granted_selections: entity_grants(entity, ruleset),
         virtue_budget: ceilings.virtue_ceiling,
         flaw_budget: ceilings.flaw_ceiling,

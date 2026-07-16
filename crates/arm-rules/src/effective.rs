@@ -1151,6 +1151,38 @@ pub fn characteristic_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<Charact
         .collect()
 }
 
+/// Effective Characteristic scores after aging drops AND free virtue deltas, one
+/// entry per Characteristic whose effective value differs from its bought score
+/// (canonical order). Characteristics unchanged from the bought score are omitted;
+/// the UI falls back to the bought score for those. Surfacing this keeps the floor
+/// clamp in [`effective_characteristic_after_aging`] as the single source of truth
+/// (the UI never re-implements it).
+pub fn effective_characteristics(
+    entity: &Entity,
+    ruleset: &Ruleset,
+) -> BTreeMap<Characteristic, i32> {
+    Characteristic::ALL
+        .into_iter()
+        .filter_map(|c| {
+            let bought = entity.characteristics.get(&c).copied().map_or(0, i32::from);
+            let effective = effective_characteristic_after_aging(entity, ruleset, c);
+            (effective != bought).then_some((c, effective))
+        })
+        .collect()
+}
+
+/// Aging-drop counts per Characteristic (from [`aging_drops`]), only the non-zero
+/// entries (canonical order), for the effective-score tooltip breakdown.
+pub fn characteristic_aging_drops(entity: &Entity) -> BTreeMap<Characteristic, u32> {
+    Characteristic::ALL
+        .into_iter()
+        .filter_map(|c| {
+            let drops = aging_drops(entity, c);
+            (drops != 0).then_some((c, drops))
+        })
+        .collect()
+}
+
 /// The restricted XP pools an entity holds, with their consumed amounts (for the
 /// frontend XP bar). Convenience wrapper over [`xp_allocation`].
 pub fn restricted_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<RestrictedXpPool> {
@@ -2991,6 +3023,40 @@ mod tests {
             effective_characteristic_after_aging(&e, &rs, Characteristic::Str),
             5
         );
+    }
+
+    #[test]
+    fn effective_summary_maps_report_aged_value_and_drops() {
+        // Core Rules.md:16613 worked example: Communication +2 with 3 aging points
+        // drops once → effective +1. The summary maps must surface both the aged
+        // effective value and the drop count, and omit unchanged Characteristics.
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![]);
+        e.characteristics.insert(Characteristic::Com, 2);
+        e.aging_points.insert(Characteristic::Com, 3);
+
+        let effective = effective_characteristics(&e, &rs);
+        assert_eq!(effective.get(&Characteristic::Com).copied(), Some(1));
+        // A Characteristic whose effective value equals its bought score is omitted.
+        assert!(!effective.contains_key(&Characteristic::Str));
+
+        let drops = characteristic_aging_drops(&e);
+        assert_eq!(drops.get(&Characteristic::Com).copied(), Some(1));
+        // Zero-drop Characteristics are omitted from the drop map.
+        assert!(!drops.contains_key(&Characteristic::Str));
+    }
+
+    #[test]
+    fn effective_summary_map_includes_free_delta_without_aging() {
+        // A free CharacteristicScoreDelta (Giant Blood +1 Str) makes the effective
+        // value differ from the bought score even with no aging, so it appears in
+        // the effective map but NOT in the aging-drop map.
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("virtue.giant_blood")]);
+        e.characteristics.insert(Characteristic::Str, 3);
+        let effective = effective_characteristics(&e, &rs);
+        assert_eq!(effective.get(&Characteristic::Str).copied(), Some(4));
+        assert!(characteristic_aging_drops(&e).is_empty());
     }
 
     #[test]

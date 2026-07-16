@@ -222,6 +222,12 @@ export interface EffectiveScores {
   size: number;
   // Free effective-score bonuses to Characteristics (Giant Blood +1 Str/Sta, Dwarf -1).
   characteristic_bonuses: CharacteristicBonus[];
+  // Effective Characteristic score after aging drops AND free virtue deltas, keyed
+  // by characteristic — only the entries that differ from the bought score (the UI
+  // falls back to the bought score for the rest; the engine owns the floor clamp).
+  characteristic_effective: Partial<Record<Characteristic, number>>;
+  // Aging-drop count per characteristic (only non-zero entries), for the tooltip.
+  characteristic_aging_drops: Partial<Record<Characteristic, number>>;
   // Virtue/Flaw Selections the entity's House grants (derived, never persisted),
   // in the House's declared grant order, so the V/F view renders them read-only.
   granted_selections: Selection[];
