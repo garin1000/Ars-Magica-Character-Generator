@@ -321,11 +321,27 @@ pub fn save_entity_to_path(entity: &Entity, path: &Path) -> Result<(), AppError>
     Ok(())
 }
 
-/// Reads and deserializes an entity from `path`.
+/// Reads and deserializes an entity from `path`, applying save migrations.
+///
+/// A pre-schema-10 save's manual `aging_reductions` are folded into `aging_points`
+/// (aging drops are now derived); the migration is logged so a stale save is
+/// visibly upgraded on load. See [`arm_rules::load_entity_migrating`].
 pub fn load_entity_from_path(path: &Path) -> Result<Entity, AppError> {
     let json = fs::read_to_string(path)?;
-    let entity: Entity = serde_json::from_str(&json)?;
-    Ok(entity)
+    let loaded = arm_rules::load_entity_migrating(&json)?;
+    if !loaded.migrated_aging_characteristics.is_empty() {
+        let characteristics: Vec<String> = loaded
+            .migrated_aging_characteristics
+            .iter()
+            .map(|c| c.to_string())
+            .collect();
+        eprintln!(
+            "save migration: folded legacy aging_reductions into aging_points for {} ({})",
+            path.display(),
+            characteristics.join(", ")
+        );
+    }
+    Ok(loaded.entity)
 }
 
 #[cfg(test)]

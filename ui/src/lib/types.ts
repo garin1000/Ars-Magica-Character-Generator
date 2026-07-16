@@ -859,12 +859,11 @@ export interface Entity {
   talisman_attunements?: TalismanAttunement[];
   // The magus's Longevity Ritual. Omitted when none.
   longevity_ritual?: LongevityRitual | null;
-  // Accrued aging points per Characteristic (their sum is Decrepitude XP).
-  // Omitted when empty.
+  // Accrued aging points per Characteristic — the lifetime total. Their sum is
+  // Decrepitude XP; the Characteristic drops they force are derived by the engine
+  // (never stored) and lower the effective/derived score, never the bought score
+  // creation-legality reads. Omitted when empty.
   aging_points?: Partial<Record<Characteristic, number>>;
-  // Completed Characteristic drops from aging/Decrepitude. Lower the effective
-  // (derived) score, never the bought score creation-legality reads. Omitted empty.
-  aging_reductions?: Partial<Record<Characteristic, number>>;
   // Accrued Warping Points (summed with grant points, inverted to the score by
   // the engine). Omitted when 0.
   warping_points?: number;

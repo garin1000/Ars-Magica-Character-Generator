@@ -160,7 +160,7 @@ identity-parens = Parens
 # Gebrechlichkeit und Verzerrung berechnet die Engine aus diesen Punkten.
 aging-label = Alterung
 aging-points-heading = Alterungspunkte pro Eigenschaft
-aging-reductions-heading = Eigenschaftsminderungen
+aging-points-note = Wertminderungen werden automatisch angewendet, sobald die angesammelten Alterungspunkte den Eigenschaftswert übersteigen; die Minderung erscheint in den abgeleiteten Werten.
 warping-points-label = Verzerrungspunkte
 twilight-scars-label = Zwielichtnarben
 twilight-scar-placeholder = Beschreibe die Narbe
@@ -363,8 +363,8 @@ issue-reputation_not_granted = Ein Ruf ({ $kind }, { $content }) benötigt eine 
 issue-over_item_level = Zauberartefakte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
 issue-over_power_levels = Übernatürliche Kräfte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
 issue-might_realm_mismatch = Die eingegebene Macht-Sphäre ({ $base }) stimmt nicht mit der von den Tugenden verliehenen Sphäre ({ $granted }) überein.
-issue-excessive_aging_reduction = Alterungsminderungen für { $characteristic } ({ $reduction }) würden den Wert unter das Minimum ({ $min }) senken.
-issue-aging_points_force_drop = { $characteristic } hat { $points } Alterungspunkte, mehr als der Wert ({ $score }) — eine Wertminderung steht an.
+issue-excessive_aging_reduction = Die Alterungsminderungen für { $characteristic } ({ $reduction }) würden unter den Mindestwert ({ $min }) fallen; er wird dort begrenzt.
+issue-aging_points_force_drop = { $characteristic } hat { $points } Alterungspunkte, die den Wert automatisch um { $drops } auf { $score } gesenkt haben.
 issue-unknown_equipment = Ausrüstung '{ $item }' passt zu keiner Waffe, keinem Schild und keiner Rüstung.
 issue-equipment_min_strength = { $item } benötigt Stärke { $required }, aber dieser Charakter hat { $strength }.
 

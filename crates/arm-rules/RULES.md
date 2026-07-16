@@ -581,6 +581,16 @@ approximation of "Latin").
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
   used. `validation.rs::validate_xp_pool` reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning).
+- **Restricted pool spent before the general pool (two-phase fill).** The
+  restricted XP is free-but-earmarked, so an eligible spend must drain it before
+  the general pool: otherwise the general pool is over-consumed and unused
+  restricted XP is spuriously wasted (a false `restricted_xp_unspent` warning).
+  A single max-flow run would drain whichever pool BFS reaches first (the general
+  node), so the solve is **two-phase** on the shared residual matrix: phase 1 runs
+  max flow with the source→general edge closed (restricted-only), phase 2 opens
+  that edge and continues Edmonds-Karp on the same residuals. The sum is the true
+  max flow with restricted usage maximized = minimum general used; feasibility and
+  `total_demand` are unchanged.
 - Permission unlock (Academic/Martial purchasable only with such a Virtue) is
   **deferred** — not enforced in this phase.
 
@@ -782,17 +792,27 @@ precedent as `SpellSelection.mastery`'s 7 → 8 bump). Nothing is derived here
 
 #### M5/5g — aged / warped state, effects & identity Entity storage
 Direct-entry storage (plus the derived scores computed from points) for an
-already-aged / already-warped character, and free-text identity/flavor fields. All
-new `Entity` fields are additive `serde(default, skip_serializing_if)` — no
-`SCHEMA_VERSION` bump (still 9); a v8 (pre-5e) **and** a v9 (5e) save both load
-unchanged. Aging *rolls* stay in M6; M5 only makes the raw state + effects
-enterable and computes the scores from points.
+already-aged / already-warped character, and free-text identity/flavor fields. The
+M5 `Entity` fields were additive `serde(default, skip_serializing_if)`; the later
+aging rework (A1) **removed** `aging_reductions` and bumped `SCHEMA_VERSION` 9 → 10,
+with `load_entity_migrating` upgrading older saves (see the Aging points note
+below). A v8 (pre-5e) and a v9 (5e) save both still load. Aging *rolls* stay in M6;
+M5 only makes the raw state + effects enterable and computes the scores from points.
 
-- **Aging points** — `Entity.aging_points: BTreeMap<Characteristic, u8>`: accrued
-  aging points *per Characteristic* (the sheet prints these). Source:
+- **Aging points** — `Entity.aging_points: BTreeMap<Characteristic, u8>`: the
+  *lifetime* accrued aging points *per Characteristic* (the sheet prints these).
+  The Characteristic **drops** they force are DERIVED, never stored (see the
+  "Aging lowers derived" note below). Source:
   `Ars Magica - Definitive Edition (Core Rules).md:16579`.
-- **Aging reductions** — `Entity.aging_reductions: BTreeMap<Characteristic, u8>`:
-  the completed Characteristic drops from aging / Decrepitude. Source: `:16579`.
+  - The former manual `aging_reductions` map was **removed** (schema 9 → 10):
+    modelling aging fully from `aging_points` per the rule made a separate
+    stored-drops field redundant and a divergence risk. `load_entity_migrating`
+    (`types.rs`) migrates old saves by folding any legacy `aging_reductions[c] = R`
+    into `aging_points[c]` as the *minimal* point total that reproduces `R` drops
+    under the derived rule (`minimal_aging_points_for_drops`), reporting which
+    Characteristics were migrated. Because every aging point counts toward
+    Decrepitude — including those "lost" to a drop — the fold also corrects the old
+    model's Decrepitude under-count.
 - **Warping points** — `Entity.warping_points: u32`: accrued Warping Points.
 - **Twilight scars** — `Entity.twilight_scars: Vec<TwilightScar { description }>`
   (free-text; `TwilightScar` derives `Ord`, so `Entity::normalize()` sorts them for
@@ -818,27 +838,38 @@ consumes them). Both invert the **Ability** advancement table via the new
   consistent — Warped by Magic's declared Score 1 equals `score_for_xp(5)`). Source:
   `:16464-16475`; grant at `:7019-7021`.
 
-**Aging lowers derived, not creation.** `effective_characteristic_after_aging(entity,
-ruleset, char) = bought − reduction`, floored at the rules effective minimum (−5).
-This is what DERIVED / play stats consume (5i); creation-legality validators keep
-reading the **un-aged bought score** from `entity.characteristics`, so entering an
-aged-down character can never retroactively make its point-buy illegal. Source:
-`:16579`.
+**Aging lowers derived, not creation.** The drops are DERIVED from the accrued
+points by `effective.rs::aging_drops(entity, char)`: once the points **exceed** the
+absolute value of the (already aged-down) score the Characteristic drops by one and
+the points reset, so the simulation consumes `|score| + 1` points per drop over the
+lifetime total. Worked examples encoded as tests (`:16613`): a Communication of +2
+drops on its **3rd** aging point; a Stamina of −3 on its **4th**.
+`effective_characteristic_after_aging(entity, ruleset, char) = (bought − drops)`
+floored at the rules effective minimum (−5), **plus** any free
+`CharacteristicScoreDelta` bonus (Giant Blood +1 Str/Sta, Dwarf −1) added on top —
+so an aged Giant-Blood score can still reach ±6. *Decision:* the drop lowers the
+*bought* score (its threshold is the bought score, per the rule text); the free
+delta is a separate additive layer. This is what DERIVED / play stats consume (5i);
+creation-legality validators keep reading the **un-aged bought score** from
+`entity.characteristics`, so entering an aged-down character can never
+retroactively make its point-buy illegal. Source: `:16579`, `:16613`.
 
 **Validation (advisory, single path).** `validation.rs::validate_aging` emits two
-**warnings** (never blocking): `excessive_aging_reduction` (a Characteristic's
-reductions would drop it below the −5 floor) and `aging_points_force_drop` (a
-Characteristic's accrued points exceed the magnitude of its aged-down score, which
-per `:16579` should already have forced a drop — kept non-blocking because a
-character may be entered mid-accrual). Fluent keys
-`issue-{excessive_aging_reduction,aging_points_force_drop}` (en/de).
+**warnings** (never blocking), per Characteristic whose accrued points force a drop:
+`aging_points_force_drop` — informational, noting the drop the engine auto-applied
+(args `characteristic`, `points`, `drops`, `score`); and `excessive_aging_reduction`
+— when the derived drops would push the score below the −5 floor (it is clamped
+regardless). Fluent keys `issue-{excessive_aging_reduction,aging_points_force_drop}`
+(en/de).
 
 App/UI: `EffectiveScores` gains `decrepitude_score: u8` and widens `warping_points`
 to `u32`; the Details tab (`CharacterDetails.svelte`) enters identity fields, aging
-points + reductions per Characteristic, Warping Points, and twilight scars, and
-shows the engine-computed Decrepitude / Warping **scores** (never recomputed in JS).
-Fluent keys en/de: identity + aging block (`identity-*`, `aging-*`,
-`warping-points-label`, `twilight-*`, `decrepitude-{label,readout}`).
+points per Characteristic (with an `aging-points-note` explaining drops are
+auto-derived), Warping Points, and twilight scars, and shows the engine-computed
+Decrepitude / Warping **scores** and the aging-lowered Characteristics (never
+recomputed in JS). Fluent keys en/de: identity + aging block (`identity-*`,
+`aging-*` incl. `aging-points-note`, `warping-points-label`, `twilight-*`,
+`decrepitude-{label,readout}`).
 
 #### True Faith — special derived score (`true_faith_grant`)
 > "You have a True Faith score of 1 and can gain more."
@@ -868,6 +899,17 @@ effect stores the ability id directly (`ability`), not a selection parameter.
 - Implementation: `effective.rs::granted_ability_floor`, folded into
   `effective_ability_score`; `ruleset.rs::validate_effect_refs` checks the
   ability id resolves against the catalogue.
+- **First granted point is free (XP charge).** A granted Supernatural Ability's
+  first point costs no experience: "the character gets an initial score of 1 from
+  the Virtue granting it, and you will not need to spend experience points for the
+  first point of those Abilities." So `xp_allocation` charges only the score
+  **above** the granted floor — `charged_cost(xp_for_score(score) −
+  xp_for_score(floor), affinity)` — leaving the first point free and pricing score
+  2 at the normal 1→2 step (e.g. 15 − 5 = 10 on the ×5 table). This is a
+  charge-only fix: `effective_ability_score` (= `max(bought, floor) + bonuses`) and
+  the stored full sheet score are unchanged, and the age-cap check (which reads the
+  bought score) is unaffected. Source: `Ars Magica - Definitive Edition (Core
+  Rules).md:2639` (a parenthetical inside the Mythic Companions bullet list).
 
 #### Deferred — milestone assignments
 The plan was reordered so all input for all character types lands in M4 (direct

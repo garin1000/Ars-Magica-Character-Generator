@@ -52,11 +52,11 @@ pub use types::{
     AbilityScore, AdvancementSource, AgingEffect, ArtScore, CastingScope, CategoryCap,
     Classification, CombatStat, Effect, EnchantedDevice, Entity, EntityKind, EntityTypeProfile,
     EquipmentSlot, Familiar, GiftPolicy, HalvableTotal, HealthTrack, I18nEntry, Id, ItemKind,
-    LineRange, LongevityRitual, LongevitySource, MagicResistanceEffect, Magnitude, MightScore,
-    ParamType, ParameterDef, ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq,
-    Realm, Reputation, ReputationType, RulesetRef, SCHEMA_VERSION, Selection, SourceRef,
+    LineRange, LoadedEntity, LongevityRitual, LongevitySource, MagicResistanceEffect, Magnitude,
+    MightScore, ParamType, ParameterDef, ParameterDomain, PersonalityTrait, PointBudget, PointItem,
+    Prereq, Realm, Reputation, ReputationType, RulesetRef, SCHEMA_VERSION, Selection, SourceRef,
     SpecialCasting, SpellSelection, SupernaturalPower, TalismanAttunement, TwilightScar,
-    ValidationMode,
+    ValidationMode, load_entity_migrating,
 };
 pub use validation::{
     Balance, IssueSeverity, PointCeilings, ValidationIssue, ValidationResult, compute_balance,

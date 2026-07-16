@@ -1928,20 +1928,19 @@ pub struct Entity {
     /// The magus's Longevity Ritual. `None` when there is none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub longevity_ritual: Option<LongevityRitual>,
-    /// Accrued aging points per Characteristic (the sheet prints these). Their sum
-    /// across all Characteristics is the character's Decrepitude XP; a single
-    /// Characteristic's points feed the "would have forced a drop" advisory. Not
-    /// itself a score — the drops actually applied live in [`Self::aging_reductions`].
+    /// Accrued aging points per Characteristic — the lifetime total gained (the
+    /// sheet prints these). Their sum across all Characteristics is the character's
+    /// Decrepitude XP ([`crate::effective::decrepitude_points_total`]). The
+    /// Characteristic *drops* they force are DERIVED, never stored: once the points
+    /// exceed the absolute value of the (aged-down) score the Characteristic drops
+    /// and the points reset (see [`crate::effective::aging_drops`] and
+    /// [`crate::effective::effective_characteristic_after_aging`]). The drops LOWER
+    /// the effective Characteristic used by derived / play stats but never the
+    /// bought score creation-legality checks read, so entering an aged character
+    /// cannot retroactively make its point-buy illegal.
     /// Source: Core Rules.md:16579.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub aging_points: BTreeMap<Characteristic, u8>,
-    /// Completed Characteristic drops from aging / Decrepitude, per Characteristic
-    /// (the sheet prints these). These LOWER the effective Characteristic used by
-    /// derived / play stats (see [`crate::effective::effective_characteristic_after_aging`])
-    /// but never the bought score creation-legality checks read, so entering an aged
-    /// character cannot retroactively make its point-buy illegal. Source: Core Rules.md:16579.
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub aging_reductions: BTreeMap<Characteristic, u8>,
     /// Accrued Warping Points. Summed with any grant-derived Warping Points (Warped
     /// by Magic, …) and inverted through the advancement curve to the Warping Score
     /// by [`crate::effective::warping_score`]. Source: Core Rules.md:16464-16475.
@@ -1990,7 +1989,12 @@ pub struct Entity {
 }
 
 /// Current save-format schema version.
-pub const SCHEMA_VERSION: u32 = 9;
+///
+/// Bumped 9 → 10 when the manual `aging_reductions` map was removed: aging-forced
+/// Characteristic drops are now DERIVED from `aging_points`. Old saves are
+/// migrated by [`load_entity_migrating`], which folds any legacy `aging_reductions`
+/// into `aging_points`.
+pub const SCHEMA_VERSION: u32 = 10;
 
 impl Entity {
     /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
@@ -2021,7 +2025,6 @@ impl Entity {
             talisman_attunements: Vec::new(),
             longevity_ritual: None,
             aging_points: BTreeMap::new(),
-            aging_reductions: BTreeMap::new(),
             warping_points: 0,
             twilight_scars: Vec::new(),
             name: String::new(),
@@ -2038,8 +2041,8 @@ impl Entity {
 
     /// Sort selections, ability scores, art scores, spells, personality traits,
     /// reputations, devices, talisman attunements, twilight scars and equipment for
-    /// canonical serialization. (`characteristics`, `aging_points`,
-    /// `aging_reductions` are `BTreeMap`s, already id-ordered.)
+    /// canonical serialization. (`characteristics` and `aging_points` are
+    /// `BTreeMap`s, already id-ordered.)
     pub fn normalize(&mut self) {
         self.selections.sort();
         self.ability_scores.sort();
@@ -2053,6 +2056,82 @@ impl Entity {
         self.equipment.sort();
         self.powers.sort();
     }
+}
+
+/// The outcome of loading an entity save, including any schema migration applied.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LoadedEntity {
+    /// The entity, migrated to the current [`SCHEMA_VERSION`].
+    pub entity: Entity,
+    /// Characteristics whose legacy `aging_reductions` drops were folded into
+    /// `aging_points` during migration (empty when nothing was migrated, sorted).
+    /// The caller surfaces a localized notice; the engine holds no user-facing
+    /// string.
+    pub migrated_aging_characteristics: Vec<Characteristic>,
+}
+
+/// The minimal lifetime aging-point total that forces exactly `drops`
+/// Characteristic drops starting from a `bought` score, under the derived rule
+/// (each drop needs one more point than the absolute value of the current
+/// aged-down score). Used to reconstruct a legacy `aging_reductions` count as
+/// `aging_points`. Source: Core Rules.md:16579.
+fn minimal_aging_points_for_drops(bought: i32, drops: u32) -> u32 {
+    let mut total = 0u32;
+    for i in 0..drops {
+        let aged = i64::from(bought) - i64::from(i);
+        let threshold = u32::try_from(aged.unsigned_abs()).unwrap_or(u32::MAX);
+        total = total.saturating_add(threshold.saturating_add(1));
+    }
+    total
+}
+
+/// Deserializes an entity from JSON, applying backward-compatible save
+/// migrations, and reports what was migrated.
+///
+/// Saves at schema ≤ 9 carried a manual `aging_reductions` map of completed
+/// Characteristic drops. The current model derives those drops from
+/// `aging_points` (Core Rules.md:16579), so any legacy reductions are folded into
+/// `aging_points` as the minimal point total that reproduces the same number of
+/// drops. Because every aging point counts toward Decrepitude — including those
+/// "lost" to a drop — this fold also corrects the old model's Decrepitude
+/// under-count. Plain `serde` deserialization still works for current saves; this
+/// wrapper only adds the fold and a migration report.
+pub fn load_entity_migrating(json: &str) -> Result<LoadedEntity, serde_json::Error> {
+    let mut value: serde_json::Value = serde_json::from_str(json)?;
+    let legacy = value
+        .as_object_mut()
+        .and_then(|obj| obj.remove("aging_reductions"));
+    let mut entity: Entity = serde_json::from_value(value)?;
+
+    let mut migrated_aging_characteristics = Vec::new();
+    if let Some(legacy) = legacy {
+        // The save predates schema 10 (manual `aging_reductions`); fold it in and
+        // bump the version. Current saves (no legacy field) are left untouched so
+        // a load is a faithful, byte-stable round trip.
+        let reductions: BTreeMap<Characteristic, u8> =
+            serde_json::from_value(legacy).unwrap_or_default();
+        for (characteristic, drops) in reductions {
+            if drops == 0 {
+                continue;
+            }
+            let bought = entity
+                .characteristics
+                .get(&characteristic)
+                .copied()
+                .map_or(0i32, i32::from);
+            let add = minimal_aging_points_for_drops(bought, u32::from(drops));
+            let slot = entity.aging_points.entry(characteristic).or_insert(0);
+            *slot = slot.saturating_add(u8::try_from(add).unwrap_or(u8::MAX));
+            migrated_aging_characteristics.push(characteristic);
+        }
+        entity.schema_version = SCHEMA_VERSION;
+    }
+
+    migrated_aging_characteristics.sort();
+    Ok(LoadedEntity {
+        entity,
+        migrated_aging_characteristics,
+    })
 }
 
 /// Identifies which ruleset (id + version) an entity was built against.
@@ -2727,7 +2806,6 @@ mod tests {
             talisman_attunements: Vec::new(),
             longevity_ritual: None,
             aging_points: BTreeMap::new(),
-            aging_reductions: BTreeMap::new(),
             warping_points: 0,
             twilight_scars: Vec::new(),
             name: String::new(),
@@ -2745,7 +2823,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 9"#));
+        assert!(json.contains(r#""schema_version": 10"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -2864,7 +2942,6 @@ mod tests {
             talisman_attunements: Vec::new(),
             longevity_ritual: None,
             aging_points: BTreeMap::new(),
-            aging_reductions: BTreeMap::new(),
             warping_points: 0,
             twilight_scars: Vec::new(),
             name: String::new(),
@@ -3068,7 +3145,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 9"#));
+        assert!(json.contains(r#""schema_version": 10"#));
         assert!(json.contains(r#""aura": -3"#));
         assert!(json.contains(r#""source": "external""#));
     }
@@ -3121,7 +3198,7 @@ mod tests {
         assert_eq!(entity.talisman_attunements[0].description, "Aegis");
     }
 
-    /// The M5/5g fields (aging points + reductions, warping points, twilight scars,
+    /// The M5/5g fields (aging points, warping points, twilight scars,
     /// identity/flavor) round-trip through JSON unchanged at the current version.
     #[test]
     fn entity_aged_and_identity_fields_roundtrip() {
@@ -3131,7 +3208,7 @@ mod tests {
             RulesetRef::new(Id::new("arm5-core"), "2024.1"),
         );
         entity.aging_points.insert(Characteristic::Str, 7);
-        entity.aging_reductions.insert(Characteristic::Qik, 1);
+        entity.aging_points.insert(Characteristic::Qik, 1);
         entity.warping_points = 15;
         entity.twilight_scars = vec![TwilightScar {
             description: "Eyes glow faintly in the dark".into(),
@@ -3146,10 +3223,75 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 9"#));
+        assert!(json.contains(r#""schema_version": 10"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
         assert!(json.contains(r#""birth_year": 1194"#));
+    }
+
+    /// A legacy save carrying `aging_reductions` migrates: the completed drops are
+    /// folded into `aging_points` as the minimal total reproducing them, the field
+    /// is dropped, the schema is bumped, and the migration is reported.
+    #[test]
+    fn legacy_aging_reductions_migrate_into_aging_points() {
+        // Com +2 with one completed aging drop under the old manual model.
+        let old = r#"{
+          "schema_version": 9,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "characteristics": { "com": 2 },
+          "aging_reductions": { "com": 1 }
+        }"#;
+        let loaded = load_entity_migrating(old).unwrap();
+        assert_eq!(
+            loaded.migrated_aging_characteristics,
+            vec![Characteristic::Com]
+        );
+        // Minimal points reproducing one drop on a +2 score = |2| + 1 = 3.
+        assert_eq!(
+            loaded
+                .entity
+                .aging_points
+                .get(&Characteristic::Com)
+                .copied(),
+            Some(3)
+        );
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+        // The bought score is untouched (point-buy stays valid).
+        assert_eq!(
+            loaded
+                .entity
+                .characteristics
+                .get(&Characteristic::Com)
+                .copied(),
+            Some(2)
+        );
+        // Re-serializing carries no `aging_reductions` field.
+        let json = serde_json::to_string(&loaded.entity).unwrap();
+        assert!(!json.contains("aging_reductions"));
+    }
+
+    /// A current save without `aging_reductions` migrates to a no-op report.
+    #[test]
+    fn current_save_migrates_without_aging_changes() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.aging_points.insert(Characteristic::Sta, 4);
+        let json = serde_json::to_string(&entity).unwrap();
+        let loaded = load_entity_migrating(&json).unwrap();
+        assert!(loaded.migrated_aging_characteristics.is_empty());
+        assert_eq!(
+            loaded
+                .entity
+                .aging_points
+                .get(&Characteristic::Sta)
+                .copied(),
+            Some(4)
+        );
     }
 
     /// A slice-5e v9 save that predates the 5g fields still loads: the additive
@@ -3167,7 +3309,6 @@ mod tests {
         let entity: Entity = serde_json::from_str(v9).unwrap();
         assert_eq!(entity.aura, -3);
         assert!(entity.aging_points.is_empty());
-        assert!(entity.aging_reductions.is_empty());
         assert_eq!(entity.warping_points, 0);
         assert!(entity.twilight_scars.is_empty());
         assert!(entity.name.is_empty());
