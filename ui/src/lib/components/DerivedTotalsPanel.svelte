@@ -266,12 +266,12 @@
     <!-- Wound ranges -->
     <div class="detail-section">
       <h3 class="detail-label">{store.t('derived-section-wounds')}</h3>
-      <ul class="derived-list" data-testid="derived-wounds">
+      <ul class="derived-list wound-list" data-testid="derived-wounds">
         {#each d.wounds as w (w.level)}
           <li>
-            <span>{store.t(`derived-wound-${w.level}`)}</span>
+            <span class="wound-level">{store.t(`derived-wound-${w.level}`)}</span>
             <span class="value">{w.min}{w.max != null ? `–${w.max}` : '+'}</span>
-            {#if w.penalty != null}<span class="focus">{w.penalty}</span>{/if}
+            <span class="focus">{w.penalty != null ? w.penalty : ''}</span>
           </li>
         {/each}
       </ul>
@@ -343,6 +343,24 @@
   }
   .derived-list .value {
     font-weight: 600;
+  }
+  /* Wound levels: a fixed three-column grid (level | number range | penalty)
+     constrained to a readable width, so the range and penalty stay aligned in
+     centered columns instead of splaying apart on a wide window. */
+  .wound-list {
+    max-width: 26rem;
+  }
+  .wound-list li {
+    display: grid;
+    grid-template-columns: 1fr 6rem 4rem;
+    align-items: baseline;
+    gap: 0.75rem;
+    justify-content: initial;
+  }
+  .wound-list .value,
+  .wound-list .focus {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
   }
   .derived-inline {
     list-style: none;
