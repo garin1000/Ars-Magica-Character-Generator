@@ -4,22 +4,22 @@
   import { tooltip, type TooltipContent } from '../actions';
   import type { AbilityCategory } from '../types';
 
-  // Filter state: free-text + category. Categories from the engine-surfaced order.
-  let search = $state('');
-  let category = $state('');
+  // Filter state (free-text + category) lives on the store, so it survives tab
+  // switches that unmount this component. Categories from the engine-surfaced order.
+  const filter = $derived(store.filters.abilities);
   const categories = $derived(store.ruleset?.ruleset.ability_category_order ?? []);
 
   const groups = $derived.by(() => {
     const rs = store.ruleset;
     if (!rs) return [];
-    const filter = {
-      text: search,
-      categories: category ? [category as AbilityCategory] : undefined,
+    const abilityFilter = {
+      text: filter.search,
+      categories: filter.category ? [filter.category as AbilityCategory] : undefined,
     };
     return groupAbilitiesByCategory(rs)
       .map((g) => ({
         category: g.category,
-        abilities: filterAbilities(rs, g.abilities, filter, store.t),
+        abilities: filterAbilities(rs, g.abilities, abilityFilter, store.t),
       }))
       .filter((g) => g.abilities.length > 0);
   });
@@ -107,10 +107,10 @@
         type="search"
         class="filter-search"
         placeholder={store.t('filter-search-placeholder')}
-        bind:value={search}
+        bind:value={filter.search}
         data-testid="ability-search"
       />
-      <select bind:value={category} data-testid="ability-category-filter">
+      <select bind:value={filter.category} data-testid="ability-category-filter">
         <option value="">{store.t('filter-category-all')}</option>
         {#each categories as c (c)}
           <option value={c}>{store.t(`ability-category-${c}`)}</option>

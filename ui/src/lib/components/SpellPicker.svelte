@@ -12,11 +12,10 @@
   } from '../derive';
   import type { Art, Spell } from '../types';
 
-  // Technique/Form filters, built from the Art registry (same split ArtGrid uses).
-  let technique = $state('');
-  let form = $state('');
-  let search = $state('');
-  let levelFilter = $state('');
+  // Technique/Form/text/level filters live on the store, so they survive the tab
+  // switch that unmounts this component (same split ArtGrid uses for the Arts).
+  // `picked`/`generalLevel` are transient add-a-spell state, so they stay local.
+  const filter = $derived(store.filters.spells);
   let picked = $state('');
   let generalLevel = $state(15);
 
@@ -38,10 +37,10 @@
       rs,
       Object.values(rs.ruleset.spells ?? {}),
       {
-        text: search,
-        technique: technique || undefined,
-        form: form || undefined,
-        level: levelFilter === '' ? undefined : Number(levelFilter),
+        text: filter.search,
+        technique: filter.technique || undefined,
+        form: filter.form || undefined,
+        level: filter.level === '' ? undefined : Number(filter.level),
       },
       store.t,
     ).sort((a, b) => spellName(rs, a.id).localeCompare(spellName(rs, b.id)));
@@ -101,7 +100,7 @@
     <div class="spell-controls">
       <label class="field">
         <span>{store.t('filter-search-placeholder')}</span>
-        <input type="search" bind:value={search} data-testid="spell-search" />
+        <input type="search" bind:value={filter.search} data-testid="spell-search" />
       </label>
       <label class="field">
         <span>{store.t('spell-level-label')}</span>
@@ -109,13 +108,13 @@
           type="number"
           min="1"
           step="1"
-          bind:value={levelFilter}
+          bind:value={filter.level}
           data-testid="spell-level-filter"
         />
       </label>
       <label class="field">
         <span>{store.t('spell-technique-label')}</span>
-        <select bind:value={technique} data-testid="spell-technique-filter">
+        <select bind:value={filter.technique} data-testid="spell-technique-filter">
           <option value="">—</option>
           {#each techniques as t (t.id)}
             <option value={t.id}>{artLabel(store.ruleset, t.id)}</option>
@@ -124,7 +123,7 @@
       </label>
       <label class="field">
         <span>{store.t('spell-form-label')}</span>
-        <select bind:value={form} data-testid="spell-form-filter">
+        <select bind:value={filter.form} data-testid="spell-form-filter">
           <option value="">—</option>
           {#each forms as f (f.id)}
             <option value={f.id}>{artLabel(store.ruleset, f.id)}</option>

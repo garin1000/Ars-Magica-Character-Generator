@@ -37,7 +37,7 @@ vi.mock('./ipc', () => ({
 }));
 
 // Import the singleton after the mock is registered.
-import { store } from './state.svelte';
+import { store, defaultPickerFilters } from './state.svelte';
 
 // --- Fixtures ---------------------------------------------------------------
 
@@ -112,6 +112,61 @@ afterEach(() => {
   // Drop any pending debounced revalidate without running it, then restore.
   vi.clearAllTimers();
   vi.useRealTimers();
+});
+
+// --- per-picker filter state (C7) -------------------------------------------
+
+describe('picker filter state', () => {
+  beforeEach(() => {
+    // Isolate from other tests mutating the shared singleton's filters.
+    store.filters = defaultPickerFilters();
+  });
+
+  it('defaults every picker to empty filters', () => {
+    expect(store.filters.vf.virtue).toEqual({
+      search: '',
+      magnitude: '',
+      category: '',
+      taintedOnly: false,
+    });
+    expect(store.filters.vf.flaw).toEqual({
+      search: '',
+      magnitude: '',
+      category: '',
+      taintedOnly: false,
+    });
+    expect(store.filters.abilities).toEqual({ search: '', category: '' });
+    expect(store.filters.spells).toEqual({ search: '', technique: '', form: '', level: '' });
+  });
+
+  it('retains a picker tab’s filter state independently of the others', () => {
+    // A tab switch unmounts the picker components, so their filter state lives on
+    // the store: mutating one picker leaves the values readable afterwards and
+    // does not bleed into the sibling pickers.
+    store.filters.vf.virtue.search = 'giant';
+    store.filters.vf.virtue.magnitude = 'major';
+    store.filters.vf.virtue.category = 'general';
+    store.filters.vf.virtue.taintedOnly = true;
+    store.filters.abilities.search = 'latin';
+    store.filters.abilities.category = 'academic';
+
+    // Returning to the V/F tab restores exactly what was set.
+    expect(store.filters.vf.virtue).toEqual({
+      search: 'giant',
+      magnitude: 'major',
+      category: 'general',
+      taintedOnly: true,
+    });
+    // The Abilities tab keeps its own, independent state.
+    expect(store.filters.abilities).toEqual({ search: 'latin', category: 'academic' });
+    // The untouched flaw picker still holds its defaults.
+    expect(store.filters.vf.flaw).toEqual({
+      search: '',
+      magnitude: '',
+      category: '',
+      taintedOnly: false,
+    });
+  });
 });
 
 // --- setType() --------------------------------------------------------------
