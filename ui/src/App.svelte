@@ -178,15 +178,21 @@
     </div>
   {:else if tab === 'equipment'}
     <div class="vf-tab">
-      <EquipmentPicker />
+      <div class="tab-scroll">
+        <EquipmentPicker />
+      </div>
     </div>
   {:else if tab === 'details'}
     <div class="vf-tab">
-      <CharacterDetails />
+      <div class="tab-scroll">
+        <CharacterDetails />
+      </div>
     </div>
   {:else if tab === 'totals'}
     <div class="vf-tab">
-      <DerivedTotalsPanel />
+      <div class="tab-scroll">
+        <DerivedTotalsPanel />
+      </div>
     </div>
   {:else if tab === 'mythic_type'}
     <div class="vf-tab">
