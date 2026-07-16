@@ -19,10 +19,14 @@ import {
   groupAbilitiesByCategory,
   groupArtsByType,
   groupByCategory,
+  groupSelectionsByCategory,
+  groupAbilitySelectionsByCategory,
   mandatoryTraitRefs,
   maxAbilityScore,
   maxArtScore,
   paramValueUsage,
+  resolveIssueArgValue,
+  resolveIssueArgs,
   restrictedPoolLabel,
 } from './derive';
 import type {
@@ -880,5 +884,232 @@ describe('restrictedPoolLabel', () => {
       t,
     );
     expect(label).toBe('Latin, Artes Liberales');
+  });
+
+  // B1: a parameterized ability in a restricted pool must render its localized
+  // param hint, never the literal "{language}" token.
+  it('renders a parameterized ability with its param hint, not the raw token', () => {
+    const th = (key: string, args?: Record<string, string>) => {
+      if (key === 'param-hint') return `(${args?.label})`;
+      if (key === 'param-label-language') return 'Language';
+      if (key === 'restricted-xp-list-separator') return ',';
+      return key;
+    };
+    const rs = makeRuleset([], {
+      i18n: {
+        'ability.artes_liberales': { name: 'Artes Liberales' },
+        'ability.living_language': { name: '{language}' },
+      },
+    });
+    const label = restrictedPoolLabel(
+      rs,
+      { amount: 50, used: 0, abilities: ['ability.artes_liberales', 'ability.living_language'] },
+      th,
+    );
+    expect(label).toBe('Artes Liberales, (Language)');
+    expect(label).not.toContain('{language}');
+  });
+});
+
+// --- B2: search matches the localized/rendered label, not the raw template ---
+
+describe('filterAbilities localized-label search', () => {
+  const abilities: Ability[] = [
+    { id: 'ability.living_language', category: 'general', parameter: 'language' },
+    { id: 'ability.awareness', category: 'general' },
+  ];
+  // param-hint renders "(<label>)"; param-label-language differs per language.
+  const makeT = (languageLabel: string) => (key: string, args?: Record<string, string>) => {
+    if (key === 'param-hint') return `(${args?.label})`;
+    if (key === 'param-label-language') return languageLabel;
+    return key;
+  };
+
+  it('matches the German rendered label ("Sprache") for the language ability', () => {
+    const rs = makeRuleset([], {
+      i18n: {
+        'ability.living_language': { name: '{language}' },
+        'ability.awareness': { name: 'Aufmerksamkeit' },
+      },
+    });
+    expect(
+      filterAbilities(rs, abilities, { text: 'spra' }, makeT('Sprache')).map((a) => a.id),
+    ).toEqual(['ability.living_language']);
+  });
+
+  it('still matches the English token/label ("langu")', () => {
+    const rs = makeRuleset([], {
+      i18n: {
+        'ability.living_language': { name: '{language}' },
+        'ability.awareness': { name: 'Awareness' },
+      },
+    });
+    expect(
+      filterAbilities(rs, abilities, { text: 'langu' }, makeT('Language')).map((a) => a.id),
+    ).toEqual(['ability.living_language']);
+  });
+
+  it('still matches a plain ability by its localized name', () => {
+    const rs = makeRuleset([], {
+      i18n: {
+        'ability.living_language': { name: '{language}' },
+        'ability.awareness': { name: 'Aufmerksamkeit' },
+      },
+    });
+    expect(
+      filterAbilities(rs, abilities, { text: 'aufmerk' }, makeT('Sprache')).map((a) => a.id),
+    ).toEqual(['ability.awareness']);
+  });
+});
+
+// --- B3: validation-issue arg label resolution ------------------------------
+
+describe('resolveIssueArgValue / resolveIssueArgs', () => {
+  const t = (key: string, args?: Record<string, string>) => {
+    const table: Record<string, string> = {
+      'characteristic-int': 'Intelligence',
+      'reputation-type-local': 'Local',
+      'realm-magic': 'Magic',
+      'param-label-area': 'Area',
+      'param-label-language': 'Language',
+    };
+    if (key === 'param-hint') return `(${args?.label})`;
+    return table[key] ?? key;
+  };
+
+  it('resolves an id-valued arg to its localized name', () => {
+    const rs = makeRuleset([], { i18n: { 'ability.awareness': { name: 'Awareness' } } });
+    expect(resolveIssueArgValue(rs, 'ability', 'ability.awareness', t)).toBe('Awareness');
+  });
+
+  it('resolves a parameterized id with its param hint, not the raw token', () => {
+    const rs = makeRuleset([], { i18n: { 'ability.area_lore': { name: '{area} Lore' } } });
+    expect(resolveIssueArgValue(rs, 'ability', 'ability.area_lore', t)).toBe('(Area) Lore');
+  });
+
+  it('resolves an enum-valued characteristic arg through its Fluent key', () => {
+    const rs = makeRuleset([]);
+    expect(resolveIssueArgValue(rs, 'characteristic', 'int', t)).toBe('Intelligence');
+  });
+
+  it('resolves a reputation kind and a Might realm through their Fluent keys', () => {
+    const rs = makeRuleset([]);
+    expect(resolveIssueArgValue(rs, 'kind', 'local', t)).toBe('Local');
+    expect(resolveIssueArgValue(rs, 'base', 'magic', t)).toBe('Magic');
+  });
+
+  it('leaves a numeric enum-keyed arg (e.g. a base score) untouched', () => {
+    const rs = makeRuleset([]);
+    expect(resolveIssueArgValue(rs, 'base', '3', t)).toBe('3');
+  });
+
+  it('resolves a param key arg through its param-label', () => {
+    const rs = makeRuleset([]);
+    expect(resolveIssueArgValue(rs, 'key', 'language', t)).toBe('Language');
+  });
+
+  it('passes free text and numbers through unchanged', () => {
+    const rs = makeRuleset([]);
+    expect(resolveIssueArgValue(rs, 'name', 'Brave', t)).toBe('Brave');
+    expect(resolveIssueArgValue(rs, 'content', 'A hidden shame', t)).toBe('A hidden shame');
+    expect(resolveIssueArgValue(rs, 'score', '5', t)).toBe('5');
+  });
+
+  it('resolves a whole args map, arg by arg', () => {
+    const rs = makeRuleset([], { i18n: { 'ability.area_lore': { name: '{area} Lore' } } });
+    expect(
+      resolveIssueArgs(rs, { ability: 'ability.area_lore', characteristic: 'int', score: '5' }, t),
+    ).toEqual({ ability: '(Area) Lore', characteristic: 'Intelligence', score: '5' });
+  });
+});
+
+// --- C4: grouping + sorting selected V/F and abilities ----------------------
+
+describe('groupSelectionsByCategory', () => {
+  const rs = makeRuleset(
+    [
+      item({ id: 'virtue.zeal', category: 'general' }),
+      item({ id: 'virtue.affinity', category: 'general' }),
+      item({ id: 'virtue.verditius', category: 'hermetic' }),
+    ],
+    {
+      i18n: {
+        'virtue.zeal': { name: 'Zeal' },
+        'virtue.affinity': { name: 'Affinity' },
+        'virtue.verditius': { name: 'Verditius' },
+      },
+    },
+  );
+
+  it('groups selections by category and sorts each group by localized name', () => {
+    // add-order: Zeal (general), Verditius (hermetic), Affinity (general).
+    const entries = [
+      { selection: { ref: 'virtue.zeal' }, index: 0 },
+      { selection: { ref: 'virtue.verditius' }, index: 1 },
+      { selection: { ref: 'virtue.affinity' }, index: 2 },
+    ];
+    const groups = groupSelectionsByCategory(rs, entries);
+    expect(groups.map((g) => g.category)).toEqual(['general', 'hermetic']);
+    // general sorted by name: Affinity (idx 2) before Zeal (idx 0).
+    expect(groups[0].entries.map((e) => e.index)).toEqual([2, 0]);
+    expect(groups[1].entries.map((e) => e.index)).toEqual([1]);
+  });
+
+  it('drops entries whose item ref is unknown', () => {
+    const groups = groupSelectionsByCategory(rs, [{ selection: { ref: 'nope' }, index: 0 }]);
+    expect(groups).toEqual([]);
+  });
+});
+
+describe('groupAbilitySelectionsByCategory', () => {
+  function withAbilities(abilities: Ability[], i18n: LocalizedRuleset['i18n']): LocalizedRuleset {
+    const map: Record<string, Ability> = {};
+    for (const a of abilities) map[a.id] = a;
+    return {
+      ruleset: {
+        id: 't',
+        version: '1',
+        point_items: {},
+        type_profiles: {},
+        abilities: map,
+        ...DERIVED_TAXONOMY,
+      },
+      i18n,
+    };
+  }
+
+  const rs = withAbilities(
+    [
+      { id: 'ability.magic_theory', category: 'arcane' },
+      { id: 'ability.awareness', category: 'general' },
+      { id: 'ability.swim', category: 'general' },
+    ],
+    {
+      'ability.magic_theory': { name: 'Magic Theory' },
+      'ability.awareness': { name: 'Awareness' },
+      'ability.swim': { name: 'Swim' },
+    },
+  );
+
+  it('groups in category order and sorts each group by localized name, keeping indices', () => {
+    // add-order: Swim(general,0), Magic Theory(arcane,1), Awareness(general,2).
+    const entries = [
+      { entry: { ability: 'ability.swim', score: 2 }, index: 0 },
+      { entry: { ability: 'ability.magic_theory', score: 3 }, index: 1 },
+      { entry: { ability: 'ability.awareness', score: 1 }, index: 2 },
+    ];
+    const groups = groupAbilitySelectionsByCategory(rs, entries);
+    // ability_category_order: general before arcane.
+    expect(groups.map((g) => g.category)).toEqual(['general', 'arcane']);
+    // general sorted by name: Awareness (idx 2) before Swim (idx 0).
+    expect(groups[0].entries.map((e) => e.index)).toEqual([2, 0]);
+    expect(groups[1].entries.map((e) => e.index)).toEqual([1]);
+  });
+
+  it('drops entries whose ability id is unknown', () => {
+    const groups = groupAbilitySelectionsByCategory(rs, [
+      { entry: { ability: 'ability.nope', score: 1 }, index: 0 },
+    ]);
+    expect(groups).toEqual([]);
   });
 });

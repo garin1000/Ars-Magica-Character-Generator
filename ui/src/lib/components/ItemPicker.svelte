@@ -29,7 +29,7 @@
       tainted: taintedOnly || undefined,
     };
     return groupByCategory(rs, kinds)
-      .map((g) => ({ category: g.category, items: filterItems(rs, g.items, filter) }))
+      .map((g) => ({ category: g.category, items: filterItems(rs, g.items, filter, store.t) }))
       .filter((g) => g.items.length > 0);
   });
   const selectedRefs = $derived(new Set(store.entity.selections.map((s) => s.ref)));

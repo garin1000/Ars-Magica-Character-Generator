@@ -4,6 +4,7 @@
 import type {
   Ability,
   AbilityCategory,
+  AbilityScore,
   Art,
   ArtType,
   Characteristic,
@@ -29,11 +30,27 @@ function normalizeSearch(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 }
 
-/** The localized name + summary of an item id, normalized for text search. */
-function searchHaystack(localized: LocalizedRuleset, id: string): string {
+/** A `store.t`-shaped translator, threaded in so search can index rendered labels. */
+type Translate = (key: string, args?: Record<string, string>) => string;
+
+/** The standard "(Label)" placeholder hint for an unfilled `{param}` token. */
+function paramHint(t: Translate): (key: string) => string {
+  return (key) => t('param-hint', { label: t(`param-label-${key}`) });
+}
+
+/**
+ * The searchable text of an item id, normalized. Folds three things so a filter
+ * matches what the user actually sees: the raw template with braces stripped (so
+ * an unresolved token like `language` still matches), the fully rendered label
+ * with its param hint resolved (so the visible "(Language)"/"(Sprache)" is
+ * indexed in the active language), and the summary. Without a translator only
+ * the template + summary are indexed (the pre-render fallback).
+ */
+function searchHaystack(localized: LocalizedRuleset, id: string, t?: Translate): string {
   const entry = localized.i18n[id];
-  const name = (entry?.name ?? id).replace(/[{}]/g, '');
-  return normalizeSearch(`${name} ${entry?.summary ?? ''}`);
+  const template = (entry?.name ?? id).replace(/[{}]/g, '');
+  const rendered = t ? displayName(localized, id, undefined, paramHint(t)) : template;
+  return normalizeSearch(`${template} ${rendered} ${entry?.summary ?? ''}`);
 }
 
 /** Facets a Virtue/Flaw list can be filtered by. All optional; omitted = no constraint. */
@@ -53,10 +70,11 @@ export function filterItems(
   localized: LocalizedRuleset,
   items: PointItem[],
   filter: ItemFilter,
+  t?: Translate,
 ): PointItem[] {
   const text = filter.text ? normalizeSearch(filter.text) : '';
   return items.filter((it) => {
-    if (text && !searchHaystack(localized, it.id).includes(text)) return false;
+    if (text && !searchHaystack(localized, it.id, t).includes(text)) return false;
     if (filter.categories?.length && !filter.categories.includes(it.category)) return false;
     if (filter.magnitudes?.length && !filter.magnitudes.includes(it.magnitude)) return false;
     if (filter.tainted && !it.tainted) return false;
@@ -75,10 +93,11 @@ export function filterAbilities(
   localized: LocalizedRuleset,
   abilities: Ability[],
   filter: AbilityFilter,
+  t?: Translate,
 ): Ability[] {
   const text = filter.text ? normalizeSearch(filter.text) : '';
   return abilities.filter((a) => {
-    if (text && !searchHaystack(localized, a.id).includes(text)) return false;
+    if (text && !searchHaystack(localized, a.id, t).includes(text)) return false;
     if (filter.categories?.length && !filter.categories.includes(a.category)) return false;
     return true;
   });
@@ -101,10 +120,17 @@ export function filterSpells(
   localized: LocalizedRuleset,
   spells: Spell[],
   filter: SpellFilter,
+  t?: Translate,
 ): Spell[] {
   const text = filter.text ? normalizeSearch(filter.text) : '';
   return spells.filter((s) => {
-    if (text && !normalizeSearch(spellName(localized, s.id)).includes(text)) return false;
+    // Spell names carry no `{param}` placeholder, so the rendered label equals
+    // the plain name; routing through the hint-aware path just keeps the search
+    // helpers uniform.
+    const name = t
+      ? displayName(localized, s.id, undefined, paramHint(t))
+      : spellName(localized, s.id);
+    if (text && !normalizeSearch(name).includes(text)) return false;
     if (filter.technique && s.technique !== filter.technique) return false;
     if (filter.form && s.form !== filter.form) return false;
     if (filter.level !== undefined && (s.level ?? null) !== filter.level) return false;
@@ -197,6 +223,48 @@ export function groupByCategory(localized: LocalizedRuleset, kinds?: ItemKind[])
       category,
       items: items.sort((a, b) =>
         localizedSortKey(localized, a.id).localeCompare(localizedSortKey(localized, b.id)),
+      ),
+    }))
+    .sort((a, b) => a.category.localeCompare(b.category));
+}
+
+/** A chosen selection paired with its original index in `entity.selections`. */
+export interface IndexedSelection {
+  selection: Selection;
+  index: number;
+}
+
+export interface SelectionGroup {
+  category: string;
+  entries: IndexedSelection[];
+}
+
+/**
+ * Chosen Virtue/Flaw selections grouped by category and alpha-sorted within each
+ * group, mirroring the source picker's grouping (`groupByCategory`). Each entry
+ * keeps its original `entity.selections` index so edit/remove wiring stays
+ * correct after the reorder; entries whose item ref is unknown are dropped.
+ * Categories order the same way as the source list (by category id).
+ */
+export function groupSelectionsByCategory(
+  localized: LocalizedRuleset,
+  entries: IndexedSelection[],
+): SelectionGroup[] {
+  const groups = new Map<string, IndexedSelection[]>();
+  for (const entry of entries) {
+    const item = localized.ruleset.point_items[entry.selection.ref];
+    if (!item) continue;
+    const list = groups.get(item.category) ?? [];
+    list.push(entry);
+    groups.set(item.category, list);
+  }
+  return [...groups.entries()]
+    .map(([category, list]) => ({
+      category,
+      entries: list.sort((a, b) =>
+        localizedSortKey(localized, a.selection.ref).localeCompare(
+          localizedSortKey(localized, b.selection.ref),
+        ),
       ),
     }))
     .sort((a, b) => a.category.localeCompare(b.category));
@@ -391,9 +459,66 @@ export function restrictedPoolLabel(
   t: (key: string, args?: Record<string, string>) => string,
 ): string {
   const parts: string[] = [];
-  for (const id of pool.abilities ?? []) parts.push(displayName(localized, id));
+  // A parameterized ability (e.g. Living Language) must show its localized param
+  // hint "(Language)"/"(Sprache)", not the raw "{language}" token.
+  for (const id of pool.abilities ?? [])
+    parts.push(displayName(localized, id, undefined, paramHint(t)));
   for (const c of pool.categories ?? []) parts.push(t(`ability-category-${c}`));
   return parts.join(`${t('restricted-xp-list-separator')} `);
+}
+
+/**
+ * Validation-issue arg keys whose value is an enum (never a rules id) and the
+ * Fluent-key prefix that localizes it. The engine emits these enums as their
+ * raw serialized form (`int`, `local`, `magic`), so the UI maps them through a
+ * Fluent key rather than rendering the slug. `base`/`granted` are realms only in
+ * the Might-realm-mismatch issue; the same `base` key is a numeric score in the
+ * Characteristic issues, so numeric values are left untouched (see below).
+ */
+const ENUM_ARG_FLUENT_PREFIX: Record<string, string> = {
+  characteristic: 'characteristic-',
+  kind: 'reputation-type-',
+  base: 'realm-',
+  granted: 'realm-',
+};
+
+/**
+ * Localize one validation-issue arg value for display. The engine deliberately
+ * emits raw ids/enums in `issue.args`; the id→label mapping lives in the UI, not
+ * the engine. Resolution is data-driven, never slug-shaped:
+ *  - a value that is a key in the ruleset i18n is a rules id → its localized name
+ *    (with the param hint so a parameterized name reads "(Area) Lore", never a
+ *    literal "{area} Lore");
+ *  - an enum-valued arg (characteristic, reputation kind, Might realm) maps
+ *    through its Fluent key — but a numeric value stays as-is, so a Characteristic
+ *    base score is not mistaken for a realm;
+ *  - a `key` arg names a parameter → its `param-label` Fluent string;
+ *  - anything else (free text like a trait name, or a number) passes through.
+ */
+export function resolveIssueArgValue(
+  localized: LocalizedRuleset,
+  argKey: string,
+  value: string,
+  t: Translate,
+): string {
+  if (localized.i18n[value]) return displayName(localized, value, undefined, paramHint(t));
+  const prefix = ENUM_ARG_FLUENT_PREFIX[argKey];
+  if (prefix && !/^-?\d+$/.test(value)) return t(`${prefix}${value}`);
+  if (argKey === 'key') return t(`param-label-${value}`);
+  return value;
+}
+
+/** Every value in a validation-issue arg map, localized via `resolveIssueArgValue`. */
+export function resolveIssueArgs(
+  localized: LocalizedRuleset,
+  args: Record<string, string>,
+  t: Translate,
+): Record<string, string> {
+  const resolved: Record<string, string> = {};
+  for (const [key, value] of Object.entries(args)) {
+    resolved[key] = resolveIssueArgValue(localized, key, value, t);
+  }
+  return resolved;
 }
 
 export interface AbilityGroup {
@@ -422,6 +547,50 @@ export function groupAbilitiesByCategory(localized: LocalizedRuleset): AbilityGr
         .get(category)!
         .sort((a, b) =>
           localizedSortKey(localized, a.id).localeCompare(localizedSortKey(localized, b.id)),
+        ),
+    }));
+}
+
+/** A bought Ability score paired with its original index in `entity.ability_scores`. */
+export interface IndexedAbilityScore {
+  entry: AbilityScore;
+  index: number;
+}
+
+export interface AbilitySelectionGroup {
+  category: AbilityCategory;
+  entries: IndexedAbilityScore[];
+}
+
+/**
+ * Bought Ability scores grouped by category (in the engine's book order,
+ * `ability_category_order`) and alpha-sorted within each group, mirroring the
+ * source picker's grouping (`groupAbilitiesByCategory`). Each entry keeps its
+ * original `entity.ability_scores` index so the spinner/remove wiring stays
+ * correct after the reorder; entries whose ability id is unknown are dropped.
+ */
+export function groupAbilitySelectionsByCategory(
+  localized: LocalizedRuleset,
+  entries: IndexedAbilityScore[],
+): AbilitySelectionGroup[] {
+  const groups = new Map<AbilityCategory, IndexedAbilityScore[]>();
+  for (const item of entries) {
+    const ability = localized.ruleset.abilities?.[item.entry.ability];
+    if (!ability) continue;
+    const list = groups.get(ability.category) ?? [];
+    list.push(item);
+    groups.set(ability.category, list);
+  }
+  return localized.ruleset.ability_category_order
+    .filter((c) => groups.has(c))
+    .map((category) => ({
+      category,
+      entries: groups
+        .get(category)!
+        .sort((a, b) =>
+          localizedSortKey(localized, a.entry.ability).localeCompare(
+            localizedSortKey(localized, b.entry.ability),
+          ),
         ),
     }));
 }

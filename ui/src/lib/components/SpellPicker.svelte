@@ -34,12 +34,17 @@
   const candidates = $derived.by((): Spell[] => {
     const rs = store.ruleset;
     if (!rs) return [];
-    return filterSpells(rs, Object.values(rs.ruleset.spells ?? {}), {
-      text: search,
-      technique: technique || undefined,
-      form: form || undefined,
-      level: levelFilter === '' ? undefined : Number(levelFilter),
-    }).sort((a, b) => spellName(rs, a.id).localeCompare(spellName(rs, b.id)));
+    return filterSpells(
+      rs,
+      Object.values(rs.ruleset.spells ?? {}),
+      {
+        text: search,
+        technique: technique || undefined,
+        form: form || undefined,
+        level: levelFilter === '' ? undefined : Number(levelFilter),
+      },
+      store.t,
+    ).sort((a, b) => spellName(rs, a.id).localeCompare(spellName(rs, b.id)));
   });
 
   const pickedSpell = $derived(candidates.find((s) => s.id === picked) ?? null);
