@@ -423,6 +423,36 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
 }
 
 #[test]
+fn effective_scores_surface_aged_characteristic_and_drop_count() {
+    // Core Rules.md:16613 worked example: Communication +2 with 3 aging points
+    // drops once → effective +1. The summary must report the aged effective value
+    // and the drop count, and omit unchanged Characteristics.
+    use arm_rules::Characteristic;
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut entity = sample_entity();
+    entity.characteristics.insert(Characteristic::Com, 2);
+    entity.aging_points.insert(Characteristic::Com, 3);
+
+    let effective = effective_scores_loaded(&entity, &ruleset);
+    assert_eq!(
+        effective.characteristic_effective.get(&Characteristic::Com),
+        Some(&1)
+    );
+    assert_eq!(
+        effective
+            .characteristic_aging_drops
+            .get(&Characteristic::Com),
+        Some(&1)
+    );
+    // A Characteristic with no aging drop is omitted from the drop map.
+    assert!(
+        !effective
+            .characteristic_aging_drops
+            .contains_key(&Characteristic::Str)
+    );
+}
+
+#[test]
 fn effective_scores_surface_house_grants_read_only() {
     // The V/F view renders House grants read-only, so effective scores must carry
     // the derived grant Selections without the UI re-deriving them. A Bjornaer

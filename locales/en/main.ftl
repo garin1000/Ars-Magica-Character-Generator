@@ -84,6 +84,14 @@ ability-requires-training-marker = *
 # Characteristic point-buy readout.
 characteristic-points = Points: { $used } / { $budget }
 characteristic-size = Size: { $size }
+# Tooltip on the Characteristics tab explaining the effective score (the bought
+# score after aging drops and free Virtue deltas). Shown only when the effective
+# score differs from the bought score. $bought/$effective are pre-formatted
+# signed numbers; $drops is a positive drop count; $bonus is a signed delta.
+characteristic-effective-tooltip-summary = Bought { $bought }, effective { $effective }.
+characteristic-effective-tooltip-breakdown-label = Includes
+characteristic-effective-tooltip-aging = aging −{ $drops }
+characteristic-effective-tooltip-virtue = Virtue { $bonus }
 # Tab labels for the editor's main area.
 tab-characteristics = Characteristics
 tab-virtues-flaws = Virtues & Flaws

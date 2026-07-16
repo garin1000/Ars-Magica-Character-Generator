@@ -47,13 +47,47 @@
     return score > 0 ? `+${score}` : `${score}`;
   }
 
-  // Free effective-score bonus (Giant Blood +1 Str/Sta, Dwarf -1), shown next to
-  // the bought score. 0 when no virtue/flaw affects this characteristic.
+  // Effective score after aging drops AND free virtue deltas. Falls back to the
+  // bought score when the engine reports no change — the engine owns the floor
+  // clamp, so the UI never re-implements it.
+  function effectiveOf(characteristic: Characteristic): number {
+    return store.effective?.characteristic_effective?.[characteristic] ?? scoreOf(characteristic);
+  }
+
+  // Aging-drop count for the tooltip breakdown (0 when none).
+  function agingDropOf(characteristic: Characteristic): number {
+    return store.effective?.characteristic_aging_drops?.[characteristic] ?? 0;
+  }
+
+  // Free virtue/flaw effective-score delta (Giant Blood +1 Str/Sta, Dwarf -1)
+  // for the tooltip breakdown. 0 when no virtue/flaw affects this characteristic.
   function bonusOf(characteristic: Characteristic): number {
     return (
       store.effective?.characteristic_bonuses?.find((b) => b.characteristic === characteristic)
         ?.bonus ?? 0
     );
+  }
+
+  // Tooltip breakdown for the effective score: a bought → effective summary plus
+  // the reasons that apply (aging drop and/or free virtue delta).
+  function effectiveTooltip(characteristic: Characteristic) {
+    const drops = agingDropOf(characteristic);
+    const bonus = bonusOf(characteristic);
+    const list: string[] = [];
+    if (drops !== 0) {
+      list.push(store.t('characteristic-effective-tooltip-aging', { drops: String(drops) }));
+    }
+    if (bonus !== 0) {
+      list.push(store.t('characteristic-effective-tooltip-virtue', { bonus: fmt(bonus) }));
+    }
+    return {
+      text: store.t('characteristic-effective-tooltip-summary', {
+        bought: fmt(scoreOf(characteristic)),
+        effective: fmt(effectiveOf(characteristic)),
+      }),
+      listLabel: store.t('characteristic-effective-tooltip-breakdown-label'),
+      list,
+    };
   }
 
   // Derived Size (base 0), shown only when a virtue/flaw moves it off 0.
@@ -85,9 +119,11 @@
           </button>
           <span class="spinner-value" data-testid="char-value-{characteristic}">
             {fmt(scoreOf(characteristic))}
-            {#if bonusOf(characteristic) !== 0}<span
-                class="char-bonus"
-                data-testid="char-bonus-{characteristic}">({fmt(bonusOf(characteristic))})</span
+            {#if effectiveOf(characteristic) !== scoreOf(characteristic)}<span
+                class="eff-badge char-effective"
+                data-testid="char-effective-{characteristic}"
+                use:tooltip={effectiveTooltip(characteristic)}
+                >→ {fmt(effectiveOf(characteristic))}</span
               >{/if}
           </span>
           <button
