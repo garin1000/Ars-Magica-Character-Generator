@@ -17,7 +17,10 @@
       categories: category ? [category as AbilityCategory] : undefined,
     };
     return groupAbilitiesByCategory(rs)
-      .map((g) => ({ category: g.category, abilities: filterAbilities(rs, g.abilities, filter) }))
+      .map((g) => ({
+        category: g.category,
+        abilities: filterAbilities(rs, g.abilities, filter, store.t),
+      }))
       .filter((g) => g.abilities.length > 0);
   });
   const selected = $derived(new Set((store.entity.ability_scores ?? []).map((a) => a.ability)));

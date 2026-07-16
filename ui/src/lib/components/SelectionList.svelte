@@ -4,6 +4,7 @@
     abilityDisplayName,
     displayName,
     grantedSelectionsForSide,
+    groupSelectionsByCategory,
     mandatoryTraitRefs,
   } from '../derive';
   import { reserveTagSpace, tooltip, type TooltipContent } from '../actions';
@@ -26,6 +27,12 @@
         const item = store.ruleset?.ruleset.point_items[selection.ref];
         return item ? kinds.includes(item.kind) : false;
       }),
+  );
+
+  // Chosen selections grouped by category and alpha-sorted within each group
+  // (mirroring the source picker). Original entity indices ride along for wiring.
+  const groupedSelections = $derived(
+    store.ruleset ? groupSelectionsByCategory(store.ruleset, selections) : [],
   );
 
   // Traits the character type mandates (a magus's The Gift + Hermetic Magus):
@@ -98,44 +105,51 @@
   </span>
 {/snippet}
 
-<section class="panel">
+<section class="panel" data-testid="selection-list-{side}">
   <h2>{store.t(titleKey)}</h2>
   {#if selections.length === 0 && granted.length === 0}
     <p class="muted">{store.t('empty-selections-side')}</p>
   {:else}
-    <ul class="selection-list" data-testid="selection-list-{side}">
-      {#each selections as { selection, index } (index)}
-        {@const item = store.ruleset?.ruleset.point_items[selection.ref]}
-        {@const required = mandatory.has(selection.ref)}
-        <li>
-          <div class="selection-row">
-            {@render nameWrap(selection.ref, selection.params)}
-            {#if required}
-              <span class="row-marker">{store.t('selection-required-label')}</span>
-            {:else}
-              <button
-                type="button"
-                class="icon-btn"
-                onclick={() => store.removeSelectionAt(index)}
-                data-testid="remove-{selection.ref}-{index}"
-              >
-                −
-              </button>
+    {#each groupedSelections as group (group.category)}
+      <h3 class="category">{store.t(`category-${group.category}`)}</h3>
+      <ul class="selection-list">
+        {#each group.entries as { selection, index } (index)}
+          {@const item = store.ruleset?.ruleset.point_items[selection.ref]}
+          {@const required = mandatory.has(selection.ref)}
+          <li>
+            <div class="selection-row">
+              {@render nameWrap(selection.ref, selection.params)}
+              {#if required}
+                <span class="row-marker">{store.t('selection-required-label')}</span>
+              {:else}
+                <button
+                  type="button"
+                  class="icon-btn"
+                  onclick={() => store.removeSelectionAt(index)}
+                  data-testid="remove-{selection.ref}-{index}"
+                >
+                  −
+                </button>
+              {/if}
+            </div>
+            {#if item?.parameters && item.parameters.length > 0}
+              <ParameterPicker {selection} {index} params={item.parameters} />
             {/if}
-          </div>
-          {#if item?.parameters && item.parameters.length > 0}
-            <ParameterPicker {selection} {index} params={item.parameters} />
-          {/if}
-        </li>
-      {/each}
-      {#each granted as grant (grant.ref)}
-        <li data-testid="granted-selection-{grant.ref}">
-          <div class="selection-row">
-            {@render nameWrap(grant.ref, grant.params)}
-            <span class="row-marker">{store.t('house-granted-label')}</span>
-          </div>
-        </li>
-      {/each}
-    </ul>
+          </li>
+        {/each}
+      </ul>
+    {/each}
+    {#if granted.length > 0}
+      <ul class="selection-list">
+        {#each granted as grant (grant.ref)}
+          <li data-testid="granted-selection-{grant.ref}">
+            <div class="selection-row">
+              {@render nameWrap(grant.ref, grant.params)}
+              <span class="row-marker">{store.t('house-granted-label')}</span>
+            </div>
+          </li>
+        {/each}
+      </ul>
+    {/if}
   {/if}
 </section>

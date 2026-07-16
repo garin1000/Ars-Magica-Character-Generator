@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { resolveIssueArgs } from '../derive';
 
   // `docked` drops the boxed panel chrome so the validation summary can sit at
   // the bottom of the Selected region as a fixed-height, scrollable box.
@@ -29,11 +30,12 @@
   {:else}
     <ul class="issue-list" data-testid="issue-list">
       {#each issues as issue (`${issue.code}|${issue.context ?? ''}|${JSON.stringify(issue.args)}`)}
+        {@const rawArgs = { ...issue.args, ...(issue.context ? { context: issue.context } : {}) }}
         <li class="issue {issue.severity}" data-severity={issue.severity} data-code={issue.code}>
-          {store.t(`issue-${issue.code}`, {
-            ...issue.args,
-            ...(issue.context ? { context: issue.context } : {}),
-          })}
+          {store.t(
+            `issue-${issue.code}`,
+            store.ruleset ? resolveIssueArgs(store.ruleset, rawArgs, store.t) : rawArgs,
+          )}
         </li>
       {/each}
     </ul>
