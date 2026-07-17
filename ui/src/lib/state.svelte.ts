@@ -46,6 +46,12 @@ export interface SpellFilterState {
   level: string;
 }
 
+/** Live filter/search state of the Equipment picker (kind = weapons/shields/armor). */
+export interface EquipmentFilterState {
+  search: string;
+  kind: string;
+}
+
 /**
  * Per-picker filter/search state, lifted out of the picker components so it
  * survives tab switches. Each `{#if tab === …}` panel in `App.svelte` unmounts
@@ -58,6 +64,7 @@ export interface PickerFilters {
   vf: Record<'virtue' | 'flaw', VfFilterState>;
   abilities: AbilityFilterState;
   spells: SpellFilterState;
+  equipment: EquipmentFilterState;
 }
 
 /** A fresh, all-empty set of picker filters (the initial/reset state). */
@@ -69,6 +76,7 @@ export function defaultPickerFilters(): PickerFilters {
     },
     abilities: { search: '', category: '' },
     spells: { search: '', technique: '', form: '', level: '' },
+    equipment: { search: '', kind: '' },
   };
 }
 

@@ -92,7 +92,7 @@ characteristic-size = Größe: { $size }
 # Minderungszahl; $bonus ist ein vorzeichenbehaftetes Delta.
 characteristic-effective-tooltip-summary = Basiswert { $bought }, effektiv { $effective }.
 characteristic-effective-tooltip-breakdown-label = Enthält
-characteristic-effective-tooltip-aging = Alterung −{ $drops }
+characteristic-effective-tooltip-aging = Alterung -{ $drops }
 characteristic-effective-tooltip-virtue = Tugend { $bonus }
 # Reiter-Bezeichnungen für den Hauptbereich des Editors.
 tab-characteristics = Eigenschaften
@@ -270,13 +270,14 @@ balance-flaws = Fehler: { $used } / { $budget }
 action-save = Speichern
 action-load = Laden
 
-param-prompt = { $param } wählen
-param-placeholder = ID eingeben
 # Hinweis für einen nicht ausgefüllten Parameter-Platzhalter im Namen, z. B. „Begabung in (Fertigkeit)“.
 param-hint = ({ $label })
-# Lokalisierte Parameter-Bezeichnungen, je Parameter-Schlüssel der Engine.
+# Lokalisierte Parameter-Bezeichnungen, je Parameter-Schlüssel der Engine. Dienen auch
+# als typbezogener Platzhalter/Hinweis für ein leeres Parameter-Eingabefeld.
 param-label-ability = Fertigkeit
 param-label-technique = Technik
+param-label-art = Kunst
+param-label-focus = Fokus
 param-label-area = Gebiet
 param-label-language = Sprache
 param-label-characteristic = Eigenschaft
@@ -373,7 +374,6 @@ issue-over_item_level = Zauberartefakte umfassen { $used } Stufen, über dem Bud
 issue-over_power_levels = Übernatürliche Kräfte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
 issue-might_realm_mismatch = Die eingegebene Macht-Sphäre ({ $base }) stimmt nicht mit der von den Tugenden verliehenen Sphäre ({ $granted }) überein.
 issue-excessive_aging_reduction = Die Alterungsminderungen für { $characteristic } ({ $reduction }) würden unter den Mindestwert ({ $min }) fallen; er wird dort begrenzt.
-issue-aging_points_force_drop = { $characteristic } hat { $points } Alterungspunkte, die den Wert automatisch um { $drops } auf { $score } gesenkt haben.
 issue-unknown_equipment = Ausrüstung '{ $item }' passt zu keiner Waffe, keinem Schild und keiner Rüstung.
 issue-equipment_min_strength = { $item } benötigt Stärke { $required }, aber dieser Charakter hat { $strength }.
 
@@ -383,13 +383,9 @@ issue-equipment_min_strength = { $item } benötigt Stärke { $required }, aber d
 weapon-kind-melee = Nahkampf
 weapon-kind-missile = Fernkampf
 weapon-kind-thrown = Wurf
-equipment-add-label = Ausrüstung hinzufügen
-equipment-none = Gegenstand wählen…
 equipment-group-weapons = Waffen
 equipment-group-shields = Schilde
 equipment-group-armor = Rüstungen
-equipment-add = Hinzufügen
-equipment-carried-label = Getragene Ausrüstung
 equipment-equipped-label = Ausgerüstet
 equipment-remove = Ausrüstung entfernen
 equipment-empty = Keine Ausrüstung.

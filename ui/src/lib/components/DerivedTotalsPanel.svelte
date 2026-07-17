@@ -3,6 +3,7 @@
   // command computes; it performs NO mechanics in JS. Every label goes through a
   // Fluent `derived-*` key; catalogue ids resolve to their localized display name.
   import { store } from '../state.svelte';
+  import { formatSigned } from '../derive';
   import type { Addend } from '../types';
 
   const d = $derived(store.derived);
@@ -18,13 +19,8 @@
     return store.t(`derived-addend-${a.label}`);
   }
 
-  // Signed rendering for a breakdown addend.
-  function signed(n: number): string {
-    return n >= 0 ? `+${n}` : `${n}`;
-  }
-
   function breakdown(addends: Addend[]): string {
-    return addends.map((a) => `${addendLabel(a)} ${signed(a.value)}`).join(', ');
+    return addends.map((a) => `${addendLabel(a)} ${formatSigned(a.value)}`).join(', ');
   }
 
   function onAura(e: Event) {
@@ -178,12 +174,12 @@
         <div class="detail-section">
           <h3 class="detail-label">{store.t('derived-section-longevity')}</h3>
           <p data-testid="derived-longevity">
-            {store.t(`derived-longevity-${d.longevity.source}`)}: −{d.longevity.bonus}
+            {store.t(`derived-longevity-${d.longevity.source}`)}: -{d.longevity.bonus}
             {#if d.longevity.lab_total != null}
               ({store.t('derived-lab-total')} {d.longevity.lab_total})
             {/if}
             {#if d.longevity.bronze_cord > 0}
-              · {store.t('derived-addend-bronze_cord')} {signed(d.longevity.bronze_cord)}
+              · {store.t('derived-addend-bronze_cord')} {formatSigned(d.longevity.bronze_cord)}
             {/if}
           </p>
         </div>
@@ -209,7 +205,7 @@
       <h3 class="detail-label">{store.t('derived-section-combat')}</h3>
       {#if d.combat.length > 0}
         <div class="table-scroll">
-          <table class="derived-table" data-testid="derived-combat">
+          <table class="derived-table combat" data-testid="derived-combat">
             <thead>
               <tr>
                 <th></th>
@@ -287,7 +283,7 @@
               <span
                 >{store.t(`derived-surfaced-${m.family}`)}: {detailLabel(m.family, m.detail)}</span
               >
-              {#if m.amount !== 0}<span class="value">{signed(m.amount)}</span>{/if}
+              {#if m.amount !== 0}<span class="value">{formatSigned(m.amount)}</span>{/if}
             </li>
           {/each}
         </ul>
@@ -315,6 +311,13 @@
   .derived-table {
     border-collapse: collapse;
     width: 100%;
+  }
+  /* The combat read-out has few columns; full width spreads them awkwardly, so
+     it shrinks to its content (still scrolls if it ever overflows). The lab and
+     casting grids keep the shared 100% width. */
+  .derived-table.combat {
+    width: auto;
+    max-width: 100%;
   }
   .derived-table th,
   .derived-table td {

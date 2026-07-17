@@ -90,7 +90,7 @@ characteristic-size = Size: { $size }
 # signed numbers; $drops is a positive drop count; $bonus is a signed delta.
 characteristic-effective-tooltip-summary = Bought { $bought }, effective { $effective }.
 characteristic-effective-tooltip-breakdown-label = Includes
-characteristic-effective-tooltip-aging = aging −{ $drops }
+characteristic-effective-tooltip-aging = aging -{ $drops }
 characteristic-effective-tooltip-virtue = Virtue { $bonus }
 # Tab labels for the editor's main area.
 tab-characteristics = Characteristics
@@ -270,13 +270,14 @@ balance-flaws = Flaws: { $used } / { $budget }
 action-save = Save
 action-load = Load
 
-param-prompt = Choose { $param }
-param-placeholder = enter an id
 # Hint shown for an unfilled parameter slot in an item name, e.g. "Puissant (Ability)".
 param-hint = ({ $label })
-# Localized parameter labels, keyed by the engine's parameter key.
+# Localized parameter labels, keyed by the engine's parameter key. Also used as the
+# type-aware placeholder/prompt for an empty parameter input.
 param-label-ability = Ability
 param-label-technique = Technique
+param-label-art = Art
+param-label-focus = Focus
 param-label-area = Area
 param-label-language = Language
 param-label-characteristic = Characteristic
@@ -373,7 +374,6 @@ issue-over_item_level = Enchanted devices total { $used } levels, over the budge
 issue-over_power_levels = Supernatural powers total { $used } levels, over the budget of { $budget } (by { $over }).
 issue-might_realm_mismatch = The entered Might Realm ({ $base }) disagrees with the Realm its Virtues grant ({ $granted }).
 issue-excessive_aging_reduction = The aging drops to { $characteristic } ({ $reduction }) would fall below the minimum score ({ $min }); it is clamped there.
-issue-aging_points_force_drop = { $characteristic } has { $points } aging points, which automatically lowered it by { $drops } to { $score }.
 issue-unknown_equipment = Equipment '{ $item }' does not match any weapon, shield, or armor.
 issue-equipment_min_strength = { $item } needs Strength { $required }, but this character has { $strength }.
 
@@ -382,13 +382,9 @@ issue-equipment_min_strength = { $item } needs Strength { $required }, but this 
 weapon-kind-melee = Melee
 weapon-kind-missile = Missile
 weapon-kind-thrown = Thrown
-equipment-add-label = Add equipment
-equipment-none = Select an item…
 equipment-group-weapons = Weapons
 equipment-group-shields = Shields
 equipment-group-armor = Armor
-equipment-add = Add
-equipment-carried-label = Carried equipment
 equipment-equipped-label = Equipped
 equipment-remove = Remove equipment
 equipment-empty = No equipment.

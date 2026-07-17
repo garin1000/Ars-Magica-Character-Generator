@@ -128,7 +128,7 @@
                   onclick={() => store.removeSelectionAt(index)}
                   data-testid="remove-{selection.ref}-{index}"
                 >
-                  −
+                  -
                 </button>
               {/if}
             </div>

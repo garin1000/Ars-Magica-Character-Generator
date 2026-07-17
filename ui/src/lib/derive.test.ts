@@ -13,8 +13,10 @@ import {
   characteristicPointsUsed,
   displayName,
   filterAbilities,
+  filterEquipment,
   filterItems,
   filterSpells,
+  formatSigned,
   grantedSelectionsForSide,
   groupAbilitiesByCategory,
   groupArtsByType,
@@ -1137,5 +1139,56 @@ describe('groupAbilitySelectionsByCategory', () => {
       { entry: { ability: 'ability.nope', score: 1 }, index: 0 },
     ]);
     expect(groups).toEqual([]);
+  });
+});
+
+describe('filterEquipment', () => {
+  const catalogue = {
+    weapons: {
+      'weapon.axe': { id: 'weapon.axe' },
+      'weapon.long_sword': { id: 'weapon.long_sword' },
+    },
+    shields: { 'shield.round': { id: 'shield.round' } },
+    armor: { 'armor.leather': { id: 'armor.leather' } },
+  };
+  const i18n = {
+    'weapon.axe': { name: 'Axe' },
+    'weapon.long_sword': { name: 'Long Sword' },
+    'shield.round': { name: 'Round Shield' },
+    'armor.leather': { name: 'Leather Scale' },
+  };
+  const rs = makeRuleset([], { i18n });
+
+  it('returns all three kinds (weapons, shields, armor) sorted by localized name', () => {
+    const groups = filterEquipment(rs, catalogue, {});
+    expect(groups.map((g) => g.kind)).toEqual(['weapons', 'shields', 'armor']);
+    expect(groups[0].ids).toEqual(['weapon.axe', 'weapon.long_sword']);
+  });
+
+  it('filters by localized name text across kinds, dropping empty groups', () => {
+    const groups = filterEquipment(rs, catalogue, { text: 'leather' });
+    expect(groups.map((g) => g.kind)).toEqual(['armor']);
+    expect(groups[0].ids).toEqual(['armor.leather']);
+  });
+
+  it('restricts to a single kind when the kind facet is set', () => {
+    const groups = filterEquipment(rs, catalogue, { kind: 'shields' });
+    expect(groups.map((g) => g.kind)).toEqual(['shields']);
+    expect(groups[0].ids).toEqual(['shield.round']);
+  });
+});
+
+describe('formatSigned', () => {
+  it('prefixes positive numbers with a plus', () => {
+    expect(formatSigned(3)).toBe('+3');
+  });
+
+  it('renders zero plain, without a sign', () => {
+    expect(formatSigned(0)).toBe('0');
+  });
+
+  it('uses an ASCII hyphen-minus (U+002D) for negatives, not the math minus U+2212', () => {
+    expect(formatSigned(-2)).toBe('-2');
+    expect(formatSigned(-2)).not.toContain('−');
   });
 });

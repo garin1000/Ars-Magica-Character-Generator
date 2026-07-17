@@ -96,15 +96,19 @@
 
 {#each params as param (param.key)}
   {@const used = usage(param.key)}
+  <!-- The parameter type (Characteristic, Art, Language…) doubles as the empty
+       prompt and the control's accessible name, so no separate label text is
+       needed alongside it. -->
+  {@const typeLabel = store.t(`param-label-${param.key}`)}
   <label class="param">
-    <span>{store.t('param-prompt', { param: store.t(`param-label-${param.key}`) })}</span>
     {#if param.domain === 'characteristic'}
       <select
+        aria-label={typeLabel}
         value={selection.params?.[param.key] ?? ''}
         onchange={(e) => onSelect(param.key, e)}
         data-testid="param-{selection.ref}-{param.key}-{index}"
       >
-        <option value="" disabled>{store.t('param-placeholder')}</option>
+        <option value="" disabled>{typeLabel}</option>
         {#each CHARACTERISTICS as characteristic (characteristic)}
           <option
             value="characteristic.{characteristic}"
@@ -118,11 +122,12 @@
       <!-- Targets a specific ability instance the character holds; add it on the
            Abilities tab first. For (Area) Lore each area is its own target. -->
       <select
+        aria-label={typeLabel}
         value={abilityTargetValue()}
         onchange={onSelectAbility}
         data-testid="param-{selection.ref}-{param.key}-{index}"
       >
-        <option value="" disabled>{store.t('param-placeholder')}</option>
+        <option value="" disabled>{typeLabel}</option>
         {#each abilityInstances as instance (instance.value)}
           <option value={instance.value} disabled={full(usedAbilityTargets, instance.value)}>
             {instance.label}
@@ -133,11 +138,12 @@
       <!-- Targets a Hermetic Art (Puissant Art). Any catalogue Art is a legal
            target; max_per_target keeps the same Art from being picked twice. -->
       <select
+        aria-label={typeLabel}
         value={selection.params?.[param.key] ?? ''}
         onchange={onSelectArt}
         data-testid="param-{selection.ref}-{param.key}-{index}"
       >
-        <option value="" disabled>{store.t('param-placeholder')}</option>
+        <option value="" disabled>{typeLabel}</option>
         {#each artOptions as art (art.value)}
           <option value={art.value} disabled={full(used, art.value)}>
             {art.label}
@@ -147,7 +153,8 @@
     {:else}
       <input
         type="text"
-        placeholder={store.t('param-placeholder')}
+        aria-label={typeLabel}
+        placeholder={typeLabel}
         value={selection.params?.[param.key] ?? ''}
         oninput={(e) =>
           store.setParamAt(index, param.key, (e.currentTarget as HTMLInputElement).value.trim())}

@@ -65,7 +65,7 @@
                   onclick={() => store.adjustArt(art.id, -1, max)}
                   data-testid="art-dec-{art.id}"
                 >
-                  −
+                  -
                 </button>
                 <span class="spinner-value" data-testid="art-score-{art.id}">{score}</span>
                 <button

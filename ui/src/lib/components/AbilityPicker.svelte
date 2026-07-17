@@ -117,26 +117,28 @@
         {/each}
       </select>
     </div>
-    {#each groups as group (group.category)}
-      <h3 class="category">{store.t(`ability-category-${group.category}`)}</h3>
-      <ul class="item-list">
-        {#each group.abilities as ability (ability.id)}
-          <li>
-            <button
-              type="button"
-              class="pick-row"
-              disabled={isDisabled(ability.id)}
-              onclick={() => store.addAbility(ability.id)}
-              use:tooltip={tip(ability.id)}
-              data-testid="add-{ability.id}"
-            >
-              <span class="item-name">{name(ability.id)}</span>
-              <span class="pick-plus" aria-hidden="true">+</span>
-            </button>
-          </li>
-        {/each}
-      </ul>
-    {/each}
+    <div class="list-scroll">
+      {#each groups as group (group.category)}
+        <h3 class="category">{store.t(`ability-category-${group.category}`)}</h3>
+        <ul class="item-list">
+          {#each group.abilities as ability (ability.id)}
+            <li>
+              <button
+                type="button"
+                class="pick-row"
+                disabled={isDisabled(ability.id)}
+                onclick={() => store.addAbility(ability.id)}
+                use:tooltip={tip(ability.id)}
+                data-testid="add-{ability.id}"
+              >
+                <span class="item-name">{name(ability.id)}</span>
+                <span class="pick-plus" aria-hidden="true">+</span>
+              </button>
+            </li>
+          {/each}
+        </ul>
+      {/each}
+    </div>
   {:else}
     <p>{store.t('loading')}</p>
   {/if}

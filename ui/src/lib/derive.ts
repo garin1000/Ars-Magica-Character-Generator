@@ -30,6 +30,17 @@ function normalizeSearch(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 }
 
+/**
+ * Formats a number with an explicit sign for display: `+` for positive, an ASCII
+ * hyphen-minus `-` (U+002D) for negative, and a plain unsigned value for zero.
+ * Single source of truth so signed modifiers render one consistent sign. Uses
+ * the hyphen-minus (not the mathematical minus U+2212) so values stay ASCII —
+ * copy-paste clean and read correctly by assistive tech.
+ */
+export function formatSigned(n: number): string {
+  return n > 0 ? `+${n}` : `${n}`;
+}
+
 /** A `store.t`-shaped translator, threaded in so search can index rendered labels. */
 type Translate = (key: string, args?: Record<string, string>) => string;
 
@@ -136,6 +147,49 @@ export function filterSpells(
     if (filter.level !== undefined && (s.level ?? null) !== filter.level) return false;
     return true;
   });
+}
+
+/** The three equipment catalogue kinds, in display order. */
+export type EquipmentKind = 'weapons' | 'shields' | 'armor';
+
+const EQUIPMENT_KINDS: EquipmentKind[] = ['weapons', 'shields', 'armor'];
+
+/** Facets an equipment catalogue can be filtered by. */
+export interface EquipmentFilter {
+  text?: string;
+  kind?: EquipmentKind;
+}
+
+/** A filtered, name-sorted group of equipment ids of one kind. */
+export interface EquipmentGroup {
+  kind: EquipmentKind;
+  ids: string[];
+}
+
+/**
+ * Equipment is stored as three separate catalogue maps (weapons/shields/armor)
+ * with no shared `kind` field, so this returns per-kind groups (in display
+ * order, empty groups dropped) rather than a flat list. Each group's ids are
+ * free-text filtered over the localized name and sorted by it. Equipment ids
+ * carry no `{param}` placeholder, so `searchHaystack` matches the plain name.
+ */
+export function filterEquipment(
+  localized: LocalizedRuleset,
+  catalogue: Record<EquipmentKind, Record<string, { id: string }>>,
+  filter: EquipmentFilter,
+  t?: Translate,
+): EquipmentGroup[] {
+  const text = filter.text ? normalizeSearch(filter.text) : '';
+  const nameOf = (id: string) => localized.i18n[id]?.name ?? id;
+  return EQUIPMENT_KINDS.filter((kind) => !filter.kind || filter.kind === kind)
+    .map((kind) => ({
+      kind,
+      ids: Object.values(catalogue[kind] ?? {})
+        .map((it) => it.id)
+        .filter((id) => !text || searchHaystack(localized, id, t).includes(text))
+        .sort((a, b) => nameOf(a).localeCompare(nameOf(b))),
+    }))
+    .filter((group) => group.ids.length > 0);
 }
 
 /**

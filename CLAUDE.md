@@ -162,6 +162,12 @@ the `rules/i18n/<lang>/` layer, not in language-neutral `core/`.
 - **Code style enforced.**
   - Rust: `rustfmt` + `clippy` (warnings as errors: `#![deny(clippy::all)]`)
   - Svelte/TS: `prettier` + `eslint`
+- **Negative signs are ASCII hyphens.** Every displayed negative sign (and the
+  minus glyph on decrement/stepper buttons) uses the ASCII hyphen-minus `-`
+  (U+002D), never the mathematical minus `−` (U+2212) — ASCII stays copy-paste
+  clean and reads correctly in assistive tech. `formatSigned(n)` in
+  `ui/src/lib/derive.ts` is the single source of truth for signed values;
+  `.ftl` strings that prepend a sign to a value use the hyphen too.
 - **English** for all code, identifiers, comments, commit messages, and all
   assistant communication (chat responses, PR descriptions, status updates) —
   regardless of the language the user writes in.
