@@ -71,7 +71,11 @@
     {#each groupedScores as group (group.category)}
       <h3 class="category">{store.t(`ability-category-${group.category}`)}</h3>
       <ul class="selection-list ability-selection">
-        {#each group.entries as { entry, index: i } (`${entry.ability}|${entry.parameter ?? ''}`)}
+        <!-- Key by the stable original index, never the mutable parameter/specialty:
+             keying on a value the row's own inputs edit would recreate the input
+             on every keystroke (losing focus, truncating typed area/language names)
+             and collide for two fresh instances that both start blank. -->
+        {#each group.entries as { entry, index: i } (i)}
           {@const key = paramKey(entry.ability)}
           <li>
             <span class="item-name" use:tooltip={tip(entry.ability)}

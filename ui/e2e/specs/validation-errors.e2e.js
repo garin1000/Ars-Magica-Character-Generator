@@ -36,10 +36,13 @@ describe('validation errors', () => {
     const errors = await $$('[data-severity="error"]');
     expect(await errors.length).toBeGreaterThan(0);
 
-    // The message is localized (not the raw code) and names the offending item.
+    // The message is localized (names the offending item, never a raw id or the
+    // i18n key): a raw slug rendered as a label would violate the strict
+    // data-kind separation in CLAUDE.md.
     const firstError = errors[0];
     const text = await firstError.getText();
     expect(text).not.toContain('issue-');
-    expect(text).toContain('flaw.blatant_gift');
+    expect(text).not.toContain('flaw.blatant_gift');
+    expect(text).toContain('Blatant Gift');
   });
 });
