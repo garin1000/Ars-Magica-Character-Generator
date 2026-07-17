@@ -226,7 +226,20 @@ button:disabled {
   align-items: stretch;
 }
 
+/* The picker panel is a fixed-height column: a non-scrolling filter bar on top
+   and the list in a scroll wrapper below it, so the filters stay put while only
+   the list scrolls (they must never overlap the rows). */
 .region-source .panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* The scrolling list area beneath a picker's filter bar. Carries the scroll
+   (and its reserved gutter) that used to live on the panel itself. */
+.list-scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   scrollbar-gutter: stable;
   padding-right: 1.1rem;
@@ -501,20 +514,15 @@ ul {
 }
 
 /* Filter/search bar for long selectable lists (V/F, Abilities, Equipment).
-   Pinned to the top of its scrolling panel so it stays reachable while the list
-   below scrolls. The opaque panel-coloured background (extended over the panel's
-   own padding via the negative margins) hides rows sliding underneath it. */
+   Sits ABOVE the scrolling list (`.list-scroll`) in normal flow — NOT inside the
+   scroll box — so it stays fixed while only the list scrolls and can never
+   overlap the rows. */
 .filter-bar {
-  position: sticky;
-  top: 0;
-  z-index: 3;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  margin: -0.5rem -0.6rem 0.6rem;
-  padding: 0.5rem 0.6rem;
-  background: var(--panel);
+  margin-bottom: 0.6rem;
 }
 
 .filter-search {
@@ -653,31 +661,7 @@ ul {
   font-weight: 600;
 }
 
-/* Equipment picker. A grouping wrapper, the add-row (item select + Add button,
-   spaced so the button never hugs the dropdown), and the carried-items list. */
-.equipment-picker .detail-section {
-  margin-bottom: 1rem;
-}
-
-.equipment-picker .detail-section:last-child {
-  margin-bottom: 0;
-}
-
-.equipment-add-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.75rem;
-}
-
-/* The select field grows to fill the row so the Add button stays at the end. */
-.field.grow {
-  flex: 1 1 16rem;
-}
-
-.field.grow select {
-  width: 100%;
-}
-
+/* Carried-equipment list on the Selected side (name + Equipped checkbox + remove). */
 .equipment-list {
   list-style: none;
   margin: 0;

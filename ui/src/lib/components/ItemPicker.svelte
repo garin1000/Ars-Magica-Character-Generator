@@ -85,35 +85,37 @@
         {store.t('vf-tag-tainted')}
       </label>
     </div>
-    {#each groups as group (group.category)}
-      <h3 class="category">{store.t(`category-${group.category}`)}</h3>
-      <ul class="item-list">
-        {#each group.items as item (item.id)}
-          <li>
-            <button
-              type="button"
-              class="pick-row"
-              disabled={!repeatable(item) && selectedRefs.has(item.id)}
-              onclick={() => store.addSelection(item.id)}
-              use:tooltip={tip(item.id)}
-              data-testid="add-{item.id}"
-            >
-              <span class="name-wrap" use:reserveTagSpace>
-                <span class="badges">
-                  <span class="badge">{store.t(`magnitude-${item.magnitude}`)}</span>
+    <div class="list-scroll">
+      {#each groups as group (group.category)}
+        <h3 class="category">{store.t(`category-${group.category}`)}</h3>
+        <ul class="item-list">
+          {#each group.items as item (item.id)}
+            <li>
+              <button
+                type="button"
+                class="pick-row"
+                disabled={!repeatable(item) && selectedRefs.has(item.id)}
+                onclick={() => store.addSelection(item.id)}
+                use:tooltip={tip(item.id)}
+                data-testid="add-{item.id}"
+              >
+                <span class="name-wrap" use:reserveTagSpace>
+                  <span class="badges">
+                    <span class="badge">{store.t(`magnitude-${item.magnitude}`)}</span>
+                  </span>
+                  <span class="item-name">
+                    {displayName(store.ruleset, item.id, undefined, (key) =>
+                      store.t('param-hint', { label: store.t(`param-label-${key}`) }),
+                    )}
+                  </span>
                 </span>
-                <span class="item-name">
-                  {displayName(store.ruleset, item.id, undefined, (key) =>
-                    store.t('param-hint', { label: store.t(`param-label-${key}`) }),
-                  )}
-                </span>
-              </span>
-              <span class="pick-plus" aria-hidden="true">+</span>
-            </button>
-          </li>
-        {/each}
-      </ul>
-    {/each}
+                <span class="pick-plus" aria-hidden="true">+</span>
+              </button>
+            </li>
+          {/each}
+        </ul>
+      {/each}
+    </div>
   {:else}
     <p>{store.t('loading')}</p>
   {/if}

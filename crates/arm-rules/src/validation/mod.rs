@@ -142,7 +142,6 @@ impl fmt::Display for IssueSeverity {
 /// | `over_power_levels` | error | `used`, `budget`, `over` |
 /// | `might_realm_mismatch` | warning | `base`, `granted` |
 /// | `excessive_aging_reduction` | warning | `characteristic`, `reduction`, `min` |
-/// | `aging_points_force_drop` | warning | `characteristic`, `points`, `drops`, `score` |
 /// | `unknown_equipment` | error | `item` |
 /// | `equipment_min_strength` | warning | `item`, `required`, `strength` |
 ///
@@ -351,11 +350,6 @@ impl ValidationIssue {
     /// the rules effective minimum (−5). Advisory — the engine still clamps the
     /// derived score at the floor (Core:16579).
     pub const CODE_EXCESSIVE_AGING_REDUCTION: &'static str = "excessive_aging_reduction";
-    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a Characteristic's
-    /// accrued aging points exceed the magnitude of its (aged-down) score, which
-    /// per the rules should already have forced a drop. Non-blocking: the user may
-    /// be entering a character mid-accrual (Core:16579).
-    pub const CODE_AGING_POINTS_FORCE_DROP: &'static str = "aging_points_force_drop";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: an equipment slot names an
     /// id that does not resolve to any catalogue weapon, shield, or armor
     /// (Core:16944-17011).
@@ -1604,7 +1598,6 @@ mod tests {
         let result = validate(&entity, &rs);
         let codes = all_codes(&result);
         assert!(!codes.contains(&ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION.to_string()));
-        assert!(!codes.contains(&ValidationIssue::CODE_AGING_POINTS_FORCE_DROP.to_string()));
     }
 
     /// Derived drops that would drive the effective Characteristic below the rules
@@ -1629,17 +1622,19 @@ mod tests {
         );
     }
 
-    /// Accrued points that force a drop raise the informational auto-applied note
-    /// but never block.
+    /// Accrued points that force a drop (but stay above the floor) raise NO aging
+    /// advisory — the auto-applied drop is not surfaced as validation noise — and
+    /// never block. The excessive-reduction warning only fires below the floor.
     #[test]
-    fn aging_points_forcing_a_drop_note_is_nonblocking() {
+    fn aging_points_forcing_a_drop_raise_no_note() {
         let rs = aging_ruleset();
         let mut entity = make_entity("companion", vec![]);
         entity.characteristics.insert(Characteristic::Sta, 1);
-        entity.aging_points.insert(Characteristic::Sta, 3); // 3 > |1| → drops
+        entity.aging_points.insert(Characteristic::Sta, 3); // 3 > |1| → drops, but above −5
         let result = validate(&entity, &rs);
         assert!(
-            all_codes(&result).contains(&ValidationIssue::CODE_AGING_POINTS_FORCE_DROP.to_string())
+            !all_codes(&result)
+                .contains(&ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION.to_string())
         );
         assert!(
             result.errors().next().is_none(),

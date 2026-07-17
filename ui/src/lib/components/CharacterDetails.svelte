@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { formatSigned } from '../derive';
   import { CHARACTERISTICS, type Characteristic } from '../types';
 
   const age = $derived(store.entity.age ?? null);
@@ -248,10 +249,10 @@
                 onclick={() => store.setPersonalityTraitValue(i, trait.value - 1)}
                 data-testid="personality-dec-{i}"
               >
-                −
+                -
               </button>
               <span class="spinner-value" data-testid="personality-value-{i}">
-                {trait.value > 0 ? `+${trait.value}` : trait.value}
+                {formatSigned(trait.value)}
               </span>
               <button
                 type="button"

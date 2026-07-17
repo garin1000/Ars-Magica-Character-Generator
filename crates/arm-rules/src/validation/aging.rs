@@ -9,12 +9,13 @@ use super::*;
 /// drops are DERIVED from [`Entity::aging_points`] (Core Rules.md:16579); this
 /// only surfaces informational notes, never blocking errors:
 ///
-/// - `aging_points_force_drop`: a Characteristic's accrued points have forced one
-///   or more drops, which the engine has already applied to its effective score.
-///   An informational note (the drop is automatic, not an entry mistake).
 /// - `excessive_aging_reduction`: the derived drops would push a Characteristic's
 ///   effective score below the rules effective minimum (−5). The derived score is
 ///   clamped regardless; this only flags an implausible entry.
+///
+/// (An earlier `aging_points_force_drop` note announcing each auto-applied drop
+/// was removed as validation noise — the drop is automatic and already reflected
+/// in the effective score, so it is not an entry problem worth flagging.)
 ///
 /// Reads the un-aged bought score plus the derived drops; it never touches the
 /// point-buy budget check (which is what keeps aging from perturbing creation
@@ -46,18 +47,6 @@ pub(crate) fn validate_aging(
             continue;
         }
         let aged = bought(characteristic) - i32::try_from(drops).unwrap_or(i32::MAX);
-
-        // Informational: the accrued points have auto-applied one or more drops.
-        issues.push(ValidationIssue::warning(
-            ValidationIssue::CODE_AGING_POINTS_FORCE_DROP,
-            args([
-                ("characteristic", characteristic.to_string()),
-                ("points", points.to_string()),
-                ("drops", drops.to_string()),
-                ("score", aged.to_string()),
-            ]),
-            None,
-        ));
 
         // The aged-down score would fall below the rules floor (clamped anyway).
         if let Some(min) = effective_min

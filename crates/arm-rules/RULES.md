@@ -854,13 +854,14 @@ creation-legality validators keep reading the **un-aged bought score** from
 `entity.characteristics`, so entering an aged-down character can never
 retroactively make its point-buy illegal. Source: `:16579`, `:16613`.
 
-**Validation (advisory, single path).** `validation.rs::validate_aging` emits two
-**warnings** (never blocking), per Characteristic whose accrued points force a drop:
-`aging_points_force_drop` — informational, noting the drop the engine auto-applied
-(args `characteristic`, `points`, `drops`, `score`); and `excessive_aging_reduction`
-— when the derived drops would push the score below the −5 floor (it is clamped
-regardless). Fluent keys `issue-{excessive_aging_reduction,aging_points_force_drop}`
-(en/de).
+**Validation (advisory, single path).** `validation.rs::validate_aging` emits one
+**warning** (never blocking), per Characteristic whose accrued points force a drop:
+`excessive_aging_reduction` — when the derived drops would push the score below the
+−5 floor (it is clamped regardless; args `characteristic`, `reduction`, `min`).
+Fluent key `issue-excessive_aging_reduction` (en/de). (An earlier
+`aging_points_force_drop` note announcing each auto-applied drop was removed as
+validation noise — the drop is automatic and already reflected in the effective
+score, so it is not an entry problem worth flagging.)
 
 App/UI: `EffectiveScores` gains `decrepitude_score: u8` and widens `warping_points`
 to `u32`; the Details tab (`CharacterDetails.svelte`) enters identity fields, aging

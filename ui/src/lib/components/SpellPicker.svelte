@@ -192,7 +192,7 @@
                 onclick={() => store.adjustSpellMasteryAt(i, -1, masteryMax)}
                 data-testid="spell-mastery-dec-{chosen.spell}-{i}"
               >
-                −
+                -
               </button>
               <span class="spinner-value" data-testid="spell-mastery-score-{chosen.spell}-{i}">
                 {chosen.mastery ?? 0}
@@ -223,7 +223,7 @@
             onclick={() => store.removeSpellAt(i)}
             data-testid="spell-remove-{chosen.spell}-{i}"
           >
-            −
+            -
           </button>
         </li>
       {/each}

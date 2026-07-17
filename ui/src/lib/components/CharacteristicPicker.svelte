@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { characteristicPointsUsed } from '../derive';
+  import { characteristicPointsUsed, formatSigned } from '../derive';
   import { tooltip } from '../actions';
   import { CHARACTERISTICS, type Characteristic } from '../types';
 
@@ -43,10 +43,6 @@
     store.setCharacteristic(characteristic, next);
   }
 
-  function fmt(score: number): string {
-    return score > 0 ? `+${score}` : `${score}`;
-  }
-
   // Effective score after aging drops AND free virtue deltas. Falls back to the
   // bought score when the engine reports no change — the engine owns the floor
   // clamp, so the UI never re-implements it.
@@ -78,12 +74,12 @@
       list.push(store.t('characteristic-effective-tooltip-aging', { drops: String(drops) }));
     }
     if (bonus !== 0) {
-      list.push(store.t('characteristic-effective-tooltip-virtue', { bonus: fmt(bonus) }));
+      list.push(store.t('characteristic-effective-tooltip-virtue', { bonus: formatSigned(bonus) }));
     }
     return {
       text: store.t('characteristic-effective-tooltip-summary', {
-        bought: fmt(scoreOf(characteristic)),
-        effective: fmt(effectiveOf(characteristic)),
+        bought: formatSigned(scoreOf(characteristic)),
+        effective: formatSigned(effectiveOf(characteristic)),
       }),
       listLabel: store.t('characteristic-effective-tooltip-breakdown-label'),
       list,
@@ -115,15 +111,15 @@
             onclick={() => adjust(characteristic, -1)}
             data-testid="char-dec-{characteristic}"
           >
-            −
+            -
           </button>
           <span class="spinner-value" data-testid="char-value-{characteristic}">
-            {fmt(scoreOf(characteristic))}
+            {formatSigned(scoreOf(characteristic))}
             {#if effectiveOf(characteristic) !== scoreOf(characteristic)}<span
                 class="eff-badge char-effective"
                 data-testid="char-effective-{characteristic}"
                 use:tooltip={effectiveTooltip(characteristic)}
-                >→ {fmt(effectiveOf(characteristic))}</span
+                >→ {formatSigned(effectiveOf(characteristic))}</span
               >{/if}
           </span>
           <button
@@ -153,7 +149,7 @@
     </div>
     {#if size !== 0}
       <p class="size-readout" data-testid="characteristic-size">
-        {store.t('characteristic-size', { size: fmt(size) })}
+        {store.t('characteristic-size', { size: formatSigned(size) })}
       </p>
     {/if}
   {:else}

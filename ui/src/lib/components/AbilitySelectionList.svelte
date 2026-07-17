@@ -86,7 +86,7 @@
                 onclick={() => store.adjustAbilityAt(i, -1, max)}
                 data-testid="ability-dec-{entry.ability}-{i}"
               >
-                −
+                -
               </button>
               <span class="spinner-value" data-testid="ability-score-{entry.ability}-{i}">
                 {entry.score}
