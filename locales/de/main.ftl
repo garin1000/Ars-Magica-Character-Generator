@@ -160,6 +160,11 @@ item-levels-readout = { $levels } Stufen
 # Identitäts-/Hintergrundfelder (Freitext, keine mechanische Wirkung).
 identity-label = Identität
 identity-name = Name
+identity-name-placeholder = Charaktername
+identity-description = Kurzbeschreibung
+identity-description-placeholder = z. B. Ritter des Deutschen Ordens, Kreuzfahrer im IV. Kreuzzug
+identity-concept = Konzept
+identity-concept-placeholder = Beschreibe das Charakterkonzept
 identity-gender = Geschlecht
 identity-birth-year = Geburtsjahr
 identity-sigil = Signum

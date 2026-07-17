@@ -789,7 +789,7 @@ class AppStore {
 
   /** Set a free-text identity/flavor field (no mechanical effect). */
   setIdentity(
-    field: 'name' | 'gender' | 'sigil' | 'covenant_name' | 'parens',
+    field: 'name' | 'description' | 'concept' | 'gender' | 'sigil' | 'covenant_name' | 'parens',
     value: string,
   ): void {
     this.entity[field] = value;

@@ -6,7 +6,9 @@ import { $, expect } from '@wdio/globals';
 
 describe('characteristic cap + ability bonus', () => {
   it('Great Characteristic opens the cap, Puissant shows a badge', async () => {
-    // Characteristics is the default tab; raise Strength to its base cap of +3.
+    // Open the Characteristics tab; raise Strength to its base cap of +3.
+    await $('[data-testid="tab-characteristics"]').waitForExist({ timeout: 30000 });
+    await $('[data-testid="tab-characteristics"]').click();
     const strInc = await $('[data-testid="char-inc-str"]');
     await strInc.waitForExist({ timeout: 30000 });
     await strInc.click();

@@ -11,8 +11,10 @@ const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
 
 describe('character editor', () => {
   it('edits across tabs, validates, and round-trips a save', async () => {
-    // Characteristics is the default tab; its spinner appearing means the ruleset
+    // Open the Characteristics tab; its spinner appearing means the ruleset
     // has loaded.
+    await $('[data-testid="tab-characteristics"]').waitForExist({ timeout: 30000 });
+    await $('[data-testid="tab-characteristics"]').click();
     const intInc = await $('[data-testid="char-inc-int"]');
     await intInc.waitForExist({ timeout: 30000 });
 

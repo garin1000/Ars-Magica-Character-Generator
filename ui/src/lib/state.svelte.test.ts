@@ -475,9 +475,13 @@ describe('aged / warped state + identity', () => {
 
   it('sets free-text identity fields and birth year', () => {
     store.setIdentity('name', 'Marcus');
+    store.setIdentity('description', 'Knight of the Teutonic Order');
+    store.setIdentity('concept', 'A grim knight turned magus.');
     store.setIdentity('sigil', 'the smell of ozone');
     store.setBirthYear(1194);
     expect(store.entity.name).toBe('Marcus');
+    expect(store.entity.description).toBe('Knight of the Teutonic Order');
+    expect(store.entity.concept).toBe('A grim knight turned magus.');
     expect(store.entity.sigil).toBe('the smell of ozone');
     expect(store.entity.birth_year).toBe(1194);
     store.setBirthYear(null);

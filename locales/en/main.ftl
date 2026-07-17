@@ -161,6 +161,11 @@ item-levels-readout = { $levels } levels
 # Identity / flavor fields (free-text, no mechanical effect).
 identity-label = Identity
 identity-name = Name
+identity-name-placeholder = Character name
+identity-description = Short description
+identity-description-placeholder = e.g. Knight of the Teutonic Order, Crusader in the IVth Crusade
+identity-concept = Concept
+identity-concept-placeholder = Describe the character concept
 identity-gender = Gender
 identity-birth-year = Birth year
 identity-sigil = Wizard's sigil

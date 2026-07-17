@@ -56,6 +56,7 @@
     !isMagus && (hasMythicType || (store.effective?.might ?? null) !== null),
   );
   const tabs = $derived<{ id: Tab; key: string }[]>([
+    { id: 'details', key: 'tab-details' },
     { id: 'characteristics', key: 'tab-characteristics' },
     { id: 'virtues_flaws', key: 'tab-virtues-flaws' },
     { id: 'abilities', key: 'tab-abilities' },
@@ -72,16 +73,15 @@
     // Equipment, Age, Confidence, Personality Traits and Reputations apply to
     // every type (grogs especially carry weapons and armor).
     { id: 'equipment', key: 'tab-equipment' },
-    { id: 'details', key: 'tab-details' },
     // The derived play-stat read-out applies to every type (read-only totals).
     { id: 'totals', key: 'tab-totals' },
   ]);
-  let tab = $state<Tab>('characteristics');
+  let tab = $state<Tab>('details');
 
   // If the active tab disappears (e.g. switching away from magus on the Arts
   // tab), fall back to Characteristics so the content area is never blank.
   $effect(() => {
-    if (!tabs.some((t) => t.id === tab)) tab = 'characteristics';
+    if (!tabs.some((t) => t.id === tab)) tab = 'details';
   });
 
   onMount(() => {
@@ -106,6 +106,25 @@
     <SaveLoadBar />
   </div>
 </header>
+
+<section class="char-banner">
+  <input
+    class="name-input"
+    value={store.entity.name ?? ''}
+    oninput={(e) => store.setIdentity('name', (e.currentTarget as HTMLInputElement).value)}
+    placeholder={store.t('identity-name-placeholder')}
+    aria-label={store.t('identity-name')}
+    data-testid="identity-name"
+  />
+  <input
+    class="desc-input"
+    value={store.entity.description ?? ''}
+    oninput={(e) => store.setIdentity('description', (e.currentTarget as HTMLInputElement).value)}
+    placeholder={store.t('identity-description-placeholder')}
+    aria-label={store.t('identity-description')}
+    data-testid="identity-description"
+  />
+</section>
 
 <div class="tabbar" role="tablist">
   {#each tabs as t (t.id)}

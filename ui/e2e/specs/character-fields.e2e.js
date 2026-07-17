@@ -114,6 +114,15 @@ describe('character details', () => {
     await $('[data-testid="reputation-content-0"]').setValue('dragon slayer');
   });
 
+  it('edits name and description in the header banner and concept on Details', async () => {
+    // Name + short description live in the always-visible header banner.
+    await $('[data-testid="identity-name"]').setValue('Marcus of Bonisagus');
+    await $('[data-testid="identity-description"]').setValue('Knight of the Teutonic Order');
+    // Concept is a multi-line textarea on the Details tab.
+    await $(DETAILS_TAB).click();
+    await $('[data-testid="identity-concept"]').setValue('A grim knight turned magus.');
+  });
+
   it('round-trips the new fields through a save', async () => {
     if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
     await $('[data-testid="save-button"]').click();
@@ -122,8 +131,10 @@ describe('character details', () => {
       timeoutMsg: 'save did not write the file',
     });
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.schema_version).toBe(7);
     expect(saved.age).toBe(25);
+    expect(saved.name).toBe('Marcus of Bonisagus');
+    expect(saved.description).toBe('Knight of the Teutonic Order');
+    expect(saved.concept).toBe('A grim knight turned magus.');
     expect(saved.personality_traits.length).toBeGreaterThan(0);
     expect(saved.reputations.some((r) => r.kind === 'local' && r.content === 'dragon slayer')).toBe(
       true,

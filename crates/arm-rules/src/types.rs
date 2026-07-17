@@ -1953,6 +1953,13 @@ pub struct Entity {
     /// The character's name (free-text; no mechanical effect).
     #[serde(default, skip_serializing_if = "is_empty_str")]
     pub name: String,
+    /// A short one-line description / tagline, e.g. "Knight of the Teutonic
+    /// Order" (free-text; no mechanical effect).
+    #[serde(default, skip_serializing_if = "is_empty_str")]
+    pub description: String,
+    /// A longer free-text character concept (free-text; no mechanical effect).
+    #[serde(default, skip_serializing_if = "is_empty_str")]
+    pub concept: String,
     /// The character's gender (free-text; no mechanical effect).
     #[serde(default, skip_serializing_if = "is_empty_str")]
     pub gender: String,
@@ -2028,6 +2035,8 @@ impl Entity {
             warping_points: 0,
             twilight_scars: Vec::new(),
             name: String::new(),
+            description: String::new(),
+            concept: String::new(),
             gender: String::new(),
             birth_year: None,
             sigil: String::new(),
@@ -2809,6 +2818,8 @@ mod tests {
             warping_points: 0,
             twilight_scars: Vec::new(),
             name: String::new(),
+            description: String::new(),
+            concept: String::new(),
             gender: String::new(),
             birth_year: None,
             sigil: String::new(),
@@ -2945,6 +2956,8 @@ mod tests {
             warping_points: 0,
             twilight_scars: Vec::new(),
             name: String::new(),
+            description: String::new(),
+            concept: String::new(),
             gender: String::new(),
             birth_year: None,
             sigil: String::new(),
@@ -3214,6 +3227,9 @@ mod tests {
             description: "Eyes glow faintly in the dark".into(),
         }];
         entity.name = "Marcus".into();
+        entity.description = "Knight of the Teutonic Order, Crusader".into();
+        entity.concept =
+            "A grim knight who turned to the Order of Hermes\nafter the crusade.".into();
         entity.gender = "male".into();
         entity.birth_year = Some(1194);
         entity.sigil = "the smell of ozone".into();
@@ -3226,7 +3242,20 @@ mod tests {
         assert!(json.contains(r#""schema_version": 10"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
+        assert!(json.contains(r#""description": "Knight of the Teutonic Order, Crusader""#));
         assert!(json.contains(r#""birth_year": 1194"#));
+
+        // A save lacking the new free-text fields still loads (additive, defaulted).
+        let without = r#"{
+          "schema_version": 10,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "name": "Marcus"
+        }"#;
+        let loaded: Entity = serde_json::from_str(without).unwrap();
+        assert_eq!(loaded.description, "");
+        assert_eq!(loaded.concept, "");
     }
 
     /// A legacy save carrying `aging_reductions` migrates: the completed drops are
