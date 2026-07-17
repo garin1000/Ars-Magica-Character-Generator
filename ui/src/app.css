@@ -134,6 +134,64 @@ button:disabled {
   border-bottom-color: var(--accent);
 }
 
+/* Character name + short description, edited in place between the app header
+   and the tab bar. Borderless until hovered/focused so they read as text. */
+.char-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 1.5rem;
+  border-bottom: 1px solid #38355a;
+}
+
+.char-banner .name-input,
+.char-banner .desc-input {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.2rem 0.4rem;
+  color: var(--ink);
+  width: 100%;
+  max-width: 40rem;
+}
+
+.char-banner .name-input {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.char-banner .desc-input {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.char-banner .name-input:hover,
+.char-banner .desc-input:hover,
+.char-banner .name-input:focus,
+.char-banner .desc-input:focus {
+  border-color: #423f63;
+  background: var(--panel);
+}
+
+.char-banner .name-input::placeholder,
+.char-banner .desc-input::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+/* Multi-line character concept in the Details tab. */
+.concept-input {
+  font: inherit;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #423f63;
+  background: var(--panel);
+  color: var(--ink);
+  resize: vertical;
+  min-height: 3.5rem;
+  width: 100%;
+}
+
 /* The tabbed main area: one concept at a time, bound to the viewport so the gold
    Selected frame can fill the full available height. Content is centered when it
    doesn't use the full width (e.g. the Characteristics block). */

@@ -877,6 +877,10 @@ export interface Entity {
   twilight_scars?: TwilightScar[];
   // Identity / flavor fields (free-text, no mechanical effect). Omitted when empty.
   name?: string;
+  // Short one-line tagline shown under the name in the header banner.
+  description?: string;
+  // Longer free-text character concept (edited in the Details tab).
+  concept?: string;
   gender?: string;
   birth_year?: number | null;
   sigil?: string;

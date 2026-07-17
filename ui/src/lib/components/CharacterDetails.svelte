@@ -56,12 +56,16 @@
     <div class="detail-section">
       <h3 class="detail-label">{store.t('identity-label')}</h3>
       <label class="field">
-        <span>{store.t('identity-name')}</span>
-        <input
-          value={store.entity.name ?? ''}
-          oninput={(e) => store.setIdentity('name', (e.currentTarget as HTMLInputElement).value)}
-          data-testid="identity-name"
-        />
+        <span>{store.t('identity-concept')}</span>
+        <textarea
+          class="concept-input"
+          rows="3"
+          value={store.entity.concept ?? ''}
+          oninput={(e) =>
+            store.setIdentity('concept', (e.currentTarget as HTMLTextAreaElement).value)}
+          placeholder={store.t('identity-concept-placeholder')}
+          data-testid="identity-concept"
+        ></textarea>
       </label>
       <label class="field">
         <span>{store.t('identity-gender')}</span>
