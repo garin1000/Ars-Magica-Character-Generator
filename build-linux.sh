@@ -46,8 +46,10 @@ rm -rf "dist-linux"
 mkdir -p "$STAGE/rules"
 cp "target/release/arm-app" "$STAGE/arm-char-gen"
 chmod +x "$STAGE/arm-char-gen"
-# A non-bundled binary resolves BaseDirectory::Resource to its own directory, so
-# the rules data the app loads at startup must sit next to the executable.
+# The rules data the app loads at startup must sit next to the executable: a
+# portable Linux binary does NOT resolve BaseDirectory::Resource to its own
+# directory (Tauri falls back to /usr/lib/<name> there), so load_ruleset also
+# looks in ./rules next to the exe — which is where this stages it.
 cp -R "rules/core" "$STAGE/rules/core"
 cp -R "rules/i18n" "$STAGE/rules/i18n"
 
