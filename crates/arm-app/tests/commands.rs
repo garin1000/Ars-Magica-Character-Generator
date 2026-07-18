@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use arm_app::error::AppError;
 use arm_app::ruleset_io::{
     RULESET_ID, RULESET_VERSION, effective_scores_loaded, load_entity_from_path,
-    load_ruleset_from_dir, save_entity_to_path, validate_loaded,
+    load_ruleset_from_dir, pick_rules_dir, save_entity_to_path, validate_loaded,
 };
 use arm_rules::{ArtScore, Entity, Id, Ruleset, Selection, ValidationMode};
 use pretty_assertions::assert_eq;
@@ -175,6 +175,22 @@ fn sample_entity_with_characteristics_and_abilities_validates() {
 fn load_ruleset_missing_language_is_io_error() {
     let err = load_ruleset_from_dir(&rules_dir(), "xx").unwrap_err();
     assert!(matches!(err, AppError::Io { .. }), "got {err:?}");
+}
+
+#[test]
+fn pick_rules_dir_returns_first_candidate_that_holds_rules() {
+    // A portable Linux build's `BaseDirectory::Resource` points at a system path
+    // that does not exist; the picker must skip it and fall back to the real
+    // directory next to the executable.
+    let empty = tempfile::tempdir().unwrap();
+    let picked = pick_rules_dir(&[empty.path().to_path_buf(), rules_dir()]);
+    assert_eq!(picked, Some(rules_dir()));
+}
+
+#[test]
+fn pick_rules_dir_is_none_when_no_candidate_holds_rules() {
+    let empty = tempfile::tempdir().unwrap();
+    assert_eq!(pick_rules_dir(&[empty.path().to_path_buf()]), None);
 }
 
 #[test]

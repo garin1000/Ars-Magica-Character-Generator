@@ -29,12 +29,32 @@ pub fn load_ruleset(
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> Result<LocalizedRuleset, AppError> {
-    let rules_dir = app
-        .path()
-        .resolve("rules", BaseDirectory::Resource)
-        .map_err(|e| AppError::Io {
-            message: e.to_string(),
-        })?;
+    // Where the rules live depends on how the app was launched. For a dev run or
+    // an installed bundle, `BaseDirectory::Resource` points at the right place;
+    // for a portable Linux build it resolves to a nonexistent system path
+    // (`/usr/lib/<name>`), so the directory next to the executable is the real
+    // location. Offer both and let `pick_rules_dir` choose whichever exists.
+    let mut candidates = Vec::new();
+    if let Ok(resource) = app.path().resolve("rules", BaseDirectory::Resource) {
+        candidates.push(resource);
+    }
+    if let Some(exe_dir) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(std::path::Path::to_path_buf))
+    {
+        candidates.push(exe_dir.join("rules"));
+    }
+
+    let rules_dir = ruleset_io::pick_rules_dir(&candidates).ok_or_else(|| AppError::Io {
+        message: format!(
+            "rules directory not found; looked in: {}",
+            candidates
+                .iter()
+                .map(|c| c.display().to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    })?;
 
     let localized = ruleset_io::load_ruleset_from_dir(&rules_dir, &lang)?;
 

@@ -53,9 +53,11 @@ export const config = {
   // Build the PRODUCTION binary (embedded frontend assets, no dev server), then
   // stage the rules resources beside it. `cargo tauri build` runs in production
   // mode and skips installers with --no-bundle; a plain `cargo build` would run
-  // the app in dev mode (loading the Vite dev URL). The app resolves rules via
-  // `BaseDirectory::Resource`, which for a non-bundled binary is the exe dir, so
-  // the resources are copied to `target/release/rules`.
+  // the app in dev mode (loading the Vite dev URL). Here the binary lives under
+  // target/ (a cargo output dir), so `BaseDirectory::Resource` resolves to the
+  // exe dir and finds `target/release/rules`. NOTE: this is NOT the portable
+  // path — a binary shipped outside target/ resolves Resource to /usr/lib/<name>
+  // and relies on load_ruleset's exe-dir fallback (see commands.rs).
   onPrepare: () => {
     const build = spawnSync('cargo', ['tauri', 'build', '--no-bundle'], {
       cwd: path.resolve(repoRoot, 'crates/arm-app'),

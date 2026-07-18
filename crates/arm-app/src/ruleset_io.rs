@@ -256,6 +256,23 @@ pub fn ensure_extension(path: PathBuf, ext: &str) -> PathBuf {
 pub const RULESET_ID: &str = "arm5-core";
 pub const RULESET_VERSION: &str = "2024.1";
 
+/// Given ordered candidate rules directories, returns the first one that
+/// actually holds the rules data, or `None` when none do.
+///
+/// Tauri's `BaseDirectory::Resource` does not resolve to the executable's own
+/// directory for a portable Linux build: `resource_dir` there falls back to a
+/// system path (`/usr/lib/<name>`) that a portable extract never populates. So
+/// the command offers both the resource path and the directory next to the
+/// executable as candidates and lets this pick whichever is real. A candidate is
+/// considered valid when it contains `core/character_types.json`, a required
+/// rules file.
+pub fn pick_rules_dir(candidates: &[PathBuf]) -> Option<PathBuf> {
+    candidates
+        .iter()
+        .find(|dir| dir.join("core/character_types.json").is_file())
+        .cloned()
+}
+
 /// Loads the shipped ruleset for `lang` from a rules directory laid out as
 /// `core/*.json` + `i18n/<lang>/*.json`, parsing and integrity-checking it via
 /// the engine. Returns the ruleset paired with localized display text.
