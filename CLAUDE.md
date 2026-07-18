@@ -244,9 +244,21 @@ cd ui && npm run test:unit
 # Full Tauri dev build
 cargo tauri dev
 
-# E2E tests (headless)
+# E2E tests (wdio + tauri-driver, drives the REAL release binary)
 cd ui && npm run test:e2e
 ```
+
+**E2E tests ARE runnable in this environment — do not skip them.** Every
+requirement is already installed and satisfied: `tauri-driver`
+(`~/.cargo/bin/tauri-driver`), `WebKitWebDriver` (`/usr/bin/WebKitWebDriver`),
+and a live display (`DISPLAY` is set — the run is **headful**, not headless).
+Never assume "no display / headless isn't possible" and skip the e2e suite; it
+runs headful here today. It is the only layer that exercises the shipped
+production binary through real IPC + bundled rules resources, so run it when a
+change touches the app's runtime behavior. To test a **portable** layout
+specifically (rules resolution differs — see `crates/arm-app/src/commands.rs`),
+stage the binary + `rules/` OUTSIDE any `target/` dir and point a wdio config at
+it; the standard suite runs from `target/release` and does not cover that path.
 
 ### Required gate (must pass before any commit / "done" claim)
 
