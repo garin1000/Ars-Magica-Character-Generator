@@ -275,6 +275,12 @@ balance-flaws = Fehler: { $used } / { $budget }
 action-save = Speichern
 action-load = Laden
 
+# Bestätigung beim Schließen oder Beenden der Anwendung mit ungespeicherten Änderungen.
+close-unsaved-title = Ungespeicherte Änderungen
+close-unsaved-message = Dieser Charakter hat ungespeicherte Änderungen. Wenn du jetzt schließt, gehen sie verloren.
+close-unsaved-discard = Verwerfen und schließen
+close-unsaved-cancel = Abbrechen
+
 # Hinweis für einen nicht ausgefüllten Parameter-Platzhalter im Namen, z. B. „Begabung in (Fertigkeit)“.
 param-hint = ({ $label })
 # Lokalisierte Parameter-Bezeichnungen, je Parameter-Schlüssel der Engine. Dienen auch

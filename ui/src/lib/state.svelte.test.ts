@@ -34,9 +34,11 @@ vi.mock('./ipc', () => ({
   }),
   saveEntity: vi.fn(),
   loadEntity: vi.fn(),
+  updateCloseGuard: vi.fn(),
 }));
 
 // Import the singleton after the mock is registered.
+import * as ipc from './ipc';
 import { store, defaultPickerFilters } from './state.svelte';
 
 // --- Fixtures ---------------------------------------------------------------
@@ -1036,5 +1038,109 @@ describe('setMythicType / required package', () => {
     await store.setMythicRequiredFlaw('flaw.default_major', 'flaw.other_major');
     expect(store.entity.selections.some((s) => s.ref === 'flaw.default_major')).toBe(false);
     expect(store.entity.selections).toContainEqual({ ref: 'flaw.other_major' });
+  });
+});
+
+// --- unsaved-changes tracking (close/quit guard) ----------------------------
+
+describe('unsaved-changes tracking', () => {
+  /** A full, minimal character used as a freshly-loaded (clean) baseline. */
+  function cleanEntity(): Entity {
+    return {
+      schema_version: 7,
+      ruleset: { id: 'test', version: '1' },
+      entity_kind: 'character',
+      type_id: 'companion',
+      selections: [],
+      characteristics: {} as Entity['characteristics'],
+      characteristic_descriptions: {},
+      ability_scores: [],
+      xp_pool: 0,
+      art_scores: [],
+      personality_traits: [],
+      reputations: [],
+    };
+  }
+
+  /** Drive a real load so the store captures a clean saved-baseline. */
+  async function loadClean(): Promise<void> {
+    vi.mocked(ipc.loadEntity).mockResolvedValue(cleanEntity());
+    await store.load();
+  }
+
+  it('is not dirty once a file has just been loaded', async () => {
+    await loadClean();
+    expect(store.dirty).toBe(false);
+  });
+
+  it('becomes dirty after any mutation', async () => {
+    await loadClean();
+    store.setIdentity('name', 'Marcus of Bonisagus');
+    expect(store.dirty).toBe(true);
+  });
+
+  it('clears dirty after a successful save (non-null path)', async () => {
+    await loadClean();
+    store.setIdentity('name', 'Marcus');
+    expect(store.dirty).toBe(true);
+
+    vi.mocked(ipc.saveEntity).mockResolvedValue('/tmp/marcus.armc');
+    await store.save();
+    expect(store.dirty).toBe(false);
+  });
+
+  it('stays dirty after a cancelled save (null return)', async () => {
+    await loadClean();
+    store.setIdentity('name', 'Marcus');
+
+    vi.mocked(ipc.saveEntity).mockResolvedValue(null);
+    await store.save();
+    expect(store.dirty).toBe(true);
+  });
+
+  it('stays dirty after a language reload that keeps the edited entity', async () => {
+    await loadClean();
+    store.setIdentity('name', 'Marcus');
+    expect(store.dirty).toBe(true);
+
+    // setLang → #reloadRuleset(false): keeps the entity, must NOT clear dirty.
+    vi.mocked(ipc.loadRuleset).mockResolvedValue(installRuleset([]));
+    await store.setLang('de');
+    expect(store.dirty).toBe(true);
+  });
+
+  it('keeps edits made while the save dialog is open marked dirty', async () => {
+    await loadClean();
+    store.setIdentity('name', 'Marcus');
+
+    // Model a slow native dialog: capture the snapshot at call time, resolve later.
+    let resolveSave: (path: string | null) => void = () => {};
+    vi.mocked(ipc.saveEntity).mockReturnValue(
+      new Promise<string | null>((resolve) => {
+        resolveSave = resolve;
+      }),
+    );
+    const saving = store.save();
+    // User keeps typing while the dialog is open.
+    store.setIdentity('name', 'Marcus of Bonisagus');
+    resolveSave('/tmp/marcus.armc');
+    await saving;
+
+    // The write captured the earlier state, so the newer edit is still unsaved.
+    expect(store.dirty).toBe(true);
+  });
+
+  it('reports dirty + localized labels to the backend guard', async () => {
+    await loadClean();
+    let payload = store.closeGuardPayload();
+    expect(payload.dirty).toBe(false);
+    expect(payload.labels.title).toBe(store.t('close-unsaved-title'));
+    expect(payload.labels.message).toBe(store.t('close-unsaved-message'));
+    expect(payload.labels.discard).toBe(store.t('close-unsaved-discard'));
+    expect(payload.labels.cancel).toBe(store.t('close-unsaved-cancel'));
+
+    store.setIdentity('name', 'Marcus');
+    payload = store.closeGuardPayload();
+    expect(payload.dirty).toBe(true);
   });
 });

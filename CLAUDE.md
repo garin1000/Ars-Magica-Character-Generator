@@ -152,6 +152,22 @@ the `rules/i18n/<lang>/` layer, not in language-neutral `core/`.
   (`category-<id>`, `magnitude-<id>`). Rendering the slug itself is the same
   violation as hardcoding a string.
 
+## Mandatory product behaviors
+
+These are load-bearing user-facing guarantees. A change that touches the
+relevant surface MUST preserve them and keep their tests green.
+
+- **Unsaved-changes guard.** Closing **or** quitting the app with unsaved edits
+  MUST prompt for confirmation before discarding — on every platform and every
+  quit path, including macOS **Cmd+Q**. The dirty flag lives in the frontend
+  store (`AppStore.dirty` in `ui/src/lib/state.svelte.ts`, a snapshot-compare
+  against the last save/load baseline) and is mirrored to Rust via the
+  `update_close_guard` command; the Rust `on_window_event` /
+  `RunEvent::ExitRequested` handlers in `crates/arm-app/src/main.rs` own the
+  actual confirmation dialog. Any change to save/load or the window/app
+  lifecycle must keep this guard intact and the dirty-tracking tests in
+  `state.svelte.test.ts` passing.
+
 ## Engineering conventions
 
 - **TDD mandatory.** Red → green → refactor. No implementation code without a

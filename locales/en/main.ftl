@@ -275,6 +275,12 @@ balance-flaws = Flaws: { $used } / { $budget }
 action-save = Save
 action-load = Load
 
+# Confirmation shown when closing or quitting the app with unsaved changes.
+close-unsaved-title = Unsaved changes
+close-unsaved-message = This character has unsaved changes. If you close now, they will be lost.
+close-unsaved-discard = Discard and close
+close-unsaved-cancel = Cancel
+
 # Hint shown for an unfilled parameter slot in an item name, e.g. "Puissant (Ability)".
 param-hint = ({ $label })
 # Localized parameter labels, keyed by the engine's parameter key. Also used as the

@@ -50,6 +50,9 @@ they stay portable and diff-friendly.
   or loading fails loudly with the offending IDs.
 - **Source-backed rules.** Every implemented mechanic is traced to a line range
   in the authoritative rulebook Markdown — no rules from memory.
+- **Never lose work by accident.** Closing or quitting the app with unsaved
+  changes — including via macOS Cmd+Q — prompts for confirmation before
+  discarding.
 
 ## Architecture
 
