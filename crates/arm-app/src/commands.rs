@@ -1,7 +1,7 @@
 //! Thin `#[tauri::command]` shims. They resolve the rules directory and managed
 //! state, then delegate to the webview-free logic in [`crate::ruleset_io`].
 
-use std::sync::RwLock;
+use std::sync::{Mutex, RwLock};
 
 use arm_rules::{Entity, LocalizedRuleset, Ruleset, ValidationMode, ValidationResult};
 use tauri::path::BaseDirectory;
@@ -19,6 +19,43 @@ use crate::ruleset_io::EffectiveScores;
 #[derive(Default)]
 pub struct AppState {
     pub ruleset: RwLock<Option<Ruleset>>,
+    /// Mirror of the frontend's unsaved-changes state, so the window-close and
+    /// app-quit handlers can prompt before discarding without a round-trip.
+    pub close_guard: Mutex<CloseGuardState>,
+}
+
+/// Backend view of the close/quit guard, kept in sync by [`update_close_guard`].
+#[derive(Default)]
+pub struct CloseGuardState {
+    /// Whether the entity has unsaved edits (mirrored from the frontend store).
+    pub dirty: bool,
+    /// Localized dialog strings, supplied by the frontend so no user-facing text
+    /// lives in Rust.
+    pub labels: CloseGuardLabels,
+    /// A confirmation dialog is currently open; guards against stacking a second
+    /// one when the user triggers close/quit again while it is showing.
+    pub showing: bool,
+    /// The user chose to discard, so the re-issued close/quit must pass through.
+    pub confirmed: bool,
+}
+
+/// Localized strings for the "discard unsaved changes?" dialog. Deserialized
+/// verbatim from the frontend; Rust never authors these.
+#[derive(Default, Clone, serde::Deserialize)]
+pub struct CloseGuardLabels {
+    pub title: String,
+    pub message: String,
+    pub discard: String,
+    pub cancel: String,
+}
+
+/// Mirrors the frontend's dirty flag and dialog strings into managed state for
+/// the close/quit guard (see `main.rs`).
+#[tauri::command]
+pub fn update_close_guard(dirty: bool, labels: CloseGuardLabels, state: State<'_, AppState>) {
+    let mut guard = state.close_guard.lock().expect("close guard lock poisoned");
+    guard.dirty = dirty;
+    guard.labels = labels;
 }
 
 /// Loads the ruleset for `lang`, caches it in managed state, and returns the

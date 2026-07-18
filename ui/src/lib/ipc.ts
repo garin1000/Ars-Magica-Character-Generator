@@ -34,3 +34,20 @@ export function saveEntity(entity: Entity): Promise<string | null> {
 export function loadEntity(): Promise<Entity | null> {
   return invoke('load_entity');
 }
+
+/** Localized strings for the "discard unsaved changes?" dialog, shown from Rust. */
+export interface CloseGuardLabels {
+  title: string;
+  message: string;
+  discard: string;
+  cancel: string;
+}
+
+/**
+ * Mirror the frontend's dirty flag (and the localized dialog strings) to the
+ * backend close/quit guard, which owns the actual confirmation prompt so it can
+ * intercept every quit path — window close and macOS Cmd+Q alike.
+ */
+export function updateCloseGuard(dirty: boolean, labels: CloseGuardLabels): Promise<void> {
+  return invoke('update_close_guard', { dirty, labels });
+}

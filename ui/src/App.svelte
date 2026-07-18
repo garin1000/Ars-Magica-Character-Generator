@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { store } from './lib/state.svelte';
+  import { updateCloseGuard } from './lib/ipc';
   import LanguageSelector from './lib/components/LanguageSelector.svelte';
   import ModeToggle from './lib/components/ModeToggle.svelte';
   import CharacterTypeSelector from './lib/components/CharacterTypeSelector.svelte';
@@ -91,6 +92,14 @@
   // Keep the document title localized rather than hardcoded in HTML.
   $effect(() => {
     document.title = store.t('app-title');
+  });
+
+  // Mirror the unsaved-changes flag (and the localized dialog strings) to the
+  // backend close/quit guard. Re-runs whenever dirty flips or the language
+  // changes, so Rust can prompt before discarding on any quit path.
+  $effect(() => {
+    const { dirty, labels } = store.closeGuardPayload();
+    void updateCloseGuard(dirty, labels);
   });
 </script>
 

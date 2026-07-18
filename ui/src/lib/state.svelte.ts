@@ -6,6 +6,7 @@
 import { mandatoryTraitRefs, sameSelection } from './derive';
 import { buildBundle, translate, type Lang, type TranslateArgs } from './i18n';
 import * as ipc from './ipc';
+import type { CloseGuardLabels } from './ipc';
 import type {
   AppError,
   Characteristic,
@@ -115,12 +116,46 @@ class AppStore {
   // {@link PickerFilters}). Not part of the entity, so it is never saved.
   filters = $state<PickerFilters>(defaultPickerFilters());
 
+  // Serialized snapshot of the entity as of the last save/load — the baseline
+  // the close/quit guard compares against. Seeded from the initial entity so
+  // `dirty` is not spuriously true before init() runs.
+  #savedSnapshot = $state<string>(this.#snapshot());
+
+  /**
+   * Whether the entity has unsaved edits. A stringify-compare against the
+   * last-saved baseline: it only ever errs toward a spurious prompt (false
+   * positive), never toward silently discarding work (false negative).
+   */
+  dirty = $derived(this.#snapshot() !== this.#savedSnapshot);
+
   #bundle = $derived(buildBundle(this.lang));
   #timer: ReturnType<typeof setTimeout> | undefined;
   #seq = 0;
 
   /** Translate a UI-chrome key. Bound so it can be passed to components. */
   t = (key: string, args?: TranslateArgs): string => translate(this.#bundle, key, args);
+
+  /** Canonical serialized form of the current entity, for dirty comparison. */
+  #snapshot(): string {
+    return JSON.stringify($state.snapshot(this.entity));
+  }
+
+  /**
+   * The payload the backend close/quit guard needs: whether there are unsaved
+   * edits, plus the localized dialog strings (kept in the frontend so no
+   * user-facing text lives in Rust).
+   */
+  closeGuardPayload(): { dirty: boolean; labels: CloseGuardLabels } {
+    return {
+      dirty: this.dirty,
+      labels: {
+        title: this.t('close-unsaved-title'),
+        message: this.t('close-unsaved-message'),
+        discard: this.t('close-unsaved-discard'),
+        cancel: this.t('close-unsaved-cancel'),
+      },
+    };
+  }
 
   /** Load the ruleset for the current language and validate the initial entity. */
   async init(): Promise<void> {
@@ -803,8 +838,14 @@ class AppStore {
 
   async save(): Promise<void> {
     this.error = null;
+    // Capture the baseline BEFORE awaiting the (async, cancellable) save dialog,
+    // so edits made while it is open stay marked dirty.
+    const snapshot = this.#snapshot();
     try {
-      await ipc.saveEntity($state.snapshot(this.entity));
+      const path = await ipc.saveEntity($state.snapshot(this.entity));
+      // A null path means the dialog was cancelled — nothing was written, so the
+      // entity is still unsaved.
+      if (path !== null) this.#savedSnapshot = snapshot;
     } catch (e) {
       this.error = e as AppError;
     }
@@ -816,6 +857,7 @@ class AppStore {
       const loaded = await ipc.loadEntity();
       if (loaded) {
         this.entity = loaded;
+        this.#savedSnapshot = this.#snapshot();
         await this.revalidate();
       }
     } catch (e) {
@@ -858,6 +900,10 @@ class AppStore {
       const { id, version } = localized.ruleset;
       if (resetEntity) {
         this.entity = newEntity(id, version);
+        // A fresh entity is a clean baseline. A language reload (else branch)
+        // keeps the edited entity, so it must NOT reset the baseline — doing so
+        // would drop `dirty` to false while unsaved edits still exist.
+        this.#savedSnapshot = this.#snapshot();
       } else {
         this.entity.ruleset = { id, version };
       }
