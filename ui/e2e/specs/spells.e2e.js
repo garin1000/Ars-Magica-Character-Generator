@@ -103,15 +103,15 @@ describe('spells', () => {
   });
 
   it('flags going over the spell-levels budget', async () => {
-    // Add a General spell (Aegis of the Hearth, ReVi) at a huge level so the
-    // total (20 + 200) exceeds the 150 budget. The General-level input is always
-    // visible; set it before clicking the spell's add row.
+    // Add a General spell (Aegis of the Hearth, ReVi). It lands at the default
+    // level; its level input then appears inline on the selected row. Setting it
+    // to a huge level pushes the total (20 + 200) past the 150 budget.
     await $('[data-testid="spell-technique-filter"]').selectByAttribute('value', '');
     await $('[data-testid="spell-form-filter"]').selectByAttribute('value', '');
+    await $('[data-testid="add-spell.aegis_of_the_hearth"]').click();
     const levelInput = await $('[data-testid="spell-level-input"]');
     await levelInput.waitForExist({ timeout: 5000 });
     await levelInput.setValue('200');
-    await $('[data-testid="add-spell.aegis_of_the_hearth"]').click();
 
     await browser.waitUntil(async () => codeExists('over_spell_levels'), {
       timeout: 5000,
@@ -127,7 +127,7 @@ describe('spells', () => {
       timeoutMsg: 'save did not write the file',
     });
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.schema_version).toBe(7);
+    expect(saved.schema_version).toBe(11);
     expect(saved.spells.some((s) => s.spell === 'spell.pilum_of_fire')).toBe(true);
     expect(
       saved.spells.some((s) => s.spell === 'spell.aegis_of_the_hearth' && s.level === 200),

@@ -554,6 +554,18 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /**
+   * Set the level of the (General) spell at `index`. The budget/used totals are
+   * engine-authoritative, so no recompute happens here. Mirrors
+   * {@link adjustSpellMasteryAt}.
+   */
+  setSpellLevelAt(index: number, level: number): void {
+    this.entity.spells = (this.entity.spells ?? []).map((s, i) =>
+      i === index ? { ...s, level } : s,
+    );
+    this.#scheduleValidate();
+  }
+
   /** Spell edits are by row index, since a General spell can appear at several levels. */
   removeSpellAt(index: number): void {
     this.entity.spells = (this.entity.spells ?? []).filter((_, i) => i !== index);
