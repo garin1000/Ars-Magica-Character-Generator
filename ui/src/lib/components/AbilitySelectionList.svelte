@@ -105,14 +105,18 @@
               >
                 +
               </button>
-              {#if effectiveOf(entry.score, entry.ability, entry.parameter) !== entry.score}
+            </span>
+            {#if effectiveOf(entry.score, entry.ability, entry.parameter) !== entry.score}
+              <span class="eff-slot">
                 <span class="eff-badge" data-testid="ability-eff-{entry.ability}-{i}">
                   {store.t('effective-score', {
                     score: String(effectiveOf(entry.score, entry.ability, entry.parameter)),
                   })}
                 </span>
-              {/if}
-            </span>
+              </span>
+            {:else}
+              <span class="eff-slot" aria-hidden="true"></span>
+            {/if}
             <input
               type="text"
               class="specialty"

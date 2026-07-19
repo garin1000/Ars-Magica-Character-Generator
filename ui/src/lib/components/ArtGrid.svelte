@@ -78,12 +78,16 @@
                 >
                   +
                 </button>
-                {#if bonus !== 0}
+              </span>
+              {#if bonus !== 0}
+                <span class="eff-slot">
                   <span class="eff-badge" data-testid="art-eff-{art.id}">
                     {store.t('effective-score', { score: String(score + bonus) })}
                   </span>
-                {/if}
-              </span>
+                </span>
+              {:else}
+                <span class="eff-slot" aria-hidden="true"></span>
+              {/if}
             </li>
           {/each}
         </ul>

@@ -500,6 +500,17 @@ ul {
   white-space: nowrap;
 }
 
+/* Fixed-width slot for the effective-score badge, always rendered (empty
+   placeholder when no bonus applies) so the following controls — the specialty
+   textbox / × on ability rows, nothing on art rows — keep the same horizontal
+   position whether or not a Puissant/effective bonus is present. */
+.eff-slot {
+  flex: 0 0 auto;
+  width: 2.4rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
 /* Ability lists: the name grows so the +/spinner/specialty/× align right. */
 .item-name {
   flex: 1;
