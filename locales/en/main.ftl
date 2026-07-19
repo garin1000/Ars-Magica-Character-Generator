@@ -198,7 +198,7 @@ reputation-type-academic = Academic
 # Magic Items tab (magi): aura, enchanted devices, familiar bond cords, talisman
 # attunements and the Longevity Ritual. The item-level budget used/remaining comes
 # from the engine, never recomputed here.
-aura-label = Aura
+aura-label = Assumed lab/covenant aura
 possessions-devices-label = Enchanted Devices
 device-name-placeholder = Device name
 device-level-label = Level
@@ -427,7 +427,7 @@ derived-section-surfaced = Other modifiers
 derived-section-decrepitude = Decrepitude
 derived-section-warping = Warping
 derived-size = Size
-derived-aura-label = Aura
+derived-aura-label = Assumed lab/covenant aura
 derived-within-focus = Within focus
 derived-deficient = (deficient, halved)
 derived-weak-magic = (Weak Magic, halved)
