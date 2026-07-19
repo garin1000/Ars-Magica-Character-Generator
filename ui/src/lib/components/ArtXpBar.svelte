@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { restrictedPoolLabel, totalXpSpent } from '../derive';
+  import { restrictedPoolLabel, totalXpSpent, xpSpentLabel } from '../derive';
 
   // Arts and Abilities share one XP bank (`entity.xp_pool`); this bar edits the
   // same pool and shows the combined spend, so the remaining total is consistent
@@ -25,7 +25,7 @@
     <span>{store.t('xp-pool')}</span>
     <input type="number" min="0" value={pool} oninput={onPool} data-testid="art-xp-pool" />
   </label>
-  <span data-testid="art-xp-spent">{store.t('xp-spent', { spent: String(spent) })}</span>
+  <span data-testid="art-xp-spent">{xpSpentLabel(spent, generalUsed, store.t)}</span>
   <span class:over={available < 0} data-testid="art-xp-available">
     {store.t('xp-available', { available: String(available) })}
   </span>

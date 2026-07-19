@@ -107,6 +107,12 @@ tab-details = Details
 # Ability XP summary and controls.
 xp-pool = XP pool
 xp-spent = Spent: { $spent }
+# Shown instead of `xp-spent` when a restricted grant (Educated/Warrior/
+# Privileged) funds part of the spend: `$spent` is the total across all pools,
+# `$general` the slice drawn from the general pool (so `xp-available` = pool -
+# `$general`). Breaking it out keeps the total from reading as more than the
+# general pool's drop.
+xp-spent-restricted = Spent: { $spent } ({ $general } from general pool)
 xp-available = Available: { $available }
 # Restricted experience pools (Educated/Warrior/Privileged): extra XP spendable
 # only on the listed Abilities/categories. `$eligibility` is a localized list.

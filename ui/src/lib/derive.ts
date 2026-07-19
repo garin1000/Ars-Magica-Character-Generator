@@ -525,6 +525,34 @@ export function restrictedPoolLabel(
 }
 
 /**
+ * Localized "Spent" figure for the XP bars.
+ *
+ * `spent` is the engine's authoritative total demand (`xp_total_demand`): the
+ * Affinity-reduced, granted-floor-discounted cost of every bought Ability + Art,
+ * summed across BOTH the general pool and any restricted grant (Educated/Warrior/
+ * Privileged). `generalUsed` (`xp_general_used`) is only the slice of that total
+ * drawn from the general pool, which is also what the "Available" figure nets out
+ * (`pool − generalUsed`).
+ *
+ * When a restricted grant funds part of the spend, `generalUsed < spent`, so the
+ * bare "Spent: 75" reads as more than the general pool's 25-point drop — the
+ * reported "more shown spent than the values account for" confusion. In that case
+ * we break the total out so the numbers reconcile (75 = 25 general + 50
+ * restricted, the restricted slice already shown per-pool). With no restricted
+ * grant `generalUsed == spent` and the plain label is used, unchanged.
+ */
+export function xpSpentLabel(
+  spent: number,
+  generalUsed: number,
+  t: (key: string, args?: Record<string, string>) => string,
+): string {
+  if (generalUsed < spent) {
+    return t('xp-spent-restricted', { spent: String(spent), general: String(generalUsed) });
+  }
+  return t('xp-spent', { spent: String(spent) });
+}
+
+/**
  * Validation-issue arg keys whose value is an enum (never a rules id) and the
  * Fluent-key prefix that localizes it. The engine emits these enums as their
  * raw serialized form (`int`, `local`, `magic`), so the UI maps them through a
@@ -719,6 +747,15 @@ export function maxArtScore(artAdvancement: { score: number }[] | undefined): nu
  * neutral `0` placeholder is shown for the one frame before `store.effective`
  * replaces it. Parameters are kept for the call sites; they are intentionally
  * unused.
+ *
+ * Note on the post-edit transient: this stub is reached ONLY while
+ * `store.effective` is nullish (the very first frame). During the 150 ms
+ * validate debounce after an edit, `store.effective` is present-but-stale, so the
+ * bars briefly show the PREVIOUS engine total (which, right after lowering a
+ * value, reads as slightly-too-much spent) until revalidation lands. That
+ * transient self-corrects within the debounce window; it is not fixed here
+ * because a correct optimistic figure would require re-running the engine's
+ * max-flow XP allocation in TS, forking the single evaluation path.
  */
 export function totalXpSpent(localized: LocalizedRuleset, entity: Entity): number {
   // Params retained for the call sites but intentionally unused: pricing here is
