@@ -139,6 +139,23 @@ describe('picker filter state', () => {
     });
     expect(store.filters.abilities).toEqual({ search: '', category: '' });
     expect(store.filters.spells).toEqual({ search: '', technique: '', form: '', level: null });
+    expect(defaultPickerFilters().derivedArtPicker).toEqual({ technique: '', form: '' });
+  });
+
+  it('persists the Derived-Totals Technique/Form picker without dirtying the entity', () => {
+    // The Totals tab unmounts on switch, so its Art picker lives on the store's
+    // filters. It is not part of the saved entity snapshot, so setting it must
+    // leave the dirty flag untouched (dirty derives from the entity alone).
+    const dirtyBefore = store.dirty;
+    store.filters.derivedArtPicker.technique = 'art.creo';
+    store.filters.derivedArtPicker.form = 'art.ignem';
+
+    // Reading it back on the store proves it survives a panel unmount.
+    expect(store.filters.derivedArtPicker).toEqual({
+      technique: 'art.creo',
+      form: 'art.ignem',
+    });
+    expect(store.dirty).toBe(dirtyBefore);
   });
 
   it('retains a picker tab’s filter state independently of the others', () => {

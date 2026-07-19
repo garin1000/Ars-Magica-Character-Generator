@@ -12,18 +12,17 @@
   // Lab/Casting Total picker. The Technique and Form option lists are derived
   // from the engine's own combination tables (never a hardcoded Art list), so
   // the picker stays in sync with whatever Arts the ruleset defines. The user's
-  // pick falls back to the first available Art until they choose.
-  let pickedTechnique = $state('');
-  let pickedForm = $state('');
-
+  // pick falls back to the first available Art until they choose. The selection
+  // lives on the store's `filters` so it survives this panel unmounting on a tab
+  // switch; it is view state, never part of the saved entity.
   function distinct(values: string[]): string[] {
     return [...new Set(values)];
   }
 
   const techniques = $derived(distinct((d?.lab_totals ?? []).map((c) => c.technique)));
   const forms = $derived(distinct((d?.lab_totals ?? []).map((c) => c.form)));
-  const technique = $derived(pickedTechnique || techniques[0] || '');
-  const form = $derived(pickedForm || forms[0] || '');
+  const technique = $derived(store.filters.derivedArtPicker.technique || techniques[0] || '');
+  const form = $derived(store.filters.derivedArtPicker.form || forms[0] || '');
 
   const labCell = $derived(
     (d?.lab_totals ?? []).find((c) => c.technique === technique && c.form === form) ?? null,
@@ -92,7 +91,10 @@
         <div class="art-picker">
           <label class="field inline">
             <span>{store.t('derived-picker-technique')}</span>
-            <select bind:value={pickedTechnique} data-testid="derived-technique-select">
+            <select
+              bind:value={store.filters.derivedArtPicker.technique}
+              data-testid="derived-technique-select"
+            >
               {#each techniques as t (t)}
                 <option value={t}>{name(t)}</option>
               {/each}
@@ -100,7 +102,10 @@
           </label>
           <label class="field inline">
             <span>{store.t('derived-picker-form')}</span>
-            <select bind:value={pickedForm} data-testid="derived-form-select">
+            <select
+              bind:value={store.filters.derivedArtPicker.form}
+              data-testid="derived-form-select"
+            >
               {#each forms as f (f)}
                 <option value={f}>{name(f)}</option>
               {/each}
