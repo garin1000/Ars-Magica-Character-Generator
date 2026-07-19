@@ -50,9 +50,13 @@ they stay portable and diff-friendly.
   or loading fails loudly with the offending IDs.
 - **Source-backed rules.** Every implemented mechanic is traced to a line range
   in the authoritative rulebook Markdown — no rules from memory.
+- **Works like a standard document app.** A tracked current file with New, Open,
+  Save and Save As — plus the usual Ctrl/Cmd+N/O/S (Shift+S for Save As)
+  shortcuts. The window title shows the file name and marks unsaved edits; Save
+  writes straight to the current file while Save As always prompts.
 - **Never lose work by accident.** Closing or quitting the app with unsaved
   changes — including via macOS Cmd+Q — prompts for confirmation before
-  discarding.
+  discarding, as does starting a new document or opening another file.
 
 ## Architecture
 

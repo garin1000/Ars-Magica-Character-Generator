@@ -5,11 +5,37 @@
 </script>
 
 <div class="saveload">
-  <button type="button" onclick={() => store.save()} data-testid="save-button">
+  <button
+    type="button"
+    onclick={() => store.newDocument()}
+    disabled={store.busy}
+    data-testid="new-button"
+  >
+    {store.t('action-new')}
+  </button>
+  <button
+    type="button"
+    onclick={() => store.open()}
+    disabled={store.busy}
+    data-testid="open-button"
+  >
+    {store.t('action-open')}
+  </button>
+  <button
+    type="button"
+    onclick={() => store.save()}
+    disabled={store.busy}
+    data-testid="save-button"
+  >
     {store.t('action-save')}
   </button>
-  <button type="button" onclick={() => store.load()} data-testid="load-button">
-    {store.t('action-load')}
+  <button
+    type="button"
+    onclick={() => store.saveAs()}
+    disabled={store.busy}
+    data-testid="save-as-button"
+  >
+    {store.t('action-save-as')}
   </button>
   {#if errorText}
     <span class="error" role="alert" data-testid="error">{errorText}</span>

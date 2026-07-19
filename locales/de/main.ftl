@@ -277,14 +277,29 @@ mythic-required-flaw-label = Erforderlicher Fehler
 balance-virtues = Tugenden: { $used } / { $budget }
 balance-flaws = Fehler: { $used } / { $budget }
 
+# Aktionen der Dokument-Werkzeugleiste.
+action-new = Neu
+action-open = Öffnen
 action-save = Speichern
-action-load = Laden
+action-save-as = Speichern unter
 
 # Bestätigung beim Schließen oder Beenden der Anwendung mit ungespeicherten Änderungen.
 close-unsaved-title = Ungespeicherte Änderungen
 close-unsaved-message = Dieser Charakter hat ungespeicherte Änderungen. Wenn du jetzt schließt, gehen sie verloren.
 close-unsaved-discard = Verwerfen und schließen
 close-unsaved-cancel = Abbrechen
+
+# Bestätigung beim Anlegen eines neuen Dokuments oder Öffnen einer anderen Datei,
+# während das aktuelle Dokument ungespeicherte Änderungen hat.
+discard-changes-title = Ungespeicherte Änderungen
+discard-changes-message = Dieser Charakter hat ungespeicherte Änderungen. Wenn du fortfährst, gehen sie verloren.
+discard-changes-confirm = Änderungen verwerfen
+discard-changes-cancel = Abbrechen
+
+# Fenstertitel. { $name } ist der Dateiname, { $app } der Anwendungsname; die
+# Variante mit ungespeicherten Änderungen stellt eine ASCII-Markierung voran.
+app-title-document = { $name } — { $app }
+app-title-document-dirty = *{ $name } — { $app }
 
 # Hinweis für einen nicht ausgefüllten Parameter-Platzhalter im Namen, z. B. „Begabung in (Fertigkeit)“.
 param-hint = ({ $label })
