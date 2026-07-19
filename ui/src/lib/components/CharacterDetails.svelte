@@ -4,6 +4,7 @@
   import { CHARACTERISTICS, type Characteristic } from '../types';
 
   const age = $derived(store.entity.age ?? null);
+  const apparentAge = $derived(store.entity.apparent_age ?? null);
   const ageCap = $derived(store.effective?.age_ability_cap ?? null);
   // Confidence is derived (type default + V/F); grogs have none (0/0) → hidden.
   const confScore = $derived(store.effective?.confidence_score ?? 0);
@@ -27,10 +28,18 @@
   const grants = $derived(store.effective?.reputation_grants ?? []);
   const agingPoints = $derived(store.entity.aging_points ?? {});
   const twilightScars = $derived(store.entity.twilight_scars ?? []);
+  const warpingEffect = $derived(store.entity.warping_effect ?? '');
+  const decrepitudeEffect = $derived(store.entity.decrepitude_effect ?? '');
+  const agingLog = $derived(store.entity.aging_log ?? []);
 
   function onAge(event: Event) {
     const raw = (event.currentTarget as HTMLInputElement).value;
     store.setAge(raw === '' ? null : Number(raw));
+  }
+
+  function onApparentAge(event: Event) {
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    store.setApparentAge(raw === '' ? null : Number(raw));
   }
 
   function onBirthYear(event: Event) {
@@ -116,6 +125,16 @@
         <span>{store.t('age-label')}</span>
         <input type="number" min="1" value={age ?? ''} oninput={onAge} data-testid="age-input" />
       </label>
+      <label class="field">
+        <span>{store.t('apparent-age-label')}</span>
+        <input
+          type="number"
+          min="1"
+          value={apparentAge ?? ''}
+          oninput={onApparentAge}
+          data-testid="apparent-age-input"
+        />
+      </label>
       {#if ageCap != null}
         <span class="age-cap" data-testid="age-cap-note">
           {store.t('age-cap-note', { cap: String(ageCap) })}
@@ -140,6 +159,18 @@
         </span>
       </div>
     {/if}
+
+    <div class="detail-field">
+      <label class="field">
+        <span>{store.t('warping-effect-label')}</span>
+        <input
+          type="text"
+          value={warpingEffect}
+          oninput={(e) => store.setWarpingEffect((e.currentTarget as HTMLInputElement).value)}
+          data-testid="warping-effect-input"
+        />
+      </label>
+    </div>
 
     {#if trueFaith > 0}
       <div class="detail-field">
@@ -167,6 +198,18 @@
         </span>
       </div>
     {/if}
+
+    <div class="detail-field">
+      <label class="field">
+        <span>{store.t('decrepitude-effect-label')}</span>
+        <input
+          type="text"
+          value={decrepitudeEffect}
+          oninput={(e) => store.setDecrepitudeEffect((e.currentTarget as HTMLInputElement).value)}
+          data-testid="decrepitude-effect-input"
+        />
+      </label>
+    </div>
 
     <div class="detail-section">
       <h3 class="detail-label">{store.t('aging-label')}</h3>
@@ -198,6 +241,44 @@
           data-testid="warping-points-input"
         />
       </label>
+
+      <p class="detail-label">{store.t('aging-log-heading')}</p>
+      <ul class="twilight-list" data-testid="aging-log-list">
+        {#each agingLog as entry, i (i)}
+          <li>
+            <input
+              type="number"
+              class="aging-log-year"
+              aria-label={store.t('aging-log-year-label')}
+              value={entry.year}
+              oninput={(e) => store.setAgingLogEntryYear(i, numValue(e))}
+              data-testid="aging-log-year-{i}"
+            />
+            <input
+              class="twilight-desc"
+              placeholder={store.t('aging-log-effect-placeholder')}
+              value={entry.effect}
+              oninput={(e) =>
+                store.setAgingLogEntryEffect(i, (e.currentTarget as HTMLInputElement).value)}
+              data-testid="aging-log-effect-{i}"
+            />
+            <button
+              type="button"
+              class="icon-btn"
+              aria-label={store.t('spell-remove')}
+              onclick={() => store.removeAgingLogEntryAt(i)}
+              data-testid="aging-log-remove-{i}"
+            >
+              ×
+            </button>
+          </li>
+        {:else}
+          <li class="empty">{store.t('aging-log-empty')}</li>
+        {/each}
+      </ul>
+      <button type="button" onclick={() => store.addAgingLogEntry()} data-testid="aging-log-add">
+        {store.t('aging-log-add')}
+      </button>
     </div>
 
     <div class="detail-section">

@@ -1791,6 +1791,19 @@ pub struct TwilightScar {
     pub description: String,
 }
 
+/// One entry in a character's aging log: the `year` the aging roll happened and
+/// a free-text `effect` describing its narrative outcome. A pure annotation — the
+/// app does not simulate aging rolls, so nothing is computed from these. `year`
+/// is declared first so the derived `Ord` sorts the log chronologically via
+/// [`Entity::normalize`]. Source: Core Rules.md:16563-16577 (Aging).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct AgingLogEntry {
+    /// The year the aging roll occurred (first field so `Ord` sorts by year).
+    pub year: i32,
+    /// Free-text description of the aging roll's outcome.
+    pub effect: String,
+}
+
 /// `skip_serializing_if` predicate: omits a `u32` field when it is zero.
 fn is_zero(n: &u32) -> bool {
     *n == 0
@@ -1901,6 +1914,13 @@ pub struct Entity {
     /// (Core:2366-2376). `None` when unset (no cap enforced yet).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub age: Option<u32>,
+    /// The character's apparent age in years (Core Rules.md:1155) — a pure
+    /// annotation carrying NO mechanic. Apparent age is the resolved outcome of
+    /// aging rolls the app deliberately does not simulate (consistent with the
+    /// [`Effect::AgingMod`] "surfaced-only" doc), so it is recorded, never
+    /// computed. `None` when unset. Mirrors [`Entity::age`]'s representation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub apparent_age: Option<u32>,
     /// Named Personality Traits (value ±3, or ±6 for a Major Personality Flaw's
     /// trait). Kept sorted by name via [`Entity::normalize`]. Defaults to empty.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1946,10 +1966,29 @@ pub struct Entity {
     /// by [`crate::effective::warping_score`]. Source: Core Rules.md:16464-16475.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub warping_points: u32,
+    /// Free-text description of how the character's Warping manifests (the
+    /// source-reflecting Minor/Major Flaw from "Effects of Warping",
+    /// Core Rules.md:16547-16561). A pure annotation carrying NO mechanic: it is
+    /// deliberately NOT a Flaw `selection`, because a post-creation warping Flaw
+    /// must not count against the creation Virtue/Flaw budget. Empty when unset.
+    #[serde(default, skip_serializing_if = "is_empty_str")]
+    pub warping_effect: String,
     /// Twilight Scars the magus has acquired (free-text). Kept sorted via
     /// [`Entity::normalize`]. Source: Core Rules.md:9731, :9743.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub twilight_scars: Vec<TwilightScar>,
+    /// Free-text narrative of the character's overall aging / decrepitude
+    /// (Core Rules.md:16563-16577). A pure annotation carrying NO mechanic —
+    /// Decrepitude is derived from `aging_points`; this only records flavor.
+    /// Empty when unset.
+    #[serde(default, skip_serializing_if = "is_empty_str")]
+    pub decrepitude_effect: String,
+    /// Per-year aging-roll log (free-text outcomes). A pure annotation carrying
+    /// NO mechanic — the app does not simulate aging rolls (Core
+    /// Rules.md:16563-16577). Kept sorted by year via [`Entity::normalize`].
+    /// Defaults to empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub aging_log: Vec<AgingLogEntry>,
     /// The character's name (free-text; no mechanical effect).
     #[serde(default, skip_serializing_if = "is_empty_str")]
     pub name: String,
@@ -2001,7 +2040,12 @@ pub struct Entity {
 /// Characteristic drops are now DERIVED from `aging_points`. Old saves are
 /// migrated by [`load_entity_migrating`], which folds any legacy `aging_reductions`
 /// into `aging_points`.
-pub const SCHEMA_VERSION: u32 = 10;
+///
+/// Bumped 10 → 11 when the aging/warping annotation fields (`apparent_age`,
+/// `warping_effect`, `decrepitude_effect`, `aging_log`) were added. These are
+/// purely additive `serde(default)` fields, so old saves load unchanged with no
+/// migration code.
+pub const SCHEMA_VERSION: u32 = 11;
 
 impl Entity {
     /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
@@ -2024,6 +2068,7 @@ impl Entity {
             mythic_type: None,
             mythic_choices: BTreeMap::new(),
             age: None,
+            apparent_age: None,
             personality_traits: Vec::new(),
             reputations: Vec::new(),
             aura: 0,
@@ -2033,7 +2078,10 @@ impl Entity {
             longevity_ritual: None,
             aging_points: BTreeMap::new(),
             warping_points: 0,
+            warping_effect: String::new(),
             twilight_scars: Vec::new(),
+            decrepitude_effect: String::new(),
+            aging_log: Vec::new(),
             name: String::new(),
             description: String::new(),
             concept: String::new(),
@@ -2049,9 +2097,9 @@ impl Entity {
     }
 
     /// Sort selections, ability scores, art scores, spells, personality traits,
-    /// reputations, devices, talisman attunements, twilight scars and equipment for
-    /// canonical serialization. (`characteristics` and `aging_points` are
-    /// `BTreeMap`s, already id-ordered.)
+    /// reputations, devices, talisman attunements, twilight scars, the aging log
+    /// (by year) and equipment for canonical serialization. (`characteristics`
+    /// and `aging_points` are `BTreeMap`s, already id-ordered.)
     pub fn normalize(&mut self) {
         self.selections.sort();
         self.ability_scores.sort();
@@ -2062,6 +2110,7 @@ impl Entity {
         self.devices.sort();
         self.talisman_attunements.sort();
         self.twilight_scars.sort();
+        self.aging_log.sort();
         self.equipment.sort();
         self.powers.sort();
     }
@@ -2804,6 +2853,7 @@ mod tests {
             mythic_type: None,
             mythic_choices: BTreeMap::new(),
             age: Some(25),
+            apparent_age: None,
             personality_traits: vec![PersonalityTrait {
                 name: "Brave".into(),
                 value: 3,
@@ -2816,7 +2866,10 @@ mod tests {
             longevity_ritual: None,
             aging_points: BTreeMap::new(),
             warping_points: 0,
+            warping_effect: String::new(),
             twilight_scars: Vec::new(),
+            decrepitude_effect: String::new(),
+            aging_log: Vec::new(),
             name: String::new(),
             description: String::new(),
             concept: String::new(),
@@ -2834,7 +2887,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 10"#));
+        assert!(json.contains(r#""schema_version": 11"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -2945,6 +2998,7 @@ mod tests {
             mythic_type: None,
             mythic_choices: BTreeMap::new(),
             age: None,
+            apparent_age: None,
             personality_traits: Vec::new(),
             reputations: Vec::new(),
             aura: 0,
@@ -2954,7 +3008,10 @@ mod tests {
             longevity_ritual: None,
             aging_points: BTreeMap::new(),
             warping_points: 0,
+            warping_effect: String::new(),
             twilight_scars: Vec::new(),
+            decrepitude_effect: String::new(),
+            aging_log: Vec::new(),
             name: String::new(),
             description: String::new(),
             concept: String::new(),
@@ -3158,7 +3215,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 10"#));
+        assert!(json.contains(r#""schema_version": 11"#));
         assert!(json.contains(r#""aura": -3"#));
         assert!(json.contains(r#""source": "external""#));
     }
@@ -3239,7 +3296,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 10"#));
+        assert!(json.contains(r#""schema_version": 11"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
         assert!(json.contains(r#""description": "Knight of the Teutonic Order, Crusader""#));
@@ -3378,6 +3435,76 @@ mod tests {
         assert!(!json.contains("twilight_scars"));
         assert!(!json.contains("\"name\""));
         assert!(!json.contains("birth_year"));
+    }
+
+    /// The character-only aging/warping annotation fields (apparent age, warping
+    /// effect, decrepitude effect, aging log) round-trip; `normalize` sorts the
+    /// aging log by year; empty fields are omitted from canonical JSON.
+    #[test]
+    fn entity_aging_warping_annotations_roundtrip_and_normalize() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.apparent_age = Some(45);
+        entity.warping_effect = "A faint aura of ozone clings to him".into();
+        entity.decrepitude_effect = "Stooped, slow, and hard of hearing".into();
+        entity.aging_log = vec![
+            AgingLogEntry {
+                year: 1230,
+                effect: "Survived a crisis".into(),
+            },
+            AgingLogEntry {
+                year: 1215,
+                effect: "Lost a point of Stamina".into(),
+            },
+        ];
+        entity.normalize();
+        // Sorted by year ascending: 1215 before 1230 (year is the first field).
+        assert_eq!(entity.aging_log[0].year, 1215);
+        assert_eq!(entity.aging_log[1].year, 1230);
+
+        let json = serde_json::to_string(&entity).unwrap();
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(entity, back);
+        assert!(json.contains(r#""apparent_age":45"#), "{json}");
+        assert!(json.contains(r#""warping_effect":"#), "{json}");
+        assert!(json.contains(r#""decrepitude_effect":"#), "{json}");
+        assert!(json.contains(r#""aging_log":"#), "{json}");
+
+        // Empty annotation fields are omitted from canonical JSON.
+        let empty = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        let json = serde_json::to_string(&empty).unwrap();
+        assert!(!json.contains("apparent_age"));
+        assert!(!json.contains("warping_effect"));
+        assert!(!json.contains("decrepitude_effect"));
+        assert!(!json.contains("aging_log"));
+    }
+
+    /// A save written before the aging/warping annotation fields existed still
+    /// loads: the additive `serde(default)` fields fill in empty/None. Uses the
+    /// slim, schema-stamped shape the app writes.
+    #[test]
+    fn save_without_aging_warping_annotations_still_loads() {
+        let older = r#"{
+          "schema_version": 7,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "warping_points": 5,
+          "selections": [{ "ref": "virtue.the_gift" }]
+        }"#;
+        let entity: Entity = serde_json::from_str(older).unwrap();
+        assert_eq!(entity.warping_points, 5);
+        assert_eq!(entity.apparent_age, None);
+        assert!(entity.warping_effect.is_empty());
+        assert!(entity.decrepitude_effect.is_empty());
+        assert!(entity.aging_log.is_empty());
     }
 
     #[test]

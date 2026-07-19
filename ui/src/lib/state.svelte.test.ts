@@ -89,7 +89,7 @@ function installRuleset(
 /** Reset the shared singleton's entity to a clean character before each test. */
 function resetEntity(): void {
   store.entity = {
-    schema_version: 7,
+    schema_version: 11,
     ruleset: { id: 'test', version: '1' },
     entity_kind: 'character',
     type_id: 'companion',
@@ -473,6 +473,33 @@ describe('aged / warped state + identity', () => {
     store.addTwilightScar();
     store.removeTwilightScarAt(0);
     expect(store.entity.twilight_scars).toEqual([{ description: '' }]);
+  });
+
+  it('sets and clears the apparent age', () => {
+    store.setApparentAge(45);
+    expect(store.entity.apparent_age).toBe(45);
+    store.setApparentAge(0);
+    expect(store.entity.apparent_age).toBeNull();
+    store.setApparentAge(50);
+    store.setApparentAge(null);
+    expect(store.entity.apparent_age).toBeNull();
+  });
+
+  it('sets the free-text warping and decrepitude effect fields', () => {
+    store.setWarpingEffect('A faint aura of ozone clings to him');
+    store.setDecrepitudeEffect('Stooped and hard of hearing');
+    expect(store.entity.warping_effect).toBe('A faint aura of ozone clings to him');
+    expect(store.entity.decrepitude_effect).toBe('Stooped and hard of hearing');
+  });
+
+  it('adds, edits and removes aging-log entries by index', () => {
+    store.addAgingLogEntry();
+    store.setAgingLogEntryYear(0, 1215);
+    store.setAgingLogEntryEffect(0, 'Lost a point of Stamina');
+    expect(store.entity.aging_log).toEqual([{ year: 1215, effect: 'Lost a point of Stamina' }]);
+    store.addAgingLogEntry();
+    store.removeAgingLogEntryAt(0);
+    expect(store.entity.aging_log).toEqual([{ year: 0, effect: '' }]);
   });
 
   it('sets free-text identity fields and birth year', () => {
@@ -1047,7 +1074,7 @@ describe('unsaved-changes tracking', () => {
   /** A full, minimal character used as a freshly-loaded (clean) baseline. */
   function cleanEntity(): Entity {
     return {
-      schema_version: 7,
+      schema_version: 11,
       ruleset: { id: 'test', version: '1' },
       entity_kind: 'character',
       type_id: 'companion',
@@ -1080,6 +1107,12 @@ describe('unsaved-changes tracking', () => {
   it('becomes dirty after any mutation', async () => {
     await loadClean();
     store.setIdentity('name', 'Marcus of Bonisagus');
+    expect(store.dirty).toBe(true);
+  });
+
+  it('becomes dirty after an aging/warping annotation edit', async () => {
+    await loadClean();
+    store.setWarpingEffect('A stigmatic scar');
     expect(store.dirty).toBe(true);
   });
 
@@ -1157,7 +1190,7 @@ describe('unsaved-changes tracking', () => {
 describe('document file model', () => {
   function cleanEntity(): Entity {
     return {
-      schema_version: 7,
+      schema_version: 11,
       ruleset: { id: 'test', version: '1' },
       entity_kind: 'character',
       type_id: 'companion',

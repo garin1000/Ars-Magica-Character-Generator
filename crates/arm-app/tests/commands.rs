@@ -164,7 +164,7 @@ fn sample_entity_with_characteristics_and_abilities_validates() {
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
     let entity = sample_entity();
     // The shipped sample now carries characteristics, ability scores, and a bank.
-    assert_eq!(entity.schema_version, 3);
+    assert_eq!(entity.schema_version, 11);
     assert!(!entity.characteristics.is_empty());
     assert!(!entity.ability_scores.is_empty());
     let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
@@ -389,6 +389,33 @@ fn save_then_load_round_trips_with_byte_stable_canonical_json() {
 }
 
 #[test]
+fn save_stamps_current_schema_version() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("character.json");
+    let mut entity = sample_entity();
+    entity.schema_version = 3; // a stale in-memory version must be corrected on write
+
+    save_entity_to_path(&entity, &path).unwrap();
+    let written = fs::read_to_string(&path).unwrap();
+    assert!(
+        written.contains("\"schema_version\": 11"),
+        "save must stamp the current schema version, got: {written}"
+    );
+}
+
+#[test]
+fn sample_save_loads_with_defaulted_aging_warping_annotations() {
+    // A shipped example save carries none of the new annotation fields; loading it
+    // must fill them with their empty/None defaults (additive backward compat).
+    let path = repo_root().join("examples/companion_sample.json");
+    let entity = load_entity_from_path(&path).unwrap();
+    assert_eq!(entity.apparent_age, None);
+    assert!(entity.warping_effect.is_empty());
+    assert!(entity.decrepitude_effect.is_empty());
+    assert!(entity.aging_log.is_empty());
+}
+
+#[test]
 fn arts_round_trip_and_puissant_art_reports_bonus() {
     // The shipped ruleset carries the Art registry and Puissant Art.
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
@@ -429,12 +456,13 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
         "Creo is unboosted and omitted"
     );
 
-    // The Arts survive a canonical save/load round trip at schema v3.
+    // The Arts survive a canonical save/load round trip; the save stamps the
+    // current schema version.
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("magus.json");
     save_entity_to_path(&entity, &path).unwrap();
     let reloaded = load_entity_from_path(&path).unwrap();
-    assert_eq!(reloaded.schema_version, 3);
+    assert_eq!(reloaded.schema_version, 11);
     assert_eq!(reloaded.art_scores, entity.art_scores);
 }
 

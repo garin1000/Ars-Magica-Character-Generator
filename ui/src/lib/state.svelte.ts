@@ -23,7 +23,7 @@ import type {
 } from './types';
 
 const VALIDATE_DEBOUNCE_MS = 150;
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 11;
 
 /** Live filter/search state of the Virtue/Flaw picker (one per side). */
 export interface VfFilterState {
@@ -566,6 +566,13 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /** Set (or clear) the character's apparent age (annotation; no mechanic). */
+  setApparentAge(age: number | null): void {
+    this.entity.apparent_age =
+      age != null && Number.isFinite(age) && age > 0 ? Math.floor(age) : null;
+    this.#scheduleValidate();
+  }
+
   addPersonalityTrait(): void {
     this.entity.personality_traits = [
       ...(this.entity.personality_traits ?? []),
@@ -825,6 +832,42 @@ class AppStore {
   setTwilightScarDescription(index: number, description: string): void {
     this.entity.twilight_scars = (this.entity.twilight_scars ?? []).map((s, i) =>
       i === index ? { ...s, description } : s,
+    );
+    this.#scheduleValidate();
+  }
+
+  /** Set the free-text description of how the character's Warping manifests. */
+  setWarpingEffect(effect: string): void {
+    this.entity.warping_effect = effect;
+    this.#scheduleValidate();
+  }
+
+  /** Set the free-text narrative of the character's overall aging/decrepitude. */
+  setDecrepitudeEffect(effect: string): void {
+    this.entity.decrepitude_effect = effect;
+    this.#scheduleValidate();
+  }
+
+  addAgingLogEntry(): void {
+    this.entity.aging_log = [...(this.entity.aging_log ?? []), { year: 0, effect: '' }];
+    this.#scheduleValidate();
+  }
+
+  removeAgingLogEntryAt(index: number): void {
+    this.entity.aging_log = (this.entity.aging_log ?? []).filter((_, i) => i !== index);
+    this.#scheduleValidate();
+  }
+
+  setAgingLogEntryYear(index: number, year: number): void {
+    this.entity.aging_log = (this.entity.aging_log ?? []).map((e, i) =>
+      i === index ? { ...e, year: Number.isFinite(year) ? Math.trunc(year) : 0 } : e,
+    );
+    this.#scheduleValidate();
+  }
+
+  setAgingLogEntryEffect(index: number, effect: string): void {
+    this.entity.aging_log = (this.entity.aging_log ?? []).map((e, i) =>
+      i === index ? { ...e, effect } : e,
     );
     this.#scheduleValidate();
   }
