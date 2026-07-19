@@ -18,8 +18,6 @@ const TYPE_SELECT = '[data-testid="type-select"]';
 const SPELLS_TAB = '[data-testid="tab-spells"]';
 const ARTS_TAB = '[data-testid="tab-arts"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
-const SPELL_SELECT = '[data-testid="spell-select"]';
-const SPELL_ADD = '[data-testid="spell-add"]';
 const BAR = '[data-testid="spell-levels-used"]';
 
 // The app's save/load dialog seam (ARM_E2E_FILE) points at this fixed path.
@@ -62,8 +60,7 @@ describe('spells', () => {
     // Filter to Creo Ignem, then add Pilum of Fire (CrIg 20).
     await $('[data-testid="spell-technique-filter"]').selectByAttribute('value', 'art.creo');
     await $('[data-testid="spell-form-filter"]').selectByAttribute('value', 'art.ignem');
-    await $(SPELL_SELECT).selectByAttribute('value', 'spell.pilum_of_fire');
-    await $(SPELL_ADD).click();
+    await $('[data-testid="add-spell.pilum_of_fire"]').click();
 
     await browser.waitUntil(async () => clean(await $(BAR).getText()).includes('20 / 120'), {
       timeout: 5000,
@@ -107,14 +104,14 @@ describe('spells', () => {
 
   it('flags going over the spell-levels budget', async () => {
     // Add a General spell (Aegis of the Hearth, ReVi) at a huge level so the
-    // total (20 + 200) exceeds the 150 budget.
+    // total (20 + 200) exceeds the 150 budget. The General-level input is always
+    // visible; set it before clicking the spell's add row.
     await $('[data-testid="spell-technique-filter"]').selectByAttribute('value', '');
     await $('[data-testid="spell-form-filter"]').selectByAttribute('value', '');
-    await $(SPELL_SELECT).selectByAttribute('value', 'spell.aegis_of_the_hearth');
     const levelInput = await $('[data-testid="spell-level-input"]');
     await levelInput.waitForExist({ timeout: 5000 });
     await levelInput.setValue('200');
-    await $(SPELL_ADD).click();
+    await $('[data-testid="add-spell.aegis_of_the_hearth"]').click();
 
     await browser.waitUntil(async () => codeExists('over_spell_levels'), {
       timeout: 5000,

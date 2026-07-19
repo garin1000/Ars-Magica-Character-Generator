@@ -138,7 +138,7 @@ describe('picker filter state', () => {
       taintedOnly: false,
     });
     expect(store.filters.abilities).toEqual({ search: '', category: '' });
-    expect(store.filters.spells).toEqual({ search: '', technique: '', form: '', level: '' });
+    expect(store.filters.spells).toEqual({ search: '', technique: '', form: '', level: null });
   });
 
   it('retains a picker tab’s filter state independently of the others', () => {

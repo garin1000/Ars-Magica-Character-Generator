@@ -573,15 +573,6 @@ ul {
   font-variant-numeric: tabular-nums;
 }
 
-/* Spell picker: a filter/add control row, the budget bar, then the chosen list. */
-.spell-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.75rem;
-  margin-bottom: 0.6rem;
-}
-
 /* Filter/search bar for long selectable lists (V/F, Abilities, Equipment).
    Sits ABOVE the scrolling list (`.list-scroll`) in normal flow — NOT inside the
    scroll box — so it stays fixed while only the list scrolls and can never
@@ -604,10 +595,6 @@ ul {
   align-items: center;
   gap: 0.3rem;
   white-space: nowrap;
-}
-
-.spell-select-field {
-  flex: 1 1 16rem;
 }
 
 .spell-levels {
