@@ -196,7 +196,7 @@ reputation-type-academic = Akademisch
 # Tab "Magische Gegenstände" (Magi): Aura, Artefakte, Vertrautenbindung,
 # Talismanabstimmungen und das Langlebigkeitsritual. Das genutzte/verbleibende
 # Artefaktbudget stammt aus der Engine, wird hier nie neu berechnet.
-aura-label = Aura
+aura-label = Angenommene Labor-/Konventaura
 possessions-devices-label = Artefakte
 device-name-placeholder = Name des Artefakts
 device-level-label = Stufe
@@ -427,7 +427,7 @@ derived-section-surfaced = Weitere Modifikatoren
 derived-section-decrepitude = Gebrechlichkeit
 derived-section-warping = Verzerrung
 derived-size = Größe
-derived-aura-label = Aura
+derived-aura-label = Angenommene Labor-/Konventaura
 derived-within-focus = Im Fokus
 derived-deficient = (defizitär, halbiert)
 derived-weak-magic = (Schwache Magie, halbiert)
