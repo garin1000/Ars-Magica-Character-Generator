@@ -203,7 +203,9 @@
     </div>
   {:else if tab === 'possessions'}
     <div class="vf-tab">
-      <MagicPossessions />
+      <div class="tab-scroll">
+        <MagicPossessions />
+      </div>
     </div>
   {:else if tab === 'equipment'}
     <div class="vf-tab">
