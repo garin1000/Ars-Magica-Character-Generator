@@ -10,6 +10,7 @@
     spellMasteryXpSpent,
     spellName,
   } from '../derive';
+  import { tooltip } from '../actions';
   import type { Art, Spell } from '../types';
 
   // Technique/Form/text/level filters live on the store, so they survive the tab
@@ -97,6 +98,12 @@
   function isGeneral(spellId: string): boolean {
     return store.ruleset?.ruleset.spells?.[spellId]?.level == null;
   }
+
+  // The spell's rules-text description, shown as a hover/focus tooltip. Spells
+  // carry no specialties, so the tooltip is text-only.
+  function tip(spellId: string) {
+    return { text: store.ruleset?.i18n[spellId]?.description ?? undefined };
+  }
 </script>
 
 {#if store.ruleset}
@@ -151,6 +158,7 @@
                   type="button"
                   class="pick-row"
                   onclick={() => add(spell)}
+                  use:tooltip={tip(spell.id)}
                   data-testid="add-{spell.id}"
                 >
                   <span class="item-name">{optionLabel(spell)}</span>
@@ -189,7 +197,7 @@
 
         <ul class="spell-list" data-testid="spell-list">
           {#each store.entity.spells ?? [] as chosen, i (`${chosen.spell}:${i}`)}
-            <li>
+            <li use:tooltip={tip(chosen.spell)}>
               <span class="item-name">{rowLabel(chosen.spell)}</span>
               {#if isGeneral(chosen.spell)}
                 <input
