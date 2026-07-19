@@ -259,6 +259,10 @@ house-none = — None —
 house-granted-label = Granted
 # Prompt shown as the empty option of a choice/open specialisation picker.
 house-choose-prompt = Choose…
+# Title of the right column (the selected House's description + its grants).
+house-grants-title = Selected House
+# Shown in the right column when no House has been chosen yet.
+house-none-selected = Select a House to see its details.
 
 # Mythic Companion type selector (mythic-companion-only). Type names come from
 # the rules i18n (keyed by mythic_type id), not from these chrome keys.

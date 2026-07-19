@@ -98,59 +98,107 @@
   }
 </script>
 
-<section class="panel house-selector" data-testid="house-selector">
+<section class="house-selector" data-testid="house-selector">
   {#if store.ruleset}
-    <label class="field">
-      <span>{store.t('house-label')}</span>
-      <select value={store.entity.house ?? ''} onchange={onHouse} data-testid="house-select">
-        <option value="">{store.t('house-none')}</option>
-        {#each houses as house (house.id)}
-          <option value={house.id}>{houseName(house.id)}</option>
-        {/each}
-      </select>
-    </label>
+    <div class="region-row">
+      <section class="region region-source">
+        <h2 class="region-title">{store.t('house-label')}</h2>
+        <div class="panel">
+          <label class="field">
+            <span>{store.t('house-label')}</span>
+            <select value={store.entity.house ?? ''} onchange={onHouse} data-testid="house-select">
+              <option value="">{store.t('house-none')}</option>
+              {#each houses as house (house.id)}
+                <option value={house.id}>{houseName(house.id)}</option>
+              {/each}
+            </select>
+          </label>
+        </div>
+      </section>
 
-    {#if selected}
-      <p class="house-description" use:tooltip={houseTip(selected.id)}>
-        {store.ruleset.i18n[selected.id]?.description ?? ''}
-      </p>
+      <section class="region region-selected">
+        <h2 class="region-title">{store.t('house-grants-title')}</h2>
+        <div class="selected-frame">
+          {#if selected}
+            <p class="house-description" use:tooltip={houseTip(selected.id)}>
+              {store.ruleset.i18n[selected.id]?.description ?? ''}
+            </p>
 
-      <ul class="house-grants">
-        {#each selected.grants ?? [] as grant, g (g)}
-          <li class="house-grant">
-            {#if grant.kind === 'fixed'}
-              <span class="house-granted-label">{store.t('house-granted-label')}</span>
-              <span class="item-name" data-testid="house-granted-{grant.item}">
-                {label(grant.item, grant.params)}
-              </span>
-            {:else if grant.kind === 'choice'}
-              <select
-                value={String(pickedIndex(grant.choice_key, grant.options))}
-                onchange={(e) => onChoice(grant.choice_key, grant.options, e)}
-                data-testid="house-choice-{grant.choice_key}"
-              >
-                <option value="-1">{store.t('house-choose-prompt')}</option>
-                {#each grant.options as option, i (i)}
-                  <option value={String(i)}>{label(option.ref, option.params)}</option>
-                {/each}
-              </select>
-            {:else}
-              <select
-                value={pickedRef(grant.choice_key)}
-                onchange={(e) => onOpen(grant.choice_key, e)}
-                data-testid="house-open-{grant.choice_key}"
-              >
-                <option value="">{store.t('house-choose-prompt')}</option>
-                {#each eligibleForOpen(grant.constraint) as item (item.id)}
-                  <option value={item.id}>{label(item.id)}</option>
-                {/each}
-              </select>
-            {/if}
-          </li>
-        {/each}
-      </ul>
-    {/if}
+            <ul class="house-grants">
+              {#each selected.grants ?? [] as grant, g (g)}
+                <li class="house-grant">
+                  {#if grant.kind === 'fixed'}
+                    <span class="house-granted-label">{store.t('house-granted-label')}</span>
+                    <span class="item-name" data-testid="house-granted-{grant.item}">
+                      {label(grant.item, grant.params)}
+                    </span>
+                  {:else if grant.kind === 'choice'}
+                    <select
+                      value={String(pickedIndex(grant.choice_key, grant.options))}
+                      onchange={(e) => onChoice(grant.choice_key, grant.options, e)}
+                      data-testid="house-choice-{grant.choice_key}"
+                    >
+                      <option value="-1">{store.t('house-choose-prompt')}</option>
+                      {#each grant.options as option, i (i)}
+                        <option value={String(i)}>{label(option.ref, option.params)}</option>
+                      {/each}
+                    </select>
+                  {:else}
+                    <select
+                      value={pickedRef(grant.choice_key)}
+                      onchange={(e) => onOpen(grant.choice_key, e)}
+                      data-testid="house-open-{grant.choice_key}"
+                    >
+                      <option value="">{store.t('house-choose-prompt')}</option>
+                      {#each eligibleForOpen(grant.constraint) as item (item.id)}
+                        <option value={item.id}>{label(item.id)}</option>
+                      {/each}
+                    </select>
+                  {/if}
+                </li>
+              {/each}
+            </ul>
+          {:else}
+            <p class="empty">{store.t('house-none-selected')}</p>
+          {/if}
+        </div>
+      </section>
+    </div>
   {:else}
     <p>{store.t('loading')}</p>
   {/if}
 </section>
+
+<style>
+  .house-description {
+    margin: 0 0 0.75rem;
+    line-height: 1.4;
+  }
+
+  .house-grants {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .house-grant {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .house-granted-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+
+  .empty {
+    color: var(--muted);
+  }
+</style>

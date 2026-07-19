@@ -258,6 +258,10 @@ house-none = — Keines —
 house-granted-label = Gewährt
 # Text der leeren Option einer Spezialisierungs-Auswahl.
 house-choose-prompt = Wählen…
+# Titel der rechten Spalte (Beschreibung des gewählten Hauses + Gewährungen).
+house-grants-title = Gewähltes Haus
+# In der rechten Spalte gezeigt, solange kein Haus gewählt ist.
+house-none-selected = Wähle ein Haus, um seine Details zu sehen.
 
 # Typ-Wähler für mythische Gefährten. Typnamen stammen aus der Regel-i18n
 # (per mythic_type-ID), nicht aus diesen Oberflächenschlüsseln.
