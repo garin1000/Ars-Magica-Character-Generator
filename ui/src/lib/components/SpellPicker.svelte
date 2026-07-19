@@ -40,7 +40,7 @@
         text: filter.search,
         technique: filter.technique || undefined,
         form: filter.form || undefined,
-        level: filter.level === '' ? undefined : Number(filter.level),
+        level: filter.level,
       },
       store.t,
     ).sort((a, b) => spellName(rs, a.id).localeCompare(spellName(rs, b.id)));
