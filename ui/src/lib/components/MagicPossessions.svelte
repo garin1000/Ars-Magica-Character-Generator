@@ -211,3 +211,76 @@
     <p>{store.t('loading')}</p>
   {/if}
 </section>
+
+<style>
+  /* Top-level vertical rhythm between the aura field and each item section.
+     `.detail-section` (spacing within a section) and `.field.inline` (label
+     beside its input) are shared globals in app.css. */
+  .magic-possessions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .budget-readout {
+    margin: 0;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Item rows: a growing name/description input, an inline number field and the
+     remove button, all baseline-aligned on one line. */
+  .device-list,
+  .talisman-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .device-list li,
+  .talisman-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .device-name,
+  .talisman-desc,
+  .familiar-name {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .device-list li.empty,
+  .talisman-list li.empty {
+    color: var(--muted);
+    display: block;
+  }
+
+  /* Familiar bond cords sit in a wrapping row of inline number fields. */
+  .cord-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  /* Longevity source radios on one row. */
+  .longevity-source {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .radio {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .empty {
+    color: var(--muted);
+  }
+</style>

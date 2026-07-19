@@ -81,6 +81,14 @@ body {
   color: var(--muted);
 }
 
+/* An inline field puts its label beside the input on one row (used in the
+   Magic Items and detail panels where the control is a short number field). */
+.field.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 select,
 input,
 button {
@@ -651,6 +659,15 @@ ul {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+/* A grouped block of related fields/readouts (Identity, Aging, a device list…).
+   Shared by MagicPossessions, DerivedTotalsPanel, SupernaturalBeing and
+   CharacterDetails: a vertical stack with consistent spacing. */
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 .detail-label {
