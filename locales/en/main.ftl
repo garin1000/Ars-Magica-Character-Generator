@@ -440,6 +440,11 @@ derived-range = Range
 derived-load = Load
 derived-burden = Burden
 derived-lab-total = Lab Total
+# On-demand Lab/Casting Total picker: choose a Technique and Form to see the
+# single matching totals instead of the full combination tables.
+derived-section-lab-casting = Lab & Casting Totals
+derived-picker-technique = Technique
+derived-picker-form = Form
 derived-combat-empty = No weapons equipped.
 derived-cast-formulaic = Formulaic
 derived-cast-ritual = Ritual
