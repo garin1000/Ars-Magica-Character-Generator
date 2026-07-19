@@ -151,6 +151,10 @@
       </div>
     {/if}
 
+    <!-- Warping & Twilight cluster: kept consecutive in source order so the
+         .character-details multi-column flow lands them together. Source order
+         governs column flow; CSS `order` has no effect on multi-column children,
+         so adjacency is achieved by ordering the DOM, not by styling. -->
     {#if showWarping}
       <div class="detail-field">
         <span class="detail-label">{store.t('warping-label')}</span>
@@ -162,6 +166,19 @@
 
     <div class="detail-field">
       <label class="field">
+        <span>{store.t('warping-points-label')}</span>
+        <input
+          type="number"
+          min="0"
+          value={storedWarpingPoints}
+          oninput={(e) => store.setWarpingPoints(numValue(e))}
+          data-testid="warping-points-input"
+        />
+      </label>
+    </div>
+
+    <div class="detail-field">
+      <label class="field">
         <span>{store.t('warping-effect-label')}</span>
         <input
           type="text"
@@ -170,6 +187,38 @@
           data-testid="warping-effect-input"
         />
       </label>
+    </div>
+
+    <div class="detail-section">
+      <h3 class="detail-label">{store.t('twilight-scars-label')}</h3>
+      <ul class="twilight-list" data-testid="twilight-scars-list">
+        {#each twilightScars as scar, i (i)}
+          <li>
+            <input
+              class="twilight-desc"
+              placeholder={store.t('twilight-scar-placeholder')}
+              value={scar.description}
+              oninput={(e) =>
+                store.setTwilightScarDescription(i, (e.currentTarget as HTMLInputElement).value)}
+              data-testid="twilight-scar-{i}"
+            />
+            <button
+              type="button"
+              class="icon-btn"
+              aria-label={store.t('spell-remove')}
+              onclick={() => store.removeTwilightScarAt(i)}
+              data-testid="twilight-scar-remove-{i}"
+            >
+              ×
+            </button>
+          </li>
+        {:else}
+          <li class="empty">{store.t('twilight-scars-empty')}</li>
+        {/each}
+      </ul>
+      <button type="button" onclick={() => store.addTwilightScar()} data-testid="twilight-scar-add">
+        {store.t('twilight-scar-add')}
+      </button>
     </div>
 
     {#if trueFaith > 0}
@@ -231,16 +280,6 @@
       <p class="detail-label" data-testid="aging-points-note">
         {store.t('aging-points-note')}
       </p>
-      <label class="field">
-        <span>{store.t('warping-points-label')}</span>
-        <input
-          type="number"
-          min="0"
-          value={storedWarpingPoints}
-          oninput={(e) => store.setWarpingPoints(numValue(e))}
-          data-testid="warping-points-input"
-        />
-      </label>
 
       <p class="detail-label">{store.t('aging-log-heading')}</p>
       <ul class="twilight-list" data-testid="aging-log-list">
@@ -278,38 +317,6 @@
       </ul>
       <button type="button" onclick={() => store.addAgingLogEntry()} data-testid="aging-log-add">
         {store.t('aging-log-add')}
-      </button>
-    </div>
-
-    <div class="detail-section">
-      <h3 class="detail-label">{store.t('twilight-scars-label')}</h3>
-      <ul class="twilight-list" data-testid="twilight-scars-list">
-        {#each twilightScars as scar, i (i)}
-          <li>
-            <input
-              class="twilight-desc"
-              placeholder={store.t('twilight-scar-placeholder')}
-              value={scar.description}
-              oninput={(e) =>
-                store.setTwilightScarDescription(i, (e.currentTarget as HTMLInputElement).value)}
-              data-testid="twilight-scar-{i}"
-            />
-            <button
-              type="button"
-              class="icon-btn"
-              aria-label={store.t('spell-remove')}
-              onclick={() => store.removeTwilightScarAt(i)}
-              data-testid="twilight-scar-remove-{i}"
-            >
-              ×
-            </button>
-          </li>
-        {:else}
-          <li class="empty">{store.t('twilight-scars-empty')}</li>
-        {/each}
-      </ul>
-      <button type="button" onclick={() => store.addTwilightScar()} data-testid="twilight-scar-add">
-        {store.t('twilight-scar-add')}
       </button>
     </div>
 
