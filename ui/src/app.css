@@ -100,6 +100,13 @@ button {
   color: var(--ink);
 }
 
+/* Number spinners never need to be as wide as a text field; a single global
+   width keeps every count/score input compact and consistent. Text/search
+   inputs and textareas are unaffected (not type=number). */
+input[type='number'] {
+  width: 4.5rem;
+}
+
 button {
   cursor: pointer;
 }
@@ -693,6 +700,29 @@ ul {
   font-variant-numeric: tabular-nums;
 }
 
+/* Aging points: a two-column grid (Characteristic name | points input) so the
+   spinners line up in their own column instead of butting against the names.
+   Each <li> is `display: contents` so its name + input flow into the grid
+   columns directly. */
+.aging-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: max-content 4.5rem;
+  column-gap: 0.75rem;
+  row-gap: 0.3rem;
+  align-items: center;
+}
+
+.aging-list li {
+  display: contents;
+}
+
+.char-name {
+  white-space: nowrap;
+}
+
 .trait-list,
 .reputation-list {
   list-style: none;
@@ -737,10 +767,6 @@ ul {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-}
-
-.xp-pool input {
-  width: 5rem;
 }
 
 .xp-summary .over {
