@@ -1062,10 +1062,14 @@ describe('unsaved-changes tracking', () => {
     };
   }
 
-  /** Drive a real load so the store captures a clean saved-baseline. */
-  async function loadClean(): Promise<void> {
-    vi.mocked(ipc.loadEntity).mockResolvedValue(cleanEntity());
-    await store.load();
+  /** Drive a real open so the store captures a clean saved-baseline. */
+  async function loadClean(path = '/tmp/marcus.armc'): Promise<void> {
+    vi.mocked(ipc.loadEntity).mockResolvedValue({ path, entity: cleanEntity() });
+    const opening = store.open();
+    // The shared singleton may be dirty from a prior test; open() then shows the
+    // discard prompt. Confirm it so this setup helper always reaches the load.
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
   }
 
   it('is not dirty once a file has just been loaded', async () => {
@@ -1091,6 +1095,9 @@ describe('unsaved-changes tracking', () => {
 
   it('stays dirty after a cancelled save (null return)', async () => {
     await loadClean();
+    // Clear the current file so save() routes to Save As (which prompts and can
+    // be cancelled). A cancelled prompt returns null: nothing was written.
+    store.currentPath = null;
     store.setIdentity('name', 'Marcus');
 
     vi.mocked(ipc.saveEntity).mockResolvedValue(null);
@@ -1142,5 +1149,180 @@ describe('unsaved-changes tracking', () => {
     store.setIdentity('name', 'Marcus');
     payload = store.closeGuardPayload();
     expect(payload.dirty).toBe(true);
+  });
+});
+
+// --- document file model (current file, Save vs Save As, New, in-flight) -----
+
+describe('document file model', () => {
+  function cleanEntity(): Entity {
+    return {
+      schema_version: 7,
+      ruleset: { id: 'test', version: '1' },
+      entity_kind: 'character',
+      type_id: 'companion',
+      selections: [],
+      characteristics: {} as Entity['characteristics'],
+      characteristic_descriptions: {},
+      ability_scores: [],
+      xp_pool: 0,
+      art_scores: [],
+      personality_traits: [],
+      reputations: [],
+    };
+  }
+
+  /** Open a file with a known path so the store tracks it as the current file. */
+  async function openFile(path = '/tmp/marcus.armc'): Promise<void> {
+    vi.mocked(ipc.loadEntity).mockResolvedValue({ path, entity: cleanEntity() });
+    const opening = store.open();
+    // The shared singleton may be dirty from a prior test; confirm the discard
+    // prompt so this setup helper always reaches the load.
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+  }
+
+  beforeEach(() => {
+    vi.mocked(ipc.saveEntity).mockReset();
+    vi.mocked(ipc.loadEntity).mockReset();
+    store.currentPath = null;
+    store.filters = defaultPickerFilters();
+  });
+
+  it('open() sets the current file path from the loaded document', async () => {
+    await openFile('/tmp/aelius.armc');
+    expect(store.currentPath).toBe('/tmp/aelius.armc');
+    expect(store.currentFileName).toBe('aelius.armc');
+  });
+
+  it('save() writes directly to the current file without prompting', async () => {
+    await openFile('/tmp/marcus.armc');
+    store.setIdentity('name', 'Marcus');
+    vi.mocked(ipc.saveEntity).mockResolvedValue('/tmp/marcus.armc');
+
+    await store.save();
+
+    // Passed the known path (no prompt) — second arg is the current file.
+    expect(ipc.saveEntity).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(ipc.saveEntity).mock.calls[0][1]).toBe('/tmp/marcus.armc');
+    expect(store.dirty).toBe(false);
+  });
+
+  it('save() with no current file falls back to Save As (prompt)', async () => {
+    store.setIdentity('name', 'Marcus');
+    vi.mocked(ipc.saveEntity).mockResolvedValue('/tmp/new.armc');
+
+    await store.save();
+
+    // Prompted: path arg is null so the backend opens the dialog.
+    expect(vi.mocked(ipc.saveEntity).mock.calls[0][1]).toBeNull();
+    expect(store.currentPath).toBe('/tmp/new.armc');
+  });
+
+  it('saveAs() always prompts and updates the current file on success', async () => {
+    await openFile('/tmp/marcus.armc');
+    store.setIdentity('name', 'Marcus');
+    vi.mocked(ipc.saveEntity).mockResolvedValue('/tmp/renamed.armc');
+
+    await store.saveAs();
+
+    expect(vi.mocked(ipc.saveEntity).mock.calls[0][1]).toBeNull();
+    expect(store.currentPath).toBe('/tmp/renamed.armc');
+    expect(store.dirty).toBe(false);
+  });
+
+  it('saveAs() cancel leaves the current file unchanged and stays dirty', async () => {
+    await openFile('/tmp/marcus.armc');
+    store.setIdentity('name', 'Marcus');
+    vi.mocked(ipc.saveEntity).mockResolvedValue(null);
+
+    await store.saveAs();
+
+    expect(store.currentPath).toBe('/tmp/marcus.armc');
+    expect(store.dirty).toBe(true);
+  });
+
+  it('save() failure surfaces an error and keeps the document dirty', async () => {
+    await openFile('/tmp/marcus.armc');
+    store.setIdentity('name', 'Marcus');
+    vi.mocked(ipc.saveEntity).mockRejectedValue({ kind: 'io' });
+
+    await store.save();
+
+    expect(store.error).toEqual({ kind: 'io' });
+    expect(store.dirty).toBe(true);
+    expect(store.currentPath).toBe('/tmp/marcus.armc');
+  });
+
+  it('a second save while one is in flight is a no-op (guarded)', async () => {
+    await openFile('/tmp/marcus.armc');
+    store.setIdentity('name', 'Marcus');
+    // A save that stays pending models a still-open write; the second call must
+    // not re-enter while the first is unresolved.
+    let finishFirst: (path: string | null) => void = () => {};
+    vi.mocked(ipc.saveEntity).mockReturnValue(
+      new Promise<string | null>((resolve) => {
+        finishFirst = resolve;
+      }),
+    );
+
+    const first = store.save();
+    void store.save();
+
+    expect(ipc.saveEntity).toHaveBeenCalledTimes(1);
+
+    // Let the first write finish so the in-flight guard clears for later tests.
+    finishFirst('/tmp/marcus.armc');
+    await first;
+  });
+
+  it('newDocument() resets the current file, filters, and dirty baseline', async () => {
+    await openFile('/tmp/marcus.armc');
+    store.filters.abilities.search = 'latin';
+    // Clean document, so no discard prompt is needed.
+    await store.newDocument();
+
+    expect(store.currentPath).toBeNull();
+    expect(store.dirty).toBe(false);
+    expect(store.filters.abilities.search).toBe('');
+    expect(store.entity.name).toBeUndefined();
+  });
+
+  it('newDocument() on a dirty document waits for the discard prompt', async () => {
+    await openFile('/tmp/marcus.armc');
+    store.setIdentity('name', 'Marcus');
+
+    // Cancelling the prompt aborts: the edited document is kept.
+    const cancelled = store.newDocument();
+    expect(store.discardPromptOpen).toBe(true);
+    store.resolveDiscardPrompt(false);
+    await cancelled;
+    expect(store.entity.name).toBe('Marcus');
+    expect(store.currentPath).toBe('/tmp/marcus.armc');
+
+    // Confirming discards and resets to a fresh document.
+    const confirmed = store.newDocument();
+    expect(store.discardPromptOpen).toBe(true);
+    store.resolveDiscardPrompt(true);
+    await confirmed;
+    expect(store.entity.name).toBeUndefined();
+    expect(store.currentPath).toBeNull();
+    expect(store.dirty).toBe(false);
+  });
+
+  it('open() on a dirty document honors the discard prompt', async () => {
+    await openFile('/tmp/marcus.armc');
+    store.setIdentity('name', 'Marcus');
+
+    // Ignore the setup helper's load; only the cancelled open below matters.
+    vi.mocked(ipc.loadEntity).mockClear();
+    vi.mocked(ipc.loadEntity).mockResolvedValue({ path: '/tmp/other.armc', entity: cleanEntity() });
+    const opening = store.open();
+    expect(store.discardPromptOpen).toBe(true);
+    store.resolveDiscardPrompt(false);
+    await opening;
+    // Cancelled: the current file is unchanged and loadEntity was never called.
+    expect(store.currentPath).toBe('/tmp/marcus.armc');
+    expect(ipc.loadEntity).not.toHaveBeenCalled();
   });
 });

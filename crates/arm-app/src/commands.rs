@@ -149,42 +149,61 @@ fn e2e_file_override() -> Option<std::path::PathBuf> {
     std::env::var_os(E2E_FILE_ENV).map(std::path::PathBuf::from)
 }
 
-/// Prompts for a destination and writes the entity as canonical JSON.
-/// Returns the chosen path, or `None` if the dialog was cancelled.
-#[tauri::command]
-pub async fn save_entity(entity: Entity, app: AppHandle) -> Result<Option<String>, AppError> {
-    let path = match e2e_file_override() {
-        Some(path) => path,
-        None => {
-            let ext = ruleset_io::entity_extension(entity.entity_kind);
-            let Some(file) = app
-                .dialog()
-                .file()
-                // Ars Magica character/covenant files first (the default save
-                // type), then JSON for interop, then an all-files fallback.
-                .add_filter("Ars Magica character", &["armc", "armcov"])
-                .add_filter("JSON", &["json"])
-                .add_filter("All files", &["*"])
-                .set_file_name(ruleset_io::default_file_name(entity.entity_kind))
-                .blocking_save_file()
-            else {
-                return Ok(None);
-            };
-            let chosen = file.into_path().map_err(|e| AppError::Io {
-                message: e.to_string(),
-            })?;
-            ruleset_io::ensure_extension(chosen, ext)
-        }
-    };
-
-    ruleset_io::save_entity_to_path(&entity, &path)?;
-    Ok(Some(path.to_string_lossy().into_owned()))
+/// An opened document: the deserialized entity plus the file it came from, so
+/// the frontend can track it as the "current file" for subsequent direct saves.
+#[derive(serde::Serialize)]
+pub struct LoadedEntity {
+    pub path: String,
+    pub entity: Entity,
 }
 
-/// Prompts for a file and deserializes the entity from it.
-/// Returns `None` if the dialog was cancelled.
+/// Writes the entity as canonical JSON. When `path` is `Some`, writes straight to
+/// that file with no dialog (a plain Save to the current file); when `None`,
+/// prompts for a destination (Save As / first Save). Returns the written path, or
+/// `None` if a prompt was cancelled.
 #[tauri::command]
-pub async fn load_entity(app: AppHandle) -> Result<Option<Entity>, AppError> {
+pub async fn save_entity(
+    entity: Entity,
+    path: Option<String>,
+    app: AppHandle,
+) -> Result<Option<String>, AppError> {
+    let ext = ruleset_io::entity_extension(entity.entity_kind);
+    let target = match path {
+        // A known current file: write directly, no dialog. `ensure_extension` is a
+        // no-op for a path that already carries one.
+        Some(path) => ruleset_io::ensure_extension(std::path::PathBuf::from(path), ext),
+        None => match e2e_file_override() {
+            Some(path) => path,
+            None => {
+                let Some(file) = app
+                    .dialog()
+                    .file()
+                    // Ars Magica character/covenant files first (the default save
+                    // type), then JSON for interop, then an all-files fallback.
+                    .add_filter("Ars Magica character", &["armc", "armcov"])
+                    .add_filter("JSON", &["json"])
+                    .add_filter("All files", &["*"])
+                    .set_file_name(ruleset_io::default_file_name(entity.entity_kind))
+                    .blocking_save_file()
+                else {
+                    return Ok(None);
+                };
+                let chosen = file.into_path().map_err(|e| AppError::Io {
+                    message: e.to_string(),
+                })?;
+                ruleset_io::ensure_extension(chosen, ext)
+            }
+        },
+    };
+
+    ruleset_io::save_entity_to_path(&entity, &target)?;
+    Ok(Some(target.to_string_lossy().into_owned()))
+}
+
+/// Prompts for a file and deserializes the entity from it, returning it paired
+/// with its path. Returns `None` if the dialog was cancelled.
+#[tauri::command]
+pub async fn load_entity(app: AppHandle) -> Result<Option<LoadedEntity>, AppError> {
     let path = match e2e_file_override() {
         Some(path) => path,
         None => {
@@ -206,5 +225,8 @@ pub async fn load_entity(app: AppHandle) -> Result<Option<Entity>, AppError> {
     };
 
     let entity = ruleset_io::load_entity_from_path(&path)?;
-    Ok(Some(entity))
+    Ok(Some(LoadedEntity {
+        path: path.to_string_lossy().into_owned(),
+        entity,
+    }))
 }
