@@ -73,7 +73,14 @@ describe('spells', () => {
     // list. Hovering its row appends the description popup to <body>.
     const row = await $('[data-testid="add-spell.pilum_of_fire"]');
     await row.waitForExist({ timeout: 5000 });
-    await row.moveTo();
+    // Dispatch mouseenter directly: the `tooltip` action binds to it, so this
+    // exercises the real wiring (action attached + description present + popup
+    // built) deterministically. Pointer moveTo / el.focus() are unreliable under
+    // parallel webdriver runs because the webview window is blurred, which
+    // suppresses OS hover/focus events; a synthetic event is focus-independent.
+    await browser.execute((el) => {
+      el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    }, row);
     const pop = await $('.tooltip-pop .tooltip-text');
     await pop.waitForExist({ timeout: 5000 });
     expect((await pop.getText()).trim().length).toBeGreaterThan(0);

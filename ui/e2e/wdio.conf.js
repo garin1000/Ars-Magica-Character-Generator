@@ -29,6 +29,13 @@ export const config = {
   runner: 'local',
   specs: [path.resolve(dirname, 'specs/**/*.e2e.js')],
   maxInstances: 1,
+  // Specs run serially against one shared app instance and each passes in
+  // isolation, but the shared session occasionally emits a transient
+  // interactability/timing flake that wanders between specs run-to-run. One
+  // retry cleanly absorbs those without masking a real, deterministic failure
+  // (which fails both attempts).
+  specFileRetries: 1,
+  specFileRetriesDeferred: true,
 
   // Connect to tauri-driver (classic WebDriver) rather than auto-starting a
   // browser driver. tauri-driver listens on 4444 and forwards to the native
