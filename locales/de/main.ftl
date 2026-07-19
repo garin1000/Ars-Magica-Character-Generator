@@ -267,7 +267,7 @@ house-granted-label = Gewährt
 # Text der leeren Option einer Spezialisierungs-Auswahl.
 house-choose-prompt = Wählen…
 # Titel der rechten Spalte (Beschreibung des gewählten Hauses + Gewährungen).
-house-grants-title = Gewähltes Haus
+house-grants-title = Hausdetails
 # In der rechten Spalte gezeigt, solange kein Haus gewählt ist.
 house-none-selected = Wähle ein Haus, um seine Details zu sehen.
 
