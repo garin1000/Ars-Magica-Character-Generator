@@ -244,7 +244,9 @@
     </div>
   {:else}
     <div class="vf-tab">
-      <HouseSelector />
+      <div class="tab-scroll">
+        <HouseSelector />
+      </div>
     </div>
   {/if}
 </main>
