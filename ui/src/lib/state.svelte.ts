@@ -44,7 +44,7 @@ export interface SpellFilterState {
   search: string;
   technique: string;
   form: string;
-  level: string;
+  level: number | null;
 }
 
 /** Live filter/search state of the Equipment picker (kind = weapons/shields/armor). */
@@ -76,7 +76,7 @@ export function defaultPickerFilters(): PickerFilters {
       flaw: { search: '', magnitude: '', category: '', taintedOnly: false },
     },
     abilities: { search: '', category: '' },
-    spells: { search: '', technique: '', form: '', level: '' },
+    spells: { search: '', technique: '', form: '', level: null },
     equipment: { search: '', kind: '' },
   };
 }

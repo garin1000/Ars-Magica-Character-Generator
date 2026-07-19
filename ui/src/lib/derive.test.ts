@@ -211,6 +211,14 @@ describe('filterSpells', () => {
     expect(filterSpells(rs, spells, { text: 'veil' }).map((s) => s.id)).toEqual(['spell.veil']);
     expect(filterSpells(rs, spells, { level: 20 }).map((s) => s.id)).toEqual(['spell.pilum']);
   });
+
+  it('treats a null level as "no level filter" (returns all spells)', () => {
+    expect(filterSpells(rs, spells, { level: null }).map((s) => s.id)).toEqual([
+      'spell.pilum',
+      'spell.veil',
+      'spell.ward',
+    ]);
+  });
 });
 
 // --- balance() --------------------------------------------------------------

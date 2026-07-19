@@ -124,8 +124,10 @@ export interface SpellFilter {
 
 /**
  * Spells matching the text (localized name), Technique and Form (each optional,
- * so they filter separately or combined), and exact level. A `level` of `null`
- * (or a General spell) is matched only when the filter's `level` is `null`.
+ * so they filter separately or combined), and exact level. Only a finite `level`
+ * filters (by exact match); a non-finite value (null / undefined / NaN) means
+ * "no level filter" and lets every spell through — an emptied number input binds
+ * to `null`, which must clear the filter rather than match level 0.
  */
 export function filterSpells(
   localized: LocalizedRuleset,
@@ -144,7 +146,8 @@ export function filterSpells(
     if (text && !normalizeSearch(name).includes(text)) return false;
     if (filter.technique && s.technique !== filter.technique) return false;
     if (filter.form && s.form !== filter.form) return false;
-    if (filter.level !== undefined && (s.level ?? null) !== filter.level) return false;
+    if (filter.level != null && Number.isFinite(filter.level) && s.level !== filter.level)
+      return false;
     return true;
   });
 }
