@@ -126,7 +126,7 @@
 
         {#if castCell}
           <div class="table-scroll">
-            <table class="derived-table" data-testid="derived-casting-total">
+            <table class="derived-table casting" data-testid="derived-casting-total">
               <thead>
                 <tr>
                   <th></th>
@@ -358,10 +358,11 @@
     border-collapse: collapse;
     width: 100%;
   }
-  /* The combat read-out has few columns; full width spreads them awkwardly, so
-     it shrinks to its content (still scrolls if it ever overflows). The lab and
-     casting grids keep the shared 100% width. */
-  .derived-table.combat {
+  /* The combat and casting read-outs have few columns; full width spreads them
+     awkwardly, so they shrink to their content (still scroll if they ever
+     overflow). The lab grid keeps the shared 100% width. */
+  .derived-table.combat,
+  .derived-table.casting {
     width: auto;
     max-width: 100%;
   }

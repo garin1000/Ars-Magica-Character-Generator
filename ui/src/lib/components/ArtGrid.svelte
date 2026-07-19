@@ -54,7 +54,7 @@
             {@const bonus = bonusOf(art.id)}
             <li>
               <span class="item-name" use:tooltip={tip(art.id)}>
-                {name(art.id)}{#if abbr(art.id)}<span class="art-abbr"> ({abbr(art.id)})</span>{/if}
+                {name(art.id)}{#if abbr(art.id)}<span class="art-abbr">({abbr(art.id)})</span>{/if}
               </span>
               <span class="spinner">
                 <button

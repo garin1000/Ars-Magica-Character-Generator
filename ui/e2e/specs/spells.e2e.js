@@ -68,6 +68,17 @@ describe('spells', () => {
     });
   });
 
+  it('shows a description tooltip when hovering a spell row', async () => {
+    // The Creo Ignem filter is still applied, so Pilum of Fire is in the source
+    // list. Hovering its row appends the description popup to <body>.
+    const row = await $('[data-testid="add-spell.pilum_of_fire"]');
+    await row.waitForExist({ timeout: 5000 });
+    await row.moveTo();
+    const pop = await $('.tooltip-pop .tooltip-text');
+    await pop.waitForExist({ timeout: 5000 });
+    expect((await pop.getText()).trim().length).toBeGreaterThan(0);
+  });
+
   it('flags a spell above the per-spell cap (fresh magus: cap 3)', async () => {
     // The magus has 0 Arts / Int / Magic Theory, so the cap is 0+0+0+0+3 = 3 and
     // Pilum (level 20) exceeds it.

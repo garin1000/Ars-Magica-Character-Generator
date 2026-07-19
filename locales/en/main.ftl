@@ -311,6 +311,14 @@ discard-changes-cancel = Cancel
 app-title-document = { $name } — { $app }
 app-title-document-dirty = *{ $name } — { $app }
 
+# On-screen document status shown in the header (not only in the OS window
+# title): the active save's file name, with an ASCII marker prepended for a
+# document with unsaved edits, or a label for a document that has never been saved.
+app-document-name = { $name }
+app-document-name-dirty = *{ $name }
+app-document-unsaved = Unsaved document
+app-document-unsaved-dirty = *Unsaved document
+
 # Hint shown for an unfilled parameter slot in an item name, e.g. "Puissant (Ability)".
 param-hint = ({ $label })
 # Localized parameter labels, keyed by the engine's parameter key. Also used as the

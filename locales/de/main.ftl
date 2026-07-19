@@ -309,6 +309,14 @@ discard-changes-cancel = Abbrechen
 app-title-document = { $name } — { $app }
 app-title-document-dirty = *{ $name } — { $app }
 
+# Dokumentstatus in der Kopfzeile (nicht nur im Fenstertitel): der Dateiname der
+# aktiven Speicherung, mit vorangestellter ASCII-Markierung für ungespeicherte
+# Änderungen, oder eine Bezeichnung für ein noch nie gespeichertes Dokument.
+app-document-name = { $name }
+app-document-name-dirty = *{ $name }
+app-document-unsaved = Ungespeichertes Dokument
+app-document-unsaved-dirty = *Ungespeichertes Dokument
+
 # Hinweis für einen nicht ausgefüllten Parameter-Platzhalter im Namen, z. B. „Begabung in (Fertigkeit)“.
 param-hint = ({ $label })
 # Lokalisierte Parameter-Bezeichnungen, je Parameter-Schlüssel der Engine. Dienen auch

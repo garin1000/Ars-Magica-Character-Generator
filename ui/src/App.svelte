@@ -136,6 +136,18 @@
   <div class="brand">
     <img class="app-logo" src={logoUrl} alt={store.t('app-logo-alt')} />
     <h1>{store.t('app-title')}</h1>
+    <!-- Active save's file name + ASCII dirty marker, on-screen (not only in the
+         OS window title). Reuses the derived currentFileName/dirty state; a null
+         file name means the document has never been saved. -->
+    <span class="doc-status" data-testid="doc-status">
+      {#if store.currentFileName === null}
+        {store.t(store.dirty ? 'app-document-unsaved-dirty' : 'app-document-unsaved')}
+      {:else}
+        {store.t(store.dirty ? 'app-document-name-dirty' : 'app-document-name', {
+          name: store.currentFileName,
+        })}
+      {/if}
+    </span>
   </div>
   <div class="controls">
     <CharacterTypeSelector />
