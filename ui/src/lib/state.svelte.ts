@@ -54,18 +54,21 @@ export interface EquipmentFilterState {
 }
 
 /**
- * Per-picker filter/search state, lifted out of the picker components so it
- * survives tab switches. Each `{#if tab === …}` panel in `App.svelte` unmounts
- * its picker, which would discard any component-local `$state`; holding it here
- * (keyed by picker identity) restores the search/filter when the tab returns.
- * Language-neutral (search text + ids), so it is never reset on a ruleset reload
- * and never enters the saved entity.
+ * Per-panel view state, lifted out of the panel components so it survives tab
+ * switches. Each `{#if tab === …}` panel in `App.svelte` unmounts its content,
+ * which would discard any component-local `$state`; holding it here (keyed by
+ * panel identity) restores it when the tab returns. Mostly picker search/filter
+ * state, plus the Derived-Totals Technique/Form picker selection (`derivedArtPicker`,
+ * a non-filter choice). Language-neutral (search text + ids), so it is never
+ * reset on a ruleset reload and never enters the saved entity.
  */
 export interface PickerFilters {
   vf: Record<'virtue' | 'flaw', VfFilterState>;
   abilities: AbilityFilterState;
   spells: SpellFilterState;
   equipment: EquipmentFilterState;
+  /** Derived-Totals Lab/Casting picker: the chosen Technique and Form art ids. */
+  derivedArtPicker: { technique: string; form: string };
 }
 
 /** File-name portion of a save path (handles both `/` and `\` separators). */
@@ -84,6 +87,7 @@ export function defaultPickerFilters(): PickerFilters {
     abilities: { search: '', category: '' },
     spells: { search: '', technique: '', form: '', level: null },
     equipment: { search: '', kind: '' },
+    derivedArtPicker: { technique: '', form: '' },
   };
 }
 
