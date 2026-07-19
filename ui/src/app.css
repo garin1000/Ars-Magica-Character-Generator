@@ -66,6 +66,16 @@ body {
   margin: 0;
 }
 
+/* Active save's file name (with an ASCII dirty marker) shown at the right of the
+   brand row, so the current document and its unsaved state are visible on-screen
+   and not only in the OS window title. */
+.doc-status {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .controls {
   display: flex;
   gap: 1rem;
@@ -559,7 +569,10 @@ ul {
    columns — Techniques, then the Forms split into two halves of five. */
 .art-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* Content-width columns: each is as wide as its longest Art row but no wider,
+     left-aligned rather than stretched across the whole tab. */
+  grid-template-columns: repeat(3, max-content);
+  justify-content: start;
   gap: 1rem;
   align-items: start;
 }
@@ -584,6 +597,7 @@ ul {
 }
 
 .art-abbr {
+  margin-left: 0.35rem;
   color: var(--muted, #6b7280);
   font-variant-numeric: tabular-nums;
 }
@@ -943,6 +957,12 @@ ul {
 
 .tooltip-pop .tooltip-text {
   margin: 0;
+  /* Rules descriptions carry `\n` paragraph breaks — honor them instead of
+     collapsing to a run-on line, and cap the height so a long spell description
+     scrolls inside the popup rather than overflowing the viewport. */
+  white-space: pre-line;
+  max-height: 40vh;
+  overflow-y: auto;
 }
 
 .tooltip-pop .tooltip-list {
