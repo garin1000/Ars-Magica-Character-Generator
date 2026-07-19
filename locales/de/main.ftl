@@ -440,6 +440,11 @@ derived-range = Reichweite
 derived-load = Last
 derived-burden = Beladung
 derived-lab-total = Laborsumme
+# Auf-Abruf-Auswahl für Labor-/Zaubersumme: Technik und Form wählen, um nur die
+# passenden Summen statt der vollständigen Kombinationstabellen zu sehen.
+derived-section-lab-casting = Labor- & Zaubersummen
+derived-picker-technique = Technik
+derived-picker-form = Form
 derived-combat-empty = Keine Waffen ausgerüstet.
 derived-cast-formulaic = Formulaisch
 derived-cast-ritual = Ritual
