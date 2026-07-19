@@ -68,6 +68,12 @@ export interface PickerFilters {
   equipment: EquipmentFilterState;
 }
 
+/** File-name portion of a save path (handles both `/` and `\` separators). */
+function fileNameOf(path: string): string {
+  const parts = path.split(/[\\/]/);
+  return parts[parts.length - 1] || path;
+}
+
 /** A fresh, all-empty set of picker filters (the initial/reset state). */
 export function defaultPickerFilters(): PickerFilters {
   return {
@@ -115,6 +121,26 @@ class AppStore {
   // Per-picker filter/search state; persists across tab switches (see
   // {@link PickerFilters}). Not part of the entity, so it is never saved.
   filters = $state<PickerFilters>(defaultPickerFilters());
+
+  // Absolute path of the document's current file (from the last Open or the last
+  // Save As / first Save). `null` for a never-saved document, so Save behaves as
+  // Save As. Drives the window title too.
+  currentPath = $state<string | null>(null);
+
+  /** File name of the current document, or `null` when it has never been saved. */
+  currentFileName = $derived(this.currentPath ? fileNameOf(this.currentPath) : null);
+
+  // A Save/Save As/Open is running. A second one is a no-op until it finishes, so
+  // a stray double click or shortcut can't stack native dialogs or races.
+  #opInFlight = $state(false);
+
+  /** Whether a file operation (Save/Save As/Open) is running; disables the toolbar. */
+  busy = $derived(this.#opInFlight);
+
+  /** Whether the New/Open discard-confirmation prompt is currently shown. */
+  discardPromptOpen = $state(false);
+  // Resolver for the in-flight discard prompt (`true` = discard and proceed).
+  #discardResolve: ((discard: boolean) => void) | null = null;
 
   // Serialized snapshot of the entity as of the last save/load — the baseline
   // the close/quit guard compares against. Seeded from the initial entity so
@@ -836,33 +862,118 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /**
+   * Save to the current file. A never-saved document (no {@link currentPath})
+   * falls back to {@link saveAs} so the user picks a destination; otherwise it
+   * writes straight to the tracked file with no prompt (standard document-app
+   * behavior). No-op while another file operation is in flight.
+   */
   async save(): Promise<void> {
+    if (this.#opInFlight) return;
+    if (this.currentPath === null) {
+      await this.saveAs();
+      return;
+    }
+    await this.#writeTo(this.currentPath);
+  }
+
+  /**
+   * Always prompt for a destination and, on success, adopt it as the current
+   * file. A cancelled prompt (null path) leaves the current file untouched and
+   * the document dirty. No-op while another file operation is in flight.
+   */
+  async saveAs(): Promise<void> {
+    if (this.#opInFlight) return;
+    await this.#writeTo(null);
+  }
+
+  /**
+   * Shared write path. `path === null` prompts (Save As / first Save); a concrete
+   * path writes directly. On success clears dirty and records the written path as
+   * the current file. The baseline is captured BEFORE awaiting, so edits made
+   * while a dialog is open stay marked dirty.
+   */
+  async #writeTo(path: string | null): Promise<void> {
+    this.#opInFlight = true;
     this.error = null;
-    // Capture the baseline BEFORE awaiting the (async, cancellable) save dialog,
-    // so edits made while it is open stay marked dirty.
     const snapshot = this.#snapshot();
     try {
-      const path = await ipc.saveEntity($state.snapshot(this.entity));
-      // A null path means the dialog was cancelled — nothing was written, so the
-      // entity is still unsaved.
-      if (path !== null) this.#savedSnapshot = snapshot;
+      const written = await ipc.saveEntity($state.snapshot(this.entity), path);
+      // A null return means the dialog was cancelled — nothing was written.
+      if (written !== null) {
+        this.currentPath = written;
+        this.#savedSnapshot = snapshot;
+      }
     } catch (e) {
       this.error = e as AppError;
+    } finally {
+      this.#opInFlight = false;
     }
   }
 
-  async load(): Promise<void> {
+  /**
+   * Open a document from a file. Prompts to discard first when the current
+   * document has unsaved edits; a cancelled prompt aborts without loading. On
+   * success the opened file becomes the current file. No-op while another file
+   * operation is in flight.
+   */
+  async open(): Promise<void> {
+    if (this.#opInFlight || this.discardPromptOpen) return;
+    if (this.dirty && !(await this.#confirmDiscard())) return;
+    this.#opInFlight = true;
     this.error = null;
     try {
       const loaded = await ipc.loadEntity();
       if (loaded) {
-        this.entity = loaded;
+        this.entity = loaded.entity;
+        this.currentPath = loaded.path;
         this.#savedSnapshot = this.#snapshot();
         await this.revalidate();
       }
     } catch (e) {
       this.error = e as AppError;
+    } finally {
+      this.#opInFlight = false;
     }
+  }
+
+  /**
+   * Reset to a fresh, empty document. Prompts to discard first when the current
+   * document has unsaved edits; a cancelled prompt aborts. Clears the current
+   * file, the picker filters, and the saved baseline.
+   */
+  async newDocument(): Promise<void> {
+    if (this.#opInFlight || this.discardPromptOpen) return;
+    if (this.dirty && !(await this.#confirmDiscard())) return;
+    const { id, version } = this.ruleset?.ruleset ?? this.entity.ruleset;
+    this.entity = newEntity(id, version);
+    this.currentPath = null;
+    this.filters = defaultPickerFilters();
+    this.result = null;
+    this.effective = null;
+    this.derived = null;
+    this.#savedSnapshot = this.#snapshot();
+    await this.revalidate();
+  }
+
+  /**
+   * Show the discard-changes prompt and resolve once the user answers via
+   * {@link resolveDiscardPrompt}. Resolves `true` to discard and proceed, `false`
+   * to cancel. The UI renders a modal keyed off {@link discardPromptOpen}.
+   */
+  #confirmDiscard(): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.#discardResolve = resolve;
+      this.discardPromptOpen = true;
+    });
+  }
+
+  /** Answer the open discard prompt (called by the modal's buttons). */
+  resolveDiscardPrompt(discard: boolean): void {
+    this.discardPromptOpen = false;
+    const resolve = this.#discardResolve;
+    this.#discardResolve = null;
+    resolve?.(discard);
   }
 
   /** Validate now, ignoring any in-flight response that finishes out of order. */

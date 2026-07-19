@@ -27,11 +27,22 @@ export function derivedTotals(entity: Entity): Promise<DerivedTotals> {
   return invoke('derived_totals', { entity });
 }
 
-export function saveEntity(entity: Entity): Promise<string | null> {
-  return invoke('save_entity', { entity });
+/**
+ * Write the entity to disk. `path === null` prompts (Save As / first Save);
+ * a concrete path writes directly with no dialog. Resolves to the written path,
+ * or `null` when a prompt was cancelled.
+ */
+export function saveEntity(entity: Entity, path: string | null): Promise<string | null> {
+  return invoke('save_entity', { entity, path });
 }
 
-export function loadEntity(): Promise<Entity | null> {
+/** An opened document: the entity plus the file it was read from. */
+export interface LoadedEntity {
+  path: string;
+  entity: Entity;
+}
+
+export function loadEntity(): Promise<LoadedEntity | null> {
   return invoke('load_entity');
 }
 
