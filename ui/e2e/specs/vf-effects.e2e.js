@@ -64,6 +64,41 @@ describe('phase-3 virtue/flaw effects', () => {
       timeout: 5000,
       timeoutMsg: 'Warrior should show a 0 / 50 restricted pool',
     });
+
+    // Buy a Martial Ability at 1 (5 XP): the Warrior pool funds it, so none of it
+    // draws on the general pool. The "Spent" figure then breaks the total out —
+    // "Spent: 5 (0 from general pool)" — so the total never reads as more than the
+    // general pool's (zero) drop.
+    const add = await $('[data-testid="add-ability.single_weapon"]');
+    await add.waitForExist({ timeout: 5000 });
+    await add.click();
+    const inc = await $('[data-testid="ability-inc-ability.single_weapon-0"]');
+    await inc.waitForExist({ timeout: 5000 });
+    await inc.click();
+
+    await browser.waitUntil(async () => clean(await pool.getText()).includes('5 / 50'), {
+      timeout: 5000,
+      timeoutMsg: 'buying a Martial Ability should draw on the Warrior pool',
+    });
+    await browser.waitUntil(
+      async () => {
+        const text = clean(await $('[data-testid="xp-spent"]').getText());
+        return text.includes('5') && text.includes('from general pool');
+      },
+      {
+        timeout: 5000,
+        timeoutMsg:
+          'Spent should break out the general-pool portion (0) of a restricted-funded spend',
+      },
+    );
+
+    // The suite shares one app instance and setType does not reset the entity, so
+    // clean up the bought Ability to leave the next test's state pristine.
+    await $('[data-testid="remove-ability.single_weapon-0"]').click();
+    await browser.waitUntil(async () => clean(await pool.getText()).includes('0 / 50'), {
+      timeout: 5000,
+      timeoutMsg: 'removing the Martial Ability should free the Warrior pool again',
+    });
   });
 
   it('Second Sight confers the Ability at a free effective floor of 1', async () => {

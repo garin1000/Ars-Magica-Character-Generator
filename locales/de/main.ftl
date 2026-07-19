@@ -109,6 +109,11 @@ tab-details = Details
 # EP-Übersicht und Bedienelemente der Fertigkeiten.
 xp-pool = EP-Vorrat
 xp-spent = Ausgegeben: { $spent }
+# Wird statt `xp-spent` angezeigt, wenn ein eingeschränkter Vorrat (Gebildet/
+# Krieger/Privilegierte Erziehung) einen Teil der Ausgaben deckt: `$spent` ist die
+# Gesamtsumme über alle Vorräte, `$general` der aus dem allgemeinen Vorrat gedeckte
+# Anteil (also `xp-available` = Vorrat - `$general`).
+xp-spent-restricted = Ausgegeben: { $spent } ({ $general } aus dem allgemeinen Vorrat)
 xp-available = Verfügbar: { $available }
 # Eingeschränkte EP-Vorräte (Gebildet/Krieger/Privilegierte Erziehung): zusätzliche
 # EP, nur für die aufgeführten Fertigkeiten/Kategorien. `$eligibility` ist eine Liste.

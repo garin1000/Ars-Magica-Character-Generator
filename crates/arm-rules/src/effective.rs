@@ -2699,6 +2699,44 @@ mod tests {
     }
 
     #[test]
+    fn total_demand_exceeds_general_used_when_a_restricted_pool_contributes() {
+        // The XP bars show "Spent" = total_demand (across ALL pools) but derive
+        // "Available" from general_used only. When a restricted grant funds part of
+        // the spend, general_used < total_demand, so a bare "Spent" reads as more
+        // than the general pool's drop — the "more shown spent than the values
+        // account for" report. This pins the invariant the UI breakdown relies on:
+        // total_demand splits exactly into general_used + the restricted usage.
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("virtue.educated")]);
+        e.xp_pool = 100;
+        e.ability_scores = vec![plain("ability.artes_liberales", 5)]; // 75 XP
+        let alloc = xp_allocation(&e, &rs);
+        let restricted_used: u32 = alloc.restricted.iter().map(|p| p.used).sum();
+        assert!(
+            alloc.general_used < alloc.total_demand,
+            "restricted funding must leave general_used below the total demand",
+        );
+        assert_eq!(
+            alloc.total_demand,
+            alloc.general_used + restricted_used,
+            "total demand splits exactly into general + restricted usage",
+        );
+    }
+
+    #[test]
+    fn total_demand_equals_general_used_without_restricted_pools() {
+        // With no restricted grant, the whole spend draws on the general pool, so
+        // the UI keeps the plain "Spent" label (general_used == total_demand).
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![]);
+        e.xp_pool = 100;
+        e.ability_scores = vec![plain("ability.awareness", 4)]; // 50 XP, general only
+        let alloc = xp_allocation(&e, &rs);
+        assert!(alloc.restricted.is_empty());
+        assert_eq!(alloc.general_used, alloc.total_demand);
+    }
+
+    #[test]
     fn educated_pool_cannot_fund_an_ineligible_ability() {
         let rs = xp_ruleset();
         // Single Weapon (martial, 15) is NOT eligible for Educated; no general XP.
