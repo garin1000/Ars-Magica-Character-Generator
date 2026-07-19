@@ -106,12 +106,12 @@ tab-spells = Zauber
 tab-possessions = Magische Gegenstände
 tab-equipment = Ausrüstung
 tab-details = Details
-# XP-Übersicht und Bedienelemente der Fertigkeiten.
-xp-pool = XP-Vorrat
+# EP-Übersicht und Bedienelemente der Fertigkeiten.
+xp-pool = EP-Vorrat
 xp-spent = Ausgegeben: { $spent }
 xp-available = Verfügbar: { $available }
-# Eingeschränkte XP-Vorräte (Gebildet/Krieger/Privilegierte Erziehung): zusätzliche
-# XP, nur für die aufgeführten Fertigkeiten/Kategorien. `$eligibility` ist eine Liste.
+# Eingeschränkte EP-Vorräte (Gebildet/Krieger/Privilegierte Erziehung): zusätzliche
+# EP, nur für die aufgeführten Fertigkeiten/Kategorien. `$eligibility` ist eine Liste.
 restricted-xp-pool = { $eligibility }: { $used } / { $amount }
 restricted-xp-list-separator = ,
 ability-score-label = Wert
@@ -122,7 +122,7 @@ ability-add = Fertigkeit hinzufügen
 ability-increment = Erhöhen
 ability-decrement = Verringern
 # Hermetische Künste: die beiden Klassen und die Bedienelemente. Künste teilen
-# sich den XP-Vorrat der Fertigkeiten (Schlüssel `xp-pool`).
+# sich den EP-Vorrat der Fertigkeiten (Schlüssel `xp-pool`).
 art-type-technique = Techniken
 art-type-form = Formen
 art-add = Kunst hinzufügen
@@ -144,7 +144,7 @@ spell-mastery-label = Meisterschaft
 spell-mastery-increment = Zauber-Meisterschaft erhöhen
 spell-mastery-decrement = Zauber-Meisterschaft verringern
 spell-remove = Entfernen
-# Details-Reiter: Alter, Selbstvertrauen (abgeleitet, schreibgeschützt), Persönlichkeit, Ruf.
+# Details-Reiter: Alter, Selbstvertrauen (abgeleitet, schreibgeschützt), Persönlichkeit, Reputation.
 age-label = Alter
 age-cap-note = Maximaler Fertigkeitswert: { $cap }
 confidence-label = Selbstvertrauen
@@ -155,7 +155,7 @@ true-faith-label = Wahrer Glaube
 true-faith-readout = Wert { $score }
 decrepitude-label = Gebrechlichkeit
 decrepitude-readout = Wert { $score }
-item-levels-label = Zauberartefakte
+item-levels-label = Artefakte
 item-levels-readout = { $levels } Stufen
 # Identitäts-/Hintergrundfelder (Freitext, keine mechanische Wirkung).
 identity-label = Identität
@@ -167,8 +167,8 @@ identity-concept = Konzept
 identity-concept-placeholder = Beschreibe das Charakterkonzept
 identity-gender = Geschlecht
 identity-birth-year = Geburtsjahr
-identity-sigil = Signum
-identity-covenant = Bund
+identity-sigil = Zauberer-Sigil
+identity-covenant = Konvent
 identity-parens = Parens
 # Direkt eingegebener gealterter / verzerrter Zustand. Die angezeigten Werte für
 # Gebrechlichkeit und Verzerrung berechnet die Engine aus diesen Punkten.
@@ -180,36 +180,36 @@ twilight-scars-label = Zwielichtnarben
 twilight-scar-placeholder = Beschreibe die Narbe
 twilight-scar-add = Zwielichtnarbe hinzufügen
 twilight-scars-empty = Noch keine Zwielichtnarben.
-personality-label = Persönlichkeitsmerkmale
-personality-name-placeholder = Merkmal
-personality-add = Merkmal hinzufügen
-personality-empty = Noch keine Persönlichkeitsmerkmale.
-reputations-label = Ruf
+personality-label = Persönlichkeitseigenschaften
+personality-name-placeholder = Eigenschaft
+personality-add = Eigenschaft hinzufügen
+personality-empty = Noch keine Persönlichkeitseigenschaften.
+reputations-label = Reputationen
 reputation-content-placeholder = Wofür
-reputation-add = { $kind }-Ruf hinzufügen (Stufe { $score })
-reputation-empty = Kein Ruf verfügbar (nimm eine Tugend oder einen Fehler, der einen verleiht).
+reputation-add = { $kind }-Reputation hinzufügen (Stufe { $score })
+reputation-empty = Keine Reputation verfügbar (nimm eine Tugend oder einen Fehler, der eine verleiht).
 reputation-type-local = Lokal
 reputation-type-ecclesiastical = Kirchlich
 reputation-type-hermetic = Hermetisch
 reputation-type-academic = Akademisch
-# Tab "Magische Gegenstände" (Magi): Aura, Zauberartefakte, Vertrautenbindung,
+# Tab "Magische Gegenstände" (Magi): Aura, Artefakte, Vertrautenbindung,
 # Talismanabstimmungen und das Langlebigkeitsritual. Das genutzte/verbleibende
 # Artefaktbudget stammt aus der Engine, wird hier nie neu berechnet.
 aura-label = Aura
-possessions-devices-label = Zauberartefakte
+possessions-devices-label = Artefakte
 device-name-placeholder = Name des Artefakts
 device-level-label = Stufe
 device-add = Artefakt hinzufügen
-devices-empty = Noch keine Zauberartefakte.
+devices-empty = Noch keine Artefakte.
 item-level-used = Artefaktstufen: { $used } / { $budget }
-# Übernatürliches Wesen (Macht-Wert + Kräfte): Budget und effektive Werte
+# Übernatürliches Wesen (Machtwert + Kräfte): Budget und effektive Werte
 # stammen aus der Engine und werden hier nie neu berechnet.
-supernatural-might-label = Macht-Wert
+supernatural-might-label = Machtwert
 might-realm-label = Sphäre
-might-score-label = Grund-Macht-Wert
-might-add = Macht-Wert hinzufügen
-might-clear = Macht-Wert entfernen
-might-empty = Noch kein Macht-Wert (eine Macht-Tugend verleiht einen).
+might-score-label = Grund-Machtwert
+might-add = Machtwert hinzufügen
+might-clear = Machtwert entfernen
+might-empty = Noch kein Machtwert (eine Macht-Tugend verleiht einen).
 might-effective = Effektive Macht: { $realm } { $score }
 might-mr = Magieresistenz (aus Macht): { $total }
 supernatural-powers-label = Übernatürliche Kräfte
@@ -219,9 +219,9 @@ power-level-label = Stufe
 power-add = Kraft hinzufügen
 powers-empty = Noch keine übernatürlichen Kräfte.
 realm-magic = Magie
-realm-faerie = Faerie
-realm-divine = Göttlich
-realm-infernal = Infernalisch
+realm-faerie = Fee
+realm-divine = Das Göttliche
+realm-infernal = Das Infernale
 familiar-label = Vertrauter
 familiar-name-placeholder = Name des Vertrauten
 familiar-cord-gold = Goldene Kordel
@@ -341,7 +341,7 @@ issue-forbidden_trait = Eine verbotene Eigenschaft ist vorhanden: { $item }.
 issue-missing_param = { $item } fehlt der Parameter { $key }.
 issue-unexpected_param = { $item } hat einen unerwarteten Parameter { $key }.
 issue-unknown_param_value = { $item }: Parameter { $key } hat unbekannten { $domain }-Wert { $value }.
-issue-multiple_magical_foci = Ein Magus darf nur eine Magische Fokussierung haben, es sind aber { $count } gewählt.
+issue-multiple_magical_foci = Ein Magus darf nur einen Magischen Fokus haben, es sind aber { $count } gewählt.
 issue-gift_required = Dieser Typ erfordert die Gabe.
 issue-gift_forbidden = Dieser Typ darf die Gabe nicht haben.
 issue-unknown_ref = Unbekannte Element-Referenz: { $item }.
@@ -355,7 +355,7 @@ issue-characteristic_max_base_too_low = { $item } erfordert { $characteristic } 
 issue-characteristic_min_base_too_high = { $item } erfordert { $characteristic } höchstens auf { $max } (derzeit { $base }).
 issue-unknown_ability = Unbekannte Fertigkeit: { $ability }.
 issue-duplicate_ability = { $ability } ist { $count }-mal mit derselben Spezialisierung aufgeführt.
-issue-not_enough_xp = Fertigkeiten kosten { $spent } XP, mehr als die { $pool } im Vorrat.
+issue-not_enough_xp = Fertigkeiten kosten { $spent } EP, mehr als die { $pool } im Vorrat.
 issue-restricted_xp_unspent = { $unspent } von { $amount } eingeschränkten Erfahrungspunkten sind nicht ausgegeben und verfallen.
 issue-ability_parameter_required = { $ability } braucht einen Wert (z. B. das konkrete Gebiet oder die Sprache).
 issue-ability_score_out_of_range = Fertigkeit { $ability } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).
@@ -379,9 +379,9 @@ issue-spell_level_exceeds_cap = Zauber { $spell } hat Stufe { $level }, über de
 issue-spell_ritual_legality = Zauber { $spell } wird auf Stufe { $level } erlernt und verletzt die Ritualgrenzen (Rituale mindestens 20, Nicht-Rituale höchstens 50).
 issue-ability_above_age_cap = { $ability } mit Wert { $score } überschreitet das Maximum von { $cap } für Alter { $age }.
 issue-supernatural_ability_requires_virtue = { $ability } ist eine übernatürliche Fähigkeit und erfordert eine verleihende Tugend (oder die eine freie Fähigkeit der Gabe).
-issue-personality_trait_out_of_range = Persönlichkeitsmerkmal { $name } ({ $value }) liegt außerhalb des zulässigen Bereichs (±{ $max }).
-issue-reputation_not_granted = Ein Ruf ({ $kind }, { $content }) benötigt eine Tugend oder einen Fehler, der ihn verleiht.
-issue-over_item_level = Zauberartefakte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
+issue-personality_trait_out_of_range = Persönlichkeitseigenschaft { $name } ({ $value }) liegt außerhalb des zulässigen Bereichs (±{ $max }).
+issue-reputation_not_granted = Eine Reputation ({ $kind }, { $content }) benötigt eine Tugend oder einen Fehler, der sie verleiht.
+issue-over_item_level = Artefakte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
 issue-over_power_levels = Übernatürliche Kräfte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
 issue-might_realm_mismatch = Die eingegebene Macht-Sphäre ({ $base }) stimmt nicht mit der von den Tugenden verliehenen Sphäre ({ $granted }) überein.
 issue-excessive_aging_reduction = Die Alterungsminderungen für { $characteristic } ({ $reduction }) würden unter den Mindestwert ({ $min }) fallen; er wird dort begrenzt.
@@ -433,10 +433,10 @@ derived-weak-magic = (Schwache Magie, halbiert)
 derived-level = Stufe
 derived-range = Reichweite
 derived-load = Last
-derived-burden = Bürde
+derived-burden = Beladung
 derived-lab-total = Laborsumme
 derived-combat-empty = Keine Waffen ausgerüstet.
-derived-cast-formulaic = Formelhaft
+derived-cast-formulaic = Formulaisch
 derived-cast-ritual = Ritual
 derived-cast-spont-fatiguing = Spontan (ermüdend)
 derived-cast-spont-non-fatiguing = Spontan (nicht ermüdend)
@@ -467,20 +467,20 @@ derived-addend-parma = Parma Magica
 derived-addend-might = Macht
 derived-addend-armor = Rüstung
 derived-addend-soak_mod = Absorptionsmodifikator
-derived-addend-bronze_cord = Bronzeband
+derived-addend-bronze_cord = Bronzene Kordel
 derived-addend-form_bonus = Formbonus
 derived-fatigue-fresh = Frisch
 derived-fatigue-winded = Außer Atem
 derived-fatigue-weary = Erschöpft
 derived-fatigue-tired = Müde
-derived-fatigue-dazed = Benommen
+derived-fatigue-dazed = Betäubt
 derived-wound-light = Leicht
 derived-wound-medium = Mittelschwer
 derived-wound-heavy = Schwer
 derived-wound-incapacitating = Lähmend
-derived-wound-dead = Tod
+derived-wound-dead = Tot
 derived-surfaced-aging = Alterung
-derived-surfaced-advancement = Steigerung
+derived-surfaced-advancement = Fortschritt
 derived-surfaced-special_casting = Zauberstil
 derived-surfaced-ability_roll = Fertigkeitswurf
 derived-surfaced-health_roll = Gesundheitswurf
@@ -495,8 +495,8 @@ derived-detail-vis = Vis-Studium
 derived-detail-practice = Übung
 derived-detail-adventure = Abenteuer
 derived-detail-insight = Einsicht
-derived-detail-teaching = Lehren
-derived-detail-spell_mastery = Zauberbeherrschung
+derived-detail-teaching = Unterrichten
+derived-detail-spell_mastery = Zaubermeisterschaft
 derived-detail-all = Alle Quellen
 derived-detail-quiet_words = Stille Magie
 derived-detail-subtle_gestures = Subtile Magie
