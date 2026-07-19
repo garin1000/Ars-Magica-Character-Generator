@@ -60,11 +60,14 @@ describe('character editor', () => {
     ).toBe(true);
     expect(saved.xp_pool).toBe(30);
 
-    // Back on the V/F tab, drop the virtue, reload the file, and confirm it
-    // returns — proving load repopulates the entity.
+    // Back on the V/F tab, drop the virtue (making the document dirty), then open
+    // the saved file again. Opening a dirty document prompts to discard first, so
+    // confirm that; the reload then repopulates the entity, proving Open works.
     await $('[data-testid="tab-virtues_flaws"]').click();
     await removeKeenVision.click();
-    await $('[data-testid="load-button"]').click();
+    await $('[data-testid="open-button"]').click();
+    await $('[data-testid="discard-confirm"]').waitForExist({ timeout: 10000 });
+    await $('[data-testid="discard-confirm"]').click();
     await $('[data-testid^="remove-virtue.keen_vision"]').waitForExist({ timeout: 10000 });
   });
 });

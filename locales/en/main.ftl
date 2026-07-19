@@ -278,14 +278,29 @@ mythic-required-flaw-label = Required Flaw
 balance-virtues = Virtues: { $used } / { $budget }
 balance-flaws = Flaws: { $used } / { $budget }
 
+# Document toolbar actions.
+action-new = New
+action-open = Open
 action-save = Save
-action-load = Load
+action-save-as = Save As
 
 # Confirmation shown when closing or quitting the app with unsaved changes.
 close-unsaved-title = Unsaved changes
 close-unsaved-message = This character has unsaved changes. If you close now, they will be lost.
 close-unsaved-discard = Discard and close
 close-unsaved-cancel = Cancel
+
+# Confirmation shown when starting a new document or opening another file while
+# the current one has unsaved changes.
+discard-changes-title = Unsaved changes
+discard-changes-message = This character has unsaved changes. If you continue, they will be lost.
+discard-changes-confirm = Discard changes
+discard-changes-cancel = Cancel
+
+# Window title. { $name } is the file name, { $app } the application name; the
+# dirty variant prepends an ASCII marker for a document with unsaved edits.
+app-title-document = { $name } — { $app }
+app-title-document-dirty = *{ $name } — { $app }
 
 # Hint shown for an unfilled parameter slot in an item name, e.g. "Puissant (Ability)".
 param-hint = ({ $label })

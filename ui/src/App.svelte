@@ -25,6 +25,7 @@
   import BalanceBar from './lib/components/BalanceBar.svelte';
   import ValidationPanel from './lib/components/ValidationPanel.svelte';
   import SaveLoadBar from './lib/components/SaveLoadBar.svelte';
+  import DiscardPrompt from './lib/components/DiscardPrompt.svelte';
   import logoUrl from './lib/assets/logo.png';
 
   type Tab =
@@ -89,10 +90,36 @@
     void store.init();
   });
 
-  // Keep the document title localized rather than hardcoded in HTML.
+  // Keep the document title localized rather than hardcoded in HTML. Once a file
+  // is being tracked, show "name — app" (with an ASCII dirty marker for unsaved
+  // edits) via a parametrized Fluent key — never string-composed here.
   $effect(() => {
-    document.title = store.t('app-title');
+    const name = store.currentFileName;
+    if (name === null) {
+      document.title = store.t('app-title');
+    } else {
+      const key = store.dirty ? 'app-title-document-dirty' : 'app-title-document';
+      document.title = store.t(key, { name, app: store.t('app-title') });
+    }
   });
+
+  // Standard document-app keyboard shortcuts. Ctrl (or Cmd on macOS) + S/N/O,
+  // with Shift+S for Save As. Cmd+Q keeps routing through the OS/close guard, so
+  // it is deliberately not handled here.
+  function handleShortcut(event: KeyboardEvent): void {
+    if (!(event.ctrlKey || event.metaKey)) return;
+    const key = event.key.toLowerCase();
+    if (key === 's') {
+      event.preventDefault();
+      void (event.shiftKey ? store.saveAs() : store.save());
+    } else if (key === 'n') {
+      event.preventDefault();
+      void store.newDocument();
+    } else if (key === 'o') {
+      event.preventDefault();
+      void store.open();
+    }
+  }
 
   // Mirror the unsaved-changes flag (and the localized dialog strings) to the
   // backend close/quit guard. Re-runs whenever dirty flips or the language
@@ -102,6 +129,8 @@
     void updateCloseGuard(dirty, labels);
   });
 </script>
+
+<svelte:window onkeydown={handleShortcut} />
 
 <header class="app-header">
   <div class="brand">
@@ -255,3 +284,6 @@
 <footer class="validation-bar">
   <ValidationPanel docked />
 </footer>
+
+<!-- Discard-changes confirmation for New/Open (close/quit uses the Rust dialog). -->
+<DiscardPrompt />
