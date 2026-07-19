@@ -647,11 +647,25 @@ ul {
   flex: 1;
 }
 
-/* Details tab: age, Confidence readout, Personality Traits, Reputations. */
+/* Details tab: age, Confidence readout, Personality Traits, Reputations.
+   Two importance-ordered columns via multi-column flow: the blocks stay in DOM
+   order (most important first — Identity, Age, key readouts), filling the left
+   column top-to-bottom before the right, so the important info sits at the top.
+   Collapses to a single column on narrow widths (matches `.art-grid`). */
 .character-details {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  columns: 2;
+  column-gap: 1.5rem;
+}
+
+.character-details > * {
+  break-inside: avoid;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 720px) {
+  .character-details {
+    columns: 1;
+  }
 }
 
 .detail-field {
