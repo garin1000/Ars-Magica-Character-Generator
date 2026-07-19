@@ -466,6 +466,12 @@ bleed onto the character's other areas.
   `effective.rs::art_bonus`, `effective_art_score`, `art_bonuses` (serialized to
   the frontend by `arm-app::ruleset_io`). `validation.rs` folds the bonus into the
   Art score map so `ArtMin` is met by the boosted score.
+- `art_bonuses` iterates the **full Art catalogue** (not just bought
+  `art_scores`), emitting any nonzero effective-over-bought delta. A Puissant Art
+  (or Elemental Magic form boost) applies at 0 bought points, but the UI drops an
+  Art's row at score 0, so gating the list on `art_scores` would hide the badge
+  until the first point is bought (Issue 13). Iterating the catalogue surfaces the
+  bonus at bought-0 and naturally dedupes any duplicate bought rows.
 
 #### Great (Characteristic) — raise the buy cap to +4/+5
 > "You may raise any Characteristic that already has a score of at least +3 by

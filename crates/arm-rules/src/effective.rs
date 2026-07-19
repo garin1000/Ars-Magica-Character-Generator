@@ -427,19 +427,25 @@ pub fn effective_art_score(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 
     bought + art_bonus(entity, ruleset, art) + elemental_form_bonus(entity, ruleset, art)
 }
 
-/// Non-zero art bonuses, one per bought Art, for the UI to add onto each
-/// displayed bought score. Each is the full effective-over-bought delta — flat
-/// Puissant Art *and* any Elemental Magic XP-space boost — so the UI surfaces the
-/// elemental redistribution exactly like a Puissant bonus. Arts with no bonus are
-/// omitted. Order follows `art_scores`.
+/// Non-zero art bonuses, one per Art, for the UI to add onto each displayed
+/// bought score. Each is the full effective-over-bought delta — flat Puissant Art
+/// *and* any Elemental Magic XP-space boost — so the UI surfaces the elemental
+/// redistribution exactly like a Puissant bonus. Arts with no bonus are omitted.
+///
+/// Iterates the full Art catalogue, not just bought `art_scores`: a Puissant Art
+/// (or an Elemental Magic form boost) applies even at 0 bought points, but the UI
+/// drops an Art's row when its bought score hits 0, so gating on `art_scores`
+/// would hide the badge until the first point is bought (Issue 13). Iterating the
+/// catalogue also naturally dedupes any duplicate bought rows. Order follows the
+/// ruleset's Art order.
 pub fn art_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<ArtBonus> {
     let mut out = Vec::new();
-    for a in &entity.art_scores {
-        let bonus = effective_art_score(entity, ruleset, &a.art)
-            - i32::from(bought_art_score(entity, &a.art));
+    for art in ruleset.arts() {
+        let bonus = effective_art_score(entity, ruleset, &art.id)
+            - i32::from(bought_art_score(entity, &art.id));
         if bonus != 0 {
             out.push(ArtBonus {
-                art: a.art.clone(),
+                art: art.id.clone(),
                 bonus,
             });
         }
@@ -2283,6 +2289,23 @@ mod tests {
     }
 
     #[test]
+    fn art_bonuses_include_puissant_art_at_bought_zero() {
+        // Regression (Issue 13): a Puissant Art virtue whose target has 0 bought
+        // points has no `art_scores` row, yet the flat bonus must still surface so
+        // the effective badge shows before the first point is bought.
+        let rs = ruleset();
+        let e = entity(vec![puissant_art("art.ignem")]);
+        assert!(e.art_scores.is_empty());
+        assert_eq!(
+            art_bonuses(&e, &rs),
+            vec![ArtBonus {
+                art: Id::new("art.ignem"),
+                bonus: 3,
+            }]
+        );
+    }
+
+    #[test]
     fn ability_bonuses_still_omit_zero_entries() {
         let rs = ruleset();
         let mut e = entity(vec![puissant("ability.awareness")]);
@@ -3384,6 +3407,31 @@ mod tests {
         };
         assert_eq!(bonus("art.aquam"), Some(3));
         assert_eq!(bonus("art.terram"), Some(4));
+    }
+
+    /// Regression (Issue 13): an elemental Form with 0 bought points still earns a
+    /// redistribution boost from the other Forms, and it must surface through
+    /// `art_bonuses` even though it has no `art_scores` row.
+    #[test]
+    fn art_bonuses_include_elemental_boost_at_bought_zero() {
+        let rs = elemental_ruleset();
+        let mut e = entity(vec![Selection::new(Id::new("virtue.elemental_magic"))]);
+        // Terram is not bought (no row); the other three Forms feed its boost.
+        e.art_scores = vec![
+            art_row("art.aquam", 6),
+            art_row("art.auram", 6),
+            art_row("art.ignem", 6),
+        ];
+        // bonus_xp(Terram) = 3 * ceil(21/2) = 33 → score 7; delta over bought 0 = 7.
+        assert_eq!(effective_art_score(&e, &rs, &Id::new("art.terram")), 7);
+        let bonuses = art_bonuses(&e, &rs);
+        assert_eq!(
+            bonuses
+                .iter()
+                .find(|b| b.art == Id::new("art.terram"))
+                .map(|b| b.bonus),
+            Some(7)
+        );
     }
 
     /// A magus without the marker gets no redistribution: effective == bought.
