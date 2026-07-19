@@ -269,7 +269,7 @@ house-granted-label = Granted
 # Prompt shown as the empty option of a choice/open specialisation picker.
 house-choose-prompt = Choose…
 # Title of the right column (the selected House's description + its grants).
-house-grants-title = Selected House
+house-grants-title = House details
 # Shown in the right column when no House has been chosen yet.
 house-none-selected = Select a House to see its details.
 
