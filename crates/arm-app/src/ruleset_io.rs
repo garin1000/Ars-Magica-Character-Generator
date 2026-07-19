@@ -343,6 +343,9 @@ pub fn validate_loaded(
 /// on serialize.
 pub fn save_entity_to_path(entity: &Entity, path: &Path) -> Result<(), AppError> {
     let mut canonical = entity.clone();
+    // Stamp the current schema version so app-written saves never drift from the
+    // engine's `SCHEMA_VERSION` (a save always reflects the shape it was written by).
+    canonical.schema_version = arm_rules::SCHEMA_VERSION;
     canonical.normalize();
     let json = serde_json::to_string_pretty(&canonical)?;
     fs::write(path, json)?;

@@ -820,6 +820,43 @@ M5 only makes the raw state + effects enterable and computes the scores from poi
 - **Identity/flavor** — `name`, `gender`, `sigil`, `covenant_name`, `parens`
   (`String`, skip-if-empty) and `birth_year: Option<i32>`. No mechanical effect.
 
+##### Aging & warping annotation fields (D2 — additive, schema 10 → 11)
+Four **character-only annotation** fields carrying **NO game mechanic** — the
+engine computes nothing from them (covenants omit them; no validator is added).
+Additive `serde(default, skip_serializing_if)`, so old saves load unchanged (no
+migration code; `load_entity_migrating` is untouched). Bumped `SCHEMA_VERSION`
+10 → 11. Fields in `types.rs`; `Entity::normalize()` sorts `aging_log`.
+
+- **Apparent age** — `Entity.apparent_age: Option<u32>` (mirrors `age`).
+  > "**Age:** The character's actual age, with the apparent age in parentheses."
+
+  Source: `Ars Magica - Definitive Edition (Core Rules).md:1155`. This is a
+  **pure annotation**: apparent age is the resolved *outcome* of aging rolls the
+  app deliberately does **not** simulate — consistent with the `Effect::AgingMod`
+  "surfaced-only" doc (`types.rs`, "the app does not simulate aging rolls").
+- **Warping effect** — `Entity.warping_effect: String` (skip-if-empty), the
+  source-reflecting Flaw a character gains from Warping.
+  > "This Minor Flaw should reflect the predominant source of the Warping Points."
+
+  Source: `Ars Magica - Definitive Edition (Core Rules).md:16547-16561` (### Effects
+  of Warping). Deliberately **free text, NOT a Flaw `selection`**: a post-creation
+  warping Flaw must not count against the creation Virtue/Flaw budget.
+- **Decrepitude effect** — `Entity.decrepitude_effect: String` (skip-if-empty):
+  free-text overall aging/decrepitude narrative. Pure annotation — Decrepitude
+  itself is DERIVED from `aging_points` (see above). Source:
+  `Ars Magica - Definitive Edition (Core Rules).md:16563-16577` (## Aging).
+- **Aging log** — `Entity.aging_log: Vec<AgingLogEntry { year, effect }>`
+  (skip-if-empty). `year` is the **first** field so the derived `Ord` sorts the
+  log chronologically via `Entity::normalize()`. Per-year free-text outcomes;
+  pure annotation (the app does not simulate the aging rolls). Source:
+  `Ars Magica - Definitive Edition (Core Rules).md:16563-16577` (## Aging).
+
+App/UI: `save_entity_to_path` (`arm-app/src/ruleset_io.rs`) now **stamps**
+`arm_rules::SCHEMA_VERSION` onto the entity on write, so app-written saves never
+drift from the engine version (the frontend `SCHEMA_VERSION` constant in
+`ui/src/lib/state.svelte.ts` was likewise reconciled to 11). The four fields are
+entered in `CharacterDetails.svelte`; every label is a Fluent key.
+
 **Derived-score formulas** (in `effective.rs`; slice 5i's `derived.rs` re-exports /
 consumes them). Both invert the **Ability** advancement table via the new
 `AdvancementTable::score_for_xp(xp)` (the highest score whose cumulative `total_xp

@@ -624,6 +624,14 @@ export interface TwilightScar {
   description: string;
 }
 
+// One entry in a character's aging log: the year of the aging roll and a
+// free-text outcome. A pure annotation (no mechanic); `year` first so the engine
+// sorts the log chronologically.
+export interface AgingLogEntry {
+  year: number;
+  effect: string;
+}
+
 // Where a Longevity Ritual comes from (rendered via Fluent, never as a raw slug).
 export type LongevitySource = 'self_made' | 'external';
 
@@ -850,6 +858,9 @@ export interface Entity {
   mythic_choices?: Record<string, Selection>;
   // The character's age (drives the age → max-Ability-score cap). Omitted unset.
   age?: number | null;
+  // The character's apparent age (pure annotation, no mechanic — the app does not
+  // simulate the aging rolls that resolve it). Omitted when unset.
+  apparent_age?: number | null;
   // Named Personality Traits. Omitted when empty.
   personality_traits?: PersonalityTrait[];
   // Starting Reputations (each backed by a granting V/F). Omitted when empty.
@@ -873,8 +884,19 @@ export interface Entity {
   // Accrued Warping Points (summed with grant points, inverted to the score by
   // the engine). Omitted when 0.
   warping_points?: number;
+  // Free-text description of how the character's Warping manifests (the
+  // source-reflecting Flaw from "Effects of Warping"). A pure annotation — NOT a
+  // Flaw selection, so it never counts against the creation V/F budget. Omitted
+  // when empty.
+  warping_effect?: string;
   // Twilight Scars (free-text). Omitted when empty.
   twilight_scars?: TwilightScar[];
+  // Free-text narrative of the character's overall aging / decrepitude (pure
+  // annotation, no mechanic). Omitted when empty.
+  decrepitude_effect?: string;
+  // Per-year aging-roll log (free-text outcomes; pure annotation, no mechanic).
+  // Omitted when empty.
+  aging_log?: AgingLogEntry[];
   // Identity / flavor fields (free-text, no mechanical effect). Omitted when empty.
   name?: string;
   // Short one-line tagline shown under the name in the header banner.
