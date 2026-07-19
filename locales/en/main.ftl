@@ -132,6 +132,8 @@ art-decrement = Lower
 spell-technique-label = Technique
 spell-form-label = Form
 spell-level-label = Level
+# Level entered for a General spell when adding it (its level is not fixed).
+spell-general-level-label = General level
 spell-add = Add spell
 spell-none = — Select a spell —
 # The spell-levels budget bar: how many of the magus's levels are used.

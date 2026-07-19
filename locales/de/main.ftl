@@ -134,6 +134,7 @@ art-decrement = Verringern
 spell-technique-label = Technik
 spell-form-label = Form
 spell-level-label = Stufe
+spell-general-level-label = Stufe (General)
 spell-add = Zauber hinzufügen
 spell-none = — Zauber wählen —
 spell-levels-used = Zauberstufen: { $used } / { $budget }
