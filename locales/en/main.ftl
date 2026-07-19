@@ -132,7 +132,8 @@ art-decrement = Lower
 spell-technique-label = Technique
 spell-form-label = Form
 spell-level-label = Level
-# Level entered for a General spell when adding it (its level is not fixed).
+# Accessible label for the inline level field on a chosen General spell (its
+# level is not fixed by the catalogue, so it is edited per row).
 spell-general-level-label = General level
 spell-add = Add spell
 spell-none = — Select a spell —

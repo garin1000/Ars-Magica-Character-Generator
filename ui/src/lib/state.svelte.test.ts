@@ -330,6 +330,30 @@ describe('adjustSpellMasteryAt', () => {
   });
 });
 
+// --- setSpellLevelAt() ------------------------------------------------------
+
+describe('setSpellLevelAt', () => {
+  it('sets the level on the indexed spell, leaving others', () => {
+    store.addSpell('spell.aegis_of_the_hearth', 5);
+    store.addSpell('spell.wind_at_back', 5);
+    store.setSpellLevelAt(0, 200);
+    expect(store.entity.spells?.[0].level).toBe(200);
+    expect(store.entity.spells?.[1].level).toBe(5);
+  });
+
+  it('marks the document dirty', () => {
+    store.addSpell('spell.aegis_of_the_hearth', 5);
+    store.setSpellLevelAt(0, 30);
+    expect(store.dirty).toBe(true);
+  });
+
+  it('ignores an out-of-range index', () => {
+    store.addSpell('spell.aegis_of_the_hearth', 5);
+    store.setSpellLevelAt(9, 200);
+    expect(store.entity.spells?.[0].level).toBe(5);
+  });
+});
+
 // --- Phase 7: age, personality traits, reputations -------------------------
 
 describe('setAge', () => {

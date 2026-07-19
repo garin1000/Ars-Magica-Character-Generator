@@ -14,9 +14,11 @@
 
   // Technique/Form/text/level filters live on the store, so they survive the tab
   // switch that unmounts this component (same split ArtGrid uses for the Arts).
-  // `generalLevel` is transient add-a-spell state, so it stays local.
   const filter = $derived(store.filters.spells);
-  let generalLevel = $state(15);
+
+  // A General spell (no fixed catalogue level) is added at this default level;
+  // the level is then edited inline on its row in the selected list.
+  const GENERAL_DEFAULT_LEVEL = 5;
 
   const techniques = $derived.by((): Art[] => {
     if (!store.ruleset) return [];
@@ -73,21 +75,27 @@
     return rs ? `${spellName(rs, spell.id)} (${tag(spell)})` : spell.id;
   }
 
-  // A chosen row's display: name + its resolved TeFo/level tag.
-  function rowLabel(spellId: string, level: number | null | undefined): string {
+  // A chosen row's display: name + its TeFo tag. A fixed spell shows its
+  // catalogue level; a General spell shows "Gen" (its level is edited inline).
+  function rowLabel(spellId: string): string {
     const rs = store.ruleset;
     const cat = rs?.ruleset.spells?.[spellId];
     if (!rs || !cat) return spellId;
-    const lvl = cat.level ?? level ?? null;
     const tf = `${abbr(cat.technique)}${abbr(cat.form)}`;
-    return `${spellName(rs, spellId)} (${tf}${lvl == null ? ' Gen' : ` ${lvl}`})`;
+    return `${spellName(rs, spellId)} (${tf}${cat.level == null ? ' Gen' : ` ${cat.level}`})`;
   }
 
-  // Clicking a source row adds the spell. A General spell (no fixed level) takes
-  // the level from the always-visible General-level input; a fixed-level spell
-  // ignores it.
+  // Clicking a source row adds the spell. A General spell (no fixed level) is
+  // added at the default level and edited inline afterwards; a fixed-level spell
+  // ignores the level.
   function add(spell: Spell) {
-    store.addSpell(spell.id, spell.level == null ? generalLevel : undefined);
+    store.addSpell(spell.id, spell.level == null ? GENERAL_DEFAULT_LEVEL : undefined);
+  }
+
+  // A chosen row is General (level editable inline) when its catalogue entry has
+  // no fixed level.
+  function isGeneral(spellId: string): boolean {
+    return store.ruleset?.ruleset.spells?.[spellId]?.level == null;
   }
 </script>
 
@@ -132,16 +140,6 @@
               step="1"
               bind:value={filter.level}
               data-testid="spell-level-filter"
-            />
-          </label>
-          <label class="field">
-            <span>{store.t('spell-general-level-label')}</span>
-            <input
-              type="number"
-              min="1"
-              step="1"
-              bind:value={generalLevel}
-              data-testid="spell-level-input"
             />
           </label>
         </div>
@@ -190,9 +188,21 @@
         {/if}
 
         <ul class="spell-list" data-testid="spell-list">
-          {#each store.entity.spells ?? [] as chosen, i (`${chosen.spell}:${chosen.level ?? ''}:${i}`)}
+          {#each store.entity.spells ?? [] as chosen, i (`${chosen.spell}:${i}`)}
             <li>
-              <span class="item-name">{rowLabel(chosen.spell, chosen.level)}</span>
+              <span class="item-name">{rowLabel(chosen.spell)}</span>
+              {#if isGeneral(chosen.spell)}
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  aria-label={store.t('spell-general-level-label')}
+                  value={chosen.level ?? GENERAL_DEFAULT_LEVEL}
+                  oninput={(e) =>
+                    store.setSpellLevelAt(i, Number((e.currentTarget as HTMLInputElement).value))}
+                  data-testid="spell-level-input"
+                />
+              {/if}
               {#if masteryXp > 0 || masteryFloor > 0}
                 <span class="spinner" data-testid="spell-mastery-{chosen.spell}-{i}">
                   <span class="spinner-label">{store.t('spell-mastery-label')}</span>
