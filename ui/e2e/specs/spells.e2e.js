@@ -64,7 +64,11 @@ describe('spells', () => {
     // The header composes the two localized Art names; the `.category` class
     // uppercases the text for display (same convention as the Ability picker),
     // so compare case-insensitively rather than pinning the display casing.
-    expect(clean(await header.getText()).trim().toLowerCase()).toBe('creo ignem');
+    expect(
+      clean(await header.getText())
+        .trim()
+        .toLowerCase(),
+    ).toBe('creo ignem');
   });
 
   it('narrows the source list with the min/max level filter', async () => {
@@ -86,14 +90,20 @@ describe('spells', () => {
     // event Svelte's bind:value listens to on a number input, so the bound state
     // would otherwise stay at 5 and leak into later steps. This still exercises
     // the real bind (empty field -> open range), just deterministically.
-    await browser.execute((el) => {
-      el.value = '';
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-    }, await $('[data-testid="spell-level-max-filter"]'));
-    await browser.waitUntil(async () => (await $$('[data-testid^="add-spell."]')).length === before, {
-      timeout: 5000,
-      timeoutMsg: 'clearing the max-level filter should restore the list',
-    });
+    await browser.execute(
+      (el) => {
+        el.value = '';
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      },
+      await $('[data-testid="spell-level-max-filter"]'),
+    );
+    await browser.waitUntil(
+      async () => (await $$('[data-testid^="add-spell."]')).length === before,
+      {
+        timeout: 5000,
+        timeoutMsg: 'clearing the max-level filter should restore the list',
+      },
+    );
   });
 
   it('greys a spell above the per-spell cap for a fresh magus (cap 3)', async () => {
@@ -167,6 +177,32 @@ describe('spells', () => {
     });
   });
 
+  it('applies an editable spell-levels budget override', async () => {
+    // The override field's placeholder is the type profile's base (120), proving
+    // the default is data-driven (surfaced by the engine, not a UI literal).
+    const override = await $('[data-testid="spell-levels-override"]');
+    await override.waitForExist({ timeout: 5000 });
+    expect(await override.getAttribute('placeholder')).toBe('120');
+    // Override the base to 80; Skilled Parens's +30 still adds on top → 80 + 30 = 110.
+    await override.setValue('80');
+    await browser.waitUntil(async () => clean(await $(BAR).getText()).includes('/ 110'), {
+      timeout: 5000,
+      timeoutMsg: 'overriding the base to 80 should make the budget 80 + 30 = 110',
+    });
+    // Reset the override (empty field -> profile base) so later specs see 150
+    // again. Dispatch the input event directly: clearValue() does not reliably
+    // fire the event Svelte listens to on a number input (same reason as the
+    // level-max filter reset above).
+    await browser.execute((el) => {
+      el.value = '';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }, override);
+    await browser.waitUntil(async () => clean(await $(BAR).getText()).includes('/ 150'), {
+      timeout: 5000,
+      timeoutMsg: 'clearing the override should restore the profile-based budget (150)',
+    });
+  });
+
   it('flags going over the spell-levels budget', async () => {
     // Add a General spell (Aegis of the Hearth, ReVi). It lands at the default
     // level; its level input then appears inline on the selected row. Setting it
@@ -200,7 +236,7 @@ describe('spells', () => {
       timeoutMsg: 'save did not write the file',
     });
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.schema_version).toBe(11);
+    expect(saved.schema_version).toBe(12);
     expect(saved.spells.some((s) => s.spell === 'spell.pilum_of_fire')).toBe(true);
     expect(
       saved.spells.some((s) => s.spell === 'spell.aegis_of_the_hearth' && s.level === 200),

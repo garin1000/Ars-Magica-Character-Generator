@@ -23,7 +23,7 @@ import type {
 } from './types';
 
 const VALIDATE_DEBOUNCE_MS = 150;
-const SCHEMA_VERSION = 11;
+const SCHEMA_VERSION = 12;
 
 /** Live filter/search state of the Virtue/Flaw picker (one per side). */
 export interface VfFilterState {
@@ -575,6 +575,18 @@ class AppStore {
   /** Spell edits are by row index, since a General spell can appear at several levels. */
   removeSpellAt(index: number): void {
     this.entity.spells = (this.entity.spells ?? []).filter((_, i) => i !== index);
+    this.#scheduleValidate();
+  }
+
+  /**
+   * Set (or clear) the per-character spell-levels budget override. A non-positive
+   * or non-finite value clears it (`null`), so the engine falls back to the type
+   * profile's base. The budget/used totals stay engine-authoritative — no
+   * recompute happens here. Mirrors {@link setAge}.
+   */
+  setSpellLevelsOverride(levels: number | null): void {
+    this.entity.spell_levels_override =
+      levels != null && Number.isFinite(levels) && levels > 0 ? Math.floor(levels) : null;
     this.#scheduleValidate();
   }
 

@@ -20,7 +20,7 @@
     "id": "arm5-core",
     "version": "2024.1"
   },
-  "schema_version": 11,
+  "schema_version": 12,
   "selections": [
     {
       "ref": "flaw.poor_student"

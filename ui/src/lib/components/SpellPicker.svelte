@@ -57,6 +57,9 @@
   // fallback for the first frame before effective scores arrive.
   const budget = $derived(store.effective?.spell_levels_budget ?? 0);
   const used = $derived(store.effective?.spell_levels_used ?? 0);
+  // The type profile's base budget (120 for a magus), used as the override
+  // field's placeholder so the default is data-driven (never a Svelte literal).
+  const profileBase = $derived(store.effective?.spell_levels_profile_base ?? 0);
   // Spell levels still available to spend (used against the per-spell budget check).
   const remaining = $derived(budget - used);
 
@@ -258,6 +261,22 @@
         <p class="spell-levels" class:over={used > budget} data-testid="spell-levels-used">
           {store.t('spell-levels-used', { used: String(used), budget: String(budget) })}
         </p>
+
+        <label class="field spell-levels-override">
+          <span>{store.t('spell-levels-override-label')}</span>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            placeholder={String(profileBase)}
+            value={store.entity.spell_levels_override ?? ''}
+            oninput={(e) => {
+              const raw = (e.currentTarget as HTMLInputElement).value;
+              store.setSpellLevelsOverride(raw === '' ? null : Number(raw));
+            }}
+            data-testid="spell-levels-override"
+          />
+        </label>
 
         {#if masteryXp > 0 || masteryFloor > 0}
           <p
