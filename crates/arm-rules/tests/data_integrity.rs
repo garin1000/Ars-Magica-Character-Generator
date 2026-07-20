@@ -236,6 +236,33 @@ fn german_i18n_covers_all_spells() {
     }
 }
 
+/// The four meta-magic Vim spells whose target `(Form)` is a selection each
+/// declare a single `form`-domain parameter, keep their catalogue Vim
+/// Technique/Form (the parameter is display + identity only), and the whole
+/// shipped catalogue still passes load-time referential integrity.
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:15776-15779,
+/// :15791-15794, :15801-15804, :15843-15846.
+#[test]
+fn parametrized_vim_spells_declare_a_form_parameter() {
+    let rs = load_ruleset_with_spells();
+    for id in [
+        "spell.mirror_of_opposition_form",
+        "spell.unravelling_the_fabric_of_form",
+        "spell.wizards_boost_form",
+        "spell.wizards_reach_form",
+    ] {
+        let spell = rs
+            .spell(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} present"));
+        assert_eq!(spell.parameters.len(), 1, "{id} has one parameter");
+        let def = &spell.parameters[0];
+        assert_eq!(def.key, "form", "{id} parameter key is 'form'");
+        assert_eq!(def.domain, ParameterDomain::Form, "{id} domain is Form");
+        // The spell's own Technique/Form stay the catalogue Vim Arts.
+        assert_eq!(spell.form, Id::new("art.vim"), "{id} form stays Vim");
+    }
+}
+
 #[test]
 fn shipped_equipment_loads_and_exposes_accessors() {
     let rs = load_ruleset_with_equipment();
@@ -1234,6 +1261,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
         spell: Id::new("spell.blade_of_the_virulent_flame"),
         level: None,
         mastery: None,
+        parameter: None,
     }];
     e.equipment = vec![
         EquipmentSlot {

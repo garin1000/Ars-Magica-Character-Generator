@@ -631,6 +631,11 @@ struct CastingScores {
 pub struct PenetrationLine {
     /// The known spell's id.
     pub spell: Id,
+    /// The chosen parameter of a parameterized spell (the target `(Form)` of a
+    /// meta-magic Vim spell), disambiguating two instances of one spell id that
+    /// differ only by parameter. `None` for ordinary, unparameterized spells.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parameter: Option<String>,
     /// The spell's (resolved) level.
     pub level: u32,
     /// The formulaic Casting Total used (base, no focus).
@@ -679,6 +684,7 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
         });
         out.push(PenetrationLine {
             spell: sel.spell.clone(),
+            parameter: sel.parameter.clone(),
             level,
             casting_total: base_casting,
             penetration_ability: pen_ability,
@@ -1435,15 +1441,19 @@ mod tests {
           ],
           "arts": [
             { "id": "art.creo", "art_type": "technique" },
+            { "id": "art.muto", "art_type": "technique" },
             { "id": "art.perdo", "art_type": "technique" },
             { "id": "art.corpus", "art_type": "form" },
             { "id": "art.ignem", "art_type": "form" },
-            { "id": "art.terram", "art_type": "form" }
+            { "id": "art.terram", "art_type": "form" },
+            { "id": "art.vim", "art_type": "form" }
           ]
         }"#;
         let spells = r#"{ "spells": [
           { "id": "spell.pilum_of_fire", "technique": "art.creo", "form": "art.ignem",
-            "level": 20, "ritual": false }
+            "level": 20, "ritual": false },
+          { "id": "spell.wizards_boost_form", "technique": "art.muto", "form": "art.vim",
+            "parameters": [{ "key": "form", "type": "ref", "domain": "form" }] }
         ] }"#;
         let equipment = r#"{
           "weapons": [
@@ -1874,6 +1884,7 @@ mod tests {
             spell: Id::new("spell.pilum_of_fire"),
             level: None,
             mastery: None,
+            parameter: None,
         }];
         let pen = penetration(&e, &rs);
         assert_eq!(pen.len(), 1);
@@ -1886,6 +1897,55 @@ mod tests {
         let pen = penetration(&e, &rs);
         assert!(pen[0].weak_magic);
         assert_eq!(pen[0].total, 0);
+    }
+
+    /// A parameterized meta-magic Vim spell's Casting Total and Penetration use
+    /// its catalogue Vim Arts (MuVi), NOT the chosen target-Form parameter, and
+    /// the Penetration line carries the chosen parameter so two instances of the
+    /// one spell id are distinct. Source: Core Rules.md:15791-15794 (the (Form) is
+    /// the target spell's Form; these are MuVi spells).
+    #[test]
+    fn parametrized_spell_penetration_uses_vim_not_param_form() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.aura = 0;
+        set_char(&mut e, Characteristic::Sta, 2);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.muto"),
+                score: 3,
+            },
+            ArtScore {
+                art: Id::new("art.vim"),
+                score: 4,
+            },
+            // A high target-Form score that MUST NOT feed the casting total.
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 20,
+            },
+        ];
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.penetration"),
+            parameter: None,
+            specialty: None,
+            score: 0,
+        }];
+        e.spells = vec![SpellSelection {
+            spell: Id::new("spell.wizards_boost_form"),
+            level: Some(10),
+            mastery: None,
+            parameter: Some("art.ignem".into()),
+        }];
+        let pen = penetration(&e, &rs);
+        assert_eq!(pen.len(), 1);
+        // Casting Total = Muto3 + Vim4 + Sta2 = 9 — the catalogue MuVi Arts, NOT
+        // the Ignem20 target Form.
+        assert_eq!(pen[0].casting_total, 9);
+        // Penetration = 9 − level 10 + Penetration 0 = −1.
+        assert_eq!(pen[0].total, -1);
+        // The line carries the chosen parameter, distinguishing instances.
+        assert_eq!(pen[0].parameter, Some("art.ignem".to_string()));
     }
 
     /// A grog combat line with a weapon and a shield combined (Core:16658-16670,
@@ -2267,6 +2327,7 @@ mod tests {
             spell: Id::new("spell.pilum_of_fire"),
             level: None,
             mastery: None,
+            parameter: None,
         }];
         e.selections = vec![Selection::with_params(
             Id::new("flaw.deficient_technique"),

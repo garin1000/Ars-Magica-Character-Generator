@@ -236,7 +236,7 @@ describe('spells', () => {
       timeoutMsg: 'save did not write the file',
     });
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.schema_version).toBe(12);
+    expect(saved.schema_version).toBe(13);
     expect(saved.spells.some((s) => s.spell === 'spell.pilum_of_fire')).toBe(true);
     expect(
       saved.spells.some((s) => s.spell === 'spell.aegis_of_the_hearth' && s.level === 200),

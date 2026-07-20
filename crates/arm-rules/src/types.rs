@@ -1585,8 +1585,8 @@ pub struct ArtScore {
 /// resolved value: the catalogue supplies a fixed spell's level, so `level` is
 /// `Some` only for a **General** spell — the per-character learned level. Two
 /// General versions of one spell at different levels are distinct spells
-/// (Core Rules.md:12349-12353), so identity is (spell, level). Kept sorted via
-/// [`Entity::normalize`].
+/// (Core Rules.md:12349-12353), so identity is (spell, level, parameter). Kept
+/// sorted via [`Entity::normalize`].
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct SpellSelection {
     /// The spell's id (e.g. `spell.pilum_of_fire`).
@@ -1601,6 +1601,14 @@ pub struct SpellSelection {
     /// at 1. Source: Core Rules.md:4471-4474, :3887-3889.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mastery: Option<u8>,
+    /// The chosen value for a parameterized spell (the target `(Form)` of a
+    /// meta-magic Vim spell like Wizard's Boost — an Art id such as `art.ignem`).
+    /// Part of the spell's identity: the same base spell may be taken once per
+    /// distinct parameter (Core Rules.md:15791-15794). Display + identity only —
+    /// it does NOT change the spell's own Technique/Form. `None` for ordinary,
+    /// unparameterized spells.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parameter: Option<String>,
 }
 
 /// A piece of equipment the character carries: a reference to a catalogue weapon,
@@ -2058,7 +2066,12 @@ pub struct Entity {
 /// Bumped 11 → 12 when the optional per-character `spell_levels_override` field
 /// was added (Issue 11). Purely additive `serde(default)`, so old saves load
 /// unchanged with no migration code.
-pub const SCHEMA_VERSION: u32 = 12;
+///
+/// Bumped 12 → 13 when the optional `parameter` field was added to
+/// [`SpellSelection`] (parametrized meta-magic Vim spells like Wizard's Boost,
+/// Issue 8/10). Purely additive `serde(default)`, so old saves load unchanged
+/// with no migration code.
+pub const SCHEMA_VERSION: u32 = 13;
 
 impl Entity {
     /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
@@ -2861,6 +2874,7 @@ mod tests {
                 spell: Id::new("spell.pilum_of_fire"),
                 level: None,
                 mastery: None,
+                parameter: None,
             }],
             spell_levels_override: None,
             house: None,
@@ -2902,7 +2916,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 12"#));
+        assert!(json.contains(r#""schema_version": 13"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -2972,11 +2986,13 @@ mod tests {
                 spell: Id::new("spell.unseen_arm"),
                 level: None,
                 mastery: None,
+                parameter: None,
             },
             SpellSelection {
                 spell: Id::new("spell.aegis_of_the_hearth"),
                 level: Some(20),
                 mastery: None,
+                parameter: None,
             },
         ];
         entity.normalize();
@@ -3246,7 +3262,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 12"#));
+        assert!(json.contains(r#""schema_version": 13"#));
         assert!(json.contains(r#""aura": -3"#));
         assert!(json.contains(r#""source": "external""#));
     }
@@ -3327,7 +3343,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 12"#));
+        assert!(json.contains(r#""schema_version": 13"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
         assert!(json.contains(r#""description": "Knight of the Teutonic Order, Crusader""#));
