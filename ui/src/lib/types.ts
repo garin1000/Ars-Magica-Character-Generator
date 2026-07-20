@@ -356,6 +356,9 @@ export interface CastingTotal {
 // A per-known-spell Penetration line.
 export interface PenetrationLine {
   spell: string;
+  // Chosen parameter of a parameterized spell (the target (Form)), disambiguating
+  // two instances of one spell id. Absent for ordinary spells.
+  parameter?: string | null;
   level: number;
   casting_total: number;
   penetration_ability: number;
@@ -575,6 +578,11 @@ export interface Spell {
   // A Ritual spell must be learned at level >= 20 (its minimum learnable level).
   // Present (true) only for rituals; absent = ordinary spell (minimum level 1).
   ritual?: boolean;
+  // Selection parameters this spell requires (a meta-magic Vim spell whose target
+  // (Form) is a selection declares a single `form`-domain parameter). Empty/absent
+  // for ordinary spells. The chosen value is display + identity only and does NOT
+  // change the spell's own Technique/Form.
+  parameters?: ParameterDef[];
 }
 
 // A spell the character knows. `level` is set only for a General spell (the
@@ -585,6 +593,10 @@ export interface SpellSelection {
   // Bought Spell Mastery Ability score (spent from the mastery-XP pool);
   // omitted/0 = unmastered. Effective mastery = max(this, mastery floor).
   mastery?: number | null;
+  // Chosen value for a parameterized spell (the target (Form) of a meta-magic Vim
+  // spell, an Art id like `art.ignem`). Part of the spell's identity: the same base
+  // spell may be taken once per distinct parameter. Absent for ordinary spells.
+  parameter?: string | null;
 }
 
 // A named Personality Trait with a value in ±3 (±6 for a Major Personality Flaw).

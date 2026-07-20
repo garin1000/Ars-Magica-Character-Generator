@@ -177,6 +177,30 @@ pub(crate) fn validate_forbidden_traits(
     }
 }
 
+/// Whether a parameter `value` resolves against its `domain`'s registry: `Item`
+/// → point items, `Ability` → the ability catalogue, `Art` → the art catalogue,
+/// `Technique`/`Form` → the art catalogue *and* the required art class (so
+/// Deficient Technique cannot target a Form; Core Rules.md:5909-5915),
+/// `Characteristic` → [`Characteristic::from_id`], `Text` → always (no registry).
+/// Shared by virtue/flaw parameter validation and spell parameter validation.
+pub(crate) fn param_value_resolves(ruleset: &Ruleset, domain: ParameterDomain, value: &Id) -> bool {
+    match domain {
+        ParameterDomain::Item => ruleset.point_items.contains_key(value),
+        ParameterDomain::Ability => ruleset.abilities.contains_key(value),
+        ParameterDomain::Characteristic => Characteristic::from_id(value).is_some(),
+        ParameterDomain::Art => ruleset.arts.contains_key(value),
+        ParameterDomain::Technique => ruleset
+            .arts
+            .get(value)
+            .is_some_and(|a| a.art_type == crate::art::ArtType::Technique),
+        ParameterDomain::Form => ruleset
+            .arts
+            .get(value)
+            .is_some_and(|a| a.art_type == crate::art::ArtType::Form),
+        ParameterDomain::Text => true,
+    }
+}
+
 /// Validates that each selection of a parameterized item supplies exactly the
 /// declared parameter keys (no missing, no extra) and that each provided value
 /// resolves against its domain's registry: `item` → point items, `ability` →
@@ -239,25 +263,7 @@ pub(crate) fn validate_parameters(
             let Some(value) = selection.params.get(&param.key) else {
                 continue; // missing already reported above
             };
-            let resolves = match param.domain {
-                ParameterDomain::Item => ruleset.point_items.contains_key(value),
-                ParameterDomain::Ability => ruleset.abilities.contains_key(value),
-                ParameterDomain::Characteristic => Characteristic::from_id(value).is_some(),
-                ParameterDomain::Art => ruleset.arts.contains_key(value),
-                // Technique/Form resolve against the art catalogue *and* enforce
-                // the art class, so Deficient Technique cannot target a Form and
-                // Deficient Form cannot target a Technique (Core Rules.md:5909-5915).
-                ParameterDomain::Technique => ruleset
-                    .arts
-                    .get(value)
-                    .is_some_and(|a| a.art_type == crate::art::ArtType::Technique),
-                ParameterDomain::Form => ruleset
-                    .arts
-                    .get(value)
-                    .is_some_and(|a| a.art_type == crate::art::ArtType::Form),
-                // Free text: any provided value is legal (no registry).
-                ParameterDomain::Text => true,
-            };
+            let resolves = param_value_resolves(ruleset, param.domain, value);
             if !resolves {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,

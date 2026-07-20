@@ -4953,7 +4953,9 @@ mod tests {
         { "id": "spell.pilum_of_fire", "technique": "art.creo", "form": "art.ignem", "level": 20 },
         { "id": "spell.ball_of_abysmal_flame", "technique": "art.creo", "form": "art.ignem", "level": 35 },
         { "id": "spell.aegis_of_the_hearth", "technique": "art.rego", "form": "art.vim", "ritual": true },
-        { "id": "spell.general_ward", "technique": "art.rego", "form": "art.vim" }
+        { "id": "spell.general_ward", "technique": "art.rego", "form": "art.vim" },
+        { "id": "spell.wizards_boost_form", "technique": "art.rego", "form": "art.vim",
+          "parameters": [{ "key": "form", "type": "ref", "domain": "form" }] }
     ] }"#;
     // spell_levels 50 keeps the budget small enough to trip in tests.
     const SPELL_MAGUS_TYPE: &str = r#"[
@@ -4986,6 +4988,18 @@ mod tests {
             spell: Id::new(id),
             level,
             mastery: None,
+            parameter: None,
+        }
+    }
+
+    /// A spell selection carrying a chosen parameter (e.g. the target `(Form)` of
+    /// a meta-magic Vim spell).
+    fn spell_param(id: &str, level: Option<u8>, parameter: &str) -> SpellSelection {
+        SpellSelection {
+            spell: Id::new(id),
+            level,
+            mastery: None,
+            parameter: Some(parameter.to_string()),
         }
     }
 
@@ -5068,6 +5082,61 @@ mod tests {
         let codes = all_codes(&validate(&e, &rs));
         assert!(codes.contains(&"spell_level_unresolved".to_string()));
         assert!(!codes.contains(&"over_spell_levels".to_string()));
+    }
+
+    /// A parameterized spell taken with a chosen Form validates, and the same base
+    /// spell with a *different* Form is a distinct instance (not a duplicate).
+    /// Source: Core Rules.md:15791-15794 (one version per Hermetic Form).
+    #[test]
+    fn parametrized_spell_distinct_per_form() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![
+            spell_param("spell.wizards_boost_form", Some(10), "art.ignem"),
+            spell_param("spell.wizards_boost_form", Some(10), "art.corpus"),
+        ];
+        let codes = all_codes(&validate(&e, &rs));
+        assert!(!codes.contains(&"duplicate_spell".to_string()), "{codes:?}");
+        assert!(!codes.contains(&"missing_param".to_string()), "{codes:?}");
+        assert!(
+            !codes.contains(&"unknown_param_value".to_string()),
+            "{codes:?}"
+        );
+    }
+
+    /// The same parameterized spell with the SAME Form twice is a duplicate.
+    #[test]
+    fn parametrized_spell_same_form_is_duplicate() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![
+            spell_param("spell.wizards_boost_form", Some(10), "art.ignem"),
+            spell_param("spell.wizards_boost_form", Some(10), "art.ignem"),
+        ];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"duplicate_spell".to_string()));
+    }
+
+    /// A parameterized spell taken with no chosen parameter is flagged missing_param.
+    #[test]
+    fn parametrized_spell_without_parameter_is_flagged() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![spell("spell.wizards_boost_form", Some(10))];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"missing_param".to_string()));
+    }
+
+    /// A parameterized spell whose chosen value is outside the parameter's domain
+    /// (a Technique where a Form is required) is flagged unknown_param_value.
+    #[test]
+    fn parametrized_spell_wrong_domain_is_flagged() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![spell_param(
+            "spell.wizards_boost_form",
+            Some(10),
+            "art.creo",
+        )];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"unknown_param_value".to_string()));
     }
 
     /// The same spell at the same level twice emits duplicate_spell.

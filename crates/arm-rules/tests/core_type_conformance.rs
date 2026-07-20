@@ -184,11 +184,13 @@ fn magus_full_build_validates() {
             spell: Id::new("spell.bind_wound"),
             level: None,
             mastery: None,
+            parameter: None,
         },
         SpellSelection {
             spell: Id::new("spell.airs_ghostly_form"),
             level: None,
             mastery: None,
+            parameter: None,
         },
     ];
     assert_valid("magus", &mag, &full_ruleset());

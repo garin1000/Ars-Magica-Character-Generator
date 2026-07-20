@@ -259,7 +259,10 @@ pub(crate) fn validate_spells(
     issues: &mut Vec<ValidationIssue>,
 ) {
     let is_magus = type_profile.is_some_and(|p| p.is_magus);
-    let mut seen: BTreeMap<(&Id, Option<u32>), u32> = BTreeMap::new();
+    // Identity is (spell, resolved level, parameter): a parameterized meta-magic
+    // Vim spell may be taken once per distinct target (Form) (Core:12353,
+    // Core Rules.md:15791-15794).
+    let mut seen: BTreeMap<(&Id, Option<u32>, Option<&String>), u32> = BTreeMap::new();
 
     for sel in &entity.spells {
         let Some(spell) = ruleset.spell(&sel.spell) else {
@@ -280,7 +283,40 @@ pub(crate) fn validate_spells(
                 Some(sel.spell.clone()),
             ));
         }
-        *seen.entry((&sel.spell, resolved)).or_insert(0) += 1;
+
+        // A parameterized spell (meta-magic Vim spell whose target (Form) is a
+        // selection) requires a chosen value that resolves to the declared
+        // domain. Display + identity only — it does NOT change the spell's own
+        // Technique/Form (Core Rules.md:15791-15794). Mirrors the virtue/flaw
+        // parameter checks in `validation::selections`.
+        if let Some(def) = spell.parameters.first() {
+            match &sel.parameter {
+                None => issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_MISSING_PARAM,
+                    args([("item", sel.spell.to_string()), ("key", def.key.clone())]),
+                    Some(sel.spell.clone()),
+                )),
+                Some(value) => {
+                    let value_id = Id::new(value.as_str());
+                    if !super::selections::param_value_resolves(ruleset, def.domain, &value_id) {
+                        issues.push(ValidationIssue::error(
+                            ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
+                            args([
+                                ("item", sel.spell.to_string()),
+                                ("key", def.key.clone()),
+                                ("value", value.clone()),
+                                ("domain", def.domain.to_string()),
+                            ]),
+                            Some(sel.spell.clone()),
+                        ));
+                    }
+                }
+            }
+        }
+
+        *seen
+            .entry((&sel.spell, resolved, sel.parameter.as_ref()))
+            .or_insert(0) += 1;
 
         // Ritual level bounds apply to the resolved learned level regardless of
         // budget: a ritual must be learned at level >= 20, a non-ritual at <= 50
@@ -319,7 +355,7 @@ pub(crate) fn validate_spells(
         }
     }
 
-    for ((spell, _level), count) in seen {
+    for ((spell, _level, _param), count) in seen {
         if count > 1 {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_DUPLICATE_SPELL,

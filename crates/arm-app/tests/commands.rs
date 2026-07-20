@@ -164,7 +164,7 @@ fn sample_entity_with_characteristics_and_abilities_validates() {
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
     let entity = sample_entity();
     // The shipped sample now carries characteristics, ability scores, and a bank.
-    assert_eq!(entity.schema_version, 12);
+    assert_eq!(entity.schema_version, 13);
     assert!(!entity.characteristics.is_empty());
     assert!(!entity.ability_scores.is_empty());
     let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
@@ -398,7 +398,7 @@ fn save_stamps_current_schema_version() {
     save_entity_to_path(&entity, &path).unwrap();
     let written = fs::read_to_string(&path).unwrap();
     assert!(
-        written.contains("\"schema_version\": 12"),
+        written.contains("\"schema_version\": 13"),
         "save must stamp the current schema version, got: {written}"
     );
 }
@@ -462,7 +462,7 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
     let path = tmp.path().join("magus.json");
     save_entity_to_path(&entity, &path).unwrap();
     let reloaded = load_entity_from_path(&path).unwrap();
-    assert_eq!(reloaded.schema_version, 12);
+    assert_eq!(reloaded.schema_version, 13);
     assert_eq!(reloaded.art_scores, entity.art_scores);
 }
 

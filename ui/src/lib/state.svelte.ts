@@ -23,7 +23,7 @@ import type {
 } from './types';
 
 const VALIDATE_DEBOUNCE_MS = 150;
-const SCHEMA_VERSION = 12;
+const SCHEMA_VERSION = 13;
 
 /** Live filter/search state of the Virtue/Flaw picker (one per side). */
 export interface VfFilterState {

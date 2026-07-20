@@ -18,7 +18,7 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Id, SourceRef};
+use crate::types::{Id, ParameterDef, SourceRef};
 
 /// A spell's Range — how far the target may be from the caster. Ordered least- to
 /// most-difficult, matching the RDT chart. Its label lives in Fluent
@@ -183,6 +183,16 @@ pub struct Spell {
     /// Core Rules.md:12039/:12115, forces the spell to be a Ritual.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub creates_lasting: bool,
+    /// Selection parameters this spell requires — mirrors [`ParameterDef`] on a
+    /// virtue/flaw. A meta-magic Vim spell whose name carries a target `(Form)`
+    /// (e.g. Wizard's Boost) declares a single `form`-domain parameter here; the
+    /// chosen value is **display + identity only** and does NOT change the spell's
+    /// own Technique/Form — those stay the catalogue Vim Arts. Empty for ordinary
+    /// spells, so existing catalogue entries are unaffected.
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:15791-15794
+    /// ("There are ten versions of this spell, one for each Hermetic Form").
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub parameters: Vec<ParameterDef>,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
@@ -252,6 +262,7 @@ mod tests {
             duration: None,
             target: None,
             creates_lasting: false,
+            parameters: Vec::new(),
             source: None,
         };
         let out = serde_json::to_string(&spell).unwrap();

@@ -1198,10 +1198,11 @@ without a parameter: the `ParamType` model is ref-domain-only and there is no
 
 A starting magus knows a list of spells, each drawn from the catalogue in
 `rules/core/spells.json` (`spell.rs`: `Spell { technique, form, level,
-requisites }`, with `level: None` marking a **General** spell learned at a
-per-character level). The chosen spells live on `Entity::spells`
-(`SpellSelection { spell, level }`); `validate_spells` (`validation.rs`) enforces
-two sourced constraints, both magus-only (gated on the profile `is_magus`).
+requisites, parameters }`, with `level: None` marking a **General** spell learned
+at a per-character level). The chosen spells live on `Entity::spells`
+(`SpellSelection { spell, level, mastery, parameter }`); `validate_spells`
+(`validation/magus.rs`) enforces two sourced constraints, both magus-only (gated
+on the profile `is_magus`).
 
 **Spell-levels budget — 120 at creation.**
 
@@ -1249,8 +1250,32 @@ but not folded into the cap.
 
 A General spell's catalogue `level` is `None`; the learned level is the
 per-character `SpellSelection.level`. Identity (and the dedup key) is
-`(spell, level)`; an unresolved General spell (no chosen level) warns
+`(spell, level, parameter)`; an unresolved General spell (no chosen level) warns
 (`spell_level_unresolved`) and is excluded from the budget sum.
+
+**Parametrized spells — one version per Hermetic Form.**
+
+> `:15791-15794` "**Wizard's Boost (Form)** … There are ten versions of this
+> spell, one for each Hermetic Form." (Also **Mirror of Opposition (form)**
+> `:15776-15779`, **Wizard's Reach (Form)** `:15801-15804`, and **Unravelling the
+> Fabric of (Form)** `:15843-15846`.)
+
+These four meta-magic Vim spells (MuVi / PeVi, all General) bake the *target*
+spell's Form into their name. The `(Form)` is modelled as a `ParameterDef`
+(`{ key: "form", type: "ref", domain: "form" }`) on `Spell.parameters`
+(`spell.rs`), chosen per selection via `SpellSelection.parameter` (an `art.*`
+id). It is **display + identity only**: the spell's own `technique`/`form` stay
+the catalogue Vim Arts (`art.muto`/`art.perdo` + `art.vim`), so casting totals,
+penetration (`derived.rs::penetration`), and the per-spell cap
+(`spell_level_cap`) keep using Vim — the parameter never resolves an "effective
+Te/Fo". `validate_spells` (`validation/magus.rs`) requires the parameter
+(`missing_param` if absent) and resolves it to the Form domain
+(`unknown_param_value` otherwise, via `selections::param_value_resolves`); the
+same base spell may be taken **once per distinct Form** (the `parameter` is part
+of the dedup key). The value flows onto `PenetrationLine.parameter` so two
+instances of one spell id stay distinct. Data: `rules/core/spells.json` (the
+`parameters` array; Te/Fo unchanged) + `rules/i18n/{en,de}/spells.json` (name
+retokenized to `{form}`).
 
 **Ritual legality — Range/Duration/Target + `ritual`/`creates_lasting` (5d).**
 A spell carries a `ritual: bool` plus optional RDT (`SpellRange`/`SpellDuration`/

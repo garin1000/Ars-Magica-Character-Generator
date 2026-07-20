@@ -2919,12 +2919,14 @@ mod tests {
             spell: Id::new("spell.x"),
             level: None,
             mastery: None,
+            parameter: None,
         };
         assert_eq!(effective_spell_mastery(&unbought, &flawless, &rs), 1);
         let bought = SpellSelection {
             spell: Id::new("spell.x"),
             level: None,
             mastery: Some(3),
+            parameter: None,
         };
         assert_eq!(effective_spell_mastery(&bought, &flawless, &rs), 3);
     }
