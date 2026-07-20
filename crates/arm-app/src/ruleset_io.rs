@@ -17,7 +17,7 @@ use arm_rules::{
     characteristic_aging_drops, characteristic_bonuses, characteristic_caps, characteristic_floors,
     characteristic_points_granted, confidence, decrepitude_score, effective_characteristics,
     effective_might, effective_point_ceilings, entity_grants, item_level_budget, item_level_used,
-    power_levels_budget, powers_used, reputation_grants, size, spell_level_caps,
+    power_levels_budget, powers_used, reputation_grants, size, spell_level_caps, spell_levels_base,
     spell_levels_budget, spell_levels_used, spell_mastery_floor, spell_mastery_xp,
     supernatural_free_slots, true_faith, validate, warping, xp_allocation,
 };
@@ -81,9 +81,14 @@ pub struct EffectiveScores {
     /// not the base 20/10). Budget numbers stay engine-authoritative.
     pub virtue_budget: u32,
     pub flaw_budget: u32,
-    /// The magus's effective spell-levels budget (profile base + Skilled/Weak
-    /// Parens modifiers) — the "available" side of the spell-levels bar.
+    /// The magus's effective spell-levels budget (base + Skilled/Weak Parens
+    /// modifiers) — the "available" side of the spell-levels bar. The base is the
+    /// per-character `spell_levels_override` when set, else the type profile's base.
     pub spell_levels_budget: u32,
+    /// The type profile's base spell-levels budget (120 for a magus), surfaced so
+    /// the override field's placeholder shows the data-driven default rather than a
+    /// hardcoded literal. Ignores the per-character override and V/F modifiers.
+    pub spell_levels_profile_base: u32,
     /// The spell levels the chosen spells consume — the "used" side of the bar.
     pub spell_levels_used: u32,
     /// Per-Technique/Form maximum learnable spell level (Te + Fo + Int + Magic
@@ -156,7 +161,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         flaw_ceiling: 0,
     });
     let profile = ruleset.profile(&entity.type_id);
-    let spell_base = profile.map(|p| p.spell_levels).unwrap_or(0);
+    let spell_base = spell_levels_base(entity, profile);
     // Confidence is derived (type default + V/F); 0/0 when there is no profile.
     let confidence = profile
         .map(|p| confidence(p.confidence_score, p.confidence_points, entity, ruleset))
@@ -186,6 +191,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         virtue_budget: ceilings.virtue_ceiling,
         flaw_budget: ceilings.flaw_ceiling,
         spell_levels_budget: spell_levels_budget(spell_base, entity, ruleset),
+        spell_levels_profile_base: profile.map(|p| p.spell_levels).unwrap_or(0),
         spell_levels_used: spell_levels_used(entity, ruleset),
         // The per-Te/Fo cap only matters on the (magus-only) Spells tab, so it is
         // computed only for a magus — other types ship an empty list.

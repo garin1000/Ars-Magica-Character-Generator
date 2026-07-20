@@ -330,7 +330,7 @@ pub(crate) fn validate_spells(
     }
 
     if is_magus {
-        let base = type_profile.map(|p| p.spell_levels).unwrap_or(0);
+        let base = crate::effective::spell_levels_base(entity, type_profile);
         let budget = crate::effective::spell_levels_budget(base, entity, ruleset);
         let used = crate::effective::spell_levels_used(entity, ruleset);
         if used > budget {

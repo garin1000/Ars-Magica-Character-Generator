@@ -1884,6 +1884,15 @@ pub struct Entity {
     /// empty.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub spells: Vec<SpellSelection>,
+    /// An optional per-character override of the type profile's base spell-levels
+    /// budget (the profile's `spell_levels`, 120 for a magus). A stored *choice*
+    /// (saves record choices, so it round-trips): when set it REPLACES the profile
+    /// base as the starting budget, then Skilled/Weak Parens
+    /// [`Effect::SpellLevels`] modifiers still add on top
+    /// ([`crate::effective::spell_levels_base`]). `None` = use the profile base.
+    /// Old saves lacking the field default to `None`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spell_levels_override: Option<u32>,
     /// The Hermetic House this entity belongs to (magi only). The save stores
     /// only the choice; the free House Virtue is derived at eval time, never
     /// persisted (honors "saves store choices, not resolved values"). `None` for
@@ -2045,7 +2054,11 @@ pub struct Entity {
 /// `warping_effect`, `decrepitude_effect`, `aging_log`) were added. These are
 /// purely additive `serde(default)` fields, so old saves load unchanged with no
 /// migration code.
-pub const SCHEMA_VERSION: u32 = 11;
+///
+/// Bumped 11 → 12 when the optional per-character `spell_levels_override` field
+/// was added (Issue 11). Purely additive `serde(default)`, so old saves load
+/// unchanged with no migration code.
+pub const SCHEMA_VERSION: u32 = 12;
 
 impl Entity {
     /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
@@ -2063,6 +2076,7 @@ impl Entity {
             xp_pool: 0,
             art_scores: Vec::new(),
             spells: Vec::new(),
+            spell_levels_override: None,
             house: None,
             house_choices: BTreeMap::new(),
             mythic_type: None,
@@ -2848,6 +2862,7 @@ mod tests {
                 level: None,
                 mastery: None,
             }],
+            spell_levels_override: None,
             house: None,
             house_choices: BTreeMap::new(),
             mythic_type: None,
@@ -2887,7 +2902,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 11"#));
+        assert!(json.contains(r#""schema_version": 12"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -2993,6 +3008,7 @@ mod tests {
             xp_pool: 0,
             art_scores: Vec::new(),
             spells: Vec::new(),
+            spell_levels_override: None,
             house: None,
             house_choices: BTreeMap::new(),
             mythic_type: None,
@@ -3183,6 +3199,21 @@ mod tests {
         assert!(entity.longevity_ritual.is_none());
     }
 
+    /// Issue 11: a save predating `spell_levels_override` deserializes with the
+    /// additive `serde(default)` field filling in as `None` — no migration needed.
+    #[test]
+    fn save_without_spell_levels_override_loads_as_none() {
+        let old = r#"{
+          "schema_version": 11,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "selections": [{ "ref": "virtue.the_gift" }]
+        }"#;
+        let entity: Entity = serde_json::from_str(old).unwrap();
+        assert_eq!(entity.spell_levels_override, None);
+    }
+
     /// An Entity carrying every new magic-possession field round-trips through JSON
     /// unchanged, at the current schema version.
     #[test]
@@ -3215,7 +3246,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 11"#));
+        assert!(json.contains(r#""schema_version": 12"#));
         assert!(json.contains(r#""aura": -3"#));
         assert!(json.contains(r#""source": "external""#));
     }
@@ -3296,7 +3327,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 11"#));
+        assert!(json.contains(r#""schema_version": 12"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
         assert!(json.contains(r#""description": "Knight of the Teutonic Order, Crusader""#));

@@ -243,9 +243,13 @@ export interface EffectiveScores {
   // bonus), so the balance bar shows the true budget (Devil Child 37/17).
   virtue_budget: number;
   flaw_budget: number;
-  // The magus's effective spell-levels budget (profile base + Skilled/Weak
-  // Parens) and how many levels the chosen spells consume — the spell bar.
+  // The magus's effective spell-levels budget (base + Skilled/Weak Parens) and
+  // how many levels the chosen spells consume — the spell bar. The base is the
+  // per-character spell_levels_override when set, else the type profile's base.
   spell_levels_budget: number;
+  // The type profile's base spell-levels budget (120 for a magus), so the
+  // override field's placeholder shows the data-driven default (never a literal).
+  spell_levels_profile_base: number;
   spell_levels_used: number;
   // Per-Technique/Form maximum learnable spell level (Te + Fo + Int + Magic
   // Theory + 3), so the picker greys a spell above the magus's cap. Empty for a
@@ -861,6 +865,10 @@ export interface Entity {
   // The spells the character knows (magi only). Each consumes the spell-levels
   // budget. Omitted when empty.
   spells?: SpellSelection[];
+  // Optional per-character override of the type profile's base spell-levels
+  // budget (a stored choice). When set it REPLACES the profile base; Skilled/Weak
+  // Parens modifiers still add on top. Omitted when unset (use the profile base).
+  spell_levels_override?: number | null;
   // The Hermetic House (magi only). Stores only the choice; the free House
   // Virtue is derived engine-side, never persisted. Omitted when unset.
   house?: string | null;

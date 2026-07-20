@@ -1316,8 +1316,20 @@ fn sum_signed_effect(
     total
 }
 
-/// The magus's effective spell-levels budget: the type profile's base plus any
-/// [`Effect::SpellLevels`] modifiers, clamped at 0.
+/// The base spell-levels budget BEFORE Skilled/Weak Parens modifiers: the
+/// per-character [`Entity::spell_levels_override`] when set, otherwise the type
+/// profile's `spell_levels` (120 for a magus; 0 for a type with no profile).
+/// Factored so the effective payload and the validator select the base
+/// identically and can never diverge (Issue 11).
+// Source: Ars Magica - Definitive Edition (Core Rules).md:2215-2216, :2435
+pub fn spell_levels_base(entity: &Entity, profile: Option<&EntityTypeProfile>) -> u32 {
+    entity
+        .spell_levels_override
+        .unwrap_or_else(|| profile.map(|p| p.spell_levels).unwrap_or(0))
+}
+
+/// The magus's effective spell-levels budget: the base ([`spell_levels_base`])
+/// plus any [`Effect::SpellLevels`] modifiers, clamped at 0.
 pub fn spell_levels_budget(base: u32, entity: &Entity, ruleset: &Ruleset) -> u32 {
     clamp_to_u32(i64::from(base) + spell_levels_bonus(entity, ruleset))
 }
@@ -1974,6 +1986,7 @@ mod tests {
             "gift_policy": "forbidden",
             "gift_id": "virtue.the_gift",
             "gift_categories": [],
+            "spell_levels": 120,
             "creation_phases": ["concept"]
           }
         ]"#;
@@ -3643,5 +3656,32 @@ mod tests {
         assert_eq!(caps[0].form, Id::new("art.ignem"));
         // 2 (Creo) + 3 (Ignem) + 1 (Int) + 0 (no Magic Theory) + 3 = 9.
         assert_eq!(caps[0].cap, 9);
+    }
+
+    /// Issue 11: with no per-character override the base budget is the type
+    /// profile's `spell_levels` (120 in the fixture), and it feeds the budget.
+    #[test]
+    fn spell_levels_base_without_override_uses_profile() {
+        let rs = ruleset();
+        let profile = rs.profile(&Id::new("companion"));
+        let e = entity(vec![]);
+        assert_eq!(e.spell_levels_override, None);
+        assert_eq!(spell_levels_base(&e, profile), 120);
+        let base = spell_levels_base(&e, profile);
+        assert_eq!(spell_levels_budget(base, &e, &rs), 120);
+    }
+
+    /// Issue 11: an explicit per-character override REPLACES the profile base;
+    /// Skilled Parens's +30 [`Effect::SpellLevels`] bonus still adds on top.
+    #[test]
+    fn spell_levels_override_replaces_profile_base() {
+        let rs = ruleset();
+        let profile = rs.profile(&Id::new("companion"));
+        let mut e = entity(vec![Selection::new(Id::new("virtue.skilled_parens"))]);
+        e.spell_levels_override = Some(80);
+        // base = override 80 (not the profile's 120); + 30 Skilled Parens = 110.
+        assert_eq!(spell_levels_base(&e, profile), 80);
+        let base = spell_levels_base(&e, profile);
+        assert_eq!(spell_levels_budget(base, &e, &rs), 110);
     }
 }

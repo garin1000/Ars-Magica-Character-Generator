@@ -149,6 +149,7 @@ spell-general-level-label = Stufe (General)
 spell-add = Zauber hinzufügen
 spell-none = — Zauber wählen —
 spell-levels-used = Zauberstufen: { $used } / { $budget }
+spell-levels-override-label = Zauberstufen-Budget
 spell-mastery-xp = Meisterschafts-EP: { $xp }
 spell-mastery-pool = Meisterschafts-EP: { $used } / { $pool }
 spell-mastery-floor = Alle Zauber gemeistert auf { $score }

@@ -1217,6 +1217,14 @@ provenance lives here). The sum of the chosen spells' levels must not exceed the
 effective budget → `over_spell_levels`. Value lives in data; the engine never
 hardcodes 120.
 
+The base budget is selected in one place, `effective::spell_levels_base` — the
+per-character `Entity::spell_levels_override` (an optional stored *choice*, an
+app affordance, not a rulebook mechanic) when set, otherwise the profile's
+`spell_levels`. Both the effective payload (`arm-app/src/ruleset_io.rs`) and the
+`over_spell_levels` validator (`validation/magus.rs`) call it, so the displayed
+and validated budgets cannot diverge. `spell_levels_budget` then adds the
+Skilled/Weak Parens `Effect::SpellLevels` modifiers on top of that base.
+
 **Per-spell cap — Technique + Form + Intelligence + Magic Theory + 3.**
 
 > `:2465` "The highest level spell you can learn is equal to Technique + Form +
