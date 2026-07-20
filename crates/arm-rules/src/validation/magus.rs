@@ -303,7 +303,8 @@ pub(crate) fn validate_spells(
         }
 
         if is_magus && let Some(level) = resolved {
-            let cap = spell_level_cap(entity, ruleset, spell);
+            let cap =
+                crate::effective::spell_level_cap(entity, ruleset, &spell.technique, &spell.form);
             if i64::from(level) > cap {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_SPELL_LEVEL_EXCEEDS_CAP,
@@ -344,37 +345,6 @@ pub(crate) fn validate_spells(
             ));
         }
     }
-}
-
-/// The maximum level a magus may learn of a spell: the sum of Technique, Form,
-/// Intelligence, Magic Theory and 3 (Core:2465), using effective Art/Ability
-/// scores. Returns an `i64` (small or negative for a beginning magus).
-/// Requisite-Art reduction is a lab-total nuance out of M4 scope.
-fn spell_level_cap(entity: &Entity, ruleset: &Ruleset, spell: &crate::spell::Spell) -> i64 {
-    let tech = i64::from(crate::effective::effective_art_score(
-        entity,
-        ruleset,
-        &spell.technique,
-    ));
-    let form = i64::from(crate::effective::effective_art_score(
-        entity,
-        ruleset,
-        &spell.form,
-    ));
-    let int = i64::from(
-        entity
-            .characteristics
-            .get(&Characteristic::Int)
-            .copied()
-            .unwrap_or(0),
-    );
-    let magic_theory = i64::from(crate::effective::effective_ability_score(
-        entity,
-        ruleset,
-        &Id::new(crate::ruleset::ID_MAGIC_THEORY),
-        None,
-    ));
-    tech + form + int + magic_theory + 3
 }
 
 /// Validates the experience pools: Abilities and Arts are bought from the shared

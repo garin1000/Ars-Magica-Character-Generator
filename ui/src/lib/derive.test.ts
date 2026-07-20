@@ -22,6 +22,7 @@ import {
   groupArtsByType,
   groupByCategory,
   groupSelectionsByCategory,
+  groupSpellsByTechniqueForm,
   groupAbilitySelectionsByCategory,
   mandatoryTraitRefs,
   maxAbilityScore,
@@ -210,15 +211,121 @@ describe('filterSpells', () => {
       filterSpells(rs, spells, { technique: 'art.creo', form: 'art.ignem' }).map((s) => s.id),
     ).toEqual(['spell.pilum']);
     expect(filterSpells(rs, spells, { text: 'veil' }).map((s) => s.id)).toEqual(['spell.veil']);
-    expect(filterSpells(rs, spells, { level: 20 }).map((s) => s.id)).toEqual(['spell.pilum']);
   });
 
-  it('treats a null level as "no level filter" (returns all spells)', () => {
-    expect(filterSpells(rs, spells, { level: null }).map((s) => s.id)).toEqual([
+  it('treats null range bounds as "no level filter" (returns all spells)', () => {
+    expect(filterSpells(rs, spells, { levelMin: null, levelMax: null }).map((s) => s.id)).toEqual([
       'spell.pilum',
       'spell.veil',
       'spell.ward',
     ]);
+    // No range keys at all is likewise unfiltered.
+    expect(filterSpells(rs, spells, {}).map((s) => s.id)).toEqual([
+      'spell.pilum',
+      'spell.veil',
+      'spell.ward',
+    ]);
+  });
+
+  it('filters a fixed-level spell by an inclusive min/max range (null bound = open)', () => {
+    // levelMin only: keeps spells at or above the bound (General spells always pass).
+    expect(filterSpells(rs, spells, { levelMin: 16 }).map((s) => s.id)).toEqual([
+      'spell.pilum',
+      'spell.ward',
+    ]);
+    // levelMax only: keeps spells at or below the bound (General spells always pass).
+    expect(filterSpells(rs, spells, { levelMax: 15 }).map((s) => s.id)).toEqual([
+      'spell.veil',
+      'spell.ward',
+    ]);
+    // Both bounds: an inclusive band.
+    expect(filterSpells(rs, spells, { levelMin: 15, levelMax: 20 }).map((s) => s.id)).toEqual([
+      'spell.pilum',
+      'spell.veil',
+      'spell.ward',
+    ]);
+    // A band excluding every fixed level leaves only the always-shown General spell.
+    expect(filterSpells(rs, spells, { levelMin: 21, levelMax: 30 }).map((s) => s.id)).toEqual([
+      'spell.ward',
+    ]);
+  });
+
+  it('always shows a General spell (level null) regardless of the range bounds', () => {
+    // ward is General (level null); it passes any bounded range because it has no
+    // fixed catalogue level to test — its learned level is chosen per character.
+    expect(filterSpells(rs, spells, { levelMin: 100, levelMax: 200 }).map((s) => s.id)).toEqual([
+      'spell.ward',
+    ]);
+  });
+});
+
+describe('groupSpellsByTechniqueForm', () => {
+  const arts: Art[] = [
+    { id: 'art.creo', art_type: 'technique' },
+    { id: 'art.rego', art_type: 'technique' },
+    { id: 'art.ignem', art_type: 'form' },
+    { id: 'art.vim', art_type: 'form' },
+  ];
+  function withSpellsRuleset(): LocalizedRuleset {
+    const map: Record<string, Art> = {};
+    for (const a of arts) map[a.id] = a;
+    return {
+      ruleset: {
+        id: 't',
+        version: '1',
+        point_items: {},
+        type_profiles: {},
+        arts: map,
+        art_type_order: ['technique', 'form'],
+        ...DERIVED_TAXONOMY,
+      },
+      i18n: {
+        'art.creo': { name: 'Creo' },
+        'art.rego': { name: 'Rego' },
+        'art.ignem': { name: 'Ignem' },
+        'art.vim': { name: 'Vim' },
+        'spell.pilum': { name: 'Pilum of Fire' },
+        'spell.arc': { name: 'Arc of Fiery Ribbons' },
+        'spell.ball': { name: 'Ball of Abysmal Flame' },
+        'spell.ward': { name: 'Ward Against Heat' },
+        'spell.aegis': { name: 'Aegis of the Hearth' },
+        'spell.watching': { name: 'Watching Ward' },
+      },
+    };
+  }
+
+  it('buckets by Technique+Form in art order, sorting each by level then name', () => {
+    const spells = [
+      // CrIg: two fixed levels (35, 10) plus a General spell (null).
+      { id: 'spell.ball', technique: 'art.creo', form: 'art.ignem', level: 35 },
+      { id: 'spell.arc', technique: 'art.creo', form: 'art.ignem', level: 10 },
+      { id: 'spell.ward', technique: 'art.creo', form: 'art.ignem', level: null },
+      // ReVi: a General spell and a fixed one.
+      { id: 'spell.aegis', technique: 'art.rego', form: 'art.vim', level: null },
+      { id: 'spell.watching', technique: 'art.rego', form: 'art.vim', level: 20 },
+    ];
+    const groups = groupSpellsByTechniqueForm(withSpellsRuleset(), spells);
+    // Groups ordered by Technique (Creo before Rego) then Form.
+    expect(groups.map((g) => [g.technique, g.form])).toEqual([
+      ['art.creo', 'art.ignem'],
+      ['art.rego', 'art.vim'],
+    ]);
+    // Within a group: level ascending, General (null) trailing, then name.
+    expect(groups[0].spells.map((s) => s.id)).toEqual(['spell.arc', 'spell.ball', 'spell.ward']);
+    expect(groups[1].spells.map((s) => s.id)).toEqual(['spell.watching', 'spell.aegis']);
+  });
+
+  it('sorts same-level spells alphabetically by localized name', () => {
+    const spells = [
+      { id: 'spell.pilum', technique: 'art.creo', form: 'art.ignem', level: 20 },
+      { id: 'spell.arc', technique: 'art.creo', form: 'art.ignem', level: 20 },
+    ];
+    const groups = groupSpellsByTechniqueForm(withSpellsRuleset(), spells);
+    expect(groups[0].spells.map((s) => s.id)).toEqual(['spell.arc', 'spell.pilum']);
+  });
+
+  it('is empty when there are no spells', () => {
+    expect(groupSpellsByTechniqueForm(withSpellsRuleset(), [])).toEqual([]);
   });
 });
 

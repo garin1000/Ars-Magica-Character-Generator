@@ -119,15 +119,28 @@ export interface SpellFilter {
   text?: string;
   technique?: string;
   form?: string;
-  level?: number | null;
+  /** Inclusive lower bound on a fixed spell's level (null/undefined = open). */
+  levelMin?: number | null;
+  /** Inclusive upper bound on a fixed spell's level (null/undefined = open). */
+  levelMax?: number | null;
+}
+
+/** A finite numeric bound, or `undefined` when the input is empty/NaN (open). */
+function finiteBound(value: number | null | undefined): number | undefined {
+  return value != null && Number.isFinite(value) ? value : undefined;
 }
 
 /**
  * Spells matching the text (localized name), Technique and Form (each optional,
- * so they filter separately or combined), and exact level. Only a finite `level`
- * filters (by exact match); a non-finite value (null / undefined / NaN) means
- * "no level filter" and lets every spell through — an emptied number input binds
- * to `null`, which must clear the filter rather than match level 0.
+ * so they filter separately or combined), and an inclusive level range. Each
+ * range bound is optional; a null/empty/NaN bound is open (an emptied number
+ * input binds to `null`, which must widen the range rather than match level 0).
+ *
+ * A **General** spell (catalogue level `null`) has no fixed level to test — its
+ * learned level is chosen per character — so it is **always shown** regardless of
+ * the bounds. Only a fixed-level spell is range-tested. This mirrors the
+ * grouping decision (`groupSpellsByTechniqueForm` buckets General spells as a
+ * trailing entry within their Te/Fo group).
  */
 export function filterSpells(
   localized: LocalizedRuleset,
@@ -136,6 +149,8 @@ export function filterSpells(
   t?: Translate,
 ): Spell[] {
   const text = filter.text ? normalizeSearch(filter.text) : '';
+  const min = finiteBound(filter.levelMin);
+  const max = finiteBound(filter.levelMax);
   return spells.filter((s) => {
     // Spell names carry no `{param}` placeholder, so the rendered label equals
     // the plain name; routing through the hint-aware path just keeps the search
@@ -146,8 +161,11 @@ export function filterSpells(
     if (text && !normalizeSearch(name).includes(text)) return false;
     if (filter.technique && s.technique !== filter.technique) return false;
     if (filter.form && s.form !== filter.form) return false;
-    if (filter.level != null && Number.isFinite(filter.level) && s.level !== filter.level)
-      return false;
+    // General spells (level null) always pass the range; only fixed levels test.
+    if (s.level != null) {
+      if (min !== undefined && s.level < min) return false;
+      if (max !== undefined && s.level > max) return false;
+    }
     return true;
   });
 }
@@ -693,6 +711,74 @@ export function artAbbreviation(localized: LocalizedRuleset, artId: string): str
 /** Localized spell name (e.g. "Pilum of Fire"), falling back to the id. */
 export function spellName(localized: LocalizedRuleset, spellId: string): string {
   return localized.i18n[spellId]?.name ?? spellId;
+}
+
+/** A group of catalogue spells sharing one Technique/Form combination. */
+export interface SpellGroup {
+  technique: string;
+  form: string;
+  spells: Spell[];
+}
+
+/**
+ * Sort key for a spell within its Te/Fo group: level first (ascending), then the
+ * localized name. A **General** spell (level `null`) has no fixed level, so it
+ * sorts as if its level were `+Infinity` — i.e. after every fixed-level spell,
+ * as a trailing entry within the group (the picker's defined General-bucket
+ * position). Ties on level break alphabetically by localized name.
+ */
+function compareSpellByLevelThenName(localized: LocalizedRuleset): (a: Spell, b: Spell) => number {
+  return (a, b) => {
+    const la = a.level ?? Number.POSITIVE_INFINITY;
+    const lb = b.level ?? Number.POSITIVE_INFINITY;
+    if (la !== lb) return la - lb;
+    return localizedSortKey(localized, a.id).localeCompare(localizedSortKey(localized, b.id));
+  };
+}
+
+/**
+ * Catalogue spells grouped by Technique+Form combination, mirroring how the
+ * Ability picker groups by category. Groups are ordered by the engine's Art order
+ * (Technique groups' Techniques, then their Forms — from `groupArtsByType`, so the
+ * UI never re-hardcodes it); within a group spells sort by level then name
+ * (General spells trailing — see `compareSpellByLevelThenName`). Empty groups are
+ * dropped. Any Te/Fo pair not found in the Art catalogue order (defensive, e.g. a
+ * spell referencing an absent Art) is appended after the ordered groups.
+ */
+export function groupSpellsByTechniqueForm(
+  localized: LocalizedRuleset,
+  spells: Spell[],
+): SpellGroup[] {
+  const keyOf = (technique: string, form: string) => `${technique} ${form}`;
+  const buckets = new Map<string, Spell[]>();
+  for (const spell of spells) {
+    const key = keyOf(spell.technique, spell.form);
+    const list = buckets.get(key) ?? [];
+    list.push(spell);
+    buckets.set(key, list);
+  }
+
+  const artGroups = groupArtsByType(localized);
+  const techniques = artGroups.find((g) => g.artType === 'technique')?.arts ?? [];
+  const forms = artGroups.find((g) => g.artType === 'form')?.arts ?? [];
+  const compare = compareSpellByLevelThenName(localized);
+
+  const result: SpellGroup[] = [];
+  for (const technique of techniques) {
+    for (const form of forms) {
+      const key = keyOf(technique.id, form.id);
+      const list = buckets.get(key);
+      if (!list) continue;
+      result.push({ technique: technique.id, form: form.id, spells: list.sort(compare) });
+      buckets.delete(key);
+    }
+  }
+  // Defensive: any leftover pair whose Arts are missing from the catalogue order.
+  for (const [key, list] of buckets) {
+    const [technique, form] = key.split(' ');
+    result.push({ technique, form, spells: list.sort(compare) });
+  }
+  return result;
 }
 
 export interface ArtGroup {

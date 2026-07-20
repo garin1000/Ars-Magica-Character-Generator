@@ -178,6 +178,14 @@ export interface ArtBonus {
   bonus: number;
 }
 
+// The maximum learnable spell level for one Technique/Form combination
+// (Te + Fo + Int + Magic Theory + 3). Mirrors the engine's `SpellLevelCap`.
+export interface SpellLevelCap {
+  technique: string;
+  form: string;
+  cap: number;
+}
+
 // A free effective-score bonus to a Characteristic (Giant Blood +1 Str/Sta,
 // Dwarf -1). Mirrors the engine's `CharacteristicBonus`.
 export interface CharacteristicBonus {
@@ -239,6 +247,10 @@ export interface EffectiveScores {
   // Parens) and how many levels the chosen spells consume — the spell bar.
   spell_levels_budget: number;
   spell_levels_used: number;
+  // Per-Technique/Form maximum learnable spell level (Te + Fo + Int + Magic
+  // Theory + 3), so the picker greys a spell above the magus's cap. Empty for a
+  // non-magus. Engine-authoritative; the UI only reads it, never recomputes it.
+  spell_level_caps: SpellLevelCap[];
   // Derived Confidence (type default + V/F); 0/0 for grogs.
   confidence_score: number;
   confidence_points: number;
@@ -556,6 +568,9 @@ export interface Spell {
   form: string;
   level?: number | null;
   requisites?: string[];
+  // A Ritual spell must be learned at level >= 20 (its minimum learnable level).
+  // Present (true) only for rituals; absent = ordinary spell (minimum level 1).
+  ritual?: boolean;
 }
 
 // A spell the character knows. `level` is set only for a General spell (the

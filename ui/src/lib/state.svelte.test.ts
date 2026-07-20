@@ -138,7 +138,13 @@ describe('picker filter state', () => {
       taintedOnly: false,
     });
     expect(store.filters.abilities).toEqual({ search: '', category: '' });
-    expect(store.filters.spells).toEqual({ search: '', technique: '', form: '', level: null });
+    expect(store.filters.spells).toEqual({
+      search: '',
+      technique: '',
+      form: '',
+      levelMin: null,
+      levelMax: null,
+    });
     expect(defaultPickerFilters().derivedArtPicker).toEqual({ technique: '', form: '' });
   });
 
