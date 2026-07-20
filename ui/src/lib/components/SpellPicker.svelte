@@ -6,15 +6,17 @@
     effectiveSpellMastery,
     filterSpells,
     groupArtsByType,
+    groupSpellsByTechniqueForm,
     maxAbilityScore,
     spellMasteryXpSpent,
     spellName,
   } from '../derive';
-  import { tooltip } from '../actions';
+  import type { SpellGroup } from '../derive';
+  import { tooltip, type TooltipContent } from '../actions';
   import type { Art, Spell } from '../types';
 
-  // Technique/Form/text/level filters live on the store, so they survive the tab
-  // switch that unmounts this component (same split ArtGrid uses for the Arts).
+  // Technique/Form/text/level-range filters live on the store, so they survive the
+  // tab switch that unmounts this component (same split ArtGrid uses for the Arts).
   const filter = $derived(store.filters.spells);
 
   // A General spell (no fixed catalogue level) is added at this default level;
@@ -31,27 +33,42 @@
   });
 
   // Catalogue spells matching the Technique/Form (separate and combined), text
-  // search, and level filters, sorted by name.
-  const candidates = $derived.by((): Spell[] => {
+  // search, and inclusive level range, grouped by Technique+Form and sorted by
+  // level-then-name within each group (General spells trailing).
+  const groups = $derived.by((): SpellGroup[] => {
     const rs = store.ruleset;
     if (!rs) return [];
-    return filterSpells(
+    const filtered = filterSpells(
       rs,
       Object.values(rs.ruleset.spells ?? {}),
       {
         text: filter.search,
         technique: filter.technique || undefined,
         form: filter.form || undefined,
-        level: filter.level,
+        levelMin: filter.levelMin,
+        levelMax: filter.levelMax,
       },
       store.t,
-    ).sort((a, b) => spellName(rs, a.id).localeCompare(spellName(rs, b.id)));
+    );
+    return groupSpellsByTechniqueForm(rs, filtered);
   });
 
   // The spell-levels budget bar: engine-authoritative used/budget, with a local
   // fallback for the first frame before effective scores arrive.
   const budget = $derived(store.effective?.spell_levels_budget ?? 0);
   const used = $derived(store.effective?.spell_levels_used ?? 0);
+  // Spell levels still available to spend (used against the per-spell budget check).
+  const remaining = $derived(budget - used);
+
+  // The engine-authoritative per-Technique/Form spell-level cap (Te + Fo + Int +
+  // Magic Theory + 3), keyed by the "<technique> <form>" pair. Never recomputed
+  // here — the picker only reads the surfaced value.
+  const capByTeFo = $derived.by((): Map<string, number> => {
+    const m = new Map<string, number>();
+    for (const c of store.effective?.spell_level_caps ?? [])
+      m.set(`${c.technique} ${c.form}`, c.cap);
+    return m;
+  });
   // Spell-Mastery: XP pool (Mastered Spells) + auto-mastery floor (Flawless Magic).
   const masteryXp = $derived(store.effective?.spell_mastery_xp ?? 0);
   const masteryFloor = $derived(store.effective?.spell_mastery_floor ?? 0);
@@ -65,25 +82,63 @@
     return store.ruleset ? artAbbreviation(store.ruleset, artId) : '';
   }
 
-  // "CrIg 20" / "ReVi Gen" — the Technique+Form tag plus level, appended to names.
-  function tag(spell: Spell): string {
-    const tf = `${abbr(spell.technique)}${abbr(spell.form)}`;
-    return spell.level == null ? `${tf} Gen` : `${tf} ${spell.level}`;
+  // The localized group header: the two Art names composed via Fluent (never a
+  // raw id) — e.g. "Creo Ignem".
+  function groupHeader(group: SpellGroup): string {
+    const rs = store.ruleset;
+    if (!rs) return '';
+    return store.t('spell-group-header', {
+      technique: artLabel(rs, group.technique),
+      form: artLabel(rs, group.form),
+    });
+  }
+
+  // A spell's level tag for a source row: its fixed level, or the localized
+  // "General" marker (the level is chosen per character). The Technique/Form is
+  // already carried by the group header, so a source row shows only the level.
+  function levelTag(spell: Spell): string {
+    return spell.level == null ? store.t('spell-level-general') : String(spell.level);
   }
 
   function optionLabel(spell: Spell): string {
     const rs = store.ruleset;
-    return rs ? `${spellName(rs, spell.id)} (${tag(spell)})` : spell.id;
+    return rs ? `${spellName(rs, spell.id)} (${levelTag(spell)})` : spell.id;
   }
 
-  // A chosen row's display: name + its TeFo tag. A fixed spell shows its
-  // catalogue level; a General spell shows "Gen" (its level is edited inline).
+  // A chosen row's display: name + its TeFo tag (no grouping in the selected
+  // list, so the Technique/Form stays useful here). A fixed spell shows its
+  // catalogue level; a General spell shows the localized "General" marker.
   function rowLabel(spellId: string): string {
     const rs = store.ruleset;
     const cat = rs?.ruleset.spells?.[spellId];
     if (!rs || !cat) return spellId;
     const tf = `${abbr(cat.technique)}${abbr(cat.form)}`;
-    return `${spellName(rs, spellId)} (${tf}${cat.level == null ? ' Gen' : ` ${cat.level}`})`;
+    const lvl = cat.level == null ? store.t('spell-level-general') : String(cat.level);
+    return `${spellName(rs, spellId)} (${tf} ${lvl})`;
+  }
+
+  // The minimum level a spell can be learned at: a Ritual must be learned at 20,
+  // an ordinary spell at 1 (Core Rules.md:12279-12295). Used to decide whether a
+  // General spell (no fixed catalogue level) is takeable at all.
+  function minLearnableLevel(spell: Spell): number {
+    return spell.ritual ? 20 : 1;
+  }
+
+  // Why a source spell's add control is greyed, or null when it is takeable. A
+  // fixed-level spell is tested at its catalogue level; a General spell (no fixed
+  // level) is tested at its minimum learnable level — never at a nonexistent
+  // catalogue level. Blocked when that level exceeds the per-spell cap or the
+  // remaining spell-levels budget. The cap is the engine's surfaced value.
+  function nonTakeableReason(spell: Spell): { key: string; cap: number } | null {
+    const cap = capByTeFo.get(`${spell.technique} ${spell.form}`);
+    const need = spell.level ?? minLearnableLevel(spell);
+    if (cap != null && need > cap) return { key: 'spell-cap-reason', cap };
+    if (need > remaining) return { key: 'spell-budget-reason', cap: cap ?? 0 };
+    return null;
+  }
+
+  function isDisabled(spell: Spell): boolean {
+    return nonTakeableReason(spell) != null;
   }
 
   // Clicking a source row adds the spell. A General spell (no fixed level) is
@@ -99,9 +154,17 @@
     return store.ruleset?.ruleset.spells?.[spellId]?.level == null;
   }
 
-  // The spell's rules-text description, shown as a hover/focus tooltip. Spells
-  // carry no specialties, so the tooltip is text-only.
-  function tip(spellId: string) {
+  // A source row's tooltip: the reason it is non-takeable (greyed) when blocked,
+  // otherwise the spell's rules-text description. Spells carry no specialties, so
+  // the tooltip is text-only.
+  function sourceTip(spell: Spell): TooltipContent {
+    const reason = nonTakeableReason(spell);
+    if (reason) return { text: store.t(reason.key, { cap: String(reason.cap) }) };
+    return { text: store.ruleset?.i18n[spell.id]?.description ?? undefined };
+  }
+
+  // A chosen (selected-list) row's tooltip: the description only.
+  function tip(spellId: string): TooltipContent {
     return { text: store.ruleset?.i18n[spellId]?.description ?? undefined };
   }
 </script>
@@ -140,33 +203,51 @@
             {/each}
           </select>
           <label class="field">
-            <span>{store.t('spell-level-label')}</span>
+            <span>{store.t('spell-level-min-label')}</span>
             <input
               type="number"
               min="1"
               step="1"
-              bind:value={filter.level}
-              data-testid="spell-level-filter"
+              aria-label={store.t('spell-level-min-label')}
+              bind:value={filter.levelMin}
+              data-testid="spell-level-min-filter"
+            />
+          </label>
+          <label class="field">
+            <span>{store.t('spell-level-max-label')}</span>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              aria-label={store.t('spell-level-max-label')}
+              bind:value={filter.levelMax}
+              data-testid="spell-level-max-filter"
             />
           </label>
         </div>
         <div class="list-scroll">
-          <ul class="item-list">
-            {#each candidates as spell (spell.id)}
-              <li>
-                <button
-                  type="button"
-                  class="pick-row"
-                  onclick={() => add(spell)}
-                  use:tooltip={tip(spell.id)}
-                  data-testid="add-{spell.id}"
-                >
-                  <span class="item-name">{optionLabel(spell)}</span>
-                  <span class="pick-plus" aria-hidden="true">+</span>
-                </button>
-              </li>
-            {/each}
-          </ul>
+          {#each groups as group (`${group.technique} ${group.form}`)}
+            <h3 class="category" data-testid="spell-group-{group.technique}-{group.form}">
+              {groupHeader(group)}
+            </h3>
+            <ul class="item-list">
+              {#each group.spells as spell (spell.id)}
+                <li>
+                  <button
+                    type="button"
+                    class="pick-row"
+                    disabled={isDisabled(spell)}
+                    onclick={() => add(spell)}
+                    use:tooltip={sourceTip(spell)}
+                    data-testid="add-{spell.id}"
+                  >
+                    <span class="item-name">{optionLabel(spell)}</span>
+                    <span class="pick-plus" aria-hidden="true">+</span>
+                  </button>
+                </li>
+              {/each}
+            </ul>
+          {/each}
         </div>
       </section>
     </section>

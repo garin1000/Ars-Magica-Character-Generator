@@ -44,7 +44,9 @@ export interface SpellFilterState {
   search: string;
   technique: string;
   form: string;
-  level: number | null;
+  /** Inclusive min/max level range; null = open bound (empty input). */
+  levelMin: number | null;
+  levelMax: number | null;
 }
 
 /** Live filter/search state of the Equipment picker (kind = weapons/shields/armor). */
@@ -85,7 +87,7 @@ export function defaultPickerFilters(): PickerFilters {
       flaw: { search: '', magnitude: '', category: '', taintedOnly: false },
     },
     abilities: { search: '', category: '' },
-    spells: { search: '', technique: '', form: '', level: null },
+    spells: { search: '', technique: '', form: '', levelMin: null, levelMax: null },
     equipment: { search: '', kind: '' },
     derivedArtPicker: { technique: '', form: '' },
   };

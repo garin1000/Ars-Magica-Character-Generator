@@ -1223,9 +1223,13 @@ hardcodes 120.
 > Intelligence + Magic Theory +3 … If the spell has requisites … they apply to
 > this total as well."
 
-`spell_level_cap` (`validation.rs`) computes it from the effective Art scores,
-the Intelligence characteristic, and effective Magic Theory → a spell above it
-emits `spell_level_exceeds_cap`. **Approximation:** requisite-Art reduction is a
+`spell_level_cap(entity, ruleset, technique, form)` (`effective.rs`) computes it
+from the effective Art scores, the Intelligence characteristic, and effective
+Magic Theory → a spell above it emits `spell_level_exceeds_cap` (validation, in
+`validation/magus.rs`). The same function is surfaced per-Te/Fo combination as
+`spell_level_caps` → `EffectiveScores.spell_level_caps` (`ruleset_io.rs`), so the
+spell picker greys a spell above the cap from the one engine-authoritative value
+rather than recomputing it in JS. **Approximation:** requisite-Art reduction is a
 lab-total nuance out of M4 scope — requisites are stored on the spell for display
 but not folded into the cap.
 

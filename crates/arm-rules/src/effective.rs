@@ -1322,6 +1322,77 @@ pub fn spell_levels_budget(base: u32, entity: &Entity, ruleset: &Ruleset) -> u32
     clamp_to_u32(i64::from(base) + spell_levels_bonus(entity, ruleset))
 }
 
+/// The maximum level a magus may learn of a spell of the given Technique/Form:
+/// the sum of Technique, Form, Intelligence, Magic Theory and 3 (Core:2465),
+/// using effective Art/Ability scores. Returns an `i64` (small or negative for a
+/// beginning magus). Requisite-Art reduction is a lab-total nuance out of scope.
+/// Single source of truth: both the validation cap and the UI-surfaced cap read
+/// this, so the two can never diverge.
+// Source: Ars Magica - Definitive Edition (Core Rules).md:2465
+pub fn spell_level_cap(entity: &Entity, ruleset: &Ruleset, technique: &Id, form: &Id) -> i64 {
+    let tech = i64::from(effective_art_score(entity, ruleset, technique));
+    let form = i64::from(effective_art_score(entity, ruleset, form));
+    let int = i64::from(
+        entity
+            .characteristics
+            .get(&Characteristic::Int)
+            .copied()
+            .unwrap_or(0),
+    );
+    let magic_theory = i64::from(effective_ability_score(
+        entity,
+        ruleset,
+        &Id::new(crate::ruleset::ID_MAGIC_THEORY),
+        None,
+    ));
+    tech + form + int + magic_theory + 3
+}
+
+/// A per-Technique/Form spell-level cap, surfaced to the frontend so the spell
+/// picker can grey a spell whose level exceeds the magus's cap without
+/// recomputing the derivation in JS. Serializes as
+/// `{ "technique": "<id>", "form": "<id>", "cap": N }`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SpellLevelCap {
+    /// The Technique-class Art id (e.g. `art.creo`).
+    pub technique: Id,
+    /// The Form-class Art id (e.g. `art.ignem`).
+    pub form: Id,
+    /// The maximum learnable level for this Te/Fo combination (may be negative
+    /// for a beginning magus).
+    pub cap: i64,
+}
+
+/// The [`spell_level_cap`] for every Technique × Form combination in the Art
+/// catalogue, sorted canonically by `(technique, form)`. The picker keys these
+/// by the pair to look up a candidate spell's cap. One entry per combo (a spell's
+/// cap depends only on its Te/Fo, never its level).
+pub fn spell_level_caps(entity: &Entity, ruleset: &Ruleset) -> Vec<SpellLevelCap> {
+    let mut techniques: Vec<&Id> = ruleset
+        .arts()
+        .filter(|a| a.art_type == crate::art::ArtType::Technique)
+        .map(|a| &a.id)
+        .collect();
+    let mut forms: Vec<&Id> = ruleset
+        .arts()
+        .filter(|a| a.art_type == crate::art::ArtType::Form)
+        .map(|a| &a.id)
+        .collect();
+    techniques.sort();
+    forms.sort();
+    let mut caps = Vec::with_capacity(techniques.len() * forms.len());
+    for technique in &techniques {
+        for form in &forms {
+            caps.push(SpellLevelCap {
+                technique: (*technique).clone(),
+                form: (*form).clone(),
+                cap: spell_level_cap(entity, ruleset, technique, form),
+            });
+        }
+    }
+    caps
+}
+
 /// The learned level of a chosen spell: the catalogue's fixed level, or — for a
 /// **General** spell — the per-character chosen level. `None` if the spell is
 /// unknown to the catalogue, or a General spell has no chosen level yet.
@@ -3546,5 +3617,31 @@ mod tests {
             xp_allocation(&with, &rs).total_demand,
             xp_allocation(&without, &rs).total_demand
         );
+    }
+
+    /// The per-Technique/Form spell-level caps surfaced to the UI equal
+    /// Te + Fo + Int + Magic Theory + 3 (Core:2465), one entry per Te×Fo combo.
+    #[test]
+    fn spell_level_caps_expose_te_fo_int_mt_plus_three() {
+        let rs = ruleset();
+        let mut e = entity(vec![]);
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 2,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 3,
+            },
+        ];
+        e.characteristics.insert(Characteristic::Int, 1);
+        let caps = spell_level_caps(&e, &rs);
+        // The fixture has one Technique (Creo) × one Form (Ignem) → one combo.
+        assert_eq!(caps.len(), 1);
+        assert_eq!(caps[0].technique, Id::new("art.creo"));
+        assert_eq!(caps[0].form, Id::new("art.ignem"));
+        // 2 (Creo) + 3 (Ignem) + 1 (Int) + 0 (no Magic Theory) + 3 = 9.
+        assert_eq!(caps[0].cap, 9);
     }
 }

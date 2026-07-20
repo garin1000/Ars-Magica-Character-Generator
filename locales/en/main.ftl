@@ -138,6 +138,19 @@ art-decrement = Lower
 spell-technique-label = Technique
 spell-form-label = Form
 spell-level-label = Level
+# The min/max level range filter (two inputs, inclusive bounds; empty = open).
+spell-level-min-label = Min level
+spell-level-max-label = Max level
+# Source spells are grouped by Technique + Form; the header composes the two
+# localized Art names (never a raw id).
+spell-group-header = { $technique } { $form }
+# Compact "General" tag on a spell with no fixed catalogue level (shown after the
+# Technique/Form abbreviations, e.g. "ReVi Gen").
+spell-level-general = Gen
+# Why a spell's add control is greyed: its level is above the magus's per-spell
+# casting cap, or the remaining spell-levels budget cannot afford it.
+spell-cap-reason = Above your casting cap ({ $cap })
+spell-budget-reason = Not enough spell levels remaining
 # Accessible label for the inline level field on a chosen General spell (its
 # level is not fixed by the catalogue, so it is edited per row).
 spell-general-level-label = General level

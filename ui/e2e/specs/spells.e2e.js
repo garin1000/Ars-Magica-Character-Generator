@@ -55,16 +55,85 @@ describe('spells', () => {
     await $(SPELLS_TAB).waitForExist({ timeout: 5000 });
   });
 
-  it('adds a catalogue spell (filtered by Technique/Form) onto the 120 budget', async () => {
+  it('groups the source spells by Technique/Form', async () => {
     await $(SPELLS_TAB).click();
-    // Filter to Creo Ignem, then add Pilum of Fire (CrIg 20).
+    // The source list is grouped like the Ability picker; the Creo Ignem group
+    // header composes the two localized Art names (never a raw id).
+    const header = await $('[data-testid="spell-group-art.creo-art.ignem"]');
+    await header.waitForExist({ timeout: 5000 });
+    // The header composes the two localized Art names; the `.category` class
+    // uppercases the text for display (same convention as the Ability picker),
+    // so compare case-insensitively rather than pinning the display casing.
+    expect(clean(await header.getText()).trim().toLowerCase()).toBe('creo ignem');
+  });
+
+  it('narrows the source list with the min/max level filter', async () => {
+    // With no Technique/Form filter the full catalogue is grouped. Capping the
+    // max level drops every fixed-level spell above it (General spells always
+    // remain), so the list shrinks and Pilum (level 20) disappears.
+    const before = (await $$('[data-testid^="add-spell."]')).length;
+    expect(await $('[data-testid="add-spell.pilum_of_fire"]').isExisting()).toBe(true);
+
+    await $('[data-testid="spell-level-max-filter"]').setValue('5');
+    await browser.waitUntil(async () => (await $$('[data-testid^="add-spell."]')).length < before, {
+      timeout: 5000,
+      timeoutMsg: 'a max-level filter should narrow the source list',
+    });
+    expect(await $('[data-testid="add-spell.pilum_of_fire"]').isExisting()).toBe(false);
+
+    // Restore the open range so later steps see the full list again. Clear via a
+    // dispatched input event: WebDriver clearValue() does not reliably fire the
+    // event Svelte's bind:value listens to on a number input, so the bound state
+    // would otherwise stay at 5 and leak into later steps. This still exercises
+    // the real bind (empty field -> open range), just deterministically.
+    await browser.execute((el) => {
+      el.value = '';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }, await $('[data-testid="spell-level-max-filter"]'));
+    await browser.waitUntil(async () => (await $$('[data-testid^="add-spell."]')).length === before, {
+      timeout: 5000,
+      timeoutMsg: 'clearing the max-level filter should restore the list',
+    });
+  });
+
+  it('greys a spell above the per-spell cap for a fresh magus (cap 3)', async () => {
+    // The magus has 0 Arts / Int / Magic Theory, so the CrIg cap is 0+0+0+0+3 = 3;
+    // Pilum (level 20) exceeds it, so its add control is greyed (disabled).
     await $('[data-testid="spell-technique-filter"]').selectByAttribute('value', 'art.creo');
     await $('[data-testid="spell-form-filter"]').selectByAttribute('value', 'art.ignem');
-    await $('[data-testid="add-spell.pilum_of_fire"]').click();
+    const pilum = await $('[data-testid="add-spell.pilum_of_fire"]');
+    await pilum.waitForExist({ timeout: 5000 });
+    await browser.waitUntil(async () => !(await pilum.isEnabled()), {
+      timeout: 5000,
+      timeoutMsg: 'Pilum should be greyed while the cap is 3',
+    });
+  });
 
+  it('adds Pilum onto the 120 budget once the Arts are high enough', async () => {
+    // Raise Creo/Ignem (for Pilum) and Rego/Vim (for the General ritual added
+    // later) so both clear their per-spell caps.
+    await $(ARTS_TAB).click();
+    await $('[data-testid="art-xp-pool"]').setValue('1000');
+    await raiseArt('art.creo', 12);
+    await raiseArt('art.ignem', 12);
+    await raiseArt('art.rego', 9);
+    await raiseArt('art.vim', 9);
+    // CrIg cap is now 12 + 12 + 3 = 27 ≥ 20, so Pilum is takeable again.
+    await $(SPELLS_TAB).click();
+    const pilum = await $('[data-testid="add-spell.pilum_of_fire"]');
+    await browser.waitUntil(async () => await pilum.isEnabled(), {
+      timeout: 5000,
+      timeoutMsg: 'raising Creo/Ignem should re-enable Pilum',
+    });
+    await pilum.click();
     await browser.waitUntil(async () => clean(await $(BAR).getText()).includes('20 / 120'), {
       timeout: 5000,
       timeoutMsg: 'spell-levels bar should read 20 / 120',
+    });
+    // The cap no longer flags Pilum.
+    await browser.waitUntil(async () => !(await codeExists('spell_level_exceeds_cap')), {
+      timeout: 5000,
+      timeoutMsg: 'a legal Pilum should not flag the per-spell cap',
     });
   });
 
@@ -86,28 +155,6 @@ describe('spells', () => {
     expect((await pop.getText()).trim().length).toBeGreaterThan(0);
   });
 
-  it('flags a spell above the per-spell cap (fresh magus: cap 3)', async () => {
-    // The magus has 0 Arts / Int / Magic Theory, so the cap is 0+0+0+0+3 = 3 and
-    // Pilum (level 20) exceeds it.
-    await browser.waitUntil(async () => codeExists('spell_level_exceeds_cap'), {
-      timeout: 5000,
-      timeoutMsg: 'expected spell_level_exceeds_cap while Arts are 0',
-    });
-  });
-
-  it('clears the per-spell cap once the Arts are high enough', async () => {
-    await $(ARTS_TAB).click();
-    await $('[data-testid="art-xp-pool"]').setValue('1000');
-    await raiseArt('art.creo', 12);
-    await raiseArt('art.ignem', 12);
-    // Cap is now 12 + 12 + 0 + 0 + 3 = 27 ≥ 20, so Pilum is legal.
-    await $(SPELLS_TAB).click();
-    await browser.waitUntil(async () => !(await codeExists('spell_level_exceeds_cap')), {
-      timeout: 5000,
-      timeoutMsg: 'raising Creo/Ignem should clear the per-spell cap',
-    });
-  });
-
   it('raises the spell-levels budget with Skilled Parens', async () => {
     await $(VF_TAB).click();
     const addParens = await $('[data-testid="add-virtue.skilled_parens"]');
@@ -126,7 +173,15 @@ describe('spells', () => {
     // to a huge level pushes the total (20 + 200) past the 150 budget.
     await $('[data-testid="spell-technique-filter"]').selectByAttribute('value', '');
     await $('[data-testid="spell-form-filter"]').selectByAttribute('value', '');
-    await $('[data-testid="add-spell.aegis_of_the_hearth"]').click();
+    // Aegis is a ReVi General ritual (min learnable level 20); Rego 9 + Vim 9 + 3
+    // = 21 clears its cap, so its add control is enabled.
+    const aegis = await $('[data-testid="add-spell.aegis_of_the_hearth"]');
+    await aegis.waitForExist({ timeout: 5000 });
+    await browser.waitUntil(async () => await aegis.isEnabled(), {
+      timeout: 5000,
+      timeoutMsg: 'Aegis should be takeable once Rego/Vim clear its ritual cap',
+    });
+    await aegis.click();
     const levelInput = await $('[data-testid="spell-level-input"]');
     await levelInput.waitForExist({ timeout: 5000 });
     await levelInput.setValue('200');

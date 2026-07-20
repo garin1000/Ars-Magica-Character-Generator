@@ -12,14 +12,14 @@ use std::collections::BTreeMap;
 use arm_rules::{
     AbilityBonus, AbilityFloor, ArtBonus, Characteristic, CharacteristicBonus, Confidence, Entity,
     EntityKind, LocalizedRuleset, MightScore, PointCeilings, ReputationType, RestrictedXpPool,
-    Ruleset, RulesetSources, Selection, SupernaturalFreeSlots, ValidationMode, ValidationResult,
-    ability_bonuses, ability_score_floors, age_ability_cap, art_bonuses,
+    Ruleset, RulesetSources, Selection, SpellLevelCap, SupernaturalFreeSlots, ValidationMode,
+    ValidationResult, ability_bonuses, ability_score_floors, age_ability_cap, art_bonuses,
     characteristic_aging_drops, characteristic_bonuses, characteristic_caps, characteristic_floors,
     characteristic_points_granted, confidence, decrepitude_score, effective_characteristics,
     effective_might, effective_point_ceilings, entity_grants, item_level_budget, item_level_used,
-    power_levels_budget, powers_used, reputation_grants, size, spell_levels_budget,
-    spell_levels_used, spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith,
-    validate, warping, xp_allocation,
+    power_levels_budget, powers_used, reputation_grants, size, spell_level_caps,
+    spell_levels_budget, spell_levels_used, spell_mastery_floor, spell_mastery_xp,
+    supernatural_free_slots, true_faith, validate, warping, xp_allocation,
 };
 use serde::Serialize;
 
@@ -86,6 +86,11 @@ pub struct EffectiveScores {
     pub spell_levels_budget: u32,
     /// The spell levels the chosen spells consume — the "used" side of the bar.
     pub spell_levels_used: u32,
+    /// Per-Technique/Form maximum learnable spell level (Te + Fo + Int + Magic
+    /// Theory + 3), so the spell picker greys a spell above the magus's cap
+    /// without recomputing the derivation in JS. Empty for a non-magus (no Spells
+    /// tab). Engine-authoritative; the UI only reads it.
+    pub spell_level_caps: Vec<SpellLevelCap>,
     /// Effective Confidence Score / Points (type default + V/F), for the read-only
     /// Confidence readout. 0/0 for grogs (who have no Confidence).
     pub confidence_score: u8,
@@ -182,6 +187,13 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         flaw_budget: ceilings.flaw_ceiling,
         spell_levels_budget: spell_levels_budget(spell_base, entity, ruleset),
         spell_levels_used: spell_levels_used(entity, ruleset),
+        // The per-Te/Fo cap only matters on the (magus-only) Spells tab, so it is
+        // computed only for a magus — other types ship an empty list.
+        spell_level_caps: if profile.is_some_and(|p| p.is_magus) {
+            spell_level_caps(entity, ruleset)
+        } else {
+            Vec::new()
+        },
         confidence_score: confidence.score,
         confidence_points: confidence.points,
         supernatural_free_total: supernatural_free.total,
