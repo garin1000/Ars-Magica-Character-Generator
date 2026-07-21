@@ -1,7 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import { abilityLabel, filterAbilities, groupAbilitiesByCategory } from '../derive';
-  import { tooltip, type TooltipContent } from '../actions';
+  import { tooltip, withReason, type TooltipContent } from '../actions';
   import type { AbilityCategory } from '../types';
 
   // Filter state (free-text + category) lives on the store, so it survives tab
@@ -87,16 +87,17 @@
   // Description + example specialties surface as a hover/focus tooltip, keeping
   // each row a single compact line.
   function tip(abilityId: string): TooltipContent {
-    // A locked Supernatural Ability explains why, instead of its description.
-    if (supernaturalLocked(abilityId)) {
-      return { text: store.t('ability-requires-virtue') };
-    }
     const entry = store.ruleset?.i18n[abilityId];
-    return {
-      text: entry?.description ?? undefined,
-      listLabel: store.t('ability-specialties-label'),
-      list: entry?.specialties ?? [],
-    };
+    // A locked Supernatural Ability explains WHY above its normal description,
+    // not instead of it.
+    return withReason(
+      {
+        text: entry?.description ?? undefined,
+        listLabel: store.t('ability-specialties-label'),
+        list: entry?.specialties ?? [],
+      },
+      supernaturalLocked(abilityId) ? store.t('ability-requires-virtue') : undefined,
+    );
   }
 </script>
 

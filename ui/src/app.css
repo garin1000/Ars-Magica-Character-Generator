@@ -955,6 +955,25 @@ ul {
   pointer-events: none;
 }
 
+.tooltip-pop .tooltip-reason {
+  /* The "why you can't take this" line, shown above the description for a
+     non-takeable item. Emphasized (accent colour + weight) so it reads as the
+     blocking reason, with a hairline separating it from the description below. */
+  margin: 0 0 0.45rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+  white-space: pre-line;
+}
+
+.tooltip-pop .tooltip-reason:only-child {
+  /* No description followed it: drop the separator/spacing entirely. */
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
 .tooltip-pop .tooltip-text {
   margin: 0;
   /* Rules descriptions carry `\n` paragraph breaks — honor them instead of

@@ -119,6 +119,31 @@ describe('spells', () => {
     });
   });
 
+  it('shows the cap reason ABOVE the description on a greyed spell', async () => {
+    // Pilum is still greyed (per-spell cap 3), the Creo Ignem filter still
+    // applied. Its tooltip must show the non-takeable REASON and, below it, the
+    // spell's normal description — reason first, not instead of the description.
+    const row = await $('[data-testid="add-spell.pilum_of_fire"]');
+    await row.waitForExist({ timeout: 5000 });
+    expect(await row.isEnabled()).toBe(false);
+    // Dispatch mouseenter directly (same rationale as the description-tooltip
+    // test below: synthetic events are focus-independent under parallel wdio).
+    await browser.execute((el) => {
+      el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    }, row);
+    const reason = await $('.tooltip-pop .tooltip-reason');
+    await reason.waitForExist({ timeout: 5000 });
+    expect((await reason.getText()).trim().length).toBeGreaterThan(0);
+    const desc = await $('.tooltip-pop .tooltip-text');
+    await desc.waitForExist({ timeout: 5000 });
+    expect((await desc.getText()).trim().length).toBeGreaterThan(0);
+    // Dismiss the popup so it does not linger into the next step, which raises
+    // the Arts and re-enables Pilum.
+    await browser.execute((el) => {
+      el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+    }, row);
+  });
+
   it('adds Pilum onto the 120 budget once the Arts are high enough', async () => {
     // Raise Creo/Ignem (for Pilum) and Rego/Vim (for the General ritual added
     // later) so both clear their per-spell caps.

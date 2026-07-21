@@ -12,7 +12,7 @@
     spellMasteryXpSpent,
   } from '../derive';
   import type { SpellGroup } from '../derive';
-  import { tooltip, type TooltipContent } from '../actions';
+  import { tooltip, withReason, type TooltipContent } from '../actions';
   import type { Art, Spell, SpellSelection } from '../types';
 
   // Technique/Form/text/level-range filters live on the store, so they survive the
@@ -172,13 +172,16 @@
     return store.ruleset?.ruleset.spells?.[spellId]?.level == null;
   }
 
-  // A source row's tooltip: the reason it is non-takeable (greyed) when blocked,
-  // otherwise the spell's rules-text description. Spells carry no specialties, so
-  // the tooltip is text-only.
+  // A source row's tooltip: always the spell's rules-text description, prefixed
+  // by the reason it is non-takeable (greyed) when blocked, so a blocked spell
+  // shows WHY plus its description rather than the reason replacing it. Spells
+  // carry no specialties, so the tooltip is otherwise text-only.
   function sourceTip(spell: Spell): TooltipContent {
     const reason = nonTakeableReason(spell);
-    if (reason) return { text: store.t(reason.key, { cap: String(reason.cap) }) };
-    return { text: store.ruleset?.i18n[spell.id]?.description ?? undefined };
+    return withReason(
+      { text: store.ruleset?.i18n[spell.id]?.description ?? undefined },
+      reason ? store.t(reason.key, { cap: String(reason.cap) }) : undefined,
+    );
   }
 
   // A chosen (selected-list) row's tooltip: the description only.
