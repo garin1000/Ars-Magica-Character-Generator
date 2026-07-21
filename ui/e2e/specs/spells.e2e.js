@@ -203,7 +203,7 @@ describe('spells', () => {
     });
   });
 
-  it('takes a parametrized spell once per distinct Form (Wizard\'s Boost)', async () => {
+  it("takes a parametrized spell once per distinct Form (Wizard's Boost)", async () => {
     // Clear the Technique/Form filter so the MuVi Wizard's Boost is listed. It is
     // a General meta-magic Vim spell whose target (Form) is a per-instance
     // selection: Muto 0 + Vim 9 + 3 = 12 clears the default level (5), and the
@@ -214,7 +214,7 @@ describe('spells', () => {
     await add.waitForExist({ timeout: 5000 });
     await browser.waitUntil(async () => await add.isEnabled(), {
       timeout: 5000,
-      timeoutMsg: 'Wizard\'s Boost should be takeable (MuVi cap 12, budget has room)',
+      timeoutMsg: "Wizard's Boost should be takeable (MuVi cap 12, budget has room)",
     });
     // The source candidate reads its param hint, not a raw token: "Wizard's Boost
     // (Form) (General)".
@@ -228,7 +228,7 @@ describe('spells', () => {
     await add.click();
     await browser.waitUntil(async () => (await $$(paramSelects)).length === 1, {
       timeout: 5000,
-      timeoutMsg: 'adding Wizard\'s Boost should show one target-Form select',
+      timeoutMsg: "adding Wizard's Boost should show one target-Form select",
     });
     await (await $$(paramSelects))[0].selectByAttribute('value', 'art.ignem');
     await browser.waitUntil(
@@ -264,7 +264,7 @@ describe('spells', () => {
     await (await $$(paramSelects))[2].selectByAttribute('value', 'art.ignem');
     await browser.waitUntil(async () => codeExists('duplicate_spell'), {
       timeout: 5000,
-      timeoutMsg: 'two Wizard\'s Boost (Ignem) instances should flag duplicate_spell',
+      timeoutMsg: "two Wizard's Boost (Ignem) instances should flag duplicate_spell",
     });
 
     // Clean up so later specs (the save round-trip) see only Pilum: remove every
@@ -274,7 +274,7 @@ describe('spells', () => {
       await (await $$(removeBtns))[0].click();
       await browser.waitUntil(async () => (await $$(removeBtns)).length === before - 1, {
         timeout: 5000,
-        timeoutMsg: 'removing a Wizard\'s Boost row should drop its count',
+        timeoutMsg: "removing a Wizard's Boost row should drop its count",
       });
     }
     // The duplicate flag clears once the extra instances are gone.
