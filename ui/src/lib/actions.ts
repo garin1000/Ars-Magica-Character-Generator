@@ -1,10 +1,27 @@
 import type { Action } from 'svelte/action';
 
-/** Rich tooltip content: a main paragraph plus an optional labelled list. */
+/**
+ * Rich tooltip content: an optional non-takeable REASON shown first (emphasized),
+ * then the main description paragraph, then an optional labelled list. For a
+ * takeable item `reason` is omitted and only the description/list show; when an
+ * item cannot be taken the reason appears ABOVE its normal description rather
+ * than replacing it.
+ */
 export interface TooltipContent {
+  reason?: string;
   text?: string;
   listLabel?: string;
   list?: string[];
+}
+
+/**
+ * Shared composer used by every picker: attach a non-takeable `reason` to a
+ * tooltip's normal content so the reason renders above the description. With no
+ * reason (a takeable item) the content is returned untouched, so takeable rows
+ * keep exactly their previous tooltip.
+ */
+export function withReason(content: TooltipContent, reason: string | undefined): TooltipContent {
+  return reason ? { ...content, reason } : content;
 }
 
 let tooltipSeq = 0;
@@ -22,7 +39,7 @@ export const tooltip: Action<HTMLElement, TooltipContent | undefined> = (node, c
   const id = `tooltip-${(tooltipSeq += 1)}`;
 
   const hasContent = (c: TooltipContent | undefined): boolean =>
-    !!c && (!!c.text || (!!c.list && c.list.length > 0));
+    !!c && (!!c.reason || !!c.text || (!!c.list && c.list.length > 0));
 
   const position = () => {
     if (!pop) return;
@@ -46,6 +63,12 @@ export const tooltip: Action<HTMLElement, TooltipContent | undefined> = (node, c
     pop.className = 'tooltip-pop';
     pop.id = id;
     pop.setAttribute('role', 'tooltip');
+    if (current?.reason) {
+      const r = document.createElement('p');
+      r.className = 'tooltip-reason';
+      r.textContent = current.reason;
+      pop.appendChild(r);
+    }
     if (current?.text) {
       const p = document.createElement('p');
       p.className = 'tooltip-text';

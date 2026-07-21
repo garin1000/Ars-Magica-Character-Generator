@@ -70,4 +70,34 @@ describe('character editor', () => {
     await $('[data-testid="discard-confirm"]').click();
     await $('[data-testid^="remove-virtue.keen_vision"]').waitForExist({ timeout: 10000 });
   });
+
+  it('shows the locked reason ABOVE the description on a non-takeable ability', async () => {
+    // A companion has no Gift free Supernatural slot, so a Supernatural Ability
+    // with no granting Virtue is locked (greyed). Its tooltip must show the
+    // "requires a Virtue" REASON and, below it, the ability's normal description
+    // — reason first, not instead of the description.
+    await $('[data-testid="type-select"]').selectByAttribute('value', 'companion');
+    await $('[data-testid="tab-abilities"]').click();
+    const row = await $('[data-testid="add-ability.second_sight"]');
+    await row.waitForExist({ timeout: 10000 });
+    await browser.waitUntil(async () => !(await row.isEnabled()), {
+      timeout: 5000,
+      timeoutMsg: 'Second Sight should be greyed for a companion',
+    });
+    // Dispatch mouseenter directly: synthetic events are focus-independent under
+    // parallel wdio (the webview window may be blurred), unlike pointer moveTo.
+    await browser.execute((el) => {
+      el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    }, row);
+    const reason = await $('.tooltip-pop .tooltip-reason');
+    await reason.waitForExist({ timeout: 5000 });
+    expect((await reason.getText()).trim().length).toBeGreaterThan(0);
+    const desc = await $('.tooltip-pop .tooltip-text');
+    await desc.waitForExist({ timeout: 5000 });
+    expect((await desc.getText()).trim().length).toBeGreaterThan(0);
+    // Dismiss the popup so it does not linger into later specs.
+    await browser.execute((el) => {
+      el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+    }, row);
+  });
 });
