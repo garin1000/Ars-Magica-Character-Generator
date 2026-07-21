@@ -8,12 +8,12 @@
     groupArtsByType,
     groupSpellsByTechniqueForm,
     maxAbilityScore,
+    spellDisplayName,
     spellMasteryXpSpent,
-    spellName,
   } from '../derive';
   import type { SpellGroup } from '../derive';
   import { tooltip, type TooltipContent } from '../actions';
-  import type { Art, Spell } from '../types';
+  import type { Art, Spell, SpellSelection } from '../types';
 
   // Technique/Form/text/level-range filters live on the store, so they survive the
   // tab switch that unmounts this component (same split ArtGrid uses for the Arts).
@@ -103,21 +103,36 @@
     return spell.level == null ? store.t('spell-level-general') : String(spell.level);
   }
 
-  function optionLabel(spell: Spell): string {
-    const rs = store.ruleset;
-    return rs ? `${spellName(rs, spell.id)} (${levelTag(spell)})` : spell.id;
+  // The localized param label ("Form"), used as the unchosen-parameter hint. The
+  // spell-name template supplies the literal parens ("… ({form})"), so the hint
+  // is the plain label — a source candidate reads "Wizard's Boost (Form)".
+  function paramLabel(key: string): string {
+    return store.t(`param-label-${key}`);
   }
 
-  // A chosen row's display: name + its TeFo tag (no grouping in the selected
-  // list, so the Technique/Form stays useful here). A fixed spell shows its
-  // catalogue level; a General spell shows the localized "General" marker.
-  function rowLabel(spellId: string): string {
+  // Whether a spell takes a selection parameter (a meta-magic Vim spell whose
+  // target Form is chosen per instance).
+  function isParametrized(spellId: string): boolean {
+    return (store.ruleset?.ruleset.spells?.[spellId]?.parameters?.length ?? 0) > 0;
+  }
+
+  function optionLabel(spell: Spell): string {
     const rs = store.ruleset;
-    const cat = rs?.ruleset.spells?.[spellId];
-    if (!rs || !cat) return spellId;
+    if (!rs) return spell.id;
+    return `${spellDisplayName(rs, spell.id, undefined, paramLabel)} (${levelTag(spell)})`;
+  }
+
+  // A chosen row's display: name (with the chosen target Form interpolated for a
+  // parametrized spell) + its TeFo tag (no grouping in the selected list, so the
+  // Technique/Form stays useful here). A fixed spell shows its catalogue level; a
+  // General spell shows the localized "General" marker.
+  function rowLabel(chosen: SpellSelection): string {
+    const rs = store.ruleset;
+    const cat = rs?.ruleset.spells?.[chosen.spell];
+    if (!rs || !cat) return chosen.spell;
     const tf = `${abbr(cat.technique)}${abbr(cat.form)}`;
     const lvl = cat.level == null ? store.t('spell-level-general') : String(cat.level);
-    return `${spellName(rs, spellId)} (${tf} ${lvl})`;
+    return `${spellDisplayName(rs, chosen.spell, chosen.parameter, paramLabel)} (${tf} ${lvl})`;
   }
 
   // The minimum level a spell can be learned at: a Ritual must be learned at 20,
@@ -296,9 +311,31 @@
         {/if}
 
         <ul class="spell-list" data-testid="spell-list">
-          {#each store.entity.spells ?? [] as chosen, i (`${chosen.spell}:${i}`)}
+          {#each store.entity.spells ?? [] as chosen, i (`${chosen.spell}:${chosen.parameter ?? ''}:${i}`)}
             <li use:tooltip={tip(chosen.spell)}>
-              <span class="item-name">{rowLabel(chosen.spell)}</span>
+              <span class="item-name" data-testid="spell-name-{chosen.spell}-{i}"
+                >{rowLabel(chosen)}</span
+              >
+              {#if isParametrized(chosen.spell)}
+                <!-- The target Form of a meta-magic Vim spell — display + identity
+                     only, so the same spell can be taken once per distinct Form.
+                     Mirrors the ParameterPicker Art <select> (groupArtsByType). -->
+                <select
+                  aria-label={store.t('param-label-form')}
+                  value={chosen.parameter ?? ''}
+                  onchange={(e) =>
+                    store.setSpellParameterAt(
+                      i,
+                      (e.currentTarget as HTMLSelectElement).value || null,
+                    )}
+                  data-testid="spell-param-{chosen.spell}-{i}"
+                >
+                  <option value="" disabled>{store.t('param-label-form')}</option>
+                  {#each forms as f (f.id)}
+                    <option value={f.id}>{artLabel(store.ruleset, f.id)}</option>
+                  {/each}
+                </select>
+              {/if}
               {#if isGeneral(chosen.spell)}
                 <input
                   type="number"

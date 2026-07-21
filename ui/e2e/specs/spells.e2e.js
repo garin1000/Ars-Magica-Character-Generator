@@ -203,6 +203,87 @@ describe('spells', () => {
     });
   });
 
+  it('takes a parametrized spell once per distinct Form (Wizard\'s Boost)', async () => {
+    // Clear the Technique/Form filter so the MuVi Wizard's Boost is listed. It is
+    // a General meta-magic Vim spell whose target (Form) is a per-instance
+    // selection: Muto 0 + Vim 9 + 3 = 12 clears the default level (5), and the
+    // 150 budget has room (only Pilum's 20 is spent so far).
+    await $('[data-testid="spell-technique-filter"]').selectByAttribute('value', '');
+    await $('[data-testid="spell-form-filter"]').selectByAttribute('value', '');
+    const add = await $('[data-testid="add-spell.wizards_boost_form"]');
+    await add.waitForExist({ timeout: 5000 });
+    await browser.waitUntil(async () => await add.isEnabled(), {
+      timeout: 5000,
+      timeoutMsg: 'Wizard\'s Boost should be takeable (MuVi cap 12, budget has room)',
+    });
+    // The source candidate reads its param hint, not a raw token: "Wizard's Boost
+    // (Form) (General)".
+    expect(clean(await add.getText())).toContain('(Form)');
+
+    const paramSelects = '[data-testid^="spell-param-spell.wizards_boost_form-"]';
+    const nameSpans = '[data-testid^="spell-name-spell.wizards_boost_form-"]';
+    const removeBtns = '[data-testid^="spell-remove-spell.wizards_boost_form-"]';
+
+    // (a) Add one instance and choose Form = Ignem; its selected label shows it.
+    await add.click();
+    await browser.waitUntil(async () => (await $$(paramSelects)).length === 1, {
+      timeout: 5000,
+      timeoutMsg: 'adding Wizard\'s Boost should show one target-Form select',
+    });
+    await (await $$(paramSelects))[0].selectByAttribute('value', 'art.ignem');
+    await browser.waitUntil(
+      async () => clean(await (await $$(nameSpans))[0].getText()).includes('Ignem'),
+      { timeout: 5000, timeoutMsg: 'the chosen Form (Ignem) should show in the row label' },
+    );
+
+    // (b) Add the SAME base spell again choosing Form = Aquam; BOTH coexist.
+    await add.click();
+    await browser.waitUntil(async () => (await $$(paramSelects)).length === 2, {
+      timeout: 5000,
+      timeoutMsg: 'the same base spell may be taken once per distinct Form',
+    });
+    await (await $$(paramSelects))[1].selectByAttribute('value', 'art.aquam');
+    await browser.waitUntil(
+      async () => {
+        // Exactly two instances now; index them directly (a `$$` ElementArray is
+        // not safely spread/mapped across an await here).
+        const spans = await $$(nameSpans);
+        if (spans.length !== 2) return false;
+        const both = clean(await spans[0].getText()) + '|' + clean(await spans[1].getText());
+        return both.includes('Ignem') && both.includes('Aquam');
+      },
+      { timeout: 5000, timeoutMsg: 'both the Ignem and Aquam instances should coexist' },
+    );
+
+    // (c) Adding the same spell+Form (Ignem) a third time is flagged as a duplicate.
+    await add.click();
+    await browser.waitUntil(async () => (await $$(paramSelects)).length === 3, {
+      timeout: 5000,
+      timeoutMsg: 'a third instance should be added (its Form is not yet chosen)',
+    });
+    await (await $$(paramSelects))[2].selectByAttribute('value', 'art.ignem');
+    await browser.waitUntil(async () => codeExists('duplicate_spell'), {
+      timeout: 5000,
+      timeoutMsg: 'two Wizard\'s Boost (Ignem) instances should flag duplicate_spell',
+    });
+
+    // Clean up so later specs (the save round-trip) see only Pilum: remove every
+    // Wizard's Boost row. Removal shifts indices, so always click the first.
+    while ((await $$(removeBtns)).length > 0) {
+      const before = (await $$(removeBtns)).length;
+      await (await $$(removeBtns))[0].click();
+      await browser.waitUntil(async () => (await $$(removeBtns)).length === before - 1, {
+        timeout: 5000,
+        timeoutMsg: 'removing a Wizard\'s Boost row should drop its count',
+      });
+    }
+    // The duplicate flag clears once the extra instances are gone.
+    await browser.waitUntil(async () => !(await codeExists('duplicate_spell')), {
+      timeout: 5000,
+      timeoutMsg: 'removing the duplicate instances should clear duplicate_spell',
+    });
+  });
+
   it('flags going over the spell-levels budget', async () => {
     // Add a General spell (Aegis of the Hearth, ReVi). It lands at the default
     // level; its level input then appears inline on the selected row. Setting it

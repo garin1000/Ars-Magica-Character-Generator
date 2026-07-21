@@ -152,9 +152,10 @@ export function filterSpells(
   const min = finiteBound(filter.levelMin);
   const max = finiteBound(filter.levelMax);
   return spells.filter((s) => {
-    // Spell names carry no `{param}` placeholder, so the rendered label equals
-    // the plain name; routing through the hint-aware path just keeps the search
-    // helpers uniform.
+    // A parametrized spell's name carries a `{param}` placeholder (e.g.
+    // "Wizard's Boost ({form})"); a source candidate has no chosen value, so the
+    // hint-aware path renders the localized "(Form)" hint into the searchable
+    // label. Plain spells have no token and render as their bare name.
     const name = t
       ? displayName(localized, s.id, undefined, paramHint(t))
       : spellName(localized, s.id);
@@ -711,6 +712,31 @@ export function artAbbreviation(localized: LocalizedRuleset, artId: string): str
 /** Localized spell name (e.g. "Pilum of Fire"), falling back to the id. */
 export function spellName(localized: LocalizedRuleset, spellId: string): string {
   return localized.i18n[spellId]?.name ?? spellId;
+}
+
+/**
+ * Localized spell name with its parameter (the target Form of a meta-magic Vim
+ * spell) interpolated. A parametrized spell's i18n name is a template
+ * ("Wizard's Boost ({form})"); the `{form}` token is filled with the chosen
+ * Form's localized Art name ("Ignem"), or with the localized param label
+ * ("Form") when no Form is chosen yet — a source-list candidate reads
+ * "Wizard's Boost (Form)". The template supplies the literal parens, so
+ * `placeholderLabel` should return the plain label, unwrapped. Plain spells have
+ * no token, so the name is returned as-is. Mirrors {@link abilityDisplayName}.
+ */
+export function spellDisplayName(
+  localized: LocalizedRuleset,
+  spellId: string,
+  parameter: string | null | undefined,
+  placeholderLabel: (key: string) => string,
+): string {
+  const paramKey = localized.ruleset.spells?.[spellId]?.parameters?.[0]?.key;
+  const params = paramKey && parameter ? { [paramKey]: parameter } : undefined;
+  // A present value is an Art id (e.g. `art.ignem`); resolve it to the Art's
+  // localized name so the label reads "(Ignem)", never "(art.ignem)".
+  return displayName(localized, spellId, params, placeholderLabel, (_key, value) =>
+    artLabel(localized, value),
+  );
 }
 
 /** A group of catalogue spells sharing one Technique/Form combination. */

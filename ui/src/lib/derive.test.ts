@@ -31,6 +31,7 @@ import {
   resolveIssueArgValue,
   resolveIssueArgs,
   restrictedPoolLabel,
+  spellDisplayName,
   xpSpentLabel,
 } from './derive';
 import type {
@@ -857,6 +858,66 @@ describe('abilityDisplayName', () => {
     expect(abilityDisplayName(ruleset, 'ability.awareness', 'ignored', placeholder)).toBe(
       'Awareness',
     );
+  });
+});
+
+// --- spellDisplayName() -----------------------------------------------------
+
+describe('spellDisplayName', () => {
+  function withSpells(): LocalizedRuleset {
+    return {
+      ruleset: {
+        id: 't',
+        version: '1',
+        point_items: {},
+        type_profiles: {},
+        spells: {
+          'spell.wizards_boost_form': {
+            id: 'spell.wizards_boost_form',
+            technique: 'art.muto',
+            form: 'art.vim',
+            level: null,
+            parameters: [{ key: 'form', type: 'ref', domain: 'form' }],
+          },
+          'spell.pilum': {
+            id: 'spell.pilum',
+            technique: 'art.creo',
+            form: 'art.ignem',
+            level: 20,
+          },
+        },
+        ...DERIVED_TAXONOMY,
+      },
+      i18n: {
+        'art.ignem': { name: 'Ignem' },
+        // The parametrized name is a template; the literal parens belong to the
+        // template, so the placeholder hint must NOT add its own.
+        'spell.wizards_boost_form': { name: "Wizard's Boost ({form})" },
+        'spell.pilum': { name: 'Pilum of Fire' },
+      },
+    };
+  }
+
+  // The source-list hint: the plain param label (the template supplies the parens).
+  const hint = (key: string) => (key === 'form' ? 'Form' : key);
+
+  it('interpolates the chosen target Form as its localized Art name', () => {
+    expect(spellDisplayName(withSpells(), 'spell.wizards_boost_form', 'art.ignem', hint)).toBe(
+      "Wizard's Boost (Ignem)",
+    );
+  });
+
+  it('shows the localized param hint when no Form is chosen (source candidate)', () => {
+    expect(spellDisplayName(withSpells(), 'spell.wizards_boost_form', null, hint)).toBe(
+      "Wizard's Boost (Form)",
+    );
+    expect(spellDisplayName(withSpells(), 'spell.wizards_boost_form', '', hint)).toBe(
+      "Wizard's Boost (Form)",
+    );
+  });
+
+  it('returns the plain name for a spell with no parameters', () => {
+    expect(spellDisplayName(withSpells(), 'spell.pilum', 'art.ignem', hint)).toBe('Pilum of Fire');
   });
 });
 
