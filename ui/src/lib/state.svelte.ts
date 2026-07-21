@@ -530,20 +530,50 @@ class AppStore {
 
   /**
    * Add a spell to the magus's list. `level` is passed only for a General spell
-   * (the chosen level); a fixed spell derives its level from the catalogue. The
-   * same (spell, level) pair is not added twice — different General levels are
-   * different spells, so they may coexist.
+   * (the chosen level); a fixed spell derives its level from the catalogue.
+   * `parameter` names the target Form of a parametrized meta-magic Vim spell.
+   *
+   * Identity is (spell, level, parameter): the same base spell may be taken once
+   * per distinct Form. A parametrized spell adds a fresh row each time (its Form
+   * is chosen afterwards in the selected list, mirroring parametrized abilities),
+   * so it is never blocked at add time and its source row never greys just
+   * because one Form instance exists; exact (spell, level, Form) duplicates are
+   * flagged by the engine's dedupe. A plain spell is added once per (level).
    */
-  addSpell(spellId: string, level?: number | null): void {
+  addSpell(spellId: string, level?: number | null, parameter?: string | null): void {
     const lvl = typeof level === 'number' ? level : undefined;
-    const present = (this.entity.spells ?? []).some(
-      (s) => s.spell === spellId && (s.level ?? undefined) === lvl,
-    );
-    if (present) return;
+    const param = parameter ?? undefined;
+    const parameterized = (this.ruleset?.ruleset.spells?.[spellId]?.parameters?.length ?? 0) > 0;
+    if (!parameterized) {
+      const present = (this.entity.spells ?? []).some(
+        (s) =>
+          s.spell === spellId &&
+          (s.level ?? undefined) === lvl &&
+          (s.parameter ?? undefined) === param,
+      );
+      if (present) return;
+    }
     this.entity.spells = [
       ...(this.entity.spells ?? []),
-      lvl === undefined ? { spell: spellId } : { spell: spellId, level: lvl },
+      {
+        spell: spellId,
+        ...(lvl === undefined ? {} : { level: lvl }),
+        ...(param === undefined ? {} : { parameter: param }),
+      },
     ];
+    this.#scheduleValidate();
+  }
+
+  /**
+   * Set (or clear) the target Form of a parametrized spell at `index` — part of
+   * the spell's identity, so distinct Forms are distinct instances. The chosen
+   * value is an Art id (e.g. `art.ignem`). Mirrors {@link setAbilityParameterAt}.
+   */
+  setSpellParameterAt(index: number, parameter: string | null): void {
+    const param = parameter && parameter.trim() ? parameter.trim() : undefined;
+    this.entity.spells = (this.entity.spells ?? []).map((s, i) =>
+      i === index ? { ...s, parameter: param } : s,
+    );
     this.#scheduleValidate();
   }
 

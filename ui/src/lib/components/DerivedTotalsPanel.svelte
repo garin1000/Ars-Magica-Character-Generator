@@ -3,8 +3,8 @@
   // command computes; it performs NO mechanics in JS. Every label goes through a
   // Fluent `derived-*` key; catalogue ids resolve to their localized display name.
   import { store } from '../state.svelte';
-  import { formatSigned } from '../derive';
-  import type { Addend } from '../types';
+  import { formatSigned, spellDisplayName } from '../derive';
+  import type { Addend, PenetrationLine } from '../types';
 
   const d = $derived(store.derived);
   const aura = $derived(store.entity.aura ?? 0);
@@ -34,6 +34,16 @@
   // Localized display name for a catalogue id (Art, spell, weapon…), id as fallback.
   function name(id: string): string {
     return store.ruleset?.i18n[id]?.name ?? id;
+  }
+
+  // A penetration line's spell label, interpolating the chosen target Form of a
+  // parametrized meta-magic Vim spell so two instances of one spell id read
+  // distinctly (e.g. "Wizard's Boost (Ignem)" vs "(Aquam)"). The parens belong
+  // to the name template, so the hint is the plain param label.
+  function penetrationLabel(line: PenetrationLine): string {
+    const rs = store.ruleset;
+    if (!rs) return line.spell;
+    return spellDisplayName(rs, line.spell, line.parameter, (key) => store.t(`param-label-${key}`));
   }
 
   // A labelled addend's display name (stable slug → Fluent).
@@ -181,9 +191,9 @@
         <div class="detail-section">
           <h3 class="detail-label">{store.t('derived-section-penetration')}</h3>
           <ul class="derived-list" data-testid="derived-penetration">
-            {#each d.penetration as p (p.spell)}
+            {#each d.penetration as p (`${p.spell}:${p.parameter ?? ''}`)}
               <li>
-                <span>{name(p.spell)} ({store.t('derived-level')} {p.level})</span>
+                <span>{penetrationLabel(p)} ({store.t('derived-level')} {p.level})</span>
                 <span class="value"
                   >{p.total}{p.weak_magic ? ' ' + store.t('derived-weak-magic') : ''}</span
                 >
