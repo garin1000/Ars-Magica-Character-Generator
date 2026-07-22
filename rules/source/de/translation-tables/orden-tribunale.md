@@ -81,7 +81,7 @@
 | Sodalis (Vok.: Sodale) | (= m.) | Sodales | (= m.) | Fellow (greeting) | Salve Sodale / Salvete Sodales | Grußformel (Vokativ) |
 | Sanctum (n.) | – | Sancta | – | Sanctuary | Sanctum | Neutrum; Privatgemächer |
 | – | Turba | – | Turbae | Turb | Turba | f.; Grog-Einheit |
-| – | Vis | – | Vires | Raw Magic / Vis | Vis | f., irreg.; im Spiel indeklinabel |
+| – | Vis | – | Vires | Raw Magic / Vis | Vis | lat. f., irreg.; im Deutschen n. (das Vis); im Spiel indeklinabel. Ausnahme: der etablierte Zaubername „Die Natur der Vis erkennen" (fem. Genitiv) bleibt kanonisch unverändert |
 | Percamenarius | – | Percamenarii | – | Parchment Maker | Pergamentmacher | m., 2. Dekl.; im Text lat. unübersetzt |
 | Vim (Akk. von Vis) | – | – | – | Vim (Form name) | Vim | Akkusativ, als Form-Name verwendet |
 | – | Aegis | – | Aegides | Aegis | Aegis | f., aus dem Griechischen |

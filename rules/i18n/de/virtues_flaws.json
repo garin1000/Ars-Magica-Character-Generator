@@ -993,7 +993,7 @@
   },
   "flaw.rigid_magic": {
     "name": "Starre Magie",
-    "summary": "Du kannst beim Wirken von Zaubern keine Vis verwenden."
+    "summary": "Du kannst beim Wirken von Zaubern kein Vis verwenden."
   },
   "flaw.rolling_stone": {
     "name": "Rastloser Wanderer",
