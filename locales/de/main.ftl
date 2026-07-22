@@ -145,6 +145,7 @@ spell-group-header = { $technique } { $form }
 spell-level-general = Gen
 spell-cap-reason = Über deiner Zaubergrenze ({ $cap })
 spell-budget-reason = Nicht genug Zauberstufen übrig
+spell-already-taken-reason = Bereits ausgewählt
 spell-general-level-label = Stufe (General)
 spell-add = Zauber hinzufügen
 spell-none = — Zauber wählen —

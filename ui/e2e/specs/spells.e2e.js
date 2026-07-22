@@ -280,16 +280,26 @@ describe('spells', () => {
       { timeout: 5000, timeoutMsg: 'both the Ignem and Aquam instances should coexist' },
     );
 
-    // (c) Adding the same spell+Form (Ignem) a third time is flagged as a duplicate.
+    // (c) A third instance's Form picker greys the Forms already used at this
+    // level (Ignem, Aquam), so the same (spell, level, Form) cannot be taken
+    // twice — while every unused Form (e.g. Terram) stays selectable. Choosing an
+    // unused Form adds a distinct instance without any duplicate_spell flag.
     await add.click();
     await browser.waitUntil(async () => (await $$(paramSelects)).length === 3, {
       timeout: 5000,
       timeoutMsg: 'a third instance should be added (its Form is not yet chosen)',
     });
-    await (await $$(paramSelects))[2].selectByAttribute('value', 'art.ignem');
-    await browser.waitUntil(async () => codeExists('duplicate_spell'), {
+    const thirdSelect = (await $$(paramSelects))[2];
+    await browser.waitUntil(
+      async () => !(await (await thirdSelect.$('option[value="art.ignem"]')).isEnabled()),
+      { timeout: 5000, timeoutMsg: 'the already-used Ignem Form should be greyed in a new row' },
+    );
+    expect(await (await thirdSelect.$('option[value="art.aquam"]')).isEnabled()).toBe(false);
+    expect(await (await thirdSelect.$('option[value="art.terram"]')).isEnabled()).toBe(true);
+    await thirdSelect.selectByAttribute('value', 'art.terram');
+    await browser.waitUntil(async () => !(await codeExists('duplicate_spell')), {
       timeout: 5000,
-      timeoutMsg: "two Wizard's Boost (Ignem) instances should flag duplicate_spell",
+      timeoutMsg: 'a distinct Form (Terram) must not flag duplicate_spell',
     });
 
     // Clean up so later specs (the save round-trip) see only Pilum: remove every

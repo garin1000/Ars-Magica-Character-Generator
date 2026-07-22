@@ -8,6 +8,8 @@
     groupArtsByType,
     groupSpellsByTechniqueForm,
     maxAbilityScore,
+    orderSelectedSpells,
+    usedSpellForms,
     spellDisplayName,
     spellMasteryXpSpent,
   } from '../derive';
@@ -52,6 +54,22 @@
     );
     return groupSpellsByTechniqueForm(rs, filtered);
   });
+
+  // The selected spells shown in Form → Technique → catalogue-level order (the
+  // same order as the available list). Each entry carries its ORIGINAL index into
+  // `entity.spells` so the index-addressed row mutations still target the right
+  // row — the display order is never written back to the entity.
+  const selectedSpells = $derived.by((): { selection: SpellSelection; index: number }[] => {
+    const rs = store.ruleset;
+    if (!rs) return [];
+    return orderSelectedSpells(rs, store.entity.spells ?? []);
+  });
+
+  // The selected spell ids, for the "already selected" grey-out of ordinary
+  // fixed-level spells (see `nonTakeableReason`). A General spell (learnable at
+  // several levels) or a parameterized spell (takeable once per Form) is excluded
+  // there and stays re-takeable — matching how Abilities/Virtues grey out.
+  const selectedSpellIds = $derived(new Set((store.entity.spells ?? []).map((s) => s.spell)));
 
   // The spell-levels budget bar: engine-authoritative used/budget, with a local
   // fallback for the first frame before effective scores arrive.
@@ -148,6 +166,11 @@
   // catalogue level. Blocked when that level exceeds the per-spell cap or the
   // remaining spell-levels budget. The cap is the engine's surfaced value.
   function nonTakeableReason(spell: Spell): { key: string; cap: number } | null {
+    // An ordinary fixed-level spell is taken only once, so grey it once selected.
+    // General spells (multiple learnable levels) and parameterized spells (once
+    // per Form) stay re-takeable and are excluded from this test.
+    if (spell.level != null && !isParametrized(spell.id) && selectedSpellIds.has(spell.id))
+      return { key: 'spell-already-taken-reason', cap: 0 };
     const cap = capByTeFo.get(`${spell.technique} ${spell.form}`);
     const need = spell.level ?? minLearnableLevel(spell);
     if (cap != null && need > cap) return { key: 'spell-cap-reason', cap };
@@ -314,7 +337,7 @@
         {/if}
 
         <ul class="spell-list" data-testid="spell-list">
-          {#each store.entity.spells ?? [] as chosen, i (`${chosen.spell}:${chosen.parameter ?? ''}:${i}`)}
+          {#each selectedSpells as { selection: chosen, index: i } (`${chosen.spell}:${chosen.parameter ?? ''}:${i}`)}
             <li use:tooltip={tip(chosen.spell)}>
               <span class="item-name" data-testid="spell-name-{chosen.spell}-{i}"
                 >{rowLabel(chosen)}</span
@@ -322,7 +345,15 @@
               {#if isParametrized(chosen.spell)}
                 <!-- The target Form of a meta-magic Vim spell — display + identity
                      only, so the same spell can be taken once per distinct Form.
-                     Mirrors the ParameterPicker Art <select> (groupArtsByType). -->
+                     Mirrors the ParameterPicker Art <select> (groupArtsByType).
+                     Forms already used by this spell at this level are greyed so
+                     each (spell, level, Form) is takeable only once. -->
+                {@const usedForms = usedSpellForms(
+                  store.entity.spells ?? [],
+                  chosen.spell,
+                  chosen.level,
+                  i,
+                )}
                 <select
                   aria-label={store.t('param-label-form')}
                   value={chosen.parameter ?? ''}
@@ -335,7 +366,9 @@
                 >
                   <option value="" disabled>{store.t('param-label-form')}</option>
                   {#each forms as f (f.id)}
-                    <option value={f.id}>{artLabel(store.ruleset, f.id)}</option>
+                    <option value={f.id} disabled={usedForms.has(f.id)}
+                      >{artLabel(store.ruleset, f.id)}</option
+                    >
                   {/each}
                 </select>
               {/if}
@@ -378,11 +411,15 @@
                     +
                   </button>
                   {#if effectiveSpellMastery(chosen.mastery, masteryFloor) !== (chosen.mastery ?? 0)}
-                    <span class="eff-badge" data-testid="spell-mastery-eff-{chosen.spell}-{i}">
-                      {store.t('effective-score', {
-                        score: String(effectiveSpellMastery(chosen.mastery, masteryFloor)),
-                      })}
+                    <span class="eff-slot">
+                      <span class="eff-badge" data-testid="spell-mastery-eff-{chosen.spell}-{i}">
+                        {store.t('effective-score', {
+                          score: String(effectiveSpellMastery(chosen.mastery, masteryFloor)),
+                        })}
+                      </span>
                     </span>
+                  {:else}
+                    <span class="eff-slot" aria-hidden="true"></span>
                   {/if}
                 </span>
               {/if}

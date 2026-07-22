@@ -18,6 +18,7 @@ import type {
   RestrictedXpPool,
   Selection,
   Spell,
+  SpellSelection,
 } from './types';
 
 /**
@@ -764,12 +765,13 @@ function compareSpellByLevelThenName(localized: LocalizedRuleset): (a: Spell, b:
 
 /**
  * Catalogue spells grouped by Technique+Form combination, mirroring how the
- * Ability picker groups by category. Groups are ordered by the engine's Art order
- * (Technique groups' Techniques, then their Forms — from `groupArtsByType`, so the
- * UI never re-hardcodes it); within a group spells sort by level then name
- * (General spells trailing — see `compareSpellByLevelThenName`). Empty groups are
- * dropped. Any Te/Fo pair not found in the Art catalogue order (defensive, e.g. a
- * spell referencing an absent Art) is appended after the ordered groups.
+ * Ability picker groups by category. Groups are ordered Form-major: by the
+ * engine's Form order first, then by Technique within each Form (both from
+ * `groupArtsByType`, so the UI never re-hardcodes the Art order); within a group
+ * spells sort by level then name (General spells trailing — see
+ * `compareSpellByLevelThenName`). Empty groups are dropped. Any Te/Fo pair not
+ * found in the Art catalogue order (defensive, e.g. a spell referencing an absent
+ * Art) is appended after the ordered groups.
  */
 export function groupSpellsByTechniqueForm(
   localized: LocalizedRuleset,
@@ -790,8 +792,8 @@ export function groupSpellsByTechniqueForm(
   const compare = compareSpellByLevelThenName(localized);
 
   const result: SpellGroup[] = [];
-  for (const technique of techniques) {
-    for (const form of forms) {
+  for (const form of forms) {
+    for (const technique of techniques) {
       const key = keyOf(technique.id, form.id);
       const list = buckets.get(key);
       if (!list) continue;
@@ -805,6 +807,73 @@ export function groupSpellsByTechniqueForm(
     result.push({ technique, form, spells: list.sort(compare) });
   }
   return result;
+}
+
+/**
+ * Order a character's selected spells for display: Form-major, then Technique
+ * within each Form, then catalogue level (General trailing) — the same order the
+ * available list groups by. Returns a *view* pairing each selection with its
+ * ORIGINAL index into the entity's `spells` array: every selected-row mutation
+ * (remove / set-parameter / set-level / adjust-mastery) addresses that real
+ * index, so the display order must never be written back to the entity. Sorting
+ * uses the **catalogue** level, not a General spell's live edited level, so
+ * inline level edits don't reorder the row mid-edit. Ties fall back to the
+ * original insertion order for a stable display.
+ */
+export function orderSelectedSpells(
+  localized: LocalizedRuleset,
+  spells: SpellSelection[],
+): { selection: SpellSelection; index: number }[] {
+  const artGroups = groupArtsByType(localized);
+  const formOrder = indexOrder(artGroups.find((g) => g.artType === 'form')?.arts ?? []);
+  const techOrder = indexOrder(artGroups.find((g) => g.artType === 'technique')?.arts ?? []);
+  const rank = (id: string | undefined, order: Map<string, number>) =>
+    order.get(id ?? '') ?? Number.POSITIVE_INFINITY;
+
+  return spells
+    .map((selection, index) => ({ selection, index }))
+    .sort((a, b) => {
+      const ca = localized.ruleset.spells?.[a.selection.spell];
+      const cb = localized.ruleset.spells?.[b.selection.spell];
+      const fa = rank(ca?.form, formOrder);
+      const fb = rank(cb?.form, formOrder);
+      if (fa !== fb) return fa - fb;
+      const ta = rank(ca?.technique, techOrder);
+      const tb = rank(cb?.technique, techOrder);
+      if (ta !== tb) return ta - tb;
+      const la = ca?.level ?? Number.POSITIVE_INFINITY;
+      const lb = cb?.level ?? Number.POSITIVE_INFINITY;
+      if (la !== lb) return la - lb;
+      return a.index - b.index;
+    });
+}
+
+function indexOrder(arts: Art[]): Map<string, number> {
+  return new Map(arts.map((art, i) => [art.id, i]));
+}
+
+/**
+ * The parameter Forms already taken by OTHER instances of a parameterized spell
+ * at the same level — used to grey those Forms in a row's target-Form picker so
+ * each (spell, level, Form) is takeable only once (matching the engine dedupe key
+ * `(spell, level, parameter)` in `validation/magus.rs`). A parameterized spell
+ * stays re-takeable for every *unused* Form (e.g. Wizard's Boost once per Form).
+ * The row being edited is excluded via `exceptIndex`, and the level filter keeps
+ * a Form legal at a different level available (General meta-magic spells).
+ */
+export function usedSpellForms(
+  spells: SpellSelection[],
+  spellId: string,
+  level: number | null | undefined,
+  exceptIndex: number,
+): Set<string> {
+  const used = new Set<string>();
+  spells.forEach((s, i) => {
+    if (i === exceptIndex || s.spell !== spellId) return;
+    if ((s.level ?? null) !== (level ?? null)) return;
+    if (s.parameter) used.add(s.parameter);
+  });
+  return used;
 }
 
 export interface ArtGroup {

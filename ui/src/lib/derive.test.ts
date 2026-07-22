@@ -23,6 +23,8 @@ import {
   groupByCategory,
   groupSelectionsByCategory,
   groupSpellsByTechniqueForm,
+  orderSelectedSpells,
+  usedSpellForms,
   groupAbilitySelectionsByCategory,
   mandatoryTraitRefs,
   maxAbilityScore,
@@ -42,6 +44,7 @@ import type {
   EntityTypeProfile,
   LocalizedRuleset,
   PointItem,
+  Spell,
 } from './types';
 
 // --- Fixtures ---------------------------------------------------------------
@@ -306,7 +309,7 @@ describe('groupSpellsByTechniqueForm', () => {
       { id: 'spell.watching', technique: 'art.rego', form: 'art.vim', level: 20 },
     ];
     const groups = groupSpellsByTechniqueForm(withSpellsRuleset(), spells);
-    // Groups ordered by Technique (Creo before Rego) then Form.
+    // Groups ordered by Form first, then Technique.
     expect(groups.map((g) => [g.technique, g.form])).toEqual([
       ['art.creo', 'art.ignem'],
       ['art.rego', 'art.vim'],
@@ -314,6 +317,25 @@ describe('groupSpellsByTechniqueForm', () => {
     // Within a group: level ascending, General (null) trailing, then name.
     expect(groups[0].spells.map((s) => s.id)).toEqual(['spell.arc', 'spell.ball', 'spell.ward']);
     expect(groups[1].spells.map((s) => s.id)).toEqual(['spell.watching', 'spell.aegis']);
+  });
+
+  it('orders groups by Form first, then Technique', () => {
+    // Spells spanning both Techniques and both Forms, so Form-major and
+    // Technique-major orderings are distinguishable.
+    const spells = [
+      { id: 'spell.ball', technique: 'art.creo', form: 'art.ignem', level: 35 },
+      { id: 'spell.aegis', technique: 'art.rego', form: 'art.vim', level: 20 },
+      { id: 'spell.arc', technique: 'art.creo', form: 'art.vim', level: 10 },
+      { id: 'spell.watching', technique: 'art.rego', form: 'art.ignem', level: 15 },
+    ];
+    const groups = groupSpellsByTechniqueForm(withSpellsRuleset(), spells);
+    // Form-major: all Ignem groups (Creo, Rego) before all Vim groups (Creo, Rego).
+    expect(groups.map((g) => [g.technique, g.form])).toEqual([
+      ['art.creo', 'art.ignem'],
+      ['art.rego', 'art.ignem'],
+      ['art.creo', 'art.vim'],
+      ['art.rego', 'art.vim'],
+    ]);
   });
 
   it('sorts same-level spells alphabetically by localized name', () => {
@@ -327,6 +349,101 @@ describe('groupSpellsByTechniqueForm', () => {
 
   it('is empty when there are no spells', () => {
     expect(groupSpellsByTechniqueForm(withSpellsRuleset(), [])).toEqual([]);
+  });
+});
+
+describe('orderSelectedSpells', () => {
+  const arts: Art[] = [
+    { id: 'art.creo', art_type: 'technique' },
+    { id: 'art.rego', art_type: 'technique' },
+    { id: 'art.ignem', art_type: 'form' },
+    { id: 'art.vim', art_type: 'form' },
+  ];
+  function rulesetWithCatalogue(): LocalizedRuleset {
+    const artMap: Record<string, Art> = {};
+    for (const a of arts) artMap[a.id] = a;
+    const spells: Record<string, Spell> = {
+      'spell.ball': { id: 'spell.ball', technique: 'art.creo', form: 'art.ignem', level: 35 },
+      'spell.arc': { id: 'spell.arc', technique: 'art.creo', form: 'art.ignem', level: 10 },
+      'spell.watching': {
+        id: 'spell.watching',
+        technique: 'art.rego',
+        form: 'art.ignem',
+        level: 15,
+      },
+      'spell.aegis': { id: 'spell.aegis', technique: 'art.rego', form: 'art.vim', level: 20 },
+      // A General (null-level) Rego Vim spell — sorts after the fixed ReVi one.
+      'spell.ward': { id: 'spell.ward', technique: 'art.creo', form: 'art.vim', level: null },
+    };
+    return {
+      ruleset: {
+        id: 't',
+        version: '1',
+        point_items: {},
+        type_profiles: {},
+        arts: artMap,
+        spells,
+        art_type_order: ['technique', 'form'],
+        ...DERIVED_TAXONOMY,
+      },
+      i18n: {},
+    };
+  }
+
+  it('orders selected spells Form-major, then Technique, then catalogue level, carrying original index', () => {
+    // Deliberately scrambled insertion order.
+    const selected = [
+      { spell: 'spell.aegis' }, // ReVi 20
+      { spell: 'spell.ball' }, // CrIg 35
+      { spell: 'spell.ward' }, // CrVi General
+      { spell: 'spell.watching' }, // ReIg 15
+      { spell: 'spell.arc' }, // CrIg 10
+    ];
+    const ordered = orderSelectedSpells(rulesetWithCatalogue(), selected);
+    // Form-major (Ignem before Vim); within a Form, Technique (Creo before Rego)
+    // outranks level; then level ascending with General trailing.
+    expect(ordered.map((o) => o.selection.spell)).toEqual([
+      'spell.arc', // Ignem / Creo / 10
+      'spell.ball', // Ignem / Creo / 35
+      'spell.watching', // Ignem / Rego / 15
+      'spell.ward', // Vim / Creo / General
+      'spell.aegis', // Vim / Rego / 20
+    ]);
+    // The original indices are preserved for index-addressed row mutations.
+    expect(ordered.map((o) => o.index)).toEqual([4, 1, 3, 2, 0]);
+  });
+});
+
+describe('usedSpellForms', () => {
+  it('collects Forms used by OTHER instances of the same spell at the same level', () => {
+    const spells = [
+      { spell: 'spell.wizards_boost_form', level: 5, parameter: 'art.ignem' },
+      { spell: 'spell.wizards_boost_form', level: 5, parameter: 'art.aquam' },
+      { spell: 'spell.wizards_boost_form', level: 5, parameter: 'art.ignem' }, // self at index 2
+    ];
+    // For the row at index 2, its own Ignem is excluded; the other Ignem (index 0)
+    // and Aquam (index 1) at the same level are reported.
+    const used = usedSpellForms(spells, 'spell.wizards_boost_form', 5, 2);
+    expect([...used].sort()).toEqual(['art.aquam', 'art.ignem']);
+  });
+
+  it('does not report Forms used at a different level', () => {
+    const spells = [
+      { spell: 'spell.wizards_boost_form', level: 5, parameter: 'art.ignem' },
+      { spell: 'spell.wizards_boost_form', level: 10, parameter: 'art.aquam' },
+    ];
+    // Editing the level-5 row: the Aquam instance sits at level 10, so its Form
+    // stays available here (the engine dedupe key is (spell, level, parameter)).
+    const used = usedSpellForms(spells, 'spell.wizards_boost_form', 5, 0);
+    expect([...used]).toEqual([]);
+  });
+
+  it('ignores other spells and unparameterized entries', () => {
+    const spells = [
+      { spell: 'spell.other', level: 5, parameter: 'art.ignem' },
+      { spell: 'spell.wizards_boost_form', level: 5 },
+    ];
+    expect(usedSpellForms(spells, 'spell.wizards_boost_form', 5, 99).size).toBe(0);
   });
 });
 
