@@ -35,7 +35,7 @@
 | Imaginem (Im) | Imaginem (f., Akk. Sg.) | Imaginem (Im) | Erscheinungen / Sinne |
 | Mentem (Me) | Mentem (f., Akk. Sg.) | Mentem (Me) | Geist / Verstand |
 | Terram (Te) | Terram (f., Akk. Sg.) | Terram (Te) | Erde und Gestein |
-| Vim (Vi) | Vim (f., Akk. Sg. von Vis) | Vim (Vi) | Magische Urkraft |
+| Vim (Vi) | Vim (lat. f., Akk. Sg. von Vis; dt. Substantiv „Vis" = n.) | Vim (Vi) | Magische Urkraft |
 
 *Die Formen werden im Spiel im Akkusativ Singular verwendet und als solche nicht weiter dekliniert.*
 
