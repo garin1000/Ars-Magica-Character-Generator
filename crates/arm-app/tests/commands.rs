@@ -123,6 +123,26 @@ fn load_ruleset_localizes_spell_names_in_german() {
 }
 
 #[test]
+fn german_spell_descriptions_are_never_empty_via_english_fallback() {
+    // German spell tooltips render the description; where a German description is
+    // not yet translated, the loader fills it from English so the tooltip is never
+    // empty. The name stays German (a present field is never overwritten by the
+    // fallback). This exercises the loader's non-English fallback path end to end.
+    let de = load_ruleset_from_dir(&rules_dir(), "de").unwrap();
+    let pilum = Id::new("spell.pilum_of_fire");
+
+    let de_desc = de
+        .description(&pilum)
+        .expect("German spell description must be present (via fallback if untranslated)");
+    assert!(!de_desc.is_empty());
+    assert_eq!(
+        de.display_name(&pilum),
+        Some("Pilum aus Feuer"),
+        "the German name is not overwritten by the English fallback"
+    );
+}
+
+#[test]
 fn load_ruleset_yields_abilities_and_characteristics() {
     let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
     // Catalogue size is data, not code: prove the catalogue loaded via a known
