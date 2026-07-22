@@ -216,7 +216,7 @@
 {#if store.ruleset}
   <div class="region-row">
     <section class="region region-source">
-      <h2 class="region-title">{store.t('available-title')}</h2>
+      <h2 class="region-title" data-testid="available-title">{store.t('available-title')}</h2>
       <section class="panel">
         <div class="filter-bar">
           <input
