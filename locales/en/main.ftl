@@ -148,9 +148,11 @@ spell-group-header = { $technique } { $form }
 # Technique/Form abbreviations, e.g. "ReVi Gen").
 spell-level-general = Gen
 # Why a spell's add control is greyed: its level is above the magus's per-spell
-# casting cap, or the remaining spell-levels budget cannot afford it.
+# casting cap, the remaining spell-levels budget cannot afford it, or the spell is
+# already in the selected list (an ordinary fixed-level spell is taken only once).
 spell-cap-reason = Above your casting cap ({ $cap })
 spell-budget-reason = Not enough spell levels remaining
+spell-already-taken-reason = Already selected
 # Accessible label for the inline level field on a chosen General spell (its
 # level is not fixed by the catalogue, so it is edited per row).
 spell-general-level-label = General level
