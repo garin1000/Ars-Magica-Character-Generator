@@ -214,9 +214,17 @@ fn english_i18n_covers_all_spells() {
     let i18n_en = include_str!("../../../rules/i18n/en/spells.json");
     let loc = LocalizedRuleset::new(rs.clone(), i18n_en).unwrap();
     for spell in rs.spells() {
+        // A spell tooltip renders the description, so a missing English
+        // description leaves an empty tooltip — assert both name and description
+        // cover every spell id (fallback-free: this is the raw en file).
         assert!(
             loc.display_name(&spell.id).is_some(),
-            "English i18n missing spell '{}'",
+            "English i18n missing spell name '{}'",
+            spell.id
+        );
+        assert!(
+            loc.description(&spell.id).is_some(),
+            "English i18n missing spell description '{}'",
             spell.id
         );
     }

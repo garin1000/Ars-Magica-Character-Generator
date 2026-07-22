@@ -305,15 +305,6 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     let equipment_json = fs::read_to_string(rules_dir.join("core/equipment.json"))?;
     let characteristics_json = fs::read_to_string(rules_dir.join("core/characteristics.json"))?;
 
-    let vf_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/virtues_flaws.json")))?;
-    let ability_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/abilities.json")))?;
-    let art_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/arts.json")))?;
-    let house_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/houses.json")))?;
-    let mythic_i18n =
-        fs::read_to_string(rules_dir.join(format!("i18n/{lang}/mythic_companion_types.json")))?;
-    let spell_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/spells.json")))?;
-    let equipment_i18n = fs::read_to_string(rules_dir.join(format!("i18n/{lang}/equipment.json")))?;
-
     let ruleset = Ruleset::from_sources(RulesetSources {
         id: RULESET_ID,
         version: RULESET_VERSION,
@@ -330,19 +321,42 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         characteristics: (!characteristics_json.is_empty())
             .then_some(characteristics_json.as_str()),
     })?;
-    let localized = LocalizedRuleset::from_merged(
-        ruleset,
-        &[
-            &vf_i18n,
-            &ability_i18n,
-            &art_i18n,
-            &house_i18n,
-            &mythic_i18n,
-            &spell_i18n,
-            &equipment_i18n,
-        ],
-    )?;
+    // Load the requested language's rules text. For any non-English language,
+    // English is loaded as a per-field fallback so a not-yet-translated string
+    // (e.g. a missing German spell description) surfaces the English text rather
+    // than rendering empty. English needs no fallback (it is the source of truth).
+    let i18n = read_i18n_sources(rules_dir, lang)?;
+    let i18n_refs: Vec<&str> = i18n.iter().map(String::as_str).collect();
+    let localized = if lang == "en" {
+        LocalizedRuleset::from_merged(ruleset, &i18n_refs)?
+    } else {
+        let fallback = read_i18n_sources(rules_dir, "en")?;
+        let fallback_refs: Vec<&str> = fallback.iter().map(String::as_str).collect();
+        LocalizedRuleset::from_merged_with_fallback(ruleset, &i18n_refs, &fallback_refs)?
+    };
     Ok(localized)
+}
+
+/// Reads the seven `i18n/<lang>/*.json` rules-text files for a language, in the
+/// stable domain order the localized ruleset merges them. A missing file is an
+/// error (each language ships the full set), surfaced to the caller.
+fn read_i18n_sources(rules_dir: &Path, lang: &str) -> Result<Vec<String>, AppError> {
+    const FILES: [&str; 7] = [
+        "virtues_flaws.json",
+        "abilities.json",
+        "arts.json",
+        "houses.json",
+        "mythic_companion_types.json",
+        "spells.json",
+        "equipment.json",
+    ];
+    FILES
+        .iter()
+        .map(|file| {
+            fs::read_to_string(rules_dir.join(format!("i18n/{lang}/{file}")))
+                .map_err(AppError::from)
+        })
+        .collect()
 }
 
 /// Validates an entity against a loaded ruleset and applies the caller's mode

@@ -1743,6 +1743,28 @@ impl Ruleset {
     }
 }
 
+/// Parses and merges several JSON id-to-entry maps into one i18n map. A given id
+/// may appear in only one source; a collision across files is an integrity error,
+/// since the id namespaces (`virtue.*`, `ability.*`, …) are meant to be disjoint.
+fn merge_i18n_sources(i18n_sources: &[&str]) -> Result<BTreeMap<Id, I18nEntry>, RulesetError> {
+    let mut i18n: BTreeMap<Id, I18nEntry> = BTreeMap::new();
+    let mut collisions = Vec::new();
+    for source in i18n_sources {
+        let entries: BTreeMap<String, I18nEntry> =
+            serde_json::from_str(source).map_err(|e| RulesetError::parse(parse_source::I18N, e))?;
+        for (key, value) in entries {
+            let id = Id::new(key);
+            if i18n.insert(id.clone(), value).is_some() {
+                collisions.push(format!("duplicate i18n entry for '{id}'"));
+            }
+        }
+    }
+    if !collisions.is_empty() {
+        return Err(IntegrityError::new(collisions).into());
+    }
+    Ok(i18n)
+}
+
 impl LocalizedRuleset {
     /// Pairs a ruleset with localized text parsed from a JSON id-to-entry map.
     pub fn new(ruleset: Ruleset, i18n_json: &str) -> Result<Self, RulesetError> {
@@ -1756,20 +1778,46 @@ impl LocalizedRuleset {
     /// integrity error, since the id namespaces (`virtue.*`, `ability.*`, …) are
     /// meant to be disjoint.
     pub fn from_merged(ruleset: Ruleset, i18n_sources: &[&str]) -> Result<Self, RulesetError> {
-        let mut i18n: BTreeMap<Id, I18nEntry> = BTreeMap::new();
-        let mut collisions = Vec::new();
-        for source in i18n_sources {
-            let entries: BTreeMap<String, I18nEntry> = serde_json::from_str(source)
-                .map_err(|e| RulesetError::parse(parse_source::I18N, e))?;
-            for (key, value) in entries {
-                let id = Id::new(key);
-                if i18n.insert(id.clone(), value).is_some() {
-                    collisions.push(format!("duplicate i18n entry for '{id}'"));
+        let i18n = merge_i18n_sources(i18n_sources)?;
+        Ok(Self { ruleset, i18n })
+    }
+
+    /// Like [`LocalizedRuleset::from_merged`], but fills each entry's missing
+    /// optional text (summary, description, abbreviation, specialties) from a
+    /// fallback locale — used so a not-yet-translated field surfaces the source
+    /// language instead of rendering as empty (e.g. an English spell description
+    /// when the German one is absent). The fallback is applied **per field**, not
+    /// per entry: a present primary field is never overwritten. An id present only
+    /// in the fallback is added whole, so nothing the source language documents is
+    /// lost. `from_merged` / `new` stay fallback-free so completeness checks can
+    /// assert on a single locale's raw coverage.
+    pub fn from_merged_with_fallback(
+        ruleset: Ruleset,
+        primary_sources: &[&str],
+        fallback_sources: &[&str],
+    ) -> Result<Self, RulesetError> {
+        let mut i18n = merge_i18n_sources(primary_sources)?;
+        let fallback = merge_i18n_sources(fallback_sources)?;
+        for (id, fb) in fallback {
+            match i18n.get_mut(&id) {
+                Some(entry) => {
+                    if entry.summary.is_none() {
+                        entry.summary = fb.summary;
+                    }
+                    if entry.description.is_none() {
+                        entry.description = fb.description;
+                    }
+                    if entry.abbreviation.is_none() {
+                        entry.abbreviation = fb.abbreviation;
+                    }
+                    if entry.specialties.is_empty() {
+                        entry.specialties = fb.specialties;
+                    }
+                }
+                None => {
+                    i18n.insert(id, fb);
                 }
             }
-        }
-        if !collisions.is_empty() {
-            return Err(IntegrityError::new(collisions).into());
         }
         Ok(Self { ruleset, i18n })
     }
@@ -2896,6 +2944,49 @@ mod tests {
         assert_eq!(loc.description(&Id::new("virtue.puissant_ability")), None);
         // A missing id returns None for all helpers.
         assert_eq!(loc.summary(&Id::new("virtue.nonexistent")), None);
+    }
+
+    #[test]
+    fn from_merged_with_fallback_fills_missing_fields_from_fallback_locale() {
+        let rs = Ruleset::from_json("arm5-core", "1", VALID_ITEMS, VALID_TYPES).unwrap();
+        // Primary (a de-like locale): a name but no description; and a second
+        // entry the fallback also lacks a description for.
+        let primary = r#"{
+          "virtue.gentle_gift": { "name": "Sanfte Gabe" },
+          "virtue.puissant_ability": { "name": "Kraftvoll (Fähigkeit)" }
+        }"#;
+        // Fallback (the source language): full text, plus an id absent from primary.
+        let fallback = r#"{
+          "virtue.gentle_gift": {
+            "name": "Gentle Gift",
+            "summary": "Your Gift is not disturbing.",
+            "description": "People do not react with mistrust to you."
+          },
+          "flaw.blatant_gift": { "name": "Blatant Gift", "description": "Everyone distrusts you." }
+        }"#;
+        let loc = LocalizedRuleset::from_merged_with_fallback(rs, &[primary], &[fallback]).unwrap();
+
+        // A present primary field wins — the name stays in the primary language.
+        assert_eq!(
+            loc.display_name(&Id::new("virtue.gentle_gift")),
+            Some("Sanfte Gabe")
+        );
+        // Missing optional fields fall back to the source language, per field.
+        assert_eq!(
+            loc.description(&Id::new("virtue.gentle_gift")),
+            Some("People do not react with mistrust to you.")
+        );
+        assert_eq!(
+            loc.summary(&Id::new("virtue.gentle_gift")),
+            Some("Your Gift is not disturbing.")
+        );
+        // An id present only in the fallback is added whole.
+        assert_eq!(
+            loc.display_name(&Id::new("flaw.blatant_gift")),
+            Some("Blatant Gift")
+        );
+        // A primary entry with no fallback description stays without one.
+        assert_eq!(loc.description(&Id::new("virtue.puissant_ability")), None);
     }
 
     #[test]
