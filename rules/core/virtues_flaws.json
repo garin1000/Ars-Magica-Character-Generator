@@ -4124,7 +4124,9 @@
     "category": "hermetic",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "grants_spell_mastery", "score": 1 }],
+    "effects": [
+      { "type": "grants_spell_mastery", "score": 1, "advancement_num": 2, "advancement_den": 1 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3887, 3890] }
   },
   {

@@ -708,26 +708,42 @@ approximation of "Latin").
   score 4 = 10 XP → boosted 9/9/9 and 8 on the triangular Art curve).
 
 #### Mastered Spells / Flawless Magic — Spell Mastery (`spell_mastery_xp`, `grants_spell_mastery`)
-> Mastered Spells: "You have fifty experience points to spend on mastering spells
-> that you know … You may take this Virtue multiple times." Flawless Magic: "All
-> your spells start with a score of 1 in the corresponding Spell Mastery Ability
-> … all your Advancement Totals for Spell Mastery Abilities are doubled."
+> Spell Mastery is an Ability: "Spell mastery Abilities are their own category"
+> (`:9516`), one of the six Ability types (`:7143`, `:7163-7165`), bought from the
+> Ability advancement table "(Ability + 1) x 5" (`:15952`; To-Buy table 1=5, 2=15,
+> 3=30, 4=50, 5=75 at `:15956-15979`). Mastered Spells: "You have fifty experience
+> points to spend on mastering spells that you know … You may take this Virtue
+> multiple times." Flawless Magic: "All your spells start with a score of 1 in the
+> corresponding Spell Mastery Ability … all your Advancement Totals for Spell
+> Mastery Abilities are doubled."
 
-- Source: `Ars Magica - Definitive Edition (Core Rules).md:4471-4474` (Mastered
-  Spells), `:3887-3889` (Flawless Magic).
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:9516`, `:7143`,
+  `:7163-7165` (mastery is an Ability type); `:15952`, `:15956-15979` (Ability
+  To-Buy table); `:4471-4474` (Mastered Spells); `:3887-3889` (Flawless Magic).
 - Data: `virtue.mastered_spells` — `spell_mastery_xp: 50`; `virtue.flawless_magic`
-  — `grants_spell_mastery: 1`. `SpellSelection` gains an optional `mastery` field
-  (bought Spell Mastery score); `SCHEMA_VERSION` bumped 7 → 8 (backward-compatible
-  — old saves default `mastery: None`).
-- Implementation: `Effect::SpellMasteryXp { amount }` → `effective.rs::spell_mastery_xp`
-  (restricted pool, summed). `Effect::GrantsSpellMastery { score }` →
-  `spell_mastery_floor` (max grant); `effective_spell_mastery(sel)` =
-  `max(bought, floor)`. Surfaced as `EffectiveScores.spell_mastery_{xp,floor}` and on
-  the sheet (Fluent `spell-mastery-xp`/`spell-mastery-floor`; DE "Meisterschaft").
-  **Deferred:** exact mastery-XP spend validation (5×new level per point) and the
-  doubled-advancement rate are in-play/advancement mechanics, not gen-time budget;
-  "may take multiple times" follows the existing `max_per_target: 1` convention
-  (as Improved Characteristics).
+  — `grants_spell_mastery: { score: 1, advancement_num: 2, advancement_den: 1 }`
+  (the doubling stored as an Affinity "counts as 2/1", halving the charge).
+  `SpellSelection.mastery` is the bought Spell Mastery score (serialized shape
+  unchanged).
+- Implementation: `effective.rs::xp_allocation` now prices each `SpellSelection`'s
+  bought `mastery` from `ruleset.advancement.xp_for_score` and adds it to the
+  max-flow demand as a `SpendKind::Mastery`. The **free floor** (Flawless Magic
+  auto-mastery 1) subtracts the floor's table cost before the charge — a bought
+  score ≤ floor costs 0 — exactly as a granted Supernatural-Ability floor does; the
+  **doubling** is applied through `charged_cost` with the Affinity from
+  `spell_mastery_advancement_affinity` (Flawless → `(2,1)`), so `mastery 3` under
+  Flawless costs `ceil((table(3) − table(1)) / 2) = ceil(25/2) = 13`. Eligibility:
+  a `PoolEligibility::Mastery` pool (the summed `SpellMasteryXp`) funds only Mastery
+  spends, the ability-restricted pools (`PoolEligibility::Ability`) never do, and
+  neither funds the other's spends (`pool_covers`). Overspend surfaces through the
+  existing `validate_xp_pool` → `CODE_NOT_ENOUGH_XP` (its `pool` arg is now
+  `allocation.max_flow`, the total all pools can fund, so `spent − pool == shortfall`
+  stays accurate). `Effect::GrantsSpellMastery { score, .. }` → `spell_mastery_floor`
+  (max grant); `effective_spell_mastery(sel)` = `max(bought, floor)`. The UI mirrors
+  the same floor + doubling charge in `derive.ts::spellMasteryXpSpent`, driven by
+  `EffectiveScores.spell_mastery_{xp,floor}` and `spell_mastery_advancement_doubled`;
+  the SpellPicker mastery spinner shows for every magus (buyable from the general
+  pool). "May take multiple times" follows the `max_per_target: 1` convention.
 
 #### Templar Commander — fixed nested free Virtue grant (`grants_selection`)
 > "This Virtue also grants the Temporal Influence Minor Virtue … This Virtue
