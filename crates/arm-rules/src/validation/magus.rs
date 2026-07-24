@@ -4,6 +4,7 @@
 //! the `ValidationIssue` issue-code contract.
 
 use super::*;
+use crate::types::SpellSelection;
 
 /// Validates a magus's Hermetic House and its specialisation picks. Runs only
 /// for a magus type (`is_magus`); no other type has a House.
@@ -353,6 +354,8 @@ pub(crate) fn validate_spells(
                 ));
             }
         }
+
+        validate_spell_mastery_abilities(sel, entity, ruleset, issues);
     }
 
     for ((spell, _level, _param), count) in seen {
@@ -378,6 +381,78 @@ pub(crate) fn validate_spells(
                     ("over", (used - budget).to_string()),
                 ]),
                 None,
+            ));
+        }
+    }
+}
+
+/// Validates the Spell Mastery special abilities chosen for one spell:
+///
+/// - Every chosen id must resolve against the mastery-ability catalogue
+///   (referential integrity — an unknown id fails loudly, CLAUDE.md).
+/// - The count of chosen abilities may not exceed the spell's *effective* mastery
+///   score: for every level in the Mastery Ability the maga may choose one
+///   special ability (Core:9524-9526).
+/// - A non-repeatable ability may be chosen only once for the same spell; only
+///   Precise, Quick, and Quiet Casting may repeat (Core:9572, :9576, :9580).
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:9524-9592.
+fn validate_spell_mastery_abilities(
+    sel: &SpellSelection,
+    entity: &Entity,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    if sel.mastery_abilities.is_empty() {
+        return;
+    }
+
+    // One special ability per effective mastery level (Core:9524-9526).
+    let effective = crate::effective::effective_spell_mastery(sel, entity, ruleset);
+    if sel.mastery_abilities.len() > usize::from(effective) {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_TOO_MANY_MASTERY_ABILITIES,
+            args([
+                ("spell", sel.spell.to_string()),
+                ("chosen", sel.mastery_abilities.len().to_string()),
+                ("mastery", effective.to_string()),
+            ]),
+            Some(sel.spell.clone()),
+        ));
+    }
+
+    // Referential integrity + per-ability occurrence counts (unknown ids are not
+    // counted, so an unknown id is never also reported as a duplicate).
+    let mut counts: BTreeMap<&Id, u32> = BTreeMap::new();
+    for ability_id in &sel.mastery_abilities {
+        if ruleset.spell_mastery_ability(ability_id).is_some() {
+            *counts.entry(ability_id).or_insert(0) += 1;
+        } else {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_UNKNOWN_MASTERY_ABILITY,
+                args([
+                    ("spell", sel.spell.to_string()),
+                    ("ability", ability_id.to_string()),
+                ]),
+                Some(sel.spell.clone()),
+            ));
+        }
+    }
+
+    // A non-repeatable ability may not appear more than once for the same spell.
+    for (ability_id, count) in counts {
+        let repeatable = ruleset
+            .spell_mastery_ability(ability_id)
+            .is_some_and(|a| a.repeatable);
+        if count > 1 && !repeatable {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_DUPLICATE_MASTERY_ABILITY,
+                args([
+                    ("spell", sel.spell.to_string()),
+                    ("ability", ability_id.to_string()),
+                    ("count", count.to_string()),
+                ]),
+                Some(sel.spell.clone()),
             ));
         }
     }

@@ -162,6 +162,7 @@ mod tests {
             houses: None,
             mythic_types: Some(TYPES),
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })

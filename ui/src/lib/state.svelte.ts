@@ -591,6 +591,36 @@ class AppStore {
   }
 
   /**
+   * Add a Spell Mastery special ability (a `spell_mastery_ability.*` id) to the
+   * spell at `index`. A repeatable ability (Precise/Quick/Quiet Casting) may be
+   * added more than once; the count cap vs. effective mastery is enforced by the
+   * engine, not here. Mirrors {@link adjustSpellMasteryAt}.
+   */
+  addMasteryAbilityAt(index: number, abilityId: string): void {
+    this.entity.spells = (this.entity.spells ?? []).map((s, i) =>
+      i === index ? { ...s, mastery_abilities: [...(s.mastery_abilities ?? []), abilityId] } : s,
+    );
+    this.#scheduleValidate();
+  }
+
+  /**
+   * Remove the mastery special ability at position `abilityIndex` within the
+   * spell at `index`. Index-addressed so a repeatable ability chosen several
+   * times removes exactly one instance. Mirrors {@link addMasteryAbilityAt}.
+   */
+  removeMasteryAbilityAt(index: number, abilityIndex: number): void {
+    this.entity.spells = (this.entity.spells ?? []).map((s, i) =>
+      i === index
+        ? {
+            ...s,
+            mastery_abilities: (s.mastery_abilities ?? []).filter((_, j) => j !== abilityIndex),
+          }
+        : s,
+    );
+    this.#scheduleValidate();
+  }
+
+  /**
    * Set the level of the (General) spell at `index`. The budget/used totals are
    * engine-authoritative, so no recompute happens here. Mirrors
    * {@link adjustSpellMasteryAt}.

@@ -35,6 +35,29 @@ fn load_ruleset_with_spells() -> Ruleset {
         houses: None,
         mythic_types: None,
         spells: Some(include_str!("../../../rules/core/spells.json")),
+        spell_mastery_abilities: None,
+        equipment: None,
+        characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+    })
+    .unwrap()
+}
+
+/// The full shipped ruleset including the Spell Mastery special-ability
+/// catalogue.
+fn load_ruleset_with_mastery_abilities() -> Ruleset {
+    Ruleset::from_sources(RulesetSources {
+        id: "arm5-core",
+        version: "2024.1",
+        point_items: include_str!("../../../rules/core/virtues_flaws.json"),
+        type_profiles: include_str!("../../../rules/core/character_types.json"),
+        abilities: Some(include_str!("../../../rules/core/abilities.json")),
+        arts: Some(include_str!("../../../rules/core/arts.json")),
+        houses: None,
+        mythic_types: None,
+        spells: None,
+        spell_mastery_abilities: Some(include_str!(
+            "../../../rules/core/spell_mastery_abilities.json"
+        )),
         equipment: None,
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
     })
@@ -54,6 +77,7 @@ fn load_ruleset_with_equipment() -> Ruleset {
         houses: None,
         mythic_types: None,
         spells: None,
+        spell_mastery_abilities: None,
         equipment: Some(include_str!("../../../rules/core/equipment.json")),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
     })
@@ -331,6 +355,7 @@ fn weapon_with_non_combat_ability_rejected_at_load() {
         houses: None,
         mythic_types: None,
         spells: None,
+        spell_mastery_abilities: None,
         equipment: Some(equipment),
         characteristics: None,
     })
@@ -358,6 +383,7 @@ fn weapon_with_unknown_ability_rejected_at_load() {
         houses: None,
         mythic_types: None,
         spells: None,
+        spell_mastery_abilities: None,
         equipment: Some(equipment),
         characteristics: None,
     })
@@ -366,6 +392,46 @@ fn weapon_with_unknown_ability_rejected_at_load() {
         err.to_string().contains("unknown ability"),
         "expected unknown-ability rejection, got: {err}"
     );
+}
+
+#[test]
+fn english_i18n_covers_all_mastery_abilities() {
+    let rs = load_ruleset_with_mastery_abilities();
+    let i18n_en = include_str!("../../../rules/i18n/en/spell_mastery_abilities.json");
+    let loc = LocalizedRuleset::new(rs.clone(), i18n_en).unwrap();
+    for ability in rs.spell_mastery_abilities() {
+        assert!(
+            loc.display_name(&ability.id).is_some(),
+            "English i18n missing mastery-ability name '{}'",
+            ability.id
+        );
+        assert!(
+            loc.description(&ability.id).is_some(),
+            "English i18n missing mastery-ability description '{}'",
+            ability.id
+        );
+    }
+}
+
+#[test]
+fn german_i18n_covers_all_mastery_abilities() {
+    let rs = load_ruleset_with_mastery_abilities();
+    let i18n_de = include_str!("../../../rules/i18n/de/spell_mastery_abilities.json");
+    // Raw German file (fallback-free `new`): a missing German entry here is a real
+    // gap, mirroring the spell coverage gate.
+    let loc = LocalizedRuleset::new(rs.clone(), i18n_de).unwrap();
+    for ability in rs.spell_mastery_abilities() {
+        assert!(
+            loc.display_name(&ability.id).is_some(),
+            "German i18n missing mastery-ability name '{}'",
+            ability.id
+        );
+        assert!(
+            loc.description(&ability.id).is_some(),
+            "German i18n missing mastery-ability description '{}'",
+            ability.id
+        );
+    }
 }
 
 #[test]
@@ -1204,6 +1270,7 @@ fn load_full_ruleset() -> Ruleset {
             "../../../rules/core/mythic_companion_types.json"
         )),
         spells: Some(include_str!("../../../rules/core/spells.json")),
+        spell_mastery_abilities: None,
         equipment: Some(include_str!("../../../rules/core/equipment.json")),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
     })
@@ -1279,6 +1346,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
         level: None,
         mastery: None,
         parameter: None,
+        mastery_abilities: Vec::new(),
     }];
     e.equipment = vec![
         EquipmentSlot {

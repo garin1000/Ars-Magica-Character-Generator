@@ -34,7 +34,12 @@ describe('German localization', () => {
     await $(SPELLS_TAB).click();
     const available = await $('[data-testid="available-title"]');
     await available.waitForExist({ timeout: 5000 });
-    expect(clean(await available.getText()).trim()).toBe('Verfügbar');
+    // `.region-title` uppercases via CSS for display, so compare case-insensitively.
+    expect(
+      clean(await available.getText())
+        .trim()
+        .toLowerCase(),
+    ).toBe('verfügbar');
 
     // Hover a spell row and assert the description tooltip has text (German where
     // translated, English fallback otherwise) — never the empty tooltip bug.

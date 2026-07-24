@@ -13,6 +13,7 @@ pub mod house;
 pub mod mythic_companion;
 pub mod ruleset;
 pub mod spell;
+pub mod spell_mastery;
 pub mod types;
 pub mod validation;
 
@@ -50,6 +51,7 @@ pub use house::{House, LineageType};
 pub use mythic_companion::{MythicCompanionType, RequiredFlaw};
 pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError, RulesetSources};
 pub use spell::{Spell, SpellDuration, SpellRange, SpellTarget};
+pub use spell_mastery::SpellMasteryAbility;
 pub use types::{
     AbilityScore, AdvancementSource, AgingEffect, AgingLogEntry, ArtScore, CastingScope,
     CategoryCap, Classification, CombatStat, Effect, EnchantedDevice, Entity, EntityKind,

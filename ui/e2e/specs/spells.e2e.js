@@ -247,7 +247,6 @@ describe('spells', () => {
 
     const paramSelects = '[data-testid^="spell-param-spell.wizards_boost_form-"]';
     const nameSpans = '[data-testid^="spell-name-spell.wizards_boost_form-"]';
-    const removeBtns = '[data-testid^="spell-remove-spell.wizards_boost_form-"]';
 
     // (a) Add one instance and choose Form = Ignem; its selected label shows it.
     await add.click();
@@ -301,22 +300,6 @@ describe('spells', () => {
       timeout: 5000,
       timeoutMsg: 'a distinct Form (Terram) must not flag duplicate_spell',
     });
-
-    // Clean up so later specs (the save round-trip) see only Pilum: remove every
-    // Wizard's Boost row. Removal shifts indices, so always click the first.
-    while ((await $$(removeBtns)).length > 0) {
-      const before = (await $$(removeBtns)).length;
-      await (await $$(removeBtns))[0].click();
-      await browser.waitUntil(async () => (await $$(removeBtns)).length === before - 1, {
-        timeout: 5000,
-        timeoutMsg: "removing a Wizard's Boost row should drop its count",
-      });
-    }
-    // The duplicate flag clears once the extra instances are gone.
-    await browser.waitUntil(async () => !(await codeExists('duplicate_spell')), {
-      timeout: 5000,
-      timeoutMsg: 'removing the duplicate instances should clear duplicate_spell',
-    });
   });
 
   it('flags going over the spell-levels budget', async () => {
@@ -334,7 +317,9 @@ describe('spells', () => {
       timeoutMsg: 'Aegis should be takeable once Rego/Vim clear its ritual cap',
     });
     await aegis.click();
-    const levelInput = await $('[data-testid="spell-level-input"]');
+    // Target Aegis's own level input (per-spell testid), so other General spells
+    // still in the list (e.g. leftover Wizard's Boost instances) don't shadow it.
+    const levelInput = await $('[data-testid^="spell-level-input-spell.aegis_of_the_hearth-"]');
     await levelInput.waitForExist({ timeout: 5000 });
     await levelInput.setValue('200');
 

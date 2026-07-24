@@ -3044,6 +3044,7 @@ mod tests {
             level: None,
             mastery: None,
             parameter: None,
+            mastery_abilities: Vec::new(),
         };
         assert_eq!(effective_spell_mastery(&unbought, &flawless, &rs), 1);
         let bought = SpellSelection {
@@ -3051,6 +3052,7 @@ mod tests {
             level: None,
             mastery: Some(3),
             parameter: None,
+            mastery_abilities: Vec::new(),
         };
         assert_eq!(effective_spell_mastery(&bought, &flawless, &rs), 3);
     }
@@ -3061,6 +3063,7 @@ mod tests {
             level: None,
             mastery: Some(score),
             parameter: None,
+            mastery_abilities: Vec::new(),
         }
     }
 
@@ -3536,6 +3539,7 @@ mod tests {
             houses: Some(houses),
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })

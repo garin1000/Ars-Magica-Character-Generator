@@ -1628,6 +1628,17 @@ pub struct SpellSelection {
     /// unparameterized spells.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parameter: Option<String>,
+    /// The chosen Spell Mastery special abilities for this spell, each a
+    /// `spell_mastery_ability.*` id from the catalogue. One may be chosen per
+    /// effective mastery level (Core Rules.md:9524-9526); a repeatable ability
+    /// (Precise/Quick/Quiet Casting) may appear more than once, so this is a
+    /// `Vec` that may hold duplicates, not a set. Additive and serde-defaulted, so
+    /// it is backward/forward compatible with saves written before it existed
+    /// (SCHEMA_VERSION stays 13): an old save omits the key and deserializes to an
+    /// empty vector; a new save with an empty vector omits the key on write. Kept
+    /// sorted (stable, with duplicates) by [`Entity::normalize`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub mastery_abilities: Vec<Id>,
 }
 
 /// A piece of equipment the character carries: a reference to a catalogue weapon,
@@ -2150,6 +2161,12 @@ impl Entity {
         self.selections.sort();
         self.ability_scores.sort();
         self.art_scores.sort();
+        // Sort each spell's chosen mastery abilities (stable, keeping duplicates —
+        // a repeatable ability may legitimately appear more than once) before
+        // sorting the spell list itself, so the whole entity serializes canonically.
+        for spell in &mut self.spells {
+            spell.mastery_abilities.sort();
+        }
         self.spells.sort();
         self.personality_traits.sort();
         self.reputations.sort();
@@ -2894,6 +2911,7 @@ mod tests {
                 level: None,
                 mastery: None,
                 parameter: None,
+                mastery_abilities: Vec::new(),
             }],
             spell_levels_override: None,
             house: None,
@@ -3006,12 +3024,14 @@ mod tests {
                 level: None,
                 mastery: None,
                 parameter: None,
+                mastery_abilities: Vec::new(),
             },
             SpellSelection {
                 spell: Id::new("spell.aegis_of_the_hearth"),
                 level: Some(20),
                 mastery: None,
                 parameter: None,
+                mastery_abilities: Vec::new(),
             },
         ];
         entity.normalize();

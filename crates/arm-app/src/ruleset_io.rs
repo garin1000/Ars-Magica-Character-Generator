@@ -309,6 +309,8 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     let houses_json = fs::read_to_string(rules_dir.join("core/houses.json"))?;
     let mythic_types_json = fs::read_to_string(rules_dir.join("core/mythic_companion_types.json"))?;
     let spells_json = fs::read_to_string(rules_dir.join("core/spells.json"))?;
+    let spell_mastery_abilities_json =
+        fs::read_to_string(rules_dir.join("core/spell_mastery_abilities.json"))?;
     let equipment_json = fs::read_to_string(rules_dir.join("core/equipment.json"))?;
     let characteristics_json = fs::read_to_string(rules_dir.join("core/characteristics.json"))?;
 
@@ -322,6 +324,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         houses: Some(&houses_json),
         mythic_types: Some(&mythic_types_json),
         spells: Some(&spells_json),
+        spell_mastery_abilities: Some(&spell_mastery_abilities_json),
         equipment: Some(&equipment_json),
         // An empty characteristics file means the ruleset ships no characteristic
         // rules (the `Option` is the engine's honest "absent" signal).
@@ -344,17 +347,18 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     Ok(localized)
 }
 
-/// Reads the seven `i18n/<lang>/*.json` rules-text files for a language, in the
+/// Reads the eight `i18n/<lang>/*.json` rules-text files for a language, in the
 /// stable domain order the localized ruleset merges them. A missing file is an
 /// error (each language ships the full set), surfaced to the caller.
 fn read_i18n_sources(rules_dir: &Path, lang: &str) -> Result<Vec<String>, AppError> {
-    const FILES: [&str; 7] = [
+    const FILES: [&str; 8] = [
         "virtues_flaws.json",
         "abilities.json",
         "arts.json",
         "houses.json",
         "mythic_companion_types.json",
         "spells.json",
+        "spell_mastery_abilities.json",
         "equipment.json",
     ];
     FILES
