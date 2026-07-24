@@ -234,11 +234,20 @@ fn english_i18n_covers_all_spells() {
 fn german_i18n_covers_all_spells() {
     let rs = load_ruleset_with_spells();
     let i18n_de = include_str!("../../../rules/i18n/de/spells.json");
+    // Raw German file (fallback-free `new`): a missing German description here is
+    // a real gap. The app layer falls back to English at load, but this gate
+    // asserts the shipped German data itself covers every spell — the check that
+    // was name-only before and let empty German tooltips ship.
     let loc = LocalizedRuleset::new(rs.clone(), i18n_de).unwrap();
     for spell in rs.spells() {
         assert!(
             loc.display_name(&spell.id).is_some(),
-            "German i18n missing spell '{}'",
+            "German i18n missing spell name '{}'",
+            spell.id
+        );
+        assert!(
+            loc.description(&spell.id).is_some(),
+            "German i18n missing spell description '{}'",
             spell.id
         );
     }
