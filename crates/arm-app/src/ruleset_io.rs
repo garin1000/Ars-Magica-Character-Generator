@@ -18,8 +18,9 @@ use arm_rules::{
     characteristic_points_granted, confidence, decrepitude_score, effective_characteristics,
     effective_might, effective_point_ceilings, entity_grants, item_level_budget, item_level_used,
     power_levels_budget, powers_used, reputation_grants, size, spell_level_caps, spell_levels_base,
-    spell_levels_budget, spell_levels_used, spell_mastery_floor, spell_mastery_xp,
-    supernatural_free_slots, true_faith, validate, warping, xp_allocation,
+    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
+    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, validate, warping,
+    xp_allocation,
 };
 use serde::Serialize;
 
@@ -134,6 +135,10 @@ pub struct EffectiveScores {
     pub spell_mastery_xp: u32,
     /// Mastery-score floor every known spell gets (Flawless Magic → 1); 0 = none.
     pub spell_mastery_floor: u8,
+    /// Whether a Virtue doubles all Spell-Mastery Advancement Totals (Flawless
+    /// Magic), halving the XP each mastery point costs — so the UI's mastery
+    /// accounting charges the same reduced cost the engine does.
+    pub spell_mastery_advancement_doubled: bool,
     /// The supernatural being's effective Might Score + Realm (base + same-Realm
     /// Virtue grants), or `None` for an ordinary character. Engine-authoritative.
     pub might: Option<MightScore>,
@@ -233,6 +238,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         item_level_used: item_level_used(entity),
         spell_mastery_xp: spell_mastery_xp(entity, ruleset),
         spell_mastery_floor: spell_mastery_floor(entity, ruleset),
+        spell_mastery_advancement_doubled: spell_mastery_advancement_affinity(entity, ruleset)
+            .is_some(),
         might: effective_might(entity, ruleset),
         power_levels_budget: power_levels_budget(entity, ruleset),
         power_levels_used: powers_used(entity),

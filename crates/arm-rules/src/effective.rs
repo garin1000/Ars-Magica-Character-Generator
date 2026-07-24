@@ -842,20 +842,57 @@ pub struct XpAllocation {
     pub restricted: Vec<RestrictedXpPool>,
 }
 
-/// One bought score's funding demand for the flow solve.
+/// One bought score's funding demand for the flow solve, tagged with what it buys
+/// so the kind-specific restricted pools know whether they may fund it.
 struct Spend {
     cost: u32,
-    /// The ability id + category, or `None` for an Art (Arts draw only from the
-    /// general pool — no restricted grant covers them).
-    ability: Option<(Id, AbilityCategory)>,
+    kind: SpendKind,
 }
 
-/// Whether a restricted pool may fund a spend: an ability whose id is listed or
-/// whose category is listed. Arts are never eligible.
-fn pool_covers(pool: &RestrictedXpPool, spend: &Spend) -> bool {
-    match &spend.ability {
-        Some((id, category)) => pool.abilities.contains(id) || pool.categories.contains(category),
-        None => false,
+/// What a [`Spend`] buys — decides which restricted pools may fund it (the general
+/// pool always can). Ability spends draw RestrictedAbilityXp pools; Mastery spends
+/// draw SpellMasteryXp pools; the two never cross, and Arts have no restricted pool.
+enum SpendKind {
+    /// An Ability score (id + category), eligible for RestrictedAbilityXp pools.
+    Ability(Id, AbilityCategory),
+    /// An Art score — funded from the general pool only.
+    Art,
+    /// A per-spell Spell Mastery Ability, eligible for SpellMasteryXp pools only.
+    Mastery,
+}
+
+/// A restricted pool's funding scope for the flow solve.
+enum PoolEligibility {
+    /// An ability-XP grant (Educated/Warrior/Privileged): funds an Ability whose
+    /// id is listed or whose category is listed. Never Arts, never Mastery.
+    Ability {
+        abilities: Vec<Id>,
+        categories: Vec<AbilityCategory>,
+    },
+    /// A Spell-Mastery grant (Mastered Spells): funds only Spell Mastery spends.
+    Mastery,
+}
+
+/// One restricted pool in the flow graph: its capacity and what it may fund.
+struct FlowPool {
+    amount: u32,
+    eligibility: PoolEligibility,
+}
+
+/// Whether a restricted pool may fund a spend. Ability pools cover only Ability
+/// spends they list (by id or category); Mastery pools cover only Mastery spends.
+/// No pool covers an Art (general pool only), and the two pool kinds never cross.
+fn pool_covers(eligibility: &PoolEligibility, spend: &Spend) -> bool {
+    match (eligibility, &spend.kind) {
+        (
+            PoolEligibility::Ability {
+                abilities,
+                categories,
+            },
+            SpendKind::Ability(id, category),
+        ) => abilities.contains(id) || categories.contains(category),
+        (PoolEligibility::Mastery, SpendKind::Mastery) => true,
+        _ => false,
     }
 }
 
@@ -866,7 +903,8 @@ fn pool_covers(pool: &RestrictedXpPool, spend: &Spend) -> bool {
 /// A score the advancement table cannot price contributes 0 (already flagged by
 /// `validate_abilities`/`validate_arts`).
 pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
-    // Spends: abilities (Affinity-reduced, with category for eligibility) + arts.
+    // Spends: abilities (Affinity-reduced, with category for eligibility) + arts +
+    // per-spell Spell Mastery Abilities.
     let mut spends: Vec<Spend> = Vec::new();
     for a in &entity.ability_scores {
         let Some(table) = ruleset.advancement.xp_for_score(a.score) else {
@@ -888,11 +926,14 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
             payable,
             ability_affinity(entity, ruleset, &a.ability, a.parameter.as_deref()),
         );
-        let ability = ruleset
+        // A catalogue-known ability carries its category (for restricted-pool
+        // eligibility); an unknown one funds from the general pool only, like an Art.
+        let kind = ruleset
             .abilities
             .get(&a.ability)
-            .map(|def| (a.ability.clone(), def.category));
-        spends.push(Spend { cost, ability });
+            .map(|def| SpendKind::Ability(a.ability.clone(), def.category))
+            .unwrap_or(SpendKind::Art);
+        spends.push(Spend { cost, kind });
     }
     for a in &entity.art_scores {
         let Some(table) = ruleset.art_advancement.xp_for_score(a.score) else {
@@ -901,12 +942,47 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
         let cost = charged_cost(table, art_affinity(entity, ruleset, &a.art));
         spends.push(Spend {
             cost,
-            ability: None,
+            kind: SpendKind::Art,
+        });
+    }
+    // Spell Mastery is an Ability (Core Rules.md:9516, :7143) bought from the
+    // Ability advancement table (:15952, :15956-15979). Flawless Magic auto-masters
+    // every spell at a free floor (charge only above it, like a granted Supernatural
+    // floor) AND doubles all mastery Advancement Totals (an Affinity that halves the
+    // charge). The mastery pool (Mastered Spells) — not the ability-restricted pools
+    // — plus the general pool fund it.
+    // Source: Ars Magica - Definitive Edition (Core Rules).md:3887-3889, :4471-4474.
+    let mastery_floor = spell_mastery_floor(entity, ruleset);
+    let mastery_floor_table = if mastery_floor > 0 {
+        ruleset.advancement.xp_for_score(mastery_floor).unwrap_or(0)
+    } else {
+        0
+    };
+    let mastery_affinity = spell_mastery_advancement_affinity(entity, ruleset);
+    for spell in &entity.spells {
+        let bought = spell.mastery.unwrap_or(0);
+        if bought == 0 {
+            continue;
+        }
+        let Some(table) = ruleset.advancement.xp_for_score(bought) else {
+            continue;
+        };
+        let payable = table.saturating_sub(mastery_floor_table);
+        let cost = charged_cost(payable, mastery_affinity);
+        if cost == 0 {
+            continue;
+        }
+        spends.push(Spend {
+            cost,
+            kind: SpendKind::Mastery,
         });
     }
 
-    // Restricted pools, one node per RestrictedAbilityXp effect instance.
-    let mut restricted: Vec<RestrictedXpPool> = Vec::new();
+    // Restricted pools: one per RestrictedAbilityXp effect (Educated/Warrior/…),
+    // plus a single Spell-Mastery pool (Mastered Spells, summed). The mastery pool
+    // is flow-only — it is not surfaced in `restricted`, which the UI reserves for
+    // ability-XP grants.
+    let mut flow_pools: Vec<FlowPool> = Vec::new();
     let selections = selections_for_effects(entity, ruleset);
     for selection in selections.iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
@@ -919,14 +995,22 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
                 categories,
             } = effect
             {
-                restricted.push(RestrictedXpPool {
+                flow_pools.push(FlowPool {
                     amount: *amount,
-                    used: 0,
-                    abilities: abilities.clone(),
-                    categories: categories.clone(),
+                    eligibility: PoolEligibility::Ability {
+                        abilities: abilities.clone(),
+                        categories: categories.clone(),
+                    },
                 });
             }
         }
+    }
+    let mastery_pool = spell_mastery_xp(entity, ruleset);
+    if mastery_pool > 0 {
+        flow_pools.push(FlowPool {
+            amount: mastery_pool,
+            eligibility: PoolEligibility::Mastery,
+        });
     }
 
     let total_demand: u32 = spends.iter().map(|s| s.cost).sum();
@@ -936,7 +1020,7 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
 
     // Flow graph: source(0) → sink(1); general(2) and restricted pools
     // (3..3+R) are pool nodes; spends follow. cap is the residual matrix.
-    let r = restricted.len();
+    let r = flow_pools.len();
     let s = spends.len();
     let n = 3 + r + s;
     let general_node = 2;
@@ -945,15 +1029,15 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
     let (source, sink) = (0usize, 1usize);
 
     let mut cap = vec![vec![0u32; n]; n];
-    for (i, pool) in restricted.iter().enumerate() {
+    for (i, pool) in flow_pools.iter().enumerate() {
         cap[source][pool_node(i)] = pool.amount;
     }
     for (j, spend) in spends.iter().enumerate() {
         cap[spend_node(j)][sink] = spend.cost;
         // The general pool can fund any spend.
         cap[general_node][spend_node(j)] = spend.cost;
-        for (i, pool) in restricted.iter().enumerate() {
-            if pool_covers(pool, spend) {
+        for (i, pool) in flow_pools.iter().enumerate() {
+            if pool_covers(&pool.eligibility, spend) {
                 cap[pool_node(i)][spend_node(j)] = spend.cost;
             }
         }
@@ -961,8 +1045,8 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
 
     // Two-phase fill on the shared residual matrix, so a spend the restricted
     // pools *can* cover drains them before the general pool (Educated/Warrior/
-    // Privileged XP is free-but-earmarked; the general pool must stay available
-    // and no restricted XP should be wasted while eligible spends exist).
+    // Privileged and Mastered-Spells XP is free-but-earmarked; the general pool
+    // must stay available and no restricted XP wasted while eligible spends exist).
     // Phase 1: restricted-only max flow — the source→general edge stays closed.
     let restricted_flow = max_flow(n, source, sink, &mut cap);
     // Phase 2: open the source→general edge and continue Edmonds-Karp on the
@@ -973,8 +1057,21 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
 
     // Residual on source→pool tells how much each pool funded.
     let general_used = general_pool - cap[source][general_node];
-    for (i, pool) in restricted.iter_mut().enumerate() {
-        pool.used = pool.amount - cap[source][pool_node(i)];
+    // Surface only the ability-XP pools (the mastery pool is accounted separately).
+    let mut restricted: Vec<RestrictedXpPool> = Vec::new();
+    for (i, pool) in flow_pools.iter().enumerate() {
+        if let PoolEligibility::Ability {
+            abilities,
+            categories,
+        } = &pool.eligibility
+        {
+            restricted.push(RestrictedXpPool {
+                amount: pool.amount,
+                used: pool.amount - cap[source][pool_node(i)],
+                abilities: abilities.clone(),
+                categories: categories.clone(),
+            });
+        }
     }
 
     XpAllocation {
@@ -1444,12 +1541,39 @@ pub fn spell_mastery_floor(entity: &Entity, ruleset: &Ruleset) -> u8 {
             continue;
         };
         for effect in &item.effects {
-            if let Effect::GrantsSpellMastery { score } = effect {
+            if let Effect::GrantsSpellMastery { score, .. } = effect {
                 floor = floor.max(*score);
             }
         }
     }
     floor
+}
+
+/// The Advancement-Total multiplier applying to *every* Spell Mastery Ability, as
+/// an Affinity "counts as num/den of itself" ([`Effect::GrantsSpellMastery`]'s
+/// doubling: Flawless Magic → `(2, 1)`, halving the XP charged). `None` when no
+/// grant reduces the cost. The most generous multiplier wins, like any Affinity.
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:3889.
+pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) -> Option<(u8, u8)> {
+    let selections = selections_for_effects(entity, ruleset);
+    let found = selections.iter().flat_map(|selection| {
+        let item = ruleset.point_items.get(&selection.item_ref);
+        item.into_iter()
+            .flat_map(|item| &item.effects)
+            .filter_map(|effect| match effect {
+                Effect::GrantsSpellMastery {
+                    advancement_num,
+                    advancement_den,
+                    ..
+                    // A larger num/den is a genuine reduction; the identity 1/1
+                    // (a plain floor grant) contributes no Affinity.
+                } if u32::from(*advancement_num) > u32::from(*advancement_den) => {
+                    Some((*advancement_num, *advancement_den))
+                }
+                _ => None,
+            })
+    });
+    best_affinity(found)
 }
 
 /// The effective Spell Mastery score of one chosen spell: the higher of its
@@ -2546,7 +2670,7 @@ mod tests {
             "id": "virtue.flawless_magic",
             "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "hermetic",
             "entity_kinds": ["character"],
-            "effects": [{ "type": "grants_spell_mastery", "score": 1 }]
+            "effects": [{ "type": "grants_spell_mastery", "score": 1, "advancement_num": 2, "advancement_den": 1 }]
           },
           {
             "id": "virtue.linguist",
@@ -2929,6 +3053,80 @@ mod tests {
             parameter: None,
         };
         assert_eq!(effective_spell_mastery(&bought, &flawless, &rs), 3);
+    }
+
+    fn mastered(spell: &str, score: u8) -> SpellSelection {
+        SpellSelection {
+            spell: Id::new(spell),
+            level: None,
+            mastery: Some(score),
+            parameter: None,
+        }
+    }
+
+    #[test]
+    fn bought_mastery_is_charged_from_the_general_pool() {
+        // Spell Mastery is an Ability bought from the Ability advancement table
+        // (Core:9518, :15952). With no mastery Virtue it draws the general pool.
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![]);
+        e.xp_pool = 20;
+        e.spells = vec![mastered("spell.pilum", 2)]; // table(2) = 15
+        let alloc = xp_allocation(&e, &rs);
+        assert_eq!(alloc.total_demand, 15);
+        assert_eq!(alloc.max_flow, 15, "funded from the 20-pt general pool");
+        assert_eq!(alloc.general_used, 15);
+
+        // Too small a general pool overspends by the shortfall.
+        e.xp_pool = 10;
+        let alloc = xp_allocation(&e, &rs);
+        assert_eq!(alloc.total_demand, 15);
+        assert_eq!(alloc.max_flow, 10);
+    }
+
+    #[test]
+    fn mastered_spells_pool_funds_mastery_but_not_abilities() {
+        // Mastered Spells' +50 pool (Core:4471-4474) is spendable only on Spell
+        // Mastery, never on ordinary Abilities/Arts, and the general pool is 0.
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("virtue.mastered_spells")]);
+        e.xp_pool = 0;
+        e.spells = vec![mastered("spell.pilum", 3)]; // table(3) = 30
+        e.ability_scores = vec![plain("ability.awareness", 2)]; // table(2) = 15
+        let alloc = xp_allocation(&e, &rs);
+        assert_eq!(alloc.total_demand, 45);
+        // Only the 30 mastery can be funded (from the mastery pool); the 15
+        // ability spend has no pool and no general XP, so it overspends.
+        assert_eq!(alloc.max_flow, 30);
+        assert_eq!(alloc.general_used, 0);
+    }
+
+    #[test]
+    fn restricted_ability_pool_does_not_fund_mastery() {
+        // Educated's pool is Ability-only; it must not bleed into Spell Mastery.
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("virtue.educated")]);
+        e.xp_pool = 0;
+        e.spells = vec![mastered("spell.pilum", 2)]; // table(2) = 15
+        let alloc = xp_allocation(&e, &rs);
+        assert_eq!(alloc.total_demand, 15);
+        assert_eq!(alloc.max_flow, 0, "Educated cannot fund mastery");
+        // The Educated pool goes wholly unused (no eligible ability spend).
+        assert_eq!(alloc.restricted[0].used, 0);
+    }
+
+    #[test]
+    fn flawless_magic_floors_first_mastery_free_and_halves_the_rest() {
+        // Flawless Magic auto-masters every spell at 1 (free floor) AND doubles all
+        // Spell-Mastery Advancement Totals, halving the XP charged. Core:3887-3889.
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("virtue.flawless_magic")]);
+        e.xp_pool = 100;
+        // Mastery 1 == the granted floor: free. Mastery 3: table(3) − table(1) =
+        // 25, doubled advancement → ceil(25/2) = 13.
+        e.spells = vec![mastered("spell.a", 1), mastered("spell.b", 3)];
+        let alloc = xp_allocation(&e, &rs);
+        assert_eq!(alloc.total_demand, 13);
     }
 
     #[test]

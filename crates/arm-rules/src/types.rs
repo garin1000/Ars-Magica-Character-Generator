@@ -552,6 +552,14 @@ pub enum Effect {
     GrantsSpellMastery {
         /// The mastery-score floor granted to every known spell.
         score: u8,
+        /// Advancement-Total multiplier for Spell Mastery Abilities, as an Affinity
+        /// "counts as num/den of itself": Flawless Magic doubles all mastery
+        /// Advancement Totals (`{2, 1}`), halving the XP charged. Absent in JSON →
+        /// `{1, 1}` (no reduction — a plain floor grant). Source: Core Rules.md:3889.
+        #[serde(default = "one_u8", skip_serializing_if = "is_one_u8")]
+        advancement_num: u8,
+        #[serde(default = "one_u8", skip_serializing_if = "is_one_u8")]
+        advancement_den: u8,
     },
     /// Grants the listed Virtues/Flaws for free (budget-exempt), folded into the
     /// entity's derived grants like a House grant. A fixed nested grant — e.g.
@@ -1298,6 +1306,17 @@ pub struct PointItem {
     /// Provenance into the Markdown source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
+}
+
+/// A `1` default for an Affinity multiplier component (num/den) — the identity
+/// ratio, i.e. no cost change. Used by [`Effect::GrantsSpellMastery`]'s optional
+/// Advancement-doubling fields.
+fn one_u8() -> u8 {
+    1
+}
+
+fn is_one_u8(value: &u8) -> bool {
+    *value == 1
 }
 
 /// The default selection multiplicity: an item may be taken once per target.

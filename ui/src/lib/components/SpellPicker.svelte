@@ -90,14 +90,20 @@
       m.set(`${c.technique} ${c.form}`, c.cap);
     return m;
   });
-  // Spell-Mastery: XP pool (Mastered Spells) + auto-mastery floor (Flawless Magic).
+  // Spell-Mastery: XP pool (Mastered Spells) + auto-mastery floor (Flawless Magic)
+  // + whether Flawless Magic doubles advancement (halving each mastery point's XP).
   const masteryXp = $derived(store.effective?.spell_mastery_xp ?? 0);
   const masteryFloor = $derived(store.effective?.spell_mastery_floor ?? 0);
+  const masteryDoubled = $derived(store.effective?.spell_mastery_advancement_doubled ?? false);
   // The Mastery Ability rises like an Ability, so it is priced from the Ability
   // advancement table (data, not a hardcoded mechanic — same path as abilities).
   const advancement = $derived(store.ruleset?.ruleset.advancement ?? []);
   const masteryMax = $derived(maxAbilityScore(advancement));
-  const masteryUsed = $derived(spellMasteryXpSpent(advancement, store.entity.spells ?? []));
+  // Charged like the engine: only mastery above the free floor, halved when
+  // Flawless Magic doubles advancement totals.
+  const masteryUsed = $derived(
+    spellMasteryXpSpent(advancement, store.entity.spells ?? [], masteryFloor, masteryDoubled),
+  );
 
   function abbr(artId: string): string {
     return store.ruleset ? artAbbreviation(store.ruleset, artId) : '';
@@ -384,7 +390,11 @@
                   data-testid="spell-level-input"
                 />
               {/if}
-              {#if masteryXp > 0 || masteryFloor > 0}
+              <!-- Spell Mastery is an Ability every magus may buy from the general
+                   apprenticeship pool (Core:9518), so the spinner shows whenever the
+                   advancement table can price it — not only with Mastered Spells /
+                   Flawless Magic. This picker is already magus-and-Spells-tab-only. -->
+              {#if masteryMax > 0}
                 <span class="spinner" data-testid="spell-mastery-{chosen.spell}-{i}">
                   <span class="spinner-label">{store.t('spell-mastery-label')}</span>
                   <button

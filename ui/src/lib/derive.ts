@@ -456,19 +456,34 @@ export function abilityXpSpent(
 }
 
 /**
- * Total XP committed to per-spell Spell Mastery Abilities (Σ xp_for_score of each
- * spell's bought mastery). A spell's Mastery rises like an Ability, so it is
- * priced from the same advancement table; unmastered spells (0/null) cost
- * nothing. Spent from the restricted Spell-Mastery pool (Mastered Spells +50).
+ * Total XP committed to per-spell Spell Mastery Abilities. A spell's Mastery rises
+ * like an Ability, so it is priced from the same advancement table; unmastered
+ * spells (0/null) cost nothing. Two Flawless-Magic reductions mirror the engine's
+ * charge (`xp_allocation`): a granted `floor` (auto-mastery at 1) is free, so only
+ * the table cost *above* the floor is charged; and when advancement is `doubled`
+ * that remainder is halved (rounded up). Spent from the Mastered-Spells pool plus
+ * the general pool. Source: Core Rules.md:3887-3889, :4471-4474.
  */
 export function spellMasteryXpSpent(
   advancement: { score: number; total_xp: number }[] | undefined,
   spells: { mastery?: number | null }[] | undefined,
+  floor = 0,
+  doubled = false,
 ): number {
-  return abilityXpSpent(
-    advancement,
-    (spells ?? []).map((s) => ({ score: s.mastery ?? 0 })),
-  );
+  if (!advancement) return 0;
+  const tableFor = (score: number): number | undefined =>
+    advancement.find((r) => r.score === score)?.total_xp;
+  const floorTable = floor > 0 ? (tableFor(floor) ?? 0) : 0;
+  let total = 0;
+  for (const { mastery } of spells ?? []) {
+    const bought = mastery ?? 0;
+    if (bought <= 0) continue;
+    const table = tableFor(bought);
+    if (table === undefined) continue;
+    const payable = Math.max(0, table - floorTable);
+    total += doubled ? Math.ceil(payable / 2) : payable;
+  }
+  return total;
 }
 
 /**

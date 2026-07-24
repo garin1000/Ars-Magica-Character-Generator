@@ -829,6 +829,18 @@ describe('spellMasteryXpSpent', () => {
     expect(used).toBe(60);
     expect(used > 50).toBe(true);
   });
+
+  it('charges only above the granted floor (Flawless Magic first point free)', () => {
+    // Floor 1: mastery 1 == floor is free; mastery 3 costs table(3) - table(1) = 25.
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 1 }, { mastery: 3 }], 1)).toBe(25);
+  });
+
+  it('halves the charge above the floor when advancement is doubled', () => {
+    // Flawless Magic doubles advancement totals: (30 - 5) charged as ceil(25/2) = 13.
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 1 }, { mastery: 3 }], 1, true)).toBe(13);
+    // Doubling with no floor: ceil(30/2) = 15.
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, true)).toBe(15);
+  });
 });
 
 describe('effectiveSpellMastery', () => {

@@ -401,7 +401,11 @@ pub(crate) fn validate_xp_pool(
             ValidationIssue::CODE_NOT_ENOUGH_XP,
             args([
                 ("spent", allocation.total_demand.to_string()),
-                ("pool", entity.xp_pool.to_string()),
+                // The demand now draws several pools (general + restricted-ability +
+                // Spell-Mastery), so `pool` is the total the allocation *can* fund
+                // (`max_flow`), not the raw general pool — keeping `spent - pool ==
+                // shortfall` accurate across all funding sources.
+                ("pool", allocation.max_flow.to_string()),
                 (
                     "shortfall",
                     (allocation.total_demand - allocation.max_flow).to_string(),

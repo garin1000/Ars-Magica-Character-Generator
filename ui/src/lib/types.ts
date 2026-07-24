@@ -53,7 +53,12 @@ export type Effect =
   | { type: 'true_faith_grant'; score: number }
   | { type: 'item_level_budget'; amount: number }
   | { type: 'spell_mastery_xp'; amount: number }
-  | { type: 'grants_spell_mastery'; score: number }
+  | {
+      type: 'grants_spell_mastery';
+      score: number;
+      advancement_num?: number;
+      advancement_den?: number;
+    }
   | { type: 'grants_selection'; items: string[] }
   | { type: 'size_delta'; amount: number }
   | { type: 'characteristic_score_delta'; characteristic: string; amount: number }
@@ -289,6 +294,10 @@ export interface EffectiveScores {
   spell_mastery_xp: number;
   // Mastery-score floor every known spell gets (Flawless Magic 1); 0 = none.
   spell_mastery_floor: number;
+  // Whether a Virtue doubles Spell-Mastery Advancement Totals (Flawless Magic),
+  // halving each mastery point's XP cost, so the mastery accounting matches the
+  // engine's charge.
+  spell_mastery_advancement_doubled: boolean;
   // The being's effective Might Score + Realm (base + same-Realm grants), or null
   // for an ordinary character. Engine-authoritative; never recomputed in JS.
   might: MightScore | null;
