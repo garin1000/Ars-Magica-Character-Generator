@@ -7,6 +7,14 @@
   --error: #f07a8d;
   --warning: #e6b466;
   --divider: #57537e;
+  /* Single source of truth for the width of derived read-outs, so the
+     two-column lists/grids and the multi-column tables stay readable instead of
+     splaying across a wide window. `--readout-max-width` bounds the narrow
+     two-column read-outs (`.derived-list`, `.derived-grid`);
+     `--readout-table-max-width` is wider because the combat/casting tables carry
+     ~7 columns that a narrow cap would cramp. */
+  --readout-max-width: 26rem;
+  --readout-table-max-width: 44rem;
   font-family: system-ui, sans-serif;
   /* Base size tuned for readability (the audience skews middle-aged); all rem
      sizes scale from here. */
@@ -204,8 +212,10 @@ button:disabled {
   opacity: 0.7;
 }
 
-/* Multi-line character concept in the Details tab. */
-.concept-input {
+/* Multi-line free-text fields in the Details tab (character concept, and the
+   warping effect description which can run to several sentences). */
+.concept-input,
+.warping-effect {
   font: inherit;
   padding: 0.35rem 0.5rem;
   border-radius: 6px;

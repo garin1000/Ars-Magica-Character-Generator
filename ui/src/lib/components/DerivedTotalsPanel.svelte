@@ -348,6 +348,10 @@
     grid-template-columns: max-content 1fr;
     gap: 0.25rem 1rem;
     margin: 0;
+    /* Width tokens (defined once on :root in app.css) are the single source of
+       truth for how wide every derived read-out is allowed to grow. Narrow cap
+       for the two-column lists/grids; wider cap for the multi-column tables. */
+    max-width: var(--readout-max-width);
   }
   .derived-grid dt {
     font-weight: 600;
@@ -367,14 +371,7 @@
   .derived-table {
     border-collapse: collapse;
     width: 100%;
-  }
-  /* The combat and casting read-outs have few columns; full width spreads them
-     awkwardly, so they shrink to their content (still scroll if they ever
-     overflow). The lab grid keeps the shared 100% width. */
-  .derived-table.combat,
-  .derived-table.casting {
-    width: auto;
-    max-width: 100%;
+    max-width: var(--readout-table-max-width);
   }
   .derived-table th,
   .derived-table td {
@@ -395,6 +392,8 @@
     list-style: none;
     margin: 0;
     padding: 0;
+    /* Shared narrow read-out width (single source of truth on :root). */
+    max-width: var(--readout-max-width);
   }
   .derived-list li {
     display: flex;
@@ -404,12 +403,9 @@
   .derived-list .value {
     font-weight: 600;
   }
-  /* Wound levels: a fixed three-column grid (level | number range | penalty)
-     constrained to a readable width, so the range and penalty stay aligned in
-     centered columns instead of splaying apart on a wide window. */
-  .wound-list {
-    max-width: 26rem;
-  }
+  /* Wound levels: a fixed three-column grid (level | number range | penalty).
+     Width comes from the shared `.derived-list` token; the grid keeps the range
+     and penalty aligned in centered columns instead of splaying apart. */
   .wound-list li {
     display: grid;
     grid-template-columns: 1fr 6rem 4rem;

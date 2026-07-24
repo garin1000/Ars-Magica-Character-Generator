@@ -180,12 +180,13 @@
     <div class="detail-field">
       <label class="field">
         <span>{store.t('warping-effect-label')}</span>
-        <input
-          type="text"
+        <textarea
+          class="warping-effect"
+          rows="3"
           value={warpingEffect}
-          oninput={(e) => store.setWarpingEffect((e.currentTarget as HTMLInputElement).value)}
+          oninput={(e) => store.setWarpingEffect((e.currentTarget as HTMLTextAreaElement).value)}
           data-testid="warping-effect-input"
-        />
+        ></textarea>
       </label>
     </div>
 

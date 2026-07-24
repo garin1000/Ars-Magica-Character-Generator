@@ -567,9 +567,13 @@ describe('aged / warped state + identity', () => {
   });
 
   it('sets the free-text warping and decrepitude effect fields', () => {
-    store.setWarpingEffect('A faint aura of ozone clings to him');
+    // The warping-effect field is a multi-line textarea, so it must round-trip
+    // embedded newlines verbatim.
+    const multiLineWarping =
+      'A faint aura of ozone clings to him.\nHis eyes glow faintly at night.';
+    store.setWarpingEffect(multiLineWarping);
     store.setDecrepitudeEffect('Stooped and hard of hearing');
-    expect(store.entity.warping_effect).toBe('A faint aura of ozone clings to him');
+    expect(store.entity.warping_effect).toBe(multiLineWarping);
     expect(store.entity.decrepitude_effect).toBe('Stooped and hard of hearing');
   });
 
