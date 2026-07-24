@@ -19,6 +19,7 @@ use crate::grant::Grant;
 use crate::house::{House, HousesFile};
 use crate::mythic_companion::{MythicCompanionType, MythicCompanionTypesFile};
 use crate::spell::{Spell, SpellDuration, SpellTarget, SpellsFile};
+use crate::spell_mastery::{SpellMasteryAbilitiesFile, SpellMasteryAbility};
 use crate::types::{
     Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, Magnitude, ParameterDomain, PointItem,
     Prereq, RulesetRef, SpecialCasting,
@@ -60,6 +61,7 @@ use crate::types::{
 ///   "art_type_order": [ "technique", "form" ],
 ///   "houses": { "house.bonisagus": { /* House */ } },
 ///   "spells": { "spell.pilum_of_fire": { /* Spell */ } },
+///   "spell_mastery_abilities": { "spell_mastery_ability.penetration": { /* SpellMasteryAbility */ } },
 ///   "weapons": { "weapon.long_sword": { /* Weapon */ } },
 ///   "shields": { "shield.heater": { /* Shield */ } },
 ///   "armor": { "armor.chain_mail_full": { /* Armor */ } }
@@ -151,6 +153,12 @@ pub struct Ruleset {
     /// the `spells` field name is a stable public contract.
     #[serde(default)]
     pub(crate) spells: BTreeMap<Id, Spell>,
+    /// All Spell Mastery special abilities keyed by their id. Defaulted so older
+    /// serialized rulesets (no mastery catalogue) still deserialize. Serialized
+    /// whole to the frontend; the `spell_mastery_abilities` field name is a stable
+    /// public contract.
+    #[serde(default)]
+    pub(crate) spell_mastery_abilities: BTreeMap<Id, SpellMasteryAbility>,
     /// All weapons keyed by their id. Defaulted so older serialized rulesets (no
     /// equipment) still deserialize. Serialized whole to the frontend; the
     /// `weapons` field name is a stable public contract.
@@ -205,6 +213,9 @@ pub struct RulesetSources<'a> {
     /// Spells-file JSON (`{ "spells": [...] }`), or `None` for a ruleset without
     /// a spell catalogue.
     pub spells: Option<&'a str>,
+    /// Spell-mastery-abilities-file JSON (`{ "abilities": [...] }`), or `None` for
+    /// a ruleset without a Spell Mastery special-ability catalogue.
+    pub spell_mastery_abilities: Option<&'a str>,
     /// Equipment-file JSON (`{ "weapons": [...], "shields": [...], "armor": [...] }`),
     /// or `None` for a ruleset without an equipment catalogue.
     pub equipment: Option<&'a str>,
@@ -318,6 +329,7 @@ pub(crate) mod parse_source {
     pub const HOUSES: &str = "houses";
     pub const MYTHIC_TYPES: &str = "mythic companion types";
     pub const SPELLS: &str = "spells";
+    pub const SPELL_MASTERY_ABILITIES: &str = "spell mastery abilities";
     pub const EQUIPMENT: &str = "equipment";
     pub const CHARACTERISTICS: &str = "characteristics";
     pub const I18N: &str = "i18n";
@@ -545,6 +557,7 @@ impl Ruleset {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -572,6 +585,7 @@ impl Ruleset {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -601,6 +615,7 @@ impl Ruleset {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             // Preserve the existing sentinel: an empty string means "no
             // characteristic rules" for this convenience constructor.
@@ -633,6 +648,7 @@ impl Ruleset {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
         })
@@ -655,6 +671,7 @@ impl Ruleset {
             houses,
             mythic_types,
             spells,
+            spell_mastery_abilities,
             equipment,
             characteristics,
         } = sources;
@@ -679,6 +696,10 @@ impl Ruleset {
         // An absent spells file is equivalent to an empty `"{}"`.
         let spells_file: SpellsFile = serde_json::from_str(spells.unwrap_or("{}"))
             .map_err(|e| RulesetError::parse(parse_source::SPELLS, e))?;
+        // An absent spell-mastery-abilities file is equivalent to an empty `"{}"`.
+        let spell_mastery_abilities_file: SpellMasteryAbilitiesFile =
+            serde_json::from_str(spell_mastery_abilities.unwrap_or("{}"))
+                .map_err(|e| RulesetError::parse(parse_source::SPELL_MASTERY_ABILITIES, e))?;
         // An absent equipment file is equivalent to an empty `"{}"`.
         let equipment_file: EquipmentFile = serde_json::from_str(equipment.unwrap_or("{}"))
             .map_err(|e| RulesetError::parse(parse_source::EQUIPMENT, e))?;
@@ -713,6 +734,11 @@ impl Ruleset {
         collect_duplicates(
             spells_file.spells.iter().map(|s| &s.id),
             "spell",
+            &mut errors,
+        );
+        collect_duplicates(
+            spell_mastery_abilities_file.abilities.iter().map(|a| &a.id),
+            "spell mastery ability",
             &mut errors,
         );
         collect_duplicates(
@@ -765,6 +791,12 @@ impl Ruleset {
             .into_iter()
             .map(|s| (s.id.clone(), s))
             .collect();
+        let spell_mastery_abilities: BTreeMap<Id, SpellMasteryAbility> =
+            spell_mastery_abilities_file
+                .abilities
+                .into_iter()
+                .map(|a| (a.id.clone(), a))
+                .collect();
         let weapons: BTreeMap<Id, Weapon> = equipment_file
             .weapons
             .into_iter()
@@ -798,6 +830,7 @@ impl Ruleset {
             houses,
             mythic_companion_types,
             spells,
+            spell_mastery_abilities,
             weapons,
             shields,
             armor,
@@ -965,6 +998,21 @@ impl Ruleset {
         self.spells.len()
     }
 
+    /// Looks up a Spell Mastery special ability by id.
+    pub fn spell_mastery_ability(&self, id: &Id) -> Option<&SpellMasteryAbility> {
+        self.spell_mastery_abilities.get(id)
+    }
+
+    /// Iterates all Spell Mastery special abilities in id order.
+    pub fn spell_mastery_abilities(&self) -> impl Iterator<Item = &SpellMasteryAbility> {
+        self.spell_mastery_abilities.values()
+    }
+
+    /// Number of Spell Mastery special abilities in the catalogue.
+    pub fn spell_mastery_ability_count(&self) -> usize {
+        self.spell_mastery_abilities.len()
+    }
+
     /// Looks up a weapon by id.
     pub fn weapon(&self, id: &Id) -> Option<&Weapon> {
         self.weapons.get(id)
@@ -1126,6 +1174,17 @@ impl Ruleset {
 
         for spell in self.spells.values() {
             self.validate_spell_refs(spell, &mut errors);
+        }
+
+        for ability in self.spell_mastery_abilities.values() {
+            if let Some(ref source) = ability.source
+                && !source.lines.is_valid()
+            {
+                errors.push(format!(
+                    "spell mastery ability '{}': source line range start ({}) exceeds end ({})",
+                    ability.id, source.lines.start, source.lines.end
+                ));
+            }
         }
 
         for weapon in self.weapons.values() {
@@ -1967,6 +2026,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -1986,6 +2046,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -2017,6 +2078,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: Some(equipment),
             characteristics: None,
         });
@@ -2050,6 +2112,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: Some(equipment),
             characteristics: None,
         })
@@ -2080,6 +2143,7 @@ mod tests {
             houses: Some(VALID_HOUSES),
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -2100,6 +2164,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -2129,6 +2194,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -2160,6 +2226,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: Some(spells),
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -2317,6 +2384,7 @@ mod tests {
             houses: Some(dup),
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -2351,6 +2419,7 @@ mod tests {
             houses: Some(VALID_HOUSES),
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -2383,6 +2452,7 @@ mod tests {
             houses: Some(houses),
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -2417,6 +2487,7 @@ mod tests {
             houses: Some(houses),
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -2447,6 +2518,7 @@ mod tests {
             houses: Some(houses),
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -3259,6 +3331,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -3286,6 +3359,7 @@ mod tests {
                 "mythic_companion_types",
                 "point_items",
                 "shields",
+                "spell_mastery_abilities",
                 "spells",
                 "type_profiles",
                 "version",
@@ -3682,6 +3756,7 @@ mod tests {
             houses: None,
             mythic_types: Some(mythic),
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -3716,6 +3791,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: Some(equipment),
             characteristics: None,
         })

@@ -139,6 +139,9 @@ impl fmt::Display for IssueSeverity {
 /// | `over_item_level` | error | `used`, `budget`, `over` |
 /// | `multiple_magical_foci` | error | `count` |
 /// | `spell_ritual_legality` | error | `spell`, `level` |
+/// | `unknown_mastery_ability` | error | `spell`, `ability` |
+/// | `too_many_mastery_abilities` | error | `spell`, `chosen`, `mastery` |
+/// | `duplicate_mastery_ability` | error | `spell`, `ability`, `count` |
 /// | `over_power_levels` | error | `used`, `budget`, `over` |
 /// | `might_realm_mismatch` | warning | `base`, `granted` |
 /// | `excessive_aging_reduction` | warning | `characteristic`, `reduction`, `min` |
@@ -318,6 +321,17 @@ impl ValidationIssue {
     /// level violates the ritual level bounds — a ritual learned below level 20, or a
     /// non-ritual learned above level 50 (Core:12279-12295, :12283).
     pub const CODE_SPELL_RITUAL_LEGALITY: &'static str = "spell_ritual_legality";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a chosen Spell Mastery
+    /// special ability id does not resolve against the mastery-ability catalogue.
+    pub const CODE_UNKNOWN_MASTERY_ABILITY: &'static str = "unknown_mastery_ability";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the number of Spell Mastery
+    /// special abilities chosen for a spell exceeds its effective mastery score —
+    /// one may be chosen per mastery level (Core:9524-9526).
+    pub const CODE_TOO_MANY_MASTERY_ABILITIES: &'static str = "too_many_mastery_abilities";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a non-repeatable Spell
+    /// Mastery special ability is chosen more than once for the same spell. Only
+    /// Precise, Quick, and Quiet Casting may repeat (Core:9572, :9576, :9580).
+    pub const CODE_DUPLICATE_MASTERY_ABILITY: &'static str = "duplicate_mastery_ability";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a bought Ability exceeds
     /// the character's age-based maximum (Core:2366-2376; Affinity raises it +2).
     pub const CODE_ABILITY_ABOVE_AGE_CAP: &'static str = "ability_above_age_cap";
@@ -691,6 +705,7 @@ mod tests {
             houses: Some(TEST_HOUSES),
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -755,6 +770,7 @@ mod tests {
             houses: Some(GRANT_HOUSES),
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -1094,6 +1110,7 @@ mod tests {
             houses: Some(HOUSE_VALIDATE_HOUSES),
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -1581,6 +1598,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: Some(characteristics),
         })
@@ -4729,6 +4747,7 @@ mod tests {
             houses: None,
             mythic_types: Some(TYPES),
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })
@@ -4957,6 +4976,13 @@ mod tests {
         { "id": "spell.wizards_boost_form", "technique": "art.rego", "form": "art.vim",
           "parameters": [{ "key": "form", "type": "ref", "domain": "form" }] }
     ] }"#;
+    // Two once-per-spell abilities and one repeatable, enough to exercise the
+    // count-cap, repeatable, and unknown-id mastery rules.
+    const SPELL_MASTERY_CATALOGUE: &str = r#"{ "abilities": [
+        { "id": "spell_mastery_ability.penetration" },
+        { "id": "spell_mastery_ability.fast_casting" },
+        { "id": "spell_mastery_ability.quiet_casting", "repeatable": true }
+    ] }"#;
     // spell_levels 50 keeps the budget small enough to trip in tests.
     const SPELL_MAGUS_TYPE: &str = r#"[
         { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -4977,6 +5003,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: Some(SPELL_CATALOGUE),
+            spell_mastery_abilities: Some(SPELL_MASTERY_CATALOGUE),
             equipment: None,
             characteristics: None,
         })
@@ -4989,6 +5016,7 @@ mod tests {
             level,
             mastery: None,
             parameter: None,
+            mastery_abilities: Vec::new(),
         }
     }
 
@@ -5000,6 +5028,7 @@ mod tests {
             level,
             mastery: None,
             parameter: Some(parameter.to_string()),
+            mastery_abilities: Vec::new(),
         }
     }
 
@@ -5165,6 +5194,108 @@ mod tests {
         assert!(!codes.contains(&"spell_level_exceeds_cap".to_string()));
     }
 
+    /// A mastered spell carrying one special ability per effective mastery level,
+    /// all catalogue-known and non-repeating, raises no mastery-ability issue.
+    /// Source: Core Rules.md:9524-9526.
+    #[test]
+    fn mastery_abilities_within_score_are_clean() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.xp_pool = 1000;
+        e.spells = vec![SpellSelection {
+            spell: Id::new("spell.pilum_of_fire"),
+            level: None,
+            mastery: Some(2),
+            parameter: None,
+            mastery_abilities: vec![
+                Id::new("spell_mastery_ability.penetration"),
+                Id::new("spell_mastery_ability.fast_casting"),
+            ],
+        }];
+        let codes = all_codes(&validate(&e, &rs));
+        assert!(
+            !codes.iter().any(|c| c.contains("mastery_abilit")),
+            "expected no mastery-ability issues, got {codes:?}"
+        );
+    }
+
+    /// More special abilities than the spell's effective mastery score is an error
+    /// — one may be chosen per mastery level (Core Rules.md:9524-9526).
+    #[test]
+    fn too_many_mastery_abilities_is_flagged() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.xp_pool = 1000;
+        // Mastery 1 permits one ability; two are chosen.
+        e.spells = vec![SpellSelection {
+            spell: Id::new("spell.pilum_of_fire"),
+            level: None,
+            mastery: Some(1),
+            parameter: None,
+            mastery_abilities: vec![
+                Id::new("spell_mastery_ability.penetration"),
+                Id::new("spell_mastery_ability.fast_casting"),
+            ],
+        }];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"too_many_mastery_abilities".to_string()));
+    }
+
+    /// A non-repeatable ability chosen twice for the same spell is an error, even
+    /// when the count fits the mastery score (Core Rules.md:9528-9592).
+    #[test]
+    fn duplicate_non_repeatable_mastery_ability_is_flagged() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.xp_pool = 1000;
+        e.spells = vec![SpellSelection {
+            spell: Id::new("spell.pilum_of_fire"),
+            level: None,
+            mastery: Some(2),
+            parameter: None,
+            mastery_abilities: vec![
+                Id::new("spell_mastery_ability.penetration"),
+                Id::new("spell_mastery_ability.penetration"),
+            ],
+        }];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"duplicate_mastery_ability".to_string()));
+    }
+
+    /// A repeatable ability (Quiet Casting) chosen twice for the same spell is
+    /// legal (Core Rules.md:9580).
+    #[test]
+    fn repeatable_mastery_ability_twice_is_clean() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.xp_pool = 1000;
+        e.spells = vec![SpellSelection {
+            spell: Id::new("spell.pilum_of_fire"),
+            level: None,
+            mastery: Some(2),
+            parameter: None,
+            mastery_abilities: vec![
+                Id::new("spell_mastery_ability.quiet_casting"),
+                Id::new("spell_mastery_ability.quiet_casting"),
+            ],
+        }];
+        assert!(!all_codes(&validate(&e, &rs)).contains(&"duplicate_mastery_ability".to_string()));
+    }
+
+    /// A chosen mastery-ability id absent from the catalogue fails loudly.
+    #[test]
+    fn unknown_mastery_ability_is_flagged() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.xp_pool = 1000;
+        e.spells = vec![SpellSelection {
+            spell: Id::new("spell.pilum_of_fire"),
+            level: None,
+            mastery: Some(1),
+            parameter: None,
+            mastery_abilities: vec![Id::new("spell_mastery_ability.does_not_exist")],
+        }];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"unknown_mastery_ability".to_string()));
+    }
+
     /// A General ritual spell learned below level 20 is a ritual-legality error
     /// (Core Rules.md:12279-12295).
     #[test]
@@ -5268,6 +5399,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: Some(P7_CHARACTERISTICS),
         })

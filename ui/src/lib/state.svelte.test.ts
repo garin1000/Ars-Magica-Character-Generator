@@ -353,6 +353,40 @@ describe('adjustSpellMasteryAt', () => {
   });
 });
 
+// --- addMasteryAbilityAt() / removeMasteryAbilityAt() -----------------------
+
+describe('mastery special abilities', () => {
+  it('appends a chosen mastery ability to the spell at the given index', () => {
+    store.addSpell('spell.pilum_of_fire');
+    store.addMasteryAbilityAt(0, 'spell_mastery_ability.penetration');
+    expect(store.entity.spells?.[0].mastery_abilities).toEqual([
+      'spell_mastery_ability.penetration',
+    ]);
+  });
+
+  it('allows a repeatable ability to be added more than once (keeps duplicates)', () => {
+    store.addSpell('spell.pilum_of_fire');
+    store.addMasteryAbilityAt(0, 'spell_mastery_ability.quiet_casting');
+    store.addMasteryAbilityAt(0, 'spell_mastery_ability.quiet_casting');
+    expect(store.entity.spells?.[0].mastery_abilities).toEqual([
+      'spell_mastery_ability.quiet_casting',
+      'spell_mastery_ability.quiet_casting',
+    ]);
+  });
+
+  it('removes exactly one instance at the given position', () => {
+    store.addSpell('spell.pilum_of_fire');
+    store.addMasteryAbilityAt(0, 'spell_mastery_ability.quiet_casting');
+    store.addMasteryAbilityAt(0, 'spell_mastery_ability.penetration');
+    store.addMasteryAbilityAt(0, 'spell_mastery_ability.quiet_casting');
+    store.removeMasteryAbilityAt(0, 0);
+    expect(store.entity.spells?.[0].mastery_abilities).toEqual([
+      'spell_mastery_ability.penetration',
+      'spell_mastery_ability.quiet_casting',
+    ]);
+  });
+});
+
 // --- setSpellLevelAt() ------------------------------------------------------
 
 describe('setSpellLevelAt', () => {

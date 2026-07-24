@@ -219,6 +219,7 @@ mod tests {
             houses: Some(GRANT_HOUSES),
             mythic_types: None,
             spells: None,
+            spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
         })

@@ -660,6 +660,7 @@ ul {
 .spell-list li {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.4rem;
   padding: 0.15rem 0;
 }

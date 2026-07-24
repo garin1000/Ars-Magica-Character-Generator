@@ -1479,6 +1479,7 @@ mod tests {
             houses: None,
             mythic_types: None,
             spells: Some(spells),
+            spell_mastery_abilities: None,
             equipment: Some(equipment),
             characteristics: None,
         })
@@ -1885,6 +1886,7 @@ mod tests {
             level: None,
             mastery: None,
             parameter: None,
+            mastery_abilities: Vec::new(),
         }];
         let pen = penetration(&e, &rs);
         assert_eq!(pen.len(), 1);
@@ -1936,6 +1938,7 @@ mod tests {
             level: Some(10),
             mastery: None,
             parameter: Some("art.ignem".into()),
+            mastery_abilities: Vec::new(),
         }];
         let pen = penetration(&e, &rs);
         assert_eq!(pen.len(), 1);
@@ -2328,6 +2331,7 @@ mod tests {
             level: None,
             mastery: None,
             parameter: None,
+            mastery_abilities: Vec::new(),
         }];
         e.selections = vec![Selection::with_params(
             Id::new("flaw.deficient_technique"),

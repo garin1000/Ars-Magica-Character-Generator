@@ -26,6 +26,7 @@ fn full_ruleset() -> Ruleset {
             "../../../rules/core/mythic_companion_types.json"
         )),
         spells: Some(include_str!("../../../rules/core/spells.json")),
+        spell_mastery_abilities: None,
         equipment: Some(include_str!("../../../rules/core/equipment.json")),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
     })
@@ -185,12 +186,14 @@ fn magus_full_build_validates() {
             level: None,
             mastery: None,
             parameter: None,
+            mastery_abilities: Vec::new(),
         },
         SpellSelection {
             spell: Id::new("spell.airs_ghostly_form"),
             level: None,
             mastery: None,
             parameter: None,
+            mastery_abilities: Vec::new(),
         },
     ];
     assert_valid("magus", &mag, &full_ruleset());

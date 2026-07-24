@@ -594,6 +594,15 @@ export interface Spell {
   parameters?: ParameterDef[];
 }
 
+// A choosable Spell Mastery special ability from the catalogue. Name/description
+// live in the i18n map, keyed by `id`.
+export interface SpellMasteryAbility {
+  id: string;
+  // Whether this ability may be taken multiple times for the same spell (Precise,
+  // Quick, Quiet Casting). Absent = false (once per spell).
+  repeatable?: boolean;
+}
+
 // A spell the character knows. `level` is set only for a General spell (the
 // chosen level); for a fixed spell the catalogue level is authoritative.
 export interface SpellSelection {
@@ -606,6 +615,11 @@ export interface SpellSelection {
   // spell, an Art id like `art.ignem`). Part of the spell's identity: the same base
   // spell may be taken once per distinct parameter. Absent for ordinary spells.
   parameter?: string | null;
+  // Chosen Spell Mastery special abilities for this spell, each a
+  // `spell_mastery_ability.*` id. One may be chosen per effective mastery level; a
+  // repeatable ability (Precise/Quick/Quiet Casting) may appear more than once, so
+  // this may hold duplicates. Absent/empty when none are chosen.
+  mastery_abilities?: string[];
 }
 
 // A named Personality Trait with a value in ±3 (±6 for a Major Personality Flaw).
@@ -818,6 +832,10 @@ export interface Ruleset {
   // Present from schema with spells loaded; optional so older shapes still
   // type-check. Keyed by spell id (e.g. `spell.pilum_of_fire`).
   spells?: Record<string, Spell>;
+  // Present from schema with the Spell Mastery special-ability catalogue loaded;
+  // optional so older shapes still type-check. Keyed by ability id
+  // (e.g. `spell_mastery_ability.penetration`).
+  spell_mastery_abilities?: Record<string, SpellMasteryAbility>;
   // Present from schema with equipment loaded; optional so older shapes still
   // type-check. Keyed by catalogue id (`weapon.*`, `shield.*`, `armor.*`).
   weapons?: Record<string, Weapon>;

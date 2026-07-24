@@ -1,0 +1,18 @@
+{
+  "abilities": [
+    { "id": "spell_mastery_ability.adaptive_casting", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9528, 9530] } },
+    { "id": "spell_mastery_ability.ceremonial_casting", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9532, 9536] } },
+    { "id": "spell_mastery_ability.fast_casting", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9538, 9540] } },
+    { "id": "spell_mastery_ability.imperturbable_casting", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9542, 9544] } },
+    { "id": "spell_mastery_ability.magic_resistance", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9546, 9548] } },
+    { "id": "spell_mastery_ability.multiple_casting", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9550, 9560] } },
+    { "id": "spell_mastery_ability.obfuscated_casting", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9562, 9564] } },
+    { "id": "spell_mastery_ability.penetration", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9566, 9568] } },
+    { "id": "spell_mastery_ability.precise_casting", "repeatable": true, "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9570, 9572] } },
+    { "id": "spell_mastery_ability.quick_casting", "repeatable": true, "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9574, 9576] } },
+    { "id": "spell_mastery_ability.quiet_casting", "repeatable": true, "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9578, 9580] } },
+    { "id": "spell_mastery_ability.rebuttal", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9582, 9584] } },
+    { "id": "spell_mastery_ability.still_casting", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9586, 9588] } },
+    { "id": "spell_mastery_ability.unravelling", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9590, 9592] } }
+  ]
+}

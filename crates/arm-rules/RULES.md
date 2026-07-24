@@ -745,6 +745,44 @@ approximation of "Latin").
   the SpellPicker mastery spinner shows for every magus (buyable from the general
   pool). "May take multiple times" follows the `max_per_target: 1` convention.
 
+#### Mastered Spell Special Abilities — choosable per-spell mastery options (`spell_mastery_abilities`)
+> "For every level in the Mastery Ability, the maga may also choose one special
+> ability, which applies only to that mastered spell. Thus, a maga with a Mastery
+> Score of two for a spell has two special abilities for that spell." (`:9524-9526`)
+> The catalogue of fourteen options is at `:9528-9592`: Adaptive, Ceremonial, Fast,
+> Imperturbable, Magic Resistance, Multiple, Obfuscated, Penetration, Precise,
+> Quick, Quiet, Rebuttal, Still Casting, and Unravelling. Most are once-per-spell;
+> Precise (`:9570-9572`), Quick (`:9574-9576`), and Quiet Casting (`:9578-9580`)
+> "may take this ability multiple times for the same spell".
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:9524-9526` (one special
+  ability per Mastery level); `:9528-9592` (the catalogue); `:9572`, `:9576`,
+  `:9580` (Precise/Quick/Quiet are repeatable). German source
+  `Ars Magica Definitive Edition Basisregeln.md:9524-9592` mirrors it line-for-line.
+- Data: catalogue in `rules/core/spell_mastery_abilities.json` — each entry an `id`
+  (`spell_mastery_ability.<slug>`) + a `repeatable` bool (true only for Precise/
+  Quick/Quiet Casting) + `source`. Names/descriptions in
+  `rules/i18n/{en,de}/spell_mastery_abilities.json` (German names from the German
+  source headings; terms matching the translation tables — e.g. Adaptives Zaubern,
+  Zeremonielles Zaubern, Schnellzaubern, Magieresistenz, Penetration). Catalogue
+  size is data (no counts in code).
+- Model: `SpellSelection.mastery_abilities: Vec<Id>` (serde-default, may hold
+  duplicates for repeatable picks; additive so `SCHEMA_VERSION` stays 13). Sorted
+  stably by `Entity::normalize`.
+- Engine plumbing: `SpellMasteryAbility` (`spell_mastery.rs`) threaded through
+  `RulesetSources`/`Ruleset::from_sources` as a `BTreeMap<Id, SpellMasteryAbility>`
+  (`spell_mastery_abilities`), loaded by `ruleset_io::load_ruleset_from_dir` and
+  surfaced on the ruleset; the i18n file joins both languages via `read_i18n_sources`.
+- Implementation: `validation/magus.rs::validate_spell_mastery_abilities` enforces
+  (a) count ≤ `effective_spell_mastery(sel)` = `max(bought, floor)`, one per level
+  (`CODE_TOO_MANY_MASTERY_ABILITIES`); (b) a non-repeatable ability chosen more than
+  once for the same spell (`CODE_DUPLICATE_MASTERY_ABILITY`); (c) referential
+  integrity — an unknown chosen id fails (`CODE_UNKNOWN_MASTERY_ABILITY`). Load-time
+  integrity checks each catalogue entry's `source` range. UI: per-spell add/remove
+  picker in `SpellPicker.svelte` (store `addMasteryAbilityAt`/`removeMasteryAbilityAt`),
+  greying non-repeatable already-chosen options and hiding the add control once the
+  count reaches the effective mastery.
+
 #### Templar Commander — fixed nested free Virtue grant (`grants_selection`)
 > "This Virtue also grants the Temporal Influence Minor Virtue … This Virtue
 > includes the effects of the Brother-Knight Virtue."
