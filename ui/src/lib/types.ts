@@ -739,6 +739,9 @@ export interface Armor {
 export interface EquipmentSlot {
   item: string;
   equipped?: boolean;
+  // Whether this weapon's combat Ability specialization applies to it, granting
+  // +1 to the weapon's Attack and Defense (Core:7122, :7139). Additive/optional.
+  specialization_applies?: boolean;
 }
 
 export interface CharacteristicCost {

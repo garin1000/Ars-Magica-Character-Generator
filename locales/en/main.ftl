@@ -455,6 +455,7 @@ issue-might_realm_mismatch = The entered Might Realm ({ $base }) disagrees with 
 issue-excessive_aging_reduction = The aging drops to { $characteristic } ({ $reduction }) would fall below the minimum score ({ $min }); it is clamped there.
 issue-unknown_equipment = Equipment '{ $item }' does not match any weapon, shield, or armor.
 issue-equipment_min_strength = { $item } needs Strength { $required }, but this character has { $strength }.
+issue-shield_with_two_handed_weapon = A shield cannot be used with a two-handed weapon, so its Attack and Defense modifiers are not applied (it still counts toward Load).
 
 # Equipment (weapons / shields / armor). Combat totals, Soak, and Encumbrance
 # are computed in a later slice; this surface only records the carried items.
@@ -465,6 +466,7 @@ equipment-group-weapons = Weapons
 equipment-group-shields = Shields
 equipment-group-armor = Armor
 equipment-equipped-label = Equipped
+equipment-specialization-label = Specialization applies (+1)
 equipment-remove = Remove equipment
 equipment-empty = No equipment.
 

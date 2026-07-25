@@ -147,6 +147,7 @@ impl fmt::Display for IssueSeverity {
 /// | `excessive_aging_reduction` | warning | `characteristic`, `reduction`, `min` |
 /// | `unknown_equipment` | error | `item` |
 /// | `equipment_min_strength` | warning | `item`, `required`, `strength` |
+/// | `shield_with_two_handed_weapon` | warning | (none) |
 ///
 /// † The per-category caps emit a code derived from the `flaw_category_caps` /
 /// `virtue_category_caps` entry's category slug: `too_many_<category>_flaws` /
@@ -373,6 +374,12 @@ impl ValidationIssue {
     /// (Core:16993). Advisory — the character may still carry/wield it, at the
     /// storyguide's discretion, so this never blocks.
     pub const CODE_EQUIPMENT_MIN_STRENGTH: &'static str = "equipment_min_strength";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a shield is equipped
+    /// alongside only two-handed weapon(s), so its Attack/Defense modifiers are
+    /// dropped (a two-handed weapon cannot be used with a shield). Advisory — the
+    /// shield still counts toward Load, and the character may carry it, so this
+    /// never blocks (Core:7494, :17063, :16975).
+    pub const CODE_SHIELD_WITH_TWO_HANDED_WEAPON: &'static str = "shield_with_two_handed_weapon";
 
     /// Builds an issue with the given severity, code, args, and context.
     pub fn new(

@@ -981,6 +981,14 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /** Toggle whether the weapon's Ability specialization applies (+1 Atk/Def). */
+  setEquipmentSpecialization(index: number, specialization_applies: boolean): void {
+    this.entity.equipment = (this.entity.equipment ?? []).map((slot, i) =>
+      i === index ? { ...slot, specialization_applies } : slot,
+    );
+    this.#scheduleValidate();
+  }
+
   /** Set a free-text identity/flavor field (no mechanical effect). */
   setIdentity(
     field: 'name' | 'description' | 'concept' | 'gender' | 'sigil' | 'covenant_name' | 'parens',

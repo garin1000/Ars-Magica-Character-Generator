@@ -57,4 +57,41 @@ pub(crate) fn validate_equipment(
             ));
         }
     }
+
+    warn_shield_with_two_handed_weapon(entity, ruleset, issues);
+}
+
+/// Advisory: a shield equipped alongside **only** two-handed weapon(s) has its
+/// combat modifiers silently dropped (a two-handed weapon cannot be paired with a
+/// shield, Core:7494), which looks like a bug. Raised only when at least one
+/// shield and at least one weapon are equipped and **no** equipped weapon is
+/// one-handed — a one-handed weapon makes the shield usable, so no advisory.
+/// Non-blocking: the shield still counts toward Load (Core:17063, :16975).
+fn warn_shield_with_two_handed_weapon(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let equipped_shield = entity
+        .equipment
+        .iter()
+        .any(|s| s.equipped && ruleset.shield(&s.item).is_some());
+    if !equipped_shield {
+        return;
+    }
+    let equipped_weapons: Vec<_> = entity
+        .equipment
+        .iter()
+        .filter(|s| s.equipped)
+        .filter_map(|s| ruleset.weapon(&s.item))
+        .collect();
+    let all_two_handed =
+        !equipped_weapons.is_empty() && equipped_weapons.iter().all(|w| w.two_handed);
+    if all_two_handed {
+        issues.push(ValidationIssue::warning(
+            ValidationIssue::CODE_SHIELD_WITH_TWO_HANDED_WEAPON,
+            args([]),
+            None,
+        ));
+    }
 }

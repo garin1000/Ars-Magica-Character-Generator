@@ -480,6 +480,7 @@ fn validate_equipment_unknown_ref_and_min_strength() {
     e.equipment = vec![EquipmentSlot {
         item: Id::new("weapon.nonexistent"),
         equipped: true,
+        specialization_applies: false,
     }];
     let result = validate(&e, &rs);
     assert!(
@@ -492,6 +493,7 @@ fn validate_equipment_unknown_ref_and_min_strength() {
     e.equipment = vec![EquipmentSlot {
         item: Id::new("weapon.warhammer"),
         equipped: true,
+        specialization_applies: false,
     }];
     let result = validate(&e, &rs);
     assert!(
@@ -523,6 +525,7 @@ fn validate_equipment_shield_warns_and_armor_never_warns() {
     e.equipment = vec![EquipmentSlot {
         item: Id::new("shield.heater"),
         equipped: true,
+        specialization_applies: false,
     }];
     let result = validate(&e, &rs);
     let warnings: Vec<_> = result
@@ -552,6 +555,7 @@ fn validate_equipment_shield_warns_and_armor_never_warns() {
     e.equipment = vec![EquipmentSlot {
         item: Id::new("armor.chain_mail_full"),
         equipped: true,
+        specialization_applies: false,
     }];
     let result = validate(&e, &rs);
     assert!(
@@ -567,6 +571,87 @@ fn validate_equipment_shield_warns_and_armor_never_warns() {
     );
 }
 
+/// Issue B: equipping a shield alongside ONLY two-handed weapon(s) raises the
+/// advisory `shield_with_two_handed_weapon` warning (the shield's modifiers are
+/// dropped, which looks like a bug otherwise). A one-handed weapon in the mix
+/// clears the advisory, since the shield is usable with it. Non-blocking.
+/// Core:7494, :17063, :16975.
+#[test]
+fn shield_with_only_two_handed_weapons_warns() {
+    let rs = load_ruleset_with_equipment();
+    let mut e = entity("grog", vec![]);
+    e.characteristics.insert(Characteristic::Str, 3);
+
+    // A great sword (two-handed) + a shield → advisory warning.
+    e.equipment = vec![
+        EquipmentSlot {
+            item: Id::new("weapon.sword_great"),
+            equipped: true,
+            specialization_applies: false,
+        },
+        EquipmentSlot {
+            item: Id::new("shield.heater"),
+            equipped: true,
+            specialization_applies: false,
+        },
+    ];
+    let result = validate(&e, &rs);
+    let warning = result
+        .issues
+        .iter()
+        .find(|i| i.code == "shield_with_two_handed_weapon")
+        .expect("shield + two-handed-only must warn");
+    assert_eq!(warning.severity, arm_rules::IssueSeverity::Warning);
+
+    // Add a one-handed weapon: the shield is now usable, so the advisory clears.
+    e.equipment.push(EquipmentSlot {
+        item: Id::new("weapon.sword_long"),
+        equipped: true,
+        specialization_applies: false,
+    });
+    let result = validate(&e, &rs);
+    assert!(
+        !result
+            .issues
+            .iter()
+            .any(|i| i.code == "shield_with_two_handed_weapon"),
+        "a one-handed weapon makes the shield usable — no advisory"
+    );
+}
+
+/// Issue C: `specialization_applies` is a canonical, additive field — it survives
+/// a JSON round-trip and participates in the derived `Ord`, so `normalize` sorts
+/// deterministically on it and it serializes only when true (skip-when-false).
+#[test]
+fn specialization_applies_round_trips_and_sorts() {
+    // Skip-when-false keeps the JSON noise-free; true is written.
+    let off = EquipmentSlot {
+        item: Id::new("weapon.sword_long"),
+        equipped: true,
+        specialization_applies: false,
+    };
+    let off_json = serde_json::to_string(&off).unwrap();
+    assert!(
+        !off_json.contains("specialization_applies"),
+        "false is skipped: {off_json}"
+    );
+    let on = EquipmentSlot {
+        specialization_applies: true,
+        ..off.clone()
+    };
+    let on_json = serde_json::to_string(&on).unwrap();
+    assert!(on_json.contains("specialization_applies"));
+    assert_eq!(serde_json::from_str::<EquipmentSlot>(&on_json).unwrap(), on);
+
+    // The field joins the derived Ord: two otherwise-identical slots order with
+    // `false` before `true`, so normalize is deterministic.
+    let mut e = entity("grog", vec![]);
+    e.equipment = vec![on.clone(), off.clone()];
+    e.normalize();
+    assert!(!e.equipment[0].specialization_applies);
+    assert!(e.equipment[1].specialization_applies);
+}
+
 #[test]
 fn normalize_sorts_equipment() {
     let mut e = entity("grog", vec![]);
@@ -574,10 +659,12 @@ fn normalize_sorts_equipment() {
         EquipmentSlot {
             item: Id::new("weapon.warhammer"),
             equipped: false,
+            specialization_applies: false,
         },
         EquipmentSlot {
             item: Id::new("armor.chain_mail_full"),
             equipped: true,
+            specialization_applies: false,
         },
     ];
     e.normalize();
@@ -1352,14 +1439,17 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
         EquipmentSlot {
             item: Id::new("weapon.axe"),
             equipped: true,
+            specialization_applies: false,
         },
         EquipmentSlot {
             item: Id::new("shield.round"),
             equipped: true,
+            specialization_applies: false,
         },
         EquipmentSlot {
             item: Id::new("armor.chain_mail_partial"),
             equipped: true,
+            specialization_applies: false,
         },
     ];
     e.familiar = Some(Familiar {
