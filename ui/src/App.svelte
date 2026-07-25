@@ -5,8 +5,7 @@
   import LanguageSelector from './lib/components/LanguageSelector.svelte';
   import ModeToggle from './lib/components/ModeToggle.svelte';
   import CharacterTypeSelector from './lib/components/CharacterTypeSelector.svelte';
-  import ItemPicker from './lib/components/ItemPicker.svelte';
-  import VfSelectionList from './lib/components/VfSelectionList.svelte';
+  import VirtueFlawTab from './lib/components/VirtueFlawTab.svelte';
   import CharacteristicPicker from './lib/components/CharacteristicPicker.svelte';
   import AbilityTab from './lib/components/AbilityTab.svelte';
   import XpBar from './lib/components/XpBar.svelte';
@@ -196,24 +195,7 @@
   {:else if tab === 'virtues_flaws'}
     <div class="vf-tab">
       <BalanceBar />
-      <div class="region-row">
-        <section class="region region-source">
-          <h2 class="region-title">{store.t('available-title')}</h2>
-          <div class="region-columns">
-            <ItemPicker side="virtue" />
-            <ItemPicker side="flaw" />
-          </div>
-        </section>
-        <section class="region region-selected">
-          <h2 class="region-title">{store.t('selections-title')}</h2>
-          <div class="selected-frame">
-            <div class="region-columns">
-              <VfSelectionList side="virtue" />
-              <VfSelectionList side="flaw" />
-            </div>
-          </div>
-        </section>
-      </div>
+      <VirtueFlawTab />
     </div>
   {:else if tab === 'abilities'}
     <div class="vf-tab">
