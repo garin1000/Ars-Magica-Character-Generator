@@ -172,15 +172,34 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 Effect::HealthMod { track, amount } => {
                     *m.health_mods.entry(*track).or_default() += i32::from(*amount);
                 }
-                Effect::MagicResistanceMod { kind } => m.mr_mods.push(*kind),
+                // Only NoFormBonus folds into the flat per-Form MR number
+                // (magic_resistance()). The realm-conditional / situational variants
+                // (aura bonus, realm susceptibilities) cannot be folded into that flat
+                // figure, so they are surfaced labelled rather than silently dropped.
+                // Source: Ars Magica - Definitive Edition (Core Rules).md:6815-6826
+                // (Susceptibility flaws), :3579-3596 (Commanding Aura) & :4998-5001
+                // (Special Circumstances) for aura_bonus.
+                Effect::MagicResistanceMod { kind } => match kind {
+                    MagicResistanceEffect::NoFormBonus => m.mr_mods.push(*kind),
+                    MagicResistanceEffect::AuraBonus
+                    | MagicResistanceEffect::SusceptibleDivine
+                    | MagicResistanceEffect::SusceptibleFaerie
+                    | MagicResistanceEffect::SusceptibleInfernal => {
+                        m.surfaced.push(SurfacedModifier {
+                            family: ModifierFamily::MagicResistance,
+                            detail: kind.to_string(),
+                            amount: 0,
+                        })
+                    }
+                },
                 // Surfaced-only families: listed labelled, never simulated.
                 Effect::AgingMod { kind, amount } => m.surfaced.push(SurfacedModifier {
-                    family: "aging".to_string(),
+                    family: ModifierFamily::Aging,
                     detail: kind.to_string(),
                     amount: i32::from(*amount),
                 }),
                 Effect::AdvancementMod { source, amount } => m.surfaced.push(SurfacedModifier {
-                    family: "advancement".to_string(),
+                    family: ModifierFamily::Advancement,
                     detail: source.to_string(),
                     amount: i32::from(*amount),
                 }),
@@ -203,13 +222,13 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     | SpecialCasting::Mercurian
                     | SpecialCasting::LifeBoost
                     | SpecialCasting::Circumstantial => m.surfaced.push(SurfacedModifier {
-                        family: "special_casting".to_string(),
+                        family: ModifierFamily::SpecialCasting,
                         detail: kind.to_string(),
                         amount: 0,
                     }),
                 },
                 Effect::AbilityRollMod { param, amount } => m.surfaced.push(SurfacedModifier {
-                    family: "ability_roll".to_string(),
+                    family: ModifierFamily::AbilityRoll,
                     detail: selection
                         .params
                         .get(param)
@@ -973,7 +992,11 @@ fn combat_gear_is_majority(combat_load: u32, total_load: u32) -> bool {
 /// largely due to weapons and armor; otherwise it applies. Initiative is always
 /// penalized regardless (Core:16658), so this governs only Attack/Defense.
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:17105.
-pub fn combat_encumbrance_applies(entity: &Entity, ruleset: &Ruleset) -> bool {
+///
+/// Crate-internal: an implementation detail of [`combat_totals`], not part of the
+/// curated public API (unlike the surfaced totals `combat_totals` / `soak` /
+/// `encumbrance` the frontend consumes).
+pub(crate) fn combat_encumbrance_applies(entity: &Entity, ruleset: &Ruleset) -> bool {
     let total_load = encumbrance(entity, ruleset).load;
     let combat_load = combat_gear_load(entity, ruleset);
     !combat_gear_is_majority(combat_load, total_load)
@@ -1024,13 +1047,43 @@ pub fn soak(entity: &Entity, ruleset: &Ruleset) -> SoakTotal {
 
 // --- Fatigue & Wounds ------------------------------------------------------
 
+/// The five penalty-bearing Fatigue levels. A fixed rules taxonomy, rendered via
+/// Fluent, never as a raw slug. Unconscious is a game state with no action penalty
+/// and is intentionally not a variant here. Source: Core:17127-17129.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FatigueTier {
+    /// No fatigue; no penalty.
+    Fresh,
+    /// One level lost; no penalty.
+    Winded,
+    /// Weary: −1 to all actions.
+    Weary,
+    /// Tired: −3 to all actions.
+    Tired,
+    /// Dazed: −5 to all actions.
+    Dazed,
+}
+
+impl std::fmt::Display for FatigueTier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            FatigueTier::Fresh => "fresh",
+            FatigueTier::Winded => "winded",
+            FatigueTier::Weary => "weary",
+            FatigueTier::Tired => "tired",
+            FatigueTier::Dazed => "dazed",
+        })
+    }
+}
+
 /// A Fatigue level and the penalty it imposes on all actions.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FatigueLevel {
-    /// Stable level id (`"fresh"`, `"winded"`, `"weary"`, `"tired"`, `"dazed"`),
-    /// mapped through Fluent. `"unconscious"` is a game state with no action
-    /// penalty and is intentionally not surfaced as a penalty row here.
-    pub level: String,
+    /// The Fatigue tier this row reports; serializes to its stable slug
+    /// (`"fresh"`, `"winded"`, `"weary"`, `"tired"`, `"dazed"`), mapped through
+    /// Fluent. Unconscious is a game state and is intentionally not surfaced here.
+    pub level: FatigueTier,
     /// The penalty applied at this level (≤ 0), after any HealthMod fatigue delta.
     pub penalty: i32,
 }
@@ -1049,26 +1102,56 @@ pub fn fatigue_levels(entity: &Entity, ruleset: &Ruleset) -> Vec<FatigueLevel> {
     // (id, base penalty). Fresh/Winded are penalty-free; Unconscious is its own
     // penalty (no numeric). Core:17127-17129 gives Weary −1, Tired −3, Dazed −5.
     [
-        ("fresh", 0),
-        ("winded", 0),
-        ("weary", -1),
-        ("tired", -3),
-        ("dazed", -5),
+        (FatigueTier::Fresh, 0),
+        (FatigueTier::Winded, 0),
+        (FatigueTier::Weary, -1),
+        (FatigueTier::Tired, -3),
+        (FatigueTier::Dazed, -5),
     ]
     .into_iter()
     .map(|(level, base)| FatigueLevel {
-        level: level.to_string(),
+        level,
         // A positive delta reduces magnitude; never flip a penalty positive.
         penalty: (base + delta).min(0),
     })
     .collect()
 }
 
+/// The five wound bands, in ascending severity. A fixed rules taxonomy, rendered
+/// via Fluent, never as a raw slug. Source: Core:17167-17191.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WoundBand {
+    /// Light wound: −1 per wound.
+    Light,
+    /// Medium wound: −3 per wound.
+    Medium,
+    /// Heavy wound: −5 per wound.
+    Heavy,
+    /// Incapacitating wound (special; no numeric per-wound penalty).
+    Incapacitating,
+    /// Dead (special; open-ended top band).
+    Dead,
+}
+
+impl std::fmt::Display for WoundBand {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            WoundBand::Light => "light",
+            WoundBand::Medium => "medium",
+            WoundBand::Heavy => "heavy",
+            WoundBand::Incapacitating => "incapacitating",
+            WoundBand::Dead => "dead",
+        })
+    }
+}
+
 /// One wound band's inclusive damage range and its per-wound penalty.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct WoundRange {
-    /// Stable band id (`"light"`, `"medium"`, `"heavy"`, `"incapacitating"`, `"dead"`).
-    pub level: String,
+    /// The wound band; serializes to its stable slug (`"light"`, `"medium"`,
+    /// `"heavy"`, `"incapacitating"`, `"dead"`), mapped through Fluent.
+    pub level: WoundBand,
     /// Lowest damage-total value in this band.
     pub min: i32,
     /// Highest damage-total value in this band; `None` for the open-ended Dead band.
@@ -1095,31 +1178,31 @@ pub fn wound_ranges(entity: &Entity, ruleset: &Ruleset) -> Vec<WoundRange> {
     let pen = |base: i32| (base + delta).min(0);
     vec![
         WoundRange {
-            level: "light".to_string(),
+            level: WoundBand::Light,
             min: 1,
             max: Some(u),
             penalty: Some(pen(-1)),
         },
         WoundRange {
-            level: "medium".to_string(),
+            level: WoundBand::Medium,
             min: u + 1,
             max: Some(2 * u),
             penalty: Some(pen(-3)),
         },
         WoundRange {
-            level: "heavy".to_string(),
+            level: WoundBand::Heavy,
             min: 2 * u + 1,
             max: Some(3 * u),
             penalty: Some(pen(-5)),
         },
         WoundRange {
-            level: "incapacitating".to_string(),
+            level: WoundBand::Incapacitating,
             min: 3 * u + 1,
             max: Some(4 * u),
             penalty: None,
         },
         WoundRange {
-            level: "dead".to_string(),
+            level: WoundBand::Dead,
             min: 4 * u + 1,
             max: None,
             penalty: None,
@@ -1163,7 +1246,6 @@ pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBo
     match ritual.source {
         LongevitySource::SelfMade => {
             let lab_total = creo_corpus_lab_total(entity, ruleset);
-            // +1 per 5 points or fraction → ceil(lab_total / 5).
             // +1 per 5 points or fraction → ceil(lab_total / 5) in unsigned space
             // (lab_total > 0 in this branch; i32::div_ceil is still unstable).
             let bonus = if aura_present && lab_total > 0 {
@@ -1250,13 +1332,49 @@ pub fn masterpiece_item_cap(entity: &Entity, ruleset: &Ruleset) -> Option<Master
 
 // --- Surfaced-only modifiers -----------------------------------------------
 
+/// The family a surfaced-only 5b modifier belongs to. A fixed, closed taxonomy —
+/// every producer in [`in_play_mods`] tags its row with exactly one of these — so
+/// it is an enum, rendered via Fluent, never as a raw slug. (The `detail` within a
+/// family stays a `String`: it is an open free-text / per-effect subject.)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ModifierFamily {
+    /// Aging-roll modifiers (Unaging and similar).
+    Aging,
+    /// Advancement / study modifiers (Apt Student and similar).
+    Advancement,
+    /// Non-standard-casting quirks not folded into a casting cell.
+    SpecialCasting,
+    /// Ability-roll modifiers scoped to a specific Ability.
+    AbilityRoll,
+    /// Surfaced health-track rolls (fatigue / casting-fatigue / recovery).
+    HealthRoll,
+    /// Realm-conditional / situational Magic-Resistance modifiers that cannot be
+    /// folded into the flat per-Form MR number (aura bonus, realm susceptibilities).
+    MagicResistance,
+}
+
+impl std::fmt::Display for ModifierFamily {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            ModifierFamily::Aging => "aging",
+            ModifierFamily::Advancement => "advancement",
+            ModifierFamily::SpecialCasting => "special_casting",
+            ModifierFamily::AbilityRoll => "ability_roll",
+            ModifierFamily::HealthRoll => "health_roll",
+            ModifierFamily::MagicResistance => "magic_resistance",
+        })
+    }
+}
+
 /// A surfaced-only 5b modifier the app **lists** rather than simulates (study /
 /// aging-roll / non-standard-casting / wound-recovery families).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SurfacedModifier {
-    /// The family slug (`"aging"`, `"advancement"`, `"special_casting"`,
-    /// `"ability_roll"`, `"health_roll"`), mapped through Fluent.
-    pub family: String,
+    /// The modifier's family; serializes to its stable slug (`"aging"`,
+    /// `"advancement"`, `"special_casting"`, `"ability_roll"`, `"health_roll"`),
+    /// mapped through Fluent.
+    pub family: ModifierFamily,
     /// The scalar/detail slug within the family (an enum's `Display`, or a free-text
     /// subject for ability-roll modifiers).
     pub detail: String,
@@ -1275,7 +1393,7 @@ pub fn surfaced_modifiers(entity: &Entity, ruleset: &Ruleset) -> Vec<SurfacedMod
         match track {
             HealthTrack::FatigueRoll | HealthTrack::CastingFatigue | HealthTrack::Recovery => {
                 m.surfaced.push(SurfacedModifier {
-                    family: "health_roll".to_string(),
+                    family: ModifierFamily::HealthRoll,
                     detail: track.to_string(),
                     amount: *amount,
                 });
@@ -1465,6 +1583,9 @@ mod tests {
           { "id": "flaw.limited_magic_resistance", "kind": "flaw", "classification": "in_play_effect",
             "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"],
             "effects": [{ "type": "magic_resistance_mod", "kind": "no_form_bonus" }] },
+          { "id": "flaw.susceptibility_to_divine_power", "kind": "flaw", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "magic_resistance_mod", "kind": "susceptible_divine" }] },
           { "id": "virtue.unaging", "kind": "virtue", "classification": "in_play_effect",
             "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
             "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }] },
@@ -2274,15 +2395,18 @@ mod tests {
         let rs = ruleset();
         let e = grog(); // Size 0 (no SizeDelta).
         let w = wound_ranges(&e, &rs);
-        let light = w.iter().find(|b| b.level == "light").unwrap();
+        let light = w.iter().find(|b| b.level == WoundBand::Light).unwrap();
         assert_eq!((light.min, light.max), (1, Some(5)));
-        let medium = w.iter().find(|b| b.level == "medium").unwrap();
+        let medium = w.iter().find(|b| b.level == WoundBand::Medium).unwrap();
         assert_eq!((medium.min, medium.max), (6, Some(10)));
-        let heavy = w.iter().find(|b| b.level == "heavy").unwrap();
+        let heavy = w.iter().find(|b| b.level == WoundBand::Heavy).unwrap();
         assert_eq!((heavy.min, heavy.max), (11, Some(15)));
-        let incap = w.iter().find(|b| b.level == "incapacitating").unwrap();
+        let incap = w
+            .iter()
+            .find(|b| b.level == WoundBand::Incapacitating)
+            .unwrap();
         assert_eq!((incap.min, incap.max), (16, Some(20)));
-        let dead = w.iter().find(|b| b.level == "dead").unwrap();
+        let dead = w.iter().find(|b| b.level == WoundBand::Dead).unwrap();
         assert_eq!((dead.min, dead.max), (21, None));
         assert_eq!(light.penalty, Some(-1));
         assert_eq!(medium.penalty, Some(-3));
@@ -2309,16 +2433,34 @@ mod tests {
         e.selections = vec![Selection::new(Id::new("virtue.enduring_constitution"))];
         let f = fatigue_levels(&e, &rs);
         // Weary −1 + 1 = 0; Tired −3 + 1 = −2.
-        assert_eq!(f.iter().find(|l| l.level == "weary").unwrap().penalty, 0);
-        assert_eq!(f.iter().find(|l| l.level == "tired").unwrap().penalty, -2);
+        assert_eq!(
+            f.iter()
+                .find(|l| l.level == FatigueTier::Weary)
+                .unwrap()
+                .penalty,
+            0
+        );
+        assert_eq!(
+            f.iter()
+                .find(|l| l.level == FatigueTier::Tired)
+                .unwrap()
+                .penalty,
+            -2
+        );
         let w = wound_ranges(&e, &rs);
         // Light −1 + 1 = 0; Medium −3 + 1 = −2.
         assert_eq!(
-            w.iter().find(|b| b.level == "light").unwrap().penalty,
+            w.iter()
+                .find(|b| b.level == WoundBand::Light)
+                .unwrap()
+                .penalty,
             Some(0)
         );
         assert_eq!(
-            w.iter().find(|b| b.level == "medium").unwrap().penalty,
+            w.iter()
+                .find(|b| b.level == WoundBand::Medium)
+                .unwrap()
+                .penalty,
             Some(-2)
         );
     }
@@ -2359,10 +2501,9 @@ mod tests {
         let mut e = magus();
         e.selections = vec![Selection::new(Id::new("virtue.apt_student"))];
         let s = surfaced_modifiers(&e, &rs);
-        assert!(
-            s.iter()
-                .any(|m| m.family == "advancement" && m.detail == "taught" && m.amount == 5)
-        );
+        assert!(s.iter().any(|m| m.family == ModifierFamily::Advancement
+            && m.detail == "taught"
+            && m.amount == 5));
     }
 
     /// Inventive Genius folds a flat +3 into the Lab-Total `lab_mod` addend of
@@ -2435,8 +2576,9 @@ mod tests {
         e.selections = vec![Selection::new(Id::new("virtue.unaging"))];
         let s = surfaced_modifiers(&e, &rs);
         assert!(
-            s.iter()
-                .any(|m| m.family == "aging" && m.detail == "no_aging" && m.amount == 0)
+            s.iter().any(|m| m.family == ModifierFamily::Aging
+                && m.detail == "no_aging"
+                && m.amount == 0)
         );
     }
 
@@ -2451,15 +2593,29 @@ mod tests {
             Selection::new(Id::new("virtue.life_boost")),
         ];
         let s = surfaced_modifiers(&e, &rs);
-        assert!(
-            s.iter()
-                .any(|m| m.family == "special_casting" && m.detail == "diedne" && m.amount == 0)
-        );
-        assert!(
-            s.iter().any(|m| m.family == "special_casting"
-                && m.detail == "life_boost"
-                && m.amount == 0)
-        );
+        assert!(s.iter().any(|m| m.family == ModifierFamily::SpecialCasting
+            && m.detail == "diedne"
+            && m.amount == 0));
+        assert!(s.iter().any(|m| m.family == ModifierFamily::SpecialCasting
+            && m.detail == "life_boost"
+            && m.amount == 0));
+    }
+
+    /// A non-flat Magic-Resistance modifier (Susceptibility to Divine power) is
+    /// surfaced labelled with amount 0, not silently dropped. Only NoFormBonus is
+    /// folded into the flat per-Form MR number; the realm-conditional variants are
+    /// listed. Source: Core:6815-6826.
+    #[test]
+    fn susceptibility_magic_resistance_is_surfaced() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new(
+            "flaw.susceptibility_to_divine_power",
+        ))];
+        let s = surfaced_modifiers(&e, &rs);
+        assert!(s.iter().any(|m| m.family == ModifierFamily::MagicResistance
+            && m.detail == "susceptible_divine"
+            && m.amount == 0));
     }
 
     /// An AbilityRollMod (Academic Concentration) is surfaced with the free-text
@@ -2473,10 +2629,9 @@ mod tests {
             BTreeMap::from([("subject".into(), Id::new("theology"))]),
         )];
         let s = surfaced_modifiers(&e, &rs);
-        assert!(
-            s.iter()
-                .any(|m| m.family == "ability_roll" && m.detail == "theology" && m.amount == 3)
-        );
+        assert!(s.iter().any(|m| m.family == ModifierFamily::AbilityRoll
+            && m.detail == "theology"
+            && m.amount == 3));
     }
 
     /// Weak Spontaneous Magic halves the spontaneous totals only; the formulaic
@@ -2592,13 +2747,18 @@ mod tests {
         let mut e = magus();
         e.selections = vec![Selection::new(Id::new("virtue.long_winded"))];
         let s = surfaced_modifiers(&e, &rs);
-        assert!(
-            s.iter()
-                .any(|m| m.family == "health_roll" && m.detail == "fatigue_roll" && m.amount == 3)
-        );
+        assert!(s.iter().any(|m| m.family == ModifierFamily::HealthRoll
+            && m.detail == "fatigue_roll"
+            && m.amount == 3));
         // The fatigue-penalty track is untouched: Weary stays −1.
         let f = fatigue_levels(&e, &rs);
-        assert_eq!(f.iter().find(|l| l.level == "weary").unwrap().penalty, -1);
+        assert_eq!(
+            f.iter()
+                .find(|l| l.level == FatigueTier::Weary)
+                .unwrap()
+                .penalty,
+            -1
+        );
     }
 
     /// An External longevity ritual passes the entered bonus straight through, with

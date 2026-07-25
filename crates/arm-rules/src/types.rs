@@ -226,6 +226,14 @@ impl fmt::Display for Classification {
 /// { "kind": "any",   "value": [ /* ... */ ] }
 /// { "kind": "none",  "value": [ /* ... */ ] }
 /// { "kind": "house", "value": "house.x" }
+/// ```
+///
+/// The `"none"` tag is the boolean **NOR** operator (the `Nor` variant): it is
+/// satisfied only when *none* of its child prereqs are present. It does **not**
+/// mean "no prerequisite" — an entity with no prereqs simply omits the field
+/// entirely. The tag stays `"none"` because it is a locked wire contract.
+///
+/// ```json
 /// { "kind": "ability_min", "value": { "ability": "ability.x", "score": 1 } }
 /// { "kind": "art_min",     "value": { "art": "art.x", "score": 1 } }
 /// { "kind": "is_magus" }
@@ -271,10 +279,21 @@ pub enum Prereq {
 }
 
 /// The kind of value a parameter slot carries.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+///
+/// A forward-looking, single-variant discriminant. Today it carries no behavior:
+/// parameter validation keys entirely off [`ParameterDomain`] (see
+/// `validation::selections::validate_parameters`), which `domain` already
+/// subsumes — `Text` and `Characteristic` values are not entity refs at all.
+/// The field therefore defaults to `Ref` and is optional in rules JSON; it is
+/// retained (rather than deleted) so a future non-ref parameter kind can be
+/// added without a wire change.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Serialize, Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ParamType {
     /// The parameter value is a reference to another rules entity (an [`Id`]).
+    #[default]
     Ref,
 }
 
@@ -350,8 +369,9 @@ impl fmt::Display for ParameterDomain {
 pub struct ParameterDef {
     /// Stable key the selection's `params` map must use.
     pub key: String,
-    /// The kind of value the parameter carries.
-    #[serde(rename = "type")]
+    /// The kind of value the parameter carries. Optional in rules JSON: defaults
+    /// to [`ParamType::Ref`], the only current variant (see [`ParamType`]).
+    #[serde(rename = "type", default)]
     pub param_type: ParamType,
     /// The domain the parameter value's id must belong to.
     pub domain: ParameterDomain,
@@ -2183,8 +2203,8 @@ impl Entity {
 
     /// Sort selections, ability scores, art scores, spells, personality traits,
     /// reputations, devices, talisman attunements, twilight scars, the aging log
-    /// (by year) and equipment for canonical serialization. (`characteristics`
-    /// and `aging_points` are `BTreeMap`s, already id-ordered.)
+    /// (by year), equipment and powers for canonical serialization.
+    /// (`characteristics` and `aging_points` are `BTreeMap`s, already id-ordered.)
     pub fn normalize(&mut self) {
         self.selections.sort();
         self.ability_scores.sort();
@@ -2458,6 +2478,22 @@ mod tests {
         check(Realm::Faerie);
         check(Realm::Divine);
         check(Realm::Infernal);
+        check(crate::derived::FatigueTier::Fresh);
+        check(crate::derived::FatigueTier::Winded);
+        check(crate::derived::FatigueTier::Weary);
+        check(crate::derived::FatigueTier::Tired);
+        check(crate::derived::FatigueTier::Dazed);
+        check(crate::derived::WoundBand::Light);
+        check(crate::derived::WoundBand::Medium);
+        check(crate::derived::WoundBand::Heavy);
+        check(crate::derived::WoundBand::Incapacitating);
+        check(crate::derived::WoundBand::Dead);
+        check(crate::derived::ModifierFamily::Aging);
+        check(crate::derived::ModifierFamily::Advancement);
+        check(crate::derived::ModifierFamily::SpecialCasting);
+        check(crate::derived::ModifierFamily::AbilityRoll);
+        check(crate::derived::ModifierFamily::HealthRoll);
+        check(crate::derived::ModifierFamily::MagicResistance);
     }
 
     #[test]

@@ -10,7 +10,7 @@ use arm_app::ruleset_io::{
     RULESET_ID, RULESET_VERSION, effective_scores_loaded, load_entity_from_path,
     load_ruleset_from_dir, pick_rules_dir, save_entity_to_path, validate_loaded,
 };
-use arm_rules::{ArtScore, Entity, Id, Ruleset, Selection, ValidationMode};
+use arm_rules::{ArtScore, Entity, Id, Ruleset, RulesetSources, Selection, ValidationMode};
 use pretty_assertions::assert_eq;
 use std::collections::BTreeMap;
 
@@ -369,15 +369,16 @@ fn over_budget_virtues_is_reported() {
     }]"#;
     // The catalogue's ability_score_grant effects reference abilities, so the
     // ruleset must carry the ability registry for referential integrity to pass.
-    let ruleset = Ruleset::from_core_json_with_arts(
-        RULESET_ID,
-        RULESET_VERSION,
-        &items,
-        tiny_type,
-        &abilities,
-        &arts,
-        &characteristics,
-    )
+    let ruleset = Ruleset::from_sources(RulesetSources {
+        id: RULESET_ID,
+        version: RULESET_VERSION,
+        point_items: &items,
+        type_profiles: tiny_type,
+        abilities: Some(&abilities),
+        arts: Some(&arts),
+        characteristics: Some(characteristics.as_str()),
+        ..RulesetSources::default()
+    })
     .unwrap();
 
     let entity: Entity = serde_json::from_str(&format!(

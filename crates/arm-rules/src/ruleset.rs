@@ -188,7 +188,11 @@ fn derived_magnitude_points() -> BTreeMap<Magnitude, u8> {
 /// optional inputs (`abilities`, `characteristics`) are honest `Option`s instead
 /// of sentinel `""`/`"{}"` strings, and each field is named at the call site.
 /// Use [`Ruleset::from_sources`].
-#[derive(Debug, Clone, Copy)]
+///
+/// `Default` yields the empty ruleset (`id`/`version`/JSON fields `""`, every
+/// optional source `None`); tests build a partial ruleset by setting only the
+/// fields they exercise and filling the rest with `..RulesetSources::default()`.
+#[derive(Debug, Clone, Copy, Default)]
 pub struct RulesetSources<'a> {
     /// Stable ruleset identifier.
     pub id: &'a str,
@@ -595,15 +599,15 @@ impl Ruleset {
     /// abilities (catalogue + advancement), and the Characteristic point-buy rules
     /// — validates referential integrity, and returns a Ruleset.
     ///
-    /// `characteristics_json` is an object `{ "start_points", "costs" }`; an empty
-    /// string means the ruleset ships no characteristic rules.
+    /// `characteristics_json` is `Some` of an object `{ "start_points", "costs" }`,
+    /// or `None` for a ruleset that ships no characteristic rules.
     pub fn from_core_json(
         id: &str,
         version: &str,
         point_items_json: &str,
         type_profiles_json: &str,
         abilities_json: &str,
-        characteristics_json: &str,
+        characteristics_json: Option<&str>,
     ) -> Result<Self, RulesetError> {
         Self::from_sources(RulesetSources {
             id,
@@ -617,40 +621,7 @@ impl Ruleset {
             spells: None,
             spell_mastery_abilities: None,
             equipment: None,
-            // Preserve the existing sentinel: an empty string means "no
-            // characteristic rules" for this convenience constructor.
-            characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
-        })
-    }
-
-    /// Like [`Ruleset::from_core_json`] but also loads the Arts file (catalogue +
-    /// Art advancement table). For tests that exercise the Art registry.
-    ///
-    /// `arts_json` is an object `{ "advancement": [...], "arts": [...] }`; both
-    /// keys default to empty, so `"{}"` is a valid empty file.
-    #[allow(clippy::too_many_arguments)]
-    pub fn from_core_json_with_arts(
-        id: &str,
-        version: &str,
-        point_items_json: &str,
-        type_profiles_json: &str,
-        abilities_json: &str,
-        arts_json: &str,
-        characteristics_json: &str,
-    ) -> Result<Self, RulesetError> {
-        Self::from_sources(RulesetSources {
-            id,
-            version,
-            point_items: point_items_json,
-            type_profiles: type_profiles_json,
-            abilities: Some(abilities_json),
-            arts: Some(arts_json),
-            houses: None,
-            mythic_types: None,
-            spells: None,
-            spell_mastery_abilities: None,
-            equipment: None,
-            characteristics: (!characteristics_json.is_empty()).then_some(characteristics_json),
+            characteristics: characteristics_json,
         })
     }
 
@@ -1044,6 +1015,12 @@ impl Ruleset {
     }
 
     /// Looks up an armor entry by id.
+    ///
+    /// Named `armor_item` rather than the sibling singular `armor` because the
+    /// plural iterator already claims `armor()` — "armor" is an uncountable noun,
+    /// so it has no distinct plural to hand the iterator. This is the one
+    /// deliberate exception to the singular-noun lookup convention used by every
+    /// other catalogue accessor (`item`, `ability`, `weapon`, `shield`, …).
     pub fn armor_item(&self, id: &Id) -> Option<&Armor> {
         self.armor.get(id)
     }
@@ -1225,24 +1202,45 @@ impl Ruleset {
     /// Checks that every engine-required Hermetic role ([`ENGINE_REQUIRED_ABILITIES`],
     /// [`ENGINE_REQUIRED_ARTS`]) resolves, failing loudly with the offending id.
     ///
-    /// Gated on the ruleset declaring a magus profile **and** shipping an Arts
-    /// catalogue — the exact condition under which the engine computes a magus's
-    /// play-stats and dereferences these ids. A minimal or non-Hermetic fixture
-    /// (no magus, or no Arts) needs none of them, so it is exempt; this keeps the
+    /// Gated on the ruleset declaring a magus profile — the condition under which
+    /// the engine dereferences these ids while computing a magus's play-stats. A
+    /// non-magus fixture is exempt entirely. The two role families are then gated
+    /// separately on the catalogue each one lives in, mirroring
+    /// [`Self::validate_engine_required_categories`]: the required **abilities**
+    /// (e.g. Parma Magica, which `magic_resistance()` looks up by slug and
+    /// silently treats as 0 if absent) are enforced whenever the ruleset ships an
+    /// abilities catalogue, independent of Arts; the required **arts** are
+    /// enforced only once an Arts catalogue is shipped. A magus fixture that ships
+    /// neither catalogue is exempt from the corresponding family. This keeps the
     /// guard from rejecting valid partial rulesets while still catching a real
-    /// Hermetic ruleset that renamed or dropped one of the roles.
+    /// Hermetic ruleset that renamed or dropped one of the roles — in particular a
+    /// magus ruleset that ships abilities but no Arts is no longer waved through.
     fn validate_engine_required_roles(&self, errors: &mut Vec<String>) {
         let has_magus = self.type_profiles.values().any(|p| p.is_magus);
-        if !has_magus || self.arts.is_empty() {
+        if !has_magus {
             return;
         }
-        for required in ENGINE_REQUIRED_ABILITIES {
-            let id = Id::new(required);
-            if !self.abilities.contains_key(&id) {
-                errors.push(format!(
-                    "engine-required ability '{id}' is missing from the catalogue"
-                ));
+        // The engine-required abilities are dereferenced for a magus (e.g.
+        // `magic_resistance()` looks up Parma Magica by slug and yields 0 if
+        // absent) whenever the ruleset ships an abilities catalogue — the exact
+        // condition under which one of them going missing is a real defect. This
+        // is gated independently of the Arts catalogue (a magus ruleset can ship
+        // abilities without Arts) and, mirroring the personality-category check,
+        // exempts a fixture that ships no abilities catalogue at all.
+        if !self.abilities.is_empty() {
+            for required in ENGINE_REQUIRED_ABILITIES {
+                let id = Id::new(required);
+                if !self.abilities.contains_key(&id) {
+                    errors.push(format!(
+                        "engine-required ability '{id}' is missing from the catalogue"
+                    ));
+                }
             }
+        }
+        // The engine-required Arts are only dereferenced once the ruleset ships an
+        // Arts catalogue; a magus ruleset with no Arts at all needs none of them.
+        if self.arts.is_empty() {
+            return;
         }
         for required in ENGINE_REQUIRED_ARTS {
             let id = Id::new(required);
@@ -2304,6 +2302,44 @@ mod tests {
         assert!(rs.spell(&Id::new("spell.pilum_of_fire")).is_some());
         assert!(rs.spell(&Id::new("spell.missing")).is_none());
         assert_eq!(rs.spells().count(), 1);
+    }
+
+    #[test]
+    fn from_sources_exposes_the_mythic_type_and_spell_mastery_accessors() {
+        let mythic = r#"{ "types": [
+          { "id": "mythic_type.alpha" },
+          { "id": "mythic_type.beta" }
+        ] }"#;
+        let mastery = r#"{ "abilities": [
+          { "id": "spell_mastery_ability.penetration" },
+          { "id": "spell_mastery_ability.fast_casting" }
+        ] }"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: None,
+            mythic_types: Some(mythic),
+            spells: None,
+            spell_mastery_abilities: Some(mastery),
+            equipment: None,
+            characteristics: None,
+        })
+        .unwrap();
+        // Mythic Companion type accessors.
+        assert_eq!(rs.mythic_type_count(), 2);
+        assert_eq!(rs.mythic_types().count(), 2);
+        assert!(
+            rs.mythic_types()
+                .any(|m| m.id == Id::new("mythic_type.alpha")),
+            "the mythic-type iterator must yield the loaded types"
+        );
+        // Spell Mastery ability accessors.
+        assert_eq!(rs.spell_mastery_ability_count(), 2);
+        assert_eq!(rs.spell_mastery_abilities().count(), 2);
     }
 
     #[test]
@@ -3760,15 +3796,15 @@ mod tests {
 
     #[test]
     fn complete_hermetic_ruleset_passes_engine_role_check() {
-        Ruleset::from_core_json_with_arts(
-            "t",
-            "1",
-            VALID_ITEMS,
-            MAGUS_TYPE,
-            HERMETIC_ABILITIES,
-            HERMETIC_ARTS,
-            "",
-        )
+        Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: MAGUS_TYPE,
+            abilities: Some(HERMETIC_ABILITIES),
+            arts: Some(HERMETIC_ARTS),
+            ..RulesetSources::default()
+        })
         .expect("a complete Hermetic ruleset must load");
     }
 
@@ -3781,15 +3817,15 @@ mod tests {
           { "id": "ability.penetration", "category": "arcane" },
           { "id": "ability.philosophiae", "category": "academic" }
         ] }"#;
-        let err = Ruleset::from_core_json_with_arts(
-            "t",
-            "1",
-            VALID_ITEMS,
-            MAGUS_TYPE,
-            abilities,
-            HERMETIC_ARTS,
-            "",
-        )
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: MAGUS_TYPE,
+            abilities: Some(abilities),
+            arts: Some(HERMETIC_ARTS),
+            ..RulesetSources::default()
+        })
         .expect_err("a Hermetic ruleset missing Parma Magica must fail integrity");
         let msg = err.to_string();
         assert!(
@@ -3801,15 +3837,15 @@ mod tests {
     #[test]
     fn missing_engine_required_art_fails_integrity() {
         let arts = r#"{ "arts": [ { "id": "art.creo", "art_type": "technique" } ] }"#;
-        let err = Ruleset::from_core_json_with_arts(
-            "t",
-            "1",
-            VALID_ITEMS,
-            MAGUS_TYPE,
-            HERMETIC_ABILITIES,
-            arts,
-            "",
-        )
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: MAGUS_TYPE,
+            abilities: Some(HERMETIC_ABILITIES),
+            arts: Some(arts),
+            ..RulesetSources::default()
+        })
         .expect_err("a Hermetic ruleset missing Corpus must fail integrity");
         assert!(
             err.to_string().contains("art.corpus"),
@@ -3823,8 +3859,47 @@ mod tests {
         // needs none of the Hermetic engine roles: the check is gated on a magus
         // profile being present.
         let arts = r#"{ "arts": [ { "id": "art.creo", "art_type": "technique" } ] }"#;
-        Ruleset::from_core_json_with_arts("t", "1", VALID_ITEMS, VALID_TYPES, "{}", arts, "")
-            .expect("a non-Hermetic ruleset must not require the engine roles");
+        Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: Some("{}"),
+            arts: Some(arts),
+            ..RulesetSources::default()
+        })
+        .expect("a non-Hermetic ruleset must not require the engine roles");
+    }
+
+    #[test]
+    fn magus_without_arts_still_requires_engine_abilities() {
+        // A magus ruleset that ships an abilities catalogue but NO Arts must
+        // still enforce the engine-required abilities: `magic_resistance()`
+        // dereferences Parma Magica by slug and silently yields 0 if absent, so
+        // a magus ruleset missing Parma would compute MR as if Parma=0. The
+        // ability guard must not be skipped just because the Arts catalogue is
+        // empty. Regression guard for the shared `arts.is_empty()` early return.
+        let abilities = r#"{ "abilities": [
+          { "id": "ability.artes_liberales", "category": "academic" },
+          { "id": "ability.magic_theory", "category": "arcane" },
+          { "id": "ability.penetration", "category": "arcane" },
+          { "id": "ability.philosophiae", "category": "academic" }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: MAGUS_TYPE,
+            abilities: Some(abilities),
+            arts: None,
+            ..RulesetSources::default()
+        })
+        .expect_err("a magus ruleset missing Parma Magica must fail even with no Arts");
+        assert!(
+            err.to_string().contains("ability.parma_magica"),
+            "the error must name the missing required ability, got: {}",
+            err
+        );
     }
 
     // --- Engine-required V/F category (personality) --------------------------
@@ -3951,6 +4026,154 @@ mod tests {
         }
     }
 
+    /// A Mythic Companion type whose `required_flaws` default names an item not in
+    /// the catalogue must fail integrity at load.
+    #[test]
+    fn mythic_type_required_flaw_default_referencing_unknown_item_is_rejected() {
+        let mythic = r#"{ "types": [
+          { "id": "mythic_type.test", "required_flaws": [
+            { "default": { "ref": "flaw.does_not_exist" },
+              "constraint": { "kind": "flaw", "magnitude": "major" } } ] }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: None,
+            mythic_types: Some(mythic),
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: None,
+            characteristics: None,
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("required flaw default")
+                        && m.contains("flaw.does_not_exist")),
+                "expected an unknown required-flaw error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    /// A Mythic Companion type whose source line range is inverted (start > end)
+    /// must fail integrity at load.
+    #[test]
+    fn mythic_type_invalid_source_range_is_rejected() {
+        let mythic = r#"{ "types": [
+          { "id": "mythic_type.test",
+            "source": { "file": "x.md", "lines": [50, 10] } }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: None,
+            mythic_types: Some(mythic),
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: None,
+            characteristics: None,
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("mythic_type.test") && m.contains("source line range")),
+                "expected a mythic-type source-range error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    /// A Spell Mastery ability whose source line range is inverted (start > end)
+    /// must fail integrity at load.
+    #[test]
+    fn spell_mastery_ability_invalid_source_range_is_rejected() {
+        let mastery = r#"{ "abilities": [
+          { "id": "spell_mastery_ability.penetration",
+            "source": { "file": "x.md", "lines": [50, 10] } }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: Some(mastery),
+            equipment: None,
+            characteristics: None,
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("spell_mastery_ability.penetration")
+                        && m.contains("source line range")),
+                "expected a spell-mastery source-range error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    /// A weapon whose source line range is inverted (start > end) must fail
+    /// integrity at load. Its combat Ability resolves so only the range defect
+    /// triggers.
+    #[test]
+    fn weapon_invalid_source_range_is_rejected() {
+        let abilities = r#"{ "advancement": [], "abilities": [
+          { "id": "ability.single_weapon", "category": "martial" }
+        ] }"#;
+        let equipment = r#"{ "weapons": [
+          { "id": "weapon.longsword", "kind": "melee", "init_mod": 2, "defense_mod": 1,
+            "load": 1, "ability": "ability.single_weapon",
+            "source": { "file": "x.md", "lines": [50, 10] } }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: Some(abilities),
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: Some(equipment),
+            characteristics: None,
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("weapon.longsword") && m.contains("source line range")),
+                "expected a weapon source-range error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
     /// A shield whose source line range is inverted (start > end) must fail
     /// integrity at load.
     #[test]
@@ -3982,6 +4205,44 @@ mod tests {
                 "expected a shield source-range error, got {:?}",
                 e.errors()
             ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    /// An armor whose source line range is inverted (start > end) must fail
+    /// integrity at load.
+    #[test]
+    fn armor_invalid_source_range_is_rejected() {
+        let equipment = r#"{ "armor": [
+          { "id": "armor.chain_mail_full", "protection": 9, "load": 6,
+            "source": { "file": "x.md", "lines": [50, 10] } }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: Some(equipment),
+            characteristics: None,
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => {
+                assert!(
+                    e.errors()
+                        .iter()
+                        .any(|m| m.contains("armor.chain_mail_full")
+                            && m.contains("source line range")),
+                    "expected an armor source-range error, got {:?}",
+                    e.errors()
+                )
+            }
             other => panic!("expected integrity error, got {other:?}"),
         }
     }

@@ -35,7 +35,12 @@ pub(crate) fn validate_might(
 /// any. Used only for the [`validate_might`] realm-agreement sanity check.
 fn ruleset_might_grant_realm(entity: &Entity, ruleset: &Ruleset) -> Option<crate::types::Realm> {
     for selection in crate::effective::selections_for_effects(entity, ruleset).iter() {
-        let item = ruleset.point_items.get(&selection.item_ref)?;
+        // A dangling selection ref (legal in direct/unchecked entry) must not
+        // abort the whole scan — skip it, mirroring the sibling validators
+        // (`effective::spell_mastery_floor` et al.).
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
         for effect in &item.effects {
             if let Effect::MightGrant { realm, .. } = effect {
                 return Some(*realm);

@@ -754,8 +754,16 @@ mod tests {
 
     /// Abilities the grant-bearing test Houses seed. Registered so the
     /// `AbilityMin` prereq ref and the `AbilityScoreGrant` effect resolve at load.
+    // Carries the five engine-required Hermetic abilities alongside Heartbeast:
+    // the magus type profile below makes `validate_engine_required_roles` demand
+    // them of any ruleset that ships an abilities catalogue.
     const GRANT_ABILITIES: &str = r#"{ "abilities": [
-        { "id": "ability.heartbeast", "category": "supernatural", "requires_training": true }
+        { "id": "ability.heartbeast", "category": "supernatural", "requires_training": true },
+        { "id": "ability.artes_liberales", "category": "academic" },
+        { "id": "ability.magic_theory", "category": "arcane" },
+        { "id": "ability.parma_magica", "category": "arcane" },
+        { "id": "ability.penetration", "category": "arcane" },
+        { "id": "ability.philosophiae", "category": "academic" }
     ] }"#;
 
     /// A House (Bjornaer) whose fixed grant is the (Major, Hermetic) Heartbeast,
@@ -1543,6 +1551,55 @@ mod tests {
         assert!(
             warning_codes(&result)
                 .contains(&ValidationIssue::CODE_MIGHT_REALM_MISMATCH.to_string())
+        );
+    }
+
+    /// A dangling selection (unresolvable `item_ref`, legal in direct/unchecked
+    /// entry) ordered BEFORE the Might-granting Virtue must NOT suppress the
+    /// realm-agreement check: the granted Realm is still found and the mismatch
+    /// still warns. Regression guard for the early-`?`-abort bug.
+    #[test]
+    fn dangling_selection_before_might_virtue_still_warns() {
+        let rs = rs_with_houses(MIGHT_ITEMS, GRANT_MAGUS_TYPE);
+        let entity_selections = vec![
+            sel("virtue.does_not_exist"), // dangling ref, ordered first
+            sel("virtue.demonic_blood"),  // grants Infernal Might
+        ];
+        let mut entity = make_entity("magus", entity_selections);
+        // Grant realm is Infernal, but the entity's base Might claims Magic.
+        entity.might = Some(MightScore {
+            realm: Realm::Magic,
+            score: 2,
+        });
+        let result = validate(&entity, &rs);
+        assert!(
+            warning_codes(&result)
+                .contains(&ValidationIssue::CODE_MIGHT_REALM_MISMATCH.to_string()),
+            "a dangling selection before the Might Virtue must not disable the \
+             realm check: {:?}",
+            result.issues
+        );
+    }
+
+    /// A being with a base Might but NO Might-granting Virtue exercises the
+    /// `ruleset_might_grant_realm` None path: with no granted Realm to compare
+    /// against, the realm-agreement check is skipped and no mismatch is raised,
+    /// even though the base Realm differs from what a grant would supply.
+    #[test]
+    fn might_without_a_granting_virtue_raises_no_realm_mismatch() {
+        let rs = rs_with_houses(MIGHT_ITEMS, GRANT_MAGUS_TYPE);
+        // No Demonic Blood → nothing grants Might, yet a base Might is entered.
+        let mut entity = make_entity("magus", vec![]);
+        entity.might = Some(MightScore {
+            realm: Realm::Magic,
+            score: 3,
+        });
+        let result = validate(&entity, &rs);
+        assert!(
+            !warning_codes(&result)
+                .contains(&ValidationIssue::CODE_MIGHT_REALM_MISMATCH.to_string()),
+            "with no Might-granting Virtue there is nothing to cross-check: {:?}",
+            result.issues
         );
     }
 
@@ -2882,7 +2939,8 @@ mod tests {
             { "score": -4, "cost": -10 }, { "score": -5, "cost": -15 }
           ]
         }"#;
-        Ruleset::from_core_json("test", "1", items, types, abilities, characteristics).unwrap()
+        Ruleset::from_core_json("test", "1", items, types, abilities, Some(characteristics))
+            .unwrap()
     }
 
     #[test]
@@ -3270,7 +3328,7 @@ mod tests {
             { "score": -1, "cost": -1 }, { "score": -2, "cost": -3 }, { "score": -3, "cost": -6 }
           ]
         }"#;
-        Ruleset::from_core_json("test", "1", "[]", types, abilities, characteristics).unwrap()
+        Ruleset::from_core_json("test", "1", "[]", types, abilities, Some(characteristics)).unwrap()
     }
 
     fn companion_entity() -> Entity {
@@ -3471,7 +3529,16 @@ mod tests {
             { "id": "art.ignem", "art_type": "form" }
           ]
         }"#;
-        Ruleset::from_core_json_with_arts("test", "1", items, types, abilities, arts, "").unwrap()
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some(abilities),
+            arts: Some(arts),
+            ..Default::default()
+        })
+        .unwrap()
     }
 
     #[test]
@@ -3569,7 +3636,16 @@ mod tests {
           ],
           "arts": [ { "id": "art.creo", "art_type": "technique" } ]
         }"#;
-        Ruleset::from_core_json_with_arts("test", "1", items, types, abilities, arts, "").unwrap()
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some(abilities),
+            arts: Some(arts),
+            ..Default::default()
+        })
+        .unwrap()
     }
 
     #[test]
@@ -3856,7 +3932,16 @@ mod tests {
           ],
           "arts": [ { "id": "art.creo", "art_type": "technique" } ]
         }"#;
-        Ruleset::from_core_json_with_arts("test", "1", items, types, "{}", arts, "").unwrap()
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some("{}"),
+            arts: Some(arts),
+            ..Default::default()
+        })
+        .unwrap()
     }
 
     #[test]
@@ -4572,8 +4657,16 @@ mod tests {
           "creation_phases": []
         }]"#;
         let arts = r#"{ "arts": [ { "id": "art.creo", "art_type": "technique" } ] }"#;
-        let rs =
-            Ruleset::from_core_json_with_arts("test", "1", items, types, "{}", arts, "").unwrap();
+        let rs = Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some("{}"),
+            arts: Some(arts),
+            ..Default::default()
+        })
+        .unwrap();
 
         let good = make_entity(
             "test_type",
@@ -5409,7 +5502,12 @@ mod tests {
         "abilities": [
         { "id": "ability.awareness", "category": "general" },
         { "id": "ability.second_sight", "category": "supernatural", "requires_training": true },
-        { "id": "ability.animal_ken", "category": "supernatural", "requires_training": true } ] }"#;
+        { "id": "ability.animal_ken", "category": "supernatural", "requires_training": true },
+        { "id": "ability.artes_liberales", "category": "academic" },
+        { "id": "ability.magic_theory", "category": "arcane" },
+        { "id": "ability.parma_magica", "category": "arcane" },
+        { "id": "ability.penetration", "category": "arcane" },
+        { "id": "ability.philosophiae", "category": "academic" } ] }"#;
     const P7_TYPES: &str = r#"[
         { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
           "gift_policy": "allowed", "gift_id": "virtue.the_gift",

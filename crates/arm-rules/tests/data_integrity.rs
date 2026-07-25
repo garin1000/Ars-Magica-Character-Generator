@@ -17,7 +17,7 @@ fn load_ruleset() -> Ruleset {
         items,
         types,
         abilities,
-        characteristics,
+        Some(characteristics),
     )
     .unwrap()
 }
