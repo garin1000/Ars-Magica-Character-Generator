@@ -188,7 +188,7 @@ Include this context in every reviewer and fixer agent prompt:
 
 ```
 ## Project: Ars Magica 5e Character Generator
-Workspace at /home/norbert/Rolle/arm-char-gen
+Workspace: the repository root (this project's checkout)
 
 ### Key architecture invariants (from CLAUDE.md)
 - Engine purity: arm-rules has NO dependency on tauri, filesystem, or UI

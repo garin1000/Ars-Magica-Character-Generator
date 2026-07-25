@@ -1,0 +1,105 @@
+name: Release
+
+# Cuts cross-platform builds and attaches them to a GitHub Release.
+#
+# Two ways this runs:
+#   • Push a tag like `v0.1.0`  -> builds every platform, uploads installers as a
+#     DRAFT GitHub Release for that tag (you review, then click Publish).
+#   • "Run workflow" (manual)   -> builds every platform and uploads the binaries
+#     as downloadable workflow ARTIFACTS only (no Release). Use this to test.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write # required for the draft Release upload
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04 # -> .deb, .rpm, .AppImage (built on old glibc = runs on more distros)
+          - platform: windows-latest # -> .msi, NSIS .exe setup
+          # - platform: macos-latest   # GitHub's Mac runner builds the .dmg for you — you do NOT need to own a
+          #                            # Mac. You just can't verify it locally. Uncomment to ship macOS too.
+          #                            # (Unsigned .dmg triggers a Gatekeeper warning until you add an Apple cert.)
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # WebKitGTK is the Linux system WebView the app renders in; only the Linux leg needs it.
+      - name: Install Linux WebView + bundling deps
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libfuse2 \
+            file \
+            build-essential \
+            libssl-dev \
+            libxdo-dev
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      # Installs the frontend deps so the Tauri `beforeBuildCommand`
+      # (`npm --prefix ../ui run build`) can produce ui/dist during the build.
+      - name: Install frontend dependencies
+        run: npm --prefix ui ci
+
+      # The same CLI the local gate uses (`cargo tauri build`). Pinned to match dev.
+      # `cargo install` compiles it (~3-5 min); swap for a prebuilt binary later if you want it faster.
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version '~2.11' --locked
+
+      # Identical to the proven local invocation, minus --no-bundle so it produces
+      # installers. Config lives at crates/arm-app/tauri.conf.json and the CLI finds
+      # it from the repo root. Bundled rules resources are baked in by bundle.resources.
+      - name: Build application bundles
+        run: cargo tauri build
+
+      # For manual/dispatch test runs: download these from the run summary and
+      # install/run them — no Release is created.
+      - name: Upload build artifacts (for testing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: arm-char-gen-${{ matrix.platform }}
+          if-no-files-found: ignore
+          path: |
+            target/release/bundle/deb/*.deb
+            target/release/bundle/rpm/*.rpm
+            target/release/bundle/appimage/*.AppImage
+            target/release/bundle/msi/*.msi
+            target/release/bundle/nsis/*.exe
+
+      # Only on a tag push: attach the same files to a DRAFT Release for that tag.
+      - name: Attach to draft GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          fail_on_unmatched_files: false
+          files: |
+            target/release/bundle/deb/*.deb
+            target/release/bundle/rpm/*.rpm
+            target/release/bundle/appimage/*.AppImage
+            target/release/bundle/msi/*.msi
+            target/release/bundle/nsis/*.exe
