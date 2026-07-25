@@ -69,11 +69,14 @@ it, every agent MUST:
   and `node` resolve directly. (This supersedes any "source cargo/nvm first" note in older
   run recipes.)
 - **Use the allowlisted build-command forms:** `cargo test/clippy/fmt/tarpaulin/tauri …`
-  and `npm run <script>` from the target directory. NEVER bare `npm`/`node`,
-  `npm install`, or `npm ci` — those are not allowlisted and will be denied.
-- Run the UI gate by `cd`-ing into `ui/` (its own call; the Bash working directory
-  persists across calls), then `npm run check`, `npm run test:unit`, `npm run lint`,
-  `npm run format:check`.
+  and `npm run <script>`. NEVER bare `npm`/`node`, `npm install`, `npm ci`, or
+  **`npm --prefix <dir> run …`** — none of those match `npm run:*`, so they are denied.
+- **Run the UI gate as one compound call:** `cd <repo>/ui && npm run <script>` — e.g.
+  `cd /home/norbert/Rolle/arm-char-gen/ui && npm run check`. Both stages are allowlisted
+  (`cd:*` + `npm run:*`) so the whole line auto-approves, and using the absolute path makes
+  it independent of the current working directory. Do NOT rely on a bare `cd ui` from an
+  earlier call persisting, and do NOT use `npm --prefix ui run …` (not allowlisted). Run
+  `npm run check`, `npm run test:unit`, `npm run lint`, `npm run format:check` this way.
 - File reads inside the repo and under the session scratchpad/`tmp/` need no approval; do
   not read unrelated out-of-repo paths.
 
@@ -158,9 +161,10 @@ Prompt context (paste PROJECT_CONTEXT below + this):
 > Run: cargo test, cargo clippy (warnings as errors), cargo fmt --check,
 > cargo tarpaulin -p arm-rules --out json --output-dir tmp/
 >
-> If ui/ exists, also run its type-check, tests, lint, and format — each as its OWN
-> single-command Bash call per the Command hygiene rules (NOT chained with `&&`): first
-> `cd ui`, then `npm run check`, `npm run test:unit`, `npm run lint`, `npm run format:check`.
+> If ui/ exists, also run its type-check, tests, lint, and format — each as a
+> `cd <repo>/ui && npm run <script>` compound (see Command hygiene), e.g.
+> `cd /home/norbert/Rolle/arm-char-gen/ui && npm run check`, then `npm run test:unit`,
+> `npm run lint`, `npm run format:check`.
 > `npm run check` (svelte-check) is MANDATORY: vitest does NOT type-check, so TS
 > type errors (including in test files) pass `test:unit` yet break the build.
 > If ui/ does not exist, skip — do NOT report it.
@@ -208,10 +212,10 @@ For each category (architecture, API surface, QA) that has findings:
 4. Repeat for API surface and QA fixers.
 
 Each fixer agent must run `cargo test -p arm-rules` after fixing and ensure tests pass.
-A fixer that touched ui/ must also run svelte-check — `cd ui` then `npm run check` as two
-separate single-command calls (see Command hygiene) — so TS type errors are caught; vitest
+A fixer that touched ui/ must also run svelte-check via
+`cd <repo>/ui && npm run check` (see Command hygiene) so TS type errors are caught; vitest
 does not type-check. The QA fixer must also run clippy, fmt, and tarpaulin. All commands
-follow the Command hygiene rules: one allowlisted command per call, no chaining or
+follow the Command hygiene rules: allowlisted stages only, no `npm --prefix`, no
 env-sourcing.
 
 ### Phase 4: Verify
@@ -221,8 +225,9 @@ Run a verification agent (or bash commands directly) to confirm:
 2. `cargo clippy --workspace -- -D warnings` — clean
 3. `cargo fmt --check` — clean
 4. `cargo tarpaulin -p arm-rules --out json --output-dir tmp/` — coverage percentage
-5. If ui/ exists: `cd ui`, then `npm run check`, `npm run test:unit`, `npm run lint`,
-   `npm run format:check` — each a separate single-command call (see Command hygiene) — all clean
+5. If ui/ exists: `cd <repo>/ui && npm run check`, then `npm run test:unit`,
+   `npm run lint`, `npm run format:check` — each a `cd <repo>/ui && npm run <script>`
+   compound (see Command hygiene) — all clean
 6. **FULL RELEASE APP COMPILE (mandatory): `cargo tauri build --no-bundle`** — must
    succeed. This is the only gate that type-checks the frontend and builds the
    production app/binary; `cargo test`/`clippy` and vitest do not. Convergence
