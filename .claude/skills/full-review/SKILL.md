@@ -16,28 +16,42 @@ so the user can see progress.
 
 ### Command hygiene (ALL agents — required, paste into every agent prompt)
 
-The project's `.claude/settings.local.json` pre-approves a specific set of command
-*prefixes* and pre-sets `PATH` (cargo + node/npm are already on it). Background agents
-cannot raise interactive approval prompts, so any command that does not cleanly match an
-allowlisted prefix is **auto-DENIED** (not queued for approval). To stay inside the
-allowlist, every agent MUST:
+The project's `.claude/settings.local.json` pre-approves a set of command *prefixes* and
+pre-sets `PATH` (cargo + node/npm are already on it). Background agents cannot raise
+interactive approval prompts, so any command containing a stage that does not match an
+allowlisted prefix is **auto-DENIED** (not queued for approval).
 
-- **One command per Bash call.** No `&&`, `;`, `|`, redirects (`>`, `>>`, `tee`), or
-  `$(...)` subshells — a compound line matches no single allowlisted prefix and is denied.
-  To change directory, issue `cd <path>` as its OWN call (the Bash working directory
-  persists across calls), then run the tool command as the next call.
+**Pipes and chains are fine** — the permission checker splits a command on `|`, `&&`, and
+`;` and approves the whole line as long as **every stage matches an allowlisted prefix**.
+So compose freely with pipelines; just keep every stage on the allowlist. To stay inside
+it, every agent MUST:
+
+- **Every stage must be an allowlisted command.** Allowed filter/util tools you can pipe
+  through: `jq`, `grep`, `rg`, `sed`, `awk`, `sort`, `uniq`, `cut`, `tr`, `wc`, `head`,
+  `tail`, `cat`, `diff`, `find`, `ls`, `echo`, `mkdir`. Build tools: `cargo …` (any
+  subcommand), `npm run <script>`, `npx prettier/svelte-check/vitest/wdio`. A pipeline
+  like `cargo tarpaulin … | tail -1` or `jq '.files | length' tmp/tarpaulin-report.json`
+  auto-approves because each stage is allowlisted.
+- **Parse JSON with `jq`, never an interpreter.** Do NOT shell out through `python`,
+  `python3`, `perl`, `ruby`, `node -e`, `bash -c`, or `sh -c` — an interpreter is an
+  arbitrary-code escape hatch that defeats the allowlist, and it is not allowlisted anyway.
+  For the tarpaulin coverage %, read it directly: `cargo tarpaulin` prints a
+  `XX.XX% coverage, N/M lines covered` summary line to stdout during the same run that
+  writes the JSON — capture it (e.g. `… | tail -3`) rather than post-processing the
+  1.5 MB report. If you truly need a field from the JSON, use `jq`.
+- **Write artifacts with the Write tool, not shell redirects.** Redirects (`>`, `>>`,
+  `tee`) are not allowlisted. To create `tmp/review-findings.json` or any file, use the
+  Write/Edit tools (they work in-repo and under `tmp/` without approval).
 - **Never prepend environment setup.** Do NOT add `source ~/.cargo/env`, `export PATH=…`,
-  `nvm use`, or a `source …; …` chain — `PATH` is already configured via the settings
-  `env`, so `cargo`, `npm`, and `node` resolve directly. Prepending these turns a clean,
-  allowlisted command into a denied compound. (This supersedes any "source cargo/nvm
-  first" note in older run recipes — that is unnecessary here.)
-- **Use only the allowlisted command forms**, exactly as the prefix expects:
-  `cargo test …`, `cargo clippy …`, `cargo fmt …`, `cargo tarpaulin …`, `cargo tauri …`,
-  and `npm run <script>` run from the target directory. NEVER bare `npm`/`node`,
+  or `nvm use` — `PATH` is already configured via the settings `env`, so `cargo`, `npm`,
+  and `node` resolve directly. (This supersedes any "source cargo/nvm first" note in older
+  run recipes.)
+- **Use the allowlisted build-command forms:** `cargo test/clippy/fmt/tarpaulin/tauri …`
+  and `npm run <script>` from the target directory. NEVER bare `npm`/`node`,
   `npm install`, or `npm ci` — those are not allowlisted and will be denied.
-- Run the UI gate by first `cd`-ing into `ui/` in one call, then `npm run check`,
-  `npm run test:unit`, `npm run lint`, `npm run format:check` as separate single-command
-  calls (each matches `Bash(npm run:*)`).
+- Run the UI gate by `cd`-ing into `ui/` (its own call; the Bash working directory
+  persists across calls), then `npm run check`, `npm run test:unit`, `npm run lint`,
+  `npm run format:check`.
 - File reads inside the repo and under the session scratchpad/`tmp/` need no approval; do
   not read unrelated out-of-repo paths.
 
