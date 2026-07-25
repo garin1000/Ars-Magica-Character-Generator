@@ -178,6 +178,13 @@ relevant surface MUST preserve them and keep their tests green.
 - **Code style enforced.**
   - Rust: `rustfmt` + `clippy` (warnings as errors: `#![deny(clippy::all)]`)
   - Svelte/TS: `prettier` + `eslint`
+- **Edit files with the Edit/Write tools, never the shell.** Create or modify
+  files (source, data, tests, docs) with the dedicated Edit/Write tools only.
+  Never write or append through shell redirection — no `cat >`, `cat >> … <<EOF`
+  heredocs, `echo >`, `sed -i`, `tee`, or similar. Shell file-writes are opaque to
+  the permission system (so they force an approval prompt that the Edit/Write path
+  avoids) and bypass the harness's file-state tracking. Use the shell only for
+  running commands (build, test, git), not for producing file content.
 - **Negative signs are ASCII hyphens.** Every displayed negative sign (and the
   minus glyph on decrement/stepper buttons) uses the ASCII hyphen-minus `-`
   (U+002D), never the mathematical minus `−` (U+2212) — ASCII stays copy-paste
@@ -264,14 +271,11 @@ cargo tauri dev
 cd ui && npm run test:e2e
 ```
 
-**E2E tests ARE runnable in this environment — do not skip them.** Every
-requirement is already installed and satisfied: `tauri-driver`
-(`~/.cargo/bin/tauri-driver`), `WebKitWebDriver` (`/usr/bin/WebKitWebDriver`),
-and a live display (`DISPLAY` is set — the run is **headful**, not headless).
-Never assume "no display / headless isn't possible" and skip the e2e suite; it
-runs headful here today. It is the only layer that exercises the shipped
-production binary through real IPC + bundled rules resources, so run it when a
-change touches the app's runtime behavior. To test a **portable** layout
+E2E tests drive the **real release binary** — the only layer that exercises the
+shipped production binary through real IPC + bundled rules resources, so run it
+when a change touches the app's runtime behavior. (Machine-specific setup —
+installed tool paths, display availability — lives in the gitignored
+`CLAUDE.local.md`, imported at the end of this file.) To test a **portable** layout
 specifically (rules resolution differs — see `crates/arm-app/src/commands.rs`),
 stage the binary + `rules/` OUTSIDE any `target/` dir and point a wdio config at
 it; the standard suite runs from `target/release` and does not cover that path.
@@ -328,3 +332,11 @@ enum ValidationMode { Enforced, Advisory, Silent }
 - `Enforced` — guided + direct-validated modes (blocks illegal states)
 - `Advisory` — shows violations as non-blocking warnings
 - `Silent` — suppresses validation display (unchecked mode)
+
+## Local, machine-specific guidance
+
+Personal, machine-specific notes that must **not** be published live in a
+gitignored `CLAUDE.local.md`, imported here. This import silently no-ops on a
+fresh clone that lacks the file, so the reference is safe to ship.
+
+@CLAUDE.local.md

@@ -9,6 +9,16 @@ dist-linux/
 tmp/
 .claude/settings.local.json
 
+# Local, machine-specific Claude guidance (imported by CLAUDE.md)
+CLAUDE.local.md
+
+# Character/covenant save files are local working files, not committed —
+# except the sample saves under examples/ used as test/demo fixtures.
+*.armc
+*.armcov
+!examples/**/*.armc
+!examples/**/*.armcov
+
 # Tauri build-generated permission schemas
 crates/arm-app/gen/
 
