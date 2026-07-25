@@ -47,10 +47,20 @@ it, every agent MUST:
   `find … | xargs wc -l`, and `grep -r PATTERN <dir>` instead of `find … -exec grep …`.
   Only reach for an executor if there is genuinely no allowlisted alternative.
 - **Avoid `$`-expansion syntax in commands.** The permission analyzer flags any `$(…)`,
-  backticks, and `$'…'` (ANSI-C quoting) as unverifiable and prompts **regardless of the
-  allowlist** — you cannot allowlist past them. Use plain forms: rely on `sort`'s default
-  whitespace (space/tab) field-splitting, e.g. `… | sort -k2 -nr`, instead of
-  `sort -t$'\t' …`.
+  backticks, `$'…'` (ANSI-C quoting), and even `$VAR`/`$0`/`$1` field refs as unverifiable
+  and prompts **regardless of the allowlist** — you cannot allowlist past them. Use plain
+  forms: rely on `sort`'s default whitespace (space/tab) field-splitting, e.g.
+  `… | sort -k2 -nr`, instead of `sort -t$'\t' …`.
+- **Scan code with `grep`/`rg`, not `awk`/`sed`.** `awk`/`sed` programs are built around
+  `$1`/`$0`/`$` field references, which trip the `$`-expansion guard above and prompt even
+  though `awk`/`sed` are allowlisted. To find items, use `grep`/`rg` with an extended
+  regex — e.g. `grep -rnE '^\s*pub (fn|struct|enum|const|mod|trait)' src/` — or the native
+  Grep tool. Reserve `awk`/`sed` for the rare transform with no `$` in it.
+- **No shell control-flow — `for`, `while`, `if`, `case`.** Loops and conditionals cannot
+  be decomposed into allowlisted prefixes, so the analyzer always prompts on them (and they
+  usually carry `$var` too). Iterate with a glob or the tool's own multi-file arguments
+  (`grep -nE … src/*.rs`, `cargo test -p arm-rules`), or use the native Read/Grep tools —
+  never a `for f in …; do …; done` loop.
 - **Write artifacts with the Write tool, not shell redirects.** Redirects (`>`, `>>`,
   `tee`) are not allowlisted. To create `tmp/review-findings.json` or any file, use the
   Write/Edit tools (they work in-repo and under `tmp/` without approval).
