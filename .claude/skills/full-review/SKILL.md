@@ -39,6 +39,18 @@ it, every agent MUST:
   `XX.XX% coverage, N/M lines covered` summary line to stdout during the same run that
   writes the JSON — capture it (e.g. `… | tail -3`) rather than post-processing the
   1.5 MB report. If you truly need a field from the JSON, use `jq`.
+- **Avoid arbitrary command executors when a direct form exists.** `xargs`, `find -exec`,
+  `bash -c`, `sh -c`, and interpreter `-c`/`-e` flags run a command the allowlist cannot
+  vet, so they are intentionally NOT allowlisted and will prompt/deny. Almost always there
+  is a plain equivalent: prefer a shell glob or the tool's own file arguments over piping
+  into an executor — e.g. `wc -l crates/arm-rules/src/*.rs` instead of
+  `find … | xargs wc -l`, and `grep -r PATTERN <dir>` instead of `find … -exec grep …`.
+  Only reach for an executor if there is genuinely no allowlisted alternative.
+- **Avoid `$`-expansion syntax in commands.** The permission analyzer flags any `$(…)`,
+  backticks, and `$'…'` (ANSI-C quoting) as unverifiable and prompts **regardless of the
+  allowlist** — you cannot allowlist past them. Use plain forms: rely on `sort`'s default
+  whitespace (space/tab) field-splitting, e.g. `… | sort -k2 -nr`, instead of
+  `sort -t$'\t' …`.
 - **Write artifacts with the Write tool, not shell redirects.** Redirects (`>`, `>>`,
   `tee`) are not allowlisted. To create `tmp/review-findings.json` or any file, use the
   Write/Edit tools (they work in-repo and under `tmp/` without approval).
