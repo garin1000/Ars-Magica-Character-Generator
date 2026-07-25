@@ -164,7 +164,10 @@ domains and a **free-text input** for `domain: "text"` (its `{:else}` branch).
 - **Dual-magnitude split.** A `*Major or Minor*` item becomes two entries,
   `<id>_minor` and `<id>_major`, marked mutually `incompatible_with` (so exactly
   one magnitude is chosen), disambiguated in i18n as "Name (Minor/Major)" /
-  "Name (Klein/Groß)". 32 core items split this way.
+  "Name (Klein/Groß)". This mutual exclusion is enforced at load by
+  `ruleset.rs` `validate_magnitude_variant_exclusivity` (see the Magical Focus
+  section), which also covers the sole prefix-form pair
+  `virtue.major_magical_focus` / `virtue.minor_magical_focus` (Core:4405).
 - **German provenance.** DE names/summaries come from the line-mirrored German
   source (`Ars Magica Definitive Edition Basisregeln.md`, same line positions),
   cross-checked against `rules/source/de/translation-tables/tugenden-fehler.md`
@@ -1756,6 +1759,24 @@ a validation rule `validate_magical_focus` (issue code `multiple_magical_foci`,
 Fluent `issue-multiple_magical_foci` in en/de) that **counts** the `MagicalFocus`
 effect across selections + grants — so it also catches two Minor Foci with
 distinct descriptors, which pairwise `incompatible_with` could not.
+
+> `:4405` "A character can have only one Magical Focus, either major or minor,
+> regardless of the source of the focus." (Restated at `:4542`.)
+
+Because a magus may hold only one Magical Focus of **either** magnitude,
+`virtue.major_magical_focus` and `virtue.minor_magical_focus` are marked mutually
+`incompatible_with` in `rules/core/virtues_flaws.json` (Core:4405) — the same
+dual-magnitude convention every `*_major`/`*_minor` V/F pair follows. That
+convention is now enforced at load by `ruleset.rs`
+`validate_magnitude_variant_exclusivity`: it detects variant pairs by shared stem
+under both the `<stem>_major`/`<stem>_minor` **suffix** and the
+`major_<stem>`/`minor_<stem>` **prefix** conventions (Magical Focus is the sole
+prefix pair), and — only when **both** members exist, so a lone `*_major` or the
+unrelated `virtue.minor_enchantments` is never flagged — fails loudly if the pair
+is not mutually incompatible. This is the load-time complement to the selection-
+time `validate_incompatibilities` (issue code `incompatible`); the effect-counting
+`validate_magical_focus` above still additionally catches two Minor Foci with
+distinct descriptors, which no `incompatible_with` pair can express.
 
 | Variant | Family / representative V/F | Source | 5i |
 |---|---|---|---|

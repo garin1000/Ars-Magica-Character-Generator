@@ -1560,3 +1560,38 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     assert_eq!(d.warping_score, 2, "15 points → Warping Score 2");
     assert_eq!(d.decrepitude_score, 2, "17 aging points → Decrepitude 2");
 }
+
+/// Issue F (selection-level): a magus selecting BOTH magnitude variants of the
+/// same Virtue — here the prefix pair Major / Minor Magical Focus — must raise
+/// the incompatibility issue. Behavioral assertion (no catalogue counts).
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:4405.
+#[test]
+fn both_magical_focus_variants_are_incompatible() {
+    let rs = load_ruleset();
+    let focus = |name: &str| {
+        Selection::with_params(
+            Id::new(name),
+            BTreeMap::from([("focus".to_string(), Id::new("fire"))]),
+        )
+    };
+    let e = entity(
+        "magus",
+        vec![
+            focus("virtue.major_magical_focus"),
+            focus("virtue.minor_magical_focus"),
+        ],
+    );
+    let result = validate(&e, &rs);
+    let flagged = result.issues.iter().any(|i| {
+        i.code == arm_rules::validation::ValidationIssue::CODE_INCOMPATIBLE
+            && [i.args.get("item"), i.args.get("other")]
+                .iter()
+                .filter_map(|a| a.map(String::as_str))
+                .any(|a| a == "virtue.major_magical_focus")
+    });
+    assert!(
+        flagged,
+        "selecting both Magical Focus variants must be flagged incompatible, got: {:?}",
+        result.issues
+    );
+}

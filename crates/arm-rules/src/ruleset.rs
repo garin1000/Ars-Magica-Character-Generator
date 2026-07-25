@@ -1122,6 +1122,7 @@ impl Ruleset {
         }
 
         self.validate_incompatibility_symmetry(&mut errors);
+        self.validate_magnitude_variant_exclusivity(&mut errors);
 
         // The advancement table must have unique scores and non-decreasing
         // total_xp, or xp_to_raise's step subtraction would underflow later.
@@ -1800,6 +1801,65 @@ impl Ruleset {
             }
         }
     }
+
+    /// Enforces that the Major and Minor variants of the SAME Virtue/Flaw mutually
+    /// exclude — a character may only take one magnitude of a given item. Variant
+    /// pairs are detected by a shared stem under two naming conventions: the suffix
+    /// form `<stem>_major` / `<stem>_minor` and the prefix form
+    /// `major_<stem>` / `minor_<stem>` (the latter covers Major / Minor Magical
+    /// Focus). Only the Major side is inspected, so each pair is reported once, and
+    /// a pair is considered only when BOTH members exist — a lone `*_major` (or a
+    /// `*_minor` whose `*_major` counterpart is a different, absent concept, e.g.
+    /// `virtue.minor_enchantments`) is never flagged. For every detected pair, both
+    /// members must list each other in `incompatible_with`; otherwise this fails
+    /// loudly naming both offending ids.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4405 ("A character
+    /// can have only one Magical Focus, either major or minor").
+    fn validate_magnitude_variant_exclusivity(&self, errors: &mut Vec<String>) {
+        for (major_id, major_item) in &self.point_items {
+            let Some(minor_id) = minor_variant_sibling(major_id) else {
+                continue;
+            };
+            let Some(minor_item) = self.point_items.get(&minor_id) else {
+                continue;
+            };
+            if !major_item.incompatible_with.contains(&minor_id)
+                || !minor_item.incompatible_with.contains(major_id)
+            {
+                errors.push(format!(
+                    "magnitude variants '{major_id}' and '{minor_id}' must be mutually incompatible_with each other"
+                ));
+            }
+        }
+    }
+}
+
+/// Given an item id, returns the id of its Minor sibling when the id names the
+/// Major member of a magnitude-variant pair, under either the `<stem>_major`
+/// suffix or the `major_<stem>` prefix convention. The `namespace.` prefix is
+/// split off first so the magnitude affix is matched on the name, never the
+/// namespace. The swap is an exact-stem substitution (`_major`↔`_minor`,
+/// `major_`↔`minor_`) leaving the stem byte-identical, so unrelated stems never
+/// collide. Returns `None` for any id that is not a Major variant.
+fn minor_variant_sibling(id: &Id) -> Option<Id> {
+    let s = id.as_str();
+    let (namespace, name) = match s.split_once('.') {
+        Some((ns, name)) => (Some(ns), name),
+        None => (None, s),
+    };
+    let minor_name = if let Some(stem) = name.strip_suffix("_major") {
+        format!("{stem}_minor")
+    } else if let Some(stem) = name.strip_prefix("major_") {
+        format!("minor_{stem}")
+    } else {
+        return None;
+    };
+    let minor_id = match namespace {
+        Some(ns) => format!("{ns}.{minor_name}"),
+        None => minor_name,
+    };
+    Some(Id::new(minor_id))
 }
 
 /// Parses and merges several JSON id-to-entry maps into one i18n map. A given id
@@ -2726,6 +2786,124 @@ mod tests {
             msg.contains("asymmetric"),
             "error should mention asymmetry: {msg}"
         );
+    }
+
+    /// Issue F (load-level): Major and Minor variants of the same Virtue/Flaw
+    /// (detected by shared stem under the `<stem>_major`/`<stem>_minor` suffix or
+    /// `major_<stem>`/`minor_<stem>` prefix conventions) MUST be mutually
+    /// `incompatible_with`. A variant pair that fails to declare it is rejected at
+    /// load, naming both offending ids.
+    #[test]
+    fn magnitude_variant_pair_without_mutual_incompatibility_is_rejected() {
+        let items = r#"[
+          {
+            "id": "virtue.foo_major",
+            "kind": "virtue",
+            "classification": "narrative",
+            "magnitude": "major",
+            "category": "general",
+            "entity_kinds": ["character"]
+          },
+          {
+            "id": "virtue.foo_minor",
+            "kind": "virtue",
+            "classification": "narrative",
+            "magnitude": "minor",
+            "category": "general",
+            "entity_kinds": ["character"]
+          },
+          {
+            "id": "flaw.optimistic",
+            "kind": "flaw",
+            "classification": "narrative",
+            "magnitude": "minor",
+            "category": "personality",
+            "entity_kinds": ["character"]
+          }
+        ]"#;
+
+        let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.foo_major") && msg.contains("virtue.foo_minor"),
+            "error should name both variant ids: {msg}"
+        );
+    }
+
+    /// The prefix convention (`major_<stem>` / `minor_<stem>`) is detected too:
+    /// a prefix pair that is not mutually incompatible is rejected.
+    #[test]
+    fn prefix_magnitude_variant_pair_without_incompatibility_is_rejected() {
+        let items = r#"[
+          {
+            "id": "virtue.major_focus",
+            "kind": "virtue",
+            "classification": "narrative",
+            "magnitude": "major",
+            "category": "general",
+            "entity_kinds": ["character"]
+          },
+          {
+            "id": "virtue.minor_focus",
+            "kind": "virtue",
+            "classification": "narrative",
+            "magnitude": "minor",
+            "category": "general",
+            "entity_kinds": ["character"]
+          },
+          {
+            "id": "flaw.optimistic",
+            "kind": "flaw",
+            "classification": "narrative",
+            "magnitude": "minor",
+            "category": "personality",
+            "entity_kinds": ["character"]
+          }
+        ]"#;
+
+        let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.major_focus") && msg.contains("virtue.minor_focus"),
+            "error should name both prefix-variant ids: {msg}"
+        );
+    }
+
+    /// False-positive guard: a lone `*_major` (or a `*_minor` whose `*_major`
+    /// counterpart is a different, absent concept — e.g. the real
+    /// `virtue.minor_enchantments`) has no sibling and MUST NOT be flagged.
+    #[test]
+    fn lone_magnitude_variant_without_sibling_is_not_flagged() {
+        let items = r#"[
+          {
+            "id": "virtue.bar_major",
+            "kind": "virtue",
+            "classification": "narrative",
+            "magnitude": "major",
+            "category": "general",
+            "entity_kinds": ["character"]
+          },
+          {
+            "id": "virtue.minor_enchantments",
+            "kind": "virtue",
+            "classification": "narrative",
+            "magnitude": "minor",
+            "category": "general",
+            "entity_kinds": ["character"]
+          },
+          {
+            "id": "flaw.optimistic",
+            "kind": "flaw",
+            "classification": "narrative",
+            "magnitude": "minor",
+            "category": "personality",
+            "entity_kinds": ["character"]
+          }
+        ]"#;
+
+        // No sibling for either item -> no variant pair -> loads cleanly.
+        let rs = Ruleset::from_json("test", "1", items, "[]").unwrap();
+        assert_eq!(rs.item_count(), 3);
     }
 
     #[test]

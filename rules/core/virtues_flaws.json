@@ -5003,6 +5003,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.minor_magical_focus"],
     "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
     "effects": [{ "type": "magical_focus", "param": "focus", "major": true }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4399, 4422] }
@@ -5208,6 +5209,7 @@
     "category": "hermetic",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
+    "incompatible_with": ["virtue.major_magical_focus"],
     "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
     "effects": [{ "type": "magical_focus", "param": "focus", "major": false }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4536, 4538] }
