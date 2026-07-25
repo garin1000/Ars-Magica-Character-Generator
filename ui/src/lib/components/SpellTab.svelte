@@ -16,6 +16,8 @@
   import type { SpellGroup } from '../derive';
   import { tooltip, withReason, type TooltipContent } from '../actions';
   import type { Art, Spell, SpellMasteryAbility, SpellSelection } from '../types';
+  import SourcePicker from './SourcePicker.svelte';
+  import SelectionList from './SelectionList.svelte';
 
   // Technique/Form/text/level-range filters live on the store, so they survive the
   // tab switch that unmounts this component (same split ArtGrid uses for the Arts).
@@ -37,7 +39,7 @@
   // Catalogue spells matching the Technique/Form (separate and combined), text
   // search, and inclusive level range, grouped by Technique+Form and sorted by
   // level-then-name within each group (General spells trailing).
-  const groups = $derived.by((): SpellGroup[] => {
+  const sourceGroups = $derived.by(() => {
     const rs = store.ruleset;
     if (!rs) return [];
     const filtered = filterSpells(
@@ -52,7 +54,12 @@
       },
       store.t,
     );
-    return groupSpellsByTechniqueForm(rs, filtered);
+    return groupSpellsByTechniqueForm(rs, filtered).map((group) => ({
+      key: `${group.technique} ${group.form}`,
+      header: groupHeader(group),
+      headerTestid: `spell-group-${group.technique}-${group.form}`,
+      items: group.spells,
+    }));
   });
 
   // The selected spells shown in Form → Technique → catalogue-level order (the
@@ -64,6 +71,24 @@
     if (!rs) return [];
     return orderSelectedSpells(rs, store.entity.spells ?? []);
   });
+
+  const selectedColumns = $derived([
+    {
+      key: 'spells',
+      header: budgetHeader,
+      groups: [
+        {
+          key: 'spells',
+          listClass: 'spell-list',
+          ulTestid: 'spell-list',
+          rows: selectedSpells.map((s) => ({
+            key: `${s.selection.spell}:${s.selection.parameter ?? ''}:${s.index}`,
+            item: s,
+          })),
+        },
+      ],
+    },
+  ]);
 
   // The selected spell ids, for the "already selected" grey-out of ordinary
   // fixed-level spells (see `nonTakeableReason`). A General spell (learnable at
@@ -239,12 +264,55 @@
   }
 </script>
 
+<!-- The spell-levels budget + Mastery read-out, lifted above the selected list
+     as the column's header block (was inline in the old monolith). -->
+{#snippet budgetHeader()}
+  <p class="spell-levels" class:over={used > budget} data-testid="spell-levels-used">
+    {store.t('spell-levels-used', { used: String(used), budget: String(budget) })}
+  </p>
+
+  <label class="field spell-levels-override">
+    <span>{store.t('spell-levels-override-label')}</span>
+    <input
+      type="number"
+      min="1"
+      step="1"
+      placeholder={String(profileBase)}
+      value={store.entity.spell_levels_override ?? ''}
+      oninput={(e) => {
+        const raw = (e.currentTarget as HTMLInputElement).value;
+        store.setSpellLevelsOverride(raw === '' ? null : Number(raw));
+      }}
+      data-testid="spell-levels-override"
+    />
+  </label>
+
+  {#if masteryXp > 0 || masteryFloor > 0}
+    <p class="spell-mastery" class:over={masteryUsed > masteryXp} data-testid="spell-mastery-info">
+      {#if masteryXp > 0}{store.t('spell-mastery-pool', {
+          used: String(masteryUsed),
+          pool: String(masteryXp),
+        })}{/if}{#if masteryXp > 0 && masteryFloor > 0}
+        ·
+      {/if}{#if masteryFloor > 0}{store.t('spell-mastery-floor', {
+          score: String(masteryFloor),
+        })}{/if}
+    </p>
+  {/if}
+{/snippet}
+
 {#if store.ruleset}
   <div class="region-row">
     <section class="region region-source">
       <h2 class="region-title" data-testid="available-title">{store.t('available-title')}</h2>
-      <section class="panel">
-        <div class="filter-bar">
+      <SourcePicker
+        groups={sourceGroups}
+        getId={(spell: Spell) => spell.id}
+        onAdd={(spell: Spell) => add(spell)}
+        disabled={(spell: Spell) => isDisabled(spell)}
+        tip={(spell: Spell) => sourceTip(spell)}
+      >
+        {#snippet filters()}
           <input
             type="search"
             class="filter-search"
@@ -259,7 +327,7 @@
           >
             <option value="">{store.t('spell-technique-label')}</option>
             {#each techniques as t (t.id)}
-              <option value={t.id}>{artLabel(store.ruleset, t.id)}</option>
+              <option value={t.id}>{artLabel(store.ruleset!, t.id)}</option>
             {/each}
           </select>
           <select
@@ -269,7 +337,7 @@
           >
             <option value="">{store.t('spell-form-label')}</option>
             {#each forms as f (f.id)}
-              <option value={f.id}>{artLabel(store.ruleset, f.id)}</option>
+              <option value={f.id}>{artLabel(store.ruleset!, f.id)}</option>
             {/each}
           </select>
           <label class="field">
@@ -294,76 +362,20 @@
               data-testid="spell-level-max-filter"
             />
           </label>
-        </div>
-        <div class="list-scroll">
-          {#each groups as group (`${group.technique} ${group.form}`)}
-            <h3 class="category" data-testid="spell-group-{group.technique}-{group.form}">
-              {groupHeader(group)}
-            </h3>
-            <ul class="item-list">
-              {#each group.spells as spell (spell.id)}
-                <li>
-                  <button
-                    type="button"
-                    class="pick-row"
-                    disabled={isDisabled(spell)}
-                    onclick={() => add(spell)}
-                    use:tooltip={sourceTip(spell)}
-                    data-testid="add-{spell.id}"
-                  >
-                    <span class="item-name">{optionLabel(spell)}</span>
-                    <span class="pick-plus" aria-hidden="true">+</span>
-                  </button>
-                </li>
-              {/each}
-            </ul>
-          {/each}
-        </div>
-      </section>
+        {/snippet}
+        {#snippet row(spell: Spell)}
+          <span class="item-name">{optionLabel(spell)}</span>
+        {/snippet}
+      </SourcePicker>
     </section>
 
     <section class="region region-selected">
       <h2 class="region-title">{store.t('selections-title')}</h2>
       <div class="selected-frame">
-        <p class="spell-levels" class:over={used > budget} data-testid="spell-levels-used">
-          {store.t('spell-levels-used', { used: String(used), budget: String(budget) })}
-        </p>
-
-        <label class="field spell-levels-override">
-          <span>{store.t('spell-levels-override-label')}</span>
-          <input
-            type="number"
-            min="1"
-            step="1"
-            placeholder={String(profileBase)}
-            value={store.entity.spell_levels_override ?? ''}
-            oninput={(e) => {
-              const raw = (e.currentTarget as HTMLInputElement).value;
-              store.setSpellLevelsOverride(raw === '' ? null : Number(raw));
-            }}
-            data-testid="spell-levels-override"
-          />
-        </label>
-
-        {#if masteryXp > 0 || masteryFloor > 0}
-          <p
-            class="spell-mastery"
-            class:over={masteryUsed > masteryXp}
-            data-testid="spell-mastery-info"
-          >
-            {#if masteryXp > 0}{store.t('spell-mastery-pool', {
-                used: String(masteryUsed),
-                pool: String(masteryXp),
-              })}{/if}{#if masteryXp > 0 && masteryFloor > 0}
-              ·
-            {/if}{#if masteryFloor > 0}{store.t('spell-mastery-floor', {
-                score: String(masteryFloor),
-              })}{/if}
-          </p>
-        {/if}
-
-        <ul class="spell-list" data-testid="spell-list">
-          {#each selectedSpells as { selection: chosen, index: i } (`${chosen.spell}:${chosen.parameter ?? ''}:${i}`)}
+        <SelectionList columns={selectedColumns}>
+          {#snippet row(item: { selection: SpellSelection; index: number })}
+            {@const chosen = item.selection}
+            {@const i = item.index}
             <li use:tooltip={tip(chosen.spell)}>
               <span class="item-name" data-testid="spell-name-{chosen.spell}-{i}"
                 >{rowLabel(chosen)}</span
@@ -393,7 +405,7 @@
                   <option value="" disabled>{store.t('param-label-form')}</option>
                   {#each forms as f (f.id)}
                     <option value={f.id} disabled={usedForms.has(f.id)}
-                      >{artLabel(store.ruleset, f.id)}</option
+                      >{artLabel(store.ruleset!, f.id)}</option
                     >
                   {/each}
                 </select>
@@ -519,8 +531,8 @@
                 -
               </button>
             </li>
-          {/each}
-        </ul>
+          {/snippet}
+        </SelectionList>
       </div>
     </section>
   </div>

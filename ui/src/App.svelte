@@ -10,7 +10,7 @@
   import AbilityTab from './lib/components/AbilityTab.svelte';
   import XpBar from './lib/components/XpBar.svelte';
   import ArtGrid from './lib/components/ArtGrid.svelte';
-  import SpellPicker from './lib/components/SpellPicker.svelte';
+  import SpellTab from './lib/components/SpellTab.svelte';
   import MagicPossessions from './lib/components/MagicPossessions.svelte';
   import SupernaturalBeing from './lib/components/SupernaturalBeing.svelte';
   import EquipmentTab from './lib/components/EquipmentTab.svelte';
@@ -208,7 +208,7 @@
     </div>
   {:else if tab === 'spells'}
     <div class="vf-tab">
-      <SpellPicker />
+      <SpellTab />
     </div>
   {:else if tab === 'possessions'}
     <div class="vf-tab">
