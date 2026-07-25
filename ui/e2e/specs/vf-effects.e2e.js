@@ -66,9 +66,9 @@ describe('phase-3 virtue/flaw effects', () => {
     });
 
     // Buy a Martial Ability at 1 (5 XP): the Warrior pool funds it, so none of it
-    // draws on the general pool. The "Spent" figure then breaks the total out —
-    // "Spent: 5 (0 from general pool)" — so the total never reads as more than the
-    // general pool's (zero) drop.
+    // draws on the general pool. In the single-row layout the restricted sub-budget
+    // rises to "5 / 50" while the read-only general-used figure stays 0 — the general
+    // and restricted portions are shown separately, not merged into one "Spent".
     const add = await $('[data-testid="add-ability.single_weapon"]');
     await add.waitForExist({ timeout: 5000 });
     await add.click();
@@ -81,14 +81,10 @@ describe('phase-3 virtue/flaw effects', () => {
       timeoutMsg: 'buying a Martial Ability should draw on the Warrior pool',
     });
     await browser.waitUntil(
-      async () => {
-        const text = clean(await $('[data-testid="xp-spent"]').getText());
-        return text.includes('5') && text.includes('from general pool');
-      },
+      async () => clean(await $('[data-testid="xp-spent"]').getText()).trim() === '0',
       {
         timeout: 5000,
-        timeoutMsg:
-          'Spent should break out the general-pool portion (0) of a restricted-funded spend',
+        timeoutMsg: 'the general-used figure should stay 0 when the Warrior pool funds the spend',
       },
     );
 
