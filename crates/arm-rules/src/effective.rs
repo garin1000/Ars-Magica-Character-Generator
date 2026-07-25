@@ -18,10 +18,11 @@
 
 use crate::ability::AbilityCategory;
 use crate::characteristics::Characteristic;
+use crate::grant::{Grant, GrantConstraint, resolve_grants};
 use crate::ruleset::Ruleset;
 use crate::types::{
-    Effect, Entity, EntityTypeProfile, Id, MightScore, Realm, ReputationType, Selection,
-    SpellSelection,
+    Effect, Entity, EntityTypeProfile, Id, ItemKind, Magnitude, MightScore, Realm, ReputationType,
+    Selection, SpellSelection,
 };
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -60,6 +61,17 @@ pub(crate) fn selections_for_effects<'a>(
 /// grant consumer (effects, prerequisites, the frontend's read-only granted
 /// rows) uses so House and mythic grants are always treated identically.
 pub fn entity_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
+    let mut granted = entity_grants_base(entity, ruleset);
+    granted.extend(warping_granted_selections(entity, ruleset));
+    granted
+}
+
+/// The grant rows that feed the Warping Score which DECIDES how many warping V/F
+/// are owed: House + Mythic + `grants_selection` grants, but **not** the owed
+/// warping fills themselves. Keeping the owed fills out of this list is the
+/// recursion guard — a fill that carries [`Effect::WarpingGrant`] cannot raise
+/// the score that determines how many fills are owed (see [`warping_owed`]).
+fn entity_grants_base(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
     let mut granted = crate::house::granted_selections(entity, ruleset);
     granted.extend(crate::mythic_companion::granted_selections(entity, ruleset));
     granted.extend(vf_granted_selections(entity, ruleset));
@@ -1775,9 +1787,9 @@ pub fn true_faith(entity: &Entity, ruleset: &Ruleset) -> u8 {
 /// is **not** read here — the Warping Score is derived by inverting the advancement
 /// curve over the point total (see [`warping_score`]), so the score is computed
 /// from points alone and the two can never disagree.
-fn warping_grant_points(entity: &Entity, ruleset: &Ruleset) -> u32 {
+fn warping_grant_points_in(selections: &[Selection], ruleset: &Ruleset) -> u32 {
     let mut points = 0u32;
-    for selection in selections_for_effects(entity, ruleset).iter() {
+    for selection in selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
         };
@@ -1795,13 +1807,42 @@ fn warping_grant_points(entity: &Entity, ruleset: &Ruleset) -> u32 {
 }
 
 /// The character's total Warping Points: the stored [`Entity::warping_points`] plus
-/// every grant-derived point ([`warping_grant_points`]). The single point total the
-/// Warping Score is derived from, so stored and granted points can never be
-/// double-counted or diverge. Source: Core Rules.md:16464-16475.
+/// every grant-derived point across the full effect selection list. The single
+/// point total the Warping Score is derived from, so stored and granted points can
+/// never be double-counted or diverge. Owed warping fills carrying
+/// [`Effect::WarpingGrant`] are filtered out of the folded grants (see
+/// [`warping_granted_selections`]), so they never contribute here either.
+/// Source: Core Rules.md:16464-16475.
 pub fn warping_points_total(entity: &Entity, ruleset: &Ruleset) -> u32 {
     entity
         .warping_points
-        .saturating_add(warping_grant_points(entity, ruleset))
+        .saturating_add(warping_grant_points_in(
+            selections_for_effects(entity, ruleset).as_ref(),
+            ruleset,
+        ))
+}
+
+/// The Warping Points that DETERMINE how many V/F are owed from Warping: the
+/// stored points plus grant points from bought selections and non-warping grants
+/// ([`entity_grants_base`]) ONLY. The owed warping fills are deliberately excluded
+/// so a fill can never raise the score that decides how many fills are owed — the
+/// recursion guard against the self-amplifying `warped_by_magic` feedback loop.
+/// Source: Core Rules.md:16553-16561.
+fn warping_points_for_owed(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    let mut base = entity.selections.clone();
+    base.extend(entity_grants_base(entity, ruleset));
+    entity
+        .warping_points
+        .saturating_add(warping_grant_points_in(&base, ruleset))
+}
+
+/// The Warping Score used to decide the owed warping V/F: [`warping_points_for_owed`]
+/// inverted through the advancement curve (owed fills excluded — the recursion
+/// guard). Source: Core Rules.md:16553-16561.
+fn warping_score_for_owed(entity: &Entity, ruleset: &Ruleset) -> u8 {
+    ruleset
+        .advancement
+        .score_for_xp(warping_points_for_owed(entity, ruleset))
 }
 
 /// The character's derived Warping Score: [`warping_points_total`] inverted through
@@ -1833,6 +1874,159 @@ pub fn warping(entity: &Entity, ruleset: &Ruleset) -> Warping {
         score: warping_score(entity, ruleset),
         points: warping_points_total(entity, ruleset),
     }
+}
+
+/// The category slug a warping-owed supernatural Minor Virtue must belong to
+/// (Core Rules.md:16559, "a supernatural Minor Virtue"). The category taxonomy is
+/// data; this names the slug the rule's "supernatural" wording maps to.
+const WARPING_SUPERNATURAL_CATEGORY: &str = "supernatural";
+
+/// Stable `choice_key` prefix for each owed Minor Flaw slot (`…0`, `…1`).
+pub(crate) const WARPING_MINOR_FLAW_KEY: &str = "warping.minor_flaw.";
+/// Stable `choice_key` prefix for the owed supernatural Minor Virtue slot.
+pub(crate) const WARPING_SUPERNATURAL_VIRTUE_KEY: &str = "warping.supernatural_virtue.";
+/// Stable `choice_key` prefix for each owed Major Flaw slot.
+pub(crate) const WARPING_MAJOR_FLAW_KEY: &str = "warping.major_flaw.";
+
+/// The Virtues and Flaws a character owes from its Warping Score, per "Effects of
+/// Warping" (Core Rules.md:16547-16561). These are auto-granted, off-budget V/F
+/// (never counted against the creation Virtue/Flaw budget), filled by the player
+/// choosing specific items (stored in [`Entity::warping_choices`]). Derived, never
+/// stored as a resolved value.
+///
+/// Hermetic magi are exempt: Warping makes them prone to Wizard's Twilight
+/// instead ("This replaces the normal effects", :16551), which this slice does
+/// NOT model — a magus always owes zero.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct WarpingOwed {
+    /// Owed Minor Flaws: 1 at Warping Score 1 (:16553), 2 at Score 3 (:16557).
+    pub minor_flaws: u8,
+    /// Owed supernatural Minor Virtues: 1 at Warping Score 5 (:16559), else 0.
+    pub minor_supernatural_virtues: u8,
+    /// Owed Major Flaws: 1 at Warping Score 6 and every point thereafter (:16561).
+    pub major_flaws: u8,
+}
+
+impl WarpingOwed {
+    /// The owed V/F for a non-magus at Warping Score `score` — the pure threshold
+    /// curve of "Effects of Warping". Source: Core Rules.md:16553-16561.
+    pub fn from_score(score: u8) -> Self {
+        WarpingOwed {
+            // A Minor Flaw at Warping Score 1 (:16553); a second at Score 3 (:16557).
+            minor_flaws: if score >= 3 {
+                2
+            } else if score >= 1 {
+                1
+            } else {
+                0
+            },
+            // A supernatural Minor Virtue at Warping Score 5 (:16559).
+            minor_supernatural_virtues: u8::from(score >= 5),
+            // A Major Flaw at Warping Score 6, and every point thereafter (:16561).
+            major_flaws: score.saturating_sub(5),
+        }
+    }
+}
+
+/// The Virtues/Flaws `entity` owes from Warping. Non-magi owe per the score
+/// (derived via the recursion-guarded [`warping_score_for_owed`], so owed fills
+/// never inflate the count); Hermetic magi (`profile.is_magus`) are exempt and
+/// owe zero — Warping gives them Wizard's Twilight instead (Core Rules.md:16551).
+pub fn warping_owed(entity: &Entity, ruleset: &Ruleset) -> WarpingOwed {
+    if ruleset
+        .profile(&entity.type_id)
+        .is_some_and(|profile| profile.is_magus)
+    {
+        return WarpingOwed::default();
+    }
+    WarpingOwed::from_score(warping_score_for_owed(entity, ruleset))
+}
+
+/// Whether `item_ref` carries an [`Effect::WarpingGrant`]. Such an item is
+/// INELIGIBLE as a warping-owed fill: folding its granted Warping Points back
+/// into the score would self-amplify the owed count. The recursion guard rejects
+/// it in validation and drops it in [`warping_granted_selections`].
+pub(crate) fn item_carries_warping_grant(item_ref: &Id, ruleset: &Ruleset) -> bool {
+    ruleset.point_items.get(item_ref).is_some_and(|item| {
+        item.effects
+            .iter()
+            .any(|effect| matches!(effect, Effect::WarpingGrant { .. }))
+    })
+}
+
+/// The owed warping V/F expressed as OPEN [`Grant`]s — one grant per owed slot,
+/// each with a stable `choice_key` and the [`GrantConstraint`] its fill must
+/// satisfy (a Minor Flaw, a supernatural Minor Virtue, or a Major Flaw). The list
+/// length tracks the recursion-guarded Warping Score via [`warping_owed`]. The
+/// frontend renders one picker per grant; validation resolves each pick against
+/// its constraint. Source: Core Rules.md:16553-16561.
+pub fn warping_owed_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<Grant> {
+    let owed = warping_owed(entity, ruleset);
+    let mut grants = Vec::new();
+    for i in 0..owed.minor_flaws {
+        grants.push(warping_open_grant(
+            format!("{WARPING_MINOR_FLAW_KEY}{i}"),
+            ItemKind::Flaw,
+            Magnitude::Minor,
+            false,
+        ));
+    }
+    for i in 0..owed.minor_supernatural_virtues {
+        grants.push(warping_open_grant(
+            format!("{WARPING_SUPERNATURAL_VIRTUE_KEY}{i}"),
+            ItemKind::Virtue,
+            Magnitude::Minor,
+            true,
+        ));
+    }
+    for i in 0..owed.major_flaws {
+        grants.push(warping_open_grant(
+            format!("{WARPING_MAJOR_FLAW_KEY}{i}"),
+            ItemKind::Flaw,
+            Magnitude::Major,
+            false,
+        ));
+    }
+    grants
+}
+
+/// Builds one owed-warping OPEN grant with the given key/kind/magnitude, adding
+/// the supernatural category requirement for the Minor Virtue slot.
+fn warping_open_grant(
+    choice_key: String,
+    kind: ItemKind,
+    magnitude: Magnitude,
+    supernatural: bool,
+) -> Grant {
+    let mut require_categories = BTreeSet::new();
+    if supernatural {
+        require_categories.insert(WARPING_SUPERNATURAL_CATEGORY.to_string());
+    }
+    Grant::Open {
+        choice_key,
+        constraint: GrantConstraint {
+            kind,
+            magnitude: Some(magnitude),
+            require_categories,
+            forbid_categories: BTreeSet::new(),
+        },
+    }
+}
+
+/// The off-budget owed warping V/F fills the player has chosen, resolved to real
+/// [`Selection`]s so they fold through [`entity_grants`] for prereq/effect
+/// purposes. Budget- and cap-exempt, exactly like House grants. A pick carrying
+/// [`Effect::WarpingGrant`] is dropped (ineligible — the recursion guard), so a
+/// warping fill can never feed Warping Points back into the owed count.
+/// Source: Core Rules.md:16553-16561.
+pub fn warping_granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
+    resolve_grants(
+        &warping_owed_grants(entity, ruleset),
+        &entity.warping_choices,
+    )
+    .into_iter()
+    .filter(|selection| !item_carries_warping_grant(&selection.item_ref, ruleset))
+    .collect()
 }
 
 /// The character's total accrued aging points across every Characteristic — the
@@ -3274,6 +3468,172 @@ mod tests {
         let mut only_stored = xp_entity(vec![]);
         only_stored.warping_points = 15;
         assert_eq!(warping_score(&only_stored, &rs), 2);
+    }
+
+    // --- Issue E: warping-owed V/F (Core:16547-16561) ------------------------
+
+    /// The owed-V/F threshold curve, tested on the pure `from_score` at the rule's
+    /// boundary scores so the assertion is independent of the advancement table:
+    /// 0 → none; 1 → 1 Minor Flaw; 3 → 2 Minor Flaws; 5 → +supernatural Minor
+    /// Virtue; 6 → +1 Major Flaw; 7 → 2 Major Flaws. Source: Core:16553-16561.
+    #[test]
+    fn warping_owed_thresholds_follow_the_score_curve() {
+        let owed = |score| WarpingOwed::from_score(score);
+        assert_eq!(owed(0), WarpingOwed::default());
+        assert_eq!(
+            owed(1),
+            WarpingOwed {
+                minor_flaws: 1,
+                minor_supernatural_virtues: 0,
+                major_flaws: 0
+            }
+        );
+        assert_eq!(
+            owed(3),
+            WarpingOwed {
+                minor_flaws: 2,
+                minor_supernatural_virtues: 0,
+                major_flaws: 0
+            }
+        );
+        assert_eq!(
+            owed(5),
+            WarpingOwed {
+                minor_flaws: 2,
+                minor_supernatural_virtues: 1,
+                major_flaws: 0
+            }
+        );
+        assert_eq!(
+            owed(6),
+            WarpingOwed {
+                minor_flaws: 2,
+                minor_supernatural_virtues: 1,
+                major_flaws: 1
+            }
+        );
+        assert_eq!(
+            owed(7),
+            WarpingOwed {
+                minor_flaws: 2,
+                minor_supernatural_virtues: 1,
+                major_flaws: 2
+            }
+        );
+    }
+
+    /// A dedicated ruleset carrying both a non-magus (`companion`) and a magus
+    /// (`is_magus`) profile plus an advancement curve, so the magus-exemption can
+    /// be checked at the same Warping Score. It ships no Arts, so the engine's
+    /// magus-required-Hermetic-role integrity gate is skipped.
+    fn magus_owed_ruleset() -> Ruleset {
+        let items = r#"[
+          { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative",
+            "magnitude": "free", "category": "special", "entity_kinds": ["character"] },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "major", "category": "personality", "entity_kinds": ["character"] }
+        ]"#;
+        let types = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["special", "personality"], "creation_phases": [] },
+          { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["special", "personality"], "is_magus": true,
+            "gift_categories": ["hermetic"], "creation_phases": [] }
+        ]"#;
+        let abilities = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },
+            { "score": 3, "total_xp": 30 }
+          ],
+          "abilities": [{ "id": "ability.awareness", "category": "general" }]
+        }"#;
+        let arts = r#"{ "advancement": [{ "score": 1, "total_xp": 1 }], "arts": [] }"#;
+        let characteristics = r#"{
+          "start_points": 7, "base_max": 3, "base_min": -3,
+          "effective_max": 5, "effective_min": -5,
+          "costs": [{ "score": 0, "cost": 0 }]
+        }"#;
+        Ruleset::from_core_json_with_arts(
+            "arm5-core",
+            "2024.1",
+            items,
+            types,
+            abilities,
+            arts,
+            characteristics,
+        )
+        .unwrap()
+    }
+
+    /// A non-magus with a Warping Score of 2 (15 stored points → curve score 2)
+    /// owes one Minor Flaw; a magus at the SAME high score owes nothing — Warping
+    /// gives magi Wizard's Twilight instead (Core:16551).
+    #[test]
+    fn magus_is_exempt_from_owed_warping_vf() {
+        let rs = magus_owed_ruleset();
+        let mut mundane = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        mundane.warping_points = 15;
+        assert_eq!(
+            warping_owed(&mundane, &rs),
+            WarpingOwed {
+                minor_flaws: 1,
+                minor_supernatural_virtues: 0,
+                major_flaws: 0
+            }
+        );
+
+        let mut magus = mundane.clone();
+        magus.type_id = Id::new("magus");
+        assert_eq!(warping_owed(&magus, &rs), WarpingOwed::default());
+    }
+
+    /// The recursion guard: choosing `warped_by_magic` (a `WarpingGrant` +5 item)
+    /// as an owed-FILL must NOT amplify the Warping Score or the owed count, and
+    /// the fill is dropped from the folded grants (so it never re-feeds the score).
+    #[test]
+    fn warping_grant_fill_does_not_amplify_score_or_owed() {
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![]);
+        e.warping_points = 5; // Warping Score 1 → owes exactly one Minor Flaw.
+        let baseline_score = warping_score(&e, &rs);
+        let baseline_owed = warping_owed(&e, &rs);
+        assert_eq!(baseline_owed.minor_flaws, 1);
+
+        // Fill the owed Minor Flaw slot with the WarpingGrant item.
+        e.warping_choices.insert(
+            format!("{WARPING_MINOR_FLAW_KEY}0"),
+            sel("flaw.warped_by_magic"),
+        );
+
+        // Owed count and displayed score are unchanged (no +5 feedback), and the
+        // ineligible pick is filtered out of the folded grants.
+        assert_eq!(warping_owed(&e, &rs), baseline_owed);
+        assert_eq!(warping_score(&e, &rs), baseline_score);
+        assert!(
+            !warping_granted_selections(&e, &rs).contains(&sel("flaw.warped_by_magic")),
+            "a WarpingGrant fill must be dropped from the folded grants"
+        );
+    }
+
+    /// A legal owed fill folds into `entity_grants` as a real (off-budget)
+    /// selection, so prereqs/effects see it — but it never touches the V/F budget.
+    #[test]
+    fn owed_warping_fill_folds_off_budget() {
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![]);
+        e.warping_points = 5; // owes one Minor Flaw
+        e.warping_choices.insert(
+            format!("{WARPING_MINOR_FLAW_KEY}0"),
+            sel("flaw.weak_characteristics"),
+        );
+        assert!(
+            entity_grants(&e, &rs).contains(&sel("flaw.weak_characteristics")),
+            "a chosen owed fill should fold into entity_grants"
+        );
     }
 
     /// Decrepitude XP is the sum of aging points across every Characteristic,

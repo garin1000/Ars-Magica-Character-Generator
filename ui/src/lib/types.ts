@@ -278,6 +278,15 @@ export interface EffectiveScores {
   // 2). 0/0 when there is no Warping. Engine-authoritative; never recomputed here.
   warping_score: number;
   warping_points: number;
+  // The off-budget Virtues/Flaws a non-magus owes from its Warping Score
+  // ("Effects of Warping", Core:16547-16561): per-kind owed counts for the
+  // read-out. All zero for magi (exempt — Twilight instead) and characters owing
+  // nothing. Engine-authoritative.
+  warping_owed: WarpingOwed;
+  // One OPEN grant per owed warping slot (stable choice_key + the constraint its
+  // fill must satisfy), so the UI renders one picker per slot. Empty for magi and
+  // characters owing nothing.
+  warping_owed_grants: Grant[];
   // Derived Decrepitude Score: the sum of accrued aging points across all
   // Characteristics inverted through the advancement curve (17 points 2); 0 when
   // there are no aging points. Engine-authoritative; never recomputed here.
@@ -773,6 +782,14 @@ export interface GrantConstraint {
   forbid_categories?: string[];
 }
 
+// The off-budget Virtues/Flaws a non-magus character owes from its Warping Score
+// ("Effects of Warping", Core:16547-16561). Mirrors the engine's `WarpingOwed`.
+export interface WarpingOwed {
+  minor_flaws: number;
+  minor_supernatural_virtues: number;
+  major_flaws: number;
+}
+
 // One thing a type-linked profile (House or Mythic Companion type) grants at
 // creation, internally tagged on `kind`. `fixed` gives a set Virtue (with any
 // fixed params); `choice` offers a menu of Selections keyed by `choice_key`;
@@ -949,6 +966,12 @@ export interface Entity {
   // Accrued Warping Points (summed with grant points, inverted to the score by
   // the engine). Omitted when 0.
   warping_points?: number;
+  // The player's chosen fills for the off-budget Virtues/Flaws a non-magus owes
+  // from its Warping Score, keyed by each owed slot's stable choice_key (see
+  // EffectiveScores.warping_owed_grants). Like house_choices/mythic_choices these
+  // resolve to derived selections engine-side and never touch the V/F budget.
+  // Omitted when empty. Mirrors the engine's Entity.warping_choices.
+  warping_choices?: Record<string, Selection>;
   // Free-text description of how the character's Warping manifests (the
   // source-reflecting Flaw from "Effects of Warping"). A pure annotation — NOT a
   // Flaw selection, so it never counts against the creation V/F budget. Omitted

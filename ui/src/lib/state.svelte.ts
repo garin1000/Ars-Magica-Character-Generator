@@ -909,6 +909,24 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /**
+   * Choose the specific Virtue/Flaw filling one owed Warping slot, keyed by the
+   * owed grant's `choice_key` (from `effective.warping_owed_grants`). Off-budget:
+   * the fill resolves to a derived selection engine-side and never touches the
+   * V/F budget. Passing `null` clears the slot. Debounced like the other picker
+   * edits. Mirrors {@link setHouseChoice}.
+   */
+  setWarpingChoice(choiceKey: string, selection: Selection | null): void {
+    const next = { ...(this.entity.warping_choices ?? {}) };
+    if (selection) {
+      next[choiceKey] = selection;
+    } else {
+      delete next[choiceKey];
+    }
+    this.entity.warping_choices = next;
+    this.#scheduleValidate();
+  }
+
   addTwilightScar(): void {
     this.entity.twilight_scars = [...(this.entity.twilight_scars ?? []), { description: '' }];
     this.#scheduleValidate();

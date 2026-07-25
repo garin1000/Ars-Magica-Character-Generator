@@ -1,7 +1,12 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import { formatSigned } from '../derive';
-  import { CHARACTERISTICS, type Characteristic } from '../types';
+  import {
+    CHARACTERISTICS,
+    type Characteristic,
+    type GrantConstraint,
+    type PointItem,
+  } from '../types';
 
   const age = $derived(store.entity.age ?? null);
   const apparentAge = $derived(store.entity.apparent_age ?? null);
@@ -31,6 +36,43 @@
   const warpingEffect = $derived(store.entity.warping_effect ?? '');
   const decrepitudeEffect = $derived(store.entity.decrepitude_effect ?? '');
   const agingLog = $derived(store.entity.aging_log ?? []);
+
+  // Off-budget Virtues/Flaws owed from the Warping Score (Core:16547-16561). The
+  // engine surfaces the per-kind counts and one OPEN grant (choice_key +
+  // constraint) per owed slot; it returns an empty list for magi (exempt —
+  // Twilight instead), so the section simply never renders for them.
+  const warpingOwed = $derived(store.effective?.warping_owed);
+  const warpingOwedGrants = $derived(store.effective?.warping_owed_grants ?? []);
+
+  function warpingItemName(ref: string): string {
+    return store.ruleset?.i18n[ref]?.name ?? ref;
+  }
+
+  // Point items an owed slot admits: the constraint's kind/magnitude/category,
+  // AND never an item that itself grants Warping (the recursion guard — mirrors
+  // the engine's ineligibility rule). Sorted by localized name.
+  function eligibleForWarping(c: GrantConstraint): PointItem[] {
+    const items = Object.values(store.ruleset?.ruleset.point_items ?? {});
+    return items
+      .filter(
+        (it) =>
+          it.kind === c.kind &&
+          (!c.magnitude || it.magnitude === c.magnitude) &&
+          (!c.require_categories?.length || c.require_categories.includes(it.category)) &&
+          !(c.forbid_categories ?? []).includes(it.category) &&
+          !(it.effects ?? []).some((e) => e.type === 'warping_grant'),
+      )
+      .sort((a, b) => warpingItemName(a.id).localeCompare(warpingItemName(b.id)));
+  }
+
+  function warpingPick(choiceKey: string): string {
+    return store.entity.warping_choices?.[choiceKey]?.ref ?? '';
+  }
+
+  function onWarpingChoice(choiceKey: string, event: Event) {
+    const ref = (event.currentTarget as HTMLSelectElement).value;
+    store.setWarpingChoice(choiceKey, ref ? { ref } : null);
+  }
 
   function onAge(event: Event) {
     const raw = (event.currentTarget as HTMLInputElement).value;
@@ -189,6 +231,51 @@
         ></textarea>
       </label>
     </div>
+
+    <!-- Owed Warping Virtues & Flaws (Core:16547-16561). Non-magi only: the engine
+         returns no owed grants for magi (Twilight instead), so this never renders
+         for them. Each owed slot gets a picker filtered to eligible items. -->
+    {#if warpingOwedGrants.length > 0}
+      <div class="detail-section" data-testid="warping-owed">
+        <h3 class="detail-label">{store.t('warping-owed-label')}</h3>
+        <p class="warping-owed-hint">{store.t('warping-owed-hint')}</p>
+        {#if warpingOwed}
+          <ul class="warping-owed-counts" data-testid="warping-owed-counts">
+            {#if warpingOwed.minor_flaws > 0}
+              <li>{store.t('warping-owed-minor-flaws', { count: warpingOwed.minor_flaws })}</li>
+            {/if}
+            {#if warpingOwed.minor_supernatural_virtues > 0}
+              <li>
+                {store.t('warping-owed-supernatural-virtues', {
+                  count: warpingOwed.minor_supernatural_virtues,
+                })}
+              </li>
+            {/if}
+            {#if warpingOwed.major_flaws > 0}
+              <li>{store.t('warping-owed-major-flaws', { count: warpingOwed.major_flaws })}</li>
+            {/if}
+          </ul>
+        {/if}
+        <ul class="warping-owed-pickers">
+          {#each warpingOwedGrants as grant, i (i)}
+            {#if grant.kind === 'open'}
+              <li>
+                <select
+                  value={warpingPick(grant.choice_key)}
+                  onchange={(e) => onWarpingChoice(grant.choice_key, e)}
+                  data-testid="warping-fill-{grant.choice_key}"
+                >
+                  <option value="">{store.t('warping-choose-prompt')}</option>
+                  {#each eligibleForWarping(grant.constraint) as item (item.id)}
+                    <option value={item.id}>{warpingItemName(item.id)}</option>
+                  {/each}
+                </select>
+              </li>
+            {/if}
+          {/each}
+        </ul>
+      </div>
+    {/if}
 
     <div class="detail-section">
       <h3 class="detail-label">{store.t('twilight-scars-label')}</h3>

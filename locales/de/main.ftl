@@ -167,6 +167,21 @@ confidence-readout = Wert { $score }, { $points } Punkte
 warping-label = Verzerrung
 warping-readout = Wert { $score }, { $points } Punkte
 warping-effect-label = Verzerrungseffekt
+warping-owed-label = Verzerrungs-Tugenden & -Fehler
+warping-owed-hint = Dein Verzerrungswert gewährt diese Tugenden und Fehler (außerhalb des Budgets). Wähle für jeden Platz einen aus.
+warping-owed-minor-flaws = { $count ->
+    [one] { $count } Kleiner Fehler
+   *[other] { $count } Kleine Fehler
+}
+warping-owed-supernatural-virtues = { $count ->
+    [one] { $count } Übernatürliche Kleine Tugend
+   *[other] { $count } Übernatürliche Kleine Tugenden
+}
+warping-owed-major-flaws = { $count ->
+    [one] { $count } Großer Fehler
+   *[other] { $count } Große Fehler
+}
+warping-choose-prompt = Auswählen…
 true-faith-label = Wahrer Glaube
 true-faith-readout = Wert { $score }
 decrepitude-label = Gebrechlichkeit
@@ -414,6 +429,12 @@ issue-duplicate_art = { $art } ist { $count }-mal aufgeführt.
 issue-art_score_out_of_range = Kunst { $art } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).
 issue-house_choice_unresolved = Haus { $house } hat eine offene Spezialisierungswahl ({ $choice_key }).
 issue-house_grant_constraint = Haus { $house }: Die Wahl { $choice_key } fällt auf { $item }, was die Vorgabe nicht erfüllt.
+issue-warping_owed_minor_flaws = Dir fehlen noch { $count } Kleine Fehler aus der Verzerrung.
+issue-warping_owed_supernatural_virtues = Dir fehlen noch { $count } Übernatürliche Kleine Tugenden aus der Verzerrung.
+issue-warping_owed_major_flaws = Dir fehlen noch { $count } Große Fehler aus der Verzerrung.
+issue-warping_fill_constraint = Die Verzerrungswahl { $choice_key } fällt auf { $item }, was nicht zum geschuldeten Platz passt.
+issue-warping_fill_ineligible = Die Verzerrungswahl { $choice_key } fällt auf { $item }, das selbst Verzerrung gewährt und keinen Verzerrungsplatz füllen kann.
+issue-warping_fill_excess = Die Verzerrungswahl { $choice_key } wird nicht geschuldet und sollte entfernt werden.
 issue-house_unset = Ein Magus sollte einem hermetischen Haus angehören.
 issue-missing_hermetic_flaw = Ein Magus sollte mindestens einen hermetischen Fehler wählen.
 issue-mythic_type_unset = Ein mythischer Gefährte sollte einen Typ wählen.

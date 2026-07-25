@@ -31,9 +31,9 @@ pub use derived::{
 };
 pub use effective::{
     AbilityBonus, AbilityFloor, ArtBonus, CharacteristicBonus, Confidence, ReputationGrant,
-    RestrictedXpPool, SpellLevelCap, SupernaturalFreeSlots, Warping, XpAllocation, ability_bonus,
-    ability_bonuses, ability_score_floors, age_ability_cap, age_max_ability_score, art_bonus,
-    art_bonuses, characteristic_aging_drops, characteristic_bonuses, characteristic_cap,
+    RestrictedXpPool, SpellLevelCap, SupernaturalFreeSlots, Warping, WarpingOwed, XpAllocation,
+    ability_bonus, ability_bonuses, ability_score_floors, age_ability_cap, age_max_ability_score,
+    art_bonus, art_bonuses, characteristic_aging_drops, characteristic_bonuses, characteristic_cap,
     characteristic_caps, characteristic_floor, characteristic_floors,
     characteristic_points_granted, characteristic_score_bonus, confidence,
     decrepitude_points_total, decrepitude_score, effective_ability_score, effective_art_score,
@@ -43,7 +43,7 @@ pub use effective::{
     resolved_spell_level, restricted_xp_pools, size, spell_level_cap, spell_level_caps,
     spell_levels_base, spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
     spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, warping,
-    warping_points_total, warping_score, xp_allocation,
+    warping_owed, warping_owed_grants, warping_points_total, warping_score, xp_allocation,
 };
 pub use equipment::{Armor, Shield, Weapon, WeaponKind};
 pub use grant::{Grant, GrantConstraint, open_pick_satisfies, resolve_grants};

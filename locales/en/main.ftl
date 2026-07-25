@@ -179,6 +179,21 @@ confidence-readout = Score { $score }, { $points } points
 warping-label = Warping
 warping-readout = Score { $score }, { $points } points
 warping-effect-label = Warping effect
+warping-owed-label = Warping Virtues & Flaws
+warping-owed-hint = Your Warping Score grants these Virtues and Flaws (off-budget). Choose one for each.
+warping-owed-minor-flaws = { $count ->
+    [one] { $count } Minor Flaw
+   *[other] { $count } Minor Flaws
+}
+warping-owed-supernatural-virtues = { $count ->
+    [one] { $count } supernatural Minor Virtue
+   *[other] { $count } supernatural Minor Virtues
+}
+warping-owed-major-flaws = { $count ->
+    [one] { $count } Major Flaw
+   *[other] { $count } Major Flaws
+}
+warping-choose-prompt = Choose…
 true-faith-label = True Faith
 true-faith-readout = Score { $score }
 decrepitude-label = Decrepitude
@@ -425,6 +440,12 @@ issue-duplicate_art = { $art } is listed { $count } times.
 issue-art_score_out_of_range = Art { $art } score { $score } is outside the allowed range (0 to { $max }).
 issue-house_choice_unresolved = House { $house } has an unresolved specialisation choice ({ $choice_key }).
 issue-house_grant_constraint = The House { $house } grant { $choice_key } picks { $item }, which does not meet its constraint.
+issue-warping_owed_minor_flaws = You still owe { $count } Minor Flaw(s) from Warping.
+issue-warping_owed_supernatural_virtues = You still owe { $count } supernatural Minor Virtue(s) from Warping.
+issue-warping_owed_major_flaws = You still owe { $count } Major Flaw(s) from Warping.
+issue-warping_fill_constraint = The Warping fill { $choice_key } picks { $item }, which does not match the owed slot.
+issue-warping_fill_ineligible = The Warping fill { $choice_key } picks { $item }, which itself grants Warping and cannot fill a Warping slot.
+issue-warping_fill_excess = The Warping fill { $choice_key } is not owed and should be removed.
 issue-house_unset = A magus should belong to a Hermetic House.
 issue-missing_hermetic_flaw = A magus should take at least one Hermetic Flaw.
 issue-mythic_type_unset = A Mythic Companion should choose a type.

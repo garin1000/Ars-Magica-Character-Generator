@@ -11,15 +11,16 @@ use std::collections::BTreeMap;
 
 use arm_rules::{
     AbilityBonus, AbilityFloor, ArtBonus, Characteristic, CharacteristicBonus, Confidence, Entity,
-    EntityKind, LocalizedRuleset, MightScore, PointCeilings, ReputationType, RestrictedXpPool,
-    Ruleset, RulesetSources, Selection, SpellLevelCap, SupernaturalFreeSlots, ValidationMode,
-    ValidationResult, ability_bonuses, ability_score_floors, age_ability_cap, art_bonuses,
-    characteristic_aging_drops, characteristic_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, confidence, decrepitude_score, effective_characteristics,
-    effective_might, effective_point_ceilings, entity_grants, item_level_budget, item_level_used,
-    power_levels_budget, powers_used, reputation_grants, size, spell_level_caps, spell_levels_base,
-    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
-    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, validate, warping,
+    EntityKind, Grant, LocalizedRuleset, MightScore, PointCeilings, ReputationType,
+    RestrictedXpPool, Ruleset, RulesetSources, Selection, SpellLevelCap, SupernaturalFreeSlots,
+    ValidationMode, ValidationResult, WarpingOwed, ability_bonuses, ability_score_floors,
+    age_ability_cap, art_bonuses, characteristic_aging_drops, characteristic_bonuses,
+    characteristic_caps, characteristic_floors, characteristic_points_granted, confidence,
+    decrepitude_score, effective_characteristics, effective_might, effective_point_ceilings,
+    entity_grants, item_level_budget, item_level_used, power_levels_budget, powers_used,
+    reputation_grants, size, spell_level_caps, spell_levels_base, spell_levels_budget,
+    spell_levels_used, spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
+    supernatural_free_slots, true_faith, validate, warping, warping_owed, warping_owed_grants,
     xp_allocation,
 };
 use serde::Serialize;
@@ -119,6 +120,15 @@ pub struct EffectiveScores {
     /// 0/0 when there is no Warping. Engine-authoritative; never recomputed in JS.
     pub warping_score: u8,
     pub warping_points: u32,
+    /// The off-budget Virtues/Flaws a non-magus character owes from its Warping
+    /// Score ("Effects of Warping", Core:16547-16561): the per-kind owed counts
+    /// (for the "you gain N …" read-out). All zero for magi (exempt — Twilight
+    /// instead) and any character owing nothing. Engine-authoritative.
+    pub warping_owed: WarpingOwed,
+    /// One OPEN grant per owed warping slot (stable `choice_key` + the constraint
+    /// its fill must satisfy), so the UI renders one picker per slot filtered to
+    /// eligible items. Empty for magi and characters owing nothing.
+    pub warping_owed_grants: Vec<Grant>,
     /// Derived Decrepitude Score: the sum of accrued aging points across all
     /// Characteristics (`Entity::aging_points`) inverted through the advancement
     /// curve (17 aging points → Decrepitude 2). 0 when there are no aging points.
@@ -232,6 +242,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
             .collect(),
         warping_score: warping.score,
         warping_points: warping.points,
+        warping_owed: warping_owed(entity, ruleset),
+        warping_owed_grants: warping_owed_grants(entity, ruleset),
         decrepitude_score: decrepitude_score(entity, ruleset),
         true_faith_score: true_faith(entity, ruleset),
         item_level_budget: item_level_budget(entity, ruleset),
