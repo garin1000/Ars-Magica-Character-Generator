@@ -13,8 +13,7 @@
   import SpellPicker from './lib/components/SpellPicker.svelte';
   import MagicPossessions from './lib/components/MagicPossessions.svelte';
   import SupernaturalBeing from './lib/components/SupernaturalBeing.svelte';
-  import EquipmentPicker from './lib/components/EquipmentPicker.svelte';
-  import EquipmentSelectionList from './lib/components/EquipmentSelectionList.svelte';
+  import EquipmentTab from './lib/components/EquipmentTab.svelte';
   import CharacterDetails from './lib/components/CharacterDetails.svelte';
   import DerivedTotalsPanel from './lib/components/DerivedTotalsPanel.svelte';
   import HouseSelector from './lib/components/HouseSelector.svelte';
@@ -219,18 +218,7 @@
     </div>
   {:else if tab === 'equipment'}
     <div class="vf-tab">
-      <div class="region-row">
-        <section class="region region-source">
-          <h2 class="region-title">{store.t('available-title')}</h2>
-          <EquipmentPicker />
-        </section>
-        <section class="region region-selected">
-          <h2 class="region-title">{store.t('selections-title')}</h2>
-          <div class="selected-frame">
-            <EquipmentSelectionList />
-          </div>
-        </section>
-      </div>
+      <EquipmentTab />
     </div>
   {:else if tab === 'details'}
     <div class="vf-tab">
