@@ -22,13 +22,23 @@ pub use ability::{
 };
 pub use art::{Art, ArtType};
 pub use characteristics::{Characteristic, CharacteristicCost, CharacteristicRules};
+// Curated public compute-function facade: the bare free functions below
+// (`soak`, `penetration`, `magic_resistance`, `derived_totals`, …) are the
+// deliberate crate-root API that `arm-app` calls directly. The generic bare
+// names are intentional and load-bearing — they are consumed by name across the
+// crate boundary, so they stay flat rather than being hidden behind their
+// module paths.
 pub use derived::{
     Addend, CastingTotal, CastingWithinFocus, CombatLine, DerivedTotals, EncumbranceTotal,
-    FatigueLevel, LabTotal, LongevityBonus, MagicResistance, MasterpieceCap, NonStandardCasting,
-    PenetrationLine, SoakTotal, SurfacedModifier, WoundRange, casting_totals, combat_totals,
-    derived_totals, encumbrance, fatigue_levels, lab_totals, longevity_bonus, magic_resistance,
-    masterpiece_item_cap, penetration, soak, surfaced_modifiers, wound_ranges,
+    FatigueLevel, FatigueTier, LabTotal, LongevityBonus, MagicResistance, MasterpieceCap,
+    ModifierFamily, NonStandardCasting, PenetrationLine, SoakTotal, SurfacedModifier, WoundBand,
+    WoundRange, casting_totals, combat_totals, derived_totals, encumbrance, fatigue_levels,
+    lab_totals, longevity_bonus, magic_resistance, masterpiece_item_cap, penetration, soak,
+    surfaced_modifiers, wound_ranges,
 };
+// Curated public compute-function facade (see the `derived` re-export above):
+// bare names such as `size`, `warping`, `confidence`, and `true_faith` are the
+// intentional crate-root compute API that `arm-app` imports by name.
 pub use effective::{
     AbilityBonus, AbilityFloor, ArtBonus, CharacteristicBonus, Confidence, ReputationGrant,
     RestrictedXpPool, SpellLevelCap, SupernaturalFreeSlots, Warping, WarpingOwed, XpAllocation,

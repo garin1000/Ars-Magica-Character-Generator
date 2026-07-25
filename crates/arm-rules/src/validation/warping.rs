@@ -46,11 +46,14 @@ pub(crate) fn validate_warping(
 
     let grants = warping_owed_grants(entity, ruleset);
     // The stable choice_key of every slot the character owes.
+    // `warping_owed_grants` emits only `Grant::Open`, so the non-Open arms are
+    // unreachable by construction; they are listed explicitly (rather than a `_`
+    // wildcard) to stay exhaustive over the closed `Grant` set.
     let owed_keys: BTreeSet<&str> = grants
         .iter()
         .filter_map(|grant| match grant {
             Grant::Open { choice_key, .. } => Some(choice_key.as_str()),
-            _ => None,
+            Grant::Fixed { .. } | Grant::Choice { .. } => None,
         })
         .collect();
 
@@ -175,7 +178,8 @@ mod tests {
           "advancement": [
             { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },
             { "score": 3, "total_xp": 30 }, { "score": 4, "total_xp": 50 },
-            { "score": 5, "total_xp": 75 }
+            { "score": 5, "total_xp": 75 }, { "score": 6, "total_xp": 105 },
+            { "score": 7, "total_xp": 140 }
           ],
           "abilities": [{ "id": "ability.awareness", "category": "general" }]
         }"#;
@@ -210,6 +214,43 @@ mod tests {
             codes(&result).contains(&"warping_owed_minor_flaws".to_string()),
             "an unfilled owed Minor Flaw should warn: {:?}",
             result.issues
+        );
+    }
+
+    #[test]
+    fn owing_a_supernatural_virtue_with_no_fill_warns() {
+        let rs = warping_ruleset();
+        // Warping Score 5 (75 pts) → owes a supernatural Minor Virtue (:16559).
+        let e = companion(75);
+        let result = validate(&e, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == "warping_owed_supernatural_virtues")
+            .expect("an unfilled owed supernatural Virtue should warn");
+        assert_eq!(
+            issue.args.get("count").map(String::as_str),
+            Some("1"),
+            "the advisory should report the one owed supernatural Virtue"
+        );
+    }
+
+    #[test]
+    fn owing_a_major_flaw_with_no_fill_warns() {
+        let rs = warping_ruleset();
+        // Warping Score 6 (105 pts) → owes a Major Flaw beyond the Score-5 set
+        // (:16561: a Major Flaw at Score 6 and every point thereafter).
+        let e = companion(105);
+        let result = validate(&e, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == "warping_owed_major_flaws")
+            .expect("an unfilled owed Major Flaw should warn");
+        assert_eq!(
+            issue.args.get("count").map(String::as_str),
+            Some("1"),
+            "the advisory should report the one owed Major Flaw"
         );
     }
 

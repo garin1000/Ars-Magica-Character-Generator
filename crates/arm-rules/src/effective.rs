@@ -904,7 +904,14 @@ fn pool_covers(eligibility: &PoolEligibility, spend: &Spend) -> bool {
             SpendKind::Ability(id, category),
         ) => abilities.contains(id) || categories.contains(category),
         (PoolEligibility::Mastery, SpendKind::Mastery) => true,
-        _ => false,
+        // Every remaining combination is explicitly uncovered, so a new
+        // PoolEligibility or SpendKind variant forces a decision here rather than
+        // silently defaulting to false: Ability pools never fund Arts or Mastery,
+        // and Mastery pools never fund Abilities or Arts.
+        (PoolEligibility::Ability { .. }, SpendKind::Art)
+        | (PoolEligibility::Ability { .. }, SpendKind::Mastery)
+        | (PoolEligibility::Mastery, SpendKind::Ability(..))
+        | (PoolEligibility::Mastery, SpendKind::Art) => false,
     }
 }
 
@@ -1582,7 +1589,47 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 } if u32::from(*advancement_num) > u32::from(*advancement_den) => {
                     Some((*advancement_num, *advancement_den))
                 }
-                _ => None,
+                // A plain floor grant (identity multiplier) or any other effect
+                // contributes no advancement Affinity. Enumerated so a new Effect
+                // variant is a compile error here until it is classified.
+                Effect::GrantsSpellMastery { .. }
+                | Effect::AffinityAbilityCost { .. }
+                | Effect::AbilityBonus { .. }
+                | Effect::CharacteristicLimit { .. }
+                | Effect::ArtBonus { .. }
+                | Effect::AffinityArtCost { .. }
+                | Effect::RestrictedAbilityXp { .. }
+                | Effect::CharacteristicPoints { .. }
+                | Effect::AbilityScoreGrant { .. }
+                | Effect::SpellLevels { .. }
+                | Effect::GeneralXp { .. }
+                | Effect::ConfidenceBonus { .. }
+                | Effect::SpellMasteryXp { .. }
+                | Effect::GrantsSelection { .. }
+                | Effect::ItemLevelBudget { .. }
+                | Effect::MasterpieceItem
+                | Effect::TrueFaithGrant { .. }
+                | Effect::WarpingGrant { .. }
+                | Effect::SizeDelta { .. }
+                | Effect::CharacteristicScoreDelta { .. }
+                | Effect::GroupAffinityCost { .. }
+                | Effect::GrantsReputation { .. }
+                | Effect::MightGrant { .. }
+                | Effect::PowerLevels { .. }
+                | Effect::MagicalFocus { .. }
+                | Effect::CastingTotalMod { .. }
+                | Effect::LabTotalMod { .. }
+                | Effect::DeficientArt { .. }
+                | Effect::MagicTotalHalving { .. }
+                | Effect::SoakMod { .. }
+                | Effect::CombatMod { .. }
+                | Effect::HealthMod { .. }
+                | Effect::MagicResistanceMod { .. }
+                | Effect::AgingMod { .. }
+                | Effect::AdvancementMod { .. }
+                | Effect::SpecialCastingMod { .. }
+                | Effect::AbilityRollMod { .. }
+                | Effect::ElementalMagic { .. } => None,
             })
     });
     best_affinity(found)
@@ -2054,7 +2101,11 @@ pub fn decrepitude_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
 /// Worked examples: a Communication of +2 drops on its 3rd aging point; a
 /// Stamina of −3 on its 4th.
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:16579, :16613.
-pub fn aging_drops(entity: &Entity, characteristic: Characteristic) -> u32 {
+///
+/// Crate-internal primitive: the frontend consumes the surfaced
+/// [`characteristic_aging_drops`] map (which wraps this per-Characteristic), so
+/// this single-Characteristic query is not part of the curated public API.
+pub(crate) fn aging_drops(entity: &Entity, characteristic: Characteristic) -> u32 {
     let bought = entity
         .characteristics
         .get(&characteristic)
@@ -2337,15 +2388,16 @@ mod tests {
             { "score": -5, "cost": -15 }
           ]
         }"#;
-        Ruleset::from_core_json_with_arts(
-            "arm5-core",
-            "2024.1",
-            items,
-            types,
-            abilities,
-            arts,
-            characteristics,
-        )
+        Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some(abilities),
+            arts: Some(arts),
+            characteristics: Some(characteristics),
+            ..RulesetSources::default()
+        })
         .unwrap()
     }
 
@@ -2624,6 +2676,24 @@ mod tests {
         assert_eq!(caps[&Characteristic::Int], 3);
         assert_eq!(floors[&Characteristic::Qik], -4);
         assert_eq!(floors[&Characteristic::Int], -3);
+    }
+
+    #[test]
+    fn cap_and_floor_default_to_zero_without_characteristic_rules() {
+        // A ruleset that supplies no characteristic table has no base/effective
+        // limits to report, so both guards fall back to zero rather than reading
+        // an absent table.
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: "[]",
+            type_profiles: "[]",
+            ..RulesetSources::default()
+        })
+        .unwrap();
+        let e = entity(vec![]);
+        assert_eq!(characteristic_cap(&e, &rs, Characteristic::Str), 0);
+        assert_eq!(characteristic_floor(&e, &rs, Characteristic::Str), 0);
     }
 
     fn puissant_art(art: &str) -> Selection {
@@ -2942,15 +3012,16 @@ mod tests {
             { "score": -1, "cost": -1 }, { "score": -2, "cost": -3 }, { "score": -3, "cost": -6 }
           ]
         }"#;
-        Ruleset::from_core_json_with_arts(
-            "arm5-core",
-            "2024.1",
-            items,
-            types,
-            abilities,
-            arts,
-            characteristics,
-        )
+        Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some(abilities),
+            arts: Some(arts),
+            characteristics: Some(characteristics),
+            ..RulesetSources::default()
+        })
         .unwrap()
     }
 
@@ -3540,12 +3611,22 @@ mod tests {
             "permitted_categories": ["special", "personality"], "is_magus": true,
             "gift_categories": ["hermetic"], "creation_phases": [] }
         ]"#;
+        // Includes the engine-required Hermetic abilities: the magus type profile
+        // makes `validate_engine_required_roles` demand them of a ruleset that
+        // ships an abilities catalogue.
         let abilities = r#"{
           "advancement": [
             { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },
             { "score": 3, "total_xp": 30 }
           ],
-          "abilities": [{ "id": "ability.awareness", "category": "general" }]
+          "abilities": [
+            { "id": "ability.awareness", "category": "general" },
+            { "id": "ability.artes_liberales", "category": "academic" },
+            { "id": "ability.magic_theory", "category": "arcane" },
+            { "id": "ability.parma_magica", "category": "arcane" },
+            { "id": "ability.penetration", "category": "arcane" },
+            { "id": "ability.philosophiae", "category": "academic" }
+          ]
         }"#;
         let arts = r#"{ "advancement": [{ "score": 1, "total_xp": 1 }], "arts": [] }"#;
         let characteristics = r#"{
@@ -3553,15 +3634,16 @@ mod tests {
           "effective_max": 5, "effective_min": -5,
           "costs": [{ "score": 0, "cost": 0 }]
         }"#;
-        Ruleset::from_core_json_with_arts(
-            "arm5-core",
-            "2024.1",
-            items,
-            types,
-            abilities,
-            arts,
-            characteristics,
-        )
+        Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some(abilities),
+            arts: Some(arts),
+            characteristics: Some(characteristics),
+            ..RulesetSources::default()
+        })
         .unwrap()
     }
 
@@ -3790,6 +3872,30 @@ mod tests {
             effective_characteristic_score(&e, &rs, Characteristic::Str),
             6
         );
+    }
+
+    #[test]
+    fn characteristic_bonuses_lists_each_nonzero_free_delta_in_canonical_order() {
+        // Giant Blood grants a free +1 to Str and +1 to Sta (Core:3975-3978). The
+        // accessor surfaces exactly those two nonzero bonuses in canonical
+        // Characteristic order, omitting the untouched ones.
+        let rs = xp_ruleset();
+        let e = xp_entity(vec![sel("virtue.giant_blood")]);
+        assert_eq!(
+            characteristic_bonuses(&e, &rs),
+            vec![
+                CharacteristicBonus {
+                    characteristic: Characteristic::Str,
+                    bonus: 1,
+                },
+                CharacteristicBonus {
+                    characteristic: Characteristic::Sta,
+                    bonus: 1,
+                },
+            ]
+        );
+        // With no bonus-granting Virtue, the list is empty.
+        assert!(characteristic_bonuses(&xp_entity(vec![]), &rs).is_empty());
     }
 
     #[test]
@@ -4042,15 +4148,16 @@ mod tests {
             { "score": -3, "cost": -6 }
           ]
         }"#;
-        Ruleset::from_core_json_with_arts(
-            "arm5-core",
-            "2024.1",
-            items,
-            types,
-            abilities,
-            arts,
-            characteristics,
-        )
+        Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some(abilities),
+            arts: Some(arts),
+            characteristics: Some(characteristics),
+            ..RulesetSources::default()
+        })
         .unwrap()
     }
 
