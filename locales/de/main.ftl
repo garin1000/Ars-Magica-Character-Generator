@@ -442,6 +442,7 @@ issue-might_realm_mismatch = Die eingegebene Macht-Sphäre ({ $base }) stimmt ni
 issue-excessive_aging_reduction = Die Alterungsminderungen für { $characteristic } ({ $reduction }) würden unter den Mindestwert ({ $min }) fallen; er wird dort begrenzt.
 issue-unknown_equipment = Ausrüstung '{ $item }' passt zu keiner Waffe, keinem Schild und keiner Rüstung.
 issue-equipment_min_strength = { $item } benötigt Stärke { $required }, aber dieser Charakter hat { $strength }.
+issue-shield_with_two_handed_weapon = Ein Schild kann nicht mit einer zweihändigen Waffe geführt werden, daher gelten seine Angriffs- und Verteidigungsmodifikatoren nicht (er zählt weiterhin zur Last).
 
 # Ausrüstung (Waffen / Schilde / Rüstungen). Kampfwerte, Absorption und Belastung
 # werden in einem späteren Schritt berechnet; diese Oberfläche erfasst nur die
@@ -453,6 +454,7 @@ equipment-group-weapons = Waffen
 equipment-group-shields = Schilde
 equipment-group-armor = Rüstungen
 equipment-equipped-label = Ausgerüstet
+equipment-specialization-label = Spezialisierung greift (+1)
 equipment-remove = Ausrüstung entfernen
 equipment-empty = Keine Ausrüstung.
 

@@ -816,9 +816,11 @@ fn equipment_load(ruleset: &Ruleset, id: &Id) -> u32 {
 // --- Combat ----------------------------------------------------------------
 
 /// One combat line for an equipped weapon, with any equipped shield's modifiers
-/// combined in (Core:16656). Attack / Damage are `None` for a weapon that lacks
-/// them (Dodge). Attack and Defense are **not** reduced by Encumbrance; Init is
-/// (Core:17105).
+/// combined in (Core:16656) — **unless** the weapon is two-handed, which receives
+/// no shield modifiers (Core:7494). Attack / Damage are `None` for a weapon that
+/// lacks them (Dodge). Initiative is always reduced by Encumbrance (Core:16658);
+/// Attack and Defense are reduced only when the Encumbrance is **not** largely due
+/// to weapons and armor (Core:17105) — see [`combat_encumbrance_applies`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CombatLine {
     /// The weapon id.
@@ -865,22 +867,42 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
 
     let cm = |stat: CombatStat| mods.combat_mods.get(&stat).copied().unwrap_or(0);
 
+    // Attack/Defense take the Encumbrance penalty only when the load is NOT
+    // largely weapons and armor; Initiative always takes it (Core:17105, :16658).
+    let atk_def_enc = if combat_encumbrance_applies(entity, ruleset) {
+        enc
+    } else {
+        0
+    };
+
     let mut out = Vec::new();
     for slot in entity.equipment.iter().filter(|s| s.equipped) {
         let Some(weapon) = ruleset.weapon(&slot.item) else {
             continue;
         };
-        let combat_ability = effective_ability_score(entity, ruleset, &weapon.ability, None);
-        let initiative =
-            quickness + i32::from(weapon.init_mod) + shield_init - enc + cm(CombatStat::Initiative);
+        // A two-handed weapon cannot be paired with a shield, so it takes none of
+        // the combined shield modifiers (Core:7494).
+        let (line_shield_init, line_shield_attack, line_shield_defense) = if weapon.two_handed {
+            (0, 0, 0)
+        } else {
+            (shield_init, shield_attack, shield_defense)
+        };
+        // Ability specialization (+1) applies to Attack and Defense only, when the
+        // slot is flagged and the weapon's Ability carries a specialty aligned to
+        // this weapon (Core:7122, :7139). It acts as if the score were one higher.
+        let spec_bonus = i32::from(specialization_bonus(entity, ruleset, slot, weapon));
+        let combat_ability =
+            effective_ability_score(entity, ruleset, &weapon.ability, None) + spec_bonus;
+        let initiative = quickness + i32::from(weapon.init_mod) + line_shield_init - enc
+            + cm(CombatStat::Initiative);
         let attack = weapon.attack_mod.map(|m| {
-            dexterity + combat_ability + i32::from(m) + shield_attack + cm(CombatStat::Attack)
+            dexterity + combat_ability + i32::from(m) + line_shield_attack - atk_def_enc
+                + cm(CombatStat::Attack)
         });
-        let defense = quickness
-            + combat_ability
-            + i32::from(weapon.defense_mod)
-            + shield_defense
-            + cm(CombatStat::Defense);
+        let defense =
+            quickness + combat_ability + i32::from(weapon.defense_mod) + line_shield_defense
+                - atk_def_enc
+                + cm(CombatStat::Defense);
         let damage = weapon
             .damage_mod
             .map(|m| strength + i32::from(m) + cm(CombatStat::Damage));
@@ -895,6 +917,66 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
         });
     }
     out
+}
+
+/// The Ability-specialization bonus for one equipped weapon slot: +1 when the
+/// slot is flagged `specialization_applies` AND the entity holds a non-empty
+/// specialty on the weapon's combat Ability (so the toggle is not a dead switch).
+/// The specialty is a per-weapon alignment the player asserts — the engine never
+/// matches specialty text to weapon names — so a flagged slot with a real specialty
+/// grants the bonus. Source: Core Rules.md:7122 (Single Weapon longsword example),
+/// :7139 ("Add +1 when using an Ability's specialization").
+fn specialization_bonus(
+    entity: &Entity,
+    _ruleset: &Ruleset,
+    slot: &crate::types::EquipmentSlot,
+    weapon: &crate::equipment::Weapon,
+) -> u8 {
+    if !slot.specialization_applies {
+        return 0;
+    }
+    let has_specialty = entity.ability_scores.iter().any(|a| {
+        a.ability == weapon.ability && a.specialty.as_deref().is_some_and(|s| !s.trim().is_empty())
+    });
+    u8::from(has_specialty)
+}
+
+/// Total Load from combat gear — every carried weapon, shield, and armor, whether
+/// equipped or not (a spare weapon is still a weapon). Classified by catalogue
+/// item type via the same dispatch [`equipment_load`] uses. Source: Core:17105
+/// ("weapons and armor"), :17107 (Load counts all carried gear).
+fn combat_gear_load(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    entity
+        .equipment
+        .iter()
+        .filter(|slot| {
+            ruleset.weapon(&slot.item).is_some()
+                || ruleset.shield(&slot.item).is_some()
+                || ruleset.armor_item(&slot.item).is_some()
+        })
+        .map(|slot| equipment_load(ruleset, &slot.item))
+        .sum()
+}
+
+/// Whether combat gear makes up "largely" (the majority) of the total carried
+/// Load, i.e. combat-gear Load ≥ half of total Load. `>= half` is our reading of
+/// the rules' "largely due to weapons and armor" (Core:17105); documented in
+/// RULES.md. Zero total Load is trivially a majority (nothing to penalize).
+fn combat_gear_is_majority(combat_load: u32, total_load: u32) -> bool {
+    // combat_load * 2 >= total_load, i.e. combat_load >= total_load / 2, without
+    // integer-division rounding.
+    combat_load.saturating_mul(2) >= total_load
+}
+
+/// Whether the Encumbrance penalty applies to Attack and Defense. The penalty is
+/// waived ("Attack and Defense are not [penalized]") when the Encumbrance is
+/// largely due to weapons and armor; otherwise it applies. Initiative is always
+/// penalized regardless (Core:16658), so this governs only Attack/Defense.
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:17105.
+pub fn combat_encumbrance_applies(entity: &Entity, ruleset: &Ruleset) -> bool {
+    let total_load = encumbrance(entity, ruleset).load;
+    let combat_load = combat_gear_load(entity, ruleset);
+    !combat_gear_is_majority(combat_load, total_load)
 }
 
 // --- Soak ------------------------------------------------------------------
@@ -1459,7 +1541,10 @@ mod tests {
           "weapons": [
             { "id": "weapon.long_sword", "kind": "melee", "init_mod": 2, "attack_mod": 4,
               "defense_mod": 1, "damage_mod": 6, "min_strength": 0, "load": 1,
-              "ability": "ability.single_weapon" }
+              "ability": "ability.single_weapon" },
+            { "id": "weapon.great_sword", "kind": "melee", "init_mod": 2, "attack_mod": 5,
+              "defense_mod": 2, "damage_mod": 9, "min_strength": 0, "load": 2,
+              "two_handed": true, "ability": "ability.single_weapon" }
           ],
           "shields": [
             { "id": "shield.round", "init_mod": 0, "attack_mod": 0, "defense_mod": 2,
@@ -1617,11 +1702,13 @@ mod tests {
         e.equipment = vec![EquipmentSlot {
             item: Id::new("weapon.long_sword"),
             equipped: false,
+            specialization_applies: false,
         }];
         // Give the weapon Load 6 via a heavier item: use armor Load path instead.
         e.equipment = vec![EquipmentSlot {
             item: Id::new("armor.leather_scale"),
             equipped: false,
+            specialization_applies: false,
         }];
         // Method Caster (+3 formulaic) and a Magical Focus.
         e.selections = vec![
@@ -1970,10 +2057,12 @@ mod tests {
             EquipmentSlot {
                 item: Id::new("weapon.long_sword"),
                 equipped: true,
+                specialization_applies: false,
             },
             EquipmentSlot {
                 item: Id::new("shield.round"),
                 equipped: true,
+                specialization_applies: false,
             },
         ];
         let lines = combat_totals(&e, &rs);
@@ -1988,6 +2077,153 @@ mod tests {
         assert_eq!(l.defense, 8);
         // Damage = Str 3 + WpnDam 6 = 9.
         assert_eq!(l.damage, Some(9));
+    }
+
+    /// Issue B: a two-handed weapon wielded with a shield gets NO shield
+    /// Init/Attack/Defense modifiers, but the shield still adds to Load /
+    /// Encumbrance (Core:7494, :17107).
+    #[test]
+    fn two_handed_weapon_ignores_shield_mods() {
+        let rs = ruleset();
+        let mut e = grog();
+        set_char(&mut e, Characteristic::Qik, 1);
+        set_char(&mut e, Characteristic::Dex, 2);
+        set_char(&mut e, Characteristic::Str, 0); // low Str so Load matters.
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.single_weapon"),
+            parameter: None,
+            specialty: None,
+            score: 4,
+        }];
+        e.equipment = vec![
+            EquipmentSlot {
+                item: Id::new("weapon.great_sword"),
+                equipped: true,
+                specialization_applies: false,
+            },
+            EquipmentSlot {
+                item: Id::new("shield.round"),
+                equipped: true,
+                specialization_applies: false,
+            },
+        ];
+        // Total Load 2 (great sword) + 1 (shield) = 3 → Burden 2; Str 0 → Enc 2.
+        assert_eq!(encumbrance(&e, &rs).total, 2);
+        let lines = combat_totals(&e, &rs);
+        assert_eq!(lines.len(), 1);
+        let l = &lines[0];
+        // Init = Qik 1 + WpnInit 2 + ShieldInit 0 − Enc 2 = 1 (shield Init 0 anyway,
+        // and a two-handed weapon takes no shield Init).
+        assert_eq!(l.initiative, 1);
+        // Attack = Dex 2 + Ability 4 + WpnAtk 5 (+ NO ShieldAtk) = 11.
+        assert_eq!(l.attack, Some(11));
+        // Defense = Qik 1 + Ability 4 + WpnDef 2 (+ NO ShieldDef +2) = 7.
+        assert_eq!(l.defense, 7);
+        // Damage = Str 0 + WpnDam 9 = 9.
+        assert_eq!(l.damage, Some(9));
+    }
+
+    /// Issue C: with the weapon's Ability carrying a specialty and the slot's
+    /// `specialization_applies` toggled on, Attack and Defense gain +1; Damage and
+    /// Initiative (which do not use the Ability) are unchanged (Core:7122, :7139).
+    #[test]
+    fn specialization_adds_one_to_attack_and_defense_only() {
+        let rs = ruleset();
+        let mut e = grog();
+        set_char(&mut e, Characteristic::Qik, 1);
+        set_char(&mut e, Characteristic::Dex, 2);
+        set_char(&mut e, Characteristic::Str, 3);
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.single_weapon"),
+            parameter: None,
+            specialty: Some("longsword".into()),
+            score: 4,
+        }];
+        let long_sword = || EquipmentSlot {
+            item: Id::new("weapon.long_sword"),
+            equipped: true,
+            specialization_applies: true,
+        };
+        e.equipment = vec![long_sword()];
+        let l = &combat_totals(&e, &rs)[0];
+        // Attack = Dex 2 + (Ability 4 +1 spec) + WpnAtk 4 = 11.
+        assert_eq!(l.attack, Some(11));
+        // Defense = Qik 1 + (Ability 4 +1 spec) + WpnDef 1 = 7.
+        assert_eq!(l.defense, 7);
+        // Damage = Str 3 + WpnDam 6 = 9 (no Ability, so no +1).
+        assert_eq!(l.damage, Some(9));
+        // Init = Qik 1 + WpnInit 2 − Enc 0 = 3 (no Ability, so no +1).
+        assert_eq!(l.initiative, 3);
+
+        // Toggle OFF → no bonus.
+        e.equipment = vec![EquipmentSlot {
+            specialization_applies: false,
+            ..long_sword()
+        }];
+        let off = &combat_totals(&e, &rs)[0];
+        assert_eq!(off.attack, Some(10));
+        assert_eq!(off.defense, 6);
+
+        // No specialty on the Ability → no bonus even with the toggle on.
+        e.ability_scores[0].specialty = None;
+        e.equipment = vec![long_sword()];
+        let no_spec = &combat_totals(&e, &rs)[0];
+        assert_eq!(no_spec.attack, Some(10));
+        assert_eq!(no_spec.defense, 6);
+    }
+
+    /// Issue A: the pure "largely due to weapons and armor" majority test —
+    /// combat-gear Load ≥ half of total Load exempts Attack/Defense (Core:17105).
+    /// Documents the ">= half" interpretation of "largely" (RULES.md).
+    #[test]
+    fn combat_gear_majority_boundary() {
+        // (i) majority combat gear (7 of 10) → exempt.
+        assert!(combat_gear_is_majority(7, 10));
+        // (ii) majority non-combat load (3 of 10) → NOT exempt (penalized).
+        assert!(!combat_gear_is_majority(3, 10));
+        // (iii) exact 50/50 → exempt (the ">= half" choice).
+        assert!(combat_gear_is_majority(5, 10));
+        // No load at all → trivially exempt (nothing to penalize).
+        assert!(combat_gear_is_majority(0, 0));
+    }
+
+    /// Issue A: with all Load coming from combat gear (weapons + armor), the
+    /// Encumbrance penalty is exempt from Attack/Defense but still hits Initiative
+    /// (Core:17105, :16658).
+    #[test]
+    fn combat_gear_exempts_attack_defense_but_not_initiative() {
+        let rs = ruleset();
+        let mut e = grog();
+        set_char(&mut e, Characteristic::Qik, 1);
+        set_char(&mut e, Characteristic::Dex, 2);
+        set_char(&mut e, Characteristic::Str, 0);
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.single_weapon"),
+            parameter: None,
+            specialty: None,
+            score: 4,
+        }];
+        // Weapon Load 1 + armor Load 1 = 2 → Burden 1; Str 0 → Enc 1. All combat.
+        e.equipment = vec![
+            EquipmentSlot {
+                item: Id::new("weapon.long_sword"),
+                equipped: true,
+                specialization_applies: false,
+            },
+            EquipmentSlot {
+                item: Id::new("armor.leather_scale"),
+                equipped: true,
+                specialization_applies: false,
+            },
+        ];
+        assert!(!combat_encumbrance_applies(&e, &rs));
+        let l = &combat_totals(&e, &rs)[0];
+        // Init = Qik 1 + WpnInit 2 − Enc 1 = 2 (Initiative IS penalized).
+        assert_eq!(l.initiative, 2);
+        // Attack = Dex 2 + Ability 4 + WpnAtk 4 = 10 (NO −Enc: exempt).
+        assert_eq!(l.attack, Some(10));
+        // Defense = Qik 1 + Ability 4 + WpnDef 1 = 6 (NO −Enc: exempt).
+        assert_eq!(l.defense, 6);
     }
 
     /// Soak with Tough (+3) and a Bronze cord, plus worn armor (Core:16667,
@@ -2007,6 +2243,7 @@ mod tests {
         e.equipment = vec![EquipmentSlot {
             item: Id::new("armor.leather_scale"),
             equipped: true,
+            specialization_applies: false,
         }];
         let s = soak(&e, &rs);
         // Sta 2 + Armor 3 + Tough 3 + Bronze 2 + Form 0 = 10.
@@ -2023,6 +2260,7 @@ mod tests {
         e.equipment = vec![EquipmentSlot {
             item: Id::new("armor.leather_scale"),
             equipped: true,
+            specialization_applies: false,
         }];
         let enc = encumbrance(&e, &rs);
         assert_eq!(enc.load, 1);
@@ -2155,6 +2393,7 @@ mod tests {
         e.equipment = vec![EquipmentSlot {
             item: Id::new("weapon.long_sword"),
             equipped: true,
+            specialization_applies: false,
         }];
         // Baseline Init = Qik 1 + WpnInit 2 − Enc 0 = 3.
         assert_eq!(combat_totals(&e, &rs)[0].initiative, 3);

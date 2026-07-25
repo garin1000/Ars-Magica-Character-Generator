@@ -1655,6 +1655,15 @@ pub struct EquipmentSlot {
     /// still count toward carried Load but not toward combat/Soak lines (5i).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub equipped: bool,
+    /// Whether this weapon's combat Ability specialization applies to it, granting
+    /// +1 to the weapon's Attack and Defense (the specialty must be aligned to this
+    /// specific weapon; Damage/Initiative do not use the Ability). Only meaningful
+    /// for a weapon slot whose Ability carries a specialty. Additive and
+    /// serde-defaulted — old saves omit the key and deserialize to `false`, a new
+    /// save with `false` omits it on write (SCHEMA_VERSION unchanged), exactly like
+    /// the sibling `equipped` field. Source: Core Rules.md:7122, :7139.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub specialization_applies: bool,
 }
 
 /// A named Personality Trait with a value in −3..+3 (or ±6 for the trait

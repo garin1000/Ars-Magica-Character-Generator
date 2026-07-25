@@ -101,6 +101,15 @@ pub struct Weapon {
     /// melee weapons.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub range: Option<u16>,
+    /// Whether the weapon requires two hands, so it cannot be paired with a
+    /// shield: a two-handed weapon receives **no** shield Init/Attack/Defense
+    /// modifiers (the shield still counts toward Load). The nine Great-Weapon
+    /// melee weapons and both bows are two-handed. `#[serde(default)]` + skip-when-
+    /// false for canonical, noise-free JSON. Source: Ars Magica - Definitive
+    /// Edition (Core Rules).md:7494 (Great Weapon — "Fighting with a weapon which
+    /// requires two hands to use"), :7333-7334 / :17099 (Bows).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub two_handed: bool,
     /// The combat Ability this weapon uses (e.g. `ability.single_weapon`,
     /// `ability.brawl`, `ability.bows`).
     pub ability: Id,
@@ -220,6 +229,7 @@ mod tests {
             min_strength: None,
             load: 0,
             range: None,
+            two_handed: false,
             ability: Id::new("ability.brawl"),
             source: None,
         };
@@ -229,6 +239,29 @@ mod tests {
         assert!(!out.contains("min_strength"), "n/a strength skipped: {out}");
         assert!(!out.contains("range"), "melee range skipped: {out}");
         assert_eq!(serde_json::from_str::<Weapon>(&out).unwrap(), w);
+    }
+
+    /// `two_handed` defaults to false and is skipped when false; a two-handed
+    /// weapon (Great Weapon / bow) serializes it. Source: Core:7494, :17099.
+    #[test]
+    fn two_handed_defaults_false_and_skips_when_false() {
+        let json = r#"{
+          "id": "weapon.sword_great", "kind": "melee", "init_mod": 2, "attack_mod": 5,
+          "defense_mod": 2, "damage_mod": 9, "min_strength": 1, "load": 2,
+          "two_handed": true, "ability": "ability.great_weapon"
+        }"#;
+        let w: Weapon = serde_json::from_str(json).unwrap();
+        assert!(w.two_handed);
+        let out = serde_json::to_string(&w).unwrap();
+        assert!(out.contains("two_handed"), "true serialized: {out}");
+        // A one-handed weapon omits the flag entirely.
+        let one = Weapon {
+            two_handed: false,
+            ..w.clone()
+        };
+        let out_one = serde_json::to_string(&one).unwrap();
+        assert!(!out_one.contains("two_handed"), "false skipped: {out_one}");
+        assert_eq!(serde_json::from_str::<Weapon>(&out_one).unwrap(), one);
     }
 
     /// A missile weapon carries a Range; a thrown weapon uses the Thrown ability.
