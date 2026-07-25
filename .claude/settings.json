@@ -1,9 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cargo test *)",
-      "Bash(cargo clippy *)",
-      "Bash(cargo fmt --check)"
+      "Bash(cargo:*)",
+      "Bash(npm run:*)"
     ]
   }
 }
