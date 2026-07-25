@@ -14,6 +14,33 @@ permission prompts surface in the chat and progress updates are visible to the u
 Follow these steps exactly. Between every step, post a short status update in the chat
 so the user can see progress.
 
+### Command hygiene (ALL agents — required, paste into every agent prompt)
+
+The project's `.claude/settings.local.json` pre-approves a specific set of command
+*prefixes* and pre-sets `PATH` (cargo + node/npm are already on it). Background agents
+cannot raise interactive approval prompts, so any command that does not cleanly match an
+allowlisted prefix is **auto-DENIED** (not queued for approval). To stay inside the
+allowlist, every agent MUST:
+
+- **One command per Bash call.** No `&&`, `;`, `|`, redirects (`>`, `>>`, `tee`), or
+  `$(...)` subshells — a compound line matches no single allowlisted prefix and is denied.
+  To change directory, issue `cd <path>` as its OWN call (the Bash working directory
+  persists across calls), then run the tool command as the next call.
+- **Never prepend environment setup.** Do NOT add `source ~/.cargo/env`, `export PATH=…`,
+  `nvm use`, or a `source …; …` chain — `PATH` is already configured via the settings
+  `env`, so `cargo`, `npm`, and `node` resolve directly. Prepending these turns a clean,
+  allowlisted command into a denied compound. (This supersedes any "source cargo/nvm
+  first" note in older run recipes — that is unnecessary here.)
+- **Use only the allowlisted command forms**, exactly as the prefix expects:
+  `cargo test …`, `cargo clippy …`, `cargo fmt …`, `cargo tarpaulin …`, `cargo tauri …`,
+  and `npm run <script>` run from the target directory. NEVER bare `npm`/`node`,
+  `npm install`, or `npm ci` — those are not allowlisted and will be denied.
+- Run the UI gate by first `cd`-ing into `ui/` in one call, then `npm run check`,
+  `npm run test:unit`, `npm run lint`, `npm run format:check` as separate single-command
+  calls (each matches `Bash(npm run:*)`).
+- File reads inside the repo and under the session scratchpad/`tmp/` need no approval; do
+  not read unrelated out-of-repo paths.
+
 ### Phase 1: Setup
 
 Run these bash commands (no agent needed):
@@ -25,8 +52,10 @@ Post: "Setup complete."
 
 ### Phase 2: Review (parallel)
 
-Launch **3 Agent calls in a single message** (so they run in parallel). Each agent must
-return structured JSON with this schema:
+Launch **3 Agent calls in a single message** (so they run in parallel). Every agent prompt
+MUST include the **Command hygiene** rules above (verbatim) in addition to PROJECT_CONTEXT,
+so agents only emit allowlisted, single commands and never trip auto-denials. Each agent
+must return structured JSON with this schema:
 
 ```json
 {
@@ -93,8 +122,9 @@ Prompt context (paste PROJECT_CONTEXT below + this):
 > Run: cargo test, cargo clippy (warnings as errors), cargo fmt --check,
 > cargo tarpaulin -p arm-rules --out json --output-dir tmp/
 >
-> If ui/ exists, also run its type-check, tests, lint, and format:
-> `cd ui && npm run check && npm run test:unit && npm run lint && npm run format:check`.
+> If ui/ exists, also run its type-check, tests, lint, and format — each as its OWN
+> single-command Bash call per the Command hygiene rules (NOT chained with `&&`): first
+> `cd ui`, then `npm run check`, `npm run test:unit`, `npm run lint`, `npm run format:check`.
 > `npm run check` (svelte-check) is MANDATORY: vitest does NOT type-check, so TS
 > type errors (including in test files) pass `test:unit` yet break the build.
 > If ui/ does not exist, skip — do NOT report it.
@@ -142,9 +172,11 @@ For each category (architecture, API surface, QA) that has findings:
 4. Repeat for API surface and QA fixers.
 
 Each fixer agent must run `cargo test -p arm-rules` after fixing and ensure tests pass.
-A fixer that touched ui/ must also run `cd ui && npm run check` (svelte-check) so TS
-type errors are caught — vitest does not type-check. The QA fixer must also run clippy,
-fmt, and tarpaulin.
+A fixer that touched ui/ must also run svelte-check — `cd ui` then `npm run check` as two
+separate single-command calls (see Command hygiene) — so TS type errors are caught; vitest
+does not type-check. The QA fixer must also run clippy, fmt, and tarpaulin. All commands
+follow the Command hygiene rules: one allowlisted command per call, no chaining or
+env-sourcing.
 
 ### Phase 4: Verify
 
@@ -153,7 +185,8 @@ Run a verification agent (or bash commands directly) to confirm:
 2. `cargo clippy --workspace -- -D warnings` — clean
 3. `cargo fmt --check` — clean
 4. `cargo tarpaulin -p arm-rules --out json --output-dir tmp/` — coverage percentage
-5. If ui/ exists: `cd ui && npm run check && npm run test:unit && npm run lint && npm run format:check` — all clean
+5. If ui/ exists: `cd ui`, then `npm run check`, `npm run test:unit`, `npm run lint`,
+   `npm run format:check` — each a separate single-command call (see Command hygiene) — all clean
 6. **FULL RELEASE APP COMPILE (mandatory): `cargo tauri build --no-bundle`** — must
    succeed. This is the only gate that type-checks the frontend and builds the
    production app/binary; `cargo test`/`clippy` and vitest do not. Convergence
