@@ -1,155 +1,99 @@
-<script lang="ts">
-  import { store } from '../state.svelte';
-  import {
-    abilityDisplayName,
-    displayName,
-    grantedSelectionsForSide,
-    groupSelectionsByCategory,
-    mandatoryTraitRefs,
-  } from '../derive';
-  import { reserveTagSpace, tooltip, type TooltipContent } from '../actions';
-  import type { ItemKind } from '../types';
-  import ParameterPicker from './ParameterPicker.svelte';
+<script lang="ts" generics="T">
+  import type { Snippet } from 'svelte';
 
-  // One list per side: chosen Virtues (virtue/boon) and Flaws (flaw/hook),
-  // mirroring ItemPicker so source and selected columns line up.
-  let { side }: { side: 'virtue' | 'flaw' } = $props();
+  // A generic "Selections" list: the shared skeleton every chosen-item list uses
+  // (V/F, Abilities, Equipment, Spells). It renders one or more side-by-side
+  // columns, each a panel with an optional heading, an optional header block
+  // (e.g. the Spells budget bar), and either an empty message or grouped rows.
+  //
+  // Two grouping modes fall out of the same shape:
+  //  - a category-grouped list (V/F, Abilities) supplies several groups, each with
+  //    an `<h3 class="category">` header;
+  //  - a flat/ordered list (Spells, Equipment) supplies a single header-less group.
+  //
+  // The caller carries each row's ORIGINAL entity index inside the row item, so
+  // the row snippet's index-addressed mutators always target the right entity row
+  // regardless of display order or per-side splitting. Row bodies (including
+  // granted/mandatory markers) are the caller's `row` snippet.
 
-  const kinds: ItemKind[] = $derived(side === 'virtue' ? ['virtue', 'boon'] : ['flaw', 'hook']);
-  const titleKey = $derived(side === 'virtue' ? 'items-virtues-title' : 'items-flaws-title');
-
-  // Carry the original entity index so repeated items address the right row even
-  // after the per-side kind filter drops the others.
-  const selections = $derived(
-    store.entity.selections
-      .map((selection, index) => ({ selection, index }))
-      .filter(({ selection }) => {
-        const item = store.ruleset?.ruleset.point_items[selection.ref];
-        return item ? kinds.includes(item.kind) : false;
-      }),
-  );
-
-  // Chosen selections grouped by category and alpha-sorted within each group
-  // (mirroring the source picker). Original entity indices ride along for wiring.
-  const groupedSelections = $derived(
-    store.ruleset ? groupSelectionsByCategory(store.ruleset, selections) : [],
-  );
-
-  // Traits the character type mandates (a magus's The Gift + Hermetic Magus):
-  // auto-selected, shown with a "Required" marker and no remove button.
-  const mandatory = $derived(
-    mandatoryTraitRefs(store.ruleset?.ruleset.type_profiles[store.entity.type_id]),
-  );
-
-  // House-granted rows on this side (e.g. Bonisagus → Puissant Magic Theory):
-  // derived at eval, not stored, so they show read-only below the chosen ones.
-  const granted = $derived(
-    store.ruleset
-      ? grantedSelectionsForSide(store.ruleset, store.effective?.granted_selections, side)
-      : [],
-  );
-
-  function hint(key: string): string {
-    return store.t('param-hint', { label: store.t(`param-label-${key}`) });
+  /** A row to render, keyed for `{#each}`; `item` is handed to the `row` snippet. */
+  interface Row {
+    key: string | number;
+    item: T;
   }
 
-  // Tooltip from the item's localized rules text (description, else summary).
-  function tip(itemId: string): TooltipContent {
-    const entry = store.ruleset?.i18n[itemId];
-    return { text: entry?.description ?? entry?.summary ?? undefined };
+  /** A group of rows under an optional `<h3 class="category">` header. */
+  interface Group {
+    key: string;
+    /** Localized category header (never a raw id); omitted → header-less (flat). */
+    header?: string;
+    /** `<ul>` classes; defaults to `selection-list`. */
+    listClass?: string;
+    /** Optional `data-testid` on the `<ul>` (Spells/Equipment set one). */
+    ulTestid?: string;
+    rows: Row[];
   }
 
-  // Resolve a filled param value (a ref slug) to its display label so the tag
-  // reads "Great Perception" / "Puissant Brandenburg Lore", not the raw slug.
-  // `params` is the whole selection's params so an ability target can pull in its
-  // sibling instance value (the area/language).
-  function resolveParamValue(params: Record<string, string> | undefined, value: string): string {
-    if (!store.ruleset) return value;
-    if (value.startsWith('characteristic.')) {
-      return store.t(`characteristic-${value.slice('characteristic.'.length)}`);
-    }
-    const ability = store.ruleset.ruleset.abilities?.[value];
-    if (ability) {
-      // A parameterized ability target ((Area) Lore) fills its instance value.
-      const instanceKey = ability.parameter ?? undefined;
-      const instanceValue = instanceKey ? params?.[instanceKey] : undefined;
-      return abilityDisplayName(store.ruleset, value, instanceValue, hint);
-    }
-    if (store.ruleset.i18n[value]) {
-      return displayName(store.ruleset, value, undefined, hint);
-    }
-    return value;
+  /** One column (side) of the selections region — a single panel. */
+  interface Column {
+    key: string;
+    /** Optional panel heading (V/F uses it for the per-side Virtues/Flaws title). */
+    title?: string;
+    /** Optional `data-testid` on the panel (V/F uses `selection-list-{side}`). */
+    panelTestid?: string;
+    /** Whether to show the empty message instead of the groups. */
+    empty?: boolean;
+    emptyText?: string;
+    /** Class on the empty `<p>` (`muted` for V/F, `empty` elsewhere). */
+    emptyClass?: string;
+    /** Optional block rendered above the groups (the Spells budget/mastery bar). */
+    header?: Snippet;
+    groups: Group[];
   }
+
+  let {
+    columns,
+    row,
+  }: {
+    columns: Column[];
+    /** Renders the full `<li>` for a row (name, controls, markers, sub-pickers). */
+    row: Snippet<[T]>;
+  } = $props();
 </script>
 
-<!-- Only the item's two intrinsic tags (category + magnitude) stack in the
-     right-edge overlay; a provenance marker (Required/Granted) is rendered as a
-     separate inline chip in the row (see below), so the vertical stack never
-     grows past two and bleeds into neighbouring rows. -->
-{#snippet nameWrap(ref: string, params: Record<string, string> | undefined)}
-  {@const item = store.ruleset?.ruleset.point_items[ref]}
-  <span class="name-wrap" use:reserveTagSpace use:tooltip={tip(ref)}>
-    {#if item}
-      <span class="badges">
-        <span class="badge type">{store.t(`category-${item.category}`)}</span>
-        <span class="badge">{store.t(`magnitude-${item.magnitude}`)}</span>
-      </span>
+{#snippet columnPanel(col: Column)}
+  <section class="panel" data-testid={col.panelTestid}>
+    {#if col.title}
+      <h2>{col.title}</h2>
     {/if}
-    <span class="item-name">
-      {store.ruleset
-        ? displayName(store.ruleset, ref, params, hint, (_key, value) =>
-            resolveParamValue(params, value),
-          )
-        : ref}
-    </span>
-  </span>
+    {#if col.header}
+      {@render col.header()}
+    {/if}
+    {#if col.empty}
+      <p class={col.emptyClass ?? 'empty'}>{col.emptyText}</p>
+    {:else}
+      {#each col.groups as group (group.key)}
+        {#if group.header}
+          <h3 class="category">{group.header}</h3>
+        {/if}
+        <ul class={group.listClass ?? 'selection-list'} data-testid={group.ulTestid}>
+          {#each group.rows as r (r.key)}
+            {@render row(r.item)}
+          {/each}
+        </ul>
+      {/each}
+    {/if}
+  </section>
 {/snippet}
 
-<section class="panel" data-testid="selection-list-{side}">
-  <h2>{store.t(titleKey)}</h2>
-  {#if selections.length === 0 && granted.length === 0}
-    <p class="muted">{store.t('empty-selections-side')}</p>
-  {:else}
-    {#each groupedSelections as group (group.category)}
-      <h3 class="category">{store.t(`category-${group.category}`)}</h3>
-      <ul class="selection-list">
-        {#each group.entries as { selection, index } (index)}
-          {@const item = store.ruleset?.ruleset.point_items[selection.ref]}
-          {@const required = mandatory.has(selection.ref)}
-          <li>
-            <div class="selection-row">
-              {@render nameWrap(selection.ref, selection.params)}
-              {#if required}
-                <span class="row-marker">{store.t('selection-required-label')}</span>
-              {:else}
-                <button
-                  type="button"
-                  class="icon-btn"
-                  onclick={() => store.removeSelectionAt(index)}
-                  data-testid="remove-{selection.ref}-{index}"
-                >
-                  -
-                </button>
-              {/if}
-            </div>
-            {#if item?.parameters && item.parameters.length > 0}
-              <ParameterPicker {selection} {index} params={item.parameters} />
-            {/if}
-          </li>
-        {/each}
-      </ul>
+{#if columns.length > 1}
+  <!-- Two-or-more columns per side (V/F: Virtues beside Flaws) through one
+       instance — the layout the tab previously built by nesting two components. -->
+  <div class="region-columns">
+    {#each columns as col (col.key)}
+      {@render columnPanel(col)}
     {/each}
-    {#if granted.length > 0}
-      <ul class="selection-list">
-        {#each granted as grant (grant.ref)}
-          <li data-testid="granted-selection-{grant.ref}">
-            <div class="selection-row">
-              {@render nameWrap(grant.ref, grant.params)}
-              <span class="row-marker">{store.t('house-granted-label')}</span>
-            </div>
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  {/if}
-</section>
+  </div>
+{:else if columns.length === 1}
+  {@render columnPanel(columns[0])}
+{/if}

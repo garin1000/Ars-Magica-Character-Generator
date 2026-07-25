@@ -6,10 +6,9 @@
   import ModeToggle from './lib/components/ModeToggle.svelte';
   import CharacterTypeSelector from './lib/components/CharacterTypeSelector.svelte';
   import ItemPicker from './lib/components/ItemPicker.svelte';
-  import SelectionList from './lib/components/SelectionList.svelte';
+  import VfSelectionList from './lib/components/VfSelectionList.svelte';
   import CharacteristicPicker from './lib/components/CharacteristicPicker.svelte';
-  import AbilityPicker from './lib/components/AbilityPicker.svelte';
-  import AbilitySelectionList from './lib/components/AbilitySelectionList.svelte';
+  import AbilityTab from './lib/components/AbilityTab.svelte';
   import XpBar from './lib/components/XpBar.svelte';
   import ArtGrid from './lib/components/ArtGrid.svelte';
   import SpellPicker from './lib/components/SpellPicker.svelte';
@@ -209,8 +208,8 @@
           <h2 class="region-title">{store.t('selections-title')}</h2>
           <div class="selected-frame">
             <div class="region-columns">
-              <SelectionList side="virtue" />
-              <SelectionList side="flaw" />
+              <VfSelectionList side="virtue" />
+              <VfSelectionList side="flaw" />
             </div>
           </div>
         </section>
@@ -219,18 +218,7 @@
   {:else if tab === 'abilities'}
     <div class="vf-tab">
       <XpBar />
-      <div class="region-row">
-        <section class="region region-source">
-          <h2 class="region-title">{store.t('available-title')}</h2>
-          <AbilityPicker />
-        </section>
-        <section class="region region-selected">
-          <h2 class="region-title">{store.t('selections-title')}</h2>
-          <div class="selected-frame">
-            <AbilitySelectionList />
-          </div>
-        </section>
-      </div>
+      <AbilityTab />
     </div>
   {:else if tab === 'arts'}
     <div class="vf-tab">
