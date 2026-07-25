@@ -27,6 +27,7 @@ mod might;
 mod prereq;
 mod scores;
 mod selections;
+mod warping;
 
 use aging::*;
 use balance::*;
@@ -37,6 +38,7 @@ use might::*;
 use prereq::*;
 use scores::*;
 use selections::*;
+use warping::*;
 
 pub use balance::{Balance, PointCeilings, compute_balance, effective_point_ceilings};
 
@@ -148,6 +150,12 @@ impl fmt::Display for IssueSeverity {
 /// | `unknown_equipment` | error | `item` |
 /// | `equipment_min_strength` | warning | `item`, `required`, `strength` |
 /// | `shield_with_two_handed_weapon` | warning | (none) |
+/// | `warping_owed_minor_flaws` | warning | `count` |
+/// | `warping_owed_supernatural_virtues` | warning | `count` |
+/// | `warping_owed_major_flaws` | warning | `count` |
+/// | `warping_fill_constraint` | error | `choice_key`, `item` |
+/// | `warping_fill_ineligible` | error | `choice_key`, `item` |
+/// | `warping_fill_excess` | error | `choice_key` |
 ///
 /// † The per-category caps emit a code derived from the `flaw_category_caps` /
 /// `virtue_category_caps` entry's category slug: `too_many_<category>_flaws` /
@@ -380,6 +388,28 @@ impl ValidationIssue {
     /// shield still counts toward Load, and the character may carry it, so this
     /// never blocks (Core:7494, :17063, :16975).
     pub const CODE_SHIELD_WITH_TWO_HANDED_WEAPON: &'static str = "shield_with_two_handed_weapon";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a non-magus owes more
+    /// Minor Flaws from Warping than it has chosen fills for (Core:16553-16557).
+    pub const CODE_WARPING_OWED_MINOR_FLAWS: &'static str = "warping_owed_minor_flaws";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a non-magus owes a
+    /// supernatural Minor Virtue from Warping it has not chosen yet (Core:16559).
+    pub const CODE_WARPING_OWED_SUPERNATURAL_VIRTUES: &'static str =
+        "warping_owed_supernatural_virtues";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a non-magus owes more
+    /// Major Flaws from Warping than it has chosen fills for (Core:16561).
+    pub const CODE_WARPING_OWED_MAJOR_FLAWS: &'static str = "warping_owed_major_flaws";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a chosen warping-owed
+    /// fill does not match the owed slot's kind/magnitude/category (or its id does
+    /// not resolve) — e.g. a Major Flaw where a Minor is owed (Core:16553-16561).
+    pub const CODE_WARPING_FILL_CONSTRAINT: &'static str = "warping_fill_constraint";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a chosen warping-owed
+    /// fill carries an [`crate::types::Effect::WarpingGrant`] and is ineligible —
+    /// folding its Warping Points back would self-amplify the owed count (the
+    /// recursion guard).
+    pub const CODE_WARPING_FILL_INELIGIBLE: &'static str = "warping_fill_ineligible";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a stored warping fill is
+    /// keyed to a slot the character does not owe (exceeds the owed count).
+    pub const CODE_WARPING_FILL_EXCESS: &'static str = "warping_fill_excess";
 
     /// Builds an issue with the given severity, code, args, and context.
     pub fn new(
@@ -521,6 +551,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_equipment(entity, ruleset, &mut issues);
         validate_aging(entity, ruleset, &mut issues);
         validate_xp_pool(entity, ruleset, &mut issues);
+        validate_warping(entity, ruleset, type_profile, &mut issues);
     }
 
     ValidationResult { issues }

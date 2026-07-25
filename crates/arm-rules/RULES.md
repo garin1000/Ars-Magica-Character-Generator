@@ -897,13 +897,67 @@ migration code; `load_entity_migrating` is untouched). Bumped `SCHEMA_VERSION`
   **pure annotation**: apparent age is the resolved *outcome* of aging rolls the
   app deliberately does **not** simulate — consistent with the `Effect::AgingMod`
   "surfaced-only" doc (`types.rs`, "the app does not simulate aging rolls").
-- **Warping effect** — `Entity.warping_effect: String` (skip-if-empty), the
-  source-reflecting Flaw a character gains from Warping.
+- **Warping effect** — `Entity.warping_effect: String` (skip-if-empty), a
+  free-text flavor note for how the character's Warping manifests (Issue D).
   > "This Minor Flaw should reflect the predominant source of the Warping Points."
 
   Source: `Ars Magica - Definitive Edition (Core Rules).md:16547-16561` (### Effects
-  of Warping). Deliberately **free text, NOT a Flaw `selection`**: a post-creation
-  warping Flaw must not count against the creation Virtue/Flaw budget.
+  of Warping). This is the flavor annotation only; the **mechanical** owed V/F it
+  used to stand in for are now auto-granted (Issue E, below), and the textarea
+  stays for additional narrative colour.
+
+#### Effects of Warping — auto-granted owed Virtues/Flaws (Issue E, `warping_grant` curve)
+> "Hermetic magi are made more prone to Wizard's Twilight by their Warping Score.
+> This replaces the normal effects." (16551)
+> "Mundane characters gain a Minor Flaw when they reach a Warping Score of one."
+> (16553) "When the Warping Score reaches 3, the character gains a second Minor
+> Flaw." (16557) "At a Warping Score of 5, the character gains a supernatural
+> Minor Virtue…" (16559) "At a Warping Score of 6, and every point thereafter,
+> the character gains a Major Flaw…" (16561)
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:16551-16561`.
+- Implementation: `effective.rs::warping_owed(entity, ruleset) -> WarpingOwed`
+  (`{ minor_flaws, minor_supernatural_virtues, major_flaws }`), driven by the pure
+  threshold `WarpingOwed::from_score`: Minor Flaw at Score 1, a second at 3
+  (`minor_flaws` cap 2); a supernatural Minor Virtue at 5; `major_flaws =
+  score.saturating_sub(5)` (Score 6 → 1, 7 → 2, …). Magi (`profile.is_magus`) owe
+  **zero** — Warping gives them Wizard's Twilight instead (16551), which this
+  core-only slice does NOT model.
+- Off-budget storage: the player's fills live in `Entity.warping_choices`
+  (`BTreeMap<String, Selection>`, keyed by each owed slot's `choice_key`), resolved
+  through the shared `grant.rs` `Grant::Open`/`GrantConstraint` machinery
+  (`warping_owed_grants` builds one Open grant per owed slot; a Minor Flaw, a
+  supernatural Minor Virtue, a Major Flaw). Like `house_choices`/`mythic_choices`
+  the fills fold through `effective.rs::entity_grants` as real (budget- and
+  cap-exempt) selections, so an owed warping Flaw never counts against the creation
+  V/F budget. Additive `serde(default)`; `SCHEMA_VERSION` stays 13.
+- **Recursion guard (the load-bearing design point).** `warping_owed` depends on
+  the Warping Score, which folds `Effect::WarpingGrant` points; the natural fill
+  `flaw.warped_by_magic` *is* a `WarpingGrant` +5 item, so folding fills back into
+  the owed score would self-amplify (owe → pick warped_by_magic → +5 → owe more →
+  …). Stratified two ways: (i) the owed count derives from
+  `warping_score_for_owed`, computed over `entity.selections` + `entity_grants_base`
+  (House/Mythic/`grants_selection` grants) **excluding** the owed warping fills; and
+  (ii) any item carrying `Effect::WarpingGrant` is ineligible as a fill — dropped in
+  `warping_granted_selections` and rejected in validation (`warping_fill_ineligible`).
+  A regular, budget-bearing `warped_by_magic` selection still counts toward the
+  score as before; only the owed-*fill* picks are excluded.
+- Validation (`validation/warping.rs`): advisory `warping_owed_{minor_flaws,
+  supernatural_virtues,major_flaws}` per unfilled kind; errors
+  `warping_fill_constraint` (wrong kind/magnitude/category or unresolvable id),
+  `warping_fill_ineligible` (WarpingGrant item), `warping_fill_excess` (a fill keyed
+  to a slot not owed). Surfaced to the UI via `EffectiveScores.warping_owed` +
+  `warping_owed_grants`; rendered in `CharacterDetails.svelte` (hidden for magi,
+  whose owed-grant list is empty) with pickers filtered to eligible items. Labels
+  via Fluent `warping-owed-*` / `issue-warping_*` (DE "Verzerrung", per the
+  glossary).
+- **Interpretation notes.** (i) 16553 says "Mundane characters"; this core-only
+  slice grants the owed V/F to **all non-magi**. Might-holders (`entity.might`) are
+  absolutely immune to warping per 16483 — a flagged interpretation left to the
+  troupe, **not** specially handled here (the guard keys only on `is_magus`).
+  (ii) The 16559 clause that the supernatural Minor Virtue "stops any further gain
+  of points from living in a strong aura of the same type" is a post-creation /
+  in-play effect and is **NOT** modeled.
 - **Decrepitude effect** — `Entity.decrepitude_effect: String` (skip-if-empty):
   free-text overall aging/decrepitude narrative. Pure annotation — Decrepitude
   itself is DERIVED from `aging_points` (see above). Source:

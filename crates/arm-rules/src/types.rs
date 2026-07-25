@@ -1966,6 +1966,18 @@ pub struct Entity {
     /// companion, never both).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub mythic_choices: BTreeMap<String, Selection>,
+    /// The player's chosen fills for the Virtues/Flaws a non-magus character owes
+    /// from its Warping Score ("Effects of Warping", Core Rules.md:16547-16561),
+    /// keyed by each owed slot's stable `choice_key` (see
+    /// [`crate::effective::warping_owed_grants`]). Off-budget grants: like
+    /// `house_choices`/`mythic_choices` the fills are resolved to derived
+    /// [`Selection`]s at eval time and never counted against the creation V/F
+    /// budget. Empty for magi (exempt — Twilight instead, :16551) and any
+    /// character owing nothing. Additive and serde-defaulted so old saves lacking
+    /// the field load unchanged (SCHEMA_VERSION stays 13), mirroring
+    /// `mastery_abilities`. Kept canonical by the `BTreeMap` key ordering.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub warping_choices: BTreeMap<String, Selection>,
     /// The character's age in years. Drives the age → max-Ability-score cap
     /// (Core:2366-2376). `None` when unset (no cap enforced yet).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2110,6 +2122,12 @@ pub struct Entity {
 /// [`SpellSelection`] (parametrized meta-magic Vim spells like Wizard's Boost,
 /// Issue 8/10). Purely additive `serde(default)`, so old saves load unchanged
 /// with no migration code.
+///
+/// The `SpellSelection::mastery_abilities` field and the `warping_choices` map
+/// (the off-budget owed-warping V/F fills, Issue E) were both later additive
+/// `serde(default)` additions that did NOT bump the version: an old save omits
+/// the key and deserializes to the empty default; a new save with the default
+/// omits it on write, so version 13 saves remain byte-compatible both ways.
 pub const SCHEMA_VERSION: u32 = 13;
 
 impl Entity {
@@ -2133,6 +2151,7 @@ impl Entity {
             house_choices: BTreeMap::new(),
             mythic_type: None,
             mythic_choices: BTreeMap::new(),
+            warping_choices: BTreeMap::new(),
             age: None,
             apparent_age: None,
             personality_traits: Vec::new(),
@@ -2927,6 +2946,7 @@ mod tests {
             house_choices: BTreeMap::new(),
             mythic_type: None,
             mythic_choices: BTreeMap::new(),
+            warping_choices: BTreeMap::new(),
             age: Some(25),
             apparent_age: None,
             personality_traits: vec![PersonalityTrait {
@@ -3077,6 +3097,7 @@ mod tests {
             house_choices: BTreeMap::new(),
             mythic_type: None,
             mythic_choices: BTreeMap::new(),
+            warping_choices: BTreeMap::new(),
             age: None,
             apparent_age: None,
             personality_traits: Vec::new(),
@@ -3600,6 +3621,36 @@ mod tests {
         assert!(entity.warping_effect.is_empty());
         assert!(entity.decrepitude_effect.is_empty());
         assert!(entity.aging_log.is_empty());
+        // The Issue E additive field also defaults on an old save.
+        assert!(entity.warping_choices.is_empty());
+    }
+
+    /// `warping_choices` round-trips canonically, stays at SCHEMA_VERSION 13
+    /// (additive `serde(default)` field), and is omitted from JSON when empty so
+    /// old saves lacking the key remain byte-compatible.
+    #[test]
+    fn warping_choices_roundtrip_is_canonical_and_schema_stable() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        // Empty → omitted from canonical JSON.
+        let json = serde_json::to_string(&entity).unwrap();
+        assert!(!json.contains("warping_choices"), "{json}");
+
+        entity.warping_choices.insert(
+            "warping.minor_flaw.0".to_string(),
+            Selection::new(Id::new("flaw.clumsy")),
+        );
+        entity.normalize();
+        let json = serde_json::to_string_pretty(&entity).unwrap();
+        assert!(json.contains(r#""warping_choices""#), "{json}");
+        assert!(json.contains(r#""schema_version": 13"#), "{json}");
+
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(entity, back);
+        assert_eq!(back.schema_version, SCHEMA_VERSION);
     }
 
     #[test]

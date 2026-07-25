@@ -547,6 +547,21 @@ describe('aged / warped state + identity', () => {
     expect(store.entity.warping_points).toBe(0);
   });
 
+  it('sets and clears an owed Warping fill by choice_key', () => {
+    store.setWarpingChoice('warping.minor_flaw.0', { ref: 'flaw.clumsy' });
+    expect(store.entity.warping_choices).toEqual({
+      'warping.minor_flaw.0': { ref: 'flaw.clumsy' },
+    });
+    // A second slot coexists without clobbering the first.
+    store.setWarpingChoice('warping.supernatural_virtue.0', { ref: 'virtue.second_sight' });
+    expect(store.entity.warping_choices?.['warping.minor_flaw.0']).toEqual({ ref: 'flaw.clumsy' });
+    // Passing null clears just that slot.
+    store.setWarpingChoice('warping.minor_flaw.0', null);
+    expect(store.entity.warping_choices).toEqual({
+      'warping.supernatural_virtue.0': { ref: 'virtue.second_sight' },
+    });
+  });
+
   it('adds, edits and removes Twilight Scars by index', () => {
     store.addTwilightScar();
     store.setTwilightScarDescription(0, 'Silver streak in the hair');
