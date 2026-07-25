@@ -106,14 +106,11 @@ tab-spells = Zauber
 tab-possessions = Magische Gegenstände
 tab-equipment = Ausrüstung
 tab-details = Details
-# EP-Übersicht und Bedienelemente der Fertigkeiten.
+# Gemeinsame EP-Übersicht (Fertigkeiten + Künste). Eine Zeile: das Label, der
+# schreibgeschützte verbrauchte Wert, der bearbeitbare Gesamtwert des allgemeinen
+# Vorrats (in Klammern), dann Verfügbar und etwaige eingeschränkte Teilvorräte.
+# `xp-pool` benennt die gesamte Gruppe des allgemeinen Vorrats.
 xp-pool = EP-Vorrat
-xp-spent = Ausgegeben: { $spent }
-# Wird statt `xp-spent` angezeigt, wenn ein eingeschränkter Vorrat (Gebildet/
-# Krieger/Privilegierte Erziehung) einen Teil der Ausgaben deckt: `$spent` ist die
-# Gesamtsumme über alle Vorräte, `$general` der aus dem allgemeinen Vorrat gedeckte
-# Anteil (also `xp-available` = Vorrat - `$general`).
-xp-spent-restricted = Ausgegeben: { $spent } ({ $general } aus dem allgemeinen Vorrat)
 xp-available = Verfügbar: { $available }
 # Eingeschränkte EP-Vorräte (Gebildet/Krieger/Privilegierte Erziehung): zusätzliche
 # EP, nur für die aufgeführten Fertigkeiten/Kategorien. `$eligibility` ist eine Liste.

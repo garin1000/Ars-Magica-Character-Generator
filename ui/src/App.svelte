@@ -10,9 +10,8 @@
   import CharacteristicPicker from './lib/components/CharacteristicPicker.svelte';
   import AbilityPicker from './lib/components/AbilityPicker.svelte';
   import AbilitySelectionList from './lib/components/AbilitySelectionList.svelte';
-  import AbilityXpBar from './lib/components/AbilityXpBar.svelte';
+  import XpBar from './lib/components/XpBar.svelte';
   import ArtGrid from './lib/components/ArtGrid.svelte';
-  import ArtXpBar from './lib/components/ArtXpBar.svelte';
   import SpellPicker from './lib/components/SpellPicker.svelte';
   import MagicPossessions from './lib/components/MagicPossessions.svelte';
   import SupernaturalBeing from './lib/components/SupernaturalBeing.svelte';
@@ -219,7 +218,7 @@
     </div>
   {:else if tab === 'abilities'}
     <div class="vf-tab">
-      <AbilityXpBar />
+      <XpBar />
       <div class="region-row">
         <section class="region region-source">
           <h2 class="region-title">{store.t('available-title')}</h2>
@@ -235,7 +234,7 @@
     </div>
   {:else if tab === 'arts'}
     <div class="vf-tab">
-      <ArtXpBar />
+      <XpBar prefix="art-" />
       <ArtGrid />
     </div>
   {:else if tab === 'spells'}

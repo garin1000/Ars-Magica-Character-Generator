@@ -10,6 +10,7 @@ import { $, expect, browser } from '@wdio/globals';
 const TYPE_SELECT = '[data-testid="type-select"]';
 const ARTS_TAB = '[data-testid="tab-arts"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
+const LANG_SELECT = '[data-testid="language-select"]';
 
 // Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
 function clean(text) {
@@ -82,5 +83,34 @@ describe('hermetic arts', () => {
       timeout: 5000,
       timeoutMsg: 'Puissant Art should make Ignem 2 read as effective 5',
     });
+  });
+
+  it('shows the single-row XP summary and localizes it to German (Issue G)', async () => {
+    await setType('magus');
+    await $(ARTS_TAB).click();
+
+    // The general-pool total is the only editable field and retains its value.
+    const pool = await $('[data-testid="art-xp-pool"]');
+    await pool.waitForExist({ timeout: 10000 });
+    await pool.setValue('30');
+    await browser.waitUntil(async () => (await pool.getValue()) === '30', {
+      timeout: 5000,
+      timeoutMsg: 'the editable general-pool total should retain the entered value',
+    });
+
+    // English: the Available readout renders in the same row with its label.
+    const available = await $('[data-testid="art-xp-available"]');
+    await available.waitForExist({ timeout: 5000 });
+    expect(clean(await available.getText())).toContain('Available');
+
+    // German: switching the language re-localizes the same XP row.
+    await $(LANG_SELECT).selectByAttribute('value', 'de');
+    await browser.waitUntil(async () => clean(await available.getText()).includes('Verfügbar'), {
+      timeout: 5000,
+      timeoutMsg: 'the XP row Available label should localize to German',
+    });
+
+    // Restore English so later specs run against the default locale.
+    await $(LANG_SELECT).selectByAttribute('value', 'en');
   });
 });

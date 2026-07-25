@@ -778,20 +778,74 @@ ul {
   white-space: nowrap;
 }
 
-/* Ability XP summary: pool input + derived spent/available. */
+/* Shared XP summary (Abilities + Arts): a single row reading
+   "XP pool <used> / [<editable total>]   Available: N   Martial: 10/50 …".
+   The general-pool total is the only editable field; used + restricted
+   sub-budgets are read-only. Wraps onto multiple lines on narrow widths. */
 .xp-summary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
+  gap: 0.4rem 1.5rem;
   margin-bottom: 0.6rem;
   font-variant-numeric: tabular-nums;
 }
 
 .xp-pool {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+.xp-pool-label {
+  font-weight: 600;
+}
+
+/* Decorative "/" between the read-only used figure and the bracketed total. */
+.xp-pool-used::after {
+  content: '/';
+  margin-left: 0.4rem;
+  color: var(--muted, #6b7280);
+}
+
+/* The editable total, styled as an inline bracketed value like "[200]". The
+   brackets are decorative (CSS), so no punctuation is hardcoded in markup. */
+.xp-pool-total {
+  display: inline-flex;
+  align-items: center;
+}
+
+.xp-pool-total::before {
+  content: '[';
+  color: var(--muted, #6b7280);
+}
+
+.xp-pool-total::after {
+  content: ']';
+  color: var(--muted, #6b7280);
+}
+
+.xp-pool-total input {
+  width: 5ch;
+  border: none;
+  background: transparent;
+  padding: 0 0.1rem;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: inherit;
+}
+
+/* Strip the number spinners so the value reads as inline bracketed text. */
+.xp-pool-total input::-webkit-outer-spin-button,
+.xp-pool-total input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.xp-pool-total input {
+  appearance: textfield;
+  -moz-appearance: textfield;
 }
 
 .xp-summary .over {

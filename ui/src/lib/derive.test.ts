@@ -34,7 +34,6 @@ import {
   resolveIssueArgs,
   restrictedPoolLabel,
   spellDisplayName,
-  xpSpentLabel,
 } from './derive';
 import type {
   Ability,
@@ -1242,35 +1241,6 @@ describe('restrictedPoolLabel', () => {
     );
     expect(label).toBe('Artes Liberales, (Language)');
     expect(label).not.toContain('{language}');
-  });
-});
-
-describe('xpSpentLabel', () => {
-  // A fake `t` that mirrors the two Fluent messages the helper chooses between.
-  const t = (key: string, args?: Record<string, string>) => {
-    if (key === 'xp-spent') return `Spent: ${args?.spent}`;
-    if (key === 'xp-spent-restricted')
-      return `Spent: ${args?.spent} (${args?.general} from general pool)`;
-    return key;
-  };
-
-  it('shows the plain total when the whole spend came from the general pool', () => {
-    // No restricted pool contributed: general_used == total spent, so the plain
-    // label reads intuitively (Available = pool − spent).
-    expect(xpSpentLabel(15, 15, t)).toBe('Spent: 15');
-  });
-
-  it('breaks out the general-pool portion when restricted pools funded part', () => {
-    // total spend 75, of which only 25 drew on the general pool (50 came from a
-    // restricted grant). Without the breakdown "Spent: 75" reads as more than the
-    // pool's 25 drop — the reported confusion.
-    expect(xpSpentLabel(75, 25, t)).toBe('Spent: 75 (25 from general pool)');
-  });
-
-  it('shows the plain total when general_used somehow exceeds spent', () => {
-    // Defensive: never render a breakdown that would read as negative restricted
-    // usage; fall back to the plain label.
-    expect(xpSpentLabel(10, 12, t)).toBe('Spent: 10');
   });
 });
 
