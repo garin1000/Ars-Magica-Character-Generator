@@ -61,6 +61,15 @@ it, every agent MUST:
   usually carry `$var` too). Iterate with a glob or the tool's own multi-file arguments
   (`grep -nE … src/*.rs`, `cargo test -p arm-rules`), or use the native Read/Grep tools —
   never a `for f in …; do …; done` loop.
+- **No brace groups or subshells — `{ … ; }` and `( … )`.** Compound commands built with
+  `|`, `&&`, `||`, and `;` ARE allowed: the analyzer splits on those separators and vets
+  each stage against the allowlist, so `cargo tarpaulin … | tail -3` and
+  `cd <repo>/ui && npm run check` auto-approve. Grouping constructs do not decompose that
+  way — the first token the analyzer sees is a bare `{` or `(`, which matches no
+  allowlisted prefix, so the whole line is denied. Write the stages out flat with `&&`/`;`
+  instead of wrapping them, and never use `{ … } > file` (redirects are banned anyway —
+  use the Write tool). Brace *expansion* in an argument (`src/*.{rs,toml}`) is likewise
+  out: use a plain glob or repeat the argument.
 - **Write artifacts with the Write tool, not shell redirects.** Redirects (`>`, `>>`,
   `tee`) are not allowlisted. To create `tmp/review-findings.json` or any file, use the
   Write/Edit tools (they work in-repo and under `tmp/` without approval).
