@@ -20,6 +20,7 @@ import type {
   Selection,
   Spell,
   SpellSelection,
+  ValidationResult,
 } from './types';
 
 /**
@@ -612,6 +613,30 @@ export function resolveIssueArgs(
     resolved[key] = resolveIssueArgValue(localized, key, value, t);
   }
   return resolved;
+}
+
+/**
+ * The ids of items an **error**-severity validation issue points at — the rows a
+ * selected list marks as illegal (red), so a selection that became invalid after
+ * the fact (a Virtue removed, an Art lowered) is visible on the row itself rather
+ * than only in the issues panel. Each issue's `context` carries the offending
+ * item's id (e.g. the spell whose level now exceeds its Te/Fo cap, or the
+ * supernatural ability whose granting Virtue is gone).
+ *
+ * Error severity only: warnings are advisory (an unevaluable prerequisite, an
+ * unspent restricted pool) and must not paint a row as illegal. This also makes
+ * the highlight follow `ValidationMode` for free — the engine's `apply_mode`
+ * clears every issue in `Silent` and downgrades all of them to warnings in
+ * `Advisory`, so only `Enforced` (where an illegal state is genuinely blocking)
+ * yields red rows.
+ */
+export function invalidSelectionIds(result: ValidationResult | null | undefined): Set<string> {
+  const ids = new Set<string>();
+  for (const issue of result?.issues ?? []) {
+    if (issue.severity !== 'error') continue;
+    if (issue.context) ids.add(issue.context);
+  }
+  return ids;
 }
 
 export interface AbilityGroup {

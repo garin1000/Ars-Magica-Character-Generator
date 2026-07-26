@@ -6,6 +6,7 @@
     filterAbilities,
     groupAbilitiesByCategory,
     groupAbilitySelectionsByCategory,
+    invalidSelectionIds,
     maxAbilityScore,
     type IndexedAbilityScore,
   } from '../derive';
@@ -130,6 +131,10 @@
       : [],
   );
 
+  // Abilities an error-severity issue points at (e.g. a supernatural ability whose
+  // granting Virtue was removed after it was bought) — their rows render red.
+  const invalidIds = $derived(invalidSelectionIds(store.result));
+
   const selectedColumns = $derived([
     {
       key: 'abilities',
@@ -229,7 +234,7 @@
           {@const entry = item.entry}
           {@const i = item.index}
           {@const key = paramKey(entry.ability)}
-          <li>
+          <li class:invalid-selection={invalidIds.has(entry.ability)}>
             <span class="item-name" use:tooltip={selectedTip(entry.ability)}
               >{selectedName(entry.ability, entry.parameter)}</span
             >
