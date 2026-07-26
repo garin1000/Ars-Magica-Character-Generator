@@ -46,6 +46,11 @@ magnitude-major = Major
 # Virtue/Flaw "Type" tag: a Tainted (Infernal-associated) Virtue or Flaw.
 vf-tag-tainted = Tainted
 
+# Reason shown on a Virtue/Flaw the enforced mode greys out because an already
+# selected item excludes it (Major vs Minor of the same V/F, Gentle vs Blatant
+# Gift, …). { $other } is the selected item that blocks it.
+vf-blocked-incompatible = Incompatible with { $other }
+
 # Filter/search controls for long selectable lists.
 filter-search-placeholder = Search…
 filter-magnitude-all = All levels

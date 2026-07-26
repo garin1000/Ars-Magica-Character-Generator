@@ -46,6 +46,12 @@ magnitude-major = Groß
 # Typ-Label für Tugenden/Fehler: eine befleckte (infernal-assoziierte) Tugend/Fehler.
 vf-tag-tainted = Befleckt
 
+# Grund, der bei einer im erzwingenden Modus ausgegrauten Tugend/einem Fehler
+# angezeigt wird, weil eine bereits gewählte Auswahl sie ausschließt (Groß vs.
+# Klein derselben Tugend, Sanfte vs. Offensichtliche Gabe, …). { $other } ist
+# die gewählte Auswahl, die sie blockiert.
+vf-blocked-incompatible = Unvereinbar mit { $other }
+
 # Filter-/Suchsteuerung für lange Auswahllisten.
 filter-search-placeholder = Suchen…
 filter-magnitude-all = Alle Stufen

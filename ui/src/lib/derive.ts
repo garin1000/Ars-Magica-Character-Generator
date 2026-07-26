@@ -20,6 +20,7 @@ import type {
   Selection,
   Spell,
   SpellSelection,
+  ValidationMode,
   ValidationResult,
 } from './types';
 
@@ -361,6 +362,40 @@ export function mandatoryTraitRefs(profile: EntityTypeProfile | undefined): Set<
   for (const ref of profile.required_traits ?? []) refs.add(ref);
   if (profile.gift_policy === 'required' && profile.gift_id) refs.add(profile.gift_id);
   return refs;
+}
+
+/**
+ * Item ids that may not be added because a currently selected item excludes
+ * them, each mapped to the selected item responsible (so a greyed row can say
+ * WHY). Built from every selected item's `incompatible_with`. Covers both
+ * magnitude-variant pairs (Major/Minor Magical Focus, Ambitious Major/Minor) and
+ * hand-authored exclusion cliques (Gentle vs Blatant Gift; Dwarf / Small Frame /
+ * Giant Blood / Large), since both are expressed through the same data field.
+ *
+ * Only `enforced` mode blocks: `advisory` and `silent` leave every option
+ * takeable and let the engine's `incompatible` issue report the violation
+ * instead. Declared incompatibilities are symmetric (the engine rejects a
+ * ruleset where they are not), so walking the selected side alone is complete.
+ *
+ * Mirrors `validate_incompatibilities`, which likewise tests bought selections
+ * only: a House-granted item never blocks a pick.
+ */
+export function incompatibleRefs(
+  localized: LocalizedRuleset,
+  selections: Selection[],
+  mode: ValidationMode,
+): Map<string, string> {
+  const blocked = new Map<string, string>();
+  if (mode !== 'enforced') return blocked;
+  for (const selection of selections) {
+    const item = localized.ruleset.point_items[selection.ref];
+    for (const ref of item?.incompatible_with ?? []) {
+      // First blocker wins: with several selected excluders the reason names one,
+      // and removing it re-derives the map against whatever still blocks.
+      if (!blocked.has(ref)) blocked.set(ref, selection.ref);
+    }
+  }
+  return blocked;
 }
 
 /**

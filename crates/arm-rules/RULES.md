@@ -1834,6 +1834,20 @@ time `validate_incompatibilities` (issue code `incompatible`); the effect-counti
 `validate_magical_focus` above still additionally catches two Minor Foci with
 distinct descriptors, which no `incompatible_with` pair can express.
 
+In `enforced` mode the V/F picker also **prevents** the illegal combination up
+front rather than only reporting it: `derive.ts` `incompatibleRefs` maps each
+excluded id to the selected item responsible, and `VirtueFlawTab.svelte` greys
+that Add row with the reason (`vf-blocked-incompatible`). It mirrors
+`validate_incompatibilities` exactly — bought selections only, so a House grant
+never blocks a pick — and stays inert in `advisory`/`silent`, where the pick
+remains open and the `incompatible` issue does the reporting. It covers every
+exclusion expressed through `incompatible_with` (magnitude pairs plus the
+hand-authored cliques: Gentle vs Blatant Gift, Dwarf/Small Frame/Giant
+Blood/Large, the four Mythic Companion status Virtues + The Gift). The
+descriptor-blind two-Minor-Foci case is *not* blocked in the picker — it is not
+an `incompatible_with` pair — and remains reported by `validate_magical_focus`.
+E2E: `ui/e2e/specs/vf-incompatible.e2e.js`.
+
 | Variant | Family / representative V/F | Source | 5i |
 |---|---|---|---|
 | `MagicalFocus { param(Text), major }` | Magical Focus — major/minor/mythic_blood | Core:4399-4422, 4536-4542, 4573-4589 | computed |

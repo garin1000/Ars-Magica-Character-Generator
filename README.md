@@ -44,7 +44,9 @@ they stay portable and diff-friendly.
   kept strictly separate from mechanics and from UI strings.
 - **One evaluation path.** The engine always computes the full validation result;
   a `ValidationMode` (Enforced / Advisory / Silent) decides how strictly it is
-  applied — there is no separate "rules off" code branch.
+  applied — there is no separate "rules off" code branch. In Enforced mode a
+  Virtue/Flaw that an already selected one excludes is greyed out with the reason,
+  so the illegal pairing cannot be picked at all.
 - **Referential integrity enforced at load.** Every prerequisite and
   incompatibility reference must resolve, and incompatibilities must be symmetric,
   or loading fails loudly with the offending IDs.

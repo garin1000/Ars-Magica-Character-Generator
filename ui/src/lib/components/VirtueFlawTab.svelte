@@ -7,9 +7,10 @@
     grantedSelectionsForSide,
     groupByCategory,
     groupSelectionsByCategory,
+    incompatibleRefs,
     mandatoryTraitRefs,
   } from '../derive';
-  import { reserveTagSpace, tooltip, type TooltipContent } from '../actions';
+  import { reserveTagSpace, tooltip, withReason, type TooltipContent } from '../actions';
   import type { ItemKind, Magnitude, PointItem, Selection } from '../types';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
@@ -70,11 +71,35 @@
     return !!item.parameters?.length || (item.max_per_target ?? 1) > 1;
   }
 
+  // Items an already-selected V/F excludes (Major vs Minor of the same V/F,
+  // Gentle vs Blatant Gift, the Dwarf/Small Frame/Large clique). Non-empty only
+  // in enforced mode, where the Add button greys out; advisory/silent leave the
+  // pick open and let the engine's `incompatible` issue report it.
+  const blocked = $derived(
+    store.ruleset
+      ? incompatibleRefs(store.ruleset, store.entity.selections, store.mode)
+      : new Map<string, string>(),
+  );
+
   // Tooltip from the item's localized rules text (full description if present,
   // else the short summary). A no-op when neither exists.
   function tip(itemId: string): TooltipContent {
     const entry = store.ruleset?.i18n[itemId];
     return { text: entry?.description ?? entry?.summary ?? undefined };
+  }
+
+  // A blocked source row explains WHY above its normal description, naming the
+  // selected item that excludes it. Undefined for a takeable row.
+  function sourceTip(itemId: string): TooltipContent {
+    const blocker = blocked.get(itemId);
+    return withReason(
+      tip(itemId),
+      blocker && store.ruleset
+        ? store.t('vf-blocked-incompatible', {
+            other: displayName(store.ruleset, blocker, undefined, hint),
+          })
+        : undefined,
+    );
   }
 
   // === Selected side ===
@@ -206,8 +231,9 @@
           groups={sourceGroups(side)}
           getId={(it: PointItem) => it.id}
           onAdd={(it: PointItem) => store.addSelection(it.id)}
-          disabled={(it: PointItem) => !repeatable(it) && selectedRefs.has(it.id)}
-          tip={(it: PointItem) => tip(it.id)}
+          disabled={(it: PointItem) =>
+            (!repeatable(it) && selectedRefs.has(it.id)) || blocked.has(it.id)}
+          tip={(it: PointItem) => sourceTip(it.id)}
         >
           {#snippet filters()}
             <input
