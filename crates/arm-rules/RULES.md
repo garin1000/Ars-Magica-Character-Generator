@@ -1002,6 +1002,57 @@ Combat / Soak / Fatigue / Wound statlines (`:17811-17817`). These are the creatu
 lines the app does not yet enter for *any* creature, so adding them for the familiar
 alone would be a lone special case.
 
+**The bond's own grants are surfaced, never auto-applied.**
+
+> The familiar binding gives both the magus and the familiar the Minor Virtue True
+> Friend, relating to the other half of the partnership. Thus, they also gain
+> Personality Traits of Loyal (partner) +3. — `:10852`
+
+> If it did not previously have human intelligence, it gains it, with a score of
+> –3. — `:10854`
+
+`FamiliarPanel.svelte` renders these as a note (`familiar-bond-note`) and the player
+enters them by hand. Auto-applying them is not possible today and would be wrong to
+fake: `virtue.true_friend` is not in the seeded catalogue, and `grant.rs` is keyed to
+House / mythic-companion **profiles**, not to the presence of a familiar bond — so
+there is no hook a bond could grant through without inventing one.
+
+**UI.** `FamiliarPanel.svelte` (extracted from `MagicPossessions.svelte` in M5.5's
+prep commit) grows to the whole statblock: name + animal + signed Size, a Might block
+adapted from `SupernaturalBeing.svelte` (reusing `might-realm-label` and `realm-*`
+verbatim, but a **new** `familiar-might-score-label` — the existing
+`might-score-label = Base Might Score` implies Virtue grants stack on top, which is
+false for a familiar), a Characteristics grid over the engine's `CHARACTERISTICS`
+order with plain signed inputs plus the not-from-the-magus's-points note, Personality
+Trait rows adapted from `CharacterDetails.svelte`, the cord row unchanged, and an
+invested-powers list adapted from `SupernaturalBeing.svelte` **with no budget bar**
+(`:10866`). `DerivedTotalsPanel.svelte` gains a familiar-bond section modelled on the
+Masterpiece block. Every read-out comes from `store.derived.familiar` and is **never**
+recomputed in JS, the `itemBudget`/`itemUsed` precedent.
+
+New Fluent keys in both locales. German terms come from
+`rules/source/de/translation-tables/`: `tiere-kreaturen.md` (Animal → **Tier**, Size →
+**Größe**, Power → **Kraft**), `grundbegriffe.md` (Familiar → **Vertrauter**, Might
+Score → **Machtwert**, Intelligence → **Intelligenz**), `sphären-mächte.md`
+(Magic Might → **Magische Macht**), `labor-fortschritt.md` (Familiar Bond →
+**Vertrautenbindung**, Laboratory Total → **Laborsumme**, Level → **Stufe**),
+`tugenden-fehler.md` (True Friend → **Wahrer Freund**, Magical Focus → **Magischer
+Fokus**), `magische-qualitaeten.md` (Minor Virtue → **Kleine Tugend**),
+`persoenlichkeitseigenschaften.md` (Personality Trait →
+**Persönlichkeitseigenschaft**, Loyal → **Loyal**). Notably **not** "Spezies":
+`grundbegriffe.md:112` reserves *Species* for the Imaginem term, which is the same
+reason the Rust field is `animal`. Terms with no table headword, each derived from the
+German rulebook passage rather than invented: **Kordelpunkte** (from `:10836`
+"verteile die Punkte … auf die drei Kordeln … Kordelwerte"), **Bindungsstufe** (from
+the `:10828` header "STUFE DER VERTRAUTENSBINDUNG"; the tables' `Vertrautenbindung`
+spelling wins over the header's linking -s-), **Investierte Kräfte/Kraftstufen**
+(from `:10864-10866` "Kräfte in die Vertrautenbindung investieren" — deliberately
+*not* "Eingebettete Effekte", which `labor-fortschritt.md:23` assigns to the
+talisman's *Instilling Effects*), and **Laborsumme für die Bindung** (phrase shape
+from `:10818`). Every displayed negative sign is the ASCII hyphen-minus, including
+the note's "Intelligenz -3", although both the tables and the German rulebook print
+U+2212 there.
+
 #### M5/5g — aged / warped state, effects & identity Entity storage
 Direct-entry storage (plus the derived scores computed from points) for an
 already-aged / already-warped character, and free-text identity/flavor fields. The

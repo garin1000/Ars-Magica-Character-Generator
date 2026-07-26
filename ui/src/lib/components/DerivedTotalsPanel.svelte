@@ -259,6 +259,45 @@
           <p class="hint">{store.t('derived-masterpiece-note')}</p>
         </div>
       {/if}
+
+      <!-- Familiar bond. Guidance only, like Masterpiece: the level the bond needs,
+           the magus's best bonding Lab Total, what the cords cost, and the total
+           level invested. The within-focus figure is conditional — whether this
+           beast falls inside the focus is a troupe judgment (Core:10818) — and the
+           invested levels deliberately get no budget bar (:10866, no limit). -->
+      {#if d.familiar}
+        <div class="detail-section">
+          <h3 class="detail-label">{store.t('derived-section-familiar')}</h3>
+          <p data-testid="derived-familiar-binding">
+            {store.t('derived-familiar-binding-level')}: {d.familiar.binding_level}
+            ({store.t('derived-lab-total')}
+            {d.familiar.binding.lab_total} ·
+            {name(d.familiar.binding.technique)} / {name(
+              d.familiar.binding.form,
+            )}{#if d.familiar.binding.lab_total_within_focus != null}, {store.t(
+                'derived-within-focus',
+              )}
+              {d.familiar.binding.lab_total_within_focus}{/if})
+          </p>
+          <p class="hint" data-testid="derived-familiar-reaches">
+            {d.familiar.binding.lab_total_reaches_level
+              ? store.t('derived-familiar-reaches')
+              : store.t('derived-familiar-falls-short')}
+          </p>
+          <p data-testid="derived-familiar-cords">
+            {store.t('derived-familiar-cord-points')}: {d.familiar.cord_points_spent}
+          </p>
+          <p class="hint" data-testid="derived-familiar-cords-fit">
+            {d.familiar.binding.cord_points_within_lab_total
+              ? store.t('derived-familiar-cords-fit')
+              : store.t('derived-familiar-cords-exceed')}
+          </p>
+          <p data-testid="derived-familiar-invested">
+            {store.t('derived-familiar-invested-levels')}: {d.familiar.invested_power_levels}
+          </p>
+          <p class="hint">{store.t('derived-familiar-note')}</p>
+        </div>
+      {/if}
     {/if}
 
     <!-- Combat lines -->
