@@ -615,6 +615,60 @@ export function resolveIssueArgs(
   return resolved;
 }
 
+/** How a magus's spent spell levels split between the base budget and its V/F modifier. */
+export interface SpellLevelAllocation {
+  /** The base budget (the editable figure): the effective budget minus the V/F modifier. */
+  base: number;
+  /** Levels charged to the base, including a negative modifier's penalty. */
+  baseUsed: number;
+  /** The V/F modifier itself, signed (Skilled Parens +30, Weak Parens -30, else 0). */
+  bonusAmount: number;
+  /** Levels drawn from a POSITIVE modifier (always 0 for a penalty). */
+  bonusUsed: number;
+  /** Base levels still free: `base - baseUsed`. Negative when overspent. */
+  available: number;
+}
+
+/**
+ * Splits the spell levels a magus has spent between the base budget and the
+ * Virtue/Flaw modifier, so the spell bar reads exactly like the XP bar: the
+ * bracketed base with its own Available, and the V/F contribution as a separate
+ * entry.
+ *
+ * A **positive** modifier (Skilled Parens +30) is spent FIRST, base covers the
+ * rest — the same policy the engine's XP allocator applies to restricted pools,
+ * which it drains before the general pool so no earmarked XP is wasted
+ * (`xp_allocation` in `effective.rs`). That allocator is a max-flow over pools
+ * with eligibility constraints; a spell-levels bonus is a single *unrestricted*
+ * pool, so the flow degenerates to `min(used, bonus)` and this plain arithmetic
+ * yields exactly what the engine would. Unspent bonus levels therefore stay in the
+ * bonus entry rather than inflating Available, mirroring unspent restricted XP.
+ *
+ * A **negative** modifier (Weak Parens -30) has no pool to draw from, so the
+ * penalty is charged to the base first instead. Either way the V/F modifier
+ * settles before the base, so `base - baseUsed` always equals `budget - used` and
+ * the base line's arithmetic closes.
+ *
+ * The engine stays the single authority on the numbers themselves: `budget`
+ * (base + modifier) and `bonus` both come from `EffectiveScores`, and validation
+ * still tests the spend against the one combined budget — this split is display
+ * attribution only, never a second rule.
+ */
+export function spellLevelAllocation(
+  used: number,
+  budget: number,
+  bonus: number,
+): SpellLevelAllocation {
+  // The engine reports the total and the modifier, so the base follows from them
+  // rather than the UI re-deriving "override else profile base".
+  const base = budget - bonus;
+  const bonusUsed = bonus > 0 ? Math.min(used, bonus) : 0;
+  // A penalty (negative bonus) is charged to the base on top of the real spend.
+  const penalty = bonus < 0 ? -bonus : 0;
+  const baseUsed = used - bonusUsed + penalty;
+  return { base, baseUsed, bonusAmount: bonus, bonusUsed, available: base - baseUsed };
+}
+
 /**
  * The ids of items an **error**-severity validation issue points at — the rows a
  * selected list marks as illegal (red), so a selection that became invalid after

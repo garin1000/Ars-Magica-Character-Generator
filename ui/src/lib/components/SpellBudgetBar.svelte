@@ -1,6 +1,11 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { formatSigned, maxAbilityScore, spellMasteryXpSpent } from '../derive';
+  import {
+    formatSigned,
+    maxAbilityScore,
+    spellLevelAllocation,
+    spellMasteryXpSpent,
+  } from '../derive';
 
   // The Spells tab's budget status line. Sits ABOVE the Available/Selected lists
   // as a sibling status bar — the same placement (and the same markup, classes and
@@ -13,14 +18,16 @@
   // The type profile's base budget (120 for a magus) is the base field's
   // placeholder, so the default stays data-driven (never a Svelte literal).
   const profileBase = $derived(store.effective?.spell_levels_profile_base ?? 0);
-  // The V/F contribution on its own (Skilled Parens +30, Weak Parens -30). Shown
-  // as a separate signed entry beside the editable base — the same shape the XP
-  // bar uses for its restricted pools — so the bracketed total stays the number
-  // the player actually edits. `base + bonus === budget` (engine-computed).
+  // The V/F contribution on its own (Skilled Parens +30, Weak Parens -30).
   const bonus = $derived(store.effective?.spell_levels_bonus ?? 0);
+  // Split the spend between the base and the V/F modifier so this bar reads exactly
+  // like the XP bar: a positive bonus is spent first (as the engine drains
+  // restricted pools before the general one), a penalty is charged to the base.
+  // That keeps `available === base - baseUsed` closed on the first line.
+  const alloc = $derived(spellLevelAllocation(used, budget, bonus));
   // Not clamped: overspending shows a negative value in bold red (`over`) with the
   // used figure in plain red (`over-value`) — exactly as the XP pool does.
-  const available = $derived(budget - used);
+  const available = $derived(alloc.available);
 
   // Spell-Mastery: XP pool (Mastered Spells) + auto-mastery floor (Flawless Magic)
   // + whether Flawless Magic doubles advancement (halving each mastery point's XP).
@@ -47,8 +54,11 @@
 <div class="xp-summary">
   <span class="xp-pool">
     <span class="xp-pool-label">{store.t('spell-levels-pool')}</span>
+    <!-- The levels charged to the BASE (a positive V/F bonus is spent first and
+         reported in its own entry; a penalty is charged here), so this figure and
+         Available always close against the bracketed base. -->
     <span class="xp-pool-used" class:over-value={available < 0} data-testid="spell-levels-used"
-      >{used}</span
+      >{alloc.baseUsed}</span
     >
     <!-- The bracketed, editable BASE — the direct counterpart of the XP pool's
          editable total. Empty falls back to the type profile's base (the
@@ -70,8 +80,19 @@
   <span class="xp-available" class:over={available < 0} data-testid="spell-levels-available">
     {store.t('spell-levels-available', { available: String(available) })}
   </span>
-  {#if bonus !== 0}
+  {#if bonus > 0}
+    <!-- A positive modifier is an extra pool of levels, spent before the base — so
+         it reads used/amount exactly like a restricted XP pool. -->
     <span class="xp-restricted" data-testid="spell-levels-bonus">
+      {store.t('spell-levels-bonus-pool', {
+        used: String(alloc.bonusUsed),
+        amount: String(bonus),
+      })}
+    </span>
+  {:else if bonus < 0}
+    <!-- A penalty has no pool to draw from; it is charged to the base above, and
+         reported here as the signed modifier that explains the charge. -->
+    <span class="xp-restricted over" data-testid="spell-levels-bonus">
       {store.t('spell-levels-bonus', { bonus: formatSigned(bonus) })}
     </span>
   {/if}

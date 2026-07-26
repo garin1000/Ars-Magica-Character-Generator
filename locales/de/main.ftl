@@ -148,6 +148,7 @@ spell-add = Zauber hinzufügen
 spell-none = — Zauber wählen —
 spell-levels-pool = Zauberstufen
 spell-levels-available = Verfügbar: { $available }
+spell-levels-bonus-pool = Tugenden & Fehler: { $used } / { $amount }
 spell-levels-bonus = Tugenden & Fehler: { $bonus }
 spell-levels-base-label = Zauberstufen-Budget
 spell-mastery-xp = Meisterschafts-EP: { $xp }
