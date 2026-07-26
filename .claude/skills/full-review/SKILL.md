@@ -29,9 +29,16 @@ it, every agent MUST:
 - **Every stage must be an allowlisted command.** Allowed filter/util tools you can pipe
   through: `jq`, `grep`, `rg`, `sed`, `awk`, `sort`, `uniq`, `cut`, `tr`, `wc`, `head`,
   `tail`, `cat`, `diff`, `find`, `ls`, `echo`, `mkdir`. Build tools: `cargo …` (any
-  subcommand), `npm run <script>`, `npx prettier/svelte-check/vitest/wdio`. A pipeline
-  like `cargo tarpaulin … | tail -1` or `jq '.files | length' tmp/tarpaulin-report.json`
-  auto-approves because each stage is allowlisted.
+  subcommand), `npm run <script>`, `npx prettier/svelte-check/vitest/wdio`. Read-only
+  git: `git status`, `git diff`, `git log`, `git show`, `git check-ignore` — use these
+  to inspect the working diff. A pipeline like `cargo tarpaulin … | tail -1` or
+  `jq '.files | length' tmp/tarpaulin-report.json` auto-approves because each stage is
+  allowlisted.
+- **Never mutate git state.** `git push`, `checkout`, `reset`, `rebase`, `stash`, and
+  `clean` are NOT allowlisted and are auto-denied, deliberately — they move refs or
+  discard work. `git add`/`git commit` are allowlisted for the main session but a
+  reviewer or fixer agent must NOT use them: committing is the orchestrator's call
+  after the gates pass, never a subagent's. Leave your changes in the working tree.
 - **Parse JSON with `jq`, never an interpreter.** Do NOT shell out through `python`,
   `python3`, `perl`, `ruby`, `node -e`, `bash -c`, or `sh -c` — an interpreter is an
   arbitrary-code escape hatch that defeats the allowlist, and it is not allowlisted anyway.
