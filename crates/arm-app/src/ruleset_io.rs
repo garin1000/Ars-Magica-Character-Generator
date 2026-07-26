@@ -50,6 +50,13 @@ pub struct EffectiveScores {
     /// Experience drawn from the general pool (`Entity::xp_pool`) by the
     /// allocation; restricted pools cover the rest.
     pub xp_general_used: u32,
+    /// The most demand the pools can actually fund. Equals `xp_total_demand` iff the
+    /// spend is legal; `xp_total_demand - xp_max_flow` is the overspend.
+    ///
+    /// The bar needs this to show an overspent pool: `xp_general_used` is a max-flow
+    /// value capped by the pool itself, so `pool - general_used` can never go
+    /// negative no matter how far the spend exceeds the pool.
+    pub xp_max_flow: u32,
     /// The restricted experience pools (Educated/Warrior/Privileged) with how
     /// much of each the allocation consumes, for the per-pool XP bar.
     pub restricted_xp_pools: Vec<RestrictedXpPool>,
@@ -200,6 +207,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         characteristic_floors: characteristic_floors(entity, ruleset),
         xp_total_demand: allocation.total_demand,
         xp_general_used: allocation.general_used,
+        xp_max_flow: allocation.max_flow,
         restricted_xp_pools: allocation.restricted,
         characteristic_points_granted: characteristic_points_granted(entity, ruleset),
         ability_score_floors: ability_score_floors(entity, ruleset),

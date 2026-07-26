@@ -58,6 +58,48 @@ describe('hermetic arts', () => {
     expect(clean(await $('[data-testid="art-xp-available"]').getText())).toContain('5');
   });
 
+  // Regression: the bar must show an OVERSPENT pool as a negative Available. This
+  // needs the real binary — `xp_general_used` alone can never express it (it is a
+  // max-flow value capped by the pool), so a unit test with a hand-written
+  // `general_used > pool` payload asserts a state the engine cannot produce and
+  // passes even when the app shows 0. Only the live IPC payload proves it.
+  it('shows an overspent XP pool as a negative Available', async () => {
+    await setType('magus');
+    await $(ARTS_TAB).click();
+
+    // Carrying on from the previous test: pool 20, Creo 5 (15 XP). Raising Creo to
+    // 7 costs 28 XP (triangular), so the 20-point pool is overspent by 8.
+    const inc = await $('[data-testid="art-inc-art.creo"]');
+    await inc.waitForExist({ timeout: 5000 });
+    for (let i = 0; i < 2; i++) await inc.click();
+
+    const spent = await $('[data-testid="art-xp-spent"]');
+    const available = await $('[data-testid="art-xp-available"]');
+    await browser.waitUntil(
+      async () =>
+        clean(await spent.getText()).includes('28') &&
+        // ASCII hyphen-minus, never U+2212.
+        clean(await available.getText()).includes('-8'),
+      {
+        timeout: 5000,
+        timeoutMsg: 'Creo 7 (28 XP) against a 20-point pool should read Available: -8',
+      },
+    );
+
+    // Both figures carry their overspend styling: the used total red (`over-value`),
+    // the negative Available bold red (`over`).
+    expect(await spent.getAttribute('class')).toContain('over-value');
+    expect(await available.getAttribute('class')).toContain('over');
+
+    // Restore a legal pool so later specs start from a funded state.
+    const pool = await $('[data-testid="art-xp-pool"]');
+    await pool.setValue('40');
+    await browser.waitUntil(async () => clean(await available.getText()).includes('12'), {
+      timeout: 5000,
+      timeoutMsg: 'a 40-point pool should cover Creo 7 (28 XP) with 12 left',
+    });
+  });
+
   it('applies Puissant Art as a +3 effective bonus on the targeted Art', async () => {
     await setType('magus');
 

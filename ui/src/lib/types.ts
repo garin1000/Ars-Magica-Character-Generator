@@ -228,6 +228,11 @@ export interface EffectiveScores {
   characteristic_floors: Partial<Record<Characteristic, number>>;
   xp_total_demand: number;
   xp_general_used: number;
+  // The most demand the pools can fund; equals xp_total_demand iff legal, so
+  // xp_total_demand - xp_max_flow is the overspend. Required to show a negative
+  // Available: xp_general_used is a flow capped by the pool, so pool -
+  // xp_general_used can never go negative however far the spend overshoots.
+  xp_max_flow: number;
   restricted_xp_pools: RestrictedXpPool[];
   characteristic_points_granted: number;
   ability_score_floors: AbilityFloor[];
