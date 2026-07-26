@@ -255,6 +255,10 @@ export interface EffectiveScores {
   // The type profile's base spell-levels budget (120 for a magus), so the
   // override field's placeholder shows the data-driven default (never a literal).
   spell_levels_profile_base: number;
+  // The V/F contribution alone (Skilled Parens +30, Weak Parens -30; signed, 0
+  // when none), so the bar shows the editable base beside a labelled bonus the way
+  // the XP bar lists its extra pools. base + bonus === spell_levels_budget.
+  spell_levels_bonus: number;
   spell_levels_used: number;
   // Per-Technique/Form maximum learnable spell level (Te + Fo + Int + Magic
   // Theory + 3), so the picker greys a spell above the magus's cap. Empty for a

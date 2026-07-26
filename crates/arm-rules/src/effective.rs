@@ -1319,7 +1319,11 @@ fn clamp_to_u32(n: i64) -> u32 {
 
 /// Sums the [`Effect::SpellLevels`] amounts across the entity's selections (may
 /// be negative; Skilled Parens +30, Weak Parens −30).
-fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
+///
+/// Surfaced on its own (not only folded into [`spell_levels_budget`]) so the
+/// spell-levels bar can show the editable base beside a labelled V/F bonus,
+/// mirroring how the XP bar lists extra pools beside the general one.
+pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
     sum_signed_effect(entity, ruleset, |e| match e {
         Effect::SpellLevels { amount } => Some(*amount),
         // Exhaustive so adding an Effect variant is a compile error here, not a
@@ -4354,5 +4358,18 @@ mod tests {
         assert_eq!(spell_levels_base(&e, profile), 80);
         let base = spell_levels_base(&e, profile);
         assert_eq!(spell_levels_budget(base, &e, &rs), 110);
+    }
+
+    /// The V/F contribution is surfaced on its own (not only folded into the
+    /// budget), so the spell-levels bar can show "base + bonus" the way the XP bar
+    /// lists its extra pools beside the general one.
+    #[test]
+    fn spell_levels_bonus_is_reported_separately_from_the_base() {
+        let rs = ruleset();
+        // No spell-levels V/F → no bonus to report.
+        assert_eq!(spell_levels_bonus(&entity(vec![]), &rs), 0);
+        // Skilled Parens contributes its +30 as a standalone signed figure.
+        let e = entity(vec![Selection::new(Id::new("virtue.skilled_parens"))]);
+        assert_eq!(spell_levels_bonus(&e, &rs), 30);
     }
 }

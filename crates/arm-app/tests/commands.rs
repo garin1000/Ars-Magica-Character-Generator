@@ -622,6 +622,42 @@ fn effective_scores_surface_confidence_and_supernatural_slots() {
     );
 }
 
+/// The V/F spell-levels contribution is surfaced as its OWN payload figure, not
+/// only folded into the effective budget, so the spell-levels bar can show the
+/// editable base beside a labelled bonus — the way the XP bar lists extra pools
+/// beside the general one.
+#[test]
+fn effective_scores_surface_the_spell_levels_bonus_separately() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut magus = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("magus"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+
+    // No spell-levels V/F: the base profile budget with nothing added.
+    let plain = effective_scores_loaded(&magus, &ruleset);
+    assert_eq!(plain.spell_levels_profile_base, 120);
+    assert_eq!(plain.spell_levels_budget, 120);
+    assert_eq!(plain.spell_levels_bonus, 0);
+
+    // Skilled Parens (+30) reports the bonus on its own, and the budget still
+    // carries the total, so base + bonus == budget.
+    magus
+        .selections
+        .push(arm_rules::Selection::new(Id::new("virtue.skilled_parens")));
+    let boosted = effective_scores_loaded(&magus, &ruleset);
+    assert_eq!(boosted.spell_levels_bonus, 30);
+    assert_eq!(boosted.spell_levels_budget, 150);
+
+    // The bonus is independent of the per-character base override: overriding the
+    // base to 80 keeps the +30 reportable and the budget at 110.
+    magus.spell_levels_override = Some(80);
+    let overridden = effective_scores_loaded(&magus, &ruleset);
+    assert_eq!(overridden.spell_levels_bonus, 30);
+    assert_eq!(overridden.spell_levels_budget, 110);
+}
+
 /// Extracts every fixed issue code from the engine's validation source so the
 /// Fluent coverage check tracks the codes the engine actually emits. The engine
 /// declares the closed set as `pub const CODE_*: &'static str = "...";` and

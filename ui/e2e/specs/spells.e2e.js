@@ -19,9 +19,12 @@ const SPELLS_TAB = '[data-testid="tab-spells"]';
 const ARTS_TAB = '[data-testid="tab-arts"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 // The spell-levels status bar above both lists reads like the XP bar: the used
-// figure and the effective budget are separate elements (used / [budget]).
+// figure, the editable base (bracketed), then Available and any V/F bonus. The
+// effective budget is base + bonus, so Available is what proves the total.
 const BAR_USED = '[data-testid="spell-levels-used"]';
-const BAR_BUDGET = '[data-testid="spell-levels-budget"]';
+const BAR_BASE = '[data-testid="spell-levels-base"]';
+const BAR_AVAILABLE = '[data-testid="spell-levels-available"]';
+const BAR_BONUS = '[data-testid="spell-levels-bonus"]';
 
 // The app's save/load dialog seam (ARM_E2E_FILE) points at this fixed path.
 const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
@@ -167,10 +170,11 @@ describe('spells', () => {
     await browser.waitUntil(
       async () =>
         clean(await $(BAR_USED).getText()).includes('20') &&
-        clean(await $(BAR_BUDGET).getText()).includes('120'),
+        // No spell-levels V/F yet, so the budget is the 120 base: 120 - 20 = 100.
+        clean(await $(BAR_AVAILABLE).getText()).includes('100'),
       {
         timeout: 5000,
-        timeoutMsg: 'spell-levels bar should read 20 used of a 120 budget',
+        timeoutMsg: 'spell-levels bar should read 20 used with 100 available of 120',
       },
     );
     // The cap no longer flags Pilum.
@@ -204,21 +208,29 @@ describe('spells', () => {
     await addParens.waitForExist({ timeout: 10000 });
     await addParens.click();
     await $(SPELLS_TAB).click();
-    await browser.waitUntil(async () => clean(await $(BAR_BUDGET).getText()).includes('150'), {
-      timeout: 5000,
-      timeoutMsg: 'Skilled Parens should raise the budget to 150',
-    });
+    // The V/F contribution is listed on its own beside the base (like a restricted
+    // XP pool), and it raises the budget: 120 + 30 - 20 used = 130 available.
+    await browser.waitUntil(
+      async () =>
+        clean(await $(BAR_BONUS).getText()).includes('+30') &&
+        clean(await $(BAR_AVAILABLE).getText()).includes('130'),
+      {
+        timeout: 5000,
+        timeoutMsg: 'Skilled Parens should report +30 and raise the budget to 150',
+      },
+    );
   });
 
   it('applies an editable spell-levels budget override', async () => {
-    // The override field's placeholder is the type profile's base (120), proving
-    // the default is data-driven (surfaced by the engine, not a UI literal).
-    const override = await $('[data-testid="spell-levels-override"]');
+    // The bracketed base field's placeholder is the type profile's base (120),
+    // proving the default is data-driven (surfaced by the engine, not a UI literal).
+    const override = await $(BAR_BASE);
     await override.waitForExist({ timeout: 5000 });
     expect(await override.getAttribute('placeholder')).toBe('120');
-    // Override the base to 80; Skilled Parens's +30 still adds on top → 80 + 30 = 110.
+    // Override the base to 80; Skilled Parens's +30 still adds on top → 80 + 30 =
+    // 110, less the 20 already spent = 90 available.
     await override.setValue('80');
-    await browser.waitUntil(async () => clean(await $(BAR_BUDGET).getText()).includes('110'), {
+    await browser.waitUntil(async () => clean(await $(BAR_AVAILABLE).getText()).includes('90'), {
       timeout: 5000,
       timeoutMsg: 'overriding the base to 80 should make the budget 80 + 30 = 110',
     });
@@ -230,7 +242,7 @@ describe('spells', () => {
       el.value = '';
       el.dispatchEvent(new Event('input', { bubbles: true }));
     }, override);
-    await browser.waitUntil(async () => clean(await $(BAR_BUDGET).getText()).includes('150'), {
+    await browser.waitUntil(async () => clean(await $(BAR_AVAILABLE).getText()).includes('130'), {
       timeout: 5000,
       timeoutMsg: 'clearing the override should restore the profile-based budget (150)',
     });

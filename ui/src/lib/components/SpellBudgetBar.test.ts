@@ -96,9 +96,9 @@ beforeEach(() => {
 });
 
 describe('SpellBudgetBar layout (mirrors the XP pool bar)', () => {
-  it('renders the budget as the editable override input, with the profile base as placeholder', () => {
+  it('renders the base as the bracketed editable total, like the XP pool input', () => {
     store.entity.spell_levels_override = 150;
-    const { open } = element(html(), 'spell-levels-override');
+    const { open } = element(html(), 'spell-levels-base');
     expect(open).toMatch(/<input/i);
     expect(open).toMatch(/value="150"/);
     // The default is data-driven: the type profile's base, never a UI literal.
@@ -111,21 +111,35 @@ describe('SpellBudgetBar layout (mirrors the XP pool bar)', () => {
     expect(text).toContain('45');
   });
 
-  it('renders the engine-effective budget as a read-only figure, not the override input', () => {
-    // The effective budget (base + virtue bonuses, e.g. Skilled Parens +30) is
-    // engine-owned, so it is displayed rather than edited; only its base is.
-    store.entity.spell_levels_override = 80;
-    setEffective(45, 110);
-    const { open, text } = element(html(), 'spell-levels-budget');
-    expect(text).toContain('110');
-    expect(open).not.toMatch(/<input/i);
-  });
-
   it('renders an Available line with the remaining levels', () => {
     setEffective(45, 120);
     const { text } = element(html(), 'spell-levels-available');
     expect(text).toContain('Available');
     expect(text).toContain('75');
+  });
+});
+
+describe('SpellBudgetBar V/F bonus (shown like an extra XP pool)', () => {
+  it('lists a positive V/F bonus as its own signed entry beside the base', () => {
+    // Skilled Parens: base 120 + 30 = a 150 budget, of which 45 is used.
+    setEffective(45, 150, { spell_levels_bonus: 30 } as Partial<EffectiveScores>);
+    const { text } = element(html(), 'spell-levels-bonus');
+    expect(text).toContain('+30');
+    // Available counts base AND bonus: 150 - 45.
+    expect(element(html(), 'spell-levels-available').text).toContain('105');
+  });
+
+  it('shows a negative V/F bonus with an ASCII hyphen-minus', () => {
+    // Weak Parens: base 120 - 30 = a 90 budget.
+    setEffective(45, 90, { spell_levels_bonus: -30 } as Partial<EffectiveScores>);
+    const { text } = element(html(), 'spell-levels-bonus');
+    expect(text).toContain('-30');
+    expect(text).not.toContain('−');
+  });
+
+  it('omits the bonus entry when no V/F touches the spell-levels budget', () => {
+    setEffective(45, 120, { spell_levels_bonus: 0 } as Partial<EffectiveScores>);
+    expect(() => element(html(), 'spell-levels-bonus')).toThrow();
   });
 });
 
