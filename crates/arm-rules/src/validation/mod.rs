@@ -1729,6 +1729,44 @@ mod tests {
         assert_eq!(crate::effective::effective_might(&plain, &rs), None);
     }
 
+    /// **Guidance-only contract (M5.5c).** Every familiar read-out is read-only
+    /// guidance, like `masterpiece_item_cap`: a familiar pushed to every extreme the
+    /// model allows — maximum cords 5/5/5 (225 points, far past any Lab Total),
+    /// hundreds of levels of bond-invested powers, and a *Faerie* Might on a
+    /// Hermetic magus — raises **zero** validation issues, of any severity.
+    #[test]
+    fn fully_populated_familiar_raises_no_issues() {
+        let rs = rs_with_houses(MIGHT_ITEMS, GRANT_MAGUS_TYPE);
+        let mut entity = make_entity("magus", vec![]);
+        entity.familiar = Some(Familiar {
+            name: "Corax".into(),
+            animal: "raven".into(),
+            might: Some(MightScore {
+                realm: Realm::Faerie,
+                score: 30,
+            }),
+            characteristics: Characteristic::ALL.into_iter().map(|c| (c, 5)).collect(),
+            size: -4,
+            personality_traits: vec![PersonalityTrait {
+                name: "Loyal (Marcus)".into(),
+                value: 3,
+            }],
+            cord_gold: 5,
+            cord_silver: 5,
+            cord_bronze: 5,
+            powers: vec![power("Speech", 200), power("Shapechanging", 250)],
+        });
+        let with_familiar = validate(&entity, &rs);
+
+        entity.familiar = None;
+        let without = validate(&entity, &rs);
+        assert_eq!(
+            all_codes(&with_familiar),
+            all_codes(&without),
+            "no familiar read-out may ever produce a ValidationIssue"
+        );
+    }
+
     /// A minimal ruleset carrying characteristic rules (effective range ±5), so the
     /// aging-reduction floor check has a minimum to compare against.
     fn aging_ruleset() -> Ruleset {
