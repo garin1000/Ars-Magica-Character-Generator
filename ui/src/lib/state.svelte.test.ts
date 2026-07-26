@@ -477,12 +477,129 @@ describe('magic possessions', () => {
     store.setFamiliarCord('gold', -2);
     expect(store.entity.familiar).toEqual({
       name: 'Corax',
+      animal: '',
+      might: null,
+      characteristics: {},
+      size: 0,
+      personality_traits: [],
       cord_gold: 0,
       cord_silver: 0,
       cord_bronze: 3,
+      powers: [],
     });
     store.removeFamiliar();
     expect(store.entity.familiar).toBeNull();
+  });
+
+  it('seeds a familiar with the full empty statblock', () => {
+    store.addFamiliar();
+    expect(store.entity.familiar).toEqual({
+      name: '',
+      animal: '',
+      might: null,
+      characteristics: {},
+      size: 0,
+      personality_traits: [],
+      cord_gold: 0,
+      cord_silver: 0,
+      cord_bronze: 0,
+      powers: [],
+    });
+  });
+
+  it('edits the familiar animal and its signed Size without clamping', () => {
+    store.addFamiliar();
+    store.setFamiliarAnimal('raven');
+    store.setFamiliarSize(-4);
+    expect(store.entity.familiar?.animal).toBe('raven');
+    expect(store.entity.familiar?.size).toBe(-4);
+    // Size is signed and truncated, never clamped at 0 — a raven is smaller than 0.
+    store.setFamiliarSize(2.7);
+    expect(store.entity.familiar?.size).toBe(2);
+  });
+
+  it("sets, scores and clears the familiar's own Magic Might", () => {
+    store.addFamiliar();
+    store.setFamiliarMightRealm('magic');
+    expect(store.entity.familiar?.might).toEqual({ realm: 'magic', score: 0 });
+    store.setFamiliarMightScore(10);
+    expect(store.entity.familiar?.might).toEqual({ realm: 'magic', score: 10 });
+    store.setFamiliarMightScore(-3);
+    expect(store.entity.familiar?.might).toEqual({ realm: 'magic', score: 0 });
+    store.setFamiliarMightRealm('faerie');
+    expect(store.entity.familiar?.might).toEqual({ realm: 'faerie', score: 0 });
+    store.clearFamiliarMight();
+    expect(store.entity.familiar?.might).toBeNull();
+  });
+
+  it('sets a familiar Characteristic and deletes it at zero', () => {
+    store.addFamiliar();
+    store.setFamiliarCharacteristic('int', -3);
+    store.setFamiliarCharacteristic('qik', 4);
+    expect(store.entity.familiar?.characteristics).toEqual({ int: -3, qik: 4 });
+    store.setFamiliarCharacteristic('qik', 0);
+    expect(store.entity.familiar?.characteristics).toEqual({ int: -3 });
+  });
+
+  it("adds, edits and removes the familiar's Personality Traits", () => {
+    store.addFamiliar();
+    store.addFamiliarPersonalityTrait();
+    store.setFamiliarPersonalityTraitName(0, 'Loyal (Marcus)');
+    store.setFamiliarPersonalityTraitValue(0, 3);
+    expect(store.entity.familiar?.personality_traits).toEqual([
+      { name: 'Loyal (Marcus)', value: 3 },
+    ]);
+    store.addFamiliarPersonalityTrait();
+    store.removeFamiliarPersonalityTraitAt(1);
+    expect(store.entity.familiar?.personality_traits).toHaveLength(1);
+  });
+
+  it("adds, edits and removes the familiar's bond-invested powers", () => {
+    store.addFamiliar();
+    store.addFamiliarPower();
+    store.setFamiliarPowerName(0, 'Mental communication');
+    store.setFamiliarPowerLevel(0, 15);
+    expect(store.entity.familiar?.powers).toEqual([{ name: 'Mental communication', level: 15 }]);
+    store.setFamiliarPowerLevel(0, -5);
+    expect(store.entity.familiar?.powers).toEqual([{ name: 'Mental communication', level: 0 }]);
+    store.addFamiliarPower();
+    store.removeFamiliarPowerAt(1);
+    expect(store.entity.familiar?.powers).toHaveLength(1);
+  });
+
+  it('ignores every familiar statblock edit when there is no familiar', () => {
+    expect(store.entity.familiar).toBeUndefined();
+    store.setFamiliarAnimal('raven');
+    store.setFamiliarSize(-4);
+    store.setFamiliarMightRealm('magic');
+    store.setFamiliarMightScore(10);
+    store.clearFamiliarMight();
+    store.setFamiliarCharacteristic('int', -3);
+    store.addFamiliarPersonalityTrait();
+    store.setFamiliarPersonalityTraitName(0, 'Loyal');
+    store.setFamiliarPersonalityTraitValue(0, 3);
+    store.removeFamiliarPersonalityTraitAt(0);
+    store.addFamiliarPower();
+    store.setFamiliarPowerName(0, 'Speech');
+    store.setFamiliarPowerLevel(0, 20);
+    store.removeFamiliarPowerAt(0);
+    expect(store.entity.familiar).toBeFalsy();
+  });
+
+  it("keeps the familiar's statblock out of the character's own fields", () => {
+    store.addFamiliar();
+    store.setFamiliarMightRealm('faerie');
+    store.setFamiliarMightScore(25);
+    store.setFamiliarCharacteristic('int', 3);
+    store.addFamiliarPower();
+    store.setFamiliarPowerLevel(0, 400);
+    store.addFamiliarPersonalityTrait();
+    // The magus's own Might / powers / Characteristics / traits are untouched: the
+    // familiar is a separate creature, not part of the character's point-buy.
+    expect(store.entity.might).toBeFalsy();
+    expect(store.entity.powers ?? []).toEqual([]);
+    expect(store.entity.characteristics ?? {}).toEqual({});
+    expect(store.entity.personality_traits ?? []).toEqual([]);
   });
 
   it('adds a talisman with its identity, and removes it', () => {

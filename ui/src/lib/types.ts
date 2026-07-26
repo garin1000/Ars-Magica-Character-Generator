@@ -479,6 +479,29 @@ export interface TalismanCapacity {
   pawns: number;
 }
 
+// The magus's side of the familiar bonding season: the best bonding Lab Total and
+// how it compares with what the bond needs. `lab_total_within_focus` is present
+// only when the magus holds a Magical Focus, and is CONDITIONAL — whether this
+// familiar falls inside the focus's narrow field is a troupe judgment.
+export interface FamiliarBinding {
+  technique: string;
+  form: string;
+  lab_total: number;
+  lab_total_within_focus?: number | null;
+  lab_total_reaches_level: boolean;
+  cord_points_within_lab_total: boolean;
+}
+
+// The familiar bonding read-out. Read-only guidance: no validation issue is ever
+// raised from any of it, and `invested_power_levels` is compared against no budget
+// (there is no limit on powers invested in a familiar), so no budget bar is drawn.
+export interface FamiliarReadout {
+  binding_level: number;
+  cord_points_spent: number;
+  invested_power_levels: number;
+  binding: FamiliarBinding;
+}
+
 // A surfaced-only modifier (listed, not simulated).
 export interface SurfacedModifier {
   family: string;
@@ -496,6 +519,7 @@ export interface DerivedTotals {
   longevity?: LongevityBonus | null;
   masterpiece?: MasterpieceCap | null;
   talisman_capacity?: TalismanCapacity | null;
+  familiar?: FamiliarReadout | null;
   combat: CombatLine[];
   soak: SoakTotal;
   encumbrance: EncumbranceTotal;
@@ -700,12 +724,29 @@ export interface SupernaturalPower {
   level: number;
 }
 
-// A magus's familiar and its three bond-cord scores. Omitted cords default to 0.
+// A magus's familiar: the magical beast itself plus the three bond cords. Field
+// order follows the rulebook's Creature Format, so a save reads like a statblock.
+// Everything here is the FAMILIAR's own — its Characteristics are not bought from
+// the magus's Characteristic points, and `might` is not the character's `might`.
+// Every field but `name` is omitted from JSON at its default.
 export interface Familiar {
   name: string;
+  // The kind of beast, free text ("raven"). Not `species` — the rules reserve that
+  // word for the Imaginem term.
+  animal?: string;
+  // The familiar's own Magic Might + Realm; null/absent when not entered.
+  might?: MightScore | null;
+  // The familiar's eight Characteristics, signed. A 0 score is absent.
+  characteristics?: Partial<Record<Characteristic, number>>;
+  // The creature's Size — signed, and commonly negative (a raven is -4).
+  size?: number;
+  personality_traits?: PersonalityTrait[];
   cord_gold?: number;
   cord_silver?: number;
   cord_bronze?: number;
+  // Powers invested in the bond. Charged against NO budget, unlike the character's
+  // own `powers` — there is no limit on powers invested in a familiar.
+  powers?: SupernaturalPower[];
 }
 
 // A talisman attunement: a free-text descriptor and the bonus it confers. Only
