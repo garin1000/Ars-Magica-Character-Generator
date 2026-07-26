@@ -154,12 +154,15 @@ spell-general-level-label = General level
 spell-add = Add spell
 spell-none = — Select a spell —
 # The spell-levels budget bar, laid out like the XP summary: the label, the used
-# figure, the effective budget (bracketed), then Available.
+# figure, the editable base (bracketed), then Available and any V/F bonus.
 spell-levels-pool = Spell levels
 spell-levels-available = Available: { $available }
-# Editable override of the BASE spell-levels budget; empty = use the type
+# The Virtue/Flaw contribution to the budget, listed beside the base the way the
+# XP bar lists its restricted pools. `$bonus` arrives already signed.
+spell-levels-bonus = Virtues/Flaws: { $bonus }
+# Accessible name for the editable BASE spell-levels field; empty = use the type
 # profile's default (shown as the field's placeholder).
-spell-levels-override-label = Spell-levels budget
+spell-levels-base-label = Spell-levels budget
 spell-mastery-xp = Mastery XP: { $xp }
 # The per-spell Spell-Mastery XP pool bar: how much of the pool is spent.
 spell-mastery-pool = Mastery XP: { $used } / { $pool }

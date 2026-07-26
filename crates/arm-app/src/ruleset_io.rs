@@ -18,10 +18,10 @@ use arm_rules::{
     characteristic_caps, characteristic_floors, characteristic_points_granted, confidence,
     decrepitude_score, effective_characteristics, effective_might, effective_point_ceilings,
     entity_grants, item_level_budget, item_level_used, power_levels_budget, powers_used,
-    reputation_grants, size, spell_level_caps, spell_levels_base, spell_levels_budget,
-    spell_levels_used, spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
-    supernatural_free_slots, true_faith, validate, warping, warping_owed, warping_owed_grants,
-    xp_allocation,
+    reputation_grants, size, spell_level_caps, spell_levels_base, spell_levels_bonus,
+    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
+    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, validate, warping,
+    warping_owed, warping_owed_grants, xp_allocation,
 };
 use serde::Serialize;
 
@@ -91,6 +91,11 @@ pub struct EffectiveScores {
     /// the override field's placeholder shows the data-driven default rather than a
     /// hardcoded literal. Ignores the per-character override and V/F modifiers.
     pub spell_levels_profile_base: u32,
+    /// The V/F contribution to the budget on its own (Skilled Parens +30, Weak
+    /// Parens −30; signed, 0 when none), so the spell-levels bar can show the
+    /// editable base beside a labelled bonus — the way the XP bar lists its extra
+    /// pools beside the general pool. `base + this == spell_levels_budget`.
+    pub spell_levels_bonus: i64,
     /// The spell levels the chosen spells consume — the "used" side of the bar.
     pub spell_levels_used: u32,
     /// Per-Technique/Form maximum learnable spell level (Te + Fo + Int + Magic
@@ -207,6 +212,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         flaw_budget: ceilings.flaw_ceiling,
         spell_levels_budget: spell_levels_budget(spell_base, entity, ruleset),
         spell_levels_profile_base: profile.map(|p| p.spell_levels).unwrap_or(0),
+        spell_levels_bonus: spell_levels_bonus(entity, ruleset),
         spell_levels_used: spell_levels_used(entity, ruleset),
         // The per-Te/Fo cap only matters on the (magus-only) Spells tab, so it is
         // computed only for a magus — other types ship an empty list.

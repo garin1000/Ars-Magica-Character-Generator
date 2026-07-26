@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { maxAbilityScore, spellMasteryXpSpent } from '../derive';
+  import { formatSigned, maxAbilityScore, spellMasteryXpSpent } from '../derive';
 
   // The Spells tab's budget status line. Sits ABOVE the Available/Selected lists
   // as a sibling status bar — the same placement (and the same markup, classes and
@@ -10,9 +10,14 @@
   // header, which put a whole-character budget inside one of the two lists.
   const budget = $derived(store.effective?.spell_levels_budget ?? 0);
   const used = $derived(store.effective?.spell_levels_used ?? 0);
-  // The type profile's base budget (120 for a magus) is the override field's
+  // The type profile's base budget (120 for a magus) is the base field's
   // placeholder, so the default stays data-driven (never a Svelte literal).
   const profileBase = $derived(store.effective?.spell_levels_profile_base ?? 0);
+  // The V/F contribution on its own (Skilled Parens +30, Weak Parens -30). Shown
+  // as a separate signed entry beside the editable base — the same shape the XP
+  // bar uses for its restricted pools — so the bracketed total stays the number
+  // the player actually edits. `base + bonus === budget` (engine-computed).
+  const bonus = $derived(store.effective?.spell_levels_bonus ?? 0);
   // Not clamped: overspending shows a negative value in bold red (`over`) with the
   // used figure in plain red (`over-value`) — exactly as the XP pool does.
   const available = $derived(budget - used);
@@ -45,27 +50,31 @@
     <span class="xp-pool-used" class:over-value={available < 0} data-testid="spell-levels-used"
       >{used}</span
     >
-    <!-- Read-only, unlike the XP pool's editable total: the effective budget is
-         the base (profile default or the override below) PLUS virtue bonuses
-         (Skilled Parens +30), so the engine owns the number. The editable part is
-         the base override, which gets its own labeled field. -->
-    <span class="xp-pool-total" data-testid="spell-levels-budget">{budget}</span>
+    <!-- The bracketed, editable BASE — the direct counterpart of the XP pool's
+         editable total. Empty falls back to the type profile's base (the
+         placeholder). Any V/F contribution is listed separately, so this stays the
+         one number the player edits. -->
+    <span class="xp-pool-total">
+      <input
+        type="number"
+        min="1"
+        step="1"
+        aria-label={store.t('spell-levels-base-label')}
+        placeholder={String(profileBase)}
+        value={store.entity.spell_levels_override ?? ''}
+        oninput={onOverride}
+        data-testid="spell-levels-base"
+      />
+    </span>
   </span>
   <span class="xp-available" class:over={available < 0} data-testid="spell-levels-available">
     {store.t('spell-levels-available', { available: String(available) })}
   </span>
-  <label class="field">
-    <span>{store.t('spell-levels-override-label')}</span>
-    <input
-      type="number"
-      min="1"
-      step="1"
-      placeholder={String(profileBase)}
-      value={store.entity.spell_levels_override ?? ''}
-      oninput={onOverride}
-      data-testid="spell-levels-override"
-    />
-  </label>
+  {#if bonus !== 0}
+    <span class="xp-restricted" data-testid="spell-levels-bonus">
+      {store.t('spell-levels-bonus', { bonus: formatSigned(bonus) })}
+    </span>
+  {/if}
   {#if masteryXp > 0 || (masteryFloor > 0 && masteryMax > 0)}
     <span
       class="xp-restricted"
