@@ -28,7 +28,8 @@ it, every agent MUST:
 
 - **Every stage must be an allowlisted command.** Allowed filter/util tools you can pipe
   through: `jq`, `grep`, `rg`, `sed`, `awk`, `sort`, `uniq`, `cut`, `tr`, `wc`, `head`,
-  `tail`, `cat`, `diff`, `find`, `ls`, `echo`, `mkdir`. Build tools: `cargo …` (any
+  `tail`, `cat`, `diff`, `cmp`, `od`, `xxd`, `file`, `find`, `ls`, `echo`, `mkdir`.
+  Build tools: `cargo …` (any
   subcommand), `npm run <script>`, `npx prettier/svelte-check/vitest/wdio`. Read-only
   git: `git status`, `git diff`, `git log`, `git show`, `git check-ignore` — use these
   to inspect the working diff. A pipeline like `cargo tarpaulin … | tail -1` or
@@ -39,6 +40,18 @@ it, every agent MUST:
   discard work. `git add`/`git commit` are allowlisted for the main session but a
   reviewer or fixer agent must NOT use them: committing is the orchestrator's call
   after the gates pass, never a subagent's. Leave your changes in the working tree.
+- **An empty `grep` result does NOT mean "not present".** `grep` here is not GNU grep:
+  Claude Code injects a shell function that re-execs its bundled **ugrep** as
+  `grep -G --ignore-files --hidden -I …`. **`-I` is hardcoded**, so a file containing a
+  NUL byte is skipped *silently* — no match, no warning, exit 0. If a search for
+  something you are confident exists comes back empty, re-run it with **`grep -a`**
+  (overrides `-I`) before concluding the symbol is missing or that your tools are
+  broken. Also, ugrep's regex dialect is not GNU's — a bracket expression with hex
+  ranges may fail with `ugrep: error at position N`; fall back to `command grep` or
+  `rg -a`. The native Grep tool is ripgrep and skips binary files too.
+- **Inspect bytes with `od`/`xxd`/`cat -v`/`cmp`/`file` — all allowlisted.** If a file
+  looks corrupt or a search behaves impossibly, that is the toolkit. Escalating to an
+  interpreter to hunt control characters is never justified and will be denied.
 - **Parse JSON with `jq`, never an interpreter.** Do NOT shell out through `python`,
   `python3`, `perl`, `ruby`, `node -e`, `bash -c`, or `sh -c` — an interpreter is an
   arbitrary-code escape hatch that defeats the allowlist, and it is not allowlisted anyway.
