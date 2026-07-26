@@ -21,6 +21,8 @@ import {
   groupAbilitiesByCategory,
   groupArtsByType,
   groupByCategory,
+  groupSelectedEquipmentByKind,
+  groupSelectedSpellsByTechniqueForm,
   groupSelectionsByCategory,
   groupSpellsByTechniqueForm,
   orderSelectedSpells,
@@ -410,6 +412,40 @@ describe('orderSelectedSpells', () => {
     ]);
     // The original indices are preserved for index-addressed row mutations.
     expect(ordered.map((o) => o.index)).toEqual([4, 1, 3, 2, 0]);
+  });
+
+  it('groups selected spells by Technique+Form, carrying original indices', () => {
+    const selected = [
+      { spell: 'spell.aegis' }, // ReVi 20
+      { spell: 'spell.ball' }, // CrIg 35
+      { spell: 'spell.watching' }, // ReIg 15
+      { spell: 'spell.arc' }, // CrIg 10
+    ];
+    const groups = groupSelectedSpellsByTechniqueForm(rulesetWithCatalogue(), selected);
+    // Same Form-major group order as the available list.
+    expect(groups.map((g) => [g.technique, g.form])).toEqual([
+      ['art.creo', 'art.ignem'],
+      ['art.rego', 'art.ignem'],
+      ['art.rego', 'art.vim'],
+    ]);
+    // Within a group: the orderSelectedSpells order; indices stay the entity's.
+    expect(groups[0].entries.map((e) => e.selection.spell)).toEqual(['spell.arc', 'spell.ball']);
+    expect(groups[0].entries.map((e) => e.index)).toEqual([3, 1]);
+  });
+
+  it('puts a spell missing from the catalogue in a trailing unlabeled group', () => {
+    const selected = [{ spell: 'spell.unknown' }, { spell: 'spell.ball' }];
+    const groups = groupSelectedSpellsByTechniqueForm(rulesetWithCatalogue(), selected);
+    // Empty technique/form marks the group as header-less, so the row for an
+    // unknown id stays visible rather than being silently dropped.
+    const last = groups[groups.length - 1];
+    expect(last.technique).toBe('');
+    expect(last.form).toBe('');
+    expect(last.entries.map((e) => e.selection.spell)).toEqual(['spell.unknown']);
+  });
+
+  it('is empty when no spells are selected', () => {
+    expect(groupSelectedSpellsByTechniqueForm(rulesetWithCatalogue(), [])).toEqual([]);
   });
 });
 
@@ -1480,6 +1516,54 @@ describe('filterEquipment', () => {
     const groups = filterEquipment(rs, catalogue, { kind: 'shields' });
     expect(groups.map((g) => g.kind)).toEqual(['shields']);
     expect(groups[0].ids).toEqual(['shield.round']);
+  });
+});
+
+describe('groupSelectedEquipmentByKind', () => {
+  const catalogue = {
+    weapons: {
+      'weapon.axe': { id: 'weapon.axe' },
+      'weapon.long_sword': { id: 'weapon.long_sword' },
+    },
+    shields: { 'shield.round': { id: 'shield.round' } },
+    armor: { 'armor.leather': { id: 'armor.leather' } },
+  };
+  const i18n = {
+    'weapon.axe': { name: 'Axe' },
+    'weapon.long_sword': { name: 'Long Sword' },
+    'shield.round': { name: 'Round Shield' },
+    'armor.leather': { name: 'Leather Scale' },
+  };
+  const rs = makeRuleset([], { i18n });
+
+  it('groups carried equipment by kind in display order, name-sorted, keeping indices', () => {
+    const slots = [
+      { item: 'armor.leather' },
+      { item: 'weapon.long_sword' },
+      { item: 'shield.round' },
+      { item: 'weapon.axe' },
+    ];
+    const groups = groupSelectedEquipmentByKind(rs, catalogue, slots);
+    // Same weapons → shields → armor order as the available list; empty dropped.
+    expect(groups.map((g) => g.kind)).toEqual(['weapons', 'shields', 'armor']);
+    // Alpha by localized name within a kind (mirroring the Abilities selected list).
+    expect(groups[0].entries.map((e) => e.slot.item)).toEqual(['weapon.axe', 'weapon.long_sword']);
+    // Original entity indices ride along for the index-addressed row mutators.
+    expect(groups[0].entries.map((e) => e.index)).toEqual([3, 1]);
+  });
+
+  it('puts an item missing from the catalogue in a trailing unlabeled group', () => {
+    const slots = [{ item: 'weapon.mystery' }, { item: 'weapon.axe' }];
+    const groups = groupSelectedEquipmentByKind(rs, catalogue, slots);
+    // A null kind marks the group as header-less, so an unknown item's row stays
+    // visible instead of vanishing from the selected list.
+    const last = groups[groups.length - 1];
+    expect(last.kind).toBeNull();
+    expect(last.entries.map((e) => e.slot.item)).toEqual(['weapon.mystery']);
+  });
+
+  it('is empty when nothing is carried', () => {
+    expect(groupSelectedEquipmentByKind(rs, catalogue, [])).toEqual([]);
   });
 });
 

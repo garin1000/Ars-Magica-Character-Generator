@@ -6,14 +6,14 @@
     effectiveSpellMastery,
     filterSpells,
     groupArtsByType,
+    groupSelectedSpellsByTechniqueForm,
     groupSpellsByTechniqueForm,
     maxAbilityScore,
-    orderSelectedSpells,
     usedSpellForms,
     spellDisplayName,
     spellMasteryXpSpent,
   } from '../derive';
-  import type { SpellGroup } from '../derive';
+  import type { SelectedSpellGroup } from '../derive';
   import { tooltip, withReason, type TooltipContent } from '../actions';
   import type { Art, Spell, SpellMasteryAbility, SpellSelection } from '../types';
   import SourcePicker from './SourcePicker.svelte';
@@ -56,37 +56,44 @@
     );
     return groupSpellsByTechniqueForm(rs, filtered).map((group) => ({
       key: `${group.technique} ${group.form}`,
-      header: groupHeader(group),
+      header: groupHeader(group.technique, group.form),
       headerTestid: `spell-group-${group.technique}-${group.form}`,
       items: group.spells,
     }));
   });
 
-  // The selected spells shown in Form → Technique → catalogue-level order (the
-  // same order as the available list). Each entry carries its ORIGINAL index into
+  // The selected spells grouped by Technique+Form — the same grouping and order
+  // as the available list, so the selected side carries category headers like the
+  // Abilities and V/F tabs do. Each entry carries its ORIGINAL index into
   // `entity.spells` so the index-addressed row mutations still target the right
   // row — the display order is never written back to the entity.
-  const selectedSpells = $derived.by((): { selection: SpellSelection; index: number }[] => {
+  const selectedGroups = $derived.by((): SelectedSpellGroup[] => {
     const rs = store.ruleset;
     if (!rs) return [];
-    return orderSelectedSpells(rs, store.entity.spells ?? []);
+    return groupSelectedSpellsByTechniqueForm(rs, store.entity.spells ?? []);
   });
 
   const selectedColumns = $derived([
     {
       key: 'spells',
       header: budgetHeader,
-      groups: [
-        {
-          key: 'spells',
-          listClass: 'spell-list',
-          ulTestid: 'spell-list',
-          rows: selectedSpells.map((s) => ({
-            key: `${s.selection.spell}:${s.selection.parameter ?? ''}:${s.index}`,
-            item: s,
-          })),
-        },
-      ],
+      empty: (store.entity.spells ?? []).length === 0,
+      emptyText: store.t('empty-selections-side'),
+      emptyClass: 'empty',
+      groups: selectedGroups.map((g, gi) => ({
+        key: `${g.technique} ${g.form}`,
+        // A group whose Te/Fo is unknown (spell absent from the catalogue) has no
+        // localizable header, so it renders header-less rather than showing a slug.
+        header: g.technique && g.form ? groupHeader(g.technique, g.form) : undefined,
+        listClass: 'spell-list',
+        // The e2e suite keys off `spell-list`; keep it on the first group so the
+        // testid stays unique now that the list is split per Technique/Form.
+        ulTestid: gi === 0 ? 'spell-list' : undefined,
+        rows: g.entries.map((s) => ({
+          key: `${s.selection.spell}:${s.selection.parameter ?? ''}:${s.index}`,
+          item: s,
+        })),
+      })),
     },
   ]);
 
@@ -135,13 +142,13 @@
   }
 
   // The localized group header: the two Art names composed via Fluent (never a
-  // raw id) — e.g. "Creo Ignem".
-  function groupHeader(group: SpellGroup): string {
+  // raw id) — e.g. "Creo Ignem". Shared by the available and selected lists.
+  function groupHeader(technique: string, form: string): string {
     const rs = store.ruleset;
     if (!rs) return '';
     return store.t('spell-group-header', {
-      technique: artLabel(rs, group.technique),
-      form: artLabel(rs, group.form),
+      technique: artLabel(rs, technique),
+      form: artLabel(rs, form),
     });
   }
 

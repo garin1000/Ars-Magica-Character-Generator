@@ -11,6 +11,7 @@ import type {
   CharacteristicRules,
   Entity,
   EntityTypeProfile,
+  EquipmentSlot,
   ItemKind,
   LocalizedRuleset,
   Magnitude,
@@ -837,6 +838,99 @@ export function orderSelectedSpells(
 
 function indexOrder(arts: Art[]): Map<string, number> {
   return new Map(arts.map((art, i) => [art.id, i]));
+}
+
+/**
+ * A group of a character's SELECTED spells sharing one Technique/Form pair. The
+ * selected-list counterpart of {@link SpellGroup}: each entry keeps its original
+ * `entity.spells` index so index-addressed row mutations stay correct. An empty
+ * `technique`/`form` marks the trailing bucket of spells missing from the
+ * catalogue — the caller renders that group without a header.
+ */
+export interface SelectedSpellGroup {
+  technique: string;
+  form: string;
+  entries: { selection: SpellSelection; index: number }[];
+}
+
+/**
+ * A character's selected spells grouped by Technique+Form, so the selected list
+ * carries the same category headers as the available list (mirroring how
+ * Abilities and V/F group their selected side).
+ *
+ * Built on {@link orderSelectedSpells}, which already sorts Form-major → Technique
+ * → catalogue level, so consecutive runs of one Te/Fo pair are exactly the groups
+ * — no re-sorting and no second source of truth for the order. A spell whose id is
+ * absent from the catalogue has no Te/Fo to group under; rather than dropping the
+ * row (it is a real selection the user must be able to see and remove) it lands in
+ * a trailing group with empty `technique`/`form`, which the caller renders
+ * header-less.
+ */
+export function groupSelectedSpellsByTechniqueForm(
+  localized: LocalizedRuleset,
+  spells: SpellSelection[],
+): SelectedSpellGroup[] {
+  const groups: SelectedSpellGroup[] = [];
+  for (const entry of orderSelectedSpells(localized, spells)) {
+    const catalogue = localized.ruleset.spells?.[entry.selection.spell];
+    const technique = catalogue?.technique ?? '';
+    const form = catalogue?.form ?? '';
+    const last = groups[groups.length - 1];
+    if (last && last.technique === technique && last.form === form) {
+      last.entries.push(entry);
+    } else {
+      groups.push({ technique, form, entries: [entry] });
+    }
+  }
+  return groups;
+}
+
+/**
+ * A group of a character's carried equipment of one kind. A `null` kind marks the
+ * trailing bucket of items missing from the catalogue — rendered header-less.
+ */
+export interface SelectedEquipmentGroup {
+  kind: EquipmentKind | null;
+  entries: { slot: EquipmentSlot; index: number }[];
+}
+
+/**
+ * Carried equipment grouped by catalogue kind (weapons → shields → armor, the
+ * same display order and headers as the available list), alpha-sorted by
+ * localized name within each kind like the Abilities selected list. Each entry
+ * keeps its original `entity.equipment` index for the index-addressed row
+ * mutators. Equipment has no shared `kind` field — the three catalogue maps are
+ * the only source of an item's kind — so the caller passes them in, exactly as
+ * for {@link filterEquipment}. An item in none of them lands in a trailing
+ * `kind: null` group so its row stays visible and removable.
+ */
+export function groupSelectedEquipmentByKind(
+  localized: LocalizedRuleset,
+  catalogue: Record<EquipmentKind, Record<string, { id: string }>>,
+  slots: EquipmentSlot[],
+): SelectedEquipmentGroup[] {
+  const nameOf = (id: string) => localized.i18n[id]?.name ?? id;
+  const kindOf = (id: string): EquipmentKind | null =>
+    EQUIPMENT_KINDS.find((kind) => catalogue[kind]?.[id]) ?? null;
+
+  const buckets = new Map<EquipmentKind | null, { slot: EquipmentSlot; index: number }[]>();
+  slots.forEach((slot, index) => {
+    const kind = kindOf(slot.item);
+    const list = buckets.get(kind) ?? [];
+    list.push({ slot, index });
+    buckets.set(kind, list);
+  });
+
+  // Known kinds in display order first, then the unclassified bucket (if any).
+  const order: (EquipmentKind | null)[] = [...EQUIPMENT_KINDS, null];
+  return order
+    .filter((kind) => buckets.has(kind))
+    .map((kind) => ({
+      kind,
+      entries: buckets
+        .get(kind)!
+        .sort((a, b) => nameOf(a.slot.item).localeCompare(nameOf(b.slot.item))),
+    }));
 }
 
 /**
