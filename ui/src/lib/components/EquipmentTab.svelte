@@ -1,6 +1,11 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { filterEquipment, type EquipmentKind } from '../derive';
+  import {
+    filterEquipment,
+    groupSelectedEquipmentByKind,
+    type EquipmentKind,
+    type SelectedEquipmentGroup,
+  } from '../derive';
   import type { EquipmentSlot } from '../types';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
@@ -38,9 +43,25 @@
 
   // === Selected side ===
 
-  // The chosen equipment slots (references to catalogue ids) — a flat list, each
-  // row carrying its original entity index for the index-addressed mutators.
+  // The chosen equipment slots (references to catalogue ids), grouped by kind so
+  // the selected side carries the same headers as the available list (mirroring the
+  // Abilities and V/F tabs). Each row keeps its original entity index for the
+  // index-addressed mutators — the display order is never written back.
   const equipment = $derived(store.entity.equipment ?? []);
+
+  const selectedGroups = $derived.by((): SelectedEquipmentGroup[] => {
+    const rs = store.ruleset;
+    if (!rs) return [];
+    return groupSelectedEquipmentByKind(
+      rs,
+      {
+        weapons: rs.ruleset.weapons ?? {},
+        shields: rs.ruleset.shields ?? {},
+        armor: rs.ruleset.armor ?? {},
+      },
+      equipment,
+    );
+  });
 
   const selectedColumns = $derived([
     {
@@ -48,14 +69,17 @@
       empty: equipment.length === 0,
       emptyText: store.t('equipment-empty'),
       emptyClass: 'empty',
-      groups: [
-        {
-          key: 'equipment',
-          listClass: 'equipment-list',
-          ulTestid: 'equipment-list',
-          rows: equipment.map((slot, index) => ({ key: index, item: { slot, index } })),
-        },
-      ],
+      groups: selectedGroups.map((g, gi) => ({
+        key: g.kind ?? 'unclassified',
+        // An item absent from all three catalogues has no kind to label, so its
+        // group renders header-less rather than showing a raw slug.
+        header: g.kind ? store.t(`equipment-group-${g.kind}`) : undefined,
+        listClass: 'equipment-list',
+        // The `equipment-list` testid stays unique by living on the first group
+        // only, now that the list is split per kind.
+        ulTestid: gi === 0 ? 'equipment-list' : undefined,
+        rows: g.entries.map((e) => ({ key: e.index, item: e })),
+      })),
     },
   ]);
 
