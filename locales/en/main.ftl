@@ -254,8 +254,8 @@ reputation-type-local = Local
 reputation-type-ecclesiastical = Ecclesiastical
 reputation-type-hermetic = Hermetic
 reputation-type-academic = Academic
-# Magic Items tab (magi): aura, enchanted devices, familiar bond cords, talisman
-# attunements and the Longevity Ritual. The item-level budget used/remaining comes
+# Magic Items tab (magi): aura, enchanted devices, familiar bond cords, the
+# talisman and the Longevity Ritual. The item-level budget used/remaining comes
 # from the engine, never recomputed here.
 aura-label = Assumed lab/covenant aura
 possessions-devices-label = Enchanted Devices
@@ -291,11 +291,27 @@ familiar-cord-silver = Silver cord
 familiar-cord-bronze = Bronze cord
 familiar-add = Add familiar
 familiar-remove = Remove familiar
-talisman-label = Talisman Attunements
+# Talisman: the magus's personal enchanted item. Its capacity is engine-derived
+# guidance (highest Technique + highest Form, in pawns of Vim vis) and is never
+# recomputed here; the instilled effects are charged against no budget.
+talisman-label = Talisman
+talisman-add = Add talisman
+talisman-remove-item = Remove talisman
+talisman-empty-item = No talisman yet.
+talisman-description-label = Shape and material
+talisman-description-placeholder = e.g. an ash staff shod with silver
+talisman-capacity = Capacity: { $pawns } pawns of Vim vis
+talisman-capacity-note = Highest Technique { $techniqueScore } + highest Form { $formScore }
+talisman-attunements-label = Talisman Attunements
 talisman-desc-placeholder = What it enhances
 talisman-bonus-label = Bonus
-talisman-add = Add attunement
+talisman-attunement-add = Add attunement
 talisman-empty = No talisman attunements yet.
+talisman-effects-label = Instilled Effects
+talisman-effect-name-placeholder = Effect name
+talisman-effect-level-label = Level
+talisman-effect-add = Add effect
+talisman-effects-empty = No instilled effects yet.
 longevity-label = Longevity Ritual
 longevity-source-label = Source
 longevity-source-self_made = Self-made

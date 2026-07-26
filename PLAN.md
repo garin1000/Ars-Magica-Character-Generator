@@ -468,13 +468,19 @@ orchestrate. Engine (where a mechanic changes) → data → direct-entry UI, TDD
       surface the **sterility** consequence. Source: Core Rules.md:10656.
 
 ### 5.5b. Talisman — item identity + instilled effects
-- [ ] Model the talisman as the magus's personal **enchanted item**, not just a
+- [x] Model the talisman as the magus's personal **enchanted item**, not just a
       list of attunements: a shape/material identity (free-text), an enchantment
       **capacity** read-out (highest Technique + highest Form, in Vim pawns), and
       its **instilled effects** (name + level, like enchanted devices), in
       addition to the existing shape/material **attunements** (description +
-      bonus). Source: Core Rules.md:10603-10623 (esp. :10619 capacity, :10623
-      attunements).
+      bonus). `Entity.talisman: Option<Talisman>` replaces `talisman_attunements`
+      (`SCHEMA_VERSION` 13 → 14, with a lossless legacy fold in
+      `load_entity_migrating`). The capacity is **read-only guidance**, and
+      instilled effects are charged against **no** budget: `item_level_budget`
+      comes only from the Redcap-only Virtues, and a Redcap "may not take The Gift"
+      (:4850), so it can never fund a magus's talisman.
+      Source: Core Rules.md:10603-10625 (esp. :10619 capacity, :10621 instilling,
+      :10623/:10625 attunements), :4347-4349 + :4842-4850 (the budget non-goal).
 
 ### 5.5c. Familiar — magical-animal statblock — **SCOPE DECISION PENDING**
 - [ ] Expand `Familiar` from name + three cords toward the rules' magical animal:
@@ -675,8 +681,9 @@ value + hint, talisman item + effects) then **M5.6** (Markdown export). The
 guided wizard **M6** gains a new first slice **6a** (startup screen + fixed
 character type) ahead of the guided flow (6b).
 
-Next: M5.5a — Longevity Ritual (player-entered value + live hint). Familiar depth
-(5.5c) still needs a scope decision before implementation.
+Next: M5.5c — Familiar (magical-animal statblock). 5.5a (Longevity Ritual —
+player-entered value + live hint) and 5.5b (Talisman as an item, `SCHEMA_VERSION`
+13 → 14) are complete.
 
 ---
 
