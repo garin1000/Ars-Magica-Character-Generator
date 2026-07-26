@@ -549,6 +549,15 @@ ul {
   white-space: nowrap;
 }
 
+/* A selected row the engine reports an ERROR for — an Ability or spell that became
+   illegal after it was chosen (a granting Virtue removed, an Art lowered below the
+   spell's cap). Red text marks the offending row itself, so the violation is
+   visible where it happened and not only in the issues panel. Colors the row's
+   text (name, score, labels); the inputs/buttons keep their own styling. */
+.invalid-selection {
+  color: var(--error);
+}
+
 /* Ability lists: the name grows so the +/spinner/specialty/× align right. */
 .item-name {
   flex: 1;

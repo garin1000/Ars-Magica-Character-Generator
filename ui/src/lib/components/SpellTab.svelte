@@ -8,6 +8,7 @@
     groupArtsByType,
     groupSelectedSpellsByTechniqueForm,
     groupSpellsByTechniqueForm,
+    invalidSelectionIds,
     maxAbilityScore,
     usedSpellForms,
     spellDisplayName,
@@ -96,6 +97,10 @@
       })),
     },
   ]);
+
+  // Spells an error-severity issue points at (e.g. a level now above its Te/Fo cap
+  // after the Arts were lowered, or an illegal Ritual) — their rows render red.
+  const invalidIds = $derived(invalidSelectionIds(store.result));
 
   // The selected spell ids, for the "already selected" grey-out of ordinary
   // fixed-level spells (see `nonTakeableReason`). A General spell (learnable at
@@ -383,7 +388,10 @@
           {#snippet row(item: { selection: SpellSelection; index: number })}
             {@const chosen = item.selection}
             {@const i = item.index}
-            <li use:tooltip={tip(chosen.spell)}>
+            <li
+              class:invalid-selection={invalidIds.has(chosen.spell)}
+              use:tooltip={tip(chosen.spell)}
+            >
               <span class="item-name" data-testid="spell-name-{chosen.spell}-{i}"
                 >{rowLabel(chosen)}</span
               >

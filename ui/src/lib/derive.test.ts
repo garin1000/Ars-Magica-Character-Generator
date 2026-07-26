@@ -25,6 +25,7 @@ import {
   groupSelectedSpellsByTechniqueForm,
   groupSelectionsByCategory,
   groupSpellsByTechniqueForm,
+  invalidSelectionIds,
   orderSelectedSpells,
   usedSpellForms,
   groupAbilitySelectionsByCategory,
@@ -1564,6 +1565,48 @@ describe('groupSelectedEquipmentByKind', () => {
 
   it('is empty when nothing is carried', () => {
     expect(groupSelectedEquipmentByKind(rs, catalogue, [])).toEqual([]);
+  });
+});
+
+describe('invalidSelectionIds', () => {
+  it('collects the context id of every error-severity issue', () => {
+    const result = {
+      issues: [
+        { severity: 'error' as const, code: 'prereq_not_met', args: {}, context: 'spell.pilum' },
+        {
+          severity: 'error' as const,
+          code: 'supernatural_ability_requires_virtue',
+          args: {},
+          context: 'ability.dowsing',
+        },
+      ],
+    };
+    expect([...invalidSelectionIds(result)].sort()).toEqual(['ability.dowsing', 'spell.pilum']);
+  });
+
+  it('ignores warnings, so only genuinely illegal rows are flagged', () => {
+    const result = {
+      issues: [
+        {
+          severity: 'warning' as const,
+          code: 'prereq_unevaluated',
+          args: {},
+          context: 'spell.pilum',
+        },
+      ],
+    };
+    expect(invalidSelectionIds(result).size).toBe(0);
+  });
+
+  it('ignores issues carrying no context (nothing to highlight)', () => {
+    const result = {
+      issues: [{ severity: 'error' as const, code: 'over_spell_levels', args: {}, context: null }],
+    };
+    expect(invalidSelectionIds(result).size).toBe(0);
+  });
+
+  it('is empty for a null result (not yet validated, or Silent mode)', () => {
+    expect(invalidSelectionIds(null).size).toBe(0);
   });
 });
 
