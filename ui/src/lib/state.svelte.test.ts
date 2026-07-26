@@ -485,15 +485,56 @@ describe('magic possessions', () => {
     expect(store.entity.familiar).toBeNull();
   });
 
+  it('adds a talisman with its identity, and removes it', () => {
+    store.addTalisman();
+    expect(store.entity.talisman).toEqual({ description: '', attunements: [], effects: [] });
+    store.setTalismanDescription('An ash staff shod with silver');
+    expect(store.entity.talisman?.description).toBe('An ash staff shod with silver');
+    store.removeTalisman();
+    expect(store.entity.talisman).toBeNull();
+  });
+
   it('adds, edits and removes talisman attunements by index', () => {
+    store.addTalisman();
     store.addTalismanAttunement();
-    store.setTalismanDescription(0, 'Attuned to fire');
-    store.setTalismanBonus(0, 5);
-    expect(store.entity.talisman_attunements).toEqual([
+    store.setTalismanAttunementDescription(0, 'Attuned to fire');
+    store.setTalismanAttunementBonus(0, 5);
+    expect(store.entity.talisman?.attunements).toEqual([
       { description: 'Attuned to fire', bonus: 5 },
     ]);
     store.removeTalismanAttunementAt(0);
-    expect(store.entity.talisman_attunements).toEqual([]);
+    expect(store.entity.talisman?.attunements).toEqual([]);
+  });
+
+  it('adds, edits (name + non-negative level) and removes instilled effects', () => {
+    store.addTalisman();
+    store.addTalismanEffect();
+    store.setTalismanEffectName(0, 'Wielding the Invisible Sling');
+    store.setTalismanEffectLevel(0, -5);
+    expect(store.entity.talisman?.effects).toEqual([
+      { name: 'Wielding the Invisible Sling', level: 0 },
+    ]);
+    store.setTalismanEffectLevel(0, 15);
+    store.addTalismanEffect();
+    store.removeTalismanEffectAt(1);
+    expect(store.entity.talisman?.effects).toEqual([
+      { name: 'Wielding the Invisible Sling', level: 15 },
+    ]);
+  });
+
+  it('ignores every talisman mutator while there is no talisman', () => {
+    // The panel only renders these controls with a talisman present, but a guard
+    // per mutator keeps a stray call from conjuring one out of nothing.
+    store.setTalismanDescription('An ash staff');
+    store.addTalismanAttunement();
+    store.setTalismanAttunementDescription(0, 'Warding');
+    store.setTalismanAttunementBonus(0, 5);
+    store.removeTalismanAttunementAt(0);
+    store.addTalismanEffect();
+    store.setTalismanEffectName(0, 'Lamp Without Flame');
+    store.setTalismanEffectLevel(0, 10);
+    store.removeTalismanEffectAt(0);
+    expect(store.entity.talisman ?? null).toBeNull();
   });
 
   it('sets Might realm + non-negative score, and clears Might', () => {

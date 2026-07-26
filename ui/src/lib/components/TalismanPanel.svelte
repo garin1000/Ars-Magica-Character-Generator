@@ -1,7 +1,13 @@
 <script lang="ts">
   import { store } from '../state.svelte';
 
-  const attunements = $derived(store.entity.talisman_attunements ?? []);
+  const attunements = $derived(store.entity.talisman?.attunements ?? []);
+
+  // Attunements live on the talisman, so adding one implies owning it.
+  function addAttunement(): void {
+    if (!store.entity.talisman) store.addTalisman();
+    store.addTalismanAttunement();
+  }
 
   function num(event: Event): number {
     return Number((event.currentTarget as HTMLInputElement).value);
@@ -18,7 +24,7 @@
           placeholder={store.t('talisman-desc-placeholder')}
           value={attunement.description}
           oninput={(e) =>
-            store.setTalismanDescription(i, (e.currentTarget as HTMLInputElement).value)}
+            store.setTalismanAttunementDescription(i, (e.currentTarget as HTMLInputElement).value)}
           data-testid="talisman-desc-{i}"
         />
         <label class="field inline">
@@ -26,7 +32,7 @@
           <input
             type="number"
             value={attunement.bonus}
-            oninput={(e) => store.setTalismanBonus(i, num(e))}
+            oninput={(e) => store.setTalismanAttunementBonus(i, num(e))}
             data-testid="talisman-bonus-{i}"
           />
         </label>
@@ -44,7 +50,7 @@
       <li class="empty">{store.t('talisman-empty')}</li>
     {/each}
   </ul>
-  <button type="button" onclick={() => store.addTalismanAttunement()} data-testid="talisman-add">
+  <button type="button" onclick={addAttunement} data-testid="talisman-add">
     {store.t('talisman-add')}
   </button>
 </div>

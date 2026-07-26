@@ -468,6 +468,17 @@ export interface MasterpieceCap {
   cap: number;
 }
 
+// The talisman's enchantment capacity in pawns of Vim vis: the magus's highest
+// Technique + highest Form. Both contributing scores travel with the sum so the
+// panel renders the derivation without arithmetic in JS.
+export interface TalismanCapacity {
+  technique: string;
+  form: string;
+  technique_score: number;
+  form_score: number;
+  pawns: number;
+}
+
 // A surfaced-only modifier (listed, not simulated).
 export interface SurfacedModifier {
   family: string;
@@ -484,6 +495,7 @@ export interface DerivedTotals {
   magic_resistance: MagicResistance[];
   longevity?: LongevityBonus | null;
   masterpiece?: MasterpieceCap | null;
+  talisman_capacity?: TalismanCapacity | null;
   combat: CombatLine[];
   soak: SoakTotal;
   encumbrance: EncumbranceTotal;
@@ -696,10 +708,28 @@ export interface Familiar {
   cord_bronze?: number;
 }
 
-// A talisman attunement: a free-text descriptor and the bonus it confers.
+// A talisman attunement: a free-text descriptor and the bonus it confers. Only
+// the highest applicable bonus applies, and only to Casting Scores.
 export interface TalismanAttunement {
   description: string;
   bonus: number;
+}
+
+// An effect instilled in a talisman. Deliberately not an EnchantedDevice: a
+// talisman's effects are charged against no budget, while a device's level is
+// charged against the item-level budget its Virtues grant.
+export interface TalismanEffect {
+  name: string;
+  level: number;
+}
+
+// A magus's talisman: his personal enchanted item. `description` is its
+// shape/material identity (free text). Its capacity is derived, never stored
+// (see TalismanCapacity). Both lists are omitted from JSON when empty.
+export interface Talisman {
+  description?: string;
+  attunements?: TalismanAttunement[];
+  effects?: TalismanEffect[];
 }
 
 // A Twilight Scar: a minor magical trait a magus acquires from Twilight
@@ -978,8 +1008,10 @@ export interface Entity {
   devices?: EnchantedDevice[];
   // The magus's familiar and bond cords. Omitted when none.
   familiar?: Familiar | null;
-  // Talisman attunements (magi). Omitted when empty.
-  talisman_attunements?: TalismanAttunement[];
+  // The magus's talisman — identity, attunements, instilled effects. Omitted when
+  // none (a magus may have at most one). Replaced the flat `talisman_attunements`
+  // list in schema 14; legacy saves are folded in by the engine on load.
+  talisman?: Talisman | null;
   // The magus's Longevity Ritual. Omitted when none.
   longevity_ritual?: LongevityRitual | null;
   // Accrued aging points per Characteristic — the lifetime total. Their sum is
