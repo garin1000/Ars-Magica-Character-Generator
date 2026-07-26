@@ -585,6 +585,13 @@ ul {
   justify-content: start;
   gap: 1rem;
   align-items: start;
+  /* Hug the content and sit centered in the tab (like `.char-panel`) rather than
+     stretching the colored panel across the full viewport. `.vf-tab` is a column
+     flex with the default `align-items: stretch`, so `align-self: center` opts
+     this one item out of the stretch and centers it on the cross axis. */
+  width: fit-content;
+  max-width: 100%;
+  align-self: center;
 }
 
 @media (max-width: 720px) {
