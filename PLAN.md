@@ -482,16 +482,36 @@ orchestrate. Engine (where a mechanic changes) → data → direct-entry UI, TDD
       Source: Core Rules.md:10603-10625 (esp. :10619 capacity, :10621 instilling,
       :10623/:10625 attunements), :4347-4349 + :4842-4850 (the budget non-goal).
 
-### 5.5c. Familiar — magical-animal statblock — **SCOPE DECISION PENDING**
-- [ ] Expand `Familiar` from name + three cords toward the rules' magical animal:
-      candidate fields are species/animal, **Size**, **Magic Might** (+ realm),
-      **Characteristics**, **Abilities**, Personality Traits, and bond-invested
-      **powers** — atop the cords already modeled. Decide how much of the statblock
-      to build now vs. defer (a likely first cut: species + Size + Might +
-      Characteristics; Abilities/powers/qualities deferred). This is a data-model +
-      engine + UI addition — the largest of the three slices. Source: Core
-      Rules.md:10766-10893, esp. :10824 (Size + Magic Might in the binding level),
-      :10852-10860 (bond effects: True Friend, Loyal +3, intelligence, cords).
+### 5.5c. Familiar — magical-animal statblock
+- [x] Expand `Familiar` from name + three cords into the rulebook's **Creature
+      Format** (Core Rules.md:17787-17827), so a save reads like a statblock.
+      **Scope decided and built**: `animal` (free text; *not* `species` — the rules
+      reserve that word for the Imaginem term), **Magic Might** + realm,
+      the eight **Characteristics** (the creature's own, never bought from the
+      magus's points), signed **Size** (commonly negative), **Personality Traits**,
+      and the bond-invested **powers** — atop the three cords already modeled.
+      **Deferred**: the familiar's Abilities, Qualities, Virtues/Flaws and the
+      Combat/Soak/Fatigue/Wound statlines — the creature lines the app enters for no
+      creature yet. `Characteristic` keeps its fixed eight values: a bound familiar
+      gains human intelligence at Int -3 (:10854), so no `Cunning` variant is
+      warranted (the unbound creature's "Cun" display is recorded in `RULES.md` as a
+      deferred display-only affordance). Every new field is additive
+      `serde(default, skip_serializing_if)`, so `SCHEMA_VERSION` stays 14.
+      Source: Core Rules.md:10766-10892, esp. :10774 (finding a Magic Might beast),
+      :17787-17827 (Creature Format), :17829-17856 (Size examples).
+- [x] Derive the bonding numbers as **read-only guidance** (no `ValidationIssue`,
+      ever — the `masterpiece_item_cap` contract): the **binding level**
+      (Might + 25 + 5 × Size, :10824/:10828), the best **bonding Lab Total**
+      (:10818/:10826, reusing the Technique × Form grid — and unlike Masterpiece a
+      **focus may apply** here, surfaced as a separate conditional figure), the
+      **cord cost curve** 5/15/30/50/75 (:10836, clamped at the +5 maximum), and the
+      total level of **invested powers** (:10866 — *no* limit, so deliberately no
+      budget bar). Vis costs stay out of scope (the model holds no vis stock).
+- [x] Surface the bond's effects as a **note, never auto-applied**: the Minor Virtue
+      True Friend, Personality Traits of Loyal (partner) +3, and Intelligence -3 for
+      a familiar that lacked human intelligence (:10852-10854). `virtue.true_friend`
+      is not in the catalogue and `grant.rs` keys off House/mythic profiles, not off
+      a familiar bond.
 
 ## Milestone 5.6 — Markdown character export
 

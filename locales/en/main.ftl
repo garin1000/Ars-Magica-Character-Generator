@@ -291,6 +291,22 @@ familiar-cord-silver = Silver cord
 familiar-cord-bronze = Bronze cord
 familiar-add = Add familiar
 familiar-remove = Remove familiar
+# The familiar's own creature statblock. Its Characteristics are the beast's, not
+# bought from the magus's points, and its Might takes no Virtue grants on top —
+# which is why it has its own score label rather than reusing might-score-label
+# ("Base Might Score"). The invested-powers list deliberately has NO budget bar.
+familiar-animal-label = Animal
+familiar-animal-placeholder = e.g. a raven
+familiar-size-label = Size
+familiar-might-label = Magic Might
+familiar-might-score-label = Might Score
+familiar-might-add = Add Magic Might
+familiar-might-clear = Remove Magic Might
+familiar-might-empty = No Magic Might entered.
+familiar-characteristics-note = The beast's own scores — not bought from the magus's Characteristic points.
+familiar-powers-label = Invested Powers
+familiar-powers-note = There is no limit to the number of powers invested in a familiar bond.
+familiar-bond-note = The bond grants both partners the Minor Virtue True Friend and the Personality Trait Loyal (partner) +3. A familiar lacking human intelligence gains it at Intelligence -3. These are not applied automatically.
 # Talisman: the magus's personal enchanted item. Its capacity is engine-derived
 # guidance (highest Technique + highest Form, in pawns of Vim vis) and is never
 # recomputed here; the instilled effects are charged against no budget.
@@ -540,6 +556,7 @@ derived-section-penetration = Penetration
 derived-section-magic-resistance = Magic Resistance
 derived-section-longevity = Longevity Ritual
 derived-section-masterpiece = Masterpiece
+derived-section-familiar = Familiar Bond
 derived-section-combat = Combat
 derived-section-soak = Soak
 derived-section-encumbrance = Encumbrance
@@ -585,6 +602,16 @@ derived-longevity-not-entered = not entered
 derived-longevity-suggested = would now be
 derived-masterpiece-cap = Max lesser-item level
 derived-masterpiece-note = Guidance only: design the actual lesser enchanted item under Magic Items (vis costs ignored).
+# Familiar bond: every figure is guidance. The within-focus Lab Total is
+# conditional — whether this beast falls inside the focus is a troupe judgment.
+derived-familiar-binding-level = Binding level
+derived-familiar-cord-points = Cord points spent
+derived-familiar-invested-levels = Invested power levels
+derived-familiar-reaches = Lab Total reaches the binding level.
+derived-familiar-falls-short = Lab Total falls short of the binding level.
+derived-familiar-cords-fit = Cord points fit within the Lab Total.
+derived-familiar-cords-exceed = Cord points exceed the Lab Total.
+derived-familiar-note = Guidance only: which Arts suit the beast, and whether a Magical Focus applies, are troupe judgments (vis costs ignored).
 derived-addend-intelligence = Intelligence
 derived-addend-magic_theory = Magic Theory
 derived-addend-technique = Technique

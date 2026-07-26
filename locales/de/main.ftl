@@ -275,6 +275,22 @@ familiar-cord-silver = Silberne Kordel
 familiar-cord-bronze = Bronzene Kordel
 familiar-add = Vertrauten hinzufügen
 familiar-remove = Vertrauten entfernen
+# Der Kreaturenblock des Vertrauten selbst. Seine Eigenschaften gehören dem Tier
+# und werden nicht aus den Punkten des Magus bezahlt; sein Machtwert erhält keine
+# Tugendboni obendrauf — daher eine eigene Beschriftung statt might-score-label
+# ("Grund-Machtwert"). Die Liste investierter Kräfte hat KEINE Budgetanzeige.
+familiar-animal-label = Tier
+familiar-animal-placeholder = z. B. ein Rabe
+familiar-size-label = Größe
+familiar-might-label = Magische Macht
+familiar-might-score-label = Machtwert
+familiar-might-add = Magische Macht hinzufügen
+familiar-might-clear = Magische Macht entfernen
+familiar-might-empty = Keine Magische Macht eingetragen.
+familiar-characteristics-note = Die eigenen Werte des Tieres — sie werden nicht aus den Eigenschaftspunkten des Magus bezahlt.
+familiar-powers-label = Investierte Kräfte
+familiar-powers-note = Die Anzahl der Kräfte, die in eine Vertrautenbindung investiert werden können, ist nicht begrenzt.
+familiar-bond-note = Die Bindung verleiht beiden Partnern die Kleine Tugend Wahrer Freund und die Persönlichkeitseigenschaft Loyal (Partner) +3. Ein Vertrauter ohne menschliche Intelligenz erhält sie mit Intelligenz -3. Dies wird nicht automatisch angewendet.
 # Talisman: das persönliche Zaubergerät des Magus. Seine Kapazität stammt als
 # Richtwert aus der Engine (höchste Technik + höchste Form, in Bauern Vim-Vis) und
 # wird hier nie neu berechnet; die eingebetteten Effekte belasten kein Budget.
@@ -527,6 +543,7 @@ derived-section-penetration = Penetration
 derived-section-magic-resistance = Magieresistenz
 derived-section-longevity = Langlebigkeitsritual
 derived-section-masterpiece = Meisterstück
+derived-section-familiar = Vertrautenbindung
 derived-section-combat = Kampf
 derived-section-soak = Absorption
 derived-section-encumbrance = Belastung
@@ -572,6 +589,16 @@ derived-longevity-not-entered = nicht eingetragen
 derived-longevity-suggested = wäre jetzt
 derived-masterpiece-cap = Höchste Stufe schlichtes Artefakt
 derived-masterpiece-note = Nur ein Hinweis: Das eigentliche schlichte Artefakt unter Magische Gegenstände entwerfen (Vis-Kosten werden ignoriert).
+# Vertrautenbindung: Alle Werte sind reine Hinweise. Die Laborsumme im Fokus ist
+# bedingt — ob das Tier in den Fokus fällt, entscheidet die Spielgruppe.
+derived-familiar-binding-level = Bindungsstufe
+derived-familiar-cord-points = Aufgewendete Kordelpunkte
+derived-familiar-invested-levels = Investierte Kraftstufen
+derived-familiar-reaches = Laborsumme erreicht die Bindungsstufe.
+derived-familiar-falls-short = Laborsumme erreicht die Bindungsstufe nicht.
+derived-familiar-cords-fit = Kordelpunkte liegen innerhalb der Laborsumme.
+derived-familiar-cords-exceed = Kordelpunkte übersteigen die Laborsumme.
+derived-familiar-note = Nur ein Hinweis: Welche Künste zum Tier passen und ob ein Magischer Fokus greift, entscheidet die Spielgruppe (Vis-Kosten werden ignoriert).
 derived-addend-intelligence = Intelligenz
 derived-addend-magic_theory = Magietheorie
 derived-addend-technique = Technik
