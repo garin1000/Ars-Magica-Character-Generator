@@ -161,6 +161,9 @@ export interface PointItem {
   tainted?: boolean;
   entity_kinds: EntityKind[];
   prerequisites?: Prereq;
+  // Items that may not be selected alongside this one. Symmetric (the engine
+  // rejects a ruleset whose declarations are one-sided) and omitted when empty.
+  incompatible_with?: string[];
   parameters?: ParameterDef[];
   effects?: Effect[];
   // Max selections per (id, params) target. Omitted when the default (1).

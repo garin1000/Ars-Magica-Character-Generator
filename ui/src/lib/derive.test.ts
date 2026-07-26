@@ -25,6 +25,7 @@ import {
   groupSelectedSpellsByTechniqueForm,
   groupSelectionsByCategory,
   groupSpellsByTechniqueForm,
+  incompatibleRefs,
   invalidSelectionIds,
   orderSelectedSpells,
   usedSpellForms,
@@ -583,6 +584,60 @@ describe('mandatoryTraitRefs', () => {
   it('is empty for a profile with no required traits or Gift', () => {
     expect(mandatoryTraitRefs(profile({})).size).toBe(0);
     expect(mandatoryTraitRefs(undefined).size).toBe(0);
+  });
+});
+
+// --- incompatibleRefs() -----------------------------------------------------
+
+describe('incompatibleRefs', () => {
+  const ruleset = makeRuleset([
+    item({ id: 'virtue.gentle_gift', incompatible_with: ['flaw.blatant_gift'] }),
+    item({ id: 'flaw.blatant_gift', kind: 'flaw', incompatible_with: ['virtue.gentle_gift'] }),
+    item({
+      id: 'flaw.dwarf',
+      kind: 'flaw',
+      incompatible_with: ['flaw.small_frame', 'virtue.large'],
+    }),
+    item({
+      id: 'flaw.small_frame',
+      kind: 'flaw',
+      incompatible_with: ['flaw.dwarf', 'virtue.large'],
+    }),
+    item({ id: 'virtue.large', incompatible_with: ['flaw.dwarf', 'flaw.small_frame'] }),
+    item({ id: 'virtue.brave' }),
+  ]);
+
+  it('blocks the counterpart of a selected item in enforced mode', () => {
+    const blocked = incompatibleRefs(ruleset, [{ ref: 'virtue.gentle_gift' }], 'enforced');
+    expect(blocked.has('flaw.blatant_gift')).toBe(true);
+    expect(blocked.has('virtue.brave')).toBe(false);
+  });
+
+  it('blocks every other member of a multi-way exclusion clique', () => {
+    const blocked = incompatibleRefs(ruleset, [{ ref: 'flaw.dwarf' }], 'enforced');
+    expect(blocked.has('flaw.small_frame')).toBe(true);
+    expect(blocked.has('virtue.large')).toBe(true);
+  });
+
+  it('is empty in advisory and silent mode, where violations only get reported', () => {
+    const selections = [{ ref: 'virtue.gentle_gift' }];
+    expect(incompatibleRefs(ruleset, selections, 'advisory').size).toBe(0);
+    expect(incompatibleRefs(ruleset, selections, 'silent').size).toBe(0);
+  });
+
+  it('ignores a selection whose ref is not in the ruleset', () => {
+    expect(incompatibleRefs(ruleset, [{ ref: 'virtue.nonexistent' }], 'enforced').size).toBe(0);
+  });
+
+  it('is empty for selections that exclude nothing', () => {
+    expect(incompatibleRefs(ruleset, [{ ref: 'virtue.brave' }], 'enforced').size).toBe(0);
+  });
+
+  it('names the selected item responsible for each block, for the reason tooltip', () => {
+    const blocked = incompatibleRefs(ruleset, [{ ref: 'flaw.dwarf' }], 'enforced');
+    expect(blocked.get('flaw.small_frame')).toBe('flaw.dwarf');
+    expect(blocked.get('virtue.large')).toBe('flaw.dwarf');
+    expect(blocked.get('virtue.brave')).toBeUndefined();
   });
 });
 
