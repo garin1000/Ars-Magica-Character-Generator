@@ -153,9 +153,11 @@ spell-already-taken-reason = Already selected
 spell-general-level-label = General level
 spell-add = Add spell
 spell-none = — Select a spell —
-# The spell-levels budget bar: how many of the magus's levels are used.
-spell-levels-used = Spell levels: { $used } / { $budget }
-# Editable override of the base spell-levels budget; empty = use the type
+# The spell-levels budget bar, laid out like the XP summary: the label, the used
+# figure, the effective budget (bracketed), then Available.
+spell-levels-pool = Spell levels
+spell-levels-available = Available: { $available }
+# Editable override of the BASE spell-levels budget; empty = use the type
 # profile's default (shown as the field's placeholder).
 spell-levels-override-label = Spell-levels budget
 spell-mastery-xp = Mastery XP: { $xp }
