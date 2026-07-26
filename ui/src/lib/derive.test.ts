@@ -37,6 +37,7 @@ import {
   resolveIssueArgs,
   restrictedPoolLabel,
   spellDisplayName,
+  spellLevelAllocation,
 } from './derive';
 import type {
   Ability,
@@ -1565,6 +1566,65 @@ describe('groupSelectedEquipmentByKind', () => {
 
   it('is empty when nothing is carried', () => {
     expect(groupSelectedEquipmentByKind(rs, catalogue, [])).toEqual([]);
+  });
+});
+
+describe('spellLevelAllocation', () => {
+  it('spends a positive V/F bonus before the base, like the engine drains restricted XP first', () => {
+    // Base 120 + Skilled Parens 30 = a 150 budget, of which 30 levels are used.
+    const a = spellLevelAllocation(30, 150, 30);
+    expect(a.base).toBe(120);
+    // The bonus covers all 30, so nothing is charged to the base...
+    expect(a.bonusUsed).toBe(30);
+    expect(a.baseUsed).toBe(0);
+    // ...and Available is the base remainder, so the line closes: 120 - 0.
+    expect(a.available).toBe(120);
+  });
+
+  it('leaves unspent bonus levels in the bonus entry, not in Available', () => {
+    // Only 10 of the 30 bonus levels are used; the other 20 stay visible as the
+    // bonus entry's remainder rather than inflating Available (XP-bar semantics).
+    const a = spellLevelAllocation(10, 150, 30);
+    expect(a.bonusUsed).toBe(10);
+    expect(a.bonusAmount).toBe(30);
+    expect(a.baseUsed).toBe(0);
+    expect(a.available).toBe(120);
+  });
+
+  it('charges the overflow above the bonus to the base', () => {
+    // 45 used: the bonus absorbs its 30, the remaining 15 come from the base.
+    const a = spellLevelAllocation(45, 150, 30);
+    expect(a.bonusUsed).toBe(30);
+    expect(a.baseUsed).toBe(15);
+    expect(a.available).toBe(105);
+  });
+
+  it('reports a negative Available when the whole budget is overspent', () => {
+    // 160 used against base 120 + bonus 30: 30 from the bonus, 130 charged to the
+    // base, so Available is -10 — the same figure as budget - used.
+    const a = spellLevelAllocation(160, 150, 30);
+    expect(a.bonusUsed).toBe(30);
+    expect(a.baseUsed).toBe(130);
+    expect(a.available).toBe(-10);
+  });
+
+  it('charges a negative V/F modifier to the base first (Weak Parens)', () => {
+    // Base 120 - Weak Parens 30 = a 90 budget, with 45 levels of spells chosen.
+    // The penalty takes the first 30 off the base, so the base line still closes.
+    const a = spellLevelAllocation(45, 90, -30);
+    expect(a.base).toBe(120);
+    expect(a.bonusAmount).toBe(-30);
+    expect(a.bonusUsed).toBe(0);
+    expect(a.baseUsed).toBe(75); // 45 spell levels + the 30-level penalty
+    expect(a.available).toBe(45); // 120 - 75, and also budget (90) - used (45)
+  });
+
+  it('charges everything to the base when no V/F touches the budget', () => {
+    const a = spellLevelAllocation(20, 120, 0);
+    expect(a.base).toBe(120);
+    expect(a.bonusUsed).toBe(0);
+    expect(a.baseUsed).toBe(20);
+    expect(a.available).toBe(100);
   });
 });
 

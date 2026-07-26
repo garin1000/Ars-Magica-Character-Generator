@@ -208,15 +208,21 @@ describe('spells', () => {
     await addParens.waitForExist({ timeout: 10000 });
     await addParens.click();
     await $(SPELLS_TAB).click();
-    // The V/F contribution is listed on its own beside the base (like a restricted
-    // XP pool), and it raises the budget: 120 + 30 - 20 used = 130 available.
+    // The +30 is listed as its own pool and spent BEFORE the base (like restricted
+    // XP): Pilum's 20 levels shift off the base onto the bonus, so the bonus entry
+    // reads 20 / 30 and the untouched 120 base is fully available again.
     await browser.waitUntil(
-      async () =>
-        clean(await $(BAR_BONUS).getText()).includes('+30') &&
-        clean(await $(BAR_AVAILABLE).getText()).includes('130'),
+      async () => {
+        const bonus = clean(await $(BAR_BONUS).getText());
+        return (
+          bonus.includes('20') &&
+          bonus.includes('30') &&
+          clean(await $(BAR_AVAILABLE).getText()).includes('120')
+        );
+      },
       {
         timeout: 5000,
-        timeoutMsg: 'Skilled Parens should report +30 and raise the budget to 150',
+        timeoutMsg: 'Skilled Parens should report 20 / 30 spent and free the 120 base',
       },
     );
   });
@@ -227,12 +233,13 @@ describe('spells', () => {
     const override = await $(BAR_BASE);
     await override.waitForExist({ timeout: 5000 });
     expect(await override.getAttribute('placeholder')).toBe('120');
-    // Override the base to 80; Skilled Parens's +30 still adds on top → 80 + 30 =
-    // 110, less the 20 already spent = 90 available.
+    // Override the base to 80; Skilled Parens's +30 still adds on top (a 110
+    // budget). Pilum's 20 levels are charged to the bonus, so the whole 80 base is
+    // available.
     await override.setValue('80');
-    await browser.waitUntil(async () => clean(await $(BAR_AVAILABLE).getText()).includes('90'), {
+    await browser.waitUntil(async () => clean(await $(BAR_AVAILABLE).getText()).includes('80'), {
       timeout: 5000,
-      timeoutMsg: 'overriding the base to 80 should make the budget 80 + 30 = 110',
+      timeoutMsg: 'overriding the base to 80 should leave the full 80 base available',
     });
     // Reset the override (empty field -> profile base) so later specs see 150
     // again. Dispatch the input event directly: clearValue() does not reliably
@@ -242,9 +249,9 @@ describe('spells', () => {
       el.value = '';
       el.dispatchEvent(new Event('input', { bubbles: true }));
     }, override);
-    await browser.waitUntil(async () => clean(await $(BAR_AVAILABLE).getText()).includes('130'), {
+    await browser.waitUntil(async () => clean(await $(BAR_AVAILABLE).getText()).includes('120'), {
       timeout: 5000,
-      timeoutMsg: 'clearing the override should restore the profile-based budget (150)',
+      timeoutMsg: 'clearing the override should restore the profile base (120 available)',
     });
   });
 

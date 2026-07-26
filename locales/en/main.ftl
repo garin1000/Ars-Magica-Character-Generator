@@ -157,8 +157,11 @@ spell-none = — Select a spell —
 # figure, the editable base (bracketed), then Available and any V/F bonus.
 spell-levels-pool = Spell levels
 spell-levels-available = Available: { $available }
-# The Virtue/Flaw contribution to the budget, listed beside the base the way the
-# XP bar lists its restricted pools. `$bonus` arrives already signed.
+# A POSITIVE Virtue/Flaw contribution: an extra pool of levels spent before the
+# base, so it reads used/amount exactly like a restricted XP pool.
+spell-levels-bonus-pool = Virtues/Flaws: { $used } / { $amount }
+# A NEGATIVE Virtue/Flaw modifier (Weak Parens): no pool to spend, so it is charged
+# to the base and reported as the signed modifier. `$bonus` arrives already signed.
 spell-levels-bonus = Virtues/Flaws: { $bonus }
 # Accessible name for the editable BASE spell-levels field; empty = use the type
 # profile's default (shown as the field's placeholder).

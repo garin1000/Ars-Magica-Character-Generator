@@ -119,22 +119,41 @@ describe('SpellBudgetBar layout (mirrors the XP pool bar)', () => {
   });
 });
 
-describe('SpellBudgetBar V/F bonus (shown like an extra XP pool)', () => {
-  it('lists a positive V/F bonus as its own signed entry beside the base', () => {
-    // Skilled Parens: base 120 + 30 = a 150 budget, of which 45 is used.
+describe('SpellBudgetBar V/F bonus (spent first, like a restricted XP pool)', () => {
+  it('lists a positive bonus as a used/amount entry and charges it before the base', () => {
+    // Skilled Parens: base 120 + 30 = a 150 budget, of which 45 is used. The bonus
+    // covers its 30 first, so only 15 lands on the base.
     setEffective(45, 150, { spell_levels_bonus: 30 } as Partial<EffectiveScores>);
-    const { text } = element(html(), 'spell-levels-bonus');
-    expect(text).toContain('+30');
-    // Available counts base AND bonus: 150 - 45.
-    expect(element(html(), 'spell-levels-available').text).toContain('105');
+    const body = html();
+    const { text } = element(body, 'spell-levels-bonus');
+    expect(text).toContain('30');
+    // The used figure is the BASE charge, and Available closes against it: 120 - 15.
+    expect(element(body, 'spell-levels-used').text).toContain('15');
+    expect(element(body, 'spell-levels-available').text).toContain('105');
   });
 
-  it('shows a negative V/F bonus with an ASCII hyphen-minus', () => {
-    // Weak Parens: base 120 - 30 = a 90 budget.
+  it('keeps unspent bonus levels in the bonus entry rather than in Available', () => {
+    // Only 10 of the 30 bonus levels are used, so nothing is charged to the base
+    // and Available is the untouched base — the same way unspent restricted XP is
+    // not counted in the XP bar's Available.
+    setEffective(10, 150, { spell_levels_bonus: 30 } as Partial<EffectiveScores>);
+    const body = html();
+    expect(element(body, 'spell-levels-used').text).toContain('0');
+    expect(element(body, 'spell-levels-available').text).toContain('120');
+    expect(element(body, 'spell-levels-bonus').text).toContain('10');
+  });
+
+  it('charges a negative modifier (Weak Parens) to the base, keeping the line closed', () => {
+    // Base 120 - 30 = a 90 budget with 45 levels chosen: the penalty takes the
+    // first 30 off the base, so used reads 75 and Available 45 (= 90 - 45).
     setEffective(45, 90, { spell_levels_bonus: -30 } as Partial<EffectiveScores>);
-    const { text } = element(html(), 'spell-levels-bonus');
+    const body = html();
+    const { text } = element(body, 'spell-levels-bonus');
+    // ASCII hyphen-minus, never U+2212.
     expect(text).toContain('-30');
     expect(text).not.toContain('−');
+    expect(element(body, 'spell-levels-used').text).toContain('75');
+    expect(element(body, 'spell-levels-available').text).toContain('45');
   });
 
   it('omits the bonus entry when no V/F touches the spell-levels budget', () => {
