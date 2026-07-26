@@ -260,6 +260,9 @@ button:disabled {
   min-height: 0;
   overflow-y: auto;
   scrollbar-gutter: stable;
+  /* Breathing room so row-end controls (e.g. the × on a device/talisman row)
+     never sit flush against the scrollbar. */
+  padding-inline: 0.5rem;
 }
 
 /* Shared issues panel, pinned below the tabs at the bottom of the viewport. It
