@@ -1781,14 +1781,74 @@ pub struct SupernaturalPower {
     pub level: u16,
 }
 
-/// A magus's bond with a familiar: the three bond-cord scores. Gold reduces botch
-/// dice, Silver aids Personality/mental resistance, Bronze adds to Soak and
-/// aging-resistance (the latter feed the derived-totals slice). Only the choice is
-/// stored; nothing is derived here. Source: Core Rules.md:10840-10844.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// A magus's familiar: the magical beast itself plus the three bond cords.
+///
+/// "A familiar is a beast that a magus befriends and then magically bonds with,
+/// instilling the beast with magical powers in the process" — it "always has its
+/// own will, and is not under the control of the magus"
+/// (Core Rules.md:10766-10892). It is therefore a *creature*, and the fields below
+/// follow the rulebook's own **Creature Format** order (`:17787-17827`) so a save
+/// reads like a statblock: Might, Characteristics, Size, Personality Traits, …,
+/// Powers.
+///
+/// **Scope (M5.5c).** Modelled: the animal, its Magic Might, the eight
+/// Characteristics, Size, Personality Traits, the three cords, and the powers
+/// invested in the bond. **Deliberately deferred**: the familiar's Abilities,
+/// Qualities, Virtues/Flaws and Combat/Soak/Fatigue/Wound statlines — the creature
+/// lines the Creature Format also carries but that this app does not yet enter for
+/// any creature.
+///
+/// Everything the familiar holds is its **own**, never the magus's: its
+/// Characteristics are not bought from the magus's Characteristic points
+/// (`:17793`), and its Might is not the magus's Might, so neither the point-buy nor
+/// the Might realm-agreement check can ever see them (both invariants are locked by
+/// regression tests in `validation/mod.rs`). Nothing is derived here; the read-outs
+/// live in [`crate::derived::familiar_readout`].
+///
+/// Every field beyond `name` is additive `serde(default, skip_serializing_if)`, so
+/// a pre-M5.5c familiar (name + cords) loads unchanged and writes identical bytes —
+/// hence no `SCHEMA_VERSION` bump.
+///
+/// Source: `Ars Magica - Definitive Edition (Core Rules).md:10766-10892` (Familiars),
+/// `:10840-10844` (the three cords), `:17787-17827` (Creature Format).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Familiar {
     /// Free-text familiar name.
     pub name: String,
+    /// The kind of beast, free text ("raven", "tortoiseshell cat"). Deliberately
+    /// **not** `species`: the rules reserve *Species* for the Imaginem term
+    /// (the sensory image a thing sheds), so the field is named for the animal.
+    /// Source: `:10774` ("finding an animal with inherent magic").
+    #[serde(default, skip_serializing_if = "is_empty_str")]
+    pub animal: String,
+    /// The familiar's own Magic Might Score + Realm; `None` when not entered.
+    /// "the beast is likely to have a Magic Might score, which may be assigned
+    /// based on the scores of comparable magical creatures" (`:10774`). This is the
+    /// familiar's Might, never the magus's — no Virtue grant stacks on it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub might: Option<MightScore>,
+    /// The familiar's eight Characteristics (`:17793`), signed and NOT bought from
+    /// the magus's Characteristic points. A score of 0 is simply omitted.
+    ///
+    /// A bound familiar that lacked human intelligence "gains it, with a score of
+    /// –3" (`:10854`), which is an ordinary Intelligence entry — so the fixed
+    /// eight-value [`Characteristic`] enum needs no `Cunning` variant. The
+    /// *unbound* creature's Cunning (Cun) score the Creature Format mentions
+    /// (`:17793`) is a display-only affordance and is deliberately deferred; see
+    /// RULES.md so it is not re-litigated.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub characteristics: BTreeMap<Characteristic, i8>,
+    /// The familiar's Size — signed, and commonly **negative** (a raven is -4).
+    /// It lowers the bonding level: "If the familiar has negative Size, this
+    /// reduces the level for the enchantment" (`:10824`). Source: `:17795`
+    /// (creature Size), `:17829-17856` (the Size examples table).
+    #[serde(default, skip_serializing_if = "is_zero_i8")]
+    pub size: i8,
+    /// The familiar's Personality Traits (`:17807`). The bond adds Loyal (partner)
+    /// +3 (`:10852`), which is surfaced as a note and entered by hand, never
+    /// auto-applied. Kept sorted via [`Familiar::normalize`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub personality_traits: Vec<PersonalityTrait>,
     /// Gold cord score (reduces botch dice).
     #[serde(default, skip_serializing_if = "is_zero_u8")]
     pub cord_gold: u8,
@@ -1798,6 +1858,22 @@ pub struct Familiar {
     /// Bronze cord score (Soak & aging-resistance).
     #[serde(default, skip_serializing_if = "is_zero_u8")]
     pub cord_bronze: u8,
+    /// The powers invested in the familiar bond. Charged against **no** budget:
+    /// "there is no limit to the number of powers which may be invested in a
+    /// familiar" (`:10866`) — unlike a being's own [`Entity::powers`], which the
+    /// power-levels budget bounds. Kept sorted via [`Familiar::normalize`].
+    /// Source: `:10862-10884` (Empowering the Bond).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub powers: Vec<SupernaturalPower>,
+}
+
+impl Familiar {
+    /// Sorts both nested lists (Personality Traits by name, invested powers by
+    /// name) for canonical serialization. Called from [`Entity::normalize`].
+    pub fn normalize(&mut self) {
+        self.personality_traits.sort();
+        self.powers.sort();
+    }
 }
 
 /// A talisman attunement: a free-text descriptor plus the bonus it confers. The
@@ -1969,6 +2045,11 @@ fn is_zero_i32(n: &i32) -> bool {
 
 /// `skip_serializing_if` predicate: omits a `u8` field when it is zero.
 fn is_zero_u8(n: &u8) -> bool {
+    *n == 0
+}
+
+/// `skip_serializing_if` predicate: omits an `i8` field when it is zero.
+fn is_zero_i8(n: &i8) -> bool {
     *n == 0
 }
 
@@ -2238,7 +2319,11 @@ pub struct Entity {
 /// input suggests the number the old build derived. A pre-5.5a *external* ritual
 /// that was added but never filled in stored a seeded 0 and now reads as a
 /// deliberate 0. Neither is silently repaired: guessing would re-invent the live
-/// derivation 5.5a exists to delete.
+/// derivation 5.5a exists to delete. The [`Familiar`] statblock fields (M5.5c —
+/// `animal`, `might`, `characteristics`, `size`, `personality_traits`, `powers`)
+/// are the same kind of addition: a pre-5.5c familiar carried only a name and the
+/// three cords, omits every new key, and writes byte-identical JSON, so the shape
+/// grew without a bump.
 ///
 /// Bumped 13 → 14 when the flat `talisman_attunements` list was replaced by
 /// [`Entity::talisman`], the magus's talisman as an *item* (identity +
@@ -2302,8 +2387,9 @@ impl Entity {
     }
 
     /// Sort selections, ability scores, art scores, spells, personality traits,
-    /// reputations, devices, the talisman's nested lists, twilight scars, the
-    /// aging log (by year), equipment and powers for canonical serialization.
+    /// reputations, devices, the familiar's and talisman's nested lists, twilight
+    /// scars, the aging log (by year), equipment and powers for canonical
+    /// serialization.
     /// (`characteristics` and `aging_points` are `BTreeMap`s, already id-ordered.)
     pub fn normalize(&mut self) {
         self.selections.sort();
@@ -2319,6 +2405,9 @@ impl Entity {
         self.personality_traits.sort();
         self.reputations.sort();
         self.devices.sort();
+        if let Some(familiar) = &mut self.familiar {
+            familiar.normalize();
+        }
         if let Some(talisman) = &mut self.talisman {
             talisman.normalize();
         }
@@ -3502,6 +3591,7 @@ mod tests {
             cord_gold: 2,
             cord_silver: 1,
             cord_bronze: 3,
+            ..Default::default()
         });
         entity.talisman = Some(Talisman {
             description: "An ash staff shod with silver".into(),
@@ -3551,6 +3641,135 @@ mod tests {
         assert!(json.contains("yew wand"), "{json}");
         assert!(json.contains(r#""level":15"#), "{json}");
         assert_eq!(serde_json::from_str::<Talisman>(&json).unwrap(), filled);
+    }
+
+    /// The familiar is a full statblock, not a name plus three cords: the animal,
+    /// its Magic Might, the eight Characteristics, a (commonly negative) Size,
+    /// Personality Traits and the powers invested in the bond all round-trip.
+    #[test]
+    fn entity_familiar_statblock_roundtrip() {
+        let filled = Familiar {
+            name: "Corax".into(),
+            animal: "raven".into(),
+            might: Some(MightScore {
+                realm: Realm::Magic,
+                score: 10,
+            }),
+            characteristics: BTreeMap::from([
+                (Characteristic::Int, -3),
+                (Characteristic::Qik, 4),
+                (Characteristic::Str, -6),
+            ]),
+            size: -4,
+            personality_traits: vec![PersonalityTrait {
+                name: "Loyal (Marcus)".into(),
+                value: 3,
+            }],
+            cord_gold: 2,
+            cord_silver: 1,
+            cord_bronze: 3,
+            powers: vec![SupernaturalPower {
+                name: "Mental communication".into(),
+                level: 15,
+            }],
+        };
+        let json = serde_json::to_string(&filled).unwrap();
+        assert!(json.contains(r#""animal":"raven""#), "{json}");
+        // Size is signed and written with the ASCII hyphen-minus.
+        assert!(json.contains(r#""size":-4"#), "{json}");
+        assert!(json.contains(r#""int":-3"#), "{json}");
+        assert!(json.contains(r#""realm":"magic""#), "{json}");
+        assert_eq!(serde_json::from_str::<Familiar>(&json).unwrap(), filled);
+    }
+
+    /// A familiar that carries only a name and cords — everything the pre-5.5c
+    /// model could store — writes **none** of the statblock keys, so an existing
+    /// save's bytes are unchanged by the expanded shape.
+    #[test]
+    fn cords_only_familiar_omits_every_statblock_key() {
+        let cords_only = Familiar {
+            name: "Corax".into(),
+            cord_gold: 2,
+            cord_silver: 1,
+            cord_bronze: 3,
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&cords_only).unwrap();
+        assert_eq!(
+            json,
+            r#"{"name":"Corax","cord_gold":2,"cord_silver":1,"cord_bronze":3}"#
+        );
+        assert_eq!(
+            serde_json::from_str::<Familiar>(&json).unwrap(),
+            cords_only,
+            "the omitted statblock keys load back as defaults"
+        );
+        assert_eq!(Familiar::default(), Familiar::default());
+    }
+
+    /// A pre-5.5c save's familiar (name + cords only) still loads: every
+    /// statblock field is additive `serde(default)`, so no migration is needed
+    /// and `SCHEMA_VERSION` is untouched.
+    #[test]
+    fn save_with_cords_only_familiar_loads_statblock_as_defaults() {
+        let save = r#"{
+          "schema_version": 14,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "selections": [{ "ref": "virtue.the_gift" }],
+          "familiar": { "name": "Corax", "cord_bronze": 3 }
+        }"#;
+        let entity: Entity = serde_json::from_str(save).unwrap();
+        let familiar = entity.familiar.expect("familiar loads");
+        assert_eq!(familiar.name, "Corax");
+        assert_eq!(familiar.cord_bronze, 3);
+        assert_eq!(familiar.animal, "");
+        assert_eq!(familiar.might, None);
+        assert_eq!(familiar.size, 0);
+        assert!(familiar.characteristics.is_empty());
+        assert!(familiar.personality_traits.is_empty());
+        assert!(familiar.powers.is_empty());
+    }
+
+    /// `Entity::normalize()` reaches into the familiar and sorts its two nested
+    /// lists — Personality Traits by name, invested powers by name — so a
+    /// statblock serializes canonically.
+    #[test]
+    fn entity_normalize_sorts_familiar_traits_and_powers() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.familiar = Some(Familiar {
+            name: "Corax".into(),
+            personality_traits: vec![
+                PersonalityTrait {
+                    name: "Wary".into(),
+                    value: 2,
+                },
+                PersonalityTrait {
+                    name: "Loyal (Marcus)".into(),
+                    value: 3,
+                },
+            ],
+            powers: vec![
+                SupernaturalPower {
+                    name: "Speech".into(),
+                    level: 20,
+                },
+                SupernaturalPower {
+                    name: "Mental communication".into(),
+                    level: 15,
+                },
+            ],
+            ..Default::default()
+        });
+        entity.normalize();
+        let familiar = entity.familiar.expect("familiar present");
+        assert_eq!(familiar.personality_traits[0].name, "Loyal (Marcus)");
+        assert_eq!(familiar.powers[0].name, "Mental communication");
     }
 
     /// A self-made Longevity Ritual stores the *player-entered* bonus and focus

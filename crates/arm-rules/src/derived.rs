@@ -2807,9 +2807,8 @@ mod tests {
         e.selections = vec![Selection::new(Id::new("virtue.tough"))];
         e.familiar = Some(Familiar {
             name: "Corax".to_string(),
-            cord_gold: 0,
-            cord_silver: 0,
             cord_bronze: 2,
+            ..Default::default()
         });
         e.equipment = vec![EquipmentSlot {
             item: Id::new("armor.leather_scale"),

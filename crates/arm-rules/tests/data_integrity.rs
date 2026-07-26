@@ -1457,6 +1457,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
         cord_gold: 1,
         cord_silver: 1,
         cord_bronze: 2,
+        ..Default::default()
     });
     e.talisman = Some(Talisman {
         description: "An ash staff shod with silver".to_string(),
