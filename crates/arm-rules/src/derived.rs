@@ -1212,29 +1212,51 @@ pub fn wound_ranges(entity: &Entity, ruleset: &Ruleset) -> Vec<WoundRange> {
 
 // --- Longevity -------------------------------------------------------------
 
+/// What a Longevity Ritual made *today* would be worth — a suggestion, never the
+/// stored value.
+///
+/// "+1 bonus for every five points or fraction of Creo Corpus Lab Total"
+/// (Core:10662). Shown beside the entered-bonus input so a player who is creating
+/// the ritual now (or reinventing it after an aging crisis, Core:10668, :10670) can
+/// read off the number the rules give them. It moves whenever Creo, Corpus,
+/// Intelligence, Magic Theory or the aura move — which is exactly why the *stored*
+/// bonus must not be derived from it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LongevityHint {
+    /// Today's Creo Corpus Lab Total, after any halvings.
+    pub lab_total: i32,
+    /// The bonus that Lab Total would buy: `ceil(lab_total / 5)`, floored at 0.
+    pub suggested_bonus: i32,
+    /// Whether a Deficient Art or Difficult Longevity Ritual halved `lab_total`.
+    pub halved: bool,
+}
+
 /// The Longevity Ritual aging bonus read-out.
 ///
-/// Self-made: +1 per 5 points (rounded up) of the Creo+Corpus Lab Total, gated on
-/// an aura being present. External: the entered bonus, passed through. The Bronze
-/// cord adds to aging-resistance and is noted separately (Core:10662-10672,
-/// :10840-10844).
+/// `bonus` is what the player entered, for **both** sources — the ritual is a past
+/// event whose bonus was fixed by the Lab Total of the season it was made
+/// (Core:10662, :10670), so nothing here is derived. `entered` distinguishes an
+/// unfilled field from a deliberate 0. `hint` carries the live suggestion for a
+/// self-made ritual only. The Bronze cord adds "to rolls to resist aging"
+/// (Core:10844) and is noted separately, since it is not part of the ritual.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LongevityBonus {
     /// Whether the ritual is self-made or external.
     pub source: LongevitySource,
-    /// The aging bonus (magnitude; applied as a negative to aging rolls).
+    /// The stored aging bonus (magnitude; applied as a negative to aging rolls).
     pub bonus: i32,
-    /// The Creo+Corpus Lab Total the self-made bonus derives from; `None` for external.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub lab_total: Option<i32>,
+    /// Whether a bonus was actually entered; `false` ⇒ `bonus` is a placeholder 0.
+    pub entered: bool,
     /// The Bronze-cord addition to aging-resistance (noted, not part of `bonus`).
     pub bronze_cord: i32,
-    /// Whether an aura is present (self-made rituals need a lab aura).
-    pub aura_present: bool,
+    /// What a ritual made today would be worth; `None` for an external ritual.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hint: Option<LongevityHint>,
 }
 
-/// The Longevity Ritual bonus, or `None` when the magus has no ritual. Source:
-/// Core:10662-10672.
+/// The Longevity Ritual read-out, or `None` when the magus has no ritual. Source:
+/// Core:10662 (formula), :10668 + :10670 (the bonus is fixed at creation and only a
+/// reinvention takes advantage of raised Arts), :10844 (Bronze cord).
 pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBonus> {
     let ritual = entity.longevity_ritual.as_ref()?;
     let bronze = entity
@@ -1242,44 +1264,71 @@ pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBo
         .as_ref()
         .map(|f| i32::from(f.cord_bronze))
         .unwrap_or(0);
-    let aura_present = entity.aura != 0;
-    match ritual.source {
+    // A hint only makes sense for a ritual this magus makes: an external one came
+    // from another magus's Lab Total, which this sheet does not know (Core:10672).
+    let hint = match ritual.source {
         LongevitySource::SelfMade => {
-            let lab_total = creo_corpus_lab_total(entity, ruleset);
-            // +1 per 5 points or fraction → ceil(lab_total / 5) in unsigned space
-            // (lab_total > 0 in this branch; i32::div_ceil is still unstable).
-            let bonus = if aura_present && lab_total > 0 {
-                i32::try_from((lab_total as u32).div_ceil(5)).unwrap_or(i32::MAX)
-            } else {
-                0
-            };
-            Some(LongevityBonus {
-                source: LongevitySource::SelfMade,
-                bonus,
-                lab_total: Some(lab_total),
-                bronze_cord: bronze,
-                aura_present,
+            let (lab_total, halved) = creo_corpus_lab_total(entity, ruleset);
+            Some(LongevityHint {
+                lab_total,
+                suggested_bonus: suggested_longevity_bonus(lab_total),
+                halved,
             })
         }
-        LongevitySource::External => Some(LongevityBonus {
-            source: LongevitySource::External,
-            bonus: i32::from(ritual.bonus.unwrap_or(0)),
-            lab_total: None,
-            bronze_cord: bronze,
-            aura_present,
-        }),
-    }
+        LongevitySource::External => None,
+    };
+    Some(LongevityBonus {
+        source: ritual.source,
+        bonus: i32::from(ritual.bonus.unwrap_or(0)),
+        entered: ritual.bonus.is_some(),
+        bronze_cord: bronze,
+        hint,
+    })
 }
 
-/// The Creo+Corpus Lab Total: Int + Magic Theory + Creo + Corpus + Aura + LabTotalMod.
-fn creo_corpus_lab_total(entity: &Entity, ruleset: &Ruleset) -> i32 {
+/// The Creo Corpus Lab Total and whether it was halved.
+///
+/// "Your basic Lab Total is: Technique + Form + Intelligence + Magic Theory + Aura
+/// Modifier" (Core:10276-10278) plus any flat Lab-Total modifier. The Aura Modifier
+/// is a plain addend with no floor and no gate: a zero aura is simply "the absence
+/// of aura, so powers used there function without hindrance" (Core:17658).
+///
+/// Two halvings can apply. A Deficient Creo or Corpus halves "almost all totals
+/// (including … Lab Totals) to which a particular Form is added" (Core:5909-5915),
+/// and Difficult Longevity Ritual makes anyone "creating a Longevity Ritual for you
+/// … halve their Lab Total" (Core:5962-5964). **That the two compound is an
+/// inference**: each Flaw halves the Lab Total and neither carves out the other, but
+/// no passage states the interaction. The order is immaterial — [`halve`] truncates
+/// toward zero — so it is fixed here as base → Deficient → Difficult.
+fn creo_corpus_lab_total(entity: &Entity, ruleset: &Ruleset) -> (i32, bool) {
     let mods = in_play_mods(entity, ruleset);
-    characteristic(entity, ruleset, Characteristic::Int)
+    let base = characteristic(entity, ruleset, Characteristic::Int)
         + ability(entity, ruleset, ID_MAGIC_THEORY)
         + art(entity, ruleset, ID_CREO)
         + art(entity, ruleset, ID_CORPUS)
         + entity.aura
-        + mods.lab_mod
+        + mods.lab_mod;
+    let deficient = mods.deficient(&Id::new(ID_CREO), &Id::new(ID_CORPUS));
+    let difficult = mods.halvings.contains(&HalvableTotal::LabLongevity);
+    let mut total = base;
+    if deficient {
+        total = halve(total);
+    }
+    if difficult {
+        total = halve(total);
+    }
+    (total, deficient || difficult)
+}
+
+/// The bonus a Creo Corpus Lab Total buys: "+1 bonus for every five points or
+/// fraction" (Core:10662), i.e. `ceil(lab_total / 5)`. A non-positive Lab Total buys
+/// nothing — there is no fraction of five points below one point.
+fn suggested_longevity_bonus(lab_total: i32) -> i32 {
+    if lab_total <= 0 {
+        return 0;
+    }
+    // `i32::div_ceil` is still unstable, so round up in unsigned space.
+    i32::try_from((lab_total as u32).div_ceil(5)).unwrap_or(i32::MAX)
 }
 
 // --- Masterpiece (lesser enchanted item cap) -------------------------------
@@ -1543,6 +1592,13 @@ mod tests {
             "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"],
             "parameters": [{ "key": "art", "type": "ref", "domain": "technique" }],
             "effects": [{ "type": "deficient_art", "param": "art" }] },
+          { "id": "flaw.deficient_form", "kind": "flaw", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
+            "effects": [{ "type": "deficient_art", "param": "form" }] },
+          { "id": "flaw.difficult_longevity_ritual", "kind": "flaw", "classification": "in_play_effect",
+            "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "magic_total_halving", "total": "lab_longevity" }] },
           { "id": "virtue.tough", "kind": "virtue", "classification": "in_play_effect",
             "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
             "effects": [{ "type": "soak_mod", "amount": 3 }] },
@@ -1719,13 +1775,10 @@ mod tests {
             .expect("casting cell present")
     }
 
-    /// Longevity: a Creo+Corpus Lab Total of 35 gives a +7 aging bonus
-    /// (Core:2573 worked example, :10662-10672).
-    #[test]
-    fn longevity_lab_total_35_gives_plus_7() {
-        let rs = ruleset();
+    /// A magus whose Creo Corpus Lab Total is 35: Int 3 + Magic Theory 4 + Creo 10
+    /// + Corpus 13 + Aura 5. The shared setup for every longevity-hint test.
+    fn longevity_magus() -> Entity {
         let mut e = magus();
-        // Int 3 + Magic Theory 4 + Creo 10 + Corpus 13 + Aura 5 = 35.
         set_char(&mut e, Characteristic::Int, 3);
         e.ability_scores = vec![AbilityScore {
             ability: Id::new("ability.magic_theory"),
@@ -1744,13 +1797,185 @@ mod tests {
             },
         ];
         e.aura = 5;
-        e.longevity_ritual = Some(LongevityRitual {
-            source: LongevitySource::SelfMade,
-            bonus: None,
-        });
+        e
+    }
+
+    fn ritual(source: LongevitySource, bonus: Option<i8>) -> Option<LongevityRitual> {
+        Some(LongevityRitual {
+            source,
+            bonus,
+            focus: String::new(),
+        })
+    }
+
+    /// A self-made ritual's bonus is the *stored* one, passed straight through: the
+    /// number was frozen by the Lab Total of the season the ritual was made
+    /// (Core:10670), so the engine must not overwrite it with today's derivation.
+    #[test]
+    fn self_made_longevity_passes_through_entered_bonus() {
+        let rs = ruleset();
+        let mut e = longevity_magus();
+        // The Lab Total is 35 (hint would suggest 7) — the stored 3 must win.
+        e.longevity_ritual = ritual(LongevitySource::SelfMade, Some(3));
         let lb = longevity_bonus(&e, &rs).expect("has ritual");
-        assert_eq!(lb.lab_total, Some(35));
-        assert_eq!(lb.bonus, 7);
+        assert_eq!(lb.source, LongevitySource::SelfMade);
+        assert_eq!(lb.bonus, 3, "the entered bonus, not the derived 7");
+        assert!(lb.entered);
+        assert_eq!(lb.hint.expect("self-made gets a hint").suggested_bonus, 7);
+    }
+
+    /// An External ritual passes the entered bonus through and gets **no** hint —
+    /// its bonus came from another magus's Lab Total (Core:10672), which this
+    /// character sheet does not know.
+    #[test]
+    fn external_longevity_passes_through_entered_bonus() {
+        let rs = ruleset();
+        let mut e = longevity_magus();
+        e.longevity_ritual = ritual(LongevitySource::External, Some(6));
+        let lb = longevity_bonus(&e, &rs).expect("has ritual");
+        assert_eq!(lb.source, LongevitySource::External);
+        assert_eq!(lb.bonus, 6);
+        assert!(lb.entered);
+        assert_eq!(lb.hint, None, "no suggestion for someone else's ritual");
+    }
+
+    /// No bonus entered yet: `bonus` reads 0 but `entered` is false, so the UI can
+    /// distinguish "not filled in" from a deliberate 0.
+    #[test]
+    fn unentered_longevity_bonus_is_zero_and_not_entered() {
+        let rs = ruleset();
+        let mut e = longevity_magus();
+        e.longevity_ritual = ritual(LongevitySource::SelfMade, None);
+        let lb = longevity_bonus(&e, &rs).expect("has ritual");
+        assert_eq!(lb.bonus, 0);
+        assert!(!lb.entered, "0 is a placeholder here, not a claim");
+    }
+
+    /// The hint: "+1 bonus for every five points or fraction of Creo Corpus Lab
+    /// Total" (Core:10662) — 35 → ceil(35/5) = 7, matching the book's worked
+    /// example (Core:2488, :2573).
+    #[test]
+    fn self_made_longevity_hint_is_lab_total_over_five_rounded_up() {
+        let rs = ruleset();
+        let mut e = longevity_magus();
+        e.longevity_ritual = ritual(LongevitySource::SelfMade, None);
+        let hint = longevity_bonus(&e, &rs)
+            .expect("has ritual")
+            .hint
+            .expect("self-made gets a hint");
+        assert_eq!(hint.lab_total, 35);
+        assert_eq!(hint.suggested_bonus, 7);
+        assert!(!hint.halved);
+    }
+
+    /// A zero aura does not suppress the hint. The Lab Total takes the Aura
+    /// Modifier as a plain addend (Core:10276-10278), and no aura simply means no
+    /// hindrance (Core:17658) — 30 → ceil(30/5) = 6.
+    #[test]
+    fn longevity_hint_survives_a_zero_aura() {
+        let rs = ruleset();
+        let mut e = longevity_magus();
+        e.aura = 0;
+        e.longevity_ritual = ritual(LongevitySource::SelfMade, None);
+        let hint = longevity_bonus(&e, &rs)
+            .expect("has ritual")
+            .hint
+            .expect("a zero aura still gets a hint");
+        assert_eq!(hint.lab_total, 30);
+        assert_eq!(hint.suggested_bonus, 6);
+    }
+
+    /// A negative aura is a plain addend too, lowering the Lab Total: 35 − 5 − 3 =
+    /// 27 → ceil(27/5) = 6 (Core:10276-10278).
+    #[test]
+    fn negative_aura_lowers_the_longevity_hint() {
+        let rs = ruleset();
+        let mut e = longevity_magus();
+        e.aura = -3;
+        e.longevity_ritual = ritual(LongevitySource::SelfMade, None);
+        let hint = longevity_bonus(&e, &rs)
+            .expect("has ritual")
+            .hint
+            .expect("has a hint");
+        assert_eq!(hint.lab_total, 27);
+        assert_eq!(hint.suggested_bonus, 6);
+    }
+
+    /// Deficient Creo halves the Lab Total the hint reads (Core:5909-5915):
+    /// 35 → 17 → ceil(17/5) = 4, flagged `halved`.
+    #[test]
+    fn deficient_creo_halves_the_longevity_hint() {
+        let rs = ruleset();
+        let mut e = longevity_magus();
+        e.selections = vec![Selection::with_params(
+            Id::new("flaw.deficient_technique"),
+            BTreeMap::from([("art".to_string(), Id::new("art.creo"))]),
+        )];
+        e.longevity_ritual = ritual(LongevitySource::SelfMade, None);
+        let hint = longevity_bonus(&e, &rs)
+            .expect("has ritual")
+            .hint
+            .expect("has a hint");
+        assert_eq!(hint.lab_total, 17);
+        assert_eq!(hint.suggested_bonus, 4);
+        assert!(hint.halved);
+    }
+
+    /// Difficult Longevity Ritual: "Anyone (including yourself) creating a Longevity
+    /// Ritual for you must halve their Lab Total" (Core:5962-5964) — 35 → 17 → 4.
+    #[test]
+    fn difficult_longevity_ritual_halves_the_hint() {
+        let rs = ruleset();
+        let mut e = longevity_magus();
+        e.selections = vec![Selection::new(Id::new("flaw.difficult_longevity_ritual"))];
+        e.longevity_ritual = ritual(LongevitySource::SelfMade, None);
+        let hint = longevity_bonus(&e, &rs)
+            .expect("has ritual")
+            .hint
+            .expect("has a hint");
+        assert_eq!(hint.lab_total, 17);
+        assert_eq!(hint.suggested_bonus, 4);
+        assert!(hint.halved);
+    }
+
+    /// The two halvings compound (an inference — neither Flaw carves out the other):
+    /// Deficient Corpus + Difficult Longevity Ritual → 35 → 17 → 8 → ceil(8/5) = 2.
+    #[test]
+    fn both_longevity_halvings_stack() {
+        let rs = ruleset();
+        let mut e = longevity_magus();
+        e.selections = vec![
+            Selection::with_params(
+                Id::new("flaw.deficient_form"),
+                BTreeMap::from([("form".to_string(), Id::new("art.corpus"))]),
+            ),
+            Selection::new(Id::new("flaw.difficult_longevity_ritual")),
+        ];
+        e.longevity_ritual = ritual(LongevitySource::SelfMade, None);
+        let hint = longevity_bonus(&e, &rs)
+            .expect("has ritual")
+            .hint
+            .expect("has a hint");
+        assert_eq!(hint.lab_total, 8, "trunc(trunc(35/2)/2)");
+        assert_eq!(hint.suggested_bonus, 2);
+        assert!(hint.halved);
+    }
+
+    /// A non-positive Lab Total suggests no bonus at all — "every five points" has
+    /// no meaning below one point (Core:10662).
+    #[test]
+    fn non_positive_longevity_lab_total_suggests_no_bonus() {
+        let rs = ruleset();
+        let mut e = magus();
+        // No Int, no Magic Theory, no Arts; a −6 aura drives the total negative.
+        e.aura = -6;
+        e.longevity_ritual = ritual(LongevitySource::SelfMade, None);
+        let hint = longevity_bonus(&e, &rs)
+            .expect("has ritual")
+            .hint
+            .expect("has a hint");
+        assert_eq!(hint.lab_total, -6);
+        assert_eq!(hint.suggested_bonus, 0);
     }
 
     /// Masterpiece: the best (Technique, Form) Lab Total bounds the lesser
@@ -2759,23 +2984,6 @@ mod tests {
                 .penalty,
             -1
         );
-    }
-
-    /// An External longevity ritual passes the entered bonus straight through, with
-    /// no self-made Lab Total (Core:10662-10672).
-    #[test]
-    fn external_longevity_passes_through_entered_bonus() {
-        let rs = ruleset();
-        let mut e = magus();
-        e.aura = 5;
-        e.longevity_ritual = Some(LongevityRitual {
-            source: LongevitySource::External,
-            bonus: Some(6),
-        });
-        let lb = longevity_bonus(&e, &rs).expect("has ritual");
-        assert_eq!(lb.source, LongevitySource::External);
-        assert_eq!(lb.bonus, 6);
-        assert_eq!(lb.lab_total, None);
     }
 
     /// Purity: calling `derived_totals` twice yields identical results and does not
