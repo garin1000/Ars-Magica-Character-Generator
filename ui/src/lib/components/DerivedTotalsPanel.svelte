@@ -225,8 +225,8 @@
           <h3 class="detail-label">{store.t('derived-section-longevity')}</h3>
           <p data-testid="derived-longevity">
             {store.t(`derived-longevity-${d.longevity.source}`)}: -{d.longevity.bonus}
-            {#if d.longevity.lab_total != null}
-              ({store.t('derived-lab-total')} {d.longevity.lab_total})
+            {#if d.longevity.hint}
+              ({store.t('derived-lab-total')} {d.longevity.hint.lab_total})
             {/if}
             {#if d.longevity.bronze_cord > 0}
               · {store.t('derived-addend-bronze_cord')} {formatSigned(d.longevity.bronze_cord)}

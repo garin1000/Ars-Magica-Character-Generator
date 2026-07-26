@@ -518,16 +518,47 @@ describe('magic possessions', () => {
     expect(store.entity.powers).toEqual([{ name: 'Curse', level: 20 }]);
   });
 
-  it('adds a self-made longevity ritual (no bonus) and switches to external', () => {
+  it('adds a longevity ritual with nothing entered yet', () => {
     store.addLongevityRitual('self_made');
-    expect(store.entity.longevity_ritual).toEqual({ source: 'self_made', bonus: null });
-    store.setLongevitySource('external');
-    store.setLongevityBonus(4);
-    expect(store.entity.longevity_ritual).toEqual({ source: 'external', bonus: 4 });
-    store.setLongevitySource('self_made');
-    expect(store.entity.longevity_ritual).toEqual({ source: 'self_made', bonus: null });
+    expect(store.entity.longevity_ritual).toEqual({ source: 'self_made', bonus: null, focus: '' });
     store.removeLongevityRitual();
     expect(store.entity.longevity_ritual).toBeNull();
+  });
+
+  it('enters a bonus and a focus for a self-made ritual', () => {
+    store.addLongevityRitual('self_made');
+    store.setLongevityBonus(7);
+    store.setLongevityFocus('A draught of quicksilver');
+    expect(store.entity.longevity_ritual).toEqual({
+      source: 'self_made',
+      bonus: 7,
+      focus: 'A draught of quicksilver',
+    });
+  });
+
+  it('keeps the entered bonus when switching source', () => {
+    store.addLongevityRitual('self_made');
+    store.setLongevityBonus(4);
+    store.setLongevityFocus('An amulet of hawthorn');
+    store.setLongevitySource('external');
+    expect(store.entity.longevity_ritual).toEqual({
+      source: 'external',
+      bonus: 4,
+      focus: 'An amulet of hawthorn',
+    });
+    store.setLongevitySource('self_made');
+    expect(store.entity.longevity_ritual).toEqual({
+      source: 'self_made',
+      bonus: 4,
+      focus: 'An amulet of hawthorn',
+    });
+  });
+
+  it('ignores longevity edits when there is no ritual', () => {
+    store.setLongevitySource('external');
+    store.setLongevityBonus(3);
+    store.setLongevityFocus('nothing');
+    expect(store.entity.longevity_ritual ?? null).toBeNull();
   });
 });
 
