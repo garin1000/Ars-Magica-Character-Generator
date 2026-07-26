@@ -622,6 +622,45 @@ fn effective_scores_surface_confidence_and_supernatural_slots() {
     );
 }
 
+/// The XP bar must be able to show an OVERSPENT pool as a negative "Available".
+/// `xp_general_used` cannot express that: it is a max-flow value capped by the pool
+/// itself, so `pool - general_used` never goes below zero. The overspend lives in
+/// `total_demand - max_flow` (the same figure `not_enough_xp` reports as its
+/// shortfall), so `max_flow` has to reach the frontend.
+#[test]
+fn effective_scores_surface_max_flow_so_the_ui_can_show_an_overspent_pool() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut entity = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("companion"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+
+    // A 10-xp pool buying an Ability score of 2 (15 xp on the advancement table):
+    // a 5-xp overspend.
+    entity.xp_pool = 10;
+    entity.ability_scores = vec![arm_rules::AbilityScore {
+        ability: Id::new("ability.awareness"),
+        score: 2,
+        specialty: None,
+        parameter: None,
+    }];
+
+    let effective = effective_scores_loaded(&entity, &ruleset);
+    assert_eq!(effective.xp_total_demand, 15, "score 2 costs 15 xp");
+    // The general pool is drained but cannot cover the demand...
+    assert_eq!(effective.xp_general_used, 10);
+    // ...so the fundable total stops at the pool, and the 5-xp shortfall is exactly
+    // total_demand - max_flow — the negative the bar renders as "Available: -5".
+    assert_eq!(effective.xp_max_flow, 10);
+    assert_eq!(effective.xp_total_demand - effective.xp_max_flow, 5);
+
+    // A pool that covers the spend reports no shortfall.
+    entity.xp_pool = 50;
+    let legal = effective_scores_loaded(&entity, &ruleset);
+    assert_eq!(legal.xp_total_demand, legal.xp_max_flow);
+}
+
 /// The V/F spell-levels contribution is surfaced as its OWN payload figure, not
 /// only folded into the effective budget, so the spell-levels bar can show the
 /// editable base beside a labelled bonus — the way the XP bar lists extra pools

@@ -59,17 +59,35 @@ function resetEntity(pool: number): void {
   };
 }
 
+/**
+ * Installs effective scores for a TOTAL demand, deriving the rest exactly as the
+ * engine's `xp_allocation` max-flow does — so a test can never assert against a
+ * state the engine cannot produce.
+ *
+ * Critically, `xp_general_used` is a flow bounded by the pool: however far the
+ * demand overshoots, it stops AT the pool and the unfundable remainder shows up as
+ * `total_demand - max_flow`. Deriving it here (rather than letting each test pass a
+ * free-hand `generalUsed`) is what keeps the overspend tests honest — an earlier
+ * version of this helper accepted `generalUsed > pool`, which made the overspend
+ * assertions pass against input the app can never reach.
+ */
 function setEffective(
-  generalUsed: number,
+  totalDemand: number,
   restricted: EffectiveScores['restricted_xp_pools'],
 ): void {
+  const pool = store.entity.xp_pool ?? 0;
+  const restrictedUsed = restricted.reduce((sum, p) => sum + p.used, 0);
+  // Restricted pools are drained first (the engine's two-phase flow), so the
+  // general pool funds the remainder — up to its size, never beyond.
+  const generalUsed = Math.min(Math.max(totalDemand - restrictedUsed, 0), pool);
   store.effective = {
     ability_bonuses: [],
     art_bonuses: [],
     characteristic_caps: {},
     characteristic_floors: {},
-    xp_total_demand: generalUsed + restricted.reduce((sum, p) => sum + p.used, 0),
+    xp_total_demand: totalDemand,
     xp_general_used: generalUsed,
+    xp_max_flow: restrictedUsed + generalUsed,
     restricted_xp_pools: restricted,
   } as unknown as EffectiveScores;
 }
