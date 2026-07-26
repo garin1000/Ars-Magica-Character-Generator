@@ -303,7 +303,16 @@ longevity-source-external = External
 longevity-bonus-label = Aging bonus
 longevity-add = Add Longevity Ritual
 longevity-remove = Remove Longevity Ritual
-longevity-self-made-note = Bonus is computed from your Creo + Corpus Lab Total.
+# The stored bonus is empty: the ritual was made in a past season, so the value is
+# entered, never derived. Distinguishes an unfilled field from a deliberate 0.
+longevity-not-entered = Not entered
+# The live suggestion beside the input: what a ritual made now would be worth.
+# { $bonus } is already signed; { $total } is today's Creo Corpus Lab Total.
+longevity-hint = A ritual made now: { $bonus } (Creo Corpus Lab Total { $total })
+longevity-hint-halved = halved
+longevity-focus-label = Focus
+longevity-focus-placeholder = How the ritual culminates
+longevity-sterility-note = The ritual's anchor stops the magus expending his life force in normal human fashion, so he becomes permanently sterile.
 # Shown as the reason a Supernatural Ability is greyed in the picker.
 ability-requires-virtue = Requires a granting Virtue (or the Gift's one free Ability)
 characteristic-increment = Raise
@@ -554,6 +563,10 @@ derived-combat-defense = Defense
 derived-combat-damage = Damage
 derived-longevity-self_made = Self-made
 derived-longevity-external = External
+# No bonus has been entered for the ritual yet, so there is no number to print.
+derived-longevity-not-entered = not entered
+# The Lab Total a ritual made now would draw on, beside the entered bonus.
+derived-longevity-suggested = would now be
 derived-masterpiece-cap = Max lesser-item level
 derived-masterpiece-note = Guidance only: design the actual lesser enchanted item under Magic Items (vis costs ignored).
 derived-addend-intelligence = Intelligence
