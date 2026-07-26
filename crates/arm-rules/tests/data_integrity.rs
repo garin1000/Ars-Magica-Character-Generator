@@ -1458,6 +1458,17 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
         cord_silver: 1,
         cord_bronze: 2,
     });
+    e.talisman = Some(Talisman {
+        description: "An ash staff shod with silver".to_string(),
+        attunements: vec![TalismanAttunement {
+            description: "Controlling things at a distance".to_string(),
+            bonus: 4,
+        }],
+        effects: vec![TalismanEffect {
+            name: "Wielding the Invisible Sling".to_string(),
+            level: 15,
+        }],
+    });
     e.longevity_ritual = Some(LongevityRitual {
         source: LongevitySource::SelfMade,
         bonus: Some(6),
@@ -1561,6 +1572,36 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     assert_eq!(hint.lab_total, 32, "CrCo Lab Total on the real ruleset");
     assert_eq!(hint.suggested_bonus, 7, "ceil(32/5)");
     assert!(!hint.halved);
+
+    // Talisman capacity on the real ruleset = highest Technique (Creo 10) + highest
+    // Form (Corpus 12) = 22 pawns of Vim vis (Core:10619). Ignem 8 loses to Corpus.
+    let capacity = d
+        .talisman_capacity
+        .expect("capacity present for a magus with a talisman");
+    assert_eq!(capacity.technique.as_str(), "art.creo");
+    assert_eq!(capacity.form.as_str(), "art.corpus");
+    assert_eq!(capacity.technique_score, 10);
+    assert_eq!(capacity.form_score, 12);
+    assert_eq!(capacity.pawns, 22);
+
+    // Non-goal guard: the level-15 instilled effect is charged against NOTHING. The
+    // item-level budget belongs to the Redcap-only Virtues (Core:4347-4349,
+    // :4842-4850), and a Redcap "may not take The Gift" (:4850), so it can never
+    // fund a magus's talisman. This magus has no such Virtue, so both figures are 0
+    // even though he owns a talisman holding 15 levels of effect.
+    assert_eq!(
+        arm_rules::item_level_used(&e),
+        0,
+        "talisman effects must not be swept into item_level_used"
+    );
+    assert_eq!(arm_rules::item_level_budget(&e, &rs), 0);
+    assert!(
+        validate(&e, &rs)
+            .issues
+            .iter()
+            .all(|i| i.code != "over_item_level"),
+        "a talisman effect must raise no item-level issue"
+    );
 
     // Warping Score 2 from 15 stored points; Decrepitude 2 from 17 aging points.
     assert_eq!(d.warping_points, 15);
