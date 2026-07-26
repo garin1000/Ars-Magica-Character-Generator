@@ -655,26 +655,6 @@ ul {
   white-space: nowrap;
 }
 
-.spell-levels {
-  font-variant-numeric: tabular-nums;
-  margin: 0 0 0.6rem;
-}
-
-.spell-levels.over {
-  color: var(--error);
-  font-weight: 600;
-}
-
-.spell-mastery {
-  font-variant-numeric: tabular-nums;
-  margin: 0 0 0.6rem;
-}
-
-.spell-mastery.over {
-  color: var(--error);
-  font-weight: 600;
-}
-
 .spinner-label {
   font-size: 0.85em;
   opacity: 0.8;

@@ -18,7 +18,10 @@ const TYPE_SELECT = '[data-testid="type-select"]';
 const SPELLS_TAB = '[data-testid="tab-spells"]';
 const ARTS_TAB = '[data-testid="tab-arts"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
-const BAR = '[data-testid="spell-levels-used"]';
+// The spell-levels status bar above both lists reads like the XP bar: the used
+// figure and the effective budget are separate elements (used / [budget]).
+const BAR_USED = '[data-testid="spell-levels-used"]';
+const BAR_BUDGET = '[data-testid="spell-levels-budget"]';
 
 // The app's save/load dialog seam (ARM_E2E_FILE) points at this fixed path.
 const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
@@ -161,10 +164,15 @@ describe('spells', () => {
       timeoutMsg: 'raising Creo/Ignem should re-enable Pilum',
     });
     await pilum.click();
-    await browser.waitUntil(async () => clean(await $(BAR).getText()).includes('20 / 120'), {
-      timeout: 5000,
-      timeoutMsg: 'spell-levels bar should read 20 / 120',
-    });
+    await browser.waitUntil(
+      async () =>
+        clean(await $(BAR_USED).getText()).includes('20') &&
+        clean(await $(BAR_BUDGET).getText()).includes('120'),
+      {
+        timeout: 5000,
+        timeoutMsg: 'spell-levels bar should read 20 used of a 120 budget',
+      },
+    );
     // The cap no longer flags Pilum.
     await browser.waitUntil(async () => !(await codeExists('spell_level_exceeds_cap')), {
       timeout: 5000,
@@ -196,7 +204,7 @@ describe('spells', () => {
     await addParens.waitForExist({ timeout: 10000 });
     await addParens.click();
     await $(SPELLS_TAB).click();
-    await browser.waitUntil(async () => clean(await $(BAR).getText()).includes('/ 150'), {
+    await browser.waitUntil(async () => clean(await $(BAR_BUDGET).getText()).includes('150'), {
       timeout: 5000,
       timeoutMsg: 'Skilled Parens should raise the budget to 150',
     });
@@ -210,7 +218,7 @@ describe('spells', () => {
     expect(await override.getAttribute('placeholder')).toBe('120');
     // Override the base to 80; Skilled Parens's +30 still adds on top → 80 + 30 = 110.
     await override.setValue('80');
-    await browser.waitUntil(async () => clean(await $(BAR).getText()).includes('/ 110'), {
+    await browser.waitUntil(async () => clean(await $(BAR_BUDGET).getText()).includes('110'), {
       timeout: 5000,
       timeoutMsg: 'overriding the base to 80 should make the budget 80 + 30 = 110',
     });
@@ -222,7 +230,7 @@ describe('spells', () => {
       el.value = '';
       el.dispatchEvent(new Event('input', { bubbles: true }));
     }, override);
-    await browser.waitUntil(async () => clean(await $(BAR).getText()).includes('/ 150'), {
+    await browser.waitUntil(async () => clean(await $(BAR_BUDGET).getText()).includes('150'), {
       timeout: 5000,
       timeoutMsg: 'clearing the override should restore the profile-based budget (150)',
     });

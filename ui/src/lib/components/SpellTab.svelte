@@ -12,13 +12,13 @@
     maxAbilityScore,
     usedSpellForms,
     spellDisplayName,
-    spellMasteryXpSpent,
   } from '../derive';
   import type { SelectedSpellGroup } from '../derive';
   import { tooltip, withReason, type TooltipContent } from '../actions';
   import type { Art, Spell, SpellMasteryAbility, SpellSelection } from '../types';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
+  import SpellBudgetBar from './SpellBudgetBar.svelte';
 
   // Technique/Form/text/level-range filters live on the store, so they survive the
   // tab switch that unmounts this component (same split ArtGrid uses for the Arts).
@@ -77,7 +77,6 @@
   const selectedColumns = $derived([
     {
       key: 'spells',
-      header: budgetHeader,
       empty: (store.entity.spells ?? []).length === 0,
       emptyText: store.t('empty-selections-side'),
       emptyClass: 'empty',
@@ -108,14 +107,11 @@
   // there and stays re-takeable — matching how Abilities/Virtues grey out.
   const selectedSpellIds = $derived(new Set((store.entity.spells ?? []).map((s) => s.spell)));
 
-  // The spell-levels budget bar: engine-authoritative used/budget, with a local
-  // fallback for the first frame before effective scores arrive.
+  // Spell levels still available to spend — the per-spell budget check behind the
+  // greying of source rows. The budget figures are engine-authoritative; the bar
+  // that displays them lives in `SpellBudgetBar`.
   const budget = $derived(store.effective?.spell_levels_budget ?? 0);
   const used = $derived(store.effective?.spell_levels_used ?? 0);
-  // The type profile's base budget (120 for a magus), used as the override
-  // field's placeholder so the default is data-driven (never a Svelte literal).
-  const profileBase = $derived(store.effective?.spell_levels_profile_base ?? 0);
-  // Spell levels still available to spend (used against the per-spell budget check).
   const remaining = $derived(budget - used);
 
   // The engine-authoritative per-Technique/Form spell-level cap (Te + Fo + Int +
@@ -127,20 +123,13 @@
       m.set(`${c.technique} ${c.form}`, c.cap);
     return m;
   });
-  // Spell-Mastery: XP pool (Mastered Spells) + auto-mastery floor (Flawless Magic)
-  // + whether Flawless Magic doubles advancement (halving each mastery point's XP).
-  const masteryXp = $derived(store.effective?.spell_mastery_xp ?? 0);
+  // Spell-Mastery: the auto-mastery floor (Flawless Magic) drives each row's
+  // effective mastery; the pool read-out itself lives in `SpellBudgetBar`.
   const masteryFloor = $derived(store.effective?.spell_mastery_floor ?? 0);
-  const masteryDoubled = $derived(store.effective?.spell_mastery_advancement_doubled ?? false);
-  // The Mastery Ability rises like an Ability, so it is priced from the Ability
+  // The Mastery Ability rises like an Ability, so its max comes from the Ability
   // advancement table (data, not a hardcoded mechanic — same path as abilities).
   const advancement = $derived(store.ruleset?.ruleset.advancement ?? []);
   const masteryMax = $derived(maxAbilityScore(advancement));
-  // Charged like the engine: only mastery above the free floor, halved when
-  // Flawless Magic doubles advancement totals.
-  const masteryUsed = $derived(
-    spellMasteryXpSpent(advancement, store.entity.spells ?? [], masteryFloor, masteryDoubled),
-  );
 
   function abbr(artId: string): string {
     return store.ruleset ? artAbbreviation(store.ruleset, artId) : '';
@@ -276,44 +265,11 @@
   }
 </script>
 
-<!-- The spell-levels budget + Mastery read-out, lifted above the selected list
-     as the column's header block (was inline in the old monolith). -->
-{#snippet budgetHeader()}
-  <p class="spell-levels" class:over={used > budget} data-testid="spell-levels-used">
-    {store.t('spell-levels-used', { used: String(used), budget: String(budget) })}
-  </p>
-
-  <label class="field spell-levels-override">
-    <span>{store.t('spell-levels-override-label')}</span>
-    <input
-      type="number"
-      min="1"
-      step="1"
-      placeholder={String(profileBase)}
-      value={store.entity.spell_levels_override ?? ''}
-      oninput={(e) => {
-        const raw = (e.currentTarget as HTMLInputElement).value;
-        store.setSpellLevelsOverride(raw === '' ? null : Number(raw));
-      }}
-      data-testid="spell-levels-override"
-    />
-  </label>
-
-  {#if masteryXp > 0 || masteryFloor > 0}
-    <p class="spell-mastery" class:over={masteryUsed > masteryXp} data-testid="spell-mastery-info">
-      {#if masteryXp > 0}{store.t('spell-mastery-pool', {
-          used: String(masteryUsed),
-          pool: String(masteryXp),
-        })}{/if}{#if masteryXp > 0 && masteryFloor > 0}
-        ·
-      {/if}{#if masteryFloor > 0}{store.t('spell-mastery-floor', {
-          score: String(masteryFloor),
-        })}{/if}
-    </p>
-  {/if}
-{/snippet}
-
 {#if store.ruleset}
+  <!-- The spell-levels budget + Mastery read-out as a status line ABOVE both
+       lists (it is a whole-character budget, so it does not belong inside the
+       selected list) — the same placement the XP bar has on Abilities/Arts. -->
+  <SpellBudgetBar />
   <div class="region-row">
     <section class="region region-source">
       <h2 class="region-title" data-testid="available-title">{store.t('available-title')}</h2>
