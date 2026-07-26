@@ -815,32 +815,102 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /** Add the magus's talisman (at most one) with nothing filled in yet. */
+  addTalisman(): void {
+    this.entity.talisman = { description: '', attunements: [], effects: [] };
+    this.#scheduleValidate();
+  }
+
+  removeTalisman(): void {
+    this.entity.talisman = null;
+    this.#scheduleValidate();
+  }
+
+  /** Set the item's shape/material identity (not an attunement's descriptor). */
+  setTalismanDescription(description: string): void {
+    if (!this.entity.talisman) return;
+    this.entity.talisman = { ...this.entity.talisman, description };
+    this.#scheduleValidate();
+  }
+
   addTalismanAttunement(): void {
-    this.entity.talisman_attunements = [
-      ...(this.entity.talisman_attunements ?? []),
-      { description: '', bonus: 0 },
-    ];
+    if (!this.entity.talisman) return;
+    this.entity.talisman = {
+      ...this.entity.talisman,
+      attunements: [...(this.entity.talisman.attunements ?? []), { description: '', bonus: 0 }],
+    };
     this.#scheduleValidate();
   }
 
   removeTalismanAttunementAt(index: number): void {
-    this.entity.talisman_attunements = (this.entity.talisman_attunements ?? []).filter(
-      (_, i) => i !== index,
-    );
+    if (!this.entity.talisman) return;
+    this.entity.talisman = {
+      ...this.entity.talisman,
+      attunements: (this.entity.talisman.attunements ?? []).filter((_, i) => i !== index),
+    };
     this.#scheduleValidate();
   }
 
-  setTalismanDescription(index: number, description: string): void {
-    this.entity.talisman_attunements = (this.entity.talisman_attunements ?? []).map((t, i) =>
-      i === index ? { ...t, description } : t,
-    );
+  setTalismanAttunementDescription(index: number, description: string): void {
+    if (!this.entity.talisman) return;
+    this.entity.talisman = {
+      ...this.entity.talisman,
+      attunements: (this.entity.talisman.attunements ?? []).map((a, i) =>
+        i === index ? { ...a, description } : a,
+      ),
+    };
     this.#scheduleValidate();
   }
 
-  setTalismanBonus(index: number, bonus: number): void {
-    this.entity.talisman_attunements = (this.entity.talisman_attunements ?? []).map((t, i) =>
-      i === index ? { ...t, bonus: Math.trunc(bonus) } : t,
-    );
+  setTalismanAttunementBonus(index: number, bonus: number): void {
+    if (!this.entity.talisman) return;
+    this.entity.talisman = {
+      ...this.entity.talisman,
+      attunements: (this.entity.talisman.attunements ?? []).map((a, i) =>
+        i === index ? { ...a, bonus: Math.trunc(bonus) } : a,
+      ),
+    };
+    this.#scheduleValidate();
+  }
+
+  addTalismanEffect(): void {
+    if (!this.entity.talisman) return;
+    this.entity.talisman = {
+      ...this.entity.talisman,
+      effects: [...(this.entity.talisman.effects ?? []), { name: '', level: 0 }],
+    };
+    this.#scheduleValidate();
+  }
+
+  removeTalismanEffectAt(index: number): void {
+    if (!this.entity.talisman) return;
+    this.entity.talisman = {
+      ...this.entity.talisman,
+      effects: (this.entity.talisman.effects ?? []).filter((_, i) => i !== index),
+    };
+    this.#scheduleValidate();
+  }
+
+  setTalismanEffectName(index: number, name: string): void {
+    if (!this.entity.talisman) return;
+    this.entity.talisman = {
+      ...this.entity.talisman,
+      effects: (this.entity.talisman.effects ?? []).map((e, i) =>
+        i === index ? { ...e, name } : e,
+      ),
+    };
+    this.#scheduleValidate();
+  }
+
+  setTalismanEffectLevel(index: number, level: number): void {
+    if (!this.entity.talisman) return;
+    const clamped = Math.max(0, Math.trunc(level));
+    this.entity.talisman = {
+      ...this.entity.talisman,
+      effects: (this.entity.talisman.effects ?? []).map((e, i) =>
+        i === index ? { ...e, level: clamped } : e,
+      ),
+    };
     this.#scheduleValidate();
   }
 
