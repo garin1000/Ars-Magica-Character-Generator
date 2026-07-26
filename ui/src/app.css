@@ -863,6 +863,13 @@ ul {
   font-weight: 600;
 }
 
+/* A figure that is red but NOT bold: the used total when the pool is overspent
+   (e.g. "15" in "15 / [10]"). The bold emphasis is reserved for the negative
+   Available value (`.over`), so overspending reads as one emphasized number. */
+.xp-summary .over-value {
+  color: var(--error);
+}
+
 /* Carried-equipment list on the Selected side (name + Equipped checkbox + remove). */
 .equipment-list {
   list-style: none;
