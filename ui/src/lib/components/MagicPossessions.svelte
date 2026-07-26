@@ -220,6 +220,19 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    /* Keep the input area a readable column on a wide screen rather than spanning
+       the whole viewport; centered within the scrolling tab. */
+    max-width: 40rem;
+    margin-inline: auto;
+  }
+
+  /* Section-level action buttons (Add device / Add familiar / Remove …) are
+     direct children of a `.detail-section`, which is a column flex with the
+     default `align-items: stretch` — so without this they stretch to the full
+     panel width. Shrink them to their label. Row-level icon buttons (the × on a
+     list row) live inside an `<li>`, not as direct children, so are unaffected. */
+  .detail-section > button {
+    align-self: flex-start;
   }
 
   .budget-readout {
