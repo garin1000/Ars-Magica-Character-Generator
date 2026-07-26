@@ -446,19 +446,25 @@ orchestrate. Engine (where a mechanic changes) → data → direct-entry UI, TDD
 `RULES.md` provenance per slice.
 
 ### 5.5a. Longevity Ritual — player-entered value + live hint
-- [ ] The LR aging bonus becomes a **player-entered, stored** value used as-is by
+- [x] The LR aging bonus becomes a **player-entered, stored** value used as-is by
       the engine (a frozen snapshot taken at the ritual's creation). **Drop the
       live Creo Corpus Lab-Total derivation** of the *stored* self-made bonus in
       `derived.rs::longevity_bonus` — raising Cr/Co or changing the aura after
       creation must NOT change the value. The engine passes the stored number
       through (as the `external` path already does); the self/external asymmetry
-      collapses to one entered field. Source: Core Rules.md:10662, :10668.
-- [ ] Show a **live hint** beside the input — current Creo Corpus Lab Total →
-      suggested bonus (+1 per 5 points, aura-aware) — computed by repurposing the
-      existing `creo_corpus_lab_total` / `longevity_bonus` logic as a *hint only*,
-      never as the stored value. The player reads it and types the number in.
-      Source: Core Rules.md:10662 (LR bonus), :10826 (aura in Lab Total).
-- [ ] Add a free-text **focus** field (potion / bath / incense / fire …) and
+      collapses to one entered field. `LongevityBonus.entered` keeps an unfilled
+      field distinct from a deliberate 0. Source: Core Rules.md:10662, :10668,
+      :10670.
+- [x] Show a **live hint** beside the input — current Creo Corpus Lab Total →
+      suggested bonus (+1 per 5 points) — computed by repurposing the existing
+      `creo_corpus_lab_total` / `longevity_bonus` logic as a *hint only*, never as
+      the stored value. The player reads it and types the number in. The hint also
+      applies the Deficient Creo/Corpus and Difficult Longevity Ritual halvings
+      (the first read of `HalvableTotal::LabLongevity`), and the unsupported
+      `aura != 0` gate is **removed**. Source: Core Rules.md:10662 (LR bonus),
+      :10276-10278 (aura in the Lab Total), :17658 (no aura ⇒ no hindrance),
+      :5909-5915, :5962-5964.
+- [x] Add a free-text **focus** field (potion / bath / incense / fire …) and
       surface the **sterility** consequence. Source: Core Rules.md:10656.
 
 ### 5.5b. Talisman — item identity + instilled effects

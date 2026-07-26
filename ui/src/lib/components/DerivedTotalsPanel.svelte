@@ -224,9 +224,20 @@
         <div class="detail-section">
           <h3 class="detail-label">{store.t('derived-section-longevity')}</h3>
           <p data-testid="derived-longevity">
-            {store.t(`derived-longevity-${d.longevity.source}`)}: -{d.longevity.bonus}
+            {store.t(`derived-longevity-${d.longevity.source}`)}:
+            {#if d.longevity.entered}
+              <!-- The bonus is a magnitude the player entered; it is subtracted from
+                   aging rolls, so it prints negative. -->
+              -{d.longevity.bonus}
+            {:else}
+              {store.t('derived-longevity-not-entered')}
+            {/if}
             {#if d.longevity.hint}
-              ({store.t('derived-lab-total')} {d.longevity.hint.lab_total})
+              · {store.t('derived-longevity-suggested')} -{d.longevity.hint.suggested_bonus}
+              ({store.t('derived-lab-total')}
+              {d.longevity.hint.lab_total}{#if d.longevity.hint.halved}, {store.t(
+                  'longevity-hint-halved',
+                )}{/if})
             {/if}
             {#if d.longevity.bronze_cord > 0}
               · {store.t('derived-addend-bronze_cord')} {formatSigned(d.longevity.bronze_cord)}

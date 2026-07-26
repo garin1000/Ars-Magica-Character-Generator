@@ -104,7 +104,12 @@ between grog, companion, mythic companion, and magus; the Arts, Spells, and Magi
 Items tabs appear only for magus-capable types. The Magic Items tab stores a
 magus's starting possessions — aura, enchanted devices (charged against the
 item-level budget their Virtues grant), a familiar with its Gold/Silver/Bronze
-bond cords, talisman attunements, and a self-made or external Longevity Ritual. An
+bond cords, talisman attunements, and a self-made or external Longevity Ritual
+with its aging bonus, its focus, and the permanent sterility it causes. Because
+the ritual's bonus was fixed by the Lab Total of the season it was made, it is
+entered and stored rather than derived; beside the input the engine suggests what
+a ritual made now would be worth, from the live Creo Corpus Lab Total, halvings
+included. An
 Equipment tab — available to every character type — records the weapons, shields,
 and armor a character carries from the Core Rules equipment catalogue (English +
 German), marking each equipped. The full Core Rules Ability catalogue and the
@@ -130,8 +135,8 @@ the point-buy the creation checks read). Every in-play Virtue/Flaw effect
 the 653-entry catalogue) is modelled, and a read-out panel computes the full
 in-play totals in-engine — per-Technique/Form Lab and Casting Totals, per-spell
 Penetration, per-Form Magic Resistance, combat lines (weapon + shield), Soak,
-Encumbrance, fatigue and wound ranges, and a self-made or external Longevity
-bonus — from a numeric aura input. With this any core-rules character is fully
+Encumbrance, fatigue and wound ranges, and the stored Longevity bonus beside the
+suggestion for a ritual made today — from a numeric aura input. With this any core-rules character is fully
 enterable **and** fully computable in direct entry (milestone M5 complete). Next
 comes the guided creation wizard with its life-stage XP flow, which merely
 orchestrates these existing input surfaces — see [PLAN.md](PLAN.md) for the

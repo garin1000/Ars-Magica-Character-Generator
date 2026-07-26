@@ -287,7 +287,17 @@ longevity-source-external = Extern
 longevity-bonus-label = Alterungsbonus
 longevity-add = Langlebigkeitsritual hinzufügen
 longevity-remove = Langlebigkeitsritual entfernen
-longevity-self-made-note = Der Bonus wird aus deinem Creo-+-Corpus-Labortotal berechnet.
+# Der gespeicherte Bonus ist leer: Das Ritual wurde in einem früheren Quartal
+# erschaffen, der Wert wird also eingetragen und nie berechnet. Unterscheidet ein
+# leeres Feld von einer bewusst eingetragenen 0.
+longevity-not-entered = Nicht eingetragen
+# Der Hinweis neben dem Eingabefeld: Was ein jetzt erschaffenes Ritual wert wäre.
+# { $bonus } ist bereits vorzeichenbehaftet; { $total } ist die heutige Laborsumme.
+longevity-hint = Ein jetzt erschaffenes Ritual: { $bonus } (Creo Corpus-Laborsumme { $total })
+longevity-hint-halved = halbiert
+longevity-focus-label = Fokus
+longevity-focus-placeholder = Worin das Ritual gipfelt
+longevity-sterility-note = Der Anker des Rituals verhindert, dass der Magus seine Lebenskraft auf normale menschliche Weise verausgabt; der Magus wird dadurch dauerhaft unfruchtbar.
 # Grund, warum eine übernatürliche Fähigkeit im Auswähler ausgegraut ist.
 ability-requires-virtue = Erfordert eine verleihende Tugend (oder die eine freie Fähigkeit der Gabe)
 characteristic-increment = Erhöhen
@@ -540,6 +550,10 @@ derived-combat-defense = Verteidigung
 derived-combat-damage = Schaden
 derived-longevity-self_made = Selbst erschaffen
 derived-longevity-external = Extern
+# Für das Ritual wurde noch kein Bonus eingetragen, es gibt also keine Zahl.
+derived-longevity-not-entered = nicht eingetragen
+# Die Laborsumme, auf die ein jetzt erschaffenes Ritual käme, neben dem Eintrag.
+derived-longevity-suggested = wäre jetzt
 derived-masterpiece-cap = Höchste Stufe schlichtes Artefakt
 derived-masterpiece-note = Nur ein Hinweis: Das eigentliche schlichte Artefakt unter Magische Gegenstände entwerfen (Vis-Kosten werden ignoriert).
 derived-addend-intelligence = Intelligenz
