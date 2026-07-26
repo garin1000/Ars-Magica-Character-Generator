@@ -442,13 +442,22 @@ export interface WoundRange {
   penalty?: number | null;
 }
 
-// The Longevity Ritual bonus read-out.
+// What a Longevity Ritual made *today* would be worth — a suggestion beside the
+// entered-bonus input, never the stored value. Self-made rituals only.
+export interface LongevityHint {
+  lab_total: number;
+  suggested_bonus: number;
+  halved: boolean;
+}
+
+// The Longevity Ritual read-out. `bonus` is the stored, player-entered value for
+// both sources; `entered` false means it is a placeholder 0, not a claim.
 export interface LongevityBonus {
   source: 'self_made' | 'external';
   bonus: number;
-  lab_total?: number | null;
+  entered: boolean;
   bronze_cord: number;
-  aura_present: boolean;
+  hint?: LongevityHint | null;
 }
 
 // The Masterpiece lesser enchanted item cap (best Lab Total / 2).
@@ -710,11 +719,14 @@ export interface AgingLogEntry {
 // Where a Longevity Ritual comes from (rendered via Fluent, never as a raw slug).
 export type LongevitySource = 'self_made' | 'external';
 
-// A magus's Longevity Ritual. `self_made` leaves `bonus` unset (computed
-// downstream); `external` carries a player-entered bonus.
+// A magus's Longevity Ritual: a stored record of a past event. `bonus` is
+// player-entered for BOTH sources — the number was fixed by the Lab Total of the
+// season the ritual was made, so nothing here is derived; null means "not entered
+// yet", never a claimed 0. `focus` is the ritual's culminating focus (free text).
 export interface LongevityRitual {
   source: LongevitySource;
   bonus?: number | null;
+  focus?: string;
 }
 
 // Which weapon table a Weapon comes from (rendered via Fluent `weapon-kind-<id>`,

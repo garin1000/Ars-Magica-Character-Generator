@@ -844,9 +844,9 @@ class AppStore {
     this.#scheduleValidate();
   }
 
-  /** Add a Longevity Ritual; a self-made one leaves the bonus for the engine. */
+  /** Add a Longevity Ritual with nothing entered yet (null bonus ≠ a claimed 0). */
   addLongevityRitual(source: LongevitySource): void {
-    this.entity.longevity_ritual = { source, bonus: source === 'external' ? 0 : null };
+    this.entity.longevity_ritual = { source, bonus: null, focus: '' };
     this.#scheduleValidate();
   }
 
@@ -855,13 +855,13 @@ class AppStore {
     this.#scheduleValidate();
   }
 
-  /** Switch the ritual source; self-made clears the (computed) bonus. */
+  /**
+   * Switch the ritual source. The entered bonus is *preserved*: it describes the
+   * ritual the magus actually has, and who made it does not change its value.
+   */
   setLongevitySource(source: LongevitySource): void {
     if (!this.entity.longevity_ritual) return;
-    this.entity.longevity_ritual = {
-      source,
-      bonus: source === 'external' ? (this.entity.longevity_ritual.bonus ?? 0) : null,
-    };
+    this.entity.longevity_ritual = { ...this.entity.longevity_ritual, source };
     this.#scheduleValidate();
   }
 
@@ -871,6 +871,12 @@ class AppStore {
       ...this.entity.longevity_ritual,
       bonus: Math.trunc(bonus),
     };
+    this.#scheduleValidate();
+  }
+
+  setLongevityFocus(focus: string): void {
+    if (!this.entity.longevity_ritual) return;
+    this.entity.longevity_ritual = { ...this.entity.longevity_ritual, focus };
     this.#scheduleValidate();
   }
 
