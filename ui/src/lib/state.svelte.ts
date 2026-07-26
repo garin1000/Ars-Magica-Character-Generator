@@ -791,8 +791,28 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  // --- Familiar: the creature statblock + the three bond cords ---
+  //
+  // Every edit below is guarded by `if (!this.entity.familiar) return;`: the panel
+  // only renders these controls once a familiar exists, but a mutator must not
+  // conjure one out of a stray call. Nothing here touches the character's own
+  // `might`, `powers`, `characteristics` or `personality_traits` — the familiar is
+  // a separate creature.
+
+  /** Add the magus's familiar (at most one) with the full empty statblock. */
   addFamiliar(): void {
-    this.entity.familiar = { name: '', cord_gold: 0, cord_silver: 0, cord_bronze: 0 };
+    this.entity.familiar = {
+      name: '',
+      animal: '',
+      might: null,
+      characteristics: {},
+      size: 0,
+      personality_traits: [],
+      cord_gold: 0,
+      cord_silver: 0,
+      cord_bronze: 0,
+      powers: [],
+    };
     this.#scheduleValidate();
   }
 
@@ -807,11 +827,152 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /** Set the kind of beast (free text; not `species`, which is the Imaginem term). */
+  setFamiliarAnimal(animal: string): void {
+    if (!this.entity.familiar) return;
+    this.entity.familiar = { ...this.entity.familiar, animal };
+    this.#scheduleValidate();
+  }
+
+  /** Set the creature's Size — signed and deliberately NOT clamped at 0: most
+   * familiars are smaller than a human and so carry a negative Size. */
+  setFamiliarSize(size: number): void {
+    if (!this.entity.familiar) return;
+    const value = Number.isFinite(size) ? Math.trunc(size) : 0;
+    this.entity.familiar = { ...this.entity.familiar, size: value };
+    this.#scheduleValidate();
+  }
+
+  /** Set the familiar's own Might Realm (creating its Might at score 0 if absent). */
+  setFamiliarMightRealm(realm: Realm): void {
+    if (!this.entity.familiar) return;
+    const score = this.entity.familiar.might?.score ?? 0;
+    this.entity.familiar = { ...this.entity.familiar, might: { realm, score } };
+    this.#scheduleValidate();
+  }
+
+  /** Set the familiar's own Might Score (non-negative; keeps the current Realm). */
+  setFamiliarMightScore(score: number): void {
+    if (!this.entity.familiar) return;
+    const realm = this.entity.familiar.might?.realm ?? 'magic';
+    this.entity.familiar = {
+      ...this.entity.familiar,
+      might: { realm, score: Math.max(0, Math.trunc(score)) },
+    };
+    this.#scheduleValidate();
+  }
+
+  clearFamiliarMight(): void {
+    if (!this.entity.familiar) return;
+    this.entity.familiar = { ...this.entity.familiar, might: null };
+    this.#scheduleValidate();
+  }
+
+  /** Set one of the familiar's Characteristics, deleting the entry at 0 (mirrors
+   * `setCharacteristic`, so a default score writes no key). */
+  setFamiliarCharacteristic(characteristic: Characteristic, score: number): void {
+    if (!this.entity.familiar) return;
+    const chars = { ...(this.entity.familiar.characteristics ?? {}) };
+    const value = Number.isFinite(score) ? Math.trunc(score) : 0;
+    if (value === 0) {
+      delete chars[characteristic];
+    } else {
+      chars[characteristic] = value;
+    }
+    this.entity.familiar = { ...this.entity.familiar, characteristics: chars };
+    this.#scheduleValidate();
+  }
+
   setFamiliarCord(cord: 'gold' | 'silver' | 'bronze', value: number): void {
     if (!this.entity.familiar) return;
     const clamped = Math.max(0, Math.trunc(value));
     const key = `cord_${cord}` as const;
     this.entity.familiar = { ...this.entity.familiar, [key]: clamped };
+    this.#scheduleValidate();
+  }
+
+  addFamiliarPersonalityTrait(): void {
+    if (!this.entity.familiar) return;
+    this.entity.familiar = {
+      ...this.entity.familiar,
+      personality_traits: [
+        ...(this.entity.familiar.personality_traits ?? []),
+        { name: '', value: 0 },
+      ],
+    };
+    this.#scheduleValidate();
+  }
+
+  removeFamiliarPersonalityTraitAt(index: number): void {
+    if (!this.entity.familiar) return;
+    this.entity.familiar = {
+      ...this.entity.familiar,
+      personality_traits: (this.entity.familiar.personality_traits ?? []).filter(
+        (_, i) => i !== index,
+      ),
+    };
+    this.#scheduleValidate();
+  }
+
+  setFamiliarPersonalityTraitName(index: number, name: string): void {
+    if (!this.entity.familiar) return;
+    this.entity.familiar = {
+      ...this.entity.familiar,
+      personality_traits: (this.entity.familiar.personality_traits ?? []).map((t, i) =>
+        i === index ? { ...t, name } : t,
+      ),
+    };
+    this.#scheduleValidate();
+  }
+
+  setFamiliarPersonalityTraitValue(index: number, value: number): void {
+    if (!this.entity.familiar) return;
+    const clamped = Math.max(-6, Math.min(6, Math.trunc(value)));
+    this.entity.familiar = {
+      ...this.entity.familiar,
+      personality_traits: (this.entity.familiar.personality_traits ?? []).map((t, i) =>
+        i === index ? { ...t, value: clamped } : t,
+      ),
+    };
+    this.#scheduleValidate();
+  }
+
+  addFamiliarPower(): void {
+    if (!this.entity.familiar) return;
+    this.entity.familiar = {
+      ...this.entity.familiar,
+      powers: [...(this.entity.familiar.powers ?? []), { name: '', level: 0 }],
+    };
+    this.#scheduleValidate();
+  }
+
+  removeFamiliarPowerAt(index: number): void {
+    if (!this.entity.familiar) return;
+    this.entity.familiar = {
+      ...this.entity.familiar,
+      powers: (this.entity.familiar.powers ?? []).filter((_, i) => i !== index),
+    };
+    this.#scheduleValidate();
+  }
+
+  setFamiliarPowerName(index: number, name: string): void {
+    if (!this.entity.familiar) return;
+    this.entity.familiar = {
+      ...this.entity.familiar,
+      powers: (this.entity.familiar.powers ?? []).map((p, i) => (i === index ? { ...p, name } : p)),
+    };
+    this.#scheduleValidate();
+  }
+
+  setFamiliarPowerLevel(index: number, level: number): void {
+    if (!this.entity.familiar) return;
+    const clamped = Math.max(0, Math.trunc(level));
+    this.entity.familiar = {
+      ...this.entity.familiar,
+      powers: (this.entity.familiar.powers ?? []).map((p, i) =>
+        i === index ? { ...p, level: clamped } : p,
+      ),
+    };
     this.#scheduleValidate();
   }
 
