@@ -49,8 +49,8 @@ use crate::ruleset::{
     ID_PHILOSOPHIAE, Ruleset,
 };
 use crate::types::{
-    CastingScope, CombatStat, Effect, Entity, HalvableTotal, HealthTrack, Id, LongevitySource,
-    MagicResistanceEffect, SpecialCasting,
+    CastingScope, CombatStat, Effect, Entity, Familiar, HalvableTotal, HealthTrack, Id,
+    LongevitySource, MagicResistanceEffect, SpecialCasting,
 };
 
 // --- Non-standard-casting penalty constants (Core:9243-9245) ---------------
@@ -1459,6 +1459,140 @@ pub fn talisman_capacity(entity: &Entity, ruleset: &Ruleset) -> Option<TalismanC
     })
 }
 
+// --- Familiar (bonding read-outs) ------------------------------------------
+
+/// What each cord score from 0 to +5 costs in Lab-Total points.
+///
+/// "The strength of each of these cords is rated from 0 to +5 … a strength of +1
+/// requires 5 points, a score of +2 requires 15 points, a score of +3 requires 30
+/// points, a score of +4 requires 50 points, and a score of +5 (the maximum)
+/// requires 75 points" (Core:10836).
+///
+/// A fixed five-entry rule curve, so it is a `const` here rather than ruleset data
+/// — the same call as [`LOAD_TABLE`] for Encumbrance. RULES.md is its provenance
+/// home.
+const CORD_COST_TABLE: [u32; 6] = [0, 5, 15, 30, 50, 75];
+
+/// The **total** Lab-Total points the three cords cost (Core:10836).
+///
+/// The score indexing [`CORD_COST_TABLE`] is **clamped** to the +5 maximum the same
+/// line sets. That clamp is load-bearing, not defensive noise: the store's cord
+/// setter clamps only at 0, the number input carries no `max`, and a hand-edited
+/// save's `u8` can be 255 — a raw index would panic inside the `derived_totals`
+/// command and take the whole read-out panel down with it.
+pub fn cord_points_spent(familiar: &Familiar) -> u32 {
+    let cost = |score: u8| CORD_COST_TABLE[usize::from(score.min(5))];
+    cost(familiar.cord_gold) + cost(familiar.cord_silver) + cost(familiar.cord_bronze)
+}
+
+/// The level of the bonding enchantment: the familiar's Magic Might + 25 + 5 × Size.
+///
+/// "The level for the enchantment is equal to 25 plus the familiar's Magic Might
+/// plus 5 times its Size. If the familiar has negative Size, this reduces the level
+/// for the enchantment" (Core:10824), restated as
+/// "**FAMILIAR BONDING LEVEL: Familiar's Magic Might + 25 + (5 x Size)**"
+/// (`:10828`).
+///
+/// A familiar with no entered Might contributes 0 rather than suppressing the
+/// read-out — the panel says so instead.
+pub fn familiar_binding_level(familiar: &Familiar) -> i32 {
+    let might = familiar.might.map(|m| i32::from(m.score)).unwrap_or(0);
+    25 + might + 5 * i32::from(familiar.size)
+}
+
+/// The total level of the powers invested in the familiar bond.
+///
+/// Informational only: "there is no limit to the number of powers which may be
+/// invested in a familiar" (Core:10866), so unlike a being's own
+/// [`crate::effective::powers_used`] this sum is compared against no budget and can
+/// raise no issue.
+pub fn familiar_invested_power_levels(familiar: &Familiar) -> u32 {
+    familiar.powers.iter().map(|p| u32::from(p.level)).sum()
+}
+
+/// The magus's side of the bonding season: the Lab Total he can bring to it, and
+/// how it compares with what the bond needs.
+///
+/// The bonding Lab Total is the ordinary Lab Total shape — "any appropriate
+/// Technique + any appropriate Form + Int + Magic Theory + Aura Modifier"
+/// (Core:10818), restated as **FAMILIAR BONDING LAB TOTAL** (`:10826`) — so
+/// [`lab_totals`] is reused and the best `(Technique, Form)` cell taken, exactly as
+/// [`masterpiece_item_cap`] does. Which Arts are *appropriate* to a given beast is a
+/// troupe judgment (`:10818` spells out the correspondences in prose), and
+/// "Any magus should be able to find an animal that he can bind with his best
+/// Technique and Form" (`:10822`) — so the best cell is the honest figure.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FamiliarBinding {
+    /// The Technique Art of the best Lab Total.
+    pub technique: Id,
+    /// The Form Art of the best Lab Total.
+    pub form: Id,
+    /// The best base `(Technique, Form)` Lab Total.
+    pub lab_total: i32,
+    /// The same cell's within-focus Lab Total; `None` when the magus holds no
+    /// Magical Focus. Unlike Masterpiece, `:10818` explicitly allows a focus here
+    /// ("Puissant Arts and foci may apply to this"), but whether *this* familiar
+    /// falls inside the focus's narrow field is a troupe judgment the engine cannot
+    /// evaluate — so it is surfaced as a separate, conditional figure the UI labels
+    /// as such. (Puissant Arts need no separate figure: `effective_art_score`
+    /// already folds them in.)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lab_total_within_focus: Option<i32>,
+    /// Whether the base Lab Total reaches the binding level: "A magus can only bind
+    /// a familiar if his Lab Total equals or exceeds this level" (`:10824`).
+    pub lab_total_reaches_level: bool,
+    /// Whether the cords bought fit in that Lab Total: "The total cost of the cords
+    /// you buy cannot exceed the magus's Lab Total" (`:10836`).
+    pub cord_points_within_lab_total: bool,
+}
+
+/// The familiar read-out: the bonding numbers a player can check by hand.
+///
+/// **Read-only guidance**, like [`MasterpieceCap`] and [`TalismanCapacity`]: no
+/// `ValidationIssue` is ever raised from any of it, and a
+/// `fully_populated_familiar_raises_no_issues` test in `validation` pins that.
+/// Whether the bonding season is legal depends on judgments the engine cannot make
+/// (which Arts suit the beast, whether a focus applies) and on vis, which the model
+/// does not hold — so the engine reports rather than enforces. Vis costs (`:10830`,
+/// `:10882`) are out of scope for the same reason.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FamiliarReadout {
+    /// The level of the bonding enchantment (`:10828`).
+    pub binding_level: i32,
+    /// The Lab-Total points the three cords cost in total (`:10836`).
+    pub cord_points_spent: u32,
+    /// The total level of the bond-invested powers (`:10866`; no budget).
+    pub invested_power_levels: u32,
+    /// The magus's best bonding Lab Total and how it compares.
+    pub binding: FamiliarBinding,
+}
+
+/// The magus's familiar read-out, or `None` when he has no familiar.
+/// Source: `Ars Magica - Definitive Edition (Core Rules).md:10818`, `:10822`,
+/// `:10824`, `:10826`, `:10828`, `:10836`, `:10866`.
+pub fn familiar_readout(entity: &Entity, ruleset: &Ruleset) -> Option<FamiliarReadout> {
+    let familiar = entity.familiar.as_ref()?;
+    let binding_level = familiar_binding_level(familiar);
+    let cord_points = cord_points_spent(familiar);
+    // Best base Lab Total across the grid; the magus picks the Te/Fo that maxes it.
+    let best = lab_totals(entity, ruleset)
+        .into_iter()
+        .max_by_key(|lt| lt.total)?;
+    Some(FamiliarReadout {
+        binding_level,
+        cord_points_spent: cord_points,
+        invested_power_levels: familiar_invested_power_levels(familiar),
+        binding: FamiliarBinding {
+            technique: best.technique,
+            form: best.form,
+            lab_total: best.total,
+            lab_total_within_focus: best.within_focus,
+            lab_total_reaches_level: best.total >= binding_level,
+            cord_points_within_lab_total: i64::from(cord_points) <= i64::from(best.total),
+        },
+    })
+}
+
 // --- Surfaced-only modifiers -----------------------------------------------
 
 /// The family a surfaced-only 5b modifier belongs to. A fixed, closed taxonomy —
@@ -1559,6 +1693,9 @@ pub struct DerivedTotals {
     /// talisman only; `None` otherwise).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub talisman_capacity: Option<TalismanCapacity>,
+    /// The familiar bonding read-out (magi with a familiar only; `None` otherwise).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub familiar: Option<FamiliarReadout>,
     /// One combat line per equipped weapon.
     pub combat: Vec<CombatLine>,
     /// The Soak total.
@@ -1630,6 +1767,11 @@ pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
         } else {
             None
         },
+        familiar: if is_magus {
+            familiar_readout(entity, ruleset)
+        } else {
+            None
+        },
         combat: combat_totals(entity, ruleset),
         soak: soak(entity, ruleset),
         encumbrance: encumbrance(entity, ruleset),
@@ -1648,8 +1790,8 @@ mod tests {
     use super::*;
     use crate::ruleset::RulesetSources;
     use crate::types::{
-        AbilityScore, ArtScore, EntityKind, EquipmentSlot, Familiar, LongevityRitual, RulesetRef,
-        Selection, SpellSelection, Talisman,
+        AbilityScore, ArtScore, EntityKind, EquipmentSlot, Familiar, LongevityRitual, MightScore,
+        Realm, RulesetRef, Selection, SpellSelection, SupernaturalPower, Talisman,
     };
     use pretty_assertions::assert_eq;
     use std::collections::BTreeMap;
@@ -2226,6 +2368,195 @@ mod tests {
         assert_eq!(cap.pawns, 0);
         assert_eq!(cap.technique.as_str(), "art.creo");
         assert_eq!(cap.form.as_str(), "art.corpus");
+    }
+
+    /// A familiar with a Magic Might and Personality Traits, for the read-out
+    /// tests. Cords 3/2/1 cost 30 + 15 + 5 = 50 points.
+    fn statblock_familiar() -> Familiar {
+        Familiar {
+            name: "Corax".into(),
+            animal: "raven".into(),
+            might: Some(MightScore {
+                realm: Realm::Magic,
+                score: 10,
+            }),
+            characteristics: BTreeMap::from([(Characteristic::Int, -3)]),
+            size: -4,
+            personality_traits: Vec::new(),
+            cord_gold: 3,
+            cord_silver: 2,
+            cord_bronze: 1,
+            powers: vec![SupernaturalPower {
+                name: "Mental communication".into(),
+                level: 15,
+            }],
+        }
+    }
+
+    /// Cord scores are bought off a fixed 5-entry curve — +1 costs 5, +2 15, +3 30,
+    /// +4 50, +5 75 — and the read-out is the **total** across all three cords
+    /// (Core:10836).
+    #[test]
+    fn cord_points_spent_follows_the_cord_cost_curve() {
+        let mut f = Familiar::default();
+        assert_eq!(cord_points_spent(&f), 0, "0/0/0 costs nothing");
+
+        f.cord_gold = 3;
+        f.cord_silver = 2;
+        f.cord_bronze = 1;
+        assert_eq!(cord_points_spent(&f), 50, "30 + 15 + 5");
+
+        f.cord_gold = 5;
+        f.cord_silver = 5;
+        f.cord_bronze = 5;
+        assert_eq!(cord_points_spent(&f), 225, "3 x 75, the maximum cords");
+    }
+
+    /// A cord score above the curve's top (+5 is the maximum, Core:10836) is
+    /// **clamped**, not indexed: `setFamiliarCord` clamps only at 0, the input
+    /// carries no max, and a hand-edited save's `u8` can be 255 — a raw index would
+    /// panic inside the derived-totals command and take the whole read-out panel
+    /// down.
+    #[test]
+    fn cord_points_spent_clamps_a_score_above_the_curve() {
+        let f = Familiar {
+            cord_gold: 255,
+            cord_silver: 6,
+            cord_bronze: 0,
+            ..Default::default()
+        };
+        assert_eq!(cord_points_spent(&f), 150, "both clamp to +5 = 75 each");
+    }
+
+    /// The bonding level is "25 plus the familiar's Magic Might plus 5 times its
+    /// Size", and a negative Size **reduces** it — the book's own worked example:
+    /// Size -2 and Magic Might 10 bind as a level 25 enchantment (Core:10824,
+    /// :10828).
+    #[test]
+    fn familiar_binding_level_folds_in_a_negative_size() {
+        let book_example = Familiar {
+            might: Some(MightScore {
+                realm: Realm::Magic,
+                score: 10,
+            }),
+            size: -2,
+            ..Default::default()
+        };
+        assert_eq!(familiar_binding_level(&book_example), 25);
+
+        let raven = statblock_familiar(); // Might 10, Size -4
+        assert_eq!(familiar_binding_level(&raven), 25 + 10 - 20);
+    }
+
+    /// A familiar with no entered Might contributes 0 to the level rather than
+    /// suppressing the read-out; the panel says "no Magic Might entered".
+    #[test]
+    fn familiar_binding_level_without_might_counts_might_as_zero() {
+        let f = Familiar {
+            size: 1,
+            ..Default::default()
+        };
+        assert_eq!(familiar_binding_level(&f), 30);
+        assert_eq!(familiar_binding_level(&Familiar::default()), 25);
+    }
+
+    /// Bond-invested power levels are summed for information only: "there is no
+    /// limit to the number of powers which may be invested in a familiar"
+    /// (Core:10866), so there is no budget to compare against and no issue to
+    /// raise.
+    #[test]
+    fn familiar_invested_power_levels_sums_with_no_budget() {
+        let mut f = statblock_familiar();
+        assert_eq!(familiar_invested_power_levels(&f), 15);
+        f.powers.push(SupernaturalPower {
+            name: "Shapechanging".into(),
+            level: 25,
+        });
+        assert_eq!(familiar_invested_power_levels(&f), 40);
+    }
+
+    /// The bonding Lab Total is the ordinary Lab Total shape (Core:10826), so the
+    /// best `(Technique, Form)` cell of the existing grid is taken — and unlike
+    /// Masterpiece, a **focus** may apply here (`:10818`), so the best cell's
+    /// within-focus figure is surfaced as a separate conditional number.
+    #[test]
+    fn familiar_readout_takes_the_best_lab_total_and_surfaces_the_focus() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Int, 3);
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.magic_theory"),
+            parameter: None,
+            specialty: None,
+            score: 4,
+        }];
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.corpus"),
+                score: 13,
+            },
+        ];
+        e.aura = 5;
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.magical_focus"),
+            BTreeMap::from([("focus".into(), Id::new("ravens"))]),
+        )];
+        e.familiar = Some(statblock_familiar());
+
+        let out = familiar_readout(&e, &rs).expect("a familiar has a read-out");
+        assert_eq!(out.binding_level, 15);
+        assert_eq!(out.cord_points_spent, 50);
+        assert_eq!(out.invested_power_levels, 15);
+
+        let binding = &out.binding;
+        // Best cell: Int 3 + Magic Theory 4 + Creo 10 + Corpus 13 + Aura 5 = 35.
+        assert_eq!(binding.technique.as_str(), "art.creo");
+        assert_eq!(binding.form.as_str(), "art.corpus");
+        assert_eq!(binding.lab_total, 35);
+        // Within the focus the lower Art (Creo 10) is added again.
+        assert_eq!(binding.lab_total_within_focus, Some(45));
+        assert!(binding.lab_total_reaches_level, "35 >= 15");
+        assert!(
+            !binding.cord_points_within_lab_total,
+            "50 cord points overrun a Lab Total of 35"
+        );
+    }
+
+    /// Without a Magical Focus the conditional within-focus figure is absent, and
+    /// the two comparison flags report a Lab Total that falls short of the level and
+    /// cords that overrun it.
+    #[test]
+    fn familiar_readout_reports_a_lab_total_that_falls_short() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.familiar = Some(statblock_familiar());
+        let out = familiar_readout(&e, &rs).expect("a familiar has a read-out");
+        assert_eq!(out.binding.lab_total, 0);
+        assert_eq!(out.binding.lab_total_within_focus, None);
+        assert!(!out.binding.lab_total_reaches_level, "0 < 15");
+        assert!(!out.binding.cord_points_within_lab_total, "50 > 0");
+    }
+
+    /// No familiar, or a non-magus, means no read-out at all — `DerivedTotals`
+    /// gates it on `is_magus` exactly as it gates the talisman capacity.
+    #[test]
+    fn familiar_readout_absent_without_a_familiar_or_for_a_non_magus() {
+        let rs = ruleset();
+        let e = magus();
+        assert!(familiar_readout(&e, &rs).is_none());
+        assert!(derived_totals(&e, &rs).familiar.is_none());
+
+        let mut g = grog();
+        g.familiar = Some(statblock_familiar());
+        assert!(derived_totals(&g, &rs).familiar.is_none());
+
+        let mut m = magus();
+        m.familiar = Some(statblock_familiar());
+        assert!(derived_totals(&m, &rs).familiar.is_some());
     }
 
     /// `Ruleset::art_ids_of` returns the ids of one Art class, sorted. The sort is
