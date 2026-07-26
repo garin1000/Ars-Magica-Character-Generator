@@ -1660,6 +1660,75 @@ mod tests {
         );
     }
 
+    /// **Invariant (M5.5c).** The familiar's Characteristics are its own creature
+    /// statblock, not bought from the magus's Characteristic points
+    /// (Core:17793 — a creature's Characteristics are simply "a list of the
+    /// characteristics and values"). Because they are nested in `Entity.familiar`
+    /// and never in `Entity.characteristics`, `validate_characteristics` cannot
+    /// see them: a familiar whose Characteristics would cost far more than the
+    /// starting budget changes no issue at all.
+    #[test]
+    fn familiar_characteristics_never_enter_the_magus_point_buy() {
+        let rs = aging_ruleset();
+        let mut entity = make_entity("companion", vec![]);
+        // Exactly the 7 starting points: Str 3 (6) + Qik 1 (1).
+        entity.characteristics.insert(Characteristic::Str, 3);
+        entity.characteristics.insert(Characteristic::Qik, 1);
+        let before = all_codes(&validate(&entity, &rs));
+
+        entity.familiar = Some(Familiar {
+            name: "Corax".into(),
+            // Eight maxed Characteristics — 48 points if they were ever charged.
+            characteristics: Characteristic::ALL.into_iter().map(|c| (c, 3)).collect(),
+            ..Default::default()
+        });
+        let after = all_codes(&validate(&entity, &rs));
+        assert_eq!(
+            before, after,
+            "the familiar's Characteristics must not touch the magus's point-buy"
+        );
+    }
+
+    /// **Invariant (M5.5c).** The familiar's Magic Might belongs to the familiar,
+    /// so it can never trip [`validate_might`]'s realm-agreement warning (which
+    /// reads only `Entity.might`), nor charge the being's power-levels budget, nor
+    /// make the magus himself look like a Might-being (which would offer the
+    /// non-magus Might tab).
+    #[test]
+    fn familiar_might_never_triggers_the_realm_mismatch_warning() {
+        let rs = rs_with_houses(MIGHT_ITEMS, GRANT_MAGUS_TYPE);
+        // Demonic Blood grants Infernal Might, so a *base* Might of another Realm
+        // would warn — the familiar's Faerie Might must not.
+        let mut entity = make_entity("magus", vec![sel("virtue.demonic_blood")]);
+        entity.might = None;
+        entity.familiar = Some(Familiar {
+            name: "Corax".into(),
+            might: Some(MightScore {
+                realm: Realm::Faerie,
+                score: 25,
+            }),
+            powers: vec![power("Mental communication", 400)],
+            ..Default::default()
+        });
+        let result = validate(&entity, &rs);
+        assert!(
+            !all_codes(&result).contains(&ValidationIssue::CODE_MIGHT_REALM_MISMATCH.to_string()),
+            "issues: {:?}",
+            result.issues
+        );
+        assert!(
+            !all_codes(&result).contains(&ValidationIssue::CODE_OVER_POWER_LEVELS.to_string()),
+            "the familiar's bond-invested powers are charged against no budget: {:?}",
+            result.issues
+        );
+
+        // And with no Might Virtue at all, a familiar with Might leaves the magus
+        // a plain magus — `effective_might` stays `None`.
+        let mut plain = make_entity("magus", vec![]);
+        plain.familiar = entity.familiar.clone();
+        assert_eq!(crate::effective::effective_might(&plain, &rs), None);
+    }
+
     /// A minimal ruleset carrying characteristic rules (effective range ±5), so the
     /// aging-reduction floor check has a minimum to compare against.
     fn aging_ruleset() -> Ruleset {

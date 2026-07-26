@@ -926,6 +926,82 @@ talisman, which is why it is an `Option`, not a `Vec`.
   — the shipped ruleset is canonically serialized, but a hand-built test fixture
   need not be.
 
+#### M5.5c — Familiar as a creature statblock (storage, additive — no schema bump)
+M5/5e stored a familiar as a name plus three cord scores, with none of the magical
+animal behind it. M5.5c expands `Entity.familiar: Option<Familiar>` into a
+**creature statblock**, whose field order follows the rulebook's own *Creature
+Format* (`:17787-17827`) so a save reads like the printed creature entry:
+
+> A familiar is a beast that a magus befriends and then magically bonds with,
+> instilling the beast with magical powers in the process … Though a familiar is
+> very close to the magus who creates it, it always has its own will, and is not
+> under the control of the magus. — `:10770`
+
+Source for the whole chapter: `Ars Magica - Definitive Edition (Core Rules).md:10766-10892`.
+
+- **`animal: String`** (free text) — the kind of beast. "The first step in getting a
+  familiar is finding an animal with inherent magic" (`:10774`). Deliberately **not**
+  named `species`: the rules reserve *Species* for the Imaginem term (the sensory
+  image a thing sheds), and the German glossary makes the same reservation
+  (`translation-tables/grundbegriffe.md:112`), so "Spezies" is the wrong label too.
+- **`might: Option<MightScore>`** — the familiar's own Magic Might + Realm. "the
+  beast is likely to have a Magic Might score, which may be assigned based on the
+  scores of comparable magical creatures" (`:10774`); the Creature Format prints it
+  as the `(Realm) Might:` line (`:17791`). It is the **familiar's** Might: no Virtue
+  grant stacks on top, which is why the UI labels it with its own Fluent key rather
+  than reusing `might-score-label` ("Base Might Score").
+- **`characteristics: BTreeMap<Characteristic, i8>`** — the creature's own
+  Characteristics ("A list of the characteristics and values", `:17793`), signed and
+  **never bought from the magus's Characteristic points**. A 0 score is omitted.
+- **`size: i8`** — signed and commonly **negative**; a raven is Size -4
+  (`:17829-17856`, the Size examples table). It lowers the bonding level: "If the
+  familiar has negative Size, this reduces the level for the enchantment" (`:10824`).
+  Every displayed sign is the ASCII hyphen-minus, per the project convention.
+- **`personality_traits: Vec<PersonalityTrait>`** — `:17807`. Reuses the existing
+  value struct; kept sorted by `Familiar::normalize()`.
+- **`powers: Vec<SupernaturalPower>`** — the powers invested in the bond
+  (`:10862-10884`), charged against **no** budget (`:10866`, see the derived row).
+  Kept sorted by `Familiar::normalize()`.
+- The three cords are unchanged, only re-ordered to sit where the statblock puts
+  them (after Personality Traits, before Powers). Source: `:10840-10844`.
+
+**No `SCHEMA_VERSION` bump.** Every field beyond `name` is additive
+`serde(default, skip_serializing_if)`, so a pre-5.5c familiar (name + cords) loads
+unchanged *and* writes byte-identical JSON — the `mastery_abilities` /
+`warping_choices` / `LongevityRitual::focus` precedent. Pinned by
+`cords_only_familiar_omits_every_statblock_key` and
+`save_with_cords_only_familiar_loads_statblock_as_defaults`.
+
+**Two invariants that fall out of nesting**, each locked by a named regression test
+in `validation/mod.rs`:
+
+- `familiar_characteristics_never_enter_the_magus_point_buy` — the familiar's
+  Characteristics live in `Entity.familiar`, never in `Entity.characteristics`, so
+  `validate_characteristics` cannot see them; a familiar with eight maxed
+  Characteristics changes no issue.
+- `familiar_might_never_triggers_the_realm_mismatch_warning` — `validate_might`
+  reads only `Entity.might`, and `validate_powers` only `Entity.powers`, so the
+  familiar's (possibly other-Realm) Might raises no `might_realm_mismatch` and its
+  invested powers raise no `over_power_levels`. The same test asserts
+  `effective_might` stays `None`, so a magus with a Might-bearing familiar is never
+  misdetected as a Might-being and offered the non-magus Might tab.
+
+**No `Cunning` variant is added to `Characteristic`** (a deliberate, recorded
+decision — do not re-litigate). The Creature Format notes that "Creatures with
+animal intelligence have a Cunning (Cun) score rather than an Intelligence score"
+(`:17793`), but a **bound** familiar is not such a creature: "If it did not
+previously have human intelligence, it gains it, with a score of –3" (`:10854`) —
+an ordinary Intelligence entry. The app only ever stores *bound* familiars, so
+`Characteristic` stays the fixed eight the rules name (`:1023-1025`). Displaying an
+unbound creature's score as "Cun" would be a **display-only** affordance, and it is
+deferred until the app models unbound creatures at all.
+
+**Deferred statblock lines** (out of M5.5c scope by decision): the familiar's
+Abilities (`:17819`), Qualities, Virtues/Flaws (`:17805`) and the
+Combat / Soak / Fatigue / Wound statlines (`:17811-17817`). These are the creature
+lines the app does not yet enter for *any* creature, so adding them for the familiar
+alone would be a lone special case.
+
 #### M5/5g — aged / warped state, effects & identity Entity storage
 Direct-entry storage (plus the derived scores computed from points) for an
 already-aged / already-warped character, and free-text identity/flavor fields. The
