@@ -152,4 +152,21 @@ describe('XpBar negative-available regression (Issue G(a))', () => {
     const { open } = element(html(), 'xp-available');
     expect(open).not.toMatch(/\bover\b/);
   });
+
+  it('marks the used figure with the over-value class when the pool is overspent', () => {
+    resetEntity(10);
+    setEffective(15, []); // used 15 exceeds the 10-point pool -> available = -5
+    const { open, text } = element(html(), 'xp-spent');
+    // over-value drives the red (non-bold) styling on the used figure; the bold
+    // treatment stays on the Available value alone.
+    expect(open).toMatch(/class="[^"]*\bover-value\b[^"]*"/);
+    expect(text).toContain('15');
+  });
+
+  it('does not mark the used figure as over-value when the pool covers the spend', () => {
+    resetEntity(50);
+    setEffective(30, []);
+    const { open } = element(html(), 'xp-spent');
+    expect(open).not.toMatch(/\bover-value\b/);
+  });
 });

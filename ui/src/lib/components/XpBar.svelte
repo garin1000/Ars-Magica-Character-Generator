@@ -32,7 +32,9 @@
 <div class="xp-summary">
   <span class="xp-pool">
     <span class="xp-pool-label">{store.t('xp-pool')}</span>
-    <span class="xp-pool-used" data-testid="{prefix}xp-spent">{generalUsed}</span>
+    <span class="xp-pool-used" class:over-value={available < 0} data-testid="{prefix}xp-spent"
+      >{generalUsed}</span
+    >
     <span class="xp-pool-total">
       <input
         type="number"
