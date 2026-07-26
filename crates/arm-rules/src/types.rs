@@ -1800,16 +1800,79 @@ pub struct Familiar {
     pub cord_bronze: u8,
 }
 
-/// A talisman attunement: a free-text descriptor plus the bonus it confers. Only
-/// the choice is stored; the derived-totals slice decides where each bonus
-/// applies. Kept sorted via [`Entity::normalize`]. Source: Core Rules.md (talisman
-/// attunement shape bonuses).
+/// A talisman attunement: a free-text descriptor plus the bonus it confers. The
+/// attunement is chosen from the Shape and Material Bonuses Table each time the
+/// talisman is prepared or an effect is instilled ("you may also open your
+/// talisman to one kind of magic attunement, based on the shape and material of
+/// the talisman"), and only the highest applicable bonus applies, to Casting
+/// Scores only. Only the choice is stored; the derived-totals slice decides where
+/// each bonus applies. Kept sorted via [`Entity::normalize`].
+/// Source: `Ars Magica - Definitive Edition (Core Rules).md:10623`, `:10625`.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct TalismanAttunement {
     /// Free-text description of the attunement (what it enhances).
     pub description: String,
     /// The bonus the attunement confers.
     pub bonus: i8,
+}
+
+/// An effect instilled in a magus's talisman: a free-text name and its total
+/// level.
+///
+/// Deliberately **not** an [`EnchantedDevice`]: the two carry different budget
+/// contracts and different provenance. A starting *device* is funded by the
+/// Redcap-only item-level Virtues and is charged against that budget by
+/// [`crate::effective::item_level_used`]; a talisman's instilled effects are
+/// funded by nothing the model tracks (see [`Talisman`]) and are charged against
+/// nothing. Keeping them apart is the same separation that puts
+/// [`SupernaturalPower`] beside [`EnchantedDevice`].
+///
+/// Source: `Ars Magica - Definitive Edition (Core Rules).md:10621` ("When a magus
+/// instills effects into a talisman …").
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct TalismanEffect {
+    /// Free-text name of the instilled effect.
+    pub name: String,
+    /// The effect's total level.
+    pub level: u16,
+}
+
+/// A magus's talisman: his personal enchanted item, not merely a list of
+/// attunements.
+///
+/// "A talisman is a very personal item that contains magics and materials that tie
+/// it intimately to you and that can be used as a channel for your magical power"
+/// — a magus can have only one at a time. The stored parts are the item's
+/// shape/material identity (free text, since shape and material are open-ended),
+/// its attunements, and the effects instilled in it. Its *capacity* is derived,
+/// never stored: it "depends on the power of the magus to whom it is attuned"
+/// (see [`crate::derived::talisman_capacity`]).
+///
+/// Every field is optional, so an untouched talisman writes no keys at all. Both
+/// nested lists are kept sorted via [`Entity::normalize`].
+///
+/// Source: `Ars Magica - Definitive Edition (Core Rules).md:10603-10625`.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Talisman {
+    /// Free-text shape/material identity of the item ("an ash staff shod with
+    /// silver"). Empty when unset.
+    #[serde(default, skip_serializing_if = "is_empty_str")]
+    pub description: String,
+    /// The shape-and-material attunements opened in the talisman.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attunements: Vec<TalismanAttunement>,
+    /// The effects instilled in the talisman.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub effects: Vec<TalismanEffect>,
+}
+
+impl Talisman {
+    /// Sorts both nested lists (attunements by description, effects by name) for
+    /// canonical serialization. Called from [`Entity::normalize`].
+    pub fn normalize(&mut self) {
+        self.attunements.sort();
+        self.effects.sort();
+    }
 }
 
 /// Where a magus's Longevity Ritual comes from — a fixed rules taxonomy, rendered
@@ -2047,10 +2110,12 @@ pub struct Entity {
     /// The magus's familiar and its bond-cord scores. `None` when there is none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub familiar: Option<Familiar>,
-    /// Talisman attunements (magi only). Kept sorted via [`Entity::normalize`].
-    /// Defaults to empty.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub talisman_attunements: Vec<TalismanAttunement>,
+    /// The magus's talisman — identity, attunements and instilled effects.
+    /// `None` when there is none (a magus may have at most one).
+    /// Replaced the flat `talisman_attunements` list in schema 14; legacy saves
+    /// are folded in by [`load_entity_migrating`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub talisman: Option<Talisman>,
     /// The magus's Longevity Ritual. `None` when there is none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub longevity_ritual: Option<LongevityRitual>,
@@ -2165,8 +2230,25 @@ pub struct Entity {
 /// (the off-budget owed-warping V/F fills, Issue E) were both later additive
 /// `serde(default)` additions that did NOT bump the version: an old save omits
 /// the key and deserializes to the empty default; a new save with the default
-/// omits it on write, so version 13 saves remain byte-compatible both ways.
-pub const SCHEMA_VERSION: u32 = 13;
+/// omits it on write, so version 13 saves remain byte-compatible both ways. The
+/// same applies to [`LongevityRitual::focus`] (M5.5a): retaining
+/// `bonus: Option<i8>` made the accompanying semantic change — the self-made
+/// bonus is now *entered* rather than derived — self-migrating, so a pre-5.5a
+/// self-made ritual simply loads as "bonus not entered" and the hint beside the
+/// input suggests the number the old build derived. A pre-5.5a *external* ritual
+/// that was added but never filled in stored a seeded 0 and now reads as a
+/// deliberate 0. Neither is silently repaired: guessing would re-invent the live
+/// derivation 5.5a exists to delete.
+///
+/// Bumped 13 → 14 when the flat `talisman_attunements` list was replaced by
+/// [`Entity::talisman`], the magus's talisman as an *item* (identity +
+/// attunements + instilled effects). This is a field **move**, not an addition,
+/// so [`load_entity_migrating`] folds any legacy list into the new
+/// `talisman.attunements`. The fold is lossless — the attunements are carried
+/// over verbatim, and the identity/effects the old shape never stored stay empty
+/// rather than being invented — so unlike the `aging_reductions` migration it
+/// needs no [`LoadedEntity`] notice flag.
+pub const SCHEMA_VERSION: u32 = 14;
 
 impl Entity {
     /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
@@ -2197,7 +2279,7 @@ impl Entity {
             aura: 0,
             devices: Vec::new(),
             familiar: None,
-            talisman_attunements: Vec::new(),
+            talisman: None,
             longevity_ritual: None,
             aging_points: BTreeMap::new(),
             warping_points: 0,
@@ -2220,8 +2302,8 @@ impl Entity {
     }
 
     /// Sort selections, ability scores, art scores, spells, personality traits,
-    /// reputations, devices, talisman attunements, twilight scars, the aging log
-    /// (by year), equipment and powers for canonical serialization.
+    /// reputations, devices, the talisman's nested lists, twilight scars, the
+    /// aging log (by year), equipment and powers for canonical serialization.
     /// (`characteristics` and `aging_points` are `BTreeMap`s, already id-ordered.)
     pub fn normalize(&mut self) {
         self.selections.sort();
@@ -2237,7 +2319,9 @@ impl Entity {
         self.personality_traits.sort();
         self.reputations.sort();
         self.devices.sort();
-        self.talisman_attunements.sort();
+        if let Some(talisman) = &mut self.talisman {
+            talisman.normalize();
+        }
         self.twilight_scars.sort();
         self.aging_log.sort();
         self.equipment.sort();
@@ -2272,6 +2356,35 @@ fn minimal_aging_points_for_drops(bought: i32, drops: u32) -> u32 {
     total
 }
 
+/// Folds a legacy (schema ≤ 13) `talisman_attunements` value into
+/// [`Entity::talisman`].
+///
+/// Two shapes are ambiguous and are decided here:
+/// - An **empty** legacy list creates no talisman. A magus with no attunements had
+///   no talisman recorded either, and a phantom empty item would show up as an
+///   owned talisman in the UI. (An app-written save can never contain one —
+///   `skip_serializing_if = "Vec::is_empty"` omits the key — so this only covers a
+///   hand-edited file. The version is still bumped by the caller, because the
+///   key's presence proves the old shape; the `aging_reductions` fold does the
+///   same.)
+/// - A save carrying **both** keys keeps the new `talisman` and drops the legacy
+///   list unmerged. Merging would duplicate attunements a player already moved
+///   across by hand, and the new shape is the more specific statement of intent.
+fn fold_legacy_talisman(entity: &mut Entity, legacy: serde_json::Value) {
+    if entity.talisman.is_some() {
+        return;
+    }
+    let attunements: Vec<TalismanAttunement> = serde_json::from_value(legacy).unwrap_or_default();
+    if attunements.is_empty() {
+        return;
+    }
+    entity.talisman = Some(Talisman {
+        description: String::new(),
+        attunements,
+        effects: Vec::new(),
+    });
+}
+
 /// Deserializes an entity from JSON, applying backward-compatible save
 /// migrations, and reports what was migrated.
 ///
@@ -2281,14 +2394,31 @@ fn minimal_aging_points_for_drops(bought: i32, drops: u32) -> u32 {
 /// `aging_points` as the minimal point total that reproduces the same number of
 /// drops. Because every aging point counts toward Decrepitude — including those
 /// "lost" to a drop — this fold also corrects the old model's Decrepitude
-/// under-count. Plain `serde` deserialization still works for current saves; this
-/// wrapper only adds the fold and a migration report.
+/// under-count.
+///
+/// Saves at schema ≤ 13 carried a flat `talisman_attunements` list. Schema 14
+/// models the talisman as an item ([`Talisman`]), so any legacy list is folded
+/// into `talisman.attunements`. See [`fold_legacy_talisman`] for the two
+/// ambiguous shapes it has to decide.
+///
+/// Dispatch is on legacy-key *presence*, never on the recorded version: a
+/// hand-edited save may carry any `schema_version` alongside either shape. Plain
+/// `serde` deserialization still works for current saves; this wrapper only adds
+/// the folds and a migration report.
 pub fn load_entity_migrating(json: &str) -> Result<LoadedEntity, serde_json::Error> {
     let mut value: serde_json::Value = serde_json::from_str(json)?;
     let legacy = value
         .as_object_mut()
         .and_then(|obj| obj.remove("aging_reductions"));
+    let legacy_attunements = value
+        .as_object_mut()
+        .and_then(|obj| obj.remove("talisman_attunements"));
     let mut entity: Entity = serde_json::from_value(value)?;
+
+    if let Some(legacy_attunements) = legacy_attunements {
+        fold_legacy_talisman(&mut entity, legacy_attunements);
+        entity.schema_version = SCHEMA_VERSION;
+    }
 
     let mut migrated_aging_characteristics = Vec::new();
     if let Some(legacy) = legacy {
@@ -3011,7 +3141,7 @@ mod tests {
             aura: 0,
             devices: Vec::new(),
             familiar: None,
-            talisman_attunements: Vec::new(),
+            talisman: None,
             longevity_ritual: None,
             aging_points: BTreeMap::new(),
             warping_points: 0,
@@ -3036,7 +3166,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 13"#));
+        assert!(json.contains(r#""schema_version": 14"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -3159,7 +3289,7 @@ mod tests {
             aura: 0,
             devices: Vec::new(),
             familiar: None,
-            talisman_attunements: Vec::new(),
+            talisman: None,
             longevity_ritual: None,
             aging_points: BTreeMap::new(),
             warping_points: 0,
@@ -3334,7 +3464,7 @@ mod tests {
         assert_eq!(entity.aura, 0);
         assert!(entity.devices.is_empty());
         assert!(entity.familiar.is_none());
-        assert!(entity.talisman_attunements.is_empty());
+        assert!(entity.talisman.is_none());
         assert!(entity.longevity_ritual.is_none());
     }
 
@@ -3373,10 +3503,14 @@ mod tests {
             cord_silver: 1,
             cord_bronze: 3,
         });
-        entity.talisman_attunements = vec![TalismanAttunement {
-            description: "Attuned to fire".into(),
-            bonus: 5,
-        }];
+        entity.talisman = Some(Talisman {
+            description: "An ash staff shod with silver".into(),
+            attunements: vec![TalismanAttunement {
+                description: "Attuned to fire".into(),
+                bonus: 5,
+            }],
+            effects: Vec::new(),
+        });
         entity.longevity_ritual = Some(LongevityRitual {
             source: LongevitySource::External,
             bonus: Some(4),
@@ -3386,9 +3520,37 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 13"#));
+        assert!(json.contains(r#""schema_version": 14"#));
         assert!(json.contains(r#""aura": -3"#));
         assert!(json.contains(r#""source": "external""#));
+    }
+
+    /// The talisman is the magus's personal enchanted item: a shape/material
+    /// identity, its shape-and-material attunements, and the effects instilled in
+    /// it. Every part is optional, so a bare talisman serializes to `{}` and a
+    /// fully-filled one round-trips.
+    #[test]
+    fn entity_talisman_roundtrip() {
+        let bare = Talisman::default();
+        let json = serde_json::to_string(&bare).unwrap();
+        assert_eq!(json, "{}", "an untouched talisman writes no keys");
+        assert_eq!(serde_json::from_str::<Talisman>(&json).unwrap(), bare);
+
+        let filled = Talisman {
+            description: "A yew wand banded with lead".into(),
+            attunements: vec![TalismanAttunement {
+                description: "Controlling things at a distance".into(),
+                bonus: 4,
+            }],
+            effects: vec![TalismanEffect {
+                name: "Wielding the Invisible Sling".into(),
+                level: 15,
+            }],
+        };
+        let json = serde_json::to_string(&filled).unwrap();
+        assert!(json.contains("yew wand"), "{json}");
+        assert!(json.contains(r#""level":15"#), "{json}");
+        assert_eq!(serde_json::from_str::<Talisman>(&json).unwrap(), filled);
     }
 
     /// A self-made Longevity Ritual stores the *player-entered* bonus and focus
@@ -3424,8 +3586,9 @@ mod tests {
         );
     }
 
-    /// `normalize()` sorts devices (by name) and talisman attunements (by
-    /// description) deterministically.
+    /// `normalize()` sorts devices (by name) and both of the talisman's nested
+    /// lists — attunements by description, instilled effects by name —
+    /// deterministically.
     #[test]
     fn entity_normalize_sorts_devices_and_talismans() {
         let mut entity = Entity::new(
@@ -3443,19 +3606,34 @@ mod tests {
                 level: 15,
             },
         ];
-        entity.talisman_attunements = vec![
-            TalismanAttunement {
-                description: "Zephyr".into(),
-                bonus: 2,
-            },
-            TalismanAttunement {
-                description: "Aegis".into(),
-                bonus: 3,
-            },
-        ];
+        entity.talisman = Some(Talisman {
+            description: String::new(),
+            attunements: vec![
+                TalismanAttunement {
+                    description: "Zephyr".into(),
+                    bonus: 2,
+                },
+                TalismanAttunement {
+                    description: "Aegis".into(),
+                    bonus: 3,
+                },
+            ],
+            effects: vec![
+                TalismanEffect {
+                    name: "Wizard's Sidestep".into(),
+                    level: 15,
+                },
+                TalismanEffect {
+                    name: "Lamp Without Flame".into(),
+                    level: 10,
+                },
+            ],
+        });
         entity.normalize();
         assert_eq!(entity.devices[0].name, "Amulet");
-        assert_eq!(entity.talisman_attunements[0].description, "Aegis");
+        let talisman = entity.talisman.expect("talisman present");
+        assert_eq!(talisman.attunements[0].description, "Aegis");
+        assert_eq!(talisman.effects[0].name, "Lamp Without Flame");
     }
 
     /// The M5/5g fields (aging points, warping points, twilight scars,
@@ -3486,7 +3664,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 13"#));
+        assert!(json.contains(r#""schema_version": 14"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
         assert!(json.contains(r#""description": "Knight of the Teutonic Order, Crusader""#));
@@ -3568,6 +3746,83 @@ mod tests {
                 .copied(),
             Some(4)
         );
+    }
+
+    /// A legacy save carrying the flat `talisman_attunements` list migrates into
+    /// `Entity.talisman`: the attunements are carried over verbatim (the fold is
+    /// lossless, unlike the aging one), the legacy key is dropped, and the schema
+    /// is bumped to 14.
+    #[test]
+    fn legacy_talisman_attunements_migrate_into_talisman() {
+        let old = r#"{
+          "schema_version": 13,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "talisman_attunements": [
+            { "description": "Projecting bolts and missiles", "bonus": 3 },
+            { "description": "Controlling things at a distance", "bonus": 4 }
+          ]
+        }"#;
+        let loaded = load_entity_migrating(old).unwrap();
+        let talisman = loaded
+            .entity
+            .talisman
+            .as_ref()
+            .expect("legacy attunements become a talisman");
+        assert_eq!(talisman.attunements.len(), 2);
+        assert_eq!(talisman.attunements[0].bonus, 3);
+        // Only the attunements are known; the item's identity and instilled
+        // effects were never stored, so they stay empty rather than invented.
+        assert_eq!(talisman.description, "");
+        assert!(talisman.effects.is_empty());
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+        // Re-serializing carries no legacy key.
+        let json = serde_json::to_string(&loaded.entity).unwrap();
+        assert!(!json.contains("talisman_attunements"), "{json}");
+    }
+
+    /// An empty legacy list is not a talisman: no phantom item is created. The
+    /// schema is still bumped, because the key's presence proves the save was
+    /// written in the old shape (the `aging_reductions` precedent). App-written
+    /// saves can never carry an empty list (`skip_serializing_if`), so this only
+    /// covers a hand-edited file.
+    #[test]
+    fn legacy_empty_talisman_attunements_migrate_to_no_talisman() {
+        let old = r#"{
+          "schema_version": 13,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "talisman_attunements": []
+        }"#;
+        let loaded = load_entity_migrating(old).unwrap();
+        assert!(loaded.entity.talisman.is_none(), "no phantom talisman");
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+    }
+
+    /// A hand-edited save carrying BOTH shapes: the new `talisman` wins and the
+    /// legacy list is dropped unmerged. Merging would silently duplicate
+    /// attunements the player may have already moved across by hand.
+    #[test]
+    fn hand_edited_save_with_both_talisman_shapes_keeps_the_new_one() {
+        let both = r#"{
+          "schema_version": 13,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "talisman": {
+            "description": "An ash staff",
+            "attunements": [{ "description": "Warding", "bonus": 5 }]
+          },
+          "talisman_attunements": [{ "description": "Stale", "bonus": 1 }]
+        }"#;
+        let loaded = load_entity_migrating(both).unwrap();
+        let talisman = loaded.entity.talisman.as_ref().expect("talisman kept");
+        assert_eq!(talisman.description, "An ash staff");
+        assert_eq!(talisman.attunements.len(), 1, "legacy row not merged in");
+        assert_eq!(talisman.attunements[0].description, "Warding");
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
 
     /// A slice-5e v9 save that predates the 5g fields still loads: the additive
@@ -3699,9 +3954,9 @@ mod tests {
         assert!(entity.warping_choices.is_empty());
     }
 
-    /// `warping_choices` round-trips canonically, stays at SCHEMA_VERSION 13
-    /// (additive `serde(default)` field), and is omitted from JSON when empty so
-    /// old saves lacking the key remain byte-compatible.
+    /// `warping_choices` round-trips canonically, bumps no schema version of its
+    /// own (additive `serde(default)` field), and is omitted from JSON when empty
+    /// so old saves lacking the key remain byte-compatible.
     #[test]
     fn warping_choices_roundtrip_is_canonical_and_schema_stable() {
         let mut entity = Entity::new(
@@ -3720,7 +3975,7 @@ mod tests {
         entity.normalize();
         let json = serde_json::to_string_pretty(&entity).unwrap();
         assert!(json.contains(r#""warping_choices""#), "{json}");
-        assert!(json.contains(r#""schema_version": 13"#), "{json}");
+        assert!(json.contains(r#""schema_version": 14"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);

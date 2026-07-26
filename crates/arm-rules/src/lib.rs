@@ -70,8 +70,8 @@ pub use types::{
     Id, ItemKind, LineRange, LoadedEntity, LongevityRitual, LongevitySource, MagicResistanceEffect,
     Magnitude, MightScore, ParamType, ParameterDef, ParameterDomain, PersonalityTrait, PointBudget,
     PointItem, Prereq, Realm, Reputation, ReputationType, RulesetRef, SCHEMA_VERSION, Selection,
-    SourceRef, SpecialCasting, SpellSelection, SupernaturalPower, TalismanAttunement, TwilightScar,
-    ValidationMode, load_entity_migrating,
+    SourceRef, SpecialCasting, SpellSelection, SupernaturalPower, Talisman, TalismanAttunement,
+    TalismanEffect, TwilightScar, ValidationMode, load_entity_migrating,
 };
 pub use validation::{
     Balance, IssueSeverity, PointCeilings, ValidationIssue, ValidationResult, compute_balance,
