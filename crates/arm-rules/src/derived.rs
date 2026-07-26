@@ -358,8 +358,9 @@ fn art(entity: &Entity, ruleset: &Ruleset, id: &str) -> i32 {
 ///
 /// Lab Total = Int + Magic Theory + Technique + Form + Aura + flat LabTotalMod;
 /// within a Magical Focus the lower applicable Art is added again; a Deficient Art
-/// halves the whole cell. Source: Core:4143-4154 (Lab Total shape), :4399-4422
-/// (focus doubling), :5909-5915 (Deficient halving).
+/// halves the whole cell. Source: Core:10276-10278 (Lab Total shape), :4151-4154
+/// (Inventive Genius, the flat `LabTotalMod`), :4399-4422 (focus doubling),
+/// :5909-5915 (Deficient halving).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LabTotal {
     /// Technique Art id of this cell.
@@ -379,16 +380,16 @@ pub struct LabTotal {
 }
 
 /// Lab Totals for every `(Technique, Form)` pair — the 5×10 grid. Source:
-/// Core:4143-4154.
+/// Core:10276-10278.
 pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
     let mods = in_play_mods(entity, ruleset);
     let intelligence = characteristic(entity, ruleset, Characteristic::Int);
     let magic_theory = ability(entity, ruleset, ID_MAGIC_THEORY);
     let aura = entity.aura;
     let mut out = Vec::new();
-    for technique in arts_of(ruleset, ArtType::Technique) {
+    for technique in ruleset.art_ids_of(ArtType::Technique) {
         let te = effective_art_score(entity, ruleset, &technique);
-        for form in arts_of(ruleset, ArtType::Form) {
+        for form in ruleset.art_ids_of(ArtType::Form) {
             let fo = effective_art_score(entity, ruleset, &form);
             let addends = vec![
                 Addend::new("intelligence", intelligence),
@@ -532,9 +533,9 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
     let philosophiae = ability(entity, ruleset, ID_PHILOSOPHIAE);
     let weak_spont = mods.halvings.contains(&HalvableTotal::SpontaneousCasting);
     let mut out = Vec::new();
-    for technique in arts_of(ruleset, ArtType::Technique) {
+    for technique in ruleset.art_ids_of(ArtType::Technique) {
         let te = effective_art_score(entity, ruleset, &technique);
-        for form in arts_of(ruleset, ArtType::Form) {
+        for form in ruleset.art_ids_of(ArtType::Form) {
             let fo = effective_art_score(entity, ruleset, &form);
             let deficient = mods.deficient(&technique, &form);
             let addends = vec![
@@ -748,7 +749,7 @@ pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistan
     let no_form = mods.mr_mods.contains(&MagicResistanceEffect::NoFormBonus);
     let halved = mods.halvings.contains(&HalvableTotal::MagicResistance);
     let mut out = Vec::new();
-    for form in arts_of(ruleset, ArtType::Form) {
+    for form in ruleset.art_ids_of(ArtType::Form) {
         let fo = effective_art_score(entity, ruleset, &form);
         let form_bonus = if no_form { 0 } else { fo };
         let base_addend = if might > parma_mr {
@@ -1379,6 +1380,85 @@ pub fn masterpiece_item_cap(entity: &Entity, ruleset: &Ruleset) -> Option<Master
         })
 }
 
+// --- Talisman (enchantment capacity) ---------------------------------------
+
+/// The talisman's enchantment-capacity read-out, in pawns of Vim vis.
+///
+/// "The capacity of a talisman is independent of its shape and material, and
+/// instead depends on the power of the magus to whom it is attuned. The maximum
+/// number of pawns of Vim vis that may be used to prepare a talisman is equal to
+/// the sum of the magus's highest Technique and highest Form" (Core:10619).
+///
+/// The two contributing Arts and their scores are surfaced alongside the sum so
+/// the UI can show the whole derivation without doing arithmetic in JS.
+///
+/// This is **read-only guidance**, like [`MasterpieceCap`]: no `ValidationIssue`
+/// is ever raised from it. Vis costs are out of scope — the model holds no vis
+/// stock, so the engine cannot know how much of the capacity is actually opened.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TalismanCapacity {
+    /// The magus's highest Technique.
+    pub technique: Id,
+    /// The magus's highest Form.
+    pub form: Id,
+    /// That Technique's effective score.
+    pub technique_score: i32,
+    /// That Form's effective score.
+    pub form_score: i32,
+    /// The capacity: `technique_score + form_score`, in pawns of Vim vis.
+    pub pawns: i32,
+}
+
+/// The Art of `art_type` with the highest **effective** score, and that score.
+/// Ties go to the alphabetically first id, because [`Ruleset::art_ids_of`] is
+/// sorted and the fold keeps the first strict maximum — so the read-out never
+/// flickers between equal Arts. `None` only when the ruleset defines no Art of
+/// that class.
+fn highest_art(entity: &Entity, ruleset: &Ruleset, art_type: ArtType) -> Option<(Id, i32)> {
+    ruleset
+        .art_ids_of(art_type)
+        .into_iter()
+        .map(|id| {
+            let score = crate::effective::effective_art_score(entity, ruleset, &id);
+            (id, score)
+        })
+        .reduce(|best, current| if current.1 > best.1 { current } else { best })
+}
+
+/// The magus's talisman capacity, or `None` when he has no talisman.
+///
+/// Uses the per-Art maxima of **effective** scores (Puissant Art and the like
+/// folded in by [`crate::effective::effective_art_score`]), *not* the best
+/// [`lab_totals`] pair: the rule reads the magus's Art scores directly, and a
+/// Deficient Art halves *totals*, never the score. A magus who has bought no Arts
+/// still gets a read-out, at 0 pawns.
+///
+/// **Non-goal — instilled effects are charged against no budget.** A talisman's
+/// [`crate::types::TalismanEffect`] levels are deliberately NOT added to
+/// `item_level_used`, so they can never overrun `item_level_budget`. That budget
+/// exists only because of two Redcap-only Virtues: Magic Items requires "You must
+/// be a Redcap to take this Virtue" (Core:4347-4349, the requirement on `:4349`),
+/// and the Redcap Social Status itself grants the fifty starting levels
+/// (`:4842-4850`) while stating "You may not take The Gift" (`:4850`). A talisman
+/// can only be attuned by a magus, so the budget can never fund one, and charging
+/// against it would invent a limit the rules do not impose. The talisman's own
+/// limit is this vis capacity, which the model cannot enforce (it holds no vis
+/// stock) and therefore only reports.
+///
+/// Source: `Ars Magica - Definitive Edition (Core Rules).md:10619`.
+pub fn talisman_capacity(entity: &Entity, ruleset: &Ruleset) -> Option<TalismanCapacity> {
+    entity.talisman.as_ref()?;
+    let (technique, technique_score) = highest_art(entity, ruleset, ArtType::Technique)?;
+    let (form, form_score) = highest_art(entity, ruleset, ArtType::Form)?;
+    Some(TalismanCapacity {
+        technique,
+        form,
+        technique_score,
+        form_score,
+        pawns: technique_score.saturating_add(form_score),
+    })
+}
+
 // --- Surfaced-only modifiers -----------------------------------------------
 
 /// The family a surfaced-only 5b modifier belongs to. A fixed, closed taxonomy —
@@ -1475,6 +1555,10 @@ pub struct DerivedTotals {
     /// The Masterpiece lesser-item cap (magi with the Virtue only; `None` otherwise).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub masterpiece: Option<MasterpieceCap>,
+    /// The talisman's enchantment capacity in pawns of Vim vis (magi with a
+    /// talisman only; `None` otherwise).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub talisman_capacity: Option<TalismanCapacity>,
     /// One combat line per equipped weapon.
     pub combat: Vec<CombatLine>,
     /// The Soak total.
@@ -1541,6 +1625,11 @@ pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
         } else {
             None
         },
+        talisman_capacity: if is_magus {
+            talisman_capacity(entity, ruleset)
+        } else {
+            None
+        },
         combat: combat_totals(entity, ruleset),
         soak: soak(entity, ruleset),
         encumbrance: encumbrance(entity, ruleset),
@@ -1554,22 +1643,13 @@ pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
     }
 }
 
-/// The Art ids of the given type, in catalogue order.
-fn arts_of(ruleset: &Ruleset, art_type: ArtType) -> Vec<Id> {
-    ruleset
-        .arts()
-        .filter(|a| a.art_type == art_type)
-        .map(|a| a.id.clone())
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::ruleset::RulesetSources;
     use crate::types::{
         AbilityScore, ArtScore, EntityKind, EquipmentSlot, Familiar, LongevityRitual, RulesetRef,
-        Selection, SpellSelection,
+        Selection, SpellSelection, Talisman,
     };
     use pretty_assertions::assert_eq;
     use std::collections::BTreeMap;
@@ -2023,6 +2103,151 @@ mod tests {
         }];
         assert!(masterpiece_item_cap(&e, &rs).is_none());
         assert!(derived_totals(&e, &rs).masterpiece.is_none());
+    }
+
+    /// A magus with a talisman: its capacity in pawns of Vim vis is his highest
+    /// Technique + his highest Form (Core:10619). Creo 10 / Perdo 4 and Corpus 12 /
+    /// Ignem 8 → Creo + Corpus = 22, with both contributing scores surfaced so the
+    /// UI needs no arithmetic.
+    #[test]
+    fn talisman_capacity_is_highest_technique_plus_highest_form() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.perdo"),
+                score: 4,
+            },
+            ArtScore {
+                art: Id::new("art.corpus"),
+                score: 12,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 8,
+            },
+        ];
+        e.talisman = Some(Talisman::default());
+        let cap = talisman_capacity(&e, &rs).expect("a talisman has a capacity");
+        assert_eq!(cap.technique.as_str(), "art.creo");
+        assert_eq!(cap.form.as_str(), "art.corpus");
+        assert_eq!(cap.technique_score, 10);
+        assert_eq!(cap.form_score, 12);
+        assert_eq!(cap.pawns, 22);
+        // Reaches the aggregated read-out for a magus.
+        assert_eq!(
+            derived_totals(&e, &rs).talisman_capacity.map(|c| c.pawns),
+            Some(22)
+        );
+    }
+
+    /// No talisman, no capacity read-out — and a non-magus never gets one even if a
+    /// hand-edited save carries a talisman.
+    #[test]
+    fn talisman_capacity_absent_without_a_talisman_or_for_a_non_magus() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.creo"),
+            score: 10,
+        }];
+        assert!(talisman_capacity(&e, &rs).is_none());
+        assert!(derived_totals(&e, &rs).talisman_capacity.is_none());
+
+        let mut g = grog();
+        g.talisman = Some(Talisman::default());
+        assert!(derived_totals(&g, &rs).talisman_capacity.is_none());
+    }
+
+    /// The capacity reads the per-Art **effective scores**, not the best Lab Total
+    /// pair: it "depends on the power of the magus" (Core:10619), and a Deficient
+    /// Technique halves *totals*, never the Art score itself. Discriminating: with
+    /// Deficient Creo the best Lab Total moves to Perdo, while the capacity stays on
+    /// Creo + Corpus.
+    #[test]
+    fn talisman_capacity_ignores_the_deficient_art_halving() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Int, 3);
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.magic_theory"),
+            parameter: None,
+            specialty: None,
+            score: 4,
+        }];
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.perdo"),
+                score: 4,
+            },
+            ArtScore {
+                art: Id::new("art.corpus"),
+                score: 12,
+            },
+        ];
+        e.selections = vec![Selection::with_params(
+            Id::new("flaw.deficient_technique"),
+            BTreeMap::from([("art".to_string(), Id::new("art.creo"))]),
+        )];
+        e.talisman = Some(Talisman::default());
+
+        // The best Lab Total is no longer a Creo cell: Creo+Corpus 29 halves to 14,
+        // while Perdo+Corpus is an unhalved 23.
+        let best = lab_totals(&e, &rs)
+            .into_iter()
+            .max_by_key(|lt| lt.total)
+            .expect("lab grid populated");
+        assert_eq!(best.technique.as_str(), "art.perdo");
+        assert_eq!(best.total, 23);
+
+        // The capacity is unmoved.
+        let cap = talisman_capacity(&e, &rs).expect("a talisman has a capacity");
+        assert_eq!(cap.technique.as_str(), "art.creo");
+        assert_eq!(cap.pawns, 22);
+    }
+
+    /// A magus who has bought no Arts still gets a read-out, at 0 pawns, naming the
+    /// alphabetically first Technique/Form — the tie is broken deterministically, not
+    /// by iteration luck.
+    #[test]
+    fn talisman_capacity_is_zero_and_deterministic_without_art_scores() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.talisman = Some(Talisman::default());
+        let cap = talisman_capacity(&e, &rs).expect("a talisman has a capacity");
+        assert_eq!(cap.pawns, 0);
+        assert_eq!(cap.technique.as_str(), "art.creo");
+        assert_eq!(cap.form.as_str(), "art.corpus");
+    }
+
+    /// `Ruleset::art_ids_of` returns the ids of one Art class, sorted. The sort is
+    /// load-bearing: `spell_level_caps` documents a canonical `(technique, form)`
+    /// ordering, and a hand-built fixture's declaration order need not be sorted.
+    #[test]
+    fn art_ids_of_returns_sorted_ids_of_one_class() {
+        let rs = ruleset();
+        let techniques = rs.art_ids_of(ArtType::Technique);
+        assert_eq!(
+            techniques.iter().map(|id| id.as_str()).collect::<Vec<_>>(),
+            vec!["art.creo", "art.muto", "art.perdo"]
+        );
+        let mut sorted = techniques.clone();
+        sorted.sort();
+        assert_eq!(techniques, sorted, "ids come back sorted");
+        assert!(
+            rs.art_ids_of(ArtType::Form)
+                .iter()
+                .all(|id| id.as_str() != "art.creo"),
+            "Forms only"
+        );
     }
 
     /// A casting total with Encumbrance and a Magical Focus: base vs within-focus,
