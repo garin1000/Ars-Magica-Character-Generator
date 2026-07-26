@@ -435,11 +435,96 @@ and the effects those carry — is directly enterable here.
       clippy, fmt, `npm run test:unit`/lint/format, and the authoritative
       `cargo tauri build --no-bundle`).
 
+## Milestone 5.5 — Magic Possessions depth (pre-wizard)
+
+Scope: M5/5e shipped only *minimal* entry for the magus's magic possessions —
+familiar (name + three cords), talisman (attunements list), Longevity Ritual
+(source + externally-provided bonus). Manual testing showed each is thinner than
+the rules warrant. This sub-milestone deepens the three to a rules-faithful model
+**before** the wizard (M6) wraps them, so the wizard has complete surfaces to
+orchestrate. Engine (where a mechanic changes) → data → direct-entry UI, TDD +
+`RULES.md` provenance per slice.
+
+### 5.5a. Longevity Ritual — player-entered value + live hint
+- [ ] The LR aging bonus becomes a **player-entered, stored** value used as-is by
+      the engine (a frozen snapshot taken at the ritual's creation). **Drop the
+      live Creo Corpus Lab-Total derivation** of the *stored* self-made bonus in
+      `derived.rs::longevity_bonus` — raising Cr/Co or changing the aura after
+      creation must NOT change the value. The engine passes the stored number
+      through (as the `external` path already does); the self/external asymmetry
+      collapses to one entered field. Source: Core Rules.md:10662, :10668.
+- [ ] Show a **live hint** beside the input — current Creo Corpus Lab Total →
+      suggested bonus (+1 per 5 points, aura-aware) — computed by repurposing the
+      existing `creo_corpus_lab_total` / `longevity_bonus` logic as a *hint only*,
+      never as the stored value. The player reads it and types the number in.
+      Source: Core Rules.md:10662 (LR bonus), :10826 (aura in Lab Total).
+- [ ] Add a free-text **focus** field (potion / bath / incense / fire …) and
+      surface the **sterility** consequence. Source: Core Rules.md:10656.
+
+### 5.5b. Talisman — item identity + instilled effects
+- [ ] Model the talisman as the magus's personal **enchanted item**, not just a
+      list of attunements: a shape/material identity (free-text), an enchantment
+      **capacity** read-out (highest Technique + highest Form, in Vim pawns), and
+      its **instilled effects** (name + level, like enchanted devices), in
+      addition to the existing shape/material **attunements** (description +
+      bonus). Source: Core Rules.md:10603-10623 (esp. :10619 capacity, :10623
+      attunements).
+
+### 5.5c. Familiar — magical-animal statblock — **SCOPE DECISION PENDING**
+- [ ] Expand `Familiar` from name + three cords toward the rules' magical animal:
+      candidate fields are species/animal, **Size**, **Magic Might** (+ realm),
+      **Characteristics**, **Abilities**, Personality Traits, and bond-invested
+      **powers** — atop the cords already modeled. Decide how much of the statblock
+      to build now vs. defer (a likely first cut: species + Size + Might +
+      Characteristics; Abilities/powers/qualities deferred). This is a data-model +
+      engine + UI addition — the largest of the three slices. Source: Core
+      Rules.md:10766-10893, esp. :10824 (Size + Magic Might in the binding level),
+      :10852-10860 (bond effects: True Friend, Loyal +3, intelligence, cords).
+
+## Milestone 5.6 — Markdown character export
+
+Scope: a standalone feature — export a built character as a single formatted
+**Markdown** file the player can read/share. Independent of the wizard; delivered
+here (pulled forward from M10's export item, which retains the PDF/Scribus path).
+
+- [ ] Pure formatter in `arm-rules` (TDD): given entity + localized ruleset, emit
+      Markdown covering identity/details, Virtues & Flaws, Abilities, Arts, Spells,
+      Equipment, **combat values**, Longevity Ritual, Talisman, and Familiar.
+      Include the character's chosen values and the key computed **combat / Soak**
+      totals, but **exclude** the per-line derived casting/lab-total read-outs —
+      those are noise in an export. Item **names** come through the `rules/i18n`
+      layer; no user-facing string is hardcoded (CLAUDE.md data-kind separation).
+- [ ] Section-header/label strings for the document: UI-owned Fluent (`.ftl`)
+      keys, assembled at the call site — resolve the engine-pure vs. localized-UI
+      split (engine emits structure/values keyed by id; UI supplies headings), so
+      the `arm-rules` purity invariant holds.
+- [ ] Tauri command + native **file-save dialog** + an **Export** button in the
+      UI; write the `.md` to a user-chosen path (file IO stays in `arm-app`).
+- [ ] Supersedes the Markdown half of M10's "Character sheet export" item.
+
 ## Milestone 6 — Guided creation wizard
 
 Scope: wrap the full phase list for every character type in a guided flow,
 reusing the direct-entry components from M2–M5. All input surfaces already exist;
 this milestone adds orchestration, gating, and the guided life-stage flows.
+
+### 6a. App entry & character-type lock (first M6 slice)
+
+The startup restructure the guided flow plugs into: the app opens on a **choice
+screen** rather than an already-instantiated blank character, and a character's
+**type is fixed** for its whole life.
+
+- [ ] Startup screen presenting the entry choices: **load existing**, **guided
+      wizard** (the rest of M6), and **create new** — one option per character
+      type (grog / companion / mythic companion / magus).
+- [ ] Character **type is fixed at creation and immutable thereafter** — including
+      on load. **Remove the in-view character-type selector** (from M4/4d); nothing
+      may change a character's type once chosen.
+- [ ] Show the type as a **read-only label** in a sensible spot in the main view
+      (e.g. the character banner/header), rendered via Fluent, never a raw slug.
+- [ ] Main view otherwise unchanged once a character is open.
+
+### 6b. Guided wizard flow
 
 - [ ] Wizard component driven by the character type's `creation_phases` list
       (already inert data on the profile; the wizard is its first consumer)
@@ -546,10 +631,10 @@ spell catalogues, and all creation-relevant and in-play V/F effects — lands in
 
 ## Milestone 10 — Export & polish
 
-- [ ] Character sheet export (PDF and/or Markdown) — reuses the M7 character-sheet
-      window layout/components, rendering the same sections to a static file.
-      PDF path may use the Scribus fillable template — see M11 /
-      `docs/scribus-character-sheet.md`.
+- [ ] Character sheet export — **Markdown delivered in M5.6**; this item now
+      covers the **PDF** path, reusing the M7 character-sheet window layout/
+      components to render the same sections to a static file. PDF path may use the
+      Scribus fillable template — see M11 / `docs/scribus-character-sheet.md`.
 - [ ] Covenant sheet export
 - [ ] Ruleset versioning & save migration
 - [ ] Multiple rulebook/supplement support
@@ -572,7 +657,24 @@ Full detail, field inventory, and quirks: **`docs/scribus-character-sheet.md`**.
 
 ---
 
-## Current focus: Milestone 5
+## Current focus: Milestone 5.5 (Magic Possessions depth)
+
+Milestones 0–5 complete: the direct-entry gate is closed — every core-rules
+character is fully enterable and its combat/Soak/casting/lab totals computed
+in-engine. Manual testing then surfaced a batch of UI/UX fixes (handled as an
+in-between quick-fix pass) plus three deeper gaps in the magus's magic
+possessions. Per user directive the roadmap now inserts, before the wizard:
+**M5.5** (Magic Possessions depth — familiar statblock, player-entered Longevity
+value + hint, talisman item + effects) then **M5.6** (Markdown export). The
+guided wizard **M6** gains a new first slice **6a** (startup screen + fixed
+character type) ahead of the guided flow (6b).
+
+Next: M5.5a — Longevity Ritual (player-entered value + live hint). Familiar depth
+(5.5c) still needs a scope decision before implementation.
+
+---
+
+### Superseded focus note (M5, complete)
 
 Milestones 0–4 complete: the Tauri app builds and launches, loads the ruleset,
 validates live, round-trips canonical saves, and passes a real-binary tauri-driver
