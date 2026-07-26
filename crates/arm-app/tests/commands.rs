@@ -423,6 +423,55 @@ fn save_then_load_round_trips_with_byte_stable_canonical_json() {
     assert_eq!(first, second, "canonical output must be byte-stable");
 }
 
+/// A pre-schema-14 save carrying the flat `talisman_attunements` list migrates
+/// through the **real** load path the app uses, not just the engine helper: the
+/// attunements arrive under `Entity.talisman`, the version is bumped to 14, and
+/// re-saving writes only the new shape. This is the engine-boundary half of the
+/// migration proof (the UI-boundary half is `ui/e2e/specs/talisman.e2e.js`).
+#[test]
+fn legacy_talisman_save_migrates_through_the_real_load_path() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("legacy-magus.json");
+    fs::write(
+        &path,
+        format!(
+            r#"{{
+              "schema_version": 13,
+              "ruleset": {{ "id": "{RULESET_ID}", "version": "{RULESET_VERSION}" }},
+              "entity_kind": "character",
+              "type_id": "magus",
+              "selections": [{{ "ref": "virtue.the_gift" }}],
+              "talisman_attunements": [
+                {{ "description": "Projecting bolts and missiles", "bonus": 3 }}
+              ]
+            }}"#
+        ),
+    )
+    .unwrap();
+
+    let migrated = load_entity_from_path(&path).unwrap();
+    assert_eq!(
+        migrated.schema_version, 14,
+        "the field move bumps the schema"
+    );
+    let talisman = migrated
+        .talisman
+        .as_ref()
+        .expect("legacy attunements become a talisman");
+    assert_eq!(talisman.attunements.len(), 1);
+    assert_eq!(talisman.attunements[0].bonus, 3);
+    // Nothing is invented for the parts the old shape never stored.
+    assert_eq!(talisman.description, "");
+    assert!(talisman.effects.is_empty());
+
+    // Saving the migrated entity writes the new shape only.
+    save_entity_to_path(&migrated, &path).unwrap();
+    let written = fs::read_to_string(&path).unwrap();
+    assert!(!written.contains("talisman_attunements"), "got: {written}");
+    assert!(written.contains("\"talisman\""), "got: {written}");
+    assert!(written.contains("\"schema_version\": 14"), "got: {written}");
+}
+
 #[test]
 fn save_stamps_current_schema_version() {
     let tmp = tempfile::tempdir().unwrap();
