@@ -841,9 +841,9 @@ precedent as `SpellSelection.mastery`'s 7 → 8 bump). Nothing is derived here
   cord_silver, cord_bronze: u8 }>`. Gold = −botch dice; Silver = +Personality /
   mental resistance; **Bronze = +Soak & aging-resistance** (feeds 5i Soak /
   longevity). Source: `Ars Magica - Definitive Edition (Core Rules).md:10840-10844`.
-- **Talisman attunements** — `Entity.talisman_attunements: Vec<TalismanAttunement {
-  description, bonus: i8 }>`; free-text descriptor + its shape bonus (5i decides
-  where each bonus applies).
+- **Talisman** — `Entity.talisman: Option<Talisman>` (see M5.5b below). Originally
+  a flat `talisman_attunements: Vec<TalismanAttunement>`; schema 14 moved it under
+  the item.
 - **Longevity Ritual** — `Entity.longevity_ritual: Option<LongevityRitual { source:
   LongevitySource (SelfMade|External), bonus: Option<i8>, focus: String }>`. The
   bonus is **player-entered for both sources** and stored; `None` means "not entered
@@ -851,11 +851,55 @@ precedent as `SpellSelection.mastery`'s 7 → 8 bump). Nothing is derived here
   ritual's culminating focus, free text. Source:
   `Ars Magica - Definitive Edition (Core Rules).md:10662` (formula), `:10656`
   (focus + permanent sterility).
-- `EnchantedDevice`/`TalismanAttunement` derive `Ord` so `Entity::normalize()`
-  sorts `devices` (by name) and `talisman_attunements` (by description) for
+- `EnchantedDevice`/`TalismanAttunement`/`TalismanEffect` derive `Ord` so
+  `Entity::normalize()` sorts `devices` (by name) and — via `Talisman::normalize()`
+  — the talisman's `attunements` (by description) and `effects` (by name) for
   zero-noise diffs. `LongevitySource` gets snake_case serde + `Display` (guarded by
   `display_matches_serde_scalar_for_every_enum`); the UI renders every enum through
   a Fluent key (`longevity-source-{self_made,external}`), never the raw slug.
+
+#### M5.5b — Talisman as an item (storage + schema 14 migration)
+The talisman is the magus's personal enchanted item, not a bare attunement list.
+`Entity.talisman: Option<Talisman { description, attunements, effects }>` replaces
+`talisman_attunements`, so `SCHEMA_VERSION` goes **13 → 14** — the first *field
+move* (every earlier bump since 10 was additive). A magus may have only one
+talisman, which is why it is an `Option`, not a `Vec`.
+
+- Verbatim: "A talisman is a very personal item that contains magics and materials
+  that tie it intimately to you and that can be used as a channel for your magical
+  power." … "A magus can only have one talisman at once".
+  Source: `Ars Magica - Definitive Edition (Core Rules).md:10603-10625`
+  (`:10605` identity, `:10607` one-at-a-time).
+- **Identity** — `Talisman.description: String`, free text: shape and material are
+  open-ended (the Shape and Material Bonuses Table is not a closed catalogue in
+  this model), so there is no id to reference.
+- **Attunements** — `Talisman.attunements: Vec<TalismanAttunement { description,
+  bonus: i8 }>`, unchanged in shape, only re-homed. "you may also open your
+  talisman to one kind of magic attunement, based on the shape and material of the
+  talisman, every time you prepare it for enchantment or instill an effect"
+  (`:10623`); "only the highest bonus applies. They apply to Casting Scores for
+  Ritual, Formulaic and Spontaneous magic, but they do not apply to Magic
+  Resistance or any laboratory activities" (`:10625`). This corrects the M5/5e
+  citation, which named no lines at all.
+- **Instilled effects** — `Talisman.effects: Vec<TalismanEffect { name, level: u16 }>`.
+  "When a magus instills effects into a talisman, he gets a +5 bonus to his Lab
+  Total" (`:10621`). Deliberately **not** a reused `EnchantedDevice`: the two carry
+  different budget contracts (see the non-goal under M5.5b in the derived-totals
+  section) and different provenance — the same reason `SupernaturalPower` exists
+  beside `EnchantedDevice`.
+- **Migration** — `load_entity_migrating` gains a second legacy-key fold
+  (`fold_legacy_talisman`) beside the `aging_reductions` one, dispatching on the
+  legacy key's *presence*, never on the recorded version. The fold is **lossless**
+  (attunements copied verbatim; identity/effects the old shape never stored stay
+  empty rather than invented), so unlike the aging fold — which *infers* a point
+  total — it needs no `LoadedEntity` notice flag. Two ambiguous shapes are pinned
+  by named tests: `"talisman_attunements": []` leaves `talisman: None` (no phantom
+  item) but still bumps the version, since the key's presence proves the old shape
+  (`legacy_empty_talisman_attunements_migrate_to_no_talisman`); a hand-edited save
+  carrying **both** keys keeps the new `talisman` and drops the legacy list
+  unmerged (`hand_edited_save_with_both_talisman_shapes_keeps_the_new_one`).
+  App-written saves can never carry an empty list
+  (`skip_serializing_if = "Vec::is_empty"`).
 
 #### M5/5g — aged / warped state, effects & identity Entity storage
 Direct-entry storage (plus the derived scores computed from points) for an
