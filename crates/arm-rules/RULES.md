@@ -902,6 +902,21 @@ talisman, which is why it is an `Option`, not a `Vec`.
   (`skip_serializing_if = "Vec::is_empty"`).
 - **Derived capacity** — see the *Talisman capacity* row in the derived-formulas
   table below, including the budget non-goal.
+- **UI** — `TalismanPanel.svelte` (extracted from `MagicPossessions.svelte` in
+  M5.5's prep commit) renders the identity input, the capacity read-out + its
+  derivation note, the attunement list and the instilled-effects list. The capacity
+  is read from `store.derived.talisman_capacity` and **never** recomputed in JS,
+  the `itemBudget`/`itemUsed` precedent. `DerivedTotalsPanel.svelte` is
+  deliberately untouched: the capacity renders where the talisman is edited, beside
+  the effects it constrains. New Fluent keys in both locales; German terms come from
+  `rules/source/de/translation-tables/` — `labor-fortschritt.md` (Talisman →
+  Talisman, Talisman Attunement → Talismanabstimmung, Level → Stufe, Shape and
+  Material Bonus → Form- und Materialbonus, hence "Form und Material"; "Instilling
+  Effects → Effekte einbetten" gives the participle for the section title
+  "Eingebettete Effekte") and `konvent.md` (Pawn → Bauer). *Vim* and *Vis* stay
+  untranslated as Latin (`magie-regeln.md`, `grundbegriffe.md`). "Kapazität" is not
+  in any table — it is the ordinary German rendering of *capacity*, which the
+  glossary does not cover.
 - **`Ruleset::art_ids_of(ArtType) -> Vec<Id>`** replaces the open-coded
   Technique/Form catalogue split that had accumulated in three places
   (`derived.rs::arts_of`, deleted, plus `effective.rs::spell_level_caps`'s own

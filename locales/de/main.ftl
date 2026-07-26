@@ -238,9 +238,9 @@ reputation-type-local = Lokal
 reputation-type-ecclesiastical = Kirchlich
 reputation-type-hermetic = Hermetisch
 reputation-type-academic = Akademisch
-# Tab "Magische Gegenstände" (Magi): Aura, Artefakte, Vertrautenbindung,
-# Talismanabstimmungen und das Langlebigkeitsritual. Das genutzte/verbleibende
-# Artefaktbudget stammt aus der Engine, wird hier nie neu berechnet.
+# Tab "Magische Gegenstände" (Magi): Aura, Artefakte, Vertrautenbindung, Talisman
+# und das Langlebigkeitsritual. Das genutzte/verbleibende Artefaktbudget stammt aus
+# der Engine, wird hier nie neu berechnet.
 aura-label = Angenommene Labor-/Konventaura
 possessions-devices-label = Artefakte
 device-name-placeholder = Name des Artefakts
@@ -275,11 +275,27 @@ familiar-cord-silver = Silberne Kordel
 familiar-cord-bronze = Bronzene Kordel
 familiar-add = Vertrauten hinzufügen
 familiar-remove = Vertrauten entfernen
-talisman-label = Talismanabstimmungen
+# Talisman: das persönliche Zaubergerät des Magus. Seine Kapazität stammt als
+# Richtwert aus der Engine (höchste Technik + höchste Form, in Bauern Vim-Vis) und
+# wird hier nie neu berechnet; die eingebetteten Effekte belasten kein Budget.
+talisman-label = Talisman
+talisman-add = Talisman hinzufügen
+talisman-remove-item = Talisman entfernen
+talisman-empty-item = Noch kein Talisman.
+talisman-description-label = Form und Material
+talisman-description-placeholder = z. B. ein Eschenstab mit Silberbeschlag
+talisman-capacity = Kapazität: { $pawns } Bauern Vim-Vis
+talisman-capacity-note = Höchste Technik { $techniqueScore } + höchste Form { $formScore }
+talisman-attunements-label = Talismanabstimmungen
 talisman-desc-placeholder = Was verstärkt wird
 talisman-bonus-label = Bonus
-talisman-add = Abstimmung hinzufügen
+talisman-attunement-add = Abstimmung hinzufügen
 talisman-empty = Noch keine Talismanabstimmungen.
+talisman-effects-label = Eingebettete Effekte
+talisman-effect-name-placeholder = Name des Effekts
+talisman-effect-level-label = Stufe
+talisman-effect-add = Effekt hinzufügen
+talisman-effects-empty = Noch keine eingebetteten Effekte.
 longevity-label = Langlebigkeitsritual
 longevity-source-label = Herkunft
 longevity-source-self_made = Selbst erstellt
