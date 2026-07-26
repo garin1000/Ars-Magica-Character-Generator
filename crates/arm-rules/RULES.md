@@ -900,6 +900,16 @@ talisman, which is why it is an `Option`, not a `Vec`.
   unmerged (`hand_edited_save_with_both_talisman_shapes_keeps_the_new_one`).
   App-written saves can never carry an empty list
   (`skip_serializing_if = "Vec::is_empty"`).
+- **Derived capacity** — see the *Talisman capacity* row in the derived-formulas
+  table below, including the budget non-goal.
+- **`Ruleset::art_ids_of(ArtType) -> Vec<Id>`** replaces the open-coded
+  Technique/Form catalogue split that had accumulated in three places
+  (`derived.rs::arts_of`, deleted, plus `effective.rs::spell_level_caps`'s own
+  pair of filters). It returns the ids **sorted**, which makes the canonical
+  `(technique, form)` ordering `spell_level_caps` documents a property of the
+  helper rather than an accident of how a ruleset's `arts.json` lists its entries
+  — the shipped ruleset is canonically serialized, but a hand-built test fixture
+  need not be.
 
 #### M5/5g — aged / warped state, effects & identity Entity storage
 Direct-entry storage (plus the derived scores computed from points) for an
@@ -1620,13 +1630,14 @@ these numbers.** The `derived_totals` Tauri command mirrors `effective_scores`.
 | Deft Form | `:3645-3648` | casting in the named Form suffers **no** non-standard voice/gesture penalty (both residuals 0 for that Form's cells) |
 | Magical Focus | `:4399-4422` | within focus, add the **lower** applicable Art again (per-`(Te,Fo)` `within_focus` value; applicability is user-judged, never auto-detected) |
 | Deficient Art | `:5909-5915` | totals adding that Technique/Form **halved** (Form excludes Magic Resistance) |
-| Lab Total | `:4143-4154` | Int + Magic Theory + Technique + Form + Aura + flat LabTotalMod (+ focus / halving as casting) |
+| Lab Total | `:10276-10278`, `:4151-4154` | Int + Magic Theory + Technique + Form + Aura + flat LabTotalMod (+ focus / halving as casting). "**YOUR BASIC LAB TOTAL IS: Technique + Form + Intelligence + Magic Theory + Aura Modifier**" (`:10276`); `:4151-4154` is Inventive Genius, the flat `LabTotalMod`. (Corrects the earlier `:4143-4154`, which is the Inspirational / Intuition / Inventive Genius Virtue block, not the formula.) |
 | Penetration | `:9159-9161` | per known spell: Casting Total − Level + Penetration score |
 | Weak Magic | `:7064-7067` | halves Penetration **after** subtracting level (not the casting total) |
 | Magic Resistance | `:9390-9398` | per Form: Form + 5 × Parma Magica (Form-base rule `:9390`, Parma "five times" `:9398`); Limited MR drops the Form bonus, Flawed Parma halves |
 | Longevity (stored) | `:10662`, `:10668`, `:10670` | the aging bonus is the **player-entered** `LongevityRitual.bonus`, passed through for **both** sources; `entered: false` marks an unfilled field so a placeholder 0 is never read as a claim. Bronze cord noted for aging-resistance (`:10840-10844`) |
 | Longevity hint | `:10662`, `:10276-10278`, `:17658`, `:5909-5915`, `:5962-5964` | self-made only: `LongevityHint { lab_total, suggested_bonus, halved }` — Creo Corpus Lab Total (Int + Magic Theory + Creo + Corpus + Aura + flat LabTotalMod), halved by a Deficient Creo/Corpus and again by Difficult Longevity Ritual, then `suggested_bonus = ceil(lab_total / 5)` floored at 0. **Read-only guidance** — never written into the entity. `derived.rs::suggested_longevity_bonus` / `creo_corpus_lab_total` |
 | Masterpiece | `:4476-4479`, `:10410` | magus with the Masterpiece Virtue (`Effect::MasterpieceItem` marker) surfaces a **read-only** lesser-enchanted-item cap = **best base `(Te,Fo)` Lab Total ÷ 2** (the lesser-enchantment rule caps single-season instillation at Lab Total ≥ 2×effect level, `:10410`; vis costs ignored per the Virtue). The best Lab Total is used (magus picks the Te/Fo), no focus doubling. The engine does **not** create the device or spend an item-level budget — the player still enters the actual lesser enchanted item by hand under Magic Items; this is guidance only. `masterpiece_item_cap` / `DerivedTotals.masterpiece` |
+| Talisman capacity | `:10619`, `:4347-4349`, `:4842-4850` | magus **with a talisman** surfaces a **read-only** enchantment capacity in pawns of Vim vis: "The maximum number of pawns of Vim vis that may be used to prepare a talisman is equal to the sum of the magus's highest Technique and highest Form" (`:10619`). Taken from the per-Art maxima of **effective** scores (`effective_art_score`, so Puissant Art folds in), **not** the best `lab_totals` pair — a Deficient Art halves *totals*, never the score, and a discriminating test pins that. Ties go to the alphabetically first Art (`Ruleset::art_ids_of` is sorted); a magus with no bought Arts still reads out, at 0 pawns. **Non-goal**: instilled `TalismanEffect` levels are charged against **no** budget — `item_level_budget` comes only from the Redcap-only Virtues (Magic Items "You must be a Redcap to take this Virtue", `:4347-4349`; Redcap's fifty starting levels `:4842-4850`, which also states "You may not take The Gift", `:4850`), so it can never fund a magus's talisman, and the talisman's real limit is this vis capacity, which the model cannot enforce (it holds no vis stock). `derived.rs::talisman_capacity` / `DerivedTotals.talisman_capacity` |
 | Combat | `:16658-16670` | Init = Qik + WpnInit − Enc + CombatMod; Attack = Dex + Ability + WpnAtk + CombatMod; Defense = Qik + Ability + WpnDef + CombatMod; Damage = Str + WpnDam + CombatMod |
 | Weapon+shield | `:16656` | one `CombatLine` per equipped weapon, combining every equipped shield's Init/Atk/Def mods |
 | Two-handed weapon | `:7494`, `:7333-7334`, `:17099` | a two-handed weapon (`Weapon.two_handed`) cannot be paired with a shield, so it receives **no** shield Init/Atk/Def mods (the shield still counts toward Load, `:17107`). The 9 Great-Weapon melee weapons ("Fighting with a weapon which requires two hands to use", `:7494`) + both bows (`:7333-7334`, `:17099`) are flagged in `rules/core/equipment.json`. `derived.rs::combat_totals` |

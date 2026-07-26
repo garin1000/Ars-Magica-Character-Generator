@@ -924,6 +924,24 @@ impl Ruleset {
         self.arts.values()
     }
 
+    /// The ids of every Art of one class (Technique or Form), **sorted**.
+    ///
+    /// The sort is part of the contract, not an accident of storage: callers pair
+    /// Techniques against Forms to build grids that are compared and serialized by
+    /// position (`spell_level_caps`, `lab_totals`, `casting_totals`), so the order
+    /// must not depend on how a ruleset's `arts.json` happened to list them. It
+    /// costs nothing today — the catalogue is a `BTreeMap`, so iteration is already
+    /// id-ordered — and it keeps that guarantee if the storage ever changes.
+    pub fn art_ids_of(&self, art_type: ArtType) -> Vec<Id> {
+        let mut ids: Vec<Id> = self
+            .arts()
+            .filter(|a| a.art_type == art_type)
+            .map(|a| a.id.clone())
+            .collect();
+        ids.sort();
+        ids
+    }
+
     /// Looks up a House by id.
     pub fn house(&self, id: &Id) -> Option<&House> {
         self.houses.get(id)

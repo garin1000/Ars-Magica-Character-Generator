@@ -1500,24 +1500,15 @@ pub struct SpellLevelCap {
 /// by the pair to look up a candidate spell's cap. One entry per combo (a spell's
 /// cap depends only on its Te/Fo, never its level).
 pub fn spell_level_caps(entity: &Entity, ruleset: &Ruleset) -> Vec<SpellLevelCap> {
-    let mut techniques: Vec<&Id> = ruleset
-        .arts()
-        .filter(|a| a.art_type == crate::art::ArtType::Technique)
-        .map(|a| &a.id)
-        .collect();
-    let mut forms: Vec<&Id> = ruleset
-        .arts()
-        .filter(|a| a.art_type == crate::art::ArtType::Form)
-        .map(|a| &a.id)
-        .collect();
-    techniques.sort();
-    forms.sort();
+    // `art_ids_of` guarantees the sort the canonical (technique, form) order needs.
+    let techniques = ruleset.art_ids_of(crate::art::ArtType::Technique);
+    let forms = ruleset.art_ids_of(crate::art::ArtType::Form);
     let mut caps = Vec::with_capacity(techniques.len() * forms.len());
     for technique in &techniques {
         for form in &forms {
             caps.push(SpellLevelCap {
-                technique: (*technique).clone(),
-                form: (*form).clone(),
+                technique: technique.clone(),
+                form: form.clone(),
                 cap: spell_level_cap(entity, ruleset, technique, form),
             });
         }
