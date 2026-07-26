@@ -833,8 +833,10 @@ precedent as `SpellSelection.mastery`'s 7 → 8 bump). Nothing is derived here
 (that is 5i); these fields only *store* the choices.
 
 - **Aura** — `Entity.aura: i32` (signed; a Divine aura can be a penalty).
-  Persisted so 5i's self-made Longevity / lab totals are reproducible. Casting
-  Score adds the aura (Core:9089); Longevity Lab Total is aura-gated (below).
+  Persisted so 5i's Longevity hint / lab totals are reproducible. Casting Score
+  adds the aura (Core:9089); every Lab Total takes it as a plain addend — "your
+  basic Lab Total is: Technique + Form + Intelligence + Magic Theory + Aura
+  Modifier" (Core:10276-10278) — with no gate on a nonzero aura (see M5.5a).
 - **Familiar cords** — `Entity.familiar: Option<Familiar { name, cord_gold,
   cord_silver, cord_bronze: u8 }>`. Gold = −botch dice; Silver = +Personality /
   mental resistance; **Bronze = +Soak & aging-resistance** (feeds 5i Soak /
@@ -843,10 +845,12 @@ precedent as `SpellSelection.mastery`'s 7 → 8 bump). Nothing is derived here
   description, bonus: i8 }>`; free-text descriptor + its shape bonus (5i decides
   where each bonus applies).
 - **Longevity Ritual** — `Entity.longevity_ritual: Option<LongevityRitual { source:
-  LongevitySource (SelfMade|External), bonus: Option<i8> }>`. `SelfMade` leaves
-  `bonus` `None` (5i computes +1 aging bonus per 5 points, round up, of the
-  Creo+Corpus Lab Total); `External` carries the player-entered bonus. Source:
-  `Ars Magica - Definitive Edition (Core Rules).md:10662-10672`.
+  LongevitySource (SelfMade|External), bonus: Option<i8>, focus: String }>`. The
+  bonus is **player-entered for both sources** and stored; `None` means "not entered
+  yet", never a claimed 0 (see M5.5a for why it is not derived). `focus` is the
+  ritual's culminating focus, free text. Source:
+  `Ars Magica - Definitive Edition (Core Rules).md:10662` (formula), `:10656`
+  (focus + permanent sterility).
 - `EnchantedDevice`/`TalismanAttunement` derive `Ord` so `Entity::normalize()`
   sorts `devices` (by name) and `talisman_attunements` (by description) for
   zero-noise diffs. `LongevitySource` gets snake_case serde + `Display` (guarded by
@@ -1576,7 +1580,8 @@ these numbers.** The `derived_totals` Tauri command mirrors `effective_scores`.
 | Penetration | `:9159-9161` | per known spell: Casting Total − Level + Penetration score |
 | Weak Magic | `:7064-7067` | halves Penetration **after** subtracting level (not the casting total) |
 | Magic Resistance | `:9390-9398` | per Form: Form + 5 × Parma Magica (Form-base rule `:9390`, Parma "five times" `:9398`); Limited MR drops the Form bonus, Flawed Parma halves |
-| Longevity | `:10662-10672` | self-made: +1 per 5 points (round **up**) of Creo+Corpus Lab Total (aura-gated); external: entered bonus passthrough. Bronze cord noted for aging-resistance (`:10840-10844`) |
+| Longevity (stored) | `:10662`, `:10668`, `:10670` | the aging bonus is the **player-entered** `LongevityRitual.bonus`, passed through for **both** sources; `entered: false` marks an unfilled field so a placeholder 0 is never read as a claim. Bronze cord noted for aging-resistance (`:10840-10844`) |
+| Longevity hint | `:10662`, `:10276-10278`, `:17658`, `:5909-5915`, `:5962-5964` | self-made only: `LongevityHint { lab_total, suggested_bonus, halved }` — Creo Corpus Lab Total (Int + Magic Theory + Creo + Corpus + Aura + flat LabTotalMod), halved by a Deficient Creo/Corpus and again by Difficult Longevity Ritual, then `suggested_bonus = ceil(lab_total / 5)` floored at 0. **Read-only guidance** — never written into the entity. `derived.rs::suggested_longevity_bonus` / `creo_corpus_lab_total` |
 | Masterpiece | `:4476-4479`, `:10410` | magus with the Masterpiece Virtue (`Effect::MasterpieceItem` marker) surfaces a **read-only** lesser-enchanted-item cap = **best base `(Te,Fo)` Lab Total ÷ 2** (the lesser-enchantment rule caps single-season instillation at Lab Total ≥ 2×effect level, `:10410`; vis costs ignored per the Virtue). The best Lab Total is used (magus picks the Te/Fo), no focus doubling. The engine does **not** create the device or spend an item-level budget — the player still enters the actual lesser enchanted item by hand under Magic Items; this is guidance only. `masterpiece_item_cap` / `DerivedTotals.masterpiece` |
 | Combat | `:16658-16670` | Init = Qik + WpnInit − Enc + CombatMod; Attack = Dex + Ability + WpnAtk + CombatMod; Defense = Qik + Ability + WpnDef + CombatMod; Damage = Str + WpnDam + CombatMod |
 | Weapon+shield | `:16656` | one `CombatLine` per equipped weapon, combining every equipped shield's Init/Atk/Def mods |
@@ -1603,8 +1608,8 @@ toggle).
 `derived.rs`), but exhaustiveness alone does not prove an effect moves a number.
 The per-area functions *read* each folded modifier and the unit tests assert the
 number changes — those reducers **and tests** are what guarantee the 5b in-play
-effects are actually consumed. Worked-example tests: Longevity Lab Total 35 → +7
-(`:2573`); casting total with Encumbrance + Focus (base vs within-focus, Method
+effects are actually consumed. Worked-example tests: Longevity hint Lab Total 35 →
++7 (`:2573`, `:2488`); casting total with Encumbrance + Focus (base vs within-focus, Method
 Caster +3); Deficient Technique halving; per-Form Magic Resistance = Form + 5×Parma;
 Flawed Parma halving; per-spell penetration + Weak Magic; weapon+shield combat line;
 Soak with Tough + Bronze cord; Encumbrance from Load; wound ranges Size 0 / +1;
@@ -1626,6 +1631,82 @@ CastingFatigue, Recovery}` tracks, and the non-`no_form_bonus` `MagicResistanceM
 kinds — `ModifierFamily::MagicResistance` — aura_bonus and the realm
 susceptibilities) are **listed** as labelled `SurfacedModifier`s, not folded into a
 simulated number, because the app does not simulate those subsystems.
+
+#### M5.5a — Longevity Ritual: stored value + live hint
+
+M5/5i **derived** the self-made aging bonus from the current Creo Corpus Lab Total.
+That was wrong, and this slice replaces it with a stored player-entered value plus a
+read-only suggestion.
+
+**Why the bonus cannot be derived.** The formula is "+1 bonus for every five points
+or fraction of Creo Corpus Lab Total" (`:10662`) — but the Lab Total in that sentence
+is the one the *creating* magus had in the season the ritual was made. The rules
+never restate this as a standalone sentence; it follows from two passages, so it is
+recorded here as an **inference from quoted text**, not a quoted rule:
+
+> If you reinvent the ritual to take advantage of increased Art scores, you can
+> choose not to use extra vis. — `:10670`
+
+> A Longevity Ritual's effect lasts until you suffer an aging crisis […] After this,
+> the ritual loses its effectiveness and the focus must be repeated. — `:10668`
+
+Reinvention is what captures raised Arts, and a failed ritual is repeated *unchanged*.
+Deriving the bonus live therefore let a Creo increase or a move to a stronger aura
+silently rewrite a past event. So `LongevityRitual.bonus: Option<i8>` is now entered
+and stored for **both** sources (`None` = not entered yet, never a claimed 0), and
+`LongevityBonus.entered` lets the UI distinguish an unfilled field from a deliberate
+0. The derivation survives only as `LongevityHint` beside the input.
+
+**`LongevityRitual.focus`** (free text, additive — no schema bump) records the
+ritual's culminating focus:
+
+> The ritual takes a season, and culminates in some sort of focus, which is
+> appropriate to the magus in question. — `:10656`
+
+The same line carries the consequence the UI surfaces as a note — "the magus becomes
+permanently sterile" (`:10656`). The rules attach no mechanics to either, so both are
+free text / a note; nothing is validated.
+
+**The `aura != 0` gate is deleted.** 5i suppressed the whole bonus unless
+`entity.aura != 0`, which has no source support: the Aura Modifier is a plain addend
+in the Lab Total (`:10276-10278`), `lab_totals()` has never gated on it, and a
+zero-aura location is explicitly unhindered —
+
+> The mundane has no aura rating — in fact, it is the absence of aura, so powers used
+> there function without hindrance. — `:17658`
+
+A zero-aura magus now gets a hint; a negative aura simply lowers it.
+
+**Two halvings now apply to the hint** (`creo_corpus_lab_total` returns
+`(total, halved)`):
+
+> Almost all totals (including Casting Totals and Lab Totals, but excluding Magic
+> Resistance) to which a particular Form is added are halved. — Deficient Form,
+> `:5909-5911`; Deficient Technique likewise, `:5913-5915`
+
+> Anyone (including yourself) creating a Longevity Ritual for you must halve their
+> Lab Total. — Difficult Longevity Ritual, `:5962-5964`
+
+This is the **first read of `HalvableTotal::LabLongevity`**: before M5.5a
+`flaw.difficult_longevity_ritual` was collected by `in_play_mods` and moved no
+number.
+
+**That the two halvings compound is an inference, not a quoted rule.** Each Flaw
+says to halve the Lab Total and neither carves out the other, but no passage states
+the interaction. Order is pinned base → Deficient → Difficult and is numerically
+immaterial, since `halve()` truncates toward zero. `halved` is a single flag: the UI
+marks the hint as halved without claiming which Flaw did it.
+
+`suggested_bonus = ceil(lab_total / 5)`, floored at 0 — "every five points or
+fraction" has no meaning below one point, and a negative Lab Total must not suggest a
+negative bonus. Worked example on the shipped ruleset: Lab Total 35 → +7, the book's
+own sheet line (`:2573`; the same magus's lab season at `:2488` shows the vis cost
+too).
+
+**Note on the Flaw's cited range.** `rules/core/virtues_flaws.json` records
+`flaw.difficult_longevity_ritual` as `:5962-5965`; line 5965 is blank, so the
+accurate inclusive range is **`:5962-5964`**, which is what this section and the
+`derived.rs` comments cite. The JSON value is left for a data-only correction pass.
 
 ---
 
@@ -1854,7 +1935,7 @@ E2E: `ui/e2e/specs/vf-incompatible.e2e.js`.
 | `CastingTotalMod { amount, scope }` | Flat casting bonus/penalty — method_caster (+3 formulaic_ritual), poor_formulaic_magic (−5 formulaic), afflicted_tongue, cyclic_magic ±3, special_circumstances, ways_of_the_land, potent_magic | Core:4524-4527, 6610-6613, 5655-5658, 3635-3638, 5893-5896, 4998-5001, 5231-5234, 4740-4781 | computed (conditional ones toggled) |
 | `LabTotalMod { amount }` | Flat lab bonus/penalty — adept_laboratory_student (+6), inventive_genius (+3), aristotelian_training (+1), creative_block (−3), weak_scholar (−6), the_constant_expression (−3), cyclic_magic, potent_magic | Core:3368-3371, 4151-4154, 3440-3443, 5873-5876, 7080-7083, 5821-5838, 4740-4781 | computed |
 | `DeficientArt { param(Technique\|Form) }` | Art-halving — deficient_technique, deficient_form | Core:5913-5915, 5909-5912 | computed |
-| `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration / MR — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic, flawed_parma_magica, weak_magic_resistance | Core:7084-7089, 7060-7063, 5962-5965, 7064-7067, 6142-6145, 7068-7071 | computed |
+| `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration / MR — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic, flawed_parma_magica, weak_magic_resistance | Core:7084-7089, 7060-7063, 5962-5964, 7064-7067, 6142-6145, 7068-7071 | **partly** computed: `spontaneous_casting`, `penetration`, `magic_resistance` and (since M5.5a) `lab_longevity` move numbers; **`lab_enchanting` is collected but still unread** — `flaw.weak_enchanter` moves no number, because the app models no lab enchantment project |
 | `SoakMod { amount }` | Flat Soak — tough (+3), frail (−3), berserk (+2) | Core:5145-5147, 6190-6193, 3500-3503 | computed |
 | `CombatMod { amount, target }` | Combat init/atk/def — berserk, hobbled, lame, missing_hand, missing_eye, poor_eyesight, palsied_hands, slow_reflexes, lightning_reflexes, fast_caster | Core:3500-3503, 6260-6263, 6330-6333, 6438-6441, 6434-6437, 6606-6609, 6578-6581, 6763-6766, 4311-4314, 3865-3868 | computed (conditional ones labelled) |
 | `HealthMod { track, amount }` | Wound/fatigue penalty (enduring_constitution, low_tolerance), fatigue rolls (obese, short_of_breath, long_winded), casting-fatigue (painful_magic, vulnerable_casting, withstand_casting), recovery (fragile_constitution, rapid_convalescence) | Core:3751-3754, 6366-6369, 6516-6519, 6733-6736, 4327-4330, 6574-6577, 6993-7004, 5261-5282, 6186-6189, 4834-4837 | wound/fatigue computed; fatigue-roll/casting-fatigue/recovery surfaced |

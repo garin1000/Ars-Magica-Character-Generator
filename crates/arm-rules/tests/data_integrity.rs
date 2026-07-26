@@ -1460,7 +1460,8 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     });
     e.longevity_ritual = Some(LongevityRitual {
         source: LongevitySource::SelfMade,
-        bonus: None,
+        bonus: Some(6),
+        focus: "A tincture of gold sipped each Midsummer".to_string(),
     });
     e.warping_points = 15;
     // Decrepitude is the SUM of aging points across Characteristics; the drops they
@@ -1547,18 +1548,99 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     assert!(!d.fatigue.is_empty(), "fatigue levels populated");
     assert!(!d.wounds.is_empty(), "wound ranges populated");
 
-    // Longevity: self-made bonus = ceil(CrCo Lab Total 32 / 5) = 7; bronze cord surfaced.
+    // Longevity: the *entered* bonus is reported verbatim (6), not the 7 that
+    // today's Creo Corpus Lab Total of 32 would suggest — the ritual is a frozen
+    // past event. The hint carries the suggestion; the bronze cord is surfaced.
     let lon = d
         .longevity
         .expect("longevity present for a magus with a ritual");
-    assert_eq!(lon.lab_total, Some(32));
-    assert_eq!(lon.bonus, 7, "self-made Longevity bonus = ceil(32/5)");
+    assert_eq!(lon.bonus, 6, "the entered bonus, verbatim");
+    assert!(lon.entered);
     assert_eq!(lon.bronze_cord, 2);
+    let hint = lon.hint.expect("self-made rituals get a hint");
+    assert_eq!(hint.lab_total, 32, "CrCo Lab Total on the real ruleset");
+    assert_eq!(hint.suggested_bonus, 7, "ceil(32/5)");
+    assert!(!hint.halved);
 
     // Warping Score 2 from 15 stored points; Decrepitude 2 from 17 aging points.
     assert_eq!(d.warping_points, 15);
     assert_eq!(d.warping_score, 2, "15 points → Warping Score 2");
     assert_eq!(d.decrepitude_score, 2, "17 aging points → Decrepitude 2");
+}
+
+/// A magus with a Creo Corpus Lab Total of 35, built on the **real shipped
+/// ruleset**, gets the book's own worked example back: "Longevity Ritual: Lab Total
+/// 35, +7 aging bonus".
+/// Source: `Ars Magica - Definitive Edition (Core Rules).md:2573` (the sheet line),
+/// `:2488` (the same magus's lab season), `:10662` (the formula).
+#[test]
+fn longevity_hint_reproduces_the_books_lab_total_35_example() {
+    let rs = load_full_ruleset();
+    let mut e = entity(
+        "magus",
+        vec![
+            Selection::new(Id::new("virtue.the_gift")),
+            Selection::new(Id::new("virtue.hermetic_magus")),
+        ],
+    );
+    // Int 3 + Magic Theory 4 + Creo 10 + Corpus 13 + Aura 5 = 35.
+    e.characteristics.insert(Characteristic::Int, 3);
+    e.ability_scores = vec![AbilityScore {
+        ability: Id::new("ability.magic_theory"),
+        parameter: None,
+        specialty: None,
+        score: 4,
+    }];
+    e.art_scores = vec![
+        ArtScore {
+            art: Id::new("art.creo"),
+            score: 10,
+        },
+        ArtScore {
+            art: Id::new("art.corpus"),
+            score: 13,
+        },
+    ];
+    e.aura = 5;
+    e.longevity_ritual = Some(LongevityRitual {
+        source: LongevitySource::SelfMade,
+        bonus: None,
+        focus: String::new(),
+    });
+
+    let lon = arm_rules::derived_totals(&e, &rs)
+        .longevity
+        .expect("longevity present");
+    assert!(!lon.entered, "nothing entered yet");
+    assert_eq!(lon.bonus, 0, "placeholder, not a claim");
+    let hint = lon.hint.expect("self-made rituals get a hint");
+    assert_eq!(hint.lab_total, 35);
+    assert_eq!(hint.suggested_bonus, 7);
+
+    // A zero aura does not suppress the suggestion — the Aura Modifier is a plain
+    // addend, and no aura simply means no hindrance (Core:10276-10278, :17658).
+    // The removed `aura != 0` gate, guarded on the real ruleset.
+    e.aura = 0;
+    let hint = arm_rules::derived_totals(&e, &rs)
+        .longevity
+        .expect("longevity present")
+        .hint
+        .expect("a zero aura still gets a hint");
+    assert_eq!(hint.lab_total, 30);
+    assert_eq!(hint.suggested_bonus, 6, "ceil(30/5), not 0");
+
+    // Difficult Longevity Ritual halves it on the shipped catalogue too
+    // (Core:5962-5964): 30 → 15 → ceil(15/5) = 3.
+    e.selections
+        .push(Selection::new(Id::new("flaw.difficult_longevity_ritual")));
+    let hint = arm_rules::derived_totals(&e, &rs)
+        .longevity
+        .expect("longevity present")
+        .hint
+        .expect("has a hint");
+    assert_eq!(hint.lab_total, 15);
+    assert_eq!(hint.suggested_bonus, 3);
+    assert!(hint.halved, "the Flaw's halving is flagged for the UI");
 }
 
 /// Issue F (selection-level): a magus selecting BOTH magnitude variants of the

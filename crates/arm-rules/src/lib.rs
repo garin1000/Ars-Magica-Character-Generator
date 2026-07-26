@@ -30,11 +30,11 @@ pub use characteristics::{Characteristic, CharacteristicCost, CharacteristicRule
 // module paths.
 pub use derived::{
     Addend, CastingTotal, CastingWithinFocus, CombatLine, DerivedTotals, EncumbranceTotal,
-    FatigueLevel, FatigueTier, LabTotal, LongevityBonus, MagicResistance, MasterpieceCap,
-    ModifierFamily, NonStandardCasting, PenetrationLine, SoakTotal, SurfacedModifier, WoundBand,
-    WoundRange, casting_totals, combat_totals, derived_totals, encumbrance, fatigue_levels,
-    lab_totals, longevity_bonus, magic_resistance, masterpiece_item_cap, penetration, soak,
-    surfaced_modifiers, wound_ranges,
+    FatigueLevel, FatigueTier, LabTotal, LongevityBonus, LongevityHint, MagicResistance,
+    MasterpieceCap, ModifierFamily, NonStandardCasting, PenetrationLine, SoakTotal,
+    SurfacedModifier, WoundBand, WoundRange, casting_totals, combat_totals, derived_totals,
+    encumbrance, fatigue_levels, lab_totals, longevity_bonus, magic_resistance,
+    masterpiece_item_cap, penetration, soak, surfaced_modifiers, wound_ranges,
 };
 // Curated public compute-function facade (see the `derived` re-export above):
 // bare names such as `size`, `warping`, `confidence`, and `true_faith` are the

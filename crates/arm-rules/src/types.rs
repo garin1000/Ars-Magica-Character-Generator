@@ -1817,11 +1817,13 @@ pub struct TalismanAttunement {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LongevitySource {
-    /// The magus made their own ritual; its bonus is computed from the Creo+Corpus
-    /// Lab Total (so `bonus` is `None`, filled by the derived-totals slice).
+    /// The magus made their own ritual. The bonus is still *entered*, not derived:
+    /// it was fixed by the Creo Corpus Lab Total of the season the ritual was made
+    /// (Core Rules.md:10662), and the engine only *suggests* a value from today's
+    /// Lab Total.
     SelfMade,
-    /// An external ritual (e.g. bought or cast by another); the player enters the
-    /// bonus directly.
+    /// An external ritual (e.g. bought or cast by another magus); no suggestion is
+    /// offered, since the bonus came from someone else's Lab Total.
     External,
 }
 
@@ -1834,18 +1836,34 @@ impl fmt::Display for LongevitySource {
     }
 }
 
-/// A magus's Longevity Ritual. `SelfMade` rituals leave `bonus` `None` (the
-/// derived-totals slice computes it as +1 aging bonus per 5 points, rounded up, of
-/// the Creo+Corpus Lab Total); `External` rituals carry a player-entered `bonus`.
-/// Source: Core Rules.md:10662-10672.
+/// A magus's Longevity Ritual: a stored record of a past event, not a live
+/// computation.
+///
+/// The aging bonus is "+1 bonus for every five points or fraction of Creo Corpus
+/// Lab Total" (Core Rules.md:10662) — but that Lab Total is the one the *creating*
+/// magus had in the season the ritual was made. Raising Creo/Corpus or moving to a
+/// stronger aura afterwards does not improve an existing ritual; the magus must
+/// reinvent it, which is a fresh season's work ("If you reinvent the ritual to take
+/// advantage of increased Art scores…", Core Rules.md:10670, and a failed ritual's
+/// focus is repeated unchanged, :10668). So `bonus` is **player-entered for both
+/// sources** and stored: `None` means "not entered yet", never a claimed 0. The
+/// engine offers a suggestion from today's Lab Total
+/// ([`crate::derived::LongevityHint`]) but never writes it here.
+///
+/// `focus` is the ritual's culminating focus, "which is appropriate to the magus in
+/// question" and must be repeated verbatim if the ritual ever fails
+/// (Core Rules.md:10656, :10668) — free text, since the rules give it no mechanics.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LongevityRitual {
     /// Whether the ritual is self-made or externally provided.
     pub source: LongevitySource,
-    /// The aging bonus; `None` for a self-made ritual (computed downstream), a
-    /// player-entered value for an external one.
+    /// The player-entered aging bonus; `None` while not yet entered.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bonus: Option<i8>,
+    /// The ritual's culminating focus, free text; empty while not entered.
+    /// Source: Core Rules.md:10656.
+    #[serde(default, skip_serializing_if = "is_empty_str")]
+    pub focus: String,
 }
 
 /// A Twilight Scar: a minor magical trait (beneficial or annoying) a magus
@@ -3362,6 +3380,7 @@ mod tests {
         entity.longevity_ritual = Some(LongevityRitual {
             source: LongevitySource::External,
             bonus: Some(4),
+            focus: "An amulet of hawthorn".into(),
         });
 
         let json = serde_json::to_string_pretty(&entity).unwrap();
@@ -3372,18 +3391,37 @@ mod tests {
         assert!(json.contains(r#""source": "external""#));
     }
 
-    /// A self-made Longevity Ritual keeps `bonus` `None` and round-trips.
+    /// A self-made Longevity Ritual stores the *player-entered* bonus and focus
+    /// just like an external one; `None` / `""` mean "not entered yet" and are
+    /// omitted from the JSON, so a pre-5.5a save loads as not-entered.
     #[test]
-    fn self_made_longevity_ritual_roundtrip() {
-        let ritual = LongevityRitual {
+    fn longevity_ritual_stores_entered_bonus_and_focus() {
+        let unentered = LongevityRitual {
             source: LongevitySource::SelfMade,
             bonus: None,
+            focus: String::new(),
         };
-        let json = serde_json::to_string(&ritual).unwrap();
+        let json = serde_json::to_string(&unentered).unwrap();
         assert!(json.contains(r#""source":"self_made""#), "{json}");
         assert!(!json.contains("bonus"), "{json}");
-        let back: LongevityRitual = serde_json::from_str(&json).unwrap();
-        assert_eq!(ritual, back);
+        assert!(!json.contains("focus"), "{json}");
+        assert_eq!(
+            serde_json::from_str::<LongevityRitual>(&json).unwrap(),
+            unentered
+        );
+
+        let entered = LongevityRitual {
+            source: LongevitySource::SelfMade,
+            bonus: Some(7),
+            focus: "A draught of quicksilver drunk at midwinter".into(),
+        };
+        let json = serde_json::to_string(&entered).unwrap();
+        assert!(json.contains(r#""bonus":7"#), "{json}");
+        assert!(json.contains("quicksilver"), "{json}");
+        assert_eq!(
+            serde_json::from_str::<LongevityRitual>(&json).unwrap(),
+            entered
+        );
     }
 
     /// `normalize()` sorts devices (by name) and talisman attunements (by
