@@ -1019,7 +1019,8 @@ pub struct SoakTotal {
 }
 
 /// The character's Soak. Source: Core:16667, :5145-5147 (Tough), :10840-10844
-/// (Bronze cord).
+/// (Bronze cord). The cord addend goes through [`cord_score`], so it can never
+/// exceed the +5 maximum (Core:10836) or disagree with the other cord read-outs.
 pub fn soak(entity: &Entity, ruleset: &Ruleset) -> SoakTotal {
     let mods = in_play_mods(entity, ruleset);
     let stamina = characteristic(entity, ruleset, Characteristic::Sta);
@@ -1033,7 +1034,7 @@ pub fn soak(entity: &Entity, ruleset: &Ruleset) -> SoakTotal {
     let bronze = entity
         .familiar
         .as_ref()
-        .map(|f| i32::from(f.cord_bronze))
+        .map(|f| i32::from(cord_score(f.cord_bronze)))
         .unwrap_or(0);
     let addends = vec![
         Addend::new("stamina", stamina),
@@ -1239,7 +1240,9 @@ pub struct LongevityHint {
 /// (Core:10662, :10670), so nothing here is derived. `entered` distinguishes an
 /// unfilled field from a deliberate 0. `hint` carries the live suggestion for a
 /// self-made ritual only. The Bronze cord adds "to rolls to resist aging"
-/// (Core:10844) and is noted separately, since it is not part of the ritual.
+/// (Core:10844) and is noted separately, since it is not part of the ritual; it goes
+/// through [`cord_score`], so it can never exceed the +5 maximum (Core:10836) or
+/// disagree with the Soak and cord-cost read-outs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LongevityBonus {
     /// Whether the ritual is self-made or external.
@@ -1263,7 +1266,7 @@ pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBo
     let bronze = entity
         .familiar
         .as_ref()
-        .map(|f| i32::from(f.cord_bronze))
+        .map(|f| i32::from(cord_score(f.cord_bronze)))
         .unwrap_or(0);
     // A hint only makes sense for a ritual this magus makes: an external one came
     // from another magus's Lab Total, which this sheet does not know (Core:10672).
@@ -1480,15 +1483,35 @@ pub fn talisman_capacity(entity: &Entity, ruleset: &Ruleset) -> Option<TalismanC
 /// home.
 const CORD_COST_TABLE: [u32; 6] = [0, 5, 15, 30, 50, 75];
 
+/// The highest score a cord can have: "The strength of each of these cords is rated
+/// from 0 to +5 … a score of +5 (the maximum)" (Core:10836).
+const MAX_CORD_SCORE: u8 = 5;
+
+/// The rules-legal score of a stored cord value, clamped to the +5 maximum
+/// (Core:10836).
+///
+/// **Every** consumer of a cord score routes through this, so the rules maximum is
+/// stated once and the read-outs cannot disagree. `Familiar`'s cord fields are plain
+/// `u8`, and a hand-edited or legacy save can therefore carry any value up to 255;
+/// left unclamped, the same entered number would render as one figure on the
+/// familiar's cord-cost read-out and a wildly different one in Soak
+/// ([`soak`]) and on the Longevity Ritual's Bronze-cord line
+/// ([`longevity_bonus`]).
+fn cord_score(raw: u8) -> u8 {
+    raw.min(MAX_CORD_SCORE)
+}
+
 /// The **total** Lab-Total points the three cords cost (Core:10836).
 ///
-/// The score indexing [`CORD_COST_TABLE`] is **clamped** to the +5 maximum the same
-/// line sets. That clamp is load-bearing, not defensive noise: the store's cord
-/// setter clamps only at 0, the number input carries no `max`, and a hand-edited
-/// save's `u8` can be 255 — a raw index would panic inside the `derived_totals`
-/// command and take the whole read-out panel down with it.
+/// The score indexing [`CORD_COST_TABLE`] goes through [`cord_score`], so it is
+/// **clamped** to the +5 maximum the same line sets. That clamp is load-bearing, not
+/// defensive noise: the cord fields are `u8`, so a hand-edited or legacy save can
+/// carry any value up to 255, and a raw index would panic inside the
+/// `derived_totals` command and take the whole read-out panel down with it. (Input
+/// bounds in the UI are a separate, non-durable layer — the save file is reachable
+/// without them.)
 pub fn cord_points_spent(familiar: &Familiar) -> u32 {
-    let cost = |score: u8| CORD_COST_TABLE[usize::from(score.min(5))];
+    let cost = |score: u8| CORD_COST_TABLE[usize::from(cord_score(score))];
     cost(familiar.cord_gold) + cost(familiar.cord_silver) + cost(familiar.cord_bronze)
 }
 
@@ -2506,10 +2529,9 @@ mod tests {
     }
 
     /// A cord score above the curve's top (+5 is the maximum, Core:10836) is
-    /// **clamped**, not indexed: `setFamiliarCord` clamps only at 0, the input
-    /// carries no max, and a hand-edited save's `u8` can be 255 — a raw index would
-    /// panic inside the derived-totals command and take the whole read-out panel
-    /// down.
+    /// **clamped**, not indexed: the cord fields are `u8`, so a hand-edited or legacy
+    /// save can carry any value up to 255, and a raw index would panic inside the
+    /// derived-totals command and take the whole read-out panel down.
     #[test]
     fn cord_points_spent_clamps_a_score_above_the_curve() {
         let f = Familiar {
@@ -2519,6 +2541,40 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(cord_points_spent(&f), 150, "both clamp to +5 = 75 each");
+    }
+
+    /// The +5 cord maximum (Core:10836) is enforced in **one** place, so every
+    /// consumer of a cord score reports the same number. A hand-edited save
+    /// carrying `cord_bronze: 255` must not read as "75 points spent" on the
+    /// familiar panel while Soak and the Longevity Bronze-cord note both claim
+    /// +255 — one entered value, three contradictory figures.
+    #[test]
+    fn an_out_of_range_bronze_cord_reads_the_same_for_every_consumer() {
+        let rs = ruleset();
+        let mut e = longevity_magus();
+        e.longevity_ritual = ritual(LongevitySource::SelfMade, Some(3));
+        e.familiar = Some(Familiar {
+            name: "Corax".to_string(),
+            cord_bronze: 255,
+            ..Default::default()
+        });
+
+        let familiar = e.familiar.as_ref().expect("familiar present");
+        assert_eq!(cord_points_spent(familiar), 75, "clamped to +5 = 75 points");
+
+        let bronze_soak = soak(&e, &rs)
+            .addends
+            .into_iter()
+            .find(|a| a.label == "bronze_cord")
+            .expect("Soak lists the Bronze cord")
+            .value;
+        assert_eq!(bronze_soak, 5, "Soak takes the clamped +5, not the raw 255");
+
+        assert_eq!(
+            longevity_bonus(&e, &rs).expect("has ritual").bronze_cord,
+            5,
+            "the aging-resistance note takes the clamped +5 too"
+        );
     }
 
     /// The bonding level is "25 plus the familiar's Magic Might plus 5 times its

@@ -1836,7 +1836,9 @@ pub struct Familiar {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub might: Option<MightScore>,
     /// The familiar's eight Characteristics (`:17793`), signed and NOT bought from
-    /// the magus's Characteristic points. A score of 0 is simply omitted.
+    /// the magus's Characteristic points. A score of 0 is pruned by
+    /// [`Familiar::normalize`] and the map is omitted when empty, so an explicit 0 and
+    /// an absent entry serialize identically.
     ///
     /// A bound familiar that lacked human intelligence "gains it, with a score of
     /// –3" (`:10854`), which is an ordinary Intelligence entry — so the fixed
@@ -1876,11 +1878,18 @@ pub struct Familiar {
 }
 
 impl Familiar {
-    /// Sorts both nested lists (Personality Traits by name, invested powers by
-    /// name) for canonical serialization. Called from [`Entity::normalize`].
+    /// Sorts both nested lists (Personality Traits by name, invested powers by name)
+    /// and prunes Characteristics entered as 0, for canonical serialization. Called
+    /// from [`Entity::normalize`].
+    ///
+    /// A 0 is pruned rather than kept because a familiar's Characteristics are
+    /// display-only — nothing derives from them and none is bought from a point pool
+    /// (`:17793`) — so an explicit 0 and an absent entry are the same statement, and
+    /// two such familiars must serialize to identical bytes.
     pub fn normalize(&mut self) {
         self.personality_traits.sort();
         self.powers.sort();
+        self.characteristics.retain(|_, score| *score != 0);
     }
 }
 
@@ -3805,6 +3814,47 @@ mod tests {
         assert_eq!(familiar.powers[0].name, "Mental communication");
     }
 
+    /// `Familiar::normalize()` prunes Characteristics entered as 0. A familiar's
+    /// Characteristics are display-only (`:17793`) and nothing is bought with them, so
+    /// an explicit 0 and an absent entry say the same thing — and canonical
+    /// serialization asks that two semantically identical familiars write identical
+    /// bytes. Pruning to empty also lets `skip_serializing_if` drop the key entirely.
+    #[test]
+    fn entity_normalize_prunes_zero_familiar_characteristics() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.familiar = Some(Familiar {
+            name: "Corax".into(),
+            characteristics: BTreeMap::from([
+                (Characteristic::Int, -3),
+                (Characteristic::Per, 0),
+                (Characteristic::Sta, 0),
+            ]),
+            ..Default::default()
+        });
+        entity.normalize();
+        let familiar = entity.familiar.clone().expect("familiar present");
+        assert_eq!(
+            familiar.characteristics,
+            BTreeMap::from([(Characteristic::Int, -3)]),
+            "only the non-zero score survives"
+        );
+
+        // An all-zero map normalizes to empty, so the key is omitted entirely.
+        let mut all_zero = entity.clone();
+        all_zero.familiar = Some(Familiar {
+            name: "Corax".into(),
+            characteristics: BTreeMap::from([(Characteristic::Per, 0)]),
+            ..Default::default()
+        });
+        all_zero.normalize();
+        let json = serde_json::to_string(&all_zero).unwrap();
+        assert!(!json.contains("characteristics"), "{json}");
+    }
+
     /// A self-made Longevity Ritual stores the *player-entered* bonus and focus
     /// just like an external one; `None` / `""` mean "not entered yet" and are
     /// omitted from the JSON, so a pre-5.5a save loads as not-entered.
@@ -4057,6 +4107,12 @@ mod tests {
     /// A hand-edited save carrying BOTH shapes: the new `talisman` wins and the
     /// legacy list is dropped unmerged. Merging would silently duplicate
     /// attunements the player may have already moved across by hand.
+    ///
+    /// The legacy row here is deliberately one that **cannot** deserialize (`bonus`
+    /// far outside `i8`), which pins the *order of operations* too: the new shape's
+    /// presence is decided before the legacy value is parsed, so its shape genuinely
+    /// cannot matter. Parsing first would make this save fail to load — a regression
+    /// from a load that succeeds today — and this `unwrap` would catch it.
     #[test]
     fn hand_edited_save_with_both_talisman_shapes_keeps_the_new_one() {
         let both = r#"{
@@ -4068,7 +4124,7 @@ mod tests {
             "description": "An ash staff",
             "attunements": [{ "description": "Warding", "bonus": 5 }]
           },
-          "talisman_attunements": [{ "description": "Stale", "bonus": 1 }]
+          "talisman_attunements": [{ "description": "Stale", "bonus": 3000 }]
         }"#;
         let loaded = load_entity_migrating(both).unwrap();
         let talisman = loaded.entity.talisman.as_ref().expect("talisman kept");
@@ -4083,6 +4139,13 @@ mod tests {
     /// while the caller still stamps the current `SCHEMA_VERSION`, so the next save
     /// would rewrite the file without the legacy key and the attunements would be
     /// gone for good. A failed load leaves the file on disk untouched.
+    ///
+    /// Each case asserts **what** the error says and pairs the malformed fixture with
+    /// a byte-identical **positive control** whose one offending value is corrected.
+    /// Together they attribute the failure to the legacy row itself: a bare
+    /// `is_err()` would stay green if the surrounding document had merely stopped
+    /// parsing for an unrelated reason (a newly required `Entity` field, a renamed
+    /// `ruleset` shape) while the fold quietly reverted to `unwrap_or_default()`.
     #[test]
     fn legacy_talisman_attunements_that_cannot_deserialize_fail_the_load() {
         // `bonus` is out of `i8` range, so `TalismanAttunement` cannot deserialize.
@@ -4095,9 +4158,22 @@ mod tests {
             { "description": "Projecting bolts and missiles", "bonus": 3000 }
           ]
         }"#;
-        assert!(
-            load_entity_migrating(broken).is_err(),
-            "a malformed legacy attunement list must not load as an empty talisman"
+        let err = load_entity_migrating(broken)
+            .expect_err("a malformed legacy attunement list must not load as an empty talisman")
+            .to_string();
+        assert!(err.contains("3000") && err.contains("i8"), "{err}");
+        // Positive control: the same document with the bonus in range loads, so the
+        // failure above is the legacy row and nothing else.
+        let fixed = broken.replace("3000", "3");
+        let loaded = load_entity_migrating(&fixed).expect("the in-range twin loads");
+        assert_eq!(
+            loaded
+                .entity
+                .talisman
+                .expect("folded into a talisman")
+                .attunements[0]
+                .bonus,
+            3
         );
 
         // The same for a bonus written as a JSON string, and for a null list.
@@ -4108,7 +4184,12 @@ mod tests {
           "type_id": "magus",
           "talisman_attunements": [{ "description": "Warding", "bonus": "5" }]
         }"#;
-        assert!(load_entity_migrating(stringly).is_err());
+        let err = load_entity_migrating(stringly)
+            .expect_err("a stringly-typed bonus must not load")
+            .to_string();
+        assert!(err.contains("i8"), "{err}");
+        let fixed = stringly.replace("\"5\"", "5");
+        load_entity_migrating(&fixed).expect("the numeric twin loads");
 
         let nulled = r#"{
           "schema_version": 13,
@@ -4117,12 +4198,21 @@ mod tests {
           "type_id": "magus",
           "talisman_attunements": null
         }"#;
-        assert!(load_entity_migrating(nulled).is_err());
+        let err = load_entity_migrating(nulled)
+            .expect_err("a null legacy list must not load")
+            .to_string();
+        assert!(err.contains("null") && err.contains("sequence"), "{err}");
+        let fixed = nulled.replace("null", "[]");
+        load_entity_migrating(&fixed).expect("the empty-list twin loads");
     }
 
     /// The same guarantee for the older `aging_reductions` fold: a legacy map that
     /// cannot deserialize (an out-of-`u8` drop count, an unknown Characteristic key)
     /// fails the load instead of folding in nothing and bumping the version.
+    ///
+    /// As above, each case checks the error text and is paired with a corrected
+    /// positive control, so the failure is provably the legacy map's and not the
+    /// surrounding document's.
     #[test]
     fn legacy_aging_reductions_that_cannot_deserialize_fail_the_load() {
         let out_of_range = r#"{
@@ -4133,7 +4223,16 @@ mod tests {
           "characteristics": { "com": 2 },
           "aging_reductions": { "com": 300 }
         }"#;
-        assert!(load_entity_migrating(out_of_range).is_err());
+        let err = load_entity_migrating(out_of_range)
+            .expect_err("an out-of-u8 drop count must not load")
+            .to_string();
+        assert!(err.contains("300") && err.contains("u8"), "{err}");
+        let fixed = out_of_range.replace("300", "1");
+        let loaded = load_entity_migrating(&fixed).expect("the in-range twin loads");
+        assert_eq!(
+            loaded.migrated_aging_characteristics,
+            vec![Characteristic::Com]
+        );
 
         let unknown_key = r#"{
           "schema_version": 9,
@@ -4142,7 +4241,19 @@ mod tests {
           "type_id": "companion",
           "aging_reductions": { "cun": 1 }
         }"#;
-        assert!(load_entity_migrating(unknown_key).is_err());
+        let err = load_entity_migrating(unknown_key)
+            .expect_err("an unknown Characteristic key must not load")
+            .to_string();
+        assert!(err.contains("cun"), "{err}");
+        // Positive control: `int` is a real Characteristic, so the twin loads — the
+        // Creature Format's Cunning score is deliberately not a variant (see
+        // `Familiar::characteristics`).
+        let fixed = unknown_key.replace("cun", "int");
+        let loaded = load_entity_migrating(&fixed).expect("the known-key twin loads");
+        assert_eq!(
+            loaded.migrated_aging_characteristics,
+            vec![Characteristic::Int]
+        );
     }
 
     /// A slice-5e v9 save that predates the 5g fields still loads: the additive
