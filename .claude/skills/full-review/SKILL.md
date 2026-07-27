@@ -94,9 +94,20 @@ it, every agent MUST:
   instead of wrapping them, and never use `{ … } > file` (redirects are banned anyway —
   use the Write tool). Brace *expansion* in an argument (`src/*.{rs,toml}`) is likewise
   out: use a plain glob or repeat the argument.
+- **Never prefix a repo-root command with `cd <repo> &&`.** You already start in
+  `/home/norbert/Rolle/arm-char-gen`, so that `cd` is dead weight — and it makes the
+  analyzer prompt even though both stages are allowlisted, because relocating the shell
+  changes what the next stage operates on. Observed repeatedly: `git log --oneline …`
+  and `git diff … -- crates/…` run silently on their own, but
+  `cd /home/norbert/Rolle/arm-char-gen && git diff …` raises a dialog every time. Just
+  issue the command with repo-relative paths (`git diff b49d49b..HEAD -- crates/…`,
+  `sed -n '1,40p' crates/arm-rules/src/derived.rs`). The **only** place a `cd` is
+  warranted is the UI gate, which genuinely must run inside `ui/` — see below.
 - **Write artifacts with the Write tool, not shell redirects.** Redirects (`>`, `>>`,
   `tee`) are not allowlisted. To create `tmp/review-findings.json` or any file, use the
-  Write/Edit tools (they work in-repo and under `tmp/` without approval).
+  Write/Edit tools (they work in-repo and under `tmp/` without approval). This includes
+  parking a large diff in the scratchpad: `git diff … > …/derived.diff` is denied — pipe
+  it through `head`/`grep`, or read the file with the Read tool instead.
 - **Never prepend environment setup.** Do NOT add `source ~/.cargo/env`, `export PATH=…`,
   or `nvm use` — `PATH` is already configured via the settings `env`, so `cargo`, `npm`,
   and `node` resolve directly. (This supersedes any "source cargo/nvm first" note in older
