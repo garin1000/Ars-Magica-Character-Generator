@@ -47,8 +47,9 @@ it, every agent MUST:
   something you are confident exists comes back empty, re-run it with **`grep -a`**
   (overrides `-I`) before concluding the symbol is missing or that your tools are
   broken. Also, ugrep's regex dialect is not GNU's — a bracket expression with hex
-  ranges may fail with `ugrep: error at position N`; fall back to `command grep` or
-  `rg -a`. The native Grep tool is ripgrep and skips binary files too.
+  ranges may fail with `ugrep: error at position N`; fall back to `rg -a` (NOT
+  `command grep` — only `command -v` is allowlisted, so that is denied). The native
+  Grep tool is ripgrep and skips binary files too.
 - **Inspect bytes with `od`/`xxd`/`cat -v`/`cmp`/`file` — all allowlisted.** If a file
   looks corrupt or a search behaves impossibly, that is the toolkit. Escalating to an
   interpreter to hunt control characters is never justified and will be denied.
