@@ -176,4 +176,38 @@ describe('familiar', () => {
     expect(await $('[data-testid="familiar-power-level-0"]').getValue()).toBe('20');
     expect(clean(await $('[data-testid="familiar-personality-value-0"]').getText())).toBe('+3');
   });
+
+  // The remove controls are only ever CLICKED here: the panel's unit tests render to
+  // a string (SSR), so no handler runs there. A row-remove wired to the wrong list or
+  // off by one would delete the player's other row — silent data loss — and every
+  // other gate would stay green. Each removal is proved by which row SURVIVES.
+  it('removes the clicked row, and then the whole familiar', async () => {
+    await $(POSSESSIONS_TAB).click();
+
+    // Two Personality Traits, then remove the FIRST: the second must survive and
+    // slide up to index 0.
+    await $('[data-testid="familiar-personality-add"]').click();
+    await set('familiar-personality-name-1', 'Curious');
+    await $('[data-testid="familiar-personality-remove-0"]').click();
+    await browser.waitUntil(
+      async () => (await $('[data-testid="familiar-personality-name-0"]').getValue()) === 'Curious',
+      { timeout: 10000, timeoutMsg: 'removing trait row 0 should leave the second trait behind' },
+    );
+    expect(await $('[data-testid="familiar-personality-name-1"]').isExisting()).toBe(false);
+
+    // Same for a bond-invested power.
+    await $('[data-testid="familiar-power-add"]').click();
+    await set('familiar-power-name-1', 'Shapeshift');
+    await $('[data-testid="familiar-power-remove-0"]').click();
+    await browser.waitUntil(
+      async () => (await $('[data-testid="familiar-power-name-0"]').getValue()) === 'Shapeshift',
+      { timeout: 10000, timeoutMsg: 'removing power row 0 should leave the second power behind' },
+    );
+    expect(await $('[data-testid="familiar-power-name-1"]').isExisting()).toBe(false);
+
+    // And the familiar itself: the empty state (the Add button) comes back.
+    await $('[data-testid="familiar-remove"]').click();
+    await $('[data-testid="familiar-add"]').waitForExist({ timeout: 10000 });
+    expect(await $('[data-testid="familiar-name"]').isExisting()).toBe(false);
+  });
 });

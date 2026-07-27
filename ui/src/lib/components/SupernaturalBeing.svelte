@@ -1,10 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import type { Realm } from '../types';
-
-  // The four Realms are a fixed rules taxonomy; rendered via Fluent (realm-<id>),
-  // never as a raw slug. Mirrors how MagicPossessions lists longevity sources.
-  const REALMS: Realm[] = ['magic', 'faerie', 'divine', 'infernal'];
+  import { REALMS, type Realm } from '../types';
 
   const might = $derived(store.entity.might ?? null);
   const powers = $derived(store.entity.powers ?? []);

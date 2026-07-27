@@ -316,8 +316,13 @@ talisman-remove-item = Remove talisman
 talisman-empty-item = No talisman yet.
 talisman-description-label = Shape and material
 talisman-description-placeholder = e.g. an ash staff shod with silver
-talisman-capacity = Capacity: { $pawns } pawns of Vim vis
-talisman-capacity-note = Highest Technique { $techniqueScore } + highest Form { $formScore }
+talisman-capacity = { $pawns ->
+    [one] Capacity: { $pawns } pawn of Vim vis
+   *[other] Capacity: { $pawns } pawns of Vim vis
+}
+# Both Arts are named beside their scores so the derivation can be checked against
+# the character sheet; the names come from the rules i18n, never as a raw slug.
+talisman-capacity-note = Highest Technique { $technique } { $techniqueScore } + highest Form { $form } { $formScore }
 talisman-attunements-label = Talisman Attunements
 talisman-desc-placeholder = What it enhances
 talisman-bonus-label = Bonus
@@ -339,8 +344,10 @@ longevity-remove = Remove Longevity Ritual
 # entered, never derived. Distinguishes an unfilled field from a deliberate 0.
 longevity-not-entered = Not entered
 # The live suggestion beside the input: what a ritual made now would be worth.
-# { $bonus } is already signed; { $total } is today's Creo Corpus Lab Total.
-longevity-hint = A ritual made now: { $bonus } (Creo Corpus Lab Total { $total })
+# { $bonus } is already signed; { $total } is today's Creo Corpus Lab Total. The
+# quantity is named ("aging bonus") because it is the STORED magnitude to type into
+# the field — the totals panel shows the same number as an aging-roll modifier (-7).
+longevity-hint = A ritual made now: aging bonus { $bonus } (Creo Corpus Lab Total { $total })
 longevity-hint-halved = halved
 longevity-focus-label = Focus
 longevity-focus-placeholder = How the ritual culminates
@@ -598,8 +605,13 @@ derived-longevity-self_made = Self-made
 derived-longevity-external = External
 # No bonus has been entered for the ritual yet, so there is no number to print.
 derived-longevity-not-entered = not entered
-# The Lab Total a ritual made now would draw on, beside the entered bonus.
-derived-longevity-suggested = would now be
+# This panel shows the ritual as what it DOES: the modifier subtracted from aging
+# rolls. So a stored bonus of 7 reads "-7 to aging rolls" here, while the editor
+# shows the stored magnitude ("aging bonus +7") — each string names its own
+# quantity, so the two surfaces can never be read as contradicting each other.
+# { $modifier } comes from formatSigned, so a 0 renders "0", never "-0".
+derived-longevity-aging-modifier = { $modifier } to aging rolls
+derived-longevity-suggested = a ritual made now: { $modifier } to aging rolls
 derived-masterpiece-cap = Max lesser-item level
 derived-masterpiece-note = Guidance only: design the actual lesser enchanted item under Magic Items (vis costs ignored).
 # Familiar bond: every figure is guidance. The within-focus Lab Total is

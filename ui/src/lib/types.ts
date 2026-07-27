@@ -711,6 +711,12 @@ export interface EnchantedDevice {
 // The four supernatural Realms a being's Might can be aligned to.
 export type Realm = 'magic' | 'faerie' | 'divine' | 'infernal';
 
+// Canonical Realm order (matches the engine's `Realm` enum declaration order). A
+// fixed rules taxonomy, so it lives here beside CHARACTERISTICS rather than being
+// re-hardcoded per component; always rendered through Fluent (`realm-<id>`),
+// never as a raw slug.
+export const REALMS: Realm[] = ['magic', 'faerie', 'divine', 'infernal'];
+
 // A supernatural being's base Might Score + Realm (Virtue grants add on top).
 export interface MightScore {
   realm: Realm;

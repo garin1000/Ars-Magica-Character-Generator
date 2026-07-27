@@ -569,8 +569,10 @@ describe('magic possessions', () => {
 
   it('ignores every familiar statblock edit when there is no familiar', () => {
     expect(store.entity.familiar).toBeUndefined();
+    store.setFamiliarName('Corvus');
     store.setFamiliarAnimal('raven');
     store.setFamiliarSize(-4);
+    store.setFamiliarCord('gold', 3);
     store.setFamiliarMightRealm('magic');
     store.setFamiliarMightScore(10);
     store.clearFamiliarMight();
@@ -694,6 +696,22 @@ describe('magic possessions', () => {
     });
   });
 
+  it('clearing the bonus returns the ritual to not-entered', () => {
+    store.addLongevityRitual('self_made');
+    store.setLongevityBonus(7);
+    // Emptying the input passes null, NOT the 0 that `Number('')` yields — a
+    // deliberate 0 is a claim ("the ritual grants nothing"), which is not what
+    // clearing the field means. Only null restores "not entered".
+    store.setLongevityBonus(null);
+    expect(store.entity.longevity_ritual?.bonus).toBeNull();
+    // A deliberate 0 is still storable, and is a different state from null.
+    store.setLongevityBonus(0);
+    expect(store.entity.longevity_ritual?.bonus).toBe(0);
+    // An unparseable value (mid-typing "-") is "not entered", never a stored 0.
+    store.setLongevityBonus(Number.NaN);
+    expect(store.entity.longevity_ritual?.bonus).toBeNull();
+  });
+
   it('keeps the entered bonus when switching source', () => {
     store.addLongevityRitual('self_made');
     store.setLongevityBonus(4);
@@ -717,6 +735,66 @@ describe('magic possessions', () => {
     store.setLongevityBonus(3);
     store.setLongevityFocus('nothing');
     expect(store.entity.longevity_ritual ?? null).toBeNull();
+  });
+});
+
+// Every number typed into a panel input ends up in a fixed-width Rust integer
+// field. An out-of-range value makes serde reject the whole payload at the Tauri
+// boundary, so `validate` / `effective_scores` / `derived_totals` all fail at once
+// and every read-out freezes on stale numbers while looking current. The store
+// clamps instead, so the engine always receives a representable value.
+describe('integer clamps at the Tauri boundary', () => {
+  it('clamps the familiar Size and Characteristics to i8', () => {
+    store.addFamiliar();
+    store.setFamiliarSize(200);
+    expect(store.entity.familiar?.size).toBe(127);
+    store.setFamiliarSize(-200);
+    expect(store.entity.familiar?.size).toBe(-128);
+    store.setFamiliarCharacteristic('int', 200);
+    expect(store.entity.familiar?.characteristics?.int).toBe(127);
+    store.setFamiliarCharacteristic('qik', -200);
+    expect(store.entity.familiar?.characteristics?.qik).toBe(-128);
+  });
+
+  it('clamps u8-backed familiar cords and Might Score', () => {
+    store.addFamiliar();
+    store.setFamiliarCord('gold', 900);
+    expect(store.entity.familiar?.cord_gold).toBe(255);
+    store.setFamiliarMightRealm('magic');
+    store.setFamiliarMightScore(900);
+    expect(store.entity.familiar?.might?.score).toBe(255);
+  });
+
+  it('clamps u16-backed power and instilled-effect levels', () => {
+    store.addFamiliar();
+    store.addFamiliarPower();
+    store.setFamiliarPowerLevel(0, 99999);
+    expect(store.entity.familiar?.powers?.[0].level).toBe(65535);
+    store.addTalisman();
+    store.addTalismanEffect();
+    store.setTalismanEffectLevel(0, 99999);
+    expect(store.entity.talisman?.effects?.[0].level).toBe(65535);
+  });
+
+  it('clamps the i8-backed longevity bonus and talisman attunement bonus', () => {
+    store.addLongevityRitual('self_made');
+    store.setLongevityBonus(200);
+    expect(store.entity.longevity_ritual?.bonus).toBe(127);
+    store.setLongevityBonus(-200);
+    expect(store.entity.longevity_ritual?.bonus).toBe(-128);
+    store.addTalisman();
+    store.addTalismanAttunement();
+    store.setTalismanAttunementBonus(0, 200);
+    expect(store.entity.talisman?.attunements?.[0].bonus).toBe(127);
+    store.setTalismanAttunementBonus(0, -200);
+    expect(store.entity.talisman?.attunements?.[0].bonus).toBe(-128);
+  });
+
+  it('clamps a bought Characteristic to i8', () => {
+    store.setCharacteristic('str', 200);
+    expect(store.entity.characteristics?.str).toBe(127);
+    store.setCharacteristic('sta', -200);
+    expect(store.entity.characteristics?.sta).toBe(-128);
   });
 });
 

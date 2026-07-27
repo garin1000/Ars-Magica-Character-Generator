@@ -105,6 +105,19 @@ describe('longevity ritual', () => {
       },
     );
 
+    // The totals panel shows the same stored 9 as what it DOES — the modifier
+    // subtracted from aging rolls, so "-9", signed exactly once (never "--9") and
+    // with the ASCII hyphen, while the editor keeps showing the magnitude 9.
+    await $(TOTALS_TAB).click();
+    await browser.waitUntil(async () => clean(await derived.getText()).includes('-9'), {
+      timeout: 10000,
+      timeoutMsg: 'the totals panel should show the stored bonus as the aging-roll modifier',
+    });
+    const derivedText = clean(await derived.getText());
+    expect(derivedText).not.toContain('--');
+    expect(derivedText).not.toContain('−');
+    await $(POSSESSIONS_TAB).click();
+
     // Raise Creo by 1: THE HINT MOVES, THE ENTERED BONUS DOES NOT. This is the
     // whole reason the slice exists.
     await $(ARTS_TAB).click();
@@ -159,5 +172,13 @@ describe('longevity ritual', () => {
     expect(saved.longevity_ritual.source).toBe('self_made');
     expect(saved.longevity_ritual.bonus).toBe(9);
     expect(saved.longevity_ritual.focus).toBe('A draught of quicksilver at midwinter');
+
+    // Removal is only ever CLICKED here — the panel's unit tests render to a string
+    // (SSR), so its handler never runs there. The empty state (the Add button) must
+    // come back and take the whole editor with it.
+    await $('[data-testid="longevity-remove"]').click();
+    await $('[data-testid="longevity-add"]').waitForExist({ timeout: 10000 });
+    expect(await $(BONUS).isExisting()).toBe(false);
+    expect(await $(FOCUS).isExisting()).toBe(false);
   });
 });

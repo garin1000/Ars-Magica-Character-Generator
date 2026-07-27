@@ -159,4 +159,55 @@ describe('talisman', () => {
     // The item exists, so its identity field renders — nothing was invented into it.
     expect(await $('[data-testid="talisman-description"]').getValue()).toBe('');
   });
+
+  // The remove controls are only ever CLICKED here: the panel's unit tests render to
+  // a string (SSR), so no handler runs there. A row-remove wired to the wrong list or
+  // off by one would delete the player's other row — silent data loss — and every
+  // other gate would stay green. Each removal is proved by which row SURVIVES.
+  it('removes the clicked row, and then the whole talisman', async () => {
+    await $(POSSESSIONS_TAB).click();
+
+    // The migrated attunement plus a second one, then remove the FIRST: the second
+    // must survive and slide up to index 0.
+    await $('[data-testid="talisman-attunement-add"]').click();
+    const second = await $('[data-testid="talisman-desc-1"]');
+    await second.waitForExist({ timeout: 10000 });
+    await second.setValue('Warding against wood');
+    await $('[data-testid="talisman-remove-0"]').click();
+    await browser.waitUntil(
+      async () =>
+        (await $('[data-testid="talisman-desc-0"]').getValue()) === 'Warding against wood',
+      {
+        timeout: 10000,
+        timeoutMsg: 'removing attunement row 0 should leave the second attunement behind',
+      },
+    );
+    expect(await $('[data-testid="talisman-desc-1"]').isExisting()).toBe(false);
+
+    // Same for the instilled effects, which are a separate list on the same item.
+    await $('[data-testid="talisman-effect-add"]').click();
+    const firstEffect = await $('[data-testid="talisman-effect-name-0"]');
+    await firstEffect.waitForExist({ timeout: 10000 });
+    await firstEffect.setValue('Lamp Without Flame');
+    await $('[data-testid="talisman-effect-add"]').click();
+    const secondEffect = await $('[data-testid="talisman-effect-name-1"]');
+    await secondEffect.waitForExist({ timeout: 10000 });
+    await secondEffect.setValue('Endurance of the Berserkers');
+    await $('[data-testid="talisman-effect-remove-0"]').click();
+    await browser.waitUntil(
+      async () =>
+        (await $('[data-testid="talisman-effect-name-0"]').getValue()) ===
+        'Endurance of the Berserkers',
+      {
+        timeout: 10000,
+        timeoutMsg: 'removing effect row 0 should leave the second effect behind',
+      },
+    );
+    expect(await $('[data-testid="talisman-effect-name-1"]').isExisting()).toBe(false);
+
+    // And the item itself: the empty state comes back.
+    await $('[data-testid="talisman-remove-item"]').click();
+    await $('[data-testid="talisman-empty-item"]').waitForExist({ timeout: 10000 });
+    expect(await $('[data-testid="talisman-description"]').isExisting()).toBe(false);
+  });
 });

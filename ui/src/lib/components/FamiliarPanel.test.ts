@@ -17,7 +17,7 @@ vi.mock('../ipc', () => ({
   updateCloseGuard: vi.fn(),
 }));
 
-import { store } from '../state.svelte';
+import { SCHEMA_VERSION, store } from '../state.svelte';
 import FamiliarPanel from './FamiliarPanel.svelte';
 
 /** A minimal localized ruleset: the panel needs no catalogue, only the bundle. */
@@ -38,7 +38,7 @@ function installRuleset(): void {
 
 function resetEntity(): void {
   store.entity = {
-    schema_version: 14,
+    schema_version: SCHEMA_VERSION,
     ruleset: { id: 'test', version: '1' },
     entity_kind: 'character',
     type_id: 'magus',

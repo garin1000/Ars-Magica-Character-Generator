@@ -10,6 +10,12 @@
   // would fork the single evaluation path (the `itemBudget`/`itemUsed` pattern).
   const capacity = $derived(store.derived?.talisman_capacity ?? null);
 
+  // Localized display name for a catalogue id (here: the two contributing Arts),
+  // from the rules i18n map — never the raw slug as a label.
+  function name(id: string): string {
+    return store.ruleset?.i18n[id]?.name ?? id;
+  }
+
   function num(event: Event): number {
     return Number((event.currentTarget as HTMLInputElement).value);
   }
@@ -37,12 +43,18 @@
          to prepare the item, and the model holds no vis stock to spend against it.
          Instilled effects are therefore charged against nothing at all. -->
     {#if capacity}
+      <!-- `pawns` goes in as a NUMBER: the Fluent message pluralizes it with a
+           `$pawns ->` selector, which a stringified argument cannot drive. -->
       <p class="budget-readout" data-testid="talisman-capacity">
-        {store.t('talisman-capacity', { pawns: String(capacity.pawns) })}
+        {store.t('talisman-capacity', { pawns: capacity.pawns })}
       </p>
+      <!-- Both Arts are named (through the rules i18n, never as a raw slug) so the
+           player can check the sum against the Arts on their sheet. -->
       <p class="hint" data-testid="talisman-capacity-note">
         {store.t('talisman-capacity-note', {
+          technique: name(capacity.technique),
           techniqueScore: String(capacity.technique_score),
+          form: name(capacity.form),
           formScore: String(capacity.form_score),
         })}
       </p>
@@ -63,6 +75,8 @@
             <span>{store.t('talisman-bonus-label')}</span>
             <input
               type="number"
+              min="-128"
+              max="127"
               value={attunement.bonus}
               oninput={(e) => store.setTalismanAttunementBonus(i, num(e))}
               data-testid="talisman-bonus-{i}"
@@ -106,6 +120,7 @@
             <input
               type="number"
               min="0"
+              max="65535"
               value={effect.level}
               oninput={(e) => store.setTalismanEffectLevel(i, num(e))}
               data-testid="talisman-effect-level-{i}"

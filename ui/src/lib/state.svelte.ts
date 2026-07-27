@@ -23,7 +23,30 @@ import type {
 } from './types';
 
 const VALIDATE_DEBOUNCE_MS = 150;
-const SCHEMA_VERSION = 14;
+
+/**
+ * Save-format schema version written into every new entity. Exported so test
+ * harnesses seed the current version instead of a literal that silently rots.
+ */
+export const SCHEMA_VERSION = 14;
+
+// Inclusive ranges of the fixed-width Rust integer fields the entity's numbers
+// land in. A value outside its field's range makes serde reject the whole payload
+// at the Tauri boundary, which fails `validate`, `effective_scores` and
+// `derived_totals` at once — leaving every read-out frozen on stale numbers that
+// still look current. Mutators clamp instead, so the engine always gets a
+// representable value and the panel inputs carry the matching min/max.
+const I8_MIN = -128;
+const I8_MAX = 127;
+const U8_MAX = 255;
+const U16_MAX = 65535;
+
+/** Truncate to an integer inside an inclusive range; a non-finite value becomes 0
+ * (itself clamped into range), the same fallback the field's default carries. */
+function clampInt(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return Math.min(Math.max(0, min), max);
+  return Math.min(max, Math.max(min, Math.trunc(value)));
+}
 
 /** Live filter/search state of the Virtue/Flaw picker (one per side). */
 export interface VfFilterState {
@@ -431,10 +454,11 @@ class AppStore {
   /** Set or clear a Characteristic score (score 0 removes the explicit entry). */
   setCharacteristic(characteristic: Characteristic, score: number): void {
     const chars = { ...(this.entity.characteristics ?? {}) } as Record<Characteristic, number>;
-    if (score === 0) {
+    const value = clampInt(score, I8_MIN, I8_MAX);
+    if (value === 0) {
       delete chars[characteristic];
     } else {
-      chars[characteristic] = score;
+      chars[characteristic] = value;
     }
     this.entity.characteristics = chars;
     this.#scheduleValidate();
@@ -838,8 +862,7 @@ class AppStore {
    * familiars are smaller than a human and so carry a negative Size. */
   setFamiliarSize(size: number): void {
     if (!this.entity.familiar) return;
-    const value = Number.isFinite(size) ? Math.trunc(size) : 0;
-    this.entity.familiar = { ...this.entity.familiar, size: value };
+    this.entity.familiar = { ...this.entity.familiar, size: clampInt(size, I8_MIN, I8_MAX) };
     this.#scheduleValidate();
   }
 
@@ -857,7 +880,7 @@ class AppStore {
     const realm = this.entity.familiar.might?.realm ?? 'magic';
     this.entity.familiar = {
       ...this.entity.familiar,
-      might: { realm, score: Math.max(0, Math.trunc(score)) },
+      might: { realm, score: clampInt(score, 0, U8_MAX) },
     };
     this.#scheduleValidate();
   }
@@ -873,7 +896,7 @@ class AppStore {
   setFamiliarCharacteristic(characteristic: Characteristic, score: number): void {
     if (!this.entity.familiar) return;
     const chars = { ...(this.entity.familiar.characteristics ?? {}) };
-    const value = Number.isFinite(score) ? Math.trunc(score) : 0;
+    const value = clampInt(score, I8_MIN, I8_MAX);
     if (value === 0) {
       delete chars[characteristic];
     } else {
@@ -885,7 +908,7 @@ class AppStore {
 
   setFamiliarCord(cord: 'gold' | 'silver' | 'bronze', value: number): void {
     if (!this.entity.familiar) return;
-    const clamped = Math.max(0, Math.trunc(value));
+    const clamped = clampInt(value, 0, U8_MAX);
     const key = `cord_${cord}` as const;
     this.entity.familiar = { ...this.entity.familiar, [key]: clamped };
     this.#scheduleValidate();
@@ -966,7 +989,7 @@ class AppStore {
 
   setFamiliarPowerLevel(index: number, level: number): void {
     if (!this.entity.familiar) return;
-    const clamped = Math.max(0, Math.trunc(level));
+    const clamped = clampInt(level, 0, U16_MAX);
     this.entity.familiar = {
       ...this.entity.familiar,
       powers: (this.entity.familiar.powers ?? []).map((p, i) =>
@@ -1028,7 +1051,7 @@ class AppStore {
     this.entity.talisman = {
       ...this.entity.talisman,
       attunements: (this.entity.talisman.attunements ?? []).map((a, i) =>
-        i === index ? { ...a, bonus: Math.trunc(bonus) } : a,
+        i === index ? { ...a, bonus: clampInt(bonus, I8_MIN, I8_MAX) } : a,
       ),
     };
     this.#scheduleValidate();
@@ -1065,7 +1088,7 @@ class AppStore {
 
   setTalismanEffectLevel(index: number, level: number): void {
     if (!this.entity.talisman) return;
-    const clamped = Math.max(0, Math.trunc(level));
+    const clamped = clampInt(level, 0, U16_MAX);
     this.entity.talisman = {
       ...this.entity.talisman,
       effects: (this.entity.talisman.effects ?? []).map((e, i) =>
@@ -1096,11 +1119,21 @@ class AppStore {
     this.#scheduleValidate();
   }
 
-  setLongevityBonus(bonus: number): void {
+  /**
+   * Store the player-entered aging bonus, or `null` for "not entered".
+   *
+   * Clearing the input must reach here as `null`, never as the 0 that
+   * `Number('')` yields: a stored 0 is a deliberate claim ("this ritual grants
+   * nothing"), and writing one would drop the not-entered marker for good — the
+   * exact state every pre-5.5a save loads in. A non-finite value (mid-typing a
+   * lone "-") is likewise "not entered", not a stored 0.
+   */
+  setLongevityBonus(bonus: number | null): void {
     if (!this.entity.longevity_ritual) return;
+    const entered = bonus != null && Number.isFinite(bonus);
     this.entity.longevity_ritual = {
       ...this.entity.longevity_ritual,
-      bonus: Math.trunc(bonus),
+      bonus: entered ? clampInt(bonus, I8_MIN, I8_MAX) : null,
     };
     this.#scheduleValidate();
   }
