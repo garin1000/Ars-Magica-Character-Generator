@@ -196,6 +196,10 @@ class AppStore {
   #bundle = $derived(buildBundle(this.lang));
   #timer: ReturnType<typeof setTimeout> | undefined;
   #seq = 0;
+  // The exact error object the last rejected validate published to `error`, so a
+  // later succeeding validate can tell its own banner apart from a file-operation
+  // failure that landed in the same shared field. Not reactive: it never renders.
+  #validateError: AppError | null = null;
 
   /** Translate a UI-chrome key. Bound so it can be passed to components. */
   t = (key: string, args?: TranslateArgs): string => translate(this.#bundle, key, args);
@@ -1439,16 +1443,23 @@ class AppStore {
         this.derived = derived;
         // A succeeding pass retires whatever the last rejected payload latched —
         // otherwise one bad value keeps the error banner up for the rest of the
-        // session even after the user corrects it. Inside the sequence guard, so a
-        // stale response cannot clear an error a newer pass just raised.
-        this.error = null;
+        // session even after the user corrects it. It may retire ONLY its own
+        // error: `error` is one shared banner channel that file operations write
+        // to as well, and a failed save must stay visible while the document is
+        // still unsaved. Inside the sequence guard, so a stale response cannot
+        // clear an error a newer pass just raised.
+        if (this.error === this.#validateError) this.error = null;
+        this.#validateError = null;
       }
     } catch (e) {
       // Guarded the same way, and for the mirror reason: a direct revalidate()
       // does not cancel a pending debounced one, so the rejection of a payload
       // the user has already corrected can land after the corrected pass
       // succeeded. Only the current pass may set *or* clear `error`.
-      if (seq === this.#seq) this.error = e as AppError;
+      if (seq === this.#seq) {
+        this.#validateError = e as AppError;
+        this.error = this.#validateError;
+      }
     }
   }
 
