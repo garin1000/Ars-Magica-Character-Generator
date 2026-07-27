@@ -905,25 +905,33 @@ talisman, which is why it is an `Option`, not a `Vec`.
   legacy key's *presence*, never on the recorded version. The fold **invents
   nothing**: attunements are copied verbatim, and the identity/effects the old shape
   never stored stay empty. So unlike the aging fold — which *infers* a point total —
-  it needs no `LoadedEntity` notice flag. Three ambiguous shapes are pinned
+  it needs no `LoadedEntity` notice flag. Four ambiguous shapes are pinned
   by named tests: `"talisman_attunements": []` leaves `talisman: None` (no phantom
   item) but still bumps the version, since the key's presence proves the old shape
   (`legacy_empty_talisman_attunements_migrate_to_no_talisman`); a hand-edited save
-  carrying **both** keys, where the new `talisman` **carries data**, keeps the new one
-  and drops the legacy list unmerged
+  carrying **both** keys, where the new `talisman` already **carries attunements**,
+  keeps the new one and drops the legacy list unmerged
   (`hand_edited_save_with_both_talisman_shapes_keeps_the_new_one` — whose
   legacy row is deliberately one that *cannot* deserialize, so the test also pins the
-  order of operations: a filled new shape wins **before** the legacy value is parsed,
-  hence its shape genuinely cannot matter); but a new shape that carries **no** data —
-  literally `"talisman": {}` — does **not** win, and the legacy list is folded into it
-  (`legacy_attunements_fold_into_an_empty_new_talisman`). The gate is therefore
-  `entity.talisman.is_some_and(|t| *t != Talisman::default())`, not `is_some()`: every
-  `Talisman` field is `skip_serializing_if`, so the *app itself* writes `{}` for an
-  untouched talisman, and the key's presence is no evidence the player moved anything
-  across. Treating `{}` as the more specific statement of intent would drop the legacy
-  list unparsed while the caller still stamped `SCHEMA_VERSION` — the identical
+  order of operations: a new shape with attunements wins **before** the legacy value is
+  parsed, hence its shape genuinely cannot matter); but a new shape with **no**
+  attunements does **not** win, and the legacy list is folded into it — both when it is
+  literally `"talisman": {}` (`legacy_attunements_fold_into_an_empty_new_talisman`) and
+  when it carries data only in fields the fold cannot touch, e.g. a description
+  (`legacy_attunements_fold_into_a_talisman_that_has_only_a_description`, which also
+  asserts the description *survives* the fold). The gate is therefore
+  `entity.talisman.as_ref().is_some_and(|t| !t.attunements.is_empty())` — neither
+  `is_some()` nor `*t != Talisman::default()`. `attunements` is the sole field the
+  legacy `talisman_attunements` key migrates into, so it is the only field whose
+  contents can make merging *duplicate* attunements a player moved across by hand; a
+  filled `description` or `effects` says nothing about attunements, and `{}` says
+  nothing at all (every `Talisman` field is `skip_serializing_if`, so the *app itself*
+  writes `{}` for an untouched talisman). Gating on anything wider would drop the
+  legacy list unparsed while the caller still stamped `SCHEMA_VERSION` — the identical
   permanent loss the error path below exists to prevent, reached through the
-  both-keys path instead. `{}` beside an *empty* legacy list stays `{}`, since the
+  both-keys path instead. Because the list is folded **into** the existing talisman
+  (only its empty `attunements` is filled), the item's own `description`/`effects`
+  survive. `{}` beside an *empty* legacy list stays `{}`, since the
   fold invents nothing (`an_empty_talisman_beside_an_empty_legacy_list_gains_nothing`).
   App-written saves can never carry an empty list
   (`skip_serializing_if = "Vec::is_empty"`).

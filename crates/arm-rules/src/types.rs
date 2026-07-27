@@ -2518,17 +2518,20 @@ fn minimal_aging_points_for_drops(bought: i32, drops: u32) -> u32 {
 ///   key's presence proves the old shape; the `aging_reductions` fold does the
 ///   same.)
 /// - A save carrying **both** keys keeps the new `talisman` and drops the legacy
-///   list unmerged — but only when the new shape actually carries data. Merging
-///   into a filled talisman would duplicate attunements a player already moved
-///   across by hand, and a filled talisman is the more specific statement of
-///   intent. The legacy list is then not even parsed — it is discarded by that
-///   decision, so its shape cannot matter.
+///   list unmerged — but only when the new shape already carries **attunements**.
+///   `attunements` is the one field the legacy list can migrate into, so it is the
+///   only field whose contents can make merging duplicate anything: attunements a
+///   player already moved across by hand. The legacy list is then not even parsed —
+///   it is discarded by that decision, so its shape cannot matter.
 ///
-///   An **empty** `"talisman": {}` states nothing, so it does not win: every
-///   [`Talisman`] field is `skip_serializing_if`, so an untouched talisman the app
-///   itself wrote serializes as exactly `{}`, and the key's mere presence is no
-///   evidence the player moved anything. The legacy list is folded into it instead.
-///   Letting `{}` take precedence would drop the list unparsed while
+///   A talisman with **no** attunements does not win, however much its other fields
+///   hold. `"talisman": {}` states nothing at all (every [`Talisman`] field is
+///   `skip_serializing_if`, so an untouched talisman the app itself wrote serializes
+///   as exactly `{}`, and the key's mere presence is no evidence the player moved
+///   anything), and `{"description": "An ash staff"}` or an effects-only talisman
+///   says nothing about *attunements* either. In all of those the list is folded into
+///   the existing talisman — filling its `attunements` while its own fields are left
+///   as written. Letting them take precedence would drop the list unparsed while
 ///   [`load_entity_migrating`] still stamps [`SCHEMA_VERSION`] — the same permanent
 ///   loss the error path below exists to prevent.
 ///
@@ -2542,22 +2545,23 @@ fn fold_legacy_talisman(
     entity: &mut Entity,
     legacy: serde_json::Value,
 ) -> Result<(), serde_json::Error> {
-    let new_shape_carries_data = entity
+    let new_shape_carries_attunements = entity
         .talisman
         .as_ref()
-        .is_some_and(|talisman| *talisman != Talisman::default());
-    if new_shape_carries_data {
+        .is_some_and(|talisman| !talisman.attunements.is_empty());
+    if new_shape_carries_attunements {
         return Ok(());
     }
     let attunements: Vec<TalismanAttunement> = serde_json::from_value(legacy)?;
     if attunements.is_empty() {
         return Ok(());
     }
-    entity.talisman = Some(Talisman {
-        description: String::new(),
-        attunements,
-        effects: Vec::new(),
-    });
+    // Fold into the existing talisman so a description-only or effects-only one keeps
+    // its own data; only `attunements` (empty, per the gate above) is filled in.
+    entity
+        .talisman
+        .get_or_insert_with(Talisman::default)
+        .attunements = attunements;
     Ok(())
 }
 
@@ -2574,8 +2578,8 @@ fn fold_legacy_talisman(
 ///
 /// Saves at schema ≤ 13 carried a flat `talisman_attunements` list. Schema 14
 /// models the talisman as an item ([`Talisman`]), so any legacy list is folded
-/// into `talisman.attunements`. See [`fold_legacy_talisman`] for the two
-/// ambiguous shapes it has to decide.
+/// into `talisman.attunements`. See [`fold_legacy_talisman`] for the ambiguous
+/// shapes it has to decide.
 ///
 /// Dispatch is on legacy-key *presence*, never on the recorded version: a
 /// hand-edited save may carry any `schema_version` alongside either shape. Plain
@@ -4202,9 +4206,12 @@ mod tests {
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
 
-    /// A hand-edited save carrying BOTH shapes: the new `talisman` wins and the
-    /// legacy list is dropped unmerged. Merging would silently duplicate
-    /// attunements the player may have already moved across by hand.
+    /// A hand-edited save carrying BOTH shapes, where the new `talisman` already has
+    /// `attunements`: the new one wins and the legacy list is dropped unmerged.
+    /// Merging would silently duplicate attunements the player already moved across by
+    /// hand — which is why populated `attunements`, and only that, is what the early
+    /// return gates on (see
+    /// `legacy_attunements_fold_into_a_talisman_that_has_only_a_description`).
     ///
     /// The legacy row here is deliberately one that **cannot** deserialize (`bonus`
     /// far outside `i8`), which pins the *order of operations* too: the new shape's
@@ -4241,8 +4248,8 @@ mod tests {
     /// then rewrite the file without the legacy key: the same permanent silent loss
     /// the error path is built to prevent, reached through the both-keys path.
     ///
-    /// The both-keys early return therefore gates on the new shape carrying *data*,
-    /// not merely existing — see
+    /// The both-keys early return therefore gates on the new shape already carrying
+    /// *attunements*, not merely existing — see
     /// `hand_edited_save_with_both_talisman_shapes_keeps_the_new_one` for the
     /// populated case, which still wins.
     #[test]
@@ -4265,6 +4272,50 @@ mod tests {
             talisman.attunements.len(),
             1,
             "the legacy list is folded into the empty talisman, not dropped"
+        );
+        assert_eq!(talisman.attunements[0].description, "Warding");
+        assert_eq!(talisman.attunements[0].bonus, 5);
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+        let json = serde_json::to_string(&loaded.entity).unwrap();
+        assert!(!json.contains("talisman_attunements"), "{json}");
+    }
+
+    /// A new-shape talisman that carries data in a field the fold cannot touch — here
+    /// only a `description`, no attunements — must **still** take the legacy list.
+    /// `attunements` is the sole field the legacy `talisman_attunements` key can
+    /// migrate into, so it is the only field whose contents can make merging
+    /// duplicate anything. Gating on the whole `Talisman` differing from
+    /// `Talisman::default()` would drop this list unparsed while the load still
+    /// stamps `SCHEMA_VERSION`, and the next save would rewrite the file without the
+    /// legacy key: permanent silent loss.
+    ///
+    /// The fold must also keep the talisman's own data — the description survives
+    /// alongside the migrated attunement, because the list is folded *into* the
+    /// existing item rather than replacing it.
+    #[test]
+    fn legacy_attunements_fold_into_a_talisman_that_has_only_a_description() {
+        let both = r#"{
+          "schema_version": 13,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "talisman": { "description": "An ash staff" },
+          "talisman_attunements": [{ "description": "Warding", "bonus": 5 }]
+        }"#;
+        let loaded = load_entity_migrating(both).unwrap();
+        let talisman = loaded
+            .entity
+            .talisman
+            .as_ref()
+            .expect("a described talisman plus a legacy list keeps both");
+        assert_eq!(
+            talisman.description, "An ash staff",
+            "the talisman keeps its own data; the fold does not replace the item"
+        );
+        assert_eq!(
+            talisman.attunements.len(),
+            1,
+            "the legacy list is folded in, not dropped: `attunements` was empty"
         );
         assert_eq!(talisman.attunements[0].description, "Warding");
         assert_eq!(talisman.attunements[0].bonus, 5);
