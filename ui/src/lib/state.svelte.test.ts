@@ -917,6 +917,7 @@ describe('integer clamps at the Tauri boundary', () => {
 describe('revalidate error latching', () => {
   afterEach(() => {
     vi.mocked(ipc.validateEntity).mockResolvedValue({ issues: [] });
+    vi.mocked(ipc.saveEntity).mockReset();
     store.error = null;
   });
 
@@ -969,6 +970,21 @@ describe('revalidate error latching', () => {
     failStale({ kind: 'invalid_entity' });
     await stale;
     expect(store.error).toBeNull();
+  });
+
+  // `error` is one shared banner channel — file operations publish to it too. A
+  // succeeding validate may only retire an error the validation path itself
+  // raised: a failed save leaves the document unsaved, so its banner must stay up
+  // until the user resolves it, even though every later validate succeeds.
+  it('does not let a succeeding validate clear a save failure', async () => {
+    vi.mocked(ipc.saveEntity).mockRejectedValueOnce({ kind: 'io' });
+    await store.saveAs();
+    expect(store.error).toEqual({ kind: 'io' });
+
+    await store.revalidate();
+
+    expect(store.error).toEqual({ kind: 'io' });
+    expect(store.dirty).toBe(true);
   });
 });
 
