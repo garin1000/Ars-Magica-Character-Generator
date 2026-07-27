@@ -689,21 +689,22 @@ Full detail, field inventory, and quirks: **`docs/scribus-character-sheet.md`**.
 
 ---
 
-## Current focus: Milestone 5.5 (Magic Possessions depth)
+## Current focus: Milestone 5.6 (Markdown character export)
 
-Milestones 0–5 complete: the direct-entry gate is closed — every core-rules
+Milestones 0–5.5 complete: the direct-entry gate is closed — every core-rules
 character is fully enterable and its combat/Soak/casting/lab totals computed
-in-engine. Manual testing then surfaced a batch of UI/UX fixes (handled as an
-in-between quick-fix pass) plus three deeper gaps in the magus's magic
-possessions. Per user directive the roadmap now inserts, before the wizard:
-**M5.5** (Magic Possessions depth — familiar statblock, player-entered Longevity
-value + hint, talisman item + effects) then **M5.6** (Markdown export). The
-guided wizard **M6** gains a new first slice **6a** (startup screen + fixed
-character type) ahead of the guided flow (6b).
+in-engine — and the magus's three magic possessions are now modeled at
+rules-faithful depth. **M5.5 is done**: the Longevity Ritual stores a
+player-entered bonus beside a live Creo Corpus hint (5.5a), the talisman is an
+item with identity, capacity and instilled effects (5.5b, `SCHEMA_VERSION`
+13 → 14 with a lossless legacy fold), and the familiar is a Creature-Format
+statblock with read-only bonding guidance (5.5c, no schema bump). The guided
+wizard **M6** gains a new first slice **6a** (startup screen + fixed character
+type) ahead of the guided flow (6b).
 
-Next: M5.5c — Familiar (magical-animal statblock). 5.5a (Longevity Ritual —
-player-entered value + live hint) and 5.5b (Talisman as an item, `SCHEMA_VERSION`
-13 → 14) are complete.
+Next: M5.6 — Markdown character export (a pure formatter in `arm-rules`,
+UI-owned Fluent headings, and a Tauri file-save command), which now has the full
+magic-possession content to export.
 
 ---
 
