@@ -21,10 +21,30 @@ pre-sets `PATH` (cargo + node/npm are already on it). Background agents cannot r
 interactive approval prompts, so any command containing a stage that does not match an
 allowlisted prefix is **auto-DENIED** (not queued for approval).
 
-**Pipes and chains are fine** — the permission checker splits a command on `|`, `&&`, and
-`;` and approves the whole line as long as **every stage matches an allowlisted prefix**.
-So compose freely with pipelines; just keep every stage on the allowlist. To stay inside
-it, every agent MUST:
+**Pipes and chains are fine** — the checker splits a command on `|`, `&&`, and `;` and
+requires **every stage to match an allowlisted prefix**. So compose freely with pipelines.
+
+**But matching a prefix is necessary, not sufficient.** Understand this before you start,
+because misreading it is what sends agents hunting for workarounds. An allowlisted prefix
+only clears the *first* of several independent checks; any later one can still deny the
+command:
+
+1. **Prefix match** — the stage must begin with an allowlisted prefix. `git -C <path> diff`
+   fails, because it does not begin with `git diff`.
+2. **Per-command flag whitelist** (`safeFlags`) — every known command has a table of
+   permitted flags, git subcommands included. An unlisted flag is denied.
+3. **Argument path containment** — commands classed as file *reads* (`grep`, `rg`, `cat`,
+   `head`, `tail`, `od`, `jq`, `git`, …) have their positional file arguments extracted and
+   checked against the working directory. Anything outside it is denied with *"Path is
+   outside allowed working directories"* — `/dev/null` included.
+4. **Special guards**, each with its own reason code: `cd-git-compound` (a `cd` and a `git`
+   in one command), `multi-cd`, `cd-compound-redirect`, `shell-expansion`,
+   `process-substitution`, `sed-dangerous`, `shell-operators`, `too-complex`.
+
+So a command that looks entirely legitimate can still be denied, and that is **not**
+evidence that the permission system is broken or that you need a cleverer spelling. Work
+out which layer refused it and satisfy all four — or use the native Read/Grep/Glob tools,
+which bypass this machinery completely. To stay inside it, every agent MUST:
 
 - **A denial is information, not an obstacle to route around.** This is the governing
   rule; the specific bans below are only its worked examples. When a command is denied,
