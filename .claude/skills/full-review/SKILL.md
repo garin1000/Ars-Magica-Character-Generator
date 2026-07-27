@@ -112,6 +112,11 @@ it, every agent MUST:
   denied (`multi-cd`), and a **`cd` plus an output redirect** is denied
   (`cd-compound-redirect`). A `cd` with a **non-git** command is unaffected, which is why
   the UI gate auto-approves.
+  **`git -C <path> …` is NOT the way around this.** The allowlist grants the prefixes
+  `git diff`, `git log`, `git show`, … and `git -C <path> diff` does not start with
+  `git diff`, so no rule matches and it is denied just the same. There is no workaround
+  to find here, because none is needed: you start in the repo root, so write the command
+  bare — `git diff --stat -- crates/`, `git log --oneline b49d49b..HEAD`.
 - **Write artifacts with the Write tool, not shell redirects.** Redirects (`>`, `>>`,
   `tee`) are not allowlisted. To create `tmp/review-findings.json` or any file, use the
   Write/Edit tools (they work in-repo and under `tmp/` without approval). This includes
