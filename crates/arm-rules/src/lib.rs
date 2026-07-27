@@ -8,6 +8,7 @@ pub mod characteristics;
 pub mod derived;
 pub mod effective;
 pub mod equipment;
+pub mod export;
 pub mod grant;
 pub mod house;
 pub mod mythic_companion;
@@ -59,6 +60,7 @@ pub use effective::{
     warping_points_total, warping_score, xp_allocation,
 };
 pub use equipment::{Armor, Shield, Weapon, WeaponKind};
+pub use export::{LABEL_KEYS, character_markdown};
 pub use grant::{Grant, GrantConstraint, open_pick_satisfies, resolve_grants};
 pub use house::{House, LineageType};
 pub use mythic_companion::{MythicCompanionType, RequiredFlaw};
