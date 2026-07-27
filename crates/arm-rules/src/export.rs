@@ -41,12 +41,17 @@
 //! ([`Characteristic::ALL`], [`ArtType::ALL`]). Two consecutive renders of the same
 //! entity are byte-identical.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
+use crate::art::ArtType;
 use crate::characteristics::Characteristic;
-use crate::effective::effective_characteristic_score;
+use crate::effective::{
+    effective_ability_score, effective_art_score, effective_characteristic_score,
+    effective_spell_mastery, resolved_spell_level, xp_allocation,
+};
 use crate::ruleset::{LocalizedRuleset, Ruleset};
-use crate::types::{Entity, Id};
+use crate::types::{Entity, Id, ItemKind};
+use crate::validation::{compute_balance, effective_point_ceilings};
 
 /// Every document-chrome label key [`character_markdown`] can ask for, sorted and
 /// duplicate-free. The caller resolves these against its own Fluent bundle and
@@ -57,14 +62,24 @@ use crate::types::{Entity, Id};
 /// new taxonomy variant cannot silently surface as a raw slug — a unit test walks
 /// each family and asserts membership here.
 ///
-/// One family is deliberately **outside** the list: `type-<profile id>`, the
-/// character-type label in the subtitle. Profile ids are catalogue *data*, and
-/// enumerating them here would bake the catalogue's size into code. The locales
-/// already ship one key per shipped profile.
+/// Two families are deliberately **outside** the list, because both are composed
+/// from catalogue *data* and enumerating them would bake the catalogue's size into
+/// code: `type-<profile id>` (the character-type label in the subtitle) and
+/// `param-label-<parameter key>` (the slot label shown for an unfilled parameter).
+/// The locales already ship one key per shipped profile and parameter key.
 pub const LABEL_KEYS: &[&str] = &[
+    "abilities-title",
+    "ability-category-academic",
+    "ability-category-arcane",
+    "ability-category-general",
+    "ability-category-martial",
+    "ability-category-supernatural",
     "ability-score-label",
+    "ability-specialty-label",
     "age-label",
     "apparent-age-label",
+    "art-type-form",
+    "art-type-technique",
     "characteristic-com",
     "characteristic-description-label",
     "characteristic-dex",
@@ -76,7 +91,11 @@ pub const LABEL_KEYS: &[&str] = &[
     "characteristic-str",
     "characteristics-title",
     "export-col-effective",
+    "export-col-magnitude",
+    "export-items-boons",
+    "export-items-hooks",
     "export-untitled",
+    "export-xp-restricted",
     "house-label",
     "identity-birth-year",
     "identity-concept",
@@ -87,6 +106,22 @@ pub const LABEL_KEYS: &[&str] = &[
     "identity-name",
     "identity-parens",
     "identity-sigil",
+    "items-flaws-title",
+    "items-virtues-title",
+    "magnitude-free",
+    "magnitude-major",
+    "magnitude-minor",
+    "restricted-xp-list-separator",
+    "spell-form-label",
+    "spell-level-general",
+    "spell-level-label",
+    "spell-mastery-abilities-label",
+    "spell-mastery-label",
+    "spell-technique-label",
+    "tab-arts",
+    "tab-spells",
+    "tab-virtues-flaws",
+    "xp-pool",
 ];
 
 /// Renders `entity` as a Markdown document.
@@ -108,8 +143,27 @@ pub fn character_markdown(
     doc.write_title(&mut out);
     doc.write_identity(&mut out);
     doc.write_characteristics(&mut out);
+    doc.write_virtues_flaws(&mut out);
+    doc.write_abilities(&mut out);
+    doc.write_arts(&mut out);
+    doc.write_spells(&mut out);
     out
 }
+
+/// The point-item kinds in document order, each with the chrome key that names its
+/// group. A fixed taxonomy: [`ItemKind`] has four variants and this is the whole
+/// mapping, so a new variant fails to compile until it is listed here.
+const ITEM_KIND_HEADINGS: [(ItemKind, &str); 4] = [
+    (ItemKind::Virtue, "items-virtues-title"),
+    (ItemKind::Flaw, "items-flaws-title"),
+    (ItemKind::Boon, "export-items-boons"),
+    (ItemKind::Hook, "export-items-hooks"),
+];
+
+/// Parameter key used when a parameterized entry's catalogue entry is missing, so
+/// the chosen value is appended verbatim instead of vanishing. No rules parameter
+/// uses this key, so it can never collide with a real `{placeholder}`.
+const UNKNOWN_PARAM_KEY: &str = "parameter";
 
 /// The formatter's inputs, bundled so each section reads as one small method.
 struct Doc<'a> {
@@ -140,6 +194,66 @@ impl<'a> Doc<'a> {
             .display_name(id)
             .unwrap_or_else(|| id.as_str())
             .to_string()
+    }
+
+    /// The localized separator for an inline list, mirroring the frontend's
+    /// `restrictedPoolLabel` (`"<sep> "`).
+    fn list_separator(&self) -> String {
+        format!("{} ", self.label("restricted-xp-list-separator"))
+    }
+
+    /// One parameter *value* rendered for display: a value that happens to be a
+    /// catalogue id resolves to its localized name, and free text (an Area Lore's
+    /// region, a Magical Focus's field) passes through as typed.
+    fn param_value(&self, raw: &str) -> String {
+        escape_cell(&self.name(&Id::new(raw)))
+    }
+
+    /// A localized item name with its chosen parameters folded in.
+    ///
+    /// `{key}` placeholders in the name template are replaced by the matching value
+    /// ("Puissant {ability}" → "Puissant Awareness"); a placeholder with no value
+    /// shows the localized slot label instead ("Puissant (Ability)"), and a value the
+    /// template never mentions is appended in parentheses ("Minor Magical Focus
+    /// (fire)") so a chosen parameter can never be silently dropped.
+    fn parameterized_name(&self, id: &Id, values: &BTreeMap<String, String>) -> String {
+        let template = escape_cell(&self.name(id));
+        let mut filled = String::new();
+        let mut consumed: BTreeSet<&str> = BTreeSet::new();
+        let mut rest = template.as_str();
+        while let Some(open) = rest.find('{') {
+            filled.push_str(&rest[..open]);
+            let after = &rest[open + 1..];
+            let Some(close) = after.find('}') else {
+                // An unterminated brace is literal text, not a placeholder.
+                filled.push('{');
+                rest = after;
+                continue;
+            };
+            let key = &after[..close];
+            match values.get(key) {
+                Some(value) => {
+                    filled.push_str(value);
+                    consumed.insert(key);
+                }
+                None => {
+                    filled.push('(');
+                    filled.push_str(&self.label(&format!("param-label-{key}")));
+                    filled.push(')');
+                }
+            }
+            rest = &after[close + 1..];
+        }
+        filled.push_str(rest);
+        let extras: Vec<&str> = values
+            .iter()
+            .filter(|(key, _)| !consumed.contains(key.as_str()))
+            .map(|(_, value)| value.as_str())
+            .collect();
+        if extras.is_empty() {
+            return filled;
+        }
+        format!("{filled} ({})", extras.join(&self.list_separator()))
     }
 
     // --- Sections ----------------------------------------------------------
@@ -247,6 +361,270 @@ impl<'a> Doc<'a> {
             &rows,
         );
     }
+
+    /// The chosen Virtues/Flaws (Boons/Hooks for a covenant), grouped by the
+    /// catalogue item's kind, plus the point-balance read-out.
+    ///
+    /// Only the entity's own `selections` are listed, which is exactly what
+    /// [`compute_balance`] counts, so the rows and the balance line can never
+    /// disagree. A selection whose id is absent from the catalogue has no kind to
+    /// file it under and is not printed; [`crate::validation::validate`] reports it
+    /// as `unknown_ref`.
+    fn write_virtues_flaws(&self, out: &mut String) {
+        let mut body = String::new();
+        for (kind, heading_key) in ITEM_KIND_HEADINGS {
+            let mut rows: Vec<Vec<String>> = Vec::new();
+            for selection in &self.entity.selections {
+                let Some(item) = self.rules().item(&selection.item_ref) else {
+                    continue;
+                };
+                if item.kind != kind {
+                    continue;
+                }
+                let values: BTreeMap<String, String> = selection
+                    .params
+                    .iter()
+                    .map(|(key, value)| (key.clone(), self.param_value(value.as_str())))
+                    .collect();
+                rows.push(vec![
+                    self.parameterized_name(&selection.item_ref, &values),
+                    self.label(&format!("magnitude-{}", item.magnitude)),
+                ]);
+            }
+            if rows.is_empty() {
+                continue;
+            }
+            heading(&mut body, 3, &self.label(heading_key));
+            table(
+                &mut body,
+                &[
+                    self.label("identity-name"),
+                    self.label("export-col-magnitude"),
+                ],
+                &rows,
+            );
+        }
+        if body.is_empty() {
+            return;
+        }
+        heading(out, 2, &self.label("tab-virtues-flaws"));
+        out.push_str(&body);
+        let balance = compute_balance(self.entity, self.rules());
+        let ceilings = effective_point_ceilings(self.entity, self.rules());
+        for (key, used, ceiling) in [
+            (
+                "items-virtues-title",
+                balance.virtue_points,
+                ceilings.as_ref().map(|c| c.virtue_ceiling),
+            ),
+            (
+                "items-flaws-title",
+                balance.flaw_points,
+                ceilings.as_ref().map(|c| c.flaw_ceiling),
+            ),
+        ] {
+            let value = match ceiling {
+                Some(max) => format!("{used} / {max}"),
+                None => used.to_string(),
+            };
+            field(out, &self.label(key), &value);
+        }
+        out.push('\n');
+    }
+
+    /// The bought Abilities — each instance a row of its own — and the experience
+    /// pools that funded them (shared with the Arts, as the rules give one pool).
+    fn write_abilities(&self, out: &mut String) {
+        let e = self.entity;
+        let mut rows: Vec<Vec<String>> = Vec::new();
+        for bought in &e.ability_scores {
+            let mut values: BTreeMap<String, String> = BTreeMap::new();
+            if let Some(parameter) = &bought.parameter {
+                let key = self
+                    .rules()
+                    .ability(&bought.ability)
+                    .and_then(|a| a.parameter.clone())
+                    .unwrap_or_else(|| UNKNOWN_PARAM_KEY.to_string());
+                values.insert(key, self.param_value(parameter));
+            }
+            let score = i32::from(bought.score);
+            let effective = effective_ability_score(
+                e,
+                self.rules(),
+                &bought.ability,
+                bought.parameter.as_deref(),
+            );
+            rows.push(vec![
+                self.parameterized_name(&bought.ability, &values),
+                escape_cell(bought.specialty.as_deref().unwrap_or_default()),
+                score.to_string(),
+                if effective == score {
+                    String::new()
+                } else {
+                    effective.to_string()
+                },
+            ]);
+        }
+        let xp = xp_allocation(e, self.rules());
+        let has_xp = xp.general_pool > 0 || xp.general_used > 0 || !xp.restricted.is_empty();
+        if rows.is_empty() && !has_xp {
+            return;
+        }
+        heading(out, 2, &self.label("abilities-title"));
+        table(
+            out,
+            &[
+                self.label("identity-name"),
+                self.label("ability-specialty-label"),
+                self.label("ability-score-label"),
+                self.label("export-col-effective"),
+            ],
+            &rows,
+        );
+        if xp.general_pool > 0 || xp.general_used > 0 {
+            field(
+                out,
+                &self.label("xp-pool"),
+                &format!("{} / {}", xp.general_used, xp.general_pool),
+            );
+            out.push('\n');
+        }
+        if xp.restricted.is_empty() {
+            return;
+        }
+        heading(out, 3, &self.label("export-xp-restricted"));
+        for pool in &xp.restricted {
+            let mut eligibility: Vec<String> = pool
+                .abilities
+                .iter()
+                .map(|id| escape_cell(&self.name(id)))
+                .collect();
+            eligibility.extend(
+                pool.categories
+                    .iter()
+                    .map(|c| self.label(&format!("ability-category-{c}"))),
+            );
+            field(
+                out,
+                &eligibility.join(&self.list_separator()),
+                &format!("{} / {}", pool.used, pool.amount),
+            );
+        }
+        out.push('\n');
+    }
+
+    /// The bought Hermetic Arts, split into Techniques and Forms.
+    ///
+    /// An Art id absent from the catalogue is not printed: it has no Technique/Form
+    /// class to file it under, and no other engine read-out can score it either
+    /// ([`crate::validation::validate`] reports it as `unknown_art`).
+    fn write_arts(&self, out: &mut String) {
+        let e = self.entity;
+        let mut body = String::new();
+        for art_type in ArtType::ALL {
+            let mut rows: Vec<Vec<String>> = Vec::new();
+            for bought in &e.art_scores {
+                let Some(art) = self.rules().art(&bought.art) else {
+                    continue;
+                };
+                if art.art_type != art_type {
+                    continue;
+                }
+                let score = i32::from(bought.score);
+                let effective = effective_art_score(e, self.rules(), &bought.art);
+                rows.push(vec![
+                    escape_cell(&self.name(&bought.art)),
+                    score.to_string(),
+                    if effective == score {
+                        String::new()
+                    } else {
+                        effective.to_string()
+                    },
+                ]);
+            }
+            if rows.is_empty() {
+                continue;
+            }
+            heading(&mut body, 3, &self.label(&format!("art-type-{art_type}")));
+            table(
+                &mut body,
+                &[
+                    self.label("identity-name"),
+                    self.label("ability-score-label"),
+                    self.label("export-col-effective"),
+                ],
+                &rows,
+            );
+        }
+        if body.is_empty() {
+            return;
+        }
+        heading(out, 2, &self.label("tab-arts"));
+        out.push_str(&body);
+    }
+
+    /// The spells the character knows, with Technique/Form, resolved level, and
+    /// Spell Mastery.
+    fn write_spells(&self, out: &mut String) {
+        let e = self.entity;
+        let mut rows: Vec<Vec<String>> = Vec::new();
+        for chosen in &e.spells {
+            let catalogue = self.rules().spell(&chosen.spell);
+            let mut values: BTreeMap<String, String> = BTreeMap::new();
+            if let Some(parameter) = &chosen.parameter {
+                let key = catalogue
+                    .and_then(|s| s.parameters.first())
+                    .map(|p| p.key.clone())
+                    .unwrap_or_else(|| UNKNOWN_PARAM_KEY.to_string());
+                values.insert(key, self.param_value(parameter));
+            }
+            let (technique, form) = match catalogue {
+                Some(spell) => (
+                    escape_cell(&self.name(&spell.technique)),
+                    escape_cell(&self.name(&spell.form)),
+                ),
+                None => (String::new(), String::new()),
+            };
+            let level = match resolved_spell_level(chosen, self.rules()) {
+                Some(level) => level.to_string(),
+                None => self.label("spell-level-general"),
+            };
+            let mastery = effective_spell_mastery(chosen, e, self.rules());
+            let abilities: Vec<String> = chosen
+                .mastery_abilities
+                .iter()
+                .map(|id| escape_cell(&self.name(id)))
+                .collect();
+            rows.push(vec![
+                self.parameterized_name(&chosen.spell, &values),
+                technique,
+                form,
+                level,
+                if mastery == 0 {
+                    String::new()
+                } else {
+                    mastery.to_string()
+                },
+                abilities.join(&self.list_separator()),
+            ]);
+        }
+        if rows.is_empty() {
+            return;
+        }
+        heading(out, 2, &self.label("tab-spells"));
+        table(
+            out,
+            &[
+                self.label("identity-name"),
+                self.label("spell-technique-label"),
+                self.label("spell-form-label"),
+                self.label("spell-level-label"),
+                self.label("spell-mastery-label"),
+                self.label("spell-mastery-abilities-label"),
+            ],
+            &rows,
+        );
+    }
 }
 
 // --- Formatting primitives -------------------------------------------------
@@ -339,7 +717,7 @@ fn table(out: &mut String, headers: &[String], rows: &[Vec<String>]) {
 mod tests {
     use super::*;
     use crate::ruleset::RulesetSources;
-    use crate::types::{EntityKind, RulesetRef, Selection};
+    use crate::types::{AbilityScore, ArtScore, EntityKind, RulesetRef, Selection, SpellSelection};
     use pretty_assertions::assert_eq;
 
     /// A small magus-capable ruleset with one Characteristic-moving Virtue.
@@ -353,7 +731,22 @@ mod tests {
           { "id": "boon.rich_vis_source", "kind": "boon", "classification": "narrative",
             "magnitude": "minor", "category": "general", "entity_kinds": ["covenant"] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] }
+            "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] },
+          { "id": "virtue.puissant_ability", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
+            "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }] },
+          { "id": "virtue.puissant_art", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
+            "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }] },
+          { "id": "virtue.minor_magical_focus", "kind": "virtue", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
+            "effects": [{ "type": "magical_focus", "param": "focus", "major": false }] },
+          { "id": "virtue.warrior", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }] }
         ]"#;
         let types = r#"[
           { "id": "magus", "is_magus": true,
@@ -379,28 +772,66 @@ mod tests {
             { "id": "ability.magic_theory", "category": "arcane" },
             { "id": "ability.parma_magica", "category": "arcane" },
             { "id": "ability.penetration", "category": "arcane" },
-            { "id": "ability.philosophiae", "category": "academic" }
+            { "id": "ability.philosophiae", "category": "academic" },
+            { "id": "ability.area_lore", "category": "general", "parameter": "area" },
+            { "id": "ability.single_weapon", "category": "martial" }
           ]
         }"#;
+        let arts = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 1 }, { "score": 5, "total_xp": 15 },
+            { "score": 8, "total_xp": 36 }, { "score": 10, "total_xp": 55 }
+          ],
+          "arts": [
+            { "id": "art.creo", "art_type": "technique" },
+            { "id": "art.muto", "art_type": "technique" },
+            { "id": "art.corpus", "art_type": "form" },
+            { "id": "art.ignem", "art_type": "form" },
+            { "id": "art.vim", "art_type": "form" }
+          ]
+        }"#;
+        let spells = r#"{ "spells": [
+          { "id": "spell.pilum_of_fire", "technique": "art.creo", "form": "art.ignem",
+            "level": 20, "ritual": false },
+          { "id": "spell.wizards_boost_form", "technique": "art.muto", "form": "art.vim",
+            "parameters": [{ "key": "form", "type": "ref", "domain": "form" }] }
+        ] }"#;
+        let mastery = r#"{ "abilities": [
+          { "id": "spell_mastery_ability.penetration" }
+        ] }"#;
         let rs = Ruleset::from_sources(RulesetSources {
             id: "arm5-core",
             version: "2024.1",
             point_items: items,
             type_profiles: types,
             abilities: Some(abilities),
-            arts: None,
+            arts: Some(arts),
             houses: None,
             mythic_types: None,
-            spells: None,
-            spell_mastery_abilities: None,
+            spells: Some(spells),
+            spell_mastery_abilities: Some(mastery),
             equipment: None,
             characteristics: None,
         })
         .unwrap();
         let i18n = r#"{
           "virtue.giant_blood": { "name": "Giant Blood" },
+          "virtue.puissant_ability": { "name": "Puissant {ability}" },
+          "virtue.puissant_art": { "name": "Puissant {art}" },
+          "virtue.minor_magical_focus": { "name": "Minor Magical Focus" },
+          "virtue.warrior": { "name": "Warrior" },
+          "flaw.optimistic": { "name": "Optimistic" },
           "boon.rich_vis_source": { "name": "Rich Vis Source" },
           "ability.awareness": { "name": "Awareness" },
+          "ability.area_lore": { "name": "{area} Lore" },
+          "ability.single_weapon": { "name": "Single Weapon" },
+          "art.creo": { "name": "Creo", "abbreviation": "Cr" },
+          "art.muto": { "name": "Muto", "abbreviation": "Mu" },
+          "art.ignem": { "name": "Ignem", "abbreviation": "Ig" },
+          "art.vim": { "name": "Vim", "abbreviation": "Vi" },
+          "spell.pilum_of_fire": { "name": "Pilum of Fire" },
+          "spell.wizards_boost_form": { "name": "Wizard's Boost of {form}" },
+          "spell_mastery_ability.penetration": { "name": "Penetration" },
           "house.bonisagus": { "name": "Bonisagus" }
         }"#;
         LocalizedRuleset::new(rs, i18n).unwrap()
@@ -703,6 +1134,295 @@ mod tests {
             !doc.contains("## Characteristics"),
             "a covenant has no Characteristics: {doc}"
         );
+    }
+
+    // --- virtues & flaws --------------------------------------------------
+
+    #[test]
+    fn virtues_and_flaws_are_split_by_kind_with_their_magnitude() {
+        let mut e = magus();
+        e.selections = vec![
+            Selection::new(Id::new("virtue.giant_blood")),
+            Selection::new(Id::new("flaw.optimistic")),
+        ];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("tab-virtues-flaws", "Virtues & Flaws"),
+                ("items-virtues-title", "Virtues"),
+                ("items-flaws-title", "Flaws"),
+                ("magnitude-major", "Major"),
+                ("magnitude-minor", "Minor"),
+            ]),
+        );
+        assert!(doc.contains("## Virtues & Flaws\n"), "{doc}");
+        assert!(doc.contains("### Virtues\n"), "{doc}");
+        assert!(doc.contains("| Giant Blood | Major |"), "{doc}");
+        assert!(doc.contains("### Flaws\n"), "{doc}");
+        assert!(doc.contains("| Optimistic | Minor |"), "{doc}");
+    }
+
+    #[test]
+    fn a_covenants_boons_are_not_filed_under_virtues() {
+        let mut e = covenant();
+        e.selections = vec![Selection::new(Id::new("boon.rich_vis_source"))];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("items-virtues-title", "Virtues"),
+                ("export-items-boons", "Boons"),
+            ]),
+        );
+        assert!(doc.contains("### Boons\n"), "{doc}");
+        assert!(!doc.contains("### Virtues"), "{doc}");
+        assert!(doc.contains("| Rich Vis Source |"), "{doc}");
+    }
+
+    #[test]
+    fn a_parameterized_virtue_names_its_chosen_target() {
+        let mut e = magus();
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([("ability".to_string(), Id::new("ability.awareness"))]),
+        )];
+        let doc = character_markdown(&e, &ruleset(), &no_labels());
+        assert!(doc.contains("| Puissant Awareness |"), "{doc}");
+    }
+
+    #[test]
+    fn a_parameter_the_name_template_ignores_is_appended_rather_than_dropped() {
+        let mut e = magus();
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.minor_magical_focus"),
+            BTreeMap::from([("focus".to_string(), Id::new("fire"))]),
+        )];
+        let doc = character_markdown(&e, &ruleset(), &no_labels());
+        assert!(doc.contains("| Minor Magical Focus (fire) |"), "{doc}");
+    }
+
+    #[test]
+    fn an_unfilled_parameter_shows_its_localized_slot_label() {
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.puissant_ability"))];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[("param-label-ability", "Ability")]),
+        );
+        assert!(doc.contains("| Puissant (Ability) |"), "{doc}");
+    }
+
+    #[test]
+    fn the_point_balance_reports_used_points_against_the_type_ceiling() {
+        let mut e = magus();
+        e.selections = vec![
+            Selection::new(Id::new("virtue.giant_blood")),
+            Selection::new(Id::new("flaw.optimistic")),
+        ];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("items-virtues-title", "Virtues"),
+                ("items-flaws-title", "Flaws"),
+            ]),
+        );
+        assert!(doc.contains("- **Virtues**: 3 / 10\n"), "{doc}");
+        assert!(doc.contains("- **Flaws**: 1 / 10\n"), "{doc}");
+    }
+
+    #[test]
+    fn the_virtues_and_flaws_section_is_omitted_when_nothing_is_selected() {
+        let doc = character_markdown(
+            &magus(),
+            &ruleset(),
+            &labels(&[("tab-virtues-flaws", "Virtues & Flaws")]),
+        );
+        assert!(!doc.contains("Virtues & Flaws"), "stray heading: {doc}");
+    }
+
+    // --- abilities --------------------------------------------------------
+
+    #[test]
+    fn abilities_list_specialty_bought_and_effective_scores() {
+        let mut e = magus();
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 3,
+            specialty: Some("searching".to_string()),
+            parameter: None,
+        }];
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([("ability".to_string(), Id::new("ability.awareness"))]),
+        )];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("abilities-title", "Abilities"),
+                ("ability-specialty-label", "Specialty"),
+            ]),
+        );
+        assert!(doc.contains("## Abilities\n"), "{doc}");
+        assert!(doc.contains("| Awareness | searching | 3 | 5 |"), "{doc}");
+    }
+
+    #[test]
+    fn two_instances_of_one_ability_stay_separate_rows() {
+        let mut e = magus();
+        e.ability_scores = vec![
+            AbilityScore {
+                ability: Id::new("ability.area_lore"),
+                score: 2,
+                specialty: None,
+                parameter: Some("Provence".to_string()),
+            },
+            AbilityScore {
+                ability: Id::new("ability.area_lore"),
+                score: 1,
+                specialty: Some("legends".to_string()),
+                parameter: Some("the Rhine".to_string()),
+            },
+        ];
+        e.normalize();
+        let doc = character_markdown(&e, &ruleset(), &no_labels());
+        assert!(doc.contains("| Provence Lore |  | 2 |"), "{doc}");
+        assert!(doc.contains("| the Rhine Lore | legends | 1 |"), "{doc}");
+    }
+
+    #[test]
+    fn the_xp_pool_reports_the_general_draw_and_each_restricted_pool() {
+        let mut e = magus();
+        e.xp_pool = 60;
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 3,
+            specialty: None,
+            parameter: None,
+        }];
+        e.selections = vec![Selection::new(Id::new("virtue.warrior"))];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("xp-pool", "XP pool"),
+                ("export-xp-restricted", "Restricted experience"),
+                ("ability-category-martial", "Martial"),
+            ]),
+        );
+        assert!(doc.contains("- **XP pool**: 30 / 60\n"), "{doc}");
+        assert!(doc.contains("### Restricted experience\n"), "{doc}");
+        assert!(doc.contains("- **Martial**: 0 / 50\n"), "{doc}");
+    }
+
+    #[test]
+    fn the_abilities_section_is_omitted_when_nothing_is_bought_and_no_xp_is_banked() {
+        let doc = character_markdown(
+            &magus(),
+            &ruleset(),
+            &labels(&[("abilities-title", "Abilities")]),
+        );
+        assert!(!doc.contains("## Abilities"), "stray heading: {doc}");
+    }
+
+    // --- arts -------------------------------------------------------------
+
+    #[test]
+    fn arts_are_split_into_techniques_and_forms() {
+        let mut e = magus();
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 8,
+            },
+        ];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("tab-arts", "Arts"),
+                ("art-type-technique", "Techniques"),
+                ("art-type-form", "Forms"),
+            ]),
+        );
+        let techniques = doc.find("### Techniques").expect("techniques heading");
+        let forms = doc.find("### Forms").expect("forms heading");
+        assert!(techniques < forms, "Techniques come first: {doc}");
+        assert!(doc.contains("| Creo | 10 |"), "{doc}");
+        assert!(doc.contains("| Ignem | 8 |"), "{doc}");
+    }
+
+    #[test]
+    fn an_art_bonus_fills_the_effective_column() {
+        let mut e = magus();
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.creo"),
+            score: 10,
+        }];
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.puissant_art"),
+            BTreeMap::from([("art".to_string(), Id::new("art.creo"))]),
+        )];
+        let doc = character_markdown(&e, &ruleset(), &no_labels());
+        assert!(doc.contains("| Creo | 10 | 13 |"), "{doc}");
+    }
+
+    #[test]
+    fn the_arts_section_is_omitted_when_no_art_is_bought() {
+        let doc = character_markdown(&magus(), &ruleset(), &labels(&[("tab-arts", "Arts")]));
+        assert!(!doc.contains("## Arts"), "stray heading: {doc}");
+    }
+
+    // --- spells -----------------------------------------------------------
+
+    #[test]
+    fn spells_list_their_arts_level_and_mastery() {
+        let mut e = magus();
+        e.spells = vec![SpellSelection {
+            spell: Id::new("spell.pilum_of_fire"),
+            level: None,
+            mastery: Some(2),
+            parameter: None,
+            mastery_abilities: vec![Id::new("spell_mastery_ability.penetration")],
+        }];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[("tab-spells", "Spells"), ("spell-mastery-label", "Mastery")]),
+        );
+        assert!(doc.contains("## Spells\n"), "{doc}");
+        assert!(
+            doc.contains("| Pilum of Fire | Creo | Ignem | 20 | 2 | Penetration |"),
+            "{doc}"
+        );
+    }
+
+    #[test]
+    fn a_general_spell_with_no_chosen_level_shows_the_general_marker() {
+        let mut e = magus();
+        e.spells = vec![SpellSelection {
+            spell: Id::new("spell.wizards_boost_form"),
+            level: None,
+            mastery: None,
+            parameter: Some("art.ignem".to_string()),
+            mastery_abilities: Vec::new(),
+        }];
+        let doc = character_markdown(&e, &ruleset(), &labels(&[("spell-level-general", "Gen")]));
+        assert!(doc.contains("| Wizard's Boost of Ignem |"), "{doc}");
+        assert!(doc.contains("| Gen |"), "{doc}");
+    }
+
+    #[test]
+    fn the_spells_section_is_omitted_when_no_spell_is_known() {
+        let doc = character_markdown(&magus(), &ruleset(), &labels(&[("tab-spells", "Spells")]));
+        assert!(!doc.contains("## Spells"), "stray heading: {doc}");
     }
 
     #[test]
