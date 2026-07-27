@@ -474,8 +474,11 @@ orchestrate. Engine (where a mechanic changes) → data → direct-entry UI, TDD
       its **instilled effects** (name + level, like enchanted devices), in
       addition to the existing shape/material **attunements** (description +
       bonus). `Entity.talisman: Option<Talisman>` replaces `talisman_attunements`
-      (`SCHEMA_VERSION` 13 → 14, with a lossless legacy fold in
-      `load_entity_migrating`). The capacity is **read-only guidance**, and
+      (`SCHEMA_VERSION` 13 → 14, with a legacy fold in `load_entity_migrating`
+      that **invents nothing**: attunements are copied verbatim, the identity and
+      effects the old shape never stored stay empty, and a legacy value that cannot
+      deserialize fails the load rather than folding in silence — see RULES.md
+      M5.5b for the shapes it decides). The capacity is **read-only guidance**, and
       instilled effects are charged against **no** budget: `item_level_budget`
       comes only from the Redcap-only Virtues, and a Redcap "may not take The Gift"
       (:4850), so it can never fund a magus's talisman.
@@ -697,8 +700,9 @@ in-engine — and the magus's three magic possessions are now modeled at
 rules-faithful depth. **M5.5 is done**: the Longevity Ritual stores a
 player-entered bonus beside a live Creo Corpus hint (5.5a), the talisman is an
 item with identity, capacity and instilled effects (5.5b, `SCHEMA_VERSION`
-13 → 14 with a lossless legacy fold), and the familiar is a Creature-Format
-statblock with read-only bonding guidance (5.5c, no schema bump). The guided
+13 → 14 with a legacy fold that invents nothing), and the familiar is a
+Creature-Format statblock with read-only bonding guidance (5.5c, no schema
+bump). The guided
 wizard **M6** gains a new first slice **6a** (startup screen + fixed character
 type) ahead of the guided flow (6b).
 

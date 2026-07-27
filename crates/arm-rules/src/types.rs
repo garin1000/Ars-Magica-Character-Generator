@@ -1859,13 +1859,16 @@ pub struct Familiar {
     /// auto-applied. Kept sorted via [`Familiar::normalize`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub personality_traits: Vec<PersonalityTrait>,
-    /// Gold cord score (reduces botch dice).
+    /// Gold cord score (reduces botch dice). Bounded by [`MAX_CORD_SCORE`], which
+    /// [`Familiar::normalize`] clamps to.
     #[serde(default, skip_serializing_if = "is_zero_u8")]
     pub cord_gold: u8,
-    /// Silver cord score (Personality / mental resistance).
+    /// Silver cord score (Personality / mental resistance). Bounded by
+    /// [`MAX_CORD_SCORE`], which [`Familiar::normalize`] clamps to.
     #[serde(default, skip_serializing_if = "is_zero_u8")]
     pub cord_silver: u8,
-    /// Bronze cord score (Soak & aging-resistance).
+    /// Bronze cord score (Soak & aging-resistance). Bounded by [`MAX_CORD_SCORE`],
+    /// which [`Familiar::normalize`] clamps to.
     #[serde(default, skip_serializing_if = "is_zero_u8")]
     pub cord_bronze: u8,
     /// The powers invested in the familiar bond. Charged against **no** budget:
@@ -1877,19 +1880,45 @@ pub struct Familiar {
     pub powers: Vec<SupernaturalPower>,
 }
 
+/// The highest score a familiar cord can have: "The strength of each of these cords
+/// is rated from 0 to +5 … a score of +5 (the maximum)".
+///
+/// The single home of the rules maximum for the whole engine: [`Familiar::normalize`]
+/// clamps the stored fields to it, and [`crate::derived::cord_score`] clamps on read
+/// for values that reach a consumer before a normalize pass (a freshly loaded save).
+/// Neither restates the number.
+///
+/// Source: `Ars Magica - Definitive Edition (Core Rules).md:10836`.
+pub const MAX_CORD_SCORE: u8 = 5;
+
 impl Familiar {
-    /// Sorts both nested lists (Personality Traits by name, invested powers by name)
-    /// and prunes Characteristics entered as 0, for canonical serialization. Called
-    /// from [`Entity::normalize`].
+    /// Sorts both nested lists (Personality Traits by name, invested powers by name),
+    /// prunes Characteristics entered as 0, and clamps the three cords to
+    /// [`MAX_CORD_SCORE`], for canonical serialization. Called from
+    /// [`Entity::normalize`].
     ///
     /// A 0 is pruned rather than kept because a familiar's Characteristics are
     /// display-only — nothing derives from them and none is bought from a point pool
     /// (`:17793`) — so an explicit 0 and an absent entry are the same statement, and
     /// two such familiars must serialize to identical bytes.
+    ///
+    /// A cord above the maximum is clamped for exactly that reason. The cord fields
+    /// are plain `u8`, so a hand-edited or legacy save can carry any value up to 255,
+    /// and **every** consumer already routes through
+    /// [`crate::derived::cord_score`] — so `cord_bronze: 255` and `cord_bronze: 5`
+    /// are indistinguishable to the engine while serializing differently and
+    /// *displaying* differently: the panel renders the raw 255 in an input that
+    /// declares the maximum, beside read-outs computed from 5. Left alone, saving
+    /// rewrites 255 unchanged and the user can never see which figure was used, so
+    /// the entered value self-heals on the next save — the same repair, for the same
+    /// canonical-serialization reason, as pruning a zero Characteristic.
     pub fn normalize(&mut self) {
         self.personality_traits.sort();
         self.powers.sort();
         self.characteristics.retain(|_, score| *score != 0);
+        self.cord_gold = self.cord_gold.min(MAX_CORD_SCORE);
+        self.cord_silver = self.cord_silver.min(MAX_CORD_SCORE);
+        self.cord_bronze = self.cord_bronze.min(MAX_CORD_SCORE);
     }
 }
 
@@ -1897,9 +1926,19 @@ impl Familiar {
 /// attunement is chosen from the Shape and Material Bonuses Table each time the
 /// talisman is prepared or an effect is instilled ("you may also open your
 /// talisman to one kind of magic attunement, based on the shape and material of
-/// the talisman"), and only the highest applicable bonus applies, to Casting
-/// Scores only. Only the choice is stored; the derived-totals slice decides where
-/// each bonus applies. Kept sorted via [`Entity::normalize`].
+/// the talisman"). Kept sorted via [`Entity::normalize`].
+///
+/// **Stored, deliberately not computed.** The bonus is *not* folded into any
+/// Casting Total: it applies "only … when the magus is touching the talisman, and
+/// only the highest bonus applies", to Casting Scores for Ritual/Formulaic/
+/// Spontaneous magic and never to Magic Resistance or lab activities (`:10625`).
+/// Which spells an attunement covers is free text ([`Self::description`]), so the
+/// engine cannot tell whether a given cell of the casting grid is one it enhances,
+/// and "touching the talisman" is a moment of play the model does not represent.
+/// It is therefore a situational modifier the player applies at the table — the
+/// same call as [`crate::derived::soak`]'s Form bonus, which is surfaced as an
+/// entered 0. Recorded as a deferral in RULES.md so it is not read as done.
+///
 /// Source: `Ars Magica - Definitive Edition (Core Rules).md:10623`, `:10625`.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct TalismanAttunement {
@@ -2479,10 +2518,19 @@ fn minimal_aging_points_for_drops(bought: i32, drops: u32) -> u32 {
 ///   key's presence proves the old shape; the `aging_reductions` fold does the
 ///   same.)
 /// - A save carrying **both** keys keeps the new `talisman` and drops the legacy
-///   list unmerged. Merging would duplicate attunements a player already moved
-///   across by hand, and the new shape is the more specific statement of intent.
-///   The legacy list is then not even parsed — it is discarded by that decision, so
-///   its shape cannot matter.
+///   list unmerged — but only when the new shape actually carries data. Merging
+///   into a filled talisman would duplicate attunements a player already moved
+///   across by hand, and a filled talisman is the more specific statement of
+///   intent. The legacy list is then not even parsed — it is discarded by that
+///   decision, so its shape cannot matter.
+///
+///   An **empty** `"talisman": {}` states nothing, so it does not win: every
+///   [`Talisman`] field is `skip_serializing_if`, so an untouched talisman the app
+///   itself wrote serializes as exactly `{}`, and the key's mere presence is no
+///   evidence the player moved anything. The legacy list is folded into it instead.
+///   Letting `{}` take precedence would drop the list unparsed while
+///   [`load_entity_migrating`] still stamps [`SCHEMA_VERSION`] — the same permanent
+///   loss the error path below exists to prevent.
 ///
 /// A legacy list that **cannot** deserialize (a `bonus` outside `i8`, a bonus
 /// written as a JSON string, `null` in place of the list) is an error, propagated to
@@ -2494,7 +2542,11 @@ fn fold_legacy_talisman(
     entity: &mut Entity,
     legacy: serde_json::Value,
 ) -> Result<(), serde_json::Error> {
-    if entity.talisman.is_some() {
+    let new_shape_carries_data = entity
+        .talisman
+        .as_ref()
+        .is_some_and(|talisman| *talisman != Talisman::default());
+    if new_shape_carries_data {
         return Ok(());
     }
     let attunements: Vec<TalismanAttunement> = serde_json::from_value(legacy)?;
@@ -3855,6 +3907,52 @@ mod tests {
         assert!(!json.contains("characteristics"), "{json}");
     }
 
+    /// `Familiar::normalize()` clamps a cord score above the rules maximum
+    /// (0…+5, Core Rules.md:10836) for the same reason it prunes a zero
+    /// Characteristic: every consumer already routes through
+    /// `derived::cord_score`, so `cord_bronze: 255` and `cord_bronze: 5` are the
+    /// same statement to the engine — yet unclamped they serialize differently and
+    /// the panel *displays* the raw 255 beside read-outs computed from 5, a
+    /// disagreement the user cannot resolve and that saving perpetuates.
+    #[test]
+    fn entity_normalize_clamps_out_of_range_familiar_cords() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        entity.familiar = Some(Familiar {
+            name: "Corax".into(),
+            cord_gold: 255,
+            cord_silver: 6,
+            cord_bronze: 5,
+            ..Default::default()
+        });
+        let mut in_range = entity.clone();
+        in_range.familiar = Some(Familiar {
+            name: "Corax".into(),
+            cord_gold: 5,
+            cord_silver: 5,
+            cord_bronze: 5,
+            ..Default::default()
+        });
+
+        entity.normalize();
+        let familiar = entity.familiar.as_ref().expect("familiar present");
+        assert_eq!(familiar.cord_gold, 5, "255 self-heals to the +5 maximum");
+        assert_eq!(familiar.cord_silver, 5, "6 self-heals to the +5 maximum");
+        assert_eq!(familiar.cord_bronze, 5, "an in-range score is untouched");
+
+        // Two familiars the engine cannot tell apart must serialize to identical
+        // bytes — the canonical-serialization rule that also prunes a zero
+        // Characteristic.
+        in_range.normalize();
+        assert_eq!(
+            serde_json::to_string(&entity).unwrap(),
+            serde_json::to_string(&in_range).unwrap()
+        );
+    }
+
     /// A self-made Longevity Ritual stores the *player-entered* bonus and focus
     /// just like an external one; `None` / `""` mean "not entered yet" and are
     /// omitted from the JSON, so a pre-5.5a save loads as not-entered.
@@ -4131,6 +4229,71 @@ mod tests {
         assert_eq!(talisman.description, "An ash staff");
         assert_eq!(talisman.attunements.len(), 1, "legacy row not merged in");
         assert_eq!(talisman.attunements[0].description, "Warding");
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+    }
+
+    /// A hand-edited save carrying an **empty** `"talisman": {}` beside a legacy
+    /// list must still fold the attunements in. Every `Talisman` field is
+    /// `skip_serializing_if`, so an app-written talisman the user never filled in
+    /// serializes as exactly `{}` — the presence of the key therefore proves
+    /// nothing, and treating it as "the new shape wins" would drop the legacy list
+    /// unparsed while the load still stamps `SCHEMA_VERSION`. The next save would
+    /// then rewrite the file without the legacy key: the same permanent silent loss
+    /// the error path is built to prevent, reached through the both-keys path.
+    ///
+    /// The both-keys early return therefore gates on the new shape carrying *data*,
+    /// not merely existing — see
+    /// `hand_edited_save_with_both_talisman_shapes_keeps_the_new_one` for the
+    /// populated case, which still wins.
+    #[test]
+    fn legacy_attunements_fold_into_an_empty_new_talisman() {
+        let both = r#"{
+          "schema_version": 13,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "talisman": {},
+          "talisman_attunements": [{ "description": "Warding", "bonus": 5 }]
+        }"#;
+        let loaded = load_entity_migrating(both).unwrap();
+        let talisman = loaded
+            .entity
+            .talisman
+            .as_ref()
+            .expect("an empty talisman plus a legacy list keeps the attunements");
+        assert_eq!(
+            talisman.attunements.len(),
+            1,
+            "the legacy list is folded into the empty talisman, not dropped"
+        );
+        assert_eq!(talisman.attunements[0].description, "Warding");
+        assert_eq!(talisman.attunements[0].bonus, 5);
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+        let json = serde_json::to_string(&loaded.entity).unwrap();
+        assert!(!json.contains("talisman_attunements"), "{json}");
+    }
+
+    /// An empty `"talisman": {}` beside an **empty** legacy list stays no-talisman:
+    /// the fold invents nothing, so nothing turns the empty item into a filled one.
+    /// (An empty legacy list alone is pinned by
+    /// `legacy_empty_talisman_attunements_migrate_to_no_talisman`; here the empty
+    /// new-shape key is preserved as written, since the fold has nothing to add.)
+    #[test]
+    fn an_empty_talisman_beside_an_empty_legacy_list_gains_nothing() {
+        let both = r#"{
+          "schema_version": 13,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "talisman": {},
+          "talisman_attunements": []
+        }"#;
+        let loaded = load_entity_migrating(both).unwrap();
+        assert_eq!(
+            loaded.entity.talisman,
+            Some(Talisman::default()),
+            "the empty talisman is kept as written; nothing is invented"
+        );
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
 

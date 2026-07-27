@@ -881,6 +881,19 @@ talisman, which is why it is an `Option`, not a `Vec`.
   Ritual, Formulaic and Spontaneous magic, but they do not apply to Magic
   Resistance or any laboratory activities" (`:10625`). This corrects the M5/5e
   citation, which named no lines at all.
+  **The bonus is stored but still unread** — nothing in `derived.rs` adds it to a
+  Casting Total (`casting_totals` never looks at `talisman.attunements`;
+  `talisman_capacity` is the only talisman consumer), in the same sense as
+  `lab_enchanting` being *collected but unread* in the V/F effect table below. This
+  is a decision, not an omission: the attunement's subject is free text
+  (`TalismanAttunement.description`), so the engine cannot tell which cell of the
+  casting grid an attunement enhances, "only the highest bonus applies" needs that
+  same judgement to pick a winner, and the bonus applies only "when the magus is
+  touching the talisman" (`:10625`) — a moment of play the model does not represent.
+  So it is a situational modifier the player applies at the table, exactly like
+  Soak's Form bonus (entered 0, see the *Soak* row). Computing it would require
+  either a closed attunement catalogue keyed to spell Techniques/Forms or a
+  per-total "touching my talisman" toggle; both are out of M5.5b's scope.
 - **Instilled effects** — `Talisman.effects: Vec<TalismanEffect { name, level: u16 }>`.
   "When a magus instills effects into a talisman, he gets a +5 bonus to his Lab
   Total" (`:10621`). Deliberately **not** a reused `EnchantedDevice`: the two carry
@@ -892,15 +905,26 @@ talisman, which is why it is an `Option`, not a `Vec`.
   legacy key's *presence*, never on the recorded version. The fold **invents
   nothing**: attunements are copied verbatim, and the identity/effects the old shape
   never stored stay empty. So unlike the aging fold — which *infers* a point total —
-  it needs no `LoadedEntity` notice flag. Two ambiguous shapes are pinned
+  it needs no `LoadedEntity` notice flag. Three ambiguous shapes are pinned
   by named tests: `"talisman_attunements": []` leaves `talisman: None` (no phantom
   item) but still bumps the version, since the key's presence proves the old shape
   (`legacy_empty_talisman_attunements_migrate_to_no_talisman`); a hand-edited save
-  carrying **both** keys keeps the new `talisman` and drops the legacy list
-  unmerged (`hand_edited_save_with_both_talisman_shapes_keeps_the_new_one` — whose
+  carrying **both** keys, where the new `talisman` **carries data**, keeps the new one
+  and drops the legacy list unmerged
+  (`hand_edited_save_with_both_talisman_shapes_keeps_the_new_one` — whose
   legacy row is deliberately one that *cannot* deserialize, so the test also pins the
-  order of operations: the new shape wins **before** the legacy value is parsed, hence
-  its shape genuinely cannot matter).
+  order of operations: a filled new shape wins **before** the legacy value is parsed,
+  hence its shape genuinely cannot matter); but a new shape that carries **no** data —
+  literally `"talisman": {}` — does **not** win, and the legacy list is folded into it
+  (`legacy_attunements_fold_into_an_empty_new_talisman`). The gate is therefore
+  `entity.talisman.is_some_and(|t| *t != Talisman::default())`, not `is_some()`: every
+  `Talisman` field is `skip_serializing_if`, so the *app itself* writes `{}` for an
+  untouched talisman, and the key's presence is no evidence the player moved anything
+  across. Treating `{}` as the more specific statement of intent would drop the legacy
+  list unparsed while the caller still stamped `SCHEMA_VERSION` — the identical
+  permanent loss the error path below exists to prevent, reached through the
+  both-keys path instead. `{}` beside an *empty* legacy list stays `{}`, since the
+  fold invents nothing (`an_empty_talisman_beside_an_empty_legacy_list_gains_nothing`).
   App-written saves can never carry an empty list
   (`skip_serializing_if = "Vec::is_empty"`).
 - **A legacy value that cannot deserialize fails the load** — both folds propagate
@@ -989,7 +1013,11 @@ Source for the whole chapter: `Ars Magica - Definitive Edition (Core Rules).md:1
   (`:10862-10884`), charged against **no** budget (`:10866`, see the derived row).
   Kept sorted by `Familiar::normalize()`.
 - The three cords are unchanged, only re-ordered to sit where the statblock puts
-  them (after Personality Traits, before Powers). Source: `:10840-10844`.
+  them (after Personality Traits, before Powers). Source: `:10840-10844`. A score
+  above the +5 maximum (`:10836`) is **clamped by `Familiar::normalize()`**, the same
+  self-healing repair as pruning a zero Characteristic above and for the same
+  canonical-serialization reason — see the *Familiar cord cost* derived row for the
+  full argument and for where `MAX_CORD_SCORE` lives.
 
 **No `SCHEMA_VERSION` bump.** Every field beyond `name` is additive
 `serde(default, skip_serializing_if)`, so a pre-5.5c familiar (name + cords) loads
@@ -1809,7 +1837,7 @@ these numbers.** The `derived_totals` Tauri command mirrors `effective_scores`.
 | Talisman capacity | `:10619`, `:4347-4349`, `:4842-4850` | magus **with a talisman** surfaces a **read-only** enchantment capacity in pawns of Vim vis: "The maximum number of pawns of Vim vis that may be used to prepare a talisman is equal to the sum of the magus's highest Technique and highest Form" (`:10619`). Taken from the per-Art maxima of **effective** scores (`effective_art_score`, so Puissant Art folds in), **not** the best `lab_totals` pair — a Deficient Art halves *totals*, never the score, and a discriminating test pins that. Ties go to the alphabetically first Art (`Ruleset::art_ids_of` is sorted); a magus with no bought Arts still reads out, at 0 pawns. **Non-goal**: instilled `TalismanEffect` levels are charged against **no** budget — `item_level_budget` comes only from the Redcap-only Virtues (Magic Items "You must be a Redcap to take this Virtue", `:4347-4349`; Redcap's fifty starting levels `:4842-4850`, which also states "You may not take The Gift", `:4850`), so it can never fund a magus's talisman, and the talisman's real limit is this vis capacity, which the model cannot enforce (it holds no vis stock). `derived.rs::talisman_capacity` / `DerivedTotals.talisman_capacity` |
 | Familiar bonding level | `:10824`, `:10828` | magus **with a familiar** surfaces a **read-only** bonding level = **Magic Might + 25 + 5 × Size**: "The level for the enchantment is equal to 25 plus the familiar's Magic Might plus 5 times its Size. If the familiar has negative Size, this reduces the level for the enchantment" (`:10824`), restated as "**FAMILIAR BONDING LEVEL: Familiar's Magic Might + 25 + (5 x Size)**" (`:10828`). Size is signed and commonly negative, so the level routinely drops *below* 25 — the book's own worked example (Size -2, Might 10 → level 25) is a named test. A familiar with **no entered Might** contributes 0 rather than suppressing the read-out; the panel says "no Magic Might entered" instead. `derived.rs::familiar_binding_level` |
 | Familiar bonding Lab Total | `:10818`, `:10822`, `:10826`, `:10824` | the **ordinary Lab Total shape** — "any appropriate Technique + any appropriate Form + Int + Magic Theory + Aura Modifier" (`:10818`), restated as "**FAMILIAR BONDING LAB TOTAL**" (`:10826`) — so `lab_totals()` is **reused** and the best `(Te,Fo)` cell taken with `max_by_key`, the same max-over-grid reuse as Masterpiece. Which Arts are *appropriate* to a given beast is prose the engine cannot evaluate, and "Any magus should be able to find an animal that he can bind with his best Technique and Form" (`:10822`), so the best cell is the honest figure. **Unlike Masterpiece, a focus applies here**: "Puissant Arts and foci may apply to this" (`:10818`) — so `lab_total_within_focus` is surfaced as a **separate conditional** figure the UI labels as such (whether *this* familiar falls inside the focus's narrow field is a troupe judgment); Puissant Arts need no separate figure, `effective_art_score` folds them in. `lab_total_reaches_level` reports "A magus can only bind a familiar if his Lab Total equals or exceeds this level" (`:10824`). `derived.rs::familiar_readout` / `FamiliarBinding` |
-| Familiar cord cost | `:10836` | cord scores 0…+5 cost **0 / 5 / 15 / 30 / 50 / 75** points: "a strength of +1 requires 5 points, a score of +2 requires 15 points, a score of +3 requires 30 points, a score of +4 requires 50 points, and a score of +5 (the maximum) requires 75 points" (`:10836`). The curve is a fixed 5-entry rule constant, so it is a Rust `const CORD_COST_TABLE` (precedent: `LOAD_TABLE` for Encumbrance) with this row as its provenance home. The same line also fixes the **+5 maximum** ("rated from 0 to +5 … a score of +5 (the maximum)"), which lives in **one** place in the engine: `const MAX_CORD_SCORE = 5` and the `cord_score(raw)` clamp that **every** cord consumer routes through — `cord_points_spent` (the table index), `soak`'s `bronze_cord` addend, and `longevity_bonus`'s `bronze_cord` note. Cord fields are plain `u8`, so a hand-edited or legacy save can carry any value up to 255; unclamped, one entered number produced three contradictory figures (75 points spent / +255 Soak / +255 aging-resistance) and a raw table index would panic inside the `derived_totals` command and kill the read-out panel. UI input bounds are a separate, non-durable layer and do not replace this clamp. Tests: `cord_points_spent_clamps_a_score_above_the_curve`, `an_out_of_range_bronze_cord_reads_the_same_for_every_consumer`. `cord_points_within_lab_total` reports "The total cost of the cords you buy cannot exceed the magus's Lab Total" (`:10836`). `derived.rs::cord_score` / `cord_points_spent` |
+| Familiar cord cost | `:10836` | cord scores 0…+5 cost **0 / 5 / 15 / 30 / 50 / 75** points: "a strength of +1 requires 5 points, a score of +2 requires 15 points, a score of +3 requires 30 points, a score of +4 requires 50 points, and a score of +5 (the maximum) requires 75 points" (`:10836`). The curve is a fixed 5-entry rule constant, so it is a Rust `const CORD_COST_TABLE` (precedent: `LOAD_TABLE` for Encumbrance) with this row as its provenance home. The same line also fixes the **+5 maximum** ("rated from 0 to +5 … a score of +5 (the maximum)"), which is stated in **one** place in the engine: `pub const MAX_CORD_SCORE: u8 = 5` in `types.rs`, beside the `Familiar` type whose fields it bounds. Two clamps read it and neither restates the number. (1) **On read** — `derived.rs::cord_score(raw)`, which **every** cord consumer routes through: `cord_points_spent` (the table index), `soak`'s `bronze_cord` addend, and `longevity_bonus`'s `bronze_cord` note. Cord fields are plain `u8`, so a hand-edited or legacy save can carry any value up to 255; unclamped, one entered number produced three contradictory figures (75 points spent / +255 Soak / +255 aging-resistance) and a raw table index would panic inside the `derived_totals` command and kill the read-out panel. (2) **On store** — `Familiar::normalize` clamps the three fields, so an out-of-range value **self-heals on the next save**, exactly as a zero Characteristic is pruned there and for the same canonical-serialization reason: since every consumer clamps, `cord_bronze: 255` and `cord_bronze: 5` are the same statement to the engine, yet they serialize differently and *display* differently (the panel renders the raw 255 in an input declaring `max="5"`, beside read-outs computed from 5) — a disagreement the user cannot resolve and that saving would otherwise perpetuate forever. UI input bounds are a separate, non-durable layer and do not replace either clamp. Tests: `cord_points_spent_clamps_a_score_above_the_curve`, `an_out_of_range_bronze_cord_reads_the_same_for_every_consumer`, `entity_normalize_clamps_out_of_range_familiar_cords`. `cord_points_within_lab_total` reports "The total cost of the cords you buy cannot exceed the magus's Lab Total" (`:10836`). `types.rs::MAX_CORD_SCORE` + `Familiar::normalize` / `derived.rs::cord_score` / `cord_points_spent` |
 | Familiar invested powers | `:10866`, `:10862-10884` | the total level of the powers invested in the bond, summed **for information only**: "there is no limit to the number of powers which may be invested in a familiar" (`:10866`). So — unlike a being's own `Entity.powers`, which `power_levels_budget` bounds — there is **no budget bar** and no issue to raise, and the UI must not render one. Vis costs (`:10882`, one pawn per ten levels) are out of scope: the model holds no vis stock. `derived.rs::familiar_invested_power_levels` |
 | Combat | `:16658-16670` | Init = Qik + WpnInit − Enc + CombatMod; Attack = Dex + Ability + WpnAtk + CombatMod; Defense = Qik + Ability + WpnDef + CombatMod; Damage = Str + WpnDam + CombatMod |
 | Weapon+shield | `:16656` | one `CombatLine` per equipped weapon, combining every equipped shield's Init/Atk/Def mods |
