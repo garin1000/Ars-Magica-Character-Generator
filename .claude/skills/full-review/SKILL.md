@@ -104,6 +104,14 @@ it, every agent MUST:
   issue the command with repo-relative paths (`git diff b49d49b..HEAD -- crates/…`,
   `sed -n '1,40p' crates/arm-rules/src/derived.rs`). The **only** place a `cd` is
   warranted is the UI gate, which genuinely must run inside `ui/` — see below.
+  The precise rule (`bashMissKind: "cd-git-compound"`): a compound holding **both a `cd`
+  and a `git`** is denied *regardless* of the allowlist and *regardless* of the path — it
+  is not a containment check, so pointing at the repo you are already in does not help.
+  Rationale: after a `cd`, git resolves its repository from the new directory, whose
+  hooks are arbitrary executables. Two neighbours: **multiple `cd`s** in one command are
+  denied (`multi-cd`), and a **`cd` plus an output redirect** is denied
+  (`cd-compound-redirect`). A `cd` with a **non-git** command is unaffected, which is why
+  the UI gate auto-approves.
 - **Write artifacts with the Write tool, not shell redirects.** Redirects (`>`, `>>`,
   `tee`) are not allowlisted. To create `tmp/review-findings.json` or any file, use the
   Write/Edit tools (they work in-repo and under `tmp/` without approval). This includes
