@@ -70,7 +70,11 @@ it, every agent MUST:
   backticks, `$'…'` (ANSI-C quoting), and even `$VAR`/`$0`/`$1` field refs as unverifiable
   and prompts **regardless of the allowlist** — you cannot allowlist past them. Use plain
   forms: rely on `sort`'s default whitespace (space/tab) field-splitting, e.g.
-  `… | sort -k2 -nr`, instead of `sort -t$'\t' …`.
+  `… | sort -k2 -nr`, instead of `sort -t$'\t' …`. **A regex end-of-line anchor `$`
+  counts as well** — the analyzer cannot distinguish an anchor from an expansion, so an
+  otherwise fully allowlisted `grep -n "^## Heading$" file.md` is denied. Drop the anchor
+  and tolerate the extra hits (`grep -n "^## Heading"`), or use the native Grep tool,
+  which takes a real regex and needs no approval.
 - **Scan code with `grep`/`rg`, not `awk`/`sed`.** `awk`/`sed` programs are built around
   `$1`/`$0`/`$` field references, which trip the `$`-expansion guard above and prompt even
   though `awk`/`sed` are allowlisted. To find items, use `grep`/`rg` with an extended
