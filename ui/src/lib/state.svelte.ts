@@ -660,8 +660,11 @@ class AppStore {
    * {@link adjustSpellMasteryAt}.
    */
   setSpellLevelAt(index: number, level: number): void {
+    // `SpellSelection.level` is the entity's narrowest number (u8), and a General
+    // spell has no level 0, so the floor is 1 — matching the input's `min`.
+    const clamped = clampInt(level, 1, U8_MAX);
     this.entity.spells = (this.entity.spells ?? []).map((s, i) =>
-      i === index ? { ...s, level } : s,
+      i === index ? { ...s, level: clamped } : s,
     );
     this.#scheduleValidate();
   }
@@ -680,20 +683,21 @@ class AppStore {
    */
   setSpellLevelsOverride(levels: number | null): void {
     this.entity.spell_levels_override =
-      levels != null && Number.isFinite(levels) && levels > 0 ? Math.floor(levels) : null;
+      levels != null && Number.isFinite(levels) && levels > 0 ? clampInt(levels, 1, U32_MAX) : null;
     this.#scheduleValidate();
   }
 
   /** Set (or clear) the character's age; drives the age → Ability-cap check. */
   setAge(age: number | null): void {
-    this.entity.age = age != null && Number.isFinite(age) && age > 0 ? Math.floor(age) : null;
+    this.entity.age =
+      age != null && Number.isFinite(age) && age > 0 ? clampInt(age, 1, U32_MAX) : null;
     this.#scheduleValidate();
   }
 
   /** Set (or clear) the character's apparent age (annotation; no mechanic). */
   setApparentAge(age: number | null): void {
     this.entity.apparent_age =
-      age != null && Number.isFinite(age) && age > 0 ? Math.floor(age) : null;
+      age != null && Number.isFinite(age) && age > 0 ? clampInt(age, 1, U32_MAX) : null;
     this.#scheduleValidate();
   }
 
@@ -1250,7 +1254,7 @@ class AppStore {
 
   setAgingLogEntryYear(index: number, year: number): void {
     this.entity.aging_log = (this.entity.aging_log ?? []).map((e, i) =>
-      i === index ? { ...e, year: Number.isFinite(year) ? Math.trunc(year) : 0 } : e,
+      i === index ? { ...e, year: clampInt(year, I32_MIN, I32_MAX) } : e,
     );
     this.#scheduleValidate();
   }
@@ -1299,7 +1303,8 @@ class AppStore {
   }
 
   setBirthYear(year: number | null): void {
-    this.entity.birth_year = year != null && Number.isFinite(year) ? Math.trunc(year) : null;
+    this.entity.birth_year =
+      year != null && Number.isFinite(year) ? clampInt(year, I32_MIN, I32_MAX) : null;
     this.#scheduleValidate();
   }
 
@@ -1439,7 +1444,11 @@ class AppStore {
         this.error = null;
       }
     } catch (e) {
-      this.error = e as AppError;
+      // Guarded the same way, and for the mirror reason: a direct revalidate()
+      // does not cancel a pending debounced one, so the rejection of a payload
+      // the user has already corrected can land after the corrected pass
+      // succeeded. Only the current pass may set *or* clear `error`.
+      if (seq === this.#seq) this.error = e as AppError;
     }
   }
 

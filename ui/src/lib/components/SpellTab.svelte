@@ -385,6 +385,7 @@
                 <input
                   type="number"
                   min="1"
+                  max="255"
                   step="1"
                   aria-label={store.t('spell-general-level-label')}
                   value={chosen.level ?? GENERAL_DEFAULT_LEVEL}

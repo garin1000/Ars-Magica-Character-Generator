@@ -130,6 +130,8 @@
         <span>{store.t('identity-birth-year')}</span>
         <input
           type="number"
+          min="-2147483648"
+          max="2147483647"
           value={store.entity.birth_year ?? ''}
           oninput={onBirthYear}
           data-testid="identity-birth-year"
@@ -165,13 +167,21 @@
     <div class="detail-field">
       <label class="field">
         <span>{store.t('age-label')}</span>
-        <input type="number" min="1" value={age ?? ''} oninput={onAge} data-testid="age-input" />
+        <input
+          type="number"
+          min="1"
+          max="4294967295"
+          value={age ?? ''}
+          oninput={onAge}
+          data-testid="age-input"
+        />
       </label>
       <label class="field">
         <span>{store.t('apparent-age-label')}</span>
         <input
           type="number"
           min="1"
+          max="4294967295"
           value={apparentAge ?? ''}
           oninput={onApparentAge}
           data-testid="apparent-age-input"
@@ -378,6 +388,8 @@
             <input
               type="number"
               class="aging-log-year"
+              min="-2147483648"
+              max="2147483647"
               aria-label={store.t('aging-log-year-label')}
               value={entry.year}
               oninput={(e) => store.setAgingLogEntryYear(i, numValue(e))}
