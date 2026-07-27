@@ -17,7 +17,7 @@ vi.mock('../ipc', () => ({
   updateCloseGuard: vi.fn(),
 }));
 
-import { store } from '../state.svelte';
+import { SCHEMA_VERSION, store } from '../state.svelte';
 import LongevityPanel from './LongevityPanel.svelte';
 
 /** A minimal localized ruleset: the panel needs no catalogue, only the bundle. */
@@ -38,7 +38,7 @@ function installRuleset(): void {
 
 function resetEntity(): void {
   store.entity = {
-    schema_version: 13,
+    schema_version: SCHEMA_VERSION,
     ruleset: { id: 'test', version: '1' },
     entity_kind: 'character',
     type_id: 'magus',
@@ -114,6 +114,20 @@ describe('LongevityPanel entered bonus (stored for both sources)', () => {
     expect(() => element(body, 'longevity-not-entered')).toThrow();
   });
 
+  it('brings the not-entered marker back when the field is emptied', () => {
+    store.addLongevityRitual('self_made');
+    store.setLongevityBonus(4);
+    setDerived('self_made', 4, true, { lab_total: 35, suggested_bonus: 7, halved: false });
+    expect(() => element(html(), 'longevity-not-entered')).toThrow();
+    // Emptying the input is how a player takes back a value they mistyped — it must
+    // restore "not entered", not write a deliberate 0 that can never be undone.
+    store.setLongevityBonus(null);
+    setDerived('self_made', 0, false, { lab_total: 35, suggested_bonus: 7, halved: false });
+    const body = html();
+    expect(element(body, 'longevity-not-entered').text).toContain('Not entered');
+    expect(element(body, 'longevity-bonus').open).not.toMatch(/value="0"/);
+  });
+
   it('keeps the bonus input for an external ritual too', () => {
     store.addLongevityRitual('external');
     store.setLongevityBonus(6);
@@ -130,6 +144,10 @@ describe('LongevityPanel hint (engine-authoritative suggestion)', () => {
     expect(text).toContain('35');
     // Signed via formatSigned, so a positive bonus reads "+7".
     expect(text).toContain('+7');
+    // The editor shows the STORED magnitude (what to type into the field), which the
+    // string names — the totals panel shows the same number as an aging-roll
+    // modifier (-7), so neither surface can be mistaken for the other.
+    expect(text.toLowerCase()).toContain('aging bonus');
   });
 
   it('marks the hint as halved when the engine flags a halving', () => {

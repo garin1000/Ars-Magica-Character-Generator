@@ -226,14 +226,21 @@
           <p data-testid="derived-longevity">
             {store.t(`derived-longevity-${d.longevity.source}`)}:
             {#if d.longevity.entered}
-              <!-- The bonus is a magnitude the player entered; it is subtracted from
-                   aging rolls, so it prints negative. -->
-              -{d.longevity.bonus}
+              <!-- The stored bonus is a magnitude; this panel shows what it DOES, so
+                   it is negated into the aging-roll modifier and signed by
+                   formatSigned — a bonus of 0 reads "0", never "-0", and a stored
+                   negative reads "+n" rather than "--n". The Fluent string names the
+                   quantity, so it cannot be confused with the editor's "+7". -->
+              {store.t('derived-longevity-aging-modifier', {
+                modifier: formatSigned(-d.longevity.bonus),
+              })}
             {:else}
               {store.t('derived-longevity-not-entered')}
             {/if}
             {#if d.longevity.hint}
-              · {store.t('derived-longevity-suggested')} -{d.longevity.hint.suggested_bonus}
+              · {store.t('derived-longevity-suggested', {
+                modifier: formatSigned(-d.longevity.hint.suggested_bonus),
+              })}
               ({store.t('derived-lab-total')}
               {d.longevity.hint.lab_total}{#if d.longevity.hint.halved}, {store.t(
                   'longevity-hint-halved',

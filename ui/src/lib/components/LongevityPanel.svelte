@@ -11,8 +11,13 @@
   // single evaluation path (the `itemBudget`/`itemUsed` pattern).
   const hint = $derived(store.derived?.longevity?.hint ?? null);
 
-  function num(event: Event): number {
-    return Number((event.currentTarget as HTMLInputElement).value);
+  // An emptied `type="number"` input reads as '', and `Number('')` is 0 — so the
+  // raw string is read here and an empty field passes `null` ("not entered"),
+  // exactly as MagicPossessions' `onAura` does. Without this, clearing the box
+  // would store a deliberate 0 there is no way back from.
+  function onBonus(event: Event): void {
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    store.setLongevityBonus(raw === '' ? null : Number(raw));
   }
 
   function text(event: Event): string {
@@ -45,8 +50,10 @@
       <span>{store.t('longevity-bonus-label')}</span>
       <input
         type="number"
+        min="-128"
+        max="127"
         value={longevity.bonus ?? ''}
-        oninput={(e) => store.setLongevityBonus(num(e))}
+        oninput={onBonus}
         data-testid="longevity-bonus"
       />
     </label>

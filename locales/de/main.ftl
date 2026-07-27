@@ -300,8 +300,13 @@ talisman-remove-item = Talisman entfernen
 talisman-empty-item = Noch kein Talisman.
 talisman-description-label = Form und Material
 talisman-description-placeholder = z. B. ein Eschenstab mit Silberbeschlag
-talisman-capacity = Kapazität: { $pawns } Bauern Vim-Vis
-talisman-capacity-note = Höchste Technik { $techniqueScore } + höchste Form { $formScore }
+talisman-capacity = { $pawns ->
+    [one] Kapazität: { $pawns } Bauer Vim-Vis
+   *[other] Kapazität: { $pawns } Bauern Vim-Vis
+}
+# Beide Künste werden neben ihren Werten benannt, damit die Herleitung mit dem
+# Charakterbogen abgeglichen werden kann; die Namen kommen aus der Regel-i18n.
+talisman-capacity-note = Höchste Technik { $technique } { $techniqueScore } + höchste Form { $form } { $formScore }
 talisman-attunements-label = Talismanabstimmungen
 talisman-desc-placeholder = Was verstärkt wird
 talisman-bonus-label = Bonus
@@ -325,7 +330,9 @@ longevity-remove = Langlebigkeitsritual entfernen
 longevity-not-entered = Nicht eingetragen
 # Der Hinweis neben dem Eingabefeld: Was ein jetzt erschaffenes Ritual wert wäre.
 # { $bonus } ist bereits vorzeichenbehaftet; { $total } ist die heutige Laborsumme.
-longevity-hint = Ein jetzt erschaffenes Ritual: { $bonus } (Creo Corpus-Laborsumme { $total })
+# Die Größe wird benannt („Alterungsbonus“), denn es ist der gespeicherte Wert für
+# das Eingabefeld — die Gesamtwerte-Ansicht zeigt dieselbe Zahl als Modifikator.
+longevity-hint = Ein jetzt erschaffenes Ritual: Alterungsbonus { $bonus } (Creo Corpus-Laborsumme { $total })
 longevity-hint-halved = halbiert
 longevity-focus-label = Fokus
 longevity-focus-placeholder = Worin das Ritual gipfelt
@@ -585,8 +592,13 @@ derived-longevity-self_made = Selbst erschaffen
 derived-longevity-external = Extern
 # Für das Ritual wurde noch kein Bonus eingetragen, es gibt also keine Zahl.
 derived-longevity-not-entered = nicht eingetragen
-# Die Laborsumme, auf die ein jetzt erschaffenes Ritual käme, neben dem Eintrag.
-derived-longevity-suggested = wäre jetzt
+# Diese Ansicht zeigt das Ritual als Wirkung: den Modifikator, der vom
+# Alterungswurf abgezogen wird. Ein gespeicherter Bonus von 7 liest sich hier also
+# als „-7 auf Alterungswürfe“, während das Eingabefeld die gespeicherte Größe
+# zeigt („Alterungsbonus +7“) — jede Zeichenkette benennt ihre eigene Größe.
+# { $modifier } kommt aus formatSigned, eine 0 wird also „0“ und nie „-0“.
+derived-longevity-aging-modifier = { $modifier } auf Alterungswürfe
+derived-longevity-suggested = ein jetzt erschaffenes Ritual: { $modifier } auf Alterungswürfe
 derived-masterpiece-cap = Höchste Stufe schlichtes Artefakt
 derived-masterpiece-note = Nur ein Hinweis: Das eigentliche schlichte Artefakt unter Magische Gegenstände entwerfen (Vis-Kosten werden ignoriert).
 # Vertrautenbindung: Alle Werte sind reine Hinweise. Die Laborsumme im Fokus ist

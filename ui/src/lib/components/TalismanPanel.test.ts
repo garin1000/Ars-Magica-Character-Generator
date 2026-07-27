@@ -17,10 +17,11 @@ vi.mock('../ipc', () => ({
   updateCloseGuard: vi.fn(),
 }));
 
-import { store } from '../state.svelte';
+import { SCHEMA_VERSION, store } from '../state.svelte';
 import TalismanPanel from './TalismanPanel.svelte';
 
-/** A minimal localized ruleset: the panel needs no catalogue, only the bundle. */
+/** A minimal localized ruleset: the panel needs no catalogue, only the bundle and
+ * the rules-i18n names of the two Arts the capacity note spells out. */
 function installRuleset(): void {
   store.ruleset = {
     ruleset: {
@@ -32,13 +33,13 @@ function installRuleset(): void {
       ability_category_order: ['general'],
       art_type_order: ['technique', 'form'],
     },
-    i18n: {},
+    i18n: { 'art.creo': { name: 'Creo' }, 'art.corpus': { name: 'Corpus' } },
   } as unknown as LocalizedRuleset;
 }
 
 function resetEntity(): void {
   store.entity = {
-    schema_version: 14,
+    schema_version: SCHEMA_VERSION,
     ruleset: { id: 'test', version: '1' },
     entity_kind: 'character',
     type_id: 'magus',
@@ -166,6 +167,36 @@ describe('TalismanPanel capacity read-out (engine-authoritative)', () => {
     const note = element(body, 'talisman-capacity-note').text;
     expect(note).toContain('10');
     expect(note).toContain('12');
+    // …and both Arts must be NAMED, through the rules-i18n lookup: a bare
+    // "Technique 10 + Form 12" cannot be checked against a character sheet, and a
+    // raw `art.creo` slug as a label is never acceptable.
+    expect(note).toContain('Creo');
+    expect(note).toContain('Corpus');
+    expect(note).not.toContain('art.');
+  });
+
+  it('pluralizes the pawns through a Fluent selector, not a hardcoded "(s)"', () => {
+    store.addTalisman();
+    setCapacity({
+      technique: 'art.creo',
+      form: 'art.corpus',
+      technique_score: 1,
+      form_score: 0,
+      pawns: 1,
+    });
+    // A stringified argument cannot drive a plural selector, so the call site has to
+    // pass the number — the singular is the proof it does. (Fluent wraps the
+    // interpolated number in bidi isolation marks, so the noun is matched alone.)
+    expect(element(html(), 'talisman-capacity').text).toContain('pawn of');
+    expect(element(html(), 'talisman-capacity').text).not.toContain('pawns of');
+    setCapacity({
+      technique: 'art.creo',
+      form: 'art.corpus',
+      technique_score: 10,
+      form_score: 12,
+      pawns: 22,
+    });
+    expect(element(html(), 'talisman-capacity').text).toContain('pawns of');
   });
 
   it('renders no capacity before the engine answers', () => {

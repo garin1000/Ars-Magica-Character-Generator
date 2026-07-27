@@ -1,11 +1,7 @@
 <script lang="ts">
   import { formatSigned } from '../derive';
   import { store } from '../state.svelte';
-  import { CHARACTERISTICS, type Characteristic, type Realm } from '../types';
-
-  // The four Realms are a fixed rules taxonomy; rendered via Fluent (realm-<id>),
-  // never as a raw slug. Same list SupernaturalBeing.svelte renders.
-  const REALMS: Realm[] = ['magic', 'faerie', 'divine', 'infernal'];
+  import { CHARACTERISTICS, REALMS, type Characteristic, type Realm } from '../types';
 
   const familiar = $derived(store.entity.familiar ?? null);
   const might = $derived(familiar?.might ?? null);
@@ -38,12 +34,16 @@
         data-testid="familiar-animal"
       />
     </label>
-    <!-- Size is signed and commonly NEGATIVE (a raven is -4): no `min`, and the
-         number input renders the ASCII hyphen-minus natively. -->
+    <!-- Size is signed and commonly NEGATIVE (a raven is -4), so `min` is the i8
+         floor rather than 0, and the number input renders the ASCII hyphen-minus
+         natively. The bounds match the store's clamp: the field is an i8 in the
+         engine, and a value serde cannot represent would fail every IPC call. -->
     <label class="field inline">
       <span>{store.t('familiar-size-label')}</span>
       <input
         type="number"
+        min="-128"
+        max="127"
         value={familiar.size ?? 0}
         oninput={(e) => store.setFamiliarSize(num(e))}
         data-testid="familiar-size"
@@ -73,6 +73,7 @@
         <input
           type="number"
           min="0"
+          max="255"
           value={might.score}
           oninput={(e) => store.setFamiliarMightScore(num(e))}
           data-testid="familiar-might-score"
@@ -106,6 +107,8 @@
           <span>{store.t(`characteristic-${characteristic}`)}</span>
           <input
             type="number"
+            min="-128"
+            max="127"
             value={characteristics[characteristic as Characteristic] ?? 0}
             oninput={(e) => store.setFamiliarCharacteristic(characteristic, num(e))}
             data-testid="familiar-char-{characteristic}"
@@ -181,6 +184,7 @@
           <input
             type="number"
             min="0"
+            max="255"
             value={familiar[`cord_${cord}` as 'cord_gold' | 'cord_silver' | 'cord_bronze'] ?? 0}
             oninput={(e) => store.setFamiliarCord(cord as 'gold' | 'silver' | 'bronze', num(e))}
             data-testid="familiar-cord-{cord}"
@@ -210,6 +214,7 @@
             <input
               type="number"
               min="0"
+              max="65535"
               value={power.level}
               oninput={(e) => store.setFamiliarPowerLevel(i, num(e))}
               data-testid="familiar-power-level-{i}"
