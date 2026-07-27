@@ -22,12 +22,12 @@ pub use ability::{
 };
 pub use art::{Art, ArtType};
 pub use characteristics::{Characteristic, CharacteristicCost, CharacteristicRules};
-// Curated public compute-function facade: the bare free functions below
-// (`soak`, `penetration`, `magic_resistance`, `derived_totals`, …) are the
-// deliberate crate-root API that `arm-app` calls directly. The generic bare
-// names are intentional and load-bearing — they are consumed by name across the
-// crate boundary, so they stay flat rather than being hidden behind their
-// module paths.
+// Curated public compute-function facade: the bare free functions below are the
+// crate's public compute API, kept flat rather than hidden behind their module
+// paths. `derived_totals` is the one the app actually calls across the crate
+// boundary — it rolls up every other function here — so the rest are reachable
+// for a caller that wants a single total without the whole roll-up, and are
+// exercised individually by this crate's own tests.
 pub use derived::{
     Addend, CastingTotal, CastingWithinFocus, CombatLine, DerivedTotals, EncumbranceTotal,
     FamiliarBinding, FamiliarReadout, FatigueLevel, FatigueTier, LabTotal, LongevityBonus,
