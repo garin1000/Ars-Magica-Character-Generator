@@ -175,6 +175,22 @@ describe('FamiliarPanel Personality Traits', () => {
   });
 });
 
+describe('FamiliarPanel cords', () => {
+  it('bounds every cord input by the RULE (0 to +5), not by the serde width', () => {
+    // "The strength of each of these cords is rated from 0 to +5 … a score of +5
+    // (the maximum)" — Core Rules.md:10836. A max of 255 (the u8 width) let a 6
+    // through, which the engine's three cord consumers then read inconsistently.
+    store.addFamiliar();
+    const body = html();
+    for (const cord of ['gold', 'silver', 'bronze']) {
+      const { open } = element(body, `familiar-cord-${cord}`);
+      expect(open).toContain('min="0"');
+      expect(open).toContain('max="5"');
+      expect(open).not.toContain('max="255"');
+    }
+  });
+});
+
 describe('FamiliarPanel invested powers', () => {
   it('renders an empty row when nothing is invested', () => {
     store.addFamiliar();

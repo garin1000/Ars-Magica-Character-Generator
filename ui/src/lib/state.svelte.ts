@@ -40,6 +40,16 @@ const I8_MIN = -128;
 const I8_MAX = 127;
 const U8_MAX = 255;
 const U16_MAX = 65535;
+const I32_MIN = -2147483648;
+const I32_MAX = 2147483647;
+const U32_MAX = 4294967295;
+
+// A few fields are bounded by the RULES more tightly than by their serde width,
+// and the rule is the bound that belongs at the point of entry — a value the
+// engine's consumers disagree about is worse than one it rejects outright.
+/** "The strength of each of these cords is rated from 0 to +5 … a score of +5
+ * (the maximum)" — Source: Ars Magica - Definitive Edition (Core Rules).md:10836. */
+const CORD_MAX = 5;
 
 /** Truncate to an integer inside an inclusive range; a non-finite value becomes 0
  * (itself clamped into range), the same fallback the field's default carries. */
@@ -520,7 +530,7 @@ class AppStore {
   }
 
   setXpPool(xp: number): void {
-    this.entity.xp_pool = Number.isFinite(xp) && xp > 0 ? Math.floor(xp) : 0;
+    this.entity.xp_pool = clampInt(xp, 0, U32_MAX);
     this.#scheduleValidate();
   }
 
@@ -739,7 +749,7 @@ class AppStore {
 
   /** Set the realm aura modifier (signed; Divine can be a penalty). */
   setAura(aura: number | null): void {
-    this.entity.aura = aura != null && Number.isFinite(aura) ? Math.trunc(aura) : 0;
+    this.entity.aura = aura == null ? 0 : clampInt(aura, I32_MIN, I32_MAX);
     this.#scheduleValidate();
   }
 
@@ -761,7 +771,7 @@ class AppStore {
   }
 
   setDeviceLevel(index: number, level: number): void {
-    const clamped = Math.max(0, Math.trunc(level));
+    const clamped = clampInt(level, 0, U16_MAX);
     this.entity.devices = (this.entity.devices ?? []).map((d, i) =>
       i === index ? { ...d, level: clamped } : d,
     );
@@ -780,7 +790,7 @@ class AppStore {
   /** Set the being's base Might Score (non-negative; keeps the current Realm). */
   setMightScore(score: number): void {
     const realm = this.entity.might?.realm ?? 'magic';
-    this.entity.might = { realm, score: Math.max(0, Math.trunc(score)) };
+    this.entity.might = { realm, score: clampInt(score, 0, U8_MAX) };
     this.#scheduleValidate();
   }
 
@@ -808,7 +818,7 @@ class AppStore {
   }
 
   setPowerLevel(index: number, level: number): void {
-    const clamped = Math.max(0, Math.trunc(level));
+    const clamped = clampInt(level, 0, U16_MAX);
     this.entity.powers = (this.entity.powers ?? []).map((p, i) =>
       i === index ? { ...p, level: clamped } : p,
     );
@@ -906,9 +916,11 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /** Set one bond cord's score, bounded by the rule (0..+5), not by its u8 width:
+   * the engine's cord consumers only agree on values the rules allow. */
   setFamiliarCord(cord: 'gold' | 'silver' | 'bronze', value: number): void {
     if (!this.entity.familiar) return;
-    const clamped = clampInt(value, 0, U8_MAX);
+    const clamped = clampInt(value, 0, CORD_MAX);
     const key = `cord_${cord}` as const;
     this.entity.familiar = { ...this.entity.familiar, [key]: clamped };
     this.#scheduleValidate();
@@ -1157,14 +1169,14 @@ class AppStore {
     this.#scheduleValidate();
   }
 
-  /** Shared helper: set a non-negative per-Characteristic count, pruning zeros. */
+  /** Shared helper: set a per-Characteristic count in u8 range, pruning zeros. */
   #withCharCount(
     map: Partial<Record<Characteristic, number>> | undefined,
     characteristic: Characteristic,
     value: number,
   ): Partial<Record<Characteristic, number>> {
     const next = { ...(map ?? {}) };
-    const clamped = Math.max(0, Math.trunc(value));
+    const clamped = clampInt(value, 0, U8_MAX);
     if (clamped === 0) {
       delete next[characteristic];
     } else {
@@ -1175,7 +1187,7 @@ class AppStore {
 
   /** Set accrued Warping Points (the engine derives the Warping Score). */
   setWarpingPoints(points: number): void {
-    this.entity.warping_points = Math.max(0, Math.trunc(points));
+    this.entity.warping_points = clampInt(points, 0, U32_MAX);
     this.#scheduleValidate();
   }
 
@@ -1420,6 +1432,11 @@ class AppStore {
         this.result = result;
         this.effective = effective;
         this.derived = derived;
+        // A succeeding pass retires whatever the last rejected payload latched —
+        // otherwise one bad value keeps the error banner up for the rest of the
+        // session even after the user corrects it. Inside the sequence guard, so a
+        // stale response cannot clear an error a newer pass just raised.
+        this.error = null;
       }
     } catch (e) {
       this.error = e as AppError;

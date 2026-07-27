@@ -177,6 +177,8 @@
       {store.t('personality-add')}
     </button>
 
+    <!-- Cord scores run 0 to +5, "+5 (the maximum)" (Core:10836) — the bound here is
+         the RULE, not the u8 the field is stored in; the store clamps to the same 5. -->
     <div class="cord-row">
       {#each [['gold', 'familiar-cord-gold'], ['silver', 'familiar-cord-silver'], ['bronze', 'familiar-cord-bronze']] as [cord, key] (cord)}
         <label class="field inline">
@@ -184,7 +186,7 @@
           <input
             type="number"
             min="0"
-            max="255"
+            max="5"
             value={familiar[`cord_${cord}` as 'cord_gold' | 'cord_silver' | 'cord_bronze'] ?? 0}
             oninput={(e) => store.setFamiliarCord(cord as 'gold' | 'silver' | 'bronze', num(e))}
             data-testid="familiar-cord-{cord}"

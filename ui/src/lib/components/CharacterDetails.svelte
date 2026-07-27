@@ -212,6 +212,7 @@
         <input
           type="number"
           min="0"
+          max="4294967295"
           value={storedWarpingPoints}
           oninput={(e) => store.setWarpingPoints(numValue(e))}
           data-testid="warping-points-input"
@@ -358,6 +359,7 @@
             <input
               type="number"
               min="0"
+              max="255"
               value={agingPoints[characteristic] ?? 0}
               oninput={(e) => store.setAgingPoints(characteristic, numValue(e))}
               data-testid="aging-points-{characteristic}"

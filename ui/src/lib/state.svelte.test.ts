@@ -756,13 +756,80 @@ describe('integer clamps at the Tauri boundary', () => {
     expect(store.entity.familiar?.characteristics?.qik).toBe(-128);
   });
 
-  it('clamps u8-backed familiar cords and Might Score', () => {
+  it('clamps the u8-backed familiar Might Score', () => {
     store.addFamiliar();
-    store.setFamiliarCord('gold', 900);
-    expect(store.entity.familiar?.cord_gold).toBe(255);
     store.setFamiliarMightRealm('magic');
     store.setFamiliarMightScore(900);
     expect(store.entity.familiar?.might?.score).toBe(255);
+  });
+
+  // A cord is bounded by the RULE, not by the serde width: "rated from 0 to +5 …
+  // a score of +5 (the maximum)" (Core Rules.md:10836). Storing a 6 gave the
+  // engine's three cord consumers a value they read inconsistently (one clamps at
+  // 5, two do not), so one entered number produced three contradictory read-outs.
+  it('clamps a familiar cord to the rules maximum of +5, not to u8', () => {
+    store.addFamiliar();
+    store.setFamiliarCord('gold', 5);
+    expect(store.entity.familiar?.cord_gold).toBe(5);
+    store.setFamiliarCord('silver', 6);
+    expect(store.entity.familiar?.cord_silver).toBe(5);
+    store.setFamiliarCord('bronze', 900);
+    expect(store.entity.familiar?.cord_bronze).toBe(5);
+    store.setFamiliarCord('gold', -1);
+    expect(store.entity.familiar?.cord_gold).toBe(0);
+  });
+
+  it('clamps u16-backed device and character power levels', () => {
+    store.addDevice();
+    store.setDeviceLevel(0, 70000);
+    expect(store.entity.devices?.[0].level).toBe(65535);
+    store.setDeviceLevel(0, -5);
+    expect(store.entity.devices?.[0].level).toBe(0);
+    store.addPower();
+    store.setPowerLevel(0, 70000);
+    expect(store.entity.powers?.[0].level).toBe(65535);
+    store.setPowerLevel(0, -5);
+    expect(store.entity.powers?.[0].level).toBe(0);
+  });
+
+  it("clamps the u8-backed base Might Score and a Characteristic's aging points", () => {
+    store.setMightRealm('magic');
+    store.setMightScore(900);
+    expect(store.entity.might?.score).toBe(255);
+    store.setAgingPoints('str', 900);
+    expect(store.entity.aging_points?.str).toBe(255);
+  });
+
+  it('clamps the i32-backed aura at both ends', () => {
+    store.setAura(3e9);
+    expect(store.entity.aura).toBe(2147483647);
+    store.setAura(-3e9);
+    expect(store.entity.aura).toBe(-2147483648);
+  });
+
+  it('clamps the u32-backed Warping Points and XP pool', () => {
+    store.setWarpingPoints(5e9);
+    expect(store.entity.warping_points).toBe(4294967295);
+    store.setXpPool(5e9);
+    expect(store.entity.xp_pool).toBe(4294967295);
+  });
+
+  // A user mid-typing a lone "-" in a signed field sends `Number('-')` — NaN.
+  // Without the non-finite guard the clamp propagates NaN, serde rejects the
+  // payload and every read-out freezes on stale numbers that still look current.
+  it('treats a non-finite value as 0 in signed and unsigned fields alike', () => {
+    store.addFamiliar();
+    store.setFamiliarSize(Number('-'));
+    expect(store.entity.familiar?.size).toBe(0);
+    store.setFamiliarCord('gold', Number('-'));
+    expect(store.entity.familiar?.cord_gold).toBe(0);
+    store.addTalisman();
+    store.addTalismanEffect();
+    store.setTalismanEffectLevel(0, Number('-'));
+    expect(store.entity.talisman?.effects?.[0].level).toBe(0);
+    store.addTalismanAttunement();
+    store.setTalismanAttunementBonus(0, Number('-'));
+    expect(store.entity.talisman?.attunements?.[0].bonus).toBe(0);
   });
 
   it('clamps u16-backed power and instilled-effect levels', () => {
@@ -795,6 +862,47 @@ describe('integer clamps at the Tauri boundary', () => {
     expect(store.entity.characteristics?.str).toBe(127);
     store.setCharacteristic('sta', -200);
     expect(store.entity.characteristics?.sta).toBe(-128);
+  });
+});
+
+// A rejected validate must not latch the error banner on for the rest of the
+// session: once the user corrects the offending value and a pass succeeds, the
+// banner has to go. Only a *current* pass may clear it, so a stale response that
+// lands after a newer edit clears nothing.
+describe('revalidate error latching', () => {
+  afterEach(() => {
+    vi.mocked(ipc.validateEntity).mockResolvedValue({ issues: [] });
+    store.error = null;
+  });
+
+  it('clears a latched error once a validate succeeds', async () => {
+    vi.mocked(ipc.validateEntity).mockRejectedValueOnce({ kind: 'invalid_entity' });
+
+    await store.revalidate();
+    expect(store.error).toEqual({ kind: 'invalid_entity' });
+
+    await store.revalidate();
+    expect(store.error).toBeNull();
+  });
+
+  it('does not let a stale response clear a current error', async () => {
+    // A slow first call resolves only after a second (rejecting) call has already
+    // bumped the sequence — its success must not wipe the newer failure.
+    let finishStale: (result: { issues: [] }) => void = () => {};
+    vi.mocked(ipc.validateEntity).mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishStale = resolve;
+      }) as ReturnType<typeof ipc.validateEntity>,
+    );
+    const stale = store.revalidate();
+
+    vi.mocked(ipc.validateEntity).mockRejectedValueOnce({ kind: 'invalid_entity' });
+    await store.revalidate();
+    expect(store.error).toEqual({ kind: 'invalid_entity' });
+
+    finishStale({ issues: [] });
+    await stale;
+    expect(store.error).toEqual({ kind: 'invalid_entity' });
   });
 });
 
