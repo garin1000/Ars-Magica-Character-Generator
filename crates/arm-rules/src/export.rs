@@ -45,12 +45,13 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::art::ArtType;
 use crate::characteristics::Characteristic;
+use crate::derived::{combat_totals, encumbrance, fatigue_levels, soak, wound_ranges};
 use crate::effective::{
     effective_ability_score, effective_art_score, effective_characteristic_score,
     effective_spell_mastery, resolved_spell_level, xp_allocation,
 };
 use crate::ruleset::{LocalizedRuleset, Ruleset};
-use crate::types::{Entity, Id, ItemKind};
+use crate::types::{Entity, EntityKind, Id, ItemKind};
 use crate::validation::{compute_balance, effective_point_ceilings};
 
 /// Every document-chrome label key [`character_markdown`] can ask for, sorted and
@@ -62,11 +63,13 @@ use crate::validation::{compute_balance, effective_point_ceilings};
 /// new taxonomy variant cannot silently surface as a raw slug — a unit test walks
 /// each family and asserts membership here.
 ///
-/// Two families are deliberately **outside** the list, because both are composed
-/// from catalogue *data* and enumerating them would bake the catalogue's size into
-/// code: `type-<profile id>` (the character-type label in the subtitle) and
+/// Two key *families* are deliberately **not** enumerated, because both are composed
+/// from catalogue *data* and listing them would bake the catalogue's size into code:
+/// `type-<profile id>` (the character-type label in the subtitle) and
 /// `param-label-<parameter key>` (the slot label shown for an unfilled parameter).
 /// The locales already ship one key per shipped profile and parameter key.
+/// Individual members the formatter names outright are still listed — hence
+/// `param-label-ability`, the Combat table's Ability column header.
 pub const LABEL_KEYS: &[&str] = &[
     "abilities-title",
     "ability-category-academic",
@@ -90,12 +93,47 @@ pub const LABEL_KEYS: &[&str] = &[
     "characteristic-sta",
     "characteristic-str",
     "characteristics-title",
+    "derived-addend-armor",
+    "derived-addend-bronze_cord",
+    "derived-addend-form_bonus",
+    "derived-addend-soak_mod",
+    "derived-addend-stamina",
+    "derived-burden",
+    "derived-combat-attack",
+    "derived-combat-damage",
+    "derived-combat-defense",
+    "derived-combat-init",
+    "derived-fatigue-dazed",
+    "derived-fatigue-fresh",
+    "derived-fatigue-tired",
+    "derived-fatigue-weary",
+    "derived-fatigue-winded",
+    "derived-load",
+    "derived-range",
+    "derived-section-combat",
+    "derived-section-encumbrance",
+    "derived-section-fatigue",
+    "derived-section-soak",
+    "derived-section-wounds",
+    "derived-wound-dead",
+    "derived-wound-heavy",
+    "derived-wound-incapacitating",
+    "derived-wound-light",
+    "derived-wound-medium",
+    "equipment-equipped-label",
+    "equipment-group-armor",
+    "equipment-group-shields",
+    "equipment-group-weapons",
     "export-col-effective",
     "export-col-magnitude",
+    "export-col-penalty",
+    "export-col-total",
     "export-items-boons",
     "export-items-hooks",
+    "export-no",
     "export-untitled",
     "export-xp-restricted",
+    "export-yes",
     "house-label",
     "identity-birth-year",
     "identity-concept",
@@ -111,6 +149,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "magnitude-free",
     "magnitude-major",
     "magnitude-minor",
+    "param-label-ability",
     "restricted-xp-list-separator",
     "spell-form-label",
     "spell-level-general",
@@ -119,6 +158,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "spell-mastery-label",
     "spell-technique-label",
     "tab-arts",
+    "tab-equipment",
     "tab-spells",
     "tab-virtues-flaws",
     "xp-pool",
@@ -147,8 +187,31 @@ pub fn character_markdown(
     doc.write_abilities(&mut out);
     doc.write_arts(&mut out);
     doc.write_spells(&mut out);
+    doc.write_equipment(&mut out);
+    doc.write_combat(&mut out);
+    doc.write_soak(&mut out);
+    doc.write_encumbrance(&mut out);
+    doc.write_health_tracks(&mut out);
     out
 }
+
+/// Which catalogue a carried [`EquipmentSlot`] belongs to. The slot stores only an
+/// id, and the id alone does not say which catalogue holds it, so the three
+/// catalogues are probed in turn.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Carried {
+    Weapon,
+    Shield,
+    Armor,
+}
+
+/// The carried-equipment groups in document order, each with the chrome key that
+/// names it.
+const EQUIPMENT_GROUPS: [(Carried, &str); 3] = [
+    (Carried::Weapon, "equipment-group-weapons"),
+    (Carried::Shield, "equipment-group-shields"),
+    (Carried::Armor, "equipment-group-armor"),
+];
 
 /// The point-item kinds in document order, each with the chrome key that names its
 /// group. A fixed taxonomy: [`ItemKind`] has four variants and this is the whole
@@ -625,6 +688,188 @@ impl<'a> Doc<'a> {
             &rows,
         );
     }
+
+    /// Which catalogue holds `id`, or `None` when no catalogue does.
+    fn carried_class(&self, id: &Id) -> Option<Carried> {
+        if self.rules().weapon(id).is_some() {
+            Some(Carried::Weapon)
+        } else if self.rules().shield(id).is_some() {
+            Some(Carried::Shield)
+        } else if self.rules().armor_item(id).is_some() {
+            Some(Carried::Armor)
+        } else {
+            None
+        }
+    }
+
+    /// The carried equipment, grouped weapons / shields / armor with the equipped
+    /// marker. An id no catalogue holds is not printed;
+    /// [`crate::validation::validate`] reports it as `unknown_equipment`.
+    fn write_equipment(&self, out: &mut String) {
+        let mut body = String::new();
+        for (class, heading_key) in EQUIPMENT_GROUPS {
+            let rows: Vec<Vec<String>> = self
+                .entity
+                .equipment
+                .iter()
+                .filter(|slot| self.carried_class(&slot.item) == Some(class))
+                .map(|slot| {
+                    vec![
+                        escape_cell(&self.name(&slot.item)),
+                        self.label(if slot.equipped {
+                            "export-yes"
+                        } else {
+                            "export-no"
+                        }),
+                    ]
+                })
+                .collect();
+            if rows.is_empty() {
+                continue;
+            }
+            heading(&mut body, 3, &self.label(heading_key));
+            table(
+                &mut body,
+                &[
+                    self.label("identity-name"),
+                    self.label("equipment-equipped-label"),
+                ],
+                &rows,
+            );
+        }
+        if body.is_empty() {
+            return;
+        }
+        heading(out, 2, &self.label("tab-equipment"));
+        out.push_str(&body);
+    }
+
+    /// One combat line per equipped weapon. Attack, Damage and Range are blank for a
+    /// weapon that has none (Dodge is attack- and damage-less; melee has no Range).
+    fn write_combat(&self, out: &mut String) {
+        let lines = combat_totals(self.entity, self.rules());
+        if lines.is_empty() {
+            return;
+        }
+        let rows: Vec<Vec<String>> = lines
+            .iter()
+            .map(|line| {
+                vec![
+                    escape_cell(&self.name(&line.weapon)),
+                    escape_cell(&self.name(&line.ability)),
+                    line.initiative.to_string(),
+                    optional_number(line.attack),
+                    line.defense.to_string(),
+                    optional_number(line.damage),
+                    line.range.map(|r| r.to_string()).unwrap_or_default(),
+                ]
+            })
+            .collect();
+        heading(out, 2, &self.label("derived-section-combat"));
+        table(
+            out,
+            &[
+                self.label("identity-name"),
+                self.label("param-label-ability"),
+                self.label("derived-combat-init"),
+                self.label("derived-combat-attack"),
+                self.label("derived-combat-defense"),
+                self.label("derived-combat-damage"),
+                self.label("derived-range"),
+            ],
+            &rows,
+        );
+    }
+
+    /// The Soak breakdown: every labelled addend, then the total.
+    fn write_soak(&self, out: &mut String) {
+        let soak_total = soak(self.entity, self.rules());
+        if soak_total.total == 0 && soak_total.addends.iter().all(|a| a.value == 0) {
+            return;
+        }
+        heading(out, 2, &self.label("derived-section-soak"));
+        for addend in &soak_total.addends {
+            field(
+                out,
+                &self.label(&format!("derived-addend-{}", addend.label)),
+                &signed(addend.value),
+            );
+        }
+        field(
+            out,
+            &self.label("export-col-total"),
+            &signed(soak_total.total),
+        );
+        out.push('\n');
+    }
+
+    /// Carried Load, the Burden it produces, and the Encumbrance penalty.
+    fn write_encumbrance(&self, out: &mut String) {
+        let enc = encumbrance(self.entity, self.rules());
+        if enc.load == 0 && enc.burden == 0 && enc.total == 0 {
+            return;
+        }
+        heading(out, 2, &self.label("derived-section-encumbrance"));
+        field(out, &self.label("derived-load"), &enc.load.to_string());
+        field(out, &self.label("derived-burden"), &enc.burden.to_string());
+        field(out, &self.label("export-col-total"), &enc.total.to_string());
+        out.push('\n');
+    }
+
+    /// The Fatigue and Wound tracks.
+    ///
+    /// The one pair of sections that emptiness cannot govern: both are constants of a
+    /// creature's body (five Fatigue levels, five wound bands widened by Size), never
+    /// a collection that can be empty. They are therefore gated on the entity being a
+    /// character — a covenant has no body to fatigue or wound.
+    fn write_health_tracks(&self, out: &mut String) {
+        if self.entity.entity_kind != EntityKind::Character {
+            return;
+        }
+        let fatigue: Vec<Vec<String>> = fatigue_levels(self.entity, self.rules())
+            .iter()
+            .map(|level| {
+                vec![
+                    self.label(&format!("derived-fatigue-{}", level.level)),
+                    level.penalty.to_string(),
+                ]
+            })
+            .collect();
+        heading(out, 2, &self.label("derived-section-fatigue"));
+        table(
+            out,
+            &[
+                self.label("identity-name"),
+                self.label("export-col-penalty"),
+            ],
+            &fatigue,
+        );
+
+        let wounds: Vec<Vec<String>> = wound_ranges(self.entity, self.rules())
+            .iter()
+            .map(|band| {
+                let span = match band.max {
+                    Some(max) => format!("{}{RANGE_DASH}{max}", band.min),
+                    None => format!("{}+", band.min),
+                };
+                vec![
+                    self.label(&format!("derived-wound-{}", band.level)),
+                    span,
+                    band.penalty.map(|p| p.to_string()).unwrap_or_default(),
+                ]
+            })
+            .collect();
+        heading(out, 2, &self.label("derived-section-wounds"));
+        table(
+            out,
+            &[
+                self.label("identity-name"),
+                self.label("derived-range"),
+                self.label("export-col-penalty"),
+            ],
+            &wounds,
+        );
+    }
 }
 
 // --- Formatting primitives -------------------------------------------------
@@ -632,6 +877,17 @@ impl<'a> Doc<'a> {
 /// Separator between the subtitle's parts. Punctuation, not prose — no locale owns
 /// it.
 const SUBTITLE_SEPARATOR: &str = " · ";
+
+/// Separator inside a numeric *range* (a wound band's damage span). An en dash, not
+/// the ASCII hyphen the project reserves for negative signs, so `1–5` can never be
+/// misread as a minus. Mirrors the frontend's wound list.
+const RANGE_DASH: &str = "–";
+
+/// An optional total as a cell: the number, or an empty cell when the weapon has no
+/// such total (Dodge has neither Attack nor Damage).
+fn optional_number(value: Option<i32>) -> String {
+    value.map(|v| v.to_string()).unwrap_or_default()
+}
 
 /// A signed modifier for display: `+` for positive, an ASCII hyphen-minus `-`
 /// (U+002D) for negative, plain for zero. The engine-side twin of `formatSigned`
@@ -716,8 +972,11 @@ fn table(out: &mut String, headers: &[String], rows: &[Vec<String>]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ability::AbilityCategory;
     use crate::ruleset::RulesetSources;
-    use crate::types::{AbilityScore, ArtScore, EntityKind, RulesetRef, Selection, SpellSelection};
+    use crate::types::{
+        AbilityScore, ArtScore, EquipmentSlot, Magnitude, RulesetRef, Selection, SpellSelection,
+    };
     use pretty_assertions::assert_eq;
 
     /// A small magus-capable ruleset with one Characteristic-moving Virtue.
@@ -799,6 +1058,23 @@ mod tests {
         let mastery = r#"{ "abilities": [
           { "id": "spell_mastery_ability.penetration" }
         ] }"#;
+        let equipment = r#"{
+          "weapons": [
+            { "id": "weapon.long_sword", "kind": "melee", "init_mod": 2, "attack_mod": 4,
+              "defense_mod": 1, "damage_mod": 6, "min_strength": 0, "load": 1,
+              "ability": "ability.single_weapon" },
+            { "id": "weapon.sling", "kind": "missile", "init_mod": 0, "attack_mod": 2,
+              "defense_mod": 0, "damage_mod": 3, "min_strength": -1, "load": 0,
+              "range": 30, "ability": "ability.single_weapon" }
+          ],
+          "shields": [
+            { "id": "shield.round", "init_mod": 0, "attack_mod": 0, "defense_mod": 2,
+              "load": 1, "min_strength": 0 }
+          ],
+          "armor": [
+            { "id": "armor.leather_scale", "protection": 3, "load": 1 }
+          ]
+        }"#;
         let rs = Ruleset::from_sources(RulesetSources {
             id: "arm5-core",
             version: "2024.1",
@@ -810,7 +1086,7 @@ mod tests {
             mythic_types: None,
             spells: Some(spells),
             spell_mastery_abilities: Some(mastery),
-            equipment: None,
+            equipment: Some(equipment),
             characteristics: None,
         })
         .unwrap();
@@ -832,6 +1108,10 @@ mod tests {
           "spell.pilum_of_fire": { "name": "Pilum of Fire" },
           "spell.wizards_boost_form": { "name": "Wizard's Boost of {form}" },
           "spell_mastery_ability.penetration": { "name": "Penetration" },
+          "weapon.long_sword": { "name": "Long Sword" },
+          "weapon.sling": { "name": "Sling" },
+          "shield.round": { "name": "Round Shield" },
+          "armor.leather_scale": { "name": "Leather Scale" },
           "house.bonisagus": { "name": "Bonisagus" }
         }"#;
         LocalizedRuleset::new(rs, i18n).unwrap()
@@ -856,6 +1136,148 @@ mod tests {
             Id::new("magus"),
             RulesetRef::new(Id::new("arm5-core"), "2024.1"),
         )
+    }
+
+    /// A magus with every export-visible surface filled in: the shared fixture for
+    /// the contract tests and the section tests that need real derived numbers.
+    ///
+    /// Chosen so the expected figures are easy to check by hand: Stamina 2 + Leather
+    /// Scale 3 = Soak 5; Load 2 → Burden 1, cancelled by Strength 1 → Encumbrance 0;
+    /// Size 0 → wound unit 5.
+    fn fully_populated_magus() -> Entity {
+        let mut e = magus();
+        e.name = "Marcus of Bonisagus".to_string();
+        e.description = "A bookish theorist".to_string();
+        e.concept = "Seeker after lost Hermetic lore".to_string();
+        e.gender = "male".to_string();
+        e.birth_year = Some(1194);
+        e.sigil = "the smell of old parchment".to_string();
+        e.covenant_name = "Semita Errabunda".to_string();
+        e.parens = "Vittoria of Bonisagus".to_string();
+        e.house = Some(Id::new("house.bonisagus"));
+        e.age = Some(35);
+        e.apparent_age = Some(30);
+        e.aura = 3;
+        for (c, score) in [
+            (Characteristic::Int, 3),
+            (Characteristic::Per, 1),
+            (Characteristic::Str, 1),
+            (Characteristic::Sta, 2),
+            (Characteristic::Pre, -1),
+            (Characteristic::Com, 1),
+            (Characteristic::Dex, 1),
+            (Characteristic::Qik, 1),
+        ] {
+            e.characteristics.insert(c, score);
+        }
+        e.characteristic_descriptions
+            .insert(Characteristic::Int, "quick-witted".to_string());
+        e.selections = vec![
+            Selection::with_params(
+                Id::new("virtue.puissant_ability"),
+                BTreeMap::from([("ability".to_string(), Id::new("ability.awareness"))]),
+            ),
+            Selection::with_params(
+                Id::new("virtue.puissant_art"),
+                BTreeMap::from([("art".to_string(), Id::new("art.creo"))]),
+            ),
+            Selection::with_params(
+                Id::new("virtue.minor_magical_focus"),
+                BTreeMap::from([("focus".to_string(), Id::new("fire"))]),
+            ),
+            Selection::new(Id::new("virtue.warrior")),
+            Selection::new(Id::new("flaw.optimistic")),
+        ];
+        e.xp_pool = 240;
+        e.ability_scores = vec![
+            AbilityScore {
+                ability: Id::new("ability.awareness"),
+                score: 3,
+                specialty: Some("searching".to_string()),
+                parameter: None,
+            },
+            AbilityScore {
+                ability: Id::new("ability.area_lore"),
+                score: 2,
+                specialty: Some("legends".to_string()),
+                parameter: Some("Provence".to_string()),
+            },
+            AbilityScore {
+                ability: Id::new("ability.magic_theory"),
+                score: 4,
+                specialty: None,
+                parameter: None,
+            },
+            AbilityScore {
+                ability: Id::new("ability.parma_magica"),
+                score: 3,
+                specialty: None,
+                parameter: None,
+            },
+            AbilityScore {
+                ability: Id::new("ability.single_weapon"),
+                score: 4,
+                specialty: Some("long sword".to_string()),
+                parameter: None,
+            },
+        ];
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.muto"),
+                score: 5,
+            },
+            ArtScore {
+                art: Id::new("art.corpus"),
+                score: 5,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 8,
+            },
+            ArtScore {
+                art: Id::new("art.vim"),
+                score: 5,
+            },
+        ];
+        e.spells = vec![
+            SpellSelection {
+                spell: Id::new("spell.pilum_of_fire"),
+                level: None,
+                mastery: Some(2),
+                parameter: None,
+                mastery_abilities: vec![Id::new("spell_mastery_ability.penetration")],
+            },
+            SpellSelection {
+                spell: Id::new("spell.wizards_boost_form"),
+                level: Some(15),
+                mastery: None,
+                parameter: Some("art.ignem".to_string()),
+                mastery_abilities: Vec::new(),
+            },
+        ];
+        e.equipment = vec![
+            EquipmentSlot {
+                item: Id::new("weapon.long_sword"),
+                equipped: true,
+                specialization_applies: false,
+            },
+            EquipmentSlot {
+                item: Id::new("weapon.sling"),
+                equipped: true,
+                specialization_applies: false,
+            },
+            EquipmentSlot {
+                item: Id::new("armor.leather_scale"),
+                equipped: true,
+                specialization_applies: false,
+            },
+        ];
+        e.normalize();
+        e
     }
 
     fn covenant() -> Entity {
@@ -1106,12 +1528,29 @@ mod tests {
 
     // --- edge cases -------------------------------------------------------
 
+    /// A blank character still has a body, so its Fatigue and Wound tracks are real
+    /// content (see `write_health_tracks`); every other section is empty and absent.
     #[test]
     fn an_empty_entity_renders_a_minimal_document() {
         let doc = character_markdown(&magus(), &ruleset(), &no_labels());
         assert!(doc.starts_with("# export-untitled\n"), "{doc}");
-        assert!(!doc.contains("##"), "no section headings: {doc}");
-        assert!(!doc.contains("| --- |"), "no empty tables: {doc}");
+        let sections: Vec<&str> = doc.lines().filter(|l| l.starts_with("## ")).collect();
+        assert_eq!(
+            sections,
+            vec!["## derived-section-fatigue", "## derived-section-wounds"],
+            "only the health tracks survive an empty entity: {doc}"
+        );
+        // Exactly the two health-track tables, each with a body: `table` is a no-op
+        // without rows, so a separator line can only exist above real rows.
+        let separators = doc.lines().filter(|l| l.starts_with("| --- ")).count();
+        assert_eq!(separators, 2, "no bodyless tables: {doc}");
+    }
+
+    #[test]
+    fn an_empty_covenant_renders_only_its_title() {
+        let doc = character_markdown(&covenant(), &ruleset(), &no_labels());
+        assert!(doc.starts_with("# export-untitled\n"), "{doc}");
+        assert!(!doc.contains("## "), "no section at all: {doc}");
     }
 
     #[test]
@@ -1423,6 +1862,308 @@ mod tests {
     fn the_spells_section_is_omitted_when_no_spell_is_known() {
         let doc = character_markdown(&magus(), &ruleset(), &labels(&[("tab-spells", "Spells")]));
         assert!(!doc.contains("## Spells"), "stray heading: {doc}");
+    }
+
+    // --- equipment --------------------------------------------------------
+
+    #[test]
+    fn equipment_is_grouped_by_catalogue_kind_with_the_equipped_marker() {
+        let mut e = magus();
+        e.equipment = vec![
+            EquipmentSlot {
+                item: Id::new("weapon.long_sword"),
+                equipped: true,
+                specialization_applies: false,
+            },
+            EquipmentSlot {
+                item: Id::new("shield.round"),
+                equipped: false,
+                specialization_applies: false,
+            },
+            EquipmentSlot {
+                item: Id::new("armor.leather_scale"),
+                equipped: true,
+                specialization_applies: false,
+            },
+        ];
+        e.normalize();
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("tab-equipment", "Equipment"),
+                ("equipment-group-weapons", "Weapons"),
+                ("equipment-group-shields", "Shields"),
+                ("equipment-group-armor", "Armor"),
+                ("export-yes", "Yes"),
+                ("export-no", "No"),
+            ]),
+        );
+        assert!(doc.contains("## Equipment\n"), "{doc}");
+        assert!(doc.contains("### Weapons\n"), "{doc}");
+        assert!(doc.contains("| Long Sword | Yes |"), "{doc}");
+        assert!(doc.contains("### Shields\n"), "{doc}");
+        assert!(doc.contains("| Round Shield | No |"), "{doc}");
+        assert!(doc.contains("### Armor\n"), "{doc}");
+        assert!(doc.contains("| Leather Scale | Yes |"), "{doc}");
+    }
+
+    #[test]
+    fn the_equipment_section_is_omitted_when_nothing_is_carried() {
+        let doc = character_markdown(
+            &magus(),
+            &ruleset(),
+            &labels(&[("tab-equipment", "Equipment")]),
+        );
+        assert!(!doc.contains("## Equipment"), "stray heading: {doc}");
+    }
+
+    // --- combat / soak / encumbrance / fatigue / wounds -------------------
+
+    #[test]
+    fn combat_lists_one_row_per_equipped_weapon() {
+        let doc = character_markdown(
+            &fully_populated_magus(),
+            &ruleset(),
+            &labels(&[
+                ("derived-section-combat", "Combat"),
+                ("derived-combat-init", "Init"),
+                ("derived-range", "Range"),
+            ]),
+        );
+        assert!(doc.contains("## Combat\n"), "{doc}");
+        // Qik 1 + weapon Init 2 + shield 0 - Encumbrance 0; Single Weapon 4.
+        assert!(doc.contains("| Long Sword | Single Weapon | 3 |"), "{doc}");
+        // A missile weapon carries a Range; the melee weapon leaves the cell blank.
+        assert!(doc.contains("| Sling | Single Weapon |"), "{doc}");
+        assert!(doc.contains("| 30 |"), "the missile range: {doc}");
+    }
+
+    #[test]
+    fn the_combat_section_is_omitted_when_no_weapon_is_equipped() {
+        let doc = character_markdown(
+            &magus(),
+            &ruleset(),
+            &labels(&[("derived-section-combat", "Combat")]),
+        );
+        assert!(!doc.contains("## Combat"), "stray heading: {doc}");
+    }
+
+    #[test]
+    fn soak_lists_every_addend_and_the_total() {
+        let doc = character_markdown(
+            &fully_populated_magus(),
+            &ruleset(),
+            &labels(&[
+                ("derived-section-soak", "Soak"),
+                ("derived-addend-stamina", "Stamina"),
+                ("derived-addend-armor", "Armor"),
+                ("export-col-total", "Total"),
+            ]),
+        );
+        assert!(doc.contains("## Soak\n"), "{doc}");
+        assert!(doc.contains("- **Stamina**: +2\n"), "{doc}");
+        assert!(doc.contains("- **Armor**: +3\n"), "{doc}");
+        assert!(doc.contains("- **Total**: +5\n"), "{doc}");
+    }
+
+    #[test]
+    fn the_soak_section_is_omitted_when_every_addend_is_zero() {
+        let doc = character_markdown(
+            &magus(),
+            &ruleset(),
+            &labels(&[("derived-section-soak", "Soak")]),
+        );
+        assert!(!doc.contains("## Soak"), "stray heading: {doc}");
+    }
+
+    #[test]
+    fn encumbrance_reports_load_burden_and_the_penalty() {
+        let doc = character_markdown(
+            &fully_populated_magus(),
+            &ruleset(),
+            &labels(&[
+                ("derived-section-encumbrance", "Encumbrance"),
+                ("derived-load", "Load"),
+                ("derived-burden", "Burden"),
+                ("export-col-total", "Total"),
+            ]),
+        );
+        assert!(doc.contains("## Encumbrance\n"), "{doc}");
+        assert!(doc.contains("- **Load**: 2\n"), "{doc}");
+        assert!(doc.contains("- **Burden**: 1\n"), "{doc}");
+        assert!(doc.contains("- **Total**: 0\n"), "{doc}");
+    }
+
+    #[test]
+    fn the_encumbrance_section_is_omitted_when_nothing_is_carried() {
+        let doc = character_markdown(
+            &magus(),
+            &ruleset(),
+            &labels(&[("derived-section-encumbrance", "Encumbrance")]),
+        );
+        assert!(!doc.contains("## Encumbrance"), "stray heading: {doc}");
+    }
+
+    #[test]
+    fn the_fatigue_and_wound_tracks_are_printed_for_a_character() {
+        let doc = character_markdown(
+            &fully_populated_magus(),
+            &ruleset(),
+            &labels(&[
+                ("derived-section-fatigue", "Fatigue"),
+                ("derived-fatigue-weary", "Weary"),
+                ("derived-section-wounds", "Wounds"),
+                ("derived-wound-light", "Light"),
+                ("derived-wound-dead", "Dead"),
+                ("export-col-penalty", "Penalty"),
+            ]),
+        );
+        assert!(doc.contains("## Fatigue\n"), "{doc}");
+        assert!(doc.contains("| Weary | -1 |"), "{doc}");
+        assert!(doc.contains("## Wounds\n"), "{doc}");
+        assert!(doc.contains("| Light | 1–5 | -1 |"), "{doc}");
+        assert!(doc.contains("| Dead | 21+ |  |"), "{doc}");
+    }
+
+    #[test]
+    fn a_covenant_has_no_fatigue_or_wound_track() {
+        let mut e = covenant();
+        e.name = "Semita Errabunda".to_string();
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("derived-section-fatigue", "Fatigue"),
+                ("derived-section-wounds", "Wounds"),
+            ]),
+        );
+        assert!(!doc.contains("Fatigue"), "{doc}");
+        assert!(!doc.contains("Wounds"), "{doc}");
+    }
+
+    // --- contract tests ---------------------------------------------------
+
+    /// The per-line derived read-outs the export deliberately leaves out: they are
+    /// working figures for play, not character-sheet content. Each is mapped to a
+    /// unique marker so its absence is proven by the marker, not by English wording
+    /// that another section might legitimately share.
+    const EXCLUDED_READOUT_KEYS: &[&str] = &[
+        "derived-section-lab",
+        "derived-section-casting",
+        "derived-section-lab-casting",
+        "derived-section-penetration",
+        "derived-section-magic-resistance",
+        "derived-section-masterpiece",
+        "derived-section-familiar",
+        "derived-section-surfaced",
+        "derived-lab-total",
+        "derived-masterpiece-cap",
+        "derived-familiar-binding-level",
+        "derived-familiar-cord-points",
+        "derived-familiar-invested-levels",
+        "derived-longevity-aging-modifier",
+        "derived-longevity-suggested",
+        "talisman-capacity",
+        "talisman-capacity-note",
+    ];
+
+    #[test]
+    fn the_document_excludes_the_per_line_derived_readouts() {
+        let excluded: BTreeMap<String, String> = EXCLUDED_READOUT_KEYS
+            .iter()
+            .enumerate()
+            .map(|(i, key)| ((*key).to_string(), format!("EXCLUDEDMARKER{i}")))
+            .collect();
+        let doc = character_markdown(&fully_populated_magus(), &ruleset(), &excluded);
+        assert!(
+            !doc.contains("EXCLUDEDMARKER"),
+            "an excluded read-out leaked into the document: {doc}"
+        );
+        for key in EXCLUDED_READOUT_KEYS {
+            assert!(!doc.contains(key), "the excluded key '{key}' leaked: {doc}");
+        }
+    }
+
+    fn assert_declared(key: &str) {
+        assert!(
+            LABEL_KEYS.contains(&key),
+            "LABEL_KEYS is missing '{key}' — it would render as a raw slug"
+        );
+    }
+
+    /// Every key the formatter composes from a fixed rules taxonomy must be declared
+    /// in [`LABEL_KEYS`]. Without this, adding a `derived.rs` Soak addend (or a
+    /// taxonomy variant) would silently surface its slug as a user-facing label.
+    #[test]
+    fn every_taxonomy_derived_label_key_is_declared() {
+        let rs = ruleset();
+        let e = fully_populated_magus();
+        for c in Characteristic::ALL {
+            assert_declared(&format!("characteristic-{c}"));
+        }
+        for m in Magnitude::ALL {
+            assert_declared(&format!("magnitude-{m}"));
+        }
+        for c in AbilityCategory::ALL {
+            assert_declared(&format!("ability-category-{c}"));
+        }
+        for t in ArtType::ALL {
+            assert_declared(&format!("art-type-{t}"));
+        }
+        for (_, key) in ITEM_KIND_HEADINGS {
+            assert_declared(key);
+        }
+        for addend in soak(&e, &rs.ruleset).addends {
+            assert_declared(&format!("derived-addend-{}", addend.label));
+        }
+        for level in fatigue_levels(&e, &rs.ruleset) {
+            assert_declared(&format!("derived-fatigue-{}", level.level));
+        }
+        for band in wound_ranges(&e, &rs.ruleset) {
+            assert_declared(&format!("derived-wound-{}", band.level));
+        }
+    }
+
+    /// Complements the family walk above by proving it at the *document* level: with
+    /// every declared key resolved to a marker, no key-shaped text may remain in the
+    /// output, so no label can reach the reader as a raw slug.
+    #[test]
+    fn no_undeclared_label_key_reaches_the_document() {
+        let e = fully_populated_magus();
+        let mut resolved: BTreeMap<String, String> = LABEL_KEYS
+            .iter()
+            .map(|key| ((*key).to_string(), "RESOLVED".to_string()))
+            .collect();
+        // The two catalogue-derived families LABEL_KEYS does not enumerate.
+        resolved.insert(format!("type-{}", e.type_id), "RESOLVED".to_string());
+        for key in [
+            "param-label-ability",
+            "param-label-art",
+            "param-label-focus",
+        ] {
+            resolved.insert(key.to_string(), "RESOLVED".to_string());
+        }
+        let doc = character_markdown(&e, &ruleset(), &resolved);
+        for family in [
+            "export-",
+            "derived-",
+            "characteristic-",
+            "magnitude-",
+            "ability-category-",
+            "art-type-",
+            "param-label-",
+            "identity-",
+            "spell-",
+            "equipment-",
+            "items-",
+            "tab-",
+        ] {
+            assert!(
+                !doc.contains(family),
+                "an undeclared '{family}*' key reached the document: {doc}"
+            );
+        }
     }
 
     #[test]
