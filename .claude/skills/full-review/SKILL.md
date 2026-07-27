@@ -26,6 +26,16 @@ allowlisted prefix is **auto-DENIED** (not queued for approval).
 So compose freely with pipelines; just keep every stage on the allowlist. To stay inside
 it, every agent MUST:
 
+- **A denial is information, not an obstacle to route around.** This is the governing
+  rule; the specific bans below are only its worked examples. When a command is denied,
+  do NOT construct a different spelling of the same thing — reaching for `perl` because
+  `grep` returned nothing, or `git -C <path>` because a `cd` was refused, turns one
+  blocked command into a second blocked command and burns the run. Stop and pick one of:
+  (a) the native **Read/Grep/Glob** tools, which need no approval inside the repo and are
+  usually the better answer anyway; (b) a genuinely different, allowlisted approach; or
+  (c) report the blocker in your findings and move on. A refusal often means your premise
+  is wrong — the `perl` incident began with a `grep` that was silently skipping a corrupt
+  file, and no amount of tool-swapping would have revealed that.
 - **Every stage must be an allowlisted command.** Allowed filter/util tools you can pipe
   through: `jq`, `grep`, `rg`, `sed`, `awk`, `sort`, `uniq`, `cut`, `tr`, `wc`, `head`,
   `tail`, `cat`, `diff`, `cmp`, `od`, `xxd`, `file`, `find`, `ls`, `echo`, `mkdir`.
