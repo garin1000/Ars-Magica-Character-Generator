@@ -103,25 +103,24 @@ shared experience pool, all validated live. A character-type selector switches
 between grog, companion, mythic companion, and magus; the Arts, Spells, and Magic
 Items tabs appear only for magus-capable types. The Magic Items tab stores a
 magus's starting possessions — aura, enchanted devices (charged against the
-item-level budget their Virtues grant), a familiar, a talisman, and a self-made or
-external Longevity Ritual
-with its aging bonus, its focus, and the permanent sterility it causes. Because
-the ritual's bonus was fixed by the Lab Total of the season it was made, it is
-entered and stored rather than derived; beside the input the engine suggests what
-a ritual made now would be worth, from the live Creo Corpus Lab Total, halvings
-included. The talisman is the magus's personal enchanted item: its shape and
-material, its shape-and-material attunements, and the effects instilled in it,
-with a read-only capacity read-out (highest Technique + highest Form, in pawns of
-Vim vis) beside them. The familiar is entered as the magical animal it is, in the
-rulebook's own creature format: the animal, its Magic Might, the eight
-Characteristics, a (usually negative) Size, Personality Traits, the Gold/Silver/
-Bronze bond cords, and the powers invested in the bond — with read-only guidance
-for the bonding level (Might + 25 + 5 × Size), the best bonding Lab Total, what the
-cords cost off the 5/15/30/50/75 curve, and the total level invested. The bond's own
-grants (True Friend, Loyal (partner) +3, Intelligence -3) are shown as a note rather
-than applied silently, and no number the familiar carries can ever raise a
-validation error. An
-Equipment tab — available to every character type — records the weapons, shields,
+item-level budget their Virtues grant), a familiar, a talisman, and a self-made
+or external Longevity Ritual with its aging bonus, its focus, and the permanent
+sterility it causes. Because the ritual's bonus was fixed by the Lab Total of the
+season it was made, it is entered and stored rather than derived; beside the input
+the engine suggests what a ritual made now would be worth, from the live Creo
+Corpus Lab Total, halvings included. The talisman is the magus's personal
+enchanted item: its shape and material, its shape-and-material attunements, and
+the effects instilled in it, with a read-only capacity read-out (highest Technique
++ highest Form, in pawns of Vim vis) beside them. The familiar is entered as the
+magical animal it is, in the rulebook's own creature format: the animal, its Magic
+Might, the eight Characteristics, a (usually negative) Size, Personality Traits,
+the Gold/Silver/Bronze bond cords, and the powers invested in the bond — with
+read-only guidance for the bonding level (Might + 25 + 5 × Size), the best bonding
+Lab Total, what the cords cost off the 5/15/30/50/75 curve, and the total level
+invested. The bond's own grants (True Friend, Loyal (partner) +3, Intelligence -3)
+are shown as a note rather than applied silently, and no number the familiar
+carries can ever raise a validation error. An Equipment tab — available to every
+character type — records the weapons, shields,
 and armor a character carries from the Core Rules equipment catalogue (English +
 German), marking each equipped. The full Core Rules Ability catalogue and the
 full 15-Art catalogue (English + German) ship with localized descriptions;
