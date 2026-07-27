@@ -50,7 +50,7 @@ use crate::ruleset::{
 };
 use crate::types::{
     CastingScope, CombatStat, Effect, Entity, Familiar, HalvableTotal, HealthTrack, Id,
-    LongevitySource, MagicResistanceEffect, SpecialCasting,
+    LongevitySource, MAX_CORD_SCORE, MagicResistanceEffect, SpecialCasting,
 };
 
 // --- Non-standard-casting penalty constants (Core:9243-9245) ---------------
@@ -1483,20 +1483,20 @@ pub fn talisman_capacity(entity: &Entity, ruleset: &Ruleset) -> Option<TalismanC
 /// home.
 const CORD_COST_TABLE: [u32; 6] = [0, 5, 15, 30, 50, 75];
 
-/// The highest score a cord can have: "The strength of each of these cords is rated
-/// from 0 to +5 … a score of +5 (the maximum)" (Core:10836).
-const MAX_CORD_SCORE: u8 = 5;
-
 /// The rules-legal score of a stored cord value, clamped to the +5 maximum
 /// (Core:10836).
 ///
-/// **Every** consumer of a cord score routes through this, so the rules maximum is
-/// stated once and the read-outs cannot disagree. `Familiar`'s cord fields are plain
-/// `u8`, and a hand-edited or legacy save can therefore carry any value up to 255;
-/// left unclamped, the same entered number would render as one figure on the
-/// familiar's cord-cost read-out and a wildly different one in Soak
-/// ([`soak`]) and on the Longevity Ritual's Bronze-cord line
+/// **Every** consumer of a cord score routes through this, so the read-outs cannot
+/// disagree. `Familiar`'s cord fields are plain `u8`, and a hand-edited or legacy save
+/// can therefore carry any value up to 255; left unclamped, the same entered number
+/// would render as one figure on the familiar's cord-cost read-out and a wildly
+/// different one in Soak ([`soak`]) and on the Longevity Ritual's Bronze-cord line
 /// ([`longevity_bonus`]).
+///
+/// The maximum itself is stated once, in [`MAX_CORD_SCORE`] beside the `Familiar`
+/// type, because [`Familiar::normalize`] clamps the *stored* fields to the same
+/// bound; this read-side clamp still matters for a value that reaches a consumer
+/// before a normalize pass (a freshly loaded save).
 fn cord_score(raw: u8) -> u8 {
     raw.min(MAX_CORD_SCORE)
 }
