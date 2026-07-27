@@ -89,7 +89,16 @@
       <div class="detail-section">
         <label class="field">
           <span>{store.t('derived-aura-label')}</span>
-          <input type="number" value={aura} oninput={onAura} data-testid="derived-aura-input" />
+          <!-- Same signed i32 field as the Magic Items tab's aura input; the bounds
+               match so the two entry points cannot disagree. -->
+          <input
+            type="number"
+            min="-2147483648"
+            max="2147483647"
+            value={aura}
+            oninput={onAura}
+            data-testid="derived-aura-input"
+          />
         </label>
       </div>
 

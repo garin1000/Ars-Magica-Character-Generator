@@ -25,7 +25,17 @@
     <div class="detail-field">
       <label class="field">
         <span>{store.t('aura-label')}</span>
-        <input type="number" value={aura} oninput={onAura} data-testid="aura-input" />
+        <!-- The aura is signed (a Divine aura is a penalty for Hermetic magic) and
+             stored in an i32; the bounds keep an out-of-range entry from making
+             serde reject the whole payload. -->
+        <input
+          type="number"
+          min="-2147483648"
+          max="2147483647"
+          value={aura}
+          oninput={onAura}
+          data-testid="aura-input"
+        />
       </label>
     </div>
 
@@ -49,6 +59,7 @@
               <input
                 type="number"
                 min="0"
+                max="65535"
                 value={device.level}
                 oninput={(e) => store.setDeviceLevel(i, num(e))}
                 data-testid="device-level-{i}"

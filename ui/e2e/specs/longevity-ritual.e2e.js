@@ -26,6 +26,11 @@ const HALVED = '[data-testid="longevity-hint-halved"]';
 const BONUS = '[data-testid="longevity-bonus"]';
 const FOCUS = '[data-testid="longevity-focus"]';
 
+// The WebDriver keycode for Backspace, sent through Element Send Keys so the webview
+// raises a real `input` event (see the emptying step below for why `clearValue()`
+// will not do).
+const BACKSPACE = String.fromCharCode(0xe003);
+
 // Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
 function clean(text) {
   return text.replace(/[⁦-⁩]/g, '');
@@ -104,6 +109,44 @@ describe('longevity ritual', () => {
         timeoutMsg: 'the not-entered flag should clear once a bonus is typed',
       },
     );
+
+    // EMPTYING the box must come back to not-entered, never store a 0. This is the
+    // only test at any level that exercises that decision (`raw === '' ? null :
+    // Number(raw)` in the panel's `onBonus`): the panel's unit tests render to an
+    // SSR string so no handler ever runs there, and both the store test and the
+    // "brings the marker back" test call `setLongevityBonus(null)` directly, past the
+    // panel. Reverting `onBonus` to `num(event)` — which turns an emptied field into
+    // a permanent, irreversible 0 — otherwise leaves every gate green.
+    //
+    // The field is emptied with a real BACKSPACE keystroke, not `clearValue()`:
+    // verified here against the shipped binary, WebDriver's Element Clear blanks the
+    // DOM value but dispatches no `input` event, so Svelte never hears about it and
+    // the test would pass whatever `onBonus` does. Element Send Keys (what
+    // `addValue`/`setValue` use) delivers real key events, which the webview turns
+    // into a genuine `input`. The stored bonus is one digit, so one Backspace empties
+    // it.
+    await $(BONUS).addValue(BACKSPACE);
+    expect(await $(BONUS).getValue()).toBe('');
+    await $('[data-testid="longevity-not-entered"]').waitForExist({ timeout: 5000 });
+
+    // A typed 0, by contrast, IS a claim ("this ritual grants nothing"), so the
+    // marker must stay gone — the 0-vs-empty distinction, pinned at both ends.
+    await $(BONUS).setValue('0');
+    await browser.waitUntil(
+      async () => !(await $('[data-testid="longevity-not-entered"]').isExisting()),
+      {
+        timeout: 5000,
+        timeoutMsg: 'a typed 0 is an entered value; the not-entered flag must stay gone',
+      },
+    );
+    expect(await $(BONUS).getValue()).toBe('0');
+
+    // Back to the 9 the rest of the spec asserts on.
+    await $(BONUS).setValue('9');
+    await browser.waitUntil(async () => (await $(BONUS).getValue()) === '9', {
+      timeout: 5000,
+      timeoutMsg: 'the bonus should read 9 again',
+    });
 
     // The totals panel shows the same stored 9 as what it DOES — the modifier
     // subtracted from aging rolls, so "-9", signed exactly once (never "--9") and

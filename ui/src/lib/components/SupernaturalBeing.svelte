@@ -41,6 +41,7 @@
           <input
             type="number"
             min="0"
+            max="255"
             value={might.score}
             oninput={(e) => store.setMightScore(num(e))}
             data-testid="might-score"
@@ -94,6 +95,7 @@
               <input
                 type="number"
                 min="0"
+                max="65535"
                 value={power.level}
                 oninput={(e) => store.setPowerLevel(i, num(e))}
                 data-testid="power-level-{i}"

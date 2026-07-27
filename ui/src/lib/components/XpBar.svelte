@@ -54,6 +54,7 @@
       <input
         type="number"
         min="0"
+        max="4294967295"
         placeholder="0"
         value={pool || ''}
         oninput={onPool}

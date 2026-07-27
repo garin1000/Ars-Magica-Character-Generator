@@ -53,18 +53,28 @@ async function set(testid, value) {
   await field.setValue(value);
 }
 
+// An issue only a MAGUS raises (no House chosen yet), used to prove the validation
+// panel is showing this magus's own pass. No House is ever chosen in this spec, so
+// the warning is present for every snapshot taken here.
+const MAGUS_GATE = '[data-code="house_unset"]';
+
 /**
- * The validation panel's issue counts, once the debounced validate has rendered.
- * A bare magus already carries unrelated advisories (unspent points and the like),
- * so the guidance-only contract is "these counts do not move", not "there are none".
+ * The validation panel's issue counts, once a validation pass for the CURRENT
+ * character type has rendered. A bare magus already carries unrelated advisories
+ * (unspent points and the like), so the guidance-only contract is "these counts do
+ * not move", not "there are none".
+ *
+ * `gate` is a selector for an issue only the current type raises — waiting for it is
+ * what proves the debounced pass triggered by the type switch has landed. Waiting
+ * merely for the panel to *exist* proves nothing: it already exists from the app's
+ * initial (grog) state, so the counts could be read from the pre-magus pass and the
+ * stale baseline would surface later as a spurious red.
  */
-async function issueCounts() {
-  await browser.waitUntil(
-    async () =>
-      (await $('[data-testid="no-issues"]').isExisting()) ||
-      (await $('[data-testid="issue-list"]').isExisting()),
-    { timeout: 10000, timeoutMsg: 'the validation panel never rendered' },
-  );
+async function issueCounts(gate) {
+  await browser.waitUntil(async () => await $(gate).isExisting(), {
+    timeout: 10000,
+    timeoutMsg: `the validation panel never rendered a pass containing ${gate}`,
+  });
   return {
     errors: await $$('[data-severity="error"]').length,
     warnings: await $$('[data-severity="warning"]').length,
@@ -78,8 +88,9 @@ describe('familiar', () => {
 
     await $(POSSESSIONS_TAB).click();
     // Baseline for the guidance-only check: whatever this magus already complains
-    // about before a familiar exists.
-    const issuesBefore = await issueCounts();
+    // about before a familiar exists — read from the MAGUS's own validation pass,
+    // never the grog pass the app started on.
+    const issuesBefore = await issueCounts(MAGUS_GATE);
 
     await $('[data-testid="familiar-add"]').click();
 
@@ -135,7 +146,7 @@ describe('familiar', () => {
     // Guidance only, end to end: a familiar whose cords cost 50 points — far more
     // than any Lab Total this magus has — and which carries 20 levels of invested
     // power adds not one issue, of any severity.
-    expect(await issueCounts()).toEqual(issuesBefore);
+    expect(await issueCounts(MAGUS_GATE)).toEqual(issuesBefore);
   });
 
   it('round-trips the whole statblock through save and Open', async () => {
