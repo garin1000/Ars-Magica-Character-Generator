@@ -1452,12 +1452,29 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
             specialization_applies: false,
         },
     ];
+    // A full familiar statblock: a raven (Size -4, Core:17829-17856) with Magic
+    // Might 10, human intelligence at Int -3 (Core:10854), the bond's Loyal
+    // (partner) +3 entered by hand, and one power invested in the bond.
     e.familiar = Some(Familiar {
         name: "Corvus".to_string(),
+        animal: "raven".to_string(),
+        might: Some(MightScore {
+            realm: Realm::Magic,
+            score: 10,
+        }),
+        characteristics: BTreeMap::from([(Characteristic::Int, -3), (Characteristic::Qik, 4)]),
+        size: -4,
+        personality_traits: vec![PersonalityTrait {
+            name: "Loyal (Marcus)".to_string(),
+            value: 3,
+        }],
         cord_gold: 1,
         cord_silver: 1,
         cord_bronze: 2,
-        ..Default::default()
+        powers: vec![SupernaturalPower {
+            name: "Mental communication".to_string(),
+            level: 20,
+        }],
     });
     e.talisman = Some(Talisman {
         description: "An ash staff shod with silver".to_string(),
@@ -1602,6 +1619,46 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
             .iter()
             .all(|i| i.code != "over_item_level"),
         "a talisman effect must raise no item-level issue"
+    );
+
+    // Familiar bonding read-out on the real ruleset. Binding level = Magic Might 10
+    // + 25 + 5 × Size(-4) = 15 (Core:10824, :10828) — the negative Size takes 20
+    // points off. Cords 1/1/2 cost 5 + 5 + 15 = 25 off the curve (:10836), which
+    // fits inside the best bonding Lab Total. Invested powers total 20 levels and
+    // are charged against nothing (:10866).
+    let fam = d
+        .familiar
+        .expect("read-out present for a magus with a familiar");
+    assert_eq!(fam.binding_level, 15, "Might 10 + 25 + 5 x -4");
+    assert_eq!(fam.cord_points_spent, 25, "5 + 5 + 15 off the cord curve");
+    assert_eq!(fam.invested_power_levels, 20);
+    // The best (Te,Fo) cell is the same Creo/Corpus pair the capacity names, so the
+    // bonding Lab Total matches the Creo Corpus Lab Total the longevity hint used.
+    assert_eq!(fam.binding.technique.as_str(), "art.creo");
+    assert_eq!(fam.binding.form.as_str(), "art.corpus");
+    assert_eq!(fam.binding.lab_total, 32);
+    // This magus holds a Major Magical Focus, and :10818 lets a focus apply to the
+    // bonding Lab Total — so the conditional figure is present (base + lower Art).
+    assert_eq!(fam.binding.lab_total_within_focus, Some(42));
+    assert!(fam.binding.lab_total_reaches_level, "32 >= 15");
+    assert!(fam.binding.cord_points_within_lab_total, "25 <= 32");
+
+    // Guidance-only guard: nothing the familiar carries raises an issue, not even
+    // its Faerie-capable Might, its own Characteristics, or 20 levels of invested
+    // power. Compare against the same magus with no familiar at all.
+    let mut without = e.clone();
+    without.familiar = None;
+    let codes = |x: &Entity| -> Vec<String> {
+        validate(x, &rs)
+            .issues
+            .iter()
+            .map(|i| i.code.clone())
+            .collect()
+    };
+    assert_eq!(
+        codes(&e),
+        codes(&without),
+        "no familiar read-out may produce a ValidationIssue"
     );
 
     // Warping Score 2 from 15 stored points; Decrepitude 2 from 17 aging points.
