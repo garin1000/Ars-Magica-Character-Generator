@@ -889,10 +889,10 @@ talisman, which is why it is an `Option`, not a `Vec`.
   beside `EnchantedDevice`.
 - **Migration** — `load_entity_migrating` gains a second legacy-key fold
   (`fold_legacy_talisman`) beside the `aging_reductions` one, dispatching on the
-  legacy key's *presence*, never on the recorded version. The fold is **lossless**
-  (attunements copied verbatim; identity/effects the old shape never stored stay
-  empty rather than invented), so unlike the aging fold — which *infers* a point
-  total — it needs no `LoadedEntity` notice flag. Two ambiguous shapes are pinned
+  legacy key's *presence*, never on the recorded version. The fold **invents
+  nothing**: attunements are copied verbatim, and the identity/effects the old shape
+  never stored stay empty. So unlike the aging fold — which *infers* a point total —
+  it needs no `LoadedEntity` notice flag. Two ambiguous shapes are pinned
   by named tests: `"talisman_attunements": []` leaves `talisman: None` (no phantom
   item) but still bumps the version, since the key's presence proves the old shape
   (`legacy_empty_talisman_attunements_migrate_to_no_talisman`); a hand-edited save
@@ -900,6 +900,17 @@ talisman, which is why it is an `Option`, not a `Vec`.
   unmerged (`hand_edited_save_with_both_talisman_shapes_keeps_the_new_one`).
   App-written saves can never carry an empty list
   (`skip_serializing_if = "Vec::is_empty"`).
+- **A legacy value that cannot deserialize fails the load** — both folds propagate
+  the `serde_json::Error` (`from_value(legacy)?`), so a `bonus` outside `i8`, a bonus
+  written as a JSON string, `null` in place of the list, or an out-of-`u8` /
+  unknown-key `aging_reductions` map aborts the load exactly as a malformed current
+  field does. Swallowing the error (the original `unwrap_or_default()`) was silent
+  data loss: the fold yielded nothing while the caller still stamped
+  `SCHEMA_VERSION`, so the load reported success and the next save rewrote the file
+  without the legacy key — destroying the attunements. Failing the load leaves the
+  file on disk untouched. Pinned by
+  `legacy_talisman_attunements_that_cannot_deserialize_fail_the_load` and
+  `legacy_aging_reductions_that_cannot_deserialize_fail_the_load`.
 - **Derived capacity** — see the *Talisman capacity* row in the derived-formulas
   table below, including the budget non-goal.
 - **UI** — `TalismanPanel.svelte` (extracted from `MagicPossessions.svelte` in
@@ -1075,7 +1086,8 @@ M5 only makes the raw state + effects enterable and computes the scores from poi
     under the derived rule (`minimal_aging_points_for_drops`), reporting which
     Characteristics were migrated. Because every aging point counts toward
     Decrepitude — including those "lost" to a drop — the fold also corrects the old
-    model's Decrepitude under-count.
+    model's Decrepitude under-count. A legacy map that cannot deserialize fails the
+    load loudly rather than folding in nothing (see the M5.5b migration note).
 - **Warping points** — `Entity.warping_points: u32`: accrued Warping Points.
 - **Twilight scars** — `Entity.twilight_scars: Vec<TwilightScar { description }>`
   (free-text; `TwilightScar` derives `Ord`, so `Entity::normalize()` sorts them for

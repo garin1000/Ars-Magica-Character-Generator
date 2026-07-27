@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 1c1532cbbfd249305d0ac670cc12bd32b917a69a6d94abbd17823d29e9dc7047 # shrinks to entity = Entity { schema_version: 0, ruleset: RulesetRef { id: Id("a"), version: "1" }, entity_kind: Character, type_id: Id("a"), selections: [], characteristics: {}, characteristic_descriptions: {}, ability_scores: [], xp_pool: 0, art_scores: [], spells: [], spell_levels_override: None, house: None, house_choices: {}, mythic_type: None, mythic_choices: {}, warping_choices: {}, age: None, apparent_age: None, personality_traits: [], reputations: [], aura: 0, devices: [], familiar: Some(Familiar { name: "a", animal: "a", might: None, characteristics: {}, size: 0, personality_traits: [PersonalityTrait { name: "ab", value: 1 }, PersonalityTrait { name: "ab", value: 0 }], cord_gold: 0, cord_silver: 0, cord_bronze: 0, powers: [] }), talisman: None, longevity_ritual: None, aging_points: {}, warping_points: 0, warping_effect: "", twilight_scars: [], decrepitude_effect: "", aging_log: [], name: "", description: "", concept: "", gender: "", birth_year: None, sigil: "", covenant_name: "", parens: "", equipment: [], might: None, powers: [] }
