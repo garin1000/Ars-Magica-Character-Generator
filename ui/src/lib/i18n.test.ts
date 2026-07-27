@@ -46,4 +46,17 @@ describe('German UI bundle', () => {
     const missingInEn = [...de].filter((key) => !en.has(key)).sort();
     expect({ missingInDe, missingInEn }).toEqual({ missingInDe: [], missingInEn: [] });
   });
+
+  // One Rust enum value, two render sites: the editor radio
+  // (`longevity-source-<v>`) and the Totals read-out (`derived-longevity-<v>`).
+  // English renders both identically, so a divergence shows up only in German —
+  // the same value named two ways across two tabs of one character.
+  it.each(['en', 'de'])('renders each longevity source the same in both panels (%s)', (lang) => {
+    const bundle = buildBundle(lang as 'en' | 'de');
+    for (const source of ['self_made', 'external']) {
+      expect(translate(bundle, `derived-longevity-${source}`)).toBe(
+        translate(bundle, `longevity-source-${source}`),
+      );
+    }
+  });
 });

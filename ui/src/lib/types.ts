@@ -453,7 +453,7 @@ export interface LongevityHint {
 // The Longevity Ritual read-out. `bonus` is the stored, player-entered value for
 // both sources; `entered` false means it is a placeholder 0, not a claim.
 export interface LongevityBonus {
-  source: 'self_made' | 'external';
+  source: LongevitySource;
   bonus: number;
   entered: boolean;
   bronze_cord: number;

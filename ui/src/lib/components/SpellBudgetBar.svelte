@@ -68,6 +68,7 @@
       <input
         type="number"
         min="1"
+        max="4294967295"
         step="1"
         aria-label={store.t('spell-levels-base-label')}
         placeholder={String(profileBase)}

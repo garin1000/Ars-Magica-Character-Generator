@@ -863,6 +863,51 @@ describe('integer clamps at the Tauri boundary', () => {
     store.setCharacteristic('sta', -200);
     expect(store.entity.characteristics?.sta).toBe(-128);
   });
+
+  // A General spell's level is the entity's tightest numeric field (u8), and one
+  // stray digit on a 25 or 50 lands past it.
+  it('clamps the u8-backed General spell level, keeping the minimum of 1', () => {
+    store.addSpell('spell.aegis_of_the_hearth', 5);
+    store.setSpellLevelAt(0, 256);
+    expect(store.entity.spells?.[0].level).toBe(255);
+    store.setSpellLevelAt(0, 0);
+    expect(store.entity.spells?.[0].level).toBe(1);
+    store.setSpellLevelAt(0, Number('-'));
+    expect(store.entity.spells?.[0].level).toBe(1);
+  });
+
+  it('clamps the u32-backed age, apparent age and spell-levels override', () => {
+    store.setAge(5e9);
+    expect(store.entity.age).toBe(4294967295);
+    store.setApparentAge(5e9);
+    expect(store.entity.apparent_age).toBe(4294967295);
+    store.setSpellLevelsOverride(5e9);
+    expect(store.entity.spell_levels_override).toBe(4294967295);
+    // The non-positive value still clears the field instead of clamping to 0.
+    store.setAge(0);
+    expect(store.entity.age).toBeNull();
+    store.setApparentAge(-3);
+    expect(store.entity.apparent_age).toBeNull();
+    store.setSpellLevelsOverride(-3);
+    expect(store.entity.spell_levels_override).toBeNull();
+  });
+
+  it('clamps the i32-backed birth year and aging-log year at both ends', () => {
+    store.setBirthYear(3e9);
+    expect(store.entity.birth_year).toBe(2147483647);
+    store.setBirthYear(-3e9);
+    expect(store.entity.birth_year).toBe(-2147483648);
+    // An empty field still clears it rather than clamping to 0.
+    store.setBirthYear(null);
+    expect(store.entity.birth_year).toBeNull();
+    store.addAgingLogEntry();
+    store.setAgingLogEntryYear(0, 3e9);
+    expect(store.entity.aging_log?.[0].year).toBe(2147483647);
+    store.setAgingLogEntryYear(0, -3e9);
+    expect(store.entity.aging_log?.[0].year).toBe(-2147483648);
+    store.setAgingLogEntryYear(0, Number('-'));
+    expect(store.entity.aging_log?.[0].year).toBe(0);
+  });
 });
 
 // A rejected validate must not latch the error banner on for the rest of the
@@ -903,6 +948,27 @@ describe('revalidate error latching', () => {
     finishStale({ issues: [] });
     await stale;
     expect(store.error).toEqual({ kind: 'invalid_entity' });
+  });
+
+  // The mirror case: a direct `revalidate()` does not cancel a pending debounced
+  // one, so a rejection from the pass the user already corrected can land after
+  // the corrected pass succeeded. It must not raise a banner for a payload that
+  // no longer exists.
+  it('does not let a stale rejection raise an error after a newer pass succeeded', async () => {
+    let failStale: (reason: unknown) => void = () => {};
+    vi.mocked(ipc.validateEntity).mockReturnValueOnce(
+      new Promise((_resolve, reject) => {
+        failStale = reject;
+      }) as ReturnType<typeof ipc.validateEntity>,
+    );
+    const stale = store.revalidate();
+
+    await store.revalidate();
+    expect(store.error).toBeNull();
+
+    failStale({ kind: 'invalid_entity' });
+    await stale;
+    expect(store.error).toBeNull();
   });
 });
 
