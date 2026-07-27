@@ -127,6 +127,13 @@ it, every agent MUST:
   `git diff`, so no rule matches and it is denied just the same. There is no workaround
   to find here, because none is needed: you start in the repo root, so write the command
   bare — `git diff --stat -- crates/`, `git log --oneline b49d49b..HEAD`.
+- **Every file argument must be inside the repo — including `/dev/null`.** File-reading
+  commands (`grep`, `rg`, `cat`, `head`, `tail`, `od`, `jq`, `git`, …) have their
+  positional file arguments extracted and containment-checked against the working
+  directory; a path outside it is refused with *"Path is outside allowed working
+  directories"* however well allowlisted the command is. `/dev/null` is exempt only as a
+  redirect target, never as a file to read — `grep -n "PLAN.md" -m2 /dev/null` is denied.
+  Never pass a placeholder file argument; just omit it.
 - **Write artifacts with the Write tool, not shell redirects.** Redirects (`>`, `>>`,
   `tee`) are not allowlisted. To create `tmp/review-findings.json` or any file, use the
   Write/Edit tools (they work in-repo and under `tmp/` without approval). This includes
