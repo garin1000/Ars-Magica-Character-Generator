@@ -1301,6 +1301,13 @@ pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBo
 /// inference**: each Flaw halves the Lab Total and neither carves out the other, but
 /// no passage states the interaction. The order is immaterial — [`halve`] truncates
 /// toward zero — so it is fixed here as base → Deficient → Difficult.
+///
+/// **Sibling formula:** [`lab_totals`] builds the same addend list for every
+/// `(Technique, Form)` cell. This is deliberately not that grid's Creo/Corpus cell:
+/// the whole 5 × 10 grid would be built to answer a one-cell question, and the two
+/// figures legitimately differ — no focus figure applies to a Longevity Ritual, and
+/// the `LabLongevity` halving applies to nothing else. Keep the shared addend list
+/// (Int + Magic Theory + Technique + Form + aura + `lab_mod`) in step across both.
 fn creo_corpus_lab_total(entity: &Entity, ruleset: &Ruleset) -> (i32, bool) {
     let mods = in_play_mods(entity, ruleset);
     let base = characteristic(entity, ruleset, Characteristic::Int)
@@ -2370,6 +2377,92 @@ mod tests {
         assert_eq!(cap.form.as_str(), "art.corpus");
     }
 
+    /// A ruleset with the given type profile and Art catalogue, for the empty and
+    /// **one-sided** Art catalogues the core fixture cannot express. Catalogue size
+    /// and shape are data, never code (CLAUDE.md), so the engine must cope with a
+    /// ruleset that defines no Art of a class instead of assuming the core rules'
+    /// 5 × 10 grid.
+    fn ruleset_with_profile_and_arts(type_profiles: &str, arts: Option<&str>) -> Ruleset {
+        Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: "[]",
+            type_profiles,
+            abilities: None,
+            arts,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: None,
+            characteristics: None,
+        })
+        .unwrap()
+    }
+
+    /// The magus profile of [`ruleset`], on its own.
+    const MAGUS_PROFILE: &str = r#"[
+      { "id": "magus", "is_magus": true,
+        "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["general", "hermetic"], "forbidden_categories": [],
+        "required_traits": [], "forbidden_traits": [], "gift_policy": "required",
+        "gift_categories": [], "creation_phases": ["concept"] }
+    ]"#;
+
+    /// A magus-capable ruleset that ships **no Art catalogue at all** — neither
+    /// Technique nor Form. `validate_integrity` demands the engine-dereferenced Arts
+    /// (Creo, Corpus) only once a ruleset ships Arts, so this is a legal ruleset.
+    fn magus_ruleset_without_arts() -> Ruleset {
+        ruleset_with_profile_and_arts(MAGUS_PROFILE, None)
+    }
+
+    /// An Art catalogue with **no Technique** yields no capacity at all — distinct
+    /// from `talisman_capacity_is_zero_and_deterministic_without_art_scores`, where
+    /// the full catalogue is present and only the magus's *scores* are absent.
+    /// `highest_art` folds an empty id list to `None`, so the capacity is `None`
+    /// rather than a half-answer naming an Art the ruleset does not define.
+    #[test]
+    fn talisman_capacity_is_absent_when_the_art_catalogue_defines_no_technique() {
+        let rs = magus_ruleset_without_arts();
+        assert!(
+            rs.art_ids_of(ArtType::Technique).is_empty(),
+            "fixture defines no Technique"
+        );
+        let mut e = magus();
+        e.talisman = Some(Talisman::default());
+        assert!(talisman_capacity(&e, &rs).is_none());
+        assert!(derived_totals(&e, &rs).talisman_capacity.is_none());
+    }
+
+    /// The sibling branch: Techniques defined, but **no Form**. Such a catalogue can
+    /// only belong to a ruleset with no magus profile — `validate_integrity` would
+    /// otherwise insist on Corpus, a Form — so the fixture declares a non-magus
+    /// profile and `talisman_capacity` is exercised directly (`derived_totals` gates
+    /// the capacity on `is_magus`).
+    #[test]
+    fn talisman_capacity_is_absent_when_the_art_catalogue_defines_no_form() {
+        let grog_profile = r#"[
+          { "id": "grog", "is_magus": false,
+            "budget": { "virtue_points": 3, "flaw_points": 3 },
+            "permitted_categories": ["general"], "forbidden_categories": [],
+            "required_traits": [], "forbidden_traits": [], "gift_policy": "forbidden",
+            "gift_categories": [], "creation_phases": ["concept"] }
+        ]"#;
+        let techniques_only = r#"{
+          "advancement": [{ "score": 1, "total_xp": 1 }],
+          "arts": [{ "id": "art.creo", "art_type": "technique" }]
+        }"#;
+        let rs = ruleset_with_profile_and_arts(grog_profile, Some(techniques_only));
+        assert!(!rs.art_ids_of(ArtType::Technique).is_empty());
+        assert!(
+            rs.art_ids_of(ArtType::Form).is_empty(),
+            "one-sided catalogue"
+        );
+        let mut e = grog();
+        e.talisman = Some(Talisman::default());
+        assert!(talisman_capacity(&e, &rs).is_none());
+    }
+
     /// A familiar with a Magic Might and Personality Traits, for the read-out
     /// tests. Cords 3/2/1 cost 30 + 15 + 5 = 50 points.
     fn statblock_familiar() -> Familiar {
@@ -2557,6 +2650,21 @@ mod tests {
         let mut m = magus();
         m.familiar = Some(statblock_familiar());
         assert!(derived_totals(&m, &rs).familiar.is_some());
+    }
+
+    /// An empty Art catalogue makes the Lab-Total grid empty, and the read-out is
+    /// then `None` — the binding numbers are meaningful only beside a Lab Total, so
+    /// no partial read-out is emitted. This is the empty-*catalogue* case, not the
+    /// zero-*score* case `familiar_readout_reports_a_lab_total_that_falls_short`
+    /// covers (there the grid is full and the best cell is simply 0).
+    #[test]
+    fn familiar_readout_is_absent_when_the_art_catalogue_yields_no_lab_totals() {
+        let rs = magus_ruleset_without_arts();
+        let mut e = magus();
+        e.familiar = Some(statblock_familiar());
+        assert!(lab_totals(&e, &rs).is_empty(), "no Arts, so no grid cell");
+        assert!(familiar_readout(&e, &rs).is_none());
+        assert!(derived_totals(&e, &rs).familiar.is_none());
     }
 
     /// `Ruleset::art_ids_of` returns the ids of one Art class, sorted. The sort is

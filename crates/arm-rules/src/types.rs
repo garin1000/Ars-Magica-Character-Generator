@@ -1753,16 +1753,24 @@ impl fmt::Display for Realm {
 
 /// A supernatural being's **Might Score** and the Realm it is aligned to. A Might
 /// Score grants blanket Magic Resistance equal to the score (Realms of Power -
-/// Magic.md:1472). Only the choice is stored; the effective score (base + Virtue
-/// grants) and its Magic Resistance are derived. Optional on [`Entity`]: a being
-/// may enter a base score (e.g. Strong Angelic Heritage's Divine Might = age ÷ 20,
-/// which the engine cannot fix as a constant grant), which Virtue [`Effect::MightGrant`]s
-/// of the same Realm add to. Source: Realms of Power - Magic.md:1470-1472.
+/// Magic.md:1472). Only the choice is stored; the effective score and its Magic
+/// Resistance are derived. Source: Realms of Power - Magic.md:1470-1472.
+///
+/// The struct is shared by two holders, and Virtue grants apply to only one of them:
+/// - [`Entity::might`] — the *character's* own Might. A being may enter a base score
+///   (e.g. Strong Angelic Heritage's Divine Might = age ÷ 20, which the engine cannot
+///   fix as a constant grant), which Virtue [`Effect::MightGrant`]s of the same Realm
+///   add to; [`crate::effective::effective_might`] sums the two.
+/// - [`Familiar::might`] — the familiar's **own** Magic Might. No Virtue grant ever
+///   stacks on it: `effective_might` reads only `Entity::might`, and the magus's
+///   Virtues are not the beast's.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct MightScore {
     /// The Realm the being's Might is aligned to.
     pub realm: Realm,
-    /// The base Might Score the player entered (Virtue grants add on top).
+    /// The Might Score the player entered. For [`Entity::might`] this is the *base*
+    /// score, which Virtue grants of the same Realm add to; for [`Familiar::might`]
+    /// it is the whole score, since nothing is ever granted on top.
     pub score: u8,
 }
 
@@ -2188,7 +2196,10 @@ pub struct Entity {
     /// item-level budget. Kept sorted via [`Entity::normalize`]. Defaults to empty.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub devices: Vec<EnchantedDevice>,
-    /// The magus's familiar and its bond-cord scores. `None` when there is none.
+    /// The magus's familiar: a full creature statblock — the beast, its own Magic
+    /// Might, Characteristics, Size, Personality Traits, the three bond cords and
+    /// the powers invested in the bond. See [`Familiar`] for what the statblock
+    /// covers and what it deliberately defers. `None` when there is none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub familiar: Option<Familiar>,
     /// The magus's talisman — identity, attunements and instilled effects.
@@ -2329,10 +2340,12 @@ pub struct Entity {
 /// [`Entity::talisman`], the magus's talisman as an *item* (identity +
 /// attunements + instilled effects). This is a field **move**, not an addition,
 /// so [`load_entity_migrating`] folds any legacy list into the new
-/// `talisman.attunements`. The fold is lossless — the attunements are carried
-/// over verbatim, and the identity/effects the old shape never stored stay empty
-/// rather than being invented — so unlike the `aging_reductions` migration it
-/// needs no [`LoadedEntity`] notice flag.
+/// `talisman.attunements`. The fold neither infers nor discards: the attunements are
+/// carried over verbatim, the identity/effects the old shape never stored stay empty
+/// rather than being invented, and a legacy list that cannot deserialize fails the
+/// load instead of quietly folding in nothing. So unlike the `aging_reductions`
+/// migration — which *infers* a point total — it needs no [`LoadedEntity`] notice
+/// flag.
 pub const SCHEMA_VERSION: u32 = 14;
 
 impl Entity {
@@ -2459,19 +2472,32 @@ fn minimal_aging_points_for_drops(bought: i32, drops: u32) -> u32 {
 /// - A save carrying **both** keys keeps the new `talisman` and drops the legacy
 ///   list unmerged. Merging would duplicate attunements a player already moved
 ///   across by hand, and the new shape is the more specific statement of intent.
-fn fold_legacy_talisman(entity: &mut Entity, legacy: serde_json::Value) {
+///   The legacy list is then not even parsed — it is discarded by that decision, so
+///   its shape cannot matter.
+///
+/// A legacy list that **cannot** deserialize (a `bonus` outside `i8`, a bonus
+/// written as a JSON string, `null` in place of the list) is an error, propagated to
+/// [`load_entity_migrating`]'s caller. Swallowing it would fold in nothing while the
+/// caller still stamps the current [`SCHEMA_VERSION`], so the load would report
+/// success and the next save would rewrite the file without the legacy key —
+/// destroying the attunements. Failing the load leaves the file untouched.
+fn fold_legacy_talisman(
+    entity: &mut Entity,
+    legacy: serde_json::Value,
+) -> Result<(), serde_json::Error> {
     if entity.talisman.is_some() {
-        return;
+        return Ok(());
     }
-    let attunements: Vec<TalismanAttunement> = serde_json::from_value(legacy).unwrap_or_default();
+    let attunements: Vec<TalismanAttunement> = serde_json::from_value(legacy)?;
     if attunements.is_empty() {
-        return;
+        return Ok(());
     }
     entity.talisman = Some(Talisman {
         description: String::new(),
         attunements,
         effects: Vec::new(),
     });
+    Ok(())
 }
 
 /// Deserializes an entity from JSON, applying backward-compatible save
@@ -2494,6 +2520,11 @@ fn fold_legacy_talisman(entity: &mut Entity, legacy: serde_json::Value) {
 /// hand-edited save may carry any `schema_version` alongside either shape. Plain
 /// `serde` deserialization still works for current saves; this wrapper only adds
 /// the folds and a migration report.
+///
+/// Either legacy value failing to deserialize fails the **whole load**, exactly as a
+/// malformed current field does. A fold that quietly yielded nothing would still get
+/// the version stamped, so the load would look successful and the next save would
+/// drop the legacy key — losing the data permanently.
 pub fn load_entity_migrating(json: &str) -> Result<LoadedEntity, serde_json::Error> {
     let mut value: serde_json::Value = serde_json::from_str(json)?;
     let legacy = value
@@ -2505,7 +2536,7 @@ pub fn load_entity_migrating(json: &str) -> Result<LoadedEntity, serde_json::Err
     let mut entity: Entity = serde_json::from_value(value)?;
 
     if let Some(legacy_attunements) = legacy_attunements {
-        fold_legacy_talisman(&mut entity, legacy_attunements);
+        fold_legacy_talisman(&mut entity, legacy_attunements)?;
         entity.schema_version = SCHEMA_VERSION;
     }
 
@@ -2513,9 +2544,11 @@ pub fn load_entity_migrating(json: &str) -> Result<LoadedEntity, serde_json::Err
     if let Some(legacy) = legacy {
         // The save predates schema 10 (manual `aging_reductions`); fold it in and
         // bump the version. Current saves (no legacy field) are left untouched so
-        // a load is a faithful, byte-stable round trip.
-        let reductions: BTreeMap<Characteristic, u8> =
-            serde_json::from_value(legacy).unwrap_or_default();
+        // a load is a faithful, byte-stable round trip. A map that cannot
+        // deserialize fails the load for the same reason as the talisman list: a
+        // silently empty fold would still bump the version, and the next save would
+        // drop the key.
+        let reductions: BTreeMap<Characteristic, u8> = serde_json::from_value(legacy)?;
         for (characteristic, drops) in reductions {
             if drops == 0 {
                 continue;
@@ -3968,9 +4001,10 @@ mod tests {
     }
 
     /// A legacy save carrying the flat `talisman_attunements` list migrates into
-    /// `Entity.talisman`: the attunements are carried over verbatim (the fold is
-    /// lossless, unlike the aging one), the legacy key is dropped, and the schema
-    /// is bumped to 14.
+    /// `Entity.talisman`: the attunements are carried over verbatim (nothing is
+    /// inferred, unlike the aging fold), the legacy key is dropped, and the schema
+    /// is bumped to 14. A list that cannot deserialize instead fails the load — see
+    /// `legacy_talisman_attunements_that_cannot_deserialize_fail_the_load`.
     #[test]
     fn legacy_talisman_attunements_migrate_into_talisman() {
         let old = r#"{
@@ -4042,6 +4076,73 @@ mod tests {
         assert_eq!(talisman.attunements.len(), 1, "legacy row not merged in");
         assert_eq!(talisman.attunements[0].description, "Warding");
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+    }
+
+    /// A legacy `talisman_attunements` list that cannot deserialize fails the load
+    /// **loudly**. Silently folding it into an empty list would create no talisman
+    /// while the caller still stamps the current `SCHEMA_VERSION`, so the next save
+    /// would rewrite the file without the legacy key and the attunements would be
+    /// gone for good. A failed load leaves the file on disk untouched.
+    #[test]
+    fn legacy_talisman_attunements_that_cannot_deserialize_fail_the_load() {
+        // `bonus` is out of `i8` range, so `TalismanAttunement` cannot deserialize.
+        let broken = r#"{
+          "schema_version": 13,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "talisman_attunements": [
+            { "description": "Projecting bolts and missiles", "bonus": 3000 }
+          ]
+        }"#;
+        assert!(
+            load_entity_migrating(broken).is_err(),
+            "a malformed legacy attunement list must not load as an empty talisman"
+        );
+
+        // The same for a bonus written as a JSON string, and for a null list.
+        let stringly = r#"{
+          "schema_version": 13,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "talisman_attunements": [{ "description": "Warding", "bonus": "5" }]
+        }"#;
+        assert!(load_entity_migrating(stringly).is_err());
+
+        let nulled = r#"{
+          "schema_version": 13,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "talisman_attunements": null
+        }"#;
+        assert!(load_entity_migrating(nulled).is_err());
+    }
+
+    /// The same guarantee for the older `aging_reductions` fold: a legacy map that
+    /// cannot deserialize (an out-of-`u8` drop count, an unknown Characteristic key)
+    /// fails the load instead of folding in nothing and bumping the version.
+    #[test]
+    fn legacy_aging_reductions_that_cannot_deserialize_fail_the_load() {
+        let out_of_range = r#"{
+          "schema_version": 9,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "characteristics": { "com": 2 },
+          "aging_reductions": { "com": 300 }
+        }"#;
+        assert!(load_entity_migrating(out_of_range).is_err());
+
+        let unknown_key = r#"{
+          "schema_version": 9,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "aging_reductions": { "cun": 1 }
+        }"#;
+        assert!(load_entity_migrating(unknown_key).is_err());
     }
 
     /// A slice-5e v9 save that predates the 5g fields still loads: the additive
