@@ -15,7 +15,7 @@ use crate::grant::{Grant, open_pick_satisfies};
 use crate::ruleset::Ruleset;
 use crate::types::{
     CategoryCap, Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind,
-    Magnitude, ParameterDomain, PointItem, Prereq, ValidationMode,
+    Magnitude, ParameterDomain, PointItem, Prereq, Selection, ValidationMode,
 };
 
 mod aging;
@@ -1113,6 +1113,9 @@ mod tests {
           "parameters": [{ "key": "art", "type": "ref", "domain": "art" }] },
         { "id": "virtue.self_confident", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
           "category": "general", "entity_kinds": ["character"] },
+        { "id": "virtue.great_characteristic", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
+          "category": "general", "entity_kinds": ["character"],
+          "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }] },
         { "id": "virtue.wealthy", "kind": "virtue", "classification": "narrative", "magnitude": "major",
           "category": "general", "entity_kinds": ["character"] },
         { "id": "flaw.driven", "kind": "flaw", "classification": "narrative", "magnitude": "minor",
@@ -1283,6 +1286,51 @@ mod tests {
                 && !codes.contains(&"house_choice_unresolved".to_string()),
             "a Minor Virtue pick must satisfy the Open grant: {:?}",
             result.issues
+        );
+    }
+
+    /// An Open grant pick of a parameterized Virtue must name its parameter — the
+    /// grant is unresolved in practice while "(Characteristic)" is still blank, so
+    /// the pick gets the same parameter checks a bought selection gets.
+    #[test]
+    fn an_open_house_pick_missing_its_param_errors() {
+        let rs = rs_for_house_validation();
+        let mut entity = magus_with_house("house.jerbiton");
+        entity.house_choices.insert(
+            "jerbiton_virtue".to_string(),
+            sel("virtue.great_characteristic"),
+        );
+
+        let result = validate(&entity, &rs);
+        assert!(
+            codes(&result).contains(&ValidationIssue::CODE_MISSING_PARAM.to_string()),
+            "a parameterized Open pick with no param should error missing_param: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn an_open_house_pick_with_resolving_param_is_clean() {
+        let rs = rs_for_house_validation();
+        let mut entity = magus_with_house("house.jerbiton");
+        entity.house_choices.insert(
+            "jerbiton_virtue".to_string(),
+            Selection::with_params(
+                Id::new("virtue.great_characteristic"),
+                BTreeMap::from([("characteristic".into(), Id::new("characteristic.per"))]),
+            ),
+        );
+
+        let result = validate(&entity, &rs);
+        let param_codes: Vec<&String> = result
+            .issues
+            .iter()
+            .map(|i| &i.code)
+            .filter(|c| c.ends_with("_param") || c.as_str() == "unknown_param_value")
+            .collect();
+        assert!(
+            param_codes.is_empty(),
+            "a resolving param on an Open pick should raise no parameter issue: {param_codes:?}"
         );
     }
 
@@ -4944,6 +4992,9 @@ mod tests {
               "category": "supernatural", "entity_kinds": ["character"] },
             { "id": "virtue.demonic_powers", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
               "category": "supernatural", "entity_kinds": ["character"] },
+            { "id": "virtue.demonic_mark", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
+              "category": "supernatural", "entity_kinds": ["character"],
+              "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }] },
             { "id": "virtue.demonic_blood", "kind": "virtue", "classification": "narrative", "magnitude": "major",
               "category": "supernatural", "entity_kinds": ["character"] },
             { "id": "flaw.tragic_life", "kind": "flaw", "classification": "narrative", "magnitude": "major",
@@ -5163,6 +5214,23 @@ mod tests {
         assert_eq!(
             issue.args.get("item").map(String::as_str),
             Some("flaw.optimistic")
+        );
+    }
+
+    /// The Mythic-type Open grant validates its pick's parameters too, exactly as
+    /// the House Open grant does (same machinery, same issue codes).
+    #[test]
+    fn an_open_mythic_pick_missing_its_param_errors() {
+        let rs = mythic_ruleset();
+        let mut e = mythic_entity("mythic_type.open_child");
+        e.mythic_choices.insert(
+            "open_child_virtue".to_string(),
+            Selection::new(Id::new("virtue.demonic_mark")),
+        );
+        let codes = all_codes(&validate(&e, &rs));
+        assert!(
+            codes.contains(&ValidationIssue::CODE_MISSING_PARAM.to_string()),
+            "a parameterized mythic Open pick with no param should error: {codes:?}"
         );
     }
 

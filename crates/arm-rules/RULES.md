@@ -1211,9 +1211,17 @@ migration code; `load_entity_migrating` is untouched). Bumped `SCHEMA_VERSION`
   `warping_fill_ineligible` (WarpingGrant item), `warping_fill_excess` (a fill keyed
   to a slot not owed). Surfaced to the UI via `EffectiveScores.warping_owed` +
   `warping_owed_grants`; rendered in `CharacterDetails.svelte` (hidden for magi,
-  whose owed-grant list is empty) with pickers filtered to eligible items. Labels
-  via Fluent `warping-owed-*` / `issue-warping_*` (DE "Verzerrung", per the
+  whose owed-grant list is empty) with pickers filtered to eligible items, grouped
+  per owed kind so each slot is labelled with what it expects. Labels via Fluent
+  `warping-owed-*` / `warping-slot-*` / `issue-warping_*` (DE "Verzerrung", per the
   glossary).
+- A fill of a **parameterized** item ("Enchanting (Ability)") must also name its
+  parameter: each pick runs through
+  `validation/selections.rs::validate_selection_parameters` — the same
+  `missing_param` / `unexpected_param` / `unknown_param_value` checks bought
+  selections get, shared with the House / Mythic-type `Grant::Open` picks. No new
+  issue codes; the specific *item* a slot is filled with is storyguide judgement
+  (16553-16561 names no list), so nothing beyond the `GrantConstraint` is filtered.
 - **Interpretation notes.** (i) 16553 says "Mundane characters"; this core-only
   slice grants the owed V/F to **all non-magi**. Might-holders (`entity.might`) are
   absolutely immune to warping per 16483 — a flagged interpretation left to the

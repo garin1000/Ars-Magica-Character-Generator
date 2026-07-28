@@ -116,6 +116,10 @@ pub(crate) fn validate_house(
                         Some(pick.item_ref.clone()),
                     ));
                 }
+                // An open pick of a parameterized Virtue must name its parameter,
+                // exactly like a bought selection. (A `Choice` pick carries the
+                // params the ruleset data declares, so it needs no check.)
+                validate_selection_parameters(pick, ruleset, issues);
             }
         }
     }
@@ -212,6 +216,8 @@ pub(crate) fn validate_mythic_type(
                         Some(pick.item_ref.clone()),
                     ));
                 }
+                // Same parameter checks the House Open grant applies.
+                validate_selection_parameters(pick, ruleset, issues);
             }
         }
     }
