@@ -294,43 +294,47 @@
   <section class="region region-selected">
     <h2 class="region-title">{store.t('selections-title')}</h2>
     <div class="selected-frame">
-      <SelectionList columns={selectedColumns}>
-        {#snippet row(item: VfRow)}
-          {#if item.kind === 'sel'}
-            {@const selection = item.selection}
-            {@const index = item.index}
-            {@const pointItem = store.ruleset?.ruleset.point_items[selection.ref]}
-            {@const required = mandatory.has(selection.ref)}
-            <li>
-              <div class="selection-row">
-                {@render nameWrap(selection.ref, selection.params)}
-                {#if required}
-                  <span class="row-marker">{store.t('selection-required-label')}</span>
-                {:else}
-                  <button
-                    type="button"
-                    class="icon-btn"
-                    onclick={() => store.removeSelectionAt(index)}
-                    data-testid="remove-{selection.ref}-{index}"
-                  >
-                    -
-                  </button>
+      <!-- The frame carries the border and its padding; this inner box does the
+           scrolling, so the padding stays a gap the rows cannot scroll into. -->
+      <div class="selected-scroll">
+        <SelectionList columns={selectedColumns}>
+          {#snippet row(item: VfRow)}
+            {#if item.kind === 'sel'}
+              {@const selection = item.selection}
+              {@const index = item.index}
+              {@const pointItem = store.ruleset?.ruleset.point_items[selection.ref]}
+              {@const required = mandatory.has(selection.ref)}
+              <li>
+                <div class="selection-row">
+                  {@render nameWrap(selection.ref, selection.params)}
+                  {#if required}
+                    <span class="row-marker">{store.t('selection-required-label')}</span>
+                  {:else}
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      onclick={() => store.removeSelectionAt(index)}
+                      data-testid="remove-{selection.ref}-{index}"
+                    >
+                      -
+                    </button>
+                  {/if}
+                </div>
+                {#if pointItem?.parameters && pointItem.parameters.length > 0}
+                  <ParameterPicker {selection} {index} params={pointItem.parameters} />
                 {/if}
-              </div>
-              {#if pointItem?.parameters && pointItem.parameters.length > 0}
-                <ParameterPicker {selection} {index} params={pointItem.parameters} />
-              {/if}
-            </li>
-          {:else}
-            <li data-testid="granted-selection-{item.grant.ref}">
-              <div class="selection-row">
-                {@render nameWrap(item.grant.ref, item.grant.params)}
-                <span class="row-marker">{store.t('house-granted-label')}</span>
-              </div>
-            </li>
-          {/if}
-        {/snippet}
-      </SelectionList>
+              </li>
+            {:else}
+              <li data-testid="granted-selection-{item.grant.ref}">
+                <div class="selection-row">
+                  {@render nameWrap(item.grant.ref, item.grant.params)}
+                  <span class="row-marker">{store.t('house-granted-label')}</span>
+                </div>
+              </li>
+            {/if}
+          {/snippet}
+        </SelectionList>
+      </div>
     </div>
   </section>
 </div>

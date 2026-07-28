@@ -340,171 +340,178 @@
     <section class="region region-selected">
       <h2 class="region-title">{store.t('selections-title')}</h2>
       <div class="selected-frame">
-        <SelectionList columns={selectedColumns}>
-          {#snippet row(item: { selection: SpellSelection; index: number })}
-            {@const chosen = item.selection}
-            {@const i = item.index}
-            <li
-              class:invalid-selection={invalidIds.has(chosen.spell)}
-              use:tooltip={tip(chosen.spell)}
-            >
-              <span class="item-name" data-testid="spell-name-{chosen.spell}-{i}"
-                >{rowLabel(chosen)}</span
+        <!-- The frame carries the border and its padding; this inner box does the
+             scrolling, so the padding stays a gap the rows cannot scroll into. -->
+        <div class="selected-scroll">
+          <SelectionList columns={selectedColumns}>
+            {#snippet row(item: { selection: SpellSelection; index: number })}
+              {@const chosen = item.selection}
+              {@const i = item.index}
+              <li
+                class:invalid-selection={invalidIds.has(chosen.spell)}
+                use:tooltip={tip(chosen.spell)}
               >
-              {#if isParametrized(chosen.spell)}
-                <!-- The target Form of a meta-magic Vim spell — display + identity
+                <span class="item-name" data-testid="spell-name-{chosen.spell}-{i}"
+                  >{rowLabel(chosen)}</span
+                >
+                {#if isParametrized(chosen.spell)}
+                  <!-- The target Form of a meta-magic Vim spell — display + identity
                      only, so the same spell can be taken once per distinct Form.
                      Mirrors the ParameterPicker Art <select> (groupArtsByType).
                      Forms already used by this spell at this level are greyed so
                      each (spell, level, Form) is takeable only once. -->
-                {@const usedForms = usedSpellForms(
-                  store.entity.spells ?? [],
-                  chosen.spell,
-                  chosen.level,
-                  i,
-                )}
-                <select
-                  aria-label={store.t('param-label-form')}
-                  value={chosen.parameter ?? ''}
-                  onchange={(e) =>
-                    store.setSpellParameterAt(
-                      i,
-                      (e.currentTarget as HTMLSelectElement).value || null,
-                    )}
-                  data-testid="spell-param-{chosen.spell}-{i}"
-                >
-                  <option value="" disabled>{store.t('param-label-form')}</option>
-                  {#each forms as f (f.id)}
-                    <option value={f.id} disabled={usedForms.has(f.id)}
-                      >{artLabel(store.ruleset!, f.id)}</option
-                    >
-                  {/each}
-                </select>
-              {/if}
-              {#if isGeneral(chosen.spell)}
-                <input
-                  type="number"
-                  min="1"
-                  max="255"
-                  step="1"
-                  aria-label={store.t('spell-general-level-label')}
-                  value={chosen.level ?? GENERAL_DEFAULT_LEVEL}
-                  oninput={(e) =>
-                    store.setSpellLevelAt(i, Number((e.currentTarget as HTMLInputElement).value))}
-                  data-testid="spell-level-input-{chosen.spell}-{i}"
-                />
-              {/if}
-              <!-- Spell Mastery is an Ability every magus may buy from the general
+                  {@const usedForms = usedSpellForms(
+                    store.entity.spells ?? [],
+                    chosen.spell,
+                    chosen.level,
+                    i,
+                  )}
+                  <select
+                    aria-label={store.t('param-label-form')}
+                    value={chosen.parameter ?? ''}
+                    onchange={(e) =>
+                      store.setSpellParameterAt(
+                        i,
+                        (e.currentTarget as HTMLSelectElement).value || null,
+                      )}
+                    data-testid="spell-param-{chosen.spell}-{i}"
+                  >
+                    <option value="" disabled>{store.t('param-label-form')}</option>
+                    {#each forms as f (f.id)}
+                      <option value={f.id} disabled={usedForms.has(f.id)}
+                        >{artLabel(store.ruleset!, f.id)}</option
+                      >
+                    {/each}
+                  </select>
+                {/if}
+                {#if isGeneral(chosen.spell)}
+                  <input
+                    type="number"
+                    min="1"
+                    max="255"
+                    step="1"
+                    aria-label={store.t('spell-general-level-label')}
+                    value={chosen.level ?? GENERAL_DEFAULT_LEVEL}
+                    oninput={(e) =>
+                      store.setSpellLevelAt(i, Number((e.currentTarget as HTMLInputElement).value))}
+                    data-testid="spell-level-input-{chosen.spell}-{i}"
+                  />
+                {/if}
+                <!-- Spell Mastery is an Ability every magus may buy from the general
                    apprenticeship pool (Core:9518), so the spinner shows whenever the
                    advancement table can price it — not only with Mastered Spells /
                    Flawless Magic. This picker is already magus-and-Spells-tab-only. -->
-              {#if masteryMax > 0}
-                <span class="spinner" data-testid="spell-mastery-{chosen.spell}-{i}">
-                  <span class="spinner-label">{store.t('spell-mastery-label')}</span>
-                  <button
-                    type="button"
-                    class="icon-btn"
-                    aria-label={store.t('spell-mastery-decrement')}
-                    disabled={(chosen.mastery ?? 0) <= 0}
-                    onclick={() => store.adjustSpellMasteryAt(i, -1, masteryMax)}
-                    data-testid="spell-mastery-dec-{chosen.spell}-{i}"
-                  >
-                    -
-                  </button>
-                  <span class="spinner-value" data-testid="spell-mastery-score-{chosen.spell}-{i}">
-                    {chosen.mastery ?? 0}
-                  </span>
-                  <button
-                    type="button"
-                    class="icon-btn"
-                    aria-label={store.t('spell-mastery-increment')}
-                    disabled={(chosen.mastery ?? 0) >= masteryMax}
-                    onclick={() => store.adjustSpellMasteryAt(i, 1, masteryMax)}
-                    data-testid="spell-mastery-inc-{chosen.spell}-{i}"
-                  >
-                    +
-                  </button>
-                  {#if effectiveSpellMastery(chosen.mastery, masteryFloor) !== (chosen.mastery ?? 0)}
-                    <span class="eff-slot">
-                      <span class="eff-badge" data-testid="spell-mastery-eff-{chosen.spell}-{i}">
-                        {store.t('effective-score', {
-                          score: String(effectiveSpellMastery(chosen.mastery, masteryFloor)),
-                        })}
-                      </span>
+                {#if masteryMax > 0}
+                  <span class="spinner" data-testid="spell-mastery-{chosen.spell}-{i}">
+                    <span class="spinner-label">{store.t('spell-mastery-label')}</span>
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      aria-label={store.t('spell-mastery-decrement')}
+                      disabled={(chosen.mastery ?? 0) <= 0}
+                      onclick={() => store.adjustSpellMasteryAt(i, -1, masteryMax)}
+                      data-testid="spell-mastery-dec-{chosen.spell}-{i}"
+                    >
+                      -
+                    </button>
+                    <span
+                      class="spinner-value"
+                      data-testid="spell-mastery-score-{chosen.spell}-{i}"
+                    >
+                      {chosen.mastery ?? 0}
                     </span>
-                  {:else}
-                    <span class="eff-slot" aria-hidden="true"></span>
-                  {/if}
-                </span>
-              {/if}
-              <!-- Spell Mastery special abilities: one may be chosen per effective
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      aria-label={store.t('spell-mastery-increment')}
+                      disabled={(chosen.mastery ?? 0) >= masteryMax}
+                      onclick={() => store.adjustSpellMasteryAt(i, 1, masteryMax)}
+                      data-testid="spell-mastery-inc-{chosen.spell}-{i}"
+                    >
+                      +
+                    </button>
+                    {#if effectiveSpellMastery(chosen.mastery, masteryFloor) !== (chosen.mastery ?? 0)}
+                      <span class="eff-slot">
+                        <span class="eff-badge" data-testid="spell-mastery-eff-{chosen.spell}-{i}">
+                          {store.t('effective-score', {
+                            score: String(effectiveSpellMastery(chosen.mastery, masteryFloor)),
+                          })}
+                        </span>
+                      </span>
+                    {:else}
+                      <span class="eff-slot" aria-hidden="true"></span>
+                    {/if}
+                  </span>
+                {/if}
+                <!-- Spell Mastery special abilities: one may be chosen per effective
                    mastery level (Core:9524-9526). The add-picker hides once the
                    count reaches the effective mastery; a non-repeatable ability
                    already chosen is disabled in the list, a repeatable one
                    (Precise/Quick/Quiet Casting) stays selectable again. -->
-              {#if effectiveSpellMastery(chosen.mastery, masteryFloor) > 0 && masteryAbilityCatalogue.length > 0}
-                {@const effMastery = effectiveSpellMastery(chosen.mastery, masteryFloor)}
-                {@const chosenAbilities = chosen.mastery_abilities ?? []}
-                <span
-                  class="mastery-abilities"
-                  data-testid="spell-mastery-abilities-{chosen.spell}-{i}"
-                >
-                  <span class="spinner-label">{store.t('spell-mastery-abilities-label')}</span>
-                  {#each chosenAbilities as abilityId, ai (`${abilityId}:${ai}`)}
-                    <span
-                      class="ability-chip"
-                      use:tooltip={masteryAbilityTip(abilityId)}
-                      data-testid="spell-mastery-ability-{chosen.spell}-{i}-{ai}"
-                    >
-                      <span class="chip-name">{masteryAbilityName(abilityId)}</span>
-                      <button
-                        type="button"
-                        class="icon-btn"
-                        aria-label={store.t('spell-mastery-ability-remove')}
-                        onclick={() => store.removeMasteryAbilityAt(i, ai)}
-                        data-testid="spell-mastery-ability-remove-{chosen.spell}-{i}-{ai}"
+                {#if effectiveSpellMastery(chosen.mastery, masteryFloor) > 0 && masteryAbilityCatalogue.length > 0}
+                  {@const effMastery = effectiveSpellMastery(chosen.mastery, masteryFloor)}
+                  {@const chosenAbilities = chosen.mastery_abilities ?? []}
+                  <span
+                    class="mastery-abilities"
+                    data-testid="spell-mastery-abilities-{chosen.spell}-{i}"
+                  >
+                    <span class="spinner-label">{store.t('spell-mastery-abilities-label')}</span>
+                    {#each chosenAbilities as abilityId, ai (`${abilityId}:${ai}`)}
+                      <span
+                        class="ability-chip"
+                        use:tooltip={masteryAbilityTip(abilityId)}
+                        data-testid="spell-mastery-ability-{chosen.spell}-{i}-{ai}"
                       >
-                        -
-                      </button>
-                    </span>
-                  {/each}
-                  {#if chosenAbilities.length < effMastery}
-                    <select
-                      aria-label={store.t('spell-mastery-ability-add')}
-                      value=""
-                      onchange={(e) => {
-                        const sel = e.currentTarget as HTMLSelectElement;
-                        if (sel.value) {
-                          store.addMasteryAbilityAt(i, sel.value);
-                          sel.value = '';
-                        }
-                      }}
-                      data-testid="spell-mastery-ability-add-{chosen.spell}-{i}"
-                    >
-                      <option value="" disabled>{store.t('spell-mastery-ability-add')}</option>
-                      {#each masteryAbilityCatalogue as ma (ma.id)}
-                        <option
-                          value={ma.id}
-                          disabled={!ma.repeatable && chosenAbilities.includes(ma.id)}
-                          >{masteryAbilityName(ma.id)}</option
+                        <span class="chip-name">{masteryAbilityName(abilityId)}</span>
+                        <button
+                          type="button"
+                          class="icon-btn"
+                          aria-label={store.t('spell-mastery-ability-remove')}
+                          onclick={() => store.removeMasteryAbilityAt(i, ai)}
+                          data-testid="spell-mastery-ability-remove-{chosen.spell}-{i}-{ai}"
                         >
-                      {/each}
-                    </select>
-                  {/if}
-                </span>
-              {/if}
-              <button
-                type="button"
-                class="icon-btn"
-                aria-label={store.t('spell-remove')}
-                onclick={() => store.removeSpellAt(i)}
-                data-testid="spell-remove-{chosen.spell}-{i}"
-              >
-                -
-              </button>
-            </li>
-          {/snippet}
-        </SelectionList>
+                          -
+                        </button>
+                      </span>
+                    {/each}
+                    {#if chosenAbilities.length < effMastery}
+                      <select
+                        aria-label={store.t('spell-mastery-ability-add')}
+                        value=""
+                        onchange={(e) => {
+                          const sel = e.currentTarget as HTMLSelectElement;
+                          if (sel.value) {
+                            store.addMasteryAbilityAt(i, sel.value);
+                            sel.value = '';
+                          }
+                        }}
+                        data-testid="spell-mastery-ability-add-{chosen.spell}-{i}"
+                      >
+                        <option value="" disabled>{store.t('spell-mastery-ability-add')}</option>
+                        {#each masteryAbilityCatalogue as ma (ma.id)}
+                          <option
+                            value={ma.id}
+                            disabled={!ma.repeatable && chosenAbilities.includes(ma.id)}
+                            >{masteryAbilityName(ma.id)}</option
+                          >
+                        {/each}
+                      </select>
+                    {/if}
+                  </span>
+                {/if}
+                <button
+                  type="button"
+                  class="icon-btn"
+                  aria-label={store.t('spell-remove')}
+                  onclick={() => store.removeSpellAt(i)}
+                  data-testid="spell-remove-{chosen.spell}-{i}"
+                >
+                  -
+                </button>
+              </li>
+            {/snippet}
+          </SelectionList>
+        </div>
       </div>
     </section>
   </div>

@@ -355,11 +355,25 @@ button:disabled {
   padding-right: 1.1rem;
 }
 
-/* Gold frame around the Selected lists, full height, scrolls its contents. */
+/* Gold frame around the Selected lists, full height. The border and the padding
+   live here, but the SCROLLING does not: `overflow` clips at the padding box, so a
+   frame that scrolled itself let its own padding scroll with the content — rows and
+   the panels' opaque background slid right up against the 1px gold border and
+   covered it, which reads as the list bleeding out of the frame. Keeping the frame
+   unscrolled reserves that padding as a gap the content can never enter. Same split
+   as `.region-source .panel` / `.list-scroll` on the source side. */
 .selected-frame {
   border: 1px solid var(--accent);
   border-radius: 10px;
   padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The scrolling area inside the gold frame. */
+.selected-scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   scrollbar-gutter: stable;
 }

@@ -127,49 +127,55 @@
   <section class="region region-selected">
     <h2 class="region-title">{store.t('selections-title')}</h2>
     <div class="selected-frame">
-      <SelectionList columns={selectedColumns}>
-        {#snippet row(item: { slot: EquipmentSlot; index: number })}
-          {@const slot = item.slot}
-          {@const i = item.index}
-          <li>
-            <span class="equipment-name" data-testid="equipment-name-{i}">{nameOf(slot.item)}</span>
-            <label class="checkbox inline">
-              <input
-                type="checkbox"
-                checked={slot.equipped ?? false}
-                onchange={(e) =>
-                  store.setEquipmentEquipped(i, (e.currentTarget as HTMLInputElement).checked)}
-                data-testid="equipment-equipped-{i}"
-              />
-              <span>{store.t('equipment-equipped-label')}</span>
-            </label>
-            {#if specializationApplicable(slot)}
+      <!-- The frame carries the border and its padding; this inner box does the
+           scrolling, so the padding stays a gap the rows cannot scroll into. -->
+      <div class="selected-scroll">
+        <SelectionList columns={selectedColumns}>
+          {#snippet row(item: { slot: EquipmentSlot; index: number })}
+            {@const slot = item.slot}
+            {@const i = item.index}
+            <li>
+              <span class="equipment-name" data-testid="equipment-name-{i}"
+                >{nameOf(slot.item)}</span
+              >
               <label class="checkbox inline">
                 <input
                   type="checkbox"
-                  checked={slot.specialization_applies ?? false}
+                  checked={slot.equipped ?? false}
                   onchange={(e) =>
-                    store.setEquipmentSpecialization(
-                      i,
-                      (e.currentTarget as HTMLInputElement).checked,
-                    )}
-                  data-testid="equipment-specialization-{i}"
+                    store.setEquipmentEquipped(i, (e.currentTarget as HTMLInputElement).checked)}
+                  data-testid="equipment-equipped-{i}"
                 />
-                <span>{store.t('equipment-specialization-label')}</span>
+                <span>{store.t('equipment-equipped-label')}</span>
               </label>
-            {/if}
-            <button
-              type="button"
-              class="icon-btn"
-              aria-label={store.t('equipment-remove')}
-              onclick={() => store.removeEquipmentAt(i)}
-              data-testid="equipment-remove-{i}"
-            >
-              ×
-            </button>
-          </li>
-        {/snippet}
-      </SelectionList>
+              {#if specializationApplicable(slot)}
+                <label class="checkbox inline">
+                  <input
+                    type="checkbox"
+                    checked={slot.specialization_applies ?? false}
+                    onchange={(e) =>
+                      store.setEquipmentSpecialization(
+                        i,
+                        (e.currentTarget as HTMLInputElement).checked,
+                      )}
+                    data-testid="equipment-specialization-{i}"
+                  />
+                  <span>{store.t('equipment-specialization-label')}</span>
+                </label>
+              {/if}
+              <button
+                type="button"
+                class="icon-btn"
+                aria-label={store.t('equipment-remove')}
+                onclick={() => store.removeEquipmentAt(i)}
+                data-testid="equipment-remove-{i}"
+              >
+                ×
+              </button>
+            </li>
+          {/snippet}
+        </SelectionList>
+      </div>
     </div>
   </section>
 </div>
