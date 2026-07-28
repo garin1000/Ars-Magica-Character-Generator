@@ -48,12 +48,12 @@ use crate::characteristics::Characteristic;
 use crate::derived::{combat_totals, encumbrance, fatigue_levels, soak, wound_ranges};
 use crate::effective::{
     confidence, decrepitude_score, effective_ability_score, effective_art_score,
-    effective_characteristic_score, effective_might, effective_spell_mastery, resolved_spell_level,
-    warping, xp_allocation,
+    effective_characteristic_score, effective_might, effective_spell_mastery, entity_grants,
+    resolved_spell_level, warping, xp_allocation,
 };
 use crate::ruleset::{LocalizedRuleset, Ruleset};
 use crate::types::{
-    EnchantedDevice, Entity, EntityKind, Id, ItemKind, MightScore, PersonalityTrait,
+    EnchantedDevice, Entity, EntityKind, Id, ItemKind, MightScore, PersonalityTrait, Selection,
     SupernaturalPower, TalismanEffect,
 };
 use crate::validation::{compute_balance, effective_point_ceilings};
@@ -140,6 +140,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "export-col-penalty",
     "export-col-points",
     "export-col-total",
+    "export-granted",
     "export-items-boons",
     "export-items-hooks",
     "export-no",
@@ -500,36 +501,28 @@ impl<'a> Doc<'a> {
         );
     }
 
-    /// The chosen Virtues/Flaws (Boons/Hooks for a covenant), grouped by the
-    /// catalogue item's kind, plus the point-balance read-out.
+    /// The Virtues/Flaws (Boons/Hooks for a covenant) the entity holds, grouped by
+    /// the catalogue item's kind, plus the point-balance read-out.
     ///
-    /// Only the entity's own `selections` are listed, which is exactly what
-    /// [`compute_balance`] counts, so the rows and the balance line can never
-    /// disagree. A selection whose id is absent from the catalogue has no kind to
-    /// file it under and is not printed; [`crate::validation::validate`] reports it
-    /// as `unknown_ref`.
+    /// Each kind section holds two tables: the **point-bought** rows from
+    /// `entity.selections`, then — under a marked sub-heading, and only when there
+    /// are any — the **granted** rows from [`entity_grants`] (a magus's free House
+    /// Virtue, a mythic-companion type's grants, an owed Warping pick, a Virtue that
+    /// grants another). Both belong on the sheet, but only the bought rows are
+    /// budgeted, so the balance line stays on [`compute_balance`], which counts
+    /// `selections` alone — the two tables are what keeps the granted items visible
+    /// without letting them move a number.
+    ///
+    /// A selection whose id is absent from the catalogue has no kind to file it under
+    /// and is not printed; [`crate::validation::validate`] reports it as
+    /// `unknown_ref`.
     fn write_virtues_flaws(&self, out: &mut String) {
+        let granted = entity_grants(self.entity, self.rules());
         let mut body = String::new();
         for (kind, heading_key) in ITEM_KIND_HEADINGS {
-            let mut rows: Vec<Vec<String>> = Vec::new();
-            for selection in &self.entity.selections {
-                let Some(item) = self.rules().item(&selection.item_ref) else {
-                    continue;
-                };
-                if item.kind != kind {
-                    continue;
-                }
-                let values: BTreeMap<String, String> = selection
-                    .params
-                    .iter()
-                    .map(|(key, value)| (key.clone(), self.param_value(value.as_str())))
-                    .collect();
-                rows.push(vec![
-                    self.parameterized_name(&selection.item_ref, &values),
-                    self.label(&format!("magnitude-{}", item.magnitude)),
-                ]);
-            }
-            if rows.is_empty() {
+            let bought = self.item_rows(&self.entity.selections, kind);
+            let granted_rows = self.item_rows(&granted, kind);
+            if bought.is_empty() && granted_rows.is_empty() {
                 continue;
             }
             self.section(&mut body, 3, heading_key);
@@ -537,7 +530,12 @@ impl<'a> Doc<'a> {
                 self.label("identity-name"),
                 self.label("export-col-magnitude"),
             ];
-            table(&mut body, &headers, &rows);
+            table(&mut body, &headers, &bought);
+            if granted_rows.is_empty() {
+                continue;
+            }
+            self.section(&mut body, 4, "export-granted");
+            table(&mut body, &headers, &granted_rows);
         }
         if body.is_empty() {
             return;
@@ -565,6 +563,30 @@ impl<'a> Doc<'a> {
             self.labelled(out, key, &value);
         }
         out.push('\n');
+    }
+
+    /// The name-and-magnitude rows for those `selections` whose catalogue item is of
+    /// `kind`, in the list's own order. Shared by the bought and the granted table so
+    /// a granted item is rendered exactly like a bought one — only its table differs.
+    fn item_rows(&self, selections: &[Selection], kind: ItemKind) -> Vec<Vec<String>> {
+        selections
+            .iter()
+            .filter_map(|selection| {
+                let item = self.rules().item(&selection.item_ref)?;
+                if item.kind != kind {
+                    return None;
+                }
+                let values: BTreeMap<String, String> = selection
+                    .params
+                    .iter()
+                    .map(|(key, value)| (key.clone(), self.param_value(value.as_str())))
+                    .collect();
+                Some(vec![
+                    self.parameterized_name(&selection.item_ref, &values),
+                    self.label(&format!("magnitude-{}", item.magnitude)),
+                ])
+            })
+            .collect()
     }
 
     /// The bought Abilities — each instance a row of its own — and the experience
@@ -1424,6 +1446,18 @@ mod tests {
             { "id": "art.vim", "art_type": "form" }
           ]
         }"#;
+        // Two grant-bearing Houses: Bonisagus offers a Puissant Ability *choice* (so
+        // it grants nothing until the entity records a pick), Ex Miscellanea fixes a
+        // free Flaw (so it grants without any pick).
+        let houses = r#"{ "houses": [
+          { "id": "house.bonisagus", "lineage_type": "true_lineage",
+            "grants": [ { "kind": "choice", "choice_key": "bonisagus_puissant", "options": [
+              { "ref": "virtue.puissant_ability", "params": { "ability": "ability.awareness" } },
+              { "ref": "virtue.puissant_ability", "params": { "ability": "ability.single_weapon" } }
+            ] } ] },
+          { "id": "house.ex_miscellanea", "lineage_type": "societas",
+            "grants": [ { "kind": "fixed", "item": "flaw.optimistic" } ] }
+        ] }"#;
         let spells = r#"{ "spells": [
           { "id": "spell.pilum_of_fire", "technique": "art.creo", "form": "art.ignem",
             "level": 20, "ritual": false },
@@ -1459,7 +1493,7 @@ mod tests {
             type_profiles: types,
             abilities: Some(abilities),
             arts: Some(arts),
-            houses: None,
+            houses: Some(houses),
             mythic_types: None,
             spells: Some(spells),
             spell_mastery_abilities: Some(mastery),
@@ -1492,7 +1526,8 @@ mod tests {
           "weapon.sling": { "name": "Sling" },
           "shield.round": { "name": "Round Shield" },
           "armor.leather_scale": { "name": "Leather Scale" },
-          "house.bonisagus": { "name": "Bonisagus" }
+          "house.bonisagus": { "name": "Bonisagus" },
+          "house.ex_miscellanea": { "name": "Ex Miscellanea" }
         }"#;
         LocalizedRuleset::new(rs, i18n).unwrap()
     }
@@ -2133,6 +2168,105 @@ mod tests {
             &labels(&[("tab-virtues-flaws", "Virtues & Flaws")]),
         );
         assert!(!doc.contains("Virtues & Flaws"), "stray heading: {doc}");
+    }
+
+    // --- granted (off-budget) virtues & flaws -----------------------------
+
+    /// A magus of a House whose Puissant-Ability choice has been picked.
+    fn bonisagus_with_granted_puissant() -> Entity {
+        let mut e = magus();
+        e.house = Some(Id::new("house.bonisagus"));
+        e.house_choices = BTreeMap::from([(
+            "bonisagus_puissant".to_string(),
+            Selection::with_params(
+                Id::new("virtue.puissant_ability"),
+                BTreeMap::from([("ability".to_string(), Id::new("ability.awareness"))]),
+            ),
+        )]);
+        e.selections = vec![Selection::new(Id::new("virtue.giant_blood"))];
+        e
+    }
+
+    #[test]
+    fn a_house_granted_virtue_is_listed_under_virtues_marked_as_granted() {
+        let doc = character_markdown(
+            &bonisagus_with_granted_puissant(),
+            &ruleset(),
+            &labels(&[
+                ("items-virtues-title", "Virtues"),
+                ("export-granted", "Granted"),
+                ("magnitude-major", "Major"),
+                ("magnitude-minor", "Minor"),
+            ]),
+        );
+        // The bought Virtue keeps its own table; the granted one sits in a marked
+        // sub-table of the same kind section.
+        assert!(doc.contains("### Virtues\n"), "{doc}");
+        assert!(doc.contains("| Giant Blood | Major |"), "{doc}");
+        assert!(doc.contains("#### Granted\n"), "{doc}");
+        assert!(doc.contains("| Puissant Awareness | Minor |"), "{doc}");
+    }
+
+    #[test]
+    fn a_granted_virtue_does_not_enter_the_point_balance() {
+        let rs = ruleset();
+        let names = labels(&[
+            ("items-virtues-title", "Virtues"),
+            ("export-granted", "Granted"),
+        ]);
+        let granted = bonisagus_with_granted_puissant();
+        let mut ungranted = granted.clone();
+        ungranted.house_choices.clear();
+
+        let with_grant = character_markdown(&granted, &rs, &names);
+        let without_grant = character_markdown(&ungranted, &rs, &names);
+        // Giant Blood (Major) alone funds the balance in both documents: the free
+        // House Virtue is off-budget, so it moves no number.
+        assert!(
+            with_grant.contains("- **Virtues**: 3 / 10\n"),
+            "{with_grant}"
+        );
+        assert!(
+            without_grant.contains("- **Virtues**: 3 / 10\n"),
+            "{without_grant}"
+        );
+        assert!(with_grant.contains("#### Granted\n"), "{with_grant}");
+        assert!(
+            !without_grant.contains("Granted"),
+            "an unpicked choice grants nothing: {without_grant}"
+        );
+    }
+
+    #[test]
+    fn a_granted_flaw_is_filed_under_flaws_not_virtues() {
+        let mut e = magus();
+        e.house = Some(Id::new("house.ex_miscellanea"));
+        e.selections = vec![Selection::new(Id::new("virtue.giant_blood"))];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("items-virtues-title", "Virtues"),
+                ("items-flaws-title", "Flaws"),
+                ("export-granted", "Granted"),
+                ("magnitude-minor", "Minor"),
+            ]),
+        );
+        // The Flaws section exists purely for the granted row, and the Virtues
+        // section — which has only a bought row — grows no granted sub-table.
+        assert!(doc.contains("### Flaws\n\n#### Granted\n"), "{doc}");
+        assert!(doc.contains("| Optimistic | Minor |"), "{doc}");
+        assert_eq!(doc.matches("#### Granted").count(), 1, "{doc}");
+        // The granted Flaw is off-budget: the Flaw balance stays at zero.
+        assert!(doc.contains("- **Flaws**: 0 / 10\n"), "{doc}");
+    }
+
+    #[test]
+    fn no_granted_sub_table_appears_when_nothing_is_granted() {
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.giant_blood"))];
+        let doc = character_markdown(&e, &ruleset(), &no_labels());
+        assert!(!doc.contains("export-granted"), "phantom heading: {doc}");
     }
 
     // --- abilities --------------------------------------------------------

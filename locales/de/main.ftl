@@ -690,6 +690,9 @@ export-col-points = Punkte
 export-col-total = Summe
 export-items-boons = Vorzüge
 export-items-hooks = Haken
+# Unterüberschrift der Tugend-/Fehler-Tabellen für die freien Einträge außerhalb des
+# Budgets, die Haus, mythischer Typ oder Verzerrung gewähren (nie in der Bilanz).
+export-granted = Gewährt
 export-xp-restricted = Eingeschränkte Erfahrungspunkte
 export-yes = Ja
 export-no = Nein

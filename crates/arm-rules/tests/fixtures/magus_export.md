@@ -37,6 +37,12 @@
 | The Gift | magnitude-free |
 | Warrior | magnitude-minor |
 
+#### export-granted
+
+| identity-name | export-col-magnitude |
+| --- | --- |
+| Puissant Intrigue | magnitude-minor |
+
 ### items-flaws-title
 
 | identity-name | export-col-magnitude |
