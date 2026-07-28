@@ -208,6 +208,74 @@ pub async fn save_entity(
     Ok(Some(target.to_string_lossy().into_owned()))
 }
 
+/// E2E seam for the Markdown export, deliberately separate from [`E2E_FILE_ENV`]:
+/// that one is a fixed `.json` path shared by save and open, so writing Markdown
+/// through it would clobber the save file the same spec round-trips.
+const E2E_EXPORT_FILE_ENV: &str = "ARM_E2E_EXPORT_FILE";
+
+fn e2e_export_file_override() -> Option<std::path::PathBuf> {
+    std::env::var_os(E2E_EXPORT_FILE_ENV).map(std::path::PathBuf::from)
+}
+
+/// Writes the entity as a Markdown character sheet. When `path` is `Some`, writes
+/// straight to that file; when `None`, prompts for a destination. Returns the
+/// written path, or `None` if a prompt was cancelled.
+///
+/// `labels` is the frontend's localized document chrome, keyed by the Fluent message
+/// names [`export_label_keys`] lists — Rust authors none of the document's text.
+#[tauri::command]
+pub async fn export_markdown(
+    entity: Entity,
+    labels: std::collections::BTreeMap<String, String>,
+    path: Option<String>,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> Result<Option<String>, AppError> {
+    // The destination is resolved BEFORE the ruleset lock is taken: a native dialog
+    // blocks until the user dismisses it, and holding the read guard across it would
+    // stall a concurrent language switch (`load_ruleset` wants the write guard) for
+    // exactly as long as the dialog stays open.
+    let target = match path {
+        Some(path) => ruleset_io::ensure_extension(
+            std::path::PathBuf::from(path),
+            ruleset_io::MARKDOWN_EXTENSION,
+        ),
+        None => match e2e_export_file_override() {
+            Some(path) => path,
+            None => {
+                let Some(file) = app
+                    .dialog()
+                    .file()
+                    .add_filter("Markdown", &["md"])
+                    .set_file_name(ruleset_io::default_markdown_file_name(entity.entity_kind))
+                    .blocking_save_file()
+                else {
+                    return Ok(None);
+                };
+                let chosen = file.into_path().map_err(|e| AppError::Io {
+                    message: e.to_string(),
+                })?;
+                ruleset_io::ensure_extension(chosen, ruleset_io::MARKDOWN_EXTENSION)
+            }
+        },
+    };
+
+    let guard = state.ruleset.read().expect("ruleset lock poisoned");
+    ruleset_io::export_markdown_to_path(&entity, guard.as_ref(), &labels, &target)?;
+    Ok(Some(target.to_string_lossy().into_owned()))
+}
+
+/// The document-chrome label keys the Markdown export needs, so the frontend
+/// resolves exactly those against its Fluent bundle and there is one source of
+/// truth for the list (the engine's).
+#[tauri::command]
+pub fn export_label_keys() -> Vec<String> {
+    arm_rules::export::LABEL_KEYS
+        .iter()
+        .map(|key| key.to_string())
+        .collect()
+}
+
 /// Prompts for a file and deserializes the entity from it, returning it paired
 /// with its path. Returns `None` if the dialog was cancelled.
 #[tauri::command]

@@ -282,13 +282,29 @@ pub fn entity_extension(kind: EntityKind) -> &'static str {
     }
 }
 
-/// Default save file name for a kind, e.g. `character.armc`.
-pub fn default_file_name(kind: EntityKind) -> String {
-    let base = match kind {
+/// Extension-free base file name for a kind, shared by the save default and the
+/// Markdown-export default so the two can never drift apart. Deliberately not the
+/// entity's own `name`: that is arbitrary user text and would need per-platform
+/// filename sanitization to be safe, for no gain — the dialog lets the user type
+/// whatever name they want.
+fn entity_base_name(kind: EntityKind) -> &'static str {
+    match kind {
         EntityKind::Character => "character",
         EntityKind::Covenant => "covenant",
-    };
-    format!("{base}.{}", entity_extension(kind))
+    }
+}
+
+/// Default save file name for a kind, e.g. `character.armc`.
+pub fn default_file_name(kind: EntityKind) -> String {
+    format!("{}.{}", entity_base_name(kind), entity_extension(kind))
+}
+
+/// Extension of an exported Markdown character sheet.
+pub const MARKDOWN_EXTENSION: &str = "md";
+
+/// Default file name for a Markdown export, e.g. `character.md`.
+pub fn default_markdown_file_name(kind: EntityKind) -> String {
+    format!("{}.{MARKDOWN_EXTENSION}", entity_base_name(kind))
 }
 
 /// Appends `ext` when the chosen path has no extension, so a user who types just
@@ -421,6 +437,28 @@ pub fn save_entity_to_path(entity: &Entity, path: &Path) -> Result<(), AppError>
     Ok(())
 }
 
+/// Renders `entity` as Markdown and writes it to `path`.
+///
+/// `ruleset` is the cached localized ruleset that supplies item display names, and
+/// `labels` the frontend's localized document chrome (see
+/// [`arm_rules::export::LABEL_KEYS`]) — no user-facing string originates here.
+///
+/// The ruleset is an `Option` rather than a reference because "no ruleset loaded"
+/// is a real outcome the export must report: without it not one display name can be
+/// resolved, so it fails with [`AppError::NotLoaded`] and writes nothing. Deciding
+/// that here rather than in the command shim keeps the case testable without a
+/// Tauri runtime.
+pub fn export_markdown_to_path(
+    entity: &Entity,
+    ruleset: Option<&LocalizedRuleset>,
+    labels: &BTreeMap<String, String>,
+    path: &Path,
+) -> Result<(), AppError> {
+    let ruleset = ruleset.ok_or(AppError::NotLoaded)?;
+    fs::write(path, arm_rules::character_markdown(entity, ruleset, labels))?;
+    Ok(())
+}
+
 /// Reads and deserializes an entity from `path`, applying save migrations.
 ///
 /// A pre-schema-10 save's manual `aging_reductions` are folded into `aging_points`
@@ -454,6 +492,18 @@ mod tests {
         assert_eq!(entity_extension(EntityKind::Covenant), "armcov");
         assert_eq!(default_file_name(EntityKind::Character), "character.armc");
         assert_eq!(default_file_name(EntityKind::Covenant), "covenant.armcov");
+    }
+
+    #[test]
+    fn markdown_default_name_shares_the_base_name_with_the_save_default() {
+        assert_eq!(
+            default_markdown_file_name(EntityKind::Character),
+            "character.md"
+        );
+        assert_eq!(
+            default_markdown_file_name(EntityKind::Covenant),
+            "covenant.md"
+        );
     }
 
     #[test]

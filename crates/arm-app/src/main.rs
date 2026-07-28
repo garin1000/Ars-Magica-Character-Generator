@@ -16,6 +16,8 @@ fn main() {
             commands::derived_totals,
             commands::save_entity,
             commands::load_entity,
+            commands::export_markdown,
+            commands::export_label_keys,
             commands::update_close_guard,
         ])
         // Window-close gestures (title-bar X, Alt+F4, Cmd+W).
