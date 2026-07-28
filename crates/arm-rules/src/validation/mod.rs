@@ -379,7 +379,7 @@ impl ValidationIssue {
     pub const CODE_UNKNOWN_EQUIPMENT: &'static str = "unknown_equipment";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: an equipped weapon or
     /// shield's minimum-Strength requirement exceeds the character's Strength
-    /// (Core:16993). Advisory — the character may still carry/wield it, at the
+    /// (Core:16997). Advisory — the character may still carry/wield it, at the
     /// storyguide's discretion, so this never blocks.
     pub const CODE_EQUIPMENT_MIN_STRENGTH: &'static str = "equipment_min_strength";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a shield is equipped

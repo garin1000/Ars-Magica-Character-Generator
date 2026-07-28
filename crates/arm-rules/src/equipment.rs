@@ -107,7 +107,9 @@ pub struct Weapon {
     /// melee weapons and both bows are two-handed. `#[serde(default)]` + skip-when-
     /// false for canonical, noise-free JSON. Source: Ars Magica - Definitive
     /// Edition (Core Rules).md:7494 (Great Weapon — "Fighting with a weapon which
-    /// requires two hands to use"), :7333-7334 / :17099 (Bows).
+    /// requires two hands to use"), :17008-17013 (the missile table's asterisked
+    /// bow rows and its footnote, ":17013 * Requires two free hands to load and
+    /// fire." — the Sling shares the asterisk but stays a thrown weapon).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub two_handed: bool,
     /// The combat Ability this weapon uses (e.g. `ability.single_weapon`,
@@ -138,7 +140,7 @@ pub struct Shield {
     /// The shield's contribution to Encumbrance Load.
     pub load: u8,
     /// The minimum Strength score needed to use the shield (met separately from
-    /// the weapon's requirement, Core Rules.md:16993).
+    /// the weapon's requirement, Core Rules.md:16997).
     pub min_strength: i8,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -242,7 +244,7 @@ mod tests {
     }
 
     /// `two_handed` defaults to false and is skipped when false; a two-handed
-    /// weapon (Great Weapon / bow) serializes it. Source: Core:7494, :17099.
+    /// weapon (Great Weapon / bow) serializes it. Source: Core:7494, :17008-17013.
     #[test]
     fn two_handed_defaults_false_and_skips_when_false() {
         let json = r#"{

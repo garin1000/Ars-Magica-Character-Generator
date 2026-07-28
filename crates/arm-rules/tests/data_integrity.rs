@@ -514,7 +514,7 @@ fn validate_equipment_unknown_ref_and_min_strength() {
 /// whose min-Strength exceeds the wielder's Strength raises the same advisory
 /// `equipment_min_strength` warning as a weapon (shield arm), while armor — which
 /// carries no min-Strength requirement — never warns however weak the wearer (armor
-/// arm's `None`). Core:16993.
+/// arm's `None`). Core:16997.
 #[test]
 fn validate_equipment_shield_warns_and_armor_never_warns() {
     let rs = load_ruleset_with_equipment();
