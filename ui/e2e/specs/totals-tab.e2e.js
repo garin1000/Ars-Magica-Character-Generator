@@ -9,6 +9,10 @@
 // ("clicking Totals does nothing"), and only the real binary can catch it: vitest
 // renders through `svelte/server`, which does not validate `{#each}` keys.
 //
+// The spec then equips a shield, which splits every one-handed weapon into a
+// with-shield and a bare line — a second, now-ordinary source of duplicate
+// `line.weapon` values, and the reason that `{#each}` must stay unkeyed forever.
+//
 // NOTE: requires a display + the production binary (see e2e/README.md). The wdio
 // `onPrepare` hook builds `target/release/arm-app`.
 
@@ -28,6 +32,10 @@ const EQUIPMENT_LIST = '[data-testid="equipment-list"]';
 // The catalogue weapon carried twice, and its English display name.
 const WEAPON = 'weapon.sword_long';
 const WEAPON_NAME = 'Long Sword';
+
+// The shield equipped afterwards, splitting each weapon's line in two.
+const SHIELD = 'shield.round';
+const SHIELD_NAME = 'Round Shield';
 
 // Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
 function clean(text) {
@@ -100,6 +108,30 @@ describe('totals tab', () => {
     // failure mode was not a blank panel but the PREVIOUS tab left on screen,
     // because the aborted render never tore its DOM down.
     expect(await $(EQUIPMENT_LIST).isExisting()).toBe(false);
+    await expect($('[data-testid="derived-panel"]')).toExist();
+
+    // Equipping a shield doubles every one-handed weapon's lines: with the shield,
+    // then bare. That makes `line.weapon` duplicate for a THIRD reason, so this is
+    // also the only guard left against the `each_key_duplicate` regression above.
+    await $(EQUIPMENT_TAB).click();
+    const addShield = await $(`[data-testid="add-${SHIELD}"]`);
+    await addShield.waitForExist({ timeout: 10000 });
+    await addShield.click();
+
+    await $(TOTALS_TAB).click();
+    await $(COMBAT).waitForExist({ timeout: 15000 });
+    await browser.waitUntil(async () => (await $$(COMBAT_ROWS)).length === 4, {
+      timeout: 10000,
+      timeoutMsg: 'each weapon should gain a with-shield row beside its bare one',
+    });
+    const shieldedRowNames = [];
+    for (const cell of await $$(`${COMBAT_ROWS} th`)) {
+      shieldedRowNames.push(clean(await cell.getText()));
+    }
+    const WITH_SHIELD = `${WEAPON_NAME} & ${SHIELD_NAME}`;
+    expect(shieldedRowNames).toEqual([WITH_SHIELD, WEAPON_NAME, WITH_SHIELD, WEAPON_NAME]);
+
+    // The panel survived the new duplication source.
     await expect($('[data-testid="derived-panel"]')).toExist();
   });
 });

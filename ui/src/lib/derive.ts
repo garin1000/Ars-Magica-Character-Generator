@@ -1048,6 +1048,20 @@ export function groupSelectedEquipmentByKind(
 }
 
 /**
+ * A combat row's label: the weapon alone on a bare line, or the weapon joined to
+ * every shield whose modifiers that line folded in ("Long Sword & Round Shield").
+ * The joiner is a localized label the caller supplies (`derived-combat-shield-joiner`)
+ * — it stands in for a word, so it is never hardcoded here. The spaces around it are
+ * added here, because a Fluent value cannot begin or end with one.
+ */
+export function combatRowLabel(weaponName: string, shieldNames: string[], joiner: string): string {
+  if (shieldNames.length === 0) {
+    return weaponName;
+  }
+  return [weaponName, ...shieldNames].join(` ${joiner} `);
+}
+
+/**
  * The parameter Forms already taken by OTHER instances of a parameterized spell
  * at the same level — used to grey those Forms in a row's target-Form picker so
  * each (spell, level, Form) is takeable only once (matching the engine dedupe key

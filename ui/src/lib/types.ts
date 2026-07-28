@@ -411,9 +411,12 @@ export interface EncumbranceTotal {
   total: number;
 }
 
-// One combat line for an equipped weapon (shield combined in).
+// One way of wielding an equipped weapon. A one-handed weapon carried with a shield
+// yields two lines: one with the shield modifiers folded in (`shields` naming them)
+// and one bare (`shields` absent).
 export interface CombatLine {
   weapon: string;
+  shields?: string[];
   ability: string;
   initiative: number;
   attack?: number | null;

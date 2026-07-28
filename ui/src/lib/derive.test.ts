@@ -11,6 +11,7 @@ import {
   artXpSpent,
   balance,
   characteristicPointsUsed,
+  combatRowLabel,
   displayName,
   filterAbilities,
   filterEquipment,
@@ -1573,6 +1574,26 @@ describe('filterEquipment', () => {
     const groups = filterEquipment(rs, catalogue, { kind: 'shields' });
     expect(groups.map((g) => g.kind)).toEqual(['shields']);
     expect(groups[0].ids).toEqual(['shield.round']);
+  });
+});
+
+describe('combatRowLabel', () => {
+  it('names the weapon alone when the line carries no shield', () => {
+    expect(combatRowLabel('Long Sword', [], '&')).toBe('Long Sword');
+  });
+
+  it('joins the weapon to the shield whose modifiers the line folded in', () => {
+    expect(combatRowLabel('Long Sword', ['Round Shield'], '&')).toBe('Long Sword & Round Shield');
+  });
+
+  it('lists every shield when several are equipped and summed', () => {
+    expect(combatRowLabel('Long Sword', ['Round Shield', 'Buckler'], '&')).toBe(
+      'Long Sword & Round Shield & Buckler',
+    );
+  });
+
+  it('uses the localized joiner verbatim', () => {
+    expect(combatRowLabel('Langschwert', ['Tartsche'], 'und')).toBe('Langschwert und Tartsche');
   });
 });
 

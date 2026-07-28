@@ -10,7 +10,7 @@ use super::*;
 /// **equipped** weapon or shield whose minimum-Strength requirement exceeds the
 /// character's (aged) Strength, an advisory `equipment_min_strength` warning is
 /// raised — never blocking, since carrying/wielding an over-heavy weapon is a
-/// storyguide call, not an illegal creation state (Core:16993). Armor carries no
+/// storyguide call, not an illegal creation state (Core:16997). Armor carries no
 /// minimum-Strength requirement. Combat totals, Soak, and Encumbrance are computed
 /// downstream (slice 5i), not here.
 pub(crate) fn validate_equipment(

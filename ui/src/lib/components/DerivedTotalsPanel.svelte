@@ -3,7 +3,7 @@
   // command computes; it performs NO mechanics in JS. Every label goes through a
   // Fluent `derived-*` key; catalogue ids resolve to their localized display name.
   import { store } from '../state.svelte';
-  import { formatSigned, spellDisplayName } from '../derive';
+  import { combatRowLabel, formatSigned, spellDisplayName } from '../derive';
   import type { Addend, PenetrationLine } from '../types';
 
   const d = $derived(store.derived);
@@ -341,11 +341,19 @@
             <tbody>
               <!-- Deliberately UNKEYED, same reason as the Penetration list above:
                    `combat_totals` emits one line per equipped slot, so carrying the
-                   same weapon twice repeats `line.weapon`. Keying by it threw
+                   same weapon twice repeats `line.weapon` — and with a shield equipped
+                   a single one-handed weapon repeats it too, since it yields a
+                   with-shield line and a bare one. Keying by it threw
                    `each_key_duplicate` and killed this whole tab. -->
               {#each d.combat as line}
                 <tr>
-                  <th>{name(line.weapon)}</th>
+                  <th>
+                    {combatRowLabel(
+                      name(line.weapon),
+                      (line.shields ?? []).map(name),
+                      store.t('derived-combat-shield-joiner'),
+                    )}
+                  </th>
                   <td>{line.initiative}</td>
                   <td>{line.attack ?? '—'}</td>
                   <td>{line.defense}</td>
