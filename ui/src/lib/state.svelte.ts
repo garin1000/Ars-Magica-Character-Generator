@@ -150,16 +150,32 @@ function newEntity(rulesetId: string, version: string): Entity {
 /**
  * The export label keys the engine composes from catalogue *data* and therefore
  * cannot list in `LABEL_KEYS` (see `crates/arm-rules/src/export.rs`): the
- * character-type subtitle `type-<profile id>`, and the slot label
+ * character-type subtitle `type-<profile id>`, the slot label
  * `param-label-<parameter key>` printed where a parameterized item has no chosen
- * value. Both are read off the loaded ruleset, so a new profile or a new
- * parameterized item ships its label with zero code changes.
+ * value, and `category-<item category>` — the Type cell of an exported Virtue/Flaw
+ * row, the same key the in-app badge renders. All three are read off the loaded
+ * ruleset, so a new profile, parameterized item or category ships its label with
+ * zero code changes.
  */
 function composedExportLabelKeys(localized: LocalizedRuleset | null): string[] {
   if (!localized) return [];
   const keys = Object.keys(localized.ruleset.type_profiles ?? {}).map((id) => `type-${id}`);
   for (const key of parameterKeys(localized)) keys.push(`param-label-${key}`);
+  for (const category of itemCategories(localized)) keys.push(`category-${category}`);
   return keys;
+}
+
+/**
+ * Every distinct `category` the point-item catalogue uses. Names the
+ * `category-<id>` label the exported Virtue/Flaw tables print in their Type column,
+ * so the set follows the catalogue rather than a hardcoded list of categories.
+ */
+function itemCategories(localized: LocalizedRuleset): Set<string> {
+  const categories = new Set<string>();
+  for (const item of Object.values(localized.ruleset.point_items ?? {})) {
+    if (item.category) categories.add(item.category);
+  }
+  return categories;
 }
 
 /**

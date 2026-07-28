@@ -1942,18 +1942,20 @@ describe('exportMarkdown', () => {
   }
 
   /**
-   * A ruleset that exercises both key families the engine composes from catalogue
-   * data and therefore cannot enumerate: two character-type profiles, and a
+   * A ruleset that exercises all three key families the engine composes from
+   * catalogue data and therefore cannot enumerate: two character-type profiles, a
    * parameter key declared on each of the three parameterized catalogues
-   * (Virtue/Flaw, Ability, spell).
+   * (Virtue/Flaw, Ability, spell), and two distinct point-item categories.
    */
   function installExportRuleset(): void {
     const localized = installRuleset(
       [
         item({
           id: 'virtue.puissant_ability',
+          category: 'hermetic',
           parameters: [{ key: 'ability', type: 'ref', domain: 'ability' }],
         }),
+        item({ id: 'flaw.optimistic', kind: 'flaw', category: 'personality' }),
       ],
       [ability('ability.area_lore', 'area')],
       { magus: profile('magus'), grog: profile('grog') },
@@ -1994,7 +1996,7 @@ describe('exportMarkdown', () => {
     expect(labels['abilities-title']).toBe('Abilities');
   });
 
-  it('adds the two composed families the engine cannot enumerate', async () => {
+  it('adds the three composed families the engine cannot enumerate', async () => {
     await store.exportMarkdown();
 
     const labels = sentLabels();
@@ -2005,6 +2007,10 @@ describe('exportMarkdown', () => {
     expect(labels['param-label-ability']).toBe('Ability');
     expect(labels['param-label-area']).toBe('Area');
     expect(labels['param-label-form']).toBe('Form');
+    // `category-<item category>`: the Type cell of an exported Virtue/Flaw row —
+    // one per distinct category the point-item catalogue uses.
+    expect(labels['category-hermetic']).toBe('Hermetic');
+    expect(labels['category-personality']).toBe('Personality');
   });
 
   it('never echoes a key back as its own label, in either language', async () => {

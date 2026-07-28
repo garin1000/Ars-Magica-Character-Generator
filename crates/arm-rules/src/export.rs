@@ -54,7 +54,7 @@ use crate::effective::{
 use crate::ruleset::{LocalizedRuleset, Ruleset};
 use crate::types::{
     EnchantedDevice, Entity, EntityKind, Id, ItemKind, MightScore, PersonalityTrait, Selection,
-    SupernaturalPower, TalismanEffect,
+    SpellSelection, SupernaturalPower, TalismanEffect,
 };
 use crate::validation::{compute_balance, effective_point_ceilings};
 
@@ -67,11 +67,12 @@ use crate::validation::{compute_balance, effective_point_ceilings};
 /// new taxonomy variant cannot silently surface as a raw slug — a unit test walks
 /// each family and asserts membership here.
 ///
-/// Two key *families* are deliberately **not** enumerated, because both are composed
+/// Three key *families* are deliberately **not** enumerated, because each is composed
 /// from catalogue *data* and listing them would bake the catalogue's size into code:
-/// `type-<profile id>` (the character-type label in the subtitle) and
-/// `param-label-<parameter key>` (the slot label shown for an unfilled parameter).
-/// The locales already ship one key per shipped profile and parameter key.
+/// `type-<profile id>` (the character-type label in the subtitle),
+/// `param-label-<parameter key>` (the slot label shown for an unfilled parameter), and
+/// `category-<item category>` (the Type cell of a Virtue/Flaw row). The locales
+/// already ship one key per shipped profile, parameter key and item category.
 /// Individual members the formatter names outright are still listed — hence
 /// `param-label-ability`, the Combat table's Ability column header.
 pub const LABEL_KEYS: &[&str] = &[
@@ -139,7 +140,9 @@ pub const LABEL_KEYS: &[&str] = &[
     "export-col-magnitude",
     "export-col-penalty",
     "export-col-points",
+    "export-col-spell-code",
     "export-col-total",
+    "export-col-type",
     "export-granted",
     "export-items-boons",
     "export-items-hooks",
@@ -191,12 +194,9 @@ pub const LABEL_KEYS: &[&str] = &[
     "reputation-type-local",
     "reputations-label",
     "restricted-xp-list-separator",
-    "spell-form-label",
     "spell-level-general",
-    "spell-level-label",
     "spell-mastery-abilities-label",
     "spell-mastery-label",
-    "spell-technique-label",
     "supernatural-might-label",
     "supernatural-powers-label",
     "tab-arts",
@@ -317,6 +317,17 @@ impl<'a> Doc<'a> {
             .display_name(id)
             .unwrap_or_else(|| id.as_str())
             .to_string()
+    }
+
+    /// The localized short abbreviation of an Art (`Cr`, `Ig`) — the notation the
+    /// rulebook and the app both use for a spell's Arts. It is rules i18n data, never
+    /// composed here; an Art whose entry ships none falls back to its display name,
+    /// which is long but still readable, rather than leaving the code half-written.
+    fn art_code(&self, id: &Id) -> String {
+        match self.ruleset.abbreviation(id) {
+            Some(abbreviation) => escape_cell(abbreviation),
+            None => escape_cell(&self.name(id)),
+        }
     }
 
     /// Appends an ATX heading whose text is the chrome label for `key`.
@@ -459,20 +470,29 @@ impl<'a> Doc<'a> {
 
     /// The bought Characteristic scores, their effective values where a Virtue moves
     /// them, and the sheet's free-text descriptions.
+    ///
+    /// Every Characteristic in the taxonomy gets a row: a score of 0 is stored as an
+    /// *absent* key, so skipping the unstored ones would silently drop a
+    /// Characteristic the user did set — to 0 — from the sheet. Whether the section
+    /// exists at all is still pure emptiness (no score and no description anywhere),
+    /// which is what keeps a covenant's sheet free of it without an `EntityKind` gate.
     fn write_characteristics(&self, out: &mut String) {
         let e = self.entity;
+        let described = e
+            .characteristic_descriptions
+            .values()
+            .any(|text| !text.trim().is_empty());
+        if e.characteristics.is_empty() && !described {
+            return;
+        }
         let mut rows: Vec<Vec<String>> = Vec::new();
         for c in Characteristic::ALL {
-            let bought = e.characteristics.get(&c).copied();
             let description = e
                 .characteristic_descriptions
                 .get(&c)
                 .map(String::as_str)
                 .unwrap_or_default();
-            if bought.is_none() && description.trim().is_empty() {
-                continue;
-            }
-            let bought = i32::from(bought.unwrap_or(0));
+            let bought = i32::from(e.characteristics.get(&c).copied().unwrap_or(0));
             let effective = effective_characteristic_score(e, self.rules(), c);
             rows.push(vec![
                 self.label(&format!("characteristic-{c}")),
@@ -484,9 +504,6 @@ impl<'a> Doc<'a> {
                 },
                 escape_cell(description),
             ]);
-        }
-        if rows.is_empty() {
-            return;
         }
         self.section(out, 2, "characteristics-title");
         table(
@@ -528,6 +545,7 @@ impl<'a> Doc<'a> {
             self.section(&mut body, 3, heading_key);
             let headers = [
                 self.label("identity-name"),
+                self.label("export-col-type"),
                 self.label("export-col-magnitude"),
             ];
             table(&mut body, &headers, &bought);
@@ -565,9 +583,14 @@ impl<'a> Doc<'a> {
         out.push('\n');
     }
 
-    /// The name-and-magnitude rows for those `selections` whose catalogue item is of
-    /// `kind`, in the list's own order. Shared by the bought and the granted table so
-    /// a granted item is rendered exactly like a bought one — only its table differs.
+    /// The name, type and magnitude rows for those `selections` whose catalogue item
+    /// is of `kind`, in the list's own order. Shared by the bought and the granted
+    /// table so a granted item is rendered exactly like a bought one — only its table
+    /// differs.
+    ///
+    /// The "type" cell is the item's `category`, localized through `category-<id>` —
+    /// the same key the in-app badge uses. Categories are catalogue *data*, so that
+    /// family is not enumerated in [`LABEL_KEYS`] (see its docs).
     fn item_rows(&self, selections: &[Selection], kind: ItemKind) -> Vec<Vec<String>> {
         selections
             .iter()
@@ -583,6 +606,7 @@ impl<'a> Doc<'a> {
                     .collect();
                 Some(vec![
                     self.parameterized_name(&selection.item_ref, &values),
+                    self.label(&format!("category-{}", item.category)),
                     self.label(&format!("magnitude-{}", item.magnitude)),
                 ])
             })
@@ -661,54 +685,67 @@ impl<'a> Doc<'a> {
         out.push('\n');
     }
 
-    /// The bought Hermetic Arts, split into Techniques and Forms.
+    /// The Hermetic Arts, split into Techniques and Forms.
     ///
-    /// An Art id absent from the catalogue is not printed: it has no Technique/Form
-    /// class to file it under, and no other engine read-out can score it either
-    /// ([`crate::validation::validate`] reports it as `unknown_art`).
+    /// The **catalogue** is the row set, in id order within each class: an Art scored
+    /// 0 is stored as no score at all, so listing only the stored Arts would drop
+    /// every unscored Art — and, for a magus who scored no Form, the entire Forms
+    /// table — from a sheet whose reader needs the whole grid. Which Arts exist is
+    /// data, so the section's size follows `arts.json` with no code change.
+    ///
+    /// The section itself is still gated on emptiness: it appears once the entity
+    /// scores an Art the catalogue holds. An Art id absent from the catalogue has no
+    /// Technique/Form class to file it under and can be scored by no engine read-out
+    /// either ([`crate::validation::validate`] reports it as `unknown_art`), so it
+    /// neither prints nor opens the section.
     fn write_arts(&self, out: &mut String) {
         let e = self.entity;
-        let mut body = String::new();
+        let scores_a_known_art = e
+            .art_scores
+            .iter()
+            .any(|score| self.rules().art(&score.art).is_some());
+        if !scores_a_known_art {
+            return;
+        }
+        self.section(out, 2, "tab-arts");
         for art_type in ArtType::ALL {
-            let mut rows: Vec<Vec<String>> = Vec::new();
-            for bought in &e.art_scores {
-                let Some(art) = self.rules().art(&bought.art) else {
-                    continue;
-                };
-                if art.art_type != art_type {
-                    continue;
-                }
-                let score = i32::from(bought.score);
-                let effective = effective_art_score(e, self.rules(), &bought.art);
-                rows.push(vec![
-                    escape_cell(&self.name(&bought.art)),
-                    score.to_string(),
-                    if effective == score {
-                        String::new()
-                    } else {
-                        effective.to_string()
-                    },
-                ]);
-            }
+            let rows: Vec<Vec<String>> = self
+                .rules()
+                .art_ids_of(art_type)
+                .iter()
+                .map(|art| {
+                    let score = e
+                        .art_scores
+                        .iter()
+                        .find(|stored| &stored.art == art)
+                        .map(|stored| i32::from(stored.score))
+                        .unwrap_or(0);
+                    let effective = effective_art_score(e, self.rules(), art);
+                    vec![
+                        escape_cell(&self.name(art)),
+                        score.to_string(),
+                        if effective == score {
+                            String::new()
+                        } else {
+                            effective.to_string()
+                        },
+                    ]
+                })
+                .collect();
             if rows.is_empty() {
                 continue;
             }
-            self.section(&mut body, 3, &format!("art-type-{art_type}"));
+            self.section(out, 3, &format!("art-type-{art_type}"));
             let headers = [
                 self.label("identity-name"),
                 self.label("ability-score-label"),
                 self.label("export-col-effective"),
             ];
-            table(&mut body, &headers, &rows);
+            table(out, &headers, &rows);
         }
-        if body.is_empty() {
-            return;
-        }
-        self.section(out, 2, "tab-arts");
-        out.push_str(&body);
     }
 
-    /// The spells the character knows, with Technique/Form, resolved level, and
+    /// The spells the character knows, each with its short Art-and-level code and its
     /// Spell Mastery.
     fn write_spells(&self, out: &mut String) {
         let e = self.entity;
@@ -723,17 +760,6 @@ impl<'a> Doc<'a> {
                     .unwrap_or_else(|| UNKNOWN_PARAM_KEY.to_string());
                 values.insert(key, self.param_value(parameter));
             }
-            let (technique, form) = match catalogue {
-                Some(spell) => (
-                    escape_cell(&self.name(&spell.technique)),
-                    escape_cell(&self.name(&spell.form)),
-                ),
-                None => (String::new(), String::new()),
-            };
-            let level = match resolved_spell_level(chosen, self.rules()) {
-                Some(level) => level.to_string(),
-                None => self.label("spell-level-general"),
-            };
             let mastery = effective_spell_mastery(chosen, e, self.rules());
             let abilities: Vec<String> = chosen
                 .mastery_abilities
@@ -742,9 +768,7 @@ impl<'a> Doc<'a> {
                 .collect();
             rows.push(vec![
                 self.parameterized_name(&chosen.spell, &values),
-                technique,
-                form,
-                level,
+                self.spell_code(chosen),
                 if mastery == 0 {
                     String::new()
                 } else {
@@ -759,13 +783,34 @@ impl<'a> Doc<'a> {
         self.section(out, 2, "tab-spells");
         let headers = [
             self.label("identity-name"),
-            self.label("spell-technique-label"),
-            self.label("spell-form-label"),
-            self.label("spell-level-label"),
+            self.label("export-col-spell-code"),
             self.label("spell-mastery-label"),
             self.label("spell-mastery-abilities-label"),
         ];
         table(out, &headers, &rows);
+    }
+
+    /// A spell's Arts and level as the one short cell the rulebook and the app both
+    /// use: the Technique and Form abbreviations followed by the resolved level, with
+    /// no separator (`CrIg20`).
+    ///
+    /// An unresolved General level keeps its localized marker a space apart, since
+    /// `CrIgGeneral` would not read as one figure. A spell no catalogue holds has no
+    /// Arts to abbreviate, and a bare level would read as a code, so its cell is empty
+    /// — the row still names the spell the character claims.
+    fn spell_code(&self, chosen: &SpellSelection) -> String {
+        let Some(spell) = self.rules().spell(&chosen.spell) else {
+            return String::new();
+        };
+        let level = match resolved_spell_level(chosen, self.rules()) {
+            Some(level) => level.to_string(),
+            None => format!(" {}", self.label("spell-level-general")),
+        };
+        format!(
+            "{}{}{level}",
+            self.art_code(&spell.technique),
+            self.art_code(&spell.form)
+        )
     }
 
     /// Which catalogue holds `id`, or `None` when no catalogue does.
@@ -1517,6 +1562,7 @@ mod tests {
           "weapon.dodge": { "name": "Dodge" },
           "art.creo": { "name": "Creo", "abbreviation": "Cr" },
           "art.muto": { "name": "Muto", "abbreviation": "Mu" },
+          "art.corpus": { "name": "Corpus", "abbreviation": "Co" },
           "art.ignem": { "name": "Ignem", "abbreviation": "Ig" },
           "art.vim": { "name": "Vim", "abbreviation": "Vi" },
           "spell.pilum_of_fire": { "name": "Pilum of Fire" },
@@ -2000,6 +2046,52 @@ mod tests {
         assert!(doc.contains("| Presence | 0 |  | unremarkable |"), "{doc}");
     }
 
+    /// A score of 0 is stored as an *absent* key (the frontend deletes it), so a
+    /// Characteristic bought at 0 is indistinguishable from an untouched one. Both
+    /// belong on the sheet — every Characteristic is part of a character — so once
+    /// the section exists it lists the whole taxonomy, the untouched ones as `0`.
+    #[test]
+    fn every_characteristic_gets_a_row_once_the_section_exists() {
+        let mut e = magus();
+        e.characteristics.insert(Characteristic::Int, 3);
+        e.characteristics.insert(Characteristic::Pre, -1);
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("characteristic-int", "Intelligence"),
+                ("characteristic-per", "Perception"),
+                ("characteristic-str", "Strength"),
+                ("characteristic-sta", "Stamina"),
+                ("characteristic-pre", "Presence"),
+                ("characteristic-com", "Communication"),
+                ("characteristic-dex", "Dexterity"),
+                ("characteristic-qik", "Quickness"),
+            ]),
+        );
+        assert!(doc.contains("| Intelligence | +3 |  |  |"), "{doc}");
+        assert!(doc.contains("| Presence | -1 |  |  |"), "{doc}");
+        for untouched in [
+            "Perception",
+            "Strength",
+            "Stamina",
+            "Communication",
+            "Dexterity",
+            "Quickness",
+        ] {
+            assert!(
+                doc.contains(&format!("| {untouched} | 0 |  |  |")),
+                "an untouched Characteristic still gets an unsigned 0 row: {doc}"
+            );
+        }
+        // One row per Characteristic and no more: the taxonomy is the row set.
+        let rows = doc
+            .lines()
+            .filter(|line| line.starts_with("| ") && line.ends_with(" |  |  |"))
+            .count();
+        assert_eq!(rows, Characteristic::ALL.len(), "{doc}");
+    }
+
     #[test]
     fn the_characteristics_section_is_omitted_when_nothing_is_entered() {
         let doc = character_markdown(
@@ -2079,15 +2171,49 @@ mod tests {
                 ("tab-virtues-flaws", "Virtues & Flaws"),
                 ("items-virtues-title", "Virtues"),
                 ("items-flaws-title", "Flaws"),
+                ("category-general", "General"),
+                ("category-personality", "Personality"),
                 ("magnitude-major", "Major"),
                 ("magnitude-minor", "Minor"),
             ]),
         );
         assert!(doc.contains("## Virtues & Flaws\n"), "{doc}");
         assert!(doc.contains("### Virtues\n"), "{doc}");
-        assert!(doc.contains("| Giant Blood | Major |"), "{doc}");
+        assert!(doc.contains("| Giant Blood | General | Major |"), "{doc}");
         assert!(doc.contains("### Flaws\n"), "{doc}");
-        assert!(doc.contains("| Optimistic | Minor |"), "{doc}");
+        assert!(
+            doc.contains("| Optimistic | Personality | Minor |"),
+            "{doc}"
+        );
+    }
+
+    /// The item's category is the "type" the in-app badge shows (Hermetic, Social
+    /// Status, Story, …), and it belongs on the sheet next to the magnitude: the two
+    /// together are how a reader places a Virtue.
+    #[test]
+    fn a_virtue_row_reports_its_type_beside_its_magnitude() {
+        let mut e = magus();
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.puissant_art"),
+            BTreeMap::from([("art".to_string(), Id::new("art.creo"))]),
+        )];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("identity-name", "Name"),
+                ("items-virtues-title", "Virtues"),
+                ("export-col-type", "Type"),
+                ("export-col-magnitude", "Magnitude"),
+                ("category-hermetic", "Hermetic"),
+                ("magnitude-minor", "Minor"),
+            ]),
+        );
+        assert!(doc.contains("| Name | Type | Magnitude |\n"), "{doc}");
+        assert!(
+            doc.contains("| Puissant Creo | Hermetic | Minor |"),
+            "{doc}"
+        );
     }
 
     #[test]
@@ -2195,6 +2321,7 @@ mod tests {
             &labels(&[
                 ("items-virtues-title", "Virtues"),
                 ("export-granted", "Granted"),
+                ("category-general", "General"),
                 ("magnitude-major", "Major"),
                 ("magnitude-minor", "Minor"),
             ]),
@@ -2202,9 +2329,12 @@ mod tests {
         // The bought Virtue keeps its own table; the granted one sits in a marked
         // sub-table of the same kind section.
         assert!(doc.contains("### Virtues\n"), "{doc}");
-        assert!(doc.contains("| Giant Blood | Major |"), "{doc}");
+        assert!(doc.contains("| Giant Blood | General | Major |"), "{doc}");
         assert!(doc.contains("#### Granted\n"), "{doc}");
-        assert!(doc.contains("| Puissant Awareness | Minor |"), "{doc}");
+        assert!(
+            doc.contains("| Puissant Awareness | General | Minor |"),
+            "{doc}"
+        );
     }
 
     #[test]
@@ -2249,13 +2379,17 @@ mod tests {
                 ("items-virtues-title", "Virtues"),
                 ("items-flaws-title", "Flaws"),
                 ("export-granted", "Granted"),
+                ("category-personality", "Personality"),
                 ("magnitude-minor", "Minor"),
             ]),
         );
         // The Flaws section exists purely for the granted row, and the Virtues
         // section — which has only a bought row — grows no granted sub-table.
         assert!(doc.contains("### Flaws\n\n#### Granted\n"), "{doc}");
-        assert!(doc.contains("| Optimistic | Minor |"), "{doc}");
+        assert!(
+            doc.contains("| Optimistic | Personality | Minor |"),
+            "{doc}"
+        );
         assert_eq!(doc.matches("#### Granted").count(), 1, "{doc}");
         // The granted Flaw is off-budget: the Flaw balance stays at zero.
         assert!(doc.contains("- **Flaws**: 0 / 10\n"), "{doc}");
@@ -2400,6 +2534,41 @@ mod tests {
         assert!(doc.contains("| Creo | 10 | 13 |"), "{doc}");
     }
 
+    /// A score of 0 is stored as no score at all, so listing only the *stored* Arts
+    /// drops every Art the character has not scored — up to the whole Forms table,
+    /// even though the character casts spells of those Forms. The catalogue is the
+    /// row set.
+    #[test]
+    fn every_catalogue_art_gets_a_row_once_any_art_is_scored() {
+        let mut e = magus();
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.ignem"),
+            score: 8,
+        }];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("tab-arts", "Arts"),
+                ("art-type-technique", "Techniques"),
+                ("art-type-form", "Forms"),
+            ]),
+        );
+        // A magus who scored no Technique still gets the Techniques table.
+        assert!(doc.contains("### Techniques\n"), "{doc}");
+        assert!(doc.contains("| Creo | 0 |  |"), "{doc}");
+        assert!(doc.contains("| Muto | 0 |  |"), "{doc}");
+        assert!(doc.contains("### Forms\n"), "{doc}");
+        assert!(doc.contains("| Ignem | 8 |  |"), "{doc}");
+        assert!(doc.contains("| Vim | 0 |  |"), "{doc}");
+        // Id order within a group — which is also the sheet's canonical Art order.
+        let creo = doc.find("| Creo |").expect("a Creo row");
+        let muto = doc.find("| Muto |").expect("a Muto row");
+        let corpus = doc.find("| Corpus |").expect("a Corpus row");
+        let ignem = doc.find("| Ignem |").expect("an Ignem row");
+        assert!(creo < muto && corpus < ignem, "Arts run in id order: {doc}");
+    }
+
     #[test]
     fn the_arts_section_is_omitted_when_no_art_is_bought() {
         let doc = character_markdown(&magus(), &ruleset(), &labels(&[("tab-arts", "Arts")]));
@@ -2408,8 +2577,11 @@ mod tests {
 
     // --- spells -----------------------------------------------------------
 
+    /// The sheet names a spell's Arts and level the way the rulebook and the app do:
+    /// one short code, Technique and Form abbreviations followed by the level
+    /// (`CrIg20`), not three separate columns of spelled-out Art names.
     #[test]
-    fn spells_list_their_arts_level_and_mastery() {
+    fn spells_list_their_art_code_and_mastery() {
         let mut e = magus();
         e.spells = vec![SpellSelection {
             spell: Id::new("spell.pilum_of_fire"),
@@ -2421,11 +2593,21 @@ mod tests {
         let doc = character_markdown(
             &e,
             &ruleset(),
-            &labels(&[("tab-spells", "Spells"), ("spell-mastery-label", "Mastery")]),
+            &labels(&[
+                ("identity-name", "Name"),
+                ("tab-spells", "Spells"),
+                ("export-col-spell-code", "TeFo/Level"),
+                ("spell-mastery-label", "Mastery"),
+                ("spell-mastery-abilities-label", "Mastery abilities"),
+            ]),
         );
         assert!(doc.contains("## Spells\n"), "{doc}");
         assert!(
-            doc.contains("| Pilum of Fire | Creo | Ignem | 20 | 2 | Penetration |"),
+            doc.contains("| Name | TeFo/Level | Mastery | Mastery abilities |\n"),
+            "{doc}"
+        );
+        assert!(
+            doc.contains("| Pilum of Fire | CrIg20 | 2 | Penetration |"),
             "{doc}"
         );
     }
@@ -2442,7 +2624,9 @@ mod tests {
         }];
         let doc = character_markdown(&e, &ruleset(), &labels(&[("spell-level-general", "Gen")]));
         assert!(doc.contains("| Wizard's Boost of Ignem |"), "{doc}");
-        assert!(doc.contains("| Gen |"), "{doc}");
+        // The marker sits a space after the Arts, where a resolved level would abut
+        // them: `MuVi15` is one figure, `MuVi Gen` two readable halves.
+        assert!(doc.contains("| MuVi Gen |"), "{doc}");
     }
 
     #[test]
@@ -2918,10 +3102,11 @@ mod tests {
     }
 
     /// A spell the catalogue does not hold keeps its row — the reader still learns the
-    /// character claims it — but its Technique/Form cells stay blank rather than
-    /// guessing.
+    /// character claims it — but its Art-and-level cell stays blank rather than
+    /// guessing: there are no Arts to abbreviate, and a bare level would read as a
+    /// code.
     #[test]
-    fn an_unknown_spell_keeps_its_row_with_blank_arts() {
+    fn an_unknown_spell_keeps_its_row_with_a_blank_art_code() {
         let mut e = magus();
         e.spells = vec![SpellSelection {
             spell: Id::new("spell.from_another_ruleset"),
@@ -2932,9 +3117,10 @@ mod tests {
         }];
         let doc = character_markdown(&e, &ruleset(), &labels(&[("spell-level-general", "Gen")]));
         assert!(
-            doc.contains("| spell.from_another_ruleset (free text) |  |  | Gen |  |  |"),
+            doc.contains("| spell.from_another_ruleset (free text) |  |  |  |"),
             "{doc}"
         );
+        assert!(!doc.contains("Gen"), "no half-written code: {doc}");
     }
 
     /// An entity whose type profile is unknown still renders: Confidence has no base
@@ -3142,12 +3328,15 @@ mod tests {
             .iter()
             .map(|key| ((*key).to_string(), "RESOLVED".to_string()))
             .collect();
-        // The two catalogue-derived families LABEL_KEYS does not enumerate.
+        // The three catalogue-derived families LABEL_KEYS does not enumerate.
         resolved.insert(format!("type-{}", e.type_id), "RESOLVED".to_string());
         for key in [
             "param-label-ability",
             "param-label-art",
             "param-label-focus",
+            "category-general",
+            "category-hermetic",
+            "category-personality",
         ] {
             resolved.insert(key.to_string(), "RESOLVED".to_string());
         }
@@ -3159,6 +3348,7 @@ mod tests {
             "magnitude-",
             "ability-category-",
             "art-type-",
+            "category-",
             "param-label-",
             "identity-",
             "spell-",

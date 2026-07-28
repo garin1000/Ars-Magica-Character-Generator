@@ -1961,8 +1961,8 @@ impl LocalizedRuleset {
     /// Use this when the caller needs more than the display name (name, summary,
     /// and description together); the field-specific helpers
     /// ([`LocalizedRuleset::display_name`], [`LocalizedRuleset::summary`],
-    /// [`LocalizedRuleset::description`], [`LocalizedRuleset::specialties`]) are
-    /// thin wrappers over it.
+    /// [`LocalizedRuleset::description`], [`LocalizedRuleset::abbreviation`],
+    /// [`LocalizedRuleset::specialties`]) are thin wrappers over it.
     pub fn entry(&self, id: &Id) -> Option<&I18nEntry> {
         self.i18n.get(id)
     }
@@ -1976,6 +1976,13 @@ impl LocalizedRuleset {
     /// and its (optional) summary are present.
     pub fn summary(&self, id: &Id) -> Option<&str> {
         self.i18n.get(id).and_then(|e| e.summary.as_deref())
+    }
+
+    /// Returns the localized short abbreviation for the given id, if both the entry
+    /// and its (optional) abbreviation are present. Carried by the Arts (`Cr`, `Ig`),
+    /// whose sheet notation is the two abbreviations plus a level (`CrIg20`).
+    pub fn abbreviation(&self, id: &Id) -> Option<&str> {
+        self.i18n.get(id).and_then(|e| e.abbreviation.as_deref())
     }
 
     /// Returns the localized full description for the given id, if both the entry
@@ -3291,6 +3298,24 @@ mod tests {
         );
         // A primary entry with no fallback description stays without one.
         assert_eq!(loc.description(&Id::new("virtue.puissant_ability")), None);
+    }
+
+    /// The Art abbreviation is localized data (`Cr`, `Ig`), and the exported spell
+    /// list composes its short Art+Level code out of it, so it needs the same kind of
+    /// field-specific accessor the name and summary already have.
+    #[test]
+    fn localized_ruleset_abbreviation() {
+        let rs = Ruleset::from_json("arm5-core", "1", VALID_ITEMS, VALID_TYPES).unwrap();
+        let i18n = r#"{
+          "virtue.gentle_gift": { "name": "Gentle Gift", "abbreviation": "GG" },
+          "virtue.puissant_ability": { "name": "Puissant (Ability)" }
+        }"#;
+        let loc = LocalizedRuleset::new(rs, i18n).unwrap();
+
+        assert_eq!(loc.abbreviation(&Id::new("virtue.gentle_gift")), Some("GG"));
+        // An entry that omits the abbreviation, and a missing id, both yield None.
+        assert_eq!(loc.abbreviation(&Id::new("virtue.puissant_ability")), None);
+        assert_eq!(loc.abbreviation(&Id::new("virtue.nonexistent")), None);
     }
 
     #[test]

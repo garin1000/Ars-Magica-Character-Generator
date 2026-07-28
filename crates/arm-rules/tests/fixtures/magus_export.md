@@ -29,25 +29,25 @@
 
 ### items-virtues-title
 
-| identity-name | export-col-magnitude |
-| --- | --- |
-| Hermetic Magus | magnitude-free |
-| Minor Magical Focus (fire) | magnitude-minor |
-| Puissant Magic Theory | magnitude-minor |
-| The Gift | magnitude-free |
-| Warrior | magnitude-minor |
+| identity-name | export-col-type | export-col-magnitude |
+| --- | --- | --- |
+| Hermetic Magus | category-social_status | magnitude-free |
+| Minor Magical Focus (fire) | category-hermetic | magnitude-minor |
+| Puissant Magic Theory | category-general | magnitude-minor |
+| The Gift | category-special | magnitude-free |
+| Warrior | category-general | magnitude-minor |
 
 #### export-granted
 
-| identity-name | export-col-magnitude |
-| --- | --- |
-| Puissant Intrigue | magnitude-minor |
+| identity-name | export-col-type | export-col-magnitude |
+| --- | --- | --- |
+| Puissant Intrigue | category-general | magnitude-minor |
 
 ### items-flaws-title
 
-| identity-name | export-col-magnitude |
-| --- | --- |
-| Blatant Gift | magnitude-major |
+| identity-name | export-col-type | export-col-magnitude |
+| --- | --- | --- |
+| Blatant Gift | category-hermetic | magnitude-major |
 
 - **items-virtues-title**: 3 / 10
 - **items-flaws-title**: 3 / 10
@@ -76,21 +76,31 @@
 | identity-name | ability-score-label | export-col-effective |
 | --- | --- | --- |
 | Creo | 8 |  |
+| Intellego | 0 |  |
+| Muto | 0 |  |
+| Perdo | 0 |  |
 | Rego | 5 |  |
 
 ### art-type-form
 
 | identity-name | ability-score-label | export-col-effective |
 | --- | --- | --- |
+| Animal | 0 |  |
+| Aquam | 0 |  |
+| Auram | 0 |  |
 | Corpus | 5 |  |
+| Herbam | 0 |  |
 | Ignem | 8 |  |
+| Imaginem | 0 |  |
+| Mentem | 0 |  |
+| Terram | 0 |  |
 | Vim | 5 |  |
 
 ## tab-spells
 
-| identity-name | spell-technique-label | spell-form-label | spell-level-label | spell-mastery-label | spell-mastery-abilities-label |
-| --- | --- | --- | --- | --- | --- |
-| Pilum of Fire | Creo | Ignem | 20 | 2 | Penetration |
+| identity-name | export-col-spell-code | spell-mastery-label | spell-mastery-abilities-label |
+| --- | --- | --- | --- |
+| Pilum of Fire | CrIg20 | 2 | Penetration |
 
 ## tab-equipment
 
