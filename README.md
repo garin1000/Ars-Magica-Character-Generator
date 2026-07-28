@@ -59,6 +59,12 @@ they stay portable and diff-friendly.
 - **Never lose work by accident.** Closing or quitting the app with unsaved
   changes — including via macOS Cmd+Q — prompts for confirmation before
   discarding, as does starting a new document or opening another file.
+- **Export a readable character sheet.** One click writes the whole character to a
+  Markdown file of your choosing — identity, Characteristics, Virtues and Flaws
+  (including the ones a House or type granted), Abilities, Arts, spells,
+  equipment, the computed combat/Soak/Fatigue/Wound values, the magic possessions,
+  and the aging record — in the language the app is running in. Exporting is not a
+  save: it never touches your current file or its unsaved-changes state.
 
 ## Architecture
 
@@ -147,10 +153,14 @@ in-play totals in-engine — per-Technique/Form Lab and Casting Totals, per-spel
 Penetration, per-Form Magic Resistance, combat lines (weapon + shield), Soak,
 Encumbrance, fatigue and wound ranges, and the stored Longevity bonus beside the
 suggestion for a ritual made today — from a numeric aura input. With this any core-rules character is fully
-enterable **and** fully computable in direct entry (milestone M5 complete). Next
-comes the guided creation wizard with its life-stage XP flow, which merely
-orchestrates these existing input surfaces — see [PLAN.md](PLAN.md) for the
-milestone breakdown.
+enterable **and** fully computable in direct entry (milestone M5 complete). A
+finished character can then be exported as a formatted Markdown sheet (M5.6): the
+engine assembles the document from the character and the localized rules text while
+the section headings come from the UI's own Fluent strings, so the sheet is
+localized without any user-facing text living in the engine, and the per-line
+casting/lab read-outs are deliberately left out as export noise. Next comes the
+guided creation wizard with its life-stage XP flow, which merely orchestrates these
+existing input surfaces — see [PLAN.md](PLAN.md) for the milestone breakdown.
 
 ## Getting started
 
