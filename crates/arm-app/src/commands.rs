@@ -6,7 +6,7 @@ use std::sync::{Mutex, RwLock};
 use arm_rules::{Entity, LocalizedRuleset, ValidationMode, ValidationResult};
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager, State};
-use tauri_plugin_dialog::DialogExt;
+use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
 
 use arm_rules::DerivedTotals;
 
@@ -157,6 +157,20 @@ fn e2e_file_override() -> Option<std::path::PathBuf> {
     std::env::var_os(E2E_FILE_ENV).map(std::path::PathBuf::from)
 }
 
+/// Ties a file dialog to the app's main window, so it opens centred on the app and
+/// can never be lost behind it. Parenting IS the mechanism here — the dialog plugin
+/// exposes no modal or always-on-top flag. Falls back to an unparented dialog when
+/// the window cannot be resolved (it is still better than no dialog at all).
+fn parented_to_main_window(
+    app: &AppHandle,
+    dialog: FileDialogBuilder<tauri::Wry>,
+) -> FileDialogBuilder<tauri::Wry> {
+    match app.get_webview_window("main") {
+        Some(window) => dialog.set_parent(&window),
+        None => dialog,
+    }
+}
+
 /// An opened document: the deserialized entity plus the file it came from, so
 /// the frontend can track it as the "current file" for subsequent direct saves.
 #[derive(serde::Serialize)]
@@ -183,7 +197,7 @@ pub async fn save_entity(
         None => match e2e_file_override() {
             Some(path) => path,
             None => {
-                let Some(file) = app
+                let dialog = app
                     .dialog()
                     .file()
                     // Ars Magica character/covenant files first (the default save
@@ -191,9 +205,8 @@ pub async fn save_entity(
                     .add_filter("Ars Magica character", &["armc", "armcov"])
                     .add_filter("JSON", &["json"])
                     .add_filter("All files", &["*"])
-                    .set_file_name(ruleset_io::default_file_name(entity.entity_kind))
-                    .blocking_save_file()
-                else {
+                    .set_file_name(ruleset_io::default_file_name(entity.entity_kind));
+                let Some(file) = parented_to_main_window(&app, dialog).blocking_save_file() else {
                     return Ok(None);
                 };
                 let chosen = file.into_path().map_err(|e| AppError::Io {
@@ -260,7 +273,7 @@ pub async fn export_markdown(
                 if let Some(parent) = ruleset_io::save_file_directory(current_path.as_deref()) {
                     dialog = dialog.set_directory(parent);
                 }
-                let Some(file) = dialog.blocking_save_file() else {
+                let Some(file) = parented_to_main_window(&app, dialog).blocking_save_file() else {
                     return Ok(None);
                 };
                 let chosen = file.into_path().map_err(|e| AppError::Io {
@@ -294,15 +307,14 @@ pub async fn load_entity(app: AppHandle) -> Result<Option<LoadedEntity>, AppErro
     let path = match e2e_file_override() {
         Some(path) => path,
         None => {
-            let Some(file) = app
+            let dialog = app
                 .dialog()
                 .file()
                 // Accept our own extensions and .json, plus an all-files fallback
                 // so a character file is never hidden by the filter.
                 .add_filter("Ars Magica character", &["armc", "armcov", "json"])
-                .add_filter("All files", &["*"])
-                .blocking_pick_file()
-            else {
+                .add_filter("All files", &["*"]);
+            let Some(file) = parented_to_main_window(&app, dialog).blocking_pick_file() else {
                 return Ok(None);
             };
             file.into_path().map_err(|e| AppError::Io {

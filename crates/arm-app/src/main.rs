@@ -67,27 +67,33 @@ where
         let labels = guard.labels.clone();
         drop(guard);
         let app = app.clone();
-        app.dialog()
+        let mut dialog = app
+            .dialog()
             .message(labels.message)
             .title(labels.title)
             .kind(MessageDialogKind::Warning)
             .buttons(MessageDialogButtons::OkCancelCustom(
                 labels.discard,
                 labels.cancel,
-            ))
-            .show(move |discard| {
-                {
-                    let state = app.state::<AppState>();
-                    let mut guard = state.close_guard.lock().expect("close guard lock poisoned");
-                    guard.showing = false;
-                    if !discard {
-                        return;
-                    }
-                    // Let the re-issued close/quit pass straight through.
-                    guard.confirmed = true;
+            ));
+        // Tie the confirmation to the window it is about, so it cannot be lost
+        // behind it. Parenting IS the modality mechanism the dialog plugin offers.
+        if let Some(window) = app.get_webview_window("main") {
+            dialog = dialog.parent(&window);
+        }
+        dialog.show(move |discard| {
+            {
+                let state = app.state::<AppState>();
+                let mut guard = state.close_guard.lock().expect("close guard lock poisoned");
+                guard.showing = false;
+                if !discard {
+                    return;
                 }
-                on_discard(&app);
-            });
+                // Let the re-issued close/quit pass straight through.
+                guard.confirmed = true;
+            }
+            on_discard(&app);
+        });
     }
     true
 }
