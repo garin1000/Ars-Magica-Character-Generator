@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import { eligibleForConstraint, grantItemLabel } from '../derive';
+  import ParameterPicker from './ParameterPicker.svelte';
   import { tooltip, type TooltipContent } from '../actions';
   import type { GrantConstraint, House, PointItem, Selection } from '../types';
 
@@ -60,8 +61,10 @@
     return pick ? options.findIndex((o) => sameSelection(o, pick)) : -1;
   }
 
-  function pickedRef(choiceKey: string): string {
-    return store.entity.house_choices?.[choiceKey]?.ref ?? '';
+  // The whole Selection picked for an open grant (undefined while unchosen), so a
+  // parameterized pick's params are in reach for the ParameterPicker.
+  function openPick(choiceKey: string): Selection | undefined {
+    return store.entity.house_choices?.[choiceKey];
   }
 
   function onHouse(event: Event) {
@@ -131,8 +134,9 @@
                         {/each}
                       </select>
                     {:else}
+                      {@const pick = openPick(grant.choice_key)}
                       <select
-                        value={pickedRef(grant.choice_key)}
+                        value={pick?.ref ?? ''}
                         onchange={(e) => onOpen(grant.choice_key, e)}
                         data-testid="house-open-{grant.choice_key}"
                       >
@@ -141,6 +145,20 @@
                           <option value={item.id}>{label(item.id)}</option>
                         {/each}
                       </select>
+                      <!-- A parameterized pick ("Puissant (Art)") needs its target
+                           chosen too, or the engine reports the parameter missing. -->
+                      {#if pick}
+                        {@const parameters =
+                          store.ruleset.ruleset.point_items[pick.ref]?.parameters ?? []}
+                        {#if parameters.length > 0}
+                          <ParameterPicker
+                            selection={pick}
+                            params={parameters}
+                            idSuffix={grant.choice_key}
+                            commit={(next) => store.setHouseChoice(grant.choice_key, next)}
+                          />
+                        {/if}
+                      {/if}
                     {/if}
                   </li>
                 {/each}

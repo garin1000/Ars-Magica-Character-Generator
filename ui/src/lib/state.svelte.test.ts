@@ -1029,6 +1029,24 @@ describe('aged / warped state + identity', () => {
     });
   });
 
+  it('keeps the chosen parameters of a parameterized owed Warping fill', () => {
+    // A fill may be a parameterized item ("Master of (Form) Creatures"); the
+    // chosen parameter travels with the pick, and re-picking the same slot
+    // replaces the whole Selection (so a stale param cannot linger).
+    store.setWarpingChoice('warping.supernatural_virtue.0', {
+      ref: 'virtue.master_of_form_creatures',
+      params: { form: 'art.ignem' },
+    });
+    expect(store.entity.warping_choices?.['warping.supernatural_virtue.0']).toEqual({
+      ref: 'virtue.master_of_form_creatures',
+      params: { form: 'art.ignem' },
+    });
+    store.setWarpingChoice('warping.supernatural_virtue.0', { ref: 'virtue.second_sight' });
+    expect(store.entity.warping_choices?.['warping.supernatural_virtue.0']).toEqual({
+      ref: 'virtue.second_sight',
+    });
+  });
+
   it('adds, edits and removes Twilight Scars by index', () => {
     store.addTwilightScar();
     store.setTwilightScarDescription(0, 'Silver streak in the hair');
@@ -1257,8 +1275,24 @@ describe('art actions', () => {
       }),
     ]);
     store.addSelection('virtue.puissant_art');
-    store.setArtBonusTarget(0, 'art.ignem');
+    store.setArtBonusTarget(0, 'art', 'art.ignem');
     expect(store.entity.selections[0].params).toEqual({ art: 'art.ignem' });
+  });
+
+  it('writes the Art under the parameter key that declared it', () => {
+    // An Art-domain parameter need not be keyed "art": Master of (Form)
+    // Creatures declares `form` over the Art catalogue, and storing the pick
+    // under "art" would leave `form` missing (and "art" unexpected).
+    installRuleset([
+      item({
+        id: 'virtue.master_of_form_creatures',
+        category: 'supernatural',
+        parameters: [{ key: 'form', type: 'ref', domain: 'art' }],
+      }),
+    ]);
+    store.addSelection('virtue.master_of_form_creatures');
+    store.setArtBonusTarget(0, 'form', 'art.ignem');
+    expect(store.entity.selections[0].params).toEqual({ form: 'art.ignem' });
   });
 });
 

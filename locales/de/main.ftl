@@ -190,6 +190,9 @@ warping-owed-major-flaws = { $count ->
     [one] { $count } Großer Fehler
    *[other] { $count } Große Fehler
 }
+warping-slot-minor-flaw = Kleiner Fehler
+warping-slot-supernatural-virtue = Übernatürliche Kleine Tugend
+warping-slot-major-flaw = Großer Fehler
 warping-choose-prompt = Auswählen…
 true-faith-label = Wahrer Glaube
 true-faith-readout = Wert { $score }

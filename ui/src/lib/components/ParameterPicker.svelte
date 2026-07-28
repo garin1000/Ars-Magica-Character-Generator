@@ -3,18 +3,57 @@
   import { abilityDisplayName, artLabel, groupArtsByType, paramValueUsage } from '../derive';
   import { CHARACTERISTICS, type ParameterDef, type Selection } from '../types';
 
+  // Two callers, two write paths. A *bought* selection lives at `index` in
+  // `entity.selections` and is edited in place by the store's index-based
+  // methods. A *grant pick* (House / Mythic-type open grant, an owed Warping
+  // slot) lives in a choice map instead, so the caller passes `commit` and gets
+  // handed the whole next Selection to store under its own choice_key.
   let {
     selection,
-    index,
     params,
-  }: { selection: Selection; index: number; params: ParameterDef[] } = $props();
+    index = -1,
+    idSuffix,
+    commit,
+  }: {
+    selection: Selection;
+    params: ParameterDef[];
+    index?: number;
+    idSuffix?: string;
+    commit?: (selection: Selection) => void;
+  } = $props();
+
+  // Test ids stay stable per caller: a bought row is identified by its index, a
+  // grant pick by its choice_key.
+  const suffix = $derived(idSuffix ?? String(index));
 
   // Separator joining an ability id and its instance value into one option value
-  // (NUL never appears in ids or in user-typed area/language names).
-  const SEP = '\u0000';
+  // (a NUL never appears in ids or in user-typed area/language names). Built from
+  // a char code so the source file itself stays plain ASCII.
+  const SEP = String.fromCharCode(0);
+
+  /**
+   * The single write sink: hand the composed params to the grant-pick `commit`,
+   * or fall back to editing the bought row in place. `next` is always the FULL
+   * next params object, mirroring what the index-path store method would write.
+   */
+  function write(next: Record<string, string>, editRow: () => void): void {
+    if (commit) {
+      commit({ ref: selection.ref, params: next });
+      return;
+    }
+    editRow();
+  }
+
+  function setParam(key: string, value: string) {
+    write({ ...(selection.params ?? {}), [key]: value }, () => store.setParamAt(index, key, value));
+  }
 
   function onSelect(key: string, event: Event) {
-    store.setParamAt(index, key, (event.currentTarget as HTMLSelectElement).value);
+    setParam(key, (event.currentTarget as HTMLSelectElement).value);
+  }
+
+  function onTypeText(key: string, event: Event) {
+    setParam(key, (event.currentTarget as HTMLInputElement).value.trim());
   }
 
   function abilityInstanceLabel(abilityId: string, parameter: string | null | undefined): string {
@@ -35,18 +74,24 @@
 
   // The composite value identifying this selection's current ability target, so
   // the matching <option> shows as selected.
-  function abilityTargetValue(): string {
-    const abilityId = selection.params?.ability;
+  function abilityTargetValue(key: string): string {
+    const abilityId = selection.params?.[key];
     if (!abilityId) return '';
-    const key = store.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
-    const instance = key ? selection.params?.[key] : undefined;
+    const instanceKey = store.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
+    const instance = instanceKey ? selection.params?.[instanceKey] : undefined;
     return instance ? `${abilityId}${SEP}${instance}` : abilityId;
   }
 
-  function onSelectAbility(event: Event) {
+  function onSelectAbility(key: string, event: Event) {
     const raw = (event.currentTarget as HTMLSelectElement).value;
     const [abilityId, parameter] = raw.split(SEP);
-    store.setAbilityBonusTarget(index, abilityId, parameter);
+    // Mirrors setAbilityBonusTarget: the target ability plus, for a parameterized
+    // ability, the instance discriminator under that ability's own param key. Any
+    // stale instance key from a previous target is dropped.
+    const next: Record<string, string> = { [key]: abilityId };
+    const instanceKey = store.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
+    if (instanceKey && parameter) next[instanceKey] = parameter;
+    write(next, () => store.setAbilityBonusTarget(index, abilityId, parameter));
   }
 
   // Every catalogue Art (Techniques then Forms) — the legal Puissant Art targets.
@@ -59,8 +104,11 @@
       : [],
   );
 
-  function onSelectArt(event: Event) {
-    store.setArtBonusTarget(index, (event.currentTarget as HTMLSelectElement).value);
+  function onSelectArt(key: string, event: Event) {
+    const artId = (event.currentTarget as HTMLSelectElement).value;
+    write({ ...(selection.params ?? {}), [key]: artId }, () =>
+      store.setArtBonusTarget(index, key, artId),
+    );
   }
 
   // How many other selections of this same item already claim each target, so a
@@ -70,6 +118,8 @@
     store.ruleset?.ruleset.point_items[selection.ref]?.max_per_target ?? 1,
   );
 
+  // A grant pick passes no index (-1 excludes nothing), so it reads the bought
+  // rows without excluding one of them — a grant pick is not itself a bought row.
   function usage(key: string): Map<string, number> {
     return paramValueUsage(store.entity.selections, selection.ref, key, index);
   }
@@ -106,7 +156,7 @@
         aria-label={typeLabel}
         value={selection.params?.[param.key] ?? ''}
         onchange={(e) => onSelect(param.key, e)}
-        data-testid="param-{selection.ref}-{param.key}-{index}"
+        data-testid="param-{selection.ref}-{param.key}-{suffix}"
       >
         <option value="" disabled>{typeLabel}</option>
         {#each CHARACTERISTICS as characteristic (characteristic)}
@@ -123,9 +173,9 @@
            Abilities tab first. For (Area) Lore each area is its own target. -->
       <select
         aria-label={typeLabel}
-        value={abilityTargetValue()}
-        onchange={onSelectAbility}
-        data-testid="param-{selection.ref}-{param.key}-{index}"
+        value={abilityTargetValue(param.key)}
+        onchange={(e) => onSelectAbility(param.key, e)}
+        data-testid="param-{selection.ref}-{param.key}-{suffix}"
       >
         <option value="" disabled>{typeLabel}</option>
         <!-- Keyed by index as well as value: two instances of a parameterized
@@ -139,13 +189,14 @@
         {/each}
       </select>
     {:else if param.domain === 'art'}
-      <!-- Targets a Hermetic Art (Puissant Art). Any catalogue Art is a legal
-           target; max_per_target keeps the same Art from being picked twice. -->
+      <!-- Targets a Hermetic Art. Any catalogue Art is a legal target;
+           max_per_target keeps the same Art from being picked twice. The key need
+           not be "art" — Master of (Form) Creatures declares `form` here. -->
       <select
         aria-label={typeLabel}
         value={selection.params?.[param.key] ?? ''}
-        onchange={onSelectArt}
-        data-testid="param-{selection.ref}-{param.key}-{index}"
+        onchange={(e) => onSelectArt(param.key, e)}
+        data-testid="param-{selection.ref}-{param.key}-{suffix}"
       >
         <option value="" disabled>{typeLabel}</option>
         {#each artOptions as art (art.value)}
@@ -160,9 +211,8 @@
         aria-label={typeLabel}
         placeholder={typeLabel}
         value={selection.params?.[param.key] ?? ''}
-        oninput={(e) =>
-          store.setParamAt(index, param.key, (e.currentTarget as HTMLInputElement).value.trim())}
-        data-testid="param-{selection.ref}-{param.key}-{index}"
+        oninput={(e) => onTypeText(param.key, e)}
+        data-testid="param-{selection.ref}-{param.key}-{suffix}"
       />
     {/if}
   </label>
