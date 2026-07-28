@@ -227,6 +227,26 @@ button:disabled {
   width: 100%;
 }
 
+/* One group of owed-Warping slots (all the Minor Flaws, all the supernatural
+   Minor Virtues, …): its count heading sits tight above its pickers, with air
+   between groups so the three kinds read as separate asks. */
+.warping-owed-group {
+  margin-top: 0.75rem;
+}
+
+.warping-owed-group > h4 {
+  margin: 0 0 0.35rem;
+}
+
+.warping-owed-pickers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
 /* The tabbed main area: one concept at a time, bound to the viewport so the gold
    Selected frame can fill the full available height. Content is centered when it
    doesn't use the full width (e.g. the Characteristics block). */

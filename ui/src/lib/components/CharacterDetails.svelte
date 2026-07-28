@@ -1,11 +1,18 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { eligibleForConstraint, formatSigned, grantItemLabel } from '../derive';
+  import {
+    eligibleForConstraint,
+    formatSigned,
+    grantItemLabel,
+    groupWarpingOwedGrants,
+  } from '../derive';
+  import ParameterPicker from './ParameterPicker.svelte';
   import {
     CHARACTERISTICS,
     type Characteristic,
     type GrantConstraint,
     type PointItem,
+    type Selection,
   } from '../types';
 
   const age = $derived(store.entity.age ?? null);
@@ -41,8 +48,10 @@
   // engine surfaces the per-kind counts and one OPEN grant (choice_key +
   // constraint) per owed slot; it returns an empty list for magi (exempt —
   // Twilight instead), so the section simply never renders for them.
-  const warpingOwed = $derived(store.effective?.warping_owed);
   const warpingOwedGrants = $derived(store.effective?.warping_owed_grants ?? []);
+  // The owed slots bucketed by what each expects, so every <select> can say what
+  // it wants instead of standing in an unlabelled row.
+  const warpingSlotGroups = $derived(groupWarpingOwedGrants(warpingOwedGrants));
 
   // Localized name of an owed-fill candidate, with any `{param}` token filled: an
   // unchosen parameter shows its localized hint ("(Form)"), a chosen ref resolves
@@ -61,8 +70,10 @@
     return rs ? eligibleForConstraint(rs, c, { excludeWarpingSources: true }) : [];
   }
 
-  function warpingPick(choiceKey: string): string {
-    return store.entity.warping_choices?.[choiceKey]?.ref ?? '';
+  // The Selection filling one owed slot (undefined while unchosen). The whole
+  // Selection, not just its ref, so a parameterized fill's params are in reach.
+  function warpingPick(choiceKey: string): Selection | undefined {
+    return store.entity.warping_choices?.[choiceKey];
   }
 
   function onWarpingChoice(choiceKey: string, event: Event) {
@@ -241,46 +252,56 @@
 
     <!-- Owed Warping Virtues & Flaws (Core:16547-16561). Non-magi only: the engine
          returns no owed grants for magi (Twilight instead), so this never renders
-         for them. Each owed slot gets a picker filtered to eligible items. -->
+         for them. The slots are grouped by what they expect (Minor Flaw,
+         supernatural Minor Virtue, Major Flaw) and each one labelled, so a row of
+         otherwise identical <select>s is readable; the rules name no eligible
+         list, so each picker offers everything the constraint admits. -->
     {#if warpingOwedGrants.length > 0}
       <div class="detail-section" data-testid="warping-owed">
         <h3 class="detail-label">{store.t('warping-owed-label')}</h3>
         <p class="warping-owed-hint">{store.t('warping-owed-hint')}</p>
-        {#if warpingOwed}
-          <ul class="warping-owed-counts" data-testid="warping-owed-counts">
-            {#if warpingOwed.minor_flaws > 0}
-              <li>{store.t('warping-owed-minor-flaws', { count: warpingOwed.minor_flaws })}</li>
-            {/if}
-            {#if warpingOwed.minor_supernatural_virtues > 0}
-              <li>
-                {store.t('warping-owed-supernatural-virtues', {
-                  count: warpingOwed.minor_supernatural_virtues,
-                })}
-              </li>
-            {/if}
-            {#if warpingOwed.major_flaws > 0}
-              <li>{store.t('warping-owed-major-flaws', { count: warpingOwed.major_flaws })}</li>
-            {/if}
-          </ul>
-        {/if}
-        <ul class="warping-owed-pickers">
-          {#each warpingOwedGrants as grant, i (i)}
-            {#if grant.kind === 'open'}
-              <li>
-                <select
-                  value={warpingPick(grant.choice_key)}
-                  onchange={(e) => onWarpingChoice(grant.choice_key, e)}
-                  data-testid="warping-fill-{grant.choice_key}"
-                >
-                  <option value="">{store.t('warping-choose-prompt')}</option>
-                  {#each eligibleForWarping(grant.constraint) as item (item.id)}
-                    <option value={item.id}>{warpingItemName(item.id)}</option>
-                  {/each}
-                </select>
-              </li>
-            {/if}
-          {/each}
-        </ul>
+        {#each warpingSlotGroups as group (group.labelKey)}
+          <div class="warping-owed-group" data-testid="warping-owed-group-{group.labelKey}">
+            <h4 class="detail-label">
+              {store.t(group.countKey, { count: group.grants.length })}
+            </h4>
+            <ul class="warping-owed-pickers">
+              {#each group.grants as slot (slot.choice_key)}
+                {@const pick = warpingPick(slot.choice_key)}
+                <li>
+                  <label class="field">
+                    <span>{store.t(group.labelKey)}</span>
+                    <select
+                      value={pick?.ref ?? ''}
+                      onchange={(e) => onWarpingChoice(slot.choice_key, e)}
+                      data-testid="warping-fill-{slot.choice_key}"
+                    >
+                      <option value="">{store.t('warping-choose-prompt')}</option>
+                      {#each eligibleForWarping(slot.constraint) as item (item.id)}
+                        <option value={item.id}>{warpingItemName(item.id)}</option>
+                      {/each}
+                    </select>
+                  </label>
+                  <!-- A parameterized fill ("Master of (Form) Creatures") needs its
+                       target chosen too, or the engine reports the parameter
+                       missing. The pick carries its own params, keyed by slot. -->
+                  {#if pick}
+                    {@const parameters =
+                      store.ruleset?.ruleset.point_items[pick.ref]?.parameters ?? []}
+                    {#if parameters.length > 0}
+                      <ParameterPicker
+                        selection={pick}
+                        params={parameters}
+                        idSuffix={slot.choice_key}
+                        commit={(next) => store.setWarpingChoice(slot.choice_key, next)}
+                      />
+                    {/if}
+                  {/if}
+                </li>
+              {/each}
+            </ul>
+          </div>
+        {/each}
       </div>
     {/if}
 

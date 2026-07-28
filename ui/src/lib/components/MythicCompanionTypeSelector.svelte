@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import { eligibleForConstraint as eligibleItems, grantItemLabel, sameSelection } from '../derive';
+  import ParameterPicker from './ParameterPicker.svelte';
   import { tooltip, type TooltipContent } from '../actions';
   import type {
     GrantConstraint,
@@ -57,6 +58,12 @@
     return pick ? options.findIndex((o) => sameSelection(o, pick)) : -1;
   }
 
+  // The whole Selection picked for an `open` grant (undefined while unchosen), so
+  // a parameterized pick's params are in reach for the ParameterPicker.
+  function openPick(choiceKey: string): Selection | undefined {
+    return store.entity.mythic_choices?.[choiceKey];
+  }
+
   // The required-Flaw ref currently satisfying a slot: the eligible flaw present
   // in the bought selections, else the rules default (pre-filled).
   function currentRequiredFlaw(flaw: RequiredFlaw): string {
@@ -75,6 +82,12 @@
     if (raw === '') return;
     const option = options[Number(raw)];
     if (option) store.setMythicChoice(choiceKey, option);
+  }
+
+  function onOpen(choiceKey: string, event: Event) {
+    const ref = (event.currentTarget as HTMLSelectElement).value;
+    // A bare `{ref}` resets any params the previous pick carried.
+    if (ref) store.setMythicChoice(choiceKey, { ref });
   }
 
   function onFlawSwap(previousRef: string, event: Event) {
@@ -124,6 +137,34 @@
                   <option value={String(i)}>{label(option.ref, option.params)}</option>
                 {/each}
               </select>
+            {:else}
+              <!-- An `open` free-Virtue grant: the player picks anything the
+                   constraint admits (the engine validates the same way it does for
+                   a House open grant). No shipped Mythic type defines one today,
+                   but the engine's Grant set does, so the UI covers it. -->
+              {@const pick = openPick(grant.choice_key)}
+              <span class="mythic-granted-label">{store.t('mythic-granted-label')}</span>
+              <select
+                value={pick?.ref ?? ''}
+                onchange={(e) => onOpen(grant.choice_key, e)}
+                data-testid="mythic-open-{grant.choice_key}"
+              >
+                <option value="">{store.t('mythic-choose-prompt')}</option>
+                {#each eligibleForConstraint(grant.constraint) as item (item.id)}
+                  <option value={item.id}>{label(item.id)}</option>
+                {/each}
+              </select>
+              {#if pick}
+                {@const parameters = store.ruleset.ruleset.point_items[pick.ref]?.parameters ?? []}
+                {#if parameters.length > 0}
+                  <ParameterPicker
+                    selection={pick}
+                    params={parameters}
+                    idSuffix={grant.choice_key}
+                    commit={(next) => store.setMythicChoice(grant.choice_key, next)}
+                  />
+                {/if}
+              {/if}
             {/if}
           </li>
         {/each}

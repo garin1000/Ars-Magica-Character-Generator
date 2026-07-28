@@ -206,6 +206,9 @@ warping-owed-major-flaws = { $count ->
     [one] { $count } Major Flaw
    *[other] { $count } Major Flaws
 }
+warping-slot-minor-flaw = Minor Flaw
+warping-slot-supernatural-virtue = Supernatural Minor Virtue
+warping-slot-major-flaw = Major Flaw
 warping-choose-prompt = Choose…
 true-faith-label = True Faith
 true-faith-readout = Score { $score }

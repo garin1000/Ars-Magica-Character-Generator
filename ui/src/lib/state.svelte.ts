@@ -610,10 +610,16 @@ class AppStore {
     this.#scheduleValidate();
   }
 
-  /** Point an art-bonus selection (Puissant Art) at a specific Art (by id). */
-  setArtBonusTarget(index: number, artId: string): void {
+  /**
+   * Point an Art-domain parameter of a selection at a specific Art (by id).
+   * `key` is the *declaring* parameter's key — usually `art` (Puissant Art), but
+   * an Art-domain parameter may be keyed otherwise (Master of (Form) Creatures
+   * declares `form` over the Art catalogue), and the value must land under the
+   * key the item declared or the engine reports it missing.
+   */
+  setArtBonusTarget(index: number, key: string, artId: string): void {
     this.entity.selections = this.entity.selections.map((s, i) =>
-      i === index ? { ...s, params: { art: artId } } : s,
+      i === index ? { ...s, params: { ...(s.params ?? {}), [key]: artId } } : s,
     );
     this.#scheduleValidate();
   }
