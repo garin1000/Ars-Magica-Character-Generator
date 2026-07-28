@@ -376,6 +376,7 @@ action-new = Neu
 action-open = Öffnen
 action-save = Speichern
 action-save-as = Speichern unter
+action-export = Exportieren
 
 # Bestätigung beim Schließen oder Beenden der Anwendung mit ungespeicherten Änderungen.
 close-unsaved-title = Ungespeicherte Änderungen

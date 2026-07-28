@@ -390,6 +390,7 @@ action-new = New
 action-open = Open
 action-save = Save
 action-save-as = Save As
+action-export = Export
 
 # Confirmation shown when closing or quitting the app with unsaved changes.
 close-unsaved-title = Unsaved changes

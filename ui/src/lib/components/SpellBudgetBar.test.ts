@@ -15,6 +15,8 @@ vi.mock('../ipc', () => ({
   saveEntity: vi.fn(),
   loadEntity: vi.fn(),
   updateCloseGuard: vi.fn(),
+  exportMarkdown: vi.fn(),
+  exportLabelKeys: vi.fn(),
 }));
 
 import { store } from '../state.svelte';
