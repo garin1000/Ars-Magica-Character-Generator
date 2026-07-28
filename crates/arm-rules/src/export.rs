@@ -53,7 +53,8 @@ use crate::effective::{
 };
 use crate::ruleset::{LocalizedRuleset, Ruleset};
 use crate::types::{
-    EnchantedDevice, Entity, EntityKind, Id, ItemKind, SupernaturalPower, TalismanEffect,
+    EnchantedDevice, Entity, EntityKind, Id, ItemKind, MightScore, PersonalityTrait,
+    SupernaturalPower, TalismanEffect,
 };
 use crate::validation::{compute_balance, effective_point_ceilings};
 
@@ -317,6 +318,26 @@ impl<'a> Doc<'a> {
             .to_string()
     }
 
+    /// Appends an ATX heading whose text is the chrome label for `key`.
+    fn section(&self, out: &mut String, level: usize, key: &str) {
+        heading(out, level, &self.label(key));
+    }
+
+    /// Appends a `- **<label for key>**: value` bullet.
+    fn labelled(&self, out: &mut String, key: &str, value: &str) {
+        field(out, &self.label(key), value);
+    }
+
+    /// A Might Score as `<localized realm> <score>`. Shared by the being's own Might
+    /// and the familiar's, which are separate scores with the same shape.
+    fn realm_score(&self, might: &MightScore) -> String {
+        format!(
+            "{} {}",
+            self.label(&format!("realm-{}", might.realm)),
+            might.score
+        )
+    }
+
     /// The localized separator for an inline list, mirroring the frontend's
     /// `restrictedPoolLabel` (`"<sep> "`).
     fn list_separator(&self) -> String {
@@ -421,20 +442,16 @@ impl<'a> Doc<'a> {
             ("identity-parens", e.parens.as_str()),
         ] {
             if !value.trim().is_empty() {
-                field(&mut body, &self.label(key), &escape_cell(value));
+                self.labelled(&mut body, key, &escape_cell(value));
             }
         }
         if let Some(year) = e.birth_year {
-            field(
-                &mut body,
-                &self.label("identity-birth-year"),
-                &year.to_string(),
-            );
+            self.labelled(&mut body, "identity-birth-year", &year.to_string());
         }
         if body.is_empty() {
             return;
         }
-        heading(out, 2, &self.label("identity-label"));
+        self.section(out, 2, "identity-label");
         out.push_str(&body);
         out.push('\n');
     }
@@ -470,7 +487,7 @@ impl<'a> Doc<'a> {
         if rows.is_empty() {
             return;
         }
-        heading(out, 2, &self.label("characteristics-title"));
+        self.section(out, 2, "characteristics-title");
         table(
             out,
             &[
@@ -515,20 +532,17 @@ impl<'a> Doc<'a> {
             if rows.is_empty() {
                 continue;
             }
-            heading(&mut body, 3, &self.label(heading_key));
-            table(
-                &mut body,
-                &[
-                    self.label("identity-name"),
-                    self.label("export-col-magnitude"),
-                ],
-                &rows,
-            );
+            self.section(&mut body, 3, heading_key);
+            let headers = [
+                self.label("identity-name"),
+                self.label("export-col-magnitude"),
+            ];
+            table(&mut body, &headers, &rows);
         }
         if body.is_empty() {
             return;
         }
-        heading(out, 2, &self.label("tab-virtues-flaws"));
+        self.section(out, 2, "tab-virtues-flaws");
         out.push_str(&body);
         let balance = compute_balance(self.entity, self.rules());
         let ceilings = effective_point_ceilings(self.entity, self.rules());
@@ -548,7 +562,7 @@ impl<'a> Doc<'a> {
                 Some(max) => format!("{used} / {max}"),
                 None => used.to_string(),
             };
-            field(out, &self.label(key), &value);
+            self.labelled(out, key, &value);
         }
         out.push('\n');
     }
@@ -591,29 +605,23 @@ impl<'a> Doc<'a> {
         if rows.is_empty() && !has_xp {
             return;
         }
-        heading(out, 2, &self.label("abilities-title"));
-        table(
-            out,
-            &[
-                self.label("identity-name"),
-                self.label("ability-specialty-label"),
-                self.label("ability-score-label"),
-                self.label("export-col-effective"),
-            ],
-            &rows,
-        );
+        self.section(out, 2, "abilities-title");
+        let headers = [
+            self.label("identity-name"),
+            self.label("ability-specialty-label"),
+            self.label("ability-score-label"),
+            self.label("export-col-effective"),
+        ];
+        table(out, &headers, &rows);
         if xp.general_pool > 0 || xp.general_used > 0 {
-            field(
-                out,
-                &self.label("xp-pool"),
-                &format!("{} / {}", xp.general_used, xp.general_pool),
-            );
+            let spent = format!("{} / {}", xp.general_used, xp.general_pool);
+            self.labelled(out, "xp-pool", &spent);
             out.push('\n');
         }
         if xp.restricted.is_empty() {
             return;
         }
-        heading(out, 3, &self.label("export-xp-restricted"));
+        self.section(out, 3, "export-xp-restricted");
         for pool in &xp.restricted {
             let mut eligibility: Vec<String> = pool
                 .abilities
@@ -625,11 +633,8 @@ impl<'a> Doc<'a> {
                     .iter()
                     .map(|c| self.label(&format!("ability-category-{c}"))),
             );
-            field(
-                out,
-                &eligibility.join(&self.list_separator()),
-                &format!("{} / {}", pool.used, pool.amount),
-            );
+            let drawn = format!("{} / {}", pool.used, pool.amount);
+            field(out, &eligibility.join(&self.list_separator()), &drawn);
         }
         out.push('\n');
     }
@@ -666,21 +671,18 @@ impl<'a> Doc<'a> {
             if rows.is_empty() {
                 continue;
             }
-            heading(&mut body, 3, &self.label(&format!("art-type-{art_type}")));
-            table(
-                &mut body,
-                &[
-                    self.label("identity-name"),
-                    self.label("ability-score-label"),
-                    self.label("export-col-effective"),
-                ],
-                &rows,
-            );
+            self.section(&mut body, 3, &format!("art-type-{art_type}"));
+            let headers = [
+                self.label("identity-name"),
+                self.label("ability-score-label"),
+                self.label("export-col-effective"),
+            ];
+            table(&mut body, &headers, &rows);
         }
         if body.is_empty() {
             return;
         }
-        heading(out, 2, &self.label("tab-arts"));
+        self.section(out, 2, "tab-arts");
         out.push_str(&body);
     }
 
@@ -732,19 +734,16 @@ impl<'a> Doc<'a> {
         if rows.is_empty() {
             return;
         }
-        heading(out, 2, &self.label("tab-spells"));
-        table(
-            out,
-            &[
-                self.label("identity-name"),
-                self.label("spell-technique-label"),
-                self.label("spell-form-label"),
-                self.label("spell-level-label"),
-                self.label("spell-mastery-label"),
-                self.label("spell-mastery-abilities-label"),
-            ],
-            &rows,
-        );
+        self.section(out, 2, "tab-spells");
+        let headers = [
+            self.label("identity-name"),
+            self.label("spell-technique-label"),
+            self.label("spell-form-label"),
+            self.label("spell-level-label"),
+            self.label("spell-mastery-label"),
+            self.label("spell-mastery-abilities-label"),
+        ];
+        table(out, &headers, &rows);
     }
 
     /// Which catalogue holds `id`, or `None` when no catalogue does.
@@ -785,20 +784,17 @@ impl<'a> Doc<'a> {
             if rows.is_empty() {
                 continue;
             }
-            heading(&mut body, 3, &self.label(heading_key));
-            table(
-                &mut body,
-                &[
-                    self.label("identity-name"),
-                    self.label("equipment-equipped-label"),
-                ],
-                &rows,
-            );
+            self.section(&mut body, 3, heading_key);
+            let headers = [
+                self.label("identity-name"),
+                self.label("equipment-equipped-label"),
+            ];
+            table(&mut body, &headers, &rows);
         }
         if body.is_empty() {
             return;
         }
-        heading(out, 2, &self.label("tab-equipment"));
+        self.section(out, 2, "tab-equipment");
         out.push_str(&body);
     }
 
@@ -823,20 +819,17 @@ impl<'a> Doc<'a> {
                 ]
             })
             .collect();
-        heading(out, 2, &self.label("derived-section-combat"));
-        table(
-            out,
-            &[
-                self.label("identity-name"),
-                self.label("param-label-ability"),
-                self.label("derived-combat-init"),
-                self.label("derived-combat-attack"),
-                self.label("derived-combat-defense"),
-                self.label("derived-combat-damage"),
-                self.label("derived-range"),
-            ],
-            &rows,
-        );
+        self.section(out, 2, "derived-section-combat");
+        let headers = [
+            self.label("identity-name"),
+            self.label("param-label-ability"),
+            self.label("derived-combat-init"),
+            self.label("derived-combat-attack"),
+            self.label("derived-combat-defense"),
+            self.label("derived-combat-damage"),
+            self.label("derived-range"),
+        ];
+        table(out, &headers, &rows);
     }
 
     /// The Soak breakdown: every labelled addend, then the total.
@@ -845,19 +838,12 @@ impl<'a> Doc<'a> {
         if soak_total.total == 0 && soak_total.addends.iter().all(|a| a.value == 0) {
             return;
         }
-        heading(out, 2, &self.label("derived-section-soak"));
+        self.section(out, 2, "derived-section-soak");
         for addend in &soak_total.addends {
-            field(
-                out,
-                &self.label(&format!("derived-addend-{}", addend.label)),
-                &signed(addend.value),
-            );
+            let key = format!("derived-addend-{}", addend.label);
+            self.labelled(out, &key, &signed(addend.value));
         }
-        field(
-            out,
-            &self.label("export-col-total"),
-            &signed(soak_total.total),
-        );
+        self.labelled(out, "export-col-total", &signed(soak_total.total));
         out.push('\n');
     }
 
@@ -867,10 +853,10 @@ impl<'a> Doc<'a> {
         if enc.load == 0 && enc.burden == 0 && enc.total == 0 {
             return;
         }
-        heading(out, 2, &self.label("derived-section-encumbrance"));
-        field(out, &self.label("derived-load"), &enc.load.to_string());
-        field(out, &self.label("derived-burden"), &enc.burden.to_string());
-        field(out, &self.label("export-col-total"), &enc.total.to_string());
+        self.section(out, 2, "derived-section-encumbrance");
+        self.labelled(out, "derived-load", &enc.load.to_string());
+        self.labelled(out, "derived-burden", &enc.burden.to_string());
+        self.labelled(out, "export-col-total", &enc.total.to_string());
         out.push('\n');
     }
 
@@ -893,15 +879,12 @@ impl<'a> Doc<'a> {
                 ]
             })
             .collect();
-        heading(out, 2, &self.label("derived-section-fatigue"));
-        table(
-            out,
-            &[
-                self.label("identity-name"),
-                self.label("export-col-penalty"),
-            ],
-            &fatigue,
-        );
+        self.section(out, 2, "derived-section-fatigue");
+        let fatigue_headers = [
+            self.label("identity-name"),
+            self.label("export-col-penalty"),
+        ];
+        table(out, &fatigue_headers, &fatigue);
 
         let wounds: Vec<Vec<String>> = wound_ranges(self.entity, self.rules())
             .iter()
@@ -917,16 +900,13 @@ impl<'a> Doc<'a> {
                 ]
             })
             .collect();
-        heading(out, 2, &self.label("derived-section-wounds"));
-        table(
-            out,
-            &[
-                self.label("identity-name"),
-                self.label("derived-range"),
-                self.label("export-col-penalty"),
-            ],
-            &wounds,
-        );
+        self.section(out, 2, "derived-section-wounds");
+        let wound_headers = [
+            self.label("identity-name"),
+            self.label("derived-range"),
+            self.label("export-col-penalty"),
+        ];
+        table(out, &wound_headers, &wounds);
     }
 
     /// The named Personality Traits and their signed values.
@@ -934,15 +914,8 @@ impl<'a> Doc<'a> {
         if self.entity.personality_traits.is_empty() {
             return;
         }
-        heading(out, 2, &self.label("personality-label"));
-        for trait_ in &self.entity.personality_traits {
-            field(
-                out,
-                &escape_cell(&trait_.name),
-                &signed(i32::from(trait_.value)),
-            );
-        }
-        out.push('\n');
+        self.section(out, 2, "personality-label");
+        write_traits(out, &self.entity.personality_traits);
     }
 
     /// The starting Reputations: audience, level, and what the Reputation is for.
@@ -950,17 +923,11 @@ impl<'a> Doc<'a> {
         if self.entity.reputations.is_empty() {
             return;
         }
-        heading(out, 2, &self.label("reputations-label"));
+        self.section(out, 2, "reputations-label");
         for reputation in &self.entity.reputations {
-            field(
-                out,
-                &format!(
-                    "{} {}",
-                    self.label(&format!("reputation-type-{}", reputation.kind)),
-                    reputation.score
-                ),
-                &escape_cell(&reputation.content),
-            );
+            let audience = self.label(&format!("reputation-type-{}", reputation.kind));
+            let heading = format!("{audience} {}", reputation.score);
+            field(out, &heading, &escape_cell(&reputation.content));
         }
         out.push('\n');
     }
@@ -980,17 +947,9 @@ impl<'a> Doc<'a> {
         if confidence.score == 0 && confidence.points == 0 {
             return;
         }
-        heading(out, 2, &self.label("confidence-label"));
-        field(
-            out,
-            &self.label("ability-score-label"),
-            &confidence.score.to_string(),
-        );
-        field(
-            out,
-            &self.label("export-col-points"),
-            &confidence.points.to_string(),
-        );
+        self.section(out, 2, "confidence-label");
+        self.labelled(out, "ability-score-label", &confidence.score.to_string());
+        self.labelled(out, "export-col-points", &confidence.points.to_string());
         out.push('\n');
     }
 
@@ -1001,23 +960,15 @@ impl<'a> Doc<'a> {
         if might.is_none() && powers.is_empty() {
             return;
         }
-        heading(out, 2, &self.label("tab-supernatural"));
+        self.section(out, 2, "tab-supernatural");
         if let Some(might) = might {
-            field(
-                out,
-                &self.label("supernatural-might-label"),
-                &format!(
-                    "{} {}",
-                    self.label(&format!("realm-{}", might.realm)),
-                    might.score
-                ),
-            );
+            self.labelled(out, "supernatural-might-label", &self.realm_score(&might));
             out.push('\n');
         }
         if powers.is_empty() {
             return;
         }
-        heading(out, 3, &self.label("supernatural-powers-label"));
+        self.section(out, 3, "supernatural-powers-label");
         table(out, &powers.headers, &powers.rows);
     }
 
@@ -1028,7 +979,7 @@ impl<'a> Doc<'a> {
         let devices = self.leveled_rows(&e.devices, "device-level-label");
         let mut body = String::new();
         if !devices.is_empty() {
-            heading(&mut body, 3, &self.label("possessions-devices-label"));
+            self.section(&mut body, 3, "possessions-devices-label");
             table(&mut body, &devices.headers, &devices.rows);
         }
         self.write_longevity(&mut body);
@@ -1037,9 +988,9 @@ impl<'a> Doc<'a> {
         if e.aura == 0 && body.is_empty() {
             return;
         }
-        heading(out, 2, &self.label("tab-possessions"));
+        self.section(out, 2, "tab-possessions");
         if e.aura != 0 {
-            field(out, &self.label("aura-label"), &signed(e.aura));
+            self.labelled(out, "aura-label", &signed(e.aura));
             out.push('\n');
         }
         out.push_str(&body);
@@ -1051,23 +1002,16 @@ impl<'a> Doc<'a> {
         let Some(ritual) = &self.entity.longevity_ritual else {
             return;
         };
-        heading(out, 3, &self.label("longevity-label"));
-        field(
-            out,
-            &self.label("longevity-source-label"),
-            &self.label(&format!("longevity-source-{}", ritual.source)),
-        );
+        self.section(out, 3, "longevity-label");
+        let source = self.label(&format!("longevity-source-{}", ritual.source));
+        self.labelled(out, "longevity-source-label", &source);
         let bonus = match ritual.bonus {
             Some(bonus) => signed(i32::from(bonus)),
             None => self.label("longevity-not-entered"),
         };
-        field(out, &self.label("longevity-bonus-label"), &bonus);
+        self.labelled(out, "longevity-bonus-label", &bonus);
         if !ritual.focus.trim().is_empty() {
-            field(
-                out,
-                &self.label("longevity-focus-label"),
-                &escape_cell(&ritual.focus),
-            );
+            self.labelled(out, "longevity-focus-label", &escape_cell(&ritual.focus));
         }
         out.push('\n');
     }
@@ -1087,28 +1031,22 @@ impl<'a> Doc<'a> {
         if talisman.description.trim().is_empty() && attunements.is_empty() && effects.is_empty() {
             return;
         }
-        heading(out, 3, &self.label("talisman-label"));
+        self.section(out, 3, "talisman-label");
         if !talisman.description.trim().is_empty() {
-            field(
-                out,
-                &self.label("talisman-description-label"),
-                &escape_cell(&talisman.description),
-            );
+            let identity = escape_cell(&talisman.description);
+            self.labelled(out, "talisman-description-label", &identity);
             out.push('\n');
         }
         if !attunements.is_empty() {
-            heading(out, 4, &self.label("talisman-attunements-label"));
-            table(
-                out,
-                &[
-                    self.label("identity-name"),
-                    self.label("talisman-bonus-label"),
-                ],
-                &attunements,
-            );
+            self.section(out, 4, "talisman-attunements-label");
+            let headers = [
+                self.label("identity-name"),
+                self.label("talisman-bonus-label"),
+            ];
+            table(out, &headers, &attunements);
         }
         if !effects.is_empty() {
-            heading(out, 4, &self.label("talisman-effects-label"));
+            self.section(out, 4, "talisman-effects-label");
             table(out, &effects.headers, &effects.rows);
         }
     }
@@ -1121,38 +1059,19 @@ impl<'a> Doc<'a> {
         let Some(familiar) = &self.entity.familiar else {
             return;
         };
-        heading(out, 3, &self.label("familiar-label"));
+        self.section(out, 3, "familiar-label");
         if !familiar.name.trim().is_empty() {
-            field(
-                out,
-                &self.label("identity-name"),
-                &escape_cell(&familiar.name),
-            );
+            self.labelled(out, "identity-name", &escape_cell(&familiar.name));
         }
         if !familiar.animal.trim().is_empty() {
-            field(
-                out,
-                &self.label("familiar-animal-label"),
-                &escape_cell(&familiar.animal),
-            );
+            self.labelled(out, "familiar-animal-label", &escape_cell(&familiar.animal));
         }
         if let Some(might) = familiar.might {
-            field(
-                out,
-                &self.label("familiar-might-label"),
-                &format!(
-                    "{} {}",
-                    self.label(&format!("realm-{}", might.realm)),
-                    might.score
-                ),
-            );
+            self.labelled(out, "familiar-might-label", &self.realm_score(&might));
         }
         if familiar.size != 0 {
-            field(
-                out,
-                &self.label("familiar-size-label"),
-                &signed(i32::from(familiar.size)),
-            );
+            let size = signed(i32::from(familiar.size));
+            self.labelled(out, "familiar-size-label", &size);
         }
         for (key, score) in [
             ("familiar-cord-gold", familiar.cord_gold),
@@ -1160,7 +1079,7 @@ impl<'a> Doc<'a> {
             ("familiar-cord-bronze", familiar.cord_bronze),
         ] {
             if score != 0 {
-                field(out, &self.label(key), &signed(i32::from(score)));
+                self.labelled(out, key, &signed(i32::from(score)));
             }
         }
         out.push('\n');
@@ -1175,30 +1094,20 @@ impl<'a> Doc<'a> {
             })
             .collect();
         if !characteristics.is_empty() {
-            heading(out, 4, &self.label("characteristics-title"));
-            table(
-                out,
-                &[
-                    self.label("identity-name"),
-                    self.label("ability-score-label"),
-                ],
-                &characteristics,
-            );
+            self.section(out, 4, "characteristics-title");
+            let headers = [
+                self.label("identity-name"),
+                self.label("ability-score-label"),
+            ];
+            table(out, &headers, &characteristics);
         }
         if !familiar.personality_traits.is_empty() {
-            heading(out, 4, &self.label("personality-label"));
-            for trait_ in &familiar.personality_traits {
-                field(
-                    out,
-                    &escape_cell(&trait_.name),
-                    &signed(i32::from(trait_.value)),
-                );
-            }
-            out.push('\n');
+            self.section(out, 4, "personality-label");
+            write_traits(out, &familiar.personality_traits);
         }
         let powers = self.leveled_rows(&familiar.powers, "power-level-label");
         if !powers.is_empty() {
-            heading(out, 4, &self.label("familiar-powers-label"));
+            self.section(out, 4, "familiar-powers-label");
             table(out, &powers.headers, &powers.rows);
         }
     }
@@ -1211,28 +1120,18 @@ impl<'a> Doc<'a> {
         let decrepitude = decrepitude_score(e, self.rules());
         let mut body = String::new();
         if warping.score != 0 || warping.points != 0 || !e.warping_effect.trim().is_empty() {
-            heading(&mut body, 3, &self.label("warping-label"));
-            field(
-                &mut body,
-                &self.label("ability-score-label"),
-                &warping.score.to_string(),
-            );
-            field(
-                &mut body,
-                &self.label("warping-points-label"),
-                &warping.points.to_string(),
-            );
+            self.section(&mut body, 3, "warping-label");
+            self.labelled(&mut body, "ability-score-label", &warping.score.to_string());
+            let points = warping.points.to_string();
+            self.labelled(&mut body, "warping-points-label", &points);
             if !e.warping_effect.trim().is_empty() {
-                field(
-                    &mut body,
-                    &self.label("warping-effect-label"),
-                    &escape_cell(&e.warping_effect),
-                );
+                let effect = escape_cell(&e.warping_effect);
+                self.labelled(&mut body, "warping-effect-label", &effect);
             }
             body.push('\n');
         }
         if !e.twilight_scars.is_empty() {
-            heading(&mut body, 3, &self.label("twilight-scars-label"));
+            self.section(&mut body, 3, "twilight-scars-label");
             for scar in &e.twilight_scars {
                 body.push_str("- ");
                 body.push_str(&escape_cell(&scar.description));
@@ -1241,23 +1140,16 @@ impl<'a> Doc<'a> {
             body.push('\n');
         }
         if decrepitude != 0 || !e.decrepitude_effect.trim().is_empty() {
-            heading(&mut body, 3, &self.label("decrepitude-label"));
-            field(
-                &mut body,
-                &self.label("ability-score-label"),
-                &decrepitude.to_string(),
-            );
+            self.section(&mut body, 3, "decrepitude-label");
+            self.labelled(&mut body, "ability-score-label", &decrepitude.to_string());
             if !e.decrepitude_effect.trim().is_empty() {
-                field(
-                    &mut body,
-                    &self.label("decrepitude-effect-label"),
-                    &escape_cell(&e.decrepitude_effect),
-                );
+                let effect = escape_cell(&e.decrepitude_effect);
+                self.labelled(&mut body, "decrepitude-effect-label", &effect);
             }
             body.push('\n');
         }
         if !e.aging_log.is_empty() {
-            heading(&mut body, 3, &self.label("aging-log-heading"));
+            self.section(&mut body, 3, "aging-log-heading");
             for entry in &e.aging_log {
                 field(
                     &mut body,
@@ -1270,7 +1162,7 @@ impl<'a> Doc<'a> {
         if body.is_empty() {
             return;
         }
-        heading(out, 2, &self.label("aging-label"));
+        self.section(out, 2, "aging-label");
         out.push_str(&body);
     }
 
@@ -1387,6 +1279,20 @@ fn escape_cell(text: &str) -> String {
     }
 }
 
+/// Appends one bullet per Personality Trait, name and signed value. Shared by the
+/// character's own traits and the familiar's, which are separate lists of the same
+/// shape. The names are free text, so each goes through [`escape_cell`].
+fn write_traits(out: &mut String, traits: &[PersonalityTrait]) {
+    for trait_ in traits {
+        field(
+            out,
+            &escape_cell(&trait_.name),
+            &signed(i32::from(trait_.value)),
+        );
+    }
+    out.push('\n');
+}
+
 /// `label: value`, the inline pairing used in the subtitle and in read-out lines.
 fn pair(label: &str, value: &str) -> String {
     format!("{label}: {value}")
@@ -1471,7 +1377,9 @@ mod tests {
             "effects": [{ "type": "magical_focus", "param": "focus", "major": false }] },
           { "id": "virtue.warrior", "kind": "virtue", "classification": "creation_effect",
             "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
-            "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }] }
+            "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }] },
+          { "id": "virtue.malformed_name", "kind": "virtue", "classification": "narrative",
+            "magnitude": "free", "category": "general", "entity_kinds": ["character"] }
         ]"#;
         let types = r#"[
           { "id": "magus", "is_magus": true,
@@ -1499,7 +1407,8 @@ mod tests {
             { "id": "ability.penetration", "category": "arcane" },
             { "id": "ability.philosophiae", "category": "academic" },
             { "id": "ability.area_lore", "category": "general", "parameter": "area" },
-            { "id": "ability.single_weapon", "category": "martial" }
+            { "id": "ability.single_weapon", "category": "martial" },
+            { "id": "ability.brawl", "category": "general", "combat_ability": true }
           ]
         }"#;
         let arts = r#"{
@@ -1531,7 +1440,9 @@ mod tests {
               "ability": "ability.single_weapon" },
             { "id": "weapon.sling", "kind": "missile", "init_mod": 0, "attack_mod": 2,
               "defense_mod": 0, "damage_mod": 3, "min_strength": -1, "load": 0,
-              "range": 30, "ability": "ability.single_weapon" }
+              "range": 30, "ability": "ability.single_weapon" },
+            { "id": "weapon.dodge", "kind": "melee", "init_mod": 0, "defense_mod": 0,
+              "load": 0, "ability": "ability.brawl" }
           ],
           "shields": [
             { "id": "shield.round", "init_mod": 0, "attack_mod": 0, "defense_mod": 2,
@@ -1562,11 +1473,14 @@ mod tests {
           "virtue.puissant_art": { "name": "Puissant {art}" },
           "virtue.minor_magical_focus": { "name": "Minor Magical Focus" },
           "virtue.warrior": { "name": "Warrior" },
+          "virtue.malformed_name": { "name": "Malformed {template" },
           "flaw.optimistic": { "name": "Optimistic" },
           "boon.rich_vis_source": { "name": "Rich Vis Source" },
           "ability.awareness": { "name": "Awareness" },
           "ability.area_lore": { "name": "{area} Lore" },
           "ability.single_weapon": { "name": "Single Weapon" },
+          "ability.brawl": { "name": "Brawl" },
+          "weapon.dodge": { "name": "Dodge" },
           "art.creo": { "name": "Creo", "abbreviation": "Cr" },
           "art.muto": { "name": "Muto", "abbreviation": "Mu" },
           "art.ignem": { "name": "Ignem", "abbreviation": "Ig" },
@@ -2826,6 +2740,170 @@ mod tests {
     fn the_annotation_block_is_omitted_for_an_unwarped_unaged_character() {
         let doc = character_markdown(&magus(), &ruleset(), &labels(&[("aging-label", "Aging")]));
         assert!(!doc.contains("## Aging"), "stray heading: {doc}");
+    }
+
+    // --- catalogue gaps and empty shapes ----------------------------------
+
+    /// A brace with no closing partner is literal text, not a placeholder — a
+    /// malformed i18n template must not swallow the rest of the name.
+    #[test]
+    fn an_unterminated_brace_in_a_name_template_is_literal_text() {
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.malformed_name"))];
+        let doc = character_markdown(&e, &ruleset(), &no_labels());
+        assert!(doc.contains("| Malformed {template |"), "{doc}");
+    }
+
+    /// Ids no catalogue holds cannot be filed under a kind / Art class / equipment
+    /// group, so they are not printed — `validate` reports each as an unknown ref.
+    #[test]
+    fn entries_absent_from_the_catalogue_are_not_printed() {
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.from_another_ruleset"))];
+        e.art_scores = vec![ArtScore {
+            art: Id::new("art.imaginem"),
+            score: 4,
+        }];
+        e.equipment = vec![EquipmentSlot {
+            item: Id::new("weapon.trebuchet"),
+            equipped: true,
+            specialization_applies: false,
+        }];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("tab-virtues-flaws", "Virtues & Flaws"),
+                ("tab-arts", "Arts"),
+                ("tab-equipment", "Equipment"),
+            ]),
+        );
+        assert!(!doc.contains("Virtues & Flaws"), "{doc}");
+        assert!(!doc.contains("## Arts"), "{doc}");
+        assert!(!doc.contains("## Equipment"), "{doc}");
+    }
+
+    /// A spell the catalogue does not hold keeps its row — the reader still learns the
+    /// character claims it — but its Technique/Form cells stay blank rather than
+    /// guessing.
+    #[test]
+    fn an_unknown_spell_keeps_its_row_with_blank_arts() {
+        let mut e = magus();
+        e.spells = vec![SpellSelection {
+            spell: Id::new("spell.from_another_ruleset"),
+            level: None,
+            mastery: None,
+            parameter: Some("free text".to_string()),
+            mastery_abilities: Vec::new(),
+        }];
+        let doc = character_markdown(&e, &ruleset(), &labels(&[("spell-level-general", "Gen")]));
+        assert!(
+            doc.contains("| spell.from_another_ruleset (free text) |  |  | Gen |  |  |"),
+            "{doc}"
+        );
+    }
+
+    /// An entity whose type profile is unknown still renders: Confidence has no base
+    /// to derive from and is omitted, and the balance line drops the ceiling rather
+    /// than inventing one.
+    #[test]
+    fn an_unknown_type_profile_omits_confidence_and_the_point_ceilings() {
+        let mut e = Entity::new(
+            EntityKind::Character,
+            Id::new("hedge_wizard"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        e.selections = vec![Selection::new(Id::new("flaw.optimistic"))];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("items-flaws-title", "Flaws"),
+                ("confidence-label", "Confidence"),
+            ]),
+        );
+        assert!(doc.contains("- **Flaws**: 1\n"), "no ceiling: {doc}");
+        assert!(!doc.contains("## Confidence"), "{doc}");
+    }
+
+    /// An untouched talisman writes no keys at all, so it must not produce a heading.
+    #[test]
+    fn an_empty_talisman_is_not_printed() {
+        let mut e = magus();
+        e.talisman = Some(Talisman::default());
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("tab-possessions", "Magic Items"),
+                ("talisman-label", "Talisman"),
+            ]),
+        );
+        assert!(!doc.contains("Talisman"), "{doc}");
+        assert!(!doc.contains("Magic Items"), "{doc}");
+    }
+
+    /// A familiar entered as nothing but powers still prints them; the empty
+    /// identity lines are skipped one by one.
+    #[test]
+    fn a_bare_familiar_prints_only_what_was_entered() {
+        let mut e = magus();
+        e.familiar = Some(Familiar {
+            powers: vec![SupernaturalPower {
+                name: "Ghostly Whispers".to_string(),
+                level: 5,
+            }],
+            ..Familiar::default()
+        });
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("familiar-label", "Familiar"),
+                ("familiar-powers-label", "Invested Powers"),
+                ("identity-name", "Name"),
+                ("familiar-animal-label", "Animal"),
+            ]),
+        );
+        assert!(doc.contains("### Familiar\n"), "{doc}");
+        assert!(doc.contains("| Ghostly Whispers | 5 |"), "{doc}");
+        assert!(!doc.contains("- **Name**"), "{doc}");
+        assert!(!doc.contains("Animal"), "{doc}");
+    }
+
+    /// A Might-less being that nonetheless holds powers still gets the section.
+    #[test]
+    fn powers_without_a_might_score_still_render() {
+        let mut e = magus();
+        e.powers = vec![SupernaturalPower {
+            name: "Second Sight".to_string(),
+            level: 10,
+        }];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("tab-supernatural", "Supernatural"),
+                ("supernatural-might-label", "Might Score"),
+                ("supernatural-powers-label", "Supernatural Powers"),
+            ]),
+        );
+        assert!(doc.contains("## Supernatural\n"), "{doc}");
+        assert!(!doc.contains("Might Score"), "{doc}");
+        assert!(doc.contains("| Second Sight | 10 |"), "{doc}");
+    }
+
+    /// A weapon with neither Attack nor Damage (Dodge) leaves those cells blank.
+    #[test]
+    fn a_weapon_without_attack_or_damage_leaves_those_cells_blank() {
+        let mut e = magus();
+        e.equipment = vec![EquipmentSlot {
+            item: Id::new("weapon.dodge"),
+            equipped: true,
+            specialization_applies: false,
+        }];
+        let doc = character_markdown(&e, &ruleset(), &no_labels());
+        assert!(doc.contains("| Dodge | Brawl | 0 |  | 0 |  |  |"), "{doc}");
     }
 
     // --- contract tests ---------------------------------------------------
