@@ -48,6 +48,29 @@ body {
   overflow: hidden;
 }
 
+/* The inert-able wrapper around every interactive surface. It carries the column
+   layout the app used to hang off `#app` directly, so adding the wrapper (needed
+   so one `inert` can switch the whole app off while a native file dialog is open)
+   changes nothing about how the header/tabs/content share the viewport. */
+.app-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Blocking scrim shown while a native file dialog is open. Fixed and full-viewport
+   so it swallows every pointer event, above the tooltip popup (z-index 1000) and
+   the discard modal so nothing pokes through. */
+.busy-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.35);
+  cursor: progress;
+}
+
 .app-header {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #38355a;
