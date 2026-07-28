@@ -102,7 +102,12 @@
   // Standard document-app keyboard shortcuts. Ctrl (or Cmd on macOS) + S/N/O,
   // with Shift+S for Save As. Cmd+Q keeps routing through the OS/close guard, so
   // it is deliberately not handled here.
+  //
+  // `inert` on the shell does not reach window-level key handlers, so the busy
+  // check has to be here too: while a native dialog is open the shortcuts must be
+  // as dead as the buttons they mirror (the store actions no-op as well).
   function handleShortcut(event: KeyboardEvent): void {
+    if (store.busy) return;
     if (!(event.ctrlKey || event.metaKey)) return;
     const key = event.key.toLowerCase();
     if (key === 's') {
@@ -128,131 +133,148 @@
 
 <svelte:window onkeydown={handleShortcut} />
 
-<header class="app-header">
-  <div class="brand">
-    <img class="app-logo" src={logoUrl} alt={store.t('app-logo-alt')} />
-    <h1>{store.t('app-title')}</h1>
-    <!-- Active save's file name + ASCII dirty marker, on-screen (not only in the
+<!-- Everything interactive lives in the shell so a single `inert` can switch the
+     whole app off while a native file dialog is open. The dialogs are parented to
+     the window but are NOT input-modal on Linux (rfd has no modal flag, and tao's
+     cross-platform Window has no `set_enabled`), so without this the user could
+     keep editing the character behind an open Save/Open/Export dialog. `inert`
+     drops focus and assistive-tech access; the overlay below swallows the clicks. -->
+<div class="app-shell" inert={store.busy} aria-busy={store.busy} data-testid="app-shell">
+  <header class="app-header">
+    <div class="brand">
+      <img class="app-logo" src={logoUrl} alt={store.t('app-logo-alt')} />
+      <h1>{store.t('app-title')}</h1>
+      <!-- Active save's file name + ASCII dirty marker, on-screen (not only in the
          OS window title). Reuses the derived currentFileName/dirty state; a null
          file name means the document has never been saved. -->
-    <span class="doc-status" data-testid="doc-status">
-      {#if store.currentFileName === null}
-        {store.t(store.dirty ? 'app-document-unsaved-dirty' : 'app-document-unsaved')}
-      {:else}
-        {store.t(store.dirty ? 'app-document-name-dirty' : 'app-document-name', {
-          name: store.currentFileName,
-        })}
-      {/if}
-    </span>
-  </div>
-  <div class="controls">
-    <CharacterTypeSelector />
-    <LanguageSelector />
-    <ModeToggle />
-    <SaveLoadBar />
-  </div>
-</header>
+      <span class="doc-status" data-testid="doc-status">
+        {#if store.currentFileName === null}
+          {store.t(store.dirty ? 'app-document-unsaved-dirty' : 'app-document-unsaved')}
+        {:else}
+          {store.t(store.dirty ? 'app-document-name-dirty' : 'app-document-name', {
+            name: store.currentFileName,
+          })}
+        {/if}
+      </span>
+    </div>
+    <div class="controls">
+      <CharacterTypeSelector />
+      <LanguageSelector />
+      <ModeToggle />
+      <SaveLoadBar />
+    </div>
+  </header>
 
-<section class="char-banner">
-  <input
-    class="name-input"
-    value={store.entity.name ?? ''}
-    oninput={(e) => store.setIdentity('name', (e.currentTarget as HTMLInputElement).value)}
-    placeholder={store.t('identity-name-placeholder')}
-    aria-label={store.t('identity-name')}
-    data-testid="identity-name"
-  />
-  <input
-    class="desc-input"
-    value={store.entity.description ?? ''}
-    oninput={(e) => store.setIdentity('description', (e.currentTarget as HTMLInputElement).value)}
-    placeholder={store.t('identity-description-placeholder')}
-    aria-label={store.t('identity-description')}
-    data-testid="identity-description"
-  />
-</section>
+  <section class="char-banner">
+    <input
+      class="name-input"
+      value={store.entity.name ?? ''}
+      oninput={(e) => store.setIdentity('name', (e.currentTarget as HTMLInputElement).value)}
+      placeholder={store.t('identity-name-placeholder')}
+      aria-label={store.t('identity-name')}
+      data-testid="identity-name"
+    />
+    <input
+      class="desc-input"
+      value={store.entity.description ?? ''}
+      oninput={(e) => store.setIdentity('description', (e.currentTarget as HTMLInputElement).value)}
+      placeholder={store.t('identity-description-placeholder')}
+      aria-label={store.t('identity-description')}
+      data-testid="identity-description"
+    />
+  </section>
 
-<div class="tabbar" role="tablist">
-  {#each tabs as t (t.id)}
-    <button
-      type="button"
-      role="tab"
-      class="tab"
-      class:active={tab === t.id}
-      aria-selected={tab === t.id}
-      onclick={() => (tab = t.id)}
-      data-testid="tab-{t.id}"
-    >
-      {store.t(t.key)}
-    </button>
-  {/each}
+  <div class="tabbar" role="tablist">
+    {#each tabs as t (t.id)}
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        class:active={tab === t.id}
+        aria-selected={tab === t.id}
+        onclick={() => (tab = t.id)}
+        data-testid="tab-{t.id}"
+      >
+        {store.t(t.key)}
+      </button>
+    {/each}
+  </div>
+
+  <main class="tab-content">
+    {#if tab === 'characteristics'}
+      <CharacteristicPicker />
+    {:else if tab === 'virtues_flaws'}
+      <div class="vf-tab">
+        <BalanceBar />
+        <VirtueFlawTab />
+      </div>
+    {:else if tab === 'abilities'}
+      <div class="vf-tab">
+        <XpBar />
+        <AbilityTab />
+      </div>
+    {:else if tab === 'arts'}
+      <div class="vf-tab">
+        <XpBar prefix="art-" />
+        <ArtGrid />
+      </div>
+    {:else if tab === 'spells'}
+      <div class="vf-tab">
+        <SpellTab />
+      </div>
+    {:else if tab === 'possessions'}
+      <div class="vf-tab">
+        <div class="tab-scroll">
+          <MagicPossessions />
+        </div>
+      </div>
+    {:else if tab === 'equipment'}
+      <div class="vf-tab">
+        <EquipmentTab />
+      </div>
+    {:else if tab === 'details'}
+      <div class="vf-tab">
+        <div class="tab-scroll">
+          <CharacterDetails />
+        </div>
+      </div>
+    {:else if tab === 'totals'}
+      <div class="vf-tab">
+        <div class="tab-scroll">
+          <DerivedTotalsPanel />
+        </div>
+      </div>
+    {:else if tab === 'mythic_type'}
+      <div class="vf-tab">
+        <MythicCompanionTypeSelector />
+      </div>
+    {:else if tab === 'supernatural'}
+      <div class="vf-tab">
+        <SupernaturalBeing />
+      </div>
+    {:else}
+      <div class="vf-tab">
+        <div class="tab-scroll">
+          <HouseSelector />
+        </div>
+      </div>
+    {/if}
+  </main>
+
+  <!-- One shared issues panel for the whole character, pinned below the tabs. -->
+  <footer class="validation-bar">
+    <ValidationPanel docked />
+  </footer>
 </div>
 
-<main class="tab-content">
-  {#if tab === 'characteristics'}
-    <CharacteristicPicker />
-  {:else if tab === 'virtues_flaws'}
-    <div class="vf-tab">
-      <BalanceBar />
-      <VirtueFlawTab />
-    </div>
-  {:else if tab === 'abilities'}
-    <div class="vf-tab">
-      <XpBar />
-      <AbilityTab />
-    </div>
-  {:else if tab === 'arts'}
-    <div class="vf-tab">
-      <XpBar prefix="art-" />
-      <ArtGrid />
-    </div>
-  {:else if tab === 'spells'}
-    <div class="vf-tab">
-      <SpellTab />
-    </div>
-  {:else if tab === 'possessions'}
-    <div class="vf-tab">
-      <div class="tab-scroll">
-        <MagicPossessions />
-      </div>
-    </div>
-  {:else if tab === 'equipment'}
-    <div class="vf-tab">
-      <EquipmentTab />
-    </div>
-  {:else if tab === 'details'}
-    <div class="vf-tab">
-      <div class="tab-scroll">
-        <CharacterDetails />
-      </div>
-    </div>
-  {:else if tab === 'totals'}
-    <div class="vf-tab">
-      <div class="tab-scroll">
-        <DerivedTotalsPanel />
-      </div>
-    </div>
-  {:else if tab === 'mythic_type'}
-    <div class="vf-tab">
-      <MythicCompanionTypeSelector />
-    </div>
-  {:else if tab === 'supernatural'}
-    <div class="vf-tab">
-      <SupernaturalBeing />
-    </div>
-  {:else}
-    <div class="vf-tab">
-      <div class="tab-scroll">
-        <HouseSelector />
-      </div>
-    </div>
-  {/if}
-</main>
+<!-- Click/hover blocker over the inert shell: a calm scrim that makes the blocked
+     state visible and eats every pointer event. Purely decorative (the shell's
+     `aria-busy` carries the meaning), so it needs no text and no Fluent key. -->
+{#if store.busy}
+  <div class="busy-overlay" data-testid="busy-overlay" aria-hidden="true"></div>
+{/if}
 
-<!-- One shared issues panel for the whole character, pinned below the tabs. -->
-<footer class="validation-bar">
-  <ValidationPanel docked />
-</footer>
-
-<!-- Discard-changes confirmation for New/Open (close/quit uses the Rust dialog). -->
+<!-- Discard-changes confirmation for New/Open (close/quit uses the Rust dialog).
+     Outside the shell: it is the one modal the user must still be able to answer
+     (it never overlaps a native dialog — `busy` is false while it is open). -->
 <DiscardPrompt />
