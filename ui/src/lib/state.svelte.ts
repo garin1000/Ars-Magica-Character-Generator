@@ -1421,6 +1421,8 @@ class AppStore {
 
   /**
    * Export the entity as a Markdown character sheet, prompting for a destination.
+   * The current file is passed along so the prompt can default to its name and
+   * directory (`gerhard.armc` -> `gerhard.md`).
    *
    * Deliberately **not** a save: the document keeps its current file, its dirty
    * flag and its saved baseline, so exporting a work in progress neither silences
@@ -1433,7 +1435,12 @@ class AppStore {
     this.#opInFlight = true;
     this.error = null;
     try {
-      await ipc.exportMarkdown($state.snapshot(this.entity), await this.#exportLabels());
+      await ipc.exportMarkdown(
+        $state.snapshot(this.entity),
+        await this.#exportLabels(),
+        null,
+        this.currentPath,
+      );
     } catch (e) {
       this.error = e as AppError;
     } finally {

@@ -329,6 +329,16 @@ pub fn markdown_file_name_for(current_path: Option<&str>, kind: EntityKind) -> S
     format!("{stem}.{MARKDOWN_EXTENSION}")
 }
 
+/// Directory the document's save file sits in, used as the export dialog's starting
+/// folder so the export is offered next to the character file. `None` when the path
+/// names no directory at all (a bare file name, or a document never saved).
+pub fn save_file_directory(current_path: Option<&str>) -> Option<&str> {
+    let path = current_path?;
+    let separator = path.rfind(['/', '\\'])?;
+    // The separator is kept, so a root-level file yields "/" rather than "".
+    Some(&path[..=separator])
+}
+
 /// Appends `ext` when the chosen path has no extension, so a user who types just
 /// "testchar" still gets "testchar.armc". An explicit extension (`.armc`,
 /// `.json`, …) the user typed is respected.
@@ -569,6 +579,23 @@ mod tests {
             markdown_file_name_for(Some("/x/"), EntityKind::Covenant),
             default_markdown_file_name(EntityKind::Covenant)
         );
+    }
+
+    #[test]
+    fn save_file_directory_is_the_path_up_to_its_last_separator() {
+        assert_eq!(
+            save_file_directory(Some("/home/u/gerhard.armc")),
+            Some("/home/u/")
+        );
+        assert_eq!(
+            save_file_directory(Some("C:\\saves\\gerhard.armcov")),
+            Some("C:\\saves\\")
+        );
+        // A root-level file keeps the separator, so the directory is not empty.
+        assert_eq!(save_file_directory(Some("/gerhard.armc")), Some("/"));
+        // A bare file name names no directory; so does a document never saved.
+        assert_eq!(save_file_directory(Some("gerhard.armc")), None);
+        assert_eq!(save_file_directory(None), None);
     }
 
     #[test]

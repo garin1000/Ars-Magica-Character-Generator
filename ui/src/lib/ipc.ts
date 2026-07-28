@@ -40,14 +40,17 @@ export function saveEntity(entity: Entity, path: string | null): Promise<string 
  * Write the entity as a Markdown character sheet. `labels` is the document chrome
  * the engine prints — `{ Fluent message name -> resolved text }`, so no
  * user-facing string lives in Rust. `path === null` prompts for a destination.
+ * `currentPath` is the document's own save file, used only to prefill that prompt's
+ * name and directory — never as a write target.
  * Resolves to the written path, or `null` when a prompt was cancelled.
  */
 export function exportMarkdown(
   entity: Entity,
   labels: Record<string, string>,
   path: string | null = null,
+  currentPath: string | null = null,
 ): Promise<string | null> {
-  return invoke('export_markdown', { entity, labels, path });
+  return invoke('export_markdown', { entity, labels, path, currentPath });
 }
 
 /**
