@@ -37,6 +37,14 @@
   >
     {store.t('action-save-as')}
   </button>
+  <button
+    type="button"
+    onclick={() => store.exportMarkdown()}
+    disabled={store.busy}
+    data-testid="export-button"
+  >
+    {store.t('action-export')}
+  </button>
   {#if errorText}
     <span class="error" role="alert" data-testid="error">{errorText}</span>
   {/if}
