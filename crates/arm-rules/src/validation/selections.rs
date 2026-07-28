@@ -213,69 +213,85 @@ pub(crate) fn validate_parameters(
     issues: &mut Vec<ValidationIssue>,
 ) {
     for selection in &entity.selections {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
+        validate_selection_parameters(selection, ruleset, issues);
+    }
+}
+
+/// The parameter checks for ONE selection: declared-vs-provided keys
+/// (`missing_param` / `unexpected_param`) and each value's domain resolution
+/// (`unknown_param_value`).
+///
+/// Shared by bought selections ([`validate_parameters`]) and the *derived* picks
+/// that never live on `entity.selections` — House / Mythic-type Open grants and
+/// the Warping-owed fills — so "{form} Monstrosity" chosen for an open grant is
+/// held to the same standard as one bought on the V/F tab.
+pub(crate) fn validate_selection_parameters(
+    selection: &Selection,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+        return;
+    };
+
+    let declared: BTreeSet<&str> = item.parameters.iter().map(|p| p.key.as_str()).collect();
+    let provided: BTreeSet<&str> = selection.params.keys().map(String::as_str).collect();
+
+    // A parameter targeting a PARAMETERIZED ability also expects the instance
+    // discriminator, supplied under the target ability's own param key
+    // ((Area) Lore → "area"). So Puissant on (Area) Lore needs both keys; on a
+    // plain ability the instance key would be an unexpected extra.
+    let mut expected = declared.clone();
+    for param in &item.parameters {
+        if matches!(param.domain, ParameterDomain::Ability)
+            && let Some(target) = selection.params.get(&param.key)
+            && let Some(ability) = ruleset.abilities.get(target)
+            && let Some(instance_key) = ability.parameter.as_deref()
+        {
+            expected.insert(instance_key);
+        }
+    }
+
+    for missing in expected.difference(&provided) {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_MISSING_PARAM,
+            args([
+                ("item", selection.item_ref.to_string()),
+                ("key", missing.to_string()),
+            ]),
+            Some(selection.item_ref.clone()),
+        ));
+    }
+
+    for extra in provided.difference(&expected) {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_UNEXPECTED_PARAM,
+            args([
+                ("item", selection.item_ref.to_string()),
+                ("key", extra.to_string()),
+            ]),
+            Some(selection.item_ref.clone()),
+        ));
+    }
+
+    // Resolve values for domains that have a registry (Item -> point items,
+    // Ability -> ability catalogue, Art -> art catalogue).
+    for param in &item.parameters {
+        let Some(value) = selection.params.get(&param.key) else {
+            continue; // missing already reported above
         };
-
-        let declared: BTreeSet<&str> = item.parameters.iter().map(|p| p.key.as_str()).collect();
-        let provided: BTreeSet<&str> = selection.params.keys().map(String::as_str).collect();
-
-        // A parameter targeting a PARAMETERIZED ability also expects the instance
-        // discriminator, supplied under the target ability's own param key
-        // ((Area) Lore → "area"). So Puissant on (Area) Lore needs both keys; on a
-        // plain ability the instance key would be an unexpected extra.
-        let mut expected = declared.clone();
-        for param in &item.parameters {
-            if matches!(param.domain, ParameterDomain::Ability)
-                && let Some(target) = selection.params.get(&param.key)
-                && let Some(ability) = ruleset.abilities.get(target)
-                && let Some(instance_key) = ability.parameter.as_deref()
-            {
-                expected.insert(instance_key);
-            }
-        }
-
-        for missing in expected.difference(&provided) {
+        let resolves = param_value_resolves(ruleset, param.domain, value);
+        if !resolves {
             issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_MISSING_PARAM,
+                ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
                 args([
                     ("item", selection.item_ref.to_string()),
-                    ("key", missing.to_string()),
+                    ("key", param.key.clone()),
+                    ("value", value.to_string()),
+                    ("domain", param.domain.to_string()),
                 ]),
                 Some(selection.item_ref.clone()),
             ));
-        }
-
-        for extra in provided.difference(&expected) {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_UNEXPECTED_PARAM,
-                args([
-                    ("item", selection.item_ref.to_string()),
-                    ("key", extra.to_string()),
-                ]),
-                Some(selection.item_ref.clone()),
-            ));
-        }
-
-        // Resolve values for domains that have a registry (Item -> point items,
-        // Ability -> ability catalogue, Art -> art catalogue).
-        for param in &item.parameters {
-            let Some(value) = selection.params.get(&param.key) else {
-                continue; // missing already reported above
-            };
-            let resolves = param_value_resolves(ruleset, param.domain, value);
-            if !resolves {
-                issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
-                    args([
-                        ("item", selection.item_ref.to_string()),
-                        ("key", param.key.clone()),
-                        ("value", value.to_string()),
-                        ("domain", param.domain.to_string()),
-                    ]),
-                    Some(selection.item_ref.clone()),
-                ));
-            }
         }
     }
 }

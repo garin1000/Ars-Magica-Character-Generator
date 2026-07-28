@@ -103,6 +103,10 @@ pub(crate) fn validate_warping(
                 Some(pick.item_ref.clone()),
             ));
         }
+        // A parameterized fill ("Enchanting (Ability)") is only really chosen once
+        // its parameter names a target, so the pick gets the same parameter checks
+        // a bought selection gets.
+        validate_selection_parameters(pick, ruleset, issues);
     }
 
     // Advisory: still owe more than chosen, per kind. A slot counts as filled once
@@ -165,6 +169,9 @@ mod tests {
             "magnitude": "major", "category": "story", "entity_kinds": ["character"] },
           { "id": "virtue.second_sight", "kind": "virtue", "classification": "narrative",
             "magnitude": "minor", "category": "supernatural", "entity_kinds": ["character"] },
+          { "id": "virtue.enchanting_ability", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "category": "supernatural", "entity_kinds": ["character"],
+            "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }] },
           { "id": "flaw.warped_by_magic", "kind": "flaw", "classification": "narrative",
             "magnitude": "minor", "category": "supernatural", "entity_kinds": ["character"],
             "effects": [{ "type": "warping_grant", "score": 1, "points": 5 }] }
@@ -199,6 +206,17 @@ mod tests {
     fn fill(e: &mut Entity, key: &str, item: &str) {
         e.warping_choices
             .insert(key.to_string(), Selection::new(Id::new(item)));
+    }
+
+    fn fill_with_params(e: &mut Entity, key: &str, item: &str, params: &[(&str, &str)]) {
+        let params = params
+            .iter()
+            .map(|(k, v)| ((*k).to_string(), Id::new(*v)))
+            .collect();
+        e.warping_choices.insert(
+            key.to_string(),
+            Selection::with_params(Id::new(item), params),
+        );
     }
 
     fn codes(result: &crate::validation::ValidationResult) -> Vec<String> {
@@ -338,6 +356,68 @@ mod tests {
         assert!(
             !codes(&validate(&e, &rs)).contains(&"over_budget_flaws".to_string()),
             "an owed warping fill must not trip the flaw budget"
+        );
+    }
+
+    /// A parameterized fill ("Enchanting (Ability)") needs its parameter chosen:
+    /// the owed slot is only really filled once the target is named, so the same
+    /// `missing_param` check bought selections get applies to the pick.
+    #[test]
+    fn a_parameterized_owed_fill_missing_its_param_errors() {
+        let rs = warping_ruleset();
+        // Warping Score 5 (75 pts) → owes a supernatural Minor Virtue slot.
+        let mut e = companion(75);
+        fill(
+            &mut e,
+            "warping.supernatural_virtue.0",
+            "virtue.enchanting_ability",
+        );
+        let result = validate(&e, &rs);
+        assert!(
+            codes(&result).contains(&ValidationIssue::CODE_MISSING_PARAM.to_string()),
+            "a parameterized owed fill with no param should error missing_param: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn a_parameterized_owed_fill_with_unknown_param_value_errors() {
+        let rs = warping_ruleset();
+        let mut e = companion(75);
+        fill_with_params(
+            &mut e,
+            "warping.supernatural_virtue.0",
+            "virtue.enchanting_ability",
+            &[("ability", "ability.nope")],
+        );
+        let result = validate(&e, &rs);
+        assert!(
+            codes(&result).contains(&ValidationIssue::CODE_UNKNOWN_PARAM_VALUE.to_string()),
+            "an owed fill whose param value is not in the catalogue should error: {:?}",
+            result.issues
+        );
+    }
+
+    #[test]
+    fn a_parameterized_owed_fill_with_resolving_param_is_clean() {
+        let rs = warping_ruleset();
+        let mut e = companion(75);
+        fill_with_params(
+            &mut e,
+            "warping.supernatural_virtue.0",
+            "virtue.enchanting_ability",
+            &[("ability", "ability.awareness")],
+        );
+        let result = validate(&e, &rs);
+        let param_codes: Vec<&String> = result
+            .issues
+            .iter()
+            .map(|i| &i.code)
+            .filter(|c| c.ends_with("_param") || c.as_str() == "unknown_param_value")
+            .collect();
+        assert!(
+            param_codes.is_empty(),
+            "a resolving param on an owed fill should raise no parameter issue: {param_codes:?}"
         );
     }
 
