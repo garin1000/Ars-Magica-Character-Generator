@@ -202,4 +202,31 @@ describe('hermetic houses', () => {
     await $(VF_TAB).click();
     expect(clean(await balance.getText())).toBe(before);
   });
+
+  it('lets a parameterized open pick choose its parameter — Puissant (Art)', async () => {
+    await setType('magus');
+    await selectHouse('house.ex_miscellanea');
+
+    // Puissant Art is a Minor Hermetic Virtue, so the Ex Misc Minor slot admits
+    // it — and it declares an Art parameter that must be named.
+    const open = await $('[data-testid="house-open-ex_misc_minor_virtue"]');
+    await open.waitForExist({ timeout: 5000 });
+    await open.selectByAttribute('value', 'virtue.puissant_art');
+
+    // Unparameterized, the engine reports the parameter missing…
+    await browser.waitUntil(async () => await $('[data-code="missing_param"]').isExisting(), {
+      timeout: 5000,
+      timeoutMsg: 'a parameterized open pick with no parameter should report missing_param',
+    });
+
+    // …and the picker under the pick resolves it.
+    const param = await $('[data-testid="param-virtue.puissant_art-art-ex_misc_minor_virtue"]');
+    await param.waitForExist({ timeout: 5000 });
+    await param.selectByAttribute('value', 'art.ignem');
+
+    await browser.waitUntil(async () => !(await $('[data-code="missing_param"]').isExisting()), {
+      timeout: 5000,
+      timeoutMsg: 'choosing the parameter should clear missing_param',
+    });
+  });
 });

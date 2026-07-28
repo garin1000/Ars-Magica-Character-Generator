@@ -8,13 +8,20 @@
 //
 // NOTE: requires a display + the production binary (see e2e/README.md).
 
-import { $, browser } from '@wdio/globals';
+import { $, $$, browser, expect } from '@wdio/globals';
 
 const TYPE_SELECT = '[data-testid="type-select"]';
 const DETAILS_TAB = '[data-testid="tab-details"]';
 const WARPING_POINTS = '[data-testid="warping-points-input"]';
 const WARPING_OWED = '[data-testid="warping-owed"]';
 const MINOR_FLAW_FILL = '[data-testid="warping-fill-warping.minor_flaw.0"]';
+// One group per owed kind, labelled with what its slots expect.
+const MINOR_FLAW_GROUP = '[data-testid="warping-owed-group-warping-slot-minor-flaw"]';
+const VIRTUE_GROUP = '[data-testid="warping-owed-group-warping-slot-supernatural-virtue"]';
+const SLOT_SELECT = 'select[data-testid^="warping-fill-"]';
+const FORM_PARAM =
+  '[data-testid="param-virtue.master_of_form_creatures-form-warping.supernatural_virtue.0"]';
+const MISSING_PARAM = '[data-code="missing_param"]';
 
 async function setType(value) {
   await $(TYPE_SELECT).selectByAttribute('value', value);
@@ -39,6 +46,40 @@ describe('warping-owed Virtues/Flaws', () => {
 
     // Filling the slot resolves cleanly (the fill is off-budget).
     await $(MINOR_FLAW_FILL).selectByAttribute('value', 'flaw.ability_block');
+  });
+
+  it('groups the owed slots per kind and resolves a parameterized fill', async () => {
+    await setType('companion');
+    await $(DETAILS_TAB).click();
+
+    // 75 Warping Points → Warping Score 5 → owes 2 Minor Flaws + 1 supernatural
+    // Minor Virtue (Core:16553-16559), in two labelled groups.
+    await $(WARPING_POINTS).setValue('75');
+    await $(MINOR_FLAW_GROUP).waitForExist({ timeout: 10000 });
+    await $(VIRTUE_GROUP).waitForExist({ timeout: 10000 });
+    // Count only the slot selects: a parameterized pick adds its own control.
+    await browser.waitUntil(
+      async () => (await $$(`${MINOR_FLAW_GROUP} ${SLOT_SELECT}`)).length === 2,
+      { timeout: 10000, timeoutMsg: 'the Minor Flaw group should hold both owed slots' },
+    );
+    expect((await $$(`${VIRTUE_GROUP} ${SLOT_SELECT}`)).length).toBe(1);
+
+    // Master of (Form) Creatures is a supernatural Minor Virtue whose Form must be
+    // named; unnamed, the engine reports the parameter missing.
+    const virtueFill = await $(`${VIRTUE_GROUP} ${SLOT_SELECT}`);
+    await virtueFill.selectByAttribute('value', 'virtue.master_of_form_creatures');
+    await browser.waitUntil(async () => await $(MISSING_PARAM).isExisting(), {
+      timeout: 10000,
+      timeoutMsg: 'a parameterized owed fill with no parameter should report missing_param',
+    });
+
+    const param = await $(FORM_PARAM);
+    await param.waitForExist({ timeout: 10000 });
+    await param.selectByAttribute('value', 'art.ignem');
+    await browser.waitUntil(async () => !(await $(MISSING_PARAM).isExisting()), {
+      timeout: 10000,
+      timeoutMsg: 'choosing the Form should clear missing_param',
+    });
   });
 
   it('hides the section for a magus at the same Warping Score', async () => {
