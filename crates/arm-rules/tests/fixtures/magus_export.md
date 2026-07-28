@@ -253,6 +253,10 @@
 - **ability-score-label**: 1
 - **decrepitude-effect-label**: a persistent cough each winter
 
+### aging-points-heading
+
+- **characteristic-pre**: 5
+
 ### aging-log-heading
 
 - **1220**: an apparent aging crisis, weathered
