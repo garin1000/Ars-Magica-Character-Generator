@@ -60,7 +60,9 @@ which bypass this machinery completely. To stay inside it, every agent MUST:
   through: `jq`, `grep`, `rg`, `sed`, `awk`, `sort`, `uniq`, `cut`, `tr`, `wc`, `head`,
   `tail`, `cat`, `diff`, `cmp`, `od`, `xxd`, `file`, `find`, `ls`, `echo`, `mkdir`.
   Build tools: `cargo …` (any
-  subcommand), `npm run <script>`, `npx prettier/svelte-check/vitest/wdio`. Read-only
+  subcommand), `npm run <script>`, `npx prettier/eslint/svelte-check/vitest/wdio` — `npx
+  eslint <file>` is the way to lint a single file, since `npm run lint` is whole-tree.
+  Read-only
   git: `git status`, `git diff`, `git log`, `git show`, `git check-ignore` — use these
   to inspect the working diff. A pipeline like `cargo tarpaulin … | tail -1` or
   `jq '.files | length' tmp/tarpaulin-report.json` auto-approves because each stage is
