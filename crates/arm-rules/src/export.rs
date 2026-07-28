@@ -87,6 +87,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "age-label",
     "aging-label",
     "aging-log-heading",
+    "aging-points-heading",
     "apparent-age-label",
     "art-type-form",
     "art-type-technique",
@@ -1200,8 +1201,9 @@ impl<'a> Doc<'a> {
         }
     }
 
-    /// The annotation block: Warping, Twilight Scars, Decrepitude, and the aging log.
-    /// Every entry here is a recorded outcome the app does not simulate.
+    /// The annotation block: Warping, Twilight Scars, Decrepitude, the accrued aging
+    /// points, and the aging log. Every entry here is a recorded outcome the app does
+    /// not simulate.
     fn write_annotations(&self, out: &mut String) {
         let e = self.entity;
         let warping = warping(e, self.rules());
@@ -1236,6 +1238,7 @@ impl<'a> Doc<'a> {
             }
             body.push('\n');
         }
+        self.write_aging_points(&mut body);
         if !e.aging_log.is_empty() {
             self.section(&mut body, 3, "aging-log-heading");
             for entry in &e.aging_log {
@@ -1252,6 +1255,32 @@ impl<'a> Doc<'a> {
         }
         self.section(out, 2, "aging-label");
         out.push_str(&body);
+    }
+
+    /// The accrued aging points, one bullet per Characteristic that carries any.
+    ///
+    /// These are the recorded state the Decrepitude Score and the Characteristic drops
+    /// are both derived from ([`crate::effective::decrepitude_score`],
+    /// [`effective_characteristic_after_aging`]), so the sheet shows them: a reader who
+    /// sees only the dropped score cannot tell how close the next drop is. A
+    /// Characteristic with no points contributes nothing and is skipped, which also
+    /// keeps the whole `aging-label` block out of an unaged character's sheet.
+    fn write_aging_points(&self, out: &mut String) {
+        let accrued: Vec<(Characteristic, u8)> = Characteristic::ALL
+            .into_iter()
+            .filter_map(|c| {
+                let points = self.entity.aging_points.get(&c).copied().unwrap_or(0);
+                (points != 0).then_some((c, points))
+            })
+            .collect();
+        if accrued.is_empty() {
+            return;
+        }
+        self.section(out, 3, "aging-points-heading");
+        for (c, points) in accrued {
+            self.labelled(out, &format!("characteristic-{c}"), &points.to_string());
+        }
+        out.push('\n');
     }
 
     /// A name-and-level table for the three list types that share that shape:
@@ -3146,9 +3175,76 @@ mod tests {
         );
     }
 
+    /// The accrued aging points are recorded per Characteristic and drive both the
+    /// Decrepitude Score and the Characteristic drops, so the sheet has to show them —
+    /// without them a reader cannot tell how close a Characteristic is to its next
+    /// drop. Two points on a Presence of 0 open the whole block on their own: they are
+    /// too few for a Decrepitude Score, so nothing else in the block is non-empty.
+    #[test]
+    fn aging_points_per_characteristic_are_listed_in_the_aging_block() {
+        let mut e = magus();
+        e.aging_points = BTreeMap::from([(Characteristic::Pre, 2), (Characteristic::Sta, 0)]);
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("aging-label", "Aging"),
+                ("aging-points-heading", "Aging points per Characteristic"),
+                ("characteristic-pre", "Presence"),
+                ("characteristic-sta", "Stamina"),
+            ]),
+        );
+        assert!(doc.contains("## Aging\n"), "{doc}");
+        assert!(
+            doc.contains("### Aging points per Characteristic\n"),
+            "{doc}"
+        );
+        assert!(doc.contains("- **Presence**: 2\n"), "{doc}");
+        assert!(
+            !doc.contains("Stamina"),
+            "a zero entry carries no information: {doc}"
+        );
+    }
+
+    /// The aging log records crises; the points record the accrual toward the next
+    /// drop. The points come first, so the block reads from state to history.
+    #[test]
+    fn the_aging_points_precede_the_aging_log() {
+        let doc = character_markdown(
+            &fully_populated_magus(),
+            &ruleset(),
+            &labels(&[
+                ("aging-points-heading", "Aging points"),
+                ("aging-log-heading", "Aging log"),
+            ]),
+        );
+        let points = doc
+            .find("### Aging points")
+            .expect("an aging-points heading");
+        let log = doc.find("### Aging log").expect("an aging-log heading");
+        assert!(points < log, "unexpected order: {doc}");
+    }
+
     #[test]
     fn the_annotation_block_is_omitted_for_an_unwarped_unaged_character() {
         let doc = character_markdown(&magus(), &ruleset(), &labels(&[("aging-label", "Aging")]));
+        assert!(!doc.contains("## Aging"), "stray heading: {doc}");
+    }
+
+    /// A stored-but-zero aging-point entry is no aging at all, so it must not open the
+    /// block (an old save can carry one; the frontend deletes it on edit).
+    #[test]
+    fn an_all_zero_aging_point_map_leaves_the_annotation_block_out() {
+        let mut e = magus();
+        e.aging_points = BTreeMap::from([(Characteristic::Pre, 0)]);
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("aging-label", "Aging"),
+                ("aging-points-heading", "Aging points"),
+            ]),
+        );
         assert!(!doc.contains("## Aging"), "stray heading: {doc}");
     }
 
