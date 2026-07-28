@@ -23,6 +23,11 @@ const application = path.resolve(repoRoot, 'target/release/arm-app');
 // Fixed save/load target so the flow is deterministic and headless.
 export const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
 
+// Fixed Markdown-export target, deliberately a separate seam from `e2eFile`:
+// that one is the JSON save file the same specs round-trip, so sharing it would
+// have an export clobber the document on disk.
+export const e2eExportFile = path.resolve(os.tmpdir(), 'arm-e2e-character.md');
+
 let tauriDriver;
 
 export const config = {
@@ -81,12 +86,13 @@ export const config = {
   },
 
   // tauri-driver bridges WebDriver to the platform webdriver. The spawned app
-  // inherits ARM_E2E_FILE so save/load skip the native dialog.
+  // inherits ARM_E2E_FILE and ARM_E2E_EXPORT_FILE so save/load and the Markdown
+  // export skip their native dialogs.
   beforeSession: () =>
     new Promise((resolve) => {
       tauriDriver = spawn(path.resolve(os.homedir(), '.cargo', 'bin', 'tauri-driver'), [], {
         stdio: [null, process.stdout, process.stderr],
-        env: { ...process.env, ARM_E2E_FILE: e2eFile },
+        env: { ...process.env, ARM_E2E_FILE: e2eFile, ARM_E2E_EXPORT_FILE: e2eExportFile },
       });
       // Give tauri-driver a moment to bind port 4444 before WDIO connects.
       setTimeout(resolve, 2000);
