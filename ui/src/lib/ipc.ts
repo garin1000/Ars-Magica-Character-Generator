@@ -36,6 +36,28 @@ export function saveEntity(entity: Entity, path: string | null): Promise<string 
   return invoke('save_entity', { entity, path });
 }
 
+/**
+ * Write the entity as a Markdown character sheet. `labels` is the document chrome
+ * the engine prints — `{ Fluent message name -> resolved text }`, so no
+ * user-facing string lives in Rust. `path === null` prompts for a destination.
+ * Resolves to the written path, or `null` when a prompt was cancelled.
+ */
+export function exportMarkdown(
+  entity: Entity,
+  labels: Record<string, string>,
+  path: string | null = null,
+): Promise<string | null> {
+  return invoke('export_markdown', { entity, labels, path });
+}
+
+/**
+ * The document-chrome label keys the Markdown export needs. The engine owns the
+ * list, so the frontend resolves exactly those rather than keeping a copy.
+ */
+export function exportLabelKeys(): Promise<string[]> {
+  return invoke('export_label_keys');
+}
+
 /** An opened document: the entity plus the file it was read from. */
 export interface LoadedEntity {
   path: string;

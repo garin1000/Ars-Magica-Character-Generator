@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Ability, Entity, House, LocalizedRuleset, PointItem } from './types';
+import type {
+  Ability,
+  Entity,
+  EntityTypeProfile,
+  House,
+  LocalizedRuleset,
+  PointItem,
+  Spell,
+} from './types';
 
 // The AppStore methods under test are synchronous; they only *schedule* a
 // debounced revalidate via setTimeout, which calls into the Tauri IPC bridge.
@@ -35,6 +43,8 @@ vi.mock('./ipc', () => ({
   saveEntity: vi.fn(),
   loadEntity: vi.fn(),
   updateCloseGuard: vi.fn(),
+  exportMarkdown: vi.fn(),
+  exportLabelKeys: vi.fn(),
 }));
 
 // Import the singleton after the mock is registered.
@@ -1914,5 +1924,147 @@ describe('document file model', () => {
     // Cancelled: the current file is unchanged and loadEntity was never called.
     expect(store.currentPath).toBe('/tmp/marcus.armc');
     expect(ipc.loadEntity).not.toHaveBeenCalled();
+  });
+});
+
+// --- Markdown export (M5.6c) -------------------------------------------------
+
+describe('exportMarkdown', () => {
+  /** A profile skeleton: only its id matters here — it names the `type-<id>` key. */
+  function profile(id: string): EntityTypeProfile {
+    return {
+      id,
+      budget: { virtue_points: 10, flaw_points: 10 },
+      permitted_categories: [],
+      forbidden_categories: [],
+      creation_phases: ['concept'],
+    };
+  }
+
+  /**
+   * A ruleset that exercises both key families the engine composes from catalogue
+   * data and therefore cannot enumerate: two character-type profiles, and a
+   * parameter key declared on each of the three parameterized catalogues
+   * (Virtue/Flaw, Ability, spell).
+   */
+  function installExportRuleset(): void {
+    const localized = installRuleset(
+      [
+        item({
+          id: 'virtue.puissant_ability',
+          parameters: [{ key: 'ability', type: 'ref', domain: 'ability' }],
+        }),
+      ],
+      [ability('ability.area_lore', 'area')],
+      { magus: profile('magus'), grog: profile('grog') },
+    );
+    const spell: Spell = {
+      id: 'spell.wizards_boost',
+      technique: 'art.muto',
+      form: 'art.vim',
+      parameters: [{ key: 'form', type: 'ref', domain: 'form' }],
+    };
+    localized.ruleset.spells = { [spell.id]: spell };
+  }
+
+  /** The label map the store handed the export command on its last call. */
+  function sentLabels(): Record<string, string> {
+    return vi.mocked(ipc.exportMarkdown).mock.calls[0][1];
+  }
+
+  beforeEach(() => {
+    vi.mocked(ipc.exportMarkdown).mockReset();
+    vi.mocked(ipc.exportLabelKeys).mockReset();
+    vi.mocked(ipc.saveEntity).mockReset();
+    vi.mocked(ipc.exportMarkdown).mockResolvedValue('/tmp/marcus.md');
+    vi.mocked(ipc.exportLabelKeys).mockResolvedValue(['identity-name', 'abilities-title']);
+    installExportRuleset();
+    store.lang = 'en';
+    store.error = null;
+    store.currentPath = null;
+  });
+
+  it('sends the entity and a resolved label for every key the engine asks for', async () => {
+    await store.exportMarkdown();
+
+    expect(ipc.exportMarkdown).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(ipc.exportMarkdown).mock.calls[0][0].type_id).toBe(store.entity.type_id);
+    const labels = sentLabels();
+    expect(labels['identity-name']).toBe('Name');
+    expect(labels['abilities-title']).toBe('Abilities');
+  });
+
+  it('adds the two composed families the engine cannot enumerate', async () => {
+    await store.exportMarkdown();
+
+    const labels = sentLabels();
+    // `type-<profile id>`: one per shipped profile, read off the ruleset.
+    expect(labels['type-magus']).toBe('Magus');
+    expect(labels['type-grog']).toBe('Grog');
+    // `param-label-<parameter key>`: declared by a Virtue, an Ability and a spell.
+    expect(labels['param-label-ability']).toBe('Ability');
+    expect(labels['param-label-area']).toBe('Area');
+    expect(labels['param-label-form']).toBe('Form');
+  });
+
+  it('never echoes a key back as its own label, in either language', async () => {
+    // Fluent's miss behavior is to return the key, so an unresolved composed key
+    // would silently ship a raw slug into the exported sheet.
+    for (const lang of ['en', 'de'] as const) {
+      vi.mocked(ipc.exportMarkdown).mockClear();
+      store.lang = lang;
+      await store.exportMarkdown();
+      for (const [key, text] of Object.entries(sentLabels())) {
+        expect(text, `'${key}' is unresolved in '${lang}'`).not.toBe(key);
+      }
+    }
+    store.lang = 'en';
+  });
+
+  it('leaves the document dirty: an export is not a save', async () => {
+    store.currentPath = '/tmp/marcus.armc';
+    store.setIdentity('name', 'Marcus');
+    expect(store.dirty).toBe(true);
+
+    await store.exportMarkdown();
+
+    expect(store.dirty).toBe(true);
+    expect(ipc.saveEntity).not.toHaveBeenCalled();
+  });
+
+  it('never adopts the written Markdown file as the current file', async () => {
+    store.currentPath = '/tmp/marcus.armc';
+
+    await store.exportMarkdown();
+
+    expect(store.currentPath).toBe('/tmp/marcus.armc');
+  });
+
+  it('surfaces a failed export in the error banner and clears the busy flag', async () => {
+    vi.mocked(ipc.exportMarkdown).mockRejectedValue({ kind: 'io' });
+
+    await store.exportMarkdown();
+
+    expect(store.error).toEqual({ kind: 'io' });
+    expect(store.busy).toBe(false);
+  });
+
+  it('is a no-op while another file operation is in flight', async () => {
+    store.currentPath = '/tmp/marcus.armc';
+    let finishSave: (path: string | null) => void = () => {};
+    vi.mocked(ipc.saveEntity).mockReturnValue(
+      new Promise<string | null>((resolve) => {
+        finishSave = resolve;
+      }),
+    );
+
+    const saving = store.save();
+    await store.exportMarkdown();
+
+    expect(ipc.exportMarkdown).not.toHaveBeenCalled();
+
+    // Let the save finish so the in-flight guard clears for later tests.
+    finishSave('/tmp/marcus.armc');
+    await saving;
   });
 });
