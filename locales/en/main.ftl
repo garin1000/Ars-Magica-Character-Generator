@@ -702,6 +702,9 @@ export-col-points = Points
 export-col-total = Total
 export-items-boons = Boons
 export-items-hooks = Hooks
+# Sub-heading of the Virtue/Flaw tables that lists the free, off-budget items the
+# character's House, mythic type or Warping grants (never counted in the balance).
+export-granted = Granted
 export-xp-restricted = Restricted experience
 export-yes = Yes
 export-no = No

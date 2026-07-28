@@ -2486,6 +2486,14 @@ holds the line, so this is a contract, not an oversight:
   (study, aging rolls, non-standard casting, wound recovery); they belong beside the
   subsystem that would use them.
 
+**Granted Virtues/Flaws are listed but off-budget.** Each Virtue/Flaw section prints
+the point-bought rows from `entity.selections` and then, under a `export-granted`
+sub-heading, the free rows `effective::entity_grants` resolves (House grant, mythic
+type grant, `grants_selection`, owed Warping fill) — so a magus's free House Virtue
+appears on the sheet, while the balance read-out keeps counting `compute_balance`,
+which sees the bought selections alone (see *The free House Virtue is budget-free and
+uncapped* above: grants are exempt from the budget and the count caps).
+
 **Localization split** (an architecture rule, not a rules mechanic): item names come
 from the rules i18n via `LocalizedRuleset::display_name`; document chrome is passed
 in as a `key → text` map keyed by Fluent message name, so the engine hardcodes no

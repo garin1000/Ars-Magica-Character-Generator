@@ -112,6 +112,16 @@ fn golden_magus() -> Entity {
         Selection::new(Id::new("virtue.warrior")),
         Selection::new(Id::new("flaw.blatant_gift")),
     ];
+    // House Bonisagus grants a free Puissant Ability; the pick is Intrigue, distinct
+    // from the point-bought Puissant Magic Theory above. Off-budget, so the sheet
+    // lists it without it moving the balance.
+    e.house_choices = BTreeMap::from([(
+        "bonisagus_puissant".to_string(),
+        Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([("ability".to_string(), Id::new("ability.intrigue"))]),
+        ),
+    )]);
     e.xp_pool = 240;
     e.ability_scores = vec![
         AbilityScore {
