@@ -3,7 +3,7 @@
 
 use std::sync::{Mutex, RwLock};
 
-use arm_rules::{Entity, LocalizedRuleset, Ruleset, ValidationMode, ValidationResult};
+use arm_rules::{Entity, LocalizedRuleset, ValidationMode, ValidationResult};
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::DialogExt;
@@ -14,11 +14,16 @@ use crate::error::AppError;
 use crate::ruleset_io;
 use crate::ruleset_io::EffectiveScores;
 
-/// Holds the parsed ruleset so validation does not re-read and re-check the
-/// rules files on every keystroke. `None` until `load_ruleset` succeeds.
+/// Holds the parsed, localized ruleset so validation does not re-read and
+/// re-check the rules files on every keystroke. `None` until `load_ruleset`
+/// succeeds.
+///
+/// The whole [`LocalizedRuleset`] is cached, not just its mechanics: the
+/// Markdown export needs the localized display names, and re-reading the i18n
+/// files per export would duplicate the loader for no gain.
 #[derive(Default)]
 pub struct AppState {
-    pub ruleset: RwLock<Option<Ruleset>>,
+    pub ruleset: RwLock<Option<LocalizedRuleset>>,
     /// Mirror of the frontend's unsaved-changes state, so the window-close and
     /// app-quit handlers can prompt before discarding without a round-trip.
     pub close_guard: Mutex<CloseGuardState>,
@@ -95,7 +100,7 @@ pub fn load_ruleset(
 
     let localized = ruleset_io::load_ruleset_from_dir(&rules_dir, &lang)?;
 
-    *state.ruleset.write().expect("ruleset lock poisoned") = Some(localized.ruleset.clone());
+    *state.ruleset.write().expect("ruleset lock poisoned") = Some(localized.clone());
 
     Ok(localized)
 }
@@ -109,7 +114,7 @@ pub fn validate_entity(
 ) -> Result<ValidationResult, AppError> {
     let guard = state.ruleset.read().expect("ruleset lock poisoned");
     let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
-    Ok(ruleset_io::validate_loaded(&entity, ruleset, mode))
+    Ok(ruleset_io::validate_loaded(&entity, &ruleset.ruleset, mode))
 }
 
 /// Computes the effective-score bonuses (Puissant Ability, Great Characteristic)
@@ -122,7 +127,10 @@ pub fn effective_scores(
 ) -> Result<EffectiveScores, AppError> {
     let guard = state.ruleset.read().expect("ruleset lock poisoned");
     let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
-    Ok(ruleset_io::effective_scores_loaded(&entity, ruleset))
+    Ok(ruleset_io::effective_scores_loaded(
+        &entity,
+        &ruleset.ruleset,
+    ))
 }
 
 /// Computes the read-only play-stat totals (casting, lab, penetration, magic
@@ -137,7 +145,7 @@ pub fn derived_totals(
 ) -> Result<DerivedTotals, AppError> {
     let guard = state.ruleset.read().expect("ruleset lock poisoned");
     let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
-    Ok(arm_rules::derived_totals(&entity, ruleset))
+    Ok(arm_rules::derived_totals(&entity, &ruleset.ruleset))
 }
 
 /// E2E seam: when set, save/load use this fixed path instead of opening a
