@@ -128,7 +128,11 @@
         data-testid="param-{selection.ref}-{param.key}-{index}"
       >
         <option value="" disabled>{typeLabel}</option>
-        {#each abilityInstances as instance (instance.value)}
+        <!-- Keyed by index as well as value: two instances of a parameterized
+             ability whose parameter is still unset share the same bare id, and a
+             duplicate key throws `each_key_duplicate` (in production too), which
+             would kill this whole tab's render. -->
+        {#each abilityInstances as instance, i (`${instance.value}:${i}`)}
           <option value={instance.value} disabled={full(usedAbilityTargets, instance.value)}>
             {instance.label}
           </option>

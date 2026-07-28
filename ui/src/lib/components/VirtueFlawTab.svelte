@@ -153,8 +153,13 @@
         // The granted rows sit in a header-less list below the chosen ones.
         groups.push({
           key: 'granted',
-          rows: granted.map((grant) => ({
-            key: `granted-${grant.ref}`,
+          rows: granted.map((grant, i) => ({
+            // The index is part of the key because the ref is not unique: the
+            // engine concatenates House, Mythic Companion, `grants_selection` and
+            // warping grants without dedup (effective.rs `entity_grants`), so one
+            // ref can be granted twice. A duplicate key makes Svelte throw
+            // `each_key_duplicate`, which aborts this tab's render entirely.
+            key: `granted-${i}-${grant.ref}`,
             item: { kind: 'granted', grant } as VfRow,
           })),
         });
