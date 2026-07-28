@@ -1019,6 +1019,67 @@ fn every_export_label_key_has_a_fluent_key_in_each_locale() {
     }
 }
 
+/// Every `{placeholder}` key the shipped catalogues declare, across the three
+/// parameterized kinds (Virtues/Flaws, Abilities, spells). Each names both the
+/// placeholder in an item's localized name and its `param-label-<key>` label — the
+/// slot label the Markdown export prints wherever a parameterized name has no chosen
+/// value (`export::Doc::parameterized_name`). The family is catalogue *data*, so it
+/// is recomputed from the shipped rules rather than listed in `LABEL_KEYS`; the
+/// frontend composes the same set for the label map it sends
+/// (`composedExportLabelKeys` in `ui/src/lib/state.svelte.ts`).
+fn shipped_parameter_keys() -> Vec<String> {
+    let read = |relative: &str| -> serde_json::Value {
+        let json = fs::read_to_string(repo_root().join(relative)).unwrap();
+        serde_json::from_str(&json).unwrap()
+    };
+    let mut keys: Vec<String> = Vec::new();
+    let mut collect = |items: Option<&Vec<serde_json::Value>>, keys: &mut Vec<String>| {
+        for item in items.into_iter().flatten() {
+            for parameter in item["parameters"].as_array().into_iter().flatten() {
+                keys.push(parameter["key"].as_str().unwrap().to_string());
+            }
+        }
+    };
+    let items = read("rules/core/virtues_flaws.json");
+    collect(items.as_array(), &mut keys);
+    let spells = read("rules/core/spells.json");
+    collect(spells["spells"].as_array(), &mut keys);
+    let abilities = read("rules/core/abilities.json");
+    for ability in abilities["abilities"].as_array().into_iter().flatten() {
+        if let Some(key) = ability["parameter"].as_str() {
+            keys.push(key.to_string());
+        }
+    }
+    keys.sort();
+    keys.dedup();
+    // One known key per scanned catalogue, so a scan that silently collected nothing
+    // cannot leave the coverage check looking green.
+    for known in ["ability", "form", "language"] {
+        assert!(
+            keys.contains(&known.to_string()),
+            "expected the shipped parameter key '{known}', got {keys:?}"
+        );
+    }
+    keys
+}
+
+/// The slot label for a parameterized name is composed from the parameter key, so a
+/// key the locales do not translate would reach the exported sheet (and the picker)
+/// as its own Fluent key. Recomputed from the catalogue, so a newly parameterized
+/// item fails here until both locales name its slot.
+#[test]
+fn every_shipped_parameter_key_has_a_param_label_in_each_locale() {
+    for lang in ["en", "de"] {
+        let ftl = fs::read_to_string(repo_root().join(format!("locales/{lang}/main.ftl"))).unwrap();
+        for key in shipped_parameter_keys() {
+            assert!(
+                ftl.contains(&format!("param-label-{key} =")),
+                "locale '{lang}' is missing key 'param-label-{key}'"
+            );
+        }
+    }
+}
+
 #[test]
 fn every_validation_code_has_a_fluent_key_in_each_locale() {
     let mut codes = validation_codes();

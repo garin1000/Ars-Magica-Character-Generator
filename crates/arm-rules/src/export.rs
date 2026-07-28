@@ -365,6 +365,56 @@ impl<'a> Doc<'a> {
         escape_cell(&self.name(&Id::new(raw)))
     }
 
+    /// The display values for one selection's parameters, keyed as its name template
+    /// expects them.
+    ///
+    /// A value may itself be a *parameterized* catalogue item: Puissant Ability aimed
+    /// at the character's Provence Lore stores `{ability: ability.area_lore, area:
+    /// "Provence"}`, where `area` is the target instance's own discriminator rather
+    /// than a parameter of Puissant Ability (this is exactly what the frontend's
+    /// `onSelectAbility` writes). So each value is rendered as a full instance name
+    /// with the sibling discriminators folded in ("Provence Lore"), and the keys a
+    /// value swallowed are dropped from the map — otherwise the row would both leak the
+    /// raw template and repeat the discriminator ("Puissant {area} Lore (Provence)").
+    fn param_display_values(&self, params: &BTreeMap<String, Id>) -> BTreeMap<String, String> {
+        let mut swallowed: BTreeSet<String> = BTreeSet::new();
+        let mut rendered: BTreeMap<String, String> = BTreeMap::new();
+        for (key, value) in params {
+            // Only the value's own placeholders that a sibling parameter can fill; an
+            // unfillable one keeps its slot label, as everywhere else.
+            let fills: BTreeMap<String, String> = self
+                .placeholder_keys(value)
+                .into_iter()
+                .filter_map(|placeholder| {
+                    let sibling = params.get(&placeholder)?;
+                    Some((placeholder, self.param_value(sibling.as_str())))
+                })
+                .collect();
+            swallowed.extend(fills.keys().cloned());
+            rendered.insert(key.clone(), self.parameterized_name(value, &fills));
+        }
+        rendered.retain(|key, _| !swallowed.contains(key));
+        rendered
+    }
+
+    /// The `{placeholder}` keys a catalogue item's localized name mentions, in the
+    /// order-free set [`param_display_values`] needs. An unterminated brace is literal
+    /// text and names no key, matching [`parameterized_name`].
+    fn placeholder_keys(&self, id: &Id) -> BTreeSet<String> {
+        let name = self.name(id);
+        let mut keys = BTreeSet::new();
+        let mut rest = name.as_str();
+        while let Some(open) = rest.find('{') {
+            let after = &rest[open + 1..];
+            let Some(close) = after.find('}') else {
+                return keys;
+            };
+            keys.insert(after[..close].to_string());
+            rest = &after[close + 1..];
+        }
+        keys
+    }
+
     /// A localized item name with its chosen parameters folded in.
     ///
     /// `{key}` placeholders in the name template are replaced by the matching value
@@ -606,11 +656,7 @@ impl<'a> Doc<'a> {
                 if item.kind != kind {
                     return None;
                 }
-                let values: BTreeMap<String, String> = selection
-                    .params
-                    .iter()
-                    .map(|(key, value)| (key.clone(), self.param_value(value.as_str())))
-                    .collect();
+                let values = self.param_display_values(&selection.params);
                 Some(vec![
                     self.parameterized_name(&selection.item_ref, &values),
                     self.label(&format!("category-{}", item.category)),
@@ -678,10 +724,13 @@ impl<'a> Doc<'a> {
         }
         self.section(out, 3, "export-xp-restricted");
         for pool in &xp.restricted {
+            // An eligible Ability may be parameterized (Dead Language is "{language}
+            // (Dead Language)"): the pool names the Ability, not one instance of it, so
+            // the placeholder keeps its slot label instead of reaching the reader raw.
             let mut eligibility: Vec<String> = pool
                 .abilities
                 .iter()
-                .map(|id| escape_cell(&self.name(id)))
+                .map(|id| self.parameterized_name(id, &BTreeMap::new()))
                 .collect();
             eligibility.extend(
                 pool.categories
@@ -2396,6 +2445,39 @@ mod tests {
         assert!(doc.contains("| Minor Magical Focus (fire) |"), "{doc}");
     }
 
+    /// A parameter *value* can itself be a parameterized Ability: Puissant Ability
+    /// aimed at the character's Provence Lore stores `{ability: ability.area_lore,
+    /// area: "Provence"}` — `area` is the target instance's own discriminator, not a
+    /// parameter of Puissant Ability. Rendering the value's name raw leaked the
+    /// template ("Puissant {area} Lore (Provence)").
+    #[test]
+    fn a_virtue_targeting_a_parameterized_ability_names_the_whole_instance() {
+        let mut e = magus();
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([
+                ("ability".to_string(), Id::new("ability.area_lore")),
+                ("area".to_string(), Id::new("Provence")),
+            ]),
+        )];
+        let doc = character_markdown(&e, &ruleset(), &no_labels());
+        assert!(doc.contains("| Puissant Provence Lore |"), "{doc}");
+        assert!(!doc.contains("{area}"), "no raw placeholder: {doc}");
+    }
+
+    /// The same target with no instance chosen yet keeps the slot label, and still
+    /// never shows the raw template.
+    #[test]
+    fn a_virtue_targeting_a_parameterized_ability_shows_the_instance_slot_label() {
+        let mut e = magus();
+        e.selections = vec![Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([("ability".to_string(), Id::new("ability.area_lore"))]),
+        )];
+        let doc = character_markdown(&e, &ruleset(), &labels(&[("param-label-area", "Area")]));
+        assert!(doc.contains("| Puissant (Area) Lore |"), "{doc}");
+    }
+
     #[test]
     fn an_unfilled_parameter_shows_its_localized_slot_label() {
         let mut e = magus();
@@ -2673,6 +2755,30 @@ mod tests {
         let bought = doc.find("| Awareness |").expect("the bought row");
         let granted = doc.find("| Second Sight |").expect("the granted row");
         assert!(bought < granted, "unexpected row order: {doc}");
+    }
+
+    /// A restricted pool's eligibility list names catalogue Abilities, and those names
+    /// can carry a `{placeholder}` (Dead Language is "{language} (Dead Language)"), so
+    /// the list has to go through the same parameterized formatter every other name
+    /// uses — otherwise the sheet shows the raw template.
+    #[test]
+    fn pool_eligibility_renders_parameterized_names_with_hints() {
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.educated"))];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("export-xp-restricted", "Restricted experience"),
+                ("restricted-xp-list-separator", ","),
+                ("param-label-language", "Language"),
+            ]),
+        );
+        assert!(
+            doc.contains("- **Artes Liberales, (Language) (Dead Language)**: 0 / 50\n"),
+            "{doc}"
+        );
+        assert!(!doc.contains("{language}"), "no raw placeholder: {doc}");
     }
 
     #[test]
