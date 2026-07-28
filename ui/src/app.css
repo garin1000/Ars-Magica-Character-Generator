@@ -233,7 +233,16 @@ button:disabled {
 .tab-content {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  /* Horizontally bound as before; vertically it SCROLLS rather than clips. Every
+     inner scrollport can shrink, but a picker panel's head (its title and filter
+     bar) has a min-content floor that no amount of shrinking removes, so in a short
+     enough window the tab's content is taller than the tab area no matter what.
+     `hidden` on that axis simply deleted the excess — no scrollbar, nothing to drag,
+     the bottom of the Available panels unreachable. `auto` costs nothing while the
+     content fits (the children still size against this box, so the gold frame still
+     fills the height) and keeps the overflow reachable when it does not. */
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -335,7 +344,12 @@ button:disabled {
    (and its reserved gutter) that used to live on the panel itself. */
 .list-scroll {
   flex: 1;
-  min-height: 0;
+  /* A floor of about three rows, NOT `min-height: 0`: this list is the only way to
+     pick anything, and as a plain `flex: 1` item it was shrunk to a height of zero
+     in a short window — the panel kept its title and filters and showed no rows at
+     all. The floor makes the panel taller than a short tab area can hold, which is
+     why `.tab-content` scrolls on that axis instead of clipping. */
+  min-height: 6rem;
   overflow-y: auto;
   scrollbar-gutter: stable;
   padding-right: 1.1rem;
