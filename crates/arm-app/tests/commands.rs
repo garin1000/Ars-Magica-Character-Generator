@@ -7,8 +7,9 @@ use std::path::PathBuf;
 
 use arm_app::error::AppError;
 use arm_app::ruleset_io::{
-    RULESET_ID, RULESET_VERSION, effective_scores_loaded, load_entity_from_path,
-    load_ruleset_from_dir, pick_rules_dir, save_entity_to_path, validate_loaded,
+    RULESET_ID, RULESET_VERSION, effective_scores_loaded, ensure_extension,
+    export_markdown_to_path, load_entity_from_path, load_ruleset_from_dir, pick_rules_dir,
+    save_entity_to_path, validate_loaded,
 };
 use arm_rules::{ArtScore, Entity, Id, Ruleset, RulesetSources, Selection, ValidationMode};
 use pretty_assertions::assert_eq;
@@ -873,6 +874,144 @@ fn devil_child_resolves_infernal_might_and_power_budget_end_to_end() {
     assert_eq!(might.realm, arm_rules::Realm::Infernal);
     assert_eq!(might.score, 7); // 5 (Demonic Blood) + 2 (Demonic Might grant)
     assert_eq!(scores.power_levels_budget, 30); // Demonic Blood's 30 levels
+}
+
+/// The real UI strings for a language, keyed by Fluent message name — the map the
+/// frontend hands to the Markdown export. Only argument-free single-line messages
+/// are usable: the engine links no Fluent formatter, so a message interpolating
+/// `{ $arg }` could never be resolved there (see `arm_rules::export`).
+fn locale_labels(lang: &str) -> BTreeMap<String, String> {
+    let ftl = fs::read_to_string(repo_root().join(format!("locales/{lang}/main.ftl"))).unwrap();
+    ftl.lines()
+        .filter(|line| !line.trim_start().starts_with('#'))
+        .filter_map(|line| line.split_once(" = "))
+        .filter(|(_, value)| !value.contains('{'))
+        .map(|(key, value)| (key.to_string(), value.to_string()))
+        .collect()
+}
+
+/// Exporting writes a Markdown document whose chrome is the **real** English UI
+/// wording, not a synthetic key map: the headings, column headers, and the
+/// untitled-character title all come from `locales/en/main.ftl`. This is the
+/// production path the export command takes; the engine's own golden test
+/// deliberately feeds a `key -> key` map instead.
+#[test]
+fn exporting_writes_markdown_with_the_real_english_labels() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("companion.md");
+    let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
+    let labels = locale_labels("en");
+
+    export_markdown_to_path(&sample_entity(), Some(&localized), &labels, &path).unwrap();
+    let doc = fs::read_to_string(&path).unwrap();
+
+    // The sample has no name, so the title is the localized untitled marker, and
+    // the subtitle names the character type.
+    assert!(doc.starts_with("# Untitled character\n"), "got: {doc}");
+    assert!(doc.contains("*Companion*"), "got: {doc}");
+    // Sections use the shipped English headings.
+    assert!(doc.contains("## Characteristics"), "got: {doc}");
+    assert!(doc.contains("## Virtues & Flaws"), "got: {doc}");
+    assert!(doc.contains("## Abilities"), "got: {doc}");
+    // Values: a bought Characteristic, and Awareness 2 raised to an effective 4 by
+    // the sample's Puissant Awareness.
+    assert!(doc.contains("| Intelligence | +2 |"), "got: {doc}");
+    assert!(doc.contains("| Puissant Awareness | Minor |"), "got: {doc}");
+    assert!(
+        doc.contains("| Awareness | searching | 2 | 4 |"),
+        "got: {doc}"
+    );
+    assert!(doc.contains("- **XP pool**: "), "got: {doc}");
+    // No chrome key leaks through as its own label — that is the fallback the
+    // formatter uses for a key the caller failed to supply.
+    assert!(!doc.contains("export-col-"), "got: {doc}");
+    assert!(!doc.contains("identity-name"), "got: {doc}");
+}
+
+/// A destination inside a directory that does not exist is a filesystem failure,
+/// surfaced as `AppError::Io` (the frontend maps the variant to its own message).
+#[test]
+fn exporting_into_a_missing_directory_is_io_error() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("no-such-dir").join("companion.md");
+    let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
+
+    let err = export_markdown_to_path(
+        &sample_entity(),
+        Some(&localized),
+        &locale_labels("en"),
+        &path,
+    )
+    .unwrap_err();
+    assert!(matches!(err, AppError::Io { .. }), "got {err:?}");
+}
+
+/// A destination the user typed without an extension gets `.md`, the same way a
+/// save without one gets `.armc` — this is the enforcement the export command
+/// applies before writing.
+#[test]
+fn exporting_a_path_without_an_extension_writes_a_dot_md_file() {
+    let tmp = tempfile::tempdir().unwrap();
+    let target = ensure_extension(tmp.path().join("companion"), "md");
+    let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
+
+    export_markdown_to_path(
+        &sample_entity(),
+        Some(&localized),
+        &locale_labels("en"),
+        &target,
+    )
+    .unwrap();
+
+    assert_eq!(target, tmp.path().join("companion.md"));
+    assert!(target.is_file(), "the .md file must exist");
+}
+
+/// Exporting before a ruleset is loaded cannot resolve a single display name, so
+/// it fails with the same `NotLoaded` the other ruleset-dependent commands use.
+/// The absent ruleset is an argument here rather than a lock read inside the
+/// command, which is what makes the case reachable without a Tauri runtime.
+#[test]
+fn exporting_without_a_loaded_ruleset_is_not_loaded_error() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("companion.md");
+
+    let err =
+        export_markdown_to_path(&sample_entity(), None, &locale_labels("en"), &path).unwrap_err();
+    assert!(matches!(err, AppError::NotLoaded), "got {err:?}");
+    assert!(
+        !path.exists(),
+        "a failed export must not leave a file behind"
+    );
+}
+
+/// The command that tells the frontend which labels to send must hand back the
+/// engine's own list, never a hand-maintained copy of it.
+#[test]
+fn export_label_keys_command_returns_the_engine_list() {
+    assert_eq!(
+        arm_app::commands::export_label_keys(),
+        arm_rules::export::LABEL_KEYS
+            .iter()
+            .map(|key| key.to_string())
+            .collect::<Vec<String>>()
+    );
+}
+
+/// Every document-chrome key the exporter can ask for must exist in every locale,
+/// or the exported sheet would print the raw key. Mirrors
+/// `every_validation_code_has_a_fluent_key_in_each_locale`.
+#[test]
+fn every_export_label_key_has_a_fluent_key_in_each_locale() {
+    for lang in ["en", "de"] {
+        let ftl = fs::read_to_string(repo_root().join(format!("locales/{lang}/main.ftl"))).unwrap();
+        for key in arm_rules::export::LABEL_KEYS {
+            assert!(
+                ftl.contains(&format!("{key} =")),
+                "locale '{lang}' is missing key '{key}'"
+            );
+        }
+    }
 }
 
 #[test]
