@@ -48,7 +48,7 @@ use crate::characteristics::Characteristic;
 use crate::derived::{CombatLine, combat_totals, encumbrance, fatigue_levels, soak, wound_ranges};
 use crate::effective::{
     confidence, decrepitude_score, effective_ability_score, effective_art_score,
-    effective_characteristic_score, effective_might, effective_spell_mastery, entity_grants,
+    effective_characteristic_after_aging, effective_might, effective_spell_mastery, entity_grants,
     resolved_spell_level, warping, xp_allocation,
 };
 use crate::ruleset::{LocalizedRuleset, Ruleset};
@@ -469,8 +469,13 @@ impl<'a> Doc<'a> {
         out.push('\n');
     }
 
-    /// The bought Characteristic scores, their effective values where a Virtue moves
-    /// them, and the sheet's free-text descriptions.
+    /// The bought Characteristic scores, their effective values where aging or a
+    /// Virtue moves them, and the sheet's free-text descriptions.
+    ///
+    /// The Effective cell is [`effective_characteristic_after_aging`] — the same
+    /// single source of truth every derived total reads, so an aged character's sheet
+    /// cannot show a score its own Soak and Combat lines contradict. It is printed
+    /// only when it differs from the bought score.
     ///
     /// Every Characteristic in the taxonomy gets a row: a score of 0 is stored as an
     /// *absent* key, so skipping the unstored ones would silently drop a
@@ -494,7 +499,7 @@ impl<'a> Doc<'a> {
                 .map(String::as_str)
                 .unwrap_or_default();
             let bought = i32::from(e.characteristics.get(&c).copied().unwrap_or(0));
-            let effective = effective_characteristic_score(e, self.rules(), c);
+            let effective = effective_characteristic_after_aging(e, self.rules(), c);
             rows.push(vec![
                 self.label(&format!("characteristic-{c}")),
                 signed(bought),
@@ -2045,6 +2050,46 @@ mod tests {
         );
         assert!(
             doc.contains("| Strength | +2 | +3 |  |"),
+            "unexpected row: {doc}"
+        );
+    }
+
+    /// Aging lowers the *effective* Characteristic, so the Effective column has to
+    /// read the aging-aware value — a sheet that printed the un-aged score would
+    /// contradict every derived total, which all read after-aging scores.
+    /// A Communication of +2 drops on its 3rd aging point, so +2 becomes +1.
+    #[test]
+    fn the_effective_column_reflects_aging_drops() {
+        let mut e = magus();
+        e.characteristics.insert(Characteristic::Com, 2);
+        e.aging_points = BTreeMap::from([(Characteristic::Com, 3)]);
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[("characteristic-com", "Communication")]),
+        );
+        assert!(
+            doc.contains("| Communication | +2 | +1 |  |"),
+            "unexpected row: {doc}"
+        );
+    }
+
+    /// Aging and a free Virtue delta are separate layers: the drop lowers the bought
+    /// score, the delta then adds on top.
+    #[test]
+    fn the_effective_column_combines_an_aging_drop_with_a_virtue_delta() {
+        let mut e = magus();
+        e.characteristics.insert(Characteristic::Str, 2);
+        e.selections = vec![Selection::new(Id::new("virtue.giant_blood"))];
+        e.aging_points = BTreeMap::from([(Characteristic::Str, 5)]);
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[("characteristic-str", "Strength")]),
+        );
+        // Bought +2, two aging drops → 0, Giant Blood +1 → +1 effective.
+        assert!(
+            doc.contains("| Strength | +2 | +1 |  |"),
             "unexpected row: {doc}"
         );
     }

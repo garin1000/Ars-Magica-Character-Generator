@@ -20,7 +20,7 @@
 | characteristic-per | +1 |  |  |
 | characteristic-str | +1 |  |  |
 | characteristic-sta | +2 |  |  |
-| characteristic-pre | -1 |  |  |
+| characteristic-pre | -1 | -3 |  |
 | characteristic-com | +1 |  |  |
 | characteristic-dex | +1 |  |  |
 | characteristic-qik | +1 |  |  |
