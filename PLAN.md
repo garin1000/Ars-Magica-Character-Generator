@@ -522,20 +522,36 @@ Scope: a standalone feature — export a built character as a single formatted
 **Markdown** file the player can read/share. Independent of the wizard; delivered
 here (pulled forward from M10's export item, which retains the PDF/Scribus path).
 
-- [ ] Pure formatter in `arm-rules` (TDD): given entity + localized ruleset, emit
-      Markdown covering identity/details, Virtues & Flaws, Abilities, Arts, Spells,
-      Equipment, **combat values**, Longevity Ritual, Talisman, and Familiar.
-      Include the character's chosen values and the key computed **combat / Soak**
-      totals, but **exclude** the per-line derived casting/lab-total read-outs —
-      those are noise in an export. Item **names** come through the `rules/i18n`
-      layer; no user-facing string is hardcoded (CLAUDE.md data-kind separation).
-- [ ] Section-header/label strings for the document: UI-owned Fluent (`.ftl`)
-      keys, assembled at the call site — resolve the engine-pure vs. localized-UI
-      split (engine emits structure/values keyed by id; UI supplies headings), so
-      the `arm-rules` purity invariant holds.
-- [ ] Tauri command + native **file-save dialog** + an **Export** button in the
-      UI; write the `.md` to a user-chosen path (file IO stays in `arm-app`).
-- [ ] Supersedes the Markdown half of M10's "Character sheet export" item.
+- [x] Pure formatter in `arm-rules` (TDD): `export::character_markdown` emits the
+      whole sheet — identity/details, Characteristics, Virtues & Flaws (bought, plus
+      **granted** off-budget items listed separately so the balance line still counts
+      only what `compute_balance` counts), Abilities + XP, Arts, Spells, Equipment,
+      **combat values**, Soak, Encumbrance, Fatigue, Wounds, Personality Traits,
+      Reputations, Confidence, the magic possessions (aura, devices, Might/powers,
+      Longevity Ritual, Talisman, Familiar statblock) and the aging/warping
+      annotations. **Excluded** by a named contract test: the per-line derived
+      read-outs (`lab_totals`, `casting_totals`, `penetration`, `magic_resistance`,
+      `masterpiece`, `talisman_capacity`, the familiar readout, the longevity bonus
+      read-out, `surfaced_modifiers`). Item **names** come from `LocalizedRuleset`;
+      no user-facing string is hardcoded. Output is byte-deterministic, pinned by a
+      golden fixture (`crates/arm-rules/tests/fixtures/magus_export.md`).
+- [x] Section-header/label strings: the engine declares its vocabulary in
+      `export::LABEL_KEYS` and takes a `{ Fluent key → text }` map from the caller,
+      so `arm-rules` holds no user-facing string. 129 of the 140 keys **reuse**
+      existing UI keys (`derived-addend-*`, `derived-section-*`, …) rather than
+      minting duplicates; 12 are new `export-*` keys. A `arm-app` test asserts every
+      key exists in both locales, and an engine **closure test** asserts every slug
+      the formatter can emit is in `LABEL_KEYS` — so a raw slug can never reach the
+      document as a label.
+- [x] Tauri command + native **file-save dialog** + an **Export** button in the
+      toolbar; `AppState` now caches the `LocalizedRuleset` so the backend can
+      resolve display names, and the path is resolved **before** the state lock is
+      taken (an open dialog must not block a language switch). Export is **not** a
+      save: it leaves `currentPath`, the saved snapshot and the dirty flag untouched.
+      E2E seam: `ARM_E2E_EXPORT_FILE`, separate from `ARM_E2E_FILE`.
+- [x] Supersedes the Markdown half of M10's "Character sheet export" item.
+- Deferred: a per-Form **Magic Resistance** section (excluded with the other derived
+      read-outs; one section to add if wanted), and the PDF/Scribus path (M10/M11).
 
 ## Milestone 6 — Guided creation wizard
 
@@ -692,23 +708,24 @@ Full detail, field inventory, and quirks: **`docs/scribus-character-sheet.md`**.
 
 ---
 
-## Current focus: Milestone 5.6 (Markdown character export)
+## Current focus: Milestone 6 (guided creation wizard)
 
-Milestones 0–5.5 complete: the direct-entry gate is closed — every core-rules
+Milestones 0–5.6 complete: the direct-entry gate is closed — every core-rules
 character is fully enterable and its combat/Soak/casting/lab totals computed
-in-engine — and the magus's three magic possessions are now modeled at
-rules-faithful depth. **M5.5 is done**: the Longevity Ritual stores a
-player-entered bonus beside a live Creo Corpus hint (5.5a), the talisman is an
-item with identity, capacity and instilled effects (5.5b, `SCHEMA_VERSION`
-13 → 14 with a legacy fold that invents nothing), and the familiar is a
-Creature-Format statblock with read-only bonding guidance (5.5c, no schema
-bump). The guided
-wizard **M6** gains a new first slice **6a** (startup screen + fixed character
-type) ahead of the guided flow (6b).
+in-engine — the magus's three magic possessions are modeled at rules-faithful
+depth (M5.5), and a finished character can be **exported as a Markdown sheet**
+(M5.6). **M5.6 is done**: `arm-rules::export` is a pure formatter that emits the
+whole document from `entity` + `LocalizedRuleset` + a caller-supplied
+`{ Fluent key → text }` label map, so the engine still holds no user-facing
+string; `arm-app` owns the file IO, the native save dialog and the
+`export_markdown` / `export_label_keys` commands; and the toolbar has an Export
+button. Byte-deterministic output, a golden fixture, and a real-binary e2e spec
+(21 specs total) hold it in place.
 
-Next: M5.6 — Markdown character export (a pure formatter in `arm-rules`,
-UI-owned Fluent headings, and a Tauri file-save command), which now has the full
-magic-possession content to export.
+Next: **M6**, starting with the new first slice **6a** (startup screen + character
+type fixed at creation) ahead of the guided flow (6b). It orchestrates the
+direct-entry surfaces that M2–M5.6 completed and adds the guided
+life-stage/aging engines.
 
 ---
 
