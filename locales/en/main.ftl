@@ -687,3 +687,21 @@ derived-detail-susceptible_divine = Susceptible to the Divine
 derived-detail-susceptible_faerie = Susceptible to Faerie
 derived-detail-susceptible_infernal = Susceptible to the Infernal
 derived-detail-aura_bonus = Aura bonus
+
+# Markdown export (Export sheet). Document chrome the exporter needs but no other
+# surface names: table headers it composes itself, the two covenant point-item
+# groups, and the yes/no markers a Markdown table has to spell out. Every other
+# heading and label in the exported sheet reuses the keys above, so the document
+# reads in the same words as the app. `arm_rules::export::LABEL_KEYS` is the
+# authoritative list; a key missing here would print as its own name.
+export-untitled = Untitled character
+export-col-effective = Effective
+export-col-magnitude = Magnitude
+export-col-penalty = Penalty
+export-col-points = Points
+export-col-total = Total
+export-items-boons = Boons
+export-items-hooks = Hooks
+export-xp-restricted = Restricted experience
+export-yes = Yes
+export-no = No

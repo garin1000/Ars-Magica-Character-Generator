@@ -674,3 +674,22 @@ derived-detail-susceptible_divine = Anfällig für das Göttliche
 derived-detail-susceptible_faerie = Anfällig für das Feenreich
 derived-detail-susceptible_infernal = Anfällig für das Infernale
 derived-detail-aura_bonus = Aurabonus
+
+# Markdown-Export (Bogen exportieren). Dokumenttext, den nur der Export benötigt:
+# selbst zusammengesetzte Tabellenköpfe, die beiden Konvents-Punktegruppen und die
+# Ja/Nein-Marker, die eine Markdown-Tabelle ausschreiben muss. Alle übrigen
+# Überschriften und Beschriftungen des Bogens nutzen die Schlüssel oben, damit das
+# Dokument dieselben Wörter verwendet wie die App. Maßgebliche Liste ist
+# `arm_rules::export::LABEL_KEYS`; ein fehlender Schlüssel würde als sein eigener
+# Name ausgegeben.
+export-untitled = Unbenannter Charakter
+export-col-effective = Effektiv
+export-col-magnitude = Magnitude
+export-col-penalty = Abzug
+export-col-points = Punkte
+export-col-total = Summe
+export-items-boons = Vorzüge
+export-items-hooks = Haken
+export-xp-restricted = Eingeschränkte Erfahrungspunkte
+export-yes = Ja
+export-no = Nein
