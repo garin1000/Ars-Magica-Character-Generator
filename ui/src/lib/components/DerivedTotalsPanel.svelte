@@ -200,7 +200,13 @@
         <div class="detail-section">
           <h3 class="detail-label">{store.t('derived-section-penetration')}</h3>
           <ul class="derived-list" data-testid="derived-penetration">
-            {#each d.penetration as p (`${p.spell}:${p.parameter ?? ''}`)}
+            <!-- Deliberately UNKEYED. These are read-only engine output rows in a
+                 stable order with no identity to preserve, and no expression built
+                 from the line's own fields is unique: the same General spell known
+                 at two levels repeats (spell, parameter), and a duplicate key makes
+                 Svelte throw `each_key_duplicate`, which aborts the whole panel's
+                 render (the tab then appears dead). An unkeyed block cannot collide. -->
+            {#each d.penetration as p}
               <li>
                 <span>{penetrationLabel(p)} ({store.t('derived-level')} {p.level})</span>
                 <span class="value"
@@ -333,7 +339,11 @@
               </tr>
             </thead>
             <tbody>
-              {#each d.combat as line (line.weapon)}
+              <!-- Deliberately UNKEYED, same reason as the Penetration list above:
+                   `combat_totals` emits one line per equipped slot, so carrying the
+                   same weapon twice repeats `line.weapon`. Keying by it threw
+                   `each_key_duplicate` and killed this whole tab. -->
+              {#each d.combat as line}
                 <tr>
                   <th>{name(line.weapon)}</th>
                   <td>{line.initiative}</td>
