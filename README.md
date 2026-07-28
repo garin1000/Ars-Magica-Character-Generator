@@ -150,7 +150,8 @@ the point-buy the creation checks read). Every in-play Virtue/Flaw effect
 (Magical Focus, Method Caster, Deficient Technique/Form, Tough, and the rest of
 the 653-entry catalogue) is modelled, and a read-out panel computes the full
 in-play totals in-engine — per-Technique/Form Lab and Casting Totals, per-spell
-Penetration, per-Form Magic Resistance, combat lines (weapon + shield), Soak,
+Penetration, per-Form Magic Resistance, combat lines (a one-handed weapon reads out
+twice while a shield is equipped: with the shield, and bare), Soak,
 Encumbrance, fatigue and wound ranges, and the stored Longevity bonus beside the
 suggestion for a ritual made today — from a numeric aura input. With this any core-rules character is fully
 enterable **and** fully computable in direct entry (milestone M5 complete). A
