@@ -307,6 +307,28 @@ pub fn default_markdown_file_name(kind: EntityKind) -> String {
     format!("{}.{MARKDOWN_EXTENSION}", entity_base_name(kind))
 }
 
+/// Prefill file name for the Markdown-export dialog: the document's own save file
+/// re-extensioned, so `gerhard.armc` exports as `gerhard.md`. Falls back to the
+/// kind default for a document that was never saved, or a path with no usable base
+/// name — the entity's `name` stays out of it for the reason
+/// [`entity_base_name`] documents.
+pub fn markdown_file_name_for(current_path: Option<&str>, kind: EntityKind) -> String {
+    let base = current_path
+        .and_then(|path| path.rsplit(['/', '\\']).next())
+        .unwrap_or_default();
+    // Split at the LAST dot, but only past the first byte: a base name starting
+    // with the dot (`.armc`) is nothing but an extension and leaves no stem.
+    let stem = match base.rfind('.') {
+        Some(dot) if dot > 0 => &base[..dot],
+        Some(_) => "",
+        None => base,
+    };
+    if stem.is_empty() {
+        return default_markdown_file_name(kind);
+    }
+    format!("{stem}.{MARKDOWN_EXTENSION}")
+}
+
 /// Appends `ext` when the chosen path has no extension, so a user who types just
 /// "testchar" still gets "testchar.armc". An explicit extension (`.armc`,
 /// `.json`, …) the user typed is respected.
@@ -503,6 +525,49 @@ mod tests {
         assert_eq!(
             default_markdown_file_name(EntityKind::Covenant),
             "covenant.md"
+        );
+    }
+
+    #[test]
+    fn markdown_name_follows_the_current_save_file() {
+        // The save file's base name, re-extensioned: an export is named after the
+        // document it came from.
+        assert_eq!(
+            markdown_file_name_for(Some("/home/u/gerhard.armc"), EntityKind::Character),
+            "gerhard.md"
+        );
+        // A path recorded on Windows separates with backslashes.
+        assert_eq!(
+            markdown_file_name_for(Some("C:\\saves\\gerhard.armcov"), EntityKind::Covenant),
+            "gerhard.md"
+        );
+        // A base name without an extension is already the stem.
+        assert_eq!(
+            markdown_file_name_for(Some("/x/gerhard"), EntityKind::Character),
+            "gerhard.md"
+        );
+    }
+
+    #[test]
+    fn markdown_name_falls_back_to_the_kind_default() {
+        // Never saved: nothing to name the export after.
+        assert_eq!(
+            markdown_file_name_for(None, EntityKind::Character),
+            default_markdown_file_name(EntityKind::Character)
+        );
+        assert_eq!(
+            markdown_file_name_for(None, EntityKind::Covenant),
+            default_markdown_file_name(EntityKind::Covenant)
+        );
+        // A base name that is nothing but an extension leaves an empty stem.
+        assert_eq!(
+            markdown_file_name_for(Some("/x/.armc"), EntityKind::Character),
+            default_markdown_file_name(EntityKind::Character)
+        );
+        // A directory-only path has no base name at all.
+        assert_eq!(
+            markdown_file_name_for(Some("/x/"), EntityKind::Covenant),
+            default_markdown_file_name(EntityKind::Covenant)
         );
     }
 
