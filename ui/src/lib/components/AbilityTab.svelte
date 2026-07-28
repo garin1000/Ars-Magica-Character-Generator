@@ -229,83 +229,87 @@
   <section class="region region-selected">
     <h2 class="region-title">{store.t('selections-title')}</h2>
     <div class="selected-frame">
-      <SelectionList columns={selectedColumns}>
-        {#snippet row(item: IndexedAbilityScore)}
-          {@const entry = item.entry}
-          {@const i = item.index}
-          {@const key = paramKey(entry.ability)}
-          <li class:invalid-selection={invalidIds.has(entry.ability)}>
-            <span class="item-name" use:tooltip={selectedTip(entry.ability)}
-              >{selectedName(entry.ability, entry.parameter)}</span
-            >
-            <span class="spinner">
+      <!-- The frame carries the border and its padding; this inner box does the
+           scrolling, so the padding stays a gap the rows cannot scroll into. -->
+      <div class="selected-scroll">
+        <SelectionList columns={selectedColumns}>
+          {#snippet row(item: IndexedAbilityScore)}
+            {@const entry = item.entry}
+            {@const i = item.index}
+            {@const key = paramKey(entry.ability)}
+            <li class:invalid-selection={invalidIds.has(entry.ability)}>
+              <span class="item-name" use:tooltip={selectedTip(entry.ability)}
+                >{selectedName(entry.ability, entry.parameter)}</span
+              >
+              <span class="spinner">
+                <button
+                  type="button"
+                  class="icon-btn"
+                  aria-label={store.t('ability-decrement')}
+                  disabled={entry.score <= 0}
+                  onclick={() => store.adjustAbilityAt(i, -1, max)}
+                  data-testid="ability-dec-{entry.ability}-{i}"
+                >
+                  -
+                </button>
+                <span class="spinner-value" data-testid="ability-score-{entry.ability}-{i}">
+                  {entry.score}
+                </span>
+                <button
+                  type="button"
+                  class="icon-btn"
+                  aria-label={store.t('ability-increment')}
+                  disabled={entry.score >= max}
+                  onclick={() => store.adjustAbilityAt(i, 1, max)}
+                  data-testid="ability-inc-{entry.ability}-{i}"
+                >
+                  +
+                </button>
+              </span>
+              {#if effectiveOf(entry.score, entry.ability, entry.parameter) !== entry.score}
+                <span class="eff-slot">
+                  <span class="eff-badge" data-testid="ability-eff-{entry.ability}-{i}">
+                    {store.t('effective-score', {
+                      score: String(effectiveOf(entry.score, entry.ability, entry.parameter)),
+                    })}
+                  </span>
+                </span>
+              {:else}
+                <span class="eff-slot" aria-hidden="true"></span>
+              {/if}
+              <input
+                type="text"
+                class="specialty"
+                placeholder={store.t('ability-specialty-label')}
+                value={entry.specialty ?? ''}
+                oninput={(e) =>
+                  store.setAbilitySpecialtyAt(i, (e.currentTarget as HTMLInputElement).value)}
+                data-testid="ability-specialty-{entry.ability}-{i}"
+              />
               <button
                 type="button"
                 class="icon-btn"
                 aria-label={store.t('ability-decrement')}
-                disabled={entry.score <= 0}
-                onclick={() => store.adjustAbilityAt(i, -1, max)}
-                data-testid="ability-dec-{entry.ability}-{i}"
+                onclick={() => store.removeAbilityAt(i)}
+                data-testid="remove-{entry.ability}-{i}"
               >
-                -
+                ×
               </button>
-              <span class="spinner-value" data-testid="ability-score-{entry.ability}-{i}">
-                {entry.score}
-              </span>
-              <button
-                type="button"
-                class="icon-btn"
-                aria-label={store.t('ability-increment')}
-                disabled={entry.score >= max}
-                onclick={() => store.adjustAbilityAt(i, 1, max)}
-                data-testid="ability-inc-{entry.ability}-{i}"
-              >
-                +
-              </button>
-            </span>
-            {#if effectiveOf(entry.score, entry.ability, entry.parameter) !== entry.score}
-              <span class="eff-slot">
-                <span class="eff-badge" data-testid="ability-eff-{entry.ability}-{i}">
-                  {store.t('effective-score', {
-                    score: String(effectiveOf(entry.score, entry.ability, entry.parameter)),
-                  })}
-                </span>
-              </span>
-            {:else}
-              <span class="eff-slot" aria-hidden="true"></span>
-            {/if}
-            <input
-              type="text"
-              class="specialty"
-              placeholder={store.t('ability-specialty-label')}
-              value={entry.specialty ?? ''}
-              oninput={(e) =>
-                store.setAbilitySpecialtyAt(i, (e.currentTarget as HTMLInputElement).value)}
-              data-testid="ability-specialty-{entry.ability}-{i}"
-            />
-            <button
-              type="button"
-              class="icon-btn"
-              aria-label={store.t('ability-decrement')}
-              onclick={() => store.removeAbilityAt(i)}
-              data-testid="remove-{entry.ability}-{i}"
-            >
-              ×
-            </button>
-            {#if key}
-              <input
-                type="text"
-                class="ability-param"
-                placeholder={store.t(`param-label-${key}`)}
-                value={entry.parameter ?? ''}
-                oninput={(e) =>
-                  store.setAbilityParameterAt(i, (e.currentTarget as HTMLInputElement).value)}
-                data-testid="ability-param-{entry.ability}-{i}"
-              />
-            {/if}
-          </li>
-        {/snippet}
-      </SelectionList>
+              {#if key}
+                <input
+                  type="text"
+                  class="ability-param"
+                  placeholder={store.t(`param-label-${key}`)}
+                  value={entry.parameter ?? ''}
+                  oninput={(e) =>
+                    store.setAbilityParameterAt(i, (e.currentTarget as HTMLInputElement).value)}
+                  data-testid="ability-param-{entry.ability}-{i}"
+                />
+              {/if}
+            </li>
+          {/snippet}
+        </SelectionList>
+      </div>
     </div>
   </section>
 </div>

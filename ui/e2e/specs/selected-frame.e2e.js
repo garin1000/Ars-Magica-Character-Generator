@@ -6,13 +6,15 @@
 // real layout engine — vitest renders these components to an SSR string and never
 // resolves a box.
 //
-// Provenance: written for a manual-testing report that the chosen rows run
-// downwards past the frame's bottom border on all four tabs. It did NOT reproduce
-// that — measured against the release binary at window heights 800 and 600 with 32
-// chosen rows, the frame is bounded (client 299 / scroll 2275 at 800px) and its
-// bottom stays inside the tab area, both before and after the `grid-auto-rows`
-// change that was proposed as the fix. So this spec is a standing invariant guard,
-// not the regression test for that report, which is still open.
+// The reported bleed was NOT a sizing bug: the frame has always been bounded and
+// scrolled internally (client 299 / scroll 2275 with 32 rows at an 800px window).
+// It was a CLIP bug. `overflow` clips at the PADDING box — the inner edge of the
+// border — so while the frame was itself the scrollport, its own padding belonged
+// to the scrolling area: scrolled rows and the panel's opaque background moved into
+// that padding and were sliced flush against the 1px gold border, covering it. The
+// frame now keeps the border and padding while a nested scrollport does the
+// scrolling, which reserves that padding as an unscrollable gap. The third test
+// below pins exactly that.
 //
 // NOTE: requires a display + the production binary (see e2e/README.md). The wdio
 // `onPrepare` hook builds `target/release/arm-app`.
@@ -38,9 +40,10 @@ const VF_ROWS = 16;
 const EQUIPMENT_ROWS = 20;
 
 /**
- * Live geometry of the selected frame and the tab area that must contain it.
- * `scrollHeight`/`clientHeight` say whether the frame is its own scrollport;
- * the rects say whether it stays inside the tab area.
+ * Live geometry of the selected frame, the scrollport inside it, and the tab area
+ * that must contain it. The scrollport is found by behaviour, not by class — the
+ * frame itself once played that role — so these assertions survive a change of
+ * which element carries the `overflow`.
  */
 async function frameMetrics() {
   const metrics = await browser.execute(
@@ -48,14 +51,26 @@ async function frameMetrics() {
       const frame = document.querySelector(frameSelector);
       const content = document.querySelector(contentSelector);
       if (!frame || !content) return null;
+      const scrolls = (el) => {
+        const overflowY = getComputedStyle(el).overflowY;
+        return (
+          (overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight
+        );
+      };
+      const scrollport = [frame, ...frame.querySelectorAll('*')].find(scrolls) ?? null;
       const frameRect = frame.getBoundingClientRect();
       const contentRect = content.getBoundingClientRect();
+      const portRect = scrollport ? scrollport.getBoundingClientRect() : null;
       return {
-        scrollHeight: frame.scrollHeight,
-        clientHeight: frame.clientHeight,
+        scrollHeight: scrollport ? scrollport.scrollHeight : frame.scrollHeight,
+        clientHeight: scrollport ? scrollport.clientHeight : frame.clientHeight,
         frameTop: frameRect.top,
         frameBottom: frameRect.bottom,
         contentBottom: contentRect.bottom,
+        // Unscrollable space between the frame's border and the scrolling area, i.e.
+        // the gap the padding is supposed to reserve on each edge.
+        gapTop: portRect ? portRect.top - frameRect.top : 0,
+        gapBottom: portRect ? frameRect.bottom - portRect.bottom : 0,
       };
     },
     FRAME,
@@ -77,10 +92,20 @@ function expectContainedScrollport(metrics) {
   const tallestPossibleFrame = metrics.contentBottom - metrics.frameTop;
   expect(metrics.scrollHeight).toBeGreaterThan(tallestPossibleFrame);
 
-  // 1. The frame is the scrollport — the overflow is scrollable INSIDE it. This is
-  //    what fails when the grid row sizes to content: the frame then grows to the
-  //    full list height, so scrollHeight === clientHeight and nothing scrolls.
+  // 1. The overflow is scrollable INSIDE the frame: there is a scrollport, and it
+  //    is shorter than its content. A frame that grew to the full list height would
+  //    have no scrollport at all.
   expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
+
+  // 1b. The scrolling area stops short of the border on both edges. `overflow` clips
+  //     at the padding box, so if the frame is its own scrollport its padding scrolls
+  //     WITH the content: rows and the panel's opaque background then slide right up
+  //     against the 1px gold border and cover it — the reported "bleeds out over the
+  //     golden frame". A nested scrollport keeps that padding unscrollable. 4px is
+  //     half the 0.5rem padding, so this rejects the flush clip without pinning the
+  //     exact padding.
+  expect(metrics.gapTop).toBeGreaterThanOrEqual(4);
+  expect(metrics.gapBottom).toBeGreaterThanOrEqual(4);
 
   // 2. And the frame stays inside the tab area, so its bottom border is on screen
   //    rather than clipped by `.tab-content { overflow: hidden }`. One pixel of

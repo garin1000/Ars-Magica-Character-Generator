@@ -119,48 +119,52 @@
       <section class="region region-selected">
         <h2 class="region-title">{store.t('house-grants-title')}</h2>
         <div class="selected-frame">
-          {#if selected}
-            <p class="house-description" use:tooltip={houseTip(selected.id)}>
-              {store.ruleset.i18n[selected.id]?.description ?? ''}
-            </p>
+          <!-- The frame carries the border and its padding; this inner box does the
+               scrolling, so the padding stays a gap the content cannot scroll into. -->
+          <div class="selected-scroll">
+            {#if selected}
+              <p class="house-description" use:tooltip={houseTip(selected.id)}>
+                {store.ruleset.i18n[selected.id]?.description ?? ''}
+              </p>
 
-            <ul class="house-grants">
-              {#each selected.grants ?? [] as grant, g (g)}
-                <li class="house-grant">
-                  {#if grant.kind === 'fixed'}
-                    <span class="house-granted-label">{store.t('house-granted-label')}</span>
-                    <span class="item-name" data-testid="house-granted-{grant.item}">
-                      {label(grant.item, grant.params)}
-                    </span>
-                  {:else if grant.kind === 'choice'}
-                    <select
-                      value={String(pickedIndex(grant.choice_key, grant.options))}
-                      onchange={(e) => onChoice(grant.choice_key, grant.options, e)}
-                      data-testid="house-choice-{grant.choice_key}"
-                    >
-                      <option value="-1">{store.t('house-choose-prompt')}</option>
-                      {#each grant.options as option, i (i)}
-                        <option value={String(i)}>{label(option.ref, option.params)}</option>
-                      {/each}
-                    </select>
-                  {:else}
-                    <select
-                      value={pickedRef(grant.choice_key)}
-                      onchange={(e) => onOpen(grant.choice_key, e)}
-                      data-testid="house-open-{grant.choice_key}"
-                    >
-                      <option value="">{store.t('house-choose-prompt')}</option>
-                      {#each eligibleForOpen(grant.constraint) as item (item.id)}
-                        <option value={item.id}>{label(item.id)}</option>
-                      {/each}
-                    </select>
-                  {/if}
-                </li>
-              {/each}
-            </ul>
-          {:else}
-            <p class="empty">{store.t('house-none-selected')}</p>
-          {/if}
+              <ul class="house-grants">
+                {#each selected.grants ?? [] as grant, g (g)}
+                  <li class="house-grant">
+                    {#if grant.kind === 'fixed'}
+                      <span class="house-granted-label">{store.t('house-granted-label')}</span>
+                      <span class="item-name" data-testid="house-granted-{grant.item}">
+                        {label(grant.item, grant.params)}
+                      </span>
+                    {:else if grant.kind === 'choice'}
+                      <select
+                        value={String(pickedIndex(grant.choice_key, grant.options))}
+                        onchange={(e) => onChoice(grant.choice_key, grant.options, e)}
+                        data-testid="house-choice-{grant.choice_key}"
+                      >
+                        <option value="-1">{store.t('house-choose-prompt')}</option>
+                        {#each grant.options as option, i (i)}
+                          <option value={String(i)}>{label(option.ref, option.params)}</option>
+                        {/each}
+                      </select>
+                    {:else}
+                      <select
+                        value={pickedRef(grant.choice_key)}
+                        onchange={(e) => onOpen(grant.choice_key, e)}
+                        data-testid="house-open-{grant.choice_key}"
+                      >
+                        <option value="">{store.t('house-choose-prompt')}</option>
+                        {#each eligibleForOpen(grant.constraint) as item (item.id)}
+                          <option value={item.id}>{label(item.id)}</option>
+                        {/each}
+                      </select>
+                    {/if}
+                  </li>
+                {/each}
+              </ul>
+            {:else}
+              <p class="empty">{store.t('house-none-selected')}</p>
+            {/if}
+          </div>
         </div>
       </section>
     </div>
