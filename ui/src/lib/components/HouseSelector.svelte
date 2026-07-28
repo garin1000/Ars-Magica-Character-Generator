@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { displayName } from '../derive';
+  import { eligibleForConstraint, grantItemLabel } from '../derive';
   import { tooltip, type TooltipContent } from '../actions';
   import type { GrantConstraint, House, PointItem, Selection } from '../types';
 
@@ -34,30 +34,14 @@
   function label(ref: string, params: Record<string, string> = {}): string {
     const rs = store.ruleset;
     if (!rs) return ref;
-    return displayName(
-      rs,
-      ref,
-      params,
-      (key) => store.t('param-hint', { label: store.t(`param-label-${key}`) }),
-      (_key, value) => rs.i18n[value]?.name ?? value,
-    );
+    return grantItemLabel(rs, ref, store.t, params);
   }
 
-  // Point items an open grant admits: matching kind, matching magnitude (when
-  // the constraint fixes one), inside any required-category allow-list and
-  // outside the forbid-list. Mirrors the engine's `validate_house` constraint
-  // check so the picker only offers legal choices.
+  // Point items an open grant admits — the shared constraint filter, mirroring
+  // the engine's `validate_house` check so the picker offers only legal choices.
   function eligibleForOpen(c: GrantConstraint): PointItem[] {
-    const items = Object.values(store.ruleset?.ruleset.point_items ?? {});
-    return items
-      .filter(
-        (it) =>
-          it.kind === c.kind &&
-          (!c.magnitude || it.magnitude === c.magnitude) &&
-          (!c.require_categories?.length || c.require_categories.includes(it.category)) &&
-          !(c.forbid_categories ?? []).includes(it.category),
-      )
-      .sort((a, b) => label(a.id).localeCompare(label(b.id)));
+    const rs = store.ruleset;
+    return rs ? eligibleForConstraint(rs, c) : [];
   }
 
   // Two Selections are the same pick when their ref and every param agree.

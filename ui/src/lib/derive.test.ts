@@ -13,11 +13,13 @@ import {
   characteristicPointsUsed,
   combatRowLabel,
   displayName,
+  eligibleForConstraint,
   filterAbilities,
   filterEquipment,
   filterItems,
   filterSpells,
   formatSigned,
+  grantItemLabel,
   grantedSelectionsForSide,
   groupAbilitiesByCategory,
   groupArtsByType,
@@ -26,6 +28,7 @@ import {
   groupSelectedSpellsByTechniqueForm,
   groupSelectionsByCategory,
   groupSpellsByTechniqueForm,
+  groupWarpingOwedGrants,
   incompatibleRefs,
   invalidSelectionIds,
   orderSelectedSpells,
@@ -47,6 +50,8 @@ import type {
   CharacteristicRules,
   Entity,
   EntityTypeProfile,
+  Grant,
+  GrantConstraint,
   LocalizedRuleset,
   PointItem,
   Spell,
@@ -1743,6 +1748,172 @@ describe('invalidSelectionIds', () => {
 
   it('is empty for a null result (not yet validated, or Silent mode)', () => {
     expect(invalidSelectionIds(null).size).toBe(0);
+  });
+});
+
+// --- grantItemLabel() / eligibleForConstraint() / groupWarpingOwedGrants() ---
+
+/** A `store.t`-shaped stub: renders `param-hint` as "(Label)" like the real .ftl. */
+const translate = (key: string, args?: Record<string, string>) =>
+  key === 'param-hint' ? `(${args?.label ?? ''})` : key.replace('param-label-', '');
+
+describe('grantItemLabel', () => {
+  it('renders a localized hint for an unfilled param, never the raw braces', () => {
+    const ruleset = makeRuleset([], {
+      i18n: { 'virtue.monstrosity': { name: '{form} Monstrosity' } },
+    });
+    const label = grantItemLabel(ruleset, 'virtue.monstrosity', translate);
+    expect(label).toBe('(form) Monstrosity');
+    expect(label).not.toContain('{');
+  });
+
+  it('resolves a filled param ref to its own localized name', () => {
+    const ruleset = makeRuleset([], {
+      i18n: {
+        'virtue.monstrosity': { name: '{form} Monstrosity' },
+        'art.ignem': { name: 'Ignem' },
+      },
+    });
+    expect(grantItemLabel(ruleset, 'virtue.monstrosity', translate, { form: 'art.ignem' })).toBe(
+      'Ignem Monstrosity',
+    );
+  });
+
+  it('falls back to the ref when there is no i18n entry', () => {
+    expect(grantItemLabel(makeRuleset([]), 'virtue.unknown', translate)).toBe('virtue.unknown');
+  });
+});
+
+describe('eligibleForConstraint', () => {
+  const items = [
+    item({ id: 'virtue.minor_general', kind: 'virtue', magnitude: 'minor', category: 'general' }),
+    item({ id: 'virtue.major_general', kind: 'virtue', magnitude: 'major', category: 'general' }),
+    item({
+      id: 'virtue.minor_super',
+      kind: 'virtue',
+      magnitude: 'minor',
+      category: 'supernatural',
+    }),
+    item({ id: 'flaw.minor_general', kind: 'flaw', magnitude: 'minor', category: 'general' }),
+    item({
+      id: 'virtue.minor_super_warping',
+      kind: 'virtue',
+      magnitude: 'minor',
+      category: 'supernatural',
+      effects: [{ type: 'warping_grant', score: 1, points: 5 }],
+    }),
+  ];
+  const ruleset = makeRuleset(items);
+
+  it('keeps only the constraint kind and magnitude', () => {
+    const ids = eligibleForConstraint(ruleset, { kind: 'flaw', magnitude: 'minor' }).map(
+      (it) => it.id,
+    );
+    expect(ids).toEqual(['flaw.minor_general']);
+  });
+
+  it('applies the required- and forbidden-category lists', () => {
+    const required = eligibleForConstraint(ruleset, {
+      kind: 'virtue',
+      magnitude: 'minor',
+      require_categories: ['supernatural'],
+    }).map((it) => it.id);
+    expect(required).toEqual(['virtue.minor_super', 'virtue.minor_super_warping']);
+
+    const forbidden = eligibleForConstraint(ruleset, {
+      kind: 'virtue',
+      magnitude: 'minor',
+      forbid_categories: ['supernatural'],
+    }).map((it) => it.id);
+    expect(forbidden).toEqual(['virtue.minor_general']);
+  });
+
+  it('excludes Warping-granting items only when asked (the recursion guard)', () => {
+    const constraint = {
+      kind: 'virtue' as const,
+      magnitude: 'minor' as const,
+      require_categories: ['supernatural'],
+    };
+    expect(
+      eligibleForConstraint(ruleset, constraint, { excludeWarpingSources: true }).map(
+        (it) => it.id,
+      ),
+    ).toEqual(['virtue.minor_super']);
+  });
+
+  it('sorts a brace-led name by its unwrapped word, not the brace glyph', () => {
+    const localized = makeRuleset(
+      [
+        item({ id: 'virtue.zebra_mastery', kind: 'virtue', magnitude: 'minor' }),
+        item({ id: 'virtue.alpha', kind: 'virtue', magnitude: 'minor' }),
+        item({ id: 'virtue.beta', kind: 'virtue', magnitude: 'minor' }),
+      ],
+      {
+        i18n: {
+          'virtue.zebra_mastery': { name: '{zebra} Mastery' },
+          'virtue.alpha': { name: 'Alpha' },
+          'virtue.beta': { name: 'Beta' },
+        },
+      },
+    );
+    const ids = eligibleForConstraint(localized, { kind: 'virtue' }).map((it) => it.id);
+    // "{zebra} Mastery" sorts under Z, after Alpha and Beta — sorting by the raw
+    // "{" would have clustered it first instead.
+    expect(ids).toEqual(['virtue.alpha', 'virtue.beta', 'virtue.zebra_mastery']);
+  });
+});
+
+describe('groupWarpingOwedGrants', () => {
+  const open = (choice_key: string, constraint: GrantConstraint): Grant => ({
+    kind: 'open',
+    choice_key,
+    constraint,
+  });
+
+  it('buckets the three owed kinds with their label and count keys', () => {
+    const groups = groupWarpingOwedGrants([
+      open('warping.minor_flaw.0', { kind: 'flaw', magnitude: 'minor' }),
+      open('warping.minor_flaw.1', { kind: 'flaw', magnitude: 'minor' }),
+      open('warping.supernatural_virtue.0', {
+        kind: 'virtue',
+        magnitude: 'minor',
+        require_categories: ['supernatural'],
+      }),
+      open('warping.major_flaw.0', { kind: 'flaw', magnitude: 'major' }),
+    ]);
+    expect(
+      groups.map((g) => ({ label: g.labelKey, count: g.countKey, slots: g.grants.length })),
+    ).toEqual([
+      { label: 'warping-slot-minor-flaw', count: 'warping-owed-minor-flaws', slots: 2 },
+      {
+        label: 'warping-slot-supernatural-virtue',
+        count: 'warping-owed-supernatural-virtues',
+        slots: 1,
+      },
+      { label: 'warping-slot-major-flaw', count: 'warping-owed-major-flaws', slots: 1 },
+    ]);
+    expect(groups[0].grants.map((g) => g.choice_key)).toEqual([
+      'warping.minor_flaw.0',
+      'warping.minor_flaw.1',
+    ]);
+  });
+
+  it('keeps the constraint on each slot, so the picker can filter it', () => {
+    const constraint: GrantConstraint = {
+      kind: 'virtue',
+      magnitude: 'minor',
+      require_categories: ['supernatural'],
+    };
+    const groups = groupWarpingOwedGrants([open('warping.supernatural_virtue.0', constraint)]);
+    expect(groups[0].grants[0].constraint).toEqual(constraint);
+  });
+
+  it('skips non-open grants and returns no empty groups', () => {
+    const groups = groupWarpingOwedGrants([
+      { kind: 'fixed', item: 'virtue.minor_general' },
+      { kind: 'choice', choice_key: 'x', options: [{ ref: 'virtue.minor_general' }] },
+    ]);
+    expect(groups).toEqual([]);
   });
 });
 

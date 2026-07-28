@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { formatSigned } from '../derive';
+  import { eligibleForConstraint, formatSigned, grantItemLabel } from '../derive';
   import {
     CHARACTERISTICS,
     type Characteristic,
@@ -44,25 +44,21 @@
   const warpingOwed = $derived(store.effective?.warping_owed);
   const warpingOwedGrants = $derived(store.effective?.warping_owed_grants ?? []);
 
-  function warpingItemName(ref: string): string {
-    return store.ruleset?.i18n[ref]?.name ?? ref;
+  // Localized name of an owed-fill candidate, with any `{param}` token filled: an
+  // unchosen parameter shows its localized hint ("(Form)"), a chosen ref resolves
+  // to its own name — never a raw brace or slug.
+  function warpingItemName(ref: string, params: Record<string, string> = {}): string {
+    const rs = store.ruleset;
+    if (!rs) return ref;
+    return grantItemLabel(rs, ref, store.t, params);
   }
 
   // Point items an owed slot admits: the constraint's kind/magnitude/category,
   // AND never an item that itself grants Warping (the recursion guard — mirrors
-  // the engine's ineligibility rule). Sorted by localized name.
+  // the engine's ineligibility rule).
   function eligibleForWarping(c: GrantConstraint): PointItem[] {
-    const items = Object.values(store.ruleset?.ruleset.point_items ?? {});
-    return items
-      .filter(
-        (it) =>
-          it.kind === c.kind &&
-          (!c.magnitude || it.magnitude === c.magnitude) &&
-          (!c.require_categories?.length || c.require_categories.includes(it.category)) &&
-          !(c.forbid_categories ?? []).includes(it.category) &&
-          !(it.effects ?? []).some((e) => e.type === 'warping_grant'),
-      )
-      .sort((a, b) => warpingItemName(a.id).localeCompare(warpingItemName(b.id)));
+    const rs = store.ruleset;
+    return rs ? eligibleForConstraint(rs, c, { excludeWarpingSources: true }) : [];
   }
 
   function warpingPick(choiceKey: string): string {
