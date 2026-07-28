@@ -2008,6 +2008,11 @@ describe('exportMarkdown', () => {
     return vi.mocked(ipc.exportMarkdown).mock.calls[0][1];
   }
 
+  /** The current-save-file hint the store handed the export command, for the prefill. */
+  function sentCurrentPath(): string | null | undefined {
+    return vi.mocked(ipc.exportMarkdown).mock.calls[0][3];
+  }
+
   beforeEach(() => {
     vi.mocked(ipc.exportMarkdown).mockReset();
     vi.mocked(ipc.exportLabelKeys).mockReset();
@@ -2078,6 +2083,25 @@ describe('exportMarkdown', () => {
     await store.exportMarkdown();
 
     expect(store.currentPath).toBe('/tmp/marcus.armc');
+  });
+
+  it('passes the current save file so the dialog can prefill from it', async () => {
+    // A save records the current file; the export dialog then defaults to that
+    // file's name and directory rather than the generic kind default.
+    vi.mocked(ipc.saveEntity).mockResolvedValue('/tmp/gerhard.armc');
+    await store.saveAs();
+
+    await store.exportMarkdown();
+
+    expect(sentCurrentPath()).toBe('/tmp/gerhard.armc');
+  });
+
+  it('passes no current save file for a document that was never saved', async () => {
+    expect(store.currentPath).toBeNull();
+
+    await store.exportMarkdown();
+
+    expect(sentCurrentPath()).toBeNull();
   });
 
   it('surfaces a failed export in the error banner and clears the busy flag', async () => {

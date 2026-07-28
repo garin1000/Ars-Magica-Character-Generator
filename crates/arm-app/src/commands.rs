@@ -221,6 +221,10 @@ fn e2e_export_file_override() -> Option<std::path::PathBuf> {
 /// straight to that file; when `None`, prompts for a destination. Returns the
 /// written path, or `None` if a prompt was cancelled.
 ///
+/// `current_path` is the document's own save file, used ONLY to prefill the dialog
+/// (name and starting directory) so an export lands next to and named after the
+/// character file. It never becomes a write target — that is `path`'s job.
+///
 /// `labels` is the frontend's localized document chrome, keyed by the Fluent message
 /// names [`export_label_keys`] lists — Rust authors none of the document's text.
 #[tauri::command]
@@ -228,6 +232,7 @@ pub async fn export_markdown(
     entity: Entity,
     labels: std::collections::BTreeMap<String, String>,
     path: Option<String>,
+    current_path: Option<String>,
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> Result<Option<String>, AppError> {
@@ -243,13 +248,19 @@ pub async fn export_markdown(
         None => match e2e_export_file_override() {
             Some(path) => path,
             None => {
-                let Some(file) = app
+                let mut dialog = app
                     .dialog()
                     .file()
                     .add_filter("Markdown", &["md"])
-                    .set_file_name(ruleset_io::default_markdown_file_name(entity.entity_kind))
-                    .blocking_save_file()
-                else {
+                    .set_file_name(ruleset_io::markdown_file_name_for(
+                        current_path.as_deref(),
+                        entity.entity_kind,
+                    ));
+                // Open where the character file lives, so the export sits beside it.
+                if let Some(parent) = ruleset_io::save_file_directory(current_path.as_deref()) {
+                    dialog = dialog.set_directory(parent);
+                }
+                let Some(file) = dialog.blocking_save_file() else {
                     return Ok(None);
                 };
                 let chosen = file.into_path().map_err(|e| AppError::Io {
