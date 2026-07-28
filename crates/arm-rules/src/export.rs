@@ -47,9 +47,9 @@ use crate::art::ArtType;
 use crate::characteristics::Characteristic;
 use crate::derived::{CombatLine, combat_totals, encumbrance, fatigue_levels, soak, wound_ranges};
 use crate::effective::{
-    confidence, decrepitude_score, effective_ability_score, effective_art_score,
-    effective_characteristic_after_aging, effective_might, effective_spell_mastery, entity_grants,
-    resolved_spell_level, warping, xp_allocation,
+    ability_score_floors, confidence, decrepitude_score, effective_ability_score,
+    effective_art_score, effective_characteristic_after_aging, effective_might,
+    effective_spell_mastery, entity_grants, resolved_spell_level, warping, xp_allocation,
 };
 use crate::ruleset::{LocalizedRuleset, Ruleset};
 use crate::types::{
@@ -620,8 +620,9 @@ impl<'a> Doc<'a> {
             .collect()
     }
 
-    /// The bought Abilities — each instance a row of its own — and the experience
-    /// pools that funded them (shared with the Arts, as the rules give one pool).
+    /// The bought Abilities — each instance a row of its own — then the Abilities a
+    /// Virtue granted without any purchase, and the experience pools that funded the
+    /// bought ones (shared with the Arts, as the rules give one pool).
     fn write_abilities(&self, out: &mut String) {
         let e = self.entity;
         let mut rows: Vec<Vec<String>> = Vec::new();
@@ -653,6 +654,7 @@ impl<'a> Doc<'a> {
                 },
             ]);
         }
+        rows.extend(self.granted_ability_rows());
         let xp = xp_allocation(e, self.rules());
         let has_xp = xp.general_pool > 0 || xp.general_used > 0 || !xp.restricted.is_empty();
         if rows.is_empty() && !has_xp {
@@ -690,6 +692,43 @@ impl<'a> Doc<'a> {
             field(out, &eligibility.join(&self.list_separator()), &drawn);
         }
         out.push('\n');
+    }
+
+    /// A row for every Ability a Virtue seeded with a free starting score
+    /// ([`ability_score_floors`], e.g. Second Sight 1) that the character has *not*
+    /// also bought. Without these the sheet omits an Ability the character can use,
+    /// since a granted score is stored nowhere in `ability_scores`.
+    ///
+    /// A grant fixes its target by id and reaches only the parameter-less instance
+    /// (see [`crate::effective::granted_ability_floor`]), so a bought row cancels the
+    /// floor row exactly when it names the same Ability with no parameter — the same
+    /// instance match [`effective_ability_score`] makes. The bought column reads 0,
+    /// the convention every unbought score uses, and the effective column comes from
+    /// [`effective_ability_score`], so a Puissant bonus on a granted Ability shows.
+    /// Order is the floors' own (ability id), after the bought rows.
+    fn granted_ability_rows(&self) -> Vec<Vec<String>> {
+        let e = self.entity;
+        ability_score_floors(e, self.rules())
+            .into_iter()
+            .filter(|floor| {
+                !e.ability_scores
+                    .iter()
+                    .any(|bought| bought.ability == floor.ability && bought.parameter.is_none())
+            })
+            .map(|floor| {
+                let effective = effective_ability_score(e, self.rules(), &floor.ability, None);
+                vec![
+                    self.parameterized_name(&floor.ability, &BTreeMap::new()),
+                    String::new(),
+                    "0".to_string(),
+                    if effective == 0 {
+                        String::new()
+                    } else {
+                        effective.to_string()
+                    },
+                ]
+            })
+            .collect()
     }
 
     /// The Hermetic Arts, split into Techniques and Forms.
@@ -1495,6 +1534,13 @@ mod tests {
           { "id": "virtue.warrior", "kind": "virtue", "classification": "creation_effect",
             "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
             "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }] },
+          { "id": "virtue.second_sight", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "minor", "category": "supernatural", "entity_kinds": ["character"],
+            "effects": [{ "type": "ability_score_grant", "ability": "ability.second_sight", "amount": 1 }] },
+          { "id": "virtue.educated", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "restricted_ability_xp", "amount": 50,
+              "abilities": ["ability.artes_liberales", "ability.dead_language"] }] },
           { "id": "virtue.malformed_name", "kind": "virtue", "classification": "narrative",
             "magnitude": "free", "category": "general", "entity_kinds": ["character"] }
         ]"#;
@@ -1524,6 +1570,8 @@ mod tests {
             { "id": "ability.penetration", "category": "arcane" },
             { "id": "ability.philosophiae", "category": "academic" },
             { "id": "ability.area_lore", "category": "general", "parameter": "area" },
+            { "id": "ability.dead_language", "category": "academic", "parameter": "language" },
+            { "id": "ability.second_sight", "category": "supernatural" },
             { "id": "ability.single_weapon", "category": "martial" },
             { "id": "ability.brawl", "category": "general", "combat_ability": true }
           ]
@@ -1607,6 +1655,9 @@ mod tests {
           "boon.rich_vis_source": { "name": "Rich Vis Source" },
           "ability.awareness": { "name": "Awareness" },
           "ability.area_lore": { "name": "{area} Lore" },
+          "ability.artes_liberales": { "name": "Artes Liberales" },
+          "ability.dead_language": { "name": "{language} (Dead Language)" },
+          "ability.second_sight": { "name": "Second Sight" },
           "ability.single_weapon": { "name": "Single Weapon" },
           "ability.brawl": { "name": "Brawl" },
           "weapon.dodge": { "name": "Dodge" },
@@ -2566,6 +2617,62 @@ mod tests {
         assert!(doc.contains("- **XP pool**: 30 / 60\n"), "{doc}");
         assert!(doc.contains("### Restricted experience\n"), "{doc}");
         assert!(doc.contains("- **Martial**: 0 / 50\n"), "{doc}");
+    }
+
+    /// An Ability the character *has* purely because a Virtue seeded it (Second Sight
+    /// 1) is stored nowhere in `ability_scores`, so iterating the bought instances
+    /// alone drops it from the sheet — even though the character can use it. The floor
+    /// row shows a bought 0 against its effective score.
+    #[test]
+    fn a_granted_but_unbought_ability_gets_its_own_row() {
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.second_sight"))];
+        let doc = character_markdown(&e, &ruleset(), &labels(&[("abilities-title", "Abilities")]));
+        assert!(
+            doc.contains("## Abilities\n"),
+            "a granted Ability opens the section on its own: {doc}"
+        );
+        assert!(doc.contains("| Second Sight |  | 0 | 1 |"), "{doc}");
+    }
+
+    /// A granted floor the character has also bought above is already reported by the
+    /// bought row (whose effective score is the higher of the two), so it must not
+    /// produce a second row for the same Ability.
+    #[test]
+    fn a_granted_ability_the_character_bought_too_gets_no_second_row() {
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.second_sight"))];
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.second_sight"),
+            score: 3,
+            specialty: Some("visions".to_string()),
+            parameter: None,
+        }];
+        let doc = character_markdown(&e, &ruleset(), &no_labels());
+        assert_eq!(
+            doc.matches("| Second Sight |").count(),
+            1,
+            "one row per Ability: {doc}"
+        );
+        assert!(doc.contains("| Second Sight | visions | 3 |  |"), "{doc}");
+    }
+
+    /// The granted rows follow the bought ones: the sheet's first block is what the
+    /// character spent experience on.
+    #[test]
+    fn granted_ability_rows_follow_the_bought_ones() {
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.second_sight"))];
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 2,
+            specialty: None,
+            parameter: None,
+        }];
+        let doc = character_markdown(&e, &ruleset(), &no_labels());
+        let bought = doc.find("| Awareness |").expect("the bought row");
+        let granted = doc.find("| Second Sight |").expect("the granted row");
+        assert!(bought < granted, "unexpected row order: {doc}");
     }
 
     #[test]
