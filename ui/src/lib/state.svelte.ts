@@ -147,6 +147,42 @@ function newEntity(rulesetId: string, version: string): Entity {
   };
 }
 
+/**
+ * The export label keys the engine composes from catalogue *data* and therefore
+ * cannot list in `LABEL_KEYS` (see `crates/arm-rules/src/export.rs`): the
+ * character-type subtitle `type-<profile id>`, and the slot label
+ * `param-label-<parameter key>` printed where a parameterized item has no chosen
+ * value. Both are read off the loaded ruleset, so a new profile or a new
+ * parameterized item ships its label with zero code changes.
+ */
+function composedExportLabelKeys(localized: LocalizedRuleset | null): string[] {
+  if (!localized) return [];
+  const keys = Object.keys(localized.ruleset.type_profiles ?? {}).map((id) => `type-${id}`);
+  for (const key of parameterKeys(localized)) keys.push(`param-label-${key}`);
+  return keys;
+}
+
+/**
+ * Every parameter key the ruleset declares, across the three parameterized
+ * catalogues (Virtues/Flaws, Abilities, spells). A key names both the
+ * `{placeholder}` in the item's localized name and its `param-label-<key>` label,
+ * which is what the exporter prints for an unfilled slot.
+ */
+function parameterKeys(localized: LocalizedRuleset): Set<string> {
+  const rules = localized.ruleset;
+  const keys = new Set<string>();
+  for (const item of Object.values(rules.point_items ?? {})) {
+    for (const param of item.parameters ?? []) keys.add(param.key);
+  }
+  for (const ability of Object.values(rules.abilities ?? {})) {
+    if (ability.parameter) keys.add(ability.parameter);
+  }
+  for (const spell of Object.values(rules.spells ?? {})) {
+    for (const param of spell.parameters ?? []) keys.add(param.key);
+  }
+  return keys;
+}
+
 class AppStore {
   lang = $state<Lang>('en');
   ruleset = $state<LocalizedRuleset | null>(null);
@@ -1359,6 +1395,43 @@ class AppStore {
     } finally {
       this.#opInFlight = false;
     }
+  }
+
+  /**
+   * Export the entity as a Markdown character sheet, prompting for a destination.
+   *
+   * Deliberately **not** a save: the document keeps its current file, its dirty
+   * flag and its saved baseline, so exporting a work in progress neither silences
+   * the unsaved-changes guard nor retargets the next Save. It shares the
+   * in-flight guard with the file operations so a stray second click cannot stack
+   * two native dialogs.
+   */
+  async exportMarkdown(): Promise<void> {
+    if (this.#opInFlight) return;
+    this.#opInFlight = true;
+    this.error = null;
+    try {
+      await ipc.exportMarkdown($state.snapshot(this.entity), await this.#exportLabels());
+    } catch (e) {
+      this.error = e as AppError;
+    } finally {
+      this.#opInFlight = false;
+    }
+  }
+
+  /**
+   * The localized document chrome the exporter prints: every key the engine names,
+   * plus the families it composes from catalogue data (see
+   * {@link composedExportLabelKeys}), each resolved against the active bundle. The
+   * engine hardcodes no user-facing string, so a key it never receives would print
+   * as its own slug.
+   */
+  async #exportLabels(): Promise<Record<string, string>> {
+    const keys = new Set(await ipc.exportLabelKeys());
+    for (const key of composedExportLabelKeys(this.ruleset)) keys.add(key);
+    const labels: Record<string, string> = {};
+    for (const key of keys) labels[key] = this.t(key);
+    return labels;
   }
 
   /**
