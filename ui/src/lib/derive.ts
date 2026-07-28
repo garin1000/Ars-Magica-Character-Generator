@@ -12,6 +12,8 @@ import type {
   Entity,
   EntityTypeProfile,
   EquipmentSlot,
+  Grant,
+  GrantConstraint,
   ItemKind,
   LocalizedRuleset,
   Magnitude,
@@ -46,10 +48,10 @@ export function formatSigned(n: number): string {
 }
 
 /** A `store.t`-shaped translator, threaded in so search can index rendered labels. */
-type Translate = (key: string, args?: Record<string, string>) => string;
+export type Translate = (key: string, args?: Record<string, string>) => string;
 
 /** The standard "(Label)" placeholder hint for an unfilled `{param}` token. */
-function paramHint(t: Translate): (key: string) => string {
+export function paramHint(t: Translate): (key: string) => string {
   return (key) => t('param-hint', { label: t(`param-label-${key}`) });
 }
 
@@ -280,8 +282,131 @@ export interface CategoryGroup {
  * Parameter placeholders are unwrapped (`{area} Lore` → `area Lore`) so a
  * parameterized entry sorts by its visible word, not the `{` glyph.
  */
-function localizedSortKey(localized: LocalizedRuleset, id: string): string {
+export function localizedSortKey(localized: LocalizedRuleset, id: string): string {
   return (localized.i18n[id]?.name ?? id).replace(/[{}]/g, '');
+}
+
+/**
+ * Display label for a granted item or a grant option: the localized name with
+ * any `{param}` token filled — an unfilled token becomes the localized hint
+ * ("(Ability)"), a chosen ref resolves to its own localized name ("Puissant
+ * Ignem", never "Puissant art.ignem"). Shared by every grant picker (House,
+ * Mythic type, Warping-owed) so no picker renders a raw slug or a raw brace.
+ */
+export function grantItemLabel(
+  localized: LocalizedRuleset,
+  ref: string,
+  t: Translate,
+  params: Record<string, string> = {},
+): string {
+  return displayName(
+    localized,
+    ref,
+    params,
+    paramHint(t),
+    (_key, value) => localized.i18n[value]?.name ?? value,
+  );
+}
+
+/** Extra filtering an open-grant picker may need beyond the engine constraint. */
+export interface EligibilityOptions {
+  /**
+   * Drop items carrying a `warping_grant` effect. The Warping-owed slots need
+   * this recursion guard — a fill must never re-feed the Warping Score that
+   * decides how many V/F are owed (the engine rejects it as
+   * `warping_fill_ineligible`). No other grant has that constraint.
+   */
+  excludeWarpingSources?: boolean;
+}
+
+/**
+ * Point items an open grant admits: matching kind, matching magnitude (when the
+ * constraint fixes one), inside any required-category allow-list and outside the
+ * forbid-list — mirroring the engine's `open_pick_satisfies`, so a picker offers
+ * exactly the legal choices and nothing more. The rules name no fixed menu for a
+ * Warping-owed slot (the pick is storyguide judgement, Core:16553-16561), so the
+ * constraint is the only filter.
+ *
+ * Sorted by localized name, with `{param}` braces unwrapped, so a parameterized
+ * entry sorts by its visible word instead of clustering under "{".
+ */
+export function eligibleForConstraint(
+  localized: LocalizedRuleset,
+  constraint: GrantConstraint,
+  opts: EligibilityOptions = {},
+): PointItem[] {
+  const items = Object.values(localized.ruleset.point_items ?? {});
+  return items
+    .filter(
+      (it) =>
+        it.kind === constraint.kind &&
+        (!constraint.magnitude || it.magnitude === constraint.magnitude) &&
+        (!constraint.require_categories?.length ||
+          constraint.require_categories.includes(it.category)) &&
+        !(constraint.forbid_categories ?? []).includes(it.category) &&
+        !(opts.excludeWarpingSources && (it.effects ?? []).some((e) => e.type === 'warping_grant')),
+    )
+    .sort((a, b) =>
+      localizedSortKey(localized, a.id).localeCompare(localizedSortKey(localized, b.id)),
+    );
+}
+
+/** One owed-Warping slot: the grant's stable key plus what it admits. */
+export interface WarpingSlot {
+  choice_key: string;
+  constraint: GrantConstraint;
+}
+
+/**
+ * A run of owed-Warping slots that expect the same thing, with the Fluent keys
+ * naming it: `labelKey` labels one slot ("Minor Flaw"), `countKey` heads the
+ * group ("You owe 2 Minor Flaws").
+ */
+export interface WarpingSlotGroup {
+  labelKey: string;
+  countKey: string;
+  grants: WarpingSlot[];
+}
+
+/**
+ * Groups the engine's owed-Warping OPEN grants by what each slot expects, so the
+ * UI can label them instead of showing a flat row of identical <select>s. The
+ * bucket is read off the grant's `constraint` (kind + magnitude) — never parsed
+ * out of the `choice_key` slug, which is an opaque identifier.
+ *
+ * The engine emits the slots already ordered (Minor Flaws, supernatural Minor
+ * Virtues, Major Flaws), so this preserves order and drops empty groups; a
+ * non-open grant (none today, by construction) is skipped.
+ */
+export function groupWarpingOwedGrants(grants: Grant[]): WarpingSlotGroup[] {
+  // A Map keyed by the label preserves insertion order, so the engine's slot
+  // order carries through while repeated kinds collapse into one group.
+  const groups = new Map<string, WarpingSlotGroup>();
+  for (const grant of grants) {
+    if (grant.kind !== 'open') continue;
+    const { labelKey, countKey } = warpingSlotKeys(grant.constraint);
+    let group = groups.get(labelKey);
+    if (!group) {
+      group = { labelKey, countKey, grants: [] };
+      groups.set(labelKey, group);
+    }
+    group.grants.push({ choice_key: grant.choice_key, constraint: grant.constraint });
+  }
+  return [...groups.values()];
+}
+
+/** The Fluent label/count keys for one owed-Warping slot's constraint. */
+function warpingSlotKeys(constraint: GrantConstraint): { labelKey: string; countKey: string } {
+  if (constraint.kind === 'virtue') {
+    return {
+      labelKey: 'warping-slot-supernatural-virtue',
+      countKey: 'warping-owed-supernatural-virtues',
+    };
+  }
+  if (constraint.magnitude === 'major') {
+    return { labelKey: 'warping-slot-major-flaw', countKey: 'warping-owed-major-flaws' };
+  }
+  return { labelKey: 'warping-slot-minor-flaw', countKey: 'warping-owed-minor-flaws' };
 }
 
 /**

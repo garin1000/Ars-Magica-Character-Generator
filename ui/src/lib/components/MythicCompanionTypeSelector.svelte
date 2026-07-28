@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { displayName, sameSelection } from '../derive';
+  import { eligibleForConstraint as eligibleItems, grantItemLabel, sameSelection } from '../derive';
   import { tooltip, type TooltipContent } from '../actions';
   import type {
     GrantConstraint,
@@ -40,28 +40,15 @@
   function label(ref: string, params: Record<string, string> = {}): string {
     const rs = store.ruleset;
     if (!rs) return ref;
-    return displayName(
-      rs,
-      ref,
-      params,
-      (key) => store.t('param-hint', { label: store.t(`param-label-${key}`) }),
-      (_key, value) => rs.i18n[value]?.name ?? value,
-    );
+    return grantItemLabel(rs, ref, store.t, params);
   }
 
-  // Flaws a required-flaw constraint admits (matching kind/magnitude/category),
-  // the substitute menu. Mirrors the engine's `open_pick_satisfies`.
+  // Items a constraint admits — the shared filter, mirroring the engine's
+  // `open_pick_satisfies`. Serves both the required-Flaw substitute menu and an
+  // `open` free-Virtue grant.
   function eligibleForConstraint(c: GrantConstraint): PointItem[] {
-    const items = Object.values(store.ruleset?.ruleset.point_items ?? {});
-    return items
-      .filter(
-        (it) =>
-          it.kind === c.kind &&
-          (!c.magnitude || it.magnitude === c.magnitude) &&
-          (!c.require_categories?.length || c.require_categories.includes(it.category)) &&
-          !(c.forbid_categories ?? []).includes(it.category),
-      )
-      .sort((a, b) => label(a.id).localeCompare(label(b.id)));
+    const rs = store.ruleset;
+    return rs ? eligibleItems(rs, c) : [];
   }
 
   // Index of the currently-picked option for a `choice` grant (−1 if none).
