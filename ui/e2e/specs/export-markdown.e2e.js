@@ -190,11 +190,16 @@ describe('markdown export', () => {
       expect(md).toContain(heading);
     }
 
-    // Entered values: the Ability score with its specialty, the Art, the spell.
+    // Entered values: the Ability score with its specialty, the Art, and the spell
+    // with its short Art-and-level code (Creo + Ignem + level 20).
     expect(md).toMatch(/\| Single Weapon \| longsword \| 2 \|/);
     expect(md).toMatch(/\| Creo \| 5 \|/);
-    expect(md).toMatch(/\| Pilum of Fire \| Creo \| Ignem \| 20 \|/);
+    expect(md).toMatch(/\| Pilum of Fire \| CrIg20 \|/);
+    // Every Art is on the sheet, not only the two that were scored.
+    expect(md).toMatch(/\| Terram \| 0 \|/);
     expect(section(md, 'Magic Items')).toContain('Ring of the Warding Flame');
+    // A Virtue row carries its type (the item's category) beside its magnitude.
+    expect(md).toMatch(/\| Keen Vision \| General \| Minor \|/);
 
     // Computed read-outs: the Combat line for the equipped weapon (Attack 10 =
     // Dex 0 + Single Weapon 2 + specialty 1 + weapon 4 ... engine-owned, so only
@@ -217,6 +222,7 @@ describe('markdown export', () => {
       'derived-section-',
       'export-col-',
       'magnitude-',
+      'category-',
       'characteristic-int',
       'identity-name',
     ]) {

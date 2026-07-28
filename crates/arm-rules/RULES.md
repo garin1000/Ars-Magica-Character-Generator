@@ -2486,6 +2486,25 @@ holds the line, so this is a contract, not an oversight:
   (study, aging rolls, non-standard casting, wound recovery); they belong beside the
   subsystem that would use them.
 
+**The sheet prints the whole taxonomy, not only the stored values.** A score of 0 is
+stored as an *absent* key (the frontend deletes it), so "stored" and "entered" are not
+the same thing: the Characteristics table emits every `Characteristic::ALL` row and the
+Arts tables every Art in the catalogue (id order within each `ArtType`, which is also
+the sheet's canonical Cr/In/Mu/Pe/Re + An/Aq/Au/Co/He/Ig/Im/Me/Te/Vi order), the
+untouched ones as `0`. Which Arts exist is data, so the Arts section's size follows
+`rules/core/arts.json` with no code change. Both sections keep an **emptiness** gate —
+no Characteristic score or description at all, no scored Art the catalogue holds — so a
+covenant's sheet still shows neither, without any `EntityKind` gate.
+
+**A spell's Arts and level are one short code.** The spell list prints
+`<Technique abbreviation><Form abbreviation><resolved level>` (`CrIg20`), the notation
+the rulebook and the app's own spell list use, instead of three spelled-out columns.
+The abbreviations are localized rules data (`LocalizedRuleset::abbreviation`, from
+`rules/i18n/<lang>/arts.json` — see the Art catalogue rows above); nothing is composed
+in code. An unresolved General level keeps the localized marker a space apart
+(`MuVi General`), and a spell no catalogue holds leaves the cell empty rather than
+printing a half-written code.
+
 **Granted Virtues/Flaws are listed but off-budget.** Each Virtue/Flaw section prints
 the point-bought rows from `entity.selections` and then, under a `export-granted`
 sub-heading, the free rows `effective::entity_grants` resolves (House grant, mythic
@@ -2497,8 +2516,12 @@ uncapped* above: grants are exempt from the budget and the count caps).
 **Localization split** (an architecture rule, not a rules mechanic): item names come
 from the rules i18n via `LocalizedRuleset::display_name`; document chrome is passed
 in as a `key → text` map keyed by Fluent message name, so the engine hardcodes no
-user-facing string and never renders a raw slug. `export::LABEL_KEYS` declares every
-chrome key, and two tests keep it honest — one walks each fixed taxonomy
+user-facing string and never renders a raw slug — including a Virtue/Flaw's **type**,
+which is the catalogue item's `category` localized through the `category-<id>` key the
+in-app badge also uses. `export::LABEL_KEYS` declares every chrome key except the three
+families composed from catalogue *data* (`type-<profile>`, `param-label-<key>`,
+`category-<category>`, all assembled by the frontend's `composedExportLabelKeys`), and
+two tests keep it honest — one walks each fixed taxonomy
 (`Characteristic`, `Magnitude`, `AbilityCategory`, `ArtType`, `ItemKind`, `Realm`,
 `ReputationType`, `LongevitySource`, the Soak addend labels, Fatigue tiers, wound
 bands) and asserts the composed key is declared; the other renders a fully-populated

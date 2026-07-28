@@ -916,7 +916,12 @@ fn exporting_writes_markdown_with_the_real_english_labels() {
     // Values: a bought Characteristic, and Awareness 2 raised to an effective 4 by
     // the sample's Puissant Awareness.
     assert!(doc.contains("| Intelligence | +2 |"), "got: {doc}");
-    assert!(doc.contains("| Puissant Awareness | Minor |"), "got: {doc}");
+    // The Virtue row carries its type (the item's category) and its magnitude, both
+    // localized — `category-general` is one of the families the frontend composes.
+    assert!(
+        doc.contains("| Puissant Awareness | General | Minor |"),
+        "got: {doc}"
+    );
     assert!(
         doc.contains("| Awareness | searching | 2 | 4 |"),
         "got: {doc}"

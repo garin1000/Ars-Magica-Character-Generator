@@ -700,7 +700,13 @@ export-col-effective = Effective
 export-col-magnitude = Magnitude
 export-col-penalty = Penalty
 export-col-points = Points
+# Header of the exported spell list's one Arts-and-level column: the Technique and
+# Form abbreviations followed by the level, the rulebook's own short form (CrIg20).
+export-col-spell-code = TeFo/Level
 export-col-total = Total
+# Type column of the exported Virtue/Flaw tables: the item's category (Hermetic,
+# Story, …), the same value the in-app badge shows via `category-<id>`.
+export-col-type = Type
 export-items-boons = Boons
 export-items-hooks = Hooks
 # Sub-heading of the Virtue/Flaw tables that lists the free, off-budget items the

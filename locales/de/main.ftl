@@ -688,7 +688,14 @@ export-col-effective = Effektiv
 export-col-magnitude = Magnitude
 export-col-penalty = Abzug
 export-col-points = Punkte
+# Kopf der einen Kunst-und-Stufe-Spalte der exportierten Zauberliste: die Kürzel von
+# Technik und Form, gefolgt von der Stufe — die Kurzform des Regelwerks (CrIg20).
+export-col-spell-code = TeFo/Stufe
 export-col-total = Summe
+# Typ-Spalte der exportierten Tugend-/Fehler-Tabellen: die Kategorie des Eintrags
+# (Hermetisch, Geschichte, …) — derselbe Wert, den das Abzeichen in der App über
+# `category-<id>` anzeigt.
+export-col-type = Typ
 export-items-boons = Vorzüge
 export-items-hooks = Haken
 # Unterüberschrift der Tugend-/Fehler-Tabellen für die freien Einträge außerhalb des
