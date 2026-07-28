@@ -589,6 +589,11 @@ derived-combat-init = Initiative
 derived-combat-attack = Angriff
 derived-combat-defense = Verteidigung
 derived-combat-damage = Schaden
+# Verbindet eine Waffe mit dem dazu getragenen Schild in einer Kampfzeile
+# ("Langschwert & Tartsche"); die deutschen Regeln schreiben ebenfalls "&".
+# Die umgebenden Leerzeichen setzt der Code, da ein Fluent-Wert nicht mit einem
+# Leerzeichen beginnen oder enden darf.
+derived-combat-shield-joiner = &
 derived-longevity-self_made = Selbst erschaffen
 derived-longevity-external = Extern
 # Für das Ritual wurde noch kein Bonus eingetragen, es gibt also keine Zahl.

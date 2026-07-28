@@ -602,6 +602,11 @@ derived-combat-init = Init
 derived-combat-attack = Attack
 derived-combat-defense = Defense
 derived-combat-damage = Damage
+# Joins a weapon to the shield carried with it on a combat line ("Long Sword &
+# Round Shield"). It stands in for a word — the rulebook's own statblocks write
+# both "&" and "and" — so it is translatable, not hardcoded. The surrounding
+# spaces are added in code, since a Fluent value cannot begin or end with one.
+derived-combat-shield-joiner = &
 derived-longevity-self_made = Self-made
 derived-longevity-external = External
 # No bonus has been entered for the ritual yet, so there is no number to print.

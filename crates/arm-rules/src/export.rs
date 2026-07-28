@@ -45,7 +45,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::art::ArtType;
 use crate::characteristics::Characteristic;
-use crate::derived::{combat_totals, encumbrance, fatigue_levels, soak, wound_ranges};
+use crate::derived::{CombatLine, combat_totals, encumbrance, fatigue_levels, soak, wound_ranges};
 use crate::effective::{
     confidence, decrepitude_score, effective_ability_score, effective_art_score,
     effective_characteristic_score, effective_might, effective_spell_mastery, entity_grants,
@@ -114,6 +114,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "derived-combat-damage",
     "derived-combat-defense",
     "derived-combat-init",
+    "derived-combat-shield-joiner",
     "derived-fatigue-dazed",
     "derived-fatigue-fresh",
     "derived-fatigue-tired",
@@ -865,8 +866,9 @@ impl<'a> Doc<'a> {
         out.push_str(&body);
     }
 
-    /// One combat line per equipped weapon. Attack, Damage and Range are blank for a
-    /// weapon that has none (Dodge is attack- and damage-less; melee has no Range).
+    /// One or two combat lines per equipped weapon — a line carrying shield modifiers
+    /// names the shields alongside the weapon. Attack, Damage and Range are blank for
+    /// a weapon that has none (Dodge is attack- and damage-less; melee has no Range).
     fn write_combat(&self, out: &mut String) {
         let lines = combat_totals(self.entity, self.rules());
         if lines.is_empty() {
@@ -876,7 +878,7 @@ impl<'a> Doc<'a> {
             .iter()
             .map(|line| {
                 vec![
-                    escape_cell(&self.name(&line.weapon)),
+                    escape_cell(&self.combat_line_name(line)),
                     escape_cell(&self.name(&line.ability)),
                     line.initiative.to_string(),
                     optional_number(line.attack),
@@ -897,6 +899,20 @@ impl<'a> Doc<'a> {
             self.label("derived-range"),
         ];
         table(out, &headers, &rows);
+    }
+
+    /// A combat line's name: the weapon alone on a bare line, or the weapon joined to
+    /// every shield whose modifiers it folded in ("Long Sword & Round Shield"). The
+    /// joiner is a localized label; the spaces around it are composed here, since a
+    /// Fluent value cannot begin or end with one.
+    fn combat_line_name(&self, line: &CombatLine) -> String {
+        if line.shields.is_empty() {
+            return self.name(&line.weapon);
+        }
+        let joiner = format!(" {} ", self.label("derived-combat-shield-joiner"));
+        let mut parts = vec![self.name(&line.weapon)];
+        parts.extend(line.shields.iter().map(|shield| self.name(shield)));
+        parts.join(&joiner)
     }
 
     /// The Soak breakdown: every labelled addend, then the total.
@@ -2708,6 +2724,37 @@ mod tests {
         // A missile weapon carries a Range; the melee weapon leaves the cell blank.
         assert!(doc.contains("| Sling | Single Weapon |"), "{doc}");
         assert!(doc.contains("| 30 |"), "the missile range: {doc}");
+    }
+
+    /// With a shield equipped, a one-handed weapon prints twice: the with-shield row
+    /// first, named `<weapon> <joiner> <shield>`, then the bare row (Core:16656;
+    /// ordering Core:1467-1472). The joiner is a localized label, never hardcoded.
+    #[test]
+    fn combat_with_a_shield_emits_with_shield_then_bare_rows() {
+        let mut e = fully_populated_magus();
+        e.equipment.push(EquipmentSlot {
+            item: Id::new("shield.round"),
+            equipped: true,
+            specialization_applies: false,
+        });
+        e.normalize();
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("derived-section-combat", "Combat"),
+                ("derived-combat-shield-joiner", "&"),
+            ]),
+        );
+        // Defense = Qik 1 + Single Weapon 4 + WpnDef 1 (+ ShieldDef 2 on the first).
+        let with_shield = doc.find("| Long Sword & Round Shield | Single Weapon | 2 | 9 | 8 | 7 |");
+        let bare = doc.find("| Long Sword | Single Weapon | 2 | 9 | 6 | 7 |");
+        assert!(with_shield.is_some(), "no with-shield row: {doc}");
+        assert!(bare.is_some(), "no bare row: {doc}");
+        assert!(
+            with_shield < bare,
+            "the with-shield row must come first: {doc}"
+        );
     }
 
     #[test]

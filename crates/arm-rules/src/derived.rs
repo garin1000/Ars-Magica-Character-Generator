@@ -835,16 +835,23 @@ fn equipment_load(ruleset: &Ruleset, id: &Id) -> u32 {
 
 // --- Combat ----------------------------------------------------------------
 
-/// One combat line for an equipped weapon, with any equipped shield's modifiers
-/// combined in (Core:16656) — **unless** the weapon is two-handed, which receives
-/// no shield modifiers (Core:7494). Attack / Damage are `None` for a weapon that
-/// lacks them (Dodge). Initiative is always reduced by Encumbrance (Core:16658);
-/// Attack and Defense are reduced only when the Encumbrance is **not** largely due
-/// to weapons and armor (Core:17105) — see [`combat_encumbrance_applies`].
+/// One way of wielding an equipped weapon. A one-handed weapon carried alongside a
+/// shield yields **two** lines — one with every equipped shield's modifiers combined
+/// in (Core:16656) and one bare — because both are legal choices in play. A
+/// two-handed weapon receives no shield modifiers (Core:7494) and so yields a single
+/// line. Attack / Damage are `None` for a weapon that lacks them (Dodge). Initiative
+/// is always reduced by Encumbrance (Core:16658); Attack and Defense are reduced only
+/// when the Encumbrance is **not** largely due to weapons and armor (Core:17105) —
+/// see [`combat_encumbrance_applies`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CombatLine {
     /// The weapon id.
     pub weapon: Id,
+    /// Every equipped shield whose modifiers this line folded in, in equipment order.
+    /// Empty on a bare line, on a two-handed weapon's line, and when no shield is
+    /// equipped — so the renderers label the line by the weapon alone.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub shields: Vec<Id>,
     /// The combat Ability id the weapon uses.
     pub ability: Id,
     /// Initiative total (Qik + weapon/shield Init − Encumbrance + CombatMod).
@@ -862,8 +869,16 @@ pub struct CombatLine {
     pub range: Option<u16>,
 }
 
-/// Combat lines: one per equipped weapon, combining every equipped shield's
-/// Init/Atk/Def modifiers. Source: Core:16658-16670, :16656, :17105.
+/// Combat lines: **one or two** per equipped weapon. With a shield equipped, a
+/// one-handed weapon yields a with-shield line (every equipped shield's Init/Atk/Def
+/// modifiers added — Source: Ars Magica - Definitive Edition (Core Rules).md:16656)
+/// followed by a bare line, because the fighter may drop the shield at will and a
+/// Single Weapon specialty "covers using that weapon with any shield or none"
+/// (Source: Ars Magica - Definitive Edition (Core Rules).md:7746). With-shield first
+/// mirrors the book's own statblocks, which list the weapon-and-shield lines ahead of
+/// the rest (Source: Ars Magica - Definitive Edition (Core Rules).md:1467-1472). The
+/// two lines differ ONLY by the shield modifiers — specialization and Encumbrance are
+/// shield-independent. Source: Core:16658-16670, :16656, :7746, :17105.
 pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
     let mods = in_play_mods(entity, ruleset);
     let quickness = characteristic(entity, ruleset, Characteristic::Qik);
@@ -871,12 +886,17 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
     let strength = characteristic(entity, ruleset, Characteristic::Str);
     let enc = encumbrance(entity, ruleset).total;
 
-    // Sum every equipped shield's modifiers into one combined shield line.
-    let (shield_init, shield_attack, shield_defense) = entity
+    // Every equipped shield's modifiers sum into one combined pseudo-shield.
+    // Source: Ars Magica - Definitive Edition (Core Rules).md:16656
+    let shield_ids: Vec<Id> = entity
         .equipment
         .iter()
-        .filter(|s| s.equipped)
-        .filter_map(|s| ruleset.shield(&s.item))
+        .filter(|s| s.equipped && ruleset.shield(&s.item).is_some())
+        .map(|s| s.item.clone())
+        .collect();
+    let (shield_init, shield_attack, shield_defense) = shield_ids
+        .iter()
+        .filter_map(|id| ruleset.shield(id))
         .fold((0i32, 0i32, 0i32), |(i, a, d), sh| {
             (
                 i + i32::from(sh.init_mod),
@@ -900,41 +920,55 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
         let Some(weapon) = ruleset.weapon(&slot.item) else {
             continue;
         };
-        // A two-handed weapon cannot be paired with a shield, so it takes none of
-        // the combined shield modifiers (Core:7494).
-        let (line_shield_init, line_shield_attack, line_shield_defense) = if weapon.two_handed {
-            (0, 0, 0)
-        } else {
-            (shield_init, shield_attack, shield_defense)
-        };
         // Ability specialization (+1) applies to Attack and Defense only, when the
         // slot is flagged and the weapon's Ability carries a specialty aligned to
         // this weapon (Core:7122, :7139). It acts as if the score were one higher.
+        // A specialty "covers using that weapon with any shield or none", so it is
+        // shield-independent and identical on both lines.
+        // Source: Ars Magica - Definitive Edition (Core Rules).md:7746
         let spec_bonus = i32::from(specialization_bonus(entity, ruleset, slot, weapon));
         let combat_ability =
             effective_ability_score(entity, ruleset, &weapon.ability, None) + spec_bonus;
-        let initiative = quickness + i32::from(weapon.init_mod) + line_shield_init - enc
-            + cm(CombatStat::Initiative);
-        let attack = weapon.attack_mod.map(|m| {
-            dexterity + combat_ability + i32::from(m) + line_shield_attack - atk_def_enc
-                + cm(CombatStat::Attack)
-        });
-        let defense =
-            quickness + combat_ability + i32::from(weapon.defense_mod) + line_shield_defense
-                - atk_def_enc
-                + cm(CombatStat::Defense);
-        let damage = weapon
-            .damage_mod
-            .map(|m| strength + i32::from(m) + cm(CombatStat::Damage));
-        out.push(CombatLine {
-            weapon: slot.item.clone(),
-            ability: weapon.ability.clone(),
-            initiative,
-            attack,
-            defense,
-            damage,
-            range: weapon.range,
-        });
+        // One way of wielding this weapon. The shield modifiers are the only part that
+        // differs between the with-shield and the bare line; Encumbrance and the
+        // specialization bonus are shield-independent.
+        let wielding =
+            |shields: Vec<Id>, sh_init: i32, sh_attack: i32, sh_defense: i32| CombatLine {
+                weapon: slot.item.clone(),
+                shields,
+                ability: weapon.ability.clone(),
+                initiative: quickness + i32::from(weapon.init_mod) + sh_init - enc
+                    + cm(CombatStat::Initiative),
+                attack: weapon.attack_mod.map(|m| {
+                    dexterity + combat_ability + i32::from(m) + sh_attack - atk_def_enc
+                        + cm(CombatStat::Attack)
+                }),
+                defense: quickness + combat_ability + i32::from(weapon.defense_mod) + sh_defense
+                    - atk_def_enc
+                    + cm(CombatStat::Defense),
+                damage: weapon
+                    .damage_mod
+                    .map(|m| strength + i32::from(m) + cm(CombatStat::Damage)),
+                range: weapon.range,
+            };
+        let bare = || wielding(Vec::new(), 0, 0, 0);
+        // A two-handed weapon cannot be paired with a shield, so it takes none of
+        // the combined shield modifiers and offers no choice to print.
+        // Source: Ars Magica - Definitive Edition (Core Rules).md:7494
+        if weapon.two_handed || shield_ids.is_empty() {
+            out.push(bare());
+            continue;
+        }
+        // Both ways of wielding a one-handed weapon, with the shield first — the order
+        // the book's own statblocks use.
+        // Source: Ars Magica - Definitive Edition (Core Rules).md:1467-1472
+        out.push(wielding(
+            shield_ids.clone(),
+            shield_init,
+            shield_attack,
+            shield_defense,
+        ));
+        out.push(bare());
     }
     out
 }
@@ -1726,7 +1760,8 @@ pub struct DerivedTotals {
     /// The familiar bonding read-out (magi with a familiar only; `None` otherwise).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub familiar: Option<FamiliarReadout>,
-    /// One combat line per equipped weapon.
+    /// One or two combat lines per equipped weapon — with-shield then bare when a
+    /// shield is equipped and the weapon is one-handed, otherwise a single line.
     pub combat: Vec<CombatLine>,
     /// The Soak total.
     pub soak: SoakTotal,
@@ -3132,17 +3167,103 @@ mod tests {
             },
         ];
         let lines = combat_totals(&e, &rs);
-        assert_eq!(lines.len(), 1);
-        let l = &lines[0];
+        // A one-handed weapon plus a shield offers the fighter a real choice, so both
+        // ways of wielding it are printed: with the shield first, then bare.
+        assert_eq!(lines.len(), 2);
+
+        let with_shield = &lines[0];
         // Total Load 2 (sword 1 + shield 1) → Burden 1; Str 3 → Encumbrance 0.
         // Init = Qik 1 + WpnInit 2 + ShieldInit 0 − Enc 0 = 3.
-        assert_eq!(l.initiative, 3);
+        assert_eq!(with_shield.initiative, 3);
         // Attack = Dex 2 + Ability 4 + WpnAtk 4 + ShieldAtk 0 = 10.
-        assert_eq!(l.attack, Some(10));
+        assert_eq!(with_shield.attack, Some(10));
         // Defense = Qik 1 + Ability 4 + WpnDef 1 + ShieldDef 2 = 8.
-        assert_eq!(l.defense, 8);
+        assert_eq!(with_shield.defense, 8);
         // Damage = Str 3 + WpnDam 6 = 9.
-        assert_eq!(l.damage, Some(9));
+        assert_eq!(with_shield.damage, Some(9));
+        // The line names the shield it folded in, so the renderers can label it.
+        assert_eq!(with_shield.shields, vec![Id::new("shield.round")]);
+
+        let bare = &lines[1];
+        // The bare line differs ONLY by the shield's modifiers: Defense loses the +2.
+        assert_eq!(bare.initiative, 3);
+        assert_eq!(bare.attack, Some(10));
+        assert_eq!(bare.defense, 6);
+        assert_eq!(bare.damage, Some(9));
+        assert!(bare.shields.is_empty());
+        // The shield still weighs on Encumbrance in both lines (Core:17107).
+        assert_eq!(encumbrance(&e, &rs).total, 0);
+    }
+
+    /// With no shield equipped there is nothing to choose between, so the weapon
+    /// yields exactly one (bare) line — byte-identical to the pre-shield behavior.
+    #[test]
+    fn bare_line_when_no_shield_is_equipped_is_the_only_line() {
+        let rs = ruleset();
+        let mut e = grog();
+        set_char(&mut e, Characteristic::Qik, 1);
+        set_char(&mut e, Characteristic::Dex, 2);
+        set_char(&mut e, Characteristic::Str, 3);
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.single_weapon"),
+            parameter: None,
+            specialty: None,
+            score: 4,
+        }];
+        e.equipment = vec![EquipmentSlot {
+            item: Id::new("weapon.long_sword"),
+            equipped: true,
+            specialization_applies: false,
+        }];
+        let lines = combat_totals(&e, &rs);
+        assert_eq!(lines.len(), 1);
+        assert!(lines[0].shields.is_empty());
+        // Defense = Qik 1 + Ability 4 + WpnDef 1 = 6, no shield anywhere.
+        assert_eq!(lines[0].defense, 6);
+    }
+
+    /// Several equipped shields stay summed into one pseudo-shield, and the
+    /// with-shield line lists every one of them.
+    #[test]
+    fn multiple_shields_are_summed_and_all_listed() {
+        let rs = ruleset();
+        let mut e = grog();
+        set_char(&mut e, Characteristic::Qik, 1);
+        set_char(&mut e, Characteristic::Dex, 2);
+        set_char(&mut e, Characteristic::Str, 3);
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.single_weapon"),
+            parameter: None,
+            specialty: None,
+            score: 4,
+        }];
+        let round_shield = || EquipmentSlot {
+            item: Id::new("shield.round"),
+            equipped: true,
+            specialization_applies: false,
+        };
+        e.equipment = vec![
+            EquipmentSlot {
+                item: Id::new("weapon.long_sword"),
+                equipped: true,
+                specialization_applies: false,
+            },
+            round_shield(),
+            round_shield(),
+        ];
+        let lines = combat_totals(&e, &rs);
+        assert_eq!(lines.len(), 2);
+        // Load 3 (sword 1 + 2 shields) → Burden 2; Str 3 → Enc 0.
+        assert_eq!(encumbrance(&e, &rs).total, 0);
+        // Defense = Qik 1 + Ability 4 + WpnDef 1 + 2 × ShieldDef 2 = 10.
+        assert_eq!(lines[0].defense, 10);
+        assert_eq!(
+            lines[0].shields,
+            vec![Id::new("shield.round"), Id::new("shield.round")]
+        );
+        // The bare line drops all four points of shield Defense.
+        assert_eq!(lines[1].defense, 6);
+        assert!(lines[1].shields.is_empty());
     }
 
     /// Issue B: a two-handed weapon wielded with a shield gets NO shield
@@ -3176,7 +3297,10 @@ mod tests {
         // Total Load 2 (great sword) + 1 (shield) = 3 → Burden 2; Str 0 → Enc 2.
         assert_eq!(encumbrance(&e, &rs).total, 2);
         let lines = combat_totals(&e, &rs);
+        // No shield line to choose between: the shield's modifiers never apply, so
+        // there is exactly one line and it names no shield.
         assert_eq!(lines.len(), 1);
+        assert!(lines[0].shields.is_empty());
         let l = &lines[0];
         // Init = Qik 1 + WpnInit 2 + ShieldInit 0 − Enc 2 = 1 (shield Init 0 anyway,
         // and a two-handed weapon takes no shield Init).
