@@ -2504,6 +2504,28 @@ untouched ones as `0`. Which Arts exist is data, so the Arts section's size foll
 no Characteristic score or description at all, no scored Art the catalogue holds — so a
 covenant's sheet still shows neither, without any `EntityKind` gate.
 
+**The sheet shows what a reader can use, not only what was bought.** Three columns
+read a *derived* value rather than the stored one, each from the function that owns it:
+
+- The Characteristics table's Effective cell is
+  `effective::effective_characteristic_after_aging` — the aging drops plus the free
+  Virtue delta, with the effective-minimum clamp — so an aged character's sheet cannot
+  show a score its own Soak, Combat and wound figures contradict (they all read the same
+  function; see the M5/5i section above). Printed only where it differs from the bought
+  score.
+- The Abilities table appends a row for every `effective::ability_score_floors` entry
+  the character has **not** also bought — an Ability held purely because a Virtue seeded
+  it (Second Sight 1) is stored nowhere in `ability_scores`, so iterating the bought
+  instances alone dropped it from the sheet. Bought column 0, effective column from
+  `effective::effective_ability_score` (so a Puissant bonus on a granted Ability shows).
+  The floor reaches only the parameter-less instance, so a bought row cancels it on the
+  same instance match.
+- The Aging block lists the accrued `entity.aging_points` per Characteristic
+  (`aging-points-heading`, the non-zero entries). They are the recorded state both the
+  Decrepitude Score and the Characteristic drops derive from
+  (`effective::decrepitude_score`, `effective::effective_characteristic_after_aging`);
+  without them a reader sees a dropped score but not how close the next drop is.
+
 **A spell's Arts and level are one short code.** The spell list prints
 `<Technique abbreviation><Form abbreviation><resolved level>` (`CrIg20`), the notation
 the rulebook and the app's own spell list use, instead of three spelled-out columns.
@@ -2534,6 +2556,23 @@ two tests keep it honest — one walks each fixed taxonomy
 `ReputationType`, `LongevitySource`, the Soak addend labels, Fatigue tiers, wound
 bands) and asserts the composed key is declared; the other renders a fully-populated
 magus with every declared key resolved and asserts no key-shaped text survives.
+
+**No name reaches the reader as a raw template.** A localized item name may carry
+`{placeholder}`s (`ability.dead_language` is "{language} (Dead Language)"), so *every*
+name the document prints for a catalogue kind that can be parameterized — Virtues/Flaws,
+Abilities, spells — goes through `Doc::parameterized_name`, which fills a placeholder
+from the chosen value or else prints the localized `param-label-<key>` slot label. That
+covers the two places the raw name used to leak: a restricted pool's eligibility list
+(which names an Ability, not one instance of it, so it shows the slot label), and a
+parameter *value* that is itself parameterized — Puissant Ability aimed at Provence Lore
+stores `{ability: ability.area_lore, area: "Provence"}`, and `Doc::param_display_values`
+renders the value as the whole instance name ("Puissant Provence Lore") instead of
+leaking `{area}` and then repeating "(Provence)". The remaining raw-name sites print
+kinds no shipped catalogue parameterizes and whose schema has no parameter at all
+(Arts, Houses, weapons/shields/armor, spell-mastery abilities). Both locales are held to
+naming every slot by `every_shipped_parameter_key_has_a_param_label_in_each_locale`
+(arm-app), which recomputes the parameter-key set from `rules/core` — the family stays
+catalogue data, never a list in code.
 
 ---
 
