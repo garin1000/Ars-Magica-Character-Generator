@@ -2436,6 +2436,68 @@ The per-item audit that fed this wiring follows (source line-ranges retained).
 - `virtue.venditor` (Core:5207-5210) — XP grant 50
 
 
+## Markdown character export (M5.6) — `export.rs`
+
+`export.rs` implements **no new rules mechanic**, so it carries no rulebook
+citation of its own. It is a pure formatter — `(&Entity, &LocalizedRuleset,
+&labels) → String` — that *selects and lays out* numbers other modules already
+compute: creation figures from `effective.rs` (effective Characteristic / Ability /
+Art scores, the XP allocation, Confidence, Warping, Decrepitude, effective Might),
+the point balance from `validation/balance.rs`, and play stats from `derived.rs`,
+whose provenance is the **Derived play-stat totals (M5/5i)** section above. Every
+formula it prints is documented there; nothing is recomputed here. A drift test
+(`tests/export_golden.rs`) pins the whole document against a checked-in fixture, so
+a change in any of those upstream numbers shows up as a fixture diff.
+
+**Which `DerivedTotals` families the document includes** — the ones a character
+sheet prints, i.e. a fixed statline the reader needs at the table:
+
+| Included | From |
+|---|---|
+| Combat lines (weapon, Ability, Init/Atk/Def/Damage, Range) | `derived::combat_totals` |
+| Soak, with its labelled addends | `derived::soak` |
+| Encumbrance (Load, Burden, penalty) | `derived::encumbrance` |
+| Fatigue levels and their penalties | `derived::fatigue_levels` |
+| Wound bands, their damage spans and penalties | `derived::wound_ranges` |
+| Warping Score + Points, Decrepitude Score | `effective::warping`, `effective::decrepitude_score` |
+
+**Which are deliberately excluded, and why.** Each is a *per-line working figure*
+recomputed as play proceeds, or a piece of read-only guidance the panel offers while
+the character is being built — not sheet content. Printing them would bury the sheet
+in a grid. A named test (`the_document_excludes_the_per_line_derived_readouts`)
+holds the line, so this is a contract, not an oversight:
+
+- `lab_totals`, `casting_totals` — one figure per `(Technique, Form)` cell, each with
+  base and within-focus variants: a 5 × 10 grid the player derives on demand (the app
+  itself surfaces them behind a Technique/Form picker).
+- `penetration` — one line per known spell, and already a function of the Casting
+  Total the export does not print.
+- `magic_resistance` — one figure per Form, likewise a grid.
+- `masterpiece` (lesser-item cap), `talisman_capacity` — read-only *guidance* for
+  designing an item, explicitly not a stored value (see the 5i rows above).
+- `familiar` (the `FamiliarReadout` bonding read-out) — guidance whose applicability
+  is a troupe judgment. The familiar's **statblock** (animal, Might, Characteristics,
+  Size, Personality Traits, cords, invested powers) *is* included: that is the
+  creature's own recorded data, not a derived read-out.
+- `longevity` (the `LongevityBonus` read-out and its `LongevityHint`) — the *stored*
+  ritual (source, entered bonus, focus) is included; the hint is a suggestion for a
+  ritual made today and must never be mistaken for the stored figure.
+- `surfaced_modifiers` — by construction the families the app does **not** simulate
+  (study, aging rolls, non-standard casting, wound recovery); they belong beside the
+  subsystem that would use them.
+
+**Localization split** (an architecture rule, not a rules mechanic): item names come
+from the rules i18n via `LocalizedRuleset::display_name`; document chrome is passed
+in as a `key → text` map keyed by Fluent message name, so the engine hardcodes no
+user-facing string and never renders a raw slug. `export::LABEL_KEYS` declares every
+chrome key, and two tests keep it honest — one walks each fixed taxonomy
+(`Characteristic`, `Magnitude`, `AbilityCategory`, `ArtType`, `ItemKind`, `Realm`,
+`ReputationType`, `LongevitySource`, the Soak addend labels, Fatigue tiers, wound
+bands) and asserts the composed key is declared; the other renders a fully-populated
+magus with every declared key resolved and asserts no key-shaped text survives.
+
+---
+
 ## Engine framework (book-agnostic, no rulebook source)
 
 These checks are structural integrity, not Ars Magica rules, and intentionally

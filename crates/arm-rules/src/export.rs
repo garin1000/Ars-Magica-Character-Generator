@@ -47,11 +47,14 @@ use crate::art::ArtType;
 use crate::characteristics::Characteristic;
 use crate::derived::{combat_totals, encumbrance, fatigue_levels, soak, wound_ranges};
 use crate::effective::{
-    effective_ability_score, effective_art_score, effective_characteristic_score,
-    effective_spell_mastery, resolved_spell_level, xp_allocation,
+    confidence, decrepitude_score, effective_ability_score, effective_art_score,
+    effective_characteristic_score, effective_might, effective_spell_mastery, resolved_spell_level,
+    warping, xp_allocation,
 };
 use crate::ruleset::{LocalizedRuleset, Ruleset};
-use crate::types::{Entity, EntityKind, Id, ItemKind};
+use crate::types::{
+    EnchantedDevice, Entity, EntityKind, Id, ItemKind, SupernaturalPower, TalismanEffect,
+};
 use crate::validation::{compute_balance, effective_point_ceilings};
 
 /// Every document-chrome label key [`character_markdown`] can ask for, sorted and
@@ -80,9 +83,12 @@ pub const LABEL_KEYS: &[&str] = &[
     "ability-score-label",
     "ability-specialty-label",
     "age-label",
+    "aging-label",
+    "aging-log-heading",
     "apparent-age-label",
     "art-type-form",
     "art-type-technique",
+    "aura-label",
     "characteristic-com",
     "characteristic-description-label",
     "characteristic-dex",
@@ -93,6 +99,9 @@ pub const LABEL_KEYS: &[&str] = &[
     "characteristic-sta",
     "characteristic-str",
     "characteristics-title",
+    "confidence-label",
+    "decrepitude-effect-label",
+    "decrepitude-label",
     "derived-addend-armor",
     "derived-addend-bronze_cord",
     "derived-addend-form_bonus",
@@ -120,6 +129,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "derived-wound-incapacitating",
     "derived-wound-light",
     "derived-wound-medium",
+    "device-level-label",
     "equipment-equipped-label",
     "equipment-group-armor",
     "equipment-group-shields",
@@ -127,6 +137,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "export-col-effective",
     "export-col-magnitude",
     "export-col-penalty",
+    "export-col-points",
     "export-col-total",
     "export-items-boons",
     "export-items-hooks",
@@ -134,6 +145,14 @@ pub const LABEL_KEYS: &[&str] = &[
     "export-untitled",
     "export-xp-restricted",
     "export-yes",
+    "familiar-animal-label",
+    "familiar-cord-bronze",
+    "familiar-cord-gold",
+    "familiar-cord-silver",
+    "familiar-label",
+    "familiar-might-label",
+    "familiar-powers-label",
+    "familiar-size-label",
     "house-label",
     "identity-birth-year",
     "identity-concept",
@@ -146,10 +165,29 @@ pub const LABEL_KEYS: &[&str] = &[
     "identity-sigil",
     "items-flaws-title",
     "items-virtues-title",
+    "longevity-bonus-label",
+    "longevity-focus-label",
+    "longevity-label",
+    "longevity-not-entered",
+    "longevity-source-external",
+    "longevity-source-label",
+    "longevity-source-self_made",
     "magnitude-free",
     "magnitude-major",
     "magnitude-minor",
     "param-label-ability",
+    "personality-label",
+    "possessions-devices-label",
+    "power-level-label",
+    "realm-divine",
+    "realm-faerie",
+    "realm-infernal",
+    "realm-magic",
+    "reputation-type-academic",
+    "reputation-type-ecclesiastical",
+    "reputation-type-hermetic",
+    "reputation-type-local",
+    "reputations-label",
     "restricted-xp-list-separator",
     "spell-form-label",
     "spell-level-general",
@@ -157,10 +195,24 @@ pub const LABEL_KEYS: &[&str] = &[
     "spell-mastery-abilities-label",
     "spell-mastery-label",
     "spell-technique-label",
+    "supernatural-might-label",
+    "supernatural-powers-label",
     "tab-arts",
     "tab-equipment",
+    "tab-possessions",
     "tab-spells",
+    "tab-supernatural",
     "tab-virtues-flaws",
+    "talisman-attunements-label",
+    "talisman-bonus-label",
+    "talisman-description-label",
+    "talisman-effect-level-label",
+    "talisman-effects-label",
+    "talisman-label",
+    "twilight-scars-label",
+    "warping-effect-label",
+    "warping-label",
+    "warping-points-label",
     "xp-pool",
 ];
 
@@ -192,6 +244,12 @@ pub fn character_markdown(
     doc.write_soak(&mut out);
     doc.write_encumbrance(&mut out);
     doc.write_health_tracks(&mut out);
+    doc.write_personality_traits(&mut out);
+    doc.write_reputations(&mut out);
+    doc.write_confidence(&mut out);
+    doc.write_supernatural(&mut out);
+    doc.write_magic_items(&mut out);
+    doc.write_annotations(&mut out);
     out
 }
 
@@ -870,6 +928,411 @@ impl<'a> Doc<'a> {
             &wounds,
         );
     }
+
+    /// The named Personality Traits and their signed values.
+    fn write_personality_traits(&self, out: &mut String) {
+        if self.entity.personality_traits.is_empty() {
+            return;
+        }
+        heading(out, 2, &self.label("personality-label"));
+        for trait_ in &self.entity.personality_traits {
+            field(
+                out,
+                &escape_cell(&trait_.name),
+                &signed(i32::from(trait_.value)),
+            );
+        }
+        out.push('\n');
+    }
+
+    /// The starting Reputations: audience, level, and what the Reputation is for.
+    fn write_reputations(&self, out: &mut String) {
+        if self.entity.reputations.is_empty() {
+            return;
+        }
+        heading(out, 2, &self.label("reputations-label"));
+        for reputation in &self.entity.reputations {
+            field(
+                out,
+                &format!(
+                    "{} {}",
+                    self.label(&format!("reputation-type-{}", reputation.kind)),
+                    reputation.score
+                ),
+                &escape_cell(&reputation.content),
+            );
+        }
+        out.push('\n');
+    }
+
+    /// The derived Confidence Score and Points (a grog has neither, so the section
+    /// disappears for one).
+    fn write_confidence(&self, out: &mut String) {
+        let Some(profile) = self.rules().profile(&self.entity.type_id) else {
+            return;
+        };
+        let confidence = confidence(
+            profile.confidence_score,
+            profile.confidence_points,
+            self.entity,
+            self.rules(),
+        );
+        if confidence.score == 0 && confidence.points == 0 {
+            return;
+        }
+        heading(out, 2, &self.label("confidence-label"));
+        field(
+            out,
+            &self.label("ability-score-label"),
+            &confidence.score.to_string(),
+        );
+        field(
+            out,
+            &self.label("export-col-points"),
+            &confidence.points.to_string(),
+        );
+        out.push('\n');
+    }
+
+    /// A supernatural being's effective Might and the powers it holds.
+    fn write_supernatural(&self, out: &mut String) {
+        let might = effective_might(self.entity, self.rules());
+        let powers = self.leveled_rows(&self.entity.powers, "power-level-label");
+        if might.is_none() && powers.is_empty() {
+            return;
+        }
+        heading(out, 2, &self.label("tab-supernatural"));
+        if let Some(might) = might {
+            field(
+                out,
+                &self.label("supernatural-might-label"),
+                &format!(
+                    "{} {}",
+                    self.label(&format!("realm-{}", might.realm)),
+                    might.score
+                ),
+            );
+            out.push('\n');
+        }
+        if powers.is_empty() {
+            return;
+        }
+        heading(out, 3, &self.label("supernatural-powers-label"));
+        table(out, &powers.headers, &powers.rows);
+    }
+
+    /// The magus's magical possessions: the assumed aura, enchanted devices, the
+    /// Longevity Ritual as stored, the talisman, and the familiar's statblock.
+    fn write_magic_items(&self, out: &mut String) {
+        let e = self.entity;
+        let devices = self.leveled_rows(&e.devices, "device-level-label");
+        let mut body = String::new();
+        if !devices.is_empty() {
+            heading(&mut body, 3, &self.label("possessions-devices-label"));
+            table(&mut body, &devices.headers, &devices.rows);
+        }
+        self.write_longevity(&mut body);
+        self.write_talisman(&mut body);
+        self.write_familiar(&mut body);
+        if e.aura == 0 && body.is_empty() {
+            return;
+        }
+        heading(out, 2, &self.label("tab-possessions"));
+        if e.aura != 0 {
+            field(out, &self.label("aura-label"), &signed(e.aura));
+            out.push('\n');
+        }
+        out.push_str(&body);
+    }
+
+    /// The stored Longevity Ritual: where it came from, the entered aging bonus (or a
+    /// marker when it was never entered), and its culminating focus.
+    fn write_longevity(&self, out: &mut String) {
+        let Some(ritual) = &self.entity.longevity_ritual else {
+            return;
+        };
+        heading(out, 3, &self.label("longevity-label"));
+        field(
+            out,
+            &self.label("longevity-source-label"),
+            &self.label(&format!("longevity-source-{}", ritual.source)),
+        );
+        let bonus = match ritual.bonus {
+            Some(bonus) => signed(i32::from(bonus)),
+            None => self.label("longevity-not-entered"),
+        };
+        field(out, &self.label("longevity-bonus-label"), &bonus);
+        if !ritual.focus.trim().is_empty() {
+            field(
+                out,
+                &self.label("longevity-focus-label"),
+                &escape_cell(&ritual.focus),
+            );
+        }
+        out.push('\n');
+    }
+
+    /// The talisman: its shape-and-material identity, its attunements, and the
+    /// effects instilled in it.
+    fn write_talisman(&self, out: &mut String) {
+        let Some(talisman) = &self.entity.talisman else {
+            return;
+        };
+        let attunements: Vec<Vec<String>> = talisman
+            .attunements
+            .iter()
+            .map(|a| vec![escape_cell(&a.description), signed(i32::from(a.bonus))])
+            .collect();
+        let effects = self.leveled_rows(&talisman.effects, "talisman-effect-level-label");
+        if talisman.description.trim().is_empty() && attunements.is_empty() && effects.is_empty() {
+            return;
+        }
+        heading(out, 3, &self.label("talisman-label"));
+        if !talisman.description.trim().is_empty() {
+            field(
+                out,
+                &self.label("talisman-description-label"),
+                &escape_cell(&talisman.description),
+            );
+            out.push('\n');
+        }
+        if !attunements.is_empty() {
+            heading(out, 4, &self.label("talisman-attunements-label"));
+            table(
+                out,
+                &[
+                    self.label("identity-name"),
+                    self.label("talisman-bonus-label"),
+                ],
+                &attunements,
+            );
+        }
+        if !effects.is_empty() {
+            heading(out, 4, &self.label("talisman-effects-label"));
+            table(out, &effects.headers, &effects.rows);
+        }
+    }
+
+    /// The familiar's own statblock, in the rulebook's Creature Format order: the
+    /// beast, its Magic Might, Characteristics, Size, Personality Traits, the three
+    /// bond cords, and the powers invested in the bond. Everything here is the
+    /// familiar's own, never the magus's.
+    fn write_familiar(&self, out: &mut String) {
+        let Some(familiar) = &self.entity.familiar else {
+            return;
+        };
+        heading(out, 3, &self.label("familiar-label"));
+        if !familiar.name.trim().is_empty() {
+            field(
+                out,
+                &self.label("identity-name"),
+                &escape_cell(&familiar.name),
+            );
+        }
+        if !familiar.animal.trim().is_empty() {
+            field(
+                out,
+                &self.label("familiar-animal-label"),
+                &escape_cell(&familiar.animal),
+            );
+        }
+        if let Some(might) = familiar.might {
+            field(
+                out,
+                &self.label("familiar-might-label"),
+                &format!(
+                    "{} {}",
+                    self.label(&format!("realm-{}", might.realm)),
+                    might.score
+                ),
+            );
+        }
+        if familiar.size != 0 {
+            field(
+                out,
+                &self.label("familiar-size-label"),
+                &signed(i32::from(familiar.size)),
+            );
+        }
+        for (key, score) in [
+            ("familiar-cord-gold", familiar.cord_gold),
+            ("familiar-cord-silver", familiar.cord_silver),
+            ("familiar-cord-bronze", familiar.cord_bronze),
+        ] {
+            if score != 0 {
+                field(out, &self.label(key), &signed(i32::from(score)));
+            }
+        }
+        out.push('\n');
+        let characteristics: Vec<Vec<String>> = Characteristic::ALL
+            .into_iter()
+            .filter_map(|c| {
+                let score = familiar.characteristics.get(&c)?;
+                Some(vec![
+                    self.label(&format!("characteristic-{c}")),
+                    signed(i32::from(*score)),
+                ])
+            })
+            .collect();
+        if !characteristics.is_empty() {
+            heading(out, 4, &self.label("characteristics-title"));
+            table(
+                out,
+                &[
+                    self.label("identity-name"),
+                    self.label("ability-score-label"),
+                ],
+                &characteristics,
+            );
+        }
+        if !familiar.personality_traits.is_empty() {
+            heading(out, 4, &self.label("personality-label"));
+            for trait_ in &familiar.personality_traits {
+                field(
+                    out,
+                    &escape_cell(&trait_.name),
+                    &signed(i32::from(trait_.value)),
+                );
+            }
+            out.push('\n');
+        }
+        let powers = self.leveled_rows(&familiar.powers, "power-level-label");
+        if !powers.is_empty() {
+            heading(out, 4, &self.label("familiar-powers-label"));
+            table(out, &powers.headers, &powers.rows);
+        }
+    }
+
+    /// The annotation block: Warping, Twilight Scars, Decrepitude, and the aging log.
+    /// Every entry here is a recorded outcome the app does not simulate.
+    fn write_annotations(&self, out: &mut String) {
+        let e = self.entity;
+        let warping = warping(e, self.rules());
+        let decrepitude = decrepitude_score(e, self.rules());
+        let mut body = String::new();
+        if warping.score != 0 || warping.points != 0 || !e.warping_effect.trim().is_empty() {
+            heading(&mut body, 3, &self.label("warping-label"));
+            field(
+                &mut body,
+                &self.label("ability-score-label"),
+                &warping.score.to_string(),
+            );
+            field(
+                &mut body,
+                &self.label("warping-points-label"),
+                &warping.points.to_string(),
+            );
+            if !e.warping_effect.trim().is_empty() {
+                field(
+                    &mut body,
+                    &self.label("warping-effect-label"),
+                    &escape_cell(&e.warping_effect),
+                );
+            }
+            body.push('\n');
+        }
+        if !e.twilight_scars.is_empty() {
+            heading(&mut body, 3, &self.label("twilight-scars-label"));
+            for scar in &e.twilight_scars {
+                body.push_str("- ");
+                body.push_str(&escape_cell(&scar.description));
+                body.push('\n');
+            }
+            body.push('\n');
+        }
+        if decrepitude != 0 || !e.decrepitude_effect.trim().is_empty() {
+            heading(&mut body, 3, &self.label("decrepitude-label"));
+            field(
+                &mut body,
+                &self.label("ability-score-label"),
+                &decrepitude.to_string(),
+            );
+            if !e.decrepitude_effect.trim().is_empty() {
+                field(
+                    &mut body,
+                    &self.label("decrepitude-effect-label"),
+                    &escape_cell(&e.decrepitude_effect),
+                );
+            }
+            body.push('\n');
+        }
+        if !e.aging_log.is_empty() {
+            heading(&mut body, 3, &self.label("aging-log-heading"));
+            for entry in &e.aging_log {
+                field(
+                    &mut body,
+                    &entry.year.to_string(),
+                    &escape_cell(&entry.effect),
+                );
+            }
+            body.push('\n');
+        }
+        if body.is_empty() {
+            return;
+        }
+        heading(out, 2, &self.label("aging-label"));
+        out.push_str(&body);
+    }
+
+    /// A name-and-level table for the three list types that share that shape:
+    /// enchanted devices, supernatural powers, and instilled talisman effects. Each
+    /// names its own "Level" key, since each is a different quantity.
+    fn leveled_rows<T: Leveled>(&self, items: &[T], level_key: &str) -> LeveledTable {
+        LeveledTable {
+            headers: [self.label("identity-name"), self.label(level_key)],
+            rows: items
+                .iter()
+                .map(|item| vec![escape_cell(item.leveled_name()), item.level().to_string()])
+                .collect(),
+        }
+    }
+}
+
+/// A name-and-level table, built by [`Doc::leveled_rows`].
+struct LeveledTable {
+    headers: [String; 2],
+    rows: Vec<Vec<String>>,
+}
+
+impl LeveledTable {
+    fn is_empty(&self) -> bool {
+        self.rows.is_empty()
+    }
+}
+
+/// The shared shape of the free-text, level-bearing lists an entity can hold. Lets
+/// one helper render all three without collapsing types that carry different budget
+/// contracts.
+trait Leveled {
+    fn leveled_name(&self) -> &str;
+    fn level(&self) -> u16;
+}
+
+impl Leveled for EnchantedDevice {
+    fn leveled_name(&self) -> &str {
+        &self.name
+    }
+    fn level(&self) -> u16 {
+        self.level
+    }
+}
+
+impl Leveled for SupernaturalPower {
+    fn leveled_name(&self) -> &str {
+        &self.name
+    }
+    fn level(&self) -> u16 {
+        self.level
+    }
+}
+
+impl Leveled for TalismanEffect {
+    fn leveled_name(&self) -> &str {
+        &self.name
+    }
+    fn level(&self) -> u16 {
+        self.level
+    }
 }
 
 // --- Formatting primitives -------------------------------------------------
@@ -975,7 +1438,10 @@ mod tests {
     use crate::ability::AbilityCategory;
     use crate::ruleset::RulesetSources;
     use crate::types::{
-        AbilityScore, ArtScore, EquipmentSlot, Magnitude, RulesetRef, Selection, SpellSelection,
+        AbilityScore, AgingLogEntry, ArtScore, EquipmentSlot, Familiar, LongevityRitual,
+        LongevitySource, Magnitude, MightScore, PersonalityTrait, Realm, Reputation,
+        ReputationType, RulesetRef, Selection, SpellSelection, Talisman, TalismanAttunement,
+        TwilightScar,
     };
     use pretty_assertions::assert_eq;
 
@@ -1276,6 +1742,75 @@ mod tests {
                 specialization_applies: false,
             },
         ];
+        e.personality_traits = vec![
+            PersonalityTrait {
+                name: "Curious".to_string(),
+                value: 3,
+            },
+            PersonalityTrait {
+                name: "Brash".to_string(),
+                value: -2,
+            },
+        ];
+        e.reputations = vec![Reputation {
+            kind: ReputationType::Hermetic,
+            score: 2,
+            content: "a promising theoretician".to_string(),
+        }];
+        e.devices = vec![EnchantedDevice {
+            name: "Ring of Seeing".to_string(),
+            level: 15,
+        }];
+        e.talisman = Some(Talisman {
+            description: "an ash staff shod with silver".to_string(),
+            attunements: vec![TalismanAttunement {
+                description: "to ward off flame".to_string(),
+                bonus: 3,
+            }],
+            effects: vec![TalismanEffect {
+                name: "Lamp Without Flame".to_string(),
+                level: 10,
+            }],
+        });
+        e.longevity_ritual = Some(LongevityRitual {
+            source: LongevitySource::SelfMade,
+            bonus: Some(7),
+            focus: "a draught of gold and silver".to_string(),
+        });
+        e.familiar = Some(Familiar {
+            name: "Corvus".to_string(),
+            animal: "a raven".to_string(),
+            might: Some(MightScore {
+                realm: Realm::Magic,
+                score: 10,
+            }),
+            characteristics: BTreeMap::from([(Characteristic::Int, 2), (Characteristic::Qik, 4)]),
+            size: -4,
+            personality_traits: vec![PersonalityTrait {
+                name: "Loyal".to_string(),
+                value: 3,
+            }],
+            cord_gold: 2,
+            cord_silver: 1,
+            cord_bronze: 0,
+            powers: vec![SupernaturalPower {
+                name: "Wings of the Storm".to_string(),
+                level: 20,
+            }],
+        });
+        e.warping_points = 6;
+        e.warping_effect = "his shadow lags a heartbeat behind".to_string();
+        e.twilight_scars = vec![TwilightScar {
+            description: "his eyes reflect no candlelight".to_string(),
+        }];
+        // Aging points on Presence: enough to force two drops, and deliberately not
+        // on Stamina, so the Soak figure stays the hand-checkable 2 + 3.
+        e.aging_points = BTreeMap::from([(Characteristic::Pre, 5)]);
+        e.decrepitude_effect = "a persistent cough each winter".to_string();
+        e.aging_log = vec![AgingLogEntry {
+            year: 1220,
+            effect: "an apparent aging crisis, weathered".to_string(),
+        }];
         e.normalize();
         e
     }
@@ -1537,8 +2072,12 @@ mod tests {
         let sections: Vec<&str> = doc.lines().filter(|l| l.starts_with("## ")).collect();
         assert_eq!(
             sections,
-            vec!["## derived-section-fatigue", "## derived-section-wounds"],
-            "only the health tracks survive an empty entity: {doc}"
+            vec![
+                "## derived-section-fatigue",
+                "## derived-section-wounds",
+                "## confidence-label"
+            ],
+            "only the body's own constants survive an empty entity: {doc}"
         );
         // Exactly the two health-track tables, each with a body: `table` is a no-op
         // without rows, so a separator line can only exist above real rows.
@@ -2042,6 +2581,253 @@ mod tests {
         assert!(!doc.contains("Wounds"), "{doc}");
     }
 
+    // --- traits, reputations, confidence ----------------------------------
+
+    #[test]
+    fn personality_traits_and_reputations_are_listed_with_signed_values() {
+        let doc = character_markdown(
+            &fully_populated_magus(),
+            &ruleset(),
+            &labels(&[
+                ("personality-label", "Personality Traits"),
+                ("reputations-label", "Reputations"),
+                ("reputation-type-hermetic", "Hermetic"),
+            ]),
+        );
+        assert!(doc.contains("## Personality Traits\n"), "{doc}");
+        assert!(doc.contains("- **Brash**: -2\n"), "{doc}");
+        assert!(doc.contains("- **Curious**: +3\n"), "{doc}");
+        assert!(doc.contains("## Reputations\n"), "{doc}");
+        assert!(
+            doc.contains("- **Hermetic 2**: a promising theoretician\n"),
+            "{doc}"
+        );
+    }
+
+    #[test]
+    fn confidence_reports_the_derived_score_and_points() {
+        let doc = character_markdown(
+            &fully_populated_magus(),
+            &ruleset(),
+            &labels(&[
+                ("confidence-label", "Confidence"),
+                ("ability-score-label", "Score"),
+                ("export-col-points", "Points"),
+            ]),
+        );
+        assert!(doc.contains("## Confidence\n"), "{doc}");
+        assert!(doc.contains("- **Score**: 1\n"), "{doc}");
+        assert!(doc.contains("- **Points**: 3\n"), "{doc}");
+    }
+
+    #[test]
+    fn the_traits_sections_are_omitted_when_empty() {
+        let doc = character_markdown(
+            &magus(),
+            &ruleset(),
+            &labels(&[
+                ("personality-label", "Personality Traits"),
+                ("reputations-label", "Reputations"),
+            ]),
+        );
+        assert!(!doc.contains("Personality Traits"), "{doc}");
+        assert!(!doc.contains("Reputations"), "{doc}");
+    }
+
+    // --- magic ------------------------------------------------------------
+
+    #[test]
+    fn the_magic_items_block_covers_aura_devices_longevity_and_the_talisman() {
+        let doc = character_markdown(
+            &fully_populated_magus(),
+            &ruleset(),
+            &labels(&[
+                ("tab-possessions", "Magic Items"),
+                ("aura-label", "Aura"),
+                ("possessions-devices-label", "Enchanted Devices"),
+                ("longevity-label", "Longevity Ritual"),
+                ("longevity-source-label", "Source"),
+                ("longevity-source-self_made", "Self-made"),
+                ("longevity-bonus-label", "Aging bonus"),
+                ("longevity-focus-label", "Focus"),
+                ("talisman-label", "Talisman"),
+                ("talisman-description-label", "Shape and material"),
+                ("talisman-attunements-label", "Talisman Attunements"),
+                ("talisman-effects-label", "Instilled Effects"),
+            ]),
+        );
+        assert!(doc.contains("## Magic Items\n"), "{doc}");
+        assert!(doc.contains("- **Aura**: +3\n"), "{doc}");
+        assert!(doc.contains("### Enchanted Devices\n"), "{doc}");
+        assert!(doc.contains("| Ring of Seeing | 15 |"), "{doc}");
+        assert!(doc.contains("### Longevity Ritual\n"), "{doc}");
+        assert!(doc.contains("- **Source**: Self-made\n"), "{doc}");
+        assert!(doc.contains("- **Aging bonus**: +7\n"), "{doc}");
+        assert!(
+            doc.contains("- **Focus**: a draught of gold and silver\n"),
+            "{doc}"
+        );
+        assert!(doc.contains("### Talisman\n"), "{doc}");
+        assert!(
+            doc.contains("- **Shape and material**: an ash staff shod with silver\n"),
+            "{doc}"
+        );
+        assert!(doc.contains("#### Talisman Attunements\n"), "{doc}");
+        assert!(doc.contains("| to ward off flame | +3 |"), "{doc}");
+        assert!(doc.contains("#### Instilled Effects\n"), "{doc}");
+        assert!(doc.contains("| Lamp Without Flame | 10 |"), "{doc}");
+    }
+
+    #[test]
+    fn an_unentered_longevity_bonus_says_so_rather_than_claiming_zero() {
+        let mut e = magus();
+        e.longevity_ritual = Some(LongevityRitual {
+            source: LongevitySource::External,
+            bonus: None,
+            focus: String::new(),
+        });
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("longevity-bonus-label", "Aging bonus"),
+                ("longevity-not-entered", "Not entered"),
+                ("longevity-source-external", "External"),
+            ]),
+        );
+        assert!(doc.contains("- **Aging bonus**: Not entered\n"), "{doc}");
+        assert!(
+            !doc.contains("longevity-focus-label"),
+            "no empty focus: {doc}"
+        );
+    }
+
+    #[test]
+    fn the_familiar_statblock_lists_the_beasts_own_scores_cords_and_powers() {
+        let doc = character_markdown(
+            &fully_populated_magus(),
+            &ruleset(),
+            &labels(&[
+                ("familiar-label", "Familiar"),
+                ("identity-name", "Name"),
+                ("familiar-animal-label", "Animal"),
+                ("familiar-might-label", "Magic Might"),
+                ("realm-magic", "Magic"),
+                ("familiar-size-label", "Size"),
+                ("familiar-cord-gold", "Gold cord"),
+                ("familiar-cord-silver", "Silver cord"),
+                ("familiar-cord-bronze", "Bronze cord"),
+                ("characteristics-title", "Characteristics"),
+                ("characteristic-qik", "Quickness"),
+                ("personality-label", "Personality Traits"),
+                ("familiar-powers-label", "Invested Powers"),
+            ]),
+        );
+        assert!(doc.contains("### Familiar\n"), "{doc}");
+        assert!(doc.contains("- **Name**: Corvus\n"), "{doc}");
+        assert!(doc.contains("- **Animal**: a raven\n"), "{doc}");
+        assert!(doc.contains("- **Magic Might**: Magic 10\n"), "{doc}");
+        assert!(doc.contains("- **Size**: -4\n"), "{doc}");
+        assert!(doc.contains("- **Gold cord**: +2\n"), "{doc}");
+        assert!(
+            !doc.contains("Bronze cord"),
+            "a zero cord is omitted: {doc}"
+        );
+        assert!(doc.contains("#### Characteristics\n"), "{doc}");
+        assert!(doc.contains("| Quickness | +4 |"), "{doc}");
+        assert!(doc.contains("#### Personality Traits\n"), "{doc}");
+        assert!(doc.contains("- **Loyal**: +3\n"), "{doc}");
+        assert!(doc.contains("#### Invested Powers\n"), "{doc}");
+        assert!(doc.contains("| Wings of the Storm | 20 |"), "{doc}");
+    }
+
+    #[test]
+    fn a_might_being_reports_its_effective_might_and_powers() {
+        let mut e = magus();
+        e.might = Some(MightScore {
+            realm: Realm::Faerie,
+            score: 15,
+        });
+        e.powers = vec![SupernaturalPower {
+            name: "Glamour".to_string(),
+            level: 25,
+        }];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("tab-supernatural", "Supernatural"),
+                ("supernatural-might-label", "Might Score"),
+                ("realm-faerie", "Faerie"),
+                ("supernatural-powers-label", "Supernatural Powers"),
+            ]),
+        );
+        assert!(doc.contains("## Supernatural\n"), "{doc}");
+        assert!(doc.contains("- **Might Score**: Faerie 15\n"), "{doc}");
+        assert!(doc.contains("### Supernatural Powers\n"), "{doc}");
+        assert!(doc.contains("| Glamour | 25 |"), "{doc}");
+    }
+
+    #[test]
+    fn the_magic_blocks_are_omitted_for_a_magus_with_no_possessions() {
+        let doc = character_markdown(
+            &magus(),
+            &ruleset(),
+            &labels(&[
+                ("tab-possessions", "Magic Items"),
+                ("tab-supernatural", "Supernatural"),
+            ]),
+        );
+        assert!(!doc.contains("Magic Items"), "{doc}");
+        assert!(!doc.contains("Supernatural"), "{doc}");
+    }
+
+    // --- annotations ------------------------------------------------------
+
+    #[test]
+    fn the_annotation_block_records_warping_twilight_decrepitude_and_aging() {
+        let doc = character_markdown(
+            &fully_populated_magus(),
+            &ruleset(),
+            &labels(&[
+                ("aging-label", "Aging"),
+                ("warping-label", "Warping"),
+                ("ability-score-label", "Score"),
+                ("warping-points-label", "Warping points"),
+                ("warping-effect-label", "Warping effect"),
+                ("twilight-scars-label", "Twilight Scars"),
+                ("decrepitude-label", "Decrepitude"),
+                ("decrepitude-effect-label", "Decrepitude effect"),
+                ("aging-log-heading", "Aging log"),
+            ]),
+        );
+        assert!(doc.contains("## Aging\n"), "{doc}");
+        assert!(doc.contains("### Warping\n"), "{doc}");
+        assert!(doc.contains("- **Warping points**: 6\n"), "{doc}");
+        assert!(
+            doc.contains("- **Warping effect**: his shadow lags a heartbeat behind\n"),
+            "{doc}"
+        );
+        assert!(doc.contains("### Twilight Scars\n"), "{doc}");
+        assert!(doc.contains("- his eyes reflect no candlelight\n"), "{doc}");
+        assert!(doc.contains("### Decrepitude\n"), "{doc}");
+        assert!(
+            doc.contains("- **Decrepitude effect**: a persistent cough each winter\n"),
+            "{doc}"
+        );
+        assert!(doc.contains("### Aging log\n"), "{doc}");
+        assert!(
+            doc.contains("- **1220**: an apparent aging crisis, weathered\n"),
+            "{doc}"
+        );
+    }
+
+    #[test]
+    fn the_annotation_block_is_omitted_for_an_unwarped_unaged_character() {
+        let doc = character_markdown(&magus(), &ruleset(), &labels(&[("aging-label", "Aging")]));
+        assert!(!doc.contains("## Aging"), "stray heading: {doc}");
+    }
+
     // --- contract tests ---------------------------------------------------
 
     /// The per-line derived read-outs the export deliberately leaves out: they are
@@ -2123,6 +2909,15 @@ mod tests {
         for band in wound_ranges(&e, &rs.ruleset) {
             assert_declared(&format!("derived-wound-{}", band.level));
         }
+        for kind in ReputationType::ALL {
+            assert_declared(&format!("reputation-type-{kind}"));
+        }
+        for realm in [Realm::Magic, Realm::Faerie, Realm::Divine, Realm::Infernal] {
+            assert_declared(&format!("realm-{realm}"));
+        }
+        for source in [LongevitySource::SelfMade, LongevitySource::External] {
+            assert_declared(&format!("longevity-source-{source}"));
+        }
     }
 
     /// Complements the family walk above by proving it at the *document* level: with
@@ -2158,6 +2953,27 @@ mod tests {
             "equipment-",
             "items-",
             "tab-",
+            "realm-",
+            "reputation-type-",
+            "longevity-",
+            "familiar-",
+            "talisman-",
+            "warping-",
+            "aging-",
+            "confidence-",
+            "decrepitude-",
+            "supernatural-",
+            "possessions-",
+            "personality-",
+            "twilight-",
+            "power-level-",
+            "device-level-",
+            "aura-",
+            "house-",
+            "age-",
+            "apparent-age-",
+            "xp-pool",
+            "restricted-xp-",
         ] {
             assert!(
                 !doc.contains(family),
