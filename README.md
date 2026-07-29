@@ -199,18 +199,31 @@ cd ui && npm run test:e2e     # headless E2E (needs webkit2gtk-driver on Linux)
 
 ## Rules sources & licensing
 
-This project deliberately separates two bodies of work under two licenses:
+This project deliberately separates two bodies of work under two licenses. The
+split follows *what the content is*, not which folder it sits in:
 
-- **The generator's own source code** — the Rust crates, the Svelte/TypeScript
-  frontend, build config, and the mechanics/UI data authored for this project
-  (`rules/core/`, `rules/i18n/`, `locales/`, `examples/`) — is licensed under the
-  **MIT License**. See [`LICENSE`](LICENSE).
-- **The Ars Magica rulebook content** in `rules/source/` is derived from material
-  ©1993–2024 Trident, Inc. d/b/a Atlas Games, redistributed under the
-  **Ars Magica Open License** (Creative Commons Attribution-ShareAlike 4.0). See
-  [`rules/source/LICENSE`](rules/source/LICENSE). The authoritative Markdown lives
-  in `rules/source/<lang>/`; the JSON in `rules/core/` and `rules/i18n/` is
-  generated from it.
+- **The generator and the data format — MIT.** The Rust crates, the
+  Svelte/TypeScript frontend, the Fluent UI strings (`locales/`), the sample
+  saves (`examples/`), the tooling (`scripts/`), the build config, **and the
+  rules JSON's form**: its schema, key names, the stable slug-ID scheme, the file
+  layout, and all of `rules/core/` — numbers, enums, prerequisite structures and
+  source citations, with no rulebook text in it. See [`LICENSE`](LICENSE) and
+  [`rules/core/LICENSE`](rules/core/LICENSE).
+- **The Ars Magica rules text — CC BY-SA 4.0.** The authoritative Markdown in
+  `rules/source/<lang>/` in full, **and the rules text extracted from it into the
+  string values of `rules/i18n/<lang>/`** — the spell, Virtue/Flaw, Ability, Art,
+  House and equipment names and descriptions, much of it verbatim rulebook prose.
+  Derived from material ©1993–2024 Trident, Inc. d/b/a Atlas Games and
+  redistributed under the **Ars Magica Open License** (Creative Commons
+  Attribution-ShareAlike 4.0). Translations of that text are derivatives and are
+  CC BY-SA 4.0 too. See [`rules/source/LICENSE`](rules/source/LICENSE) and
+  [`rules/i18n/LICENSE`](rules/i18n/LICENSE).
+
+  In plain terms: **reusing the format needs only MIT — writing your own data
+  against this schema, translating into a new language, or building tooling on
+  it. Redistributing or adapting the Ars Magica text keeps CC BY-SA 4.0 with
+  attribution.**
+
 - **Rule provenance** — every implemented mechanic is traced back to its source
   passage (book + line range) in
   [`crates/arm-rules/RULES.md`](crates/arm-rules/RULES.md), the single
@@ -221,6 +234,10 @@ The rulebook Markdown originates from these Open License repositories:
 - **English** — [OriginalMadman/Ars-Magica-Open-License](https://github.com/OriginalMadman/Ars-Magica-Open-License),
   via the fork at [garin1000/Ars-Magica-Open-License](https://github.com/garin1000/Ars-Magica-Open-License)
 - **German** — [garin1000/Ars-Magica-Open-License-German](https://github.com/garin1000/Ars-Magica-Open-License-German)
+
+Installers and portable archives ship both bodies of work side by side, with
+[`rules/NOTICE.md`](rules/NOTICE.md) travelling alongside them to carry the full
+attribution.
 
 *Ars Magica is a trademark of Trident, Inc. d/b/a Atlas Games. This is an
 unofficial fan tool and is not affiliated with or endorsed by Atlas Games.*

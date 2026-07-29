@@ -2,9 +2,18 @@ Ars Magica rulebook content — Ars Magica Open License (CC-BY-SA 4.0)
 ===================================================================
 
 This directory (`rules/source/`) contains the human-authored Ars Magica 5th
-Edition rulebook text used as the authoritative source for this project. This
-content is NOT covered by the MIT License that governs the project's source code
-(see the top-level `LICENSE` file).
+Edition rulebook text used as the authoritative source for this project. All of
+it is covered by the terms below, and NONE of it is covered by the MIT License
+that governs the project's source code (see the top-level `LICENSE` file).
+
+These terms follow the text wherever it goes. In particular they also govern the
+rules text extracted from this Markdown into the string values of
+`rules/i18n/<lang>/` — the names, descriptions, summaries and specialties the
+application displays. That directory is dual-licensed: its JSON *form* (schema,
+key names, the slug-identifier scheme) is MIT, while the rules *text* it carries
+is CC-BY-SA 4.0 under these terms. See `rules/i18n/LICENSE` for that split. The
+language-neutral mechanics in `rules/core/` contain no rulebook text and are MIT
+throughout — see `rules/core/LICENSE`.
 
 Attribution
 -----------
@@ -40,7 +49,14 @@ Share-alike obligation
 
 Under CC-BY-SA 4.0, any adapted or derived version of this rulebook content must
 be distributed under the same license, with attribution preserved. This applies
-to the Markdown in this directory and to any derivative produced from it.
+to the Markdown in this directory, to the rules text extracted from it into the
+string values of `rules/i18n/<lang>/`, to translations of that text into further
+languages, and to any other derivative produced from any of them.
+
+It does not extend to the JSON *form* that text is stored in, nor to the
+language-neutral mechanics in `rules/core/`, which are this project's own work
+and are MIT-licensed. Shipping the two together in one installer or archive is a
+collection, not an adaptation.
 
 This project is an unofficial fan tool. It is not affiliated with, sponsored by,
 or endorsed by Atlas Games.

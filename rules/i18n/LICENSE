@@ -1,0 +1,61 @@
+Localized Ars Magica rules text — dual licensed (MIT form / CC-BY-SA 4.0 text)
+==============================================================================
+
+This directory is the one place in the project where two differently licensed
+bodies of work sit in the same files, so read this before reusing anything from
+it.
+
+The form is MIT
+---------------
+
+The JSON *form* is this project's own work and is covered by the MIT License in
+the top-level `LICENSE` file:
+
+  - the schema and the object/key names (`name`, `description`, `summary`,
+    `specialties`, ...),
+  - the stable slug-identifier scheme the text is keyed by
+    (`spell.aegis_of_the_hearth`, `virtue.puissant_ability`, `art.creo`, ...),
+  - the file layout, the split into one file per rules domain, and the key
+    ordering conventions.
+
+So writing your own data against this schema — a translation into a language
+this project does not ship, a homebrew catalogue, or tooling that reads and
+writes this format — needs only the MIT License.
+
+The text is CC-BY-SA 4.0
+------------------------
+
+The *string values* are extracted from the Ars Magica rulebooks and are NOT
+MIT-licensed. That covers every `name`, `description`, `summary` and
+`specialties` entry under `<lang>/` — the spell, Virtue/Flaw, Ability, Art,
+House and equipment text the application displays. Much of it is verbatim
+rulebook prose; `en/spells.json` in particular carries full spell descriptions
+unchanged. It is derived expressive content and keeps the license of the
+Markdown it came from.
+
+A translation of that text is a derivative of it, so a new `<lang>/` directory
+filled with translated rules text is CC-BY-SA 4.0 as well — even though the
+schema it follows is MIT.
+
+Attribution
+-----------
+
+Based on the material for Ars Magica, ©1993–2024, licensed by Trident, Inc.
+d/b/a Atlas Games®, under the Creative Commons Attribution-ShareAlike 4.0
+International License ("CC-BY-SA 4.0"), commonly known as the Ars Magica Open
+License:
+
+    https://creativecommons.org/licenses/by-sa/4.0/
+
+Ars Magica is a trademark of Trident, Inc. d/b/a Atlas Games. Trademarks are not
+licensed under CC-BY-SA 4.0. This is an unofficial fan tool, not affiliated with,
+sponsored by, or endorsed by Atlas Games.
+
+See also
+--------
+
+  ../source/LICENSE   full attribution, trademark and share-alike terms
+  ../core/LICENSE     the language-neutral mechanics (MIT throughout)
+  ../../LICENSE       the project's MIT License and the overall scope statement
+
+Project: https://github.com/garin1000/Ars-Magica-Character-Generator
