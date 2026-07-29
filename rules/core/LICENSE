@@ -1,0 +1,20 @@
+Language-neutral rules mechanics — MIT
+======================================
+
+Everything in this directory is covered by the MIT License in the top-level
+`LICENSE` file, with no CC-BY-SA 4.0 carve-out.
+
+These files carry no rulebook text: only slug identifiers, numbers, enums,
+prerequisite and grant structures, and `source` citations recording the file and
+line range each value was taken from. Where a slug echoes a rulebook term
+(`spell.aegis_of_the_hearth`, `house.bjornaer`) it is used as an identifier, not
+as expressive content.
+
+The sibling `rules/i18n/` directory is different: its JSON form is MIT but the
+rules text in its string values is CC-BY-SA 4.0. See `../i18n/LICENSE`.
+
+Ars Magica is a trademark of Trident, Inc. d/b/a Atlas Games. This is an
+unofficial fan tool, not affiliated with, sponsored by, or endorsed by Atlas
+Games.
+
+Project: https://github.com/garin1000/Ars-Magica-Character-Generator

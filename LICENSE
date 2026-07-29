@@ -22,12 +22,66 @@ SOFTWARE.
 
 -------------------------------------------------------------------------------
 
-This MIT License applies ONLY to the source code of this project — the Rust
-crates (`crates/`), the Svelte/TypeScript frontend (`ui/`), build configuration,
-and the language-neutral mechanics and UI data files generated/authored for this
-project (`rules/core/`, `rules/i18n/`, `locales/`, `examples/`).
+SCOPE -- WHAT THIS MIT LICENSE COVERS
+------------------------------------
 
-It does NOT apply to the Ars Magica rulebook content under `rules/source/`, which
-is derived from copyrighted material owned by Trident, Inc. d/b/a Atlas Games and
-is redistributed under the Ars Magica Open License (CC-BY-SA 4.0). See
-`rules/source/LICENSE` for the terms governing that content.
+The MIT License above covers everything in this repository EXCEPT the Ars Magica
+rulebook material carved out below. That includes the Rust crates (`crates/`),
+the Svelte/TypeScript frontend (`ui/`), the Fluent UI strings (`locales/`), the
+sample saves (`examples/`), the extraction and helper tooling (`scripts/`), the
+documentation (`docs/`, `.github/`), and the build configuration and scripts.
+
+
+THE ARS MAGICA RULEBOOK MARKDOWN -- CC BY-SA 4.0
+-----------------------------------------------
+
+The rulebook text under `rules/source/` is NOT covered by the MIT License. It is
+derived from copyrighted material owned by Trident, Inc. d/b/a Atlas Games and is
+redistributed in full under the Ars Magica Open License, i.e. the Creative
+Commons Attribution-ShareAlike 4.0 International License ("CC BY-SA 4.0"):
+
+    https://creativecommons.org/licenses/by-sa/4.0/
+
+See `rules/source/LICENSE` for the attribution, trademark and share-alike terms.
+
+
+THE RULES JSON -- DUAL LICENSED, BY FORM AND BY CONTENT
+------------------------------------------------------
+
+The generated rules data in `rules/core/` and `rules/i18n/` holds two separable
+bodies of work, and they are licensed differently:
+
+  * THE FORM is MIT. The JSON schema, the object and key names, the stable
+    slug-identifier scheme, the file layout and ordering conventions, and all of
+    the language-neutral mechanics in `rules/core/` -- numbers, enums,
+    prerequisite and grant structures, and the citations back to the source text
+    -- were authored for this project and are covered by the MIT License above.
+    `rules/core/` contains no rulebook text at all; where a slug echoes a
+    rulebook term it is used as an identifier, not as expressive content.
+
+  * THE CONTENT is CC BY-SA 4.0. The human-readable rules text carried in the
+    string values of `rules/i18n/<lang>/` -- the spell, Virtue/Flaw, Ability,
+    Art, House and equipment names, descriptions, summaries and specialties --
+    is extracted from the rulebooks and is in places verbatim rulebook prose. It
+    is derived expressive content and carries the same CC BY-SA 4.0 terms as the
+    Markdown it came from. Translating that text produces a derivative, which is
+    likewise CC BY-SA 4.0.
+
+In plain terms: reusing the FORMAT -- writing your own data against this schema,
+or building tooling on it -- needs only the MIT License. Redistributing or
+adapting the Ars Magica rules TEXT keeps it under CC BY-SA 4.0 with attribution
+preserved.
+
+See `rules/core/LICENSE` and `rules/i18n/LICENSE` for the per-directory
+statement, and `rules/source/LICENSE` for the full CC BY-SA 4.0 terms.
+
+
+COMBINING THE TWO
+-----------------
+
+Distributing the CC BY-SA 4.0 rules content alongside the MIT-licensed
+application in a single installer or archive is a collection, not an adaptation.
+It does not place the application code under CC BY-SA 4.0.
+
+Ars Magica is a trademark of Trident, Inc. d/b/a Atlas Games. This is an
+unofficial fan tool and is not affiliated with or endorsed by Atlas Games.
