@@ -1080,6 +1080,51 @@ fn every_shipped_parameter_key_has_a_param_label_in_each_locale() {
     }
 }
 
+/// The CC-BY-SA rules text is bundled into every installer, so its attribution
+/// has to travel with it. `rules/NOTICE.md` is that attribution, and the only
+/// legal text that reaches a Linux user's disk — the deb/rpm/AppImage bundlers
+/// never read `bundle.licenseFile`. Without this test the sole check on it is a
+/// real bundle build, which only runs after a release tag is already pushed.
+#[test]
+fn attribution_notice_ships_with_the_bundled_rules_data() {
+    let notice = repo_root().join("rules/NOTICE.md");
+    assert!(
+        notice.is_file(),
+        "rules/NOTICE.md is missing; the bundled rules data would ship without \
+         its CC-BY-SA attribution"
+    );
+
+    let config: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(repo_root().join("crates/arm-app/tauri.conf.json")).unwrap(),
+    )
+    .unwrap();
+    let resources = &config["bundle"]["resources"];
+    assert!(
+        resources
+            .as_object()
+            .expect("bundle.resources should be a map of source -> destination")
+            .contains_key("../../rules/NOTICE.md"),
+        "tauri.conf.json bundle.resources must map ../../rules/NOTICE.md so the \
+         notice is installed alongside rules/core and rules/i18n"
+    );
+}
+
+/// Each rules directory states its own licensing, because the two are not the
+/// same: `rules/core/` is MIT throughout, while `rules/i18n/` is MIT in form and
+/// CC-BY-SA 4.0 in the rules text it carries. Both ride into the installers with
+/// the directories they describe.
+#[test]
+fn each_rules_directory_carries_its_own_license_file() {
+    for dir in ["core", "i18n"] {
+        let license = rules_dir().join(dir).join("LICENSE");
+        assert!(
+            license.is_file(),
+            "rules/{dir}/LICENSE is missing; the bundled data would not state \
+             which license covers it"
+        );
+    }
+}
+
 #[test]
 fn every_validation_code_has_a_fluent_key_in_each_locale() {
     let mut codes = validation_codes();

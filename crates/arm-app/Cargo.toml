@@ -4,6 +4,8 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "Tauri desktop shell for the Ars Magica character generator"
+repository.workspace = true
+homepage.workspace = true
 
 # Library holds the testable command logic; the binary is a thin launcher.
 [lib]

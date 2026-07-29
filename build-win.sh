@@ -61,17 +61,26 @@ VERSION="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' \
   crates/arm-app/tauri.conf.json | head -1)"
 VERSION="${VERSION:-0.0.0}"
 
-NAME="arm-char-gen-${VERSION}-win-x64-portable"
+# Hyphenated form of the Tauri productName: the installers get the spaced name,
+# but the portable layout keeps hyphens so paths stay easy to type.
+APP="Ars-Magica-Character-Generator"
+NAME="${APP}-${VERSION}-win-x64-portable"
 STAGE="dist-win/${NAME}"
 
 echo ">> Staging portable bundle at $STAGE..."
 rm -rf "dist-win"
 mkdir -p "$STAGE/rules"
-cp "target/$TARGET/release/arm-app.exe" "$STAGE/arm-char-gen.exe"
+cp "target/$TARGET/release/arm-app.exe" "$STAGE/${APP}.exe"
 # A non-bundled binary resolves BaseDirectory::Resource to its own directory, so
 # the rules data the app loads at startup must sit next to the executable.
 cp -R "rules/core" "$STAGE/rules/core"
 cp -R "rules/i18n" "$STAGE/rules/i18n"
+# Attribution has to travel with the data it describes. Bundled installers get
+# these from tauri.conf.json (bundle.resources + licenseFile), which this
+# --no-bundle path never runs, so copy them explicitly. The per-directory
+# LICENSE files ride along with the cp -R above.
+cp "rules/NOTICE.md" "$STAGE/rules/NOTICE.md"
+cp "LICENSE" "$STAGE/LICENSE.txt"
 
 # Run instructions + system requirements travel inside the zip.
 cat > "$STAGE/README.txt" <<EOF
@@ -80,9 +89,9 @@ Version ${VERSION}
 
 HOW TO RUN
   1. Unzip this folder anywhere (Desktop, USB stick, etc.).
-  2. Double-click  arm-char-gen.exe
+  2. Double-click  ${APP}.exe
 
-  Keep arm-char-gen.exe and the "rules" folder together in the same
+  Keep ${APP}.exe and the "rules" folder together in the same
   directory — the app loads its rules data from .\\rules at startup.
   Moving the .exe out on its own will stop it from launching correctly.
 
@@ -99,6 +108,13 @@ NOTES
     entries. Delete the folder to remove it.
   - Windows SmartScreen may warn on first launch because the binary is
     unsigned ("More info" -> "Run anyway").
+
+LICENSING
+  The application is MIT licensed (see LICENSE.txt), and so is the form of the
+  rules data — its JSON schema, identifiers and the mechanics in rules\\core.
+  The Ars Magica rules TEXT in rules\\i18n is (c) 1993-2024 Trident, Inc. d/b/a
+  Atlas Games, used under CC BY-SA 4.0. See rules\\NOTICE.md for the full
+  attribution and terms.
 EOF
 
 echo ">> Zipping..."

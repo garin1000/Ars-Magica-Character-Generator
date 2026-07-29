@@ -38,20 +38,30 @@ VERSION="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' \
   crates/arm-app/tauri.conf.json | head -1)"
 VERSION="${VERSION:-0.0.0}"
 
-NAME="arm-char-gen-${VERSION}-linux-x64-portable"
+# Hyphenated form of the Tauri productName: the installers get the spaced name,
+# but a binary with spaces is painful to invoke from a shell, so the portable
+# layout uses hyphens.
+APP="Ars-Magica-Character-Generator"
+NAME="${APP}-${VERSION}-linux-x64-portable"
 STAGE="dist-linux/${NAME}"
 
 echo ">> Staging portable bundle at $STAGE..."
 rm -rf "dist-linux"
 mkdir -p "$STAGE/rules"
-cp "target/release/arm-app" "$STAGE/arm-char-gen"
-chmod +x "$STAGE/arm-char-gen"
+cp "target/release/arm-app" "$STAGE/$APP"
+chmod +x "$STAGE/$APP"
 # The rules data the app loads at startup must sit next to the executable: a
 # portable Linux binary does NOT resolve BaseDirectory::Resource to its own
 # directory (Tauri falls back to /usr/lib/<name> there), so load_ruleset also
 # looks in ./rules next to the exe — which is where this stages it.
 cp -R "rules/core" "$STAGE/rules/core"
 cp -R "rules/i18n" "$STAGE/rules/i18n"
+# Attribution has to travel with the data it describes. Bundled installers get
+# these from tauri.conf.json (bundle.resources + licenseFile), which this
+# --no-bundle path never runs, so copy them explicitly. The per-directory
+# LICENSE files ride along with the cp -R above.
+cp "rules/NOTICE.md" "$STAGE/rules/NOTICE.md"
+cp "LICENSE" "$STAGE/LICENSE.txt"
 
 # Run instructions + system requirements travel inside the archive.
 cat > "$STAGE/README.txt" <<EOF
@@ -62,9 +72,9 @@ HOW TO RUN
   1. Extract this archive anywhere (home folder, USB stick, etc.):
        tar -xzf ${NAME}.tar.gz
   2. Run the launcher:
-       ./${NAME}/arm-char-gen
+       ./${NAME}/${APP}
 
-  Keep the arm-char-gen binary and the "rules" folder together in the same
+  Keep the ${APP} binary and the "rules" folder together in the same
   directory — the app loads its rules data from ./rules at startup. Moving the
   binary out on its own will stop it from launching correctly.
 
@@ -85,8 +95,15 @@ NOTES
   - This is a portable build: it installs nothing and writes no system files.
     Delete the folder to remove it.
   - The binary is unsigned. If your desktop refuses to launch it from a file
-    manager, mark it executable (chmod +x arm-char-gen) or run it from a
+    manager, mark it executable (chmod +x ${APP}) or run it from a
     terminal as shown above.
+
+LICENSING
+  The application is MIT licensed (see LICENSE.txt), and so is the form of the
+  rules data — its JSON schema, identifiers and the mechanics in rules/core.
+  The Ars Magica rules TEXT in rules/i18n is (c) 1993-2024 Trident, Inc. d/b/a
+  Atlas Games, used under CC BY-SA 4.0. See rules/NOTICE.md for the full
+  attribution and terms.
 EOF
 
 echo ">> Creating tarball..."
