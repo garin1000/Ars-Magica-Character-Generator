@@ -1,0 +1,18 @@
+# Every pull request needs the maintainer's review.
+*                                @garin1000
+
+# Licensing-critical paths. Changes here are either CC-BY-SA 4.0 content or the
+# license terms themselves, so they always get a second look.
+/LICENSE                         @garin1000
+/CONTRIBUTING.md                 @garin1000
+/rules/NOTICE.md                 @garin1000
+/rules/core/LICENSE              @garin1000
+/rules/i18n/LICENSE              @garin1000
+/rules/source/                   @garin1000
+/rules/i18n/                     @garin1000
+
+# Release plumbing and packaging metadata.
+/.github/                        @garin1000
+/crates/arm-app/tauri.conf.json  @garin1000
+/build-linux.sh                  @garin1000
+/build-win.sh                    @garin1000

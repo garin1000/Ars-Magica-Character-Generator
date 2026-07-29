@@ -128,7 +128,7 @@ which bypass this machinery completely. To stay inside it, every agent MUST:
   use the Write tool). Brace *expansion* in an argument (`src/*.{rs,toml}`) is likewise
   out: use a plain glob or repeat the argument.
 - **Never prefix a repo-root command with `cd <repo> &&`.** You already start in
-  `<repo>`, so that `cd` is dead weight — and it makes the
+  the repository root (`<repo>`), so that `cd` is dead weight — and it makes the
   analyzer prompt even though both stages are allowlisted, because relocating the shell
   changes what the next stage operates on. Observed repeatedly: `git log --oneline …`
   and `git diff … -- crates/…` run silently on their own, but
@@ -169,7 +169,8 @@ which bypass this machinery completely. To stay inside it, every agent MUST:
   and `npm run <script>`. NEVER bare `npm`/`node`, `npm install`, `npm ci`, or
   **`npm --prefix <dir> run …`** — none of those match `npm run:*`, so they are denied.
 - **Run the UI gate as one compound call:** `cd <repo>/ui && npm run <script>` — e.g.
-  `cd <repo>/ui && npm run check`. Both stages are allowlisted
+  `cd <repo>/ui && npm run check`, where `<repo>` is the repository root spelled out
+  as an absolute path. Both stages are allowlisted
   (`cd:*` + `npm run:*`) so the whole line auto-approves, and using the absolute path makes
   it independent of the current working directory. Do NOT rely on a bare `cd ui` from an
   earlier call persisting, and do NOT use `npm --prefix ui run …` (not allowlisted). Run
@@ -260,7 +261,8 @@ Prompt context (paste PROJECT_CONTEXT below + this):
 >
 > If ui/ exists, also run its type-check, tests, lint, and format — each as a
 > `cd <repo>/ui && npm run <script>` compound (see Command hygiene), e.g.
-> `cd <repo>/ui && npm run check`, then `npm run test:unit`,
+> `cd <repo>/ui && npm run check` (with `<repo>` as the absolute repository root),
+> then `npm run test:unit`,
 > `npm run lint`, `npm run format:check`.
 > `npm run check` (svelte-check) is MANDATORY: vitest does NOT type-check, so TS
 > type errors (including in test files) pass `test:unit` yet break the build.
