@@ -10,9 +10,10 @@
 
 <p align="center">
   <a href="#status"><img src="https://img.shields.io/badge/status-in%20development-orange" alt="Status"></a>
-  <img src="https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-blue" alt="Platforms">
+  <img src="https://img.shields.io/badge/downloads-Windows%20%7C%20Linux-blue" alt="Downloads: Windows and Linux">
   <img src="https://img.shields.io/badge/rust-2024%20edition-informational" alt="Rust 2024">
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
+  <img src="https://img.shields.io/badge/code-MIT-green" alt="Code license: MIT">
+  <img src="https://img.shields.io/badge/rules%20text-CC--BY--SA%204.0-green" alt="Rules text license: CC BY-SA 4.0">
 </p>
 
 ---
@@ -33,6 +34,35 @@ Three input modes cover the spectrum from hand-holding to power-user:
 Everything runs locally. There is no server, no account, and no telemetry. Saves
 are plain JSON that record your *choices* (plus the ruleset id and version), so
 they stay portable and diff-friendly.
+
+## Download
+
+Grab the latest build from the
+[**releases page**](https://github.com/garin1000/Ars-Magica-Character-Generator/releases/latest).
+
+| Platform | File | How to install |
+|----------|------|----------------|
+| Linux, any distro | `.AppImage` | `chmod +x` it and run — installs nothing |
+| Linux (Debian, Ubuntu) | `.deb` | `sudo apt install ./<file>.deb` |
+| Linux (Fedora, openSUSE) | `.rpm` | `sudo dnf install ./<file>.rpm` |
+| Windows 10/11, 64-bit | `.msi` **or** setup `.exe` | Either installer works — pick one |
+
+**Requirements.** On Linux the app renders in the system WebView, so it needs
+**WebKitGTK 4.1** (`libwebkit2gtk-4.1-0` on Debian/Ubuntu, `webkit2gtk4.1` on
+Fedora, `webkit2gtk-4.1` on Arch); the `.deb` and `.rpm` pull it in for you. On
+Windows it needs the **WebView2 runtime**, which is preinstalled on Windows 11
+and on up-to-date Windows 10.
+
+**The binaries are unsigned.** Windows SmartScreen will warn on first launch —
+choose *More info → Run anyway*. The Linux packages are unsigned too.
+
+**There is no prebuilt macOS download.** The app builds and runs on macOS from
+source (`cargo tauri build`), but no signed `.dmg` is published.
+
+Prefer something you can drop on a USB stick? `./build-linux.sh` and
+`./build-win.sh` produce self-contained portable archives that install nothing
+and write no registry entries. These are not published by CI — you build them
+yourself.
 
 ## Highlights
 
@@ -102,66 +132,91 @@ support is new data plus thin UI — never an engine rewrite.
 
 Active development. The engine, Tauri integration, and a direct-entry UI are in
 place and tested end to end (engine unit tests, webview-free command integration
-tests, and a real-binary `tauri-driver` E2E). Characters can be built with
-virtues/flaws, point-buy Characteristics, whole bought Ability scores, and — for
-magi — whole bought Hermetic Art scores, with Abilities and Arts drawing from one
-shared experience pool, all validated live. A character-type selector switches
-between grog, companion, mythic companion, and magus; the Arts, Spells, and Magic
-Items tabs appear only for magus-capable types. The Magic Items tab stores a
-magus's starting possessions — aura, enchanted devices (charged against the
-item-level budget their Virtues grant), a familiar, a talisman, and a self-made
-or external Longevity Ritual with its aging bonus, its focus, and the permanent
-sterility it causes. Because the ritual's bonus was fixed by the Lab Total of the
-season it was made, it is entered and stored rather than derived; beside the input
-the engine suggests what a ritual made now would be worth, from the live Creo
-Corpus Lab Total, halvings included. The talisman is the magus's personal
-enchanted item: its shape and material, its shape-and-material attunements, and
-the effects instilled in it, with a read-only capacity read-out (highest Technique
-+ highest Form, in pawns of Vim vis) beside them. The familiar is entered as the
-magical animal it is, in the rulebook's own creature format: the animal, its Magic
-Might, the eight Characteristics, a (usually negative) Size, Personality Traits,
-the Gold/Silver/Bronze bond cords, and the powers invested in the bond — with
-read-only guidance for the bonding level (Might + 25 + 5 × Size), the best bonding
-Lab Total, what the cords cost off the 5/15/30/50/75 curve, and the total level
-invested. The bond's own grants (True Friend, Loyal (partner) +3, Intelligence -3)
-are shown as a note rather than applied silently, and no number the familiar
-carries can ever raise a validation error. An Equipment tab — available to every
-character type — records the weapons, shields,
-and armor a character carries from the Core Rules equipment catalogue (English +
-German), marking each equipped. The full Core Rules Ability catalogue and the
-full 15-Art catalogue (English + German) ship with localized descriptions;
-abilities also carry example specialties and the "cannot be used untrained"
-marker, and the complete Core Rules spell catalogue ships with each spell's
-Range/Duration/Target and ritual legality. Score-boosting Virtues
-(Puissant Ability, Puissant Art +3, Great Characteristic) compute an effective
-score that drives prerequisites, the +5 characteristic ceiling, and a read-only
-display badge. Virtues with experience effects are modelled too: Affinity
-(Ability/Art) reduces the XP charged for its target, the restricted-pool Virtues
-(Educated, Warrior, Privileged Upbringing) grant experience spendable only on
-eligible Abilities (allocated by a max-flow solve so overlapping pools resolve
-correctly), Improved Characteristics raises the Characteristic-buy budget, and
-starting-score Virtues (Second Sight, Premonitions) confer their Ability at a
-free floor. The Details tab captures identity/flavor fields (name, gender, birth
-year, Wizard's sigil, covenant, parens) and an already-aged / already-warped
-character's raw state — aging points and completed Characteristic reductions,
-Warping Points, and free-text Twilight Scars — from which the engine derives the
-Decrepitude and Warping scores (aging reductions lower derived/play stats but never
-the point-buy the creation checks read). Every in-play Virtue/Flaw effect
-(Magical Focus, Method Caster, Deficient Technique/Form, Tough, and the rest of
-the 653-entry catalogue) is modelled, and a read-out panel computes the full
-in-play totals in-engine — per-Technique/Form Lab and Casting Totals, per-spell
-Penetration, per-Form Magic Resistance, combat lines (a one-handed weapon reads out
-twice while a shield is equipped: with the shield, and bare), Soak,
-Encumbrance, fatigue and wound ranges, and the stored Longevity bonus beside the
-suggestion for a ritual made today — from a numeric aura input. With this any core-rules character is fully
-enterable **and** fully computable in direct entry (milestone M5 complete). A
-finished character can then be exported as a formatted Markdown sheet (M5.6): the
-engine assembles the document from the character and the localized rules text while
-the section headings come from the UI's own Fluent strings, so the sheet is
-localized without any user-facing text living in the engine, and the per-line
-casting/lab read-outs are deliberately left out as export noise. Next comes the
-guided creation wizard with its life-stage XP flow, which merely orchestrates these
-existing input surfaces — see [PLAN.md](PLAN.md) for the milestone breakdown.
+tests, and a real-binary `tauri-driver` E2E). Any core-rules character is fully
+enterable **and** fully computable in direct entry — milestone M5 complete, with
+Markdown export added in M5.6.
+
+### What works today
+
+- **Character creation.** Characters can be built with virtues/flaws, point-buy
+  Characteristics, whole bought Ability scores, and — for magi — whole bought
+  Hermetic Art scores, with Abilities and Arts drawing from one shared experience
+  pool, all validated live. A character-type selector switches between grog,
+  companion, mythic companion, and magus; the Arts, Spells, and Magic Items tabs
+  appear only for magus-capable types.
+
+- **Magic Items: devices and the Longevity Ritual.** The Magic Items tab stores a
+  magus's starting possessions — aura, enchanted devices (charged against the
+  item-level budget their Virtues grant), a familiar, a talisman, and a self-made
+  or external Longevity Ritual with its aging bonus, its focus, and the permanent
+  sterility it causes. Because the ritual's bonus was fixed by the Lab Total of
+  the season it was made, it is entered and stored rather than derived; beside the
+  input the engine suggests what a ritual made now would be worth, from the live
+  Creo Corpus Lab Total, halvings included.
+
+- **Talisman.** The magus's personal enchanted item: its shape and material, its
+  shape-and-material attunements, and the effects instilled in it, with a
+  read-only capacity read-out (highest Technique + highest Form, in pawns of Vim
+  vis) beside them.
+
+- **Familiar.** Entered as the magical animal it is, in the rulebook's own
+  creature format: the animal, its Magic Might, the eight Characteristics, a
+  (usually negative) Size, Personality Traits, the Gold/Silver/Bronze bond cords,
+  and the powers invested in the bond — with read-only guidance for the bonding
+  level (Might + 25 + 5 × Size), the best bonding Lab Total, what the cords cost
+  off the 5/15/30/50/75 curve, and the total level invested. The bond's own grants
+  (True Friend, Loyal (partner) +3, Intelligence -3) are shown as a note rather
+  than applied silently, and no number the familiar carries can ever raise a
+  validation error.
+
+- **Equipment.** An Equipment tab — available to every character type — records
+  the weapons, shields, and armor a character carries from the Core Rules
+  equipment catalogue (English + German), marking each equipped.
+
+- **Catalogues.** The full Core Rules Ability catalogue and the full 15-Art
+  catalogue (English + German) ship with localized descriptions; abilities also
+  carry example specialties and the "cannot be used untrained" marker, and the
+  complete Core Rules spell catalogue ships with each spell's Range/Duration/Target
+  and ritual legality.
+
+- **Score-boosting Virtues.** Puissant Ability, Puissant Art +3 and Great
+  Characteristic compute an effective score that drives prerequisites, the +5
+  characteristic ceiling, and a read-only display badge.
+
+- **Experience-effect Virtues.** Affinity (Ability/Art) reduces the XP charged for
+  its target; the restricted-pool Virtues (Educated, Warrior, Privileged
+  Upbringing) grant experience spendable only on eligible Abilities, allocated by
+  a max-flow solve so overlapping pools resolve correctly; Improved Characteristics
+  raises the Characteristic-buy budget; and starting-score Virtues (Second Sight,
+  Premonitions) confer their Ability at a free floor.
+
+- **Details, aging and Warping.** The Details tab captures identity/flavor fields
+  (name, gender, birth year, Wizard's sigil, covenant, parens) and an already-aged
+  / already-warped character's raw state — aging points and completed
+  Characteristic reductions, Warping Points, and free-text Twilight Scars — from
+  which the engine derives the Decrepitude and Warping scores (aging reductions
+  lower derived/play stats but never the point-buy the creation checks read).
+
+- **In-play effects and the totals read-out.** Every in-play Virtue/Flaw effect
+  (Magical Focus, Method Caster, Deficient Technique/Form, Tough, and the rest of
+  the 653-entry catalogue) is modelled, and a read-out panel computes the full
+  in-play totals in-engine from a numeric aura input — per-Technique/Form Lab and
+  Casting Totals, per-spell Penetration, per-Form Magic Resistance, combat lines
+  (a one-handed weapon reads out twice while a shield is equipped: with the
+  shield, and bare), Soak, Encumbrance, fatigue and wound ranges, and the stored
+  Longevity bonus beside the suggestion for a ritual made today.
+
+- **Markdown export.** A finished character exports as a formatted Markdown
+  sheet: the engine assembles the document from the character and the localized
+  rules text while the section headings come from the UI's own Fluent strings, so
+  the sheet is localized without any user-facing text living in the engine. The
+  per-line casting/lab read-outs are deliberately left out as export noise.
+
+### Next
+
+The guided creation wizard with its life-stage XP flow, which merely orchestrates
+these existing input surfaces — see [PLAN.md](PLAN.md) for the milestone
+breakdown.
 
 ## Getting started
 
@@ -194,7 +249,13 @@ cargo fmt --check
 # Frontend
 cd ui && npm run dev          # dev server
 cd ui && npm run lint         # eslint + prettier
-cd ui && npm run test:e2e     # headless E2E (needs webkit2gtk-driver on Linux)
+cd ui && npm run test:unit     # vitest
+cd ui && npm run format:check  # prettier
+
+# Real-binary E2E. Needs tauri-driver, webkit2gtk-driver, and a display —
+# it is not headless. Wrap it in xvfb-run to run without one:
+cd ui && npm run test:e2e
+cd ui && xvfb-run -a npm run test:e2e
 ```
 
 ## Rules sources & licensing
