@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "arm-char-gen",
+  "productName": "Ars Magica Character Generator",
   "version": "0.2.0",
   "identifier": "io.github.garin1000.armchargen",
   "build": {
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "arm-char-gen",
+        "title": "Ars Magica Character Generator",
         "width": 1100,
         "height": 800,
         "minWidth": 900,
@@ -28,9 +28,18 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "publisher": "Ars Magica 5th Edition Character Generator contributors",
+    "homepage": "https://github.com/garin1000/Ars-Magica-Character-Generator",
+    "copyright": "Copyright (c) 2026 Ars Magica 5th Edition Character Generator contributors. Ars Magica rulebook content (c) 1993-2024 Trident, Inc. d/b/a Atlas Games, used under CC BY-SA 4.0.",
+    "license": "MIT AND CC-BY-SA-4.0",
+    "licenseFile": "../../LICENSE",
+    "category": "Utility",
+    "shortDescription": "Character and covenant generator for Ars Magica 5th Edition",
+    "longDescription": "A locally installed desktop generator for Ars Magica 5th Edition characters — grogs, companions, mythic companions and magi — as well as covenants, built on one shared rules engine. Offers a guided wizard, direct validated entry, and fully unchecked entry. Available in English and German. Everything runs locally: no server, no account, no telemetry. Saves are plain JSON recording your choices.",
     "resources": {
       "../../rules/core": "rules/core",
-      "../../rules/i18n": "rules/i18n"
+      "../../rules/i18n": "rules/i18n",
+      "../../rules/NOTICE.md": "rules/NOTICE.md"
     },
     "icon": [
       "icons/32x32.png",

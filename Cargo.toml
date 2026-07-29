@@ -6,6 +6,8 @@ members = ["crates/arm-rules", "crates/arm-app"]
 version = "0.2.0"
 edition = "2024"
 license = "MIT"
+repository = "https://github.com/garin1000/Ars-Magica-Character-Generator"
+homepage = "https://github.com/garin1000/Ars-Magica-Character-Generator"
 
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }

@@ -2,6 +2,12 @@
   "name": "arm-char-gen-ui",
   "private": true,
   "version": "0.2.0",
+  "description": "Svelte 5 frontend for the Ars Magica 5th Edition Character Generator",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/garin1000/Ars-Magica-Character-Generator.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
