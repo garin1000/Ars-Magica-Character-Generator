@@ -737,16 +737,70 @@ ul {
   padding: 0;
 }
 
+/* A selected spell row: the name, then the per-spell controls. Rows are top
+   aligned because the name may wrap to two lines and the mastery controls stack
+   into two — both blocks read from the row's top edge rather than drifting
+   around a vertical centre. */
 .spell-list li {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.5rem;
+  padding: 0.25rem 0;
+}
+
+/* Spell names are long ("The Incantation of Lightning", "True Rest of the
+   Injured Brute"), so the name takes the row's free width and never shrinks
+   below a readable measure — without the basis/min-width it collapses to the
+   controls' leftovers and wraps one word per line. */
+.spell-list .item-name {
+  flex: 1 1 14rem;
+  min-width: 9rem;
+  /* Align the first line with the adjacent 1.6rem control buttons. */
+  line-height: 1.6rem;
+}
+
+/* The mastery score spinner and the mastery special abilities stack vertically
+   in one column beside the name. Side by side they consume the whole row and
+   leave the name a few characters' width; stacked, each is one short line. */
+.spell-mastery-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.mastery-abilities {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  padding: 0.15rem 0;
+  gap: 0.3rem;
+  min-width: 0;
 }
 
-.spell-list .item-name {
-  flex: 1;
+/* A chosen mastery special ability: a compact chip carrying its own remove
+   button, so several fit on the abilities line without a list of full rows. */
+.ability-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding-left: 0.4rem;
+  border: 1px solid var(--divider);
+  border-radius: 999px;
+}
+
+.chip-name {
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+/* The row's remove button keeps to the right edge of whatever line it lands on:
+   on a narrow panel the mastery block wraps below the name, and without this the
+   remove button would trail the wrapped controls mid-row. */
+.spell-list li > button:last-child {
+  margin-left: auto;
 }
 
 /* Details tab: age, Confidence readout, Personality Traits, Reputations.
