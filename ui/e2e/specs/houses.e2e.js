@@ -4,8 +4,10 @@
 // unresolved pick raises a localized issue, and an `open` grant is additive (it
 // never charges the bought budget). All against the real binary.
 //
-// NOTE: requires a display + the production binary (see e2e/README.md). The
-// wdio `onPrepare` hook builds `target/release/arm-app`.
+// NOTE: requires the production binary; the display comes from your desktop
+// session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
+// (see e2e/README.md). The wdio `onPrepare` hook builds
+// `target/release/arm-app`.
 //
 // Coverage boundary (mirrors validation-errors.e2e.js): two Phase-4 facts are
 // NOT click-reachable in the shipped `rules/core/` seed, so they are asserted by

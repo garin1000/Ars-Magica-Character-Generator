@@ -4,7 +4,9 @@
 // exclusion: a hand-authored clique (Gentle vs Blatant Gift) and a Major/Minor
 // magnitude pair of the same Flaw (Ambitious). Drives the real binary.
 //
-// NOTE: requires a display + the production binary (see e2e/README.md).
+// NOTE: requires the production binary; the display comes from your desktop
+// session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
+// (see e2e/README.md).
 
 import { $, browser, expect } from '@wdio/globals';
 

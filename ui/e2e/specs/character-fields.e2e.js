@@ -5,7 +5,9 @@
 //
 // The wdio session is shared, so the `it` blocks run as one ordered narrative.
 //
-// NOTE: requires a display + the production binary (see e2e/README.md).
+// NOTE: requires the production binary; the display comes from your desktop
+// session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
+// (see e2e/README.md).
 
 import { $, $$, expect, browser } from '@wdio/globals';
 import fs from 'node:fs';

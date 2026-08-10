@@ -5,8 +5,10 @@
 // raises the balance ceilings by the type's bonus points (Devil Child 37/17).
 // A required Flaw is swappable for a substitute. All against the real binary.
 //
-// NOTE: requires a display + the production binary (see e2e/README.md). The
-// wdio `onPrepare` hook builds `target/release/arm-app`.
+// NOTE: requires the production binary; the display comes from your desktop
+// session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
+// (see e2e/README.md). The wdio `onPrepare` hook builds
+// `target/release/arm-app`.
 
 import { $, expect, browser } from '@wdio/globals';
 

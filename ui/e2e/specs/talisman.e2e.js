@@ -5,8 +5,10 @@
 // Then the schema-14 shape on disk, and the legacy-save migration through the
 // shipped binary's own Open path.
 //
-// NOTE: requires a display + the production binary (see e2e/README.md). The wdio
-// `onPrepare` hook builds `target/release/arm-app`.
+// NOTE: requires the production binary; the display comes from your desktop
+// session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
+// (see e2e/README.md). The wdio `onPrepare` hook builds
+// `target/release/arm-app`.
 
 import { $, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';

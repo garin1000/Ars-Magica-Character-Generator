@@ -6,8 +6,10 @@
 // The wdio session is shared across the `it` blocks below, so they run as one
 // ordered narrative (each builds on the prior state), like the Arts spec.
 //
-// NOTE: requires a display + the production binary (see e2e/README.md). The
-// wdio `onPrepare` hook builds `target/release/arm-app`.
+// NOTE: requires the production binary; the display comes from your desktop
+// session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
+// (see e2e/README.md). The wdio `onPrepare` hook builds
+// `target/release/arm-app`.
 
 import { $, $$, expect, browser } from '@wdio/globals';
 import fs from 'node:fs';

@@ -2,9 +2,10 @@
 // reported. Enforced keeps errors, Advisory downgrades them to warnings, Silent
 // clears the panel entirely. Drives the real binary.
 //
-// NOTE: requires a display + the production binary (see e2e/README.md). The
-// wdio `onPrepare` hook builds `target/release/arm-app`, so this cannot run
-// without that build step.
+// NOTE: requires the production binary; the display comes from your desktop
+// session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
+// (see e2e/README.md). The wdio `onPrepare` hook builds
+// `target/release/arm-app`, so this cannot run without that build step.
 
 import { $, $$, expect } from '@wdio/globals';
 

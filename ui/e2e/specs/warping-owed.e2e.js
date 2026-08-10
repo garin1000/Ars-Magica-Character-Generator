@@ -6,7 +6,9 @@
 // Drives the real production binary. Runs last alphabetically and restores the
 // type to companion at the end so it leaves no state behind.
 //
-// NOTE: requires a display + the production binary (see e2e/README.md).
+// NOTE: requires the production binary; the display comes from your desktop
+// session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
+// (see e2e/README.md).
 
 import { $, $$, browser, expect } from '@wdio/globals';
 

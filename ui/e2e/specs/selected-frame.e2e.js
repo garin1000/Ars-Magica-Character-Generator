@@ -16,8 +16,10 @@
 // scrolling, which reserves that padding as an unscrollable gap. The third test
 // below pins exactly that.
 //
-// NOTE: requires a display + the production binary (see e2e/README.md). The wdio
-// `onPrepare` hook builds `target/release/arm-app`.
+// NOTE: requires the production binary; the display comes from your desktop
+// session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
+// (see e2e/README.md). The wdio `onPrepare` hook builds
+// `target/release/arm-app`.
 
 import { $, $$, browser, expect } from '@wdio/globals';
 
