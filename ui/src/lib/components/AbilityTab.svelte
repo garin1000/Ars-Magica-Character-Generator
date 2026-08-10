@@ -48,7 +48,7 @@
   const grantedSupernatural = $derived.by(() => {
     const granted = new Set<string>();
     const items = store.ruleset?.ruleset.point_items ?? {};
-    for (const selection of store.entity.selections) {
+    for (const selection of store.entity.selections ?? []) {
       for (const effect of items[selection.ref]?.effects ?? []) {
         if (effect.type === 'ability_score_grant') granted.add(effect.ability);
       }

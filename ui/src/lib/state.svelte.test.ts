@@ -255,7 +255,7 @@ describe('createCharacter', () => {
   it("seeds the profile's mandatory free traits (The Gift + Hermetic Magus)", async () => {
     installRuleset([gift(), hermeticMagus()], [], magusProfiles);
     await store.createCharacter('magus');
-    const refs = store.entity.selections.map((s) => s.ref).sort();
+    const refs = store.entity.selections!.map((s) => s.ref).sort();
     expect(refs).toEqual(['virtue.hermetic_magus', 'virtue.the_gift']);
   });
 
@@ -353,11 +353,13 @@ describe('open() and the startup view', () => {
   });
 
   // The engine's canonical JSON omits `selections` when it is empty, and serde
-  // re-defaults it Rust-side — JavaScript does not. `selections` is the one
-  // omit-when-empty field the frontend treats as always present (five components
-  // iterate it unguarded), so a saved character with no Virtues or Flaws at all
-  // used to arrive undefined and throw mid-render, aborting the editor's mount.
-  it('fills in a saved character whose empty selections were omitted', async () => {
+  // re-defaults it Rust-side — JavaScript does not. So a saved character with no
+  // Virtues or Flaws at all — a bare grog — arrives with the key absent, and an
+  // unguarded read used to throw mid-render, aborting the editor's mount and
+  // freezing the app on the previous screen. The guarantee is that such a save
+  // opens and stays editable, not that the store back-fills the key.
+  it('opens a saved character whose empty selections were omitted', async () => {
+    installRuleset([item({ id: 'virtue.plain' })]);
     const sparse = loadedEntity() as Partial<Entity>;
     delete sparse.selections;
     vi.mocked(ipc.loadEntity).mockResolvedValue({
@@ -367,7 +369,69 @@ describe('open() and the startup view', () => {
 
     await openAndConfirm();
 
+    expect(store.view).toBe('editor');
+    store.addSelection('virtue.plain');
+    expect(store.entity.selections).toEqual([{ ref: 'virtue.plain' }]);
+  });
+});
+
+// Every selection mutator has to survive an entity whose empty `selections` the
+// engine omitted, since that entity is what a loaded bare grog is. These drive
+// the mutators straight off such an entity, without the open() path.
+describe('editing a character whose omitted selections key left it absent', () => {
+  /** The store's entity with no `selections` key at all, as a sparse save loads. */
+  function sparseEntity(): Entity {
+    const sparse = { ...store.entity } as Partial<Entity>;
+    delete sparse.selections;
+    return sparse as Entity;
+  }
+
+  it('adds a virtue/flaw selection', () => {
+    installRuleset([item({ id: 'virtue.plain' })]);
+    store.entity = sparseEntity();
+
+    store.addSelection('virtue.plain');
+
+    expect(store.entity.selections).toEqual([{ ref: 'virtue.plain' }]);
+  });
+
+  it('removes a selection without one to remove', () => {
+    installRuleset([]);
+    store.entity = sparseEntity();
+
+    store.removeSelectionAt(0);
+
     expect(store.entity.selections).toEqual([]);
+  });
+
+  it('seeds a Mythic Companion type package', async () => {
+    installRuleset([item({ id: 'flaw.blatant', kind: 'flaw', magnitude: 'major' })]);
+    store.ruleset!.ruleset.mythic_companion_types = {
+      'mythic_type.devil_child': {
+        id: 'mythic_type.devil_child',
+        required_virtues: [{ ref: 'virtue.might' }],
+        required_flaws: [
+          {
+            default: { ref: 'flaw.blatant' },
+            constraint: { kind: 'flaw', magnitude: 'major' },
+          },
+        ],
+      },
+    };
+    store.entity = sparseEntity();
+
+    await store.setMythicType('mythic_type.devil_child');
+
+    expect(store.entity.selections).toEqual([{ ref: 'virtue.might' }, { ref: 'flaw.blatant' }]);
+  });
+
+  it('swaps a required Flaw', async () => {
+    installRuleset([]);
+    store.entity = sparseEntity();
+
+    await store.setMythicRequiredFlaw('flaw.absent', 'flaw.other');
+
+    expect(store.entity.selections).toEqual([{ ref: 'flaw.other' }]);
   });
 });
 
@@ -1337,14 +1401,14 @@ describe('removeSelectionAt', () => {
     store.addSelection('v.b');
     store.addSelection('v.c');
     store.removeSelectionAt(1);
-    expect(store.entity.selections.map((s) => s.ref)).toEqual(['v.a', 'v.c']);
+    expect(store.entity.selections!.map((s) => s.ref)).toEqual(['v.a', 'v.c']);
   });
 
   it('is a no-op for an out-of-range index', () => {
     installRuleset([item({ id: 'v.a' })]);
     store.addSelection('v.a');
     store.removeSelectionAt(5);
-    expect(store.entity.selections.map((s) => s.ref)).toEqual(['v.a']);
+    expect(store.entity.selections!.map((s) => s.ref)).toEqual(['v.a']);
   });
 });
 
@@ -1356,11 +1420,11 @@ describe('setParamAt', () => {
     store.addSelection('v.great');
     store.addSelection('v.great');
     store.setParamAt(0, 'characteristic', 'characteristic.per');
-    expect(store.entity.selections[0]).toEqual({
+    expect(store.entity.selections![0]).toEqual({
       ref: 'v.great',
       params: { characteristic: 'characteristic.per' },
     });
-    expect(store.entity.selections[1]).toEqual({ ref: 'v.great' });
+    expect(store.entity.selections![1]).toEqual({ ref: 'v.great' });
   });
 
   it('merges into existing params rather than replacing them', () => {
@@ -1368,7 +1432,7 @@ describe('setParamAt', () => {
     store.addSelection('v.x');
     store.setParamAt(0, 'a', '1');
     store.setParamAt(0, 'b', '2');
-    expect(store.entity.selections[0].params).toEqual({ a: '1', b: '2' });
+    expect(store.entity.selections![0].params).toEqual({ a: '1', b: '2' });
   });
 });
 
@@ -1385,7 +1449,7 @@ describe('setAbilityBonusTarget', () => {
 
   it('stores the instance key for a parameterized ability', () => {
     store.setAbilityBonusTarget(0, 'ability.area_lore', 'Rhine');
-    expect(store.entity.selections[0].params).toEqual({
+    expect(store.entity.selections![0].params).toEqual({
       ability: 'ability.area_lore',
       area: 'Rhine',
     });
@@ -1393,23 +1457,23 @@ describe('setAbilityBonusTarget', () => {
 
   it('stores just the ability for a plain ability (no instance key)', () => {
     store.setAbilityBonusTarget(0, 'ability.awareness');
-    expect(store.entity.selections[0].params).toEqual({ ability: 'ability.awareness' });
+    expect(store.entity.selections![0].params).toEqual({ ability: 'ability.awareness' });
   });
 
   it('drops the stale instance key when switching to a plain ability', () => {
     // First point it at a parameterized instance...
     store.setAbilityBonusTarget(0, 'ability.area_lore', 'Rhine');
-    expect(store.entity.selections[0].params).toHaveProperty('area', 'Rhine');
+    expect(store.entity.selections![0].params).toHaveProperty('area', 'Rhine');
     // ...then switch the target to a plain ability: the params object is
     // rebuilt, so the stale `area` key is gone, not merged.
     store.setAbilityBonusTarget(0, 'ability.awareness');
-    expect(store.entity.selections[0].params).toEqual({ ability: 'ability.awareness' });
-    expect(store.entity.selections[0].params).not.toHaveProperty('area');
+    expect(store.entity.selections![0].params).toEqual({ ability: 'ability.awareness' });
+    expect(store.entity.selections![0].params).not.toHaveProperty('area');
   });
 
   it('omits the instance key when a parameterized ability has no parameter value', () => {
     store.setAbilityBonusTarget(0, 'ability.area_lore', null);
-    expect(store.entity.selections[0].params).toEqual({ ability: 'ability.area_lore' });
+    expect(store.entity.selections![0].params).toEqual({ ability: 'ability.area_lore' });
   });
 });
 
@@ -1497,7 +1561,7 @@ describe('art actions', () => {
     ]);
     store.addSelection('virtue.puissant_art');
     store.setArtBonusTarget(0, 'art', 'art.ignem');
-    expect(store.entity.selections[0].params).toEqual({ art: 'art.ignem' });
+    expect(store.entity.selections![0].params).toEqual({ art: 'art.ignem' });
   });
 
   it('writes the Art under the parameter key that declared it', () => {
@@ -1513,7 +1577,7 @@ describe('art actions', () => {
     ]);
     store.addSelection('virtue.master_of_form_creatures');
     store.setArtBonusTarget(0, 'form', 'art.ignem');
-    expect(store.entity.selections[0].params).toEqual({ form: 'art.ignem' });
+    expect(store.entity.selections![0].params).toEqual({ form: 'art.ignem' });
   });
 });
 
@@ -1862,7 +1926,7 @@ describe('setMythicType / required package', () => {
     });
     expect(store.entity.selections).toContainEqual({ ref: 'flaw.default_major' });
     // The free status/Minor Virtues are grants, never bought selections.
-    expect(store.entity.selections.some((s) => s.ref === 'virtue.status')).toBe(false);
+    expect(store.entity.selections!.some((s) => s.ref === 'virtue.status')).toBe(false);
     // The `choice` free-Minor defaults to its first option.
     expect(store.entity.mythic_choices?.free_minor).toEqual({ ref: 'virtue.min_a' });
   });
@@ -1872,20 +1936,20 @@ describe('setMythicType / required package', () => {
     await store.setMythicType('mythic_type.other');
     // Devil-only rows (Puissant, the default Flaw) are dropped; the shared
     // req_major stays; the stale free_minor choice is pruned.
-    expect(store.entity.selections.some((s) => s.ref === 'virtue.puissant')).toBe(false);
-    expect(store.entity.selections.some((s) => s.ref === 'flaw.default_major')).toBe(false);
+    expect(store.entity.selections!.some((s) => s.ref === 'virtue.puissant')).toBe(false);
+    expect(store.entity.selections!.some((s) => s.ref === 'flaw.default_major')).toBe(false);
     expect(store.entity.selections).toContainEqual({ ref: 'virtue.req_major' });
     expect(store.entity.mythic_choices?.free_minor).toBeUndefined();
 
     await store.setMythicType(null);
     expect(store.entity.mythic_type).toBeNull();
-    expect(store.entity.selections.some((s) => s.ref === 'virtue.req_major')).toBe(false);
+    expect(store.entity.selections!.some((s) => s.ref === 'virtue.req_major')).toBe(false);
   });
 
   it('swaps a required Flaw for a substitute', async () => {
     await store.setMythicType('mythic_type.devil');
     await store.setMythicRequiredFlaw('flaw.default_major', 'flaw.other_major');
-    expect(store.entity.selections.some((s) => s.ref === 'flaw.default_major')).toBe(false);
+    expect(store.entity.selections!.some((s) => s.ref === 'flaw.default_major')).toBe(false);
     expect(store.entity.selections).toContainEqual({ ref: 'flaw.other_major' });
   });
 });

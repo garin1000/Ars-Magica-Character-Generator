@@ -68,7 +68,7 @@
   // in the bought selections, else the rules default (pre-filled).
   function currentRequiredFlaw(flaw: RequiredFlaw): string {
     const eligible = new Set(eligibleForConstraint(flaw.constraint).map((it) => it.id));
-    const chosen = store.entity.selections.find((s) => eligible.has(s.ref));
+    const chosen = (store.entity.selections ?? []).find((s) => eligible.has(s.ref));
     return chosen?.ref ?? flaw.default.ref;
   }
 

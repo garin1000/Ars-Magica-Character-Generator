@@ -569,7 +569,7 @@ export function balance(localized: LocalizedRuleset, entity: Entity): Balance {
   const magnitudePoints = localized.ruleset.magnitude_points;
   let virtuePoints = 0;
   let flawPoints = 0;
-  for (const selection of entity.selections) {
+  for (const selection of entity.selections ?? []) {
     const item = localized.ruleset.point_items[selection.ref];
     if (!item) continue;
     const points = magnitudePoints[item.magnitude] ?? 0;

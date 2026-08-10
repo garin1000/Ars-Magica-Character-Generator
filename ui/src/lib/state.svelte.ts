@@ -378,7 +378,7 @@ class AppStore {
     const previousPackage = this.#mythicPackage(this.entity.mythic_type ?? null);
     const nextPackage = this.#mythicPackage(mythicType);
     // Drop the previous type's seeded package rows the new type doesn't require.
-    this.entity.selections = this.entity.selections.filter(
+    const kept = (this.entity.selections ?? []).filter(
       (s) =>
         !(
           previousPackage.some((p) => sameSelection(p, s)) &&
@@ -389,10 +389,9 @@ class AppStore {
     this.entity.mythic_choices = this.#defaultedMythicChoices(mythicType);
     // Seed the new type's required package (budgeted) where not already present.
     for (const pkg of nextPackage) {
-      if (!this.entity.selections.some((s) => sameSelection(s, pkg))) {
-        this.entity.selections.push(pkg);
-      }
+      if (!kept.some((s) => sameSelection(s, pkg))) kept.push(pkg);
     }
+    this.entity.selections = kept;
     await this.revalidate();
   }
 
@@ -417,12 +416,11 @@ class AppStore {
    */
   async setMythicRequiredFlaw(previousRef: string, nextRef: string): Promise<void> {
     if (previousRef === nextRef) return;
-    const idx = this.entity.selections.findIndex((s) => s.ref === previousRef);
-    if (idx >= 0) this.entity.selections.splice(idx, 1);
-    if (!this.entity.selections.some((s) => s.ref === nextRef)) {
-      this.entity.selections.push({ ref: nextRef });
-    }
-    this.entity.selections = [...this.entity.selections];
+    const selections = [...(this.entity.selections ?? [])];
+    const idx = selections.findIndex((s) => s.ref === previousRef);
+    if (idx >= 0) selections.splice(idx, 1);
+    if (!selections.some((s) => s.ref === nextRef)) selections.push({ ref: nextRef });
+    this.entity.selections = selections;
     await this.revalidate();
   }
 
@@ -465,20 +463,20 @@ class AppStore {
   addSelection(ref: string): void {
     const item = this.ruleset?.ruleset.point_items[ref];
     const repeatable = !!item?.parameters?.length || (item?.max_per_target ?? 1) > 1;
-    const present = this.entity.selections.some((s) => s.ref === ref);
+    const present = (this.entity.selections ?? []).some((s) => s.ref === ref);
     if (!repeatable && present) return;
-    this.entity.selections.push({ ref });
+    this.entity.selections = [...(this.entity.selections ?? []), { ref }];
     this.#scheduleValidate();
   }
 
   /** Selection edits are by row index, since a repeatable item has several rows. */
   removeSelectionAt(index: number): void {
-    this.entity.selections = this.entity.selections.filter((_, i) => i !== index);
+    this.entity.selections = (this.entity.selections ?? []).filter((_, i) => i !== index);
     this.#scheduleValidate();
   }
 
   setParamAt(index: number, key: string, value: string): void {
-    this.entity.selections = this.entity.selections.map((s, i) =>
+    this.entity.selections = (this.entity.selections ?? []).map((s, i) =>
       i === index ? { ...s, params: { ...(s.params ?? {}), [key]: value } } : s,
     );
     this.#scheduleValidate();
@@ -495,7 +493,7 @@ class AppStore {
     const instanceKey = this.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
     const params: Record<string, string> = { ability: abilityId };
     if (instanceKey && parameter) params[instanceKey] = parameter;
-    this.entity.selections = this.entity.selections.map((s, i) =>
+    this.entity.selections = (this.entity.selections ?? []).map((s, i) =>
       i === index ? { ...s, params } : s,
     );
     this.#scheduleValidate();
@@ -602,7 +600,7 @@ class AppStore {
    * key the item declared or the engine reports it missing.
    */
   setArtBonusTarget(index: number, key: string, artId: string): void {
-    this.entity.selections = this.entity.selections.map((s, i) =>
+    this.entity.selections = (this.entity.selections ?? []).map((s, i) =>
       i === index ? { ...s, params: { ...(s.params ?? {}), [key]: artId } } : s,
     );
     this.#scheduleValidate();
@@ -1461,16 +1459,7 @@ class AppStore {
     try {
       const loaded = await ipc.loadEntity();
       if (loaded) {
-        // The engine writes canonical JSON that OMITS `selections` when it is
-        // empty (`skip_serializing_if = "Vec::is_empty"`), and serde re-defaults
-        // it Rust-side — JavaScript does not. Every other omit-when-empty field
-        // is typed optional and read defensively, but `selections` is the one the
-        // store guarantees is always an array (`newEntity` always supplies it)
-        // and that five components iterate unguarded. So a saved character with
-        // no Virtues or Flaws at all — a bare grog, say — would otherwise arrive
-        // here with `selections` undefined and throw mid-render, aborting the
-        // editor's mount and leaving the previous screen frozen on display.
-        this.entity = { ...loaded.entity, selections: loaded.entity.selections ?? [] };
+        this.entity = loaded.entity;
         this.currentPath = loaded.path;
         this.#savedSnapshot = this.#snapshot();
         // Opening is reachable from either screen, so a load always lands in the
@@ -1525,9 +1514,7 @@ class AppStore {
   async createCharacter(typeId: string): Promise<void> {
     const { id, version } = this.ruleset?.ruleset ?? this.entity.ruleset;
     this.entity = newEntity(id, version, typeId);
-    for (const ref of this.#mandatoryTraitRefs(typeId)) {
-      this.entity.selections.push({ ref });
-    }
+    this.entity.selections = [...this.#mandatoryTraitRefs(typeId)].map((ref) => ({ ref }));
     this.currentPath = null;
     this.filters = defaultPickerFilters();
     this.result = null;
