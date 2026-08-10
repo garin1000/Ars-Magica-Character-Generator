@@ -29,7 +29,7 @@ jobs:
           #                            # (Unsigned .dmg triggers a Gatekeeper warning until you add an Apple cert.)
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # WebKitGTK is the Linux system WebView the app renders in; only the Linux leg needs it.
       - name: Install Linux WebView + bundling deps
@@ -54,7 +54,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -79,7 +79,7 @@ jobs:
       # For manual/dispatch test runs: download these from the run summary and
       # install/run them — no Release is created.
       - name: Upload build artifacts (for testing)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: arm-char-gen-${{ matrix.platform }}
           if-no-files-found: ignore
@@ -93,7 +93,7 @@ jobs:
       # Only on a tag push: attach the same files to a DRAFT Release for that tag.
       - name: Attach to draft GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           fail_on_unmatched_files: false
