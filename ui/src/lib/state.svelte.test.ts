@@ -96,6 +96,26 @@ function installRuleset(
   return ruleset;
 }
 
+// A profile that mandates The Gift + Hermetic Magus (both free, profile-declared).
+// Shared by the `setType` and `createCharacter` blocks: both seed exactly this
+// data-driven set of mandatory free traits.
+const magusProfiles = {
+  magus: {
+    id: 'magus',
+    budget: { virtue_points: 10, flaw_points: 10 },
+    permitted_categories: [],
+    forbidden_categories: [],
+    required_traits: ['virtue.hermetic_magus'],
+    gift_policy: 'required' as const,
+    gift_id: 'virtue.the_gift',
+    is_magus: true,
+    creation_phases: [],
+  },
+};
+const gift = () => item({ id: 'virtue.the_gift', magnitude: 'free', category: 'special' });
+const hermeticMagus = () =>
+  item({ id: 'virtue.hermetic_magus', magnitude: 'free', category: 'social_status' });
+
 /** Reset the shared singleton's entity to a clean character before each test. */
 function resetEntity(): void {
   store.entity = {
@@ -222,24 +242,6 @@ describe('setType', () => {
     expect(store.entity.type_id).toBe('companion');
   });
 
-  // A profile that mandates The Gift + Hermetic Magus (both free, profile-declared).
-  const magusProfiles = {
-    magus: {
-      id: 'magus',
-      budget: { virtue_points: 10, flaw_points: 10 },
-      permitted_categories: [],
-      forbidden_categories: [],
-      required_traits: ['virtue.hermetic_magus'],
-      gift_policy: 'required' as const,
-      gift_id: 'virtue.the_gift',
-      is_magus: true,
-      creation_phases: [],
-    },
-  };
-  const gift = () => item({ id: 'virtue.the_gift', magnitude: 'free', category: 'special' });
-  const hermeticMagus = () =>
-    item({ id: 'virtue.hermetic_magus', magnitude: 'free', category: 'social_status' });
-
   it("auto-selects a magus's mandatory free traits (The Gift + Hermetic Magus)", () => {
     installRuleset([gift(), hermeticMagus()], [], magusProfiles);
     store.setType('magus');
@@ -263,6 +265,130 @@ describe('setType', () => {
     const refs = store.entity.selections.map((s) => s.ref);
     // The user's own pick survives; the auto-added mandatory traits are gone.
     expect(refs).toEqual(['virtue.plain']);
+  });
+});
+
+// --- startup view + createCharacter() (M6a) ---------------------------------
+//
+// Deliberately placed before every block that calls open(): `view` lives on the
+// shared singleton, and open() flips it to 'editor' for the rest of the file, so
+// the initial-value assertion below only holds here.
+
+describe('createCharacter', () => {
+  beforeEach(() => {
+    store.currentPath = null;
+    store.filters = defaultPickerFilters();
+  });
+
+  it('starts on the start view', () => {
+    expect(store.view).toBe('start');
+  });
+
+  it('creates a character of the chosen type and enters the editor', async () => {
+    installRuleset([gift(), hermeticMagus()], [], magusProfiles);
+    await store.createCharacter('magus');
+    expect(store.entity.type_id).toBe('magus');
+    expect(store.view).toBe('editor');
+  });
+
+  it("seeds the profile's mandatory free traits (The Gift + Hermetic Magus)", async () => {
+    installRuleset([gift(), hermeticMagus()], [], magusProfiles);
+    await store.createCharacter('magus');
+    const refs = store.entity.selections.map((s) => s.ref).sort();
+    expect(refs).toEqual(['virtue.hermetic_magus', 'virtue.the_gift']);
+  });
+
+  it('discards the previous character entirely', async () => {
+    installRuleset([item({ id: 'virtue.plain' })], [ability('ability.awareness')]);
+    store.addSelection('virtue.plain');
+    store.addAbility('ability.awareness');
+    store.setIdentity('name', 'Marcus');
+
+    await store.createCharacter('grog');
+
+    expect(store.entity.type_id).toBe('grog');
+    expect(store.entity.selections).toEqual([]);
+    expect(store.entity.ability_scores).toEqual([]);
+    expect(store.entity.name).toBeUndefined();
+  });
+
+  it('clears the current file and leaves the document not dirty', async () => {
+    installRuleset([]);
+    store.currentPath = '/tmp/marcus.armc';
+    store.setIdentity('name', 'Marcus');
+
+    await store.createCharacter('companion');
+
+    expect(store.currentPath).toBeNull();
+    expect(store.dirty).toBe(false);
+  });
+
+  it('resets the picker filters', async () => {
+    installRuleset([]);
+    store.filters.abilities.search = 'latin';
+    store.filters.vf.virtue.magnitude = 'major';
+
+    await store.createCharacter('companion');
+
+    expect(store.filters).toEqual(defaultPickerFilters());
+  });
+});
+
+describe('open() and the startup view', () => {
+  /**
+   * A full, minimal character standing in for a loaded document. It carries a
+   * name so the saved-baseline this load leaves behind stays distinguishable
+   * from the blank entity `resetEntity()` installs for every later test — an
+   * identical baseline would silently mark those tests' documents clean.
+   */
+  function loadedEntity(): Entity {
+    return {
+      schema_version: 11,
+      ruleset: { id: 'test', version: '1' },
+      entity_kind: 'character',
+      type_id: 'companion',
+      name: 'Marcus of Bonisagus',
+      selections: [],
+      characteristics: {} as Entity['characteristics'],
+      characteristic_descriptions: {},
+      ability_scores: [],
+      xp_pool: 0,
+      art_scores: [],
+      personality_traits: [],
+      reputations: [],
+    };
+  }
+
+  /** Drive open() to completion, confirming a discard prompt if one appears. */
+  async function openAndConfirm(): Promise<void> {
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+  }
+
+  beforeEach(() => {
+    vi.mocked(ipc.loadEntity).mockReset();
+    // Opening a document must work from either screen, so arrange the start one.
+    store.view = 'start';
+  });
+
+  it('enters the editor on a successful load', async () => {
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/marcus.armc',
+      entity: loadedEntity(),
+    });
+
+    await openAndConfirm();
+
+    expect(store.view).toBe('editor');
+  });
+
+  it('leaves the view alone when the dialog is cancelled', async () => {
+    vi.mocked(ipc.loadEntity).mockResolvedValue(null);
+
+    await openAndConfirm();
+
+    expect(store.view).toBe('start');
   });
 });
 

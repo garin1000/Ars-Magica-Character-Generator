@@ -126,12 +126,17 @@ export function defaultPickerFilters(): PickerFilters {
   };
 }
 
-function newEntity(rulesetId: string, version: string): Entity {
+/**
+ * A blank character of `typeId`. The type is a required argument because it is
+ * fixed at creation time (see {@link AppStore.createCharacter}); no id is
+ * defaulted here, so the caller decides and the profile catalogue stays data.
+ */
+function newEntity(rulesetId: string, version: string, typeId: string): Entity {
   return {
     schema_version: SCHEMA_VERSION,
     ruleset: { id: rulesetId, version },
     entity_kind: 'character',
-    type_id: 'companion',
+    type_id: typeId,
     selections: [],
     characteristics: {} as Record<Characteristic, number>,
     characteristic_descriptions: {},
@@ -202,7 +207,7 @@ function parameterKeys(localized: LocalizedRuleset): Set<string> {
 class AppStore {
   lang = $state<Lang>('en');
   ruleset = $state<LocalizedRuleset | null>(null);
-  entity = $state<Entity>(newEntity('', ''));
+  entity = $state<Entity>(newEntity('', '', 'companion'));
   mode = $state<ValidationMode>('enforced');
   result = $state<ValidationResult | null>(null);
   effective = $state<EffectiveScores | null>(null);
@@ -212,6 +217,15 @@ class AppStore {
   // Per-picker filter/search state; persists across tab switches (see
   // {@link PickerFilters}). Not part of the entity, so it is never saved.
   filters = $state<PickerFilters>(defaultPickerFilters());
+
+  /**
+   * Which screen the app is on: the startup choice screen or the character
+   * editor. **Inert for now** — no component reads it yet, so the app still
+   * boots straight into the editor. It exists ahead of the startup screen (the
+   * next M6a step), which is what will switch on it; {@link createCharacter} and
+   * {@link open} already leave it correct, so that step only adds the rendering.
+   */
+  view = $state<'start' | 'editor'>('start');
 
   // Absolute path of the document's current file (from the last Open or the last
   // Save As / first Save). `null` for a never-saved document, so Save behaves as
@@ -1480,6 +1494,9 @@ class AppStore {
         this.entity = loaded.entity;
         this.currentPath = loaded.path;
         this.#savedSnapshot = this.#snapshot();
+        // Opening is reachable from either screen, so a load always lands in the
+        // editor; a cancelled dialog leaves the current screen alone.
+        this.view = 'editor';
         await this.revalidate();
       }
     } catch (e) {
@@ -1498,13 +1515,43 @@ class AppStore {
     if (this.#opInFlight || this.discardPromptOpen) return;
     if (this.dirty && !(await this.#confirmDiscard())) return;
     const { id, version } = this.ruleset?.ruleset ?? this.entity.ruleset;
-    this.entity = newEntity(id, version);
+    this.entity = newEntity(id, version, 'companion');
     this.currentPath = null;
     this.filters = defaultPickerFilters();
     this.result = null;
     this.effective = null;
     this.derived = null;
     this.#savedSnapshot = this.#snapshot();
+    await this.revalidate();
+  }
+
+  /**
+   * Start a brand-new character of `typeId` and enter the editor, replacing
+   * whatever was being edited. The type is fixed at creation, so the profile's
+   * mandatory free traits (a magus's The Gift + Hermetic Magus) are seeded right
+   * away — the same data-driven set {@link setType} maintains, so no id is
+   * hardcoded here. Otherwise it resets exactly what {@link newDocument} does:
+   * the current file, the picker filters, the last results, and the saved
+   * baseline (so a freshly created character is not dirty).
+   *
+   * Deliberately does NOT prompt about unsaved changes: the caller is the
+   * startup screen, which is only reached from a state with nothing to discard.
+   * Creation is a discrete action, so it validates immediately rather than
+   * through the debounce — like {@link setType} and {@link setHouse}.
+   */
+  async createCharacter(typeId: string): Promise<void> {
+    const { id, version } = this.ruleset?.ruleset ?? this.entity.ruleset;
+    this.entity = newEntity(id, version, typeId);
+    for (const ref of this.#mandatoryTraitRefs(typeId)) {
+      this.entity.selections.push({ ref });
+    }
+    this.currentPath = null;
+    this.filters = defaultPickerFilters();
+    this.result = null;
+    this.effective = null;
+    this.derived = null;
+    this.#savedSnapshot = this.#snapshot();
+    this.view = 'editor';
     await this.revalidate();
   }
 
@@ -1578,7 +1625,7 @@ class AppStore {
       this.ruleset = localized;
       const { id, version } = localized.ruleset;
       if (resetEntity) {
-        this.entity = newEntity(id, version);
+        this.entity = newEntity(id, version, 'companion');
         // A fresh entity is a clean baseline. A language reload (else branch)
         // keeps the edited entity, so it must NOT reset the baseline — doing so
         // would drop `dirty` to false while unsaved edits still exist.
