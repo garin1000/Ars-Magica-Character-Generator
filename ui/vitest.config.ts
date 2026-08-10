@@ -22,7 +22,11 @@ export default defineConfig({
   plugins: [svelte({ configFile: false, preprocess: vitePreprocess({ style: false }) })],
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
-    exclude: ['node_modules/', 'dist/', 'e2e/'],
+    // `e2e/**/*.test.js` is the pure logic *inside* the e2e harness (the display
+    // preflight), not the suite itself: the wdio specs are named `*.e2e.js` and
+    // stay out of this run, which is why `e2e/specs/` is excluded rather than
+    // the whole directory.
+    include: ['src/**/*.test.ts', 'e2e/**/*.test.js'],
+    exclude: ['node_modules/', 'dist/', 'e2e/specs/'],
   },
 });
