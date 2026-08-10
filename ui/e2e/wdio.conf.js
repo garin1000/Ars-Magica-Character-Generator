@@ -5,7 +5,9 @@
 // Requirements to run:
 //   - `tauri-driver`        (cargo install tauri-driver)
 //   - `WebKitWebDriver`     (Linux: apt install webkit2gtk-driver)
-//   - a display (use `xvfb-run` in headless CI)
+//   - a display — the desktop session if there is one (the run is then headful
+//     and watchable), otherwise Xvfb (apt install xvfb), which WebdriverIO
+//     starts for us. See `display.js` for the whole story.
 //
 // The native save/load dialogs can't be driven by WebDriver, so the app reads
 // the ARM_E2E_FILE seam (see crates/arm-app/src/commands.rs) for a fixed path.
@@ -15,6 +17,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { hasXvfbRun, preflightDisplay } from './display.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(dirname, '../..');
@@ -70,7 +74,15 @@ export const config = {
   // exe dir and finds `target/release/rules`. NOTE: this is NOT the portable
   // path — a binary shipped outside target/ resolves Resource to /usr/lib/<name>
   // and relies on load_ruleset's exe-dir fallback (see commands.rs).
+  //
+  // The display check runs first, and runs *here* rather than in a session hook:
+  // onPrepare is the launcher process, the last point at which `DISPLAY` still
+  // reflects the real environment — every worker below it is already inside
+  // WebdriverIO's `xvfb-run` wrapper when headless.
   onPrepare: () => {
+    const problem = preflightDisplay(process.env, { xvfbRunAvailable: hasXvfbRun() });
+    if (problem) throw new Error(problem);
+
     const build = spawnSync('cargo', ['tauri', 'build', '--no-bundle'], {
       cwd: path.resolve(repoRoot, 'crates/arm-app'),
       stdio: 'inherit',
@@ -88,6 +100,11 @@ export const config = {
   // tauri-driver bridges WebDriver to the platform webdriver. The spawned app
   // inherits ARM_E2E_FILE and ARM_E2E_EXPORT_FILE so save/load and the Markdown
   // export skip their native dialogs.
+  //
+  // This hook already runs inside the display WebdriverIO arranged — the real
+  // one, or the `xvfb-run` wrapper around this worker — so `DISPLAY` is set
+  // either way and everything spawned below (WebKitWebDriver, then the app)
+  // inherits it. There is nothing to set up here beyond the driver itself.
   beforeSession: () =>
     new Promise((resolve) => {
       tauriDriver = spawn(path.resolve(os.homedir(), '.cargo', 'bin', 'tauri-driver'), [], {

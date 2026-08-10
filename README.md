@@ -252,10 +252,10 @@ cd ui && npm run lint         # eslint + prettier
 cd ui && npm run test:unit     # vitest
 cd ui && npm run format:check  # prettier
 
-# Real-binary E2E. Needs tauri-driver, webkit2gtk-driver, and a display —
-# it is not headless. Wrap it in xvfb-run to run without one:
+# Real-binary E2E. Needs tauri-driver and webkit2gtk-driver. Runs headful on a
+# desktop and headless via xvfb-run where there is no display (ssh, CI) — same
+# command either way; on a headless box also install the xvfb package.
 cd ui && npm run test:e2e
-cd ui && xvfb-run -a npm run test:e2e
 ```
 
 ## Rules sources & licensing
