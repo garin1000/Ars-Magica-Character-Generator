@@ -3,8 +3,8 @@
 // surfaces one picker per owed slot on the Details tab; a magus (exempt — Twilight
 // instead) never shows the section, even at the same Warping Score.
 //
-// Drives the real production binary. Runs last alphabetically and restores the
-// type to companion at the end so it leaves no state behind.
+// Drives the real production binary. Each block creates its own character, so it
+// neither inherits state nor needs to restore any.
 //
 // NOTE: requires the production binary; the display comes from your desktop
 // session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
@@ -12,7 +12,8 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 
-const TYPE_SELECT = '[data-testid="type-select"]';
+import { startCharacter } from '../helpers.js';
+
 const DETAILS_TAB = '[data-testid="tab-details"]';
 const WARPING_POINTS = '[data-testid="warping-points-input"]';
 const WARPING_OWED = '[data-testid="warping-owed"]';
@@ -25,14 +26,9 @@ const FORM_PARAM =
   '[data-testid="param-virtue.master_of_form_creatures-form-warping.supernatural_virtue.0"]';
 const MISSING_PARAM = '[data-code="missing_param"]';
 
-async function setType(value) {
-  await $(TYPE_SELECT).selectByAttribute('value', value);
-}
-
 describe('warping-owed Virtues/Flaws', () => {
   it('surfaces an owed Minor Flaw picker for a warped non-magus', async () => {
-    await $(TYPE_SELECT).waitForExist({ timeout: 30000 });
-    await setType('companion');
+    await startCharacter('companion');
     await $(DETAILS_TAB).click();
 
     // 5 Warping Points → Warping Score 1 → owes one Minor Flaw.
@@ -51,11 +47,14 @@ describe('warping-owed Virtues/Flaws', () => {
   });
 
   it('groups the owed slots per kind and resolves a parameterized fill', async () => {
-    await setType('companion');
+    // Its own companion: the slot counts asserted below must be produced by this
+    // test's Warping Score alone, with no fill left over from the previous one.
+    await startCharacter('companion');
     await $(DETAILS_TAB).click();
 
     // 75 Warping Points → Warping Score 5 → owes 2 Minor Flaws + 1 supernatural
     // Minor Virtue (Core:16553-16559), in two labelled groups.
+    await $(WARPING_POINTS).waitForExist({ timeout: 10000 });
     await $(WARPING_POINTS).setValue('75');
     await $(MINOR_FLAW_GROUP).waitForExist({ timeout: 10000 });
     await $(VIRTUE_GROUP).waitForExist({ timeout: 10000 });
@@ -85,16 +84,21 @@ describe('warping-owed Virtues/Flaws', () => {
   });
 
   it('hides the section for a magus at the same Warping Score', async () => {
-    await setType('magus');
+    // The comparison only means something at the SAME Warping Score, and a freshly
+    // created magus starts at 0 — so give this one the previous test's 75 points
+    // (Warping Score 5) before asserting the section is absent.
+    await startCharacter('magus');
     await $(DETAILS_TAB).click();
+    await $(WARPING_POINTS).waitForExist({ timeout: 10000 });
+    await $(WARPING_POINTS).setValue('75');
+    await browser.waitUntil(async () => (await $(WARPING_POINTS).getValue()) === '75', {
+      timeout: 10000,
+      timeoutMsg: 'the magus should carry the same 75 Warping Points',
+    });
+
     await browser.waitUntil(async () => !(await $(WARPING_OWED).isExisting()), {
       timeout: 10000,
       timeoutMsg: 'a magus must not show the owed-warping section (Twilight instead)',
     });
-
-    // Restore a clean companion with no Warping so later runs start fresh.
-    await setType('companion');
-    await $(DETAILS_TAB).click();
-    await $(WARPING_POINTS).setValue('0');
   });
 });

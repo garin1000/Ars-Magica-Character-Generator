@@ -24,14 +24,28 @@ import * as ipc from './lib/ipc';
 import { SCHEMA_VERSION, store } from './lib/state.svelte';
 import App from './App.svelte';
 
-/** A minimal localized ruleset: the shell needs no catalogue, only the bundle. */
-function installRuleset(): void {
+/**
+ * A minimal localized ruleset: the shell needs no catalogue, only the bundle —
+ * plus whatever character-type profiles a test names (the shell reads them for
+ * the type label and the startup screen's create buttons).
+ */
+function installRuleset(...typeIds: string[]): void {
+  const type_profiles: Record<string, unknown> = {};
+  for (const id of typeIds) {
+    type_profiles[id] = {
+      id,
+      budget: { virtue_points: 10, flaw_points: 10 },
+      permitted_categories: [],
+      forbidden_categories: [],
+      creation_phases: [],
+    };
+  }
   store.ruleset = {
     ruleset: {
       id: 'test',
       version: '1',
       point_items: {},
-      type_profiles: {},
+      type_profiles,
       magnitude_points: { free: 0, minor: 1, major: 3 },
       ability_category_order: ['general'],
       art_type_order: ['technique', 'form'],
@@ -67,12 +81,32 @@ function openTag(body: string, testid: string): string | null {
   return new RegExp(`<[^>]*data-testid="${testid}"[^>]*>`, 'i').exec(body)?.[0] ?? null;
 }
 
+/**
+ * The text content of the single element carrying `testid`, tags stripped.
+ * Closes on the element's own tag name so nested markup (a label span beside a
+ * value span) is included rather than cutting the match short.
+ */
+function textOf(body: string, testid: string): string {
+  const match = new RegExp(`<(\\w+)[^>]*data-testid="${testid}"[^>]*>([\\s\\S]*?)</\\1>`, 'i').exec(
+    body,
+  );
+  if (!match) throw new Error(`no element with data-testid="${testid}"`);
+  return match[2]
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   vi.mocked(ipc.saveEntity).mockReset();
   store.lang = 'en';
   store.error = null;
   store.currentPath = null;
+  // The screen is now part of what App renders, so every test has to say which
+  // one it is about. The dialog-modality tests below were written against the
+  // editor, so pin that here and let the start-screen tests opt out.
+  store.view = 'editor';
   installRuleset();
   resetEntity();
 });
@@ -80,6 +114,81 @@ beforeEach(() => {
 afterEach(() => {
   vi.clearAllTimers();
   vi.useRealTimers();
+});
+
+// --- the two screens (M6a) ---------------------------------------------------
+
+describe('App screens', () => {
+  it('opens on the startup screen, with no character surfaces', () => {
+    store.view = 'start';
+    const body = html();
+
+    expect(openTag(body, 'start-screen')).not.toBeNull();
+    // No character exists yet, so nothing that edits or reports on one is shown.
+    expect(openTag(body, 'identity-name')).toBeNull();
+    expect(openTag(body, 'character-type')).toBeNull();
+    expect(openTag(body, 'tab-details')).toBeNull();
+    expect(openTag(body, 'no-issues')).toBeNull();
+  });
+
+  it('keeps only the language control in the header on the startup screen', () => {
+    store.view = 'start';
+    const body = html();
+
+    expect(openTag(body, 'language-select')).not.toBeNull();
+    // Validation mode and the document toolbar are meaningless with no document,
+    // and the status would read "unsaved" for a document that does not exist.
+    expect(openTag(body, 'mode-select')).toBeNull();
+    expect(openTag(body, 'save-button')).toBeNull();
+    expect(openTag(body, 'doc-status')).toBeNull();
+  });
+
+  it('renders the editor, and no startup screen, once a character exists', () => {
+    const body = html();
+
+    expect(openTag(body, 'start-screen')).toBeNull();
+    expect(openTag(body, 'identity-name')).not.toBeNull();
+    expect(openTag(body, 'tab-details')).not.toBeNull();
+    expect(openTag(body, 'no-issues')).not.toBeNull();
+    expect(openTag(body, 'doc-status')).not.toBeNull();
+  });
+
+  it('shows the character type as a read-only label, not a selector', () => {
+    installRuleset('magus');
+    store.entity.type_id = 'magus';
+    const body = html();
+
+    expect(textOf(body, 'character-type')).toContain('Magus');
+    // The type is fixed at creation: there is no control that changes it.
+    expect(openTag(body, 'type-select')).toBeNull();
+  });
+
+  it('localizes the type label through Fluent, never rendering the slug', () => {
+    installRuleset('mythic_companion');
+    store.entity.type_id = 'mythic_companion';
+
+    const en = textOf(html(), 'character-type');
+    expect(en).toContain('Mythic Companion');
+    expect(en).not.toContain('mythic_companion');
+
+    store.lang = 'de';
+    const de = textOf(html(), 'character-type');
+    expect(de).toContain('Mythischer Gefährte');
+    expect(de).not.toContain('mythic_companion');
+  });
+
+  // `translate()` falls back to the key itself, so a save naming a type the loaded
+  // ruleset has no profile for would otherwise print `type-<slug>` on screen.
+  it('names an unknown character type through a Fluent key, never its id', () => {
+    installRuleset('magus');
+    store.entity.type_id = 'sorcerer';
+    const body = html();
+
+    const label = textOf(body, 'character-type');
+    expect(label).toContain(store.t('type-unknown'));
+    expect(label).not.toContain('sorcerer');
+    expect(label).not.toContain('type-sorcerer');
+  });
 });
 
 describe('App dialog modality', () => {

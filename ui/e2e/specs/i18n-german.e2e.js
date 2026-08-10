@@ -6,8 +6,9 @@
 
 import { $, browser, expect } from '@wdio/globals';
 
+import { startCharacter } from '../helpers.js';
+
 const LANG_SELECT = '[data-testid="language-select"]';
-const TYPE_SELECT = '[data-testid="type-select"]';
 const SPELLS_TAB = '[data-testid="tab-spells"]';
 
 // Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
@@ -17,7 +18,8 @@ function clean(text) {
 
 describe('German localization', () => {
   it('renders German chrome and a non-empty German spell tooltip', async () => {
-    // Wait for the ruleset to load (the language selector is always mounted).
+    // A magus of this spec's own — the Spells tab is magus-only.
+    await startCharacter('magus');
     await $(LANG_SELECT).waitForExist({ timeout: 30000 });
 
     // Switch to German and confirm the language actually changed.
@@ -27,9 +29,8 @@ describe('German localization', () => {
       timeoutMsg: 'language should switch to German',
     });
 
-    // A magus shows the Spells tab; its "Available" region title must render in
-    // German ("Verfügbar"), proving UI chrome re-localizes.
-    await $(TYPE_SELECT).selectByAttribute('value', 'magus');
+    // The Spells tab's "Available" region title must render in German
+    // ("Verfügbar"), proving UI chrome re-localizes.
     await $(SPELLS_TAB).waitForExist({ timeout: 10000 });
     await $(SPELLS_TAB).click();
     const available = await $('[data-testid="available-title"]');

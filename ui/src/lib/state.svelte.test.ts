@@ -51,6 +51,11 @@ vi.mock('./ipc', () => ({
 import * as ipc from './ipc';
 import { store, defaultPickerFilters } from './state.svelte';
 
+// The screen the app boots on, captured at import time — before any test or
+// `beforeEach` has touched the shared singleton, which is the only moment the
+// initial value is still observable.
+const bootView = store.view;
+
 // --- Fixtures ---------------------------------------------------------------
 
 function item(overrides: Partial<PointItem> & Pick<PointItem, 'id'>): PointItem {
@@ -97,8 +102,7 @@ function installRuleset(
 }
 
 // A profile that mandates The Gift + Hermetic Magus (both free, profile-declared).
-// Shared by the `setType` and `createCharacter` blocks: both seed exactly this
-// data-driven set of mandatory free traits.
+// `createCharacter` seeds exactly this data-driven set of mandatory free traits.
 const magusProfiles = {
   magus: {
     id: 'magus',
@@ -136,6 +140,11 @@ function resetEntity(): void {
 
 beforeEach(() => {
   vi.useFakeTimers();
+  // Almost every block below edits a character, which only exists in the editor —
+  // and `revalidate()` is deliberately inert on the startup screen. Pin the editor
+  // here so each test starts where it was written to run; the startup-screen
+  // blocks set their own view.
+  store.view = 'editor';
   resetEntity();
   installRuleset([]);
 });
@@ -224,55 +233,7 @@ describe('picker filter state', () => {
   });
 });
 
-// --- setType() --------------------------------------------------------------
-
-describe('setType', () => {
-  it('switches the entity type id in place, keeping selections', () => {
-    installRuleset([item({ id: 'virtue.plain' })]);
-    store.addSelection('virtue.plain');
-    store.setType('magus');
-    expect(store.entity.type_id).toBe('magus');
-    expect(store.entity.selections).toEqual([{ ref: 'virtue.plain' }]);
-  });
-
-  it('is a no-op when the type is unchanged', () => {
-    const before = store.entity;
-    store.setType('companion');
-    expect(store.entity).toBe(before);
-    expect(store.entity.type_id).toBe('companion');
-  });
-
-  it("auto-selects a magus's mandatory free traits (The Gift + Hermetic Magus)", () => {
-    installRuleset([gift(), hermeticMagus()], [], magusProfiles);
-    store.setType('magus');
-    const refs = store.entity.selections.map((s) => s.ref).sort();
-    expect(refs).toEqual(['virtue.hermetic_magus', 'virtue.the_gift']);
-  });
-
-  it('does not duplicate a mandatory trait the user already selected', () => {
-    installRuleset([gift(), hermeticMagus()], [], magusProfiles);
-    store.addSelection('virtue.the_gift');
-    store.setType('magus');
-    const gifts = store.entity.selections.filter((s) => s.ref === 'virtue.the_gift');
-    expect(gifts).toHaveLength(1);
-  });
-
-  it("drops the previous type's mandatory traits when they aren't mandated anymore", () => {
-    installRuleset([gift(), hermeticMagus(), item({ id: 'virtue.plain' })], [], magusProfiles);
-    store.addSelection('virtue.plain');
-    store.setType('magus');
-    store.setType('companion');
-    const refs = store.entity.selections.map((s) => s.ref);
-    // The user's own pick survives; the auto-added mandatory traits are gone.
-    expect(refs).toEqual(['virtue.plain']);
-  });
-});
-
 // --- startup view + createCharacter() (M6a) ---------------------------------
-//
-// Deliberately placed before every block that calls open(): `view` lives on the
-// shared singleton, and open() flips it to 'editor' for the rest of the file, so
-// the initial-value assertion below only holds here.
 
 describe('createCharacter', () => {
   beforeEach(() => {
@@ -280,8 +241,8 @@ describe('createCharacter', () => {
     store.filters = defaultPickerFilters();
   });
 
-  it('starts on the start view', () => {
-    expect(store.view).toBe('start');
+  it('boots on the start view', () => {
+    expect(bootView).toBe('start');
   });
 
   it('creates a character of the chosen type and enters the editor', async () => {
@@ -389,6 +350,140 @@ describe('open() and the startup view', () => {
     await openAndConfirm();
 
     expect(store.view).toBe('start');
+  });
+
+  // The engine's canonical JSON omits `selections` when it is empty, and serde
+  // re-defaults it Rust-side — JavaScript does not. `selections` is the one
+  // omit-when-empty field the frontend treats as always present (five components
+  // iterate it unguarded), so a saved character with no Virtues or Flaws at all
+  // used to arrive undefined and throw mid-render, aborting the editor's mount.
+  it('fills in a saved character whose empty selections were omitted', async () => {
+    const sparse = loadedEntity() as Partial<Entity>;
+    delete sparse.selections;
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/rolf.armc',
+      entity: sparse as Entity,
+    });
+
+    await openAndConfirm();
+
+    expect(store.entity.selections).toEqual([]);
+  });
+});
+
+// The startup screen holds no character, only a placeholder entity. Everything
+// below pins what that means: an empty type nobody may read as a choice, no
+// engine round trip for it, and nothing for the close/quit guard to warn about.
+describe('the startup screen placeholder', () => {
+  /** Drive newDocument() to completion, confirming a discard prompt if one appears. */
+  async function newAndConfirm(): Promise<void> {
+    const discarding = store.newDocument();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await discarding;
+  }
+
+  beforeEach(() => {
+    store.currentPath = null;
+    store.error = null;
+    vi.mocked(ipc.validateEntity).mockClear();
+    vi.mocked(ipc.effectiveScores).mockClear();
+    vi.mocked(ipc.derivedTotals).mockClear();
+  });
+
+  afterEach(() => {
+    vi.mocked(ipc.validateEntity).mockResolvedValue({ issues: [] });
+    vi.mocked(ipc.saveEntity).mockReset();
+    store.error = null;
+  });
+
+  it('newDocument() returns to the type choice, discarding the character', async () => {
+    installRuleset([item({ id: 'virtue.plain' })]);
+    store.addSelection('virtue.plain');
+    store.setIdentity('name', 'Marcus');
+    store.currentPath = '/tmp/marcus.armc';
+
+    await newAndConfirm();
+
+    expect(store.view).toBe('start');
+    expect(store.entity.selections).toEqual([]);
+    expect(store.entity.name).toBeUndefined();
+    expect(store.currentPath).toBeNull();
+  });
+
+  it('leaves the placeholder without a type: no character means no type', async () => {
+    await newAndConfirm();
+    expect(store.entity.type_id).toBe('');
+  });
+
+  // The close/quit guard compares against the last save/load baseline. A
+  // placeholder that read as dirty would make every quit from the startup screen
+  // prompt about a character that does not exist.
+  it('is not dirty, so quitting from the startup screen never prompts', async () => {
+    await newAndConfirm();
+    expect(store.dirty).toBe(false);
+    expect(store.closeGuardPayload().dirty).toBe(false);
+  });
+
+  it('never sends the placeholder to the engine', async () => {
+    store.view = 'start';
+
+    await store.revalidate();
+
+    expect(ipc.validateEntity).not.toHaveBeenCalled();
+    expect(ipc.effectiveScores).not.toHaveBeenCalled();
+    expect(ipc.derivedTotals).not.toHaveBeenCalled();
+  });
+
+  it('drops a debounced validate the discarded character left pending', async () => {
+    store.setIdentity('name', 'Marcus');
+
+    await newAndConfirm();
+    vi.runAllTimers();
+    await Promise.resolve();
+
+    expect(ipc.validateEntity).not.toHaveBeenCalled();
+  });
+
+  it('discards a validate still in flight when the startup screen takes over', async () => {
+    let finishStale: (result: { issues: [] }) => void = () => {};
+    vi.mocked(ipc.validateEntity).mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishStale = resolve;
+      }) as ReturnType<typeof ipc.validateEntity>,
+    );
+    const stale = store.revalidate();
+    store.result = null;
+
+    store.view = 'start';
+    await store.revalidate();
+
+    finishStale({ issues: [] });
+    await stale;
+    expect(store.result).toBeNull();
+  });
+
+  it('retires a validation banner instead of stranding it on the startup screen', async () => {
+    vi.mocked(ipc.validateEntity).mockRejectedValueOnce({ kind: 'invalid_entity' });
+    await store.revalidate();
+    expect(store.error).toEqual({ kind: 'invalid_entity' });
+
+    store.view = 'start';
+    await store.revalidate();
+
+    expect(store.error).toBeNull();
+  });
+
+  // `error` is one shared banner channel: a failed save must stay visible, since
+  // the document it names is still unwritten.
+  it('keeps a file-operation banner it does not own', async () => {
+    vi.mocked(ipc.saveEntity).mockRejectedValueOnce({ kind: 'io' });
+    await store.saveAs();
+    expect(store.error).toEqual({ kind: 'io' });
+
+    store.view = 'start';
+    await store.revalidate();
+
+    expect(store.error).toEqual({ kind: 'io' });
   });
 });
 

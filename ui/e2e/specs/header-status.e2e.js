@@ -7,6 +7,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { startCharacter } from '../helpers.js';
+
 const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
 const STATUS = '[data-testid="doc-status"]';
 
@@ -17,6 +19,10 @@ function clean(text) {
 
 describe('header document status', () => {
   it('shows unsaved, then dirty, then the file name after save', async () => {
+    // A brand-new character has never been saved, which is the state the first
+    // assertion below is about — and the status only exists in the editor, never
+    // on the startup screen.
+    await startCharacter('companion');
     await $('[data-testid="tab-characteristics"]').waitForExist({ timeout: 30000 });
     const status = await $(STATUS);
     await status.waitForExist({ timeout: 10000 });

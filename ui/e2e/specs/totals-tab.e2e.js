@@ -20,9 +20,9 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 
+import { startCharacter } from '../helpers.js';
+
 const LANG_SELECT = '[data-testid="language-select"]';
-const TYPE_SELECT = '[data-testid="type-select"]';
-const STATUS = '[data-testid="doc-status"]';
 
 const EQUIPMENT_TAB = '[data-testid="tab-equipment"]';
 const TOTALS_TAB = '[data-testid="tab-totals"]';
@@ -46,31 +46,18 @@ function clean(text) {
 
 describe('totals tab', () => {
   it('renders the panel when the same weapon is carried twice', async () => {
-    await $(TYPE_SELECT).waitForExist({ timeout: 30000 });
+    // A magus, as reported — the type that renders the panel's widest surface
+    // (Lab/Casting Totals, Penetration, Magic Resistance) above the combat table.
+    // Freshly created, so the row counts below are only what this spec carries.
+    await startCharacter('magus');
 
-    // Specs share one app instance, so this one inherits the previous spec's
-    // edits and language. Save first — that clears the dirty flag, so New cannot
-    // raise the discard prompt and the reset needs no conditional branch.
+    // The language is app-wide state and does survive a new character, so pin it:
+    // the English weapon names below are asserted exactly.
     await $(LANG_SELECT).selectByAttribute('value', 'en');
     await browser.waitUntil(async () => (await $(LANG_SELECT).getValue()) === 'en', {
       timeout: 5000,
       timeoutMsg: 'language should switch to en',
     });
-    const status = await $(STATUS);
-    await $('[data-testid="save-button"]').click();
-    await browser.waitUntil(async () => !clean(await status.getText()).startsWith('*'), {
-      timeout: 10000,
-      timeoutMsg: 'saving should clear the dirty marker',
-    });
-    await $('[data-testid="new-button"]').click();
-    await browser.waitUntil(
-      async () => (await $('[data-testid="identity-name"]').getValue()) === '',
-      { timeout: 10000, timeoutMsg: 'New should reset the document' },
-    );
-
-    // A magus, as reported — the type that renders the panel's widest surface
-    // (Lab/Casting Totals, Penetration, Magic Resistance) above the combat table.
-    await $(TYPE_SELECT).selectByAttribute('value', 'magus');
 
     // Carry the same Long Sword twice. Nothing dedups this, and it is what a real
     // character does: several instances of one catalogue weapon.

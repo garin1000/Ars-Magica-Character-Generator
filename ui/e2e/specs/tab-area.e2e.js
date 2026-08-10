@@ -17,8 +17,7 @@
 
 import { $, browser, expect } from '@wdio/globals';
 
-const TYPE_SELECT = '[data-testid="type-select"]';
-const NAME_INPUT = '[data-testid="identity-name"]';
+import { startCharacter } from '../helpers.js';
 
 // The default window is 1100x800 (crates/arm-app/tauri.conf.json). 600 is a
 // plausible short window — a laptop screen with OS panels — and is where the source
@@ -62,19 +61,10 @@ async function setWindowHeight(height) {
 
 describe('tab area at a short window height', () => {
   before(async () => {
-    await $(TYPE_SELECT).waitForExist({ timeout: 30000 });
-    // Specs share one app instance; a marker name guarantees the document is dirty,
-    // so New always raises the discard prompt and the reset needs no branch.
-    await $(NAME_INPUT).setValue('tab-area-reset');
-    await $('[data-testid="new-button"]').click();
-    const confirm = await $('[data-testid="discard-confirm"]');
-    await confirm.waitForExist({ timeout: 10000 });
-    await confirm.click();
-    await browser.waitUntil(async () => (await $(NAME_INPUT).getValue()) === '', {
-      timeout: 10000,
-      timeoutMsg: 'New should reset the document',
-    });
-    await $(TYPE_SELECT).selectByAttribute('value', 'magus');
+    // A magus, whose Virtues & Flaws source list is the longest one the picker
+    // renders — and freshly created, so the geometry measured below is that of an
+    // untouched list rather than one the previous spec had filtered or filled.
+    await startCharacter('magus');
     await $('[data-testid="tab-virtues_flaws"]').click();
     await $('.region-source .list-scroll').waitForExist({ timeout: 10000 });
   });

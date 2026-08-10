@@ -17,6 +17,19 @@ type-grog = Grog
 type-companion = Companion
 type-mythic_companion = Mythic Companion
 type-magus = Magus
+# Shown in place of `type-<id>` when a loaded save names a character type the
+# active ruleset has no profile for — the raw id must never reach the screen.
+type-unknown = Unknown character type
+
+# Startup screen: the app opens here, with no character loaded yet. The character
+# type is picked once, by creating a character of that type.
+start-title = Create or open a character
+start-open-title = Open an existing character
+start-create-title = Create a new character
+start-create-hint = The character type is chosen here, once — it cannot be changed later.
+start-wizard-title = Guided wizard
+start-wizard = Start the guided wizard
+start-wizard-hint = The step-by-step guided creation arrives in a later version.
 
 available-title = Available
 items-virtues-title = Virtues

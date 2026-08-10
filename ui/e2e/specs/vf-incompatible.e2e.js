@@ -10,6 +10,8 @@
 
 import { $, browser, expect } from '@wdio/globals';
 
+import { startCharacter } from '../helpers.js';
+
 const MODE_SELECT = '[data-testid="mode-select"]';
 const INCOMPATIBLE_ISSUE = '[data-testid="issue-list"] li[data-code="incompatible"]';
 
@@ -29,6 +31,9 @@ async function waitForEnabled(ref, enabled) {
 
 describe('mutually exclusive Virtues/Flaws', () => {
   before(async () => {
+    // One companion for both blocks: the first clears its picks again, so the
+    // second starts from the clean sheet its comment describes.
+    await startCharacter('companion');
     const vfTab = await $('[data-testid="tab-virtues_flaws"]');
     await vfTab.waitForExist({ timeout: 30000 });
     await vfTab.click();

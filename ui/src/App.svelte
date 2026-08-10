@@ -4,7 +4,7 @@
   import { updateCloseGuard } from './lib/ipc';
   import LanguageSelector from './lib/components/LanguageSelector.svelte';
   import ModeToggle from './lib/components/ModeToggle.svelte';
-  import CharacterTypeSelector from './lib/components/CharacterTypeSelector.svelte';
+  import StartScreen from './lib/components/StartScreen.svelte';
   import VirtueFlawTab from './lib/components/VirtueFlawTab.svelte';
   import CharacteristicPicker from './lib/components/CharacteristicPicker.svelte';
   import AbilityTab from './lib/components/AbilityTab.svelte';
@@ -46,6 +46,16 @@
   );
   const hasMythicType = $derived(
     store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.has_mythic_type ?? false,
+  );
+  // The character type is chosen once, when the character is created, so the
+  // editor displays it and never offers to change it. `translate()` echoes an
+  // unknown key back, so a save naming a type the loaded ruleset has no profile
+  // for gets its own key instead of rendering the raw slug. (The engine reports
+  // that save's `unknown_type` separately, so the real problem is still shown.)
+  const typeName = $derived(
+    store.ruleset?.ruleset.type_profiles[store.entity.type_id]
+      ? store.t(`type-${store.entity.type_id}`)
+      : store.t('type-unknown'),
   );
   // The Supernatural (Might) tab appears for a mythic-companion-capable type
   // (Devil Child, Nephilim) or once the character has an effective Might (any type
@@ -111,12 +121,24 @@
     if (!(event.ctrlKey || event.metaKey)) return;
     const key = event.key.toLowerCase();
     if (key === 's') {
+      // Save/Save As write the document being edited. On the startup screen there
+      // is no document — only the placeholder entity — so an unguarded Ctrl+S
+      // there would write a file for a character that does not exist. The Save
+      // buttons are hidden on that screen; this window-level handler is not, so
+      // the gate has to be repeated here.
+      if (store.view !== 'editor') return;
       event.preventDefault();
       void (event.shiftKey ? store.saveAs() : store.save());
     } else if (key === 'n') {
+      // Ctrl+N stays live on both screens. From the editor it discards (through
+      // the unsaved-changes guard) and returns to the type choice; on the startup
+      // screen it lands where it already is, which is harmless and keeps the
+      // shortcut's meaning the same everywhere.
       event.preventDefault();
       void store.newDocument();
     } else if (key === 'o') {
+      // Ctrl+O works on both screens: opening a character is the startup screen's
+      // own first offer.
       event.preventDefault();
       void store.open();
     }
@@ -146,125 +168,141 @@
       <h1>{store.t('app-title')}</h1>
       <!-- Active save's file name + ASCII dirty marker, on-screen (not only in the
          OS window title). Reuses the derived currentFileName/dirty state; a null
-         file name means the document has never been saved. -->
-      <span class="doc-status" data-testid="doc-status">
-        {#if store.currentFileName === null}
-          {store.t(store.dirty ? 'app-document-unsaved-dirty' : 'app-document-unsaved')}
-        {:else}
-          {store.t(store.dirty ? 'app-document-name-dirty' : 'app-document-name', {
-            name: store.currentFileName,
-          })}
-        {/if}
-      </span>
+         file name means the document has never been saved. Hidden on the startup
+         screen, where it would report an unsaved document that does not exist. -->
+      {#if store.view === 'editor'}
+        <span class="doc-status" data-testid="doc-status">
+          {#if store.currentFileName === null}
+            {store.t(store.dirty ? 'app-document-unsaved-dirty' : 'app-document-unsaved')}
+          {:else}
+            {store.t(store.dirty ? 'app-document-name-dirty' : 'app-document-name', {
+              name: store.currentFileName,
+            })}
+          {/if}
+        </span>
+      {/if}
     </div>
+    <!-- The language applies to the whole app, so it is offered on both screens.
+         The validation mode and the document toolbar act on a character, so they
+         appear only once one exists. -->
     <div class="controls">
-      <CharacterTypeSelector />
       <LanguageSelector />
-      <ModeToggle />
-      <SaveLoadBar />
+      {#if store.view === 'editor'}
+        <ModeToggle />
+        <SaveLoadBar />
+      {/if}
     </div>
   </header>
 
-  <section class="char-banner">
-    <input
-      class="name-input"
-      value={store.entity.name ?? ''}
-      oninput={(e) => store.setIdentity('name', (e.currentTarget as HTMLInputElement).value)}
-      placeholder={store.t('identity-name-placeholder')}
-      aria-label={store.t('identity-name')}
-      data-testid="identity-name"
-    />
-    <input
-      class="desc-input"
-      value={store.entity.description ?? ''}
-      oninput={(e) => store.setIdentity('description', (e.currentTarget as HTMLInputElement).value)}
-      placeholder={store.t('identity-description-placeholder')}
-      aria-label={store.t('identity-description')}
-      data-testid="identity-description"
-    />
-  </section>
+  {#if store.view === 'start'}
+    <StartScreen />
+  {:else}
+    <section class="char-banner">
+      <p class="char-type" data-testid="character-type">
+        <span class="char-type-label">{store.t('type-label')}</span>
+        <span class="char-type-value">{typeName}</span>
+      </p>
+      <input
+        class="name-input"
+        value={store.entity.name ?? ''}
+        oninput={(e) => store.setIdentity('name', (e.currentTarget as HTMLInputElement).value)}
+        placeholder={store.t('identity-name-placeholder')}
+        aria-label={store.t('identity-name')}
+        data-testid="identity-name"
+      />
+      <input
+        class="desc-input"
+        value={store.entity.description ?? ''}
+        oninput={(e) =>
+          store.setIdentity('description', (e.currentTarget as HTMLInputElement).value)}
+        placeholder={store.t('identity-description-placeholder')}
+        aria-label={store.t('identity-description')}
+        data-testid="identity-description"
+      />
+    </section>
 
-  <div class="tabbar" role="tablist">
-    {#each tabs as t (t.id)}
-      <button
-        type="button"
-        role="tab"
-        class="tab"
-        class:active={tab === t.id}
-        aria-selected={tab === t.id}
-        onclick={() => (tab = t.id)}
-        data-testid="tab-{t.id}"
-      >
-        {store.t(t.key)}
-      </button>
-    {/each}
-  </div>
+    <div class="tabbar" role="tablist">
+      {#each tabs as t (t.id)}
+        <button
+          type="button"
+          role="tab"
+          class="tab"
+          class:active={tab === t.id}
+          aria-selected={tab === t.id}
+          onclick={() => (tab = t.id)}
+          data-testid="tab-{t.id}"
+        >
+          {store.t(t.key)}
+        </button>
+      {/each}
+    </div>
 
-  <main class="tab-content">
-    {#if tab === 'characteristics'}
-      <CharacteristicPicker />
-    {:else if tab === 'virtues_flaws'}
-      <div class="vf-tab">
-        <BalanceBar />
-        <VirtueFlawTab />
-      </div>
-    {:else if tab === 'abilities'}
-      <div class="vf-tab">
-        <XpBar />
-        <AbilityTab />
-      </div>
-    {:else if tab === 'arts'}
-      <div class="vf-tab">
-        <XpBar prefix="art-" />
-        <ArtGrid />
-      </div>
-    {:else if tab === 'spells'}
-      <div class="vf-tab">
-        <SpellTab />
-      </div>
-    {:else if tab === 'possessions'}
-      <div class="vf-tab">
-        <div class="tab-scroll">
-          <MagicPossessions />
+    <main class="tab-content">
+      {#if tab === 'characteristics'}
+        <CharacteristicPicker />
+      {:else if tab === 'virtues_flaws'}
+        <div class="vf-tab">
+          <BalanceBar />
+          <VirtueFlawTab />
         </div>
-      </div>
-    {:else if tab === 'equipment'}
-      <div class="vf-tab">
-        <EquipmentTab />
-      </div>
-    {:else if tab === 'details'}
-      <div class="vf-tab">
-        <div class="tab-scroll">
-          <CharacterDetails />
+      {:else if tab === 'abilities'}
+        <div class="vf-tab">
+          <XpBar />
+          <AbilityTab />
         </div>
-      </div>
-    {:else if tab === 'totals'}
-      <div class="vf-tab">
-        <div class="tab-scroll">
-          <DerivedTotalsPanel />
+      {:else if tab === 'arts'}
+        <div class="vf-tab">
+          <XpBar prefix="art-" />
+          <ArtGrid />
         </div>
-      </div>
-    {:else if tab === 'mythic_type'}
-      <div class="vf-tab">
-        <MythicCompanionTypeSelector />
-      </div>
-    {:else if tab === 'supernatural'}
-      <div class="vf-tab">
-        <SupernaturalBeing />
-      </div>
-    {:else}
-      <div class="vf-tab">
-        <div class="tab-scroll">
-          <HouseSelector />
+      {:else if tab === 'spells'}
+        <div class="vf-tab">
+          <SpellTab />
         </div>
-      </div>
-    {/if}
-  </main>
+      {:else if tab === 'possessions'}
+        <div class="vf-tab">
+          <div class="tab-scroll">
+            <MagicPossessions />
+          </div>
+        </div>
+      {:else if tab === 'equipment'}
+        <div class="vf-tab">
+          <EquipmentTab />
+        </div>
+      {:else if tab === 'details'}
+        <div class="vf-tab">
+          <div class="tab-scroll">
+            <CharacterDetails />
+          </div>
+        </div>
+      {:else if tab === 'totals'}
+        <div class="vf-tab">
+          <div class="tab-scroll">
+            <DerivedTotalsPanel />
+          </div>
+        </div>
+      {:else if tab === 'mythic_type'}
+        <div class="vf-tab">
+          <MythicCompanionTypeSelector />
+        </div>
+      {:else if tab === 'supernatural'}
+        <div class="vf-tab">
+          <SupernaturalBeing />
+        </div>
+      {:else}
+        <div class="vf-tab">
+          <div class="tab-scroll">
+            <HouseSelector />
+          </div>
+        </div>
+      {/if}
+    </main>
 
-  <!-- One shared issues panel for the whole character, pinned below the tabs. -->
-  <footer class="validation-bar">
-    <ValidationPanel docked />
-  </footer>
+    <!-- One shared issues panel for the whole character, pinned below the tabs. -->
+    <footer class="validation-bar">
+      <ValidationPanel docked />
+    </footer>
+  {/if}
 </div>
 
 <!-- Click/hover blocker over the inert shell: a calm scrim that makes the blocked

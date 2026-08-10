@@ -17,6 +17,20 @@ type-grog = Grog
 type-companion = Gefährte
 type-mythic_companion = Mythischer Gefährte
 type-magus = Magus
+# Wird anstelle von `type-<id>` angezeigt, wenn eine geladene Datei einen
+# Charaktertyp nennt, für den das aktive Regelwerk kein Profil hat — die rohe
+# Kennung darf nie auf dem Bildschirm erscheinen.
+type-unknown = Unbekannter Charaktertyp
+
+# Startbildschirm: Hier beginnt die Anwendung, noch ohne geladenen Charakter. Der
+# Charaktertyp wird einmalig gewählt, indem ein Charakter dieses Typs angelegt wird.
+start-title = Charakter anlegen oder öffnen
+start-open-title = Vorhandenen Charakter öffnen
+start-create-title = Neuen Charakter anlegen
+start-create-hint = Der Charaktertyp wird hier einmalig gewählt — er lässt sich später nicht mehr ändern.
+start-wizard-title = Geführte Erstellung
+start-wizard = Geführte Erstellung starten
+start-wizard-hint = Die schrittweise geführte Erstellung kommt in einer späteren Version.
 
 available-title = Verfügbar
 items-virtues-title = Tugenden

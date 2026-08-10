@@ -190,6 +190,51 @@ button:disabled {
   border-bottom-color: var(--accent);
 }
 
+/* Startup screen: the app opens here, before any character exists. One column of
+   choices (open / create / guided wizard), scrollable so a short window never
+   hides the last one. */
+.start-screen {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  align-items: flex-start;
+}
+
+.start-screen h2 {
+  margin: 0;
+}
+
+.start-screen h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.start-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+/* One button per character type the ruleset declares; wraps rather than
+   overflowing, since the number of types is data. */
+.start-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.start-screen .hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  max-width: 40rem;
+}
+
 /* Character name + short description, edited in place between the app header
    and the tab bar. Borderless until hovered/focused so they read as text. */
 .char-banner {
@@ -198,6 +243,22 @@ button:disabled {
   gap: 0.15rem;
   padding: 0.5rem 1.5rem;
   border-bottom: 1px solid #38355a;
+}
+
+/* Read-only character type, above the name: chosen once at creation, so it is
+   stated here rather than offered as a control. */
+.char-type {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 0 0.1rem;
+  padding: 0 0.4rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.char-type-value {
+  color: var(--ink);
+  font-weight: 600;
 }
 
 .char-banner .name-input,

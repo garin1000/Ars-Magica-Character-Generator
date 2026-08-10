@@ -138,12 +138,15 @@ Markdown export added in M5.6.
 
 ### What works today
 
-- **Character creation.** Characters can be built with virtues/flaws, point-buy
-  Characteristics, whole bought Ability scores, and — for magi — whole bought
-  Hermetic Art scores, with Abilities and Arts drawing from one shared experience
-  pool, all validated live. A character-type selector switches between grog,
-  companion, mythic companion, and magus; the Arts, Spells, and Magic Items tabs
-  appear only for magus-capable types.
+- **Character creation.** The app opens on a startup screen offering to open an
+  existing character or to create a new one — one button per character type the
+  ruleset declares (grog, companion, mythic companion, magus), plus the guided
+  wizard, which is announced but not yet available. The type is chosen once, at
+  creation, and is shown read-only in the editor afterwards. Characters are then
+  built with virtues/flaws, point-buy Characteristics, whole bought Ability
+  scores, and — for magi — whole bought Hermetic Art scores, with Abilities and
+  Arts drawing from one shared experience pool, all validated live. The Arts,
+  Spells, and Magic Items tabs appear only for magus-capable types.
 
 - **Magic Items: devices and the Longevity Ritual.** The Magic Items tab stores a
   magus's starting possessions — aura, enchanted devices (charged against the

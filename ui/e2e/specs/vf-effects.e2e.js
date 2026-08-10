@@ -9,7 +9,8 @@
 
 import { $, expect, browser } from '@wdio/globals';
 
-const TYPE_SELECT = '[data-testid="type-select"]';
+import { startCharacter } from '../helpers.js';
+
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const CHARS_TAB = '[data-testid="tab-characteristics"]';
 const ABILITIES_TAB = '[data-testid="tab-abilities"]';
@@ -18,10 +19,6 @@ const ARTS_TAB = '[data-testid="tab-arts"]';
 // Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
 function clean(text) {
   return text.replace(/[⁦-⁩]/g, '');
-}
-
-async function setType(value) {
-  await $(TYPE_SELECT).selectByAttribute('value', value);
 }
 
 async function addVirtue(id) {
@@ -33,8 +30,8 @@ async function addVirtue(id) {
 
 describe('phase-3 virtue/flaw effects', () => {
   it('Improved Characteristics raises the Characteristic-buy budget by 3', async () => {
+    await startCharacter('companion');
     await $(VF_TAB).waitForExist({ timeout: 30000 });
-    await setType('companion');
 
     // Base budget is 7.
     await $(CHARS_TAB).click();
@@ -55,7 +52,7 @@ describe('phase-3 virtue/flaw effects', () => {
   });
 
   it('Warrior adds a restricted XP pool eligible for Martial Abilities', async () => {
-    await setType('companion');
+    await startCharacter('companion');
     await addVirtue('virtue.warrior');
 
     await $(ABILITIES_TAB).click();
@@ -90,8 +87,8 @@ describe('phase-3 virtue/flaw effects', () => {
       },
     );
 
-    // The suite shares one app instance and setType does not reset the entity, so
-    // clean up the bought Ability to leave the next test's state pristine.
+    // Removing the bought Ability must free the pool again — the other half of the
+    // restricted-pool contract, and cheap to check while it is set up.
     await $('[data-testid="remove-ability.single_weapon-0"]').click();
     await browser.waitUntil(async () => clean(await pool.getText()).includes('0 / 50'), {
       timeout: 5000,
@@ -100,7 +97,7 @@ describe('phase-3 virtue/flaw effects', () => {
   });
 
   it('Second Sight confers the Ability at a free effective floor of 1', async () => {
-    await setType('companion');
+    await startCharacter('companion');
     await addVirtue('virtue.second_sight');
 
     // Add the Second Sight Ability at 0; the grant floors its effective score at 1.
@@ -120,7 +117,7 @@ describe('phase-3 virtue/flaw effects', () => {
   });
 
   it('Affinity with Art reduces the XP charged for that Art', async () => {
-    await setType('magus');
+    await startCharacter('magus');
 
     // Affinity with Creo, then raise Creo to 5 (table cost 15 → charged 10).
     await addVirtue('virtue.affinity_art');

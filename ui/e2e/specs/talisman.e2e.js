@@ -15,9 +15,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { startCharacter } from '../helpers.js';
+
 const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
 
-const TYPE_SELECT = '[data-testid="type-select"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const ARTS_TAB = '[data-testid="tab-arts"]';
 const POSSESSIONS_TAB = '[data-testid="tab-possessions"]';
@@ -49,8 +50,8 @@ async function waitForText(selector, ...fragments) {
 
 describe('talisman', () => {
   it('enters an item, derives its capacity, and leaves the item-level budget alone', async () => {
+    await startCharacter('magus');
     await $(VF_TAB).waitForExist({ timeout: 30000 });
-    await $(TYPE_SELECT).selectByAttribute('value', 'magus');
 
     // Creo 5 / Perdo 2 (Techniques) and Corpus 4 / Ignem 3 (Forms) from the shared
     // Art XP pool. Highest Technique 5 + highest Form 4 = 9 pawns; the lower Arts

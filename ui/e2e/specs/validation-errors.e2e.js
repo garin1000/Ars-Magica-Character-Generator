@@ -16,8 +16,14 @@
 
 import { $, $$, expect } from '@wdio/globals';
 
+import { startCharacter } from '../helpers.js';
+
 describe('validation errors', () => {
   it('shows a localized, error-severity issue for a forbidden-category selection', async () => {
+    // A fresh companion, so "no issues before any selection" below is about this
+    // character rather than whatever the previous spec left behind.
+    await startCharacter('companion');
+
     // The shared validation bar (bottom) reports for the whole character; the V/F
     // add buttons live in the Virtues & Flaws tab.
     const vfTab = await $('[data-testid="tab-virtues_flaws"]');

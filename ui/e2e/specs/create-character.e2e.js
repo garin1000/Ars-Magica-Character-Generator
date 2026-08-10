@@ -7,10 +7,14 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { startCharacter } from '../helpers.js';
+
 const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
 
 describe('character editor', () => {
   it('edits across tabs, validates, and round-trips a save', async () => {
+    await startCharacter('companion');
+
     // Open the Characteristics tab; its spinner appearing means the ruleset
     // has loaded.
     await $('[data-testid="tab-characteristics"]').waitForExist({ timeout: 30000 });
@@ -76,7 +80,7 @@ describe('character editor', () => {
     // with no granting Virtue is locked (greyed). Its tooltip must show the
     // "requires a Virtue" REASON and, below it, the ability's normal description
     // — reason first, not instead of the description.
-    await $('[data-testid="type-select"]').selectByAttribute('value', 'companion');
+    await startCharacter('companion');
     await $('[data-testid="tab-abilities"]').click();
     const row = await $('[data-testid="add-ability.second_sight"]');
     await row.waitForExist({ timeout: 10000 });
