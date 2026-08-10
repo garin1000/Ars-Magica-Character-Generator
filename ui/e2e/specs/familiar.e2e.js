@@ -17,9 +17,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { startCharacter } from '../helpers.js';
+
 const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
 
-const TYPE_SELECT = '[data-testid="type-select"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const POSSESSIONS_TAB = '[data-testid="tab-possessions"]';
 const TOTALS_TAB = '[data-testid="tab-totals"]';
@@ -67,10 +68,10 @@ const MAGUS_GATE = '[data-code="house_unset"]';
  * not move", not "there are none".
  *
  * `gate` is a selector for an issue only the current type raises — waiting for it is
- * what proves the debounced pass triggered by the type switch has landed. Waiting
- * merely for the panel to *exist* proves nothing: it already exists from the app's
- * initial (grog) state, so the counts could be read from the pre-magus pass and the
- * stale baseline would surface later as a spurious red.
+ * what proves the debounced pass for THIS magus has landed. Waiting merely for the
+ * panel to *exist* proves nothing: it may still be showing the pass for whatever the
+ * previous spec left on screen, so the counts could be read from a pre-magus pass and
+ * the stale baseline would surface later as a spurious red.
  */
 async function issueCounts(gate) {
   await browser.waitUntil(async () => await $(gate).isExisting(), {
@@ -85,13 +86,13 @@ async function issueCounts(gate) {
 
 describe('familiar', () => {
   it('enters the whole statblock and derives the bonding numbers as guidance', async () => {
+    await startCharacter('magus');
     await $(VF_TAB).waitForExist({ timeout: 30000 });
-    await $(TYPE_SELECT).selectByAttribute('value', 'magus');
 
     await $(POSSESSIONS_TAB).click();
     // Baseline for the guidance-only check: whatever this magus already complains
     // about before a familiar exists — read from the MAGUS's own validation pass,
-    // never the grog pass the app started on.
+    // never one left over from the previous spec.
     const issuesBefore = await issueCounts(MAGUS_GATE);
 
     await $('[data-testid="familiar-add"]').click();

@@ -9,8 +9,10 @@
 
 import { $, $$, expect } from '@wdio/globals';
 
-// `flaw.blatant_gift` (hermetic category) is forbidden for the default
-// `companion` profile, so it yields a deterministic error in Enforced mode.
+import { startCharacter } from '../helpers.js';
+
+// `flaw.blatant_gift` (hermetic category) is forbidden for the `companion`
+// profile, so it yields a deterministic error in Enforced mode.
 const FORBIDDEN = '[data-testid="add-flaw.blatant_gift"]';
 const MODE_SELECT = '[data-testid="mode-select"]';
 
@@ -28,8 +30,12 @@ async function severities() {
 
 describe('validation modes', () => {
   it('reports the same illegal entity differently per mode', async () => {
+    // A companion whose only issue is the forbidden flaw added below, so the
+    // per-mode severity counts are unambiguous.
+    await startCharacter('companion');
+
     // V/F add buttons live in the Virtues & Flaws tab; the mode select and the
-    // shared validation bar are always visible.
+    // shared validation bar are visible throughout the editor.
     const vfTab = await $('[data-testid="tab-virtues_flaws"]');
     await vfTab.waitForExist({ timeout: 30000 });
     await vfTab.click();

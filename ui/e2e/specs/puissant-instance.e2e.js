@@ -5,6 +5,8 @@
 
 import { $, expect } from '@wdio/globals';
 
+import { startCharacter } from '../helpers.js';
+
 // Add an (Area) Lore instance at row `i`, name its area, and raise it to `score`.
 async function addLore(i, area, score) {
   await $('[data-testid="add-ability.area_lore"]').click();
@@ -17,6 +19,10 @@ async function addLore(i, area, score) {
 
 describe('Puissant Ability targets one ability instance', () => {
   it('boosts only the chosen (Area) Lore, not the others', async () => {
+    // The row indices below are the ability-array positions, so this needs a
+    // character with no abilities yet.
+    await startCharacter('companion');
+
     // Abilities tab: fund XP, then add three distinct Area Lore instances.
     const abilitiesTab = await $('[data-testid="tab-abilities"]');
     await abilitiesTab.waitForExist({ timeout: 30000 });

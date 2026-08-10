@@ -4,7 +4,9 @@
 // and the list round-trips through a save. All against the real binary.
 //
 // The wdio session is shared across the `it` blocks below, so they run as one
-// ordered narrative (each builds on the prior state), like the Arts spec.
+// ordered narrative (each builds on the prior state), like the Arts spec. The
+// first block creates the magus all the others go on building, so it is the only
+// one that calls `startCharacter`.
 //
 // NOTE: requires the production binary; the display comes from your desktop
 // session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
@@ -16,7 +18,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const TYPE_SELECT = '[data-testid="type-select"]';
+import { startCharacter } from '../helpers.js';
+
 const SPELLS_TAB = '[data-testid="tab-spells"]';
 const ARTS_TAB = '[data-testid="tab-arts"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
@@ -36,10 +39,6 @@ function clean(text) {
   return text.replace(/[⁦-⁩]/g, '');
 }
 
-async function setType(value) {
-  await $(TYPE_SELECT).selectByAttribute('value', value);
-}
-
 async function codeExists(code) {
   return (await $$(`[data-code="${code}"]`).length) > 0;
 }
@@ -53,13 +52,12 @@ async function raiseArt(artId, times) {
 
 describe('spells', () => {
   it('shows the Spells tab only for a magus', async () => {
+    await startCharacter('companion');
     await $(VF_TAB).waitForExist({ timeout: 30000 });
-    await setType('companion');
-    await browser.waitUntil(async () => !(await $(SPELLS_TAB).isExisting()), {
-      timeout: 5000,
-      timeoutMsg: 'companion must not show the Spells tab',
-    });
-    await setType('magus');
+    expect(await $(SPELLS_TAB).isExisting()).toBe(false);
+
+    // The magus every block below goes on building.
+    await startCharacter('magus');
     await $(SPELLS_TAB).waitForExist({ timeout: 5000 });
   });
 

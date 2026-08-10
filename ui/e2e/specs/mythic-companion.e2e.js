@@ -1,5 +1,5 @@
-// End-to-end: Mythic Companion types (mythic-companion-only). Choosing the
-// character type surfaces a "Type" tab (gated on the profile's
+// End-to-end: Mythic Companion types (mythic-companion-only). Creating a
+// character of that type surfaces a "Type" tab (gated on the profile's
 // `has_mythic_type` flag); picking a type auto-grants its free status + Minor
 // Virtue (read-only), seeds its required V/F package as bought selections, and
 // raises the balance ceilings by the type's bonus points (Devil Child 37/17).
@@ -12,7 +12,8 @@
 
 import { $, expect, browser } from '@wdio/globals';
 
-const TYPE_SELECT = '[data-testid="type-select"]';
+import { startCharacter } from '../helpers.js';
+
 const MYTHIC_TAB = '[data-testid="tab-mythic_type"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const MYTHIC_SELECT = '[data-testid="mythic-type-select"]';
@@ -24,10 +25,6 @@ function clean(text) {
   return text.replace(/[⁦-⁩]/g, '');
 }
 
-async function setType(value) {
-  await $(TYPE_SELECT).selectByAttribute('value', value);
-}
-
 async function selectMythicType(value) {
   await $(MYTHIC_TAB).click();
   const select = await $(MYTHIC_SELECT);
@@ -37,14 +34,16 @@ async function selectMythicType(value) {
 
 describe('mythic companion types', () => {
   it('shows the Type tab only for a mythic companion', async () => {
-    await setType('companion');
+    await startCharacter('companion');
+    await $(VF_TAB).waitForExist({ timeout: 30000 });
     await expect($(MYTHIC_TAB)).not.toExist();
-    await setType('mythic_companion');
+
+    await startCharacter('mythic_companion');
     await $(MYTHIC_TAB).waitForExist({ timeout: 10000 });
   });
 
   it('grants the free status + Minor Virtue and raises the budget to the type bonus', async () => {
-    await setType('mythic_companion');
+    await startCharacter('mythic_companion');
     await selectMythicType('mythic_type.devil_child');
 
     // On the Type tab: the free status Virtue is a read-only grant row, and the
@@ -63,7 +62,7 @@ describe('mythic companion types', () => {
   });
 
   it('seeds the required package and offers a required-Flaw substitute', async () => {
-    await setType('mythic_companion');
+    await startCharacter('mythic_companion');
     await selectMythicType('mythic_type.devil_child');
 
     // The required Flaw swap dropdown is on the Type tab, with >1 substitute.

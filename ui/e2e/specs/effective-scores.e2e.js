@@ -4,8 +4,12 @@
 
 import { $, expect } from '@wdio/globals';
 
+import { startCharacter } from '../helpers.js';
+
 describe('characteristic cap + ability bonus', () => {
   it('Great Characteristic opens the cap, Puissant shows a badge', async () => {
+    await startCharacter('companion');
+
     // Open the Characteristics tab; raise Strength to its base cap of +3.
     await $('[data-testid="tab-characteristics"]').waitForExist({ timeout: 30000 });
     await $('[data-testid="tab-characteristics"]').click();

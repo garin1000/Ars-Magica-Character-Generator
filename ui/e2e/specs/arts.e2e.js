@@ -9,7 +9,8 @@
 
 import { $, expect, browser } from '@wdio/globals';
 
-const TYPE_SELECT = '[data-testid="type-select"]';
+import { startCharacter } from '../helpers.js';
+
 const ARTS_TAB = '[data-testid="tab-arts"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const LANG_SELECT = '[data-testid="language-select"]';
@@ -19,28 +20,20 @@ function clean(text) {
   return text.replace(/[⁦-⁩]/g, '');
 }
 
-async function setType(value) {
-  await $(TYPE_SELECT).selectByAttribute('value', value);
-}
-
 describe('hermetic arts', () => {
   it('shows the Arts tab only for a magus', async () => {
+    // A companion has no Arts tab...
+    await startCharacter('companion');
     await $(VF_TAB).waitForExist({ timeout: 30000 });
+    expect(await $(ARTS_TAB).isExisting()).toBe(false);
 
-    // Companion (default) has no Arts tab.
-    await setType('companion');
-    await browser.waitUntil(async () => !(await $(ARTS_TAB).isExisting()), {
-      timeout: 5000,
-      timeoutMsg: 'companion must not show the Arts tab',
-    });
-
-    // Magus reveals it (capability flag, not the type id).
-    await setType('magus');
+    // ...while a magus does (capability flag, not the type id).
+    await startCharacter('magus');
     await $(ARTS_TAB).waitForExist({ timeout: 5000 });
   });
 
   it('buys an Art against the shared XP pool', async () => {
-    await setType('magus');
+    await startCharacter('magus');
     await $(ARTS_TAB).click();
 
     // Fund the shared pool. All 15 Arts are always shown — raise Creo to 5
@@ -66,7 +59,8 @@ describe('hermetic arts', () => {
   // `general_used > pool` payload asserts a state the engine cannot produce and
   // passes even when the app shows 0. Only the live IPC payload proves it.
   it('shows an overspent XP pool as a negative Available', async () => {
-    await setType('magus');
+    // Deliberately NO startCharacter here: this test carries on from the magus the
+    // previous one funded, because reaching an overspent pool needs that state.
     await $(ARTS_TAB).click();
 
     // Carrying on from the previous test: pool 20, Creo 5 (15 XP). Raising Creo to
@@ -103,7 +97,7 @@ describe('hermetic arts', () => {
   });
 
   it('applies Puissant Art as a +3 effective bonus on the targeted Art', async () => {
-    await setType('magus');
+    await startCharacter('magus');
 
     // Add Puissant Art on the Virtues & Flaws tab and target Ignem.
     await $(VF_TAB).click();
@@ -130,7 +124,7 @@ describe('hermetic arts', () => {
   });
 
   it('shows the single-row XP summary and localizes it to German (Issue G)', async () => {
-    await setType('magus');
+    await startCharacter('magus');
     await $(ARTS_TAB).click();
 
     // The general-pool total is the only editable field and retains its value.

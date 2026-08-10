@@ -23,8 +23,7 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 
-const TYPE_SELECT = '[data-testid="type-select"]';
-const NAME_INPUT = '[data-testid="identity-name"]';
+import { startCharacter } from '../helpers.js';
 
 // The frame and the tab area carry no data-testid: they ARE layout elements, and
 // what this spec asserts is precisely the geometry of `.selected-frame` inside
@@ -127,24 +126,6 @@ async function clickTab(id) {
 }
 
 /**
- * Back to an empty document. Specs share one app instance, so a marker name is
- * typed first: that guarantees the document is dirty, so New ALWAYS raises the
- * discard prompt and the reset needs no conditional branch (and, unlike saving
- * first, it never touches the JSON file the other specs round-trip).
- */
-async function resetDocument() {
-  await $(NAME_INPUT).setValue('selected-frame-reset');
-  await $('[data-testid="new-button"]').click();
-  const confirm = await $('[data-testid="discard-confirm"]');
-  await confirm.waitForExist({ timeout: 10000 });
-  await confirm.click();
-  await browser.waitUntil(async () => (await $(NAME_INPUT).getValue()) === '', {
-    timeout: 10000,
-    timeoutMsg: 'New should reset the document',
-  });
-}
-
-/**
  * The `data-testid`s of the first `count` ENABLED add controls in the active
  * source list, read in one round trip. Ids are never hardcoded: catalogue size and
  * contents are data, so the spec asks the rendered list what it can add.
@@ -165,11 +146,10 @@ async function enabledAddIds(prefix, count) {
 
 describe('selected frame', () => {
   it('scrolls a long Virtues list inside the frame instead of past its bottom border', async () => {
-    await $(TYPE_SELECT).waitForExist({ timeout: 30000 });
-    await resetDocument();
     // A magus: the widest V/F catalogue, and the mandatory traits (The Gift,
-    // Hermetic Magus) add their own rows to the selected side.
-    await $(TYPE_SELECT).selectByAttribute('value', 'magus');
+    // Hermetic Magus) add their own rows to the selected side. Freshly created, so
+    // the row counts below are this spec's own picks and nothing else.
+    await startCharacter('magus');
 
     await clickTab('virtues_flaws');
     const frame = await $(FRAME);
@@ -197,7 +177,9 @@ describe('selected frame', () => {
   });
 
   it('scrolls a long Equipment list inside the frame instead of past its bottom border', async () => {
-    await resetDocument();
+    // Its own character again: the previous test filled the Virtues column, and the
+    // row count below must be only what this test carries.
+    await startCharacter('magus');
 
     await clickTab('equipment');
     const frame = await $(FRAME);
@@ -218,9 +200,7 @@ describe('selected frame', () => {
     );
 
     expectContainedScrollport(await frameMetrics());
-
-    // Leave a clean document behind: the specs after this one assert exact budgets
-    // and would otherwise inherit these rows.
-    await resetDocument();
+    // No clean-up needed: every spec after this one creates its own character
+    // through `startCharacter`, which discards these rows.
   });
 });

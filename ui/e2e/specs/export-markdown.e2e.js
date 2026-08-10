@@ -14,11 +14,12 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { startCharacter } from '../helpers.js';
+
 const exportFile = path.resolve(os.tmpdir(), 'arm-e2e-character.md');
 const saveFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
 
 const LANG_SELECT = '[data-testid="language-select"]';
-const TYPE_SELECT = '[data-testid="type-select"]';
 const STATUS = '[data-testid="doc-status"]';
 const NAME = 'Marcus of Bonisagus';
 
@@ -71,25 +72,12 @@ function section(md, heading) {
 
 describe('markdown export', () => {
   it('builds a magus worth exporting', async () => {
-    await $(TYPE_SELECT).waitForExist({ timeout: 30000 });
+    // A magus of this spec's own, from the startup screen: specs share one app
+    // instance, so nothing here may be inherited from the previous file. The
+    // language is app-wide state and does carry over, so pin it to English.
+    await startCharacter('magus');
     await setLang('en');
 
-    // Specs share one app instance, so this one inherits the previous spec's
-    // edits. Save first — that clears the dirty flag, so New cannot raise the
-    // discard prompt and the reset needs no conditional branch.
-    const status = await $(STATUS);
-    await $('[data-testid="save-button"]').click();
-    await browser.waitUntil(async () => !clean(await status.getText()).startsWith('*'), {
-      timeout: 10000,
-      timeoutMsg: 'saving should clear the dirty marker',
-    });
-    await $('[data-testid="new-button"]').click();
-    await browser.waitUntil(
-      async () => (await $('[data-testid="identity-name"]').getValue()) === '',
-      { timeout: 10000, timeoutMsg: 'New should reset the document' },
-    );
-
-    await $(TYPE_SELECT).selectByAttribute('value', 'magus');
     await $('[data-testid="identity-name"]').setValue(NAME);
 
     // Intelligence +2 and Stamina +2 — the latter is what gives Soak a non-zero

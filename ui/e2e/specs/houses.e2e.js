@@ -22,7 +22,8 @@
 
 import { $, expect, browser } from '@wdio/globals';
 
-const TYPE_SELECT = '[data-testid="type-select"]';
+import { startCharacter } from '../helpers.js';
+
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const ABILITIES_TAB = '[data-testid="tab-abilities"]';
 const ARTS_TAB = '[data-testid="tab-arts"]';
@@ -32,10 +33,6 @@ const HOUSE_SELECT = '[data-testid="house-select"]';
 // Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
 function clean(text) {
   return text.replace(/[⁦-⁩]/g, '');
-}
-
-async function setType(value) {
-  await $(TYPE_SELECT).selectByAttribute('value', value);
 }
 
 async function selectHouse(value) {
@@ -57,17 +54,13 @@ async function addAbility(id) {
 
 describe('hermetic houses', () => {
   it('shows the House tab only for a magus', async () => {
+    // A companion has no House tab (gated on the capability flag).
+    await startCharacter('companion');
     await $(VF_TAB).waitForExist({ timeout: 30000 });
+    expect(await $(HOUSE_TAB).isExisting()).toBe(false);
 
-    // Companion (default) has no House tab (gated on the capability flag).
-    await setType('companion');
-    await browser.waitUntil(async () => !(await $(HOUSE_TAB).isExisting()), {
-      timeout: 5000,
-      timeoutMsg: 'companion must not show the House tab',
-    });
-
-    // Magus reveals it, and the HouseSelector renders behind it.
-    await setType('magus');
+    // A magus has one, and the HouseSelector renders behind it.
+    await startCharacter('magus');
     await $(HOUSE_TAB).waitForExist({ timeout: 5000 });
     await $(HOUSE_TAB).click();
     await $('[data-testid="house-selector"]').waitForExist({ timeout: 5000 });
@@ -75,7 +68,7 @@ describe('hermetic houses', () => {
   });
 
   it('grants a fixed Virtue for free — Bjornaer confers Heartbeast', async () => {
-    await setType('magus');
+    await startCharacter('magus');
 
     // Record the bought-virtue balance BEFORE choosing a House. A granted Virtue
     // must not change it (compute_balance counts bought selections only).
@@ -91,8 +84,8 @@ describe('hermetic houses', () => {
     await granted.waitForExist({ timeout: 5000 });
 
     // …and its ability_score_grant floors Heartbeast at effective 1 for 0 XP.
-    // Match by testid prefix: the index suffix is the ability-array position,
-    // which depends on what else was added earlier in the session.
+    // Match by testid prefix: the index suffix is the ability-array position, which
+    // is not this spec's subject.
     await addAbility('ability.heartbeast');
     const eff = await $('[data-testid^="ability-eff-ability.heartbeast-"]');
     await eff.waitForExist({ timeout: 5000 });
@@ -109,11 +102,11 @@ describe('hermetic houses', () => {
   });
 
   it('seeds a Mystery Ability at an effective floor of 1 — Merinita → Faerie Magic', async () => {
-    await setType('magus');
+    await startCharacter('magus');
     await selectHouse('house.merinita');
 
     await addAbility('ability.faerie_magic');
-    // Match by testid prefix — a prior test already occupies index 0.
+    // Match by testid prefix — the ability-array index is not the subject.
     const eff = await $('[data-testid^="ability-eff-ability.faerie_magic-"]');
     await eff.waitForExist({ timeout: 5000 });
     await browser.waitUntil(async () => clean(await eff.getText()).includes('1'), {
@@ -125,7 +118,7 @@ describe('hermetic houses', () => {
   });
 
   it('offers a choice grant, flags an unresolved pick, and applies the chosen bonus', async () => {
-    await setType('magus');
+    await startCharacter('magus');
     await selectHouse('house.flambeau');
 
     // The choice select offers both Puissant Perdo and Puissant Ignem.
@@ -174,7 +167,7 @@ describe('hermetic houses', () => {
   });
 
   it('adds an open grant on top of the bought budget — Ex Miscellanea', async () => {
-    await setType('magus');
+    await startCharacter('magus');
 
     await $(VF_TAB).click();
     const balance = await $('[data-testid="balance-virtues"]');
@@ -206,7 +199,7 @@ describe('hermetic houses', () => {
   });
 
   it('lets a parameterized open pick choose its parameter — Puissant (Art)', async () => {
-    await setType('magus');
+    await startCharacter('magus');
     await selectHouse('house.ex_miscellanea');
 
     // Puissant Art is a Minor Hermetic Virtue, so the Ex Misc Minor slot admits

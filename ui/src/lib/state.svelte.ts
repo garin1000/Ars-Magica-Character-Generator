@@ -207,7 +207,9 @@ function parameterKeys(localized: LocalizedRuleset): Set<string> {
 class AppStore {
   lang = $state<Lang>('en');
   ruleset = $state<LocalizedRuleset | null>(null);
-  entity = $state<Entity>(newEntity('', '', 'companion'));
+  // The startup screen's placeholder: no character exists yet, so its type is
+  // empty. A real one is only ever built by {@link createCharacter} or a load.
+  entity = $state<Entity>(newEntity('', '', ''));
   mode = $state<ValidationMode>('enforced');
   result = $state<ValidationResult | null>(null);
   effective = $state<EffectiveScores | null>(null);
@@ -220,10 +222,10 @@ class AppStore {
 
   /**
    * Which screen the app is on: the startup choice screen or the character
-   * editor. **Inert for now** — no component reads it yet, so the app still
-   * boots straight into the editor. It exists ahead of the startup screen (the
-   * next M6a step), which is what will switch on it; {@link createCharacter} and
-   * {@link open} already leave it correct, so that step only adds the rendering.
+   * editor. The app boots on `start`; only {@link createCharacter} and a
+   * successful {@link open} enter the editor, and {@link newDocument} is the way
+   * back. While it is `start` the entity is a placeholder, not a character —
+   * which is why {@link revalidate} refuses to send it to the engine.
    */
   view = $state<'start' | 'editor'>('start');
 
@@ -309,38 +311,6 @@ class AppStore {
     await this.revalidate();
   }
 
-  /**
-   * Switch the character type in place. Selections, characteristics and
-   * abilities are kept; live validation then flags anything the new type's
-   * budget/category rules forbid (e.g. a Hermetic flaw on a grog). The available
-   * direct-entry sections (Arts/Spells/House) follow the new profile's
-   * capability flags, never the type id.
-   */
-  async setType(typeId: string): Promise<void> {
-    if (this.entity.type_id === typeId) return;
-    const previousMandatory = this.#mandatoryTraitRefs(this.entity.type_id);
-    this.entity.type_id = typeId;
-    const nextMandatory = this.#mandatoryTraitRefs(typeId);
-    // Auto-manage the type's mandatory free traits (a magus's The Gift + Hermetic
-    // Magus): drop the previous type's that the new type doesn't mandate, then
-    // add any the new type mandates but that aren't already selected. Both are
-    // free, so this never touches the point budget; it makes a direct-entry magus
-    // legal without hand-picking them. The set is data-driven (profile
-    // required_traits + required gift_id), so no id is hardcoded here.
-    this.entity.selections = this.entity.selections.filter(
-      (s) => !(previousMandatory.has(s.ref) && !nextMandatory.has(s.ref)),
-    );
-    for (const ref of nextMandatory) {
-      if (!this.entity.selections.some((s) => s.ref === ref)) {
-        this.entity.selections.push({ ref });
-      }
-    }
-    // A type switch is a discrete action (not rapid typing), so validate
-    // immediately rather than through the debounce — mirrors setMode and avoids
-    // a stale debounced result from the prior type winning the race.
-    await this.revalidate();
-  }
-
   /** The item ids the given type profile mandates (required traits + required Gift). */
   #mandatoryTraitRefs(typeId: string | undefined): Set<string> {
     const profile = typeId ? this.ruleset?.ruleset.type_profiles[typeId] : undefined;
@@ -349,7 +319,7 @@ class AppStore {
 
   /**
    * Select the Hermetic House (or clear it with `null`). A discrete action, so
-   * it validates immediately like {@link setType}. Switching House drops any
+   * it validates immediately like {@link setMode}. Switching House drops any
    * specialisation picks whose `choice_key` the new House no longer defines, so
    * a stale pick from the previous House can't linger in the save; clearing the
    * House drops them all.
@@ -401,7 +371,7 @@ class AppStore {
    * the required Flaws swappable via {@link setMythicRequiredFlaw}. The free
    * status/Minor Virtue are point-free grants derived engine-side (never in
    * `selections`); a `choice` free-Minor (Devil Child's Might/Powers) defaults to
-   * its first option. Mirrors {@link setHouse} + {@link setType}.
+   * its first option. Mirrors {@link setHouse}.
    */
   async setMythicType(mythicType: string | null): Promise<void> {
     if ((this.entity.mythic_type ?? null) === mythicType) return;
@@ -1491,7 +1461,16 @@ class AppStore {
     try {
       const loaded = await ipc.loadEntity();
       if (loaded) {
-        this.entity = loaded.entity;
+        // The engine writes canonical JSON that OMITS `selections` when it is
+        // empty (`skip_serializing_if = "Vec::is_empty"`), and serde re-defaults
+        // it Rust-side — JavaScript does not. Every other omit-when-empty field
+        // is typed optional and read defensively, but `selections` is the one the
+        // store guarantees is always an array (`newEntity` always supplies it)
+        // and that five components iterate unguarded. So a saved character with
+        // no Virtues or Flaws at all — a bare grog, say — would otherwise arrive
+        // here with `selections` undefined and throw mid-render, aborting the
+        // editor's mount and leaving the previous screen frozen on display.
+        this.entity = { ...loaded.entity, selections: loaded.entity.selections ?? [] };
         this.currentPath = loaded.path;
         this.#savedSnapshot = this.#snapshot();
         // Opening is reachable from either screen, so a load always lands in the
@@ -1507,15 +1486,19 @@ class AppStore {
   }
 
   /**
-   * Reset to a fresh, empty document. Prompts to discard first when the current
-   * document has unsaved edits; a cancelled prompt aborts. Clears the current
-   * file, the picker filters, and the saved baseline.
+   * Discard the current document and return to the startup screen — the only way
+   * back to the character-type choice, since a type is fixed at creation. Prompts
+   * to discard first when the current document has unsaved edits; a cancelled
+   * prompt aborts. Clears the current file, the picker filters, and the saved
+   * baseline, and leaves behind the typeless placeholder (no character exists
+   * again, so no type may be implied).
    */
   async newDocument(): Promise<void> {
     if (this.#opInFlight || this.discardPromptOpen) return;
     if (this.dirty && !(await this.#confirmDiscard())) return;
     const { id, version } = this.ruleset?.ruleset ?? this.entity.ruleset;
-    this.entity = newEntity(id, version, 'companion');
+    this.entity = newEntity(id, version, '');
+    this.view = 'start';
     this.currentPath = null;
     this.filters = defaultPickerFilters();
     this.result = null;
@@ -1529,7 +1512,7 @@ class AppStore {
    * Start a brand-new character of `typeId` and enter the editor, replacing
    * whatever was being edited. The type is fixed at creation, so the profile's
    * mandatory free traits (a magus's The Gift + Hermetic Magus) are seeded right
-   * away — the same data-driven set {@link setType} maintains, so no id is
+   * away, from the profile's own `required_traits` + `gift_id`, so no id is
    * hardcoded here. Otherwise it resets exactly what {@link newDocument} does:
    * the current file, the picker filters, the last results, and the saved
    * baseline (so a freshly created character is not dirty).
@@ -1537,7 +1520,7 @@ class AppStore {
    * Deliberately does NOT prompt about unsaved changes: the caller is the
    * startup screen, which is only reached from a state with nothing to discard.
    * Creation is a discrete action, so it validates immediately rather than
-   * through the debounce — like {@link setType} and {@link setHouse}.
+   * through the debounce — like {@link setHouse}.
    */
   async createCharacter(typeId: string): Promise<void> {
     const { id, version } = this.ruleset?.ruleset ?? this.entity.ruleset;
@@ -1577,6 +1560,20 @@ class AppStore {
 
   /** Validate now, ignoring any in-flight response that finishes out of order. */
   async revalidate(): Promise<void> {
+    // The startup screen holds a placeholder, not a character: its empty type
+    // would come back as an `unknown_type` error about a character that does not
+    // exist. Skip the round trip — but leave nothing stranded behind: cancel a
+    // pending debounced pass, retire any in-flight one through the sequence
+    // guard, and clear a banner the validation path itself raised (never a file
+    // operation's, which shares the channel and outlives this screen).
+    if (this.view === 'start') {
+      clearTimeout(this.#timer);
+      this.#timer = undefined;
+      this.#seq++;
+      if (this.error === this.#validateError) this.error = null;
+      this.#validateError = null;
+      return;
+    }
     if (!this.ruleset) return;
     const seq = ++this.#seq;
     const snapshot = $state.snapshot(this.entity);
@@ -1625,7 +1622,7 @@ class AppStore {
       this.ruleset = localized;
       const { id, version } = localized.ruleset;
       if (resetEntity) {
-        this.entity = newEntity(id, version, 'companion');
+        this.entity = newEntity(id, version, '');
         // A fresh entity is a clean baseline. A language reload (else branch)
         // keeps the edited entity, so it must NOT reset the baseline — doing so
         // would drop `dirty` to false while unsaved edits still exist.

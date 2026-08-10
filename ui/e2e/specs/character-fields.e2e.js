@@ -3,7 +3,9 @@
 // the age → Ability cap, the Personality ±3/±6 range, the Reputation grant gate,
 // and the Supernatural-Ability greying are all exercised against the real binary.
 //
-// The wdio session is shared, so the `it` blocks run as one ordered narrative.
+// The wdio session is shared, so the `it` blocks run as one ordered narrative:
+// the first creates the companion the rest go on editing, right through to the
+// closing save round-trip. Only that first one calls `startCharacter`.
 //
 // NOTE: requires the production binary; the display comes from your desktop
 // session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
@@ -14,7 +16,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const TYPE_SELECT = '[data-testid="type-select"]';
+import { startCharacter } from '../helpers.js';
+
 const DETAILS_TAB = '[data-testid="tab-details"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const ABILITIES_TAB = '[data-testid="tab-abilities"]';
@@ -24,31 +27,29 @@ const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
 function clean(text) {
   return text.replace(/[⁦-⁩]/g, '');
 }
-async function setType(value) {
-  await $(TYPE_SELECT).selectByAttribute('value', value);
-}
 async function codeExists(code) {
   return (await $$(`[data-code="${code}"]`).length) > 0;
 }
 
 describe('character details', () => {
   it('shows a Details tab with Confidence for a companion, hidden for a grog', async () => {
+    // Grogs have no Confidence — the readout is absent for one entirely.
+    await startCharacter('grog');
     await $(VF_TAB).waitForExist({ timeout: 30000 });
     await $(DETAILS_TAB).click();
-    // Companion default Confidence: Score 1, 3 points.
-    await $(CONFIDENCE).waitForExist({ timeout: 10000 });
-    const text = clean(await $(CONFIDENCE).getText());
-    expect(text).toContain('1');
-    expect(text).toContain('3');
-
-    // Grogs have no Confidence — the readout disappears.
-    await setType('grog');
     await browser.waitUntil(async () => !(await $(CONFIDENCE).isExisting()), {
       timeout: 5000,
       timeoutMsg: 'grog must not show a Confidence readout',
     });
-    await setType('companion');
-    await $(CONFIDENCE).waitForExist({ timeout: 5000 });
+
+    // A companion has it, at the default Score 1 / 3 points. This is also the
+    // character the rest of the file goes on editing.
+    await startCharacter('companion');
+    await $(DETAILS_TAB).click();
+    await $(CONFIDENCE).waitForExist({ timeout: 10000 });
+    const text = clean(await $(CONFIDENCE).getText());
+    expect(text).toContain('1');
+    expect(text).toContain('3');
   });
 
   it('flags an Ability above the age cap', async () => {

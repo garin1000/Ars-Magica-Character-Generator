@@ -57,18 +57,77 @@ unrelated-looking error. `onPrepare` therefore runs `preflightDisplay`
 — and fails immediately with the install hint instead. That check is pure and
 unit-tested in `display.test.js`, which runs under `npm run test:unit`.
 
+## Layout
+
+```
+e2e/
+  wdio.conf.js     # the runner: build, display preflight, tauri-driver, the ARM_E2E_* seams
+  display.js       # display preflight (pure; unit-tested by display.test.js)
+  display.test.js  # runs under `npm run test:unit`, NOT under wdio
+  helpers.js       # shared spec harness — `startCharacter()`
+  specs/*.e2e.js   # the suite; wdio globs `specs/**/*.e2e.js`
+```
+
+Non-spec harness modules live at the `e2e/` root, never under `specs/`. They must
+not be named `*.test.js` unless they really are Vitest tests: `ui/vitest.config.ts`
+includes `e2e/**/*.test.js` in `npm run test:unit` and excludes only `e2e/specs/`,
+and anything importing `@wdio/globals` cannot resolve there. That is why
+`display.test.js` is a unit test and `helpers.js` is not.
+
+## Every spec builds its own character
+
+The suite runs **serially against one shared app instance**, and since M6a the app
+boots on a startup choice screen where a character's **type is fixed at creation**
+— there is no type selector to switch, and creating a character discards whatever
+was being edited. So a spec can never inherit a character from an earlier `it` or
+an earlier spec file.
+
+`helpers.js` exports the one function that follows from that:
+
+```js
+import { startCharacter } from '../helpers.js';
+
+await startCharacter('magus'); // 'grog' | 'companion' | 'mythic_companion' | 'magus' | …
+```
+
+It works from any state: it returns to the startup screen (answering the discard
+prompt if there are unsaved edits), clicks that type's create button, and waits for
+the editor. Call it at the start of every `it` that needs a character — except
+where a block deliberately continues the narrative an earlier block in the same
+file set up, which a comment should then say out loud.
+
+App-wide state is **not** part of a character and does survive: the UI language and
+the validation mode carry over, so a spec that depends on either must set it itself.
+
+## Spec ordering
+
+wdio globs `specs/**/*.e2e.js` and runs the files in sorted order.
+`app-entry.e2e.js` sorts first, which is what lets it — and only it — assert the
+app's **boot** state. Renaming it to anything sorting later would silently turn
+those assertions into claims about the previous spec's leftovers. The file says so
+in its own header too.
+
 ## Specs
 
+- `app-entry.e2e.js` — M6a entry: the app boots on the startup screen; creating a
+  magus lands in the editor with its mandatory free traits and a read-only type
+  label; New returns to the startup screen through the discard guard; Open loads a
+  saved character with that file's type.
 - `create-character.e2e.js` — happy path: load rules, add a virtue, validate,
   save, reload.
+- `character-types.e2e.js` — each created type carries its own profile budget and
+  category rules, and the type cannot be changed afterwards.
 - `validation-errors.e2e.js` — an illegal (forbidden-category) selection renders
   a localized, error-severity issue in the validation panel.
 - `validation-modes.e2e.js` — the same illegal entity is reported differently
   under each `ValidationMode`: Enforced keeps errors, Advisory downgrades them to
   warnings, Silent clears the panel.
+- …and the rest of `specs/`, one file per mechanic or reported defect (Arts,
+  Spells, Houses, familiar, talisman, longevity ritual, Markdown export, the
+  layout/geometry specs, …). Each file's header comment states what it is for.
 
-The two validation specs require the same display + release-build prerequisites
-as the happy path; they cannot run without `WebKitWebDriver` and a display.
+Every spec requires the same display + release-build prerequisites: none of them
+can run without `WebKitWebDriver` and a display.
 
 > The shipped sample ruleset (`rules/core/`) has too few selectable virtues to
 > exceed the companion's 10-point budget through clicks alone, so the
@@ -77,7 +136,7 @@ as the happy path; they cannot run without `WebKitWebDriver` and a display.
 > by `crates/arm-app/tests/commands.rs::over_budget_virtues_is_reported`.
 
 Pure display helpers (`src/lib/derive.ts`) are unit-tested with Vitest, separate
-from this webview-gated suite: `cd ui && npm run test`.
+from this webview-gated suite: `cd ui && npm run test:unit`.
 
 ## Status
 

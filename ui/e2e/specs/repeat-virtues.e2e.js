@@ -5,6 +5,8 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 
+import { startCharacter } from '../helpers.js';
+
 const MISSING_PARAM = 'missing the parameter';
 
 async function errorTexts() {
@@ -18,6 +20,10 @@ async function errorTexts() {
 
 describe('repeated parameterized virtues', () => {
   it('keeps a distinct target per Great Characteristic instance', async () => {
+    // The instance indices below are the selections-array positions, so this needs
+    // a character carrying no Great Characteristic yet.
+    await startCharacter('companion');
+
     const vfTab = await $('[data-testid="tab-virtues_flaws"]');
     await vfTab.waitForExist({ timeout: 30000 });
     await vfTab.click();
