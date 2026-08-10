@@ -62,7 +62,7 @@
       }))
       .filter((g) => g.items.length > 0);
   }
-  const selectedRefs = $derived(new Set(store.entity.selections.map((s) => s.ref)));
+  const selectedRefs = $derived(new Set((store.entity.selections ?? []).map((s) => s.ref)));
 
   // A repeatable item (one with a target parameter, or with max_per_target > 1)
   // can be added several times, so its Add button never deactivates. Mirrors the
@@ -77,7 +77,7 @@
   // pick open and let the engine's `incompatible` issue report it.
   const blocked = $derived(
     store.ruleset
-      ? incompatibleRefs(store.ruleset, store.entity.selections, store.mode)
+      ? incompatibleRefs(store.ruleset, store.entity.selections ?? [], store.mode)
       : new Map<string, string>(),
   );
 
@@ -118,7 +118,7 @@
 
   function selectionsFor(side: Side): { selection: Selection; index: number }[] {
     const kinds = kindsFor(side);
-    return store.entity.selections
+    return (store.entity.selections ?? [])
       .map((selection, index) => ({ selection, index }))
       .filter(({ selection }) => {
         const item = store.ruleset?.ruleset.point_items[selection.ref];

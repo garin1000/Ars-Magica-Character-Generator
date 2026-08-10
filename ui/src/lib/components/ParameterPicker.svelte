@@ -121,7 +121,7 @@
   // A grant pick passes no index (-1 excludes nothing), so it reads the bought
   // rows without excluding one of them — a grant pick is not itself a bought row.
   function usage(key: string): Map<string, number> {
-    return paramValueUsage(store.entity.selections, selection.ref, key, index);
+    return paramValueUsage(store.entity.selections ?? [], selection.ref, key, index);
   }
 
   function full(usageCounts: Map<string, number>, value: string): boolean {
@@ -131,7 +131,7 @@
   // Composite ability targets already claimed by other selections of this item.
   const usedAbilityTargets = $derived.by(() => {
     const counts = new Map<string, number>();
-    store.entity.selections.forEach((s, i) => {
+    (store.entity.selections ?? []).forEach((s, i) => {
       if (i === index || s.ref !== selection.ref) return;
       const abilityId = s.params?.ability;
       if (!abilityId) return;

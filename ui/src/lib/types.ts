@@ -159,7 +159,9 @@ export interface PointItem {
   classification: Classification;
   // Descriptor "Type" tag: a Tainted (Infernal-associated) V/F. Omitted when false.
   tainted?: boolean;
-  entity_kinds: EntityKind[];
+  // Entity kinds this item may be selected for. Omitted when empty, which the
+  // engine reads as "any kind".
+  entity_kinds?: EntityKind[];
   prerequisites?: Prereq;
   // Items that may not be selected alongside this one. Symmetric (the engine
   // rejects a ruleset whose declarations are one-sided) and omitted when empty.
@@ -567,8 +569,11 @@ export interface PointBudget {
 export interface EntityTypeProfile {
   id: string;
   budget: PointBudget;
-  permitted_categories: string[];
-  forbidden_categories: string[];
+  // Category allow/deny lists. Both are omitted when empty (the magus profile
+  // forbids nothing, so it carries no `forbidden_categories` key); an absent
+  // permit list means "no restriction".
+  permitted_categories?: string[];
+  forbidden_categories?: string[];
   // Item ids that must / may never be selected. Omitted from JSON when empty.
   required_traits?: string[];
   forbidden_traits?: string[];
@@ -1012,7 +1017,9 @@ export interface Entity {
   ruleset: RulesetRef;
   entity_kind: EntityKind;
   type_id: string;
-  selections: Selection[];
+  // The chosen Virtues/Flaws. Omitted when empty (a character with none at all —
+  // a bare grog — carries no key), so every read must be defensive.
+  selections?: Selection[];
   // Chosen Characteristic scores (point-buy). Omitted when empty.
   characteristics?: Record<Characteristic, number>;
   // Optional free-text description per Characteristic (sheet flavor). Omitted empty.

@@ -542,6 +542,21 @@ describe('balance', () => {
     expect(result.flawPoints).toBe(0);
   });
 
+  // The engine's canonical JSON omits `selections` when it is empty, exactly as
+  // it omits every other empty collection, so a saved character with no Virtues
+  // or Flaws at all — a bare grog — arrives with the key absent. balance() runs
+  // on every editor render, so an unguarded read throws mid-mount.
+  it('treats an omitted selections key as no selections', () => {
+    const ruleset = makeRuleset([item({ id: 'v.minor', magnitude: 'minor' })], { profiles });
+    const sparse = entity([]);
+    delete sparse.selections;
+    const result = balance(ruleset, sparse);
+    expect(result.virtuePoints).toBe(0);
+    expect(result.flawPoints).toBe(0);
+    expect(result.virtueBudget).toBe(10);
+    expect(result.flawBudget).toBe(10);
+  });
+
   it('reports a zero budget when the type profile is missing', () => {
     const ruleset = makeRuleset([item({ id: 'v.minor', magnitude: 'minor' })]);
     const result = balance(ruleset, entity(['v.minor'], 'unknown_type'));
