@@ -5,8 +5,10 @@
 // marker, the focus field + sterility note, and that the source radio no longer
 // discards the entered bonus.
 //
-// NOTE: requires a display + the production binary (see e2e/README.md). The wdio
-// `onPrepare` hook builds `target/release/arm-app`.
+// NOTE: requires the production binary; the display comes from your desktop
+// session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
+// (see e2e/README.md). The wdio `onPrepare` hook builds
+// `target/release/arm-app`.
 
 import { $, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';

@@ -1,9 +1,11 @@
 // End-to-end: an illegal selection surfaces a localized error in the validation
 // panel. Drives the real binary; assertions read the rendered DOM.
 //
-// NOTE: requires a display + the production binary (see e2e/README.md). The
-// wdio `onPrepare` hook builds `target/release/arm-app` via `cargo tauri build`,
-// so this cannot run without that build step.
+// NOTE: requires the production binary; the display comes from your desktop
+// session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
+// (see e2e/README.md). The wdio `onPrepare` hook builds
+// `target/release/arm-app` via `cargo tauri build`, so this cannot run
+// without that build step.
 //
 // Why a forbidden-category flaw rather than an over-budget case: the shipped
 // sample ruleset (rules/core/) has too few selectable virtues to exceed the
