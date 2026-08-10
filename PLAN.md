@@ -559,21 +559,31 @@ Scope: wrap the full phase list for every character type in a guided flow,
 reusing the direct-entry components from M2–M5. All input surfaces already exist;
 this milestone adds orchestration, gating, and the guided life-stage flows.
 
-### 6a. App entry & character-type lock (first M6 slice)
+### 6a. App entry & character-type lock (first M6 slice) ✅
 
 The startup restructure the guided flow plugs into: the app opens on a **choice
 screen** rather than an already-instantiated blank character, and a character's
 **type is fixed** for its whole life.
 
-- [ ] Startup screen presenting the entry choices: **load existing**, **guided
-      wizard** (the rest of M6), and **create new** — one option per character
-      type (grog / companion / mythic companion / magus).
-- [ ] Character **type is fixed at creation and immutable thereafter** — including
-      on load. **Remove the in-view character-type selector** (from M4/4d); nothing
-      may change a character's type once chosen.
-- [ ] Show the type as a **read-only label** in a sensible spot in the main view
-      (e.g. the character banner/header), rendered via Fluent, never a raw slug.
-- [ ] Main view otherwise unchanged once a character is open.
+- [x] Startup screen (`StartScreen.svelte`) presenting the entry choices: **load
+      existing**, **guided wizard** (the rest of M6 — present but disabled until
+      6b builds it), and **create new** — one option per character type, read
+      from the ruleset's `type_profiles` in its own id order, so the set is data.
+- [x] Character **type is fixed at creation and immutable thereafter** — including
+      on load. The in-view character-type selector (from M4/4d) and the store's
+      `setType` are **removed**; `createCharacter(typeId)` is the only way a type
+      is ever set, and it seeds the profile's mandatory free traits.
+- [x] The type shows as a **read-only label** in the character banner, via the
+      `type-<id>` Fluent key, with a `type-unknown` fallback so a save naming a
+      profile the loaded ruleset lacks can never render its raw slug.
+- [x] Main view otherwise unchanged once a character is open. `newDocument()` is
+      the only route back to the choice screen, still through the discard guard;
+      while it is up the entity is a placeholder, so `revalidate()` and the Save
+      shortcuts stand down rather than act on a character that does not exist.
+- [x] All 24 e2e specs migrated to the `startCharacter` helper (`ui/e2e/helpers.js`)
+      — mandatory now that the shared app instance can no longer carry state
+      between specs — plus `app-entry.e2e.js`, named to sort first because only
+      the first spec to run can observe the boot state.
 
 ### 6b. Guided wizard flow
 
@@ -722,10 +732,18 @@ string; `arm-app` owns the file IO, the native save dialog and the
 button. Byte-deterministic output, a golden fixture, and a real-binary e2e spec
 (21 specs total) hold it in place.
 
-Next: **M6**, starting with the new first slice **6a** (startup screen + character
-type fixed at creation) ahead of the guided flow (6b). It orchestrates the
-direct-entry surfaces that M2–M5.6 completed and adds the guided
-life-stage/aging engines.
+**6a is done**: the app opens on a startup choice screen instead of a blank
+companion, and a character's type is chosen once at creation and immutable
+thereafter — the type selector and `setType` are gone, replaced by
+`createCharacter(typeId)` and a read-only banner label. The startup screen's
+guided-wizard entry is in place but disabled. The e2e suite grew to 25 spec
+files, every one of them building its own character through the new
+`startCharacter` helper.
+
+Next: **6b**, the guided wizard flow itself — the phase-driven wizard component
+over each profile's `creation_phases`, and the three engines it needs that do not
+exist yet (life-stage XP, Sample Childhood packages, magus apprenticeship, and
+the aging engine for characters over 35).
 
 ---
 
