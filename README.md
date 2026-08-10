@@ -20,7 +20,7 @@
 
 ## What it does
 
-This is a native desktop application for building **Ars Magica 5th Edition**
+This is a — fully vibe coded — native desktop application for building **Ars Magica 5th Edition**
 characters — grogs, companions, mythic companions, and magi — as well as
 **covenants**. Both characters and covenants are first-class entity types built
 on one shared rules engine.
@@ -34,6 +34,8 @@ Three input modes cover the spectrum from hand-holding to power-user:
 Everything runs locally. There is no server, no account, and no telemetry. Saves
 are plain JSON that record your *choices* (plus the ruleset id and version), so
 they stay portable and diff-friendly.
+
+Currently, this is work in progress. The current state of development is described below.
 
 ## Download
 
