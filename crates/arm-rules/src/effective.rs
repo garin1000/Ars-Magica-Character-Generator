@@ -4694,6 +4694,7 @@ mod tests {
         entity.age = Some(25);
         entity.life_stages = Some(crate::life_stage::LifeStagePlan {
             native_language: Some("German".into()),
+            ..crate::life_stage::LifeStagePlan::default()
         });
         entity.ability_scores = vec![AbilityScore {
             ability: Id::new("ability.living_language"),

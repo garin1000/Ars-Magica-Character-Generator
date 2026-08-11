@@ -147,6 +147,7 @@ mod tests {
         entity.age = Some(age);
         entity.life_stages = Some(LifeStagePlan {
             native_language: Some("German".into()),
+            ..LifeStagePlan::default()
         });
         entity.ability_scores = vec![AbilityScore {
             ability: Id::new("ability.living_language"),
