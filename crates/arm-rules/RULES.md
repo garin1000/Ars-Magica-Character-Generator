@@ -1356,7 +1356,8 @@ entry) before the guided wizard in M6. Accordingly:
   starting-score effects. See the effect-layer subsections above.
 - **M6 (guided wizard):** the life-stage XP acquisition (early childhood 75+45 xp
   `:2378`; later life 15/20/10 xp/yr `:2390-2394`; age→max-score cap
-  `:2368-2374`), the Sample Childhood packages (`:2380-2388`), the magus
+  `:2368-2374`), the Sample Childhood packages (`:2380-2388` — landing in M6/6b3,
+  see **Sample Childhood packages** below), the magus
   apprenticeship/post-apprenticeship Art-XP flow (`:2433-2471`), and the aging
   engine for characters over 35 (`:16563-16640`). The age→max-score *cap* itself
   is enforced as direct-entry validation in M4/4e; only the XP *acquisition* and
@@ -2482,6 +2483,60 @@ Abilities are bought with experience earned in blocks, not from one bank:
 - Load-time referential integrity (not a sourced rule): every `spread_abilities` id
   and the `native_language_ability` must resolve, and the latter must be a
   *parameterized* ability — one language among many cannot be named otherwise.
+
+#### Sample Childhood packages (M6/6b3) — `childhood.rs`
+
+> The following Ability packages can be taken to speed up character generation.
+> Each represents a particular sort of childhood. Note that you can spend the 45
+> experience points for yourself, as well.
+>
+> - Athletic Childhood: Athletics 2, Brawl 2, Native Language 5, Swim 2
+> - Exploring Childhood: Area Lore 2, Athletics 1, Awareness 1, Native Language 5, Stealth 1, Survival 2
+> - Mischievous Childhood: Brawl 2, Guile 2, Native Language 5, Stealth 2
+> - Social Childhood: Charm 2, Folk Ken 2, Guile 2, Native Language 5
+> - Traveling Childhood: Area A Lore 1, Area B Lore 1, Folk Ken 2, Living Language 1, Native Language 5, Survival 2
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2380-2388` (heading
+  `:2380`, the "can be taken … for yourself, as well" sentence `:2382`, the five
+  packages `:2384-2388`, one per line). Pricing off the Ability advancement table
+  at `:2406-2427` (the shared "ABILITY To Buy" column, whose own provenance is the
+  **Abilities** section above).
+- Data: `rules/core/childhoods.json` (ships in a later 6b3a task) — packages
+  id-sorted, each package's entries authored in `(ability, slot)` order.
+- Implementation: `crates/arm-rules/src/childhood.rs` — `ChildhoodPackage` /
+  `ChildhoodEntry`, with `spread_xp` and `native_xp` pricing a package against
+  `AdvancementTable::xp_for_score`, and `slots` naming the parameters a UI must
+  ask for.
+- **A package is a shortcut, never a restriction.** `:2382` says the packages
+  *can* be taken and explicitly keeps hand-spending open ("you can spend the 45
+  experience points for yourself, as well"), so no character type requires one and
+  taking none is not a validation issue. What a package may buy is unchanged: the
+  closed eleven-ability spread list of `:2378` above.
+- **Every package prices to exactly 45 + 75.** Verified against the advancement
+  table for all five: spreads 15+15+15 (Athletic), 15+5+5+5+15 (Exploring),
+  15+15+15 (Mischievous), 15+15+15 (Social), 5+5+15+5+15 (Traveling) = **45**
+  each, and every `Native Language 5` = **75**. That identity is why a package
+  needs no budget of its own — it is one way of spending the two childhood blocks
+  `:2378` already grants, so `spread_xp`/`native_xp` exist to *check* the shipped
+  data against the blocks rather than to fund anything. Funding stays with the
+  restricted 45/75 pools in `effective.rs` (`xp_allocation`).
+- Engine reading where the text is terse: "Native Language 5" names no language,
+  because the language is the character's own choice — so the entry carries a
+  `native` flag and the chosen language lives in `LifeStagePlan::native_language`.
+  Likewise "Area A Lore / Area B Lore" are two instances of one parameterized
+  Ability, distinguished by an entry `slot` key (`area_a`, `area_b`) rather than by
+  id; Traveling's plain "Living Language 1" is the spread's second language, the
+  `:2378` "other than the character's native language", and is told apart from the
+  native entry by the flag alone.
+- Entry order is preserved on load rather than re-sorted (unlike the advancement
+  table, whose order is unobservable): it is the order `slots()` asks the player
+  for parameters in. Canonical `(ability, slot)` ordering is therefore a property
+  of the shipped file, checked where the file is loaded.
+- **Deferred to the rest of 6b3:** wiring the catalogue into `Ruleset` with its
+  referential-integrity checks, the i18n names, applying a package to an entity —
+  a **monotone raise**, `score = max(existing, entry.score)` keyed by
+  `(ability, parameter)`, hence idempotent and never lowering a hand-bought score —
+  and the UI that offers them.
 
 #### Later life — 15 experience points per year
 

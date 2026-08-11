@@ -18,6 +18,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::ability::AdvancementTable;
 use crate::types::{Id, SourceRef, is_false};
 
 /// One Ability score a Sample Childhood package grants.
@@ -74,6 +75,59 @@ pub struct ChildhoodPackage {
     /// Provenance into the authoritative Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
+}
+
+impl ChildhoodPackage {
+    /// The package's native-language entry — the one the childhood's 75-point
+    /// block funds. `None` for a package that grants no native language.
+    ///
+    /// The first flagged entry wins. That a package carries at most one is a
+    /// load-time data-integrity guarantee, so it is not re-litigated here.
+    pub fn native_entry(&self) -> Option<&ChildhoodEntry> {
+        self.entries.iter().find(|entry| entry.native)
+    }
+
+    /// Every entry the 45-point spread funds: all but the native language, in
+    /// file order. The spread may itself include a *second* Living Language —
+    /// "Living Language (other than the character's native language)"
+    /// (Core Rules.md:2378), which the Traveling package takes up — so
+    /// membership is decided by the `native` flag, never by the Ability id.
+    pub fn spread_entries(&self) -> impl Iterator<Item = &ChildhoodEntry> {
+        self.entries.iter().filter(|entry| !entry.native)
+    }
+
+    /// What the package's spread costs off the Ability advancement table
+    /// ("ABILITY To Buy", Core Rules.md:2406-2427). Every package in the
+    /// rulebook prices to exactly the 45 points early childhood grants
+    /// (Core Rules.md:2378), so taking one can never smuggle in experience the
+    /// block does not fund — which is what makes this figure worth computing
+    /// rather than assuming.
+    ///
+    /// `None` when any entry's score has no row in the table: an unpriceable
+    /// package is reported as such, never silently costed at 0.
+    pub fn spread_xp(&self, advancement: &AdvancementTable) -> Option<u32> {
+        self.spread_entries().try_fold(0u32, |total, entry| {
+            Some(total.saturating_add(advancement.xp_for_score(entry.score)?))
+        })
+    }
+
+    /// What the package's native language costs off the same table: 75 points
+    /// for the score of 5 every package grants (Core Rules.md:2378, :2384-2388).
+    ///
+    /// `None` when the package has no native entry, or its score is off-table.
+    pub fn native_xp(&self, advancement: &AdvancementTable) -> Option<u32> {
+        advancement.xp_for_score(self.native_entry()?.score)
+    }
+
+    /// The parameters the player must supply, as `(slot key, Ability)` pairs in
+    /// file order — what a UI has to ask for before the package can be applied.
+    /// The native language is never among them: it is chosen once for the
+    /// character as a whole, not per package.
+    pub fn slots(&self) -> impl Iterator<Item = (&str, &Id)> {
+        self.entries
+            .iter()
+            .filter_map(|entry| Some((entry.slot.as_deref()?, &entry.ability)))
+    }
 }
 
 #[cfg(test)]
@@ -234,5 +288,124 @@ mod tests {
             .collect();
         assert_eq!(abilities, vec!["ability.swim", "ability.athletics"]);
         assert!(out_of_order.source.is_none());
+    }
+
+    /// The canonical "ABILITY To Buy" column, scores 1-10
+    /// (Core Rules.md:2408-2417).
+    fn table() -> AdvancementTable {
+        serde_json::from_str(
+            r#"[
+              { "score": 1, "total_xp": 5 },
+              { "score": 2, "total_xp": 15 },
+              { "score": 3, "total_xp": 30 },
+              { "score": 4, "total_xp": 50 },
+              { "score": 5, "total_xp": 75 },
+              { "score": 6, "total_xp": 105 },
+              { "score": 7, "total_xp": 140 },
+              { "score": 8, "total_xp": 180 },
+              { "score": 9, "total_xp": 225 },
+              { "score": 10, "total_xp": 275 }
+            ]"#,
+        )
+        .unwrap()
+    }
+
+    /// A package is a shortcut for spending the childhood's 45 points, so its
+    /// spread must price to exactly 45 — Athletic 15+15+15, Traveling
+    /// 5+5+15+5+15 (Core Rules.md:2378, :2406-2427).
+    #[test]
+    fn every_package_spreads_exactly_45_experience_points() {
+        let table = table();
+        assert_eq!(athletic().spread_xp(&table), Some(45));
+        assert_eq!(traveling().spread_xp(&table), Some(45));
+    }
+
+    /// And its native language to exactly the 75 the other block grants.
+    #[test]
+    fn the_native_entry_prices_at_75() {
+        let table = table();
+        assert_eq!(athletic().native_xp(&table), Some(75));
+        assert_eq!(traveling().native_xp(&table), Some(75));
+    }
+
+    /// A score the table does not price makes the package unpriceable rather
+    /// than free: the cost is unknown, and reporting 0 would understate it.
+    #[test]
+    fn an_off_table_score_cannot_be_priced() {
+        let table = table();
+        let too_high: ChildhoodPackage = serde_json::from_str(
+            r#"{ "id": "childhood.impossible",
+              "entries": [
+                { "ability": "ability.athletics", "score": 11 },
+                { "ability": "ability.living_language", "score": 11, "native": true }
+              ] }"#,
+        )
+        .unwrap();
+        assert_eq!(too_high.spread_xp(&table), None);
+        assert_eq!(too_high.native_xp(&table), None);
+    }
+
+    /// Nothing in the shape requires a native language, so a package without one
+    /// prices no native block at all — as distinct from pricing it at 0.
+    #[test]
+    fn a_package_without_a_native_entry_has_no_native_experience() {
+        let package: ChildhoodPackage = serde_json::from_str(
+            r#"{ "id": "childhood.spread_only",
+              "entries": [{ "ability": "ability.athletics", "score": 2 }] }"#,
+        )
+        .unwrap();
+        assert!(package.native_entry().is_none());
+        assert_eq!(package.native_xp(&table()), None);
+    }
+
+    /// The native entry is the flagged one, whatever its position in the list.
+    #[test]
+    fn the_native_entry_is_the_flagged_one() {
+        let native = traveling().native_entry().expect("a native entry").clone();
+        assert_eq!(native.ability, Id::new("ability.living_language"));
+        assert_eq!(native.score, 5);
+        assert!(native.slot.is_none());
+    }
+
+    /// The spread is everything but the native language — including a second
+    /// Living Language, which the flag distinguishes and the id cannot.
+    #[test]
+    fn spread_entries_exclude_the_native_language() {
+        let package = traveling();
+        let spread: Vec<(&str, u8)> = package
+            .spread_entries()
+            .map(|entry| (entry.ability.as_str(), entry.score))
+            .collect();
+        assert_eq!(
+            spread,
+            vec![
+                ("ability.area_lore", 1),
+                ("ability.area_lore", 1),
+                ("ability.folk_ken", 2),
+                ("ability.living_language", 1),
+                ("ability.survival", 2)
+            ]
+        );
+    }
+
+    /// `slots()` is what a UI must ask for, in file order; a package with
+    /// nothing parameterized asks nothing.
+    #[test]
+    fn slots_name_what_the_ui_must_ask_for() {
+        let package = traveling();
+        let slots: Vec<(&str, &str)> = package
+            .slots()
+            .map(|(slot, ability)| (slot, ability.as_str()))
+            .collect();
+        assert_eq!(
+            slots,
+            vec![
+                ("area_a", "ability.area_lore"),
+                ("area_b", "ability.area_lore"),
+                ("language", "ability.living_language")
+            ]
+        );
+
+        assert_eq!(athletic().slots().count(), 0);
     }
 }
