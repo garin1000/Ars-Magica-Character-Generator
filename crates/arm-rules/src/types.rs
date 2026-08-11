@@ -1214,6 +1214,88 @@ impl std::fmt::Display for ReputationType {
     }
 }
 
+/// A phase of character creation.
+///
+/// Two consumers share this vocabulary. An [`EntityTypeProfile`] lists the phases
+/// its type is built through, in order, and the guided wizard walks that list; and
+/// every [`ValidationIssue`](crate::validation::ValidationIssue) names the phase
+/// whose input surface owns the offending value, so the wizard can tell which
+/// findings belong to the step the user is on.
+///
+/// A fixed taxonomy the rules define, so it is an enum rather than data: adding a
+/// phase must be a compile error until every issue site, the UI's step table and
+/// both locales handle it. [`CreationPhase::ALL`] is the single source of the set,
+/// so nothing re-hardcodes its members.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CreationPhase {
+    /// The character concept and identity: name, description, gender, birth year.
+    Concept,
+    /// The character type itself — fixed at creation, so the step only confirms
+    /// what the chosen profile commits the character to.
+    Type,
+    /// Characteristics.
+    Characteristics,
+    /// Virtues and Flaws, including their point balance and category caps.
+    VirtuesFlaws,
+    /// Abilities and the experience they are bought with.
+    Abilities,
+    /// Hermetic Arts.
+    Arts,
+    /// Spells and spell mastery.
+    Spells,
+    /// A magus's House, plus the specialisation or free Virtue it grants.
+    HouseSpecialisation,
+    /// A mythic companion's type and the package it confers.
+    MythicType,
+    /// Personality Traits and Reputations.
+    PersonalityReputations,
+    /// The terminal phase: everything a finished character carries that no
+    /// creation phase owns — equipment, magic items, Might and powers, Warping,
+    /// aging — plus a last look at the whole character. A profile may not declare
+    /// it (the wizard appends it), so it is the one phase that is never skipped.
+    Review,
+}
+
+impl CreationPhase {
+    /// Every phase, in the order the rules' creation summary walks them
+    /// (Core Rules.md:2205-2222), with the synthetic [`Review`](Self::Review)
+    /// last. The single source of the phase set: the Fluent `phase-<slug>` keys,
+    /// the UI's step table and the issue-contract table are all checked against
+    /// it rather than against a second hardcoded list.
+    pub const ALL: [CreationPhase; 11] = [
+        CreationPhase::Concept,
+        CreationPhase::Type,
+        CreationPhase::Characteristics,
+        CreationPhase::VirtuesFlaws,
+        CreationPhase::Abilities,
+        CreationPhase::Arts,
+        CreationPhase::Spells,
+        CreationPhase::HouseSpecialisation,
+        CreationPhase::MythicType,
+        CreationPhase::PersonalityReputations,
+        CreationPhase::Review,
+    ];
+}
+
+impl fmt::Display for CreationPhase {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            CreationPhase::Concept => "concept",
+            CreationPhase::Type => "type",
+            CreationPhase::Characteristics => "characteristics",
+            CreationPhase::VirtuesFlaws => "virtues_flaws",
+            CreationPhase::Abilities => "abilities",
+            CreationPhase::Arts => "arts",
+            CreationPhase::Spells => "spells",
+            CreationPhase::HouseSpecialisation => "house_specialisation",
+            CreationPhase::MythicType => "mythic_type",
+            CreationPhase::PersonalityReputations => "personality_reputations",
+            CreationPhase::Review => "review",
+        })
+    }
+}
+
 /// An inclusive line range `[start, end]` into a Markdown source file.
 /// Serialized as a two-element JSON array to match the shipped rules data.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -1531,10 +1613,13 @@ pub struct EntityTypeProfile {
     /// Categories that count as carrying The Gift (e.g. `hermetic`).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub gift_categories: BTreeSet<String>,
-    /// Ordered creation phases the guided wizard walks through.
+    /// Ordered creation phases the guided wizard walks through. Typed, so serde
+    /// itself is the load-time validator: a profile naming a phase the engine has
+    /// no [`CreationPhase`] for fails the ruleset load rather than reaching the
+    /// wizard as a step it cannot render.
     // Order-significant (the wizard walks them in sequence): intentionally
     // exempt from `normalize`'s canonical sorting.
-    pub creation_phases: Vec<String>,
+    pub creation_phases: Vec<CreationPhase>,
 }
 
 impl EntityTypeProfile {
@@ -3106,7 +3191,7 @@ mod tests {
                   { "category": "personality", "max": 2 }
                 ]
               },
-              "creation_phases": ["concept", "boons_hooks"]
+              "creation_phases": ["type", "concept"]
             }"#,
         )
         .unwrap();
@@ -3119,7 +3204,12 @@ mod tests {
             .collect();
         assert_eq!(cats, vec!["personality", "story"]);
         // Order-significant phases stay in their declared order.
-        assert_eq!(profile.creation_phases, vec!["concept", "boons_hooks"]);
+        // Declared in non-canonical order on purpose: this asserts `normalize`
+        // leaves the phase order alone, which a single-phase list could not show.
+        assert_eq!(
+            profile.creation_phases,
+            vec![CreationPhase::Type, CreationPhase::Concept]
+        );
     }
 
     #[test]
@@ -3268,7 +3358,7 @@ mod tests {
         let json = r#"{
           "id": "standard_covenant",
           "budget": { "virtue_points": 10, "flaw_points": 10 },
-          "creation_phases": ["concept", "boons_hooks"]
+          "creation_phases": ["concept"]
         }"#;
 
         let profile: EntityTypeProfile = serde_json::from_str(json).unwrap();
@@ -3406,6 +3496,46 @@ mod tests {
         assert_eq!(
             serde_json::to_string(&ReputationType::Ecclesiastical).unwrap(),
             r#""ecclesiastical""#
+        );
+    }
+
+    /// Every creation phase serializes to the slug the profile data uses, and
+    /// `Display` agrees with serde — the phase Fluent keys (`phase-<slug>`) and
+    /// the profile's `creation_phases` strings are the same vocabulary.
+    #[test]
+    fn creation_phase_slugs_are_the_profile_phase_strings() {
+        assert_eq!(CreationPhase::ALL.len(), 11);
+        for phase in CreationPhase::ALL {
+            let json = serde_json::to_string(&phase).unwrap();
+            assert_eq!(serde_json::from_str::<CreationPhase>(&json).unwrap(), phase);
+            // The Display slug is the serde slug without the JSON quotes.
+            assert_eq!(json, format!("\"{phase}\""));
+        }
+        assert_eq!(
+            serde_json::to_string(&CreationPhase::VirtuesFlaws).unwrap(),
+            r#""virtues_flaws""#
+        );
+        assert_eq!(
+            serde_json::to_string(&CreationPhase::HouseSpecialisation).unwrap(),
+            r#""house_specialisation""#
+        );
+    }
+
+    /// A profile's phases are typed, so a phase string the engine has no phase for
+    /// fails the load instead of reaching the wizard as a step it cannot render.
+    #[test]
+    fn profile_with_an_unknown_creation_phase_fails_to_parse() {
+        let err = serde_json::from_str::<EntityTypeProfile>(
+            r#"{
+              "id": "companion",
+              "budget": { "virtue_points": 10, "flaw_points": 10 },
+              "creation_phases": ["concept", "not_a_phase"]
+            }"#,
+        )
+        .expect_err("an unknown creation phase must not parse");
+        assert!(
+            err.to_string().contains("not_a_phase"),
+            "the error must name the offending phase: {err}"
         );
     }
 
