@@ -543,6 +543,18 @@ pub enum Effect {
         /// negative).
         amount: i16,
     },
+    /// **Replaces** the later-life experience rate: the character earns `amount`
+    /// points per year of later life instead of the ruleset's base rate. Not
+    /// additive — the rules state the whole rate ("Characters with the Wealthy
+    /// Virtue get 20 experience points per year, while characters with the Poor
+    /// Flaw get 10 experience points per year"). Both are Major and, per the same
+    /// line, available to companions only; the profiles enforce that.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2394.
+    LaterLifeXpRate {
+        /// Experience points earned per year of later life.
+        amount: u32,
+    },
     /// Adjusts the character's derived Confidence Score and Points (on top of the
     /// type profile's defaults). Signed and additive; e.g. Self-Confident grants
     /// `{ score: 1, points: 2 }` (raising the 1/3 default to 2/5). Confidence is

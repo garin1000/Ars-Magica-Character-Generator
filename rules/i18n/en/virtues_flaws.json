@@ -883,6 +883,10 @@
     "name": "Plagued by Supernatural Entity",
     "summary": "Some supernatural being interferes in your life on a fairly regular basis."
   },
+  "flaw.poor": {
+    "name": "Poor",
+    "summary": "You are a poor member of your social class: three seasons a year go to making ends meet, leaving one fewer season for any advancement other than exposure. Not available to magi, nor to anyone the covenant supports."
+  },
   "flaw.poor_characteristic": {
     "name": "Poor {characteristic}",
     "summary": "Lower a Characteristic already at −3 down to −5; you still gain the points."

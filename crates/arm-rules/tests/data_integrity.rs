@@ -129,6 +129,67 @@ fn shipped_data_passes_integrity_check() {
     );
 }
 
+/// The two Virtues/Flaws that change the later-life experience rate, and the
+/// eligibility the same rules line puts on them.
+///
+/// Poor was absent from the shipped catalogue entirely until this milestone (the
+/// extraction plausibly dropped it because six other flaw names begin with
+/// "Poor"), so this test is as much a guard against losing it again as a check on
+/// its numbers.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2394 ("Characters with
+/// the Wealthy Virtue get 20 experience points per year, while characters with the
+/// Poor Flaw get 10 … Note that only companions can take this Virtue or Flaw"),
+/// `:5235-5238` (Wealthy), `:6594-6596` (Poor: "this Flaw is not available to
+/// magi").
+#[test]
+fn wealthy_and_poor_ship_with_their_rates_and_eligibility() {
+    let rs = load_ruleset();
+
+    let rate_of = |id: &str| -> u32 {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} ships"));
+        item.effects
+            .iter()
+            .find_map(|e| match e {
+                Effect::LaterLifeXpRate { amount } => Some(*amount),
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("{id} carries a later-life rate"))
+    };
+    assert_eq!(rate_of("virtue.wealthy"), 20);
+    assert_eq!(rate_of("flaw.poor"), 10);
+
+    // Both are Major, per their own entries.
+    for id in ["virtue.wealthy", "flaw.poor"] {
+        assert_eq!(
+            rs.item(&Id::new(id)).unwrap().magnitude,
+            Magnitude::Major,
+            "{id} is a Major Virtue/Flaw"
+        );
+    }
+
+    // "Only companions can take this Virtue or Flaw." A grog is covered
+    // incidentally (its profile allows no Major V/F at all), so the two profiles
+    // that would otherwise permit them must forbid them outright.
+    for type_id in ["magus", "mythic_companion"] {
+        let profile = rs.profile(&Id::new(type_id)).expect("profile ships");
+        for id in ["virtue.wealthy", "flaw.poor"] {
+            assert!(
+                profile.forbidden_traits.contains(&Id::new(id)),
+                "{type_id} must forbid {id} (Core Rules.md:2394)"
+            );
+        }
+    }
+    // The grog case, stated so the incidental cover is deliberate rather than luck.
+    assert_eq!(
+        rs.profile(&Id::new("grog")).unwrap().budget.max_major_flaws,
+        Some(0),
+        "a grog takes no Major Flaw, so Poor is out of reach without a forbid"
+    );
+}
+
 #[test]
 fn shipped_abilities_and_characteristics_load() {
     let rs = load_ruleset();

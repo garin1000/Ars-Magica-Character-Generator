@@ -2123,6 +2123,16 @@
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6590, 6593] }
   },
   {
+    "id": "flaw.poor",
+    "kind": "flaw",
+    "magnitude": "major",
+    "category": "general",
+    "classification": "creation_effect",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "later_life_xp_rate", "amount": 10 }],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6594, 6596] }
+  },
+  {
     "id": "flaw.poor_characteristic",
     "kind": "flaw",
     "magnitude": "minor",
@@ -6295,8 +6305,9 @@
     "kind": "virtue",
     "magnitude": "major",
     "category": "general",
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "later_life_xp_rate", "amount": 20 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5235, 5238] }
   },
   {

@@ -1835,6 +1835,7 @@ impl Ruleset {
                 | Effect::CharacteristicPoints { .. }
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
+                | Effect::LaterLifeXpRate { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::GrantsReputation { .. }
                 | Effect::MightGrant { .. }
