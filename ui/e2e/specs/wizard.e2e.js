@@ -9,9 +9,9 @@
 // (see e2e/README.md). The wdio `onPrepare` hook builds
 // `target/release/arm-app`, so this cannot run without that build step.
 
-import { $, $$, browser, expect } from '@wdio/globals';
+import { $, browser, expect } from '@wdio/globals';
 
-import { startWizard } from '../helpers.js';
+import { advanceWizardTo, currentWizardPhase, startWizard, wizardRailPhases } from '../helpers.js';
 
 const WIZARD_RAIL = '[data-testid="wizard-rail"]';
 const TAB_BAR = '[role="tablist"]';
@@ -34,36 +34,6 @@ function clean(text) {
   return text.replace(/[⁦-⁩]/g, '');
 }
 
-/** The rail's phase ids, in document order. */
-async function railPhases() {
-  // Index-based loop: in webdriverio v9 the awaited `$$` result's `.map` does not
-  // yield a plain iterable, so `Promise.all(items.map(...))` throws.
-  const items = await $$(`${WIZARD_RAIL} button`);
-  const phases = [];
-  for (let i = 0; i < items.length; i++) {
-    const testid = await items[i].getAttribute('data-testid');
-    phases.push(testid.replace('wizard-step-', ''));
-  }
-  return phases;
-}
-
-/** Click Next and wait for the rail's current step to move on. */
-async function next() {
-  const before = await currentPhase();
-  await $(NEXT).click();
-  await browser.waitUntil(async () => (await currentPhase()) !== before, {
-    timeout: STEP_TIMEOUT,
-    timeoutMsg: `the wizard did not advance past '${before}'`,
-  });
-}
-
-/** The phase whose rail entry is marked current. */
-async function currentPhase() {
-  const current = await $(`${WIZARD_RAIL} button[aria-current="step"]`);
-  const testid = await current.getAttribute('data-testid');
-  return testid.replace('wizard-step-', '');
-}
-
 describe('guided creation wizard', () => {
   it('walks a magus through its declared phases and finishes in the editor', async () => {
     await startWizard('magus');
@@ -84,7 +54,7 @@ describe('guided creation wizard', () => {
 
     // The rail follows the ruleset, and the magus profile deliberately places the
     // House step BEFORE Virtues & Flaws — its free Virtue lands in that budget.
-    const phases = await railPhases();
+    const phases = await wizardRailPhases();
     expect(phases).toContain('house_specialisation');
     expect(phases).toContain('virtues_flaws');
     expect(phases.indexOf('house_specialisation')).toBeLessThan(phases.indexOf('virtues_flaws'));
@@ -93,14 +63,14 @@ describe('guided creation wizard', () => {
 
     // Back is dead on the first step; Next advances and the rail follows.
     expect(await $(BACK).isEnabled()).toBe(false);
-    expect(await currentPhase()).toBe('concept');
-    await next();
-    expect(await currentPhase()).toBe('type');
+    expect(await currentWizardPhase()).toBe('concept');
+    await advanceWizardTo('type');
+    expect(await currentWizardPhase()).toBe('type');
     expect(await $(BACK).isEnabled()).toBe(true);
 
     // Walk to Virtues & Flaws and break it: a Minor Virtue with no Flaws to fund
     // it is `unbalanced_virtues`, an error.
-    while ((await currentPhase()) !== 'virtues_flaws') await next();
+    await advanceWizardTo('virtues_flaws');
     const addVirtue = await $(ADD_VIRTUE);
     await addVirtue.waitForExist({ timeout: STEP_TIMEOUT });
     await addVirtue.click();
@@ -145,15 +115,15 @@ describe('guided creation wizard', () => {
     // visited — the two halves of the flow's navigation.
     await $(BACK).click();
     await $(BACK).click();
-    const twoBack = await currentPhase();
+    const twoBack = await currentWizardPhase();
     await $(`[data-testid="wizard-step-virtues_flaws"]`).click();
-    await browser.waitUntil(async () => (await currentPhase()) === 'virtues_flaws', {
+    await browser.waitUntil(async () => (await currentWizardPhase()) === 'virtues_flaws', {
       timeout: STEP_TIMEOUT,
       timeoutMsg: `a rail jump forward from '${twoBack}' did not land on Virtues & Flaws`,
     });
 
     // On to the closing step: Next gives way to Finish.
-    while ((await currentPhase()) !== 'review') await next();
+    await advanceWizardTo('review');
     expect(await $(NEXT).isExisting()).toBe(false);
     await $(FINISH).waitForExist({ timeout: STEP_TIMEOUT });
 
