@@ -1356,8 +1356,8 @@ entry) before the guided wizard in M6. Accordingly:
   starting-score effects. See the effect-layer subsections above.
 - **M6 (guided wizard):** the life-stage XP acquisition (early childhood 75+45 xp
   `:2378`; later life 15/20/10 xp/yr `:2390-2394`; age→max-score cap
-  `:2368-2374`), the Sample Childhood packages (`:2380-2388` — landing in M6/6b3,
-  see **Sample Childhood packages** below), the magus
+  `:2368-2374`), the Sample Childhood packages (`:2380-2388` — catalogue and engine
+  landed in M6/6b3a, see **Sample Childhood packages** below), the magus
   apprenticeship/post-apprenticeship Art-XP flow (`:2433-2471`), and the aging
   engine for characters over 35 (`:16563-16640`). The age→max-score *cap* itself
   is enforced as direct-entry validation in M4/4e; only the XP *acquisition* and
@@ -2505,8 +2505,21 @@ Abilities are bought with experience earned in blocks, not from one bank:
   packages `:2384-2388`, one per line). Pricing off the Ability advancement table
   at `:2406-2427` (the shared "ABILITY To Buy" column, whose own provenance is the
   **Abilities** section above).
-- Data: `rules/core/childhoods.json` (ships in a later 6b3a task) — packages
-  id-sorted, each package's entries authored in `(ability, slot)` order.
+- Data: `rules/core/childhoods.json` — all five packages of `:2384-2388`, one
+  object per rulebook line, each carrying that single line as its `source`
+  (`[2384, 2384]` … `[2388, 2388]`). Packages id-sorted (`childhood.athletic`,
+  `.exploring`, `.mischievous`, `.social`, `.traveling`), each package's entries
+  sorted by `(ability, slot)`; an absent slot sorts first, which is what puts
+  Traveling's native `Living Language 5` ahead of its slotted `Living Language 1`.
+  Names in `rules/i18n/en/childhoods.json` and `rules/i18n/de/childhoods.json` —
+  `name` only, no `description`: the entry list is mechanics, and a UI composes the
+  human-readable spread from this file plus the Ability i18n, so no rules text is
+  duplicated. The German names are read verbatim off the German mirror
+  `Ars Magica Definitive Edition Basisregeln.md:2384-2388` — Athletische Kindheit,
+  Forschende Kindheit, Mutwillige Kindheit, Soziale Kindheit, Reisende Kindheit.
+  No translation table carries a "Childhood" entry, so the rulebook line **is** the
+  authority here (the mirror is line-for-line, so `:2384` is the same package in
+  both languages).
 - Implementation: `crates/arm-rules/src/childhood.rs` — `ChildhoodPackage` /
   `ChildhoodEntry`, with `spread_xp` and `native_xp` pricing a package against
   `AdvancementTable::xp_for_score`, and `slots` naming the parameters a UI must
@@ -2534,6 +2547,19 @@ Abilities are bought with experience earned in blocks, not from one bank:
   row in the table is reported as unpriceable rather than costed at 0. This is
   what keeps a hand-transcribed catalogue honest: a mistyped "Athletics 1" fails
   the load instead of shipping a package that quietly costs 35 rather than 45.
+  The shipped catalogue is additionally gated from *outside* that arithmetic by
+  `every_shipped_childhood_package_prices_to_45_and_75`
+  (`crates/arm-rules/tests/data_integrity.rs`), which re-prices every package
+  against the **literals** 45 and 75. The load-time check compares against
+  `life_stages.json`, so a coordinated edit lowering the block and a package
+  together would pass it in silence; the literals come from the rulebook line
+  instead, and are the reason a transcription slip cannot ship. Two further data
+  gates sit beside it: `known_childhood_packages_ship_with_their_entries_and_provenance`
+  pins Athletic's four entries and Traveling's three slots (structure, never a
+  package total — catalogue size is data), and
+  `the_shipped_childhoods_file_is_canonically_ordered` checks the file's own
+  `(ability, slot)` ordering, which nothing else can: entry order is deliberately
+  preserved on load, so a mis-sorted file parses and validates happily.
   Eleven further load-time rules guard the same data: every entry's ability
   resolves; a parameterized ability carries a `slot` (unless it is the native
   language, chosen once per character) and a plain one does not; slots are unique
@@ -2630,8 +2656,8 @@ Abilities are bought with experience earned in blocks, not from one bank:
   the loaded ruleset does not ship — which a save written against another ruleset
   can. This is the *only* thing checked about the recorded package: what it granted
   stays uncross-checked, per `:2382` above.
-- **Deferred to the rest of 6b3:** the shipped `childhoods.json` itself, the i18n
-  names, and the UI that offers the packages.
+- **Deferred to the rest of 6b3:** the UI that offers the packages (6b3b) and the
+  `apply_childhood_package` command that carries an application across IPC.
 
 #### Later life — 15 experience points per year
 

@@ -347,6 +347,193 @@ fn german_i18n_covers_all_abilities() {
     }
 }
 
+/// The shipped Sample Childhood catalogue, read as text so the tests below can
+/// check the *file's* own canonical order as well as what the engine parses out
+/// of it.
+const SHIPPED_CHILDHOODS: &str = include_str!("../../../rules/core/childhoods.json");
+
+/// Every shipped Sample Childhood package spends exactly the two childhood blocks
+/// it is a shortcut for: 45 experience points across the spread and 75 in the
+/// native language.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2378 (the two blocks),
+/// `:2384-2388` (the five packages), priced off the "ABILITY To Buy" column at
+/// `:2406-2427`.
+///
+/// The two figures are deliberately **literals**. `Ruleset::validate_childhood_packages`
+/// already prices every package at load, but against `rules/core/life_stages.json`
+/// — so an edit that lowered the block and a package together would pass the load
+/// in silence. These literals are the outside witness that keeps the transcription
+/// honest: they come from the rulebook line, not from another JSON file.
+#[test]
+fn every_shipped_childhood_package_prices_to_45_and_75() {
+    let rs = load_full_ruleset();
+    assert!(
+        rs.childhoods().next().is_some(),
+        "the shipped ruleset must offer Sample Childhood packages"
+    );
+    for package in rs.childhoods() {
+        assert_eq!(
+            package.spread_xp(rs.advancement()),
+            Some(45),
+            "package '{}' must spread exactly 45 experience points",
+            package.id
+        );
+        assert_eq!(
+            package.native_xp(rs.advancement()),
+            Some(75),
+            "package '{}' must spend exactly 75 on its native language",
+            package.id
+        );
+    }
+}
+
+/// Two known packages load with their entries and provenance intact — never a
+/// package total, which is data (a ruleset may ship any number of packages).
+/// Athletic is the plain shape, Traveling the one that exercises every feature at
+/// once: two instances of one parameterized Ability and a spread language beside
+/// the native one.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2384 (Athletic),
+/// `:2388` (Traveling).
+#[test]
+fn known_childhood_packages_ship_with_their_entries_and_provenance() {
+    let rs = load_full_ruleset();
+
+    let athletic = rs
+        .childhood(&Id::new("childhood.athletic"))
+        .expect("childhood.athletic ships");
+    let entries: Vec<(&str, Option<&str>, u8, bool)> = athletic
+        .entries
+        .iter()
+        .map(|e| (e.ability.as_str(), e.slot.as_deref(), e.score, e.native))
+        .collect();
+    assert_eq!(
+        entries,
+        vec![
+            ("ability.athletics", None, 2, false),
+            ("ability.brawl", None, 2, false),
+            ("ability.living_language", None, 5, true),
+            ("ability.swim", None, 2, false),
+        ],
+        "Athletics 2, Brawl 2, Native Language 5, Swim 2 (Core Rules.md:2384)"
+    );
+    let source = athletic
+        .source
+        .as_ref()
+        .expect("Athletic carries provenance");
+    assert_eq!(
+        source.file,
+        "Ars Magica - Definitive Edition (Core Rules).md"
+    );
+    assert_eq!((source.lines.start, source.lines.end), (2384, 2384));
+
+    let traveling = rs
+        .childhood(&Id::new("childhood.traveling"))
+        .expect("childhood.traveling ships");
+    let slots: Vec<(&str, &str)> = traveling
+        .slots()
+        .map(|(slot, ability)| (slot, ability.as_str()))
+        .collect();
+    assert_eq!(
+        slots,
+        vec![
+            ("area_a", "ability.area_lore"),
+            ("area_b", "ability.area_lore"),
+            ("language", "ability.living_language"),
+        ],
+        "Area A Lore, Area B Lore and the spread Living Language are asked for \
+         (Core Rules.md:2388)"
+    );
+    // The native language is never a slot: it is chosen once per character.
+    let native = traveling.native_entry().expect("a native-language entry");
+    assert_eq!(native.ability, Id::new("ability.living_language"));
+    assert_eq!(native.score, 5);
+    assert!(native.slot.is_none());
+    assert_eq!(
+        traveling
+            .source
+            .as_ref()
+            .map(|s| (s.lines.start, s.lines.end)),
+        Some((2388, 2388))
+    );
+}
+
+/// The shipped file is canonically ordered: packages by id, each package's entries
+/// by `(ability, slot)`.
+///
+/// This has to be checked here because nothing else can. `ChildhoodEntry` order is
+/// deliberately *preserved* on load — it is the order a UI asks for slot values in
+/// — so a mis-sorted file parses and validates perfectly happily, and the only
+/// symptom would be a noisy git diff the next time the catalogue is regenerated.
+#[test]
+fn the_shipped_childhoods_file_is_canonically_ordered() {
+    let file: serde_json::Value =
+        serde_json::from_str(SHIPPED_CHILDHOODS).expect("the shipped catalogue is valid JSON");
+    let packages = file["packages"]
+        .as_array()
+        .expect("the file carries a package list");
+
+    let ids: Vec<&str> = packages
+        .iter()
+        .map(|p| p["id"].as_str().expect("every package has an id"))
+        .collect();
+    let mut id_sorted = ids.clone();
+    id_sorted.sort_unstable();
+    assert_eq!(ids, id_sorted, "packages must be id-sorted");
+
+    for package in packages {
+        // An absent slot sorts before any present one, which is what puts the
+        // native-language entry ahead of Traveling's slotted second language.
+        let keys: Vec<(&str, &str)> = package["entries"]
+            .as_array()
+            .expect("every package has entries")
+            .iter()
+            .map(|e| {
+                (
+                    e["ability"].as_str().expect("every entry names an ability"),
+                    e["slot"].as_str().unwrap_or(""),
+                )
+            })
+            .collect();
+        let mut key_sorted = keys.clone();
+        key_sorted.sort_unstable();
+        assert_eq!(
+            keys, key_sorted,
+            "entries of '{}' must be sorted by (ability, slot)",
+            package["id"]
+        );
+    }
+}
+
+#[test]
+fn english_i18n_covers_all_childhood_packages() {
+    let rs = load_full_ruleset();
+    let i18n_en = include_str!("../../../rules/i18n/en/childhoods.json");
+    let loc = LocalizedRuleset::new(rs.clone(), i18n_en).unwrap();
+    for package in rs.childhoods() {
+        assert!(
+            loc.display_name(&package.id).is_some(),
+            "English i18n missing childhood package '{}'",
+            package.id
+        );
+    }
+}
+
+#[test]
+fn german_i18n_covers_all_childhood_packages() {
+    let rs = load_full_ruleset();
+    let i18n_de = include_str!("../../../rules/i18n/de/childhoods.json");
+    let loc = LocalizedRuleset::new(rs.clone(), i18n_de).unwrap();
+    for package in rs.childhoods() {
+        assert!(
+            loc.display_name(&package.id).is_some(),
+            "German i18n missing childhood package '{}'",
+            package.id
+        );
+    }
+}
+
 #[test]
 fn english_i18n_covers_all_spells() {
     let rs = load_ruleset_with_spells();
@@ -1480,7 +1667,7 @@ fn load_full_ruleset() -> Ruleset {
         equipment: Some(include_str!("../../../rules/core/equipment.json")),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
-        childhoods: None,
+        childhoods: Some(SHIPPED_CHILDHOODS),
     })
     .unwrap()
 }
