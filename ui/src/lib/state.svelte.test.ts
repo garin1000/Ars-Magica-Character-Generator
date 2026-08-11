@@ -1943,6 +1943,155 @@ describe('setNativeLanguage', () => {
   });
 });
 
+// --- the Sample Childhood draft (M6b3b) -------------------------------------
+
+/**
+ * Install a ruleset carrying two Sample Childhood packages. They share the
+ * `language` slot and differ elsewhere, which is what makes pruning on a package
+ * switch observable.
+ */
+function installChildhoods(): void {
+  const localized = installRuleset([]);
+  localized.ruleset.childhoods = {
+    'childhood.athletic': {
+      id: 'childhood.athletic',
+      entries: [
+        { ability: 'ability.living_language', score: 5, slot: 'language', native: true },
+        { ability: 'ability.athletics', score: 2 },
+      ],
+    },
+    'childhood.traveling': {
+      id: 'childhood.traveling',
+      entries: [
+        { ability: 'ability.living_language', score: 5, slot: 'language', native: true },
+        { ability: 'ability.area_lore', score: 1, slot: 'area_a' },
+        { ability: 'ability.area_lore', score: 1, slot: 'area_b' },
+      ],
+    },
+  };
+  store.ruleset = localized;
+}
+
+describe('the childhood package draft', () => {
+  beforeEach(() => {
+    installChildhoods();
+    // Isolate from other tests mutating the shared singleton's draft.
+    store.setChildhoodDraftPackage(null);
+    vi.mocked(ipc.validateEntity).mockClear();
+  });
+
+  it('starts with nothing selected and no slot values', () => {
+    expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
+  });
+
+  it('records the selected package', () => {
+    store.setChildhoodDraftPackage('childhood.traveling');
+    expect(store.childhoodDraft.packageId).toBe('childhood.traveling');
+  });
+
+  it('stores a trimmed slot value under its slot key', () => {
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('area_a', '  Rhine  ');
+    expect(store.childhoodDraft.slots).toEqual({ area_a: 'Rhine' });
+  });
+
+  it('prunes the slot values the newly selected package does not declare', () => {
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('language', 'German');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+    store.setChildhoodDraftSlot('area_b', 'Provence');
+
+    store.setChildhoodDraftPackage('childhood.athletic');
+
+    // The shared `language` slot survives; the Area Lore slots the athletic
+    // package never asks for are dropped (the #prunedHouseChoices precedent).
+    expect(store.childhoodDraft).toEqual({
+      packageId: 'childhood.athletic',
+      slots: { language: 'German' },
+    });
+  });
+
+  it('clears both the selection and every slot value for null', () => {
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+
+    store.setChildhoodDraftPackage(null);
+
+    expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
+  });
+
+  it('deletes a slot key for a blank or whitespace-only value', () => {
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+    store.setChildhoodDraftSlot('area_a', '   ');
+    // An unanswered slot is absent, never present-but-empty.
+    expect(store.childhoodDraft.slots).toEqual({});
+    expect(store.childhoodDraft.slots).not.toHaveProperty('area_a');
+  });
+
+  it('never touches the entity, so drafting cannot dirty the document', async () => {
+    await store.createCharacter('companion');
+    expect(store.dirty).toBe(false);
+
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+
+    // The draft is UI state: the entity records only the package actually taken.
+    expect(store.dirty).toBe(false);
+    expect(store.entity.life_stages).toBeUndefined();
+  });
+
+  it('never validates: nothing in a draft is checked until it is applied', () => {
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+    vi.advanceTimersByTime(200);
+    expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+  });
+
+  it('is reset by createCharacter', async () => {
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+
+    await store.createCharacter('companion');
+
+    expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
+  });
+
+  it('is reset by startWizard', async () => {
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+
+    await store.startWizard('companion');
+
+    expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
+  });
+
+  it('is reset by newDocument, like the picker filters', async () => {
+    store.setChildhoodDraftPackage('childhood.traveling');
+    const discarding = store.newDocument();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await discarding;
+
+    expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
+  });
+
+  it('is reset by a load: a recorded package is history, not a draft', async () => {
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/marcus.armc',
+      entity: { ...store.entity, life_stages: { childhood_package: 'childhood.traveling' } },
+    });
+
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+
+    expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
+    vi.mocked(ipc.loadEntity).mockReset();
+  });
+});
+
 // --- Art actions ------------------------------------------------------------
 
 describe('art actions', () => {
