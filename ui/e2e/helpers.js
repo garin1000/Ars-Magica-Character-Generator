@@ -20,7 +20,7 @@
 // logic to extract. A unit test could only assert against a mock of WebDriver.
 // Its real coverage is the 25 spec files that fail loudly the moment it breaks.
 
-import { $, browser } from '@wdio/globals';
+import { $, $$, browser } from '@wdio/globals';
 
 const START_SCREEN = '[data-testid="start-screen"]';
 const NEW_BUTTON = '[data-testid="new-button"]';
@@ -32,6 +32,7 @@ const TAB_BAR = '[role="tablist"]';
 // order is the point), so `returnToStartScreen` would otherwise wait out its full
 // timeout on a wizard that is plainly on screen.
 const WIZARD_RAIL = '[data-testid="wizard-rail"]';
+const WIZARD_NEXT = '[data-testid="wizard-next"]';
 
 // The first wait of a run also covers app start-up and the ruleset load over IPC
 // (the create buttons are the loaded profiles, so they do not exist before it);
@@ -77,6 +78,69 @@ export async function startWizard(type) {
   await start.click();
 
   await $(WIZARD_RAIL).waitForExist({ timeout: STEP_TIMEOUT });
+}
+
+/**
+ * The wizard rail's phase ids, in document order.
+ *
+ * @returns {Promise<string[]>}
+ */
+export async function wizardRailPhases() {
+  // Index-based loop: in webdriverio v9 the awaited `$$` result's `.map` does not
+  // yield a plain iterable, so `Promise.all(items.map(...))` throws.
+  const items = await $$(`${WIZARD_RAIL} button`);
+  const phases = [];
+  for (let i = 0; i < items.length; i++) {
+    const testid = await items[i].getAttribute('data-testid');
+    phases.push(testid.replace('wizard-step-', ''));
+  }
+  return phases;
+}
+
+/**
+ * The phase whose rail entry is marked current.
+ *
+ * @returns {Promise<string>}
+ */
+export async function currentWizardPhase() {
+  const current = await $(`${WIZARD_RAIL} button[aria-current="step"]`);
+  await current.waitForExist({ timeout: STEP_TIMEOUT });
+  const testid = await current.getAttribute('data-testid');
+  return testid.replace('wizard-step-', '');
+}
+
+/**
+ * Walk the guided wizard forward to `phase`, pressing Next one step at a time and
+ * waiting for the rail to follow each time — the flow has no way to jump to a step
+ * it has not reached, so this is the only way to a later phase.
+ *
+ * A no-op when the wizard is already on `phase`. Fails loudly rather than spinning:
+ * a phase the current character's rail does not declare is reported at once, and a
+ * step whose gate blocks Next fails on the click (Next is disabled) or on the wait.
+ *
+ * @param {string} phase creation-phase id (`abilities`, `review`, …)
+ */
+export async function advanceWizardTo(phase) {
+  const phases = await wizardRailPhases();
+  if (!phases.includes(phase)) {
+    throw new Error(`the wizard rail has no '${phase}' step; it offers ${phases.join(', ')}`);
+  }
+
+  let current = await currentWizardPhase();
+  while (current !== phase) {
+    const before = current;
+    const nextButton = await $(WIZARD_NEXT);
+    await nextButton.waitForClickable({
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: `Next is not clickable on '${before}', so '${phase}' is unreachable`,
+    });
+    await nextButton.click();
+    await browser.waitUntil(async () => (await currentWizardPhase()) !== before, {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: `the wizard did not advance past '${before}' on the way to '${phase}'`,
+    });
+    current = await currentWizardPhase();
+  }
 }
 
 /**
