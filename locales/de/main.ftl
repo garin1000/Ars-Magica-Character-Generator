@@ -193,6 +193,64 @@ restricted-xp-list-separator = ,
 # ist damit der allgemeine Vorrat.
 xp-pool-childhood_native_language = Muttersprache
 xp-pool-childhood_spread = Frühe Kindheit
+# Der Umschalter für die Herkunft der Erfahrung der Fertigkeiten. Sie stammt
+# entweder aus einem selbst eingetragenen Vorrat oder aus den Lebensabschnitten des
+# Charakters. Der Umschalter ist kein gespeichertes Kennzeichen: ein Plan der
+# Lebensabschnitte am Charakter IST die geführte Finanzierung, eine geladene Datei
+# landet also in dem Modus, den ihre eigenen Daten vorgeben.
+ability-funding-label = Herkunft der Erfahrung
+ability-funding-pool = EP-Vorrat
+ability-funding-life_stages = Lebensabschnitte
+ability-funding-pool-hint = Trage einen Gesamtwert selbst ein und gib ihn für beliebige Fertigkeiten aus.
+ability-funding-life_stages-hint = Frühe Kindheit und späteres Leben erbringen die Erfahrung: das Alter bestimmt die Erfahrung des späteren Lebens, Muttersprache und eine beispielhafte Kindheit füllen die Blöcke der Kindheit.
+# Warum die Lebensabschnitte für einen Magus nicht zur Wahl stehen: von den vier
+# Perioden, in denen ein Magus Erfahrung erwirbt, ist die Lehrlingszeit noch nicht
+# abgebildet, daher bleibt nur der EP-Vorrat. Sagt dasselbe wie der Hinweis
+# life_stage_magus_guided_unsupported der Engine, nur vor dem Versuch statt danach.
+ability-funding-magus-reason = Ein Magus erwirbt Erfahrung in vier Perioden — frühe Kindheit, späteres Leben, Lehrlingszeit und das Leben als Magus danach. Die Lehrlingszeit ist noch nicht abgebildet, daher nutzt ein Magus vorerst den EP-Vorrat.
+# Anzeigen der Lebensabschnitte in der EP-Zeile. Das spätere Leben finanziert alles
+# und ersetzt daher den bearbeitbaren Gesamtwert: Jahre nach der Kindheit ×
+# Erfahrung pro Jahr. Die Rate ist die dieses Charakters — die Tugend Wohlhabend und
+# der Fehler Arm ändern sie.
+life-stage-later-life = Späteres Leben: { $years } × { $rate } = { $xp } EP
+life-stage-no-budget = Noch keine Erfahrung aus Lebensabschnitten.
+# Das Alter wird im Bereich wiederholt, weil das spätere Leben in Jahren gemessen
+# wird — es wird hier ebenso bearbeitet wie im Details-Reiter.
+life-stage-age-label = Alter
+# Notausgang für eine von Hand bearbeitete Datei: ein Charakter, der über seine
+# Lebensabschnitte finanziert wird, darf keinen eingetragenen Vorrat führen, und die
+# geführte Erstellung bietet kein Feld, um ihn zu berichtigen — dies leert ihn.
+xp-pool-clear = Vorrat leeren
+xp-pool-clear-hint = Die Erfahrung stammt hier aus den Lebensabschnitten, ein von Hand eingetragener Vorrat muss daher zurück auf 0.
+# Die Muttersprache: der erste Block der Kindheit kauft diese Fertigkeit und nichts
+# anderes, ohne sie gibt es kein Budget der Kindheit.
+native-language-label = Muttersprache
+native-language-placeholder = z. B. Deutsch
+# Beispielhafte Kindheiten: fertige Fertigkeitspakete für die Erfahrung der frühen
+# Kindheit. Die Namen der Pakete sind Regeltext (rules/i18n/<lang>/childhoods.json),
+# niemals Schlüssel hier. Die Punkte selbst zu verteilen ist eine gleichwertige Wahl
+# und kein Verzicht, daher ist es die erste Option der Auswahl und keine leere Wahl.
+childhood-label = Beispielhafte Kindheit
+childhood-taken = Genommenes Fertigkeitspaket: { $name }
+childhood-choose-prompt = — Erfahrung der Kindheit selbst verteilen —
+childhood-preview-label = Vorschau des Pakets
+childhood-entry = { $name } { $score }
+# Ein Platz, den das Paket offen lässt (das Gebiet einer Gebietskunde, die Sprache
+# einer Lebenden Sprache). Sein Label ist der Fertigkeitsname des Eintrags —
+# Platz-Kennungen sind Paketdaten und dürfen nie angezeigt werden — mit einer
+# Ordnungszahl nur dort, wo ein Paket dieselbe Fertigkeit zweimal vergibt (die zwei
+# Gebietskunden der Reisenden Kindheit).
+childhood-slot-label = { $name }
+childhood-slot-label-nth = { $name } ({ $index })
+childhood-apply = Diese Kindheit nehmen
+childhood-apply-hint = Das Fertigkeitspaket trägt diese Fertigkeitswerte ein; sie bleiben danach bearbeitbar.
+# Warum das Nehmen des Pakets blockiert ist. Zwei Plätze derselben Fertigkeit mit
+# gleichem Wert würden zu einer Zeile verschmelzen und die Erfahrung des anderen
+# verschwenden; eine Sprache der Kindheit muss sich von der Muttersprache
+# unterscheiden, die ihren eigenen Block hat.
+childhood-slot-empty-reason = Fülle jede Fertigkeit aus, die das Paket offen lässt.
+childhood-slot-duplicate-reason = Zwei Plätze derselben Fertigkeit brauchen verschiedene Werte, sonst verschmelzen sie zu einer Zeile und Erfahrung geht verloren.
+childhood-slot-native-reason = Eine Sprache der Kindheit muss sich von der Muttersprache unterscheiden.
 ability-score-label = Wert
 ability-specialty-label = Spezialisierung
 # Überschrift für die im Auswahlbereich gezeigten Beispiel-Spezialisierungen.
