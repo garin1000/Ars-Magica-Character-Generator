@@ -182,6 +182,7 @@ pub fn ability_bonus(
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
                 | Effect::AbilityAuthorization { .. }
+                | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
@@ -330,6 +331,7 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
                 | Effect::AbilityAuthorization { .. }
+                | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
@@ -516,6 +518,7 @@ fn characteristic_limit_shift(
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
                 | Effect::AbilityAuthorization { .. }
+                | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
@@ -720,6 +723,7 @@ pub(crate) fn ability_affinity(
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
                 | Effect::AbilityAuthorization { .. }
+                | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
@@ -788,6 +792,7 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
                 | Effect::AbilityAuthorization { .. }
+                | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
@@ -1541,6 +1546,7 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::GeneralXp { .. }
         | Effect::LaterLifeXpRate { .. }
         | Effect::AbilityAuthorization { .. }
+        | Effect::LocalityAbilityCapFraction { .. }
         | Effect::ConfidenceBonus { .. }
         | Effect::SpellMasteryXp { .. }
         | Effect::GrantsSpellMastery { .. }
@@ -1593,6 +1599,7 @@ fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         // which then becomes the general pool. Adding it here would double-count.
         | Effect::LaterLifeXpRate { .. }
         | Effect::AbilityAuthorization { .. }
+        | Effect::LocalityAbilityCapFraction { .. }
         | Effect::ConfidenceBonus { .. }
         | Effect::SpellMasteryXp { .. }
         | Effect::GrantsSpellMastery { .. }
@@ -1809,6 +1816,7 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
                 | Effect::AbilityAuthorization { .. }
+                | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSelection { .. }
@@ -2456,6 +2464,48 @@ pub fn age_max_ability_score(ruleset: &Ruleset, age: u32) -> Option<u8> {
 /// ships an age band table.
 pub fn age_ability_cap(entity: &Entity, ruleset: &Ruleset) -> Option<u8> {
     age_max_ability_score(ruleset, entity.age?)
+}
+
+/// The age cap for ONE ability, after any Virtue/Flaw that narrows it for
+/// locality-dependent Abilities.
+///
+/// > The maximum scores at character creation for locality-dependent Abilities like
+/// > Language, Area Lore, or Organization Lore, as well as some social Abilities,
+/// > are half (round up) that which his age normally allows.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:6160 (Foreign
+/// Upbringing). Which Abilities count as locality-dependent is catalogue data
+/// (`locality_dependent`), because the passage's "as well as some social Abilities"
+/// is deliberately open — the engine enforces the flag it is given rather than
+/// guessing which social Abilities a saga counts.
+///
+/// The fraction rounds **up**, per the passage. Several such flaws would compose by
+/// applying the smallest resulting cap, though no shipped Flaw pairs with another.
+pub fn ability_age_cap(entity: &Entity, ruleset: &Ruleset, ability: &Id) -> Option<u8> {
+    let base = age_ability_cap(entity, ruleset)?;
+    if !ruleset
+        .ability(ability)
+        .is_some_and(|def| def.locality_dependent)
+    {
+        return Some(base);
+    }
+    let mut cap = base;
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::LocalityAbilityCapFraction { num, den } = effect
+                && *den > 0
+            {
+                // Ceiling division: "half (round up)".
+                let numerator = u32::from(base) * u32::from(*num) + u32::from(*den) - 1;
+                let fractioned = u8::try_from(numerator / u32::from(*den)).unwrap_or(base);
+                cap = cap.min(fractioned);
+            }
+        }
+    }
+    Some(cap)
 }
 
 #[cfg(test)]

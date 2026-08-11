@@ -190,6 +190,54 @@ fn wealthy_and_poor_ship_with_their_rates_and_eligibility() {
     );
 }
 
+/// Foreign Upbringing halves the creation cap on locality-dependent Abilities, so
+/// the Flaw must carry the fraction and the three Ability families the passage names
+/// must carry the flag.
+///
+/// > The maximum scores at character creation for locality-dependent Abilities like
+/// > Language, Area Lore, or Organization Lore, as well as some social Abilities, are
+/// > half (round up) that which his age normally allows.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:6160. The trailing "some
+/// social Abilities" is deliberately unflagged — see RULES.md.
+#[test]
+fn foreign_upbringing_halves_the_locality_dependent_abilities() {
+    let rs = load_ruleset();
+
+    let flaw = rs
+        .item(&Id::new("flaw.foreign_upbringing"))
+        .expect("flaw.foreign_upbringing ships");
+    let fraction = flaw
+        .effects
+        .iter()
+        .find_map(|e| match e {
+            Effect::LocalityAbilityCapFraction { num, den } => Some((*num, *den)),
+            _ => None,
+        })
+        .expect("it carries the cap fraction");
+    assert_eq!(fraction, (1, 2), "half");
+
+    for id in [
+        "ability.living_language",
+        "ability.dead_language",
+        "ability.area_lore",
+        "ability.organization_lore",
+    ] {
+        assert!(
+            rs.ability(&Id::new(id))
+                .expect("ability ships")
+                .locality_dependent,
+            "{id} is locality-dependent (Core Rules.md:6160)"
+        );
+    }
+    // A plainly non-local Ability is not flagged, so the fraction has a real edge.
+    assert!(
+        !rs.ability(&Id::new("ability.brawl"))
+            .unwrap()
+            .locality_dependent
+    );
+}
+
 #[test]
 fn shipped_abilities_and_characteristics_load() {
     let rs = load_ruleset();

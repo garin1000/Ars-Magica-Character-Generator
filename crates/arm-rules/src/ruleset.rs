@@ -1923,6 +1923,7 @@ impl Ruleset {
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
                 | Effect::AbilityAuthorization { .. }
+                | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::GrantsReputation { .. }
                 | Effect::MightGrant { .. }

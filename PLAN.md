@@ -621,11 +621,15 @@ Slices 6b1a (phase vocabulary + issue attribution) and 6b1b (the wizard shell) a
       which was missing from the catalogue entirely**, and forbids Wealthy/Poor on the
       magus and mythic-companion profiles. Source: Core Rules.md:2364, :2378, :2392,
       :2394, :6594-6596
-- [ ] 6b2b: the Virtue requirement for Academic/Arcane/Martial Abilities — the
-      general pool currently funds them with no Virtue (only the Supernatural half is
-      enforced). Source: Core Rules.md:2315, :2392, :7151
-- [ ] 6b2c: Foreign Upbringing halves the cap on locality-dependent Abilities.
-      Source: Core Rules.md:6158-6160
+- [x] **6b2b**: Academic/Arcane/Martial Abilities now require a permitting Virtue —
+      the gated categories are data, a `restricted_ability_xp` pool counts as
+      permission (so Educated/Warrior/Arcane Lore need no new data), Supernatural
+      keeps its stricter per-Ability rule, and magi are exempt. Plus the Latin-3
+      expectation as a warning. Source: Core Rules.md:2315, :2392, :5867, :7151
+- [x] **6b2c**: Foreign Upbringing halves the creation cap on locality-dependent
+      Abilities (Language, Area Lore, Organization Lore — the source's trailing "some
+      social Abilities" is left unflagged, a data decision, not a code one).
+      Source: Core Rules.md:6160
 - [ ] Sample Childhood packages (deferred from M3): childhood model + registry +
       load-time integrity (ability refs resolve) + an "apply package" step.
       Source: Core Rules.md:2380-2388
@@ -782,11 +786,15 @@ allocation as instance-restricted pools rather than as one bank. It also shipped
 **Poor Major Flaw, which was absent from the catalogue entirely**, and the
 companions-only restriction on it and Wealthy.
 
+Its two tails are done too: **6b2b** gates Academic/Arcane/Martial Abilities behind a
+permitting Virtue (which was enforced for Supernatural only, so the pool would fund an
+Academic Ability nobody could learn), and **6b2c** halves the creation cap on
+locality-dependent Abilities for Foreign Upbringing.
+
 Next: **6b3 onwards** — Sample Childhood packages, magus apprenticeship and
 post-Gauntlet accrual, and aging for characters over 35 (with die results typed by
-the user, so the engine stays deterministic). Two severable tails from 6b2 remain
-open: the Academic/Arcane/Martial Virtue requirement (6b2b) and Foreign Upbringing's
-halved cap (6b2c). Slice-by-slice plan: `M6B-IMPLEMENTATION.md`.
+the user, so the engine stays deterministic). Slice-by-slice plan:
+`M6B-IMPLEMENTATION.md`.
 
 ---
 

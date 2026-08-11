@@ -108,6 +108,20 @@ pub struct Ability {
     /// have no Martial Abilities.").
     #[serde(default, skip_serializing_if = "is_false")]
     pub combat_ability: bool,
+    /// Whether this Ability is tied to where the character grew up, so a Flaw that
+    /// narrows locality knowledge caps it lower at creation
+    /// ([`Effect::LocalityAbilityCapFraction`](crate::types::Effect)).
+    ///
+    /// A per-ability flag rather than a category or a hardcoded slug list, because
+    /// the rules name three families and then trail off: "locality-dependent
+    /// Abilities like Language, Area Lore, or Organization Lore, **as well as some
+    /// social Abilities**". The three named families carry the flag; which social
+    /// Abilities a saga counts is left to the data author rather than guessed here.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:6160 (Foreign
+    /// Upbringing).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub locality_dependent: bool,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
