@@ -9,10 +9,10 @@ here and the matching `PLAN.md` box in the same commit as green code.
 type is fixed at creation via `store.createCharacter(typeId)`. 6b1b replaced that
 screen's hardcoded-disabled wizard button with one guided entry per character type.
 
-**Status: 6b1a, 6b1b, 6b2 and 6b3a are done.** Next is **6b3b** — the frontend half of
-6b3: the funding-mode toggle, the life-stage panel, the Sample Childhood package picker,
-the guided branch of the XP bar, and the e2e coverage. 6b3 counts as done only once
-6b3b is in, so the `PLAN.md` 6b3 boxes stay unticked until then.
+**Status: 6b1a, 6b1b, 6b2 and 6b3 (both halves, 6b3a + 6b3b) are done.** Next is
+**6b4** — the magus's apprenticeship (240 xp across Arts and Abilities, 120 spell
+levels, the Parma/Magic Theory/Latin minimums), which is also what lifts the engine's
+refusal of a guided magus. The `PLAN.md` 6b3 boxes are ticked as of 6b3b.
 
 6b2 shipped as five commits: the life-stage rules as data; the missing Poor Major
 Flaw plus the Wealthy/Poor rate effect; `Entity::life_stages` and the derived
@@ -528,13 +528,99 @@ player can actually take a package.
   life-stage character no longer gets two warnings that differ only in their numbers
   (`8d7ecdf`).
 
-### Deferred to 6b3b
+### Deferred to 6b3b (all shipped — see the next section)
 
 The Abilities step's two funding modes (flat pool as today, guided life-stage flow), the
 life-stage panel (age, native language, the two block read-outs), the package picker with
 a field per slot calling `apply_childhood_package`, the XP bar's guided branch, and the
 e2e spec. Provenance for all of the above: **Sample Childhood packages (M6/6b3a)** in
 `crates/arm-rules/RULES.md`.
+
+---
+
+## Slice 6b3b — The guided Abilities step ✅
+
+The frontend half, and the one that makes 6b3 real: before it, the catalogue, the
+applicator and the command shipped with no surface calling them. No engine change was
+needed — 6b3a's command was the whole contract — so this slice is UI, state and
+localization only, plus the spec that drives the flow through the real binary.
+
+### What shipped (14 commits, `f4d5280..f812644` plus `c1772f9`)
+
+- **The types mirror** (`f4d5280`). `LifeStagePlan`, `LifeStageBudget`,
+  `ChildhoodPackage`/`ChildhoodEntry` and `ChildhoodApplication` in `ui/src/lib/types.ts`,
+  pinned against the Rust shapes by `crates/arm-app/tests/commands.rs`.
+- **The derived funding mode** (`58e84ec`). `store.abilityFunding` is
+  `entity.life_stages ? 'life_stages' : 'pool'`, and `setAbilityFunding` is the only way
+  across: entering adds an empty plan and zeroes `xp_pool` (the engine forbids both at
+  once), leaving deletes the plan key outright.
+- **The plan's own fields** (`a5eb2b3`, `bbaeeae`). `setNativeLanguage` writes
+  `plan.native_language` (blank deletes the key, and it is a no-op without a plan, so a
+  flat-mode surface cannot conjure one); the chrome's Fluent keys land in both locales.
+- **The XP bar's guided branch** (`e009889`). Under a plan the editable pool input gives
+  way to a read-only `xp-pool-total`, with the later-life line
+  (`years × rate = xp`) beside it; the restricted-pool read-outs name their block
+  through `xp-pool-childhood_*` rather than the slug.
+- **The panel** (`b0d75ba`, `1412efd`). `LifeStagePanel.svelte` — the funding radio, the
+  age input with the engine's age→cap echoed beside it, and the native language — mounted
+  by `AbilityTab` above the Ability rows, so the wizard step and the editor tab get it
+  from one place.
+- **The draft, the picker and the application** (`b95cd9c`, `8574573`, `9c0a930`,
+  `89d466f`, `85e94d5`). `store.childhoodDraft` + `childhoodRejections`,
+  `applyChildhoodPackage` over IPC, the `childhoodSlots` / `childhoodEntryPreview` /
+  `childhoodSlotFault` / `restrictedPoolLabel` helpers in `derive.ts`, and
+  `ChildhoodPackagePicker.svelte`.
+- **The 27th e2e spec** (`ea7dae7`, `f812644`).
+  `ui/e2e/specs/life-stage-childhood.e2e.js` drives the whole narrative on a companion —
+  switch the funding source, type an age and a native language, draft Traveling Childhood,
+  watch the two blocks fill, re-take it idempotently, switch away and back, save/load, and
+  finish on a magus being refused. The wizard's phase-advance driver moved into
+  `ui/e2e/helpers.js` (`advanceWizardTo`) rather than being copied.
+- **Pruning the draft on the way out** (`c1772f9`) — see the decisions below.
+
+### Decisions of record
+
+- **The funding mode is derived, never a second flag.** A plan on the entity *is* guided
+  funding, so there is nothing to reconcile on load and no way for a flag and a plan to
+  disagree. The save shape is unchanged, and `SCHEMA_VERSION` stays 14.
+- **The draft is UI state; the taken package is the record.** `store.childhoodDraft`
+  (package id + slot answers) lives beside `filters`: never on the entity, so drafting
+  cannot dirty the document and nothing about a half-filled form is ever saved. What
+  persists is `life_stages.childhood_package`, written by the engine's applicator. The
+  select therefore starts **unselected even when a package is recorded** — a recorded
+  package is history, not a draft, and prefilling it would show empty-slot faults for a
+  form the player never opened (the slot answers are the Ability rows' `parameter`s and
+  are deliberately not stored, so they could not be restored anyway).
+- **Leaving guided funding prunes the draft** (`c1772f9`). Leaving deletes the plan, and
+  the plan is what a draft is *for*: a survivor would prefill a package for a future plan
+  that starts from nothing, with stale slot faults for a decision nobody has made.
+  Deliberately asymmetric — *entering* guided mode keeps an in-progress draft, since
+  toggling the radio back and forth would otherwise destroy typed slot values.
+- **The guided radio is disabled for a magus, in engine and UI.** The engine's
+  `life_stage_magus_guided_unsupported` is the backstop for a hand-edited save; the UI
+  reads `type_profile.is_magus` and disables the option with its reason spoken through
+  `aria-describedby` (`ability-funding-magus-reason`), never greyed out alone. Both lift
+  in 6b4.
+- **The panel carries a second age input, bound to the same `entity.age`.** Age already
+  lives on the Details tab, but later life is (age − childhood years) × rate, so the
+  guided flow cannot ask the player to leave for it. Both surfaces read and write the one
+  field, so they cannot diverge.
+- **Rejections stay out of `result`.** `childhoodRejections` is its own store field: a
+  rejection describes the *form just submitted*, not the character (which a rejection
+  leaves untouched), and it is retired by the next apply and by every draft edit.
+
+### Two findings the e2e spec pinned
+
+- **The 75-point childhood block only forms once the native language is named.** It is an
+  instance-restricted pool over the chosen language, so before the language exists there
+  is no instance to restrict it to and only the 45-point spread is on screen. The slice
+  design expected both blocks as soon as guided funding was picked; the spec asserts the
+  real order instead.
+- **Leaving guided mode deletes the recorded package with the plan.** The plan *is* the
+  record (`life_stages.childhood_package`), so switching to the flat pool and back leaves
+  no childhood taken — the bought Ability rows stand, as ordinary rows, and the now
+  unfunded spend surfaces as `not_enough_xp`. That is the same "deleting the plan prunes
+  its contents" rule as `native_language`, not a special case.
 
 ---
 
@@ -695,8 +781,10 @@ Academic/Arcane/Martial Abilities (waived when `profile.is_magus`, per 2435/7151
 **Foreign Upbringing**'s halved locality-dependent cap (a new `locality_dependent` data
 flag on abilities).
 
-**6b3 — Sample Childhood packages.** (Split into 6b3a/6b3b; everything but the UI has
-shipped — read the **Slice 6b3a** section above for what the design below actually became.)
+**6b3 — Sample Childhood packages.** (Split into 6b3a/6b3b; **both have shipped** — read
+the **Slice 6b3a** and **Slice 6b3b** sections above for what the design below actually
+became. Notably the funding mode is *not* UI state as sketched here: it is derived from
+the plan on the entity, and only the drafted package is UI state.)
 `childhood.rs` (`ChildhoodPackage`, `apply_package`,
 `package_cost`), `rules/core/childhoods.json` (five packages, one `source` each at
 2384-2388) + `rules/i18n/{en,de}/childhoods.json`, the five integrity rules above, and an
