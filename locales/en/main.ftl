@@ -184,6 +184,60 @@ restricted-xp-list-separator = ,
 # no key — it funds anything, so it IS the general pool.
 xp-pool-childhood_native_language = Native language
 xp-pool-childhood_spread = Early childhood
+# The Abilities funding switch. Experience either comes from one pool the player
+# enters, or the character's life stages earn it. The switch is not a stored flag:
+# a life-stage plan on the character IS guided funding, so a loaded save lands in
+# the mode its own data implies.
+ability-funding-label = Source of experience
+ability-funding-pool = Experience pool
+ability-funding-life_stages = Life stages
+ability-funding-pool-hint = Enter one total yourself and spend it on any Ability.
+ability-funding-life_stages-hint = Early childhood and later life earn the experience: age sets the later-life total, while a native language and a sample Childhood fill the childhood blocks.
+# Why the life-stage option is unavailable for a magus: of the four periods a magus
+# earns experience in, apprenticeship is not modelled yet, so the flat pool is the
+# only honest offer. Says the same as the engine's
+# life_stage_magus_guided_unsupported issue, ahead of the attempt rather than after.
+ability-funding-magus-reason = A magus earns experience in four periods — early childhood, later life, apprenticeship, and life as a magus after that. Apprenticeship is not modelled yet, so a magus uses the experience pool for now.
+# Life-stage read-outs in the XP bar. Later life funds anything, so it replaces the
+# editable pool total: years after childhood × experience per year. The rate is this
+# character's own — the Wealthy Virtue and the Poor Flaw change it.
+life-stage-later-life = Later life: { $years } × { $rate } = { $xp } XP
+life-stage-no-budget = No life-stage experience yet.
+# Age is repeated inside the panel because later life is measured in years, so it
+# is edited here as well as on the Details tab.
+life-stage-age-label = Age
+# Escape hatch for a hand-edited save: a character funded by its life stages must
+# not also carry an entered pool, and guided mode offers no field to correct one,
+# so this empties it.
+xp-pool-clear = Clear pool
+xp-pool-clear-hint = Experience comes from the life stages here, so a pool entered by hand has to go back to 0.
+# The native language: childhood's first block buys this Ability and nothing else,
+# so there is no childhood budget until it is named.
+native-language-label = Native language
+native-language-placeholder = e.g. German
+# Sample Childhoods: ready-made Ability packages for early childhood's experience.
+# Package names are rules text (rules/i18n/<lang>/childhoods.json), never keys here.
+# Spending the points yourself is an equal choice rather than an opt-out, so it is
+# the picker's first option and not an empty selection.
+childhood-label = Sample Childhood
+childhood-taken = Childhood taken: { $name }
+childhood-choose-prompt = — Spend childhood's experience yourself —
+childhood-preview-label = Package preview
+childhood-entry = { $name } { $score }
+# A slot the package leaves open (the Area of an Area Lore, the Language of a Living
+# Language). Its label is the entry's own Ability name — slot ids are per-package
+# data and must never be rendered — with a 1-based ordinal only where one package
+# slots the same Ability twice (Traveling Childhood's two Area Lores).
+childhood-slot-label = { $name }
+childhood-slot-label-nth = { $name } ({ $index })
+childhood-apply = Take this childhood
+childhood-apply-hint = The package fills in these Ability scores; they stay editable afterwards.
+# Why taking the package is blocked. Two slots of one Ability sharing a value would
+# merge into a single row and waste the other's experience; a childhood language
+# must differ from the native language, which has a block of its own.
+childhood-slot-empty-reason = Fill in every Ability the package leaves open.
+childhood-slot-duplicate-reason = Two slots of the same Ability need different values, or they merge into one row and experience is wasted.
+childhood-slot-native-reason = A childhood language must differ from the native language.
 ability-score-label = Score
 ability-specialty-label = Specialty
 # Heading for the rulebook's list of example specialties shown in the picker.
