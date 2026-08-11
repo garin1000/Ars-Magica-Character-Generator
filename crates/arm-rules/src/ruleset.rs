@@ -1327,6 +1327,8 @@ impl Ruleset {
         // Same invariant for the Art advancement table.
         errors.extend(self.art_advancement.validation_errors());
 
+        self.validate_childhood_packages(&mut errors);
+
         for (type_id, profile) in &self.type_profiles {
             for trait_id in &profile.required_traits {
                 if !self.point_items.contains_key(trait_id) {
@@ -1495,6 +1497,151 @@ impl Ruleset {
                 "engine-required V/F category '{ENGINE_REQUIRED_CATEGORY_PERSONALITY}' \
                  is missing from the catalogue"
             ));
+        }
+    }
+
+    /// Validates the Sample Childhood packages against the abilities catalogue,
+    /// the advancement table, and the childhood blocks they are a shortcut for.
+    ///
+    /// This is the **trust gate on transcribed rulebook data**. A package is one
+    /// way of spending the two childhood blocks
+    /// ("75 experience points in their native language … and 45 experience points
+    /// to divide between …", Core Rules.md:2378), so its entries must price to
+    /// exactly those blocks: a mistyped score fails the load rather than shipping
+    /// a package that quietly costs 40 or 50 experience points. It also makes
+    /// [`ChildhoodPackage::native_entry`]'s "at most one native entry" a real
+    /// guarantee rather than a hope.
+    ///
+    /// Errors accumulate — a broken file reports every problem at once.
+    fn validate_childhood_packages(&self, errors: &mut Vec<String>) {
+        if self.childhoods.is_empty() {
+            return;
+        }
+        // Without the blocks there is nothing to price a package against, so the
+        // pricing rules below stay silent rather than blaming each package for
+        // the missing file.
+        let childhood = match self.life_stages {
+            Some(ref rules) => Some(&rules.childhood),
+            None => {
+                errors.push(
+                    "childhood packages are shipped without life-stage rules, \
+                     so their experience cannot be priced"
+                        .to_string(),
+                );
+                None
+            }
+        };
+
+        for package in self.childhoods.values() {
+            let id = &package.id;
+            let mut slots_seen: BTreeSet<&str> = BTreeSet::new();
+            let mut native_entries = 0usize;
+
+            for entry in &package.entries {
+                let ability = &entry.ability;
+                match self.abilities.get(ability) {
+                    None => errors.push(format!(
+                        "childhood package '{id}' names unknown ability '{ability}'"
+                    )),
+                    // A parameterized ability needs a slot key for the player's
+                    // answer to arrive under; the native language is the
+                    // exception, being chosen once for the character as a whole.
+                    Some(known) if known.parameter.is_some() => {
+                        if entry.slot.is_none() && !entry.native {
+                            errors.push(format!(
+                                "childhood package '{id}' entry for parameterized ability \
+                                 '{ability}' names no slot, so its value could never be asked for"
+                            ));
+                        }
+                    }
+                    Some(_) => {
+                        if let Some(slot) = entry.slot.as_deref() {
+                            errors.push(format!(
+                                "childhood package '{id}' entry for plain ability '{ability}' \
+                                 names slot '{slot}', which it has no parameter to fill"
+                            ));
+                        }
+                    }
+                }
+
+                // Two entries of one parameterized ability are told apart by slot
+                // alone, so a repeated key would collapse them into one row.
+                if let Some(slot) = entry.slot.as_deref()
+                    && !slots_seen.insert(slot)
+                {
+                    errors.push(format!("childhood package '{id}' repeats slot '{slot}'"));
+                }
+
+                if entry.native {
+                    native_entries += 1;
+                }
+
+                // An unpriceable score is reported here, per entry; the two sum
+                // checks below then stay silent rather than blaming the total.
+                if self.advancement.xp_for_score(entry.score).is_none() {
+                    errors.push(format!(
+                        "childhood package '{id}' entry for '{ability}' has score {}, \
+                         which the advancement table does not price",
+                        entry.score
+                    ));
+                }
+
+                if let Some(childhood) = childhood
+                    && !entry.native
+                    && !childhood.spread_abilities.contains(ability)
+                {
+                    errors.push(format!(
+                        "childhood package '{id}' names ability '{ability}', \
+                         which the childhood spread cannot buy"
+                    ));
+                }
+            }
+
+            if native_entries != 1 {
+                errors.push(format!(
+                    "childhood package '{id}' has {native_entries} native entries, \
+                     but exactly one is required"
+                ));
+            }
+
+            if let Some(childhood) = childhood {
+                if let Some(native) = package.native_entry()
+                    && native.ability != childhood.native_language_ability
+                {
+                    errors.push(format!(
+                        "childhood package '{id}' native entry names ability '{}', not the \
+                         childhood's native-language ability '{}'",
+                        native.ability, childhood.native_language_ability
+                    ));
+                }
+                if let Some(sum) = package.spread_xp(&self.advancement)
+                    && sum != childhood.spread_xp
+                {
+                    errors.push(format!(
+                        "childhood package '{id}' spread entries price to {sum} experience, \
+                         not the childhood spread's {}",
+                        childhood.spread_xp
+                    ));
+                }
+                if let Some(sum) = package.native_xp(&self.advancement)
+                    && sum != childhood.native_language_xp
+                {
+                    errors.push(format!(
+                        "childhood package '{id}' native entry prices to {sum} experience, \
+                         not the childhood's {}",
+                        childhood.native_language_xp
+                    ));
+                }
+            }
+
+            if let Some(ref source) = package.source
+                && !source.lines.is_valid()
+            {
+                errors.push(format!(
+                    "childhood package '{id}': source line range start ({}) exceeds end ({})",
+                    source.lines.start, source.lines.end
+                ));
+            }
         }
     }
 
@@ -3858,33 +4005,417 @@ mod tests {
     /// shortcut down rather than making the childhood block unusable.
     #[test]
     fn childhood_packages_load_from_their_own_file() {
-        let childhoods = r#"{
-          "packages": [
-            { "id": "childhood.athletic",
-              "entries": [
-                { "ability": "ability.awareness", "score": 2 },
-                { "ability": "ability.living_language", "score": 5, "native": true }
-              ] }
-          ]
-        }"#;
-        let rs = Ruleset::from_sources(RulesetSources {
-            id: "test",
-            version: "1",
-            point_items: "[]",
-            type_profiles: "[]",
-            abilities: Some(LIFE_STAGE_ABILITIES),
-            childhoods: Some(childhoods),
-            ..RulesetSources::default()
-        })
-        .unwrap();
+        let rs = Ruleset::from_sources(childhood_sources(VALID_CHILDHOOD)).unwrap();
         let package = rs
             .childhood(&Id::new("childhood.athletic"))
             .expect("the package is reachable by id");
-        assert_eq!(package.entries.len(), 2);
+        assert_eq!(package.entries.len(), 4);
         assert_eq!(rs.childhoods().count(), 1);
 
         let without = Ruleset::from_json("test", "1", "[]", "[]").unwrap();
         assert_eq!(without.childhoods().count(), 0);
+    }
+
+    /// Abilities for the Sample Childhood fixtures: the closed spread list of
+    /// Core Rules.md:2378 in miniature (one parameterized `(Area) Lore`, one
+    /// parameterized `(Living Language)`, three plain ones), plus a known ability
+    /// the spread may NOT buy, and the canonical "ABILITY To Buy" prices for
+    /// scores 1-5 (Core Rules.md:2406-2427).
+    const CHILDHOOD_ABILITIES: &str = r#"{
+      "advancement": [
+        { "score": 1, "total_xp": 5 },
+        { "score": 2, "total_xp": 15 },
+        { "score": 3, "total_xp": 30 },
+        { "score": 4, "total_xp": 50 },
+        { "score": 5, "total_xp": 75 }
+      ],
+      "abilities": [
+        { "id": "ability.area_lore", "category": "general", "parameter": "area" },
+        { "id": "ability.athletics", "category": "general" },
+        { "id": "ability.awareness", "category": "general" },
+        { "id": "ability.living_language", "category": "general", "parameter": "language" },
+        { "id": "ability.magic_theory", "category": "general" },
+        { "id": "ability.swim", "category": "general" }
+      ]
+    }"#;
+
+    /// The two childhood blocks a package is a shortcut for: 75 in the native
+    /// language, 45 across the spread list (Core Rules.md:2378).
+    const CHILDHOOD_LIFE_STAGES: &str = r#"{
+      "childhood": {
+        "years": 5,
+        "native_language_ability": "ability.living_language",
+        "native_language_xp": 75,
+        "spread_xp": 45,
+        "spread_abilities": [
+          "ability.area_lore",
+          "ability.athletics",
+          "ability.awareness",
+          "ability.living_language",
+          "ability.swim"
+        ]
+      },
+      "later_life": { "xp_per_year": 15 }
+    }"#;
+
+    /// A package that satisfies every integrity rule: three plain spread entries
+    /// pricing to 15+15+15 = 45, and one native language at 5 = 75.
+    const VALID_CHILDHOOD: &str = r#"{
+      "packages": [
+        { "id": "childhood.athletic",
+          "entries": [
+            { "ability": "ability.athletics", "score": 2 },
+            { "ability": "ability.awareness", "score": 2 },
+            { "ability": "ability.living_language", "score": 5, "native": true },
+            { "ability": "ability.swim", "score": 2 }
+          ],
+          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2384, 2384] } }
+      ]
+    }"#;
+
+    /// A ruleset shipping the given package file against the childhood fixtures.
+    fn childhood_sources(childhoods: &str) -> RulesetSources<'_> {
+        RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            abilities: Some(CHILDHOOD_ABILITIES),
+            life_stages: Some(CHILDHOOD_LIFE_STAGES),
+            childhoods: Some(childhoods),
+            ..RulesetSources::default()
+        }
+    }
+
+    /// The integrity errors the given package file produces — every one of them,
+    /// since a broken file must report all its problems at once.
+    fn childhood_integrity_errors(childhoods: &str) -> Vec<String> {
+        match Ruleset::from_sources(childhood_sources(childhoods)).unwrap_err() {
+            RulesetError::Integrity(e) => e.errors().to_vec(),
+            other => panic!("expected an integrity error, got {other:?}"),
+        }
+    }
+
+    /// Asserts that some reported error carries `needle`.
+    fn assert_childhood_error(errors: &[String], needle: &str) {
+        assert!(
+            errors.iter().any(|m| m.contains(needle)),
+            "expected an error containing {needle:?}, got {errors:?}"
+        );
+    }
+
+    /// A typo in an entry's ability would silently drop a score the package is
+    /// supposed to grant, so the id must resolve like every other ref.
+    #[test]
+    fn a_childhood_entry_must_name_a_known_ability() {
+        let errors = childhood_integrity_errors(
+            r#"{
+              "packages": [
+                { "id": "childhood.athletic",
+                  "entries": [
+                    { "ability": "ability.nonesuch", "score": 2 },
+                    { "ability": "ability.awareness", "score": 2 },
+                    { "ability": "ability.living_language", "score": 5, "native": true },
+                    { "ability": "ability.swim", "score": 2 }
+                  ] }
+              ]
+            }"#,
+        );
+        assert_childhood_error(
+            &errors,
+            "childhood package 'childhood.athletic' names unknown ability 'ability.nonesuch'",
+        );
+    }
+
+    /// "(Area) Lore" needs to know WHICH area, and the slot key is where the
+    /// player's answer goes — without one the entry's value could never be asked
+    /// for. The native language is the exception: it is chosen once for the
+    /// character, not per package.
+    #[test]
+    fn a_parameterized_entry_must_carry_a_slot() {
+        let errors = childhood_integrity_errors(
+            r#"{
+              "packages": [
+                { "id": "childhood.exploring",
+                  "entries": [
+                    { "ability": "ability.area_lore", "score": 2 },
+                    { "ability": "ability.athletics", "score": 2 },
+                    { "ability": "ability.living_language", "score": 5, "native": true },
+                    { "ability": "ability.swim", "score": 2 }
+                  ] }
+              ]
+            }"#,
+        );
+        assert_childhood_error(
+            &errors,
+            "childhood package 'childhood.exploring' entry for parameterized ability 'ability.area_lore' names no slot",
+        );
+    }
+
+    /// A slot on a plain ability would ask the player for something the Ability
+    /// has no parameter to hold.
+    #[test]
+    fn a_plain_entry_must_not_carry_a_slot() {
+        let errors = childhood_integrity_errors(
+            r#"{
+              "packages": [
+                { "id": "childhood.athletic",
+                  "entries": [
+                    { "ability": "ability.athletics", "score": 2, "slot": "sport" },
+                    { "ability": "ability.awareness", "score": 2 },
+                    { "ability": "ability.living_language", "score": 5, "native": true },
+                    { "ability": "ability.swim", "score": 2 }
+                  ] }
+              ]
+            }"#,
+        );
+        assert_childhood_error(
+            &errors,
+            "childhood package 'childhood.athletic' entry for plain ability 'ability.athletics' names slot 'sport'",
+        );
+    }
+
+    /// Traveling's two Area Lores are told apart by slot alone, so a repeated key
+    /// would collapse them into one row and quietly lose the second entry's
+    /// experience.
+    #[test]
+    fn a_repeated_slot_is_rejected() {
+        let errors = childhood_integrity_errors(
+            r#"{
+              "packages": [
+                { "id": "childhood.traveling",
+                  "entries": [
+                    { "ability": "ability.area_lore", "score": 1, "slot": "area" },
+                    { "ability": "ability.area_lore", "score": 1, "slot": "area" },
+                    { "ability": "ability.athletics", "score": 2 },
+                    { "ability": "ability.awareness", "score": 1 },
+                    { "ability": "ability.living_language", "score": 5, "native": true },
+                    { "ability": "ability.swim", "score": 2 }
+                  ] }
+              ]
+            }"#,
+        );
+        assert_childhood_error(
+            &errors,
+            "childhood package 'childhood.traveling' repeats slot 'area'",
+        );
+    }
+
+    /// Every package in the book grants exactly one native language, and
+    /// `native_entry` promises as much: none would leave the 75-point block
+    /// unspent, two would make which one wins depend on file order.
+    #[test]
+    fn a_package_must_have_exactly_one_native_entry() {
+        let none = childhood_integrity_errors(
+            r#"{
+              "packages": [
+                { "id": "childhood.athletic",
+                  "entries": [
+                    { "ability": "ability.athletics", "score": 2 },
+                    { "ability": "ability.awareness", "score": 2 },
+                    { "ability": "ability.swim", "score": 2 }
+                  ] }
+              ]
+            }"#,
+        );
+        assert_childhood_error(
+            &none,
+            "childhood package 'childhood.athletic' has 0 native entries, but exactly one is required",
+        );
+
+        let two = childhood_integrity_errors(
+            r#"{
+              "packages": [
+                { "id": "childhood.athletic",
+                  "entries": [
+                    { "ability": "ability.athletics", "score": 2 },
+                    { "ability": "ability.awareness", "score": 2 },
+                    { "ability": "ability.living_language", "score": 5, "native": true },
+                    { "ability": "ability.living_language", "score": 5, "native": true },
+                    { "ability": "ability.swim", "score": 2 }
+                  ] }
+              ]
+            }"#,
+        );
+        assert_childhood_error(
+            &two,
+            "childhood package 'childhood.athletic' has 2 native entries, but exactly one is required",
+        );
+    }
+
+    /// The 75-point block funds the childhood's native-language Ability and
+    /// nothing else, so a package flagging some other Ability as native would
+    /// spend a block that cannot pay for it.
+    #[test]
+    fn the_native_entry_must_be_the_childhoods_native_language_ability() {
+        let errors = childhood_integrity_errors(
+            r#"{
+              "packages": [
+                { "id": "childhood.athletic",
+                  "entries": [
+                    { "ability": "ability.athletics", "score": 2 },
+                    { "ability": "ability.awareness", "score": 5, "native": true },
+                    { "ability": "ability.living_language", "score": 2, "slot": "language" },
+                    { "ability": "ability.swim", "score": 2 }
+                  ] }
+              ]
+            }"#,
+        );
+        assert_childhood_error(
+            &errors,
+            "childhood package 'childhood.athletic' native entry names ability 'ability.awareness', not the childhood's native-language ability 'ability.living_language'",
+        );
+    }
+
+    /// The spread is a closed list (Core Rules.md:2378), so a package naming an
+    /// Ability outside it would smuggle in experience the block may not spend.
+    #[test]
+    fn a_spread_entry_must_be_on_the_childhood_spread_list() {
+        let errors = childhood_integrity_errors(
+            r#"{
+              "packages": [
+                { "id": "childhood.athletic",
+                  "entries": [
+                    { "ability": "ability.athletics", "score": 2 },
+                    { "ability": "ability.living_language", "score": 5, "native": true },
+                    { "ability": "ability.magic_theory", "score": 2 },
+                    { "ability": "ability.swim", "score": 2 }
+                  ] }
+              ]
+            }"#,
+        );
+        assert_childhood_error(
+            &errors,
+            "childhood package 'childhood.athletic' names ability 'ability.magic_theory', which the childhood spread cannot buy",
+        );
+    }
+
+    /// The trust gate on the transcription: a mistyped score must fail the load
+    /// rather than ship a package that quietly costs 30 instead of 45.
+    #[test]
+    fn a_mispriced_spread_is_rejected() {
+        let errors = childhood_integrity_errors(
+            r#"{
+              "packages": [
+                { "id": "childhood.athletic",
+                  "entries": [
+                    { "ability": "ability.athletics", "score": 2 },
+                    { "ability": "ability.awareness", "score": 2 },
+                    { "ability": "ability.living_language", "score": 5, "native": true }
+                  ] }
+              ]
+            }"#,
+        );
+        assert_childhood_error(
+            &errors,
+            "childhood package 'childhood.athletic' spread entries price to 30 experience, not the childhood spread's 45",
+        );
+    }
+
+    /// Same gate on the other block: "Native Language 5" is 75 experience, and a
+    /// 4 would leave the block overfunded by 25.
+    #[test]
+    fn a_mispriced_native_language_is_rejected() {
+        let errors = childhood_integrity_errors(
+            r#"{
+              "packages": [
+                { "id": "childhood.athletic",
+                  "entries": [
+                    { "ability": "ability.athletics", "score": 2 },
+                    { "ability": "ability.awareness", "score": 2 },
+                    { "ability": "ability.living_language", "score": 4, "native": true },
+                    { "ability": "ability.swim", "score": 2 }
+                  ] }
+              ]
+            }"#,
+        );
+        assert_childhood_error(
+            &errors,
+            "childhood package 'childhood.athletic' native entry prices to 50 experience, not the childhood's 75",
+        );
+    }
+
+    /// A score with no row in the advancement table cannot be priced at all, so
+    /// it is reported as such — and NOT also reported as a mispriced spread,
+    /// which would blame the sum for a single bad entry.
+    #[test]
+    fn an_off_table_score_is_rejected() {
+        let errors = childhood_integrity_errors(
+            r#"{
+              "packages": [
+                { "id": "childhood.athletic",
+                  "entries": [
+                    { "ability": "ability.athletics", "score": 7 },
+                    { "ability": "ability.living_language", "score": 5, "native": true }
+                  ] }
+              ]
+            }"#,
+        );
+        assert_childhood_error(
+            &errors,
+            "childhood package 'childhood.athletic' entry for 'ability.athletics' has score 7, which the advancement table does not price",
+        );
+        assert!(
+            !errors.iter().any(|m| m.contains("spread entries price to")),
+            "an unpriceable entry must not also be reported as a mispriced sum: {errors:?}"
+        );
+    }
+
+    /// Without life-stage rules there are no blocks to price a package against,
+    /// so shipping packages alone is a data error rather than a silently
+    /// unchecked catalogue.
+    #[test]
+    fn childhood_packages_without_life_stage_rules_are_rejected() {
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            abilities: Some(CHILDHOOD_ABILITIES),
+            childhoods: Some(VALID_CHILDHOOD),
+            ..RulesetSources::default()
+        })
+        .unwrap_err();
+        let errors = match err {
+            RulesetError::Integrity(e) => e.errors().to_vec(),
+            other => panic!("expected an integrity error, got {other:?}"),
+        };
+        assert_childhood_error(
+            &errors,
+            "childhood packages are shipped without life-stage rules, so their experience cannot be priced",
+        );
+        // The pricing rules cannot run without the blocks, so they must stay
+        // silent rather than blame the package for the missing file.
+        assert!(
+            !errors.iter().any(|m| m.contains("price to")
+                || m.contains("prices to")
+                || m.contains("native-language ability")
+                || m.contains("spread cannot buy")),
+            "the pricing rules must not double-report: {errors:?}"
+        );
+    }
+
+    /// Provenance is checked like every other source range in the ruleset.
+    #[test]
+    fn an_inverted_childhood_source_range_is_rejected() {
+        let errors = childhood_integrity_errors(
+            r#"{
+              "packages": [
+                { "id": "childhood.athletic",
+                  "entries": [
+                    { "ability": "ability.athletics", "score": 2 },
+                    { "ability": "ability.awareness", "score": 2 },
+                    { "ability": "ability.living_language", "score": 5, "native": true },
+                    { "ability": "ability.swim", "score": 2 }
+                  ],
+                  "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2388, 2384] } }
+              ]
+            }"#,
+        );
+        assert_childhood_error(
+            &errors,
+            "childhood package 'childhood.athletic': source line range start (2388) exceeds end (2384)",
+        );
     }
 
     /// Two packages under one id would make `childhood()` return whichever won
