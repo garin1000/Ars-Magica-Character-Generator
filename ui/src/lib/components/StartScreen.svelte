@@ -64,11 +64,22 @@
     </div>
   </section>
 
-  <!-- The guided wizard is milestone 6b: announced here so the third way in is
-       visible, but permanently disabled until it exists. -->
+  <!-- The guided flow is entered per character type, exactly like direct creation:
+       a type is fixed at creation, so it is chosen before the first step. -->
   <section class="start-choice" aria-labelledby="start-wizard-heading">
     <h3 id="start-wizard-heading">{store.t('start-wizard-title')}</h3>
-    <button type="button" disabled data-testid="start-wizard">{store.t('start-wizard')}</button>
     <p class="hint">{store.t('start-wizard-hint')}</p>
+    <div class="start-types">
+      {#each typeIds as id (id)}
+        <button
+          type="button"
+          onclick={() => store.startWizard(id)}
+          disabled={blocked}
+          data-testid="start-wizard-{id}"
+        >
+          {store.t(`type-${id}`)}
+        </button>
+      {/each}
+    </div>
   </section>
 </main>

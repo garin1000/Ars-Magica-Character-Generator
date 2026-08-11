@@ -6,6 +6,7 @@
   import ModeToggle from './lib/components/ModeToggle.svelte';
   import StartScreen from './lib/components/StartScreen.svelte';
   import CharacterBanner from './lib/components/CharacterBanner.svelte';
+  import WizardShell from './lib/components/WizardShell.svelte';
   import VirtueFlawTab from './lib/components/VirtueFlawTab.svelte';
   import CharacteristicPicker from './lib/components/CharacteristicPicker.svelte';
   import AbilityTab from './lib/components/AbilityTab.svelte';
@@ -116,8 +117,10 @@
       // is no document — only the placeholder entity — so an unguarded Ctrl+S
       // there would write a file for a character that does not exist. The Save
       // buttons are hidden on that screen; this window-level handler is not, so
-      // the gate has to be repeated here.
-      if (store.view !== 'editor') return;
+      // the gate has to be repeated here. It stays live in the wizard, whose
+      // character is a real one: the unsaved-changes guard promises the work can
+      // be saved rather than lost.
+      if (store.view === 'start') return;
       event.preventDefault();
       void (event.shiftKey ? store.saveAs() : store.save());
     } else if (key === 'n') {
@@ -161,7 +164,7 @@
          OS window title). Reuses the derived currentFileName/dirty state; a null
          file name means the document has never been saved. Hidden on the startup
          screen, where it would report an unsaved document that does not exist. -->
-      {#if store.view === 'editor'}
+      {#if store.view !== 'start'}
         <span class="doc-status" data-testid="doc-status">
           {#if store.currentFileName === null}
             {store.t(store.dirty ? 'app-document-unsaved-dirty' : 'app-document-unsaved')}
@@ -178,7 +181,7 @@
          appear only once one exists. -->
     <div class="controls">
       <LanguageSelector />
-      {#if store.view === 'editor'}
+      {#if store.view !== 'start'}
         <ModeToggle />
         <SaveLoadBar />
       {/if}
@@ -187,6 +190,13 @@
 
   {#if store.view === 'start'}
     <StartScreen />
+  {:else if store.view === 'wizard'}
+    <!-- The wizard edits the same character the editor would, so the banner sits
+         above it too; the tab bar does not, because the flow's order is the point.
+         The wizard docks its own step-scoped issues panel, so the whole-character
+         footer below belongs to the editor branch only. -->
+    <CharacterBanner />
+    <WizardShell />
   {:else}
     <CharacterBanner />
 

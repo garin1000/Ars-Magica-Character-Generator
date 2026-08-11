@@ -138,10 +138,10 @@ Markdown export added in M5.6.
 
 ### What works today
 
-- **Character creation.** The app opens on a startup screen offering to open an
-  existing character or to create a new one — one button per character type the
-  ruleset declares (grog, companion, mythic companion, magus), plus the guided
-  wizard, which is announced but not yet available. The type is chosen once, at
+- **Character creation.** The app opens on a startup screen offering three ways in:
+  open an existing character, create a new one directly, or walk one through the
+  guided wizard — the latter two with one button per character type the ruleset
+  declares (grog, companion, mythic companion, magus). The type is chosen once, at
   creation, and is shown read-only in the editor afterwards. Characters are then
   built with virtues/flaws, point-buy Characteristics, whole bought Ability
   scores, and — for magi — whole bought Hermetic Art scores, with Abilities and
@@ -215,11 +215,23 @@ Markdown export added in M5.6.
   the sheet is localized without any user-facing text living in the engine. The
   per-line casting/lab read-outs are deliberately left out as export noise.
 
+- **Guided creation wizard.** The third input mode walks a character through its
+  type's creation phases in the order the ruleset declares them, mounting the same
+  input surfaces the editor's tabs use — so the two can never drift apart. Each
+  step shows only its own validation findings and refuses to advance while it holds
+  an error; Back and the step rail move freely through everything already visited.
+  A closing Review step reports what no step could (equipment, Might, Warping,
+  aging) and hands the finished character to the ordinary editor. Which mode
+  enforces the gate is still the validation-mode control: Advisory and Silent stop
+  it gating at all.
+
 ### Next
 
-The guided creation wizard with its life-stage XP flow, which merely orchestrates
-these existing input surfaces — see [PLAN.md](PLAN.md) for the milestone
-breakdown.
+The wizard's life-stage XP flow — early-childhood and per-year experience, Sample
+Childhood packages, the magus's apprenticeship, and aging for characters over 35 —
+which is engine work the guided steps will then drive. See
+[PLAN.md](PLAN.md) for the milestone breakdown and
+[M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the slice-by-slice plan.
 
 ## Getting started
 

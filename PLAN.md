@@ -591,12 +591,23 @@ screen** rather than an already-instantiated blank character, and a character's
 
 ### 6b. Guided wizard flow
 
-- [ ] Wizard component driven by the character type's `creation_phases` list
-      (already inert data on the profile; the wizard is its first consumer)
-- [ ] Phase navigation (next/back/skip where allowed)
-- [ ] Per-phase validation gating (enforced mode blocks advancing with errors)
-- [ ] Phases wired to their M2–M4 direct-entry components (V/F, characteristics,
-      abilities, Arts, spells, House+specialisation)
+Slices 6b1a (phase vocabulary + issue attribution) and 6b1b (the wizard shell) are
+**done**; the rest is the engine work in 6b2–6b8. Detail: `M6B-IMPLEMENTATION.md`.
+
+- [x] Wizard component driven by the character type's `creation_phases` list
+      (`WizardShell` + `WizardStep`; the phases are now a typed `CreationPhase`, so
+      serde rejects a profile naming one the engine has no step for)
+- [x] Phase navigation (next/back, plus a step rail over everything already
+      visited; "skip" awaits data marking a phase optional — nothing does today)
+- [x] Per-phase validation gating: every `ValidationIssue` carries the phase whose
+      input surface owns the offending value, so a step blocks on its own errors
+      and Finish on the whole character's. Advisory/Silent stop gating by design
+- [x] Phases wired to their M2–M4 direct-entry components (V/F, characteristics,
+      abilities, Arts, spells, House+specialisation), reusing them as they are;
+      `concept` and `personality_reputations` got extractions out of
+      `CharacterDetails`, and `type` a read-only confirmation step
+- [ ] Completeness indicators: the gate catches errors only, so a legal-but-empty
+      phase currently walks through (e.g. `house_unset` is a warning) — 6b8
 - [ ] Abilities phase offers two modes: simple flat allocation, and a
       "sophisticated" guided life-stage flow — early childhood (Native Language
       + the 45-xp restricted spread, with an optional Sample Childhood prefab),
@@ -745,10 +756,18 @@ guided-wizard entry is in place but disabled. The e2e suite grew to 25 spec
 files, every one of them building its own character through the new
 `startCharacter` helper.
 
-Next: **6b**, the guided wizard flow itself — the phase-driven wizard component
-over each profile's `creation_phases`, and the three engines it needs that do not
-exist yet (life-stage XP, Sample Childhood packages, magus apprenticeship, and
-the aging engine for characters over 35).
+**6b1 is done**, in two slices. 6b1a gave the creation phases a typed vocabulary
+(`CreationPhase`) and attributed all 85 validation-issue emit sites to a phase, with
+the contract table and a source scanner holding that attribution in place. 6b1b built
+the shell: a third view over the same character, a step rail in the ruleset's declared
+order, back/forward navigation, per-step gating on that step's errors, and a Review
+step for the findings no phase owns. The e2e suite is 26 specs.
+
+Next: **6b2 onwards**, the engines the guided steps will drive — life-stage XP
+(including the **Poor Major Flaw, which is missing from the catalogue entirely**),
+Sample Childhood packages, magus apprenticeship and post-Gauntlet accrual, and aging
+for characters over 35 (with die results typed by the user, so the engine stays
+deterministic). Slice-by-slice plan: `M6B-IMPLEMENTATION.md`.
 
 ---
 

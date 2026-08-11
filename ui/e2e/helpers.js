@@ -28,6 +28,10 @@ const DISCARD_CONFIRM = '[data-testid="discard-confirm"]';
 // The editor's tab bar. Addressed by role rather than by one tab's testid: which
 // tabs exist is a function of the type profile, but the bar itself always is.
 const TAB_BAR = '[role="tablist"]';
+// The guided wizard's step rail — the third screen. It has no tab bar (the flow's
+// order is the point), so `returnToStartScreen` would otherwise wait out its full
+// timeout on a wizard that is plainly on screen.
+const WIZARD_RAIL = '[data-testid="wizard-rail"]';
 
 // The first wait of a run also covers app start-up and the ruleset load over IPC
 // (the create buttons are the loaded profiles, so they do not exist before it);
@@ -57,19 +61,41 @@ export async function startCharacter(type) {
 }
 
 /**
- * Leave the editor for the startup screen through the New button, confirming the
- * discard prompt when there is something to discard. A no-op when the startup
- * screen is already showing.
+ * Bring the app to a freshly created character of `type` and leave it in the
+ * guided wizard, on its first step.
+ *
+ * Safe to call from any state, exactly like {@link startCharacter}.
+ *
+ * @param {string} type character-type id
+ */
+export async function startWizard(type) {
+  await returnToStartScreen();
+
+  const start = await $(`[data-testid="start-wizard-${type}"]`);
+  await start.waitForExist({ timeout: BOOT_TIMEOUT });
+  await start.waitForClickable({ timeout: STEP_TIMEOUT });
+  await start.click();
+
+  await $(WIZARD_RAIL).waitForExist({ timeout: STEP_TIMEOUT });
+}
+
+/**
+ * Leave the editor or the wizard for the startup screen through the New button,
+ * confirming the discard prompt when there is something to discard. A no-op when
+ * the startup screen is already showing.
  */
 export async function returnToStartScreen() {
-  // Decide only once the app has painted one of its two screens: on the very
+  // Decide only once the app has painted one of its three screens: on the very
   // first call it may still be starting up, and the New button lives on the
-  // editor screen only.
+  // editor and wizard screens only.
   await browser.waitUntil(
-    async () => (await $(START_SCREEN).isExisting()) || (await $(TAB_BAR).isExisting()),
+    async () =>
+      (await $(START_SCREEN).isExisting()) ||
+      (await $(TAB_BAR).isExisting()) ||
+      (await $(WIZARD_RAIL).isExisting()),
     {
       timeout: BOOT_TIMEOUT,
-      timeoutMsg: 'the app rendered neither the startup screen nor the editor',
+      timeoutMsg: 'the app rendered neither the startup screen, the editor, nor the wizard',
     },
   );
   if (await $(START_SCREEN).isExisting()) return;

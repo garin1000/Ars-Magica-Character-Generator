@@ -29,7 +29,7 @@ const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
 
 const START_SCREEN = '[data-testid="start-screen"]';
 const START_OPEN = '[data-testid="start-open"]';
-const START_WIZARD = '[data-testid="start-wizard"]';
+const START_WIZARD_MAGUS = '[data-testid="start-wizard-magus"]';
 const CHARACTER_TYPE = '[data-testid="character-type"]';
 const TAB_BAR = '[role="tablist"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
@@ -44,11 +44,13 @@ describe('app entry', () => {
   it('boots on the startup screen, not in the editor', async () => {
     await $(START_SCREEN).waitForExist({ timeout: 30000 });
 
-    // The three ways in. Open and the create buttons are live; the guided wizard
-    // is announced but permanently disabled until milestone 6b builds it.
+    // The three ways in, all live: open an existing character, create one
+    // directly, or walk one through the guided flow. The guided entry is per type
+    // for the same reason creation is — the type is fixed at creation.
     await $(START_OPEN).waitForExist({ timeout: 10000 });
-    await $(START_WIZARD).waitForExist({ timeout: 10000 });
-    expect(await $(START_WIZARD).isEnabled()).toBe(false);
+    await $(START_WIZARD_MAGUS).waitForExist({ timeout: 10000 });
+    expect(await $(START_WIZARD_MAGUS).isEnabled()).toBe(true);
+    expect((await $$('[data-testid^="start-wizard-"]')).length).toBeGreaterThan(0);
 
     // One create button per character type the ruleset declares. The set is data,
     // so the count is never pinned — only that the profiles arrived and that the

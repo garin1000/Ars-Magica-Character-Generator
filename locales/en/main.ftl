@@ -27,9 +27,8 @@ start-title = Create or open a character
 start-open-title = Open an existing character
 start-create-title = Create a new character
 start-create-hint = The character type is chosen here, once — it cannot be changed later.
-start-wizard-title = Guided wizard
-start-wizard = Start the guided wizard
-start-wizard-hint = The step-by-step guided creation arrives in a later version.
+start-wizard-title = Guided creation
+start-wizard-hint = Step by step through this type's creation phases, in order. The character type is chosen here too, once — it cannot be changed later.
 
 # Creation-phase labels, keyed by the engine's `CreationPhase` slug. They name the
 # guided wizard's steps and are the only rendering of a phase — the slug itself
@@ -46,6 +45,38 @@ phase-house_specialisation = House
 phase-mythic_type = Mythic companion type
 phase-personality_reputations = Personality & Reputations
 phase-review = Review
+
+# Guided wizard chrome. The rail lists the steps; the step body is the same input
+# surface the editor's tabs use.
+wizard-rail-label = Creation steps
+wizard-step-progress = Step { $current } of { $total }
+wizard-back = Back
+wizard-next = Next
+wizard-finish = Finish
+# Why Next is disabled: the current step has an error. Errors only — an advisory
+# never blocks — and switching the validation mode to Advisory lifts the gate.
+wizard-blocked-hint = Fix this step's errors to continue, or switch the validation mode to Advisory.
+# Marks a step in the rail that still holds an error.
+wizard-step-blocked-label = has errors
+# Shown while the validation mode is Advisory or Silent: nothing is enforced, so
+# no step gates and Finish is always available.
+wizard-unchecked-hint = Validation is not enforced, so no step blocks progress.
+
+# The Character type step: a read-only account of what the chosen type commits
+# this character to. The type itself was fixed when the character was created.
+phase-type-explainer = The character type is fixed for this character. It sets the Virtue and Flaw budget, which categories may be taken, and which creation steps follow.
+phase-type-budget = Up to { $flaws } points of Flaws, funding up to { $virtues } points of Virtues.
+phase-type-gift-required = This type has The Gift, granted automatically.
+phase-type-gift-forbidden = This type cannot have The Gift.
+phase-type-gift-optional = This type may take The Gift.
+
+# The wizard's closing step.
+wizard-review-title = Review
+wizard-review-clean = No errors or warnings — this character is legal.
+# Honest about what the gating does and does not check: the steps block on errors
+# only, so a legal character can still be an unfinished one.
+wizard-review-incomplete = A legal character is not necessarily a finished one: steps only block on errors, so anything merely left empty passed through.
+wizard-review-hint = Equipment, magic items, Might, Warping and aging are not part of the guided flow — they are edited after finishing.
 
 available-title = Available
 items-virtues-title = Virtues

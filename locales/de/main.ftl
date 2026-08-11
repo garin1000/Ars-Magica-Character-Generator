@@ -29,8 +29,7 @@ start-open-title = Vorhandenen Charakter öffnen
 start-create-title = Neuen Charakter anlegen
 start-create-hint = Der Charaktertyp wird hier einmalig gewählt — er lässt sich später nicht mehr ändern.
 start-wizard-title = Geführte Erstellung
-start-wizard = Geführte Erstellung starten
-start-wizard-hint = Die schrittweise geführte Erstellung kommt in einer späteren Version.
+start-wizard-hint = Schritt für Schritt durch die Erstellungsphasen dieses Typs, in ihrer Reihenfolge. Der Charaktertyp wird auch hier einmalig gewählt — er kann später nicht geändert werden.
 
 # Bezeichnungen der Erstellungsschritte, geschlüsselt nach dem `CreationPhase`-Slug
 # der Engine. Sie benennen die Schritte der geführten Erstellung und sind die
@@ -48,6 +47,40 @@ phase-house_specialisation = Haus
 phase-mythic_type = Typ des mythischen Gefährten
 phase-personality_reputations = Persönlichkeit & Reputationen
 phase-review = Überprüfung
+
+# Rahmen der geführten Erstellung. Die Leiste listet die Schritte; der Inhalt eines
+# Schritts ist dieselbe Eingabefläche, die auch die Reiter des Editors verwenden.
+wizard-rail-label = Erstellungsschritte
+wizard-step-progress = Schritt { $current } von { $total }
+wizard-back = Zurück
+wizard-next = Weiter
+wizard-finish = Fertigstellen
+# Warum „Weiter" deaktiviert ist: der aktuelle Schritt enthält einen Fehler. Nur
+# Fehler blockieren — ein Hinweis nie — und der Prüfmodus „Beratend" hebt die
+# Sperre auf.
+wizard-blocked-hint = Behebe die Fehler dieses Schritts, um fortzufahren, oder wechsle den Prüfmodus auf „Beratend".
+# Kennzeichnet einen Schritt in der Leiste, der noch einen Fehler enthält.
+wizard-step-blocked-label = enthält Fehler
+# Wird angezeigt, solange der Prüfmodus „Beratend" oder „Stumm" ist: es wird nichts
+# erzwungen, also blockiert kein Schritt und „Fertigstellen" ist immer möglich.
+wizard-unchecked-hint = Die Prüfung wird nicht erzwungen, daher blockiert kein Schritt.
+
+# Der Schritt „Charaktertyp": eine schreibgeschützte Darstellung dessen, worauf der
+# gewählte Typ diesen Charakter festlegt. Der Typ selbst wurde bei der Erstellung
+# des Charakters festgelegt.
+phase-type-explainer = Der Charaktertyp ist für diesen Charakter festgelegt. Er bestimmt das Budget für Tugenden und Fehler, welche Kategorien gewählt werden dürfen und welche Erstellungsschritte folgen.
+phase-type-budget = Bis zu { $flaws } Punkte an Fehlern, die bis zu { $virtues } Punkte an Tugenden finanzieren.
+phase-type-gift-required = Dieser Typ besitzt Die Gabe; sie wird automatisch gewährt.
+phase-type-gift-forbidden = Dieser Typ kann Die Gabe nicht besitzen.
+phase-type-gift-optional = Dieser Typ darf Die Gabe wählen.
+
+# Der Abschlussschritt des Assistenten.
+wizard-review-title = Überprüfung
+wizard-review-clean = Keine Fehler oder Hinweise — dieser Charakter ist regelkonform.
+# Ehrlich darüber, was die Sperren prüfen und was nicht: die Schritte blockieren nur
+# bei Fehlern, ein regelkonformer Charakter kann also unfertig sein.
+wizard-review-incomplete = Ein regelkonformer Charakter ist nicht zwangsläufig ein fertiger: Schritte blockieren nur bei Fehlern, alles bloß Leergelassene ist also durchgelaufen.
+wizard-review-hint = Ausrüstung, magische Gegenstände, Macht, Verzerrung und Alterung sind nicht Teil der geführten Erstellung — sie werden nach dem Fertigstellen bearbeitet.
 
 available-title = Verfügbar
 items-virtues-title = Tugenden
