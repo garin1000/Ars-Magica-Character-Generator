@@ -1,0 +1,58 @@
+{
+  "packages": [
+    {
+      "id": "childhood.athletic",
+      "entries": [
+        { "ability": "ability.athletics", "score": 2 },
+        { "ability": "ability.brawl", "score": 2 },
+        { "ability": "ability.living_language", "score": 5, "native": true },
+        { "ability": "ability.swim", "score": 2 }
+      ],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2384, 2384] }
+    },
+    {
+      "id": "childhood.exploring",
+      "entries": [
+        { "ability": "ability.area_lore", "score": 2, "slot": "area" },
+        { "ability": "ability.athletics", "score": 1 },
+        { "ability": "ability.awareness", "score": 1 },
+        { "ability": "ability.living_language", "score": 5, "native": true },
+        { "ability": "ability.stealth", "score": 1 },
+        { "ability": "ability.survival", "score": 2 }
+      ],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2385, 2385] }
+    },
+    {
+      "id": "childhood.mischievous",
+      "entries": [
+        { "ability": "ability.brawl", "score": 2 },
+        { "ability": "ability.guile", "score": 2 },
+        { "ability": "ability.living_language", "score": 5, "native": true },
+        { "ability": "ability.stealth", "score": 2 }
+      ],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2386, 2386] }
+    },
+    {
+      "id": "childhood.social",
+      "entries": [
+        { "ability": "ability.charm", "score": 2 },
+        { "ability": "ability.folk_ken", "score": 2 },
+        { "ability": "ability.guile", "score": 2 },
+        { "ability": "ability.living_language", "score": 5, "native": true }
+      ],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2387, 2387] }
+    },
+    {
+      "id": "childhood.traveling",
+      "entries": [
+        { "ability": "ability.area_lore", "score": 1, "slot": "area_a" },
+        { "ability": "ability.area_lore", "score": 1, "slot": "area_b" },
+        { "ability": "ability.folk_ken", "score": 2 },
+        { "ability": "ability.living_language", "score": 5, "native": true },
+        { "ability": "ability.living_language", "score": 1, "slot": "language" },
+        { "ability": "ability.survival", "score": 2 }
+      ],
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2388, 2388] }
+    }
+  ]
+}
