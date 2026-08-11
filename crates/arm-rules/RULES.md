@@ -2583,6 +2583,14 @@ Abilities are bought with experience earned in blocks, not from one bank:
   pools in `effective.rs` (`xp_allocation`) already price the rows against the
   blocks, so an overspend surfaces as `not_enough_xp` exactly as a hand-typed one
   would, and charging here as well would double-count.
+- **A slot value is just the row's `parameter`.** The player's answer for an entry's
+  `slot` (`area_a`, `area_b`, `language`) is written straight into the row's
+  `parameter`, trimmed of surrounding whitespace, so Traveling's two Area Lore slots
+  become two distinct rows and its spread `Living Language 1` sits beside the native
+  `Living Language 5` — exactly the shape hand-buying two instances of one
+  parameterized Ability produces. A slot that is missing, or blank once trimmed, is
+  **unanswered** rather than answered with an empty string, since `Area Lore ()` is
+  a row no one asked for.
 - **Deferred to the rest of 6b3:** the shipped `childhoods.json` itself, the i18n
   names, and the UI that offers the packages.
 
