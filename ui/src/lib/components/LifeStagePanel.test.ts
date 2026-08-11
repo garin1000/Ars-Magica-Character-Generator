@@ -282,3 +282,39 @@ describe('LifeStagePanel guided fields (slice 6b3b)', () => {
     expect(has(html(), 'life-stage-age-cap')).toBe(false);
   });
 });
+
+describe('LifeStagePanel childhood picker (slice 6b3b)', () => {
+  /** A ruleset that also ships a Sample Childhood catalogue for the picker to offer. */
+  function installCatalogue(): void {
+    installRuleset();
+    store.ruleset!.ruleset.childhoods = {
+      'childhood.athletic': {
+        id: 'childhood.athletic',
+        entries: [
+          { ability: 'ability.athletics', score: 2 },
+          { ability: 'ability.living_language', score: 5, native: true },
+        ],
+      },
+    };
+    store.ruleset!.i18n['childhood.athletic'] = { name: 'Athletic Childhood' };
+  }
+
+  it('mounts the childhood picker under the guided fields', () => {
+    installCatalogue();
+    installPlan({ native_language: 'German' });
+    const body = html();
+    expect(has(body, 'childhood-package-select')).toBe(true);
+    // Childhood is part of the guided flow, so it belongs below the native
+    // language it depends on.
+    expect(body.indexOf('native-language-input')).toBeLessThan(
+      body.indexOf('childhood-package-select'),
+    );
+  });
+
+  it('offers no childhood package in pool mode', () => {
+    installCatalogue();
+    // No plan: the character's Abilities are funded by the typed pool, and
+    // childhood is not one of its blocks.
+    expect(has(html(), 'childhood-package-select')).toBe(false);
+  });
+});

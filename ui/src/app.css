@@ -1214,6 +1214,64 @@ ul {
   flex-wrap: wrap;
 }
 
+/* The Sample Childhood picker inside the guided life-stage panel: the recorded
+   package, the draft select, the package preview, its open slots and Apply. Also
+   auto-height, for the same reason as its parent. */
+.childhood-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.childhood-taken {
+  font-weight: 600;
+}
+
+.childhood-preview-label {
+  margin: 0.2rem 0 0;
+  font-weight: 600;
+}
+
+.childhood-preview {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.2rem;
+}
+
+/* The open parameters, one labelled field each, wrapping on a narrow window. */
+.childhood-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+}
+
+.childhood-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.childhood-apply {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.childhood-hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* A fault is spoken through aria-describedby; the colour only reinforces it. */
+.childhood-reason {
+  color: var(--error);
+  font-size: 0.85rem;
+}
+
 /* Carried-equipment list on the Selected side (name + Equipped checkbox + remove). */
 .equipment-list {
   list-style: none;
