@@ -40,6 +40,7 @@ pub(crate) fn validate_balance(
     if virtue_points > budget.virtue_ceiling {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_OVER_BUDGET_VIRTUES,
+            CreationPhase::VirtuesFlaws,
             args([
                 ("points", virtue_points.to_string()),
                 ("budget", budget.virtue_ceiling.to_string()),
@@ -51,6 +52,7 @@ pub(crate) fn validate_balance(
     if flaw_points > budget.flaw_ceiling {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_OVER_BUDGET_FLAWS,
+            CreationPhase::VirtuesFlaws,
             args([
                 ("points", flaw_points.to_string()),
                 ("budget", budget.flaw_ceiling.to_string()),
@@ -62,6 +64,7 @@ pub(crate) fn validate_balance(
     if virtue_points > budget.funded(flaw_points) {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_UNBALANCED_VIRTUES,
+            CreationPhase::VirtuesFlaws,
             args([
                 ("virtue_points", virtue_points.to_string()),
                 ("flaw_points", flaw_points.to_string()),

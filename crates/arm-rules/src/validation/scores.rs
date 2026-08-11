@@ -44,6 +44,7 @@ pub(crate) fn validate_characteristics(
         if !rules.is_legal_score(score) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_CHARACTERISTIC_OUT_OF_RANGE,
+                CreationPhase::Characteristics,
                 args([
                     ("characteristic", characteristic.to_string()),
                     ("score", score.to_string()),
@@ -61,6 +62,7 @@ pub(crate) fn validate_characteristics(
         if i32::from(score) > cap {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_CHARACTERISTIC_ABOVE_CAP,
+                CreationPhase::Characteristics,
                 args([
                     ("characteristic", characteristic.to_string()),
                     ("score", score.to_string()),
@@ -71,6 +73,7 @@ pub(crate) fn validate_characteristics(
         } else if i32::from(score) < floor {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_CHARACTERISTIC_BELOW_FLOOR,
+                CreationPhase::Characteristics,
                 args([
                     ("characteristic", characteristic.to_string()),
                     ("score", score.to_string()),
@@ -94,12 +97,14 @@ pub(crate) fn validate_characteristics(
     if cost > budget {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_CHARACTERISTIC_OVERSPENT,
+            CreationPhase::Characteristics,
             args([("cost", cost.to_string()), ("points", budget.to_string())]),
             None,
         ));
     } else if cost < budget {
         issues.push(ValidationIssue::warning(
             ValidationIssue::CODE_CHARACTERISTIC_POINTS_UNSPENT,
+            CreationPhase::Characteristics,
             args([("cost", cost.to_string()), ("points", budget.to_string())]),
             None,
         ));
@@ -194,6 +199,9 @@ pub(crate) fn validate_characteristic_limit_preconditions(
                 {
                     issues.push(ValidationIssue::error(
                         ValidationIssue::CODE_CHARACTERISTIC_MAX_BASE_TOO_LOW,
+                        // The Virtue names the limit, but the value that violates
+                        // it is the Characteristic score.
+                        CreationPhase::Characteristics,
                         args([
                             ("item", selection.item_ref.to_string()),
                             ("characteristic", target.to_string()),
@@ -209,6 +217,7 @@ pub(crate) fn validate_characteristic_limit_preconditions(
             {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_CHARACTERISTIC_MIN_BASE_TOO_HIGH,
+                    CreationPhase::Characteristics,
                     args([
                         ("item", selection.item_ref.to_string()),
                         ("characteristic", target.to_string()),
@@ -252,6 +261,7 @@ pub(crate) fn validate_abilities(
         match ruleset.abilities.get(&entry.ability) {
             None => issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_UNKNOWN_ABILITY,
+                CreationPhase::Abilities,
                 args([("ability", entry.ability.to_string())]),
                 Some(entry.ability.clone()),
             )),
@@ -262,6 +272,7 @@ pub(crate) fn validate_abilities(
                 {
                     issues.push(ValidationIssue::error(
                         ValidationIssue::CODE_ABILITY_PARAMETER_REQUIRED,
+                        CreationPhase::Abilities,
                         args([("ability", entry.ability.to_string())]),
                         Some(entry.ability.clone()),
                     ));
@@ -281,6 +292,7 @@ pub(crate) fn validate_abilities(
         {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_ABILITY_SCORE_OUT_OF_RANGE,
+                CreationPhase::Abilities,
                 args([
                     ("ability", entry.ability.to_string()),
                     ("score", entry.score.to_string()),
@@ -310,6 +322,7 @@ pub(crate) fn validate_abilities(
             if u32::from(entry.score) > cap {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_ABILITY_ABOVE_AGE_CAP,
+                    CreationPhase::Abilities,
                     args([
                         ("ability", entry.ability.to_string()),
                         ("score", entry.score.to_string()),
@@ -328,6 +341,7 @@ pub(crate) fn validate_abilities(
         if count > 1 {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_DUPLICATE_ABILITY,
+                CreationPhase::Abilities,
                 args([
                     ("ability", ability.to_string()),
                     ("count", count.to_string()),
@@ -354,6 +368,7 @@ pub(crate) fn validate_arts(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
         if !ruleset.arts.contains_key(&entry.art) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_UNKNOWN_ART,
+                CreationPhase::Arts,
                 args([("art", entry.art.to_string())]),
                 Some(entry.art.clone()),
             ));
@@ -365,6 +380,7 @@ pub(crate) fn validate_arts(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
         {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_ART_SCORE_OUT_OF_RANGE,
+                CreationPhase::Arts,
                 args([
                     ("art", entry.art.to_string()),
                     ("score", entry.score.to_string()),
@@ -380,6 +396,7 @@ pub(crate) fn validate_arts(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
         if count > 1 {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_DUPLICATE_ART,
+                CreationPhase::Arts,
                 args([("art", art.to_string()), ("count", count.to_string())]),
                 Some(art.clone()),
             ));
@@ -428,6 +445,9 @@ pub(crate) fn validate_supernatural_abilities(
     for ability in uncovered.into_iter().skip(usize::from(free_total)) {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_SUPERNATURAL_ABILITY_REQUIRES_VIRTUE,
+            // Fixable from either side, but the stored offending value is the
+            // Ability score, so it belongs to the Abilities step.
+            CreationPhase::Abilities,
             args([("ability", ability.to_string())]),
             Some(ability.clone()),
         ));
@@ -490,6 +510,7 @@ pub(crate) fn validate_personality_traits(
 fn personality_out_of_range(trait_: &crate::types::PersonalityTrait, max: i8) -> ValidationIssue {
     ValidationIssue::error(
         ValidationIssue::CODE_PERSONALITY_TRAIT_OUT_OF_RANGE,
+        CreationPhase::PersonalityReputations,
         args([
             ("name", trait_.name.clone()),
             ("value", trait_.value.to_string()),
@@ -528,6 +549,7 @@ pub(crate) fn validate_reputations(
         } else {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_REPUTATION_NOT_GRANTED,
+                CreationPhase::PersonalityReputations,
                 args([
                     ("kind", reputation.kind.to_string()),
                     ("content", reputation.content.clone()),

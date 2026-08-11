@@ -93,6 +93,7 @@ pub(crate) fn validate_prerequisites(
                 Tri::False => {
                     issues.push(ValidationIssue::error(
                         ValidationIssue::CODE_PREREQ_NOT_MET,
+                        CreationPhase::VirtuesFlaws,
                         args([("item", selection.item_ref.to_string())]),
                         Some(selection.item_ref.clone()),
                     ));
@@ -100,6 +101,7 @@ pub(crate) fn validate_prerequisites(
                 Tri::Unknown if depended_on_unknown => {
                     issues.push(ValidationIssue::warning(
                         ValidationIssue::CODE_PREREQ_UNEVALUATED,
+                        CreationPhase::VirtuesFlaws,
                         args([("item", selection.item_ref.to_string())]),
                         Some(selection.item_ref.clone()),
                     ));
@@ -252,6 +254,7 @@ pub(crate) fn validate_incompatibilities(
                 if reported.insert(pair) {
                     issues.push(ValidationIssue::error(
                         ValidationIssue::CODE_INCOMPATIBLE,
+                        CreationPhase::VirtuesFlaws,
                         args([
                             ("item", selection.item_ref.to_string()),
                             ("other", incompat_id.to_string()),

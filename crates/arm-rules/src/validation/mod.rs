@@ -14,8 +14,8 @@ use crate::characteristics::Characteristic;
 use crate::grant::{Grant, open_pick_satisfies};
 use crate::ruleset::Ruleset;
 use crate::types::{
-    CategoryCap, Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind,
-    Magnitude, ParameterDomain, PointItem, Prereq, Selection, ValidationMode,
+    CategoryCap, CreationPhase, Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id,
+    ItemKind, Magnitude, ParameterDomain, PointItem, Prereq, Selection, ValidationMode,
 };
 
 mod aging;
@@ -174,6 +174,16 @@ pub struct ValidationIssue {
     /// as `issue-<code>` (e.g. code `over_budget_virtues` →
     /// `issue-over_budget_virtues`).
     pub code: String,
+    /// The creation phase whose input surface owns the offending value — the step
+    /// the guided wizard blocks on, and where the user can actually fix it. Set
+    /// per emit site rather than derived from `code`, because several codes
+    /// (`missing_param`, `prereq_not_met`, `unknown_param_value`, …) are emitted
+    /// over different subject kinds from different modules. Findings no creation
+    /// phase owns (equipment, Might, Warping, aging, an unknown type) carry
+    /// [`CreationPhase::Review`].
+    ///
+    /// Always emitted, for the same reason as `args`.
+    pub phase: CreationPhase,
     /// Interpolation values for the localized message, keyed by argument name.
     /// Always emitted, even when empty (no `skip_serializing_if`): a
     /// `ValidationResult` is a transient frontend payload, never a git-tracked
@@ -411,29 +421,41 @@ impl ValidationIssue {
     /// keyed to a slot the character does not owe (exceeds the owed count).
     pub const CODE_WARPING_FILL_EXCESS: &'static str = "warping_fill_excess";
 
-    /// Builds an issue with the given severity, code, args, and context.
+    /// Builds an issue with the given severity, code, phase, args, and context.
     pub fn new(
         severity: IssueSeverity,
         code: &str,
+        phase: CreationPhase,
         args: BTreeMap<String, String>,
         context: Option<Id>,
     ) -> Self {
         Self {
             severity,
             code: code.to_string(),
+            phase,
             args,
             context,
         }
     }
 
     /// Builds an error-severity issue.
-    pub fn error(code: &str, args: BTreeMap<String, String>, context: Option<Id>) -> Self {
-        Self::new(IssueSeverity::Error, code, args, context)
+    pub fn error(
+        code: &str,
+        phase: CreationPhase,
+        args: BTreeMap<String, String>,
+        context: Option<Id>,
+    ) -> Self {
+        Self::new(IssueSeverity::Error, code, phase, args, context)
     }
 
     /// Builds a warning-severity issue.
-    pub fn warning(code: &str, args: BTreeMap<String, String>, context: Option<Id>) -> Self {
-        Self::new(IssueSeverity::Warning, code, args, context)
+    pub fn warning(
+        code: &str,
+        phase: CreationPhase,
+        args: BTreeMap<String, String>,
+        context: Option<Id>,
+    ) -> Self {
+        Self::new(IssueSeverity::Warning, code, phase, args, context)
     }
 }
 
@@ -564,8 +586,10 @@ pub(crate) fn validate_known_type(
     issues: &mut Vec<ValidationIssue>,
 ) {
     if type_profile.is_none() {
+        // No creation phase can fix this: the type is chosen once, at creation.
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_UNKNOWN_TYPE,
+            CreationPhase::Review,
             args([("type_id", entity.type_id.to_string())]),
             None,
         ));
@@ -582,6 +606,7 @@ pub(crate) fn validate_known_refs(
         if !ruleset.point_items.contains_key(&selection.item_ref) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_UNKNOWN_REF,
+                CreationPhase::VirtuesFlaws,
                 args([("item", selection.item_ref.to_string())]),
                 Some(selection.item_ref.clone()),
             ));
@@ -1975,6 +2000,146 @@ mod tests {
         );
     }
 
+    /// The phase the issue carrying `code` is attributed to.
+    fn phase_of(result: &ValidationResult, code: &str) -> CreationPhase {
+        result
+            .issues
+            .iter()
+            .find(|i| i.code == code)
+            .unwrap_or_else(|| {
+                panic!(
+                    "expected an issue with code '{code}', got {:?}",
+                    codes(result)
+                )
+            })
+            .phase
+    }
+
+    /// Every submodule attributes its findings to the phase whose input surface
+    /// owns the offending value — not to the phase that happens to detect it. This
+    /// is what lets the wizard show a step only its own findings and block Next on
+    /// them; an issue filed under the wrong phase would either nag on a step that
+    /// cannot fix it or hide on one the user has left behind.
+    ///
+    /// The codes no creation phase owns (equipment, Might, Warping, aging, and an
+    /// entity whose whole type is unknown) go to the terminal `Review` phase.
+    #[test]
+    fn every_module_attributes_its_issues_to_a_phase() {
+        // mod.rs — an unknown type is not fixable on any step: the type is chosen
+        // once, at creation.
+        let rs = test_ruleset();
+        let unknown = validate(&make_entity("nope", vec![]), &rs);
+        assert_eq!(
+            phase_of(&unknown, ValidationIssue::CODE_UNKNOWN_TYPE),
+            CreationPhase::Review
+        );
+
+        // balance.rs + prereq.rs + selections.rs — everything about a chosen
+        // Virtue or Flaw is fixed on the V/F step.
+        let vf = validate(
+            &make_entity("companion", vec![sel("virtue.gentle_gift")]),
+            &rs,
+        );
+        assert_eq!(
+            phase_of(&vf, ValidationIssue::CODE_PREREQ_NOT_MET),
+            CreationPhase::VirtuesFlaws
+        );
+        assert_eq!(
+            phase_of(&vf, ValidationIssue::CODE_FORBIDDEN_CATEGORY),
+            CreationPhase::VirtuesFlaws
+        );
+        let unbalanced = validate(
+            &make_entity("companion", vec![sel("virtue.keen_vision")]),
+            &rs,
+        );
+        assert_eq!(
+            phase_of(&unbalanced, ValidationIssue::CODE_UNBALANCED_VIRTUES),
+            CreationPhase::VirtuesFlaws
+        );
+
+        // caps.rs — the dynamic per-category cap codes are V/F findings too.
+        let caps_types = r#"[{
+          "id": "companion",
+          "budget": { "virtue_points": 10, "flaw_points": 10,
+                      "flaw_category_caps": [{ "category": "personality", "max": 0 }] },
+          "permitted_categories": ["personality"],
+          "creation_phases": []
+        }]"#;
+        let caps_rs = Ruleset::from_json(
+            "test",
+            "1",
+            r#"[{ "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+                  "magnitude": "major", "category": "personality", "entity_kinds": ["character"] }]"#,
+            caps_types,
+        )
+        .unwrap();
+        let capped = validate(
+            &make_entity("companion", vec![sel("flaw.optimistic")]),
+            &caps_rs,
+        );
+        assert_eq!(
+            phase_of(&capped, "too_many_personality_flaws"),
+            CreationPhase::VirtuesFlaws
+        );
+
+        // scores.rs — characteristics, abilities and personality traits each own
+        // their own step, though one module validates all three.
+        let aging_rs = aging_ruleset();
+        let mut overspent = make_entity("companion", vec![]);
+        overspent.characteristics.insert(Characteristic::Str, 3);
+        overspent.characteristics.insert(Characteristic::Sta, 3);
+        overspent.personality_traits = vec![PersonalityTrait {
+            name: "Brave".into(),
+            value: 99,
+        }];
+        let scores = validate(&overspent, &aging_rs);
+        assert_eq!(
+            phase_of(&scores, ValidationIssue::CODE_CHARACTERISTIC_OVERSPENT),
+            CreationPhase::Characteristics
+        );
+        assert_eq!(
+            phase_of(
+                &scores,
+                ValidationIssue::CODE_PERSONALITY_TRAIT_OUT_OF_RANGE
+            ),
+            CreationPhase::PersonalityReputations
+        );
+
+        let mut unknown_ability = make_entity("companion", vec![]);
+        unknown_ability.ability_scores = vec![ability("ability.nonesuch", 1)];
+        assert_eq!(
+            phase_of(
+                &validate(&unknown_ability, &rs),
+                ValidationIssue::CODE_UNKNOWN_ABILITY
+            ),
+            CreationPhase::Abilities
+        );
+
+        // aging.rs and equipment.rs — surfaces the wizard has no step for.
+        let mut aged = make_entity("companion", vec![]);
+        aged.characteristics.insert(Characteristic::Str, 0);
+        aged.aging_points.insert(Characteristic::Str, 21);
+        assert_eq!(
+            phase_of(
+                &validate(&aged, &aging_rs),
+                ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION
+            ),
+            CreationPhase::Review
+        );
+
+        // might.rs — likewise Review: Might and its powers live in the editor.
+        let might_rs = rs_with_houses(MIGHT_ITEMS, GRANT_MAGUS_TYPE);
+        let mut over_powers = make_entity("magus", vec![sel("virtue.demonic_blood")]);
+        over_powers.powers = vec![power("Curse", 25), power("Shape", 10)];
+        assert_eq!(
+            phase_of(
+                &validate(&over_powers, &might_rs),
+                ValidationIssue::CODE_OVER_POWER_LEVELS
+            ),
+            CreationPhase::Review
+        );
+    }
+
     #[test]
     fn every_issue_code_const_is_documented_in_the_contract_table() {
         // Guards the `ValidationIssue` doc-comment contract table against drift:
@@ -2522,21 +2687,34 @@ mod tests {
 
     #[test]
     fn issue_without_context_omits_field_and_roundtrips() {
-        let issue = ValidationIssue::error("over_budget_virtues", BTreeMap::new(), None);
+        let issue = ValidationIssue::error(
+            "over_budget_virtues",
+            CreationPhase::VirtuesFlaws,
+            BTreeMap::new(),
+            None,
+        );
 
         let json = serde_json::to_string(&issue).unwrap();
         assert!(
             !json.contains("context"),
             "a None context must be omitted from JSON: {json}"
         );
+        assert!(
+            json.contains(r#""phase":"virtues_flaws""#),
+            "the phase is always emitted: {json}"
+        );
 
         let roundtripped: ValidationIssue = serde_json::from_str(&json).unwrap();
         assert_eq!(issue, roundtripped);
 
         // Deserialization must also accept JSON that omits `context` entirely.
-        let without_context = r#"{"severity":"error","code":"over_budget_virtues"}"#;
+        // `phase` is required — the frontend filters steps on it, so an issue
+        // without one would be silently ungated rather than merely unlabelled.
+        let without_context =
+            r#"{"severity":"error","code":"over_budget_virtues","phase":"virtues_flaws"}"#;
         let parsed: ValidationIssue = serde_json::from_str(without_context).unwrap();
         assert_eq!(parsed.context, None);
+        assert_eq!(parsed.phase, CreationPhase::VirtuesFlaws);
     }
 
     #[test]
@@ -2544,14 +2722,16 @@ mod tests {
         let issue = ValidationIssue::new(
             IssueSeverity::Warning,
             "too_many_story_flaws",
+            CreationPhase::VirtuesFlaws,
             BTreeMap::new(),
             None,
         );
         assert_eq!(issue.severity, IssueSeverity::Warning);
         assert_eq!(issue.code, "too_many_story_flaws");
+        assert_eq!(issue.phase, CreationPhase::VirtuesFlaws);
 
         let result = ValidationResult::new(vec![
-            ValidationIssue::error("unknown_type", BTreeMap::new(), None),
+            ValidationIssue::error("unknown_type", CreationPhase::Review, BTreeMap::new(), None),
             issue,
         ]);
         assert!(!result.is_valid(), "an error makes the result invalid");
@@ -4954,9 +5134,9 @@ mod tests {
     fn validation_result_errors_vs_warnings() {
         let result = ValidationResult {
             issues: vec![
-                ValidationIssue::error("err1", BTreeMap::new(), None),
-                ValidationIssue::warning("warn1", BTreeMap::new(), None),
-                ValidationIssue::error("err2", BTreeMap::new(), None),
+                ValidationIssue::error("err1", CreationPhase::Review, BTreeMap::new(), None),
+                ValidationIssue::warning("warn1", CreationPhase::Review, BTreeMap::new(), None),
+                ValidationIssue::error("err2", CreationPhase::Review, BTreeMap::new(), None),
             ],
         };
 
