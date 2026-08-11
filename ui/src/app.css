@@ -1135,6 +1135,18 @@ ul {
   -moz-appearance: textfield;
 }
 
+/* Guided funding read-outs: the later-life line that stands in for the editable
+   total, and the hint beside the clear-pool escape hatch. Both are secondary
+   text, so they read muted next to the figures. */
+.xp-summary .xp-life-stage {
+  color: var(--muted, #6b7280);
+}
+
+.xp-summary .xp-pool-clear-hint {
+  color: var(--muted, #6b7280);
+  font-size: 0.85rem;
+}
+
 .xp-summary .over {
   color: var(--error);
   font-weight: 600;

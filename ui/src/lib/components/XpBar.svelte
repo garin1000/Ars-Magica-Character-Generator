@@ -9,7 +9,22 @@
   // across the two instances.
   let { prefix = '' }: { prefix?: string } = $props();
 
-  const pool = $derived(store.entity.xp_pool ?? 0);
+  // A life-stage plan IS the guided-funding switch (there is no stored flag), and
+  // the engine makes a plan and a typed pool mutually exclusive
+  // (`life_stage_xp_pool_conflict`). So under a plan the editable total must go:
+  // offering it would offer a value the engine rejects. Both instances read the
+  // same `entity.xp_pool`, so the Arts bar takes the identical guided shape —
+  // correct, since Arts spend that very pool.
+  const guided = $derived(store.entity.life_stages != null);
+  // The engine's life-stage budget, or null when the plan yields none yet (no age
+  // typed, or a ruleset without life-stage rules).
+  const lifeStage = $derived(store.effective?.life_stage ?? null);
+  // What the player typed, which under a plan should be nothing at all.
+  const typedPool = $derived(store.entity.xp_pool ?? 0);
+  // The general pool: later life's experience under a plan, the typed total
+  // otherwise — the engine's own `base_general`.
+  const pool = $derived(guided ? (lifeStage?.later_life_xp ?? 0) : typedPool);
+  const clearHintId = $derived(`${prefix}xp-pool-clear-hint`);
   // The engine's authoritative slice of the spend FUNDED from the general pool.
   // `restricted_xp_pools` cover the rest and are reported separately. The local
   // `totalXpSpent` fallback only covers the first frame before the effective-
@@ -51,20 +66,43 @@
       >{generalUsed}</span
     >
     <span class="xp-pool-total">
-      <input
-        type="number"
-        min="0"
-        max="4294967295"
-        placeholder="0"
-        value={pool || ''}
-        oninput={onPool}
-        data-testid="{prefix}xp-pool"
-      />
+      {#if guided}
+        <!-- Read-only text, not a disabled input: assistive tech must not announce
+             a control the player cannot use. -->
+        <span data-testid="{prefix}xp-pool-total">{pool}</span>
+      {:else}
+        <input
+          type="number"
+          min="0"
+          max="4294967295"
+          placeholder="0"
+          value={pool || ''}
+          oninput={onPool}
+          data-testid="{prefix}xp-pool"
+        />
+      {/if}
     </span>
   </span>
   <span class="xp-available" class:over={available < 0} data-testid="{prefix}xp-available">
     {store.t('xp-available', { available: String(available) })}
   </span>
+  {#if guided}
+    {#if lifeStage}
+      <span class="xp-life-stage" data-testid="{prefix}life-stage-later-life">
+        {store.t('life-stage-later-life', {
+          years: String(lifeStage.later_life_years),
+          rate: String(lifeStage.later_life_rate),
+          xp: String(lifeStage.later_life_xp),
+        })}
+      </span>
+    {:else}
+      <!-- Announced: this row arrives in response to an edit elsewhere (the age),
+           so its appearance must reach a screen reader. -->
+      <span class="xp-life-stage" role="status" data-testid="{prefix}life-stage-no-budget">
+        {store.t('life-stage-no-budget')}
+      </span>
+    {/if}
+  {/if}
   {#each restricted as restrictedPool, i (i)}
     <span
       class="xp-restricted"
@@ -80,4 +118,21 @@
         : ''}
     </span>
   {/each}
+  {#if guided && typedPool > 0}
+    <!-- Escape hatch for a hand-edited save that carries both a plan and a typed
+         pool: guided mode shows no field to correct one, so without this the
+         engine's conflict error would be inescapable from the UI. -->
+    <button
+      type="button"
+      class="xp-pool-clear"
+      aria-describedby={clearHintId}
+      onclick={() => store.setXpPool(0)}
+      data-testid="{prefix}xp-pool-clear"
+    >
+      {store.t('xp-pool-clear')}
+    </button>
+    <span class="xp-pool-clear-hint" id={clearHintId} data-testid="{prefix}xp-pool-clear-hint">
+      {store.t('xp-pool-clear-hint')}
+    </span>
+  {/if}
 </div>
