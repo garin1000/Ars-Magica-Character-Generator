@@ -783,6 +783,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap()
     }
@@ -856,6 +857,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap()
     }
@@ -1199,6 +1201,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap()
     }
@@ -1888,6 +1891,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: Some(characteristics),
+            life_stages: None,
         })
         .unwrap()
     }
@@ -5439,6 +5443,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap()
     }
@@ -5712,6 +5717,7 @@ mod tests {
             spell_mastery_abilities: Some(SPELL_MASTERY_CATALOGUE),
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap()
     }
@@ -6113,6 +6119,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: Some(P7_CHARACTERISTICS),
+            life_stages: None,
         })
         .unwrap()
     }

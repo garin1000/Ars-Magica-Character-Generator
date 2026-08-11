@@ -29,6 +29,7 @@ fn full_ruleset() -> Ruleset {
         spell_mastery_abilities: None,
         equipment: Some(include_str!("../../../rules/core/equipment.json")),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+        life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
     })
     .expect("shipped core ruleset loads")
 }

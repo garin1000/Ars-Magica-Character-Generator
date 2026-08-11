@@ -222,6 +222,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap()
     }

@@ -11,6 +11,7 @@ pub mod equipment;
 pub mod export;
 pub mod grant;
 pub mod house;
+pub mod life_stage;
 pub mod mythic_companion;
 pub mod ruleset;
 pub mod spell;
