@@ -228,22 +228,31 @@ Markdown export added in M5.6.
 - **Life-stage experience.** A character can earn its Abilities the way the rules
   grant them — 75 points of native language and a restricted 45-point spread in
   early childhood, then 15 a year (20 with Wealthy, 10 with Poor) to its age —
-  instead of typing one experience total. The save records only the choices, so every
-  figure is re-derived; and each block funds only what it may, so childhood's
+  instead of typing one experience total. Pick the source of experience on the
+  Abilities step: the flat pool asks for one total, while the guided flow asks for an
+  age and a native language and then shows what each life stage earns, with the
+  editable pool replaced by the derived budget. The save records only the choices, so
+  every figure is re-derived; and each block funds only what it may, so childhood's
   native-language points cannot quietly pay for a second language.
+
+- **Sample Childhood packages.** Early childhood can be filled from one of the five
+  ready-made childhoods instead of divided by hand. The packages are rules data,
+  re-priced against the advancement table at load so a transcription slip cannot
+  ship; the picker asks for the parameters a package leaves open (which regions its
+  Area Lores cover, which second language it teaches), previews the result, and
+  refuses a form the engine rejects — pointing at the field that is wrong. Applying
+  raises scores and never lowers them, so taking a package twice changes nothing, and
+  the Abilities it writes stay ordinary editable rows afterwards. A magus keeps the
+  flat pool for now: its apprenticeship years are not modelled yet.
 
 ### Next
 
-The wizard's Abilities step is being rebuilt around the life-stage flow. The engine
-half is in: the five **Sample Childhood packages** ship as rules data, priced against
-the advancement table at load so a transcription slip cannot ship, and the engine can
-apply one to a character (raising scores, never lowering them, so applying twice
-changes nothing). **No screen offers them yet** — the funding-mode toggle and the
-package picker are the next slice. After that: the magus's apprenticeship and
-post-Gauntlet years, and aging for characters over 35 (die results typed by the
-player, so the engine stays deterministic). See [PLAN.md](PLAN.md) for the milestone
-breakdown and [M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the slice-by-slice
-plan.
+The magus's own life stages: **apprenticeship** (240 experience across Arts and
+Abilities, 120 levels of spells, the minimum Parma Magica / Magic Theory / Latin the
+Order admits) and the post-Gauntlet years, which is also what opens the guided flow to
+magi. After that: aging for characters over 35 (die results typed by the player, so
+the engine stays deterministic). See [PLAN.md](PLAN.md) for the milestone breakdown
+and [M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the slice-by-slice plan.
 
 ## Getting started
 

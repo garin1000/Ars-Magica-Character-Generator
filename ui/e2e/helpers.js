@@ -18,7 +18,8 @@
 // an oversight: `display.js` wraps a pure decision worth testing in isolation,
 // whereas everything here is browser interaction (find, wait, click) with no pure
 // logic to extract. A unit test could only assert against a mock of WebDriver.
-// Its real coverage is the 25 spec files that fail loudly the moment it breaks.
+// Its real coverage is every spec file in `specs/`, each of which fails loudly the
+// moment it breaks. (No count here on purpose: the suite grows every slice.)
 
 import { $, $$, browser } from '@wdio/globals';
 

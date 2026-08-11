@@ -592,9 +592,9 @@ screen** rather than an already-instantiated blank character, and a character's
 ### 6b. Guided wizard flow
 
 Slices 6b1a (phase vocabulary + issue attribution), 6b1b (the wizard shell), 6b2 (with
-its 6b2b/6b2c tails) and 6b3a (the Sample Childhood engine, data and command — no UI)
-are **done**; next is 6b3b, the guided Abilities step that finally offers them.
-Detail: `M6B-IMPLEMENTATION.md`.
+its 6b2b/6b2c tails) and 6b3 (6b3a's Sample Childhood engine, data and command, then
+6b3b's guided Abilities step that offers them) are **done**; next is 6b4, the magus's
+apprenticeship. Detail: `M6B-IMPLEMENTATION.md`.
 
 - [x] Wizard component driven by the character type's `creation_phases` list
       (`WizardShell` + `WizardStep`; the phases are now a typed `CreationPhase`, so
@@ -610,10 +610,16 @@ Detail: `M6B-IMPLEMENTATION.md`.
       `CharacterDetails`, and `type` a read-only confirmation step
 - [ ] Completeness indicators: the gate catches errors only, so a legal-but-empty
       phase currently walks through (e.g. `house_unset` is a warning) — 6b8
-- [ ] Abilities phase offers two modes: simple flat allocation, and a
+- [x] Abilities phase offers two modes: simple flat allocation, and a
       "sophisticated" guided life-stage flow — early childhood (Native Language
       + the 45-xp restricted spread, with an optional Sample Childhood prefab),
-      then 15 xp/year to the chosen age, enforcing the age → max-score cap
+      then 15 xp/year to the chosen age, enforcing the age → max-score cap.
+      **6b3b**: the mode is *derived* from `entity.life_stages` (no second flag),
+      the `LifeStagePanel` carries the funding radio + age + native language above
+      the Ability rows on both the wizard step and the editor tab, and the XP bar
+      shows the derived life-stage budget instead of an editable pool. The guided
+      option is disabled for a magus (engine and UI) until 6b4 grants the two
+      further periods
 - [x] Life-stage XP engine (deferred from M3), **6b2**: early-childhood 75+45 xp and
       later-life 15/20/10 per year, as `rules/core/life_stages.json` + `life_stage.rs`.
       Childhood's two blocks are instance-restricted pools in the existing max-flow
@@ -632,11 +638,13 @@ Detail: `M6B-IMPLEMENTATION.md`.
       Abilities (Language, Area Lore, Organization Lore — the source's trailing "some
       social Abilities" is left unflagged, a data decision, not a code one).
       Source: Core Rules.md:6160
-- [ ] Sample Childhood packages (deferred from M3): childhood model + registry +
-      load-time integrity (ability refs resolve) + an "apply package" step.
-      Source: Core Rules.md:2380-2388. *(Engine, catalogue and the
-      `apply_childhood_package` command landed in 6b3a; this box waits on the 6b3b
-      picker UI, since nothing offers a package to a player yet.)*
+- [x] Sample Childhood packages (deferred from M3), **6b3**: childhood model +
+      registry + load-time integrity (the 45/75 re-pricing among twelve rules) +
+      an "apply package" step, and the picker that offers them — a select, one field
+      per parameter slot, a preview resolved through the plan, and the engine's
+      rejections shown against the offending slot. The drafted package is UI state;
+      only the package actually taken is recorded on the plan.
+      Source: Core Rules.md:2380-2388
 - [ ] Magus life stages that spend Art XP: apprenticeship (240 xp across Arts +
       Abilities, 120 spell levels, min Parma/Magic Theory/Latin) and
       after-apprenticeship accrual (30 pts/year across Arts, Abilities, spells).
@@ -795,10 +803,19 @@ permitting Virtue (which was enforced for Supernatural only, so the pool would f
 Academic Ability nobody could learn), and **6b2c** halves the creation cap on
 locality-dependent Abilities for Foreign Upbringing.
 
-Next: **6b3 onwards** — Sample Childhood packages, magus apprenticeship and
-post-Gauntlet accrual, and aging for characters over 35 (with die results typed by
-the user, so the engine stays deterministic). Slice-by-slice plan:
-`M6B-IMPLEMENTATION.md`.
+**6b3 is done**, in two slices. 6b3a shipped the Sample Childhood engine: the five
+packages as rules data, twelve load-time integrity rules (the 45/75 re-pricing among
+them, so a transcription slip fails the load), a monotone-raise applicator whose
+rejections stay apart from `validate()`'s findings, and the `apply_childhood_package`
+command. 6b3b shipped the surface: the Abilities step now offers a funding mode
+*derived* from the plan on the entity — a life-stage panel with the funding radio, the
+age and the native language, the XP bar's read-only life-stage budget, and a childhood
+package picker with a field per parameter slot. A magus is refused the guided mode in
+both engine and UI until 6b4. The e2e suite is 27 specs.
+
+Next: **6b4 onwards** — the magus's apprenticeship and post-Gauntlet accrual, and
+aging for characters over 35 (with die results typed by the user, so the engine stays
+deterministic). Slice-by-slice plan: `M6B-IMPLEMENTATION.md`.
 
 ---
 

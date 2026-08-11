@@ -1360,8 +1360,8 @@ entry) before the guided wizard in M6. Accordingly:
   starting-score effects. See the effect-layer subsections above.
 - **M6 (guided wizard):** the life-stage XP acquisition (early childhood 75+45 xp
   `:2378`; later life 15/20/10 xp/yr `:2390-2394`; age→max-score cap
-  `:2368-2374`), the Sample Childhood packages (`:2380-2388` — catalogue and engine
-  landed in M6/6b3a, see **Sample Childhood packages** below), the magus
+  `:2368-2374`), the Sample Childhood packages (`:2380-2388` — catalogue, engine
+  and picker landed in M6/6b3, see **Sample Childhood packages** below), the magus
   apprenticeship/post-apprenticeship Art-XP flow (`:2433-2471`), and the aging
   engine for characters over 35 (`:16563-16640`). The age→max-score *cap* itself
   is enforced as direct-entry validation in M4/4e; only the XP *acquisition* and
@@ -2473,10 +2473,12 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `life_stage_magus_guided_unsupported` (error, `abilities`, no args) whenever the
   entity's type profile is `is_magus` and a plan is present — read from the profile
   flag, never a type id. A magus keeps the directly-entered pool, which is fully
-  functional; 6b3b is to keep the guided funding mode off a magus in the UI as well,
-  so this code is the backstop for a hand-edited save (and, until that UI exists,
-  the only check there is). `later_life_years` carries the restriction in its
-  own doc comment so the formula is not later mistaken for complete.
+  functional. **M6/6b3b keeps the guided funding mode off a magus in the UI as well**
+  — `LifeStagePanel.svelte` disables that radio when the type profile is `is_magus`,
+  with the reason spoken through `aria-describedby` rather than greyed out alone — so
+  this code is now the backstop for a hand-edited save. `later_life_years` carries
+  the restriction in its own doc comment so the formula is not later mistaken for
+  complete.
 
 #### Early childhood — 75 + 45, and the closed spread list
 
@@ -2718,10 +2720,17 @@ Abilities are bought with experience earned in blocks, not from one bank:
   the form the player submitted, not a failed command — and no English prose crosses
   the boundary, since the frontend renders the issues through the `issue-<code>`
   Fluent path it already has.
-- **Deferred to 6b3b:** the UI that offers the packages — the funding-mode toggle,
-  the life-stage panel, and the package picker with its slot fields. Until it
-  exists, the catalogue, the applicator and the command ship with no surface
-  calling them.
+- **The UI that offers the packages shipped in M6/6b3b:** the funding-mode toggle
+  and life-stage panel (`ui/src/lib/components/LifeStagePanel.svelte`) and the
+  package picker with one field per slot
+  (`ChildhoodPackagePicker.svelte` → `store.applyChildhoodPackage`). It keeps the
+  split above intact: the *drafted* package and its slot answers are UI state
+  (`store.childhoodDraft`), never on the entity, while the package actually **taken**
+  is the persisted `LifeStagePlan::childhood_package` record — so the picker's select
+  starts unselected even for a character that has one recorded, since the answers
+  live on the Ability rows and a recorded package is history rather than a form to
+  re-open. Leaving the guided funding mode deletes the plan, which deletes the record
+  and prunes the draft with it.
 
 #### Later life — 15 experience points per year
 
