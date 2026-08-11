@@ -75,13 +75,16 @@ pub(crate) fn validate_life_stage_plan(
         // Suppressed while the language is set but unspent — that is the warning
         // below, not this error.
         Some(language) => {
-            // The native language is a Living Language instance, so "bought" means a
-            // row for that ability whose parameter value is this language.
+            // "75 experience points in their native language" (Core Rules.md:2378)
+            // names one Ability — `childhood.native_language_ability` — at one
+            // instance, so "bought" is a row for exactly that id whose parameter is
+            // this language, scoring above 0. Testing the parameter alone would let
+            // an `Area Lore (German)` pass while the 75-point pool, which keys on the
+            // id (`native_language_instance` in `effective.rs`), funds none of it.
             let bought = entity.ability_scores.iter().any(|score| {
-                score.parameter.as_deref() == Some(language.as_str())
-                    && ruleset
-                        .ability(&score.ability)
-                        .is_some_and(|ability| ability.parameter.is_some())
+                score.ability == rules.childhood.native_language_ability
+                    && score.parameter.as_deref() == Some(language.as_str())
+                    && score.score > 0
             });
             if !bought {
                 issues.push(ValidationIssue::warning(
@@ -375,6 +378,52 @@ mod tests {
         assert_eq!(
             issue.args.get("language").map(String::as_str),
             Some("German")
+        );
+    }
+
+    /// "75 experience points in their native language" (Core Rules.md:2378) names
+    /// **one** Ability: the childhood's `native_language_ability`. An Area Lore
+    /// whose area happens to be spelled like the language is a different Ability,
+    /// and the 75-point pool — which keys on that id — cannot fund a point of it, so
+    /// it must not silence the warning. The validator and the pool have to read the
+    /// same rule the same way.
+    #[test]
+    fn an_area_lore_named_after_the_language_does_not_satisfy_the_native_language() {
+        let mut entity = planned(25);
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.area_lore"),
+            parameter: Some("German".into()),
+            score: 2,
+            specialty: None,
+        }];
+
+        let result = validate(&entity, &rs());
+        assert!(
+            codes(&result)
+                .contains(&ValidationIssue::CODE_LIFE_STAGE_NATIVE_LANGUAGE_MISSING_SCORE.into()),
+            "issues: {:?}",
+            codes(&result)
+        );
+    }
+
+    /// A row at 0 buys nothing, so it leaves the 75 points as unspent as no row at
+    /// all — the whole point of the warning.
+    #[test]
+    fn a_native_language_row_at_zero_does_not_satisfy_the_native_language() {
+        let mut entity = planned(25);
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.living_language"),
+            parameter: Some("German".into()),
+            score: 0,
+            specialty: None,
+        }];
+
+        let result = validate(&entity, &rs());
+        assert!(
+            codes(&result)
+                .contains(&ValidationIssue::CODE_LIFE_STAGE_NATIVE_LANGUAGE_MISSING_SCORE.into()),
+            "issues: {:?}",
+            codes(&result)
         );
     }
 

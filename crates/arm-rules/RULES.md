@@ -2795,6 +2795,14 @@ an age inside the childhood block, an unchosen native language, and a chosen one
 with no bought score (a warning — the points are merely unspent). No rulebook
 passage states this; it exists because the app offers two ways in.
 
+The unspent-block warning and the 75-point pool read `:2378` the same way, which is
+a requirement rather than a coincidence: both key on
+`childhood.native_language_ability` at the chosen instance, scoring above 0
+(`validate_life_stage_plan` and `native_language_instance` in `effective.rs`). A
+looser test — any parameterized Ability whose parameter equals the language — would
+let an `Area Lore (German)` declare the block spent while the pool, which funds one
+instance of one id, paid for nothing of it.
+
 ## Markdown character export (M5.6) — `export.rs`
 
 `export.rs` implements **no new rules mechanic**, so it carries no rulebook
