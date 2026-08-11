@@ -9,8 +9,10 @@ here and the matching `PLAN.md` box in the same commit as green code.
 type is fixed at creation via `store.createCharacter(typeId)`. 6b1b replaced that
 screen's hardcoded-disabled wizard button with one guided entry per character type.
 
-**Status: 6b1a, 6b1b and 6b2 are done.** Next is 6b3 — Sample Childhood packages and
-the sophisticated Abilities step.
+**Status: 6b1a, 6b1b, 6b2 and 6b3a are done.** Next is **6b3b** — the frontend half of
+6b3: the funding-mode toggle, the life-stage panel, the Sample Childhood package picker,
+the guided branch of the XP bar, and the e2e coverage. 6b3 counts as done only once
+6b3b is in, so the `PLAN.md` 6b3 boxes stay unticked until then.
 
 6b2 shipped as five commits: the life-stage rules as data; the missing Poor Major
 Flaw plus the Wealthy/Poor rate effect; `Entity::life_stages` and the derived
@@ -81,7 +83,8 @@ canonical key/array sorting. German labels must match
 | **6b1a** | Phase vocabulary + issue attribution across all 85 emit sites; Fluent keys; TS mirror. UI unchanged | 6a |
 | **6b1b** | Wizard shell: view, rail, back/forward nav, per-phase gating, existing components mounted as steps | 6b1a |
 | **6b2** | Life-stage XP engine (childhood 75+45, later life 15/20/10, pools into the existing solver) **+ the missing Poor Major Flaw** | 6b1a |
-| **6b3** | Sample Childhood packages (data + integrity + apply) and the "sophisticated" Abilities step | 6b2 |
+| **6b3a** | Sample Childhood packages: catalogue + load-time integrity + applicator + IPC command (no UI) | 6b2 |
+| **6b3b** | The "sophisticated" Abilities step: funding-mode toggle, life-stage panel, package picker, XP-bar guided branch, e2e | 6b3a |
 | **6b4** | Magus apprenticeship (240 xp / 120 spell levels / hard minimums) | 6b2 |
 | **6b5** | Post-Gauntlet accrual (30 pts/year, lab-season deduction, xp↔spell-level split) | 6b4 |
 | **6b6** | Aging tables + aging total + outcome resolution | 6b1a |
@@ -450,6 +453,91 @@ through the untouched `startCharacter`.
 
 ---
 
+## Slice 6b3a — Sample Childhood packages: data, engine, IPC ✅
+
+6b3 was split at the IPC boundary, exactly as 6b1 was: **6b3a** is the engine, the
+catalogue and the command — independently green with an unchanged UI — and **6b3b** is
+the frontend (funding-mode toggle, life-stage panel, package picker, the XP bar's guided
+branch, e2e). The `PLAN.md` 6b3 boxes tick in 6b3b, not here: 6b3 is only done when a
+player can actually take a package.
+
+### What shipped (17 commits)
+
+- **Types and pricing.** `crates/arm-rules/src/childhood.rs` — `ChildhoodPackage` /
+  `ChildhoodEntry`, `native_entry`/`spread_entries`, and `spread_xp`/`native_xp` pricing a
+  package against `AdvancementTable::xp_for_score` (`86ff068`, `6dc7fd6`). Registered on
+  the `Ruleset` from its own source (`85f8225`).
+- **Load-time integrity.** Twelve rules in `Ruleset::validate_childhood_packages`
+  (`c949216`), the 45/75 re-pricing among them — the trust gate on a hand-transcribed
+  catalogue. The 6b2 childhood ref checks moved so `from_serialized` enforces them too,
+  i.e. a cached ruleset is trusted no further than a freshly parsed one (`74f746a`).
+- **Storage.** `LifeStagePlan.childhood_package` — the taken package's id, additive, so
+  `SCHEMA_VERSION` stays 14 (`a277096`).
+- **The applicator.** `apply_package` / `apply_childhood_package`: a monotone raise keyed
+  by `(ability, parameter)`, slot values resolved into the rows' own `parameter`, every
+  rejection collected in one pass (`171258d`, `02b9414`, `33dbcde`).
+- **Localization seam.** `validation::childhood_rejection_issues` maps the rejections onto
+  four codes — `childhood_slot_unfilled`, `childhood_slot_is_native_language`,
+  `childhood_slot_duplicate_value`, `childhood_package_unknown` — with Fluent keys in both
+  locales (`096e786`).
+- **Data.** `rules/core/childhoods.json` plus `rules/i18n/{en,de}/childhoods.json`: the
+  five packages of `:2384-2388`, one `source` line each; German names read off the German
+  mirror at the same lines (`65e935d`). Read by the app loader with the "an empty file
+  means the ruleset ships none" idiom `life_stages.json` uses (`be9dbee`), and applied
+  over IPC by the `apply_childhood_package` command returning `ChildhoodApplication`
+  (`0fed0af`).
+- **Four latent 6b2 defects, fixed here** (`f3adc40`, `23f12c9`, `8d7ecdf`, `ab529d8`) —
+  see below.
+
+### Deliberate deviations from the 6b3 design below
+
+- **Only the package id is stored — no `childhood_slots`.** *Hard problems, decided* and
+  the 6b3 slice text both proposed storing the slot answers on the plan. They are not:
+  a slot value **is** the Ability row's `parameter`, so storing it twice creates two
+  representations of one fact that can disagree (edit the row, and the stored slot lies).
+  `LifeStagePlan` therefore carries `native_language` and `childhood_package` only.
+- **The stored package narrows nothing.** The design had the taken package restrict the
+  45-xp spread pool's eligibility. It does not: eligibility stays the closed eleven-ability
+  list of `:2378`, because no passage forbids the other eight once a package is taken and
+  `:2382` explicitly invites adjusting one. `xp_allocation` never reads
+  `childhood_package`; the pool is identical whether a package was taken or the points
+  were divided by hand. The stored id is a **for-the-record annotation** — `validate()`
+  checks only that it resolves (`childhood_package_unknown`), never that the rows still
+  match it.
+- **Three of the four codes are command-input rejections, not `validate()` findings.**
+  Applying a package is all-or-nothing, so no stored character can *hold* an unfilled or
+  colliding slot; `childhood_slot_*` therefore come only from
+  `childhood_rejection_issues`, describing the form the player just submitted. Only
+  `childhood_package_unknown` is a real `validate()` error — precisely because that id is
+  the one thing persisted. (The emit sites still live in `validation/`, so the
+  contract-table and phase scanners keep seeing every `(code, phase)` pair.)
+- **A magus life-stage plan is refused, not costed.** `:2364` grants a magus **four**
+  periods; this engine models two, and `later_life_years` would swallow apprenticeship and
+  life as a magus both — 825 points for a 60-year-old, spendable on Arts as well through
+  the shared pool. `validate_life_stage_plan` emits
+  `life_stage_magus_guided_unsupported` (error, `abilities`) whenever a profile with
+  `is_magus` carries a plan (`ab529d8`). A magus keeps the directly-entered pool, which is
+  fully functional; magus life stages remain 6b4/6b5.
+- **Three further latent 6b2 defects were fixed in passing**, since 6b3 depends on all
+  three being right: the native-language check now matches the childhood's
+  `native_language_ability` rather than any parameterized Ability whose parameter happens
+  to equal the language (`f3adc40`); an unset age is reported as
+  `life_stage_age_unset` instead of silently withholding the childhood budget and blaming
+  every childhood row as unfunded (`23f12c9`); and `restricted_xp_unspent` now names the
+  pool it is about via `RestrictedXpPool::origin` (`origin_kind` + `origin`), so a
+  life-stage character no longer gets two warnings that differ only in their numbers
+  (`8d7ecdf`).
+
+### Deferred to 6b3b
+
+The Abilities step's two funding modes (flat pool as today, guided life-stage flow), the
+life-stage panel (age, native language, the two block read-outs), the package picker with
+a field per slot calling `apply_childhood_package`, the XP bar's guided branch, and the
+e2e spec. Provenance for all of the above: **Sample Childhood packages (M6/6b3a)** in
+`crates/arm-rules/RULES.md`.
+
+---
+
 ## Slices 6b2-6b8 — design notes
 
 ### What already exists (verified in code — these engines add less than PLAN.md implies)
@@ -495,27 +583,32 @@ because "Poor" prefixes six other flaw names). Fixed **in 6b2** rather than earl
 because the flaw's whole mechanical content is the 10-xp/year rate, and shipping the item
 before its `LaterLifeXpRate` effect exists would add a flaw that silently does nothing.
 
-- [ ] RED: the ruleset contains `flaw.poor` with `magnitude: major`, `category: general`
+All of this shipped in 6b2; the boxes below record it.
+
+- [x] RED: the ruleset contains `flaw.poor` with `magnitude: major`, `category: general`
       and a `later_life_xp_rate` effect of 10 — structural, never a catalogue total.
-- [ ] GREEN (data): add the item to `rules/core/virtues_flaws.json` in canonical
+      (`wealthy_and_poor_ship_with_their_rates_and_eligibility`, `tests/data_integrity.rs`.)
+- [x] GREEN (data): add the item to `rules/core/virtues_flaws.json` in canonical
       (id-sorted) position with `source: { file: "Ars Magica - Definitive Edition (Core
       Rules).md", lines: [6594, 6596] }`, mirroring `flaw.poor_living_conditions`
       (`:2179-2187`).
-- [ ] GREEN (i18n): `rules/i18n/en/virtues_flaws.json` name "Poor" + summary from the
+- [x] GREEN (i18n): `rules/i18n/en/virtues_flaws.json` name "Poor" + summary from the
       source; `rules/i18n/de/virtues_flaws.json` name **"Arm"** — the translation table's
       value (`rules/source/de/translation-tables/tugenden-fehler.md:445`, "Konsistent im
       Text verwendet"), corroborated by the German source at the same mirrored lines
       6594-6596 (`#### Arm` / `*Groß, Allgemein*`).
-- [ ] RED → GREEN (rate): Poor gives 10 xp/year, Wealthy 20, neither 15 (2392/2394).
-- [ ] RED → GREEN (eligibility): 2394 says "only companions can take this Virtue or
+- [x] RED → GREEN (rate): Poor gives 10 xp/year, Wealthy 20, neither 15 (2392/2394).
+      (`LifeStageRules::later_life_rate`, `life_stage.rs`.)
+- [x] RED → GREEN (eligibility): 2394 says "only companions can take this Virtue or
       Flaw" and 6596 repeats "not available to magi". Add both `flaw.poor` and
       `virtue.wealthy` to `forbidden_traits` on the **magus** *and* **mythic_companion**
       profiles — grog is covered incidentally by `max_major_virtues/flaws: 0`, but
       mythic_companion has `max_major_*: null` (`character_types.json:110ff`) and would
       otherwise take both legally. Record the 2394-vs-5237/6596 scope reading in
       RULES.md.
-- [ ] RULES.md provenance entry: the verbatim 6594-6596 excerpt, the
-      `later_life_xp_rate: 10` data value, the eligibility ruling.
+- [x] RULES.md provenance entry: the verbatim 6594-6596 excerpt, the
+      `later_life_xp_rate: 10` data value, the eligibility ruling. (**Wealthy / Poor —
+      the rate, and who may take them**, `crates/arm-rules/RULES.md`.)
 
 `virtue.wealthy` already exists (`virtues_flaws.json:6294`) but is `classification:
 narrative` with no effects, so it gains the same treatment in the same commit.
@@ -547,6 +640,8 @@ narrative` with no effects, so it gains the same treatment in the same commit.
 - **Parameterized package entries** ("Area A Lore", "Area B Lore", "Living Language 1").
   Each entry carries a `slot` — a stable choice key, mirroring `house_choices` /
   `warping_choices` — and player values land in `LifeStagePlan::childhood_slots`.
+  (**Superseded in 6b3a:** slot values are *not* stored on the plan; they are the Ability
+  rows' own `parameter`, and a second copy could only diverge. See the 6b3a section.)
   Load-time integrity is therefore **not** a plain slug lookup: refs resolve; a
   parameterized ability must carry a slot and a plain one must not; slots are unique per
   package; exactly one entry is `native: true` and it must be the language-parameterized
@@ -557,7 +652,10 @@ narrative` with no effects, so it gains the same treatment in the same commit.
   per "saves store choices, not resolved values". New
   `Entity::life_stages: Option<LifeStagePlan>` holding `native_language`,
   `childhood_package`, `childhood_slots`, `apprenticeship_start_age`,
-  `post_gauntlet_spell_levels`, `post_gauntlet_lab_seasons`. When `life_stages` is
+  `post_gauntlet_spell_levels`, `post_gauntlet_lab_seasons`. (As shipped: 6b2 added
+  `native_language`, 6b3a `childhood_package`, and **no** `childhood_slots` — see the
+  6b3a section; the apprenticeship/post-Gauntlet fields land with 6b4/6b5.) When
+  `life_stages` is
   `Some`, the derived pools are authoritative and `xp_pool` must be 0 — a non-zero value
   alongside a plan is an error (`life_stage_xp_pool_conflict`), never a silent
   double-count. Rejected: making `xp_pool` an `Option` override, which forces a
@@ -597,7 +695,9 @@ Academic/Arcane/Martial Abilities (waived when `profile.is_magus`, per 2435/7151
 **Foreign Upbringing**'s halved locality-dependent cap (a new `locality_dependent` data
 flag on abilities).
 
-**6b3 — Sample Childhood packages.** `childhood.rs` (`ChildhoodPackage`, `apply_package`,
+**6b3 — Sample Childhood packages.** (Split into 6b3a/6b3b; everything but the UI has
+shipped — read the **Slice 6b3a** section above for what the design below actually became.)
+`childhood.rs` (`ChildhoodPackage`, `apply_package`,
 `package_cost`), `rules/core/childhoods.json` (five packages, one `source` each at
 2384-2388) + `rules/i18n/{en,de}/childhoods.json`, the five integrity rules above, and an
 `apply_childhood_package` command. The Abilities step gains its two modes — flat

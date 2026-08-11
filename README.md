@@ -234,11 +234,16 @@ Markdown export added in M5.6.
 
 ### Next
 
-The rest of the wizard's life-stage flow: Sample Childhood packages, the magus's
-apprenticeship and post-Gauntlet years, and aging for characters over 35 (die results
-typed by the player, so the engine stays deterministic). See [PLAN.md](PLAN.md) for
-the milestone breakdown and [M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the
-slice-by-slice plan.
+The wizard's Abilities step is being rebuilt around the life-stage flow. The engine
+half is in: the five **Sample Childhood packages** ship as rules data, priced against
+the advancement table at load so a transcription slip cannot ship, and the engine can
+apply one to a character (raising scores, never lowering them, so applying twice
+changes nothing). **No screen offers them yet** — the funding-mode toggle and the
+package picker are the next slice. After that: the magus's apprenticeship and
+post-Gauntlet years, and aging for characters over 35 (die results typed by the
+player, so the engine stays deterministic). See [PLAN.md](PLAN.md) for the milestone
+breakdown and [M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the slice-by-slice
+plan.
 
 ## Getting started
 

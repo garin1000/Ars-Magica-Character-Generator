@@ -591,8 +591,10 @@ screen** rather than an already-instantiated blank character, and a character's
 
 ### 6b. Guided wizard flow
 
-Slices 6b1a (phase vocabulary + issue attribution) and 6b1b (the wizard shell) are
-**done**; the rest is the engine work in 6b2–6b8. Detail: `M6B-IMPLEMENTATION.md`.
+Slices 6b1a (phase vocabulary + issue attribution), 6b1b (the wizard shell), 6b2 (with
+its 6b2b/6b2c tails) and 6b3a (the Sample Childhood engine, data and command — no UI)
+are **done**; next is 6b3b, the guided Abilities step that finally offers them.
+Detail: `M6B-IMPLEMENTATION.md`.
 
 - [x] Wizard component driven by the character type's `creation_phases` list
       (`WizardShell` + `WizardStep`; the phases are now a typed `CreationPhase`, so
@@ -632,7 +634,9 @@ Slices 6b1a (phase vocabulary + issue attribution) and 6b1b (the wizard shell) a
       Source: Core Rules.md:6160
 - [ ] Sample Childhood packages (deferred from M3): childhood model + registry +
       load-time integrity (ability refs resolve) + an "apply package" step.
-      Source: Core Rules.md:2380-2388
+      Source: Core Rules.md:2380-2388. *(Engine, catalogue and the
+      `apply_childhood_package` command landed in 6b3a; this box waits on the 6b3b
+      picker UI, since nothing offers a package to a player yet.)*
 - [ ] Magus life stages that spend Art XP: apprenticeship (240 xp across Arts +
       Abilities, 120 spell levels, min Parma/Magic Theory/Latin) and
       after-apprenticeship accrual (30 pts/year across Arts, Abilities, spells).
