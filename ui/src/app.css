@@ -378,6 +378,108 @@ button:disabled {
   padding-inline: 0.5rem;
 }
 
+/* The guided wizard, in place of the tab bar + tab content. It MUST be a bounded
+   flex column: its `.wizard-body` is a `.tab-content`, whose `flex: 1; min-height: 0`
+   only resolves against a parent that passes the height down from `.app-shell`.
+   Without that the step's `.region-row` collapses and the Available list vanishes —
+   which is exactly why the steps reuse the editor's wrappers rather than restyling
+   them. */
+.wizard {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The step rail: the flow's phases in order, current one highlighted, steps not
+   yet reached disabled, a blocked one marked. */
+.wizard-rail {
+  border-bottom: 1px solid #38355a;
+  padding: 0.5rem 1.5rem 0;
+}
+
+.wizard-rail ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /* The steps are a numbered sequence; a counter says so without spending a column
+     on list markers. */
+  counter-reset: wizard-step;
+}
+
+.wizard-rail li {
+  counter-increment: wizard-step;
+}
+
+.wizard-rail-step {
+  background: none;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  color: #b9b6d6;
+  cursor: pointer;
+  padding: 0.35rem 0.8rem;
+  font: inherit;
+}
+
+.wizard-rail-step::before {
+  content: counter(wizard-step) '. ';
+  opacity: 0.7;
+}
+
+.wizard-rail-step:hover:not(:disabled) {
+  color: #efeeff;
+}
+
+.wizard-rail-step.active {
+  background: #201d38;
+  border-color: #38355a;
+  color: #efeeff;
+}
+
+.wizard-rail-step:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* A step still holding an error. Colour alone would carry the meaning, so the
+   marker is a glyph too, and the button points at the blocked hint via
+   aria-describedby for assistive tech. */
+.wizard-rail-step[data-blocked='true']::after {
+  content: ' !';
+  color: #ff9a9a;
+  font-weight: 700;
+}
+
+.wizard-progress {
+  margin: 0;
+  padding: 0.4rem 1.5rem 0;
+  color: #b9b6d6;
+  font-size: 0.9rem;
+}
+
+.wizard-nav {
+  border-top: 1px solid #38355a;
+  padding: 0.6rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* The hint sits between Back and Next and takes the slack, so the two controls
+   stay at the ends of the bar whether or not it is shown. */
+.wizard-nav .hint {
+  flex: 1;
+  margin: 0;
+}
+
+.wizard-nav .primary {
+  margin-left: auto;
+}
+
 /* Shared issues panel, pinned below the tabs at the bottom of the viewport. It
    shows every error/warning for the whole character, not just the active tab. */
 .validation-bar {

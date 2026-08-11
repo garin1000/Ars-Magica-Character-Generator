@@ -90,6 +90,11 @@ function createTestIds(body: string): string[] {
   return [...body.matchAll(/data-testid="(start-create-[^"]+)"/g)].map((m) => m[1]);
 }
 
+/** Every `start-wizard-*` test id present in the markup, in document order. */
+function wizardTestIds(body: string): string[] {
+  return [...body.matchAll(/data-testid="(start-wizard-[^"]+)"/g)].map((m) => m[1]);
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   store.lang = 'en';
@@ -142,14 +147,37 @@ describe('StartScreen', () => {
     expect(text).toBe('Open');
   });
 
-  it('shows the guided wizard as a disabled entry with a later-version hint', () => {
+  // The wizard is entered per character type, exactly like direct creation: the
+  // type is fixed at creation, so it must be chosen before the flow starts.
+  it('offers one guided-wizard button per type profile in the ruleset', () => {
+    installProfiles('grog', 'magus');
+    expect(wizardTestIds(html())).toEqual(['start-wizard-grog', 'start-wizard-magus']);
+  });
+
+  it('no longer shows a single, permanently disabled wizard entry', () => {
     const body = html();
-    const wizard = element(body, 'start-wizard');
-    expect(wizard.open).toMatch(/<button/i);
-    expect(wizard.open).toMatch(/disabled/);
-    // The hint says the wizard arrives later; it must be real text, not a key.
+    expect(body).not.toContain('data-testid="start-wizard"');
+    expect(element(body, 'start-wizard-magus').open).not.toMatch(/disabled/);
+  });
+
+  it('labels each wizard button through its type Fluent key, never the raw slug', () => {
+    const label = element(html(), 'start-wizard-mythic_companion').text;
+    expect(label).toBe('Mythic Companion');
+    expect(label).not.toBe('mythic_companion');
+    expect(label).not.toBe('type-mythic_companion');
+  });
+
+  it('explains the guided entry in real prose, not an echoed key', () => {
+    const body = html();
     expect(body).toContain(store.t('start-wizard-hint'));
     expect(store.t('start-wizard-hint')).not.toBe('start-wizard-hint');
+  });
+
+  it('offers nothing to start while the ruleset has no profiles', () => {
+    installProfiles();
+    const body = html();
+    expect(createTestIds(body)).toEqual([]);
+    expect(wizardTestIds(body)).toEqual([]);
   });
 
   it('disables every action while the ruleset is loading', () => {

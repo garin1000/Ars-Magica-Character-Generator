@@ -5,10 +5,12 @@ the high-level 6b scope checkboxes; this file is the session-resumable execution
 tracker with per-slice tasks, decisions, and verified source citations. Tick a box
 here and the matching `PLAN.md` box in the same commit as green code.
 
-6a is done (`PLAN.md:562-586`): the app opens on `StartScreen.svelte`, a character's
-type is fixed at creation via `store.createCharacter(typeId)`, and the start screen
-already carries a hardcoded-**disabled** wizard button (`StartScreen.svelte:71`) that
-6b1b replaces.
+6a is done (`PLAN.md:562-586`): the app opens on `StartScreen.svelte` and a character's
+type is fixed at creation via `store.createCharacter(typeId)`. 6b1b replaced that
+screen's hardcoded-disabled wizard button with one guided entry per character type.
+
+**Status: 6b1a and 6b1b are done** (26 e2e specs green against the real binary). Next
+is 6b2 — the life-stage XP engine, and with it the missing Poor Major Flaw.
 
 ## Required gate (end of every slice, before any "done" claim)
 
@@ -181,7 +183,7 @@ literal without the new key, and the four TS issue literals in
 
 ---
 
-## Slice 6b1b — The wizard shell
+## Slice 6b1b — The wizard shell ✅
 
 ### Design
 
@@ -310,38 +312,38 @@ confidence blocks; `EquipmentTab`, `MagicPossessions`, `SupernaturalBeing`,
 
 ### Tasks
 
-- [ ] **10. Pure helpers** in `derive.test.ts` → `derive.ts`: `wizardPhases(profile)`
+- [x] **10. Pure helpers** in `derive.test.ts` → `derive.ts`: `wizardPhases(profile)`
       (profile order + `review` appended once; magus keeps `house_specialisation` before
       `virtues_flaws`), `issuesForPhase`, `phaseHasBlockingIssue` (errors only),
       `firstBlockedPhaseIndex(phases, issues, from, to)` **with an explicit case proving
       the range includes `from`**.
-- [ ] **11. Store: entry.** `startWizard('magus')` → `view === 'wizard'`, mandatory
+- [x] **11. Store: entry.** `startWizard('magus')` → `view === 'wizard'`, mandatory
       traits seeded, path/filters/results cleared, `dirty === false`, nav at 0/0, and
       `ipc.validateEntity` called once (proving no early return).
-- [ ] **12. Store: navigation.** `wizardNext` advances and raises `wizardFurthest`; no-op
+- [x] **12. Store: navigation.** `wizardNext` advances and raises `wizardFurthest`; no-op
       while the phase has an error; `wizardBack` always works, never lowers the mark,
       no-op at 0; `wizardGoTo(furthest)` works, `wizardGoTo(furthest + 1)` does not; a
       forward jump clamps both when a *strictly intermediate* phase is broken and when
       the **departure** phase itself is broken.
-- [ ] **13. Store: finish and exits.** `finishWizard()` → `view === 'editor'`, entity
+- [x] **13. Store: finish and exits.** `finishWizard()` → `view === 'editor'`, entity
       byte-identical, `dirty` unchanged; no-op while `wizardCanFinish` is false;
       navigating never flips `dirty`; an edit in the wizard flips `dirty` **and**
       `closeGuardPayload().dirty`; `newDocument()` → `'start'` with nav reset; `open()` →
       `'editor'` with nav reset.
-- [ ] **14. Extractions** (pure moves, no new specs — `App.test.ts`,
+- [x] **14. Extractions** (pure moves, no new specs — `App.test.ts`,
       `character-fields.e2e.js` and `validation-errors.e2e.js` are the regression gate):
       `CharacterBanner.svelte` ← `App.svelte:200-222` + the `typeName` derivation at
       `:55-59`; `IdentityFields.svelte` ← `CharacterDetails.svelte:114-172`;
       `PersonalityTraits.svelte` ← `:442-499` and `Reputations.svelte` ← `:501-546`.
-- [ ] **15. `ValidationPanel` phase prop:** renders only that phase's issues when set,
+- [x] **15. `ValidationPanel` phase prop:** renders only that phase's issues when set,
       everything when absent (today's behavior), `no-issues` when filtered empty.
-- [ ] **16. `WizardStep.svelte`** — the phase→component table; per-phase test that the
+- [x] **16. `WizardStep.svelte`** — the phase→component table; per-phase test that the
       expected component's testid appears and the step body adds no `<h2>` of its own.
-- [ ] **17. `TypeStep.svelte`** (localized type label, budget numbers from
+- [x] **17. `TypeStep.svelte`** (localized type label, budget numbers from
       `profile.budget`, exactly one Gift-policy line) and **`WizardReview.svelte`**
       (unfiltered panel, clean-state message, the "Equipment / Magic Items / Aging /
       Totals live in the editor" hint, and the legal-≠-complete caveat).
-- [ ] **18. `WizardShell.svelte`** — rail button per phase in order
+- [x] **18. `WizardShell.svelte`** — rail button per phase in order
       (`data-testid="wizard-step-{phase}"`), `aria-current="step"` on the current one,
       `disabled` past `wizardFurthest`, and a blocked phase **announced to assistive
       tech**, not just styled (`data-blocked` is a CSS hook; also attach
@@ -350,20 +352,20 @@ confidence blocks; `EquipmentTab`, `MagicPossessions`, `SupernaturalBeing`,
       disabled when blocked; on `review` `wizard-next` absent and `wizard-finish`
       present-but-disabled while errors remain; localized `wizard-step-progress`. New CSS
       block including the bounded-flex root.
-- [ ] **19. `App.svelte`** three-way view branch; the **two** `view === 'editor'` header
+- [x] **19. `App.svelte`** three-way view branch; the **two** `view === 'editor'` header
       guards (`:173` doc-status, `:190` ModeToggle + SaveLoadBar) flip to
       `view !== 'start'`; the Ctrl+S gate at `:129` flips to `view === 'start'`; the
       app-level validation footer moves inside the editor branch.
-- [ ] **20. `StartScreen.svelte`** — one enabled `start-wizard-{id}` per profile,
+- [x] **20. `StartScreen.svelte`** — one enabled `start-wizard-{id}` per profile,
       mirroring the create row, labelled through `type-<id>`, disabled while
       `loading`/`busy`; rewrite `start-wizard-hint`; delete the unused `start-wizard` key
       from both locales; cover the zero-profiles case (no buttons, error banner only).
-- [ ] **21. E2E.** `ui/e2e/helpers.js:64` — `returnToStartScreen()` waits for
+- [x] **21. E2E.** `ui/e2e/helpers.js:64` — `returnToStartScreen()` waits for
       `START_SCREEN || TAB_BAR`; a wizard view has neither, so it would fail at
       `BOOT_TIMEOUT`. Add the wizard rail to the probe and add `startWizard(type)`. New
       `ui/e2e/specs/wizard.e2e.js` (magus); update the `start-wizard`-disabled assertion
       at `app-entry.e2e.js:50-51`.
-- [ ] **22. Docs + full gate.** `PLAN.md` 6b checkboxes + focus note; `README.md` (a real
+- [x] **22. Docs + full gate.** `PLAN.md` 6b checkboxes + focus note; `README.md` (a real
       third input mode now exists). `RULES.md` needs nothing — 6b1 ships no new mechanic.
 
 ### New Fluent keys (both `locales/en/main.ftl` and `locales/de/main.ftl`)

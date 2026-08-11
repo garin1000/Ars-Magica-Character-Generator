@@ -1,19 +1,28 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { resolveIssueArgs } from '../derive';
+  import { issuesForPhase, resolveIssueArgs } from '../derive';
+  import type { CreationPhase } from '../types';
 
   // `docked` drops the boxed panel chrome so the validation summary can sit at
   // the bottom of the Selected region as a fixed-height, scrollable box.
-  let { docked = false }: { docked?: boolean } = $props();
+  //
+  // `phase` narrows the panel to one creation phase, which is what makes a
+  // wizard step's footer about that step. Omitted — as the editor mounts it — the
+  // panel shows every finding for the whole character, and so does the wizard's
+  // terminal Review step, which is the only place the findings no phase owns can
+  // be seen at all.
+  let { docked = false, phase = undefined }: { docked?: boolean; phase?: CreationPhase } = $props();
 
   // Collapse identical issues (same code, context and args) to a single line:
   // several unfilled instances of the same parameterized virtue each emit an
   // identical `missing_param`, and rendering them under one key would crash the
   // keyed list. Dedup keeps the panel correct and quiet.
   const issues = $derived.by(() => {
+    const all = store.result?.issues ?? [];
+    const scoped = phase ? issuesForPhase(all, phase) : all;
     const seen = new Set<string>();
     const unique = [];
-    for (const issue of store.result?.issues ?? []) {
+    for (const issue of scoped) {
       const key = `${issue.code}|${issue.context ?? ''}|${JSON.stringify(issue.args)}`;
       if (seen.has(key)) continue;
       seen.add(key);

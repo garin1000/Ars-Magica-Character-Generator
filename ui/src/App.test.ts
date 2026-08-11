@@ -191,6 +191,52 @@ describe('App screens', () => {
   });
 });
 
+// --- the wizard as the third screen (M6b1b) ----------------------------------
+
+describe('App and the guided wizard', () => {
+  beforeEach(() => {
+    installRuleset('magus');
+    store.entity.type_id = 'magus';
+    store.view = 'wizard';
+    store.wizardStep = 0;
+    store.wizardFurthest = 0;
+  });
+
+  afterEach(() => {
+    store.view = 'editor';
+  });
+
+  it('shows the wizard instead of the tab bar', () => {
+    const body = html();
+    expect(openTag(body, 'wizard-rail')).not.toBeNull();
+    expect(openTag(body, 'tab-details')).toBeNull();
+    expect(body).not.toContain('role="tablist"');
+  });
+
+  // The wizard edits a real character, so the banner belongs above it — and the
+  // document toolbar has to be reachable, because the close guard promises the
+  // user can save rather than lose the work.
+  it('keeps the banner and the document controls', () => {
+    const body = html();
+    expect(openTag(body, 'character-type')).not.toBeNull();
+    expect(openTag(body, 'identity-name')).not.toBeNull();
+    expect(openTag(body, 'save-button')).not.toBeNull();
+    expect(openTag(body, 'mode-select')).not.toBeNull();
+    expect(openTag(body, 'doc-status')).not.toBeNull();
+  });
+
+  // The wizard docks its own step-scoped panel; a second, unfiltered one below it
+  // would undo the filtering.
+  it('leaves the whole-character issues footer to the editor', () => {
+    const wizard = html();
+    store.view = 'editor';
+    const editor = html();
+    const count = (body: string) => [...body.matchAll(/class="validation-docked"/g)].length;
+    expect(count(wizard)).toBe(1);
+    expect(count(editor)).toBe(1);
+  });
+});
+
 describe('App dialog modality', () => {
   it('leaves the app interactive while no file operation is running', () => {
     const body = html();
