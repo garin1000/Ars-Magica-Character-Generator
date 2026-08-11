@@ -2520,6 +2520,11 @@ Abilities are bought with experience earned in blocks, not from one bank:
   No translation table carries a "Childhood" entry, so the rulebook line **is** the
   authority here (the mirror is line-for-line, so `:2384` is the same package in
   both languages).
+  The app reads the file in `load_ruleset_from_dir` (`crates/arm-app/src/ruleset_io.rs`)
+  alongside the other `core/*.json`, with the same "an empty file means the ruleset
+  ships none" idiom `life_stages.json` uses — so a ruleset may legitimately offer no
+  packages, per `:2382`. `childhoods.json` is the ninth `i18n/<lang>/` file the
+  localized ruleset merges, and it is required in every language's directory.
 - Implementation: `crates/arm-rules/src/childhood.rs` — `ChildhoodPackage` /
   `ChildhoodEntry`, with `spread_xp` and `native_xp` pricing a package against
   `AdvancementTable::xp_for_score`, and `slots` naming the parameters a UI must

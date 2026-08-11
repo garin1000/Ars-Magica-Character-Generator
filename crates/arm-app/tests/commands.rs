@@ -77,6 +77,50 @@ fn load_ruleset_yields_houses_with_localized_names() {
     );
 }
 
+/// The shipped `core/childhoods.json` + its i18n must reach the app through the
+/// real production loader: a package the engine can price is useless if the
+/// binary never reads the file. Proves a known package loaded with the slots a UI
+/// has to ask for, and that its name is localized in both languages — never a
+/// package count, which is data.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2388 (Traveling
+/// Childhood), and its German name at
+/// `Ars Magica Definitive Edition Basisregeln.md:2388`.
+#[test]
+fn load_ruleset_yields_childhood_packages_with_localized_names() {
+    let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
+    let traveling = localized
+        .ruleset
+        .childhood(&Id::new("childhood.traveling"))
+        .expect("Traveling Childhood loaded");
+
+    // "Area A Lore 1, Area B Lore 1 … Living Language 1": two instances of one
+    // parameterized Ability plus the spread's second language, each a slot the
+    // player fills in.
+    let slots: Vec<(&str, &str)> = traveling
+        .slots()
+        .map(|(slot, ability)| (slot, ability.as_str()))
+        .collect();
+    assert_eq!(
+        slots,
+        vec![
+            ("area_a", "ability.area_lore"),
+            ("area_b", "ability.area_lore"),
+            ("language", "ability.living_language"),
+        ]
+    );
+    assert_eq!(
+        localized.display_name(&Id::new("childhood.traveling")),
+        Some("Traveling Childhood")
+    );
+
+    let german = load_ruleset_from_dir(&rules_dir(), "de").unwrap();
+    assert_eq!(
+        german.display_name(&Id::new("childhood.traveling")),
+        Some("Reisende Kindheit")
+    );
+}
+
 #[test]
 fn load_ruleset_yields_spells_with_localized_names() {
     // The shipped spells.json + its i18n must load through the real production
@@ -232,6 +276,7 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     fs::write(tmp.path().join("core/equipment.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("core/life_stages.json"), "").unwrap();
+    fs::write(tmp.path().join("core/childhoods.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();
@@ -244,6 +289,7 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     )
     .unwrap();
     fs::write(tmp.path().join("i18n/en/equipment.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/childhoods.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {
@@ -292,6 +338,7 @@ fn integrity_failure_preserves_individual_messages() {
     fs::write(tmp.path().join("core/equipment.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("core/life_stages.json"), "").unwrap();
+    fs::write(tmp.path().join("core/childhoods.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();
@@ -304,6 +351,7 @@ fn integrity_failure_preserves_individual_messages() {
     )
     .unwrap();
     fs::write(tmp.path().join("i18n/en/equipment.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/childhoods.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {
