@@ -1728,10 +1728,17 @@ describe('invalidSelectionIds', () => {
   it('collects the context id of every error-severity issue', () => {
     const result = {
       issues: [
-        { severity: 'error' as const, code: 'prereq_not_met', args: {}, context: 'spell.pilum' },
+        {
+          severity: 'error' as const,
+          code: 'prereq_not_met',
+          phase: 'virtues_flaws' as const,
+          args: {},
+          context: 'spell.pilum',
+        },
         {
           severity: 'error' as const,
           code: 'supernatural_ability_requires_virtue',
+          phase: 'abilities' as const,
           args: {},
           context: 'ability.dowsing',
         },
@@ -1746,6 +1753,7 @@ describe('invalidSelectionIds', () => {
         {
           severity: 'warning' as const,
           code: 'prereq_unevaluated',
+          phase: 'virtues_flaws' as const,
           args: {},
           context: 'spell.pilum',
         },
@@ -1756,7 +1764,15 @@ describe('invalidSelectionIds', () => {
 
   it('ignores issues carrying no context (nothing to highlight)', () => {
     const result = {
-      issues: [{ severity: 'error' as const, code: 'over_spell_levels', args: {}, context: null }],
+      issues: [
+        {
+          severity: 'error' as const,
+          code: 'over_spell_levels',
+          phase: 'spells' as const,
+          args: {},
+          context: null,
+        },
+      ],
     };
     expect(invalidSelectionIds(result).size).toBe(0);
   });

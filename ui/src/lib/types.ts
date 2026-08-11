@@ -8,6 +8,26 @@ export type EntityKind = 'character' | 'covenant';
 export type ValidationMode = 'enforced' | 'advisory' | 'silent';
 export type IssueSeverity = 'error' | 'warning';
 
+// A phase of character creation (`CreationPhase`). Two things speak it: the
+// character type's ordered `creation_phases`, which the guided wizard walks, and
+// every validation issue, which names the phase whose input surface owns the
+// offending value. `review` is the wizard's terminal step — the findings no
+// creation phase owns (equipment, Might, Warping, aging) plus a last look at the
+// whole character. Labels always go through the `phase-<slug>` Fluent key; a Rust
+// test pins this union against `CreationPhase::ALL`.
+export type CreationPhase =
+  | 'concept'
+  | 'type'
+  | 'characteristics'
+  | 'virtues_flaws'
+  | 'abilities'
+  | 'arts'
+  | 'spells'
+  | 'house_specialisation'
+  | 'mythic_type'
+  | 'personality_reputations'
+  | 'review';
+
 // Closed enums in the engine (`ParamType` / `ParameterDomain`), serialized as
 // their snake_case names.
 export type ParamType = 'ref';
@@ -593,7 +613,9 @@ export interface EntityTypeProfile {
   // The Gift policy and the id representing The Gift. Omitted when not applicable.
   gift_policy?: 'required' | 'allowed' | 'forbidden';
   gift_id?: string;
-  creation_phases: string[];
+  // Ordered: the guided wizard walks these in sequence. Typed in the engine too,
+  // so a phase string it has no variant for fails the ruleset load.
+  creation_phases: CreationPhase[];
 }
 
 export interface I18nEntry {
@@ -1124,6 +1146,9 @@ export interface ValidationIssue {
   severity: IssueSeverity;
   // Stable machine key, also the Fluent message id the UI localizes.
   code: string;
+  // The creation phase whose input surface owns the offending value — what the
+  // wizard filters each step's findings on. Always present.
+  phase: CreationPhase;
   // Interpolation values for the localized message, keyed by argument name.
   args: Record<string, string>;
   context?: string | null;

@@ -32,6 +32,23 @@ start-wizard-title = Geführte Erstellung
 start-wizard = Geführte Erstellung starten
 start-wizard-hint = Die schrittweise geführte Erstellung kommt in einer späteren Version.
 
+# Bezeichnungen der Erstellungsschritte, geschlüsselt nach dem `CreationPhase`-Slug
+# der Engine. Sie benennen die Schritte der geführten Erstellung und sind die
+# einzige Darstellung einer Phase — der Slug selbst erscheint nie auf dem
+# Bildschirm. `review` ist der eigene Abschlussschritt des Assistenten, angefügt
+# nach den Phasen, die der Charaktertyp deklariert.
+phase-concept = Konzept
+phase-type = Charaktertyp
+phase-characteristics = Eigenschaften
+phase-virtues_flaws = Tugenden & Fehler
+phase-abilities = Fertigkeiten
+phase-arts = Künste
+phase-spells = Zauber
+phase-house_specialisation = Haus
+phase-mythic_type = Typ des mythischen Gefährten
+phase-personality_reputations = Persönlichkeit & Reputationen
+phase-review = Überprüfung
+
 available-title = Verfügbar
 items-virtues-title = Tugenden
 items-flaws-title = Fehler

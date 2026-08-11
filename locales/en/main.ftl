@@ -31,6 +31,22 @@ start-wizard-title = Guided wizard
 start-wizard = Start the guided wizard
 start-wizard-hint = The step-by-step guided creation arrives in a later version.
 
+# Creation-phase labels, keyed by the engine's `CreationPhase` slug. They name the
+# guided wizard's steps and are the only rendering of a phase — the slug itself
+# never reaches the screen. `review` is the wizard's own terminal step, appended
+# after whatever phases the character type declares.
+phase-concept = Concept
+phase-type = Character type
+phase-characteristics = Characteristics
+phase-virtues_flaws = Virtues & Flaws
+phase-abilities = Abilities
+phase-arts = Arts
+phase-spells = Spells
+phase-house_specialisation = House
+phase-mythic_type = Mythic companion type
+phase-personality_reputations = Personality & Reputations
+phase-review = Review
+
 available-title = Available
 items-virtues-title = Virtues
 items-flaws-title = Flaws
