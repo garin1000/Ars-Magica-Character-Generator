@@ -28,6 +28,8 @@
     { "max_age": 45, "max_score": 8 },
     { "max_score": 9 }
   ],
+  "categories_requiring_virtue": ["academic", "arcane", "martial"],
+  "scholarly_language": { "ability": "ability.dead_language", "min_score": 3 },
   "abilities": [
     { "id": "ability.animal_handling", "category": "general", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7273, 7276] } },
     { "id": "ability.animal_ken", "category": "supernatural", "requires_training": true, "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7277, 7280] } },

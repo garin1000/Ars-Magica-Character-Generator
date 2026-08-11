@@ -556,6 +556,25 @@ pub enum Effect {
         /// Experience points earned per year of later life.
         amount: u32,
     },
+    /// Permits buying the named Abilities or Ability categories at creation, which
+    /// the rules otherwise gate behind a Virtue: "a character must have a Virtue to
+    /// buy Academic, Arcane, Martial, or Supernatural Abilities at character
+    /// creation … although other Virtues (and some Flaws) also grant access to some
+    /// of these Abilities."
+    ///
+    /// Only needed for a Virtue that permits *without* granting experience — a
+    /// [`Effect::RestrictedAbilityXp`] pool already implies permission for what it
+    /// funds (Warrior, Arcane Lore), since the grant would otherwise be unspendable.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2315.
+    AbilityAuthorization {
+        /// Specific Abilities permitted.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        abilities: Vec<Id>,
+        /// Whole categories permitted.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        categories: Vec<AbilityCategory>,
+    },
     /// Adjusts the character's derived Confidence Score and Points (on top of the
     /// type profile's defaults). Signed and additive; e.g. Self-Confident grants
     /// `{ score: 1, points: 2 }` (raising the 1/3 default to 2/5). Confidence is

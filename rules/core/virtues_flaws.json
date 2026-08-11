@@ -499,8 +499,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "category": "personality",
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "ability_authorization", "abilities": ["ability.dead_language"] }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5865, 5868] }
   },
   {

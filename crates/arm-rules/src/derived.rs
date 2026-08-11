@@ -250,6 +250,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
+                | Effect::AbilityAuthorization { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
