@@ -327,9 +327,11 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Data: 78 abilities covering all five categories, including the full
   early-childhood restricted list (`:2378`: Area Lore, Athletics, Awareness,
   Brawl, Charm, Folk Ken, Guile, Living Language, Stealth, Survival, Swim).
-  Native language is a *specialty* of `ability.living_language`, not a separate
-  id. Parameterized abilities carry a `parameter` key (`area` for (Area) Lore,
-  `language` for the (Living/Dead Language) abilities).
+  Native language is not a separate id: it is one *instance* of
+  `ability.living_language`, told apart by the row's `parameter` (the language
+  name), which is what `LifeStagePlan::native_language` names. Parameterized
+  abilities carry a `parameter` key (`area` for (Area) Lore, `language` for the
+  (Living/Dead Language) abilities).
 - The `*` marker (`requires_training` flag): an *asterisked* Ability cannot be
   used without at least one experience point in it — there is no untrained roll.
   > "Characters without this Virtue cannot even attempt rolls on an asterisked
@@ -2471,8 +2473,9 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `life_stage_magus_guided_unsupported` (error, `abilities`, no args) whenever the
   entity's type profile is `is_magus` and a plan is present — read from the profile
   flag, never a type id. A magus keeps the directly-entered pool, which is fully
-  functional, and 6b3b additionally disables the guided choice in the UI, so this
-  code catches a hand-edited save. `later_life_years` carries the restriction in its
+  functional; 6b3b is to keep the guided funding mode off a magus in the UI as well,
+  so this code is the backstop for a hand-edited save (and, until that UI exists,
+  the only check there is). `later_life_years` carries the restriction in its
   own doc comment so the formula is not later mistaken for complete.
 
 #### Early childhood — 75 + 45, and the closed spread list
@@ -2524,7 +2527,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `from_serialized`, and a cached ruleset is trusted no further than a freshly
   parsed one.
 
-#### Sample Childhood packages (M6/6b3) — `childhood.rs`
+#### Sample Childhood packages (M6/6b3a) — `childhood.rs`
 
 > The following Ability packages can be taken to speed up character generation.
 > Each represents a particular sort of childhood. Note that you can spend the 45
@@ -2601,7 +2604,8 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `the_shipped_childhoods_file_is_canonically_ordered` checks the file's own
   `(ability, slot)` ordering, which nothing else can: entry order is deliberately
   preserved on load, so a mis-sorted file parses and validates happily.
-  Eleven further load-time rules guard the same data: every entry's ability
+  Twelve load-time rules guard this data in all: the two sum checks above, the
+  unpriceable-score report above, and these nine — every entry's ability
   resolves; a parameterized ability carries a `slot` (unless it is the native
   language, chosen once per character) and a plain one does not; slots are unique
   within a package; there is exactly **one** `native` entry (which is what makes
@@ -2634,6 +2638,14 @@ Abilities are bought with experience earned in blocks, not from one bank:
   rows' own `parameter` values, and a second copy could only diverge from them. The
   field is additive (`serde(default, skip_serializing_if)`), so `SCHEMA_VERSION`
   stays 14 and no migration is needed.
+- **A stored package does not narrow the 45-point pool.** Taking one leaves the
+  spread pool's eligibility exactly as `:2378` sets it — the closed eleven-ability
+  list — rather than restricting it to the abilities the package names. No passage
+  forbids the other eight once a package is taken, and `:2382` invites precisely
+  that adjustment, so narrowing would be a rule the rulebook does not state.
+  `effective.rs::xp_allocation` therefore never reads
+  `LifeStagePlan::childhood_package`; the pool it builds is identical whether a
+  package was taken or the 45 points were divided by hand.
 - **Applying a package is a monotone raise.** `childhood::apply_package`
   (`childhood.rs`) returns a **new** entity whose Ability rows are each brought to
   `max(existing, entry.score)`, keyed by `(ability, parameter)` — so a score bought
@@ -2697,8 +2709,19 @@ Abilities are bought with experience earned in blocks, not from one bank:
   the loaded ruleset does not ship — which a save written against another ruleset
   can. This is the *only* thing checked about the recorded package: what it granted
   stays uncross-checked, per `:2382` above.
-- **Deferred to the rest of 6b3:** the UI that offers the packages (6b3b) and the
-  `apply_childhood_package` command that carries an application across IPC.
+- **The application crosses IPC as a command.** `apply_childhood_package`
+  (`crates/arm-app/src/commands.rs`) takes the entity, the package id and the slot
+  values and returns `ChildhoodApplication`
+  (`ruleset_io::apply_childhood_package_loaded`): either the character the entity
+  becomes, or the rejections as localizable `ValidationIssue`s. A rejection is an
+  ordinary `Ok` outcome, not an `AppError` — an unanswered slot is a finding about
+  the form the player submitted, not a failed command — and no English prose crosses
+  the boundary, since the frontend renders the issues through the `issue-<code>`
+  Fluent path it already has.
+- **Deferred to 6b3b:** the UI that offers the packages — the funding-mode toggle,
+  the life-stage panel, and the package picker with its slot fields. Until it
+  exists, the catalogue, the applicator and the command ship with no surface
+  calling them.
 
 #### Later life — 15 experience points per year
 
@@ -2712,10 +2735,10 @@ Abilities are bought with experience earned in blocks, not from one bank:
 - Implementation: `life_stage.rs` — `LaterLifeRules`, `later_life_years` (age −
   childhood years) and `budget`. Later life is the **general pool**, since it funds
   anything the character may learn.
-- **Deferred (M6/6b2b):** the Virtue requirement for Academic/Arcane/Martial
-  Abilities (`:2315` names Educated / Arcane Lore / Warrior). Only the Supernatural
-  half is enforced today, by the pre-existing `supernatural_ability_requires_virtue`
-  — so the general pool currently funds an Academic Ability with no Virtue.
+- The Virtue requirement this passage restates for Academic/Arcane/Martial
+  Abilities (`:2315` names Educated / Arcane Lore / Warrior) **landed in M6/6b2b** —
+  see **Access to Academic / Arcane / Martial Abilities** below. Supernatural keeps
+  its own stricter check (`supernatural_ability_requires_virtue`).
 
 #### Wealthy / Poor — the rate, and who may take them
 
