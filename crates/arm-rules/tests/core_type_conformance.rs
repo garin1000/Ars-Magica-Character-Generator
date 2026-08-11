@@ -30,6 +30,7 @@ fn full_ruleset() -> Ruleset {
         equipment: Some(include_str!("../../../rules/core/equipment.json")),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
+        childhoods: None,
     })
     .expect("shipped core ruleset loads")
 }

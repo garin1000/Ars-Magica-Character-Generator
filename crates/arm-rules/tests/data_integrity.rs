@@ -39,6 +39,7 @@ fn load_ruleset_with_spells() -> Ruleset {
         equipment: None,
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
+        childhoods: None,
     })
     .unwrap()
 }
@@ -62,6 +63,7 @@ fn load_ruleset_with_mastery_abilities() -> Ruleset {
         equipment: None,
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
+        childhoods: None,
     })
     .unwrap()
 }
@@ -83,6 +85,7 @@ fn load_ruleset_with_equipment() -> Ruleset {
         equipment: Some(include_str!("../../../rules/core/equipment.json")),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
+        childhoods: None,
     })
     .unwrap()
 }
@@ -471,6 +474,7 @@ fn weapon_with_non_combat_ability_rejected_at_load() {
         equipment: Some(equipment),
         characteristics: None,
         life_stages: None,
+        childhoods: None,
     })
     .unwrap_err();
     assert!(
@@ -500,6 +504,7 @@ fn weapon_with_unknown_ability_rejected_at_load() {
         equipment: Some(equipment),
         characteristics: None,
         life_stages: None,
+        childhoods: None,
     })
     .unwrap_err();
     assert!(
@@ -1475,6 +1480,7 @@ fn load_full_ruleset() -> Ruleset {
         equipment: Some(include_str!("../../../rules/core/equipment.json")),
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
+        childhoods: None,
     })
     .unwrap()
 }

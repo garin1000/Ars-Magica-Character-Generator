@@ -417,6 +417,9 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         // Likewise: an empty life-stages file means the ruleset ships no life
         // stages, leaving `Entity::xp_pool` the only source of experience.
         life_stages: (!life_stages_json.is_empty()).then_some(life_stages_json.as_str()),
+        // The Sample Childhood package file is not shipped yet, so the app offers
+        // no packages; reading it lands with the data file itself.
+        childhoods: None,
     })?;
     // Load the requested language's rules text. For any non-English language,
     // English is loaded as a per-field fallback so a not-yet-translated string

@@ -825,6 +825,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap()
     }
@@ -899,6 +900,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap()
     }
@@ -1243,6 +1245,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap()
     }
@@ -1933,6 +1936,7 @@ mod tests {
             equipment: None,
             characteristics: Some(characteristics),
             life_stages: None,
+            childhoods: None,
         })
         .unwrap()
     }
@@ -5485,6 +5489,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap()
     }
@@ -5759,6 +5764,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap()
     }
@@ -6161,6 +6167,7 @@ mod tests {
             equipment: None,
             characteristics: Some(P7_CHARACTERISTICS),
             life_stages: None,
+            childhoods: None,
         })
         .unwrap()
     }
