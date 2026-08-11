@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store, type AbilityFunding } from '../state.svelte';
+  import ChildhoodPackagePicker from './ChildhoodPackagePicker.svelte';
 
   // Where the character's experience comes from: one total the player enters, or
   // the experience its life stages earn.
@@ -123,6 +124,10 @@
           />
         </label>
       </div>
+      <!-- Childhood comes after the native language it is measured against: a
+           package's native entry is bought in that language, and its own childhood
+           language must differ from it. -->
+      <ChildhoodPackagePicker />
     {/if}
   </div>
 {/if}
