@@ -3,13 +3,20 @@
 // validation result, and the active language/mode — and drives the live
 // validation loop with debouncing plus a sequence guard against stale results.
 
-import { mandatoryTraitRefs, sameSelection } from './derive';
+import {
+  firstBlockedPhaseIndex,
+  mandatoryTraitRefs,
+  phaseHasBlockingIssue,
+  sameSelection,
+  wizardPhases,
+} from './derive';
 import { buildBundle, translate, type Lang, type TranslateArgs } from './i18n';
 import * as ipc from './ipc';
 import type { CloseGuardLabels } from './ipc';
 import type {
   AppError,
   Characteristic,
+  CreationPhase,
   DerivedTotals,
   EffectiveScores,
   Entity,
@@ -221,13 +228,61 @@ class AppStore {
   filters = $state<PickerFilters>(defaultPickerFilters());
 
   /**
-   * Which screen the app is on: the startup choice screen or the character
-   * editor. The app boots on `start`; only {@link createCharacter} and a
-   * successful {@link open} enter the editor, and {@link newDocument} is the way
-   * back. While it is `start` the entity is a placeholder, not a character —
-   * which is why {@link revalidate} refuses to send it to the engine.
+   * Which screen the app is on: the startup choice screen, the guided wizard, or
+   * the character editor. The app boots on `start`; {@link createCharacter} and a
+   * successful {@link open} enter the editor, {@link startWizard} enters the
+   * wizard, and {@link newDocument} is the way back. While it is `start` the
+   * entity is a placeholder, not a character — which is why {@link revalidate}
+   * refuses to send it to the engine. The wizard's entity IS a character, so
+   * validation runs there normally.
    */
-  view = $state<'start' | 'editor'>('start');
+  view = $state<'start' | 'editor' | 'wizard'>('start');
+
+  /**
+   * Index of the wizard's current step within {@link wizardPhases}.
+   *
+   * Navigation state, deliberately not part of the entity: moving through the
+   * flow is not an edit, so it never dirties the document and a save records no
+   * progress through it.
+   */
+  wizardStep = $state(0);
+
+  /**
+   * The furthest step reached by advancing. Raised only by {@link wizardNext},
+   * never lowered by going back, so the rail can offer every step the user has
+   * already seen while still refusing to skip ahead into unseen ones.
+   */
+  wizardFurthest = $state(0);
+
+  /**
+   * The wizard's steps for the current character: the type profile's own ordered
+   * phases, then the terminal `review` step. Empty when no profile is loaded.
+   */
+  wizardPhases = $derived(wizardPhases(this.ruleset?.ruleset.type_profiles[this.entity.type_id]));
+
+  /** The phase the wizard is currently on. */
+  wizardPhase = $derived<CreationPhase>(this.wizardPhases[this.wizardStep] ?? 'review');
+
+  /**
+   * Whether the wizard may advance: the current phase carries no error.
+   *
+   * Errors only, so a warning never gates — which means a phase can be legal but
+   * empty (a magus may pass the House step with no House, since `house_unset` is
+   * an advisory). In Advisory mode the engine downgrades every error to a warning
+   * and in Silent mode it reports none, so in both the wizard stops gating
+   * entirely; the validation-mode control is the intended escape hatch.
+   */
+  wizardCanAdvance = $derived(!phaseHasBlockingIssue(this.result?.issues ?? [], this.wizardPhase));
+
+  /**
+   * Whether the wizard may finish: no error remains anywhere in the character.
+   *
+   * Deliberately wider than {@link wizardCanAdvance}: the findings no creation
+   * phase owns (equipment, Might, Warping, aging) gate no single step, and a phase
+   * the character type never declares has no step at all — Finish is where both
+   * still have to be answered.
+   */
+  wizardCanFinish = $derived(!(this.result?.issues ?? []).some((i) => i.severity === 'error'));
 
   // Absolute path of the document's current file (from the last Open or the last
   // Save As / first Save). `null` for a never-saved document, so Save behaves as
@@ -1462,9 +1517,12 @@ class AppStore {
         this.entity = loaded.entity;
         this.currentPath = loaded.path;
         this.#savedSnapshot = this.#snapshot();
-        // Opening is reachable from either screen, so a load always lands in the
-        // editor; a cancelled dialog leaves the current screen alone.
+        // Opening is reachable from any screen, so a load always lands in the
+        // editor; a cancelled dialog leaves the current screen alone. A save
+        // records no wizard progress, so an opened character is a finished
+        // document and never resumes mid-flow — hence the rail reset.
         this.view = 'editor';
+        this.#resetWizardNav();
         await this.revalidate();
       }
     } catch (e) {
@@ -1488,6 +1546,7 @@ class AppStore {
     const { id, version } = this.ruleset?.ruleset ?? this.entity.ruleset;
     this.entity = newEntity(id, version, '');
     this.view = 'start';
+    this.#resetWizardNav();
     this.currentPath = null;
     this.filters = defaultPickerFilters();
     this.result = null;
@@ -1512,6 +1571,19 @@ class AppStore {
    * through the debounce — like {@link setHouse}.
    */
   async createCharacter(typeId: string): Promise<void> {
+    this.#instantiateCharacter(typeId);
+    this.view = 'editor';
+    await this.revalidate();
+  }
+
+  /**
+   * Build a blank character of `typeId` and reset the document around it. The
+   * shared half of {@link createCharacter} and {@link startWizard} — one place
+   * seeds the profile's mandatory free traits, clears the current file, the
+   * picker filters and the last results, and re-seeds the saved baseline so a
+   * freshly created character is not dirty.
+   */
+  #instantiateCharacter(typeId: string): void {
     const { id, version } = this.ruleset?.ruleset ?? this.entity.ruleset;
     this.entity = newEntity(id, version, typeId);
     this.entity.selections = [...this.#mandatoryTraitRefs(typeId)].map((ref) => ({ ref }));
@@ -1521,8 +1593,80 @@ class AppStore {
     this.effective = null;
     this.derived = null;
     this.#savedSnapshot = this.#snapshot();
-    this.view = 'editor';
+  }
+
+  /**
+   * Create a character of `typeId` and walk it through the guided wizard.
+   *
+   * The same instantiation {@link createCharacter} performs — the wizard edits a
+   * real character from its first step, not a draft that is materialized at the
+   * end — followed by the wizard view and a rail reset. Validates immediately
+   * rather than through the debounce, so the first step is gated before the user
+   * can act on it.
+   */
+  async startWizard(typeId: string): Promise<void> {
+    this.#instantiateCharacter(typeId);
+    this.view = 'wizard';
+    this.#resetWizardNav();
     await this.revalidate();
+  }
+
+  /** Advance one step, unless the current phase holds an error. */
+  wizardNext(): void {
+    if (!this.wizardCanAdvance) return;
+    if (this.wizardStep >= this.wizardPhases.length - 1) return;
+    this.wizardStep += 1;
+    this.wizardFurthest = Math.max(this.wizardFurthest, this.wizardStep);
+  }
+
+  /**
+   * Step back one. Never gated: the user must always be able to reach the step
+   * that needs fixing, including the one they have just broken.
+   */
+  wizardBack(): void {
+    this.wizardStep = Math.max(this.wizardStep - 1, 0);
+  }
+
+  /**
+   * Jump to an already-visited step from the rail.
+   *
+   * Forward jumps are held to the same gate as Next: the jump clamps to the first
+   * blocking phase between here and there, **including the step being left**.
+   * Otherwise the rail would be a way around the very gate that blocks Next.
+   * Backward jumps are free, like {@link wizardBack}.
+   */
+  wizardGoTo(step: number): void {
+    if (step < 0 || step > this.wizardFurthest) return;
+    if (step <= this.wizardStep) {
+      this.wizardStep = step;
+      return;
+    }
+    const blocked = firstBlockedPhaseIndex(
+      this.wizardPhases,
+      this.result?.issues ?? [],
+      this.wizardStep,
+      step,
+    );
+    this.wizardStep = blocked ?? step;
+  }
+
+  /**
+   * Leave the wizard for the editor, with the character exactly as the wizard left
+   * it. Blocked while any error remains ({@link wizardCanFinish}).
+   *
+   * Nothing about the entity changes, so this deliberately does not revalidate —
+   * the results on screen are already the ones for this character.
+   */
+  finishWizard(): void {
+    if (!this.wizardCanFinish) return;
+    this.view = 'editor';
+    this.#resetWizardNav();
+  }
+
+  /** Send the rail back to the first step. */
+  #resetWizardNav(): void {
+    this.wizardStep = 0;
+    this.wizardFurthest = 0;
   }
 
   /**
@@ -1553,6 +1697,10 @@ class AppStore {
     // pending debounced pass, retire any in-flight one through the sequence
     // guard, and clear a banner the validation path itself raised (never a file
     // operation's, which shares the channel and outlives this screen).
+    //
+    // Tests `start` specifically, NOT `!== 'editor'`: the wizard's entity is a
+    // real character and must be validated on every keystroke, since that is what
+    // gates its steps. Do not "tidy" this into a negation.
     if (this.view === 'start') {
       clearTimeout(this.#timer);
       this.#timer = undefined;

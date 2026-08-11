@@ -4,6 +4,10 @@ import {
   abilityDisplayName,
   abilityLabel,
   abilityXpSpent,
+  firstBlockedPhaseIndex,
+  issuesForPhase,
+  phaseHasBlockingIssue,
+  wizardPhases,
   effectiveSpellMastery,
   spellMasteryXpSpent,
   artAbbreviation,
@@ -48,6 +52,7 @@ import type {
   Ability,
   Art,
   CharacteristicRules,
+  CreationPhase,
   Entity,
   EntityTypeProfile,
   Grant,
@@ -55,6 +60,7 @@ import type {
   LocalizedRuleset,
   PointItem,
   Spell,
+  ValidationIssue,
 } from './types';
 
 // --- Fixtures ---------------------------------------------------------------
@@ -1960,5 +1966,136 @@ describe('formatSigned', () => {
   it('uses an ASCII hyphen-minus (U+002D) for negatives, not the math minus U+2212', () => {
     expect(formatSigned(-2)).toBe('-2');
     expect(formatSigned(-2)).not.toContain('−');
+  });
+});
+
+// --- the guided wizard's phase helpers --------------------------------------
+
+describe('wizardPhases', () => {
+  function profile(phases: CreationPhase[]): EntityTypeProfile {
+    return {
+      id: 't',
+      budget: { virtue_points: 10, flaw_points: 10 },
+      creation_phases: phases,
+    };
+  }
+
+  it("walks the profile's declared order, then its own Review step", () => {
+    // The magus order is the interesting one: the House step comes BEFORE
+    // Virtues & Flaws, because the House grants a free Virtue that the V/F
+    // budget then has to account for.
+    expect(
+      wizardPhases(profile(['concept', 'type', 'house_specialisation', 'virtues_flaws'])),
+    ).toEqual(['concept', 'type', 'house_specialisation', 'virtues_flaws', 'review']);
+  });
+
+  it('appends Review exactly once, and never a second one', () => {
+    const phases = wizardPhases(profile(['concept']));
+    expect(phases.filter((p) => p === 'review')).toHaveLength(1);
+    expect(phases.at(-1)).toBe('review');
+  });
+
+  it('is a lone Review step for a type that declares no guided flow', () => {
+    expect(wizardPhases(profile([]))).toEqual(['review']);
+  });
+
+  it('is empty with no profile at all, so the wizard has nothing to show', () => {
+    expect(wizardPhases(undefined)).toEqual([]);
+  });
+});
+
+describe('issuesForPhase', () => {
+  const issue = (code: string, phase: CreationPhase): ValidationIssue => ({
+    severity: 'error',
+    code,
+    phase,
+    args: {},
+  });
+
+  it("keeps only the step's own findings", () => {
+    const issues = [
+      issue('unbalanced_virtues', 'virtues_flaws'),
+      issue('characteristic_overspent', 'characteristics'),
+    ];
+    expect(issuesForPhase(issues, 'virtues_flaws').map((i) => i.code)).toEqual([
+      'unbalanced_virtues',
+    ]);
+  });
+
+  it('is empty for a phase nothing was filed under', () => {
+    expect(issuesForPhase([issue('unknown_type', 'review')], 'arts')).toEqual([]);
+  });
+});
+
+describe('phaseHasBlockingIssue', () => {
+  const issue = (
+    severity: 'error' | 'warning',
+    code: string,
+    phase: CreationPhase,
+  ): ValidationIssue => ({ severity, code, phase, args: {} });
+
+  it('blocks on an error in that phase', () => {
+    expect(
+      phaseHasBlockingIssue(
+        [issue('error', 'unbalanced_virtues', 'virtues_flaws')],
+        'virtues_flaws',
+      ),
+    ).toBe(true);
+  });
+
+  it('does not block on a warning — an advisory is not an illegal state', () => {
+    // house_unset is a warning, which is exactly why the wizard lets a magus
+    // walk past the House step with no House chosen (legal, if incomplete).
+    expect(
+      phaseHasBlockingIssue(
+        [issue('warning', 'house_unset', 'house_specialisation')],
+        'house_specialisation',
+      ),
+    ).toBe(false);
+  });
+
+  it("does not block on another phase's error", () => {
+    expect(
+      phaseHasBlockingIssue([issue('error', 'over_spell_levels', 'spells')], 'abilities'),
+    ).toBe(false);
+  });
+});
+
+describe('firstBlockedPhaseIndex', () => {
+  const phases: CreationPhase[] = [
+    'concept',
+    'characteristics',
+    'virtues_flaws',
+    'abilities',
+    'review',
+  ];
+  const err = (phase: CreationPhase): ValidationIssue => ({
+    severity: 'error',
+    code: 'x',
+    phase,
+    args: {},
+  });
+
+  it('is null when nothing in the range blocks', () => {
+    expect(firstBlockedPhaseIndex(phases, [err('review')], 0, 3)).toBeNull();
+  });
+
+  it('finds a phase blocked in the middle of the range', () => {
+    expect(firstBlockedPhaseIndex(phases, [err('virtues_flaws')], 0, 3)).toBe(2);
+  });
+
+  it('includes the departure phase, so a rail jump cannot smuggle past the Next gate', () => {
+    // Advance to 3, walk back to 1 and break it: jumping forward to 3 must clamp
+    // to 1, not sail over it. If the scan skipped `from`, the rail would be a way
+    // around the very gate that blocks Next.
+    expect(firstBlockedPhaseIndex(phases, [err('characteristics')], 1, 3)).toBe(1);
+  });
+
+  it('includes the destination phase', () => {
+    expect(firstBlockedPhaseIndex(phases, [err('abilities')], 1, 3)).toBe(3);
+  });
+
+  it('is null for a backwards range — Back is never gated', () => {
+    expect(firstBlockedPhaseIndex(phases, [err('characteristics')], 3, 1)).toBeNull();
   });
 });

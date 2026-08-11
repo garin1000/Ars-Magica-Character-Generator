@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type {
   Ability,
+  CreationPhase,
   Entity,
   EntityTypeProfile,
   House,
@@ -292,6 +293,270 @@ describe('createCharacter', () => {
     await store.createCharacter('companion');
 
     expect(store.filters).toEqual(defaultPickerFilters());
+  });
+});
+
+// --- the guided wizard (M6b1b) -----------------------------------------------
+
+describe('the guided wizard', () => {
+  /** A magus-like profile with a real, ordered flow for the rail to walk. */
+  const wizardProfiles = {
+    magus: {
+      ...magusProfiles.magus,
+      creation_phases: [
+        'concept',
+        'type',
+        'characteristics',
+        'house_specialisation',
+        'virtues_flaws',
+        'abilities',
+      ] as CreationPhase[],
+    },
+  };
+
+  /** Install a validation result the wizard's gating reads. */
+  function issues(...list: { phase: CreationPhase; severity?: 'error' | 'warning' }[]): void {
+    store.result = {
+      issues: list.map(({ phase, severity }) => ({
+        severity: severity ?? 'error',
+        code: 'x',
+        phase,
+        args: {},
+      })),
+    };
+  }
+
+  beforeEach(() => {
+    installRuleset([gift(), hermeticMagus()], [], wizardProfiles);
+    store.result = null;
+  });
+
+  describe('startWizard', () => {
+    it('creates a real character of the chosen type and enters the wizard', async () => {
+      await store.startWizard('magus');
+      expect(store.view).toBe('wizard');
+      expect(store.entity.type_id).toBe('magus');
+    });
+
+    it("seeds the profile's mandatory free traits, exactly as createCharacter does", async () => {
+      await store.startWizard('magus');
+      const refs = store.entity.selections!.map((s) => s.ref).sort();
+      expect(refs).toEqual(['virtue.hermetic_magus', 'virtue.the_gift']);
+    });
+
+    it('starts a clean document at the first step', async () => {
+      store.currentPath = '/tmp/old.armc';
+      await store.startWizard('magus');
+      expect(store.currentPath).toBeNull();
+      expect(store.dirty).toBe(false);
+      expect(store.wizardStep).toBe(0);
+      expect(store.wizardPhase).toBe('concept');
+    });
+
+    // The wizard's entity is a real character, unlike the start screen's
+    // placeholder — so validation must actually run, or nothing would ever gate.
+    it('validates immediately rather than standing down like the start screen', async () => {
+      vi.mocked(ipc.validateEntity).mockClear();
+      await store.startWizard('magus');
+      expect(ipc.validateEntity).toHaveBeenCalledTimes(1);
+    });
+
+    it("walks the profile's phases and then the wizard's own Review step", async () => {
+      await store.startWizard('magus');
+      expect(store.wizardPhases).toEqual([
+        'concept',
+        'type',
+        'characteristics',
+        'house_specialisation',
+        'virtues_flaws',
+        'abilities',
+        'review',
+      ]);
+    });
+  });
+
+  describe('navigation', () => {
+    beforeEach(async () => {
+      await store.startWizard('magus');
+    });
+
+    it('advances and raises the furthest-reached step', () => {
+      store.wizardNext();
+      expect(store.wizardStep).toBe(1);
+      expect(store.wizardFurthest).toBe(1);
+    });
+
+    it('refuses to advance past an error in the current phase', () => {
+      issues({ phase: 'concept' });
+      store.wizardNext();
+      expect(store.wizardStep).toBe(0);
+      expect(store.wizardCanAdvance).toBe(false);
+    });
+
+    it('advances past a warning — an advisory is not an illegal state', () => {
+      issues({ phase: 'concept', severity: 'warning' });
+      store.wizardNext();
+      expect(store.wizardStep).toBe(1);
+    });
+
+    it('goes back freely, even when the phase left behind is broken', () => {
+      store.wizardNext();
+      issues({ phase: 'type' });
+      store.wizardBack();
+      expect(store.wizardStep).toBe(0);
+    });
+
+    it('never lowers the furthest-reached step by going back', () => {
+      store.wizardNext();
+      store.wizardNext();
+      store.wizardBack();
+      expect(store.wizardStep).toBe(1);
+      expect(store.wizardFurthest).toBe(2);
+    });
+
+    it('is a no-op going back from the first step', () => {
+      store.wizardBack();
+      expect(store.wizardStep).toBe(0);
+    });
+
+    it('jumps to any already-visited step', () => {
+      store.wizardNext();
+      store.wizardNext();
+      store.wizardBack();
+      store.wizardGoTo(2);
+      expect(store.wizardStep).toBe(2);
+    });
+
+    it('refuses to jump past the furthest step reached', () => {
+      store.wizardGoTo(3);
+      expect(store.wizardStep).toBe(0);
+    });
+
+    it('clamps a forward jump at a broken step in between', () => {
+      store.wizardNext();
+      store.wizardNext();
+      store.wizardNext();
+      store.wizardBack();
+      store.wizardBack();
+      store.wizardBack();
+      issues({ phase: 'type' }); // step 1, between 0 and 3
+      store.wizardGoTo(3);
+      expect(store.wizardStep).toBe(1);
+    });
+
+    // The departure step counts too: Next is blocked when the current phase is
+    // broken, so a rail jump must not be a way around that same gate.
+    it('clamps a forward jump at the step being left, when that step is broken', () => {
+      store.wizardNext();
+      store.wizardNext();
+      store.wizardBack();
+      issues({ phase: 'type' }); // the step the user is standing on
+      store.wizardGoTo(2);
+      expect(store.wizardStep).toBe(1);
+    });
+  });
+
+  describe('finishing', () => {
+    beforeEach(async () => {
+      await store.startWizard('magus');
+    });
+
+    /** Walk to the terminal Review step. */
+    function reachReview(): void {
+      while (store.wizardPhase !== 'review') store.wizardNext();
+    }
+
+    it('lands in the editor with the character untouched', () => {
+      store.setIdentity('name', 'Marcus');
+      const before = JSON.stringify(store.entity);
+      reachReview();
+      store.finishWizard();
+      expect(store.view).toBe('editor');
+      expect(JSON.stringify(store.entity)).toBe(before);
+    });
+
+    it('refuses to finish while any error remains, in any phase', () => {
+      reachReview();
+      issues({ phase: 'abilities' });
+      expect(store.wizardCanFinish).toBe(false);
+      store.finishWizard();
+      expect(store.view).toBe('wizard');
+    });
+
+    // The Review step is the only place a finding no creation phase owns can be
+    // seen, so it must not block a *step* — but it must block Finish.
+    it('finishes over warnings, but not over a Review-phase error', () => {
+      reachReview();
+      issues({ phase: 'review', severity: 'warning' });
+      expect(store.wizardCanFinish).toBe(true);
+      issues({ phase: 'review' });
+      expect(store.wizardCanFinish).toBe(false);
+    });
+
+    it('resets the rail, so the next wizard starts at the first step', () => {
+      store.wizardNext();
+      reachReview();
+      store.finishWizard();
+      expect(store.wizardStep).toBe(0);
+      expect(store.wizardFurthest).toBe(0);
+    });
+  });
+
+  describe('the unsaved-changes guard', () => {
+    beforeEach(async () => {
+      await store.startWizard('magus');
+    });
+
+    it('does not dirty the document by navigating', () => {
+      store.wizardNext();
+      store.wizardBack();
+      expect(store.dirty).toBe(false);
+    });
+
+    it('dirties the document on a real edit, and mirrors that to the close guard', () => {
+      store.setIdentity('name', 'Marcus');
+      expect(store.dirty).toBe(true);
+      expect(store.closeGuardPayload().dirty).toBe(true);
+    });
+
+    it('leaves the wizard for the start screen through newDocument, rail reset', async () => {
+      store.wizardNext();
+      const leaving = store.newDocument();
+      if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+      await leaving;
+      expect(store.view).toBe('start');
+      expect(store.wizardStep).toBe(0);
+      expect(store.wizardFurthest).toBe(0);
+    });
+
+    // A save records no wizard progress, so an opened character is a finished
+    // document: it belongs in the editor, never mid-flow.
+    it('lands an opened character in the editor, not back in the wizard', async () => {
+      store.wizardNext();
+      vi.mocked(ipc.loadEntity).mockResolvedValue({
+        path: '/tmp/marcus.armc',
+        entity: {
+          schema_version: 11,
+          ruleset: { id: 'test', version: '1' },
+          entity_kind: 'character',
+          type_id: 'magus',
+          name: 'Marcus',
+          selections: [],
+          characteristics: {} as Entity['characteristics'],
+          characteristic_descriptions: {},
+          ability_scores: [],
+          xp_pool: 0,
+          art_scores: [],
+          personality_traits: [],
+          reputations: [],
+        },
+      });
+      const opening = store.open();
+      if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+      await opening;
+      expect(store.view).toBe('editor');
+      expect(store.wizardStep).toBe(0);
+    });
   });
 });
 
