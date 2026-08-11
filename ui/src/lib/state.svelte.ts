@@ -25,6 +25,7 @@ import type {
   Realm,
   ReputationType,
   Selection,
+  ValidationIssue,
   ValidationMode,
   ValidationResult,
 } from './types';
@@ -261,6 +262,20 @@ class AppStore {
   // {@link filters} it is UI state: never part of the entity, so it is never saved
   // and drafting never dirties the document.
   childhoodDraft = $state<ChildhoodDraft>(defaultChildhoodDraft());
+
+  /**
+   * Why the last attempt to take a Sample Childhood package was refused, for the
+   * picker to render beside the offending slots. Empty when there is nothing to say.
+   *
+   * Deliberately its own field rather than part of {@link result}: these findings
+   * describe the *command input* the player just submitted, not the state of the
+   * entity — which is unchanged by a rejection — so mixing them into the validation
+   * results `revalidate()` owns would put issues about a rejected form on a
+   * character sheet that never took it. Cleared on the next apply and by every draft
+   * edit, since a rejection pointing at a field the user has just corrected is worse
+   * than none at all.
+   */
+  childhoodRejections = $state<ValidationIssue[]>([]);
 
   /**
    * Which screen the app is on: the startup choice screen, the guided wizard, or
@@ -731,9 +746,12 @@ class AppStore {
    * drops the selection and every slot.
    *
    * Not validated and not debounced: a draft is a form the engine has not been shown
-   * yet, so there is nothing to check until it is submitted.
+   * yet, so there is nothing to check until it is submitted. Editing the draft does
+   * retire the last rejection ({@link childhoodRejections}), which was about the form
+   * as it stood before the edit.
    */
   setChildhoodDraftPackage(packageId: string | null): void {
+    this.childhoodRejections = [];
     if (packageId === null) {
       this.childhoodDraft = defaultChildhoodDraft();
       return;
@@ -749,6 +767,7 @@ class AppStore {
    * {@link setChildhoodDraftPackage}.
    */
   setChildhoodDraftSlot(slot: string, value: string): void {
+    this.childhoodRejections = [];
     const answer = value.trim();
     const slots = { ...this.childhoodDraft.slots };
     if (answer) {
@@ -776,6 +795,39 @@ class AppStore {
       if (asked.has(slot)) kept[slot] = answer;
     }
     return kept;
+  }
+
+  /**
+   * Take the drafted Sample Childhood package: submit it with its slot answers and
+   * keep whatever the engine decides. A no-op while no package is drafted — there is
+   * nothing to submit.
+   *
+   * The engine owns the whole mechanic, so this only routes its two outcomes. On
+   * `applied` the returned entity replaces the current one wholesale (the Ability
+   * rows the package writes and the record of the package taken arrive together);
+   * `dirty` needs no help, since it derives from the entity snapshot. On `rejected`
+   * the entity is left exactly as it was and the findings land in
+   * {@link childhoodRejections} for the picker to show against the offending slots.
+   */
+  async applyChildhoodPackage(): Promise<void> {
+    const packageId = this.childhoodDraft.packageId;
+    if (!packageId) return;
+    this.childhoodRejections = [];
+    try {
+      const outcome = await ipc.applyChildhoodPackage(
+        $state.snapshot(this.entity),
+        packageId,
+        $state.snapshot(this.childhoodDraft.slots),
+      );
+      if (outcome.status === 'rejected') {
+        this.childhoodRejections = outcome.issues;
+        return;
+      }
+      this.entity = outcome.entity;
+      await this.revalidate();
+    } catch (e) {
+      this.error = e as AppError;
+    }
   }
 
   /**
