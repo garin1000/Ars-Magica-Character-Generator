@@ -19,6 +19,7 @@ use crate::types::{
 };
 
 mod aging;
+mod authorization;
 mod balance;
 mod caps;
 mod equipment;
@@ -31,6 +32,7 @@ mod selections;
 mod warping;
 
 use aging::*;
+use authorization::*;
 use balance::*;
 use caps::*;
 use equipment::*;
@@ -125,6 +127,8 @@ impl fmt::Display for IssueSeverity {
 /// | `duplicate_ability` | error | abilities | `ability`, `count` |
 /// | `not_enough_xp` | error | abilities | `spent`, `pool`, `shortfall` |
 /// | `restricted_xp_unspent` | warning | abilities | `amount`, `used`, `unspent` |
+/// | `ability_category_requires_virtue` | error | abilities | `ability`, `category` |
+/// | `academic_ability_without_scholarly_language` | warning | abilities | `ability`, `min` |
 /// | `life_stage_xp_pool_conflict` | error | abilities | `xp_pool` |
 /// | `life_stage_age_before_childhood` | error | abilities | `age`, `min` |
 /// | `life_stage_native_language_unset` | error | abilities | (none) |
@@ -312,6 +316,16 @@ impl ValidationIssue {
     /// (Educated/Warrior/Privileged) has experience the character left unspent on
     /// its eligible Abilities; the rules waste it.
     pub const CODE_RESTRICTED_XP_UNSPENT: &'static str = "restricted_xp_unspent";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: an Ability whose category
+    /// the rules gate behind a Virtue (Academic/Arcane/Martial) is bought without
+    /// one. Supernatural has its own per-Ability rule
+    /// (`supernatural_ability_requires_virtue`).
+    pub const CODE_ABILITY_CATEGORY_REQUIRES_VIRTUE: &'static str =
+        "ability_category_requires_virtue";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: an Academic Ability is
+    /// bought without a scholarly language at 3+, which the rules normally require.
+    pub const CODE_ACADEMIC_ABILITY_WITHOUT_SCHOLARLY_LANGUAGE: &'static str =
+        "academic_ability_without_scholarly_language";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the character carries both
     /// a life-stage plan and a directly-entered experience pool. They are
     /// alternative ways of funding the same purchases, so both together would let
@@ -610,6 +624,8 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_aging(entity, ruleset, &mut issues);
         validate_xp_pool(entity, ruleset, &mut issues);
         validate_life_stage_plan(entity, ruleset, &mut issues);
+        validate_ability_authorization(entity, ruleset, type_profile, &mut issues);
+        validate_academic_language(entity, ruleset, &mut issues);
         validate_warping(entity, ruleset, type_profile, &mut issues);
     }
 

@@ -101,6 +101,19 @@ pub struct Ruleset {
     /// contract.
     #[serde(default)]
     pub(crate) age_ability_caps: AgeAbilityCaps,
+    /// Ability categories a character may only buy with a permitting Virtue
+    /// (Core:2315), loaded from `rules/core/abilities.json` beside the age caps.
+    /// Empty for a ruleset that gates none, which stands the rule down rather than
+    /// letting the engine invent the list. Serialized whole to the frontend; the
+    /// `categories_requiring_virtue` field name is a stable public contract.
+    #[serde(default)]
+    pub(crate) categories_requiring_virtue: BTreeSet<AbilityCategory>,
+    /// The scholarly-language expectation Academic Abilities normally carry
+    /// (Core:7151), loaded beside the categories above. `None` for a ruleset that
+    /// states none. Serialized whole to the frontend; the `scholarly_language` field
+    /// name is a stable public contract.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) scholarly_language: Option<ScholarlyLanguageRequirement>,
     /// The Characteristic point-buy rules (cost table + starting points), if the
     /// ruleset ships them. `None` for rulesets without a characteristics file.
     /// Serialized whole to the frontend; the `characteristic_rules` field name is
@@ -487,6 +500,32 @@ struct AbilitiesFile {
     /// scores by age, so it lives beside the Ability advancement table.
     #[serde(default)]
     age_ability_caps: AgeAbilityCaps,
+    /// Ability categories a character may only buy with a permitting Virtue
+    /// (Core:2315). Data, not a hardcoded list, so a ruleset that gates a different
+    /// set says so in its own file; empty means the rule is not enforced.
+    #[serde(default)]
+    categories_requiring_virtue: BTreeSet<AbilityCategory>,
+    /// The scholarly-language expectation for Academic Abilities (Core:7151), or
+    /// absent for a ruleset that states none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    scholarly_language: Option<ScholarlyLanguageRequirement>,
+}
+
+/// The scholarly language an Academic Ability normally expects, and at what score.
+///
+/// > learning an Academic Knowledge normally requires a Latin, Greek, Hebrew, or
+/// > Arabic score of at least 3, depending on the region of Europe you are from.
+///
+/// Data rather than four hardcoded ids: which language qualifies is regional, so the
+/// ruleset names the *ability* (the parameterized dead language) and the minimum
+/// score, and any instance of it satisfies the expectation. Source: Ars Magica -
+/// Definitive Edition (Core Rules).md:7151.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ScholarlyLanguageRequirement {
+    /// The ability a scholarly language is an instance of.
+    pub ability: Id,
+    /// The score it is normally expected to reach.
+    pub min_score: u8,
 }
 
 /// Pushes a `"duplicate <label> ID: '<id>'"` error for each id seen more than
@@ -751,6 +790,26 @@ impl Ruleset {
             "armor",
             &mut errors,
         );
+        // The scholarly-language expectation names an ability, which must resolve and
+        // be parameterized (a scholarly language is one instance of a dead language).
+        if let Some(requirement) = &abilities_file.scholarly_language {
+            match abilities_file
+                .abilities
+                .iter()
+                .find(|a| a.id == requirement.ability)
+            {
+                None => errors.push(format!(
+                    "scholarly-language requirement names unknown ability '{}'",
+                    requirement.ability
+                )),
+                Some(ability) if ability.parameter.is_none() => errors.push(format!(
+                    "scholarly-language ability '{}' takes no parameter, so it cannot name one language",
+                    requirement.ability
+                )),
+                Some(_) => {}
+            }
+        }
+
         // The childhood spread names abilities, so every id must resolve — a typo
         // would silently shrink the list the guided flow offers rather than fail.
         if let Some(rules) = &life_stage_rules {
@@ -862,6 +921,8 @@ impl Ruleset {
             abilities,
             advancement: abilities_file.advancement,
             age_ability_caps: abilities_file.age_ability_caps,
+            categories_requiring_virtue: abilities_file.categories_requiring_virtue,
+            scholarly_language: abilities_file.scholarly_language,
             characteristic_rules,
             life_stages: life_stage_rules,
             magnitude_points: derived_magnitude_points(),
@@ -1142,6 +1203,18 @@ impl Ruleset {
     /// The life-stage experience rules, if the ruleset ships them.
     pub fn life_stages(&self) -> Option<&LifeStageRules> {
         self.life_stages.as_ref()
+    }
+
+    /// Ability categories that may only be bought with a permitting Virtue
+    /// (Core:2315). Empty for a ruleset that gates none.
+    pub fn categories_requiring_virtue(&self) -> &BTreeSet<AbilityCategory> {
+        &self.categories_requiring_virtue
+    }
+
+    /// The scholarly-language expectation for Academic Abilities (Core:7151), if the
+    /// ruleset states one.
+    pub fn scholarly_language_requirement(&self) -> Option<&ScholarlyLanguageRequirement> {
+        self.scholarly_language.as_ref()
     }
 
     /// Iterates over point items of the given [`ItemKind`].
@@ -1849,6 +1922,7 @@ impl Ruleset {
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
+                | Effect::AbilityAuthorization { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::GrantsReputation { .. }
                 | Effect::MightGrant { .. }
@@ -3870,6 +3944,7 @@ mod tests {
                 "art_advancement",
                 "art_type_order",
                 "arts",
+                "categories_requiring_virtue",
                 "characteristic_rules",
                 "houses",
                 "id",

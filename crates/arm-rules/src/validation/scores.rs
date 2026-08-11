@@ -162,6 +162,7 @@ pub(crate) fn validate_characteristic_limit_preconditions(
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
+                | Effect::AbilityAuthorization { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
