@@ -70,10 +70,15 @@ pub struct LaterLifeRules {
 /// A character's life-stage *choices* — never its resolved numbers.
 ///
 /// Saves store choices, not derived values, so this records only what the player
-/// decided: which language is native, and (from 6b3 on) which Sample Childhood
-/// package was applied and what its parameterized slots were filled with. Every
-/// figure follows from these plus [`Entity::age`] and the ruleset, so a rules edit
-/// re-derives an old save rather than leaving it with stale totals.
+/// decided: which language is native, and which Sample Childhood package (if any)
+/// was applied. Every figure follows from these plus [`Entity::age`] and the
+/// ruleset, so a rules edit re-derives an old save rather than leaving it with
+/// stale totals.
+///
+/// The package's parameterized slot values are deliberately NOT recorded here:
+/// they persist as the `parameter` of the Ability rows the package wrote, which is
+/// where the engine reads them, so keeping a second copy would only let the two
+/// representations diverge.
 ///
 /// Its presence is also the switch between the two ways of buying Abilities: with
 /// a plan the budget below is authoritative and [`Entity::xp_pool`] must be 0
@@ -88,6 +93,23 @@ pub struct LifeStagePlan {
     /// the player's own text, not an id.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub native_language: Option<String>,
+    /// The Sample Childhood package the player took, if any — a **record of the
+    /// decision**, nothing more. The Abilities it grants live in
+    /// [`Entity::ability_scores`] as ordinary bought rows, exactly as a
+    /// hand-divided 45 experience points would, so nothing is derived from this
+    /// field.
+    ///
+    /// It is deliberately **not** cross-checked against those rows: "Note that you
+    /// can spend the 45 experience points for yourself, as well"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2382) leaves a package open
+    /// to adjustment after it has been taken, so a character whose scores no longer
+    /// match the package is legal, not an error.
+    ///
+    /// `None` for a character who divided the childhood experience by hand — and for
+    /// every save written before the packages existed, which is why the field is
+    /// additive and needs no schema bump.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub childhood_package: Option<Id>,
 }
 
 /// The experience a life-stage plan earns, split into the blocks the rules grant
@@ -180,7 +202,7 @@ impl LifeStageRules {
 mod tests {
     use super::*;
     use crate::ruleset::Ruleset;
-    use crate::types::{Entity, EntityKind, Id, RulesetRef, Selection};
+    use crate::types::{Entity, EntityKind, Id, RulesetRef, SCHEMA_VERSION, Selection};
 
     /// The shipped file's shape, so a rename or a retype fails here.
     const SHIPPED: &str = r#"{
@@ -317,6 +339,47 @@ mod tests {
         assert_eq!(budget.later_life_rate, 15);
         assert_eq!(budget.later_life_xp, 300);
         assert_eq!(budget.total(), 420);
+    }
+
+    /// The chosen Sample Childhood package is recorded on the character, so it
+    /// survives a save/load round-trip; it is omitted from JSON when unset, so a
+    /// save written before the packages existed stays byte-compatible; and being
+    /// additive it bumps no schema version of its own — exactly the
+    /// `warping_choices` precedent.
+    #[test]
+    fn the_chosen_childhood_package_roundtrips_and_is_schema_stable() {
+        let mut entity = companion(vec![]);
+        // A fresh entity has no plan at all, so certainly no package.
+        let json = serde_json::to_string(&entity).unwrap();
+        assert!(!json.contains("childhood_package"), "{json}");
+
+        // A plan whose package is unset omits the key rather than writing null.
+        entity.life_stages = Some(LifeStagePlan::default());
+        entity.normalize();
+        let json = serde_json::to_string(&entity).unwrap();
+        assert!(!json.contains("childhood_package"), "{json}");
+
+        entity.life_stages = Some(LifeStagePlan {
+            native_language: Some("German".into()),
+            childhood_package: Some(Id::new("childhood.athletic")),
+        });
+        entity.normalize();
+        let json = serde_json::to_string_pretty(&entity).unwrap();
+        assert!(
+            json.contains(r#""childhood_package": "childhood.athletic""#),
+            "{json}"
+        );
+        assert!(json.contains(r#""schema_version": 14"#), "{json}");
+
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(entity, back);
+        assert_eq!(back.schema_version, SCHEMA_VERSION);
+        assert_eq!(
+            back.life_stages
+                .as_ref()
+                .and_then(|plan| plan.childhood_package.as_ref()),
+            Some(&Id::new("childhood.athletic"))
+        );
     }
 
     /// Wealthy multiplies out across every year of later life, not once.

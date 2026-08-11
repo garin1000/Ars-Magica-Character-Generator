@@ -2555,6 +2555,18 @@ Abilities are bought with experience earned in blocks, not from one bank:
   table, whose order is unobservable): it is the order `slots()` asks the player
   for parameters in. Canonical `(ability, slot)` ordering is therefore a property
   of the shipped file, checked where the file is loaded.
+- **The chosen package is stored, but only as a record.**
+  `LifeStagePlan::childhood_package` (`life_stage.rs`) keeps the id the player took,
+  so a save says which childhood the character had. Nothing is derived from it: the
+  Abilities the package grants are ordinary bought `ability_scores` rows, funded by
+  the same restricted 45/75 pools a hand-divided childhood uses. It is also
+  deliberately **not** cross-checked against those rows — `:2382` ("Note that you can
+  spend the 45 experience points for yourself, as well") leaves a taken package open
+  to adjustment, so scores that no longer match the package are legal rather than an
+  error. The parameterized slot values are not stored either: they persist as the
+  rows' own `parameter` values, and a second copy could only diverge from them. The
+  field is additive (`serde(default, skip_serializing_if)`), so `SCHEMA_VERSION`
+  stays 14 and no migration is needed.
 - **Deferred to the rest of 6b3:** the shipped `childhoods.json` itself, the i18n
   names, applying a package to an entity —
   a **monotone raise**, `score = max(existing, entry.score)` keyed by
