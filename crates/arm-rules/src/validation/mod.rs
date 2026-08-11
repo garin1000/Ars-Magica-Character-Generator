@@ -70,102 +70,114 @@ impl fmt::Display for IssueSeverity {
 ///
 /// # Issue-code contract (the Fluent contract for the frontend)
 ///
-/// Every `code` the engine can emit, with the `args` keys it carries. The UI
-/// must define an `issue-<code>` message for each (see the workspace test
-/// `every_validation_code_has_a_fluent_key_in_each_locale`).
+/// Every `code` the engine can emit, with the creation phase it is attributed to
+/// and the `args` keys it carries. The UI must define an `issue-<code>` message
+/// for each (see the workspace test
+/// `every_validation_code_has_a_fluent_key_in_each_locale`), and the guided wizard
+/// filters each step's findings on the phase — so both columns are contract, not
+/// commentary, and both are asserted against the source by
+/// `contract_table_phase_column_covers_the_creation_phases` and
+/// `every_issue_emit_site_names_a_phase_the_table_lists`.
 ///
-/// | `code` | severity | `args` keys |
-/// |--------|----------|-------------|
-/// | `unknown_type` | error | `type_id` |
-/// | `unknown_ref` | error | `item` |
-/// | `wrong_entity_kind` | error | `item`, `entity_kind` |
-/// | `duplicate_selection` | error | `item`, `count`, `max` |
-/// | `over_budget_virtues` | error | `points`, `budget` |
-/// | `over_budget_flaws` | error | `points`, `budget` |
-/// | `unbalanced_virtues` | error | `virtue_points`, `flaw_points` |
-/// | `too_many_major_virtues` | error | `count`, `max` |
-/// | `too_many_major_flaws` | error | `count`, `max` |
-/// | `too_many_minor_flaws` | error | `count`, `max` |
-/// | `too_many_tainted_virtues` | warning | `tainted`, `total` |
-/// | `too_many_tainted_flaws` | warning | `tainted`, `total` |
-/// | `too_many_major_<category>_flaws`† | error or warning | `count`, `max` |
-/// | `too_many_<category>_flaws`† | error or warning | `count`, `max` |
-/// | `too_many_major_<category>_virtues`† | error or warning | `count`, `max` |
-/// | `too_many_<category>_virtues`† | error or warning | `count`, `max` |
-/// | `prereq_not_met` | error | `item` |
-/// | `prereq_unevaluated` | warning | `item` |
-/// | `incompatible` | error | `item`, `other` |
-/// | `category_not_permitted` | error | `item`, `category` |
-/// | `forbidden_category` | error | `item`, `category` |
-/// | `missing_required_trait` | error | `item` |
-/// | `forbidden_trait` | error | `item` |
-/// | `missing_param` | error | `item`, `key` |
-/// | `unexpected_param` | error | `item`, `key` |
-/// | `unknown_param_value` | error | `item`, `key`, `value`, `domain` |
-/// | `gift_required` | error | (none) |
-/// | `gift_forbidden` | error | (none) |
-/// | `characteristic_out_of_range` | error | `characteristic`, `score`, `min`, `max` |
-/// | `characteristic_above_cap` | error | `characteristic`, `score`, `cap` |
-/// | `characteristic_below_floor` | error | `characteristic`, `score`, `floor` |
-/// | `characteristic_max_base_too_low` | error | `item`, `characteristic`, `base`, `min` |
-/// | `characteristic_min_base_too_high` | error | `item`, `characteristic`, `base`, `max` |
-/// | `characteristic_overspent` | error | `cost`, `points` |
-/// | `characteristic_points_unspent` | warning | `cost`, `points` |
-/// | `unknown_ability` | error | `ability` |
-/// | `duplicate_ability` | error | `ability`, `count` |
-/// | `not_enough_xp` | error | `spent`, `pool`, `shortfall` |
-/// | `restricted_xp_unspent` | warning | `amount`, `used`, `unspent` |
-/// | `ability_parameter_required` | error | `ability` |
-/// | `ability_score_out_of_range` | error | `ability`, `score`, `max` |
-/// | `ability_bonus_dangling_target` | error | `item`, `ability`, `parameter` |
-/// | `unknown_art` | error | `art` |
-/// | `duplicate_art` | error | `art`, `count` |
-/// | `art_score_out_of_range` | error | `art`, `score`, `max` |
-/// | `house_choice_unresolved` | error | `house`, `choice_key` |
-/// | `house_grant_constraint` | error | `house`, `choice_key`, `item` |
-/// | `house_unset` | warning | (none) |
-/// | `missing_hermetic_flaw` | warning | (none) |
-/// | `mythic_type_unset` | warning | (none) |
-/// | `mythic_choice_unresolved` | error | `mythic_type`, `choice_key` |
-/// | `mythic_grant_constraint` | error | `mythic_type`, `choice_key`, `item` |
-/// | `mythic_required_trait_missing` | warning | `item` |
-/// | `unknown_spell` | error | `spell` |
-/// | `duplicate_spell` | error | `spell`, `count` |
-/// | `spell_level_unresolved` | warning | `spell` |
-/// | `over_spell_levels` | error | `used`, `budget`, `over` |
-/// | `spell_level_exceeds_cap` | error | `spell`, `level`, `cap` |
-/// | `ability_above_age_cap` | error | `ability`, `score`, `cap`, `age` |
-/// | `supernatural_ability_requires_virtue` | error | `ability` |
-/// | `personality_trait_out_of_range` | error | `name`, `value`, `max` |
-/// | `reputation_not_granted` | error | `kind`, `content` |
-/// | `over_item_level` | error | `used`, `budget`, `over` |
-/// | `multiple_magical_foci` | error | `count` |
-/// | `spell_ritual_legality` | error | `spell`, `level` |
-/// | `unknown_mastery_ability` | error | `spell`, `ability` |
-/// | `too_many_mastery_abilities` | error | `spell`, `chosen`, `mastery` |
-/// | `duplicate_mastery_ability` | error | `spell`, `ability`, `count` |
-/// | `over_power_levels` | error | `used`, `budget`, `over` |
-/// | `might_realm_mismatch` | warning | `base`, `granted` |
-/// | `excessive_aging_reduction` | warning | `characteristic`, `reduction`, `min` |
-/// | `unknown_equipment` | error | `item` |
-/// | `equipment_min_strength` | warning | `item`, `required`, `strength` |
-/// | `shield_with_two_handed_weapon` | warning | (none) |
-/// | `warping_owed_minor_flaws` | warning | `count` |
-/// | `warping_owed_supernatural_virtues` | warning | `count` |
-/// | `warping_owed_major_flaws` | warning | `count` |
-/// | `warping_fill_constraint` | error | `choice_key`, `item` |
-/// | `warping_fill_ineligible` | error | `choice_key`, `item` |
-/// | `warping_fill_excess` | error | `choice_key` |
+/// A code listed under several phases is emitted from several places over
+/// different subject kinds; its phase is the caller's, not the code's.
+///
+/// | `code` | severity | phase | `args` keys |
+/// |--------|----------|-------|-------------|
+/// | `unknown_type` | error | review | `type_id` |
+/// | `unknown_ref` | error | virtues_flaws | `item` |
+/// | `wrong_entity_kind` | error | virtues_flaws | `item`, `entity_kind` |
+/// | `duplicate_selection` | error | virtues_flaws | `item`, `count`, `max` |
+/// | `over_budget_virtues` | error | virtues_flaws | `points`, `budget` |
+/// | `over_budget_flaws` | error | virtues_flaws | `points`, `budget` |
+/// | `unbalanced_virtues` | error | virtues_flaws | `virtue_points`, `flaw_points` |
+/// | `too_many_major_virtues` | error | virtues_flaws | `count`, `max` |
+/// | `too_many_major_flaws` | error | virtues_flaws | `count`, `max` |
+/// | `too_many_minor_flaws` | error | virtues_flaws | `count`, `max` |
+/// | `too_many_tainted_virtues` | warning | virtues_flaws | `tainted`, `total` |
+/// | `too_many_tainted_flaws` | warning | virtues_flaws | `tainted`, `total` |
+/// | `too_many_major_<category>_flaws`† | error or warning | virtues_flaws | `count`, `max` |
+/// | `too_many_<category>_flaws`† | error or warning | virtues_flaws | `count`, `max` |
+/// | `too_many_major_<category>_virtues`† | error or warning | virtues_flaws | `count`, `max` |
+/// | `too_many_<category>_virtues`† | error or warning | virtues_flaws | `count`, `max` |
+/// | `prereq_not_met` | error | virtues_flaws | `item` |
+/// | `prereq_unevaluated` | warning | virtues_flaws | `item` |
+/// | `incompatible` | error | virtues_flaws | `item`, `other` |
+/// | `category_not_permitted` | error | virtues_flaws | `item`, `category` |
+/// | `forbidden_category` | error | virtues_flaws | `item`, `category` |
+/// | `missing_required_trait` | error | virtues_flaws | `item` |
+/// | `forbidden_trait` | error | virtues_flaws | `item` |
+/// | `missing_param` | error | virtues_flaws, house_specialisation, mythic_type, spells, review | `item`, `key` |
+/// | `unexpected_param` | error | virtues_flaws, house_specialisation, mythic_type, review | `item`, `key` |
+/// | `unknown_param_value` | error | virtues_flaws, house_specialisation, mythic_type, spells, review | `item`, `key`, `value`, `domain` |
+/// | `gift_required` | error | virtues_flaws | (none) |
+/// | `gift_forbidden` | error | virtues_flaws | (none) |
+/// | `characteristic_out_of_range` | error | characteristics | `characteristic`, `score`, `min`, `max` |
+/// | `characteristic_above_cap` | error | characteristics | `characteristic`, `score`, `cap` |
+/// | `characteristic_below_floor` | error | characteristics | `characteristic`, `score`, `floor` |
+/// | `characteristic_max_base_too_low` | error | characteristics | `item`, `characteristic`, `base`, `min` |
+/// | `characteristic_min_base_too_high` | error | characteristics | `item`, `characteristic`, `base`, `max` |
+/// | `characteristic_overspent` | error | characteristics | `cost`, `points` |
+/// | `characteristic_points_unspent` | warning | characteristics | `cost`, `points` |
+/// | `unknown_ability` | error | abilities | `ability` |
+/// | `duplicate_ability` | error | abilities | `ability`, `count` |
+/// | `not_enough_xp` | error | abilities | `spent`, `pool`, `shortfall` |
+/// | `restricted_xp_unspent` | warning | abilities | `amount`, `used`, `unspent` |
+/// | `ability_parameter_required` | error | abilities | `ability` |
+/// | `ability_score_out_of_range` | error | abilities | `ability`, `score`, `max` |
+/// | `ability_bonus_dangling_target` | error | virtues_flaws | `item`, `ability`, `parameter` |
+/// | `unknown_art` | error | arts | `art` |
+/// | `duplicate_art` | error | arts | `art`, `count` |
+/// | `art_score_out_of_range` | error | arts | `art`, `score`, `max` |
+/// | `house_choice_unresolved` | error | house_specialisation | `house`, `choice_key` |
+/// | `house_grant_constraint` | error | house_specialisation | `house`, `choice_key`, `item` |
+/// | `house_unset` | warning | house_specialisation | (none) |
+/// | `missing_hermetic_flaw` | warning | virtues_flaws | (none) |
+/// | `mythic_type_unset` | warning | mythic_type | (none) |
+/// | `mythic_choice_unresolved` | error | mythic_type | `mythic_type`, `choice_key` |
+/// | `mythic_grant_constraint` | error | mythic_type | `mythic_type`, `choice_key`, `item` |
+/// | `mythic_required_trait_missing` | warning | virtues_flaws | `item` |
+/// | `unknown_spell` | error | spells | `spell` |
+/// | `duplicate_spell` | error | spells | `spell`, `count` |
+/// | `spell_level_unresolved` | warning | spells | `spell` |
+/// | `over_spell_levels` | error | spells | `used`, `budget`, `over` |
+/// | `spell_level_exceeds_cap` | error | spells | `spell`, `level`, `cap` |
+/// | `ability_above_age_cap` | error | abilities | `ability`, `score`, `cap`, `age` |
+/// | `supernatural_ability_requires_virtue` | error | abilities | `ability` |
+/// | `personality_trait_out_of_range` | error | personality_reputations | `name`, `value`, `max` |
+/// | `reputation_not_granted` | error | personality_reputations | `kind`, `content` |
+/// | `over_item_level` | error | review | `used`, `budget`, `over` |
+/// | `multiple_magical_foci` | error | virtues_flaws | `count` |
+/// | `spell_ritual_legality` | error | spells | `spell`, `level` |
+/// | `unknown_mastery_ability` | error | spells | `spell`, `ability` |
+/// | `too_many_mastery_abilities` | error | spells | `spell`, `chosen`, `mastery` |
+/// | `duplicate_mastery_ability` | error | spells | `spell`, `ability`, `count` |
+/// | `over_power_levels` | error | review | `used`, `budget`, `over` |
+/// | `might_realm_mismatch` | warning | review | `base`, `granted` |
+/// | `excessive_aging_reduction` | warning | review | `characteristic`, `reduction`, `min` |
+/// | `unknown_equipment` | error | review | `item` |
+/// | `equipment_min_strength` | warning | review | `item`, `required`, `strength` |
+/// | `shield_with_two_handed_weapon` | warning | review | (none) |
+/// | `warping_owed_minor_flaws` | warning | review | `count` |
+/// | `warping_owed_supernatural_virtues` | warning | review | `count` |
+/// | `warping_owed_major_flaws` | warning | review | `count` |
+/// | `warping_fill_constraint` | error | review | `choice_key`, `item` |
+/// | `warping_fill_ineligible` | error | review | `choice_key`, `item` |
+/// | `warping_fill_excess` | error | review | `choice_key` |
 ///
 /// † The per-category caps emit a code derived from the `flaw_category_caps` /
 /// `virtue_category_caps` entry's category slug: `too_many_<category>_flaws` /
 /// `too_many_<category>_virtues` (or the `too_many_major_<category>_…` form when
-/// the cap is `major_only`); severity follows the cap's `hard` flag. The shipped
-/// `personality`/`story` flaw caps thus produce `too_many_major_personality_flaws`
-/// (error), `too_many_personality_flaws` (warning), and `too_many_story_flaws`
-/// (warning), and the magus `hermetic` virtue cap produces
-/// `too_many_major_hermetic_virtues` (error); a new category requires its
-/// matching `issue-<code>` Fluent key.
+/// the cap is `major_only`); severity follows the cap's `hard` flag and the phase
+/// is always `virtues_flaws`. The shipped `personality`/`story` flaw caps thus
+/// produce `too_many_major_personality_flaws` (error), `too_many_personality_flaws`
+/// (warning), and `too_many_story_flaws` (warning), and the magus `hermetic`
+/// virtue cap produces `too_many_major_hermetic_virtues` (error); a new category
+/// requires its matching `issue-<code>` Fluent key.
+///
+/// Two phases appear in no row: `concept` (free text — nothing to violate) and
+/// `type` (fixed at creation; a bad one is `unknown_type`, a `review` finding).
+/// The test pins that list, so the first code filed under either must update it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ValidationIssue {
     /// Error or warning.
@@ -2137,6 +2149,214 @@ mod tests {
                 ValidationIssue::CODE_OVER_POWER_LEVELS
             ),
             CreationPhase::Review
+        );
+    }
+
+    /// The whole `validation/` source, test modules stripped, so a scan sees only
+    /// the emit sites that ship.
+    fn production_validation_source() -> String {
+        let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/src/validation");
+        let mut src = String::new();
+        for entry in std::fs::read_dir(dir).expect("read validation dir") {
+            let path = entry.expect("dir entry").path();
+            if path.extension().and_then(|e| e.to_str()) != Some("rs") {
+                continue;
+            }
+            let file = std::fs::read_to_string(&path).expect("read validation source");
+            let production = match file.find("#[cfg(test)]") {
+                Some(at) => &file[..at],
+                None => &file[..],
+            };
+            src.push_str(production);
+            src.push('\n');
+        }
+        src
+    }
+
+    /// `CODE_*` const name → its string value, read out of the source.
+    fn issue_code_consts(src: &str) -> BTreeMap<String, String> {
+        let marker = concat!("const ", "CODE_");
+        src.split(marker)
+            .skip(1)
+            .filter_map(|seg| {
+                let name = format!("CODE_{}", seg.split(':').next()?.trim());
+                let start = seg.find('"')? + 1;
+                let end = seg[start..].find('"')? + start;
+                Some((name, seg[start..end].to_string()))
+            })
+            .collect()
+    }
+
+    /// The contract table as `code → the phases its row lists`.
+    fn contract_table_phases(src: &str) -> BTreeMap<String, Vec<String>> {
+        src.lines()
+            .filter_map(|line| {
+                let line = line.trim_start().strip_prefix("///")?.trim();
+                // A row ends with `|` too, so drop the trailing empty cell.
+                let cells: Vec<&str> = line
+                    .strip_prefix('|')?
+                    .split('|')
+                    .filter(|c| !c.trim().is_empty())
+                    .collect();
+                if cells.len() < 4 {
+                    return None;
+                }
+                // Skip the header separator (`|---|---|…`).
+                if cells.iter().all(|c| c.trim().starts_with('-')) {
+                    return None;
+                }
+                let code = cells[0].trim().trim_matches('`').trim_end_matches('†');
+                // Skip the header row itself.
+                if code == "code" {
+                    return None;
+                }
+                let phases = cells[2]
+                    .split(',')
+                    .map(|p| p.trim().to_string())
+                    .filter(|p| !p.is_empty())
+                    .collect::<Vec<_>>();
+                if phases.is_empty() {
+                    return None;
+                }
+                Some((code.to_string(), phases))
+            })
+            .collect()
+    }
+
+    /// Phases no issue code can name, because they hold no rule the engine
+    /// checks: the concept is free text and the type is fixed at creation (a bad
+    /// type is `unknown_type`, which is a `review` finding). Asserted below, so
+    /// the first code filed under either forces this note to be updated.
+    const PHASES_WITH_NO_CODES: [CreationPhase; 2] = [CreationPhase::Concept, CreationPhase::Type];
+
+    /// The contract table's phase column is a real part of the frontend contract —
+    /// the wizard filters steps on it — so it may not drift from the emit sites or
+    /// invent a phase the engine has no variant for.
+    #[test]
+    fn contract_table_phase_column_covers_the_creation_phases() {
+        let src = production_validation_source();
+        let rows = contract_table_phases(&src);
+        assert!(
+            rows.len() >= 40,
+            "expected to find the contract table rows, found {}",
+            rows.len()
+        );
+
+        let known: BTreeSet<String> = CreationPhase::ALL.iter().map(|p| p.to_string()).collect();
+        let mut used = BTreeSet::new();
+        for (code, phases) in &rows {
+            for phase in phases {
+                assert!(
+                    known.contains(phase),
+                    "row `{code}` names '{phase}', which is not a CreationPhase"
+                );
+                used.insert(phase.clone());
+            }
+        }
+
+        let unused: BTreeSet<String> = known.difference(&used).cloned().collect();
+        let expected: BTreeSet<String> =
+            PHASES_WITH_NO_CODES.iter().map(|p| p.to_string()).collect();
+        assert_eq!(
+            unused, expected,
+            "the phases with no issue codes changed; update PHASES_WITH_NO_CODES and the table's footnote"
+        );
+    }
+
+    /// Every place the engine builds an issue must name a phase the code's table
+    /// row lists. This is the check that keeps attribution honest: the table is
+    /// documentation, and documentation drifts unless something reads it.
+    #[test]
+    fn every_issue_emit_site_names_a_phase_the_table_lists() {
+        let src = production_validation_source();
+        let consts = issue_code_consts(&src);
+        let rows = contract_table_phases(&src);
+
+        let mut sites = 0;
+        let mut derived_code_sites = 0;
+        let mut forwarded_phase_sites = 0;
+        // Split on the three constructors; each segment starts inside the call's
+        // argument list, where the code and the phase are the leading arguments.
+        for seg in src
+            .split("ValidationIssue::error(")
+            .skip(1)
+            .chain(src.split("ValidationIssue::warning(").skip(1))
+            .chain(src.split("ValidationIssue::new(").skip(1))
+        {
+            let window = &seg[..seg.len().min(600)];
+            sites += 1;
+
+            let phase = window
+                .find("CreationPhase::")
+                .map(|at| {
+                    window[at + "CreationPhase::".len()..]
+                        .chars()
+                        .take_while(char::is_ascii_alphanumeric)
+                        .collect::<String>()
+                })
+                .map(|variant| {
+                    CreationPhase::ALL
+                        .into_iter()
+                        .find(|p| format!("{p:?}") == variant)
+                        .unwrap_or_else(|| panic!("emit site names unknown phase '{variant}'"))
+                        .to_string()
+                });
+
+            let code = window.find("CODE_").map(|at| {
+                let name: String = window[at..]
+                    .chars()
+                    .take_while(|c| c.is_ascii_uppercase() || *c == '_' || c.is_ascii_digit())
+                    .collect();
+                consts
+                    .get(&name)
+                    .unwrap_or_else(|| panic!("emit site names unknown const '{name}'"))
+                    .clone()
+            });
+
+            match (code, phase) {
+                (Some(code), Some(phase)) => {
+                    let listed = rows
+                        .get(&code)
+                        .unwrap_or_else(|| panic!("code `{code}` has no contract table row"));
+                    assert!(
+                        listed.contains(&phase),
+                        "an emit site files `{code}` under '{phase}', which its table row ({listed:?}) does not list"
+                    );
+                }
+                // The per-category cap codes are built with `format!`, so the site
+                // carries no const; the table's `†` footnote covers them.
+                (None, Some(_)) => derived_code_sites += 1,
+                // A site that forwards its caller's phase (the shared parameter
+                // checks) must be a code the table lists under several phases —
+                // that is exactly why the phase is a parameter there.
+                (Some(code), None) => {
+                    forwarded_phase_sites += 1;
+                    let listed = rows
+                        .get(&code)
+                        .unwrap_or_else(|| panic!("code `{code}` has no contract table row"));
+                    assert!(
+                        listed.len() > 1,
+                        "`{code}` forwards its caller's phase but its row lists only {listed:?}"
+                    );
+                }
+                (None, None) => panic!("an issue emit site names neither a code nor a phase"),
+            }
+        }
+
+        // 79 shipping sites today (the six literals in the test module are
+        // stripped). A floor, not an equality, so adding a validator is not a
+        // failing test — but a scanner that stops matching is.
+        assert!(
+            sites >= 79,
+            "expected to find the issue emit sites, found {sites}"
+        );
+        assert!(
+            derived_code_sites >= 2,
+            "expected the format!-built category-cap sites, found {derived_code_sites}"
+        );
+        assert!(
+            forwarded_phase_sites >= 3,
+            "expected the shared parameter-check sites, found {forwarded_phase_sites}"
         );
     }
 
