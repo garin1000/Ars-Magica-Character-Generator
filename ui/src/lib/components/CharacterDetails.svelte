@@ -1,12 +1,10 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import {
-    eligibleForConstraint,
-    formatSigned,
-    grantItemLabel,
-    groupWarpingOwedGrants,
-  } from '../derive';
+  import { eligibleForConstraint, grantItemLabel, groupWarpingOwedGrants } from '../derive';
   import ParameterPicker from './ParameterPicker.svelte';
+  import IdentityFields from './IdentityFields.svelte';
+  import PersonalityTraits from './PersonalityTraits.svelte';
+  import Reputations from './Reputations.svelte';
   import {
     CHARACTERISTICS,
     type Characteristic,
@@ -34,10 +32,6 @@
   const trueFaith = $derived(store.effective?.true_faith_score ?? 0);
   // Starting enchanted-device level budget (Magic Items/Redcap); hidden when 0.
   const itemLevels = $derived(store.effective?.item_level_budget ?? 0);
-  const traits = $derived(store.entity.personality_traits ?? []);
-  const reputations = $derived(store.entity.reputations ?? []);
-  // Reputation input is offered only for the kinds a V/F grants (Core:2514).
-  const grants = $derived(store.effective?.reputation_grants ?? []);
   const agingPoints = $derived(store.entity.aging_points ?? {});
   const twilightScars = $derived(store.entity.twilight_scars ?? []);
   const warpingEffect = $derived(store.entity.warping_effect ?? '');
@@ -91,15 +85,6 @@
     store.setApparentAge(raw === '' ? null : Number(raw));
   }
 
-  function onBirthYear(event: Event) {
-    const raw = (event.currentTarget as HTMLInputElement).value;
-    store.setBirthYear(raw === '' ? null : Number(raw));
-  }
-
-  function repKindLabel(kind: string): string {
-    return store.t(`reputation-type-${kind}`);
-  }
-
   function charLabel(characteristic: Characteristic): string {
     return store.t(`characteristic-${characteristic}`);
   }
@@ -111,65 +96,7 @@
 
 <section class="panel character-details">
   {#if store.ruleset}
-    <div class="detail-section">
-      <h3 class="detail-label">{store.t('identity-label')}</h3>
-      <label class="field">
-        <span>{store.t('identity-concept')}</span>
-        <textarea
-          class="concept-input"
-          rows="3"
-          value={store.entity.concept ?? ''}
-          oninput={(e) =>
-            store.setIdentity('concept', (e.currentTarget as HTMLTextAreaElement).value)}
-          placeholder={store.t('identity-concept-placeholder')}
-          data-testid="identity-concept"
-        ></textarea>
-      </label>
-      <label class="field">
-        <span>{store.t('identity-gender')}</span>
-        <input
-          value={store.entity.gender ?? ''}
-          oninput={(e) => store.setIdentity('gender', (e.currentTarget as HTMLInputElement).value)}
-          data-testid="identity-gender"
-        />
-      </label>
-      <label class="field">
-        <span>{store.t('identity-birth-year')}</span>
-        <input
-          type="number"
-          min="-2147483648"
-          max="2147483647"
-          value={store.entity.birth_year ?? ''}
-          oninput={onBirthYear}
-          data-testid="identity-birth-year"
-        />
-      </label>
-      <label class="field">
-        <span>{store.t('identity-sigil')}</span>
-        <input
-          value={store.entity.sigil ?? ''}
-          oninput={(e) => store.setIdentity('sigil', (e.currentTarget as HTMLInputElement).value)}
-          data-testid="identity-sigil"
-        />
-      </label>
-      <label class="field">
-        <span>{store.t('identity-covenant')}</span>
-        <input
-          value={store.entity.covenant_name ?? ''}
-          oninput={(e) =>
-            store.setIdentity('covenant_name', (e.currentTarget as HTMLInputElement).value)}
-          data-testid="identity-covenant"
-        />
-      </label>
-      <label class="field">
-        <span>{store.t('identity-parens')}</span>
-        <input
-          value={store.entity.parens ?? ''}
-          oninput={(e) => store.setIdentity('parens', (e.currentTarget as HTMLInputElement).value)}
-          data-testid="identity-parens"
-        />
-      </label>
-    </div>
+    <IdentityFields />
 
     <div class="detail-field">
       <label class="field">
@@ -439,111 +366,8 @@
       </button>
     </div>
 
-    <div class="detail-section">
-      <h3 class="detail-label">{store.t('personality-label')}</h3>
-      <ul class="trait-list" data-testid="personality-list">
-        {#each traits as trait, i (i)}
-          <li>
-            <input
-              class="trait-name"
-              placeholder={store.t('personality-name-placeholder')}
-              value={trait.name}
-              oninput={(e) =>
-                store.setPersonalityTraitName(i, (e.currentTarget as HTMLInputElement).value)}
-              data-testid="personality-name-{i}"
-            />
-            <span class="spinner">
-              <button
-                type="button"
-                class="icon-btn"
-                aria-label={store.t('characteristic-decrement')}
-                onclick={() => store.setPersonalityTraitValue(i, trait.value - 1)}
-                data-testid="personality-dec-{i}"
-              >
-                -
-              </button>
-              <span class="spinner-value" data-testid="personality-value-{i}">
-                {formatSigned(trait.value)}
-              </span>
-              <button
-                type="button"
-                class="icon-btn"
-                aria-label={store.t('characteristic-increment')}
-                onclick={() => store.setPersonalityTraitValue(i, trait.value + 1)}
-                data-testid="personality-inc-{i}"
-              >
-                +
-              </button>
-            </span>
-            <button
-              type="button"
-              class="icon-btn"
-              aria-label={store.t('spell-remove')}
-              onclick={() => store.removePersonalityTraitAt(i)}
-              data-testid="personality-remove-{i}"
-            >
-              ×
-            </button>
-          </li>
-        {:else}
-          <li class="empty">{store.t('personality-empty')}</li>
-        {/each}
-      </ul>
-      <button
-        type="button"
-        onclick={() => store.addPersonalityTrait()}
-        data-testid="personality-add"
-      >
-        {store.t('personality-add')}
-      </button>
-    </div>
-
-    <div class="detail-section">
-      <h3 class="detail-label">{store.t('reputations-label')}</h3>
-      <ul class="reputation-list" data-testid="reputation-list">
-        {#each reputations as reputation, i (i)}
-          <li>
-            <span class="reputation-tag">
-              {repKindLabel(reputation.kind)}
-              {reputation.score}
-            </span>
-            <input
-              class="reputation-content"
-              placeholder={store.t('reputation-content-placeholder')}
-              value={reputation.content}
-              oninput={(e) =>
-                store.setReputationContent(i, (e.currentTarget as HTMLInputElement).value)}
-              data-testid="reputation-content-{i}"
-            />
-            <button
-              type="button"
-              class="icon-btn"
-              aria-label={store.t('spell-remove')}
-              onclick={() => store.removeReputationAt(i)}
-              data-testid="reputation-remove-{i}"
-            >
-              ×
-            </button>
-          </li>
-        {/each}
-      </ul>
-      {#if grants.length === 0}
-        <p class="empty" data-testid="reputation-empty">{store.t('reputation-empty')}</p>
-      {:else}
-        {#each grants as grant, gi (gi)}
-          <button
-            type="button"
-            onclick={() => store.addReputation(grant.kind, grant.score)}
-            data-testid="reputation-add-{grant.kind}"
-          >
-            {store.t('reputation-add', {
-              kind: repKindLabel(grant.kind),
-              score: String(grant.score),
-            })}
-          </button>
-        {/each}
-      {/if}
-    </div>
+    <PersonalityTraits />
+    <Reputations />
   {:else}
     <p>{store.t('loading')}</p>
   {/if}

@@ -5,6 +5,7 @@
   import LanguageSelector from './lib/components/LanguageSelector.svelte';
   import ModeToggle from './lib/components/ModeToggle.svelte';
   import StartScreen from './lib/components/StartScreen.svelte';
+  import CharacterBanner from './lib/components/CharacterBanner.svelte';
   import VirtueFlawTab from './lib/components/VirtueFlawTab.svelte';
   import CharacteristicPicker from './lib/components/CharacteristicPicker.svelte';
   import AbilityTab from './lib/components/AbilityTab.svelte';
@@ -46,16 +47,6 @@
   );
   const hasMythicType = $derived(
     store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.has_mythic_type ?? false,
-  );
-  // The character type is chosen once, when the character is created, so the
-  // editor displays it and never offers to change it. `translate()` echoes an
-  // unknown key back, so a save naming a type the loaded ruleset has no profile
-  // for gets its own key instead of rendering the raw slug. (The engine reports
-  // that save's `unknown_type` separately, so the real problem is still shown.)
-  const typeName = $derived(
-    store.ruleset?.ruleset.type_profiles[store.entity.type_id]
-      ? store.t(`type-${store.entity.type_id}`)
-      : store.t('type-unknown'),
   );
   // The Supernatural (Might) tab appears for a mythic-companion-capable type
   // (Devil Child, Nephilim) or once the character has an effective Might (any type
@@ -197,29 +188,7 @@
   {#if store.view === 'start'}
     <StartScreen />
   {:else}
-    <section class="char-banner">
-      <p class="char-type" data-testid="character-type">
-        <span class="char-type-label">{store.t('type-label')}</span>
-        <span class="char-type-value">{typeName}</span>
-      </p>
-      <input
-        class="name-input"
-        value={store.entity.name ?? ''}
-        oninput={(e) => store.setIdentity('name', (e.currentTarget as HTMLInputElement).value)}
-        placeholder={store.t('identity-name-placeholder')}
-        aria-label={store.t('identity-name')}
-        data-testid="identity-name"
-      />
-      <input
-        class="desc-input"
-        value={store.entity.description ?? ''}
-        oninput={(e) =>
-          store.setIdentity('description', (e.currentTarget as HTMLInputElement).value)}
-        placeholder={store.t('identity-description-placeholder')}
-        aria-label={store.t('identity-description')}
-        data-testid="identity-description"
-      />
-    </section>
+    <CharacterBanner />
 
     <div class="tabbar" role="tablist">
       {#each tabs as t (t.id)}
