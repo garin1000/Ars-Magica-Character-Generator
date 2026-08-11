@@ -14,7 +14,9 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
-use crate::types::Id;
+use crate::effective::selections_for_effects;
+use crate::ruleset::Ruleset;
+use crate::types::{Effect, Entity, Id};
 
 /// The life-stage experience rules, loaded from `rules/core/life_stages.json`.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -64,12 +66,43 @@ impl LifeStageRules {
     pub fn later_life_years(&self, age: u32) -> u32 {
         age.saturating_sub(self.childhood.years)
     }
+
+    /// Experience per year of later life for this character: the ruleset's base
+    /// rate, unless a selection replaces it ([`Effect::LaterLifeXpRate`] — Wealthy
+    /// 20, Poor 10).
+    ///
+    /// The rate is replaced, not adjusted, because the rules state it whole. If
+    /// several selections name a rate — which the shipped data prevents, since
+    /// Wealthy and Poor are the only two and both are Major General — the lowest
+    /// wins: nothing in the text ranks them, so the engine takes the conservative
+    /// reading rather than depending on declaration order.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2392, :2394.
+    pub fn later_life_rate(&self, entity: &Entity, ruleset: &Ruleset) -> u32 {
+        // The base rate is not one of the candidates: a named rate replaces it
+        // outright, so `min` is taken over the named rates only (or the base stands
+        // when nothing names one). Folding the base in would make Wealthy's 20 lose
+        // to it.
+        let mut named: Option<u32> = None;
+        for selection in selections_for_effects(entity, ruleset).iter() {
+            let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+                continue;
+            };
+            for effect in &item.effects {
+                if let Effect::LaterLifeXpRate { amount } = effect {
+                    named = Some(named.map_or(*amount, |current: u32| current.min(*amount)));
+                }
+            }
+        }
+        named.unwrap_or(self.later_life.xp_per_year)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Id;
+    use crate::ruleset::Ruleset;
+    use crate::types::{Entity, EntityKind, Id, RulesetRef, Selection};
 
     /// The shipped file's shape, so a rename or a retype fails here.
     const SHIPPED: &str = r#"{
@@ -117,5 +150,69 @@ mod tests {
     #[test]
     fn an_age_inside_childhood_earns_no_later_life_years() {
         assert_eq!(rules().later_life_years(3), 0);
+    }
+
+    /// A ruleset carrying the two rate-bearing items, so the per-year rate can be
+    /// read off a character's selections rather than hardcoded.
+    fn rate_ruleset() -> Ruleset {
+        let items = r#"[
+          { "id": "virtue.wealthy", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "major", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "later_life_xp_rate", "amount": 20 }] },
+          { "id": "flaw.poor", "kind": "flaw", "classification": "creation_effect",
+            "magnitude": "major", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "later_life_xp_rate", "amount": 10 }] },
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] }
+        ]"#;
+        let types = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"], "creation_phases": [] }
+        ]"#;
+        Ruleset::from_json("test", "1", items, types).unwrap()
+    }
+
+    fn companion(selections: Vec<&str>) -> Entity {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.selections = selections
+            .into_iter()
+            .map(|r| Selection::new(Id::new(r)))
+            .collect();
+        entity
+    }
+
+    /// Wealthy and Poor replace the yearly rate rather than adding to it: "get 20
+    /// experience points per year" / "get 10 experience points per year".
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2394.
+    #[test]
+    fn wealthy_and_poor_replace_the_yearly_rate() {
+        let rs = rate_ruleset();
+        let rules = rules();
+        assert_eq!(rules.later_life_rate(&companion(vec![]), &rs), 15);
+        assert_eq!(
+            rules.later_life_rate(&companion(vec!["virtue.wealthy"]), &rs),
+            20
+        );
+        assert_eq!(
+            rules.later_life_rate(&companion(vec!["flaw.poor"]), &rs),
+            10
+        );
+    }
+
+    /// The two are mutually exclusive in the shipped data, but nothing in the rules
+    /// text makes one override the other, so the engine takes the lowest rate it is
+    /// told about rather than picking by declaration order — the conservative
+    /// reading, and a deterministic one.
+    #[test]
+    fn conflicting_rates_resolve_to_the_lowest() {
+        let rs = rate_ruleset();
+        assert_eq!(
+            rules().later_life_rate(&companion(vec!["virtue.wealthy", "flaw.poor"]), &rs),
+            10
+        );
     }
 }

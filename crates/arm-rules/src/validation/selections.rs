@@ -349,6 +349,7 @@ pub(crate) fn validate_ability_bonus_targets(
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
+                | Effect::LaterLifeXpRate { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }

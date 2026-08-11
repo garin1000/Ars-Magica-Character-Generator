@@ -883,6 +883,10 @@
     "name": "Von übernatürlichem Wesen geplagt",
     "summary": "Ein übernatürliches Wesen mischt sich regelmäßig in dein Leben ein."
   },
+  "flaw.poor": {
+    "name": "Arm",
+    "summary": "Du bist ein armes Mitglied deiner sozialen Klasse: drei Quartale pro Jahr gehen dafür auf, über die Runden zu kommen, sodass dir ein Quartal weniger für jeden Fortschritt außer Exposition bleibt. Steht Magi nicht zur Verfügung, ebenso wenig jemandem, der vom Konvent unterhalten wird."
+  },
   "flaw.poor_characteristic": {
     "name": "Schlechte {characteristic}",
     "summary": "Senke eine Eigenschaft, die bereits bei −3 liegt, bis mindestens −5; die Punkte erhältst du weiterhin."

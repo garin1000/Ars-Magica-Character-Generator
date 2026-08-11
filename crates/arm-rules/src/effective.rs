@@ -179,6 +179,7 @@ pub fn ability_bonus(
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
+                | Effect::LaterLifeXpRate { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
@@ -325,6 +326,7 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
+                | Effect::LaterLifeXpRate { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
@@ -509,6 +511,7 @@ fn characteristic_limit_shift(
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
+                | Effect::LaterLifeXpRate { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
@@ -711,6 +714,7 @@ pub(crate) fn ability_affinity(
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
+                | Effect::LaterLifeXpRate { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
@@ -777,6 +781,7 @@ fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
+                | Effect::LaterLifeXpRate { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
@@ -1337,6 +1342,7 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
         | Effect::GeneralXp { .. }
+        | Effect::LaterLifeXpRate { .. }
         | Effect::ConfidenceBonus { .. }
         | Effect::SpellMasteryXp { .. }
         | Effect::GrantsSpellMastery { .. }
@@ -1384,6 +1390,10 @@ fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
         | Effect::SpellLevels { .. }
+        // The later-life RATE is not a pool bonus: it multiplies out into the
+        // life-stage budget (see `life_stage::LifeStageRules::later_life_budget`),
+        // which then becomes the general pool. Adding it here would double-count.
+        | Effect::LaterLifeXpRate { .. }
         | Effect::ConfidenceBonus { .. }
         | Effect::SpellMasteryXp { .. }
         | Effect::GrantsSpellMastery { .. }
@@ -1598,6 +1608,7 @@ pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) ->
                 | Effect::AbilityScoreGrant { .. }
                 | Effect::SpellLevels { .. }
                 | Effect::GeneralXp { .. }
+                | Effect::LaterLifeXpRate { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSelection { .. }
