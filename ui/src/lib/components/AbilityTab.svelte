@@ -12,6 +12,7 @@
   } from '../derive';
   import { tooltip, withReason, type TooltipContent } from '../actions';
   import type { Ability, AbilityCategory } from '../types';
+  import LifeStagePanel from './LifeStagePanel.svelte';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
 
@@ -195,6 +196,14 @@
     };
   }
 </script>
+
+<!-- How Abilities are funded, chosen above the lists it funds — a SIBLING of
+     `.region-row`, never a wrapper: the row must stay the only `flex: 1` child of
+     `.vf-tab`, or the Available/Selected lists collapse. This tab is mounted both as
+     the editor's Abilities tab and as the wizard's `abilities` step, so one mount
+     puts the panel in both flows; that is the point, since a character built in the
+     wizard has to stay editable in the editor. -->
+<LifeStagePanel />
 
 <div class="region-row">
   <section class="region region-source">
