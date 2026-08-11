@@ -9,13 +9,14 @@ use std::path::{Path, PathBuf};
 
 use std::collections::BTreeMap;
 
+use arm_rules::validation::childhood_rejection_issues;
 use arm_rules::{
     AbilityBonus, AbilityFloor, ArtBonus, Characteristic, CharacteristicBonus, Confidence, Entity,
-    EntityKind, Grant, LifeStageBudget, LocalizedRuleset, MightScore, PointCeilings,
+    EntityKind, Grant, Id, LifeStageBudget, LocalizedRuleset, MightScore, PointCeilings,
     ReputationType, RestrictedXpPool, Ruleset, RulesetSources, Selection, SpellLevelCap,
-    SupernaturalFreeSlots, ValidationMode, ValidationResult, WarpingOwed, ability_bonuses,
-    ability_score_floors, age_ability_cap, art_bonuses, characteristic_aging_drops,
-    characteristic_bonuses, characteristic_caps, characteristic_floors,
+    SupernaturalFreeSlots, ValidationIssue, ValidationMode, ValidationResult, WarpingOwed,
+    ability_bonuses, ability_score_floors, age_ability_cap, apply_childhood_package, art_bonuses,
+    characteristic_aging_drops, characteristic_bonuses, characteristic_caps, characteristic_floors,
     characteristic_points_granted, confidence, decrepitude_score, effective_characteristics,
     effective_might, effective_point_ceilings, entity_grants, item_level_budget, item_level_used,
     power_levels_budget, powers_used, reputation_grants, size, spell_level_caps, spell_levels_base,
@@ -278,6 +279,47 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         might: effective_might(entity, ruleset),
         power_levels_budget: power_levels_budget(entity, ruleset),
         power_levels_used: powers_used(entity),
+    }
+}
+
+/// The outcome of applying a Sample Childhood package: either the entity with the
+/// package's rows written, or the reasons it could not be applied.
+///
+/// The reasons cross the IPC edge as ordinary [`ValidationIssue`]s so the frontend
+/// renders them through the `issue-<code>` Fluent path it already has, and no
+/// English prose ever crosses the boundary. That is also why a rejection is a
+/// perfectly ordinary `Ok` outcome rather than an [`AppError`]: an unanswered slot
+/// is a finding about the form the player just submitted, not a failure of the
+/// command.
+/// The entity is boxed so the two variants stay comparable in size (an `Entity` is
+/// far larger than a list of issues); `Box<Entity>` serializes exactly as `Entity`
+/// does, so the JSON the frontend sees is unaffected.
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum ChildhoodApplication {
+    Applied { entity: Box<Entity> },
+    Rejected { issues: Vec<ValidationIssue> },
+}
+
+/// Applies the Sample Childhood package `package` names to `entity` against a
+/// loaded ruleset, localizing the engine's rejections on the way out.
+///
+/// The engine owns every decision here ([`apply_childhood_package`]): what the
+/// package writes, that the write is a monotone raise, and what makes it
+/// impossible. This only chooses the shape the frontend receives.
+pub fn apply_childhood_package_loaded(
+    entity: &Entity,
+    package: &Id,
+    slot_values: &BTreeMap<String, String>,
+    ruleset: &Ruleset,
+) -> ChildhoodApplication {
+    match apply_childhood_package(entity, package, slot_values, ruleset) {
+        Ok(entity) => ChildhoodApplication::Applied {
+            entity: Box::new(entity),
+        },
+        Err(rejections) => ChildhoodApplication::Rejected {
+            issues: childhood_rejection_issues(&rejections, ruleset),
+        },
     }
 }
 

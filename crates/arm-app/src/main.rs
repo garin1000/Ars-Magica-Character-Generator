@@ -14,6 +14,7 @@ fn main() {
             commands::validate_entity,
             commands::effective_scores,
             commands::derived_totals,
+            commands::apply_childhood_package,
             commands::save_entity,
             commands::load_entity,
             commands::export_markdown,
