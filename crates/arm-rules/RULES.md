@@ -2458,6 +2458,22 @@ Abilities are bought with experience earned in blocks, not from one bank:
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2364`.
 - Implementation: `crates/arm-rules/src/life_stage.rs`. The magus's two further
   periods are **M6/6b4-6b5**, not implemented here.
+- **So a magus may not be built through its life stages, and is refused rather than
+  costed.** The line grants a magus **four** periods — early childhood, later life,
+  apprenticeship, and life as a magus after that — of which this engine models the
+  first two. `LifeStageRules::later_life_years` counts every year after childhood, so
+  for a magus it would swallow apprenticeship and life as a magus both; and because
+  Abilities and Arts buy from **one shared experience pool**
+  (`effective.rs::xp_allocation`), the surplus would fund Arts as well. A guided
+  60-year-old magus would be handed 825 later-life points that `validate()` finds
+  perfectly legal and the rules do not grant. `validate_life_stage_plan`
+  (`validation/life_stage.rs`) therefore emits
+  `life_stage_magus_guided_unsupported` (error, `abilities`, no args) whenever the
+  entity's type profile is `is_magus` and a plan is present — read from the profile
+  flag, never a type id. A magus keeps the directly-entered pool, which is fully
+  functional, and 6b3b additionally disables the guided choice in the UI, so this
+  code catches a hand-edited save. `later_life_years` carries the restriction in its
+  own doc comment so the formula is not later mistaken for complete.
 
 #### Early childhood — 75 + 45, and the closed spread list
 
@@ -2814,6 +2830,8 @@ carrying a directly-entered `xp_pool` as well would fund the same purchases twic
 an unset age, an age inside the childhood block, an unchosen native language, and a
 chosen one with no bought score (a warning — the points are merely unspent). No
 rulebook passage states this; it exists because the app offers two ways in.
+`life_stage_magus_guided_unsupported` is of the same kind — a limit of this engine's
+coverage rather than of the rules — and is documented with `:2364` above.
 
 The unspent-block warning and the 75-point pool read `:2378` the same way, which is
 a requirement rather than a coincidence: both key on

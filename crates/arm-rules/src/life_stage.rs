@@ -170,6 +170,17 @@ impl LifeStageRules {
     /// Years of later life a character of `age` has lived: every year after
     /// childhood. Childhood is a fixed block, so an age inside it yields 0 rather
     /// than a negative span (the validator reports such an age separately).
+    ///
+    /// **This formula holds for grogs and companions only.** "For grogs and
+    /// companions they are acquired in two blocks: early childhood, and later life.
+    /// For magi, there are two more periods to consider: apprenticeship, and life as
+    /// a magus after that."
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2364.) A magus's later life
+    /// runs only *until* apprenticeship, so counting every year to its age would
+    /// over-grant — and since Abilities and Arts buy from one shared pool, the
+    /// surplus would fund Arts as well. Apprenticeship and life as a magus are
+    /// **M6/6b4**; until then a magus carrying a life-stage plan is refused outright
+    /// (`life_stage_magus_guided_unsupported`) rather than costed with this formula.
     pub fn later_life_years(&self, age: u32) -> u32 {
         age.saturating_sub(self.childhood.years)
     }
