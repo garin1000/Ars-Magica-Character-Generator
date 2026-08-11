@@ -589,7 +589,9 @@ approximation of "Latin").
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
   used. `validation.rs::validate_xp_pool` reports `not_enough_xp` (with
-  `shortfall`) and `restricted_xp_unspent` (warning).
+  `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
+  through `origin_kind`/`origin` — see the life-stage section for why the pool has to
+  be named).
 - **Restricted pool spent before the general pool (two-phase fill).** The
   restricted XP is free-but-earmarked, so an eligible spend must drain it before
   the general pool: otherwise the general pool is over-consumed and unused
@@ -2479,7 +2481,15 @@ Abilities are bought with experience earned in blocks, not from one bank:
   ability *instance* (the chosen language), the spread funds the eleven-ability list
   **excluding** that instance — the passage's "Living Language (other than the
   character's native language)". Unspent childhood experience is wasted, which the
-  pre-existing `restricted_xp_unspent` warning already reports.
+  pre-existing `restricted_xp_unspent` warning reports — **naming the block**: it
+  carries `origin_kind` (`item` | `life_stage`) and `origin` (the granting item's id,
+  or the block slug from `LifeStageBlock`'s `Display`), read off
+  `RestrictedXpPool::origin` by `validate_xp_pool` (`validation/magus.rs`). Without
+  that pair a life-stage character gets two warnings differing only in their numbers
+  — 75 unspent and 45 unspent — and neither says which block to go and spend. The
+  engine emits machine names only, never a Fluent key or a label: the frontend
+  resolves an `item` through the ruleset's i18n and a `life_stage` through its own
+  `xp-pool-<block>` catalogue.
 - **Childhood is granted unconditionally, so it does not wait for an age.** `:2378`
   gives the 75 + 45 "in the first five years of life" with no further condition;
   only later life is counted in years up to an age (`:2392`). `budget` therefore

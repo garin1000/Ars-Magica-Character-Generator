@@ -507,6 +507,49 @@ mod tests {
         );
     }
 
+    /// Childhood grants two separately-restricted blocks (Core Rules.md:2378), so a
+    /// life-stage character can leave both unspent and would otherwise receive two
+    /// warnings a reader cannot tell apart. Each names its own block, and the
+    /// unspent-45 case — the common one, since the 75 buys one language — says
+    /// `childhood_spread` rather than merely "restricted".
+    #[test]
+    fn an_unspent_life_stage_block_names_which_block_it_is() {
+        let origins = |entity: &Entity| -> Vec<(String, String)> {
+            validate(entity, &rs())
+                .issues
+                .iter()
+                .filter(|i| i.code == ValidationIssue::CODE_RESTRICTED_XP_UNSPENT)
+                .map(|i| {
+                    (
+                        i.args.get("origin_kind").cloned().unwrap_or_default(),
+                        i.args.get("origin").cloned().unwrap_or_default(),
+                    )
+                })
+                .collect()
+        };
+
+        // The bought German 5 spends the whole 75; only the spread is left.
+        assert_eq!(
+            origins(&planned(25)),
+            vec![("life_stage".to_string(), "childhood_spread".to_string())]
+        );
+
+        // Nothing bought: both blocks are unspent, and the two warnings are
+        // distinguishable.
+        let mut entity = planned(25);
+        entity.ability_scores.clear();
+        assert_eq!(
+            origins(&entity),
+            vec![
+                (
+                    "life_stage".to_string(),
+                    "childhood_native_language".to_string()
+                ),
+                ("life_stage".to_string(), "childhood_spread".to_string()),
+            ]
+        );
+    }
+
     /// A rejected package application describes **command input**, not entity
     /// state, so `validate()` never produces these codes: they are localized here
     /// instead. Each carries what a message needs — the Ability, the `parameter`
