@@ -1895,6 +1895,54 @@ describe('ability funding mode', () => {
   });
 });
 
+describe('setNativeLanguage', () => {
+  beforeEach(async () => {
+    vi.mocked(ipc.validateEntity).mockClear();
+    await store.setAbilityFunding('life_stages');
+    vi.mocked(ipc.validateEntity).mockClear();
+  });
+
+  it('stores the trimmed language on the plan', () => {
+    store.setNativeLanguage('  German  ');
+    expect(store.entity.life_stages).toEqual({ native_language: 'German' });
+  });
+
+  it('validates through the debounce, like the other typed fields', () => {
+    store.setNativeLanguage('German');
+    expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(200);
+    expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
+  });
+
+  it('deletes the key for a blank or whitespace-only value', () => {
+    store.setNativeLanguage('German');
+    store.setNativeLanguage('  ');
+    // The engine reads blank as unset, and a sparse save is the canonical one.
+    expect(store.entity.life_stages).toEqual({});
+    expect(store.entity.life_stages).not.toHaveProperty('native_language');
+  });
+
+  it('keeps the rest of the plan intact', () => {
+    store.entity.life_stages = { childhood_package: 'childhood.traveling' };
+    store.setNativeLanguage('German');
+    expect(store.entity.life_stages).toEqual({
+      childhood_package: 'childhood.traveling',
+      native_language: 'German',
+    });
+  });
+
+  it('is a no-op without a plan, so a flat-mode surface cannot conjure one', async () => {
+    await store.setAbilityFunding('pool');
+    vi.mocked(ipc.validateEntity).mockClear();
+
+    store.setNativeLanguage('German');
+
+    expect('life_stages' in store.entity).toBe(false);
+    vi.advanceTimersByTime(200);
+    expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+  });
+});
+
 // --- Art actions ------------------------------------------------------------
 
 describe('art actions', () => {

@@ -670,6 +670,27 @@ class AppStore {
   }
 
   /**
+   * Name the character's native language — the Ability the childhood's language
+   * experience is spent on. Debounced like the other typed fields.
+   *
+   * A blank value deletes the key rather than storing an empty string: the engine
+   * reads blank as unset, and a sparse save is the canonical one. A no-op without a
+   * plan, so a surface shown in the flat mode can never conjure one into being;
+   * {@link setAbilityFunding} is the only way into the guided mode.
+   */
+  setNativeLanguage(value: string): void {
+    const plan = this.entity.life_stages;
+    if (!plan) return;
+    const language = value.trim();
+    if (language) {
+      plan.native_language = language;
+    } else {
+      delete plan.native_language;
+    }
+    this.#scheduleValidate();
+  }
+
+  /**
    * Adjust an Art's bought score by `delta`, clamped to [0, max]. All 15 Arts are
    * always present for a magus, so an Art is addressed by id (not a row index)
    * and upserted: the score is stored only while non-zero (score 0 is the default
