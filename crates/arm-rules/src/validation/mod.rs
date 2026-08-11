@@ -22,6 +22,7 @@ mod aging;
 mod balance;
 mod caps;
 mod equipment;
+mod life_stage;
 mod magus;
 mod might;
 mod prereq;
@@ -33,6 +34,7 @@ use aging::*;
 use balance::*;
 use caps::*;
 use equipment::*;
+use life_stage::*;
 use magus::*;
 use might::*;
 use prereq::*;
@@ -123,6 +125,10 @@ impl fmt::Display for IssueSeverity {
 /// | `duplicate_ability` | error | abilities | `ability`, `count` |
 /// | `not_enough_xp` | error | abilities | `spent`, `pool`, `shortfall` |
 /// | `restricted_xp_unspent` | warning | abilities | `amount`, `used`, `unspent` |
+/// | `life_stage_xp_pool_conflict` | error | abilities | `xp_pool` |
+/// | `life_stage_age_before_childhood` | error | abilities | `age`, `min` |
+/// | `life_stage_native_language_unset` | error | abilities | (none) |
+/// | `life_stage_native_language_missing_score` | warning | abilities | `language` |
 /// | `ability_parameter_required` | error | abilities | `ability` |
 /// | `ability_score_out_of_range` | error | abilities | `ability`, `score`, `max` |
 /// | `ability_bonus_dangling_target` | error | virtues_flaws | `item`, `ability`, `parameter` |
@@ -306,6 +312,24 @@ impl ValidationIssue {
     /// (Educated/Warrior/Privileged) has experience the character left unspent on
     /// its eligible Abilities; the rules waste it.
     pub const CODE_RESTRICTED_XP_UNSPENT: &'static str = "restricted_xp_unspent";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the character carries both
+    /// a life-stage plan and a directly-entered experience pool. They are
+    /// alternative ways of funding the same purchases, so both together would let
+    /// the character spend twice.
+    pub const CODE_LIFE_STAGE_XP_POOL_CONFLICT: &'static str = "life_stage_xp_pool_conflict";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the character's age falls
+    /// inside the childhood block, so it cannot have lived a year of later life.
+    pub const CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD: &'static str =
+        "life_stage_age_before_childhood";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: no native language chosen,
+    /// leaving childhood's largest experience block with nothing to buy.
+    pub const CODE_LIFE_STAGE_NATIVE_LANGUAGE_UNSET: &'static str =
+        "life_stage_native_language_unset";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a native language is
+    /// chosen but no matching Living Language score is bought, so its experience is
+    /// unspent.
+    pub const CODE_LIFE_STAGE_NATIVE_LANGUAGE_MISSING_SCORE: &'static str =
+        "life_stage_native_language_missing_score";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a magus's House Choice
     /// grant has no pick, or a pick that is not one of the offered options.
     pub const CODE_HOUSE_CHOICE_UNRESOLVED: &'static str = "house_choice_unresolved";
@@ -585,6 +609,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_equipment(entity, ruleset, &mut issues);
         validate_aging(entity, ruleset, &mut issues);
         validate_xp_pool(entity, ruleset, &mut issues);
+        validate_life_stage_plan(entity, ruleset, &mut issues);
         validate_warping(entity, ruleset, type_profile, &mut issues);
     }
 
