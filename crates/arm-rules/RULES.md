@@ -2610,6 +2610,26 @@ Abilities are bought with experience earned in blocks, not from one bank:
   data — no issue codes, no Fluent keys, no user-facing prose; mapping them onto
   localized `ValidationIssue`s happens in `validation/`, where the emit sites stay
   visible to the contract-table and phase scanners.
+- **The slot codes are command-input findings, not `validate()` findings.**
+  `validation::childhood_rejection_issues` (`validation/life_stage.rs`) turns the
+  rejections into `childhood_slot_unfilled`, `childhood_slot_is_native_language`
+  and `childhood_slot_duplicate_value` (all error / `abilities`). They are emitted
+  only there, never by `validate()`: applying a package is all-or-nothing, so a
+  stored character cannot *hold* an unanswered or colliding slot — the rejection
+  describes the form the player just submitted and is gone once it is corrected.
+  Each carries the Ability plus the `key` its field label comes from — the
+  Ability's own `parameter` key (`area`, `language`), looked up in the ruleset since
+  the rejection carries only the id — while `slot`/`other_slot` travel for **field
+  targeting only** and are never interpolated into a message, a slot key being a
+  slug. `ChildhoodRejection::NativeLanguageUnset` reuses the plan's existing
+  `life_stage_native_language_unset` rather than inventing a second code for the
+  same fact.
+- **A stored package id is a reference, so `validate()` checks it resolves.**
+  `validate_life_stage_plan` reports `childhood_package_unknown` (error,
+  `abilities`, arg `package`) when `LifeStagePlan::childhood_package` names an id
+  the loaded ruleset does not ship — which a save written against another ruleset
+  can. This is the *only* thing checked about the recorded package: what it granted
+  stays uncross-checked, per `:2382` above.
 - **Deferred to the rest of 6b3:** the shipped `childhoods.json` itself, the i18n
   names, and the UI that offers the packages.
 

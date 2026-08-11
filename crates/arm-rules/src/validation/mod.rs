@@ -45,6 +45,7 @@ use selections::*;
 use warping::*;
 
 pub use balance::{Balance, PointCeilings, compute_balance, effective_point_ceilings};
+pub use life_stage::childhood_rejection_issues;
 
 /// Whether a validation issue blocks (`Error`) or merely advises (`Warning`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -85,6 +86,14 @@ impl fmt::Display for IssueSeverity {
 ///
 /// A code listed under several phases is emitted from several places over
 /// different subject kinds; its phase is the caller's, not the code's.
+///
+/// Three rows describe a **rejected command input** rather than an entity state:
+/// `childhood_slot_unfilled`, `childhood_slot_is_native_language`, and
+/// `childhood_slot_duplicate_value` come only from [`childhood_rejection_issues`],
+/// when applying a Sample Childhood package fails, and never from [`validate`] — a
+/// stored character cannot *hold* an unanswered slot, because a rejected
+/// application writes nothing. They are listed here all the same: the UI localizes
+/// them through the same `issue-<code>` catalogue.
 ///
 /// | `code` | severity | phase | `args` keys |
 /// |--------|----------|-------|-------------|
@@ -133,6 +142,10 @@ impl fmt::Display for IssueSeverity {
 /// | `life_stage_age_before_childhood` | error | abilities | `age`, `min` |
 /// | `life_stage_native_language_unset` | error | abilities | (none) |
 /// | `life_stage_native_language_missing_score` | warning | abilities | `language` |
+/// | `childhood_package_unknown` | error | abilities | `package` |
+/// | `childhood_slot_unfilled` | error | abilities | `ability`, `key`, `slot` |
+/// | `childhood_slot_is_native_language` | error | abilities | `ability`, `key`, `slot`, `language` |
+/// | `childhood_slot_duplicate_value` | error | abilities | `ability`, `key`, `slot`, `other_slot`, `value` |
 /// | `ability_parameter_required` | error | abilities | `ability` |
 /// | `ability_score_out_of_range` | error | abilities | `ability`, `score`, `max` |
 /// | `ability_bonus_dangling_target` | error | virtues_flaws | `item`, `ability`, `parameter` |
@@ -344,6 +357,26 @@ impl ValidationIssue {
     /// unspent.
     pub const CODE_LIFE_STAGE_NATIVE_LANGUAGE_MISSING_SCORE: &'static str =
         "life_stage_native_language_missing_score";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the Sample Childhood
+    /// package recorded on the life-stage plan names an id the loaded ruleset does
+    /// not ship — a dangling reference, since the taken package is persisted.
+    pub const CODE_CHILDHOOD_PACKAGE_UNKNOWN: &'static str = "childhood_package_unknown";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Sample Childhood
+    /// package's parameterized entry was left unanswered, so the row it would write
+    /// has no parameter to be told apart by. A **command-input** code
+    /// ([`childhood_rejection_issues`]), never a [`validate`] finding.
+    pub const CODE_CHILDHOOD_SLOT_UNFILLED: &'static str = "childhood_slot_unfilled";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Sample Childhood
+    /// package's language slot was answered with the character's own native
+    /// language, which the childhood spread may not buy (Core:2378). A
+    /// **command-input** code, never a [`validate`] finding.
+    pub const CODE_CHILDHOOD_SLOT_IS_NATIVE_LANGUAGE: &'static str =
+        "childhood_slot_is_native_language";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: two slots of one Ability
+    /// were answered with the same value, so their rows would merge and the second
+    /// entry's experience would vanish. A **command-input** code, never a
+    /// [`validate`] finding.
+    pub const CODE_CHILDHOOD_SLOT_DUPLICATE_VALUE: &'static str = "childhood_slot_duplicate_value";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a magus's House Choice
     /// grant has no pick, or a pick that is not one of the offered options.
     pub const CODE_HOUSE_CHOICE_UNRESOLVED: &'static str = "house_choice_unresolved";
