@@ -9,6 +9,7 @@ import type {
   LocalizedRuleset,
   PointItem,
   Spell,
+  ValidationIssue,
 } from './types';
 
 // The AppStore methods under test are synchronous; they only *schedule* a
@@ -46,6 +47,7 @@ vi.mock('./ipc', () => ({
   updateCloseGuard: vi.fn(),
   exportMarkdown: vi.fn(),
   exportLabelKeys: vi.fn(),
+  applyChildhoodPackage: vi.fn(),
 }));
 
 // Import the singleton after the mock is registered.
@@ -2089,6 +2091,154 @@ describe('the childhood package draft', () => {
 
     expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
     vi.mocked(ipc.loadEntity).mockReset();
+  });
+});
+
+describe('applyChildhoodPackage', () => {
+  /** A plain deep copy, for comparing an entity against its own earlier state. */
+  function plain(entity: Entity): Entity {
+    return JSON.parse(JSON.stringify(entity)) as Entity;
+  }
+
+  /** The entity the engine hands back on a successful application. */
+  function appliedEntity(): Entity {
+    return {
+      ...plain(store.entity),
+      life_stages: { native_language: 'German', childhood_package: 'childhood.traveling' },
+      ability_scores: [
+        { ability: 'ability.living_language', score: 5, parameter: 'German' },
+        { ability: 'ability.area_lore', score: 1, parameter: 'Rhine' },
+      ],
+    };
+  }
+
+  /** The engine's "you left a slot unanswered" rejection. */
+  function slotUnfilled(): ValidationIssue {
+    return {
+      severity: 'error',
+      code: 'childhood_slot_unfilled',
+      phase: 'abilities',
+      args: { ability: 'ability.area_lore', key: 'area', slot: 'area_b' },
+    };
+  }
+
+  beforeEach(() => {
+    installChildhoods();
+    store.setChildhoodDraftPackage(null);
+    store.error = null;
+    vi.mocked(ipc.applyChildhoodPackage).mockReset();
+    vi.mocked(ipc.validateEntity).mockClear();
+  });
+
+  afterEach(() => {
+    store.error = null;
+  });
+
+  it('sends the entity snapshot, the drafted package and its slot answers', async () => {
+    vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({
+      status: 'applied',
+      entity: appliedEntity(),
+    });
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('language', 'German');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+    const sent = plain(store.entity);
+
+    await store.applyChildhoodPackage();
+
+    expect(vi.mocked(ipc.applyChildhoodPackage)).toHaveBeenCalledWith(sent, 'childhood.traveling', {
+      language: 'German',
+      area_a: 'Rhine',
+    });
+  });
+
+  it('replaces the entity with the applied one and revalidates once', async () => {
+    const applied = appliedEntity();
+    vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({ status: 'applied', entity: applied });
+    store.setChildhoodDraftPackage('childhood.traveling');
+
+    await store.applyChildhoodPackage();
+
+    expect(plain(store.entity)).toEqual(applied);
+    expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears a previous rejection when applying again', async () => {
+    vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({
+      status: 'rejected',
+      issues: [slotUnfilled()],
+    });
+    store.setChildhoodDraftPackage('childhood.traveling');
+    await store.applyChildhoodPackage();
+    expect(store.childhoodRejections).toHaveLength(1);
+
+    vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({
+      status: 'applied',
+      entity: appliedEntity(),
+    });
+    await store.applyChildhoodPackage();
+
+    expect(store.childhoodRejections).toEqual([]);
+  });
+
+  it('leaves the entity untouched and exposes the issues on a rejection', async () => {
+    const issues = [slotUnfilled()];
+    vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({ status: 'rejected', issues });
+    store.result = { issues: [] };
+    store.setChildhoodDraftPackage('childhood.traveling');
+    const before = plain(store.entity);
+
+    await store.applyChildhoodPackage();
+
+    expect(plain(store.entity)).toEqual(before);
+    expect(store.childhoodRejections).toEqual(issues);
+    // A rejection describes the command input, not the entity's state, so it stays
+    // out of the validation results and needs no engine round trip.
+    expect(store.result?.issues).toEqual([]);
+    expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+  });
+
+  it('clears a stale rejection when the drafted slot answer changes', async () => {
+    vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({
+      status: 'rejected',
+      issues: [slotUnfilled()],
+    });
+    store.setChildhoodDraftPackage('childhood.traveling');
+    await store.applyChildhoodPackage();
+
+    store.setChildhoodDraftSlot('area_b', 'Provence');
+
+    // A rejection pointing at a field the user has just fixed is worse than none.
+    expect(store.childhoodRejections).toEqual([]);
+  });
+
+  it('clears a stale rejection when a different package is drafted', async () => {
+    vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({
+      status: 'rejected',
+      issues: [slotUnfilled()],
+    });
+    store.setChildhoodDraftPackage('childhood.traveling');
+    await store.applyChildhoodPackage();
+
+    store.setChildhoodDraftPackage('childhood.athletic');
+
+    expect(store.childhoodRejections).toEqual([]);
+  });
+
+  it('does nothing at all without a drafted package', async () => {
+    await store.applyChildhoodPackage();
+    expect(vi.mocked(ipc.applyChildhoodPackage)).not.toHaveBeenCalled();
+  });
+
+  it('surfaces a thrown ipc failure on the shared error banner', async () => {
+    vi.mocked(ipc.applyChildhoodPackage).mockRejectedValueOnce({ kind: 'invalid_entity' });
+    store.setChildhoodDraftPackage('childhood.traveling');
+    const before = plain(store.entity);
+
+    await store.applyChildhoodPackage();
+
+    expect(store.error).toEqual({ kind: 'invalid_entity' });
+    expect(plain(store.entity)).toEqual(before);
   });
 });
 

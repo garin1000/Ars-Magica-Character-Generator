@@ -18,6 +18,7 @@ vi.mock('./lib/ipc', () => ({
   updateCloseGuard: vi.fn(),
   exportMarkdown: vi.fn(),
   exportLabelKeys: vi.fn(),
+  applyChildhoodPackage: vi.fn(),
 }));
 
 import * as ipc from './lib/ipc';

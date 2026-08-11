@@ -13,6 +13,7 @@ vi.mock('../ipc', () => ({
   updateCloseGuard: vi.fn(),
   exportMarkdown: vi.fn(),
   exportLabelKeys: vi.fn(),
+  applyChildhoodPackage: vi.fn(),
 }));
 
 import { SCHEMA_VERSION, store } from '../state.svelte';
