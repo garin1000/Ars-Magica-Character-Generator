@@ -50,7 +50,7 @@ vi.mock('./ipc', () => ({
 
 // Import the singleton after the mock is registered.
 import * as ipc from './ipc';
-import { store, defaultPickerFilters } from './state.svelte';
+import { store, defaultPickerFilters, SCHEMA_VERSION } from './state.svelte';
 
 // The screen the app boots on, captured at import time — before any test or
 // `beforeEach` has touched the shared singleton, which is the only moment the
@@ -1784,6 +1784,114 @@ describe('setXpPool', () => {
     expect(store.entity.xp_pool).toBe(0);
     store.setXpPool(Number.NaN);
     expect(store.entity.xp_pool).toBe(0);
+  });
+});
+
+// --- the Ability funding mode (M6b3b) ---------------------------------------
+
+describe('ability funding mode', () => {
+  /** A loadable character carrying a life-stage plan (a guided-mode save). */
+  function entityWithPlan(): Entity {
+    return {
+      schema_version: SCHEMA_VERSION,
+      ruleset: { id: 'test', version: '1' },
+      entity_kind: 'character',
+      type_id: 'companion',
+      selections: [],
+      characteristics: {} as Entity['characteristics'],
+      characteristic_descriptions: {},
+      ability_scores: [],
+      xp_pool: 0,
+      art_scores: [],
+      personality_traits: [],
+      reputations: [],
+      life_stages: { native_language: 'German' },
+    };
+  }
+
+  beforeEach(() => {
+    vi.mocked(ipc.validateEntity).mockClear();
+  });
+
+  it('reports the typed pool for an entity carrying no plan', () => {
+    expect(store.abilityFunding).toBe('pool');
+  });
+
+  it('creates an empty plan and zeroes the typed pool when switching to life stages', async () => {
+    store.setXpPool(45);
+    await store.setAbilityFunding('life_stages');
+    // The engine forbids a plan and a typed pool at once (life_stage_xp_pool_conflict).
+    expect(store.entity.life_stages).toEqual({});
+    expect(store.entity.xp_pool).toBe(0);
+    expect(store.abilityFunding).toBe('life_stages');
+  });
+
+  it('validates immediately rather than through the debounce', async () => {
+    await store.setAbilityFunding('life_stages');
+    // No timer advance: a discrete action revalidates on the spot.
+    expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves bought ability rows alone in both directions', async () => {
+    // An over-spend must surface as `not_enough_xp` — visible and fixable —
+    // rather than being silently wiped by the switch.
+    installRuleset([], [ability('ability.awareness')]);
+    store.addAbility('ability.awareness');
+    store.adjustAbilityAt(0, 3, 10);
+
+    await store.setAbilityFunding('life_stages');
+    expect(store.entity.ability_scores).toEqual([{ ability: 'ability.awareness', score: 3 }]);
+    await store.setAbilityFunding('pool');
+    expect(store.entity.ability_scores).toEqual([{ ability: 'ability.awareness', score: 3 }]);
+  });
+
+  it('removes the plan key entirely when switching back to the typed pool', async () => {
+    store.entity.life_stages = {
+      native_language: 'German',
+      childhood_package: 'childhood.traveling',
+    };
+    await store.setAbilityFunding('pool');
+    // Sparse save: the key is gone, not present-but-empty.
+    expect('life_stages' in store.entity).toBe(false);
+    expect(store.abilityFunding).toBe('pool');
+  });
+
+  it('starts a new plan empty instead of resurrecting the dropped one', async () => {
+    store.entity.life_stages = {
+      native_language: 'German',
+      childhood_package: 'childhood.traveling',
+    };
+    await store.setAbilityFunding('pool');
+    await store.setAbilityFunding('life_stages');
+    expect(store.entity.life_stages).toEqual({});
+  });
+
+  it('reports life stages for a loaded save that already carries a plan', async () => {
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/marcus.armc',
+      entity: entityWithPlan(),
+    });
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+
+    expect(store.abilityFunding).toBe('life_stages');
+    // And the mode needs no reconciliation: asking for it again is a no-op.
+    vi.mocked(ipc.validateEntity).mockClear();
+    await store.setAbilityFunding('life_stages');
+    expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op when the requested funding is already active', async () => {
+    await store.setAbilityFunding('pool');
+    expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+  });
+
+  it('makes the document dirty', async () => {
+    await store.createCharacter('companion');
+    expect(store.dirty).toBe(false);
+    await store.setAbilityFunding('life_stages');
+    expect(store.dirty).toBe(true);
   });
 });
 

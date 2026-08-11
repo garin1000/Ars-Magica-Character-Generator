@@ -211,6 +211,12 @@ function parameterKeys(localized: LocalizedRuleset): Set<string> {
   return keys;
 }
 
+/**
+ * Where a character's Ability/Art experience comes from: a typed `xp_pool`
+ * (direct entry) or the blocks its life stages earn (the guided flow).
+ */
+export type AbilityFunding = 'pool' | 'life_stages';
+
 class AppStore {
   lang = $state<Lang>('en');
   ruleset = $state<LocalizedRuleset | null>(null);
@@ -315,6 +321,18 @@ class AppStore {
    * positive), never toward silently discarding work (false negative).
    */
   dirty = $derived(this.#snapshot() !== this.#savedSnapshot);
+
+  /**
+   * How the character's Abilities (and Arts) are funded: by a typed `xp_pool`, or
+   * by the experience its life stages earn.
+   *
+   * Read off the entity rather than held in its own `$state`, because the presence
+   * of `life_stages` already *is* the switch everywhere in the engine
+   * (`LifeStageRules::budget`, `validate_life_stage_plan`, `EffectiveScores.life_stage`).
+   * A second flag could disagree with a loaded save; a derivation cannot, so a save
+   * carrying a plan lands in the guided mode with no reconciliation code at all.
+   */
+  abilityFunding = $derived<AbilityFunding>(this.entity.life_stages ? 'life_stages' : 'pool');
 
   #bundle = $derived(buildBundle(this.lang));
   #timer: ReturnType<typeof setTimeout> | undefined;
@@ -625,6 +643,30 @@ class AppStore {
   setXpPool(xp: number): void {
     this.entity.xp_pool = clampInt(xp, 0, U32_MAX);
     this.#scheduleValidate();
+  }
+
+  /**
+   * Switch how Abilities are funded (see {@link abilityFunding}). A discrete
+   * action, so it validates immediately like {@link setHouse}.
+   *
+   * Entering the guided mode adds an empty plan and zeroes `xp_pool`, since the
+   * engine makes a plan and a typed pool mutually exclusive; leaving it deletes
+   * the plan key outright, which keeps the save sparse and *is* the pruning of the
+   * plan's now-stale contents (the {@link #prunedHouseChoices} precedent).
+   *
+   * Bought `ability_scores` survive either switch untouched: funding less
+   * experience than the rows demand is reported as `not_enough_xp` — visible and
+   * fixable — which is strictly better than silently discarding the player's work.
+   */
+  async setAbilityFunding(funding: AbilityFunding): Promise<void> {
+    if (this.abilityFunding === funding) return;
+    if (funding === 'life_stages') {
+      this.entity.life_stages = {};
+      this.entity.xp_pool = 0;
+    } else {
+      delete this.entity.life_stages;
+    }
+    await this.revalidate();
   }
 
   /**
