@@ -58,7 +58,7 @@ independently green with an unchanged UI that merely carries the new field.
 
 ---
 
-## Slice 6b1a — Phase vocabulary and issue attribution
+## Slice 6b1a — Phase vocabulary and issue attribution ✅
 
 ### Design
 
@@ -131,18 +131,18 @@ literal without the new key, and the four TS issue literals in
 
 ### Tasks
 
-- [ ] **1. `CreationPhase` round-trips.** RED in `types.rs`: `VirtuesFlaws` serializes
+- [x] **1. `CreationPhase` round-trips.** RED in `types.rs`: `VirtuesFlaws` serializes
       to `"virtues_flaws"`, `ALL.len() == 11`, `Display` equals the serde slug for every
       member. GREEN: the enum + `ALL` + `Display`; re-export from `lib.rs`.
-- [ ] **2. Typed profile phases.** RED: a profile with `"creation_phases":
+- [x] **2. Typed profile phases.** RED: a profile with `"creation_phases":
       ["not_a_phase"]` fails to parse; update `:3122` to the `["type", "concept"]`
       fixture, keeping it an order assertion. GREEN: retype the field; fix both
       fixtures.
-- [ ] **3. Load-time integrity** in `ruleset.rs`, beside the duplicate checks at
+- [x] **3. Load-time integrity** in `ruleset.rs`, beside the duplicate checks at
       `:686-731`: a profile declaring `review` is an error; a repeated phase is an
       error. Decide and document the stance on an **empty** `creation_phases` (several
       fixtures ship `[]`, and such a profile would get a review-only wizard).
-- [ ] **4. Every module attributes its issues.** RED: table-driven test in
+- [x] **4. Every module attributes its issues.** RED: table-driven test in
       `validation/mod.rs` asserting `(code, phase)` for ≥1 representative per submodule
       — `over_budget_virtues → virtues_flaws`, `characteristic_overspent →
       characteristics`, `ability_above_age_cap → abilities`, `art_score_out_of_range →
@@ -154,29 +154,30 @@ literal without the new key, and the four TS issue literals in
       `excessive_aging_reduction` / `unknown_type` → `review`. GREEN: the field, the
       three constructors, all 85 sites plus the deserialization test at `:2537`.
       **Commit one submodule per commit.**
-- [ ] **5. Contract table carries the phase.** Extend
+- [x] **5. Contract table carries the phase.** Extend
       `every_issue_code_const_is_documented_in_the_contract_table` (`mod.rs:1979`) to
       require a 4-column row `| code | severity | phase | args |`, assert every phase
       token is a slug from `CreationPhase::ALL` (derived, never hardcoded), and assert
       in reverse that every `ALL` slug appears at least once. Rewrite the table at
       `mod.rs:77-168`; the `†` footnote states the dynamic cap codes are
       `virtues_flaws`.
-- [ ] **6. No emit site drifts.** New source-scanning test (same idiom as the existing
+- [x] **6. No emit site drifts.** New source-scanning test (same idiom as the existing
       `const CODE_` scanner): for every `ValidationIssue::(error|warning|new)(` call,
       extract the `CODE_*` and `CreationPhase::*` tokens and assert the table row lists
       that phase; the two runtime-`&code` sites (`caps.rs:110`, `:112`) are exempt from
       the code half but must still carry a literal phase. Assert `sites >= 80` so a
       broken scanner cannot look green.
-- [ ] **7. Fluent coverage.** New test in `crates/arm-app/tests/commands.rs`, mirroring
+- [x] **7. Fluent coverage.** New test in `crates/arm-app/tests/commands.rs`, mirroring
       `every_export_label_key_has_a_fluent_key_in_each_locale` (`:1010`), iterating
       `CreationPhase::ALL` and asserting `phase-<slug>` in both locales. Add the 11 keys.
-- [ ] **8. TS mirror** (`ui/src/lib/types.ts`): `CreationPhase` union next to
+- [x] **8. TS mirror** (`ui/src/lib/types.ts`): `CreationPhase` union next to
       `IssueSeverity`; `phase: CreationPhase` on `ValidationIssue` (`:1123`);
       `creation_phases: CreationPhase[]` (`:596`); fix the four `derive.test.ts`
       literals. Add the Rust-side test that every `ALL` slug appears in `types.ts` — the
       one real drift risk now that phases gate.
-- [ ] **9. Full gate.** No behavior change, so e2e should pass untouched — run it anyway,
-      since the IPC payload shape changed.
+- [x] **9. Full gate.** No behavior change, so e2e should pass untouched — run it anyway,
+      since the IPC payload shape changed. (All 25 specs green against the real
+      binary; the whole gate passed.)
 
 ---
 
