@@ -178,6 +178,12 @@ xp-available = Available: { $available }
 # only on the listed Abilities/categories. `$eligibility` is a localized list.
 restricted-xp-pool = { $eligibility }: { $used } / { $amount }
 restricted-xp-list-separator = ,
+# Life-stage experience blocks, keyed by the engine's `LifeStageBlock` slug. Each
+# is a restricted pool of its own: the first buys the native language and nothing
+# else, the second the childhood Abilities but never that language. Later life has
+# no key — it funds anything, so it IS the general pool.
+xp-pool-childhood_native_language = Native language
+xp-pool-childhood_spread = Early childhood
 ability-score-label = Score
 ability-specialty-label = Specialty
 # Heading for the rulebook's list of example specialties shown in the picker.

@@ -186,6 +186,13 @@ xp-available = Verfügbar: { $available }
 # EP, nur für die aufgeführten Fertigkeiten/Kategorien. `$eligibility` ist eine Liste.
 restricted-xp-pool = { $eligibility }: { $used } / { $amount }
 restricted-xp-list-separator = ,
+# Erfahrungsblöcke der Lebensabschnitte, geschlüsselt nach dem `LifeStageBlock`-Slug
+# der Engine. Jeder ist ein eigener eingeschränkter Vorrat: der erste kauft die
+# Muttersprache und nichts anderes, der zweite die Kindheitsfertigkeiten, aber nie
+# jene Sprache. Das spätere Leben hat keinen Schlüssel — es finanziert alles und
+# ist damit der allgemeine Vorrat.
+xp-pool-childhood_native_language = Muttersprache
+xp-pool-childhood_spread = Frühe Kindheit
 ability-score-label = Wert
 ability-specialty-label = Spezialisierung
 # Überschrift für die im Auswahlbereich gezeigten Beispiel-Spezialisierungen.

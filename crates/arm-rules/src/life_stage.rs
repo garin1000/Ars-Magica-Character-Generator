@@ -19,7 +19,10 @@ use crate::ruleset::Ruleset;
 use crate::types::{Effect, Entity, Id};
 
 /// The life-stage experience rules, loaded from `rules/core/life_stages.json`.
-#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+// No `Default`: every field is authored data with no meaningful zero (a childhood
+// of no years granting no experience is not a default, it is a broken file), and
+// the ruleset holds these as an `Option` for the absent case.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LifeStageRules {
     /// The first years of life, before any chosen advancement.
     pub childhood: ChildhoodRules,
@@ -31,10 +34,15 @@ pub struct LifeStageRules {
 /// restricted spread of the Abilities a child picks up in play.
 ///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:2378.
-#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ChildhoodRules {
     /// Years childhood covers ("the first five years of life").
     pub years: u32,
+    /// The ability the native-language experience buys ("75 experience points in
+    /// their native language (see page 167 for the Language Ability)"). Data rather
+    /// than a hardcoded slug, so a ruleset naming its language ability differently
+    /// still resolves; the id is checked at load like every other ref.
+    pub native_language_ability: Id,
     /// Experience granted in the native language alone, spendable on nothing else
     /// ("75 experience points in their native language").
     pub native_language_xp: u32,
@@ -53,7 +61,7 @@ pub struct ChildhoodRules {
 /// [`crate::types::Effect::LaterLifeXpRate`] (Wealthy, Poor).
 ///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:2392.
-#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LaterLifeRules {
     /// Experience per year of later life ("15 experience points per year").
     pub xp_per_year: u32,
@@ -178,6 +186,7 @@ mod tests {
     const SHIPPED: &str = r#"{
       "childhood": {
         "years": 5,
+        "native_language_ability": "ability.living_language",
         "native_language_xp": 75,
         "spread_xp": 45,
         "spread_abilities": ["ability.athletics", "ability.swim"]

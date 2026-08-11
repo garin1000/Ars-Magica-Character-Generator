@@ -1038,6 +1038,22 @@ fn every_creation_phase_has_a_fluent_key_in_each_locale() {
     }
 }
 
+/// A life-stage XP pool is labelled by which block it is, not by the abilities it
+/// may fund (its list is the whole childhood spread, and both childhood blocks
+/// share it), so every block needs its own key or the bar would print the slug.
+#[test]
+fn every_life_stage_xp_pool_has_a_fluent_key_in_each_locale() {
+    for lang in ["en", "de"] {
+        let ftl = fs::read_to_string(repo_root().join(format!("locales/{lang}/main.ftl"))).unwrap();
+        for block in arm_rules::LifeStageBlock::ALL {
+            assert!(
+                ftl.contains(&format!("xp-pool-{block} =")),
+                "locale '{lang}' is missing key 'xp-pool-{block}'"
+            );
+        }
+    }
+}
+
 /// The frontend filters each wizard step's findings on the issue's phase, so its
 /// `CreationPhase` union has to hold every variant the engine can send. A missing
 /// arm is not a type error on the JS side — it is a step that silently shows

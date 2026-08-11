@@ -27,6 +27,7 @@ use crate::types::{
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::fmt;
 
 /// The selection list every effect / score computation iterates: the entity's
 /// bought selections plus any Virtue rows its Hermetic House grants (see
@@ -834,6 +835,86 @@ pub struct RestrictedXpPool {
     /// Eligible ability categories (empty when eligibility is purely by id).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub categories: Vec<AbilityCategory>,
+    /// Where the pool came from, so the UI can label it. Without this the XP bar
+    /// would have to infer a name from the ability list, which cannot distinguish
+    /// childhood's two blocks (both list childhood Abilities) and would read as a
+    /// V/F grant.
+    pub origin: XpPoolOrigin,
+}
+
+/// Where a restricted XP pool came from.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "kind")]
+pub enum XpPoolOrigin {
+    /// A Virtue/Flaw grant (Educated, Warrior, Privileged Upbringing, …). The UI
+    /// labels it with the item's own localized name.
+    Item {
+        /// The granting item.
+        item: Id,
+    },
+    /// A block of life-stage experience. Labelled through a Fluent key on the
+    /// block, since a life stage is not an item and has no i18n entry.
+    LifeStage {
+        /// Which block.
+        block: LifeStageBlock,
+    },
+}
+
+/// A block of life-stage experience that funds purchases on its own terms.
+///
+/// A fixed taxonomy (the rules grant exactly these), so an enum: adding a block is
+/// a compile error until the UI labels it. Later life is absent on purpose — it
+/// funds anything the character may learn, so it is the general pool rather than a
+/// restricted one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LifeStageBlock {
+    /// Childhood's native-language experience: spendable only on the native
+    /// language instance (Core Rules.md:2378).
+    ChildhoodNativeLanguage,
+    /// Childhood's restricted spread: spendable only on the childhood Ability list,
+    /// and never on the native language (`:2378`).
+    ChildhoodSpread,
+}
+
+impl LifeStageBlock {
+    /// Every block, the single source of the set (the UI's labels are checked
+    /// against it).
+    pub const ALL: [LifeStageBlock; 2] = [
+        LifeStageBlock::ChildhoodNativeLanguage,
+        LifeStageBlock::ChildhoodSpread,
+    ];
+}
+
+impl fmt::Display for LifeStageBlock {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            LifeStageBlock::ChildhoodNativeLanguage => "childhood_native_language",
+            LifeStageBlock::ChildhoodSpread => "childhood_spread",
+        })
+    }
+}
+
+/// One instance of an ability: the id plus, for a parameterized ability, the
+/// instance value ("Living Language (German)"). Childhood's blocks need this
+/// granularity — the 75 points buy the native language and the 45 may buy any
+/// OTHER Living Language — which an id alone cannot express.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AbilityInstanceRef {
+    /// The ability.
+    pub ability: Id,
+    /// The instance value, for a parameterized ability. `None` matches the ability
+    /// whatever its instance.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parameter: Option<String>,
+}
+
+impl AbilityInstanceRef {
+    /// Whether this ref names the given bought instance.
+    fn matches(&self, ability: &Id, parameter: Option<&str>) -> bool {
+        self.ability == *ability
+            && (self.parameter.is_none() || self.parameter.as_deref() == parameter)
+    }
 }
 
 /// The result of allocating Ability + Art spends across the general experience
@@ -870,8 +951,14 @@ struct Spend {
 /// pool always can). Ability spends draw RestrictedAbilityXp pools; Mastery spends
 /// draw SpellMasteryXp pools; the two never cross, and Arts have no restricted pool.
 enum SpendKind {
-    /// An Ability score (id + category), eligible for RestrictedAbilityXp pools.
-    Ability(Id, AbilityCategory),
+    /// An Ability score, eligible for RestrictedAbilityXp and life-stage pools. The
+    /// instance value travels with it because childhood's blocks are
+    /// instance-restricted (the native language against every other one).
+    Ability {
+        ability: Id,
+        category: AbilityCategory,
+        parameter: Option<String>,
+    },
     /// An Art score — funded from the general pool only.
     Art,
     /// A per-spell Spell Mastery Ability, eligible for SpellMasteryXp pools only.
@@ -880,20 +967,46 @@ enum SpendKind {
 
 /// A restricted pool's funding scope for the flow solve.
 enum PoolEligibility {
-    /// An ability-XP grant (Educated/Warrior/Privileged): funds an Ability whose
-    /// id is listed or whose category is listed. Never Arts, never Mastery.
+    /// An ability-XP grant (Educated/Warrior/Privileged) or a life-stage block:
+    /// funds an Ability whose id, category or instance is listed, minus anything
+    /// `exclude` names. Never Arts, never Mastery.
     Ability {
         abilities: Vec<Id>,
         categories: Vec<AbilityCategory>,
+        /// Specific instances this pool funds. When non-empty it is the ONLY test —
+        /// childhood's native-language block funds one instance and nothing else,
+        /// which `abilities` (id-only) cannot express.
+        instances: Vec<AbilityInstanceRef>,
+        /// Instances this pool never funds, even when `abilities`/`categories`
+        /// would cover them: childhood's spread excludes the native language.
+        exclude: Vec<AbilityInstanceRef>,
     },
     /// A Spell-Mastery grant (Mastered Spells): funds only Spell Mastery spends.
     Mastery,
 }
 
-/// One restricted pool in the flow graph: its capacity and what it may fund.
+/// One restricted pool in the flow graph: its capacity, what it may fund, and
+/// where it came from (carried through to the surfaced pool so the UI can name it).
 struct FlowPool {
     amount: u32,
     eligibility: PoolEligibility,
+    origin: XpPoolOrigin,
+}
+
+/// The instance childhood's native-language experience may be spent on: the
+/// ability the rules data names for it, at the language the plan chose. `None`
+/// when either is unset — the validator reports an unset language
+/// (`life_stage_native_language_unset`), and no pool is created for a language
+/// nobody picked.
+fn native_language_instance(
+    entity: &Entity,
+    rules: &crate::life_stage::LifeStageRules,
+) -> Option<AbilityInstanceRef> {
+    let language = entity.life_stages.as_ref()?.native_language.clone()?;
+    Some(AbilityInstanceRef {
+        ability: rules.childhood.native_language_ability.clone(),
+        parameter: Some(language),
+    })
 }
 
 /// Whether a restricted pool may fund a spend. Ability pools cover only Ability
@@ -905,9 +1018,26 @@ fn pool_covers(eligibility: &PoolEligibility, spend: &Spend) -> bool {
             PoolEligibility::Ability {
                 abilities,
                 categories,
+                instances,
+                exclude,
             },
-            SpendKind::Ability(id, category),
-        ) => abilities.contains(id) || categories.contains(category),
+            SpendKind::Ability {
+                ability,
+                category,
+                parameter,
+            },
+        ) => {
+            let parameter = parameter.as_deref();
+            if exclude.iter().any(|e| e.matches(ability, parameter)) {
+                return false;
+            }
+            if !instances.is_empty() {
+                // An instance list is exhaustive for this pool, not additive: the
+                // native-language block funds exactly its one instance.
+                return instances.iter().any(|i| i.matches(ability, parameter));
+            }
+            abilities.contains(ability) || categories.contains(category)
+        }
         (PoolEligibility::Mastery, SpendKind::Mastery) => true,
         // Every remaining combination is explicitly uncovered, so a new
         // PoolEligibility or SpendKind variant forces a decision here rather than
@@ -915,7 +1045,7 @@ fn pool_covers(eligibility: &PoolEligibility, spend: &Spend) -> bool {
         // and Mastery pools never fund Abilities or Arts.
         (PoolEligibility::Ability { .. }, SpendKind::Art)
         | (PoolEligibility::Ability { .. }, SpendKind::Mastery)
-        | (PoolEligibility::Mastery, SpendKind::Ability(..))
+        | (PoolEligibility::Mastery, SpendKind::Ability { .. })
         | (PoolEligibility::Mastery, SpendKind::Art) => false,
     }
 }
@@ -955,7 +1085,11 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
         let kind = ruleset
             .abilities
             .get(&a.ability)
-            .map(|def| SpendKind::Ability(a.ability.clone(), def.category))
+            .map(|def| SpendKind::Ability {
+                ability: a.ability.clone(),
+                category: def.category,
+                parameter: a.parameter.clone(),
+            })
             .unwrap_or(SpendKind::Art);
         spends.push(Spend { cost, kind });
     }
@@ -1024,23 +1158,79 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
                     eligibility: PoolEligibility::Ability {
                         abilities: abilities.clone(),
                         categories: categories.clone(),
+                        // A V/F grant is id/category-scoped, never instance-scoped.
+                        instances: Vec::new(),
+                        exclude: Vec::new(),
+                    },
+                    origin: XpPoolOrigin::Item {
+                        item: selection.item_ref.clone(),
                     },
                 });
             }
         }
+    }
+    // Childhood's two blocks, for a character built through its life stages. Both
+    // are restricted pools rather than budget added to the general one, because
+    // each may buy only its own things: the 75 the native language, the 45 the
+    // childhood list minus that language.
+    // Source: Ars Magica - Definitive Edition (Core Rules).md:2378.
+    let life_stage_budget = ruleset
+        .life_stages()
+        .and_then(|rules| rules.budget(entity, ruleset).map(|budget| (rules, budget)));
+    if let Some((rules, budget)) = &life_stage_budget {
+        let native = native_language_instance(entity, rules);
+        if let Some(native) = &native {
+            flow_pools.push(FlowPool {
+                amount: budget.childhood_native_xp,
+                eligibility: PoolEligibility::Ability {
+                    abilities: Vec::new(),
+                    categories: Vec::new(),
+                    instances: vec![native.clone()],
+                    exclude: Vec::new(),
+                },
+                origin: XpPoolOrigin::LifeStage {
+                    block: LifeStageBlock::ChildhoodNativeLanguage,
+                },
+            });
+        }
+        flow_pools.push(FlowPool {
+            amount: budget.childhood_spread_xp,
+            eligibility: PoolEligibility::Ability {
+                abilities: rules.childhood.spread_abilities.iter().cloned().collect(),
+                categories: Vec::new(),
+                instances: Vec::new(),
+                // "Living Language (other than the character's native language)":
+                // the spread may buy a second language, never the native one.
+                exclude: native.into_iter().collect(),
+            },
+            origin: XpPoolOrigin::LifeStage {
+                block: LifeStageBlock::ChildhoodSpread,
+            },
+        });
     }
     let mastery_pool = spell_mastery_xp(entity, ruleset);
     if mastery_pool > 0 {
         flow_pools.push(FlowPool {
             amount: mastery_pool,
             eligibility: PoolEligibility::Mastery,
+            // Never surfaced (see `restricted` below), so its origin is nominal.
+            origin: XpPoolOrigin::LifeStage {
+                block: LifeStageBlock::ChildhoodSpread,
+            },
         });
     }
 
     let total_demand: u32 = spends.iter().map(|s| s.cost).sum();
-    // Skilled/Weak Parens (and any GeneralXp effect) adjust the apprenticeship
-    // pool; a net-negative grant clamps at 0 rather than underflowing.
-    let general_pool = clamp_to_u32(i64::from(entity.xp_pool) + general_xp_bonus(entity, ruleset));
+    // The general pool funds anything. For a life-stage character that is later
+    // life's experience — childhood's blocks are restricted, above — and for a
+    // directly-entered one it is the typed `xp_pool`. Skilled/Weak Parens (and any
+    // GeneralXp effect) adjust it; a net-negative grant clamps at 0 rather than
+    // underflowing.
+    let base_general = match &life_stage_budget {
+        Some((_, budget)) => budget.later_life_xp,
+        None => entity.xp_pool,
+    };
+    let general_pool = clamp_to_u32(i64::from(base_general) + general_xp_bonus(entity, ruleset));
 
     // Flow graph: source(0) → sink(1); general(2) and restricted pools
     // (3..3+R) are pool nodes; spends follow. cap is the residual matrix.
@@ -1087,11 +1277,13 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
         if let PoolEligibility::Ability {
             abilities,
             categories,
+            ..
         } = &pool.eligibility
         {
             restricted.push(RestrictedXpPool {
                 amount: pool.amount,
                 used: pool.amount - cap[source][pool_node(i)],
+                origin: pool.origin.clone(),
                 abilities: abilities.clone(),
                 categories: categories.clone(),
             });
@@ -4374,5 +4566,236 @@ mod tests {
         // Skilled Parens contributes its +30 as a standalone signed figure.
         let e = entity(vec![Selection::new(Id::new("virtue.skilled_parens"))]);
         assert_eq!(spell_levels_bonus(&e, &rs), 30);
+    }
+
+    // --- life-stage pools (M6b2) ---------------------------------------------
+
+    /// A ruleset with life stages, a parameterized Living Language, and two of the
+    /// childhood spread's Abilities.
+    fn life_stage_ruleset() -> Ruleset {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] },
+          { "id": "virtue.affinity_with_ability", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
+            "effects": [{ "type": "affinity_ability_cost", "param": "ability",
+                          "counts_as_num": 3, "counts_as_den": 2 }] },
+          { "id": "virtue.puissant_ability", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
+            "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }] }
+        ]"#;
+        let types = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general", "personality"], "creation_phases": [] }
+        ]"#;
+        // Ability table: 5/15/30/50/75 — the shipped Core Rules figures.
+        let abilities = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },
+            { "score": 3, "total_xp": 30 }, { "score": 4, "total_xp": 50 },
+            { "score": 5, "total_xp": 75 }
+          ],
+          "abilities": [
+            { "id": "ability.living_language", "category": "general", "parameter": "language" },
+            { "id": "ability.swim", "category": "general" },
+            { "id": "ability.concentration", "category": "general" }
+          ]
+        }"#;
+        let life_stages = r#"{
+          "childhood": {
+            "years": 5,
+            "native_language_ability": "ability.living_language",
+            "native_language_xp": 75,
+            "spread_xp": 45,
+            "spread_abilities": ["ability.living_language", "ability.swim"]
+          },
+          "later_life": { "xp_per_year": 15 }
+        }"#;
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some(abilities),
+            life_stages: Some(life_stages),
+            ..RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    /// A 25-year-old companion whose childhood bought Native Language (German) 5.
+    fn planned_companion() -> Entity {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.age = Some(25);
+        entity.life_stages = Some(crate::life_stage::LifeStagePlan {
+            native_language: Some("German".into()),
+        });
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.living_language"),
+            parameter: Some("German".into()),
+            score: 5,
+            specialty: None,
+        }];
+        entity
+    }
+
+    /// The native-language block funds the native instance and nothing else, so a
+    /// Native Language 5 (75 xp) is paid entirely by it — leaving the general pool
+    /// (later life) untouched.
+    #[test]
+    fn the_native_language_block_pays_for_the_native_language() {
+        let rs = life_stage_ruleset();
+        let allocation = xp_allocation(&planned_companion(), &rs);
+        assert_eq!(allocation.total_demand, 75);
+        assert_eq!(allocation.max_flow, 75, "the spend is fully funded");
+        assert_eq!(allocation.general_used, 0, "later life pays none of it");
+        assert_eq!(allocation.general_pool, 300, "20 years at 15 a year");
+    }
+
+    /// A childhood-list Ability is paid by the 45-point spread, not by later life.
+    #[test]
+    fn the_spread_block_pays_for_a_childhood_ability() {
+        let rs = life_stage_ruleset();
+        let mut entity = planned_companion();
+        entity.ability_scores.push(AbilityScore {
+            ability: Id::new("ability.swim"),
+            parameter: None,
+            score: 2,
+            specialty: None,
+        });
+        let allocation = xp_allocation(&entity, &rs);
+        assert_eq!(allocation.total_demand, 90, "75 + 15");
+        assert_eq!(allocation.max_flow, 90);
+        assert_eq!(allocation.general_used, 0, "childhood covers both");
+    }
+
+    /// An Ability outside the childhood list can only come from later life.
+    #[test]
+    fn an_ability_off_the_childhood_list_falls_to_later_life() {
+        let rs = life_stage_ruleset();
+        let mut entity = planned_companion();
+        entity.ability_scores.push(AbilityScore {
+            ability: Id::new("ability.concentration"),
+            parameter: None,
+            score: 2,
+            specialty: None,
+        });
+        let allocation = xp_allocation(&entity, &rs);
+        assert_eq!(allocation.max_flow, 90, "fully funded");
+        assert_eq!(allocation.general_used, 15, "later life pays the 15");
+    }
+
+    /// The native-language block is restricted to the NATIVE instance: a second
+    /// Living Language is a childhood-spread purchase (":2378" allows a Living
+    /// Language "other than the character's native language"), so it may draw the
+    /// 45 but never the 75.
+    #[test]
+    fn a_second_living_language_draws_the_spread_not_the_native_block() {
+        let rs = life_stage_ruleset();
+        let mut entity = planned_companion();
+        entity.ability_scores.push(AbilityScore {
+            ability: Id::new("ability.living_language"),
+            parameter: Some("French".into()),
+            score: 3, // 30 xp: more than the 45 spread can spare alongside nothing else
+            specialty: None,
+        });
+        let allocation = xp_allocation(&entity, &rs);
+        assert_eq!(allocation.total_demand, 105, "75 + 30");
+        assert_eq!(allocation.max_flow, 105);
+        // The spread (45) covers the French 30; the native block cannot, and later
+        // life is not needed.
+        assert_eq!(allocation.general_used, 0);
+
+        // Push the second language past what the spread can fund and later life
+        // picks up the rest — proof the 75 stays reserved for the native instance.
+        entity.ability_scores[1].score = 5; // 75 xp
+        let allocation = xp_allocation(&entity, &rs);
+        assert_eq!(allocation.total_demand, 150);
+        assert_eq!(allocation.max_flow, 150);
+        assert_eq!(allocation.general_used, 30, "75 − 45 comes from later life");
+    }
+
+    /// Affinity's discount applies to a childhood-funded Ability exactly as it does
+    /// to any other spend: the pool is where the points come from, not how they are
+    /// priced. Swim 2 costs 15, so ⌈15 × 2/3⌉ = 10.
+    #[test]
+    fn affinity_still_discounts_a_childhood_funded_ability() {
+        let rs = life_stage_ruleset();
+        let mut entity = planned_companion();
+        entity.selections = vec![Selection::with_params(
+            Id::new("virtue.affinity_with_ability"),
+            BTreeMap::from([("ability".to_string(), Id::new("ability.swim"))]),
+        )];
+        entity.ability_scores.push(AbilityScore {
+            ability: Id::new("ability.swim"),
+            parameter: None,
+            score: 2,
+            specialty: None,
+        });
+        let allocation = xp_allocation(&entity, &rs);
+        assert_eq!(allocation.total_demand, 85, "75 + ceil(15 * 2/3) = 75 + 10");
+    }
+
+    /// Puissant adds to *use*, not to the bought score, so it is charged nothing —
+    /// the opposite handling from Affinity, and worth pinning beside it.
+    #[test]
+    fn puissant_costs_no_life_stage_experience() {
+        let rs = life_stage_ruleset();
+        let mut entity = planned_companion();
+        entity.selections = vec![Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([("ability".to_string(), Id::new("ability.swim"))]),
+        )];
+        let allocation = xp_allocation(&entity, &rs);
+        assert_eq!(
+            allocation.total_demand, 75,
+            "only the native language is charged"
+        );
+    }
+
+    /// Without a plan nothing changes: the general pool is the typed `xp_pool` and
+    /// no life-stage pool exists. This is the regression guard for every
+    /// directly-entered character.
+    #[test]
+    fn direct_entry_allocation_is_unchanged() {
+        let rs = life_stage_ruleset();
+        let mut entity = planned_companion();
+        entity.life_stages = None;
+        entity.xp_pool = 120;
+        let allocation = xp_allocation(&entity, &rs);
+        assert_eq!(allocation.general_pool, 120);
+        assert_eq!(allocation.general_used, 75);
+        assert!(
+            allocation.restricted.is_empty(),
+            "no life-stage pools: {:?}",
+            allocation.restricted
+        );
+    }
+
+    /// Each life-stage pool says where it came from, so the XP bar can label it
+    /// through a Fluent key rather than guessing from its ability list.
+    #[test]
+    fn life_stage_pools_carry_their_origin() {
+        let rs = life_stage_ruleset();
+        let allocation = xp_allocation(&planned_companion(), &rs);
+        let origins: Vec<&XpPoolOrigin> = allocation.restricted.iter().map(|p| &p.origin).collect();
+        assert!(
+            origins.contains(&&XpPoolOrigin::LifeStage {
+                block: LifeStageBlock::ChildhoodNativeLanguage
+            }),
+            "origins: {origins:?}"
+        );
+        assert!(
+            origins.contains(&&XpPoolOrigin::LifeStage {
+                block: LifeStageBlock::ChildhoodSpread
+            }),
+            "origins: {origins:?}"
+        );
     }
 }

@@ -762,6 +762,19 @@ impl Ruleset {
                     ));
                 }
             }
+            let native = &rules.childhood.native_language_ability;
+            match abilities_file.abilities.iter().find(|a| a.id == *native) {
+                None => errors.push(format!(
+                    "life-stage childhood names unknown native-language ability '{native}'"
+                )),
+                // The native language is one instance among many, so the ability it
+                // names must be parameterized — otherwise "the character's native
+                // language" could not be told from any other.
+                Some(ability) if ability.parameter.is_none() => errors.push(format!(
+                    "life-stage childhood native-language ability '{native}' takes no parameter, so it cannot name one language"
+                )),
+                Some(_) => {}
+            }
         }
 
         // A declared creation flow must be walkable: no phase twice (the second
@@ -3577,6 +3590,16 @@ mod tests {
     /// `review` is the wizard's synthetic terminal phase — it collects the issues
     /// no creation phase owns and is appended to every flow — so a profile that
     /// declares it would give the user two of them.
+    /// Abilities for the life-stage fixtures: the native-language block names a
+    /// PARAMETERIZED ability, since one language among many has to be nameable.
+    const LIFE_STAGE_ABILITIES: &str = r#"{
+      "advancement": [ { "score": 1, "total_xp": 5 } ],
+      "abilities": [
+        { "id": "ability.awareness", "category": "general" },
+        { "id": "ability.living_language", "category": "general", "parameter": "language" }
+      ]
+    }"#;
+
     /// The life-stage file is optional (a ruleset may ship no life stages), and
     /// when present its numbers reach the engine.
     #[test]
@@ -3584,6 +3607,7 @@ mod tests {
         let life_stages = r#"{
           "childhood": {
             "years": 5,
+            "native_language_ability": "ability.living_language",
             "native_language_xp": 75,
             "spread_xp": 45,
             "spread_abilities": ["ability.awareness"]
@@ -3595,7 +3619,7 @@ mod tests {
             version: "1",
             point_items: "[]",
             type_profiles: "[]",
-            abilities: Some(VALID_ABILITIES),
+            abilities: Some(LIFE_STAGE_ABILITIES),
             arts: None,
             houses: None,
             mythic_types: None,
@@ -3622,6 +3646,7 @@ mod tests {
         let life_stages = r#"{
           "childhood": {
             "years": 5,
+            "native_language_ability": "ability.living_language",
             "native_language_xp": 75,
             "spread_xp": 45,
             "spread_abilities": ["ability.nonesuch"]
@@ -3633,7 +3658,7 @@ mod tests {
             version: "1",
             point_items: "[]",
             type_profiles: "[]",
-            abilities: Some(VALID_ABILITIES),
+            abilities: Some(LIFE_STAGE_ABILITIES),
             arts: None,
             houses: None,
             mythic_types: None,
@@ -3648,6 +3673,38 @@ mod tests {
         assert!(
             msg.contains("ability.nonesuch"),
             "should name the unresolved childhood ability: {msg}"
+        );
+    }
+
+    /// "the character's native language" is one instance among many, so the ability
+    /// the block names must be parameterized — a plain one could not tell German
+    /// from every other language.
+    #[test]
+    fn the_native_language_ability_must_be_parameterized() {
+        let life_stages = r#"{
+          "childhood": {
+            "years": 5,
+            "native_language_ability": "ability.awareness",
+            "native_language_xp": 75,
+            "spread_xp": 45,
+            "spread_abilities": ["ability.awareness"]
+          },
+          "later_life": { "xp_per_year": 15 }
+        }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            abilities: Some(LIFE_STAGE_ABILITIES),
+            life_stages: Some(life_stages),
+            ..RulesetSources::default()
+        })
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("ability.awareness") && msg.contains("parameter"),
+            "should explain why the ability cannot name one language: {msg}"
         );
     }
 
