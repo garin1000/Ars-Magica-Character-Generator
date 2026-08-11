@@ -17,6 +17,10 @@ use crate::childhood::ChildhoodRejection;
 /// - `life_stage_xp_pool_conflict`: a raw pool alongside the plan. The two are
 ///   alternative ways of funding the same purchases, so carrying both would let a
 ///   character spend the derived budget *and* a typed pool.
+/// - `life_stage_age_unset`: no age at all, so the later-life block — the one
+///   counted in years — cannot be earned. Childhood is granted regardless
+///   ([`crate::life_stage::LifeStageRules::budget`]), so this is a finding of its
+///   own rather than a missing budget.
 /// - `life_stage_age_before_childhood`: an age inside the childhood block, which
 ///   earns childhood's experience but cannot have lived any later-life year.
 /// - `life_stage_native_language_unset`: no native language chosen, so the
@@ -47,6 +51,19 @@ pub(crate) fn validate_life_stage_plan(
             ValidationIssue::CODE_LIFE_STAGE_XP_POOL_CONFLICT,
             CreationPhase::Abilities,
             args([("xp_pool", entity.xp_pool.to_string())]),
+            None,
+        ));
+    }
+
+    // The later-life block is "15 experience points per year" up to the character's
+    // age (Core Rules.md:2392), so an unset age leaves it uncountable — said plainly
+    // here rather than left to surface as a shortfall on rows the guided flow may
+    // itself have written before an age was typed.
+    if entity.age.is_none() {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_LIFE_STAGE_AGE_UNSET,
+            CreationPhase::Abilities,
+            args([]),
             None,
         ));
     }
@@ -350,6 +367,34 @@ mod tests {
             "issues: {:?}",
             codes(&result)
         );
+    }
+
+    /// Later life is counted in years up to an age (Core Rules.md:2392), so a plan
+    /// with no age has no later-life block to earn. That is worth saying out loud:
+    /// the guided flow can write childhood rows before an age is typed, and without
+    /// this the only symptom would be a shortfall the player did not cause.
+    #[test]
+    fn a_plan_without_an_age_is_an_error() {
+        let mut entity = planned(25);
+        entity.age = None;
+        let result = validate(&entity, &rs());
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_AGE_UNSET)
+            .expect("the missing age is reported");
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert!(issue.args.is_empty(), "args: {:?}", issue.args);
+
+        // With an age it is silent, and a direct-entry character never sees it.
+        assert!(
+            !codes(&validate(&planned(25), &rs())).contains(&"life_stage_age_unset".to_string())
+        );
+        let mut direct = planned(25);
+        direct.life_stages = None;
+        direct.age = None;
+        assert!(!codes(&validate(&direct, &rs())).contains(&"life_stage_age_unset".to_string()));
     }
 
     #[test]

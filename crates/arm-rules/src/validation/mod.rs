@@ -139,6 +139,7 @@ impl fmt::Display for IssueSeverity {
 /// | `ability_category_requires_virtue` | error | abilities | `ability`, `category` |
 /// | `academic_ability_without_scholarly_language` | warning | abilities | `ability`, `min` |
 /// | `life_stage_xp_pool_conflict` | error | abilities | `xp_pool` |
+/// | `life_stage_age_unset` | error | abilities | (none) |
 /// | `life_stage_age_before_childhood` | error | abilities | `age`, `min` |
 /// | `life_stage_native_language_unset` | error | abilities | (none) |
 /// | `life_stage_native_language_missing_score` | warning | abilities | `language` |
@@ -348,6 +349,11 @@ impl ValidationIssue {
     /// inside the childhood block, so it cannot have lived a year of later life.
     pub const CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD: &'static str =
         "life_stage_age_before_childhood";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a life-stage plan with no
+    /// age, so the later-life block — the one that counts years — cannot be earned.
+    /// Childhood is granted regardless (Core Rules.md:2378), which is why this is a
+    /// finding of its own rather than the absence of a budget.
+    pub const CODE_LIFE_STAGE_AGE_UNSET: &'static str = "life_stage_age_unset";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: no native language chosen,
     /// leaving childhood's largest experience block with nothing to buy.
     pub const CODE_LIFE_STAGE_NATIVE_LANGUAGE_UNSET: &'static str =

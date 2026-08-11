@@ -2480,6 +2480,16 @@ Abilities are bought with experience earned in blocks, not from one bank:
   **excluding** that instance — the passage's "Living Language (other than the
   character's native language)". Unspent childhood experience is wasted, which the
   pre-existing `restricted_xp_unspent` warning already reports.
+- **Childhood is granted unconditionally, so it does not wait for an age.** `:2378`
+  gives the 75 + 45 "in the first five years of life" with no further condition;
+  only later life is counted in years up to an age (`:2392`). `budget` therefore
+  returns both childhood blocks with `later_life_years: 0` for a plan whose age is
+  not yet set, and returns `None` only when there is no plan at all. The missing age
+  is a finding in its own right — `life_stage_age_unset` (error, `abilities`, no
+  args) from `validate_life_stage_plan` — rather than the silent absence of a
+  budget: with no budget the two childhood pools would stand at 0 and every
+  childhood row would be reported as unfunded, which blames the player for rows the
+  guided flow itself writes before an age is typed.
 - Load-time referential integrity (not a sourced rule): every `spread_abilities` id
   and the `native_language_ability` must resolve, and the latter must be a
   *parameterized* ability — one language among many cannot be named otherwise.
@@ -2791,9 +2801,9 @@ Abilities are bought with experience earned in blocks, not from one bank:
 A character built through its life stages derives its funding from them, so
 carrying a directly-entered `xp_pool` as well would fund the same purchases twice.
 `validation/life_stage.rs` reports that as `life_stage_xp_pool_conflict`, alongside
-an age inside the childhood block, an unchosen native language, and a chosen one
-with no bought score (a warning — the points are merely unspent). No rulebook
-passage states this; it exists because the app offers two ways in.
+an unset age, an age inside the childhood block, an unchosen native language, and a
+chosen one with no bought score (a warning — the points are merely unspent). No
+rulebook passage states this; it exists because the app offers two ways in.
 
 The unspent-block warning and the 75-point pool read `:2378` the same way, which is
 a requirement rather than a coincidence: both key on
