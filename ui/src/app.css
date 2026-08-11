@@ -1159,6 +1159,61 @@ ul {
   color: var(--error);
 }
 
+/* The life-stage funding panel, a sibling above the Abilities/Arts region row: the
+   two funding radios, plus the age and native-language fields the guided mode needs.
+   Deliberately AUTO-HEIGHT — `.region-row` must stay the only `flex: 1` child of
+   `.vf-tab`, or the Available/Selected lists lose their bounded height and collapse. */
+.life-stage-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.life-stage-panel fieldset {
+  margin: 0;
+  padding: 0.4rem 0.75rem 0.6rem;
+  border: 1px solid #423f63;
+  border-radius: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.5rem;
+}
+
+.life-stage-panel legend {
+  padding-inline: 0.3rem;
+  font-weight: 600;
+}
+
+/* One option: the radio beside its label, its hint (and any reason) underneath. */
+.funding-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-width: 32rem;
+}
+
+/* The global input rule dresses text fields; a radio wants none of that padding. */
+.life-stage-panel input[type='radio'] {
+  padding: 0;
+  border: none;
+  background: none;
+  accent-color: var(--accent);
+}
+
+.funding-hint,
+.funding-reason {
+  color: var(--muted, #6b7280);
+  font-size: 0.85rem;
+}
+
+/* Age, its cap echo and the native language on one wrapping row. */
+.life-stage-fields {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 /* Carried-equipment list on the Selected side (name + Equipped checkbox + remove). */
 .equipment-list {
   list-style: none;
