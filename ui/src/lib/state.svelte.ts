@@ -217,6 +217,30 @@ function parameterKeys(localized: LocalizedRuleset): Set<string> {
  */
 export type AbilityFunding = 'pool' | 'life_stages';
 
+/**
+ * The Sample Childhood package the player is *considering*, plus the values typed
+ * into its parameter slots — the in-progress form, before it is applied.
+ *
+ * Deliberately UI state and never part of the entity. The entity records only the
+ * package actually taken (`life_stages.childhood_package`) and the Ability rows the
+ * application writes, whose `parameter` values *are* these slot values; keeping a
+ * parallel draft on the entity would give one decision two representations that can
+ * diverge — and would dirty the document for merely opening a picker. Held on the
+ * store rather than in the component so it survives a tab switch, exactly like
+ * {@link PickerFilters}.
+ */
+export interface ChildhoodDraft {
+  /** The package the picker has selected; `null` while none is chosen. */
+  packageId: string | null;
+  /** Slot key (`area_a`, `language`, …) -> the player's value. Blanks are absent. */
+  slots: Record<string, string>;
+}
+
+/** A fresh, empty childhood draft (the initial/reset state). */
+export function defaultChildhoodDraft(): ChildhoodDraft {
+  return { packageId: null, slots: {} };
+}
+
 class AppStore {
   lang = $state<Lang>('en');
   ruleset = $state<LocalizedRuleset | null>(null);
@@ -232,6 +256,11 @@ class AppStore {
   // Per-picker filter/search state; persists across tab switches (see
   // {@link PickerFilters}). Not part of the entity, so it is never saved.
   filters = $state<PickerFilters>(defaultPickerFilters());
+
+  // The in-progress Sample Childhood choice (see {@link ChildhoodDraft}). Like
+  // {@link filters} it is UI state: never part of the entity, so it is never saved
+  // and drafting never dirties the document.
+  childhoodDraft = $state<ChildhoodDraft>(defaultChildhoodDraft());
 
   /**
    * Which screen the app is on: the startup choice screen, the guided wizard, or
@@ -688,6 +717,65 @@ class AppStore {
       delete plan.native_language;
     }
     this.#scheduleValidate();
+  }
+
+  /**
+   * Select the Sample Childhood package the player is considering, or clear the
+   * consideration with `null`. Draft state only (see {@link ChildhoodDraft}):
+   * nothing is written to the entity until {@link applyChildhoodPackage}.
+   *
+   * Switching packages drops the slot values the new package does not declare, so a
+   * stale answer from the previous one can never be submitted — the
+   * {@link #prunedHouseChoices} precedent. Slots both packages ask for survive, so
+   * comparing two childhoods does not mean re-typing the shared answers. Clearing
+   * drops the selection and every slot.
+   *
+   * Not validated and not debounced: a draft is a form the engine has not been shown
+   * yet, so there is nothing to check until it is submitted.
+   */
+  setChildhoodDraftPackage(packageId: string | null): void {
+    if (packageId === null) {
+      this.childhoodDraft = defaultChildhoodDraft();
+      return;
+    }
+    this.childhoodDraft = { packageId, slots: this.#prunedChildhoodSlots(packageId) };
+  }
+
+  /**
+   * Answer one of the drafted package's parameter slots (the Area Lore region, the
+   * language, …). A blank or whitespace-only value deletes the key rather than
+   * storing an empty string: an unanswered slot is absent, which is what the
+   * engine's "slot unanswered" rejection is about. Draft state only, like
+   * {@link setChildhoodDraftPackage}.
+   */
+  setChildhoodDraftSlot(slot: string, value: string): void {
+    const answer = value.trim();
+    const slots = { ...this.childhoodDraft.slots };
+    if (answer) {
+      slots[slot] = answer;
+    } else {
+      delete slots[slot];
+    }
+    this.childhoodDraft.slots = slots;
+  }
+
+  /** The parameter slot keys the given package's entries declare. */
+  #childhoodSlotKeys(packageId: string): Set<string> {
+    const keys = new Set<string>();
+    for (const entry of this.ruleset?.ruleset.childhoods?.[packageId]?.entries ?? []) {
+      if (entry.slot) keys.add(entry.slot);
+    }
+    return keys;
+  }
+
+  /** Drafted slot answers kept only where the target package still asks for them. */
+  #prunedChildhoodSlots(packageId: string): Record<string, string> {
+    const asked = this.#childhoodSlotKeys(packageId);
+    const kept: Record<string, string> = {};
+    for (const [slot, answer] of Object.entries(this.childhoodDraft.slots)) {
+      if (asked.has(slot)) kept[slot] = answer;
+    }
+    return kept;
   }
 
   /**
@@ -1580,6 +1668,11 @@ class AppStore {
         this.entity = loaded.entity;
         this.currentPath = loaded.path;
         this.#savedSnapshot = this.#snapshot();
+        // A loaded character's recorded childhood package is history, not a draft:
+        // its slot answers already live in its Ability rows. Starting the draft
+        // empty is what keeps that coherent — nothing pre-fills a package whose
+        // slots are gone, so no applied package can show a spurious empty slot.
+        this.childhoodDraft = defaultChildhoodDraft();
         // Opening is reachable from any screen, so a load always lands in the
         // editor; a cancelled dialog leaves the current screen alone. A save
         // records no wizard progress, so an opened character is a finished
@@ -1612,6 +1705,7 @@ class AppStore {
     this.#resetWizardNav();
     this.currentPath = null;
     this.filters = defaultPickerFilters();
+    this.childhoodDraft = defaultChildhoodDraft();
     this.result = null;
     this.effective = null;
     this.derived = null;
@@ -1652,6 +1746,7 @@ class AppStore {
     this.entity.selections = [...this.#mandatoryTraitRefs(typeId)].map((ref) => ({ ref }));
     this.currentPath = null;
     this.filters = defaultPickerFilters();
+    this.childhoodDraft = defaultChildhoodDraft();
     this.result = null;
     this.effective = null;
     this.derived = null;
