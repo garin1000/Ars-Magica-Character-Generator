@@ -847,31 +847,10 @@ impl Ruleset {
             }
         }
 
-        // The childhood spread names abilities, so every id must resolve — a typo
-        // would silently shrink the list the guided flow offers rather than fail.
-        if let Some(rules) = &life_stage_rules {
-            let known: BTreeSet<&Id> = abilities_file.abilities.iter().map(|a| &a.id).collect();
-            for ability in &rules.childhood.spread_abilities {
-                if !known.contains(ability) {
-                    errors.push(format!(
-                        "life-stage childhood spread names unknown ability '{ability}'"
-                    ));
-                }
-            }
-            let native = &rules.childhood.native_language_ability;
-            match abilities_file.abilities.iter().find(|a| a.id == *native) {
-                None => errors.push(format!(
-                    "life-stage childhood names unknown native-language ability '{native}'"
-                )),
-                // The native language is one instance among many, so the ability it
-                // names must be parameterized — otherwise "the character's native
-                // language" could not be told from any other.
-                Some(ability) if ability.parameter.is_none() => errors.push(format!(
-                    "life-stage childhood native-language ability '{native}' takes no parameter, so it cannot name one language"
-                )),
-                Some(_) => {}
-            }
-        }
+        // The childhood block's own ability refs are checked in
+        // `validate_childhood_refs`, called from `validate_integrity` — so a
+        // cached ruleset arriving through `from_serialized` is held to the same
+        // standard as a freshly parsed one.
 
         // A declared creation flow must be walkable: no phase twice (the second
         // visit's Back would land where the user just was), and never `review`,
@@ -1327,6 +1306,7 @@ impl Ruleset {
         // Same invariant for the Art advancement table.
         errors.extend(self.art_advancement.validation_errors());
 
+        self.validate_childhood_refs(&mut errors);
         self.validate_childhood_packages(&mut errors);
 
         for (type_id, profile) in &self.type_profiles {
@@ -1497,6 +1477,41 @@ impl Ruleset {
                 "engine-required V/F category '{ENGINE_REQUIRED_CATEGORY_PERSONALITY}' \
                  is missing from the catalogue"
             ));
+        }
+    }
+
+    /// Validates the childhood block's own ability references: every ability on
+    /// the spread list must resolve, and so must the native-language ability —
+    /// which must additionally be parameterized, since "the character's native
+    /// language" is one instance among many and a plain Ability could not tell
+    /// German from any other language.
+    ///
+    /// A typo here would silently shrink the list the guided flow offers instead
+    /// of failing the load, which is why it is a load-time referential check like
+    /// every other ref in the rules data. It runs from
+    /// [`Ruleset::validate_integrity`] rather than [`Ruleset::from_sources`] so a
+    /// cached ruleset returning through [`Ruleset::from_serialized`] — the
+    /// documented integrity gate — is held to exactly the same standard.
+    fn validate_childhood_refs(&self, errors: &mut Vec<String>) {
+        let Some(rules) = &self.life_stages else {
+            return;
+        };
+        for ability in &rules.childhood.spread_abilities {
+            if !self.abilities.contains_key(ability) {
+                errors.push(format!(
+                    "life-stage childhood spread names unknown ability '{ability}'"
+                ));
+            }
+        }
+        let native = &rules.childhood.native_language_ability;
+        match self.abilities.get(native) {
+            None => errors.push(format!(
+                "life-stage childhood names unknown native-language ability '{native}'"
+            )),
+            Some(ability) if ability.parameter.is_none() => errors.push(format!(
+                "life-stage childhood native-language ability '{native}' takes no parameter, so it cannot name one language"
+            )),
+            Some(_) => {}
         }
     }
 
@@ -3996,6 +4011,45 @@ mod tests {
         assert!(
             msg.contains("ability.awareness") && msg.contains("parameter"),
             "should explain why the ability cannot name one language: {msg}"
+        );
+    }
+
+    /// A cached ruleset is trusted no further than a freshly parsed one: the
+    /// childhood cross-file checks belong to `validate_integrity`, which
+    /// [`Ruleset::from_serialized`] re-runs, so a spread naming a nonexistent
+    /// ability is rejected however the ruleset arrived.
+    #[test]
+    fn from_serialized_rejects_a_broken_childhood_spread() {
+        let life_stages = r#"{
+          "childhood": {
+            "years": 5,
+            "native_language_ability": "ability.living_language",
+            "native_language_xp": 75,
+            "spread_xp": 45,
+            "spread_abilities": ["ability.awareness"]
+          },
+          "later_life": { "xp_per_year": 15 }
+        }"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            abilities: Some(LIFE_STAGE_ABILITIES),
+            life_stages: Some(life_stages),
+            ..RulesetSources::default()
+        })
+        .unwrap();
+
+        let mut serialized = serde_json::to_value(&rs).unwrap();
+        serialized["life_stages"]["childhood"]["spread_abilities"] =
+            serde_json::Value::from(vec!["ability.nonesuch"]);
+
+        let err = Ruleset::from_serialized(&serialized.to_string()).unwrap_err();
+        assert_eq!(err.kind(), "integrity");
+        assert!(
+            err.to_string().contains("ability.nonesuch"),
+            "should name the unresolved childhood spread ability: {err}"
         );
     }
 

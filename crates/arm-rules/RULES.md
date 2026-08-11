@@ -2483,6 +2483,10 @@ Abilities are bought with experience earned in blocks, not from one bank:
 - Load-time referential integrity (not a sourced rule): every `spread_abilities` id
   and the `native_language_ability` must resolve, and the latter must be a
   *parameterized* ability — one language among many cannot be named otherwise.
+  Checked by `Ruleset::validate_childhood_refs` (`ruleset.rs`), called from
+  `validate_integrity` beside `validate_childhood_packages` — so it also runs on
+  `from_serialized`, and a cached ruleset is trusted no further than a freshly
+  parsed one.
 
 #### Sample Childhood packages (M6/6b3) — `childhood.rs`
 
