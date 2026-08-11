@@ -1,7 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { Ability, AbilityCategory, EffectiveScores, Entity, LocalizedRuleset } from '../types';
+import type {
+  Ability,
+  AbilityCategory,
+  EffectiveScores,
+  Entity,
+  LifeStageBudget,
+  LifeStagePlan,
+  LocalizedRuleset,
+} from '../types';
 
 // The XP bar reads the shared store singleton (entity + engine-derived effective
 // scores) and the Fluent bundle. The store schedules a debounced revalidate over
@@ -76,8 +84,12 @@ function resetEntity(pool: number): void {
 function setEffective(
   totalDemand: number,
   restricted: EffectiveScores['restricted_xp_pools'],
+  lifeStage: LifeStageBudget | null = null,
 ): void {
-  const pool = store.entity.xp_pool ?? 0;
+  // The general pool is later life's experience for a life-stage character and the
+  // typed `xp_pool` for a directly-entered one — exactly the engine's `base_general`
+  // (`effective.rs`), so a guided-mode test cannot assert against an impossible flow.
+  const pool = lifeStage ? lifeStage.later_life_xp : (store.entity.xp_pool ?? 0);
   const restrictedUsed = restricted.reduce((sum, p) => sum + p.used, 0);
   // Restricted pools are drained first (the engine's two-phase flow), so the
   // general pool funds the remainder — up to its size, never beyond.
@@ -91,7 +103,40 @@ function setEffective(
     xp_general_used: generalUsed,
     xp_max_flow: restrictedUsed + generalUsed,
     restricted_xp_pools: restricted,
+    life_stage: lifeStage,
   } as unknown as EffectiveScores;
+}
+
+/** A life-stage budget: `years × rate` funds later life, the general pool. */
+function budget(years: number, rate: number): LifeStageBudget {
+  return {
+    childhood_native_xp: 75,
+    childhood_spread_xp: 45,
+    later_life_years: years,
+    later_life_rate: rate,
+    later_life_xp: years * rate,
+  };
+}
+
+/** Put the entity in guided funding: a plan present IS the switch. */
+function installPlan(plan: LifeStagePlan = {}): void {
+  store.entity.life_stages = plan;
+}
+
+/** The two childhood blocks as the engine emits them: restricted, life-stage origin. */
+function childhoodPools(nativeUsed = 0, spreadUsed = 0): EffectiveScores['restricted_xp_pools'] {
+  return [
+    {
+      amount: 75,
+      used: nativeUsed,
+      origin: { kind: 'life_stage', block: 'childhood_native_language' },
+    },
+    {
+      amount: 45,
+      used: spreadUsed,
+      origin: { kind: 'life_stage', block: 'childhood_spread' },
+    },
+  ];
 }
 
 /** Render the bar to an HTML string (node env, no DOM). */
@@ -106,6 +151,11 @@ function element(body: string, testid: string): { open: string; text: string } {
   if (!match) throw new Error(`no element with data-testid="${testid}"`);
   const openMatch = new RegExp(`<[^>]*data-testid="${testid}"[^>]*>`, 'i').exec(body);
   return { open: openMatch![0], text: match[1].replace(/<[^>]*>/g, '').trim() };
+}
+
+/** Whether any element carries the exact data-testid. */
+function has(body: string, testid: string): boolean {
+  return new RegExp(`data-testid="${testid}"`).test(body);
 }
 
 beforeEach(() => {
@@ -202,5 +252,118 @@ describe('XpBar negative-available regression (Issue G(a))', () => {
     setEffective(30, []);
     const { open } = element(html(), 'xp-spent');
     expect(open).not.toMatch(/\bover-value\b/);
+  });
+});
+
+describe('XpBar under a life-stage plan (slice 6b3b)', () => {
+  it('replaces the editable pool input with a read-only later-life total', () => {
+    resetEntity(0);
+    installPlan();
+    setEffective(0, [], budget(10, 15));
+    const body = html();
+    // The engine forbids a plan AND a typed pool (life_stage_xp_pool_conflict), so
+    // the input must be gone entirely — and a read-only span, not a disabled input,
+    // so assistive tech does not announce an unusable control.
+    expect(has(body, 'xp-pool')).toBe(false);
+    const { open, text } = element(body, 'xp-pool-total');
+    expect(open).toMatch(/<span/i);
+    expect(open).not.toMatch(/<input/i);
+    expect(text).toBe('150');
+  });
+
+  it('renders the later-life row as years, rate and total experience', () => {
+    resetEntity(0);
+    installPlan();
+    setEffective(0, [], budget(10, 15));
+    const { text } = element(html(), 'life-stage-later-life');
+    expect(text).toContain('10');
+    expect(text).toContain('15');
+    expect(text).toContain('150');
+    // ASCII hyphen-minus only; nothing here is negative but no U+2212 may leak in.
+    expect(text).not.toContain('−');
+  });
+
+  it('keeps the spent and available arithmetic against the derived later-life pool', () => {
+    resetEntity(0);
+    installPlan();
+    setEffective(60, [], budget(10, 15)); // 150-point general pool, 60 spent
+    const body = html();
+    expect(element(body, 'xp-spent').text).toBe('60');
+    expect(element(body, 'xp-available').text).toContain('90');
+  });
+
+  it('announces a missing budget with role=status when the plan yields none', () => {
+    resetEntity(0);
+    installPlan();
+    setEffective(0, [], null); // no age typed, or a ruleset without life-stage rules
+    const body = html();
+    const { open, text } = element(body, 'life-stage-no-budget');
+    // It appears in response to an unrelated edit (the age), so its arrival must
+    // be announced rather than silently rendered.
+    expect(open).toMatch(/role="status"/);
+    expect(text).toContain('No life-stage experience yet');
+    expect(has(body, 'life-stage-later-life')).toBe(false);
+  });
+
+  it('offers the clear button only when a plan coexists with a typed pool', () => {
+    resetEntity(40); // a hand-edited save carrying both
+    installPlan();
+    setEffective(0, [], budget(10, 15));
+    const body = html();
+    const { open, text } = element(body, 'xp-pool-clear');
+    expect(open).toMatch(/<button/i);
+    expect(text).toContain('Clear pool');
+    // The hint explaining why the pool must go back to 0 is wired for assistive tech.
+    expect(open).toMatch(/aria-describedby="xp-pool-clear-hint"/);
+    expect(element(body, 'xp-pool-clear-hint').open).toMatch(/id="xp-pool-clear-hint"/);
+  });
+
+  it('omits the clear button when the plan carries no typed pool', () => {
+    resetEntity(0);
+    installPlan();
+    setEffective(0, [], budget(10, 15));
+    const body = html();
+    expect(has(body, 'xp-pool-clear')).toBe(false);
+    expect(has(body, 'xp-pool-clear-hint')).toBe(false);
+  });
+
+  it('localizes the childhood blocks the engine already emits, with no new code', () => {
+    resetEntity(0);
+    installPlan();
+    setEffective(20, childhoodPools(5, 15), budget(10, 15));
+    const body = html();
+    // Both blocks arrive as ordinary restricted pools with a life_stage origin, so
+    // the existing restricted rows name them through the xp-pool-<block> keys.
+    expect(element(body, 'restricted-xp-0').text).toContain('Native language');
+    expect(element(body, 'restricted-xp-0').text).toContain('75');
+    expect(element(body, 'restricted-xp-1').text).toContain('Early childhood');
+    expect(element(body, 'restricted-xp-1').text).toContain('45');
+  });
+
+  it('gives the Arts instance the identical guided shape', () => {
+    resetEntity(40);
+    installPlan();
+    setEffective(0, [], budget(10, 15));
+    const body = html('art-');
+    // Arts spend the SAME pool, so the Arts bar must not offer the forbidden input
+    // either — this is correct, not an oversight to be "fixed" later.
+    expect(has(body, 'art-xp-pool')).toBe(false);
+    expect(element(body, 'art-xp-pool-total').text).toBe('150');
+    expect(() => element(body, 'art-life-stage-later-life')).not.toThrow();
+    expect(() => element(body, 'art-xp-pool-clear')).not.toThrow();
+  });
+});
+
+describe('XpBar flat mode is untouched by the guided branch (slice 6b3b)', () => {
+  it('keeps the editable pool input and adds no life-stage node without a plan', () => {
+    resetEntity(200);
+    setEffective(0, []);
+    const body = html();
+    // Four e2e specs drive this input; every guided node must stay behind the plan check.
+    expect(element(body, 'xp-pool').open).toMatch(/<input/i);
+    expect(has(body, 'xp-pool-total')).toBe(false);
+    expect(has(body, 'xp-pool-clear')).toBe(false);
+    expect(has(body, 'life-stage-later-life')).toBe(false);
+    expect(has(body, 'life-stage-no-budget')).toBe(false);
   });
 });
