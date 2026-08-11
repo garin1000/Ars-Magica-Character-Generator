@@ -143,6 +143,15 @@ pub enum ChildhoodRejection {
     /// language, so the package's native-language entry has no language to be
     /// written under.
     NativeLanguageUnset,
+    /// A parameterized entry's slot was left unanswered — no value at all, or
+    /// one that is blank once trimmed — so the row it would write has no
+    /// parameter to be told apart by.
+    SlotUnfilled {
+        /// The entry's slot key, for targeting the offending field.
+        slot: String,
+        /// The Ability the unanswered entry buys.
+        ability: Id,
+    },
 }
 
 /// Applies a Sample Childhood package to a character, returning the character it
@@ -156,10 +165,13 @@ pub enum ChildhoodRejection {
 /// Each of the package's entries becomes an ordinary bought
 /// [`AbilityScore`] keyed by `(ability, parameter)` — the same rows a
 /// hand-divided childhood produces, which is why nothing downstream needs to
-/// know a package was involved. The parameter comes from the entry:
-/// the native-language entry takes the plan's
-/// [`native_language`](crate::life_stage::LifeStagePlan::native_language), and a
-/// plain entry takes none.
+/// know a package was involved. The parameter comes from the entry: the
+/// native-language entry takes the plan's
+/// [`native_language`](crate::life_stage::LifeStagePlan::native_language), a
+/// parameterized entry takes `slot_values[slot]` trimmed (so Traveling's two Area
+/// Lore slots become two distinct rows), and a plain entry takes none. A slot
+/// that is missing or blank once trimmed is unanswered, not answered with an
+/// empty string.
 ///
 /// The write is a **monotone raise**: an existing row is brought to
 /// `max(existing, entry.score)` and keeps its specialty, and a row the package
@@ -208,11 +220,19 @@ pub fn apply_package(
                 // Already reported above; there is nothing to write it under.
                 None => continue,
             }
+        } else if let Some(slot) = entry.slot.as_deref() {
+            match filled_slot_value(slot_values, slot) {
+                Some(value) => Some(value.to_string()),
+                None => {
+                    rejections.push(ChildhoodRejection::SlotUnfilled {
+                        slot: slot.to_string(),
+                        ability: entry.ability.clone(),
+                    });
+                    continue;
+                }
+            }
         } else {
-            entry
-                .slot
-                .as_deref()
-                .and_then(|slot| slot_values.get(slot).cloned())
+            None
         };
         raise_score(&mut scores, &entry.ability, parameter, entry.score);
     }
@@ -228,6 +248,16 @@ pub fn apply_package(
     }
     applied.normalize();
     Ok(applied)
+}
+
+/// The player's answer for `slot`, or `None` when the slot is unanswered.
+///
+/// Surrounding whitespace is the player's typing rather than part of the answer,
+/// so it is trimmed off — which also makes a whitespace-only value count as no
+/// value at all, as it should.
+fn filled_slot_value<'a>(slot_values: &'a BTreeMap<String, String>, slot: &str) -> Option<&'a str> {
+    let value = slot_values.get(slot)?.trim();
+    (!value.is_empty()).then_some(value)
 }
 
 /// Raises the `(ability, parameter)` row to `score`, adding it when the
@@ -729,6 +759,62 @@ mod tests {
 
         assert_eq!(rejections, vec![ChildhoodRejection::NativeLanguageUnset]);
         assert_eq!(entity, before);
+    }
+
+    /// A slot value is nothing more than the row's `parameter`, so Traveling's two
+    /// Area Lore slots become two distinct rows and its spread language sits
+    /// beside the native one (Core Rules.md:2388). Surrounding whitespace is the
+    /// player's typing, not part of the answer, so it is trimmed off.
+    #[test]
+    fn slot_values_become_ordinary_ability_parameters() {
+        let applied = apply_package(
+            &child(Some("German")),
+            &traveling(),
+            &filled(&[
+                ("area_a", "  Rhine  "),
+                ("area_b", "Provence"),
+                ("language", "Italian"),
+            ]),
+            &ruleset(),
+        )
+        .expect("every slot is filled");
+
+        assert_eq!(
+            rows(&applied),
+            vec![
+                ("ability.area_lore", Some("Provence"), 1),
+                ("ability.area_lore", Some("Rhine"), 1),
+                ("ability.folk_ken", None, 2),
+                ("ability.living_language", Some("Italian"), 1),
+                ("ability.living_language", Some("German"), 5),
+                ("ability.survival", None, 2),
+            ]
+        );
+    }
+
+    /// A slot the player left blank is unanswered, not answered with an empty
+    /// string: writing `Area Lore ()` would be a row no one asked for.
+    #[test]
+    fn a_blank_slot_value_counts_as_unfilled() {
+        let rejections = apply_package(
+            &child(Some("German")),
+            &traveling(),
+            &filled(&[
+                ("area_a", "Rhine"),
+                ("area_b", "   "),
+                ("language", "Italian"),
+            ]),
+            &ruleset(),
+        )
+        .expect_err("a whitespace-only value fills nothing");
+
+        assert_eq!(
+            rejections,
+            vec![ChildhoodRejection::SlotUnfilled {
+                slot: "area_b".to_string(),
+                ability: Id::new("ability.area_lore"),
+            }]
+        );
     }
 
     /// Slot values as a UI would supply them.
