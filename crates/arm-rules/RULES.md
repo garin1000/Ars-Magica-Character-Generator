@@ -2520,6 +2520,25 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `:2378` already grants, so `spread_xp`/`native_xp` exist to *check* the shipped
   data against the blocks rather than to fund anything. Funding stays with the
   restricted 45/75 pools in `effective.rs` (`xp_allocation`).
+- **The 45/75 arithmetic is enforced at load, as the transcription trust gate.**
+  `Ruleset::validate_childhood_packages` (`ruleset.rs`, called from
+  `validate_integrity`, so it also runs on `from_serialized`) re-prices every
+  shipped package off the advancement table and rejects the ruleset unless the
+  spread equals `childhood.spread_xp` and the native entry equals
+  `childhood.native_language_xp` — the numbers come from
+  `rules/core/life_stages.json`, never from a constant in code. A score with no
+  row in the table is reported as unpriceable rather than costed at 0. This is
+  what keeps a hand-transcribed catalogue honest: a mistyped "Athletics 1" fails
+  the load instead of shipping a package that quietly costs 35 rather than 45.
+  Eleven further load-time rules guard the same data: every entry's ability
+  resolves; a parameterized ability carries a `slot` (unless it is the native
+  language, chosen once per character) and a plain one does not; slots are unique
+  within a package; there is exactly **one** `native` entry (which is what makes
+  `native_entry`'s "at most one" a guarantee) and it names
+  `childhood.native_language_ability`; every non-native entry is on the closed
+  `:2378` spread list; packages shipped without life-stage rules are rejected,
+  since nothing could price them; and `source` ranges are not inverted. All
+  errors accumulate, so a broken file reports every problem at once.
 - Engine reading where the text is terse: "Native Language 5" names no language,
   because the language is the character's own choice — so the entry carries a
   `native` flag and the chosen language lives in `LifeStagePlan::native_language`.
@@ -2532,8 +2551,8 @@ Abilities are bought with experience earned in blocks, not from one bank:
   table, whose order is unobservable): it is the order `slots()` asks the player
   for parameters in. Canonical `(ability, slot)` ordering is therefore a property
   of the shipped file, checked where the file is loaded.
-- **Deferred to the rest of 6b3:** wiring the catalogue into `Ruleset` with its
-  referential-integrity checks, the i18n names, applying a package to an entity —
+- **Deferred to the rest of 6b3:** the shipped `childhoods.json` itself, the i18n
+  names, applying a package to an entity —
   a **monotone raise**, `score = max(existing, entry.score)` keyed by
   `(ability, parameter)`, hence idempotent and never lowering a hand-bought score —
   and the UI that offers them.
