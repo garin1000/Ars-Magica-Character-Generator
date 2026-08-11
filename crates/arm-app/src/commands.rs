@@ -3,7 +3,7 @@
 
 use std::sync::{Mutex, RwLock};
 
-use arm_rules::{Entity, LocalizedRuleset, ValidationMode, ValidationResult};
+use arm_rules::{Entity, Id, LocalizedRuleset, ValidationMode, ValidationResult};
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
@@ -12,7 +12,7 @@ use arm_rules::DerivedTotals;
 
 use crate::error::AppError;
 use crate::ruleset_io;
-use crate::ruleset_io::EffectiveScores;
+use crate::ruleset_io::{ChildhoodApplication, EffectiveScores};
 
 /// Holds the parsed, localized ruleset so validation does not re-read and
 /// re-check the rules files on every keystroke. `None` until `load_ruleset`
@@ -129,6 +129,30 @@ pub fn effective_scores(
     let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
     Ok(ruleset_io::effective_scores_loaded(
         &entity,
+        &ruleset.ruleset,
+    ))
+}
+
+/// Applies a Sample Childhood package to the character, returning either the
+/// character it becomes or the reasons it could not be applied (as localizable
+/// [`arm_rules::ValidationIssue`]s — see [`ChildhoodApplication`]).
+///
+/// `slot_values` answers the package's parameter slots (`area_a`, `language`, …),
+/// keyed by slot; JS supplies it as `slotValues`, as Tauri's camelCase argument
+/// convention requires.
+#[tauri::command]
+pub fn apply_childhood_package(
+    entity: Entity,
+    package_id: String,
+    slot_values: std::collections::BTreeMap<String, String>,
+    state: State<'_, AppState>,
+) -> Result<ChildhoodApplication, AppError> {
+    let guard = state.ruleset.read().expect("ruleset lock poisoned");
+    let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
+    Ok(ruleset_io::apply_childhood_package_loaded(
+        &entity,
+        &Id::new(package_id),
+        &slot_values,
         &ruleset.ruleset,
     ))
 }

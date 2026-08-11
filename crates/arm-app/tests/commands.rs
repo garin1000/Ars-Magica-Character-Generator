@@ -7,9 +7,9 @@ use std::path::PathBuf;
 
 use arm_app::error::AppError;
 use arm_app::ruleset_io::{
-    RULESET_ID, RULESET_VERSION, effective_scores_loaded, ensure_extension,
-    export_markdown_to_path, load_entity_from_path, load_ruleset_from_dir, pick_rules_dir,
-    save_entity_to_path, validate_loaded,
+    ChildhoodApplication, RULESET_ID, RULESET_VERSION, apply_childhood_package_loaded,
+    effective_scores_loaded, ensure_extension, export_markdown_to_path, load_entity_from_path,
+    load_ruleset_from_dir, pick_rules_dir, save_entity_to_path, validate_loaded,
 };
 use arm_rules::{ArtScore, Entity, Id, Ruleset, RulesetSources, Selection, ValidationMode};
 use pretty_assertions::assert_eq;
@@ -797,6 +797,138 @@ fn effective_scores_surface_the_spell_levels_bonus_separately() {
     let overridden = effective_scores_loaded(&magus, &ruleset);
     assert_eq!(overridden.spell_levels_bonus, 30);
     assert_eq!(overridden.spell_levels_budget, 110);
+}
+
+/// A companion built through its life stages, speaking `native_language` — the
+/// character a Sample Childhood package is applied to (childhood exists only in
+/// life-stage mode, and the package's native-language entry takes the plan's
+/// language).
+fn life_stage_companion(native_language: &str) -> Entity {
+    let mut entity = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("companion"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+    entity.age = Some(25);
+    entity.life_stages = Some(arm_rules::LifeStagePlan {
+        native_language: Some(native_language.to_string()),
+        ..arm_rules::LifeStagePlan::default()
+    });
+    entity
+}
+
+/// The entity's Ability rows as `(ability, parameter, score)`, in the canonical
+/// order the applied entity comes back normalized into.
+fn ability_rows(entity: &Entity) -> Vec<(&str, Option<&str>, u8)> {
+    entity
+        .ability_scores
+        .iter()
+        .map(|row| (row.ability.as_str(), row.parameter.as_deref(), row.score))
+        .collect()
+}
+
+/// Applying a shipped package through the command path writes its entries as
+/// ordinary bought Ability rows, the native-language one under the language the
+/// plan names — "Athletic Childhood: Athletics 2, Brawl 2, Native Language 5,
+/// Swim 2" (Ars Magica - Definitive Edition (Core Rules).md:2384).
+#[test]
+fn apply_childhood_package_writes_the_package_rows() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+
+    let outcome = apply_childhood_package_loaded(
+        &life_stage_companion("German"),
+        &Id::new("childhood.athletic"),
+        &BTreeMap::new(),
+        &ruleset,
+    );
+
+    let ChildhoodApplication::Applied { entity } = outcome else {
+        panic!("Athletic Childhood asks the player for nothing, so it applies: {outcome:?}");
+    };
+    assert_eq!(
+        ability_rows(&entity),
+        vec![
+            ("ability.athletics", None, 2),
+            ("ability.brawl", None, 2),
+            ("ability.living_language", Some("German"), 5),
+            ("ability.swim", None, 2),
+        ]
+    );
+    assert_eq!(
+        entity
+            .life_stages
+            .and_then(|plan| plan.childhood_package)
+            .as_ref(),
+        Some(&Id::new("childhood.athletic")),
+        "the package taken is recorded on the plan"
+    );
+}
+
+/// A slot the player never answered is reported as an ordinary
+/// `ValidationIssue`, carrying the Ability, its parameter key, and the slot the
+/// UI highlights — Traveling asks for two Area Lores plus a second language
+/// (Core Rules.md:2388), and only two of the three arrive here.
+#[test]
+fn apply_childhood_package_rejects_an_unfilled_slot() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut slot_values = BTreeMap::new();
+    slot_values.insert("area_a".to_string(), "Rhine".to_string());
+    slot_values.insert("language".to_string(), "Italian".to_string());
+
+    let outcome = apply_childhood_package_loaded(
+        &life_stage_companion("German"),
+        &Id::new("childhood.traveling"),
+        &slot_values,
+        &ruleset,
+    );
+
+    let ChildhoodApplication::Rejected { issues } = outcome else {
+        panic!("area_b was never answered, so nothing may be written: {outcome:?}");
+    };
+    assert_eq!(
+        issues.len(),
+        1,
+        "one unanswered slot, one issue: {issues:?}"
+    );
+    let issue = &issues[0];
+    assert_eq!(issue.code, "childhood_slot_unfilled");
+    assert_eq!(
+        issue.args.get("ability").map(String::as_str),
+        Some("ability.area_lore")
+    );
+    assert_eq!(issue.args.get("key").map(String::as_str), Some("area"));
+    assert_eq!(issue.args.get("slot").map(String::as_str), Some("area_b"));
+}
+
+/// The outcome crosses IPC as a tagged union, because the frontend switches on
+/// `status` — and rejections travel as issue codes, never as English prose.
+#[test]
+fn apply_childhood_package_serializes_as_a_tagged_union() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+
+    let applied = serde_json::to_value(apply_childhood_package_loaded(
+        &life_stage_companion("German"),
+        &Id::new("childhood.athletic"),
+        &BTreeMap::new(),
+        &ruleset,
+    ))
+    .unwrap();
+    assert_eq!(applied["status"], "applied");
+    assert!(
+        applied["entity"].is_object(),
+        "an applied outcome carries the entity: {applied}"
+    );
+
+    // A package id the ruleset does not ship is a rejection, not a silent no-op.
+    let rejected = serde_json::to_value(apply_childhood_package_loaded(
+        &life_stage_companion("German"),
+        &Id::new("childhood.nonesuch"),
+        &BTreeMap::new(),
+        &ruleset,
+    ))
+    .unwrap();
+    assert_eq!(rejected["status"], "rejected");
+    assert_eq!(rejected["issues"][0]["code"], "childhood_package_unknown");
 }
 
 /// Extracts every fixed issue code from the engine's validation source so the
