@@ -9,6 +9,7 @@ import type {
   ArtType,
   Characteristic,
   CharacteristicRules,
+  CreationPhase,
   Entity,
   EntityTypeProfile,
   EquipmentSlot,
@@ -22,6 +23,7 @@ import type {
   Selection,
   Spell,
   SpellSelection,
+  ValidationIssue,
   ValidationMode,
   ValidationResult,
 } from './types';
@@ -851,6 +853,64 @@ export function invalidSelectionIds(result: ValidationResult | null | undefined)
     if (issue.context) ids.add(issue.context);
   }
   return ids;
+}
+
+/**
+ * The steps the guided wizard walks for a character type: the profile's own
+ * ordered `creation_phases`, then the wizard's terminal `review` step.
+ *
+ * The order is the ruleset's, never imposed here — a magus declares
+ * `house_specialisation` before `virtues_flaws` because the House grants a free
+ * Virtue the V/F budget then has to account for. `review` is appended rather than
+ * declared (the engine rejects a profile that declares it) because it is the
+ * wizard's own step: it holds the findings no creation phase owns, and gates
+ * Finish on the whole character.
+ *
+ * Empty without a profile, so a wizard opened before the ruleset loads shows
+ * nothing rather than a bogus one-step flow.
+ */
+export function wizardPhases(profile: EntityTypeProfile | undefined): CreationPhase[] {
+  if (!profile) return [];
+  return [...profile.creation_phases, 'review'];
+}
+
+/** The findings attributed to one creation phase — what a wizard step shows. */
+export function issuesForPhase(issues: ValidationIssue[], phase: CreationPhase): ValidationIssue[] {
+  return issues.filter((issue) => issue.phase === phase);
+}
+
+/**
+ * Whether a phase holds an error, which is what blocks advancing past it.
+ *
+ * Errors only: a warning is an advisory, not an illegal state, so it never gates.
+ * That is deliberate but it does mean legal is not the same as complete — a magus
+ * can walk past the House step with no House, because `house_unset` is a warning.
+ * The completeness indicator that surfaces such gaps is 6b8.
+ */
+export function phaseHasBlockingIssue(issues: ValidationIssue[], phase: CreationPhase): boolean {
+  return issues.some((issue) => issue.phase === phase && issue.severity === 'error');
+}
+
+/**
+ * The index of the first phase in `phases[from..=to]` that blocks, or `null` if
+ * the whole range is clear.
+ *
+ * The range is **inclusive of `from`**: a forward rail jump starts at a phase the
+ * user may have just broken, and skipping it would make the rail a way around the
+ * very gate that blocks Next. A backwards range is never blocked — Back is always
+ * allowed, so the user can always reach the step that needs fixing.
+ */
+export function firstBlockedPhaseIndex(
+  phases: CreationPhase[],
+  issues: ValidationIssue[],
+  from: number,
+  to: number,
+): number | null {
+  for (let i = from; i <= to; i++) {
+    const phase = phases[i];
+    if (phase && phaseHasBlockingIssue(issues, phase)) return i;
+  }
+  return null;
 }
 
 export interface AbilityGroup {
