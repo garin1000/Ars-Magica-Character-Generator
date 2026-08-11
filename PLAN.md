@@ -612,9 +612,20 @@ Slices 6b1a (phase vocabulary + issue attribution) and 6b1b (the wizard shell) a
       "sophisticated" guided life-stage flow — early childhood (Native Language
       + the 45-xp restricted spread, with an optional Sample Childhood prefab),
       then 15 xp/year to the chosen age, enforcing the age → max-score cap
-- [ ] Life-stage XP engine (deferred from M3): early-childhood 75+45 xp, later-life
-      15/20/10 xp per year, age→max-Ability-score cap; feeds the `unspent_xp` bank
-      and validates against it. Source: Core Rules.md:2364-2394
+- [x] Life-stage XP engine (deferred from M3), **6b2**: early-childhood 75+45 xp and
+      later-life 15/20/10 per year, as `rules/core/life_stages.json` + `life_stage.rs`.
+      Childhood's two blocks are instance-restricted pools in the existing max-flow
+      allocation (the 75 buys the chosen native language, the 45 the eleven-ability
+      list excluding it); later life is the general pool. The age→max-score cap was
+      already enforced (`ability_above_age_cap`). Also ships the **Poor Major Flaw,
+      which was missing from the catalogue entirely**, and forbids Wealthy/Poor on the
+      magus and mythic-companion profiles. Source: Core Rules.md:2364, :2378, :2392,
+      :2394, :6594-6596
+- [ ] 6b2b: the Virtue requirement for Academic/Arcane/Martial Abilities — the
+      general pool currently funds them with no Virtue (only the Supernatural half is
+      enforced). Source: Core Rules.md:2315, :2392, :7151
+- [ ] 6b2c: Foreign Upbringing halves the cap on locality-dependent Abilities.
+      Source: Core Rules.md:6158-6160
 - [ ] Sample Childhood packages (deferred from M3): childhood model + registry +
       load-time integrity (ability refs resolve) + an "apply package" step.
       Source: Core Rules.md:2380-2388
@@ -763,11 +774,19 @@ the shell: a third view over the same character, a step rail in the ruleset's de
 order, back/forward navigation, per-step gating on that step's errors, and a Review
 step for the findings no phase owns. The e2e suite is 26 specs.
 
-Next: **6b2 onwards**, the engines the guided steps will drive — life-stage XP
-(including the **Poor Major Flaw, which is missing from the catalogue entirely**),
-Sample Childhood packages, magus apprenticeship and post-Gauntlet accrual, and aging
-for characters over 35 (with die results typed by the user, so the engine stays
-deterministic). Slice-by-slice plan: `M6B-IMPLEMENTATION.md`.
+**6b2 is done**: the life-stage XP engine. Childhood's 75 + 45 and later life's
+15/20/10 per year are data in `rules/core/life_stages.json`; `Entity::life_stages`
+stores only the *choices* (which language is native), so every figure is derived from
+them plus the age; and childhood's two blocks fund through the existing max-flow
+allocation as instance-restricted pools rather than as one bank. It also shipped the
+**Poor Major Flaw, which was absent from the catalogue entirely**, and the
+companions-only restriction on it and Wealthy.
+
+Next: **6b3 onwards** — Sample Childhood packages, magus apprenticeship and
+post-Gauntlet accrual, and aging for characters over 35 (with die results typed by
+the user, so the engine stays deterministic). Two severable tails from 6b2 remain
+open: the Academic/Arcane/Martial Virtue requirement (6b2b) and Foreign Upbringing's
+halved cap (6b2c). Slice-by-slice plan: `M6B-IMPLEMENTATION.md`.
 
 ---
 
