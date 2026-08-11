@@ -225,13 +225,20 @@ Markdown export added in M5.6.
   enforces the gate is still the validation-mode control: Advisory and Silent stop
   it gating at all.
 
+- **Life-stage experience.** A character can earn its Abilities the way the rules
+  grant them — 75 points of native language and a restricted 45-point spread in
+  early childhood, then 15 a year (20 with Wealthy, 10 with Poor) to its age —
+  instead of typing one experience total. The save records only the choices, so every
+  figure is re-derived; and each block funds only what it may, so childhood's
+  native-language points cannot quietly pay for a second language.
+
 ### Next
 
-The wizard's life-stage XP flow — early-childhood and per-year experience, Sample
-Childhood packages, the magus's apprenticeship, and aging for characters over 35 —
-which is engine work the guided steps will then drive. See
-[PLAN.md](PLAN.md) for the milestone breakdown and
-[M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the slice-by-slice plan.
+The rest of the wizard's life-stage flow: Sample Childhood packages, the magus's
+apprenticeship and post-Gauntlet years, and aging for characters over 35 (die results
+typed by the player, so the engine stays deterministic). See [PLAN.md](PLAN.md) for
+the milestone breakdown and [M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the
+slice-by-slice plan.
 
 ## Getting started
 

@@ -9,8 +9,26 @@ here and the matching `PLAN.md` box in the same commit as green code.
 type is fixed at creation via `store.createCharacter(typeId)`. 6b1b replaced that
 screen's hardcoded-disabled wizard button with one guided entry per character type.
 
-**Status: 6b1a and 6b1b are done** (26 e2e specs green against the real binary). Next
-is 6b2 — the life-stage XP engine, and with it the missing Poor Major Flaw.
+**Status: 6b1a, 6b1b and 6b2 are done.** Next is 6b3 — Sample Childhood packages and
+the sophisticated Abilities step.
+
+6b2 shipped as five commits: the life-stage rules as data; the missing Poor Major
+Flaw plus the Wealthy/Poor rate effect; `Entity::life_stages` and the derived
+budget; the childhood blocks as instance-restricted pools in the existing solver;
+and the surfacing. Two deliberate deviations from the plan above:
+
+- **`life_stages.json` carries only childhood and later life.** The apprenticeship
+  and post-apprenticeship numbers move to 6b4/6b5, with the engines that read them —
+  shipping inert unvalidated data is the very thing the M3 deferral note warned
+  against.
+- **`ChildhoodRules.native_language_ability` was added** (not in the plan): the
+  native-language block has to name the ability it buys, and a hardcoded
+  `ability.living_language` in Rust would have been an engine-required slug. It is
+  data, and load-time integrity requires it to resolve *and* be parameterized.
+
+The two severable tails stay open: **6b2b** (the `:2315`/`:2392` Virtue requirement
+for Academic/Arcane/Martial Abilities — today the general pool funds them with no
+Virtue) and **6b2c** (Foreign Upbringing's halved locality-dependent cap).
 
 ## Required gate (end of every slice, before any "done" claim)
 

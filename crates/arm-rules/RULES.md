@@ -2444,6 +2444,98 @@ The per-item audit that fed this wiring follows (source line-ranges retained).
 - `virtue.venditor` (Core:5207-5210) — XP grant 50
 
 
+## Life-stage experience (M6/6b2) — `life_stage.rs`
+
+Abilities are bought with experience earned in blocks, not from one bank:
+
+> Abilities represent a character's learned abilities. For grogs and companions
+> they are acquired in two blocks: early childhood, and later life. For magi, there
+> are two more periods to consider: apprenticeship, and life as a magus after that.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2364`.
+- Implementation: `crates/arm-rules/src/life_stage.rs`. The magus's two further
+  periods are **M6/6b4-6b5**, not implemented here.
+
+#### Early childhood — 75 + 45, and the closed spread list
+
+> In the first five years of life, characters gain 75 experience points in their
+> native language (see page 167 for the Language Ability), which normally gives them
+> a score of 5, and 45 experience points to divide between Area Lore (for the place
+> or places the character is growing up), Athletics, Awareness, Brawl, Charm, Folk
+> Ken, Guile, Living Language (other than the character's native language), Stealth,
+> Survival, and Swim. You do not need to put points into all of these Abilities;
+> choose the ones that best fit your conception of the character.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2378`.
+- Data: `rules/core/life_stages.json` → `childhood`: `years` 5,
+  `native_language_xp` 75, `spread_xp` 45, and `spread_abilities` (the eleven ids
+  the passage names). `native_language_ability` names the ability the 75 buys
+  (`ability.living_language`) as data rather than a hardcoded slug.
+- Implementation: `life_stage.rs` — `ChildhoodRules`, and
+  `LifeStageRules::budget`, which reports the two blocks separately because they
+  fund different things. They become two **restricted pools** in the existing
+  allocation solve (`effective.rs` — `xp_allocation`): the native block funds one
+  ability *instance* (the chosen language), the spread funds the eleven-ability list
+  **excluding** that instance — the passage's "Living Language (other than the
+  character's native language)". Unspent childhood experience is wasted, which the
+  pre-existing `restricted_xp_unspent` warning already reports.
+- Load-time referential integrity (not a sourced rule): every `spread_abilities` id
+  and the `native_language_ability` must resolve, and the latter must be a
+  *parameterized* ability — one language among many cannot be named otherwise.
+
+#### Later life — 15 experience points per year
+
+> After early childhood, the character gains 15 experience points per year, which
+> may be placed in any Abilities, as long as the character has a Virtue that permits
+> her to learn those Abilities. Academic, Arcane, and Martial Abilities require a
+> Virtue, as do Supernatural Abilities.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2392`.
+- Data: `rules/core/life_stages.json` → `later_life.xp_per_year` 15.
+- Implementation: `life_stage.rs` — `LaterLifeRules`, `later_life_years` (age −
+  childhood years) and `budget`. Later life is the **general pool**, since it funds
+  anything the character may learn.
+- **Deferred (M6/6b2b):** the Virtue requirement for Academic/Arcane/Martial
+  Abilities (`:2315` names Educated / Arcane Lore / Warrior). Only the Supernatural
+  half is enforced today, by the pre-existing `supernatural_ability_requires_virtue`
+  — so the general pool currently funds an Academic Ability with no Virtue.
+
+#### Wealthy / Poor — the rate, and who may take them
+
+> Characters with the Wealthy Virtue get 20 experience points per year, while
+> characters with the Poor Flaw get 10 experience points per year. Note that only
+> companions can take this Virtue or Flaw.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2394`; the items
+  themselves at `:5235-5238` (Wealthy) and `:6594-6596` (Poor, which repeats "In
+  particular, this Flaw is not available to magi").
+- Data: `rules/core/virtues_flaws.json` — `virtue.wealthy` and `flaw.poor` each
+  carry `later_life_xp_rate` (20 / 10). **`flaw.poor` was missing from the
+  catalogue entirely before this milestone** and is added here; German name "Arm"
+  (`rules/source/de/translation-tables/tugenden-fehler.md:445`, corroborated by the
+  German source at the mirrored `:6594-6596`).
+- Implementation: `Effect::LaterLifeXpRate` (`types.rs`), read by
+  `LifeStageRules::later_life_rate`. The effect **replaces** the base rate rather
+  than adjusting it, because the passage states the whole rate. Engine reading where
+  the text is silent: if several selections ever name a rate, the lowest applies —
+  nothing ranks them, so this is the conservative and deterministic choice.
+- Eligibility, as data: `rules/core/character_types.json` — the `magus` and
+  `mythic_companion` profiles list both ids in `forbidden_traits`. The grog profile
+  needs no entry, since `max_major_flaws: 0` already puts a Major Flaw out of reach.
+  Scope reading: `:2394` says "only companions", while `:5237`/`:6596` say only that
+  magi may not; a mythic companion *is* a companion in the rules' sense but is a
+  distinct profile here, so it is forbidden too — the stricter reading of the line
+  that names companions specifically.
+
+#### Plan vs. pool — an engine invariant, not a sourced rule
+
+A character built through its life stages derives its funding from them, so
+carrying a directly-entered `xp_pool` as well would fund the same purchases twice.
+`validation/life_stage.rs` reports that as `life_stage_xp_pool_conflict`, alongside
+an age inside the childhood block, an unchosen native language, and a chosen one
+with no bought score (a warning — the points are merely unspent). No rulebook
+passage states this; it exists because the app offers two ways in.
+
 ## Markdown character export (M5.6) — `export.rs`
 
 `export.rs` implements **no new rules mechanic**, so it carries no rulebook
