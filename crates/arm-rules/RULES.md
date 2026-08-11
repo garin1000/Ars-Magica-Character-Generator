@@ -2567,11 +2567,24 @@ Abilities are bought with experience earned in blocks, not from one bank:
   rows' own `parameter` values, and a second copy could only diverge from them. The
   field is additive (`serde(default, skip_serializing_if)`), so `SCHEMA_VERSION`
   stays 14 and no migration is needed.
+- **Applying a package is a monotone raise.** `childhood::apply_package`
+  (`childhood.rs`) returns a **new** entity whose Ability rows are each brought to
+  `max(existing, entry.score)`, keyed by `(ability, parameter)` — so a score bought
+  from later life is never lowered by taking a package, a row the package does not
+  name is never removed, and an existing row keeps its specialty. Two properties
+  follow, both pinned by tests: the application is **idempotent** (the same package
+  with the same slot values applied twice yields an identical entity, so a double
+  click cannot charge twice), and a rejected application leaves the caller's
+  character untouched, since nothing is mutated in place. The rows it writes are
+  ordinary bought rows, indistinguishable from a hand-divided childhood, which is
+  why nothing downstream needs to know a package was involved; the id is recorded in
+  `LifeStagePlan::childhood_package` purely as the annotation described above.
+  **Funding is deliberately not checked at application time** — the restricted 45/75
+  pools in `effective.rs` (`xp_allocation`) already price the rows against the
+  blocks, so an overspend surfaces as `not_enough_xp` exactly as a hand-typed one
+  would, and charging here as well would double-count.
 - **Deferred to the rest of 6b3:** the shipped `childhoods.json` itself, the i18n
-  names, applying a package to an entity —
-  a **monotone raise**, `score = max(existing, entry.score)` keyed by
-  `(ability, parameter)`, hence idempotent and never lowering a hand-bought score —
-  and the UI that offers them.
+  names, and the UI that offers the packages.
 
 #### Later life — 15 experience points per year
 

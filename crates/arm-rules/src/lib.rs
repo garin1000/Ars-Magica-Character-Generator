@@ -7,7 +7,7 @@ pub mod art;
 pub mod characteristics;
 pub mod childhood;
 #[doc(inline)]
-pub use childhood::{ChildhoodEntry, ChildhoodPackage};
+pub use childhood::{ChildhoodEntry, ChildhoodPackage, ChildhoodRejection, apply_package};
 pub mod derived;
 pub mod effective;
 pub mod equipment;

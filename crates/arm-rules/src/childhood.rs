@@ -17,9 +17,11 @@
 //! [`crate::effective::xp_allocation`] already do the funding.
 
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 use crate::ability::AdvancementTable;
-use crate::types::{Id, SourceRef, is_false};
+use crate::ruleset::Ruleset;
+use crate::types::{AbilityScore, Entity, Id, SourceRef, is_false};
 
 /// One Ability score a Sample Childhood package grants.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -130,10 +132,133 @@ impl ChildhoodPackage {
     }
 }
 
+/// Why a Sample Childhood package could not be applied to a character.
+///
+/// Plain data: no issue codes, no Fluent keys, no user-facing prose. Turning a
+/// rejection into a localized validation issue happens in `validation/`, where
+/// the emit sites stay visible to the contract-table and phase scanners.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ChildhoodRejection {
+    /// The character has no life-stage plan, or its plan names no native
+    /// language, so the package's native-language entry has no language to be
+    /// written under.
+    NativeLanguageUnset,
+}
+
+/// Applies a Sample Childhood package to a character, returning the character it
+/// becomes.
+///
+/// The entity is never mutated in place: a rejected application therefore leaves
+/// the caller's own character exactly as it was.
+///
+/// # What it writes
+///
+/// Each of the package's entries becomes an ordinary bought
+/// [`AbilityScore`] keyed by `(ability, parameter)` — the same rows a
+/// hand-divided childhood produces, which is why nothing downstream needs to
+/// know a package was involved. The parameter comes from the entry:
+/// the native-language entry takes the plan's
+/// [`native_language`](crate::life_stage::LifeStagePlan::native_language), and a
+/// plain entry takes none.
+///
+/// The write is a **monotone raise**: an existing row is brought to
+/// `max(existing, entry.score)` and keeps its specialty, and a row the package
+/// does not name is left alone. Two consequences are the reason for that choice:
+/// a score bought from later life is never lowered by taking a package, and the
+/// application is **idempotent** — applying the same package with the same slot
+/// values twice yields an identical entity, so a double click cannot charge
+/// twice or drift the character.
+///
+/// The result is [`Entity::normalize`]d, so the rows come back in canonical
+/// order, and the package's id is recorded in
+/// [`childhood_package`](crate::life_stage::LifeStagePlan::childhood_package) as
+/// the for-the-record annotation it is.
+///
+/// # What it does not check
+///
+/// **Funding.** The restricted 45/75 childhood pools in
+/// [`crate::effective::xp_allocation`] already price what the rows cost against
+/// what the childhood blocks grant, so an overspend surfaces as `not_enough_xp`
+/// exactly as a hand-typed one would. Charging here as well would double-count.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2380-2388.
+pub fn apply_package(
+    entity: &Entity,
+    package: &ChildhoodPackage,
+    slot_values: &BTreeMap<String, String>,
+    _ruleset: &Ruleset,
+) -> Result<Entity, Vec<ChildhoodRejection>> {
+    let mut rejections = Vec::new();
+
+    // Childhood exists only in life-stage mode, and the taken package is
+    // recorded on the plan, so there is no character to apply one to without it.
+    let native_language = entity
+        .life_stages
+        .as_ref()
+        .and_then(|plan| plan.native_language.as_deref());
+    if native_language.is_none() {
+        rejections.push(ChildhoodRejection::NativeLanguageUnset);
+    }
+
+    let mut scores = entity.ability_scores.clone();
+    for entry in &package.entries {
+        let parameter = if entry.native {
+            match native_language {
+                Some(language) => Some(language.to_string()),
+                // Already reported above; there is nothing to write it under.
+                None => continue,
+            }
+        } else {
+            entry
+                .slot
+                .as_deref()
+                .and_then(|slot| slot_values.get(slot).cloned())
+        };
+        raise_score(&mut scores, &entry.ability, parameter, entry.score);
+    }
+
+    if !rejections.is_empty() {
+        return Err(rejections);
+    }
+
+    let mut applied = entity.clone();
+    applied.ability_scores = scores;
+    if let Some(plan) = applied.life_stages.as_mut() {
+        plan.childhood_package = Some(package.id.clone());
+    }
+    applied.normalize();
+    Ok(applied)
+}
+
+/// Raises the `(ability, parameter)` row to `score`, adding it when the
+/// character has none. The raise is monotone — a higher bought score stands —
+/// and an existing row keeps everything else it carries, its specialty included.
+fn raise_score(scores: &mut Vec<AbilityScore>, ability: &Id, parameter: Option<String>, score: u8) {
+    if let Some(existing) = scores
+        .iter_mut()
+        .find(|row| row.ability == *ability && row.parameter == parameter)
+    {
+        existing.score = existing.score.max(score);
+        return;
+    }
+    scores.push(AbilityScore {
+        ability: ability.clone(),
+        score,
+        specialty: None,
+        parameter,
+    });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+
+    use std::collections::BTreeMap;
+
+    use crate::life_stage::LifeStagePlan;
+    use crate::ruleset::{Ruleset, RulesetSources};
+    use crate::types::{AbilityScore, Entity, EntityKind, RulesetRef};
 
     /// "Athletic Childhood: Athletics 2, Brawl 2, Native Language 5, Swim 2"
     /// (Core Rules.md:2384) as the shipped file will carry it — entries in
@@ -407,5 +532,210 @@ mod tests {
         );
 
         assert_eq!(athletic().slots().count(), 0);
+    }
+
+    // --- Applying a package ------------------------------------------------
+
+    /// The abilities the two fixtures name, priced by the canonical "ABILITY To
+    /// Buy" column for scores 1-5 (Core Rules.md:2406-2427).
+    const APPLY_ABILITIES: &str = r#"{
+      "advancement": [
+        { "score": 1, "total_xp": 5 },
+        { "score": 2, "total_xp": 15 },
+        { "score": 3, "total_xp": 30 },
+        { "score": 4, "total_xp": 50 },
+        { "score": 5, "total_xp": 75 }
+      ],
+      "abilities": [
+        { "id": "ability.area_lore", "category": "general", "parameter": "area" },
+        { "id": "ability.athletics", "category": "general" },
+        { "id": "ability.brawl", "category": "general" },
+        { "id": "ability.folk_ken", "category": "general" },
+        { "id": "ability.living_language", "category": "general", "parameter": "language" },
+        { "id": "ability.stealth", "category": "general" },
+        { "id": "ability.survival", "category": "general" },
+        { "id": "ability.swim", "category": "general" }
+      ]
+    }"#;
+
+    /// The two childhood blocks a package is a shortcut for (Core Rules.md:2378).
+    const APPLY_LIFE_STAGES: &str = r#"{
+      "childhood": {
+        "years": 5,
+        "native_language_ability": "ability.living_language",
+        "native_language_xp": 75,
+        "spread_xp": 45,
+        "spread_abilities": [
+          "ability.area_lore",
+          "ability.athletics",
+          "ability.brawl",
+          "ability.folk_ken",
+          "ability.living_language",
+          "ability.stealth",
+          "ability.survival",
+          "ability.swim"
+        ]
+      },
+      "later_life": { "xp_per_year": 15 }
+    }"#;
+
+    /// A ruleset shipping both fixtures as its packages, so an application can be
+    /// looked up by id and is priced by the same load-time rules the real file
+    /// passes.
+    fn ruleset() -> Ruleset {
+        let childhoods = format!(r#"{{ "packages": [{ATHLETIC}, {TRAVELING}] }}"#);
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            abilities: Some(APPLY_ABILITIES),
+            life_stages: Some(APPLY_LIFE_STAGES),
+            childhoods: Some(&childhoods),
+            ..RulesetSources::default()
+        })
+        .expect("the childhood fixtures load")
+    }
+
+    /// A companion built through its life stages, speaking `native_language`.
+    fn child(native_language: Option<&str>) -> Entity {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.age = Some(25);
+        entity.life_stages = Some(LifeStagePlan {
+            native_language: native_language.map(str::to_string),
+            ..LifeStagePlan::default()
+        });
+        entity
+    }
+
+    /// The entity's Ability rows as `(ability, parameter, score)`, in the
+    /// canonical order [`Entity::normalize`] leaves them in.
+    fn rows(entity: &Entity) -> Vec<(&str, Option<&str>, u8)> {
+        entity
+            .ability_scores
+            .iter()
+            .map(|row| (row.ability.as_str(), row.parameter.as_deref(), row.score))
+            .collect()
+    }
+
+    fn score(ability: &str, score: u8, specialty: Option<&str>) -> AbilityScore {
+        AbilityScore {
+            ability: Id::new(ability),
+            score,
+            specialty: specialty.map(str::to_string),
+            parameter: None,
+        }
+    }
+
+    /// Every entry becomes an ordinary bought Ability row, and the package the
+    /// player took is recorded on the plan.
+    #[test]
+    fn applying_a_package_writes_its_ability_rows() {
+        let applied = apply_package(
+            &child(Some("German")),
+            &athletic(),
+            &BTreeMap::new(),
+            &ruleset(),
+        )
+        .expect("a package with nothing to ask for applies");
+
+        assert_eq!(
+            rows(&applied),
+            vec![
+                ("ability.athletics", None, 2),
+                ("ability.brawl", None, 2),
+                ("ability.living_language", Some("German"), 5),
+                ("ability.swim", None, 2),
+            ]
+        );
+        assert_eq!(
+            applied
+                .life_stages
+                .as_ref()
+                .and_then(|plan| plan.childhood_package.as_ref()),
+            Some(&Id::new("childhood.athletic"))
+        );
+    }
+
+    /// Application is a monotone raise, so a score bought from later life stands
+    /// and a row the package does not name survives untouched — including its
+    /// specialty.
+    #[test]
+    fn applying_a_package_never_lowers_a_bought_score() {
+        let mut entity = child(Some("German"));
+        entity.ability_scores = vec![
+            score("ability.athletics", 4, Some("running")),
+            score("ability.stealth", 3, None),
+            score("ability.swim", 1, None),
+        ];
+        entity.normalize();
+
+        let applied = apply_package(&entity, &athletic(), &BTreeMap::new(), &ruleset())
+            .expect("a package applies over hand-bought scores");
+
+        assert_eq!(
+            rows(&applied),
+            vec![
+                ("ability.athletics", None, 4),
+                ("ability.brawl", None, 2),
+                ("ability.living_language", Some("German"), 5),
+                ("ability.stealth", None, 3),
+                ("ability.swim", None, 2),
+            ]
+        );
+        assert_eq!(
+            applied
+                .ability_scores
+                .iter()
+                .find(|row| row.ability == Id::new("ability.athletics"))
+                .and_then(|row| row.specialty.as_deref()),
+            Some("running"),
+            "an existing row keeps its specialty"
+        );
+    }
+
+    /// Because the raise is monotone, applying the same package with the same
+    /// slot values twice yields an identical entity — nothing is charged twice.
+    #[test]
+    fn applying_the_same_package_twice_changes_nothing() {
+        let ruleset = ruleset();
+        let slots = filled(&[
+            ("area_a", "Rhine"),
+            ("area_b", "Provence"),
+            ("language", "Italian"),
+        ]);
+
+        let once = apply_package(&child(Some("German")), &traveling(), &slots, &ruleset)
+            .expect("the first application");
+        let twice =
+            apply_package(&once, &traveling(), &slots, &ruleset).expect("the second application");
+
+        assert_eq!(once, twice);
+    }
+
+    /// A rejected application writes nothing: the applicator returns a new
+    /// entity, so the caller's own is left exactly as it was.
+    #[test]
+    fn a_rejected_application_leaves_the_entity_untouched() {
+        let entity = child(None);
+        let before = entity.clone();
+
+        let rejections = apply_package(&entity, &athletic(), &BTreeMap::new(), &ruleset())
+            .expect_err("the native entry has no language to take");
+
+        assert_eq!(rejections, vec![ChildhoodRejection::NativeLanguageUnset]);
+        assert_eq!(entity, before);
+    }
+
+    /// Slot values as a UI would supply them.
+    fn filled(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
+        pairs
+            .iter()
+            .map(|(slot, value)| ((*slot).to_string(), (*value).to_string()))
+            .collect()
     }
 }
