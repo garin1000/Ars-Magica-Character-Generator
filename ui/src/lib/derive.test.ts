@@ -1483,6 +1483,8 @@ describe('resolveIssueArgValue / resolveIssueArgs', () => {
       'realm-magic': 'Magic',
       'param-label-area': 'Area',
       'param-label-language': 'Language',
+      'xp-pool-childhood_spread': 'Early childhood',
+      'xp-pool-childhood_native_language': 'Native language',
     };
     if (key === 'param-hint') return `(${args?.label})`;
     return table[key] ?? key;
@@ -1517,6 +1519,30 @@ describe('resolveIssueArgValue / resolveIssueArgs', () => {
   it('resolves a param key arg through its param-label', () => {
     const rs = makeRuleset([]);
     expect(resolveIssueArgValue(rs, 'key', 'language', t)).toBe('Language');
+  });
+
+  // `restricted_xp_unspent` names the pool it is about, and the pool's origin is
+  // either a granting item or a life-stage block. The engine emits both as machine
+  // names, so both have to arrive as a label — a life-stage block through the same
+  // `xp-pool-<block>` keys the XP bar's own pool label uses, so one wording names
+  // the block wherever it appears.
+  it('resolves an item-granted pool origin to the granting item name', () => {
+    const rs = makeRuleset([item({ id: 'virtue.educated' })], {
+      i18n: { 'virtue.educated': { name: 'Educated' } },
+    });
+    expect(resolveIssueArgValue(rs, 'origin', 'virtue.educated', t)).toBe('Educated');
+  });
+
+  it('resolves a life-stage pool origin through its xp-pool Fluent key', () => {
+    const rs = makeRuleset([]);
+    expect(resolveIssueArgValue(rs, 'origin', 'childhood_spread', t)).toBe('Early childhood');
+    expect(resolveIssueArgValue(rs, 'origin', 'childhood_native_language', t)).toBe(
+      'Native language',
+    );
+    // The block slug must never reach the screen.
+    expect(resolveIssueArgValue(rs, 'origin', 'childhood_spread', t)).not.toContain(
+      'childhood_spread',
+    );
   });
 
   it('passes free text and numbers through unchanged', () => {

@@ -882,6 +882,11 @@ const ENUM_ARG_FLUENT_PREFIX: Record<string, string> = {
  *    through its Fluent key — but a numeric value stays as-is, so a Characteristic
  *    base score is not mistaken for a realm;
  *  - a `key` arg names a parameter → its `param-label` Fluent string;
+ *  - an `origin` arg names the pool an unspent-experience warning is about. An
+ *    item-granted pool is a rules id and is already localized above; a life-stage
+ *    block is no item and has no i18n entry, so it goes through the same
+ *    `xp-pool-<block>` keys `restrictedPoolLabel` uses — one wording for the block
+ *    wherever it appears, and never the raw `childhood_spread` slug;
  *  - anything else (free text like a trait name, or a number) passes through.
  */
 export function resolveIssueArgValue(
@@ -894,6 +899,7 @@ export function resolveIssueArgValue(
   const prefix = ENUM_ARG_FLUENT_PREFIX[argKey];
   if (prefix && !/^-?\d+$/.test(value)) return t(`${prefix}${value}`);
   if (argKey === 'key') return t(`param-label-${value}`);
+  if (argKey === 'origin') return t(`xp-pool-${value}`);
   return value;
 }
 
