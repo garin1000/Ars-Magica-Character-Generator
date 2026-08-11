@@ -4,6 +4,7 @@
 //! the `ValidationIssue` issue-code contract.
 
 use super::*;
+use crate::effective::XpPoolOrigin;
 use crate::types::SpellSelection;
 
 /// Validates a magus's Hermetic House and its specialisation picks. Runs only
@@ -527,6 +528,7 @@ pub(crate) fn validate_xp_pool(
     }
     for pool in &allocation.restricted {
         if pool.used < pool.amount {
+            let (origin_kind, origin) = origin_args(&pool.origin);
             issues.push(ValidationIssue::warning(
                 ValidationIssue::CODE_RESTRICTED_XP_UNSPENT,
                 CreationPhase::Abilities,
@@ -534,9 +536,30 @@ pub(crate) fn validate_xp_pool(
                     ("amount", pool.amount.to_string()),
                     ("used", pool.used.to_string()),
                     ("unspent", (pool.amount - pool.used).to_string()),
+                    ("origin_kind", origin_kind.to_string()),
+                    ("origin", origin),
                 ]),
                 None,
             ));
         }
+    }
+}
+
+/// The `(origin_kind, origin)` pair that names an unspent pool: which sort of thing
+/// granted it, and that thing's machine name — an item id, or a life-stage block
+/// slug ([`LifeStageBlock`]'s `Display`).
+///
+/// Naming the pool is the whole reason [`RestrictedXpPool::origin`] exists: a
+/// life-stage character leaves childhood's two blocks (75 and 45) unspent
+/// independently, and two warnings differing only in their numbers cannot tell a
+/// reader which block to go and spend.
+///
+/// Deliberately **not** a message and not a Fluent key: the engine carries no
+/// user-facing string, so the frontend resolves an `item` through the ruleset's own
+/// i18n and a `life_stage` through its `xp-pool-<block>` catalogue.
+fn origin_args(origin: &XpPoolOrigin) -> (&'static str, String) {
+    match origin {
+        XpPoolOrigin::Item { item } => ("item", item.to_string()),
+        XpPoolOrigin::LifeStage { block } => ("life_stage", block.to_string()),
     }
 }

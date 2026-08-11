@@ -135,7 +135,7 @@ impl fmt::Display for IssueSeverity {
 /// | `unknown_ability` | error | abilities | `ability` |
 /// | `duplicate_ability` | error | abilities | `ability`, `count` |
 /// | `not_enough_xp` | error | abilities | `spent`, `pool`, `shortfall` |
-/// | `restricted_xp_unspent` | warning | abilities | `amount`, `used`, `unspent` |
+/// | `restricted_xp_unspent` | warning | abilities | `amount`, `used`, `unspent`, `origin_kind`, `origin` |
 /// | `ability_category_requires_virtue` | error | abilities | `ability`, `category` |
 /// | `academic_ability_without_scholarly_language` | warning | abilities | `ability`, `min` |
 /// | `life_stage_xp_pool_conflict` | error | abilities | `xp_pool` |
@@ -326,9 +326,11 @@ impl ValidationIssue {
         "characteristic_min_base_too_high";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_ABILITY_BONUS_DANGLING_TARGET: &'static str = "ability_bonus_dangling_target";
-    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a restricted XP grant
-    /// (Educated/Warrior/Privileged) has experience the character left unspent on
-    /// its eligible Abilities; the rules waste it.
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a restricted XP pool — a
+    /// grant (Educated/Warrior/Privileged) or a life-stage block — has experience the
+    /// character left unspent on its eligible Abilities; the rules waste it.
+    /// `origin_kind` (`item` | `life_stage`) plus `origin` (the item id or the block
+    /// slug) say *which* pool, since a life-stage character has several.
     pub const CODE_RESTRICTED_XP_UNSPENT: &'static str = "restricted_xp_unspent";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: an Ability whose category
     /// the rules gate behind a Virtue (Academic/Arcane/Martial) is bought without
@@ -4299,10 +4301,21 @@ mod tests {
         let mut e = make_entity("companion", vec![sel("virtue.educated")]);
         e.xp_pool = 0;
         let result = validate(&e, &rs);
-        assert!(
-            warning_codes(&result).contains(&"restricted_xp_unspent".to_string()),
-            "{:?}",
-            warning_codes(&result)
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_RESTRICTED_XP_UNSPENT)
+            .unwrap_or_else(|| panic!("{:?}", warning_codes(&result)));
+        assert_eq!(issue.severity, IssueSeverity::Warning);
+        // The pool names its granting item, so the UI can localize "Educated" out of
+        // the ruleset's own i18n rather than saying "restricted" twice over.
+        assert_eq!(
+            issue.args.get("origin_kind").map(String::as_str),
+            Some("item")
+        );
+        assert_eq!(
+            issue.args.get("origin").map(String::as_str),
+            Some("virtue.educated")
         );
         assert!(!codes(&result).contains(&"not_enough_xp".to_string()));
     }
