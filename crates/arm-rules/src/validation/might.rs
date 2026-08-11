@@ -22,6 +22,7 @@ pub(crate) fn validate_might(
     if granted != base.realm {
         issues.push(ValidationIssue::warning(
             ValidationIssue::CODE_MIGHT_REALM_MISMATCH,
+            CreationPhase::Review,
             args([
                 ("base", base.realm.to_string()),
                 ("granted", granted.to_string()),
@@ -64,6 +65,7 @@ pub(crate) fn validate_powers(
     if used > budget {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_OVER_POWER_LEVELS,
+            CreationPhase::Review,
             args([
                 ("used", used.to_string()),
                 ("budget", budget.to_string()),
@@ -90,6 +92,7 @@ pub(crate) fn validate_devices(
     if used > budget {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_OVER_ITEM_LEVEL,
+            CreationPhase::Review,
             args([
                 ("used", used.to_string()),
                 ("budget", budget.to_string()),

@@ -36,6 +36,7 @@ pub(crate) fn validate_equipment(
         } else {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_UNKNOWN_EQUIPMENT,
+                CreationPhase::Review,
                 args([("item", item.to_string())]),
                 Some(item.clone()),
             ));
@@ -48,6 +49,7 @@ pub(crate) fn validate_equipment(
         {
             issues.push(ValidationIssue::warning(
                 ValidationIssue::CODE_EQUIPMENT_MIN_STRENGTH,
+                CreationPhase::Review,
                 args([
                     ("item", item.to_string()),
                     ("required", required.to_string()),
@@ -90,6 +92,7 @@ fn warn_shield_with_two_handed_weapon(
     if all_two_handed {
         issues.push(ValidationIssue::warning(
             ValidationIssue::CODE_SHIELD_WITH_TWO_HANDED_WEAPON,
+            CreationPhase::Review,
             args([]),
             None,
         ));

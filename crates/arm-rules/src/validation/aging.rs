@@ -54,6 +54,7 @@ pub(crate) fn validate_aging(
         {
             issues.push(ValidationIssue::warning(
                 ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION,
+                CreationPhase::Review,
                 args([
                     ("characteristic", characteristic.to_string()),
                     ("reduction", drops.to_string()),

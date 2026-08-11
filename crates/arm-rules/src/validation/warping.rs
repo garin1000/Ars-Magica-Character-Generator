@@ -63,6 +63,7 @@ pub(crate) fn validate_warping(
         if !owed_keys.contains(choice_key.as_str()) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_WARPING_FILL_EXCESS,
+                CreationPhase::Review,
                 args([("choice_key", choice_key.clone())]),
                 None,
             ));
@@ -85,6 +86,7 @@ pub(crate) fn validate_warping(
         if item_carries_warping_grant(&pick.item_ref, ruleset) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_WARPING_FILL_INELIGIBLE,
+                CreationPhase::Review,
                 args([
                     ("choice_key", choice_key.clone()),
                     ("item", pick.item_ref.to_string()),
@@ -96,6 +98,7 @@ pub(crate) fn validate_warping(
         if !open_pick_satisfies(pick, constraint, ruleset) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_WARPING_FILL_CONSTRAINT,
+                CreationPhase::Review,
                 args([
                     ("choice_key", choice_key.clone()),
                     ("item", pick.item_ref.to_string()),
@@ -106,7 +109,9 @@ pub(crate) fn validate_warping(
         // A parameterized fill ("Enchanting (Ability)") is only really chosen once
         // its parameter names a target, so the pick gets the same parameter checks
         // a bought selection gets.
-        validate_selection_parameters(pick, ruleset, issues);
+        // A Warping fill lives on no creation step, so its parameter problems are
+        // fixable only in the finished character.
+        validate_selection_parameters(pick, ruleset, CreationPhase::Review, issues);
     }
 
     // Advisory: still owe more than chosen, per kind. A slot counts as filled once
@@ -122,6 +127,7 @@ pub(crate) fn validate_warping(
     if remaining_minor_flaws > 0 {
         issues.push(ValidationIssue::warning(
             ValidationIssue::CODE_WARPING_OWED_MINOR_FLAWS,
+            CreationPhase::Review,
             args([("count", remaining_minor_flaws.to_string())]),
             None,
         ));
@@ -133,6 +139,7 @@ pub(crate) fn validate_warping(
     if remaining_virtues > 0 {
         issues.push(ValidationIssue::warning(
             ValidationIssue::CODE_WARPING_OWED_SUPERNATURAL_VIRTUES,
+            CreationPhase::Review,
             args([("count", remaining_virtues.to_string())]),
             None,
         ));
@@ -141,6 +148,7 @@ pub(crate) fn validate_warping(
     if remaining_major_flaws > 0 {
         issues.push(ValidationIssue::warning(
             ValidationIssue::CODE_WARPING_OWED_MAJOR_FLAWS,
+            CreationPhase::Review,
             args([("count", remaining_major_flaws.to_string())]),
             None,
         ));

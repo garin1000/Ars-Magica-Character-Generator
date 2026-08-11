@@ -52,6 +52,9 @@ pub(crate) fn validate_house(
         if !has_hermetic_flaw {
             issues.push(ValidationIssue::warning(
                 ValidationIssue::CODE_MISSING_HERMETIC_FLAW,
+                // Detected here, but fixed by taking a Hermetic Flaw on the V/F
+                // step.
+                CreationPhase::VirtuesFlaws,
                 args([]),
                 None,
             ));
@@ -62,6 +65,7 @@ pub(crate) fn validate_house(
     let Some(house_id) = &entity.house else {
         issues.push(ValidationIssue::warning(
             ValidationIssue::CODE_HOUSE_UNSET,
+            CreationPhase::HouseSpecialisation,
             args([]),
             None,
         ));
@@ -76,6 +80,7 @@ pub(crate) fn validate_house(
     let unresolved = |choice_key: &str| {
         ValidationIssue::error(
             ValidationIssue::CODE_HOUSE_CHOICE_UNRESOLVED,
+            CreationPhase::HouseSpecialisation,
             args([
                 ("house", house_id.to_string()),
                 ("choice_key", choice_key.to_string()),
@@ -108,6 +113,7 @@ pub(crate) fn validate_house(
                 if !open_pick_satisfies(pick, constraint, ruleset) {
                     issues.push(ValidationIssue::error(
                         ValidationIssue::CODE_HOUSE_GRANT_CONSTRAINT,
+                        CreationPhase::HouseSpecialisation,
                         args([
                             ("house", house_id.to_string()),
                             ("choice_key", choice_key.clone()),
@@ -119,7 +125,12 @@ pub(crate) fn validate_house(
                 // An open pick of a parameterized Virtue must name its parameter,
                 // exactly like a bought selection. (A `Choice` pick carries the
                 // params the ruleset data declares, so it needs no check.)
-                validate_selection_parameters(pick, ruleset, issues);
+                validate_selection_parameters(
+                    pick,
+                    ruleset,
+                    CreationPhase::HouseSpecialisation,
+                    issues,
+                );
             }
         }
     }
@@ -163,6 +174,7 @@ pub(crate) fn validate_mythic_type(
     let Some(type_id) = &entity.mythic_type else {
         issues.push(ValidationIssue::warning(
             ValidationIssue::CODE_MYTHIC_TYPE_UNSET,
+            CreationPhase::MythicType,
             args([]),
             None,
         ));
@@ -178,6 +190,7 @@ pub(crate) fn validate_mythic_type(
     let unresolved = |choice_key: &str| {
         ValidationIssue::error(
             ValidationIssue::CODE_MYTHIC_CHOICE_UNRESOLVED,
+            CreationPhase::MythicType,
             args([
                 ("mythic_type", type_id.to_string()),
                 ("choice_key", choice_key.to_string()),
@@ -208,6 +221,7 @@ pub(crate) fn validate_mythic_type(
                 if !open_pick_satisfies(pick, constraint, ruleset) {
                     issues.push(ValidationIssue::error(
                         ValidationIssue::CODE_MYTHIC_GRANT_CONSTRAINT,
+                        CreationPhase::MythicType,
                         args([
                             ("mythic_type", type_id.to_string()),
                             ("choice_key", choice_key.clone()),
@@ -217,7 +231,7 @@ pub(crate) fn validate_mythic_type(
                     ));
                 }
                 // Same parameter checks the House Open grant applies.
-                validate_selection_parameters(pick, ruleset, issues);
+                validate_selection_parameters(pick, ruleset, CreationPhase::MythicType, issues);
             }
         }
     }
@@ -226,6 +240,8 @@ pub(crate) fn validate_mythic_type(
     let missing = |item: &Id| {
         ValidationIssue::warning(
             ValidationIssue::CODE_MYTHIC_REQUIRED_TRAIT_MISSING,
+            // The mythic type demands it, but the trait is bought on the V/F step.
+            CreationPhase::VirtuesFlaws,
             args([("item", item.to_string())]),
             Some(item.clone()),
         )
@@ -275,6 +291,7 @@ pub(crate) fn validate_spells(
         let Some(spell) = ruleset.spell(&sel.spell) else {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_UNKNOWN_SPELL,
+                CreationPhase::Spells,
                 args([("spell", sel.spell.to_string())]),
                 Some(sel.spell.clone()),
             ));
@@ -286,6 +303,7 @@ pub(crate) fn validate_spells(
         if spell.level.is_none() && sel.level.is_none() {
             issues.push(ValidationIssue::warning(
                 ValidationIssue::CODE_SPELL_LEVEL_UNRESOLVED,
+                CreationPhase::Spells,
                 args([("spell", sel.spell.to_string())]),
                 Some(sel.spell.clone()),
             ));
@@ -300,6 +318,7 @@ pub(crate) fn validate_spells(
             match &sel.parameter {
                 None => issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_MISSING_PARAM,
+                    CreationPhase::Spells,
                     args([("item", sel.spell.to_string()), ("key", def.key.clone())]),
                     Some(sel.spell.clone()),
                 )),
@@ -308,6 +327,7 @@ pub(crate) fn validate_spells(
                     if !super::selections::param_value_resolves(ruleset, def.domain, &value_id) {
                         issues.push(ValidationIssue::error(
                             ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
+                            CreationPhase::Spells,
                             args([
                                 ("item", sel.spell.to_string()),
                                 ("key", def.key.clone()),
@@ -336,6 +356,7 @@ pub(crate) fn validate_spells(
             if ritual_too_low || non_ritual_too_high {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_SPELL_RITUAL_LEGALITY,
+                    CreationPhase::Spells,
                     args([
                         ("spell", sel.spell.to_string()),
                         ("level", level.to_string()),
@@ -351,6 +372,7 @@ pub(crate) fn validate_spells(
             if i64::from(level) > cap {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_SPELL_LEVEL_EXCEEDS_CAP,
+                    CreationPhase::Spells,
                     args([
                         ("spell", sel.spell.to_string()),
                         ("level", level.to_string()),
@@ -368,6 +390,7 @@ pub(crate) fn validate_spells(
         if count > 1 {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_DUPLICATE_SPELL,
+                CreationPhase::Spells,
                 args([("spell", spell.to_string()), ("count", count.to_string())]),
                 Some(spell.clone()),
             ));
@@ -381,6 +404,7 @@ pub(crate) fn validate_spells(
         if used > budget {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_OVER_SPELL_LEVELS,
+                CreationPhase::Spells,
                 args([
                     ("used", used.to_string()),
                     ("budget", budget.to_string()),
@@ -418,6 +442,7 @@ fn validate_spell_mastery_abilities(
     if sel.mastery_abilities.len() > usize::from(effective) {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_TOO_MANY_MASTERY_ABILITIES,
+            CreationPhase::Spells,
             args([
                 ("spell", sel.spell.to_string()),
                 ("chosen", sel.mastery_abilities.len().to_string()),
@@ -436,6 +461,7 @@ fn validate_spell_mastery_abilities(
         } else {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_UNKNOWN_MASTERY_ABILITY,
+                CreationPhase::Spells,
                 args([
                     ("spell", sel.spell.to_string()),
                     ("ability", ability_id.to_string()),
@@ -453,6 +479,7 @@ fn validate_spell_mastery_abilities(
         if count > 1 && !repeatable {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_DUPLICATE_MASTERY_ABILITY,
+                CreationPhase::Spells,
                 args([
                     ("spell", sel.spell.to_string()),
                     ("ability", ability_id.to_string()),
@@ -480,6 +507,9 @@ pub(crate) fn validate_xp_pool(
     if allocation.total_demand > allocation.max_flow {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_NOT_ENOUGH_XP,
+            // The pool spans Abilities and Arts, but the Abilities step is where
+            // the XP bar lives and where most of the spending happens.
+            CreationPhase::Abilities,
             args([
                 ("spent", allocation.total_demand.to_string()),
                 // The demand now draws several pools (general + restricted-ability +
@@ -499,6 +529,7 @@ pub(crate) fn validate_xp_pool(
         if pool.used < pool.amount {
             issues.push(ValidationIssue::warning(
                 ValidationIssue::CODE_RESTRICTED_XP_UNSPENT,
+                CreationPhase::Abilities,
                 args([
                     ("amount", pool.amount.to_string()),
                     ("used", pool.used.to_string()),

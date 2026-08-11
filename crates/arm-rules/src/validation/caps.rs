@@ -47,6 +47,7 @@ pub(crate) fn validate_caps(
         if n > max as usize {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_TOO_MANY_MAJOR_VIRTUES,
+                CreationPhase::VirtuesFlaws,
                 count_args(n, max),
                 None,
             ));
@@ -58,6 +59,7 @@ pub(crate) fn validate_caps(
         if n > max as usize {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_TOO_MANY_MAJOR_FLAWS,
+                CreationPhase::VirtuesFlaws,
                 count_args(n, max),
                 None,
             ));
@@ -69,6 +71,7 @@ pub(crate) fn validate_caps(
         if n > max as usize {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_TOO_MANY_MINOR_FLAWS,
+                CreationPhase::VirtuesFlaws,
                 count_args(n, max),
                 None,
             ));
@@ -107,9 +110,19 @@ pub(crate) fn validate_caps(
             let cap_args = count_args(n, cap.max);
 
             if cap.hard {
-                issues.push(ValidationIssue::error(&code, cap_args, None));
+                issues.push(ValidationIssue::error(
+                    &code,
+                    CreationPhase::VirtuesFlaws,
+                    cap_args,
+                    None,
+                ));
             } else {
-                issues.push(ValidationIssue::warning(&code, cap_args, None));
+                issues.push(ValidationIssue::warning(
+                    &code,
+                    CreationPhase::VirtuesFlaws,
+                    cap_args,
+                    None,
+                ));
             }
         }
     };
@@ -161,6 +174,7 @@ pub(crate) fn validate_tainted_cap(
         if tainted * 2 > total {
             issues.push(ValidationIssue::warning(
                 code,
+                CreationPhase::VirtuesFlaws,
                 args([
                     ("tainted", tainted.to_string()),
                     ("total", total.to_string()),

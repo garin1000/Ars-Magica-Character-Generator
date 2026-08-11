@@ -36,6 +36,7 @@ pub(crate) fn validate_permitted_categories(
         if !profile.permitted_categories.contains(&item.category) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_CATEGORY_NOT_PERMITTED,
+                CreationPhase::VirtuesFlaws,
                 args([
                     ("item", selection.item_ref.to_string()),
                     ("category", item.category.clone()),
@@ -68,6 +69,7 @@ pub(crate) fn validate_forbidden_categories(
         if profile.forbidden_categories.contains(&item.category) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_FORBIDDEN_CATEGORY,
+                CreationPhase::VirtuesFlaws,
                 args([
                     ("item", selection.item_ref.to_string()),
                     ("category", item.category.clone()),
@@ -91,6 +93,7 @@ pub(crate) fn validate_entity_kind_applicability(
         if !item.entity_kinds.is_empty() && !item.entity_kinds.contains(&entity.entity_kind) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_WRONG_ENTITY_KIND,
+                CreationPhase::VirtuesFlaws,
                 args([
                     ("item", selection.item_ref.to_string()),
                     ("entity_kind", entity.entity_kind.to_string()),
@@ -127,6 +130,7 @@ pub(crate) fn validate_duplicate_selections(
         }
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_DUPLICATE_SELECTION,
+            CreationPhase::VirtuesFlaws,
             args([
                 ("item", item_ref.to_string()),
                 ("count", count.to_string()),
@@ -150,6 +154,7 @@ pub(crate) fn validate_required_traits(
         if !selected_ids.contains(required_id) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_MISSING_REQUIRED_TRAIT,
+                CreationPhase::VirtuesFlaws,
                 args([("item", required_id.to_string())]),
                 Some(required_id.clone()),
             ));
@@ -170,6 +175,7 @@ pub(crate) fn validate_forbidden_traits(
         if selected_ids.contains(forbidden_id) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_FORBIDDEN_TRAIT,
+                CreationPhase::VirtuesFlaws,
                 args([("item", forbidden_id.to_string())]),
                 Some(forbidden_id.clone()),
             ));
@@ -213,7 +219,7 @@ pub(crate) fn validate_parameters(
     issues: &mut Vec<ValidationIssue>,
 ) {
     for selection in &entity.selections {
-        validate_selection_parameters(selection, ruleset, issues);
+        validate_selection_parameters(selection, ruleset, CreationPhase::VirtuesFlaws, issues);
     }
 }
 
@@ -225,9 +231,14 @@ pub(crate) fn validate_parameters(
 /// that never live on `entity.selections` — House / Mythic-type Open grants and
 /// the Warping-owed fills — so "{form} Monstrosity" chosen for an open grant is
 /// held to the same standard as one bought on the V/F tab.
+///
+/// `phase` is the caller's, not this function's: the same three codes are fixed on
+/// the V/F step for a bought selection, on the House or Mythic-type step for an
+/// open grant, and only in the finished character for a Warping fill.
 pub(crate) fn validate_selection_parameters(
     selection: &Selection,
     ruleset: &Ruleset,
+    phase: CreationPhase,
     issues: &mut Vec<ValidationIssue>,
 ) {
     let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
@@ -255,6 +266,7 @@ pub(crate) fn validate_selection_parameters(
     for missing in expected.difference(&provided) {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_MISSING_PARAM,
+            phase,
             args([
                 ("item", selection.item_ref.to_string()),
                 ("key", missing.to_string()),
@@ -266,6 +278,7 @@ pub(crate) fn validate_selection_parameters(
     for extra in provided.difference(&expected) {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_UNEXPECTED_PARAM,
+            phase,
             args([
                 ("item", selection.item_ref.to_string()),
                 ("key", extra.to_string()),
@@ -284,6 +297,7 @@ pub(crate) fn validate_selection_parameters(
         if !resolves {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
+                phase,
                 args([
                     ("item", selection.item_ref.to_string()),
                     ("key", param.key.clone()),
@@ -383,6 +397,10 @@ pub(crate) fn validate_ability_bonus_targets(
             if !has_instance {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_ABILITY_BONUS_DANGLING_TARGET,
+                    // The offending value is the Virtue's target parameter, so the
+                    // fix is on the V/F step (retarget it) even though the missing
+                    // half is an Ability.
+                    CreationPhase::VirtuesFlaws,
                     args([
                         ("item", selection.item_ref.to_string()),
                         ("ability", target.to_string()),
@@ -421,6 +439,7 @@ pub(crate) fn validate_magical_focus(
     if foci > 1 {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_MULTIPLE_MAGICAL_FOCI,
+            CreationPhase::VirtuesFlaws,
             args([("count", foci.to_string())]),
             None,
         ));
@@ -457,6 +476,7 @@ pub(crate) fn validate_gift_policy(
             if !has_gift {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_GIFT_REQUIRED,
+                    CreationPhase::VirtuesFlaws,
                     BTreeMap::new(),
                     None,
                 ));
@@ -466,6 +486,7 @@ pub(crate) fn validate_gift_policy(
             if has_gift {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_GIFT_FORBIDDEN,
+                    CreationPhase::VirtuesFlaws,
                     BTreeMap::new(),
                     None,
                 ));
