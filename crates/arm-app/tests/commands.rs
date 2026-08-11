@@ -1249,6 +1249,119 @@ fn every_creation_phase_is_mirrored_in_the_frontend_union() {
     }
 }
 
+/// Provenance is deliberately not mirrored to the frontend — `PointItem` and
+/// `House` drop their `source` too — so a `SourceRef` is never a drift risk and its
+/// key (and the `file`/`lines` inside it) is skipped by [`mirrored_keys`].
+const PROVENANCE_KEY: &str = "source";
+
+/// Every field name `value` carries, recursively, as the frontend sees them:
+/// nested objects and array elements contribute their keys as well, so mirroring
+/// `LifeStageRules` covers the `ChildhoodRules`/`LaterLifeRules` inside it and
+/// mirroring a `ChildhoodPackage` covers its `ChildhoodEntry` rows.
+///
+/// [`PROVENANCE_KEY`] is skipped whole, subtree included.
+fn mirrored_keys(value: &serde_json::Value, into: &mut std::collections::BTreeSet<String>) {
+    match value {
+        serde_json::Value::Object(map) => {
+            for (key, nested) in map {
+                if key == PROVENANCE_KEY {
+                    continue;
+                }
+                into.insert(key.clone());
+                mirrored_keys(nested, into);
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for item in items {
+                mirrored_keys(item, into);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// The life-stage payloads cross the Tauri boundary as JSON, and
+/// `ui/src/lib/types.ts` mirrors them **by hand**. TypeScript cannot notice when a
+/// Rust field is renamed — the mirror keeps compiling against a key the engine no
+/// longer sends, and the life-stage surface silently reads `undefined` — so the
+/// serialized shape is the source and this test pins the mirror.
+///
+/// Every optional field is populated on purpose: `skip_serializing_if` would
+/// otherwise drop `slot`, `native`, `childhood_package` and `native_language` from
+/// the serialization and hide them from the check.
+///
+/// **Scope: these five types plus the two `Ruleset`/`Entity` member names.** It is
+/// deliberately NOT an assertion over `Ruleset`'s whole key set — `types.ts` omits
+/// `age_ability_caps`, `categories_requiring_virtue` and `scholarly_language`, so
+/// widening it that far could only fail. Mirroring those is separate work, not a
+/// reason to loosen or "tighten" this test.
+#[test]
+fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
+    let plan = arm_rules::LifeStagePlan {
+        native_language: Some("German".to_string()),
+        childhood_package: Some(Id::new("childhood.athletic")),
+    };
+    let budget = arm_rules::LifeStageBudget {
+        childhood_native_xp: 75,
+        childhood_spread_xp: 45,
+        later_life_years: 20,
+        later_life_rate: 15,
+        later_life_xp: 300,
+    };
+    let rules = arm_rules::LifeStageRules {
+        childhood: arm_rules::ChildhoodRules {
+            years: 5,
+            native_language_ability: Id::new("ability.living_language"),
+            native_language_xp: 75,
+            spread_xp: 45,
+            spread_abilities: [Id::new("ability.swim")].into_iter().collect(),
+        },
+        later_life: arm_rules::LaterLifeRules { xp_per_year: 15 },
+    };
+    let package = arm_rules::ChildhoodPackage {
+        id: Id::new("childhood.traveling"),
+        entries: vec![arm_rules::ChildhoodEntry {
+            ability: Id::new("ability.area_lore"),
+            score: 1,
+            slot: Some("area_a".to_string()),
+            native: true,
+        }],
+        source: Some(arm_rules::SourceRef::new(
+            "Ars Magica - Definitive Edition (Core Rules).md",
+            arm_rules::LineRange::new(2388, 2388),
+        )),
+    };
+
+    let mut keys = std::collections::BTreeSet::new();
+    for payload in [
+        serde_json::to_value(&plan).unwrap(),
+        serde_json::to_value(budget).unwrap(),
+        serde_json::to_value(&rules).unwrap(),
+        serde_json::to_value(&package).unwrap(),
+    ] {
+        mirrored_keys(&payload, &mut keys);
+    }
+    // A floor, so a collector that silently gathered nothing cannot look green.
+    assert!(
+        keys.len() >= 12,
+        "expected the life-stage payloads to carry at least 12 field names, got {keys:?}"
+    );
+
+    let types = fs::read_to_string(repo_root().join("ui/src/lib/types.ts")).unwrap();
+    // The two member names the frontend reaches the whole surface through: the
+    // ruleset's `life_stages`/`childhoods` catalogues and the entity's own plan.
+    for key in keys
+        .iter()
+        .map(String::as_str)
+        .chain(["life_stages", "childhoods"])
+    {
+        assert!(
+            types.contains(&format!("{key}:")) || types.contains(&format!("{key}?:")),
+            "ui/src/lib/types.ts declares no '{key}' property"
+        );
+    }
+}
+
 /// Every `{placeholder}` key the shipped catalogues declare, across the three
 /// parameterized kinds (Virtues/Flaws, Abilities, spells). Each names both the
 /// placeholder in an item's localized name and its `param-label-<key>` label — the
