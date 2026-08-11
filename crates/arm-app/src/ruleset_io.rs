@@ -397,6 +397,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     let equipment_json = fs::read_to_string(rules_dir.join("core/equipment.json"))?;
     let characteristics_json = fs::read_to_string(rules_dir.join("core/characteristics.json"))?;
     let life_stages_json = fs::read_to_string(rules_dir.join("core/life_stages.json"))?;
+    let childhoods_json = fs::read_to_string(rules_dir.join("core/childhoods.json"))?;
 
     let ruleset = Ruleset::from_sources(RulesetSources {
         id: RULESET_ID,
@@ -417,9 +418,12 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         // Likewise: an empty life-stages file means the ruleset ships no life
         // stages, leaving `Entity::xp_pool` the only source of experience.
         life_stages: (!life_stages_json.is_empty()).then_some(life_stages_json.as_str()),
-        // The Sample Childhood package file is not shipped yet, so the app offers
-        // no packages; reading it lands with the data file itself.
-        childhoods: None,
+        // And likewise: an empty Sample Childhood file means the ruleset offers no
+        // ready-made packages, leaving the childhood blocks to be divided by hand —
+        // which the rules explicitly allow ("you can spend the 45 experience points
+        // for yourself, as well",
+        // Ars Magica - Definitive Edition (Core Rules).md:2382).
+        childhoods: (!childhoods_json.is_empty()).then_some(childhoods_json.as_str()),
     })?;
     // Load the requested language's rules text. For any non-English language,
     // English is loaded as a per-field fallback so a not-yet-translated string
@@ -437,11 +441,11 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     Ok(localized)
 }
 
-/// Reads the eight `i18n/<lang>/*.json` rules-text files for a language, in the
+/// Reads the nine `i18n/<lang>/*.json` rules-text files for a language, in the
 /// stable domain order the localized ruleset merges them. A missing file is an
 /// error (each language ships the full set), surfaced to the caller.
 fn read_i18n_sources(rules_dir: &Path, lang: &str) -> Result<Vec<String>, AppError> {
-    const FILES: [&str; 8] = [
+    const FILES: [&str; 9] = [
         "virtues_flaws.json",
         "abilities.json",
         "arts.json",
@@ -450,6 +454,7 @@ fn read_i18n_sources(rules_dir: &Path, lang: &str) -> Result<Vec<String>, AppErr
         "spells.json",
         "spell_mastery_abilities.json",
         "equipment.json",
+        "childhoods.json",
     ];
     FILES
         .iter()
