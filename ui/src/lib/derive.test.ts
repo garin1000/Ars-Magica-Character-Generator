@@ -15,6 +15,9 @@ import {
   artXpSpent,
   balance,
   characteristicPointsUsed,
+  childhoodEntryPreview,
+  childhoodSlotFault,
+  childhoodSlots,
   combatRowLabel,
   displayName,
   eligibleForConstraint,
@@ -52,6 +55,7 @@ import type {
   Ability,
   Art,
   CharacteristicRules,
+  ChildhoodPackage,
   CreationPhase,
   Entity,
   EntityTypeProfile,
@@ -2151,5 +2155,238 @@ describe('firstBlockedPhaseIndex', () => {
 
   it('is null for a backwards range — Back is never gated', () => {
     expect(firstBlockedPhaseIndex(phases, [err('characteristics')], 3, 1)).toBeNull();
+  });
+});
+
+// --- 6b3b: Sample Childhood package helpers ---------------------------------
+
+describe('childhoodSlots / childhoodEntryPreview / childhoodSlotFault', () => {
+  /**
+   * Fluent stand-in with the real strings' shapes: `childhood-slot-label` is the
+   * bare name, `-nth` appends a 1-based ordinal, `childhood-entry` is "name score".
+   * Keys resolve to themselves otherwise, so a helper reaching for a key that does
+   * not exist shows up as a slug in the assertion.
+   */
+  const t = (key: string, args?: Record<string, string>) => {
+    if (key === 'param-hint') return `(${args?.label})`;
+    if (key === 'param-label-area') return 'Area';
+    if (key === 'param-label-language') return 'Language';
+    if (key === 'childhood-slot-label') return `${args?.name}`;
+    if (key === 'childhood-slot-label-nth') return `${args?.name} (${args?.index})`;
+    if (key === 'childhood-entry') return `${args?.name} ${args?.score}`;
+    return key;
+  };
+
+  /** A ruleset that knows the childhood Abilities, their parameters and the plan rules. */
+  function childhoodRuleset(): LocalizedRuleset {
+    return {
+      ruleset: {
+        id: 't',
+        version: '1',
+        point_items: {},
+        type_profiles: {},
+        abilities: {
+          'ability.area_lore': { id: 'ability.area_lore', category: 'general', parameter: 'area' },
+          'ability.athletics': { id: 'ability.athletics', category: 'general' },
+          'ability.awareness': { id: 'ability.awareness', category: 'general' },
+          'ability.folk_ken': { id: 'ability.folk_ken', category: 'general' },
+          'ability.living_language': {
+            id: 'ability.living_language',
+            category: 'general',
+            parameter: 'language',
+          },
+          'ability.stealth': { id: 'ability.stealth', category: 'general' },
+          'ability.survival': { id: 'ability.survival', category: 'general' },
+        },
+        life_stages: {
+          childhood: {
+            years: 5,
+            native_language_ability: 'ability.living_language',
+            native_language_xp: 75,
+            spread_xp: 45,
+            spread_abilities: ['ability.area_lore', 'ability.living_language'],
+          },
+          later_life: { xp_per_year: 15 },
+        },
+        ...DERIVED_TAXONOMY,
+      },
+      i18n: {
+        'ability.area_lore': { name: '{area} Lore' },
+        'ability.athletics': { name: 'Athletics' },
+        'ability.awareness': { name: 'Awareness' },
+        'ability.folk_ken': { name: 'Folk Ken' },
+        'ability.living_language': { name: '{language}' },
+        'ability.stealth': { name: 'Stealth' },
+        'ability.survival': { name: 'Survival' },
+      },
+    } as unknown as LocalizedRuleset;
+  }
+
+  /** Traveling Childhood as `rules/core/childhoods.json` ships it: three slots, two on one Ability. */
+  const traveling: ChildhoodPackage = {
+    id: 'childhood.traveling',
+    entries: [
+      { ability: 'ability.area_lore', score: 1, slot: 'area_a' },
+      { ability: 'ability.area_lore', score: 1, slot: 'area_b' },
+      { ability: 'ability.folk_ken', score: 2 },
+      { ability: 'ability.living_language', score: 5, native: true },
+      { ability: 'ability.living_language', score: 1, slot: 'language' },
+      { ability: 'ability.survival', score: 2 },
+    ],
+  };
+
+  /** Exploring Childhood: exactly one slot, so its label must carry no ordinal. */
+  const exploring: ChildhoodPackage = {
+    id: 'childhood.exploring',
+    entries: [
+      { ability: 'ability.area_lore', score: 2, slot: 'area' },
+      { ability: 'ability.athletics', score: 1 },
+      { ability: 'ability.awareness', score: 1 },
+      { ability: 'ability.living_language', score: 5, native: true },
+      { ability: 'ability.stealth', score: 1 },
+      { ability: 'ability.survival', score: 2 },
+    ],
+  };
+
+  /** Athletic Childhood: nothing to ask the player at all. */
+  const athletic: ChildhoodPackage = {
+    id: 'childhood.athletic',
+    entries: [
+      { ability: 'ability.athletics', score: 2 },
+      { ability: 'ability.living_language', score: 5, native: true },
+    ],
+  };
+
+  const rs = childhoodRuleset();
+
+  describe('childhoodSlots', () => {
+    it('asks for every slotted entry, in the package order, with its ability', () => {
+      const slots = childhoodSlots(rs, traveling, t);
+      expect(slots.map((s) => s.slot)).toEqual(['area_a', 'area_b', 'language']);
+      expect(slots.map((s) => s.ability)).toEqual([
+        'ability.area_lore',
+        'ability.area_lore',
+        'ability.living_language',
+      ]);
+    });
+
+    it('numbers the labels only where one Ability holds two slots', () => {
+      // Two Area Lores are indistinguishable without an ordinal; the single
+      // language slot needs none, so it must not get one.
+      expect(childhoodSlots(rs, traveling, t).map((s) => s.label)).toEqual([
+        '(Area) Lore (1)',
+        '(Area) Lore (2)',
+        '(Language)',
+      ]);
+    });
+
+    it('leaves a lone slot unnumbered', () => {
+      expect(childhoodSlots(rs, exploring, t).map((s) => s.label)).toEqual(['(Area) Lore']);
+    });
+
+    it('asks nothing for a package with no slotted entry', () => {
+      expect(childhoodSlots(rs, athletic, t)).toEqual([]);
+    });
+
+    it('never renders a raw parameter token, an ability id or the slot key', () => {
+      for (const slot of childhoodSlots(rs, traveling, t)) {
+        expect(slot.label).not.toContain('{');
+        expect(slot.label).not.toContain('ability.');
+        // The slot key is per-package data, so it can only ever be a machine key.
+        expect(slot.label).not.toContain(slot.slot);
+      }
+    });
+  });
+
+  describe('childhoodEntryPreview', () => {
+    it('reads out every entry with its score, in package order', () => {
+      const rows = childhoodEntryPreview(
+        rs,
+        traveling,
+        { native_language: 'German' },
+        { area_a: 'Rhine' },
+        t,
+      );
+      expect(rows).toEqual([
+        'Rhine Lore 1',
+        '(Area) Lore 1',
+        'Folk Ken 2',
+        'German 5',
+        '(Language) 1',
+        'Survival 2',
+      ]);
+    });
+
+    it('names the plan native language on the native entry, never its token or id', () => {
+      const rows = childhoodEntryPreview(rs, traveling, { native_language: 'German' }, {}, t);
+      expect(rows).toContain('German 5');
+      expect(rows.join(' | ')).not.toContain('{language}');
+      expect(rows.join(' | ')).not.toContain('ability.living_language');
+    });
+
+    it('falls back to the localized parameter hint while no native language is chosen', () => {
+      const rows = childhoodEntryPreview(rs, traveling, null, {}, t);
+      expect(rows).toContain('(Language) 5');
+    });
+
+    it('never leaves a brace placeholder or an ability slug in a row', () => {
+      const rows = childhoodEntryPreview(rs, exploring, { native_language: 'German' }, {}, t);
+      for (const row of rows) {
+        expect(row).not.toContain('{');
+        expect(row).not.toContain('ability.');
+      }
+    });
+  });
+
+  describe('childhoodSlotFault', () => {
+    const plan = { native_language: 'German' };
+
+    it('reports an unanswered slot as empty', () => {
+      expect(childhoodSlotFault(rs, traveling, 'area_a', {}, plan)).toBe('empty');
+      expect(childhoodSlotFault(rs, traveling, 'area_a', { area_a: '   ' }, plan)).toBe('empty');
+    });
+
+    it('accepts distinct answers', () => {
+      const slots = { area_a: 'Rhine', area_b: 'Provence', language: 'Italian' };
+      expect(childhoodSlotFault(rs, traveling, 'area_a', slots, plan)).toBeNull();
+      expect(childhoodSlotFault(rs, traveling, 'area_b', slots, plan)).toBeNull();
+      expect(childhoodSlotFault(rs, traveling, 'language', slots, plan)).toBeNull();
+    });
+
+    it('faults both slots of one Ability answered alike — they would merge into one row', () => {
+      const slots = { area_a: 'Rhine', area_b: 'Rhine', language: 'Italian' };
+      expect(childhoodSlotFault(rs, traveling, 'area_a', slots, plan)).toBe('duplicate');
+      expect(childhoodSlotFault(rs, traveling, 'area_b', slots, plan)).toBe('duplicate');
+    });
+
+    it('does not fault two slots of different Abilities sharing a value', () => {
+      // "Rhine Lore" and the language "Rhine" are two different rows.
+      const slots = { area_a: 'Rhine', area_b: 'Provence', language: 'Rhine' };
+      expect(childhoodSlotFault(rs, traveling, 'area_a', slots, plan)).toBeNull();
+      expect(childhoodSlotFault(rs, traveling, 'language', slots, plan)).toBeNull();
+    });
+
+    it('faults a childhood language repeating the native language', () => {
+      // Childhood's spread buys a Living Language *other than* the native one.
+      // Source: Ars Magica - Definitive Edition (Core Rules).md:2378
+      const slots = { area_a: 'Rhine', area_b: 'Provence', language: 'German' };
+      expect(childhoodSlotFault(rs, traveling, 'language', slots, plan)).toBe('native');
+    });
+
+    it('lets an Area Lore be named after the native language', () => {
+      // Only the childhood's own language Ability is restricted; an Area Lore
+      // called "German" is perfectly ordinary.
+      const slots = { area_a: 'German', area_b: 'Provence', language: 'Italian' };
+      expect(childhoodSlotFault(rs, traveling, 'area_a', slots, plan)).toBeNull();
+    });
+
+    it('cannot fault a language against a native language that is not chosen yet', () => {
+      const slots = { area_a: 'Rhine', area_b: 'Provence', language: 'German' };
+      expect(childhoodSlotFault(rs, traveling, 'language', slots, null)).toBeNull();
+    });
+
+    it('has nothing to say about a slot the package does not declare', () => {
+      expect(childhoodSlotFault(rs, exploring, 'area_b', { area: 'Rhine' }, plan)).toBeNull();
+    });
   });
 });

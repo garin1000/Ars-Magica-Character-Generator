@@ -9,6 +9,8 @@ import type {
   ArtType,
   Characteristic,
   CharacteristicRules,
+  ChildhoodEntry,
+  ChildhoodPackage,
   CreationPhase,
   Entity,
   EntityTypeProfile,
@@ -16,6 +18,7 @@ import type {
   Grant,
   GrantConstraint,
   ItemKind,
+  LifeStagePlan,
   LocalizedRuleset,
   Magnitude,
   PointItem,
@@ -701,6 +704,131 @@ export function abilityLabel(
   const name = abilityDisplayName(localized, abilityId, value, placeholderLabel);
   const requiresTraining = localized.ruleset.abilities?.[abilityId]?.requires_training ?? false;
   return requiresTraining ? `${name}${trainingMarker}` : name;
+}
+
+/** One parameter value a Sample Childhood package must be told before it can be taken. */
+export interface ChildhoodSlot {
+  /** The package's own machine key for the slot (`area_a`, `language`) — never shown. */
+  slot: string;
+  /** The Ability the answer parameterizes. */
+  ability: string;
+  /** The field's user-facing name: the localized Ability, ordinal-disambiguated. */
+  label: string;
+}
+
+/**
+ * The parameter values a Sample Childhood package must be told, in the package's
+ * own entry order.
+ *
+ * A slot's label is its Ability's localized name with the parameter hint
+ * ("(Area) Lore"), carrying a 1-based ordinal **only** where one Ability holds two
+ * or more slots — Traveling Childhood's two Area Lores are indistinguishable
+ * without one, while Exploring Childhood's single Area Lore must not gain a
+ * pointless "(1)".
+ *
+ * The slot key itself is never rendered: keys are per-package *data*, so a Fluent
+ * key per slot would make the catalogue's shape code, and printing the slug raw
+ * would render an id as a label. Both are forbidden.
+ *
+ * Source: Ars Magica - Definitive Edition (Core Rules).md:2384-2388.
+ */
+export function childhoodSlots(
+  localized: LocalizedRuleset,
+  pkg: ChildhoodPackage,
+  t: Translate,
+): ChildhoodSlot[] {
+  const slotted = pkg.entries.filter(
+    (entry): entry is ChildhoodEntry & { slot: string } => !!entry.slot,
+  );
+  const total = new Map<string, number>();
+  for (const entry of slotted) total.set(entry.ability, (total.get(entry.ability) ?? 0) + 1);
+
+  const seen = new Map<string, number>();
+  return slotted.map((entry) => {
+    const name = abilityDisplayName(localized, entry.ability, undefined, paramHint(t));
+    const ordinal = (seen.get(entry.ability) ?? 0) + 1;
+    seen.set(entry.ability, ordinal);
+    const label =
+      (total.get(entry.ability) ?? 0) > 1
+        ? t('childhood-slot-label-nth', { name, index: String(ordinal) })
+        : t('childhood-slot-label', { name });
+    return { slot: entry.slot, ability: entry.ability, label };
+  });
+}
+
+/**
+ * The rows a Sample Childhood package would buy, as readable lines — the preview a
+ * player decides on before taking it. One line per entry, in package order.
+ *
+ * Every Ability is named as the sheet will show it: the package's native-language
+ * entry reads the plan's chosen language ("German 5", never the `{language}` token
+ * and never the Ability id), a slot already answered reads its answer ("Rhine Lore
+ * 1"), and an unanswered one falls back to the localized parameter hint.
+ *
+ * Source: Ars Magica - Definitive Edition (Core Rules).md:2384-2388.
+ */
+export function childhoodEntryPreview(
+  localized: LocalizedRuleset,
+  pkg: ChildhoodPackage,
+  plan: LifeStagePlan | null | undefined,
+  slots: Record<string, string>,
+  t: Translate,
+): string[] {
+  const nativeLanguage = plan?.native_language?.trim() ?? '';
+  return pkg.entries.map((entry) => {
+    const value = entry.native ? nativeLanguage : entry.slot ? slots[entry.slot] : undefined;
+    const name = abilityDisplayName(localized, entry.ability, value, paramHint(t));
+    return t('childhood-entry', { name, score: String(entry.score) });
+  });
+}
+
+/** What is wrong with one drafted childhood slot answer, as far as the UI can tell. */
+export type ChildhoodSlotFault = 'empty' | 'duplicate' | 'native';
+
+/**
+ * The locally decidable fault in one drafted slot answer, or `null` when there is
+ * none. Lets the picker disable Apply with a reason instead of submitting a form
+ * the engine is bound to reject; the engine stays the authority once it is taken.
+ *
+ * Three faults, in the engine's own order of precedence (`childhood::apply_package`):
+ *  - `empty` — nothing answered, so there is no value to buy the Ability under;
+ *  - `native` — a childhood *language* repeating the native language, which the
+ *    spread may not buy ("Living Language (other than the character's native
+ *    language)"). Only the childhood's own language Ability is restricted, so an
+ *    Area Lore named after the native language is fine; and with no native language
+ *    chosen yet there is nothing to collide with.
+ *  - `duplicate` — the same answer as another slot **of the same Ability**, which
+ *    would merge into a single row and waste the other entry's experience.
+ *
+ * Reported symmetrically for a duplicate: both answers need looking at, and either
+ * one is a legitimate thing to change.
+ *
+ * Source: Ars Magica - Definitive Edition (Core Rules).md:2378, :2384-2388.
+ */
+export function childhoodSlotFault(
+  localized: LocalizedRuleset,
+  pkg: ChildhoodPackage,
+  slot: string,
+  slots: Record<string, string>,
+  plan: LifeStagePlan | null | undefined,
+): ChildhoodSlotFault | null {
+  const entry = pkg.entries.find((candidate) => candidate.slot === slot);
+  if (!entry) return null;
+
+  const value = (slots[slot] ?? '').trim();
+  if (!value) return 'empty';
+
+  const nativeLanguage = plan?.native_language?.trim() ?? '';
+  const languageAbility = localized.ruleset.life_stages?.childhood.native_language_ability;
+  if (nativeLanguage && entry.ability === languageAbility && value === nativeLanguage) {
+    return 'native';
+  }
+
+  for (const other of pkg.entries) {
+    if (!other.slot || other.slot === slot || other.ability !== entry.ability) continue;
+    if ((slots[other.slot] ?? '').trim() === value) return 'duplicate';
+  }
+  return null;
 }
 
 /**
