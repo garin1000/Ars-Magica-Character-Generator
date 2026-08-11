@@ -48,6 +48,18 @@ beforeEach(() => {
         effective_min: -5,
         costs: [],
       },
+      // The ruleset ships life-stage rules, so the Abilities step offers the funding
+      // choice — the wizard mounts the very component the editor tab does.
+      life_stages: {
+        childhood: {
+          years: 5,
+          native_language_ability: 'ability.living_language',
+          native_language_xp: 75,
+          spread_xp: 45,
+          spread_abilities: ['ability.athletics'],
+        },
+        later_life: { xp_per_year: 15 },
+      },
       magnitude_points: { free: 0, minor: 1, major: 3 },
       ability_category_order: ['general'],
       art_type_order: ['technique', 'form'],
@@ -104,6 +116,13 @@ describe('WizardStep', () => {
       expect(body(phase)).toContain(`data-testid="${testid}"`);
     });
   }
+
+  // AbilityTab carries the life-stage funding panel, so mounting it in the wizard
+  // puts the choice in both flows at once: a save made in the wizard stays editable
+  // in the editor because they are one surface, not two.
+  it('offers the life-stage funding panel on the abilities step', () => {
+    expect(body('abilities')).toContain('data-testid="life-stage-panel"');
+  });
 
   it('shows both halves of the personality step, traits and reputations', () => {
     const markup = body('personality_reputations');
