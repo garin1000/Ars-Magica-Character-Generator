@@ -1299,6 +1299,9 @@ describe('art helpers', () => {
 });
 
 describe('restrictedPoolLabel', () => {
+  /// Every V/F-granted pool names its granting item; the label ignores it and reads
+  /// the eligibility instead, so which item it is does not matter here.
+  const itemOrigin = { kind: 'item', item: 'virtue.educated' } as const;
   const t = (key: string) =>
     (
       ({
@@ -1310,7 +1313,11 @@ describe('restrictedPoolLabel', () => {
 
   it('labels a category pool by localized category names', () => {
     const rs = makeRuleset([]);
-    const label = restrictedPoolLabel(rs, { amount: 50, used: 0, categories: ['martial'] }, t);
+    const label = restrictedPoolLabel(
+      rs,
+      { amount: 50, used: 0, categories: ['martial'], origin: itemOrigin },
+      t,
+    );
     expect(label).toBe('Martial');
   });
 
@@ -1318,7 +1325,7 @@ describe('restrictedPoolLabel', () => {
     const rs = makeRuleset([]);
     const label = restrictedPoolLabel(
       rs,
-      { amount: 50, used: 0, categories: ['academic', 'martial'] },
+      { amount: 50, used: 0, categories: ['academic', 'martial'], origin: itemOrigin },
       t,
     );
     expect(label).toBe('Academic, Martial');
@@ -1333,7 +1340,12 @@ describe('restrictedPoolLabel', () => {
     });
     const label = restrictedPoolLabel(
       rs,
-      { amount: 50, used: 30, abilities: ['ability.latin', 'ability.artes_liberales'] },
+      {
+        amount: 50,
+        used: 30,
+        abilities: ['ability.latin', 'ability.artes_liberales'],
+        origin: itemOrigin,
+      },
       t,
     );
     expect(label).toBe('Latin, Artes Liberales');
@@ -1356,11 +1368,53 @@ describe('restrictedPoolLabel', () => {
     });
     const label = restrictedPoolLabel(
       rs,
-      { amount: 50, used: 0, abilities: ['ability.artes_liberales', 'ability.living_language'] },
+      {
+        amount: 50,
+        used: 0,
+        abilities: ['ability.artes_liberales', 'ability.living_language'],
+        origin: itemOrigin,
+      },
       th,
     );
     expect(label).toBe('Artes Liberales, (Language)');
     expect(label).not.toContain('{language}');
+  });
+
+  // A life-stage block is named for what it IS. Listing its eligible abilities
+  // would print all eleven childhood Abilities, and could not tell childhood's two
+  // blocks apart — both list childhood Abilities.
+  it('labels a life-stage block through its own Fluent key', () => {
+    const tl = (key: string) =>
+      (
+        ({
+          'xp-pool-childhood_native_language': 'Native language',
+          'xp-pool-childhood_spread': 'Childhood',
+        }) as Record<string, string>
+      )[key] ?? key;
+    const rs = makeRuleset([], { i18n: { 'ability.swim': { name: 'Swim' } } });
+    expect(
+      restrictedPoolLabel(
+        rs,
+        {
+          amount: 75,
+          used: 75,
+          origin: { kind: 'life_stage', block: 'childhood_native_language' },
+        },
+        tl,
+      ),
+    ).toBe('Native language');
+    expect(
+      restrictedPoolLabel(
+        rs,
+        {
+          amount: 45,
+          used: 0,
+          abilities: ['ability.swim'],
+          origin: { kind: 'life_stage', block: 'childhood_spread' },
+        },
+        tl,
+      ),
+    ).toBe('Childhood');
   });
 });
 

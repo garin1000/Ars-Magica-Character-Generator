@@ -714,6 +714,11 @@ export function restrictedPoolLabel(
   pool: RestrictedXpPool,
   t: (key: string, args?: Record<string, string>) => string,
 ): string {
+  // A life-stage block is named for what it is, not for what it may buy: its
+  // ability list is the whole childhood spread, and the two childhood blocks share
+  // that list, so listing abilities could not even tell them apart.
+  if (pool.origin?.kind === 'life_stage') return t(`xp-pool-${pool.origin.block}`);
+
   const parts: string[] = [];
   // A parameterized ability (e.g. Living Language) must show its localized param
   // hint "(Language)"/"(Sprache)", not the raw "{language}" token.

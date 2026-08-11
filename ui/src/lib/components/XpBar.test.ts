@@ -135,7 +135,14 @@ describe('XpBar layout data (Issue G)', () => {
   });
 
   it('renders each restricted sub-budget as used/amount with its localized label', () => {
-    setEffective(30, [{ amount: 50, used: 10, categories: ['martial'] }]);
+    setEffective(30, [
+      {
+        amount: 50,
+        used: 10,
+        categories: ['martial'],
+        origin: { kind: 'item', item: 'virtue.warrior' },
+      },
+    ]);
     const { text } = element(html(), 'restricted-xp-0');
     expect(text).toContain('Martial');
     expect(text).toContain('10');
@@ -143,7 +150,14 @@ describe('XpBar layout data (Issue G)', () => {
   });
 
   it('uses the art- testid prefix for the Arts instance', () => {
-    setEffective(30, [{ amount: 50, used: 10, categories: ['martial'] }]);
+    setEffective(30, [
+      {
+        amount: 50,
+        used: 10,
+        categories: ['martial'],
+        origin: { kind: 'item', item: 'virtue.warrior' },
+      },
+    ]);
     const body = html('art-');
     expect(() => element(body, 'art-xp-pool')).not.toThrow();
     expect(() => element(body, 'art-xp-spent')).not.toThrow();

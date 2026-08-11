@@ -238,6 +238,37 @@ export interface RestrictedXpPool {
   used: number;
   abilities?: string[];
   categories?: string[];
+  // Where the pool came from, so the bar can name it. A V/F grant is labelled with
+  // the item's own localized name; a life-stage block through `xp-pool-<block>`,
+  // since a life stage is not an item and has no i18n entry.
+  origin: XpPoolOrigin;
+}
+
+// A block of life-stage experience that funds purchases on its own terms
+// (`LifeStageBlock`). Later life is absent on purpose: it funds anything the
+// character may learn, so it is the general pool rather than a restricted one.
+export type LifeStageBlock = 'childhood_native_language' | 'childhood_spread';
+
+export type XpPoolOrigin =
+  | { kind: 'item'; item: string }
+  | { kind: 'life_stage'; block: LifeStageBlock };
+
+// The experience a character's life stages earn, block by block (`LifeStageBudget`).
+// Derived, never stored: `LifeStagePlan` holds the choices and this follows from
+// them plus the age.
+export interface LifeStageBudget {
+  childhood_native_xp: number;
+  childhood_spread_xp: number;
+  later_life_years: number;
+  later_life_rate: number;
+  later_life_xp: number;
+}
+
+// A character's life-stage choices — never its resolved numbers (see
+// `LifeStageBudget`). Its presence switches Ability funding from the typed
+// `xp_pool` to the derived life-stage blocks.
+export interface LifeStagePlan {
+  native_language?: string;
 }
 
 // Score effects for the current entity, computed by the engine. Ability bonuses
@@ -259,6 +290,9 @@ export interface EffectiveScores {
   // xp_general_used can never go negative however far the spend overshoots.
   xp_max_flow: number;
   restricted_xp_pools: RestrictedXpPool[];
+  // The life-stage experience blocks, or null for a directly-entered character
+  // (where `xp_pool` is the authority).
+  life_stage: LifeStageBudget | null;
   characteristic_points_granted: number;
   ability_score_floors: AbilityFloor[];
   // Derived Size (base 0; Large +1, Giant Blood +2, Small Frame -1, Dwarf -2).

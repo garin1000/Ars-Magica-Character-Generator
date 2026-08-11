@@ -116,6 +116,7 @@ mod tests {
     const LIFE_STAGES: &str = r#"{
       "childhood": {
         "years": 5,
+        "native_language_ability": "ability.living_language",
         "native_language_xp": 75,
         "spread_xp": 45,
         "spread_abilities": ["ability.swim", "ability.living_language"]
