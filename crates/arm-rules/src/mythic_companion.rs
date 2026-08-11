@@ -166,6 +166,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap()
     }

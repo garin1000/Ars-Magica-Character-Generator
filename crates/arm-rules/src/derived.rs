@@ -2035,6 +2035,7 @@ mod tests {
             equipment: Some(equipment),
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap()
     }
@@ -2459,6 +2460,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap()
     }

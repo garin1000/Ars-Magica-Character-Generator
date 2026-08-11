@@ -14,6 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::ability::{Ability, AbilityCategory, AdvancementTable, AgeAbilityCaps};
 use crate::art::{Art, ArtType, ArtsFile};
 use crate::characteristics::CharacteristicRules;
+use crate::childhood::ChildhoodPackage;
 use crate::equipment::{Armor, EquipmentFile, Shield, Weapon};
 use crate::grant::Grant;
 use crate::house::{House, HousesFile};
@@ -61,6 +62,7 @@ use crate::types::{
 ///   "art_advancement": [ { "score": 1, "total_xp": 1 } ],
 ///   "art_type_order": [ "technique", "form" ],
 ///   "houses": { "house.bonisagus": { /* House */ } },
+///   "childhoods": { "childhood.athletic": { /* ChildhoodPackage */ } },
 ///   "spells": { "spell.pilum_of_fire": { /* Spell */ } },
 ///   "spell_mastery_abilities": { "spell_mastery_ability.penetration": { /* SpellMasteryAbility */ } },
 ///   "weapons": { "weapon.long_sword": { /* Weapon */ } },
@@ -127,6 +129,14 @@ pub struct Ruleset {
     /// contract.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) life_stages: Option<LifeStageRules>,
+    /// Sample Childhood packages keyed by their id — ready-made Ability spreads a
+    /// player may take instead of dividing the childhood experience by hand.
+    /// Defaulted so older serialized rulesets (no packages) still deserialize, and
+    /// always serialized like `houses`, so the frontend's record is empty rather
+    /// than absent for a ruleset shipping none. The `childhoods` field name is a
+    /// stable public contract.
+    #[serde(default)]
+    pub(crate) childhoods: BTreeMap<Id, ChildhoodPackage>,
     /// Magnitude→point-weight table, derived from [`Magnitude::points`]. Serialized
     /// to the frontend so the UI reads point values from the engine instead of
     /// re-hardcoding them. Derived data, not authored: populated at construction
@@ -251,6 +261,10 @@ pub struct RulesetSources<'a> {
     /// a ruleset that ships no life stages (which leaves `Entity::xp_pool` the only
     /// source of experience, as before).
     pub life_stages: Option<&'a str>,
+    /// Sample-Childhood-packages JSON (`{ "packages": [...] }`), or `None` for a
+    /// ruleset that ships no packages — which offers the player no shortcut but
+    /// leaves the childhood block itself perfectly usable by hand.
+    pub childhoods: Option<&'a str>,
 }
 
 /// A [`Ruleset`] paired with localized display text for a single language.
@@ -362,6 +376,7 @@ pub(crate) mod parse_source {
     pub const EQUIPMENT: &str = "equipment";
     pub const CHARACTERISTICS: &str = "characteristics";
     pub const LIFE_STAGES: &str = "life stages";
+    pub const CHILDHOODS: &str = "childhoods";
     pub const I18N: &str = "i18n";
     /// Fallback used by the blanket `From<serde_json::Error>` conversion, where
     /// the failing input is not named at the call site.
@@ -528,6 +543,16 @@ pub struct ScholarlyLanguageRequirement {
     pub min_score: u8,
 }
 
+/// On-disk shape of `rules/core/childhoods.json`: the Sample Childhood package
+/// catalogue. Defaults to empty so `"{}"` is a valid empty file. Internal
+/// deserialize-only wrapper, module-private for the same reason as
+/// [`AbilitiesFile`]: it is parsed only within this module.
+#[derive(Deserialize)]
+struct ChildhoodsFile {
+    #[serde(default)]
+    packages: Vec<ChildhoodPackage>,
+}
+
 /// Pushes a `"duplicate <label> ID: '<id>'"` error for each id seen more than
 /// once.
 fn collect_duplicates<'a>(
@@ -617,6 +642,7 @@ impl Ruleset {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
     }
 
@@ -646,6 +672,7 @@ impl Ruleset {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
     }
 
@@ -677,6 +704,7 @@ impl Ruleset {
             equipment: None,
             characteristics: characteristics_json,
             life_stages: None,
+            childhoods: None,
         })
     }
 
@@ -701,6 +729,7 @@ impl Ruleset {
             equipment,
             characteristics,
             life_stages,
+            childhoods,
         } = sources;
 
         let items: Vec<PointItem> = serde_json::from_str(point_items_json)
@@ -744,6 +773,9 @@ impl Ruleset {
                     .map_err(|e| RulesetError::parse(parse_source::LIFE_STAGES, e))?,
             ),
         };
+        // An absent childhoods file is equivalent to an empty `"{}"`.
+        let childhoods_file: ChildhoodsFile = serde_json::from_str(childhoods.unwrap_or("{}"))
+            .map_err(|e| RulesetError::parse(parse_source::CHILDHOODS, e))?;
 
         // Detect duplicate IDs across each registry.
         let mut errors = Vec::new();
@@ -788,6 +820,11 @@ impl Ruleset {
         collect_duplicates(
             equipment_file.armor.iter().map(|a| &a.id),
             "armor",
+            &mut errors,
+        );
+        collect_duplicates(
+            childhoods_file.packages.iter().map(|p| &p.id),
+            "childhood package",
             &mut errors,
         );
         // The scholarly-language expectation names an ability, which must resolve and
@@ -912,6 +949,11 @@ impl Ruleset {
             .into_iter()
             .map(|a| (a.id.clone(), a))
             .collect();
+        let childhoods: BTreeMap<Id, ChildhoodPackage> = childhoods_file
+            .packages
+            .into_iter()
+            .map(|p| (p.id.clone(), p))
+            .collect();
 
         let ruleset = Self {
             id: Id::new(id),
@@ -925,6 +967,7 @@ impl Ruleset {
             scholarly_language: abilities_file.scholarly_language,
             characteristic_rules,
             life_stages: life_stage_rules,
+            childhoods,
             magnitude_points: derived_magnitude_points(),
             ability_category_order: AbilityCategory::ALL.to_vec(),
             arts,
@@ -1203,6 +1246,16 @@ impl Ruleset {
     /// The life-stage experience rules, if the ruleset ships them.
     pub fn life_stages(&self) -> Option<&LifeStageRules> {
         self.life_stages.as_ref()
+    }
+
+    /// Looks up a Sample Childhood package by id.
+    pub fn childhood(&self, id: &Id) -> Option<&ChildhoodPackage> {
+        self.childhoods.get(id)
+    }
+
+    /// Iterates all Sample Childhood packages in id order.
+    pub fn childhoods(&self) -> impl Iterator<Item = &ChildhoodPackage> {
+        self.childhoods.values()
     }
 
     /// Ability categories that may only be bought with a permitting Virtue
@@ -2265,6 +2318,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap();
         assert_eq!(rs.item_count(), 6);
@@ -2286,6 +2340,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap();
         assert_eq!(no_abilities.ability_count(), 0);
@@ -2319,6 +2374,7 @@ mod tests {
             equipment: Some(equipment),
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         });
         assert!(
             rs.is_ok(),
@@ -2354,6 +2410,7 @@ mod tests {
             equipment: Some(equipment),
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap_err();
         assert!(
@@ -2386,6 +2443,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap();
         assert_eq!(rs.house_count(), 2);
@@ -2408,6 +2466,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap();
         assert_eq!(none.house_count(), 0);
@@ -2439,6 +2498,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap();
         assert_eq!(rs.art_count(), 2);
@@ -2472,6 +2532,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
     }
 
@@ -2513,6 +2574,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap();
         // Mythic Companion type accessors.
@@ -2670,6 +2732,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap_err();
         match err {
@@ -2706,6 +2769,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap_err();
         match err {
@@ -2740,6 +2804,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap_err();
         match err {
@@ -2776,6 +2841,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap_err();
         match err {
@@ -2808,6 +2874,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap_err();
         match err {
@@ -3703,6 +3770,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: Some(life_stages),
+            childhoods: None,
         })
         .unwrap();
         let rules = rs.life_stages().expect("life-stage rules loaded");
@@ -3742,6 +3810,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: Some(life_stages),
+            childhoods: None,
         })
         .unwrap_err();
         let msg = err.to_string();
@@ -3781,6 +3850,75 @@ mod tests {
             msg.contains("ability.awareness") && msg.contains("parameter"),
             "should explain why the ability cannot name one language: {msg}"
         );
+    }
+
+    /// Sample Childhood packages are a catalogue of their own, so they load from
+    /// their own file and are reachable by id — like every other registry. A
+    /// ruleset that ships no package file simply offers none, which stands the
+    /// shortcut down rather than making the childhood block unusable.
+    #[test]
+    fn childhood_packages_load_from_their_own_file() {
+        let childhoods = r#"{
+          "packages": [
+            { "id": "childhood.athletic",
+              "entries": [
+                { "ability": "ability.awareness", "score": 2 },
+                { "ability": "ability.living_language", "score": 5, "native": true }
+              ] }
+          ]
+        }"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            abilities: Some(LIFE_STAGE_ABILITIES),
+            childhoods: Some(childhoods),
+            ..RulesetSources::default()
+        })
+        .unwrap();
+        let package = rs
+            .childhood(&Id::new("childhood.athletic"))
+            .expect("the package is reachable by id");
+        assert_eq!(package.entries.len(), 2);
+        assert_eq!(rs.childhoods().count(), 1);
+
+        let without = Ruleset::from_json("test", "1", "[]", "[]").unwrap();
+        assert_eq!(without.childhoods().count(), 0);
+    }
+
+    /// Two packages under one id would make `childhood()` return whichever won
+    /// the map insert, so the collision is a load-time failure like every other
+    /// registry's.
+    #[test]
+    fn duplicate_childhood_id_is_rejected() {
+        let dup = r#"{
+          "packages": [
+            { "id": "childhood.athletic", "entries": [] },
+            { "id": "childhood.athletic", "entries": [] }
+          ]
+        }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            childhoods: Some(dup),
+            ..RulesetSources::default()
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => {
+                assert!(
+                    e.errors()
+                        .iter()
+                        .any(|m| m.contains("duplicate childhood package ID")),
+                    "expected a duplicate-childhood error, got {:?}",
+                    e.errors()
+                );
+            }
+            other => panic!("expected integrity error, got {other:?}"),
+        }
     }
 
     #[test]
@@ -3927,6 +4065,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap();
 
@@ -3947,6 +4086,10 @@ mod tests {
                 "arts",
                 "categories_requiring_virtue",
                 "characteristic_rules",
+                // Always present, like `houses`: the frontend's record of Sample
+                // Childhood packages is empty for a ruleset shipping none, never
+                // absent.
+                "childhoods",
                 "houses",
                 "id",
                 // `life_stages` is absent here on purpose: this fixture ships no
@@ -4398,6 +4541,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap_err();
         match err {
@@ -4435,6 +4579,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap_err();
         match err {
@@ -4472,6 +4617,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap_err();
         match err {
@@ -4508,6 +4654,7 @@ mod tests {
             equipment: None,
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap_err();
         match err {
@@ -4550,6 +4697,7 @@ mod tests {
             equipment: Some(equipment),
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap_err();
         match err {
@@ -4586,6 +4734,7 @@ mod tests {
             equipment: Some(equipment),
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap_err();
         match err {
@@ -4622,6 +4771,7 @@ mod tests {
             equipment: Some(equipment),
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap_err();
         match err {

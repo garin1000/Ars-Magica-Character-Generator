@@ -1692,6 +1692,7 @@ mod tests {
             equipment: Some(equipment),
             characteristics: None,
             life_stages: None,
+            childhoods: None,
         })
         .unwrap();
         let i18n = r#"{
