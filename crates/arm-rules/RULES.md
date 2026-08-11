@@ -2591,6 +2591,25 @@ Abilities are bought with experience earned in blocks, not from one bank:
   parameterized Ability produces. A slot that is missing, or blank once trimmed, is
   **unanswered** rather than answered with an empty string, since `Area Lore ()` is
   a row no one asked for.
+- **The spread's second language may not be the native one.** `:2378` lists what the
+  45 points buy as "Living Language (other than the character's **native
+  language**)", so a language slot answered with the plan's own native language is
+  rejected (`ChildhoodRejection::SlotIsNativeLanguage`). The check applies to the
+  childhood's `native_language_ability` alone — an `Area Lore (German)` beside a
+  native language of German is ordinary, not a violation.
+- **Two slots may not share a value.** Rows merge by `(ability, parameter)`, so two
+  Area Lore slots both answered "Bavaria" would collapse into **one** row at score 1:
+  `duplicate_ability` (`validation/scores.rs`) would never fire, and 40 of the
+  spread's 45 experience points would vanish into an anonymous
+  `restricted_xp_unspent` warning. `ChildhoodRejection::DuplicateSlotValue` names
+  both slots so the UI can point at the colliding field.
+- **Rejections are collected, not short-circuited.** `apply_package` reports every
+  bad field in one pass (`ChildhoodRejection`: unknown package, native language
+  unset, slot unfilled, slot is the native language, duplicate slot value), so a
+  player fixing a package fills in all of it at once. The rejections are plain
+  data — no issue codes, no Fluent keys, no user-facing prose; mapping them onto
+  localized `ValidationIssue`s happens in `validation/`, where the emit sites stay
+  visible to the contract-table and phase scanners.
 - **Deferred to the rest of 6b3:** the shipped `childhoods.json` itself, the i18n
   names, and the UI that offers the packages.
 

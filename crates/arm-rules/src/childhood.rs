@@ -139,6 +139,13 @@ impl ChildhoodPackage {
 /// the emit sites stay visible to the contract-table and phase scanners.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ChildhoodRejection {
+    /// No ruleset package carries the requested id, so there is nothing to
+    /// apply. A package is taken by id, so an unknown one is reported rather
+    /// than silently doing nothing.
+    UnknownPackage {
+        /// The id that resolved to no package.
+        package: Id,
+    },
     /// The character has no life-stage plan, or its plan names no native
     /// language, so the package's native-language entry has no language to be
     /// written under.
@@ -152,6 +159,53 @@ pub enum ChildhoodRejection {
         /// The Ability the unanswered entry buys.
         ability: Id,
     },
+    /// A language slot was answered with the character's own native language. The
+    /// childhood spread buys "Living Language (other than the character's native
+    /// language)" (Ars Magica - Definitive Edition (Core Rules).md:2378), so the
+    /// second language has to be a different one — and merging it into the native
+    /// row would silently discard the entry besides.
+    SlotIsNativeLanguage {
+        /// The entry's slot key, for targeting the offending field.
+        slot: String,
+        /// The Ability the entry buys — the childhood's native-language Ability.
+        ability: Id,
+        /// The language the slot and the plan agree on.
+        language: String,
+    },
+    /// Two slots on the same Ability were answered with the same value. Rows
+    /// merge by `(ability, parameter)`, so the two entries would collapse into
+    /// one — the character would silently lose everything the second entry
+    /// bought.
+    DuplicateSlotValue {
+        /// The slot reported, for targeting the offending field.
+        slot: String,
+        /// The earlier slot on the same Ability carrying the same value.
+        other_slot: String,
+        /// The Ability both slots buy.
+        ability: Id,
+        /// The value they share.
+        value: String,
+    },
+}
+
+/// Applies the Sample Childhood package `package` names, looked up in the
+/// ruleset's catalogue.
+///
+/// A thin wrapper over [`apply_package`]: it resolves the id — an unknown one is
+/// [`ChildhoodRejection::UnknownPackage`], never a silent no-op — and delegates.
+/// See [`apply_package`] for what applying one does.
+pub fn apply_childhood_package(
+    entity: &Entity,
+    package: &Id,
+    slot_values: &BTreeMap<String, String>,
+    ruleset: &Ruleset,
+) -> Result<Entity, Vec<ChildhoodRejection>> {
+    let Some(found) = ruleset.childhood(package) else {
+        return Err(vec![ChildhoodRejection::UnknownPackage {
+            package: package.clone(),
+        }]);
+    };
+    apply_package(entity, found, slot_values, ruleset)
 }
 
 /// Applies a Sample Childhood package to a character, returning the character it
@@ -193,24 +247,44 @@ pub enum ChildhoodRejection {
 /// what the childhood blocks grant, so an overspend surfaces as `not_enough_xp`
 /// exactly as a hand-typed one would. Charging here as well would double-count.
 ///
+/// # Rejections
+///
+/// Every [`ChildhoodRejection`] is **collected, not short-circuited**, so a UI
+/// can flag every bad field in one pass rather than one per attempt. A rejected
+/// application writes nothing at all.
+///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:2380-2388.
 pub fn apply_package(
     entity: &Entity,
     package: &ChildhoodPackage,
     slot_values: &BTreeMap<String, String>,
-    _ruleset: &Ruleset,
+    ruleset: &Ruleset,
 ) -> Result<Entity, Vec<ChildhoodRejection>> {
     let mut rejections = Vec::new();
 
     // Childhood exists only in life-stage mode, and the taken package is
     // recorded on the plan, so there is no character to apply one to without it.
+    // A blank language is no language, exactly as a blank slot value is no value.
     let native_language = entity
         .life_stages
         .as_ref()
-        .and_then(|plan| plan.native_language.as_deref());
+        .and_then(|plan| plan.native_language.as_deref())
+        .map(str::trim)
+        .filter(|language| !language.is_empty());
     if native_language.is_none() {
         rejections.push(ChildhoodRejection::NativeLanguageUnset);
     }
+
+    // Only the childhood's own language Ability may not repeat the native
+    // language; an Area Lore named after it is perfectly ordinary. Absent
+    // life-stage rules the question cannot be asked, and the load-time integrity
+    // check has already rejected packages shipped without them.
+    let native_language_ability = ruleset
+        .life_stages()
+        .map(|rules| &rules.childhood.native_language_ability);
+    // The slot each `(ability, value)` pair was first answered under, so a repeat
+    // can name the slot it collides with.
+    let mut answered: BTreeMap<(&Id, &str), &str> = BTreeMap::new();
 
     let mut scores = entity.ability_scores.clone();
     for entry in &package.entries {
@@ -221,16 +295,33 @@ pub fn apply_package(
                 None => continue,
             }
         } else if let Some(slot) = entry.slot.as_deref() {
-            match filled_slot_value(slot_values, slot) {
-                Some(value) => Some(value.to_string()),
-                None => {
-                    rejections.push(ChildhoodRejection::SlotUnfilled {
-                        slot: slot.to_string(),
-                        ability: entry.ability.clone(),
-                    });
-                    continue;
-                }
+            let Some(value) = filled_slot_value(slot_values, slot) else {
+                rejections.push(ChildhoodRejection::SlotUnfilled {
+                    slot: slot.to_string(),
+                    ability: entry.ability.clone(),
+                });
+                continue;
+            };
+            if native_language_ability == Some(&entry.ability) && Some(value) == native_language {
+                rejections.push(ChildhoodRejection::SlotIsNativeLanguage {
+                    slot: slot.to_string(),
+                    ability: entry.ability.clone(),
+                    language: value.to_string(),
+                });
+                continue;
             }
+            // Two entries of one Ability answered alike would merge into a single
+            // row, so the second entry's experience would vanish.
+            if let Some(other_slot) = answered.insert((&entry.ability, value), slot) {
+                rejections.push(ChildhoodRejection::DuplicateSlotValue {
+                    slot: slot.to_string(),
+                    other_slot: other_slot.to_string(),
+                    ability: entry.ability.clone(),
+                    value: value.to_string(),
+                });
+                continue;
+            }
+            Some(value.to_string())
         } else {
             None
         };
@@ -814,6 +905,184 @@ mod tests {
                 slot: "area_b".to_string(),
                 ability: Id::new("ability.area_lore"),
             }]
+        );
+    }
+
+    /// A package is taken by id, so an id no ruleset ships is a rejection rather
+    /// than a silent no-op; a known one is applied exactly as `apply_package`
+    /// would.
+    #[test]
+    fn an_unknown_package_is_rejected() {
+        let ruleset = ruleset();
+        let rejections = apply_childhood_package(
+            &child(Some("German")),
+            &Id::new("childhood.nonesuch"),
+            &BTreeMap::new(),
+            &ruleset,
+        )
+        .expect_err("no such package");
+        assert_eq!(
+            rejections,
+            vec![ChildhoodRejection::UnknownPackage {
+                package: Id::new("childhood.nonesuch"),
+            }]
+        );
+
+        let applied = apply_childhood_package(
+            &child(Some("German")),
+            &Id::new("childhood.athletic"),
+            &BTreeMap::new(),
+            &ruleset,
+        )
+        .expect("a shipped package applies");
+        assert_eq!(
+            applied,
+            apply_package(
+                &child(Some("German")),
+                &athletic(),
+                &BTreeMap::new(),
+                &ruleset
+            )
+            .expect("the same package, looked up by hand")
+        );
+    }
+
+    /// Childhood exists only in life-stage mode, and the native entry takes the
+    /// plan's language — so neither a character without a plan nor one whose plan
+    /// leaves the language blank can take a package.
+    #[test]
+    fn a_plan_without_a_native_language_cannot_take_a_package() {
+        let ruleset = ruleset();
+
+        let mut without_plan = child(None);
+        without_plan.life_stages = None;
+        assert_eq!(
+            apply_package(&without_plan, &athletic(), &BTreeMap::new(), &ruleset)
+                .expect_err("no plan at all"),
+            vec![ChildhoodRejection::NativeLanguageUnset]
+        );
+
+        assert_eq!(
+            apply_package(&child(Some("   ")), &athletic(), &BTreeMap::new(), &ruleset)
+                .expect_err("a blank language is no language"),
+            vec![ChildhoodRejection::NativeLanguageUnset]
+        );
+    }
+
+    /// A slot with no value at all is as unanswered as a blank one.
+    #[test]
+    fn an_unfilled_slot_is_rejected() {
+        let rejections = apply_package(
+            &child(Some("German")),
+            &traveling(),
+            &filled(&[("area_a", "Rhine"), ("language", "Italian")]),
+            &ruleset(),
+        )
+        .expect_err("area_b was never answered");
+
+        assert_eq!(
+            rejections,
+            vec![ChildhoodRejection::SlotUnfilled {
+                slot: "area_b".to_string(),
+                ability: Id::new("ability.area_lore"),
+            }]
+        );
+    }
+
+    /// The childhood spread buys "Living Language (other than the character's
+    /// native language)" (Core Rules.md:2378), so a language slot answered with
+    /// the native language is illegal — while an Area Lore that happens to be
+    /// named after it is perfectly ordinary.
+    #[test]
+    fn a_language_slot_filled_with_the_native_language_is_rejected() {
+        let ruleset = ruleset();
+        let rejections = apply_package(
+            &child(Some("German")),
+            &traveling(),
+            &filled(&[
+                ("area_a", "Rhine"),
+                ("area_b", "Provence"),
+                ("language", "German"),
+            ]),
+            &ruleset,
+        )
+        .expect_err("the spread language may not be the native one");
+
+        assert_eq!(
+            rejections,
+            vec![ChildhoodRejection::SlotIsNativeLanguage {
+                slot: "language".to_string(),
+                ability: Id::new("ability.living_language"),
+                language: "German".to_string(),
+            }]
+        );
+
+        apply_package(
+            &child(Some("German")),
+            &traveling(),
+            &filled(&[
+                ("area_a", "German"),
+                ("area_b", "Provence"),
+                ("language", "Italian"),
+            ]),
+            &ruleset,
+        )
+        .expect("an area named after the language is not the language");
+    }
+
+    /// Rows merge by `(ability, parameter)`, so two Area Lore slots answered
+    /// "Bavaria" would collapse into ONE row at score 1: `duplicate_ability`
+    /// would never fire, and 40 experience points would vanish into an anonymous
+    /// unspent-pool warning. Hence the rejection.
+    #[test]
+    fn two_slots_with_the_same_value_are_rejected() {
+        let rejections = apply_package(
+            &child(Some("German")),
+            &traveling(),
+            &filled(&[
+                ("area_a", "Bavaria"),
+                ("area_b", "Bavaria"),
+                ("language", "Italian"),
+            ]),
+            &ruleset(),
+        )
+        .expect_err("one area cannot fill both slots");
+
+        assert_eq!(
+            rejections,
+            vec![ChildhoodRejection::DuplicateSlotValue {
+                slot: "area_b".to_string(),
+                other_slot: "area_a".to_string(),
+                ability: Id::new("ability.area_lore"),
+                value: "Bavaria".to_string(),
+            }]
+        );
+    }
+
+    /// Rejections are collected rather than short-circuited, so a UI can flag
+    /// every bad field in one pass instead of one per attempt.
+    #[test]
+    fn every_bad_slot_is_reported_at_once() {
+        let rejections = apply_package(
+            &child(Some("German")),
+            &traveling(),
+            &filled(&[("language", "Italian")]),
+            &ruleset(),
+        )
+        .expect_err("two areas were never answered");
+
+        assert_eq!(
+            rejections,
+            vec![
+                ChildhoodRejection::SlotUnfilled {
+                    slot: "area_a".to_string(),
+                    ability: Id::new("ability.area_lore"),
+                },
+                ChildhoodRejection::SlotUnfilled {
+                    slot: "area_b".to_string(),
+                    ability: Id::new("ability.area_lore"),
+                },
+            ]
         );
     }
 
