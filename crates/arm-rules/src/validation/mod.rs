@@ -140,6 +140,7 @@ impl fmt::Display for IssueSeverity {
 /// | `academic_ability_without_scholarly_language` | warning | abilities | `ability`, `min` |
 /// | `life_stage_xp_pool_conflict` | error | abilities | `xp_pool` |
 /// | `life_stage_age_unset` | error | abilities | (none) |
+/// | `life_stage_magus_guided_unsupported` | error | abilities | (none) |
 /// | `life_stage_age_before_childhood` | error | abilities | `age`, `min` |
 /// | `life_stage_native_language_unset` | error | abilities | (none) |
 /// | `life_stage_native_language_missing_score` | warning | abilities | `language` |
@@ -351,6 +352,12 @@ impl ValidationIssue {
     /// inside the childhood block, so it cannot have lived a year of later life.
     pub const CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD: &'static str =
         "life_stage_age_before_childhood";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a magus carries a
+    /// life-stage plan. A magus earns experience in four periods, not the two this
+    /// engine models (Core Rules.md:2364), so its later life cannot be counted to its
+    /// age — refused until apprenticeship is modelled (M6/6b4).
+    pub const CODE_LIFE_STAGE_MAGUS_GUIDED_UNSUPPORTED: &'static str =
+        "life_stage_magus_guided_unsupported";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a life-stage plan with no
     /// age, so the later-life block — the one that counts years — cannot be earned.
     /// Childhood is granted regardless (Core Rules.md:2378), which is why this is a
@@ -664,7 +671,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_equipment(entity, ruleset, &mut issues);
         validate_aging(entity, ruleset, &mut issues);
         validate_xp_pool(entity, ruleset, &mut issues);
-        validate_life_stage_plan(entity, ruleset, &mut issues);
+        validate_life_stage_plan(entity, ruleset, type_profile, &mut issues);
         validate_ability_authorization(entity, ruleset, type_profile, &mut issues);
         validate_academic_language(entity, ruleset, &mut issues);
         validate_warping(entity, ruleset, type_profile, &mut issues);
