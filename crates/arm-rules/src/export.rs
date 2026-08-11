@@ -1691,6 +1691,7 @@ mod tests {
             spell_mastery_abilities: Some(mastery),
             equipment: Some(equipment),
             characteristics: None,
+            life_stages: None,
         })
         .unwrap();
         let i18n = r#"{

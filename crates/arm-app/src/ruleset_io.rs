@@ -387,6 +387,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         fs::read_to_string(rules_dir.join("core/spell_mastery_abilities.json"))?;
     let equipment_json = fs::read_to_string(rules_dir.join("core/equipment.json"))?;
     let characteristics_json = fs::read_to_string(rules_dir.join("core/characteristics.json"))?;
+    let life_stages_json = fs::read_to_string(rules_dir.join("core/life_stages.json"))?;
 
     let ruleset = Ruleset::from_sources(RulesetSources {
         id: RULESET_ID,
@@ -404,6 +405,9 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         // rules (the `Option` is the engine's honest "absent" signal).
         characteristics: (!characteristics_json.is_empty())
             .then_some(characteristics_json.as_str()),
+        // Likewise: an empty life-stages file means the ruleset ships no life
+        // stages, leaving `Entity::xp_pool` the only source of experience.
+        life_stages: (!life_stages_json.is_empty()).then_some(life_stages_json.as_str()),
     })?;
     // Load the requested language's rules text. For any non-English language,
     // English is loaded as a per-field fallback so a not-yet-translated string

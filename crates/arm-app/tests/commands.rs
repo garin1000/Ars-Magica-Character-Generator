@@ -231,6 +231,7 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     fs::write(tmp.path().join("core/spell_mastery_abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/equipment.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
+    fs::write(tmp.path().join("core/life_stages.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();
@@ -290,6 +291,7 @@ fn integrity_failure_preserves_individual_messages() {
     fs::write(tmp.path().join("core/spell_mastery_abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/equipment.json"), "{}").unwrap();
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
+    fs::write(tmp.path().join("core/life_stages.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();

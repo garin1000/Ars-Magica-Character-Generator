@@ -17,6 +17,7 @@ use crate::characteristics::CharacteristicRules;
 use crate::equipment::{Armor, EquipmentFile, Shield, Weapon};
 use crate::grant::Grant;
 use crate::house::{House, HousesFile};
+use crate::life_stage::LifeStageRules;
 use crate::mythic_companion::{MythicCompanionType, MythicCompanionTypesFile};
 use crate::spell::{Spell, SpellDuration, SpellTarget, SpellsFile};
 use crate::spell_mastery::{SpellMasteryAbilitiesFile, SpellMasteryAbility};
@@ -106,6 +107,13 @@ pub struct Ruleset {
     /// a stable public contract.
     #[serde(default)]
     pub(crate) characteristic_rules: Option<CharacteristicRules>,
+    /// The life-stage experience rules (childhood + later life), if the ruleset
+    /// ships them. `None` for a ruleset without a life-stages file, which leaves
+    /// [`crate::types::Entity::xp_pool`] the only source of experience. Serialized
+    /// whole to the frontend; the `life_stages` field name is a stable public
+    /// contract.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) life_stages: Option<LifeStageRules>,
     /// Magnitude→point-weight table, derived from [`Magnitude::points`]. Serialized
     /// to the frontend so the UI reads point values from the engine instead of
     /// re-hardcoding them. Derived data, not authored: populated at construction
@@ -226,6 +234,10 @@ pub struct RulesetSources<'a> {
     /// Characteristic point-buy JSON (`{ "start_points", "costs" }`), or `None`
     /// for a ruleset that ships no characteristic rules.
     pub characteristics: Option<&'a str>,
+    /// Life-stage experience JSON (`{ "childhood", "later_life" }`), or `None` for
+    /// a ruleset that ships no life stages (which leaves `Entity::xp_pool` the only
+    /// source of experience, as before).
+    pub life_stages: Option<&'a str>,
 }
 
 /// A [`Ruleset`] paired with localized display text for a single language.
@@ -336,6 +348,7 @@ pub(crate) mod parse_source {
     pub const SPELL_MASTERY_ABILITIES: &str = "spell mastery abilities";
     pub const EQUIPMENT: &str = "equipment";
     pub const CHARACTERISTICS: &str = "characteristics";
+    pub const LIFE_STAGES: &str = "life stages";
     pub const I18N: &str = "i18n";
     /// Fallback used by the blanket `From<serde_json::Error>` conversion, where
     /// the failing input is not named at the call site.
@@ -564,6 +577,7 @@ impl Ruleset {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
     }
 
@@ -592,6 +606,7 @@ impl Ruleset {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
     }
 
@@ -622,6 +637,7 @@ impl Ruleset {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: characteristics_json,
+            life_stages: None,
         })
     }
 
@@ -645,6 +661,7 @@ impl Ruleset {
             spell_mastery_abilities,
             equipment,
             characteristics,
+            life_stages,
         } = sources;
 
         let items: Vec<PointItem> = serde_json::from_str(point_items_json)
@@ -679,6 +696,13 @@ impl Ruleset {
             Some(json) => Some(
                 serde_json::from_str(json)
                     .map_err(|e| RulesetError::parse(parse_source::CHARACTERISTICS, e))?,
+            ),
+        };
+        let life_stage_rules: Option<LifeStageRules> = match life_stages {
+            None => None,
+            Some(json) => Some(
+                serde_json::from_str(json)
+                    .map_err(|e| RulesetError::parse(parse_source::LIFE_STAGES, e))?,
             ),
         };
 
@@ -727,6 +751,19 @@ impl Ruleset {
             "armor",
             &mut errors,
         );
+        // The childhood spread names abilities, so every id must resolve — a typo
+        // would silently shrink the list the guided flow offers rather than fail.
+        if let Some(rules) = &life_stage_rules {
+            let known: BTreeSet<&Id> = abilities_file.abilities.iter().map(|a| &a.id).collect();
+            for ability in &rules.childhood.spread_abilities {
+                if !known.contains(ability) {
+                    errors.push(format!(
+                        "life-stage childhood spread names unknown ability '{ability}'"
+                    ));
+                }
+            }
+        }
+
         // A declared creation flow must be walkable: no phase twice (the second
         // visit's Back would land where the user just was), and never `review`,
         // which the wizard appends itself as the terminal catch-all step. An empty
@@ -813,6 +850,7 @@ impl Ruleset {
             advancement: abilities_file.advancement,
             age_ability_caps: abilities_file.age_ability_caps,
             characteristic_rules,
+            life_stages: life_stage_rules,
             magnitude_points: derived_magnitude_points(),
             ability_category_order: AbilityCategory::ALL.to_vec(),
             arts,
@@ -1086,6 +1124,11 @@ impl Ruleset {
     /// The Characteristic point-buy rules, if the ruleset ships them.
     pub fn characteristic_rules(&self) -> Option<&CharacteristicRules> {
         self.characteristic_rules.as_ref()
+    }
+
+    /// The life-stage experience rules, if the ruleset ships them.
+    pub fn life_stages(&self) -> Option<&LifeStageRules> {
+        self.life_stages.as_ref()
     }
 
     /// Iterates over point items of the given [`ItemKind`].
@@ -2132,6 +2175,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap();
         assert_eq!(rs.item_count(), 6);
@@ -2152,6 +2196,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap();
         assert_eq!(no_abilities.ability_count(), 0);
@@ -2184,6 +2229,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: Some(equipment),
             characteristics: None,
+            life_stages: None,
         });
         assert!(
             rs.is_ok(),
@@ -2218,6 +2264,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: Some(equipment),
             characteristics: None,
+            life_stages: None,
         })
         .unwrap_err();
         assert!(
@@ -2249,6 +2296,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap();
         assert_eq!(rs.house_count(), 2);
@@ -2270,6 +2318,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap();
         assert_eq!(none.house_count(), 0);
@@ -2300,6 +2349,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap();
         assert_eq!(rs.art_count(), 2);
@@ -2332,6 +2382,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
     }
 
@@ -2372,6 +2423,7 @@ mod tests {
             spell_mastery_abilities: Some(mastery),
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap();
         // Mythic Companion type accessors.
@@ -2528,6 +2580,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap_err();
         match err {
@@ -2563,6 +2616,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap_err();
         match err {
@@ -2596,6 +2650,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap_err();
         match err {
@@ -2631,6 +2686,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap_err();
         match err {
@@ -2662,6 +2718,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap_err();
         match err {
@@ -3519,6 +3576,80 @@ mod tests {
     /// `review` is the wizard's synthetic terminal phase — it collects the issues
     /// no creation phase owns and is appended to every flow — so a profile that
     /// declares it would give the user two of them.
+    /// The life-stage file is optional (a ruleset may ship no life stages), and
+    /// when present its numbers reach the engine.
+    #[test]
+    fn life_stage_rules_load_from_their_own_file() {
+        let life_stages = r#"{
+          "childhood": {
+            "years": 5,
+            "native_language_xp": 75,
+            "spread_xp": 45,
+            "spread_abilities": ["ability.awareness"]
+          },
+          "later_life": { "xp_per_year": 15 }
+        }"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            abilities: Some(VALID_ABILITIES),
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: None,
+            characteristics: None,
+            life_stages: Some(life_stages),
+        })
+        .unwrap();
+        let rules = rs.life_stages().expect("life-stage rules loaded");
+        assert_eq!(rules.childhood.native_language_xp, 75);
+        assert_eq!(rules.later_life.xp_per_year, 15);
+
+        let without = Ruleset::from_json("test", "1", "[]", "[]").unwrap();
+        assert!(without.life_stages().is_none());
+    }
+
+    /// The childhood spread names abilities, so a typo there would silently shrink
+    /// the list the wizard offers — a load-time referential-integrity failure, like
+    /// every other ref in the rules data.
+    #[test]
+    fn a_childhood_spread_ability_must_resolve() {
+        let life_stages = r#"{
+          "childhood": {
+            "years": 5,
+            "native_language_xp": 75,
+            "spread_xp": 45,
+            "spread_abilities": ["ability.nonesuch"]
+          },
+          "later_life": { "xp_per_year": 15 }
+        }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            abilities: Some(VALID_ABILITIES),
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: None,
+            characteristics: None,
+            life_stages: Some(life_stages),
+        })
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("ability.nonesuch"),
+            "should name the unresolved childhood ability: {msg}"
+        );
+    }
+
     #[test]
     fn profile_may_not_declare_the_synthetic_review_phase() {
         let types = r#"[
@@ -3662,6 +3793,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap();
 
@@ -3683,6 +3815,11 @@ mod tests {
                 "characteristic_rules",
                 "houses",
                 "id",
+                // `life_stages` is absent here on purpose: this fixture ships no
+                // life-stage file, and the field is skipped when `None` (a ruleset
+                // without life stages must not grow an empty key). The
+                // life-stage-bearing shape is asserted by
+                // `life_stage_rules_load_from_their_own_file`.
                 "magnitude_points",
                 "mythic_companion_types",
                 "point_items",
@@ -4126,6 +4263,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap_err();
         match err {
@@ -4162,6 +4300,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap_err();
         match err {
@@ -4198,6 +4337,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap_err();
         match err {
@@ -4233,6 +4373,7 @@ mod tests {
             spell_mastery_abilities: Some(mastery),
             equipment: None,
             characteristics: None,
+            life_stages: None,
         })
         .unwrap_err();
         match err {
@@ -4274,6 +4415,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: Some(equipment),
             characteristics: None,
+            life_stages: None,
         })
         .unwrap_err();
         match err {
@@ -4309,6 +4451,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: Some(equipment),
             characteristics: None,
+            life_stages: None,
         })
         .unwrap_err();
         match err {
@@ -4344,6 +4487,7 @@ mod tests {
             spell_mastery_abilities: None,
             equipment: Some(equipment),
             characteristics: None,
+            life_stages: None,
         })
         .unwrap_err();
         match err {

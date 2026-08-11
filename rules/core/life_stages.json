@@ -1,0 +1,23 @@
+{
+  "childhood": {
+    "years": 5,
+    "native_language_xp": 75,
+    "spread_xp": 45,
+    "spread_abilities": [
+      "ability.area_lore",
+      "ability.athletics",
+      "ability.awareness",
+      "ability.brawl",
+      "ability.charm",
+      "ability.folk_ken",
+      "ability.guile",
+      "ability.living_language",
+      "ability.stealth",
+      "ability.survival",
+      "ability.swim"
+    ]
+  },
+  "later_life": {
+    "xp_per_year": 15
+  }
+}
