@@ -559,6 +559,10 @@ Scope: wrap the full phase list for every character type in a guided flow,
 reusing the direct-entry components from M2–M5. All input surfaces already exist;
 this milestone adds orchestration, gating, and the guided life-stage flows.
 
+Sequenced execution plan, decisions, and the verified source citations:
+**`M6B-IMPLEMENTATION.md`** (session-resumable tracker; 6b runs as slices
+6b1a/6b1b then 6b2–6b8).
+
 ### 6a. App entry & character-type lock (first M6 slice) ✅
 
 The startup restructure the guided flow plugs into: the app opens on a **choice
@@ -606,7 +610,8 @@ screen** rather than an already-instantiated blank character, and a character's
 - [ ] Magus life stages that spend Art XP: apprenticeship (240 xp across Arts +
       Abilities, 120 spell levels, min Parma/Magic Theory/Latin) and
       after-apprenticeship accrual (30 pts/year across Arts, Abilities, spells).
-      Source: Core Rules.md:2433-2435, 2467-2471
+      Source: Core Rules.md:2433-2437, 2467-2471 (the Parma/Magic Theory/Latin
+      minimums are at :2437 — the range was two lines short)
 - [ ] Aging engine for characters over 35: aging rolls, Characteristic loss,
       Decrepitude accrual — the guided age/life-stage computation. Source:
       Core Rules.md:16563-16640
