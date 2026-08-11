@@ -2092,6 +2092,38 @@ describe('the childhood package draft', () => {
     expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
     vi.mocked(ipc.loadEntity).mockReset();
   });
+
+  it('is pruned when guided funding is left, together with its rejections', async () => {
+    await store.setAbilityFunding('life_stages');
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+    store.childhoodRejections = [
+      { severity: 'error', code: 'childhood_slot_unfilled', phase: 'abilities', args: {} },
+    ];
+
+    await store.setAbilityFunding('pool');
+
+    // Leaving guided mode deletes the plan, and the plan is what a draft is for:
+    // a survivor would show stale slot faults for a decision nobody has made.
+    expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
+    expect(store.childhoodRejections).toEqual([]);
+  });
+
+  it('survives entering guided funding, so toggling the radio keeps typed slots', async () => {
+    await store.setAbilityFunding('pool');
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+
+    await store.setAbilityFunding('life_stages');
+
+    // Deliberately asymmetric to the prune above: entering the mode adds a plan, so
+    // there is nothing stale about the draft — and clearing it here would destroy
+    // typed answers on a stray double toggle.
+    expect(store.childhoodDraft).toEqual({
+      packageId: 'childhood.traveling',
+      slots: { area_a: 'Rhine' },
+    });
+  });
 });
 
 describe('applyChildhoodPackage', () => {

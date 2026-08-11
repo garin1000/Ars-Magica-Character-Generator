@@ -701,6 +701,13 @@ class AppStore {
    * Bought `ability_scores` survive either switch untouched: funding less
    * experience than the rows demand is reported as `not_enough_xp` — visible and
    * fixable — which is strictly better than silently discarding the player's work.
+   *
+   * Leaving guided mode also prunes the {@link childhoodDraft} and its
+   * {@link childhoodRejections}: the plan is what a draft is *for*, so a surviving
+   * one would prefill a package for a future plan that starts from nothing, showing
+   * stale slot faults for a decision nobody has made yet. Deliberately asymmetric —
+   * *entering* guided mode keeps an in-progress draft, since toggling the radio back
+   * and forth without ever leaving would otherwise destroy typed slot values.
    */
   async setAbilityFunding(funding: AbilityFunding): Promise<void> {
     if (this.abilityFunding === funding) return;
@@ -709,6 +716,8 @@ class AppStore {
       this.entity.xp_pool = 0;
     } else {
       delete this.entity.life_stages;
+      this.childhoodDraft = defaultChildhoodDraft();
+      this.childhoodRejections = [];
     }
     await this.revalidate();
   }

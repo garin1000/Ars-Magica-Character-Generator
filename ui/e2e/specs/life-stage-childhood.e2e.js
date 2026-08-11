@@ -326,6 +326,10 @@ describe('life-stage funding and Sample Childhoods', () => {
     // native language has to be named again — and no drafted slot shows a fault.
     expect(await $(NATIVE_LANGUAGE).getValue()).toBe('');
     expect(await countOf('[data-testid^="childhood-slot-"][data-testid$="-reason"]')).toBe(0);
+    // The draft went with the plan it belonged to: the select is back on its prompt
+    // option, so nothing prefills a package for a plan that starts from nothing.
+    expect(await $(PACKAGE_SELECT).getValue()).toBe('');
+    expect(await $(PACKAGE_PREVIEW).isExisting()).toBe(false);
     // The rows still stand through the second switch.
     expect(await countOf(AREA_LORE_SCORES)).toBe(2);
 
@@ -339,10 +343,9 @@ describe('life-stage funding and Sample Childhoods', () => {
   });
 
   it('restores guided funding and the recorded package from a save', async () => {
-    // Leaving the guided mode dropped the plan, and the recorded package went with
-    // it (the plan IS the record), so re-take it — spelled out from the select and
-    // the slots so this setup does not depend on what the previous switch left in
-    // the draft.
+    // Leaving the guided mode dropped the plan, and both the recorded package (the
+    // plan IS the record) and the draft went with it, so re-take it from the select
+    // and the slots.
     await $(PACKAGE_SELECT).selectByAttribute('value', TRAVELING);
     await $('[data-testid="childhood-slot-area_a"]').setValue('Rhine');
     await $('[data-testid="childhood-slot-area_b"]').setValue('Provence');
