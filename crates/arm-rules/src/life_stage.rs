@@ -59,7 +59,77 @@ pub struct LaterLifeRules {
     pub xp_per_year: u32,
 }
 
+/// A character's life-stage *choices* — never its resolved numbers.
+///
+/// Saves store choices, not derived values, so this records only what the player
+/// decided: which language is native, and (from 6b3 on) which Sample Childhood
+/// package was applied and what its parameterized slots were filled with. Every
+/// figure follows from these plus [`Entity::age`] and the ruleset, so a rules edit
+/// re-derives an old save rather than leaving it with stale totals.
+///
+/// Its presence is also the switch between the two ways of buying Abilities: with
+/// a plan the budget below is authoritative and [`Entity::xp_pool`] must be 0
+/// (`life_stage_xp_pool_conflict`); without one, `xp_pool` is the authority and
+/// nothing here applies.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct LifeStagePlan {
+    /// The language the character grew up speaking — the one the childhood's
+    /// native-language experience may be spent on, and the one a second Living
+    /// Language may not be ("Living Language (other than the character's native
+    /// language)", Core Rules.md:2378). A `living_language` instance value, so it is
+    /// the player's own text, not an id.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub native_language: Option<String>,
+}
+
+/// The experience a life-stage plan earns, split into the blocks the rules grant
+/// it in. Derived — never stored (see [`LifeStagePlan`]).
+///
+/// The three blocks fund different things, which is the whole reason they are kept
+/// apart rather than summed: the native-language points buy one language and
+/// nothing else, the spread buys only the childhood Abilities, and later life buys
+/// anything the character is permitted.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LifeStageBudget {
+    /// Experience for the native language alone (75).
+    pub childhood_native_xp: u32,
+    /// Experience for the childhood spread (45).
+    pub childhood_spread_xp: u32,
+    /// Years of later life lived (age − childhood years).
+    pub later_life_years: u32,
+    /// Experience earned per year of later life for this character (15/20/10).
+    pub later_life_rate: u32,
+    /// Experience from later life (`later_life_years × later_life_rate`).
+    pub later_life_xp: u32,
+}
+
+impl LifeStageBudget {
+    /// Every point the character has earned, across all three blocks.
+    pub fn total(&self) -> u32 {
+        self.childhood_native_xp
+            .saturating_add(self.childhood_spread_xp)
+            .saturating_add(self.later_life_xp)
+    }
+}
+
 impl LifeStageRules {
+    /// The experience this character has earned through its life stages, or `None`
+    /// when it has no life-stage plan (direct entry, where [`Entity::xp_pool`] is
+    /// the authority) or no age (the yearly block cannot be counted).
+    pub fn budget(&self, entity: &Entity, ruleset: &Ruleset) -> Option<LifeStageBudget> {
+        entity.life_stages.as_ref()?;
+        let age = entity.age?;
+        let later_life_years = self.later_life_years(age);
+        let later_life_rate = self.later_life_rate(entity, ruleset);
+        Some(LifeStageBudget {
+            childhood_native_xp: self.childhood.native_language_xp,
+            childhood_spread_xp: self.childhood.spread_xp,
+            later_life_years,
+            later_life_rate,
+            later_life_xp: later_life_years.saturating_mul(later_life_rate),
+        })
+    }
+
     /// Years of later life a character of `age` has lived: every year after
     /// childhood. Childhood is a fixed block, so an age inside it yields 0 rather
     /// than a negative span (the validator reports such an age separately).
@@ -214,5 +284,57 @@ mod tests {
             rules().later_life_rate(&companion(vec!["virtue.wealthy", "flaw.poor"]), &rs),
             10
         );
+    }
+
+    /// A character with a life-stage plan earns the two childhood blocks plus one
+    /// per-year block, so a 25-year-old companion has 75 + 45 + 20×15 = 420 points
+    /// across three differently-restricted pools.
+    #[test]
+    fn the_budget_is_the_childhood_blocks_plus_the_yearly_ones() {
+        let rs = rate_ruleset();
+        let mut entity = companion(vec![]);
+        entity.age = Some(25);
+        entity.life_stages = Some(LifeStagePlan {
+            native_language: Some("German".into()),
+            ..LifeStagePlan::default()
+        });
+
+        let budget = rules()
+            .budget(&entity, &rs)
+            .expect("a character with a plan and an age has a budget");
+        assert_eq!(budget.childhood_native_xp, 75);
+        assert_eq!(budget.childhood_spread_xp, 45);
+        assert_eq!(budget.later_life_years, 20);
+        assert_eq!(budget.later_life_rate, 15);
+        assert_eq!(budget.later_life_xp, 300);
+        assert_eq!(budget.total(), 420);
+    }
+
+    /// Wealthy multiplies out across every year of later life, not once.
+    #[test]
+    fn a_raised_rate_applies_to_every_later_life_year() {
+        let rs = rate_ruleset();
+        let mut entity = companion(vec!["virtue.wealthy"]);
+        entity.age = Some(25);
+        entity.life_stages = Some(LifeStagePlan::default());
+
+        let budget = rules().budget(&entity, &rs).expect("budget");
+        assert_eq!(budget.later_life_xp, 400);
+        assert_eq!(budget.total(), 520);
+    }
+
+    /// No plan means no derived budget: the character is in direct entry, where
+    /// `Entity::xp_pool` is the authority. Nor is there one without an age, since
+    /// the yearly block cannot be counted.
+    #[test]
+    fn there_is_no_budget_without_a_plan_or_an_age() {
+        let rs = rate_ruleset();
+        let mut entity = companion(vec![]);
+        entity.age = Some(25);
+        assert!(rules().budget(&entity, &rs).is_none(), "no plan");
+
+        entity.life_stages = Some(LifeStagePlan::default());
+        entity.age = None;
+        assert!(rules().budget(&entity, &rs).is_none(), "no age");
     }
 }

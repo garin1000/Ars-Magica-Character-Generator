@@ -13,6 +13,7 @@ use std::fmt;
 
 use crate::ability::AbilityCategory;
 use crate::characteristics::Characteristic;
+use crate::life_stage::LifeStagePlan;
 
 /// Slug-style identifier for rules entities (e.g. `virtue.gentle_gift`, `ability.awareness`).
 /// Ordered for use as `BTreeMap` keys.
@@ -2254,8 +2255,22 @@ pub struct Entity {
     /// the leftover (`xp_pool` − spent) is the character's banked XP. Spending
     /// more than the pool is an error (surfaced in Advisory/Enforced modes); the
     /// M4 life-stage flow sets this pool and blocks overspending up front.
+    ///
+    /// Mutually exclusive with [`Entity::life_stages`]: a character built through
+    /// the life stages derives its pools from them, so carrying a raw pool as well
+    /// would double-count (`life_stage_xp_pool_conflict`).
     #[serde(default, skip_serializing_if = "is_zero")]
     pub xp_pool: u32,
+    /// The character's life-stage choices, when it is being built through them
+    /// (childhood + later life) rather than by typing [`Entity::xp_pool`] directly.
+    /// `None` for a directly-entered character — including every save written
+    /// before the life stages existed, which is why this is additive and needs no
+    /// schema bump.
+    ///
+    /// Choices only: every figure the stages grant is derived from these plus
+    /// [`Entity::age`] (see [`crate::life_stage::LifeStageRules::budget`]).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub life_stages: Option<LifeStagePlan>,
     /// Whole bought Hermetic Art scores (magi only). Kept sorted via
     /// [`Entity::normalize`]. Defaults to empty. Priced from the Art advancement
     /// table against the shared [`Entity::xp_pool`].
@@ -2507,6 +2522,7 @@ impl Entity {
             characteristic_descriptions: BTreeMap::new(),
             ability_scores: Vec::new(),
             xp_pool: 0,
+            life_stages: None,
             art_scores: Vec::new(),
             spells: Vec::new(),
             spell_levels_override: None,
@@ -3403,6 +3419,7 @@ mod tests {
                 parameter: None,
             }],
             xp_pool: 30,
+            life_stages: None,
             art_scores: vec![ArtScore {
                 art: Id::new("art.creo"),
                 score: 5,
@@ -3603,6 +3620,7 @@ mod tests {
             characteristic_descriptions: BTreeMap::new(),
             ability_scores: Vec::new(),
             xp_pool: 0,
+            life_stages: None,
             art_scores: Vec::new(),
             spells: Vec::new(),
             spell_levels_override: None,
