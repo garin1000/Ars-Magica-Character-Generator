@@ -21,8 +21,8 @@ use crate::mythic_companion::{MythicCompanionType, MythicCompanionTypesFile};
 use crate::spell::{Spell, SpellDuration, SpellTarget, SpellsFile};
 use crate::spell_mastery::{SpellMasteryAbilitiesFile, SpellMasteryAbility};
 use crate::types::{
-    Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, Magnitude, ParameterDomain, PointItem,
-    Prereq, RulesetRef, SpecialCasting,
+    CreationPhase, Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, Magnitude, ParameterDomain,
+    PointItem, Prereq, RulesetRef, SpecialCasting,
 };
 
 /// Top-level container for all loaded game mechanics.
@@ -727,6 +727,26 @@ impl Ruleset {
             "armor",
             &mut errors,
         );
+        // A declared creation flow must be walkable: no phase twice (the second
+        // visit's Back would land where the user just was), and never `review`,
+        // which the wizard appends itself as the terminal catch-all step. An empty
+        // list is legal and simply means the type has no guided flow.
+        for profile in &types {
+            let mut seen = BTreeSet::new();
+            for phase in &profile.creation_phases {
+                if *phase == CreationPhase::Review {
+                    errors.push(format!(
+                        "type profile '{}' declares the synthetic '{phase}' phase, which the wizard appends itself",
+                        profile.id
+                    ));
+                } else if !seen.insert(phase) {
+                    errors.push(format!(
+                        "type profile '{}' repeats creation phase '{phase}'",
+                        profile.id
+                    ));
+                }
+            }
+        }
         if !errors.is_empty() {
             return Err(IntegrityError::new(errors).into());
         }
@@ -3493,6 +3513,57 @@ mod tests {
         assert!(
             msg.contains("duplicate"),
             "should flag duplicate type profile IDs: {msg}"
+        );
+    }
+
+    /// `review` is the wizard's synthetic terminal phase — it collects the issues
+    /// no creation phase owns and is appended to every flow — so a profile that
+    /// declares it would give the user two of them.
+    #[test]
+    fn profile_may_not_declare_the_synthetic_review_phase() {
+        let types = r#"[
+          {"id": "companion", "budget": {"virtue_points": 10, "flaw_points": 10}, "creation_phases": ["concept", "review"]}
+        ]"#;
+
+        let err = Ruleset::from_json("test", "1", "[]", types).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("review") && msg.contains("companion"),
+            "should name the offending phase and profile: {msg}"
+        );
+    }
+
+    /// A repeated phase would be walked twice, with the second visit's Back
+    /// landing on the same step the user just left.
+    #[test]
+    fn profile_may_not_repeat_a_creation_phase() {
+        let types = r#"[
+          {"id": "companion", "budget": {"virtue_points": 10, "flaw_points": 10}, "creation_phases": ["concept", "abilities", "concept"]}
+        ]"#;
+
+        let err = Ruleset::from_json("test", "1", "[]", types).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("concept") && msg.contains("companion"),
+            "should name the repeated phase and profile: {msg}"
+        );
+    }
+
+    /// An empty phase list is legal and means "this type has no guided flow": the
+    /// wizard is not offered for it. Only a *declared* flow is validated. Many
+    /// test fixtures rely on this, and a covenant profile will until M8 gives it
+    /// real phases.
+    #[test]
+    fn profile_may_declare_no_creation_phases() {
+        let types = r#"[
+          {"id": "companion", "budget": {"virtue_points": 10, "flaw_points": 10}, "creation_phases": []}
+        ]"#;
+
+        let ruleset = Ruleset::from_json("test", "1", "[]", types).expect("empty phases are legal");
+        assert!(
+            ruleset.type_profiles[&Id::new("companion")]
+                .creation_phases
+                .is_empty()
         );
     }
 
