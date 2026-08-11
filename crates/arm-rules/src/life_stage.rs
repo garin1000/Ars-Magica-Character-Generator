@@ -144,12 +144,19 @@ impl LifeStageBudget {
 
 impl LifeStageRules {
     /// The experience this character has earned through its life stages, or `None`
-    /// when it has no life-stage plan (direct entry, where [`Entity::xp_pool`] is
-    /// the authority) or no age (the yearly block cannot be counted).
+    /// when it has no life-stage plan — direct entry, where [`Entity::xp_pool`] is
+    /// the authority.
+    ///
+    /// An **unset age** still yields a budget: childhood is granted "in the first
+    /// five years of life" with no further condition
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2378), so only later life
+    /// scales with an age and an ageless plan simply lives 0 later-life years.
+    /// Withholding the whole budget instead would leave childhood's two restricted
+    /// pools at nothing and report every childhood row as unfunded — the validator
+    /// names the missing age itself (`life_stage_age_unset`).
     pub fn budget(&self, entity: &Entity, ruleset: &Ruleset) -> Option<LifeStageBudget> {
         entity.life_stages.as_ref()?;
-        let age = entity.age?;
-        let later_life_years = self.later_life_years(age);
+        let later_life_years = entity.age.map_or(0, |age| self.later_life_years(age));
         let later_life_rate = self.later_life_rate(entity, ruleset);
         Some(LifeStageBudget {
             childhood_native_xp: self.childhood.native_language_xp,
@@ -396,17 +403,37 @@ mod tests {
     }
 
     /// No plan means no derived budget: the character is in direct entry, where
-    /// `Entity::xp_pool` is the authority. Nor is there one without an age, since
-    /// the yearly block cannot be counted.
+    /// `Entity::xp_pool` is the authority.
     #[test]
-    fn there_is_no_budget_without_a_plan_or_an_age() {
+    fn there_is_no_budget_without_a_plan() {
         let rs = rate_ruleset();
         let mut entity = companion(vec![]);
         entity.age = Some(25);
         assert!(rules().budget(&entity, &rs).is_none(), "no plan");
+    }
 
+    /// Childhood is granted "in the first five years of life" unconditionally
+    /// (Core Rules.md:2378) — only later life counts years up to an age. So a plan
+    /// whose age is not yet typed still earns both childhood blocks, and merely
+    /// lives no later-life year. Returning nothing instead would leave the
+    /// childhood pools at 0 and report every childhood row as unfunded, blaming
+    /// the player for rows the app itself wrote; the missing age is reported on its
+    /// own (`life_stage_age_unset`).
+    #[test]
+    fn an_unset_age_still_earns_the_childhood_blocks() {
+        let rs = rate_ruleset();
+        let mut entity = companion(vec![]);
         entity.life_stages = Some(LifeStagePlan::default());
         entity.age = None;
-        assert!(rules().budget(&entity, &rs).is_none(), "no age");
+
+        let budget = rules()
+            .budget(&entity, &rs)
+            .expect("childhood does not depend on an age");
+        assert_eq!(budget.childhood_native_xp, 75);
+        assert_eq!(budget.childhood_spread_xp, 45);
+        assert_eq!(budget.later_life_years, 0);
+        assert_eq!(budget.later_life_rate, 15);
+        assert_eq!(budget.later_life_xp, 0);
+        assert_eq!(budget.total(), 120);
     }
 }
