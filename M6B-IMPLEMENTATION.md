@@ -26,9 +26,26 @@ and the surfacing. Two deliberate deviations from the plan above:
   `ability.living_language` in Rust would have been an engine-required slug. It is
   data, and load-time integrity requires it to resolve *and* be parameterized.
 
-The two severable tails stay open: **6b2b** (the `:2315`/`:2392` Virtue requirement
-for Academic/Arcane/Martial Abilities — today the general pool funds them with no
-Virtue) and **6b2c** (Foreign Upbringing's halved locality-dependent cap).
+**Both tails are done as well**, in two further commits:
+
+- **6b2b** — Academic/Arcane/Martial Abilities require a permitting Virtue (`:2315`,
+  `:2392`), which was previously enforced for Supernatural only. The gated categories
+  are data; a `restricted_ability_xp` pool counts as permission, so Educated, Warrior,
+  Arcane Lore and Privileged Upbringing needed no new data (only Covenant Upbringing
+  did, for its Latin at `:5867`); Supernatural keeps its stricter per-Ability rule; and
+  magi are exempt per `:7151`/`:2435`. The Latin-3 clause (`:7151`) is a warning,
+  since the passage hedges it twice.
+- **6b2c** — Foreign Upbringing halves the creation cap on locality-dependent
+  Abilities (`:6160`), via a `locality_dependent` flag on the Ability and a cap
+  fraction on the Flaw. The passage's trailing "some social Abilities" is left
+  unflagged on purpose: which ones a saga counts is a data decision, and the engine
+  enforces the flag it is given rather than guessing.
+
+One thing 6b2b does **not** model, and should be recorded rather than forgotten:
+`:7151`'s finer "Magi without a specific Virtue may only buy Academic Abilities
+during or after apprenticeship". A bought score carries no per-stage attribution in
+this engine, so the magus exemption is whole-character. 6b4 (apprenticeship) is where
+that could change.
 
 ## Required gate (end of every slice, before any "done" claim)
 

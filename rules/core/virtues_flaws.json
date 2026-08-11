@@ -1132,8 +1132,9 @@
     "kind": "flaw",
     "magnitude": "minor",
     "category": "personality",
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "effects": [{ "type": "locality_ability_cap_fraction", "num": 1, "den": 2 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6158, 6161] }
   },
   {

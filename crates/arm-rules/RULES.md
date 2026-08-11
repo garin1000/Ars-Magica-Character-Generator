@@ -2527,6 +2527,84 @@ Abilities are bought with experience earned in blocks, not from one bank:
   distinct profile here, so it is forbidden too — the stricter reading of the line
   that names companions specifically.
 
+#### Access to Academic / Arcane / Martial Abilities (M6/6b2b)
+
+> There are two exceptions. One is that a character must have a Virtue to buy
+> Academic, Arcane, Martial, or Supernatural Abilities at character creation.
+> Educated, Arcane Lore, and Warrior, respectively, are the easiest options for the
+> first three groups, although other Virtues (and some Flaws) also grant access to
+> some of these Abilities.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2315`, restated for the
+  later-life block at `:2392` ("as long as the character has a Virtue that permits
+  her to learn those Abilities").
+- Data: `rules/core/abilities.json` → `categories_requiring_virtue`
+  (`academic`, `arcane`, `martial`). Empty stands the rule down, so a ruleset gating
+  a different set says so in its own file.
+- Implementation: `crates/arm-rules/src/validation/authorization.rs` —
+  `validate_ability_authorization`, emitting `ability_category_requires_virtue`.
+- A Virtue grants access two ways, both counted: an explicit
+  `Effect::AbilityAuthorization`, or **any** `Effect::RestrictedAbilityXp` pool —
+  experience earmarked for a category is evidence the category is permitted, since
+  the grant would otherwise be unspendable. That covers Educated, Warrior, Arcane
+  Lore and Privileged Upbringing from their existing data.
+- Wired Virtue/Flaw: `flaw.covenant_upbringing` gains
+  `ability_authorization: [ability.dead_language]` for "You may take Latin at
+  character creation" (`:5867`). **Documented approximation:** authorization is by
+  ability id, so this permits any dead language, not Latin alone — the same
+  id-level proxy the `ability_score_grant` effects already use. Other access-granting
+  Virtues are a data addition, never a code change.
+- **Supernatural is deliberately excluded** from this check: `:2315` says access "is
+  granted by a separate Virtue" per Ability, which the stricter, pre-existing
+  `validate_supernatural_abilities` / `supernatural_ability_requires_virtue` already
+  enforces. Folding it in here would double-report.
+- **Magi are exempt**: `:7151` ("Beginning characters may only purchase Academic
+  Abilities if they are specifically permitted to through the purchase of a Virtue,
+  **or if they are magi**") and `:2435`, where apprenticeship experience may go on
+  "Arcane, Academic, and Martial Abilities". Read from the profile's `is_magus` flag,
+  never a type id. Not modelled: `:7151`'s finer "Magi without a specific Virtue may
+  only buy Academic Abilities **during or after** apprenticeship" — the engine has no
+  per-stage attribution for a bought score, so the exemption is whole-character.
+
+#### The scholarly-language expectation for Academic Abilities (M6/6b2b)
+
+> Academic Abilities require formal training. … In addition, learning an Academic
+> Knowledge normally requires a Latin, Greek, Hebrew, or Arabic score of at least 3,
+> depending on the region of Europe you are from. For most characters, Latin 3 is
+> required.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:7151`.
+- Data: `rules/core/abilities.json` → `scholarly_language`
+  (`{ ability: ability.dead_language, min_score: 3 }`).
+- Implementation: `validation/authorization.rs` — `validate_academic_language`,
+  emitting `academic_ability_without_scholarly_language`.
+- A **warning**, not an error, because the passage hedges twice ("normally",
+  "depending on the region of Europe"). Engine reading: the data names the
+  parameterized dead-language ability and the minimum score rather than enumerating
+  Latin/Greek/Hebrew/Arabic, and any instance at that score satisfies it — the engine
+  cannot know a saga's region, and the four names are examples of one Ability.
+
+#### Foreign Upbringing halves locality-dependent caps (M6/6b2c)
+
+> The maximum scores at character creation for locality-dependent Abilities like
+> Language, Area Lore, or Organization Lore, as well as some social Abilities, are
+> half (round up) that which his age normally allows.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:6160`.
+- Data: `rules/core/virtues_flaws.json` — `flaw.foreign_upbringing` carries
+  `locality_ability_cap_fraction { num: 1, den: 2 }`; `rules/core/abilities.json`
+  flags `locality_dependent` on `ability.living_language`, `ability.dead_language`,
+  `ability.area_lore` and `ability.organization_lore`.
+- Implementation: `effective.rs` — `ability_age_cap` (per-ability, ceiling division),
+  consumed by `validate_abilities`'s `ability_above_age_cap` check.
+- **Deliberately incomplete, per the source:** the passage's trailing "as well as
+  some social Abilities" names no Abilities, so none are flagged — the engine
+  enforces the flag it is given rather than deciding which social Abilities a saga
+  counts. Flagging more is a data edit with no code change.
+- The fraction caps the *score*, not the cost: such an Ability is bought at the usual
+  price, just not as high. Composition rule (no shipped Flaw pairs with another): the
+  smallest resulting cap applies.
+
 #### Plan vs. pool — an engine invariant, not a sourced rule
 
 A character built through its life stages derives its funding from them, so

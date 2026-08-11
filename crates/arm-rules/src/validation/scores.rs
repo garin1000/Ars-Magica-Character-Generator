@@ -163,6 +163,7 @@ pub(crate) fn validate_characteristic_limit_preconditions(
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
                 | Effect::AbilityAuthorization { .. }
+                | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
@@ -307,8 +308,11 @@ pub(crate) fn validate_abilities(
         // Affinity may exceed it by +2 (Core:3374), not without limit. The cap is
         // read from the ruleset's age band table; a ruleset that ships none cannot
         // enforce it, so the check is skipped.
+        // The per-ability cap, so a Flaw that halves locality-dependent Abilities
+        // (Foreign Upbringing, Core:6160) is enforced on those rows alone.
         if let Some(age) = entity.age
-            && let Some(base_cap) = crate::effective::age_max_ability_score(ruleset, age)
+            && let Some(base_cap) =
+                crate::effective::ability_age_cap(entity, ruleset, &entry.ability)
         {
             let mut cap = u32::from(base_cap);
             if crate::effective::ability_affinity(
@@ -411,6 +415,101 @@ pub(crate) fn validate_arts(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
 /// free slot (one for a Gifted non-magus, none for a magus). Uncovered instances
 /// beyond the free allowance emit `supernatural_ability_requires_virtue`
 /// (deterministic by sorted id). Source: Core Rules.md:2874.
+#[cfg(test)]
+mod locality_cap_tests {
+    use crate::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection};
+    use crate::validation::{ValidationIssue, validate};
+    use crate::{Ruleset, RulesetSources};
+
+    const ITEMS: &str = r#"[
+      { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+        "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] },
+      { "id": "flaw.foreign_upbringing", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "minor", "category": "personality", "entity_kinds": ["character"],
+        "effects": [{ "type": "locality_ability_cap_fraction", "num": 1, "den": 2 }] }
+    ]"#;
+    const TYPES: &str = r#"[
+      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["general", "personality"], "creation_phases": [] }
+    ]"#;
+    // Age caps: 5 under 30. Half of 5, rounded up, is 3.
+    const ABILITIES: &str = r#"{
+      "advancement": [
+        { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },
+        { "score": 3, "total_xp": 30 }, { "score": 4, "total_xp": 50 },
+        { "score": 5, "total_xp": 75 }
+      ],
+      "age_ability_caps": [ { "max_age": 29, "max_score": 5 }, { "max_score": 9 } ],
+      "abilities": [
+        { "id": "ability.area_lore", "category": "general", "parameter": "area",
+          "locality_dependent": true },
+        { "id": "ability.brawl", "category": "general" }
+      ]
+    }"#;
+
+    fn rs() -> Ruleset {
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: TYPES,
+            abilities: Some(ABILITIES),
+            ..RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    fn companion(foreign: bool, ability: &str, score: u8) -> Entity {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.age = Some(25);
+        entity.xp_pool = 500;
+        if foreign {
+            entity.selections = vec![Selection::new(Id::new("flaw.foreign_upbringing"))];
+        }
+        entity.ability_scores = vec![AbilityScore {
+            ability: Id::new(ability),
+            parameter: Some("Bavaria".into()),
+            score,
+            specialty: None,
+        }];
+        entity
+    }
+
+    fn over_cap(entity: &Entity, ruleset: &Ruleset) -> bool {
+        validate(entity, ruleset)
+            .issues
+            .iter()
+            .any(|i| i.code == ValidationIssue::CODE_ABILITY_ABOVE_AGE_CAP)
+    }
+
+    /// Without the Flaw the ordinary age cap applies: 5 at 25 years old.
+    #[test]
+    fn the_age_cap_is_untouched_without_the_flaw() {
+        assert!(!over_cap(&companion(false, "ability.area_lore", 5), &rs()));
+    }
+
+    /// With it, a locality-dependent Ability is capped at half — "half (round up)" of
+    /// 5 is 3, so 3 passes and 4 does not.
+    #[test]
+    fn foreign_upbringing_halves_a_locality_dependent_cap() {
+        let rs = rs();
+        assert!(!over_cap(&companion(true, "ability.area_lore", 3), &rs));
+        assert!(over_cap(&companion(true, "ability.area_lore", 4), &rs));
+    }
+
+    /// It touches only the flagged Abilities: Brawl keeps the full cap.
+    #[test]
+    fn an_unflagged_ability_keeps_the_full_cap() {
+        let mut entity = companion(true, "ability.brawl", 5);
+        entity.ability_scores[0].parameter = None;
+        assert!(!over_cap(&entity, &rs()));
+    }
+}
+
 pub(crate) fn validate_supernatural_abilities(
     entity: &Entity,
     ruleset: &Ruleset,

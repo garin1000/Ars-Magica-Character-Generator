@@ -567,6 +567,22 @@ pub enum Effect {
     /// funds (Warrior, Arcane Lore), since the grant would otherwise be unspendable.
     ///
     /// Source: Ars Magica - Definitive Edition (Core Rules).md:2315.
+    /// Narrows the age → maximum-Ability-score cap to `num/den` of its normal value
+    /// (rounded **up**) for Abilities the catalogue marks `locality_dependent`:
+    ///
+    /// > The maximum scores at character creation for locality-dependent Abilities
+    /// > like Language, Area Lore, or Organization Lore, as well as some social
+    /// > Abilities, are half (round up) that which his age normally allows.
+    ///
+    /// Applies to the *cap*, not the cost: such an Ability is bought at the usual
+    /// price, just not as high. Source: Ars Magica - Definitive Edition (Core
+    /// Rules).md:6160 (Foreign Upbringing).
+    LocalityAbilityCapFraction {
+        /// Numerator of the surviving fraction (1 for "half").
+        num: u8,
+        /// Denominator (2 for "half").
+        den: u8,
+    },
     AbilityAuthorization {
         /// Specific Abilities permitted.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]

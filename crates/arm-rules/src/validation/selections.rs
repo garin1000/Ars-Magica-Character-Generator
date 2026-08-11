@@ -351,6 +351,7 @@ pub(crate) fn validate_ability_bonus_targets(
                 | Effect::GeneralXp { .. }
                 | Effect::LaterLifeXpRate { .. }
                 | Effect::AbilityAuthorization { .. }
+                | Effect::LocalityAbilityCapFraction { .. }
                 | Effect::ConfidenceBonus { .. }
                 | Effect::SpellMasteryXp { .. }
                 | Effect::GrantsSpellMastery { .. }
