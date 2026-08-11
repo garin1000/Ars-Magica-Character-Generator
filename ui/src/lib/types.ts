@@ -269,6 +269,10 @@ export interface LifeStageBudget {
 // `xp_pool` to the derived life-stage blocks.
 export interface LifeStagePlan {
   native_language?: string;
+  // The Sample Childhood package the player took — a record of the decision, not
+  // something derived from: the Abilities it grants live in `ability_scores` as
+  // ordinary bought rows. Omitted for a childhood divided by hand.
+  childhood_package?: string;
 }
 
 // Score effects for the current entity, computed by the engine. Ability bonuses
@@ -995,6 +999,65 @@ export interface MythicCompanionType {
   bonus_free_virtue_points?: number;
 }
 
+// The life-stage experience rules: the blocks a character's Abilities are bought
+// from before play (`rules/core/life_stages.json`). Mirrors the engine's
+// `LifeStageRules`.
+export interface LifeStageRules {
+  childhood: ChildhoodRules;
+  later_life: LaterLifeRules;
+}
+
+// Early childhood: a fixed block of years granting a native language plus a
+// restricted spread of the Abilities a child picks up. Mirrors the engine's
+// `ChildhoodRules`.
+export interface ChildhoodRules {
+  years: number;
+  // The Ability the native-language experience buys — data, not a hardcoded slug,
+  // so a ruleset naming its language Ability differently still resolves.
+  native_language_ability: string;
+  // Experience for the native language alone, spendable on nothing else.
+  native_language_xp: number;
+  // Experience to divide between `spread_abilities`.
+  spread_xp: number;
+  // The closed list the spread may be spent on (a Rust set, so an id array).
+  spread_abilities: string[];
+}
+
+// Later life: the base experience per year from the end of childhood to the
+// character's age. Mirrors the engine's `LaterLifeRules`; the rate this character
+// actually earns (Wealthy 20 / Poor 10 replace it) arrives already resolved as
+// `LifeStageBudget.later_life_rate`.
+export interface LaterLifeRules {
+  xp_per_year: number;
+}
+
+// One Ability score a Sample Childhood package grants. Mirrors the engine's
+// `ChildhoodEntry`.
+export interface ChildhoodEntry {
+  ability: string;
+  // The whole Ability score the package brings this Ability to.
+  score: number;
+  // For a parameterized Ability, the key the player's value is supplied under
+  // (`area_a`, `area_b`, `language`) — what tells two entries of the same Ability
+  // apart. Omitted for an entry that needs nothing asked.
+  slot?: string;
+  // Whether this entry is the package's native language, funded by the childhood's
+  // native-language block rather than the spread. Omitted = false. Which language
+  // it is is the player's choice (`LifeStagePlan.native_language`).
+  native?: boolean;
+}
+
+// A Sample Childhood package: a ready-made Ability spread a player may take
+// instead of dividing the childhood experience by hand. Name/description live in
+// the rules i18n map, keyed by `id` (like Arts and Houses) — not in Fluent.
+// `entries` keep their authored file order, which is the order a UI must ask for
+// the parameterized ones in. Mirrors the engine's `ChildhoodPackage` (the
+// provenance `source` field is not surfaced to the UI).
+export interface ChildhoodPackage {
+  id: string;
+  entries: ChildhoodEntry[];
+}
+
 // `Ruleset` serializes its maps as JSON objects keyed by id.
 export interface Ruleset {
   id: string;
@@ -1027,6 +1090,13 @@ export interface Ruleset {
   shields?: Record<string, Shield>;
   armor?: Record<string, Armor>;
   characteristic_rules?: CharacteristicRules | null;
+  // The life-stage experience rules. Absent for a ruleset shipping no life-stages
+  // file, which leaves the typed `xp_pool` the only source of experience.
+  life_stages?: LifeStageRules;
+  // Sample Childhood packages keyed by package id (e.g. `childhood.athletic`). The
+  // engine always sends the map — empty for a ruleset shipping none — but it stays
+  // optional here like the other catalogues above, so older shapes still type-check.
+  childhoods?: Record<string, ChildhoodPackage>;
   // Derived taxonomy surfaced by the engine so the UI never re-hardcodes the
   // magnitude point weights or the ability-category / art-type order. Source of
   // truth is the Rust `Magnitude::points` / `AbilityCategory::ALL` / `ArtType::ALL`.
@@ -1085,6 +1155,10 @@ export interface Entity {
   // Total XP available to spend on Abilities AND Arts — one shared bank. Spent
   // is derived (ability + art cost), leftover is the banked XP. Omitted when zero.
   xp_pool?: number;
+  // The character's life-stage choices, when it is built through them (childhood +
+  // later life) rather than by typing `xp_pool` directly. Mutually exclusive with a
+  // non-zero `xp_pool`. Omitted for a directly-entered character.
+  life_stages?: LifeStagePlan;
   // Whole bought Art scores (magi only). Priced against the shared xp_pool.
   // Omitted when empty.
   art_scores?: ArtScore[];
