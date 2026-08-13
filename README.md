@@ -53,6 +53,14 @@ Fedora, `webkit2gtk-4.1` on Arch); the `.deb` and `.rpm` pull it in for you. On
 Windows it needs the **WebView2 runtime**, which is preinstalled on Windows 11
 and on up-to-date Windows 10.
 
+**Blank white window from the AppImage on Wayland?** AppImages before 0.2.1
+bundled a libwayland too old for a current Mesa, so the WebView aborted with
+`Could not create default EGL display: EGL_BAD_PARAMETER` and the window stayed
+empty. Download 0.2.1 or newer; to rescue an older one, launch it with
+`LD_PRELOAD=/usr/lib/libwayland-client.so.0 ./<file>.AppImage` (the path is
+`/usr/lib/x86_64-linux-gnu/libwayland-client.so.0` on Debian/Ubuntu). The `.deb`,
+`.rpm` and portable builds were never affected.
+
 **The binaries are unsigned.** Windows SmartScreen will warn on first launch —
 choose *More info → Run anyway*. The Linux packages are unsigned too.
 
