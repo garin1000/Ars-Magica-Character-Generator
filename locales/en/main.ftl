@@ -205,9 +205,21 @@ ability-funding-magus-reason = A magus earns experience in four periods — earl
 # character's own — the Wealthy Virtue and the Poor Flaw change it.
 life-stage-later-life = Later life: { $years } × { $rate } = { $xp } XP
 life-stage-no-budget = No life-stage experience yet.
+# Apprenticeship, for a magus alone: fifteen fixed years whose experience "can be
+# spent on Arts or Abilities" (Core Rules.md:2435), which makes it the general pool —
+# so this line names the block the pool total comes from. Absent for anyone who
+# serves no apprenticeship, which is what keeps the non-magus bar unchanged.
+life-stage-apprenticeship = Apprenticeship: { $years } years = { $xp } XP
 # Age is repeated inside the panel because later life is measured in years, so it
 # is edited here as well as on the Details tab.
 life-stage-age-label = Age
+# What the age means for a magus: the life stages build one AT its Gauntlet, so the
+# age entered is the Gauntlet age — apprenticeship is the fifteen years ending there
+# (Core Rules.md:2435) and every year before them earns later-life experience
+# (`:2214`). The second sentence is the actionable half: life as a magus after the
+# Gauntlet (`:2216`, `:2471`) is not counted yet, so an older magus belongs on the
+# flat pool rather than silently losing those years.
+life-stage-gauntlet-note = Life stages build a magus at its Gauntlet: apprenticeship is the fifteen years ending at the age entered, and every year before them earns later-life experience. The years lived as a magus after the Gauntlet are not counted yet, so an older magus should use the experience pool instead.
 # Escape hatch for a hand-edited save: a character funded by its life stages must
 # not also carry an entered pool, and guided mode offers no field to correct one,
 # so this empties it.
@@ -240,6 +252,18 @@ childhood-apply-hint = The package fills in these Ability scores; they stay edit
 childhood-slot-empty-reason = Fill in every Ability the package leaves open.
 childhood-slot-duplicate-reason = Two slots of the same Ability need different values, or they merge into one row and experience is wasted.
 childhood-slot-native-reason = A childhood language must differ from the native language.
+# The Hermetic minimum Abilities a magus owes. The first group is admission to the
+# Order — "Characters with lower scores would not be admitted"
+# (Core Rules.md:2437) — the second the rulebook's recommended package
+# (`:2451-2461`), which is advice and therefore a warning. Each row states its status
+# as a whole sentence rather than a shared template plus a "met"/"unmet" word, so
+# nothing is carried by colour and the German reads as German.
+magus-minimums-label = Minimum Abilities
+magus-minimums-summary = { $unmet } of { $total } still unmet
+magus-minimum-met = { $ability } { $min } is met: this character has { $score }.
+magus-minimum-unmet = { $ability } { $min } is not met: this character has { $score }.
+magus-recommended-label = Recommended minimum Abilities
+magus-recommended-hint = The recommended Abilities cost { $xp } experience points in total; below them the magus is weak relative to other magi.
 ability-score-label = Score
 ability-specialty-label = Specialty
 # Heading for the rulebook's list of example specialties shown in the picker.

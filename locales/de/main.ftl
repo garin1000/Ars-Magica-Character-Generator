@@ -216,9 +216,22 @@ ability-funding-magus-reason = Ein Magus erwirbt Erfahrung in vier Perioden — 
 # der Fehler Arm ändern sie.
 life-stage-later-life = Späteres Leben: { $years } × { $rate } = { $xp } EP
 life-stage-no-budget = Noch keine Erfahrung aus Lebensabschnitten.
+# Die Lehrlingszeit, allein für einen Magus: fünfzehn feste Jahre, deren Erfahrung
+# auf Künste oder Fertigkeiten verwendet werden kann (Basisregeln.md:2435), was sie
+# zum allgemeinen Vorrat macht — diese Zeile benennt also den Block, aus dem der
+# Gesamtwert stammt. Fehlt bei jedem, der keine Lehrlingszeit dient.
+life-stage-apprenticeship = Lehrlingszeit: { $years } Jahre = { $xp } EP
 # Das Alter wird im Bereich wiederholt, weil das spätere Leben in Jahren gemessen
 # wird — es wird hier ebenso bearbeitet wie im Details-Reiter.
 life-stage-age-label = Alter
+# Was das Alter für einen Magus bedeutet: die Lebensabschnitte erzeugen ihn ZUM
+# Zeitpunkt seiner Lehrlingsprüfung, das eingetragene Alter ist also das Alter bei der
+# Prüfung — die Lehrlingszeit sind die fünfzehn Jahre, die dort enden
+# (Basisregeln.md:2435), und jedes Jahr davor erbringt Erfahrung des späteren Lebens
+# (`:2214`). Der zweite Satz ist der handlungsleitende: das Leben als Magus nach der
+# Lehrlingsprüfung (`:2216`, `:2471`) wird noch nicht gezählt, ein älterer Magus
+# gehört daher an den EP-Vorrat, statt diese Jahre stillschweigend zu verlieren.
+life-stage-gauntlet-note = Lebensabschnitte erzeugen einen Magus zum Zeitpunkt seiner Lehrlingsprüfung: Die Lehrlingszeit sind die fünfzehn Jahre, die mit dem eingetragenen Alter enden, und jedes Jahr davor erbringt Erfahrung des späteren Lebens. Die Jahre, die als Magus nach der Lehrlingsprüfung gelebt werden, werden noch nicht gezählt, ein älterer Magus sollte daher den EP-Vorrat verwenden.
 # Notausgang für eine von Hand bearbeitete Datei: ein Charakter, der über seine
 # Lebensabschnitte finanziert wird, darf keinen eingetragenen Vorrat führen, und die
 # geführte Erstellung bietet kein Feld, um ihn zu berichtigen — dies leert ihn.
@@ -253,6 +266,18 @@ childhood-apply-hint = Das Fertigkeitspaket trägt diese Fertigkeitswerte ein; s
 childhood-slot-empty-reason = Fülle jede Fertigkeit aus, die das Paket offen lässt.
 childhood-slot-duplicate-reason = Zwei Plätze derselben Fertigkeit brauchen verschiedene Werte, sonst verschmelzen sie zu einer Zeile und Erfahrung geht verloren.
 childhood-slot-native-reason = Eine Sprache der Kindheit muss sich von der Muttersprache unterscheiden.
+# Die hermetischen Mindestfertigkeiten, die ein Magus schuldet. Die erste Gruppe ist
+# die Aufnahme in den Orden — Charaktere mit niedrigeren Werten würden nicht
+# aufgenommen (Basisregeln.md:2437) —, die zweite das empfohlene Paket des Regelwerks
+# (`:2451-2461`), das ein Rat und daher eine Warnung ist. Jede Zeile nennt ihren
+# Zustand als ganzen Satz, statt eine Vorlage um ein angeklebtes erfüllt/nicht erfüllt
+# zu ergänzen, damit nichts von der Farbe getragen wird und das Deutsche natürlich ist.
+magus-minimums-label = Mindestfertigkeiten
+magus-minimums-summary = { $unmet } von { $total } noch nicht erfüllt
+magus-minimum-met = { $ability } { $min } ist erfüllt: dieser Charakter hat { $score }.
+magus-minimum-unmet = { $ability } { $min } ist nicht erfüllt: dieser Charakter hat { $score }.
+magus-recommended-label = Empfohlene Mindestfertigkeiten
+magus-recommended-hint = Die empfohlenen Fertigkeiten kosten zusammen { $xp } Erfahrungspunkte; darunter ist der Magus relativ zu anderen Magi schwach.
 ability-score-label = Wert
 ability-specialty-label = Spezialisierung
 # Überschrift für die im Auswahlbereich gezeigten Beispiel-Spezialisierungen.
