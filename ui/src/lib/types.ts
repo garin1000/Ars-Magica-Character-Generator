@@ -262,6 +262,12 @@ export interface LifeStageBudget {
   later_life_years: number;
   later_life_rate: number;
   later_life_xp: number;
+  // Years of apprenticeship served (15 for a magus, 0 for anyone else).
+  apprenticeship_years: number;
+  // Experience from apprenticeship (240 for a magus, 0 for anyone else) — the base
+  // of the general pool, which may buy Arts as well as Abilities. The pool actually
+  // funded from is `EffectiveScores.xp_general_pool` (this plus Skilled/Weak Parens).
+  apprenticeship_xp: number;
 }
 
 // A character's life-stage choices — never its resolved numbers (see

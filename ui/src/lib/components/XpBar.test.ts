@@ -108,7 +108,11 @@ function setEffective(
   } as unknown as EffectiveScores;
 }
 
-/** A life-stage budget: `years × rate` funds later life, the general pool. */
+/**
+ * A life-stage budget for a non-magus: `years × rate` funds later life, which for
+ * a grog or companion is the general pool. No apprenticeship — only a magus serves
+ * one.
+ */
 function budget(years: number, rate: number): LifeStageBudget {
   return {
     childhood_native_xp: 75,
@@ -116,6 +120,8 @@ function budget(years: number, rate: number): LifeStageBudget {
     later_life_years: years,
     later_life_rate: rate,
     later_life_xp: years * rate,
+    apprenticeship_years: 0,
+    apprenticeship_xp: 0,
   };
 }
 
