@@ -51,7 +51,8 @@ pub(crate) fn validate_ability_authorization(
         return;
     }
 
-    let (authorized_abilities, authorized_categories) = authorizations(entity, ruleset);
+    let (authorized_abilities, authorized_categories) =
+        crate::effective::ability_authorizations(entity, ruleset);
 
     for entry in &entity.ability_scores {
         let Some(ability) = ruleset.ability(&entry.ability) else {
@@ -124,42 +125,6 @@ pub(crate) fn validate_academic_language(
             None,
         ));
     }
-}
-
-/// The Abilities and categories the character's selections permit.
-fn authorizations(entity: &Entity, ruleset: &Ruleset) -> (BTreeSet<Id>, BTreeSet<AbilityCategory>) {
-    let mut abilities = BTreeSet::new();
-    let mut categories = BTreeSet::new();
-    for selection in crate::effective::selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            match effect {
-                // Experience earmarked for a category or Ability is itself
-                // permission to learn it — otherwise the grant could never be spent.
-                Effect::RestrictedAbilityXp {
-                    abilities: ids,
-                    categories: cats,
-                    ..
-                }
-                | Effect::AbilityAuthorization {
-                    abilities: ids,
-                    categories: cats,
-                } => {
-                    abilities.extend(ids.iter().cloned());
-                    categories.extend(cats.iter().copied());
-                }
-                // A free score in an Ability is permission to have it, since the
-                // Virtue confers the Ability outright.
-                Effect::AbilityScoreGrant { ability, .. } => {
-                    abilities.insert(ability.clone());
-                }
-                _ => {}
-            }
-        }
-    }
-    (abilities, categories)
 }
 
 #[cfg(test)]
