@@ -1605,6 +1605,13 @@ provenance lives here). The sum of the chosen spells' levels must not exceed the
 effective budget → `over_spell_levels`. Value lives in data; the engine never
 hardcodes 120.
 
+`:2435`'s **other** number — the 240 experience points of the same sentence — lives in
+`rules/core/life_stages.json` instead, on the apprenticeship block: see
+**Apprenticeship — 240 experience points across Arts and Abilities (M6/6b4)** in the
+*Life-stage experience* section below, which records why the two halves of one
+sentence are deliberately split across two files. `ApprenticeshipRules` carries no
+`spell_levels` field, so this profile value stays the single source.
+
 The base budget is selected in one place, `effective::spell_levels_base` — the
 per-character `Entity::spell_levels_override` (an optional stored *choice*, an
 app affordance, not a rulebook mechanic) when set, otherwise the profile's
@@ -2458,27 +2465,23 @@ Abilities are bought with experience earned in blocks, not from one bank:
 > are two more periods to consider: apprenticeship, and life as a magus after that.
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2364`.
-- Implementation: `crates/arm-rules/src/life_stage.rs`. The magus's two further
-  periods are **M6/6b4-6b5**, not implemented here.
-- **So a magus may not be built through its life stages, and is refused rather than
-  costed.** The line grants a magus **four** periods — early childhood, later life,
-  apprenticeship, and life as a magus after that — of which this engine models the
-  first two. `LifeStageRules::later_life_years` counts every year after childhood, so
-  for a magus it would swallow apprenticeship and life as a magus both; and because
-  Abilities and Arts buy from **one shared experience pool**
-  (`effective.rs::xp_allocation`), the surplus would fund Arts as well. A guided
-  60-year-old magus would be handed 825 later-life points that `validate()` finds
-  perfectly legal and the rules do not grant. `validate_life_stage_plan`
-  (`validation/life_stage.rs`) therefore emits
-  `life_stage_magus_guided_unsupported` (error, `abilities`, no args) whenever the
-  entity's type profile is `is_magus` and a plan is present — read from the profile
-  flag, never a type id. A magus keeps the directly-entered pool, which is fully
-  functional. **M6/6b3b keeps the guided funding mode off a magus in the UI as well**
-  — `LifeStagePanel.svelte` disables that radio when the type profile is `is_magus`,
-  with the reason spoken through `aria-describedby` rather than greyed out alone — so
-  this code is now the backstop for a hand-edited save. `later_life_years` carries
-  the restriction in its own doc comment so the formula is not later mistaken for
-  complete.
+- Implementation: `crates/arm-rules/src/life_stage.rs`. **Three of the four periods
+  are modelled**: early childhood, later life, and apprenticeship (**M6/6b4**). Life
+  as a magus after the Gauntlet — `:2216`/`:2471`'s 30 points per year — is
+  **M6/6b5**.
+- **So a magus may now be built through its life stages** (M6/6b4). Its later life
+  runs only "until apprenticeship" (`:2214`), so `later_life_years` subtracts the
+  apprenticeship span as well as childhood; apprenticeship itself is the fourth block
+  and the general pool; and the years before it become a restricted, Abilities-only
+  pool. See **Apprenticeship — 240 experience points across Arts and Abilities** and
+  **Pre-apprenticeship experience buys Abilities only** below for all of it.
+- The 6b2-era refusal `life_stage_magus_guided_unsupported` is **gone** — code, contract
+  row and both Fluent messages. It said the engine modelled two of four periods, which
+  is no longer true. What remains of the limit moved to where it belongs: a ruleset
+  declaring magi must declare their apprenticeship, checked at **load**
+  (`Ruleset::validate_apprenticeship_refs`), because a missing block is missing data,
+  not a property of a character. The guided funding mode is therefore offered to magi
+  too; `ui/src/lib/components/LifeStagePanel.svelte` no longer disables that radio.
 
 #### Early childhood — 75 + 45, and the closed spread list
 
@@ -2741,13 +2744,242 @@ Abilities are bought with experience earned in blocks, not from one bank:
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2392`.
 - Data: `rules/core/life_stages.json` → `later_life.xp_per_year` 15.
-- Implementation: `life_stage.rs` — `LaterLifeRules`, `later_life_years` (age −
-  childhood years) and `budget`. Later life is the **general pool**, since it funds
-  anything the character may learn.
+- Implementation: `life_stage.rs` — `LaterLifeRules`, `later_life_years`
+  (age − childhood years − apprenticeship years) and `budget`. **For a grog or
+  companion later life is the general pool**, since it funds anything the character
+  may learn. For a magus it is neither the whole span nor the general pool — see
+  **Pre-apprenticeship experience buys Abilities only** below.
 - The Virtue requirement this passage restates for Academic/Arcane/Martial
   Abilities (`:2315` names Educated / Arcane Lore / Warrior) **landed in M6/6b2b** —
   see **Access to Academic / Arcane / Martial Abilities** below. Supernatural keeps
   its own stricter check (`supernatural_ability_requires_virtue`).
+
+#### Apprenticeship — 240 experience points across Arts and Abilities (M6/6b4)
+
+> The fifteen years of apprenticeship give the character 240 experience points, and
+> 120 levels of spells. These experience points can be spent on Arts or Abilities,
+> including Arcane, Academic, and Martial Abilities. Note that magi can only spend
+> experience points on Arcane, Academic and Martial Abilities before apprenticeship
+> if they have a Virtue which allows them to do so. A sensible division is to spend
+> 120 experience points on Abilities and 120 on Arts.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2435` (heading
+  `#### Magus Only — Apprenticeship` at `:2433`), the four periods at `:2364` ("For
+  magi, there are two more periods to consider: apprenticeship, and life as a magus
+  after that"), and the Darius example at `:2439-2449` — whose master "picks 10 as a
+  nice, round number" for the start of apprenticeship (`:2402`) and who spends "his
+  last 5 exp on Parma Magica 1" "just before Gauntlet" (`:2449`).
+- Data: `rules/core/life_stages.json` → `apprenticeship`: `years` 15, `xp` 240, plus
+  the two Ability lists (below). Canonically sorted, so `apprenticeship` leads the
+  file.
+- Implementation: `life_stage.rs` — `ApprenticeshipRules`,
+  `LifeStageRules::apprenticeship_of` (the block for a magus, `None` for anyone else,
+  read off the profile's `is_magus` flag) and `budget`, which reports
+  `apprenticeship_years` / `apprenticeship_xp` as a fourth block. `total()` sums all
+  four.
+- **The 120 spell levels are deliberately NOT here.** They ship as
+  `EntityTypeProfile.spell_levels: 120` on the magus profile
+  (`rules/core/character_types.json`), whose single selector is
+  `effective::spell_levels_base` — see **Spell-levels budget — 120 at creation** in
+  the *Hermetic spells* section above, which cites this same `:2435`. The two numbers
+  of one sentence live in two files on purpose: the spell budget belongs to the
+  character *type* (a per-character `spell_levels_override` may replace it), while the
+  240 belongs to the life-stage block. Duplicating either would create a second place
+  to edit it.
+- **Apprenticeship is the general pool.** Two independent facts force it. (a) `:2435`
+  lets this experience buy "Arts or Abilities", and only the general pool may fund an
+  Art — `pool_covers` returns false for every `(Ability pool, Art spend)` pair
+  (`effective.rs`). (b) `Effect::GeneralXp` **already means apprenticeship
+  experience**: Skilled Parens grants "an additional 60 experience points … during
+  apprenticeship" (`:4966`) and Weak Parens "60 fewer … from apprenticeship"
+  (`:7074`), and `general_xp_bonus` is applied to the general pool alone. Assigning
+  apprenticeship anywhere else would move that ±60 onto a child's money.
+  `xp_allocation` therefore selects `base_general` in exactly one place:
+  apprenticeship for a magus, later life for anyone else, the typed `xp_pool` without
+  a plan.
+- **No `general_xp` field on `LifeStageBudget`.** The pool the solve funds from is
+  base + bonus (240, or 300 with Skilled Parens); a budget field holding only the base
+  would disagree with it and would have to be excluded from `total()`. The real pool
+  is surfaced instead, as `EffectiveScores.xp_general_pool` (`arm-app/ruleset_io.rs`).
+- **`apprenticeship_start_age` is not stored.** Apprenticeship is fifteen fixed years
+  and the character stands at its Gauntlet, so the span before it follows:
+  `later_life_years = age − childhood.years − apprenticeship.years`. Verified against
+  `:2402`, where a boy apprenticed at 10 has "75 experience points to spend from those
+  five years" — exactly what a magus of 25 earns here. `SCHEMA_VERSION` is unchanged
+  (14) and no save migrates; a stored start age only becomes necessary for the years
+  *after* apprenticeship (**M6/6b5**).
+- Load-time gate (an engine invariant, not a sourced rule): a ruleset that declares an
+  `is_magus` profile **and** ships life-stage rules must declare an apprenticeship
+  block — `Ruleset::validate_apprenticeship_refs`, gated exactly like
+  `validate_engine_required_roles`. Without the block such a ruleset would cost a
+  magus as a companion, counting every year to its age. **This replaces the 6b2
+  runtime refusal** (`life_stage_magus_guided_unsupported`, now deleted): the limit was
+  never a property of a character, it was missing data.
+
+#### Pre-apprenticeship experience buys Abilities only — never Arts (M6/6b4)
+
+> 6. **Later Life.** 15 experience points per year (until apprenticeship for magi),
+>    spread between any Abilities the character can learn, based on the Virtues and
+>    Flaws he has. …
+> 7. **Hermetic Magi Only: Apprenticeship.** Divide 240 experience points between
+>    Hermetic Arts and any nonSupernatural Abilities (or Supernatural Abilities, if
+>    the magus has the relevant Virtue). …
+> 8. **Hermetic Magi Only (Optional):** Years after apprenticeship. Divide 30 points
+>    per year between experience points in Arts, experience points in Abilities, and
+>    levels of spells.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2213-2216` — the numbered
+  creation sequence, and the decisive statement of *which* period may buy Arts: step 6
+  (`:2214`) says "any **Abilities**", step 7 (`:2215`) "between Hermetic **Arts** and
+  … Abilities". Restated for the block itself at `:2392`.
+- Implementation: `effective.rs` — `xp_allocation` pushes later life as a
+  **restricted** `PoolEligibility::Ability` pool for a magus (`is_magus &&
+  budget.later_life_xp > 0`, the same shape of guard the mastery pool uses), so Arts
+  fall out for free: an Ability pool never covers an Art spend. `LifeStageBlock` gains
+  `LaterLife` (slug `later_life`, labelled `xp-pool-later_life` in both locales) so the
+  bar can name the row.
+- **The reason, not just the wording:** a magus's later life *ends where
+  apprenticeship begins* (`:2214`, "until apprenticeship for magi"), so it is the span
+  in which the character is a child not yet taken as an apprentice — and has no Arts at
+  all. Funding an Art from it would be funding it before the Gift was ever opened.
+- Where an experienced magus's Arts actually come from: `:2216`/`:2471`'s "For every
+  year, the magus gets 30 points", the years *after* apprenticeship — **M6/6b5**, not
+  modelled. The consequence is that guided funding currently builds a magus **at its
+  Gauntlet**: an age well past 20 earns no more than a 20-year-old's blocks, and the
+  surplus shows up as `restricted_xp_unspent` on the later-life pool plus the ordinary
+  age-cap arithmetic (`:2368-2374`), rather than as an invented upper bound on the age.
+  Nothing in the source bounds the apprenticeship start age — Darius's master "picks 10
+  as a nice, round number" (`:2402`) — so no such bound is enforced.
+
+#### Pre-apprenticeship experience may not buy Arcane, Academic or Martial Abilities (M6/6b4)
+
+> Note that magi can only spend experience points on Arcane, Academic and Martial
+> Abilities before apprenticeship if they have a Virtue which allows them to do so.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2435` (second sentence),
+  with `:2215`'s "any nonSupernatural Abilities (or Supernatural Abilities, if the
+  magus has the relevant Virtue)" for apprenticeship itself. The Darius example
+  reasons exactly this way about a pre-apprenticeship purchase: Order of Hermes Lore
+  "It's a **general** Ability, so he can" (`:2402`).
+- Implementation: the later-life pool's eligibility (`effective.rs`,
+  `xp_allocation`) — `categories` is `AbilityCategory::ALL` minus
+  `ruleset.categories_requiring_virtue()` plus whatever the character's Virtues
+  authorize, and `abilities` is the authorized ids. Both come from
+  `effective::ability_authorizations`, moved here from `validation/authorization.rs` in
+  this slice so the ownership check and the pool read one function. (Direction matters:
+  `validation` already depends on `effective`, so calling the other way would invert
+  the layering.)
+- **No double-reporting with `validate_ability_authorization`.** That validator gates
+  *owning* a gated Ability and exempts magi whole-character (`:7151`, "or if they are
+  magi"); the pool decides *whose money* pays. A magus who overspends its
+  apprenticeship gets `not_enough_xp`, never `ability_category_requires_virtue`. The
+  two mechanisms are disjoint by construction.
+- **Supernatural stays in the pool's category set and legalizes nothing.** Access to
+  each Supernatural Ability is granted per Ability (`:2315`), which
+  `validate_supernatural_abilities` enforces for magi as well — so an unauthorized one
+  is already an error and funding it here changes nothing. Excluding it would only
+  produce a second, differently-worded complaint about the same row.
+- **Deliberate asymmetry: later life stays the general pool for a non-magus.** A grog
+  or companion is gated by an error on the character
+  (`ability_category_requires_virtue`), so its money needs no restriction; a magus's
+  category gate is waived whole-character, so the pool is the only place the "before
+  apprenticeship" half of `:2435` can live. This is also where `:7151`'s finer
+  distinction now bites — see **Access to Academic / Arcane / Martial Abilities**
+  below, whose "not modelled" note this slice narrows.
+
+#### Hermetic minimum Abilities — Parma Magica 1, Magic Theory 1, Latin 1 (M6/6b4)
+
+> Magi must have the following minimum Abilities: Parma Magica 1, Magic Theory 1,
+> Latin 1. Characters with lower scores would not be admitted to the Order.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2437`.
+- Data: `rules/core/life_stages.json` → `apprenticeship.minimum_abilities` —
+  `ability.dead_language 1`, `ability.magic_theory 1`, `ability.parma_magica 1`. The
+  list is **data**: a ruleset demanding something else says so in its own file, and no
+  Rust anywhere names these three.
+- Implementation: `life_stage.rs` — `magus_minimum_abilities`, producing one
+  `MagusMinimumAbility` row per requirement (`AbilityRequirementKind::Required` here,
+  `Recommended` below). **One function, two consumers:**
+  `validation/magus.rs::validate_magus_minimum_abilities` emits
+  `magus_minimum_ability` (error, `abilities`, args `ability`/`min`/`score`, context =
+  the Ability), and `EffectiveScores.magus_minimum_abilities`
+  (`arm-app/ruleset_io.rs`) hands the whole checklist to the frontend — so a finding
+  and the checklist a UI shows cannot disagree.
+- **An error, and unconditional.** "Would not be admitted to the Order" is a hard bar,
+  and `:2437` says nothing about how the experience was earned, so a magus built from a
+  flat `xp_pool` is held to it exactly as a guided one is. That is why the validator
+  lives in `validation/magus.rs` and not in `validation/life_stage.rs`, which returns
+  early without a life-stage plan.
+- **Documented approximation: "Latin 1" is matched by Ability id.** Latin is one
+  *value* of the parameterized `ability.dead_language` (`:7431-7434`, where Latin is
+  only "the most important example"), and an instance value is free-text player input
+  with no localization path — a German player types "Latein". Matching the instance
+  would therefore fail for every non-English user, which is worse than
+  under-enforcing. **The consequence, stated plainly: a magus whose only dead language
+  is Greek 1 passes `:2437`.** The same id-level proxy `ability.scholarly_language`
+  (`rules/core/abilities.json`) and `flaw.covenant_upbringing`'s
+  `ability_authorization` already use. `AbilityRequirement::parameter` exists unused so
+  a future language registry tightens this by filling one JSON field, with no code
+  change; the test `latin_is_matched_by_ability_id_not_by_instance` pins the current
+  behaviour so it can never become accidental.
+- **The score tested is the BOUGHT one**, not the effective one:
+  `effective_ability_score` returns 2 for a magus with a Puissant Parma Magica and no
+  Parma row at all, and `:2437`'s "scores" cannot mean a Virtue's +2 to *use*. The same
+  `entry.score >= min_score` test `validate_academic_language` applies. General ruling:
+  the age caps constrain the bought score, and the minimums test it. Pinned by
+  `puissant_parma_magica_does_not_admit_a_magus_to_the_order`.
+- **A minimum age of 20 follows** from the same block: childhood (5) plus
+  apprenticeship (15), `LifeStageRules::minimum_gauntlet_age`. A younger magus with a
+  life-stage plan gets `life_stage_age_before_gauntlet` (error, `abilities`, args
+  `age`/`min`) **instead of** `life_stage_age_before_childhood` — one wrong age, one
+  finding, under the code that describes it truthfully.
+- **The minimum set is deliberately not re-priced** the way the recommended one is:
+  `:2437` states no total, so a pricing check could only compare the engine to itself.
+
+#### Hermetic Magi Recommended Minimum Abilities — 90 experience points (M6/6b4)
+
+> #### Hermetic Magi Recommended Minimum Abilities
+>
+> Artes Liberales 1
+>
+> Latin 4
+>
+> Magic Theory 3
+>
+> Parma Magica 1 (should be no higher if the magus is just out of apprenticeship)
+>
+> Total Cost: 90 experience points
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2451-2461` (heading
+  `:2451`, the four Abilities `:2453-2459`, the total `:2461`), with the consequence
+  half of `:2437`: "A character without a Latin score of least 4 and an Artes
+  Liberales score of at least 1 is unable to read the books of the Order… A Magic
+  Theory score of below 3 is weak, and, in particular, means that the magus cannot set
+  up his own laboratory."
+- Data: `rules/core/life_stages.json` → `apprenticeship.recommended_abilities` +
+  `recommended_xp: 90`.
+- Implementation: the same `magus_minimum_abilities` rows, tagged
+  `AbilityRequirementKind::Recommended`, reported by
+  `validate_magus_minimum_abilities` as `magus_recommended_ability` (**warning**,
+  `abilities`, args `ability`/`min`/`score`).
+- **A warning, not an error**, because `:2451` calls the list *recommended* and the
+  consequences `:2437` spells out describe a weak magus, not an illegal one — unlike
+  `:2437`'s own three, which decide admission.
+- **The 90 is a re-pricing trust gate.** `Ruleset::validate_apprenticeship_refs`
+  prices the list off the Ability advancement table and refuses any other total:
+  5 (`:2408`) + 50 (`:2411`) + 30 (`:2410`) + 5 = 90 exactly. A mistyped score fails
+  the load instead of shipping a recommendation the rulebook never costed — the gate
+  `validate_childhood_packages` applies to childhood's 45 and 75. The literals are also
+  asserted from outside the data, in
+  `tests/data_integrity.rs::shipped_apprenticeship_carries_the_2435_and_2437_numbers`,
+  so an edit moving list and total together cannot pass in silence.
+- Parma Magica 1 appears in **both** lists (`:2437` and `:2459`), so it legitimately
+  produces two checklist rows — one required, one recommended. Not a duplicate.
+- **Not modelled:** `:2459`'s "(should be no higher if the magus is just out of
+  apprenticeship)". It is advice about what apprenticeship *teaches* — "this Ability is
+  normally the last thing taught" (`:2437`) — and the engine has no per-stage
+  attribution for a bought score to hang a maximum on, the same limit recorded for
+  `:7151` below.
 
 #### Wealthy / Poor — the rate, and who may take them
 
@@ -2811,9 +3043,15 @@ Abilities are bought with experience earned in blocks, not from one bank:
   Abilities if they are specifically permitted to through the purchase of a Virtue,
   **or if they are magi**") and `:2435`, where apprenticeship experience may go on
   "Arcane, Academic, and Martial Abilities". Read from the profile's `is_magus` flag,
-  never a type id. Not modelled: `:7151`'s finer "Magi without a specific Virtue may
-  only buy Academic Abilities **during or after** apprenticeship" — the engine has no
-  per-stage attribution for a bought score, so the exemption is whole-character.
+  never a type id. `:7151`'s finer "Magi without a specific Virtue may only buy
+  Academic Abilities **during or after** apprenticeship" is now modelled **for a
+  guided magus** (M6/6b4): the restriction is not on the Ability but on the money, so
+  a magus's pre-apprenticeship experience simply cannot fund those categories — see
+  **Pre-apprenticeship experience may not buy Arcane, Academic or Martial Abilities**
+  above. It remains unmodelled for a magus funded from a flat `xp_pool`, which carries
+  no per-stage attribution at all; there the exemption stays whole-character. The
+  ownership check here is unchanged either way, and the two never double-report: a
+  shortfall is `not_enough_xp`, never `ability_category_requires_virtue`.
 
 #### The scholarly-language expectation for Academic Abilities (M6/6b2b)
 
@@ -2859,11 +3097,12 @@ Abilities are bought with experience earned in blocks, not from one bank:
 A character built through its life stages derives its funding from them, so
 carrying a directly-entered `xp_pool` as well would fund the same purchases twice.
 `validation/life_stage.rs` reports that as `life_stage_xp_pool_conflict`, alongside
-an unset age, an age inside the childhood block, an unchosen native language, and a
-chosen one with no bought score (a warning — the points are merely unspent). No
-rulebook passage states this; it exists because the app offers two ways in.
-`life_stage_magus_guided_unsupported` is of the same kind — a limit of this engine's
-coverage rather than of the rules — and is documented with `:2364` above.
+an unset age, an age below the character's first possible one — childhood for a grog
+or companion (`life_stage_age_before_childhood`), childhood plus apprenticeship for a
+magus standing at its Gauntlet (`life_stage_age_before_gauntlet`, `:2435`) — an
+unchosen native language, and a chosen one with no bought score (a warning — the
+points are merely unspent). Only the two age bars are sourced; the pool conflict
+exists because the app offers two ways in.
 
 The unspent-block warning and the 75-point pool read `:2378` the same way, which is
 a requirement rather than a coincidence: both key on
