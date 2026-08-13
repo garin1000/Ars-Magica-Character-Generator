@@ -11,7 +11,13 @@
 
 import { $, browser, expect } from '@wdio/globals';
 
-import { advanceWizardTo, currentWizardPhase, startWizard, wizardRailPhases } from '../helpers.js';
+import {
+  advanceWizardTo,
+  currentWizardPhase,
+  satisfyMagusMinimums,
+  startWizard,
+  wizardRailPhases,
+} from '../helpers.js';
 
 const WIZARD_RAIL = '[data-testid="wizard-rail"]';
 const TAB_BAR = '[role="tablist"]';
@@ -121,6 +127,13 @@ describe('guided creation wizard', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: `a rail jump forward from '${twoBack}' did not land on Virtues & Flaws`,
     });
+
+    // The Abilities step owes the Order its minimums — Parma Magica 1, Magic Theory 1
+    // and Latin 1 (Core Rules.md:2437) — which are blocking errors for every magus, so
+    // the walk to the closing step has to settle them (and the experience to pay for
+    // them) rather than passing through.
+    await advanceWizardTo('abilities');
+    await satisfyMagusMinimums();
 
     // On to the closing step: Next gives way to Finish.
     await advanceWizardTo('review');
