@@ -304,7 +304,18 @@ mod tests {
         { "id": "ability.penetration", "category": "arcane" }
       ]
     }"#;
+    /// The apprenticeship block carries **empty** requirement lists: the load-time
+    /// gate only demands that a magus ruleset declare the block, and the abilities
+    /// const above ships no dead language, so filling the lists here would drag an
+    /// unrelated catalogue change into these tests.
     const LIFE_STAGES: &str = r#"{
+      "apprenticeship": {
+        "years": 15,
+        "xp": 240,
+        "minimum_abilities": [],
+        "recommended_abilities": [],
+        "recommended_xp": 0
+      },
       "childhood": {
         "years": 5,
         "native_language_ability": "ability.living_language",
