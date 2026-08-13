@@ -44,9 +44,25 @@ describe('German UI bundle', () => {
     expect(translate(de, 'ability-funding-life_stages')).toBe('Lebensabschnitte');
     expect(translate(de, 'native-language-label')).toBe('Muttersprache');
     expect(translate(de, 'childhood-label')).toBe('Beispielhafte Kindheit');
-    // The magus is excluded because apprenticeship is unmodelled; the reason has
-    // to name the period the rulebook names.
-    expect(translate(de, 'ability-funding-magus-reason')).toContain('Lehrlingszeit');
+    // A magus is built through its life stages too (slice 6b4), so the guided chrome
+    // names apprenticeship and the Gauntlet exactly as the German rulebook does
+    // (Basisregeln.md:2433, :2449 — Lehrlingszeit, Lehrlingsprüfung).
+    expect(translate(de, 'life-stage-apprenticeship', { years: '15', xp: '240' })).toContain(
+      'Lehrlingszeit',
+    );
+    expect(translate(de, 'life-stage-gauntlet-note')).toContain('Lehrlingsprüfung');
+    // The two checklist headings are the rulebook's own (Basisregeln.md:2437, :2451).
+    expect(translate(de, 'magus-minimums-label')).toBe('Mindestfertigkeiten');
+    expect(translate(de, 'magus-recommended-label')).toBe('Empfohlene Mindestfertigkeiten');
+    // Fertigkeiten, never "Fähigkeiten": the glossary's word for an Ability.
+    expect(translate(de, 'magus-minimums-summary', { unmet: '3', total: '7' })).not.toContain(
+      'Fähigkeiten',
+    );
+    expect(translate(de, 'magus-recommended-hint', { xp: '90' })).toContain('Erfahrungspunkte');
+    // Whole sentences per status, so neither row leans on colour alone.
+    const row = { ability: 'Parma Magica', min: '1', score: '0' };
+    expect(translate(de, 'magus-minimum-met', row)).toContain('erfüllt');
+    expect(translate(de, 'magus-minimum-unmet', row)).toContain('nicht erfüllt');
   });
 
   it('has full message-key parity between English and German', () => {
