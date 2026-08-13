@@ -144,6 +144,8 @@ impl fmt::Display for IssueSeverity {
 /// | `life_stage_age_before_childhood` | error | abilities | `age`, `min` |
 /// | `life_stage_native_language_unset` | error | abilities | (none) |
 /// | `life_stage_native_language_missing_score` | warning | abilities | `language` |
+/// | `magus_minimum_ability` | error | abilities | `ability`, `min`, `score` |
+/// | `magus_recommended_ability` | warning | abilities | `ability`, `min`, `score` |
 /// | `childhood_package_unknown` | error | abilities | `package` |
 /// | `childhood_slot_unfilled` | error | abilities | `ability`, `key`, `slot` |
 /// | `childhood_slot_is_native_language` | error | abilities | `ability`, `key`, `slot`, `language` |
@@ -372,6 +374,16 @@ impl ValidationIssue {
     /// unspent.
     pub const CODE_LIFE_STAGE_NATIVE_LANGUAGE_MISSING_SCORE: &'static str =
         "life_stage_native_language_missing_score";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a magus falls short of an
+    /// Ability the Order demands — "Magi must have the following minimum Abilities:
+    /// Parma Magica 1, Magic Theory 1, Latin 1. Characters with lower scores would not
+    /// be admitted to the Order." (Core Rules.md:2437.) One finding per unmet
+    /// requirement, and unconditional on how the experience was funded.
+    pub const CODE_MAGUS_MINIMUM_ABILITY: &'static str = "magus_minimum_ability";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a magus falls short of one
+    /// of the `#### Hermetic Magi Recommended Minimum Abilities` (Core Rules.md:2451-2461)
+    /// — advice about a weak magus, not an illegal one.
+    pub const CODE_MAGUS_RECOMMENDED_ABILITY: &'static str = "magus_recommended_ability";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the Sample Childhood
     /// package recorded on the life-stage plan names an id the loaded ruleset does
     /// not ship — a dangling reference, since the taken package is persisted.
@@ -672,6 +684,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_aging(entity, ruleset, &mut issues);
         validate_xp_pool(entity, ruleset, &mut issues);
         validate_life_stage_plan(entity, ruleset, type_profile, &mut issues);
+        validate_magus_minimum_abilities(entity, ruleset, &mut issues);
         validate_ability_authorization(entity, ruleset, type_profile, &mut issues);
         validate_academic_language(entity, ruleset, &mut issues);
         validate_warping(entity, ruleset, type_profile, &mut issues);
