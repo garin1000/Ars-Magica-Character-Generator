@@ -19,8 +19,9 @@ pub mod house;
 pub mod life_stage;
 #[doc(inline)]
 pub use life_stage::{
-    AbilityRequirement, ApprenticeshipRules, ChildhoodRules, LaterLifeRules, LifeStageBudget,
-    LifeStagePlan, LifeStageRules,
+    AbilityRequirement, AbilityRequirementKind, ApprenticeshipRules, ChildhoodRules,
+    LaterLifeRules, LifeStageBudget, LifeStagePlan, LifeStageRules, MagusMinimumAbility,
+    magus_minimum_abilities,
 };
 pub mod mythic_companion;
 pub mod ruleset;
