@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { Entity, LifeStageRules, LocalizedRuleset } from '../types';
+import type {
+  EffectiveScores,
+  Entity,
+  LifeStageRules,
+  LocalizedRuleset,
+  MagusMinimumAbility,
+} from '../types';
 
 // The tab reads the shared store singleton (ruleset catalogue, entity rows, filter
 // state) and the Fluent bundle. The store schedules a debounced revalidate over the
@@ -52,15 +58,32 @@ function installRuleset(rules: LifeStageRules | null = lifeStageRules()): void {
           creation_phases: [],
         },
       },
-      abilities: { 'ability.athletics': { id: 'ability.athletics', category: 'general' } },
+      abilities: {
+        'ability.athletics': { id: 'ability.athletics', category: 'general' },
+        'ability.parma_magica': { id: 'ability.parma_magica', category: 'arcane' },
+      },
       advancement: [],
       magnitude_points: { free: 0, minor: 1, major: 3 },
       ability_category_order: ['general', 'academic', 'arcane', 'martial', 'supernatural'],
       art_type_order: ['technique', 'form'],
       ...(rules ? { life_stages: rules } : {}),
     },
-    i18n: {},
+    i18n: { 'ability.parma_magica': { name: 'Parma Magica' } },
   } as unknown as LocalizedRuleset;
+}
+
+/** One unmet Hermetic minimum, as the engine sends it for a magus. */
+function setChecklist(): void {
+  const rows: MagusMinimumAbility[] = [
+    {
+      ability: 'ability.parma_magica',
+      min_score: 1,
+      score: 0,
+      met: false,
+      requirement: 'required',
+    },
+  ];
+  store.effective = { magus_minimum_abilities: rows } as unknown as EffectiveScores;
 }
 
 function resetEntity(): void {
@@ -157,5 +180,52 @@ describe('AbilityTab mounts the life-stage panel (slice 6b3b)', () => {
     expect(body).toContain('class="region-row"');
     expect(body).not.toContain('data-testid="life-stage-panel"');
     expect(depthOf(body, 'class="region-row"')).toBe(0);
+  });
+});
+
+describe('AbilityTab mounts the magus minimums checklist (slice 6b4)', () => {
+  it('renders it between the funding panel and the Available/Selected row', () => {
+    setChecklist();
+    const body = html();
+    const panel = body.indexOf('data-testid="life-stage-panel"');
+    const checklist = body.indexOf('data-testid="magus-minimums"');
+    const row = body.indexOf('class="region-row"');
+    // How Abilities are funded, then what the Order demands of them, then the lists.
+    expect(panel).toBeLessThan(checklist);
+    expect(checklist).toBeLessThan(row);
+  });
+
+  it('keeps it a root-level sibling, so the region row still owns the height', () => {
+    setChecklist();
+    const body = html();
+    // An auto-height sibling, never a wrapper: `.region-row` must stay the only
+    // `flex: 1` child of `.vf-tab` or the Available/Selected lists collapse.
+    expect(depthOf(body, 'data-testid="magus-minimums"')).toBe(0);
+    expect(depthOf(body, 'class="region-row"')).toBe(0);
+  });
+
+  it('renders it in both funding modes', () => {
+    setChecklist();
+    // Flat pool: `:2437` is unconditional, so a magus owes the minimums either way …
+    expect(html()).toContain('data-testid="magus-minimums"');
+    // … and under a life-stage plan just the same.
+    store.entity.life_stages = {};
+    expect(html()).toContain('data-testid="magus-minimums"');
+  });
+
+  it('renders it for a ruleset shipping no life-stage rules', () => {
+    installRuleset(null);
+    setChecklist();
+    const body = html();
+    // The funding panel is gone with the rules it needs, but a magus still owes the
+    // Order its minimums — which is why the checklist is not mounted inside the panel.
+    expect(body).not.toContain('data-testid="life-stage-panel"');
+    expect(body).toContain('data-testid="magus-minimums"');
+    expect(depthOf(body, 'class="region-row"')).toBe(0);
+  });
+
+  it('renders nothing of it when the engine sends no rows', () => {
+    // Empty for every type but a magus — the tab needs no is_magus test of its own.
+    expect(html()).not.toContain('data-testid="magus-minimums"');
   });
 });
