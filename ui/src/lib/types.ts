@@ -245,9 +245,11 @@ export interface RestrictedXpPool {
 }
 
 // A block of life-stage experience that funds purchases on its own terms
-// (`LifeStageBlock`). Later life is absent on purpose: it funds anything the
-// character may learn, so it is the general pool rather than a restricted one.
-export type LifeStageBlock = 'childhood_native_language' | 'childhood_spread';
+// (`LifeStageBlock`). Apprenticeship is absent on purpose: whichever block funds
+// anything the character may learn is the general pool and needs no slug, and for a
+// magus that is apprenticeship. Later life is here because for a magus it is
+// restricted — Abilities only, never an Art.
+export type LifeStageBlock = 'childhood_native_language' | 'childhood_spread' | 'later_life';
 
 export type XpPoolOrigin =
   | { kind: 'item'; item: string }

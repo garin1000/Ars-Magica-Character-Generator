@@ -873,9 +873,16 @@ pub enum XpPoolOrigin {
 /// A block of life-stage experience that funds purchases on its own terms.
 ///
 /// A fixed taxonomy (the rules grant exactly these), so an enum: adding a block is
-/// a compile error until the UI labels it. Later life is absent on purpose — it
-/// funds anything the character may learn, so it is the general pool rather than a
-/// restricted one.
+/// a compile error until the UI labels it.
+///
+/// **Apprenticeship is absent, and later life is present.** Whichever block funds
+/// anything the character may learn is the *general* pool and needs no slug: for a
+/// magus that is apprenticeship, whose experience "can be spent on Arts or
+/// Abilities" (Core Rules.md:2435). Later life buys "any **Abilities**" (`:2214`,
+/// `:2392`) and, for a magus, ends where apprenticeship begins — so it is a
+/// restricted pool of its own, listed here. For a grog or companion later life is
+/// still the general pool; the enum names the blocks that *can* be restricted, and
+/// which pools a character actually gets is decided in [`xp_allocation`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LifeStageBlock {
@@ -885,14 +892,18 @@ pub enum LifeStageBlock {
     /// Childhood's restricted spread: spendable only on the childhood Ability list,
     /// and never on the native language (`:2378`).
     ChildhoodSpread,
+    /// Later life: for a magus, the years before apprenticeship, spendable on
+    /// Abilities alone and never on an Art (`:2214`, `:2392`).
+    LaterLife,
 }
 
 impl LifeStageBlock {
     /// Every block, the single source of the set (the UI's labels are checked
     /// against it).
-    pub const ALL: [LifeStageBlock; 2] = [
+    pub const ALL: [LifeStageBlock; 3] = [
         LifeStageBlock::ChildhoodNativeLanguage,
         LifeStageBlock::ChildhoodSpread,
+        LifeStageBlock::LaterLife,
     ];
 }
 
@@ -901,6 +912,7 @@ impl fmt::Display for LifeStageBlock {
         f.write_str(match self {
             LifeStageBlock::ChildhoodNativeLanguage => "childhood_native_language",
             LifeStageBlock::ChildhoodSpread => "childhood_spread",
+            LifeStageBlock::LaterLife => "later_life",
         })
     }
 }
@@ -4897,6 +4909,18 @@ mod tests {
             "no life-stage pools: {:?}",
             allocation.restricted
         );
+    }
+
+    /// Later life is a life-stage block like the childhood ones, because for a magus
+    /// it is a **restricted** pool: it buys "any Abilities" (Core Rules.md:2214,
+    /// `:2392`) and never an Art, which only apprenticeship's experience may. So it
+    /// needs a slug of its own, and a Fluent label — a block the UI cannot name would
+    /// print its own slug.
+    #[test]
+    fn life_stage_blocks_include_later_life() {
+        assert_eq!(LifeStageBlock::ALL.len(), 3);
+        assert!(LifeStageBlock::ALL.contains(&LifeStageBlock::LaterLife));
+        assert_eq!(LifeStageBlock::LaterLife.to_string(), "later_life");
     }
 
     /// Each life-stage pool says where it came from, so the XP bar can label it
