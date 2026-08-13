@@ -189,10 +189,12 @@ restricted-xp-list-separator = ,
 # Erfahrungsblöcke der Lebensabschnitte, geschlüsselt nach dem `LifeStageBlock`-Slug
 # der Engine. Jeder ist ein eigener eingeschränkter Vorrat: der erste kauft die
 # Muttersprache und nichts anderes, der zweite die Kindheitsfertigkeiten, aber nie
-# jene Sprache. Das spätere Leben hat keinen Schlüssel — es finanziert alles und
-# ist damit der allgemeine Vorrat.
+# jene Sprache. Das spätere Leben erscheint bei einem Magus, dessen allgemeiner
+# Vorrat stattdessen die Lehrlingszeit ist — seine Jahre erbringen nur
+# Fertigkeiten, niemals eine Kunst, was das Label ausdrücklich sagt.
 xp-pool-childhood_native_language = Muttersprache
 xp-pool-childhood_spread = Frühe Kindheit
+xp-pool-later_life = Späteres Leben (nur Fertigkeiten)
 # Der Umschalter für die Herkunft der Erfahrung der Fertigkeiten. Sie stammt
 # entweder aus einem selbst eingetragenen Vorrat oder aus den Lebensabschnitten des
 # Charakters. Der Umschalter ist kein gespeichertes Kennzeichen: ein Plan der

@@ -180,10 +180,12 @@ restricted-xp-pool = { $eligibility }: { $used } / { $amount }
 restricted-xp-list-separator = ,
 # Life-stage experience blocks, keyed by the engine's `LifeStageBlock` slug. Each
 # is a restricted pool of its own: the first buys the native language and nothing
-# else, the second the childhood Abilities but never that language. Later life has
-# no key — it funds anything, so it IS the general pool.
+# else, the second the childhood Abilities but never that language. Later life
+# appears for a magus, whose general pool is apprenticeship instead — its years
+# earn Abilities only, never an Art, so the label says so.
 xp-pool-childhood_native_language = Native language
 xp-pool-childhood_spread = Early childhood
+xp-pool-later_life = Later life (Abilities only)
 # The Abilities funding switch. Experience either comes from one pool the player
 # enters, or the character's life stages earn it. The switch is not a stored flag:
 # a life-stage plan on the character IS guided funding, so a loaded save lands in
