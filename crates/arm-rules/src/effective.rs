@@ -1184,6 +1184,11 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
     // each may buy only its own things: the 75 the native language, the 45 the
     // childhood list minus that language.
     // Source: Ars Magica - Definitive Edition (Core Rules).md:2378.
+    // Which block is the general pool depends on whether the character serves an
+    // apprenticeship, so the flag is read once here — off the profile, never a type id.
+    let is_magus = ruleset
+        .profile(&entity.type_id)
+        .is_some_and(|profile| profile.is_magus);
     let life_stage_budget = ruleset
         .life_stages()
         .and_then(|rules| rules.budget(entity, ruleset).map(|budget| (rules, budget)));
@@ -1231,12 +1236,17 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
     }
 
     let total_demand: u32 = spends.iter().map(|s| s.cost).sum();
-    // The general pool funds anything. For a life-stage character that is later
-    // life's experience — childhood's blocks are restricted, above — and for a
-    // directly-entered one it is the typed `xp_pool`. Skilled/Weak Parens (and any
-    // GeneralXp effect) adjust it; a net-negative grant clamps at 0 rather than
-    // underflowing.
+    // The general pool funds anything, so it is the block whose experience the rules
+    // let buy Arts as well as Abilities. For a **magus** that is apprenticeship —
+    // "These experience points can be spent on Arts or Abilities" (`:2435`) — with
+    // later life a restricted, Abilities-only pool above. For a grog or companion
+    // there is no apprenticeship and later life is itself unrestricted (`:2392`), so
+    // it is the general pool. A directly-entered character uses the typed `xp_pool`.
+    // Decided here, once: Skilled/Weak Parens (and any GeneralXp effect) then adjust
+    // it — "an additional 60 experience points … during apprenticeship" (`:4966`) —
+    // and a net-negative grant clamps at 0 rather than underflowing.
     let base_general = match &life_stage_budget {
+        Some((_, budget)) if is_magus => budget.apprenticeship_xp,
         Some((_, budget)) => budget.later_life_xp,
         None => entity.xp_pool,
     };
@@ -4643,13 +4653,21 @@ mod tests {
           { "id": "virtue.puissant_ability", "kind": "virtue", "classification": "narrative",
             "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
             "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
-            "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }] }
+            "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }] },
+          { "id": "virtue.skilled_parens", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "general_xp", "amount": 60 }] }
         ]"#;
         let types = r#"[
           { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
-            "permitted_categories": ["general", "personality"], "creation_phases": [] }
+            "permitted_categories": ["general", "personality"], "creation_phases": [] },
+          { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general", "personality", "hermetic"],
+            "is_magus": true, "creation_phases": [] }
         ]"#;
-        // Ability table: 5/15/30/50/75 — the shipped Core Rules figures.
+        // Ability table: 5/15/30/50/75 — the shipped Core Rules figures. The five
+        // Hermetic roles are present because the magus profile above obliges any
+        // ruleset shipping an abilities catalogue to carry them.
         let abilities = r#"{
           "advancement": [
             { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },
@@ -4657,12 +4675,25 @@ mod tests {
             { "score": 5, "total_xp": 75 }
           ],
           "abilities": [
+            { "id": "ability.artes_liberales", "category": "academic" },
+            { "id": "ability.concentration", "category": "general" },
+            { "id": "ability.dead_language", "category": "academic", "parameter": "language" },
             { "id": "ability.living_language", "category": "general", "parameter": "language" },
-            { "id": "ability.swim", "category": "general" },
-            { "id": "ability.concentration", "category": "general" }
+            { "id": "ability.magic_theory", "category": "arcane" },
+            { "id": "ability.parma_magica", "category": "arcane" },
+            { "id": "ability.penetration", "category": "arcane" },
+            { "id": "ability.philosophiae", "category": "academic" },
+            { "id": "ability.swim", "category": "general" }
           ]
         }"#;
         let life_stages = r#"{
+          "apprenticeship": {
+            "years": 15,
+            "xp": 240,
+            "minimum_abilities": [],
+            "recommended_abilities": [],
+            "recommended_xp": 0
+          },
           "childhood": {
             "years": 5,
             "native_language_ability": "ability.living_language",
@@ -4703,6 +4734,36 @@ mod tests {
             specialty: None,
         }];
         entity
+    }
+
+    /// The same, as a magus: 25 years old, so taken as an apprentice at 10 and
+    /// standing at its Gauntlet.
+    fn planned_magus() -> Entity {
+        let mut entity = planned_companion();
+        entity.type_id = Id::new("magus");
+        entity
+    }
+
+    /// A guided magus's **general** pool is its apprenticeship experience, not its
+    /// later life: "These experience points can be spent on Arts or Abilities"
+    /// (Core Rules.md:2435), and the general pool is the only one that may fund an
+    /// Art. Later life buys "any Abilities" (`:2214`) and becomes a restricted pool
+    /// of its own.
+    #[test]
+    fn the_general_pool_of_a_guided_magus_is_its_apprenticeship() {
+        let rs = life_stage_ruleset();
+        assert_eq!(xp_allocation(&planned_magus(), &rs).general_pool, 240);
+
+        // Skilled Parens grants "an additional 60 experience points … during
+        // apprenticeship" (`:4966`), which lands on exactly this pool. So the block's
+        // base (240) and the pool the solve funds from (300) are different numbers —
+        // which is why the base is not stored as a pool anywhere.
+        let mut magus = planned_magus();
+        magus.selections = vec![Selection::new(Id::new("virtue.skilled_parens"))];
+        assert_eq!(xp_allocation(&magus, &rs).general_pool, 300);
+
+        // A companion's general pool is still its later life.
+        assert_eq!(xp_allocation(&planned_companion(), &rs).general_pool, 300);
     }
 
     /// The native-language block funds the native instance and nothing else, so a
