@@ -398,6 +398,20 @@ impl LifeStageRules {
         self.apprenticeship.as_ref()
     }
 
+    /// The youngest a magus can be: childhood plus the fifteen years of
+    /// apprenticeship (Core Rules.md:2435), so twenty against the shipped data. A
+    /// magus is generated standing at its Gauntlet, so this is a floor on its age.
+    ///
+    /// Falls back to childhood alone for a ruleset shipping no apprenticeship block —
+    /// there is then no further span to clear.
+    pub fn minimum_gauntlet_age(&self) -> u32 {
+        self.childhood.years.saturating_add(
+            self.apprenticeship
+                .as_ref()
+                .map_or(0, |apprenticeship| apprenticeship.years),
+        )
+    }
+
     /// Experience per year of later life for this character: the ruleset's base
     /// rate, unless a selection replaces it ([`Effect::LaterLifeXpRate`] — Wealthy
     /// 20, Poor 10).

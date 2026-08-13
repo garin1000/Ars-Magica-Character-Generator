@@ -142,6 +142,7 @@ impl fmt::Display for IssueSeverity {
 /// | `life_stage_age_unset` | error | abilities | (none) |
 /// | `life_stage_magus_guided_unsupported` | error | abilities | (none) |
 /// | `life_stage_age_before_childhood` | error | abilities | `age`, `min` |
+/// | `life_stage_age_before_gauntlet` | error | abilities | `age`, `min` |
 /// | `life_stage_native_language_unset` | error | abilities | (none) |
 /// | `life_stage_native_language_missing_score` | warning | abilities | `language` |
 /// | `magus_minimum_ability` | error | abilities | `ability`, `min`, `score` |
@@ -354,6 +355,12 @@ impl ValidationIssue {
     /// inside the childhood block, so it cannot have lived a year of later life.
     pub const CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD: &'static str =
         "life_stage_age_before_childhood";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a magus is younger than
+    /// childhood plus apprenticeship, so it cannot yet stand at its Gauntlet
+    /// (Core Rules.md:2435). The magus-specific counterpart of
+    /// [`ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD`]; one wrong age
+    /// produces one of the two, never both.
+    pub const CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET: &'static str = "life_stage_age_before_gauntlet";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a magus carries a
     /// life-stage plan. A magus earns experience in four periods, not the two this
     /// engine models (Core Rules.md:2364), so its later life cannot be counted to its

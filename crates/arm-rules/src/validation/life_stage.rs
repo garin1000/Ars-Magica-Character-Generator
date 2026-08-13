@@ -90,18 +90,33 @@ pub(crate) fn validate_life_stage_plan(
         ));
     }
 
-    if let Some(age) = entity.age
-        && age < rules.childhood.years
-    {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD,
-            CreationPhase::Abilities,
-            args([
-                ("age", age.to_string()),
-                ("min", rules.childhood.years.to_string()),
-            ]),
-            None,
-        ));
+    // How young is too young depends on the periods the character has lived through.
+    // A grog or companion may be a child, so the bar is childhood itself; a magus is
+    // generated standing at its Gauntlet, so it has also served the fifteen years of
+    // apprenticeship (`:2435`) and cannot be younger than twenty. One wrong age gets
+    // ONE finding, under the code that describes it truthfully — telling the owner of
+    // a 19-year-old magus that its age falls inside childhood would simply be wrong.
+    if let Some(age) = entity.age {
+        let magus = type_profile.is_some_and(|profile| profile.is_magus);
+        let (min_age, code) = if magus {
+            (
+                rules.minimum_gauntlet_age(),
+                ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET,
+            )
+        } else {
+            (
+                rules.childhood.years,
+                ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD,
+            )
+        };
+        if age < min_age {
+            issues.push(ValidationIssue::error(
+                code,
+                CreationPhase::Abilities,
+                args([("age", age.to_string()), ("min", min_age.to_string())]),
+                None,
+            ));
+        }
     }
 
     match &plan.native_language {
@@ -409,6 +424,46 @@ mod tests {
             "issues: {:?}",
             codes(&result)
         );
+    }
+
+    /// A magus stands at its Gauntlet, so the earliest age it can have is childhood
+    /// plus the fifteen years of apprenticeship (Core Rules.md:2435) — twenty. A
+    /// younger one is one wrong age, so it gets **one** finding, and a magus-specific
+    /// one: "your age is inside childhood" would be plain wrong about a magus of 19.
+    #[test]
+    fn an_age_before_the_gauntlet_is_a_magus_specific_error() {
+        let mut magus = planned(19);
+        magus.type_id = Id::new("magus");
+        let result = validate(&magus, &rs());
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET)
+            .expect("a magus below the Gauntlet age is reported");
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.args.get("age").map(String::as_str), Some("19"));
+        assert_eq!(issue.args.get("min").map(String::as_str), Some("20"));
+        assert!(
+            !codes(&result).contains(&ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD.into()),
+            "one wrong age, one finding: {:?}",
+            codes(&result)
+        );
+
+        // A magus of 20 is out of its apprenticeship and raises neither.
+        let mut old_enough = planned(20);
+        old_enough.type_id = Id::new("magus");
+        let issues = codes(&validate(&old_enough, &rs()));
+        assert!(
+            !issues.contains(&ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET.into()),
+            "issues: {issues:?}"
+        );
+
+        // A companion serves no apprenticeship, so childhood is still the bar it can
+        // fall below — and it never sees the magus code.
+        let issues = codes(&validate(&planned(3), &rs()));
+        assert!(issues.contains(&ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD.into()));
+        assert!(!issues.contains(&ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET.into()));
     }
 
     /// Later life is counted in years up to an age (Core Rules.md:2392), so a plan
