@@ -216,6 +216,24 @@ export interface SpellLevelCap {
   cap: number;
 }
 
+// Whether a demanded Ability score is one the Order enforces or one the rulebook
+// merely recommends. Mirrors the engine's `AbilityRequirementKind`.
+export type AbilityRequirementKind = 'required' | 'recommended';
+
+// One row of a magus's Hermetic-minimums checklist: what is demanded, what the
+// character bought, and whether that satisfies it. Mirrors the engine's
+// `MagusMinimumAbility`. `score` is the BOUGHT score — a Virtue's +2 to use is not
+// training the Order can examine — and `parameter` narrows the demand to one
+// instance, unset throughout the shipped data.
+export interface MagusMinimumAbility {
+  ability: string;
+  parameter?: string;
+  min_score: number;
+  score: number;
+  met: boolean;
+  requirement: AbilityRequirementKind;
+}
+
 // A free effective-score bonus to a Characteristic (Giant Blood +1 Str/Sta,
 // Dwarf -1). Mirrors the engine's `CharacteristicBonus`.
 export interface CharacteristicBonus {
@@ -301,6 +319,11 @@ export interface EffectiveScores {
   // Available: xp_general_used is a flow capped by the pool, so pool -
   // xp_general_used can never go negative however far the spend overshoots.
   xp_max_flow: number;
+  // The general pool itself: the typed `xp_pool` for a directly-entered character,
+  // and for one built through its life stages the block that may fund anything —
+  // apprenticeship for a magus, later life for anyone else — plus the Skilled/Weak
+  // Parens adjustment. Engine-authoritative, because no stored field holds it.
+  xp_general_pool: number;
   restricted_xp_pools: RestrictedXpPool[];
   // The life-stage experience blocks, or null for a directly-entered character
   // (where `xp_pool` is the authority).
@@ -340,6 +363,13 @@ export interface EffectiveScores {
   // Theory + 3), so the picker greys a spell above the magus's cap. Empty for a
   // non-magus. Engine-authoritative; the UI only reads it, never recomputes it.
   spell_level_caps: SpellLevelCap[];
+  // The Hermetic minimum-Ability checklist: what the Order demands (Core:2437) and
+  // what the rulebook recommends (Core:2451-2461), each with the character's bought
+  // score and whether it suffices. Empty for a non-magus, exactly like
+  // `spell_level_caps` — admission to the Order is a magus's concern alone.
+  // Engine-authoritative: the same reading the magus_minimum_ability /
+  // magus_recommended_ability findings come from.
+  magus_minimum_abilities: MagusMinimumAbility[];
   // Derived Confidence (type default + V/F); 0/0 for grogs.
   confidence_score: number;
   confidence_points: number;
