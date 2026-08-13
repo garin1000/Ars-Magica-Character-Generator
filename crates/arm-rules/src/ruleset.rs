@@ -1528,11 +1528,24 @@ impl Ruleset {
     /// [`Self::validate_childhood_refs`], so a cached ruleset returning through
     /// [`Ruleset::from_serialized`] is held to the same standard.
     fn validate_apprenticeship_refs(&self, errors: &mut Vec<String>) {
-        let Some(apprenticeship) = self
-            .life_stages
-            .as_ref()
-            .and_then(|rules| rules.apprenticeship.as_ref())
-        else {
+        let Some(life_stages) = self.life_stages.as_ref() else {
+            return;
+        };
+        let Some(apprenticeship) = life_stages.apprenticeship.as_ref() else {
+            // A ruleset declaring Hermetic magi must declare their apprenticeship
+            // too: a magus's later life runs only "until apprenticeship" (`:2214`,
+            // `:2364`), so without the block the engine would cost a magus exactly as
+            // it costs a companion — every year to its age, funding Arts out of a
+            // child's experience. Gated on an `is_magus` profile, like
+            // `validate_engine_required_roles`, because that is the condition under
+            // which the missing block is a real defect.
+            if self.type_profiles.values().any(|profile| profile.is_magus) {
+                errors.push(
+                    "life-stage rules ship no apprenticeship block, but the ruleset \
+                     declares a magus type, whose later life ends at apprenticeship"
+                        .to_string(),
+                );
+            }
             return;
         };
         let requirements = apprenticeship
@@ -4269,6 +4282,86 @@ mod tests {
             !msg.contains("recommended abilities price to"),
             "an unpriceable score must not also produce a total mismatch: {msg}"
         );
+    }
+
+    /// A ruleset that declares Hermetic magi and ships life-stage rules must declare
+    /// the apprenticeship block, because a magus's later life runs only *until*
+    /// apprenticeship (Core Rules.md:2214, :2364). Without the block the engine would
+    /// cost a magus exactly as it costs a companion — every year to its age, funding
+    /// Arts out of a child's experience — so this is an engine invariant enforced
+    /// where the limit actually lives: in the data, at load, not on each character.
+    ///
+    /// Gated the same way as [`Self::validate_engine_required_roles`]: only a ruleset
+    /// declaring an `is_magus` profile is held to it, and only when it ships life
+    /// stages at all.
+    #[test]
+    fn a_magus_ruleset_shipping_life_stages_must_declare_an_apprenticeship() {
+        const MAGUS_TYPES: &str = r#"[
+          { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"], "is_magus": true, "creation_phases": [] }
+        ]"#;
+        // The five abilities any magus ruleset shipping a catalogue must carry, plus
+        // the parameterized language the childhood block names.
+        const MAGUS_ABILITIES: &str = r#"{
+          "advancement": [ { "score": 1, "total_xp": 5 } ],
+          "abilities": [
+            { "id": "ability.artes_liberales", "category": "academic" },
+            { "id": "ability.awareness", "category": "general" },
+            { "id": "ability.living_language", "category": "general", "parameter": "language" },
+            { "id": "ability.magic_theory", "category": "arcane" },
+            { "id": "ability.parma_magica", "category": "arcane" },
+            { "id": "ability.penetration", "category": "arcane" },
+            { "id": "ability.philosophiae", "category": "academic" }
+          ]
+        }"#;
+        const CHILDHOOD_ONLY: &str = r#"{
+          "childhood": {
+            "years": 5,
+            "native_language_ability": "ability.living_language",
+            "native_language_xp": 75,
+            "spread_xp": 45,
+            "spread_abilities": ["ability.awareness"]
+          },
+          "later_life": { "xp_per_year": 15 }
+        }"#;
+        let load = |types: &str, life_stages: Option<&str>| {
+            Ruleset::from_sources(RulesetSources {
+                id: "test",
+                version: "1",
+                point_items: "[]",
+                type_profiles: types,
+                abilities: Some(MAGUS_ABILITIES),
+                life_stages,
+                ..RulesetSources::default()
+            })
+        };
+
+        let err = load(MAGUS_TYPES, Some(CHILDHOOD_ONLY)).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("apprenticeship"),
+            "should name the missing block: {msg}"
+        );
+
+        // Declared — even with no requirements of its own — and it loads.
+        let with_block = CHILDHOOD_ONLY.replace(
+            r#"{
+          "childhood""#,
+            r#"{
+          "apprenticeship": { "years": 15, "xp": 240, "recommended_xp": 0,
+                              "minimum_abilities": [], "recommended_abilities": [] },
+          "childhood""#,
+        );
+        assert!(load(MAGUS_TYPES, Some(&with_block)).is_ok());
+
+        // A ruleset with no magus profile needs neither block, and a magus ruleset
+        // shipping no life stages at all is out of scope of the rule.
+        const COMPANION_TYPES: &str = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"], "creation_phases": [] }
+        ]"#;
+        assert!(load(COMPANION_TYPES, Some(CHILDHOOD_ONLY)).is_ok());
+        assert!(load(MAGUS_TYPES, None).is_ok());
     }
 
     /// Sample Childhood packages are a catalogue of their own, so they load from
