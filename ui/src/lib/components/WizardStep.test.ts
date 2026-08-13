@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { CreationPhase, Entity, LocalizedRuleset } from '../types';
+import type { CreationPhase, EffectiveScores, Entity, LocalizedRuleset } from '../types';
 
 vi.mock('../ipc', () => ({
   loadRuleset: vi.fn(),
@@ -123,6 +123,23 @@ describe('WizardStep', () => {
   // in the editor because they are one surface, not two.
   it('offers the life-stage funding panel on the abilities step', () => {
     expect(body('abilities')).toContain('data-testid="life-stage-panel"');
+  });
+
+  // And the Hermetic minimums beside it, from the same mount: the wizard's magus has
+  // to see what the Order demands before it can be finished.
+  it('shows the magus minimums checklist on the abilities step', () => {
+    store.effective = {
+      magus_minimum_abilities: [
+        {
+          ability: 'ability.parma_magica',
+          min_score: 1,
+          score: 0,
+          met: false,
+          requirement: 'required',
+        },
+      ],
+    } as unknown as EffectiveScores;
+    expect(body('abilities')).toContain('data-testid="magus-minimums"');
   });
 
   it('shows both halves of the personality step, traits and reputations', () => {

@@ -13,6 +13,7 @@
   import { tooltip, withReason, type TooltipContent } from '../actions';
   import type { Ability, AbilityCategory } from '../types';
   import LifeStagePanel from './LifeStagePanel.svelte';
+  import MagusMinimumAbilities from './MagusMinimumAbilities.svelte';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
 
@@ -204,6 +205,14 @@
      puts the panel in both flows; that is the point, since a character built in the
      wizard has to stay editable in the editor. -->
 <LifeStagePanel />
+
+<!-- What the Order demands of a magus (Core Rules.md:2437), read after the funding
+     choice and before the lists it is about — another auto-height SIBLING, for the same
+     reason. Not inside the panel: the panel is gated on the ruleset shipping life-stage
+     rules and on guided funding, while `:2437` is unconditional, and "what a magus must
+     know" is a different concern from "how Abilities are funded". Empty for every other
+     type, so nothing gates it here. -->
+<MagusMinimumAbilities />
 
 <div class="region-row">
   <section class="region region-source">
