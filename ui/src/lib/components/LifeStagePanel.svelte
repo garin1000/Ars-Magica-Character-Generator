@@ -16,10 +16,10 @@
   const funding = $derived(store.abilityFunding);
   const guided = $derived(funding === 'life_stages');
   const typeProfile = $derived(store.ruleset?.ruleset.type_profiles[store.entity.type_id] ?? null);
-  // A magus earns experience in four periods, and later life stops at apprenticeship
-  // — which slice 6b4 adds. Until then the engine refuses the combination
-  // (`life_stage_magus_guided_unsupported`), so the UI must not offer it: the option
-  // is disabled with its reason spoken through `aria-describedby`, never greyed alone.
+  // A magus is built through its life stages too, but only AT its Gauntlet: its
+  // apprenticeship is the fifteen years ending at the age entered, and life as a magus
+  // after that is not counted yet (6b5). So the age means something different for a
+  // magus than for anyone else, which the note below says in words.
   const isMagus = $derived(typeProfile?.is_magus ?? false);
   const age = $derived(store.entity.age ?? null);
   // The engine's age→max-Ability-score cap, echoed read-only beside the age.
@@ -30,19 +30,8 @@
   // store's `AbilityFunding` union), not catalogue data.
   const options: AbilityFunding[] = ['pool', 'life_stages'];
 
-  const MAGUS_REASON_ID = 'ability-funding-magus-reason';
-
   function hintId(option: AbilityFunding): string {
     return `ability-funding-${option}-hint`;
-  }
-
-  function optionDisabled(option: AbilityFunding): boolean {
-    return option === 'life_stages' && isMagus;
-  }
-
-  /** The hint a radio describes itself with, plus the reason when it is disabled. */
-  function describedBy(option: AbilityFunding): string {
-    return optionDisabled(option) ? `${hintId(option)} ${MAGUS_REASON_ID}` : hintId(option);
   }
 
   function onAge(event: Event) {
@@ -67,8 +56,7 @@
               name="ability-funding"
               value={option}
               checked={funding === option}
-              disabled={optionDisabled(option)}
-              aria-describedby={describedBy(option)}
+              aria-describedby={hintId(option)}
               onchange={() => store.setAbilityFunding(option)}
               data-testid="ability-funding-{option}"
             />
@@ -81,11 +69,6 @@
           >
             {store.t(`ability-funding-${option}-hint`)}
           </span>
-          {#if optionDisabled(option)}
-            <span class="funding-reason" id={MAGUS_REASON_ID} data-testid={MAGUS_REASON_ID}>
-              {store.t('ability-funding-magus-reason')}
-            </span>
-          {/if}
         </div>
       {/each}
     </fieldset>
@@ -94,6 +77,14 @@
       <!-- Age is edited here as well as on the Details tab. Both surfaces read and
            write the one `entity.age`, so they cannot diverge — and the guided flow
            needs it, because later life's experience is (age - childhood years) × rate. -->
+      {#if isMagus}
+        <!-- Announced, and placed above the age input it constrains: for a magus the
+             age entered is the Gauntlet age, and the years lived as a magus after it
+             are not counted yet — so the field cannot be read at face value. -->
+        <p class="gauntlet-note" role="status" data-testid="life-stage-gauntlet-note">
+          {store.t('life-stage-gauntlet-note')}
+        </p>
+      {/if}
       <div class="life-stage-fields">
         <label class="field inline">
           <span>{store.t('life-stage-age-label')}</span>

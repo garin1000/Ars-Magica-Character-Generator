@@ -195,11 +195,6 @@ ability-funding-pool = Experience pool
 ability-funding-life_stages = Life stages
 ability-funding-pool-hint = Enter one total yourself and spend it on any Ability.
 ability-funding-life_stages-hint = Early childhood and later life earn the experience: age sets the later-life total, while a native language and a sample Childhood fill the childhood blocks.
-# Why the life-stage option is unavailable for a magus: of the four periods a magus
-# earns experience in, apprenticeship is not modelled yet, so the flat pool is the
-# only honest offer. Says the same as the engine's
-# life_stage_magus_guided_unsupported issue, ahead of the attempt rather than after.
-ability-funding-magus-reason = A magus earns experience in four periods — early childhood, later life, apprenticeship, and life as a magus after that. Apprenticeship is not modelled yet, so a magus uses the experience pool for now.
 # Life-stage read-outs in the XP bar. Later life funds anything, so it replaces the
 # editable pool total: years after childhood × experience per year. The rate is this
 # character's own — the Wealthy Virtue and the Poor Flaw change it.

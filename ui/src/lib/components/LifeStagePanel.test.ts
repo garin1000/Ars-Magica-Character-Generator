@@ -210,28 +210,60 @@ describe('LifeStagePanel funding switch (slice 6b3b)', () => {
   });
 });
 
-describe('LifeStagePanel magus restriction (slice 6b3b)', () => {
-  it('disables the guided option for a magus and reaches its reason via aria-describedby', () => {
+describe('LifeStagePanel offers both modes to a magus (slice 6b4)', () => {
+  /** Install the magus profile and a magus entity — the type 6b4 admits. */
+  function installMagus(): void {
     installRuleset(lifeStageRules(), profile('magus', true));
     resetEntity('magus');
+  }
+
+  it('offers the guided option to a magus, undisabled and with no refusal', () => {
+    installMagus();
     const body = html();
     const guided = element(body, 'ability-funding-life_stages');
-    // A magus earns experience in four periods; apprenticeship is not modelled yet,
-    // so the engine refuses the combination and the UI must not offer it.
-    expect(guided.open).toMatch(/disabled/);
-    expect(guided.open).toMatch(/aria-describedby="[^"]*ability-funding-magus-reason/);
-    const reason = element(body, 'ability-funding-magus-reason');
-    expect(reason.open).toMatch(/id="ability-funding-magus-reason"/);
-    // Never colour or absence alone: the reason is text a screen reader reads out.
-    expect(reason.text).toContain('apprenticeship');
-    // The pool option stays available — a magus is not locked out of Abilities.
+    // Apprenticeship is modelled now, so a magus with a life-stage plan is legal and
+    // the option must be live — the engine no longer refuses the combination.
+    expect(guided.open).not.toMatch(/disabled/);
+    // The reason node is gone, so the radio describes itself with its hint alone.
+    expect(guided.open).toMatch(/aria-describedby="ability-funding-life_stages-hint"/);
     expect(element(body, 'ability-funding-pool').open).not.toMatch(/disabled/);
   });
 
-  it('leaves the guided option enabled for a companion, with no magus reason node', () => {
+  it('carries no magus refusal node for any character type', () => {
+    // Neither for a companion, which never had one …
+    expect(has(html(), 'ability-funding-magus-reason')).toBe(false);
+    // … nor for the magus, which no longer does.
+    installMagus();
+    expect(has(html(), 'ability-funding-magus-reason')).toBe(false);
+  });
+
+  it('announces the Gauntlet note above the age it constrains, for a guided magus', () => {
+    installMagus();
+    installPlan();
     const body = html();
-    expect(element(body, 'ability-funding-life_stages').open).not.toMatch(/disabled/);
-    expect(has(body, 'ability-funding-magus-reason')).toBe(false);
+    const note = element(body, 'life-stage-gauntlet-note');
+    // The age entered IS the Gauntlet age, which the age field cannot say for itself,
+    // so the note is read before it.
+    expect(body.indexOf('life-stage-gauntlet-note')).toBeLessThan(
+      body.indexOf('life-stage-age-input'),
+    );
+    // It arrives when the funding source is switched, so its appearance is announced.
+    expect(note.open).toMatch(/role="status"/);
+    expect(note.text).toContain('Gauntlet');
+    // The actionable half: an older magus belongs on the flat pool until 6b5.
+    expect(note.text).toContain('experience pool');
+  });
+
+  it('shows no Gauntlet note for a guided companion', () => {
+    installPlan();
+    // A companion has no apprenticeship, so its age is simply its age.
+    expect(has(html(), 'life-stage-gauntlet-note')).toBe(false);
+  });
+
+  it('shows no Gauntlet note for a magus in pool mode', () => {
+    installMagus();
+    // Nothing is built from life stages there, so the note has nothing to constrain.
+    expect(has(html(), 'life-stage-gauntlet-note')).toBe(false);
   });
 });
 

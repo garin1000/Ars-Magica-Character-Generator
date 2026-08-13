@@ -1184,7 +1184,7 @@ ul {
   font-weight: 600;
 }
 
-/* One option: the radio beside its label, its hint (and any reason) underneath. */
+/* One option: the radio beside its label, its hint underneath. */
 .funding-option {
   display: flex;
   flex-direction: column;
@@ -1200,8 +1200,16 @@ ul {
   accent-color: var(--accent);
 }
 
-.funding-hint,
-.funding-reason {
+.funding-hint {
+  color: var(--muted, #6b7280);
+  font-size: 0.85rem;
+}
+
+/* What a guided magus's age means: read before the age field it qualifies, so it
+   keeps the muted hint voice rather than shouting like an error. */
+.gauntlet-note {
+  margin: 0;
+  max-width: 44rem;
   color: var(--muted, #6b7280);
   font-size: 0.85rem;
 }
