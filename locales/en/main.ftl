@@ -622,7 +622,6 @@ issue-restricted_xp_unspent = { $origin }: { $unspent } of { $amount } restricte
 issue-ability_category_requires_virtue = { $ability } is { $category }, which needs a Virtue granting access at character creation.
 issue-academic_ability_without_scholarly_language = An Academic Ability normally requires { $ability } at { $min } or better.
 issue-life_stage_xp_pool_conflict =This character earns its experience through its life stages, so the directly entered pool of { $xp_pool } must be 0.
-issue-life_stage_magus_guided_unsupported = A magus earns experience in four periods — early childhood, later life, apprenticeship, and life as a magus — so it cannot be built through its life stages yet; use the experience pool instead.
 issue-life_stage_age_unset = Enter the character's age: later life earns experience per year, so with no age only childhood's blocks can be counted.
 issue-life_stage_age_before_childhood = Age { $age } falls inside childhood, which lasts { $min } years — there are no later-life years to earn experience in.
 issue-life_stage_age_before_gauntlet = Age { $age } is younger than the { $min } a magus reaches at its Gauntlet — childhood plus fifteen years of apprenticeship.

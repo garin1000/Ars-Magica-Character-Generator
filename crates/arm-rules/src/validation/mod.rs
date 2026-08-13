@@ -140,7 +140,6 @@ impl fmt::Display for IssueSeverity {
 /// | `academic_ability_without_scholarly_language` | warning | abilities | `ability`, `min` |
 /// | `life_stage_xp_pool_conflict` | error | abilities | `xp_pool` |
 /// | `life_stage_age_unset` | error | abilities | (none) |
-/// | `life_stage_magus_guided_unsupported` | error | abilities | (none) |
 /// | `life_stage_age_before_childhood` | error | abilities | `age`, `min` |
 /// | `life_stage_age_before_gauntlet` | error | abilities | `age`, `min` |
 /// | `life_stage_native_language_unset` | error | abilities | (none) |
@@ -361,12 +360,6 @@ impl ValidationIssue {
     /// [`ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD`]; one wrong age
     /// produces one of the two, never both.
     pub const CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET: &'static str = "life_stage_age_before_gauntlet";
-    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a magus carries a
-    /// life-stage plan. A magus earns experience in four periods, not the two this
-    /// engine models (Core Rules.md:2364), so its later life cannot be counted to its
-    /// age — refused until apprenticeship is modelled (M6/6b4).
-    pub const CODE_LIFE_STAGE_MAGUS_GUIDED_UNSUPPORTED: &'static str =
-        "life_stage_magus_guided_unsupported";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a life-stage plan with no
     /// age, so the later-life block — the one that counts years — cannot be earned.
     /// Childhood is granted regardless (Core Rules.md:2378), which is why this is a
