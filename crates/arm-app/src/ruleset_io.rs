@@ -12,15 +12,16 @@ use std::collections::BTreeMap;
 use arm_rules::validation::childhood_rejection_issues;
 use arm_rules::{
     AbilityBonus, AbilityFloor, ArtBonus, Characteristic, CharacteristicBonus, Confidence, Entity,
-    EntityKind, Grant, Id, LifeStageBudget, LocalizedRuleset, MightScore, PointCeilings,
-    ReputationType, RestrictedXpPool, Ruleset, RulesetSources, Selection, SpellLevelCap,
-    SupernaturalFreeSlots, ValidationIssue, ValidationMode, ValidationResult, WarpingOwed,
-    ability_bonuses, ability_score_floors, age_ability_cap, apply_childhood_package, art_bonuses,
-    characteristic_aging_drops, characteristic_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, confidence, decrepitude_score, effective_characteristics,
-    effective_might, effective_point_ceilings, entity_grants, item_level_budget, item_level_used,
-    power_levels_budget, powers_used, reputation_grants, size, spell_level_caps, spell_levels_base,
-    spell_levels_bonus, spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
+    EntityKind, Grant, Id, LifeStageBudget, LocalizedRuleset, MagusMinimumAbility, MightScore,
+    PointCeilings, ReputationType, RestrictedXpPool, Ruleset, RulesetSources, Selection,
+    SpellLevelCap, SupernaturalFreeSlots, ValidationIssue, ValidationMode, ValidationResult,
+    WarpingOwed, ability_bonuses, ability_score_floors, age_ability_cap, apply_childhood_package,
+    art_bonuses, characteristic_aging_drops, characteristic_bonuses, characteristic_caps,
+    characteristic_floors, characteristic_points_granted, confidence, decrepitude_score,
+    effective_characteristics, effective_might, effective_point_ceilings, entity_grants,
+    item_level_budget, item_level_used, magus_minimum_abilities, power_levels_budget, powers_used,
+    reputation_grants, size, spell_level_caps, spell_levels_base, spell_levels_bonus,
+    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
     spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, validate, warping,
     warping_owed, warping_owed_grants, xp_allocation,
 };
@@ -48,9 +49,16 @@ pub struct EffectiveScores {
     /// reductions — the authoritative "spent" the UI shows (it must not recompute
     /// it without Affinity).
     pub xp_total_demand: u32,
-    /// Experience drawn from the general pool (`Entity::xp_pool`) by the
-    /// allocation; restricted pools cover the rest.
+    /// Experience drawn from the general pool by the allocation; restricted pools
+    /// cover the rest.
     pub xp_general_used: u32,
+    /// The general pool itself: the typed `Entity::xp_pool` for a directly-entered
+    /// character, and for one built through its life stages the block that may fund
+    /// anything — apprenticeship for a magus, later life for anyone else — plus the
+    /// Skilled/Weak Parens adjustment. Engine-authoritative, because the base and the
+    /// pool differ (240 against 300 with Skilled Parens) and no stored field holds
+    /// the latter.
+    pub xp_general_pool: u32,
     /// The most demand the pools can actually fund. Equals `xp_total_demand` iff the
     /// spend is legal; `xp_total_demand - xp_max_flow` is the overspend.
     ///
@@ -117,6 +125,13 @@ pub struct EffectiveScores {
     /// without recomputing the derivation in JS. Empty for a non-magus (no Spells
     /// tab). Engine-authoritative; the UI only reads it.
     pub spell_level_caps: Vec<SpellLevelCap>,
+    /// The Hermetic minimum-Ability checklist: what the Order demands (Core:2437) and
+    /// what the rulebook recommends (Core:2451-2461), each with the character's bought
+    /// score and whether it suffices. Empty for a non-magus, exactly like
+    /// [`Self::spell_level_caps`] — `:2437` is about admission to the Order.
+    /// Engine-authoritative: the same reading the `magus_minimum_ability` /
+    /// `magus_recommended_ability` findings come from.
+    pub magus_minimum_abilities: Vec<MagusMinimumAbility>,
     /// Effective Confidence Score / Points (type default + V/F), for the read-only
     /// Confidence readout. 0/0 for grogs (who have no Confidence).
     pub confidence_score: u8,
@@ -214,6 +229,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         characteristic_floors: characteristic_floors(entity, ruleset),
         xp_total_demand: allocation.total_demand,
         xp_general_used: allocation.general_used,
+        xp_general_pool: allocation.general_pool,
         xp_max_flow: allocation.max_flow,
         restricted_xp_pools: allocation.restricted,
         life_stage: ruleset
@@ -239,6 +255,9 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         } else {
             Vec::new()
         },
+        // Magus-gated inside the engine already (the checklist is empty for anyone
+        // the Order does not admit), so this needs no `is_magus` test of its own.
+        magus_minimum_abilities: magus_minimum_abilities(entity, ruleset),
         confidence_score: confidence.score,
         confidence_points: confidence.points,
         supernatural_free_total: supernatural_free.total,

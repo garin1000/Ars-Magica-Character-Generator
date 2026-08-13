@@ -724,6 +724,76 @@ fn effective_scores_surface_confidence_and_supernatural_slots() {
     );
 }
 
+/// The Abilities view has to show a magus which Hermetic minimums it still owes, so
+/// the checklist crosses the boundary with the effective scores rather than being
+/// re-derived in JS from the rules file. Against the **real shipped ruleset**: the
+/// three minimums of Core Rules.md:2437 plus the four recommendations of
+/// `:2451-2461`, seven rows.
+///
+/// The same payload carries `xp_general_pool` — the pool the solve funds from, which
+/// `xp_general_used` (a max-flow value) cannot be divided by.
+#[test]
+fn effective_scores_surface_the_magus_minimum_ability_checklist() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut magus = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("magus"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+
+    let checklist = effective_scores_loaded(&magus, &ruleset).magus_minimum_abilities;
+    assert_eq!(
+        checklist.len(),
+        7,
+        "3 required + 4 recommended: {checklist:?}"
+    );
+    assert!(
+        checklist.iter().all(|row| !row.met),
+        "a fresh magus owes all of them: {checklist:?}"
+    );
+
+    // Buying Magic Theory 1 flips exactly one row. Magic Theory, not Parma Magica:
+    // Parma 1 is demanded by BOTH lists (`:2437` and `:2459`), so buying it correctly
+    // flips two, while the recommended Magic Theory threshold is 3 — which makes this
+    // the only clean single-flip probe.
+    magus.ability_scores = vec![arm_rules::AbilityScore {
+        ability: Id::new("ability.magic_theory"),
+        score: 1,
+        specialty: None,
+        parameter: None,
+    }];
+    let checklist = effective_scores_loaded(&magus, &ruleset).magus_minimum_abilities;
+    assert_eq!(checklist.iter().filter(|row| row.met).count(), 1);
+    let met = checklist
+        .iter()
+        .find(|row| row.met)
+        .expect("one row is met now");
+    assert_eq!(met.ability, Id::new("ability.magic_theory"));
+    assert_eq!(met.min_score, 1);
+    assert_eq!(met.score, 1);
+
+    // The magus's general pool is its apprenticeship experience once it is built
+    // through its life stages, and the typed pool otherwise.
+    magus.xp_pool = 240;
+    assert_eq!(
+        effective_scores_loaded(&magus, &ruleset).xp_general_pool,
+        240
+    );
+
+    // A companion is not admitted to the Order, so it gets no checklist at all —
+    // exactly like the magus-only spell-level caps.
+    let companion = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("companion"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+    assert!(
+        effective_scores_loaded(&companion, &ruleset)
+            .magus_minimum_abilities
+            .is_empty()
+    );
+}
+
 /// The XP bar must be able to show an OVERSPENT pool as a negative "Available".
 /// `xp_general_used` cannot express that: it is a max-flow value capped by the pool
 /// itself, so `pool - general_used` never goes below zero. The overspend lives in
