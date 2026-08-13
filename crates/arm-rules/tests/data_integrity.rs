@@ -388,6 +388,69 @@ fn every_shipped_childhood_package_prices_to_45_and_75() {
     }
 }
 
+/// The shipped apprenticeship block carries the rulebook's own numbers.
+///
+/// > The fifteen years of apprenticeship give the character 240 experience points
+/// > … Magi must have the following minimum Abilities: Parma Magica 1, Magic
+/// > Theory 1, Latin 1.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2435 (the years and the
+/// experience), `:2437` (the three minimums), `:2451-2461` (the four recommended
+/// Abilities and their "Total Cost: 90 experience points").
+///
+/// Every figure is a **literal off the rulebook line**, for the same reason the
+/// childhood packages are priced with literals above: the load-time check prices the
+/// recommended list against `recommended_xp` in the same file, so an edit that moved
+/// both together would pass in silence. These literals are the outside witness.
+#[test]
+fn shipped_apprenticeship_carries_the_2435_and_2437_numbers() {
+    let rs = load_full_ruleset();
+    let apprenticeship = rs
+        .life_stages()
+        .and_then(|rules| rules.apprenticeship.as_ref())
+        .expect("the shipped life stages declare an apprenticeship");
+
+    assert_eq!(apprenticeship.years, 15, "\"The fifteen years\" (:2435)");
+    assert_eq!(apprenticeship.xp, 240, "\"240 experience points\" (:2435)");
+
+    // "Parma Magica 1, Magic Theory 1, Latin 1" (:2437). Latin is one instance of
+    // the parameterized dead-language Ability, matched by id (see RULES.md), so no
+    // requirement names a parameter.
+    let stated: Vec<(&str, u8, Option<&str>)> = apprenticeship
+        .minimum_abilities
+        .iter()
+        .map(|r| (r.ability.as_str(), r.min_score, r.parameter.as_deref()))
+        .collect();
+    assert_eq!(
+        stated,
+        vec![
+            ("ability.dead_language", 1, None),
+            ("ability.magic_theory", 1, None),
+            ("ability.parma_magica", 1, None),
+        ]
+    );
+
+    // "Artes Liberales 1 / Latin 4 / Magic Theory 3 / Parma Magica 1" (:2453-2459).
+    let recommended: Vec<(&str, u8, Option<&str>)> = apprenticeship
+        .recommended_abilities
+        .iter()
+        .map(|r| (r.ability.as_str(), r.min_score, r.parameter.as_deref()))
+        .collect();
+    assert_eq!(
+        recommended,
+        vec![
+            ("ability.artes_liberales", 1, None),
+            ("ability.dead_language", 4, None),
+            ("ability.magic_theory", 3, None),
+            ("ability.parma_magica", 1, None),
+        ]
+    );
+    assert_eq!(
+        apprenticeship.recommended_xp, 90,
+        "\"Total Cost: 90 experience points\" (:2461)"
+    );
+}
+
 /// Two known packages load with their entries and provenance intact — never a
 /// package total, which is data (a ruleset may ship any number of packages).
 /// Athletic is the plain shape, Traveling the one that exercises every feature at
