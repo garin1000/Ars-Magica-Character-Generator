@@ -1554,6 +1554,38 @@ impl Ruleset {
                 Some(_) => {}
             }
         }
+
+        // The recommended set states its own total — "Total Cost: 90 experience
+        // points" (Core Rules.md:2461) — so the list must price to it off the
+        // advancement table. The trust gate on transcribed data: a mistyped score
+        // fails the load rather than shipping a recommendation the rulebook never
+        // costed. The *minimum* set carries no total in the source (`:2437`), so it
+        // is deliberately not priced — the engine would only be checking itself.
+        let mut total = Some(0u32);
+        for requirement in &apprenticeship.recommended_abilities {
+            match self.advancement.xp_for_score(requirement.min_score) {
+                // An unpriceable score is reported as itself, and the sum below then
+                // stays silent rather than blaming a total it could not compute.
+                None => {
+                    total = None;
+                    errors.push(format!(
+                        "apprenticeship recommends '{}' at score {}, \
+                         which the advancement table does not price",
+                        requirement.ability, requirement.min_score
+                    ));
+                }
+                Some(xp) => total = total.map(|sum| sum.saturating_add(xp)),
+            }
+        }
+        if let Some(sum) = total
+            && sum != apprenticeship.recommended_xp
+        {
+            errors.push(format!(
+                "apprenticeship recommended abilities price to {sum} experience, \
+                 not the stated {}",
+                apprenticeship.recommended_xp
+            ));
+        }
     }
 
     /// Validates the Sample Childhood packages against the abilities catalogue,
@@ -4183,6 +4215,59 @@ mod tests {
                    "recommended_abilities": []"#,
             )
             .is_ok()
+        );
+    }
+
+    /// The recommended Abilities carry their own total — "Total Cost: 90 experience
+    /// points" (Core Rules.md:2461) — so the list and the total must agree off the
+    /// advancement table. This is the **trust gate on transcribed rulebook data**,
+    /// the same one `validate_childhood_packages` applies to childhood's 45 and 75: a
+    /// mistyped score fails the load instead of shipping a recommendation that costs
+    /// something the rulebook never says.
+    ///
+    /// The *minimum* set is deliberately not priced — `:2437` states no total, so
+    /// such a check could only compare the engine to itself.
+    #[test]
+    fn recommended_apprenticeship_abilities_must_price_to_their_total() {
+        // `ability.awareness 1` costs 5 off the fixture's table, not 80.
+        let err = apprenticeship_ruleset(
+            r#""years": 15, "xp": 240, "recommended_xp": 80,
+               "minimum_abilities": [],
+               "recommended_abilities": [{ "ability": "ability.awareness", "min_score": 1 }]"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("apprenticeship") && msg.contains("80") && msg.contains('5'),
+            "should name the block and both totals: {msg}"
+        );
+
+        // The honest total loads.
+        assert!(
+            apprenticeship_ruleset(
+                r#""years": 15, "xp": 240, "recommended_xp": 5,
+                   "minimum_abilities": [],
+                   "recommended_abilities": [{ "ability": "ability.awareness", "min_score": 1 }]"#,
+            )
+            .is_ok()
+        );
+
+        // A score the table cannot price is reported as itself; the total then stays
+        // silent rather than blaming a sum that could not be computed.
+        let err = apprenticeship_ruleset(
+            r#""years": 15, "xp": 240, "recommended_xp": 5,
+               "minimum_abilities": [],
+               "recommended_abilities": [{ "ability": "ability.awareness", "min_score": 4 }]"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("ability.awareness") && msg.contains('4'),
+            "should name the unpriceable score: {msg}"
+        );
+        assert!(
+            !msg.contains("recommended abilities price to"),
+            "an unpriceable score must not also produce a total mismatch: {msg}"
         );
     }
 
