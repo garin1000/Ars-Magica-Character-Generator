@@ -1031,6 +1031,59 @@ fn native_language_instance(
     })
 }
 
+/// The Abilities and categories the character's selections permit.
+///
+/// A Virtue grants access two ways, and both count: an explicit
+/// [`Effect::AbilityAuthorization`], or any [`Effect::RestrictedAbilityXp`] pool —
+/// experience earmarked for a category is evidence the category is permitted, which
+/// is what makes Warrior (Martial XP) and Arcane Lore (Arcane XP) work without
+/// further data.
+///
+/// It lives here rather than in `validation/` because both readers need it and the
+/// layering only runs one way: `validation` already depends on `effective`
+/// ([`validate_ability_authorization`](crate::validation) calls
+/// [`selections_for_effects`]), so `effective` calling back into `validation` would
+/// invert it. The two readers are that validator, which gates *owning* a gated
+/// Ability, and [`xp_allocation`], which decides which of a magus's blocks may
+/// *fund* one.
+pub(crate) fn ability_authorizations(
+    entity: &Entity,
+    ruleset: &Ruleset,
+) -> (BTreeSet<Id>, BTreeSet<AbilityCategory>) {
+    let mut abilities = BTreeSet::new();
+    let mut categories = BTreeSet::new();
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            match effect {
+                // Experience earmarked for a category or Ability is itself
+                // permission to learn it — otherwise the grant could never be spent.
+                Effect::RestrictedAbilityXp {
+                    abilities: ids,
+                    categories: cats,
+                    ..
+                }
+                | Effect::AbilityAuthorization {
+                    abilities: ids,
+                    categories: cats,
+                } => {
+                    abilities.extend(ids.iter().cloned());
+                    categories.extend(cats.iter().copied());
+                }
+                // A free score in an Ability is permission to have it, since the
+                // Virtue confers the Ability outright.
+                Effect::AbilityScoreGrant { ability, .. } => {
+                    abilities.insert(ability.clone());
+                }
+                _ => {}
+            }
+        }
+    }
+    (abilities, categories)
+}
+
 /// Whether a restricted pool may fund a spend. Ability pools cover only Ability
 /// spends they list (by id or category); Mastery pools cover only Mastery spends.
 /// No pool covers an Art (general pool only), and the two pool kinds never cross.
