@@ -1309,6 +1309,22 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
         later_life_xp: 300,
     };
     let rules = arm_rules::LifeStageRules {
+        apprenticeship: Some(arm_rules::ApprenticeshipRules {
+            minimum_abilities: vec![arm_rules::AbilityRequirement {
+                ability: Id::new("ability.parma_magica"),
+                min_score: 1,
+                parameter: None,
+            }],
+            recommended_abilities: vec![arm_rules::AbilityRequirement {
+                ability: Id::new("ability.dead_language"),
+                min_score: 4,
+                // Populated on purpose, like every other optional field here.
+                parameter: Some("Latin".to_string()),
+            }],
+            recommended_xp: 90,
+            xp: 240,
+            years: 15,
+        }),
         childhood: arm_rules::ChildhoodRules {
             years: 5,
             native_language_ability: Id::new("ability.living_language"),
