@@ -427,17 +427,19 @@ describe('life-stage funding and Sample Childhoods', () => {
     expect(clean(await note.getText()).length).toBeGreaterThan(0);
 
     await $(AGE_INPUT).setValue('25');
+    // Wait on the AGE-dependent figure, never on the pool: apprenticeship is a fixed
+    // block, so a guided magus reads 240 with no age typed at all and waiting for that
+    // would race the engine round-trip. Later life stops where apprenticeship begins,
+    // so a magus of 25 lived five later-life years, worth 75 — not the twenty a
+    // companion of 25 lives.
+    await browser.waitUntil(async () => (await textOf(LATER_LIFE)).includes('75'), {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'a magus of 25 should have lived five later-life years, worth 75',
+    });
+    expect(await textOf(LATER_LIFE)).toContain('5');
     // The 240 points of apprenticeship are the general pool: they alone may buy Arts
     // as well as Abilities (Core Rules.md:2435).
-    await browser.waitUntil(async () => (await textOf(XP_POOL_TOTAL)) === '240', {
-      timeout: STEP_TIMEOUT,
-      timeoutMsg: 'a guided magus should be funded by its apprenticeship',
-    });
+    expect(await textOf(XP_POOL_TOTAL)).toBe('240');
     expect(await textOf(APPRENTICESHIP)).toContain('240');
-    // Later life stops where apprenticeship begins, so a magus of 25 lived five
-    // later-life years, worth 75 — not the twenty a companion of 25 lives.
-    const laterLife = await textOf(LATER_LIFE);
-    expect(laterLife).toContain('5');
-    expect(laterLife).toContain('75');
   });
 });
