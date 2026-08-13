@@ -9,10 +9,11 @@ here and the matching `PLAN.md` box in the same commit as green code.
 type is fixed at creation via `store.createCharacter(typeId)`. 6b1b replaced that
 screen's hardcoded-disabled wizard button with one guided entry per character type.
 
-**Status: 6b1a, 6b1b, 6b2 and 6b3 (both halves, 6b3a + 6b3b) are done.** Next is
-**6b4** — the magus's apprenticeship (240 xp across Arts and Abilities, 120 spell
-levels, the Parma/Magic Theory/Latin minimums), which is also what lifts the engine's
-refusal of a guided magus. The `PLAN.md` 6b3 boxes are ticked as of 6b3b.
+**Status: 6b1a, 6b1b, 6b2, 6b3 (both halves) and 6b4 are done.** Next is **6b5** —
+the post-Gauntlet years (30 points a year, the lab-season deduction, the
+xp↔spell-level split), which is what lets guided funding build a magus older than its
+Gauntlet. The `PLAN.md` 6b3 boxes are ticked as of 6b3b; 6b4 ticks the first half of
+the magus life-stage box, leaving after-apprenticeship accrual to 6b5.
 
 6b2 shipped as five commits: the life-stage rules as data; the missing Poor Major
 Flaw plus the Wealthy/Poor rate effect; `Entity::life_stages` and the derived
@@ -43,11 +44,13 @@ and the surfacing. Two deliberate deviations from the plan above:
   unflagged on purpose: which ones a saga counts is a data decision, and the engine
   enforces the flag it is given rather than guessing.
 
-One thing 6b2b does **not** model, and should be recorded rather than forgotten:
+One thing 6b2b models only **partly**, and should be recorded rather than forgotten:
 `:7151`'s finer "Magi without a specific Virtue may only buy Academic Abilities
-during or after apprenticeship". A bought score carries no per-stage attribution in
-this engine, so the magus exemption is whole-character. 6b4 (apprenticeship) is where
-that could change.
+during or after apprenticeship". A bought score still carries no per-stage attribution,
+so the exemption remains whole-character for a magus on the flat pool. 6b4 covers the
+*guided* magus, where the stage is implicit in the pool: later life is a restricted
+pool that excludes Academic/Arcane/Martial unless a Virtue permits them, while
+apprenticeship's own 240 may buy them freely (`:2435`).
 
 ## Required gate (end of every slice, before any "done" claim)
 
@@ -80,12 +83,12 @@ canonical key/array sorting. German labels must match
 
 | Slice | Contents | Depends on |
 |---|---|---|
-| **6b1a** | Phase vocabulary + issue attribution across all 85 emit sites; Fluent keys; TS mirror. UI unchanged | 6a |
-| **6b1b** | Wizard shell: view, rail, back/forward nav, per-phase gating, existing components mounted as steps | 6b1a |
-| **6b2** | Life-stage XP engine (childhood 75+45, later life 15/20/10, pools into the existing solver) **+ the missing Poor Major Flaw** | 6b1a |
-| **6b3a** | Sample Childhood packages: catalogue + load-time integrity + applicator + IPC command (no UI) | 6b2 |
-| **6b3b** | The "sophisticated" Abilities step: funding-mode toggle, life-stage panel, package picker, XP-bar guided branch, e2e | 6b3a |
-| **6b4** | Magus apprenticeship (240 xp / 120 spell levels / hard minimums) | 6b2 |
+| **6b1a** ✅ | Phase vocabulary + issue attribution across all 85 emit sites; Fluent keys; TS mirror. UI unchanged | 6a |
+| **6b1b** ✅ | Wizard shell: view, rail, back/forward nav, per-phase gating, existing components mounted as steps | 6b1a |
+| **6b2** ✅ | Life-stage XP engine (childhood 75+45, later life 15/20/10, pools into the existing solver) **+ the missing Poor Major Flaw** | 6b1a |
+| **6b3a** ✅ | Sample Childhood packages: catalogue + load-time integrity + applicator + IPC command (no UI) | 6b2 |
+| **6b3b** ✅ | The "sophisticated" Abilities step: funding-mode toggle, life-stage panel, package picker, XP-bar guided branch, e2e | 6b3a |
+| **6b4** ✅ | Magus apprenticeship (240 xp / 120 spell levels / hard minimums) | 6b2 |
 | **6b5** | Post-Gauntlet accrual (30 pts/year, lab-season deduction, xp↔spell-level split) | 6b4 |
 | **6b6** | Aging tables + aging total + outcome resolution | 6b1a |
 | **6b7** | Crisis, Decrepitude levels, per-year write-back | 6b6 |
@@ -518,6 +521,10 @@ player can actually take a package.
   `life_stage_magus_guided_unsupported` (error, `abilities`) whenever a profile with
   `is_magus` carries a plan (`ab529d8`). A magus keeps the directly-entered pool, which is
   fully functional; magus life stages remain 6b4/6b5.
+  **Superseded by 6b4** — the code const, the contract row, the emit site and both
+  Fluent keys are gone. A guided magus is funded by its apprenticeship, its later life
+  stops at the Gauntlet, and the age entered is the Gauntlet age; only the years *after*
+  the Gauntlet are still unmodelled, and 6b5 is where they land.
 - **Three further latent 6b2 defects were fixed in passing**, since 6b3 depends on all
   three being right: the native-language check now matches the childhood's
   `native_language_ability` rather than any parameterized Ability whose parameter happens
@@ -621,6 +628,139 @@ localization only, plus the spec that drives the flow through the real binary.
   no childhood taken — the bought Ability rows stand, as ordinary rows, and the now
   unfunded spend surfaces as `not_enough_xp`. That is the same "deleting the plan prunes
   its contents" rule as `native_language`, not a special case.
+
+---
+
+## Slice 6b4 — The magus's apprenticeship ✅
+
+The period 6b2 left out. Apprenticeship is now the magus's third life-stage block, and
+modelling it is what lifts 6b3a's refusal of a guided magus: the option is live, the
+240 points fund Arts and Abilities alike, later life stops at the Gauntlet, and every
+magus — guided or flat — is held to the minimum Abilities the Order admits.
+
+### What shipped
+
+**Engine (20 commits, `2c07793..3c0eeeb`).** `ApprenticeshipRules` (years, xp, the
+minimum and recommended Ability lists, `recommended_xp`) as an optional third block of
+`rules/core/life_stages.json`, re-priced and ref-resolved at load; `LifeStageBudget`
+gains `apprenticeship_years`/`apprenticeship_xp` and `total()` counts them;
+`later_life_years = age − childhood − apprenticeship` for a magus (`:2214`), so the age
+entered is the Gauntlet age; `life_stage_age_before_gauntlet` (error) for a magus under
+20; the pool restructuring below; `magus_minimum_abilities` as the single reading of
+`:2437`/`:2451-2461`, feeding both `EffectiveScores` and the two new findings
+(`magus_minimum_ability` error, `magus_recommended_ability` warning, phase `abilities`);
+and the deletion of `life_stage_magus_guided_unsupported` — code const, contract row,
+emit site and both Fluent keys.
+
+**Frontend (12 commits, `e1bd0cd..8da4862`).**
+
+- **The types mirror** (`e1bd0cd`). `EffectiveScores.xp_general_pool` and
+  `magus_minimum_abilities`, plus `MagusMinimumAbility`/`AbilityRequirementKind`. The
+  Rust-side drift test now serializes a populated `MagusMinimumAbility` into its
+  `mirrored_keys` pass, so a rename of `met` or `requirement` fails in Rust rather than
+  leaving `types.ts` compiling against a key the engine no longer sends.
+- **The locale strings** (`573c73b`). `life-stage-apprenticeship`,
+  `life-stage-gauntlet-note`, and the six checklist keys, in both locales. German from
+  the rulebook mirror and the tables: **Lehrlingszeit** (`Basisregeln.md:2433`),
+  **Lehrlingsprüfung** (`translation-tables/grundbegriffe.md:57`, `Basisregeln.md:2449`),
+  **Mindestfertigkeiten** (`:2437`), **Empfohlene Mindestfertigkeiten** (`:2451`).
+- **The panel** (`01e2b80`). `LifeStagePanel` drops the disabled attribute, the reason
+  node and `ability-funding-magus-reason` (key and comment blocks with it), and gains a
+  `role="status"` Gauntlet note above the age input it qualifies.
+- **The XP bar** (`c76f166`). Under a plan the pool is the engine's `xp_general_pool`
+  rather than a re-derived later life, and an apprenticeship line sits above the
+  later-life one — gated on `apprenticeship_xp > 0`, so there is zero magus branching in
+  the component and the non-magus bar is untouched.
+- **The checklist** (`abf0080`, `fd09b0b`). `MagusMinimumAbilities.svelte`, mounted by
+  `AbilityTab` as a root-level sibling between the funding panel and `.region-row`.
+- **E2E** (`a175bdc`, `39bbc49`, `8da4862`). `satisfyMagusMinimums()` in
+  `ui/e2e/helpers.js`; the childhood spec's closing test inverted; and the 28th spec,
+  `ui/e2e/specs/magus-apprenticeship.e2e.js`.
+
+### Decisions of record
+
+- **The general pool is `EffectiveScores.xp_general_pool`, not a budget field.** A
+  `general_xp` on `LifeStageBudget` would carry the block's *base* (240) while the solve
+  funds base + `general_xp_bonus` (300 with Skilled Parens), so the bar would show a
+  pool the engine does not use. The budget keeps `apprenticeship_xp` as the block, and
+  the resolved pool crosses the boundary once, engine-authoritative.
+- **Which block is the general pool depends on the character.** For a magus it is
+  apprenticeship — "These experience points can be spent on Arts or Abilities"
+  (`:2435`) — and later life becomes a restricted, Abilities-only pool that excludes
+  Academic/Arcane/Martial unless a Virtue permits them. For everyone else nothing
+  changed: later life is still the general pool and never appears as a restricted row.
+  The companion assertion in `life-stage-childhood.e2e.js` is annotated as the lock on
+  that.
+- **Latin is matched by Ability id.** `ability.dead_language >= 1` satisfies `:2437`, so
+  a magus whose only dead language is Greek passes. This **supersedes** this tracker's
+  own 6b4 sketch (`Slice contents`, "matched on the Latin *instance*"): an instance
+  value is free-text player input with no localization path — a German player types
+  "Latein" — so an instance match would fail for every non-English user, which is worse
+  than under-enforcing. `AbilityRequirement.parameter` is the field a future language
+  registry fills to tighten it, in data rather than code.
+- **The score examined is the BOUGHT one.** `effective_ability_score` returns 2 for a
+  magus with a Puissant Parma Magica and no Parma row at all, and a Virtue's +2 to *use*
+  is not training the Order can examine.
+- **No second spell-level budget.** `:2435`'s "120 levels of spells" is already the
+  magus profile's `spell_levels` in `rules/core/character_types.json`, with
+  `spell_levels_base` its single selector. The two numbers of one sentence live in two
+  files on purpose; `ApprenticeshipRules` carries only the experience.
+- **One age finding, not two.** A magus under 20 gets `life_stage_age_before_gauntlet`
+  alone — `life_stage_age_before_childhood` would pile a second, less specific sentence
+  onto the same field.
+- **No `apprenticeship_start_age`.** Apprenticeship is fifteen *fixed* years ending at
+  the age entered, so a start age is derivable and stores nothing new. It only becomes a
+  question in 6b5, where the years after the Gauntlet start being counted.
+- **Guided funding builds a magus AT its Gauntlet — the limit 6b5 lifts.** An
+  experienced magus's Arts come from the post-Gauntlet 30 points a year (`:2216`,
+  `:2471`), which is not modelled, so entering 60 would silently earn a magus of 60 the
+  same 240. The `life-stage-gauntlet-note` says both halves in words: what the age means,
+  and that an older magus should use the flat experience pool for now.
+- **The checklist resolves the instance from the entity.** `MagusMinimumAbility.parameter`
+  is `None` throughout the shipped data (see above), so a dead-language row would read
+  only "(Language) (Dead Language)". The component fills the token from the character's
+  own highest-scoring matching row — the very row the engine's `score` came from — so it
+  reads "Latin (Dead Language)". Display only; nothing is re-derived.
+- **The recommended package's 90 is an argument, not a literal.** `magus-recommended-hint`
+  takes `{ $xp }` from `life_stages.apprenticeship.recommended_xp`, so the rules number
+  stays in the rules file rather than being transcribed into two `.ftl` files.
+- **Each checklist row is a whole sentence per status.** `magus-minimum-met` /
+  `magus-minimum-unmet` rather than one template plus a bolted-on "met"/"unmet" word:
+  natural German (`uebersetzungsregeln.md`) and a status no screen reader can miss.
+  `data-met` only mirrors it, and the summary is the single `role="status"` region —
+  a live region per row would announce seven sentences on every keystroke.
+
+### One finding the e2e spec pinned
+
+- **`.region-row` collapsed to nothing under the checklist.** It is `flex: 1` with
+  `min-height: 0`, so it gives up all of its height to the auto-height siblings above it:
+  on the magus's Abilities step (funding panel 112px + checklist 224px) it measured **0**
+  in an 800×1100 window, and the Available/Selected lists were not merely cramped but
+  gone — their spinners reported "element not interactable" to WebDriver. Fixed with a
+  `min-height: 12rem` floor (`12ba515`), which turns the collapse into a scroll of the
+  enclosing `.tab-content` (`overflow-y: auto` for exactly this reason). The unit test's
+  depth assertion could not have caught it: the checklist *is* a correct sibling, and the
+  fault was the height budget, not the DOM shape.
+
+Two smaller corrections, both in the specs rather than the app: a guided magus reads 240
+**before any age is typed** (apprenticeship is a fixed block), so a wait on the pool
+total races the round-trip — wait on later life's own figure; and the save/reload
+round-trip has to come **after** Finish, because loading a file lands in the editor and
+there is no wizard left to advance.
+
+### Two deliberate non-changes
+
+- **The Markdown export labels the later-life pool by its eligibility list.**
+  `crates/arm-rules/src/export.rs:704-743` renders `xp.general_pool` — so a guided magus's
+  sheet correctly reads `used / 240` — but labels every restricted pool by what it may
+  buy, never by where it came from, so later life prints as a long category enumeration.
+  Numbers right, label poor. Labelling by origin (the XP bar already does it, through
+  `xp-pool-<block>`) is a **6b8** follow-up.
+- **Flat mode ignores `general_xp_bonus`.** Without a plan the bar's pool is
+  `entity.xp_pool`, so a flat magus with Skilled Parens spends the extra 60 the engine
+  grants and shows a negative Available with no error. Pre-existing (the bonus predates
+  this slice) and deliberately not folded in here, because the flat pool is the number
+  the player typed and the e2e suite drives exact arithmetic against it — also **6b8**.
 
 ---
 
