@@ -252,17 +252,27 @@ Markdown export added in M5.6.
   Area Lores cover, which second language it teaches), previews the result, and
   refuses a form the engine rejects — pointing at the field that is wrong. Applying
   raises scores and never lowers them, so taking a package twice changes nothing, and
-  the Abilities it writes stay ordinary editable rows afterwards. A magus keeps the
-  flat pool for now: its apprenticeship years are not modelled yet.
+  the Abilities it writes stay ordinary editable rows afterwards.
+
+- **The magus's apprenticeship.** A magus can be built through its life stages too, at
+  the moment of its Gauntlet: its fifteen apprenticeship years earn the 240 experience
+  the rules grant, and those alone may buy Arts as well as Abilities — so they are the
+  pool both the Abilities and the Arts step spend from. The age asked for is therefore
+  the age at the Gauntlet (younger than twenty is refused), and the years before
+  apprenticeship earn their own Abilities-only experience, which may not reach Academic,
+  Arcane or Martial Abilities without a Virtue that allows it. Every magus, however it is
+  funded, is held to the minimum Abilities the Order admits — Parma Magica, Magic Theory
+  and a dead language — with the rulebook's recommended scores shown beside them as
+  advice: a checklist that says of each, in words, whether it is met.
 
 ### Next
 
-The magus's own life stages: **apprenticeship** (240 experience across Arts and
-Abilities, 120 levels of spells, the minimum Parma Magica / Magic Theory / Latin the
-Order admits) and the post-Gauntlet years, which is also what opens the guided flow to
-magi. After that: aging for characters over 35 (die results typed by the player, so
-the engine stays deterministic). See [PLAN.md](PLAN.md) for the milestone breakdown
-and [M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the slice-by-slice plan.
+The magus's years **after** the Gauntlet: 30 points a year across Arts, Abilities and
+spells, less the seasons spent in the laboratory — which is also what lets the guided
+flow build a magus older than its Gauntlet (until then an experienced magus uses the
+flat experience pool). After that: aging for characters over 35 (die results typed by
+the player, so the engine stays deterministic). See [PLAN.md](PLAN.md) for the milestone
+breakdown and [M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the slice-by-slice plan.
 
 ## Getting started
 
