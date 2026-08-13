@@ -1360,7 +1360,7 @@ fn mirrored_keys(value: &serde_json::Value, into: &mut std::collections::BTreeSe
 /// otherwise drop `slot`, `native`, `childhood_package` and `native_language` from
 /// the serialization and hide them from the check.
 ///
-/// **Scope: these five types plus the two `Ruleset`/`Entity` member names.** It is
+/// **Scope: these six types plus the two `Ruleset`/`Entity` member names.** It is
 /// deliberately NOT an assertion over `Ruleset`'s whole key set — `types.ts` omits
 /// `age_ability_caps`, `categories_requiring_virtue` and `scholarly_language`, so
 /// widening it that far could only fail. Mirroring those is separate work, not a
@@ -1406,6 +1406,20 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
         },
         later_life: arm_rules::LaterLifeRules { xp_per_year: 15 },
     };
+    // One row of the magus checklist, which reaches the frontend on
+    // `EffectiveScores.magus_minimum_abilities` — the payload the Abilities view
+    // renders. Its `met`/`requirement` are the two fields nothing else carries, so
+    // without this row a rename of either would leave `types.ts` compiling and the
+    // checklist silently reading `undefined`.
+    let minimum = arm_rules::MagusMinimumAbility {
+        ability: Id::new("ability.dead_language"),
+        // Populated on purpose, like every other optional field here.
+        parameter: Some("Latin".to_string()),
+        min_score: 1,
+        score: 0,
+        met: false,
+        requirement: arm_rules::AbilityRequirementKind::Required,
+    };
     let package = arm_rules::ChildhoodPackage {
         id: Id::new("childhood.traveling"),
         entries: vec![arm_rules::ChildhoodEntry {
@@ -1426,13 +1440,14 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
         serde_json::to_value(budget).unwrap(),
         serde_json::to_value(&rules).unwrap(),
         serde_json::to_value(&package).unwrap(),
+        serde_json::to_value(&minimum).unwrap(),
     ] {
         mirrored_keys(&payload, &mut keys);
     }
     // A floor, so a collector that silently gathered nothing cannot look green.
     assert!(
-        keys.len() >= 12,
-        "expected the life-stage payloads to carry at least 12 field names, got {keys:?}"
+        keys.len() >= 30,
+        "expected the life-stage payloads to carry at least 30 field names, got {keys:?}"
     );
 
     let types = fs::read_to_string(repo_root().join("ui/src/lib/types.ts")).unwrap();
