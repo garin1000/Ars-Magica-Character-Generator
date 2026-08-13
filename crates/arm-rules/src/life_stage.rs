@@ -128,6 +128,114 @@ pub struct LaterLifeRules {
     pub xp_per_year: u32,
 }
 
+/// Which sort of demand an [`AbilityRequirement`] is: one the Order enforces, or one
+/// the rulebook merely recommends.
+///
+/// An enum rather than a bool, so a third kind is a compile error until every reader
+/// has decided what to do with it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AbilityRequirementKind {
+    /// A minimum without which the character "would not be admitted to the Order"
+    /// (Core Rules.md:2437) — an error.
+    Required,
+    /// One of the `#### Hermetic Magi Recommended Minimum Abilities` (`:2451-2461`) —
+    /// advice, so a warning.
+    Recommended,
+}
+
+/// One row of a magus's Hermetic-minimums checklist: what is demanded, what the
+/// character bought, and whether that satisfies it.
+///
+/// Derived, never stored. Produced by [`magus_minimum_abilities`], which is the
+/// single reading of `:2437`/`:2451-2461` — both the validator and the effective
+/// scores consume this, so the finding and the display cannot disagree.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MagusMinimumAbility {
+    /// The Ability demanded.
+    pub ability: Id,
+    /// The instance demanded, when the requirement names one (`None` throughout the
+    /// shipped data — see [`AbilityRequirement::parameter`]).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parameter: Option<String>,
+    /// The score demanded.
+    pub min_score: u8,
+    /// The highest score the character **bought** in a matching instance.
+    pub score: u8,
+    /// Whether `score` reaches `min_score`.
+    pub met: bool,
+    /// Whether falling short is an error or merely advice.
+    pub requirement: AbilityRequirementKind,
+}
+
+/// The Hermetic minimum-Ability checklist for this character: the minimums of
+/// `:2437` first, then the recommendations of `:2451-2461`, each in the order the
+/// rules data declares them.
+///
+/// > Magi must have the following minimum Abilities: Parma Magica 1, Magic Theory 1,
+/// > Latin 1. Characters with lower scores would not be admitted to the Order.
+///
+/// **The single reading of those two passages**, consumed by both
+/// `validate_magus_minimum_abilities` and `EffectiveScores`, so the error and the
+/// checklist a UI shows can never drift apart.
+///
+/// Empty for anyone who is not a magus — `:2437` is about admission to the Order —
+/// and for a ruleset shipping no apprenticeship block, which states no minimums.
+/// Independent of the funding mode: `:2437` is unconditional, so a magus built from a
+/// flat experience pool is held to it exactly as a guided one is.
+///
+/// `score` is the highest **bought** score across the matching instances: a Virtue's
+/// +2 to *use* (Puissant) is not training the Order can examine, and
+/// [`crate::effective::effective_ability_score`] would report 2 for a magus with no
+/// Parma row at all.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2437, :2451-2461.
+pub fn magus_minimum_abilities(entity: &Entity, ruleset: &Ruleset) -> Vec<MagusMinimumAbility> {
+    let Some(apprenticeship) = ruleset
+        .life_stages()
+        .and_then(|rules| rules.apprenticeship_of(entity, ruleset))
+    else {
+        return Vec::new();
+    };
+    let kinds = [
+        (
+            &apprenticeship.minimum_abilities,
+            AbilityRequirementKind::Required,
+        ),
+        (
+            &apprenticeship.recommended_abilities,
+            AbilityRequirementKind::Recommended,
+        ),
+    ];
+    let mut rows = Vec::new();
+    for (requirements, kind) in kinds {
+        for requirement in requirements {
+            let score = entity
+                .ability_scores
+                .iter()
+                .filter(|bought| {
+                    bought.ability == requirement.ability
+                        && requirement
+                            .parameter
+                            .as_ref()
+                            .is_none_or(|wanted| bought.parameter.as_ref() == Some(wanted))
+                })
+                .map(|bought| bought.score)
+                .max()
+                .unwrap_or(0);
+            rows.push(MagusMinimumAbility {
+                ability: requirement.ability.clone(),
+                parameter: requirement.parameter.clone(),
+                min_score: requirement.min_score,
+                score,
+                met: score >= requirement.min_score,
+                requirement: kind,
+            });
+        }
+    }
+    rows
+}
+
 /// A character's life-stage *choices* — never its resolved numbers.
 ///
 /// Saves store choices, not derived values, so this records only what the player
@@ -673,6 +781,210 @@ mod tests {
         assert_eq!(budget.later_life_years, 0);
         assert_eq!(budget.later_life_xp, 0);
         assert_eq!(budget.total(), 360);
+    }
+
+    // --- the Hermetic minimum Abilities (M6/6b4) -----------------------------
+
+    /// A ruleset whose life stages carry the shipped apprenticeship requirements, so
+    /// the checklist can be read off a real ruleset rather than a bare
+    /// [`LifeStageRules`].
+    fn minimum_ruleset() -> Ruleset {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] },
+          { "id": "virtue.puissant_ability", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
+            "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }] }
+        ]"#;
+        let types = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"], "creation_phases": [] },
+          { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"], "is_magus": true, "creation_phases": [] }
+        ]"#;
+        let abilities = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 5 }, { "score": 3, "total_xp": 30 },
+            { "score": 4, "total_xp": 50 }
+          ],
+          "abilities": [
+            { "id": "ability.artes_liberales", "category": "academic" },
+            { "id": "ability.athletics", "category": "general" },
+            { "id": "ability.dead_language", "category": "academic", "parameter": "language" },
+            { "id": "ability.living_language", "category": "general", "parameter": "language" },
+            { "id": "ability.magic_theory", "category": "arcane" },
+            { "id": "ability.parma_magica", "category": "arcane" },
+            { "id": "ability.penetration", "category": "arcane" },
+            { "id": "ability.philosophiae", "category": "academic" },
+            { "id": "ability.swim", "category": "general" }
+          ]
+        }"#;
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: types,
+            abilities: Some(abilities),
+            life_stages: Some(SHIPPED_WITH_APPRENTICESHIP),
+            ..crate::ruleset::RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    fn magus(scores: Vec<(&str, Option<&str>, u8)>) -> Entity {
+        let mut entity = companion(vec![]);
+        entity.type_id = Id::new("magus");
+        entity.ability_scores = scores
+            .into_iter()
+            .map(|(ability, parameter, score)| crate::types::AbilityScore {
+                ability: Id::new(ability),
+                parameter: parameter.map(str::to_string),
+                score,
+                specialty: None,
+            })
+            .collect();
+        entity
+    }
+
+    /// The one reading of `:2437` and `:2451-2461`, as a checklist: every requirement
+    /// in order, the score the character actually bought, and whether it is met.
+    ///
+    /// Both the validator and the effective-scores payload consume this, so they
+    /// cannot disagree about what the Order demands.
+    #[test]
+    fn the_magus_minimum_checklist_reports_met_and_unmet() {
+        let rs = minimum_ruleset();
+
+        // A magus with nothing bought: seven rows, all unmet, minimums first.
+        let checklist = magus_minimum_abilities(&magus(vec![]), &rs);
+        let rows: Vec<(&str, u8, u8, bool, AbilityRequirementKind)> = checklist
+            .iter()
+            .map(|row| {
+                (
+                    row.ability.as_str(),
+                    row.min_score,
+                    row.score,
+                    row.met,
+                    row.requirement,
+                )
+            })
+            .collect();
+        use AbilityRequirementKind::{Recommended, Required};
+        assert_eq!(
+            rows,
+            vec![
+                ("ability.dead_language", 1, 0, false, Required),
+                ("ability.magic_theory", 1, 0, false, Required),
+                ("ability.parma_magica", 1, 0, false, Required),
+                ("ability.artes_liberales", 1, 0, false, Recommended),
+                ("ability.dead_language", 4, 0, false, Recommended),
+                ("ability.magic_theory", 3, 0, false, Recommended),
+                ("ability.parma_magica", 1, 0, false, Recommended),
+            ]
+        );
+
+        // The Darius package: Latin 4, Magic Theory 4, Artes Liberales 3, Parma 1
+        // (`:2441`, `:2449`) meets every row.
+        let darius = magus(vec![
+            ("ability.dead_language", Some("Latin"), 4),
+            ("ability.magic_theory", None, 4),
+            ("ability.artes_liberales", None, 3),
+            ("ability.parma_magica", None, 1),
+        ]);
+        assert!(
+            magus_minimum_abilities(&darius, &rs)
+                .iter()
+                .all(|row| row.met),
+            "{:?}",
+            magus_minimum_abilities(&darius, &rs)
+        );
+
+        // The score reported is the highest bought instance of the id, so a magus
+        // with Greek 1 and Latin 4 is credited with 4.
+        let polyglot = magus(vec![
+            ("ability.dead_language", Some("Greek"), 1),
+            ("ability.dead_language", Some("Latin"), 4),
+        ]);
+        let rows = magus_minimum_abilities(&polyglot, &rs);
+        assert_eq!(
+            rows.iter()
+                .filter(|row| row.ability == Id::new("ability.dead_language"))
+                .map(|row| (row.min_score, row.score, row.met))
+                .collect::<Vec<_>>(),
+            vec![(1, 4, true), (4, 4, true)]
+        );
+
+        // Nothing is demanded of a companion — `:2437` is about admission to the
+        // Order — and nothing at all when the ruleset ships no apprenticeship block.
+        assert!(magus_minimum_abilities(&companion(vec![]), &rs).is_empty());
+        assert!(magus_minimum_abilities(&magus(vec![]), &rate_ruleset()).is_empty());
+    }
+
+    /// **Documented approximation.** "Latin 1" is matched by Ability id alone, so a
+    /// magus whose only dead language is Greek satisfies it. The rules model Latin as
+    /// one *value* of the parameterized dead-language Ability, and an instance value
+    /// is free-text player input with no localization path — a German player types
+    /// "Latein" — so an instance match would fail for every non-English user, which is
+    /// worse than under-enforcing. `AbilityRequirement::parameter` is the tightening a
+    /// future language registry would fill in.
+    ///
+    /// Asserted so this can never become accidental. See `RULES.md`.
+    #[test]
+    fn latin_is_matched_by_ability_id_not_by_instance() {
+        let rs = minimum_ruleset();
+        let greek = magus(vec![("ability.dead_language", Some("Greek"), 1)]);
+        let row = magus_minimum_abilities(&greek, &rs)
+            .into_iter()
+            .find(|row| {
+                row.ability == Id::new("ability.dead_language")
+                    && row.requirement == AbilityRequirementKind::Required
+            })
+            .expect("the Latin minimum is on the checklist");
+        assert!(row.met, "any dead language satisfies it: {row:?}");
+        assert!(
+            row.parameter.is_none(),
+            "the shipped requirement names no instance: {row:?}"
+        );
+    }
+
+    /// The score tested is the **bought** one. "Magi must have the following minimum
+    /// Abilities … Characters with lower scores would not be admitted to the Order"
+    /// (`:2437`) cannot mean the effective score: `effective_ability_score` returns 2
+    /// for a magus with a Puissant Parma Magica and no Parma row at all, and a
+    /// Virtue's +2 to *use* is not training the Order can examine.
+    #[test]
+    fn puissant_parma_magica_does_not_admit_a_magus_to_the_order() {
+        let rs = minimum_ruleset();
+        let mut entity = magus(vec![]);
+        entity.selections = vec![Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            std::collections::BTreeMap::from([(
+                "ability".to_string(),
+                Id::new("ability.parma_magica"),
+            )]),
+        )];
+
+        // The effective score is 2 …
+        assert_eq!(
+            crate::effective::effective_ability_score(
+                &entity,
+                &rs,
+                &Id::new("ability.parma_magica"),
+                None
+            ),
+            2
+        );
+        // … and the Order is unimpressed.
+        let row = magus_minimum_abilities(&entity, &rs)
+            .into_iter()
+            .find(|row| {
+                row.ability == Id::new("ability.parma_magica")
+                    && row.requirement == AbilityRequirementKind::Required
+            })
+            .expect("the Parma minimum is on the checklist");
+        assert_eq!(row.score, 0);
+        assert!(!row.met, "{row:?}");
     }
 
     /// The chosen Sample Childhood package is recorded on the character, so it
