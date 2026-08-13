@@ -4760,7 +4760,11 @@ mod tests {
             "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }] },
           { "id": "virtue.skilled_parens", "kind": "virtue", "classification": "creation_effect",
             "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
-            "effects": [{ "type": "general_xp", "amount": 60 }] }
+            "effects": [{ "type": "general_xp", "amount": 60 }] },
+          { "id": "flaw.covenant_upbringing", "kind": "flaw", "classification": "creation_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "ability_authorization",
+                          "abilities": ["ability.dead_language"] }] }
         ]"#;
         let types = r#"[
           { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -5055,6 +5059,49 @@ mod tests {
 
         // A companion has no such pool at all: its later life IS the general pool.
         assert!(later_life_pool(&xp_allocation(&planned_companion(), &rs)).is_none());
+    }
+
+    /// …unless a Virtue says otherwise: "if they have a Virtue which allows them to do
+    /// so" (Core Rules.md:2435). Covenant Upbringing authorizes the dead language
+    /// ("You may take Latin at character creation", `:5867`), so those points may come
+    /// from before apprenticeship after all.
+    ///
+    /// A **regression lock**: the pool is built from the same authorizations the
+    /// ownership check reads, so this already holds — which is exactly the property
+    /// worth pinning, since the two readings may never drift apart.
+    #[test]
+    fn an_authorizing_virtue_lets_pre_apprenticeship_experience_buy_a_gated_ability() {
+        let rs = life_stage_ruleset();
+        let mut magus = planned_magus();
+        magus.ability_scores.push(AbilityScore {
+            ability: Id::new("ability.dead_language"),
+            parameter: Some("Latin".into()),
+            score: 3,
+            specialty: None,
+        });
+
+        // Without the Flaw, the 30 points must come from apprenticeship.
+        let allocation = xp_allocation(&magus, &rs);
+        assert_eq!(later_life_pool(&allocation).expect("a pool").used, 0);
+        assert_eq!(allocation.general_used, 30);
+
+        // With it, later life may fund them.
+        magus.selections = vec![Selection::new(Id::new("flaw.covenant_upbringing"))];
+        let allocation = xp_allocation(&magus, &rs);
+        assert_eq!(later_life_pool(&allocation).expect("a pool").used, 30);
+        assert_eq!(allocation.general_used, 0);
+
+        // It authorizes that Ability alone: Artes Liberales stays out.
+        magus.ability_scores.pop();
+        magus.ability_scores.push(AbilityScore {
+            ability: Id::new("ability.artes_liberales"),
+            parameter: None,
+            score: 3,
+            specialty: None,
+        });
+        let allocation = xp_allocation(&magus, &rs);
+        assert_eq!(later_life_pool(&allocation).expect("a pool").used, 0);
+        assert_eq!(allocation.general_used, 30);
     }
 
     /// Later life is a life-stage block like the childhood ones, because for a magus
