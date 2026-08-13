@@ -87,10 +87,16 @@ function setEffective(
   restricted: EffectiveScores['restricted_xp_pools'],
   lifeStage: LifeStageBudget | null = null,
 ): void {
-  // The general pool is later life's experience for a life-stage character and the
-  // typed `xp_pool` for a directly-entered one — exactly the engine's `base_general`
-  // (`effective.rs`), so a guided-mode test cannot assert against an impossible flow.
-  const pool = lifeStage ? lifeStage.later_life_xp : (store.entity.xp_pool ?? 0);
+  // The general pool is exactly the engine's `base_general` (`effective.rs`): for a
+  // life-stage character the block that may fund anything — APPRENTICESHIP for a
+  // magus, whose 240 points buy Arts as well as Abilities (Core Rules.md:2435), and
+  // later life for anyone who serves none — and the typed `xp_pool` for a
+  // directly-entered one. A non-zero apprenticeship block is what makes the character
+  // a magus, so it is the discriminator here too. The bar reads the pool off
+  // `xp_general_pool` rather than re-deriving it, so this must set that field.
+  const pool = lifeStage
+    ? lifeStage.apprenticeship_xp || lifeStage.later_life_xp
+    : (store.entity.xp_pool ?? 0);
   const restrictedUsed = restricted.reduce((sum, p) => sum + p.used, 0);
   // Restricted pools are drained first (the engine's two-phase flow), so the
   // general pool funds the remainder — up to its size, never beyond.
@@ -102,6 +108,7 @@ function setEffective(
     characteristic_floors: {},
     xp_total_demand: totalDemand,
     xp_general_used: generalUsed,
+    xp_general_pool: pool,
     xp_max_flow: restrictedUsed + generalUsed,
     restricted_xp_pools: restricted,
     life_stage: lifeStage,
@@ -123,6 +130,33 @@ function budget(years: number, rate: number): LifeStageBudget {
     apprenticeship_years: 0,
     apprenticeship_xp: 0,
   };
+}
+
+/**
+ * A life-stage budget for a guided MAGUS: fifteen years of apprenticeship earning the
+ * 240 points that "can be spent on Arts or Abilities"
+ * (Ars Magica - Definitive Edition (Core Rules).md:2435), which makes apprenticeship
+ * the general pool — and a later life that stops at the Gauntlet (five years for a
+ * magus of 25), which is a restricted, Abilities-only pool instead.
+ */
+function magusBudget(years = 5, rate = 15): LifeStageBudget {
+  return {
+    ...budget(years, rate),
+    apprenticeship_years: 15,
+    apprenticeship_xp: 240,
+  };
+}
+
+/** The later-life block as the engine emits it for a magus: restricted, Abilities only. */
+function laterLifePool(amount: number, used = 0): EffectiveScores['restricted_xp_pools'] {
+  return [
+    {
+      amount,
+      used,
+      categories: ['general', 'academic'],
+      origin: { kind: 'life_stage', block: 'later_life' },
+    },
+  ];
 }
 
 /** Put the entity in guided funding: a plan present IS the switch. */
@@ -361,6 +395,71 @@ describe('XpBar under a life-stage plan (slice 6b3b)', () => {
   });
 });
 
+describe('XpBar under a guided magus plan (slice 6b4)', () => {
+  it('shows the apprenticeship block as the pool the spend is charged against', () => {
+    resetEntity(0);
+    installPlan();
+    setEffective(0, laterLifePool(75), magusBudget());
+    const body = html();
+    // Apprenticeship is the general pool for a magus — not a grand total of 240 + 75 +
+    // childhood, or `used / total` and Available would stop closing.
+    expect(element(body, 'xp-pool-total').text).toBe('240');
+    expect(element(body, 'xp-available').text).toContain('240');
+  });
+
+  it('names the apprenticeship block with its years and its experience', () => {
+    resetEntity(0);
+    installPlan();
+    setEffective(0, laterLifePool(75), magusBudget());
+    const { text } = element(html(), 'life-stage-apprenticeship');
+    expect(text).toContain('15');
+    expect(text).toContain('240');
+    expect(text).toContain('Apprenticeship');
+    expect(text).not.toContain('−');
+  });
+
+  it('omits the apprenticeship line for a character who serves none', () => {
+    resetEntity(0);
+    installPlan();
+    setEffective(0, [], budget(10, 15));
+    const body = html();
+    // Zero magus branching in the component: the line is gated on the block itself, so
+    // the guided companion bar is exactly what 6b3b shipped.
+    expect(has(body, 'life-stage-apprenticeship')).toBe(false);
+    expect(element(body, 'xp-pool-total').text).toBe('150');
+    expect(() => element(body, 'life-stage-later-life')).not.toThrow();
+  });
+
+  it('keeps the later-life row beside it, labelled and never as its slug', () => {
+    resetEntity(0);
+    installPlan();
+    setEffective(20, laterLifePool(75, 20), magusBudget());
+    const body = html();
+    // The restricted row shows the spend; the `life-stage-later-life` line above says
+    // WHY (5 × 15 = 75). Both name it in words.
+    // Fluent isolates each interpolated value, so used and amount are asserted apart.
+    const later = element(body, 'restricted-xp-0');
+    expect(later.text).toContain('20');
+    expect(later.text).toContain('75');
+    expect(later.text).toContain('Later life');
+    expect(later.text).toContain('Abilities only');
+    expect(later.text).not.toContain('later_life');
+    expect(element(body, 'life-stage-later-life').text).toContain('75');
+  });
+
+  it('gives the Arts instance the identical guided shape', () => {
+    resetEntity(0);
+    installPlan();
+    setEffective(0, laterLifePool(75), magusBudget());
+    const body = html('art-');
+    // Apprenticeship experience buys Arts as well (`:2435`), so the Arts bar shows the
+    // same 240 — the two instances differ only in their testid prefix.
+    expect(element(body, 'art-xp-pool-total').text).toBe('240');
+    expect(element(body, 'art-life-stage-apprenticeship').text).toContain('240');
+    expect(element(body, 'art-restricted-xp-0').text).toContain('Later life');
+  });
+});
+
 describe('XpBar flat mode is untouched by the guided branch (slice 6b3b)', () => {
   it('keeps the editable pool input and adds no life-stage node without a plan', () => {
     resetEntity(200);
@@ -371,6 +470,21 @@ describe('XpBar flat mode is untouched by the guided branch (slice 6b3b)', () =>
     expect(has(body, 'xp-pool-total')).toBe(false);
     expect(has(body, 'xp-pool-clear')).toBe(false);
     expect(has(body, 'life-stage-later-life')).toBe(false);
+    expect(has(body, 'life-stage-apprenticeship')).toBe(false);
     expect(has(body, 'life-stage-no-budget')).toBe(false);
+  });
+
+  it('charges the typed pool, not xp_general_pool, when the two differ', () => {
+    resetEntity(200);
+    setEffective(0, []);
+    // In flat mode the editable total IS `entity.xp_pool`: the engine's own
+    // `base_general` there. Reading `xp_general_pool` unconditionally would be the
+    // tempting over-simplification — and would silently shift the figure whenever a
+    // Skilled Parens bonus is folded in, breaking the exact arithmetic
+    // `arts.e2e.js` drives against this very input.
+    store.effective!.xp_general_pool = 999;
+    const body = html();
+    expect(element(body, 'xp-pool').open).toMatch(/value="200"/);
+    expect(element(body, 'xp-available').text).toContain('200');
   });
 });

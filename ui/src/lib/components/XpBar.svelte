@@ -21,9 +21,11 @@
   const lifeStage = $derived(store.effective?.life_stage ?? null);
   // What the player typed, which under a plan should be nothing at all.
   const typedPool = $derived(store.entity.xp_pool ?? 0);
-  // The general pool: later life's experience under a plan, the typed total
-  // otherwise — the engine's own `base_general`.
-  const pool = $derived(guided ? (lifeStage?.later_life_xp ?? 0) : typedPool);
+  // The general pool the `used` figure is charged against. Under a plan it is the
+  // engine's own resolved pool — whichever block may fund anything (apprenticeship for
+  // a magus, later life for anyone else) plus the Skilled/Weak Parens adjustment, which
+  // no stored field holds — and the typed total otherwise.
+  const pool = $derived(guided ? (store.effective?.xp_general_pool ?? 0) : typedPool);
   const clearHintId = $derived(`${prefix}xp-pool-clear-hint`);
   // The engine's authoritative slice of the spend FUNDED from the general pool.
   // `restricted_xp_pools` cover the rest and are reported separately. The local
@@ -88,6 +90,18 @@
   </span>
   {#if guided}
     {#if lifeStage}
+      {#if lifeStage.apprenticeship_xp > 0}
+        <!-- The block behind the pool total, for whoever serves an apprenticeship: its
+             fifteen years and their 240 points. Gated on the block, not on the type, so
+             the component needs no notion of a magus and the bar of a character who
+             serves none is unchanged. -->
+        <span class="xp-life-stage" data-testid="{prefix}life-stage-apprenticeship">
+          {store.t('life-stage-apprenticeship', {
+            years: String(lifeStage.apprenticeship_years),
+            xp: String(lifeStage.apprenticeship_xp),
+          })}
+        </span>
+      {/if}
       <span class="xp-life-stage" data-testid="{prefix}life-stage-later-life">
         {store.t('life-stage-later-life', {
           years: String(lifeStage.later_life_years),
