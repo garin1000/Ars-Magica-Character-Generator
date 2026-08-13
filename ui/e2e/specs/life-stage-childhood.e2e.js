@@ -7,8 +7,9 @@
 // AbilityTab the editor's Abilities tab does, so one narrative covers both
 // surfaces: switch the funding source, type an age and a native language, take
 // the Traveling Childhood, and watch the two childhood pools fill. It closes on a
-// save/load round-trip (guided funding must survive a reload) and on a magus,
-// where the guided mode is refused with a reason.
+// save/load round-trip (guided funding must survive a reload) and on a magus, which
+// slice 6b4 admits to the guided mode as well — built at its Gauntlet, funded by its
+// apprenticeship.
 //
 // NOTE: requires the production binary; the display comes from your desktop
 // session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
@@ -30,6 +31,8 @@ const NATIVE_LANGUAGE = '[data-testid="native-language-input"]';
 const XP_POOL_INPUT = '[data-testid="xp-pool"]';
 const XP_POOL_TOTAL = '[data-testid="xp-pool-total"]';
 const LATER_LIFE = '[data-testid="life-stage-later-life"]';
+const APPRENTICESHIP = '[data-testid="life-stage-apprenticeship"]';
+const GAUNTLET_NOTE = '[data-testid="life-stage-gauntlet-note"]';
 const RESTRICTED_0 = '[data-testid="restricted-xp-0"]';
 const RESTRICTED_1 = '[data-testid="restricted-xp-1"]';
 const PACKAGE_SELECT = '[data-testid="childhood-package-select"]';
@@ -115,7 +118,7 @@ describe('life-stage funding and Sample Childhoods', () => {
     expect(await $(XP_POOL_INPUT).getTagName()).toBe('input');
     expect(await $(XP_POOL_TOTAL).isExisting()).toBe(false);
     expect(await $(LATER_LIFE).isExisting()).toBe(false);
-    // A companion may be built either way, so the guided option is live.
+    // Every character type may be built either way, so the guided option is live.
     expect(await $(FUNDING_LIFE_STAGES).isEnabled()).toBe(true);
   });
 
@@ -155,6 +158,11 @@ describe('life-stage funding and Sample Childhoods', () => {
     expect(spread).toContain('Early childhood');
     // Localized, never the raw block slug.
     expect(spread).not.toContain('childhood_spread');
+    // REGRESSION LOCK for the 6b4 pool restructuring: a magus's later life became a
+    // restricted, Abilities-only pool of its own (its general pool is apprenticeship
+    // instead), and that must NOT have happened to anyone else. For a companion later
+    // life IS the general pool, so with the native language still unnamed the spread is
+    // the only restricted row on screen and there is no second one.
     expect(await $(RESTRICTED_1).isExisting()).toBe(false);
   });
 
@@ -397,22 +405,39 @@ describe('life-stage funding and Sample Childhoods', () => {
     expect(await countOf('[data-testid^="childhood-slot-"][data-testid$="-reason"]')).toBe(0);
   });
 
-  it('refuses guided funding for a magus, with the reason reachable', async () => {
+  it('offers guided funding to a magus, funded by its apprenticeship', async () => {
     await startWizard('magus');
     await advanceWizardTo('abilities');
     await $(PANEL).waitForExist({ timeout: STEP_TIMEOUT });
 
-    // A magus earns experience in four periods and apprenticeship is not modelled
-    // yet, so the engine refuses the combination — and the UI must not offer it.
-    expect(await $(FUNDING_LIFE_STAGES).isEnabled()).toBe(false);
-    const ids = await describedByIds(FUNDING_LIFE_STAGES);
-    expect(ids).toContain('ability-funding-magus-reason');
-    const reason = clean(await $('#ability-funding-magus-reason').getText());
-    expect(reason.length).toBeGreaterThan(0);
-    expect(reason).not.toContain('ability-funding-magus-reason');
+    // Apprenticeship is modelled now (slice 6b4), so the option is live for a magus …
+    expect(await $(FUNDING_LIFE_STAGES).isEnabled()).toBe(true);
+    // … and the old refusal is gone: no node, and nothing pointing at one.
+    expect(await $('#ability-funding-magus-reason').isExisting()).toBe(false);
+    expect(await describedByIds(FUNDING_LIFE_STAGES)).not.toContain('ability-funding-magus-reason');
 
-    // So a magus keeps the editable pool.
-    expect(await $(XP_POOL_INPUT).getTagName()).toBe('input');
-    expect(await $(XP_POOL_TOTAL).isExisting()).toBe(false);
+    await $(FUNDING_LIFE_STAGES).click();
+    await $(XP_POOL_TOTAL).waitForExist({ timeout: STEP_TIMEOUT });
+
+    // The age a magus is asked for is its age AT the Gauntlet, which the field cannot
+    // say for itself — so the note says it, and is announced.
+    const note = await $(GAUNTLET_NOTE);
+    await note.waitForExist({ timeout: STEP_TIMEOUT });
+    expect(await note.getAttribute('role')).toBe('status');
+    expect(clean(await note.getText()).length).toBeGreaterThan(0);
+
+    await $(AGE_INPUT).setValue('25');
+    // The 240 points of apprenticeship are the general pool: they alone may buy Arts
+    // as well as Abilities (Core Rules.md:2435).
+    await browser.waitUntil(async () => (await textOf(XP_POOL_TOTAL)) === '240', {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'a guided magus should be funded by its apprenticeship',
+    });
+    expect(await textOf(APPRENTICESHIP)).toContain('240');
+    // Later life stops where apprenticeship begins, so a magus of 25 lived five
+    // later-life years, worth 75 — not the twenty a companion of 25 lives.
+    const laterLife = await textOf(LATER_LIFE);
+    expect(laterLife).toContain('5');
+    expect(laterLife).toContain('75');
   });
 });
