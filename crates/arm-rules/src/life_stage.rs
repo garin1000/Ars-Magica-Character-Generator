@@ -24,10 +24,71 @@ use crate::types::{Effect, Entity, Id};
 // the ruleset holds these as an `Option` for the absent case.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LifeStageRules {
+    /// The magus's apprenticeship, when the ruleset ships one. Optional because
+    /// `:2364` calls apprenticeship and life as a magus "two **more** periods" — a
+    /// ruleset with no Hermetic magi needs neither.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub apprenticeship: Option<ApprenticeshipRules>,
     /// The first years of life, before any chosen advancement.
     pub childhood: ChildhoodRules,
     /// Every year after childhood, up to the character's age.
     pub later_life: LaterLifeRules,
+}
+
+/// Apprenticeship: the fixed block of years a magus spends being trained, and the
+/// Abilities the Order expects at its end.
+///
+/// > The fifteen years of apprenticeship give the character 240 experience points,
+/// > and 120 levels of spells. These experience points can be spent on Arts or
+/// > Abilities, including Arcane, Academic, and Martial Abilities.
+///
+/// The **120 spell levels are deliberately not here**: they are the magus type
+/// profile's `spell_levels` (`rules/core/character_types.json`), which
+/// [`crate::effective::spell_levels_base`] is the single selector of. The two
+/// numbers of `:2435` live in two files on purpose; see `RULES.md`.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2433-2437.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ApprenticeshipRules {
+    /// Abilities the Order demands of every magus: "Magi must have the following
+    /// minimum Abilities: Parma Magica 1, Magic Theory 1, Latin 1. Characters with
+    /// lower scores would not be admitted to the Order." (`:2437`.)
+    pub minimum_abilities: Vec<AbilityRequirement>,
+    /// The Abilities of `#### Hermetic Magi Recommended Minimum Abilities`
+    /// (`:2451-2461`) — advice, not admission, so a shortfall is a warning.
+    pub recommended_abilities: Vec<AbilityRequirement>,
+    /// What [`Self::recommended_abilities`] costs off the advancement table:
+    /// "Total Cost: 90 experience points" (`:2461`). Carried as data so the load
+    /// can re-price the list against it — the trust gate on transcribed numbers.
+    pub recommended_xp: u32,
+    /// Experience the years of apprenticeship grant ("240 experience points",
+    /// `:2435`), spendable on Arts or Abilities alike.
+    pub xp: u32,
+    /// Years apprenticeship covers ("The fifteen years of apprenticeship", `:2435`).
+    pub years: u32,
+}
+
+/// An Ability score some rule demands, as data: which Ability, at what score, and
+/// optionally at which instance.
+///
+/// Shaped like [`crate::ruleset::ScholarlyLanguageRequirement`] plus `parameter`,
+/// and deliberately NOT unified with it: they live in different files and gate
+/// different rules, so sharing a type would couple two unrelated edits.
+///
+/// `parameter` is `None` throughout the shipped data — "Latin 1" is matched by
+/// Ability id, since an instance value is free-text player input with no
+/// localization path (a German player types "Latein"). The field exists so a future
+/// language registry can tighten the match by filling one JSON field rather than
+/// changing code; see `RULES.md` for the consequence (a magus with Greek 1 passes).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AbilityRequirement {
+    /// The Ability the requirement is about.
+    pub ability: Id,
+    /// The score it must reach.
+    pub min_score: u8,
+    /// The instance it must be, for a parameterized Ability. `None` accepts any.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parameter: Option<String>,
 }
 
 /// Early childhood: a fixed block of years granting a native language and a
@@ -234,8 +295,119 @@ mod tests {
       "later_life": { "xp_per_year": 15 }
     }"#;
 
+    /// The same shape plus the magus's apprenticeship block, so the optional third
+    /// period parses with every field the rules state.
+    const SHIPPED_WITH_APPRENTICESHIP: &str = r#"{
+      "apprenticeship": {
+        "years": 15,
+        "xp": 240,
+        "minimum_abilities": [
+          { "ability": "ability.dead_language", "min_score": 1 },
+          { "ability": "ability.magic_theory", "min_score": 1 },
+          { "ability": "ability.parma_magica", "min_score": 1 }
+        ],
+        "recommended_abilities": [
+          { "ability": "ability.artes_liberales", "min_score": 1 },
+          { "ability": "ability.dead_language", "min_score": 4 },
+          { "ability": "ability.magic_theory", "min_score": 3 },
+          { "ability": "ability.parma_magica", "min_score": 1 }
+        ],
+        "recommended_xp": 90
+      },
+      "childhood": {
+        "years": 5,
+        "native_language_ability": "ability.living_language",
+        "native_language_xp": 75,
+        "spread_xp": 45,
+        "spread_abilities": ["ability.athletics", "ability.swim"]
+      },
+      "later_life": { "xp_per_year": 15 }
+    }"#;
+
     fn rules() -> LifeStageRules {
         serde_json::from_str(SHIPPED).expect("the shipped life-stage shape parses")
+    }
+
+    /// "For magi, there are two more periods to consider: apprenticeship, and life
+    /// as a magus after that." (Core Rules.md:2364.) Apprenticeship is the third
+    /// block a ruleset may ship: "The fifteen years of apprenticeship give the
+    /// character 240 experience points" (`:2435`), with the minimum Abilities the
+    /// Order demands (`:2437`) and the recommended package priced at 90 experience
+    /// points (`:2451-2461`).
+    ///
+    /// Optional, because `:2364` calls these "two **more** periods": a non-Hermetic
+    /// ruleset ships none, and the block is simply absent.
+    #[test]
+    fn apprenticeship_rules_carry_the_years_the_xp_and_the_ability_lists() {
+        let parsed: LifeStageRules = serde_json::from_str(SHIPPED_WITH_APPRENTICESHIP)
+            .expect("the apprenticeship shape parses");
+        let apprenticeship = parsed
+            .apprenticeship
+            .expect("the file declares an apprenticeship block");
+        assert_eq!(apprenticeship.years, 15);
+        assert_eq!(apprenticeship.xp, 240);
+        assert_eq!(apprenticeship.recommended_xp, 90);
+        assert_eq!(
+            apprenticeship.minimum_abilities,
+            vec![
+                AbilityRequirement {
+                    ability: Id::new("ability.dead_language"),
+                    min_score: 1,
+                    parameter: None,
+                },
+                AbilityRequirement {
+                    ability: Id::new("ability.magic_theory"),
+                    min_score: 1,
+                    parameter: None,
+                },
+                AbilityRequirement {
+                    ability: Id::new("ability.parma_magica"),
+                    min_score: 1,
+                    parameter: None,
+                },
+            ]
+        );
+        assert_eq!(
+            apprenticeship
+                .recommended_abilities
+                .iter()
+                .map(|r| (r.ability.as_str(), r.min_score))
+                .collect::<Vec<_>>(),
+            vec![
+                ("ability.artes_liberales", 1),
+                ("ability.dead_language", 4),
+                ("ability.magic_theory", 3),
+                ("ability.parma_magica", 1),
+            ]
+        );
+
+        // A ruleset shipping no apprenticeship parses just as well, and says so.
+        assert!(rules().apprenticeship.is_none());
+    }
+
+    /// A requirement may name one instance of a parameterized Ability, so the field
+    /// exists — and is omitted from JSON when unset, which is what keeps the shipped
+    /// file free of a `"parameter": null` on every row.
+    #[test]
+    fn an_ability_requirement_omits_an_unset_parameter() {
+        let requirement = AbilityRequirement {
+            ability: Id::new("ability.dead_language"),
+            min_score: 1,
+            parameter: None,
+        };
+        let json = serde_json::to_string(&requirement).unwrap();
+        assert!(!json.contains("parameter"), "{json}");
+
+        let named = AbilityRequirement {
+            parameter: Some("Latin".into()),
+            ..requirement
+        };
+        let json = serde_json::to_string(&named).unwrap();
+        assert!(json.contains(r#""parameter":"Latin""#), "{json}");
+        assert_eq!(
+            serde_json::from_str::<AbilityRequirement>(&json).unwrap(),
+            named
+        );
     }
 
     #[test]

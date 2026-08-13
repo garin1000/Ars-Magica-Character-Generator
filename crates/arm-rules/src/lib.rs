@@ -19,7 +19,8 @@ pub mod house;
 pub mod life_stage;
 #[doc(inline)]
 pub use life_stage::{
-    ChildhoodRules, LaterLifeRules, LifeStageBudget, LifeStagePlan, LifeStageRules,
+    AbilityRequirement, ApprenticeshipRules, ChildhoodRules, LaterLifeRules, LifeStageBudget,
+    LifeStagePlan, LifeStageRules,
 };
 pub mod mythic_companion;
 pub mod ruleset;

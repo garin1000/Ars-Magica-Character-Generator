@@ -1003,8 +1003,34 @@ export interface MythicCompanionType {
 // from before play (`rules/core/life_stages.json`). Mirrors the engine's
 // `LifeStageRules`.
 export interface LifeStageRules {
+  // The magus's apprenticeship, when the ruleset ships one (a ruleset with no
+  // Hermetic magi ships none, so the block is optional).
+  apprenticeship?: ApprenticeshipRules;
   childhood: ChildhoodRules;
   later_life: LaterLifeRules;
+}
+
+// Apprenticeship: fifteen years and 240 experience points, plus the Abilities the
+// Order demands and the ones it recommends. Mirrors the engine's
+// `ApprenticeshipRules`. The 120 spell levels are NOT here — they are the magus
+// type profile's `spell_levels`.
+export interface ApprenticeshipRules {
+  // Abilities without which a magus "would not be admitted to the Order".
+  minimum_abilities: AbilityRequirement[];
+  // The recommended package, priced by `recommended_xp`.
+  recommended_abilities: AbilityRequirement[];
+  recommended_xp: number;
+  xp: number;
+  years: number;
+}
+
+// An Ability score a rule demands. Mirrors the engine's `AbilityRequirement`;
+// `parameter` narrows the demand to one instance of a parameterized Ability and is
+// unset throughout the shipped data (the match is by Ability id).
+export interface AbilityRequirement {
+  ability: string;
+  min_score: number;
+  parameter?: string;
 }
 
 // Early childhood: a fixed block of years granting a native language plus a
