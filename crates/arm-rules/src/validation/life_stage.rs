@@ -85,24 +85,30 @@ pub(crate) fn validate_life_stage_plan(
     // a 19-year-old magus that its age falls inside childhood would simply be wrong.
     if let Some(age) = entity.age {
         let magus = type_profile.is_some_and(|profile| profile.is_magus);
-        let (min_age, code) = if magus {
-            (
-                rules.minimum_gauntlet_age(),
-                ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET,
-            )
+        let min_age = if magus {
+            rules.minimum_gauntlet_age()
         } else {
-            (
-                rules.childhood.years,
-                ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD,
-            )
+            rules.childhood.years
         };
         if age < min_age {
-            issues.push(ValidationIssue::error(
-                code,
-                CreationPhase::Abilities,
-                args([("age", age.to_string()), ("min", min_age.to_string())]),
-                None,
-            ));
+            // Two emit sites rather than one with a computed code, so each names its
+            // own const and phase where the contract-table scanner can read them.
+            let issue_args = args([("age", age.to_string()), ("min", min_age.to_string())]);
+            issues.push(if magus {
+                ValidationIssue::error(
+                    ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET,
+                    CreationPhase::Abilities,
+                    issue_args,
+                    None,
+                )
+            } else {
+                ValidationIssue::error(
+                    ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD,
+                    CreationPhase::Abilities,
+                    issue_args,
+                    None,
+                )
+            });
         }
     }
 
