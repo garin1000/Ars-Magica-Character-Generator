@@ -36,7 +36,7 @@
   function instanceOf(row: MagusMinimumAbility): string | null {
     if (row.parameter) return row.parameter;
     let best: { score: number; parameter: string | null } | null = null;
-    for (const bought of store.entity.ability_scores) {
+    for (const bought of store.entity.ability_scores ?? []) {
       if (bought.ability !== row.ability) continue;
       if (!best || bought.score > best.score) {
         best = { score: bought.score, parameter: bought.parameter ?? null };
