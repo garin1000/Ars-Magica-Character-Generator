@@ -1222,6 +1222,39 @@ ul {
   flex-wrap: wrap;
 }
 
+/* The Hermetic minimum Abilities a magus owes: two short lists above the Ability
+   regions. Auto-height, like the life-stage panel beside it — `.region-row` must stay
+   the only `flex: 1` child of `.vf-tab`. */
+.magus-minimums {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-block: 0.3rem;
+}
+
+.magus-minimums h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.magus-minimum-list {
+  margin: 0;
+  padding-inline-start: 1.2rem;
+  font-size: 0.85rem;
+}
+
+/* Colour is a second channel only: every row already says "is met"/"is not met". */
+.magus-minimum-list li[data-met='false'] {
+  color: var(--error);
+}
+
+.magus-minimums-summary,
+.magus-recommended-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 /* The Sample Childhood picker inside the guided life-stage panel: the recorded
    package, the draft select, the package preview, its open slots and Apply. Also
    auto-height, for the same reason as its parent. */
