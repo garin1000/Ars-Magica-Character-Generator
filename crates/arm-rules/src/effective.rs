@@ -1287,6 +1287,45 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
                 block: LifeStageBlock::ChildhoodSpread,
             },
         });
+        // A magus's later life is a restricted pool of its own: the years between
+        // childhood and being taken as an apprentice, which buy "any Abilities"
+        // (`:2214`) and never an Art, and not an Arcane, Academic or Martial Ability
+        // either — "magi can only spend experience points on Arcane, Academic and
+        // Martial Abilities before apprenticeship if they have a Virtue which allows
+        // them to do so" (`:2435`). A Virtue that does allow it (Covenant Upbringing,
+        // Educated, Warrior) widens the pool through the same authorizations the
+        // ownership check reads, so the two cannot disagree.
+        //
+        // Supernatural stays in the set and legalizes nothing: access to each
+        // Supernatural Ability is granted per Ability, which
+        // `validate_supernatural_abilities` enforces for magi too — so an
+        // unauthorized one is already an error and funding it here changes nothing.
+        //
+        // For a grog or companion no such pool is pushed: later life is their general
+        // pool (`:2392`), and the categories are gated by an error on the character
+        // instead. A magus's category gate is waived whole-character (`:7151`), so the
+        // pool is the only place the "before apprenticeship" half can live.
+        if is_magus && budget.later_life_xp > 0 {
+            let (abilities, authorized_categories) = ability_authorizations(entity, ruleset);
+            let gated = ruleset.categories_requiring_virtue();
+            flow_pools.push(FlowPool {
+                amount: budget.later_life_xp,
+                eligibility: PoolEligibility::Ability {
+                    abilities: abilities.into_iter().collect(),
+                    categories: AbilityCategory::ALL
+                        .into_iter()
+                        .filter(|category| {
+                            !gated.contains(category) || authorized_categories.contains(category)
+                        })
+                        .collect(),
+                    instances: Vec::new(),
+                    exclude: Vec::new(),
+                },
+                origin: XpPoolOrigin::LifeStage {
+                    block: LifeStageBlock::LaterLife,
+                },
+            });
+        }
     }
     let mastery_pool = spell_mastery_xp(entity, ruleset);
     if mastery_pool > 0 {
@@ -4739,6 +4778,7 @@ mod tests {
             { "score": 3, "total_xp": 30 }, { "score": 4, "total_xp": 50 },
             { "score": 5, "total_xp": 75 }
           ],
+          "categories_requiring_virtue": ["academic", "arcane", "martial"],
           "abilities": [
             { "id": "ability.artes_liberales", "category": "academic" },
             { "id": "ability.concentration", "category": "general" },
@@ -4962,6 +5002,59 @@ mod tests {
             "no life-stage pools: {:?}",
             allocation.restricted
         );
+    }
+
+    /// The later-life pool of a guided magus, or `None` when it has none.
+    fn later_life_pool<'a>(allocation: &'a XpAllocation) -> Option<&'a RestrictedXpPool> {
+        allocation.restricted.iter().find(|pool| {
+            pool.origin
+                == XpPoolOrigin::LifeStage {
+                    block: LifeStageBlock::LaterLife,
+                }
+        })
+    }
+
+    /// A magus's pre-apprenticeship experience may not buy an Arcane, Academic or
+    /// Martial Ability: "Note that magi can only spend experience points on Arcane,
+    /// Academic and Martial Abilities **before** apprenticeship if they have a Virtue
+    /// which allows them to do so." (Core Rules.md:2435.) The Darius example reasons
+    /// the same way about a pre-apprenticeship purchase — "It's a **general** Ability,
+    /// so he can" (`:2402`).
+    ///
+    /// So later life is a pool of its own for a magus, and a gated Ability falls to
+    /// apprenticeship's general pool instead.
+    #[test]
+    fn pre_apprenticeship_experience_cannot_buy_a_gated_ability() {
+        let rs = life_stage_ruleset();
+        let mut magus = planned_magus();
+        // Concentration 3 — a General Ability, 30 experience points.
+        magus.ability_scores.push(AbilityScore {
+            ability: Id::new("ability.concentration"),
+            parameter: None,
+            score: 3,
+            specialty: None,
+        });
+        let allocation = xp_allocation(&magus, &rs);
+        let pool = later_life_pool(&allocation).expect("a guided magus has a later-life pool");
+        assert_eq!(pool.amount, 75, "five years at 15 a year");
+        assert_eq!(pool.used, 30, "later life buys the General Ability");
+        assert_eq!(allocation.general_used, 0, "apprenticeship pays none of it");
+
+        // Artes Liberales 3 — Academic, so the same 30 points cannot come from
+        // before apprenticeship, and the apprenticeship pool takes it instead.
+        magus.ability_scores.pop();
+        magus.ability_scores.push(AbilityScore {
+            ability: Id::new("ability.artes_liberales"),
+            parameter: None,
+            score: 3,
+            specialty: None,
+        });
+        let allocation = xp_allocation(&magus, &rs);
+        assert_eq!(later_life_pool(&allocation).expect("still there").used, 0);
+        assert_eq!(allocation.general_used, 30, "apprenticeship funds it");
+
+        // A companion has no such pool at all: its later life IS the general pool.
+        assert!(later_life_pool(&xp_allocation(&planned_companion(), &rs)).is_none());
     }
 
     /// Later life is a life-stage block like the childhood ones, because for a magus

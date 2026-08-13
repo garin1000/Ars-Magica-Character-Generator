@@ -31,6 +31,17 @@ use crate::ability::AbilityCategory;
 /// may be spent on "Arcane, Academic, and Martial Abilities". The exemption is read
 /// off the profile's `is_magus` flag, never a type id.
 ///
+/// The exemption is whole-character on purpose, and the other half of `:2435` —
+/// "magi can only spend experience points on Arcane, Academic and Martial Abilities
+/// **before** apprenticeship if they have a Virtue which allows them to do so" — is
+/// enforced elsewhere and is **not** unenforced: for a guided magus it is a property
+/// of the money, not of the Ability, so it lives in the pool
+/// ([`crate::effective::xp_allocation`] builds later life as an Abilities-only pool
+/// that excludes the gated categories). A magus may *own* these Abilities; a
+/// shortfall there is `not_enough_xp`, never `ability_category_requires_virtue`. The
+/// two mechanisms are disjoint, which is what keeps a single purchase from being
+/// reported twice.
+///
 /// A Virtue grants access two ways, and both count: an explicit
 /// [`Effect::AbilityAuthorization`], or any [`Effect::RestrictedAbilityXp`] pool —
 /// experience earmarked for a category is evidence the category is permitted, which
