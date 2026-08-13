@@ -192,14 +192,26 @@ pub struct LifeStageBudget {
     pub later_life_rate: u32,
     /// Experience from later life (`later_life_years × later_life_rate`).
     pub later_life_xp: u32,
+    /// Years of apprenticeship served (15 for a magus, 0 for anyone else).
+    pub apprenticeship_years: u32,
+    /// Experience from apprenticeship (240 for a magus, 0 for anyone else) — the
+    /// **general** pool, since it alone may buy Arts as well as Abilities
+    /// (Core Rules.md:2435).
+    ///
+    /// The pool the solve actually funds from is this plus any
+    /// [`Effect::GeneralXp`] (Skilled/Weak Parens), surfaced as
+    /// `EffectiveScores::xp_general_pool`. This field is the block's base, which is
+    /// why nothing displays it as "the pool".
+    pub apprenticeship_xp: u32,
 }
 
 impl LifeStageBudget {
-    /// Every point the character has earned, across all three blocks.
+    /// Every point the character has earned, across all four blocks.
     pub fn total(&self) -> u32 {
         self.childhood_native_xp
             .saturating_add(self.childhood_spread_xp)
             .saturating_add(self.later_life_xp)
+            .saturating_add(self.apprenticeship_xp)
     }
 }
 
@@ -217,7 +229,8 @@ impl LifeStageRules {
     /// names the missing age itself (`life_stage_age_unset`).
     pub fn budget(&self, entity: &Entity, ruleset: &Ruleset) -> Option<LifeStageBudget> {
         entity.life_stages.as_ref()?;
-        let apprenticeship_years = self.apprenticeship_years(entity, ruleset);
+        let apprenticeship = self.apprenticeship_of(entity, ruleset);
+        let apprenticeship_years = apprenticeship.map_or(0, |block| block.years);
         let later_life_years = entity
             .age
             .map_or(0, |age| self.later_life_years(age, apprenticeship_years));
@@ -228,6 +241,10 @@ impl LifeStageRules {
             later_life_years,
             later_life_rate,
             later_life_xp: later_life_years.saturating_mul(later_life_rate),
+            apprenticeship_years,
+            // Apprenticeship is a fixed block like childhood, so it does not scale
+            // with an age; 0 for anyone who serves none.
+            apprenticeship_xp: apprenticeship.map_or(0, |block| block.xp),
         })
     }
 
@@ -253,21 +270,24 @@ impl LifeStageRules {
         age.saturating_sub(self.childhood.years.saturating_add(apprenticeship_years))
     }
 
-    /// Years of apprenticeship this character serves: the block's own `years` for a
-    /// magus, and 0 for anyone else — a grog or companion has no apprenticeship at
-    /// all, and a ruleset shipping no block declares none.
+    /// The apprenticeship this character serves, if any: the block for a magus, and
+    /// `None` for anyone else — a grog or companion serves no apprenticeship at all,
+    /// and a ruleset shipping no block declares none (`Ruleset::validate_integrity`
+    /// refuses that combination for a ruleset that declares magi).
     ///
     /// Read off the type profile's `is_magus` flag, never a type id.
-    fn apprenticeship_years(&self, entity: &Entity, ruleset: &Ruleset) -> u32 {
+    pub(crate) fn apprenticeship_of(
+        &self,
+        entity: &Entity,
+        ruleset: &Ruleset,
+    ) -> Option<&ApprenticeshipRules> {
         if !ruleset
             .profile(&entity.type_id)
             .is_some_and(|profile| profile.is_magus)
         {
-            return 0;
+            return None;
         }
-        self.apprenticeship
-            .as_ref()
-            .map_or(0, |apprenticeship| apprenticeship.years)
+        self.apprenticeship.as_ref()
     }
 
     /// Experience per year of later life for this character: the ruleset's base
@@ -605,6 +625,54 @@ mod tests {
         assert_eq!(budget.later_life_rate, 15);
         assert_eq!(budget.later_life_xp, 300);
         assert_eq!(budget.total(), 420);
+    }
+
+    /// A magus earns a fourth block on top of the three: "The fifteen years of
+    /// apprenticeship give the character 240 experience points"
+    /// (Core Rules.md:2435). So a magus of 25 has 75 + 45 + 75 + 240 = 435 points,
+    /// where a companion of the same age has 420.
+    #[test]
+    fn the_budget_of_a_guided_magus_adds_its_apprenticeship() {
+        let rs = rate_ruleset();
+        let rules = rules_with_apprenticeship();
+
+        let budget = rules
+            .budget(&planned_magus(25), &rs)
+            .expect("a magus with a plan");
+        assert_eq!(budget.apprenticeship_years, 15);
+        assert_eq!(budget.apprenticeship_xp, 240);
+        assert_eq!(budget.later_life_xp, 75);
+        assert_eq!(budget.total(), 435);
+
+        // A companion serves no apprenticeship, so its budget is untouched.
+        let mut entity = companion(vec![]);
+        entity.age = Some(25);
+        entity.life_stages = Some(LifeStagePlan::default());
+        let budget = rules.budget(&entity, &rs).expect("a companion with a plan");
+        assert_eq!(budget.apprenticeship_years, 0);
+        assert_eq!(budget.apprenticeship_xp, 0);
+        assert_eq!(budget.total(), 420);
+    }
+
+    /// Apprenticeship is a fixed block of fifteen years (`:2435`), exactly as
+    /// childhood is a fixed five, so it does not wait for an age either: only later
+    /// life is counted in years up to one. A guided magus whose age is not yet typed
+    /// therefore holds its 240 points and lives no later-life year — the missing age
+    /// is reported on its own (`life_stage_age_unset`).
+    #[test]
+    fn an_unset_age_still_earns_the_apprenticeship_block() {
+        let rs = rate_ruleset();
+        let mut magus = planned_magus(25);
+        magus.age = None;
+
+        let budget = rules_with_apprenticeship()
+            .budget(&magus, &rs)
+            .expect("apprenticeship does not depend on an age");
+        assert_eq!(budget.apprenticeship_years, 15);
+        assert_eq!(budget.apprenticeship_xp, 240);
+        assert_eq!(budget.later_life_years, 0);
+        assert_eq!(budget.later_life_xp, 0);
+        assert_eq!(budget.total(), 360);
     }
 
     /// The chosen Sample Childhood package is recorded on the character, so it

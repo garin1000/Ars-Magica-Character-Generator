@@ -1307,6 +1307,8 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
         later_life_years: 20,
         later_life_rate: 15,
         later_life_xp: 300,
+        apprenticeship_years: 15,
+        apprenticeship_xp: 240,
     };
     let rules = arm_rules::LifeStageRules {
         apprenticeship: Some(arm_rules::ApprenticeshipRules {
