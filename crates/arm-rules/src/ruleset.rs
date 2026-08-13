@@ -1307,6 +1307,7 @@ impl Ruleset {
         errors.extend(self.art_advancement.validation_errors());
 
         self.validate_childhood_refs(&mut errors);
+        self.validate_apprenticeship_refs(&mut errors);
         self.validate_childhood_packages(&mut errors);
 
         for (type_id, profile) in &self.type_profiles {
@@ -1512,6 +1513,46 @@ impl Ruleset {
                 "life-stage childhood native-language ability '{native}' takes no parameter, so it cannot name one language"
             )),
             Some(_) => {}
+        }
+    }
+
+    /// Validates the apprenticeship block's own Ability references: every
+    /// requirement — the minimums of `:2437` and the recommendations of
+    /// `:2451-2461` — must name an Ability the catalogue knows, and a requirement
+    /// that narrows itself to an *instance* must name a parameterized Ability, since
+    /// a plain one has no instance to be.
+    ///
+    /// A typo here would silently drop a requirement no magus is then held to, which
+    /// is why it is a load-time referential check like every other ref in the rules
+    /// data. It runs from [`Ruleset::validate_integrity`] beside
+    /// [`Self::validate_childhood_refs`], so a cached ruleset returning through
+    /// [`Ruleset::from_serialized`] is held to the same standard.
+    fn validate_apprenticeship_refs(&self, errors: &mut Vec<String>) {
+        let Some(apprenticeship) = self
+            .life_stages
+            .as_ref()
+            .and_then(|rules| rules.apprenticeship.as_ref())
+        else {
+            return;
+        };
+        let requirements = apprenticeship
+            .minimum_abilities
+            .iter()
+            .chain(&apprenticeship.recommended_abilities);
+        for requirement in requirements {
+            let id = &requirement.ability;
+            match self.abilities.get(id) {
+                None => errors.push(format!(
+                    "apprenticeship names unknown ability '{id}' as a requirement"
+                )),
+                Some(ability) if requirement.parameter.is_some() && ability.parameter.is_none() => {
+                    errors.push(format!(
+                        "apprenticeship requirement for '{id}' names an instance, \
+                         but the ability takes no parameter"
+                    ));
+                }
+                Some(_) => {}
+            }
         }
     }
 
@@ -4050,6 +4091,98 @@ mod tests {
         assert!(
             err.to_string().contains("ability.nonesuch"),
             "should name the unresolved childhood spread ability: {err}"
+        );
+    }
+
+    /// The childhood half of a life-stage file, so the apprenticeship fixtures below
+    /// vary one block only. `{APPRENTICESHIP}` is substituted per test.
+    const APPRENTICESHIP_LIFE_STAGES: &str = r#"{
+      "apprenticeship": { APPRENTICESHIP },
+      "childhood": {
+        "years": 5,
+        "native_language_ability": "ability.living_language",
+        "native_language_xp": 75,
+        "spread_xp": 45,
+        "spread_abilities": ["ability.awareness"]
+      },
+      "later_life": { "xp_per_year": 15 }
+    }"#;
+
+    /// Loads a ruleset whose apprenticeship block is `apprenticeship`, against the
+    /// life-stage abilities fixture.
+    fn apprenticeship_ruleset(apprenticeship: &str) -> Result<Ruleset, RulesetError> {
+        let life_stages = APPRENTICESHIP_LIFE_STAGES.replace("APPRENTICESHIP", apprenticeship);
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            abilities: Some(LIFE_STAGE_ABILITIES),
+            life_stages: Some(&life_stages),
+            ..RulesetSources::default()
+        })
+    }
+
+    /// The apprenticeship block names Abilities ("Parma Magica 1, Magic Theory 1,
+    /// Latin 1", Core Rules.md:2437), so a typo there would silently drop a
+    /// requirement no magus is then held to — a load-time referential failure like
+    /// every other ref in the rules data.
+    #[test]
+    fn an_apprenticeship_ability_requirement_must_resolve() {
+        let err = apprenticeship_ruleset(
+            r#""years": 15, "xp": 240, "recommended_xp": 0,
+               "minimum_abilities": [{ "ability": "ability.nonesuch", "min_score": 1 }],
+               "recommended_abilities": []"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("ability.nonesuch"),
+            "should name the unresolved apprenticeship ability: {msg}"
+        );
+
+        // The recommended list is checked the same way — it is the same shape.
+        let err = apprenticeship_ruleset(
+            r#""years": 15, "xp": 240, "recommended_xp": 0,
+               "minimum_abilities": [],
+               "recommended_abilities": [{ "ability": "ability.absent", "min_score": 1 }]"#,
+        )
+        .unwrap_err();
+        assert!(
+            err.to_string().contains("ability.absent"),
+            "should name the unresolved recommended ability: {err}"
+        );
+    }
+
+    /// A requirement may narrow itself to one instance of a parameterized Ability,
+    /// so naming a parameter for an Ability that takes none could never match — a
+    /// broken file rather than a requirement nobody meets.
+    #[test]
+    fn an_apprenticeship_requirement_parameter_needs_a_parameterized_ability() {
+        let err = apprenticeship_ruleset(
+            r#""years": 15, "xp": 240, "recommended_xp": 0,
+               "minimum_abilities": [
+                 { "ability": "ability.awareness", "min_score": 1, "parameter": "Latin" }
+               ],
+               "recommended_abilities": []"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("ability.awareness") && msg.contains("parameter"),
+            "should explain why the requirement can never name an instance: {msg}"
+        );
+
+        // The parameterized ability takes one happily.
+        assert!(
+            apprenticeship_ruleset(
+                r#""years": 15, "xp": 240, "recommended_xp": 0,
+                   "minimum_abilities": [
+                     { "ability": "ability.living_language", "min_score": 1, "parameter": "German" }
+                   ],
+                   "recommended_abilities": []"#,
+            )
+            .is_ok()
         );
     }
 
