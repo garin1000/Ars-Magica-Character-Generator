@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Ars Magica Character Generator",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "identifier": "io.github.garin1000.armchargen",
   "build": {
     "devUrl": "http://localhost:1420",
