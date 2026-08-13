@@ -515,7 +515,15 @@ button:disabled {
 /* Source (Available) beside Selected; fills the tab height, wraps when narrow. */
 .region-row {
   flex: 1;
-  min-height: 0;
+  /* A FLOOR, not 0. `flex: 1` with `min-height: 0` lets the row give up all of its
+     height to the auto-height siblings above it, and it does: on the magus's Abilities
+     step — the funding panel plus the Hermetic-minimums checklist — the row measured 0
+     in an 800px window, so both lists vanished and their controls were not even
+     clickable. The floor turns that into a scroll instead: the enclosing
+     `.tab-content` is `overflow-y: auto` precisely so excess content stays reachable.
+     It still shrinks freely down to the floor, so every inner scrollport works as
+     before. */
+  min-height: 12rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
   gap: 1rem;

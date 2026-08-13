@@ -154,7 +154,7 @@ export async function advanceWizardTo(phase) {
  */
 async function addAbilityAtScoreOne(ability, index, parameter) {
   const add = await $(`[data-testid="add-${ability}"]`);
-  await add.waitForClickable({ timeout: STEP_TIMEOUT });
+  await add.waitForExist({ timeout: STEP_TIMEOUT });
   await add.click();
 
   if (parameter !== undefined) {
@@ -163,8 +163,11 @@ async function addAbilityAtScoreOne(ability, index, parameter) {
     await field.setValue(parameter);
   }
 
+  // `click` scrolls the element into view; `waitForClickable` does not, and the
+  // Selected list is a scrolling box inside a squeezed step, so a freshly added row's
+  // spinner can sit below the fold.
   const inc = await $(`[data-testid="ability-inc-${ability}-${index}"]`);
-  await inc.waitForClickable({ timeout: STEP_TIMEOUT });
+  await inc.waitForExist({ timeout: STEP_TIMEOUT });
   await inc.click();
   await browser.waitUntil(
     async () => (await $(`[data-testid="ability-score-${ability}-${index}"]`).getText()) === '1',
