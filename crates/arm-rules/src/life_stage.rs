@@ -217,7 +217,10 @@ impl LifeStageRules {
     /// names the missing age itself (`life_stage_age_unset`).
     pub fn budget(&self, entity: &Entity, ruleset: &Ruleset) -> Option<LifeStageBudget> {
         entity.life_stages.as_ref()?;
-        let later_life_years = entity.age.map_or(0, |age| self.later_life_years(age));
+        let apprenticeship_years = self.apprenticeship_years(entity, ruleset);
+        let later_life_years = entity
+            .age
+            .map_or(0, |age| self.later_life_years(age, apprenticeship_years));
         let later_life_rate = self.later_life_rate(entity, ruleset);
         Some(LifeStageBudget {
             childhood_native_xp: self.childhood.native_language_xp,
@@ -229,21 +232,42 @@ impl LifeStageRules {
     }
 
     /// Years of later life a character of `age` has lived: every year after
-    /// childhood. Childhood is a fixed block, so an age inside it yields 0 rather
-    /// than a negative span (the validator reports such an age separately).
+    /// childhood, minus the `apprenticeship_years` that follow it (0 for anyone who
+    /// serves no apprenticeship). Both blocks are fixed spans, so an age inside them
+    /// yields 0 rather than a negative one (the validator reports such an age
+    /// separately).
     ///
-    /// **This formula holds for grogs and companions only.** "For grogs and
-    /// companions they are acquired in two blocks: early childhood, and later life.
-    /// For magi, there are two more periods to consider: apprenticeship, and life as
-    /// a magus after that."
-    /// (Ars Magica - Definitive Edition (Core Rules).md:2364.) A magus's later life
-    /// runs only *until* apprenticeship, so counting every year to its age would
-    /// over-grant — and since Abilities and Arts buy from one shared pool, the
-    /// surplus would fund Arts as well. Apprenticeship and life as a magus are
-    /// **M6/6b4**; until then a magus carrying a life-stage plan is refused outright
-    /// (`life_stage_magus_guided_unsupported`) rather than costed with this formula.
-    pub fn later_life_years(&self, age: u32) -> u32 {
-        age.saturating_sub(self.childhood.years)
+    /// **A magus's later life ends where its apprenticeship begins.** "**Later
+    /// Life.** 15 experience points per year (until apprenticeship for magi)"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2214), the same four periods
+    /// `:2364` sets out. Counting every year to a magus's age would over-grant, and
+    /// since Abilities and Arts buy from one shared pool the surplus would fund Arts
+    /// as well. The character stands at its Gauntlet, so the span this leaves is the
+    /// childhood-to-apprenticeship one — five years for a magus of 25, which is
+    /// exactly the Darius example's "75 experience points to spend from those five
+    /// years" (`:2402`).
+    ///
+    /// Life as a magus *after* the Gauntlet — "30 points per year" (`:2216`, `:2471`)
+    /// — is **M6/6b5** and adds nothing here.
+    pub fn later_life_years(&self, age: u32, apprenticeship_years: u32) -> u32 {
+        age.saturating_sub(self.childhood.years.saturating_add(apprenticeship_years))
+    }
+
+    /// Years of apprenticeship this character serves: the block's own `years` for a
+    /// magus, and 0 for anyone else — a grog or companion has no apprenticeship at
+    /// all, and a ruleset shipping no block declares none.
+    ///
+    /// Read off the type profile's `is_magus` flag, never a type id.
+    fn apprenticeship_years(&self, entity: &Entity, ruleset: &Ruleset) -> u32 {
+        if !ruleset
+            .profile(&entity.type_id)
+            .is_some_and(|profile| profile.is_magus)
+        {
+            return 0;
+        }
+        self.apprenticeship
+            .as_ref()
+            .map_or(0, |apprenticeship| apprenticeship.years)
     }
 
     /// Experience per year of later life for this character: the ruleset's base
@@ -326,6 +350,11 @@ mod tests {
 
     fn rules() -> LifeStageRules {
         serde_json::from_str(SHIPPED).expect("the shipped life-stage shape parses")
+    }
+
+    /// The same rules with the magus's apprenticeship block declared.
+    fn rules_with_apprenticeship() -> LifeStageRules {
+        serde_json::from_str(SHIPPED_WITH_APPRENTICESHIP).expect("the apprenticeship shape parses")
     }
 
     /// "For magi, there are two more periods to consider: apprenticeship, and life
@@ -430,9 +459,9 @@ mod tests {
     #[test]
     fn later_life_years_start_after_childhood() {
         let rules = rules();
-        assert_eq!(rules.later_life_years(25), 20);
+        assert_eq!(rules.later_life_years(25, 0), 20);
         // A five-year-old has finished childhood and no more.
-        assert_eq!(rules.later_life_years(5), 0);
+        assert_eq!(rules.later_life_years(5, 0), 0);
     }
 
     /// An age below the childhood span is not a shorter childhood — childhood is a
@@ -440,7 +469,7 @@ mod tests {
     /// underflowing into a huge count.
     #[test]
     fn an_age_inside_childhood_earns_no_later_life_years() {
-        assert_eq!(rules().later_life_years(3), 0);
+        assert_eq!(rules().later_life_years(3, 0), 0);
     }
 
     /// A ruleset carrying the two rate-bearing items, so the per-year rate can be
@@ -458,7 +487,9 @@ mod tests {
         ]"#;
         let types = r#"[
           { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
-            "permitted_categories": ["general"], "creation_phases": [] }
+            "permitted_categories": ["general"], "creation_phases": [] },
+          { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"], "is_magus": true, "creation_phases": [] }
         ]"#;
         Ruleset::from_json("test", "1", items, types).unwrap()
     }
@@ -473,6 +504,15 @@ mod tests {
             .into_iter()
             .map(|r| Selection::new(Id::new(r)))
             .collect();
+        entity
+    }
+
+    /// A magus of `age`, built through its life stages.
+    fn planned_magus(age: u32) -> Entity {
+        let mut entity = companion(vec![]);
+        entity.type_id = Id::new("magus");
+        entity.age = Some(age);
+        entity.life_stages = Some(LifeStagePlan::default());
         entity
     }
 
@@ -505,6 +545,42 @@ mod tests {
             rules().later_life_rate(&companion(vec!["virtue.wealthy", "flaw.poor"]), &rs),
             10
         );
+    }
+
+    /// A magus's later life ends where its apprenticeship begins: "**Later Life.** 15
+    /// experience points per year (until apprenticeship for magi)"
+    /// (Core Rules.md:2214). Apprenticeship is fifteen years (`:2435`) and the
+    /// character stands at its Gauntlet, so a magus of 25 was taken as an apprentice
+    /// at 10 and lived five later-life years — exactly the arithmetic of the Darius
+    /// example, whose master "picks 10 as a nice, round number" and who then "has 75
+    /// experience points to spend from those five years" (`:2402`).
+    #[test]
+    fn a_magus_later_life_stops_at_the_gauntlet() {
+        let rules = rules();
+        // Fifteen years of apprenticeship take their span out of later life.
+        assert_eq!(rules.later_life_years(25, 15), 5);
+        // A grog or companion has no apprenticeship, so nothing changes for it.
+        assert_eq!(rules.later_life_years(25, 0), 20);
+        // An age inside childhood-plus-apprenticeship earns no later-life year
+        // rather than underflowing into a huge count.
+        assert_eq!(rules.later_life_years(19, 15), 0);
+
+        // Through the budget: the five years are worth 75 experience points.
+        let rs = rate_ruleset();
+        let rules = rules_with_apprenticeship();
+        let budget = rules
+            .budget(&planned_magus(25), &rs)
+            .expect("a magus with a plan");
+        assert_eq!(budget.later_life_years, 5);
+        assert_eq!(budget.later_life_xp, 75);
+
+        // The same age as a companion keeps every year it always had.
+        let mut entity = companion(vec![]);
+        entity.age = Some(25);
+        entity.life_stages = Some(LifeStagePlan::default());
+        let budget = rules.budget(&entity, &rs).expect("a companion with a plan");
+        assert_eq!(budget.later_life_years, 20);
+        assert_eq!(budget.later_life_xp, 300);
     }
 
     /// A character with a life-stage plan earns the two childhood blocks plus one
