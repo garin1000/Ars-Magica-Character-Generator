@@ -205,11 +205,6 @@ ability-funding-pool = EP-Vorrat
 ability-funding-life_stages = Lebensabschnitte
 ability-funding-pool-hint = Trage einen Gesamtwert selbst ein und gib ihn für beliebige Fertigkeiten aus.
 ability-funding-life_stages-hint = Frühe Kindheit und späteres Leben erbringen die Erfahrung: das Alter bestimmt die Erfahrung des späteren Lebens, Muttersprache und eine beispielhafte Kindheit füllen die Blöcke der Kindheit.
-# Warum die Lebensabschnitte für einen Magus nicht zur Wahl stehen: von den vier
-# Perioden, in denen ein Magus Erfahrung erwirbt, ist die Lehrlingszeit noch nicht
-# abgebildet, daher bleibt nur der EP-Vorrat. Sagt dasselbe wie der Hinweis
-# life_stage_magus_guided_unsupported der Engine, nur vor dem Versuch statt danach.
-ability-funding-magus-reason = Ein Magus erwirbt Erfahrung in vier Perioden — frühe Kindheit, späteres Leben, Lehrlingszeit und das Leben als Magus danach. Die Lehrlingszeit ist noch nicht abgebildet, daher nutzt ein Magus vorerst den EP-Vorrat.
 # Anzeigen der Lebensabschnitte in der EP-Zeile. Das spätere Leben finanziert alles
 # und ersetzt daher den bearbeitbaren Gesamtwert: Jahre nach der Kindheit ×
 # Erfahrung pro Jahr. Die Rate ist die dieses Charakters — die Tugend Wohlhabend und
