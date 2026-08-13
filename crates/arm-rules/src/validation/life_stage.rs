@@ -22,17 +22,23 @@ use crate::childhood::ChildhoodRejection;
 ///   ([`crate::life_stage::LifeStageRules::budget`]), so this is a finding of its
 ///   own rather than a missing budget.
 /// - `life_stage_age_before_childhood`: an age inside the childhood block, which
-///   earns childhood's experience but cannot have lived any later-life year.
+///   earns childhood's experience but cannot have lived any later-life year. For a
+///   magus the bar is its Gauntlet instead — childhood plus apprenticeship
+///   (`:2435`) — reported as `life_stage_age_before_gauntlet`, so one wrong age
+///   still produces exactly one finding.
 /// - `life_stage_native_language_unset`: no native language chosen, so the
 ///   childhood's largest block (75 points) has nothing it may be spent on.
 /// - `life_stage_native_language_missing_score`: a native language chosen but no
 ///   matching Living Language row bought, so those points are unspent.
 /// - `childhood_package_unknown`: the recorded Sample Childhood package names an id
 ///   the loaded ruleset does not ship.
-/// - `life_stage_magus_guided_unsupported`: a magus with a plan at all — its
-///   experience comes in four periods, of which this engine models two (`:2364`).
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2364, :2378, :2392.
+/// A magus is welcome here: all four periods of `:2364` are modelled (M6/6b4), so
+/// nothing refuses the combination. What a magus's plan costs differs — its later
+/// life ends at apprenticeship (`:2214`) — but that is arithmetic in
+/// [`crate::life_stage::LifeStageRules::budget`], not a finding.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2364, :2378, :2392, :2435.
 pub(crate) fn validate_life_stage_plan(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -54,25 +60,6 @@ pub(crate) fn validate_life_stage_plan(
             ValidationIssue::CODE_LIFE_STAGE_XP_POOL_CONFLICT,
             CreationPhase::Abilities,
             args([("xp_pool", entity.xp_pool.to_string())]),
-            None,
-        ));
-    }
-
-    // "For grogs and companions they are acquired in two blocks: early childhood,
-    // and later life. For magi, there are two more periods to consider:
-    // apprenticeship, and life as a magus after that."
-    // (Core Rules.md:2364.) The engine models the two blocks, so a magus's later
-    // life — which runs only until apprenticeship — cannot be counted to its age
-    // here without over-granting, all the more so because Abilities and Arts draw
-    // one shared pool. The combination is refused until apprenticeship exists
-    // (M6/6b4) rather than computed wrongly; a magus keeps the flat pool, which is
-    // fully functional. The guided UI hides the choice, so this catches a
-    // hand-edited save.
-    if type_profile.is_some_and(|profile| profile.is_magus) {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_LIFE_STAGE_MAGUS_GUIDED_UNSUPPORTED,
-            CreationPhase::Abilities,
-            args([]),
             None,
         ));
     }
@@ -604,43 +591,37 @@ mod tests {
         );
     }
 
-    /// A magus does not earn its experience in two blocks: "For grogs and companions
-    /// they are acquired in two blocks: early childhood, and later life. For magi,
-    /// there are two more periods to consider: apprenticeship, and life as a magus
-    /// after that." (Core Rules.md:2364). `later_life_years` counts every year after
-    /// childhood, so for a magus it swallows apprenticeship and life as a magus —
-    /// and since Abilities and Arts draw one shared pool, those years would fund
-    /// Arts too. Until the two further periods are modelled (M6/6b4) the combination
-    /// is refused rather than computed.
+    /// A magus **may** now be built through its life stages. All four periods
+    /// `:2364` names are modelled — early childhood, later life (which for a magus
+    /// ends at apprenticeship, `:2214`), and apprenticeship itself (`:2435`) — so the
+    /// combination is costed rather than refused, and the 6b2 refusal
+    /// (`life_stage_magus_guided_unsupported`) is gone.
+    ///
+    /// What replaces it is a **load-time** demand on the rules data: a ruleset
+    /// declaring magi must declare their apprenticeship
+    /// (`Ruleset::validate_apprenticeship_refs`). The limit was never a property of a
+    /// character.
     #[test]
-    fn a_magus_may_not_be_built_through_its_life_stages_yet() {
-        let mut entity = planned(25);
-        entity.type_id = Id::new("magus");
-
-        let result = validate(&entity, &rs());
-        let issue = result
-            .issues
-            .iter()
-            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_MAGUS_GUIDED_UNSUPPORTED)
-            .expect("a magus carrying a life-stage plan is refused");
-        assert_eq!(issue.severity, IssueSeverity::Error);
-        assert_eq!(issue.phase, CreationPhase::Abilities);
-        assert!(issue.args.is_empty(), "args: {:?}", issue.args);
-
-        // A companion is exactly the case the two blocks describe, and a magus with
-        // no plan keeps the flat pool it always had.
-        let unaffected = |entity: &Entity| {
-            assert!(
-                !codes(&validate(entity, &rs()))
-                    .contains(&"life_stage_magus_guided_unsupported".to_string())
-            );
-        };
-        unaffected(&planned(25));
+    fn a_magus_may_now_be_built_through_its_life_stages() {
         let mut magus = planned(25);
         magus.type_id = Id::new("magus");
-        magus.life_stages = None;
-        magus.xp_pool = 240;
-        unaffected(&magus);
+
+        let result = validate(&magus, &rs());
+        let blocking: Vec<&str> = result
+            .issues
+            .iter()
+            .filter(|i| i.severity == IssueSeverity::Error && i.code.starts_with("life_stage_"))
+            .map(|i| i.code.as_str())
+            .collect();
+        assert!(
+            blocking.is_empty(),
+            "a guided magus is legal now: {blocking:?}"
+        );
+        assert!(
+            !codes(&result).contains(&"life_stage_magus_guided_unsupported".to_string()),
+            "the refusal is retired: {:?}",
+            codes(&result)
+        );
     }
 
     /// Childhood grants two separately-restricted blocks (Core Rules.md:2378), so a

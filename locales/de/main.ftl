@@ -617,7 +617,6 @@ issue-restricted_xp_unspent = { $origin }: { $unspent } von { $amount } eingesch
 issue-ability_category_requires_virtue = { $ability } ist { $category } und benötigt eine Tugend, die den Zugang bei der Charaktererschaffung gewährt.
 issue-academic_ability_without_scholarly_language = Eine akademische Fertigkeit erfordert normalerweise { $ability } auf { $min } oder höher.
 issue-life_stage_xp_pool_conflict =Dieser Charakter erhält seine Erfahrung über seine Lebensabschnitte, daher muss der direkt eingetragene Vorrat von { $xp_pool } 0 sein.
-issue-life_stage_magus_guided_unsupported = Ein Magus erwirbt Erfahrung in vier Perioden — frühe Kindheit, späteres Leben, Lehrlingszeit und das Leben als Magus — und kann daher noch nicht über seine Lebensabschnitte erschaffen werden; nutze stattdessen den EP-Vorrat.
 issue-life_stage_age_unset = Trage das Alter des Charakters ein: das spätere Leben erbringt Erfahrungspunkte pro Jahr, ohne Alter zählen daher nur die Blöcke der Kindheit.
 issue-life_stage_age_before_childhood = Alter { $age } liegt innerhalb der Kindheit, die { $min } Jahre dauert — es gibt keine späteren Lebensjahre, in denen Erfahrung erworben wird.
 issue-life_stage_age_before_gauntlet = Alter { $age } liegt unter den { $min } Jahren, die ein Magus zur Lehrlingsprüfung erreicht — Kindheit plus fünfzehn Jahre Lehrlingszeit.
