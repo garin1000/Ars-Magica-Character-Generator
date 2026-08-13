@@ -5,6 +5,7 @@
 
 use super::*;
 use crate::effective::XpPoolOrigin;
+use crate::life_stage::{AbilityRequirementKind, magus_minimum_abilities};
 use crate::types::SpellSelection;
 
 /// Validates a magus's Hermetic House and its specialisation picks. Runs only
@@ -134,6 +135,61 @@ pub(crate) fn validate_house(
                 );
             }
         }
+    }
+}
+
+/// Validates the Abilities the Order demands of every magus.
+///
+/// > Magi must have the following minimum Abilities: Parma Magica 1, Magic Theory 1,
+/// > Latin 1. Characters with lower scores would not be admitted to the Order.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2437, with the
+/// `#### Hermetic Magi Recommended Minimum Abilities` of `:2451-2461` as the second,
+/// advisory half.
+///
+/// - `magus_minimum_ability` (error) — one per unmet minimum. "Would not be admitted
+///   to the Order" is a hard bar, and the passage is **unconditional on the funding
+///   mode**, which is why this lives here rather than in `validation/life_stage.rs`:
+///   that validator returns early without a life-stage plan, while a magus built from
+///   a flat experience pool is held to `:2437` just the same.
+/// - `magus_recommended_ability` (warning) — one per unmet recommendation. `:2451`
+///   calls them *recommended*, and the consequences `:2437` spells out ("unable to
+///   read the books of the Order", "cannot set up his own laboratory") describe a weak
+///   magus, not an illegal one.
+///
+/// The checklist itself comes from [`magus_minimum_abilities`], the single reading of
+/// both passages — so this validator and the checklist a UI shows cannot disagree.
+/// Nothing is enforced for a non-magus, nor for a ruleset that states no minimums:
+/// the requirements are data (`rules/core/life_stages.json`), never a list in Rust.
+pub(crate) fn validate_magus_minimum_abilities(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    for row in magus_minimum_abilities(entity, ruleset) {
+        if row.met {
+            continue;
+        }
+        let args = args([
+            ("ability", row.ability.to_string()),
+            ("min", row.min_score.to_string()),
+            ("score", row.score.to_string()),
+        ]);
+        let context = Some(row.ability.clone());
+        issues.push(match row.requirement {
+            AbilityRequirementKind::Required => ValidationIssue::error(
+                ValidationIssue::CODE_MAGUS_MINIMUM_ABILITY,
+                CreationPhase::Abilities,
+                args,
+                context,
+            ),
+            AbilityRequirementKind::Recommended => ValidationIssue::warning(
+                ValidationIssue::CODE_MAGUS_RECOMMENDED_ABILITY,
+                CreationPhase::Abilities,
+                args,
+                context,
+            ),
+        });
     }
 }
 
@@ -561,5 +617,206 @@ fn origin_args(origin: &XpPoolOrigin) -> (&'static str, String) {
     match origin {
         XpPoolOrigin::Item { item } => ("item", item.to_string()),
         XpPoolOrigin::LifeStage { block } => ("life_stage", block.to_string()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef};
+    use crate::validation::{IssueSeverity, ValidationIssue, ValidationResult, validate};
+    use crate::{CreationPhase, Ruleset, RulesetSources};
+
+    const ITEMS: &str = r#"[
+      { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+        "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] }
+    ]"#;
+    const TYPES: &str = r#"[
+      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["general", "personality"], "creation_phases": [] },
+      { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["general", "personality"], "is_magus": true,
+        "creation_phases": [] }
+    ]"#;
+    const ABILITIES: &str = r#"{
+      "advancement": [
+        { "score": 1, "total_xp": 5 },
+        { "score": 3, "total_xp": 30 },
+        { "score": 4, "total_xp": 50 }
+      ],
+      "abilities": [
+        { "id": "ability.artes_liberales", "category": "academic" },
+        { "id": "ability.dead_language", "category": "academic", "parameter": "language" },
+        { "id": "ability.living_language", "category": "general", "parameter": "language" },
+        { "id": "ability.magic_theory", "category": "arcane" },
+        { "id": "ability.parma_magica", "category": "arcane" },
+        { "id": "ability.penetration", "category": "arcane" },
+        { "id": "ability.philosophiae", "category": "academic" },
+        { "id": "ability.swim", "category": "general" }
+      ]
+    }"#;
+    /// The shipped Hermetic requirements: the three minimums of Core Rules.md:2437 and
+    /// the four recommendations of `:2451-2461`, priced to 90 (5 + 50 + 30 + 5).
+    const LIFE_STAGES: &str = r#"{
+      "apprenticeship": {
+        "years": 15,
+        "xp": 240,
+        "minimum_abilities": [
+          { "ability": "ability.dead_language", "min_score": 1 },
+          { "ability": "ability.magic_theory", "min_score": 1 },
+          { "ability": "ability.parma_magica", "min_score": 1 }
+        ],
+        "recommended_abilities": [
+          { "ability": "ability.artes_liberales", "min_score": 1 },
+          { "ability": "ability.dead_language", "min_score": 4 },
+          { "ability": "ability.magic_theory", "min_score": 3 },
+          { "ability": "ability.parma_magica", "min_score": 1 }
+        ],
+        "recommended_xp": 90
+      },
+      "childhood": {
+        "years": 5,
+        "native_language_ability": "ability.living_language",
+        "native_language_xp": 75,
+        "spread_xp": 45,
+        "spread_abilities": ["ability.swim"]
+      },
+      "later_life": { "xp_per_year": 15 }
+    }"#;
+
+    fn rs() -> Ruleset {
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: TYPES,
+            abilities: Some(ABILITIES),
+            life_stages: Some(LIFE_STAGES),
+            ..RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    /// The same catalogue with no life-stage rules at all — a ruleset that states no
+    /// minimums, so none are enforced. (A ruleset shipping life stages *and* magi is
+    /// obliged to declare an apprenticeship, so this is the only shape that can lack
+    /// the requirements.)
+    fn rs_without_life_stages() -> Ruleset {
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: TYPES,
+            abilities: Some(ABILITIES),
+            ..RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    /// A directly-entered character of `type_id` with the given bought scores. No
+    /// life-stage plan: `:2437` is unconditional on how the experience was funded.
+    fn character(type_id: &str, scores: Vec<(&str, Option<&str>, u8)>) -> Entity {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new(type_id),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.xp_pool = 500;
+        entity.ability_scores = scores
+            .into_iter()
+            .map(|(ability, parameter, score)| AbilityScore {
+                ability: Id::new(ability),
+                parameter: parameter.map(str::to_string),
+                score,
+                specialty: None,
+            })
+            .collect();
+        entity
+    }
+
+    fn issues_with(result: &ValidationResult, code: &str) -> Vec<ValidationIssue> {
+        result
+            .issues
+            .iter()
+            .filter(|issue| issue.code == code)
+            .cloned()
+            .collect()
+    }
+
+    /// > Magi must have the following minimum Abilities: Parma Magica 1, Magic Theory
+    /// > 1, Latin 1. Characters with lower scores would not be admitted to the Order.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2437. An **error**, and
+    /// unconditional: it says nothing about how the experience was earned, so a magus
+    /// built from a flat pool is held to it exactly as a guided one is. One finding per
+    /// unmet requirement, each naming the Ability it is about.
+    #[test]
+    fn a_magus_below_the_minimum_abilities_is_an_error() {
+        let rs = rs();
+        let result = validate(&character("magus", vec![]), &rs);
+
+        let errors = issues_with(&result, ValidationIssue::CODE_MAGUS_MINIMUM_ABILITY);
+        assert_eq!(
+            errors
+                .iter()
+                .map(|issue| {
+                    (
+                        issue.args.get("ability").cloned().unwrap_or_default(),
+                        issue.args.get("min").cloned().unwrap_or_default(),
+                        issue.args.get("score").cloned().unwrap_or_default(),
+                    )
+                })
+                .collect::<Vec<_>>(),
+            vec![
+                ("ability.dead_language".to_string(), "1".into(), "0".into()),
+                ("ability.magic_theory".to_string(), "1".into(), "0".into()),
+                ("ability.parma_magica".to_string(), "1".into(), "0".into()),
+            ]
+        );
+        for issue in &errors {
+            assert_eq!(issue.severity, IssueSeverity::Error);
+            assert_eq!(issue.phase, CreationPhase::Abilities);
+            assert_eq!(
+                issue.context.as_ref().map(Id::to_string),
+                issue.args.get("ability").cloned(),
+                "the finding targets the Ability row: {issue:?}"
+            );
+        }
+
+        // The recommended set is advice, so falling short of it only warns.
+        let warnings = issues_with(&result, ValidationIssue::CODE_MAGUS_RECOMMENDED_ABILITY);
+        assert_eq!(warnings.len(), 4);
+        for issue in &warnings {
+            assert_eq!(issue.severity, IssueSeverity::Warning);
+            assert_eq!(issue.phase, CreationPhase::Abilities);
+        }
+
+        // A magus meeting the minimums raises neither code for them; the Darius
+        // package (`:2441`, `:2449`) meets all seven rows.
+        let darius = character(
+            "magus",
+            vec![
+                ("ability.dead_language", Some("Latin"), 4),
+                ("ability.magic_theory", None, 4),
+                ("ability.artes_liberales", None, 3),
+                ("ability.parma_magica", None, 1),
+            ],
+        );
+        let result = validate(&darius, &rs);
+        assert!(
+            issues_with(&result, ValidationIssue::CODE_MAGUS_MINIMUM_ABILITY).is_empty(),
+            "{:?}",
+            issues_with(&result, ValidationIssue::CODE_MAGUS_MINIMUM_ABILITY)
+        );
+        assert!(issues_with(&result, ValidationIssue::CODE_MAGUS_RECOMMENDED_ABILITY).is_empty());
+
+        // A companion is not admitted to the Order in the first place.
+        let result = validate(&character("companion", vec![]), &rs);
+        assert!(issues_with(&result, ValidationIssue::CODE_MAGUS_MINIMUM_ABILITY).is_empty());
+        assert!(issues_with(&result, ValidationIssue::CODE_MAGUS_RECOMMENDED_ABILITY).is_empty());
+
+        // A ruleset that states no minimums enforces none — the minimums are data.
+        let result = validate(&character("magus", vec![]), &rs_without_life_stages());
+        assert!(issues_with(&result, ValidationIssue::CODE_MAGUS_MINIMUM_ABILITY).is_empty());
+        assert!(issues_with(&result, ValidationIssue::CODE_MAGUS_RECOMMENDED_ABILITY).is_empty());
     }
 }
