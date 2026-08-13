@@ -293,6 +293,7 @@ mod tests {
         { "score": 3, "total_xp": 30 },
         { "score": 5, "total_xp": 75 }
       ],
+      "categories_requiring_virtue": ["academic", "arcane", "martial"],
       "abilities": [
         { "id": "ability.area_lore", "category": "general", "parameter": "area" },
         { "id": "ability.living_language", "category": "general", "parameter": "language" },
@@ -627,6 +628,44 @@ mod tests {
                 ),
                 ("life_stage".to_string(), "childhood_spread".to_string()),
             ]
+        );
+    }
+
+    /// A magus's pre-apprenticeship experience is a pool of its own, so leaving it
+    /// unspent is reported like any other wasted block — and **names the block**,
+    /// because a magus now has three of them and three warnings differing only in
+    /// their numbers say nothing about where to go and spend.
+    ///
+    /// A **regression lock**: this falls out of `origin_args` reading
+    /// `LifeStageBlock`'s `Display`, which is precisely why the pool carries an origin
+    /// at all.
+    #[test]
+    fn unspent_pre_apprenticeship_experience_names_the_later_life_block() {
+        let mut magus = planned(25);
+        magus.type_id = Id::new("magus");
+        // Academic, so only apprenticeship's 240 may fund it — the 75 of later life
+        // stays untouched.
+        magus.ability_scores.push(AbilityScore {
+            ability: Id::new("ability.artes_liberales"),
+            parameter: None,
+            score: 3,
+            specialty: None,
+        });
+
+        let origins: Vec<(String, String)> = validate(&magus, &rs())
+            .issues
+            .iter()
+            .filter(|i| i.code == ValidationIssue::CODE_RESTRICTED_XP_UNSPENT)
+            .map(|i| {
+                (
+                    i.args.get("origin_kind").cloned().unwrap_or_default(),
+                    i.args.get("origin").cloned().unwrap_or_default(),
+                )
+            })
+            .collect();
+        assert!(
+            origins.contains(&("life_stage".to_string(), "later_life".to_string())),
+            "origins: {origins:?}"
         );
     }
 
