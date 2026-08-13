@@ -2453,11 +2453,11 @@ mod tests {
             }
         }
 
-        // 79 shipping sites today (the six literals in the test module are
-        // stripped). A floor, not an equality, so adding a validator is not a
-        // failing test — but a scanner that stops matching is.
+        // 92 shipping sites today (every literal inside a test module is stripped).
+        // A floor, not an equality, so adding a validator is not a failing test —
+        // but a scanner that stops matching is.
         assert!(
-            sites >= 79,
+            sites >= 92,
             "expected to find the issue emit sites, found {sites}"
         );
         assert!(
