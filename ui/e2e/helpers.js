@@ -145,6 +145,65 @@ export async function advanceWizardTo(phase) {
 }
 
 /**
+ * Add one Ability row at `index` (its position in the character's Ability array),
+ * name its instance where the Ability is parameterized, and raise it to 1.
+ *
+ * @param {string} ability ability id
+ * @param {number} index expected row index
+ * @param {string} [parameter] instance value, for a parameterized Ability
+ */
+async function addAbilityAtScoreOne(ability, index, parameter) {
+  const add = await $(`[data-testid="add-${ability}"]`);
+  await add.waitForClickable({ timeout: STEP_TIMEOUT });
+  await add.click();
+
+  if (parameter !== undefined) {
+    const field = await $(`[data-testid="ability-param-${ability}-${index}"]`);
+    await field.waitForExist({ timeout: STEP_TIMEOUT });
+    await field.setValue(parameter);
+  }
+
+  const inc = await $(`[data-testid="ability-inc-${ability}-${index}"]`);
+  await inc.waitForClickable({ timeout: STEP_TIMEOUT });
+  await inc.click();
+  await browser.waitUntil(
+    async () => (await $(`[data-testid="ability-score-${ability}-${index}"]`).getText()) === '1',
+    { timeout: STEP_TIMEOUT, timeoutMsg: `${ability} did not reach a score of 1` },
+  );
+}
+
+/**
+ * Give the magus on screen the Abilities the Order demands of it, and the experience
+ * to pay for them.
+ *
+ * "Magi must have the following minimum Abilities: Parma Magica 1, Magic Theory 1,
+ * Latin 1. Characters with lower scores would not be admitted to the Order."
+ * (Ars Magica - Definitive Edition (Core Rules).md:2437.) Those three are BLOCKING
+ * findings on the `abilities` phase for every magus, guided or flat — and an empty
+ * experience pool leaves `not_enough_xp` blocking just as effectively — so any spec
+ * walking a magus past that step has to settle both. Extracted rather than copied into
+ * each spec, exactly like {@link advanceWizardTo}.
+ *
+ * Expects an Abilities surface on screen (the wizard's `abilities` step or the editor
+ * tab) and a character with no Ability rows yet, so the three added take rows 0-2. The
+ * experience pool is only filled where it is editable: under a life-stage plan the
+ * engine forbids a typed pool, and apprenticeship funds these three many times over.
+ *
+ * @param {string} language the dead language to name (any dead language satisfies `:2437`)
+ */
+export async function satisfyMagusMinimums(language = 'Latin') {
+  const pool = await $('[data-testid="xp-pool"]');
+  if (await pool.isExisting()) {
+    // Five experience points each off the advancement table; 30 leaves headroom.
+    await pool.setValue('30');
+  }
+
+  await addAbilityAtScoreOne('ability.parma_magica', 0);
+  await addAbilityAtScoreOne('ability.magic_theory', 1);
+  await addAbilityAtScoreOne('ability.dead_language', 2, language);
+}
+
+/**
  * Leave the editor or the wizard for the startup screen through the New button,
  * confirming the discard prompt when there is something to discard. A no-op when
  * the startup screen is already showing.
