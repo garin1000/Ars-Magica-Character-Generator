@@ -76,6 +76,19 @@ jobs:
       - name: Build application bundles
         run: cargo tauri build
 
+      # The bundled AppImage ships linuxdeploy's copies of libwayland, which the
+      # host's (much newer) Mesa libEGL cannot drive: eglGetDisplay() fails with
+      # EGL_BAD_PARAMETER, WebKitWebProcess aborts, and the user gets an empty
+      # white window on a Wayland desktop. This patches an AppRun hook into the
+      # AppImage that prefers the host's libwayland; see the script and
+      # scripts/appimage/wayland-compat-hook.sh for the full mechanism. The
+      # AppImage is patched in place, so the upload paths below are unchanged.
+      - name: Test and apply the AppImage Wayland/EGL patch
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          ./scripts/test-appimage-wayland-patch.sh
+          ./scripts/patch-appimage-wayland.sh
+
       # For manual/dispatch test runs: download these from the run summary and
       # install/run them — no Release is created.
       - name: Upload build artifacts (for testing)
