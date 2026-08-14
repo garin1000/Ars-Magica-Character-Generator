@@ -19,9 +19,9 @@ use arm_rules::{
     art_bonuses, characteristic_aging_drops, characteristic_bonuses, characteristic_caps,
     characteristic_floors, characteristic_points_granted, confidence, decrepitude_score,
     effective_characteristics, effective_might, effective_point_ceilings, entity_grants,
-    item_level_budget, item_level_used, magus_minimum_abilities, power_levels_budget, powers_used,
-    reputation_grants, size, spell_level_caps, spell_levels_base, spell_levels_bonus,
-    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
+    item_level_budget, item_level_used, life_stage_spell_levels, magus_minimum_abilities,
+    power_levels_budget, powers_used, reputation_grants, size, spell_level_caps, spell_levels_base,
+    spell_levels_bonus, spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
     spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, validate, warping,
     warping_owed, warping_owed_grants, xp_allocation,
 };
@@ -114,10 +114,26 @@ pub struct EffectiveScores {
     /// hardcoded literal. Ignores the per-character override and V/F modifiers.
     pub spell_levels_profile_base: u32,
     /// The V/F contribution to the budget on its own (Skilled Parens +30, Weak
-    /// Parens −30; signed, 0 when none), so the spell-levels bar can show the
-    /// editable base beside a labelled bonus — the way the XP bar lists its extra
-    /// pools beside the general pool. `base + this == spell_levels_budget`.
+    /// Parens −30; signed, 0 when none).
+    ///
+    /// The budget's three parts — [`Self::spell_levels_profile_base`], this, and
+    /// [`Self::spell_levels_life_stage`] — are surfaced separately because they come
+    /// from three different rules and the bar labels each, the way the XP bar lists
+    /// its extra pools beside the general pool; folding them into
+    /// [`Self::spell_levels_budget`] alone would leave the player an unexplained
+    /// total. The identity is
+    /// `base + bonus + life_stage == spell_levels_budget`.
     pub spell_levels_bonus: i64,
+    /// The levels of spells the magus's years past its Gauntlet bought: the player's
+    /// chosen slice of the fungible 30-points-a-year, where "Each point can be an
+    /// experience point in an Art or Ability or one level of spell"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2471). 0 for a magus standing
+    /// at its Gauntlet and for anyone who serves no apprenticeship.
+    ///
+    /// **Not a second budget** like apprenticeship's 120 levels (`:2435`), which are
+    /// the type profile's `spell_levels` and reach the UI as
+    /// [`Self::spell_levels_profile_base`] — these are added on top of it.
+    pub spell_levels_life_stage: u32,
     /// The spell levels the chosen spells consume — the "used" side of the bar.
     pub spell_levels_used: u32,
     /// Per-Technique/Form maximum learnable spell level (Te + Fo + Int + Magic
@@ -247,6 +263,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         spell_levels_budget: spell_levels_budget(spell_base, entity, ruleset),
         spell_levels_profile_base: profile.map(|p| p.spell_levels).unwrap_or(0),
         spell_levels_bonus: spell_levels_bonus(entity, ruleset),
+        spell_levels_life_stage: life_stage_spell_levels(entity, ruleset),
         spell_levels_used: spell_levels_used(entity, ruleset),
         // The per-Te/Fo cap only matters on the (magus-only) Spells tab, so it is
         // computed only for a magus — other types ship an empty list.

@@ -312,6 +312,17 @@ export interface LifeStagePlan {
   // something derived from: the Abilities it grants live in `ability_scores` as
   // ordinary bought rows. Omitted for a childhood divided by hand.
   childhood_package?: string;
+  // The age the magus was gauntleted at — the one post-Gauntlet number stored, with
+  // every other figure derived from it. Omitted means the character stands AT its
+  // Gauntlet, which is how a magus was built before the field existed.
+  gauntlet_age?: number;
+  // Lab seasons charged against the yearly 30 points, totalled across every
+  // post-Gauntlet year (-10 each, and the deduction stops at the third season of any
+  // year, so a fourth is free). Omitted when zero.
+  post_gauntlet_lab_seasons?: number;
+  // How many of the post-Gauntlet points the player took as levels of spells rather
+  // than experience; the rest are experience. Omitted when zero.
+  post_gauntlet_spell_levels?: number;
 }
 
 // Score effects for the current entity, computed by the engine. Ability bonuses
@@ -368,9 +379,15 @@ export interface EffectiveScores {
   // override field's placeholder shows the data-driven default (never a literal).
   spell_levels_profile_base: number;
   // The V/F contribution alone (Skilled Parens +30, Weak Parens -30; signed, 0
-  // when none), so the bar shows the editable base beside a labelled bonus the way
-  // the XP bar lists its extra pools. base + bonus === spell_levels_budget.
+  // when none). The budget's three parts — profile base, this, and the life-stage
+  // levels below — are surfaced separately because they come from three different
+  // rules and the bar labels each, the way the XP bar lists its extra pools; the
+  // identity is base + bonus + life_stage === spell_levels_budget.
   spell_levels_bonus: number;
+  // The levels of spells the magus's years past its Gauntlet bought — its chosen
+  // slice of the fungible 30 points a year, added ON TOP of the profile base (which
+  // is apprenticeship's 120). 0 for a magus standing at its Gauntlet.
+  spell_levels_life_stage: number;
   spell_levels_used: number;
   // Per-Technique/Form maximum learnable spell level (Te + Fo + Int + Magic
   // Theory + 3), so the picker greys a spell above the magus's cap. Empty for a
@@ -1059,6 +1076,24 @@ export interface LifeStageRules {
   apprenticeship?: ApprenticeshipRules;
   childhood: ChildhoodRules;
   later_life: LaterLifeRules;
+  // The years a magus lives after its Gauntlet, when the ruleset ships them —
+  // optional for the same reason apprenticeship is.
+  post_apprenticeship?: PostApprenticeshipRules;
+}
+
+// Life as a magus after the Gauntlet: what a year out of apprenticeship is worth
+// and what a season of lab work costs against it. Mirrors the engine's
+// `PostApprenticeshipRules`. Counted in POINTS, not experience: each point is an
+// experience point in an Art or Ability OR one level of spell, and the player
+// decides which.
+export interface PostApprenticeshipRules {
+  // What one season of lab work costs the year that holds it (10 points).
+  lab_season_cost: number;
+  // How many lab seasons in one year actually cost anything (3) — the deduction
+  // stops at 0, so a fourth season in the same year is free.
+  max_charged_lab_seasons_per_year: number;
+  // The points one year out of apprenticeship grants (30).
+  points_per_year: number;
 }
 
 // Apprenticeship: fifteen years and 240 experience points, plus the Abilities the
