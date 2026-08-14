@@ -33,6 +33,12 @@ pub struct LifeStageRules {
     pub childhood: ChildhoodRules,
     /// Every year after childhood, up to the character's age.
     pub later_life: LaterLifeRules,
+    /// The years a magus lives after its Gauntlet, when the ruleset ships them.
+    /// Optional for the same reason as [`Self::apprenticeship`]: `:2364` calls
+    /// apprenticeship and life as a magus "two **more** periods", so a ruleset
+    /// with no Hermetic magi ships neither.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub post_apprenticeship: Option<PostApprenticeshipRules>,
 }
 
 /// Apprenticeship: the fixed block of years a magus spends being trained, and the
@@ -66,6 +72,34 @@ pub struct ApprenticeshipRules {
     pub xp: u32,
     /// Years apprenticeship covers ("The fifteen years of apprenticeship", `:2435`).
     pub years: u32,
+}
+
+/// Life as a magus after the Gauntlet: what each year out of apprenticeship is
+/// worth, and what a season of lab work costs against it.
+///
+/// > For every year, the magus gets 30 points. Each point can be an experience
+/// > point in an Art or Ability or one level of spell.
+///
+/// Every field is counted in **points**, not experience: `:2471` makes a point
+/// fungible between an experience point and a level of spell, and the player
+/// decides which each one becomes. Calling them "xp" would name only half of what
+/// they buy — which is why this struct says `points_per_year` where
+/// [`ApprenticeshipRules`] says `xp` (`:2435` grants experience and spell levels
+/// as two separate, non-interchangeable numbers).
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2467-2482.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PostApprenticeshipRules {
+    /// What one season of lab work costs the year that holds it: "the character
+    /// loses 10 points from the yearly 30 experience points" (`:2482`).
+    pub lab_season_cost: u32,
+    /// How many lab seasons in one year actually cost anything — the deduction
+    /// stops "at a minimum of 0 if three or four seasons are spent on lab work"
+    /// (`:2482`), so a fourth season is free because there is nothing left to take.
+    pub max_charged_lab_seasons_per_year: u32,
+    /// The points one year out of apprenticeship grants: "For every year, the
+    /// magus gets 30 points" (`:2471`).
+    pub points_per_year: u32,
 }
 
 /// An Ability score some rule demands, as data: which Ability, at what score, and
@@ -490,6 +524,24 @@ mod tests {
       "later_life": { "xp_per_year": 15 }
     }"#;
 
+    /// The same shape plus the years a magus lives after its Gauntlet, so the
+    /// fourth period parses with every field `:2471` and `:2482` state.
+    const SHIPPED_WITH_POST_APPRENTICESHIP: &str = r#"{
+      "childhood": {
+        "years": 5,
+        "native_language_ability": "ability.living_language",
+        "native_language_xp": 75,
+        "spread_xp": 45,
+        "spread_abilities": ["ability.athletics", "ability.swim"]
+      },
+      "later_life": { "xp_per_year": 15 },
+      "post_apprenticeship": {
+        "lab_season_cost": 10,
+        "max_charged_lab_seasons_per_year": 3,
+        "points_per_year": 30
+      }
+    }"#;
+
     fn rules() -> LifeStageRules {
         serde_json::from_str(SHIPPED).expect("the shipped life-stage shape parses")
     }
@@ -554,6 +606,39 @@ mod tests {
 
         // A ruleset shipping no apprenticeship parses just as well, and says so.
         assert!(rules().apprenticeship.is_none());
+    }
+
+    /// The fourth period: "For every year, the magus gets 30 points"
+    /// (Core Rules.md:2471), less the "10 points from the yearly 30 experience
+    /// points" a season of lab work costs, "to a minimum of 0 if three or four
+    /// seasons are spent on lab work" (`:2482`).
+    ///
+    /// Additive like every optional field before it: a ruleset shipping no such
+    /// block parses, and serializes without the key.
+    #[test]
+    fn post_apprenticeship_rules_carry_the_yearly_points_and_the_lab_season_cost() {
+        let parsed: LifeStageRules = serde_json::from_str(SHIPPED_WITH_POST_APPRENTICESHIP)
+            .expect("the post-apprenticeship shape parses");
+        let post = parsed
+            .post_apprenticeship
+            .clone()
+            .expect("the file declares a post-apprenticeship block");
+        assert_eq!(post.points_per_year, 30);
+        assert_eq!(post.lab_season_cost, 10);
+        assert_eq!(post.max_charged_lab_seasons_per_year, 3);
+
+        // Serialize → deserialize → equal, so a cached ruleset carries the block.
+        let json = serde_json::to_string(&parsed).expect("the block serializes");
+        assert_eq!(
+            serde_json::from_str::<LifeStageRules>(&json).expect("the block round-trips"),
+            parsed
+        );
+
+        // A ruleset shipping no post-apprenticeship block parses, and writes no key.
+        let without = rules();
+        assert!(without.post_apprenticeship.is_none());
+        let json = serde_json::to_string(&without).expect("the blockless rules serialize");
+        assert!(!json.contains("post_apprenticeship"), "{json}");
     }
 
     /// A requirement may name one instance of a parameterized Ability, so the field

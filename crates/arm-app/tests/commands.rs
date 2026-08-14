@@ -1405,6 +1405,11 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
             spread_abilities: [Id::new("ability.swim")].into_iter().collect(),
         },
         later_life: arm_rules::LaterLifeRules { xp_per_year: 15 },
+        // The one optional field deliberately left unset: nothing in the frontend
+        // reads the post-apprenticeship block yet, so populating it here would
+        // demand a `types.ts` mirror for a payload no view consumes. It joins the
+        // check in the same change that first sends it across the boundary.
+        post_apprenticeship: None,
     };
     // One row of the magus checklist, which reaches the frontend on
     // `EffectiveScores.magus_minimum_abilities` — the payload the Abilities view
