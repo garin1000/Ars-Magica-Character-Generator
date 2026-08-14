@@ -65,11 +65,12 @@ pub use effective::{
     effective_ability_score, effective_art_score, effective_characteristic_after_aging,
     effective_characteristic_score, effective_characteristics, effective_might,
     effective_spell_mastery, entity_grants, item_level_budget, item_level_used,
-    power_levels_budget, powers_used, reputation_grants, resolved_spell_level, restricted_xp_pools,
-    size, spell_level_cap, spell_level_caps, spell_levels_base, spell_levels_bonus,
-    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
-    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, warping,
-    warping_owed, warping_owed_grants, warping_points_total, warping_score, xp_allocation,
+    life_stage_spell_levels, power_levels_budget, powers_used, reputation_grants,
+    resolved_spell_level, restricted_xp_pools, size, spell_level_cap, spell_level_caps,
+    spell_levels_base, spell_levels_bonus, spell_levels_budget, spell_levels_used,
+    spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
+    supernatural_free_slots, true_faith, warping, warping_owed, warping_owed_grants,
+    warping_points_total, warping_score, xp_allocation,
 };
 pub use equipment::{Armor, Shield, Weapon, WeaponKind};
 pub use export::{LABEL_KEYS, character_markdown};

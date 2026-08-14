@@ -1793,10 +1793,46 @@ pub fn spell_levels_base(entity: &Entity, profile: Option<&EntityTypeProfile>) -
         .unwrap_or_else(|| profile.map(|p| p.spell_levels).unwrap_or(0))
 }
 
+/// The levels of spells a magus took out of its years past the Gauntlet — the
+/// player's chosen slice of "30 points per year", where "Each point can be an
+/// experience point in an Art or Ability or **one level of spell**" (`:2471`).
+///
+/// 0 for a character with no life-stage plan, and for a ruleset shipping no
+/// `post_apprenticeship` block — the rate is data, so with no block there is
+/// nothing to grant.
+// Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2471.
+pub fn life_stage_spell_levels(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    ruleset
+        .life_stages()
+        .and_then(|rules| rules.budget(entity, ruleset))
+        .map_or(0, |budget| budget.post_gauntlet_spell_levels)
+}
+
 /// The magus's effective spell-levels budget: the base ([`spell_levels_base`])
-/// plus any [`Effect::SpellLevels`] modifiers, clamped at 0.
+/// plus any [`Effect::SpellLevels`] modifiers and the levels its post-Gauntlet
+/// years bought ([`life_stage_spell_levels`]), clamped at 0.
+///
+/// The post-Gauntlet term is **additive, not a second budget.** Apprenticeship's
+/// "120 levels of spells" (`:2435`) are the type profile's `spell_levels` and are
+/// what `base` selects; these are the player's chosen slice of the fungible "30
+/// points per year" (`:2471`), which is also why `post_gauntlet_xp` and
+/// `post_gauntlet_spell_levels` always sum to `post_gauntlet_points`.
+///
+/// Folded in **here**, in the one selector both `validate_spells` and the
+/// `EffectiveScores` payload call, so the `over_spell_levels` finding and the
+/// spell-levels bar can never disagree about what the budget is.
+///
+/// [`Entity::spell_levels_override`] still replaces the *profile base* only, and
+/// the post-Gauntlet levels stay on top of it. Deliberate: the override is the flat
+/// flow's escape hatch, and it is not made exclusive with a life-stage plan the way
+/// [`Entity::xp_pool`] is.
+// Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2435, :2471.
 pub fn spell_levels_budget(base: u32, entity: &Entity, ruleset: &Ruleset) -> u32 {
-    clamp_to_u32(i64::from(base) + spell_levels_bonus(entity, ruleset))
+    clamp_to_u32(
+        i64::from(base)
+            + spell_levels_bonus(entity, ruleset)
+            + i64::from(life_stage_spell_levels(entity, ruleset)),
+    )
 }
 
 /// The maximum level a magus may learn of a spell of the given Technique/Form:
@@ -4786,7 +4822,7 @@ mod tests {
             "permitted_categories": ["general", "personality"], "creation_phases": [] },
           { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
             "permitted_categories": ["general", "personality", "hermetic"],
-            "is_magus": true, "creation_phases": [] }
+            "is_magus": true, "spell_levels": 120, "creation_phases": [] }
         ]"#;
         // Ability table: 5/15/30/50/75 — the shipped Core Rules figures. The five
         // Hermetic roles are present because the magus profile above obliges any
@@ -5259,6 +5295,75 @@ mod tests {
             ..magus.life_stages.clone().expect("a plan")
         });
         assert_eq!(xp_allocation(&magus, &rs).general_pool, 240);
+    }
+
+    /// The levels of spells a magus took out of its post-Gauntlet points are **added
+    /// to** the profile's 120, not a second budget beside it: the 120 of `:2435` are
+    /// the type profile's `spell_levels`, while these are the player's chosen slice of
+    /// the fungible "30 points per year" (`:2471`).
+    #[test]
+    fn post_gauntlet_spell_levels_add_to_the_profile_budget() {
+        let rs = life_stage_ruleset();
+        let profile = rs.profile(&Id::new("magus"));
+        let mut magus = experienced_magus();
+        magus.life_stages = Some(crate::life_stage::LifeStagePlan {
+            post_gauntlet_spell_levels: 300,
+            ..magus.life_stages.clone().expect("a plan")
+        });
+        assert_eq!(life_stage_spell_levels(&magus, &rs), 300);
+        let base = spell_levels_base(&magus, profile);
+        assert_eq!(base, 120, "the profile's apprenticeship levels, untouched");
+        assert_eq!(spell_levels_budget(base, &magus, &rs), 420, "120 + 300");
+    }
+
+    /// A magus standing at its Gauntlet has no post-Gauntlet points to slice, so its
+    /// budget is the profile's 120 — the pre-6b5 number.
+    #[test]
+    fn a_magus_at_its_gauntlet_keeps_the_profile_spell_budget() {
+        let rs = life_stage_ruleset();
+        let profile = rs.profile(&Id::new("magus"));
+        let magus = planned_magus();
+        assert_eq!(life_stage_spell_levels(&magus, &rs), 0);
+        let base = spell_levels_base(&magus, profile);
+        assert_eq!(spell_levels_budget(base, &magus, &rs), 120);
+    }
+
+    /// `spell_levels_override` replaces the **profile base** only; the post-Gauntlet
+    /// levels stay additive on top of whatever base is in force. Deliberate: the
+    /// override is the flat flow's escape hatch and is not made exclusive with a plan
+    /// the way `xp_pool` is.
+    #[test]
+    fn an_override_replaces_the_base_not_the_post_gauntlet_levels() {
+        let rs = life_stage_ruleset();
+        let profile = rs.profile(&Id::new("magus"));
+        let mut magus = experienced_magus();
+        magus.life_stages = Some(crate::life_stage::LifeStagePlan {
+            post_gauntlet_spell_levels: 300,
+            ..magus.life_stages.clone().expect("a plan")
+        });
+        magus.spell_levels_override = Some(80);
+        let base = spell_levels_base(&magus, profile);
+        assert_eq!(base, 80, "the override replaces the profile's 120");
+        assert_eq!(spell_levels_budget(base, &magus, &rs), 380, "80 + 300");
+    }
+
+    /// A non-magus earns none: "**Hermetic Magi Only (Optional):** Years after
+    /// apprenticeship" (`:2216`), so a companion's plan contributes 0 however its
+    /// post-Gauntlet fields are set — and so does a character with no plan at all.
+    #[test]
+    fn a_non_magus_gets_no_post_gauntlet_spell_levels() {
+        let rs = life_stage_ruleset();
+        let mut companion = planned_companion();
+        companion.life_stages = Some(crate::life_stage::LifeStagePlan {
+            gauntlet_age: Some(20),
+            post_gauntlet_spell_levels: 100,
+            ..companion.life_stages.clone().expect("a plan")
+        });
+        assert_eq!(life_stage_spell_levels(&companion, &rs), 0);
+
+        let mut direct = planned_magus();
+        direct.life_stages = None;
+        assert_eq!(life_stage_spell_levels(&direct, &rs), 0);
     }
 
     /// Later life is a life-stage block like the childhood ones, because for a magus

@@ -2926,6 +2926,26 @@ Abilities are bought with experience earned in blocks, not from one bank:
   - Later life is untouched by this and stays the restricted, Abilities-only pool of
     `:2435`'s "before apprenticeship" clause however many years the magus has lived
     since (`post_gauntlet_years_leave_later_life_restricted`).
+- **The spell levels are *additive* to the profile's 120 — not a second budget.**
+  `effective.rs` gains `life_stage_spell_levels(entity, ruleset)` (the budget's
+  `post_gauntlet_spell_levels`; 0 without a plan or without the block), folded into
+  `spell_levels_budget`, which becomes `base + spell_levels_bonus +
+  life_stage_spell_levels`, clamped as before. Apprenticeship's "120 levels of spells"
+  (`:2435`) are the magus profile's `spell_levels` in
+  `rules/core/character_types.json`, which is what `spell_levels_base` selects; the
+  post-Gauntlet levels are the player's chosen slice of the fungible 30 points a year
+  (`:2471`) — the same reason `post_gauntlet_xp + post_gauntlet_spell_levels ==
+  post_gauntlet_points`. A magus 35 years out with 300 points banked as levels has a
+  budget of 420.
+  - Folded into **`spell_levels_budget`** on purpose: it is the single selector both
+    `validate_spells` (the `over_spell_levels` finding) and the `EffectiveScores`
+    payload call, so the finding and the bar can never disagree. `validate_spells`
+    itself needed no change — a change there would have meant the term was in the
+    wrong place.
+  - `Entity::spell_levels_override` still replaces the **profile base** only; the
+    post-Gauntlet levels stay additive on top. Deliberate: the override is the flat
+    flow's escape hatch and is *not* made exclusive with a plan the way `xp_pool` is
+    (`life_stage_xp_pool_conflict`).
 - Still to come in **M6/6b5**: the character-level validation of the three stored
   choices.
 
