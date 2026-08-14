@@ -5792,6 +5792,7 @@ mod tests {
     // so every engine-required Hermetic ability must be present.
     const SPELL_ABILITIES: &str = r#"{ "abilities": [
         { "id": "ability.artes_liberales", "category": "academic" },
+        { "id": "ability.living_language", "category": "general", "parameter": "language" },
         { "id": "ability.magic_theory", "category": "arcane" },
         { "id": "ability.parma_magica", "category": "arcane" },
         { "id": "ability.penetration", "category": "arcane" },
@@ -5812,6 +5813,19 @@ mod tests {
         { "id": "spell_mastery_ability.fast_casting" },
         { "id": "spell_mastery_ability.quiet_casting", "repeatable": true }
     ] }"#;
+    // Life stages so a magus can be taken past its Gauntlet; the `post_apprenticeship`
+    // block is obligatory once an `is_magus` profile ships life-stage rules.
+    const SPELL_LIFE_STAGES: &str = r#"{
+        "apprenticeship": { "years": 15, "xp": 240, "minimum_abilities": [],
+                            "recommended_abilities": [], "recommended_xp": 0 },
+        "childhood": { "years": 5, "native_language_ability": "ability.living_language",
+                       "native_language_xp": 75, "spread_xp": 45,
+                       "spread_abilities": ["ability.living_language"] },
+        "later_life": { "xp_per_year": 15 },
+        "post_apprenticeship": { "lab_season_cost": 10,
+                                 "max_charged_lab_seasons_per_year": 3,
+                                 "points_per_year": 30 }
+    }"#;
     // spell_levels 50 keeps the budget small enough to trip in tests.
     const SPELL_MAGUS_TYPE: &str = r#"[
         { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -5835,7 +5849,7 @@ mod tests {
             spell_mastery_abilities: Some(SPELL_MASTERY_CATALOGUE),
             equipment: None,
             characteristics: None,
-            life_stages: None,
+            life_stages: Some(SPELL_LIFE_STAGES),
             childhoods: None,
         })
         .unwrap()
@@ -5908,6 +5922,33 @@ mod tests {
             spell("spell.pilum_of_fire", None),
             spell("spell.ball_of_abysmal_flame", None),
         ];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"over_spell_levels".to_string()));
+    }
+
+    /// The levels of spells a magus took out of its post-Gauntlet points raise the
+    /// same budget `over_spell_levels` is measured against: "Divide 30 points per year
+    /// between … levels of spells" (Core Rules.md:2216). Gauntleted at 25 and now 60,
+    /// this maga banked 370 of its 1050 points as spell levels, so its budget is the
+    /// profile's 50 plus 370 — and the finding turns on exactly one level.
+    #[test]
+    fn post_gauntlet_spell_levels_raise_the_budget_the_finding_measures() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.age = Some(60);
+        e.life_stages = Some(crate::life_stage::LifeStagePlan {
+            gauntlet_age: Some(25),
+            post_gauntlet_spell_levels: 370,
+            ..crate::life_stage::LifeStagePlan::default()
+        });
+        // 210 + 210 = 420, exactly the budget.
+        e.spells = vec![
+            spell("spell.general_ward", Some(210)),
+            spell("spell.aegis_of_the_hearth", Some(210)),
+        ];
+        assert!(!all_codes(&validate(&e, &rs)).contains(&"over_spell_levels".to_string()));
+
+        // One level more and it fires.
+        e.spells[1].level = Some(211);
         assert!(all_codes(&validate(&e, &rs)).contains(&"over_spell_levels".to_string()));
     }
 
