@@ -1812,6 +1812,62 @@ describe('spellLevelAllocation', () => {
     expect(a.baseUsed).toBe(20);
     expect(a.available).toBe(100);
   });
+
+  it('assumes no post-Gauntlet levels when the term is omitted', () => {
+    // The default keeps every pre-6b5a caller reading exactly as before.
+    const a = spellLevelAllocation(20, 120, 0);
+    expect(a.lifeStage).toBe(0);
+    expect(a.base).toBe(120);
+    expect(a.available).toBe(100);
+  });
+
+  it('keeps the post-Gauntlet levels out of the editable base', () => {
+    // 35 years past the Gauntlet with 300 of the points taken as levels of spells:
+    // the engine's budget is 120 + 0 + 300, so the base is still the profile's 120.
+    const a = spellLevelAllocation(0, 420, 0, 300);
+    expect(a.base).toBe(120);
+    expect(a.lifeStage).toBe(300);
+    expect(a.baseUsed).toBe(0);
+    // Already-earned levels are spendable, so they count towards Available.
+    expect(a.available).toBe(420);
+  });
+
+  it('spends the post-Gauntlet levels on the same side as the base', () => {
+    // Nothing is earmarked: 150 levels of spells simply draw on the 420 earned.
+    const a = spellLevelAllocation(150, 420, 0, 300);
+    expect(a.baseUsed).toBe(150);
+    expect(a.available).toBe(270); // = budget - used
+  });
+
+  it('breaks a Skilled Parens magus past its Gauntlet into three summing parts', () => {
+    // 120 base + 30 Skilled Parens + 300 post-Gauntlet = the engine's 450 budget.
+    const a = spellLevelAllocation(45, 450, 30, 300);
+    expect(a.base).toBe(120);
+    expect(a.bonusAmount).toBe(30);
+    expect(a.lifeStage).toBe(300);
+    expect(a.base + a.bonusAmount + a.lifeStage).toBe(450);
+    // The bonus is still spent first; the rest lands on base + post-Gauntlet.
+    expect(a.bonusUsed).toBe(30);
+    expect(a.baseUsed).toBe(15);
+    expect(a.available).toBe(405); // = budget - used
+  });
+
+  it('still charges a Weak Parens penalty to the base when post-Gauntlet levels exist', () => {
+    // 120 - 30 + 300 = a 390 budget with 45 levels chosen: the penalty takes its 30
+    // off the unconditional side, exactly as it does without a life stage.
+    const a = spellLevelAllocation(45, 390, -30, 300);
+    expect(a.base).toBe(120);
+    expect(a.lifeStage).toBe(300);
+    expect(a.bonusUsed).toBe(0);
+    expect(a.baseUsed).toBe(75); // 45 spell levels + the 30-level penalty
+    expect(a.available).toBe(345); // 420 - 75, and also budget (390) - used (45)
+  });
+
+  it('reports a negative Available when a post-Gauntlet budget is overspent', () => {
+    const a = spellLevelAllocation(430, 420, 0, 300);
+    expect(a.baseUsed).toBe(430);
+    expect(a.available).toBe(-10);
+  });
 });
 
 describe('invalidSelectionIds', () => {
