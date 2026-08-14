@@ -7,6 +7,7 @@
 use super::*;
 
 use crate::childhood::ChildhoodRejection;
+use crate::life_stage::LifeStagePlan;
 
 /// Validates a character built through its life stages.
 ///
@@ -28,6 +29,11 @@ use crate::childhood::ChildhoodRejection;
 ///   still produces exactly one finding. That floor is measured against the
 ///   **Gauntlet** age ([`crate::life_stage::LifeStageBudget::gauntlet_age`]), which
 ///   is the character's own age only while it stands at its Gauntlet.
+/// - `life_stage_gauntlet_age_after_age`: a Gauntlet later than the character's own
+///   age, so it lies in the character's future. Clamped to the age by
+///   [`crate::life_stage::LifeStageRules::budget`] — see
+///   [`validate_post_gauntlet_choices`] for why the clamp stays and the finding is
+///   still made.
 /// - `life_stage_native_language_unset`: no native language chosen, so the
 ///   childhood's largest block (75 points) has nothing it may be spent on.
 /// - `life_stage_native_language_missing_score`: a native language chosen but no
@@ -133,6 +139,16 @@ pub(crate) fn validate_life_stage_plan(
         }
     }
 
+    // "**Hermetic Magi Only (Optional):** Years after apprenticeship"
+    // (Core Rules.md:2216), so the three post-Gauntlet choices are checked for a
+    // magus and nobody else: on any other plan `budget()` ignores them outright, and
+    // a finding about a value that changes nothing is noise a player cannot act on.
+    // An unset age is its own finding (`life_stage_age_unset`) and leaves nothing to
+    // measure these against.
+    if magus && let Some(age) = entity.age {
+        validate_post_gauntlet_choices(plan, age, issues);
+    }
+
     match &plan.native_language {
         None => issues.push(ValidationIssue::error(
             ValidationIssue::CODE_LIFE_STAGE_NATIVE_LANGUAGE_UNSET,
@@ -178,6 +194,41 @@ pub(crate) fn validate_life_stage_plan(
             CreationPhase::Abilities,
             args([("package", package.to_string())]),
             Some(package.clone()),
+        ));
+    }
+}
+
+/// The stored choices for a magus's life after its Gauntlet, checked against the
+/// years it actually lived.
+///
+/// Every one of these is a value [`crate::life_stage::LifeStageRules::budget`]
+/// **clamps**. The clamps are load-bearing and stay: `ValidationMode::Advisory` and
+/// `Silent` do not block an error, so the budget has to remain arithmetically sane
+/// whatever a save holds. The cost of a clamp is that a wrong number simply
+/// disappears — a Gauntlet in the future silently loses the years between, a lab
+/// season beyond the cap costs nothing — so each finding here names the fault
+/// standing beside the clamp that absorbed it.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2471, :2482.
+fn validate_post_gauntlet_choices(
+    plan: &LifeStagePlan,
+    age: u32,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    // A Gauntlet the character has not reached yet. `budget()` clamps it to the age,
+    // which costs the magus every later-life year between the two — up to 35 years,
+    // 525 experience points — without a word.
+    if let Some(gauntlet_age) = plan.gauntlet_age
+        && gauntlet_age > age
+    {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_LIFE_STAGE_GAUNTLET_AGE_AFTER_AGE,
+            CreationPhase::Abilities,
+            args([
+                ("age", age.to_string()),
+                ("gauntlet_age", gauntlet_age.to_string()),
+            ]),
+            None,
         ));
     }
 }
@@ -574,6 +625,61 @@ mod tests {
             "issues: {:?}",
             codes(&validate(&lived_on, &rs()))
         );
+    }
+
+    /// A magus of `age` gauntleted at `gauntlet_age`, charging `lab_seasons` seasons
+    /// of lab work against its yearly points and taking `spell_levels` of them as
+    /// levels of spells.
+    fn out_of_apprenticeship(
+        age: u32,
+        gauntlet_age: u32,
+        lab_seasons: u32,
+        spell_levels: u32,
+    ) -> Entity {
+        let mut magus = planned(age);
+        magus.type_id = Id::new("magus");
+        magus.life_stages = Some(LifeStagePlan {
+            native_language: Some("German".into()),
+            gauntlet_age: Some(gauntlet_age),
+            post_gauntlet_lab_seasons: lab_seasons,
+            post_gauntlet_spell_levels: spell_levels,
+            ..LifeStagePlan::default()
+        });
+        magus
+    }
+
+    /// A Gauntlet in the character's future. `budget()` clamps it to the age so no
+    /// figure underflows — Advisory and Silent do not block an error, so the
+    /// arithmetic has to stay sane on its own — and this is the finding that says
+    /// the clamp happened, rather than letting a magus lose years in silence.
+    #[test]
+    fn a_gauntlet_age_after_the_characters_age_is_an_error() {
+        let result = validate(&out_of_apprenticeship(25, 40, 0, 0), &rs());
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_GAUNTLET_AGE_AFTER_AGE)
+            .expect("a Gauntlet after the character's age is reported");
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(
+            issue.args.get("gauntlet_age").map(String::as_str),
+            Some("40")
+        );
+        assert_eq!(issue.args.get("age").map(String::as_str), Some("25"));
+
+        // A Gauntlet at the character's own age is the magus standing at it, and a
+        // Gauntlet behind it is a magus who has lived on: neither is a fault.
+        for legal in [
+            out_of_apprenticeship(25, 25, 0, 0),
+            out_of_apprenticeship(60, 25, 0, 0),
+        ] {
+            let issues = codes(&validate(&legal, &rs()));
+            assert!(
+                !issues.contains(&ValidationIssue::CODE_LIFE_STAGE_GAUNTLET_AGE_AFTER_AGE.into()),
+                "issues: {issues:?}"
+            );
+        }
     }
 
     #[test]
