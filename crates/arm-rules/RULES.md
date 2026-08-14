@@ -44,6 +44,23 @@ mechanics carry entries; the rest are stubbed at the end.
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2774`.
 - Implementation: `crates/arm-rules/src/types.rs` — `ItemKind::is_positive()`.
 
+#### Age at which aging rolls become due — over 35
+> "Characters begin aging in the Winter after they turn 35. Every year, a
+> character must roll on the aging table."
+
+> "The first thing to bear in mind is that a character over the age of 35 must
+> make aging rolls (see page 392) before the game begins."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:16565` (the threshold),
+  `:2232` (the rolls are owed before play begins).
+- Implementation: `crates/arm-rules/src/validation/aging.rs` —
+  `AGING_ROLLS_START_AGE` / `report_pending_aging_rolls`, which emits
+  `life_stage_aging_rolls_pending` (warning) for `age > 35` with an empty
+  `aging_log`. "Over the age of 35" is strict, so the first roll is owed at 36.
+- **Hardcoded for now**: there is no `rules/core/aging.json` yet. Slice 6b6 adds
+  that file and moves this threshold into it, at which point the constant goes
+  and this row becomes a data row.
+
 ### Enforcement logic
 
 #### Virtue/Flaw balance — Virtues must be funded by Flaws
@@ -1291,6 +1308,17 @@ Fluent key `issue-excessive_aging_reduction` (en/de). (An earlier
 `aging_points_force_drop` note announcing each auto-applied drop was removed as
 validation noise — the drop is automatic and already reflected in the effective
 score, so it is not an entry problem worth flagging.)
+
+`validate_aging` also emits the entity-wide **warning**
+`life_stage_aging_rolls_pending` (arg `age`, phase `review`) when the character is
+over 35 and its `aging_log` is empty — the rolls the rules owe before play have
+not been made (`:2232`, `:16565`; see *Hardcoded engine values* above). Emitted
+for **every** character of that age, not only one built through its life stages,
+which is why it lives here rather than in `validate_life_stage_plan` (that one
+returns early without a plan). The **log**, never `aging_points`, settles it: a
+roll can legitimately produce no points. Fluent key
+`issue-life_stage_aging_rolls_pending` (en/de). Filed under `review` only because
+no aging phase exists yet — 6b6 adds `CreationPhase::Aging` and moves it there.
 
 App/UI: `EffectiveScores` gains `decrepitude_score: u8` and widens `warping_points`
 to `u32`; the Details tab (`CharacterDetails.svelte`) enters identity fields, aging
