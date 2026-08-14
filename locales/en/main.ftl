@@ -644,6 +644,7 @@ issue-life_stage_xp_pool_conflict =This character earns its experience through i
 issue-life_stage_age_unset = Enter the character's age: later life earns experience per year, so with no age only childhood's blocks can be counted.
 issue-life_stage_age_before_childhood = Age { $age } falls inside childhood, which lasts { $min } years — there are no later-life years to earn experience in.
 issue-life_stage_age_before_gauntlet = No magus is gauntleted at { $age }: the Gauntlet comes no earlier than { $min } — childhood plus fifteen years of apprenticeship.
+issue-life_stage_gauntlet_age_after_age = The Gauntlet at { $gauntlet_age } is still ahead of this magus, who is { $age }; the years as a magus are counted forward from the Gauntlet.
 issue-life_stage_native_language_unset = Choose a native language: childhood's largest block of experience can be spent on nothing else.
 issue-life_stage_native_language_missing_score = No { $language } score is bought, so childhood's native-language experience is unspent.
 issue-magus_minimum_ability = No magus is admitted to the Order below { $ability } { $min }; this character has { $score }.

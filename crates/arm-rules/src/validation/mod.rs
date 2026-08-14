@@ -142,6 +142,7 @@ impl fmt::Display for IssueSeverity {
 /// | `life_stage_age_unset` | error | abilities | (none) |
 /// | `life_stage_age_before_childhood` | error | abilities | `age`, `min` |
 /// | `life_stage_age_before_gauntlet` | error | abilities | `age`, `min` |
+/// | `life_stage_gauntlet_age_after_age` | error | abilities | `gauntlet_age`, `age` |
 /// | `life_stage_native_language_unset` | error | abilities | (none) |
 /// | `life_stage_native_language_missing_score` | warning | abilities | `language` |
 /// | `magus_minimum_ability` | error | abilities | `ability`, `min`, `score` |
@@ -360,6 +361,13 @@ impl ValidationIssue {
     /// [`ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD`]; one wrong age
     /// produces one of the two, never both.
     pub const CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET: &'static str = "life_stage_age_before_gauntlet";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the stored Gauntlet age is
+    /// later than the character's own age, putting the Gauntlet in its future
+    /// (Core Rules.md:2216). [`crate::life_stage::LifeStageRules::budget`] clamps the
+    /// value to the age so no figure underflows; this names the fault the clamp
+    /// would otherwise absorb in silence.
+    pub const CODE_LIFE_STAGE_GAUNTLET_AGE_AFTER_AGE: &'static str =
+        "life_stage_gauntlet_age_after_age";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a life-stage plan with no
     /// age, so the later-life block — the one that counts years — cannot be earned.
     /// Childhood is granted regardless (Core Rules.md:2378), which is why this is a
