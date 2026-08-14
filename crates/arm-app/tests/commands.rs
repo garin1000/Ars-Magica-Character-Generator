@@ -1370,6 +1370,11 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
     let plan = arm_rules::LifeStagePlan {
         native_language: Some("German".to_string()),
         childhood_package: Some(Id::new("childhood.athletic")),
+        // The post-Gauntlet choices are deliberately left unset, for the reason
+        // `post_apprenticeship` is below: no view reads them yet, so populating them
+        // would demand a `types.ts` mirror for a payload nothing consumes. They join
+        // the check in the change that first sends them across the boundary.
+        ..arm_rules::LifeStagePlan::default()
     };
     let budget = arm_rules::LifeStageBudget {
         childhood_native_xp: 75,

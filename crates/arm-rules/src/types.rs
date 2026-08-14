@@ -2218,7 +2218,11 @@ pub struct AgingLogEntry {
 }
 
 /// `skip_serializing_if` predicate: omits a `u32` field when it is zero.
-fn is_zero(n: &u32) -> bool {
+///
+/// Visible crate-wide because the same predicate keeps additive `u32` choices out
+/// of a save elsewhere in the engine (`life_stage::LifeStagePlan`); a second copy
+/// there would be one more thing to keep in step.
+pub(crate) fn is_zero(n: &u32) -> bool {
     *n == 0
 }
 

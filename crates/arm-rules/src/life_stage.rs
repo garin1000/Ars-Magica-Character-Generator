@@ -16,7 +16,7 @@ use std::collections::BTreeSet;
 
 use crate::effective::selections_for_effects;
 use crate::ruleset::Ruleset;
-use crate::types::{Effect, Entity, Id};
+use crate::types::{Effect, Entity, Id, is_zero};
 
 /// The life-stage experience rules, loaded from `rules/core/life_stages.json`.
 // No `Default`: every field is authored data with no meaningful zero (a childhood
@@ -313,6 +313,46 @@ pub struct LifeStagePlan {
     /// additive and needs no schema bump.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub childhood_package: Option<Id>,
+    /// The age at which the magus was gauntleted — **the one number this slice
+    /// stores**. `age = childhood + later life + apprenticeship + post-Gauntlet` is
+    /// a single equation in two unknowns (where apprenticeship starts, and how long
+    /// ago it ended), so exactly one of them has to be recorded and every other
+    /// figure derived from it.
+    ///
+    /// **`None` means the character stands at its Gauntlet** — the Gauntlet age is
+    /// then [`Entity::age`] itself, which is precisely how a magus was built before
+    /// this field existed. So every earlier save keeps its numbers unchanged, and the
+    /// field is additive.
+    ///
+    /// Storing `post_gauntlet_years` instead was rejected: raising a magus's age
+    /// would then stretch the *childhood-to-apprenticeship* span — the years before
+    /// it was taken as an apprentice — rather than its years as a magus, which is the
+    /// opposite of what a player raising the age means.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2467-2471.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gauntlet_age: Option<u32>,
+    /// Lab seasons **charged** against the yearly 30 points, totalled across every
+    /// post-Gauntlet year: "the character loses 10 points from the yearly 30
+    /// experience points, to a minimum of 0 if three or four seasons are spent on lab
+    /// work" (Core Rules.md:2482).
+    ///
+    /// One total rather than a season list per year, because the arithmetic cannot
+    /// tell the difference: the deduction stops at the third season of any year, so
+    /// every legal per-year distribution totals at most `3 × years`, every total in
+    /// that range is realizable by some distribution, and all of them cost the same.
+    ///
+    /// It counts **charged** seasons, not seasons actually worked — the fourth season
+    /// of a year is free (`:2482` has already reached 0 by the third), so 16 seasons
+    /// worked costs nothing across four years but 30 points across five, and a single
+    /// total of *worked* seasons could not tell those two apart.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub post_gauntlet_lab_seasons: u32,
+    /// How many of the post-Gauntlet points the player took as **levels of spells**
+    /// rather than experience: "Each point can be an experience point in an Art or
+    /// Ability or one level of spell" (Core Rules.md:2471). The rest are experience.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub post_gauntlet_spell_levels: u32,
 }
 
 /// The experience a life-stage plan earns, split into the blocks the rules grant
@@ -1095,6 +1135,7 @@ mod tests {
         entity.life_stages = Some(LifeStagePlan {
             native_language: Some("German".into()),
             childhood_package: Some(Id::new("childhood.athletic")),
+            ..LifeStagePlan::default()
         });
         entity.normalize();
         let json = serde_json::to_string_pretty(&entity).unwrap();
@@ -1113,6 +1154,55 @@ mod tests {
                 .and_then(|plan| plan.childhood_package.as_ref()),
             Some(&Id::new("childhood.athletic"))
         );
+    }
+
+    /// The three choices life after the Gauntlet needs are stored on the plan, and
+    /// nothing else is: `age = childhood + later life + apprenticeship +
+    /// post-Gauntlet` is one equation in two unknowns, so exactly one of them —
+    /// the Gauntlet age — is recorded, and the years as a magus follow from it.
+    ///
+    /// All three are additive. Absent, they add no key at all, so a save written
+    /// before they existed is byte-identical and needs no schema bump; and an absent
+    /// `gauntlet_age` means the magus stands at its Gauntlet, which is exactly what
+    /// such a save meant.
+    #[test]
+    fn the_post_gauntlet_choices_roundtrip_and_are_schema_stable() {
+        let at_the_gauntlet = LifeStagePlan {
+            native_language: Some("German".into()),
+            childhood_package: Some(Id::new("childhood.athletic")),
+            ..LifeStagePlan::default()
+        };
+        assert_eq!(
+            serde_json::to_string(&at_the_gauntlet).unwrap(),
+            r#"{"native_language":"German","childhood_package":"childhood.athletic"}"#
+        );
+
+        let out_of_apprenticeship = LifeStagePlan {
+            gauntlet_age: Some(25),
+            post_gauntlet_lab_seasons: 12,
+            post_gauntlet_spell_levels: 300,
+            ..at_the_gauntlet
+        };
+        let mut entity = companion(vec![]);
+        entity.age = Some(60);
+        entity.life_stages = Some(out_of_apprenticeship.clone());
+        entity.normalize();
+        let json = serde_json::to_string_pretty(&entity).unwrap();
+        assert!(json.contains(r#""gauntlet_age": 25"#), "{json}");
+        assert!(
+            json.contains(r#""post_gauntlet_lab_seasons": 12"#),
+            "{json}"
+        );
+        assert!(
+            json.contains(r#""post_gauntlet_spell_levels": 300"#),
+            "{json}"
+        );
+        // Additive, so the save format is unchanged.
+        assert_eq!(SCHEMA_VERSION, 14);
+        assert!(json.contains(r#""schema_version": 14"#), "{json}");
+
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.life_stages, Some(out_of_apprenticeship));
     }
 
     /// Wealthy multiplies out across every year of later life, not once.

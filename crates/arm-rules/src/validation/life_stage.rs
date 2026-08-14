@@ -576,6 +576,7 @@ mod tests {
         entity.life_stages = Some(LifeStagePlan {
             native_language: Some("German".into()),
             childhood_package: Some(Id::new("childhood.nonesuch")),
+            ..LifeStagePlan::default()
         });
 
         let result = validate(&entity, &rs());
@@ -595,6 +596,7 @@ mod tests {
         entity.life_stages = Some(LifeStagePlan {
             native_language: Some("German".into()),
             childhood_package: Some(Id::new("childhood.shipped")),
+            ..LifeStagePlan::default()
         });
         assert!(
             !codes(&validate(&entity, &rs()))
