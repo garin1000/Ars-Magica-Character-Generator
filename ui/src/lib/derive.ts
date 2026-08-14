@@ -916,25 +916,33 @@ export function resolveIssueArgs(
   return resolved;
 }
 
-/** How a magus's spent spell levels split between the base budget and its V/F modifier. */
+/** How a magus's spent spell levels split between the base budget, its V/F modifier and its years as a magus. */
 export interface SpellLevelAllocation {
-  /** The base budget (the editable figure): the effective budget minus the V/F modifier. */
+  /**
+   * The base budget (the editable figure): the effective budget minus the V/F
+   * modifier and the post-Gauntlet levels.
+   */
   base: number;
-  /** Levels charged to the base, including a negative modifier's penalty. */
+  /**
+   * Levels charged to the unconditional side (base + post-Gauntlet), including a
+   * negative modifier's penalty.
+   */
   baseUsed: number;
   /** The V/F modifier itself, signed (Skilled Parens +30, Weak Parens -30, else 0). */
   bonusAmount: number;
   /** Levels drawn from a POSITIVE modifier (always 0 for a penalty). */
   bonusUsed: number;
-  /** Base levels still free: `base - baseUsed`. Negative when overspent. */
+  /** Levels the magus's years past its Gauntlet bought; 0 at the Gauntlet. */
+  lifeStage: number;
+  /** Unconditional levels still free: `base + lifeStage - baseUsed`. Negative when overspent. */
   available: number;
 }
 
 /**
- * Splits the spell levels a magus has spent between the base budget and the
- * Virtue/Flaw modifier, so the spell bar reads exactly like the XP bar: the
- * bracketed base with its own Available, and the V/F contribution as a separate
- * entry.
+ * Splits the spell levels a magus has spent between the base budget, the
+ * Virtue/Flaw modifier and the levels its years past the Gauntlet bought, so the
+ * spell bar reads exactly like the XP bar: the bracketed base with its own
+ * Available, and each further contribution as a separate entry.
  *
  * A **positive** modifier (Skilled Parens +30) is spent FIRST, base covers the
  * rest — the same policy the engine's XP allocator applies to restricted pools,
@@ -947,27 +955,44 @@ export interface SpellLevelAllocation {
  *
  * A **negative** modifier (Weak Parens -30) has no pool to draw from, so the
  * penalty is charged to the base first instead. Either way the V/F modifier
- * settles before the base, so `base - baseUsed` always equals `budget - used` and
- * the base line's arithmetic closes.
+ * settles before the base, so `base + lifeStage - baseUsed` always equals
+ * `budget - used` and the base line's arithmetic closes.
+ *
+ * `lifeStage` — the slice of a magus's 30-points-a-year taken as levels of spells
+ * rather than experience — is **not** a third pool. Those levels are already
+ * earned, exactly as unconditional as the profile base, whereas the V/F modifier
+ * is a signed adjustment that may even be a debt. So they sit on the base's side
+ * of the split: they are not spent first, they raise Available, and whatever the
+ * bonus does not cover is charged against `base + lifeStage` as one. Only the
+ * editable `base` excludes them, because the override field edits the profile base
+ * alone and the post-Gauntlet levels stay additive on top of it.
  *
  * The engine stays the single authority on the numbers themselves: `budget`
- * (base + modifier) and `bonus` both come from `EffectiveScores`, and validation
- * still tests the spend against the one combined budget — this split is display
- * attribution only, never a second rule.
+ * (base + modifier + life stage), `bonus` and `lifeStage` all come from
+ * `EffectiveScores`, and validation still tests the spend against the one combined
+ * budget — this split is display attribution only, never a second rule.
  */
 export function spellLevelAllocation(
   used: number,
   budget: number,
   bonus: number,
+  lifeStage = 0,
 ): SpellLevelAllocation {
-  // The engine reports the total and the modifier, so the base follows from them
-  // rather than the UI re-deriving "override else profile base".
-  const base = budget - bonus;
+  // The engine reports the total and both of its extra terms, so the base follows
+  // from them rather than the UI re-deriving "override else profile base".
+  const base = budget - bonus - lifeStage;
   const bonusUsed = bonus > 0 ? Math.min(used, bonus) : 0;
   // A penalty (negative bonus) is charged to the base on top of the real spend.
   const penalty = bonus < 0 ? -bonus : 0;
   const baseUsed = used - bonusUsed + penalty;
-  return { base, baseUsed, bonusAmount: bonus, bonusUsed, available: base - baseUsed };
+  return {
+    base,
+    baseUsed,
+    bonusAmount: bonus,
+    bonusUsed,
+    lifeStage,
+    available: base + lifeStage - baseUsed,
+  };
 }
 
 /**
