@@ -744,6 +744,60 @@ class AppStore {
   }
 
   /**
+   * Set (or clear) the age the magus was gauntleted at — the one post-Gauntlet
+   * figure stored, with the years, points and experience all derived from it.
+   *
+   * A blank or zero age deletes the key, which is what "the magus stands AT its
+   * Gauntlet" means: with no Gauntlet age the engine reads the character's own age
+   * as the Gauntlet age, exactly how a magus was built before the field existed. So
+   * a magus at its Gauntlet still saves nothing but its native language.
+   *
+   * A no-op without a plan, like {@link setNativeLanguage}: a surface shown in the
+   * flat mode can never conjure one into being.
+   */
+  setGauntletAge(age: number | null): void {
+    this.#setPlanCount('gauntlet_age', age);
+  }
+
+  /**
+   * Set (or clear) the lab seasons charged against the post-Gauntlet years — 10
+   * points each, and at most three a year count (the third already takes the whole
+   * 30, so a fourth is free). Zero deletes the key, like {@link setGauntletAge}.
+   */
+  setPostGauntletLabSeasons(seasons: number | null): void {
+    this.#setPlanCount('post_gauntlet_lab_seasons', seasons);
+  }
+
+  /**
+   * Set (or clear) how many post-Gauntlet points the player took as levels of
+   * spells rather than experience. Zero deletes the key, like
+   * {@link setGauntletAge}.
+   */
+  setPostGauntletSpellLevels(levels: number | null): void {
+    this.#setPlanCount('post_gauntlet_spell_levels', levels);
+  }
+
+  /**
+   * Write one of the plan's optional u32 counts, deleting the key when the input is
+   * blank, zero or not a number. The three post-Gauntlet fields share this shape:
+   * absent is the meaningful default for every one of them, so a sparse save is the
+   * canonical one.
+   */
+  #setPlanCount(
+    field: 'gauntlet_age' | 'post_gauntlet_lab_seasons' | 'post_gauntlet_spell_levels',
+    value: number | null,
+  ): void {
+    const plan = this.entity.life_stages;
+    if (!plan) return;
+    if (value != null && Number.isFinite(value) && value > 0) {
+      plan[field] = clampInt(value, 1, U32_MAX);
+    } else {
+      delete plan[field];
+    }
+    this.#scheduleValidate();
+  }
+
+  /**
    * Select the Sample Childhood package the player is considering, or clear the
    * consideration with `null`. Draft state only (see {@link ChildhoodDraft}):
    * nothing is written to the entity until {@link applyChildhoodPackage}.

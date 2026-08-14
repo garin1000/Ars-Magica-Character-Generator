@@ -1945,6 +1945,148 @@ describe('setNativeLanguage', () => {
   });
 });
 
+// --- the post-Gauntlet choices (M6b5) ---------------------------------------
+
+describe('the post-Gauntlet plan fields', () => {
+  beforeEach(async () => {
+    await store.setAbilityFunding('pool');
+    await store.setAbilityFunding('life_stages');
+    vi.mocked(ipc.validateEntity).mockClear();
+  });
+
+  describe('setGauntletAge', () => {
+    it('stores the age the apprenticeship ended at', () => {
+      store.setGauntletAge(25);
+      expect(store.entity.life_stages).toEqual({ gauntlet_age: 25 });
+    });
+
+    it('deletes the key for a blank or zero age, so a magus at its Gauntlet saves nothing', () => {
+      store.setNativeLanguage('German');
+      store.setGauntletAge(25);
+      store.setGauntletAge(null);
+      // Absent means "standing at the Gauntlet" — exactly the pre-6b5 shape.
+      expect(store.entity.life_stages).toEqual({ native_language: 'German' });
+
+      store.setGauntletAge(25);
+      store.setGauntletAge(0);
+      expect(store.entity.life_stages).toEqual({ native_language: 'German' });
+    });
+
+    it('clamps to the u32 range the engine field is', () => {
+      store.setGauntletAge(9999999999);
+      expect(store.entity.life_stages?.gauntlet_age).toBe(4294967295);
+      store.setGauntletAge(25.7);
+      expect(store.entity.life_stages?.gauntlet_age).toBe(25);
+    });
+
+    it('validates through the debounce, like the other typed fields', () => {
+      store.setGauntletAge(25);
+      expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(200);
+      expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
+    });
+
+    it('is a no-op without a plan, so a flat-mode surface cannot conjure one', async () => {
+      await store.setAbilityFunding('pool');
+      vi.mocked(ipc.validateEntity).mockClear();
+
+      store.setGauntletAge(25);
+
+      expect('life_stages' in store.entity).toBe(false);
+      vi.advanceTimersByTime(200);
+      expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('setPostGauntletLabSeasons', () => {
+    it('stores the charged lab seasons', () => {
+      store.setPostGauntletLabSeasons(6);
+      expect(store.entity.life_stages).toEqual({ post_gauntlet_lab_seasons: 6 });
+    });
+
+    it('deletes the key for a blank or zero count', () => {
+      store.setPostGauntletLabSeasons(6);
+      store.setPostGauntletLabSeasons(0);
+      expect(store.entity.life_stages).toEqual({});
+      store.setPostGauntletLabSeasons(6);
+      store.setPostGauntletLabSeasons(null);
+      expect(store.entity.life_stages).toEqual({});
+    });
+
+    it('clamps to the u32 range the engine field is', () => {
+      store.setPostGauntletLabSeasons(9999999999);
+      expect(store.entity.life_stages?.post_gauntlet_lab_seasons).toBe(4294967295);
+    });
+
+    it('validates through the debounce', () => {
+      store.setPostGauntletLabSeasons(6);
+      expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(200);
+      expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
+    });
+
+    it('is a no-op without a plan', async () => {
+      await store.setAbilityFunding('pool');
+      vi.mocked(ipc.validateEntity).mockClear();
+
+      store.setPostGauntletLabSeasons(6);
+
+      expect('life_stages' in store.entity).toBe(false);
+      vi.advanceTimersByTime(200);
+      expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('setPostGauntletSpellLevels', () => {
+    it('stores the levels taken as spells rather than experience', () => {
+      store.setPostGauntletSpellLevels(120);
+      expect(store.entity.life_stages).toEqual({ post_gauntlet_spell_levels: 120 });
+    });
+
+    it('deletes the key for a blank or zero split', () => {
+      store.setPostGauntletSpellLevels(120);
+      store.setPostGauntletSpellLevels(0);
+      expect(store.entity.life_stages).toEqual({});
+      store.setPostGauntletSpellLevels(120);
+      store.setPostGauntletSpellLevels(null);
+      expect(store.entity.life_stages).toEqual({});
+    });
+
+    it('clamps to the u32 range the engine field is', () => {
+      store.setPostGauntletSpellLevels(9999999999);
+      expect(store.entity.life_stages?.post_gauntlet_spell_levels).toBe(4294967295);
+    });
+
+    it('validates through the debounce', () => {
+      store.setPostGauntletSpellLevels(120);
+      expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(200);
+      expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
+    });
+
+    it('is a no-op without a plan', async () => {
+      await store.setAbilityFunding('pool');
+      vi.mocked(ipc.validateEntity).mockClear();
+
+      store.setPostGauntletSpellLevels(120);
+
+      expect('life_stages' in store.entity).toBe(false);
+      vi.advanceTimersByTime(200);
+      expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+    });
+  });
+
+  it('drops all three with the plan when guided funding is left', async () => {
+    store.setGauntletAge(40);
+    store.setPostGauntletLabSeasons(6);
+    store.setPostGauntletSpellLevels(120);
+
+    await store.setAbilityFunding('pool');
+
+    expect('life_stages' in store.entity).toBe(false);
+  });
+});
+
 // --- the Sample Childhood draft (M6b3b) -------------------------------------
 
 /**
