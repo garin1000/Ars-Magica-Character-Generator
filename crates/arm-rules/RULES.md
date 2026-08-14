@@ -2946,8 +2946,41 @@ Abilities are bought with experience earned in blocks, not from one bank:
     post-Gauntlet levels stay additive on top. Deliberate: the override is the flat
     flow's escape hatch and is *not* made exclusive with a plan the way `xp_pool` is
     (`life_stage_xp_pool_conflict`).
-- Still to come in **M6/6b5**: the character-level validation of the three stored
-  choices.
+- **Three findings stand beside the three clamps** — `validate_post_gauntlet_choices`
+  in `validation/life_stage.rs`, all `error`/`abilities`, all magus-gated because
+  `:2216` is "**Hermetic Magi Only (Optional)**" and on any other plan the values are
+  ignored outright:
+  - `life_stage_gauntlet_age_after_age` (`gauntlet_age`, `age`) — a Gauntlet in the
+    character's future.
+  - `life_stage_lab_seasons_out_of_range` (`seasons`, `max`, `years`) — more charged
+    seasons than `max_charged_lab_seasons_per_year × post_gauntlet_years` (`:2482`).
+    The message spells out the *charged* reading, which is the one thing a player
+    misreads: the deduction is exhausted by the third season of a year, so a fourth
+    is free and never counted here.
+  - `life_stage_spell_level_split_exceeds_points` (`levels`, `points`) — a spell-level
+    share larger than the points the years granted (`:2471`).
+- **The clamps stay, and that is why the findings exist.** `ValidationMode::Advisory`
+  downgrades every issue to a warning and `Silent` drops it, so neither blocks a save;
+  the budget therefore has to stay arithmetically sane whatever a file holds, which is
+  what `min`/`saturating_sub` guarantee. The price is that a wrong number *vanishes*
+  instead of failing — a Gauntlet at 40 on a magus of 25 silently loses the years
+  between, a 200-season total silently costs the same as 105, a 5 000-level split
+  silently becomes "all of them". Each finding names the value the clamp absorbed, so
+  the two together are honest: the arithmetic never breaks and the player is still
+  told what was ignored.
+- **The Gauntlet-age floor is a floor on the Gauntlet age**, not on the character's
+  own: `minimum_gauntlet_age()` (childhood + apprenticeship, `:2435`) is compared
+  against `LifeStageBudget::gauntlet_age` — the resolved value `budget()` funds the
+  character from, read off the budget rather than re-derived, so the finding and the
+  arithmetic cannot drift. A magus of 60 gauntleted at 12 never served its fifteen
+  years either, and only the Gauntlet age sees that; with no `gauntlet_age` stored the
+  two numbers are identical, which is what keeps every pre-6b5 plan reading as it did.
+- **`life_stage_spell_level_split_exceeds_points` is filed under `abilities`, not
+  `spells`**, although it feeds `spell_levels_budget`. M6/6b1a's rule is that a finding
+  belongs to the phase whose *input surface* owns the offending value: the number is
+  typed into the life-stage panel on the Abilities step, and the magus phase order is
+  `… abilities, arts, spells`, so filing it under `spells` would let the guided wizard
+  walk past the only step that can correct it.
 
 #### Pre-apprenticeship experience buys Abilities only — never Arts (M6/6b4)
 

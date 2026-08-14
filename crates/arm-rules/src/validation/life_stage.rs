@@ -37,6 +37,10 @@ use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
 /// - `life_stage_lab_seasons_out_of_range`: more lab seasons charged against the
 ///   post-Gauntlet years than three per year (`:2482`), which is all a year can be
 ///   charged for. Capped by [`crate::life_stage::LifeStageRules::budget`].
+/// - `life_stage_spell_level_split_exceeds_points`: more of the post-Gauntlet points
+///   taken as levels of spells than the years granted (`:2471`). Held to the points
+///   by [`crate::life_stage::LifeStageRules::budget`]. Filed under `abilities`, the
+///   phase whose input surface owns the number, never `spells`.
 /// - `life_stage_native_language_unset`: no native language chosen, so the
 ///   childhood's largest block (75 points) has nothing it may be spent on.
 /// - `life_stage_native_language_missing_score`: a native language chosen but no
@@ -262,6 +266,30 @@ fn validate_post_gauntlet_choices(
                 None,
             ));
         }
+    }
+
+    // "Each point can be an experience point in an Art or Ability or one level of
+    // spell" (Ars Magica - Definitive Edition (Core Rules).md:2471) — a split of the
+    // points the years granted, so a stored share beyond them is not a split at all.
+    // `budget()` holds it to the points, which quietly rewrites "600 levels" as "all
+    // of them" and hands the rest to nobody.
+    //
+    // **Phase `abilities`, deliberately not `spells`**, although the figure feeds the
+    // spell-levels budget. 6b1a's rule is that a finding belongs to the phase whose
+    // *input surface* owns the offending value, and this number is typed into the
+    // life-stage panel on the Abilities step; the magus phase order is
+    // `… abilities, arts, spells`, so filing it under `spells` would send the guided
+    // wizard forward past the only step where it can be corrected.
+    if plan.post_gauntlet_spell_levels > budget.post_gauntlet_points {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_LIFE_STAGE_SPELL_LEVEL_SPLIT_EXCEEDS_POINTS,
+            CreationPhase::Abilities,
+            args([
+                ("levels", plan.post_gauntlet_spell_levels.to_string()),
+                ("points", budget.post_gauntlet_points.to_string()),
+            ]),
+            None,
+        ));
     }
 }
 
@@ -750,6 +778,38 @@ mod tests {
             .expect("a season without a year is reported");
         assert_eq!(issue.args.get("max").map(String::as_str), Some("0"));
         assert_eq!(issue.args.get("years").map(String::as_str), Some("0"));
+    }
+
+    /// More of the yearly points taken as levels of spells than the years granted.
+    /// "Each point can be an experience point in an Art or Ability or one level of
+    /// spell" (Core Rules.md:2471) is a split of points that exist, so `budget()`
+    /// holds the stored figure to them — silently turning an over-large split into
+    /// "all of them", which is a different character from the one that was asked for.
+    ///
+    /// Filed under **abilities**, not spells: the life-stage panel that takes this
+    /// number lives on the Abilities step.
+    #[test]
+    fn taking_more_spell_levels_than_the_years_grant_is_an_error() {
+        let result = validate(&out_of_apprenticeship(60, 25, 10, 5_000), &rs());
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_SPELL_LEVEL_SPLIT_EXCEEDS_POINTS)
+            .expect("a split beyond the points is reported");
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.args.get("levels").map(String::as_str), Some("5000"));
+        // 35 years × 30 points, less 10 charged lab seasons × 10.
+        assert_eq!(issue.args.get("points").map(String::as_str), Some("950"));
+
+        // Taking every point as levels of spells is a legal split, not a fault.
+        let issues = codes(&validate(&out_of_apprenticeship(60, 25, 10, 950), &rs()));
+        assert!(
+            !issues.contains(
+                &ValidationIssue::CODE_LIFE_STAGE_SPELL_LEVEL_SPLIT_EXCEEDS_POINTS.into()
+            ),
+            "issues: {issues:?}"
+        );
     }
 
     #[test]

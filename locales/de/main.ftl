@@ -642,6 +642,7 @@ issue-life_stage_age_before_childhood = Alter { $age } liegt innerhalb der Kindh
 issue-life_stage_age_before_gauntlet = Kein Magus legt die Lehrlingsprüfung mit { $age } Jahren ab: Sie kommt frühestens mit { $min } — Kindheit plus fünfzehn Jahre Lehrlingszeit.
 issue-life_stage_gauntlet_age_after_age = Die Lehrlingsprüfung mit { $gauntlet_age } liegt für diesen Magus mit { $age } Jahren noch in der Zukunft; die Jahre als Magus werden ab der Lehrlingsprüfung gezählt.
 issue-life_stage_lab_seasons_out_of_range = { $seasons } Quartale Laborarbeit werden { $years } Jahren als Magus angerechnet, mehr als die { $max }, die diese Jahre tragen können: nur drei Quartale pro Jahr kosten etwas, denn das dritte nimmt dem Jahr bereits die vollen 30 Punkte — ein viertes ist kostenlos.
+issue-life_stage_spell_level_split_exceeds_points = { $levels } Zauberstufen aus den Jahren als Magus zu nehmen übersteigt, was diese Jahre gewähren: Sie sind { $points } Punkte wert, die zwischen Erfahrung und Zauberstufen aufzuteilen sind.
 issue-life_stage_native_language_unset = Wähle eine Muttersprache: der größte Erfahrungsblock der Kindheit kann für nichts anderes ausgegeben werden.
 issue-life_stage_native_language_missing_score = Kein Wert in { $language } gekauft, daher bleibt die Erfahrung der Kindheit für die Muttersprache unausgegeben.
 issue-magus_minimum_ability = Kein Magus wird unter { $ability } { $min } in den Orden aufgenommen; dieser Charakter hat { $score }.
