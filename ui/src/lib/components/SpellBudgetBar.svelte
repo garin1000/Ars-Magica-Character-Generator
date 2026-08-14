@@ -20,11 +20,19 @@
   const profileBase = $derived(store.effective?.spell_levels_profile_base ?? 0);
   // The V/F contribution on its own (Skilled Parens +30, Weak Parens -30).
   const bonus = $derived(store.effective?.spell_levels_bonus ?? 0);
-  // Split the spend between the base and the V/F modifier so this bar reads exactly
-  // like the XP bar: a positive bonus is spent first (as the engine drains
-  // restricted pools before the general one), a penalty is charged to the base.
-  // That keeps `available === base - baseUsed` closed on the first line.
-  const alloc = $derived(spellLevelAllocation(used, budget, bonus));
+  // The levels the magus's years past its Gauntlet bought — the slice of its
+  // 30-points-a-year it took as spells rather than experience. There is no input
+  // for it here on purpose: that one number defines both the experience pool and
+  // this budget, and the magus phase order is abilities, arts, spells, so editing
+  // it on the Spells step would retroactively shrink an xp pool already spent two
+  // steps earlier. The Abilities step owns the choice; this step shows what it did.
+  const lifeStage = $derived(store.effective?.spell_levels_life_stage ?? 0);
+  // Split the spend between the base, the V/F modifier and the post-Gauntlet levels
+  // so this bar reads exactly like the XP bar: a positive bonus is spent first (as
+  // the engine drains restricted pools before the general one), a penalty is
+  // charged to the base, and the already-earned post-Gauntlet levels sit on the
+  // base's side. That keeps `available === base + lifeStage - baseUsed` closed.
+  const alloc = $derived(spellLevelAllocation(used, budget, bonus, lifeStage));
   // Not clamped: overspending shows a negative value in bold red (`over`) with the
   // used figure in plain red (`over-value`) — exactly as the XP pool does.
   const available = $derived(alloc.available);
@@ -95,6 +103,17 @@
          reported here as the signed modifier that explains the charge. -->
     <span class="xp-restricted over" data-testid="spell-levels-bonus">
       {store.t('spell-levels-bonus', { bonus: formatSigned(bonus) })}
+    </span>
+  {/if}
+  {#if lifeStage > 0}
+    <!-- Read-only: levels the years past the Gauntlet already earned, listed so the
+         budget is not an unexplained total. Gated on the number alone — no is_magus
+         test, no type branch — exactly like the XP bar's life-stage lines, so a
+         magus standing at its Gauntlet and every non-magus show nothing. Muted
+         (`xp-life-stage`) rather than a pool entry, because there is nothing to
+         spend against: these levels are counted in Available above. -->
+    <span class="xp-life-stage" data-testid="spell-levels-post-gauntlet">
+      {store.t('spell-levels-post-gauntlet', { levels: String(lifeStage) })}
     </span>
   {/if}
   {#if masteryXp > 0 || (masteryFloor > 0 && masteryMax > 0)}
