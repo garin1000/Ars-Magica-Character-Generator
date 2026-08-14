@@ -16,15 +16,34 @@
   const funding = $derived(store.abilityFunding);
   const guided = $derived(funding === 'life_stages');
   const typeProfile = $derived(store.ruleset?.ruleset.type_profiles[store.entity.type_id] ?? null);
-  // A magus is built through its life stages too, but only AT its Gauntlet: its
-  // apprenticeship is the fifteen years ending at the age entered, and life as a magus
-  // after that is not counted yet (6b5). So the age means something different for a
-  // magus than for anyone else, which the note below says in words.
+  // A magus carries two ages, not one: the age it is now, and the age its Gauntlet
+  // came at. So the age means something different for a magus than for anyone else,
+  // which the note below says in words.
   const isMagus = $derived(typeProfile?.is_magus ?? false);
   const age = $derived(store.entity.age ?? null);
   // The engine's age→max-Ability-score cap, echoed read-only beside the age.
   const ageCap = $derived(store.effective?.age_ability_cap ?? null);
   const nativeLanguage = $derived(store.entity.life_stages?.native_language ?? '');
+
+  // The years after the Gauntlet are worth what the DATA says (30 points a year, 10
+  // a charged lab season), so a ruleset shipping no such block grants nothing and the
+  // three fields would be dead controls — hence the gate.
+  const postGauntlet = $derived(rules?.post_apprenticeship ?? null);
+  const showPostGauntlet = $derived(isMagus && postGauntlet != null);
+  const plan = $derived(store.entity.life_stages ?? null);
+  // The engine's own figures for those years; null until an age makes a budget.
+  const budget = $derived(store.effective?.life_stage ?? null);
+
+  /** A stored optional count as an input value: absent reads as an empty field. */
+  function fieldValue(count: number | undefined): string {
+    return count == null ? '' : String(count);
+  }
+
+  /** The number typed into a post-Gauntlet field, with a blank field meaning `null`. */
+  function count(event: Event): number | null {
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    return raw === '' ? null : Number(raw);
+  }
 
   // The two funding modes, in the order they are offered. A fixed taxonomy (the
   // store's `AbilityFunding` union), not catalogue data.
@@ -78,9 +97,9 @@
            write the one `entity.age`, so they cannot diverge — and the guided flow
            needs it, because later life's experience is (age - childhood years) × rate. -->
       {#if isMagus}
-        <!-- Announced, and placed above the age input it constrains: for a magus the
-             age entered is the Gauntlet age, and the years lived as a magus after it
-             are not counted yet — so the field cannot be read at face value. -->
+        <!-- Announced, and placed above the two age inputs it explains: a magus has an
+             age AND a Gauntlet age, and neither field can say for itself which is
+             which or what the years between them are worth. -->
         <p class="gauntlet-note" role="status" data-testid="life-stage-gauntlet-note">
           {store.t('life-stage-gauntlet-note')}
         </p>
@@ -104,6 +123,49 @@
             {store.t('age-cap-note', { cap: String(ageCap) })}
           </span>
         {/if}
+        {#if showPostGauntlet}
+          <!-- In the same wrapping row as the age, deliberately: the panel is an
+               auto-height sibling of the `flex: 1` region row below it, so every
+               full-width row added here comes straight out of the Available/Selected
+               lists' height (see `.region-row` in app.css). -->
+          <label class="field inline">
+            <span>{store.t('life-stage-gauntlet-age-label')}</span>
+            <input
+              type="number"
+              min="1"
+              max="4294967295"
+              placeholder={age == null ? '' : String(age)}
+              value={fieldValue(plan?.gauntlet_age)}
+              aria-describedby="life-stage-gauntlet-age-hint"
+              oninput={(event) => store.setGauntletAge(count(event))}
+              data-testid="life-stage-gauntlet-age-input"
+            />
+          </label>
+          <label class="field inline">
+            <span>{store.t('life-stage-lab-seasons-label')}</span>
+            <input
+              type="number"
+              min="0"
+              max="4294967295"
+              value={fieldValue(plan?.post_gauntlet_lab_seasons)}
+              aria-describedby="life-stage-lab-seasons-hint"
+              oninput={(event) => store.setPostGauntletLabSeasons(count(event))}
+              data-testid="life-stage-lab-seasons-input"
+            />
+          </label>
+          <label class="field inline">
+            <span>{store.t('life-stage-spell-levels-label')}</span>
+            <input
+              type="number"
+              min="0"
+              max="4294967295"
+              value={fieldValue(plan?.post_gauntlet_spell_levels)}
+              aria-describedby="life-stage-spell-levels-hint"
+              oninput={(event) => store.setPostGauntletSpellLevels(count(event))}
+              data-testid="life-stage-spell-levels-input"
+            />
+          </label>
+        {/if}
         <label class="field inline">
           <span>{store.t('native-language-label')}</span>
           <input
@@ -115,6 +177,39 @@
           />
         </label>
       </div>
+      {#if showPostGauntlet}
+        <!-- The three hints share one wrapping row rather than sitting under their
+             fields: three stacked hint lines would cost the region row below three
+             more lines of height. -->
+        <div class="life-stage-hints">
+          {#each ['gauntlet-age', 'lab-seasons', 'spell-levels'] as field (field)}
+            <span
+              class="funding-hint"
+              id="life-stage-{field}-hint"
+              data-testid="life-stage-{field}-hint"
+            >
+              {store.t(`life-stage-${field}-hint`)}
+            </span>
+          {/each}
+        </div>
+        {#if budget}
+          <!-- Announced: the numbers arrive in response to an edit above (either age,
+               the lab seasons or the split), so their change must reach a screen
+               reader. Every figure is the engine's own — nothing is recomputed here. -->
+          <span
+            class="post-gauntlet-summary"
+            role="status"
+            data-testid="life-stage-post-gauntlet-summary"
+          >
+            {store.t('life-stage-post-gauntlet-summary', {
+              years: String(budget.post_gauntlet_years),
+              points: String(budget.post_gauntlet_points),
+              xp: String(budget.post_gauntlet_xp),
+              levels: String(budget.post_gauntlet_spell_levels),
+            })}
+          </span>
+        {/if}
+      {/if}
       <!-- Childhood comes after the native language it is measured against: a
            package's native entry is bought in that language, and its own childhood
            language must differ from it. -->

@@ -1222,12 +1222,29 @@ ul {
   font-size: 0.85rem;
 }
 
-/* Age, its cap echo and the native language on one wrapping row. */
+/* Age, its cap echo, a magus's three post-Gauntlet fields and the native language
+   on ONE wrapping row. Everything shares the row on purpose: the panel is an
+   auto-height sibling of the `flex: 1` `.region-row`, so each full-width row added
+   here is height taken straight off the Available/Selected lists. */
 .life-stage-fields {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+/* The post-Gauntlet field hints, wrapping together instead of one line each. */
+.life-stage-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.2rem;
+  max-width: 60rem;
+}
+
+/* The engine's read-out of the years past the Gauntlet: a figure, not a warning. */
+.post-gauntlet-summary {
+  color: var(--muted, #6b7280);
+  font-size: 0.85rem;
 }
 
 /* The Hermetic minimum Abilities a magus owes: two short lists above the Ability

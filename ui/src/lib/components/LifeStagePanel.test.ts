@@ -5,6 +5,7 @@ import type {
   EffectiveScores,
   Entity,
   EntityTypeProfile,
+  LifeStageBudget,
   LifeStagePlan,
   LifeStageRules,
   LocalizedRuleset,
@@ -41,7 +42,19 @@ function lifeStageRules(): LifeStageRules {
       spread_abilities: ['ability.athletics', 'ability.awareness'],
     },
     later_life: { xp_per_year: 15 },
+    post_apprenticeship: {
+      points_per_year: 30,
+      lab_season_cost: 10,
+      max_charged_lab_seasons_per_year: 3,
+    },
   };
+}
+
+/** The same rules as a ruleset predating the post-Gauntlet block ships them. */
+function rulesWithoutPostApprenticeship(): LifeStageRules {
+  const rules = lifeStageRules();
+  delete rules.post_apprenticeship;
+  return rules;
 }
 
 function profile(id: string, isMagus: boolean): EntityTypeProfile {
@@ -104,7 +117,42 @@ function installPlan(plan: LifeStagePlan = {}): void {
 
 /** The engine's age→max-Ability-score cap, the panel's read-only echo. */
 function setAgeCap(cap: number | null): void {
-  store.effective = { age_ability_cap: cap } as unknown as EffectiveScores;
+  store.effective = {
+    ...(store.effective ?? {}),
+    age_ability_cap: cap,
+  } as unknown as EffectiveScores;
+}
+
+/**
+ * The engine's life-stage budget, which the post-Gauntlet read-out reports. Shaped
+ * as `LifeStageBudget::budget` derives it: `years × 30` less `seasons × 10`, split
+ * into levels of spells and the experience left over.
+ */
+function setLifeStageBudget(budget: LifeStageBudget | null): void {
+  store.effective = {
+    ...(store.effective ?? {}),
+    life_stage: budget,
+  } as unknown as EffectiveScores;
+}
+
+/** A magus gauntleted at 25 and now `age`, with `seasons` charged lab seasons. */
+function magusBudget(age: number, seasons = 0, spellLevels = 0): LifeStageBudget {
+  const years = age - 25;
+  const points = years * 30 - Math.min(seasons, 3 * years) * 10;
+  return {
+    childhood_native_xp: 75,
+    childhood_spread_xp: 45,
+    later_life_years: 5,
+    later_life_rate: 15,
+    later_life_xp: 75,
+    apprenticeship_years: 15,
+    apprenticeship_xp: 240,
+    gauntlet_age: 25,
+    post_gauntlet_years: years,
+    post_gauntlet_points: points,
+    post_gauntlet_spell_levels: spellLevels,
+    post_gauntlet_xp: points - spellLevels,
+  };
 }
 
 /** Render the panel to an HTML string (node env, no DOM). */
@@ -250,8 +298,11 @@ describe('LifeStagePanel offers both modes to a magus (slice 6b4)', () => {
     // It arrives when the funding source is switched, so its appearance is announced.
     expect(note.open).toMatch(/role="status"/);
     expect(note.text).toContain('Gauntlet');
-    // The actionable half: an older magus belongs on the flat pool until 6b5.
-    expect(note.text).toContain('experience pool');
+    // The actionable half (6b5): the two ages mean different things, and the years
+    // between them are worth 30 points each. It must no longer send an older magus
+    // to the flat pool — those years are counted now.
+    expect(note.text).toContain('30 points');
+    expect(note.text).not.toContain('experience pool');
   });
 
   it('shows no Gauntlet note for a guided companion', () => {
@@ -312,6 +363,132 @@ describe('LifeStagePanel guided fields (slice 6b3b)', () => {
     installPlan();
     setAgeCap(null);
     expect(has(html(), 'life-stage-age-cap')).toBe(false);
+  });
+});
+
+describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
+  /** A guided magus against a ruleset carrying the post-apprenticeship block. */
+  function installGuidedMagus(plan: LifeStagePlan = {}): void {
+    installRuleset(lifeStageRules(), profile('magus', true));
+    resetEntity('magus');
+    installPlan(plan);
+  }
+
+  const inputs = [
+    'life-stage-gauntlet-age-input',
+    'life-stage-lab-seasons-input',
+    'life-stage-spell-levels-input',
+  ];
+
+  it('offers all three number inputs to a guided magus', () => {
+    installGuidedMagus();
+    const body = html();
+    for (const testid of inputs) {
+      expect(element(body, testid).open).toMatch(/type="number"/);
+    }
+  });
+
+  it('offers none of them to a guided companion', () => {
+    installPlan();
+    const body = html();
+    // Only a magus serves a Gauntlet, so only a magus has years past one.
+    for (const testid of inputs) expect(has(body, testid)).toBe(false);
+    expect(has(body, 'life-stage-post-gauntlet-summary')).toBe(false);
+  });
+
+  it('offers none of them to a magus in pool mode', () => {
+    installRuleset(lifeStageRules(), profile('magus', true));
+    resetEntity('magus');
+    const body = html();
+    for (const testid of inputs) expect(has(body, testid)).toBe(false);
+  });
+
+  it('offers none of them when the ruleset ships no post-apprenticeship block', () => {
+    installRuleset(rulesWithoutPostApprenticeship(), profile('magus', true));
+    resetEntity('magus');
+    installPlan();
+    const body = html();
+    // The rate is data: with no block there is no number to grant, so the fields
+    // would be dead controls.
+    for (const testid of inputs) expect(has(body, testid)).toBe(false);
+    expect(has(body, 'life-stage-post-gauntlet-summary')).toBe(false);
+    // The rest of the guided panel is untouched.
+    expect(has(body, 'life-stage-age-input')).toBe(true);
+  });
+
+  it('carries the plan values, and offers the entered age as the Gauntlet placeholder', () => {
+    installGuidedMagus({
+      gauntlet_age: 25,
+      post_gauntlet_lab_seasons: 6,
+      post_gauntlet_spell_levels: 40,
+    });
+    store.entity.age = 40;
+    const body = html();
+    const gauntlet = element(body, 'life-stage-gauntlet-age-input');
+    expect(gauntlet.open).toMatch(/value="25"/);
+    // "Leave it blank and the magus stands at its Gauntlet" made visible: blank
+    // reads as the age itself.
+    expect(gauntlet.open).toMatch(/placeholder="40"/);
+    expect(element(body, 'life-stage-lab-seasons-input').open).toMatch(/value="6"/);
+    expect(element(body, 'life-stage-spell-levels-input').open).toMatch(/value="40"/);
+  });
+
+  it('leaves every field empty for a magus standing at its Gauntlet', () => {
+    installGuidedMagus();
+    store.entity.age = 25;
+    const body = html();
+    for (const testid of inputs) expect(element(body, testid).open).toMatch(/value=""/);
+  });
+
+  it('labels each field through Fluent, never as a raw slug', () => {
+    installGuidedMagus();
+    const body = html();
+    expect(body).toContain('Gauntlet age');
+    expect(body).toContain('Lab seasons');
+    expect(body).toContain('Levels of spells');
+    expect(body).not.toMatch(/>\s*post_gauntlet_lab_seasons\s*</);
+    expect(body).not.toMatch(/>\s*gauntlet_age\s*</);
+  });
+
+  it('wires each field to its own hint, the way the funding radios are', () => {
+    installGuidedMagus();
+    const body = html();
+    for (const testid of inputs) {
+      const hint = testid.replace('-input', '-hint');
+      expect(element(body, testid).open).toMatch(new RegExp(`aria-describedby="${hint}"`));
+      expect(element(body, hint).open).toMatch(new RegExp(`id="${hint}"`));
+    }
+    // The charged-seasons rule is the one that cannot be guessed from the label.
+    const seasons = element(body, 'life-stage-lab-seasons-hint').text;
+    expect(seasons).toContain('10');
+    expect(seasons).toContain('three');
+  });
+
+  it('reads out the engine years, points and split, announced', () => {
+    installGuidedMagus({
+      gauntlet_age: 25,
+      post_gauntlet_lab_seasons: 6,
+      post_gauntlet_spell_levels: 40,
+    });
+    store.entity.age = 40;
+    setLifeStageBudget(magusBudget(40, 6, 40));
+    const summary = element(html(), 'life-stage-post-gauntlet-summary');
+    // 15 years × 30 = 450, less 6 charged seasons × 10 = 390 points, 40 of them
+    // taken as levels of spells.
+    expect(summary.open).toMatch(/role="status"/);
+    expect(summary.text).toContain('15');
+    expect(summary.text).toContain('390');
+    expect(summary.text).toContain('350');
+    expect(summary.text).toContain('40');
+    // Engine numbers through a Fluent key, never a slug and never a U+2212.
+    expect(summary.text).not.toContain('post_gauntlet');
+    expect(summary.text).not.toContain('−');
+  });
+
+  it('omits the read-out until the engine has a budget', () => {
+    installGuidedMagus({ gauntlet_age: 25 });
+    setLifeStageBudget(null);
+    expect(has(html(), 'life-stage-post-gauntlet-summary')).toBe(false);
   });
 });
 
