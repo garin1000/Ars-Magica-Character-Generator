@@ -7,7 +7,7 @@
 use super::*;
 
 use crate::childhood::ChildhoodRejection;
-use crate::life_stage::LifeStagePlan;
+use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
 
 /// Validates a character built through its life stages.
 ///
@@ -34,6 +34,9 @@ use crate::life_stage::LifeStagePlan;
 ///   [`crate::life_stage::LifeStageRules::budget`] — see
 ///   [`validate_post_gauntlet_choices`] for why the clamp stays and the finding is
 ///   still made.
+/// - `life_stage_lab_seasons_out_of_range`: more lab seasons charged against the
+///   post-Gauntlet years than three per year (`:2482`), which is all a year can be
+///   charged for. Capped by [`crate::life_stage::LifeStageRules::budget`].
 /// - `life_stage_native_language_unset`: no native language chosen, so the
 ///   childhood's largest block (75 points) has nothing it may be spent on.
 /// - `life_stage_native_language_missing_score`: a native language chosen but no
@@ -145,8 +148,8 @@ pub(crate) fn validate_life_stage_plan(
     // a finding about a value that changes nothing is noise a player cannot act on.
     // An unset age is its own finding (`life_stage_age_unset`) and leaves nothing to
     // measure these against.
-    if magus && let Some(age) = entity.age {
-        validate_post_gauntlet_choices(plan, age, issues);
+    if magus && let (Some(age), Some(budget)) = (entity.age, budget) {
+        validate_post_gauntlet_choices(plan, rules, age, &budget, issues);
     }
 
     match &plan.native_language {
@@ -212,7 +215,9 @@ pub(crate) fn validate_life_stage_plan(
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2471, :2482.
 fn validate_post_gauntlet_choices(
     plan: &LifeStagePlan,
+    rules: &LifeStageRules,
     age: u32,
+    budget: &LifeStageBudget,
     issues: &mut Vec<ValidationIssue>,
 ) {
     // A Gauntlet the character has not reached yet. `budget()` clamps it to the age,
@@ -230,6 +235,33 @@ fn validate_post_gauntlet_choices(
             ]),
             None,
         ));
+    }
+
+    // "For each season that your magus spends working on a lab project, the
+    // character loses 10 points from the yearly 30 experience points, to a minimum
+    // of 0 if three or four seasons are spent on lab work"
+    // (Ars Magica - Definitive Edition (Core Rules).md:2482). The deduction is
+    // exhausted by the third season of a year, so a year holds at most three
+    // *charged* seasons and the whole span at most three per year — which is the
+    // ceiling `budget()` caps the stored total at. Past the cap the extra seasons
+    // are simply free, so without this finding an impossible plan looks like a
+    // bargain.
+    if let Some(post_apprenticeship) = rules.post_apprenticeship.as_ref() {
+        let max = post_apprenticeship
+            .max_charged_lab_seasons_per_year
+            .saturating_mul(budget.post_gauntlet_years);
+        if plan.post_gauntlet_lab_seasons > max {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE,
+                CreationPhase::Abilities,
+                args([
+                    ("max", max.to_string()),
+                    ("seasons", plan.post_gauntlet_lab_seasons.to_string()),
+                    ("years", budget.post_gauntlet_years.to_string()),
+                ]),
+                None,
+            ));
+        }
     }
 }
 
@@ -680,6 +712,44 @@ mod tests {
                 "issues: {issues:?}"
             );
         }
+    }
+
+    /// More charged lab seasons than the years can hold. Only three seasons a year
+    /// are ever charged — "to a minimum of 0 if three or four seasons are spent on
+    /// lab work" (Core Rules.md:2482) — so 35 years hold 105, and `budget()` caps
+    /// the stored total there. Beyond the cap the extra seasons cost nothing, which
+    /// reads as a bargain rather than a mistake unless it is said out loud.
+    #[test]
+    fn more_charged_lab_seasons_than_the_years_hold_is_an_error() {
+        let result = validate(&out_of_apprenticeship(60, 25, 200, 0), &rs());
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE)
+            .expect("lab seasons beyond the span are reported");
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.args.get("seasons").map(String::as_str), Some("200"));
+        assert_eq!(issue.args.get("max").map(String::as_str), Some("105"));
+        assert_eq!(issue.args.get("years").map(String::as_str), Some("35"));
+
+        // Exactly the cap is legal: 35 years of nothing but charged lab work.
+        let issues = codes(&validate(&out_of_apprenticeship(60, 25, 105, 0), &rs()));
+        assert!(
+            !issues.contains(&ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE.into()),
+            "issues: {issues:?}"
+        );
+
+        // A magus standing at its Gauntlet has lived no year to work in, so a single
+        // season is already one too many.
+        let result = validate(&out_of_apprenticeship(25, 25, 1, 0), &rs());
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE)
+            .expect("a season without a year is reported");
+        assert_eq!(issue.args.get("max").map(String::as_str), Some("0"));
+        assert_eq!(issue.args.get("years").map(String::as_str), Some("0"));
     }
 
     #[test]

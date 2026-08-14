@@ -143,6 +143,7 @@ impl fmt::Display for IssueSeverity {
 /// | `life_stage_age_before_childhood` | error | abilities | `age`, `min` |
 /// | `life_stage_age_before_gauntlet` | error | abilities | `age`, `min` |
 /// | `life_stage_gauntlet_age_after_age` | error | abilities | `gauntlet_age`, `age` |
+/// | `life_stage_lab_seasons_out_of_range` | error | abilities | `seasons`, `max`, `years` |
 /// | `life_stage_native_language_unset` | error | abilities | (none) |
 /// | `life_stage_native_language_missing_score` | warning | abilities | `language` |
 /// | `magus_minimum_ability` | error | abilities | `ability`, `min`, `score` |
@@ -368,6 +369,15 @@ impl ValidationIssue {
     /// would otherwise absorb in silence.
     pub const CODE_LIFE_STAGE_GAUNTLET_AGE_AFTER_AGE: &'static str =
         "life_stage_gauntlet_age_after_age";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: more lab seasons are
+    /// charged against the post-Gauntlet years than those years can hold. Only three
+    /// seasons a year cost anything — the deduction runs "to a minimum of 0 if three
+    /// or four seasons are spent on lab work" (Core Rules.md:2482) — so the ceiling
+    /// is `max_charged_lab_seasons_per_year × post_gauntlet_years`.
+    /// [`crate::life_stage::LifeStageRules::budget`] caps the total there, making the
+    /// surplus free rather than an error of its own.
+    pub const CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE: &'static str =
+        "life_stage_lab_seasons_out_of_range";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a life-stage plan with no
     /// age, so the later-life block — the one that counts years — cannot be earned.
     /// Childhood is granted regardless (Core Rules.md:2378), which is why this is a
