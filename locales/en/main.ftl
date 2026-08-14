@@ -205,6 +205,13 @@ life-stage-no-budget = No life-stage experience yet.
 # so this line names the block the pool total comes from. Absent for anyone who
 # serves no apprenticeship, which is what keeps the non-magus bar unchanged.
 life-stage-apprenticeship = Apprenticeship: { $years } years = { $xp } XP
+# Life as a magus after the Gauntlet, for a magus that has lived any: "For every
+# year, the magus gets 30 points" (Core Rules.md:2471), less 10 for every charged
+# season of lab work (`:2482`). Each point is an experience point or one level of a
+# spell, so the points and the experience left after the spell levels are both
+# named. Gated on the years, not on the type, so a magus at its Gauntlet and every
+# non-magus show nothing.
+life-stage-post-gauntlet = As a magus: { $years } × { $rate } - { $lab } for lab work = { $points } points, { $xp } XP
 # Age is repeated inside the panel because later life is measured in years, so it
 # is edited here as well as on the Details tab.
 life-stage-age-label = Age

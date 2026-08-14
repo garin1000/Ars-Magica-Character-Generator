@@ -55,6 +55,16 @@
   const available = $derived(pool - generalUsed);
   const restricted = $derived(store.effective?.restricted_xp_pools ?? []);
 
+  // What a year past the Gauntlet is worth. DATA, never a literal: the 30 lives in
+  // `rules/core/life_stages.json`, and the lab deduction below is read back out of
+  // the engine's own points rather than recomputed from a season count.
+  const pointsPerYear = $derived(
+    store.ruleset?.ruleset.life_stages?.post_apprenticeship?.points_per_year ?? 0,
+  );
+  const labDeduction = $derived(
+    lifeStage ? lifeStage.post_gauntlet_years * pointsPerYear - lifeStage.post_gauntlet_points : 0,
+  );
+
   function onPool(event: Event) {
     const raw = (event.currentTarget as HTMLInputElement).value;
     store.setXpPool(raw === '' ? 0 : Number(raw));
@@ -99,6 +109,21 @@
           {store.t('life-stage-apprenticeship', {
             years: String(lifeStage.apprenticeship_years),
             xp: String(lifeStage.apprenticeship_xp),
+          })}
+        </span>
+      {/if}
+      {#if lifeStage.post_gauntlet_years > 0}
+        <!-- Life as a magus after the Gauntlet: 30 points a year, less the charged lab
+             seasons, split into experience and levels of spells. Gated on the years the
+             block covers, not on the type — the same reason the apprenticeship line
+             above needs no notion of a magus. -->
+        <span class="xp-life-stage" data-testid="{prefix}life-stage-post-gauntlet">
+          {store.t('life-stage-post-gauntlet', {
+            years: String(lifeStage.post_gauntlet_years),
+            rate: String(pointsPerYear),
+            lab: String(labDeduction),
+            points: String(lifeStage.post_gauntlet_points),
+            xp: String(lifeStage.post_gauntlet_xp),
           })}
         </span>
       {/if}
