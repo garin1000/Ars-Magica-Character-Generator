@@ -332,7 +332,12 @@ mod tests {
         "spread_xp": 45,
         "spread_abilities": ["ability.swim", "ability.living_language"]
       },
-      "later_life": { "xp_per_year": 15 }
+      "later_life": { "xp_per_year": 15 },
+      "post_apprenticeship": {
+        "lab_season_cost": 10,
+        "max_charged_lab_seasons_per_year": 3,
+        "points_per_year": 30
+      }
     }"#;
     /// One shipped package, priced to the blocks above: spread 30 + 15 = 45,
     /// native language 75 (Core Rules.md:2378).

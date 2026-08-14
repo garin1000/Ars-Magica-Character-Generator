@@ -2816,6 +2816,53 @@ Abilities are bought with experience earned in blocks, not from one bank:
   runtime refusal** (`life_stage_magus_guided_unsupported`, now deleted): the limit was
   never a property of a character, it was missing data.
 
+#### Life as a magus after the Gauntlet — 30 points per year (M6/6b5)
+
+> For every year, the magus gets 30 points. Each point can be an experience point in an
+> Art or Ability or one level of spell. The maximum spell level a magus may know is
+> limited as before.
+
+> For each season that your magus spends working on a lab project, the character loses
+> 10 points from the yearly 30 experience points, to a minimum of 0 if three or four
+> seasons are spent on lab work. Thus it is most cost effective to have the magus engage
+> in a full year of lab work at a time.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2471` and `:2482` (heading
+  `#### Magus Only — After Apprenticeship` at `:2467`) — the fourth of the periods
+  `:2364` names: "apprenticeship, and life as a magus after that".
+- Data: `rules/core/life_stages.json` → `post_apprenticeship`: `points_per_year` 30
+  (`:2471`), `lab_season_cost` 10 and `max_charged_lab_seasons_per_year` 3 (`:2482`).
+  Canonically sorted, so the block closes the file after `later_life`.
+- Implementation: `life_stage.rs` — `PostApprenticeshipRules`, carried by
+  `LifeStageRules::post_apprenticeship` as an additive `Option` with
+  `skip_serializing_if`, exactly like `apprenticeship`: `:2364` calls these "two
+  **more** periods", so a ruleset with no Hermetic magi ships neither block and writes
+  neither key.
+- **Points, not experience points.** `:2471` makes each point fungible — "an experience
+  point in an Art or Ability or one level of spell" — and the player decides which each
+  one becomes. Hence `points_per_year` where apprenticeship says `xp`: `:2435` grants
+  its 240 experience and 120 spell levels as two separate, non-interchangeable numbers,
+  which is why those two live in two files (above) while this one number does not split.
+- **Transcription trust gate:** `lab_season_cost × max_charged_lab_seasons_per_year`
+  must equal `points_per_year`, and `lab_season_cost` may not be 0 —
+  `Ruleset::validate_post_apprenticeship_rules`. The identity is not tidiness, it **is**
+  `:2482`: the deduction runs "to a minimum of 0 if three or four seasons are spent", so
+  three seasons at 10 have to cancel the yearly 30 exactly. A year that overshot would
+  have lab work take points it never granted; one that fell short would still pay a
+  magus who spent the whole year in the lab. Same idiom as re-pricing the
+  apprenticeship's `recommended_xp` off the advancement table. The **fourth** season is
+  free because `:2482` has already reached 0 by the third — hence `max_charged`, not a
+  cap on seasons.
+- Load-time gate (an engine invariant, not a sourced rule): a ruleset that declares an
+  `is_magus` profile **and** ships life-stage rules must declare the
+  `post_apprenticeship` block, exactly as it must declare `apprenticeship`. That block
+  already ends a magus's later life at its Gauntlet age; without this one the years
+  after the Gauntlet would grant nothing back, so a magus would simply lose them. Both
+  checks run from `validate_integrity`, so a cached ruleset returning through
+  `Ruleset::from_serialized` is trusted no further than a freshly parsed one.
+- Nothing spends these points yet: the per-year arithmetic, the lab-season choices and
+  the character-level validation arrive with the rest of **M6/6b5**.
+
 #### Pre-apprenticeship experience buys Abilities only — never Arts (M6/6b4)
 
 > 6. **Later Life.** 15 experience points per year (until apprenticeship for magi),
