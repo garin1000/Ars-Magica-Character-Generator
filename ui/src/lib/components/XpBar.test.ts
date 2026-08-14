@@ -157,6 +157,45 @@ function magusBudget(years = 5, rate = 15): LifeStageBudget {
   };
 }
 
+/**
+ * A guided magus a while past its Gauntlet: `years × 30` less `seasons × 10`, with
+ * `spellLevels` of those points taken as spells and the rest as experience. That
+ * experience joins apprenticeship in the general pool, which is why the caller must
+ * raise `xp_general_pool` to match.
+ */
+function pastGauntletBudget(years: number, seasons = 0, spellLevels = 0): LifeStageBudget {
+  const points = years * 30 - Math.min(seasons, 3 * years) * 10;
+  return {
+    ...magusBudget(),
+    post_gauntlet_years: years,
+    post_gauntlet_points: points,
+    post_gauntlet_spell_levels: spellLevels,
+    post_gauntlet_xp: points - spellLevels,
+  };
+}
+
+/**
+ * The life-stage rules the bar reads the per-year rate off. The rate is DATA — the
+ * bar must never carry the 30 as a literal.
+ */
+function installPostApprenticeshipRules(pointsPerYear = 30): void {
+  store.ruleset!.ruleset.life_stages = {
+    childhood: {
+      years: 5,
+      native_language_ability: 'ability.living_language',
+      native_language_xp: 75,
+      spread_xp: 45,
+      spread_abilities: [],
+    },
+    later_life: { xp_per_year: 15 },
+    post_apprenticeship: {
+      points_per_year: pointsPerYear,
+      lab_season_cost: 10,
+      max_charged_lab_seasons_per_year: 3,
+    },
+  };
+}
+
 /** The later-life block as the engine emits it for a magus: restricted, Abilities only. */
 function laterLifePool(amount: number, used = 0): EffectiveScores['restricted_xp_pools'] {
   return [
@@ -470,6 +509,72 @@ describe('XpBar under a guided magus plan (slice 6b4)', () => {
   });
 });
 
+describe('XpBar for a magus past its Gauntlet (slice 6b5)', () => {
+  /** A magus of 55 gauntleted at 25: 30 years, 6 charged lab seasons, 120 spell levels. */
+  function installPastGauntlet(): void {
+    resetEntity(0);
+    installPlan({
+      gauntlet_age: 25,
+      post_gauntlet_lab_seasons: 6,
+      post_gauntlet_spell_levels: 120,
+    });
+    installPostApprenticeshipRules();
+    setEffective(0, laterLifePool(75), pastGauntletBudget(30, 6, 120));
+    // Those years' experience joins apprenticeship in the general pool (the engine's
+    // `base_general`), so the total the bar charges against is 240 + 720.
+    store.effective!.xp_general_pool = 240 + 720;
+  }
+
+  it('names the years past the Gauntlet with the rate, the lab deduction and the experience', () => {
+    installPastGauntlet();
+    const { text } = element(html(), 'life-stage-post-gauntlet');
+    // 30 years × 30 = 900, less 6 charged seasons × 10 = 840 points, 120 of them
+    // taken as levels of spells, leaving 720 XP.
+    expect(text).toContain('30');
+    expect(text).toContain('60');
+    expect(text).toContain('840');
+    expect(text).toContain('720');
+    expect(text).not.toContain('post_gauntlet');
+    // ASCII hyphen-minus only; nothing here is negative but no U+2212 may leak in.
+    expect(text).not.toContain('−');
+  });
+
+  it('reads the per-year rate off the ruleset rather than a literal 30', () => {
+    installPastGauntlet();
+    installPostApprenticeshipRules(20);
+    const { text } = element(html(), 'life-stage-post-gauntlet');
+    expect(text).toContain('20');
+  });
+
+  it('omits the line for a magus standing at its Gauntlet', () => {
+    resetEntity(0);
+    installPlan();
+    installPostApprenticeshipRules();
+    setEffective(0, laterLifePool(75), magusBudget());
+    const body = html();
+    // Gated on the block's own years, exactly like the apprenticeship line — so the
+    // component still needs no notion of a magus.
+    expect(has(body, 'life-stage-post-gauntlet')).toBe(false);
+    expect(() => element(body, 'life-stage-apprenticeship')).not.toThrow();
+  });
+
+  it('omits the line for a guided companion', () => {
+    resetEntity(0);
+    installPlan();
+    installPostApprenticeshipRules();
+    setEffective(0, [], budget(10, 15));
+    expect(has(html(), 'life-stage-post-gauntlet')).toBe(false);
+  });
+
+  it('gives the Arts instance the identical line', () => {
+    installPastGauntlet();
+    const body = html('art-');
+    // Those points buy Arts as readily as Abilities (Core Rules.md:2471), so the Arts
+    // bar carries the same row — the two instances differ only in their testid prefix.
+    expect(element(body, 'art-life-stage-post-gauntlet').text).toContain('720');
+  });
+});
+
 describe('XpBar flat mode is untouched by the guided branch (slice 6b3b)', () => {
   it('keeps the editable pool input and adds no life-stage node without a plan', () => {
     resetEntity(200);
@@ -481,6 +586,7 @@ describe('XpBar flat mode is untouched by the guided branch (slice 6b3b)', () =>
     expect(has(body, 'xp-pool-clear')).toBe(false);
     expect(has(body, 'life-stage-later-life')).toBe(false);
     expect(has(body, 'life-stage-apprenticeship')).toBe(false);
+    expect(has(body, 'life-stage-post-gauntlet')).toBe(false);
     expect(has(body, 'life-stage-no-budget')).toBe(false);
   });
 

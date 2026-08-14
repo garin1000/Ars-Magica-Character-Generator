@@ -216,6 +216,13 @@ life-stage-no-budget = Noch keine Erfahrung aus Lebensabschnitten.
 # zum allgemeinen Vorrat macht — diese Zeile benennt also den Block, aus dem der
 # Gesamtwert stammt. Fehlt bei jedem, der keine Lehrlingszeit dient.
 life-stage-apprenticeship = Lehrlingszeit: { $years } Jahre = { $xp } EP
+# Das Leben als Magus nach der Lehrlingsprüfung, sofern er es gelebt hat: „Für jedes
+# Jahr erhält der Magus 30 Punkte“ (Basisregeln.md:2471), abzüglich 10 für jedes
+# angerechnete Quartal Laborarbeit (`:2482`). Jeder Punkt ist ein Erfahrungspunkt
+# oder eine Zauberstufe, daher werden sowohl die Punkte als auch die nach den
+# Zauberstufen verbleibende Erfahrung genannt. Die Zeile hängt an den Jahren, nicht
+# am Typ — ein Magus zur Lehrlingsprüfung und jeder Nicht-Magus zeigen nichts.
+life-stage-post-gauntlet = Als Magus: { $years } × { $rate } - { $lab } für Laborarbeit = { $points } Punkte, { $xp } EP
 # Das Alter wird im Bereich wiederholt, weil das spätere Leben in Jahren gemessen
 # wird — es wird hier ebenso bearbeitet wie im Details-Reiter.
 life-stage-age-label = Alter
