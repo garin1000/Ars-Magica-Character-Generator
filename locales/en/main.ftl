@@ -208,13 +208,26 @@ life-stage-apprenticeship = Apprenticeship: { $years } years = { $xp } XP
 # Age is repeated inside the panel because later life is measured in years, so it
 # is edited here as well as on the Details tab.
 life-stage-age-label = Age
-# What the age means for a magus: the life stages build one AT its Gauntlet, so the
-# age entered is the Gauntlet age — apprenticeship is the fifteen years ending there
-# (Core Rules.md:2435) and every year before them earns later-life experience
-# (`:2214`). The second sentence is the actionable half: life as a magus after the
-# Gauntlet (`:2216`, `:2471`) is not counted yet, so an older magus belongs on the
-# flat pool rather than silently losing those years.
-life-stage-gauntlet-note = Life stages build a magus at its Gauntlet: apprenticeship is the fifteen years ending at the age entered, and every year before them earns later-life experience. The years lived as a magus after the Gauntlet are not counted yet, so an older magus should use the experience pool instead.
+# What the two ages mean for a magus, which neither field can say for itself. The
+# age is how old the magus is NOW; the Gauntlet age is when its apprenticeship
+# ended — the fifteen years before it (Core Rules.md:2435), with every year before
+# those earning later-life experience (`:2214`). The years between the two are life
+# as a magus, worth "30 points" each (`:2216`, `:2471`). Blank means the magus
+# stands at its Gauntlet, which is what an absent Gauntlet age stores.
+life-stage-gauntlet-note = For a magus the age is how old it is now, and the Gauntlet age is when its apprenticeship ended: apprenticeship is the fifteen years before the Gauntlet, every year before those earns later-life experience, and every year from the Gauntlet to today is worth 30 points. Leave the Gauntlet age blank and the magus stands at its Gauntlet.
+# The years a magus has lived since its Gauntlet. Only the Gauntlet age is stored;
+# the years, the points and the experience all follow from it and the age. Each
+# point "can be an experience point in an Art or Ability or one level of spell"
+# (Core Rules.md:2471), and a season of lab work costs 10 of that year's 30 — but
+# only three seasons a year are charged, because the third has already taken the
+# whole 30 (`:2482`).
+life-stage-gauntlet-age-label = Gauntlet age
+life-stage-gauntlet-age-hint = The age the apprenticeship ended at. Blank means the magus stands at its Gauntlet, with no years as a magus behind it.
+life-stage-lab-seasons-label = Lab seasons
+life-stage-lab-seasons-hint = Seasons of lab work, totalled over all the years as a magus: each costs 10 of that year's 30 points, and only three a year are charged — the third already takes the whole 30, so a fourth is free.
+life-stage-spell-levels-label = Levels of spells
+life-stage-spell-levels-hint = How many of the points to take as levels of spells rather than experience.
+life-stage-post-gauntlet-summary = { $years } years as a magus: { $points } points = { $xp } XP + { $levels } levels of spells
 # Escape hatch for a hand-edited save: a character funded by its life stages must
 # not also carry an entered pool, and guided mode offers no field to correct one,
 # so this empties it.
