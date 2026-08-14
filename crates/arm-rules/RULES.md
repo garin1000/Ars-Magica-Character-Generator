@@ -2904,8 +2904,30 @@ Abilities are bought with experience earned in blocks, not from one bank:
   companion plan carrying `gauntlet_age: 25` at age 60 silently lose 35 later-life years
   (525 experience points). The value is clamped to the age because Advisory and Silent
   validation do not block a Gauntlet later than the character's own age.
-- Still to come in **M6/6b5**: which pools these points fund, the spell-levels budget they
-  add to, and the character-level validation of the three stored choices.
+- **The post-Gauntlet experience joins the *general* pool — it is not a block of its
+  own.** `effective.rs`'s `xp_allocation` selects `base_general` as
+  `apprenticeship_xp + post_gauntlet_xp` for a magus (saturating), leaving the
+  non-magus arm and the plan-less `xp_pool` arm untouched. Three sourced facts force
+  the general pool rather than a restricted one:
+  - `:2216` — "Divide 30 points per year between experience points in **Arts**,
+    experience points in Abilities, and levels of spells" — and `:2471` — "Each point
+    can be an experience point in an **Art** or Ability or one level of spell". Only
+    the general pool may fund an Art (`pool_covers` returns false for every
+    `(Ability pool, Art spend)` pair), so a restricted pool could not express this.
+  - The Academic/Arcane/Martial gate does not narrow them: `:2435` restricts what a
+    magus may spend "**before** apprenticeship", and `:7151` puts the years after it on
+    the permitted side — "Magi without a specific Virtue may only buy Academic Abilities
+    during or after apprenticeship". The whole-character waiver of `:7151` already
+    applies to a magus, so nothing further is needed.
+  - Consequently **no** `LifeStageBlock` variant, **no** `RestrictedXpPool`, and **no**
+    `xp-pool-<slug>` Fluent key were added: the block that funds anything is the general
+    pool, which is the one block with no slug. Its size is surfaced as
+    `EffectiveScores.xp_general_pool`, exactly as apprenticeship's was.
+  - Later life is untouched by this and stays the restricted, Abilities-only pool of
+    `:2435`'s "before apprenticeship" clause however many years the magus has lived
+    since (`post_gauntlet_years_leave_later_life_restricted`).
+- Still to come in **M6/6b5**: the character-level validation of the three stored
+  choices.
 
 #### Pre-apprenticeship experience buys Abilities only — never Arts (M6/6b4)
 
