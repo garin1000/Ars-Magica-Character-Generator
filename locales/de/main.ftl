@@ -688,6 +688,12 @@ issue-over_item_level = Artefakte umfassen { $used } Stufen, über dem Budget vo
 issue-over_power_levels = Übernatürliche Kräfte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
 issue-might_realm_mismatch = Die eingegebene Macht-Sphäre ({ $base }) stimmt nicht mit der von den Tugenden verliehenen Sphäre ({ $granted }) überein.
 issue-excessive_aging_reduction = Die Alterungsminderungen für { $characteristic } ({ $reduction }) würden unter den Mindestwert ({ $min }) fallen; er wird dort begrenzt.
+# Ein Charakter über 35 muss vor Spielbeginn Alterungswürfe ablegen
+# (Basisregeln.md:2232); die Alterung beginnt im Winter nach dem 35. Geburtstag
+# (`:16565`), daher greift dies ab 36. Die Würfe fallen am Spieltisch, die App
+# kann sie nur anmahnen; ein eingetragenes Alterungsprotokoll erledigt den
+# Hinweis, gleich was die Würfe ergeben haben.
+issue-life_stage_aging_rolls_pending = Dieser Charakter ist { $age } Jahre alt, und ein Charakter über 35 muss vor Spielbeginn Alterungswürfe ablegen; bisher ist keiner eingetragen.
 issue-unknown_equipment = Ausrüstung '{ $item }' passt zu keiner Waffe, keinem Schild und keiner Rüstung.
 issue-equipment_min_strength = { $item } benötigt Stärke { $required }, aber dieser Charakter hat { $strength }.
 issue-shield_with_two_handed_weapon = Ein Schild kann nicht mit einer zweihändigen Waffe geführt werden, daher gelten seine Angriffs- und Verteidigungsmodifikatoren nicht (er zählt weiterhin zur Last).

@@ -185,6 +185,7 @@ impl fmt::Display for IssueSeverity {
 /// | `over_power_levels` | error | review | `used`, `budget`, `over` |
 /// | `might_realm_mismatch` | warning | review | `base`, `granted` |
 /// | `excessive_aging_reduction` | warning | review | `characteristic`, `reduction`, `min` |
+/// | `life_stage_aging_rolls_pending` | warning | review | `age` |
 /// | `unknown_equipment` | error | review | `item` |
 /// | `equipment_min_strength` | warning | review | `item`, `required`, `strength` |
 /// | `shield_with_two_handed_weapon` | warning | review | (none) |
@@ -521,6 +522,11 @@ impl ValidationIssue {
     /// the rules effective minimum (−5). Advisory — the engine still clamps the
     /// derived score at the floor (Core:16579).
     pub const CODE_EXCESSIVE_AGING_REDUCTION: &'static str = "excessive_aging_reduction";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a character over 35 has
+    /// no aging rolls recorded, and "a character over the age of 35 must make aging
+    /// rolls ... before the game begins" (Core:2232). Advisory: the rolls happen at
+    /// the table, so the engine can only say they are owed.
+    pub const CODE_LIFE_STAGE_AGING_ROLLS_PENDING: &'static str = "life_stage_aging_rolls_pending";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: an equipment slot names an
     /// id that does not resolve to any catalogue weapon, shield, or armor
     /// (Core:16944-17011).
@@ -2086,6 +2092,86 @@ mod tests {
         );
     }
 
+    /// "A character over the age of 35 must make aging rolls ... before the game
+    /// begins" (Core Rules.md:2232) is a rule about *any* character, not only one
+    /// built through its life stages — so the finding cannot hang off the
+    /// life-stage plan, which a directly-entered character does not carry. This
+    /// fixture has no plan at all, and the warning still fires.
+    #[test]
+    fn a_character_over_thirty_five_owes_aging_rolls_without_a_life_stage_plan() {
+        let rs = aging_ruleset();
+        let mut entity = make_entity("companion", vec![]);
+        entity.age = Some(40);
+        assert!(entity.life_stages.is_none(), "no plan, by construction");
+
+        let result = validate(&entity, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_AGING_ROLLS_PENDING)
+            .expect("the owed aging rolls are reported");
+        assert_eq!(issue.severity, IssueSeverity::Warning);
+        assert_eq!(issue.phase, CreationPhase::Review);
+        assert_eq!(issue.args.get("age").map(String::as_str), Some("40"));
+        // Advisory only — an unrolled character is unfinished, not illegal.
+        assert!(
+            result.errors().next().is_none(),
+            "issues: {:?}",
+            result.issues
+        );
+    }
+
+    /// "Characters begin aging in the Winter **after** they turn 35"
+    /// (Core Rules.md:16565), and the rule reads "over the age of 35"
+    /// (`:2232`) — so 35 owes nothing and 36 owes the first roll. The exact
+    /// boundary, pinned on both sides.
+    #[test]
+    fn the_first_aging_roll_is_owed_at_thirty_six_not_thirty_five() {
+        let rs = aging_ruleset();
+        let owed = |age: u32| {
+            let mut entity = make_entity("companion", vec![]);
+            entity.age = Some(age);
+            all_codes(&validate(&entity, &rs))
+                .contains(&ValidationIssue::CODE_LIFE_STAGE_AGING_ROLLS_PENDING.to_string())
+        };
+
+        assert!(!owed(35), "a character of 35 has not yet begun aging");
+        assert!(owed(36), "the first roll is owed the year after 35");
+    }
+
+    /// A character with no age entered cannot be over 35, so it owes nothing yet.
+    #[test]
+    fn a_character_without_an_age_owes_no_aging_rolls() {
+        let rs = aging_ruleset();
+        let entity = make_entity("companion", vec![]);
+        assert!(
+            !all_codes(&validate(&entity, &rs))
+                .contains(&ValidationIssue::CODE_LIFE_STAGE_AGING_ROLLS_PENDING.to_string())
+        );
+    }
+
+    /// A recorded aging log means the rolls were made, whatever they produced. It
+    /// is the log — not the accrued points — that settles them: a roll can
+    /// legitimately produce no aging points at all, so keying on the points would
+    /// nag a character that had rolled well.
+    #[test]
+    fn a_recorded_aging_log_settles_the_owed_rolls() {
+        let rs = aging_ruleset();
+        let mut entity = make_entity("companion", vec![]);
+        entity.age = Some(60);
+        entity.aging_log = vec![crate::types::AgingLogEntry {
+            year: 1220,
+            effect: "No apparent aging.".into(),
+        }];
+        assert!(entity.aging_points.is_empty(), "rolled, but gained nothing");
+
+        assert!(
+            !all_codes(&validate(&entity, &rs))
+                .contains(&ValidationIssue::CODE_LIFE_STAGE_AGING_ROLLS_PENDING.to_string()),
+            "a logged roll settles the finding"
+        );
+    }
+
     #[test]
     fn over_budget_virtues() {
         let items = r#"[
@@ -2481,11 +2567,11 @@ mod tests {
             }
         }
 
-        // 95 shipping sites today (every literal inside a test module is stripped).
+        // 96 shipping sites today (every literal inside a test module is stripped).
         // A floor, not an equality, so adding a validator is not a failing test —
         // but a scanner that stops matching is.
         assert!(
-            sites >= 95,
+            sites >= 96,
             "expected to find the issue emit sites, found {sites}"
         );
         assert!(

@@ -12,6 +12,8 @@ use super::*;
 /// - `excessive_aging_reduction`: the derived drops would push a Characteristic's
 ///   effective score below the rules effective minimum (−5). The derived score is
 ///   clamped regardless; this only flags an implausible entry.
+/// - `life_stage_aging_rolls_pending`: the character is over 35 and no aging roll
+///   is recorded, so the rolls the rules owe before play have not been made.
 ///
 /// (An earlier `aging_points_force_drop` note announcing each auto-applied drop
 /// was removed as validation noise — the drop is automatic and already reflected
@@ -64,4 +66,53 @@ pub(crate) fn validate_aging(
             ));
         }
     }
+
+    report_pending_aging_rolls(entity, issues);
+}
+
+/// The age past which the rules owe aging rolls: "Characters begin aging in the
+/// Winter after they turn 35."
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16565.
+///
+/// A cited constant in Rust rather than rules data because there is no
+/// `rules/core/aging.json` yet; slice 6b6 introduces that file and this threshold
+/// moves into it (see RULES.md → *Hardcoded engine values*).
+const AGING_ROLLS_START_AGE: u32 = 35;
+
+/// Emits `life_stage_aging_rolls_pending` for a character older than
+/// [`AGING_ROLLS_START_AGE`] whose aging log is empty.
+///
+/// "The first thing to bear in mind is that a character over the age of 35 must
+/// make aging rolls (see page 392) before the game begins."
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2232.
+///
+/// The rule is about *any* character, however it was built, which is why this
+/// lives here and not in `validate_life_stage_plan` — that one returns early for a
+/// character with no plan, and a directly-entered magus of 60 owes the rolls just
+/// as much as a guided one.
+///
+/// "Over the age of 35" is strict: aging begins "in the Winter after they turn
+/// 35" (`:16565`), so 35 owes nothing and 36 owes the first roll.
+///
+/// The recorded [`Entity::aging_log`] — not [`Entity::aging_points`] — settles the
+/// finding: a roll can legitimately produce no aging points, so a well-rolled
+/// character would otherwise be nagged forever.
+///
+/// Filed under [`CreationPhase::Review`] because no aging phase exists yet; slice
+/// 6b6 adds the `Aging` variant to [`CreationPhase`] and moves this finding onto
+/// it.
+fn report_pending_aging_rolls(entity: &Entity, issues: &mut Vec<ValidationIssue>) {
+    let Some(age) = entity.age else {
+        return;
+    };
+    if age <= AGING_ROLLS_START_AGE || !entity.aging_log.is_empty() {
+        return;
+    }
+
+    issues.push(ValidationIssue::warning(
+        ValidationIssue::CODE_LIFE_STAGE_AGING_ROLLS_PENDING,
+        CreationPhase::Review,
+        args([("age", age.to_string())]),
+        None,
+    ));
 }

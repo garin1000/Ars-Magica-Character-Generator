@@ -692,6 +692,11 @@ issue-over_item_level = Enchanted devices total { $used } levels, over the budge
 issue-over_power_levels = Supernatural powers total { $used } levels, over the budget of { $budget } (by { $over }).
 issue-might_realm_mismatch = The entered Might Realm ({ $base }) disagrees with the Realm its Virtues grant ({ $granted }).
 issue-excessive_aging_reduction = The aging drops to { $characteristic } ({ $reduction }) would fall below the minimum score ({ $min }); it is clamped there.
+# A character over 35 owes aging rolls before play begins (Core Rules.md:2232),
+# and aging starts the Winter after 35 (`:16565`) — so this fires from 36 up. The
+# rolls happen at the table, so the app can only say they are outstanding; a
+# recorded aging log settles it, whatever the rolls produced.
+issue-life_stage_aging_rolls_pending = This character is { $age }, and a character over 35 must make aging rolls before play begins; none are recorded yet.
 issue-unknown_equipment = Equipment '{ $item }' does not match any weapon, shield, or armor.
 issue-equipment_min_strength = { $item } needs Strength { $required }, but this character has { $strength }.
 issue-shield_with_two_handed_weapon = A shield cannot be used with a two-handed weapon, so its Attack and Defense modifiers are not applied (it still counts toward Load).
