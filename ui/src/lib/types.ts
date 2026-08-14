@@ -288,6 +288,19 @@ export interface LifeStageBudget {
   // of the general pool, which may buy Arts as well as Abilities. The pool actually
   // funded from is `EffectiveScores.xp_general_pool` (this plus Skilled/Weak Parens).
   apprenticeship_xp: number;
+  // The age the character was gauntleted at — its own age while it stands at its
+  // Gauntlet, and for anyone who serves no apprenticeship.
+  gauntlet_age: number;
+  // Years lived after the Gauntlet (age - gauntlet_age), 0 for everyone else.
+  post_gauntlet_years: number;
+  // What those years grant, lab work deducted (30 per year, -10 per charged lab
+  // season). Points, not experience: each is an experience point OR a spell level,
+  // so this is the sum of the two fields below and funds nothing on its own.
+  post_gauntlet_points: number;
+  // How many of those points the player took as levels of spells.
+  post_gauntlet_spell_levels: number;
+  // The rest of them, which are experience.
+  post_gauntlet_xp: number;
 }
 
 // A character's life-stage choices — never its resolved numbers (see

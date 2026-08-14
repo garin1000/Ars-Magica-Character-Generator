@@ -129,6 +129,13 @@ function budget(years: number, rate: number): LifeStageBudget {
     later_life_xp: years * rate,
     apprenticeship_years: 0,
     apprenticeship_xp: 0,
+    // No Gauntlet to live past: the years after one are a magus-only block, so for
+    // everyone else the Gauntlet age is simply the age later life runs to.
+    gauntlet_age: 5 + years,
+    post_gauntlet_years: 0,
+    post_gauntlet_points: 0,
+    post_gauntlet_spell_levels: 0,
+    post_gauntlet_xp: 0,
   };
 }
 
@@ -144,6 +151,9 @@ function magusBudget(years = 5, rate = 15): LifeStageBudget {
     ...budget(years, rate),
     apprenticeship_years: 15,
     apprenticeship_xp: 240,
+    // Standing at its Gauntlet: childhood + later life + the fifteen years of
+    // apprenticeship, with no year after it yet.
+    gauntlet_age: 5 + years + 15,
   };
 }
 

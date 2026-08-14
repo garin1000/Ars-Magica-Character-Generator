@@ -358,10 +358,12 @@ pub struct LifeStagePlan {
 /// The experience a life-stage plan earns, split into the blocks the rules grant
 /// it in. Derived — never stored (see [`LifeStagePlan`]).
 ///
-/// The three blocks fund different things, which is the whole reason they are kept
-/// apart rather than summed: the native-language points buy one language and
-/// nothing else, the spread buys only the childhood Abilities, and later life buys
-/// anything the character is permitted.
+/// The blocks fund different things, which is the whole reason they are kept apart
+/// rather than summed: the native-language points buy one language and nothing else,
+/// the spread buys only the childhood Abilities, later life buys anything the
+/// character is permitted, and the years after a magus's Gauntlet buy Arts,
+/// Abilities or levels of spells alike — which is why that block alone is reported
+/// as points *and* as the experience/spell-level split the player chose.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LifeStageBudget {
     /// Experience for the native language alone (75).
@@ -385,15 +387,47 @@ pub struct LifeStageBudget {
     /// `EffectiveScores::xp_general_pool`. This field is the block's base, which is
     /// why nothing displays it as "the pool".
     pub apprenticeship_xp: u32,
+    /// The age this character was gauntleted at: [`LifeStagePlan::gauntlet_age`] for a
+    /// magus that has lived past its Gauntlet, and the character's own age for one
+    /// standing at it — or for anyone serving no apprenticeship, where it is simply
+    /// the age later life runs to. Clamped to the age, and 0 while the age is unset,
+    /// like every other age-dependent figure here.
+    pub gauntlet_age: u32,
+    /// Years lived after the Gauntlet (age − [`Self::gauntlet_age`]), 0 for a
+    /// character standing at it (Core Rules.md:2216).
+    pub post_gauntlet_years: u32,
+    /// What those years grant, lab work deducted: `post_gauntlet_years × 30 −
+    /// charged lab seasons × 10` (Core Rules.md:2471, :2482).
+    ///
+    /// **Points, not experience:** each one is "an experience point in an Art or
+    /// Ability or one level of spell" (`:2471`), so this is the sum of the two fields
+    /// below and never itself funds a pool.
+    pub post_gauntlet_points: u32,
+    /// How many of [`Self::post_gauntlet_points`] the player took as levels of spells
+    /// (`:2471`) — not experience, so `total()` excludes them.
+    pub post_gauntlet_spell_levels: u32,
+    /// The rest of [`Self::post_gauntlet_points`], which is experience.
+    pub post_gauntlet_xp: u32,
+    // Deliberately NOT a field: what a post-Gauntlet year is worth. Unlike
+    // `later_life_rate`, which Wealthy and Poor change per character (`:2394`), the 30
+    // of `:2471` never varies — so there is nothing per-character to report, and a UI
+    // that shows the rate reads it off the ruleset's `post_apprenticeship` block,
+    // which is the one place it lives.
 }
 
 impl LifeStageBudget {
-    /// Every point the character has earned, across all four blocks.
+    /// Every **experience point** the character has earned, across every block.
+    ///
+    /// [`Self::post_gauntlet_spell_levels`] is excluded on purpose: a level of spell
+    /// is not experience — `:2471` has the player split the yearly points between the
+    /// two — and counting it here would spend it twice, once as experience and once
+    /// against the spell-levels budget.
     pub fn total(&self) -> u32 {
         self.childhood_native_xp
             .saturating_add(self.childhood_spread_xp)
             .saturating_add(self.later_life_xp)
             .saturating_add(self.apprenticeship_xp)
+            .saturating_add(self.post_gauntlet_xp)
     }
 }
 
@@ -409,14 +443,39 @@ impl LifeStageRules {
     /// Withholding the whole budget instead would leave childhood's two restricted
     /// pools at nothing and report every childhood row as unfunded — the validator
     /// names the missing age itself (`life_stage_age_unset`).
+    ///
+    /// **The age is spent around the Gauntlet, not up to it.** The years before the
+    /// Gauntlet are childhood, later life and apprenticeship; the years after it earn
+    /// "30 points per year" (`:2216`, `:2471`). So every figure here is derived from
+    /// the *Gauntlet* age — [`LifeStagePlan::gauntlet_age`], or the character's own
+    /// age when it stands at its Gauntlet — and raising a magus's age lengthens its
+    /// life as a magus, never the childhood-to-apprenticeship span behind it.
     pub fn budget(&self, entity: &Entity, ruleset: &Ruleset) -> Option<LifeStageBudget> {
-        entity.life_stages.as_ref()?;
+        let plan = entity.life_stages.as_ref()?;
         let apprenticeship = self.apprenticeship_of(entity, ruleset);
         let apprenticeship_years = apprenticeship.map_or(0, |block| block.years);
-        let later_life_years = entity
-            .age
-            .map_or(0, |age| self.later_life_years(age, apprenticeship_years));
+        // "**Hermetic Magi Only (Optional):** Years after apprenticeship"
+        // (Ars Magica - Definitive Edition (Core Rules).md:2216), so the stored
+        // Gauntlet age is read for a character that serves an apprenticeship and
+        // ignored on every other plan — gating on the *points* being zero instead
+        // would let a hand-edited companion plan carrying one cut its later life
+        // short. Clamped to the age, because Advisory and Silent validation do not
+        // block a Gauntlet after the character's own age and an unclamped value
+        // would grant later-life years never lived.
+        let gauntlet_age = entity.age.map_or(0, |age| {
+            apprenticeship
+                .and(plan.gauntlet_age)
+                .map_or(age, |gauntlet| gauntlet.min(age))
+        });
+        let later_life_years = self.later_life_years(gauntlet_age, apprenticeship_years);
         let later_life_rate = self.later_life_rate(entity, ruleset);
+        let post_gauntlet_years = entity.age.unwrap_or(0).saturating_sub(gauntlet_age);
+        let post_gauntlet_points = self.post_gauntlet_points(plan, post_gauntlet_years);
+        // "Each point can be an experience point in an Art or Ability or one level of
+        // spell" (`:2471`): the player's split, held to the points that exist so a
+        // stored figure the years cannot pay for takes nothing away from the rest
+        // (the validator reports it).
+        let post_gauntlet_spell_levels = plan.post_gauntlet_spell_levels.min(post_gauntlet_points);
         Some(LifeStageBudget {
             childhood_native_xp: self.childhood.native_language_xp,
             childhood_spread_xp: self.childhood.spread_xp,
@@ -427,12 +486,47 @@ impl LifeStageRules {
             // Apprenticeship is a fixed block like childhood, so it does not scale
             // with an age; 0 for anyone who serves none.
             apprenticeship_xp: apprenticeship.map_or(0, |block| block.xp),
+            gauntlet_age,
+            post_gauntlet_years,
+            post_gauntlet_points,
+            post_gauntlet_spell_levels,
+            post_gauntlet_xp: post_gauntlet_points.saturating_sub(post_gauntlet_spell_levels),
         })
     }
 
-    /// Years of later life a character of `age` has lived: every year after
-    /// childhood, minus the `apprenticeship_years` that follow it (0 for anyone who
-    /// serves no apprenticeship). Both blocks are fixed spans, so an age inside them
+    /// What `post_gauntlet_years` out of apprenticeship are worth to this plan:
+    /// "For every year, the magus gets 30 points" (`:2471`), less what its lab work
+    /// took — "For each season that your magus spends working on a lab project, the
+    /// character loses 10 points from the yearly 30 experience points, to a minimum
+    /// of 0 if three or four seasons are spent on lab work" (`:2482`).
+    ///
+    /// The stored season total is capped at `max_charged × years` first, which is that
+    /// per-year minimum of 0 read across the whole span: no year can lose more than
+    /// three seasons' worth, so no span can. Everything saturates, so a stored total
+    /// beyond the cap costs the same as the cap rather than underflowing — a validator
+    /// reports it instead.
+    ///
+    /// 0 throughout for a ruleset shipping no `post_apprenticeship` block: the rate
+    /// is data, so with no block there is no number to grant.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2471, :2482.
+    fn post_gauntlet_points(&self, plan: &LifeStagePlan, post_gauntlet_years: u32) -> u32 {
+        let Some(rules) = self.post_apprenticeship.as_ref() else {
+            return 0;
+        };
+        let charged = plan.post_gauntlet_lab_seasons.min(
+            rules
+                .max_charged_lab_seasons_per_year
+                .saturating_mul(post_gauntlet_years),
+        );
+        post_gauntlet_years
+            .saturating_mul(rules.points_per_year)
+            .saturating_sub(charged.saturating_mul(rules.lab_season_cost))
+    }
+
+    /// Years of later life lived up to `stop_age`: every year after childhood, minus
+    /// the `apprenticeship_years` that follow it (0 for anyone who serves no
+    /// apprenticeship). Both blocks are fixed spans, so a `stop_age` inside them
     /// yields 0 rather than a negative one (the validator reports such an age
     /// separately).
     ///
@@ -441,15 +535,18 @@ impl LifeStageRules {
     /// (Ars Magica - Definitive Edition (Core Rules).md:2214), the same four periods
     /// `:2364` sets out. Counting every year to a magus's age would over-grant, and
     /// since Abilities and Arts buy from one shared pool the surplus would fund Arts
-    /// as well. The character stands at its Gauntlet, so the span this leaves is the
-    /// childhood-to-apprenticeship one — five years for a magus of 25, which is
-    /// exactly the Darius example's "75 experience points to spend from those five
-    /// years" (`:2402`).
+    /// as well.
     ///
-    /// Life as a magus *after* the Gauntlet — "30 points per year" (`:2216`, `:2471`)
-    /// — is **M6/6b5** and adds nothing here.
-    pub fn later_life_years(&self, age: u32, apprenticeship_years: u32) -> u32 {
-        age.saturating_sub(self.childhood.years.saturating_add(apprenticeship_years))
+    /// `stop_age` is therefore the age at which later life **stops**, not
+    /// necessarily the character's own: the **Gauntlet age** for a magus — which is
+    /// its age only while it stands at its Gauntlet — and the age itself for anyone
+    /// else, who never leaves later life. That is why a magus of 60 gauntleted at 25
+    /// has the same five later-life years as one of 25, exactly the Darius example's
+    /// "75 experience points to spend from those five years" (`:2402`) for a boy
+    /// apprenticed at 10. The years after the Gauntlet are a block of their own
+    /// (`:2216`, `:2471`), counted in [`Self::budget`].
+    pub fn later_life_years(&self, stop_age: u32, apprenticeship_years: u32) -> u32 {
+        stop_age.saturating_sub(self.childhood.years.saturating_add(apprenticeship_years))
     }
 
     /// The apprenticeship this character serves, if any: the block for a magus, and
@@ -472,9 +569,12 @@ impl LifeStageRules {
         self.apprenticeship.as_ref()
     }
 
-    /// The youngest a magus can be: childhood plus the fifteen years of
-    /// apprenticeship (Core Rules.md:2435), so twenty against the shipped data. A
-    /// magus is generated standing at its Gauntlet, so this is a floor on its age.
+    /// The youngest a magus can be gauntleted: childhood plus the fifteen years of
+    /// apprenticeship (Core Rules.md:2435), so twenty against the shipped data.
+    ///
+    /// A floor on the **Gauntlet age**, which is a floor on the character's age too:
+    /// the years after the Gauntlet (`:2216`) run forward from it, so a magus is at
+    /// least this old whether it stands at its Gauntlet or is a century past it.
     ///
     /// Falls back to childhood alone for a ruleset shipping no apprenticeship block —
     /// there is then no further span to clear.
@@ -908,6 +1008,217 @@ mod tests {
         assert_eq!(budget.later_life_years, 0);
         assert_eq!(budget.later_life_xp, 0);
         assert_eq!(budget.total(), 360);
+    }
+
+    // --- life as a magus after the Gauntlet (M6/6b5) -------------------------
+
+    /// A magus of `age` gauntleted at `gauntlet_age`, having charged `lab_seasons`
+    /// seasons of lab work against its yearly points and taken `spell_levels` of
+    /// them as levels of spells.
+    fn magus_out_of_apprenticeship(
+        age: u32,
+        gauntlet_age: u32,
+        lab_seasons: u32,
+        spell_levels: u32,
+    ) -> Entity {
+        let mut entity = planned_magus(age);
+        entity.life_stages = Some(LifeStagePlan {
+            gauntlet_age: Some(gauntlet_age),
+            post_gauntlet_lab_seasons: lab_seasons,
+            post_gauntlet_spell_levels: spell_levels,
+            ..LifeStagePlan::default()
+        });
+        entity
+    }
+
+    /// The 6b4 behavior, locked: a plan carrying no Gauntlet age means the magus
+    /// stands at its Gauntlet, so its age *is* that age and the years after it are
+    /// none. Every save written before the field existed keeps its numbers.
+    #[test]
+    fn a_magus_with_no_stored_gauntlet_age_stands_at_its_gauntlet() {
+        let budget = rules_with_apprenticeship()
+            .budget(&planned_magus(25), &rate_ruleset())
+            .expect("a magus with a plan");
+        assert_eq!(budget.gauntlet_age, 25);
+        assert_eq!(budget.later_life_years, 5);
+        assert_eq!(budget.apprenticeship_xp, 240);
+        assert_eq!(budget.post_gauntlet_years, 0);
+        assert_eq!(budget.post_gauntlet_points, 0);
+        assert_eq!(budget.post_gauntlet_xp, 0);
+        assert_eq!(budget.total(), 435);
+    }
+
+    /// "For every year, the magus gets 30 points."
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2471.) The years counted are
+    /// the ones after the Gauntlet — and the years *before* it are untouched by the
+    /// character's age, which is the whole reason the Gauntlet age is the stored
+    /// number: a magus of 60 gauntleted at 25 still lived the same five later-life
+    /// years as a magus of 25.
+    #[test]
+    fn the_years_after_the_gauntlet_earn_thirty_points_each() {
+        let budget = rules_with_apprenticeship()
+            .budget(&magus_out_of_apprenticeship(60, 25, 0, 0), &rate_ruleset())
+            .expect("a magus with a plan");
+        assert_eq!(budget.gauntlet_age, 25);
+        assert_eq!(budget.post_gauntlet_years, 35);
+        assert_eq!(budget.post_gauntlet_points, 1050);
+        assert_eq!(budget.post_gauntlet_xp, 1050);
+        // The span before the Gauntlet is exactly the one a magus of 25 lives.
+        assert_eq!(budget.later_life_years, 5);
+        assert_eq!(budget.later_life_xp, 75);
+        assert_eq!(budget.apprenticeship_years, 15);
+        assert_eq!(budget.total(), 435 + 1050);
+    }
+
+    /// "For each season that your magus spends working on a lab project, the
+    /// character loses 10 points from the yearly 30 experience points" (`:2482`), so
+    /// ten charged seasons cost 100 of the 1050.
+    #[test]
+    fn each_charged_lab_season_costs_ten_points() {
+        let budget = rules_with_apprenticeship()
+            .budget(&magus_out_of_apprenticeship(60, 25, 10, 0), &rate_ruleset())
+            .expect("a magus with a plan");
+        assert_eq!(budget.post_gauntlet_points, 950);
+        assert_eq!(budget.post_gauntlet_xp, 950);
+    }
+
+    /// The deduction runs "to a minimum of 0 if three or four seasons are spent on
+    /// lab work" (`:2482`), so the fourth season of a year is free — the year has
+    /// nothing left to lose. A magus one year out of apprenticeship that spent every
+    /// season in the lab is at 0 points, never below.
+    #[test]
+    fn a_fourth_lab_season_in_a_year_costs_nothing() {
+        let rules = rules_with_apprenticeship();
+        let rs = rate_ruleset();
+        let three = rules
+            .budget(&magus_out_of_apprenticeship(26, 25, 3, 0), &rs)
+            .expect("a magus with a plan");
+        assert_eq!(three.post_gauntlet_years, 1);
+        assert_eq!(three.post_gauntlet_points, 0);
+
+        let four = rules
+            .budget(&magus_out_of_apprenticeship(26, 25, 4, 0), &rs)
+            .expect("a magus with a plan");
+        assert_eq!(four.post_gauntlet_points, 0);
+
+        // Over 35 years the same cap holds: 105 charged seasons exhaust the 1050,
+        // and a stored total beyond that neither costs more nor underflows.
+        let all_lab = rules
+            .budget(&magus_out_of_apprenticeship(60, 25, 200, 0), &rs)
+            .expect("a magus with a plan");
+        assert_eq!(all_lab.post_gauntlet_points, 0);
+        assert_eq!(all_lab.post_gauntlet_xp, 0);
+    }
+
+    /// "Each point can be an experience point in an Art or Ability or one level of
+    /// spell" (`:2471`), so the split is the player's: 300 of the 950 taken as spell
+    /// levels leave 650 experience points. `total()` counts the 650 alone — a level
+    /// of spell is not experience, and folding it in would spend it twice.
+    #[test]
+    fn points_taken_as_spell_levels_are_not_experience() {
+        let budget = rules_with_apprenticeship()
+            .budget(
+                &magus_out_of_apprenticeship(60, 25, 10, 300),
+                &rate_ruleset(),
+            )
+            .expect("a magus with a plan");
+        assert_eq!(budget.post_gauntlet_points, 950);
+        assert_eq!(budget.post_gauntlet_spell_levels, 300);
+        assert_eq!(budget.post_gauntlet_xp, 650);
+        assert_eq!(budget.total(), 435 + 650);
+
+        // More levels than there are points buys only the points that exist.
+        let greedy = rules_with_apprenticeship()
+            .budget(
+                &magus_out_of_apprenticeship(60, 25, 10, 5_000),
+                &rate_ruleset(),
+            )
+            .expect("a magus with a plan");
+        assert_eq!(greedy.post_gauntlet_spell_levels, 950);
+        assert_eq!(greedy.post_gauntlet_xp, 0);
+    }
+
+    /// A Gauntlet age past the character's age is clamped to it rather than
+    /// underflowing. The clamp is load-bearing: `ValidationMode::Advisory` and
+    /// `Silent` do not block the error such a plan raises, so the budget has to stay
+    /// arithmetically sane on its own — an unclamped value would hand the magus
+    /// later-life years it never lived.
+    #[test]
+    fn a_gauntlet_age_above_the_characters_age_is_clamped_to_it() {
+        let budget = rules_with_apprenticeship()
+            .budget(&magus_out_of_apprenticeship(25, 40, 0, 0), &rate_ruleset())
+            .expect("a magus with a plan");
+        assert_eq!(budget.gauntlet_age, 25);
+        assert_eq!(budget.later_life_years, 5);
+        assert_eq!(budget.post_gauntlet_years, 0);
+        assert_eq!(budget.post_gauntlet_points, 0);
+    }
+
+    /// The Gauntlet age is read for a character that serves an apprenticeship and
+    /// nobody else — `:2216` is "**Hermetic Magi Only (Optional):** Years after
+    /// apprenticeship". Gating on the field instead would let a hand-edited companion
+    /// plan carrying one silently lose every later-life year between the two ages: 35
+    /// years, 525 experience points.
+    #[test]
+    fn a_companion_ignores_a_stored_gauntlet_age() {
+        let rules = rules_with_apprenticeship();
+        let rs = rate_ruleset();
+        let mut plain = companion(vec![]);
+        plain.age = Some(60);
+        plain.life_stages = Some(LifeStagePlan::default());
+
+        let mut edited = plain.clone();
+        edited.life_stages = Some(LifeStagePlan {
+            gauntlet_age: Some(25),
+            post_gauntlet_lab_seasons: 4,
+            post_gauntlet_spell_levels: 300,
+            ..LifeStagePlan::default()
+        });
+
+        assert_eq!(
+            rules.budget(&edited, &rs).expect("a companion with a plan"),
+            rules.budget(&plain, &rs).expect("a companion with a plan")
+        );
+        let budget = rules.budget(&edited, &rs).expect("a companion with a plan");
+        assert_eq!(budget.later_life_years, 55);
+        assert_eq!(budget.post_gauntlet_years, 0);
+    }
+
+    /// Age-dependent figures wait for an age, exactly as later life does: a magus
+    /// whose age is not yet typed lives no year after its Gauntlet either. The
+    /// missing age is reported on its own (`life_stage_age_unset`).
+    #[test]
+    fn an_unset_age_earns_no_post_gauntlet_year() {
+        let mut magus = magus_out_of_apprenticeship(60, 25, 4, 100);
+        magus.age = None;
+
+        let budget = rules_with_apprenticeship()
+            .budget(&magus, &rate_ruleset())
+            .expect("a magus with a plan");
+        assert_eq!(budget.post_gauntlet_years, 0);
+        assert_eq!(budget.post_gauntlet_points, 0);
+        assert_eq!(budget.post_gauntlet_spell_levels, 0);
+        assert_eq!(budget.post_gauntlet_xp, 0);
+        assert_eq!(budget.later_life_years, 0);
+        assert_eq!(budget.total(), 360);
+    }
+
+    /// A ruleset shipping no post-apprenticeship block grants nothing for the years
+    /// after the Gauntlet — the rate lives in the rules data, so there is no fallback
+    /// number to invent. (The shipped combination is refused at load; this is the
+    /// arithmetic behind that refusal.)
+    #[test]
+    fn without_a_post_apprenticeship_block_the_years_after_the_gauntlet_grant_nothing() {
+        let mut rules = rules_with_apprenticeship();
+        rules.post_apprenticeship = None;
+
+        let budget = rules
+            .budget(&magus_out_of_apprenticeship(60, 25, 0, 0), &rate_ruleset())
+            .expect("a magus with a plan");
+        assert_eq!(budget.post_gauntlet_years, 35);
+        assert_eq!(budget.post_gauntlet_points, 0);
+        assert_eq!(budget.post_gauntlet_spell_levels, 0);
+        assert_eq!(budget.post_gauntlet_xp, 0);
     }
 
     // --- the Hermetic minimum Abilities (M6/6b4) -----------------------------
