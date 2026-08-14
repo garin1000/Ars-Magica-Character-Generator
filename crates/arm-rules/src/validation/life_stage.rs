@@ -53,7 +53,8 @@ use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
 /// life ends at apprenticeship (`:2214`) — but that is arithmetic in
 /// [`crate::life_stage::LifeStageRules::budget`], not a finding.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:2364, :2378, :2392, :2435.
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2364, :2378, :2392, :2435,
+/// :2216, :2471, :2482.
 pub(crate) fn validate_life_stage_plan(
     entity: &Entity,
     ruleset: &Ruleset,
