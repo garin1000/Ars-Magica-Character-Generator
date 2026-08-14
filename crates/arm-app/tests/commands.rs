@@ -869,6 +869,47 @@ fn effective_scores_surface_the_spell_levels_bonus_separately() {
     assert_eq!(overridden.spell_levels_budget, 110);
 }
 
+/// The levels of spells a magus took out of its post-Gauntlet points reach the
+/// frontend as a figure of their own, beside the profile base and the V/F bonus, so
+/// the spell-levels bar can label all three parts of the budget rather than folding
+/// them into an unexplained total.
+///
+/// They are additive, not a second budget: the profile's 120 are apprenticeship's
+/// (`:2435`), while these are the player's chosen slice of the fungible "30 points
+/// per year" (`:2471`).
+#[test]
+fn effective_scores_surface_the_post_gauntlet_spell_levels_separately() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut magus = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("magus"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+
+    // A magus of 60 gauntleted at 25: 35 years at 30 points each, 300 of them taken
+    // as levels of spells.
+    magus.age = Some(60);
+    magus.life_stages = Some(arm_rules::LifeStagePlan {
+        gauntlet_age: Some(25),
+        post_gauntlet_spell_levels: 300,
+        ..arm_rules::LifeStagePlan::default()
+    });
+    let experienced = effective_scores_loaded(&magus, &ruleset);
+    assert_eq!(experienced.spell_levels_life_stage, 300);
+    assert_eq!(experienced.spell_levels_profile_base, 120);
+    assert_eq!(experienced.spell_levels_bonus, 0);
+    // base + bonus + life stage == budget.
+    assert_eq!(experienced.spell_levels_budget, 420);
+
+    // A magus standing at its Gauntlet has lived no year past it, so it takes no
+    // levels out of them and its budget is the profile's 120 — the pre-6b5 number.
+    magus.age = Some(25);
+    magus.life_stages = Some(arm_rules::LifeStagePlan::default());
+    let fresh = effective_scores_loaded(&magus, &ruleset);
+    assert_eq!(fresh.spell_levels_life_stage, 0);
+    assert_eq!(fresh.spell_levels_budget, 120);
+}
+
 /// A companion built through its life stages, speaking `native_language` — the
 /// character a Sample Childhood package is applied to (childhood exists only in
 /// life-stage mode, and the package's native-language entry takes the plan's
@@ -1370,11 +1411,12 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
     let plan = arm_rules::LifeStagePlan {
         native_language: Some("German".to_string()),
         childhood_package: Some(Id::new("childhood.athletic")),
-        // The post-Gauntlet choices are deliberately left unset, for the reason
-        // `post_apprenticeship` is below: no view reads them yet, so populating them
-        // would demand a `types.ts` mirror for a payload nothing consumes. They join
-        // the check in the change that first sends them across the boundary.
-        ..arm_rules::LifeStagePlan::default()
+        // The three post-Gauntlet choices, populated for the same reason every other
+        // optional field here is: `skip_serializing_if` would otherwise drop them
+        // from the serialization and hide them from the check.
+        gauntlet_age: Some(25),
+        post_gauntlet_lab_seasons: 10,
+        post_gauntlet_spell_levels: 300,
     };
     let budget = arm_rules::LifeStageBudget {
         childhood_native_xp: 75,
@@ -1419,11 +1461,14 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
             spread_abilities: [Id::new("ability.swim")].into_iter().collect(),
         },
         later_life: arm_rules::LaterLifeRules { xp_per_year: 15 },
-        // The one optional field deliberately left unset: nothing in the frontend
-        // reads the post-apprenticeship block yet, so populating it here would
-        // demand a `types.ts` mirror for a payload no view consumes. It joins the
-        // check in the same change that first sends it across the boundary.
-        post_apprenticeship: None,
+        // Populated on purpose, like every other optional field here: the block is
+        // what a UI showing the post-Gauntlet rate reads it off, so its three field
+        // names have to be mirrored.
+        post_apprenticeship: Some(arm_rules::PostApprenticeshipRules {
+            lab_season_cost: 10,
+            max_charged_lab_seasons_per_year: 3,
+            points_per_year: 30,
+        }),
     };
     // One row of the magus checklist, which reaches the frontend on
     // `EffectiveScores.magus_minimum_abilities` — the payload the Abilities view
