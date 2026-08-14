@@ -10,9 +10,10 @@
 //! [`SpellSelection`](crate::types::SpellSelection)s; the catalogue here is
 //! language-neutral mechanics, with names/descriptions in `rules/i18n`.
 //!
-//! Spells consume the magus's *spell-levels budget* (120 at creation,
-//! Core Rules.md:2215-2216, 2435), a currency distinct from the shared Ability/Art
-//! XP pool. Enforcement lives in [`crate::validation`].
+//! Spells consume the magus's *spell-levels budget* (120 out of apprenticeship,
+//! Core Rules.md:2215-2216, 2435, plus whatever the magus took as levels out of its
+//! years past the Gauntlet, `:2471`), a currency distinct from the shared
+//! Ability/Art XP pool. Enforcement lives in [`crate::validation`].
 
 use std::fmt;
 

@@ -904,9 +904,10 @@ mod tests {
 
     /// A magus's later life ends where its apprenticeship begins: "**Later Life.** 15
     /// experience points per year (until apprenticeship for magi)"
-    /// (Core Rules.md:2214). Apprenticeship is fifteen years (`:2435`) and the
-    /// character stands at its Gauntlet, so a magus of 25 was taken as an apprentice
-    /// at 10 and lived five later-life years — exactly the arithmetic of the Darius
+    /// (Core Rules.md:2214). Apprenticeship is fifteen years (`:2435`) and the stop
+    /// age is the **Gauntlet** age, so a magus gauntleted at 25 was taken as an
+    /// apprentice at 10 and lived five later-life years however old it is now —
+    /// exactly the arithmetic of the Darius
     /// example, whose master "picks 10 as a nice, round number" and who then "has 75
     /// experience points to spend from those five years" (`:2402`).
     #[test]

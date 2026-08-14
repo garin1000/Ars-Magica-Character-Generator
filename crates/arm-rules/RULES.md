@@ -1646,7 +1646,10 @@ app affordance, not a rulebook mechanic) when set, otherwise the profile's
 `spell_levels`. Both the effective payload (`arm-app/src/ruleset_io.rs`) and the
 `over_spell_levels` validator (`validation/magus.rs`) call it, so the displayed
 and validated budgets cannot diverge. `spell_levels_budget` then adds the
-Skilled/Weak Parens `Effect::SpellLevels` modifiers on top of that base.
+Skilled/Weak Parens `Effect::SpellLevels` modifiers on top of that base — and, for
+a magus generated some years out of apprenticeship, the levels it took out of its
+post-Gauntlet points (`:2471`): see **Life as a magus after the Gauntlet — 30 points
+per year (M6/6b5)** below. So 120 is the budget *at the Gauntlet*, not a ceiling.
 
 **Per-spell cap — Technique + Form + Intelligence + Magic Theory + 3.**
 
@@ -2493,15 +2496,17 @@ Abilities are bought with experience earned in blocks, not from one bank:
 > are two more periods to consider: apprenticeship, and life as a magus after that.
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2364`.
-- Implementation: `crates/arm-rules/src/life_stage.rs`. **Three of the four periods
-  are modelled**: early childhood, later life, and apprenticeship (**M6/6b4**). Life
-  as a magus after the Gauntlet — `:2216`/`:2471`'s 30 points per year — is
-  **M6/6b5**.
-- **So a magus may now be built through its life stages** (M6/6b4). Its later life
-  runs only "until apprenticeship" (`:2214`), so `later_life_years` subtracts the
-  apprenticeship span as well as childhood; apprenticeship itself is the fourth block
-  and the general pool; and the years before it become a restricted, Abilities-only
-  pool. See **Apprenticeship — 240 experience points across Arts and Abilities** and
+- Implementation: `crates/arm-rules/src/life_stage.rs`. **All four periods are
+  modelled**: early childhood, later life, apprenticeship (**M6/6b4**), and life as a
+  magus after the Gauntlet — `:2216`/`:2471`'s 30 points per year (**M6/6b5**). Each
+  has a section below.
+- **So a magus may be built through its life stages, at its Gauntlet or long past
+  it.** Its later life runs only "until apprenticeship" (`:2214`), so
+  `later_life_years` subtracts the apprenticeship span as well as childhood, and those
+  pre-apprenticeship years become a restricted, Abilities-only pool; apprenticeship
+  and the years after the Gauntlet both fund the **general** pool, since only that
+  pool may buy an Art. See **Apprenticeship — 240 experience points across Arts and
+  Abilities**, **Life as a magus after the Gauntlet — 30 points per year** and
   **Pre-apprenticeship experience buys Abilities only** below for all of it.
 - The 6b2-era refusal `life_stage_magus_guided_unsupported` is **gone** — code, contract
   row and both Fluent messages. It said the engine modelled two of four periods, which
@@ -2824,10 +2829,12 @@ Abilities are bought with experience earned in blocks, not from one bank:
   (`:7074`), and `general_xp_bonus` is applied to the general pool alone. Assigning
   apprenticeship anywhere else would move that ±60 onto a child's money.
   `xp_allocation` therefore selects `base_general` in exactly one place:
-  apprenticeship for a magus, later life for anyone else, the typed `xp_pool` without
-  a plan.
+  `apprenticeship_xp + post_gauntlet_xp` for a magus (the years after the Gauntlet buy
+  Arts too, `:2471` — see **Life as a magus after the Gauntlet** below), later life for
+  anyone else, the typed `xp_pool` without a plan.
 - **No `general_xp` field on `LifeStageBudget`.** The pool the solve funds from is
-  base + bonus (240, or 300 with Skilled Parens); a budget field holding only the base
+  base + bonus (240 at the Gauntlet, 300 with Skilled Parens, more once the
+  post-Gauntlet experience joins it); a budget field holding only the base
   would disagree with it and would have to be excluded from `total()`. The real pool
   is surfaced instead, as `EffectiveScores.xp_general_pool` (`arm-app/ruleset_io.rs`).
 - **`apprenticeship_start_age` is not stored.** Apprenticeship is fifteen fixed years,
@@ -2849,6 +2856,10 @@ Abilities are bought with experience earned in blocks, not from one bank:
 
 #### Life as a magus after the Gauntlet — 30 points per year (M6/6b5)
 
+> 8. **Hermetic Magi Only (Optional):** Years after apprenticeship. Divide 30 points
+> per year between experience points in Arts, experience points in Abilities, and
+> levels of spells.
+
 > For every year, the magus gets 30 points. Each point can be an experience point in an
 > Art or Ability or one level of spell. The maximum spell level a magus may know is
 > limited as before.
@@ -2858,8 +2869,9 @@ Abilities are bought with experience earned in blocks, not from one bank:
 > seasons are spent on lab work. Thus it is most cost effective to have the magus engage
 > in a full year of lab work at a time.
 
-- Source: `Ars Magica - Definitive Edition (Core Rules).md:2471` and `:2482` (heading
-  `#### Magus Only — After Apprenticeship` at `:2467`) — the fourth of the periods
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2216` (the character-creation
+  step), `:2471` (the rate) and `:2482` (lab work), under the heading
+  `#### Magus Only — After Apprenticeship` at `:2467` — the fourth of the periods
   `:2364` names: "apprenticeship, and life as a magus after that".
 - Data: `rules/core/life_stages.json` → `post_apprenticeship`: `points_per_year` 30
   (`:2471`), `lab_season_cost` 10 and `max_charged_lab_seasons_per_year` 3 (`:2482`).
@@ -2868,7 +2880,10 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `LifeStageRules::post_apprenticeship` as an additive `Option` with
   `skip_serializing_if`, exactly like `apprenticeship`: `:2364` calls these "two
   **more** periods", so a ruleset with no Hermetic magi ships neither block and writes
-  neither key.
+  neither key. The player's three choices live on `LifeStagePlan` (`gauntlet_age`,
+  `post_gauntlet_lab_seasons`, `post_gauntlet_spell_levels`), the derived figures on
+  `LifeStageBudget` (`gauntlet_age`, `post_gauntlet_years`, `post_gauntlet_points`,
+  `post_gauntlet_spell_levels`, `post_gauntlet_xp`).
 - **Points, not experience points.** `:2471` makes each point fungible — "an experience
   point in an Art or Ability or one level of spell" — and the player decides which each
   one becomes. Hence `points_per_year` where apprenticeship says `xp`: `:2435` grants
@@ -2910,28 +2925,32 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `LifeStageBudget::total()` adds **`post_gauntlet_xp` only** — a level of spell is not
   experience (`:2471` has the player split the points), and folding it in would spend it
   twice, once here and once against the spell-levels budget.
-- **An absent `gauntlet_age` means the magus stands at its Gauntlet** — the Gauntlet age
-  is then [`Entity::age`] itself, which is exactly what M6/6b4 computed, so every save
-  written before the field keeps its numbers and `SCHEMA_VERSION` stays 14.
-- **`gauntlet_age` is the stored choice, not `post_gauntlet_years`.**
-  `age = childhood + later life + apprenticeship + post-Gauntlet` is one equation in two
-  unknowns, so exactly one number has to be stored. With the years stored instead,
-  raising a magus's age would stretch the *childhood-to-apprenticeship* span — the years
-  before it was taken as an apprentice — rather than its life as a magus, the opposite of
-  what raising the age means. Hence `later_life_years(stop_age, apprenticeship_years)` is
-  fed the **Gauntlet** age, which for anyone serving no apprenticeship is the age itself.
+- **`gauntlet_age` is the one number stored, and its absence means the magus stands at
+  its Gauntlet.** `age = childhood + later life + apprenticeship + post-Gauntlet` is one
+  equation in two unknowns, so exactly one of them has to be recorded and every other
+  figure derived from it. Three consequences, all deliberate:
+  - **Absent = at the Gauntlet.** The Gauntlet age is then `Entity::age` itself, which
+    is exactly what M6/6b4 computed, so every save written before the field keeps its
+    numbers, the field is purely additive and `SCHEMA_VERSION` stays 14.
+  - **`post_gauntlet_years` was rejected as the stored number.** With the years stored
+    instead, raising a magus's age would stretch the *childhood-to-apprenticeship* span
+    — the years before it was taken as an apprentice — rather than its life as a magus,
+    which is the opposite of what a player raising the age means. Hence
+    `later_life_years(stop_age, apprenticeship_years)` is fed the **Gauntlet** age,
+    which for anyone serving no apprenticeship is the age itself.
+  - **Read for a magus only, and clamped to the age.** `:2216` is "**Hermetic Magi Only
+    (Optional):** Years after apprenticeship", so the stored age is read for a character
+    whose profile serves an apprenticeship and ignored on any other plan. Gating on the
+    *points* being zero instead would let a hand-edited companion plan carrying
+    `gauntlet_age: 25` at age 60 silently lose 35 later-life years (525 experience
+    points). It is clamped to the age because Advisory and Silent validation do not
+    block a Gauntlet later than the character's own.
 - **`post_gauntlet_lab_seasons` is one total of *charged* seasons, not a per-year list.**
   The deduction stops at the third season of a year (`:2482`), so every legal per-year
   distribution totals at most `3 × years`, every total in that range is realizable, and
   all of them cost the same — one number is lossless. It must count *charged* seasons:
   sixteen seasons actually worked cost 0 points across four years but 30 across five, so
   a single total of worked seasons could not tell those apart.
-- The Gauntlet age is read for a character whose profile serves an apprenticeship and
-  ignored on any other plan — `:2216` is "**Hermetic Magi Only (Optional):** Years after
-  apprenticeship". Gating on the *points* being zero instead would let a hand-edited
-  companion plan carrying `gauntlet_age: 25` at age 60 silently lose 35 later-life years
-  (525 experience points). The value is clamped to the age because Advisory and Silent
-  validation do not block a Gauntlet later than the character's own age.
 - **The post-Gauntlet experience joins the *general* pool — it is not a block of its
   own.** `effective.rs`'s `xp_allocation` selects `base_general` as
   `apprenticeship_xp + post_gauntlet_xp` for a magus (saturating), leaving the
@@ -2955,9 +2974,9 @@ Abilities are bought with experience earned in blocks, not from one bank:
     `:2435`'s "before apprenticeship" clause however many years the magus has lived
     since (`post_gauntlet_years_leave_later_life_restricted`).
 - **The spell levels are *additive* to the profile's 120 — not a second budget.**
-  `effective.rs` gains `life_stage_spell_levels(entity, ruleset)` (the budget's
-  `post_gauntlet_spell_levels`; 0 without a plan or without the block), folded into
-  `spell_levels_budget`, which becomes `base + spell_levels_bonus +
+  `effective.rs`'s `life_stage_spell_levels(entity, ruleset)` (the budget's
+  `post_gauntlet_spell_levels`; 0 without a plan or without the block) is folded into
+  `spell_levels_budget`, which is `base + spell_levels_bonus +
   life_stage_spell_levels`, clamped as before. Apprenticeship's "120 levels of spells"
   (`:2435`) are the magus profile's `spell_levels` in
   `rules/core/character_types.json`, which is what `spell_levels_base` selects; the
@@ -2974,10 +2993,20 @@ Abilities are bought with experience earned in blocks, not from one bank:
     post-Gauntlet levels stay additive on top. Deliberate: the override is the flat
     flow's escape hatch and is *not* made exclusive with a plan the way `xp_pool` is
     (`life_stage_xp_pool_conflict`).
-- **Three findings stand beside the three clamps** — `validate_post_gauntlet_choices`
-  in `validation/life_stage.rs`, all `error`/`abilities`, all magus-gated because
-  `:2216` is "**Hermetic Magi Only (Optional)**" and on any other plan the values are
-  ignored outright:
+  - **App payload:** `EffectiveScores` (`arm-app/ruleset_io.rs`) carries the three
+    parts of the budget separately — `spell_levels_profile_base`,
+    `spell_levels_bonus` and `spell_levels_life_stage`, whose identity is
+    `base + bonus + life_stage == spell_levels_budget` — so the spell-levels bar can
+    label each rather than showing an unexplained total, the way the XP bar lists its
+    extra pools beside the general pool. Mirrored by hand in `ui/src/lib/types.ts`
+    (`EffectiveScores`, `LifeStagePlan`'s three choices, and the new
+    `PostApprenticeshipRules` on `LifeStageRules`), pinned by
+    `every_life_stage_field_is_mirrored_in_the_frontend_types`. The views that render
+    them are **M6/6b5b**.
+- **Four findings, and the reason the clamps stay.** The first three are
+  `validate_post_gauntlet_choices` in `validation/life_stage.rs`, all
+  `error`/`abilities`, all magus-gated because `:2216` is "**Hermetic Magi Only
+  (Optional)**" and on any other plan the values are ignored outright:
   - `life_stage_gauntlet_age_after_age` (`gauntlet_age`, `age`) — a Gauntlet in the
     character's future.
   - `life_stage_lab_seasons_out_of_range` (`seasons`, `max`, `years`) — more charged
@@ -2987,22 +3016,29 @@ Abilities are bought with experience earned in blocks, not from one bank:
     is free and never counted here.
   - `life_stage_spell_level_split_exceeds_points` (`levels`, `points`) — a spell-level
     share larger than the points the years granted (`:2471`).
-- **The clamps stay, and that is why the findings exist.** `ValidationMode::Advisory`
-  downgrades every issue to a warning and `Silent` drops it, so neither blocks a save;
-  the budget therefore has to stay arithmetically sane whatever a file holds, which is
-  what `min`/`saturating_sub` guarantee. The price is that a wrong number *vanishes*
-  instead of failing — a Gauntlet at 40 on a magus of 25 silently loses the years
-  between, a 200-season total silently costs the same as 105, a 5 000-level split
-  silently becomes "all of them". Each finding names the value the clamp absorbed, so
-  the two together are honest: the arithmetic never breaks and the player is still
-  told what was ignored.
-- **The Gauntlet-age floor is a floor on the Gauntlet age**, not on the character's
-  own: `minimum_gauntlet_age()` (childhood + apprenticeship, `:2435`) is compared
-  against `LifeStageBudget::gauntlet_age` — the resolved value `budget()` funds the
-  character from, read off the budget rather than re-derived, so the finding and the
-  arithmetic cannot drift. A magus of 60 gauntleted at 12 never served its fifteen
-  years either, and only the Gauntlet age sees that; with no `gauntlet_age` stored the
-  two numbers are identical, which is what keeps every pre-6b5 plan reading as it did.
+  - The fourth is `life_stage_aging_rolls_pending` (warning, `review`), which the
+    post-Gauntlet years make reachable at all: a magus generated years out of
+    apprenticeship is routinely over 35, and "a character over the age of 35 must make
+    aging rolls before the game begins" (`:2232`, `:16565`). It is emitted from
+    `validation/aging.rs` for **every** character of that age, not only a magus with a
+    plan — see *Age at which aging rolls become due* and the aging section above.
+  - **Why the clamps stay.** `ValidationMode::Advisory` downgrades every issue to a
+    warning and `Silent` drops it, so neither blocks a save; the budget therefore has
+    to stay arithmetically sane whatever a file holds, which is what
+    `min`/`saturating_sub` guarantee. The price is that a wrong number *vanishes*
+    instead of failing — a Gauntlet at 40 on a magus of 25 silently loses the years
+    between, a 200-season total silently costs the same as 105, a 5 000-level split
+    silently becomes "all of them". Each finding names the value the clamp absorbed, so
+    the two together are honest: the arithmetic never breaks and the player is still
+    told what was ignored.
+- **The Gauntlet-age floor moved onto the Gauntlet age** — an existing finding
+  retargeted, not a new one. `minimum_gauntlet_age()` (childhood + apprenticeship,
+  `:2435`) is compared against `LifeStageBudget::gauntlet_age` — the resolved value
+  `budget()` funds the character from, read off the budget rather than re-derived, so
+  `life_stage_age_before_gauntlet` and the arithmetic cannot drift. A magus of 60
+  gauntleted at 12 never served its fifteen years either, and only the Gauntlet age
+  sees that; with no `gauntlet_age` stored the two numbers are identical, which is what
+  keeps every pre-6b5 plan reading as it did.
 - **`life_stage_spell_level_split_exceeds_points` is filed under `abilities`, not
   `spells`**, although it feeds `spell_levels_budget`. M6/6b1a's rule is that a finding
   belongs to the phase whose *input surface* owns the offending value: the number is
@@ -3037,13 +3073,15 @@ Abilities are bought with experience earned in blocks, not from one bank:
   in which the character is a child not yet taken as an apprentice — and has no Arts at
   all. Funding an Art from it would be funding it before the Gift was ever opened.
 - Where an experienced magus's Arts actually come from: `:2216`/`:2471`'s "For every
-  year, the magus gets 30 points", the years *after* apprenticeship — **M6/6b5**, not
-  modelled. The consequence is that guided funding currently builds a magus **at its
-  Gauntlet**: an age well past 20 earns no more than a 20-year-old's blocks, and the
-  surplus shows up as `restricted_xp_unspent` on the later-life pool plus the ordinary
-  age-cap arithmetic (`:2368-2374`), rather than as an invented upper bound on the age.
-  Nothing in the source bounds the apprenticeship start age — Darius's master "picks 10
-  as a nice, round number" (`:2402`) — so no such bound is enforced.
+  year, the magus gets 30 points", the years *after* apprenticeship — modelled in
+  **M6/6b5**, whose experience joins the **general** pool precisely because only that
+  pool may fund an Art. So later life stays Abilities-only however many years the
+  magus has lived since its Gauntlet
+  (`post_gauntlet_years_leave_later_life_restricted`), and a magus is no longer built
+  standing at its Gauntlet: the age past it is spent through
+  `LifeStagePlan::gauntlet_age`. Nothing in the source bounds the apprenticeship start
+  age — Darius's master "picks 10 as a nice, round number" (`:2402`) — so no such
+  bound is enforced.
 
 #### Pre-apprenticeship experience may not buy Arcane, Academic or Martial Abilities (M6/6b4)
 

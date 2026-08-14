@@ -327,7 +327,8 @@ pub(crate) fn validate_mythic_type(
 /// spell at the same level may not appear twice (different General levels are
 /// different spells, Core:12353); a General spell with no chosen level is excluded
 /// from the budget and warned; the sum of chosen levels must not exceed the
-/// effective spell-levels budget (Core:2215-2216, 2435); and no spell's level may
+/// effective spell-levels budget (Core:2215-2216, 2435, and the levels bought out of
+/// the years past the Gauntlet, `:2471`); and no spell's level may
 /// exceed Technique + Form + Intelligence + Magic Theory + 3 (Core:2465).
 ///
 /// The budget and per-spell cap apply only to magi (`profile.is_magus`); a stray

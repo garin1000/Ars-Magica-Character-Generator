@@ -345,7 +345,8 @@ export interface EffectiveScores {
   xp_max_flow: number;
   // The general pool itself: the typed `xp_pool` for a directly-entered character,
   // and for one built through its life stages the block that may fund anything —
-  // apprenticeship for a magus, later life for anyone else — plus the Skilled/Weak
+  // apprenticeship plus the years past the Gauntlet for a magus, later life for
+  // anyone else — plus the Skilled/Weak
   // Parens adjustment. Engine-authoritative, because no stored field holds it.
   xp_general_pool: number;
   restricted_xp_pools: RestrictedXpPool[];
@@ -371,9 +372,10 @@ export interface EffectiveScores {
   // bonus), so the balance bar shows the true budget (Devil Child 37/17).
   virtue_budget: number;
   flaw_budget: number;
-  // The magus's effective spell-levels budget (base + Skilled/Weak Parens) and
-  // how many levels the chosen spells consume — the spell bar. The base is the
-  // per-character spell_levels_override when set, else the type profile's base.
+  // The magus's effective spell-levels budget (base + Skilled/Weak Parens + the
+  // levels its post-Gauntlet years bought) and how many levels the chosen spells
+  // consume — the spell bar. The base is the per-character spell_levels_override
+  // when set, else the type profile's base.
   spell_levels_budget: number;
   // The type profile's base spell-levels budget (120 for a magus), so the
   // override field's placeholder shows the data-driven default (never a literal).
