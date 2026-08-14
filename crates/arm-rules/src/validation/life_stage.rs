@@ -25,7 +25,9 @@ use crate::childhood::ChildhoodRejection;
 ///   earns childhood's experience but cannot have lived any later-life year. For a
 ///   magus the bar is its Gauntlet instead — childhood plus apprenticeship
 ///   (`:2435`) — reported as `life_stage_age_before_gauntlet`, so one wrong age
-///   still produces exactly one finding.
+///   still produces exactly one finding. That floor is measured against the
+///   **Gauntlet** age ([`crate::life_stage::LifeStageBudget::gauntlet_age`]), which
+///   is the character's own age only while it stands at its Gauntlet.
 /// - `life_stage_native_language_unset`: no native language chosen, so the
 ///   childhood's largest block (75 points) has nothing it may be spent on.
 /// - `life_stage_native_language_missing_score`: a native language chosen but no
@@ -77,23 +79,42 @@ pub(crate) fn validate_life_stage_plan(
         ));
     }
 
+    let magus = type_profile.is_some_and(|profile| profile.is_magus);
+    // Every post-Gauntlet figure is read off the budget the character is actually
+    // funded from, never re-derived here: `budget()` resolves the Gauntlet age (and
+    // clamps it), and a second reading of that resolution could drift from the one
+    // that pays. `Some` for any entity carrying a plan, which `plan` above already
+    // established.
+    let budget = rules.budget(entity, ruleset);
+
     // How young is too young depends on the periods the character has lived through.
-    // A grog or companion may be a child, so the bar is childhood itself; a magus is
-    // generated standing at its Gauntlet, so it has also served the fifteen years of
-    // apprenticeship (`:2435`) and cannot be younger than twenty. One wrong age gets
-    // ONE finding, under the code that describes it truthfully — telling the owner of
-    // a 19-year-old magus that its age falls inside childhood would simply be wrong.
+    // A grog or companion may be a child, so the bar is childhood itself; a magus has
+    // also served the fifteen years of apprenticeship (`:2435`) and cannot have been
+    // gauntleted before twenty. One wrong age gets ONE finding, under the code that
+    // describes it truthfully — telling the owner of a 19-year-old magus that its age
+    // falls inside childhood would simply be wrong.
+    //
+    // For a magus the subject is its **Gauntlet** age, not its own: the years after
+    // the Gauntlet run forward from it (`:2216`), so a magus of 60 gauntleted at 12
+    // is exactly as impossible as one aged 12 standing at its Gauntlet, and only the
+    // Gauntlet age sees both. With no Gauntlet age stored the two are the same
+    // number, which is what keeps every pre-6b5 plan reading as it always did.
     if let Some(age) = entity.age {
-        let magus = type_profile.is_some_and(|profile| profile.is_magus);
-        let min_age = if magus {
-            rules.minimum_gauntlet_age()
+        let (subject_age, min_age) = if magus {
+            (
+                budget.map_or(age, |budget| budget.gauntlet_age),
+                rules.minimum_gauntlet_age(),
+            )
         } else {
-            rules.childhood.years
+            (age, rules.childhood.years)
         };
-        if age < min_age {
+        if subject_age < min_age {
             // Two emit sites rather than one with a computed code, so each names its
             // own const and phase where the contract-table scanner can read them.
-            let issue_args = args([("age", age.to_string()), ("min", min_age.to_string())]);
+            let issue_args = args([
+                ("age", subject_age.to_string()),
+                ("min", min_age.to_string()),
+            ]);
             issues.push(if magus {
                 ValidationIssue::error(
                     ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET,
@@ -490,6 +511,69 @@ mod tests {
         direct.life_stages = None;
         direct.age = None;
         assert!(!codes(&validate(&direct, &rs())).contains(&"life_stage_age_unset".to_string()));
+    }
+
+    /// **The 6b4 regression lock.** A magus standing at its Gauntlet — no stored
+    /// Gauntlet age, no charged lab seasons, no spell-level split — must raise
+    /// exactly the findings it raised before life after the Gauntlet was modelled.
+    /// Every check M6/6b5 adds hangs off a stored value such a plan does not carry,
+    /// so the whole list has to be unchanged, not merely free of the new codes.
+    #[test]
+    fn a_magus_at_its_gauntlet_raises_exactly_the_findings_it_always_did() {
+        let mut magus = planned(25);
+        magus.type_id = Id::new("magus");
+        assert_eq!(
+            codes(&validate(&magus, &rs())),
+            vec![
+                // No House chosen, and the two childhood blocks left partly
+                // unspent — the findings such a bare fixture always produced.
+                "house_unset",
+                "restricted_xp_unspent",
+                "restricted_xp_unspent",
+            ]
+        );
+    }
+
+    /// The Gauntlet-age floor is a floor on the **Gauntlet age**, not on the
+    /// character's own age. The years after the Gauntlet run forward from it
+    /// (Core Rules.md:2216), so a magus of 60 gauntleted at 12 never served its
+    /// fifteen years of apprenticeship either — and reading the character's age
+    /// instead would call that plan perfectly legal.
+    #[test]
+    fn the_gauntlet_age_floor_is_measured_against_the_gauntlet_age() {
+        let mut magus = planned(60);
+        magus.type_id = Id::new("magus");
+        magus.life_stages = Some(LifeStagePlan {
+            native_language: Some("German".into()),
+            gauntlet_age: Some(12),
+            ..LifeStagePlan::default()
+        });
+
+        let result = validate(&magus, &rs());
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET)
+            .expect("a Gauntlet below the minimum age is reported");
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.args.get("age").map(String::as_str), Some("12"));
+        assert_eq!(issue.args.get("min").map(String::as_str), Some("20"));
+
+        // A Gauntlet at a legal age is silent however old the magus has since
+        // become — the very case the character's age could not tell apart.
+        let mut lived_on = magus.clone();
+        lived_on.life_stages = Some(LifeStagePlan {
+            native_language: Some("German".into()),
+            gauntlet_age: Some(25),
+            ..LifeStagePlan::default()
+        });
+        assert!(
+            !codes(&validate(&lived_on, &rs()))
+                .contains(&ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET.into()),
+            "issues: {:?}",
+            codes(&validate(&lived_on, &rs()))
+        );
     }
 
     #[test]
