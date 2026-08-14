@@ -1349,8 +1349,23 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
     // Decided here, once: Skilled/Weak Parens (and any GeneralXp effect) then adjust
     // it — "an additional 60 experience points … during apprenticeship" (`:4966`) —
     // and a net-negative grant clamps at 0 rather than underflowing.
+    //
+    // A magus's years past its Gauntlet join that same general pool rather than
+    // forming a block of their own: "Divide 30 points per year between experience
+    // points in Arts, experience points in Abilities, and levels of spells"
+    // (`:2216`), "Each point can be an experience point in an Art or Ability or one
+    // level of spell" (`:2471`) — Arts included, which is precisely what makes a pool
+    // general. The Academic/Arcane/Martial gate does not narrow them either: `:2435`
+    // restricts only what a magus may buy "**before** apprenticeship", and "Magi
+    // without a specific Virtue may only buy Academic Abilities during or after
+    // apprenticeship" (`:7151`) says the years after it are on the permitted side.
+    // So there is no restricted pool and no life-stage block to add — the block that
+    // funds anything is the general pool and needs no slug.
+    // Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2435, :2471, :7151.
     let base_general = match &life_stage_budget {
-        Some((_, budget)) if is_magus => budget.apprenticeship_xp,
+        Some((_, budget)) if is_magus => budget
+            .apprenticeship_xp
+            .saturating_add(budget.post_gauntlet_xp),
         Some((_, budget)) => budget.later_life_xp,
         None => entity.xp_pool,
     };
@@ -4795,6 +4810,28 @@ mod tests {
             { "id": "ability.swim", "category": "general" }
           ]
         }"#;
+        // Art table: the shipped Core Rules figures up to 20 (`:2408-2427`), so a
+        // post-Gauntlet magus can buy an Art far beyond what apprenticeship's 240
+        // could ever fund.
+        let arts = r#"{
+          "advancement": [
+            { "score": 1, "total_xp": 1 }, { "score": 2, "total_xp": 3 },
+            { "score": 3, "total_xp": 6 }, { "score": 4, "total_xp": 10 },
+            { "score": 5, "total_xp": 15 }, { "score": 6, "total_xp": 21 },
+            { "score": 7, "total_xp": 28 }, { "score": 8, "total_xp": 36 },
+            { "score": 9, "total_xp": 45 }, { "score": 10, "total_xp": 55 },
+            { "score": 11, "total_xp": 66 }, { "score": 12, "total_xp": 78 },
+            { "score": 13, "total_xp": 91 }, { "score": 14, "total_xp": 105 },
+            { "score": 15, "total_xp": 120 }, { "score": 16, "total_xp": 136 },
+            { "score": 17, "total_xp": 153 }, { "score": 18, "total_xp": 171 },
+            { "score": 19, "total_xp": 190 }, { "score": 20, "total_xp": 210 }
+          ],
+          "arts": [
+            { "id": "art.corpus", "art_type": "form" },
+            { "id": "art.creo", "art_type": "technique" },
+            { "id": "art.ignem", "art_type": "form" }
+          ]
+        }"#;
         let life_stages = r#"{
           "apprenticeship": {
             "years": 15,
@@ -4823,6 +4860,7 @@ mod tests {
             point_items: items,
             type_profiles: types,
             abilities: Some(abilities),
+            arts: Some(arts),
             life_stages: Some(life_stages),
             ..RulesetSources::default()
         })
@@ -5107,6 +5145,120 @@ mod tests {
         let allocation = xp_allocation(&magus, &rs);
         assert_eq!(later_life_pool(&allocation).expect("a pool").used, 0);
         assert_eq!(allocation.general_used, 30);
+    }
+
+    /// A magus gauntleted at 25 and now 60: thirty-five years of "30 points per
+    /// year" (Core Rules.md:2471) behind it, none of them spent in the lab.
+    fn experienced_magus() -> Entity {
+        let mut magus = planned_magus();
+        magus.age = Some(60);
+        magus.life_stages = Some(crate::life_stage::LifeStagePlan {
+            gauntlet_age: Some(25),
+            ..magus
+                .life_stages
+                .clone()
+                .expect("a planned magus has a plan")
+        });
+        magus
+    }
+
+    /// The years after the Gauntlet fund the **general** pool: "Divide 30 points per
+    /// year between experience points in Arts, experience points in Abilities, and
+    /// levels of spells" (Core Rules.md:2216) — Arts included, which no restricted
+    /// pool may ever fund.
+    ///
+    /// Proved through the allocation rather than by reading the budget: two Arts at
+    /// 20 cost 420, well past the 240 apprenticeship alone could pay, so the demand
+    /// is only fully funded if the post-Gauntlet experience is in the general pool.
+    #[test]
+    fn post_gauntlet_experience_buys_arts_from_the_general_pool() {
+        let rs = life_stage_ruleset();
+        let mut magus = experienced_magus();
+        magus.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 20,
+            },
+            ArtScore {
+                art: Id::new("art.ignem"),
+                score: 20,
+            },
+        ];
+        let allocation = xp_allocation(&magus, &rs);
+        assert_eq!(
+            allocation.general_pool, 1290,
+            "240 apprenticeship + 35 years at 30 a year"
+        );
+        assert_eq!(
+            allocation.total_demand, 495,
+            "75 native language + 420 Arts"
+        );
+        assert_eq!(allocation.max_flow, 495, "fully funded");
+        assert_eq!(
+            allocation.general_used, 420,
+            "the general pool pays the Arts"
+        );
+    }
+
+    /// The post-Gauntlet experience does not widen later life: that block stays the
+    /// restricted, Abilities-only pool of `:2435`'s "before apprenticeship" clause,
+    /// so it funds neither an Art nor a gated Academic Ability however many years
+    /// the magus has lived since.
+    #[test]
+    fn post_gauntlet_years_leave_later_life_restricted() {
+        let rs = life_stage_ruleset();
+        let mut magus = experienced_magus();
+        magus.art_scores = vec![ArtScore {
+            art: Id::new("art.creo"),
+            score: 5,
+        }];
+        magus.ability_scores.push(AbilityScore {
+            ability: Id::new("ability.artes_liberales"),
+            parameter: None,
+            score: 3,
+            specialty: None,
+        });
+        let allocation = xp_allocation(&magus, &rs);
+        let pool = later_life_pool(&allocation).expect("an experienced magus still has one");
+        assert_eq!(pool.amount, 75, "five years at 15 a year, unchanged");
+        assert_eq!(
+            pool.used, 0,
+            "later life buys neither the Art nor the Academic Ability"
+        );
+        assert_eq!(allocation.general_used, 45, "15 for the Art + 30 for Latin");
+    }
+
+    /// A companion's allocation is untouched by post-Gauntlet fields on its plan:
+    /// "**Hermetic Magi Only (Optional):** Years after apprenticeship" (`:2216`), and
+    /// a companion serves no apprenticeship, so the numbers may not move a point.
+    #[test]
+    fn a_companion_allocation_ignores_post_gauntlet_fields() {
+        let rs = life_stage_ruleset();
+        let plain = planned_companion();
+        let mut annotated = planned_companion();
+        annotated.life_stages = Some(crate::life_stage::LifeStagePlan {
+            gauntlet_age: Some(20),
+            post_gauntlet_lab_seasons: 4,
+            post_gauntlet_spell_levels: 100,
+            ..annotated.life_stages.clone().expect("a plan")
+        });
+        assert_eq!(xp_allocation(&annotated, &rs), xp_allocation(&plain, &rs));
+    }
+
+    /// A magus standing at its Gauntlet has lived no year past it, so its general
+    /// pool is the apprenticeship 240 and nothing more — the pre-6b5 number, held
+    /// even when the plan carries lab seasons and spell levels a Gauntlet age would
+    /// have made meaningful.
+    #[test]
+    fn a_magus_at_its_gauntlet_has_only_its_apprenticeship() {
+        let rs = life_stage_ruleset();
+        let mut magus = planned_magus();
+        magus.life_stages = Some(crate::life_stage::LifeStagePlan {
+            post_gauntlet_lab_seasons: 4,
+            post_gauntlet_spell_levels: 100,
+            ..magus.life_stages.clone().expect("a plan")
+        });
+        assert_eq!(xp_allocation(&magus, &rs).general_pool, 240);
     }
 
     /// Later life is a life-stage block like the childhood ones, because for a magus
