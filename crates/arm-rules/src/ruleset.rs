@@ -1308,6 +1308,7 @@ impl Ruleset {
 
         self.validate_childhood_refs(&mut errors);
         self.validate_apprenticeship_refs(&mut errors);
+        self.validate_post_apprenticeship_rules(&mut errors);
         self.validate_childhood_packages(&mut errors);
 
         for (type_id, profile) in &self.type_profiles {
@@ -1597,6 +1598,67 @@ impl Ruleset {
                 "apprenticeship recommended abilities price to {sum} experience, \
                  not the stated {}",
                 apprenticeship.recommended_xp
+            ));
+        }
+    }
+
+    /// Validates the years a magus lives after its Gauntlet: that a season of lab
+    /// work costs something, that the charged seasons exhaust the year exactly, and
+    /// that a ruleset declaring magi ships the block at all.
+    ///
+    /// The multiplication is **not** a sanity check, it is the rule:
+    ///
+    /// > For each season that your magus spends working on a lab project, the
+    /// > character loses 10 points from the yearly 30 experience points, to a
+    /// > minimum of 0 if three or four seasons are spent on lab work.
+    ///
+    /// The deduction *reaches* zero at three seasons, so three seasons at 10 must
+    /// cancel the yearly 30 exactly — a year that overshoots would take points it
+    /// never granted, and one that falls short would pay a magus for a year spent
+    /// entirely in the lab. That makes the identity the **trust gate on three
+    /// hand-transcribed numbers**, the same idiom as re-pricing the apprenticeship's
+    /// `recommended_xp` against the advancement table.
+    ///
+    /// Runs from [`Ruleset::validate_integrity`] beside
+    /// [`Self::validate_apprenticeship_refs`], so a cached ruleset returning through
+    /// [`Ruleset::from_serialized`] is held to the same standard.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2471, :2482.
+    fn validate_post_apprenticeship_rules(&self, errors: &mut Vec<String>) {
+        let Some(life_stages) = self.life_stages.as_ref() else {
+            return;
+        };
+        let Some(post) = life_stages.post_apprenticeship.as_ref() else {
+            // A ruleset declaring Hermetic magi must declare their years after the
+            // Gauntlet too. The apprenticeship block already ends a magus's later
+            // life at its Gauntlet age (`:2364`); with nothing granted for the years
+            // after it, a magus would simply lose them. Gated on an `is_magus`
+            // profile, exactly like the apprenticeship block above.
+            if self.type_profiles.values().any(|profile| profile.is_magus) {
+                errors.push(
+                    "life-stage rules ship no post-apprenticeship block, but the ruleset \
+                     declares a magus type, whose years after the Gauntlet would then \
+                     earn nothing"
+                        .to_string(),
+                );
+            }
+            return;
+        };
+        if post.lab_season_cost == 0 {
+            errors.push(
+                "post-apprenticeship lab_season_cost is 0, so no season of lab work \
+                 would ever cost a magus anything"
+                    .to_string(),
+            );
+        }
+        let charged = post
+            .lab_season_cost
+            .saturating_mul(post.max_charged_lab_seasons_per_year);
+        if charged != post.points_per_year {
+            errors.push(format!(
+                "post-apprenticeship lab seasons cost {} × {} = {charged} points, \
+                 not the {} a year grants, so the deduction never lands on 0",
+                post.lab_season_cost, post.max_charged_lab_seasons_per_year, post.points_per_year
             ));
         }
     }
@@ -4314,7 +4376,186 @@ mod tests {
             { "id": "ability.philosophiae", "category": "academic" }
           ]
         }"#;
-        const CHILDHOOD_ONLY: &str = r#"{
+        /// Everything a magus ruleset needs except the apprenticeship itself — the
+        /// years after the Gauntlet are present so only one block is missing.
+        const WITHOUT_APPRENTICESHIP: &str = r#"{
+          "childhood": {
+            "years": 5,
+            "native_language_ability": "ability.living_language",
+            "native_language_xp": 75,
+            "spread_xp": 45,
+            "spread_abilities": ["ability.awareness"]
+          },
+          "later_life": { "xp_per_year": 15 },
+          "post_apprenticeship": { "lab_season_cost": 10,
+                                   "max_charged_lab_seasons_per_year": 3,
+                                   "points_per_year": 30 }
+        }"#;
+        let load = |types: &str, life_stages: Option<&str>| {
+            Ruleset::from_sources(RulesetSources {
+                id: "test",
+                version: "1",
+                point_items: "[]",
+                type_profiles: types,
+                abilities: Some(MAGUS_ABILITIES),
+                life_stages,
+                ..RulesetSources::default()
+            })
+        };
+
+        let err = load(MAGUS_TYPES, Some(WITHOUT_APPRENTICESHIP)).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("apprenticeship"),
+            "should name the missing block: {msg}"
+        );
+
+        // Declared — even with no requirements of its own — and it loads.
+        let with_block = WITHOUT_APPRENTICESHIP.replace(
+            r#"{
+          "childhood""#,
+            r#"{
+          "apprenticeship": { "years": 15, "xp": 240, "recommended_xp": 0,
+                              "minimum_abilities": [], "recommended_abilities": [] },
+          "childhood""#,
+        );
+        assert!(load(MAGUS_TYPES, Some(&with_block)).is_ok());
+
+        // A ruleset with no magus profile needs neither block, and a magus ruleset
+        // shipping no life stages at all is out of scope of the rule.
+        const COMPANION_TYPES: &str = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"], "creation_phases": [] }
+        ]"#;
+        assert!(load(COMPANION_TYPES, Some(WITHOUT_APPRENTICESHIP)).is_ok());
+        assert!(load(MAGUS_TYPES, None).is_ok());
+    }
+
+    /// The childhood half of a life-stage file once more, so the
+    /// post-apprenticeship fixtures below vary one block only. `POST` is
+    /// substituted per test.
+    const POST_APPRENTICESHIP_LIFE_STAGES: &str = r#"{
+      "childhood": {
+        "years": 5,
+        "native_language_ability": "ability.living_language",
+        "native_language_xp": 75,
+        "spread_xp": 45,
+        "spread_abilities": ["ability.awareness"]
+      },
+      "later_life": { "xp_per_year": 15 },
+      "post_apprenticeship": { POST }
+    }"#;
+
+    /// Loads a ruleset whose post-apprenticeship block is `post`, against the
+    /// life-stage abilities fixture. No magus profile, so the block is under test
+    /// on its own terms rather than because something demanded it.
+    fn post_apprenticeship_ruleset(post: &str) -> Result<Ruleset, RulesetError> {
+        let life_stages = POST_APPRENTICESHIP_LIFE_STAGES.replace("POST", post);
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            abilities: Some(LIFE_STAGE_ABILITIES),
+            life_stages: Some(&life_stages),
+            ..RulesetSources::default()
+        })
+    }
+
+    /// A season of lab work costs a magus "10 points from the yearly 30 experience
+    /// points" (Core Rules.md:2482), so a cost of nothing is a broken file: every
+    /// season would be free and the whole passage would stop applying.
+    #[test]
+    fn a_post_apprenticeship_lab_season_must_cost_something() {
+        // A block that is internally consistent (0 × 3 = 0) and still wrong.
+        let err = post_apprenticeship_ruleset(
+            r#""lab_season_cost": 0, "max_charged_lab_seasons_per_year": 3,
+               "points_per_year": 0"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("lab_season_cost"),
+            "should name the free lab season: {msg}"
+        );
+
+        assert!(
+            post_apprenticeship_ruleset(
+                r#""lab_season_cost": 10, "max_charged_lab_seasons_per_year": 3,
+                   "points_per_year": 30"#,
+            )
+            .is_ok()
+        );
+    }
+
+    /// The charged seasons must exhaust the year exactly. This is not a tidiness
+    /// check, it **is** `:2482`: the deduction runs "to a minimum of 0 if three or
+    /// four seasons are spent on lab work", so three seasons at 10 have to cancel
+    /// the yearly 30 — no more, no less. The trust gate on three hand-transcribed
+    /// numbers, the same idiom as re-pricing the apprenticeship's `recommended_xp`.
+    #[test]
+    fn post_apprenticeship_lab_seasons_must_exhaust_the_year_exactly() {
+        // 10 × 4 = 40 overshoots: the fourth season would take points the year
+        // never granted.
+        let err = post_apprenticeship_ruleset(
+            r#""lab_season_cost": 10, "max_charged_lab_seasons_per_year": 4,
+               "points_per_year": 30"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("40") && msg.contains("30"),
+            "should name what the seasons cost and what the year grants: {msg}"
+        );
+
+        // 10 × 3 = 30 falls short of a 35-point year: the minimum of 0 is never
+        // reached, so a magus in the lab all year still earns 5.
+        let err = post_apprenticeship_ruleset(
+            r#""lab_season_cost": 10, "max_charged_lab_seasons_per_year": 3,
+               "points_per_year": 35"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("30") && msg.contains("35"),
+            "should name both totals: {msg}"
+        );
+    }
+
+    /// A ruleset that declares Hermetic magi and ships life-stage rules must declare
+    /// the post-apprenticeship block, exactly as it must declare the apprenticeship
+    /// one. Its stored Gauntlet age already ends the magus's later life
+    /// (Core Rules.md:2364); without this block the years after it would grant
+    /// nothing back, so the profile would simply lose them.
+    ///
+    /// Gated like [`Ruleset::validate_apprenticeship_refs`]: only an `is_magus`
+    /// ruleset that ships life stages at all is held to it.
+    #[test]
+    fn a_magus_ruleset_shipping_life_stages_must_declare_a_post_apprenticeship() {
+        const MAGUS_TYPES: &str = r#"[
+          { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"], "is_magus": true, "creation_phases": [] }
+        ]"#;
+        const COMPANION_TYPES: &str = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"], "creation_phases": [] }
+        ]"#;
+        const MAGUS_ABILITIES: &str = r#"{
+          "advancement": [ { "score": 1, "total_xp": 5 } ],
+          "abilities": [
+            { "id": "ability.artes_liberales", "category": "academic" },
+            { "id": "ability.awareness", "category": "general" },
+            { "id": "ability.living_language", "category": "general", "parameter": "language" },
+            { "id": "ability.magic_theory", "category": "arcane" },
+            { "id": "ability.parma_magica", "category": "arcane" },
+            { "id": "ability.penetration", "category": "arcane" },
+            { "id": "ability.philosophiae", "category": "academic" }
+          ]
+        }"#;
+        /// Everything a magus ruleset needs except the years after the Gauntlet.
+        const WITHOUT_POST: &str = r#"{
+          "apprenticeship": { "years": 15, "xp": 240, "recommended_xp": 0,
+                              "minimum_abilities": [], "recommended_abilities": [] },
           "childhood": {
             "years": 5,
             "native_language_ability": "ability.living_language",
@@ -4336,32 +4577,52 @@ mod tests {
             })
         };
 
-        let err = load(MAGUS_TYPES, Some(CHILDHOOD_ONLY)).unwrap_err();
+        let err = load(MAGUS_TYPES, Some(WITHOUT_POST)).unwrap_err();
         let msg = err.to_string();
         assert!(
-            msg.contains("apprenticeship"),
+            msg.contains("post-apprenticeship"),
             "should name the missing block: {msg}"
         );
 
-        // Declared — even with no requirements of its own — and it loads.
-        let with_block = CHILDHOOD_ONLY.replace(
-            r#"{
-          "childhood""#,
-            r#"{
-          "apprenticeship": { "years": 15, "xp": 240, "recommended_xp": 0,
-                              "minimum_abilities": [], "recommended_abilities": [] },
-          "childhood""#,
+        // Declared, and it loads.
+        let with_post = WITHOUT_POST.replace(
+            r#""later_life": { "xp_per_year": 15 }"#,
+            r#""later_life": { "xp_per_year": 15 },
+               "post_apprenticeship": { "lab_season_cost": 10,
+                                        "max_charged_lab_seasons_per_year": 3,
+                                        "points_per_year": 30 }"#,
         );
-        assert!(load(MAGUS_TYPES, Some(&with_block)).is_ok());
+        assert!(load(MAGUS_TYPES, Some(&with_post)).is_ok());
 
-        // A ruleset with no magus profile needs neither block, and a magus ruleset
-        // shipping no life stages at all is out of scope of the rule.
-        const COMPANION_TYPES: &str = r#"[
-          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
-            "permitted_categories": ["general"], "creation_phases": [] }
-        ]"#;
-        assert!(load(COMPANION_TYPES, Some(CHILDHOOD_ONLY)).is_ok());
+        // A ruleset with no magus profile needs the block no more than it needs the
+        // apprenticeship one, and a magus ruleset shipping no life stages at all is
+        // out of the rule's scope.
+        assert!(load(COMPANION_TYPES, Some(WITHOUT_POST)).is_ok());
         assert!(load(MAGUS_TYPES, None).is_ok());
+    }
+
+    /// A cached ruleset is trusted no further than a freshly parsed one: the
+    /// post-apprenticeship checks belong to `validate_integrity`, which
+    /// [`Ruleset::from_serialized`] re-runs, so a block whose lab seasons no longer
+    /// exhaust the year is rejected however the ruleset arrived.
+    #[test]
+    fn from_serialized_rejects_post_apprenticeship_seasons_that_miss_the_year() {
+        let rs = post_apprenticeship_ruleset(
+            r#""lab_season_cost": 10, "max_charged_lab_seasons_per_year": 3,
+               "points_per_year": 30"#,
+        )
+        .unwrap();
+
+        let mut serialized = serde_json::to_value(&rs).unwrap();
+        serialized["life_stages"]["post_apprenticeship"]["points_per_year"] =
+            serde_json::Value::from(45);
+
+        let err = Ruleset::from_serialized(&serialized.to_string()).unwrap_err();
+        assert_eq!(err.kind(), "integrity");
+        assert!(
+            err.to_string().contains("45"),
+            "should name the year the seasons no longer exhaust: {err}"
+        );
     }
 
     /// Sample Childhood packages are a catalogue of their own, so they load from

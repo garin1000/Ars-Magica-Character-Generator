@@ -4810,7 +4810,12 @@ mod tests {
             "spread_xp": 45,
             "spread_abilities": ["ability.living_language", "ability.swim"]
           },
-          "later_life": { "xp_per_year": 15 }
+          "later_life": { "xp_per_year": 15 },
+          "post_apprenticeship": {
+            "lab_season_cost": 10,
+            "max_charged_lab_seasons_per_year": 3,
+            "points_per_year": 30
+          }
         }"#;
         Ruleset::from_sources(RulesetSources {
             id: "test",

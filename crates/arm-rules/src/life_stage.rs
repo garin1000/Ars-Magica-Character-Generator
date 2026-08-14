@@ -495,8 +495,9 @@ mod tests {
       "later_life": { "xp_per_year": 15 }
     }"#;
 
-    /// The same shape plus the magus's apprenticeship block, so the optional third
-    /// period parses with every field the rules state.
+    /// The same shape plus the two magus-only periods — apprenticeship, and the
+    /// years lived after the Gauntlet — so both optional blocks parse with every
+    /// field the rules state.
     const SHIPPED_WITH_APPRENTICESHIP: &str = r#"{
       "apprenticeship": {
         "years": 15,
@@ -514,19 +515,6 @@ mod tests {
         ],
         "recommended_xp": 90
       },
-      "childhood": {
-        "years": 5,
-        "native_language_ability": "ability.living_language",
-        "native_language_xp": 75,
-        "spread_xp": 45,
-        "spread_abilities": ["ability.athletics", "ability.swim"]
-      },
-      "later_life": { "xp_per_year": 15 }
-    }"#;
-
-    /// The same shape plus the years a magus lives after its Gauntlet, so the
-    /// fourth period parses with every field `:2471` and `:2482` state.
-    const SHIPPED_WITH_POST_APPRENTICESHIP: &str = r#"{
       "childhood": {
         "years": 5,
         "native_language_ability": "ability.living_language",
@@ -617,7 +605,7 @@ mod tests {
     /// block parses, and serializes without the key.
     #[test]
     fn post_apprenticeship_rules_carry_the_yearly_points_and_the_lab_season_cost() {
-        let parsed: LifeStageRules = serde_json::from_str(SHIPPED_WITH_POST_APPRENTICESHIP)
+        let parsed: LifeStageRules = serde_json::from_str(SHIPPED_WITH_APPRENTICESHIP)
             .expect("the post-apprenticeship shape parses");
         let post = parsed
             .post_apprenticeship
