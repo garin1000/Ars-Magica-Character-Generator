@@ -328,6 +328,21 @@ spell-levels-pool = Zauberstufen
 spell-levels-available = Verfügbar: { $available }
 spell-levels-bonus-pool = Tugenden & Fehler: { $used } / { $amount }
 spell-levels-bonus = Tugenden & Fehler: { $bonus }
+# Die Zauberstufen, die die Jahre des Magus seit seiner Lehrlingsprüfung
+# eingebracht haben: der gewählte Anteil der 30 Punkte pro Jahr, von denen jeder
+# entweder ein Erfahrungspunkt in einer Kunst oder Fertigkeit oder eine
+# Zauberstufe sein kann (Basisregeln.md:2471). Benannt wie derselbe Block in der
+# EP-Leiste (`life-stage-post-gauntlet`), damit ein Block in beiden Leisten
+# gleich liest. Hier NUR ZUR ANZEIGE: Die Aufteilung wird einmal im Schritt
+# Fertigkeiten gewählt, denn die Phasenfolge des Magus lautet Fertigkeiten,
+# Künste, Zauber — eine Änderung hier würde einen zwei Schritte zuvor bereits
+# ausgegebenen Vorrat nachträglich verkleinern. Anders als der Tugenden-/Fehler-
+# Modifikator sind diese Stufen bereits verdient und erhöhen daher das Verfügbar,
+# statt einen eigenen Vorrat zu bilden. Nur sichtbar, wenn es welche gibt — ein
+# Magus an seiner Lehrlingsprüfung bleibt so unverändert.
+spell-levels-post-gauntlet = Als Magus: { $levels }
+# Überschreibt allein den Grundwert des Typprofils — der Tugenden-/Fehler-
+# Modifikator und die Zauberstufen aus den Jahren als Magus kommen obendrauf.
 spell-levels-base-label = Zauberstufen-Budget
 spell-mastery-xp = Meisterschafts-EP: { $xp }
 spell-mastery-pool = Meisterschafts-EP: { $used } / { $pool }

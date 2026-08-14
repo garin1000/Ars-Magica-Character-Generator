@@ -329,8 +329,20 @@ spell-levels-bonus-pool = Virtues/Flaws: { $used } / { $amount }
 # A NEGATIVE Virtue/Flaw modifier (Weak Parens): no pool to spend, so it is charged
 # to the base and reported as the signed modifier. `$bonus` arrives already signed.
 spell-levels-bonus = Virtues/Flaws: { $bonus }
+# The levels of spells the magus's years past its Gauntlet bought: its chosen
+# slice of the fungible 30 points a year, where each point "can be an experience
+# point in an Art or Ability or one level of spell" (Core Rules.md:2471). Named
+# the way the XP bar names the same block (`life-stage-post-gauntlet`), so one
+# block reads alike in both bars. READ-ONLY here: the split is chosen once on the
+# Abilities step, because the magus phase order runs abilities, arts, spells, so
+# moving a point back to experience here would retroactively shrink a pool spent
+# two steps earlier. Unlike the V/F modifier these levels are already earned, so
+# they raise Available instead of forming a pool of their own. Shown only when
+# there are any, which is what keeps a magus at its Gauntlet unchanged.
+spell-levels-post-gauntlet = As a magus: { $levels }
 # Accessible name for the editable BASE spell-levels field; empty = use the type
-# profile's default (shown as the field's placeholder).
+# profile's default (shown as the field's placeholder). It overrides the profile
+# base ALONE — the V/F modifier and the post-Gauntlet levels stay additive on top.
 spell-levels-base-label = Spell-levels budget
 spell-mastery-xp = Mastery XP: { $xp }
 # The per-spell Spell-Mastery XP pool bar: how much of the pool is spent.

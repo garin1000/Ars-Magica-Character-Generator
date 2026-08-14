@@ -165,6 +165,55 @@ describe('SpellBudgetBar V/F bonus (spent first, like a restricted XP pool)', ()
   });
 });
 
+describe('SpellBudgetBar post-Gauntlet levels (read-only, already earned)', () => {
+  it('lists the levels a magus past its Gauntlet bought and keeps the base at the profile figure', () => {
+    // 35 years a magus with 300 of the points taken as levels of spells: the
+    // engine's budget is 120 + 300, so the base field still means the 120.
+    setEffective(0, 420, { spell_levels_life_stage: 300 } as Partial<EffectiveScores>);
+    const body = html();
+    expect(element(body, 'spell-levels-post-gauntlet').text).toContain('300');
+    // The editable base is untouched: its placeholder is still the profile's 120.
+    expect(element(body, 'spell-levels-base').open).toMatch(/placeholder="120"/);
+    // Earned levels are spendable, so Available is the whole budget.
+    expect(element(body, 'spell-levels-used').text).toContain('0');
+    expect(element(body, 'spell-levels-available').text).toContain('420');
+  });
+
+  it('charges a spend against the base and the post-Gauntlet levels as one', () => {
+    setEffective(150, 420, { spell_levels_life_stage: 300 } as Partial<EffectiveScores>);
+    const body = html();
+    expect(element(body, 'spell-levels-used').text).toContain('150');
+    expect(element(body, 'spell-levels-available').text).toContain('270');
+  });
+
+  it('shows base, V/F bonus and post-Gauntlet levels as three separate parts', () => {
+    // Skilled Parens 30 on top of 120 + 300 = the engine's 450 budget, 45 spent.
+    setEffective(45, 450, {
+      spell_levels_bonus: 30,
+      spell_levels_life_stage: 300,
+    } as Partial<EffectiveScores>);
+    const body = html();
+    expect(element(body, 'spell-levels-base').open).toMatch(/placeholder="120"/);
+    expect(element(body, 'spell-levels-bonus').text).toContain('30');
+    expect(element(body, 'spell-levels-post-gauntlet').text).toContain('300');
+    // The bonus is still spent first, so only 15 lands on the unconditional side.
+    expect(element(body, 'spell-levels-used').text).toContain('15');
+    expect(element(body, 'spell-levels-available').text).toContain('405');
+  });
+
+  it('omits the line for a magus standing at its Gauntlet', () => {
+    // Gated on the number alone, exactly like the XP bar's life-stage lines — no
+    // is_magus test, no type branch — so this also covers every non-magus.
+    setEffective(45, 120, { spell_levels_life_stage: 0 } as Partial<EffectiveScores>);
+    expect(() => element(html(), 'spell-levels-post-gauntlet')).toThrow();
+  });
+
+  it('omits the line when the engine reports no life-stage figure at all', () => {
+    setEffective(45, 120);
+    expect(() => element(html(), 'spell-levels-post-gauntlet')).toThrow();
+  });
+});
+
 describe('SpellBudgetBar overspend styling (same behavior as the XP pool)', () => {
   it('marks Available with the over class and shows a negative value when overspent', () => {
     setEffective(130, 120); // available = -10
