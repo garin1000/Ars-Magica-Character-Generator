@@ -54,7 +54,8 @@ pub struct EffectiveScores {
     pub xp_general_used: u32,
     /// The general pool itself: the typed `Entity::xp_pool` for a directly-entered
     /// character, and for one built through its life stages the block that may fund
-    /// anything — apprenticeship for a magus, later life for anyone else — plus the
+    /// anything — apprenticeship plus the years past the Gauntlet for a magus, later
+    /// life for anyone else — plus the
     /// Skilled/Weak Parens adjustment. Engine-authoritative, because the base and the
     /// pool differ (240 against 300 with Skilled Parens) and no stored field holds
     /// the latter.
@@ -106,8 +107,9 @@ pub struct EffectiveScores {
     pub virtue_budget: u32,
     pub flaw_budget: u32,
     /// The magus's effective spell-levels budget (base + Skilled/Weak Parens
-    /// modifiers) — the "available" side of the spell-levels bar. The base is the
-    /// per-character `spell_levels_override` when set, else the type profile's base.
+    /// modifiers + the levels its post-Gauntlet years bought) — the "available" side
+    /// of the spell-levels bar. The base is the per-character
+    /// `spell_levels_override` when set, else the type profile's base.
     pub spell_levels_budget: u32,
     /// The type profile's base spell-levels budget (120 for a magus), surfaced so
     /// the override field's placeholder shows the data-driven default rather than a

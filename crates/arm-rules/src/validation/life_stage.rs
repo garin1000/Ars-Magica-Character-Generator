@@ -48,9 +48,11 @@ use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
 /// - `childhood_package_unknown`: the recorded Sample Childhood package names an id
 ///   the loaded ruleset does not ship.
 ///
-/// A magus is welcome here: all four periods of `:2364` are modelled (M6/6b4), so
-/// nothing refuses the combination. What a magus's plan costs differs — its later
-/// life ends at apprenticeship (`:2214`) — but that is arithmetic in
+/// A magus is welcome here: all four periods of `:2364` are modelled — the first
+/// three in M6/6b4, life as a magus after the Gauntlet in M6/6b5 — so nothing
+/// refuses the combination. What a magus's plan costs differs — its later life ends
+/// at apprenticeship (`:2214`) and the years past its Gauntlet earn 30 points each
+/// (`:2471`) — but that is arithmetic in
 /// [`crate::life_stage::LifeStageRules::budget`], not a finding.
 ///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:2364, :2378, :2392, :2435,
@@ -557,10 +559,12 @@ mod tests {
         );
     }
 
-    /// A magus stands at its Gauntlet, so the earliest age it can have is childhood
-    /// plus the fifteen years of apprenticeship (Core Rules.md:2435) — twenty. A
-    /// younger one is one wrong age, so it gets **one** finding, and a magus-specific
-    /// one: "your age is inside childhood" would be plain wrong about a magus of 19.
+    /// The earliest a magus can have been gauntleted is childhood plus the fifteen
+    /// years of apprenticeship (Core Rules.md:2435) — twenty — and this magus carries
+    /// no `gauntlet_age`, so it stands at its Gauntlet and its own age is the one
+    /// measured. A younger one is one wrong age, so it gets **one** finding, and a
+    /// magus-specific one: "your age is inside childhood" would be plain wrong about a
+    /// magus of 19.
     #[test]
     fn an_age_before_the_gauntlet_is_a_magus_specific_error() {
         let mut magus = planned(19);
@@ -927,9 +931,10 @@ mod tests {
 
     /// A magus **may** now be built through its life stages. All four periods
     /// `:2364` names are modelled — early childhood, later life (which for a magus
-    /// ends at apprenticeship, `:2214`), and apprenticeship itself (`:2435`) — so the
-    /// combination is costed rather than refused, and the 6b2 refusal
-    /// (`life_stage_magus_guided_unsupported`) is gone.
+    /// ends at apprenticeship, `:2214`), apprenticeship itself (`:2435`), and life as
+    /// a magus after the Gauntlet (`:2471`) — so the combination is costed rather
+    /// than refused, and the 6b2 refusal (`life_stage_magus_guided_unsupported`) is
+    /// gone.
     ///
     /// What replaces it is a **load-time** demand on the rules data: a ruleset
     /// declaring magi must declare their apprenticeship

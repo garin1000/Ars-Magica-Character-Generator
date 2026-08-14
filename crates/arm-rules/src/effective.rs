@@ -4780,8 +4780,9 @@ mod tests {
     }
 
     /// The V/F contribution is surfaced on its own (not only folded into the
-    /// budget), so the spell-levels bar can show "base + bonus" the way the XP bar
-    /// lists its extra pools beside the general one.
+    /// budget), so the spell-levels bar can show it beside the base and the
+    /// post-Gauntlet levels the way the XP bar lists its extra pools beside the
+    /// general one.
     #[test]
     fn spell_levels_bonus_is_reported_separately_from_the_base() {
         let rs = ruleset();
