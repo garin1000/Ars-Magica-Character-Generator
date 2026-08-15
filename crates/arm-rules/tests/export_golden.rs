@@ -16,7 +16,7 @@ use arm_rules::Characteristic;
 use arm_rules::export::{LABEL_KEYS, character_markdown};
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// The whole shipped ruleset, localized with the shipped English rules text.
 fn shipped_ruleset() -> LocalizedRuleset {
@@ -39,7 +39,7 @@ fn shipped_ruleset() -> LocalizedRuleset {
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         childhoods: None,
-        aging: None,
+        aging: Some(include_str!("../../../rules/core/aging.json")),
     })
     .expect("the shipped ruleset loads");
     LocalizedRuleset::from_merged(
@@ -53,6 +53,7 @@ fn shipped_ruleset() -> LocalizedRuleset {
             include_str!("../../../rules/i18n/en/spells.json"),
             include_str!("../../../rules/i18n/en/spell_mastery_abilities.json"),
             include_str!("../../../rules/i18n/en/equipment.json"),
+            include_str!("../../../rules/i18n/en/aging.json"),
         ],
     )
     .expect("the shipped English rules text loads")
@@ -276,11 +277,31 @@ fn golden_magus() -> Entity {
     }];
     e.aging_points = BTreeMap::from([(Characteristic::Pre, 5)]);
     e.decrepitude_effect = "a persistent cough each winter".to_string();
-    e.aging_log = vec![AgingLogEntry {
-        year: Some(1220),
-        effect: "an apparent aging crisis, weathered".to_string(),
-        ..AgingLogEntry::default()
-    }];
+    // Two cumulative rows off the shipped table, so the fixture pins that a stored
+    // choice reaches the sheet through the rules i18n rather than as its slug.
+    e.living_conditions = BTreeSet::from([
+        Id::new("living_condition.work_in_a_mine"),
+        Id::new("living_condition.live_in_a_leper_colony"),
+    ]);
+    // One hand-written year and one the engine resolved, so the fixture covers both
+    // the free-text entry and the widened one carrying its die and total.
+    e.aging_log = vec![
+        AgingLogEntry {
+            year: Some(1220),
+            effect: "an apparent aging crisis, weathered".to_string(),
+            ..AgingLogEntry::default()
+        },
+        AgingLogEntry {
+            year: Some(1229),
+            age: Some(35),
+            die: Some(9),
+            total: Some(13),
+            living_conditions: BTreeSet::from([Id::new("living_condition.work_in_a_mine")]),
+            points: BTreeMap::from([(Characteristic::Pre, 5)]),
+            crisis: true,
+            ..AgingLogEntry::default()
+        },
+    ];
     e.normalize();
     e
 }

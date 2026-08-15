@@ -53,8 +53,8 @@ use crate::effective::{
 };
 use crate::ruleset::{LocalizedRuleset, Ruleset};
 use crate::types::{
-    EnchantedDevice, Entity, EntityKind, Id, ItemKind, MightScore, PersonalityTrait, Selection,
-    SpellSelection, SupernaturalPower, TalismanEffect,
+    AgingLogEntry, EnchantedDevice, Entity, EntityKind, Id, ItemKind, MightScore, PersonalityTrait,
+    Selection, SpellSelection, SupernaturalPower, TalismanEffect,
 };
 use crate::validation::{compute_balance, effective_point_ceilings};
 
@@ -85,6 +85,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "ability-score-label",
     "ability-specialty-label",
     "age-label",
+    "aging-die-label",
     "aging-label",
     "aging-log-heading",
     "aging-points-heading",
@@ -172,6 +173,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "identity-sigil",
     "items-flaws-title",
     "items-virtues-title",
+    "living-conditions-label",
     "longevity-bonus-label",
     "longevity-focus-label",
     "longevity-label",
@@ -1289,14 +1291,18 @@ impl<'a> Doc<'a> {
         }
     }
 
-    /// The annotation block: Warping, Twilight Scars, Decrepitude, the accrued aging
-    /// points, and the aging log. Every entry here is a recorded outcome the app does
-    /// not simulate.
+    /// The annotation block: Warping, Twilight Scars, Decrepitude, the chosen Living
+    /// Conditions, the accrued aging points, and the aging log. It reads from the
+    /// standing choice through the accrued state to the year-by-year history.
     fn write_annotations(&self, out: &mut String) {
         let e = self.entity;
         let warping = warping(e, self.rules());
         let decrepitude = decrepitude_score(e, self.rules());
         let mut body = String::new();
+        // Ahead of the subsections, because it is the standing choice the rest of
+        // the block is the consequence of — and because a bullet sitting after a
+        // `###` heading would read as part of that subsection.
+        self.write_living_conditions(&mut body);
         if warping.score != 0 || warping.points != 0 || !e.warping_effect.trim().is_empty() {
             self.section(&mut body, 3, "warping-label");
             self.labelled(&mut body, "ability-score-label", &warping.score.to_string());
@@ -1330,14 +1336,15 @@ impl<'a> Doc<'a> {
         if !e.aging_log.is_empty() {
             self.section(&mut body, 3, "aging-log-heading");
             for entry in &e.aging_log {
+                let recorded = self.aging_log_entry(entry);
                 // A character with no birth year has no calendar year to label the
                 // entry with (see `AgingLogEntry::year`), so it prints as a plain
                 // bullet rather than an empty bold label.
                 match entry.year {
-                    Some(year) => field(&mut body, &year.to_string(), &escape_cell(&entry.effect)),
+                    Some(year) => field(&mut body, &year.to_string(), &recorded),
                     None => {
                         body.push_str("- ");
-                        body.push_str(&escape_cell(&entry.effect));
+                        body.push_str(&recorded);
                         body.push('\n');
                     }
                 }
@@ -1349,6 +1356,54 @@ impl<'a> Doc<'a> {
         }
         self.section(out, 2, "aging-label");
         out.push_str(&body);
+    }
+
+    /// The chosen Living Conditions, one inline list of localized names.
+    ///
+    /// They are a **stored choice** ([`Entity::living_conditions`]) and a standing
+    /// term of every future aging total — "AGING TOTAL: Stress die (no botch) +
+    /// age/10 (round up) - Living Conditions modifier"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:16567-16569, table at
+    /// :16581-16594) — so a sheet that dropped them would read as data loss. The
+    /// resolved modifier is deliberately *not* printed: it is derived from these ids
+    /// and the character's Virtues and Flaws, and the sheet records choices.
+    fn write_living_conditions(&self, out: &mut String) {
+        let chosen = &self.entity.living_conditions;
+        if chosen.is_empty() {
+            return;
+        }
+        let names: Vec<String> = chosen
+            .iter()
+            .map(|id| escape_cell(&self.name(id)))
+            .collect();
+        self.labelled(
+            out,
+            "living-conditions-label",
+            &names.join(&self.list_separator()),
+        );
+        out.push('\n');
+    }
+
+    /// One logged year's recorded detail: its free text, then the stress die the
+    /// player typed and the AGING TOTAL it produced, where the entry carries them.
+    ///
+    /// A resolved year may leave the free text empty and let the structured fields
+    /// speak, and a hand-written entry carries no die at all, so each part is
+    /// included only when it is there.
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16569.
+    fn aging_log_entry(&self, entry: &AgingLogEntry) -> String {
+        let mut parts: Vec<String> = Vec::new();
+        let effect = escape_cell(&entry.effect);
+        if !effect.is_empty() {
+            parts.push(effect);
+        }
+        if let Some(die) = entry.die {
+            parts.push(pair(&self.label("aging-die-label"), &die.to_string()));
+        }
+        if let Some(total) = entry.total {
+            parts.push(pair(&self.label("export-col-total"), &total.to_string()));
+        }
+        parts.join(SUBTITLE_SEPARATOR)
     }
 
     /// The accrued aging points, one bullet per Characteristic that carries any.
@@ -1732,7 +1787,9 @@ mod tests {
           "shield.round": { "name": "Round Shield" },
           "armor.leather_scale": { "name": "Leather Scale" },
           "house.bonisagus": { "name": "Bonisagus" },
-          "house.ex_miscellanea": { "name": "Ex Miscellanea" }
+          "house.ex_miscellanea": { "name": "Ex Miscellanea" },
+          "living_condition.leper": { "name": "Leper" },
+          "living_condition.work_in_a_mine": { "name": "Work in a mine" }
         }"#;
         LocalizedRuleset::new(rs, i18n).unwrap()
     }
@@ -1961,6 +2018,7 @@ mod tests {
         // on Stamina, so the Soak figure stays the hand-checkable 2 + 3.
         e.aging_points = BTreeMap::from([(Characteristic::Pre, 5)]);
         e.decrepitude_effect = "a persistent cough each winter".to_string();
+        e.living_conditions = BTreeSet::from([Id::new("living_condition.work_in_a_mine")]);
         e.aging_log = vec![AgingLogEntry {
             year: Some(1220),
             effect: "an apparent aging crisis, weathered".to_string(),
@@ -3448,6 +3506,55 @@ mod tests {
         assert!(points < log, "unexpected order: {doc}");
     }
 
+    /// The Living Conditions are a stored choice and a standing term of every aging
+    /// total (Core Rules.md:16567-16569, :16581-16594), so the sheet has to carry
+    /// them — a sheet that dropped them would read as data loss. They are catalogue
+    /// ids, so they print through the rules i18n and never as the slug. Each logged
+    /// year prints the stress die and the total it produced alongside its free text,
+    /// so the sheet records what produced the outcome.
+    #[test]
+    fn the_aging_block_names_the_living_conditions_and_each_years_die_and_total() {
+        let mut e = fully_populated_magus();
+        e.living_conditions = BTreeSet::from([
+            Id::new("living_condition.work_in_a_mine"),
+            Id::new("living_condition.leper"),
+        ]);
+        e.aging_log = vec![AgingLogEntry {
+            year: Some(1220),
+            age: Some(40),
+            effect: "an apparent aging crisis, weathered".to_string(),
+            die: Some(9),
+            total: Some(13),
+            ..AgingLogEntry::default()
+        }];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("aging-label", "Aging"),
+                ("living-conditions-label", "Living Conditions"),
+                ("restricted-xp-list-separator", ","),
+                ("aging-log-heading", "Aging log"),
+                ("aging-die-label", "Stress die"),
+                ("export-col-total", "Total"),
+            ]),
+        );
+        assert!(
+            doc.contains("- **Living Conditions**: Leper, Work in a mine\n"),
+            "{doc}"
+        );
+        assert!(
+            doc.contains(
+                "- **1220**: an apparent aging crisis, weathered · Stress die: 9 · Total: 13\n"
+            ),
+            "{doc}"
+        );
+        assert!(
+            !doc.contains("living_condition."),
+            "a raw slug reached the sheet: {doc}"
+        );
+    }
+
     /// A character with no birth year logs no calendar year, so the entry has no
     /// label to print. It prints as a plain bullet — never a Rust `None`, and
     /// never an empty bold label.
@@ -3796,6 +3903,7 @@ mod tests {
             "talisman-",
             "warping-",
             "aging-",
+            "living-conditions-",
             "confidence-",
             "decrepitude-",
             "supernatural-",

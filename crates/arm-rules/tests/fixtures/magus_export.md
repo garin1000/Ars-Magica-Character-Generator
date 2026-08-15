@@ -238,6 +238,8 @@
 
 ## aging-label
 
+- **living-conditions-label**: Live in a leper colonyrestricted-xp-list-separator Work in a mine
+
 ### warping-label
 
 - **ability-score-label**: 1
@@ -260,4 +262,5 @@
 ### aging-log-heading
 
 - **1220**: an apparent aging crisis, weathered
+- **1229**: aging-die-label: 9 · export-col-total: 13
 
