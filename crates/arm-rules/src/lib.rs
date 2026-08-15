@@ -6,8 +6,8 @@ pub mod ability;
 pub mod aging;
 #[doc(inline)]
 pub use aging::{
-    AgingRow, AgingRowEffect, AgingRules, AgingYear, LivingCondition, LongevityClamp,
-    aging_schedule,
+    AgingRow, AgingRowEffect, AgingRules, AgingYear, LivingCondition, LivingConditionsModifier,
+    LongevityClamp, aging_schedule, living_conditions_modifier,
 };
 pub mod art;
 pub mod characteristics;

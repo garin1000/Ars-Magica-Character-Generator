@@ -30,8 +30,9 @@
 use serde::{Deserialize, Serialize};
 
 use crate::characteristics::Characteristic;
+use crate::effective::selections_for_effects;
 use crate::ruleset::Ruleset;
-use crate::types::{Entity, Id, SourceRef, is_false};
+use crate::types::{AgingEffect, Effect, Entity, Id, SourceRef, is_false};
 
 /// The aging rules, loaded from `rules/core/aging.json`.
 // No `Default`: every field is authored data with no meaningful zero (an aging
@@ -162,6 +163,89 @@ pub fn aging_schedule(entity: &Entity, ruleset: &Ruleset) -> Vec<AgingYear> {
         .collect()
 }
 
+/// The resolved Living Conditions modifier — the number the AGING TOTAL
+/// subtracts (`:16567-16569`), broken into the two places it comes from.
+///
+/// Split rather than a bare integer because the sheet has to *show* the
+/// arithmetic: which rows the character lives under, and how much of the figure
+/// is his Virtues and Flaws rather than his circumstances.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16594.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct LivingConditionsModifier {
+    /// The chosen rows that resolved against the table, in canonical id order.
+    pub rows: Vec<Id>,
+    /// Σ of those rows' [`LivingCondition::modifier`].
+    pub from_table: i32,
+    /// Σ of the Virtue/Flaw `living_conditions` aging modifiers.
+    pub from_traits: i32,
+    /// `from_table + from_traits` — the modifier the AGING TOTAL subtracts.
+    pub total: i32,
+}
+
+/// Resolves a character's [`Entity::living_conditions`] against the Living
+/// Conditions table, and adds the Virtue/Flaw modifiers that name the same
+/// subsystem.
+///
+/// # The sign is the book's, not the formula's
+///
+/// "A high Longevity Ritual modifier and a high Living Conditions modifier both
+/// indicate longer life" (`:16571`) — which works because the AGING TOTAL
+/// *subtracts* the modifier. So the numbers here are the ones the table and the
+/// descriptors print (Wealthy +2, Leper -2, Mild Aging +1, Poor Living Conditions
+/// -1), and the negation happens once, later, in the total. Returning the
+/// negated figure from here would double-negate it there.
+///
+/// # An unknown id contributes nothing
+///
+/// An id the table does not carry is skipped silently: the engine has **one
+/// evaluation path**, so a computation never refuses to produce a number — the
+/// unresolved id is reported as a validation finding instead. Trait modifiers are
+/// summed even when the ruleset ships no aging table at all; a Virtue's bonus does
+/// not depend on a table being present to be worth what it says.
+///
+/// Sources: Ars Magica - Definitive Edition (Core Rules).md:16567-16571 (the
+/// total and the sign), `:16581-16594` (the table), `:4530` (Mild Aging +1),
+/// `:6340` (Leprosy -2), `:6620` (Poor Living Conditions -1).
+pub fn living_conditions_modifier(entity: &Entity, ruleset: &Ruleset) -> LivingConditionsModifier {
+    let mut rows = Vec::new();
+    let mut from_table = 0;
+    if let Some(table) = ruleset.aging().map(|rules| &rules.living_conditions) {
+        // Walking the entity's set (a `BTreeSet`, so canonically ordered) rather
+        // than the table keeps `rows` in id order whatever order the file lists.
+        for id in &entity.living_conditions {
+            let Some(row) = table.iter().find(|row| row.id == *id) else {
+                continue;
+            };
+            rows.push(id.clone());
+            from_table += i32::from(row.modifier);
+        }
+    }
+
+    let mut from_traits = 0;
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            if let Effect::AgingMod {
+                kind: AgingEffect::LivingConditions,
+                amount,
+            } = effect
+            {
+                from_traits += i32::from(*amount);
+            }
+        }
+    }
+
+    LivingConditionsModifier {
+        rows,
+        from_table,
+        from_traits,
+        total: from_table + from_traits,
+    }
+}
+
 /// What a Longevity Ritual does to the roll of a character too young to be
 /// aging yet.
 ///
@@ -271,7 +355,7 @@ pub enum AgingRowEffect {
 mod tests {
     use super::*;
     use crate::ruleset::{Ruleset, RulesetSources};
-    use crate::types::{Entity, EntityKind, RulesetRef};
+    use crate::types::{Entity, EntityKind, RulesetRef, Selection};
     use pretty_assertions::assert_eq;
 
     /// The two tables of `## Aging` in miniature: a Living Conditions row of each
@@ -402,6 +486,13 @@ mod tests {
     /// A ruleset carrying a loadable aging block. [`AGING`] itself will not do:
     /// its miniature table leaves a gap between 13 and 18, which the loader's
     /// tiling gate rejects, so the schedule fixtures ship a contiguous one.
+    ///
+    /// The Living Conditions rows are the baseline (`:16587`), a positive
+    /// alternative (`:16583`) and two asterisked ones that stack (`:16590`,
+    /// `:16592`); the point items are the three shipped carriers of a
+    /// `living_conditions` aging modifier — plus one Personality Flaw, which any
+    /// ruleset shipping a V/F catalogue at all must carry
+    /// (`validate_engine_required_categories`).
     fn scheduled_ruleset() -> Ruleset {
         let aging = r#"{
           "start_age": 35,
@@ -409,17 +500,33 @@ mod tests {
           "apparent_age_increase_min": 3,
           "longevity_clamp": { "max_total": 9, "until_age": 35 },
           "living_conditions": [
-            { "id": "living_condition.average_peasant", "modifier": 0 }
+            { "id": "living_condition.average_peasant", "modifier": 0 },
+            { "id": "living_condition.leper", "modifier": -2, "cumulative": true },
+            { "id": "living_condition.wealthy_or_healthy_location", "modifier": 2 },
+            { "id": "living_condition.work_in_a_mine", "modifier": -1, "cumulative": true }
           ],
           "outcomes": [
             { "min": 10, "max": 21, "effect": { "type": "any_characteristic", "points": 1 } },
             { "min": 22, "effect": { "type": "next_decrepitude_level_and_crisis" } }
           ]
         }"#;
+        let items = r#"[
+          { "id": "flaw.driven", "kind": "flaw", "magnitude": "minor",
+            "category": "personality", "classification": "narrative" },
+          { "id": "flaw.poor_living_conditions", "kind": "flaw", "magnitude": "minor",
+            "category": "general", "classification": "in_play_effect",
+            "effects": [{ "type": "aging_mod", "kind": "living_conditions", "amount": -1 }] },
+          { "id": "virtue.mild_aging", "kind": "virtue", "magnitude": "minor",
+            "category": "general", "classification": "in_play_effect",
+            "effects": [{ "type": "aging_mod", "kind": "living_conditions", "amount": 1 }] },
+          { "id": "virtue.unaging", "kind": "virtue", "magnitude": "minor",
+            "category": "general", "classification": "in_play_effect",
+            "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }] }
+        ]"#;
         Ruleset::from_sources(RulesetSources {
             id: "test",
             version: "1",
-            point_items: "[]",
+            point_items: items,
             type_profiles: "[]",
             aging: Some(aging),
             ..RulesetSources::default()
@@ -528,6 +635,101 @@ mod tests {
         let without = Ruleset::from_json("test", "1", "[]", "[]").expect("an empty ruleset loads");
         assert!(without.aging().is_none());
         assert!(aging_schedule(&character(Some(80), Some(1160)), &without).is_empty());
+    }
+
+    /// A character of `age` living under the named conditions.
+    fn living_under(conditions: &[&str]) -> Entity {
+        let mut entity = character(Some(40), None);
+        entity.living_conditions = conditions.iter().map(|id| Id::new(*id)).collect();
+        entity
+    }
+
+    /// The Living Conditions table (`:16581-16594`): the asterisked rows "are
+    /// cumulative with each other" (`:16594`), so a leper working in a mine holds
+    /// both and their modifiers add. An empty set is not an incomplete entry — it
+    /// is the table's own baseline, "Average peasant 0" (`:16587`).
+    #[test]
+    fn the_living_conditions_modifier_sums_the_chosen_rows() {
+        let ruleset = scheduled_ruleset();
+
+        let stacked = living_conditions_modifier(
+            &living_under(&["living_condition.leper", "living_condition.work_in_a_mine"]),
+            &ruleset,
+        );
+        assert_eq!(
+            stacked.rows,
+            vec![
+                Id::new("living_condition.leper"),
+                Id::new("living_condition.work_in_a_mine"),
+            ]
+        );
+        assert_eq!(stacked.from_table, -3);
+        assert_eq!(stacked.from_traits, 0);
+        assert_eq!(stacked.total, -3);
+
+        // A single row resolves to its own modifier, sign intact: `:16571` says a
+        // high modifier means a longer life, and the total *subtracts* it, so the
+        // book's own signs are what this function returns.
+        let wealthy = living_conditions_modifier(
+            &living_under(&["living_condition.wealthy_or_healthy_location"]),
+            &ruleset,
+        );
+        assert_eq!(wealthy.from_table, 2);
+        assert_eq!(wealthy.total, 2);
+
+        let baseline = living_conditions_modifier(&living_under(&[]), &ruleset);
+        assert!(baseline.rows.is_empty());
+        assert_eq!(baseline.total, 0);
+    }
+
+    /// An id the table does not know contributes nothing and is skipped here; a
+    /// later step reports it as a validation finding, which is the project's one
+    /// evaluation path — compute, then report, never panic mid-computation.
+    #[test]
+    fn an_unknown_living_condition_contributes_nothing() {
+        let ruleset = scheduled_ruleset();
+        let modifier = living_conditions_modifier(
+            &living_under(&[
+                "living_condition.leper",
+                "living_condition.marooned_on_the_moon",
+            ]),
+            &ruleset,
+        );
+
+        assert_eq!(modifier.rows, vec![Id::new("living_condition.leper")]);
+        assert_eq!(modifier.from_table, -2);
+        assert_eq!(modifier.total, -2);
+    }
+
+    /// Mild Aging gives "a +1 bonus to the Living Conditions Modifier" (`:4530`)
+    /// and Poor Living Conditions "an additional -1 Living Conditions Modifier …
+    /// cumulative with the character's base" (`:6620`) — so a Virtue/Flaw modifier
+    /// joins the table rows in the total without disturbing `from_table`.
+    #[test]
+    fn virtue_living_condition_modifiers_join_the_table_rows() {
+        let ruleset = scheduled_ruleset();
+
+        let mut entity = living_under(&["living_condition.work_in_a_mine"]);
+        entity.selections = vec![
+            Selection::new(Id::new("virtue.mild_aging")),
+            Selection::new(Id::new("virtue.unaging")),
+        ];
+        let mild = living_conditions_modifier(&entity, &ruleset);
+        assert_eq!(mild.rows, vec![Id::new("living_condition.work_in_a_mine")]);
+        assert_eq!(mild.from_table, -1, "the table rows are untouched");
+        assert_eq!(
+            mild.from_traits, 1,
+            "only the living_conditions kind counts"
+        );
+        assert_eq!(mild.total, 0);
+
+        // And the Flaw pulls the other way, with no table row at all.
+        let mut poor = living_under(&[]);
+        poor.selections = vec![Selection::new(Id::new("flaw.poor_living_conditions"))];
+        let poor = living_conditions_modifier(&poor, &ruleset);
+        assert_eq!(poor.from_table, 0);
+        assert_eq!(poor.from_traits, -1);
+        assert_eq!(poor.total, -1);
     }
 
     /// "age/10 (round up)" (`:16567`) — so the term steps up on the first year of

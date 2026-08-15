@@ -2410,6 +2410,31 @@ pub struct Entity {
     /// The magus's Longevity Ritual. `None` when there is none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub longevity_ritual: Option<LongevityRitual>,
+    /// The circumstances the character lives under, as ids into the Living
+    /// Conditions table of `rules/core/aging.json`
+    /// (Core Rules.md:16581-16594). The other modifier the AGING TOTAL subtracts,
+    /// alongside the Longevity Ritual above (`:16567-16569`).
+    ///
+    /// A **set**, because the asterisked rows are not alternatives: "Modifiers
+    /// marked with an asterisk are cumulative with each other" (`:16594`), so a
+    /// leper who works in a mine holds two rows and their modifiers add.
+    ///
+    /// **Empty means the table's baseline, not an unfinished entry.** The table
+    /// prints "Average peasant 0" (`:16587`), so a character who names no
+    /// condition has a modifier of exactly 0 — the same number the baseline row
+    /// carries. Nothing prompts him to choose one.
+    ///
+    /// Choices, not a resolved value: the modifier is derived by
+    /// [`crate::aging::living_conditions_modifier`], while the chosen rows are
+    /// what the sheet prints and what a covenant will supply in a later milestone.
+    /// An id the table does not know is skipped by that derivation and reported as
+    /// a validation finding, never resolved into a silent zero.
+    ///
+    /// Additive and serde-defaulted, so a save written before the field existed
+    /// loads unchanged (no [`SCHEMA_VERSION`] bump). A `BTreeSet` is canonically
+    /// ordered by construction, so [`Entity::normalize`] needs no line for it.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub living_conditions: BTreeSet<Id>,
     /// Accrued aging points per Characteristic — the lifetime total gained (the
     /// sheet prints these). Their sum across all Characteristics is the character's
     /// Decrepitude XP ([`crate::effective::decrepitude_points_total`]). The
@@ -2579,6 +2604,7 @@ impl Entity {
             familiar: None,
             talisman: None,
             longevity_ritual: None,
+            living_conditions: BTreeSet::new(),
             aging_points: BTreeMap::new(),
             warping_points: 0,
             warping_effect: String::new(),
@@ -3488,6 +3514,7 @@ mod tests {
             familiar: None,
             talisman: None,
             longevity_ritual: None,
+            living_conditions: BTreeSet::new(),
             aging_points: BTreeMap::new(),
             warping_points: 0,
             warping_effect: String::new(),
@@ -3677,6 +3704,7 @@ mod tests {
             familiar: None,
             talisman: None,
             longevity_ritual: None,
+            living_conditions: BTreeSet::new(),
             aging_points: BTreeMap::new(),
             warping_points: 0,
             warping_effect: String::new(),
@@ -4796,6 +4824,57 @@ mod tests {
         assert!(entity.aging_log.is_empty());
         // The Issue E additive field also defaults on an old save.
         assert!(entity.warping_choices.is_empty());
+    }
+
+    /// `living_conditions` is additive and serde-defaulted, so it bumps no schema
+    /// version: an entity that records none omits the key entirely, and a save
+    /// written before the field existed loads to the empty set — which is not an
+    /// incomplete entry but the table's own baseline, "Average peasant 0"
+    /// (Core Rules.md:16587).
+    #[test]
+    fn a_save_without_living_conditions_round_trips_unchanged() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        assert!(entity.living_conditions.is_empty());
+
+        let json = serde_json::to_string(&entity).unwrap();
+        assert!(
+            !json.contains("living_conditions"),
+            "an empty set is the baseline, not a key to write: {json}"
+        );
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(entity, back);
+
+        // A save written before the field existed reads as the baseline too.
+        let older = r#"{
+          "schema_version": 14,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "selections": []
+        }"#;
+        let legacy: Entity = serde_json::from_str(older).unwrap();
+        assert!(legacy.living_conditions.is_empty());
+
+        // Two cumulative rows (`:16594`) are a set, and the `BTreeSet` orders them
+        // canonically without `normalize` having to.
+        entity.living_conditions = BTreeSet::from([
+            Id::new("living_condition.work_in_a_mine"),
+            Id::new("living_condition.leper"),
+        ]);
+        entity.normalize();
+        let json = serde_json::to_string(&entity).unwrap();
+        assert!(
+            json.contains(
+                r#""living_conditions":["living_condition.leper","living_condition.work_in_a_mine"]"#
+            ),
+            "{json}"
+        );
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(entity, back);
     }
 
     /// `warping_choices` round-trips canonically, bumps no schema version of its
