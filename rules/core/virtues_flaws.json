@@ -5928,7 +5928,10 @@
     "category": "supernatural",
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "grants_selection", "items": ["virtue.second_sight"] }],
+    "effects": [
+      { "type": "grants_selection", "items": ["virtue.second_sight"] },
+      { "type": "aging_mod", "kind": "aging_roll", "amount": -3 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5032, 5047] }
   },
   {
