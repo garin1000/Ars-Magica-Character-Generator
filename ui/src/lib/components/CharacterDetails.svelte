@@ -2,20 +2,13 @@
   import { store } from '../state.svelte';
   import { eligibleForConstraint, grantItemLabel, groupWarpingOwedGrants } from '../derive';
   import ParameterPicker from './ParameterPicker.svelte';
+  import AgeFields from './AgeFields.svelte';
+  import AgingPanel from './AgingPanel.svelte';
   import IdentityFields from './IdentityFields.svelte';
   import PersonalityTraits from './PersonalityTraits.svelte';
   import Reputations from './Reputations.svelte';
-  import {
-    CHARACTERISTICS,
-    type Characteristic,
-    type GrantConstraint,
-    type PointItem,
-    type Selection,
-  } from '../types';
+  import { type GrantConstraint, type PointItem, type Selection } from '../types';
 
-  const age = $derived(store.entity.age ?? null);
-  const apparentAge = $derived(store.entity.apparent_age ?? null);
-  const ageCap = $derived(store.effective?.age_ability_cap ?? null);
   // Confidence is derived (type default + V/F); grogs have none (0/0) → hidden.
   const confScore = $derived(store.effective?.confidence_score ?? 0);
   const confPoints = $derived(store.effective?.confidence_points ?? 0);
@@ -26,17 +19,12 @@
   const warpPoints = $derived(store.effective?.warping_points ?? 0);
   const showWarping = $derived(warpScore > 0 || warpPoints > 0);
   const storedWarpingPoints = $derived(store.entity.warping_points ?? 0);
-  // Decrepitude is derived by the engine from the sum of aging points; hidden at 0.
-  const decrepitude = $derived(store.effective?.decrepitude_score ?? 0);
   // True Faith is derived from V/F (True Faith → 1); hidden when 0.
   const trueFaith = $derived(store.effective?.true_faith_score ?? 0);
   // Starting enchanted-device level budget (Magic Items/Redcap); hidden when 0.
   const itemLevels = $derived(store.effective?.item_level_budget ?? 0);
-  const agingPoints = $derived(store.entity.aging_points ?? {});
   const twilightScars = $derived(store.entity.twilight_scars ?? []);
   const warpingEffect = $derived(store.entity.warping_effect ?? '');
-  const decrepitudeEffect = $derived(store.entity.decrepitude_effect ?? '');
-  const agingLog = $derived(store.entity.aging_log ?? []);
 
   // Off-budget Virtues/Flaws owed from the Warping Score (Core:16547-16561). The
   // engine surfaces the per-kind counts and one OPEN grant (choice_key +
@@ -75,28 +63,8 @@
     store.setWarpingChoice(choiceKey, ref ? { ref } : null);
   }
 
-  function onAge(event: Event) {
-    const raw = (event.currentTarget as HTMLInputElement).value;
-    store.setAge(raw === '' ? null : Number(raw));
-  }
-
-  function onApparentAge(event: Event) {
-    const raw = (event.currentTarget as HTMLInputElement).value;
-    store.setApparentAge(raw === '' ? null : Number(raw));
-  }
-
-  function charLabel(characteristic: Characteristic): string {
-    return store.t(`characteristic-${characteristic}`);
-  }
-
   function numValue(event: Event): number {
     return Number((event.currentTarget as HTMLInputElement).value || 0);
-  }
-
-  /** An emptied field reads as "not given", not as 0 — same as {@link onAge}. */
-  function optionalNumValue(event: Event): number | null {
-    const raw = (event.currentTarget as HTMLInputElement).value;
-    return raw === '' ? null : Number(raw);
   }
 </script>
 
@@ -104,35 +72,7 @@
   {#if store.ruleset}
     <IdentityFields />
 
-    <div class="detail-field">
-      <label class="field">
-        <span>{store.t('age-label')}</span>
-        <input
-          type="number"
-          min="1"
-          max="4294967295"
-          value={age ?? ''}
-          oninput={onAge}
-          data-testid="age-input"
-        />
-      </label>
-      <label class="field">
-        <span>{store.t('apparent-age-label')}</span>
-        <input
-          type="number"
-          min="1"
-          max="4294967295"
-          value={apparentAge ?? ''}
-          oninput={onApparentAge}
-          data-testid="apparent-age-input"
-        />
-      </label>
-      {#if ageCap != null}
-        <span class="age-cap" data-testid="age-cap-note">
-          {store.t('age-cap-note', { cap: String(ageCap) })}
-        </span>
-      {/if}
-    </div>
+    <AgeFields />
 
     {#if showConfidence}
       <div class="detail-field">
@@ -288,89 +228,10 @@
       </div>
     {/if}
 
-    {#if decrepitude > 0}
-      <div class="detail-field">
-        <span class="detail-label">{store.t('decrepitude-label')}</span>
-        <span data-testid="decrepitude-readout">
-          {store.t('decrepitude-readout', { score: String(decrepitude) })}
-        </span>
-      </div>
-    {/if}
-
-    <div class="detail-field">
-      <label class="field">
-        <span>{store.t('decrepitude-effect-label')}</span>
-        <input
-          type="text"
-          value={decrepitudeEffect}
-          oninput={(e) => store.setDecrepitudeEffect((e.currentTarget as HTMLInputElement).value)}
-          data-testid="decrepitude-effect-input"
-        />
-      </label>
-    </div>
-
-    <div class="detail-section">
-      <h3 class="detail-label">{store.t('aging-label')}</h3>
-      <p class="detail-label">{store.t('aging-points-heading')}</p>
-      <ul class="aging-list" data-testid="aging-points-list">
-        {#each CHARACTERISTICS as characteristic (characteristic)}
-          <li>
-            <span class="char-name">{charLabel(characteristic)}</span>
-            <input
-              type="number"
-              min="0"
-              max="255"
-              value={agingPoints[characteristic] ?? 0}
-              oninput={(e) => store.setAgingPoints(characteristic, numValue(e))}
-              data-testid="aging-points-{characteristic}"
-            />
-          </li>
-        {/each}
-      </ul>
-      <p class="detail-label" data-testid="aging-points-note">
-        {store.t('aging-points-note')}
-      </p>
-
-      <p class="detail-label">{store.t('aging-log-heading')}</p>
-      <ul class="twilight-list" data-testid="aging-log-list">
-        {#each agingLog as entry, i (i)}
-          <li>
-            <input
-              type="number"
-              class="aging-log-year"
-              min="-2147483648"
-              max="2147483647"
-              aria-label={store.t('aging-log-year-label')}
-              value={entry.year ?? ''}
-              oninput={(e) => store.setAgingLogEntryYear(i, optionalNumValue(e))}
-              data-testid="aging-log-year-{i}"
-            />
-            <input
-              class="twilight-desc"
-              placeholder={store.t('aging-log-effect-placeholder')}
-              value={entry.effect}
-              oninput={(e) =>
-                store.setAgingLogEntryEffect(i, (e.currentTarget as HTMLInputElement).value)}
-              data-testid="aging-log-effect-{i}"
-            />
-            <button
-              type="button"
-              class="icon-btn"
-              aria-label={store.t('spell-remove')}
-              onclick={() => store.removeAgingLogEntryAt(i)}
-              data-testid="aging-log-remove-{i}"
-            >
-              ×
-            </button>
-          </li>
-        {:else}
-          <li class="empty">{store.t('aging-log-empty')}</li>
-        {/each}
-      </ul>
-      <button type="button" onclick={() => store.addAgingLogEntry()} data-testid="aging-log-add">
-        {store.t('aging-log-add')}
-      </button>
-    </div>
+    <!-- The aging cluster, kept consecutive in source order for the same reason the
+         Warping one is: source order governs the multi-column flow. Composed in
+         AgingPanel so the guided aging step mounts exactly this surface. -->
+    <AgingPanel />
 
     <PersonalityTraits />
     <Reputations />

@@ -418,6 +418,27 @@ aging-log-year-label = Year
 aging-log-effect-placeholder = Describe the aging roll's effect
 aging-log-add = Add aging entry
 aging-log-empty = No aging entries yet.
+# The aging schedule read-out: which years a character owes a roll for, how many
+# are already recorded, and the standing (die-independent) half of the AGING
+# TOTAL. Every figure comes from the engine's own readout — the threshold is read
+# out of the rules, never printed here as a literal.
+aging-schedule-label = Aging rolls
+aging-rolls-none = No aging rolls are owed yet.
+aging-first-roll-age = Aging begins after age { $begins }; the first roll falls at { $first }.
+aging-rolls-owed = { $count ->
+    [one] { $count } aging roll owed, at age { $from }.
+   *[other] { $count } aging rolls owed, for ages { $from } to { $to }.
+}
+aging-rolls-years = { $count ->
+    [one] Calendar year { $from }.
+   *[other] Calendar years { $from } to { $to }.
+}
+aging-rolls-recorded = { $recorded } of { $owed } recorded
+# AGING TOTAL = stress die (no botch) + age/10 (round up) - Living Conditions
+# modifier - Longevity Ritual modifier (Core Rules.md:16567-16569), so a high
+# modifier means a longer life. Each term arrives already signed.
+aging-total-formula = Stress die { $age } (age) { $conditions } (living conditions) { $longevity } (Longevity Ritual) = stress die { $fixed }
+aging-longevity-clamp = A Longevity Ritual is in force: while it lasts, no total reaches the aging table's first result, so these rolls cannot age the character.
 personality-label = Personality Traits
 personality-name-placeholder = Trait
 personality-add = Add trait
