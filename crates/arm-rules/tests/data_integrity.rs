@@ -2149,6 +2149,14 @@ fn shipped_aging_rules() -> AgingRules {
 fn shipped_aging_table_carries_the_16583_to_16611_rows() {
     let rules = shipped_aging_rules();
 
+    // Stated outright rather than left to `load_full_ruleset`'s unwrap: the
+    // shipped tables clear every load-time gate of `validate_aging_rules` —
+    // contiguous rows up to an open-ended top one, a clamp below the first
+    // aging-point row (:16575), and no duplicate Living Condition id.
+    load_full_ruleset()
+        .validate_integrity()
+        .expect("the shipped aging tables pass every load-time gate");
+
     // "Characters begin aging in the Winter after they turn 35" (:16565), the
     // "age/10 (round up)" term (:16567) and the apparent-aging threshold, which
     // is a question asked of every total rather than a row: "2 or less — No
