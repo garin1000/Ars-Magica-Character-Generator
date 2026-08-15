@@ -331,9 +331,9 @@ class AppStore {
    * Whether the wizard may finish: no error remains anywhere in the character.
    *
    * Deliberately wider than {@link wizardCanAdvance}: the findings no creation
-   * phase owns (equipment, Might, Warping, aging) gate no single step, and a phase
-   * the character type never declares has no step at all — Finish is where both
-   * still have to be answered.
+   * phase owns (equipment, Might, Warping) gate no single step, and a phase the
+   * character type never declares has no step at all — Finish is where both still
+   * have to be answered.
    */
   wizardCanFinish = $derived(!(this.result?.issues ?? []).some((i) => i.severity === 'error'));
 

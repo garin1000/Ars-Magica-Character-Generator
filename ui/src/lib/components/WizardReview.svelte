@@ -7,7 +7,7 @@
 
 <!-- The wizard's closing step. Its validation panel is deliberately UNFILTERED:
      this is the only place in the flow where a finding no creation phase owns
-     (equipment, Might, Warping, aging) — or one belonging to a phase this
+     (equipment, Might, Warping) — or one belonging to a phase this
      character type never declares — can be seen at all. Finish gates on the same
      whole-character view. -->
 <section class="panel wizard-review">

@@ -64,7 +64,7 @@ describe('WizardReview', () => {
   });
 
   // The unfiltered panel is the point of this step: it is the only place a
-  // finding no creation phase owns — equipment, Might, Warping, aging — is shown.
+  // finding no creation phase owns — equipment, Might, Warping — is shown.
   it('shows the findings no step of the flow could have shown', () => {
     store.result = {
       issues: [

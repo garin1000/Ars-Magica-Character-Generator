@@ -44,6 +44,7 @@ phase-spells = Spells
 phase-house_specialisation = House
 phase-mythic_type = Mythic companion type
 phase-personality_reputations = Personality & Reputations
+phase-aging = Aging
 phase-review = Review
 
 # Guided wizard chrome. The rail lists the steps; the step body is the same input
