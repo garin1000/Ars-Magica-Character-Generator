@@ -923,12 +923,25 @@ export interface TwilightScar {
   description: string;
 }
 
-// One entry in a character's aging log: the year of the aging roll and a
-// free-text outcome. A pure annotation (no mechanic); `year` first so the engine
-// sorts the log chronologically.
+// One year of a character's aging log. A resolved year carries the whole roll —
+// the die the player typed, the total it made, the conditions in force and the
+// points awarded — which is what lets the engine undo the year exactly. A
+// hand-written entry carries only `effect`, which stays authoritative for it.
+//
+// `year` is the CALENDAR year and is absent for a character with no birth year
+// (and for a hand-written entry naming none), so every reader must handle its
+// absence rather than render it. `year` is first so the engine sorts the log
+// chronologically; undated entries sort first.
 export interface AgingLogEntry {
-  year: number;
+  year?: number | null;
+  age?: number | null;
   effect: string;
+  die?: number | null;
+  total?: number | null;
+  living_conditions?: string[];
+  points?: Partial<Record<Characteristic, number>>;
+  apparent_age_increased?: boolean;
+  crisis?: boolean;
 }
 
 // Where a Longevity Ritual comes from (rendered via Fluent, never as a raw slug).

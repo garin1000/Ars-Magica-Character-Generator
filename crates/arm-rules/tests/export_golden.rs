@@ -277,8 +277,9 @@ fn golden_magus() -> Entity {
     e.aging_points = BTreeMap::from([(Characteristic::Pre, 5)]);
     e.decrepitude_effect = "a persistent cough each winter".to_string();
     e.aging_log = vec![AgingLogEntry {
-        year: 1220,
+        year: Some(1220),
         effect: "an apparent aging crisis, weathered".to_string(),
+        ..AgingLogEntry::default()
     }];
     e.normalize();
     e

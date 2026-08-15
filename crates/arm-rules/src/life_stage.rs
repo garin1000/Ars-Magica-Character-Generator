@@ -1455,7 +1455,7 @@ mod tests {
             json.contains(r#""childhood_package": "childhood.athletic""#),
             "{json}"
         );
-        assert!(json.contains(r#""schema_version": 14"#), "{json}");
+        assert!(json.contains(r#""schema_version": 15"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
@@ -1509,9 +1509,11 @@ mod tests {
             json.contains(r#""post_gauntlet_spell_levels": 300"#),
             "{json}"
         );
-        // Additive, so the save format is unchanged.
-        assert_eq!(SCHEMA_VERSION, 14);
-        assert!(json.contains(r#""schema_version": 14"#), "{json}");
+        // The post-Gauntlet fields are additive and bumped nothing of their own;
+        // the literal is here so a bump has to be a conscious edit (15 came from
+        // the widened aging log, not from this plan).
+        assert_eq!(SCHEMA_VERSION, 15);
+        assert!(json.contains(r#""schema_version": 15"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(back.life_stages, Some(out_of_apprenticeship));

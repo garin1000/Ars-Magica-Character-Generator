@@ -35,8 +35,11 @@ const VALIDATE_DEBOUNCE_MS = 150;
 /**
  * Save-format schema version written into every new entity. Exported so test
  * harnesses seed the current version instead of a literal that silently rots.
+ *
+ * Mirrors `arm_rules::SCHEMA_VERSION` by hand; the Rust constant is the source
+ * and `the_frontend_mirrors_the_engine_schema_version` pins the two together.
  */
-export const SCHEMA_VERSION = 14;
+export const SCHEMA_VERSION = 15;
 
 // Inclusive ranges of the fixed-width Rust integer fields the entity's numbers
 // land in. A value outside its field's range makes serde reject the whole payload
@@ -1607,8 +1610,13 @@ class AppStore {
     this.#scheduleValidate();
   }
 
+  /**
+   * Append a blank, hand-written log row. It names no year: `AgingLogEntry.year`
+   * is optional, so an undated entry is a supported shape rather than a claim
+   * that the roll happened in the year 0.
+   */
   addAgingLogEntry(): void {
-    this.entity.aging_log = [...(this.entity.aging_log ?? []), { year: 0, effect: '' }];
+    this.entity.aging_log = [...(this.entity.aging_log ?? []), { year: null, effect: '' }];
     this.#scheduleValidate();
   }
 
@@ -1617,9 +1625,16 @@ class AppStore {
     this.#scheduleValidate();
   }
 
-  setAgingLogEntryYear(index: number, year: number): void {
+  /**
+   * Set (or, with `null`, clear) the calendar year of a log entry. Clearing
+   * un-dates the entry rather than dating it to year 0 — the same treatment
+   * {@link setBirthYear} gives an emptied field, and the shape a character with
+   * no birth year gets from the engine.
+   */
+  setAgingLogEntryYear(index: number, year: number | null): void {
+    const clamped = year != null && Number.isFinite(year) ? clampInt(year, I32_MIN, I32_MAX) : null;
     this.entity.aging_log = (this.entity.aging_log ?? []).map((e, i) =>
-      i === index ? { ...e, year: clampInt(year, I32_MIN, I32_MAX) } : e,
+      i === index ? { ...e, year: clamped } : e,
     );
     this.#scheduleValidate();
   }

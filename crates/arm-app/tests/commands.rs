@@ -254,7 +254,7 @@ fn sample_entity_with_characteristics_and_abilities_validates() {
     // The shipped sample now carries characteristics, ability scores, and a bank,
     // and is kept at the current schema version so a save/load round trip on it is
     // an identity (see `save_then_load_round_trips_with_byte_stable_canonical_json`).
-    assert_eq!(entity.schema_version, 14);
+    assert_eq!(entity.schema_version, 15);
     assert!(!entity.characteristics.is_empty());
     assert!(!entity.ability_scores.is_empty());
     let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
@@ -503,7 +503,7 @@ fn save_then_load_round_trips_with_byte_stable_canonical_json() {
 
 /// A pre-schema-14 save carrying the flat `talisman_attunements` list migrates
 /// through the **real** load path the app uses, not just the engine helper: the
-/// attunements arrive under `Entity.talisman`, the version is bumped to 14, and
+/// attunements arrive under `Entity.talisman`, the version is bumped to current, and
 /// re-saving writes only the new shape. This is the engine-boundary half of the
 /// migration proof (the UI-boundary half is `ui/e2e/specs/talisman.e2e.js`).
 #[test]
@@ -529,7 +529,7 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
 
     let migrated = load_entity_from_path(&path).unwrap();
     assert_eq!(
-        migrated.schema_version, 14,
+        migrated.schema_version, 15,
         "the field move bumps the schema"
     );
     let talisman = migrated
@@ -547,7 +547,7 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
     let written = fs::read_to_string(&path).unwrap();
     assert!(!written.contains("talisman_attunements"), "got: {written}");
     assert!(written.contains("\"talisman\""), "got: {written}");
-    assert!(written.contains("\"schema_version\": 14"), "got: {written}");
+    assert!(written.contains("\"schema_version\": 15"), "got: {written}");
 }
 
 #[test]
@@ -560,7 +560,7 @@ fn save_stamps_current_schema_version() {
     save_entity_to_path(&entity, &path).unwrap();
     let written = fs::read_to_string(&path).unwrap();
     assert!(
-        written.contains("\"schema_version\": 14"),
+        written.contains("\"schema_version\": 15"),
         "save must stamp the current schema version, got: {written}"
     );
 }
@@ -624,7 +624,7 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
     let path = tmp.path().join("magus.json");
     save_entity_to_path(&entity, &path).unwrap();
     let reloaded = load_entity_from_path(&path).unwrap();
-    assert_eq!(reloaded.schema_version, 14);
+    assert_eq!(reloaded.schema_version, 15);
     assert_eq!(reloaded.art_scores, entity.art_scores);
 }
 
@@ -1385,6 +1385,24 @@ fn every_creation_phase_is_mirrored_in_the_frontend_union() {
             "ui/src/lib/types.ts is missing the CreationPhase member '{phase}'"
         );
     }
+}
+
+/// `ui/src/lib/state.svelte.ts` re-declares `SCHEMA_VERSION` by hand — the frontend
+/// stamps it onto every entity it builds from scratch — and TypeScript cannot notice
+/// when the Rust constant moves. A stale mirror is silent: the app keeps running and
+/// writes saves labelled with a version the engine no longer speaks, so the Rust
+/// constant is the source and this test pins the mirror.
+#[test]
+fn the_frontend_mirrors_the_engine_schema_version() {
+    let state = fs::read_to_string(repo_root().join("ui/src/lib/state.svelte.ts")).unwrap();
+    let declaration = format!(
+        "export const SCHEMA_VERSION = {};",
+        arm_rules::SCHEMA_VERSION
+    );
+    assert!(
+        state.contains(&declaration),
+        "ui/src/lib/state.svelte.ts must declare `{declaration}`"
+    );
 }
 
 /// Provenance is deliberately not mirrored to the frontend — `PointItem` and

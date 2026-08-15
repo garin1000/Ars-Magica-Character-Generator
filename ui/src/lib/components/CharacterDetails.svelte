@@ -92,6 +92,12 @@
   function numValue(event: Event): number {
     return Number((event.currentTarget as HTMLInputElement).value || 0);
   }
+
+  /** An emptied field reads as "not given", not as 0 — same as {@link onAge}. */
+  function optionalNumValue(event: Event): number | null {
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    return raw === '' ? null : Number(raw);
+  }
 </script>
 
 <section class="panel character-details">
@@ -335,8 +341,8 @@
               min="-2147483648"
               max="2147483647"
               aria-label={store.t('aging-log-year-label')}
-              value={entry.year}
-              oninput={(e) => store.setAgingLogEntryYear(i, numValue(e))}
+              value={entry.year ?? ''}
+              oninput={(e) => store.setAgingLogEntryYear(i, optionalNumValue(e))}
               data-testid="aging-log-year-{i}"
             />
             <input
