@@ -1670,6 +1670,29 @@ describe('aged / warped state + identity', () => {
     });
   });
 
+  it('writes the chosen Living Conditions sorted, and prunes the key when the last goes', () => {
+    // Canonical serialization: the ids go out sorted whatever order they were
+    // ticked in, so the save's diff is zero-noise.
+    store.setLivingCondition('living_condition.work_in_a_mine', true);
+    store.setLivingCondition('living_condition.leper', true);
+    expect(store.entity.living_conditions).toEqual([
+      'living_condition.leper',
+      'living_condition.work_in_a_mine',
+    ]);
+    // Ticking the same row twice is idempotent, not a duplicate.
+    store.setLivingCondition('living_condition.leper', true);
+    expect(store.entity.living_conditions).toEqual([
+      'living_condition.leper',
+      'living_condition.work_in_a_mine',
+    ]);
+    store.setLivingCondition('living_condition.leper', false);
+    expect(store.entity.living_conditions).toEqual(['living_condition.work_in_a_mine']);
+    // The last one off leaves no key: an empty set is the engine's default (the
+    // table's own "Average peasant 0"), so a sparse save is the canonical one.
+    store.setLivingCondition('living_condition.work_in_a_mine', false);
+    expect(store.entity.living_conditions).toBeUndefined();
+  });
+
   it('sets free-text identity fields and birth year', () => {
     store.setIdentity('name', 'Marcus');
     store.setIdentity('description', 'Knight of the Teutonic Order');
