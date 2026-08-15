@@ -439,6 +439,15 @@ aging-rolls-recorded = { $recorded } von { $owed } eingetragen
 # bereits mit Vorzeichen an.
 aging-total-formula = Stresswürfel { $age } (Alter) { $conditions } (Lebensumstände) { $longevity } (Langlebigkeitsritual) = Stresswürfel { $fixed }
 aging-longevity-clamp = Ein Langlebigkeitsritual wirkt: solange es anhält, erreicht kein Ergebnis die erste Zeile der Alterungstabelle, diese Würfe können den Charakter also nicht altern lassen.
+# Die Auswahl der Lebensumstände (Core Rules.md:16581-16594). Der angezeigte Wert
+# ist der von der Engine berechnete Lebensumständemodifikator — er enthält auch
+# die Beiträge von Tugenden und Fehlern, die hier keine eigene Zeile haben.
+living-conditions-label = Lebensumstände
+living-conditions-hint = Der Alterungswurf zieht diesen Modifikator ab; ein höherer Modifikator bedeutet also ein längeres Leben.
+living-conditions-total = Lebensumständemodifikator: { $modifier }
+living-conditions-none = Keine Lebensumstände gewählt: der Charakter gilt als durchschnittlicher Bauer (0).
+living-conditions-cumulative-note = Als kumulativ markierte Lebensumstände sind untereinander kumulativ; die übrigen sind Alternativen, von denen höchstens eine gewählt werden sollte.
+living-conditions-cumulative-label = kumulativ
 personality-label = Persönlichkeitseigenschaften
 personality-name-placeholder = Eigenschaft
 personality-add = Eigenschaft hinzufügen

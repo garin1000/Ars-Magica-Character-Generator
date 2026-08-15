@@ -440,6 +440,15 @@ aging-rolls-recorded = { $recorded } of { $owed } recorded
 # modifier means a longer life. Each term arrives already signed.
 aging-total-formula = Stress die { $age } (age) { $conditions } (living conditions) { $longevity } (Longevity Ritual) = stress die { $fixed }
 aging-longevity-clamp = A Longevity Ritual is in force: while it lasts, no total reaches the aging table's first result, so these rolls cannot age the character.
+# The Living Conditions checklist (Core Rules.md:16581-16594). The total shown is
+# the engine's own resolved modifier — it also carries the Virtue/Flaw
+# contributions, which are not rows in this list.
+living-conditions-label = Living Conditions
+living-conditions-hint = The aging total subtracts this modifier, so a higher modifier means a longer life.
+living-conditions-total = Living Conditions modifier: { $modifier }
+living-conditions-none = No Living Conditions chosen: the character counts as an average peasant (0).
+living-conditions-cumulative-note = Conditions marked cumulative stack with each other; the rest are alternatives, so take at most one of those.
+living-conditions-cumulative-label = cumulative
 personality-label = Personality Traits
 personality-name-placeholder = Trait
 personality-add = Add trait

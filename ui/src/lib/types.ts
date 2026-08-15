@@ -327,6 +327,42 @@ export interface LifeStagePlan {
   post_gauntlet_spell_levels?: number;
 }
 
+// One row of the Living Conditions table (`rules/core/aging.json`): how a
+// character's circumstances modify the aging total. A HIGHER modifier means a
+// longer life, because the total subtracts it. Its display name lives in
+// `rules/i18n/<lang>/aging.json`, keyed by this id — never render the id.
+export interface LivingCondition {
+  id: string;
+  modifier: number;
+  // "Modifiers marked with an asterisk are cumulative with each other" — the
+  // unstarred rows are alternatives. Absent (rather than false) for a plain row.
+  cumulative?: boolean;
+}
+
+// One row of the Aging Roll table: a band of totals, inclusive on both ends, and
+// what landing in it costs. `max` is absent for the open-ended top row.
+export interface AgingRow {
+  min: number;
+  max?: number | null;
+  effect: AgingRowEffect;
+}
+
+export type AgingRowEffect =
+  | { type: 'any_characteristic'; points: number }
+  | { type: 'named_characteristics'; points: number; characteristics: Characteristic[] }
+  | { type: 'next_decrepitude_level_and_crisis' };
+
+// The aging tables as the ruleset ships them. Absent for a ruleset with no aging
+// file, which stands the whole subsystem down.
+export interface AgingRules {
+  start_age: number;
+  age_divisor: number;
+  apparent_age_increase_min: number;
+  longevity_clamp?: { max_total: number; until_age: number } | null;
+  living_conditions: LivingCondition[];
+  outcomes: AgingRow[];
+}
+
 // One year of a character's aging schedule: the age the roll is owed at, the
 // calendar year it falls in (absent without a birth year) and whether the aging
 // log already records it.
@@ -1265,6 +1301,9 @@ export interface Ruleset {
   // engine always sends the map — empty for a ruleset shipping none — but it stays
   // optional here like the other catalogues above, so older shapes still type-check.
   childhoods?: Record<string, ChildhoodPackage>;
+  // The aging tables (Living Conditions + Aging Roll). Absent for a ruleset that
+  // ships no aging file, which stands the whole aging subsystem down.
+  aging?: AgingRules | null;
   // Derived taxonomy surfaced by the engine so the UI never re-hardcodes the
   // magnitude point weights or the ability-category / art-type order. Source of
   // truth is the Rust `Magnitude::points` / `AbilityCategory::ALL` / `ArtType::ALL`.

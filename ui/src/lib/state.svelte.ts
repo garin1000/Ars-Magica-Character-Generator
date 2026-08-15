@@ -1611,6 +1611,35 @@ class AppStore {
   }
 
   /**
+   * Take or drop one Living Conditions row, by its id into the aging catalogue.
+   *
+   * A SET, not a single pick: "Modifiers marked with an asterisk are cumulative
+   * with each other" (Core Rules.md:16594), so several rows can hold at once. The
+   * engine decides which combinations are legal
+   * (`living_conditions_conflict`); this only records the choice.
+   *
+   * Written sorted — canonical serialization, so ticking two rows in either order
+   * produces the same save and a zero-noise diff. The last row off deletes the key
+   * entirely: an empty set is the engine's own default (and the table's "Average
+   * peasant 0"), so a sparse save is the canonical one, exactly as
+   * {@link #setPlanCount} treats a zeroed count.
+   */
+  setLivingCondition(id: string, chosen: boolean): void {
+    const next = new Set(this.entity.living_conditions ?? []);
+    if (chosen) {
+      next.add(id);
+    } else {
+      next.delete(id);
+    }
+    if (next.size === 0) {
+      delete this.entity.living_conditions;
+    } else {
+      this.entity.living_conditions = [...next].sort();
+    }
+    this.#scheduleValidate();
+  }
+
+  /**
    * Append a blank, hand-written log row. It names no year: `AgingLogEntry.year`
    * is optional, so an undated entry is a supported shape rather than a claim
    * that the roll happened in the year 0.
