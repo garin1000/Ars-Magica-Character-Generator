@@ -3815,7 +3815,15 @@ lives on the `SCHEMA_VERSION` constant in `types.rs`; the frontend mirror in
 
 Knock-on: `export.rs` now prints an **undated** log entry as a plain bullet rather
 than an empty bold label (`an_undated_aging_log_entry_prints_its_effect_without_a_year_label`)
-— a consequence of the optional `year`, not a formatting preference.
+— a consequence of the optional `year`, not a formatting preference. The Markdown
+sheet also carries the two new records: `Doc::write_living_conditions` opens the
+annotation block with the chosen `Entity.living_conditions`, localized through
+`rules/i18n/<lang>/aging.json` (never the slug), because they are a **stored choice**
+and a standing term of the aging total (`:16567-16569`, table `:16581-16594`); and
+`Doc::aging_log_entry` appends each logged year's `die` and `total` (`:16567`) after
+its free text, so an exported sheet records what produced the year's outcome. The
+resolved conditions *modifier* is deliberately not printed — it is derived from the
+ids plus the character's Virtues and Flaws, and the sheet records choices.
 
 #### Recorded gaps — deliberately not implemented in 6b6
 Each is findable here so it is not rediscovered later as a bug.
