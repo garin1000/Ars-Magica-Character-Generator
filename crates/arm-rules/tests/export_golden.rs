@@ -39,6 +39,7 @@ fn shipped_ruleset() -> LocalizedRuleset {
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         childhoods: None,
+        aging: None,
     })
     .expect("the shipped ruleset loads");
     LocalizedRuleset::from_merged(

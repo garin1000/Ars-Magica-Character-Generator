@@ -478,6 +478,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     let characteristics_json = fs::read_to_string(rules_dir.join("core/characteristics.json"))?;
     let life_stages_json = fs::read_to_string(rules_dir.join("core/life_stages.json"))?;
     let childhoods_json = fs::read_to_string(rules_dir.join("core/childhoods.json"))?;
+    let aging_json = fs::read_to_string(rules_dir.join("core/aging.json"))?;
 
     let ruleset = Ruleset::from_sources(RulesetSources {
         id: RULESET_ID,
@@ -504,6 +505,10 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         // for yourself, as well",
         // Ars Magica - Definitive Edition (Core Rules).md:2382).
         childhoods: (!childhoods_json.is_empty()).then_some(childhoods_json.as_str()),
+        // And likewise: an empty aging file means the ruleset ships no aging
+        // tables, which stands the aging subsystem down rather than letting the
+        // engine invent a table.
+        aging: (!aging_json.is_empty()).then_some(aging_json.as_str()),
     })?;
     // Load the requested language's rules text. For any non-English language,
     // English is loaded as a per-field fallback so a not-yet-translated string
@@ -521,11 +526,11 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
     Ok(localized)
 }
 
-/// Reads the nine `i18n/<lang>/*.json` rules-text files for a language, in the
+/// Reads the ten `i18n/<lang>/*.json` rules-text files for a language, in the
 /// stable domain order the localized ruleset merges them. A missing file is an
 /// error (each language ships the full set), surfaced to the caller.
 fn read_i18n_sources(rules_dir: &Path, lang: &str) -> Result<Vec<String>, AppError> {
-    const FILES: [&str; 9] = [
+    const FILES: [&str; 10] = [
         "virtues_flaws.json",
         "abilities.json",
         "arts.json",
@@ -535,6 +540,7 @@ fn read_i18n_sources(rules_dir: &Path, lang: &str) -> Result<Vec<String>, AppErr
         "spell_mastery_abilities.json",
         "equipment.json",
         "childhoods.json",
+        "aging.json",
     ];
     FILES
         .iter()

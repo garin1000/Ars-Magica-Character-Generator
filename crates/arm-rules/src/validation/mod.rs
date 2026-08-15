@@ -921,6 +921,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap()
     }
@@ -996,6 +997,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap()
     }
@@ -1341,6 +1343,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap()
     }
@@ -2032,6 +2035,7 @@ mod tests {
             characteristics: Some(characteristics),
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap()
     }
@@ -5676,6 +5680,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap()
     }
@@ -5965,6 +5970,7 @@ mod tests {
             characteristics: None,
             life_stages: Some(SPELL_LIFE_STAGES),
             childhoods: None,
+            aging: None,
         })
         .unwrap()
     }
@@ -6395,6 +6401,7 @@ mod tests {
             characteristics: Some(P7_CHARACTERISTICS),
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap()
     }

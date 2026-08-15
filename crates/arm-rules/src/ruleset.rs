@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ability::{Ability, AbilityCategory, AdvancementTable, AgeAbilityCaps};
+use crate::aging::AgingRules;
 use crate::art::{Art, ArtType, ArtsFile};
 use crate::characteristics::CharacteristicRules;
 use crate::childhood::ChildhoodPackage;
@@ -63,6 +64,7 @@ use crate::types::{
 ///   "art_type_order": [ "technique", "form" ],
 ///   "houses": { "house.bonisagus": { /* House */ } },
 ///   "childhoods": { "childhood.athletic": { /* ChildhoodPackage */ } },
+///   "aging": { /* AgingRules */ },
 ///   "spells": { "spell.pilum_of_fire": { /* Spell */ } },
 ///   "spell_mastery_abilities": { "spell_mastery_ability.penetration": { /* SpellMasteryAbility */ } },
 ///   "weapons": { "weapon.long_sword": { /* Weapon */ } },
@@ -137,6 +139,12 @@ pub struct Ruleset {
     /// stable public contract.
     #[serde(default)]
     pub(crate) childhoods: BTreeMap<Id, ChildhoodPackage>,
+    /// The aging tables (Living Conditions + Aging Roll), if the ruleset ships
+    /// them. `None` for a ruleset without an aging file, which stands the whole
+    /// subsystem down rather than letting the engine invent a table. Serialized
+    /// whole to the frontend; the `aging` field name is a stable public contract.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) aging: Option<AgingRules>,
     /// Magnitude→point-weight table, derived from [`Magnitude::points`]. Serialized
     /// to the frontend so the UI reads point values from the engine instead of
     /// re-hardcoding them. Derived data, not authored: populated at construction
@@ -265,6 +273,10 @@ pub struct RulesetSources<'a> {
     /// ruleset that ships no packages — which offers the player no shortcut but
     /// leaves the childhood block itself perfectly usable by hand.
     pub childhoods: Option<&'a str>,
+    /// Aging-tables JSON (`{ "start_age", "living_conditions", "outcomes", ... }`),
+    /// or `None` for a ruleset that ships no aging rules — which stands the aging
+    /// subsystem down entirely rather than letting the engine invent a table.
+    pub aging: Option<&'a str>,
 }
 
 /// A [`Ruleset`] paired with localized display text for a single language.
@@ -377,6 +389,7 @@ pub(crate) mod parse_source {
     pub const CHARACTERISTICS: &str = "characteristics";
     pub const LIFE_STAGES: &str = "life stages";
     pub const CHILDHOODS: &str = "childhoods";
+    pub const AGING: &str = "aging";
     pub const I18N: &str = "i18n";
     /// Fallback used by the blanket `From<serde_json::Error>` conversion, where
     /// the failing input is not named at the call site.
@@ -643,6 +656,7 @@ impl Ruleset {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
     }
 
@@ -673,6 +687,7 @@ impl Ruleset {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
     }
 
@@ -705,6 +720,7 @@ impl Ruleset {
             characteristics: characteristics_json,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
     }
 
@@ -730,6 +746,7 @@ impl Ruleset {
             characteristics,
             life_stages,
             childhoods,
+            aging,
         } = sources;
 
         let items: Vec<PointItem> = serde_json::from_str(point_items_json)
@@ -776,6 +793,16 @@ impl Ruleset {
         // An absent childhoods file is equivalent to an empty `"{}"`.
         let childhoods_file: ChildhoodsFile = serde_json::from_str(childhoods.unwrap_or("{}"))
             .map_err(|e| RulesetError::parse(parse_source::CHILDHOODS, e))?;
+        // Unlike the catalogue files above, an absent aging file is NOT an empty
+        // one: `AgingRules` has no meaningful zero (an aging table with no rows is
+        // broken, not empty), so absence stays an honest `None`.
+        let aging_rules: Option<AgingRules> = match aging {
+            None => None,
+            Some(json) => Some(
+                serde_json::from_str(json)
+                    .map_err(|e| RulesetError::parse(parse_source::AGING, e))?,
+            ),
+        };
 
         // Detect duplicate IDs across each registry.
         let mut errors = Vec::new();
@@ -947,6 +974,7 @@ impl Ruleset {
             characteristic_rules,
             life_stages: life_stage_rules,
             childhoods,
+            aging: aging_rules,
             magnitude_points: derived_magnitude_points(),
             ability_category_order: AbilityCategory::ALL.to_vec(),
             arts,
@@ -1225,6 +1253,12 @@ impl Ruleset {
     /// The life-stage experience rules, if the ruleset ships them.
     pub fn life_stages(&self) -> Option<&LifeStageRules> {
         self.life_stages.as_ref()
+    }
+
+    /// The aging tables, if the ruleset ships them. `None` stands the aging
+    /// subsystem down.
+    pub fn aging(&self) -> Option<&AgingRules> {
+        self.aging.as_ref()
     }
 
     /// Looks up a Sample Childhood package by id.
@@ -2629,6 +2663,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap();
         assert_eq!(rs.item_count(), 6);
@@ -2651,6 +2686,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap();
         assert_eq!(no_abilities.ability_count(), 0);
@@ -2685,6 +2721,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         });
         assert!(
             rs.is_ok(),
@@ -2721,6 +2758,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         assert!(
@@ -2754,6 +2792,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap();
         assert_eq!(rs.house_count(), 2);
@@ -2777,6 +2816,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap();
         assert_eq!(none.house_count(), 0);
@@ -2809,6 +2849,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap();
         assert_eq!(rs.art_count(), 2);
@@ -2843,6 +2884,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
     }
 
@@ -2885,6 +2927,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap();
         // Mythic Companion type accessors.
@@ -3043,6 +3086,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         match err {
@@ -3080,6 +3124,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         match err {
@@ -3115,6 +3160,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         match err {
@@ -3152,6 +3198,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         match err {
@@ -3185,6 +3232,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         match err {
@@ -4081,6 +4129,7 @@ mod tests {
             characteristics: None,
             life_stages: Some(life_stages),
             childhoods: None,
+            aging: None,
         })
         .unwrap();
         let rules = rs.life_stages().expect("life-stage rules loaded");
@@ -4089,6 +4138,59 @@ mod tests {
 
         let without = Ruleset::from_json("test", "1", "[]", "[]").unwrap();
         assert!(without.life_stages().is_none());
+    }
+
+    /// The aging file is optional too — a ruleset may ship no aging tables, which
+    /// stands the whole subsystem down rather than letting the engine invent a
+    /// table — and when present its numbers reach the engine.
+    #[test]
+    fn aging_rules_load_from_their_own_file() {
+        let aging = r#"{
+          "start_age": 35,
+          "age_divisor": 10,
+          "apparent_age_increase_min": 3,
+          "longevity_clamp": { "max_total": 9, "until_age": 35 },
+          "living_conditions": [
+            { "id": "living_condition.average_peasant", "modifier": 0 }
+          ],
+          "outcomes": [
+            { "min": 10, "max": 12, "effect": { "type": "any_characteristic", "points": 1 } }
+          ]
+        }"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            aging: Some(aging),
+            ..RulesetSources::default()
+        })
+        .unwrap();
+        let rules = rs.aging().expect("aging rules loaded");
+        assert_eq!(rules.start_age, 35);
+        assert_eq!(rules.age_divisor, 10);
+        assert_eq!(rules.apparent_age_increase_min, 3);
+        assert_eq!(rules.longevity_clamp.as_ref().map(|c| c.max_total), Some(9));
+        assert_eq!(rules.living_conditions.len(), 1);
+        assert_eq!(rules.outcomes.len(), 1);
+        // The serialized key name is the stable public contract the frontend binds
+        // to — pinned here because the golden field-name test's fixture ships no
+        // aging file, so the key is skipped there.
+        let value = serde_json::to_value(&rs).unwrap();
+        assert!(
+            value.as_object().expect("object").contains_key("aging"),
+            "the aging rules reach the frontend under the 'aging' key"
+        );
+
+        // An absent file leaves the whole subsystem stood down, and no empty key
+        // reaches the frontend.
+        let without = Ruleset::from_json("test", "1", "[]", "[]").unwrap();
+        assert!(without.aging().is_none());
+        let value = serde_json::to_value(&without).unwrap();
+        assert!(
+            value.as_object().expect("object").get("aging").is_none(),
+            "a ruleset without aging rules must not grow an empty 'aging' key"
+        );
     }
 
     /// The childhood spread names abilities, so a typo there would silently shrink
@@ -4121,6 +4223,7 @@ mod tests {
             characteristics: None,
             life_stages: Some(life_stages),
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         let msg = err.to_string();
@@ -5223,6 +5326,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap();
 
@@ -5237,6 +5341,10 @@ mod tests {
                 "ability_category_order",
                 "advancement",
                 "age_ability_caps",
+                // `aging` is absent here for the same reason `life_stages` is:
+                // this fixture ships no aging file and the field is skipped when
+                // `None`. The aging-bearing shape is asserted by
+                // `aging_rules_load_from_their_own_file`.
                 "armor",
                 "art_advancement",
                 "art_type_order",
@@ -5699,6 +5807,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         match err {
@@ -5737,6 +5846,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         match err {
@@ -5775,6 +5885,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         match err {
@@ -5812,6 +5923,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         match err {
@@ -5855,6 +5967,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         match err {
@@ -5892,6 +6005,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         match err {
@@ -5929,6 +6043,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap_err();
         match err {
