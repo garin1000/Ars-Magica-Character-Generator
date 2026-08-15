@@ -6,9 +6,10 @@ pub mod ability;
 pub mod aging;
 #[doc(inline)]
 pub use aging::{
-    AgingOutcome, AgingPointAward, AgingPointTarget, AgingRow, AgingRowEffect, AgingRules,
-    AgingTotal, AgingYear, LivingCondition, LivingConditionsModifier, LongevityClamp,
-    aging_schedule, aging_total, living_conditions_modifier, resolve_outcome,
+    AgingError, AgingOutcome, AgingPointAward, AgingPointTarget, AgingRow, AgingRowEffect,
+    AgingRules, AgingTotal, AgingYear, AgingYearRequest, AgingYearResult, LivingCondition,
+    LivingConditionsModifier, LongevityClamp, aging_schedule, aging_total,
+    living_conditions_modifier, resolve_outcome, resolve_year,
 };
 pub mod art;
 pub mod characteristics;
