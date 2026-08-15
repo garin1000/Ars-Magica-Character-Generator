@@ -1330,11 +1330,17 @@ impl<'a> Doc<'a> {
         if !e.aging_log.is_empty() {
             self.section(&mut body, 3, "aging-log-heading");
             for entry in &e.aging_log {
-                field(
-                    &mut body,
-                    &entry.year.to_string(),
-                    &escape_cell(&entry.effect),
-                );
+                // A character with no birth year has no calendar year to label the
+                // entry with (see `AgingLogEntry::year`), so it prints as a plain
+                // bullet rather than an empty bold label.
+                match entry.year {
+                    Some(year) => field(&mut body, &year.to_string(), &escape_cell(&entry.effect)),
+                    None => {
+                        body.push_str("- ");
+                        body.push_str(&escape_cell(&entry.effect));
+                        body.push('\n');
+                    }
+                }
             }
             body.push('\n');
         }
@@ -1956,8 +1962,9 @@ mod tests {
         e.aging_points = BTreeMap::from([(Characteristic::Pre, 5)]);
         e.decrepitude_effect = "a persistent cough each winter".to_string();
         e.aging_log = vec![AgingLogEntry {
-            year: 1220,
+            year: Some(1220),
             effect: "an apparent aging crisis, weathered".to_string(),
+            ..AgingLogEntry::default()
         }];
         e.normalize();
         e
@@ -3439,6 +3446,29 @@ mod tests {
             .expect("an aging-points heading");
         let log = doc.find("### Aging log").expect("an aging-log heading");
         assert!(points < log, "unexpected order: {doc}");
+    }
+
+    /// A character with no birth year logs no calendar year, so the entry has no
+    /// label to print. It prints as a plain bullet — never a Rust `None`, and
+    /// never an empty bold label.
+    #[test]
+    fn an_undated_aging_log_entry_prints_its_effect_without_a_year_label() {
+        let mut e = fully_populated_magus();
+        e.aging_log = vec![AgingLogEntry {
+            effect: "an apparent aging crisis, weathered".to_string(),
+            ..AgingLogEntry::default()
+        }];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[("aging-log-heading", "Aging log")]),
+        );
+        assert!(
+            doc.contains("- an apparent aging crisis, weathered\n"),
+            "{doc}"
+        );
+        assert!(!doc.contains("None"), "{doc}");
+        assert!(!doc.contains("- ****"), "{doc}");
     }
 
     #[test]

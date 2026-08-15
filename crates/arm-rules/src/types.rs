@@ -2204,17 +2204,77 @@ pub struct TwilightScar {
     pub description: String,
 }
 
-/// One entry in a character's aging log: the `year` the aging roll happened and
-/// a free-text `effect` describing its narrative outcome. A pure annotation — the
-/// app does not simulate aging rolls, so nothing is computed from these. `year`
-/// is declared first so the derived `Ord` sorts the log chronologically via
-/// [`Entity::normalize`]. Source: Core Rules.md:16563-16577 (Aging).
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+/// One year of a character's aging log.
+///
+/// The engine does not *roll* — the player types the stress die — but it does
+/// everything after that: [`crate::aging::aging_total`] computes the AGING TOTAL
+/// and [`crate::aging::resolve_outcome`] resolves it against the table, and a
+/// resolved year is recorded here, in full. So an entry answers two different
+/// needs with one type:
+///
+/// - A **resolved** entry carries the whole roll — the `die` the player typed,
+///   the `total` it made, the `living_conditions` in force, the `points` awarded
+///   and whether the roll advanced the apparent age or called for a Crisis. That
+///   is what makes the year exactly reversible: undoing it needs no re-derivation
+///   from conditions and a ritual bonus that may since have changed.
+/// - A **hand-written** entry carries only what its author typed. `effect` stays
+///   authoritative for it: the engine never overwrites free text, and an entry
+///   naming no year or age is fully supported.
+///
+/// Recording the `total` is a historical record of a roll, not a cached
+/// derivation, so it does not offend "saves store choices, not resolved values".
+///
+/// `year` is declared first so the derived `Ord` still sorts the log
+/// chronologically via [`Entity::normalize`]. **A log mixing dated and undated
+/// entries sorts the undated ones first**, because `None < Some(_)`.
+///
+/// Source: Core Rules.md:16563-16577 (Aging).
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct AgingLogEntry {
-    /// The year the aging roll occurred (first field so `Ord` sorts by year).
-    pub year: i32,
-    /// Free-text description of the aging roll's outcome.
+    /// The **calendar** year the roll happened. `None` for a character with no
+    /// `birth_year` — there is then no calendar year to write — and for a
+    /// hand-written entry that names none. First field so `Ord` sorts the log
+    /// chronologically; see the type doc for how undated entries sort.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub year: Option<i32>,
+    /// The character's age in that year — the key the aging schedule matches a
+    /// recorded year on, since a calendar year is unavailable without a birth
+    /// year. `None` on a hand-written entry.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub age: Option<u32>,
+    /// Free-text description of the year's outcome. Authoritative for a
+    /// hand-written entry; a resolved year may leave it empty and let the
+    /// structured fields below speak.
     pub effect: String,
+    /// The stress die the player typed. The app never rolls.
+    /// Source: Core Rules.md:16567.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub die: Option<i32>,
+    /// The AGING TOTAL that die produced, conditions and Longevity Ritual
+    /// included. Source: Core Rules.md:16567-16569.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub total: Option<i32>,
+    /// The Living Conditions in force that year, as ids into the
+    /// `rules/core/aging.json` table. Recorded per year because the character's
+    /// standing [`Entity::living_conditions`] may legitimately change later.
+    /// Source: Core Rules.md:16581-16594.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub living_conditions: BTreeSet<Id>,
+    /// The aging points that year awarded, per Characteristic — the player's own
+    /// distribution where the table left the choice open (Core Rules.md:16615).
+    /// Subtracting exactly these is what reverts the year.
+    /// Source: Core Rules.md:16579.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub points: BTreeMap<Characteristic, u8>,
+    /// Whether the roll advanced the character's apparent age by one year.
+    /// Source: Core Rules.md:16577.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub apparent_age_increased: bool,
+    /// Whether the row called for a Crisis. The Crisis roll itself is a later
+    /// slice; this only records that the year demanded one.
+    /// Source: Core Rules.md:16602, :16611.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub crisis: bool,
 }
 
 /// `skip_serializing_if` predicate: omits a `u32` field when it is zero.
@@ -2371,11 +2431,16 @@ pub struct Entity {
     /// (Core:2366-2376). `None` when unset (no cap enforced yet).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub age: Option<u32>,
-    /// The character's apparent age in years (Core Rules.md:1155) — a pure
-    /// annotation carrying NO mechanic. Apparent age is the resolved outcome of
-    /// aging rolls the app deliberately does not simulate (consistent with the
-    /// [`Effect::AgingMod`] "surfaced-only" doc), so it is recorded, never
-    /// computed. `None` when unset. Mirrors [`Entity::age`]'s representation.
+    /// The character's apparent age in years (Core Rules.md:1155). The resolved
+    /// outcome of aging rolls: "the character's apparent age increases by one
+    /// year" whenever the AGING TOTAL clears the table's threshold
+    /// (Core Rules.md:16577), which [`crate::aging`] resolves and a resolved year
+    /// writes here. It stays directly editable — a hand-entered age is never
+    /// overwritten — and `None` when unset. Mirrors [`Entity::age`]'s
+    /// representation.
+    ///
+    /// Never an input to the aging roll: the modifier "depends on the character's
+    /// **actual, not apparent**, age" (`:16577`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub apparent_age: Option<u32>,
     /// Named Personality Traits (value ±3, or ±6 for a Major Personality Flaw's
@@ -2470,10 +2535,13 @@ pub struct Entity {
     /// Empty when unset.
     #[serde(default, skip_serializing_if = "is_empty_str")]
     pub decrepitude_effect: String,
-    /// Per-year aging-roll log (free-text outcomes). A pure annotation carrying
-    /// NO mechanic — the app does not simulate aging rolls (Core
-    /// Rules.md:16563-16577). Kept sorted by year via [`Entity::normalize`].
-    /// Defaults to empty.
+    /// Per-year aging-roll log (Core Rules.md:16563-16577). The app never rolls
+    /// the die, but it resolves the one the player types — [`crate::aging`]
+    /// computes the AGING TOTAL and its outcome — and records the result here as
+    /// a structured [`AgingLogEntry`], which is what lets a year be reverted
+    /// exactly. Hand-written free-text entries remain fully supported and are
+    /// never rewritten. Kept sorted by year via [`Entity::normalize`]; see
+    /// [`AgingLogEntry`] for how undated entries sort. Defaults to empty.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub aging_log: Vec<AgingLogEntry>,
     /// The character's name (free-text; no mechanical effect).
@@ -2570,7 +2638,18 @@ pub struct Entity {
 /// load instead of quietly folding in nothing. So unlike the `aging_reductions`
 /// migration — which *infers* a point total — it needs no [`LoadedEntity`] notice
 /// flag.
-pub const SCHEMA_VERSION: u32 = 14;
+///
+/// Bumped 14 → 15 when [`AgingLogEntry`] widened from `{ year, effect }` into the
+/// full record of a resolved aging year (`age`, `die`, `total`,
+/// `living_conditions`, `points`, `apparent_age_increased`, `crisis`) and `year`
+/// became `Option<i32>`. Every added field is `serde(default,
+/// skip_serializing_if)` and serde reads a bare `year` number into `Some`, so a
+/// schema-14 save loads unchanged and **no migration code exists**. What is not
+/// backward-compatible is the *forward* direction: a schema-15 save may omit
+/// `year` entirely (a character with no `birth_year` has no calendar year to
+/// write), which a schema-14 reader rejects — and a version number is exactly how
+/// an older build learns not to try.
+pub const SCHEMA_VERSION: u32 = 15;
 
 impl Entity {
     /// Creates a new entity at the current [`SCHEMA_VERSION`] with empty trait
@@ -3538,7 +3617,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 14"#));
+        assert!(json.contains(r#""schema_version": 15"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -3935,7 +4014,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 14"#));
+        assert!(json.contains(r#""schema_version": 15"#));
         assert!(json.contains(r#""aura": -3"#));
         assert!(json.contains(r#""source": "external""#));
     }
@@ -4295,7 +4374,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 14"#));
+        assert!(json.contains(r#""schema_version": 15"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
         assert!(json.contains(r#""description": "Knight of the Teutonic Order, Crusader""#));
@@ -4769,18 +4848,20 @@ mod tests {
         entity.decrepitude_effect = "Stooped, slow, and hard of hearing".into();
         entity.aging_log = vec![
             AgingLogEntry {
-                year: 1230,
+                year: Some(1230),
                 effect: "Survived a crisis".into(),
+                ..AgingLogEntry::default()
             },
             AgingLogEntry {
-                year: 1215,
+                year: Some(1215),
                 effect: "Lost a point of Stamina".into(),
+                ..AgingLogEntry::default()
             },
         ];
         entity.normalize();
         // Sorted by year ascending: 1215 before 1230 (year is the first field).
-        assert_eq!(entity.aging_log[0].year, 1215);
-        assert_eq!(entity.aging_log[1].year, 1230);
+        assert_eq!(entity.aging_log[0].year, Some(1215));
+        assert_eq!(entity.aging_log[1].year, Some(1230));
 
         let json = serde_json::to_string(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
@@ -4877,6 +4958,97 @@ mod tests {
         assert_eq!(entity, back);
     }
 
+    /// A hand-written log entry — the only shape schema 14 could hold — still
+    /// deserializes, and re-serializes to exactly those two keys. Every widened
+    /// field carries `skip_serializing_if`, so widening the type did not rewrite
+    /// a single existing entry.
+    #[test]
+    fn a_legacy_aging_log_entry_round_trips_to_year_and_effect_alone() {
+        let legacy = r#"{"year":1220,"effect":"Lost a point of Stamina"}"#;
+        let entry: AgingLogEntry = serde_json::from_str(legacy).unwrap();
+        assert_eq!(entry.year, Some(1220));
+        assert_eq!(entry.effect, "Lost a point of Stamina");
+        assert_eq!(serde_json::to_string(&entry).unwrap(), legacy);
+    }
+
+    /// A resolved year records everything that produced it — the die the player
+    /// typed, the total it made, the conditions in force and the points awarded —
+    /// so [`crate::aging`] can undo the year exactly. All of it round-trips.
+    #[test]
+    fn a_resolved_aging_log_entry_round_trips_with_every_recorded_field() {
+        let entry = AgingLogEntry {
+            year: Some(1220),
+            age: Some(40),
+            effect: "Lost a point of Stamina".into(),
+            die: Some(11),
+            total: Some(15),
+            living_conditions: BTreeSet::from([Id::new("living_condition.work_in_a_mine")]),
+            points: BTreeMap::from([(Characteristic::Sta, 1)]),
+            apparent_age_increased: true,
+            crisis: false,
+        };
+        let json = serde_json::to_string(&entry).unwrap();
+        let back: AgingLogEntry = serde_json::from_str(&json).unwrap();
+        assert_eq!(entry, back);
+        // A `false` flag is not a key: `crisis` stays out of a save that had none.
+        assert!(!json.contains("crisis"), "{json}");
+    }
+
+    /// A character with no birth year has no calendar year to write, so `year`
+    /// is omitted entirely — and because `None < Some(_)`, the derived `Ord`
+    /// sorts every undated entry ahead of every dated one.
+    #[test]
+    fn an_undated_aging_log_entry_omits_the_year_and_sorts_before_a_dated_one() {
+        let undated = AgingLogEntry {
+            effect: "No apparent aging".into(),
+            age: Some(36),
+            ..AgingLogEntry::default()
+        };
+        let json = serde_json::to_string(&undated).unwrap();
+        assert!(!json.contains(r#""year""#), "{json}");
+
+        let dated = AgingLogEntry {
+            year: Some(1220),
+            effect: "Lost a point of Stamina".into(),
+            ..AgingLogEntry::default()
+        };
+        let mut log = vec![dated.clone(), undated.clone()];
+        log.sort();
+        assert_eq!(log, vec![undated, dated]);
+    }
+
+    /// The 14 → 15 bump ships **no migration code**: a schema-14 save is already a
+    /// valid schema-15 document, because serde reads a bare `year` number into
+    /// `Some` and every widened field defaults. Only the *forward* direction broke
+    /// — a schema-15 save may omit `year` entirely, which a schema-14 reader
+    /// rejects — and that is what earns the bump.
+    #[test]
+    fn a_schema_fourteen_save_loads_without_migration() {
+        assert_eq!(SCHEMA_VERSION, 15);
+        let schema_14 = r#"{
+          "schema_version": 14,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "magus",
+          "apparent_age": 45,
+          "aging_log": [{ "year": 1220, "effect": "Lost a point of Stamina" }]
+        }"#;
+        let loaded = load_entity_migrating(schema_14).unwrap();
+        assert!(
+            loaded.migrated_aging_characteristics.is_empty(),
+            "the bump migrates nothing"
+        );
+        assert_eq!(loaded.entity.aging_log.len(), 1);
+        assert_eq!(loaded.entity.aging_log[0].year, Some(1220));
+        assert_eq!(loaded.entity.aging_log[0].effect, "Lost a point of Stamina");
+        assert_eq!(loaded.entity.aging_log[0].age, None);
+        assert_eq!(loaded.entity.apparent_age, Some(45));
+        // The load is faithful, not rewriting: with nothing to migrate the stamped
+        // version is left alone, and the *writer* stamps the current one
+        // (`arm-app`'s `save_entity`). So a 14 stays a 14 until it is saved.
+        assert_eq!(loaded.entity.schema_version, 14);
+    }
+
     /// `warping_choices` round-trips canonically, bumps no schema version of its
     /// own (additive `serde(default)` field), and is omitted from JSON when empty
     /// so old saves lacking the key remain byte-compatible.
@@ -4898,7 +5070,7 @@ mod tests {
         entity.normalize();
         let json = serde_json::to_string_pretty(&entity).unwrap();
         assert!(json.contains(r#""warping_choices""#), "{json}");
-        assert!(json.contains(r#""schema_version": 14"#), "{json}");
+        assert!(json.contains(r#""schema_version": 15"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);

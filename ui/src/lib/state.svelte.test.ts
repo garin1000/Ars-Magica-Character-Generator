@@ -1467,8 +1467,9 @@ describe('integer clamps at the Tauri boundary', () => {
     expect(store.entity.aging_log?.[0].year).toBe(2147483647);
     store.setAgingLogEntryYear(0, -3e9);
     expect(store.entity.aging_log?.[0].year).toBe(-2147483648);
+    // A non-number (a lone minus sign mid-typing) is not a year; it clears.
     store.setAgingLogEntryYear(0, Number('-'));
-    expect(store.entity.aging_log?.[0].year).toBe(0);
+    expect(store.entity.aging_log?.[0].year).toBeNull();
   });
 });
 
@@ -1630,13 +1631,43 @@ describe('aged / warped state + identity', () => {
   });
 
   it('adds, edits and removes aging-log entries by index', () => {
+    // A fresh row names no year: `AgingLogEntry.year` is optional, so a blank
+    // entry claims nothing rather than claiming the year 0.
     store.addAgingLogEntry();
+    expect(store.entity.aging_log).toEqual([{ year: null, effect: '' }]);
     store.setAgingLogEntryYear(0, 1215);
     store.setAgingLogEntryEffect(0, 'Lost a point of Stamina');
     expect(store.entity.aging_log).toEqual([{ year: 1215, effect: 'Lost a point of Stamina' }]);
+    // Clearing the field un-dates the entry instead of dating it to year 0.
+    store.setAgingLogEntryYear(0, null);
+    expect(store.entity.aging_log).toEqual([{ year: null, effect: 'Lost a point of Stamina' }]);
     store.addAgingLogEntry();
     store.removeAgingLogEntryAt(0);
-    expect(store.entity.aging_log).toEqual([{ year: 0, effect: '' }]);
+    expect(store.entity.aging_log).toEqual([{ year: null, effect: '' }]);
+  });
+
+  it('keeps a resolved entry’s recorded roll when only its free text is edited', () => {
+    store.entity.aging_log = [
+      {
+        year: 1220,
+        age: 40,
+        effect: '',
+        die: 11,
+        total: 15,
+        points: { sta: 1 },
+        apparent_age_increased: true,
+      },
+    ];
+    store.setAgingLogEntryEffect(0, 'Weathered it');
+    expect(store.entity.aging_log?.[0]).toEqual({
+      year: 1220,
+      age: 40,
+      effect: 'Weathered it',
+      die: 11,
+      total: 15,
+      points: { sta: 1 },
+      apparent_age_increased: true,
+    });
   });
 
   it('sets free-text identity fields and birth year', () => {

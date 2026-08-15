@@ -160,10 +160,10 @@ describe('familiar', () => {
       timeoutMsg: 'save did not write the file',
     });
 
-    // Every statblock field reaches disk, at the unchanged schema 14 — the fields
-    // are additive, so 5.5c bumped nothing.
+    // Every statblock field reaches disk, at the engine's current schema — the
+    // statblock fields are additive, so 5.5c bumped nothing of its own.
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.schema_version).toBe(14);
+    expect(saved.schema_version).toBe(15);
     expect(saved.familiar.name).toBe('Corvus');
     expect(saved.familiar.animal).toBe('raven');
     expect(saved.familiar.size).toBe(-4);

@@ -115,11 +115,10 @@ impl AgingRules {
 /// [`AgingLogEntry`](crate::types::AgingLogEntry) records a **calendar** year —
 /// so pairing them is the schedule's job rather than every caller's.
 ///
-/// **No `recorded: bool` here, deliberately.** Deciding whether a year is already
-/// logged needs the widened `AgingLogEntry` a later step introduces; today the log
-/// carries only `{ year, effect }`, so an undated character's entries could not be
-/// matched to a schedule row at all. A flag added now would be a half-answer that
-/// step would have to redefine.
+/// **No `recorded: bool` here, deliberately.** Matching a schedule row to a
+/// logged year is [`crate::types::AgingLogEntry::age`]'s job — the calendar year
+/// is unavailable without a birth year — and the writer that fills it in lands
+/// with `resolve_year`. The flag belongs beside that writer, not ahead of it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AgingYear {
     /// The age the character reaches in this year of the schedule.

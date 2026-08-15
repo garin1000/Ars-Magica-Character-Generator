@@ -2164,8 +2164,9 @@ mod tests {
         let mut entity = make_entity("companion", vec![]);
         entity.age = Some(60);
         entity.aging_log = vec![crate::types::AgingLogEntry {
-            year: 1220,
+            year: Some(1220),
             effect: "No apparent aging.".into(),
+            ..Default::default()
         }];
         assert!(entity.aging_points.is_empty(), "rolled, but gained nothing");
 
