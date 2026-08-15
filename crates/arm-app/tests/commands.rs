@@ -7,9 +7,10 @@ use std::path::PathBuf;
 
 use arm_app::error::AppError;
 use arm_app::ruleset_io::{
-    ChildhoodApplication, RULESET_ID, RULESET_VERSION, apply_childhood_package_loaded,
-    effective_scores_loaded, ensure_extension, export_markdown_to_path, load_entity_from_path,
-    load_ruleset_from_dir, pick_rules_dir, save_entity_to_path, validate_loaded,
+    AgingApplication, AgingProjection, AgingReversion, ChildhoodApplication, RULESET_ID,
+    RULESET_VERSION, apply_childhood_package_loaded, effective_scores_loaded, ensure_extension,
+    export_markdown_to_path, load_entity_from_path, load_ruleset_from_dir, pick_rules_dir,
+    save_entity_to_path, validate_loaded,
 };
 use arm_rules::{ArtScore, Entity, Id, Ruleset, RulesetSources, Selection, ValidationMode};
 use pretty_assertions::assert_eq;
@@ -700,6 +701,113 @@ fn effective_scores_report_the_aging_rolls_a_character_of_forty_owes() {
     assert_eq!(
         aging.fixed_total,
         aging.age_modifier - aging.living_conditions_modifier - aging.longevity_modifier
+    );
+}
+
+/// A character of 40 rolling a 10: `10 + ⌈40/10⌉ = 14`, which the shipped table
+/// answers with "1 Aging Point in Qik" (Core Rules.md:16603). One less on the die
+/// lands on 13 — "Gain sufficient Aging Points … to reach the next level in
+/// Decrepitude, and Crisis" (`:16602`) — so the preview must say a Crisis follows.
+///
+/// The die is the player's, typed in and never stored, which is why this is a
+/// command rather than a field of the character.
+#[test]
+fn aging_preview_totals_the_typed_die_and_names_the_outcome() {
+    use arm_rules::{AgingPointTarget, Characteristic};
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut entity = sample_entity();
+    entity.age = Some(40);
+    entity.aging_log.clear();
+    entity.living_conditions.clear();
+    entity.longevity_ritual = None;
+
+    let AgingProjection::Previewed { total, outcome } =
+        arm_app::ruleset_io::aging_preview_loaded(&entity, &ruleset, 40, 10)
+    else {
+        panic!("the shipped ruleset carries aging rules");
+    };
+    assert_eq!(total.die, 10);
+    assert_eq!(total.age_modifier, 4);
+    assert_eq!(total.total, 14);
+    assert!(!total.capped_by_longevity, "no ritual, so no :16575 clamp");
+    assert_eq!(outcome.total, 14);
+    assert!(
+        outcome.apparent_age_increases,
+        "14 is well over the 3 of :16600"
+    );
+    assert_eq!(
+        outcome
+            .awards
+            .iter()
+            .map(|award| award.target.clone())
+            .collect::<Vec<_>>(),
+        vec![AgingPointTarget::Named(Characteristic::Qik)],
+        "row 14 names Quickness and nothing else"
+    );
+    assert!(!outcome.crisis);
+
+    let AgingProjection::Previewed { total, outcome } =
+        arm_app::ruleset_io::aging_preview_loaded(&entity, &ruleset, 40, 9)
+    else {
+        panic!("the shipped ruleset carries aging rules");
+    };
+    assert_eq!(total.total, 13);
+    assert!(outcome.crisis, "13 is the first Crisis row (:16602)");
+}
+
+/// A mistyped die has to be recoverable — a magus of 60 owes 25 rolls (`:2232`) —
+/// so applying a year and reverting it must leave the character it started from,
+/// byte for byte, not merely something equivalent.
+#[test]
+fn an_applied_aging_year_reverts_to_the_character_it_started_from() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut entity = sample_entity();
+    entity.age = Some(40);
+    entity.aging_log.clear();
+    entity.normalize();
+    let before = serde_json::to_string(&entity).unwrap();
+
+    // Row 14 names its own Characteristic, so the player places nothing.
+    let AgingApplication::Applied {
+        entity: applied,
+        total,
+        outcome,
+    } = arm_app::ruleset_io::aging_apply_loaded(&entity, &ruleset, 40, 10, &BTreeMap::new())
+    else {
+        panic!("a year the character owes and has not rolled applies");
+    };
+    assert_eq!(
+        total.total, 14,
+        "the applied roll comes back with the entity"
+    );
+    assert!(!outcome.crisis);
+    assert_ne!(
+        serde_json::to_string(&*applied).unwrap(),
+        before,
+        "the year was written"
+    );
+    assert_eq!(applied.aging_log.len(), 1);
+
+    let AgingReversion::Reverted { entity: reverted } =
+        arm_app::ruleset_io::aging_revert_loaded(&applied, &ruleset, 40)
+    else {
+        panic!("the year just applied is recorded, so it reverts");
+    };
+    assert_eq!(serde_json::to_string(&*reverted).unwrap(), before);
+
+    // A year no entry records is a refusal the player is told about, never a
+    // silent no-op — and it crosses the boundary as a localizable finding.
+    let AgingReversion::Rejected { issues } =
+        arm_app::ruleset_io::aging_revert_loaded(&entity, &ruleset, 40)
+    else {
+        panic!("nothing is recorded for that year");
+    };
+    assert_eq!(
+        issues
+            .iter()
+            .map(|issue| issue.code.as_str())
+            .collect::<Vec<_>>(),
+        vec![arm_rules::ValidationIssue::CODE_AGING_YEAR_NOT_RECORDED]
     );
 }
 

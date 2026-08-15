@@ -3,7 +3,7 @@
 
 use std::sync::{Mutex, RwLock};
 
-use arm_rules::{Entity, Id, LocalizedRuleset, ValidationMode, ValidationResult};
+use arm_rules::{Characteristic, Entity, Id, LocalizedRuleset, ValidationMode, ValidationResult};
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
@@ -12,7 +12,9 @@ use arm_rules::DerivedTotals;
 
 use crate::error::AppError;
 use crate::ruleset_io;
-use crate::ruleset_io::{ChildhoodApplication, EffectiveScores};
+use crate::ruleset_io::{
+    AgingApplication, AgingProjection, AgingReversion, ChildhoodApplication, EffectiveScores,
+};
 
 /// Holds the parsed, localized ruleset so validation does not re-read and
 /// re-check the rules files on every keystroke. `None` until `load_ruleset`
@@ -154,6 +156,72 @@ pub fn apply_childhood_package(
         &Id::new(package_id),
         &slot_values,
         &ruleset.ruleset,
+    ))
+}
+
+/// Reads one year's aging roll without writing anything: the AGING TOTAL the typed
+/// `die` makes at `age`, and the row it lands on.
+///
+/// The die is player input the entity must never store, so the calculator asks the
+/// engine rather than keeping the number on the character. A refusal comes back as
+/// localizable [`arm_rules::ValidationIssue`]s (see [`AgingProjection`]), never as
+/// an error.
+#[tauri::command]
+pub fn aging_preview(
+    entity: Entity,
+    age: u32,
+    die: i32,
+    state: State<'_, AppState>,
+) -> Result<AgingProjection, AppError> {
+    let guard = state.ruleset.read().expect("ruleset lock poisoned");
+    let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
+    Ok(ruleset_io::aging_preview_loaded(
+        &entity,
+        &ruleset.ruleset,
+        age,
+        die,
+    ))
+}
+
+/// Applies one year's aging roll, returning the character it makes together with
+/// the reading that made it.
+///
+/// `distribution` places the Aging Points the row leaves to the player, per
+/// Characteristic; JS supplies it as `distribution` keyed by Characteristic slug.
+/// Empty for a row that names its own Characteristics.
+#[tauri::command]
+pub fn aging_apply(
+    entity: Entity,
+    age: u32,
+    die: i32,
+    distribution: std::collections::BTreeMap<Characteristic, u8>,
+    state: State<'_, AppState>,
+) -> Result<AgingApplication, AppError> {
+    let guard = state.ruleset.read().expect("ruleset lock poisoned");
+    let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
+    Ok(ruleset_io::aging_apply_loaded(
+        &entity,
+        &ruleset.ruleset,
+        age,
+        die,
+        &distribution,
+    ))
+}
+
+/// Takes one applied aging year back off, exactly — a 25-roll pre-play catch-up
+/// with no undo would not be shippable.
+#[tauri::command]
+pub fn aging_revert(
+    entity: Entity,
+    age: u32,
+    state: State<'_, AppState>,
+) -> Result<AgingReversion, AppError> {
+    let guard = state.ruleset.read().expect("ruleset lock poisoned");
+    let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
+    Ok(ruleset_io::aging_revert_loaded(
+        &entity,
+        &ruleset.ruleset,
+        age,
     ))
 }
 

@@ -4,6 +4,7 @@
 //! the `ValidationIssue` issue-code contract.
 
 use super::*;
+use crate::aging::AgingError;
 
 /// Validates a directly-entered aged character's aging state (advisory). Aging
 /// drops are DERIVED from [`Entity::aging_points`] (Core Rules.md:16579); this
@@ -228,4 +229,69 @@ fn report_pending_aging_rolls(
         args([("age", age.to_string())]),
         None,
     ));
+}
+
+/// Localizes the [`AgingError`] a refused aging roll produced.
+///
+/// [`AgingError`] is plain data with no `Display` and no user-facing prose, so
+/// this is where a refusal becomes something the player can read — the same
+/// division of labour as
+/// [`childhood_rejection_issues`](super::childhood_rejection_issues), and for the
+/// same reason: these are **command-input** findings, not entity state. Every
+/// variant is a refusal to write, so no stored character can ever hold the
+/// condition for [`validate`](super::validate) to find; the finding describes the
+/// roll the player just submitted and is gone the moment it is corrected.
+///
+/// The emit site lives in `validation/` all the same, so the contract-table and
+/// phase scanners keep seeing every `(code, phase)` pair the frontend must
+/// localize.
+///
+/// No `characteristics` argument on
+/// [`AgingError::DistributionNotOpen`]: they would reach the message as slugs,
+/// and a slug is never shown to a user. The count says what the player needs —
+/// that the table fixed this row's Characteristics itself.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16597-16617.
+pub fn aging_error_issue(error: &AgingError) -> ValidationIssue {
+    match error {
+        AgingError::NoAgingRules => ValidationIssue::error(
+            ValidationIssue::CODE_AGING_RULES_MISSING,
+            CreationPhase::Review,
+            args([]),
+            None,
+        ),
+        AgingError::YearAlreadyRecorded { age } => ValidationIssue::error(
+            ValidationIssue::CODE_AGING_YEAR_ALREADY_RECORDED,
+            CreationPhase::Review,
+            args([("age", age.to_string())]),
+            None,
+        ),
+        AgingError::DistributionMismatch { owed, distributed } => ValidationIssue::error(
+            ValidationIssue::CODE_AGING_DISTRIBUTION_MISMATCH,
+            CreationPhase::Review,
+            args([
+                ("distributed", distributed.to_string()),
+                ("owed", owed.to_string()),
+            ]),
+            None,
+        ),
+        AgingError::DistributionNotOpen { characteristics } => ValidationIssue::error(
+            ValidationIssue::CODE_AGING_DISTRIBUTION_NOT_OPEN,
+            CreationPhase::Review,
+            args([("count", characteristics.len().to_string())]),
+            None,
+        ),
+        AgingError::AwardUnpriceable => ValidationIssue::error(
+            ValidationIssue::CODE_AGING_AWARD_UNPRICEABLE,
+            CreationPhase::Review,
+            args([]),
+            None,
+        ),
+        AgingError::YearNotRecorded { age } => ValidationIssue::error(
+            ValidationIssue::CODE_AGING_YEAR_NOT_RECORDED,
+            CreationPhase::Review,
+            args([("age", age.to_string())]),
+            None,
+        ),
+    }
 }

@@ -3,6 +3,7 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import type {
+  Characteristic,
   DerivedTotals,
   EffectiveScores,
   Entity,
@@ -87,6 +88,108 @@ export function applyChildhoodPackage(
   slotValues: Record<string, string>,
 ): Promise<ChildhoodApplication> {
   return invoke('apply_childhood_package', { entity, packageId, slotValues });
+}
+
+/**
+ * Where one aging row's points go. `kind` is the question to ask: the table names
+ * the Characteristic itself, the player picks it, or the points must reach the next
+ * level of Decrepitude. `characteristic` is present only for `named`.
+ */
+export type AgingPointTarget =
+  | { kind: 'named'; characteristic: Characteristic }
+  | { kind: 'player_choice' }
+  | { kind: 'next_decrepitude_level' };
+
+/**
+ * One award an aging row makes. `points` is null only when the next Decrepitude
+ * level lies beyond the advancement table — reported as unpriceable, never
+ * silently costed at zero.
+ */
+export interface AgingPointAward {
+  target: AgingPointTarget;
+  points: number | null;
+}
+
+/** The Living Conditions modifier, split into the two places it comes from. */
+export interface LivingConditionsModifier {
+  rows: string[];
+  from_table: number;
+  from_traits: number;
+  total: number;
+}
+
+/**
+ * One year's AGING TOTAL with every term that made it, so the calculator shows the
+ * arithmetic instead of a bare number. The two modifiers carry the book's own sign
+ * and are SUBTRACTED; the trait modifier is ADDED with its stored sign.
+ */
+export interface AgingTotal {
+  age: number;
+  die: number;
+  age_modifier: number;
+  living_conditions: LivingConditionsModifier;
+  longevity_bonus: number;
+  trait_modifier: number;
+  uncapped_total: number;
+  total: number;
+  // Whether a Longevity Ritual's under-35 ceiling cut THIS roll down.
+  capped_by_longevity: boolean;
+}
+
+/** What the aging table does at a total. A crisis is flagged here, never resolved. */
+export interface AgingOutcome {
+  total: number;
+  apparent_age_increases: boolean;
+  awards: AgingPointAward[];
+  crisis: boolean;
+}
+
+/**
+ * The outcome of previewing, applying or reverting one aging roll.
+ *
+ * A refusal is an ordinary outcome, not an error — a die typed against a year
+ * already rolled is a finding about the form the player just submitted — so the
+ * engine reports it as localizable `ValidationIssue`s, rendered through the same
+ * `issue-<code>` path as any other finding. Shaped exactly like
+ * `ChildhoodApplication`.
+ */
+export type AgingProjection =
+  | { status: 'previewed'; total: AgingTotal; outcome: AgingOutcome }
+  | { status: 'rejected'; issues: ValidationIssue[] };
+
+export type AgingApplication =
+  | { status: 'applied'; entity: Entity; total: AgingTotal; outcome: AgingOutcome }
+  | { status: 'rejected'; issues: ValidationIssue[] };
+
+export type AgingReversion =
+  | { status: 'reverted'; entity: Entity }
+  | { status: 'rejected'; issues: ValidationIssue[] };
+
+/**
+ * Read one year's aging roll without writing anything: the total the typed `die`
+ * makes at `age`, and the row it lands on. The die stays out of the entity, which
+ * is what makes "the calculator does not dirty the document" mechanically true.
+ */
+export function agingPreview(entity: Entity, age: number, die: number): Promise<AgingProjection> {
+  return invoke('aging_preview', { entity, age, die });
+}
+
+/**
+ * Apply one year's aging roll. `distribution` places the Aging Points the row left
+ * to the player, per Characteristic; it is empty for a row that names its own.
+ */
+export function agingApply(
+  entity: Entity,
+  age: number,
+  die: number,
+  distribution: Partial<Record<Characteristic, number>>,
+): Promise<AgingApplication> {
+  return invoke('aging_apply', { entity, age, die, distribution });
+}
+
+/** Take one applied aging year back off, exactly. */
+export function agingRevert(entity: Entity, age: number): Promise<AgingReversion> {
+  return invoke('aging_revert', { entity, age });
 }
 
 /** An opened document: the entity plus the file it was read from. */

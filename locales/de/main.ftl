@@ -739,6 +739,16 @@ issue-living_conditions_conflict = Die Lebensumstände '{ $condition }' und '{ $
 # `:5189` sagt allerdings nur, es "sollte" höchstens so hoch sein, und lässt
 # Ausnahmen für Charaktere zu, die nicht im Grunde menschlich sind.
 issue-apparent_age_above_age = Das scheinbare Alter ({ $apparent_age }) liegt über dem tatsächlichen Alter ({ $age }); die Alterung erhöht es um höchstens ein Jahr pro Jahr.
+# Die sechs Gründe, aus denen ein Alterungswurf abgelehnt wird. Anders als alle
+# Befunde darüber gehören diese zur Eingabe eines Befehls: die Engine schreibt bei
+# einer Ablehnung nichts, kein gespeicherter Charakter kann sie also tragen — jeder
+# beschreibt den gerade abgeschickten Wurf.
+issue-aging_rules_missing = Dieses Regelwerk enthält keine Alterungstabelle, daher lässt sich kein Alterungswurf auswerten.
+issue-aging_year_already_recorded = Der Alterungswurf für das Alter { $age } ist bereits eingetragen; er muss zurückgenommen werden, bevor dieses Jahr erneut gewürfelt wird.
+issue-aging_distribution_mismatch = Dieser Wurf lässt { $owed } Alterungspunkt(e) zu verteilen, verteilt wurden aber { $distributed }.
+issue-aging_distribution_not_open = Die Eigenschaften dieses Wurfs gibt die Tabelle selbst vor, daher lassen sich die { $count } verteilten Punkte nicht anwenden.
+issue-aging_award_unpriceable = Die nächste Stufe der Gebrechlichkeit liegt jenseits der Steigerungstabelle, daher lassen sich ihre Kosten nicht bestimmen.
+issue-aging_year_not_recorded = Für das Alter { $age } ist kein Alterungswurf eingetragen, es gibt also nichts zurückzunehmen.
 issue-unknown_equipment = Ausrüstung '{ $item }' passt zu keiner Waffe, keinem Schild und keiner Rüstung.
 issue-equipment_min_strength = { $item } benötigt Stärke { $required }, aber dieser Charakter hat { $strength }.
 issue-shield_with_two_handed_weapon = Ein Schild kann nicht mit einer zweihändigen Waffe geführt werden, daher gelten seine Angriffs- und Verteidigungsmodifikatoren nicht (er zählt weiterhin zur Last).

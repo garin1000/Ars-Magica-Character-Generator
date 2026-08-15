@@ -3685,6 +3685,32 @@ stands over the character at all.
   resolved values*. `AgingLogEntry.effect` is left empty by the writer: the
   structured fields *are* the record, and the prose is the player's to add.
 
+App/UI: three thin commands wrap the above — `aging_preview(entity, age, die)`,
+`aging_apply(entity, age, die, distribution)` and `aging_revert(entity, age)`
+(`arm-app/src/commands.rs` → `ruleset_io::aging_{preview,apply,revert}_loaded`),
+modelled on `apply_childhood_package`. The outcome resolution **cannot** live in
+JS: the die is player input the entity must not store, and a stress die explodes,
+so no bounded lookup table could stand in for the engine.
+
+**Localizing `AgingError`** follows the `ChildhoodRejection` precedent exactly, and
+that choice is deliberate. `AgingError` is plain data with no `Display`; the six
+variants become ordinary `issue-*` findings through
+`validation::aging_error_issue`, with contract-table rows and Fluent keys in both
+locales — `aging_rules_missing`, `aging_year_already_recorded` (`age`),
+`aging_distribution_mismatch` (`owed`, `distributed`), `aging_distribution_not_open`
+(`count`), `aging_award_unpriceable`, `aging_year_not_recorded` (`age`), all errors,
+all on `review` until the `Aging` phase lands. A refusal therefore crosses the IPC
+edge as an ordinary `Ok` outcome (`status: "rejected"`) carrying issues, never as an
+`AppError`: it describes the form the player just submitted, and the frontend
+renders it through the `issue-<code>` path it already has, so no English prose
+crosses the boundary. They are **command-input** findings — the engine writes
+nothing when it refuses, so no saved character can hold one for `validate` to find —
+which is why the emit site is a mapping function rather than a `validate` pass, and
+why it still lives in `validation/` where the contract scanners can see it.
+`aging_distribution_not_open` deliberately carries a **count**, not the
+Characteristics: those would reach the message as slugs, and a slug is never shown
+to a user.
+
 #### Apparent age cannot outrun actual age
 > "Otherwise, the character's apparent age increases by one year."
 
