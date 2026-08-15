@@ -3390,6 +3390,27 @@ the arithmetic, and `crates/arm-rules/src/validation/aging.rs` the findings.
   entered and the apparent age is higher. A warning, not an error: `:5189` states it
   as a *should* and explicitly excuses a character who is not basically human.
 
+#### Unaging — the points accrue, the Characteristics do not drop
+> "In game terms, your aging points do not decrease your Characteristics, only
+> building up to give you Decrepitude points."
+
+> "This Flaw also includes the effects of the Unaging Virtue, but the character's
+> apparent age advances in line with their physical age."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:5189` (Unaging),
+  `:5743` (Bound to (Role)), `:3488` (Bee King — the appearance only).
+- **Data**: `rules/core/virtues_flaws.json` → the `aging_mod` effect of kind
+  `no_aging`, carried by `virtue.unaging` and `flaw.bound_to_role_role`.
+- Implementation: `effective.rs::aging_drops` (and the surfaced
+  `characteristic_aging_drops`, which wraps it) return 0 for a carrier, so no
+  Characteristic ever drops and `effective_characteristic_after_aging` leaves the
+  bought score alone. `decrepitude_points_total` / `decrepitude_score` are
+  deliberately **untouched**: "only building up to give you Decrepitude points" is
+  the other half of the same sentence, so a carrier reaches Decrepitude at
+  everyone's rate. The appearance is a separate tag (`no_apparent_aging`, read by
+  `aging.rs::resolve_outcome`), because Bound to (Role)'s explicit *but* proves the
+  two facts are separable.
+
 ## Markdown character export (M5.6) — `export.rs`
 
 `export.rs` implements **no new rules mechanic**, so it carries no rulebook

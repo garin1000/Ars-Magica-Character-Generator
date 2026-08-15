@@ -258,7 +258,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         size: size(entity, ruleset),
         characteristic_bonuses: characteristic_bonuses(entity, ruleset),
         characteristic_effective: effective_characteristics(entity, ruleset),
-        characteristic_aging_drops: characteristic_aging_drops(entity),
+        characteristic_aging_drops: characteristic_aging_drops(entity, ruleset),
         granted_selections: entity_grants(entity, ruleset),
         virtue_budget: ceilings.virtue_ceiling,
         flaw_budget: ceilings.flaw_ceiling,
