@@ -294,18 +294,15 @@ describe('a magus past its Gauntlet', () => {
     expect(await $(SPELL_LEVELS_INPUT).isExisting()).toBe(false);
   });
 
-  it('owes the aging rolls a character over 35 must make, without gating on them', async () => {
-    await advanceWizardTo('review');
-    await $(FINISH).waitForExist({ timeout: STEP_TIMEOUT });
+  it('owes the aging rolls a character over 35 must make, on the step that owns them', async () => {
+    await advanceWizardTo('aging');
 
     // "a character over the age of 35 must make aging rolls … before the game begins"
-    // (`:2232`) — which a 60-year-old magus plainly has not. Advice, not admission: a
-    // warning, so Finish stays live.
-    // Counted loosely, not pinned to one: the Review step renders the whole-character
-    // panel in its body AND the docked one in the footer, so every finding is on
-    // screen twice here. (Every other step shows the docked panel alone, which is why
-    // the counts above are exact.)
-    await browser.waitUntil(async () => (await issueCount('aging_rolls_pending')) > 0, {
+    // (`:2232`) — which a 60-year-old magus plainly has not. The finding belongs to
+    // the AGING phase, whose step is where the age is typed and the rolls are made,
+    // so it is counted EXACTLY here: outside Review only the docked panel is mounted
+    // and it is filtered to the current phase, which is what makes one the proof.
+    await browser.waitUntil(async () => (await issueCount('aging_rolls_pending')) === 1, {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'a magus of 60 with an empty aging log should be reminded of its aging rolls',
     });
@@ -313,6 +310,23 @@ describe('a magus past its Gauntlet', () => {
     expect(pending.severity).toBe('warning');
     expect(pending.text).not.toContain('aging_rolls_pending');
     expect(pending.text).toContain('60');
+    // Advice, not admission: unrolled years must not trap the magus on the step.
+    expect(await $(NEXT).isEnabled()).toBe(true);
+  });
+
+  it('carries the reminder onto the closing step without gating on it', async () => {
+    await advanceWizardTo('review');
+    await $(FINISH).waitForExist({ timeout: STEP_TIMEOUT });
+
+    // Counted loosely, not pinned to one: the Review step renders the whole-character
+    // panel in its body AND the docked one in the footer, so every finding is on
+    // screen twice here. (Every other step shows the docked panel alone, which is why
+    // the counts above — the aging step's included — are exact.)
+    await browser.waitUntil(async () => (await issueCount('aging_rolls_pending')) > 0, {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'the closing step should still carry the pending-rolls reminder',
+    });
+    expect((await issue('aging_rolls_pending')).severity).toBe('warning');
     expect(await $(FINISH).isEnabled()).toBe(true);
   });
 
