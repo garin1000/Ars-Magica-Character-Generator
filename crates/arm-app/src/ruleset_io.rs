@@ -15,13 +15,14 @@ use arm_rules::{
     EntityKind, Grant, Id, LifeStageBudget, LocalizedRuleset, MagusMinimumAbility, MightScore,
     PointCeilings, ReputationType, RestrictedXpPool, Ruleset, RulesetSources, Selection,
     SpellLevelCap, SupernaturalFreeSlots, ValidationIssue, ValidationMode, ValidationResult,
-    WarpingOwed, ability_bonuses, ability_score_floors, age_ability_cap, apply_childhood_package,
-    art_bonuses, characteristic_aging_drops, characteristic_bonuses, characteristic_caps,
-    characteristic_floors, characteristic_points_granted, confidence, decrepitude_score,
-    effective_characteristics, effective_might, effective_point_ceilings, entity_grants,
-    item_level_budget, item_level_used, life_stage_spell_levels, magus_minimum_abilities,
-    power_levels_budget, powers_used, reputation_grants, size, spell_level_caps, spell_levels_base,
-    spell_levels_bonus, spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
+    WarpingOwed, ability_bonuses, ability_score_floors, age_ability_cap, aging_schedule,
+    aging_total, apply_childhood_package, art_bonuses, characteristic_aging_drops,
+    characteristic_bonuses, characteristic_caps, characteristic_floors,
+    characteristic_points_granted, confidence, decrepitude_score, effective_characteristics,
+    effective_might, effective_point_ceilings, entity_grants, item_level_budget, item_level_used,
+    life_stage_spell_levels, longevity_bonus, magus_minimum_abilities, power_levels_budget,
+    powers_used, reputation_grants, size, spell_level_caps, spell_levels_base, spell_levels_bonus,
+    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
     spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, validate, warping,
     warping_owed, warping_owed_grants, xp_allocation,
 };
@@ -76,6 +77,12 @@ pub struct EffectiveScores {
     /// for a directly-entered character (where `xp_pool` is the authority). The
     /// guided flow shows this instead of an editable pool.
     pub life_stage: Option<LifeStageBudget>,
+    /// The die-independent half of the character's aging: which rolls are owed,
+    /// which are recorded, and every term of the AGING TOTAL except the die.
+    /// `None` when the ruleset ships no aging rules at all — the same shape as
+    /// [`Self::life_stage`], and for the same reason: an absent block stands the
+    /// subsystem down rather than letting the payload invent a threshold.
+    pub aging: Option<AgingReadout>,
     /// Net Characteristic-buy points granted by Improved / Weak Characteristics,
     /// on top of the ruleset's base `start_points`. Signed (Weak subtracts).
     pub characteristic_points_granted: i32,
@@ -212,6 +219,113 @@ pub struct EffectiveScores {
     pub power_levels_used: u32,
 }
 
+/// Everything about a character's aging that does **not** depend on a die.
+///
+/// The stress die is player input the entity must never store (`:16567` — the
+/// engine has no `rand` dependency and never will), so the roll itself is a
+/// command the player triggers. Every field here, by contrast, is a pure function
+/// of `(entity, ruleset)`, which is exactly why it rides on the always-recomputed
+/// effective-scores payload rather than on a separate request: it can never be
+/// stale, and the UI never has to ask for it.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16563-16617.
+#[derive(Debug, Clone, Serialize)]
+pub struct AgingReadout {
+    /// The first age at which a roll is owed — 36 under the shipped rules, the
+    /// Winter after the character turns 35 (`:16565`).
+    pub first_roll_age: u32,
+    /// The age aging begins AFTER (`:16565`) — the ruleset's own `start_age`,
+    /// surfaced for the explanatory line so the UI never prints the threshold as
+    /// a literal.
+    pub begins_after_age: u32,
+    /// Every year the character owes a roll for, ascending, each marked with
+    /// whether the log already records it.
+    pub schedule: Vec<AgingScheduleYear>,
+    /// `schedule.len()`, so the UI never counts a rules-defined set itself.
+    pub rolls_owed: u32,
+    /// How many of those owed years the log already records.
+    pub rolls_recorded: u32,
+    /// ⌈age / divisor⌉ at the character's **actual** age (`:16577`); 0 when no
+    /// age is entered, because there is then no age term to compute.
+    pub age_modifier: i32,
+    /// The Living Conditions modifier the total SUBTRACTS (`:16569`, `:16571`),
+    /// the chosen rows and the Virtue/Flaw contributions together.
+    pub living_conditions_modifier: i32,
+    /// The Longevity Ritual modifier the total SUBTRACTS (`:16569`); 0 with no
+    /// ritual, or with one whose bonus the player has not entered.
+    pub longevity_modifier: i32,
+    /// Whether the `:16575` clamp stands over this character — he holds a
+    /// Longevity Ritual and has not yet reached the clamp's age.
+    ///
+    /// **Named apart from [`arm_rules::AgingTotal::capped_by_longevity`] on
+    /// purpose.** That one is a per-ROLL fact ("this total was cut down"); this
+    /// is a standing predicate about the character, true even in a year whose
+    /// total never reached the ceiling.
+    pub longevity_clamp_active: bool,
+    /// The whole non-die half of the AGING TOTAL, so the UI adds only the number
+    /// the player typed: `age_modifier - living_conditions_modifier -
+    /// longevity_modifier`, plus the Virtue/Flaw aging-roll modifiers (Faerie
+    /// Blood's -1, `:3801`), which the book's three-line formula does not name
+    /// but which are just as die-independent.
+    pub fixed_total: i32,
+}
+
+/// One year of [`AgingReadout::schedule`]: the age the roll is owed at, the
+/// calendar year it falls in when the character has a birth year, and whether it
+/// has been rolled.
+#[derive(Debug, Clone, Serialize)]
+pub struct AgingScheduleYear {
+    /// The age the character reaches in this year.
+    pub age: u32,
+    /// `birth_year + age`, or `None` when no birth year is recorded.
+    pub year: Option<i32>,
+    /// Whether the aging log already carries a resolved entry for this age.
+    pub recorded: bool,
+}
+
+/// Reads the die-independent half of a character's aging.
+///
+/// The terms come from one probe of the engine's own [`aging_total`] at a die of
+/// zero rather than from a second derivation here: that keeps the read-out and
+/// the roll the player will actually make arithmetically identical by
+/// construction, sign conventions included.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16563-16617.
+fn aging_readout(entity: &Entity, ruleset: &Ruleset) -> Option<AgingReadout> {
+    let rules = ruleset.aging()?;
+    let schedule = aging_schedule(entity, ruleset);
+    // No age entered means no age term (`:16577` asks for the actual age, and
+    // there is none) — and an empty schedule, so nothing is owed either.
+    let age = entity.age.unwrap_or(0);
+    let terms = aging_total(entity, ruleset, age, 0)?;
+
+    Some(AgingReadout {
+        first_roll_age: rules.first_roll_age(),
+        begins_after_age: rules.start_age,
+        rolls_owed: u32::try_from(schedule.len()).unwrap_or(u32::MAX),
+        rolls_recorded: u32::try_from(schedule.iter().filter(|year| year.recorded).count())
+            .unwrap_or(u32::MAX),
+        schedule: schedule
+            .into_iter()
+            .map(|year| AgingScheduleYear {
+                age: year.age,
+                year: year.year,
+                recorded: year.recorded,
+            })
+            .collect(),
+        age_modifier: terms.age_modifier,
+        living_conditions_modifier: terms.living_conditions.total,
+        longevity_modifier: terms.longevity_bonus,
+        longevity_clamp_active: rules
+            .longevity_clamp
+            .as_ref()
+            .is_some_and(|clamp| age < clamp.until_age)
+            && longevity_bonus(entity, ruleset).is_some(),
+        // The probe's die was 0, so its uncapped total IS the non-die half.
+        fixed_total: terms.uncapped_total,
+    })
+}
+
 /// A Reputation a Virtue/Flaw authorizes the character to start with (the UI
 /// pre-fills a new Reputation row from this; content is player-supplied).
 #[derive(Debug, Clone, Serialize)]
@@ -253,6 +367,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         life_stage: ruleset
             .life_stages()
             .and_then(|rules| rules.budget(entity, ruleset)),
+        aging: aging_readout(entity, ruleset),
         characteristic_points_granted: characteristic_points_granted(entity, ruleset),
         ability_score_floors: ability_score_floors(entity, ruleset),
         size: size(entity, ruleset),

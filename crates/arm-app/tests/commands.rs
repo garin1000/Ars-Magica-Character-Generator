@@ -658,6 +658,51 @@ fn effective_scores_surface_aged_characteristic_and_drop_count() {
     );
 }
 
+/// "a character over the age of 35 must make aging rolls … before the game begins"
+/// (Core Rules.md:2232), and aging starts "the Winter after they turn 35"
+/// (`:16565`) — so a character of 40 owes one roll a year from 36 through 40, five
+/// in all. The whole read-out is a pure function of the character and the rules:
+/// the die is the player's and never reaches the entity, which is why the
+/// die-independent half rides on the always-recomputed payload.
+#[test]
+fn effective_scores_report_the_aging_rolls_a_character_of_forty_owes() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut entity = sample_entity();
+    entity.age = Some(40);
+    entity.aging_log.clear();
+
+    let aging = effective_scores_loaded(&entity, &ruleset)
+        .aging
+        .expect("the shipped ruleset carries aging rules");
+
+    assert_eq!(aging.begins_after_age, 35, "the book's own number (:16565)");
+    assert_eq!(
+        aging.first_roll_age, 36,
+        "the Winter after 35 falls in year 36"
+    );
+    assert_eq!(aging.rolls_owed, 5, "36, 37, 38, 39 and 40");
+    assert_eq!(aging.rolls_recorded, 0, "an empty log has settled none");
+    assert_eq!(aging.schedule.len(), 5);
+    assert_eq!(aging.schedule.first().map(|year| year.age), Some(36));
+    assert_eq!(aging.schedule.last().map(|year| year.age), Some(40));
+    assert!(
+        aging.schedule.iter().all(|year| !year.recorded),
+        "nothing is recorded yet: {:?}",
+        aging.schedule
+    );
+
+    // "age/10 (round up)" (`:16567`) at the ACTUAL age (`:16577`).
+    assert_eq!(aging.age_modifier, 4);
+    // No ritual, so no bonus and no `:16575` clamp standing over this character.
+    assert_eq!(aging.longevity_modifier, 0);
+    assert!(!aging.longevity_clamp_active);
+    // The whole non-die half, so the UI adds only the number the player typed.
+    assert_eq!(
+        aging.fixed_total,
+        aging.age_modifier - aging.living_conditions_modifier - aging.longevity_modifier
+    );
+}
+
 #[test]
 fn effective_scores_surface_house_grants_read_only() {
     // The V/F view renders House grants read-only, so effective scores must carry
@@ -1566,6 +1611,94 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
         .iter()
         .map(String::as_str)
         .chain(["life_stages", "childhoods"])
+    {
+        assert!(
+            types.contains(&format!("{key}:")) || types.contains(&format!("{key}?:")),
+            "ui/src/lib/types.ts declares no '{key}' property"
+        );
+    }
+}
+
+/// The aging payloads cross the Tauri boundary as JSON and `ui/src/lib/types.ts`
+/// mirrors them **by hand**, exactly like the life-stage ones — so this is a
+/// SIBLING of [`every_life_stage_field_is_mirrored_in_the_frontend_types`], not a
+/// widening of it. That test's scope note fixes it at six named types plus two
+/// member names, and folding the aging surface into it would dilute its floor
+/// rather than add a check.
+///
+/// Every optional field is populated on purpose: `skip_serializing_if` would
+/// otherwise drop `year`, `age`, `die`, `total`, `living_conditions`,
+/// `apparent_age_increased` and `crisis` from the serialization and hide them from
+/// the check.
+///
+/// **`AgingLogEntry::points` is deliberately left empty.** It is a
+/// `BTreeMap<Characteristic, u8>`, so its serialized *keys* are Characteristic
+/// slugs (`sta`) rather than field names, and [`mirrored_keys`] cannot tell the
+/// two apart — a populated map would demand a `sta:` property of `types.ts`. The
+/// key itself is covered by the chained member names below.
+#[test]
+fn every_aging_field_is_mirrored_in_the_frontend_types() {
+    let readout = arm_app::ruleset_io::AgingReadout {
+        first_roll_age: 36,
+        begins_after_age: 35,
+        // Two years, the first dated: a `None` calendar year would be skipped and
+        // hide the `year` key, so one of each proves both shapes serialize.
+        schedule: vec![
+            arm_app::ruleset_io::AgingScheduleYear {
+                age: 36,
+                year: Some(1216),
+                recorded: true,
+            },
+            arm_app::ruleset_io::AgingScheduleYear {
+                age: 37,
+                year: None,
+                recorded: false,
+            },
+        ],
+        rolls_owed: 2,
+        rolls_recorded: 1,
+        age_modifier: 4,
+        living_conditions_modifier: -3,
+        longevity_modifier: 5,
+        // Populated on purpose: `true` is the standing `:16575` predicate, and the
+        // field is the one thing that tells it apart from the per-roll cap flag.
+        longevity_clamp_active: true,
+        fixed_total: 2,
+    };
+    let entry = arm_rules::AgingLogEntry {
+        year: Some(1220),
+        age: Some(40),
+        effect: "Grey at the temples.".to_string(),
+        die: Some(9),
+        total: Some(13),
+        living_conditions: [Id::new("living_condition.work_in_a_mine")]
+            .into_iter()
+            .collect(),
+        points: BTreeMap::new(),
+        apparent_age_increased: true,
+        crisis: true,
+    };
+
+    let mut keys = std::collections::BTreeSet::new();
+    for payload in [
+        serde_json::to_value(&readout).unwrap(),
+        serde_json::to_value(&entry).unwrap(),
+    ] {
+        mirrored_keys(&payload, &mut keys);
+    }
+    // A floor, so a collector that silently gathered nothing cannot look green.
+    assert!(
+        keys.len() >= 15,
+        "expected the aging payloads to carry at least 15 field names, got {keys:?}"
+    );
+
+    let types = fs::read_to_string(repo_root().join("ui/src/lib/types.ts")).unwrap();
+    // The two member names the frontend reaches the rest of the surface through:
+    // the effective-scores read-out and the character's own standing conditions.
+    for key in keys
+        .iter()
+        .map(String::as_str)
+        .chain(["aging", "living_conditions", "points"])
     {
         assert!(
             types.contains(&format!("{key}:")) || types.contains(&format!("{key}?:")),
