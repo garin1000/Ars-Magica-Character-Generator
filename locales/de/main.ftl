@@ -81,7 +81,7 @@ wizard-review-clean = Keine Fehler oder Hinweise — dieser Charakter ist regelk
 # Ehrlich darüber, was die Sperren prüfen und was nicht: die Schritte blockieren nur
 # bei Fehlern, ein regelkonformer Charakter kann also unfertig sein.
 wizard-review-incomplete = Ein regelkonformer Charakter ist nicht zwangsläufig ein fertiger: Schritte blockieren nur bei Fehlern, alles bloß Leergelassene ist also durchgelaufen.
-wizard-review-hint = Ausrüstung, magische Gegenstände, Macht, Verzerrung und Alterung sind nicht Teil der geführten Erstellung — sie werden nach dem Fertigstellen bearbeitet.
+wizard-review-hint = Ausrüstung, magische Gegenstände, Macht und Verzerrung sind nicht Teil der geführten Erstellung — sie werden nach dem Fertigstellen bearbeitet.
 
 available-title = Verfügbar
 items-virtues-title = Tugenden

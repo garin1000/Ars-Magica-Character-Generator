@@ -230,8 +230,8 @@ Markdown export added in M5.6.
   input surfaces the editor's tabs use — so the two can never drift apart. Each
   step shows only its own validation findings and refuses to advance while it holds
   an error; Back and the step rail move freely through everything already visited.
-  A closing Review step reports what no step could (equipment, Might, Warping,
-  aging) and hands the finished character to the ordinary editor. Which mode
+  A closing Review step reports what no step could (equipment, Might, Warping)
+  and hands the finished character to the ordinary editor. Which mode
   enforces the gate is still the validation-mode control: Advisory and Silent stop
   it gating at all.
 

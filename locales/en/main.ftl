@@ -77,7 +77,7 @@ wizard-review-clean = No errors or warnings — this character is legal.
 # Honest about what the gating does and does not check: the steps block on errors
 # only, so a legal character can still be an unfinished one.
 wizard-review-incomplete = A legal character is not necessarily a finished one: steps only block on errors, so anything merely left empty passed through.
-wizard-review-hint = Equipment, magic items, Might, Warping and aging are not part of the guided flow — they are edited after finishing.
+wizard-review-hint = Equipment, magic items, Might and Warping are not part of the guided flow — they are edited after finishing.
 
 available-title = Available
 items-virtues-title = Virtues
