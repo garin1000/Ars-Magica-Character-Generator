@@ -729,6 +729,14 @@ issue-excessive_aging_reduction = The aging drops to { $characteristic } ({ $red
 # rolls happen at the table, so the app can only say they are outstanding; a
 # recorded aging log settles it, whatever the rolls produced.
 issue-life_stage_aging_rolls_pending = This character is { $age }, and a character over 35 must make aging rolls before play begins; none are recorded yet.
+issue-unknown_living_condition = Living condition '{ $condition }' matches no row of the Living Conditions table, so it contributes nothing to the aging total.
+# Only the asterisked rows of the table "are cumulative with each other"
+# (`:16594`); the rest describe one situation each, so only one can apply.
+issue-living_conditions_conflict = Living conditions '{ $condition }' and '{ $other }' are alternatives, so only one of them can apply.
+# An aging roll advances the apparent age by at most one year per year (`:16577`),
+# so it cannot outrun the actual age on its own — but `:5189` only says it "should
+# be" less than or equal, and lets a character who is not basically human differ.
+issue-apparent_age_above_age = The apparent age ({ $apparent_age }) is above the actual age ({ $age }); aging raises it by at most one year per year.
 issue-unknown_equipment = Equipment '{ $item }' does not match any weapon, shield, or armor.
 issue-equipment_min_strength = { $item } needs Strength { $required }, but this character has { $strength }.
 issue-shield_with_two_handed_weapon = A shield cannot be used with a two-handed weapon, so its Attack and Defense modifiers are not applied (it still counts toward Load).
