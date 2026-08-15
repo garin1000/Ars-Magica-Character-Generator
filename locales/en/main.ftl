@@ -737,6 +737,15 @@ issue-living_conditions_conflict = Living conditions '{ $condition }' and '{ $ot
 # so it cannot outrun the actual age on its own — but `:5189` only says it "should
 # be" less than or equal, and lets a character who is not basically human differ.
 issue-apparent_age_above_age = The apparent age ({ $apparent_age }) is above the actual age ({ $age }); aging raises it by at most one year per year.
+# The six refusals an aging roll can meet. Unlike every finding above, these are
+# command-input findings: the engine writes nothing when it refuses, so no saved
+# character can hold one — each describes the roll just submitted.
+issue-aging_rules_missing = These rules carry no aging table, so an aging roll cannot be resolved.
+issue-aging_year_already_recorded = The aging roll for age { $age } is already recorded; take it back before rolling that year again.
+issue-aging_distribution_mismatch = This roll leaves { $owed } aging point(s) for you to place, but { $distributed } were placed.
+issue-aging_distribution_not_open = The table names this roll's Characteristics itself, so the { $count } you placed cannot be applied.
+issue-aging_award_unpriceable = The next level of Decrepitude lies beyond the advancement table, so the points it costs cannot be determined.
+issue-aging_year_not_recorded = No aging roll is recorded for age { $age }, so there is nothing to take back.
 issue-unknown_equipment = Equipment '{ $item }' does not match any weapon, shield, or armor.
 issue-equipment_min_strength = { $item } needs Strength { $required }, but this character has { $strength }.
 issue-shield_with_two_handed_weapon = A shield cannot be used with a two-handed weapon, so its Attack and Defense modifiers are not applied (it still counts toward Load).

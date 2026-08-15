@@ -204,7 +204,9 @@ pub fn aging_schedule(entity: &Entity, ruleset: &Ruleset) -> Vec<AgingYear> {
 /// is his Virtues and Flaws rather than his circumstances.
 ///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16594.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+// `Serialize` only: this is a computed read-out that crosses the IPC edge for the
+// sheet to show, never something a save carries back in.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize)]
 pub struct LivingConditionsModifier {
     /// The chosen rows that resolved against the table, in canonical id order.
     pub rows: Vec<Id>,
@@ -286,7 +288,9 @@ pub fn living_conditions_modifier(entity: &Entity, ruleset: &Ruleset) -> LivingC
 /// it against the book.
 ///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16569.
-#[derive(Debug, Clone, PartialEq, Eq)]
+// `Serialize` only, like every other aging read-out: the aging calculator shows
+// these terms, and none of them is ever read back off a save.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct AgingTotal {
     /// The actual age the roll was made at (`:16577`).
     pub age: u32,
@@ -437,7 +441,8 @@ pub fn aging_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Op
 /// logging the year) belongs to the single writer a later step introduces.
 ///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:16599-16615.
-#[derive(Debug, Clone, PartialEq, Eq)]
+// `Serialize` only: a reading, never a stored value.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct AgingOutcome {
     /// The total this resolves — post-clamp, so a caller can echo it back.
     pub total: i32,
@@ -457,7 +462,7 @@ pub struct AgingOutcome {
 /// One award an Aging Roll row makes: where the points go, and how many.
 ///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:16601-16615.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct AgingPointAward {
     /// Which Characteristic (or which question to ask the player) the points
     /// land on.
@@ -476,7 +481,12 @@ pub struct AgingPointAward {
 /// compile error until every reader has decided what to do with it.
 ///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:16601-16615.
-#[derive(Debug, Clone, PartialEq, Eq)]
+// **Adjacently** tagged, so the UI can switch on `kind` and a named
+// Characteristic still rides along in its own key. Internal tagging cannot carry
+// a newtype variant whose content is a plain string, and an untagged enum would
+// leave the UI guessing which of the three questions to ask.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", content = "characteristic", rename_all = "snake_case")]
 pub enum AgingPointTarget {
     /// The table names the Characteristic itself: rows 14-21 (`:16603-16610`).
     Named(Characteristic),

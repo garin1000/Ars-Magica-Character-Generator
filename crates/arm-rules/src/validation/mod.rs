@@ -44,6 +44,7 @@ use scores::*;
 use selections::*;
 use warping::*;
 
+pub use aging::aging_error_issue;
 pub use balance::{Balance, PointCeilings, compute_balance, effective_point_ceilings};
 pub use life_stage::childhood_rejection_issues;
 
@@ -189,6 +190,12 @@ impl fmt::Display for IssueSeverity {
 /// | `unknown_living_condition` | error | review | `condition` |
 /// | `living_conditions_conflict` | error | review | `condition`, `other` |
 /// | `apparent_age_above_age` | warning | review | `apparent_age`, `age` |
+/// | `aging_rules_missing` | error | review | (none) |
+/// | `aging_year_already_recorded` | error | review | `age` |
+/// | `aging_distribution_mismatch` | error | review | `owed`, `distributed` |
+/// | `aging_distribution_not_open` | error | review | `count` |
+/// | `aging_award_unpriceable` | error | review | (none) |
+/// | `aging_year_not_recorded` | error | review | `age` |
 /// | `unknown_equipment` | error | review | `item` |
 /// | `equipment_min_strength` | warning | review | `item`, `required`, `strength` |
 /// | `shield_with_two_handed_weapon` | warning | review | (none) |
@@ -545,6 +552,33 @@ impl ValidationIssue {
     /// a *should* with an explicit escape for a character who is not basically
     /// human.
     pub const CODE_APPARENT_AGE_ABOVE_AGE: &'static str = "apparent_age_above_age";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: an aging roll was
+    /// submitted against a ruleset shipping no aging table, so there is nothing to
+    /// resolve it on (Core:16597-16611). A **command-input** finding: see
+    /// [`aging_error_issue`](crate::validation::aging_error_issue).
+    pub const CODE_AGING_RULES_MISSING: &'static str = "aging_rules_missing";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the aging log already
+    /// records this age, and applying it twice would charge the character twice for
+    /// one roll (Core:16565 — one roll a year).
+    pub const CODE_AGING_YEAR_ALREADY_RECORDED: &'static str = "aging_year_already_recorded";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the points the player
+    /// distributed do not sum to the points the row awarded. The count is the
+    /// table's, not the player's (Core:16602, :16611).
+    pub const CODE_AGING_DISTRIBUTION_MISMATCH: &'static str = "aging_distribution_mismatch";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the row names its own
+    /// Characteristics (Core:16603-16610), or awards nothing, so there was nothing
+    /// for the player to place — yet points were placed.
+    pub const CODE_AGING_DISTRIBUTION_NOT_OPEN: &'static str = "aging_distribution_not_open";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the row asks for enough
+    /// Aging Points to reach the next Decrepitude level (Core:16602) and the
+    /// advancement curve cannot price that level — Decrepitude "increases as an
+    /// Ability" (Core:16617) and the table tops out. Reported rather than silently
+    /// costed at zero.
+    pub const CODE_AGING_AWARD_UNPRICEABLE: &'static str = "aging_award_unpriceable";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: no aging log entry records
+    /// the age a revert names, so there is nothing to take back. Never a silent
+    /// no-op, which would tell the player the year had been undone.
+    pub const CODE_AGING_YEAR_NOT_RECORDED: &'static str = "aging_year_not_recorded";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: an equipment slot names an
     /// id that does not resolve to any catalogue weapon, shield, or armor
     /// (Core:16944-17011).

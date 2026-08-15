@@ -9,19 +9,20 @@ use std::path::{Path, PathBuf};
 
 use std::collections::BTreeMap;
 
-use arm_rules::validation::childhood_rejection_issues;
+use arm_rules::validation::{aging_error_issue, childhood_rejection_issues};
 use arm_rules::{
-    AbilityBonus, AbilityFloor, ArtBonus, Characteristic, CharacteristicBonus, Confidence, Entity,
-    EntityKind, Grant, Id, LifeStageBudget, LocalizedRuleset, MagusMinimumAbility, MightScore,
-    PointCeilings, ReputationType, RestrictedXpPool, Ruleset, RulesetSources, Selection,
-    SpellLevelCap, SupernaturalFreeSlots, ValidationIssue, ValidationMode, ValidationResult,
-    WarpingOwed, ability_bonuses, ability_score_floors, age_ability_cap, aging_schedule,
-    aging_total, apply_childhood_package, art_bonuses, characteristic_aging_drops,
-    characteristic_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, confidence, decrepitude_score, effective_characteristics,
-    effective_might, effective_point_ceilings, entity_grants, item_level_budget, item_level_used,
-    life_stage_spell_levels, longevity_bonus, magus_minimum_abilities, power_levels_budget,
-    powers_used, reputation_grants, size, spell_level_caps, spell_levels_base, spell_levels_bonus,
+    AbilityBonus, AbilityFloor, AgingError, AgingOutcome, AgingTotal, AgingYearRequest, ArtBonus,
+    Characteristic, CharacteristicBonus, Confidence, Entity, EntityKind, Grant, Id,
+    LifeStageBudget, LocalizedRuleset, MagusMinimumAbility, MightScore, PointCeilings,
+    ReputationType, RestrictedXpPool, Ruleset, RulesetSources, Selection, SpellLevelCap,
+    SupernaturalFreeSlots, ValidationIssue, ValidationMode, ValidationResult, WarpingOwed,
+    ability_bonuses, ability_score_floors, age_ability_cap, aging_schedule, aging_total,
+    apply_childhood_package, art_bonuses, characteristic_aging_drops, characteristic_bonuses,
+    characteristic_caps, characteristic_floors, characteristic_points_granted, confidence,
+    decrepitude_score, effective_characteristics, effective_might, effective_point_ceilings,
+    entity_grants, item_level_budget, item_level_used, life_stage_spell_levels, longevity_bonus,
+    magus_minimum_abilities, power_levels_budget, powers_used, reputation_grants, resolve_outcome,
+    resolve_year, revert_year, size, spell_level_caps, spell_levels_base, spell_levels_bonus,
     spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
     spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, validate, warping,
     warping_owed, warping_owed_grants, xp_allocation,
@@ -472,6 +473,134 @@ pub fn apply_childhood_package_loaded(
         },
         Err(rejections) => ChildhoodApplication::Rejected {
             issues: childhood_rejection_issues(&rejections, ruleset),
+        },
+    }
+}
+
+/// The outcome of previewing one aging roll: the reading, or the reason there was
+/// none.
+///
+/// The three aging commands are shaped on [`ChildhoodApplication`] throughout: a
+/// refusal is an ordinary `Ok` outcome carrying localizable
+/// [`ValidationIssue`]s, never an [`AppError`], because a die typed against a year
+/// already rolled is a finding about the form the player just submitted rather
+/// than a failure of the command. [`arm_rules::AgingError`] is plain data with no
+/// prose of its own, so `aging_error_issue` turns it into something the frontend
+/// renders through the `issue-<code>` path it already has, and no English string
+/// crosses the boundary.
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum AgingProjection {
+    Previewed {
+        total: AgingTotal,
+        outcome: AgingOutcome,
+    },
+    Rejected {
+        issues: Vec<ValidationIssue>,
+    },
+}
+
+/// The outcome of applying one aging roll: the character it made plus the reading
+/// that made it, or the reason it was refused.
+///
+/// The reading comes back with the entity so the UI can confirm what it applied
+/// without recomputing it against a character that has since changed. The entity
+/// is boxed so the two variants stay comparable in size; `Box<Entity>` serializes
+/// exactly as `Entity` does.
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum AgingApplication {
+    Applied {
+        entity: Box<Entity>,
+        total: AgingTotal,
+        outcome: AgingOutcome,
+    },
+    Rejected {
+        issues: Vec<ValidationIssue>,
+    },
+}
+
+/// The outcome of taking one applied aging roll back off.
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum AgingReversion {
+    Reverted { entity: Box<Entity> },
+    Rejected { issues: Vec<ValidationIssue> },
+}
+
+/// Reads one year's aging roll without writing anything: the AGING TOTAL the typed
+/// `die` makes at `age`, and the row it lands on.
+///
+/// Read-only on purpose. The die is player input the entity must never store — the
+/// engine has no `rand` dependency and a stress die explodes, so no lookup table
+/// could stand in for this — which is why the calculator asks the engine instead of
+/// keeping the number on the character.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16615.
+pub fn aging_preview_loaded(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    age: u32,
+    die: i32,
+) -> AgingProjection {
+    let reading = aging_total(entity, ruleset, age, die)
+        .and_then(|total| resolve_outcome(entity, ruleset, total.total).map(|out| (total, out)));
+    match reading {
+        Some((total, outcome)) => AgingProjection::Previewed { total, outcome },
+        // The one thing that can be missing is the aging block itself; every other
+        // input is the character's own.
+        None => AgingProjection::Rejected {
+            issues: vec![aging_error_issue(&AgingError::NoAgingRules)],
+        },
+    }
+}
+
+/// Applies one year's aging roll, returning the character it makes.
+///
+/// The engine owns every decision ([`resolve_year`] is the aging subsystem's
+/// single writer): what the row awards, where the points may go, whether the
+/// apparent age advances, and what makes the year impossible. This only chooses
+/// the shape the frontend receives.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16617.
+pub fn aging_apply_loaded(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    age: u32,
+    die: i32,
+    distribution: &BTreeMap<Characteristic, u8>,
+) -> AgingApplication {
+    let request = AgingYearRequest {
+        age,
+        die,
+        distribution: distribution.clone(),
+    };
+    match resolve_year(entity, ruleset, &request) {
+        Ok(result) => AgingApplication::Applied {
+            entity: Box::new(result.entity),
+            total: result.total,
+            outcome: result.outcome,
+        },
+        Err(error) => AgingApplication::Rejected {
+            issues: vec![aging_error_issue(&error)],
+        },
+    }
+}
+
+/// Takes one applied aging year back off, exactly.
+///
+/// Addresses the year by `age`, which is what the log entry records; a
+/// hand-written free-text entry carries none and is out of reach here by
+/// construction (the ordinary log editor removes it instead).
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16577-16617.
+pub fn aging_revert_loaded(entity: &Entity, ruleset: &Ruleset, age: u32) -> AgingReversion {
+    match revert_year(entity, ruleset, age) {
+        Ok(entity) => AgingReversion::Reverted {
+            entity: Box::new(entity),
+        },
+        Err(error) => AgingReversion::Rejected {
+            issues: vec![aging_error_issue(&error)],
         },
     }
 }
