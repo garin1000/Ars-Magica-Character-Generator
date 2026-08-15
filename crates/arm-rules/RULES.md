@@ -3436,6 +3436,23 @@ See *Recorded gaps* at the end of this section.
     a character who actually holds a ritual — a modifier to a bonus that does not
     exist is meaningless.
 
+App/UI: `EffectiveScores` (`arm-app/src/ruleset_io.rs`) gains
+`aging: Option<AgingReadout>` — the **die-independent** half of all of the above
+(`first_roll_age`, `begins_after_age`, the `schedule`, `rolls_owed`,
+`rolls_recorded`, `age_modifier`, `living_conditions_modifier`,
+`longevity_modifier`, `longevity_clamp_active`, `fixed_total`), so the surface that
+shows the schedule and explains the total never re-derives a rules number in JS.
+Every field is a pure function of `(entity, ruleset)`, which is why it rides on the
+always-recomputed payload; the die stays out of the entity entirely. Its terms come
+from one probe of `aging_total` at a die of **zero**, so the read-out and the roll
+the player actually makes are arithmetically identical by construction — sign
+conventions included — and `fixed_total` is that probe's `uncapped_total`, i.e. the
+three-term formula above *plus* the `aging_roll` trait modifiers, which the book's
+formula block does not name but which are just as die-independent.
+`longevity_clamp_active` is deliberately **not** `AgingTotal::capped_by_longevity`:
+that one says a particular roll was cut down, this one that the `:16575` clamp
+stands over the character at all.
+
 #### The `:16575` Longevity Ritual clamp — it clamps the TOTAL, not the die
 > "A character under the influence of a Longevity Ritual should roll on the table no
 > matter what his age, but treats all rolls of 10 or more as rolls of 9 until he

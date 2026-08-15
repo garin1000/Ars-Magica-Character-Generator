@@ -326,6 +326,42 @@ export interface LifeStagePlan {
   post_gauntlet_spell_levels?: number;
 }
 
+// One year of a character's aging schedule: the age the roll is owed at, the
+// calendar year it falls in (absent without a birth year) and whether the aging
+// log already records it.
+export interface AgingScheduleYear {
+  age: number;
+  year?: number | null;
+  recorded: boolean;
+}
+
+// The die-independent half of a character's aging. Every field is a pure function
+// of the character and the rules, which is why it rides on the always-recomputed
+// effective scores: the stress die is the player's and never touches the entity,
+// so the roll itself is a separate command.
+export interface AgingReadout {
+  // The first age owing a roll (36) and the age aging begins after (35) — read
+  // out of the rules, never printed as a literal.
+  first_roll_age: number;
+  begins_after_age: number;
+  schedule: AgingScheduleYear[];
+  // schedule.length and how many of those years are already recorded, so the UI
+  // never counts a rules-defined set itself.
+  rolls_owed: number;
+  rolls_recorded: number;
+  // ceil(age/10) at the ACTUAL age; 0 when no age is entered.
+  age_modifier: number;
+  // The two modifiers the AGING TOTAL subtracts (a high one means a longer life).
+  living_conditions_modifier: number;
+  longevity_modifier: number;
+  // Whether a Longevity Ritual's under-35 clamp stands over this character — a
+  // standing predicate, unlike AgingTotal.capped_by_longevity, which says a
+  // particular roll was cut down.
+  longevity_clamp_active: boolean;
+  // The whole non-die half of the total, so the UI adds only what the player typed.
+  fixed_total: number;
+}
+
 // Score effects for the current entity, computed by the engine. Ability bonuses
 // are per-instance (only non-zero ones present). Art bonuses are per-Art (only
 // non-zero ones present). Characteristic caps/floors are the per-characteristic
@@ -354,6 +390,9 @@ export interface EffectiveScores {
   // The life-stage experience blocks, or null for a directly-entered character
   // (where `xp_pool` is the authority).
   life_stage: LifeStageBudget | null;
+  // The die-independent half of the character's aging, or null when the ruleset
+  // ships no aging rules at all.
+  aging: AgingReadout | null;
   characteristic_points_granted: number;
   ability_score_floors: AbilityFloor[];
   // Derived Size (base 0; Large +1, Giant Blood +2, Small Frame -1, Dwarf -2).
@@ -1309,8 +1348,9 @@ export interface Entity {
   mythic_choices?: Record<string, Selection>;
   // The character's age (drives the age → max-Ability-score cap). Omitted unset.
   age?: number | null;
-  // The character's apparent age (pure annotation, no mechanic — the app does not
-  // simulate the aging rolls that resolve it). Omitted when unset.
+  // The character's apparent age. Seeded at 35 and advanced by one for every
+  // resolved aging roll whose total reached the threshold; a hand-entered value is
+  // never re-seeded, only advanced. Omitted when unset.
   apparent_age?: number | null;
   // Named Personality Traits. Omitted when empty.
   personality_traits?: PersonalityTrait[];
@@ -1353,9 +1393,14 @@ export interface Entity {
   // Free-text narrative of the character's overall aging / decrepitude (pure
   // annotation, no mechanic). Omitted when empty.
   decrepitude_effect?: string;
-  // Per-year aging-roll log (free-text outcomes; pure annotation, no mechanic).
-  // Omitted when empty.
+  // Per-year aging-roll log. A resolved year carries the whole roll and is what
+  // the engine reverts; a hand-written entry carries only its free text. Omitted
+  // when empty.
   aging_log?: AgingLogEntry[];
+  // The Living Conditions the character lives under, as ids into the aging
+  // catalogue — stored choices, never the resolved modifier. Sorted, and omitted
+  // when empty (an empty set IS the table's "Average peasant 0").
+  living_conditions?: string[];
   // Identity / flavor fields (free-text, no mechanical effect). Omitted when empty.
   name?: string;
   // Short one-line tagline shown under the name in the header banner.
