@@ -206,6 +206,29 @@ fn load_ruleset_yields_abilities_and_characteristics() {
     );
 }
 
+/// The shipped `core/aging.json` must reach the engine the way the app loads it —
+/// through `load_ruleset_from_dir`, not through a test that reads the file bytes
+/// itself. Structural assertions only: the two tables are catalogue *data*, so
+/// their row counts belong in `data_integrity.rs`, never here.
+#[test]
+fn load_ruleset_yields_the_shipped_aging_tables() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let aging = ruleset
+        .aging()
+        .expect("the shipped ruleset ships aging rules");
+    // "Characters begin aging in the Winter after they turn 35"
+    // (Ars Magica - Definitive Edition (Core Rules).md:16565).
+    assert_eq!(aging.start_age, 35);
+    assert!(
+        !aging.living_conditions.is_empty(),
+        "the Living Conditions table reached the engine"
+    );
+    assert!(
+        !aging.outcomes.is_empty(),
+        "the Aging Roll table reached the engine"
+    );
+}
+
 #[test]
 fn load_ruleset_localized_names_differ_between_languages() {
     let en = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
@@ -277,6 +300,7 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("core/life_stages.json"), "").unwrap();
     fs::write(tmp.path().join("core/childhoods.json"), "").unwrap();
+    fs::write(tmp.path().join("core/aging.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();
@@ -290,6 +314,7 @@ fn load_ruleset_malformed_rules_is_ruleset_error() {
     .unwrap();
     fs::write(tmp.path().join("i18n/en/equipment.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/childhoods.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/aging.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {
@@ -339,6 +364,7 @@ fn integrity_failure_preserves_individual_messages() {
     fs::write(tmp.path().join("core/characteristics.json"), "").unwrap();
     fs::write(tmp.path().join("core/life_stages.json"), "").unwrap();
     fs::write(tmp.path().join("core/childhoods.json"), "").unwrap();
+    fs::write(tmp.path().join("core/aging.json"), "").unwrap();
     fs::write(tmp.path().join("i18n/en/virtues_flaws.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/abilities.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/arts.json"), "{}").unwrap();
@@ -352,6 +378,7 @@ fn integrity_failure_preserves_individual_messages() {
     .unwrap();
     fs::write(tmp.path().join("i18n/en/equipment.json"), "{}").unwrap();
     fs::write(tmp.path().join("i18n/en/childhoods.json"), "{}").unwrap();
+    fs::write(tmp.path().join("i18n/en/aging.json"), "{}").unwrap();
 
     let err = load_ruleset_from_dir(tmp.path(), "en").unwrap_err();
     let AppError::Ruleset {

@@ -41,6 +41,7 @@ fn load_ruleset_with_spells() -> Ruleset {
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         childhoods: None,
+        aging: None,
     })
     .unwrap()
 }
@@ -65,6 +66,7 @@ fn load_ruleset_with_mastery_abilities() -> Ruleset {
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         childhoods: None,
+        aging: None,
     })
     .unwrap()
 }
@@ -87,6 +89,7 @@ fn load_ruleset_with_equipment() -> Ruleset {
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         childhoods: None,
+        aging: None,
     })
     .unwrap()
 }
@@ -726,6 +729,7 @@ fn weapon_with_non_combat_ability_rejected_at_load() {
         characteristics: None,
         life_stages: None,
         childhoods: None,
+        aging: None,
     })
     .unwrap_err();
     assert!(
@@ -756,6 +760,7 @@ fn weapon_with_unknown_ability_rejected_at_load() {
         characteristics: None,
         life_stages: None,
         childhoods: None,
+        aging: None,
     })
     .unwrap_err();
     assert!(
@@ -1732,6 +1737,7 @@ fn load_full_ruleset() -> Ruleset {
         characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
         life_stages: Some(include_str!("../../../rules/core/life_stages.json")),
         childhoods: Some(SHIPPED_CHILDHOODS),
+        aging: Some(SHIPPED_AGING),
     })
     .unwrap()
 }
@@ -2114,16 +2120,19 @@ fn longevity_hint_reproduces_the_books_lab_total_35_example() {
     assert!(hint.halved, "the Flaw's halving is flagged for the UI");
 }
 
-/// The shipped Aging tables, read as text. The ruleset loader does not read this
-/// file yet (that is the next slice step), so the tests below deserialize the
-/// bytes straight into [`AgingRules`] — which is exactly what the loader will
-/// then do.
+/// The shipped Aging tables, read as text. `load_full_ruleset` feeds these bytes
+/// to the loader exactly as `ruleset_io.rs` does, so the row-by-row tests below
+/// read the tables back off the ruleset rather than deserializing them
+/// themselves.
 const SHIPPED_AGING: &str = include_str!("../../../rules/core/aging.json");
 const SHIPPED_AGING_EN: &str = include_str!("../../../rules/i18n/en/aging.json");
 const SHIPPED_AGING_DE: &str = include_str!("../../../rules/i18n/de/aging.json");
 
 fn shipped_aging_rules() -> AgingRules {
-    serde_json::from_str(SHIPPED_AGING).expect("the shipped aging table is valid AgingRules")
+    load_full_ruleset()
+        .aging()
+        .expect("the shipped ruleset carries the aging tables")
+        .clone()
 }
 
 /// The whole of `## Aging`'s two tables, transcribed row by row: the scalars of

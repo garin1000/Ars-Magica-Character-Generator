@@ -2036,6 +2036,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap()
     }
@@ -2461,6 +2462,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap()
     }

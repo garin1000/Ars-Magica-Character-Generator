@@ -1693,6 +1693,7 @@ mod tests {
             characteristics: None,
             life_stages: None,
             childhoods: None,
+            aging: None,
         })
         .unwrap();
         let i18n = r#"{
