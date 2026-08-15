@@ -126,6 +126,7 @@ export type AgingEffect =
   | 'aging_roll'
   | 'longevity_bonus'
   | 'no_aging'
+  | 'no_apparent_aging'
   | 'decrepitude'
   | 'living_conditions';
 export type AdvancementSource =

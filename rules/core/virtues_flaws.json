@@ -3449,7 +3449,7 @@
     "category": "supernatural",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }],
+    "effects": [{ "type": "aging_mod", "kind": "no_apparent_aging", "amount": 0 }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3484, 3499] }
   },
   {
@@ -6207,7 +6207,10 @@
     "category": "supernatural",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }],
+    "effects": [
+      { "type": "aging_mod", "kind": "no_aging", "amount": 0 },
+      { "type": "aging_mod", "kind": "no_apparent_aging", "amount": 0 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5187, 5190] }
   },
   {

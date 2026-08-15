@@ -2579,6 +2579,59 @@ fn english_and_german_i18n_cover_all_living_conditions() {
     }
 }
 
+/// The three shipped items that suspend some part of aging tag the **two
+/// independent facts** separately, because the sources state them separately:
+///
+/// - Unaging — "your aging points do not decrease your Characteristics, only
+///   building up to give you Decrepitude points … You may choose your apparent
+///   age freely" (Core:5189): both facts.
+/// - Bound to (Role) — "This Flaw also includes the effects of the Unaging
+///   Virtue, **but** the character's apparent age advances in line with their
+///   physical age" (Core:5743): the Characteristic immunity only. That *but* is
+///   what proves the two are separable at all.
+/// - Bee King — "Bee Kings do not appear to age after reaching maturity"
+///   (Core:3488): the appearance only, and nothing about Characteristics.
+///
+/// All three shipped `no_aging` alone before the tags came apart, which made the
+/// Bee King's entry simply wrong. This test is the outside witness that keeps the
+/// retag from silently regressing to one tag again.
+#[test]
+fn the_three_aging_immunities_ship_their_two_facts_separately() {
+    let rs = load_ruleset();
+    let tagged = |id: &str| -> Vec<AgingEffect> {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("the shipped catalogue carries '{id}'"));
+        let mut kinds: Vec<AgingEffect> = item
+            .effects
+            .iter()
+            .filter_map(|effect| match effect {
+                Effect::AgingMod { kind, .. } => Some(kind),
+                _ => None,
+            })
+            .copied()
+            .collect();
+        kinds.sort_unstable();
+        kinds
+    };
+
+    assert_eq!(
+        tagged("virtue.unaging"),
+        vec![AgingEffect::NoAging, AgingEffect::NoApparentAging],
+        "Unaging states both facts (Core:5189)"
+    );
+    assert_eq!(
+        tagged("flaw.bound_to_role_role"),
+        vec![AgingEffect::NoAging],
+        "Bound to (Role) keeps ageing in appearance (Core:5743)"
+    );
+    assert_eq!(
+        tagged("virtue.bee_king"),
+        vec![AgingEffect::NoApparentAging],
+        "a Bee King only stops looking older (Core:3488)"
+    );
+}
+
 /// Issue F (selection-level): a magus selecting BOTH magnitude variants of the
 /// same Virtue — here the prefix pair Major / Minor Magical Focus — must raise
 /// the incompatibility issue. Behavioral assertion (no catalogue counts).

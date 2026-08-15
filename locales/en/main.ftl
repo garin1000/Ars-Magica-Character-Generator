@@ -863,6 +863,7 @@ derived-surfaced-magic_resistance = Magic Resistance
 derived-detail-aging_roll = Aging roll
 derived-detail-longevity_bonus = Longevity bonus
 derived-detail-no_aging = Does not age
+derived-detail-no_apparent_aging = Does not appear to age
 derived-detail-decrepitude = Decrepitude
 derived-detail-living_conditions = Living conditions
 derived-detail-taught = Taught
