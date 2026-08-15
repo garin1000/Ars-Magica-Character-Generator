@@ -147,7 +147,16 @@ pub struct AgingYear {
 /// step's aging total will still compute a pre-35 roll correctly for a caller that
 /// asks for one.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16565, :16575, :2232.
+/// **Known gap — a trait may move the start age, and none does here.** Strong
+/// Faerie Blood reads "You start making aging rolls at the age of **fifty**,
+/// rather than the normal 35, and get -3 to Aging Rolls" (`:5036`). The -3 is
+/// implemented (as an `aging_roll` modifier on the shipped item, folded in by
+/// [`aging_total`]); the start-at-fifty half is **not**, so such a character is
+/// still scheduled from [`AgingRules::first_roll_age`]. It would need a per-trait
+/// override of [`AgingRules::start_age`], which no other shipped item asks for.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16565, :16575, :2232,
+/// :5036.
 pub fn aging_schedule(entity: &Entity, ruleset: &Ruleset) -> Vec<AgingYear> {
     let (Some(rules), Some(age)) = (ruleset.aging(), entity.age) else {
         return Vec::new();

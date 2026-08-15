@@ -2400,6 +2400,21 @@ fn faerie_blood_lowers_the_aging_total_by_one() {
     assert_eq!(faerie.total, 9);
 }
 
+/// Strong Faerie Blood: "You start making aging rolls at the age of fifty, rather
+/// than the normal 35, and get -3 to Aging Rolls, cumulative with any other
+/// bonuses." (Core:5036)
+///
+/// Only the -3 half is implemented. The start-at-fifty half needs a per-trait
+/// override of [`arm_rules::AgingRules::start_age`] — machinery no other shipped
+/// item asks for — so this character is still scheduled from 36, which is a known
+/// gap rather than a reading of the text.
+#[test]
+fn strong_faerie_blood_lowers_the_aging_total_by_three() {
+    let strong = shipped_aging_total(&["virtue.strong_faerie_blood"]);
+    assert_eq!(strong.trait_modifier, -3);
+    assert_eq!(strong.total, 7);
+}
+
 /// `flaw.age_quickly` and `flaw.baneful_circumstances` both ship an `aging_roll`
 /// modifier of **0**, and that 0 is deliberate — not an unfilled field waiting to
 /// be "fixed" into a number.
