@@ -423,7 +423,8 @@ and the effects those carry — is directly enterable here.
       ranges**, and Decrepitude/Warping **score** from points. Consumes 5b.
       (Done in `derived.rs`; families the app does not simulate — study/aging-roll/
       non-standard-casting/wound-recovery — are **surfaced** as labelled modifiers
-      rather than folded into a number.)
+      rather than folded into a number. The aging-roll family stopped being one of
+      them in **M6/6b6**: `aging.rs` consumes it, and `derived.rs` still lists it.)
 - [x] A numeric **aura** input field (covenant auras arrive in M8).
 - [x] Rendered in a **main-window read-out panel**; the M7 sheet window later
       re-renders the same computed values (the "UI computes no mechanics" invariant
@@ -593,9 +594,10 @@ screen** rather than an already-instantiated blank character, and a character's
 
 Slices 6b1a (phase vocabulary + issue attribution), 6b1b (the wizard shell), 6b2 (with
 its 6b2b/6b2c tails), 6b3 (6b3a's Sample Childhood engine, data and command, then
-6b3b's guided Abilities step that offers them), 6b4 (the magus's apprenticeship) and 6b5
-(both halves — the years after the Gauntlet) are **done**; next is 6b6, the aging
-engine. Detail: `M6B-IMPLEMENTATION.md`.
+6b3b's guided Abilities step that offers them), 6b4 (the magus's apprenticeship), 6b5
+(both halves — the years after the Gauntlet) and 6b6 (all three sub-slices — the aging
+engine, its phase and its step) are **done**; next is 6b7, the Crisis. Detail:
+`M6B-IMPLEMENTATION.md`.
 
 - [x] Wizard component driven by the character type's `creation_phases` list
       (`WizardShell` + `WizardStep`; the phases are now a typed `CreationPhase`, so
@@ -665,11 +667,24 @@ engine. Detail: `M6B-IMPLEMENTATION.md`.
       three a year are ever charged; the experience joins apprenticeship in the general
       pool, because only that pool may buy Arts; and the levels are additive to the
       profile's 120 rather than a second budget. A character over 35 with an empty
-      aging log is reminded of its aging rolls — a warning, until 6b6 gives it a phase.
+      aging log is reminded of its aging rolls — a warning, filed under `review` until
+      6b6 gave aging a phase of its own.
       Source: Core Rules.md:2216, :2467-2471, :2482, :7151, :2232
-- [ ] Aging engine for characters over 35: aging rolls, Characteristic loss,
-      Decrepitude accrual — the guided age/life-stage computation. Source:
-      Core Rules.md:16563-16640
+- [x] Aging engine for characters over 35 — **6b6**: the aging table, the Living
+      Conditions table and the thresholds are `rules/core/aging.json`, so the engine
+      holds no aging number of its own; a character owes one roll a year from the
+      Winter after 35 (stored as `start_age: 35`, first roll derived at 36); the
+      player types the stress die and the engine returns the whole total — age term,
+      Living Conditions, Longevity Ritual and the Virtue/Flaw modifiers — resolves it
+      against the table, and **applies** the year (aging points, apparent age, a
+      structured log entry) with an exact revert. Living Conditions are stored as
+      chosen ids, never a resolved integer; Decrepitude stays derived; the two
+      immunities are separate tags (Unaging has both, Bound to Role only the
+      Characteristic one, Bee King only the appearance one). Aging is its own creation
+      phase, declared last on all four profiles, and `SCHEMA_VERSION` goes 14 → 15
+      because the log entry's `year` became optional. The Crisis is flagged, not yet
+      resolved — that is 6b7. Source: Core Rules.md:16563-16617, :2232, :5036, :5189,
+      :5743, :3488, :10662, :10672
 - [ ] Guided House+specialisation step and guided Arts allocation step (auto-grant
       logic already in M4)
 - [ ] Grog wizard flow (subset of phases)
@@ -790,7 +805,7 @@ whole document from `entity` + `LocalizedRuleset` + a caller-supplied
 string; `arm-app` owns the file IO, the native save dialog and the
 `export_markdown` / `export_label_keys` commands; and the toolbar has an Export
 button. Byte-deterministic output, a golden fixture, and a real-binary e2e spec
-(21 specs total) hold it in place.
+(21 specs at the time; the suite is **30** today) hold it in place.
 
 **6a is done**: the app opens on a startup choice screen instead of a blank
 companion, and a character's type is chosen once at creation and immutable
@@ -827,12 +842,35 @@ rejections stay apart from `validate()`'s findings, and the `apply_childhood_pac
 command. 6b3b shipped the surface: the Abilities step now offers a funding mode
 *derived* from the plan on the entity — a life-stage panel with the funding radio, the
 age and the native language, the XP bar's read-only life-stage budget, and a childhood
-package picker with a field per parameter slot. A magus is refused the guided mode in
-both engine and UI until 6b4. The e2e suite is 27 specs.
+package picker with a field per parameter slot. A magus was refused the guided mode in
+both engine and UI until 6b4 lifted it. The e2e suite was 27 specs.
 
-Next: **6b4 onwards** — the magus's apprenticeship and post-Gauntlet accrual, and
-aging for characters over 35 (with die results typed by the user, so the engine stays
-deterministic). Slice-by-slice plan: `M6B-IMPLEMENTATION.md`.
+**6b4 is done**: the magus's apprenticeship. Its fifteen fixed years earn the 240
+experience the rules grant, and only that pool may buy Arts as well as Abilities, so
+both the Abilities and the Arts step spend from it; later life stops at the Gauntlet and
+becomes an Abilities-only restricted pool; and every magus, guided or flat, is held to
+the minimum Abilities the Order admits (Parma Magica, Magic Theory, a dead language) as
+errors, with the rulebook's recommended scores beside them as warnings, rendered as a
+checklist. 28 specs.
+
+**6b5 is done**: the years after the Gauntlet. A guided magus carries two ages, and
+every year between them is worth 30 points that split between experience and spell
+levels, less 10 points for each of at most three charged lab seasons a year. One
+Gauntlet age is stored — absent still means a magus standing at its Gauntlet, so no save
+migrated. 29 specs.
+
+**6b6 is done**: the aging engine. The aging table, the Living Conditions table and the
+thresholds are `rules/core/aging.json`; a character over 35 owes one roll a year from
+36; the player types the stress die and the engine returns the whole total, resolves it
+against the table and applies the year — aging points, apparent age, a structured log
+entry — with an exact revert. Aging is a creation phase of its own, declared last on all
+four profiles, and it carries the first schema bump since M5.5 (14 → 15, because the log
+entry's `year` became optional). The Crisis is flagged, not resolved. 30 specs.
+
+Next: **6b7** — the Crisis and its table: the crisis total, the Decrepitude level it
+reaches, and the Longevity Ritual spent surviving it. Smaller than originally scoped,
+because 6b6 took the per-year write-back with it. Then **6b8** closes the milestone.
+Slice-by-slice plan: `M6B-IMPLEMENTATION.md`.
 
 ---
 

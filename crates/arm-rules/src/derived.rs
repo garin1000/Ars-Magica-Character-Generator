@@ -26,10 +26,16 @@
 //!   unit tests assert the number moves. Those tests are what guarantee the 5b
 //!   in-play effects are actually consumed.
 //!
-//! Surfaced-only 5b families (study / aging-roll / non-standard-casting /
-//! wound-recovery) are **listed** as labelled [`SurfacedModifier`]s rather than
-//! folded into a simulated number, because the app does not simulate those
-//! subsystems.
+//! Surfaced-only 5b families (study / non-standard-casting / wound-recovery) are
+//! **listed** as labelled [`SurfacedModifier`]s rather than folded into a
+//! simulated number, because the app does not simulate those subsystems.
+//!
+//! The **aging** family is listed here too, but it is no longer surfaced-only:
+//! M6/6b6's `aging.rs` consumes it (`aging_roll` and `longevity_bonus` move the
+//! aging total, `living_conditions` the modifier it subtracts, and the two
+//! immunity tags gate the drop and the apparent age). It stays in the read-out
+//! because the read-out is the character's standing modifier list, and it is the
+//! aging step — not this module — that computes the number.
 //!
 //! Source line ranges (all `Ars Magica - Definitive Edition (Core Rules).md`) are
 //! cited at each computing function and in `crates/arm-rules/RULES.md` (§5i).
@@ -192,7 +198,9 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                         })
                     }
                 },
-                // Surfaced-only families: listed labelled, never simulated.
+                // Surfaced-only families: listed labelled, never simulated. Aging is
+                // the exception — `aging.rs` consumes it (M6/6b6); it is listed here
+                // as a standing modifier, not because nothing reads it.
                 Effect::AgingMod { kind, amount } => m.surfaced.push(SurfacedModifier {
                     family: ModifierFamily::Aging,
                     detail: kind.to_string(),

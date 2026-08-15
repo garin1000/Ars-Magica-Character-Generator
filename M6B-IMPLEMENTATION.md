@@ -9,14 +9,19 @@ here and the matching `PLAN.md` box in the same commit as green code.
 type is fixed at creation via `store.createCharacter(typeId)`. 6b1b replaced that
 screen's hardcoded-disabled wizard button with one guided entry per character type.
 
-**Status: 6b1a, 6b1b, 6b2, 6b3 (both halves), 6b4 and 6b5 (both halves) are done.**
-Next is **6b6** — the aging tables, the aging total and outcome resolution, which is
-also where `aging_rolls_pending` (shipped in 6b5a as `life_stage_aging_rolls_pending`,
-against `CreationPhase::Review`
-for want of anywhere better) moves onto its own `Aging` phase and its threshold moves
-out of Rust into `rules/core/aging.json`. The `PLAN.md` 6b3 boxes are ticked as of
-6b3b; 6b4 ticked the first half of the magus life-stage story (apprenticeship) and 6b5
-ticks the second (the years after the Gauntlet), so both boxes are now closed.
+**Status: 6b1a, 6b1b, 6b2, 6b3 (both halves), 6b4, 6b5 (both halves) and 6b6 (all
+three sub-slices) are done.**
+Next is **6b7** — the Crisis, the Decrepitude levels it reaches, and the crisis table.
+It is **smaller than the sketch below**, because 6b6 already took the per-year
+write-back that sketch scoped to 6b7: `resolve_year` exists, is the only writer, and
+`revert_year` undoes it exactly, so 6b7 adds the crisis roll and its table on top of
+machinery that is already in place rather than building the write-back first.
+`aging_rolls_pending` (shipped in 6b5a as `life_stage_aging_rolls_pending`, against
+`CreationPhase::Review` for want of anywhere better) now sits on its own `Aging` phase
+under its own name, and its threshold is `rules/core/aging.json`'s `start_age` rather
+than a Rust constant. The `PLAN.md` 6b3 boxes are ticked as of 6b3b; 6b4 ticked the
+first half of the magus life-stage story (apprenticeship) and 6b5 the second (the years
+after the Gauntlet); 6b6 ticks the aging box.
 
 6b2 shipped as five commits: the life-stage rules as data; the missing Poor Major
 Flaw plus the Wealthy/Poor rate effect; `Entity::life_stages` and the derived
@@ -93,8 +98,8 @@ canonical key/array sorting. German labels must match
 | **6b3b** ✅ | The "sophisticated" Abilities step: funding-mode toggle, life-stage panel, package picker, XP-bar guided branch, e2e | 6b3a |
 | **6b4** ✅ | Magus apprenticeship (240 xp / 120 spell levels / hard minimums) | 6b2 |
 | **6b5** ✅ | Post-Gauntlet accrual (30 pts/year, lab-season deduction, xp↔spell-level split) | 6b4 |
-| **6b6** | Aging tables + aging total + outcome resolution | 6b1a |
-| **6b7** | Crisis, Decrepitude levels, per-year write-back | 6b6 |
+| **6b6** ✅ | Aging tables + aging total + outcome resolution **+ the per-year write-back**, as a creation phase of its own | 6b1a |
+| **6b7** | Crisis, Decrepitude levels, the crisis table — the write-back landed in 6b6, so this is smaller than the sketch below | 6b6 |
 | **6b8** | Per-type flow completion, completeness indicators, guided copy, milestone gate | 6b2-6b7 |
 
 6b1 was one slice until review: ~24 TDD steps spanning 85 emit sites, a contract-table
@@ -913,12 +918,13 @@ life-stage provenance describes all four periods rather than two.
   with a plan: "a character over the age of 35 must make aging rolls before the game
   begins" (`:2232`, `:16565`) is about the character, and the post-Gauntlet years merely
   make the case routine. Strictly over — aging begins "in the Winter after they turn 35",
-  so 35 owes nothing and 36 owes the first roll. It is a **warning** on phase `review`,
-  so Finish stays live. The threshold was a cited Rust constant
+  so 35 owes nothing and 36 owes the first roll. It is a **warning**, so
+  Finish stays live. The threshold was a cited Rust constant
   (`AGING_ROLLS_START_AGE`) until 6b6a created `rules/core/aging.json`; it now reads
-  `AgingRules::first_roll_age()`, and the constant is gone. The `review` phase is still a
-  placeholder and says so at the emit site: the finding moves onto the new `Aging` phase
-  when 6b6b adds the variant.
+  `AgingRules::first_roll_age()`, and the constant is gone. It shipped on phase `review`
+  as an avowed placeholder; **6b6b moved it onto `CreationPhase::Aging`** — the step
+  where the age is typed and the rolls are made — and renamed it `aging_rolls_pending`
+  in the same slice.
 
 ### Findings the e2e spec pinned
 
@@ -947,6 +953,228 @@ life-stage provenance describes all four periods rather than two.
   Deliberately *not* made exclusive with a plan the way `xp_pool` is
   (`life_stage_xp_pool_conflict`): the override is the flat flow's escape hatch, and the
   two answer different questions.
+
+---
+
+## Slice 6b6 — The aging engine ✅
+
+The last mechanical gap in the guided wizard. Until this slice the app *knew* a
+character over 35 owed aging rolls — 6b5a shipped the warning — and could then do
+nothing about it: the threshold was a Rust constant, there was no aging table, no aging
+total, no Living Conditions, and the aging log was free text the engine never read. A
+magus of 60 owed 25 rolls and the app could only say so. Now aging is a creation phase
+of its own: the player types the stress die, the engine explains the total, resolves it
+against the table and **applies** it — aging points, apparent age, a structured log
+entry — one year at a time, with an exact undo, and every number lives in
+`rules/core/aging.json`. Full provenance — the verbatim `:16563-16617` excerpts, every
+shipped value, and every recorded gap — is `## Aging (M6/6b6)` in
+`crates/arm-rules/RULES.md`; this section records the slice, not the rule.
+
+Split in three, each closing the full gate on its own: **6b6a** is the engine, its rules
+data and the loader wiring; **6b6b** crosses the IPC boundary and makes the phase real;
+**6b6c** is the step's own input surfaces.
+
+### What shipped
+
+**Engine — 6b6a (18 commits, `bdeea62..5203abb`).** `rules/core/aging.json` (`start_age`
+35, `age_divisor` 10, `apparent_age_increase_min` 3, `longevity_clamp { max_total: 9,
+until_age: 35 }`, ten Living Conditions rows of which **five** are cumulative, and
+eleven outcome rows, each row carrying its own `source` line) plus
+`rules/i18n/{en,de}/aging.json`; a new `crates/arm-rules/src/aging.rs` holding
+`aging_schedule`, `living_conditions_modifier`, `aging_total`, `resolve_outcome`,
+`resolve_year`, `revert_year` and `AgingRules::{first_roll_age, age_modifier}`;
+`Ruleset.aging` with `validate_aging_rules` refusing a table whose rows do not tile the
+integers, that has no single open-ended last row, or whose clamp does not sit strictly
+below the first point-granting row; `Entity.living_conditions: BTreeSet<Id>`; the
+widened `AgingLogEntry` and `SCHEMA_VERSION` **14 → 15**; the `NoAging` /
+`NoApparentAging` split with the three-way retag; Strong Faerie Blood's missing −3;
+`effective::aging_drops` honouring Unaging; and three new findings
+(`unknown_living_condition`, `living_conditions_conflict`, `apparent_age_above_age`)
+while `AGING_ROLLS_START_AGE` was deleted in favour of the data.
+
+**IPC and the phase — 6b6b (6 commits, `133207c..baade08`).**
+
+- **The rename, alone** (`133207c`). `life_stage_aging_rolls_pending` →
+  `aging_rolls_pending`: the prefix was a false statement (the finding fires for every
+  character, plan or no plan) and `life_stage_*` is a namespace whose nine other codes
+  are all `abilities` findings.
+- **`EffectiveScores.aging`** (`388320e`). An `AgingReadout` of the whole die-independent
+  half — `first_roll_age`, `begins_after_age`, the `schedule`, `rolls_owed`,
+  `rolls_recorded`, `age_modifier`, `living_conditions_modifier`, `longevity_modifier`,
+  `longevity_clamp_active` and `fixed_total` — so the UI adds only what the player typed.
+  Mirrored in `ui/src/lib/types.ts` behind its **own** drift test rather than by widening
+  `every_life_stage_field_is_mirrored_in_the_frontend_types`, whose scope note forbids it.
+- **The three commands** (`ff5137e`). `aging_preview`, `aging_apply` and `aging_revert`,
+  thin `arm-app` wrappers over the pure engine on the `apply_childhood_package` model.
+- **The panels** (`027c5a9`). `AgeFields.svelte` and `AgingRecordPanel.svelte` extracted
+  out of `CharacterDetails.svelte` with every existing testid verbatim, a new
+  `AgingSchedulePanel.svelte`, and `AgingPanel.svelte` composing the last two so the
+  wizard and the editor mount the same thing and can never drift.
+- **The phase** (`b931861`), deliberately one indivisible commit — `CreationPhase::Aging`
+  before `Review`, `ALL` 11 → **12**, `phase-aging` in both locales, `| 'aging'` in the TS
+  union, `AgingStep.svelte` in `WizardStep`'s table, and **eleven** aging codes filed onto
+  the new phase: the two pre-existing ones, 6b6a's three, and the six `AgingError`
+  refusals. Widening the phase set breaks the Rust contract tests, the Fluent coverage
+  test, the TS union mirror and `satisfies Record<CreationPhase, StepDef>` at once, and no
+  ordering of smaller commits leaves the gate green in between.
+- **The profiles** (`baade08`). `"aging"` last on all four types in
+  `rules/core/character_types.json`, guarded by
+  `every_shipped_profile_declares_the_aging_phase_last`, plus the stale copy that said
+  aging was not part of the guided flow (`wizard-review-hint` in both locales,
+  `WizardReview.svelte`, the ownerless-findings comments).
+
+**The step — 6b6c (5 commits, `fbfd864..a9966ed`).**
+
+- **`LivingConditionsPicker.svelte`** (`fbfd864`). One checkbox per catalogue row,
+  `living-condition-{id}`, labelled through `rules/i18n/<lang>/aging.json` and never as a
+  slug, each row showing its own `formatSigned` modifier, the five cumulative rows marked
+  from the data, and a `living-conditions-total` showing the **engine's** modifier rather
+  than a JS sum.
+- **`LongevityPanel` on the step** (`f67c832`), mounted by `AgingStep` and *not* inside
+  `AgingPanel`, which would have put the ritual on the Details tab as well. It stays on
+  the Possessions tab too.
+- **`AgingRollCalculator.svelte`** (`1cba191`). `aging-die-input` with no maximum (a
+  stress die explodes), the engine's total and its parts, the outcome named in words, a
+  per-Characteristic distributor that will not submit until it sums to the award, Apply,
+  and a Revert per recorded year. `agingDraft` / `agingPreview` are UI-only `$state` on
+  the `childhoodDraft` model, with the same debounce and `#seq` guard.
+- **The sheet** (`6a7808f`). The Markdown export prints the chosen Living Conditions
+  ahead of the annotation block's subsections and each log entry's die and total, instead
+  of silently dropping them.
+- **The 30th e2e spec** (`a9966ed`). `ui/e2e/specs/aging.e2e.js` drives a **grog** — the
+  suite's first grog wizard spec — from "nothing owed yet" through age 40, five owed
+  years, two cumulative conditions, a ritual bonus, a typed die, Apply, Revert, re-apply,
+  Finish, save and reload.
+
+### Decisions of record
+
+- **`:16575` clamps the aging TOTAL, not the die.** The table's index column is headed
+  "Aging Roll" and the formula block "AGING TOTAL" — one quantity — and 10 is meaningful
+  only in the table's index space, where it is exactly the first row granting a point.
+  Decisive: under the die reading a 34-year-old average peasant with the weakest legal
+  ritual (+1) totals `9 + ⌈34/10⌉ − 1 = 12` and takes an aging point, while the same
+  character *without* a ritual makes no roll at all — the die reading makes the ritual
+  strictly worse than nothing in exactly the case `:16575` calls safe ("no risk of
+  actually aging before any other characters"). Under the total reading both halves of
+  the sentence fall out. The reading is not merely asserted: `validate_aging_rules`
+  refuses to load a table whose `longevity_clamp.max_total` is not **strictly below**
+  `outcomes[0].min`, so the shipped `9 < 10` is a checked identity between two sentences
+  rather than a transcribed number.
+- **One apparent-age threshold, not a second table array.** `apparent_age_increase_min: 3`
+  plus the single `outcomes` array serves the whole of `:16577`, which states it as a
+  threshold in prose ("Particularly low rolls … **Otherwise** …"). The rows genuinely
+  overlap — 15 both ages the character a year *and* costs Sta a point — but that is one
+  cut across one array, and a second array is a second thing that can disagree with
+  itself. (This tracker's *Table decisions* row said "two arrays"; corrected in place.)
+- **`start_age: 35` in the data; `first_roll_age()` derives 36.** The book's number is 35
+  ("Characters begin aging in the Winter after they turn 35", `:16565`); 36 is an engine
+  derivation, and it is the one deliberate off-by-one in the engine, done once in a cited
+  function and pinned by a named test. That test also disposes of `:2496` in writing —
+  "make aging rolls for the character each year **from the age of 35**" is the only line
+  that reads against the derivation, and `:2232`'s "a character over the age of 35 must
+  make aging rolls … before the game begins" is the creation-time rule and wins.
+- **Living Conditions are stored choices, never a resolved integer.**
+  `Entity.living_conditions` is a `BTreeSet<Id>` into the catalogue: a *set*, because the
+  five asterisked rows are cumulative with each other (`:16594`); a `BTreeSet`, so
+  canonical serialization needs no normalize step; and an **empty** set is not an
+  incomplete entry but the table's own "Average peasant 0". An integer could not answer
+  "which conditions?" for the sheet, and M8's covenant will hand over ids.
+- **The V/F aging modifiers are consumed, not decorative** — and one number was missing.
+  `Effect::AgingMod` now moves real quantities: `living_conditions` amounts join the
+  conditions modifier, which the total **subtracts**, while `aging_roll` amounts are
+  **ADDED with their stored sign**. Both directions come out of one stored sign (Mild
+  Aging +1 → total −1; Faerie Blood −1 → total −1), so the sign trap carries a named test
+  asserting the two move oppositely from the same die. `virtue.strong_faerie_blood`
+  carried no `aging_mod` at all though `:5036` grants it −3; harmless while nothing read
+  the modifiers, a wrong number in a shipped character the moment they were read.
+- **`NoAging` and `NoApparentAging` are orthogonal.** Bound to (Role) is the proof: "This
+  Flaw also includes the effects of the Unaging Virtue, **but** the character's apparent
+  age advances in line with their physical age" (`:5743`) — one immunity without the
+  other, in one sentence. So `NoAging` keeps meaning "no Characteristic drop", an additive
+  `NoApparentAging` means "the face does not advance", `virtue.unaging` carries both,
+  `flaw.bound_to_role_role` only the first, and `virtue.bee_king` — which "do[es] not
+  appear to age" (`:3488`) and nothing more — was **mis-tagged** `no_aging` and is now
+  `no_apparent_aging` alone. `resolve_outcome` reads the second, `effective::aging_drops`
+  the first.
+- **`resolve_year` is the only writer, and `revert_year` is exact.** A pre-play catch-up
+  can run to 25 rolls, and 25 rolls with no undo is not shippable — so the widened
+  `AgingLogEntry` records precisely what its year did (die, total, conditions, the point
+  map, whether the apparent age moved, whether a Crisis was flagged) and `revert_year`
+  subtracts exactly that and removes the entry. `resolve_year` refuses a year already
+  recorded, and it never touches Decrepitude: the score stays derived from
+  `aging_points`.
+- **The point distribution is a per-Characteristic map, not a single pick.** `:16602` and
+  `:16611` say "Gain sufficient Aging Points (**in any Characteristics**) …" — plural —
+  and reaching the next Decrepitude level costs five points, so forcing them all into one
+  Characteristic would force drops the player may legally avoid. The map is validated to
+  sum to the award, and naming a Characteristic against a row the table already fixed is
+  refused rather than silently dropped.
+- **`SCHEMA_VERSION` 14 → 15.** `AgingLogEntry::year` became `Option<i32>`, because a
+  character with no birth year has no calendar year to write and `age` is what the
+  schedule matches on. That is not forward-compatible: a new save may omit `year`
+  entirely, which a schema-14 reader rejects. Every other new field is additive, so a
+  schema-14 save still loads with **no migration code**. (This tracker's blanket
+  "**`SCHEMA_VERSION` stays 14**" under *Hard problems, decided* was written for the
+  purely additive 6b2-6b5 fields; corrected in place.)
+- **The Aging phase is declared last on all four profiles, and the wizard never skips
+  it.** Last, because the rulebook's own creation summary never mentions aging and
+  `:2232` places the rolls "before the game begins", and because the total needs the final
+  age, Characteristics and ritual. Not skipped *dynamically*: `wizardPhases` is a pure
+  function of the **profile** and `wizardStep` / `wizardFurthest` are indices into it, so
+  making the list depend on the entity would silently re-point the current step the moment
+  an age is typed. A character who owes nothing gets an informative "nothing owed yet"
+  state with the threshold read out of the data.
+- **The die is UI-only state.** `agingDraft` and `agingPreview` live in `$state` beside
+  `childhoodDraft` and never reach the entity, and they schedule a preview rather than a
+  validate, because a typed die is not an entity edit. `dirty` is a snapshot compare of
+  `this.entity`, so keeping the draft off it is what makes "the calculator does not
+  persist" mechanically true rather than merely intended — the e2e spec asserts the
+  document is still clean after a die, a total and an outcome are on screen.
+
+### Findings the e2e spec pinned
+
+- **The pending-rolls finding is keyed on the log, not on the aging points.** A legal roll
+  can award nothing at all, so a character who rolls well would be nagged forever if the
+  finding watched `aging_points`. Recording the year clears it; reverting the year brings
+  it back.
+- **Four e2e specs pinned the schema version as a literal.** `create-character`,
+  `familiar`, `spells` and `talisman` each asserted `schema_version === 14` — the first
+  bump since those specs were written, and the point at which four unrelated specs go red
+  together. They are now `15`, and `familiar`'s comment no longer claims a fixed number.
+- **The exact issue count had to move off Review.** `magus-post-gauntlet.e2e.js`'s aging
+  assertion was split into two `it`s: the **exact** `=== 1` count now runs on the aging
+  step, where only the docked, phase-filtered panel is mounted, and the Review one keeps
+  its loose `> 0` because that step renders the panel twice (6b5's finding, unchanged).
+  The exact count is the phase-attribution proof, so it belongs where the filter is.
+- **The guided aging step is the only place a grog can enter a Longevity Ritual bonus.**
+  `:10672` lets anyone hold an externally-made ritual, but the editor's only home for it is
+  the Possessions tab, which is magus-gated. The panel degrades correctly on its own (only
+  the Creo Corpus suggestion is magus-gated), so the step simply mounts it; making the
+  ritual reachable in the *editor* for a non-magus is recorded for **6b8**.
+
+### Deliberate non-changes
+
+- **The Crisis is flagged, never resolved.** `AgingOutcome.crisis` is set for totals of 13
+  and 22+, and the UI says the roll is not modelled yet. No crisis rows ship at all: none
+  of their numbers has a cross-check the loader could apply, and data with no trust gate is
+  data nobody can trust. The table, `crisis_total`, `:16636`'s "Virtues that affect aging
+  rolls do not affect crisis survival rolls", `:16619`'s Decrepitude-first ordering and
+  `:16573`'s spent ritual are all **6b7**.
+- **Decrepitude is still derived, never stored.** `resolve_year` writes aging points; the
+  score follows through the existing `decrepitude_score`.
+- **The log records the total it computed**, which does not offend "saves store choices,
+  not resolved values": it is the historical record of a roll, and the conditions and
+  ritual bonus that produced it may legitimately change afterwards.
+- **Strong Faerie Blood's −3 shipped; its start-at-fifty did not.** A per-trait start-age
+  override is machinery this slice does not need; it is a recorded gap in RULES.md, beside
+  Might-holders' immunity to aging and the Bronze cord's "rolls to resist aging" (whose
+  natural referent is the *crisis survival* roll, so 6b7 revisits it).
+- **Age Quickly and Baneful Circumstances keep `aging_mod` amount 0** and stay surfaced —
+  doubled rolls and a conditional extra roll are schedule rules, not modifiers.
+- **No consolidation of the two age inputs.** `AgeFields` closed a real gap (under flat
+  funding there was no age input anywhere in the wizard, because `life-stage-age-input`
+  renders only for life-stage funding), but the editor's own documented duplication stays
+  as it is — **6b8**'s call. Covenant-derived Living Conditions remain **M8**.
 
 ---
 
@@ -1032,7 +1260,7 @@ narrative` with no effects, so it gains the same treatment in the same commit.
 | Age→max score, advancement | **Data — already is.** No change |
 | Later-life rates 15/20/10 | **Data on the V/F items** via a new `Effect::LaterLifeXpRate { amount }`; base 15 in `rules/core/life_stages.json` |
 | Living Conditions (16581-16594) | **Data** in `rules/core/aging.json` + names in `rules/i18n/<lang>/aging.json` — an open catalogue of situations; the engine branches only on `modifier`/`cumulative` |
-| Aging Roll table (16597-16611) | **Split**: rows are data, `AgingOutcome` is a Rust enum — the engine genuinely branches ("who picks the Characteristic", "does a Crisis follow"), so a new kind must be a compile error. Two arrays, because a roll of 15 both ages you a year *and* costs Sta a point |
+| Aging Roll table (16597-16611) | **Split**: rows are data, `AgingOutcome` is a Rust enum — the engine genuinely branches ("who picks the Characteristic", "does a Crisis follow"), so a new kind must be a compile error. ~~Two arrays, because a roll of 15 both ages you a year *and* costs Sta a point~~ — **corrected in 6b6a: one array.** The overlap is real, but it is one *cut*, not a second table: `apparent_age_increase_min: 3` plus the single `outcomes` array expresses all of 16577, which states it as a threshold in prose ("Particularly low rolls … **Otherwise** …"). A second array is a second thing that can disagree with itself. See the **Slice 6b6** section |
 | Crisis table (16621-16632) | **Split**: rows are data, `CrisisSeverity` is a Rust enum; ease factors and CrCo levels are numbers |
 | Decrepitude levels | **No new table** — reuse `AdvancementTable::xp_for_score` |
 | Sample Childhoods | **Data** in `rules/core/childhoods.json` + i18n names |
@@ -1075,6 +1303,12 @@ narrative` with no effects, so it gains the same treatment in the same commit.
 - **`SCHEMA_VERSION` stays 14.** Every new field is additive `#[serde(default,
   skip_serializing_if)]`, exactly like `mastery_abilities`, `warping_choices` and
   `LongevityRitual::focus` before it. No migration code.
+  **Corrected in 6b6a: it goes 14 → 15.** The claim held for every field 6b2-6b5 added,
+  but 6b6 did not only add — `AgingLogEntry::year` became `Option<i32>` (a character with
+  no birth year has no calendar year to write, and `age` is what the schedule matches on),
+  so a new save may omit a key a schema-14 reader requires. That is not forward-compatible
+  and is the one M6b change that earns a bump. Still **no migration code**: every other new
+  field defaults, and serde reads a legacy bare `year` straight into `Some`.
 - **Affinity vs whole-score storage: nothing changes.** `charged_cost` already charges
   `⌈cost·2/3⌉` and the +2 cap bump is already in `validate_abilities`. Add two regression
   tests, no code: a childhood-funded Affinity ability draws the reduced amount from the
@@ -1134,8 +1368,9 @@ what this became. The arithmetic held; two details did not.) `years × 30 − Σ
 is free), plus the stored xp↔spell-level split. New codes:
 `life_stage_spell_level_split_exceeds_points` (error, `spells`),
 `life_stage_lab_seasons_out_of_range` (error), and `life_stage_aging_rolls_pending`
-(warning) — the seam 6b6/6b7 fill, from 2494/2496 and 2232's "must make aging rolls
-before the game begins".
+(warning; **renamed `aging_rolls_pending` and moved onto the `Aging` phase in 6b6b**) —
+the seam 6b6/6b7 fill, from 2494/2496 and 2232's "must make aging rolls before the game
+begins".
 
 Two corrections to the above. **The split finding shipped under `abilities`, not
 `spells`**: the number is typed on the Abilities step, and the magus phase order is
@@ -1149,7 +1384,10 @@ in silence. The per-year clamp also did not survive as written — the seasons a
 as **one total of charged seasons**, so `Σ min(seasons, 3)` collapses to a single
 `min(seasons, 3 × years)` (see the decisions above).
 
-**6b6 — Aging tables and totals.** New `crates/arm-rules/src/aging.rs`: `aging_total` =
+**6b6 — Aging tables and totals.** (**Shipped, and larger than this sketch** — read the
+**Slice 6b6** section above. The write-back scoped to 6b7 below moved into it on the
+user's ruling, so `resolve_year`/`revert_year`, the `Aging` phase and the whole step are
+6b6.) New `crates/arm-rules/src/aging.rs`: `aging_total` =
 `die + ⌈age/10⌉ − living conditions − longevity bonus − aging-roll modifiers`, with `die`
 **user-entered** and the doc comment saying so; 16575's pre-35 "treat 10+ as 9" clamp
 applied to the die and reported as `capped_by_longevity` so the UI can explain the
@@ -1160,16 +1398,30 @@ number; 16577's "actual, not apparent, age" as a named test; `resolve_outcome`;
 to `creation_phases` on all four profiles (and therefore an `Aging` variant plus its
 Fluent keys), which 6b1's gating then consumes for free.
 
-**6b7 — Crisis, Decrepitude levels, write-back.** `crisis_total` = `simple die +
-⌈age/10⌉ + Decrepitude`, with 16636 ("Virtues that affect aging rolls do not affect
-crisis survival rolls") as a named regression test — the rule most likely to be silently
-broken later. `resolve_year` is the **only writer**: it adds aging points, bumps apparent
-age, appends a log entry, raises Decrepitude **before** the crisis roll (16619), and
-spends the Longevity Ritual on a crisis (16571) as a surfaced note rather than a silent
-deletion. It never kills the character and never rolls a die. `AgingLogEntry` widens
-additively (roll, total, conditions, points, crisis roll and severity) while
-`aging_points` stays authoritative; divergence is a warning. Two new commands:
-`aging_year`, and `aging_schedule` riding on `EffectiveScores`.
+Two corrections to the formula above, both settled in 6b6a. **The clamp applies to the
+TOTAL, not the die**: the table's index column and the formula block are the same
+quantity, and under the die reading a 34-year-old with the weakest legal ritual takes an
+aging point that the same character *without* a ritual could not take — the opposite of
+what 16575 promises. The reading is enforced at load, since `max_total < outcomes[0].min`
+is checkable (9 < 10). And **the aging-roll modifiers are ADDED with their stored sign**,
+not subtracted: only the two *named* terms of 16567-16569, Living Conditions and the
+Longevity Ritual, are subtracted, and writing the trait modifiers as a fourth subtracted
+term would flip the sign of every one of them (Faerie Blood's −1 would *raise* the total).
+
+**6b7 — Crisis and the crisis table.** (**Smaller than this sketch**: everything below
+about `resolve_year` and the widened `AgingLogEntry` shipped in 6b6, and the two commands
+became three — `aging_preview`, `aging_apply`, `aging_revert` — with the schedule riding
+on `EffectiveScores.aging` as sketched. What is left is the crisis itself.) `crisis_total`
+= `simple die + ⌈age/10⌉ + Decrepitude`, with 16636 ("Virtues that affect aging rolls do
+not affect crisis survival rolls") as a named regression test — the rule most likely to be
+silently broken later. The crisis rows (16621-16632) ship for the first time here: 6b6
+deliberately shipped none, because no crisis number has a cross-check the loader could
+apply. `resolve_year` gains the crisis leg — it must raise Decrepitude **before** the
+crisis roll (16619) and spend the Longevity Ritual on a crisis (16571) as a surfaced note
+rather than a silent deletion — while keeping its existing guarantees: it never kills the
+character and never rolls a die, `aging_points` stays authoritative, and `revert_year`
+must stay exact across the new leg. `AgingLogEntry` widens once more, additively, for the
+crisis roll and its severity.
 
 **6b8 — Per-type flow completion and the milestone gate.** Walk grog, companion, mythic
 companion and magus end to end and close what the composed flow reveals — above all the

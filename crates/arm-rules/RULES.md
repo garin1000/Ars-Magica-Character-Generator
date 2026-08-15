@@ -1936,13 +1936,17 @@ carries a `NonStandardCasting` variant (`silent` / `still` / `silent_and_still`,
 residuals clamped at 0). Every **other** `SpecialCastingMod` kind (spontaneous-magic
 variants, circumstantial halvings) stays surfaced-only.
 
-**Surfaced-only families** (study / aging-roll / conditional-casting /
-wound-recovery / realm-conditional MR: `AdvancementMod`, `AgingMod`, the non-computed
+**Surfaced-only families** (study / conditional-casting /
+wound-recovery / realm-conditional MR: `AdvancementMod`, the non-computed
 `SpecialCastingMod` kinds, `AbilityRollMod`, the `HealthTrack::{FatigueRoll,
 CastingFatigue, Recovery}` tracks, and the non-`no_form_bonus` `MagicResistanceMod`
 kinds — `ModifierFamily::MagicResistance` — aura_bonus and the realm
 susceptibilities) are **listed** as labelled `SurfacedModifier`s, not folded into a
 simulated number, because the app does not simulate those subsystems.
+
+**`AgingMod` left this list in M6/6b6.** `derived.rs` still lists it as a standing
+modifier, but it is no longer surfaced-*only*: `aging.rs` consumes it — see
+**Aging (M6/6b6)**, and the `AgingMod` row of the in-play effect table below.
 
 #### M5.5a — Longevity Ritual: stored value + live hint
 

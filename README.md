@@ -205,10 +205,14 @@ Markdown export added in M5.6.
 
 - **Details, aging and Warping.** The Details tab captures identity/flavor fields
   (name, gender, birth year, Wizard's sigil, covenant, parens) and an already-aged
-  / already-warped character's raw state — aging points and completed
-  Characteristic reductions, Warping Points, and free-text Twilight Scars — from
-  which the engine derives the Decrepitude and Warping scores (aging reductions
-  lower derived/play stats but never the point-buy the creation checks read).
+  / already-warped character's raw state — aging points per Characteristic, the
+  apparent age, Warping Points, and free-text Twilight Scars — from which the
+  engine derives the Decrepitude and Warping scores and the Characteristic drops
+  the accumulated points force (those drops lower derived/play stats but never the
+  point-buy the creation checks read). It also mounts the whole aging surface the
+  guided step uses — the schedule of rolls owed, the Living Conditions, the roll
+  calculator and the year-by-year log — so a character can be aged here as well,
+  not merely described as aged.
 
 - **In-play effects and the totals read-out.** Every in-play Virtue/Flaw effect
   (Magical Focus, Method Caster, Deficient Technique/Form, Tough, and the rest of
@@ -277,12 +281,25 @@ Markdown export added in M5.6.
   A character over 35 is reminded that it owes its aging rolls, without being blocked
   from finishing.
 
+- **Aging.** A character over 35 owes one aging roll for every year since the Winter
+  after its thirty-fifth birthday, and the wizard's closing step before the review walks
+  them one at a time. **The app never rolls** — you type the stress die you rolled
+  yourself — and it shows the whole total it built from it: the age term, the Living
+  Conditions the character lives under (picked from the rulebook's table, several of
+  which stack), and the bonus of a Longevity Ritual, which this step is the only guided
+  place to enter. The table's outcome is named in words, and one click applies it: the
+  aging points land in the Characteristics the table names or the ones you choose, the
+  apparent age moves unless the character is one of those who never look older, and the
+  year is written into the aging log with the die and total that produced it. Any year
+  can be taken back again, exactly as it went on. A roll bad enough to be a Crisis is
+  flagged and named — resolving it is the next slice's work.
+
 ### Next
 
-Aging for characters over 35: the aging tables, the aging total and the outcomes,
-Characteristic loss and Decrepitude — with die results typed by the player, so the engine
-stays deterministic. See [PLAN.md](PLAN.md) for the milestone breakdown and
-[M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the slice-by-slice plan.
+The Crisis: the crisis total and its table, the Decrepitude level a bad aging roll
+reaches, and the Longevity Ritual spent surviving it — again with die results typed by
+the player, so the engine stays deterministic. See [PLAN.md](PLAN.md) for the milestone
+breakdown and [M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the slice-by-slice plan.
 
 ## Getting started
 
