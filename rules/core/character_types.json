@@ -29,7 +29,8 @@
       "characteristics",
       "virtues_flaws",
       "abilities",
-      "personality_reputations"
+      "personality_reputations",
+      "aging"
     ]
   },
   {
@@ -59,7 +60,8 @@
       "type",
       "characteristics",
       "virtues_flaws",
-      "abilities"
+      "abilities",
+      "aging"
     ]
   },
   {
@@ -99,7 +101,8 @@
       "abilities",
       "arts",
       "spells",
-      "personality_reputations"
+      "personality_reputations",
+      "aging"
     ]
   },
   {
@@ -135,7 +138,8 @@
       "characteristics",
       "virtues_flaws",
       "abilities",
-      "personality_reputations"
+      "personality_reputations",
+      "aging"
     ]
   }
 ]

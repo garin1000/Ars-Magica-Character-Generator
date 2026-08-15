@@ -140,9 +140,10 @@ that vacuous. Comment it as a placeholder for M8's covenant phases.
 
 **`Review` is the home for issues no phase owns.** `unknown_equipment`,
 `equipment_min_strength`, `shield_with_two_handed_weapon`, `over_item_level`,
-`over_power_levels`, `might_realm_mismatch`, `warping_*`, `excessive_aging_reduction`
-and `unknown_type` belong to no declared phase, because there is no equipment /
-possessions / warping / aging phase. A named terminal `Review` variant, rather than
+`over_power_levels`, `might_realm_mismatch`, `warping_*` and `unknown_type` belong to
+no declared phase, because there is no equipment / possessions / warping phase.
+(`excessive_aging_reduction` was in this list too, until 6b6b gave aging a phase of its
+own and moved every aging code onto it.) A named terminal `Review` variant, rather than
 `Option<CreationPhase>`, makes "only fixable in the finished character" an explicit,
 testable claim and gives the wizard a step to hang it on. Profiles may not declare it
 (integrity error); the wizard appends it in 6b1b. The same bucket covers issues in
@@ -385,8 +386,9 @@ confidence blocks; `EquipmentTab`, `MagicPossessions`, `SupernaturalBeing`,
       expected component's testid appears and the step body adds no `<h2>` of its own.
 - [x] **17. `TypeStep.svelte`** (localized type label, budget numbers from
       `profile.budget`, exactly one Gift-policy line) and **`WizardReview.svelte`**
-      (unfiltered panel, clean-state message, the "Equipment / Magic Items / Aging /
-      Totals live in the editor" hint, and the legal-≠-complete caveat).
+      (unfiltered panel, clean-state message, the "Equipment / Magic Items / Might /
+      Warping live in the editor" hint, and the legal-≠-complete caveat). Aging was
+      part of that list until 6b6b step 24 gave it a phase of its own.
 - [x] **18. `WizardShell.svelte`** — rail button per phase in order
       (`data-testid="wizard-step-{phase}"`), `aria-current="step"` on the current one,
       `disabled` past `wizardFurthest`, and a blocked phase **announced to assistive

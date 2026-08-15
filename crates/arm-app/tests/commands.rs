@@ -12,7 +12,9 @@ use arm_app::ruleset_io::{
     export_markdown_to_path, load_entity_from_path, load_ruleset_from_dir, pick_rules_dir,
     save_entity_to_path, validate_loaded,
 };
-use arm_rules::{ArtScore, Entity, Id, Ruleset, RulesetSources, Selection, ValidationMode};
+use arm_rules::{
+    ArtScore, CreationPhase, Entity, Id, Ruleset, RulesetSources, Selection, ValidationMode,
+};
 use pretty_assertions::assert_eq;
 use std::collections::BTreeMap;
 
@@ -228,6 +230,36 @@ fn load_ruleset_yields_the_shipped_aging_tables() {
         !aging.outcomes.is_empty(),
         "the Aging Roll table reached the engine"
     );
+}
+
+/// Every shipped character type ends its guided rail with the Aging phase, and
+/// the position is the point of the test: it guards against a later reorder that
+/// would look harmless and quietly compute the aging total from an unfinished
+/// character.
+///
+/// Aging is last because the rulebook puts it there. The creation summary
+/// (Ars Magica - Definitive Edition (Core Rules).md:2205-2222) runs steps 1..11
+/// and never mentions aging at all; aging enters only in the next section,
+/// "Starting Character Age", whose `:2232` places the rolls "before the game
+/// begins" — the last thing done to a built character, not one of the steps that
+/// build it. Mechanically the total needs the finished character too: it reads
+/// the final age, the final Characteristics (aging points reduce them, `:16579`)
+/// and the Longevity Ritual bonus, so any earlier slot would total up a
+/// half-built character. The wizard appends its implicit `review` step after the
+/// declared list, so declaring `aging` last makes the rail end
+/// `… -> aging -> review`.
+#[test]
+fn every_shipped_profile_declares_the_aging_phase_last() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    assert!(ruleset.profile_count() > 0, "the ruleset ships profiles");
+    for profile in ruleset.profiles() {
+        assert_eq!(
+            profile.creation_phases.last(),
+            Some(&CreationPhase::Aging),
+            "profile '{}' must declare the aging phase last",
+            profile.id
+        );
+    }
 }
 
 #[test]
