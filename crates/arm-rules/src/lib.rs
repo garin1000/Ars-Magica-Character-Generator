@@ -3,6 +3,9 @@
 #![deny(clippy::all)]
 
 pub mod ability;
+pub mod aging;
+#[doc(inline)]
+pub use aging::{AgingRow, AgingRowEffect, AgingRules, LivingCondition, LongevityClamp};
 pub mod art;
 pub mod characteristics;
 pub mod childhood;
