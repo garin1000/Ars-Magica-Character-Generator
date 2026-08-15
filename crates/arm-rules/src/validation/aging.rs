@@ -56,7 +56,7 @@ pub(crate) fn validate_aging(
         if *points == 0 {
             continue;
         }
-        let drops = crate::effective::aging_drops(entity, *characteristic);
+        let drops = crate::effective::aging_drops(entity, ruleset, *characteristic);
         if drops == 0 {
             continue;
         }

@@ -21,8 +21,8 @@ use crate::characteristics::Characteristic;
 use crate::grant::{Grant, GrantConstraint, resolve_grants};
 use crate::ruleset::Ruleset;
 use crate::types::{
-    Effect, Entity, EntityTypeProfile, Id, ItemKind, Magnitude, MightScore, Realm, ReputationType,
-    Selection, SpellSelection,
+    AgingEffect, Effect, Entity, EntityTypeProfile, Id, ItemKind, Magnitude, MightScore, Realm,
+    ReputationType, Selection, SpellSelection,
 };
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -1630,12 +1630,16 @@ pub fn effective_characteristics(
 }
 
 /// Aging-drop counts per Characteristic (from [`aging_drops`]), only the non-zero
-/// entries (canonical order), for the effective-score tooltip breakdown.
-pub fn characteristic_aging_drops(entity: &Entity) -> BTreeMap<Characteristic, u32> {
+/// entries (canonical order), for the effective-score tooltip breakdown. Empty for
+/// a character whose Virtues exempt him from Characteristic aging (`:5189`).
+pub fn characteristic_aging_drops(
+    entity: &Entity,
+    ruleset: &Ruleset,
+) -> BTreeMap<Characteristic, u32> {
     Characteristic::ALL
         .into_iter()
         .filter_map(|c| {
-            let drops = aging_drops(entity, c);
+            let drops = aging_drops(entity, ruleset, c);
             (drops != 0).then_some((c, drops))
         })
         .collect()
@@ -2484,7 +2488,27 @@ pub fn decrepitude_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
 /// Crate-internal primitive: the frontend consumes the surfaced
 /// [`characteristic_aging_drops`] map (which wraps this per-Characteristic), so
 /// this single-Characteristic query is not part of the curated public API.
-pub(crate) fn aging_drops(entity: &Entity, characteristic: Characteristic) -> u32 {
+///
+/// # Unaging drops nothing
+///
+/// Returns 0 for a character carrying an [`AgingEffect::NoAging`] item: "In game
+/// terms, your aging points do not decrease your Characteristics, only building up
+/// to give you Decrepitude points" (`:5189`; Bound to (Role) "also includes the
+/// effects of the Unaging Virtue" at `:5743`). The second half of that sentence is
+/// why [`decrepitude_points_total`] and [`decrepitude_score`] are deliberately
+/// **not** gated the same way — the points still accrue and still build
+/// Decrepitude, at everybody else's rate. The *appearance* is a separate exemption
+/// ([`AgingEffect::NoApparentAging`]), applied in `aging.rs`.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:5189, :5743.
+pub(crate) fn aging_drops(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    characteristic: Characteristic,
+) -> u32 {
+    if suppresses_characteristic_aging(entity, ruleset) {
+        return 0;
+    }
     let bought = entity
         .characteristics
         .get(&characteristic)
@@ -2508,6 +2532,31 @@ pub(crate) fn aging_drops(entity: &Entity, characteristic: Characteristic) -> u3
     }
 }
 
+/// Whether the character's Characteristics are exempt from aging drops — i.e.
+/// whether he carries an [`AgingEffect::NoAging`] item.
+///
+/// It gates the Characteristic drop **only**. Unaging carries this tag alongside
+/// `no_apparent_aging`, Bound to (Role) carries it alone (`:5743` advances the
+/// apparent age "in line with their physical age"), and a Bee King carries neither
+/// — "do not appear to age" (`:3488`) is about the appearance and nothing else.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:5189, :5743, :3488.
+fn suppresses_characteristic_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
+    selections_for_effects(entity, ruleset)
+        .iter()
+        .filter_map(|selection| ruleset.point_items.get(&selection.item_ref))
+        .flat_map(|item| &item.effects)
+        .any(|effect| {
+            matches!(
+                effect,
+                Effect::AgingMod {
+                    kind: AgingEffect::NoAging,
+                    ..
+                }
+            )
+        })
+}
+
 /// The effective value of `characteristic` after aging: the bought score lowered
 /// by the DERIVED aging drops ([`aging_drops`]) and floored at the rules effective
 /// minimum (−5), with any free [`Effect::CharacteristicScoreDelta`] bonus (Giant
@@ -2529,7 +2578,7 @@ pub fn effective_characteristic_after_aging(
         .get(&characteristic)
         .copied()
         .map_or(0, i32::from);
-    let drops = i32::try_from(aging_drops(entity, characteristic)).unwrap_or(i32::MAX);
+    let drops = i32::try_from(aging_drops(entity, ruleset, characteristic)).unwrap_or(i32::MAX);
     let floor = ruleset
         .characteristic_rules()
         .and_then(|r| r.effective_min_score())
@@ -4163,7 +4212,7 @@ mod tests {
         e.characteristics.insert(Characteristic::Str, 3);
         // Minimal points that force two drops on a +3 score: (|3|+1)+(|2|+1) = 7.
         e.aging_points.insert(Characteristic::Str, 7);
-        assert_eq!(aging_drops(&e, Characteristic::Str), 2);
+        assert_eq!(aging_drops(&e, &rs, Characteristic::Str), 2);
         // Derived (aged-down) value is bought − derived drops.
         assert_eq!(
             effective_characteristic_after_aging(&e, &rs, Characteristic::Str),
@@ -4190,13 +4239,13 @@ mod tests {
         let mut com = xp_entity(vec![]);
         com.characteristics.insert(Characteristic::Com, 2);
         com.aging_points.insert(Characteristic::Com, 2); // ≤ |2|, no drop yet
-        assert_eq!(aging_drops(&com, Characteristic::Com), 0);
+        assert_eq!(aging_drops(&com, &rs, Characteristic::Com), 0);
         assert_eq!(
             effective_characteristic_after_aging(&com, &rs, Characteristic::Com),
             2
         );
         com.aging_points.insert(Characteristic::Com, 3); // the third point drops it
-        assert_eq!(aging_drops(&com, Characteristic::Com), 1);
+        assert_eq!(aging_drops(&com, &rs, Characteristic::Com), 1);
         assert_eq!(
             effective_characteristic_after_aging(&com, &rs, Characteristic::Com),
             1
@@ -4205,9 +4254,9 @@ mod tests {
         let mut sta = xp_entity(vec![]);
         sta.characteristics.insert(Characteristic::Sta, -3);
         sta.aging_points.insert(Characteristic::Sta, 3); // ≤ |−3|, no drop yet
-        assert_eq!(aging_drops(&sta, Characteristic::Sta), 0);
+        assert_eq!(aging_drops(&sta, &rs, Characteristic::Sta), 0);
         sta.aging_points.insert(Characteristic::Sta, 4); // the fourth point drops it
-        assert_eq!(aging_drops(&sta, Characteristic::Sta), 1);
+        assert_eq!(aging_drops(&sta, &rs, Characteristic::Sta), 1);
         assert_eq!(
             effective_characteristic_after_aging(&sta, &rs, Characteristic::Sta),
             -4
@@ -4229,7 +4278,7 @@ mod tests {
         );
         // One drop: bought 5 → 4, plus the +1 delta = 5.
         e.aging_points.insert(Characteristic::Str, 6); // |5| = 5, sixth point drops
-        assert_eq!(aging_drops(&e, Characteristic::Str), 1);
+        assert_eq!(aging_drops(&e, &rs, Characteristic::Str), 1);
         assert_eq!(
             effective_characteristic_after_aging(&e, &rs, Characteristic::Str),
             5
@@ -4251,7 +4300,7 @@ mod tests {
         // A Characteristic whose effective value equals its bought score is omitted.
         assert!(!effective.contains_key(&Characteristic::Str));
 
-        let drops = characteristic_aging_drops(&e);
+        let drops = characteristic_aging_drops(&e, &rs);
         assert_eq!(drops.get(&Characteristic::Com).copied(), Some(1));
         // Zero-drop Characteristics are omitted from the drop map.
         assert!(!drops.contains_key(&Characteristic::Str));
@@ -4267,7 +4316,7 @@ mod tests {
         e.characteristics.insert(Characteristic::Str, 3);
         let effective = effective_characteristics(&e, &rs);
         assert_eq!(effective.get(&Characteristic::Str).copied(), Some(4));
-        assert!(characteristic_aging_drops(&e).is_empty());
+        assert!(characteristic_aging_drops(&e, &rs).is_empty());
     }
 
     #[test]

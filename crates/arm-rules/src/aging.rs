@@ -1066,7 +1066,9 @@ pub enum AgingRowEffect {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::effective::{characteristic_aging_drops, decrepitude_score};
+    use crate::effective::{
+        characteristic_aging_drops, decrepitude_score, effective_characteristic_after_aging,
+    };
     use crate::ruleset::{Ruleset, RulesetSources};
     use crate::types::{
         AgingLogEntry, Entity, EntityKind, LongevityRitual, LongevitySource, RulesetRef, Selection,
@@ -1749,7 +1751,7 @@ mod tests {
         // of 0 drops on its first aging point (`:16579`).
         bee_king.aging_points.insert(Characteristic::Sta, 1);
         assert_eq!(
-            characteristic_aging_drops(&bee_king),
+            characteristic_aging_drops(&bee_king, &ruleset),
             BTreeMap::from([(Characteristic::Sta, 1)]),
             "no_apparent_aging says nothing about the Characteristics"
         );
@@ -1783,6 +1785,59 @@ mod tests {
             bound.awards, unaging.awards,
             "both carry no_aging, so they differ on the appearance alone"
         );
+    }
+
+    /// "In game terms, your aging points do not decrease your Characteristics,
+    /// **only building up to give you Decrepitude points**" (`:5189`).
+    ///
+    /// Both halves are load-bearing, and they pull in opposite directions: the
+    /// Characteristic is spared, and the very same points still accrue and still
+    /// raise Decrepitude. So `aging_drops` returns nothing for a `no_aging` carrier
+    /// while `decrepitude_points_total` / `decrepitude_score` are untouched — the
+    /// character ages into Decrepitude exactly as fast as anyone else.
+    ///
+    /// The control is the same character without the Virtue, which guards the
+    /// `:16613` worked examples: suppression must be the carrier's, not everyone's.
+    #[test]
+    fn unaging_accrues_decrepitude_without_dropping_a_characteristic() {
+        let ruleset = scheduled_ruleset();
+        // From a Stamina of 0, 21 aging points force six drops (`:16579`).
+        let aged = |item: Option<&str>| {
+            let mut entity = match item {
+                Some(item) => carrying(item),
+                None => living_under(&[]),
+            };
+            entity.characteristics.insert(Characteristic::Sta, 0);
+            entity.aging_points.insert(Characteristic::Sta, 21);
+            entity
+        };
+
+        let ordinary = aged(None);
+        assert_eq!(
+            characteristic_aging_drops(&ordinary, &ruleset),
+            BTreeMap::from([(Characteristic::Sta, 6)]),
+            "without the Virtue the points cost Characteristics as ever (:16579)"
+        );
+
+        let unaging = aged(Some("virtue.unaging"));
+        assert!(
+            characteristic_aging_drops(&unaging, &ruleset).is_empty(),
+            "'your aging points do not decrease your Characteristics' (:5189)"
+        );
+        assert_eq!(
+            effective_characteristic_after_aging(&unaging, &ruleset, Characteristic::Sta),
+            0,
+            "the Characteristic itself never moves"
+        );
+
+        // …and the points still build up into Decrepitude, at the same rate.
+        assert_eq!(decrepitude_points_total(&unaging), 21);
+        assert_eq!(
+            decrepitude_score(&unaging, &ruleset),
+            decrepitude_score(&ordinary, &ruleset),
+            "'only building up to give you Decrepitude points' (:5189)"
+        );
+        assert!(decrepitude_score(&unaging, &ruleset) > 0);
     }
 
     /// Rows 14-21 name the Characteristics themselves (`:16603-16610`), one or
