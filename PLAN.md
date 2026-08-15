@@ -593,9 +593,9 @@ screen** rather than an already-instantiated blank character, and a character's
 
 Slices 6b1a (phase vocabulary + issue attribution), 6b1b (the wizard shell), 6b2 (with
 its 6b2b/6b2c tails), 6b3 (6b3a's Sample Childhood engine, data and command, then
-6b3b's guided Abilities step that offers them) and 6b4 (the magus's apprenticeship)
-are **done**; next is 6b5, the post-Gauntlet years. Detail:
-`M6B-IMPLEMENTATION.md`.
+6b3b's guided Abilities step that offers them), 6b4 (the magus's apprenticeship) and 6b5
+(both halves — the years after the Gauntlet) are **done**; next is 6b6, the aging
+engine. Detail: `M6B-IMPLEMENTATION.md`.
 
 - [x] Wizard component driven by the character type's `creation_phases` list
       (`WizardShell` + `WizardStep`; the phases are now a typed `CreationPhase`, so
@@ -620,7 +620,9 @@ are **done**; next is 6b5, the post-Gauntlet years. Detail:
       the Ability rows on both the wizard step and the editor tab, and the XP bar
       shows the derived life-stage budget instead of an editable pool. **6b4** opened
       the guided option to a magus as well — built at its Gauntlet, funded by its
-      apprenticeship; the years lived *after* the Gauntlet wait for 6b5
+      apprenticeship. **6b5** added the second age: the panel asks for the Gauntlet age
+      beside the current one, and the years between them are costed, so the guided flow
+      builds a magus of any age
 - [x] Life-stage XP engine (deferred from M3), **6b2**: early-childhood 75+45 xp and
       later-life 15/20/10 per year, as `rules/core/life_stages.json` + `life_stage.rs`.
       Childhood's two blocks are instance-restricted pools in the existing max-flow
@@ -655,10 +657,16 @@ are **done**; next is 6b5, the post-Gauntlet years. Detail:
       the Abilities surface. The 120 spell levels were already the magus profile's.
       Source: Core Rules.md:2433-2437, :2451-2461, :2214 (the Parma/Magic Theory/Latin
       minimums are at :2437 — the range was two lines short)
-- [ ] Magus life stages, **after apprenticeship** (6b5): 30 pts/year across Arts,
+- [x] Magus life stages, **after apprenticeship** — **6b5**: 30 pts/year across Arts,
       Abilities and spells, the lab-season deduction, and the xp↔spell-level split —
       which is also what lets guided funding build a magus older than its Gauntlet.
-      Source: Core Rules.md:2467-2471, :2216
+      One choice is stored, `gauntlet_age` (absent = the magus stands at its Gauntlet,
+      so no save migrates); the seasons are one total of *charged* seasons, since only
+      three a year are ever charged; the experience joins apprenticeship in the general
+      pool, because only that pool may buy Arts; and the levels are additive to the
+      profile's 120 rather than a second budget. A character over 35 with an empty
+      aging log is reminded of its aging rolls — a warning, until 6b6 gives it a phase.
+      Source: Core Rules.md:2216, :2467-2471, :2482, :7151, :2232
 - [ ] Aging engine for characters over 35: aging rolls, Characteristic loss,
       Decrepitude accrual — the guided age/life-stage computation. Source:
       Core Rules.md:16563-16640

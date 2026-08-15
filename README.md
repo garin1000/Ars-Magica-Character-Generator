@@ -254,25 +254,35 @@ Markdown export added in M5.6.
   raises scores and never lowers them, so taking a package twice changes nothing, and
   the Abilities it writes stay ordinary editable rows afterwards.
 
-- **The magus's apprenticeship.** A magus can be built through its life stages too, at
-  the moment of its Gauntlet: its fifteen apprenticeship years earn the 240 experience
-  the rules grant, and those alone may buy Arts as well as Abilities — so they are the
-  pool both the Abilities and the Arts step spend from. The age asked for is therefore
-  the age at the Gauntlet (younger than twenty is refused), and the years before
-  apprenticeship earn their own Abilities-only experience, which may not reach Academic,
-  Arcane or Martial Abilities without a Virtue that allows it. Every magus, however it is
-  funded, is held to the minimum Abilities the Order admits — Parma Magica, Magic Theory
-  and a dead language — with the rulebook's recommended scores shown beside them as
-  advice: a checklist that says of each, in words, whether it is met.
+- **The magus's apprenticeship.** A magus can be built through its life stages too: its
+  fifteen apprenticeship years earn the 240 experience the rules grant, and those alone
+  may buy Arts as well as Abilities — so they are the pool both the Abilities and the
+  Arts step spend from. Apprenticeship ends at the Gauntlet age (younger than twenty is
+  refused), and the years before it earn their own Abilities-only experience, which may
+  not reach Academic, Arcane or Martial Abilities without a Virtue that allows it. Every
+  magus, however it is funded, is held to the minimum Abilities the Order admits — Parma
+  Magica, Magic Theory and a dead language — with the rulebook's recommended scores shown
+  beside them as advice: a checklist that says of each, in words, whether it is met.
+
+- **The magus's years after the Gauntlet.** A guided magus need not stand at its
+  Gauntlet. It carries two ages — how old it is now, and how old it was when its
+  apprenticeship ended — and every year between them is worth 30 points, each of which
+  can be an experience point in an Art or an Ability or one level of a spell. Seasons
+  spent on lab projects cost 10 points of their year, three a year at most, so a fourth
+  is free; the character keeps the split it chose, and the two halves show up where they
+  are spent: the experience joins apprenticeship in the pool the Abilities and Arts steps
+  draw on, the levels raise the spell budget above the 120 apprenticeship granted. Only
+  the choices are saved — one Gauntlet age, one season total, one split — so leaving the
+  Gauntlet age blank still means a magus fresh out of apprenticeship, exactly as before.
+  A character over 35 is reminded that it owes its aging rolls, without being blocked
+  from finishing.
 
 ### Next
 
-The magus's years **after** the Gauntlet: 30 points a year across Arts, Abilities and
-spells, less the seasons spent in the laboratory — which is also what lets the guided
-flow build a magus older than its Gauntlet (until then an experienced magus uses the
-flat experience pool). After that: aging for characters over 35 (die results typed by
-the player, so the engine stays deterministic). See [PLAN.md](PLAN.md) for the milestone
-breakdown and [M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the slice-by-slice plan.
+Aging for characters over 35: the aging tables, the aging total and the outcomes,
+Characteristic loss and Decrepitude — with die results typed by the player, so the engine
+stays deterministic. See [PLAN.md](PLAN.md) for the milestone breakdown and
+[M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the slice-by-slice plan.
 
 ## Getting started
 
