@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ability::{Ability, AbilityCategory, AdvancementTable, AgeAbilityCaps};
-use crate::aging::AgingRules;
+use crate::aging::{AgingRowEffect, AgingRules};
 use crate::art::{Art, ArtType, ArtsFile};
 use crate::characteristics::CharacteristicRules;
 use crate::childhood::ChildhoodPackage;
@@ -854,6 +854,13 @@ impl Ruleset {
             "childhood package",
             &mut errors,
         );
+        if let Some(rules) = &aging_rules {
+            collect_duplicates(
+                rules.living_conditions.iter().map(|c| &c.id),
+                "living condition",
+                &mut errors,
+            );
+        }
         // The scholarly-language expectation names an ability, which must resolve and
         // be parameterized (a scholarly language is one instance of a dead language).
         if let Some(requirement) = &abilities_file.scholarly_language {
@@ -1343,6 +1350,7 @@ impl Ruleset {
         self.validate_childhood_refs(&mut errors);
         self.validate_apprenticeship_refs(&mut errors);
         self.validate_post_apprenticeship_rules(&mut errors);
+        self.validate_aging_rules(&mut errors);
         self.validate_childhood_packages(&mut errors);
 
         for (type_id, profile) in &self.type_profiles {
@@ -1694,6 +1702,214 @@ impl Ruleset {
                  not the {} a year grants, so the deduction never lands on 0",
                 post.lab_season_cost, post.max_charged_lab_seasons_per_year, post.points_per_year
             ));
+        }
+    }
+
+    /// Validates the aging tables: that the Aging Roll table tiles every total it
+    /// will be asked about, that each of its rows actually costs something, and
+    /// that a Longevity Ritual clamp does what the rulebook says it is *for*.
+    ///
+    /// The tiling check is **contiguity**, deliberately not "must cover 10..=21":
+    /// the shipped table's own bands are data, and a ruleset that draws them
+    /// elsewhere is still well-formed. What no ruleset may do is leave a total
+    /// with no row (a gap), give one two rows (an overlap), or stop before the
+    /// open-ended top row that catches everything above the table
+    /// (Core Rules.md:16611).
+    ///
+    /// The clamp check is the **trust gate on transcribed numbers**, the same
+    /// idiom as re-pricing the apprenticeship's `recommended_xp`. `:16575` states
+    /// the clamp's purpose — a young ritual-bearer "is at no risk of actually
+    /// aging before any other characters" — and that is true if and only if the
+    /// clamped ceiling sits strictly below the first row that costs Aging Points.
+    /// The shipped 9-against-10 is therefore an identity derivable from two
+    /// sentences, not a number to transcribe and hope for.
+    ///
+    /// Runs from [`Ruleset::validate_integrity`] beside
+    /// [`Self::validate_post_apprenticeship_rules`], so a cached ruleset returning
+    /// through [`Ruleset::from_serialized`] is held to the same standard. An
+    /// absent aging block stands the whole subsystem down and is not an error.
+    ///
+    /// **Considered and rejected** (recorded so they are not re-litigated):
+    /// - *"exactly one Living Condition with `modifier == 0` and
+    ///   `cumulative == false`"* — the baseline row is a UI affordance, not a
+    ///   rule: an empty set of conditions already contributes 0. It would catch no
+    ///   transcription error worth catching.
+    /// - *`start_age == longevity_clamp.until_age`* — two numbers from two
+    ///   different sentences (`:16565` and `:16575`) that happen to coincide.
+    ///   Asserting equality would invent a relationship the rules never state.
+    /// - *requiring the block whenever the ruleset declares characters* — an
+    ///   absent `Option` stands the subsystem down, which is the house position
+    ///   stated on [`Ruleset::aging`].
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16567, :16575,
+    /// :16577, :16597-16611.
+    fn validate_aging_rules(&self, errors: &mut Vec<String>) {
+        let Some(aging) = self.aging.as_ref() else {
+            return;
+        };
+
+        // The age term is "age/10 (round up)" (`:16567`); a divisor of 0 has no
+        // rounding-up to do, it has a division by zero.
+        if aging.age_divisor == 0 {
+            errors.push(
+                "aging age_divisor is 0, but the aging total adds the character's age \
+                 divided by it, rounded up"
+                    .to_string(),
+            );
+        }
+
+        let Some(first) = aging.outcomes.first() else {
+            errors.push(
+                "aging rules ship no outcome rows, so no aging total would ever have a result"
+                    .to_string(),
+            );
+            return;
+        };
+
+        let last_index = aging.outcomes.len() - 1;
+        for (index, row) in aging.outcomes.iter().enumerate() {
+            self.validate_aging_row_effect(row.min, &row.effect, errors);
+
+            match row.max {
+                None if index != last_index => {
+                    errors.push(format!(
+                        "aging outcome row starting at {} has no upper bound but is not the \
+                         last row: only the open-ended top row may omit its maximum",
+                        row.min
+                    ));
+                    continue;
+                }
+                Some(max) if max < row.min => {
+                    errors.push(format!(
+                        "aging outcome row spans {} to {max}, whose upper bound is below its \
+                         lower bound, so it covers no total at all",
+                        row.min
+                    ));
+                    continue;
+                }
+                _ => {}
+            }
+
+            let Some(next) = aging.outcomes.get(index + 1) else {
+                break;
+            };
+            if next.min <= row.min {
+                errors.push(format!(
+                    "aging outcome rows are not in ascending order: the row starting at {} \
+                     is followed by one starting at {}",
+                    row.min, next.min
+                ));
+                continue;
+            }
+            // Unreachable for the open-ended row, which the match above already
+            // established is the last one.
+            let Some(max) = row.max else { continue };
+            if next.min > max.saturating_add(1) {
+                errors.push(format!(
+                    "aging outcome rows leave a gap: the row ending at {max} is followed by \
+                     one starting at {}, so totals {} to {} land on no row",
+                    next.min,
+                    max.saturating_add(1),
+                    next.min.saturating_sub(1)
+                ));
+            } else if next.min <= max {
+                errors.push(format!(
+                    "aging outcome rows overlap: the row ending at {max} is followed by one \
+                     starting at {}, so totals {} to {max} land on two rows",
+                    next.min, next.min
+                ));
+            }
+        }
+
+        // "22+" (`:16611`) catches every total above the table; a bounded top row
+        // would let a high total fall off the end with no result at all.
+        if let Some(max) = aging.outcomes[last_index].max {
+            errors.push(format!(
+                "the highest aging outcome row ends at {max} rather than being open-ended, \
+                 so any higher total would land on no row"
+            ));
+        }
+
+        // "Particularly low rolls on the table mean that the character appears no
+        // older. Otherwise, the character's apparent age increases by one year"
+        // (`:16577`) — low rolls being the *only* exception, no row that costs
+        // Aging Points may sit below the threshold.
+        if aging.apparent_age_increase_min > first.min {
+            errors.push(format!(
+                "aging apparent_age_increase_min is {}, above the first aging-point row at \
+                 {}: a total could then cost Aging Points while leaving the character \
+                 looking no older, though ':16577' makes particularly low rolls the only \
+                 exception",
+                aging.apparent_age_increase_min, first.min
+            ));
+        }
+
+        // The trust gate: the clamp's stated purpose holds only while the clamped
+        // total stays below the first row that costs anything.
+        if let Some(clamp) = aging.longevity_clamp.as_ref()
+            && clamp.max_total >= first.min
+        {
+            errors.push(format!(
+                "a Longevity Ritual clamps aging totals to {}, which does not clear the \
+                 first aging-point row at {}: the clamp exists so its bearer 'is at no risk \
+                 of actually aging before any other characters' \
+                 (Ars Magica - Definitive Edition (Core Rules).md:16575), which holds only \
+                 while the clamped total stays below that row",
+                clamp.max_total, first.min
+            ));
+        }
+    }
+
+    /// Per-row sanity for one Aging Roll outcome: a row that awards no Aging
+    /// Points is a no-op that reads as a rule, and a row that names
+    /// Characteristics must name at least one, each of them once — "1 Aging Point
+    /// in Str and Sta" (Core Rules.md:16607) gives *each* named Characteristic a
+    /// point, so a repeat would silently double it.
+    fn validate_aging_row_effect(
+        &self,
+        min: i32,
+        effect: &AgingRowEffect,
+        errors: &mut Vec<String>,
+    ) {
+        match effect {
+            AgingRowEffect::AnyCharacteristic { points } => {
+                if *points == 0 {
+                    errors.push(format!(
+                        "aging outcome row starting at {min} awards 0 Aging Points, \
+                         so landing on it would cost nothing"
+                    ));
+                }
+            }
+            AgingRowEffect::NamedCharacteristics {
+                points,
+                characteristics,
+            } => {
+                if *points == 0 {
+                    errors.push(format!(
+                        "aging outcome row starting at {min} awards 0 Aging Points, \
+                         so landing on it would cost nothing"
+                    ));
+                }
+                if characteristics.is_empty() {
+                    errors.push(format!(
+                        "aging outcome row starting at {min} names no Characteristic \
+                         to take its Aging Points"
+                    ));
+                }
+                let mut seen = BTreeSet::new();
+                for characteristic in characteristics {
+                    if !seen.insert(characteristic) {
+                        errors.push(format!(
+                            "aging outcome row starting at {min} names Characteristic \
+                             '{characteristic}' twice, which would silently double its \
+                             Aging Points"
+                        ));
+                    }
+                }
+            }
+            // A crisis row costs whatever it takes to reach the next Decrepitude
+            // level, so there is no number of its own to check.
+            AgingRowEffect::NextDecrepitudeLevelAndCrisis => {}
         }
     }
 
@@ -4154,7 +4370,7 @@ mod tests {
             { "id": "living_condition.average_peasant", "modifier": 0 }
           ],
           "outcomes": [
-            { "min": 10, "max": 12, "effect": { "type": "any_characteristic", "points": 1 } }
+            { "min": 10, "effect": { "type": "any_characteristic", "points": 1 } }
           ]
         }"#;
         let rs = Ruleset::from_sources(RulesetSources {
@@ -4190,6 +4406,311 @@ mod tests {
         assert!(
             value.as_object().expect("object").get("aging").is_none(),
             "a ruleset without aging rules must not grow an empty 'aging' key"
+        );
+    }
+
+    /// The aging file with its scalars and one Living Condition fixed, so the
+    /// tiling fixtures below vary the outcome table only. `OUTCOMES` is
+    /// substituted per test.
+    const AGING_SCALARS: &str = r#"{
+      "start_age": 35,
+      "age_divisor": 10,
+      "apparent_age_increase_min": 3,
+      "longevity_clamp": { "max_total": 9, "until_age": 35 },
+      "living_conditions": [
+        { "id": "living_condition.average_peasant", "modifier": 0 }
+      ],
+      "outcomes": [ OUTCOMES ]
+    }"#;
+
+    /// Loads a ruleset whose aging file is `aging`. The aging tables reference no
+    /// other catalogue, so nothing else needs to be present.
+    fn aging_ruleset(aging: &str) -> Result<Ruleset, RulesetError> {
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            aging: Some(aging),
+            ..RulesetSources::default()
+        })
+    }
+
+    /// Loads a ruleset whose aging outcome table is `outcomes`, against the
+    /// scalars of [`AGING_SCALARS`].
+    fn aging_outcomes_ruleset(outcomes: &str) -> Result<Ruleset, RulesetError> {
+        aging_ruleset(&AGING_SCALARS.replace("OUTCOMES", outcomes))
+    }
+
+    /// The Aging Roll table answers *every* total, so its rows must tile the
+    /// number line from the first one upwards: a gap would leave a total with no
+    /// result at all, an overlap would give it two, and without an open-ended top
+    /// row ("22+", Core Rules.md:16611) every high total would fall off the end.
+    ///
+    /// The check is contiguity, deliberately **not** "must cover 10..=21" — the
+    /// shipped table's own numbers are data, and a ruleset that bands its rows
+    /// differently is still well-formed.
+    #[test]
+    fn aging_outcome_rows_must_tile_without_a_gap_or_an_overlap() {
+        // The shipped shape, in miniature: contiguous rows and an open-ended top.
+        assert!(
+            aging_outcomes_ruleset(
+                r#"{ "min": 10, "max": 21, "effect": { "type": "any_characteristic", "points": 1 } },
+                   { "min": 22, "effect": { "type": "next_decrepitude_level_and_crisis" } }"#,
+            )
+            .is_ok()
+        );
+
+        // No rows at all: every total would land nowhere.
+        let err = aging_outcomes_ruleset("").unwrap_err();
+        assert!(
+            err.to_string().contains("no outcome rows"),
+            "should name the empty table: {err}"
+        );
+
+        // A gap: 13 lands on no row.
+        let err = aging_outcomes_ruleset(
+            r#"{ "min": 10, "max": 12, "effect": { "type": "any_characteristic", "points": 1 } },
+               { "min": 14, "effect": { "type": "next_decrepitude_level_and_crisis" } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("gap") && msg.contains("12") && msg.contains("14"),
+            "should name the rows the gap sits between: {msg}"
+        );
+
+        // An overlap: 12, 13 and 14 land on two rows at once.
+        let err = aging_outcomes_ruleset(
+            r#"{ "min": 10, "max": 14, "effect": { "type": "any_characteristic", "points": 1 } },
+               { "min": 12, "effect": { "type": "next_decrepitude_level_and_crisis" } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("overlap") && msg.contains("14") && msg.contains("12"),
+            "should name the rows that overlap: {msg}"
+        );
+
+        // Rows out of order: the table is read top-down, so a `min` that goes
+        // backwards is a mis-transcribed table however the bands work out.
+        let err = aging_outcomes_ruleset(
+            r#"{ "min": 13, "max": 14, "effect": { "type": "any_characteristic", "points": 1 } },
+               { "min": 10, "max": 12, "effect": { "type": "any_characteristic", "points": 1 } },
+               { "min": 22, "effect": { "type": "next_decrepitude_level_and_crisis" } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("ascending") && msg.contains("13") && msg.contains("10"),
+            "should name the row that goes backwards: {msg}"
+        );
+
+        // No open-ended row: a total of 22 falls off the end of the table.
+        let err = aging_outcomes_ruleset(
+            r#"{ "min": 10, "max": 12, "effect": { "type": "any_characteristic", "points": 1 } },
+               { "min": 13, "max": 21, "effect": { "type": "any_characteristic", "points": 1 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("open-ended") && msg.contains("21"),
+            "should name the row that should have had no upper bound: {msg}"
+        );
+
+        // Two open-ended rows: everything from 10 up would take the first one, and
+        // the rest of the table would never be reached.
+        let err = aging_outcomes_ruleset(
+            r#"{ "min": 10, "effect": { "type": "any_characteristic", "points": 1 } },
+               { "min": 22, "effect": { "type": "next_decrepitude_level_and_crisis" } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("open-ended") && msg.contains("10"),
+            "should name the row that is open-ended too early: {msg}"
+        );
+
+        // A row whose band runs backwards covers nothing at all.
+        let err = aging_outcomes_ruleset(
+            r#"{ "min": 12, "max": 10, "effect": { "type": "any_characteristic", "points": 1 } },
+               { "min": 22, "effect": { "type": "next_decrepitude_level_and_crisis" } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("12") && msg.contains("10"),
+            "should name the inverted band: {msg}"
+        );
+    }
+
+    /// The Longevity Ritual clamp of `:16575` says what it is *for*: a young
+    /// ritual-bearer "is at no risk of actually aging before any other
+    /// characters". That holds if and only if the clamped ceiling sits strictly
+    /// below the first row that costs Aging Points — so the 9-against-10 the
+    /// rulebook ships is a derivable identity between two sentences, not a number
+    /// to transcribe and hope for.
+    #[test]
+    fn the_longevity_clamp_must_sit_below_the_first_aging_point_row() {
+        let with_clamp = |max_total: i32| {
+            let aging = AGING_SCALARS
+                .replace(
+                    r#""max_total": 9"#,
+                    &format!(r#""max_total": {max_total}"#),
+                )
+                .replace(
+                    "OUTCOMES",
+                    r#"{ "min": 10, "max": 21, "effect": { "type": "any_characteristic", "points": 1 } },
+                       { "min": 22, "effect": { "type": "next_decrepitude_level_and_crisis" } }"#,
+                );
+            aging_ruleset(&aging)
+        };
+
+        // The shipped 9-against-10: clamped totals never reach the first row.
+        assert!(with_clamp(9).is_ok());
+
+        // A clamp of 10 lands squarely on the first aging-point row, so the ritual
+        // would age its bearer exactly as if he had none.
+        let err = with_clamp(10).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains(":16575"),
+            "should cite the sentence the identity comes from: {msg}"
+        );
+        assert!(
+            msg.contains("10"),
+            "should name the clamp and the row it fails to clear: {msg}"
+        );
+    }
+
+    /// The remaining per-file and per-row gates: the apparent-age threshold, the
+    /// age divisor, and rows that award nothing or name their Characteristics
+    /// badly. Plus the duplicate-id sweep the Living Conditions table joins.
+    #[test]
+    fn an_apparent_age_threshold_above_the_first_points_row_fails_the_load() {
+        // `:16577` gives exactly one exception to "apparent age increases":
+        // particularly low rolls. So no row that costs Aging Points may sit below
+        // the threshold, or a total could age a character without his looking a day
+        // older.
+        let err = aging_ruleset(
+            &AGING_SCALARS
+                .replace(
+                    r#""apparent_age_increase_min": 3"#,
+                    r#""apparent_age_increase_min": 11"#,
+                )
+                .replace(
+                    "OUTCOMES",
+                    r#"{ "min": 10, "effect": { "type": "any_characteristic", "points": 1 } }"#,
+                ),
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("11") && msg.contains("10"),
+            "should name the threshold and the row it sits above: {msg}"
+        );
+
+        // The age term is `age / divisor`, rounded up — a divisor of 0 has no
+        // meaning at all.
+        let err = aging_ruleset(
+            &AGING_SCALARS
+                .replace(r#""age_divisor": 10"#, r#""age_divisor": 0"#)
+                .replace(
+                    "OUTCOMES",
+                    r#"{ "min": 10, "effect": { "type": "any_characteristic", "points": 1 } }"#,
+                ),
+        )
+        .unwrap_err();
+        assert!(
+            err.to_string().contains("age_divisor"),
+            "should name the divisor: {err}"
+        );
+
+        // A row that awards no Aging Points is a no-op that reads as a rule.
+        let err = aging_outcomes_ruleset(
+            r#"{ "min": 10, "effect": { "type": "any_characteristic", "points": 0 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("10") && msg.contains('0'),
+            "should name the row that costs nothing: {msg}"
+        );
+        let err = aging_outcomes_ruleset(
+            r#"{ "min": 10, "effect": { "type": "named_characteristics", "points": 0, "characteristics": ["qik"] } }"#,
+        )
+        .unwrap_err();
+        assert!(
+            err.to_string().contains("10"),
+            "a named-Characteristic row must award something too: {err}"
+        );
+
+        // A named-Characteristic row that names none has nowhere to put its points.
+        let err = aging_outcomes_ruleset(
+            r#"{ "min": 10, "effect": { "type": "named_characteristics", "points": 1, "characteristics": [] } }"#,
+        )
+        .unwrap_err();
+        assert!(
+            err.to_string().contains("10"),
+            "should name the row that names no Characteristic: {err}"
+        );
+
+        // "1 Aging Point in Str and Sta" (`:16607`) gives each named Characteristic
+        // a point, so naming one twice is a transcription slip that would silently
+        // double it.
+        let err = aging_outcomes_ruleset(
+            r#"{ "min": 10, "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["sta", "sta"] } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("sta") && msg.contains("10"),
+            "should name the repeated Characteristic and its row: {msg}"
+        );
+
+        // Living Conditions are a catalogue like any other, so their ids join the
+        // duplicate sweep.
+        let err = aging_ruleset(
+            &AGING_SCALARS
+                .replace(
+                    r#"{ "id": "living_condition.average_peasant", "modifier": 0 }"#,
+                    r#"{ "id": "living_condition.average_peasant", "modifier": 0 },
+                       { "id": "living_condition.average_peasant", "modifier": 2 }"#,
+                )
+                .replace(
+                    "OUTCOMES",
+                    r#"{ "min": 10, "effect": { "type": "any_characteristic", "points": 1 } }"#,
+                ),
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("duplicate living condition ID")
+                && msg.contains("living_condition.average_peasant"),
+            "should name the duplicated condition: {msg}"
+        );
+    }
+
+    /// A cached ruleset is trusted no further than a freshly parsed one: the aging
+    /// gates belong to `validate_integrity`, which [`Ruleset::from_serialized`]
+    /// re-runs, so a clamp that no longer clears the first aging-point row is
+    /// rejected however the ruleset arrived.
+    #[test]
+    fn from_serialized_rejects_a_longevity_clamp_that_reaches_the_table() {
+        let rs = aging_outcomes_ruleset(
+            r#"{ "min": 10, "max": 21, "effect": { "type": "any_characteristic", "points": 1 } },
+               { "min": 22, "effect": { "type": "next_decrepitude_level_and_crisis" } }"#,
+        )
+        .unwrap();
+
+        let mut serialized = serde_json::to_value(&rs).unwrap();
+        serialized["aging"]["longevity_clamp"]["max_total"] = serde_json::Value::from(12);
+
+        let err = Ruleset::from_serialized(&serialized.to_string()).unwrap_err();
+        assert_eq!(err.kind(), "integrity");
+        assert!(
+            err.to_string().contains(":16575"),
+            "should cite the sentence the identity comes from: {err}"
         );
     }
 
