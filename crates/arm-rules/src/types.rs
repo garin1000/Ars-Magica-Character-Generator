@@ -878,16 +878,26 @@ pub enum Effect {
         /// Which Magic Resistance modifier this is.
         kind: MagicResistanceEffect,
     },
-    /// An aging / longevity modifier — **surfaced-only**: the app does not
-    /// simulate aging rolls. `kind` selects the aging subsystem, `amount` the
-    /// signed modifier (Unaging → no aging rolls). 5i surfaces these labelled.
+    /// An aging / longevity modifier. `kind` selects which aging subsystem it
+    /// touches, `amount` the signed modifier — 0 when the `kind` is itself the
+    /// whole effect (Unaging carries no number, only its two immunities).
     ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5187-5190 (Unaging).
+    /// **Three of the five kinds are consumed** by `aging.rs`:
+    /// [`AgingEffect::AgingRoll`] is added to the AGING TOTAL with its stored
+    /// sign, [`AgingEffect::LongevityBonus`] moves the ritual term of that total,
+    /// and [`AgingEffect::LivingConditions`] joins the modifier the total
+    /// subtracts. [`AgingEffect::NoApparentAging`] is read by
+    /// `aging::resolve_outcome`. Every kind is *also* surfaced labelled in 5i's
+    /// modifier read-out, which is the only home for the ones no computation
+    /// reaches — see each variant for what it is worth today.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5187-5190 (Unaging),
+    /// `:16567-16569` (the AGING TOTAL the modifiers feed).
     AgingMod {
         /// Which aging / longevity subsystem the modifier touches.
         kind: AgingEffect,
-        /// Signed modifier (0 when `kind` is itself the whole effect, e.g. no
-        /// aging rolls).
+        /// Signed modifier (0 when `kind` is itself the whole effect, e.g. an
+        /// aging immunity).
         amount: i8,
     },
     /// A study / advancement source-quality modifier — **surfaced-only**: the app
@@ -1103,22 +1113,52 @@ impl fmt::Display for MagicResistanceEffect {
     }
 }
 
-/// Which aging / longevity subsystem an [`Effect::AgingMod`] touches
-/// (surfaced-only). A fixed rules taxonomy, rendered via Fluent.
+/// Which aging / longevity subsystem an [`Effect::AgingMod`] touches. A fixed
+/// rules taxonomy, rendered via Fluent (`derived-detail-<slug>`).
+///
+/// The two immunities are **orthogonal**, because the sources state them
+/// separately: not dropping Characteristics and not looking older are different
+/// facts, and Bound to (Role) has the first without the second (`:5743`).
+/// Collapsing them into one tag is what made the shipped Bee King entry wrong.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AgingEffect {
-    /// A modifier to aging rolls.
+    /// A modifier to aging rolls, added to the AGING TOTAL with its stored sign
+    /// (Faerie Blood -1). Consumed by `aging::aging_total`.
     AgingRoll,
-    /// A modifier to the longevity-ritual bonus.
+    /// A modifier to the longevity-ritual bonus. Consumed by
+    /// `aging::aging_total`, and only for a character who actually holds a
+    /// ritual.
     LongevityBonus,
-    /// The character does not age normally / aging points do not reduce
-    /// Characteristics (Unaging, Bee King, Bound to Role).
+    /// **Aging Points do not decrease the character's Characteristics** — they
+    /// still accrue, and still count toward Decrepitude: "your aging points do
+    /// not decrease your Characteristics, only building up to give you
+    /// Decrepitude points" (`:5189`). Carried by Unaging and by Bound to (Role),
+    /// which "also includes the effects of the Unaging Virtue" (`:5743`). It says
+    /// nothing about the apparent age — see [`Self::NoApparentAging`].
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5189, :5743.
     NoAging,
-    /// A modifier to accrued Decrepitude.
+    /// **The apparent age never advances**, whatever the roll: "Bee Kings do not
+    /// appear to age after reaching maturity" (`:3488`), and Unaging's "You may
+    /// choose your apparent age freely" (`:5189`). Consumed by
+    /// `aging::resolve_outcome`, so a carrier's
+    /// `AgingOutcome::apparent_age_increases` is false at every total.
+    ///
+    /// Bound to (Role) deliberately does **not** carry it: "but the character's
+    /// apparent age advances in line with their physical age" (`:5743`) — the
+    /// sentence that proves the two immunities are separable at all. A Bee King
+    /// carries this one alone, and so still loses Characteristics.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:3488, :5189,
+    /// :5743.
+    NoApparentAging,
+    /// A modifier to accrued Decrepitude. Surfaced only — no shipped item moves
+    /// a number here, and the score is derived from the accrued Aging Points.
     Decrepitude,
     /// A modifier to the Living Conditions Modifier that feeds aging rolls
-    /// (Poor Living Conditions −1, Leprosy −2, Mild Aging +1).
+    /// (Poor Living Conditions -1, Leprosy -2, Mild Aging +1). Consumed by
+    /// `aging::living_conditions_modifier`.
     LivingConditions,
 }
 
@@ -1128,6 +1168,7 @@ impl fmt::Display for AgingEffect {
             AgingEffect::AgingRoll => "aging_roll",
             AgingEffect::LongevityBonus => "longevity_bonus",
             AgingEffect::NoAging => "no_aging",
+            AgingEffect::NoApparentAging => "no_apparent_aging",
             AgingEffect::Decrepitude => "decrepitude",
             AgingEffect::LivingConditions => "living_conditions",
         })
@@ -3035,6 +3076,7 @@ mod tests {
         check(AgingEffect::AgingRoll);
         check(AgingEffect::LongevityBonus);
         check(AgingEffect::NoAging);
+        check(AgingEffect::NoApparentAging);
         check(AgingEffect::Decrepitude);
         check(AgingEffect::LivingConditions);
         check(AdvancementSource::Taught);

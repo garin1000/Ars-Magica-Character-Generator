@@ -394,10 +394,12 @@ pub fn aging_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Op
                 }
                 // Already summed into `living_conditions` above.
                 AgingEffect::LivingConditions => {}
-                // Neither is a term of the total: `no_aging` decides whether
-                // Aging Points reach the Characteristics at all, and
-                // `decrepitude` modifies the accrued score, not the roll.
-                AgingEffect::NoAging | AgingEffect::Decrepitude => {}
+                // None of these is a term of the total: `no_aging` decides
+                // whether Aging Points reach the Characteristics at all,
+                // `no_apparent_aging` whether the appearance follows the roll
+                // ([`resolve_outcome`]), and `decrepitude` modifies the accrued
+                // score rather than the roll.
+                AgingEffect::NoAging | AgingEffect::NoApparentAging | AgingEffect::Decrepitude => {}
             }
         }
     }
@@ -440,7 +442,9 @@ pub struct AgingOutcome {
     /// The total this resolves — post-clamp, so a caller can echo it back.
     pub total: i32,
     /// "Otherwise, the character's apparent age increases by one year"
-    /// (`:16577`, `:16600`).
+    /// (`:16577`, `:16600`) — unless the character is exempt from that sentence
+    /// altogether, which an [`AgingEffect::NoApparentAging`] item
+    /// (`:3488`, `:5189`) makes him at every total.
     pub apparent_age_increases: bool,
     /// The Aging Points the row awards, in the order the row names them. Empty
     /// below the table's first row, which costs nothing.
@@ -552,10 +556,38 @@ pub fn resolve_outcome(entity: &Entity, ruleset: &Ruleset, total: i32) -> Option
 
     Some(AgingOutcome {
         total,
-        apparent_age_increases: total >= rules.apparent_age_increase_min,
+        apparent_age_increases: total >= rules.apparent_age_increase_min
+            && !suppresses_apparent_aging(entity, ruleset),
         awards,
         crisis,
     })
+}
+
+/// Whether the character's apparent age is exempt from `:16577` — i.e. whether
+/// he carries an [`AgingEffect::NoApparentAging`] item.
+///
+/// It gates the appearance **only**. A Bee King "do[es] not appear to age"
+/// (`:3488`) and takes the row's Aging Points like anyone else; Unaging "may
+/// choose [its] apparent age freely" (`:5189`) and additionally carries
+/// [`AgingEffect::NoAging`], which is a different exemption applied elsewhere.
+/// Bound to (Role) carries neither this tag nor its effect: "the character's
+/// apparent age advances in line with their physical age" (`:5743`).
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:3488, :5189, :5743.
+fn suppresses_apparent_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
+    selections_for_effects(entity, ruleset)
+        .iter()
+        .filter_map(|selection| ruleset.point_items.get(&selection.item_ref))
+        .flat_map(|item| &item.effects)
+        .any(|effect| {
+            matches!(
+                effect,
+                Effect::AgingMod {
+                    kind: AgingEffect::NoApparentAging,
+                    ..
+                }
+            )
+        })
 }
 
 /// How many Aging Points "reach the next level in Decrepitude" (`:16602`,
@@ -719,6 +751,11 @@ pub enum AgingError {
 /// **order-independent**: applying a catch-up's years out of order lands on the
 /// same apparent age as applying them in order. A hand-entered apparent age is
 /// never re-seeded, only advanced.
+///
+/// A character carrying [`AgingEffect::NoApparentAging`] (`:3488`, `:5189`) is
+/// neither seeded nor advanced, because [`resolve_outcome`] has already reported
+/// that his appearance does not follow the roll — one decision, read here rather
+/// than made twice.
 ///
 /// # Refusals
 ///
@@ -1029,7 +1066,7 @@ pub enum AgingRowEffect {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::effective::decrepitude_score;
+    use crate::effective::{characteristic_aging_drops, decrepitude_score};
     use crate::ruleset::{Ruleset, RulesetSources};
     use crate::types::{
         AgingLogEntry, Entity, EntityKind, LongevityRitual, LongevitySource, RulesetRef, Selection,
@@ -1232,7 +1269,14 @@ mod tests {
             "effects": [{ "type": "aging_mod", "kind": "living_conditions", "amount": 1 }] },
           { "id": "virtue.unaging", "kind": "virtue", "magnitude": "minor",
             "category": "general", "classification": "in_play_effect",
+            "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 },
+                        { "type": "aging_mod", "kind": "no_apparent_aging", "amount": 0 }] },
+          { "id": "flaw.bound_to_role_role", "kind": "flaw", "magnitude": "minor",
+            "category": "general", "classification": "in_play_effect",
             "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }] },
+          { "id": "virtue.bee_king", "kind": "virtue", "magnitude": "major",
+            "category": "supernatural", "classification": "in_play_effect",
+            "effects": [{ "type": "aging_mod", "kind": "no_apparent_aging", "amount": 0 }] },
           { "id": "virtue.faerie_blood", "kind": "virtue", "magnitude": "minor",
             "category": "supernatural", "classification": "in_play_effect",
             "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": -1 }] },
@@ -1663,6 +1707,82 @@ mod tests {
             "the appearance ages well below the first row that costs Aging Points"
         );
         assert!(!three.crisis);
+    }
+
+    /// A character carrying that Virtue, and nothing else.
+    fn carrying(item: &str) -> Entity {
+        let mut entity = living_under(&[]);
+        entity.selections = vec![Selection::new(Id::new(item))];
+        entity
+    }
+
+    /// "Bee Kings do not appear to age after reaching maturity" (`:3488`) — and
+    /// that is *all* it says. The appearance stops; the body does not. So the
+    /// table's award is exactly the one anybody else takes at the same total, and
+    /// the point it places still forces a Characteristic drop, because dropping is
+    /// what `no_aging` (`:5189`) suppresses and a Bee King carries no `no_aging`.
+    ///
+    /// The shipped catalogue tagged this Virtue `no_aging` — the wrong one of the
+    /// two facts, and the reason the tags had to come apart.
+    #[test]
+    fn a_bee_king_does_not_appear_to_age_but_still_loses_characteristics() {
+        let ruleset = scheduled_ruleset();
+        let ordinary =
+            resolve_outcome(&living_under(&[]), &ruleset, 15).expect("the fixture ships a table");
+        assert!(
+            ordinary.apparent_age_increases,
+            "15 ages anybody else's appearance"
+        );
+
+        let mut bee_king = carrying("virtue.bee_king");
+        let outcome = resolve_outcome(&bee_king, &ruleset, 15).expect("aging rules");
+        assert!(
+            !outcome.apparent_age_increases,
+            "'Bee Kings do not appear to age' (:3488)"
+        );
+        assert_eq!(
+            outcome.awards, ordinary.awards,
+            "the row's Aging Points are untouched — only the appearance is spared"
+        );
+
+        // And the point the row places still costs him the Characteristic: a Sta
+        // of 0 drops on its first aging point (`:16579`).
+        bee_king.aging_points.insert(Characteristic::Sta, 1);
+        assert_eq!(
+            characteristic_aging_drops(&bee_king),
+            BTreeMap::from([(Characteristic::Sta, 1)]),
+            "no_apparent_aging says nothing about the Characteristics"
+        );
+    }
+
+    /// The two items diverge on exactly one axis, from the same total.
+    ///
+    /// "This Flaw also includes the effects of the Unaging Virtue, **but** the
+    /// character's apparent age advances in line with their physical age"
+    /// (`:5743`). That *but* is the proof the two facts are separable: Bound to
+    /// (Role) keeps Unaging's Characteristic immunity and withholds `:5189`'s "You
+    /// may choose your apparent age freely".
+    #[test]
+    fn bound_to_role_keeps_ageing_in_appearance_while_unaging_does_not() {
+        let ruleset = scheduled_ruleset();
+
+        let bound = resolve_outcome(&carrying("flaw.bound_to_role_role"), &ruleset, 15)
+            .expect("aging rules");
+        assert!(
+            bound.apparent_age_increases,
+            "'the character's apparent age advances in line with their physical age' (:5743)"
+        );
+
+        let unaging = resolve_outcome(&carrying("virtue.unaging"), &ruleset, 15).expect("rules");
+        assert!(
+            !unaging.apparent_age_increases,
+            "'You may choose your apparent age freely' (:5189)"
+        );
+
+        assert_eq!(
+            bound.awards, unaging.awards,
+            "both carry no_aging, so they differ on the appearance alone"
+        );
     }
 
     /// Rows 14-21 name the Characteristics themselves (`:16603-16610`), one or
@@ -2235,6 +2355,52 @@ mod tests {
             saved(&revert_year(&resolved.entity, &ruleset, 40).expect("reverts")),
             before
         );
+    }
+
+    /// The single writer honours `no_apparent_aging` too, which is a separate
+    /// claim from [`resolve_outcome`]'s: the stored [`Entity::apparent_age`] must
+    /// not move, and the year's log entry must record that it did not — otherwise
+    /// [`revert_year`] would walk the appearance backwards past a year that never
+    /// advanced it.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:5189, :16577.
+    #[test]
+    fn a_resolved_year_leaves_an_unaging_character_looking_exactly_as_he_did() {
+        let ruleset = scheduled_ruleset();
+
+        // A hand-entered apparent age stays where the player put it.
+        let mut unaging = carrying("virtue.unaging");
+        unaging.apparent_age = Some(30);
+        let before = saved(&unaging);
+
+        let resolved = resolve_year(&unaging, &ruleset, &request(40, 10, &[])).expect("a 14 at 40");
+        assert_eq!(
+            resolved.entity.apparent_age,
+            Some(30),
+            "'You may choose your apparent age freely' (:5189)"
+        );
+        assert_eq!(
+            resolved.entity.aging_points,
+            points(&[(Characteristic::Qik, 1)]),
+            "the row's points still land — only the appearance is spared"
+        );
+        let entry = resolved
+            .entity
+            .aging_log
+            .first()
+            .expect("the year is logged");
+        assert!(!entry.apparent_age_increased);
+
+        // And the revert is still exact for such a character.
+        assert_eq!(
+            saved(&revert_year(&resolved.entity, &ruleset, 40).expect("reverts")),
+            before
+        );
+
+        // With no apparent age entered, the seed never fires either.
+        let fresh = carrying("virtue.unaging");
+        let resolved = resolve_year(&fresh, &ruleset, &request(40, 10, &[])).expect("a 14 at 40");
+        assert_eq!(resolved.entity.apparent_age, None, "nothing to seed");
     }
 
     /// Reverting a year no entry records is an error, not a no-op: silently

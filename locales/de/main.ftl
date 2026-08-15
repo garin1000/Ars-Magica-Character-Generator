@@ -865,6 +865,7 @@ derived-surfaced-magic_resistance = Magiewiderstand
 derived-detail-aging_roll = Alterungswurf
 derived-detail-longevity_bonus = Langlebigkeitsbonus
 derived-detail-no_aging = Altert nicht
+derived-detail-no_apparent_aging = Scheinbares Alter steigt nicht
 derived-detail-decrepitude = Gebrechlichkeit
 derived-detail-living_conditions = Lebensumstände
 derived-detail-taught = Unterrichtet
