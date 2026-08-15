@@ -448,6 +448,47 @@ living-conditions-total = Lebensumständemodifikator: { $modifier }
 living-conditions-none = Keine Lebensumstände gewählt: der Charakter gilt als durchschnittlicher Bauer (0).
 living-conditions-cumulative-note = Als kumulativ markierte Lebensumstände sind untereinander kumulativ; die übrigen sind Alternativen, von denen höchstens eine gewählt werden sollte.
 living-conditions-cumulative-label = kumulativ
+# Der Alterungswurf-Rechner (Core Rules.md:16567-16615). Der Spieler wirft den
+# Stresswürfel am Tisch und trägt ihn hier ein — die App würfelt nie, und der
+# Würfelwurf wird nie am Charakter gespeichert. Alle Zahlen stammen aus der
+# Engine, und nichts wird eingetragen, bevor der Wurf angewendet wird.
+aging-roll-label = Alterungswurf
+aging-year-label = Jahr für den Wurf
+aging-year-option = { $recorded ->
+    [yes] Alter { $age } — bereits eingetragen
+   *[no] Alter { $age }
+}
+aging-year-option-dated = { $recorded ->
+    [yes] Alter { $age } ({ $year }) — bereits eingetragen
+   *[no] Alter { $age } ({ $year })
+}
+aging-die-label = Stresswürfel
+aging-die-hint = Wirf den Stresswürfel (kein Patzer) am Tisch und trage ihn hier ein — die App würfelt nie für dich. Ein Stresswürfel explodiert, es gibt also keinen Höchstwert.
+aging-total-readout = Alterungswurf gesamt: { $total }
+aging-total-parts = { $die } (Stresswürfel) { $age } (Alter) { $conditions } (Lebensumstände) { $longevity } (Langlebigkeitsritual) { $traits } (Tugenden und Fehler)
+aging-die-capped = Das Langlebigkeitsritual begrenzt diesen Wurf: { $uncapped } zählt als { $total }.
+aging-outcome-apparent_age = Das scheinbare Alter steigt um ein Jahr.
+aging-outcome-no_apparent_aging = Das scheinbare Alter steigt nicht.
+aging-outcome-points_any = { $points ->
+    [one] 1 Alterungspunkt in einer Eigenschaft deiner Wahl.
+   *[other] { $points } Alterungspunkte in beliebigen Eigenschaften deiner Wahl.
+}
+aging-outcome-points_fixed = { $points ->
+    [one] 1 Alterungspunkt in { $characteristic }.
+   *[other] { $points } Alterungspunkte in { $characteristic }.
+}
+aging-outcome-decrepitude_and_crisis = { $points } Alterungspunkte — genug für die nächste Stufe Gebrechlichkeit — und eine Krise.
+aging-outcome-decrepitude_unpriceable = Genug Alterungspunkte für die nächste Stufe Gebrechlichkeit, und eine Krise. Die Steigerungstabelle reicht nicht bis zu dieser Stufe; legt die Zahl am Tisch fest.
+aging-outcome-crisis-note = Dieser Wurf ist eine Krise. Der Krisenwurf selbst ist noch nicht umgesetzt: würfelt ihn am Tisch aus und tragt das Ergebnis ins Alterungsprotokoll ein.
+aging-distribute = { $points ->
+    [one] Verteile 1 Alterungspunkt auf eine Eigenschaft deiner Wahl.
+   *[other] Verteile { $points } Alterungspunkte auf beliebige Eigenschaften deiner Wahl.
+}
+aging-distribute-remaining = { $placed } von { $owed } verteilt
+aging-apply = Dieses Jahr anwenden
+aging-revert = Alter { $age } zurücknehmen
+aging-calculator-clear = Diesen Wurf verwerfen
+aging-calculator-note = Nichts hiervon wird am Charakter eingetragen, bevor du diesen Wurf anwendest; der Würfelwurf selbst wird nie gespeichert.
 personality-label = Persönlichkeitseigenschaften
 personality-name-placeholder = Eigenschaft
 personality-add = Eigenschaft hinzufügen

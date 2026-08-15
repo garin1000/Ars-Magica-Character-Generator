@@ -3691,6 +3691,16 @@ App/UI: three thin commands wrap the above — `aging_preview(entity, age, die)`
 modelled on `apply_childhood_package`. The outcome resolution **cannot** live in
 JS: the die is player input the entity must not store, and a stress die explodes,
 so no bounded lookup table could stand in for the engine.
+`ui/src/lib/components/AgingRollCalculator.svelte` is the surface over them (mounted
+in `AgingPanel.svelte`, so the Details tab and the guided aging step share it): the
+die input carries `min="0"` and deliberately **no `max`** (`:16567`'s exploding
+stress die), the total is shown broken into the terms `AgingTotal` already reports,
+and the distributor renders one number input per Characteristic and refuses to
+submit until it sums to exactly the points the row left open — the UI half of
+`:16602`/`:16611`'s plural "in any Characteristic**s**". The year and die live in
+`AppStore.agingDraft`, UI-only `$state` on the `childhoodDraft` precedent with its
+own debounce and sequence guard, which is what keeps the calculator from dirtying
+the document (`dirty` is a snapshot compare of the entity).
 
 **Localizing `AgingError`** follows the `ChildhoodRejection` precedent exactly, and
 that choice is deliberate. `AgingError` is plain data with no `Display`; the six

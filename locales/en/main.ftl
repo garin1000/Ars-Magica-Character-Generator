@@ -449,6 +449,47 @@ living-conditions-total = Living Conditions modifier: { $modifier }
 living-conditions-none = No Living Conditions chosen: the character counts as an average peasant (0).
 living-conditions-cumulative-note = Conditions marked cumulative stack with each other; the rest are alternatives, so take at most one of those.
 living-conditions-cumulative-label = cumulative
+# The aging roll calculator (Core Rules.md:16567-16615). The player rolls a stress
+# die at the table and types it here — the app never rolls, and the die is never
+# stored on the character. Every number shown is the engine's, and nothing is
+# recorded until Apply.
+aging-roll-label = Aging roll
+aging-year-label = Year to roll for
+aging-year-option = { $recorded ->
+    [yes] Age { $age } — already recorded
+   *[no] Age { $age }
+}
+aging-year-option-dated = { $recorded ->
+    [yes] Age { $age } ({ $year }) — already recorded
+   *[no] Age { $age } ({ $year })
+}
+aging-die-label = Stress die
+aging-die-hint = Roll a stress die (no botch) at the table and type it here — the app never rolls for you. A stress die explodes, so there is no upper value.
+aging-total-readout = Aging total: { $total }
+aging-total-parts = { $die } (stress die) { $age } (age) { $conditions } (living conditions) { $longevity } (Longevity Ritual) { $traits } (Virtues and Flaws)
+aging-die-capped = The Longevity Ritual caps this roll: { $uncapped } counts as { $total }.
+aging-outcome-apparent_age = Apparent age increases by one year.
+aging-outcome-no_apparent_aging = Apparent age does not advance.
+aging-outcome-points_any = { $points ->
+    [one] 1 Aging Point, in any Characteristic you choose.
+   *[other] { $points } Aging Points, in any Characteristics you choose.
+}
+aging-outcome-points_fixed = { $points ->
+    [one] 1 Aging Point in { $characteristic }.
+   *[other] { $points } Aging Points in { $characteristic }.
+}
+aging-outcome-decrepitude_and_crisis = { $points } Aging Points — enough to reach the next level of Decrepitude — and a Crisis.
+aging-outcome-decrepitude_unpriceable = Enough Aging Points to reach the next level of Decrepitude, and a Crisis. The advancement table does not reach that level, so agree the number at the table.
+aging-outcome-crisis-note = This roll is a Crisis. The Crisis roll itself is not modelled yet: resolve it at the table and write the result into the aging log.
+aging-distribute = { $points ->
+    [one] Place 1 Aging Point in a Characteristic of your choice.
+   *[other] Place { $points } Aging Points across any Characteristics you choose.
+}
+aging-distribute-remaining = { $placed } of { $owed } placed
+aging-apply = Apply this year
+aging-revert = Take back age { $age }
+aging-calculator-clear = Clear this roll
+aging-calculator-note = Nothing shown here is recorded on the character until you press Apply; the die itself is never saved.
 personality-label = Personality Traits
 personality-name-placeholder = Trait
 personality-add = Add trait
