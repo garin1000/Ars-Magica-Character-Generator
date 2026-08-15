@@ -27,12 +27,14 @@
 //! See `RULES.md` for the provenance of every value the shipped
 //! `rules/core/aging.json` carries.
 
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 
 use crate::characteristics::Characteristic;
 use crate::effective::{decrepitude_points_total, decrepitude_score, selections_for_effects};
 use crate::ruleset::Ruleset;
-use crate::types::{AgingEffect, Effect, Entity, Id, SourceRef, is_false};
+use crate::types::{AgingEffect, AgingLogEntry, Effect, Entity, Id, SourceRef, is_false};
 
 /// The aging rules, loaded from `rules/core/aging.json`.
 // No `Default`: every field is authored data with no meaningful zero (an aging
@@ -115,10 +117,9 @@ impl AgingRules {
 /// [`AgingLogEntry`](crate::types::AgingLogEntry) records a **calendar** year —
 /// so pairing them is the schedule's job rather than every caller's.
 ///
-/// **No `recorded: bool` here, deliberately.** Matching a schedule row to a
-/// logged year is [`crate::types::AgingLogEntry::age`]'s job — the calendar year
-/// is unavailable without a birth year — and the writer that fills it in lands
-/// with `resolve_year`. The flag belongs beside that writer, not ahead of it.
+/// [`Self::recorded`] answers the third question — whether this year's roll has
+/// already been made — by matching the log on [`AgingLogEntry::age`] rather than
+/// on the calendar year, which is unavailable without a birth year.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AgingYear {
     /// The age the character reaches in this year of the schedule.
@@ -126,6 +127,32 @@ pub struct AgingYear {
     /// The calendar year that age falls in — `birth_year + age` — or `None` when
     /// the character has no birth year recorded.
     pub year: Option<i32>,
+    /// Whether [`resolve_year`] has already resolved this year — i.e. whether
+    /// the log carries an entry for this `age`. A second apply of a recorded
+    /// year is refused ([`AgingError::YearAlreadyRecorded`]), so this is what
+    /// lets a UI offer the years still owed.
+    pub recorded: bool,
+}
+
+/// The calendar year a character's `age` falls in — `birth_year + age` — or
+/// `None` when no birth year is recorded.
+///
+/// Shared by the schedule and the writer so a scheduled year and the log entry
+/// that resolves it can never disagree about which calendar year it was.
+fn calendar_year(entity: &Entity, age: u32) -> Option<i32> {
+    entity
+        .birth_year
+        .zip(i32::try_from(age).ok())
+        .map(|(birth, elapsed)| birth.saturating_add(elapsed))
+}
+
+/// Whether the log already carries a resolved entry for `age`.
+///
+/// The age is the key, not the calendar year: a character with no birth year has
+/// no calendar year to be addressed by, and a hand-written free-text entry
+/// carries no age at all and so is never matched here.
+fn logged_year(entity: &Entity, age: u32) -> Option<&AgingLogEntry> {
+    entity.aging_log.iter().find(|entry| entry.age == Some(age))
 }
 
 /// Every aging roll a character owes, ascending, from
@@ -163,10 +190,8 @@ pub fn aging_schedule(entity: &Entity, ruleset: &Ruleset) -> Vec<AgingYear> {
     (rules.first_roll_age()..=age)
         .map(|age| AgingYear {
             age,
-            year: entity
-                .birth_year
-                .zip(i32::try_from(age).ok())
-                .map(|(birth, elapsed)| birth.saturating_add(elapsed)),
+            year: calendar_year(entity, age),
+            recorded: logged_year(entity, age).is_some(),
         })
         .collect()
 }
@@ -559,6 +584,264 @@ fn points_to_next_decrepitude_level(entity: &Entity, ruleset: &Ruleset) -> Optio
     Some(priced.saturating_sub(accrued).max(1))
 }
 
+/// One year's aging roll as the player submits it.
+///
+/// The engine never rolls: `die` is the stress die (no botch) thrown at the
+/// table and typed in (`:16567`). `age` is the age the roll is made at rather
+/// than the character's current age, because `:2232`'s pre-play catch-up walks
+/// every owed year and each uses that year's own age.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16567, :16615.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct AgingYearRequest {
+    /// The character's age in the year being resolved.
+    pub age: u32,
+    /// The stress die the player rolled and typed in.
+    pub die: i32,
+    /// Where the points the row leaves to the player go, per Characteristic:
+    /// "If an Aging Point 'in any Characteristic' is gained, the player may
+    /// choose the Characteristic" (`:16615`). A **map** rather than a single
+    /// pick, because reaching the next Decrepitude level asks for points "in any
+    /// Characteristic**s**" (`:16602`, `:16611`) and forcing them all onto one
+    /// would force Characteristic drops the player may legally avoid. Empty for
+    /// a row that names its own Characteristics, and for one that awards
+    /// nothing.
+    pub distribution: BTreeMap<Characteristic, u8>,
+}
+
+/// What resolving one year produced: the character it made, and the reading that
+/// made it.
+///
+/// The total and the outcome come back with the entity so a caller can show the
+/// arithmetic it just applied without recomputing it against an entity that has
+/// since changed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AgingYearResult {
+    /// The character after the year — a new value; the caller's is untouched.
+    pub entity: Entity,
+    /// The AGING TOTAL that was rolled, every term included.
+    pub total: AgingTotal,
+    /// What the table did with it.
+    pub outcome: AgingOutcome,
+}
+
+/// Why a year could not be resolved, or reverted.
+///
+/// Plain data: no issue codes, no Fluent keys, no user-facing prose — the same
+/// idiom as [`ChildhoodRejection`](crate::childhood::ChildhoodRejection).
+/// Turning one into a localized message is the caller's job.
+///
+/// Every variant is a **refusal to write**, never a silent adjustment. A year
+/// the engine cannot apply exactly is a year the player must be told about,
+/// because the alternative is a character sheet that quietly disagrees with the
+/// dice that were rolled.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AgingError {
+    /// The ruleset ships no aging rules, so there is no table to roll against.
+    /// An absent block stands the whole subsystem down rather than letting the
+    /// engine invent a threshold or a row.
+    NoAgingRules,
+    /// The log already carries a resolved entry for this age. Applying it again
+    /// would charge the character twice for one roll.
+    YearAlreadyRecorded {
+        /// The age already recorded.
+        age: u32,
+    },
+    /// The distribution does not sum to the points the row left to the player.
+    /// The count is the table's, not the player's: "sufficient Aging Points … to
+    /// reach the next level in Decrepitude" (`:16602`).
+    DistributionMismatch {
+        /// The points the row leaves to the player to place.
+        owed: u32,
+        /// What the request actually distributed.
+        distributed: u32,
+    },
+    /// The row names its own Characteristics (`:16603-16610`) — or awards
+    /// nothing at all — so there was nothing for the player to place, yet the
+    /// request carried a distribution. Applying it would invent points the table
+    /// never awarded.
+    DistributionNotOpen {
+        /// The Characteristics the request tried to place points in, in
+        /// canonical order.
+        characteristics: Vec<Characteristic>,
+    },
+    /// The row asks for "sufficient Aging Points … to reach the next level in
+    /// Decrepitude" (`:16602`) and the advancement curve cannot price that
+    /// level — Decrepitude "increases as an Ability" (`:16617`) and the table
+    /// tops out. Reported as unpriceable rather than silently costed at 0.
+    AwardUnpriceable,
+    /// No log entry records this age, so there is nothing to revert. A
+    /// hand-written free-text entry carries no age and is out of
+    /// [`revert_year`]'s reach by construction — see its doc.
+    YearNotRecorded {
+        /// The age that resolved to no entry.
+        age: u32,
+    },
+}
+
+/// Resolves one year's aging roll and **applies** it — the single writer in the
+/// aging subsystem.
+///
+/// It computes the year's [`AgingTotal`], reads it against the table with
+/// [`resolve_outcome`], and returns the character that results: the awarded
+/// Aging Points added to [`Entity::aging_points`], the apparent age advanced if
+/// the total cleared the threshold (`:16577`), and a structured
+/// [`AgingLogEntry`] appended.
+///
+/// # What it does not do
+///
+/// It **never rolls** — the die is the player's, typed in. It **never kills**:
+/// a row carrying a Crisis (`:16602`, `:16611`) sets
+/// [`AgingOutcome::crisis`] and stops there, because the Crisis Table
+/// (`:16619-16632`) is a later slice. And it **never touches Decrepitude**:
+/// "Every Aging Point also counts as an experience point towards Decrepitude,
+/// which increases as an Ability" (`:16617`), so the score follows from the
+/// points through [`decrepitude_score`] and is never written down beside them.
+///
+/// The entity is not mutated in place, so a refused year leaves the caller's own
+/// character exactly as it was — and [`revert_year`] can put an applied one
+/// back.
+///
+/// # The log entry records, it does not derive
+///
+/// [`AgingLogEntry::effect`] is left empty: the structured fields *are* the
+/// record, and the prose is the player's to add later. The entry keeps the
+/// Living Conditions and the total the year was rolled under because they are
+/// **history** — the character's standing conditions and ritual may legitimately
+/// change afterwards, and the roll that was made does not change with them.
+///
+/// # Seeding the apparent age
+///
+/// [`Entity::apparent_age`] is `None` on most characters. The first year that
+/// needs it seeds it at [`AgingRules::start_age`] — nothing has happened to the
+/// appearance before the first owed roll — and every year after that only
+/// increments. Seeding once and incrementing thereafter is what makes the result
+/// **order-independent**: applying a catch-up's years out of order lands on the
+/// same apparent age as applying them in order. A hand-entered apparent age is
+/// never re-seeded, only advanced.
+///
+/// # Refusals
+///
+/// Every [`AgingError`] here is a refusal to write; nothing is ever partially
+/// applied or silently dropped. See the variants for the five cases.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16617.
+pub fn resolve_year(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    request: &AgingYearRequest,
+) -> Result<AgingYearResult, AgingError> {
+    let Some(rules) = ruleset.aging() else {
+        return Err(AgingError::NoAgingRules);
+    };
+    if logged_year(entity, request.age).is_some() {
+        return Err(AgingError::YearAlreadyRecorded { age: request.age });
+    }
+
+    // Both read the character as it stands *before* the year: the next
+    // Decrepitude level is priced off the points already accrued.
+    let (Some(total), Some(outcome)) = (
+        aging_total(entity, ruleset, request.age, request.die),
+        aging_total(entity, ruleset, request.age, request.die)
+            .and_then(|total| resolve_outcome(entity, ruleset, total.total)),
+    ) else {
+        return Err(AgingError::NoAgingRules);
+    };
+
+    let awarded = award_points(&outcome, &request.distribution)?;
+
+    let mut applied = entity.clone();
+    for (characteristic, points) in &awarded {
+        let accrued = applied.aging_points.entry(*characteristic).or_insert(0);
+        *accrued = accrued.saturating_add(*points);
+    }
+    if outcome.apparent_age_increases {
+        let seeded = applied.apparent_age.unwrap_or(rules.start_age);
+        applied.apparent_age = Some(seeded.saturating_add(1));
+    }
+    applied.aging_log.push(AgingLogEntry {
+        year: calendar_year(entity, request.age),
+        age: Some(request.age),
+        effect: String::new(),
+        die: Some(request.die),
+        total: Some(total.total),
+        living_conditions: entity.living_conditions.clone(),
+        points: awarded,
+        apparent_age_increased: outcome.apparent_age_increases,
+        crisis: outcome.crisis,
+    });
+    applied.normalize();
+
+    Ok(AgingYearResult {
+        entity: applied,
+        total,
+        outcome,
+    })
+}
+
+/// Where the year's Aging Points land, per Characteristic: the ones the row
+/// names itself, plus the ones the player placed.
+///
+/// A zero is not an award, so it is never written — which keeps the log entry
+/// canonical and makes [`revert_year`] the exact inverse.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16601-16615.
+fn award_points(
+    outcome: &AgingOutcome,
+    distribution: &BTreeMap<Characteristic, u8>,
+) -> Result<BTreeMap<Characteristic, u8>, AgingError> {
+    let mut awarded: BTreeMap<Characteristic, u8> = BTreeMap::new();
+    let mut owed = 0u32;
+    for award in &outcome.awards {
+        // `None` is the unpriceable next Decrepitude level, which cannot be
+        // costed at 0 without quietly awarding the character nothing.
+        let Some(points) = award.points else {
+            return Err(AgingError::AwardUnpriceable);
+        };
+        match award.target {
+            AgingPointTarget::Named(characteristic) => add_points(
+                &mut awarded,
+                characteristic,
+                u8::try_from(points).unwrap_or(u8::MAX),
+            ),
+            AgingPointTarget::PlayerChoice | AgingPointTarget::NextDecrepitudeLevel => {
+                owed = owed.saturating_add(points);
+            }
+        }
+    }
+
+    if owed == 0 {
+        if !distribution.is_empty() {
+            return Err(AgingError::DistributionNotOpen {
+                characteristics: distribution.keys().copied().collect(),
+            });
+        }
+        return Ok(awarded);
+    }
+
+    let distributed: u32 = distribution.values().map(|points| u32::from(*points)).sum();
+    if distributed != owed {
+        return Err(AgingError::DistributionMismatch { owed, distributed });
+    }
+    for (characteristic, points) in distribution {
+        add_points(&mut awarded, *characteristic, *points);
+    }
+    Ok(awarded)
+}
+
+/// Adds `points` to a Characteristic's entry, leaving a zero unwritten.
+fn add_points(
+    awarded: &mut BTreeMap<Characteristic, u8>,
+    characteristic: Characteristic,
+    points: u8,
+) {
+    if points == 0 {
+        return;
+    }
+    let entry = awarded.entry(characteristic).or_insert(0);
+    *entry = entry.saturating_add(points);
+}
+
 /// What a Longevity Ritual does to the roll of a character too young to be
 /// aging yet.
 ///
@@ -679,7 +962,7 @@ mod tests {
     use crate::effective::decrepitude_score;
     use crate::ruleset::{Ruleset, RulesetSources};
     use crate::types::{
-        Entity, EntityKind, LongevityRitual, LongevitySource, RulesetRef, Selection,
+        AgingLogEntry, Entity, EntityKind, LongevityRitual, LongevitySource, RulesetRef, Selection,
     };
     use pretty_assertions::assert_eq;
 
@@ -965,15 +1248,18 @@ mod tests {
             vec![
                 AgingYear {
                     age: 36,
-                    year: Some(1196)
+                    year: Some(1196),
+                    recorded: false,
                 },
                 AgingYear {
                     age: 37,
-                    year: Some(1197)
+                    year: Some(1197),
+                    recorded: false,
                 },
                 AgingYear {
                     age: 38,
-                    year: Some(1198)
+                    year: Some(1198),
+                    recorded: false,
                 },
             ]
         );
@@ -1482,5 +1768,344 @@ mod tests {
         let without = Ruleset::from_json("test", "1", "[]", "[]").expect("an empty ruleset loads");
         assert!(without.aging().is_none());
         assert!(resolve_outcome(&living_under(&[]), &without, 22).is_none());
+    }
+
+    /// One year's submission: the die the player typed and where any open points
+    /// go.
+    fn request(age: u32, die: i32, distribution: &[(Characteristic, u8)]) -> AgingYearRequest {
+        AgingYearRequest {
+            age,
+            die,
+            distribution: distribution.iter().copied().collect(),
+        }
+    }
+
+    /// A `BTreeMap` of aging points, which is how both the entity and the log
+    /// entry hold them.
+    fn points(entries: &[(Characteristic, u8)]) -> BTreeMap<Characteristic, u8> {
+        entries.iter().copied().collect()
+    }
+
+    /// Everything the single writer writes, in one year: the row's points, the
+    /// apparent age, the log entry — and nothing else.
+    ///
+    /// A 40-year-old working in a mine ("Work in a mine -1", `:16590`) rolls a
+    /// 10: `10 + ⌈40/10⌉ - (-1) = 15`, which the table answers with "1 Aging
+    /// Point in Sta" (`:16604`).
+    #[test]
+    fn a_resolved_year_writes_the_points_the_appearance_and_a_log_entry() {
+        let ruleset = scheduled_ruleset();
+        let mut entity = living_under(&["living_condition.work_in_a_mine"]);
+        entity.birth_year = Some(1160);
+
+        let resolved = resolve_year(&entity, &ruleset, &request(40, 10, &[]))
+            .expect("an ordinary year resolves");
+
+        assert_eq!(resolved.total.total, 15, "10 + ceil(40/10) - (-1)");
+        assert_eq!(
+            resolved.outcome.awards,
+            vec![AgingPointAward {
+                target: AgingPointTarget::Named(Characteristic::Sta),
+                points: Some(1),
+            }]
+        );
+
+        let applied = &resolved.entity;
+        assert_eq!(applied.aging_points, points(&[(Characteristic::Sta, 1)]));
+        assert_eq!(
+            applied.apparent_age,
+            Some(36),
+            "seeded at the start age, then advanced by this year"
+        );
+        assert_eq!(
+            applied.aging_log,
+            vec![AgingLogEntry {
+                year: Some(1200),
+                age: Some(40),
+                effect: String::new(),
+                die: Some(10),
+                total: Some(15),
+                living_conditions: [Id::new("living_condition.work_in_a_mine")]
+                    .into_iter()
+                    .collect(),
+                points: points(&[(Characteristic::Sta, 1)]),
+                apparent_age_increased: true,
+                crisis: false,
+            }],
+            "the structured fields are the record; the prose is left to the player"
+        );
+
+        // Never in place: the caller's own character is exactly as it was.
+        assert!(entity.aging_log.is_empty());
+        assert!(entity.aging_points.is_empty());
+        assert!(entity.apparent_age.is_none());
+    }
+
+    /// A year is resolved once. Applying it again would charge the character
+    /// twice for a single roll, so the second attempt is refused rather than
+    /// merged or silently dropped.
+    #[test]
+    fn the_same_year_cannot_be_resolved_twice() {
+        let ruleset = scheduled_ruleset();
+        let entity = living_under(&[]);
+
+        let once =
+            resolve_year(&entity, &ruleset, &request(40, 10, &[])).expect("the first apply lands");
+        assert_eq!(
+            resolve_year(&once.entity, &ruleset, &request(40, 4, &[])).unwrap_err(),
+            AgingError::YearAlreadyRecorded { age: 40 },
+            "even with a different die: the year is the key"
+        );
+
+        // Its neighbours are untouched — only that one year is spoken for.
+        assert!(resolve_year(&once.entity, &ruleset, &request(39, 10, &[])).is_ok());
+    }
+
+    /// "Gain sufficient Aging Points (in any Characteristics) to reach the next
+    /// level in Decrepitude" (`:16602`) — the count is the table's, so a
+    /// distribution that does not sum to it is refused instead of quietly
+    /// awarding whatever was typed.
+    #[test]
+    fn a_distribution_that_misses_the_award_is_refused() {
+        let ruleset = scheduled_ruleset();
+        let entity = living_under(&[]);
+
+        // 9 + ceil(40/10) = 13, the first row that reaches the next Decrepitude
+        // level — 5 points on the fixture's curve.
+        let short = resolve_year(
+            &entity,
+            &ruleset,
+            &request(40, 9, &[(Characteristic::Str, 2), (Characteristic::Sta, 2)]),
+        );
+        assert_eq!(
+            short.unwrap_err(),
+            AgingError::DistributionMismatch {
+                owed: 5,
+                distributed: 4,
+            }
+        );
+
+        // An unanswered award is the same refusal, not an award of nothing.
+        assert_eq!(
+            resolve_year(&entity, &ruleset, &request(40, 9, &[])).unwrap_err(),
+            AgingError::DistributionMismatch {
+                owed: 5,
+                distributed: 0,
+            }
+        );
+    }
+
+    /// "Gain sufficient Aging Points (**in any Characteristics**) to reach the
+    /// next level in Decrepitude" (`:16602`, `:16611`) — **plural**. Reaching
+    /// Decrepitude 1 costs five points, and forcing all five into one
+    /// Characteristic would force Characteristic drops (`:16579`) the player may
+    /// legally avoid. So the distribution is a per-Characteristic map, and this
+    /// test is what stops a later refactor narrowing it to a single pick.
+    #[test]
+    fn a_decrepitude_award_may_be_spread_across_several_characteristics() {
+        let ruleset = scheduled_ruleset();
+        let entity = living_under(&[]);
+
+        let spread = resolve_year(
+            &entity,
+            &ruleset,
+            &request(
+                40,
+                9,
+                &[
+                    (Characteristic::Str, 2),
+                    (Characteristic::Sta, 2),
+                    (Characteristic::Qik, 1),
+                ],
+            ),
+        )
+        .expect("five points across three Characteristics is a legal answer");
+
+        let spread_points = points(&[
+            (Characteristic::Str, 2),
+            (Characteristic::Sta, 2),
+            (Characteristic::Qik, 1),
+        ]);
+        assert_eq!(spread.entity.aging_points, spread_points);
+        assert_eq!(
+            spread.entity.aging_log[0].points, spread_points,
+            "the log records where they went, which is what makes the year revertible"
+        );
+        assert!(
+            spread.outcome.crisis,
+            "'… and Crisis' (`:16602`) — flagged, not resolved"
+        );
+    }
+
+    /// Rows 14-21 name the Characteristics themselves (`:16603-16610`), and so
+    /// does every row below 10 by naming none at all. Placing points against
+    /// either would invent an award the table never made.
+    #[test]
+    fn a_row_that_names_its_own_characteristics_takes_no_distribution() {
+        let ruleset = scheduled_ruleset();
+        let entity = living_under(&[]);
+
+        // 10 + ceil(40/10) = 14: "1 Aging Point in Qik" (`:16603`).
+        assert_eq!(
+            resolve_year(
+                &entity,
+                &ruleset,
+                &request(40, 10, &[(Characteristic::Int, 1)])
+            )
+            .unwrap_err(),
+            AgingError::DistributionNotOpen {
+                characteristics: vec![Characteristic::Int],
+            }
+        );
+
+        // And a total below the table's first row awards nothing at all.
+        assert_eq!(
+            resolve_year(
+                &entity,
+                &ruleset,
+                &request(40, 1, &[(Characteristic::Int, 1)])
+            )
+            .unwrap_err(),
+            AgingError::DistributionNotOpen {
+                characteristics: vec![Characteristic::Int],
+            }
+        );
+    }
+
+    /// "Every Aging Point also counts as an experience point towards
+    /// Decrepitude, which increases as an Ability" (`:16617`) — so the writer
+    /// writes points and Decrepitude follows from them. Nothing stores the
+    /// score.
+    #[test]
+    fn aging_points_stay_authoritative_and_decrepitude_follows_from_them() {
+        let ruleset = scheduled_ruleset();
+        let entity = living_under(&[]);
+        assert_eq!(decrepitude_score(&entity, &ruleset), 0);
+
+        let resolved = resolve_year(
+            &entity,
+            &ruleset,
+            &request(40, 9, &[(Characteristic::Str, 3), (Characteristic::Sta, 2)]),
+        )
+        .expect("the next Decrepitude level costs five points");
+
+        assert_eq!(decrepitude_points_total(&resolved.entity), 5);
+        assert_eq!(
+            decrepitude_score(&resolved.entity, &ruleset),
+            1,
+            "derived from the points, with no separate write"
+        );
+        assert!(
+            resolved.entity.decrepitude_effect.is_empty(),
+            "the Decrepitude annotation is the player's prose, never the engine's"
+        );
+    }
+
+    /// `apparent_age` is `None` on most characters, so the first year that needs
+    /// it seeds it at [`AgingRules::start_age`] — nothing has happened before the
+    /// first owed roll — and advances from there (`:16577`). Seeding once and
+    /// only incrementing afterwards is what makes an out-of-order catch-up land
+    /// on the same number as an in-order one.
+    #[test]
+    fn the_apparent_age_seeds_at_the_start_age_however_the_years_are_ordered() {
+        let ruleset = scheduled_ruleset();
+        let mut entity = living_under(&[]);
+        entity.age = Some(41);
+        assert!(entity.apparent_age.is_none());
+
+        let first = resolve_year(&entity, &ruleset, &request(40, 10, &[])).expect("a 14 at 40");
+        assert_eq!(first.entity.apparent_age, Some(36), "35, then this year");
+        let in_order =
+            resolve_year(&first.entity, &ruleset, &request(41, 10, &[])).expect("a 15 at 41");
+        assert_eq!(in_order.entity.apparent_age, Some(37));
+
+        let later = resolve_year(&entity, &ruleset, &request(41, 10, &[])).expect("a 15 at 41");
+        let reversed =
+            resolve_year(&later.entity, &ruleset, &request(40, 10, &[])).expect("a 14 at 40");
+        assert_eq!(
+            reversed.entity.apparent_age, in_order.entity.apparent_age,
+            "the same two years in the other order reach the same appearance"
+        );
+
+        // A hand-entered apparent age is never re-seeded, only advanced.
+        let mut aged = living_under(&[]);
+        aged.apparent_age = Some(50);
+        assert_eq!(
+            resolve_year(&aged, &ruleset, &request(40, 10, &[]))
+                .expect("a 14 at 40")
+                .entity
+                .apparent_age,
+            Some(51)
+        );
+
+        // "2 or less: No apparent aging" (`:16599`) seeds nothing at all — a
+        // wealthy 40-year-old with Mild Aging rolling a 1: 1 + 4 - (2 + 1) = 2.
+        let mut kept = living_under(&["living_condition.wealthy_or_healthy_location"]);
+        kept.selections = vec![Selection::new(Id::new("virtue.mild_aging"))];
+        let calm = resolve_year(&kept, &ruleset, &request(40, 1, &[])).expect("a 2 at 40");
+        assert_eq!(calm.total.total, 2);
+        assert!(
+            calm.entity.apparent_age.is_none(),
+            "a year that ages nothing invents no apparent age either"
+        );
+        assert!(!calm.entity.aging_log[0].apparent_age_increased);
+    }
+
+    /// The schedule's `recorded` flag is the log read back through
+    /// [`AgingLogEntry::age`] — the key a resolved year is addressed by, since a
+    /// calendar year is unavailable without a birth year.
+    #[test]
+    fn the_schedule_marks_a_resolved_year_as_recorded() {
+        let ruleset = scheduled_ruleset();
+        let mut entity = living_under(&[]);
+        entity.age = Some(38);
+        assert!(
+            aging_schedule(&entity, &ruleset)
+                .iter()
+                .all(|year| !year.recorded),
+            "nothing is recorded before the first apply"
+        );
+
+        let resolved = resolve_year(&entity, &ruleset, &request(37, 10, &[])).expect("a 14 at 37");
+        assert_eq!(
+            aging_schedule(&resolved.entity, &ruleset)
+                .into_iter()
+                .map(|year| (year.age, year.recorded))
+                .collect::<Vec<_>>(),
+            vec![(36, false), (37, true), (38, false)]
+        );
+    }
+
+    /// Two refusals with nothing to award: a Decrepitude level the advancement
+    /// curve cannot price (`:16617` — Decrepitude "increases as an Ability", and
+    /// the table tops out), and a ruleset shipping no aging rules at all. Both
+    /// are reported, never silently costed at 0.
+    #[test]
+    fn an_unpriceable_award_and_a_ruleset_without_aging_rules_are_refused() {
+        let ruleset = scheduled_ruleset();
+        let top = ruleset
+            .advancement()
+            .max_score()
+            .expect("the fixture's curve prices something");
+        let at_top = ruleset
+            .advancement()
+            .xp_for_score(top)
+            .expect("the top score is priced");
+        let mut frail = living_under(&[]);
+        frail.aging_points.insert(
+            Characteristic::Str,
+            u8::try_from(at_top).expect("the fixture's top price fits a point count"),
+        );
+
+        assert_eq!(
+            resolve_year(&frail, &ruleset, &request(40, 9, &[])).unwrap_err(),
+            AgingError::AwardUnpriceable
+        );
+
+        let without = Ruleset::from_json("test", "1", "[]", "[]").expect("an empty ruleset loads");
+        assert_eq!(
+            resolve_year(&living_under(&[]), &without, &request(40, 10, &[])).unwrap_err(),
+            AgingError::NoAgingRules
+        );
     }
 }
