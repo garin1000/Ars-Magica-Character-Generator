@@ -30,7 +30,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::characteristics::Characteristic;
-use crate::types::{Id, SourceRef, is_false};
+use crate::ruleset::Ruleset;
+use crate::types::{Entity, Id, SourceRef, is_false};
 
 /// The aging rules, loaded from `rules/core/aging.json`.
 // No `Default`: every field is authored data with no meaningful zero (an aging
@@ -59,6 +60,106 @@ pub struct AgingRules {
     /// The Aging Roll table (`:16597-16611`), in file order.
     #[serde(default)]
     pub outcomes: Vec<AgingRow>,
+}
+
+impl AgingRules {
+    /// The first age at which a roll is owed: [`Self::start_age`] + 1, the one
+    /// deliberate off-by-one in the engine.
+    ///
+    /// "Characters begin aging in the Winter **after** they turn 35. Every year, a
+    /// character must roll on the aging table." (`:16565`) The Winter after the
+    /// 35th birthday falls in the character's 36th year, so 35 is the last age
+    /// owing nothing and 36 is the first owing a roll. The creation-time rule says
+    /// the same thing from the other side: "a character **over** the age of 35
+    /// must make aging rolls … before the game begins" (`:2232`).
+    ///
+    /// `:2496` reads against this and is **disposed of, not ignored**: "you should
+    /// also make aging rolls for the character each year **from the age of 35**".
+    /// That sentence is advice inside the worked magus-advancement example, while
+    /// `:2232` is the creation-time rule the app enforces — and `:2232` agrees
+    /// with `:16565`. So 36 it is.
+    ///
+    /// No month or season is modelled. "The Winter after they turn 35" places the
+    /// roll *inside* a year rather than splitting one, and the app tracks no
+    /// seasons, so a year either owes a roll or it does not.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16565, :2232,
+    /// :2496.
+    pub fn first_roll_age(&self) -> u32 {
+        self.start_age.saturating_add(1)
+    }
+
+    /// The age term of the AGING TOTAL: "age/10 (round up)" (`:16567`), with
+    /// [`Self::age_divisor`] standing in for the 10.
+    ///
+    /// Rounding up means the term steps on the first year of each decade, not the
+    /// last: 30 still scores 3, 31 already scores 4. Returns 0 for a divisor of 0,
+    /// which [`Ruleset::validate_integrity`] rejects at load — a ruleset that
+    /// reached the engine anyway has no age term to compute, not a panic to raise.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16567.
+    pub fn age_modifier(&self, age: u32) -> i32 {
+        if self.age_divisor == 0 {
+            return 0;
+        }
+        i32::try_from(age.div_ceil(self.age_divisor)).unwrap_or(i32::MAX)
+    }
+}
+
+/// One year on a character's aging schedule: the `age` he reaches and, when the
+/// character has a birth year, the calendar `year` that age falls in.
+///
+/// Both, because they answer different questions.
+/// [`AgingRules::age_modifier`] wants the age, while
+/// [`AgingLogEntry`](crate::types::AgingLogEntry) records a **calendar** year —
+/// so pairing them is the schedule's job rather than every caller's.
+///
+/// **No `recorded: bool` here, deliberately.** Deciding whether a year is already
+/// logged needs the widened `AgingLogEntry` a later step introduces; today the log
+/// carries only `{ year, effect }`, so an undated character's entries could not be
+/// matched to a schedule row at all. A flag added now would be a half-answer that
+/// step would have to redefine.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AgingYear {
+    /// The age the character reaches in this year of the schedule.
+    pub age: u32,
+    /// The calendar year that age falls in — `birth_year + age` — or `None` when
+    /// the character has no birth year recorded.
+    pub year: Option<i32>,
+}
+
+/// Every aging roll a character owes, ascending, from
+/// [`AgingRules::first_roll_age`] through his current age.
+///
+/// Empty when the question does not arise: the character is at or under the
+/// threshold, his age was never entered, or the ruleset ships no aging rules at
+/// all (which stands the whole subsystem down rather than letting the engine
+/// invent a threshold).
+///
+/// **A Longevity Ritual holder under 35 is not scheduled**, which is a decision
+/// rather than an oversight. `:16575` says such a character "should roll on the
+/// table no matter what his age" — but that clause is unbounded downward, nothing
+/// on the entity records *when* the ritual was made, and those rolls are clamped
+/// (see [`LongevityClamp`]) so they can never grant an Aging Point. The obligation
+/// the app enforces is `:2232`'s, which is age-gated and carries no ritual clause.
+/// So the schedule yields `first_roll_age()..=age` and nothing below it; a later
+/// step's aging total will still compute a pre-35 roll correctly for a caller that
+/// asks for one.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16565, :16575, :2232.
+pub fn aging_schedule(entity: &Entity, ruleset: &Ruleset) -> Vec<AgingYear> {
+    let (Some(rules), Some(age)) = (ruleset.aging(), entity.age) else {
+        return Vec::new();
+    };
+    (rules.first_roll_age()..=age)
+        .map(|age| AgingYear {
+            age,
+            year: entity
+                .birth_year
+                .zip(i32::try_from(age).ok())
+                .map(|(birth, elapsed)| birth.saturating_add(elapsed)),
+        })
+        .collect()
 }
 
 /// What a Longevity Ritual does to the roll of a character too young to be
@@ -169,6 +270,8 @@ pub enum AgingRowEffect {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ruleset::{Ruleset, RulesetSources};
+    use crate::types::{Entity, EntityKind, RulesetRef};
     use pretty_assertions::assert_eq;
 
     /// The two tables of `## Aging` in miniature: a Living Conditions row of each
@@ -294,5 +397,149 @@ mod tests {
             newt.is_err(),
             "an effect kind the engine cannot apply must fail to load, not be ignored"
         );
+    }
+
+    /// A ruleset carrying a loadable aging block. [`AGING`] itself will not do:
+    /// its miniature table leaves a gap between 13 and 18, which the loader's
+    /// tiling gate rejects, so the schedule fixtures ship a contiguous one.
+    fn scheduled_ruleset() -> Ruleset {
+        let aging = r#"{
+          "start_age": 35,
+          "age_divisor": 10,
+          "apparent_age_increase_min": 3,
+          "longevity_clamp": { "max_total": 9, "until_age": 35 },
+          "living_conditions": [
+            { "id": "living_condition.average_peasant", "modifier": 0 }
+          ],
+          "outcomes": [
+            { "min": 10, "max": 21, "effect": { "type": "any_characteristic", "points": 1 } },
+            { "min": 22, "effect": { "type": "next_decrepitude_level_and_crisis" } }
+          ]
+        }"#;
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            aging: Some(aging),
+            ..RulesetSources::default()
+        })
+        .expect("the aging fixture loads")
+    }
+
+    /// A character of `age`, born in `birth_year` when one is given.
+    fn character(age: Option<u32>, birth_year: Option<i32>) -> Entity {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.age = age;
+        entity.birth_year = birth_year;
+        entity
+    }
+
+    /// The ages of an entity's schedule, which is what most of these assert on.
+    fn ages(entity: &Entity, ruleset: &Ruleset) -> Vec<u32> {
+        aging_schedule(entity, ruleset)
+            .into_iter()
+            .map(|year| year.age)
+            .collect()
+    }
+
+    /// The one deliberate off-by-one in the engine, and the three sentences that
+    /// settle it.
+    ///
+    /// `:16565` — "Characters begin aging in the Winter **after** they turn 35.
+    /// Every year, a character must roll on the aging table." The Winter *after*
+    /// the 35th birthday falls in the character's 36th year, so 35 is the last
+    /// year owing nothing and 36 is the first owing a roll.
+    ///
+    /// `:2496` reads against this and is disposed of, not ignored: "you should
+    /// also make aging rolls for the character each year **from the age of 35**".
+    /// That is advice inside the worked magus-advancement example; `:2232` is the
+    /// creation-time rule proper — "a character **over** the age of 35 must make
+    /// aging rolls … before the game begins" — and it agrees with `:16565`. Over
+    /// 35, from the Winter after 35: the first owed roll is at 36.
+    #[test]
+    fn aging_rolls_are_owed_from_the_year_after_thirty_five() {
+        let ruleset = scheduled_ruleset();
+        let rules = ruleset.aging().expect("the fixture ships aging rules");
+        assert_eq!(rules.start_age, 35);
+        assert_eq!(rules.first_roll_age(), 36);
+
+        // A 38-year-old owes the three years he has lived past the threshold.
+        assert_eq!(ages(&character(Some(38), None), &ruleset), vec![36, 37, 38]);
+
+        // At the threshold itself nothing is owed — he has turned 35, but the
+        // Winter after has not come.
+        assert!(ages(&character(Some(35), None), &ruleset).is_empty());
+        assert!(ages(&character(Some(20), None), &ruleset).is_empty());
+
+        // And one year past it, exactly one roll.
+        assert_eq!(ages(&character(Some(36), None), &ruleset), vec![36]);
+    }
+
+    /// [`AgingLogEntry`](crate::types::AgingLogEntry) records a **calendar** year,
+    /// while the schedule is driven by the character's age — so each entry carries
+    /// both, and the pairing is the schedule's job rather than every caller's.
+    #[test]
+    fn the_aging_schedule_pairs_each_age_with_its_calendar_year() {
+        let ruleset = scheduled_ruleset();
+
+        let born = character(Some(38), Some(1160));
+        assert_eq!(
+            aging_schedule(&born, &ruleset),
+            vec![
+                AgingYear {
+                    age: 36,
+                    year: Some(1196)
+                },
+                AgingYear {
+                    age: 37,
+                    year: Some(1197)
+                },
+                AgingYear {
+                    age: 38,
+                    year: Some(1198)
+                },
+            ]
+        );
+
+        // Birth year is optional flavor, so a character without one still owes the
+        // same rolls — they just have no calendar year to sit in.
+        let undated = character(Some(38), None);
+        let schedule = aging_schedule(&undated, &ruleset);
+        assert_eq!(schedule.len(), 3);
+        assert!(
+            schedule.iter().all(|entry| entry.year.is_none()),
+            "no birth year means no calendar year: {schedule:?}"
+        );
+    }
+
+    /// Two ways the question does not arise at all: a character whose age was
+    /// never entered, and a ruleset that ships no aging tables (which stands the
+    /// whole subsystem down rather than letting the engine invent a threshold).
+    #[test]
+    fn a_character_without_an_age_or_aging_rules_owes_no_schedule() {
+        let ruleset = scheduled_ruleset();
+        assert!(aging_schedule(&character(None, Some(1160)), &ruleset).is_empty());
+
+        let without = Ruleset::from_json("test", "1", "[]", "[]").expect("an empty ruleset loads");
+        assert!(without.aging().is_none());
+        assert!(aging_schedule(&character(Some(80), Some(1160)), &without).is_empty());
+    }
+
+    /// "age/10 (round up)" (`:16567`) — so the term steps up on the first year of
+    /// each decade, not the last: 30 still scores 3, and 31 already scores 4.
+    #[test]
+    fn the_age_modifier_rounds_the_decade_up() {
+        let ruleset = scheduled_ruleset();
+        let rules = ruleset.aging().expect("the fixture ships aging rules");
+
+        assert_eq!(rules.age_modifier(30), 3);
+        assert_eq!(rules.age_modifier(31), 4);
+        assert_eq!(rules.age_modifier(40), 4);
+        assert_eq!(rules.age_modifier(41), 5);
     }
 }
