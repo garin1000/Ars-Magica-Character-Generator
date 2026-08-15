@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { AgingProjection } from './ipc';
 import type {
   Ability,
   CreationPhase,
@@ -48,6 +49,9 @@ vi.mock('./ipc', () => ({
   exportMarkdown: vi.fn(),
   exportLabelKeys: vi.fn(),
   applyChildhoodPackage: vi.fn(),
+  agingPreview: vi.fn(),
+  agingApply: vi.fn(),
+  agingRevert: vi.fn(),
 }));
 
 // Import the singleton after the mock is registered.
@@ -3363,5 +3367,73 @@ describe('exportMarkdown', () => {
     // Let the save finish so the in-flight guard clears for later tests.
     finishSave('/tmp/marcus.armc');
     await saving;
+  });
+});
+
+// --- the aging roll draft (M6/6b6c) -----------------------------------------
+
+describe('the aging roll draft', () => {
+  beforeEach(() => {
+    store.clearAgingDraft();
+    vi.mocked(ipc.agingPreview).mockClear();
+  });
+
+  it('keeps the typed aging die off the entity, so the calculator never dirties the document', async () => {
+    await store.createCharacter('companion');
+    expect(store.dirty).toBe(false);
+
+    store.setAgingYear(40);
+    store.setAgingDie(9);
+    store.setAgingDistribution('sta', 2);
+
+    // The die is player input the entity must never store: it is not a choice the
+    // character records, and `dirty` is a snapshot compare of the entity, so
+    // holding it here is what makes "the calculator does not persist" true.
+    expect(store.dirty).toBe(false);
+    const serialized = JSON.stringify(store.entity);
+    expect(serialized).not.toContain('die');
+    expect(serialized).not.toContain('aging_log');
+    expect(store.agingDraft).toEqual({ age: 40, die: 9, distribution: { sta: 2 } });
+  });
+
+  it('drops the aging draft when a new character is created', async () => {
+    store.setAgingYear(40);
+    store.setAgingDie(9);
+
+    await store.createCharacter('companion');
+
+    expect(store.agingDraft).toEqual({ age: null, die: null, distribution: {} });
+    expect(store.agingPreview).toBeNull();
+  });
+
+  it('never lets a stale preview overwrite a newer one', async () => {
+    /** A previewed projection carrying only the field this test reads. */
+    const previewed = (total: number) =>
+      ({
+        status: 'previewed',
+        total: { total },
+        outcome: { total },
+      }) as unknown as AgingProjection;
+
+    let finishFirst: (value: AgingProjection) => void = () => {};
+    vi.mocked(ipc.agingPreview)
+      .mockReturnValueOnce(
+        new Promise<AgingProjection>((resolve) => {
+          finishFirst = resolve;
+        }),
+      )
+      .mockResolvedValueOnce(previewed(14));
+
+    store.setAgingYear(40);
+    store.setAgingDie(9);
+    const stale = store.previewAgingRoll();
+    store.setAgingDie(10);
+    await store.previewAgingRoll();
+
+    // The newer answer is in place; the older one lands afterwards and is dropped.
+    finishFirst(previewed(13));
+    await stale;
+
+    expect(store.agingPreview?.total.total).toBe(14);
   });
 });

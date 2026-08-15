@@ -12,7 +12,7 @@ import {
 } from './derive';
 import { buildBundle, translate, type Lang, type TranslateArgs } from './i18n';
 import * as ipc from './ipc';
-import type { CloseGuardLabels } from './ipc';
+import type { AgingOutcome, AgingTotal, CloseGuardLabels } from './ipc';
 import type {
   AppError,
   Characteristic,
@@ -245,6 +245,38 @@ export function defaultChildhoodDraft(): ChildhoodDraft {
   return { packageId: null, slots: {} };
 }
 
+/**
+ * The aging roll the player is working on: which owed year it is for, the stress
+ * die they typed, and where they are placing the Aging Points the table left to
+ * them.
+ *
+ * UI-only state, exactly like {@link ChildhoodDraft} and for the same reason —
+ * only more strictly. The die is not a choice the character records: the engine
+ * carries no `rand` dependency, so the player rolls a stress die at the table and
+ * types it in, and what the character keeps is the *result* the year applied
+ * (`Entity.aging_log`), never the input. Since `dirty` is a snapshot compare of
+ * the entity, holding the die here is what makes "the calculator does not persist"
+ * mechanically true rather than merely intended.
+ *
+ * The distribution rides along because it is one form with the die: "Gain
+ * sufficient Aging Points (in any Characteristic**s**)"
+ * (Core Rules.md:16602/:16611) is plural, so the player may spread the points,
+ * and the map is only meaningful against the award the current die produced.
+ */
+export interface AgingDraft {
+  /** The age of the owed year being rolled for; `null` while none is picked. */
+  age: number | null;
+  /** The stress die the player typed; `null` while the field is blank. */
+  die: number | null;
+  /** Characteristic -> Aging Points placed there. Zeroes are absent. */
+  distribution: Partial<Record<Characteristic, number>>;
+}
+
+/** A fresh, empty aging draft (the initial/reset state). */
+export function defaultAgingDraft(): AgingDraft {
+  return { age: null, die: null, distribution: {} };
+}
+
 class AppStore {
   lang = $state<Lang>('en');
   ruleset = $state<LocalizedRuleset | null>(null);
@@ -279,6 +311,49 @@ class AppStore {
    * than none at all.
    */
   childhoodRejections = $state<ValidationIssue[]>([]);
+
+  /**
+   * The in-progress aging roll (see {@link AgingDraft}). UI state like
+   * {@link childhoodDraft}: never part of the entity, so it is never saved and
+   * typing a die never dirties the document.
+   */
+  agingDraft = $state<AgingDraft>(defaultAgingDraft());
+
+  /**
+   * The engine's answer for the drafted roll: the AGING TOTAL with every term
+   * that made it, and the row it lands on. `null` until a year and a die are both
+   * given (and while the debounced round trip is still out).
+   *
+   * Held rather than derived because it is the *engine's* reading — a stress die
+   * explodes, so no bounded lookup table in JS could stand in for it, and
+   * re-deriving the outcome here would be a second implementation of the table.
+   */
+  agingPreview = $state<{ total: AgingTotal; outcome: AgingOutcome } | null>(null);
+
+  /**
+   * Why the last preview, apply or revert was refused, for the calculator to
+   * render. Empty when there is nothing to say.
+   *
+   * Its own field rather than part of {@link result}, on the
+   * {@link childhoodRejections} precedent: these findings are about the form the
+   * player just submitted, not about the character — which a refusal leaves
+   * untouched.
+   */
+  agingRejections = $state<ValidationIssue[]>([]);
+
+  /**
+   * The owed year the calculator is on: the player's own pick, or the first year
+   * the aging log does not yet record.
+   *
+   * Defaulted here rather than in the component so the store and the screen can
+   * never disagree about which year a typed die belongs to — the component only
+   * renders what this says.
+   */
+  agingYear = $derived<number | null>(
+    this.agingDraft.age ??
+      (this.effective?.aging?.schedule ?? []).find((year) => !year.recorded)?.age ??
+      null,
+  );
 
   /**
    * Which screen the app is on: the startup choice screen, the guided wizard, or
@@ -384,6 +459,12 @@ class AppStore {
   #bundle = $derived(buildBundle(this.lang));
   #timer: ReturnType<typeof setTimeout> | undefined;
   #seq = 0;
+  // The aging preview's own debounce and sequence guard. Deliberately separate
+  // from the validation pair above: the die is not an entity edit, so it must not
+  // ride on `#scheduleValidate` — and a keystroke in the die field must not cancel
+  // a pending validation of the character (or the other way round).
+  #agingTimer: ReturnType<typeof setTimeout> | undefined;
+  #agingSeq = 0;
   // The exact error object the last rejected validate published to `error`, so a
   // later succeeding validate can tell its own banner apart from a file-operation
   // failure that landed in the same shared field. Not reactive: it never renders.
@@ -711,6 +792,11 @@ class AppStore {
    * stale slot faults for a decision nobody has made yet. Deliberately asymmetric —
    * *entering* guided mode keeps an in-progress draft, since toggling the radio back
    * and forth without ever leaving would otherwise destroy typed slot values.
+   *
+   * The {@link agingDraft} goes with it, on one blanket rule: an un-submitted draft
+   * never outlives a change to how the document is built. One rule covering every
+   * draft keeps their lifetimes auditable in a single place, which is worth more
+   * than sparing a typed die across a funding switch.
    */
   async setAbilityFunding(funding: AbilityFunding): Promise<void> {
     if (this.abilityFunding === funding) return;
@@ -721,6 +807,7 @@ class AppStore {
       delete this.entity.life_stages;
       this.childhoodDraft = defaultChildhoodDraft();
       this.childhoodRejections = [];
+      this.clearAgingDraft();
     }
     await this.revalidate();
   }
@@ -894,6 +981,163 @@ class AppStore {
     } catch (e) {
       this.error = e as AppError;
     }
+  }
+
+  /**
+   * Pick which owed year the calculator is rolling for, or fall back to the
+   * default with `null`. Draft state only (see {@link AgingDraft}).
+   *
+   * Drops the point distribution: it was placed against the award the *other*
+   * year's roll produced, and carrying it over would let a player apply points
+   * they never re-confirmed. The typed die survives, since it is the number the
+   * player has in front of them either way.
+   */
+  setAgingYear(age: number | null): void {
+    this.agingRejections = [];
+    this.agingDraft = { ...this.agingDraft, age, distribution: {} };
+    this.#scheduleAgingPreview();
+  }
+
+  /**
+   * Record the stress die the player rolled, or clear it with `null`.
+   *
+   * "AGING TOTAL: Stress die (no botch) + age/10 (round up) …"
+   * Source: Ars Magica - Definitive Edition (Core Rules).md:16567
+   *
+   * A stress die explodes, so the value has a floor of 0 and no ceiling; it is
+   * clamped only to what the command's `i32` can carry. Debounced through
+   * {@link #scheduleAgingPreview} and NOT through `#scheduleValidate` — the die is
+   * not an edit of the character, so it must never be sent as one.
+   */
+  setAgingDie(die: number | null): void {
+    this.agingRejections = [];
+    const value = die != null && Number.isFinite(die) ? clampInt(die, 0, I32_MAX) : null;
+    this.agingDraft = { ...this.agingDraft, die: value, distribution: {} };
+    this.#scheduleAgingPreview();
+  }
+
+  /**
+   * Place (or, with 0, un-place) Aging Points in one Characteristic.
+   *
+   * "If an Aging Point 'in any Characteristic' is gained, the player may choose
+   * the Characteristic." Source: Ars Magica - Definitive Edition (Core
+   * Rules).md:16615 — and `:16602`/`:16611` say "in any Characteristic**s**",
+   * plural, so this is a map and not a single pick.
+   *
+   * The engine is the authority on whether the map is legal; this only records
+   * it, and the calculator refuses to submit one that does not sum to the award.
+   */
+  setAgingDistribution(characteristic: Characteristic, points: number | null): void {
+    this.agingRejections = [];
+    const distribution = { ...this.agingDraft.distribution };
+    if (points != null && Number.isFinite(points) && points > 0) {
+      distribution[characteristic] = clampInt(points, 1, U8_MAX);
+    } else {
+      delete distribution[characteristic];
+    }
+    this.agingDraft = { ...this.agingDraft, distribution };
+  }
+
+  /** Abandon the drafted roll: the year, the die, the points and the last refusal. */
+  clearAgingDraft(): void {
+    clearTimeout(this.#agingTimer);
+    this.#agingTimer = undefined;
+    this.#agingSeq++;
+    this.agingDraft = defaultAgingDraft();
+    this.agingPreview = null;
+    this.agingRejections = [];
+  }
+
+  /**
+   * Ask the engine what the drafted die makes of the drafted year, and keep the
+   * answer in {@link agingPreview}. Writes nothing to the character.
+   *
+   * Guarded by its own sequence counter, the {@link revalidate} idiom: the die
+   * field is typed into, so several previews can be in flight and they may finish
+   * out of order — a stale answer must never overwrite a newer one, or the player
+   * sees an outcome for a die they have already changed.
+   */
+  async previewAgingRoll(): Promise<void> {
+    const seq = ++this.#agingSeq;
+    const { age, die } = this.agingDraft;
+    const year = age ?? this.agingYear;
+    if (year == null || die == null) {
+      this.agingPreview = null;
+      return;
+    }
+    try {
+      const projection = await ipc.agingPreview($state.snapshot(this.entity), year, die);
+      if (seq !== this.#agingSeq) return;
+      if (projection.status === 'rejected') {
+        this.agingPreview = null;
+        this.agingRejections = projection.issues;
+        return;
+      }
+      this.agingPreview = { total: projection.total, outcome: projection.outcome };
+      this.agingRejections = [];
+    } catch (e) {
+      if (seq === this.#agingSeq) this.error = e as AppError;
+    }
+  }
+
+  /**
+   * Apply the drafted roll: the engine resolves the year, writes the Aging Points,
+   * advances the apparent age and appends the log entry, all in one move
+   * (`resolve_year` is the aging subsystem's single writer).
+   *
+   * On acceptance the returned character replaces the current one wholesale and
+   * the draft is spent, so the calculator moves on to the next owed year; `dirty`
+   * needs no help, since it derives from the entity snapshot. On refusal the
+   * character is untouched and the findings land in {@link agingRejections}.
+   */
+  async applyAgingRoll(): Promise<void> {
+    const { die, distribution } = this.agingDraft;
+    const year = this.agingYear;
+    if (year == null || die == null) return;
+    this.agingRejections = [];
+    try {
+      const application = await ipc.agingApply(
+        $state.snapshot(this.entity),
+        year,
+        die,
+        $state.snapshot(distribution),
+      );
+      if (application.status === 'rejected') {
+        this.agingRejections = application.issues;
+        return;
+      }
+      this.entity = application.entity;
+      this.agingDraft = defaultAgingDraft();
+      this.agingPreview = null;
+      await this.revalidate();
+    } catch (e) {
+      this.error = e as AppError;
+    }
+  }
+
+  /**
+   * Take one recorded year back off, exactly — a pre-play catch-up of 25 rolls
+   * with no undo would not be shippable. The engine subtracts precisely the points
+   * the log entry recorded and removes the entry.
+   */
+  async revertAgingRoll(age: number): Promise<void> {
+    this.agingRejections = [];
+    try {
+      const reversion = await ipc.agingRevert($state.snapshot(this.entity), age);
+      if (reversion.status === 'rejected') {
+        this.agingRejections = reversion.issues;
+        return;
+      }
+      this.entity = reversion.entity;
+      await this.revalidate();
+    } catch (e) {
+      this.error = e as AppError;
+    }
+  }
+
+  #scheduleAgingPreview(): void {
+    clearTimeout(this.#agingTimer);
+    this.#agingTimer = setTimeout(() => void this.previewAgingRoll(), VALIDATE_DEBOUNCE_MS);
   }
 
   /**
@@ -1832,6 +2076,10 @@ class AppStore {
         // empty is what keeps that coherent — nothing pre-fills a package whose
         // slots are gone, so no applied package can show a spurious empty slot.
         this.childhoodDraft = defaultChildhoodDraft();
+        // Likewise the aging draft: a die typed against the year the *previous*
+        // character owed says nothing about this one, and the years it already
+        // recorded arrive in its own log.
+        this.clearAgingDraft();
         // Opening is reachable from any screen, so a load always lands in the
         // editor; a cancelled dialog leaves the current screen alone. A save
         // records no wizard progress, so an opened character is a finished
@@ -1865,6 +2113,7 @@ class AppStore {
     this.currentPath = null;
     this.filters = defaultPickerFilters();
     this.childhoodDraft = defaultChildhoodDraft();
+    this.clearAgingDraft();
     this.result = null;
     this.effective = null;
     this.derived = null;
@@ -1906,6 +2155,7 @@ class AppStore {
     this.currentPath = null;
     this.filters = defaultPickerFilters();
     this.childhoodDraft = defaultChildhoodDraft();
+    this.clearAgingDraft();
     this.result = null;
     this.effective = null;
     this.derived = null;
