@@ -30,7 +30,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::characteristics::Characteristic;
-use crate::effective::selections_for_effects;
+use crate::effective::{decrepitude_points_total, decrepitude_score, selections_for_effects};
 use crate::ruleset::Ruleset;
 use crate::types::{AgingEffect, Effect, Entity, Id, SourceRef, is_false};
 
@@ -406,6 +406,160 @@ pub fn aging_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Op
     })
 }
 
+/// What the Aging Roll table does at one total — the *reading*, and nothing
+/// else. **Nothing here is written to the character**; applying an outcome (and
+/// logging the year) belongs to the single writer a later step introduces.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16599-16615.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AgingOutcome {
+    /// The total this resolves — post-clamp, so a caller can echo it back.
+    pub total: i32,
+    /// "Otherwise, the character's apparent age increases by one year"
+    /// (`:16577`, `:16600`).
+    pub apparent_age_increases: bool,
+    /// The Aging Points the row awards, in the order the row names them. Empty
+    /// below the table's first row, which costs nothing.
+    pub awards: Vec<AgingPointAward>,
+    /// "… and Crisis" (`:16602`, `:16611`). Resolving the Crisis itself
+    /// (`:16619-16632`) is its own slice; this only says one follows.
+    pub crisis: bool,
+}
+
+/// One award an Aging Roll row makes: where the points go, and how many.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16601-16615.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AgingPointAward {
+    /// Which Characteristic (or which question to ask the player) the points
+    /// land on.
+    pub target: AgingPointTarget,
+    /// How many points. `None` **only** for
+    /// [`AgingPointTarget::NextDecrepitudeLevel`] when the advancement curve
+    /// cannot price the next Decrepitude score — reported as unpriceable rather
+    /// than silently costed at 0.
+    pub points: Option<u32>,
+}
+
+/// Where an Aging Roll row's points go.
+///
+/// Three variants rather than two, because the UI has three genuinely different
+/// questions to ask — and an exhaustive `match` makes a new kind of row a
+/// compile error until every reader has decided what to do with it.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16601-16615.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AgingPointTarget {
+    /// The table names the Characteristic itself: rows 14-21 (`:16603-16610`).
+    Named(Characteristic),
+    /// "1 Aging Point in any Characteristic" (`:16601`) — "the player may choose
+    /// the Characteristic" (`:16615`).
+    PlayerChoice,
+    /// "sufficient Aging Points (in any Characteristics) to reach the next level
+    /// in Decrepitude" (`:16602`, `:16611`). The player still picks *where* the
+    /// points land, and may spread them, but the COUNT is derived — see
+    /// [`points_to_next_decrepitude_level`].
+    NextDecrepitudeLevel,
+}
+
+/// What the aging table does at `total` (`:16599-16615`).
+///
+/// # Two questions, not two rows
+///
+/// "2 or less — No apparent aging" and "3 or more — Apparent age increases by one
+/// year" (`:16599-16600`) are **not** alternatives to the effect rows: they are
+/// one threshold ([`AgingRules::apparent_age_increase_min`]) asked of every
+/// total, so a 20 both ages the appearance and costs two Characteristics a point.
+///
+/// # Why it needs the character
+///
+/// Rows 13 and 22+ ask for "sufficient Aging Points … to reach the next level in
+/// Decrepitude" (`:16602`, `:16611`) — a count the table does not print, measured
+/// off the character's accrued points and the Ability advancement curve.
+///
+/// # Pure
+///
+/// Nothing is written: not the Aging Points, not the apparent age, not the log.
+/// A row that carries a Crisis sets [`AgingOutcome::crisis`] and stops there —
+/// the Crisis Table (`:16619-16632`) is a later slice, so this reports that a
+/// crisis follows and resolves none of it.
+///
+/// `None` when the ruleset ships no aging rules.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16599-16617.
+pub fn resolve_outcome(entity: &Entity, ruleset: &Ruleset, total: i32) -> Option<AgingOutcome> {
+    let rules = ruleset.aging()?;
+    let row = rules.outcomes.iter().find(|row| row.covers(total));
+
+    // A total below the table's first row costs nothing at all — which is a
+    // result, not a missing one, so it is `Some` with no awards.
+    let (awards, crisis) = match row.map(|row| &row.effect) {
+        None => (Vec::new(), false),
+        Some(AgingRowEffect::AnyCharacteristic { points }) => (
+            vec![AgingPointAward {
+                target: AgingPointTarget::PlayerChoice,
+                points: Some(*points),
+            }],
+            false,
+        ),
+        // "1 Aging Point in Str and Sta" (`:16607`) gives EACH named
+        // Characteristic a point, so one award per name.
+        Some(AgingRowEffect::NamedCharacteristics {
+            points,
+            characteristics,
+        }) => (
+            characteristics
+                .iter()
+                .map(|characteristic| AgingPointAward {
+                    target: AgingPointTarget::Named(*characteristic),
+                    points: Some(*points),
+                })
+                .collect(),
+            false,
+        ),
+        Some(AgingRowEffect::NextDecrepitudeLevelAndCrisis) => (
+            vec![AgingPointAward {
+                target: AgingPointTarget::NextDecrepitudeLevel,
+                points: points_to_next_decrepitude_level(entity, ruleset),
+            }],
+            true,
+        ),
+    };
+
+    Some(AgingOutcome {
+        total,
+        apparent_age_increases: total >= rules.apparent_age_increase_min,
+        awards,
+        crisis,
+    })
+}
+
+/// How many Aging Points "reach the next level in Decrepitude" (`:16602`,
+/// `:16611`) costs this character.
+///
+/// Decrepitude is no separate curve: "Every Aging Point also counts as an
+/// experience point towards Decrepitude, which increases as an Ability"
+/// (`:16617`). So the count is the advancement curve's price for the score above
+/// the character's current one, less the points he has already accrued — reusing
+/// [`decrepitude_points_total`] and [`decrepitude_score`] rather than
+/// re-deriving either.
+///
+/// Floored at 1: a character sitting exactly on a level boundary must still gain
+/// *something*, because reaching the next level cannot cost nothing.
+///
+/// `None` when the curve cannot price the next score — the table tops out
+/// (`AdvancementTable::max_score`), and a level with no price is reported as
+/// unpriceable rather than silently costed at 0.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16602, :16611,
+/// :16617.
+fn points_to_next_decrepitude_level(entity: &Entity, ruleset: &Ruleset) -> Option<u32> {
+    let accrued = decrepitude_points_total(entity);
+    let next_score = decrepitude_score(entity, ruleset).checked_add(1)?;
+    let priced = ruleset.advancement().xp_for_score(next_score)?;
+    Some(priced.saturating_sub(accrued).max(1))
+}
+
 /// What a Longevity Ritual does to the roll of a character too young to be
 /// aging yet.
 ///
@@ -477,6 +631,15 @@ pub struct AgingRow {
     pub source: Option<SourceRef>,
 }
 
+impl AgingRow {
+    /// Whether `total` lands on this row: the band is inclusive on both ends, and
+    /// an absent [`Self::max`] is the open-ended "22+" top row (`:16611`), which
+    /// has no upper bound at all rather than a very large one.
+    fn covers(&self, total: i32) -> bool {
+        self.min <= total && self.max.is_none_or(|max| total <= max)
+    }
+}
+
 /// What an [`AgingRow`] does to the character.
 ///
 /// A tagged enum rather than free-text, so a kind the engine cannot apply is a
@@ -514,6 +677,7 @@ pub enum AgingRowEffect {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::effective::decrepitude_score;
     use crate::ruleset::{Ruleset, RulesetSources};
     use crate::types::{
         Entity, EntityKind, LongevityRitual, LongevitySource, RulesetRef, Selection,
@@ -657,6 +821,12 @@ mod tests {
     /// (`validate_engine_required_categories`), the shipped `aging_roll` carrier
     /// Faerie Blood (`:3801`), and one **synthetic** carrier of a
     /// `longevity_bonus` modifier, a kind no shipped item uses today.
+    ///
+    /// The eleven Aging Roll rows are the book's own (`:16601-16611`), because
+    /// [`resolve_outcome`] has to be witnessed against every row shape the table
+    /// actually has. The advancement curve is the shipped one's first three rows
+    /// (5 / 15 / 30), deliberately **short**: a table that tops out is what lets a
+    /// test reach the score the curve cannot price.
     fn scheduled_ruleset() -> Ruleset {
         let aging = r#"{
           "start_age": 35,
@@ -670,8 +840,33 @@ mod tests {
             { "id": "living_condition.work_in_a_mine", "modifier": -1, "cumulative": true }
           ],
           "outcomes": [
-            { "min": 10, "max": 21, "effect": { "type": "any_characteristic", "points": 1 } },
+            { "min": 10, "max": 12, "effect": { "type": "any_characteristic", "points": 1 } },
+            { "min": 13, "max": 13, "effect": { "type": "next_decrepitude_level_and_crisis" } },
+            { "min": 14, "max": 14,
+              "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["qik"] } },
+            { "min": 15, "max": 15,
+              "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["sta"] } },
+            { "min": 16, "max": 16,
+              "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["per"] } },
+            { "min": 17, "max": 17,
+              "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["pre"] } },
+            { "min": 18, "max": 18,
+              "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["str", "sta"] } },
+            { "min": 19, "max": 19,
+              "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["dex", "qik"] } },
+            { "min": 20, "max": 20,
+              "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["com", "pre"] } },
+            { "min": 21, "max": 21,
+              "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["int", "per"] } },
             { "min": 22, "effect": { "type": "next_decrepitude_level_and_crisis" } }
+          ]
+        }"#;
+        let abilities = r#"{
+          "abilities": [],
+          "advancement": [
+            { "score": 1, "total_xp": 5 },
+            { "score": 2, "total_xp": 15 },
+            { "score": 3, "total_xp": 30 }
           ]
         }"#;
         let items = r#"[
@@ -698,6 +893,7 @@ mod tests {
             version: "1",
             point_items: items,
             type_profiles: "[]",
+            abilities: Some(abilities),
             aging: Some(aging),
             ..RulesetSources::default()
         })
@@ -1082,5 +1278,210 @@ mod tests {
         assert_eq!(low.uncapped_total, 2, "1 + 4 - 2 - 1");
         assert_eq!(low.total, 2);
         assert!(!low.capped_by_longevity);
+    }
+
+    /// "2 or less — No apparent aging" / "3 or more — Apparent age increases by
+    /// one year" (`:16599-16600`). Not two rows of the outcome table but one
+    /// threshold asked of every total, and it fires long before any total costs a
+    /// Characteristic anything.
+    #[test]
+    fn the_appearance_ages_from_three_and_not_from_two() {
+        let ruleset = scheduled_ruleset();
+        let entity = living_under(&[]);
+
+        let two = resolve_outcome(&entity, &ruleset, 2).expect("the fixture ships aging rules");
+        assert_eq!(two.total, 2, "the resolved total is echoed back");
+        assert!(
+            !two.apparent_age_increases,
+            "'2 or less: No apparent aging'"
+        );
+        assert!(two.awards.is_empty());
+        assert!(!two.crisis);
+
+        let three = resolve_outcome(&entity, &ruleset, 3).expect("aging rules");
+        assert!(
+            three.apparent_age_increases,
+            "'3 or more: Apparent age increases by one year'"
+        );
+        assert!(
+            three.awards.is_empty(),
+            "the appearance ages well below the first row that costs Aging Points"
+        );
+        assert!(!three.crisis);
+    }
+
+    /// Rows 14-21 name the Characteristics themselves (`:16603-16610`), one or
+    /// two of them, each taking a point of its own. The book writes Presence as
+    /// "Prs"; the enum variant is `Pre`.
+    #[test]
+    fn the_table_names_the_characteristics_for_fourteen_through_twenty_one() {
+        let ruleset = scheduled_ruleset();
+        let entity = living_under(&[]);
+        let named = |total: i32| -> Vec<Characteristic> {
+            let outcome = resolve_outcome(&entity, &ruleset, total).expect("aging rules");
+            assert!(
+                outcome.apparent_age_increases,
+                "total {total} is far above the apparent-aging threshold"
+            );
+            assert!(!outcome.crisis, "total {total} carries no Crisis");
+            outcome
+                .awards
+                .iter()
+                .map(|award| {
+                    assert_eq!(
+                        award.points,
+                        Some(1),
+                        "each named Characteristic takes one point, not a share of one"
+                    );
+                    match award.target {
+                        AgingPointTarget::Named(characteristic) => characteristic,
+                        ref other => {
+                            panic!("total {total} should name a Characteristic: {other:?}")
+                        }
+                    }
+                })
+                .collect()
+        };
+
+        assert_eq!(named(14), vec![Characteristic::Qik]);
+        assert_eq!(named(18), vec![Characteristic::Str, Characteristic::Sta]);
+        assert_eq!(named(20), vec![Characteristic::Com, Characteristic::Pre]);
+        assert_eq!(named(21), vec![Characteristic::Int, Characteristic::Per]);
+    }
+
+    /// "10–12 — 1 Aging Point in any Characteristic" (`:16601`), and "If an Aging
+    /// Point 'in any Characteristic' is gained, the player may choose the
+    /// Characteristic" (`:16615`) — so the engine names none of them.
+    #[test]
+    fn ten_through_twelve_leave_the_characteristic_to_the_player() {
+        let ruleset = scheduled_ruleset();
+        let entity = living_under(&[]);
+
+        for total in 10..=12 {
+            let outcome = resolve_outcome(&entity, &ruleset, total).expect("aging rules");
+            assert_eq!(
+                outcome.awards,
+                vec![AgingPointAward {
+                    target: AgingPointTarget::PlayerChoice,
+                    points: Some(1),
+                }],
+                "total {total} gives exactly one point, placed by the player"
+            );
+            assert!(outcome.apparent_age_increases, "total {total}");
+            assert!(!outcome.crisis, "total {total}");
+        }
+    }
+
+    /// "Gain sufficient Aging Points (in any Characteristics) to reach the next
+    /// level in Decrepitude, and Crisis" (`:16602`, `:16611`).
+    ///
+    /// The count is derived, never authored: Decrepitude "increases as an
+    /// Ability" off the accrued points (`:16617`), so the next level costs the
+    /// advancement curve's price for the next score less what the character has
+    /// already accrued. The expectation is computed from the table rather than
+    /// written out, so a re-priced curve moves the test with it.
+    #[test]
+    fn thirteen_and_twenty_two_reach_the_next_decrepitude_level_and_flag_a_crisis() {
+        let ruleset = scheduled_ruleset();
+        let mut entity = living_under(&[]);
+        entity.aging_points.insert(Characteristic::Str, 3);
+        assert_eq!(
+            decrepitude_score(&entity, &ruleset),
+            0,
+            "three accrued points is short of Decrepitude 1"
+        );
+
+        let to_first_level = ruleset
+            .advancement()
+            .xp_for_score(1)
+            .expect("the fixture's curve prices Decrepitude 1")
+            - 3;
+        let owed = vec![AgingPointAward {
+            target: AgingPointTarget::NextDecrepitudeLevel,
+            points: Some(to_first_level),
+        }];
+
+        // 13 (`:16602`), and the open-ended top row (`:16611`) whatever the total.
+        for total in [13, 22, 30] {
+            let outcome = resolve_outcome(&entity, &ruleset, total).expect("aging rules");
+            assert_eq!(outcome.awards, owed, "total {total}");
+            assert!(
+                outcome.crisis,
+                "total {total} sends the character to a Crisis"
+            );
+            assert!(outcome.apparent_age_increases, "total {total}");
+        }
+
+        // Every other row on the table is crisis-free.
+        for total in (2..=21).filter(|total| *total != 13) {
+            let outcome = resolve_outcome(&entity, &ruleset, total).expect("aging rules");
+            assert!(!outcome.crisis, "total {total} carries no Crisis");
+        }
+
+        // A character the curve can no longer price: his Decrepitude is already
+        // the table's top score, so "the next level" has no price at all. That is
+        // reported as unpriceable, never silently costed at 0.
+        let top = ruleset
+            .advancement()
+            .max_score()
+            .expect("the fixture's curve prices something");
+        let at_top = ruleset
+            .advancement()
+            .xp_for_score(top)
+            .expect("the top score is priced");
+        let mut frail = living_under(&[]);
+        frail.aging_points.insert(
+            Characteristic::Str,
+            u8::try_from(at_top).expect("the fixture's top price fits a point count"),
+        );
+        assert_eq!(decrepitude_score(&frail, &ruleset), top);
+
+        let outcome = resolve_outcome(&frail, &ruleset, 22).expect("aging rules");
+        assert_eq!(
+            outcome.awards,
+            vec![AgingPointAward {
+                target: AgingPointTarget::NextDecrepitudeLevel,
+                points: None,
+            }],
+            "a level the curve cannot price is reported as unpriceable"
+        );
+        assert!(outcome.crisis);
+    }
+
+    /// Below "10–12" the table costs nothing at all (`:16601` is its first row
+    /// that does) — but the apparent-aging threshold is a separate question and
+    /// still answers for those totals.
+    #[test]
+    fn a_total_below_the_first_row_awards_nothing() {
+        let ruleset = scheduled_ruleset();
+        let entity = living_under(&[]);
+
+        for total in [-4, 0, 9] {
+            let outcome = resolve_outcome(&entity, &ruleset, total).expect("aging rules");
+            assert_eq!(outcome.total, total);
+            assert!(outcome.awards.is_empty(), "total {total} costs nothing");
+            assert!(!outcome.crisis, "total {total}");
+        }
+
+        assert!(
+            !resolve_outcome(&entity, &ruleset, 0)
+                .expect("aging rules")
+                .apparent_age_increases
+        );
+        assert!(
+            resolve_outcome(&entity, &ruleset, 9)
+                .expect("aging rules")
+                .apparent_age_increases,
+            "a 9 ages the appearance without costing a point"
+        );
+    }
+
+    /// A ruleset shipping no aging rules has no table to resolve against, which
+    /// stands the question down rather than letting the engine invent a row.
+    #[test]
+    fn no_aging_rules_resolve_to_none() {
+        let without = Ruleset::from_json("test", "1", "[]", "[]").expect("an empty ruleset loads");
+        assert!(without.aging().is_none());
+        assert!(resolve_outcome(&living_under(&[]), &without, 22).is_none());
     }
 }

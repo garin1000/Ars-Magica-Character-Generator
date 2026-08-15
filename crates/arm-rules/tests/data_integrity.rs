@@ -1,6 +1,6 @@
 use arm_rules::AbilityCategory;
 use arm_rules::Characteristic;
-use arm_rules::aging::AgingTotal;
+use arm_rules::aging::{AgingOutcome, AgingPointAward, AgingPointTarget, AgingTotal};
 use arm_rules::effective_art_score;
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
@@ -2456,6 +2456,99 @@ fn age_quickly_contributes_nothing_to_the_total_and_stays_surfaced() {
         vec![("aging_roll".to_string(), 0), ("aging_roll".to_string(), 0)],
         "both Flaws stay listed for the player"
     );
+}
+
+/// The shipped table's own reading of `total`, for a companion who has already
+/// accrued `accrued` Aging Points (parked in Str — Decrepitude counts the
+/// character's whole bank, whichever Characteristics hold it, Core:16617).
+fn shipped_aging_outcome(total: i32, accrued: u8) -> AgingOutcome {
+    let rs = load_full_ruleset();
+    let mut e = entity("companion", vec![]);
+    if accrued > 0 {
+        e.aging_points.insert(Characteristic::Str, accrued);
+    }
+    arm_rules::aging::resolve_outcome(&e, &rs, total)
+        .expect("the shipped ruleset carries aging rules")
+}
+
+/// The shipped table resolved row by row, against the shipped advancement curve:
+/// the apparent-aging threshold of `:16599-16600`, the "any Characteristic" band
+/// of `:16601`, the named rows of `:16603-16610`, and both Decrepitude-and-Crisis
+/// rows (`:16602`, `:16611`).
+///
+/// The unit fixture in `aging.rs` transcribes these rows by hand; only this test
+/// witnesses the ones the app actually ships — and only here does the derived
+/// Decrepitude count meet the real advancement curve.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16599-16617.
+#[test]
+fn the_shipped_aging_table_resolves_each_row_of_16599_to_16611() {
+    // "2 or less — No apparent aging" / "3 or more — Apparent age increases by
+    // one year": one threshold asked of every total, not a pair of rows.
+    let two = shipped_aging_outcome(2, 0);
+    assert!(!two.apparent_age_increases);
+    assert!(two.awards.is_empty());
+    assert!(!two.crisis);
+    let nine = shipped_aging_outcome(9, 0);
+    assert!(nine.apparent_age_increases);
+    assert!(
+        nine.awards.is_empty(),
+        "the appearance ages below the first row that costs anything"
+    );
+
+    // "10–12 — 1 Aging Point in any Characteristic" (:16601), the player placing
+    // it (:16615).
+    let eleven = shipped_aging_outcome(11, 0);
+    assert_eq!(
+        eleven.awards,
+        vec![AgingPointAward {
+            target: AgingPointTarget::PlayerChoice,
+            points: Some(1),
+        }]
+    );
+    assert!(eleven.apparent_age_increases);
+    assert!(!eleven.crisis);
+
+    // The named rows, including the one the book spells "Prs" (:16606) and a
+    // two-Characteristic row where EACH name takes a point of its own (:16608).
+    let named = |total: i32| -> Vec<AgingPointAward> { shipped_aging_outcome(total, 0).awards };
+    let one_point = |characteristic| AgingPointAward {
+        target: AgingPointTarget::Named(characteristic),
+        points: Some(1),
+    };
+    assert_eq!(named(14), vec![one_point(Characteristic::Qik)]);
+    assert_eq!(named(17), vec![one_point(Characteristic::Pre)]);
+    assert_eq!(
+        named(19),
+        vec![
+            one_point(Characteristic::Dex),
+            one_point(Characteristic::Qik),
+        ]
+    );
+    assert!(!shipped_aging_outcome(21, 0).crisis, "only 13 and 22+ do");
+
+    // "Gain sufficient Aging Points … to reach the next level in Decrepitude, and
+    // Crisis" (:16602, :16611). The count comes off the shipped curve, so the
+    // expectation is computed from it rather than written out.
+    let rs = load_full_ruleset();
+    let to_first_level = rs
+        .advancement()
+        .xp_for_score(1)
+        .expect("the shipped curve prices Decrepitude 1");
+    let accrued = 3;
+    let owed = vec![AgingPointAward {
+        target: AgingPointTarget::NextDecrepitudeLevel,
+        points: Some(to_first_level - u32::from(accrued)),
+    }];
+    for total in [13, 22, 40] {
+        let outcome = shipped_aging_outcome(total, accrued);
+        assert_eq!(outcome.awards, owed, "total {total}");
+        assert!(
+            outcome.crisis,
+            "total {total} sends him to the Crisis Table"
+        );
+        assert!(outcome.apparent_age_increases, "total {total}");
+    }
 }
 
 /// Every Living Condition has a display name in both shipped languages, and no
