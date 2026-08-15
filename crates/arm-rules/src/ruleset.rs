@@ -854,13 +854,12 @@ impl Ruleset {
             "childhood package",
             &mut errors,
         );
-        if let Some(rules) = &aging_rules {
-            collect_duplicates(
-                rules.living_conditions.iter().map(|c| &c.id),
-                "living condition",
-                &mut errors,
-            );
-        }
+        // Living Conditions are swept for duplicates too, but from
+        // `validate_aging_rules` rather than from here: unlike every catalogue
+        // above, they are not collapsed into a `BTreeMap` on the way in, so a
+        // duplicate survives a round trip and `from_serialized` has to catch it as
+        // well.
+
         // The scholarly-language expectation names an ability, which must resolve and
         // be parameterized (a scholarly language is one instance of a dead language).
         if let Some(requirement) = &abilities_file.scholarly_language {
@@ -1705,9 +1704,10 @@ impl Ruleset {
         }
     }
 
-    /// Validates the aging tables: that the Aging Roll table tiles every total it
-    /// will be asked about, that each of its rows actually costs something, and
-    /// that a Longevity Ritual clamp does what the rulebook says it is *for*.
+    /// Validates the aging tables: that no Living Condition id is used twice, that
+    /// the Aging Roll table tiles every total it will be asked about, that each of
+    /// its rows actually costs something, and that a Longevity Ritual clamp does
+    /// what the rulebook says it is *for*.
     ///
     /// The tiling check is **contiguity**, deliberately not "must cover 10..=21":
     /// the shipped table's own bands are data, and a ruleset that draws them
@@ -1747,6 +1747,18 @@ impl Ruleset {
         let Some(aging) = self.aging.as_ref() else {
             return;
         };
+
+        // Living Conditions are a catalogue like any other, so their ids join the
+        // duplicate sweep — but from here rather than from `from_sources`, because
+        // they are the one swept catalogue the [`Ruleset`] keeps as a `Vec`
+        // instead of collapsing into a `BTreeMap`. A duplicate therefore survives
+        // serialization, and only a check on this path catches it when a cached
+        // ruleset comes back through [`Ruleset::from_serialized`].
+        collect_duplicates(
+            aging.living_conditions.iter().map(|c| &c.id),
+            "living condition",
+            errors,
+        );
 
         // The age term is "age/10 (round up)" (`:16567`); a divisor of 0 has no
         // rounding-up to do, it has a division by zero.
@@ -4711,6 +4723,38 @@ mod tests {
         assert!(
             err.to_string().contains(":16575"),
             "should cite the sentence the identity comes from: {err}"
+        );
+    }
+
+    /// Living Conditions are the one duplicate-swept catalogue that can survive a
+    /// round trip with its duplicates intact: every other one collapses into a
+    /// `BTreeMap` on the way into the [`Ruleset`], where a repeated id simply
+    /// cannot exist, while the conditions stay a `Vec` inside [`AgingRules`]. So
+    /// the sweep belongs to `validate_aging_rules`, which both load paths run —
+    /// otherwise a cached ruleset could carry two rows under one id and the
+    /// second would silently shadow the first.
+    #[test]
+    fn from_serialized_rejects_duplicate_living_condition_ids() {
+        let rs = aging_outcomes_ruleset(
+            r#"{ "min": 10, "max": 21, "effect": { "type": "any_characteristic", "points": 1 } },
+               { "min": 22, "effect": { "type": "next_decrepitude_level_and_crisis" } }"#,
+        )
+        .unwrap();
+
+        let mut serialized = serde_json::to_value(&rs).unwrap();
+        let conditions = serialized["aging"]["living_conditions"]
+            .as_array_mut()
+            .expect("the fixture ships a Living Conditions table");
+        let repeated = conditions[0].clone();
+        conditions.push(repeated);
+
+        let err = Ruleset::from_serialized(&serialized.to_string()).unwrap_err();
+        assert_eq!(err.kind(), "integrity");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("duplicate living condition ID")
+                && msg.contains("living_condition.average_peasant"),
+            "should name the duplicated condition: {msg}"
         );
     }
 
