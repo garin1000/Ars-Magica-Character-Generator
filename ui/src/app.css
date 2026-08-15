@@ -989,6 +989,26 @@ ul {
   margin-bottom: 1rem;
 }
 
+/* The aging cluster is composed from child components (AgingPanel →
+   AgingSchedulePanel + AgingRecordPanel), so on the Details tab its blocks sit one
+   or two levels below `.character-details`. A real wrapper box there would become
+   ONE unbreakable column item and drag the whole cluster into a single column, so
+   the wrappers generate no box at all and each block inside stays its own column
+   item — exactly as it was before the extraction. `.character-details > *` cannot
+   reach through a `display: contents` box, so the spacing is restated here.
+   Outside `.character-details` (the guided aging step) the wrappers keep their own
+   flex stack below. */
+.character-details .aging-panel,
+.character-details .aging-record {
+  display: contents;
+}
+
+.character-details .aging-panel > *,
+.character-details .aging-record > * {
+  break-inside: avoid;
+  margin-bottom: 1rem;
+}
+
 @media (max-width: 720px) {
   .character-details {
     columns: 1;

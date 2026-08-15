@@ -416,6 +416,28 @@ aging-log-year-label = Jahr
 aging-log-effect-placeholder = Beschreibe die Wirkung des Alterungswurfs
 aging-log-add = Alterungseintrag hinzufügen
 aging-log-empty = Noch keine Alterungseinträge.
+# Die Übersicht der Alterungswürfe: für welche Jahre ein Wurf fällig ist, wie
+# viele bereits eingetragen sind, und die feststehende (würfelunabhängige) Hälfte
+# des Alterungswurfs. Alle Zahlen stammen aus der Engine — die Altersschwelle
+# wird aus den Regeln gelesen, nie hier als feste Zahl geschrieben.
+aging-schedule-label = Alterungswürfe
+aging-rolls-none = Bisher sind keine Alterungswürfe fällig.
+aging-first-roll-age = Die Alterung beginnt nach dem Alter { $begins }; der erste Wurf fällt im Alter von { $first } an.
+aging-rolls-owed = { $count ->
+    [one] { $count } Alterungswurf fällig, im Alter von { $from }.
+   *[other] { $count } Alterungswürfe fällig, für die Alter { $from } bis { $to }.
+}
+aging-rolls-years = { $count ->
+    [one] Kalenderjahr { $from }.
+   *[other] Kalenderjahre { $from } bis { $to }.
+}
+aging-rolls-recorded = { $recorded } von { $owed } eingetragen
+# Alterungswurf = Stresswürfel (kein Patzer) + Alter/10 (aufgerundet)
+# - Lebensumständemodifikator - Langlebigkeitsritual (Core Rules.md:16567-16569);
+# ein hoher Modifikator bedeutet also ein längeres Leben. Jeder Term kommt
+# bereits mit Vorzeichen an.
+aging-total-formula = Stresswürfel { $age } (Alter) { $conditions } (Lebensumstände) { $longevity } (Langlebigkeitsritual) = Stresswürfel { $fixed }
+aging-longevity-clamp = Ein Langlebigkeitsritual wirkt: solange es anhält, erreicht kein Ergebnis die erste Zeile der Alterungstabelle, diese Würfe können den Charakter also nicht altern lassen.
 personality-label = Persönlichkeitseigenschaften
 personality-name-placeholder = Eigenschaft
 personality-add = Eigenschaft hinzufügen
