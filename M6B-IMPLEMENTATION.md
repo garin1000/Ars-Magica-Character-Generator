@@ -9,11 +9,13 @@ here and the matching `PLAN.md` box in the same commit as green code.
 type is fixed at creation via `store.createCharacter(typeId)`. 6b1b replaced that
 screen's hardcoded-disabled wizard button with one guided entry per character type.
 
-**Status: 6b1a, 6b1b, 6b2, 6b3 (both halves) and 6b4 are done.** Next is **6b5** —
-the post-Gauntlet years (30 points a year, the lab-season deduction, the
-xp↔spell-level split), which is what lets guided funding build a magus older than its
-Gauntlet. The `PLAN.md` 6b3 boxes are ticked as of 6b3b; 6b4 ticks the first half of
-the magus life-stage box, leaving after-apprenticeship accrual to 6b5.
+**Status: 6b1a, 6b1b, 6b2, 6b3 (both halves), 6b4 and 6b5 (both halves) are done.**
+Next is **6b6** — the aging tables, the aging total and outcome resolution, which is
+also where `life_stage_aging_rolls_pending` (shipped in 6b5a against `CreationPhase::Review`
+for want of anywhere better) moves onto its own `Aging` phase and its threshold moves
+out of Rust into `rules/core/aging.json`. The `PLAN.md` 6b3 boxes are ticked as of
+6b3b; 6b4 ticked the first half of the magus life-stage story (apprenticeship) and 6b5
+ticks the second (the years after the Gauntlet), so both boxes are now closed.
 
 6b2 shipped as five commits: the life-stage rules as data; the missing Poor Major
 Flaw plus the Wealthy/Poor rate effect; `Entity::life_stages` and the derived
@@ -89,7 +91,7 @@ canonical key/array sorting. German labels must match
 | **6b3a** ✅ | Sample Childhood packages: catalogue + load-time integrity + applicator + IPC command (no UI) | 6b2 |
 | **6b3b** ✅ | The "sophisticated" Abilities step: funding-mode toggle, life-stage panel, package picker, XP-bar guided branch, e2e | 6b3a |
 | **6b4** ✅ | Magus apprenticeship (240 xp / 120 spell levels / hard minimums) | 6b2 |
-| **6b5** | Post-Gauntlet accrual (30 pts/year, lab-season deduction, xp↔spell-level split) | 6b4 |
+| **6b5** ✅ | Post-Gauntlet accrual (30 pts/year, lab-season deduction, xp↔spell-level split) | 6b4 |
 | **6b6** | Aging tables + aging total + outcome resolution | 6b1a |
 | **6b7** | Crisis, Decrepitude levels, per-year write-back | 6b6 |
 | **6b8** | Per-type flow completion, completeness indicators, guided copy, milestone gate | 6b2-6b7 |
@@ -524,7 +526,11 @@ player can actually take a package.
   **Superseded by 6b4** — the code const, the contract row, the emit site and both
   Fluent keys are gone. A guided magus is funded by its apprenticeship, its later life
   stops at the Gauntlet, and the age entered is the Gauntlet age; only the years *after*
-  the Gauntlet are still unmodelled, and 6b5 is where they land.
+  the Gauntlet were still unmodelled.
+  **And superseded again by 6b5**, which models those years: the panel now asks for the
+  age *and* the Gauntlet age, `LifeStagePlan::gauntlet_age` records the second, and the
+  span between them earns 30 points a year (`:2216`, `:2471`). All four of `:2364`'s
+  periods are costed, so nothing about a guided magus is refused or deferred any more.
 - **Three further latent 6b2 defects were fixed in passing**, since 6b3 depends on all
   three being right: the native-language check now matches the childhood's
   `native_language_ability` rather than any parameterized Ability whose parameter happens
@@ -710,12 +716,18 @@ emit site and both Fluent keys.
   onto the same field.
 - **No `apprenticeship_start_age`.** Apprenticeship is fifteen *fixed* years ending at
   the age entered, so a start age is derivable and stores nothing new. It only becomes a
-  question in 6b5, where the years after the Gauntlet start being counted.
+  question in 6b5, where the years after the Gauntlet start being counted. **Still true
+  after 6b5**, which stores `gauntlet_age` — the *end* of apprenticeship — for exactly
+  the same reason.
 - **Guided funding builds a magus AT its Gauntlet — the limit 6b5 lifts.** An
   experienced magus's Arts come from the post-Gauntlet 30 points a year (`:2216`,
   `:2471`), which is not modelled, so entering 60 would silently earn a magus of 60 the
   same 240. The `life-stage-gauntlet-note` says both halves in words: what the age means,
   and that an older magus should use the flat experience pool for now.
+  **Superseded by 6b5.** The age and the Gauntlet age are now two fields, the years
+  between them are costed, and the note no longer sends anyone to the flat pool — the
+  e2e spec asserts the sentence does *not* contain "experience pool". A guided magus of
+  60 gauntleted at 25 is a first-class character.
 - **The checklist resolves the instance from the entity.** `MagusMinimumAbility.parameter`
   is `None` throughout the shipped data (see above), so a dead-language row would read
   only "(Language) (Dead Language)". The component fills the token from the character's
@@ -761,6 +773,175 @@ there is no wizard left to advance.
   grants and shows a negative Available with no error. Pre-existing (the bonus predates
   this slice) and deliberately not folded in here, because the flat pool is the number
   the player typed and the e2e suite drives exact arithmetic against it — also **6b8**.
+
+---
+
+## Slice 6b5 — Post-Gauntlet accrual ✅
+
+The fourth and last of the periods `:2364` names, and the one that makes the guided
+magus general rather than a snapshot: 6b4 built a magus standing *at* its Gauntlet, and
+this slice lets it have lived on. "For every year, the magus gets 30 points. Each point
+can be an experience point in an Art or Ability or one level of spell"
+(`Ars Magica - Definitive Edition (Core Rules).md:2471`), less "10 points from the yearly
+30" for each season of lab work, "to a minimum of 0 if three or four seasons are spent"
+(`:2482`), all under `:2216`'s "**Hermetic Magi Only (Optional):** Years after
+apprenticeship". Full provenance — data, arithmetic, findings and every rejected
+alternative — is `#### Life as a magus after the Gauntlet — 30 points per year (M6/6b5)`
+in `crates/arm-rules/RULES.md`; this section records the slice, not the rule.
+
+Split at the IPC boundary exactly as 6b1 and 6b3 were: **6b5a** is independently green
+with an unchanged UI that merely carries the new fields, **6b5b** is the surface that
+uses them.
+
+### What shipped
+
+**Engine — 6b5a (14 commits, `6cad5e0..bb35a5d`).** `PostApprenticeshipRules`
+(`points_per_year` 30, `lab_season_cost` 10, `max_charged_lab_seasons_per_year` 3) as an
+optional fourth block of `rules/core/life_stages.json`, with
+`Ruleset::validate_post_apprenticeship_rules` refusing a transcription whose
+`lab_season_cost × max_charged` does not equal `points_per_year` and a load-time gate
+requiring the block wherever an `is_magus` profile and life-stage rules meet;
+`LifeStagePlan` gains `gauntlet_age`, `post_gauntlet_lab_seasons` and
+`post_gauntlet_spell_levels`, `LifeStageBudget` the five derived figures
+(`gauntlet_age`, `post_gauntlet_years`/`_points`/`_spell_levels`/`_xp`); `budget()`
+re-derived around the Gauntlet age rather than the character's; `xp_allocation`'s
+`base_general` becomes `apprenticeship_xp + post_gauntlet_xp`; `spell_levels_budget`
+becomes `base + bonus + life_stage_spell_levels`; three new errors plus
+`life_stage_aging_rolls_pending`, and `life_stage_age_before_gauntlet` retargeted onto
+the resolved Gauntlet age; `EffectiveScores` splits the spell-levels budget into
+`spell_levels_profile_base`/`_bonus`/`_life_stage`; and RULES.md rewritten so the
+life-stage provenance describes all four periods rather than two.
+
+**Frontend — 6b5b (6 commits, `624609e..302a54d`).**
+
+- **The store setters** (`624609e`). `setGauntletAge`, `setPostGauntletLabSeasons` and
+  `setPostGauntletSpellLevels` write the three plan fields. Each is a no-op without a
+  plan (so a flat-mode surface cannot conjure one) and each deletes its key when blank or
+  zero, so a magus standing at its Gauntlet still saves nothing but its native language.
+- **The panel** (`629cb63`). `LifeStagePanel.svelte` gains the Gauntlet age, the lab
+  seasons and the spell-level split, plus a `life-stage-post-gauntlet-summary` read-out
+  of the engine's own figures (`{years} years as a magus: {points} points = {xp} XP +
+  {levels} levels of spells`). Gated on `is_magus && rules.post_apprenticeship != null` —
+  a ruleset shipping no such block would otherwise show three dead controls. The three
+  fields join the age and the native language on **one wrapping row** (`app.css`), because
+  the panel is an auto-height sibling of the `flex: 1` `.region-row` and every full-width
+  row is height taken straight off the Available/Selected lists — the lesson 6b4's
+  collapse taught.
+- **The XP bar** (`92203d0`). A `life-stage-post-gauntlet` line, `years × rate - lab for
+  lab work = points, xp`. The rate is read out of
+  `ruleset.life_stages.post_apprenticeship.points_per_year` (never a literal 30) and the
+  lab deduction is `years × rate − points`, derived back from the engine's own figure
+  rather than recomputed from the season count. Gated on `post_gauntlet_years > 0`, not on
+  the type, so there is no magus branch in the component.
+- **The spell bar** (`b71bf23`, `ddb6527`). `spellLevelAllocation` takes a fourth term
+  and subtracts it: `base = budget − bonus − lifeStage`, so a 35-year magus that took 300
+  levels reports the profile's 120 as its editable base instead of 420. The levels are
+  already earned, as unconditional as the base, so they sit on the base's side of the
+  split — they raise Available rather than forming a pool, and a Weak Parens penalty is
+  still charged to the base. `SpellBudgetBar` lists them as a muted
+  `spell-levels-post-gauntlet` row.
+- **The 29th e2e spec** (`302a54d`). `ui/e2e/specs/magus-post-gauntlet.e2e.js` drives one
+  magus of 60 gauntleted at 25 end to end against the real binary: later life 5 × 15 = 75
+  (the 6b4 regression lock), 35 × 30 = 1050 points, 10 charged seasons = 950, a 300-level
+  split leaving 650 XP, a general pool of 240 + 650 = 890 spent by both the Abilities and
+  the Arts step, a spell budget of 120 + 300 = 420, each of the three errors raised and
+  cleared with `Next` blocking and unblocking, the aging warning leaving Finish live, and
+  a save asserting **exactly** the four stored keys.
+
+### Decisions of record
+
+- **One stored choice: `LifeStagePlan::gauntlet_age`.** `age = childhood + later life +
+  apprenticeship + post-Gauntlet` is one equation in two unknowns, so exactly one has to
+  be recorded. **Absent means the magus stands at its Gauntlet** — the Gauntlet age is
+  then `Entity::age` itself, which is precisely what 6b4 computed, so every pre-6b5 save
+  reads identically, the field is purely additive and `SCHEMA_VERSION` stays **14**.
+- **`post_gauntlet_years` was rejected as the stored value.** With the years stored
+  instead, raising a magus's age would stretch its *childhood-to-apprenticeship* span —
+  the years before it was taken as an apprentice — rather than its life as a magus, which
+  is the opposite of what raising the age means. `later_life_years(stop_age, …)` is
+  therefore fed the Gauntlet age, which for anyone serving no apprenticeship is the age.
+- **Lab seasons are one total of *charged* seasons, not a per-year list.** The deduction
+  stops at the third season of a year (`:2482` reaches 0 there, so the fourth is free), so
+  every legal per-year distribution totals at most `3 × years`, every total in that range
+  is realizable, and all of them cost the same — one number is lossless and the per-year
+  clamp collapses into one range check. It has to count *charged* seasons: sixteen seasons
+  actually worked cost 0 across four years but 30 across five, and a single total of
+  worked seasons could not tell those apart.
+- **The post-Gauntlet experience is the general pool — no new `LifeStageBlock`.**
+  `:2216`/`:2471` let each point buy an Art or any Ability, and only the general pool may
+  fund an Art (`pool_covers` is false for every `(Ability pool, Art spend)` pair); `:7151`
+  puts the years after apprenticeship explicitly on the permitted side of the
+  Academic/Arcane/Martial gate. So **no** new `LifeStageBlock` variant, **no**
+  `RestrictedXpPool`, **no** `xp-pool-<slug>` Fluent key — the single biggest
+  simplification in the slice. Later life stays the restricted, Abilities-only pool
+  however many years the magus has lived since
+  (`post_gauntlet_years_leave_later_life_restricted`).
+- **The spell levels are additive to the profile's 120, not a second budget.** Folded in
+  inside `spell_levels_budget` (`base + bonus + life_stage`), which is the single selector
+  both `validate_spells` and the `EffectiveScores` payload call — so `validate_spells`
+  needed **no change of its own**, and a change there would have meant the term was in the
+  wrong place. The payload carries the three parts separately, identity
+  `base + bonus + life_stage == spell_levels_budget`, so the bar labels each rather than
+  showing an unexplained total.
+- **The split is chosen on the Abilities step, and its finding is filed there.** One
+  number defines both the experience pool and the spell budget, and the magus phase order
+  is `… abilities, arts, spells`, so editing it from the Spells step would retroactively
+  shrink a pool already spent two steps earlier — hence no input there, only a read-out,
+  and hence `life_stage_spell_level_split_exceeds_points` under `abilities` despite
+  feeding `spell_levels_budget`. Filing it under `spells` would let the wizard walk past
+  the only surface that can correct it.
+- **The clamps in `budget()` stay, and the validators name what they absorb.**
+  `ValidationMode::Advisory` downgrades every issue and `Silent` drops it, so neither
+  blocks a save and the arithmetic has to stay sane whatever a file holds — which is what
+  `min`/`saturating_sub` guarantee. The price is that a wrong number *vanishes* rather
+  than failing, so each of the three findings names the value the clamp swallowed: the two
+  together are honest.
+- **The Gauntlet age is resolved only for a character that serves an apprenticeship.**
+  `:2216` is "Hermetic Magi Only", so `budget()` reads the stored age through
+  `apprenticeship.and(plan.gauntlet_age)`. Gating on the *points* being zero instead would
+  let a hand-edited companion plan carrying `gauntlet_age: 25` at age 60 silently lose 35
+  later-life years (525 experience points).
+- **`life_stage_age_before_gauntlet` was retargeted, not duplicated.**
+  `minimum_gauntlet_age()` (childhood + apprenticeship) is now compared against
+  `LifeStageBudget::gauntlet_age` — read off the budget rather than re-derived, so the
+  finding and the arithmetic cannot drift. A magus of 60 gauntleted at 12 never served its
+  fifteen years either, and only the Gauntlet age sees that.
+- **`life_stage_aging_rolls_pending` fires for every character over 35**, not only a magus
+  with a plan: "a character over the age of 35 must make aging rolls before the game
+  begins" (`:2232`, `:16565`) is about the character, and the post-Gauntlet years merely
+  make the case routine. Strictly over — aging begins "in the Winter after they turn 35",
+  so 35 owes nothing and 36 owes the first roll. It is a **warning** on phase `review`,
+  so Finish stays live. Both of those are 6b6 placeholders and say so at the emit site:
+  `AGING_ROLLS_START_AGE` is a cited Rust constant until `rules/core/aging.json` exists,
+  and the finding moves onto the new `Aging` phase when 6b6 adds the variant.
+
+### Findings the e2e spec pinned
+
+- **The Review step renders the validation panel twice.** `WizardReview.svelte` mounts an
+  unscoped `<ValidationPanel />` in its body and `WizardShell.svelte` the docked one in
+  the footer, and both carry `data-testid="issue-list"` — so on Review, and only there,
+  every finding is on screen twice. By design (the body panel reports the whole character,
+  the docked one the step), but a trap for any future spec that counts issues on Review:
+  this one counts the aging warning loosely (`> 0`) and keeps its exact counts to the
+  earlier steps, where the docked panel stands alone.
+- **A guided magus reads its post-Gauntlet figures only once an age *and* a Gauntlet age
+  exist.** `post_gauntlet_years` is `age − gauntlet_age`, and an absent Gauntlet age reads
+  as the age, so the summary shows nothing until both are typed — the spec waits on
+  `35 years` rather than asserting immediately after the age.
+
+### Two deliberate non-changes
+
+- **The Markdown export still renders only `xp.general_pool`.** `export.rs:704-743` prints
+  the pool as one `used / total`, so a post-Gauntlet magus's sheet reads `used / 890` —
+  right numbers, no breakdown of which block contributed what. This is the same labelling
+  gap 6b4 recorded (restricted pools named by their eligibility list rather than their
+  origin) and it stays a **6b8** follow-up; the XP bar already labels by origin, the sheet
+  does not.
+- **`spell_levels_override` and the split coexist.** The override still replaces the
+  **profile base** alone, with the V/F bonus and the post-Gauntlet levels additive on top.
+  Deliberately *not* made exclusive with a plan the way `xp_pool` is
+  (`life_stage_xp_pool_conflict`): the override is the flat flow's escape hatch, and the
+  two answer different questions.
 
 ---
 
@@ -942,12 +1123,26 @@ dead language. `magus_minimum_ability` is an **error** (2437: "would not be admi
 the Order"); `magus_recommended_ability` is a warning (2451-2461's 90-xp list).
 `EffectiveScores.magus_minimum_abilities` lets the UI render a checklist.
 
-**6b5 — Post-Gauntlet accrual.** `years × 30 − Σ min(seasons, 3) × 10` clamped at 0 per
-year (2482: minimum 0 at "three or four seasons", so the fourth is free), plus the stored
-xp↔spell-level split. New codes: `life_stage_spell_level_split_exceeds_points` (error,
-`spells`), `life_stage_lab_seasons_out_of_range` (error), and
-`life_stage_aging_rolls_pending` (warning) — the seam 6b6/6b7 fill, from 2494/2496 and
-2232's "must make aging rolls before the game begins".
+**6b5 — Post-Gauntlet accrual.** (**Shipped** — read the **Slice 6b5** section above for
+what this became. The arithmetic held; two details did not.) `years × 30 − Σ min(seasons,
+3) × 10` clamped at 0 per year (2482: minimum 0 at "three or four seasons", so the fourth
+is free), plus the stored xp↔spell-level split. New codes:
+`life_stage_spell_level_split_exceeds_points` (error, `spells`),
+`life_stage_lab_seasons_out_of_range` (error), and `life_stage_aging_rolls_pending`
+(warning) — the seam 6b6/6b7 fill, from 2494/2496 and 2232's "must make aging rolls
+before the game begins".
+
+Two corrections to the above. **The split finding shipped under `abilities`, not
+`spells`**: the number is typed on the Abilities step, and the magus phase order is
+`… abilities, arts, spells`, so `spells` would have walked the wizard past the only
+surface that can correct it (M6/6b1a's rule — a finding belongs to the phase whose input
+surface owns the value). And a **fourth** code was needed that this sketch did not
+anticipate, `life_stage_gauntlet_age_after_age` (error, `abilities`): storing a Gauntlet
+age at all makes a Gauntlet in the character's future expressible, and `budget()` clamps
+it, so without the finding a magus of 25 gauntleted at 40 would lose the years between
+in silence. The per-year clamp also did not survive as written — the seasons are stored
+as **one total of charged seasons**, so `Σ min(seasons, 3)` collapses to a single
+`min(seasons, 3 × years)` (see the decisions above).
 
 **6b6 — Aging tables and totals.** New `crates/arm-rules/src/aging.rs`: `aging_total` =
 `die + ⌈age/10⌉ − living conditions − longevity bonus − aging-roll modifiers`, with `die`
