@@ -12,7 +12,7 @@ use super::*;
 /// - `excessive_aging_reduction`: the derived drops would push a Characteristic's
 ///   effective score below the rules effective minimum (−5). The derived score is
 ///   clamped regardless; this only flags an implausible entry.
-/// - `life_stage_aging_rolls_pending`: the character is over 35 and no aging roll
+/// - `aging_rolls_pending`: the character is over 35 and no aging roll
 ///   is recorded, so the rolls the rules owe before play have not been made.
 /// - `unknown_living_condition` and `living_conditions_conflict`: the character's
 ///   chosen Living Conditions do not resolve, or are mutually exclusive.
@@ -27,7 +27,7 @@ use super::*;
 /// entered bonus (`LongevityBonus::entered` already surfaces that on the sheet, and
 /// a ritual whose bonus the storyguide has not yet agreed is a legal state); a note
 /// for accrued aging points with an empty log (that is
-/// `life_stage_aging_rolls_pending` restated, keyed off a weaker signal); and
+/// `aging_rolls_pending` restated, keyed off a weaker signal); and
 /// widening that finding's args to `owed`/`recorded` (it would reword two locales
 /// to say what the schedule read-out already says better).
 ///
@@ -183,7 +183,7 @@ fn report_apparent_age(entity: &Entity, issues: &mut Vec<ValidationIssue>) {
     ));
 }
 
-/// Emits `life_stage_aging_rolls_pending` for a character who has reached
+/// Emits `aging_rolls_pending` for a character who has reached
 /// [`AgingRules::first_roll_age`](crate::aging::AgingRules::first_roll_age) and
 /// whose aging log is empty.
 ///
@@ -223,7 +223,7 @@ fn report_pending_aging_rolls(
     }
 
     issues.push(ValidationIssue::warning(
-        ValidationIssue::CODE_LIFE_STAGE_AGING_ROLLS_PENDING,
+        ValidationIssue::CODE_AGING_ROLLS_PENDING,
         CreationPhase::Review,
         args([("age", age.to_string())]),
         None,

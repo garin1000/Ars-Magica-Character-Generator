@@ -185,7 +185,7 @@ impl fmt::Display for IssueSeverity {
 /// | `over_power_levels` | error | review | `used`, `budget`, `over` |
 /// | `might_realm_mismatch` | warning | review | `base`, `granted` |
 /// | `excessive_aging_reduction` | warning | review | `characteristic`, `reduction`, `min` |
-/// | `life_stage_aging_rolls_pending` | warning | review | `age` |
+/// | `aging_rolls_pending` | warning | review | `age` |
 /// | `unknown_living_condition` | error | review | `condition` |
 /// | `living_conditions_conflict` | error | review | `condition`, `other` |
 /// | `apparent_age_above_age` | warning | review | `apparent_age`, `age` |
@@ -529,7 +529,7 @@ impl ValidationIssue {
     /// no aging rolls recorded, and "a character over the age of 35 must make aging
     /// rolls ... before the game begins" (Core:2232). Advisory: the rolls happen at
     /// the table, so the engine can only say they are owed.
-    pub const CODE_LIFE_STAGE_AGING_ROLLS_PENDING: &'static str = "life_stage_aging_rolls_pending";
+    pub const CODE_AGING_ROLLS_PENDING: &'static str = "aging_rolls_pending";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a chosen Living Condition
     /// resolves against no row of the Living Conditions table (Core:16581-16594).
     /// The modifier computation skips such an id, so without this the aging total
@@ -2160,7 +2160,7 @@ mod tests {
         let issue = result
             .issues
             .iter()
-            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_AGING_ROLLS_PENDING)
+            .find(|i| i.code == ValidationIssue::CODE_AGING_ROLLS_PENDING)
             .expect("the owed aging rolls are reported");
         assert_eq!(issue.severity, IssueSeverity::Warning);
         assert_eq!(issue.phase, CreationPhase::Review);
@@ -2184,7 +2184,7 @@ mod tests {
             let mut entity = make_entity("companion", vec![]);
             entity.age = Some(age);
             all_codes(&validate(&entity, &rs))
-                .contains(&ValidationIssue::CODE_LIFE_STAGE_AGING_ROLLS_PENDING.to_string())
+                .contains(&ValidationIssue::CODE_AGING_ROLLS_PENDING.to_string())
         };
 
         assert!(!owed(35), "a character of 35 has not yet begun aging");
@@ -2198,7 +2198,7 @@ mod tests {
         let entity = make_entity("companion", vec![]);
         assert!(
             !all_codes(&validate(&entity, &rs))
-                .contains(&ValidationIssue::CODE_LIFE_STAGE_AGING_ROLLS_PENDING.to_string())
+                .contains(&ValidationIssue::CODE_AGING_ROLLS_PENDING.to_string())
         );
     }
 
@@ -2220,7 +2220,7 @@ mod tests {
 
         assert!(
             !all_codes(&validate(&entity, &rs))
-                .contains(&ValidationIssue::CODE_LIFE_STAGE_AGING_ROLLS_PENDING.to_string()),
+                .contains(&ValidationIssue::CODE_AGING_ROLLS_PENDING.to_string()),
             "a logged roll settles the finding"
         );
     }
@@ -2409,7 +2409,7 @@ mod tests {
             let mut entity = make_entity("companion", vec![]);
             entity.age = Some(age);
             all_codes(&validate(&entity, rs))
-                .contains(&ValidationIssue::CODE_LIFE_STAGE_AGING_ROLLS_PENDING.to_string())
+                .contains(&ValidationIssue::CODE_AGING_ROLLS_PENDING.to_string())
         };
 
         // No aging rules: no threshold, so nothing is owed at any age.

@@ -11,7 +11,8 @@ screen's hardcoded-disabled wizard button with one guided entry per character ty
 
 **Status: 6b1a, 6b1b, 6b2, 6b3 (both halves), 6b4 and 6b5 (both halves) are done.**
 Next is **6b6** — the aging tables, the aging total and outcome resolution, which is
-also where `life_stage_aging_rolls_pending` (shipped in 6b5a against `CreationPhase::Review`
+also where `aging_rolls_pending` (shipped in 6b5a as `life_stage_aging_rolls_pending`,
+against `CreationPhase::Review`
 for want of anywhere better) moves onto its own `Aging` phase and its threshold moves
 out of Rust into `rules/core/aging.json`. The `PLAN.md` 6b3 boxes are ticked as of
 6b3b; 6b4 ticked the first half of the magus life-stage story (apprenticeship) and 6b5
@@ -906,7 +907,7 @@ life-stage provenance describes all four periods rather than two.
   `LifeStageBudget::gauntlet_age` — read off the budget rather than re-derived, so the
   finding and the arithmetic cannot drift. A magus of 60 gauntleted at 12 never served its
   fifteen years either, and only the Gauntlet age sees that.
-- **`life_stage_aging_rolls_pending` fires for every character over 35**, not only a magus
+- **`aging_rolls_pending` fires for every character over 35**, not only a magus
   with a plan: "a character over the age of 35 must make aging rolls before the game
   begins" (`:2232`, `:16565`) is about the character, and the post-Gauntlet years merely
   make the case routine. Strictly over — aging begins "in the Winter after they turn 35",
