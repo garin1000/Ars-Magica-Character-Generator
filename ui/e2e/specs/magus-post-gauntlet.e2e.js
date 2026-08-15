@@ -305,13 +305,13 @@ describe('a magus past its Gauntlet', () => {
     // panel in its body AND the docked one in the footer, so every finding is on
     // screen twice here. (Every other step shows the docked panel alone, which is why
     // the counts above are exact.)
-    await browser.waitUntil(async () => (await issueCount('life_stage_aging_rolls_pending')) > 0, {
+    await browser.waitUntil(async () => (await issueCount('aging_rolls_pending')) > 0, {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'a magus of 60 with an empty aging log should be reminded of its aging rolls',
     });
-    const pending = await issue('life_stage_aging_rolls_pending');
+    const pending = await issue('aging_rolls_pending');
     expect(pending.severity).toBe('warning');
-    expect(pending.text).not.toContain('life_stage_aging_rolls_pending');
+    expect(pending.text).not.toContain('aging_rolls_pending');
     expect(pending.text).toContain('60');
     expect(await $(FINISH).isEnabled()).toBe(true);
   });

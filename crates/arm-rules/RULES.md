@@ -1302,7 +1302,7 @@ validation noise — the drop is automatic and already reflected in the effectiv
 score, so it is not an entry problem worth flagging.)
 
 `validate_aging` also emits the entity-wide **warning**
-`life_stage_aging_rolls_pending` (arg `age`, phase `review`) when the character has
+`aging_rolls_pending` (arg `age`, phase `review`) when the character has
 reached `ruleset.aging()?.first_roll_age()` and its `aging_log` is empty — the rolls
 the rules owe before play have not been made (`:2232`, `:16565`; the threshold is a
 **data** value since M6/6b6, see **Aging (M6/6b6)** below). Emitted
@@ -1310,7 +1310,10 @@ for **every** character of that age, not only one built through its life stages,
 which is why it lives here rather than in `validate_life_stage_plan` (that one
 returns early without a plan). The **log**, never `aging_points`, settles it: a
 roll can legitimately produce no points. Fluent key
-`issue-life_stage_aging_rolls_pending` (en/de). Filed under `review` only because
+`issue-aging_rolls_pending` (en/de) — the `life_stage_` prefix it shipped under in
+6b5a was dropped in M6/6b6, because the finding fires for every character over the
+threshold and the `life_stage_*` codes are all filed under `abilities`. Filed under
+`review` only because
 no aging phase exists yet — 6b6 adds `CreationPhase::Aging` and moves it there.
 
 App/UI: `EffectiveScores` gains `decrepitude_score: u8` and widens `warping_points`
@@ -3010,7 +3013,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
     is free and never counted here.
   - `life_stage_spell_level_split_exceeds_points` (`levels`, `points`) — a spell-level
     share larger than the points the years granted (`:2471`).
-  - The fourth is `life_stage_aging_rolls_pending` (warning, `review`), which the
+  - The fourth is `aging_rolls_pending` (warning, `review`), which the
     post-Gauntlet years make reachable at all: a magus generated years out of
     apprenticeship is routinely over 35, and "a character over the age of 35 must make
     aging rolls before the game begins" (`:2232`, `:16565`). It is emitted from
@@ -3375,7 +3378,7 @@ See *Recorded gaps* at the end of this section.
   deliberate `+1` — "the Winter **after** they turn 35" falls in the 36th year, and
   `:2232`'s "over the age of 35" agrees — and
   `validation/aging.rs::report_pending_aging_rolls` emits
-  `life_stage_aging_rolls_pending` (warning) for a character who has reached it with
+  `aging_rolls_pending` (warning) for a character who has reached it with
   an empty `aging_log`. `:2496`'s "each year from the age of 35" is advice inside a
   worked advancement example, disposed of in `first_roll_age()`'s doc comment rather
   than ignored.

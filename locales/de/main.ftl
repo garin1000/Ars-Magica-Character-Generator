@@ -729,7 +729,7 @@ issue-excessive_aging_reduction = Die Alterungsminderungen für { $characteristi
 # (`:16565`), daher greift dies ab 36. Die Würfe fallen am Spieltisch, die App
 # kann sie nur anmahnen; ein eingetragenes Alterungsprotokoll erledigt den
 # Hinweis, gleich was die Würfe ergeben haben.
-issue-life_stage_aging_rolls_pending = Dieser Charakter ist { $age } Jahre alt, und ein Charakter über 35 muss vor Spielbeginn Alterungswürfe ablegen; bisher ist keiner eingetragen.
+issue-aging_rolls_pending = Dieser Charakter ist { $age } Jahre alt, und ein Charakter über 35 muss vor Spielbeginn Alterungswürfe ablegen; bisher ist keiner eingetragen.
 issue-unknown_living_condition = Der Lebensumstand '{ $condition }' entspricht keiner Zeile der Lebensumstände-Tabelle und geht daher nicht in den Alterungswurf ein.
 # Nur die mit Sternchen markierten Zeilen der Tabelle sind untereinander kumulativ
 # (`:16594`); die übrigen beschreiben je eine Situation, es gilt also nur eine.

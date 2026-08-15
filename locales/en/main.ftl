@@ -728,7 +728,7 @@ issue-excessive_aging_reduction = The aging drops to { $characteristic } ({ $red
 # and aging starts the Winter after 35 (`:16565`) — so this fires from 36 up. The
 # rolls happen at the table, so the app can only say they are outstanding; a
 # recorded aging log settles it, whatever the rolls produced.
-issue-life_stage_aging_rolls_pending = This character is { $age }, and a character over 35 must make aging rolls before play begins; none are recorded yet.
+issue-aging_rolls_pending = This character is { $age }, and a character over 35 must make aging rolls before play begins; none are recorded yet.
 issue-unknown_living_condition = Living condition '{ $condition }' matches no row of the Living Conditions table, so it contributes nothing to the aging total.
 # Only the asterisked rows of the table "are cumulative with each other"
 # (`:16594`); the rest describe one situation each, so only one can apply.
