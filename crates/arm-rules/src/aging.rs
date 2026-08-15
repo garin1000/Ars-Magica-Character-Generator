@@ -779,6 +779,76 @@ pub fn resolve_year(
     })
 }
 
+/// Undoes one resolved year, exactly: the points it awarded come back off, the
+/// apparent age steps back if that year advanced it, and the entry is removed.
+///
+/// # Why this exists
+///
+/// A magus of 60 owes 25 aging rolls before play begins (`:2232`), and a
+/// 25-roll walk with no undo is not shippable — a mistyped die has to be
+/// recoverable. It is *exact* rather than a recomputation because the widened
+/// [`AgingLogEntry`] records precisely what its year did: the points it placed,
+/// and whether the appearance moved. Re-deriving them would get a different
+/// answer whenever the character's Living Conditions, Longevity Ritual or
+/// accrued points have changed since — which they legitimately may.
+///
+/// # It addresses entries by age
+///
+/// [`AgingLogEntry::age`] is the key, because a character with no `birth_year`
+/// has no calendar year to be addressed by. A **legacy free-text entry carries
+/// no age**, so it is out of this function's reach by construction and is
+/// removed with the ordinary log editor instead — which is the right home for
+/// it, since there is nothing mechanical to undo.
+///
+/// # Undoing the seed
+///
+/// [`resolve_year`] seeds an unset [`Entity::apparent_age`] at
+/// [`AgingRules::start_age`] before advancing it, so the exact inverse clears
+/// the field again when the decrement lands back on that age: a character whose
+/// appearance sits at the age before the first owed roll has an apparent age no
+/// roll has moved, which is what `None` means. The one thing this collapses is a
+/// hand-entered apparent age of exactly `start_age`, which comes back unset —
+/// the two states carry the same fact and the entry cannot tell them apart.
+/// Under a ruleset shipping no aging rules there is no start age to compare, so
+/// the decremented figure simply stays.
+///
+/// Reverting an age no entry records is [`AgingError::YearNotRecorded`], never a
+/// silent no-op: a revert that quietly did nothing would tell the player the
+/// year had been undone.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16577-16617.
+pub fn revert_year(entity: &Entity, ruleset: &Ruleset, age: u32) -> Result<Entity, AgingError> {
+    let Some(entry) = logged_year(entity, age) else {
+        return Err(AgingError::YearNotRecorded { age });
+    };
+
+    let mut reverted = entity.clone();
+    for (characteristic, points) in &entry.points {
+        let Some(accrued) = reverted.aging_points.get_mut(characteristic) else {
+            continue;
+        };
+        *accrued = accrued.saturating_sub(*points);
+        // The writer never leaves a zero entry, so neither does its inverse.
+        if *accrued == 0 {
+            reverted.aging_points.remove(characteristic);
+        }
+    }
+
+    if entry.apparent_age_increased
+        && let Some(apparent) = reverted.apparent_age
+    {
+        let stepped_back = apparent.saturating_sub(1);
+        let unmoved = ruleset
+            .aging()
+            .is_some_and(|rules| stepped_back == rules.start_age);
+        reverted.apparent_age = (!unmoved).then_some(stepped_back);
+    }
+
+    reverted.aging_log.retain(|logged| logged.age != Some(age));
+    reverted.normalize();
+    Ok(reverted)
+}
+
 /// Where the year's Aging Points land, per Characteristic: the ones the row
 /// names itself, plus the ones the player placed.
 ///
@@ -2107,5 +2177,141 @@ mod tests {
             resolve_year(&living_under(&[]), &without, &request(40, 10, &[])).unwrap_err(),
             AgingError::NoAgingRules
         );
+    }
+
+    /// The character as a save file sees it — which is the only comparison that
+    /// can witness "exact": a field-by-field check would pass over a stray key
+    /// the writer left behind.
+    fn saved(entity: &Entity) -> String {
+        serde_json::to_string(entity).expect("a character serializes")
+    }
+
+    /// A mistyped die must be recoverable: a magus of 60 owes 25 rolls
+    /// (`:2232`), and a 25-roll walk with no undo is not shippable. The widened
+    /// log entry records precisely what its year did, so putting it back is
+    /// exact — down to the bytes of the save.
+    #[test]
+    fn applying_a_year_and_reverting_it_leaves_the_character_byte_identical() {
+        let ruleset = scheduled_ruleset();
+
+        // The open-award path, on a character whose apparent age was never
+        // entered: the revert has to undo the seed as well as the increment.
+        let mut fresh = living_under(&["living_condition.work_in_a_mine"]);
+        fresh.birth_year = Some(1160);
+        let before = saved(&fresh);
+
+        // 8 + ceil(40/10) - (-1) = 13: the next Decrepitude level, five points.
+        let resolved = resolve_year(
+            &fresh,
+            &ruleset,
+            &request(
+                40,
+                8,
+                &[
+                    (Characteristic::Str, 2),
+                    (Characteristic::Sta, 2),
+                    (Characteristic::Qik, 1),
+                ],
+            ),
+        )
+        .expect("a 13 at 40");
+        assert_ne!(saved(&resolved.entity), before, "the year wrote something");
+
+        let reverted =
+            revert_year(&resolved.entity, &ruleset, 40).expect("the year comes back off");
+        assert_eq!(saved(&reverted), before);
+
+        // And the named-row path, on a character carrying points and an apparent
+        // age of his own: those are left exactly where they were.
+        let mut aged = living_under(&[]);
+        aged.apparent_age = Some(44);
+        aged.aging_points.insert(Characteristic::Str, 3);
+        let before = saved(&aged);
+
+        let resolved =
+            resolve_year(&aged, &ruleset, &request(40, 10, &[])).expect("a 14 at 40 takes Qik");
+        assert_eq!(resolved.entity.apparent_age, Some(45));
+        assert_eq!(
+            saved(&revert_year(&resolved.entity, &ruleset, 40).expect("reverts")),
+            before
+        );
+    }
+
+    /// Reverting a year no entry records is an error, not a no-op: silently
+    /// doing nothing would tell the player the year had been undone.
+    #[test]
+    fn reverting_a_year_no_entry_records_is_refused() {
+        let ruleset = scheduled_ruleset();
+        let entity = living_under(&[]);
+
+        assert_eq!(
+            revert_year(&entity, &ruleset, 40).unwrap_err(),
+            AgingError::YearNotRecorded { age: 40 }
+        );
+
+        let resolved = resolve_year(&entity, &ruleset, &request(40, 10, &[])).expect("a 14 at 40");
+        assert_eq!(
+            revert_year(&resolved.entity, &ruleset, 39).unwrap_err(),
+            AgingError::YearNotRecorded { age: 39 },
+            "the neighbouring year is not this one"
+        );
+
+        // And a year reverted once is no longer recorded.
+        let reverted = revert_year(&resolved.entity, &ruleset, 40).expect("the first revert lands");
+        assert_eq!(
+            revert_year(&reverted, &ruleset, 40).unwrap_err(),
+            AgingError::YearNotRecorded { age: 40 }
+        );
+    }
+
+    /// A hand-written free-text entry carries no age, so it is out of the
+    /// revert's reach by construction — it is removed with the ordinary log
+    /// editor. Reverting a resolved year leaves it, and everything it does not
+    /// own, alone.
+    #[test]
+    fn reverting_a_resolved_year_leaves_a_hand_written_entry_alone() {
+        let ruleset = scheduled_ruleset();
+        let hand_written = AgingLogEntry {
+            year: Some(1180),
+            effect: "A hard winter in the Rhine".to_string(),
+            ..AgingLogEntry::default()
+        };
+        let mut entity = living_under(&[]);
+        entity.aging_points.insert(Characteristic::Str, 3);
+        entity.aging_log = vec![hand_written.clone()];
+
+        let resolved = resolve_year(&entity, &ruleset, &request(40, 10, &[])).expect("a 14 at 40");
+        assert_eq!(resolved.entity.aging_log.len(), 2);
+
+        let reverted = revert_year(&resolved.entity, &ruleset, 40).expect("the resolved year");
+        assert_eq!(
+            reverted.aging_log,
+            vec![hand_written],
+            "only the entry addressed by age is removed"
+        );
+        assert_eq!(
+            reverted.aging_points,
+            points(&[(Characteristic::Str, 3)]),
+            "the points the year did not award are untouched"
+        );
+    }
+
+    /// "2 or less: No apparent aging" (`:16599`) — so the revert of such a year
+    /// must not walk the appearance backwards. The entry's own
+    /// `apparent_age_increased` is what decides, not the total.
+    #[test]
+    fn a_year_that_did_not_age_the_appearance_leaves_it_alone_on_revert() {
+        let ruleset = scheduled_ruleset();
+        // Wealthy (+2) with Mild Aging (+1) rolling a 1: 1 + 4 - 3 = 2.
+        let mut kept = living_under(&["living_condition.wealthy_or_healthy_location"]);
+        kept.selections = vec![Selection::new(Id::new("virtue.mild_aging"))];
+        kept.apparent_age = Some(44);
+
+        let resolved = resolve_year(&kept, &ruleset, &request(40, 1, &[])).expect("a 2 at 40");
+        assert_eq!(resolved.entity.apparent_age, Some(44));
+
+        let reverted = revert_year(&resolved.entity, &ruleset, 40).expect("reverts");
+        assert_eq!(reverted.apparent_age, Some(44));
+        assert!(reverted.aging_log.is_empty());
     }
 }
