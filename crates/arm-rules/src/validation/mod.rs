@@ -186,6 +186,9 @@ impl fmt::Display for IssueSeverity {
 /// | `might_realm_mismatch` | warning | review | `base`, `granted` |
 /// | `excessive_aging_reduction` | warning | review | `characteristic`, `reduction`, `min` |
 /// | `life_stage_aging_rolls_pending` | warning | review | `age` |
+/// | `unknown_living_condition` | error | review | `condition` |
+/// | `living_conditions_conflict` | error | review | `condition`, `other` |
+/// | `apparent_age_above_age` | warning | review | `apparent_age`, `age` |
 /// | `unknown_equipment` | error | review | `item` |
 /// | `equipment_min_strength` | warning | review | `item`, `required`, `strength` |
 /// | `shield_with_two_handed_weapon` | warning | review | (none) |
@@ -527,6 +530,21 @@ impl ValidationIssue {
     /// rolls ... before the game begins" (Core:2232). Advisory: the rolls happen at
     /// the table, so the engine can only say they are owed.
     pub const CODE_LIFE_STAGE_AGING_ROLLS_PENDING: &'static str = "life_stage_aging_rolls_pending";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a chosen Living Condition
+    /// resolves against no row of the Living Conditions table (Core:16581-16594).
+    /// The modifier computation skips such an id, so without this the aging total
+    /// would be silently wrong.
+    pub const CODE_UNKNOWN_LIVING_CONDITION: &'static str = "unknown_living_condition";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: two or more chosen Living
+    /// Conditions are mutually exclusive. Only the asterisked rows "are cumulative
+    /// with each other" (Core:16594); the rest describe one situation each.
+    pub const CODE_LIVING_CONDITIONS_CONFLICT: &'static str = "living_conditions_conflict";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: the apparent age exceeds
+    /// the actual age, which aging cannot produce — it advances the apparent age by
+    /// at most one year per year (Core:16577). Advisory, because `:5189` puts it as
+    /// a *should* with an explicit escape for a character who is not basically
+    /// human.
+    pub const CODE_APPARENT_AGE_ABOVE_AGE: &'static str = "apparent_age_above_age";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: an equipment slot names an
     /// id that does not resolve to any catalogue weapon, shield, or armor
     /// (Core:16944-17011).
@@ -1997,9 +2015,39 @@ mod tests {
         );
     }
 
+    /// The smallest loadable aging block: the threshold the pending-rolls finding
+    /// reads (`start_age: 35`), the Living Conditions rows the unknown-id and
+    /// conflict checks resolve against — three non-cumulative alternatives and two
+    /// asterisked rows that stack (`:16594`) — and a single open-ended outcome row,
+    /// which is all `Ruleset::validate_aging_rules`' tiling gate needs. The shipped
+    /// table is asserted in `tests/data_integrity.rs`, not restated here.
+    const AGING_RULES: &str = r#"{
+          "start_age": 35,
+          "age_divisor": 10,
+          "apparent_age_increase_min": 3,
+          "living_conditions": [
+            { "id": "living_condition.average_peasant", "modifier": 0 },
+            { "id": "living_condition.leper", "modifier": -2, "cumulative": true },
+            { "id": "living_condition.typical_summer_or_autumn_covenant_magus", "modifier": 2 },
+            { "id": "living_condition.wealthy_or_healthy_location", "modifier": 2 },
+            { "id": "living_condition.work_in_a_mine", "modifier": -1, "cumulative": true }
+          ],
+          "outcomes": [
+            { "min": 10, "effect": { "type": "any_characteristic", "points": 1 } }
+          ]
+        }"#;
+
     /// A minimal ruleset carrying characteristic rules (effective range ±5), so the
-    /// aging-reduction floor check has a minimum to compare against.
+    /// aging-reduction floor check has a minimum to compare against, plus
+    /// [`AGING_RULES`] — every aging finding reads its numbers off the ruleset, so
+    /// a fixture without them would leave its test asserting nothing.
     fn aging_ruleset() -> Ruleset {
+        ruleset_with_aging(Some(AGING_RULES))
+    }
+
+    /// The same fixture with `aging` set as given, so a test can witness what a
+    /// ruleset shipping no aging rules at all does: stand the subsystem down.
+    fn ruleset_with_aging(aging: Option<&'static str>) -> Ruleset {
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
           { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
@@ -2035,7 +2083,7 @@ mod tests {
             characteristics: Some(characteristics),
             life_stages: None,
             childhoods: None,
-            aging: None,
+            aging,
         })
         .unwrap()
     }
@@ -2175,6 +2223,220 @@ mod tests {
                 .contains(&ValidationIssue::CODE_LIFE_STAGE_AGING_ROLLS_PENDING.to_string()),
             "a logged roll settles the finding"
         );
+    }
+
+    /// The set of chosen Living Conditions, as a canonical [`BTreeSet`].
+    fn living_conditions<const N: usize>(ids: [&str; N]) -> BTreeSet<Id> {
+        ids.into_iter().map(Id::new).collect()
+    }
+
+    /// The standard referential check, applied to the Living Conditions table:
+    /// `living_conditions_modifier` deliberately *skips* an id the table does not
+    /// carry (the engine has one evaluation path and always produces a number), so
+    /// without this finding a typo would silently make the aging total wrong.
+    /// One finding per unknown id, like `unknown_ability` and `unknown_spell`.
+    #[test]
+    fn an_unknown_living_condition_is_reported() {
+        let rs = aging_ruleset();
+        let mut entity = make_entity("companion", vec![]);
+        entity.living_conditions = living_conditions([
+            "living_condition.average_peasant",
+            "living_condition.nonesuch",
+            "living_condition.no_such_row_either",
+        ]);
+
+        let result = validate(&entity, &rs);
+        let reported: Vec<&str> = result
+            .issues
+            .iter()
+            .filter(|i| i.code == ValidationIssue::CODE_UNKNOWN_LIVING_CONDITION)
+            .map(|i| i.args.get("condition").map(String::as_str).unwrap_or(""))
+            .collect();
+        assert_eq!(
+            reported,
+            vec![
+                "living_condition.no_such_row_either",
+                "living_condition.nonesuch"
+            ],
+            "one finding per unknown id, in canonical order: {:?}",
+            result.issues
+        );
+
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_UNKNOWN_LIVING_CONDITION)
+            .expect("the unresolvable id is reported");
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.phase, CreationPhase::Review);
+    }
+
+    /// A ruleset shipping no aging rules stands the whole subsystem down — there
+    /// is no table for an id to be unknown against, so nothing is reported.
+    #[test]
+    fn a_ruleset_without_aging_rules_reports_no_unknown_living_condition() {
+        let rs = ruleset_with_aging(None);
+        let mut entity = make_entity("companion", vec![]);
+        entity.living_conditions = living_conditions(["living_condition.nonesuch"]);
+        assert!(
+            !all_codes(&validate(&entity, &rs))
+                .contains(&ValidationIssue::CODE_UNKNOWN_LIVING_CONDITION.to_string())
+        );
+    }
+
+    /// "Modifiers marked with an asterisk are cumulative with each other"
+    /// (Core Rules.md:16594) — which is only worth saying because the *rest* are
+    /// alternatives. A character cannot be both "Wealthy, or healthy location" and
+    /// "Average peasant", and the covenant rows are graded versions of one
+    /// situation, so at most one non-cumulative row may be chosen.
+    ///
+    /// Exactly ONE finding naming the first two offenders in canonical id order,
+    /// not one per pair: three mutually exclusive rows are a single mistake to fix,
+    /// and a pair explosion would report it three times.
+    #[test]
+    fn two_non_cumulative_living_conditions_conflict() {
+        let rs = aging_ruleset();
+        let conflicts = |ids: BTreeSet<Id>| {
+            let mut entity = make_entity("companion", vec![]);
+            entity.living_conditions = ids;
+            validate(&entity, &rs)
+                .issues
+                .into_iter()
+                .filter(|i| i.code == ValidationIssue::CODE_LIVING_CONDITIONS_CONFLICT)
+                .collect::<Vec<_>>()
+        };
+
+        // The five asterisked rows stack, so two of them are legal.
+        assert!(
+            conflicts(living_conditions([
+                "living_condition.leper",
+                "living_condition.work_in_a_mine",
+            ]))
+            .is_empty(),
+            "the cumulative rows stack with each other (:16594)"
+        );
+
+        // A cumulative row plus one baseline is the table's own normal case.
+        assert!(
+            conflicts(living_conditions([
+                "living_condition.leper",
+                "living_condition.average_peasant",
+            ]))
+            .is_empty(),
+            "one non-cumulative row alongside a cumulative one is legal"
+        );
+
+        // Three exclusive alternatives: one finding, naming the first two.
+        let found = conflicts(living_conditions([
+            "living_condition.average_peasant",
+            "living_condition.typical_summer_or_autumn_covenant_magus",
+            "living_condition.wealthy_or_healthy_location",
+        ]));
+        assert_eq!(
+            found.len(),
+            1,
+            "one finding, not a pair explosion: {found:?}"
+        );
+        let issue = &found[0];
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.phase, CreationPhase::Review);
+        assert_eq!(
+            issue.args.get("condition").map(String::as_str),
+            Some("living_condition.average_peasant")
+        );
+        assert_eq!(
+            issue.args.get("other").map(String::as_str),
+            Some("living_condition.typical_summer_or_autumn_covenant_magus")
+        );
+    }
+
+    /// "Otherwise, the character's apparent age increases by one year"
+    /// (Core Rules.md:16577) — at most one year per year lived, so absent a
+    /// supernatural reason the apparent age cannot outrun the actual one, and a
+    /// higher figure is a transposed entry.
+    ///
+    /// A WARNING, not an error: the closest explicit text is Unaging's aside — "You
+    /// may choose your apparent age freely, although if you are basically human it
+    /// **should be** less than or equal to your actual age" (`:5189`) — a *should*,
+    /// carrying its own escape for a character who is not basically human.
+    #[test]
+    fn an_apparent_age_above_the_actual_age_is_reported() {
+        let rs = aging_ruleset();
+        let reported = |apparent_age: Option<u32>, age: Option<u32>| {
+            let mut entity = make_entity("companion", vec![]);
+            entity.age = age;
+            entity.apparent_age = apparent_age;
+            validate(&entity, &rs)
+                .issues
+                .into_iter()
+                .find(|i| i.code == ValidationIssue::CODE_APPARENT_AGE_ABOVE_AGE)
+        };
+
+        let issue = reported(Some(50), Some(40)).expect("the crossed ages are reported");
+        assert_eq!(issue.severity, IssueSeverity::Warning);
+        assert_eq!(issue.phase, CreationPhase::Review);
+        assert_eq!(
+            issue.args.get("apparent_age").map(String::as_str),
+            Some("50")
+        );
+        assert_eq!(issue.args.get("age").map(String::as_str), Some("40"));
+
+        assert!(
+            reported(Some(40), Some(40)).is_none(),
+            "equal ages are exactly what :5189 permits"
+        );
+        assert!(
+            reported(Some(30), Some(40)).is_none(),
+            "a younger appearance is the ordinary case"
+        );
+        assert!(
+            reported(Some(50), None).is_none(),
+            "with no actual age there is nothing to compare against"
+        );
+        assert!(
+            reported(None, Some(40)).is_none(),
+            "with no apparent age there is nothing to compare"
+        );
+    }
+
+    /// The pending-rolls threshold is a rules NUMBER, so it comes from
+    /// `rules/core/aging.json` via `AgingRules::first_roll_age()` and from nowhere
+    /// else. A ruleset shipping no aging rules emits nothing — the subsystem stands
+    /// down rather than the engine inventing a fallback constant.
+    #[test]
+    fn the_pending_aging_rolls_finding_reads_its_threshold_from_the_ruleset() {
+        let owed = |rs: &Ruleset, age: u32| {
+            let mut entity = make_entity("companion", vec![]);
+            entity.age = Some(age);
+            all_codes(&validate(&entity, rs))
+                .contains(&ValidationIssue::CODE_LIFE_STAGE_AGING_ROLLS_PENDING.to_string())
+        };
+
+        // No aging rules: no threshold, so nothing is owed at any age.
+        let standing_down = ruleset_with_aging(None);
+        assert!(
+            !owed(&standing_down, 60),
+            "with no aging rules the engine has no threshold to enforce"
+        );
+
+        // The shipped threshold: "over the age of 35" is strict (`:2232`, `:16565`).
+        let rs = aging_ruleset();
+        assert!(!owed(&rs, 35), "a character of 35 has not yet begun aging");
+        assert!(owed(&rs, 36), "the first roll is owed the year after 35");
+
+        // Move the number in the data and the finding moves with it.
+        let late = ruleset_with_aging(Some(
+            r#"{
+              "start_age": 49,
+              "age_divisor": 10,
+              "apparent_age_increase_min": 3,
+              "outcomes": [
+                { "min": 10, "effect": { "type": "any_characteristic", "points": 1 } }
+              ]
+            }"#,
+        ));
+        assert!(!owed(&late, 49), "the data's start age owes nothing itself");
+        assert!(owed(&late, 50), "and the year after it owes the first roll");
     }
 
     #[test]

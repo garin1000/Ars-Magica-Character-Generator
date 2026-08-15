@@ -730,6 +730,15 @@ issue-excessive_aging_reduction = Die Alterungsminderungen für { $characteristi
 # kann sie nur anmahnen; ein eingetragenes Alterungsprotokoll erledigt den
 # Hinweis, gleich was die Würfe ergeben haben.
 issue-life_stage_aging_rolls_pending = Dieser Charakter ist { $age } Jahre alt, und ein Charakter über 35 muss vor Spielbeginn Alterungswürfe ablegen; bisher ist keiner eingetragen.
+issue-unknown_living_condition = Der Lebensumstand '{ $condition }' entspricht keiner Zeile der Lebensumstände-Tabelle und geht daher nicht in den Alterungswurf ein.
+# Nur die mit Sternchen markierten Zeilen der Tabelle sind untereinander kumulativ
+# (`:16594`); die übrigen beschreiben je eine Situation, es gilt also nur eine.
+issue-living_conditions_conflict = Die Lebensumstände '{ $condition }' und '{ $other }' schließen einander aus, es kann also nur einer davon gelten.
+# Ein Alterungswurf erhöht das scheinbare Alter um höchstens ein Jahr pro Jahr
+# (`:16577`), kann es also von sich aus nicht über das tatsächliche Alter treiben —
+# `:5189` sagt allerdings nur, es "sollte" höchstens so hoch sein, und lässt
+# Ausnahmen für Charaktere zu, die nicht im Grunde menschlich sind.
+issue-apparent_age_above_age = Das scheinbare Alter ({ $apparent_age }) liegt über dem tatsächlichen Alter ({ $age }); die Alterung erhöht es um höchstens ein Jahr pro Jahr.
 issue-unknown_equipment = Ausrüstung '{ $item }' passt zu keiner Waffe, keinem Schild und keiner Rüstung.
 issue-equipment_min_strength = { $item } benötigt Stärke { $required }, aber dieser Charakter hat { $strength }.
 issue-shield_with_two_handed_weapon = Ein Schild kann nicht mit einer zweihändigen Waffe geführt werden, daher gelten seine Angriffs- und Verteidigungsmodifikatoren nicht (er zählt weiterhin zur Last).

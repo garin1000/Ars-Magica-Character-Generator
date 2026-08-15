@@ -911,9 +911,11 @@ life-stage provenance describes all four periods rather than two.
   begins" (`:2232`, `:16565`) is about the character, and the post-Gauntlet years merely
   make the case routine. Strictly over — aging begins "in the Winter after they turn 35",
   so 35 owes nothing and 36 owes the first roll. It is a **warning** on phase `review`,
-  so Finish stays live. Both of those are 6b6 placeholders and say so at the emit site:
-  `AGING_ROLLS_START_AGE` is a cited Rust constant until `rules/core/aging.json` exists,
-  and the finding moves onto the new `Aging` phase when 6b6 adds the variant.
+  so Finish stays live. The threshold was a cited Rust constant
+  (`AGING_ROLLS_START_AGE`) until 6b6a created `rules/core/aging.json`; it now reads
+  `AgingRules::first_roll_age()`, and the constant is gone. The `review` phase is still a
+  placeholder and says so at the emit site: the finding moves onto the new `Aging` phase
+  when 6b6b adds the variant.
 
 ### Findings the e2e spec pinned
 

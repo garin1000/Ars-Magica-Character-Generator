@@ -44,22 +44,9 @@ mechanics carry entries; the rest are stubbed at the end.
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2774`.
 - Implementation: `crates/arm-rules/src/types.rs` — `ItemKind::is_positive()`.
 
-#### Age at which aging rolls become due — over 35
-> "Characters begin aging in the Winter after they turn 35. Every year, a
-> character must roll on the aging table."
-
-> "The first thing to bear in mind is that a character over the age of 35 must
-> make aging rolls (see page 392) before the game begins."
-
-- Source: `Ars Magica - Definitive Edition (Core Rules).md:16565` (the threshold),
-  `:2232` (the rolls are owed before play begins).
-- Implementation: `crates/arm-rules/src/validation/aging.rs` —
-  `AGING_ROLLS_START_AGE` / `report_pending_aging_rolls`, which emits
-  `life_stage_aging_rolls_pending` (warning) for `age > 35` with an empty
-  `aging_log`. "Over the age of 35" is strict, so the first roll is owed at 36.
-- **Hardcoded for now**: there is no `rules/core/aging.json` yet. Slice 6b6 adds
-  that file and moves this threshold into it, at which point the constant goes
-  and this row becomes a data row.
+(The aging-roll threshold used to sit here as `AGING_ROLLS_START_AGE`. Slice 6b6
+introduced `rules/core/aging.json`, so it is now a data value — see
+**Aging (M6/6b6)** below.)
 
 ### Enforcement logic
 
@@ -3343,6 +3330,65 @@ a requirement rather than a coincidence: both key on
 looser test — any parameterized Ability whose parameter equals the language — would
 let an `Area Lore (German)` declare the block spent while the pool, which funds one
 instance of one id, paid for nothing of it.
+
+## Aging (M6/6b6) — `aging.rs`
+
+Slice 6b6 is still landing; this section records the parts of it that ship.
+`rules/core/aging.json` carries every number, `crates/arm-rules/src/aging.rs`
+the arithmetic, and `crates/arm-rules/src/validation/aging.rs` the findings.
+
+#### Age at which aging rolls become due — over 35
+> "Characters begin aging in the Winter after they turn 35. Every year, a
+> character must roll on the aging table."
+
+> "The first thing to bear in mind is that a character over the age of 35 must
+> make aging rolls (see page 392) before the game begins."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:16565` (the threshold),
+  `:2232` (the rolls are owed before play begins).
+- **Data**: `rules/core/aging.json` → `start_age: 35`. It was a cited Rust
+  constant (`AGING_ROLLS_START_AGE`) until this slice created the file; the
+  constant is gone, and a ruleset shipping no aging block stands the subsystem
+  down rather than letting the engine supply a fallback number.
+- Implementation: `AgingRules::first_roll_age()` (`aging.rs`) does the one
+  deliberate `+1` — "the Winter **after** they turn 35" falls in the 36th year, and
+  `:2232`'s "over the age of 35" agrees — and
+  `validation/aging.rs::report_pending_aging_rolls` emits
+  `life_stage_aging_rolls_pending` (warning) for a character who has reached it with
+  an empty `aging_log`. `:2496`'s "each year from the age of 35" is advice inside a
+  worked advancement example, disposed of in `first_roll_age()`'s doc comment rather
+  than ignored.
+
+#### Living Conditions are alternatives unless marked cumulative
+> "\* Modifiers marked with an asterisk are cumulative with each other."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:16594`; the table itself
+  at `:16581-16592`. The footnote is only worth writing because the *unmarked* rows
+  are not cumulative: they name mutually exclusive situations (`:16583` "Wealthy, or
+  healthy location" against `:16587` "Average peasant"; the four covenant rows are
+  graded alternatives for one covenant), so at most one of them applies.
+- **Data**: `rules/core/aging.json` → `living_conditions[].cumulative`, `true` on
+  exactly the five asterisked rows (`:16588-16592`).
+- Implementation: `validation/aging.rs::report_living_conditions` emits
+  `living_conditions_conflict` (error, args `condition` / `other`) once when more
+  than one non-cumulative row is chosen, naming the first two offenders in canonical
+  id order — three exclusive rows are one mistake to fix, not three. The same
+  function emits `unknown_living_condition` (error, arg `condition`) per chosen id
+  the table does not carry, because `living_conditions_modifier` deliberately skips
+  an unresolvable id, which would otherwise make the AGING TOTAL silently wrong.
+
+#### Apparent age cannot outrun actual age
+> "Otherwise, the character's apparent age increases by one year."
+
+> "You may choose your apparent age freely, although if you are basically human it
+> should be less than or equal to your actual age."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:16577` (one year per
+  year), `:5189` (Unaging's aside).
+- Implementation: `validation/aging.rs::report_apparent_age` emits
+  `apparent_age_above_age` (**warning**, args `apparent_age` / `age`) when both are
+  entered and the apparent age is higher. A warning, not an error: `:5189` states it
+  as a *should* and explicitly excuses a character who is not basically human.
 
 ## Markdown character export (M5.6) — `export.rs`
 
