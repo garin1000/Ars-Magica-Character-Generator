@@ -246,6 +246,113 @@ pub fn living_conditions_modifier(entity: &Entity, ruleset: &Ruleset) -> LivingC
     }
 }
 
+/// One year's AGING TOTAL, broken into every term that made it.
+///
+/// Split rather than a bare number because the sheet has to *show* the
+/// arithmetic — a player who cannot see which term moved the total cannot check
+/// it against the book.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16569.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AgingTotal {
+    /// The actual age the roll was made at (`:16577`).
+    pub age: u32,
+    /// The player's stress die, as typed in.
+    pub die: i32,
+    /// ⌈`age` / [`AgingRules::age_divisor`]⌉ — ADDED.
+    pub age_modifier: i32,
+    /// The Living Conditions Modifier — SUBTRACTED (`:16571`).
+    pub living_conditions: LivingConditionsModifier,
+    /// The Longevity Ritual bonus — SUBTRACTED. 0 with no ritual, or with a
+    /// ritual whose bonus the player has not entered yet.
+    pub longevity_bonus: i32,
+    /// Σ of the Virtue/Flaw aging-ROLL modifiers — ADDED with their stored sign.
+    pub trait_modifier: i32,
+    /// The total before the `:16575` clamp.
+    pub uncapped_total: i32,
+    /// The total after it — the number the Aging Roll table is indexed by.
+    pub total: i32,
+    /// Whether the `:16575` clamp fired on this roll.
+    pub capped_by_longevity: bool,
+}
+
+/// The AGING TOTAL for one year's roll (`:16567-16569`).
+///
+/// > **AGING TOTAL: Stress die (no botch) + age/10 (round up)**
+/// > **\- Living Conditions modifier**
+/// > **\- Longevity Ritual modifier**
+///
+/// `die` is the player's stress die (no botch), typed in — the engine never rolls
+/// and `arm-rules` has no `rand` dependency. `age` is a parameter rather than read
+/// off the entity, because `:2232`'s pre-play catch-up walks each owed year and
+/// every year's roll uses THAT year's age. It is the ACTUAL age: "The modifier to
+/// rolls depends on the character's actual, not apparent, age" (`:16577`).
+///
+/// # Signs
+///
+/// The two modifiers keep the book's own sign wherever they are stored, and are
+/// negated exactly once — here. So Mild Aging's `+1` Living Conditions modifier
+/// (`:4530`) *lowers* the total and Poor Living Conditions' `-1` (`:6620`) *raises*
+/// it, which is what "a high … Living Conditions modifier … indicate[s] longer
+/// life" (`:16571`) means. The Virtue/Flaw aging-ROLL modifiers are a different
+/// quantity and are ADDED with their stored sign: Faerie Blood's `-1` (`:3801`)
+/// lowers the total directly.
+///
+/// `None` when the ruleset ships no aging rules.
+pub fn aging_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Option<AgingTotal> {
+    let age_modifier = ruleset.aging()?.age_modifier(age);
+    let living_conditions = living_conditions_modifier(entity, ruleset);
+
+    // The one existing reader of the stored ritual bonus, reused so the aging
+    // total and the Longevity read-out can never disagree. It is `None` for
+    // exactly the character who has no ritual, which is also the gate a
+    // `longevity_bonus` modifier needs.
+    let ritual = crate::derived::longevity_bonus(entity, ruleset);
+    let mut longevity_bonus = ritual.as_ref().map_or(0, |read_out| read_out.bonus);
+    let mut trait_modifier = 0;
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            let Effect::AgingMod { kind, amount } = effect else {
+                continue;
+            };
+            match kind {
+                AgingEffect::AgingRoll => trait_modifier += i32::from(*amount),
+                // A modifier to a ritual bonus is meaningless without a ritual.
+                AgingEffect::LongevityBonus => {
+                    if ritual.is_some() {
+                        longevity_bonus += i32::from(*amount);
+                    }
+                }
+                // Already summed into `living_conditions` above.
+                AgingEffect::LivingConditions => {}
+                // Neither is a term of the total: `no_aging` decides whether
+                // Aging Points reach the Characteristics at all, and
+                // `decrepitude` modifies the accrued score, not the roll.
+                AgingEffect::NoAging | AgingEffect::Decrepitude => {}
+            }
+        }
+    }
+
+    let uncapped_total =
+        die + age_modifier - living_conditions.total - longevity_bonus + trait_modifier;
+    Some(AgingTotal {
+        age,
+        die,
+        age_modifier,
+        living_conditions,
+        longevity_bonus,
+        trait_modifier,
+        uncapped_total,
+        // The `:16575` Longevity Ritual clamp is not applied yet — it arrives with
+        // the step that cites it, and until then the total is the raw arithmetic.
+        total: uncapped_total,
+        capped_by_longevity: false,
+    })
+}
+
 /// What a Longevity Ritual does to the roll of a character too young to be
 /// aging yet.
 ///
@@ -355,7 +462,9 @@ pub enum AgingRowEffect {
 mod tests {
     use super::*;
     use crate::ruleset::{Ruleset, RulesetSources};
-    use crate::types::{Entity, EntityKind, RulesetRef, Selection};
+    use crate::types::{
+        Entity, EntityKind, LongevityRitual, LongevitySource, RulesetRef, Selection,
+    };
     use pretty_assertions::assert_eq;
 
     /// The two tables of `## Aging` in miniature: a Living Conditions row of each
@@ -492,7 +601,9 @@ mod tests {
     /// `:16592`); the point items are the three shipped carriers of a
     /// `living_conditions` aging modifier — plus one Personality Flaw, which any
     /// ruleset shipping a V/F catalogue at all must carry
-    /// (`validate_engine_required_categories`).
+    /// (`validate_engine_required_categories`), the shipped `aging_roll` carrier
+    /// Faerie Blood (`:3801`), and one **synthetic** carrier of a
+    /// `longevity_bonus` modifier, a kind no shipped item uses today.
     fn scheduled_ruleset() -> Ruleset {
         let aging = r#"{
           "start_age": 35,
@@ -521,7 +632,13 @@ mod tests {
             "effects": [{ "type": "aging_mod", "kind": "living_conditions", "amount": 1 }] },
           { "id": "virtue.unaging", "kind": "virtue", "magnitude": "minor",
             "category": "general", "classification": "in_play_effect",
-            "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }] }
+            "effects": [{ "type": "aging_mod", "kind": "no_aging", "amount": 0 }] },
+          { "id": "virtue.faerie_blood", "kind": "virtue", "magnitude": "minor",
+            "category": "supernatural", "classification": "in_play_effect",
+            "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": -1 }] },
+          { "id": "virtue.synthetic_longevity_bonus", "kind": "virtue", "magnitude": "minor",
+            "category": "general", "classification": "in_play_effect",
+            "effects": [{ "type": "aging_mod", "kind": "longevity_bonus", "amount": 2 }] }
         ]"#;
         Ruleset::from_sources(RulesetSources {
             id: "test",
@@ -743,5 +860,131 @@ mod tests {
         assert_eq!(rules.age_modifier(31), 4);
         assert_eq!(rules.age_modifier(40), 4);
         assert_eq!(rules.age_modifier(41), 5);
+    }
+
+    /// A character with a Longevity Ritual of the given entered bonus.
+    fn with_ritual(entity: &mut Entity, bonus: Option<i8>) {
+        entity.longevity_ritual = Some(LongevityRitual {
+            source: LongevitySource::External,
+            bonus,
+            focus: String::new(),
+        });
+    }
+
+    /// The four terms of the formula and, crucially, their **signs**:
+    ///
+    /// > **AGING TOTAL: Stress die (no botch) + age/10 (round up)**
+    /// > **\- Living Conditions modifier**
+    /// > **\- Longevity Ritual modifier** (`:16567-16569`)
+    ///
+    /// Every term is given a different magnitude here, so a swapped pair cannot
+    /// coincidentally produce the right sum.
+    #[test]
+    fn the_aging_total_adds_the_age_step_and_subtracts_the_two_modifiers() {
+        let ruleset = scheduled_ruleset();
+        let mut entity =
+            living_under(&["living_condition.leper", "living_condition.work_in_a_mine"]);
+        entity.selections = vec![Selection::new(Id::new("virtue.faerie_blood"))];
+        with_ritual(&mut entity, Some(5));
+
+        let total = aging_total(&entity, &ruleset, 60, 7).expect("the fixture ships aging rules");
+
+        assert_eq!(total.age, 60);
+        assert_eq!(total.die, 7);
+        assert_eq!(total.age_modifier, 6, "ceil(60/10), ADDED");
+        assert_eq!(total.living_conditions.total, -3, "the book's own sign");
+        assert_eq!(total.longevity_bonus, 5, "the entered ritual bonus");
+        assert_eq!(total.trait_modifier, -1, "Faerie Blood's -1 aging roll");
+        // 7 + 6 - (-3) - 5 + (-1)
+        assert_eq!(total.uncapped_total, 10);
+        assert_eq!(total.total, 10);
+        assert!(!total.capped_by_longevity);
+
+        // A ruleset with no aging rules has no total to compute.
+        let without = Ruleset::from_json("test", "1", "[]", "[]").expect("an empty ruleset loads");
+        assert!(aging_total(&entity, &without, 60, 7).is_none());
+    }
+
+    /// The sign trap, stated as an assertion so it cannot be "simplified" away.
+    ///
+    /// Mild Aging ships `+1` and Poor Living Conditions `-1` — both in the book's
+    /// own sign (`:4530`, `:6620`) — and the AGING TOTAL *subtracts* the Living
+    /// Conditions modifier. So the Virtue must LOWER the total and the Flaw must
+    /// RAISE it, from the very same die.
+    #[test]
+    fn mild_aging_and_poor_living_conditions_move_the_total_in_opposite_directions() {
+        let ruleset = scheduled_ruleset();
+        let total_of = |item: Option<&str>| {
+            let mut entity = living_under(&[]);
+            entity.selections = item
+                .map(|id| Selection::new(Id::new(id)))
+                .into_iter()
+                .collect();
+            aging_total(&entity, &ruleset, 40, 6)
+                .expect("the fixture ships aging rules")
+                .total
+        };
+
+        // 6 + ceil(40/10), no modifiers at all.
+        assert_eq!(total_of(None), 10);
+        assert_eq!(
+            total_of(Some("virtue.mild_aging")),
+            9,
+            "+1 conditions LOWERS"
+        );
+        assert_eq!(
+            total_of(Some("flaw.poor_living_conditions")),
+            11,
+            "-1 conditions RAISES"
+        );
+    }
+
+    /// A `longevity_bonus` modifier moves the ritual term — but only for a
+    /// character who actually has a ritual, since a modifier to a ritual bonus is
+    /// meaningless without one. Synthetic: no shipped item carries this kind.
+    #[test]
+    fn a_longevity_bonus_modifier_moves_the_ritual_term_only_with_a_ritual() {
+        let ruleset = scheduled_ruleset();
+        let mut entity = living_under(&[]);
+        entity.selections = vec![Selection::new(Id::new("virtue.synthetic_longevity_bonus"))];
+
+        let without = aging_total(&entity, &ruleset, 40, 6).expect("aging rules");
+        assert_eq!(without.longevity_bonus, 0, "no ritual, nothing to modify");
+        assert_eq!(without.total, 10);
+
+        with_ritual(&mut entity, Some(4));
+        let with = aging_total(&entity, &ruleset, 40, 6).expect("aging rules");
+        assert_eq!(
+            with.longevity_bonus, 6,
+            "the entered 4 plus the modifier's 2"
+        );
+        assert_eq!(with.total, 4);
+
+        // An unentered bonus is not a claimed 0 — but it contributes 0 here, and
+        // the modifier still applies, because the ritual exists.
+        with_ritual(&mut entity, None);
+        let unentered = aging_total(&entity, &ruleset, 40, 6).expect("aging rules");
+        assert_eq!(unentered.longevity_bonus, 2);
+    }
+
+    /// "The modifier to rolls depends on the character's **actual, not apparent**,
+    /// age." (`:16577`) — so an apparent age far from the real one moves nothing.
+    #[test]
+    fn the_aging_total_reads_the_actual_age_not_the_apparent_age() {
+        let ruleset = scheduled_ruleset();
+        let mut entity = living_under(&[]);
+        entity.age = Some(60);
+        entity.apparent_age = Some(20);
+
+        let total = aging_total(&entity, &ruleset, 60, 6).expect("aging rules");
+        assert_eq!(total.age_modifier, 6, "ceil(60/10), not ceil(20/10)");
+        assert_eq!(total.total, 12);
+
+        // And the apparent age is not consulted even when it is the higher figure.
+        entity.apparent_age = Some(90);
+        assert_eq!(
+            aging_total(&entity, &ruleset, 60, 6).expect("aging rules"),
+            total
+        );
     }
 }

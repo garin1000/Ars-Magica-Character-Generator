@@ -1,5 +1,6 @@
 use arm_rules::AbilityCategory;
 use arm_rules::Characteristic;
+use arm_rules::aging::AgingTotal;
 use arm_rules::effective_art_score;
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
@@ -2366,6 +2367,79 @@ fn shipped_aging_table_carries_the_16583_to_16611_rows() {
             (Characteristic::Dex, 1),
             (Characteristic::Qik, 2),
         ])
+    );
+}
+
+/// The AGING TOTAL of a 40-year-old carrying the named shipped items, rolling a
+/// 6: `6 + ceil(40/10)` = 10 before any modifier.
+fn shipped_aging_total(items: &[&str]) -> AgingTotal {
+    let rs = load_full_ruleset();
+    let e = entity(
+        "companion",
+        items
+            .iter()
+            .map(|id| Selection::new(Id::new(*id)))
+            .collect(),
+    );
+    arm_rules::aging::aging_total(&e, &rs, 40, 6).expect("the shipped ruleset carries aging rules")
+}
+
+/// Faerie Blood: "You are resistant to aging, and get -1 to all aging rolls."
+/// (Core:3801) — the shipped `aging_roll -1` is ADDED with its stored sign, so
+/// the total drops by one.
+#[test]
+fn faerie_blood_lowers_the_aging_total_by_one() {
+    assert_eq!(
+        shipped_aging_total(&[]).total,
+        10,
+        "the unmodified baseline"
+    );
+
+    let faerie = shipped_aging_total(&["virtue.faerie_blood"]);
+    assert_eq!(faerie.trait_modifier, -1);
+    assert_eq!(faerie.total, 9);
+}
+
+/// `flaw.age_quickly` and `flaw.baneful_circumstances` both ship an `aging_roll`
+/// modifier of **0**, and that 0 is deliberate — not an unfilled field waiting to
+/// be "fixed" into a number.
+///
+/// Age Quickly doubles the *rate*: "your effective age … increases two years for
+/// every year that passes, and you make two aging rolls each year" (Core:5661).
+/// Baneful Circumstances adds a *conditional extra roll*: "he must make an
+/// additional Aging roll even if he is normally immune to aging" (Core:5689).
+/// Both are schedule rules — how many rolls, at what effective age — and neither
+/// shifts the total of any one roll. The engine does not implement either
+/// schedule yet, so each Flaw contributes nothing to the arithmetic while staying
+/// visible in the surfaced-modifier read-out, where a player can act on it.
+#[test]
+fn age_quickly_contributes_nothing_to_the_total_and_stays_surfaced() {
+    let items = ["flaw.age_quickly", "flaw.baneful_circumstances"];
+    let both = shipped_aging_total(&items);
+    assert_eq!(
+        both.trait_modifier, 0,
+        "neither Flaw shifts one roll's total"
+    );
+    assert_eq!(both.total, shipped_aging_total(&[]).total);
+
+    // Still surfaced, so the player sees the mechanics the engine cannot apply.
+    let rs = load_full_ruleset();
+    let e = entity(
+        "companion",
+        items
+            .iter()
+            .map(|id| Selection::new(Id::new(*id)))
+            .collect(),
+    );
+    let surfaced: Vec<(String, i32)> = arm_rules::derived::surfaced_modifiers(&e, &rs)
+        .into_iter()
+        .filter(|m| m.family == arm_rules::derived::ModifierFamily::Aging)
+        .map(|m| (m.detail, m.amount))
+        .collect();
+    assert_eq!(
+        surfaced,
+        vec![("aging_roll".to_string(), 0), ("aging_roll".to_string(), 0)],
+        "both Flaws stay listed for the player"
     );
 }
 
