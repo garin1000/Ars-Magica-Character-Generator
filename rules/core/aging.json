@@ -1,0 +1,130 @@
+{
+  "start_age": 35,
+  "age_divisor": 10,
+  "apparent_age_increase_min": 3,
+  "longevity_clamp": { "max_total": 9, "until_age": 35 },
+  "living_conditions": [
+    {
+      "id": "living_condition.average_peasant",
+      "modifier": 0,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16587, 16587] }
+    },
+    {
+      "id": "living_condition.leper",
+      "modifier": -2,
+      "cumulative": true,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16592, 16592] }
+    },
+    {
+      "id": "living_condition.live_in_a_leper_colony",
+      "modifier": -1,
+      "cumulative": true,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16588, 16588] }
+    },
+    {
+      "id": "living_condition.poor_or_unhealthy_location_typical_town",
+      "modifier": -2,
+      "cumulative": true,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16591, 16591] }
+    },
+    {
+      "id": "living_condition.typical_spring_or_winter_covenant_magus",
+      "modifier": 1,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16586, 16586] }
+    },
+    {
+      "id": "living_condition.typical_summer_or_autumn_covenant_magus",
+      "modifier": 2,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16584, 16584] }
+    },
+    {
+      "id": "living_condition.typical_summer_or_autumn_covenant_mundane",
+      "modifier": 1,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16585, 16585] }
+    },
+    {
+      "id": "living_condition.wealthy_or_healthy_location",
+      "modifier": 2,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16583, 16583] }
+    },
+    {
+      "id": "living_condition.work_in_a_bad_air_trade",
+      "modifier": -1,
+      "cumulative": true,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16589, 16589] }
+    },
+    {
+      "id": "living_condition.work_in_a_mine",
+      "modifier": -1,
+      "cumulative": true,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16590, 16590] }
+    }
+  ],
+  "outcomes": [
+    {
+      "min": 10,
+      "max": 12,
+      "effect": { "type": "any_characteristic", "points": 1 },
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16601, 16601] }
+    },
+    {
+      "min": 13,
+      "max": 13,
+      "effect": { "type": "next_decrepitude_level_and_crisis" },
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16602, 16602] }
+    },
+    {
+      "min": 14,
+      "max": 14,
+      "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["qik"] },
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16603, 16603] }
+    },
+    {
+      "min": 15,
+      "max": 15,
+      "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["sta"] },
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16604, 16604] }
+    },
+    {
+      "min": 16,
+      "max": 16,
+      "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["per"] },
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16605, 16605] }
+    },
+    {
+      "min": 17,
+      "max": 17,
+      "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["pre"] },
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16606, 16606] }
+    },
+    {
+      "min": 18,
+      "max": 18,
+      "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["str", "sta"] },
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16607, 16607] }
+    },
+    {
+      "min": 19,
+      "max": 19,
+      "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["dex", "qik"] },
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16608, 16608] }
+    },
+    {
+      "min": 20,
+      "max": 20,
+      "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["com", "pre"] },
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16609, 16609] }
+    },
+    {
+      "min": 21,
+      "max": 21,
+      "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["int", "per"] },
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16610, 16610] }
+    },
+    {
+      "min": 22,
+      "effect": { "type": "next_decrepitude_level_and_crisis" },
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16611, 16611] }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "living_condition.average_peasant": { "name": "Average peasant" },
+  "living_condition.leper": { "name": "Leper" },
+  "living_condition.live_in_a_leper_colony": { "name": "Live in a leper colony" },
+  "living_condition.poor_or_unhealthy_location_typical_town": {
+    "name": "Poor, or unhealthy location; typical town"
+  },
+  "living_condition.typical_spring_or_winter_covenant_magus": {
+    "name": "Typical Spring or Winter covenant (magus)"
+  },
+  "living_condition.typical_summer_or_autumn_covenant_magus": {
+    "name": "Typical Summer or Autumn covenant (magus)"
+  },
+  "living_condition.typical_summer_or_autumn_covenant_mundane": {
+    "name": "Typical Summer or Autumn covenant (mundane)"
+  },
+  "living_condition.wealthy_or_healthy_location": { "name": "Wealthy, or healthy location" },
+  "living_condition.work_in_a_bad_air_trade": { "name": "Work in a bad air trade" },
+  "living_condition.work_in_a_mine": { "name": "Work in a mine" }
+}

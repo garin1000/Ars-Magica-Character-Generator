@@ -92,7 +92,7 @@ pub struct LongevityClamp {
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:16581-16594.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LivingCondition {
-    /// Slug-style id, e.g. `living_conditions.average_peasant`. Its display name
+    /// Slug-style id, e.g. `living_condition.average_peasant`. Its display name
     /// lives in `rules/i18n`, keyed by this id.
     pub id: Id,
     /// The modifier the row contributes, from `+2` down to `-2`.
@@ -181,8 +181,8 @@ mod tests {
       "apparent_age_increase_min": 3,
       "longevity_clamp": { "max_total": 9, "until_age": 35 },
       "living_conditions": [
-        { "id": "living_conditions.average_peasant", "modifier": 0 },
-        { "id": "living_conditions.leper", "modifier": -2, "cumulative": true,
+        { "id": "living_condition.average_peasant", "modifier": 0 },
+        { "id": "living_condition.leper", "modifier": -2, "cumulative": true,
           "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16592, 16592] } }
       ],
       "outcomes": [
@@ -217,8 +217,8 @@ mod tests {
         assert_eq!(
             conditions,
             vec![
-                ("living_conditions.average_peasant", 0, false),
-                ("living_conditions.leper", -2, true),
+                ("living_condition.average_peasant", 0, false),
+                ("living_condition.leper", -2, true),
             ]
         );
         assert!(rules.living_conditions[0].source.is_none());

@@ -4,6 +4,7 @@ use arm_rules::effective_art_score;
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
 use arm_rules::validation::{compute_balance, validate};
+use arm_rules::{AgingRowEffect, AgingRules};
 use std::collections::BTreeMap;
 
 fn load_ruleset() -> Ruleset {
@@ -2111,6 +2112,272 @@ fn longevity_hint_reproduces_the_books_lab_total_35_example() {
     assert_eq!(hint.lab_total, 15);
     assert_eq!(hint.suggested_bonus, 3);
     assert!(hint.halved, "the Flaw's halving is flagged for the UI");
+}
+
+/// The shipped Aging tables, read as text. The ruleset loader does not read this
+/// file yet (that is the next slice step), so the tests below deserialize the
+/// bytes straight into [`AgingRules`] — which is exactly what the loader will
+/// then do.
+const SHIPPED_AGING: &str = include_str!("../../../rules/core/aging.json");
+const SHIPPED_AGING_EN: &str = include_str!("../../../rules/i18n/en/aging.json");
+const SHIPPED_AGING_DE: &str = include_str!("../../../rules/i18n/de/aging.json");
+
+fn shipped_aging_rules() -> AgingRules {
+    serde_json::from_str(SHIPPED_AGING).expect("the shipped aging table is valid AgingRules")
+}
+
+/// The whole of `## Aging`'s two tables, transcribed row by row: the scalars of
+/// `:16565`-`:16577`, the ten Living Conditions of `:16583-16592` (five of them
+/// asterisked, i.e. cumulative — `:16594`) and the eleven Aging Roll outcomes of
+/// `:16601-16611`.
+///
+/// The row values are deliberately **literals** here: nothing else in the engine
+/// can witness a mis-transcribed modifier or a swapped Characteristic, since the
+/// JSON is the only place those numbers live.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16563-16615.
+#[test]
+fn shipped_aging_table_carries_the_16583_to_16611_rows() {
+    let rules = shipped_aging_rules();
+
+    // "Characters begin aging in the Winter after they turn 35" (:16565), the
+    // "age/10 (round up)" term (:16567) and the apparent-aging threshold, which
+    // is a question asked of every total rather than a row: "2 or less — No
+    // apparent aging" / "3 or more — Apparent age increases by one year"
+    // (:16599-16600, :16577).
+    assert_eq!(rules.start_age, 35);
+    assert_eq!(rules.age_divisor, 10);
+    assert_eq!(rules.apparent_age_increase_min, 3);
+    // "treats all rolls of 10 or more as rolls of 9 until he reaches the age of
+    // 35" (:16575).
+    let clamp = rules
+        .longevity_clamp
+        .clone()
+        .expect("the :16575 clamp ships");
+    assert_eq!(clamp.max_total, 9);
+    assert_eq!(clamp.until_age, 35);
+
+    let conditions: Vec<(&str, i8)> = rules
+        .living_conditions
+        .iter()
+        .map(|row| (row.id.as_str(), row.modifier))
+        .collect();
+    assert_eq!(
+        conditions,
+        vec![
+            ("living_condition.average_peasant", 0),
+            ("living_condition.leper", -2),
+            ("living_condition.live_in_a_leper_colony", -1),
+            (
+                "living_condition.poor_or_unhealthy_location_typical_town",
+                -2
+            ),
+            (
+                "living_condition.typical_spring_or_winter_covenant_magus",
+                1
+            ),
+            (
+                "living_condition.typical_summer_or_autumn_covenant_magus",
+                2
+            ),
+            (
+                "living_condition.typical_summer_or_autumn_covenant_mundane",
+                1
+            ),
+            ("living_condition.wealthy_or_healthy_location", 2),
+            ("living_condition.work_in_a_bad_air_trade", -1),
+            ("living_condition.work_in_a_mine", -1),
+        ],
+        "the ten rows of :16583-16592, id-sorted"
+    );
+
+    // "\\* Modifiers marked with an asterisk are cumulative with each other."
+    // (:16594) — FIVE rows carry it, the three occupational -1s and both -2s.
+    let cumulative: Vec<&str> = rules
+        .living_conditions
+        .iter()
+        .filter(|row| row.cumulative)
+        .map(|row| row.id.as_str())
+        .collect();
+    assert_eq!(
+        cumulative,
+        vec![
+            "living_condition.leper",
+            "living_condition.live_in_a_leper_colony",
+            "living_condition.poor_or_unhealthy_location_typical_town",
+            "living_condition.work_in_a_bad_air_trade",
+            "living_condition.work_in_a_mine",
+        ],
+        "exactly the five asterisked rows :16588-16592 are cumulative"
+    );
+
+    // Every row points at its own line of the table, so a re-transcription can be
+    // checked against the source one row at a time.
+    let condition_lines: Vec<(&str, u32, u32)> = rules
+        .living_conditions
+        .iter()
+        .map(|row| {
+            let source = row.source.as_ref().expect("every row carries provenance");
+            assert_eq!(
+                source.file,
+                "Ars Magica - Definitive Edition (Core Rules).md"
+            );
+            (row.id.as_str(), source.lines.start, source.lines.end)
+        })
+        .collect();
+    assert_eq!(
+        condition_lines,
+        vec![
+            ("living_condition.average_peasant", 16587, 16587),
+            ("living_condition.leper", 16592, 16592),
+            ("living_condition.live_in_a_leper_colony", 16588, 16588),
+            (
+                "living_condition.poor_or_unhealthy_location_typical_town",
+                16591,
+                16591
+            ),
+            (
+                "living_condition.typical_spring_or_winter_covenant_magus",
+                16586,
+                16586
+            ),
+            (
+                "living_condition.typical_summer_or_autumn_covenant_magus",
+                16584,
+                16584
+            ),
+            (
+                "living_condition.typical_summer_or_autumn_covenant_mundane",
+                16585,
+                16585
+            ),
+            ("living_condition.wealthy_or_healthy_location", 16583, 16583),
+            ("living_condition.work_in_a_bad_air_trade", 16589, 16589),
+            ("living_condition.work_in_a_mine", 16590, 16590),
+        ]
+    );
+
+    // The Aging Roll table (:16601-16611): eleven effect rows, ascending, the
+    // last one open-ended ("22+").
+    let any = |points| AgingRowEffect::AnyCharacteristic { points };
+    let named = |characteristics: Vec<Characteristic>| AgingRowEffect::NamedCharacteristics {
+        points: 1,
+        characteristics,
+    };
+    let crisis = AgingRowEffect::NextDecrepitudeLevelAndCrisis;
+    let outcomes: Vec<(i32, Option<i32>, &AgingRowEffect, u32)> = rules
+        .outcomes
+        .iter()
+        .map(|row| {
+            let source = row.source.as_ref().expect("every row carries provenance");
+            assert_eq!(
+                source.file,
+                "Ars Magica - Definitive Edition (Core Rules).md"
+            );
+            assert_eq!(
+                source.lines.start, source.lines.end,
+                "a table row spans one line"
+            );
+            (row.min, row.max, &row.effect, source.lines.start)
+        })
+        .collect();
+    assert_eq!(
+        outcomes,
+        vec![
+            (10, Some(12), &any(1), 16601),
+            (13, Some(13), &crisis, 16602),
+            (14, Some(14), &named(vec![Characteristic::Qik]), 16603),
+            (15, Some(15), &named(vec![Characteristic::Sta]), 16604),
+            (16, Some(16), &named(vec![Characteristic::Per]), 16605),
+            // "1 Aging Point in Prs" (:16606) — the table's abbreviation for
+            // Presence, which the engine spells `pre`.
+            (17, Some(17), &named(vec![Characteristic::Pre]), 16606),
+            (
+                18,
+                Some(18),
+                &named(vec![Characteristic::Str, Characteristic::Sta]),
+                16607
+            ),
+            (
+                19,
+                Some(19),
+                &named(vec![Characteristic::Dex, Characteristic::Qik]),
+                16608
+            ),
+            (
+                20,
+                Some(20),
+                &named(vec![Characteristic::Com, Characteristic::Pre]),
+                16609
+            ),
+            (
+                21,
+                Some(21),
+                &named(vec![Characteristic::Int, Characteristic::Per]),
+                16610
+            ),
+            (22, None, &crisis, 16611),
+        ]
+    );
+
+    // The table's structural signature: over the eight rows that name
+    // Characteristics (:16603-16610), the four "physical/social pairs" halves
+    // Qik, Sta, Per and Prs each appear twice — once alone, once paired — and
+    // Str, Dex, Com and Int exactly once each. A row transcribed with the wrong
+    // Characteristic breaks this even if every band still looks plausible.
+    let mut tally: BTreeMap<Characteristic, usize> = BTreeMap::new();
+    for row in rules.outcomes.iter().filter(|r| (14..=21).contains(&r.min)) {
+        let AgingRowEffect::NamedCharacteristics {
+            characteristics, ..
+        } = &row.effect
+        else {
+            panic!("rows 14-21 all name their Characteristics: {row:?}");
+        };
+        for c in characteristics {
+            *tally.entry(*c).or_default() += 1;
+        }
+    }
+    assert_eq!(
+        tally,
+        BTreeMap::from([
+            (Characteristic::Int, 1),
+            (Characteristic::Per, 2),
+            (Characteristic::Pre, 2),
+            (Characteristic::Com, 1),
+            (Characteristic::Str, 1),
+            (Characteristic::Sta, 2),
+            (Characteristic::Dex, 1),
+            (Characteristic::Qik, 2),
+        ])
+    );
+}
+
+/// Every Living Condition has a display name in both shipped languages, and no
+/// name smuggles the table's cumulative-marker asterisk into the UI — the
+/// `cumulative` flag carries that, and a raw `*` in a label would render as one.
+#[test]
+fn english_and_german_i18n_cover_all_living_conditions() {
+    let rules = shipped_aging_rules();
+    let en: BTreeMap<String, serde_json::Value> =
+        serde_json::from_str(SHIPPED_AGING_EN).expect("the English aging i18n is valid JSON");
+    let de: BTreeMap<String, serde_json::Value> =
+        serde_json::from_str(SHIPPED_AGING_DE).expect("the German aging i18n is valid JSON");
+
+    for row in &rules.living_conditions {
+        for (lang, texts) in [("en", &en), ("de", &de)] {
+            let name = texts
+                .get(row.id.as_str())
+                .and_then(|entry| entry.get("name"))
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or_else(|| panic!("{lang} i18n missing living condition '{}'", row.id));
+            assert!(!name.is_empty(), "{lang} name for '{}' is empty", row.id);
+            assert!(
+                !name.contains('*'),
+                "{lang} name for '{}' carries the cumulative asterisk: {name}",
+                row.id
+            );
+        }
+    }
 }
 
 /// Issue F (selection-level): a magus selecting BOTH magnitude variants of the
