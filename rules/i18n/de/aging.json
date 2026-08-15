@@ -1,0 +1,20 @@
+{
+  "living_condition.average_peasant": { "name": "Durchschnittlicher Bauer" },
+  "living_condition.leper": { "name": "Aussätziger" },
+  "living_condition.live_in_a_leper_colony": { "name": "Leben in einer Leprakolonie" },
+  "living_condition.poor_or_unhealthy_location_typical_town": {
+    "name": "Arm oder ungesunder Aufenthaltsort; typische Stadt"
+  },
+  "living_condition.typical_spring_or_winter_covenant_magus": {
+    "name": "Typischer Frühlings- oder Winter-Konvent (Magus)"
+  },
+  "living_condition.typical_summer_or_autumn_covenant_magus": {
+    "name": "Typischer Sommer- oder Herbst-Konvent (Magus)"
+  },
+  "living_condition.typical_summer_or_autumn_covenant_mundane": {
+    "name": "Typischer Sommer- oder Herbst-Konvent (Sterblicher)"
+  },
+  "living_condition.wealthy_or_healthy_location": { "name": "Wohlhabend oder gesunder Aufenthaltsort" },
+  "living_condition.work_in_a_bad_air_trade": { "name": "Arbeit in einem Gewerbe mit schlechter Luft" },
+  "living_condition.work_in_a_mine": { "name": "Arbeit in einem Bergwerk" }
+}
