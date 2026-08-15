@@ -307,9 +307,42 @@ pub struct AgingTotal {
 /// quantity and are ADDED with their stored sign: Faerie Blood's `-1` (`:3801`)
 /// lowers the total directly.
 ///
+/// # The `:16575` clamp applies to the TOTAL, not to the die
+///
+/// > A character under the influence of a Longevity Ritual should roll on the
+/// > table no matter what his age, but treats all rolls of 10 or more as rolls of
+/// > 9 until he reaches the age of 35 … he is at no risk of actually aging before
+/// > any other characters.
+///
+/// The argument, because this is easy to get backwards and at least one project
+/// note has:
+///
+/// 1. The formula block those rolls feed is headed "AGING TOTAL", and the table's
+///    index column is headed "Aging Roll" (`:16597`) — the clamp's "rolls" and the
+///    table's "roll" are the same quantity.
+/// 2. 10 is meaningful only in the table's index space: it is exactly where the
+///    first aging-point row begins (`:16601`). On a stress die 10 is nothing at
+///    all.
+/// 3. Decisive: a 34-year-old average peasant with the weakest legal ritual (+1 —
+///    "+1 bonus for every five points **or fraction** of Creo Corpus Lab Total",
+///    `:10662`) would, under the die reading, get `9 + ⌈34/10⌉ - 1 = 12` and take
+///    an Aging Point — while the same character with **no** ritual makes no roll
+///    at all before 36. The die reading would make a Longevity Ritual strictly
+///    worse than nothing in exactly the case the sentence calls safe.
+///
+/// It is a ceiling, never a floor: an uncapped total of 2 stays 2.
+///
+/// **The one-year seam is the text's, not a bug.** [`AgingRules::start_age`] (35,
+/// `:16565`) and [`LongevityClamp::until_age`] (35, `:16575`) are two numbers from
+/// two different sentences that happen to coincide. "Until he reaches the age of
+/// 35" stops the clamp *at* 35, while rolls are owed only from 36 (`:16565`) — so
+/// at exactly 35 a ritual-holder rolls unclamped while a character without one
+/// does not roll at all. That is what the two sentences say when read together.
+///
 /// `None` when the ruleset ships no aging rules.
 pub fn aging_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Option<AgingTotal> {
-    let age_modifier = ruleset.aging()?.age_modifier(age);
+    let rules = ruleset.aging()?;
+    let age_modifier = rules.age_modifier(age);
     let living_conditions = living_conditions_modifier(entity, ruleset);
 
     // The one existing reader of the stored ritual bonus, reused so the aging
@@ -347,6 +380,19 @@ pub fn aging_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Op
 
     let uncapped_total =
         die + age_modifier - living_conditions.total - longevity_bonus + trait_modifier;
+
+    // "treats all rolls of 10 or more as rolls of 9 until he reaches the age of
+    // 35" (`:16575`) — a ceiling on the total, applied only to a ritual-holder
+    // below the clamp's age. `min` alone would silently claim a cap on a total it
+    // never touched, so the flag compares.
+    let mut total = uncapped_total;
+    if let Some(clamp) = &rules.longevity_clamp
+        && ritual.is_some()
+        && age < clamp.until_age
+    {
+        total = uncapped_total.min(clamp.max_total);
+    }
+
     Some(AgingTotal {
         age,
         die,
@@ -355,10 +401,8 @@ pub fn aging_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Op
         longevity_bonus,
         trait_modifier,
         uncapped_total,
-        // The `:16575` Longevity Ritual clamp is not applied yet — it arrives with
-        // the step that cites it, and until then the total is the raw arithmetic.
-        total: uncapped_total,
-        capped_by_longevity: false,
+        total,
+        capped_by_longevity: total < uncapped_total,
     })
 }
 
@@ -995,5 +1039,48 @@ mod tests {
             aging_total(&entity, &ruleset, 60, 6).expect("aging rules"),
             total
         );
+    }
+
+    /// The `:16575` clamp: a ritual-holder "treats all rolls of 10 or more as
+    /// rolls of 9 until he reaches the age of 35", so he "is at no risk of
+    /// actually aging before any other characters".
+    ///
+    /// It is a CEILING on the TOTAL, never a floor and never a cap on the die —
+    /// see [`aging_total`]'s doc for why the die reading cannot be right.
+    #[test]
+    fn a_longevity_ritual_caps_the_total_at_nine_before_thirty_five() {
+        let ruleset = scheduled_ruleset();
+        let mut entity = living_under(&[]);
+        with_ritual(&mut entity, Some(1));
+
+        // 9 + ceil(34/10) - 1 = 12, which the clamp brings back to 9 — the last
+        // total below the table's first aging-point row.
+        let young = aging_total(&entity, &ruleset, 34, 9).expect("aging rules");
+        assert_eq!(young.uncapped_total, 12);
+        assert_eq!(young.total, 9);
+        assert!(young.capped_by_longevity);
+
+        // The one-year seam: `until_age` is 35, so at exactly 35 the same
+        // character rolls unclamped — while a character *without* a ritual does
+        // not roll at all until 36.
+        let at_thirty_five = aging_total(&entity, &ruleset, 35, 9).expect("aging rules");
+        assert_eq!(at_thirty_five.total, 12);
+        assert!(!at_thirty_five.capped_by_longevity);
+
+        // No ritual, no clamp, at any age.
+        let mut unritualed = living_under(&[]);
+        unritualed.longevity_ritual = None;
+        let bare = aging_total(&unritualed, &ruleset, 34, 9).expect("aging rules");
+        assert_eq!(bare.uncapped_total, 13);
+        assert_eq!(bare.total, 13);
+        assert!(!bare.capped_by_longevity);
+
+        // A ceiling, never a floor: a low total is left exactly where it is.
+        let mut wealthy = living_under(&["living_condition.wealthy_or_healthy_location"]);
+        with_ritual(&mut wealthy, Some(1));
+        let low = aging_total(&wealthy, &ruleset, 34, 1).expect("aging rules");
+        assert_eq!(low.uncapped_total, 2, "1 + 4 - 2 - 1");
+        assert_eq!(low.total, 2);
+        assert!(!low.capped_by_longevity);
     }
 }
