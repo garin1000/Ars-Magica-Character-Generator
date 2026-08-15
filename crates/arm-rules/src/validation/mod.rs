@@ -185,17 +185,17 @@ impl fmt::Display for IssueSeverity {
 /// | `duplicate_mastery_ability` | error | spells | `spell`, `ability`, `count` |
 /// | `over_power_levels` | error | review | `used`, `budget`, `over` |
 /// | `might_realm_mismatch` | warning | review | `base`, `granted` |
-/// | `excessive_aging_reduction` | warning | review | `characteristic`, `reduction`, `min` |
-/// | `aging_rolls_pending` | warning | review | `age` |
-/// | `unknown_living_condition` | error | review | `condition` |
-/// | `living_conditions_conflict` | error | review | `condition`, `other` |
-/// | `apparent_age_above_age` | warning | review | `apparent_age`, `age` |
-/// | `aging_rules_missing` | error | review | (none) |
-/// | `aging_year_already_recorded` | error | review | `age` |
-/// | `aging_distribution_mismatch` | error | review | `owed`, `distributed` |
-/// | `aging_distribution_not_open` | error | review | `count` |
-/// | `aging_award_unpriceable` | error | review | (none) |
-/// | `aging_year_not_recorded` | error | review | `age` |
+/// | `excessive_aging_reduction` | warning | aging | `characteristic`, `reduction`, `min` |
+/// | `aging_rolls_pending` | warning | aging | `age` |
+/// | `unknown_living_condition` | error | aging | `condition` |
+/// | `living_conditions_conflict` | error | aging | `condition`, `other` |
+/// | `apparent_age_above_age` | warning | aging | `apparent_age`, `age` |
+/// | `aging_rules_missing` | error | aging | (none) |
+/// | `aging_year_already_recorded` | error | aging | `age` |
+/// | `aging_distribution_mismatch` | error | aging | `owed`, `distributed` |
+/// | `aging_distribution_not_open` | error | aging | `count` |
+/// | `aging_award_unpriceable` | error | aging | (none) |
+/// | `aging_year_not_recorded` | error | aging | `age` |
 /// | `unknown_equipment` | error | review | `item` |
 /// | `equipment_min_strength` | warning | review | `item`, `required`, `strength` |
 /// | `shield_with_two_handed_weapon` | warning | review | (none) |
@@ -232,7 +232,7 @@ pub struct ValidationIssue {
     /// per emit site rather than derived from `code`, because several codes
     /// (`missing_param`, `prereq_not_met`, `unknown_param_value`, …) are emitted
     /// over different subject kinds from different modules. Findings no creation
-    /// phase owns (equipment, Might, Warping, aging, an unknown type) carry
+    /// phase owns (equipment, Might, Warping, an unknown type) carry
     /// [`CreationPhase::Review`].
     ///
     /// Always emitted, for the same reason as `args`.
@@ -2197,7 +2197,7 @@ mod tests {
             .find(|i| i.code == ValidationIssue::CODE_AGING_ROLLS_PENDING)
             .expect("the owed aging rolls are reported");
         assert_eq!(issue.severity, IssueSeverity::Warning);
-        assert_eq!(issue.phase, CreationPhase::Review);
+        assert_eq!(issue.phase, CreationPhase::Aging);
         assert_eq!(issue.args.get("age").map(String::as_str), Some("40"));
         // Advisory only — an unrolled character is unfinished, not illegal.
         assert!(
@@ -2302,7 +2302,7 @@ mod tests {
             .find(|i| i.code == ValidationIssue::CODE_UNKNOWN_LIVING_CONDITION)
             .expect("the unresolvable id is reported");
         assert_eq!(issue.severity, IssueSeverity::Error);
-        assert_eq!(issue.phase, CreationPhase::Review);
+        assert_eq!(issue.phase, CreationPhase::Aging);
     }
 
     /// A ruleset shipping no aging rules stands the whole subsystem down — there
@@ -2373,7 +2373,7 @@ mod tests {
         );
         let issue = &found[0];
         assert_eq!(issue.severity, IssueSeverity::Error);
-        assert_eq!(issue.phase, CreationPhase::Review);
+        assert_eq!(issue.phase, CreationPhase::Aging);
         assert_eq!(
             issue.args.get("condition").map(String::as_str),
             Some("living_condition.average_peasant")
@@ -2408,7 +2408,7 @@ mod tests {
 
         let issue = reported(Some(50), Some(40)).expect("the crossed ages are reported");
         assert_eq!(issue.severity, IssueSeverity::Warning);
-        assert_eq!(issue.phase, CreationPhase::Review);
+        assert_eq!(issue.phase, CreationPhase::Aging);
         assert_eq!(
             issue.args.get("apparent_age").map(String::as_str),
             Some("50")
@@ -2558,8 +2558,8 @@ mod tests {
     /// them; an issue filed under the wrong phase would either nag on a step that
     /// cannot fix it or hide on one the user has left behind.
     ///
-    /// The codes no creation phase owns (equipment, Might, Warping, aging, and an
-    /// entity whose whole type is unknown) go to the terminal `Review` phase.
+    /// The codes no creation phase owns (equipment, Might, Warping, and an entity
+    /// whose whole type is unknown) go to the terminal `Review` phase.
     #[test]
     fn every_module_attributes_its_issues_to_a_phase() {
         // mod.rs — an unknown type is not fixable on any step: the type is chosen
@@ -2652,7 +2652,8 @@ mod tests {
             CreationPhase::Abilities
         );
 
-        // aging.rs and equipment.rs — surfaces the wizard has no step for.
+        // aging.rs — the aging step owns the age, the Living Conditions and the
+        // accrued points, so its findings are fixable there and nowhere else.
         let mut aged = make_entity("companion", vec![]);
         aged.characteristics.insert(Characteristic::Str, 0);
         aged.aging_points.insert(Characteristic::Str, 21);
@@ -2661,10 +2662,11 @@ mod tests {
                 &validate(&aged, &aging_rs),
                 ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION
             ),
-            CreationPhase::Review
+            CreationPhase::Aging
         );
 
-        // might.rs — likewise Review: Might and its powers live in the editor.
+        // might.rs — Review, like `unknown_type` above: Might and its powers are a
+        // surface the wizard has no step for, so they live in the editor.
         let might_rs = rs_with_houses(MIGHT_ITEMS, GRANT_MAGUS_TYPE);
         let mut over_powers = make_entity("magus", vec![sel("virtue.demonic_blood")]);
         over_powers.powers = vec![power("Curse", 25), power("Shape", 10)];

@@ -12,9 +12,9 @@ export type IssueSeverity = 'error' | 'warning';
 // character type's ordered `creation_phases`, which the guided wizard walks, and
 // every validation issue, which names the phase whose input surface owns the
 // offending value. `review` is the wizard's terminal step — the findings no
-// creation phase owns (equipment, Might, Warping, aging) plus a last look at the
-// whole character. Labels always go through the `phase-<slug>` Fluent key; a Rust
-// test pins this union against `CreationPhase::ALL`.
+// creation phase owns (equipment, Might, Warping) plus a last look at the whole
+// character. Labels always go through the `phase-<slug>` Fluent key; a Rust test
+// pins this union against `CreationPhase::ALL`.
 export type CreationPhase =
   | 'concept'
   | 'type'
@@ -26,6 +26,7 @@ export type CreationPhase =
   | 'house_specialisation'
   | 'mythic_type'
   | 'personality_reputations'
+  | 'aging'
   | 'review';
 
 // Closed enums in the engine (`ParamType` / `ParameterDomain`), serialized as

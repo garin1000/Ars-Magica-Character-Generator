@@ -2,6 +2,20 @@
 //!
 //! Split out of `validation`; see `validation/mod.rs` for the public API and
 //! the `ValidationIssue` issue-code contract.
+//!
+//! # Every finding here is a [`CreationPhase::Aging`] finding
+//!
+//! A finding names the phase whose *input surface* owns the offending value, and
+//! this module's values — the age, the Living Conditions, the apparent age, the
+//! Longevity Ritual, and the year the player just submitted — are all typed on the
+//! aging step. Before that step existed they were filed under
+//! [`CreationPhase::Review`] as findings no phase owned; they are owned now.
+//!
+//! Several of them are **errors** (`unknown_living_condition`,
+//! `living_conditions_conflict`, and every [`AgingError`] refusal), which is what
+//! makes the attribution load-bearing rather than cosmetic: the wizard blocks Next
+//! on the current step's errors, so leaving them on Review would let a player walk
+//! past an aging step whose own input does not resolve.
 
 use super::*;
 use crate::aging::AgingError;
@@ -69,7 +83,7 @@ pub(crate) fn validate_aging(
         {
             issues.push(ValidationIssue::warning(
                 ValidationIssue::CODE_EXCESSIVE_AGING_REDUCTION,
-                CreationPhase::Review,
+                CreationPhase::Aging,
                 args([
                     ("characteristic", characteristic.to_string()),
                     ("reduction", drops.to_string()),
@@ -126,7 +140,7 @@ fn report_living_conditions(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
         match table.iter().find(|row| row.id == *id) {
             None => issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_UNKNOWN_LIVING_CONDITION,
-                CreationPhase::Review,
+                CreationPhase::Aging,
                 args([("condition", id.to_string())]),
                 Some(id.clone()),
             )),
@@ -138,7 +152,7 @@ fn report_living_conditions(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
     if let [first, second, ..] = exclusive.as_slice() {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_LIVING_CONDITIONS_CONFLICT,
-            CreationPhase::Review,
+            CreationPhase::Aging,
             args([
                 ("condition", first.to_string()),
                 ("other", second.to_string()),
@@ -175,7 +189,7 @@ fn report_apparent_age(entity: &Entity, issues: &mut Vec<ValidationIssue>) {
 
     issues.push(ValidationIssue::warning(
         ValidationIssue::CODE_APPARENT_AGE_ABOVE_AGE,
-        CreationPhase::Review,
+        CreationPhase::Aging,
         args([
             ("apparent_age", apparent_age.to_string()),
             ("age", age.to_string()),
@@ -208,9 +222,9 @@ fn report_apparent_age(entity: &Entity, issues: &mut Vec<ValidationIssue>) {
 /// finding: a roll can legitimately produce no aging points, so a well-rolled
 /// character would otherwise be nagged forever.
 ///
-/// Filed under [`CreationPhase::Review`] because no aging phase exists yet; slice
-/// 6b6 adds the `Aging` variant to [`CreationPhase`] and moves this finding onto
-/// it.
+/// Filed under [`CreationPhase::Aging`], with every other finding this module
+/// emits: the age it reads is typed on the aging step, so that is where the
+/// player can act on it.
 fn report_pending_aging_rolls(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -225,7 +239,7 @@ fn report_pending_aging_rolls(
 
     issues.push(ValidationIssue::warning(
         ValidationIssue::CODE_AGING_ROLLS_PENDING,
-        CreationPhase::Review,
+        CreationPhase::Aging,
         args([("age", age.to_string())]),
         None,
     ));
@@ -256,19 +270,19 @@ pub fn aging_error_issue(error: &AgingError) -> ValidationIssue {
     match error {
         AgingError::NoAgingRules => ValidationIssue::error(
             ValidationIssue::CODE_AGING_RULES_MISSING,
-            CreationPhase::Review,
+            CreationPhase::Aging,
             args([]),
             None,
         ),
         AgingError::YearAlreadyRecorded { age } => ValidationIssue::error(
             ValidationIssue::CODE_AGING_YEAR_ALREADY_RECORDED,
-            CreationPhase::Review,
+            CreationPhase::Aging,
             args([("age", age.to_string())]),
             None,
         ),
         AgingError::DistributionMismatch { owed, distributed } => ValidationIssue::error(
             ValidationIssue::CODE_AGING_DISTRIBUTION_MISMATCH,
-            CreationPhase::Review,
+            CreationPhase::Aging,
             args([
                 ("distributed", distributed.to_string()),
                 ("owed", owed.to_string()),
@@ -277,19 +291,19 @@ pub fn aging_error_issue(error: &AgingError) -> ValidationIssue {
         ),
         AgingError::DistributionNotOpen { characteristics } => ValidationIssue::error(
             ValidationIssue::CODE_AGING_DISTRIBUTION_NOT_OPEN,
-            CreationPhase::Review,
+            CreationPhase::Aging,
             args([("count", characteristics.len().to_string())]),
             None,
         ),
         AgingError::AwardUnpriceable => ValidationIssue::error(
             ValidationIssue::CODE_AGING_AWARD_UNPRICEABLE,
-            CreationPhase::Review,
+            CreationPhase::Aging,
             args([]),
             None,
         ),
         AgingError::YearNotRecorded { age } => ValidationIssue::error(
             ValidationIssue::CODE_AGING_YEAR_NOT_RECORDED,
-            CreationPhase::Review,
+            CreationPhase::Aging,
             args([("age", age.to_string())]),
             None,
         ),

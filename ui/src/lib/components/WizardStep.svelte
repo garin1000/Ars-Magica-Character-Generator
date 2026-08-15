@@ -3,6 +3,7 @@
   import type { CreationPhase } from '../types';
 
   import AbilityTab from './AbilityTab.svelte';
+  import AgingStep from './AgingStep.svelte';
   import ArtGrid from './ArtGrid.svelte';
   import BalanceBar from './BalanceBar.svelte';
   import CharacteristicPicker from './CharacteristicPicker.svelte';
@@ -46,6 +47,7 @@
     house_specialisation: { component: HouseSelector, scroll: true },
     mythic_type: { component: MythicCompanionTypeSelector },
     personality_reputations: { component: PersonalityReputationsStep, scroll: true },
+    aging: { component: AgingStep, scroll: true },
     review: { component: WizardReview, scroll: true },
   } satisfies Record<CreationPhase, StepDef>;
 

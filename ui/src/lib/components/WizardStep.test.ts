@@ -109,6 +109,7 @@ describe('WizardStep', () => {
     ['house_specialisation', 'house-select'],
     ['mythic_type', 'mythic-type-select'],
     ['personality_reputations', 'personality-list'],
+    ['aging', 'aging-step'],
     ['review', 'wizard-review-hint'],
   ];
 

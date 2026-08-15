@@ -46,6 +46,7 @@ phase-spells = Zauber
 phase-house_specialisation = Haus
 phase-mythic_type = Typ des mythischen Gefährten
 phase-personality_reputations = Persönlichkeit & Reputationen
+phase-aging = Alterung
 phase-review = Überprüfung
 
 # Rahmen der geführten Erstellung. Die Leiste listet die Schritte; der Inhalt eines

@@ -1339,10 +1339,15 @@ pub enum CreationPhase {
     MythicType,
     /// Personality Traits and Reputations.
     PersonalityReputations,
+    /// The aging a character owes before play: the age itself, the Living
+    /// Conditions and Longevity Ritual that modify each aging total, and the
+    /// per-year rolls the rules require of anyone past the threshold
+    /// (Core Rules.md:2232, :16563-16617).
+    Aging,
     /// The terminal phase: everything a finished character carries that no
-    /// creation phase owns — equipment, magic items, Might and powers, Warping,
-    /// aging — plus a last look at the whole character. A profile may not declare
-    /// it (the wizard appends it), so it is the one phase that is never skipped.
+    /// creation phase owns — equipment, magic items, Might and powers, Warping —
+    /// plus a last look at the whole character. A profile may not declare it
+    /// (the wizard appends it), so it is the one phase that is never skipped.
     Review,
 }
 
@@ -1352,7 +1357,7 @@ impl CreationPhase {
     /// last. The single source of the phase set: the Fluent `phase-<slug>` keys,
     /// the UI's step table and the issue-contract table are all checked against
     /// it rather than against a second hardcoded list.
-    pub const ALL: [CreationPhase; 11] = [
+    pub const ALL: [CreationPhase; 12] = [
         CreationPhase::Concept,
         CreationPhase::Type,
         CreationPhase::Characteristics,
@@ -1363,6 +1368,7 @@ impl CreationPhase {
         CreationPhase::HouseSpecialisation,
         CreationPhase::MythicType,
         CreationPhase::PersonalityReputations,
+        CreationPhase::Aging,
         CreationPhase::Review,
     ];
 }
@@ -1380,6 +1386,7 @@ impl fmt::Display for CreationPhase {
             CreationPhase::HouseSpecialisation => "house_specialisation",
             CreationPhase::MythicType => "mythic_type",
             CreationPhase::PersonalityReputations => "personality_reputations",
+            CreationPhase::Aging => "aging",
             CreationPhase::Review => "review",
         })
     }
@@ -3720,7 +3727,7 @@ mod tests {
     /// the profile's `creation_phases` strings are the same vocabulary.
     #[test]
     fn creation_phase_slugs_are_the_profile_phase_strings() {
-        assert_eq!(CreationPhase::ALL.len(), 11);
+        assert_eq!(CreationPhase::ALL.len(), 12);
         for phase in CreationPhase::ALL {
             let json = serde_json::to_string(&phase).unwrap();
             assert_eq!(serde_json::from_str::<CreationPhase>(&json).unwrap(), phase);

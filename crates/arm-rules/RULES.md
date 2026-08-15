@@ -1302,7 +1302,7 @@ validation noise — the drop is automatic and already reflected in the effectiv
 score, so it is not an entry problem worth flagging.)
 
 `validate_aging` also emits the entity-wide **warning**
-`aging_rolls_pending` (arg `age`, phase `review`) when the character has
+`aging_rolls_pending` (arg `age`, phase `aging`) when the character has
 reached `ruleset.aging()?.first_roll_age()` and its `aging_log` is empty — the rolls
 the rules owe before play have not been made (`:2232`, `:16565`; the threshold is a
 **data** value since M6/6b6, see **Aging (M6/6b6)** below). Emitted
@@ -3013,7 +3013,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
     is free and never counted here.
   - `life_stage_spell_level_split_exceeds_points` (`levels`, `points`) — a spell-level
     share larger than the points the years granted (`:2471`).
-  - The fourth is `aging_rolls_pending` (warning, `review`), which the
+  - The fourth is `aging_rolls_pending` (warning, `aging`), which the
     post-Gauntlet years make reachable at all: a magus generated years out of
     apprenticeship is routinely over 35, and "a character over the age of 35 must make
     aging rolls before the game begins" (`:2232`, `:16565`). It is emitted from
@@ -3699,7 +3699,10 @@ variants become ordinary `issue-*` findings through
 locales — `aging_rules_missing`, `aging_year_already_recorded` (`age`),
 `aging_distribution_mismatch` (`owed`, `distributed`), `aging_distribution_not_open`
 (`count`), `aging_award_unpriceable`, `aging_year_not_recorded` (`age`), all errors,
-all on `review` until the `Aging` phase lands. A refusal therefore crosses the IPC
+all on the `aging` phase — like every other finding `validation/aging.rs` emits,
+because the year, die and distribution they describe are typed on the aging step and
+nowhere else. Several are errors, so the attribution is what lets that step block
+Next on its own broken input. A refusal therefore crosses the IPC
 edge as an ordinary `Ok` outcome (`status: "rejected"`) carrying issues, never as an
 `AppError`: it describes the form the player just submitted, and the frontend
 renders it through the `issue-<code>` path it already has, so no English prose
