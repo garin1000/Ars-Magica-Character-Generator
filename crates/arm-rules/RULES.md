@@ -1164,10 +1164,12 @@ migration code; `load_entity_migrating` is untouched). Bumped `SCHEMA_VERSION`
 - **Apparent age** — `Entity.apparent_age: Option<u32>` (mirrors `age`).
   > "**Age:** The character's actual age, with the apparent age in parentheses."
 
-  Source: `Ars Magica - Definitive Edition (Core Rules).md:1155`. This is a
-  **pure annotation**: apparent age is the resolved *outcome* of aging rolls the
-  app deliberately does **not** simulate — consistent with the `Effect::AgingMod`
-  "surfaced-only" doc (`types.rs`, "the app does not simulate aging rolls").
+  Source: `Ars Magica - Definitive Edition (Core Rules).md:1155`. **No longer a
+  pure annotation.** M5/D2 shipped it as one because nothing computed aging rolls;
+  since M6/6b6 `aging::resolve_year` seeds and advances it per `:16577` (see
+  **Aging (M6/6b6)** below). It stays directly editable — a hand-entered figure is
+  never overwritten — and it is never an *input* to a roll: the modifier "depends
+  on the character's **actual, not apparent**, age" (`:16577`).
 - **Warping effect** — `Entity.warping_effect: String` (skip-if-empty), a
   free-text flavor note for how the character's Warping manifests (Issue D).
   > "This Minor Flaw should reflect the predominant source of the Warping Points."
@@ -1241,11 +1243,14 @@ migration code; `load_entity_migrating` is untouched). Bumped `SCHEMA_VERSION`
   free-text overall aging/decrepitude narrative. Pure annotation — Decrepitude
   itself is DERIVED from `aging_points` (see above). Source:
   `Ars Magica - Definitive Edition (Core Rules).md:16563-16577` (## Aging).
-- **Aging log** — `Entity.aging_log: Vec<AgingLogEntry { year, effect }>`
-  (skip-if-empty). `year` is the **first** field so the derived `Ord` sorts the
-  log chronologically via `Entity::normalize()`. Per-year free-text outcomes;
-  pure annotation (the app does not simulate the aging rolls). Source:
-  `Ars Magica - Definitive Edition (Core Rules).md:16563-16577` (## Aging).
+- **Aging log** — `Entity.aging_log: Vec<AgingLogEntry>` (skip-if-empty). `year`
+  is the **first** field so the derived `Ord` sorts the log chronologically via
+  `Entity::normalize()`. Shipped in D2 as `{ year: i32, effect: String }` — per-year
+  free-text outcomes, a pure annotation. **M6/6b6 widened it** into the full record
+  of a resolved aging year and made `year` optional (`SCHEMA_VERSION` 14 → 15); the
+  free text stays authoritative for a hand-written entry. See **Aging (M6/6b6)**
+  below. Source: `Ars Magica - Definitive Edition (Core Rules).md:16563-16577`
+  (## Aging).
 
 App/UI: `save_entity_to_path` (`arm-app/src/ruleset_io.rs`) now **stamps**
 `arm_rules::SCHEMA_VERSION` onto the entity on write, so app-written saves never
@@ -1297,9 +1302,10 @@ validation noise — the drop is automatic and already reflected in the effectiv
 score, so it is not an entry problem worth flagging.)
 
 `validate_aging` also emits the entity-wide **warning**
-`life_stage_aging_rolls_pending` (arg `age`, phase `review`) when the character is
-over 35 and its `aging_log` is empty — the rolls the rules owe before play have
-not been made (`:2232`, `:16565`; see *Hardcoded engine values* above). Emitted
+`life_stage_aging_rolls_pending` (arg `age`, phase `review`) when the character has
+reached `ruleset.aging()?.first_roll_age()` and its `aging_log` is empty — the rolls
+the rules owe before play have not been made (`:2232`, `:16565`; the threshold is a
+**data** value since M6/6b6, see **Aging (M6/6b6)** below). Emitted
 for **every** character of that age, not only one built through its life stages,
 which is why it lives here rather than in `validate_life_stage_plan` (that one
 returns early without a plan). The **log**, never `aging_points`, settles it: a
@@ -1378,9 +1384,10 @@ entry) before the guided wizard in M6. Accordingly:
   `:2368-2374`), the Sample Childhood packages (`:2380-2388` — catalogue, engine
   and picker landed in M6/6b3, see **Sample Childhood packages** below), the magus
   apprenticeship/post-apprenticeship Art-XP flow (`:2433-2471`), and the aging
-  engine for characters over 35 (`:16563-16640`). The age→max-score *cap* itself
-  is enforced as direct-entry validation in M4/4e; only the XP *acquisition* and
-  aging *rolls* are M6.
+  engine for characters over 35 (`:16563-16617` — **landed in M6/6b6**, see
+  **Aging (M6/6b6)** below; the Crisis of `:16619-16640` is not part of it). The
+  age→max-score *cap* itself is enforced as direct-entry validation in M4/4e; only
+  the XP *acquisition* and aging *rolls* are M6.
 
 ### Houses (magus-only)
 
@@ -2262,7 +2269,7 @@ E2E: `ui/e2e/specs/vf-incompatible.e2e.js`.
 | `CombatMod { amount, target }` | Combat init/atk/def — berserk, hobbled, lame, missing_hand, missing_eye, poor_eyesight, palsied_hands, slow_reflexes, lightning_reflexes, fast_caster | Core:3500-3503, 6260-6263, 6330-6333, 6438-6441, 6434-6437, 6606-6609, 6578-6581, 6763-6766, 4311-4314, 3865-3868 | computed (conditional ones labelled) |
 | `HealthMod { track, amount }` | Wound/fatigue penalty (enduring_constitution, low_tolerance), fatigue rolls (obese, short_of_breath, long_winded), casting-fatigue (painful_magic, vulnerable_casting, withstand_casting), recovery (fragile_constitution, rapid_convalescence) | Core:3751-3754, 6366-6369, 6516-6519, 6733-6736, 4327-4330, 6574-6577, 6993-7004, 5261-5282, 6186-6189, 4834-4837 | wound/fatigue computed; fatigue-roll/casting-fatigue/recovery surfaced |
 | `MagicResistanceMod { kind }` | Non-halving MR — limited_magic_resistance (no_form_bonus), susceptibility faerie/infernal/divine, commanding_aura & special_circumstances (aura_bonus) | Core:6346-6349, 6819-6826, 6815-6818, 3579-3596 | **no_form_bonus computed** (folded into the flat per-Form MR number in `magic_resistance`); the four realm-conditional/situational kinds (aura_bonus, susceptible_divine/faerie/infernal) are surfaced as `ModifierFamily::MagicResistance` (amount 0) — they cannot be folded into the flat per-Form figure, so listing them keeps them from being silently dropped |
-| `AgingMod { kind, amount }` | Aging/longevity — age_quickly, baneful_circumstances, monstrous_blood (−1), bee_king, faerie_blood (−1), magical_blood (−1), unaging, bound_to_role, leprosy, poor_living_conditions, mild_aging, magian_lineage major/minor | Core:5659-5662, 5687-5690, 6454-6467, 3484-3499, 3797-3820, 4359-4372, 5187-5190, 5735-5748, 6338-6341, 6618-6621, 4528-4531, 4339-4346 | surfaced (app does not simulate aging rolls) |
+| `AgingMod { kind, amount }` | Aging/longevity — age_quickly, baneful_circumstances, monstrous_blood (−1), bee_king, faerie_blood (−1), magical_blood (−1), strong_faerie_blood (−3), unaging, bound_to_role, leprosy, poor_living_conditions, mild_aging, magian_lineage major/minor | Core:5659-5662, 5687-5690, 6454-6467, 3484-3499, 3797-3820, 4359-4372, 5032-5047, 5187-5190, 5735-5748, 6338-6341, 6618-6621, 4528-4531, 4339-4346 | **computed since M6/6b6**: `aging_roll` and `longevity_bonus` move the AGING TOTAL, `living_conditions` moves the modifier it subtracts, `no_apparent_aging` gates the apparent age and `no_aging` gates the Characteristic drop. Three items stay surfaced-only, each for a stated reason — age_quickly and baneful_circumstances (amount 0; schedule rules, not modifiers) and any `decrepitude` amount (no shipped item carries one). **The two immunities are separate tags**: bee_king carries `no_apparent_aging` alone, bound_to_role `no_aging` alone, unaging both — see **Aging (M6/6b6)** |
 | `AdvancementMod { source, amount }` | Study/teaching — apt_student (+5 taught), book_learner (+3 book), free_study (+3 vis), good_teacher, independent_study, study_bonus, secondary_insight, unimaginative_learner, poor_student, incomprehensible, loose_magic | Core:3422-3425, 3519-3522, 3937-3940, 3971-3974, 4115-4118, 5056-5072, 4892-4895, 6915-6918, 6626-6628, 6294-6297, 6354-6357 | surfaced (app does not simulate advancement) |
 | `SpecialCastingMod { kind, param? }` | Casting-style quirks — deft_form (Form-parameterized), quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, and circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, corrupted_spells, disjointed_magic) | Core:3645-3648, 4822-4826, 5073-5076, 9236-9245, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5859-5864, 5972-5975 | **deft_form/quiet_magic/subtle_magic computed** into per-cell `NonStandardCasting` (silent/still/silent_and_still); all other kinds surfaced (conditional penalties). `deft_form`'s `param` names the affected Form and is load-validated (`validate_effect_refs`, `ParameterDomain::Form` required) exactly as `DeficientArt`'s param, so a missing/wrong-domain key fails loudly instead of silently voiding the waiver in `in_play_mods` |
 | `AbilityRollMod { param(Text), amount }` | Ability-roll bonus in a subject — academic_concentration_subject (+3) | Core:3362-3367 | surfaced |
@@ -3333,9 +3340,23 @@ instance of one id, paid for nothing of it.
 
 ## Aging (M6/6b6) — `aging.rs`
 
-Slice 6b6 is still landing; this section records the parts of it that ship.
-`rules/core/aging.json` carries every number, `crates/arm-rules/src/aging.rs`
-the arithmetic, and `crates/arm-rules/src/validation/aging.rs` the findings.
+The yearly roll of `## Aging` (`:16563-16617`), from the threshold that owes it to
+the write-back that applies it. `rules/core/aging.json` carries every number,
+`crates/arm-rules/src/aging.rs` the arithmetic,
+`crates/arm-rules/src/validation/aging.rs` the findings, and
+`Ruleset::validate_aging_rules` (`ruleset.rs`) the load-time gates that make the
+data checkable rather than merely transcribed.
+
+**The engine never rolls.** `arm-rules` has no `rand` dependency and never will:
+the stress die is thrown at the table and typed in, and everything here is the
+arithmetic *around* that number. A generator that rolled would invent
+rules-relevant state nobody at the table agreed to, and would make a character's
+history unreproducible from its save file.
+
+**The Crisis is flagged, never resolved.** `AgingOutcome.crisis` is set for the two
+rows that call for one; `:16619-16640` (the Crisis Table, the survival rolls, the
+doctor's Medicine roll) plus `:16617`'s death at Decrepitude 5 are a later slice.
+See *Recorded gaps* at the end of this section.
 
 #### Age at which aging rolls become due — over 35
 > "Characters begin aging in the Winter after they turn 35. Every year, a
@@ -3358,6 +3379,149 @@ the arithmetic, and `crates/arm-rules/src/validation/aging.rs` the findings.
   an empty `aging_log`. `:2496`'s "each year from the age of 35" is advice inside a
   worked advancement example, disposed of in `first_roll_age()`'s doc comment rather
   than ignored.
+- The schedule itself is `aging::aging_schedule(entity, ruleset) -> Vec<AgingYear
+  { age, year, recorded }>` — `first_roll_age()..=age`, pairing each age with its
+  calendar year (`birth_year + age`, `None` without a birth year) and with whether
+  the log already records it. Empty at or under the threshold, with no age entered,
+  and under a ruleset shipping no aging rules.
+- **A Longevity Ritual holder under 35 is not scheduled** — a decision, not an
+  oversight. `:16575`'s "should roll on the table no matter what his age" is
+  unbounded downward, nothing records *when* the ritual was made, and those rolls
+  are clamped so they can never cost a point. The obligation the app enforces is
+  `:2232`'s, which is age-gated with no ritual clause. `aging_total` still computes
+  a pre-35 roll correctly for a caller that asks for one.
+
+#### The AGING TOTAL
+> "**AGING TOTAL: Stress die (no botch) + age/10 (round up)**
+> **\- Living Conditions modifier**
+> **\- Longevity Ritual modifier**"
+
+> "As a high roll generally indicates more serious effects of age, a high Longevity
+> Ritual modifier and a high Living Conditions modifier both indicate longer life."
+
+> "The modifier to rolls depends on the character's actual, not apparent, age."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:16567-16569` (the
+  formula), `:16571` (the sign convention), `:16577` (actual, not apparent, age).
+- **Data**: `rules/core/aging.json` → `age_divisor: 10` — the 10 of "age/10 (round
+  up)". Rounding **up** steps the term on the first year of each decade, not the
+  last: 30 scores 3, 31 already scores 4 (`AgingRules::age_modifier`).
+- Implementation: `aging::aging_total(entity, ruleset, age, die) ->
+  Option<AgingTotal>`, which returns every term (`age`, `die`, `age_modifier`,
+  `living_conditions`, `longevity_bonus`, `trait_modifier`, `uncapped_total`,
+  `total`, `capped_by_longevity`) rather than a bare number, so a sheet can show the
+  arithmetic without re-deriving it. `age` is a **parameter**, not read off the
+  entity: `:2232`'s pre-play catch-up walks every owed year and each uses *that*
+  year's age.
+- **The signs, which are easy to get backwards.** `:16571` works only because the
+  formula *subtracts* the two named modifiers, so both are stored with the book's
+  own printed sign and negated exactly once, in `aging_total`:
+  - `Effect::AgingMod { kind: living_conditions }` and the table rows are
+    **SUBTRACTED**. Mild Aging's `+1` (`:4530`) therefore *lowers* the total, and
+    Poor Living Conditions' `-1` (`:6620`) *raises* it.
+  - The Longevity Ritual bonus is **SUBTRACTED** (`:10662`, `:10672`).
+  - `Effect::AgingMod { kind: aging_roll }` is a **different quantity and is ADDED
+    with its stored sign**: Faerie Blood's `-1` (`:3801`) lowers the total directly,
+    Strong Faerie Blood's `-3` (`:5036`) by three. This is not the same convention
+    as the two named modifiers, and reading it as one would invert the sign of the
+    six shipped items that carry a non-zero `aging_roll` amount (five at `-1`, plus
+    Strong Faerie Blood's `-3`); the guard is
+    `mild_aging_and_poor_living_conditions_move_the_total_in_opposite_directions`
+    plus `faerie_blood_lowers_the_aging_total_by_one` and
+    `strong_faerie_blood_lowers_the_aging_total_by_three` in `data_integrity.rs`.
+  - `Effect::AgingMod { kind: longevity_bonus }` moves the ritual term, and only for
+    a character who actually holds a ritual — a modifier to a bonus that does not
+    exist is meaningless.
+
+#### The `:16575` Longevity Ritual clamp — it clamps the TOTAL, not the die
+> "A character under the influence of a Longevity Ritual should roll on the table no
+> matter what his age, but treats all rolls of 10 or more as rolls of 9 until he
+> reaches the age of 35. His apparent age may be younger than his actual age, but he
+> is at no risk of actually aging before any other characters."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:16575`.
+- **Data**: `rules/core/aging.json` → `longevity_clamp: { max_total: 9, until_age:
+  35 }` — the 9, not the 10, because it is the value the roll *becomes*.
+- Implementation: `aging::aging_total` applies `total =
+  uncapped_total.min(max_total)` when the character holds a ritual **and** `age <
+  until_age`. A ceiling, never a floor: an uncapped total of 2 stays 2.
+  `capped_by_longevity` compares rather than assuming, so it never claims a cap on a
+  total the clamp did not touch.
+- **The ruling, recorded because a project note had it backwards.** "Rolls of 10 or
+  more" is the **total**, not the die:
+  1. The formula block those rolls feed is headed "AGING TOTAL" (`:16567`) and the
+     table's index column "Aging Roll" (`:16597`) — the clamp's *rolls* and the
+     table's *roll* are the same quantity.
+  2. 10 is meaningful only in the table's index space: it is exactly where the first
+     aging-point row begins (`:16601`). On a stress die 10 is nothing at all.
+  3. Decisive: a 34-year-old average peasant with the weakest legal ritual (+1 — "+1
+     bonus for every five points **or fraction** of Creo Corpus Lab Total",
+     `:10662`) would under the die reading score `9 + ⌈34/10⌉ - 1 = 12` and take an
+     Aging Point, while a ritual-less peer of the same age rolls nothing at all. The
+     die reading makes a Longevity Ritual strictly *worse than nothing* in exactly
+     the case the sentence calls safe. Under the total reading both halves of the
+     sentence fall out: no points, and a good ritual drops the total below 3 so the
+     apparent age does not advance either.
+- **The one-year seam is the text's, not a bug.** `start_age` (35, `:16565`) and
+  `longevity_clamp.until_age` (35, `:16575`) are two numbers from two different
+  sentences that happen to coincide. "Until he reaches the age of 35" stops the clamp
+  *at* 35 while rolls are owed only from 36, so at exactly 35 a ritual-holder rolls
+  **unclamped** and a character without one does not roll at all. `validate_aging_rules`
+  deliberately does **not** gate `start_age == until_age`: asserting equality would
+  invent a relationship the rules never state.
+- **The load-time trust gate**: `longevity_clamp.max_total < outcomes[0].min`.
+  `:16575` states the clamp's *purpose* — "no risk of actually aging" — and that is
+  true if and only if the ceiling sits strictly below the first row that costs Aging
+  Points. The shipped `9 < 10` is therefore an identity derivable from two
+  sentences, not a number to transcribe and hope for (the same idiom as re-pricing
+  the apprenticeship's `recommended_xp`). A `max_total: 10` against a table starting
+  at 10 fails the load, naming `:16575`.
+
+#### The Living Conditions table
+> "| Living Conditions | Modifier |"
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:16581-16594` — the header
+  at `:16581-16582`, the ten rows at `:16583-16592`, the footnote at `:16594`.
+- **Data**: `rules/core/aging.json` → `living_conditions`, ten rows, each carrying
+  its own one-line `source`. Ids are sorted canonically in the file, so the file
+  order is *not* the book's; the `source` line is what pairs a row with its
+  rulebook line:
+
+  | id | modifier | `:line` | cumulative |
+  |---|---|---|---|
+  | `living_condition.wealthy_or_healthy_location` | +2 | `:16583` | |
+  | `living_condition.typical_summer_or_autumn_covenant_magus` | +2 | `:16584` | |
+  | `living_condition.typical_summer_or_autumn_covenant_mundane` | +1 | `:16585` | |
+  | `living_condition.typical_spring_or_winter_covenant_magus` | +1 | `:16586` | |
+  | `living_condition.average_peasant` | 0 | `:16587` | |
+  | `living_condition.live_in_a_leper_colony` | -1 | `:16588` | yes |
+  | `living_condition.work_in_a_bad_air_trade` | -1 | `:16589` | yes |
+  | `living_condition.work_in_a_mine` | -1 | `:16590` | yes |
+  | `living_condition.poor_or_unhealthy_location_typical_town` | -2 | `:16591` | yes |
+  | `living_condition.leper` | -2 | `:16592` | yes |
+
+  Names live in `rules/i18n/{en,de}/aging.json`, keyed by id. The German names come
+  from the **rulebook body** at the mirrored `:16583-16592`, not from the glossary —
+  see *Translation-table notes* below. Guarded by
+  `shipped_aging_table_carries_the_16583_to_16611_rows` and
+  `english_and_german_i18n_cover_all_living_conditions` (`data_integrity.rs`).
+- **Stored as choices, never as a resolved integer**: `Entity.living_conditions:
+  BTreeSet<Id>` (`serde(default, skip_serializing_if)`, additive — no schema bump of
+  its own). A *set*, because the five asterisked rows stack; a `BTreeSet`, so it is
+  canonical by construction and `Entity::normalize()` needs no line for it. An
+  integer could not answer "which conditions?" for the sheet, and a covenant will
+  hand over *ids* in a later milestone.
+- **An empty set is the table's baseline, not an unfinished entry**: the table prints
+  "Average peasant 0" (`:16587`), so a character naming no condition already has a
+  modifier of exactly 0. Nothing prompts him to pick one, and
+  `validate_aging_rules` deliberately does **not** gate "exactly one zero-modifier
+  row" — the baseline row is a UI affordance, not a rule.
+- Implementation: `aging::living_conditions_modifier(entity, ruleset) ->
+  LivingConditionsModifier { rows, from_table, from_traits, total }`, split rather
+  than a bare integer so the sheet can show how much of the figure is circumstance
+  and how much is Virtues and Flaws. An id the table does not carry contributes
+  nothing (the engine has **one evaluation path**, so a computation never refuses to
+  produce a number) and is reported as a finding instead.
 
 #### Living Conditions are alternatives unless marked cumulative
 > "\* Modifiers marked with an asterisk are cumulative with each other."
@@ -3377,6 +3541,130 @@ the arithmetic, and `crates/arm-rules/src/validation/aging.rs` the findings.
   the table does not carry, because `living_conditions_modifier` deliberately skips
   an unresolvable id, which would otherwise make the AGING TOTAL silently wrong.
 
+#### The Aging Roll table
+> "| Aging Roll | Result |"
+
+> "If an Aging Point 'in any Characteristic' is gained, the player may choose the
+> Characteristic."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:16597-16611` — the header
+  at `:16597-16598`, the two apparent-aging rows at `:16599-16600`, the eleven
+  effect rows at `:16601-16611`; the player's choice at `:16615`.
+- **Data**: `rules/core/aging.json` → `outcomes`, eleven rows, each with its own
+  `source` line and a serde-tagged `effect` so an unknown kind is a **load**
+  failure rather than a silently ignored row:
+
+  | totals | effect | `:line` |
+  |---|---|---|
+  | 10-12 | `any_characteristic`, 1 point | `:16601` |
+  | 13 | `next_decrepitude_level_and_crisis` | `:16602` |
+  | 14 | `named_characteristics`, 1 point, `[qik]` | `:16603` |
+  | 15 | `named_characteristics`, 1 point, `[sta]` | `:16604` |
+  | 16 | `named_characteristics`, 1 point, `[per]` | `:16605` |
+  | 17 | `named_characteristics`, 1 point, `[pre]` | `:16606` |
+  | 18 | `named_characteristics`, 1 point, `[str, sta]` | `:16607` |
+  | 19 | `named_characteristics`, 1 point, `[dex, qik]` | `:16608` |
+  | 20 | `named_characteristics`, 1 point, `[com, pre]` | `:16609` |
+  | 21 | `named_characteristics`, 1 point, `[int, per]` | `:16610` |
+  | 22+ | `next_decrepitude_level_and_crisis` (open-ended) | `:16611` |
+
+  The book's **"Prs"** (`:16606`, `:16609`) is `Characteristic::Pre`, slug `"pre"`.
+  A named row gives **each** Characteristic it names a point — "1 Aging Point in Str
+  and Sta" (`:16607`) is one point each, not one divided between them.
+- **The "3 or more" row is a threshold, not a row.** `:16599-16600` ("2 or less — No
+  apparent aging" / "3 or more — Apparent age increases by one year") **overlaps**
+  every effect row: a 20 both ages the appearance and costs two Characteristics a
+  point. Modelling it as two more table rows would make the rows non-exclusive and
+  let the table disagree with itself, so it ships as a single number,
+  `apparent_age_increase_min: 3`, asked of every total. `:16577` states it as a
+  threshold in prose anyway ("Particularly low rolls … **Otherwise** …").
+- Implementation: `aging::resolve_outcome(entity, ruleset, total) ->
+  Option<AgingOutcome { total, apparent_age_increases, awards, crisis }>`, with
+  `AgingPointAward { target, points }` over `AgingPointTarget::{Named, PlayerChoice,
+  NextDecrepitudeLevel}` — three variants because the UI has three genuinely
+  different questions to ask, and the exhaustive `match` makes a new kind of row a
+  compile error until every reader has decided what to do with it. It reads and
+  writes nothing. A total below the table's first row is `Some` with no awards: that
+  is a result, not a missing one.
+- **It needs the character** because rows 13 and 22+ ask for "sufficient Aging Points
+  (in any Characteristic**s**) to reach the next level in Decrepitude" — a count the
+  table never prints. `points_to_next_decrepitude_level` derives it: Decrepitude
+  "increases as an Ability" (`:16617`), so the count is the advancement curve's price
+  for the next score less the points already accrued, floored at 1 (sitting exactly
+  on a boundary must still cost *something*). `points: None` **only** when the curve
+  cannot price that score (`AdvancementTable` tops out) — reported as unpriceable,
+  never silently costed at 0.
+- **"In any Characteristic*s*" is plural** (`:16602`, `:16611`), so the points may be
+  spread. Reaching Decrepitude 1 costs 5 points, and forcing them all into one
+  Characteristic would force drops the player may legally avoid — which is why the
+  writer takes a per-Characteristic **map**, not a single pick.
+- **Load-time contiguity gate** (`Ruleset::validate_aging_rules`): the rows must tile
+  the integers with no gap, no overlap, ascending `min`, and exactly one open-ended
+  row which must be last; each row must award at least 1 point and name each
+  Characteristic at most once; `apparent_age_increase_min <= outcomes[0].min`. A
+  dropped row would otherwise degrade silently to "resolves to no effect". It is
+  **contiguity**, deliberately not "must cover 10..=21" — hardcoding the shipped
+  table's numbers in Rust would violate *catalogue size is data*. Row-by-row
+  resolution against the shipped data is asserted by
+  `the_shipped_aging_table_resolves_each_row_of_16599_to_16611`
+  (`data_integrity.rs`).
+
+#### Applying a year — `resolve_year`, and undoing it — `revert_year`
+> "Aging points are accumulated in each Characteristic."
+
+> "Every Aging Point also counts as an experience point towards Decrepitude, which
+> increases as an Ability."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:16567-16617`; `:16579`
+  (the points accumulate), `:16577` (the apparent age), `:16615` (the player's
+  choice), `:16617` (Decrepitude follows the points).
+- Implementation: `aging::resolve_year(entity, ruleset, &AgingYearRequest { age, die,
+  distribution }) -> Result<AgingYearResult { entity, total, outcome }, AgingError>`
+  — the **single writer** in the subsystem, shaped on `apply_childhood_package`. It
+  computes the year's `AgingTotal`, reads it with `resolve_outcome`, and returns a
+  **new** entity: the awarded points added to `Entity.aging_points`, the apparent age
+  advanced if the total cleared the threshold, and a structured `AgingLogEntry`
+  appended. Nothing is mutated in place, so a refused year leaves the caller's
+  character exactly as it was.
+- **What it never does.** It never **rolls** (no `rand` dependency, ever — the die is
+  the player's). It never **kills**: a row carrying a Crisis sets
+  `AgingOutcome.crisis` and stops. And it never touches **Decrepitude**, which stays
+  derived from `aging_points` through `decrepitude_score` (`:16617`) and is never
+  written down beside them.
+- **Every refusal is a refusal to write**, never a silent adjustment: `AgingError::{
+  NoAgingRules, YearAlreadyRecorded, DistributionMismatch, DistributionNotOpen,
+  AwardUnpriceable, YearNotRecorded }`. The distribution must sum to exactly the
+  points the row left open, and a row that names its own Characteristics accepts no
+  distribution at all. Plain data — no issue codes, no Fluent keys — like
+  `ChildhoodRejection`.
+- **Seeding the apparent age.** `Entity.apparent_age` is `None` on most characters.
+  The first year that needs it seeds it at `start_age` (35 — nothing has happened to
+  the appearance before the first owed roll, `:16577`) and every year after only
+  increments. Seeding once and incrementing thereafter is what makes the result
+  **order-independent**: a catch-up applied out of order lands on the same apparent
+  age. A hand-entered apparent age is never re-seeded, only advanced.
+- `aging::revert_year(entity, ruleset, age) -> Result<Entity, AgingError>` is the
+  **exact** inverse: it subtracts precisely the points the entry recorded, steps the
+  apparent age back iff that entry advanced it, and removes the entry. Exact rather
+  than recomputed, because the conditions and ritual bonus that produced the roll may
+  legitimately have changed since. A 25-roll pre-play catch-up with no undo is not
+  shippable.
+  - It addresses entries **by `age`**, since a character with no `birth_year` has no
+    calendar year to be addressed by. A **legacy free-text entry carries no age** and
+    is therefore out of its reach by construction; it is removed with the ordinary
+    log editor, which is the right home for it — there is nothing mechanical to undo.
+  - **Documented edge case**: undoing the seed clears `apparent_age` again when the
+    decrement lands back on `start_age`, so a **hand-entered apparent age of exactly
+    35 comes back unset**. The two states carry the same fact and the log entry
+    cannot tell them apart. Under a ruleset with no aging rules there is no start age
+    to compare, so the decremented figure simply stays.
+  - Reverting an age no entry records is `Err`, never a silent no-op: a revert that
+    quietly did nothing would tell the player the year had been undone.
+- **The log records the total it computed**, which is a historical record of a roll
+  and not a cached derivation — so it does not offend *saves store choices, not
+  resolved values*. `AgingLogEntry.effect` is left empty by the writer: the
+  structured fields *are* the record, and the prose is the player's to add.
+
 #### Apparent age cannot outrun actual age
 > "Otherwise, the character's apparent age increases by one year."
 
@@ -3390,26 +3678,146 @@ the arithmetic, and `crates/arm-rules/src/validation/aging.rs` the findings.
   entered and the apparent age is higher. A warning, not an error: `:5189` states it
   as a *should* and explicitly excuses a character who is not basically human.
 
-#### Unaging — the points accrue, the Characteristics do not drop
+#### The three-way aging-immunity split — `no_aging` and `no_apparent_aging` are orthogonal
 > "In game terms, your aging points do not decrease your Characteristics, only
-> building up to give you Decrepitude points."
+> building up to give you Decrepitude points. … You may choose your apparent age
+> freely, although if you are basically human it should be less than or equal to
+> your actual age."
 
 > "This Flaw also includes the effects of the Unaging Virtue, but the character's
 > apparent age advances in line with their physical age."
 
-- Source: `Ars Magica - Definitive Edition (Core Rules).md:5189` (Unaging),
-  `:5743` (Bound to (Role)), `:3488` (Bee King — the appearance only).
-- **Data**: `rules/core/virtues_flaws.json` → the `aging_mod` effect of kind
-  `no_aging`, carried by `virtue.unaging` and `flaw.bound_to_role_role`.
-- Implementation: `effective.rs::aging_drops` (and the surfaced
-  `characteristic_aging_drops`, which wraps it) return 0 for a carrier, so no
-  Characteristic ever drops and `effective_characteristic_after_aging` leaves the
-  bought score alone. `decrepitude_points_total` / `decrepitude_score` are
-  deliberately **untouched**: "only building up to give you Decrepitude points" is
-  the other half of the same sentence, so a carrier reaches Decrepitude at
-  everyone's rate. The appearance is a separate tag (`no_apparent_aging`, read by
-  `aging.rs::resolve_outcome`), because Bound to (Role)'s explicit *but* proves the
-  two facts are separable.
+> "Bee Kings do not appear to age after reaching maturity, but every Bee King not
+> killed by circumstances dies of a rapid illness precisely a century after birth."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:5189` (Unaging), `:5743`
+  (Bound to (Role)), `:3488` (Bee King).
+- **The sources describe two independent facts**, and the shipped data used to
+  collapse them into one `no_aging` tag — which made the Bee King entry simply
+  wrong. Bound to (Role)'s explicit *but* at `:5743` is the sentence that proves
+  they are separable at all:
+
+  | item | Characteristics do not drop | apparent age does not advance | tags |
+  |---|---|---|---|
+  | `virtue.unaging` (`:5189`) | yes | yes | `no_aging` + `no_apparent_aging` |
+  | `flaw.bound_to_role_role` (`:5743`) | yes | **no** | `no_aging` |
+  | `virtue.bee_king` (`:3488`) | **no** | yes | `no_apparent_aging` |
+
+- **Data**: `rules/core/virtues_flaws.json`. `AgingEffect::NoApparentAging` is the
+  additive new variant (Fluent `derived-detail-no_apparent_aging`, en/de);
+  `virtue.bee_king` was **re-tagged** from `no_aging` to `no_apparent_aging` alone,
+  `virtue.unaging` gained the second tag, `flaw.bound_to_role_role` keeps `no_aging`
+  only. Guarded by `the_three_aging_immunities_ship_their_two_facts_separately`
+  (`data_integrity.rs`).
+- Implementation, one reader each:
+  - `effective.rs::aging_drops` (and the surfaced `characteristic_aging_drops`,
+    which wraps it) return 0 for a `no_aging` carrier, so no Characteristic ever
+    drops and `effective_characteristic_after_aging` leaves the bought score alone.
+    **This is new in 6b6**: `aging_drops` ignored `:5189` until the engine started
+    awarding the points, and both functions gained a `&Ruleset` parameter for it —
+    the slice's only public-signature change.
+  - `decrepitude_points_total` / `decrepitude_score` stay deliberately **untouched**:
+    "only building up to give you Decrepitude points" is the other half of the same
+    sentence, so a carrier reaches Decrepitude at everyone's rate.
+  - `aging.rs::resolve_outcome` reads `no_apparent_aging`, so a carrier's
+    `apparent_age_increases` is false at every total and `resolve_year` neither seeds
+    nor advances his apparent age — one decision, read once rather than made twice.
+
+#### Strong Faerie Blood's -3 to Aging Rolls
+> "First, you have natural longevity. You start making aging rolls at the age of
+> fifty, rather than the normal 35, and get –3 to Aging Rolls, cumulative with any
+> other bonuses."
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:5036`.
+- **Data**: `rules/core/virtues_flaws.json` → `virtue.strong_faerie_blood` gains
+  `{"type":"aging_mod","kind":"aging_roll","amount":-3}` beside its existing
+  `grants_selection`. The item carried **no** `aging_mod` at all before this slice;
+  harmless while nothing consumed the modifiers, a wrong number in a shipped
+  character the moment `aging_total` started reading them.
+- Guarded by `strong_faerie_blood_lowers_the_aging_total_by_three`
+  (`data_integrity.rs`). Its **start-at-fifty** half is *not* implemented — see
+  *Recorded gaps*.
+
+#### `SCHEMA_VERSION` 14 → 15
+`AgingLogEntry` widened from `{ year: i32, effect: String }` into the full record of
+a resolved aging year — `age`, `die`, `total`, `living_conditions`, `points`,
+`apparent_age_increased`, `crisis` — and **`year` became `Option<i32>`**, because a
+character with no `birth_year` has no calendar year to write and `age` is the key
+the schedule matches on.
+
+Every added field is `serde(default, skip_serializing_if)` and serde reads a bare
+`year` number into `Some`, so a schema-14 save loads unchanged and **no migration
+code exists**. What is *not* compatible is the **forward** direction: a schema-15
+save may omit `year` entirely, which a schema-14 reader rejects — and a version
+number is exactly how an older build learns not to try. That is why this one earns a
+bump where `Entity.living_conditions` (purely additive) did not. The history line
+lives on the `SCHEMA_VERSION` constant in `types.rs`; the frontend mirror in
+`ui/src/lib/state.svelte.ts` is pinned equal to it by test.
+
+Knock-on: `export.rs` now prints an **undated** log entry as a plain bullet rather
+than an empty bold label (`an_undated_aging_log_entry_prints_its_effect_without_a_year_label`)
+— a consequence of the optional `year`, not a formatting preference.
+
+#### Recorded gaps — deliberately not implemented in 6b6
+Each is findable here so it is not rediscovered later as a bug.
+
+- **Strong Faerie Blood's start-at-fifty** (`:5036`). "You start making aging rolls
+  at the age of **fifty**, rather than the normal 35" — the **-3 ships**, the altered
+  start age does not. A carrier is still scheduled from `first_roll_age()`. It would
+  need a per-trait override of `AgingRules::start_age`, machinery no other shipped
+  item asks for. Recorded on `aging_schedule`'s doc comment as well.
+- **Might-holders' immunity to aging**, which `:5689` presupposes — "he must make an
+  additional Aging roll even if he is normally immune to aging because of a Longevity
+  Ritual **or Might Score**" — and which mythic companions can hold
+  (`entity.might`). The clause states the immunity in passing rather than granting
+  it, so no rule is implemented from it; the schedule takes no notice of `might`.
+- **The Bronze Cord** (`:10844`, "and to rolls to resist aging") is deliberately
+  **not** folded into the aging total. An aging roll is not a roll one passes or
+  fails, the natural referent for "resist aging" is the *crisis survival* roll, and
+  `:16636` ("Virtues that affect aging rolls do not affect crisis survival rolls")
+  keeps the two roll families apart on purpose. A later slice revisits it against the
+  crisis rules.
+- **Age Quickly** (`:5661`) and **Baneful Circumstances** (`:5689`) both ship
+  `aging_mod` amount **0**, deliberately. Their real mechanics are *schedule* rules —
+  a doubled rate and effective age ("you make two aging rolls each year"), and a
+  conditional extra roll — not modifiers to any one roll's total, and this slice
+  implements neither schedule. Both stay visible in the surfaced-modifier read-out.
+  `age_quickly_contributes_nothing_to_the_total_and_stays_surfaced`
+  (`data_integrity.rs`) is a regression test whose doc comment exists so nobody
+  "fixes" the 0 into a number.
+- **`:16575`'s closing clause** — "At the player's and storyguide's discretion, this
+  may also apply to characters with modifiers to the aging roll from other sources."
+  Explicitly discretionary, so the clamp is **not** extended to non-ritual modifier
+  holders unilaterally; `aging_total` gates it on `longevity_ritual.is_some()`.
+- **The Crisis** (`:16619-16632`). `AgingOutcome.crisis` flags the two rows that call
+  for one and `resolve_year` stops there; nothing resolves it. The crisis table ships
+  **no data at all**, and that is the point: none of its numbers has a cross-check
+  the loader could apply the way `max_total < outcomes[0].min` checks the clamp, and
+  data with no trust gate is data nobody can trust. `crisis_total` (`:16621`),
+  `:16619`'s Decrepitude-first ordering, the doctor's Medicine roll (`:16634`),
+  `:16636`, `:16573`'s spent ritual and death at Decrepitude 5 (`:16617`) all wait
+  with it.
+- **Covenant-derived Living Conditions.** The four covenant rows are chosen by hand
+  today; a covenant will hand over ids in a later milestone.
+
+#### Translation-table notes — `alterung-twilight.md`
+Two things about `rules/source/de/translation-tables/alterung-twilight.md` that a
+future translator must not "fix" the core file from.
+
+1. **Its modifier column carries a pre-subtracted sign.** The table declares it
+   itself at `:43` — *"Negativer Modifikator: wird vom Alterungswurf subtrahiert."* —
+   and its rows at `:47-56` accordingly print the negation of the book's own column
+   (Wohlhabend −2 where `:16583` prints +2; Aussätziger +2 where `:16592` prints -2).
+   That is a **convention difference, not a defect**, but it means the glossary must
+   **never** source `rules/core/aging.json`'s numbers. The shipped modifiers come
+   from the English `:16583-16592`, and the German *names* from the mirrored German
+   rulebook body at the same line numbers — not from this table.
+2. **Its `:67` narrows "3 or more" to "3–9", which _is_ a divergence** from `:16600`
+   ("3 or more") and from the German rulebook's own mirrored line. Under the book's
+   reading the apparent-age row overlaps every effect row, which is exactly why the
+   engine models it as `apparent_age_increase_min` rather than as a table row; under
+   the glossary's "3–9" a total of 15 would age the Characteristic but not the face.
+   The core file is right and the glossary line is the outlier.
 
 ## Markdown character export (M5.6) — `export.rs`
 
