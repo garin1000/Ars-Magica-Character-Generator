@@ -3868,6 +3868,14 @@ Each is findable here so it is not rediscovered later as a bug.
   `:16619`'s Decrepitude-first ordering, the doctor's Medicine roll (`:16634`),
   `:16636`, `:16573`'s spent ritual and death at Decrepitude 5 (`:16617`) all wait
   with it.
+  **Slice 6b7 is unpicking this.** Its first step adds the serde shape only —
+  `CrisisRules` / `CrisisRow` / `CrisisOutcome` / `CrisisSeverity` / `CrisisDie` /
+  `CrisisAttendant` in `aging.rs`, plus `AgingRules.crisis` and the two Decrepitude
+  thresholds of `:16617` — all optional, so an aging block with no crisis key loads
+  unchanged. No data, no gates, no resolution yet; the crisis section of this file
+  lands with them. Survival itself stays out for good: the engine will give the
+  total, the row, the Ease Factor and the Creo Corpus level, but never rolls the
+  Stamina die and never kills.
 - **Covenant-derived Living Conditions.** The four covenant rows are chosen by hand
   today; a covenant will hand over ids in a later milestone.
 
