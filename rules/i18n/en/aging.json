@@ -1,4 +1,11 @@
 {
+  "crisis.bedridden_month": { "name": "Bedridden for a month" },
+  "crisis.bedridden_week": { "name": "Bedridden for a week" },
+  "crisis.critical_illness": { "name": "Critical illness" },
+  "crisis.major_illness": { "name": "Major illness" },
+  "crisis.minor_illness": { "name": "Minor illness" },
+  "crisis.serious_illness": { "name": "Serious illness" },
+  "crisis.terminal_illness": { "name": "Terminal illness" },
   "living_condition.average_peasant": { "name": "Average peasant" },
   "living_condition.leper": { "name": "Leper" },
   "living_condition.live_in_a_leper_colony": { "name": "Live in a leper colony" },

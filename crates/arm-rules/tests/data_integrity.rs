@@ -1,6 +1,8 @@
 use arm_rules::AbilityCategory;
 use arm_rules::Characteristic;
-use arm_rules::aging::{AgingOutcome, AgingPointAward, AgingPointTarget, AgingTotal};
+use arm_rules::aging::{
+    AgingOutcome, AgingPointAward, AgingPointTarget, AgingTotal, CrisisOutcome, CrisisSeverity,
+};
 use arm_rules::effective_art_score;
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
@@ -2370,6 +2372,191 @@ fn shipped_aging_table_carries_the_16583_to_16611_rows() {
     );
 }
 
+/// The Crisis Table transcribed row by row (`:16626-16632`), together with the
+/// Simple Die it is rolled on (`:474`), the attending doctor (`:16634`) and the
+/// two Decrepitude thresholds of `:16617`.
+///
+/// The values are deliberately **literals**, for the same reason the Aging Roll
+/// transcription above uses them: the shipped JSON is the only place an Ease
+/// Factor or a Ritual level lives, so nothing else in the engine can witness a
+/// mis-transcribed one.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:474, :16617-16634.
+#[test]
+fn shipped_crisis_table_carries_the_16626_to_16632_rows() {
+    let rules = shipped_aging_rules();
+    let crisis = rules.crisis.clone().expect("the shipped crisis table");
+
+    // "Characters with a Decrepitude score of 4 are extremely frail, and must
+    // roll on the Crisis Table … Characters with a Decrepitude score of 5 are
+    // bedridden and will die within a few months at most." (:16617)
+    assert_eq!(rules.frail_decrepitude_score, Some(4));
+    assert_eq!(rules.fatal_decrepitude_score, Some(5));
+
+    // "Roll a ten-sided die. Each number counts for its value, except that a zero
+    // counts as ten." (:474) — the CRISIS TOTAL's Simple die (:16621).
+    let die = crisis.die.clone().expect("the Simple Die of :474 ships");
+    assert_eq!((die.min, die.max), (1, 10));
+    let die_source = die.source.expect("the die carries provenance");
+    assert_eq!(
+        die_source.file,
+        "Ars Magica - Definitive Edition (Core Rules).md"
+    );
+    assert_eq!((die_source.lines.start, die_source.lines.end), (474, 474));
+
+    // "An Int + Medicine roll against an Ease Factor of 6 allows the character to
+    // add the attendant's Medicine score to the roll to survive the crisis. …
+    // if the doctor botches the character must subtract 3 from the survival
+    // roll." (:16634) — the penalty is stored signed, as the roll takes it.
+    let attendant = crisis
+        .attendant
+        .clone()
+        .expect("the attendant of :16634 ships");
+    assert_eq!(attendant.ability.as_str(), "ability.medicine");
+    assert_eq!(attendant.characteristic, Characteristic::Int);
+    assert_eq!(attendant.ease_factor, 6);
+    assert_eq!(attendant.botch_penalty, -3);
+    let attendant_source = attendant.source.expect("the attendant carries provenance");
+    assert_eq!(
+        attendant_source.file,
+        "Ars Magica - Definitive Edition (Core Rules).md"
+    );
+    assert_eq!(
+        (attendant_source.lines.start, attendant_source.lines.end),
+        (16634, 16634)
+    );
+
+    let bedridden = CrisisOutcome::Bedridden;
+    let illness = |severity, ease_factor, ritual_level| CrisisOutcome::Illness {
+        severity,
+        ease_factor,
+        ritual_level,
+    };
+    let rows: Vec<(&str, Option<i32>, Option<i32>, &CrisisOutcome, u32)> = crisis
+        .rows
+        .iter()
+        .map(|row| {
+            let source = row.source.as_ref().expect("every row carries provenance");
+            assert_eq!(
+                source.file,
+                "Ars Magica - Definitive Edition (Core Rules).md"
+            );
+            assert_eq!(
+                source.lines.start, source.lines.end,
+                "a table row spans one line"
+            );
+            (
+                row.id.as_str(),
+                row.min,
+                row.max,
+                &row.outcome,
+                source.lines.start,
+            )
+        })
+        .collect();
+    assert_eq!(
+        rows,
+        vec![
+            // "8 or less — Bedridden for a week" (:16626): open below, so no
+            // `min` at all rather than a very small one.
+            ("crisis.bedridden_week", None, Some(8), &bedridden, 16626),
+            (
+                "crisis.bedridden_month",
+                Some(9),
+                Some(14),
+                &bedridden,
+                16627
+            ),
+            (
+                "crisis.minor_illness",
+                Some(15),
+                Some(15),
+                &illness(CrisisSeverity::Minor, Some(3), 20),
+                16628
+            ),
+            (
+                "crisis.serious_illness",
+                Some(16),
+                Some(16),
+                &illness(CrisisSeverity::Serious, Some(6), 25),
+                16629
+            ),
+            (
+                "crisis.major_illness",
+                Some(17),
+                Some(17),
+                &illness(CrisisSeverity::Major, Some(9), 30),
+                16630
+            ),
+            (
+                "crisis.critical_illness",
+                Some(18),
+                Some(18),
+                &illness(CrisisSeverity::Critical, Some(12), 35),
+                16631
+            ),
+            // "19+ — **Terminal illness**. CrCo40 required to survive."
+            // (:16632): open above, and no Stamina roll at all — hence no Ease
+            // Factor rather than an unbeatable one.
+            (
+                "crisis.terminal_illness",
+                Some(19),
+                None,
+                &illness(CrisisSeverity::Terminal, None, 40),
+                16632
+            ),
+        ]
+    );
+
+    // The table's structural signature. `crisis.rows` is the ONE array in
+    // `rules/core` that ships in band order rather than id order (see RULES.md):
+    // the rows ascend by the totals they cover, open below at the top of the
+    // table and open above at the bottom. An id-alphabetical sort would leave
+    // every value above intact and still break this.
+    let first = crisis.rows.first().expect("the crisis table has rows");
+    let last = crisis.rows.last().expect("the crisis table has rows");
+    assert!(
+        first.min.is_none(),
+        "the first row is open below: \"8 or less\" (:16626)"
+    );
+    assert!(
+        last.max.is_none(),
+        "the last row is open above: \"19+\" (:16632)"
+    );
+    for pair in crisis.rows.windows(2) {
+        let ceiling = pair[0].max.expect("only the last row is open above");
+        let floor = pair[1].min.expect("only the first row is open below");
+        assert!(
+            ceiling < floor,
+            "the rows ascend by band: '{}' ends at {ceiling}, '{}' starts at {floor}",
+            pair[0].id,
+            pair[1].id
+        );
+    }
+
+    // "The level of spell required depends on the severity of the crisis, as
+    // noted on the table." (:16638) — so severity is a ladder that climbs with
+    // the band, and the Ritual level climbs with it.
+    let illnesses: Vec<(CrisisSeverity, u32)> = crisis
+        .rows
+        .iter()
+        .filter_map(|row| match &row.outcome {
+            CrisisOutcome::Illness {
+                severity,
+                ritual_level,
+                ..
+            } => Some((*severity, *ritual_level)),
+            CrisisOutcome::Bedridden => None,
+        })
+        .collect();
+    assert!(
+        illnesses
+            .windows(2)
+            .all(|pair| pair[0].0 < pair[1].0 && pair[0].1 < pair[1].1),
+        "the illness rows climb in severity and Ritual level with the band: {illnesses:?}"
+    );
+}
+
 /// The AGING TOTAL of a 40-year-old carrying the named shipped items, rolling a
 /// 6: `6 + ceil(40/10)` = 10 before any modifier.
 fn shipped_aging_total(items: &[&str]) -> AgingTotal {
@@ -2577,6 +2764,47 @@ fn english_and_german_i18n_cover_all_living_conditions() {
             );
         }
     }
+}
+
+/// Every Crisis Table row has a display name in both shipped languages.
+///
+/// The German names are pinned as literals for the two rows that are a false
+/// friend in the other direction: German *Schwere* is **Major** (:16630) and
+/// *Ernste* is **Serious** (:16629), which is the opposite of what the English
+/// cognate suggests. `alterung-twilight.md:82-92` agrees with the rulebook body.
+#[test]
+fn english_and_german_i18n_cover_all_crisis_rows() {
+    let rules = shipped_aging_rules();
+    let crisis = rules.crisis.clone().expect("the shipped crisis table");
+    let en: BTreeMap<String, serde_json::Value> =
+        serde_json::from_str(SHIPPED_AGING_EN).expect("the English aging i18n is valid JSON");
+    let de: BTreeMap<String, serde_json::Value> =
+        serde_json::from_str(SHIPPED_AGING_DE).expect("the German aging i18n is valid JSON");
+
+    let name = |texts: &BTreeMap<String, serde_json::Value>, id: &str, lang: &str| -> String {
+        texts
+            .get(id)
+            .and_then(|entry| entry.get("name"))
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or_else(|| panic!("{lang} i18n missing crisis row '{id}'"))
+            .to_owned()
+    };
+
+    for row in &crisis.rows {
+        for (lang, texts) in [("en", &en), ("de", &de)] {
+            let text = name(texts, row.id.as_str(), lang);
+            assert!(!text.is_empty(), "{lang} name for '{}' is empty", row.id);
+        }
+    }
+
+    assert_eq!(
+        name(&de, "crisis.serious_illness", "de"),
+        "Ernste Erkrankung"
+    );
+    assert_eq!(
+        name(&de, "crisis.major_illness", "de"),
+        "Schwere Erkrankung"
+    );
 }
 
 /// The three shipped items that suspend some part of aging tag the **two
