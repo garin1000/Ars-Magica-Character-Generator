@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ability::{Ability, AbilityCategory, AdvancementTable, AgeAbilityCaps};
-use crate::aging::{AgingRowEffect, AgingRules};
+use crate::aging::{AgingRowEffect, AgingRules, CrisisOutcome, CrisisRow, CrisisSeverity};
 use crate::art::{Art, ArtType, ArtsFile};
 use crate::characteristics::CharacteristicRules;
 use crate::childhood::ChildhoodPackage;
@@ -1869,6 +1869,282 @@ impl Ruleset {
                  while the clamped total stays below that row",
                 clamp.max_total, first.min
             ));
+        }
+
+        self.validate_crisis_rules(errors);
+    }
+
+    /// Validates the Crisis Table: that no row id is used twice, that the rows
+    /// tile every crisis total between the table's two open ends, that the illness
+    /// rows climb as one ladder, that the attending doctor's Ability resolves, and
+    /// that the two Decrepitude thresholds of `:16617` sit in the right order.
+    ///
+    /// The tiling check is **contiguity**, like the Aging Roll table's, and for
+    /// the same reason — but with a second open end. "8 or less" (`:16626`) has no
+    /// lower bound and "19+" (`:16632`) no upper one, so the first row and only the
+    /// first may omit its minimum, the last and only the last its maximum, and
+    /// between them no total may land on two rows or on none.
+    ///
+    /// The ladder check is licensed by one sentence: "The level of spell required
+    /// depends on the severity of the crisis, as noted on the table." (`:16638`)
+    /// That makes severity a **rank** rather than a label, and makes the required
+    /// Ritual level a function of it — so severity and Ritual level must both climb
+    /// strictly down the illness rows, or the stated dependency does not hold. The
+    /// Ease Factor rides along on the same argument: a more severe crisis that were
+    /// easier to survive would invert the ladder the sentence names. All three are
+    /// read off the **illness rows only** — a bedridden row has no severity to
+    /// compare — with the bedridden rows pinned to the front of the table instead.
+    ///
+    /// Runs from [`Self::validate_aging_rules`], so a cached ruleset returning
+    /// through [`Ruleset::from_serialized`] is held to the same standard. An absent
+    /// `crisis` block stands the crisis subsystem down and is not an error, which
+    /// is the house position stated on [`Ruleset::aging`].
+    ///
+    /// **Considered and rejected** (recorded so they are not re-litigated):
+    /// - *the `+3` Ease-Factor and `+5` Ritual-level steps* — the shipped columns
+    ///   do step by exactly 3 and 5 (`:16628-16632`), but the rulebook never states
+    ///   that relation, and gating it would refuse a legitimate house table. Slice
+    ///   6b6 rejected `start_age == longevity_clamp.until_age` on the same ground:
+    ///   a gate must not invent a relationship the rules do not state.
+    /// - *`ritual_level` == the Creo Corpus guideline + 5* — the guidelines at
+    ///   `:13372-13376` price a minor/serious/major/critical/terminal aging crisis
+    ///   at 15/20/25/30/35, exactly 5 below the table's 20/25/30/35/40, which is the
+    ///   `+1` Touch magnitude of a Ritual cast on someone else. But the guidelines
+    ///   are not loaded data and the `+5` is an inference, not a stated rule. It
+    ///   belongs in `RULES.md` as provenance — so nobody "fixes" one table against
+    ///   the other — not in a gate.
+    /// - *any literal band boundary* (e.g. "the table must cover 15..=19") — that
+    ///   hardcodes the shipped numbers in Rust, which is the catalogue-size-is-data
+    ///   violation. Transcription is already pinned by
+    ///   `shipped_crisis_table_carries_the_16626_to_16632_rows` (`data_integrity.rs`).
+    /// - *"exactly five illness rows and two bedridden rows"* — catalogue size is
+    ///   data, never code.
+    /// - *"every [`CrisisSeverity`] variant is used by the shipped rows"* — a house
+    ///   ruleset that omits Terminal would fail to load for no good reason.
+    /// - *"a `crisis` block is required whenever `outcomes` contains
+    ///   `next_decrepitude_level_and_crisis`"* — an absent `Option` stands the
+    ///   subsystem down, and the player learns about it from a refusal at command
+    ///   time rather than from a ruleset that will not load at all.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16617,
+    /// :16624-16634, :16638.
+    fn validate_crisis_rules(&self, errors: &mut Vec<String>) {
+        let Some(aging) = self.aging.as_ref() else {
+            return;
+        };
+        let Some(crisis) = aging.crisis.as_ref() else {
+            return;
+        };
+
+        // The rows stay a `Vec` inside [`CrisisRules`], exactly like the Living
+        // Conditions above, so a duplicate id survives serialization and only a
+        // check on this path catches it on the way back in.
+        collect_duplicates(crisis.rows.iter().map(|row| &row.id), "crisis row", errors);
+
+        let Some(first) = crisis.rows.first() else {
+            errors.push(
+                "crisis rules ship no crisis rows, so no crisis total would ever have a result"
+                    .to_string(),
+            );
+            return;
+        };
+        let last_index = crisis.rows.len() - 1;
+        let last = &crisis.rows[last_index];
+
+        // "8 or less" (`:16626`) opens the table below and "19+" (`:16632`) closes
+        // it above. A bounded end would let a total fall off the table with no
+        // result at all.
+        if let Some(min) = first.min {
+            errors.push(format!(
+                "the first crisis row '{}' starts at {min} rather than being open below, \
+                 so any lower total would land on no row",
+                first.id
+            ));
+        }
+        if let Some(max) = last.max {
+            errors.push(format!(
+                "the last crisis row '{}' ends at {max} rather than being open above, \
+                 so any higher total would land on no row",
+                last.id
+            ));
+        }
+
+        for (index, row) in crisis.rows.iter().enumerate() {
+            if index != 0 && row.min.is_none() {
+                errors.push(format!(
+                    "crisis row '{}' has no lower bound but is not the first row: only the \
+                     row open below may omit its minimum, or every total beneath it would \
+                     land on two rows",
+                    row.id
+                ));
+            }
+            if index != last_index && row.max.is_none() {
+                errors.push(format!(
+                    "crisis row '{}' has no upper bound but is not the last row: only the \
+                     row open above may omit its maximum, or nothing after it would ever \
+                     be reached",
+                    row.id
+                ));
+            }
+            if let (Some(min), Some(max)) = (row.min, row.max)
+                && max < min
+            {
+                errors.push(format!(
+                    "crisis row '{}' spans {min} to {max}, whose upper bound is below its \
+                     lower bound, so it covers no total at all",
+                    row.id
+                ));
+            }
+        }
+
+        self.validate_crisis_tiling(&crisis.rows, errors);
+        self.validate_crisis_ladder(&crisis.rows, errors);
+
+        // "An Int + Medicine roll against an Ease Factor of 6 allows the character
+        // to add the attendant's Medicine score" (`:16634`) names the Ability by
+        // id, so a typo would leave the survival read-out quietly finding no score
+        // to add — a referential-integrity failure like every other ref in the
+        // rules data.
+        if let Some(attendant) = crisis.attendant.as_ref()
+            && !self.abilities.contains_key(&attendant.ability)
+        {
+            errors.push(format!(
+                "crisis attendant names unknown ability '{}'",
+                attendant.ability
+            ));
+        }
+
+        // "Characters with a Decrepitude score of 4 are extremely frail … Characters
+        // with a Decrepitude score of 5 are bedridden and will die" (`:16617`) — two
+        // thresholds on one ascending track, so frailty must be reached first. The
+        // pair rides with the crisis block because the crisis subsystem is the only
+        // thing that reads it.
+        if let (Some(frail), Some(fatal)) =
+            (aging.frail_decrepitude_score, aging.fatal_decrepitude_score)
+            && frail >= fatal
+        {
+            errors.push(format!(
+                "aging frail_decrepitude_score is {frail} and fatal_decrepitude_score is \
+                 {fatal}, so a character would be dead before he ever turned frail \
+                 (Ars Magica - Definitive Edition (Core Rules).md:16617)"
+            ));
+        }
+    }
+
+    /// The Crisis Table answers every crisis total, so consecutive rows must abut
+    /// exactly: `next.min == this.max + 1`. A gap leaves a total with no row, an
+    /// overlap gives it two.
+    ///
+    /// Rows with an open end are skipped here — whether they are allowed to have
+    /// one is [`Self::validate_crisis_rules`]'s question, not this one's.
+    fn validate_crisis_tiling(&self, rows: &[CrisisRow], errors: &mut Vec<String>) {
+        for (index, row) in rows.iter().enumerate() {
+            let (Some(next), Some(max)) = (rows.get(index + 1), row.max) else {
+                continue;
+            };
+            let Some(next_min) = next.min else {
+                continue;
+            };
+            if next_min > max.saturating_add(1) {
+                errors.push(format!(
+                    "crisis rows leave a gap: the row '{}' ending at {max} is followed by \
+                     '{}' starting at {next_min}, so totals {} to {} land on no row",
+                    row.id,
+                    next.id,
+                    max.saturating_add(1),
+                    next_min.saturating_sub(1)
+                ));
+            } else if next_min <= max {
+                errors.push(format!(
+                    "crisis rows overlap: the row '{}' ending at {max} is followed by '{}' \
+                     starting at {next_min}, so totals {next_min} to {max} land on two rows",
+                    row.id, next.id
+                ));
+            }
+        }
+    }
+
+    /// The illness ladder of `:16638`: severity, required Ritual level and Ease
+    /// Factor all climb together down the illness rows, and the bedridden rows —
+    /// which carry no severity at all — sit in front of every illness.
+    ///
+    /// Only the **last** illness row may omit its Ease Factor: "**Terminal
+    /// illness**. CrCo40 required to survive." (`:16632`) offers no Stamina roll,
+    /// and a milder row that offered none either would be unsurvivable without
+    /// magic while a worse one was not.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16626-16632, :16638.
+    fn validate_crisis_ladder(&self, rows: &[CrisisRow], errors: &mut Vec<String>) {
+        let mut illnesses: Vec<(&Id, CrisisSeverity, Option<i32>, u32)> = Vec::new();
+        let mut first_illness: Option<&Id> = None;
+        for row in rows {
+            match &row.outcome {
+                CrisisOutcome::Bedridden => {
+                    if let Some(illness) = first_illness {
+                        errors.push(format!(
+                            "crisis row '{}' is bedridden but follows the illness row \
+                             '{illness}': the table's bedridden results are its mildest \
+                             (Ars Magica - Definitive Edition (Core Rules).md:16626-16627) \
+                             and must come before every illness",
+                            row.id
+                        ));
+                    }
+                }
+                CrisisOutcome::Illness {
+                    severity,
+                    ease_factor,
+                    ritual_level,
+                } => {
+                    if first_illness.is_none() {
+                        first_illness = Some(&row.id);
+                    }
+                    illnesses.push((&row.id, *severity, *ease_factor, *ritual_level));
+                }
+            }
+        }
+
+        let last_illness = illnesses.len().saturating_sub(1);
+        for (index, (id, severity, ease_factor, ritual_level)) in illnesses.iter().enumerate() {
+            if ease_factor.is_none() && index != last_illness {
+                errors.push(format!(
+                    "crisis illness row '{id}' offers no Ease Factor but is not the most \
+                     severe illness on the table: only the last illness row may forgo the \
+                     Stamina roll (Ars Magica - Definitive Edition (Core Rules).md:16632)"
+                ));
+            }
+
+            let Some((next_id, next_severity, next_ease_factor, next_ritual_level)) =
+                illnesses.get(index + 1)
+            else {
+                continue;
+            };
+            if next_severity <= severity {
+                errors.push(format!(
+                    "crisis illness rows do not climb in severity: '{id}' ({severity:?}) is \
+                     followed by '{next_id}' ({next_severity:?}), though 'the level of spell \
+                     required depends on the severity of the crisis, as noted on the table' \
+                     (Ars Magica - Definitive Edition (Core Rules).md:16638)"
+                ));
+            }
+            if next_ritual_level <= ritual_level {
+                errors.push(format!(
+                    "crisis illness rows do not climb in required Ritual level: '{id}' \
+                     requires CrCo{ritual_level} and is followed by '{next_id}' requiring \
+                     CrCo{next_ritual_level}, though 'the level of spell required depends on \
+                     the severity of the crisis' \
+                     (Ars Magica - Definitive Edition (Core Rules).md:16638)"
+                ));
+            }
+            if let (Some(ease), Some(next_ease)) = (ease_factor, next_ease_factor)
+                && next_ease <= ease
+            {
+                errors.push(format!(
+                    "crisis illness rows do not climb in Ease Factor: '{id}' rolls against \
+                     {ease} and is followed by '{next_id}' rolling against {next_ease}, \
+                     though a more severe crisis cannot be easier to survive \
+                     (Ars Magica - Definitive Edition (Core Rules).md:16638)"
+                ));
+            }
         }
     }
 
@@ -4756,6 +5032,357 @@ mod tests {
                 && msg.contains("living_condition.average_peasant"),
             "should name the duplicated condition: {msg}"
         );
+    }
+
+    /// The aging file with its scalars and a settled outcome table fixed, so the
+    /// crisis fixtures below vary the crisis block only. `CRISIS` is substituted
+    /// per test.
+    const AGING_AROUND_CRISIS: &str = r#"{
+      "start_age": 35,
+      "age_divisor": 10,
+      "apparent_age_increase_min": 3,
+      "longevity_clamp": { "max_total": 9, "until_age": 35 },
+      "living_conditions": [
+        { "id": "living_condition.average_peasant", "modifier": 0 }
+      ],
+      "outcomes": [
+        { "min": 10, "max": 21, "effect": { "type": "any_characteristic", "points": 1 } },
+        { "min": 22, "effect": { "type": "next_decrepitude_level_and_crisis" } }
+      ],
+      "crisis": CRISIS
+    }"#;
+
+    /// A well-formed Crisis Table in miniature: a bedridden row open below
+    /// (Core Rules.md:16626), then two illness rows climbing together, the last of
+    /// them open above and offering no Stamina roll at all (`:16632`).
+    const CRISIS_ROWS: &str = r#"
+      { "id": "crisis.bedridden", "max": 8, "outcome": { "type": "bedridden" } },
+      { "id": "crisis.minor", "min": 9, "max": 14,
+        "outcome": { "type": "illness", "severity": "minor", "ease_factor": 3, "ritual_level": 20 } },
+      { "id": "crisis.terminal", "min": 15,
+        "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 40 } }"#;
+
+    /// Loads a ruleset whose crisis block is `crisis`, against the aging file of
+    /// [`AGING_AROUND_CRISIS`].
+    fn crisis_ruleset(crisis: &str) -> Result<Ruleset, RulesetError> {
+        aging_ruleset(&AGING_AROUND_CRISIS.replace("CRISIS", crisis))
+    }
+
+    /// Loads a ruleset whose Crisis Table carries `rows` and neither a die nor an
+    /// attendant — the shape most of the gates below vary.
+    fn crisis_rows_ruleset(rows: &str) -> Result<Ruleset, RulesetError> {
+        crisis_ruleset(&format!(r#"{{ "rows": [ {rows} ] }}"#))
+    }
+
+    /// The Crisis Table answers *every* crisis total, so its rows must tile the
+    /// number line between two open ends: the row open below ("8 or less",
+    /// Core Rules.md:16626) comes first and only it may omit its minimum, the row
+    /// open above ("19+", `:16632`) comes last and only it may omit its maximum,
+    /// and between them no total may land on two rows or on none.
+    ///
+    /// The check is contiguity, deliberately **not** "must cover 15..=19": the
+    /// shipped table's own bands are data, and a house table that draws them
+    /// elsewhere is still well-formed.
+    #[test]
+    fn crisis_rows_must_tile_ascending_between_two_open_ends() {
+        // The shipped shape, in miniature.
+        assert!(crisis_rows_ruleset(CRISIS_ROWS).is_ok());
+
+        // No rows at all: every crisis total would land nowhere.
+        let err = crisis_rows_ruleset("").unwrap_err();
+        assert!(
+            err.to_string().contains("no crisis rows"),
+            "should name the empty table: {err}"
+        );
+
+        // A first row that is not open below: a total of 7 falls off the bottom.
+        let err = crisis_rows_ruleset(
+            r#"{ "id": "crisis.bedridden", "min": 8, "max": 8, "outcome": { "type": "bedridden" } },
+               { "id": "crisis.terminal", "min": 9,
+                 "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 40 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("open below") && msg.contains("crisis.bedridden"),
+            "should name the row that should have had no lower bound: {msg}"
+        );
+
+        // A second row open below: everything up to 14 takes it, and the first row
+        // is never reached.
+        let err = crisis_rows_ruleset(
+            r#"{ "id": "crisis.bedridden", "max": 8, "outcome": { "type": "bedridden" } },
+               { "id": "crisis.minor", "max": 14,
+                 "outcome": { "type": "illness", "severity": "minor", "ease_factor": 3, "ritual_level": 20 } },
+               { "id": "crisis.terminal", "min": 15,
+                 "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 40 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("open below") && msg.contains("crisis.minor"),
+            "should name the row that is open below too late: {msg}"
+        );
+
+        // A last row that is not open above: a total of 20 falls off the top.
+        let err = crisis_rows_ruleset(
+            r#"{ "id": "crisis.bedridden", "max": 8, "outcome": { "type": "bedridden" } },
+               { "id": "crisis.terminal", "min": 9, "max": 19,
+                 "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 40 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("open above") && msg.contains("crisis.terminal"),
+            "should name the row that should have had no upper bound: {msg}"
+        );
+
+        // A middle row open above: nothing below it would ever be reached again.
+        let err = crisis_rows_ruleset(
+            r#"{ "id": "crisis.bedridden", "max": 8, "outcome": { "type": "bedridden" } },
+               { "id": "crisis.minor", "min": 9,
+                 "outcome": { "type": "illness", "severity": "minor", "ease_factor": 3, "ritual_level": 20 } },
+               { "id": "crisis.terminal", "min": 15,
+                 "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 40 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("open above") && msg.contains("crisis.minor"),
+            "should name the row that is open above too early: {msg}"
+        );
+
+        // A band that runs backwards covers no total at all.
+        let err = crisis_rows_ruleset(
+            r#"{ "id": "crisis.bedridden", "max": 8, "outcome": { "type": "bedridden" } },
+               { "id": "crisis.minor", "min": 14, "max": 9,
+                 "outcome": { "type": "illness", "severity": "minor", "ease_factor": 3, "ritual_level": 20 } },
+               { "id": "crisis.terminal", "min": 15,
+                 "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 40 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("crisis.minor") && msg.contains("14") && msg.contains('9'),
+            "should name the inverted band: {msg}"
+        );
+
+        // A gap: 9 lands on no row.
+        let err = crisis_rows_ruleset(
+            r#"{ "id": "crisis.bedridden", "max": 8, "outcome": { "type": "bedridden" } },
+               { "id": "crisis.terminal", "min": 10,
+                 "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 40 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("gap") && msg.contains('8') && msg.contains("10"),
+            "should name the rows the gap sits between: {msg}"
+        );
+
+        // An overlap: 7 and 8 land on two rows at once.
+        let err = crisis_rows_ruleset(
+            r#"{ "id": "crisis.bedridden", "max": 8, "outcome": { "type": "bedridden" } },
+               { "id": "crisis.terminal", "min": 7,
+                 "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 40 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("overlap") && msg.contains('8') && msg.contains('7'),
+            "should name the rows that overlap: {msg}"
+        );
+    }
+
+    /// "The level of spell required depends on the severity of the crisis, as noted
+    /// on the table." (Core Rules.md:16638) — the illness rows are one ladder, so
+    /// severity, required Ritual level and Ease Factor must all climb together
+    /// down the table, and the bedridden rows (which have no severity at all) must
+    /// sit in front of them.
+    #[test]
+    fn the_crisis_illness_ladder_must_climb_together() {
+        // A bedridden row after an illness row: the table's mildest results would
+        // sit above its worst.
+        let err = crisis_rows_ruleset(
+            r#"{ "id": "crisis.minor", "max": 14,
+                 "outcome": { "type": "illness", "severity": "minor", "ease_factor": 3, "ritual_level": 20 } },
+               { "id": "crisis.bedridden", "min": 15, "outcome": { "type": "bedridden" } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("crisis.bedridden") && msg.contains("crisis.minor"),
+            "should name the bedridden row and the illness it follows: {msg}"
+        );
+
+        // Severity going backwards down the table.
+        let err = crisis_rows_ruleset(
+            r#"{ "id": "crisis.bedridden", "max": 8, "outcome": { "type": "bedridden" } },
+               { "id": "crisis.major", "min": 9, "max": 14,
+                 "outcome": { "type": "illness", "severity": "major", "ease_factor": 3, "ritual_level": 20 } },
+               { "id": "crisis.minor", "min": 15,
+                 "outcome": { "type": "illness", "severity": "minor", "ritual_level": 40 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("severity")
+                && msg.contains("crisis.major")
+                && msg.contains("crisis.minor"),
+            "should name the two illness rows whose severities go backwards: {msg}"
+        );
+        assert!(
+            msg.contains(":16638"),
+            "should cite the sentence that makes severity a ladder: {msg}"
+        );
+
+        // The required Ritual level standing still: two severities would ask for
+        // the same spell, so the level would no longer depend on the severity.
+        let err = crisis_rows_ruleset(
+            r#"{ "id": "crisis.bedridden", "max": 8, "outcome": { "type": "bedridden" } },
+               { "id": "crisis.minor", "min": 9, "max": 14,
+                 "outcome": { "type": "illness", "severity": "minor", "ease_factor": 3, "ritual_level": 20 } },
+               { "id": "crisis.terminal", "min": 15,
+                 "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 20 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("crisis.minor") && msg.contains("crisis.terminal") && msg.contains("20"),
+            "should name the two rows requiring the same Ritual level: {msg}"
+        );
+
+        // The Ease Factor going backwards: a worse illness would be easier to
+        // survive.
+        let err = crisis_rows_ruleset(
+            r#"{ "id": "crisis.bedridden", "max": 8, "outcome": { "type": "bedridden" } },
+               { "id": "crisis.minor", "min": 9, "max": 14,
+                 "outcome": { "type": "illness", "severity": "minor", "ease_factor": 6, "ritual_level": 20 } },
+               { "id": "crisis.terminal", "min": 15,
+                 "outcome": { "type": "illness", "severity": "terminal", "ease_factor": 3, "ritual_level": 40 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Ease Factor")
+                && msg.contains("crisis.minor")
+                && msg.contains("crisis.terminal"),
+            "should name the two rows whose Ease Factors go backwards: {msg}"
+        );
+
+        // Only the most severe illness may forgo the Stamina roll (`:16632`); a
+        // milder row with no Ease Factor would be unsurvivable without magic while
+        // a worse one was not.
+        let err = crisis_rows_ruleset(
+            r#"{ "id": "crisis.bedridden", "max": 8, "outcome": { "type": "bedridden" } },
+               { "id": "crisis.minor", "min": 9, "max": 14,
+                 "outcome": { "type": "illness", "severity": "minor", "ritual_level": 20 } },
+               { "id": "crisis.terminal", "min": 15,
+                 "outcome": { "type": "illness", "severity": "terminal", "ease_factor": 12, "ritual_level": 40 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Ease Factor") && msg.contains("crisis.minor"),
+            "should name the milder row that offers no Stamina roll: {msg}"
+        );
+    }
+
+    /// Two rows under one id would let the second silently shadow the first, so
+    /// the Crisis Table joins the duplicate sweep like every other catalogue — and
+    /// from `validate_crisis_rules`, because the rows stay a `Vec` and a duplicate
+    /// therefore survives a round trip through [`Ruleset::from_serialized`].
+    #[test]
+    fn duplicate_crisis_row_ids_fail_the_load() {
+        let err = crisis_rows_ruleset(
+            r#"{ "id": "crisis.bedridden", "max": 8, "outcome": { "type": "bedridden" } },
+               { "id": "crisis.bedridden", "min": 9,
+                 "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 40 } }"#,
+        )
+        .unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("duplicate crisis row ID") && msg.contains("crisis.bedridden"),
+            "should name the duplicated row: {msg}"
+        );
+    }
+
+    /// The attending doctor's "Int + Medicine roll" (Core Rules.md:16634) names an
+    /// Ability by id, so a typo there is a referential-integrity failure like every
+    /// other ref in the rules data — the survival read-out would otherwise quietly
+    /// find no Medicine score to add.
+    #[test]
+    fn a_crisis_attendants_ability_must_resolve() {
+        let with_attendant = |ability: &str| {
+            let crisis = format!(
+                r#"{{ "rows": [ {CRISIS_ROWS} ],
+                      "attendant": {{ "ability": "{ability}", "characteristic": "int",
+                                      "ease_factor": 6, "botch_penalty": -3 }} }}"#
+            );
+            Ruleset::from_sources(RulesetSources {
+                id: "test",
+                version: "1",
+                point_items: "[]",
+                type_profiles: "[]",
+                abilities: Some(LIFE_STAGE_ABILITIES),
+                aging: Some(&AGING_AROUND_CRISIS.replace("CRISIS", &crisis)),
+                ..RulesetSources::default()
+            })
+        };
+
+        assert!(with_attendant("ability.awareness").is_ok());
+
+        let err = with_attendant("ability.nonesuch").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("attendant") && msg.contains("ability.nonesuch"),
+            "should name the unknown ability: {msg}"
+        );
+    }
+
+    /// "Characters with a Decrepitude score of 4 are extremely frail … Characters
+    /// with a Decrepitude score of 5 are bedridden and will die" (`:16617`) — two
+    /// thresholds on one ascending track, so the frail one must be reached first.
+    /// Transposed, a character would be dead before he ever turned frail.
+    #[test]
+    fn the_frail_decrepitude_score_must_sit_below_the_fatal_one() {
+        let with_scores = |frail: u8, fatal: u8| {
+            crisis_ruleset(&format!(
+                r#"{{ "rows": [ {CRISIS_ROWS} ] }},
+                   "frail_decrepitude_score": {frail},
+                   "fatal_decrepitude_score": {fatal}"#
+            ))
+        };
+
+        // The shipped 4-before-5.
+        assert!(with_scores(4, 5).is_ok());
+
+        let err = with_scores(5, 4).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("frail_decrepitude_score")
+                && msg.contains("fatal_decrepitude_score")
+                && msg.contains('5')
+                && msg.contains('4'),
+            "should name both thresholds and their values: {msg}"
+        );
+
+        // Equal is the same defect: a character would turn frail and die at once.
+        assert!(with_scores(5, 5).is_err());
+    }
+
+    /// An absent `crisis` block stands the crisis subsystem down and is not an
+    /// error — the same house position [`Ruleset::aging`] states for the aging
+    /// block as a whole. An aging file written before the Crisis Table existed
+    /// must keep loading exactly as it did.
+    #[test]
+    fn an_aging_block_with_no_crisis_key_loads_cleanly() {
+        let rs = aging_outcomes_ruleset(
+            r#"{ "min": 10, "max": 21, "effect": { "type": "any_characteristic", "points": 1 } },
+               { "min": 22, "effect": { "type": "next_decrepitude_level_and_crisis" } }"#,
+        )
+        .expect("an aging block with no crisis key loads");
+        assert!(rs.aging().expect("the aging block").crisis.is_none());
     }
 
     /// The childhood spread names abilities, so a typo there would silently shrink
