@@ -3884,7 +3884,8 @@ Each is findable here so it is not rediscovered later as a bug.
 **Placeholder — the full `### The Crisis` section (the CRISIS TOTAL of `:16621`, the
 look-up, the survival read-out, the refusals) lands with the steps that implement
 them.** This subsection records only where the *numbers* now in
-`rules/core/aging.json` come from, because JSON carries no comments.
+`rules/core/aging.json` come from, because JSON carries no comments — plus the two
+items below, which are provenance the load gates deliberately do **not** encode.
 
 | Datum | Value | Source line |
 |---|---|---|
@@ -3918,6 +3919,40 @@ Three things a later sweep must not undo:
    **adds** it. (`CrisisAttendant::botch_penalty`'s doc comment describes it as a
    positive magnitude of 3 — the shipped datum is the negative one, and the survival
    read-out step must resolve which reading it wants and make doc and data agree.)
+
+##### The `+5` between the table and the Creo Corpus guidelines
+
+> "| 15 | … • Resolve a minor aging crisis |" … "| 35 | … • Resolve a terminal aging
+> crisis … |"
+> — Ars Magica - Definitive Edition (Core Rules).md:13372-13376
+
+The Creo Corpus guidelines price a minor / serious / major / critical / terminal
+aging crisis at **15 / 20 / 25 / 30 / 35**, exactly **5 below** the Crisis Table's
+own **20 / 25 / 30 / 35 / 40** (`:16628-16632`) — the `+1` Touch magnitude of a
+Ritual cast on someone other than the caster. Recorded here so nobody "fixes" one
+table against the other: **both columns are transcribed correctly**, and the offset
+is real.
+
+It is provenance, **not a gate**. The guidelines are not loaded data, and the `+5`
+is an inference rather than a sentence the rulebook states, so
+`validate_crisis_rules` does not check it.
+
+##### Gates deliberately not written on the Crisis Table
+
+`validate_crisis_rules` (`ruleset.rs`) carries the full list in its doc comment;
+the two that touch *rules numbers* are recorded here as well, because this file is
+where a reader looks for why a shipped number is not enforced.
+
+1. **The `+3` Ease-Factor and `+5` Ritual-level steps.** The shipped columns do step
+   by exactly 3 and 5 down `:16628-16632`, but the rulebook never states that
+   relation. Gating it would refuse a legitimate house table, and it is the same
+   class of invention as `start_age == longevity_clamp.until_age`, which slice 6b6
+   rejected for the aging block. What *is* gated is the direction the source does
+   state — "The level of spell required depends on the severity of the crisis, as
+   noted on the table" (`:16638`) — so severity, required Ritual level and Ease
+   Factor must each climb strictly down the illness rows, by any step.
+2. **`ritual_level == guideline + 5`.** See the offset above: an inference, not a
+   stated rule, and one of the two tables is not loaded at all.
 
 #### Translation-table notes — `alterung-twilight.md`
 Two things about `rules/source/de/translation-tables/alterung-twilight.md` that a

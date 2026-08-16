@@ -2387,6 +2387,16 @@ fn shipped_crisis_table_carries_the_16626_to_16632_rows() {
     let rules = shipped_aging_rules();
     let crisis = rules.crisis.clone().expect("the shipped crisis table");
 
+    // Stated outright rather than left to `load_full_ruleset`'s unwrap: the
+    // shipped Crisis Table clears every load-time gate of `validate_crisis_rules`
+    // — rows tiling contiguously between an open-below and an open-above end, an
+    // illness ladder whose severity, Ritual level and Ease Factor all climb
+    // together (:16638), an attendant Ability that resolves, and a frail
+    // Decrepitude score below the fatal one (:16617).
+    load_full_ruleset()
+        .validate_integrity()
+        .expect("the shipped crisis table passes every load-time gate");
+
     // "Characters with a Decrepitude score of 4 are extremely frail, and must
     // roll on the Crisis Table … Characters with a Decrepitude score of 5 are
     // bedridden and will die within a few months at most." (:16617)
