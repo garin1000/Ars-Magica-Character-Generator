@@ -3954,6 +3954,31 @@ where a reader looks for why a shipped number is not enforced.
 2. **`ritual_level == guideline + 5`.** See the offset above: an inference, not a
    stated rule, and one of the two tables is not loaded at all.
 
+##### The CRISIS TOTAL adds the Decrepitude **that year** raised
+
+> "**Crisis:** Increase the character's Decrepitude first, and then roll on the Crisis
+> Table." … "**CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score**"
+> — Ars Magica - Definitive Edition (Core Rules).md:16619, :16621
+
+`crisis_total` (`aging.rs`) adds those three terms and no others. Its Decrepitude term
+is **as of the crisis year**, not the character's score today: `:16619` puts the
+year's own increase *first*, and the aging module is deliberately order-independent
+(`resolve_year` refuses nothing but a year already recorded), so a player may roll 36,
+carry on through 37-40, and resolve 36's Crisis afterwards. A live
+`effective::decrepitude_score` read would charge that Crisis with four later years'
+Aging Points. `decrepitude_points_as_of` therefore takes the lifetime total
+(`:16617` — "Every Aging Point also counts as an experience point towards
+Decrepitude") less the points of every `aging_log` entry whose `age` is **strictly**
+greater, so the crisis year's own award stays in and an undated legacy entry
+subtracts nothing. `the_crisis_total_reads_the_decrepitude_that_year_raised_not_todays`
+is the regression test.
+
+No trait modifier reaches this total: `:16621` names three terms, and `:16636` —
+"Virtues that affect aging rolls do not affect crisis survival rolls" — refuses the
+analogy with `aging_total` for the roll that follows. The Simple Die's 1–10 range
+(`:474`) is an input affordance a UI applies; the engine totals whatever die it is
+given rather than refusing one.
+
 #### Translation-table notes — `alterung-twilight.md`
 Two things about `rules/source/de/translation-tables/alterung-twilight.md` that a
 future translator must not "fix" the core file from.
