@@ -18,11 +18,17 @@
 //!
 //! # Not here
 //!
-//! Crisis resolution — the Crisis Table and its survival rolls
-//! (`:16619-16632`) — is deliberately absent. An aging row can *send* a
-//! character to a crisis
-//! ([`AgingRowEffect::NextDecrepitudeLevelAndCrisis`]), but resolving one is its
-//! own slice.
+//! The same line is drawn around the **Crisis** an aging row can send a
+//! character to ([`AgingRowEffect::NextDecrepitudeLevelAndCrisis`],
+//! `:16619-16638`). The engine does the arithmetic and the look-up: the CRISIS
+//! TOTAL of `:16621`, which row of the Crisis Table (`:16624-16632`) that total
+//! lands on, the Ease Factor of the Stamina roll it calls for, and the level of
+//! the Creo Corpus Ritual that would resolve it (`:16638`).
+//!
+//! What it never does is **resolve survival**. It does not throw the Stamina
+//! die, does not pronounce a character survived or died, and never kills one.
+//! Those are the table's to decide and the player's to record — the engine only
+//! lays out what the roll is against.
 //!
 //! See `RULES.md` for the provenance of every value the shipped
 //! `rules/core/aging.json` carries.
@@ -63,6 +69,21 @@ pub struct AgingRules {
     /// The Aging Roll table (`:16597-16611`), in file order.
     #[serde(default)]
     pub outcomes: Vec<AgingRow>,
+    /// The Crisis Table and its two rolls (`:16619-16634`), when the ruleset
+    /// ships them. Optional so an aging block written before the crisis existed
+    /// keeps loading unchanged.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crisis: Option<CrisisRules>,
+    /// The Decrepitude score at which a character is "extremely frail, and must
+    /// roll on the Crisis Table if they undertake stressful activities, such as
+    /// long journeys, or any combat" (`:16617`) — 4 in the core rules.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub frail_decrepitude_score: Option<u8>,
+    /// The Decrepitude score at which a character is "bedridden and will die
+    /// within a few months at most. They cannot be saved by mortal intervention."
+    /// (`:16617`) — 5 in the core rules.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fatal_decrepitude_score: Option<u8>,
 }
 
 impl AgingRules {
@@ -1073,6 +1094,182 @@ pub enum AgingRowEffect {
     NextDecrepitudeLevelAndCrisis,
 }
 
+/// The Crisis Table and the two rolls around it, loaded as part of
+/// `rules/core/aging.json`.
+///
+/// "**Crisis:** Increase the character's Decrepitude first, and then roll on the
+/// Crisis Table." (`:16619`) — **CRISIS TOTAL: Simple die + age/10 (round up) +
+/// Decrepitude Score** (`:16621`).
+///
+/// [`Self::die`] and [`Self::attendant`] are optional because a ruleset may ship
+/// the table without them; the rows are not, since a crisis table with no rows
+/// resolves nothing.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16619-16634.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CrisisRules {
+    /// The Crisis Table (`:16624-16632`), in file order.
+    pub rows: Vec<CrisisRow>,
+    /// The die the crisis total is rolled on (`:474`), when the ruleset ships it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub die: Option<CrisisDie>,
+    /// The attending doctor of `:16634`, when the ruleset ships them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub attendant: Option<CrisisAttendant>,
+}
+
+/// One row of the Crisis Table: a band of crisis totals and what landing in it
+/// costs.
+///
+/// The band is inclusive on both ends and **both** ends may be open — "8 or
+/// less" (`:16626`) has no lower bound and "19+" (`:16632`) no upper one. That
+/// is why [`Self::covers`] is its own function rather than
+/// [`AgingRow::covers`]: the Aging Roll table opens at exactly one end, and the
+/// loader's integrity gates depend on that.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16624-16632.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CrisisRow {
+    /// Slug-style id, e.g. `crisis.minor_illness`. Its display text lives in
+    /// `rules/i18n`, keyed by this id.
+    pub id: Id,
+    /// Lowest total the row covers (inclusive). `None` for the row open below
+    /// ("8 or less", `:16626`), which has no lower bound at all rather than a
+    /// very small one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min: Option<i32>,
+    /// Highest total the row covers (inclusive). `None` for the row open above
+    /// ("19+", `:16632`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<i32>,
+    /// What the row costs the character.
+    pub outcome: CrisisOutcome,
+    /// Provenance into the authoritative Markdown rules source.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<SourceRef>,
+}
+
+impl CrisisRow {
+    /// Whether `total` lands on this row: the band is inclusive on both ends, and
+    /// an absent bound is an open end — below for [`Self::min`] (`:16626`), above
+    /// for [`Self::max`] (`:16632`).
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16624-16632.
+    // The crisis look-up that calls this arrives with the rest of the crisis
+    // engine; until then only the tests exercise it. `expect` rather than
+    // `allow` so the attribute becomes a hard error the moment it is no longer
+    // true, and `not(test)` because the tests do call it.
+    #[cfg_attr(not(test), expect(dead_code, reason = "called by the crisis look-up"))]
+    fn covers(&self, total: i32) -> bool {
+        self.min.is_none_or(|min| min <= total) && self.max.is_none_or(|max| total <= max)
+    }
+}
+
+/// What a [`CrisisRow`] does to the character.
+///
+/// A tagged enum for the same reason [`AgingRowEffect`] is one: an outcome the
+/// engine cannot read must fail at load rather than be silently ignored.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16624-16632.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum CrisisOutcome {
+    /// "Bedridden for a week" (`:16626`) and "Bedridden for a month." (`:16627`)
+    /// — no roll, no spell, nothing but time. How long is display text in
+    /// `rules/i18n`, keyed by the row's id, not a mechanic.
+    Bedridden,
+    /// An illness the character must survive: "Stamina stress roll against an
+    /// Ease Factor of 3 or CrCo20 to survive" (`:16628`) and its four heavier
+    /// siblings (`:16629-16632`).
+    Illness {
+        /// How bad it is, which is what fixes the required spell level: "The
+        /// level of spell required depends on the severity of the crisis, as
+        /// noted on the table." (`:16638`)
+        severity: CrisisSeverity,
+        /// The Ease Factor of the Stamina stress roll. `None` for the Terminal
+        /// row, which offers no roll at all — "**Terminal illness**. CrCo40
+        /// required to survive." (`:16632`) — rather than an unbeatable one.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        ease_factor: Option<i32>,
+        /// The level of the Momentary Creo Corpus Ritual that resolves the
+        /// crisis (`:16638`), e.g. 20 for CrCo20.
+        ritual_level: u32,
+    },
+}
+
+/// How bad an [`CrisisOutcome::Illness`] is, ascending.
+///
+/// Ordered, and **declaration order is the ladder**: "The level of spell
+/// required depends on the severity of the crisis, as noted on the table."
+/// (`:16638`) The table's five illness rows climb together — 15/EF 3/CrCo20 up
+/// to 19+/no roll/CrCo40 (`:16628-16632`) — so severity is a rank, not a label,
+/// and comparing two of them is a rules operation the source licenses.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16628-16632, :16638.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CrisisSeverity {
+    /// "**Minor illness**. Stamina stress roll against an Ease Factor of 3 or
+    /// CrCo20 to survive." (`:16628`)
+    Minor,
+    /// "**Serious illness**. … Ease Factor of 6 or CrCo25 to survive."
+    /// (`:16629`)
+    Serious,
+    /// "**Major illness**. … Ease Factor of 9 or CrCo30 to survive." (`:16630`)
+    Major,
+    /// "**Critical illness**. … Ease Factor of 12 or CrCo35 to survive"
+    /// (`:16631`)
+    Critical,
+    /// "**Terminal illness**. CrCo40 required to survive." (`:16632`)
+    Terminal,
+}
+
+/// The die the crisis total is rolled on: "Roll a ten-sided die. Each number
+/// counts for its value, except that a zero counts as ten." (`:474`) — so the
+/// Simple Die's range is 1 to 10, which this carries as data rather than as a
+/// literal in the engine.
+///
+/// The engine never rolls it (see the module docs); the bounds are here so a UI
+/// can offer the legal results and the loader can reject a nonsensical range.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:474, :16621.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CrisisDie {
+    /// Lowest result the die can show (inclusive).
+    pub min: i32,
+    /// Highest result the die can show (inclusive).
+    pub max: i32,
+    /// Provenance into the authoritative Markdown rules source.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<SourceRef>,
+}
+
+/// The doctor who may attend a crisis: "An Int + Medicine roll against an Ease
+/// Factor of 6 allows the character to add the attendant's Medicine score to the
+/// roll to survive the crisis. Only one doctor may usefully attend a patient, and
+/// if the doctor botches the character must subtract 3 from the survival roll."
+/// (`:16634`)
+///
+/// The Ability and Characteristic are data rather than hard-coded ids, so the
+/// rule stays a property of the ruleset.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16634.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CrisisAttendant {
+    /// The Ability rolled and then added on a success — `ability.medicine`.
+    pub ability: Id,
+    /// The Characteristic added to the attendant's roll — Int.
+    pub characteristic: Characteristic,
+    /// The Ease Factor the attendant's roll must beat: 6.
+    pub ease_factor: i32,
+    /// What a botched attendance costs the patient, as a positive magnitude that
+    /// the survival roll *subtracts*: 3.
+    pub botch_penalty: i32,
+    /// Provenance into the authoritative Markdown rules source.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<SourceRef>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1120,6 +1317,10 @@ mod tests {
         let clamp = rules.longevity_clamp.clone().expect("the :16575 clamp");
         assert_eq!(clamp.max_total, 9);
         assert_eq!(clamp.until_age, 35);
+        // An aging block carrying no crisis table still parses, unchanged.
+        assert!(rules.crisis.is_none());
+        assert!(rules.frail_decrepitude_score.is_none());
+        assert!(rules.fatal_decrepitude_score.is_none());
 
         // A plain condition and a cumulative one, the asterisk of `:16594` being
         // the only thing that tells them apart.
@@ -1208,6 +1409,159 @@ mod tests {
             newt.is_err(),
             "an effect kind the engine cannot apply must fail to load, not be ignored"
         );
+    }
+
+    /// The Crisis Table of `:16624-16632` in miniature — its two open ends, one
+    /// `bedridden` row and one `illness` row of each shape (an Ease Factor, and
+    /// the Terminal row that has none, `:16632`) — plus the Simple Die of `:474`
+    /// and the attending doctor of `:16634`. A sibling of [`AGING`] rather than an
+    /// extension of it: [`AGING`] is what an aging block with **no** crisis key
+    /// looks like, and that case must keep parsing untouched.
+    const AGING_WITH_CRISIS: &str = r#"{
+      "start_age": 35,
+      "age_divisor": 10,
+      "apparent_age_increase_min": 3,
+      "frail_decrepitude_score": 4,
+      "fatal_decrepitude_score": 5,
+      "crisis": {
+        "die": { "min": 1, "max": 10,
+          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [474, 474] } },
+        "attendant": { "ability": "ability.medicine", "characteristic": "int",
+          "ease_factor": 6, "botch_penalty": 3,
+          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16634, 16634] } },
+        "rows": [
+          { "id": "crisis.bedridden_week", "max": 8, "outcome": { "type": "bedridden" },
+            "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16626, 16626] } },
+          { "id": "crisis.minor_illness", "min": 15, "max": 15,
+            "outcome": { "type": "illness", "severity": "minor", "ease_factor": 3, "ritual_level": 20 } },
+          { "id": "crisis.terminal_illness", "min": 19,
+            "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 40 } }
+        ]
+      }
+    }"#;
+
+    #[test]
+    fn a_crisis_block_deserializes_its_rows_and_both_open_ends() {
+        let rules: AgingRules =
+            serde_json::from_str(AGING_WITH_CRISIS).expect("the crisis shape parses");
+
+        assert_eq!(rules.frail_decrepitude_score, Some(4));
+        assert_eq!(rules.fatal_decrepitude_score, Some(5));
+        let crisis = rules.crisis.clone().expect("the :16624-16632 table");
+
+        let ids: Vec<&str> = crisis.rows.iter().map(|row| row.id.as_str()).collect();
+        assert_eq!(
+            ids,
+            vec![
+                "crisis.bedridden_week",
+                "crisis.minor_illness",
+                "crisis.terminal_illness",
+            ]
+        );
+
+        // "8 or less" (`:16626`) is open below and "19+" (`:16632`) open above —
+        // the Crisis Table, unlike the Aging Roll table, has *both* ends open.
+        let below = &crisis.rows[0];
+        assert_eq!((below.min, below.max), (None, Some(8)));
+        assert!(below.covers(i32::MIN));
+        assert!(below.covers(8));
+        assert!(!below.covers(9));
+
+        let interior = &crisis.rows[1];
+        assert!(!interior.covers(14));
+        assert!(interior.covers(15));
+        assert!(!interior.covers(16));
+
+        let above = &crisis.rows[2];
+        assert_eq!((above.min, above.max), (Some(19), None));
+        assert!(!above.covers(18));
+        assert!(above.covers(19));
+        assert!(above.covers(i32::MAX));
+
+        // Bedridden costs nothing but time; the illnesses carry a severity, the
+        // Ease Factor of the Stamina roll, and the Creo Corpus level.
+        assert_eq!(below.outcome, CrisisOutcome::Bedridden);
+        assert_eq!(
+            interior.outcome,
+            CrisisOutcome::Illness {
+                severity: CrisisSeverity::Minor,
+                ease_factor: Some(3),
+                ritual_level: 20,
+            }
+        );
+        // "Terminal illness. CrCo40 required to survive." (`:16632`) — no Stamina
+        // roll is offered at all, so the Ease Factor is absent, not zero.
+        assert_eq!(
+            above.outcome,
+            CrisisOutcome::Illness {
+                severity: CrisisSeverity::Terminal,
+                ease_factor: None,
+                ritual_level: 40,
+            }
+        );
+
+        let die = crisis.die.clone().expect("the :474 Simple Die");
+        assert_eq!((die.min, die.max), (1, 10));
+        let attendant = crisis.attendant.clone().expect("the :16634 doctor");
+        assert_eq!(attendant.ability.as_str(), "ability.medicine");
+        assert_eq!(attendant.characteristic, Characteristic::Int);
+        assert_eq!(attendant.ease_factor, 6);
+        assert_eq!(attendant.botch_penalty, 3);
+        let source = attendant.source.clone().expect("provenance");
+        assert_eq!(
+            source.file,
+            "Ars Magica - Definitive Edition (Core Rules).md"
+        );
+        assert_eq!((source.lines.start, source.lines.end), (16634, 16634));
+
+        // Canonical JSON: every absent option stays omitted, and re-reading gives
+        // back the same rules.
+        let json = serde_json::to_string(&rules).expect("crisis rules serialize");
+        assert!(
+            json.contains(r#"{"id":"crisis.bedridden_week","max":8"#),
+            "the row open below omits its absent lower bound: {json}"
+        );
+        assert!(
+            json.contains(r#"{"id":"crisis.terminal_illness","min":19,"outcome""#),
+            "the row open above omits its absent upper bound: {json}"
+        );
+        assert_eq!(
+            json.matches("\"min\"").count(),
+            3,
+            "the die's bound and the two rows with a lower bound: {json}"
+        );
+        assert_eq!(
+            json.matches("\"max\"").count(),
+            3,
+            "the die's bound and the two rows with an upper bound: {json}"
+        );
+        assert_eq!(
+            json.matches("\"ease_factor\"").count(),
+            2,
+            "the Terminal row offers no Stamina roll: {json}"
+        );
+        let back: AgingRules = serde_json::from_str(&json).expect("the round trip re-reads");
+        assert_eq!(back, rules);
+        assert_eq!(serde_json::to_string(&back).expect("stable"), json);
+    }
+
+    #[test]
+    fn an_unknown_crisis_outcome_kind_is_rejected() {
+        let newt = serde_json::from_str::<CrisisRow>(
+            r#"{ "id": "crisis.newt", "min": 15, "outcome": { "type": "turns_you_into_a_newt" } }"#,
+        );
+        assert!(
+            newt.is_err(),
+            "a crisis outcome the engine cannot read must fail to load, not be ignored"
+        );
+    }
+
+    #[test]
+    fn crisis_severity_ascends_in_declaration_order() {
+        assert!(CrisisSeverity::Minor < CrisisSeverity::Serious);
+        assert!(CrisisSeverity::Serious < CrisisSeverity::Major);
+        assert!(CrisisSeverity::Major < CrisisSeverity::Critical);
+        assert!(CrisisSeverity::Critical < CrisisSeverity::Terminal);
     }
 
     /// A ruleset carrying a loadable aging block. [`AGING`] itself will not do:

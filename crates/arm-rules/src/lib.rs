@@ -7,7 +7,8 @@ pub mod aging;
 #[doc(inline)]
 pub use aging::{
     AgingError, AgingOutcome, AgingPointAward, AgingPointTarget, AgingRow, AgingRowEffect,
-    AgingRules, AgingTotal, AgingYear, AgingYearRequest, AgingYearResult, LivingCondition,
+    AgingRules, AgingTotal, AgingYear, AgingYearRequest, AgingYearResult, CrisisAttendant,
+    CrisisDie, CrisisOutcome, CrisisRow, CrisisRules, CrisisSeverity, LivingCondition,
     LivingConditionsModifier, LongevityClamp, aging_schedule, aging_total,
     living_conditions_modifier, resolve_outcome, resolve_year, revert_year,
 };
