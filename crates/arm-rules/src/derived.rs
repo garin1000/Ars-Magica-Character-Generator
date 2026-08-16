@@ -1064,8 +1064,9 @@ pub struct SoakTotal {
 }
 
 /// The character's Soak. Source: Core:16667, :5145-5147 (Tough), :10840-10844
-/// (Bronze cord). The cord addend goes through [`cord_score`], so it can never
-/// exceed the +5 maximum (Core:10836) or disagree with the other cord read-outs.
+/// (Bronze cord). The cord addend goes through [`bronze_cord_bonus`] and thus
+/// [`cord_score`], so it can never exceed the +5 maximum (Core:10836) or disagree
+/// with the other cord read-outs.
 pub fn soak(entity: &Entity, ruleset: &Ruleset) -> SoakTotal {
     let mods = in_play_mods(entity, ruleset);
     let stamina = characteristic(entity, ruleset, Characteristic::Sta);
@@ -1076,11 +1077,7 @@ pub fn soak(entity: &Entity, ruleset: &Ruleset) -> SoakTotal {
         .filter_map(|s| ruleset.armor_item(&s.item))
         .map(|a| i32::from(a.protection))
         .sum();
-    let bronze = entity
-        .familiar
-        .as_ref()
-        .map(|f| i32::from(cord_score(f.cord_bronze)))
-        .unwrap_or(0);
+    let bronze = bronze_cord_bonus(entity);
     let addends = vec![
         Addend::new("stamina", stamina),
         Addend::new("armor", armor),
@@ -1286,8 +1283,8 @@ pub struct LongevityHint {
 /// unfilled field from a deliberate 0. `hint` carries the live suggestion for a
 /// self-made ritual only. The Bronze cord adds "to rolls to resist aging"
 /// (Core:10844) and is noted separately, since it is not part of the ritual; it goes
-/// through [`cord_score`], so it can never exceed the +5 maximum (Core:10836) or
-/// disagree with the Soak and cord-cost read-outs.
+/// through [`bronze_cord_bonus`], so it can never exceed the +5 maximum (Core:10836)
+/// or disagree with the Soak and cord-cost read-outs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LongevityBonus {
     /// Whether the ritual is self-made or external.
@@ -1296,7 +1293,13 @@ pub struct LongevityBonus {
     pub bonus: i32,
     /// Whether a bonus was actually entered; `false` ⇒ `bonus` is a placeholder 0.
     pub entered: bool,
-    /// The Bronze-cord addition to aging-resistance (noted, not part of `bonus`).
+    /// The Bronze-cord bonus, noted here and **not** summed into `bonus`.
+    ///
+    /// The cord applies "to rolls to resist aging" (Core:10844), and the roll that
+    /// referent names is the **crisis survival** roll — an aging roll itself is not
+    /// passed or failed, and Core:16636 keeps the two roll families apart. So this
+    /// line is informational on the ritual panel; the cord reaches a total through
+    /// [`bronze_cord_bonus`] on the crisis-survival read-out, not here.
     pub bronze_cord: i32,
     /// What a ritual made today would be worth; `None` for an external ritual.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1308,11 +1311,7 @@ pub struct LongevityBonus {
 /// reinvention takes advantage of raised Arts), :10844 (Bronze cord).
 pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBonus> {
     let ritual = entity.longevity_ritual.as_ref()?;
-    let bronze = entity
-        .familiar
-        .as_ref()
-        .map(|f| i32::from(cord_score(f.cord_bronze)))
-        .unwrap_or(0);
+    let bronze = bronze_cord_bonus(entity);
     // A hint only makes sense for a ritual this magus makes: an external one came
     // from another magus's Lab Total, which this sheet does not know (Core:10672).
     let hint = match ritual.source {
@@ -1544,6 +1543,28 @@ const CORD_COST_TABLE: [u32; 6] = [0, 5, 15, 30, 50, 75];
 /// before a normalize pass (a freshly loaded save).
 fn cord_score(raw: u8) -> u8 {
     raw.min(MAX_CORD_SCORE)
+}
+
+/// The entity's Bronze-cord bonus, or 0 when it has no familiar.
+///
+/// "**The Bronze Cord:** You can apply your bronze cord score as a bonus to Soak
+/// rolls and totals, to healing rolls, to rolls to withstand deprivation …, and to
+/// rolls to resist aging."
+/// (Source: Ars Magica - Definitive Edition (Core Rules).md:10844)
+///
+/// The one entity-level accessor for that score, shared by every total the cord
+/// feeds: [`soak`], the aging-resistance note on [`longevity_bonus`], and the
+/// crisis-survival read-out. It goes **through** [`cord_score`], so the +5 maximum
+/// (`:10836`) keeps its single home there and cannot be bypassed by adding a
+/// consumer here. [`cord_points_spent`] deliberately stays on [`cord_score`]: it
+/// prices all three cords of a `Familiar` and has no bronze-only, entity-level
+/// form.
+pub(crate) fn bronze_cord_bonus(entity: &Entity) -> i32 {
+    entity
+        .familiar
+        .as_ref()
+        .map(|f| i32::from(cord_score(f.cord_bronze)))
+        .unwrap_or(0)
 }
 
 /// The **total** Lab-Total points the three cords cost (Core:10836).
@@ -2627,6 +2648,54 @@ mod tests {
             5,
             "the aging-resistance note takes the clamped +5 too"
         );
+    }
+
+    /// The three **entity-level** Bronze-cord read-outs all clamp at the same +5
+    /// maximum (Core:10836), because they share one accessor
+    /// ([`bronze_cord_bonus`]) which itself routes through [`cord_score`]. The
+    /// clamp must not be bypassable by any single path: a hand-edited save
+    /// carrying `cord_bronze: 255` reads +5 through the accessor, +5 in Soak, and
+    /// +5 on the Longevity Ritual's aging-resistance note.
+    #[test]
+    fn all_three_cord_readouts_clamp_at_the_same_maximum() {
+        let rs = ruleset();
+        let mut e = longevity_magus();
+        e.longevity_ritual = ritual(LongevitySource::SelfMade, Some(3));
+        e.familiar = Some(Familiar {
+            name: "Corax".to_string(),
+            cord_bronze: 255,
+            ..Default::default()
+        });
+
+        let clamped = i32::from(MAX_CORD_SCORE);
+        assert_eq!(
+            bronze_cord_bonus(&e),
+            clamped,
+            "the accessor clamps the raw 255 to +5"
+        );
+
+        let bronze_soak = soak(&e, &rs)
+            .addends
+            .into_iter()
+            .find(|a| a.label == "bronze_cord")
+            .expect("Soak lists the Bronze cord")
+            .value;
+        assert_eq!(bronze_soak, clamped, "Soak reads the same clamped +5");
+
+        assert_eq!(
+            longevity_bonus(&e, &rs).expect("has ritual").bronze_cord,
+            clamped,
+            "the aging-resistance note reads the same clamped +5"
+        );
+    }
+
+    /// An entity with no familiar has no Bronze cord, and the accessor says 0 —
+    /// not a panic and not an absent addend.
+    #[test]
+    fn bronze_cord_bonus_is_zero_without_a_familiar() {
+        let mut e = longevity_magus();
+        e.familiar = None;
+        assert_eq!(bronze_cord_bonus(&e), 0);
     }
 
     /// The bonding level is "25 plus the familiar's Magic Might plus 5 times its
