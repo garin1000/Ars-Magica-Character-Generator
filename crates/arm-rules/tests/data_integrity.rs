@@ -2612,6 +2612,127 @@ fn strong_faerie_blood_lowers_the_aging_total_by_three() {
     assert_eq!(strong.total, 7);
 }
 
+/// The `aging_mod` kinds an item ships, sorted so the assertion does not depend
+/// on the order the effects happen to sit in the file.
+fn aging_kinds(id: &str) -> Vec<(AgingEffect, i8)> {
+    let rs = load_ruleset();
+    let item = rs
+        .item(&Id::new(id))
+        .unwrap_or_else(|| panic!("the shipped catalogue carries '{id}'"));
+    let mut kinds: Vec<(AgingEffect, i8)> = item
+        .effects
+        .iter()
+        .filter_map(|effect| match effect {
+            Effect::AgingMod { kind, amount } => Some((*kind, *amount)),
+            _ => None,
+        })
+        .collect();
+    kinds.sort_unstable();
+    kinds
+}
+
+/// Mild Aging states **two** mechanics in one sentence, and they go to two
+/// different places:
+///
+/// > "The character's aging rolls benefit from a +1 bonus to the Living
+/// > Conditions Modifier, in addition to whatever his social standing normally
+/// > offers him. Furthermore, he receives a +3 bonus to rolls to survive an aging
+/// > crisis." (Core:4530)
+///
+/// The +1 is a Living Conditions term of the AGING TOTAL; the +3 belongs to the
+/// crisis *survival* roll, which `:16636` otherwise walls off from aging-roll
+/// modifiers entirely. Only the first half shipped until 6b7, so the Virtue read
+/// as half a rule. Both halves now ship, and this test is the witness that a
+/// later sweep does not drop one again.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:4530, :16636.
+#[test]
+fn mild_aging_carries_both_halves_of_4530() {
+    assert_eq!(
+        aging_kinds("virtue.mild_aging"),
+        vec![
+            (AgingEffect::LivingConditions, 1),
+            (AgingEffect::CrisisSurvival, 3),
+        ],
+    );
+}
+
+/// Leprosy likewise states two mechanics at once:
+///
+/// > "A leper has a permanent -2 modifier to her Living Condition …, and whenever
+/// > she undergoes an Aging Crisis (page 392) the leper sustains a Heavy Wound in
+/// > addition to any other result." (Core:6340)
+///
+/// The Heavy Wound is a *consequence*, not a number, so it ships as a marker with
+/// amount 0 — the `crisis_heavy_wound` kind exists precisely so the shipped 0 is
+/// not mistaken for an unfilled modifier.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:6340.
+#[test]
+fn leprosy_carries_its_crisis_wound_beside_its_living_conditions_penalty() {
+    assert_eq!(
+        aging_kinds("flaw.leprosy"),
+        vec![
+            (AgingEffect::LivingConditions, -2),
+            (AgingEffect::CrisisHeavyWound, 0),
+        ],
+    );
+}
+
+/// > "Virtues that affect aging rolls do not affect crisis survival rolls."
+/// > (Core:16636)
+///
+/// This is that sentence's **converse**, which Mild Aging is the first shipped
+/// item to make expressible: a modifier granted specifically to the crisis
+/// survival roll is not an aging-roll modifier either, so nothing of the +3 may
+/// reach the AGING TOTAL. Mild Aging moves the Living Conditions term by +1 and
+/// nothing else — the trait modifier stays 0, and the total drops by exactly one,
+/// because the total *subtracts* the Living Conditions Modifier (`:16571`).
+///
+/// (Step 7 pins the other direction, that `aging_roll` modifiers stay out of the
+/// survival roll.)
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:4530, :16636.
+#[test]
+fn a_crisis_survival_modifier_never_reaches_the_aging_total() {
+    let baseline = shipped_aging_total(&[]);
+    let mild = shipped_aging_total(&["virtue.mild_aging"]);
+
+    assert_eq!(
+        mild.living_conditions.from_traits,
+        baseline.living_conditions.from_traits + 1,
+        "the +1 half is a Living Conditions term"
+    );
+    assert_eq!(
+        mild.trait_modifier, 0,
+        "the +3 is not an aging-roll modifier"
+    );
+    assert_eq!(mild.longevity_bonus, baseline.longevity_bonus);
+    assert_eq!(mild.age_modifier, baseline.age_modifier);
+    assert_eq!(
+        mild.total,
+        baseline.total - 1,
+        "only the Living Conditions half moves the total"
+    );
+
+    // The +3 is nowhere in the total, but it is still surfaced for the player,
+    // labelled by its own kind rather than folded into an aging-roll figure.
+    let rs = load_full_ruleset();
+    let e = entity(
+        "companion",
+        vec![Selection::new(Id::new("virtue.mild_aging"))],
+    );
+    let surfaced: Vec<(String, i32)> = arm_rules::derived::surfaced_modifiers(&e, &rs)
+        .into_iter()
+        .filter(|m| m.family == arm_rules::derived::ModifierFamily::Aging)
+        .map(|m| (m.detail, m.amount))
+        .collect();
+    assert!(
+        surfaced.contains(&("crisis_survival".to_string(), 3)),
+        "the crisis bonus stays visible: {surfaced:?}"
+    );
+}
+
 /// `flaw.age_quickly` and `flaw.baneful_circumstances` both ship an `aging_roll`
 /// modifier of **0**, and that 0 is deliberate — not an unfilled field waiting to
 /// be "fixed" into a number.

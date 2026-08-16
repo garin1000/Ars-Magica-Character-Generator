@@ -3873,6 +3873,30 @@ Each is findable here so it is not rediscovered later as a bug.
   resolution yet; the full crisis section of this file lands with them. Survival
   itself stays out for good: the engine will give the total, the row, the Ease Factor
   and the Creo Corpus level, but never rolls the Stamina die and never kills.
+- **Two `AgingEffect` kinds and the two shipped items that carry them (M6/6b7).**
+  `crisis_survival` (a modifier to the crisis *survival* roll) and
+  `crisis_heavy_wound` (a marker; `amount` ignored, shipped as **0**, because a Heavy
+  Wound is a consequence and not a number) are two kinds rather than one, so the
+  stored `amount` never means two different things depending on the carrier. Neither
+  reaches the AGING TOTAL — `aging_total`'s no-op arm — and both are surfaced under
+  `derived-detail-crisis_survival` / `derived-detail-crisis_heavy_wound`. The two data
+  fixes, in `rules/core/virtues_flaws.json`:
+  - **`virtue.mild_aging`** gains `crisis_survival +3` beside its existing
+    `living_conditions +1`. "The character's aging rolls benefit from a +1 bonus to
+    the Living Conditions Modifier … Furthermore, he receives a +3 bonus to rolls to
+    survive an aging crisis." (`:4530`) — **one sentence, two mechanics, two
+    destinations.** This is the proof case for `:16636`, "Virtues that affect aging
+    rolls do not affect crisis survival rolls": that general prohibition governs the
+    +1, which is an aging-roll modifier and so stays out of the crisis, while the +3
+    is a *specific* grant to the survival roll and survives the general rule. Guards:
+    `mild_aging_carries_both_halves_of_4530` and
+    `a_crisis_survival_modifier_never_reaches_the_aging_total` (`data_integrity.rs`),
+    the latter being `:16636`'s converse — a survival-roll grant is not an aging-roll
+    modifier either.
+  - **`flaw.leprosy`** gains `crisis_heavy_wound 0` beside its `living_conditions -2`:
+    "whenever she undergoes an Aging Crisis (page 392) the leper sustains a Heavy
+    Wound in addition to any other result" (`:6340`). Guard:
+    `leprosy_carries_its_crisis_wound_beside_its_living_conditions_penalty`.
 - **Covenant-derived Living Conditions.** The four covenant rows are chosen by hand
   today; a covenant will hand over ids in a later milestone.
 

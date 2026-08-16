@@ -1572,6 +1572,37 @@ fn every_creation_phase_is_mirrored_in_the_frontend_union() {
     }
 }
 
+/// The surfaced-modifier read-out labels every aging modifier through
+/// `derived-detail-<slug>`, so a kind no locale names would reach the panel as its
+/// own raw slug — the one thing a label may never do. `AgingEffect::ALL` is the
+/// source of the set, so adding a kind fails this test until both locales carry it.
+#[test]
+fn every_aging_effect_has_a_fluent_key_in_each_locale() {
+    for lang in ["en", "de"] {
+        let ftl = fs::read_to_string(repo_root().join(format!("locales/{lang}/main.ftl"))).unwrap();
+        for kind in arm_rules::AgingEffect::ALL {
+            assert!(
+                ftl.contains(&format!("derived-detail-{kind} =")),
+                "locale '{lang}' is missing key 'derived-detail-{kind}'"
+            );
+        }
+    }
+}
+
+/// The frontend's `AgingEffect` union types every `aging_mod` effect it reads off a
+/// loaded item. A missing member is not caught by anything the engine runs, so the
+/// Rust enum is the source and this test pins the mirror.
+#[test]
+fn every_aging_effect_is_mirrored_in_the_frontend_union() {
+    let types = fs::read_to_string(repo_root().join("ui/src/lib/types.ts")).unwrap();
+    for kind in arm_rules::AgingEffect::ALL {
+        assert!(
+            types.contains(&format!("'{kind}'")),
+            "ui/src/lib/types.ts is missing the AgingEffect member '{kind}'"
+        );
+    }
+}
+
 /// `ui/src/lib/state.svelte.ts` re-declares `SCHEMA_VERSION` by hand — the frontend
 /// stamps it onto every entity it builds from scratch — and TypeScript cannot notice
 /// when the Rust constant moves. A stale mirror is silent: the app keeps running and
