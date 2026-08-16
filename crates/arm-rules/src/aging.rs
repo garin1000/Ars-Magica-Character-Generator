@@ -647,6 +647,129 @@ fn points_to_next_decrepitude_level(entity: &Entity, ruleset: &Ruleset) -> Optio
     Some(priced.saturating_sub(accrued).max(1))
 }
 
+/// One Crisis's CRISIS TOTAL, broken into every term that made it.
+///
+/// Split rather than a bare number for the same reason [`AgingTotal`] is: the
+/// sheet has to *show* the arithmetic, and a player who cannot see which term
+/// moved the total cannot check it against the book. Three terms is all there
+/// is (`:16621`), so all three are here.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16621.
+// `Serialize` only, like every other aging read-out: the crisis calculator shows
+// these terms, and none of them is ever read back off a save.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct CrisisTotal {
+    /// The age the Crisis fell in — the year's own age, not the character's
+    /// current one, for the same reason [`AgingTotal::age`] is.
+    pub age: u32,
+    /// The player's Simple Die, as typed in.
+    pub die: i32,
+    /// ⌈`age` / [`AgingRules::age_divisor`]⌉ — ADDED. The aging roll's own age
+    /// term ([`AgingRules::age_modifier`]), not a second reading of it.
+    pub age_modifier: i32,
+    /// The Decrepitude Score **as of `age`** — ADDED. See [`crisis_total`] for
+    /// why "as of" is the load-bearing word.
+    pub decrepitude_score: u8,
+    /// `die + age_modifier + decrepitude_score` — the number the Crisis Table is
+    /// indexed by.
+    pub total: i32,
+}
+
+/// The CRISIS TOTAL for one Crisis (`:16621`).
+///
+/// > **CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score**
+///
+/// `die` is the player's Simple Die, typed in — the engine never rolls and
+/// `arm-rules` has no `rand` dependency. `age` is a parameter rather than read
+/// off the entity, because the Crisis belongs to the year that flagged it and a
+/// pre-play catch-up may resolve it long after later years have been applied.
+///
+/// # Three terms, and no fourth
+///
+/// `:16621` names exactly three, all ADDED, and **no trait modifier of any kind
+/// reaches this total**. Nothing in any source gives a Virtue or Flaw a bearing
+/// on the crisis total, and `:16636` — "Virtues that affect aging rolls do not
+/// affect crisis survival rolls" — cuts the same way for the roll that follows.
+/// (That sentence is strictly about the *survival* roll, which is its own
+/// read-out; it is quoted here because the temptation is to fold
+/// [`AgingEffect::AgingRoll`] into this total by analogy with [`aging_total`].
+/// Do not: the analogy is exactly what the book denies.)
+///
+/// # The Decrepitude is the year's, not today's
+///
+/// > **Crisis:** Increase the character's Decrepitude first, and then roll on
+/// > the Crisis Table. (`:16619`)
+///
+/// "First" fixes the score this total adds: the one the crisis year itself
+/// raised. Reading [`decrepitude_score`] live would be right only if the crisis
+/// year were the newest year applied — and it need not be. [`resolve_year`]
+/// refuses nothing but a year already recorded, and this module is deliberately
+/// order-independent, so a player may roll 36 (which flags a Crisis), carry on
+/// through 37-40, and resolve 36's Crisis afterwards. A live read would then
+/// charge that Crisis with four later years' Aging Points. So the score comes
+/// from [`decrepitude_points_as_of`] instead.
+///
+/// # The die is not policed
+///
+/// "Roll a ten-sided die. Each number counts for its value, except that a zero
+/// counts as ten." (`:474`) bounds what a UI should *offer*; it is an input
+/// affordance, not an engine rule. A storyguide may hand out any number, so a
+/// die outside 1..=10 is totalled as given rather than refused.
+///
+/// `None` when the ruleset ships no aging rules, or aging rules with no Crisis
+/// Table — the engine never invents a table the ruleset does not carry.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16619, :16621,
+/// :16636, :474.
+pub fn crisis_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Option<CrisisTotal> {
+    let rules = ruleset.aging()?;
+    // A ruleset with no Crisis Table has no crisis to total, exactly as one with
+    // no aging rules has no year to roll.
+    rules.crisis.as_ref()?;
+
+    let age_modifier = rules.age_modifier(age);
+    let score = ruleset
+        .advancement()
+        .score_for_xp(decrepitude_points_as_of(entity, age));
+
+    Some(CrisisTotal {
+        age,
+        die,
+        age_modifier,
+        decrepitude_score: score,
+        total: die + age_modifier + i32::from(score),
+    })
+}
+
+/// The Aging Points that had reached Decrepitude by the end of the character's
+/// `age`th year — his lifetime total less every point a **later** year awarded.
+///
+/// This is what `:16619`'s "Increase the character's Decrepitude first, and then
+/// roll on the Crisis Table" needs and a live [`decrepitude_points_total`] read
+/// does not give, because years may be resolved in any order (see
+/// [`crisis_total`]).
+///
+/// Two boundaries decide the arithmetic:
+///
+/// - **Strictly greater.** The crisis year's own entry carries `age == Some(age)`,
+///   which is not greater, so the points that year awarded stay IN — they are
+///   precisely the increase `:16619` puts first.
+/// - **Undated entries never subtract.** A legacy hand-written entry carries
+///   neither an `age` nor a distribution, so there is nothing to date it by and
+///   nothing to take off; such a character rolls against every point he has.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16619, :16617.
+fn decrepitude_points_as_of(entity: &Entity, age: u32) -> u32 {
+    let later: u32 = entity
+        .aging_log
+        .iter()
+        .filter(|entry| entry.age.is_some_and(|logged| logged > age))
+        .flat_map(|entry| entry.points.values())
+        .map(|points| u32::from(*points))
+        .sum();
+    decrepitude_points_total(entity).saturating_sub(later)
+}
+
 /// One year's aging roll as the player submits it.
 ///
 /// The engine never rolls: `die` is the stress die (no botch) thrown at the
@@ -1667,6 +1790,68 @@ mod tests {
             ..RulesetSources::default()
         })
         .expect("the aging fixture loads")
+    }
+
+    /// A ruleset whose aging block ships a **Crisis Table** as well as the two
+    /// aging tables. [`scheduled_ruleset`] deliberately ships none — an aging
+    /// block written before the crisis existed must keep loading — so a crisis
+    /// total against it is `None`, which is its own test below.
+    ///
+    /// Both tables are the smallest that survive the loader's gates. The Crisis
+    /// Table tiles the integers contiguously with the open-below row (`:16626`)
+    /// first and the open-above row (`:16632`) last; the Aging Roll table carries
+    /// "10-12" (`:16601`) for a year that costs one point and an open-ended
+    /// "13+" standing in for `:16602`/`:16611`, so a test can drive a year to a
+    /// Crisis on demand.
+    ///
+    /// The advancement curve is the shipped one's first five rows (5 / 15 / 30 /
+    /// 50 / 75) rather than [`scheduled_ruleset`]'s deliberately short three: the
+    /// crisis total has to be witnessed while the Decrepitude score is still
+    /// climbing, not while it sits at a curve that has run out.
+    fn crisis_ruleset() -> Ruleset {
+        let aging = r#"{
+          "start_age": 35,
+          "age_divisor": 10,
+          "apparent_age_increase_min": 3,
+          "frail_decrepitude_score": 4,
+          "fatal_decrepitude_score": 5,
+          "outcomes": [
+            { "min": 10, "max": 12, "effect": { "type": "any_characteristic", "points": 1 } },
+            { "min": 13, "effect": { "type": "next_decrepitude_level_and_crisis" } }
+          ],
+          "crisis": {
+            "die": { "min": 1, "max": 10 },
+            "rows": [
+              { "id": "crisis.bedridden_week", "max": 8, "outcome": { "type": "bedridden" } },
+              { "id": "crisis.bedridden_month", "min": 9, "max": 14,
+                "outcome": { "type": "bedridden" } },
+              { "id": "crisis.minor_illness", "min": 15, "max": 15,
+                "outcome": { "type": "illness", "severity": "minor", "ease_factor": 3, "ritual_level": 20 } },
+              { "id": "crisis.terminal_illness", "min": 16,
+                "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 40 } }
+            ]
+          }
+        }"#;
+        let abilities = r#"{
+          "abilities": [],
+          "advancement": [
+            { "score": 1, "total_xp": 5 },
+            { "score": 2, "total_xp": 15 },
+            { "score": 3, "total_xp": 30 },
+            { "score": 4, "total_xp": 50 },
+            { "score": 5, "total_xp": 75 }
+          ]
+        }"#;
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: "[]",
+            abilities: Some(abilities),
+            aging: Some(aging),
+            ..RulesetSources::default()
+        })
+        .expect("the crisis fixture loads")
     }
 
     /// A character of `age`, born in `birth_year` when one is given.
@@ -2905,5 +3090,195 @@ mod tests {
         let reverted = revert_year(&resolved.entity, &ruleset, 40).expect("reverts");
         assert_eq!(reverted.apparent_age, Some(44));
         assert!(reverted.aging_log.is_empty());
+    }
+
+    /// **CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score**
+    /// (`:16621`) — exactly three terms, every one of them ADDED, and every one
+    /// of them reported so a sheet can show the arithmetic without re-deriving
+    /// it.
+    ///
+    /// The age term is the aging roll's own [`AgingRules::age_modifier`], so it
+    /// steps on the *first* year of a decade rather than the last and the two
+    /// totals can never disagree about what "age/10 (round up)" means.
+    #[test]
+    fn the_crisis_total_is_a_simple_die_plus_the_age_term_plus_decrepitude() {
+        let ruleset = crisis_ruleset();
+        let mut entity = character(Some(40), None);
+        entity.aging_points.insert(Characteristic::Sta, 15);
+        assert_eq!(
+            decrepitude_score(&entity, &ruleset),
+            2,
+            "fifteen accrued Aging Points is Decrepitude 2 on the fixture's curve"
+        );
+
+        assert_eq!(
+            crisis_total(&entity, &ruleset, 36, 3).expect("the fixture ships a Crisis Table"),
+            CrisisTotal {
+                age: 36,
+                die: 3,
+                age_modifier: 4,
+                decrepitude_score: 2,
+                total: 9,
+            }
+        );
+
+        // "age/10 (round up)" steps on the first year of the decade, not the last.
+        let steps: Vec<i32> = [30, 31, 39, 40, 41]
+            .into_iter()
+            .map(|age| {
+                crisis_total(&entity, &ruleset, age, 3)
+                    .expect("a Crisis Table")
+                    .age_modifier
+            })
+            .collect();
+        assert_eq!(steps, vec![3, 4, 4, 4, 5]);
+
+        // Every term is ADDED: a bigger die and a frailer character both push the
+        // total up. No term is ever subtracted — `:16621` names none.
+        assert_eq!(
+            crisis_total(&entity, &ruleset, 36, 10)
+                .expect("a Crisis Table")
+                .total,
+            16
+        );
+        let mut frailer = entity.clone();
+        frailer.aging_points.insert(Characteristic::Sta, 30);
+        assert_eq!(decrepitude_score(&frailer, &ruleset), 3);
+        assert_eq!(
+            crisis_total(&frailer, &ruleset, 36, 3)
+                .expect("a Crisis Table")
+                .total,
+            10
+        );
+
+        // A character who has never taken an Aging Point adds nothing for
+        // Decrepitude — the term is 0, not absent.
+        let unaged =
+            crisis_total(&character(Some(40), None), &ruleset, 36, 3).expect("a Crisis Table");
+        assert_eq!(unaged.decrepitude_score, 0);
+        assert_eq!(unaged.total, 7);
+
+        // The die is the player's and the engine does not police it: "Roll a
+        // ten-sided die … a zero counts as ten" (`:474`) bounds what a UI offers,
+        // not what a storyguide may hand out.
+        for die in [-2, 0, 11] {
+            let total = crisis_total(&entity, &ruleset, 36, die).expect("a Crisis Table");
+            assert_eq!(total.die, die);
+            assert_eq!(total.total, die + 4 + 2, "die {die}");
+        }
+    }
+
+    /// "**Crisis:** Increase the character's Decrepitude **first**, and then roll
+    /// on the Crisis Table." (`:16619`) — so the Decrepitude the total adds is the
+    /// one *that year* raised, not the one the character carries today.
+    ///
+    /// The distinction is not academic, because this module is deliberately
+    /// **order-independent**: [`resolve_year`] refuses nothing but a year already
+    /// recorded, so a player may roll 36 (which flags a Crisis), carry on through
+    /// 37-40, and only then resolve 36's Crisis. A live [`decrepitude_score`] read
+    /// would charge that Crisis with four later years' Aging Points, which
+    /// `:16619` does not license.
+    #[test]
+    fn the_crisis_total_reads_the_decrepitude_that_year_raised_not_todays() {
+        let ruleset = crisis_ruleset();
+
+        // Age 36: `9 + ⌈36/10⌉ = 13` reaches the next Decrepitude level and flags
+        // a Crisis (`:16602`) — five points on the fixture's curve.
+        let crisis_year = resolve_year(
+            &character(Some(40), None),
+            &ruleset,
+            &request(36, 9, &[(Characteristic::Sta, 5)]),
+        )
+        .expect("the crisis year resolves")
+        .entity;
+        assert!(crisis_year.aging_log[0].crisis);
+        assert_eq!(decrepitude_score(&crisis_year, &ruleset), 1);
+
+        let when_rolled = crisis_total(&crisis_year, &ruleset, 36, 3).expect("a Crisis Table");
+        assert_eq!(when_rolled.decrepitude_score, 1);
+        assert_eq!(when_rolled.total, 8);
+
+        // The player carries on before resolving the Crisis: 37 reaches the next
+        // level again (ten more points), and 38-40 cost a point each.
+        let mut walked = resolve_year(
+            &crisis_year,
+            &ruleset,
+            &request(37, 9, &[(Characteristic::Sta, 10)]),
+        )
+        .expect("the next year resolves")
+        .entity;
+        for age in [38, 39, 40] {
+            walked = resolve_year(
+                &walked,
+                &ruleset,
+                &request(age, 7, &[(Characteristic::Int, 1)]),
+            )
+            .expect("a one-point year resolves")
+            .entity;
+        }
+        assert_eq!(decrepitude_points_total(&walked), 18);
+        assert_eq!(
+            decrepitude_score(&walked, &ruleset),
+            2,
+            "today's Decrepitude has genuinely moved on since the crisis year"
+        );
+
+        // …and 36's Crisis is still rolled against 36's Decrepitude, to the point.
+        assert_eq!(
+            crisis_total(&walked, &ruleset, 36, 3).expect("a Crisis Table"),
+            when_rolled
+        );
+
+        // The newest year is not special-cased the other way: a Crisis at 40 does
+        // take every Aging Point the character has accrued, later years included
+        // — there are none after it to leave out.
+        let today = crisis_total(&walked, &ruleset, 40, 3).expect("a Crisis Table");
+        assert_eq!(today.decrepitude_score, 2);
+        assert_eq!(today.total, 9);
+    }
+
+    /// A legacy hand-written log entry carries neither an age nor a point
+    /// distribution, so nothing about it can be dated and nothing is subtracted.
+    /// A character whose whole history is hand-written therefore rolls his Crisis
+    /// against every Aging Point he has accrued — and a dated year that awarded
+    /// nothing subtracts nothing either.
+    #[test]
+    fn a_hand_written_log_never_subtracts_from_the_crisis_year() {
+        let ruleset = crisis_ruleset();
+        let mut entity = character(Some(60), None);
+        entity.aging_points.insert(Characteristic::Sta, 15);
+        entity.aging_log.push(AgingLogEntry {
+            effect: "Took to his bed for a month".to_string(),
+            ..AgingLogEntry::default()
+        });
+        entity.aging_log.push(AgingLogEntry {
+            age: Some(59),
+            effect: "A quiet year".to_string(),
+            ..AgingLogEntry::default()
+        });
+
+        let total = crisis_total(&entity, &ruleset, 36, 3).expect("a Crisis Table");
+        assert_eq!(
+            total.decrepitude_score, 2,
+            "an undated entry dates nothing, so all fifteen points stand"
+        );
+        assert_eq!(total.total, 9);
+    }
+
+    /// Two rulesets with no crisis total to give: one shipping no aging rules at
+    /// all, and one shipping the aging tables but no Crisis Table. Both answer
+    /// `None`, exactly as [`aging_total`] does — the engine never invents a table
+    /// the ruleset does not carry.
+    #[test]
+    fn a_ruleset_without_a_crisis_table_has_no_crisis_total() {
+        let entity = character(Some(40), None);
+
+        let without = Ruleset::from_json("test", "1", "[]", "[]").expect("an empty ruleset loads");
+        assert!(without.aging().is_none());
+        assert!(crisis_total(&entity, &without, 36, 3).is_none());
+
+        let no_crisis = scheduled_ruleset();
+        assert!(no_crisis.aging().expect("aging rules").crisis.is_none());
+        assert!(crisis_total(&entity, &no_crisis, 36, 3).is_none());
     }
 }
