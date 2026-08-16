@@ -126,5 +126,70 @@
       "effect": { "type": "next_decrepitude_level_and_crisis" },
       "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16611, 16611] }
     }
-  ]
+  ],
+  "crisis": {
+    "die": {
+      "min": 1,
+      "max": 10,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [474, 474] }
+    },
+    "attendant": {
+      "ability": "ability.medicine",
+      "characteristic": "int",
+      "ease_factor": 6,
+      "botch_penalty": -3,
+      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16634, 16634] }
+    },
+    "rows": [
+      {
+        "id": "crisis.bedridden_week",
+        "max": 8,
+        "outcome": { "type": "bedridden" },
+        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16626, 16626] }
+      },
+      {
+        "id": "crisis.bedridden_month",
+        "min": 9,
+        "max": 14,
+        "outcome": { "type": "bedridden" },
+        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16627, 16627] }
+      },
+      {
+        "id": "crisis.minor_illness",
+        "min": 15,
+        "max": 15,
+        "outcome": { "type": "illness", "severity": "minor", "ease_factor": 3, "ritual_level": 20 },
+        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16628, 16628] }
+      },
+      {
+        "id": "crisis.serious_illness",
+        "min": 16,
+        "max": 16,
+        "outcome": { "type": "illness", "severity": "serious", "ease_factor": 6, "ritual_level": 25 },
+        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16629, 16629] }
+      },
+      {
+        "id": "crisis.major_illness",
+        "min": 17,
+        "max": 17,
+        "outcome": { "type": "illness", "severity": "major", "ease_factor": 9, "ritual_level": 30 },
+        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16630, 16630] }
+      },
+      {
+        "id": "crisis.critical_illness",
+        "min": 18,
+        "max": 18,
+        "outcome": { "type": "illness", "severity": "critical", "ease_factor": 12, "ritual_level": 35 },
+        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16631, 16631] }
+      },
+      {
+        "id": "crisis.terminal_illness",
+        "min": 19,
+        "outcome": { "type": "illness", "severity": "terminal", "ritual_level": 40 },
+        "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16632, 16632] }
+      }
+    ]
+  },
+  "frail_decrepitude_score": 4,
+  "fatal_decrepitude_score": 5
 }

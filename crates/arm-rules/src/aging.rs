@@ -1262,8 +1262,15 @@ pub struct CrisisAttendant {
     pub characteristic: Characteristic,
     /// The Ease Factor the attendant's roll must beat: 6.
     pub ease_factor: i32,
-    /// What a botched attendance costs the patient, as a positive magnitude that
-    /// the survival roll *subtracts*: 3.
+    /// What a botched attendance costs the patient, stored with its sign and
+    /// **added** to the survival roll: -3, because "if the doctor botches the
+    /// character must subtract 3 from the survival roll" (`:16634`).
+    ///
+    /// Signed-and-added, not a positive magnitude to subtract, because that is
+    /// the convention every other aging modifier already follows — the aging
+    /// roll's trait modifiers are added with their stored sign, and only the two
+    /// terms `:16567-16569` *names* as subtracted are subtracted. One convention
+    /// for one file; a second would invert something eventually.
     pub botch_penalty: i32,
     /// Provenance into the authoritative Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]

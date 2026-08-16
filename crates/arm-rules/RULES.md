@@ -3861,23 +3861,63 @@ Each is findable here so it is not rediscovered later as a bug.
   Explicitly discretionary, so the clamp is **not** extended to non-ritual modifier
   holders unilaterally; `aging_total` gates it on `longevity_ritual.is_some()`.
 - **The Crisis** (`:16619-16632`). `AgingOutcome.crisis` flags the two rows that call
-  for one and `resolve_year` stops there; nothing resolves it. The crisis table ships
-  **no data at all**, and that is the point: none of its numbers has a cross-check
-  the loader could apply the way `max_total < outcomes[0].min` checks the clamp, and
-  data with no trust gate is data nobody can trust. `crisis_total` (`:16621`),
-  `:16619`'s Decrepitude-first ordering, the doctor's Medicine roll (`:16634`),
-  `:16636`, `:16573`'s spent ritual and death at Decrepitude 5 (`:16617`) all wait
-  with it.
-  **Slice 6b7 is unpicking this.** Its first step adds the serde shape only —
-  `CrisisRules` / `CrisisRow` / `CrisisOutcome` / `CrisisSeverity` / `CrisisDie` /
-  `CrisisAttendant` in `aging.rs`, plus `AgingRules.crisis` and the two Decrepitude
-  thresholds of `:16617` — all optional, so an aging block with no crisis key loads
-  unchanged. No data, no gates, no resolution yet; the crisis section of this file
-  lands with them. Survival itself stays out for good: the engine will give the
-  total, the row, the Ease Factor and the Creo Corpus level, but never rolls the
-  Stamina die and never kills.
+  for one and `resolve_year` stops there; **nothing resolves it yet**. `crisis_total`
+  (`:16621`), `:16619`'s Decrepitude-first ordering, the doctor's Medicine roll
+  (`:16634`), `:16636`, `:16573`'s spent ritual and death at Decrepitude 5 (`:16617`)
+  all still wait.
+  **Slice 6b7 is unpicking this**, and its first two steps have landed: the serde
+  shape (`CrisisRules` / `CrisisRow` / `CrisisOutcome` / `CrisisSeverity` /
+  `CrisisDie` / `CrisisAttendant` in `aging.rs`, plus `AgingRules.crisis` and the two
+  Decrepitude thresholds of `:16617` — all optional, so an aging block with no crisis
+  key loads unchanged) and the **shipped data** below. No load gates and no
+  resolution yet; the full crisis section of this file lands with them. Survival
+  itself stays out for good: the engine will give the total, the row, the Ease Factor
+  and the Creo Corpus level, but never rolls the Stamina die and never kills.
 - **Covenant-derived Living Conditions.** The four covenant rows are chosen by hand
   today; a covenant will hand over ids in a later milestone.
+
+#### The Crisis Table — shipped values (M6/6b7, data only)
+
+> "| Crisis Roll | Result |" … "| 8 or less | Bedridden for a week |"
+> — Ars Magica - Definitive Edition (Core Rules).md:16624-16632
+
+**Placeholder — the full `### The Crisis` section (the CRISIS TOTAL of `:16621`, the
+look-up, the survival read-out, the refusals) lands with the steps that implement
+them.** This subsection records only where the *numbers* now in
+`rules/core/aging.json` come from, because JSON carries no comments.
+
+| Datum | Value | Source line |
+|---|---|---|
+| `frail_decrepitude_score` | 4 | `:16617` |
+| `fatal_decrepitude_score` | 5 | `:16617` |
+| `crisis.die` | 1–10 (Simple Die) | `:474` |
+| `crisis.attendant` | `ability.medicine`, `int`, EF 6, botch `-3` | `:16634` |
+| `crisis.bedridden_week` | ≤ 8, bedridden | `:16626` |
+| `crisis.bedridden_month` | 9–14, bedridden | `:16627` |
+| `crisis.minor_illness` | 15, EF 3, CrCo20 | `:16628` |
+| `crisis.serious_illness` | 16, EF 6, CrCo25 | `:16629` |
+| `crisis.major_illness` | 17, EF 9, CrCo30 | `:16630` |
+| `crisis.critical_illness` | 18, EF 12, CrCo35 | `:16631` |
+| `crisis.terminal_illness` | 19+, **no EF**, CrCo40 | `:16632` |
+
+Three things a later sweep must not undo:
+
+1. **`crisis.rows` ships in BAND order, not id order — a deliberate exception to the
+   project's canonical-serialization rule.** The rows must tile the integers
+   contiguously with the open-below row (`:16626`) first and the open-above row
+   (`:16632`) last, which is what the load gates check and what the look-up walks. An
+   id-alphabetical sort leaves every value intact and silently breaks all of it.
+   Everything else in the file — `living_conditions` above all — stays id-sorted.
+   `shipped_crisis_table_carries_the_16626_to_16632_rows` (`data_integrity.rs`)
+   asserts the band order so the exception has a test, not just a paragraph.
+2. **Terminal carries no `ease_factor` at all.** `:16632` offers no Stamina roll —
+   "CrCo40 required to survive" — so the field is absent rather than set to an
+   unbeatable number. `Option<i32>` says "no roll"; a 99 would say "roll and lose".
+3. **`botch_penalty` ships signed (`-3`)**, matching "the character must subtract 3
+   from the survival roll" (`:16634`) as the roll takes it: the survival read-out
+   **adds** it. (`CrisisAttendant::botch_penalty`'s doc comment describes it as a
+   positive magnitude of 3 — the shipped datum is the negative one, and the survival
+   read-out step must resolve which reading it wants and make doc and data agree.)
 
 #### Translation-table notes — `alterung-twilight.md`
 Two things about `rules/source/de/translation-tables/alterung-twilight.md` that a
@@ -3897,6 +3937,16 @@ future translator must not "fix" the core file from.
    engine models it as `apparent_age_increase_min` rather than as a table row; under
    the glossary's "3–9" a total of 15 would age the Characteristic but not the face.
    The core file is right and the glossary line is the outlier.
+3. **The Crisis Table's German severities are a false friend — do not "correct"
+   them.** German **_Schwere_ Erkrankung = _Major_ illness** (`:16630`) and **_Ernste_
+   Erkrankung = _Serious_ illness** (`:16629`), which is the opposite of the English
+   cognate pull ("schwer" reads as *severe/serious*). The German rulebook body at
+   `Ars Magica Definitive Edition Basisregeln.md:16628-16632` and the glossary at
+   `alterung-twilight.md:82-92` agree with each other, so both `rules/i18n/de` names
+   are right as shipped. `english_and_german_i18n_cover_all_crisis_rows`
+   (`data_integrity.rs`) pins the two of them as literals for exactly this reason.
+   The ladder in full: Leichte / Ernste / Schwere / Kritische / Tödliche =
+   Minor / Serious / Major / Critical / Terminal.
 
 ## Markdown character export (M5.6) — `export.rs`
 
