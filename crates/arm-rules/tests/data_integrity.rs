@@ -1,7 +1,8 @@
 use arm_rules::AbilityCategory;
 use arm_rules::Characteristic;
 use arm_rules::aging::{
-    AgingOutcome, AgingPointAward, AgingPointTarget, AgingTotal, CrisisOutcome, CrisisSeverity,
+    AgingOutcome, AgingPointAward, AgingPointTarget, AgingTotal, CrisisAllowance, CrisisModifier,
+    CrisisModifierSource, CrisisOutcome, CrisisSeverity, CrisisSurvival,
 };
 use arm_rules::effective_art_score;
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
@@ -2655,6 +2656,160 @@ fn mild_aging_carries_both_halves_of_4530() {
             (AgingEffect::CrisisSurvival, 3),
         ],
     );
+}
+
+/// The [`CrisisOutcome`] of one named row of the **shipped** Crisis Table — what
+/// a look-up would hand `crisis_survival`, fetched by id so the test does not
+/// have to invent a total to reach the row.
+fn shipped_crisis_outcome(id: &str) -> CrisisOutcome {
+    shipped_aging_rules()
+        .crisis
+        .as_ref()
+        .expect("the shipped crisis table")
+        .rows
+        .iter()
+        .find(|row| row.id.as_str() == id)
+        .unwrap_or_else(|| panic!("the shipped Crisis Table carries '{id}'"))
+        .outcome
+        .clone()
+}
+
+/// The crisis-survival read-out for a companion carrying the named shipped
+/// items, against the shipped Minor illness row (`:16628`).
+fn shipped_crisis_survival(items: &[&str]) -> CrisisSurvival {
+    let rs = load_full_ruleset();
+    let e = entity(
+        "companion",
+        items
+            .iter()
+            .map(|id| Selection::new(Id::new(*id)))
+            .collect(),
+    );
+    arm_rules::aging::crisis_survival(&e, &rs, &shipped_crisis_outcome("crisis.minor_illness"))
+        .expect("an illness is a roll to describe")
+}
+
+/// **"Virtues that affect aging rolls do not affect crisis survival rolls."**
+/// (Core:16636) — the single load-bearing sentence of the survival read-out,
+/// locked against the shipped catalogue rather than a fixture.
+///
+/// Three shipped items carry the two kinds the aging roll takes, and all three
+/// are witnessed moving the AGING TOTAL and then contributing **nothing** to the
+/// survival roll:
+///
+/// - Faerie Blood, `aging_roll -1` (`:3801`)
+/// - Strong Faerie Blood, `aging_roll -3` (`:5036`)
+/// - Poor Living Conditions, `living_conditions -1` (`:6620`)
+///
+/// Mild Aging is the proof case, because `:4530` grants both sides in one
+/// sentence: "The character's aging rolls benefit from a +1 bonus to the Living
+/// Conditions Modifier … Furthermore, he receives a +3 bonus to rolls to survive
+/// an aging crisis." The +1 stays out of the crisis; the +3 goes in, alone.
+///
+/// An implementation that simply summed every `aging_mod` amount would read -5
+/// on the first character and -1 on the second, so this test is not satisfiable
+/// by accident.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:3801, :4530, :5036,
+/// :6620, :16636.
+#[test]
+fn virtues_that_modify_aging_rolls_do_not_affect_crisis_survival_rolls() {
+    let aging_movers = [
+        "virtue.faerie_blood",
+        "virtue.strong_faerie_blood",
+        "flaw.poor_living_conditions",
+    ];
+
+    // They demonstrably move the AGING TOTAL: -1 and -3 on the trait modifier,
+    // -1 on the Living Conditions term.
+    let aging = shipped_aging_total(&aging_movers);
+    assert_eq!(aging.trait_modifier, -4);
+    assert_eq!(aging.living_conditions.total, -1);
+
+    // …and contribute nothing at all to the survival roll.
+    let survival = shipped_crisis_survival(&aging_movers);
+    assert_eq!(survival.modifiers, vec![]);
+    assert_eq!(survival.modifier_total, 0);
+
+    // Mild Aging's +3 is a grant to *this* roll by name, so it does arrive — and
+    // it arrives alone, itemized under the id the UI resolves to a label.
+    let mut with_mild = aging_movers.to_vec();
+    with_mild.push("virtue.mild_aging");
+    let survival = shipped_crisis_survival(&with_mild);
+    assert_eq!(
+        survival.modifiers,
+        vec![CrisisModifier {
+            source: CrisisModifierSource::Trait {
+                item: Id::new("virtue.mild_aging"),
+            },
+            amount: 3,
+        }],
+        "only :4530's crisis-survival half crosses the :16636 wall"
+    );
+    assert_eq!(survival.modifier_total, 3);
+
+    // The Living Conditions half is not lost, merely elsewhere: -1 from the Flaw
+    // and +1 from Mild Aging cancel on the roll that takes them.
+    assert_eq!(shipped_aging_total(&with_mild).living_conditions.total, 0);
+}
+
+/// "19+ — **Terminal illness**. CrCo40 required to survive." (Core:16632) — the
+/// one row that offers no Stamina roll at all. The read-out reports the Ritual
+/// that resolves it (`:16638`) and **no** Ease Factor, rather than an unbeatable
+/// one; and the Minor row beside it shows the ordinary shape, Ease Factor 3 and
+/// CrCo20 (`:16628`).
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16628, :16632, :16638.
+#[test]
+fn the_terminal_row_reports_a_ritual_level_and_no_ease_factor() {
+    let rs = load_full_ruleset();
+    let e = entity("companion", vec![]);
+
+    let terminal = arm_rules::aging::crisis_survival(
+        &e,
+        &rs,
+        &shipped_crisis_outcome("crisis.terminal_illness"),
+    )
+    .expect("Terminal illness is still a crisis to describe");
+    assert_eq!(
+        terminal.ease_factor, None,
+        "no Stamina roll is offered at 19+"
+    );
+    assert_eq!(terminal.ritual_level, 40);
+
+    let minor =
+        arm_rules::aging::crisis_survival(&e, &rs, &shipped_crisis_outcome("crisis.minor_illness"))
+            .expect("Minor illness is survivable");
+    assert_eq!(minor.ease_factor, Some(3));
+    assert_eq!(minor.ritual_level, 20);
+}
+
+/// "An Int + Medicine roll against an Ease Factor of 6 allows the character to
+/// add the attendant's Medicine score to the roll to survive the crisis. Only
+/// one doctor may usefully attend a patient, and if the doctor botches the
+/// character must subtract 3 from the survival roll." (Core:16634)
+///
+/// The doctor is reported as an **allowance** — what the rules permit — and not
+/// as a modifier, because the app has no attendant to score: the Medicine score
+/// belongs to another character entirely. Every value comes off the ruleset, and
+/// the botch penalty keeps the file's one sign convention (stored signed, added).
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16634.
+#[test]
+fn the_attending_doctor_is_reported_as_an_allowance() {
+    let survival = shipped_crisis_survival(&[]);
+    assert_eq!(
+        survival.allowances,
+        vec![CrisisAllowance::Attendant {
+            ability: Id::new("ability.medicine"),
+            characteristic: Characteristic::Int,
+            ease_factor: 6,
+            botch_penalty: -3,
+        }],
+        "one doctor, with the ruleset's own numbers"
+    );
+    // An allowance is never a term of the total the character brings.
+    assert_eq!(survival.modifier_total, 0);
 }
 
 /// Leprosy likewise states two mechanics at once:

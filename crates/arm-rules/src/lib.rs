@@ -7,10 +7,11 @@ pub mod aging;
 #[doc(inline)]
 pub use aging::{
     AgingError, AgingOutcome, AgingPointAward, AgingPointTarget, AgingRow, AgingRowEffect,
-    AgingRules, AgingTotal, AgingYear, AgingYearRequest, AgingYearResult, CrisisAttendant,
-    CrisisDie, CrisisOutcome, CrisisRow, CrisisRules, CrisisSeverity, CrisisTotal, LivingCondition,
-    LivingConditionsModifier, LongevityClamp, aging_schedule, aging_total, crisis_total,
-    living_conditions_modifier, resolve_outcome, resolve_year, revert_year,
+    AgingRules, AgingTotal, AgingYear, AgingYearRequest, AgingYearResult, CrisisAllowance,
+    CrisisAttendant, CrisisDie, CrisisModifier, CrisisModifierSource, CrisisOutcome, CrisisRow,
+    CrisisRules, CrisisSeverity, CrisisSurvival, CrisisTotal, LivingCondition,
+    LivingConditionsModifier, LongevityClamp, aging_schedule, aging_total, crisis_survival,
+    crisis_total, living_conditions_modifier, resolve_outcome, resolve_year, revert_year,
 };
 pub mod art;
 pub mod characteristics;
