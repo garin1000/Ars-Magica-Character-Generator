@@ -1561,7 +1561,10 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "aging_mod", "kind": "living_conditions", "amount": -2 }],
+    "effects": [
+      { "type": "aging_mod", "kind": "crisis_heavy_wound", "amount": 0 },
+      { "type": "aging_mod", "kind": "living_conditions", "amount": -2 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6338, 6341] }
   },
   {
@@ -5202,7 +5205,10 @@
     "category": "general",
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "effects": [{ "type": "aging_mod", "kind": "living_conditions", "amount": 1 }],
+    "effects": [
+      { "type": "aging_mod", "kind": "crisis_survival", "amount": 3 },
+      { "type": "aging_mod", "kind": "living_conditions", "amount": 1 }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4528, 4531] }
   },
   {

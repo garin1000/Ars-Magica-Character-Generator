@@ -129,7 +129,9 @@ export type AgingEffect =
   | 'no_aging'
   | 'no_apparent_aging'
   | 'decrepitude'
-  | 'living_conditions';
+  | 'living_conditions'
+  | 'crisis_survival'
+  | 'crisis_heavy_wound';
 export type AdvancementSource =
   | 'taught'
   | 'book'

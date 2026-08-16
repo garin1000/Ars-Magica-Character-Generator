@@ -424,7 +424,22 @@ pub fn aging_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Op
                 // `no_apparent_aging` whether the appearance follows the roll
                 // ([`resolve_outcome`]), and `decrepitude` modifies the accrued
                 // score rather than the roll.
-                AgingEffect::NoAging | AgingEffect::NoApparentAging | AgingEffect::Decrepitude => {}
+                //
+                // The two crisis kinds are here for a stronger reason: neither
+                // reaches the aging roll at all. "Virtues that affect aging rolls
+                // do not affect crisis survival rolls" (`:16636`) separates the two
+                // rolls, and this arm is its converse — a bonus granted
+                // specifically to the survival roll (Mild Aging's +3, `:4530`) is
+                // no more an aging-roll modifier than an aging-roll modifier is a
+                // survival one. `crisis_heavy_wound` is not a number anywhere.
+                //
+                // Source: Ars Magica - Definitive Edition (Core Rules).md:4530,
+                // :16636.
+                AgingEffect::NoAging
+                | AgingEffect::NoApparentAging
+                | AgingEffect::Decrepitude
+                | AgingEffect::CrisisSurvival
+                | AgingEffect::CrisisHeavyWound => {}
             }
         }
     }

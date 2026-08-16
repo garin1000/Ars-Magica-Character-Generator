@@ -1160,6 +1160,46 @@ pub enum AgingEffect {
     /// (Poor Living Conditions -1, Leprosy -2, Mild Aging +1). Consumed by
     /// `aging::living_conditions_modifier`.
     LivingConditions,
+    /// A modifier to the roll to **survive an aging crisis** — a different roll
+    /// from the aging roll, and deliberately sealed off from it: "Virtues that
+    /// affect aging rolls do not affect crisis survival rolls" (`:16636`). So a
+    /// modifier tagged here never reaches [`Self::AgingRoll`]'s total, and an
+    /// `aging_roll` modifier never reaches the survival roll.
+    ///
+    /// The general prohibition does not silence a *specific* grant: Mild Aging's
+    /// "he receives a +3 bonus to rolls to survive an aging crisis" (`:4530`) is
+    /// exactly such a grant, and is the first shipped item to carry this kind.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:4530, :16636.
+    CrisisSurvival,
+    /// **A Heavy Wound whenever a crisis lands**: "whenever she undergoes an Aging
+    /// Crisis (page 392) the leper sustains a Heavy Wound in addition to any other
+    /// result" (`:6340`). A marker — the `amount` is ignored and ships as 0,
+    /// because this is a consequence of the crisis, not a number added to any roll.
+    ///
+    /// Kept separate from [`Self::CrisisSurvival`] rather than folded into one
+    /// `crisis` kind: the two are different kinds of fact, and collapsing them
+    /// would make the stored `amount` mean a roll modifier for one carrier and
+    /// nothing at all for the next.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:6340.
+    CrisisHeavyWound,
+}
+
+impl AgingEffect {
+    /// Every kind, in declaration order — the source of the set for the
+    /// `derived-detail-<slug>` locale coverage and the frontend union mirror, so a
+    /// new kind fails those tests until it is named and mirrored.
+    pub const ALL: [AgingEffect; 8] = [
+        AgingEffect::AgingRoll,
+        AgingEffect::LongevityBonus,
+        AgingEffect::NoAging,
+        AgingEffect::NoApparentAging,
+        AgingEffect::Decrepitude,
+        AgingEffect::LivingConditions,
+        AgingEffect::CrisisSurvival,
+        AgingEffect::CrisisHeavyWound,
+    ];
 }
 
 impl fmt::Display for AgingEffect {
@@ -1171,6 +1211,8 @@ impl fmt::Display for AgingEffect {
             AgingEffect::NoApparentAging => "no_apparent_aging",
             AgingEffect::Decrepitude => "decrepitude",
             AgingEffect::LivingConditions => "living_conditions",
+            AgingEffect::CrisisSurvival => "crisis_survival",
+            AgingEffect::CrisisHeavyWound => "crisis_heavy_wound",
         })
     }
 }
