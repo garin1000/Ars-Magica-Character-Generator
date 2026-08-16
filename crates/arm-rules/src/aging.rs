@@ -785,6 +785,256 @@ fn decrepitude_points_as_of(entity: &Entity, age: u32) -> u32 {
     decrepitude_points_total(entity).saturating_sub(later)
 }
 
+/// What surviving one Crisis would take, and what the character brings to it.
+///
+/// A **read-out, never a resolution.** It reports the Ease Factor of the Stamina
+/// stress roll (`:16628-16631`), the level of the Momentary Creo Corpus Ritual
+/// that resolves the crisis instead (`:16638`), every survival modifier the
+/// character carries, and what the rules *allow* someone else to contribute
+/// (`:16634`). It then stops. See [`crisis_survival`] for why.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16628-16638.
+// `Serialize` only, like every other aging read-out: computed on demand from the
+// entity and the ruleset, never read back off a save.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct CrisisSurvival {
+    /// The Ease Factor of the Stamina stress roll the row calls for — 3 at Minor
+    /// up to 12 at Critical (`:16628-16631`).
+    ///
+    /// `None` for Terminal illness, which offers **no roll at all**: "CrCo40
+    /// required to survive." (`:16632`) An absent Ease Factor is not an
+    /// unbeatable one; there is simply no Stamina roll to make, so
+    /// [`Self::modifier_total`] has nothing to modify and only
+    /// [`Self::ritual_level`] can answer.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ease_factor: Option<i32>,
+    /// The level of the Momentary Creo Corpus Ritual that resolves the crisis:
+    /// "The level of spell required depends on the severity of the crisis, as
+    /// noted on the table." (`:16638`) — 20 at Minor up to 40 at Terminal.
+    pub ritual_level: u32,
+    /// Every survival modifier the character carries, **itemized**: the UI has to
+    /// be able to name each one, and a pre-summed number names none. Each carries
+    /// its source rather than a label, because a raw [`Id`] is never rendered —
+    /// the frontend resolves it through its display-name lookup.
+    pub modifiers: Vec<CrisisModifier>,
+    /// The sum of [`Self::modifiers`]. Both are reported because the sheet shows
+    /// the breakdown *and* the number, and a caller must never have to re-add the
+    /// terms to get the second.
+    pub modifier_total: i32,
+    /// What the rules **allow** someone else to bring, which is not the same
+    /// thing as a modifier the character has: the attending doctor of `:16634`.
+    /// The engine cannot score it, because the Medicine belongs to a character
+    /// this sheet does not hold.
+    pub allowances: Vec<CrisisAllowance>,
+}
+
+/// One modifier to the crisis survival roll, named by where it comes from.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:4530, :10844.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct CrisisModifier {
+    /// Where it comes from.
+    pub source: CrisisModifierSource,
+    /// How much, **with its stored sign** and ADDED — the one convention this
+    /// file keeps (see [`crisis_survival`]).
+    pub amount: i32,
+}
+
+/// Where a [`CrisisModifier`] comes from.
+///
+/// A tagged enum rather than a string, so a new source is a compile error at
+/// every reader until it is handled, and so the UI can render the two cases
+/// differently: a Virtue resolves through the item catalogue, the cord does not.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:4530, :10844.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum CrisisModifierSource {
+    /// A Virtue or Flaw the character carries that grants a bonus to the survival
+    /// roll by name — Mild Aging's "+3 bonus to rolls to survive an aging crisis"
+    /// (`:4530`).
+    ///
+    /// Carries the **id**, never a name: a raw [`Id`] is never a user-facing
+    /// label, so the frontend resolves it through its display-name lookup like
+    /// every other item reference.
+    Trait {
+        /// The item's id.
+        item: Id,
+    },
+    /// The familiar's Bronze cord: "You can apply your bronze cord score as a
+    /// bonus to … rolls to resist aging." (`:10844`) The roll that names is this
+    /// one — an aging roll is not a roll one passes or fails — and `:16636` keeps
+    /// the two families apart, so the cord reaches this total and never the
+    /// AGING TOTAL.
+    BronzeCord,
+}
+
+/// Something the rules **permit** at a crisis, as opposed to a number the engine
+/// adds.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16634.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum CrisisAllowance {
+    /// The attending doctor: "An Int + Medicine roll against an Ease Factor of 6
+    /// allows the character to add the attendant's Medicine score to the roll to
+    /// survive the crisis. Only one doctor may usefully attend a patient, and if
+    /// the doctor botches the character must subtract 3 from the survival roll."
+    /// (`:16634`)
+    ///
+    /// Reported rather than scored: the Medicine score belongs to *another*
+    /// character, whom this sheet does not hold, so the app can state what is
+    /// allowed and no more. "Only one doctor" is why this is at most one entry.
+    Attendant {
+        /// The Ability rolled, and added on a success — `ability.medicine`.
+        ability: Id,
+        /// The Characteristic added to the attendant's own roll — Int.
+        characteristic: Characteristic,
+        /// The Ease Factor the attendant's roll must beat: 6.
+        ease_factor: i32,
+        /// What a botch costs the patient, stored **signed and added** like every
+        /// other modifier in this file: -3.
+        botch_penalty: i32,
+    },
+}
+
+/// What surviving `outcome` would take, and what this character brings to it
+/// (`:16628-16638`).
+///
+/// # It computes; it never rolls
+///
+/// The engine reports the Ease Factor, the Creo Corpus level that resolves the
+/// crisis instead, the modifiers the character carries, and the doctor's
+/// allowance — and then stops. It **never throws the Stamina die, never says a
+/// character survived or died, and never kills one**. `arm-rules` has no `rand`
+/// dependency and never will: a generator that rolled for the player would
+/// invent rules-relevant state no one at the table agreed to, and death is the
+/// one outcome a character sheet must never author on its own.
+///
+/// # `None` means Bedridden
+///
+/// "Bedridden for a week" (`:16626`) and "Bedridden for a month." (`:16627`) are
+/// time, not a roll: no Stamina roll, no Ritual level, nothing for a modifier to
+/// modify. There is no survival read-out to give, so there is none — rather than
+/// an empty one that would read as "survivable on a 0".
+///
+/// # `:16636` is the whole point
+///
+/// > Virtues that affect aging rolls do not affect crisis survival rolls.
+///
+/// So [`AgingEffect::AgingRoll`] and [`AgingEffect::LivingConditions`] amounts
+/// never reach [`CrisisSurvival::modifier_total`]. Only two things do: an
+/// [`AgingEffect::CrisisSurvival`] amount, which is a grant to *this* roll by
+/// name, and the Bronze cord (`:10844`). Mild Aging is the case that proves the
+/// wall is load-bearing, because `:4530` grants both kinds in one sentence —
+/// "The character's aging rolls benefit from a +1 bonus to the Living Conditions
+/// Modifier … Furthermore, he receives a +3 bonus to rolls to survive an aging
+/// crisis." The +1 stays on the aging roll; only the +3 arrives here.
+///
+/// # Signs
+///
+/// Every modifier is ADDED with its stored sign — the one convention this file
+/// keeps, in which only the terms a rule *names* as subtracted are subtracted
+/// (`:16567-16569` names two, and this roll's rules name none). That includes the
+/// attendant's `botch_penalty`, which ships as -3.
+///
+/// # Itemized, and summed
+///
+/// [`CrisisSurvival::modifiers`] carries each term separately so the UI can name
+/// it, and [`CrisisSurvival::modifier_total`] carries the sum so no caller has to
+/// re-add them. A modifier is listed when the character actually carries its
+/// source, so a magus with no familiar shows no cord line at all rather than a
+/// "+0".
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:4530, :10844, :16626,
+/// :16627, :16628-16632, :16634, :16636, :16638.
+pub fn crisis_survival(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    outcome: &CrisisOutcome,
+) -> Option<CrisisSurvival> {
+    // Bedridden is time, not a roll (`:16626`, `:16627`) — nothing to describe.
+    let CrisisOutcome::Illness {
+        ease_factor,
+        ritual_level,
+        ..
+    } = outcome
+    else {
+        return None;
+    };
+
+    let mut modifiers = Vec::new();
+    for selection in selections_for_effects(entity, ruleset).iter() {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for effect in &item.effects {
+            let Effect::AgingMod { kind, amount } = effect else {
+                continue;
+            };
+            match kind {
+                // A grant to this roll by name — Mild Aging's +3 (`:4530`).
+                AgingEffect::CrisisSurvival => modifiers.push(CrisisModifier {
+                    source: CrisisModifierSource::Trait {
+                        item: selection.item_ref.clone(),
+                    },
+                    amount: i32::from(*amount),
+                }),
+                // "Virtues that affect aging rolls do not affect crisis survival
+                // rolls." (`:16636`) — the two kinds the AGING TOTAL takes are
+                // walled off from this roll, and this arm is the wall. The
+                // remaining kinds belong to neither roll: `longevity_bonus`
+                // modifies a ritual bonus, `no_aging` / `no_apparent_aging` are
+                // exemptions rather than numbers, `decrepitude` moves the accrued
+                // score, and `crisis_heavy_wound` is a consequence of a crisis
+                // (`:6340`) rather than a term of the roll to survive one.
+                AgingEffect::AgingRoll
+                | AgingEffect::LivingConditions
+                | AgingEffect::LongevityBonus
+                | AgingEffect::NoAging
+                | AgingEffect::NoApparentAging
+                | AgingEffect::Decrepitude
+                | AgingEffect::CrisisHeavyWound => {}
+            }
+        }
+    }
+
+    // "and to rolls to resist aging" (`:10844`), through the one entity-level
+    // accessor, so the +5 cord maximum (`:10836`) keeps its single home.
+    let bronze_cord = crate::derived::bronze_cord_bonus(entity);
+    if bronze_cord != 0 {
+        modifiers.push(CrisisModifier {
+            source: CrisisModifierSource::BronzeCord,
+            amount: bronze_cord,
+        });
+    }
+
+    let modifier_total = modifiers.iter().map(|modifier| modifier.amount).sum();
+
+    // "Only one doctor may usefully attend a patient" (`:16634`), so at most one
+    // — and none at all from a ruleset that ships no attendant.
+    let allowances = ruleset
+        .aging()
+        .and_then(|rules| rules.crisis.as_ref())
+        .and_then(|crisis| crisis.attendant.as_ref())
+        .map(|attendant| CrisisAllowance::Attendant {
+            ability: attendant.ability.clone(),
+            characteristic: attendant.characteristic,
+            ease_factor: attendant.ease_factor,
+            botch_penalty: attendant.botch_penalty,
+        })
+        .into_iter()
+        .collect();
+
+    Some(CrisisSurvival {
+        ease_factor: *ease_factor,
+        ritual_level: *ritual_level,
+        modifiers,
+        modifier_total,
+        allowances,
+    })
+}
+
 /// One year's aging roll as the player submits it.
 ///
 /// The engine never rolls: `die` is the stress die (no botch) thrown at the
@@ -1423,7 +1673,8 @@ mod tests {
     };
     use crate::ruleset::{Ruleset, RulesetSources};
     use crate::types::{
-        AgingLogEntry, Entity, EntityKind, LongevityRitual, LongevitySource, RulesetRef, Selection,
+        AgingLogEntry, Entity, EntityKind, Familiar, LongevityRitual, LongevitySource, RulesetRef,
+        Selection,
     };
     use pretty_assertions::assert_eq;
 
@@ -1823,6 +2074,12 @@ mod tests {
     /// 50 / 75) rather than [`scheduled_ruleset`]'s deliberately short three: the
     /// crisis total has to be witnessed while the Decrepitude score is still
     /// climbing, not while it sits at a curve that has run out.
+    ///
+    /// It ships **no attendant**, so the `:16634` doctor's absence is testable;
+    /// the shipped table carries one, and `data_integrity.rs` tests that half.
+    /// Its three items are the two sides of the `:16636` wall — an aging-ROLL
+    /// modifier, a LIVING CONDITIONS one, and Mild Aging, which carries one of
+    /// each kind plus the crisis-survival grant.
     fn crisis_ruleset() -> Ruleset {
         let aging = r#"{
           "start_age": 35,
@@ -1857,16 +2114,48 @@ mod tests {
             { "score": 5, "total_xp": 75 }
           ]
         }"#;
+        let items = r#"[
+          { "id": "flaw.driven", "kind": "flaw", "magnitude": "minor",
+            "category": "personality", "classification": "narrative" },
+          { "id": "virtue.faerie_blood", "kind": "virtue", "magnitude": "minor",
+            "category": "supernatural", "classification": "in_play_effect",
+            "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": -1 }] },
+          { "id": "flaw.poor_living_conditions", "kind": "flaw", "magnitude": "minor",
+            "category": "general", "classification": "in_play_effect",
+            "effects": [{ "type": "aging_mod", "kind": "living_conditions", "amount": -1 }] },
+          { "id": "virtue.mild_aging", "kind": "virtue", "magnitude": "minor",
+            "category": "general", "classification": "in_play_effect",
+            "effects": [{ "type": "aging_mod", "kind": "living_conditions", "amount": 1 },
+                        { "type": "aging_mod", "kind": "crisis_survival", "amount": 3 }] }
+        ]"#;
         Ruleset::from_sources(RulesetSources {
             id: "test",
             version: "1",
-            point_items: "[]",
+            point_items: items,
             type_profiles: "[]",
             abilities: Some(abilities),
             aging: Some(aging),
             ..RulesetSources::default()
         })
         .expect("the crisis fixture loads")
+    }
+
+    /// The [`CrisisOutcome`] of one named row of a fixture's Crisis Table — what
+    /// a look-up on the table would hand [`crisis_survival`], without a total to
+    /// get there.
+    fn crisis_outcome(ruleset: &Ruleset, id: &str) -> CrisisOutcome {
+        ruleset
+            .aging()
+            .expect("the fixture ships aging rules")
+            .crisis
+            .as_ref()
+            .expect("the fixture ships a Crisis Table")
+            .rows
+            .iter()
+            .find(|row| row.id.as_str() == id)
+            .unwrap_or_else(|| panic!("the fixture ships the row '{id}'"))
+            .outcome
+            .clone()
     }
 
     /// A character of `age`, born in `birth_year` when one is given.
@@ -3295,5 +3584,162 @@ mod tests {
         let no_crisis = scheduled_ruleset();
         assert!(no_crisis.aging().expect("aging rules").crisis.is_none());
         assert!(crisis_total(&entity, &no_crisis, 36, 3).is_none());
+    }
+
+    /// The miniature twin of `data_integrity.rs`'s shipped-catalogue lock on
+    /// `:16636` — "Virtues that affect aging rolls do not affect crisis survival
+    /// rolls."
+    ///
+    /// Both quantities the aging roll takes are witnessed moving that roll and
+    /// then failing to move this one: an [`AgingEffect::AgingRoll`] modifier and
+    /// an [`AgingEffect::LivingConditions`] one. Mild Aging is the proof case,
+    /// because `:4530` grants a Living Conditions +1 and a crisis-survival +3 in
+    /// one sentence and exactly one of them belongs here.
+    #[test]
+    fn an_aging_roll_modifier_never_reaches_the_crisis_survival_total() {
+        let ruleset = crisis_ruleset();
+        let illness = crisis_outcome(&ruleset, "crisis.minor_illness");
+
+        let mut walled = character(Some(40), None);
+        walled.selections = vec![
+            Selection::new(Id::new("virtue.faerie_blood")),
+            Selection::new(Id::new("flaw.poor_living_conditions")),
+        ];
+
+        // Both modifiers demonstrably move the AGING TOTAL …
+        let aging = aging_total(&walled, &ruleset, 40, 6).expect("the fixture ships aging rules");
+        assert_eq!(aging.trait_modifier, -1, "Faerie Blood's aging-roll -1");
+        assert_eq!(
+            aging.living_conditions.total, -1,
+            "Poor Living Conditions' -1"
+        );
+
+        // … and neither one reaches the survival roll.
+        let survival =
+            crisis_survival(&walled, &ruleset, &illness).expect("an illness is survivable");
+        assert_eq!(survival.modifiers, vec![]);
+        assert_eq!(survival.modifier_total, 0);
+        // The roll itself is the row's, reported and not resolved.
+        assert_eq!(survival.ease_factor, Some(3));
+        assert_eq!(survival.ritual_level, 20);
+
+        // Mild Aging's two halves part company here: the +3 arrives, the +1 does
+        // not, and the +1 is still doing its work on the other roll.
+        let mut mild = walled.clone();
+        mild.selections
+            .push(Selection::new(Id::new("virtue.mild_aging")));
+        let survival =
+            crisis_survival(&mild, &ruleset, &illness).expect("an illness is survivable");
+        assert_eq!(
+            survival.modifiers,
+            vec![CrisisModifier {
+                source: CrisisModifierSource::Trait {
+                    item: Id::new("virtue.mild_aging"),
+                },
+                amount: 3,
+            }],
+            "only the crisis-survival grant of :4530 is a survival modifier"
+        );
+        assert_eq!(survival.modifier_total, 3);
+        assert_eq!(
+            living_conditions_modifier(&mild, &ruleset).total,
+            0,
+            "the Flaw's -1 and Mild Aging's +1 cancel, on the aging roll where they belong"
+        );
+    }
+
+    /// The Bronze cord applies "to rolls to resist aging" (`:10844`), and the
+    /// roll that names is the crisis *survival* roll — an aging roll is not a
+    /// roll one passes or fails. So the cord goes in here and stays out of the
+    /// AGING TOTAL, and this test watches both directions at once.
+    #[test]
+    fn the_bronze_cord_reaches_crisis_survival_and_never_the_aging_total() {
+        let ruleset = crisis_ruleset();
+        let illness = crisis_outcome(&ruleset, "crisis.minor_illness");
+        let mut magus = character(Some(40), None);
+
+        let before = aging_total(&magus, &ruleset, 40, 6).expect("aging rules");
+        assert!(
+            crisis_survival(&magus, &ruleset, &illness)
+                .expect("survivable")
+                .modifiers
+                .is_empty(),
+            "a magus with no familiar carries no cord to name"
+        );
+
+        magus.familiar = Some(Familiar {
+            name: "Corax".to_string(),
+            cord_bronze: 2,
+            ..Default::default()
+        });
+
+        let survival =
+            crisis_survival(&magus, &ruleset, &illness).expect("an illness is survivable");
+        assert_eq!(
+            survival.modifiers,
+            vec![CrisisModifier {
+                source: CrisisModifierSource::BronzeCord,
+                amount: 2,
+            }]
+        );
+        assert_eq!(survival.modifier_total, 2);
+
+        let after = aging_total(&magus, &ruleset, 40, 6).expect("aging rules");
+        assert_eq!(
+            after, before,
+            "the cord moves no term of the AGING TOTAL (:16636)"
+        );
+    }
+
+    /// "8 or less — Bedridden for a week" and "9-14 — Bedridden for a month."
+    /// (`:16626`, `:16627`) cost nothing but time: no Stamina roll, no Ritual,
+    /// nothing for a modifier to modify. So there is no survival read-out to
+    /// give, and a character loaded with every modifier in the fixture still
+    /// gets none.
+    #[test]
+    fn a_bedridden_outcome_has_no_survival_roll() {
+        let ruleset = crisis_ruleset();
+        let mut entity = character(Some(40), None);
+        entity.selections = vec![Selection::new(Id::new("virtue.mild_aging"))];
+        entity.familiar = Some(Familiar {
+            name: "Corax".to_string(),
+            cord_bronze: 3,
+            ..Default::default()
+        });
+
+        for id in ["crisis.bedridden_week", "crisis.bedridden_month"] {
+            assert!(
+                crisis_survival(&entity, &ruleset, &crisis_outcome(&ruleset, id)).is_none(),
+                "'{id}' is time, not a roll"
+            );
+        }
+    }
+
+    /// The doctor of `:16634` is *what the rules permit*, not a number the engine
+    /// adds — and a ruleset that ships no attendant permits none. The fixture is
+    /// deliberately one such ruleset; the shipped table's attendant is asserted
+    /// against its own values in `data_integrity.rs`.
+    #[test]
+    fn a_ruleset_that_ships_no_attendant_allows_no_doctor() {
+        let ruleset = crisis_ruleset();
+        assert!(
+            ruleset
+                .aging()
+                .expect("aging rules")
+                .crisis
+                .as_ref()
+                .expect("a Crisis Table")
+                .attendant
+                .is_none(),
+            "the fixture is the no-attendant case"
+        );
+
+        let survival = crisis_survival(
+            &character(Some(40), None),
+            &ruleset,
+            &crisis_outcome(&ruleset, "crisis.minor_illness"),
+        )
+        .expect("an illness is survivable");
+        assert_eq!(survival.allowances, vec![]);
     }
 }

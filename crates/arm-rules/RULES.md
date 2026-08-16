@@ -3842,12 +3842,20 @@ Each is findable here so it is not rediscovered later as a bug.
   Ritual **or Might Score**" — and which mythic companions can hold
   (`entity.might`). The clause states the immunity in passing rather than granting
   it, so no rule is implemented from it; the schedule takes no notice of `might`.
-- **The Bronze Cord** (`:10844`, "and to rolls to resist aging") is deliberately
-  **not** folded into the aging total. An aging roll is not a roll one passes or
-  fails, the natural referent for "resist aging" is the *crisis survival* roll, and
-  `:16636` ("Virtues that affect aging rolls do not affect crisis survival rolls")
-  keeps the two roll families apart on purpose. A later slice revisits it against the
-  crisis rules.
+- **The Bronze Cord** (`:10844`, "and to rolls to resist aging") — *no longer a gap;
+  delivered in 6b7.* It is still deliberately **not** folded into the aging total:
+  an aging roll is not a roll one passes or fails, so the referent of "resist aging"
+  is the *crisis survival* roll, and `:16636` ("Virtues that affect aging rolls do
+  not affect crisis survival rolls") keeps the two roll families apart on purpose.
+  The slice that revisited it against the crisis rules is 6b7, and it landed on that
+  reading: the cord reaches `crisis_survival`'s `modifier_total` as a
+  `CrisisModifierSource::BronzeCord` term (`aging.rs`), through the shared
+  `derived::bronze_cord_bonus` accessor so the +5 maximum of `:10836` keeps its one
+  home, and it moves no term of `aging_total`.
+  `the_bronze_cord_reaches_crisis_survival_and_never_the_aging_total` (`aging.rs`)
+  asserts both directions in one test, and
+  `virtues_that_modify_aging_rolls_do_not_affect_crisis_survival_rolls`
+  (`data_integrity.rs`) locks the converse against the shipped catalogue.
 - **Age Quickly** (`:5661`) and **Baneful Circumstances** (`:5689`) both ship
   `aging_mod` amount **0**, deliberately. Their real mechanics are *schedule* rules —
   a doubled rate and effective age ("you make two aging rolls each year"), and a
