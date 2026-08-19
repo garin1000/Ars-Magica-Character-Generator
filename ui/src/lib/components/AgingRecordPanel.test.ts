@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import { CHARACTERISTICS, type EffectiveScores, type Entity } from '../types';
+import {
+  CHARACTERISTICS,
+  type EffectiveScores,
+  type Entity,
+  type LocalizedRuleset,
+} from '../types';
 
 // The panel reads the shared store singleton (the entity's apparent age, aging
 // points and aging log, the engine's Decrepitude score) and the Fluent bundle.
@@ -63,6 +68,38 @@ function has(body: string, testid: string): boolean {
   return new RegExp(`data-testid="${testid}"`).test(body);
 }
 
+/** The visible text of the element carrying a data-testid, tags stripped. */
+function text(body: string, testid: string): string {
+  const opening = new RegExp(`<([a-z]+)[^>]*data-testid="${testid}"[^>]*>`, 'i').exec(body);
+  if (!opening) throw new Error(`no element with data-testid="${testid}"`);
+  const inner = body.slice(opening.index + opening[0].length);
+  const closing = new RegExp(`</${opening[1]}>`, 'i').exec(inner);
+  return (closing ? inner.slice(0, closing.index) : inner)
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/[⁨⁩]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * A minimal localized ruleset, so a logged Crisis row resolves to its name in
+ * `rules/i18n/<lang>/aging.json` rather than printing its id.
+ */
+function installRuleset(): void {
+  store.ruleset = {
+    ruleset: {
+      id: 'test',
+      version: '1',
+      point_items: {},
+      type_profiles: {},
+      magnitude_points: { free: 0, minor: 1, major: 3 },
+      ability_category_order: ['general'],
+      art_type_order: ['technique', 'form'],
+    },
+    i18n: { 'crisis.minor_illness': { name: 'Minor illness' } },
+  } as unknown as LocalizedRuleset;
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   store.lang = 'en';
@@ -101,6 +138,49 @@ describe('AgingRecordPanel (slice 6b6b)', () => {
     expect(has(body, 'aging-log-year-0')).toBe(false);
     // Decrepitude is hidden at 0 — a score of zero is not a state to report.
     expect(has(body, 'decrepitude-readout')).toBe(false);
+  });
+
+  it('reads a resolved Crisis back off the log entry that recorded it', () => {
+    // The four crisis fields are the whole record of what the Crisis Table was
+    // asked and what it answered (`:16621`, `:16624-16632`). Without them on
+    // screen a resolved Crisis is invisible the moment the calculator is closed.
+    installRuleset();
+    store.entity.aging_log = [
+      {
+        year: 1220,
+        age: 40,
+        effect: '',
+        die: 9,
+        total: 13,
+        crisis: true,
+        crisis_die: 10,
+        crisis_total: 15,
+        crisis_row: 'crisis.minor_illness',
+        crisis_severity: 'minor',
+      },
+    ];
+    const body = html();
+    const crisis = text(body, 'aging-log-crisis-0');
+    // The row's text is rules data keyed by its id; the severity goes through
+    // Fluent. Neither is ever rendered as its slug.
+    expect(crisis).toContain('Minor illness');
+    expect(crisis).toContain('15');
+    expect(crisis).toContain('10');
+    expect(crisis).not.toContain('crisis.minor_illness');
+    expect(body).not.toContain('crisis_severity');
+  });
+
+  it('tells a Crisis owed and unrolled apart from a resolved one', () => {
+    // Three states, not two: no Crisis, one the table demanded that nobody has
+    // rolled, and one resolved. A `crisis` with no row is the middle state.
+    installRuleset();
+    store.entity.aging_log = [
+      { year: 1220, age: 40, effect: '', die: 9, total: 13, crisis: true },
+      { year: 1221, age: 41, effect: '', die: 4, total: 8 },
+    ];
+    const body = html();
+    expect(text(body, 'aging-log-crisis-0').length).toBeGreaterThan(0);
+    expect(has(body, 'aging-log-crisis-1')).toBe(false);
   });
 
   it('labels every control through Fluent, never as a raw slug', () => {

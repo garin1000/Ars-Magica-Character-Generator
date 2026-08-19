@@ -417,6 +417,13 @@ aging-log-year-label = Jahr
 aging-log-effect-placeholder = Beschreibe die Wirkung des Alterungswurfs
 aging-log-add = Alterungseintrag hinzufügen
 aging-log-empty = Noch keine Alterungseinträge.
+# Eine eingetragene Krise, gelesen aus dem Eintrag, der sie festgehalten hat. Drei
+# Zustände sind unterscheidbar: keine Krise, eine von der Tabelle geforderte, die
+# niemand gewürfelt hat, und eine auf der Krisentabelle aufgelöste
+# (Core Rules.md:16619-16632).
+aging-log-crisis-unrolled = Krise: offen, der Einfachwürfel wurde nicht geworfen.
+aging-log-crisis = Krise: { $row } — Krisen-Gesamtwert { $total } bei einem Einfachwürfel von { $die }.
+aging-log-crisis-severity = Krise: { $row } ({ $severity }) — Krisen-Gesamtwert { $total } bei einem Einfachwürfel von { $die }.
 # Die Übersicht der Alterungswürfe: für welche Jahre ein Wurf fällig ist, wie
 # viele bereits eingetragen sind, und die feststehende (würfelunabhängige) Hälfte
 # des Alterungswurfs. Alle Zahlen stammen aus der Engine — die Altersschwelle
