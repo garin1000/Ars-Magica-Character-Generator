@@ -166,11 +166,18 @@ pub fn apply_childhood_package(
 /// engine rather than keeping the number on the character. A refusal comes back as
 /// localizable [`arm_rules::ValidationIssue`]s (see [`AgingProjection`]), never as
 /// an error.
+///
+/// The Crisis rides on this same call rather than on one of its own: it exists only
+/// because this year's row demanded it, and its total counts the Decrepitude this
+/// year raises. `distribution` and `crisisDie` are therefore the very arguments
+/// [`aging_apply`] takes, so the preview shows exactly what Apply will write.
 #[tauri::command]
 pub fn aging_preview(
     entity: Entity,
     age: u32,
     die: i32,
+    distribution: std::collections::BTreeMap<Characteristic, u8>,
+    crisis_die: Option<i32>,
     state: State<'_, AppState>,
 ) -> Result<AgingProjection, AppError> {
     let guard = state.ruleset.read().expect("ruleset lock poisoned");
@@ -180,6 +187,8 @@ pub fn aging_preview(
         &ruleset.ruleset,
         age,
         die,
+        &distribution,
+        crisis_die,
     ))
 }
 

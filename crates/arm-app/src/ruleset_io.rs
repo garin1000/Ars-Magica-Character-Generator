@@ -494,6 +494,16 @@ pub enum AgingProjection {
     Previewed {
         total: AgingTotal,
         outcome: AgingOutcome,
+        /// The Crisis this year would send the character to, read whole and
+        /// **written nowhere** — present only once the row demands one, the
+        /// player has thrown the Simple Die, and the year is one
+        /// [`arm_rules::resolve_year`] would accept. See
+        /// [`aging_preview_loaded`] for why the last condition is not optional.
+        ///
+        /// Boxed to keep the two variants comparable in size;
+        /// `Box<CrisisPreview>` serializes exactly as `CrisisPreview` does.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        crisis: Option<Box<CrisisPreview>>,
     },
     Rejected {
         issues: Vec<ValidationIssue>,
@@ -551,23 +561,84 @@ pub enum AgingReversion {
 /// could stand in for this — which is why the calculator asks the engine instead of
 /// keeping the number on the character.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16615.
+/// # The Crisis rides here, and there is no second command
+///
+/// A Crisis is not a second question about a second thing: it exists only because
+/// this year's row demanded one (`:16602`, `:16611`), and its total counts the
+/// Decrepitude this very year raised. A command of its own would let the frontend
+/// pair a CRISIS TOTAL with an aging outcome that no longer calls for one, which is
+/// exactly the pairing `crisis_preview` was composed to take out of a caller's
+/// hands.
+///
+/// # Why it resolves the year rather than reading the character
+///
+/// > **Crisis:** Increase the character's Decrepitude first, and then roll on the
+/// > Crisis Table. (`:16619`)
+///
+/// The Aging Points the row awards ARE that increase, so a Crisis read off the
+/// character *standing in front of you* is one Decrepitude short of the one the
+/// year writes — the player would be shown 14 and then watch the log record 15. So
+/// this builds the very [`AgingYearRequest`] the Apply would send, resolves it in
+/// memory, and keeps only the reading: same request, same answer, and the entity
+/// it made is dropped on the spot. Nothing is written, and nothing can drift.
+///
+/// A year the engine would refuse — an unplaced distribution, a year already
+/// recorded — yields no crisis reading, while the AGING TOTAL and the outcome still
+/// stand. The player has to be told a Crisis follows and what to place *before* he
+/// can place it, which is the order `:16619` itself asks for.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16615, :16619.
 pub fn aging_preview_loaded(
     entity: &Entity,
     ruleset: &Ruleset,
     age: u32,
     die: i32,
+    distribution: &BTreeMap<Characteristic, u8>,
+    crisis_die: Option<i32>,
 ) -> AgingProjection {
     let reading = aging_total(entity, ruleset, age, die)
         .and_then(|total| resolve_outcome(entity, ruleset, total.total).map(|out| (total, out)));
     match reading {
-        Some((total, outcome)) => AgingProjection::Previewed { total, outcome },
+        Some((total, outcome)) => AgingProjection::Previewed {
+            total,
+            outcome,
+            crisis: previewed_crisis(entity, ruleset, age, die, distribution, crisis_die),
+        },
         // The one thing that can be missing is the aging block itself; every other
         // input is the character's own.
         None => AgingProjection::Rejected {
             issues: vec![aging_error_issue(&AgingError::NoAgingRules)],
         },
     }
+}
+
+/// The Crisis one previewed year would produce, read off the character the year
+/// would make rather than the one it started from (`:16619`).
+///
+/// The whole of it is [`resolve_year`] run for its reading alone: the entity it
+/// returns is dropped, so this stays as read-only as the preview it serves while
+/// remaining, by construction, the same answer the Apply will give. A refusal is
+/// simply no reading — the calculator's own findings already say why.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16619.
+fn previewed_crisis(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    age: u32,
+    die: i32,
+    distribution: &BTreeMap<Characteristic, u8>,
+    crisis_die: Option<i32>,
+) -> Option<Box<CrisisPreview>> {
+    let request = AgingYearRequest {
+        age,
+        die,
+        distribution: distribution.clone(),
+        crisis_die: Some(crisis_die?),
+    };
+    resolve_year(entity, ruleset, &request)
+        .ok()?
+        .crisis
+        .map(Box::new)
 }
 
 /// Applies one year's aging roll, returning the character it makes.
