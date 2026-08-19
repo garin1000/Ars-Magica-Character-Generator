@@ -1065,6 +1065,78 @@ pub fn crisis_survival(
     })
 }
 
+/// One Crisis, read whole: the total, the row it lands on, what the row costs,
+/// and what surviving it would take.
+///
+/// The four values a caller needs are composed here rather than left to be
+/// fetched one at a time, for the reason `AgingProjection` composes the AGING
+/// TOTAL with its row: a UI that assembled them itself would be free to pair a
+/// total with the wrong row, and there is exactly one right pairing.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16621-16638.
+// `Serialize` only, like every other aging read-out: computed on demand from the
+// entity, the ruleset, the year and the die, and never read back off a save.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct CrisisPreview {
+    /// The CRISIS TOTAL and every term that made it (`:16621`).
+    pub total: CrisisTotal,
+    /// The **id** of the row the total landed on — `crisis.minor_illness` and
+    /// friends. An id, never a name: the row's display text lives in
+    /// `rules/i18n/<lang>/aging.json` keyed by this, so the frontend resolves it
+    /// there like every other rules string.
+    pub row: Id,
+    /// What that row costs the character (`:16624-16632`).
+    pub outcome: CrisisOutcome,
+    /// What surviving it would take (`:16628-16638`), when the row calls for a
+    /// roll at all. Absent for [`CrisisOutcome::Bedridden`], which is time rather
+    /// than a roll (`:16626`, `:16627`) — see [`crisis_survival`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub survival: Option<CrisisSurvival>,
+}
+
+/// Everything the engine can say about one Crisis, from the character, the year
+/// it fell in and the Simple Die the player typed.
+///
+/// # Composed, not decided
+///
+/// [`crisis_total`], [`resolve_crisis_row`] and [`crisis_survival`] each stay the
+/// single home of their own rule; this only pairs them, which is the one thing a
+/// caller must not be left to do. The pairing is what makes the three consistent:
+/// the row is looked up against the total this call computed, and the survival
+/// read-out against the outcome that row carries.
+///
+/// # It writes nothing, and it never rolls
+///
+/// The Crisis is a **reading**. No Aging Point moves, no log entry appears, no
+/// Decrepitude is raised — `resolve_year` remains the aging subsystem's single
+/// writer, and `:16619`'s "increase the character's Decrepitude first" is
+/// honoured by reading the score as of the crisis year (see [`crisis_total`])
+/// rather than by writing anything here. The Stamina die is never thrown and no
+/// character is ever pronounced dead: `arm-rules` has no `rand` dependency, and
+/// death is the one outcome a character sheet must not author on its own.
+///
+/// `None` when the ruleset ships no aging rules, or aging rules with no Crisis
+/// Table.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16619-16638.
+pub fn crisis_preview(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    age: u32,
+    die: i32,
+) -> Option<CrisisPreview> {
+    let total = crisis_total(entity, ruleset, age, die)?;
+    let row = resolve_crisis_row(ruleset, total.total)?;
+    let survival = crisis_survival(entity, ruleset, &row.outcome);
+
+    Some(CrisisPreview {
+        total,
+        row: row.id.clone(),
+        outcome: row.outcome.clone(),
+        survival,
+    })
+}
+
 /// One year's aging roll as the player submits it.
 ///
 /// The engine never rolls: `die` is the stress die (no botch) thrown at the
@@ -3828,5 +3900,148 @@ mod tests {
         let no_crisis = scheduled_ruleset();
         assert!(no_crisis.aging().expect("aging rules").crisis.is_none());
         assert!(resolve_crisis_row(&no_crisis, 15).is_none());
+    }
+
+    /// One Crisis end to end, as a caller receives it: the CRISIS TOTAL broken
+    /// into its three terms (`:16621`), the row that total lands on
+    /// (`:16624-16632`), what the row costs, and what surviving it would take
+    /// (`:16628-16638`).
+    ///
+    /// And **nothing is written**. The Crisis is a reading, not a resolution:
+    /// `aging_points` stays where `resolve_year` left it, no log entry appears,
+    /// and the character comes out of the preview byte-identical to the one that
+    /// went in.
+    #[test]
+    fn the_crisis_preview_composes_the_total_the_row_and_the_survival_roll() {
+        let ruleset = crisis_ruleset();
+        let mut entity = character(Some(40), None);
+        entity.aging_points.insert(Characteristic::Sta, 15);
+        assert_eq!(decrepitude_score(&entity, &ruleset), 2);
+        let before = saved(&entity);
+
+        // `9 + ⌈36/10⌉ + 2 = 15` — the minor illness of `:16628`.
+        let preview = crisis_preview(&entity, &ruleset, 36, 9).expect("the fixture ships a table");
+        assert_eq!(
+            preview.total,
+            CrisisTotal {
+                age: 36,
+                die: 9,
+                age_modifier: 4,
+                decrepitude_score: 2,
+                total: 15,
+            }
+        );
+        assert_eq!(preview.row, Id::new("crisis.minor_illness"));
+        assert_eq!(
+            preview.outcome,
+            CrisisOutcome::Illness {
+                severity: CrisisSeverity::Minor,
+                ease_factor: Some(3),
+                ritual_level: 20,
+            }
+        );
+        let survival = preview.survival.expect("an illness is survivable");
+        assert_eq!(survival.ease_factor, Some(3));
+        assert_eq!(survival.ritual_level, 20);
+        assert_eq!(survival.modifier_total, 0);
+
+        // The terminal row offers no Stamina roll at all (`:16632`) — an absent
+        // Ease Factor, and only the Ritual level can answer.
+        let terminal = crisis_preview(&entity, &ruleset, 36, 10).expect("a table");
+        assert_eq!(terminal.total.total, 16);
+        assert_eq!(terminal.row, Id::new("crisis.terminal_illness"));
+        let survival = terminal.survival.expect("an illness is survivable");
+        assert_eq!(survival.ease_factor, None);
+        assert_eq!(survival.ritual_level, 40);
+
+        assert_eq!(saved(&entity), before, "a preview writes nothing");
+    }
+
+    /// "8 or less — Bedridden for a week" and "9-14 — Bedridden for a month."
+    /// (`:16626`, `:16627`) are time, not a roll. So the composed read-out names
+    /// the row and carries **no** survival read-out — an empty one would read as
+    /// "survivable on a 0".
+    #[test]
+    fn a_bedridden_crisis_preview_carries_no_survival_read_out() {
+        let ruleset = crisis_ruleset();
+        let entity = character(Some(40), None);
+
+        // No Decrepitude yet, so `die + ⌈36/10⌉` is the whole total.
+        let week = crisis_preview(&entity, &ruleset, 36, 4).expect("a table");
+        assert_eq!(week.total.total, 8);
+        assert_eq!(week.row, Id::new("crisis.bedridden_week"));
+        assert_eq!(week.outcome, CrisisOutcome::Bedridden);
+        assert!(week.survival.is_none(), "a week in bed is not a roll");
+
+        let month = crisis_preview(&entity, &ruleset, 36, 5).expect("a table");
+        assert_eq!(month.total.total, 9);
+        assert_eq!(month.row, Id::new("crisis.bedridden_month"));
+        assert!(month.survival.is_none(), "a month in bed is not a roll");
+    }
+
+    /// The composed read-out invents no table either: with no aging rules, or
+    /// aging rules carrying no Crisis Table, there is no Crisis to read.
+    #[test]
+    fn a_ruleset_without_a_crisis_table_has_no_crisis_preview() {
+        let entity = character(Some(40), None);
+
+        let without = Ruleset::from_json("test", "1", "[]", "[]").expect("an empty ruleset loads");
+        assert!(crisis_preview(&entity, &without, 36, 9).is_none());
+
+        let no_crisis = scheduled_ruleset();
+        assert!(crisis_preview(&entity, &no_crisis, 36, 9).is_none());
+    }
+
+    /// `:16636` — "Virtues that affect aging rolls do not affect crisis survival
+    /// rolls" — held through the **composed** path, which is a second way for an
+    /// aging-roll modifier to leak: the read-out that carries the total and the
+    /// survival roll in one value could sum them into either.
+    ///
+    /// Neither half moves. The three terms of `:16621` are all the total has, and
+    /// only the survival grant `:4530` makes by name reaches the survival roll.
+    #[test]
+    fn a_crisis_preview_leaks_no_aging_roll_modifier_into_either_half() {
+        let ruleset = crisis_ruleset();
+        let mut loaded = character(Some(40), None);
+        loaded.selections = vec![
+            Selection::new(Id::new("virtue.faerie_blood")),
+            Selection::new(Id::new("flaw.poor_living_conditions")),
+            Selection::new(Id::new("virtue.mild_aging")),
+        ];
+
+        // Every one of those modifiers demonstrably moves the AGING TOTAL.
+        let aging = aging_total(&loaded, &ruleset, 36, 9).expect("aging rules");
+        assert_eq!(aging.trait_modifier, -1, "Faerie Blood's aging-roll -1");
+        assert_eq!(aging.living_conditions.total, 0, "the -1 and the +1 cancel");
+
+        let preview = crisis_preview(&loaded, &ruleset, 36, 9).expect("a table");
+        assert_eq!(
+            preview.total,
+            CrisisTotal {
+                age: 36,
+                die: 9,
+                age_modifier: 4,
+                decrepitude_score: 0,
+                total: 13,
+            },
+            "the CRISIS TOTAL is the three terms of :16621 and no fourth"
+        );
+        assert_eq!(preview.row, Id::new("crisis.bedridden_month"));
+
+        // On a row that does call for a survival roll, only the +3 of :4530 that
+        // names this roll arrives.
+        let illness = crisis_preview(&loaded, &ruleset, 36, 11).expect("a table");
+        assert_eq!(illness.row, Id::new("crisis.minor_illness"));
+        let survival = illness.survival.expect("an illness is survivable");
+        assert_eq!(
+            survival.modifiers,
+            vec![CrisisModifier {
+                source: CrisisModifierSource::Trait {
+                    item: Id::new("virtue.mild_aging"),
+                },
+                amount: 3,
+            }]
+        );
+        assert_eq!(survival.modifier_total, 3);
     }
 }
