@@ -419,6 +419,12 @@ aging-log-year-label = Year
 aging-log-effect-placeholder = Describe the aging roll's effect
 aging-log-add = Add aging entry
 aging-log-empty = No aging entries yet.
+# A logged Crisis, read back off the entry that recorded it. Three states are
+# tellable apart: no Crisis at all, one the table demanded that nobody has rolled,
+# and one resolved against the Crisis Table (Core Rules.md:16619-16632).
+aging-log-crisis-unrolled = Crisis: owed, and the simple die has not been rolled.
+aging-log-crisis = Crisis: { $row } — crisis total { $total } on a simple die of { $die }.
+aging-log-crisis-severity = Crisis: { $row } ({ $severity }) — crisis total { $total } on a simple die of { $die }.
 # The aging schedule read-out: which years a character owes a roll for, how many
 # are already recorded, and the standing (die-independent) half of the AGING
 # TOTAL. Every figure comes from the engine's own readout — the threshold is read

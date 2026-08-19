@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { CHARACTERISTICS, type Characteristic } from '../types';
+  import { displayName, paramHint } from '../derive';
+  import { CHARACTERISTICS, type AgingLogEntry, type Characteristic } from '../types';
 
   const apparentAge = $derived(store.entity.apparent_age ?? null);
   // Decrepitude is derived by the engine from the sum of aging points; hidden at 0.
@@ -26,6 +27,38 @@
   function optionalNumValue(event: Event): number | null {
     const raw = (event.currentTarget as HTMLInputElement).value;
     return raw === '' ? null : Number(raw);
+  }
+
+  /**
+   * What the Crisis Table was asked and what it answered, in words — or that it
+   * has not been asked yet.
+   *
+   * "**Crisis:** Increase the character's Decrepitude first, and then roll on the
+   * Crisis Table." Source: Ars Magica - Definitive Edition (Core Rules).md:16619
+   *
+   * A `crisis` with no `crisis_row` is a Crisis the aging row demanded and nobody
+   * has rolled — a real state, not an incomplete record, because the aging roll
+   * happened whether or not the second die was thrown. The row travels as an id,
+   * so its text comes from `rules/i18n/<lang>/aging.json`; the severity is an
+   * engine enum and goes through `crisis-severity-<id>`. Neither is ever printed
+   * as its slug.
+   */
+  function crisisText(entry: AgingLogEntry): string {
+    if (entry.crisis_row == null) return store.t('aging-log-crisis-unrolled');
+    const localized = store.ruleset;
+    const args = {
+      row: localized
+        ? displayName(localized, entry.crisis_row, undefined, paramHint(store.t))
+        : entry.crisis_row,
+      total: String(entry.crisis_total ?? ''),
+      die: String(entry.crisis_die ?? ''),
+    };
+    return entry.crisis_severity == null
+      ? store.t('aging-log-crisis', args)
+      : store.t('aging-log-crisis-severity', {
+          ...args,
+          severity: store.t(`crisis-severity-${entry.crisis_severity}`),
+        });
   }
 </script>
 
@@ -125,6 +158,14 @@
           >
             ×
           </button>
+          {#if entry.crisis}
+            <!-- Read-only: the four crisis fields are the engine's record of a
+                 resolved roll, not free text to edit. The year is taken back
+                 whole (`revert_year`) rather than corrected field by field. -->
+            <span class="aging-log-crisis" data-testid="aging-log-crisis-{i}">
+              {crisisText(entry)}
+            </span>
+          {/if}
         </li>
       {:else}
         <li class="empty" data-testid="aging-log-empty">{store.t('aging-log-empty')}</li>
@@ -135,3 +176,13 @@
     </button>
   </div>
 </div>
+
+<style>
+  /* The engine's record of a resolved Crisis, sitting under its year's row rather
+     than beside the editable fields — it is a read-out, not a control. */
+  .aging-log-crisis {
+    flex-basis: 100%;
+    color: var(--muted);
+    font-size: 0.9em;
+  }
+</style>
