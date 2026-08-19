@@ -4011,6 +4011,29 @@ analogy with `aging_total` for the roll that follows. The Simple Die's 1–10 ra
 (`:474`) is an input affordance a UI applies; the engine totals whatever die it is
 given rather than refusing one.
 
+##### Which row a CRISIS TOTAL lands on — `resolve_crisis_row`
+
+> "| Crisis Roll | Result |" … "| 8 or less | Bedridden for a week |" … "| 19+ |
+> **Terminal illness**. CrCo40 required to survive. |"
+> — Ars Magica - Definitive Edition (Core Rules).md:16624-16632
+
+`resolve_crisis_row` (`aging.rs`) is the Aging Roll table's `resolve_outcome` twin,
+and deliberately the simpler of the two. An aging row means nothing until it is read
+against the character — "sufficient Aging Points … to reach the next level in
+Decrepitude" (`:16602`) is a count the table does not print — whereas a crisis row
+already says everything it does. So the look-up takes no `Entity` and returns the
+`CrisisRow` itself: the caller needs the **id** as much as the `CrisisOutcome`,
+because the row's display text ("Bedridden for a week") lives in
+`rules/i18n/<lang>/aging.json` keyed by that id and never in the engine.
+
+Band membership is `CrisisRow::covers`, inclusive at both ends, with an absent bound
+meaning an open end — below for `:16626`, above for `:16632`. Because
+`validate_crisis_rules` refuses at load any table that leaves a gap or an overlap
+between those two open ends, a `None` from a ruleset that loaded means the ruleset
+ships **no Crisis Table**, never that the total fell off the table.
+`a_crisis_total_lands_on_the_row_whose_band_covers_it` (`aging.rs`) walks both open
+ends and every band between them.
+
 #### Translation-table notes — `alterung-twilight.md`
 Two things about `rules/source/de/translation-tables/alterung-twilight.md` that a
 future translator must not "fix" the core file from.

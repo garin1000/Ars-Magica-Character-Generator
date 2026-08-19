@@ -785,6 +785,36 @@ fn decrepitude_points_as_of(entity: &Entity, age: u32) -> u32 {
     decrepitude_points_total(entity).saturating_sub(later)
 }
 
+/// Which row of the Crisis Table a CRISIS TOTAL lands on (`:16624-16632`).
+///
+/// The Aging Roll table's [`resolve_outcome`] twin, and deliberately the simpler
+/// of the two: an aging row has to be read against the character before it means
+/// anything ("sufficient Aging Points … to reach the next level in Decrepitude",
+/// `:16602`), while a crisis row already says everything it does. So this takes
+/// no [`Entity`] and hands back the row itself — the caller needs its [`Id`] as
+/// much as its [`CrisisOutcome`], because the row's display text ("Bedridden for
+/// a week") lives in `rules/i18n/<lang>/aging.json` keyed by that id and never in
+/// the engine.
+///
+/// # Every total lands somewhere
+///
+/// The table's first row is open below ("8 or less", `:16626`) and its last open
+/// above ("19+", `:16632`), and `Ruleset::validate_crisis_rules` refuses at load
+/// any table whose rows leave a gap or overlap between those ends. So for a
+/// ruleset that loaded, a `None` here means the ruleset ships **no Crisis Table**
+/// — not that the total fell off the table.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16624-16632.
+pub fn resolve_crisis_row(ruleset: &Ruleset, total: i32) -> Option<&CrisisRow> {
+    ruleset
+        .aging()?
+        .crisis
+        .as_ref()?
+        .rows
+        .iter()
+        .find(|row| row.covers(total))
+}
+
 /// What surviving one Crisis would take, and what the character brings to it.
 ///
 /// A **read-out, never a resolution.** It reports the Ease Factor of the Stamina
@@ -1543,11 +1573,6 @@ impl CrisisRow {
     /// for [`Self::max`] (`:16632`).
     ///
     /// Source: Ars Magica - Definitive Edition (Core Rules).md:16624-16632.
-    // The crisis look-up that calls this arrives with the rest of the crisis
-    // engine; until then only the tests exercise it. `expect` rather than
-    // `allow` so the attribute becomes a hard error the moment it is no longer
-    // true, and `not(test)` because the tests do call it.
-    #[cfg_attr(not(test), expect(dead_code, reason = "called by the crisis look-up"))]
     fn covers(&self, total: i32) -> bool {
         self.min.is_none_or(|min| min <= total) && self.max.is_none_or(|max| total <= max)
     }
@@ -3741,5 +3766,67 @@ mod tests {
         )
         .expect("an illness is survivable");
         assert_eq!(survival.allowances, vec![]);
+    }
+
+    /// The Crisis Table is indexed by the CRISIS TOTAL (`:16621`) and answers for
+    /// **every** integer: its first row is open below ("8 or less", `:16626`) and
+    /// its last open above ("19+", `:16632`), so a total no die could reach lands
+    /// on a row exactly as a middling one does.
+    ///
+    /// The row comes back whole rather than as a copied outcome, because the id is
+    /// what the UI keys the row's display text off — the text lives in
+    /// `rules/i18n/<lang>/aging.json` and never in the engine.
+    #[test]
+    fn a_crisis_total_lands_on_the_row_whose_band_covers_it() {
+        let ruleset = crisis_ruleset();
+
+        let landings: Vec<(i32, &str)> = [-40, 0, 8, 9, 14, 15, 16, 400]
+            .into_iter()
+            .map(|total| {
+                let row = resolve_crisis_row(&ruleset, total)
+                    .unwrap_or_else(|| panic!("the fixture's table covers {total}"));
+                (total, row.id.as_str())
+            })
+            .collect();
+        assert_eq!(
+            landings,
+            vec![
+                (-40, "crisis.bedridden_week"),
+                (0, "crisis.bedridden_week"),
+                (8, "crisis.bedridden_week"),
+                (9, "crisis.bedridden_month"),
+                (14, "crisis.bedridden_month"),
+                (15, "crisis.minor_illness"),
+                (16, "crisis.terminal_illness"),
+                (400, "crisis.terminal_illness"),
+            ]
+        );
+
+        // The row carries its outcome, so the look-up is all a caller needs to
+        // reach the survival read-out.
+        assert_eq!(
+            resolve_crisis_row(&ruleset, 15)
+                .expect("15 lands on the minor illness")
+                .outcome,
+            CrisisOutcome::Illness {
+                severity: CrisisSeverity::Minor,
+                ease_factor: Some(3),
+                ritual_level: 20,
+            }
+        );
+    }
+
+    /// A ruleset with no aging rules, and one whose aging block ships no Crisis
+    /// Table, both resolve no row at all — the engine never invents a table the
+    /// ruleset does not carry, exactly as [`crisis_total`] never invents a total.
+    #[test]
+    fn a_ruleset_without_a_crisis_table_resolves_no_crisis_row() {
+        let without = Ruleset::from_json("test", "1", "[]", "[]").expect("an empty ruleset loads");
+        assert!(without.aging().is_none());
+        assert!(resolve_crisis_row(&without, 15).is_none());
+
+        let no_crisis = scheduled_ruleset();
+        assert!(no_crisis.aging().expect("aging rules").crisis.is_none());
+        assert!(resolve_crisis_row(&no_crisis, 15).is_none());
     }
 }
