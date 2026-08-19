@@ -354,6 +354,32 @@ export type AgingRowEffect =
   | { type: 'named_characteristics'; points: number; characteristics: Characteristic[] }
   | { type: 'next_decrepitude_level_and_crisis' };
 
+// One row of the Crisis Table: a band of CRISIS TOTALs, inclusive on both ends,
+// and what landing in it costs. `min` is absent for the open-ended bottom row and
+// `max` for the open-ended top one, so every total lands somewhere. Its display
+// name lives in `rules/i18n/<lang>/aging.json`, keyed by this id.
+export interface CrisisRow {
+  id: string;
+  min?: number | null;
+  max?: number | null;
+  outcome: CrisisOutcome;
+}
+
+// The Crisis Table as the ruleset ships it, plus the die it is rolled on
+// ("a zero counts as ten") and the doctor the rules permit to attend. All three
+// are data, so a UI can offer the legal die and name the attendant's Ability
+// without hardcoding either.
+export interface CrisisRules {
+  rows: CrisisRow[];
+  die?: { min: number; max: number } | null;
+  attendant?: {
+    ability: string;
+    characteristic: Characteristic;
+    ease_factor: number;
+    botch_penalty: number;
+  } | null;
+}
+
 // The aging tables as the ruleset ships them. Absent for a ruleset with no aging
 // file, which stands the whole subsystem down.
 export interface AgingRules {
@@ -363,6 +389,9 @@ export interface AgingRules {
   longevity_clamp?: { max_total: number; until_age: number } | null;
   living_conditions: LivingCondition[];
   outcomes: AgingRow[];
+  // Absent for an aging block that ships no Crisis Table, which stands the Crisis
+  // down exactly as an absent aging block stands the whole subsystem down.
+  crisis?: CrisisRules | null;
 }
 
 // One year of a character's aging schedule: the age the roll is owed at, the
@@ -1036,6 +1065,18 @@ export interface AgingLogEntry {
 // How bad a crisis illness is, ascending. Mirrors the Rust `CrisisSeverity`;
 // rendered through Fluent, never as a raw slug.
 export type CrisisSeverity = 'minor' | 'serious' | 'major' | 'critical' | 'terminal';
+
+// What one row of the Crisis Table does to the character. Bedridden is time
+// rather than a roll, so it carries no numbers at all; `ease_factor` is absent
+// for the Terminal row, which offers NO Stamina roll — not an unbeatable one.
+export type CrisisOutcome =
+  | { type: 'bedridden' }
+  | {
+      type: 'illness';
+      severity: CrisisSeverity;
+      ease_factor?: number | null;
+      ritual_level: number;
+    };
 
 // Where a Longevity Ritual comes from (rendered via Fluent, never as a raw slug).
 export type LongevitySource = 'self_made' | 'external';
