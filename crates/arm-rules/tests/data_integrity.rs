@@ -2812,6 +2812,86 @@ fn the_attending_doctor_is_reported_as_an_allowance() {
     assert_eq!(survival.modifier_total, 0);
 }
 
+/// One Crisis walked end to end against the **shipped** table, through the
+/// crate's public surface: a die and a year in, and the CRISIS TOTAL
+/// (Core:16621), the row it lands on (`:16624-16632`), what that row costs and
+/// what surviving it would take (`:16628-16638`) out.
+///
+/// The fixture tests in `aging.rs` prove the composition; this proves it against
+/// the real `rules/core/aging.json`, where the attendant of `:16634` actually
+/// ships — so the doctor reaches a caller through the composed read-out and not
+/// only through a hand-built outcome.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16621-16638.
+#[test]
+fn the_shipped_crisis_table_answers_a_total_end_to_end() {
+    let rs = load_full_ruleset();
+    let mut e = entity("companion", vec![]);
+    e.age = Some(40);
+    e.aging_points.insert(Characteristic::Sta, 15);
+
+    // `9 + ⌈36/10⌉ + 2 = 15` — Minor illness, Ease Factor 3, CrCo20 (:16628).
+    let preview = arm_rules::crisis_preview(&e, &rs, 36, 9).expect("the shipped table");
+    assert_eq!(preview.total.age_modifier, 4);
+    assert_eq!(preview.total.decrepitude_score, 2);
+    assert_eq!(preview.total.total, 15);
+    assert_eq!(preview.row, Id::new("crisis.minor_illness"));
+    assert_eq!(
+        preview.outcome,
+        CrisisOutcome::Illness {
+            severity: CrisisSeverity::Minor,
+            ease_factor: Some(3),
+            ritual_level: 20,
+        }
+    );
+    let survival = preview.survival.expect("an illness is survivable");
+    assert_eq!(survival.ease_factor, Some(3));
+    assert_eq!(survival.ritual_level, 20);
+    assert_eq!(
+        survival.allowances,
+        vec![CrisisAllowance::Attendant {
+            ability: Id::new("ability.medicine"),
+            characteristic: Characteristic::Int,
+            ease_factor: 6,
+            botch_penalty: -3,
+        }],
+        "the doctor of :16634 reaches the composed read-out too"
+    );
+
+    // "8 or less — Bedridden for a week" (:16626) is time, not a roll.
+    let unaged = entity("companion", vec![]);
+    let bedridden = arm_rules::crisis_preview(&unaged, &rs, 36, 4).expect("the shipped table");
+    assert_eq!(bedridden.total.total, 8);
+    assert_eq!(bedridden.row, Id::new("crisis.bedridden_week"));
+    assert_eq!(bedridden.outcome, CrisisOutcome::Bedridden);
+    assert!(bedridden.survival.is_none());
+
+    // The shipped table's own bands, read by the look-up rather than by index.
+    let landings: Vec<&str> = [8, 9, 14, 15, 16, 17, 18, 19, 99]
+        .into_iter()
+        .map(|total| {
+            arm_rules::resolve_crisis_row(&rs, total)
+                .unwrap_or_else(|| panic!("the shipped table covers {total}"))
+                .id
+                .as_str()
+        })
+        .collect();
+    assert_eq!(
+        landings,
+        vec![
+            "crisis.bedridden_week",
+            "crisis.bedridden_month",
+            "crisis.bedridden_month",
+            "crisis.minor_illness",
+            "crisis.serious_illness",
+            "crisis.major_illness",
+            "crisis.critical_illness",
+            "crisis.terminal_illness",
+            "crisis.terminal_illness",
+        ]
+    );
+}
+
 /// Leprosy likewise states two mechanics at once:
 ///
 /// > "A leper has a permanent -2 modifier to her Living Condition …, and whenever

@@ -3869,18 +3869,23 @@ Each is findable here so it is not rediscovered later as a bug.
   Explicitly discretionary, so the clamp is **not** extended to non-ritual modifier
   holders unilaterally; `aging_total` gates it on `longevity_ritual.is_some()`.
 - **The Crisis** (`:16619-16632`). `AgingOutcome.crisis` flags the two rows that call
-  for one and `resolve_year` stops there; **nothing resolves it yet**. `crisis_total`
-  (`:16621`), `:16619`'s Decrepitude-first ordering, the doctor's Medicine roll
-  (`:16634`), `:16636`, `:16573`'s spent ritual and death at Decrepitude 5 (`:16617`)
-  all still wait.
-  **Slice 6b7 is unpicking this**, and its first two steps have landed: the serde
-  shape (`CrisisRules` / `CrisisRow` / `CrisisOutcome` / `CrisisSeverity` /
-  `CrisisDie` / `CrisisAttendant` in `aging.rs`, plus `AgingRules.crisis` and the two
-  Decrepitude thresholds of `:16617` — all optional, so an aging block with no crisis
-  key loads unchanged) and the **shipped data** below. No load gates and no
-  resolution yet; the full crisis section of this file lands with them. Survival
-  itself stays out for good: the engine will give the total, the row, the Ease Factor
-  and the Creo Corpus level, but never rolls the Stamina die and never kills.
+  for one and `resolve_year` stops there. **Slice 6b7 is unpicking this**, and the
+  whole **read-only** half has now landed: the serde shape (`CrisisRules` /
+  `CrisisRow` / `CrisisOutcome` / `CrisisSeverity` / `CrisisDie` / `CrisisAttendant`
+  in `aging.rs`, plus `AgingRules.crisis` and the two Decrepitude thresholds of
+  `:16617` — all optional, so an aging block with no crisis key loads unchanged);
+  the **shipped data** below and the load gates of `validate_crisis_rules`; the
+  CRISIS TOTAL of `:16621` with `:16619`'s Decrepitude-first ordering; the survival
+  read-out of `:16628-16638` with the doctor's allowance (`:16634`) and `:16636`'s
+  wall; the table look-up (`resolve_crisis_row`); and `crisis_preview`, which
+  composes all four into one reading. The subsections at the end of this section
+  carry the provenance for each.
+  Still waiting: the **write-back** — `resolve_year`'s crisis leg, `:16573`'s spent
+  Longevity Ritual, and whatever `AgingLogEntry` must record of a resolved Crisis.
+  Survival itself stays out for good: the engine gives the total, the row, the Ease
+  Factor and the Creo Corpus level, but never rolls the Stamina die, never resolves
+  the attendant's Medicine roll, and never kills — so the `fatal_decrepitude_score`
+  of `:16617` ships as a datum nothing in the engine acts on.
 - **Two `AgingEffect` kinds and the two shipped items that carry them (M6/6b7).**
   `crisis_survival` (a modifier to the crisis *survival* roll) and
   `crisis_heavy_wound` (a marker; `amount` ignored, shipped as **0**, because a Heavy
@@ -3948,9 +3953,11 @@ Three things a later sweep must not undo:
    unbeatable number. `Option<i32>` says "no roll"; a 99 would say "roll and lose".
 3. **`botch_penalty` ships signed (`-3`)**, matching "the character must subtract 3
    from the survival roll" (`:16634`) as the roll takes it: the survival read-out
-   **adds** it. (`CrisisAttendant::botch_penalty`'s doc comment describes it as a
-   positive magnitude of 3 — the shipped datum is the negative one, and the survival
-   read-out step must resolve which reading it wants and make doc and data agree.)
+   **adds** it. (The doc-vs-data disagreement recorded here while the field was
+   unread — the doc comment then described a positive magnitude — was settled in
+   favour of the signed datum when the survival read-out landed. The field's doc
+   comment now states `-3` as stored-and-added, the one sign convention this file
+   keeps.)
 
 ##### The `+5` between the table and the Creo Corpus guidelines
 
@@ -4063,6 +4070,9 @@ here. `the_crisis_preview_composes_the_total_the_row_and_the_survival_roll`
 `a_crisis_preview_leaks_no_aging_roll_modifier_into_either_half` re-pins `:16636`
 through the composed path — a read-out holding the total and the survival roll in one
 value is a second place an aging-roll modifier could leak into either.
+`the_shipped_crisis_table_answers_a_total_end_to_end` (`data_integrity.rs`) walks the
+same path against the **shipped** `rules/core/aging.json` through the crate's public
+surface, which is where the attendant of `:16634` actually ships.
 
 #### Translation-table notes — `alterung-twilight.md`
 Two things about `rules/source/de/translation-tables/alterung-twilight.md` that a
