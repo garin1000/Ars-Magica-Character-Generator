@@ -519,6 +519,7 @@ crisis-allowance-attendant = An attending doctor may roll { $characteristic } + 
 crisis-note = The app never makes the survival roll and never decides whether the character lives; resolve that at the table.
 # What an applied year has to tell the player, as opposed to what it wrote.
 aging-note-longevity_ritual_spent = The Crisis spends the Longevity Ritual: it assures the character survives, but its power is gone and the focal ritual must be performed again. The entry is left as it stands — record the new ritual yourself.
+aging-note-heavy_wound = This character sustains a Heavy Wound from the Crisis, in addition to any other result. The app records no wound — mark it on the health track yourself.
 aging-distribute = { $points ->
     [one] Place 1 Aging Point in a Characteristic of your choice.
    *[other] Place { $points } Aging Points across any Characteristics you choose.

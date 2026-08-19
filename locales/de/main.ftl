@@ -520,6 +520,7 @@ crisis-note = Die App macht nie den Überlebenswurf und entscheidet nie, ob der 
 # Was ein angewendetes Jahr dem Spieler sagen muss, im Unterschied zu dem, was es
 # eingetragen hat.
 aging-note-longevity_ritual_spent = Die Krise verbraucht das Langlebigkeitsritual: es stellt sicher, dass der Charakter überlebt, aber seine Kraft ist erschöpft und das Ritual muss erneut durchgeführt werden. Der Eintrag bleibt stehen — trage das neue Ritual selbst ein.
+aging-note-heavy_wound = Dieser Charakter erleidet durch die Krise zusätzlich zu jedem anderen Ergebnis eine Schwere Wunde. Die App trägt keine Wunde ein — vermerke sie selbst auf der Gesundheitsleiste.
 aging-distribute = { $points ->
     [one] Verteile 1 Alterungspunkt auf eine Eigenschaft deiner Wahl.
    *[other] Verteile { $points } Alterungspunkte auf beliebige Eigenschaften deiner Wahl.

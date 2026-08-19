@@ -1066,6 +1066,37 @@ pub fn crisis_survival(
     })
 }
 
+/// Whether the character carries a trait that costs him a Heavy Wound at every
+/// Aging Crisis — Leprosy's "whenever she undergoes an Aging Crisis (page 392) the
+/// leper sustains a Heavy Wound in addition to any other result" (`:6340`).
+///
+/// A predicate and not a sum: [`AgingEffect::CrisisHeavyWound`] is a **marker**
+/// whose `amount` means nothing (it ships as 0), because a Heavy Wound is a mark on
+/// the health track rather than a number to add. Two traits carrying it still cost
+/// one wound as far as this engine is concerned; how they interact is the table's,
+/// and the engine never writes the wound at all.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:6340.
+fn carries_crisis_heavy_wound(entity: &Entity, ruleset: &Ruleset) -> bool {
+    selections_for_effects(entity, ruleset).iter().any(|s| {
+        ruleset
+            .point_items
+            .get(&s.item_ref)
+            .is_some_and(|item| item.effects.iter().any(is_crisis_heavy_wound))
+    })
+}
+
+/// Whether one effect is the Heavy-Wound-at-a-Crisis marker.
+fn is_crisis_heavy_wound(effect: &Effect) -> bool {
+    matches!(
+        effect,
+        Effect::AgingMod {
+            kind: AgingEffect::CrisisHeavyWound,
+            ..
+        }
+    )
+}
+
 /// One Crisis, read whole: the total, the row it lands on, what the row costs,
 /// and what surviving it would take.
 ///
@@ -1237,6 +1268,26 @@ pub enum AgingNote {
     /// the aging row's doing (`:16602`, `:16611`), and the Simple Die only decides
     /// how bad it was — so a Crisis owed and unrolled spends the ritual too.
     LongevityRitualSpent,
+    /// The Crisis this year suffered costs the character a Heavy Wound on top of
+    /// whatever the Crisis Table said.
+    ///
+    /// > … and whenever she undergoes an Aging Crisis (page 392) the leper
+    /// > sustains a Heavy Wound in addition to any other result. (`:6340`)
+    ///
+    /// **Reported, never applied**, for the same reason the spent ritual is: the
+    /// health track is the player's to keep, and [`AgingEffect::CrisisHeavyWound`]
+    /// is a marker whose `amount` is meaningless — there is no quantity here for a
+    /// writer to apply. A wound the engine invented would also be one
+    /// [`revert_year`] could not take back off, since the entry records no such
+    /// thing.
+    ///
+    /// Like its sibling it follows the **Crisis**, not the Crisis roll ("whenever
+    /// she undergoes an Aging Crisis" is the aging row's doing), so a Crisis owed
+    /// and unrolled costs the wound too. And "in addition to any other result" is
+    /// why both notes can stand on one year.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:6340.
+    HeavyWound,
 }
 
 /// Why a year could not be resolved, or reverted.
@@ -1437,15 +1488,27 @@ pub fn resolve_year(
     });
     applied.normalize();
 
+    // Both notes are said and not done, and both follow the Crisis rather than the
+    // Crisis roll — so an unrolled Crisis carries them too.
+    //
     // "A Longevity Ritual is effective until the character suffers a crisis. When
     // the crisis occurs, the ritual assures that the character survives, but its
-    // power is spent" (`:16573`) — said, and not done: the ritual is the player's
-    // stored choice and stays on the entity untouched.
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:16573.
-    let notes = (outcome.crisis && entity.longevity_ritual.is_some())
-        .then_some(AgingNote::LongevityRitualSpent)
-        .into_iter()
-        .collect();
+    // power is spent" (`:16573`) — the ritual is the player's stored choice and
+    // stays on the entity untouched.
+    //
+    // "whenever she undergoes an Aging Crisis (page 392) the leper sustains a Heavy
+    // Wound in addition to any other result" (`:6340`) — "in addition" is why the
+    // two stand together, and the health track is the player's to mark.
+    // Source: Ars Magica - Definitive Edition (Core Rules).md:6340, :16573.
+    let mut notes = Vec::new();
+    if outcome.crisis {
+        if entity.longevity_ritual.is_some() {
+            notes.push(AgingNote::LongevityRitualSpent);
+        }
+        if carries_crisis_heavy_wound(entity, ruleset) {
+            notes.push(AgingNote::HeavyWound);
+        }
+    }
 
     Ok(AgingYearResult {
         entity: applied,
@@ -2369,7 +2432,11 @@ mod tests {
           { "id": "virtue.mild_aging", "kind": "virtue", "magnitude": "minor",
             "category": "general", "classification": "in_play_effect",
             "effects": [{ "type": "aging_mod", "kind": "living_conditions", "amount": 1 },
-                        { "type": "aging_mod", "kind": "crisis_survival", "amount": 3 }] }
+                        { "type": "aging_mod", "kind": "crisis_survival", "amount": 3 }] },
+          { "id": "flaw.leprosy", "kind": "flaw", "magnitude": "major",
+            "category": "general", "classification": "in_play_effect",
+            "effects": [{ "type": "aging_mod", "kind": "living_conditions", "amount": -2 },
+                        { "type": "aging_mod", "kind": "crisis_heavy_wound", "amount": 0 }] }
         ]"#;
         Ruleset::from_sources(RulesetSources {
             id: "test",
@@ -4485,6 +4552,84 @@ mod tests {
         assert!(
             reverted.longevity_ritual.is_some(),
             "a ritual reported spent is a ritual still there to come back"
+        );
+    }
+
+    /// `:6340`, the second thing a Crisis costs a character who was already ill:
+    ///
+    /// > … and whenever she undergoes an Aging Crisis (page 392) the leper
+    /// > sustains a Heavy Wound in addition to any other result.
+    ///
+    /// **Told, never written**, exactly like the spent ritual. A Heavy Wound is a
+    /// mark on the health track, which is the player's to keep — the marker ships
+    /// with `amount` 0 because there is no quantity here for a writer to apply, and
+    /// a wound the engine invented would be a wound `revert_year` could not take
+    /// back off cleanly.
+    ///
+    /// It follows the **Crisis**, not the Crisis roll: "whenever she undergoes an
+    /// Aging Crisis" is the aging row's doing (`:16602`, `:16611`), and the Simple
+    /// Die only decides how bad the illness was. So a Crisis owed and unrolled
+    /// costs the leper the wound too — and a year that is no Crisis costs nothing,
+    /// however ill the character is.
+    ///
+    /// "in addition to any other result" is why both notes can stand at once.
+    #[test]
+    fn a_crisis_costs_a_leper_a_heavy_wound_and_says_so_rather_than_writing_one() {
+        let ruleset = crisis_ruleset();
+        let mut entity = character(Some(40), None);
+        entity
+            .selections
+            .push(Selection::new(Id::new("flaw.leprosy")));
+        let before = saved(&entity);
+
+        // Leprosy's -2 Living Conditions modifier is SUBTRACTED from the total, so
+        // `7 + ⌈40/10⌉ - (-2) = 13`: the Crisis row.
+        let resolved = resolve_year(
+            &entity,
+            &ruleset,
+            &crisis_request(40, 7, &[(Characteristic::Sta, 5)], 7),
+        )
+        .expect("a crisis year resolves");
+        assert!(resolved.crisis.is_some());
+        assert_eq!(resolved.notes, vec![AgingNote::HeavyWound]);
+
+        // Nothing was written but the year itself: no wound, no extra points.
+        assert_eq!(resolved.entity.aging_points[&Characteristic::Sta], 5);
+        let reverted =
+            revert_year(&resolved.entity, &ruleset, 40).expect("the year comes back off");
+        assert_eq!(saved(&reverted), before);
+
+        // Unrolled, the Crisis has still been undergone.
+        let unrolled = resolve_year(
+            &entity,
+            &ruleset,
+            &request(40, 7, &[(Characteristic::Sta, 5)]),
+        )
+        .expect("the aging year resolves on its own");
+        assert!(unrolled.crisis.is_none());
+        assert_eq!(unrolled.notes, vec![AgingNote::HeavyWound]);
+
+        // A year that is no Crisis costs the leper nothing extra.
+        let quiet = resolve_year(
+            &entity,
+            &ruleset,
+            &request(40, 4, &[(Characteristic::Str, 1)]),
+        )
+        .expect("an ordinary year resolves");
+        assert!(quiet.notes.is_empty());
+
+        // "in addition to any other result": a leper holding a ritual is told both.
+        let mut both = entity.clone();
+        with_ritual(&mut both, None);
+        let resolved = resolve_year(
+            &both,
+            &ruleset,
+            &crisis_request(40, 7, &[(Characteristic::Sta, 5)], 7),
+        )
+        .expect("a crisis year resolves");
+        assert_eq!(
+            resolved.notes,
+            vec![AgingNote::LongevityRitualSpent, AgingNote::HeavyWound]
         );
     }
 
