@@ -4340,6 +4340,57 @@ mod tests {
         assert_eq!(owed.entity.aging_log[0].crisis_row, None);
     }
 
+    /// `revert_year` stays **exact** across the Crisis leg, which is the property
+    /// a pre-play catch-up of 25 rolls (`:2232`) depends on and the one a new leg
+    /// is most likely to break.
+    ///
+    /// The year under test writes everything the leg can write: the row's Aging
+    /// Points (and so the Decrepitude the Crisis was rolled against), an advanced
+    /// apparent age, and a log entry carrying the Simple Die, the CRISIS TOTAL, the
+    /// row and its severity. Taking it back off restores the save **byte for
+    /// byte** — the Longevity Ritual included, which costs nothing precisely
+    /// because the leg reports it spent rather than deleting it.
+    ///
+    /// Nothing new was needed in [`revert_year`] to make this true, and that is
+    /// the claim: the Crisis is recorded *inside* the year's own entry, and the
+    /// entry is what the revert removes.
+    #[test]
+    fn reverting_a_resolved_crisis_year_leaves_the_character_byte_identical() {
+        let ruleset = crisis_ruleset();
+        let mut entity = character(Some(40), Some(1160));
+        with_ritual(&mut entity, Some(4));
+        entity.aging_points.insert(Characteristic::Str, 3);
+        entity.apparent_age = Some(38);
+        let before = saved(&entity);
+
+        // `13 + ⌈40/10⌉ - 4 = 13`: the Crisis row. Three points are already
+        // accrued, so two more reach Decrepitude 1 — and `12 + 4 + 1 = 17` is the
+        // terminal row.
+        let resolved = resolve_year(
+            &entity,
+            &ruleset,
+            &crisis_request(40, 13, &[(Characteristic::Sta, 2)], 12),
+        )
+        .expect("a crisis year resolves");
+
+        let entry = &resolved.entity.aging_log[0];
+        assert_eq!(entry.crisis_die, Some(12));
+        assert_eq!(entry.crisis_total, Some(17));
+        assert_eq!(entry.crisis_row, Some(Id::new("crisis.terminal_illness")));
+        assert_eq!(entry.crisis_severity, Some(CrisisSeverity::Terminal));
+        assert_eq!(resolved.entity.apparent_age, Some(39));
+        assert_eq!(resolved.notes, vec![AgingNote::LongevityRitualSpent]);
+        assert_ne!(saved(&resolved.entity), before, "the year wrote something");
+
+        let reverted =
+            revert_year(&resolved.entity, &ruleset, 40).expect("the year comes back off");
+        assert_eq!(saved(&reverted), before);
+        assert!(
+            reverted.longevity_ritual.is_some(),
+            "a ritual reported spent is a ritual still there to come back"
+        );
+    }
+
     /// `:16573`, which is a rule about a **stored choice** and therefore a rule
     /// about what the engine must not quietly do to one.
     ///
