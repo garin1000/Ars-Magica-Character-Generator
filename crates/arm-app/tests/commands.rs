@@ -753,8 +753,15 @@ fn aging_preview_totals_the_typed_die_and_names_the_outcome() {
     entity.living_conditions.clear();
     entity.longevity_ritual = None;
 
-    let AgingProjection::Previewed { total, outcome } =
-        arm_app::ruleset_io::aging_preview_loaded(&entity, &ruleset, 40, 10)
+    let AgingProjection::Previewed { total, outcome, .. } =
+        arm_app::ruleset_io::aging_preview_loaded(
+            &entity,
+            &ruleset,
+            40,
+            10,
+            &BTreeMap::new(),
+            None,
+        )
     else {
         panic!("the shipped ruleset carries aging rules");
     };
@@ -778,8 +785,8 @@ fn aging_preview_totals_the_typed_die_and_names_the_outcome() {
     );
     assert!(!outcome.crisis);
 
-    let AgingProjection::Previewed { total, outcome } =
-        arm_app::ruleset_io::aging_preview_loaded(&entity, &ruleset, 40, 9)
+    let AgingProjection::Previewed { total, outcome, .. } =
+        arm_app::ruleset_io::aging_preview_loaded(&entity, &ruleset, 40, 9, &BTreeMap::new(), None)
     else {
         panic!("the shipped ruleset carries aging rules");
     };
@@ -842,6 +849,98 @@ fn an_applied_aging_year_reverts_to_the_character_it_started_from() {
             .collect::<Vec<_>>(),
         vec![arm_rules::ValidationIssue::CODE_AGING_YEAR_NOT_RECORDED]
     );
+}
+
+/// The calculator has to show the Crisis BEFORE Apply, and it has to show the one
+/// Apply will write — which is not the one a bare `crisis_preview` of the
+/// character standing in front of you answers.
+///
+/// > **Crisis:** Increase the character's Decrepitude first, and then roll on the
+/// > Crisis Table. (`:16619`)
+///
+/// The five Aging Points row 13 awards ARE that increase, so the CRISIS TOTAL adds
+/// the Decrepitude the year itself raised. Read off the character before the year
+/// is applied, the same die answers 14 and the same player would then watch the
+/// log record 15. So the preview resolves the year in memory and throws the
+/// character away: the preview and the apply send one identical request, and the
+/// reading cannot disagree with what lands.
+#[test]
+fn aging_preview_reads_the_crisis_off_the_year_it_would_apply() {
+    use arm_rules::Characteristic;
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut entity = sample_entity();
+    entity.age = Some(40);
+    entity.aging_log.clear();
+    entity.living_conditions.clear();
+    entity.longevity_ritual = None;
+
+    let distribution = BTreeMap::from([(Characteristic::Sta, 5)]);
+    let AgingProjection::Previewed {
+        total,
+        outcome,
+        crisis,
+    } = arm_app::ruleset_io::aging_preview_loaded(
+        &entity,
+        &ruleset,
+        40,
+        9,
+        &distribution,
+        Some(10),
+    )
+    else {
+        panic!("the shipped ruleset carries aging rules");
+    };
+    assert_eq!(total.total, 13);
+    assert!(outcome.crisis, "13 is the first Crisis row (:16602)");
+    let previewed = crisis.expect("a Crisis with a die rolled reads whole");
+    assert_eq!(
+        previewed.total.decrepitude_score, 1,
+        "the increase :16619 puts first"
+    );
+    assert_eq!(previewed.total.total, 15);
+    assert_eq!(previewed.row, Id::new("crisis.minor_illness"));
+
+    // THE POINT: what the player is shown is what the year writes.
+    let AgingApplication::Applied {
+        crisis: applied, ..
+    } = arm_app::ruleset_io::aging_apply_loaded(&entity, &ruleset, 40, 9, &distribution, Some(10))
+    else {
+        panic!("the same request applies");
+    };
+    assert_eq!(applied.as_deref(), Some(&*previewed));
+
+    // And the reading the un-applied character would give is the wrong one, which
+    // is what makes resolving the year first load-bearing rather than tidy.
+    assert_eq!(
+        arm_rules::crisis_preview(&entity, &ruleset, 40, 10)
+            .expect("the shipped ruleset carries a Crisis Table")
+            .total
+            .total,
+        14,
+        "one Decrepitude short, because this year's points have not landed"
+    );
+
+    // Before the points are placed there is no honest Crisis to read, but the
+    // total and the outcome still stand: the player is told a Crisis follows and
+    // what to place, which is the order :16619 asks for.
+    let AgingProjection::Previewed {
+        total,
+        outcome,
+        crisis,
+    } = arm_app::ruleset_io::aging_preview_loaded(
+        &entity,
+        &ruleset,
+        40,
+        9,
+        &BTreeMap::new(),
+        Some(10),
+    )
+    else {
+        panic!("an unplaced distribution is not a reason to withhold the total");
+    };
+    assert_eq!(total.total, 13);
+    assert!(outcome.crisis);
+    assert_eq!(crisis, None);
 }
 
 /// The Crisis the player rolled has to reach the character, and the two things

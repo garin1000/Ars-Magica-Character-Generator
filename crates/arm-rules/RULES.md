@@ -3888,9 +3888,13 @@ Each is findable here so it is not rediscovered later as a bug.
   Factor and the Creo Corpus level, but never rolls the Stamina die, never resolves
   the attendant's Medicine roll, and never kills — so the `fatal_decrepitude_score`
   of `:16617` ships as a datum nothing in the engine acts on. Two consequences of the
-  write-back are **left to the IPC/UI step** and are gaps until it lands: the
-  `aging_apply` command does not yet carry a Crisis die (so the shipped app still
-  records every Crisis as owed and unrolled), and `export.rs` prints a log entry's
+  write-back reached the app edge in **6b7c**: `aging_apply` now carries the Simple
+  Die through to `resolve_year`, and `aging_preview` answers with the Crisis the
+  year *would* write. The preview does that by resolving the year in memory and
+  keeping only the reading — never by calling `crisis_preview` on the character as
+  it stands, which `:16619` makes one Decrepitude short (the year's own award is
+  the increase that comes first), so a bare read would show 14 where the log then
+  records 15. One gap of the write-back remains: `export.rs` prints a log entry's
   aging die and total but none of the four Crisis fields, so a resolved Crisis is
   absent from the Markdown sheet.
 - **Leprosy's Heavy Wound at a Crisis** (`:6340`) — "whenever she undergoes an Aging
