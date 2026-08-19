@@ -595,8 +595,9 @@ screen** rather than an already-instantiated blank character, and a character's
 Slices 6b1a (phase vocabulary + issue attribution), 6b1b (the wizard shell), 6b2 (with
 its 6b2b/6b2c tails), 6b3 (6b3a's Sample Childhood engine, data and command, then
 6b3b's guided Abilities step that offers them), 6b4 (the magus's apprenticeship), 6b5
-(both halves — the years after the Gauntlet) and 6b6 (all three sub-slices — the aging
-engine, its phase and its step) are **done**; next is 6b7, the Crisis. Detail:
+(both halves — the years after the Gauntlet), 6b6 (all three sub-slices — the aging
+engine, its phase and its step) and 6b7 (the Crisis, its table and the survival
+read-out) are **done**; next is 6b8, which closes the milestone. Detail:
 `M6B-IMPLEMENTATION.md`.
 
 - [x] Wizard component driven by the character type's `creation_phases` list
@@ -867,10 +868,18 @@ entry — with an exact revert. Aging is a creation phase of its own, declared l
 four profiles, and it carries the first schema bump since M5.5 (14 → 15, because the log
 entry's `year` became optional). The Crisis is flagged, not resolved. 30 specs.
 
-Next: **6b7** — the Crisis and its table: the crisis total, the Decrepitude level it
-reaches, and the Longevity Ritual spent surviving it. Smaller than originally scoped,
-because 6b6 took the per-year write-back with it. Then **6b8** closes the milestone.
-Slice-by-slice plan: `M6B-IMPLEMENTATION.md`.
+**6b7 is done**: the Crisis. A year that calls for one raises Decrepitude first, totals
+the Crisis against the score that year itself raised, lands it on the Crisis Table —
+shipped here for the first time — and says what surviving it would take: the Stamina
+Ease Factor, the Momentary Creo Corpus level that resolves it instead, every modifier the
+character brings, and the doctor the rules allow. The Longevity Ritual spent on a Crisis
+is reported, never silently deleted. Then it stops: no Stamina die is thrown, nobody is
+pronounced dead, and the engine still has no `rand`. The save shape widened additively,
+so the schema stays 15. 31 specs.
+
+Next: **6b8** closes the milestone — per-type flow completion, the completeness
+indicator deferred from 6b1b, guided per-step copy, and the end-to-end specs for all
+four character types. Slice-by-slice plan: `M6B-IMPLEMENTATION.md`.
 
 ---
 

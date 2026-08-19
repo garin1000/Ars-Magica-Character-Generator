@@ -291,15 +291,25 @@ Markdown export added in M5.6.
   aging points land in the Characteristics the table names or the ones you choose, the
   apparent age moves unless the character is one of those who never look older, and the
   year is written into the aging log with the die and total that produced it. Any year
-  can be taken back again, exactly as it went on. A roll bad enough to be a Crisis is
-  flagged and named — resolving it is the next slice's work.
+  can be taken back again, exactly as it went on.
+
+- **The Crisis.** A roll bad enough to be a Crisis is resolved rather than merely named.
+  The year's Decrepitude increase is applied first, and the crisis total is built against
+  that raised score — again from a die you type yourself — and landed on the rulebook's
+  Crisis Table. The app then says what surviving it would take: the Ease Factor of the
+  Stamina roll, the Momentary Creo Corpus level that resolves it instead, every modifier
+  this particular character brings (listed one by one, not summed away), and the attending
+  doctor the rules allow. A Longevity Ritual spent on a Crisis is reported, never quietly
+  removed. What the app will not do is throw the Stamina die or pronounce a character
+  dead — that is the table's and the troupe's call, not the generator's.
 
 ### Next
 
-The Crisis: the crisis total and its table, the Decrepitude level a bad aging roll
-reaches, and the Longevity Ritual spent surviving it — again with die results typed by
-the player, so the engine stays deterministic. See [PLAN.md](PLAN.md) for the milestone
-breakdown and [M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the slice-by-slice plan.
+Closing the guided wizard: completeness indicators, so a legal-but-empty step is visibly
+unfinished even though it does not block; per-step guidance sourced from the rulebook;
+and an end-to-end pass for each of the four character types. See [PLAN.md](PLAN.md) for
+the milestone breakdown and [M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the
+slice-by-slice plan.
 
 ## Getting started
 
