@@ -479,7 +479,38 @@ aging-outcome-points_fixed = { $points ->
 }
 aging-outcome-decrepitude_and_crisis = { $points } Alterungspunkte — genug für die nächste Stufe Gebrechlichkeit — und eine Krise.
 aging-outcome-decrepitude_unpriceable = Genug Alterungspunkte für die nächste Stufe Gebrechlichkeit, und eine Krise. Die Steigerungstabelle reicht nicht bis zu dieser Stufe; legt die Zahl am Tisch fest.
-aging-outcome-crisis-note = Dieser Wurf ist eine Krise. Der Krisenwurf selbst ist noch nicht umgesetzt: würfelt ihn am Tisch aus und tragt das Ergebnis ins Alterungsprotokoll ein.
+aging-outcome-crisis-note = Dieser Wurf ist eine Krise. Verteile zuerst die Alterungspunkte und wirf dann unten den Krisenwürfel — die Gebrechlichkeit, die diese Punkte erhöhen, zählt zum Krisen-Gesamtwert.
+# Die Krise (Core Rules.md:16619-16638). Zwei Würfe, beide vom Spieler: der
+# Stresswürfel oben hat das Jahr hierher geschickt, und auf der Krisentabelle wird
+# ein Einfachwürfel geworfen. Die App würfelt keinen von beiden, macht nie den
+# Überlebenswurf und entscheidet nie, ob der Charakter überlebt.
+crisis-label = Krise
+crisis-die-label = Einfachwürfel
+crisis-die-hint = Wirf am Tisch einen Einfachwürfel und trage ihn hier ein — die App würfelt nie für dich. Eine Null zählt als zehn.
+crisis-die-unrolled = Solange der Einfachwürfel fehlt, trägt dieses Jahr die Krise als offen und ungewürfelt ein.
+crisis-total-readout = Krisen-Gesamtwert: { $total }
+crisis-total-parts = { $die } (Einfachwürfel) { $age } (Alter) { $decrepitude } (Gebrechlichkeitswert)
+crisis-row-readout = Krisentabelle: { $row }
+crisis-row-readout-severity = Krisentabelle: { $row } ({ $severity })
+# Die fünf Schweregrade aus Core Rules.md:16628-16632, als eigenständige Label.
+crisis-severity-minor = Leicht
+crisis-severity-serious = Ernst
+crisis-severity-major = Schwer
+crisis-severity-critical = Kritisch
+crisis-severity-terminal = Tödlich
+crisis-bedridden = Bettlägerig ist Zeit und kein Wurf: es gibt keinen Überlebenswurf und keine Zauberstufe zu erreichen.
+crisis-survival-label = Die Krise überstehen
+crisis-survival-ease-factor = Ausdauer-Stresswurf gegen Schwierigkeitsgrad { $ease }.
+crisis-survival-no-roll = Für diese Krise gibt es keinen Überlebenswurf.
+crisis-survival-ritual = Ein Momentan-Ritual aus Creo Corpus der Stufe { $level } behebt sie stattdessen.
+crisis-modifier-row = { $source } { $amount }
+crisis-modifier-bronze_cord = Bronzene Kordel
+crisis-modifier-total = Modifikatoren auf den Überlebenswurf: { $total }
+crisis-allowance-attendant = Ein behandelnder Arzt darf { $characteristic } + { $ability } gegen Schwierigkeitsgrad { $ease } würfeln; bei Erfolg wird sein { $ability }-Wert zum Überlebenswurf addiert, bei einem Patzer gilt { $botch }. Nur ein Arzt kann sinnvoll beistehen.
+crisis-note = Die App macht nie den Überlebenswurf und entscheidet nie, ob der Charakter überlebt; das gehört an den Tisch.
+# Was ein angewendetes Jahr dem Spieler sagen muss, im Unterschied zu dem, was es
+# eingetragen hat.
+aging-note-longevity_ritual_spent = Die Krise verbraucht das Langlebigkeitsritual: es stellt sicher, dass der Charakter überlebt, aber seine Kraft ist erschöpft und das Ritual muss erneut durchgeführt werden. Der Eintrag bleibt stehen — trage das neue Ritual selbst ein.
 aging-distribute = { $points ->
     [one] Verteile 1 Alterungspunkt auf eine Eigenschaft deiner Wahl.
    *[other] Verteile { $points } Alterungspunkte auf beliebige Eigenschaften deiner Wahl.

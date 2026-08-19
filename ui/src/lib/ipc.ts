@@ -4,7 +4,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import type {
   Characteristic,
-  CrisisSeverity,
+  CrisisOutcome,
   DerivedTotals,
   EffectiveScores,
   Entity,
@@ -185,20 +185,6 @@ export type CrisisAllowance = {
   ease_factor: number;
   botch_penalty: number;
 };
-
-/**
- * What one row of the Crisis Table does to the character (`:16624-16632`).
- * `ease_factor` is absent for the Terminal row, which offers no Stamina roll at
- * all (`:16632`).
- */
-export type CrisisOutcome =
-  | { type: 'bedridden' }
-  | {
-      type: 'illness';
-      severity: CrisisSeverity;
-      ease_factor?: number | null;
-      ritual_level: number;
-    };
 
 /**
  * What surviving one Crisis would take, and what the character brings to it

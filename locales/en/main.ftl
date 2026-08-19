@@ -480,7 +480,37 @@ aging-outcome-points_fixed = { $points ->
 }
 aging-outcome-decrepitude_and_crisis = { $points } Aging Points — enough to reach the next level of Decrepitude — and a Crisis.
 aging-outcome-decrepitude_unpriceable = Enough Aging Points to reach the next level of Decrepitude, and a Crisis. The advancement table does not reach that level, so agree the number at the table.
-aging-outcome-crisis-note = This roll is a Crisis. The Crisis roll itself is not modelled yet: resolve it at the table and write the result into the aging log.
+aging-outcome-crisis-note = This roll is a Crisis. Place the Aging Points first, then roll the Crisis die below — the Decrepitude those points raise counts towards the crisis total.
+# The Crisis (Core Rules.md:16619-16638). Two dice, both the player's: the stress
+# die above sent the year here, and a simple die is thrown at the Crisis Table.
+# The app never rolls either, never throws the survival roll, and never decides
+# whether the character lives.
+crisis-label = Crisis
+crisis-die-label = Simple die
+crisis-die-hint = Roll a simple die at the table and type it here — the app never rolls for you. A zero counts as ten.
+crisis-die-unrolled = Until the simple die is entered, applying this year records the Crisis as owed and unrolled.
+crisis-total-readout = Crisis total: { $total }
+crisis-total-parts = { $die } (simple die) { $age } (age) { $decrepitude } (Decrepitude Score)
+crisis-row-readout = Crisis Table: { $row }
+crisis-row-readout-severity = Crisis Table: { $row } ({ $severity })
+# The five illness ranks of Core Rules.md:16628-16632, as standalone labels.
+crisis-severity-minor = Minor
+crisis-severity-serious = Serious
+crisis-severity-major = Major
+crisis-severity-critical = Critical
+crisis-severity-terminal = Terminal
+crisis-bedridden = Bedridden is time rather than a roll: there is no survival roll to make and no spell level to reach.
+crisis-survival-label = Surviving the crisis
+crisis-survival-ease-factor = Stamina stress roll against an Ease Factor of { $ease }.
+crisis-survival-no-roll = There is no survival roll for this crisis.
+crisis-survival-ritual = A Momentary Creo Corpus Ritual of level { $level } resolves it instead.
+crisis-modifier-row = { $source } { $amount }
+crisis-modifier-bronze_cord = Bronze cord
+crisis-modifier-total = Modifiers to the survival roll: { $total }
+crisis-allowance-attendant = An attending doctor may roll { $characteristic } + { $ability } against an Ease Factor of { $ease }; on a success their { $ability } score is added to the survival roll, and on a botch { $botch } applies. Only one doctor may usefully attend.
+crisis-note = The app never makes the survival roll and never decides whether the character lives; resolve that at the table.
+# What an applied year has to tell the player, as opposed to what it wrote.
+aging-note-longevity_ritual_spent = The Crisis spends the Longevity Ritual: it assures the character survives, but its power is gone and the focal ritual must be performed again. The entry is left as it stands — record the new ritual yourself.
 aging-distribute = { $points ->
     [one] Place 1 Aging Point in a Characteristic of your choice.
    *[other] Place { $points } Aging Points across any Characteristics you choose.

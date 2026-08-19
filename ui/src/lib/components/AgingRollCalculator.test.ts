@@ -2,7 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
 import type { AgingOutcome, AgingTotal, CrisisPreview } from '../ipc';
-import type { AgingReadout, AgingScheduleYear, EffectiveScores, Entity } from '../types';
+import type {
+  AgingReadout,
+  AgingScheduleYear,
+  EffectiveScores,
+  Entity,
+  LocalizedRuleset,
+} from '../types';
 
 // The calculator is a read-out over UI-only draft state plus the engine's own
 // preview: the schedule off `store.effective.aging`, the typed die off
@@ -44,6 +50,67 @@ function resetEntity(): void {
     reputations: [],
     spells: [],
   };
+}
+
+/**
+ * A minimal localized ruleset, so the crisis panel can resolve the two ids it
+ * shows — the Crisis Table row and the attendant's Ability — through the rules
+ * i18n rather than printing a slug. The Crisis die's own bounds ride along,
+ * because "a zero counts as ten" (`:474`) is data, not a literal in the component.
+ */
+function installRuleset(): void {
+  store.ruleset = {
+    ruleset: {
+      id: 'test',
+      version: '1',
+      point_items: {},
+      type_profiles: {},
+      magnitude_points: { free: 0, minor: 1, major: 3 },
+      ability_category_order: ['general'],
+      art_type_order: ['technique', 'form'],
+      aging: {
+        start_age: 35,
+        age_divisor: 10,
+        apparent_age_increase_min: 3,
+        living_conditions: [],
+        outcomes: [],
+        crisis: { rows: [], die: { min: 1, max: 10 } },
+      },
+    },
+    i18n: {
+      'crisis.minor_illness': { name: 'Minor illness' },
+      'crisis.bedridden_week': { name: 'Bedridden for a week' },
+      'crisis.terminal_illness': { name: 'Terminal illness' },
+      'ability.medicine': { name: 'Medicine' },
+      'virtue.mild_aging': { name: 'Mild Aging' },
+    },
+  } as unknown as LocalizedRuleset;
+}
+
+/** One Crisis as the engine reads it, every field the panel shows present. */
+function crisis(over: Partial<CrisisPreview> = {}): CrisisPreview {
+  return {
+    total: { age: 40, die: 10, age_modifier: 4, decrepitude_score: 1, total: 15 },
+    row: 'crisis.minor_illness',
+    outcome: { type: 'illness', severity: 'minor', ease_factor: 3, ritual_level: 20 },
+    survival: {
+      ease_factor: 3,
+      ritual_level: 20,
+      modifiers: [],
+      modifier_total: 0,
+      allowances: [],
+    },
+    ...over,
+  };
+}
+
+/** A crisis outcome that sends the year to the Crisis Table. */
+function crisisOutcome(): AgingOutcome {
+  return outcome({
+    total: 13,
+    awards: [{ target: { kind: 'next_decrepitude_level' }, points: 5 }],
+    crisis: true,
+  });
 }
 
 /** A schedule of owed years, `recorded` for the ages listed. */
@@ -148,9 +215,11 @@ beforeEach(() => {
   vi.useFakeTimers();
   store.lang = 'en';
   resetEntity();
+  installRuleset();
   store.agingDraft = defaultAgingDraft();
   store.agingPreview = null;
   store.agingRejections = [];
+  store.agingNotes = [];
   setSchedule(schedule([36, 37, 38, 39, 40]));
 });
 
@@ -245,23 +314,207 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     expect(text(body, 'aging-distribute-remaining')).toContain('5');
   });
 
-  it('warns that a Crisis is not resolved by the app yet', () => {
+  it('says a Crisis follows, and offers the die that resolves it', () => {
     store.agingDraft = draft({ die: 9 });
-    setPreview(
-      total({ die: 9, total: 13 }),
-      outcome({
-        total: 13,
-        awards: [{ target: { kind: 'next_decrepitude_level' }, points: 5 }],
-        crisis: true,
-      }),
-    );
+    setPreview(total({ die: 9, total: 13 }), crisisOutcome());
     const body = html();
     expect(has(body, 'aging-outcome-crisis')).toBe(true);
     expect(text(body, 'aging-outcome-crisis').length).toBeGreaterThan(0);
+    // "Roll a ten-sided die. Each number counts for its value, except that a zero
+    // counts as ten." (`:474`) — the bounds are the ruleset's, not a literal here.
+    expect(has(body, 'crisis-die-input')).toBe(true);
+    expect(open(body, 'crisis-die-input')).toContain('min="1"');
+    expect(open(body, 'crisis-die-input')).toContain('max="10"');
 
-    // A roll that is no Crisis says nothing about one.
+    // A roll that is no Crisis says nothing about one, and asks for no die.
     setPreview(total(), outcome());
-    expect(has(html(), 'aging-outcome-crisis')).toBe(false);
+    const plain = html();
+    expect(has(plain, 'aging-outcome-crisis')).toBe(false);
+    expect(has(plain, 'crisis-die-input')).toBe(false);
+  });
+
+  it('reads the CRISIS TOTAL and names the row in words, never as a slug', () => {
+    // "CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score"
+    // Source: Ars Magica - Definitive Edition (Core Rules).md:16621
+    store.agingDraft = draft({ die: 9, crisisDie: 10 });
+    setPreview(total({ die: 9, total: 13 }), crisisOutcome(), crisis());
+    const body = html();
+
+    expect(text(body, 'crisis-total')).toContain('15');
+    expect(open(body, 'crisis-total')).toMatch(/role="status"/);
+    const parts = text(body, 'crisis-total-parts');
+    expect(parts).toContain('+10'); // the Simple Die
+    expect(parts).toContain('+4'); // age/10, rounded up
+    expect(parts).toContain('+1'); // the Decrepitude this year raised
+
+    // The row's text lives in `rules/i18n/<lang>/aging.json`, keyed by its id.
+    const row = text(body, 'crisis-row');
+    expect(row).toContain('Minor illness');
+    expect(row).not.toContain('crisis.minor_illness');
+    // The severity is an engine enum, so it reaches the screen through Fluent.
+    expect(row.toLowerCase()).toContain('minor');
+    expect(visibleText(body)).not.toContain('crisis.');
+  });
+
+  it('names every survival modifier separately, and invents none', () => {
+    // "The character's aging rolls benefit from a +1 bonus … Furthermore, he
+    // receives a +3 bonus to rolls to survive an aging crisis" (`:4530`), and
+    // "you can apply your bronze cord score as a bonus to … rolls to resist
+    // aging" (`:10844`). The panel has to NAME each, so they are never summed away.
+    store.agingDraft = draft({ die: 9, crisisDie: 10 });
+    setPreview(
+      total({ die: 9, total: 13 }),
+      crisisOutcome(),
+      crisis({
+        survival: {
+          ease_factor: 3,
+          ritual_level: 20,
+          modifiers: [
+            { source: { kind: 'trait', item: 'virtue.mild_aging' }, amount: 3 },
+            { source: { kind: 'bronze_cord' }, amount: 2 },
+          ],
+          modifier_total: 5,
+          allowances: [],
+        },
+      }),
+    );
+    let body = html();
+    const survival = text(body, 'crisis-survival');
+    // Ease Factor 3 or CrCo20 (`:16628`), both offered.
+    expect(survival).toContain('3');
+    expect(survival).toContain('20');
+    expect(text(body, 'crisis-modifier-0')).toContain('Mild Aging');
+    expect(text(body, 'crisis-modifier-0')).toContain('+3');
+    expect(text(body, 'crisis-modifier-1')).toContain('+2');
+    expect(text(body, 'crisis-modifier-total')).toContain('+5');
+    expect(visibleText(body)).not.toContain('virtue.mild_aging');
+    expect(visibleText(body)).not.toContain('bronze_cord');
+
+    // A character with no familiar shows no cord line at all, never a "+0".
+    setPreview(total({ die: 9, total: 13 }), crisisOutcome(), crisis());
+    body = html();
+    expect(has(body, 'crisis-modifier-0')).toBe(false);
+    expect(has(body, 'crisis-modifier-total')).toBe(false);
+  });
+
+  it('states what an attending doctor may bring, without scoring it', () => {
+    // "An Int + Medicine roll against an Ease Factor of 6 allows the character to
+    // add the attendant's Medicine score … if the doctor botches the character
+    // must subtract 3." (`:16634`) The Medicine belongs to another character, so
+    // the app states the allowance and no more.
+    store.agingDraft = draft({ die: 9, crisisDie: 10 });
+    setPreview(
+      total({ die: 9, total: 13 }),
+      crisisOutcome(),
+      crisis({
+        survival: {
+          ease_factor: 3,
+          ritual_level: 20,
+          modifiers: [],
+          modifier_total: 0,
+          allowances: [
+            {
+              kind: 'attendant',
+              ability: 'ability.medicine',
+              characteristic: 'int',
+              ease_factor: 6,
+              botch_penalty: -3,
+            },
+          ],
+        },
+      }),
+    );
+    const body = html();
+    const allowance = text(body, 'crisis-allowance-0');
+    expect(allowance).toContain('Medicine');
+    expect(allowance).toContain('Intelligence');
+    expect(allowance).toContain('6');
+    expect(allowance).toContain('-3');
+    expect(visibleText(body)).not.toContain('ability.medicine');
+    expect(visibleText(body)).not.toContain('int ');
+  });
+
+  it('says a bedridden Crisis is time rather than a roll', () => {
+    // "Bedridden for a week" (`:16626`) — no Stamina roll, no Ritual level, and
+    // no empty read-out that would say "survivable on a 0".
+    store.agingDraft = draft({ die: 9, crisisDie: 4 });
+    setPreview(
+      total({ die: 9, total: 13 }),
+      crisisOutcome(),
+      crisis({
+        total: { age: 40, die: 4, age_modifier: 4, decrepitude_score: 1, total: 9 },
+        row: 'crisis.bedridden_week',
+        outcome: { type: 'bedridden' },
+        survival: null,
+      }),
+    );
+    const body = html();
+    expect(text(body, 'crisis-row')).toContain('Bedridden for a week');
+    expect(has(body, 'crisis-survival')).toBe(false);
+    expect(text(body, 'crisis-bedridden').length).toBeGreaterThan(0);
+  });
+
+  it('says the Terminal row offers no roll at all', () => {
+    // "**Terminal illness**. CrCo40 required to survive." (`:16632`) — an absent
+    // Ease Factor is no roll, never an unbeatable one.
+    store.agingDraft = draft({ die: 9, crisisDie: 10 });
+    setPreview(
+      total({ die: 9, total: 13 }),
+      crisisOutcome(),
+      crisis({
+        total: { age: 40, die: 10, age_modifier: 4, decrepitude_score: 5, total: 19 },
+        row: 'crisis.terminal_illness',
+        outcome: { type: 'illness', severity: 'terminal', ritual_level: 40 },
+        survival: { ritual_level: 40, modifiers: [], modifier_total: 0, allowances: [] },
+      }),
+    );
+    const body = html();
+    expect(text(body, 'crisis-survival')).toContain('40');
+    expect(has(body, 'crisis-survival-ease-factor')).toBe(false);
+    expect(text(body, 'crisis-survival-no-roll').length).toBeGreaterThan(0);
+  });
+
+  it('reports the Longevity Ritual the applied year spent', () => {
+    // "the ritual assures that the character survives, but its power is spent"
+    // (`:16573`) — reported, because the entity keeps the stored choice, so this
+    // is the only place the player can be told.
+    store.agingNotes = [{ kind: 'longevity_ritual_spent' }];
+    const body = html();
+    expect(text(body, 'aging-note-0').length).toBeGreaterThan(0);
+    expect(visibleText(body)).not.toContain('longevity_ritual_spent');
+
+    store.agingNotes = [];
+    expect(has(html(), 'aging-note-0')).toBe(false);
+  });
+
+  it('writes every crisis figure with an ASCII hyphen', () => {
+    store.agingDraft = draft({ die: 9, crisisDie: 10 });
+    setPreview(
+      total({ die: 9, total: 13 }),
+      crisisOutcome(),
+      crisis({
+        total: { age: 40, die: 10, age_modifier: 4, decrepitude_score: 1, total: 15 },
+        survival: {
+          ease_factor: 3,
+          ritual_level: 20,
+          modifiers: [{ source: { kind: 'bronze_cord' }, amount: -2 }],
+          modifier_total: -2,
+          allowances: [
+            {
+              kind: 'attendant',
+              ability: 'ability.medicine',
+              characteristic: 'int',
+              ease_factor: 6,
+              botch_penalty: -3,
+            },
+          ],
+        },
+      }),
+    );
+    const body = html();
+    expect(text(body, 'crisis-modifier-total')).toContain('-2');
+    // U+2212 never reaches the screen; formatSigned is the source of truth.
+    expect(body).not.toContain('−');
   });
 
   it('says in words that nothing it shows is recorded until applied', () => {
