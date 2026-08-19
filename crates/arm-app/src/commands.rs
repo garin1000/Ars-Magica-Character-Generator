@@ -189,12 +189,17 @@ pub fn aging_preview(
 /// `distribution` places the Aging Points the row leaves to the player, per
 /// Characteristic; JS supplies it as `distribution` keyed by Characteristic slug.
 /// Empty for a row that names its own Characteristics.
+///
+/// `crisisDie` is the Simple Die thrown at the Crisis Table for a year the aging
+/// row sent there (`:16621`); `null` records the Crisis as owed and unrolled,
+/// which is a legitimate state rather than a refusal.
 #[tauri::command]
 pub fn aging_apply(
     entity: Entity,
     age: u32,
     die: i32,
     distribution: std::collections::BTreeMap<Characteristic, u8>,
+    crisis_die: Option<i32>,
     state: State<'_, AppState>,
 ) -> Result<AgingApplication, AppError> {
     let guard = state.ruleset.read().expect("ruleset lock poisoned");
@@ -205,6 +210,7 @@ pub fn aging_apply(
         age,
         die,
         &distribution,
+        crisis_die,
     ))
 }
 
