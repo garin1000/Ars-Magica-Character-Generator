@@ -3360,10 +3360,12 @@ arithmetic *around* that number. A generator that rolled would invent
 rules-relevant state nobody at the table agreed to, and would make a character's
 history unreproducible from its save file.
 
-**The Crisis is flagged, never resolved.** `AgingOutcome.crisis` is set for the two
-rows that call for one; `:16619-16640` (the Crisis Table, the survival rolls, the
-doctor's Medicine roll) plus `:16617`'s death at Decrepitude 5 are a later slice.
-See *Recorded gaps* at the end of this section.
+**The Crisis is resolved, never survived.** The engine totals it (`:16621`), reads
+the row (`:16624-16632`), records it on the year (`resolve_year`'s Crisis leg) and
+reports what surviving would take (`:16628-16638`). It never throws the Stamina die,
+never resolves the doctor's Medicine roll (`:16634`) and never kills — `:16617`'s
+death at Decrepitude 5 ships as a datum nothing acts on. See *Recorded gaps* at the
+end of this section.
 
 #### Age at which aging rolls become due — over 35
 > "Characters begin aging in the Winter after they turn 35. Every year, a
@@ -3868,24 +3870,36 @@ Each is findable here so it is not rediscovered later as a bug.
   may also apply to characters with modifiers to the aging roll from other sources."
   Explicitly discretionary, so the clamp is **not** extended to non-ritual modifier
   holders unilaterally; `aging_total` gates it on `longevity_ritual.is_some()`.
-- **The Crisis** (`:16619-16632`). `AgingOutcome.crisis` flags the two rows that call
-  for one and `resolve_year` stops there. **Slice 6b7 is unpicking this**, and the
-  whole **read-only** half has now landed: the serde shape (`CrisisRules` /
+- **The Crisis** (`:16619-16632`) — *no longer a gap; delivered in 6b7.* What 6b6 left
+  as a flag `resolve_year` stopped at is now read, resolved and recorded. The serde
+  shape (`CrisisRules` /
   `CrisisRow` / `CrisisOutcome` / `CrisisSeverity` / `CrisisDie` / `CrisisAttendant`
   in `aging.rs`, plus `AgingRules.crisis` and the two Decrepitude thresholds of
   `:16617` — all optional, so an aging block with no crisis key loads unchanged);
   the **shipped data** below and the load gates of `validate_crisis_rules`; the
   CRISIS TOTAL of `:16621` with `:16619`'s Decrepitude-first ordering; the survival
   read-out of `:16628-16638` with the doctor's allowance (`:16634`) and `:16636`'s
-  wall; the table look-up (`resolve_crisis_row`); and `crisis_preview`, which
-  composes all four into one reading. The subsections at the end of this section
-  carry the provenance for each.
-  Still waiting: the **write-back** — `resolve_year`'s crisis leg, `:16573`'s spent
-  Longevity Ritual, and whatever `AgingLogEntry` must record of a resolved Crisis.
+  wall; the table look-up (`resolve_crisis_row`); `crisis_preview`, which composes all
+  four into one reading; and the **write-back** — `resolve_year`'s Crisis leg with
+  `:16619`'s ordering, the four fields a resolved Crisis records on `AgingLogEntry`,
+  and `:16573`'s spent Longevity Ritual as an `AgingNote`. The subsections at the end
+  of this section carry the provenance for each.
   Survival itself stays out for good: the engine gives the total, the row, the Ease
   Factor and the Creo Corpus level, but never rolls the Stamina die, never resolves
   the attendant's Medicine roll, and never kills — so the `fatal_decrepitude_score`
-  of `:16617` ships as a datum nothing in the engine acts on.
+  of `:16617` ships as a datum nothing in the engine acts on. Two consequences of the
+  write-back are **left to the IPC/UI step** and are gaps until it lands: the
+  `aging_apply` command does not yet carry a Crisis die (so the shipped app still
+  records every Crisis as owed and unrolled), and `export.rs` prints a log entry's
+  aging die and total but none of the four Crisis fields, so a resolved Crisis is
+  absent from the Markdown sheet.
+- **Leprosy's Heavy Wound at a Crisis** (`:6340`) — "whenever she undergoes an Aging
+  Crisis (page 392) the leper sustains a Heavy Wound in addition to any other result".
+  `flaw.leprosy` ships the `crisis_heavy_wound` marker and it is surfaced in the
+  modifier read-out, but the Crisis leg emits **no note** for it and writes no wound:
+  the health track is the player's to fill in, and a marker with no number is not a
+  quantity the writer could apply. It is the obvious second `AgingNote` variant when a
+  slice wants one.
 - **Two `AgingEffect` kinds and the two shipped items that carry them (M6/6b7).**
   `crisis_survival` (a modifier to the crisis *survival* roll) and
   `crisis_heavy_wound` (a marker; `amount` ignored, shipped as **0**, because a Heavy
@@ -4107,6 +4121,21 @@ crisis rule is implemented twice.
   error either — whether a Crisis happened is `:16602`/`:16611`'s call, never the
   player's, and nothing is written from the unused die
   (`a_crisis_die_never_invents_a_crisis_the_table_did_not_call_for`).
+- **`:16636` gets a third pin**, and this is the worst of the three places it could
+  leak: one call now computes the AGING TOTAL, which *does* take the trait modifiers,
+  and the CRISIS TOTAL, which takes none, off **one** character — the shape that
+  invites someone to reuse a modifier between them. A character wearing Faerie Blood,
+  Poor Living Conditions and Mild Aging is driven through the whole write-back in
+  `a_resolved_crisis_year_leaks_no_aging_roll_modifier_into_the_crisis` (`aging.rs`):
+  the aging half takes the `-1`, the CRISIS TOTAL is still the three terms of
+  `:16621`, and only Mild Aging's `+3` reaches the survival read-out the year hands
+  back.
+- **`revert_year` needed nothing**, and that is a claim rather than an omission: the
+  Crisis is recorded inside the year's own entry and the entry is what the revert
+  removes, so a Crisis year still restores the save byte for byte — the Longevity
+  Ritual included, which costs nothing precisely because the leg reports it spent
+  instead of deleting it
+  (`reverting_a_resolved_crisis_year_leaves_the_character_byte_identical`).
 - App/UI: `ruleset_io::aging_apply_loaded` passes `crisis_die: None` — a mechanical
   pass-through, since the command edge does not yet ask for the die. Threading it
   through `aging_apply` is the IPC/UI step's work.
