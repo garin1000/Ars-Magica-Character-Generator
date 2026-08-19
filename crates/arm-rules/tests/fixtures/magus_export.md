@@ -262,5 +262,6 @@
 ### aging-log-heading
 
 - **1220**: an apparent aging crisis, weathered
-- **1229**: aging-die-label: 9 · export-col-total: 13
+- **1229**: aging-die-label: 9 · export-col-total: 13 · aging-log-crisis-unrolled
+- **1230**: aging-die-label: 9 · export-col-total: 13 · crisis-label: Minor illness (crisis-severity-minor) · crisis-die-label: 10 · crisis-total-label: 15
 

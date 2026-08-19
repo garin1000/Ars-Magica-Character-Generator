@@ -496,6 +496,8 @@ crisis-die-label = Einfachwürfel
 crisis-die-hint = Wirf am Tisch einen Einfachwürfel und trage ihn hier ein — die App würfelt nie für dich. Eine Null zählt als zehn.
 crisis-die-unrolled = Solange der Einfachwürfel fehlt, trägt dieses Jahr die Krise als offen und ungewürfelt ein.
 crisis-total-readout = Krisen-Gesamtwert: { $total }
+# Dieselbe Größe als reines Spaltenlabel für das exportierte Charakterblatt.
+crisis-total-label = Krisen-Gesamtwert
 crisis-total-parts = { $die } (Einfachwürfel) { $age } (Alter) { $decrepitude } (Gebrechlichkeitswert)
 crisis-row-readout = Krisentabelle: { $row }
 crisis-row-readout-severity = Krisentabelle: { $row } ({ $severity })

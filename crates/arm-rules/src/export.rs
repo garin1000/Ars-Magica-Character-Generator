@@ -87,6 +87,7 @@ pub const LABEL_KEYS: &[&str] = &[
     "age-label",
     "aging-die-label",
     "aging-label",
+    "aging-log-crisis-unrolled",
     "aging-log-heading",
     "aging-points-heading",
     "apparent-age-label",
@@ -104,6 +105,14 @@ pub const LABEL_KEYS: &[&str] = &[
     "characteristic-str",
     "characteristics-title",
     "confidence-label",
+    "crisis-die-label",
+    "crisis-label",
+    "crisis-severity-critical",
+    "crisis-severity-major",
+    "crisis-severity-minor",
+    "crisis-severity-serious",
+    "crisis-severity-terminal",
+    "crisis-total-label",
     "decrepitude-effect-label",
     "decrepitude-label",
     "derived-addend-armor",
@@ -1385,12 +1394,13 @@ impl<'a> Doc<'a> {
     }
 
     /// One logged year's recorded detail: its free text, then the stress die the
-    /// player typed and the AGING TOTAL it produced, where the entry carries them.
+    /// player typed and the AGING TOTAL it produced, then the Crisis the year sent
+    /// the character to — where the entry carries them.
     ///
     /// A resolved year may leave the free text empty and let the structured fields
     /// speak, and a hand-written entry carries no die at all, so each part is
     /// included only when it is there.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16569.
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16569, :16621.
     fn aging_log_entry(&self, entry: &AgingLogEntry) -> String {
         let mut parts: Vec<String> = Vec::new();
         let effect = escape_cell(&entry.effect);
@@ -1403,7 +1413,50 @@ impl<'a> Doc<'a> {
         if let Some(total) = entry.total {
             parts.push(pair(&self.label("export-col-total"), &total.to_string()));
         }
+        parts.extend(self.aging_log_crisis(entry));
         parts.join(SUBTITLE_SEPARATOR)
+    }
+
+    /// What the Crisis Table was asked of one logged year and what it answered, or
+    /// that it has not been asked yet.
+    ///
+    /// Three states, and the sheet has to tell them apart: a year with no Crisis
+    /// says nothing, a Crisis the aging row demanded that nobody has rolled says so
+    /// (`crisis` set with no row — the aging roll happened whether or not the second
+    /// die was thrown), and a resolved one prints its row, its severity and the
+    /// Simple Die that found it beside the CRISIS TOTAL they made.
+    ///
+    /// The row travels as an [`Id`], so its text comes from the rules i18n and never
+    /// reaches the sheet as a slug; the severity is a Rust taxonomy and goes through
+    /// `crisis-severity-<slug>`, which [`LABEL_KEYS`] declares.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16619-16632.
+    fn aging_log_crisis(&self, entry: &AgingLogEntry) -> Vec<String> {
+        if !entry.crisis {
+            return Vec::new();
+        }
+        let Some(row) = &entry.crisis_row else {
+            return vec![self.label("aging-log-crisis-unrolled")];
+        };
+
+        let named = match entry.crisis_severity {
+            Some(severity) => format!(
+                "{} ({})",
+                self.name(row),
+                self.label(&format!("crisis-severity-{severity}"))
+            ),
+            // A bedridden row carries no severity: a week in bed is time, not an
+            // illness, so there is no rank to print.
+            None => self.name(row),
+        };
+        let mut parts = vec![pair(&self.label("crisis-label"), &named)];
+        if let Some(die) = entry.crisis_die {
+            parts.push(pair(&self.label("crisis-die-label"), &die.to_string()));
+        }
+        if let Some(total) = entry.crisis_total {
+            parts.push(pair(&self.label("crisis-total-label"), &total.to_string()));
+        }
+        parts
     }
 
     /// The accrued aging points, one bullet per Characteristic that carries any.
@@ -1608,6 +1661,7 @@ fn table(out: &mut String, headers: &[String], rows: &[Vec<String>]) {
 mod tests {
     use super::*;
     use crate::ability::AbilityCategory;
+    use crate::aging::CrisisSeverity;
     use crate::ruleset::RulesetSources;
     use crate::types::{
         AbilityScore, AgingLogEntry, ArtScore, EquipmentSlot, Familiar, LongevityRitual,
@@ -1789,7 +1843,8 @@ mod tests {
           "house.bonisagus": { "name": "Bonisagus" },
           "house.ex_miscellanea": { "name": "Ex Miscellanea" },
           "living_condition.leper": { "name": "Leper" },
-          "living_condition.work_in_a_mine": { "name": "Work in a mine" }
+          "living_condition.work_in_a_mine": { "name": "Work in a mine" },
+          "crisis.minor_illness": { "name": "Minor illness" }
         }"#;
         LocalizedRuleset::new(rs, i18n).unwrap()
     }
@@ -3555,6 +3610,84 @@ mod tests {
         );
     }
 
+    /// A resolved Crisis is the most consequential thing an aging year can record,
+    /// and the sheet dropped all four of its fields — so a character who had
+    /// weathered a Major illness read exactly like one who had not.
+    ///
+    /// The row prints through the rules i18n keyed by its id, the severity through
+    /// `crisis-severity-<slug>`, and both dice and both totals stand beside each
+    /// other so a reader can check the arithmetic of `:16621` off the sheet.
+    #[test]
+    fn a_logged_crisis_prints_its_row_its_severity_and_the_die_that_found_it() {
+        let mut e = fully_populated_magus();
+        e.aging_log = vec![AgingLogEntry {
+            year: Some(1220),
+            age: Some(40),
+            effect: String::new(),
+            die: Some(9),
+            total: Some(13),
+            crisis: true,
+            crisis_die: Some(10),
+            crisis_total: Some(15),
+            crisis_row: Some(Id::new("crisis.minor_illness")),
+            crisis_severity: Some(CrisisSeverity::Minor),
+            ..AgingLogEntry::default()
+        }];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("aging-log-heading", "Aging log"),
+                ("aging-die-label", "Stress die"),
+                ("export-col-total", "Total"),
+                ("crisis-label", "Crisis"),
+                ("crisis-die-label", "Simple die"),
+                ("crisis-total-label", "Crisis total"),
+                ("crisis-severity-minor", "Minor"),
+            ]),
+        );
+        assert!(
+            doc.contains(
+                "- **1220**: Stress die: 9 · Total: 13 · Crisis: Minor illness (Minor) \
+                 · Simple die: 10 · Crisis total: 15\n"
+            ),
+            "{doc}"
+        );
+        assert!(doc.contains("Minor illness"), "the row is named: {doc}");
+        assert!(
+            !doc.contains("crisis.minor_illness"),
+            "a raw slug reached the sheet: {doc}"
+        );
+    }
+
+    /// A Crisis the table demanded and nobody has rolled is a state of its own, and
+    /// the sheet has to be able to say so — otherwise it reads identically to a year
+    /// that never met the Crisis Table at all.
+    #[test]
+    fn a_crisis_nobody_has_rolled_says_so_rather_than_printing_nothing() {
+        let mut e = fully_populated_magus();
+        e.aging_log = vec![AgingLogEntry {
+            year: Some(1220),
+            age: Some(40),
+            effect: String::new(),
+            die: Some(9),
+            total: Some(13),
+            crisis: true,
+            ..AgingLogEntry::default()
+        }];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("aging-log-heading", "Aging log"),
+                ("aging-die-label", "Stress die"),
+                ("export-col-total", "Total"),
+                ("aging-log-crisis-unrolled", "Crisis owed, not yet rolled"),
+            ]),
+        );
+        assert!(doc.contains("· Crisis owed, not yet rolled\n"), "{doc}");
+    }
+
     /// A character with no birth year logs no calendar year, so the entry has no
     /// label to print. It prints as a plain bullet — never a Rust `None`, and
     /// never an empty bold label.
@@ -3856,6 +3989,9 @@ mod tests {
         }
         for source in [LongevitySource::SelfMade, LongevitySource::External] {
             assert_declared(&format!("longevity-source-{source}"));
+        }
+        for severity in CrisisSeverity::ALL {
+            assert_declared(&format!("crisis-severity-{severity}"));
         }
     }
 

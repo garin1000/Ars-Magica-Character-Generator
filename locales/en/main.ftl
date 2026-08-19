@@ -496,6 +496,8 @@ crisis-die-label = Simple die
 crisis-die-hint = Roll a simple die at the table and type it here — the app never rolls for you. A zero counts as ten.
 crisis-die-unrolled = Until the simple die is entered, applying this year records the Crisis as owed and unrolled.
 crisis-total-readout = Crisis total: { $total }
+# The same quantity as a bare column label, for the exported sheet.
+crisis-total-label = Crisis total
 crisis-total-parts = { $die } (simple die) { $age } (age) { $decrepitude } (Decrepitude Score)
 crisis-row-readout = Crisis Table: { $row }
 crisis-row-readout-severity = Crisis Table: { $row } ({ $severity })
