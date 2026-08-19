@@ -220,8 +220,13 @@ export interface CrisisPreview {
 /**
  * Something a resolved year has to TELL the player, as opposed to something it
  * writes. Rendered through `aging-note-<kind>`, never as a raw tag.
+ *
+ * Both of today's follow the Crisis rather than the Crisis roll, so an unrolled
+ * Crisis carries them: the Longevity Ritual it spends without deleting (`:16573`),
+ * and the Heavy Wound a leper takes "in addition to any other result" (`:6340`)
+ * that the app records nowhere, because the health track is the player's.
  */
-export type AgingNote = { kind: 'longevity_ritual_spent' };
+export type AgingNote = { kind: 'longevity_ritual_spent' } | { kind: 'heavy_wound' };
 
 /**
  * The outcome of previewing, applying or reverting one aging roll.

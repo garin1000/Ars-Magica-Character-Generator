@@ -3902,11 +3902,18 @@ Each is findable here so it is not rediscovered later as a bug.
   fixture carries one of each.
 - **Leprosy's Heavy Wound at a Crisis** (`:6340`) — "whenever she undergoes an Aging
   Crisis (page 392) the leper sustains a Heavy Wound in addition to any other result".
-  `flaw.leprosy` ships the `crisis_heavy_wound` marker and it is surfaced in the
-  modifier read-out, but the Crisis leg emits **no note** for it and writes no wound:
-  the health track is the player's to fill in, and a marker with no number is not a
-  quantity the writer could apply. It is the obvious second `AgingNote` variant when a
-  slice wants one.
+  *No longer a gap; the note landed in 6b7c* as `AgingNote::HeavyWound`, emitted by
+  `resolve_year`'s note leg when `carries_crisis_heavy_wound` finds the marker on any
+  selection. Still **told, never written**: the engine records no wound, because the
+  health track is the player's to mark and a marker with no number is not a quantity a
+  writer could apply — and an invented wound would be one `revert_year` could not take
+  back off, since the entry records no such thing. It is a **predicate**, not a sum:
+  two carriers of the marker still cost one note. Like the spent ritual it follows the
+  **Crisis**, not the Crisis roll, so an unrolled Crisis carries it too; "in addition
+  to any other result" is why both notes stand on one year, which
+  `a_crisis_costs_a_leper_a_heavy_wound_and_says_so_rather_than_writing_one`
+  (`aging.rs`) pins alongside the byte-identical revert. Rendered through
+  `aging-note-heavy_wound` in both locales.
 - **Two `AgingEffect` kinds and the two shipped items that carry them (M6/6b7).**
   `crisis_survival` (a modifier to the crisis *survival* roll) and
   `crisis_heavy_wound` (a marker; `amount` ignored, shipped as **0**, because a Heavy
