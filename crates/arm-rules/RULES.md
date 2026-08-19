@@ -4074,6 +4074,43 @@ value is a second place an aging-roll modifier could leak into either.
 same path against the **shipped** `rules/core/aging.json` through the crate's public
 surface, which is where the attendant of `:16634` actually ships.
 
+##### The Crisis leg of the single writer — `resolve_year`
+
+> "**Crisis:** Increase the character's Decrepitude first, and then roll on the Crisis
+> Table."
+> — Ars Magica - Definitive Edition (Core Rules).md:16619
+
+`resolve_year` (`aging.rs`) gains the leg that makes a Crisis part of the character.
+`AgingYearRequest` grows `crisis_die: Option<i32>` and `AgingYearResult` grows
+`crisis: Option<CrisisPreview>`; everything the leg reads is `crisis_preview`'s, so no
+crisis rule is implemented twice.
+
+- **The order is the rule.** A row carrying a Crisis awards its Aging Points like any
+  other row, and **that award IS `:16619`'s increase**. The Crisis is then read off the
+  *applied* character rather than the one who walked into the year, so the CRISIS TOTAL
+  adds the Decrepitude this very year raised. The writer does nothing but order it: it
+  is `crisis_preview(&applied, …)` and not `crisis_preview(entity, …)`, and
+  `a_resolved_crisis_year_records_the_roll_the_row_and_its_severity` witnesses the
+  difference (five points take a fresh character to Decrepitude 1, and the total adds
+  the 1, not the 0 he started the year with).
+- **It still never rolls and never kills.** Both dice are typed in; the heaviest row the
+  table has hands back a living character with the Ease Factor, the Creo Corpus level
+  and nothing else decided (`a_terminal_crisis_is_recorded_and_kills_nobody`).
+- **A Crisis nobody has rolled is a state, not a refusal.** With no `crisis_die`, or
+  under a ruleset shipping no Crisis Table, the year is still written and the log
+  records the Crisis as **owed and unrolled** (`crisis: true`, no `crisis_row`). The
+  aging roll happened whether or not the second die has been thrown, and refusing to
+  record it would lose the one thing that did. This is deliberately **not** an
+  `AgingError`: every existing variant describes a write the engine will not make, and
+  here it makes one.
+- **A Crisis die on a year the table sent to no Crisis resolves nothing**, and is not an
+  error either — whether a Crisis happened is `:16602`/`:16611`'s call, never the
+  player's, and nothing is written from the unused die
+  (`a_crisis_die_never_invents_a_crisis_the_table_did_not_call_for`).
+- App/UI: `ruleset_io::aging_apply_loaded` passes `crisis_die: None` — a mechanical
+  pass-through, since the command edge does not yet ask for the die. Threading it
+  through `aging_apply` is the IPC/UI step's work.
+
 ##### What a resolved Crisis records — and why `SCHEMA_VERSION` stays 15
 
 > "**CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score**" … "| Crisis
