@@ -99,7 +99,7 @@ canonical key/array sorting. German labels must match
 | **6b4** ✅ | Magus apprenticeship (240 xp / 120 spell levels / hard minimums) | 6b2 |
 | **6b5** ✅ | Post-Gauntlet accrual (30 pts/year, lab-season deduction, xp↔spell-level split) | 6b4 |
 | **6b6** ✅ | Aging tables + aging total + outcome resolution **+ the per-year write-back**, as a creation phase of its own | 6b1a |
-| **6b7** | Crisis, Decrepitude levels, the crisis table — the write-back landed in 6b6, so this is smaller than the sketch below | 6b6 |
+| **6b7** ✅ | Crisis, Decrepitude levels, the crisis table — the write-back landed in 6b6, so this is smaller than the sketch below | 6b6 |
 | **6b8** | Per-type flow completion, completeness indicators, guided copy, milestone gate | 6b2-6b7 |
 
 6b1 was one slice until review: ~24 TDD steps spanning 85 emit sites, a contract-table
@@ -1178,6 +1178,149 @@ while `AGING_ROLLS_START_AGE` was deleted in favour of the data.
 
 ---
 
+## Slice 6b7 — The Crisis ✅
+
+6b6 shipped an aging roll that could say a Crisis had happened and nothing more: no
+crisis rows, no crisis total, no survival roll, no record. This slice resolves it. A year
+whose row calls for a Crisis now raises the character's Decrepitude, totals the Crisis
+against the score that year itself raised, lands it on the Crisis Table, and says what
+surviving it would take — the Ease Factor of the Stamina roll, the Momentary Creo Corpus
+level that resolves it instead, every modifier the character actually brings, and the
+doctor the rules allow. Then it stops: no Stamina die is thrown, no character is
+pronounced dead, and `arm-rules` still has no `rand`. Full provenance — the verbatim
+`:16619-16638` excerpts, every shipped crisis value and every remaining gap — is
+`## Aging (M6/6b6)` in `crates/arm-rules/RULES.md`; this section records the slice.
+
+25 commits, `0b2f35f..966ccfb`, in four blocks. The first shipped the table and its two
+reads before the work was split into lettered sub-slices; then **6b7a** is the look-up
+that pairs a total with a row, **6b7b** the write-back into the character, **6b7c** the
+surfaces the player touches. Each closed the full gate on its own.
+
+### What shipped
+
+**The table and its two reads (7 commits, `0b2f35f..5b3da64`).** `CrisisRules`,
+`CrisisRow`, `CrisisOutcome`, `CrisisSeverity`, `CrisisDie` and `CrisisAttendant` in
+`crates/arm-rules/src/aging.rs`; the Crisis Table itself in `rules/core/aging.json` +
+`rules/i18n/{en,de}/aging.json` — the first crisis numbers to ship, which 6b6 had
+deliberately withheld; `validate_crisis_rules` refusing a table that does not tile the
+integers between its two open ends; `crisis_total` (`die + ⌈age/10⌉ + Decrepitude`);
+`crisis_survival`; and `bronze_cord_bonus` extracted in `derived.rs` so Soak, the
+longevity bonus and now the survival roll share one accessor rather than three copies of
+four lines. Two shipped Virtues were re-tagged in the same block: they named the crisis
+survival roll and until now meant nothing.
+
+**The look-up — 6b7a (3 commits, `8615bbc..d3c9ee2`).** `resolve_crisis_row(ruleset,
+total)`, `resolve_outcome`'s twin, taking no `Entity` because a crisis row already says
+everything it does; `crisis_preview(entity, ruleset, age, die) -> Option<CrisisPreview>`
+composing total + row + survival and writing nothing. `CrisisRow::covers` lost its
+`expect(dead_code, reason = "called by the crisis look-up")` — the attribute was the
+slice's own tripwire, and its removal is the proof the caller arrived.
+
+**The write-back — 6b7b (6 commits, `360cecc..d799437`).** `resolve_year`'s crisis leg;
+`AgingYearRequest.crisis_die`; `AgingYearResult.crisis` and `.notes`; `AgingNote`; and
+four `serde(default, skip_serializing_if)` fields on `AgingLogEntry` — `crisis_die`,
+`crisis_total`, `crisis_row`, `crisis_severity` — which with the pre-existing `crisis`
+flag tell three states apart: no Crisis, owed-and-unrolled, resolved.
+
+**The step — 6b7c (9 commits, `0af11e4..966ccfb`).** The Simple Die threaded through
+`aging_apply` and `aging_preview` to the engine — until this commit the shipped app
+recorded every Crisis as unrolled; the crisis panel in `AgingRollCalculator.svelte` (die
+input bounded from the data, the total and its three terms, the row named through
+`rules/i18n`, the survival read-out, the bedridden note, the applied year's notes); the
+per-year crisis line in `AgingRecordPanel.svelte`; `AgingDraft.crisisDie` in the store,
+off the entity like the aging die; the Fluent keys in both locales; `CrisisSeverity::ALL`
++ `Display` with per-locale key coverage and TS-union mirror tests on the
+`AgingEffect::ALL` precedent; and the Markdown export finally printing the row, severity,
+die and total — plus saying when a Crisis is owed and unrolled, a state the sheet could
+not previously distinguish.
+
+### Decisions of record
+
+- **The crisis preview rides on `aging_preview`, and is the year resolved in memory with
+  only the reading kept** — not `crisis_preview` called on the character as it stands.
+  Two reasons, both load-bearing. A Crisis exists only because *this* year's row demanded
+  one, so a separate command would let the UI pair a CRISIS TOTAL with an outcome that no
+  longer calls for one — the exact pairing `crisis_preview` was composed to prevent. And
+  `:16619` puts the Decrepitude increase first: those Aging Points *are* the increase, so
+  a bare read of the un-applied character answers **14** where the applied year writes
+  **15**. Three facts are pinned: preview equals applied, the bare read differs, and an
+  unplaced distribution withholds the reading while the total and outcome still stand.
+- **`resolve_year` awards the row's Aging Points first and reads the Crisis off the
+  *applied* character.** That composition is the whole of `:16619`, so no crisis rule is
+  implemented twice.
+- **A Crisis nobody has rolled is a state, not a refusal.** No `crisis_die`, or a ruleset
+  shipping no Crisis Table, still writes the year with the Crisis owed and unrolled —
+  deliberately not a new `AgingError`, since every existing variant describes a write the
+  engine refuses and here it makes one.
+- **A crisis die on a year the table sent nowhere resolves nothing, and is not an error.**
+  Whether a Crisis happened is `:16602`/`:16611`'s call, never the player's; nothing is
+  written from the unused die.
+- **The spent Longevity Ritual is reported, never applied.** `:16573` carries it — *not*
+  `:16571`, which is the sign-convention sentence, and which the sketch below cited
+  wrongly. `Entity.longevity_ritual` is untouched: it is a stored choice holding a
+  player-entered bonus and the focus that must be repeated (`:10668`), and deleting it
+  would also make the year unrevertible. The note follows the *Crisis*, not the roll — an
+  owed-and-unrolled Crisis spends the ritual too.
+- **`crisis_severity` is recorded although the row already carries it** — the one
+  deliberate redundancy, because `AgingRules.crisis` is optional and a save may be loaded
+  under a ruleset shipping no Crisis Table, where the severity is all that says what
+  happened. `ease_factor` and `ritual_level` are *not* recorded; the sheet re-reads them
+  off the row.
+- **`revert_year` needed no change, and that is the claim.** The Crisis lives inside the
+  year's own log entry, which the revert removes. Pinned rather than assumed.
+- **`SCHEMA_VERSION` stays 15**, pinned as a literal. The widening is additive in both
+  directions — an older save omits the keys and defaults them, a newer save is still a
+  document an older reader accepts (`AgingLogEntry` declares no `deny_unknown_fields`).
+  14 → 15 was earned by something different in kind: `year` *became* `Option`, so a new
+  save may omit a key an old reader requires.
+- **The look-up returns the row, not a copied outcome**, because the id is load-bearing:
+  row display text lives in `rules/i18n/<lang>/aging.json` and never in the engine.
+- **`None` from `resolve_crisis_row` means the ruleset ships no Crisis Table, never "the
+  total fell off the table".** `validate_crisis_rules` refuses a gapped or overlapping
+  table at load, so the tiling is a guarantee the look-up may rely on.
+- **`survival` is absent, not empty, for `CrisisOutcome::Bedridden`** (`:16626`,
+  `:16627`) — an empty read-out would read as "survivable on a 0".
+- **Survival modifiers are listed one by one, never summed away**, because the panel has
+  to name them; a character with no familiar shows no bronze-cord line rather than a +0.
+- **The bronze cord's "rolls to resist aging" (`:10844`) finally has a referent**: the
+  crisis survival roll, not the aging roll — an aging roll is not one you pass or fail,
+  and `:16636` keeps the two families apart. 6b6 recorded this as an open gap; it is
+  closed, not restated.
+- **`:16636` — "Virtues that affect aging rolls do not affect crisis survival rolls" — now
+  carries three named pins**, one per new leak surface: the survival read-out, the
+  composed preview, and the write-back, where a single call computes an AGING TOTAL that
+  takes trait modifiers and a CRISIS TOTAL that takes none. Each drives a character
+  wearing Faerie Blood, Poor Living Conditions and Mild Aging.
+
+### Findings the e2e spec pinned
+
+`ui/e2e/specs/aging-crisis.e2e.js` is the **31st** spec (the suite was 30). It drives a
+grog: 9+4=13 → Crisis, with the crisis die typed *before* the point distribution to prove
+the reading is withheld until the points are placed while the total and outcome still
+stand; then 10+4+1=15 → Minor illness, Ease Factor 3, CrCo20, no cord line, the doctor
+named; apply → log entry, note and save fields; revert → gone.
+
+### Deliberate non-changes
+
+- **The engine still stops at the roll.** No Stamina die, no Medicine roll for the
+  attending doctor, no death at Decrepitude 5, no auto-kill of any kind, and no `rand`
+  dependency — as scoped for M6.
+- **Decrepitude is still derived, never stored.** The crisis leg writes aging points; the
+  score follows through the existing `decrepitude_score`.
+- **Both gaps 6b6 recorded against the Crisis are closed**: the Markdown export prints the
+  crisis fields, and Leprosy's `crisis_heavy_wound` (`:6340`) emits
+  `AgingNote::HeavyWound` — told, never written, a predicate rather than a sum.
+- **"Attendant / doctor" is not in the German translation tables.** Rendered
+  `behandelnder Arzt` / `Arzt` from the German rulebook at the mirrored `:16634`, which is
+  authoritative but not glossary-indexed. Every other German term came from the tables or
+  the mirrored rulebook lines.
+- **`cargo clippy --all-targets` is still not part of the gate**, and three pre-existing
+  failures live under it (`type_complexity` in `data_integrity.rs`, `needless_lifetimes`
+  in `effective.rs`, `doc_lazy_continuation` in `export.rs`). Untouched here; **6b8**'s
+  call whether to fix them and tighten the gate.
+
+---
+
 ## Slices 6b2-6b8 — design notes
 
 ### What already exists (verified in code — these engines add less than PLAN.md implies)
@@ -1408,7 +1551,9 @@ not subtracted: only the two *named* terms of 16567-16569, Living Conditions and
 Longevity Ritual, are subtracted, and writing the trait modifiers as a fourth subtracted
 term would flip the sign of every one of them (Faerie Blood's −1 would *raise* the total).
 
-**6b7 — Crisis and the crisis table.** (**Smaller than this sketch**: everything below
+**6b7 — Crisis and the crisis table.** (**Shipped** — read the **Slice 6b7** section
+above for what this became, including the `:16571` citation below, which is wrong: the
+spent ritual is `:16573`. **Smaller than this sketch**: everything below
 about `resolve_year` and the widened `AgingLogEntry` shipped in 6b6, and the two commands
 became three — `aging_preview`, `aging_apply`, `aging_revert` — with the schedule riding
 on `EffectiveScores.aging` as sketched. What is left is the crisis itself.) `crisis_total`
