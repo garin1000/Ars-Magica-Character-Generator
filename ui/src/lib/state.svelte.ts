@@ -12,7 +12,7 @@ import {
 } from './derive';
 import { buildBundle, translate, type Lang, type TranslateArgs } from './i18n';
 import * as ipc from './ipc';
-import type { AgingOutcome, AgingTotal, CloseGuardLabels } from './ipc';
+import type { AgingNote, AgingOutcome, AgingTotal, CloseGuardLabels, CrisisPreview } from './ipc';
 import type {
   AppError,
   Characteristic,
@@ -270,11 +270,20 @@ export interface AgingDraft {
   die: number | null;
   /** Characteristic -> Aging Points placed there. Zeroes are absent. */
   distribution: Partial<Record<Characteristic, number>>;
+  /**
+   * The **Simple Die** thrown at the Crisis Table (Core Rules.md:16621), for a
+   * year the aging row sent there; `null` while the field is blank, which the
+   * engine records as a Crisis owed and unrolled rather than refusing.
+   *
+   * Draft state for the same reason the stress die is: the engine rolls neither,
+   * and what the character keeps is the year's result, never its inputs.
+   */
+  crisisDie: number | null;
 }
 
 /** A fresh, empty aging draft (the initial/reset state). */
 export function defaultAgingDraft(): AgingDraft {
-  return { age: null, die: null, distribution: {} };
+  return { age: null, die: null, distribution: {}, crisisDie: null };
 }
 
 class AppStore {
@@ -328,7 +337,27 @@ class AppStore {
    * explodes, so no bounded lookup table in JS could stand in for it, and
    * re-deriving the outcome here would be a second implementation of the table.
    */
-  agingPreview = $state<{ total: AgingTotal; outcome: AgingOutcome } | null>(null);
+  agingPreview = $state<{
+    total: AgingTotal;
+    outcome: AgingOutcome;
+    /**
+     * The Crisis the year would send the character to, once the row demands one,
+     * the Simple Die is typed and the Aging Points are placed — the engine reads
+     * it off the year it would apply, so what is shown is what Apply writes.
+     */
+    crisis?: CrisisPreview | null;
+  } | null>(null);
+
+  /**
+   * What the year just applied had to TELL the player, as opposed to what it
+   * wrote — today only the Longevity Ritual a Crisis spends (`:16573`), which the
+   * entity cannot show because it deliberately keeps the stored choice.
+   *
+   * Cleared whenever the draft is, and by the next apply or revert: a note about
+   * a year the player has since taken back would be a lie about the character in
+   * front of them.
+   */
+  agingNotes = $state<AgingNote[]>([]);
 
   /**
    * Why the last preview, apply or revert was refused, for the calculator to
@@ -1036,9 +1065,32 @@ class AppStore {
       delete distribution[characteristic];
     }
     this.agingDraft = { ...this.agingDraft, distribution };
+    // Placing the points moves the CRISIS TOTAL, because those points ARE the
+    // Decrepitude increase `:16619` puts first — so the reading is asked for
+    // again rather than left standing at a number the year will not write.
+    this.#scheduleAgingPreview();
   }
 
-  /** Abandon the drafted roll: the year, the die, the points and the last refusal. */
+  /**
+   * Record the Simple Die the player threw at the Crisis Table, or clear it with
+   * `null`.
+   *
+   * "CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score"
+   * Source: Ars Magica - Definitive Edition (Core Rules).md:16621
+   *
+   * Draft state and a preview, never a validate: like the stress die this is
+   * player input the character must not hold, so typing it cannot dirty the
+   * document.
+   */
+  setAgingCrisisDie(die: number | null): void {
+    this.agingRejections = [];
+    const value = die != null && Number.isFinite(die) ? clampInt(die, 0, I32_MAX) : null;
+    this.agingDraft = { ...this.agingDraft, crisisDie: value };
+    this.#scheduleAgingPreview();
+  }
+
+  /** Abandon the drafted roll: the year, both dice, the points, the last refusal
+   *  and whatever the last applied year had to say. */
   clearAgingDraft(): void {
     clearTimeout(this.#agingTimer);
     this.#agingTimer = undefined;
@@ -1046,6 +1098,7 @@ class AppStore {
     this.agingDraft = defaultAgingDraft();
     this.agingPreview = null;
     this.agingRejections = [];
+    this.agingNotes = [];
   }
 
   /**
@@ -1059,21 +1112,31 @@ class AppStore {
    */
   async previewAgingRoll(): Promise<void> {
     const seq = ++this.#agingSeq;
-    const { age, die } = this.agingDraft;
+    const { age, die, distribution, crisisDie } = this.agingDraft;
     const year = age ?? this.agingYear;
     if (year == null || die == null) {
       this.agingPreview = null;
       return;
     }
     try {
-      const projection = await ipc.agingPreview($state.snapshot(this.entity), year, die);
+      const projection = await ipc.agingPreview(
+        $state.snapshot(this.entity),
+        year,
+        die,
+        $state.snapshot(distribution),
+        crisisDie,
+      );
       if (seq !== this.#agingSeq) return;
       if (projection.status === 'rejected') {
         this.agingPreview = null;
         this.agingRejections = projection.issues;
         return;
       }
-      this.agingPreview = { total: projection.total, outcome: projection.outcome };
+      this.agingPreview = {
+        total: projection.total,
+        outcome: projection.outcome,
+        crisis: projection.crisis ?? null,
+      };
       this.agingRejections = [];
     } catch (e) {
       if (seq === this.#agingSeq) this.error = e as AppError;
@@ -1091,16 +1154,18 @@ class AppStore {
    * character is untouched and the findings land in {@link agingRejections}.
    */
   async applyAgingRoll(): Promise<void> {
-    const { die, distribution } = this.agingDraft;
+    const { die, distribution, crisisDie } = this.agingDraft;
     const year = this.agingYear;
     if (year == null || die == null) return;
     this.agingRejections = [];
+    this.agingNotes = [];
     try {
       const application = await ipc.agingApply(
         $state.snapshot(this.entity),
         year,
         die,
         $state.snapshot(distribution),
+        crisisDie,
       );
       if (application.status === 'rejected') {
         this.agingRejections = application.issues;
@@ -1109,6 +1174,9 @@ class AppStore {
       this.entity = application.entity;
       this.agingDraft = defaultAgingDraft();
       this.agingPreview = null;
+      // Kept past the draft it came from: the note is about the character now on
+      // screen, not about the form that has just been spent.
+      this.agingNotes = application.notes ?? [];
       await this.revalidate();
     } catch (e) {
       this.error = e as AppError;
@@ -1122,6 +1190,8 @@ class AppStore {
    */
   async revertAgingRoll(age: number): Promise<void> {
     this.agingRejections = [];
+    // The year is going away, so what it had to say goes with it.
+    this.agingNotes = [];
     try {
       const reversion = await ipc.agingRevert($state.snapshot(this.entity), age);
       if (reversion.status === 'rejected') {

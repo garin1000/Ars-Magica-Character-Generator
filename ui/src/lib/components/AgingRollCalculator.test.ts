@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { AgingOutcome, AgingTotal } from '../ipc';
+import type { AgingOutcome, AgingTotal, CrisisPreview } from '../ipc';
 import type { AgingReadout, AgingScheduleYear, EffectiveScores, Entity } from '../types';
 
 // The calculator is a read-out over UI-only draft state plus the engine's own
@@ -25,7 +25,7 @@ vi.mock('../ipc', () => ({
   agingRevert: vi.fn(),
 }));
 
-import { SCHEMA_VERSION, defaultAgingDraft, store } from '../state.svelte';
+import { SCHEMA_VERSION, defaultAgingDraft, store, type AgingDraft } from '../state.svelte';
 import AgingRollCalculator from './AgingRollCalculator.svelte';
 
 function resetEntity(): void {
@@ -93,9 +93,14 @@ function outcome(overrides: Partial<AgingOutcome> = {}): AgingOutcome {
   };
 }
 
+/** A drafted roll: the year, the stress die, the placed points and the Simple Die. */
+function draft(over: Partial<AgingDraft> = {}): AgingDraft {
+  return { age: 40, die: 10, distribution: {}, crisisDie: null, ...over };
+}
+
 /** Put the engine's answer on the store, as the debounced preview would. */
-function setPreview(t: AgingTotal, o: AgingOutcome): void {
-  store.agingPreview = { total: t, outcome: o };
+function setPreview(t: AgingTotal, o: AgingOutcome, c: CrisisPreview | null = null): void {
+  store.agingPreview = { total: t, outcome: o, crisis: c };
 }
 
 /** Render the calculator to an HTML string (node env, no DOM). */
@@ -167,7 +172,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
   });
 
   it("renders the engine's total and every part of it", () => {
-    store.agingDraft = { age: 40, die: 10, distribution: {} };
+    store.agingDraft = draft({ die: 10 });
     setPreview(
       total({
         die: 10,
@@ -193,7 +198,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
   });
 
   it('names the Characteristics an outcome fixes, in words', () => {
-    store.agingDraft = { age: 40, die: 10, distribution: {} };
+    store.agingDraft = draft({ die: 10 });
     setPreview(
       total(),
       outcome({ awards: [{ target: { kind: 'named', characteristic: 'qik' }, points: 1 }] }),
@@ -213,7 +218,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     // player may spread them; forcing them into one target would force drops the
     // player could legally avoid.
     // Source: Ars Magica - Definitive Edition (Core Rules).md:16602
-    store.agingDraft = { age: 40, die: 9, distribution: {} };
+    store.agingDraft = draft({ die: 9 });
     setPreview(
       total({ die: 9, total: 13 }),
       outcome({
@@ -230,18 +235,18 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     expect(open(body, 'aging-apply')).toContain('disabled');
 
     // Four of five placed is still short.
-    store.agingDraft = { age: 40, die: 9, distribution: { qik: 2, sta: 2 } };
+    store.agingDraft = draft({ die: 9, distribution: { qik: 2, sta: 2 } });
     expect(open(html(), 'aging-apply')).toContain('disabled');
 
     // Spread across three Characteristics, summing exactly: now it may be applied.
-    store.agingDraft = { age: 40, die: 9, distribution: { qik: 2, sta: 2, per: 1 } };
+    store.agingDraft = draft({ die: 9, distribution: { qik: 2, sta: 2, per: 1 } });
     body = html();
     expect(open(body, 'aging-apply')).not.toContain('disabled');
     expect(text(body, 'aging-distribute-remaining')).toContain('5');
   });
 
   it('warns that a Crisis is not resolved by the app yet', () => {
-    store.agingDraft = { age: 40, die: 9, distribution: {} };
+    store.agingDraft = draft({ die: 9 });
     setPreview(
       total({ die: 9, total: 13 }),
       outcome({
@@ -260,7 +265,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
   });
 
   it('says in words that nothing it shows is recorded until applied', () => {
-    store.agingDraft = { age: 40, die: 10, distribution: {} };
+    store.agingDraft = draft({ die: 10 });
     setPreview(total(), outcome());
     const note = text(html(), 'aging-calculator-note');
     expect(note.length).toBeGreaterThan(0);
@@ -269,7 +274,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
   });
 
   it('writes every displayed modifier with an ASCII hyphen', () => {
-    store.agingDraft = { age: 40, die: 10, distribution: {} };
+    store.agingDraft = draft({ die: 10 });
     setPreview(
       total({
         living_conditions: { rows: [], from_table: 2, from_traits: 0, total: 2 },

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { AgingProjection } from './ipc';
+import type { AgingApplication, AgingProjection } from './ipc';
 import type {
   Ability,
   CreationPhase,
@@ -3393,7 +3393,12 @@ describe('the aging roll draft', () => {
     const serialized = JSON.stringify(store.entity);
     expect(serialized).not.toContain('die');
     expect(serialized).not.toContain('aging_log');
-    expect(store.agingDraft).toEqual({ age: 40, die: 9, distribution: { sta: 2 } });
+    expect(store.agingDraft).toEqual({
+      age: 40,
+      die: 9,
+      distribution: { sta: 2 },
+      crisisDie: null,
+    });
   });
 
   it('drops the aging draft when a new character is created', async () => {
@@ -3402,8 +3407,69 @@ describe('the aging roll draft', () => {
 
     await store.createCharacter('companion');
 
-    expect(store.agingDraft).toEqual({ age: null, die: null, distribution: {} });
+    expect(store.agingDraft).toEqual({
+      age: null,
+      die: null,
+      distribution: {},
+      crisisDie: null,
+    });
     expect(store.agingPreview).toBeNull();
+  });
+
+  it('keeps the Crisis die off the entity too, and asks the engine again for each', async () => {
+    // The Simple Die of `:16621` is player input exactly as the stress die is —
+    // the engine has no `rand` dependency and rolls neither — so it lives in the
+    // draft and the document stays clean.
+    await store.createCharacter('companion');
+    vi.mocked(ipc.agingPreview).mockResolvedValue({
+      status: 'previewed',
+      total: { total: 13 },
+      outcome: { total: 13, crisis: true },
+      crisis: { total: { total: 15 }, row: 'crisis.minor_illness' },
+    } as unknown as AgingProjection);
+
+    store.setAgingYear(40);
+    store.setAgingDie(9);
+    store.setAgingCrisisDie(10);
+    expect(store.dirty).toBe(false);
+    expect(JSON.stringify(store.entity)).not.toContain('crisis');
+    expect(store.agingDraft.crisisDie).toBe(10);
+
+    // Placing the points changes the CRISIS TOTAL, because those points ARE the
+    // Decrepitude increase `:16619` puts first — so the reading has to be asked
+    // for again, not left standing.
+    vi.mocked(ipc.agingPreview).mockClear();
+    store.setAgingDistribution('sta', 5);
+    await store.previewAgingRoll();
+    expect(vi.mocked(ipc.agingPreview).mock.lastCall?.slice(1)).toEqual([40, 9, { sta: 5 }, 10]);
+    expect(store.agingPreview?.crisis?.total.total).toBe(15);
+  });
+
+  it('reports what the applied year spent, and forgets it with the draft', async () => {
+    await store.createCharacter('companion');
+    vi.mocked(ipc.agingApply).mockResolvedValue({
+      status: 'applied',
+      entity: $state.snapshot(store.entity),
+      total: { total: 13 },
+      outcome: { total: 13, crisis: true },
+      notes: [{ kind: 'longevity_ritual_spent' }],
+    } as unknown as AgingApplication);
+
+    store.setAgingYear(40);
+    store.setAgingDie(9);
+    store.setAgingCrisisDie(10);
+    store.setAgingDistribution('sta', 5);
+    await store.applyAgingRoll();
+
+    // The Crisis die crosses with the rest of the form, or the engine records the
+    // Crisis as owed and unrolled however carefully the player rolled it.
+    expect(vi.mocked(ipc.agingApply).mock.lastCall?.slice(1)).toEqual([40, 9, { sta: 5 }, 10]);
+    // "its power is spent, and the focal ritual must be performed again"
+    // (`:16573`) — the entity keeps the ritual, so only the note can say this.
+    expect(store.agingNotes).toEqual([{ kind: 'longevity_ritual_spent' }]);
+
+    store.clearAgingDraft();
+    expect(store.agingNotes).toEqual([]);
   });
 
   it('never lets a stale preview overwrite a newer one', async () => {
