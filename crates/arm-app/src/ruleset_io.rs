@@ -574,6 +574,10 @@ pub fn aging_apply_loaded(
         age,
         die,
         distribution: distribution.clone(),
+        // The Crisis die is not yet asked for at this edge, so a year that calls
+        // for a Crisis is applied with the Crisis owed and unrolled — exactly the
+        // state the engine already recorded before it could resolve one.
+        crisis_die: None,
     };
     match resolve_year(entity, ruleset, &request) {
         Ok(result) => AgingApplication::Applied {

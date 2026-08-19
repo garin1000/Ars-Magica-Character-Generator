@@ -555,8 +555,9 @@ pub enum AgingPointTarget {
 ///
 /// Nothing is written: not the Aging Points, not the apparent age, not the log.
 /// A row that carries a Crisis sets [`AgingOutcome::crisis`] and stops there —
-/// the Crisis Table (`:16619-16632`) is a later slice, so this reports that a
-/// crisis follows and resolves none of it.
+/// reading the Crisis Table (`:16619-16632`) needs the Decrepitude the row's own
+/// award has yet to raise (`:16619`), so it belongs to [`resolve_year`], which
+/// makes that award.
 ///
 /// `None` when the ruleset ships no aging rules.
 ///
@@ -1160,6 +1161,19 @@ pub struct AgingYearRequest {
     /// a row that names its own Characteristics, and for one that awards
     /// nothing.
     pub distribution: BTreeMap<Characteristic, u8>,
+    /// The **Simple Die** the player threw at the Crisis Table (`:16621`), when
+    /// the year's row sent him there and he has rolled it. The engine never rolls
+    /// this one either.
+    ///
+    /// `None` is a Crisis the table demanded and nobody has rolled yet, which is a
+    /// legitimate state rather than a refusal: the aging roll happened whether or
+    /// not the second die has been thrown, and refusing to record it would lose
+    /// the one thing that did. A die given for a year the table sent to no Crisis
+    /// is simply unused — whether a Crisis happened is `:16602`/`:16611`'s call,
+    /// never the player's.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16619, :16621.
+    pub crisis_die: Option<i32>,
 }
 
 /// What resolving one year produced: the character it made, and the reading that
@@ -1176,6 +1190,14 @@ pub struct AgingYearResult {
     pub total: AgingTotal,
     /// What the table did with it.
     pub outcome: AgingOutcome,
+    /// The Crisis the year sent the character to, read whole (`:16619-16638`) —
+    /// present only when [`AgingOutcome::crisis`] is set **and** the request
+    /// carried a [`AgingYearRequest::crisis_die`] **and** the ruleset ships a
+    /// Crisis Table. Otherwise the Crisis is owed and unrolled, which the log
+    /// records as `crisis` with no row.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16619-16638.
+    pub crisis: Option<CrisisPreview>,
 }
 
 /// Why a year could not be resolved, or reverted.
@@ -1243,13 +1265,30 @@ pub enum AgingError {
 ///
 /// # What it does not do
 ///
-/// It **never rolls** — the die is the player's, typed in. It **never kills**:
-/// a row carrying a Crisis (`:16602`, `:16611`) sets
-/// [`AgingOutcome::crisis`] and stops there, because the Crisis Table
-/// (`:16619-16632`) is a later slice. And it **never touches Decrepitude**:
-/// "Every Aging Point also counts as an experience point towards Decrepitude,
-/// which increases as an Ability" (`:16617`), so the score follows from the
-/// points through [`decrepitude_score`] and is never written down beside them.
+/// It **never rolls** — both dice are the player's, typed in. It **never
+/// kills**: a Crisis is read, recorded and stopped at, because whether the
+/// character survives is the table's to decide (see [`crisis_survival`]). And it
+/// **never touches Decrepitude**: "Every Aging Point also counts as an
+/// experience point towards Decrepitude, which increases as an Ability"
+/// (`:16617`), so the score follows from the points through
+/// [`decrepitude_score`] and is never written down beside them.
+///
+/// # The Crisis leg, and why the order matters
+///
+/// > **Crisis:** Increase the character's Decrepitude first, and then roll on
+/// > the Crisis Table. (`:16619`)
+///
+/// A row carrying a Crisis (`:16602`, `:16611`) awards its Aging Points like any
+/// other, and **that award is the increase `:16619` puts first**. The Crisis is
+/// then read off the character those points already made — never off the one who
+/// walked into the year — so the CRISIS TOTAL adds the Decrepitude this very year
+/// raised. [`crisis_preview`] does the reading; this only orders it.
+///
+/// The Crisis is resolved when the player has thrown the Simple Die and the
+/// ruleset ships a Crisis Table. Otherwise the year is still written, with the
+/// Crisis recorded as **owed and unrolled**
+/// ([`AgingLogEntry::crisis`](crate::types::AgingLogEntry::crisis) set and no
+/// row) — the aging roll happened whether or not the second die has been thrown.
 ///
 /// The entity is not mutated in place, so a refused year leaves the caller's own
 /// character exactly as it was — and [`revert_year`] can put an applied one
@@ -1317,6 +1356,19 @@ pub fn resolve_year(
         let seeded = applied.apparent_age.unwrap_or(rules.start_age);
         applied.apparent_age = Some(seeded.saturating_add(1));
     }
+
+    // "**Crisis:** Increase the character's Decrepitude first, and then roll on
+    // the Crisis Table." (`:16619`) — the award above IS that increase, and
+    // reading the Crisis off `applied` rather than off `entity` is what puts it
+    // first. `crisis_total` measures the score as of this year, so the points
+    // just awarded count and any later year's do not.
+    // Source: Ars Magica - Definitive Edition (Core Rules).md:16619.
+    let crisis = outcome
+        .crisis
+        .then_some(request.crisis_die)
+        .flatten()
+        .and_then(|die| crisis_preview(&applied, ruleset, request.age, die));
+
     applied.aging_log.push(AgingLogEntry {
         year: calendar_year(entity, request.age),
         age: Some(request.age),
@@ -1327,10 +1379,13 @@ pub fn resolve_year(
         points: awarded,
         apparent_age_increased: outcome.apparent_age_increases,
         crisis: outcome.crisis,
-        crisis_die: None,
-        crisis_total: None,
-        crisis_row: None,
-        crisis_severity: None,
+        crisis_die: crisis.as_ref().map(|crisis| crisis.total.die),
+        crisis_total: crisis.as_ref().map(|crisis| crisis.total.total),
+        crisis_row: crisis.as_ref().map(|crisis| crisis.row.clone()),
+        crisis_severity: crisis.as_ref().and_then(|crisis| match crisis.outcome {
+            CrisisOutcome::Illness { severity, .. } => Some(severity),
+            CrisisOutcome::Bedridden => None,
+        }),
     });
     applied.normalize();
 
@@ -1338,6 +1393,7 @@ pub fn resolve_year(
         entity: applied,
         total,
         outcome,
+        crisis,
     })
 }
 
@@ -2983,6 +3039,7 @@ mod tests {
             age,
             die,
             distribution: distribution.iter().copied().collect(),
+            crisis_die: None,
         }
     }
 
@@ -4051,5 +4108,202 @@ mod tests {
             }]
         );
         assert_eq!(survival.modifier_total, 3);
+    }
+
+    /// The same submission, plus the Simple Die the player threw at the Crisis
+    /// Table.
+    fn crisis_request(
+        age: u32,
+        die: i32,
+        distribution: &[(Characteristic, u8)],
+        crisis_die: i32,
+    ) -> AgingYearRequest {
+        AgingYearRequest {
+            crisis_die: Some(crisis_die),
+            ..request(age, die, distribution)
+        }
+    }
+
+    /// `:16619`'s ordering, written into the writer: "**Crisis:** Increase the
+    /// character's Decrepitude first, and then roll on the Crisis Table."
+    ///
+    /// A 40-year-old with nothing accrued rolls a 9: `9 + ⌈40/10⌉ = 13`, the row
+    /// that reaches the next Decrepitude level **and** sends him to the Crisis
+    /// Table. Five points take him to Decrepitude 1 on the fixture's curve, and
+    /// the CRISIS TOTAL is then `7 + 4 + 1 = 12` — the **1** is the whole point.
+    /// Read before the award it would have been 0, and the Crisis would have been
+    /// rolled against a score the year had already left behind.
+    #[test]
+    fn a_resolved_crisis_year_records_the_roll_the_row_and_its_severity() {
+        let ruleset = crisis_ruleset();
+        let entity = character(Some(40), None);
+
+        let resolved = resolve_year(
+            &entity,
+            &ruleset,
+            &crisis_request(40, 9, &[(Characteristic::Sta, 5)], 7),
+        )
+        .expect("a crisis year resolves");
+
+        assert_eq!(resolved.total.total, 13);
+        assert!(resolved.outcome.crisis, "the row calls for one");
+
+        let crisis = resolved.crisis.as_ref().expect("and the player rolled it");
+        assert_eq!(
+            crisis.total,
+            CrisisTotal {
+                age: 40,
+                die: 7,
+                age_modifier: 4,
+                decrepitude_score: 1,
+                total: 12,
+            },
+            "the Decrepitude this very year raised, not the one it started with"
+        );
+        assert_eq!(crisis.row, Id::new("crisis.bedridden_month"));
+        assert_eq!(crisis.outcome, CrisisOutcome::Bedridden);
+        assert!(crisis.survival.is_none(), "a month in bed is not a roll");
+
+        // And the year records it, so the save carries what happened.
+        let applied = &resolved.entity;
+        assert_eq!(
+            applied.aging_log,
+            vec![AgingLogEntry {
+                year: None,
+                age: Some(40),
+                effect: String::new(),
+                die: Some(9),
+                total: Some(13),
+                living_conditions: std::collections::BTreeSet::new(),
+                points: points(&[(Characteristic::Sta, 5)]),
+                apparent_age_increased: true,
+                crisis: true,
+                crisis_die: Some(7),
+                crisis_total: Some(12),
+                crisis_row: Some(Id::new("crisis.bedridden_month")),
+                crisis_severity: None,
+            }],
+            "a bedridden row has no severity: it is time, not an illness"
+        );
+
+        // The points stay authoritative and the score still follows from them.
+        assert_eq!(applied.aging_points, points(&[(Characteristic::Sta, 5)]));
+        assert_eq!(decrepitude_score(applied, &ruleset), 1);
+
+        // Never in place.
+        assert!(entity.aging_log.is_empty());
+        assert!(entity.aging_points.is_empty());
+    }
+
+    /// The severity of an illness row is recorded beside its id (`:16628-16632`),
+    /// and the heaviest row the table has still hands back a **living** character.
+    ///
+    /// The engine reports what surviving would take — the Creo Corpus level of
+    /// `:16638`, and the Ease Factor where the row offers a roll at all — and then
+    /// stops. It throws no Stamina die and kills nobody; that is the table's to
+    /// decide and the player's to record.
+    #[test]
+    fn a_terminal_crisis_is_recorded_and_kills_nobody() {
+        let ruleset = crisis_ruleset();
+        let entity = character(Some(40), None);
+
+        // `12 + ⌈40/10⌉ + 1 = 17`, above the fixture's open-ended terminal row.
+        let resolved = resolve_year(
+            &entity,
+            &ruleset,
+            &crisis_request(40, 9, &[(Characteristic::Sta, 5)], 12),
+        )
+        .expect("a crisis year resolves");
+
+        let crisis = resolved.crisis.as_ref().expect("the player rolled it");
+        assert_eq!(crisis.total.total, 17);
+        assert_eq!(crisis.row, Id::new("crisis.terminal_illness"));
+        assert_eq!(
+            crisis.outcome,
+            CrisisOutcome::Illness {
+                severity: CrisisSeverity::Terminal,
+                ease_factor: None,
+                ritual_level: 40,
+            }
+        );
+        let survival = crisis.survival.as_ref().expect("an illness is survivable");
+        assert_eq!(survival.ease_factor, None, "`:16632` offers no roll");
+        assert_eq!(survival.ritual_level, 40);
+
+        let entry = &resolved.entity.aging_log[0];
+        assert_eq!(entry.crisis_row, Some(Id::new("crisis.terminal_illness")));
+        assert_eq!(entry.crisis_severity, Some(CrisisSeverity::Terminal));
+
+        // Alive, and holding exactly the points the aging row awarded.
+        assert_eq!(
+            resolved.entity.aging_points,
+            points(&[(Characteristic::Sta, 5)])
+        );
+    }
+
+    /// A Crisis the table demanded and nobody has rolled yet is a state of its
+    /// own, and the year is still recorded. The player may not have the Simple Die
+    /// to hand, and refusing to write down the aging roll he *did* make would lose
+    /// the one thing that actually happened.
+    ///
+    /// So `crisis: true` with no `crisis_row` means owed-and-unrolled, and a
+    /// ruleset shipping no Crisis Table leaves every crisis year in exactly that
+    /// state however many dice are typed.
+    #[test]
+    fn a_crisis_nobody_has_rolled_stays_owed_on_the_year() {
+        let ruleset = crisis_ruleset();
+        let entity = character(Some(40), None);
+
+        let unrolled = resolve_year(
+            &entity,
+            &ruleset,
+            &request(40, 9, &[(Characteristic::Sta, 5)]),
+        )
+        .expect("the aging year resolves on its own");
+        assert!(unrolled.crisis.is_none(), "no die, no Crisis Table read");
+        let entry = &unrolled.entity.aging_log[0];
+        assert!(entry.crisis, "but the year still demanded one");
+        assert_eq!(entry.crisis_die, None);
+        assert_eq!(entry.crisis_total, None);
+        assert_eq!(entry.crisis_row, None);
+        assert_eq!(entry.crisis_severity, None);
+
+        // A ruleset with no Crisis Table has no Crisis to resolve, die or no die.
+        let no_table = scheduled_ruleset();
+        let owed = resolve_year(
+            &entity,
+            &no_table,
+            &crisis_request(40, 9, &[(Characteristic::Sta, 5)], 7),
+        )
+        .expect("the aging year resolves");
+        assert!(owed.crisis.is_none());
+        assert!(owed.entity.aging_log[0].crisis);
+        assert_eq!(owed.entity.aging_log[0].crisis_row, None);
+    }
+
+    /// Whether a Crisis happened is the **table's** call (`:16602`, `:16611`), not
+    /// the player's. A Simple Die typed against a year the aging table never sent
+    /// to the Crisis Table therefore resolves nothing — it is not an error,
+    /// because nothing is written from it and no roll disagrees with the sheet.
+    #[test]
+    fn a_crisis_die_never_invents_a_crisis_the_table_did_not_call_for() {
+        let ruleset = crisis_ruleset();
+        let entity = character(Some(40), None);
+
+        // `6 + ⌈40/10⌉ = 10` — one Aging Point, and no Crisis.
+        let resolved = resolve_year(
+            &entity,
+            &ruleset,
+            &crisis_request(40, 6, &[(Characteristic::Str, 1)], 7),
+        )
+        .expect("an ordinary year resolves");
+
+        assert!(!resolved.outcome.crisis);
+        assert!(resolved.crisis.is_none());
+        let entry = &resolved.entity.aging_log[0];
+        assert!(!entry.crisis);
+        assert_eq!(entry.crisis_die, None, "an unused die is not recorded");
+        assert_eq!(entry.crisis_total, None);
+        assert_eq!(entry.crisis_row, None);
     }
 }
