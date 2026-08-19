@@ -4340,6 +4340,76 @@ mod tests {
         assert_eq!(owed.entity.aging_log[0].crisis_row, None);
     }
 
+    /// `:16636` — "Virtues that affect aging rolls do not affect crisis survival
+    /// rolls" — held through the **writer**, which is the third and worst place it
+    /// could leak: one call now computes the AGING TOTAL, which *does* take the
+    /// trait modifiers, and the CRISIS TOTAL, which takes none, off one character.
+    /// A single shared `entity` between the two halves is exactly the shape that
+    /// invites someone to "reuse" the modifier.
+    ///
+    /// The character wears all three kinds at once. Faerie Blood's aging-roll `-1`
+    /// and the two Living Conditions modifiers demonstrably move the aging half;
+    /// the CRISIS TOTAL is still the three terms of `:16621`; and only Mild
+    /// Aging's `+3`, which names the survival roll (`:4530`), reaches the survival
+    /// read-out the year hands back.
+    #[test]
+    fn a_resolved_crisis_year_leaks_no_aging_roll_modifier_into_the_crisis() {
+        let ruleset = crisis_ruleset();
+        let mut loaded = character(Some(40), None);
+        loaded.selections = vec![
+            Selection::new(Id::new("virtue.faerie_blood")),
+            Selection::new(Id::new("flaw.poor_living_conditions")),
+            Selection::new(Id::new("virtue.mild_aging")),
+        ];
+
+        // `10 + ⌈40/10⌉ - 0 + (-1) = 13`, the Crisis row.
+        let resolved = resolve_year(
+            &loaded,
+            &ruleset,
+            &crisis_request(40, 10, &[(Characteristic::Sta, 5)], 10),
+        )
+        .expect("a crisis year resolves");
+        assert_eq!(resolved.total.total, 13);
+        assert_eq!(
+            resolved.total.trait_modifier, -1,
+            "the aging half does take Faerie Blood's -1"
+        );
+        assert_eq!(
+            resolved.total.living_conditions.total, 0,
+            "-1 and +1 cancel"
+        );
+
+        let crisis = resolved.crisis.as_ref().expect("the player rolled it");
+        assert_eq!(
+            crisis.total,
+            CrisisTotal {
+                age: 40,
+                die: 10,
+                age_modifier: 4,
+                decrepitude_score: 1,
+                total: 15,
+            },
+            "the CRISIS TOTAL is the three terms of :16621 and no fourth"
+        );
+        assert_eq!(crisis.row, Id::new("crisis.minor_illness"));
+
+        let survival = crisis.survival.as_ref().expect("an illness is survivable");
+        assert_eq!(
+            survival.modifiers,
+            vec![CrisisModifier {
+                source: CrisisModifierSource::Trait {
+                    item: Id::new("virtue.mild_aging"),
+                },
+                amount: 3,
+            }],
+            "only the grant :4530 makes to THIS roll by name"
+        );
+        assert_eq!(survival.modifier_total, 3);
+
+        // And the year records the total it actually rolled against.
+        assert_eq!(resolved.entity.aging_log[0].crisis_total, Some(15));
+    }
+
     /// `revert_year` stays **exact** across the Crisis leg, which is the property
     /// a pre-play catch-up of 25 rolls (`:2232`) depends on and the one a new leg
     /// is most likely to break.
