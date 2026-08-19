@@ -1198,6 +1198,45 @@ pub struct AgingYearResult {
     ///
     /// Source: Ars Magica - Definitive Edition (Core Rules).md:16619-16638.
     pub crisis: Option<CrisisPreview>,
+    /// What the year changed about the character that the character itself cannot
+    /// show — today, only the Longevity Ritual a Crisis spends (`:16573`). Empty
+    /// for almost every year.
+    pub notes: Vec<AgingNote>,
+}
+
+/// Something a resolved year has to **tell** the player, as opposed to something
+/// it writes.
+///
+/// A tagged enum rather than a message, for the reason every refusal in this file
+/// is plain data: the engine hardcodes no user-facing string, so the caller maps
+/// each variant through Fluent. An exhaustive `match` also makes a new note a
+/// compile error at every reader until it has been rendered somewhere.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16573.
+// `Serialize` so the note can cross the IPC edge unchanged; never deserialized,
+// because it is produced by a single call and stored by nobody.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum AgingNote {
+    /// The Crisis this year suffered spent the character's Longevity Ritual.
+    ///
+    /// > A Longevity Ritual is effective until the character suffers a crisis.
+    /// > When the crisis occurs, the ritual assures that the character survives,
+    /// > but its power is spent, and the focal ritual must be performed again.
+    /// > (`:16573`)
+    ///
+    /// **Reported, never applied.** [`resolve_year`] leaves
+    /// [`Entity::longevity_ritual`] exactly as it found it: the entry is a stored
+    /// choice holding a player-entered bonus and the focus that "must be repeated"
+    /// if the ritual is performed again (`:10668`), and an engine that silently
+    /// deleted it would destroy both — and make the year unrevertible. Performing
+    /// the focal ritual again is a season's work the player records; the sheet does
+    /// not infer it.
+    ///
+    /// It follows the **Crisis**, not the Crisis roll: "when the crisis occurs" is
+    /// the aging row's doing (`:16602`, `:16611`), and the Simple Die only decides
+    /// how bad it was — so a Crisis owed and unrolled spends the ritual too.
+    LongevityRitualSpent,
 }
 
 /// Why a year could not be resolved, or reverted.
@@ -1289,6 +1328,15 @@ pub enum AgingError {
 /// Crisis recorded as **owed and unrolled**
 /// ([`AgingLogEntry::crisis`](crate::types::AgingLogEntry::crisis) set and no
 /// row) — the aging roll happened whether or not the second die has been thrown.
+///
+/// # A spent Longevity Ritual is reported, never deleted
+///
+/// "A Longevity Ritual is effective until the character suffers a crisis. When
+/// the crisis occurs, the ritual assures that the character survives, but its
+/// power is spent, and the focal ritual must be performed again" (`:16573`). The
+/// year says so with an [`AgingNote::LongevityRitualSpent`] and leaves
+/// [`Entity::longevity_ritual`] exactly where it found it — see the variant for
+/// why deleting a stored choice is the wrong half of that sentence to implement.
 ///
 /// The entity is not mutated in place, so a refused year leaves the caller's own
 /// character exactly as it was — and [`revert_year`] can put an applied one
@@ -1389,11 +1437,22 @@ pub fn resolve_year(
     });
     applied.normalize();
 
+    // "A Longevity Ritual is effective until the character suffers a crisis. When
+    // the crisis occurs, the ritual assures that the character survives, but its
+    // power is spent" (`:16573`) — said, and not done: the ritual is the player's
+    // stored choice and stays on the entity untouched.
+    // Source: Ars Magica - Definitive Edition (Core Rules).md:16573.
+    let notes = (outcome.crisis && entity.longevity_ritual.is_some())
+        .then_some(AgingNote::LongevityRitualSpent)
+        .into_iter()
+        .collect();
+
     Ok(AgingYearResult {
         entity: applied,
         total,
         outcome,
         crisis,
+        notes,
     })
 }
 
@@ -4279,6 +4338,82 @@ mod tests {
         assert!(owed.crisis.is_none());
         assert!(owed.entity.aging_log[0].crisis);
         assert_eq!(owed.entity.aging_log[0].crisis_row, None);
+    }
+
+    /// `:16573`, which is a rule about a **stored choice** and therefore a rule
+    /// about what the engine must not quietly do to one.
+    ///
+    /// > A Longevity Ritual is effective until the character suffers a crisis.
+    /// > When the crisis occurs, the ritual assures that the character survives,
+    /// > but its power is spent, and the focal ritual must be performed again.
+    ///
+    /// So the year reports that the ritual is spent, and the ritual stays exactly
+    /// where the player put it. Clearing [`Entity::longevity_ritual`] would delete
+    /// a recorded bonus and a hand-typed focus that "must be repeated" (`:10668`)
+    /// when the ritual is performed again — and would make the year unrevertible
+    /// into the bargain.
+    ///
+    /// The note follows the **Crisis**, not the Crisis *roll*: "when the crisis
+    /// occurs" is the row's doing (`:16602`, `:16611`), and the Simple Die only
+    /// decides how bad it was. So a Crisis owed and unrolled spends the ritual too.
+    #[test]
+    fn a_crisis_spends_the_longevity_ritual_and_never_deletes_it() {
+        let ruleset = crisis_ruleset();
+        let mut entity = character(Some(40), None);
+        with_ritual(&mut entity, Some(4));
+        let before = saved(&entity);
+
+        // `9 + ⌈40/10⌉ - 4 = 9` would not reach the crisis row, so the ritual is
+        // given no bonus to subtract here and 13 stands.
+        let mut holder = entity.clone();
+        with_ritual(&mut holder, None);
+        let resolved = resolve_year(
+            &holder,
+            &ruleset,
+            &crisis_request(40, 9, &[(Characteristic::Sta, 5)], 7),
+        )
+        .expect("a crisis year resolves");
+
+        assert!(resolved.crisis.is_some());
+        assert_eq!(resolved.notes, vec![AgingNote::LongevityRitualSpent]);
+        assert_eq!(
+            resolved.entity.longevity_ritual, holder.longevity_ritual,
+            "the ritual is reported spent, never deleted"
+        );
+
+        // Unrolled, the Crisis has still occurred, so the ritual is still spent.
+        let unrolled = resolve_year(
+            &holder,
+            &ruleset,
+            &request(40, 9, &[(Characteristic::Sta, 5)]),
+        )
+        .expect("the aging year resolves on its own");
+        assert!(unrolled.crisis.is_none());
+        assert_eq!(unrolled.notes, vec![AgingNote::LongevityRitualSpent]);
+
+        // A year with no Crisis spends nothing, and neither does a Crisis suffered
+        // by a character who holds no ritual.
+        let quiet = resolve_year(
+            &holder,
+            &ruleset,
+            &crisis_request(40, 6, &[(Characteristic::Str, 1)], 7),
+        )
+        .expect("an ordinary year resolves");
+        assert!(quiet.notes.is_empty(), "no Crisis, nothing spent");
+
+        let ritualless = resolve_year(
+            &character(Some(40), None),
+            &ruleset,
+            &crisis_request(40, 9, &[(Characteristic::Sta, 5)], 7),
+        )
+        .expect("a crisis year resolves");
+        assert!(ritualless.notes.is_empty(), "nothing to spend");
+
+        assert_eq!(
+            saved(&entity),
+            before,
+            "the caller's character is untouched"
+        );
     }
 
     /// Whether a Crisis happened is the **table's** call (`:16602`, `:16611`), not
