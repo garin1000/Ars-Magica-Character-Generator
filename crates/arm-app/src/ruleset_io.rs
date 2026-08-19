@@ -11,9 +11,9 @@ use std::collections::BTreeMap;
 
 use arm_rules::validation::{aging_error_issue, childhood_rejection_issues};
 use arm_rules::{
-    AbilityBonus, AbilityFloor, AgingError, AgingOutcome, AgingTotal, AgingYearRequest, ArtBonus,
-    Characteristic, CharacteristicBonus, Confidence, Entity, EntityKind, Grant, Id,
-    LifeStageBudget, LocalizedRuleset, MagusMinimumAbility, MightScore, PointCeilings,
+    AbilityBonus, AbilityFloor, AgingError, AgingNote, AgingOutcome, AgingTotal, AgingYearRequest,
+    ArtBonus, Characteristic, CharacteristicBonus, Confidence, CrisisPreview, Entity, EntityKind,
+    Grant, Id, LifeStageBudget, LocalizedRuleset, MagusMinimumAbility, MightScore, PointCeilings,
     ReputationType, RestrictedXpPool, Ruleset, RulesetSources, Selection, SpellLevelCap,
     SupernaturalFreeSlots, ValidationIssue, ValidationMode, ValidationResult, WarpingOwed,
     ability_bonuses, ability_score_floors, age_ability_cap, aging_schedule, aging_total,
@@ -514,6 +514,21 @@ pub enum AgingApplication {
         entity: Box<Entity>,
         total: AgingTotal,
         outcome: AgingOutcome,
+        /// The Crisis the year sent the character to, read whole — present only
+        /// when the row demanded one *and* the player had thrown the Simple Die.
+        /// The log records the same figures, but only from here can the UI show
+        /// what surviving it would take, which the log has no room for.
+        ///
+        /// Boxed for the reason [`Self::Applied::entity`] is — it keeps the two
+        /// variants comparable in size — and `Box<CrisisPreview>` serializes
+        /// exactly as `CrisisPreview` does.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        crisis: Option<Box<CrisisPreview>>,
+        /// What the year changed that the character itself cannot show — today,
+        /// only the Longevity Ritual a Crisis spends (`:16573`). Empty for almost
+        /// every year, and each variant is rendered through Fluent by the caller.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        notes: Vec<AgingNote>,
     },
     Rejected {
         issues: Vec<ValidationIssue>,
@@ -562,28 +577,34 @@ pub fn aging_preview_loaded(
 /// apparent age advances, and what makes the year impossible. This only chooses
 /// the shape the frontend receives.
 ///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16617.
+/// `crisis_die` is the **Simple Die** the player threw at the Crisis Table
+/// (`:16621`), or `None` for a Crisis nobody has rolled yet — a legitimate state,
+/// because the aging roll happened whether or not the second die was thrown. A die
+/// given for a year the table sent to no Crisis is simply unused: whether a Crisis
+/// happened is `:16602`/`:16611`'s call, never the player's.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16621.
 pub fn aging_apply_loaded(
     entity: &Entity,
     ruleset: &Ruleset,
     age: u32,
     die: i32,
     distribution: &BTreeMap<Characteristic, u8>,
+    crisis_die: Option<i32>,
 ) -> AgingApplication {
     let request = AgingYearRequest {
         age,
         die,
         distribution: distribution.clone(),
-        // The Crisis die is not yet asked for at this edge, so a year that calls
-        // for a Crisis is applied with the Crisis owed and unrolled — exactly the
-        // state the engine already recorded before it could resolve one.
-        crisis_die: None,
+        crisis_die,
     };
     match resolve_year(entity, ruleset, &request) {
         Ok(result) => AgingApplication::Applied {
             entity: Box::new(result.entity),
             total: result.total,
             outcome: result.outcome,
+            crisis: result.crisis.map(Box::new),
+            notes: result.notes,
         },
         Err(error) => AgingApplication::Rejected {
             issues: vec![aging_error_issue(&error)],

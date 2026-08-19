@@ -804,7 +804,8 @@ fn an_applied_aging_year_reverts_to_the_character_it_started_from() {
         entity: applied,
         total,
         outcome,
-    } = arm_app::ruleset_io::aging_apply_loaded(&entity, &ruleset, 40, 10, &BTreeMap::new())
+        ..
+    } = arm_app::ruleset_io::aging_apply_loaded(&entity, &ruleset, 40, 10, &BTreeMap::new(), None)
     else {
         panic!("a year the character owes and has not rolled applies");
     };
@@ -841,6 +842,86 @@ fn an_applied_aging_year_reverts_to_the_character_it_started_from() {
             .collect::<Vec<_>>(),
         vec![arm_rules::ValidationIssue::CODE_AGING_YEAR_NOT_RECORDED]
     );
+}
+
+/// The Crisis the player rolled has to reach the character, and the two things
+/// only the applied year can say have to reach the player.
+///
+/// A companion of 40 rolling a 9 totals `9 + ⌈40/10⌉ = 13`, which is "Gain
+/// sufficient Aging Points (in any Characteristics) to reach the next level in
+/// Decrepitude, and Crisis" (`:16602`) — five points from nothing. The Crisis is
+/// then read off the character those five points already made (`:16619`), so a
+/// Simple Die of 10 totals `10 + 4 + 1 = 15`: the minor illness of `:16628`,
+/// survivable on a Stamina stress roll against an Ease Factor of 3 or a CrCo20.
+///
+/// Until the die crossed this edge every Crisis the shipped app recorded was owed
+/// and unrolled, whatever the player had thrown.
+#[test]
+fn an_applied_crisis_year_comes_back_with_the_crisis_and_the_ritual_it_spent() {
+    use arm_rules::{AgingNote, Characteristic, CrisisOutcome, CrisisSeverity, LongevityRitual};
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut entity = sample_entity();
+    entity.age = Some(40);
+    entity.aging_log.clear();
+    entity.living_conditions.clear();
+    // A ritual with no bonus leaves the AGING TOTAL alone, so the year still lands
+    // on 13 — and it is still a ritual the Crisis spends (`:16573`).
+    entity.longevity_ritual = Some(LongevityRitual {
+        source: arm_rules::LongevitySource::External,
+        bonus: Some(0),
+        focus: String::new(),
+    });
+
+    let distribution = BTreeMap::from([(Characteristic::Sta, 5)]);
+    let AgingApplication::Applied {
+        total,
+        outcome,
+        crisis,
+        notes,
+        ..
+    } = arm_app::ruleset_io::aging_apply_loaded(&entity, &ruleset, 40, 9, &distribution, Some(10))
+    else {
+        panic!("a year the character owes and has not rolled applies");
+    };
+    assert_eq!(total.total, 13);
+    assert!(outcome.crisis, "13 is the first Crisis row (:16602)");
+
+    let crisis = crisis.expect("a Crisis with a die rolled comes back resolved");
+    assert_eq!(crisis.total.die, 10, "the player's Simple Die (:16621)");
+    assert_eq!(crisis.total.age_modifier, 4);
+    assert_eq!(
+        crisis.total.decrepitude_score, 1,
+        "the five points this very year awarded, counted first (:16619)"
+    );
+    assert_eq!(crisis.total.total, 15);
+    assert_eq!(crisis.row, Id::new("crisis.minor_illness"));
+    assert_eq!(
+        crisis.outcome,
+        CrisisOutcome::Illness {
+            severity: CrisisSeverity::Minor,
+            ease_factor: Some(3),
+            ritual_level: 20,
+        }
+    );
+    let survival = crisis
+        .survival
+        .expect("an illness is survivable, so it has a read-out");
+    assert_eq!(survival.ease_factor, Some(3));
+    assert_eq!(survival.ritual_level, 20);
+    assert_eq!(survival.allowances.len(), 1, "one doctor only (:16634)");
+
+    // "its power is spent, and the focal ritual must be performed again"
+    // (`:16573`) — reported, because the entity keeps the stored choice.
+    assert_eq!(notes, vec![AgingNote::LongevityRitualSpent]);
+
+    // A year with no Crisis die is still written, with the Crisis owed and
+    // unrolled — the aging roll happened whether or not the second die was thrown.
+    let AgingApplication::Applied { crisis: none, .. } =
+        arm_app::ruleset_io::aging_apply_loaded(&entity, &ruleset, 40, 9, &distribution, None)
+    else {
+        panic!("an unrolled Crisis is a legitimate state, not a refusal");
+    };
+    assert_eq!(none, None);
 }
 
 #[test]
