@@ -4,6 +4,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import type {
   Characteristic,
+  CrisisSeverity,
   DerivedTotals,
   EffectiveScores,
   Entity,
@@ -145,6 +146,98 @@ export interface AgingOutcome {
 }
 
 /**
+ * One Crisis's CRISIS TOTAL with every term that made it — "Simple die + age/10
+ * (round up) + Decrepitude Score" (Core Rules.md:16621). All three are ADDED, and
+ * the Decrepitude is the one the crisis year itself raised (`:16619`), never
+ * today's.
+ */
+export interface CrisisTotal {
+  age: number;
+  die: number;
+  age_modifier: number;
+  decrepitude_score: number;
+  total: number;
+}
+
+/**
+ * Where one crisis-survival modifier comes from. A tagged union rather than a
+ * string so each case can be named its own way: a Virtue resolves through the item
+ * catalogue by `item` id, the familiar's bronze cord (`:10844`) through Fluent.
+ */
+export type CrisisModifierSource = { kind: 'trait'; item: string } | { kind: 'bronze_cord' };
+
+/** One modifier to the crisis survival roll, ADDED with its stored sign. */
+export interface CrisisModifier {
+  source: CrisisModifierSource;
+  amount: number;
+}
+
+/**
+ * Something the rules PERMIT at a crisis, as opposed to a number the engine adds:
+ * the attending doctor of `:16634`, whose Medicine belongs to a character this
+ * sheet does not hold. `botch_penalty` is stored signed and added, like every other
+ * aging modifier.
+ */
+export type CrisisAllowance = {
+  kind: 'attendant';
+  ability: string;
+  characteristic: Characteristic;
+  ease_factor: number;
+  botch_penalty: number;
+};
+
+/**
+ * What one row of the Crisis Table does to the character (`:16624-16632`).
+ * `ease_factor` is absent for the Terminal row, which offers no Stamina roll at
+ * all (`:16632`).
+ */
+export type CrisisOutcome =
+  | { type: 'bedridden' }
+  | {
+      type: 'illness';
+      severity: CrisisSeverity;
+      ease_factor?: number | null;
+      ritual_level: number;
+    };
+
+/**
+ * What surviving one Crisis would take, and what the character brings to it
+ * (`:16628-16638`). A read-out: the engine never throws the Stamina die and never
+ * pronounces a character dead.
+ *
+ * `ease_factor` is absent for the Terminal row, which offers no roll at all
+ * (`:16632`) — not an unbeatable one. The modifiers are itemized *and* summed
+ * because the panel has to name each one; a character carrying no bronze cord shows
+ * no cord line rather than a +0.
+ */
+export interface CrisisSurvival {
+  ease_factor?: number | null;
+  ritual_level: number;
+  modifiers: CrisisModifier[];
+  modifier_total: number;
+  allowances: CrisisAllowance[];
+}
+
+/**
+ * One Crisis read whole: the total, the row it landed on, what that row costs, and
+ * what surviving it would take. `row` is an id — its text lives in
+ * `rules/i18n/<lang>/aging.json` — and `survival` is absent for a bedridden row,
+ * which is time rather than a roll (`:16626`, `:16627`).
+ */
+export interface CrisisPreview {
+  total: CrisisTotal;
+  row: string;
+  outcome: CrisisOutcome;
+  survival?: CrisisSurvival | null;
+}
+
+/**
+ * Something a resolved year has to TELL the player, as opposed to something it
+ * writes. Rendered through `aging-note-<kind>`, never as a raw tag.
+ */
+export type AgingNote = { kind: 'longevity_ritual_spent' };
+
+/**
  * The outcome of previewing, applying or reverting one aging roll.
  *
  * A refusal is an ordinary outcome, not an error — a die typed against a year
@@ -154,11 +247,23 @@ export interface AgingOutcome {
  * `ChildhoodApplication`.
  */
 export type AgingProjection =
-  | { status: 'previewed'; total: AgingTotal; outcome: AgingOutcome }
+  | {
+      status: 'previewed';
+      total: AgingTotal;
+      outcome: AgingOutcome;
+      crisis?: CrisisPreview | null;
+    }
   | { status: 'rejected'; issues: ValidationIssue[] };
 
 export type AgingApplication =
-  | { status: 'applied'; entity: Entity; total: AgingTotal; outcome: AgingOutcome }
+  | {
+      status: 'applied';
+      entity: Entity;
+      total: AgingTotal;
+      outcome: AgingOutcome;
+      crisis?: CrisisPreview | null;
+      notes?: AgingNote[];
+    }
   | { status: 'rejected'; issues: ValidationIssue[] };
 
 export type AgingReversion =
@@ -169,22 +274,38 @@ export type AgingReversion =
  * Read one year's aging roll without writing anything: the total the typed `die`
  * makes at `age`, and the row it lands on. The die stays out of the entity, which
  * is what makes "the calculator does not dirty the document" mechanically true.
+ *
+ * `distribution` and `crisisDie` are the very arguments {@link agingApply} takes,
+ * because the engine answers them by resolving the year in memory and throwing the
+ * character away: the Aging Points a Crisis row awards ARE the Decrepitude increase
+ * `:16619` puts first, so a Crisis read off the character as it stands would be one
+ * short of the one Apply writes.
  */
-export function agingPreview(entity: Entity, age: number, die: number): Promise<AgingProjection> {
-  return invoke('aging_preview', { entity, age, die });
+export function agingPreview(
+  entity: Entity,
+  age: number,
+  die: number,
+  distribution: Partial<Record<Characteristic, number>>,
+  crisisDie: number | null,
+): Promise<AgingProjection> {
+  return invoke('aging_preview', { entity, age, die, distribution, crisisDie });
 }
 
 /**
  * Apply one year's aging roll. `distribution` places the Aging Points the row left
  * to the player, per Characteristic; it is empty for a row that names its own.
+ * `crisisDie` is the Simple Die thrown at the Crisis Table (`:16621`), or `null`
+ * for a Crisis nobody has rolled yet — which the year records as owed and unrolled
+ * rather than refusing.
  */
 export function agingApply(
   entity: Entity,
   age: number,
   die: number,
   distribution: Partial<Record<Characteristic, number>>,
+  crisisDie: number | null,
 ): Promise<AgingApplication> {
-  return invoke('aging_apply', { entity, age, die, distribution });
+  return invoke('aging_apply', { entity, age, die, distribution, crisisDie });
 }
 
 /** Take one applied aging year back off, exactly. */
