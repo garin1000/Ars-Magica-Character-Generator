@@ -12,10 +12,10 @@
 //! pins is the document's *structure* and its *numbers*; the wording is 5.6c's
 //! business.
 
-use arm_rules::Characteristic;
 use arm_rules::export::{LABEL_KEYS, character_markdown};
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
+use arm_rules::{Characteristic, CrisisSeverity};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The whole shipped ruleset, localized with the shipped English rules text.
@@ -283,8 +283,10 @@ fn golden_magus() -> Entity {
         Id::new("living_condition.work_in_a_mine"),
         Id::new("living_condition.live_in_a_leper_colony"),
     ]);
-    // One hand-written year and one the engine resolved, so the fixture covers both
-    // the free-text entry and the widened one carrying its die and total.
+    // One hand-written year and two the engine resolved, so the fixture covers the
+    // free-text entry, the widened one carrying its die and total, and both states a
+    // Crisis can be in: demanded and unrolled (1229), and resolved against the
+    // Crisis Table (1230, Core Rules.md:16621-16632).
     e.aging_log = vec![
         AgingLogEntry {
             year: Some(1220),
@@ -299,6 +301,19 @@ fn golden_magus() -> Entity {
             living_conditions: BTreeSet::from([Id::new("living_condition.work_in_a_mine")]),
             points: BTreeMap::from([(Characteristic::Pre, 5)]),
             crisis: true,
+            ..AgingLogEntry::default()
+        },
+        AgingLogEntry {
+            year: Some(1230),
+            age: Some(36),
+            die: Some(9),
+            total: Some(13),
+            living_conditions: BTreeSet::from([Id::new("living_condition.work_in_a_mine")]),
+            crisis: true,
+            crisis_die: Some(10),
+            crisis_total: Some(15),
+            crisis_row: Some(Id::new("crisis.minor_illness")),
+            crisis_severity: Some(CrisisSeverity::Minor),
             ..AgingLogEntry::default()
         },
     ];

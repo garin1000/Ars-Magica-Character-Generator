@@ -3894,9 +3894,12 @@ Each is findable here so it is not rediscovered later as a bug.
   keeping only the reading — never by calling `crisis_preview` on the character as
   it stands, which `:16619` makes one Decrepitude short (the year's own award is
   the increase that comes first), so a bare read would show 14 where the log then
-  records 15. One gap of the write-back remains: `export.rs` prints a log entry's
-  aging die and total but none of the four Crisis fields, so a resolved Crisis is
-  absent from the Markdown sheet.
+  records 15. The Markdown sheet caught up in the same slice: `export.rs`'s
+  `aging_log_crisis` prints the row (through the rules i18n), its severity (through
+  `crisis-severity-<slug>`, now declared in `LABEL_KEYS`), the Simple Die and the
+  CRISIS TOTAL — and says in words when a Crisis is owed and unrolled, which is a
+  third state the sheet could not previously tell from no Crisis at all. The golden
+  fixture carries one of each.
 - **Leprosy's Heavy Wound at a Crisis** (`:6340`) — "whenever she undergoes an Aging
   Crisis (page 392) the leper sustains a Heavy Wound in addition to any other result".
   `flaw.leprosy` ships the `crisis_heavy_wound` marker and it is surfaced in the
