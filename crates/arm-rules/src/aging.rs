@@ -1327,6 +1327,10 @@ pub fn resolve_year(
         points: awarded,
         apparent_age_increased: outcome.apparent_age_increases,
         crisis: outcome.crisis,
+        crisis_die: None,
+        crisis_total: None,
+        crisis_row: None,
+        crisis_severity: None,
     });
     applied.normalize();
 
@@ -3033,6 +3037,10 @@ mod tests {
                 points: points(&[(Characteristic::Sta, 1)]),
                 apparent_age_increased: true,
                 crisis: false,
+                crisis_die: None,
+                crisis_total: None,
+                crisis_row: None,
+                crisis_severity: None,
             }],
             "the structured fields are the record; the prose is left to the player"
         );

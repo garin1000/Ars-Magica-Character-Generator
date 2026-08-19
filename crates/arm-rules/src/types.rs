@@ -12,6 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 use crate::ability::AbilityCategory;
+use crate::aging::CrisisSeverity;
 use crate::characteristics::Characteristic;
 use crate::life_stage::LifeStagePlan;
 
@@ -2360,11 +2361,42 @@ pub struct AgingLogEntry {
     /// Source: Core Rules.md:16577.
     #[serde(default, skip_serializing_if = "is_false")]
     pub apparent_age_increased: bool,
-    /// Whether the row called for a Crisis. The Crisis roll itself is a later
-    /// slice; this only records that the year demanded one.
+    /// Whether the row called for a Crisis (`:16602`, `:16611`). It says the year
+    /// *demanded* one, which is not the same as the Crisis having been rolled: the
+    /// four fields below are what records that, and a `true` here with an absent
+    /// [`Self::crisis_row`] is a Crisis owed and not yet resolved.
     /// Source: Core Rules.md:16602, :16611.
     #[serde(default, skip_serializing_if = "is_false")]
     pub crisis: bool,
+    /// The Simple Die the player typed for the Crisis, when one was rolled. The
+    /// app never rolls this one either.
+    /// Source: Core Rules.md:16621.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crisis_die: Option<i32>,
+    /// The CRISIS TOTAL that die produced — "Simple die + age/10 (round up) +
+    /// Decrepitude Score", the Decrepitude being the one this very year raised
+    /// (`:16619`). Recorded for the same reason [`Self::total`] is: it is the
+    /// historical record of a roll, and the score it was made against goes on
+    /// climbing afterwards.
+    /// Source: Core Rules.md:16619, :16621.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crisis_total: Option<i32>,
+    /// The row of the Crisis Table that total landed on, as an id into
+    /// `rules/core/aging.json` — `crisis.minor_illness` and friends. An id, never
+    /// a name: the row's text lives in `rules/i18n/<lang>/aging.json`.
+    /// Source: Core Rules.md:16624-16632.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crisis_row: Option<Id>,
+    /// How bad that row was, recorded beside its id rather than left to be looked
+    /// up again. `AgingRules::crisis` is optional — a ruleset may ship no Crisis
+    /// Table at all — so a save can outlive the table that produced it, and the
+    /// severity is then the only thing left that says what the character went
+    /// through. `None` beside a present [`Self::crisis_row`] is a Bedridden row
+    /// (`:16626`, `:16627`), which has no severity because it is time rather than
+    /// an illness.
+    /// Source: Core Rules.md:16628-16632.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crisis_severity: Option<CrisisSeverity>,
 }
 
 /// `skip_serializing_if` predicate: omits a `u32` field when it is zero.
@@ -5077,12 +5109,78 @@ mod tests {
             points: BTreeMap::from([(Characteristic::Sta, 1)]),
             apparent_age_increased: true,
             crisis: false,
+            crisis_die: None,
+            crisis_total: None,
+            crisis_row: None,
+            crisis_severity: None,
         };
         let json = serde_json::to_string(&entry).unwrap();
         let back: AgingLogEntry = serde_json::from_str(&json).unwrap();
         assert_eq!(entry, back);
         // A `false` flag is not a key: `crisis` stays out of a save that had none.
         assert!(!json.contains("crisis"), "{json}");
+    }
+
+    /// A resolved **Crisis** records what the Crisis Table was asked and what it
+    /// answered — the Simple Die the player typed (`:16621`), the CRISIS TOTAL it
+    /// made, the row it landed on and that row's severity — and all four
+    /// round-trip. Absent on every year that saw no Crisis, so a save that had
+    /// none carries none of the keys.
+    ///
+    /// **No `SCHEMA_VERSION` bump**, and this test is where that decision is
+    /// pinned. Every field is `serde(default, skip_serializing_if)`, so the
+    /// widening is purely additive in *both* directions: a schema-15 save written
+    /// before the Crisis leg existed loads unchanged, and one written after it is
+    /// still a document an older reader accepts (`AgingLogEntry` declares no
+    /// `deny_unknown_fields`). That is exactly the case
+    /// `Entity::living_conditions` made and `AgingLogEntry::year` did not — 14 → 15
+    /// was earned by `year` *becoming* optional, which an older reader rejects.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16621, :16624-16632.
+    #[test]
+    fn a_resolved_crisis_round_trips_and_needs_no_schema_bump() {
+        assert_eq!(
+            SCHEMA_VERSION, 15,
+            "a purely additive widening earns no bump"
+        );
+
+        let entry = AgingLogEntry {
+            year: Some(1220),
+            age: Some(40),
+            effect: String::new(),
+            die: Some(9),
+            total: Some(13),
+            living_conditions: BTreeSet::new(),
+            points: BTreeMap::from([(Characteristic::Sta, 5)]),
+            apparent_age_increased: true,
+            crisis: true,
+            crisis_die: Some(7),
+            crisis_total: Some(12),
+            crisis_row: Some(Id::new("crisis.bedridden_month")),
+            crisis_severity: Some(CrisisSeverity::Minor),
+        };
+        let json = serde_json::to_string(&entry).unwrap();
+        let back: AgingLogEntry = serde_json::from_str(&json).unwrap();
+        assert_eq!(entry, back);
+
+        // A year with no Crisis carries none of the four keys.
+        let quiet = AgingLogEntry {
+            age: Some(41),
+            die: Some(4),
+            total: Some(8),
+            ..AgingLogEntry::default()
+        };
+        let json = serde_json::to_string(&quiet).unwrap();
+        assert!(!json.contains("crisis"), "{json}");
+
+        // And an entry written before the Crisis leg existed still loads.
+        let earlier = r#"{ "year": 1219, "age": 39, "effect": "", "die": 9,
+                           "total": 13, "crisis": true }"#;
+        let loaded: AgingLogEntry = serde_json::from_str(earlier).unwrap();
+        assert!(loaded.crisis, "the year called for one");
+        assert_eq!(loaded.crisis_die, None, "and nobody has rolled it yet");
+        assert_eq!(loaded.crisis_row, None);
+        assert_eq!(loaded.crisis_severity, None);
     }
 
     /// A character with no birth year has no calendar year to write, so `year`

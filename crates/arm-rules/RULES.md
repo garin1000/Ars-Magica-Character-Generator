@@ -4074,6 +4074,47 @@ value is a second place an aging-roll modifier could leak into either.
 same path against the **shipped** `rules/core/aging.json` through the crate's public
 surface, which is where the attendant of `:16634` actually ships.
 
+##### What a resolved Crisis records — and why `SCHEMA_VERSION` stays 15
+
+> "**CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score**" … "| Crisis
+> Roll | Result |"
+> — Ars Magica - Definitive Edition (Core Rules).md:16621, :16624-16632
+
+`AgingLogEntry` (`types.rs`) widens by four fields, all
+`serde(default, skip_serializing_if)`: `crisis_die` (the player's Simple Die),
+`crisis_total` (the CRISIS TOTAL it made), `crisis_row` (the **id** of the row it
+landed on) and `crisis_severity`. Together with the pre-existing `crisis` flag they
+distinguish three states a year can be in, which one boolean could not: no Crisis
+(`crisis: false`), a Crisis the table demanded and nobody has rolled yet
+(`crisis: true`, no `crisis_row`), and a resolved one (all four present).
+
+- **The roll is recorded for the same reason the aging roll is.** `die` and `total`
+  are the historical record of what was thrown, not a cached derivation — the
+  Decrepitude the CRISIS TOTAL was made against goes on climbing afterwards, so
+  re-deriving it later would get a different number. Same argument, same fields.
+- **The row travels as an id** — "Bedridden for a week" is `rules/i18n/<lang>/aging.json`
+  data, never engine prose.
+- **`crisis_severity` is recorded beside the id although the row carries it**, which is
+  the one deliberate redundancy. `AgingRules::crisis` is **optional**: a ruleset may
+  ship no Crisis Table at all, and a save can be loaded under one that does not, at
+  which point the id resolves to nothing and the severity is all that is left to say
+  what the character went through. A `None` severity beside a **present** `crisis_row`
+  is a bedridden row (`:16626`, `:16627`) — time, not an illness. The writer takes both
+  from the same resolved row, so they cannot disagree.
+  `ease_factor` and `ritual_level` are **not** recorded: they are properties of the row
+  the sheet re-reads, and the severity is the rank that outlives the table.
+- **No `SCHEMA_VERSION` bump — it stays 15**, pinned by
+  `a_resolved_crisis_round_trips_and_needs_no_schema_bump` (`types.rs`). The widening
+  is additive in *both* directions: an older save omits the four keys and defaults
+  them, and a newer save is still a document an older reader accepts, since
+  `AgingLogEntry` declares no `deny_unknown_fields` and the keys are omitted whenever
+  they are absent. That is exactly the case `Entity.living_conditions` made. The 14 → 15
+  bump was earned by something different in kind — `AgingLogEntry::year` *became*
+  `Option`, so a new save may omit a key an old reader **requires**.
+- Mirrored by hand in `ui/src/lib/types.ts` (`AgingLogEntry` plus a `CrisisSeverity`
+  union), which `every_aging_field_is_mirrored_in_the_frontend_types`
+  (`arm-app/tests/commands.rs`) enforces by populating every optional field.
+
 #### Translation-table notes — `alterung-twilight.md`
 Two things about `rules/source/de/translation-tables/alterung-twilight.md` that a
 future translator must not "fix" the core file from.

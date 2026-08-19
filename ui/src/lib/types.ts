@@ -1020,8 +1020,22 @@ export interface AgingLogEntry {
   living_conditions?: string[];
   points?: Partial<Record<Characteristic, number>>;
   apparent_age_increased?: boolean;
+  // Whether the row DEMANDED a Crisis. A `true` with no `crisis_row` is a Crisis
+  // owed and not yet rolled.
   crisis?: boolean;
+  // What the Crisis Table was asked and what it answered, once the Crisis is
+  // rolled: the player's Simple Die, the CRISIS TOTAL it made, the row id (whose
+  // text lives in the rules i18n, never here) and that row's severity. A row with
+  // no severity is a bedridden one — time, not an illness.
+  crisis_die?: number | null;
+  crisis_total?: number | null;
+  crisis_row?: string | null;
+  crisis_severity?: CrisisSeverity | null;
 }
+
+// How bad a crisis illness is, ascending. Mirrors the Rust `CrisisSeverity`;
+// rendered through Fluent, never as a raw slug.
+export type CrisisSeverity = 'minor' | 'serious' | 'major' | 'critical' | 'terminal';
 
 // Where a Longevity Ritual comes from (rendered via Fluent, never as a raw slug).
 export type LongevitySource = 'self_made' | 'external';

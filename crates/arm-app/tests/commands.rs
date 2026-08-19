@@ -1799,8 +1799,9 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
 ///
 /// Every optional field is populated on purpose: `skip_serializing_if` would
 /// otherwise drop `year`, `age`, `die`, `total`, `living_conditions`,
-/// `apparent_age_increased` and `crisis` from the serialization and hide them from
-/// the check.
+/// `apparent_age_increased`, `crisis` and the four fields a resolved Crisis
+/// records (`crisis_die`, `crisis_total`, `crisis_row`, `crisis_severity`) from
+/// the serialization and hide them from the check.
 ///
 /// **`AgingLogEntry::points` is deliberately left empty.** It is a
 /// `BTreeMap<Characteristic, u8>`, so its serialized *keys* are Characteristic
@@ -1848,6 +1849,10 @@ fn every_aging_field_is_mirrored_in_the_frontend_types() {
         points: BTreeMap::new(),
         apparent_age_increased: true,
         crisis: true,
+        crisis_die: Some(7),
+        crisis_total: Some(12),
+        crisis_row: Some(Id::new("crisis.minor_illness")),
+        crisis_severity: Some(arm_rules::CrisisSeverity::Minor),
     };
 
     let mut keys = std::collections::BTreeSet::new();
