@@ -1769,6 +1769,38 @@ fn every_aging_effect_has_a_fluent_key_in_each_locale() {
     }
 }
 
+/// The crisis panel names an illness's severity through `crisis-severity-<slug>`,
+/// and the log entry that records one does the same. `CrisisSeverity` is a Rust
+/// taxonomy, so a rank no locale names would reach the screen as its own raw slug —
+/// the one thing a label may never do. `CrisisSeverity::ALL` is the source of the
+/// set, so adding a rank fails this test until both locales carry it.
+#[test]
+fn every_crisis_severity_has_a_fluent_key_in_each_locale() {
+    for lang in ["en", "de"] {
+        let ftl = fs::read_to_string(repo_root().join(format!("locales/{lang}/main.ftl"))).unwrap();
+        for severity in arm_rules::CrisisSeverity::ALL {
+            assert!(
+                ftl.contains(&format!("crisis-severity-{severity} =")),
+                "locale '{lang}' is missing key 'crisis-severity-{severity}'"
+            );
+        }
+    }
+}
+
+/// The frontend's `CrisisSeverity` union types the rank a log entry records. A
+/// missing member is caught by nothing the engine runs, so the Rust enum is the
+/// source and this test pins the mirror.
+#[test]
+fn every_crisis_severity_is_mirrored_in_the_frontend_union() {
+    let types = fs::read_to_string(repo_root().join("ui/src/lib/types.ts")).unwrap();
+    for severity in arm_rules::CrisisSeverity::ALL {
+        assert!(
+            types.contains(&format!("'{severity}'")),
+            "ui/src/lib/types.ts is missing the CrisisSeverity member '{severity}'"
+        );
+    }
+}
+
 /// The frontend's `AgingEffect` union types every `aging_mod` effect it reads off a
 /// loaded item. A missing member is not caught by anything the engine runs, so the
 /// Rust enum is the source and this test pins the mirror.

@@ -1828,6 +1828,33 @@ pub enum CrisisSeverity {
     Terminal,
 }
 
+impl CrisisSeverity {
+    /// Every rank, in the table's own ascending order — the source of the set for
+    /// the `crisis-severity-<slug>` locale coverage and the frontend union mirror,
+    /// so a new rank fails those tests until it is named and mirrored.
+    pub const ALL: [CrisisSeverity; 5] = [
+        CrisisSeverity::Minor,
+        CrisisSeverity::Serious,
+        CrisisSeverity::Major,
+        CrisisSeverity::Critical,
+        CrisisSeverity::Terminal,
+    ];
+}
+
+impl std::fmt::Display for CrisisSeverity {
+    /// The serde slug, which is what the Fluent key and the frontend union are
+    /// keyed on — never a user-facing label.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            CrisisSeverity::Minor => "minor",
+            CrisisSeverity::Serious => "serious",
+            CrisisSeverity::Major => "major",
+            CrisisSeverity::Critical => "critical",
+            CrisisSeverity::Terminal => "terminal",
+        })
+    }
+}
+
 /// The die the crisis total is rolled on: "Roll a ten-sided die. Each number
 /// counts for its value, except that a zero counts as ten." (`:474`) — so the
 /// Simple Die's range is 1 to 10, which this carries as data rather than as a
