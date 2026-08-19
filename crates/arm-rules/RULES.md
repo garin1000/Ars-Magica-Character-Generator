@@ -4136,6 +4136,12 @@ crisis rule is implemented twice.
   Ritual included, which costs nothing precisely because the leg reports it spent
   instead of deleting it
   (`reverting_a_resolved_crisis_year_leaves_the_character_byte_identical`).
+- **Walked against the shipped catalogue**, not only against fixtures:
+  `a_shipped_crisis_year_is_written_into_the_character_and_reverts_exactly`
+  (`data_integrity.rs`) drives a companion of 40 through a 9 (`13`, the `:16602` row),
+  five Aging Points to Decrepitude 1, a Simple Die of 10 and so a CRISIS TOTAL of 15 —
+  the shipped minor illness with its Ease Factor 3, CrCo20 and the `:16634` doctor,
+  which only the real `rules/core/aging.json` ships — and then back off byte for byte.
 - App/UI: `ruleset_io::aging_apply_loaded` passes `crisis_die: None` — a mechanical
   pass-through, since the command edge does not yet ask for the die. Threading it
   through `aging_apply` is the IPC/UI step's work.

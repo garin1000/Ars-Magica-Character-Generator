@@ -2892,6 +2892,80 @@ fn the_shipped_crisis_table_answers_a_total_end_to_end() {
     );
 }
 
+/// One Crisis **written into a character** against the shipped tables, and taken
+/// back off again.
+///
+/// A 40-year-old companion rolls a 9: `9 + ⌈40/10⌉ = 13`, the row of `:16602` that
+/// reaches the next level in Decrepitude and sends him to the Crisis Table. Five
+/// Aging Points is what the shipped advancement curve prices Decrepitude 1 at, and
+/// `:16619`'s "increase the character's Decrepitude first" is visible in the CRISIS
+/// TOTAL: `10 + 4 + 1 = 15`, the **1** being the score this very year raised. That
+/// lands on the shipped minor illness — Ease Factor 3, CrCo20, and the doctor of
+/// `:16634`, which only the real `rules/core/aging.json` ships.
+///
+/// The fixture tests in `aging.rs` prove the leg; this proves it against the
+/// catalogue the app actually loads, and that the year still comes back off byte
+/// for byte.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:16602, :16619, :16621,
+/// :16628, :16634.
+#[test]
+fn a_shipped_crisis_year_is_written_into_the_character_and_reverts_exactly() {
+    let rs = load_full_ruleset();
+    let mut e = entity("companion", vec![]);
+    e.age = Some(40);
+    let before = serde_json::to_string(&e).expect("a character serializes");
+
+    let request = arm_rules::AgingYearRequest {
+        age: 40,
+        die: 9,
+        distribution: BTreeMap::from([(Characteristic::Sta, 5)]),
+        crisis_die: Some(10),
+    };
+    let resolved = arm_rules::resolve_year(&e, &rs, &request).expect("a shipped crisis year");
+    assert_eq!(resolved.total.total, 13);
+    assert!(resolved.outcome.crisis);
+
+    let crisis = resolved.crisis.as_ref().expect("the player rolled it");
+    assert_eq!(
+        crisis.total.decrepitude_score, 1,
+        "the score this year raised, not the 0 he started it with"
+    );
+    assert_eq!(crisis.total.total, 15);
+    assert_eq!(crisis.row, Id::new("crisis.minor_illness"));
+    let survival = crisis.survival.as_ref().expect("an illness is survivable");
+    assert_eq!(survival.ease_factor, Some(3));
+    assert_eq!(survival.ritual_level, 20);
+    assert_eq!(
+        survival.allowances,
+        vec![CrisisAllowance::Attendant {
+            ability: Id::new("ability.medicine"),
+            characteristic: Characteristic::Int,
+            ease_factor: 6,
+            botch_penalty: -3,
+        }],
+        "the doctor of :16634 reaches the write-back too"
+    );
+
+    // The year records it, and the character is alive and holding exactly the
+    // points the aging row awarded.
+    let entry = &resolved.entity.aging_log[0];
+    assert_eq!(entry.crisis_die, Some(10));
+    assert_eq!(entry.crisis_total, Some(15));
+    assert_eq!(entry.crisis_row, Some(Id::new("crisis.minor_illness")));
+    assert_eq!(entry.crisis_severity, Some(CrisisSeverity::Minor));
+    assert_eq!(
+        resolved.entity.aging_points,
+        BTreeMap::from([(Characteristic::Sta, 5)])
+    );
+
+    let reverted = arm_rules::revert_year(&resolved.entity, &rs, 40).expect("comes back off");
+    assert_eq!(
+        serde_json::to_string(&reverted).expect("a character serializes"),
+        before
+    );
+}
+
 /// Leprosy likewise states two mechanics at once:
 ///
 /// > "A leper has a permanent -2 modifier to her Living Condition …, and whenever
