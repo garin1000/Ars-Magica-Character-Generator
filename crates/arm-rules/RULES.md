@@ -4034,6 +4034,36 @@ ships **no Crisis Table**, never that the total fell off the table.
 `a_crisis_total_lands_on_the_row_whose_band_covers_it` (`aging.rs`) walks both open
 ends and every band between them.
 
+##### One Crisis read whole — `crisis_preview`
+
+> "**Crisis:** Increase the character's Decrepitude first, and then roll on the Crisis
+> Table." … "Creo Corpus magic can postpone a crisis, or resolve it if cast as a
+> Momentary Ritual."
+> — Ars Magica - Definitive Edition (Core Rules).md:16619, :16638
+
+`crisis_preview` (`aging.rs`) composes `crisis_total`, `resolve_crisis_row` and
+`crisis_survival` into the one value a caller needs from `(entity, ruleset, age,
+die)`: the CRISIS TOTAL with its three terms, the **id** of the row it lands on, that
+row's `CrisisOutcome`, and the survival read-out where one applies. Each of the three
+stays the single home of its own rule; what the composition adds is the *pairing* —
+the row is looked up against the total this call computed and the survival read-out
+against the outcome that row carries, so no caller can pair a total with the wrong
+row. The row travels as an id because its text ("Bedridden for a week") is i18n data,
+never engine prose.
+
+`survival` is `None` for `CrisisOutcome::Bedridden` (`:16626`, `:16627`): a week or a
+month in bed is time, not a roll, and an empty read-out would read as "survivable on
+a 0".
+
+It **writes nothing**. `resolve_year` remains the aging subsystem's single writer;
+`:16619`'s "increase the character's Decrepitude first" is honoured by *reading* the
+score as of the crisis year (`decrepitude_points_as_of`), not by raising anything
+here. `the_crisis_preview_composes_the_total_the_row_and_the_survival_roll`
+(`aging.rs`) asserts the character is byte-identical after a preview, and
+`a_crisis_preview_leaks_no_aging_roll_modifier_into_either_half` re-pins `:16636`
+through the composed path — a read-out holding the total and the survival roll in one
+value is a second place an aging-roll modifier could leak into either.
+
 #### Translation-table notes — `alterung-twilight.md`
 Two things about `rules/source/de/translation-tables/alterung-twilight.md` that a
 future translator must not "fix" the core file from.
