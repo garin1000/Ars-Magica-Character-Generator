@@ -4111,6 +4111,33 @@ crisis rule is implemented twice.
   pass-through, since the command edge does not yet ask for the die. Threading it
   through `aging_apply` is the IPC/UI step's work.
 
+##### The Longevity Ritual a Crisis spends — reported, never deleted
+
+> "A Longevity Ritual is effective until the character suffers a crisis. When the
+> crisis occurs, the ritual assures that the character survives, but its power is
+> spent, and the focal ritual must be performed again (see page 261)."
+> — Ars Magica - Definitive Edition (Core Rules).md:16573
+
+`AgingYearResult` gains `notes: Vec<AgingNote>`, and `AgingNote::LongevityRitualSpent`
+is the one variant (`aging.rs`). A tagged enum rather than a message, on the
+`AgingError` / `ChildhoodRejection` precedent: the engine hardcodes no user-facing
+string, so the caller maps the variant through Fluent, and an exhaustive `match` makes
+a second note a compile error at every reader until it has been rendered.
+
+**`Entity.longevity_ritual` is not touched.** The ritual is a *stored choice* holding a
+player-entered bonus and the focus that "must be repeated" if the ritual is performed
+again (`:10668`); an engine that cleared it would destroy both, and would make the year
+unrevertible into the bargain. Performing the focal ritual again is a season's work the
+player records, not an inference the sheet makes. (The sentence's other half — "the
+ritual assures that the character survives" — is likewise **not** implemented as an
+automatic survival: the engine resolves no survival roll at all, for anyone.)
+
+The note follows the **Crisis**, not the Crisis *roll*: "when the crisis occurs" is the
+aging row's doing (`:16602`, `:16611`) and the Simple Die only decides how bad it was,
+so a Crisis owed and unrolled spends the ritual too.
+`a_crisis_spends_the_longevity_ritual_and_never_deletes_it` (`aging.rs`) pins all four
+cases — rolled, unrolled, no Crisis, no ritual.
+
 ##### What a resolved Crisis records — and why `SCHEMA_VERSION` stays 15
 
 > "**CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score**" … "| Crisis
