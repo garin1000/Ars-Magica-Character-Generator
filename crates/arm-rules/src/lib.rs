@@ -17,10 +17,13 @@ pub use aging::{
 pub mod art;
 pub mod characteristics;
 pub mod childhood;
+pub mod completeness;
 #[doc(inline)]
 pub use childhood::{
     ChildhoodEntry, ChildhoodPackage, ChildhoodRejection, apply_childhood_package, apply_package,
 };
+#[doc(inline)]
+pub use completeness::{CompletenessReport, completeness};
 pub mod derived;
 pub mod effective;
 pub mod equipment;
