@@ -10,9 +10,9 @@ type is fixed at creation via `store.createCharacter(typeId)`. 6b1b replaced tha
 screen's hardcoded-disabled wizard button with one guided entry per character type.
 
 **Status: 6b1a through 6b7 are done.** The milestone's closing slice, **6b8**, runs as
-four sub-slices: **6b8a — completeness indicators is done**; the per-step guided copy,
-the ownership inconsistencies 6b1b froze, and the milestone gate (per-type e2e specs,
-the portable smoke check, doc reconciliation) remain.
+four sub-slices: **6b8a — completeness indicators** and **6b8b — the per-step guided
+copy** are done; the ownership inconsistencies 6b1b froze (6b8c) and the milestone gate
+(per-type e2e specs, the portable smoke check, doc reconciliation — 6b8d) remain.
 
 6b7 — the Crisis, the Decrepitude levels it reaches, and the crisis table — was
 **smaller than the sketch below**, because 6b6 already took the per-year
@@ -1428,6 +1428,113 @@ weaker reading of the same character decides what is *empty*. Six commits,
   Abilities") would be the engine inventing rules the sources do not carry.
 - **`cargo clippy --all-targets` is still not part of the gate** (the three
   pre-existing failures 6b7 recorded) — still 6b8's call, not taken here.
+
+---
+
+## Slice 6b8b — Guided step copy ✅
+
+The wizard walked a player through the phases their type declares and then dropped
+them into the editor's own input surface with nothing said about what this stage of
+creation *is*. 6b8's scope named the fix — "per-step guided copy sourced from the
+rules passage" — and this slice ships it: two or three sentences per phase, on the
+step, saying what is decided there and what the rules say about it. Four code commits,
+`b8ee433..df4f4fe`, plus this documentation one.
+
+### What shipped
+
+- **Twelve lines of copy in each locale**, `wizard-guidance-<phase>`, keyed by the
+  engine slug exactly as `phase-<phase>` beside them. `review` included.
+- **The locale-parity test extended, not duplicated.**
+  `every_creation_phase_has_a_fluent_key_in_each_locale` (`crates/arm-app/tests/
+  commands.rs:1761`) now demands `phase-<slug>` **and** `wizard-guidance-<slug>` for
+  every `CreationPhase::ALL` member in both locales, so a thirteenth phase fails the
+  Rust gate until both locales carry copy for it.
+- **`wizardGuidance(phase, context)`** in `ui/src/lib/derive.ts` — the Fluent key plus
+  the arguments its sentence needs, over a `satisfies Record<CreationPhase, …>` map, so
+  a phase without an entry is a `svelte-check` error. `null` when a number the sentence
+  states is not loaded.
+- **`WizardStep.svelte`** renders it as a `<p class="hint wizard-guidance">` at the top
+  of the step's existing `.vf-tab` column, above the budget bar. No new wrapper, no
+  heading, no change to the height chain.
+- **Tests** — six in `derive.test.ts` (key per phase, both parameterised phases read
+  from data, no-args phases, the `null` case), fifteen in `WizardStep.test.ts` (a note
+  on every one of the twelve steps that never echoes its own key, the two numbers, and
+  the German rendering), and the e2e walk below.
+- **E2E** — `wizard.e2e.js` reads the note on `concept` and on `virtues_flaws`, proves
+  the two differ, and asserts the V/F note states the same Flaw budget the `type` step
+  read out of the profile.
+
+### Design decisions of record
+
+- **Fluent, not `rules/i18n/`.** The two-file separation puts *rules text* in
+  `rules/i18n/<lang>/`, keyed by an item ID. This copy names no item: it is
+  instructional chrome about **our** wizard's flow, keyed by a phase of it, and it is
+  written for the player standing on a step rather than quoted from the book. So it is
+  UI text, and UI text lives only in `.ftl`. (It still owes its sources — see below.)
+- **Numbers are placeables, never prose.** Two sentences want a number, and both take
+  it from loaded data: the Characteristic allowance from
+  `characteristic_rules.start_points`, the Virtue/Flaw budget from the type profile's
+  `budget`. A number frozen into a translated string is the "catalogue size is code"
+  failure one layer up — worse, in fact, because it would have to be fixed in every
+  locale. The Mythic Companion is the proof: its ten points of Flaws buy twenty of
+  Virtues, and one sentence covers all four types because it knows no ratio.
+- **Every other sentence is worded without a number**, deliberately: the childhood 75/45,
+  later life's 15 per year, apprenticeship's 240 and 120, the age→cap table, and the
+  `+3` in the spell-level cap are all named as *what they are* rather than stated. The
+  spell line names Technique, Form, Intelligence and Magic Theory and stops there,
+  because the `+3` of `:2465` is nowhere in the data to interpolate from.
+- **Sourced, and filed under the book.** `RULES.md` gains
+  *Guided wizard step copy (M6/6b8b)* with a phase → claim → line-range table, all
+  verified against `rules/source/en/`. It sits under the Core Rules rather than under
+  *Engine framework* because — unlike 6b8a's completeness criteria, which cite nothing
+  on purpose — every sentence here **does** make a rules claim. `review` is the single
+  exception and says so in the table and in a comment above the key.
+- **German is a translation.** Terminology comes from
+  `rules/source/de/translation-tables/` (Tugend/Fehler, Eigenschaft, Fertigkeit, Kunst,
+  Technik/Form, Zauber, Haus, Persönlichkeitseigenschaft, Reputation — explicitly *not*
+  "Ruf", Alterungswurf, Alterungspunkt, Scheinbares Alter, Erfahrungspunkte, Die Gabe,
+  Gefährte, Grog, Mythischer Gefährte, Tapfer/Loyal, Sozialer Status).
+  Three terms have no table entry and were taken from the mirrored German rulebook at
+  the same line numbers: **"kostenlose Kleine Tugend"** for *free Minor Virtue*
+  (`Basisregeln.md:2859`, and `:2637` for the Free Virtue of a Mythic Companion),
+  **"Stufen Zauber"** for *levels of spells* (`:2215`, `:2435`), and
+  **"Lehrlingszeit"** for *apprenticeship* (`:2214`, `:2435` — the tables carry only
+  *Lehrling* and *Lehrlingsprüfung*).
+- **Display-only.** No gate reads it, no validation depends on it, nothing is stored:
+  `SCHEMA_VERSION` stays 15 and the engine gained no code at all — the whole slice is
+  data, one pure helper and one paragraph of markup.
+- **Inside `.vf-tab`, not in the shell.** 6b8a's incompleteness hint sits in
+  `WizardShell` above `<main>` because it is about the *flow's* state; guidance is about
+  the *step*, so it belongs to `WizardStep` next to the map that decides what the step
+  is. It renders as a plain flex item (no `flex: 1`), which is why the Available/Selected
+  columns keep their bounded height.
+
+### Findings
+
+- **The release compile earned its place again.** `characteristic_rules` is nullable on
+  the payload (`CharacteristicRules | null`), which vitest never notices and
+  `svelte-check` refuses; the guidance context had to widen. Two type errors, both only
+  visible at `cargo tauri build --no-bundle`.
+- **`grep` silently skips `derive.ts`.** A plain `grep "^export" ui/src/lib/derive.ts`
+  returns nothing, because the injected shim hardcodes `-I` and the file trips its binary
+  heuristic; `grep -a` and the native tools see it fine. Recorded because an empty result
+  there reads exactly like "the symbol does not exist".
+
+### Deliberate non-changes
+
+- **The step layout is untouched.** No heading was added (the rail still owns the step's
+  title), no wrapper introduced, and `WizardShell` was not edited at all.
+- **The copy does not repeat what a step already says.** `TypeStep` states the budget and
+  the Gift policy, so the `type` guidance says what a magus/companion/grog *is* instead;
+  `WizardReview` lists the empty steps, so the `review` guidance only frames the step.
+- **No per-type copy.** Guidance is per phase, and a phase means the same thing whichever
+  type declared it — the two type-dependent numbers already vary through the profile.
+- **Nothing was quoted verbatim.** The lines are written for the step, not excerpted, so
+  the licence's share-alike terms need no thought here beyond the attribution the repo
+  already carries.
+- **`cargo clippy --all-targets` still is not part of the gate** (the pre-existing
+  failures 6b7 recorded, plus an `unused_mut` warning in `commands.rs` this slice did not
+  introduce) — 6b8d's call.
 
 ---
 
