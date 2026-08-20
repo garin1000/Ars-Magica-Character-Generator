@@ -16,7 +16,8 @@ verify true Tauri IPC, the bundled rules resources, and the save/load flow.
 
 ```bash
 cd ui
-npm run test:e2e          # builds the release binary, then runs the suite
+npm run test:e2e            # builds the release binary, then runs the suite
+npm run test:e2e:portable   # the portable-layout smoke check (see below)
 ```
 
 One command, both environments — no `xvfb-run` wrapper.
@@ -26,6 +27,35 @@ the app. Native file dialogs can't be automated over WebDriver, so the app
 honors the `ARM_E2E_FILE` environment seam (set by the config) to save/load a
 fixed temp path instead of opening a dialog. See
 `crates/arm-app/src/commands.rs`.
+
+## The portable-layout smoke check
+
+`npm run test:e2e` runs the binary from `target/release`, where Tauri takes it for
+a dev build and `BaseDirectory::Resource` already resolves to the executable's own
+directory. A **portable** build — the archives `build-linux.sh` and `build-win.sh`
+produce, the folder on a USB stick — sits outside `target/`, where Resource
+resolves to `/usr/lib/<name>` instead; there the app only starts because
+`load_ruleset` also looks for `./rules` beside the executable
+(`crates/arm-app/src/commands.rs`). That fallback is unreachable from the standard
+suite, so it has a run of its own:
+
+```bash
+cd ui
+npm run test:e2e:portable
+```
+
+`wdio.portable.conf.js` builds the release binary, then `stage-portable.js` copies
+it plus `rules/core`, `rules/i18n` and `rules/NOTICE.md` into the **gitignored**
+`tmp/portable/` — mirroring `build-linux.sh`'s layout — and points the driver
+there. The single spec in `portable/` asserts what the layout puts at risk and
+nothing more: that a character-type profile loaded (so `rules/core` was found and
+passed its integrity check), that a catalogue entry renders a name rather than its
+own slug (so `rules/i18n` arrived too), and that no error banner is up. Everything
+the app does _after_ its ruleset loads is the standard suite's job.
+
+It is deliberately **not** part of `npm run test:e2e`: it needs the staging step,
+and its specs live outside `specs/` so the standard config's glob cannot reach
+them.
 
 ## Headful and headless
 
@@ -61,11 +91,15 @@ unit-tested in `display.test.js`, which runs under `npm run test:unit`.
 
 ```
 e2e/
-  wdio.conf.js     # the runner: build, display preflight, tauri-driver, the ARM_E2E_* seams
-  display.js       # display preflight (pure; unit-tested by display.test.js)
-  display.test.js  # runs under `npm run test:unit`, NOT under wdio
-  helpers.js       # shared spec harness — `startCharacter()`
-  specs/*.e2e.js   # the suite; wdio globs `specs/**/*.e2e.js`
+  wdio.conf.js           # the runner: build, display preflight, tauri-driver, the ARM_E2E_* seams
+  wdio.portable.conf.js  # the portable-layout run: build, stage outside target/, drive that copy
+  stage-portable.js      # stages binary + rules/ into the gitignored tmp/portable/
+  display.js             # display preflight (pure; unit-tested by display.test.js)
+  display.test.js        # runs under `npm run test:unit`, NOT under wdio
+  helpers.js             # shared spec harness — `startCharacter()`, `startWizard()`, …
+  wizard-walk.js         # shared driver for the four per-type guided walks
+  specs/*.e2e.js         # the suite; wdio globs `specs/**/*.e2e.js`
+  portable/*.e2e.js      # the portable smoke check; the standard glob cannot reach it
 ```
 
 Non-spec harness modules live at the `e2e/` root, never under `specs/`. They must
@@ -122,6 +156,17 @@ in its own header too.
 - `validation-modes.e2e.js` — the same illegal entity is reported differently
   under each `ValidationMode`: Enforced keeps errors, Advisory downgrades them to
   warnings, Silent clears the panel.
+- `wizard.e2e.js` — the guided flow's machinery on a magus: the rail's order, the
+  per-step gate and the validation mode that lifts it, back/forward navigation,
+  the untouched mark, and Finish landing in the editor.
+- `grog-wizard.e2e.js`, `companion-wizard.e2e.js`,
+  `mythic-companion-wizard.e2e.js`, `magus-wizard.e2e.js` — one per character
+  type, each walking that type from the startup screen to Finish with **every**
+  declared phase filled in, then asserting the character is complete (no phase
+  left marked untouched) and legal (no error-severity finding) and that it
+  survives a save and a reload. The phase list comes from
+  `rules/core/character_types.json`, and the shared driving from `wizard-walk.js`,
+  so a profile that gains a phase makes all four walks visit it.
 - …and the rest of `specs/`, one file per mechanic or reported defect (Arts,
   Spells, Houses, familiar, talisman, longevity ritual, Markdown export, the
   layout/geometry specs, …). Each file's header comment states what it is for.
