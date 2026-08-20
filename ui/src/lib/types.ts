@@ -1532,8 +1532,19 @@ export interface ValidationIssue {
   context?: string | null;
 }
 
+// Which of the character's declared creation phases hold no choices yet, in the
+// profile's own order. Deliberately not shaped like a ValidationIssue: it carries
+// no severity, so nothing that gates on `error` can ever see it.
+export interface CompletenessReport {
+  incomplete_phases: CreationPhase[];
+}
+
 export interface ValidationResult {
   issues: ValidationIssue[];
+  // Always present on an engine payload; optional here because a result built
+  // from a bare issue list (and every test fixture) legitimately carries none,
+  // which reads as "nothing to report".
+  completeness?: CompletenessReport;
 }
 
 // Tauri command errors are rejected as a tagged object whose `kind`

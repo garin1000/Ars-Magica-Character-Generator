@@ -5,8 +5,10 @@ import {
   abilityLabel,
   abilityXpSpent,
   firstBlockedPhaseIndex,
+  incompletePhases,
   issuesForPhase,
   phaseHasBlockingIssue,
+  phaseIsIncomplete,
   wizardPhases,
   effectiveSpellMastery,
   spellMasteryXpSpent,
@@ -2198,6 +2200,62 @@ describe('phaseHasBlockingIssue', () => {
     expect(
       phaseHasBlockingIssue([issue('error', 'over_spell_levels', 'spells')], 'abilities'),
     ).toBe(false);
+  });
+});
+
+describe('phaseIsIncomplete', () => {
+  const result = (phases: CreationPhase[]): ValidationResult => ({
+    issues: [],
+    completeness: { incomplete_phases: phases },
+  });
+
+  it('marks a phase the engine reports as untouched', () => {
+    expect(phaseIsIncomplete(result(['abilities', 'aging']), 'abilities')).toBe(true);
+  });
+
+  it('leaves a phase with choices recorded unmarked', () => {
+    expect(phaseIsIncomplete(result(['aging']), 'abilities')).toBe(false);
+  });
+
+  it('marks nothing before the first validation result arrives', () => {
+    expect(phaseIsIncomplete(null, 'abilities')).toBe(false);
+  });
+
+  // The wizard's own closing step is never in the report, and neither is a phase
+  // the character's type does not declare — so neither can be marked.
+  it('marks nothing for a phase the engine never reported on', () => {
+    expect(phaseIsIncomplete(result(['abilities']), 'review')).toBe(false);
+  });
+
+  // Incompleteness must never be mistaken for a finding: it carries no severity,
+  // so nothing that gates on `error` can ever see it.
+  it('is independent of the findings', () => {
+    const blocked: ValidationResult = {
+      issues: [{ severity: 'error', code: 'x', phase: 'abilities', args: {} }],
+      completeness: { incomplete_phases: [] },
+    };
+    expect(phaseIsIncomplete(blocked, 'abilities')).toBe(false);
+    expect(phaseHasBlockingIssue(blocked.issues, 'abilities')).toBe(true);
+  });
+});
+
+describe('incompletePhases', () => {
+  it('lists the untouched phases in the order the engine sent them', () => {
+    const result: ValidationResult = {
+      issues: [],
+      completeness: { incomplete_phases: ['house_specialisation', 'virtues_flaws'] },
+    };
+    expect(incompletePhases(result)).toEqual(['house_specialisation', 'virtues_flaws']);
+  });
+
+  it('is empty with no result at all', () => {
+    expect(incompletePhases(null)).toEqual([]);
+  });
+
+  // An engine payload always carries the report; a fixture (or an older payload)
+  // need not, and must read as "nothing to report" rather than crashing the rail.
+  it('is empty when the payload carries no report', () => {
+    expect(incompletePhases({ issues: [] })).toEqual([]);
   });
 });
 
