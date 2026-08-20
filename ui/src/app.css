@@ -497,6 +497,15 @@ button:disabled {
   margin-left: auto;
 }
 
+/* The closing step's list of steps left empty. Informational, like the rail's
+   marker: no warning colour, because nothing here holds Finish shut. */
+.wizard-review-outstanding {
+  margin: 0.2rem 0 0.6rem;
+  padding-left: 1.2rem;
+  color: #b9b6d6;
+  font-size: 0.9rem;
+}
+
 /* Shared issues panel, pinned below the tabs at the bottom of the viewport. It
    shows every error/warning for the whole character, not just the active tab. */
 .validation-bar {
