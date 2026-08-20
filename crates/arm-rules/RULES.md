@@ -4366,9 +4366,21 @@ families composed from catalogue *data* (`type-<profile>`, `param-label-<key>`,
 `category-<category>`, all assembled by the frontend's `composedExportLabelKeys`), and
 two tests keep it honest — one walks each fixed taxonomy
 (`Characteristic`, `Magnitude`, `AbilityCategory`, `ArtType`, `ItemKind`, `Realm`,
-`ReputationType`, `LongevitySource`, the Soak addend labels, Fatigue tiers, wound
-bands) and asserts the composed key is declared; the other renders a fully-populated
-magus with every declared key resolved and asserts no key-shaped text survives.
+`ReputationType`, `LongevitySource`, `CrisisSeverity`, `LifeStageBlock`, the Soak addend
+labels, Fatigue tiers, wound bands) and asserts the composed key is declared; the other
+renders a fully-populated magus with every declared key resolved and asserts no
+key-shaped text survives.
+
+**A restricted XP pool is labelled by its origin when it has one** (M6/6b8c).
+`Doc::restricted_pool_label` follows the same rule as the in-app XP bar's
+`restrictedPoolLabel`, so one budget reads the same on screen and on the sheet: a
+`XpPoolOrigin::LifeStage` pool prints `xp-pool-<block>` (the block enum being a fixed
+taxonomy, its three keys are declared in `LABEL_KEYS`), and a Virtue's grant keeps its
+eligibility list, because the item's own name says nothing about what its points may buy
+and that is exactly where Educated and Warrior differ. Eligibility could not name a
+life-stage block at all: both childhood blocks list the same childhood Abilities, later
+life lists every category, and the native-language block is restricted to one *instance*
+— it carries no ability and no category, so before this it printed an **empty** label.
 
 **No name reaches the reader as a raw template.** A localized item name may carry
 `{placeholder}`s (`ability.dead_language` is "{language} (Dead Language)"), so *every*
