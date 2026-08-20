@@ -1221,10 +1221,19 @@ fn effective_scores_surface_the_magus_minimum_ability_checklist() {
     // The magus's general pool is its apprenticeship experience once it is built
     // through its life stages, and the typed pool otherwise.
     magus.xp_pool = 240;
-    assert_eq!(
-        effective_scores_loaded(&magus, &ruleset).xp_general_pool,
-        240
-    );
+    let scores = effective_scores_loaded(&magus, &ruleset);
+    assert_eq!(scores.xp_general_pool, 240);
+    assert_eq!(scores.xp_general_bonus, 0);
+
+    // Skilled Parens raises that pool by 60 — "an additional 60 experience points …
+    // during apprenticeship" (Core Rules.md:4966). The bar shows the typed 240 as the
+    // editable total, so the bonus has to reach it as a figure of its own; without it
+    // the pool and the field it is entered in differ with nothing to explain the gap.
+    magus.selections = vec![arm_rules::Selection::new(Id::new("virtue.skilled_parens"))];
+    let scores = effective_scores_loaded(&magus, &ruleset);
+    assert_eq!(scores.xp_general_pool, 300);
+    assert_eq!(scores.xp_general_bonus, 60);
+    magus.selections.clear();
 
     // A companion is not admitted to the Order, so it gets no checklist at all —
     // exactly like the magus-only spell-level caps.

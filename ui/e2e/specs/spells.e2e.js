@@ -227,6 +227,37 @@ describe('spells', () => {
     );
   });
 
+  // Slice 6b8c: the OTHER half of the same Virtue. "You gain an additional 60
+  // experience points and 30 spell levels during apprenticeship" (`:4966`) — the
+  // engine has always granted the 60, but the XP bar charged the spend against the
+  // typed pool alone, so this legal magus read a negative Available with no error
+  // anywhere. Real-binary arithmetic, because only the live payload carries the
+  // engine's own pool.
+  it('raises the experience pool with the same Skilled Parens, and says so', async () => {
+    await $(ARTS_TAB).click();
+    const pool = await $('[data-testid="art-xp-pool"]');
+    await pool.waitForExist({ timeout: 5000 });
+    // Creo 12 + Ignem 12 + Rego 9 + Vim 9 = 78 + 78 + 45 + 45 = 246 XP against a
+    // typed 1000 raised to 1060. The +60 is spent FIRST, like a restricted pool, so
+    // 186 is charged to the base and 1000 - 186 = 814 stays available.
+    await browser.waitUntil(
+      async () =>
+        clean(await $('[data-testid="art-xp-bonus"]').getText()).includes('60') &&
+        clean(await $('[data-testid="art-xp-spent"]').getText()).trim() === '186' &&
+        clean(await $('[data-testid="art-xp-available"]').getText()).includes('814'),
+      {
+        timeout: 5000,
+        timeoutMsg: 'Skilled Parens should fund the first 60 XP and leave 814 of the base',
+      },
+    );
+    // The editable total stays the number the player typed — the bonus is listed
+    // beside it, never folded into the field.
+    expect(await pool.getValue()).toBe('1000');
+    // Back to the Spells tab: the blocks below carry on there.
+    await $(SPELLS_TAB).click();
+    await $(BAR_BASE).waitForExist({ timeout: 5000 });
+  });
+
   it('applies an editable spell-levels budget override', async () => {
     // The bracketed base field's placeholder is the type profile's base (120),
     // proving the default is data-driven (surfaced by the engine, not a UI literal).

@@ -28,6 +28,7 @@ import {
   filterItems,
   filterSpells,
   formatSigned,
+  generalXpAllocation,
   grantItemLabel,
   grantedSelectionsForSide,
   groupAbilitiesByCategory,
@@ -1871,6 +1872,57 @@ describe('spellLevelAllocation', () => {
     const a = spellLevelAllocation(430, 420, 0, 300);
     expect(a.baseUsed).toBe(430);
     expect(a.available).toBe(-10);
+  });
+});
+
+describe('generalXpAllocation', () => {
+  it('leaves an unmodified pool exactly as it is', () => {
+    // The overwhelming case: no Virtue touches the pool, so nothing is split and
+    // the bar reads as it always has.
+    const a = generalXpAllocation(90, 240, 0);
+    expect(a.base).toBe(240);
+    expect(a.baseUsed).toBe(90);
+    expect(a.bonusAmount).toBe(0);
+    expect(a.available).toBe(150);
+  });
+
+  it('spends Skilled Parens before the base', () => {
+    // "You gain an additional 60 experience points … during apprenticeship"
+    // (Core Rules.md:4966): a typed 240 becomes a pool of 300, of which 50 are
+    // spent — all of them off the bonus, exactly as the engine drains a restricted
+    // pool before the general one.
+    const a = generalXpAllocation(50, 300, 60);
+    expect(a.base).toBe(240);
+    expect(a.bonusUsed).toBe(50);
+    expect(a.baseUsed).toBe(0);
+    expect(a.available).toBe(240);
+  });
+
+  it('charges the overflow above the bonus to the base', () => {
+    const a = generalXpAllocation(300, 300, 60);
+    expect(a.bonusUsed).toBe(60);
+    expect(a.baseUsed).toBe(240);
+    // THE BUG THIS CLOSES: a flat magus that spends all 300 used to read
+    // Available: -60, because the bar charged the spend against the typed 240.
+    expect(a.available).toBe(0);
+  });
+
+  it('reports a negative Available only once the whole pool is overspent', () => {
+    const a = generalXpAllocation(310, 300, 60);
+    expect(a.bonusUsed).toBe(60);
+    expect(a.baseUsed).toBe(250);
+    expect(a.available).toBe(-10);
+  });
+
+  it('charges a Weak Parens penalty to the base first', () => {
+    // A typed 240 with Weak Parens is a pool of 180. The penalty has no pool of
+    // its own to draw on, so it is charged to the base and the base line closes:
+    // 240 - (60 + 60) = 120, which is also pool (180) - used (60).
+    const a = generalXpAllocation(60, 180, -60);
+    expect(a.base).toBe(240);
+    expect(a.bonusUsed).toBe(0);
+    expect(a.baseUsed).toBe(120);
+    expect(a.available).toBe(120);
   });
 });
 

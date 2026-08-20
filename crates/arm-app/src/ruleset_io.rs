@@ -62,6 +62,12 @@ pub struct EffectiveScores {
     /// pool differ (240 against 300 with Skilled Parens) and no stored field holds
     /// the latter.
     pub xp_general_pool: u32,
+    /// The signed Virtue/Flaw contribution folded into `xp_general_pool` (Skilled
+    /// Parens +60, Weak Parens -60). Surfaced on its own because the bar's editable
+    /// total is the base the player typed, not the pool: without this figure the two
+    /// differ with nothing on screen to explain it — the same split the spell-levels
+    /// bar makes with `spell_levels_bonus`.
+    pub xp_general_bonus: i64,
     /// The most demand the pools can actually fund. Equals `xp_total_demand` iff the
     /// spend is legal; `xp_total_demand - xp_max_flow` is the overspend.
     ///
@@ -363,6 +369,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         xp_total_demand: allocation.total_demand,
         xp_general_used: allocation.general_used,
         xp_general_pool: allocation.general_pool,
+        xp_general_bonus: allocation.general_bonus,
         xp_max_flow: allocation.max_flow,
         restricted_xp_pools: allocation.restricted,
         life_stage: ruleset

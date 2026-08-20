@@ -215,6 +215,15 @@ tab-details = Details
 # `xp-pool` benennt die gesamte Gruppe des allgemeinen Vorrats.
 xp-pool = EP-Vorrat
 xp-available = Verfügbar: { $available }
+# Der Beitrag von Tugenden & Fehlern zum allgemeinen Vorrat: Erfahrener Parens
+# gewährt 60 zusätzliche Erfahrungspunkte während der Lehrzeit
+# (Basisregeln.md:4966), Schwacher Parens nimmt 60 weg. Ein POSITIVER Beitrag
+# ist ein eigener Vorrat, der vor der Basis ausgegeben wird — genau wie ein
+# eingeschränkter Vorrat; ein NEGATIVER hat nichts auszugeben und wird der Basis
+# angelastet, erscheint also als vorzeichenbehafteter Modifikator. Gleiche
+# Aufteilung und gleiche Formulierung wie bei den Zauberstufen.
+xp-bonus-pool = Tugenden & Fehler: { $used } / { $amount }
+xp-bonus = Tugenden & Fehler: { $bonus }
 # Eingeschränkte EP-Vorräte (Gebildet/Krieger/Privilegierte Erziehung): zusätzliche
 # EP, nur für die aufgeführten Fertigkeiten/Kategorien. `$eligibility` ist eine Liste.
 restricted-xp-pool = { $eligibility }: { $used } / { $amount }

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { restrictedPoolLabel, totalXpSpent } from '../derive';
+  import { formatSigned, generalXpAllocation, restrictedPoolLabel, totalXpSpent } from '../derive';
 
   // One XP summary shared by the Abilities and Arts tabs: both spend from the
   // SAME `entity.xp_pool`, so this single component drives both, differing only
@@ -21,11 +21,18 @@
   const lifeStage = $derived(store.effective?.life_stage ?? null);
   // What the player typed, which under a plan should be nothing at all.
   const typedPool = $derived(store.entity.xp_pool ?? 0);
-  // The general pool the `used` figure is charged against. Under a plan it is the
-  // engine's own resolved pool — whichever block may fund anything (apprenticeship for
-  // a magus, later life for anyone else) plus the Skilled/Weak Parens adjustment, which
-  // no stored field holds — and the typed total otherwise.
-  const pool = $derived(guided ? (store.effective?.xp_general_pool ?? 0) : typedPool);
+  // The general pool the `used` figure is charged against: the engine's own resolved
+  // pool, in BOTH funding modes. It is the base — whichever block may fund anything
+  // (apprenticeship for a magus, later life for anyone else), or the typed total —
+  // plus the Skilled/Weak Parens adjustment, which no stored field holds. Reading the
+  // typed total here instead was a silently wrong read-out under flat funding: a magus
+  // with Skilled Parens legally spends 300 against a typed 240 and reported an
+  // overspend the engine never raised. The typed figure keeps the editable field
+  // below; the bonus is listed separately, so the two still close.
+  const pool = $derived(store.effective?.xp_general_pool ?? typedPool);
+  // The signed Virtue/Flaw contribution inside that pool (Skilled Parens +60, Weak
+  // Parens -60), so the bar can name it rather than show an unexplained total.
+  const bonus = $derived(store.effective?.xp_general_bonus ?? 0);
   const clearHintId = $derived(`${prefix}xp-pool-clear-hint`);
   // The engine's authoritative slice of the spend FUNDED from the general pool.
   // `restricted_xp_pools` cover the rest and are reported separately. The local
@@ -50,9 +57,14 @@
   // definition general demand (the general pool may fund any spend, so it is
   // exhausted before anything goes unfunded).
   const generalUsed = $derived(generalFunded + overspend);
+  // Split the general spend between the base and the V/F modifier, so this bar reads
+  // like the spell-levels bar the same Virtue also feeds: a positive bonus is spent
+  // first, a penalty is charged to the base, and `base - baseUsed` closes against
+  // `pool - used` either way.
+  const alloc = $derived(generalXpAllocation(generalUsed, pool, bonus));
   // Not clamped: overspending shows a negative value in bold red (the `over`
   // class covers both the label and the number).
-  const available = $derived(pool - generalUsed);
+  const available = $derived(alloc.available);
   const restricted = $derived(store.effective?.restricted_xp_pools ?? []);
 
   // What a year past the Gauntlet is worth. DATA, never a literal: the 30 lives in
@@ -74,21 +86,25 @@
 <div class="xp-summary">
   <span class="xp-pool">
     <span class="xp-pool-label">{store.t('xp-pool')}</span>
+    <!-- The experience charged to the BASE (a positive V/F bonus is spent first and
+         reported in its own entry; a penalty is charged here), so this figure and
+         Available always close against the bracketed total beside them. -->
     <span class="xp-pool-used" class:over-value={available < 0} data-testid="{prefix}xp-spent"
-      >{generalUsed}</span
+      >{alloc.baseUsed}</span
     >
     <span class="xp-pool-total">
       {#if guided}
         <!-- Read-only text, not a disabled input: assistive tech must not announce
-             a control the player cannot use. -->
-        <span data-testid="{prefix}xp-pool-total">{pool}</span>
+             a control the player cannot use. The life-stage block's own base, with
+             any V/F contribution listed separately below. -->
+        <span data-testid="{prefix}xp-pool-total">{alloc.base}</span>
       {:else}
         <input
           type="number"
           min="0"
           max="4294967295"
           placeholder="0"
-          value={pool || ''}
+          value={typedPool || ''}
           oninput={onPool}
           data-testid="{prefix}xp-pool"
         />
@@ -98,6 +114,23 @@
   <span class="xp-available" class:over={available < 0} data-testid="{prefix}xp-available">
     {store.t('xp-available', { available: String(available) })}
   </span>
+  {#if bonus > 0}
+    <!-- A positive modifier is an extra pool of experience, spent before the base —
+         so it reads used/amount exactly like a restricted pool. Gated on the number
+         alone, never on the type, so no character branch enters this component. -->
+    <span class="xp-restricted" data-testid="{prefix}xp-bonus">
+      {store.t('xp-bonus-pool', {
+        used: String(alloc.bonusUsed),
+        amount: String(bonus),
+      })}
+    </span>
+  {:else if bonus < 0}
+    <!-- A penalty has no pool to draw from; it is charged to the base above, and
+         reported here as the signed modifier that explains the charge. -->
+    <span class="xp-restricted over" data-testid="{prefix}xp-bonus">
+      {store.t('xp-bonus', { bonus: formatSigned(bonus) })}
+    </span>
+  {/if}
   {#if guided}
     {#if lifeStage}
       {#if lifeStage.apprenticeship_xp > 0}
