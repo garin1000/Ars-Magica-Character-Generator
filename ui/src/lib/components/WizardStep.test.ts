@@ -168,4 +168,47 @@ describe('WizardStep', () => {
   it('wraps a long single-panel surface in the scrolling container', () => {
     expect(body('concept')).toContain('class="tab-scroll"');
   });
+
+  // --- 6b8b: the per-step guidance note ------------------------------------
+
+  function guidance(phase: CreationPhase): string {
+    const markup = /data-testid="wizard-guidance"[^>]*>([\s\S]*?)<\/p>/.exec(body(phase));
+    if (!markup) throw new Error(`no guidance on the ${phase} step`);
+    return markup[1]
+      .replace(/<[^>]*>/g, '')
+      .replace(/[⁨⁩]/g, '')
+      .trim();
+  }
+
+  // Every step says what is decided on it — including the closing one, which
+  // decides nothing and says so.
+  for (const [phase] of expected) {
+    it(`explains what the ${phase} step is for`, () => {
+      const note = guidance(phase);
+      expect(note.length).toBeGreaterThan(0);
+      // The one thing a label may never do: render its own key back at the player,
+      // which is exactly what a locale missing the line would produce.
+      expect(note).not.toContain('wizard-guidance');
+    });
+  }
+
+  it('takes the Characteristic allowance from the ruleset rather than stating it', () => {
+    expect(guidance('characteristics')).toContain('7');
+    store.ruleset!.ruleset.characteristic_rules.start_points = 9;
+    expect(guidance('characteristics')).toContain('9');
+  });
+
+  it("takes the Virtue and Flaw budget from the character type's profile", () => {
+    store.ruleset!.ruleset.type_profiles.magus.budget = { virtue_points: 20, flaw_points: 10 };
+    const note = guidance('virtues_flaws');
+    expect(note).toContain('20');
+    expect(note).toContain('10');
+  });
+
+  it('localizes the note to German', () => {
+    store.lang = 'de';
+    const note = guidance('concept');
+    expect(note).not.toContain('wizard-guidance-concept');
+    expect(note).toContain('Konzept');
+  });
 });
