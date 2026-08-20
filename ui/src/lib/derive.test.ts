@@ -52,6 +52,7 @@ import {
   restrictedPoolLabel,
   spellDisplayName,
   spellLevelAllocation,
+  wizardGuidance,
 } from './derive';
 import type {
   Ability,
@@ -2296,6 +2297,77 @@ describe('firstBlockedPhaseIndex', () => {
 
   it('is null for a backwards range — Back is never gated', () => {
     expect(firstBlockedPhaseIndex(phases, [err('characteristics')], 3, 1)).toBeNull();
+  });
+});
+
+describe('wizardGuidance', () => {
+  // Every phase the engine can send, so a new one is caught here as well as by
+  // the `satisfies` on the map itself.
+  const ALL_PHASES: CreationPhase[] = [
+    'concept',
+    'type',
+    'characteristics',
+    'virtues_flaws',
+    'abilities',
+    'arts',
+    'spells',
+    'house_specialisation',
+    'mythic_type',
+    'personality_reputations',
+    'aging',
+    'review',
+  ];
+
+  const profile: EntityTypeProfile = {
+    id: 'mythic_companion',
+    budget: { virtue_points: 20, flaw_points: 10 },
+    creation_phases: [],
+  };
+  const characteristicRules: CharacteristicRules = { start_points: 7, costs: [] };
+  const context = { profile, characteristicRules };
+
+  it('names a Fluent key for every phase, keyed by the engine slug', () => {
+    for (const phase of ALL_PHASES) {
+      expect(wizardGuidance(phase, context)?.key).toBe(`wizard-guidance-${phase}`);
+    }
+  });
+
+  it('takes the Characteristic allowance from the ruleset, not from a number in the copy', () => {
+    expect(wizardGuidance('characteristics', context)?.args).toEqual({ points: '7' });
+    expect(
+      wizardGuidance('characteristics', {
+        ...context,
+        characteristicRules: { start_points: 9, costs: [] },
+      })?.args,
+    ).toEqual({ points: '9' });
+  });
+
+  // A Mythic Companion's ten points of Flaws buy twenty of Virtues, so the two
+  // numbers are read separately off the profile rather than assumed equal.
+  it("takes the Virtue and Flaw budget from the character type's profile", () => {
+    expect(wizardGuidance('virtues_flaws', context)?.args).toEqual({
+      virtues: '20',
+      flaws: '10',
+    });
+  });
+
+  it('passes no arguments for a phase whose copy states no number', () => {
+    expect(wizardGuidance('arts', context)?.args).toEqual({});
+  });
+
+  // Better silent than wrong: a sentence with a hole in it would state a budget
+  // of zero, which is a rules claim the data does not make.
+  it('says nothing at all when the number its sentence needs is not loaded', () => {
+    expect(wizardGuidance('virtues_flaws', { ...context, profile: undefined })).toBeNull();
+    expect(
+      wizardGuidance('characteristics', { ...context, characteristicRules: undefined }),
+    ).toBeNull();
+  });
+
+  it('still speaks for a number-free phase with nothing loaded', () => {
+    expect(
+      wizardGuidance('concept', { profile: undefined, characteristicRules: undefined })?.key,
+    ).toBe('wizard-guidance-concept');
   });
 });
 
