@@ -11,6 +11,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 use crate::characteristics::Characteristic;
+use crate::completeness::{CompletenessReport, completeness};
 use crate::grant::{Grant, open_pick_satisfies};
 use crate::ruleset::Ruleset;
 use crate::types::{
@@ -660,17 +661,35 @@ fn args<const N: usize>(pairs: [(&str, String); N]) -> BTreeMap<String, String> 
     pairs.into_iter().map(|(k, v)| (k.to_string(), v)).collect()
 }
 
-/// The outcome of validating an entity: a flat list of issues.
+/// The outcome of validating an entity: a flat list of issues, plus which of the
+/// entity's creation phases hold no choices yet.
+///
+/// The two readings ride on one payload because one caller — the guided wizard —
+/// shows both about the same character at the same moment, and a second round trip
+/// could only let them disagree. They are kept strictly apart in kind, though: the
+/// issues say what the *rules* forbid and are what every gate is phrased over,
+/// while [`completeness`](CompletenessReport) says what the *player* has not filled
+/// in yet and gates nothing (see [`crate::completeness`]).
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ValidationResult {
     /// All findings, errors and warnings intermixed in detection order.
     pub issues: Vec<ValidationIssue>,
+    /// The declared creation phases the player has not engaged with yet.
+    ///
+    /// `#[serde(default)]` so a payload written without it still parses, and so a
+    /// result built from a bare issue list ([`ValidationResult::new`], the
+    /// childhood rejections) reports nothing incomplete rather than guessing.
+    #[serde(default)]
+    pub completeness: CompletenessReport,
 }
 
 impl ValidationResult {
-    /// Builds a result from a list of issues.
+    /// Builds a result from a list of issues, with nothing reported incomplete.
     pub fn new(issues: Vec<ValidationIssue>) -> Self {
-        Self { issues }
+        Self {
+            issues,
+            completeness: CompletenessReport::default(),
+        }
     }
 
     /// Returns `true` if there are no error-severity issues.
@@ -697,21 +716,21 @@ impl ValidationResult {
 
     /// Applies a [`ValidationMode`]: `Enforced` keeps issues as-is, `Advisory`
     /// downgrades every issue to a warning, `Silent` clears all issues.
-    pub fn apply_mode(self, mode: ValidationMode) -> Self {
+    ///
+    /// The completeness report passes through all three untouched. The mode says
+    /// how hard the *rules* are enforced, and which steps the player has filled in
+    /// is not a rules question — an unchecked character still has empty steps.
+    pub fn apply_mode(mut self, mode: ValidationMode) -> Self {
         match mode {
-            ValidationMode::Enforced => self,
-            ValidationMode::Advisory => ValidationResult {
-                issues: self
-                    .issues
-                    .into_iter()
-                    .map(|mut i| {
-                        i.severity = IssueSeverity::Warning;
-                        i
-                    })
-                    .collect(),
-            },
-            ValidationMode::Silent => ValidationResult { issues: vec![] },
+            ValidationMode::Enforced => {}
+            ValidationMode::Advisory => {
+                for issue in &mut self.issues {
+                    issue.severity = IssueSeverity::Warning;
+                }
+            }
+            ValidationMode::Silent => self.issues.clear(),
         }
+        self
     }
 }
 
@@ -776,7 +795,10 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
         validate_warping(entity, ruleset, type_profile, &mut issues);
     }
 
-    ValidationResult { issues }
+    ValidationResult {
+        issues,
+        completeness: completeness(entity, ruleset),
+    }
 }
 
 /// Emits `unknown_type` when the entity's `type_id` has no matching profile.
@@ -5890,17 +5912,65 @@ mod tests {
 
     #[test]
     fn validation_result_errors_vs_warnings() {
-        let result = ValidationResult {
-            issues: vec![
-                ValidationIssue::error("err1", CreationPhase::Review, BTreeMap::new(), None),
-                ValidationIssue::warning("warn1", CreationPhase::Review, BTreeMap::new(), None),
-                ValidationIssue::error("err2", CreationPhase::Review, BTreeMap::new(), None),
-            ],
-        };
+        let result = ValidationResult::new(vec![
+            ValidationIssue::error("err1", CreationPhase::Review, BTreeMap::new(), None),
+            ValidationIssue::warning("warn1", CreationPhase::Review, BTreeMap::new(), None),
+            ValidationIssue::error("err2", CreationPhase::Review, BTreeMap::new(), None),
+        ]);
 
         assert_eq!(result.errors().count(), 2);
         assert_eq!(result.warnings().count(), 1);
         assert!(!result.is_valid());
+    }
+
+    /// The wizard reads its findings and its completeness off ONE payload, so
+    /// `validate` computes both. The companion profile declares three phases and
+    /// this entity has touched none of them.
+    #[test]
+    fn a_validation_result_reports_the_phases_still_untouched() {
+        let rs = test_ruleset();
+        let entity = make_entity("companion", vec![]);
+
+        assert_eq!(
+            validate(&entity, &rs).completeness.incomplete_phases,
+            vec![
+                CreationPhase::Concept,
+                CreationPhase::VirtuesFlaws,
+                CreationPhase::Abilities,
+            ]
+        );
+    }
+
+    /// Completeness is not a rule verdict, so the validation mode — which only
+    /// says how hard the *rules* are enforced — must not touch it. Silent is the
+    /// load-bearing case: it clears every issue, and an unchecked character still
+    /// has steps nobody has filled in.
+    #[test]
+    fn no_validation_mode_changes_what_is_incomplete() {
+        let rs = test_ruleset();
+        let entity = make_entity("companion", vec![]);
+        let expected = validate(&entity, &rs).completeness;
+        assert!(!expected.incomplete_phases.is_empty());
+
+        for mode in [
+            ValidationMode::Enforced,
+            ValidationMode::Advisory,
+            ValidationMode::Silent,
+        ] {
+            assert_eq!(
+                validate(&entity, &rs).apply_mode(mode).completeness,
+                expected,
+                "{mode:?} changed the completeness report"
+            );
+        }
+    }
+
+    /// An older payload — or any caller building a result from a bare issue list,
+    /// as the childhood rejections do — carries no report and must still parse.
+    #[test]
+    fn a_result_without_a_completeness_report_still_deserializes() {
+        let result: ValidationResult = serde_json::from_str(r#"{ "issues": [] }"#).unwrap();
+        assert!(result.completeness.incomplete_phases.is_empty());
     }
 
     #[test]
