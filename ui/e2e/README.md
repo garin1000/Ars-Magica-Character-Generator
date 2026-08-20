@@ -110,11 +110,12 @@ and anything importing `@wdio/globals` cannot resolve there. That is why
 
 ## Every spec builds its own character
 
-The suite runs **serially against one shared app instance**, and since M6a the app
-boots on a startup choice screen where a character's **type is fixed at creation**
-— there is no type selector to switch, and creating a character discards whatever
-was being edited. So a spec can never inherit a character from an earlier `it` or
-an earlier spec file.
+The suite runs **serially**, one spec file at a time, and since M6a the app boots on a
+startup choice screen where a character's **type is fixed at creation** — there is no
+type selector to switch, and creating a character discards whatever was being edited.
+So a spec can never inherit a character from an earlier `it`, and — since each spec
+file gets its own session and so its own app process — certainly not from an earlier
+spec file.
 
 `helpers.js` exports the one function that follows from that:
 
@@ -135,11 +136,23 @@ the validation mode carry over, so a spec that depends on either must set it its
 
 ## Spec ordering
 
-wdio globs `specs/**/*.e2e.js` and runs the files in sorted order.
-`app-entry.e2e.js` sorts first, which is what lets it — and only it — assert the
-app's **boot** state. Renaming it to anything sorting later would silently turn
-those assertions into claims about the previous spec's leftovers. The file says so
-in its own header too.
+wdio globs `specs/**/*.e2e.js` and runs the files in sorted order, one at a time
+(`maxInstances: 1`). `app-entry.e2e.js` was named to sort first, so that it — and only
+it — could assert the app's **boot** state.
+
+**Neither half of that is true any more, and it does not matter** (established in
+M6/6b8d):
+
+- It no longer sorts first. `aging-crisis.e2e.js` and `aging.e2e.js`, added in
+  6b6/6b7, sort ahead of it (`ag` before `ap`), so it runs **third**.
+- It does not need to. wdio spawns a **worker per spec file**, and each worker opens
+  its own WebDriver session — so every spec file gets a **freshly launched app**.
+  (Visible in the reporter as `#0-0 … #0-34`, one `Session ID` per file.) The boot
+  state is therefore not one file's privilege; any spec's first line sees a fresh app.
+
+So do not rename a file believing the order protects an assertion, and do not write a
+spec that expects to inherit anything at all from the file before it — not even the
+app process.
 
 ## Specs
 

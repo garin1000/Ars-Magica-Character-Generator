@@ -1,19 +1,32 @@
 # Milestone 6b — Implementation Tracker
 
-Sequenced execution plan for 6b ("Guided creation wizard"). `PLAN.md:588-618` holds
+Sequenced execution plan for 6b ("Guided creation wizard"). `PLAN.md:593-726` holds
 the high-level 6b scope checkboxes; this file is the session-resumable execution
 tracker with per-slice tasks, decisions, and verified source citations. Tick a box
 here and the matching `PLAN.md` box in the same commit as green code.
 
-6a is done (`PLAN.md:562-586`): the app opens on `StartScreen.svelte` and a character's
+6a is done (`PLAN.md:567-591`): the app opens on `StartScreen.svelte` and a character's
 type is fixed at creation via `store.createCharacter(typeId)`. 6b1b replaced that
 screen's hardcoded-disabled wizard button with one guided entry per character type.
 
-**Status: 6b1a through 6b7 are done.** The milestone's closing slice, **6b8**, runs as
-four sub-slices: **6b8a — completeness indicators**, **6b8b — the per-step guided copy**
-and **6b8c — the deferrals 6b1b-6b7 froze** are done; the milestone gate (per-type e2e
-specs, the portable smoke check, `cargo clippy --all-targets`, doc reconciliation —
-6b8d) remains.
+**Status: 6b — and with it milestone 6 — is COMPLETE.** Every slice from 6b1a to 6b8
+is done. The closing slice, **6b8**, ran as four sub-slices:
+
+- **6b8a — completeness indicators.** An engine-side `CompletenessReport` beside the
+  validation result, so a legal-but-empty step is visibly unfinished; the rail, the
+  step and `WizardReview` show it, and nothing gates on it.
+- **6b8b — guided step copy.** Two or three sentences per phase, `wizard-guidance-
+  <phase>` in both locales, rendered by `WizardStep`, with every number in them
+  interpolated from loaded data rather than written into the translation.
+- **6b8c — the deferrals 6b1b-6b7 froze.** Six recorded items: four fixed (the spell
+  budget bar's ownership, a non-magus's route to its Longevity Ritual, the export's
+  restricted-pool labels, the XP bar reading `xp_general_pool`) and two settled as
+  they stood, in comments at the declaration.
+- **6b8d — the milestone gate.** One end-to-end walk per character type, the
+  portable-layout smoke check, `cargo clippy --all-targets` fixed and added to the
+  gate, and this reconciliation.
+
+Next is **milestone 7**, the read-only character-sheet window (`PLAN.md:727`).
 
 6b7 — the Crisis, the Decrepitude levels it reaches, and the crisis table — was
 **smaller than the sketch below**, because 6b6 already took the per-year
@@ -104,7 +117,7 @@ canonical key/array sorting. German labels must match
 | **6b5** ✅ | Post-Gauntlet accrual (30 pts/year, lab-season deduction, xp↔spell-level split) | 6b4 |
 | **6b6** ✅ | Aging tables + aging total + outcome resolution **+ the per-year write-back**, as a creation phase of its own | 6b1a |
 | **6b7** ✅ | Crisis, Decrepitude levels, the crisis table — the write-back landed in 6b6, so this is smaller than the sketch below | 6b6 |
-| **6b8** 🔄 | Per-type flow completion, completeness indicators, guided copy, milestone gate — run as four sub-slices; **6b8a ✅ 6b8b ✅ 6b8c ✅** | 6b2-6b7 |
+| **6b8** ✅ | Per-type flow completion, completeness indicators, guided copy, milestone gate — run as four sub-slices; **6b8a ✅ 6b8b ✅ 6b8c ✅ 6b8d ✅** | 6b2-6b7 |
 
 6b1 was one slice until review: ~24 TDD steps spanning 85 emit sites, a contract-table
 rewrite, two new scanner tests, three extractions, five new components and a new e2e
@@ -1343,6 +1356,9 @@ named; apply → log entry, note and save fields; revert → gone.
   failures live under it (`type_complexity` in `data_integrity.rs`, `needless_lifetimes`
   in `effective.rs`, `doc_lazy_continuation` in `export.rs`). Untouched here; **6b8d**'s
   call whether to fix them and tighten the gate (6b8c left them alone too).
+  *Settled in 6b8d: fixed and in the gate. The count was five, not three — the two
+  extra were the `unused_mut` 6b8c noted and an `items_after_test_module` that had a
+  doc comment attached to the wrong item.*
 
 ---
 
@@ -1448,6 +1464,7 @@ weaker reading of the same character decides what is *empty*. Six commits,
   Abilities") would be the engine inventing rules the sources do not carry.
 - **`cargo clippy --all-targets` is still not part of the gate** (the three
   pre-existing failures 6b7 recorded) — still **6b8d**'s call, not taken here.
+  *Settled in 6b8d: the flag is on, and it found five things, not three.*
 
 ---
 
@@ -1554,7 +1571,7 @@ step, saying what is decided there and what the rules say about it. Four code co
   already carries.
 - **`cargo clippy --all-targets` still is not part of the gate** (the pre-existing
   failures 6b7 recorded, plus an `unused_mut` warning in `commands.rs` this slice did not
-  introduce) — 6b8d's call.
+  introduce) — 6b8d's call. *Settled in 6b8d: taken, fixed, and in the gate.*
 
 ---
 
@@ -1676,9 +1693,125 @@ a route that did not exist for half the character types, and two are decisions.
   the other way round; the bar was already right.
 - **No new e2e spec file.** Both real-binary proofs extend an existing spec — the grog's
   ritual in `aging.e2e.js`, the magus's raised pool in `spells.e2e.js`, both riding
-  characters those specs had already built. 6b8d owns the per-type specs.
+  characters those specs had already built. 6b8d owns the per-type specs. *Delivered:
+  four of them.*
 - **`cargo clippy --all-targets` is still not part of the gate**, and the `unused_mut` in
   `crates/arm-app/tests/commands.rs:2178` is still there — 6b8d's, as recorded.
+  *Settled in 6b8d: fixed, along with four others.*
+
+---
+
+## Slice 6b8d — the milestone gate ✅
+
+The last slice of the milestone, and the first one that walks the thing the milestone
+was for. 6b1b through 6b8c built the flow a phase at a time and tested it a phase at a
+time; nothing had ever taken a character of any type from the startup screen to Finish.
+Six commits, `71ed277..<this one>`.
+
+### What shipped
+
+- **Four per-type end-to-end walks** — `grog-wizard.e2e.js`,
+  `companion-wizard.e2e.js`, `mythic-companion-wizard.e2e.js`,
+  `magus-wizard.e2e.js` — each driving the real release binary from `StartScreen`
+  through **every** phase its profile declares, filling each one in, to Finish and into
+  the editor, then through a save and a reload. The suite is **35** spec files.
+- **`ui/e2e/wizard-walk.js`**, the shared driver: `declaredPhases(typeId)` reads
+  `rules/core/character_types.json`, one filler per `CreationPhase`, and
+  `walkEveryPhase(typeId, plan)` which asserts the rail *is* the profile plus the
+  synthetic `review`, fills each phase, waits for its incompleteness mark to clear, and
+  presses Next. A spec supplies only its `plan` of choices.
+- **The portable-layout smoke check** — `npm run test:e2e:portable`,
+  `ui/e2e/wdio.portable.conf.js` + `ui/e2e/stage-portable.js` + one spec in
+  `ui/e2e/portable/`. Stages the release binary with `rules/` beside it into the
+  gitignored `tmp/portable/` and drives that copy, which is the only way to exercise
+  `load_ruleset`'s exe-dir fallback.
+- **`cargo clippy --workspace --all-targets -- -D warnings`** — five fixes, and the
+  flag is now in the gate in `CLAUDE.md`, in this file, and in `README.md`.
+- **The documents reconciled** — this file, `PLAN.md`, `README.md`,
+  `crates/arm-rules/RULES.md`, `ui/e2e/README.md`.
+
+### Design decisions of record
+
+- **The phase list is data in the spec too.** A walk that hardcoded its own phase list
+  would agree with a stale profile forever. `declaredPhases` reads the same JSON the app
+  loads, the rail is asserted to equal it, and a phase no filler knows how to fill throws
+  by name — so a thirteenth phase fails these specs rather than being walked past.
+- **"Visited" is not enough; the assertion is 6b8a's report.** After each filler the walk
+  waits for that step's `wizard-incomplete-<phase>` mark to disappear. That is the engine
+  saying the choice reached the entity, which is a far stronger claim than "Next was
+  clickable" — and it is checked once, centrally, instead of eleven different ways.
+- **Two claims at the closing step, not one.** Zero `data-severity="error"` in the
+  unfiltered Review panel (legal, including the findings no phase owns) **and**
+  `wizard-review-complete` (finished). Before 6b8a the second could not be stated at all.
+- **One shared driver, four plans.** The four walks differ only in their choices, so
+  everything else lives in `wizard-walk.js`. `helpers.js` keeps the entry points
+  (`startWizard`, `wizardRailPhases`, `satisfyMagusMinimums`); the walk builds on them
+  rather than duplicating them.
+- **The portable check is a smoke check on purpose.** What the layout puts at risk is
+  *resolution*, so the spec asserts that `rules/core` was found and passed its
+  integrity check (a type profile rendered), that `rules/i18n` arrived (a catalogue entry
+  renders a name, not its slug), and that no error banner is up. Re-running app behaviour
+  there would say nothing about resolution and would double the suite's runtime.
+- **Staging is Node, invoked through `npm run`.** `cp`/`rm` in a shell script would make
+  the check platform-specific and unrunnable from the repo's own tooling; `fs.cpSync` in
+  `stage-portable.js` makes `npm run test:e2e:portable` the whole recipe.
+- **`tmp/` is gitignored** (verified with `git check-ignore`), so no binary is ever
+  committed, and the staging is wiped and rebuilt each run — a stale copy would hide a
+  rules file that had stopped shipping.
+
+### Findings
+
+- **All four types complete cleanly, first try.** Only the magus walk needed a change,
+  and it was in the harness rather than the app: every picker adds through `add-<id>`,
+  but a spell's Selected row is `spell-remove-<id>-<i>` where a Virtue's is
+  `remove-<id>-<i>`, so the generic wait was looking for a row that never appears.
+- **`clippy --all-targets` found five things, not the three on record.** The extra two:
+  `items_after_test_module` in `crates/arm-rules/src/validation/scores.rs`, and the
+  `unused_mut` 6b8c had noted. The first is a real defect and not a lint nit — the
+  `#[cfg(test)] mod locality_cap_tests` sat in the *middle* of the file, directly under
+  the doc comment for `validate_supernatural_abilities`, so rustdoc attached that comment
+  to the test module and the function shipped undocumented. Moving the module to the end
+  of the file restores it. This is exactly the rot the flag exists to catch.
+- **The `doc_lazy_continuation` in `export.rs` was a wording accident.** A doc paragraph's
+  second line began with `1)` (the tail of "Second Sight 1)"), which Markdown reads as an
+  ordered-list marker. Indenting the continuation, as clippy suggests, would have turned
+  prose into a list it never was; the sentence was reflowed instead.
+- **The portable check was verified RED before being believed.** Staged without
+  `rules/`, the app boots and the startup screen never gets its create buttons — so the
+  check is exercising the exe-dir fallback and not merely agreeing with the standard
+  suite.
+- **The `concept` step does not own the character's name.** The name lives in
+  `CharacterBanner`, above every view, and `IdentityFields` says so deliberately. It still
+  satisfies the `concept` completeness criterion (any identity field), which is right, but
+  a walk that only typed a name would not have touched the step at all — so the walks type
+  the step's own concept field as well.
+- **Two long-standing claims about how the suite runs are wrong.** `ui/e2e/README.md`
+  says `app-entry.e2e.js` sorts first and that only this lets it observe the app's boot
+  state; `aging-crisis.e2e.js` and `aging.e2e.js`, added in 6b6/6b7, sort ahead of it, so
+  it runs **third** — and its boot assertions pass anyway. `helpers.js` says the suite
+  runs "against one shared app instance". Measured rather than guessed: wdio spawns a
+  **worker per spec file** and each opens its **own WebDriver session** (`#0-0 … #0-34`,
+  one `Session ID` per file), so every spec file gets a freshly launched app. That is why
+  the ordering never mattered. Both documents are corrected; no file was renamed, because
+  the name was never what protected anything. The advice both comments give — never
+  inherit a character from an earlier spec — stands, and is stronger for it.
+
+### Deliberate non-changes
+
+- **No new UI, no new engine code.** The whole slice is tests, lint fixes and prose. If a
+  phase had turned out to be uncompletable through the UI that would have been a finding
+  to report rather than a feature to add here; none did.
+- **The walks do not chase edge cases.** Each type takes one Minor Flaw funding one Minor
+  Virtue, spends its seven Characteristic points exactly, and buys a couple of Abilities.
+  The budget ceilings, the incompatibility greying, the gate and the validation modes are
+  already driven by `wizard.e2e.js`, `vf-*.e2e.js` and `character-types.e2e.js`; a walk
+  that re-drove them would be slower and no more informative.
+- **The recorded gaps stay open**, and stay described where they are: Strong Faerie
+  Blood's start-at-fifty override, Might-holders' immunity to aging, covenant-derived
+  Living Conditions (M8), the Markdown sheet printing the general pool as one total,
+  crisis *survival* resolution / the doctor's Medicine roll / death / Twilight (out of M6
+  scope by design), and "attendant/doctor" missing from the German translation tables.
+- **`SCHEMA_VERSION` stays 15.** Nothing is stored and no payload changed.
 
 ---
 
@@ -1703,8 +1836,9 @@ So the engines add **budget provision** (new pools feeding the existing solver),
 rules: the 2437 minimums, the 2392/2394 rates, the 2315 authorization gate, the
 aging/crisis tables, and Foreign Upbringing's halved cap.
 
-**Corrected source citations** (verified against the file; `PLAN.md:606-609` has one
-wrong): apprenticeship is **2433-2437**, not 2433-2435 — the Parma Magica 1 / Magic
+**Corrected source citations** (verified against the file; `PLAN.md`'s magus
+life-stage bullet had one wrong, and now carries the corrected range):
+apprenticeship is **2433-2437**, not 2433-2435 — the Parma Magica 1 / Magic
 Theory 1 / Latin 1 minimums are at **2437**, outside the cited range. Also uncited but
 load-bearing: the advancement table **2404-2431**, the spell cap **2465**, the childhood
 11-ability closed list **2378**, the base 15 xp/year at **2392** with Wealthy/Poor and
