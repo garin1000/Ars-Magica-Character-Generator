@@ -269,16 +269,24 @@ cargo tauri dev
 
 # E2E tests (wdio + tauri-driver, drives the REAL release binary)
 cd ui && npm run test:e2e
+
+# Portable-layout smoke check: stages the binary + rules/ outside target/ and
+# proves the app boots and loads its ruleset there. Separate run, not part of the
+# suite above (it needs the staging step first).
+cd ui && npm run test:e2e:portable
 ```
 
 E2E tests drive the **real release binary** — the only layer that exercises the
 shipped production binary through real IPC + bundled rules resources, so run it
 when a change touches the app's runtime behavior. (Machine-specific setup —
 installed tool paths, display availability — lives in the gitignored
-`CLAUDE.local.md`, imported at the end of this file.) To test a **portable** layout
-specifically (rules resolution differs — see `crates/arm-app/src/commands.rs`),
-stage the binary + `rules/` OUTSIDE any `target/` dir and point a wdio config at
-it; the standard suite runs from `target/release` and does not cover that path.
+`CLAUDE.local.md`, imported at the end of this file.) The standard suite runs from
+`target/release`, where `BaseDirectory::Resource` already resolves to the exe dir,
+so it does **not** cover the **portable** layout — where Resource points at a
+system path that does not exist and only `load_ruleset`'s exe-dir fallback finds
+the rules (see `crates/arm-app/src/commands.rs`). `npm run test:e2e:portable`
+(`ui/e2e/wdio.portable.conf.js` + `stage-portable.js`) stages the binary and
+`rules/` into the gitignored `tmp/portable/` and drives that copy.
 
 ### Required gate (must pass before any commit / "done" claim)
 

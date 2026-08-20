@@ -350,6 +350,11 @@ cd ui && npm run format:check  # prettier
 # desktop and headless via xvfb-run where there is no display (ssh, CI) — same
 # command either way; on a headless box also install the xvfb package.
 cd ui && npm run test:e2e
+
+# Portable-layout smoke check: stages the binary with rules/ beside it outside
+# target/ (as the portable archives ship it) and proves the app boots and finds
+# its rules there. Separate from the suite above.
+cd ui && npm run test:e2e:portable
 ```
 
 ## Rules sources & licensing
