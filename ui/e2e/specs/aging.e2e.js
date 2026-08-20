@@ -3,8 +3,10 @@
 // ruleset declares (concept, type, characteristics, virtues & flaws, abilities,
 // aging), so nothing between the start screen and the step under test can colour
 // the result. It is also the type that proves the step stands on its own for a
-// non-magus: the Longevity Ritual has no editor home outside the magus-gated
-// Possessions tab, so this step is the ONLY surface a grog can reach it from.
+// non-magus: the Longevity Ritual's other home, the Possessions tab, is
+// magus-gated, so this step is where a grog first reaches it. Since 6b8c the
+// editor's Details tab carries the panel for a non-magus too, and the closing
+// `it` follows the ritual across the save into it.
 //
 // The arithmetic is the rulebook's:
 //
@@ -390,5 +392,22 @@ describe('the guided aging step', () => {
     expect(await textOf(CONDITIONS_TOTAL)).toContain('-3');
     expect(await textOf(ROLLS_RECORDED)).toBe('1 of 5 recorded');
     expect((await agingPoints()).qik).toBe('1');
+  });
+
+  // Slice 6b8c. "You can perform Longevity Rituals for others, even for non-magi"
+  // (`:10672`), and the ritual this grog holds is a term of every aging total it
+  // will ever roll — but the editor's only home for one was the magus-gated
+  // Possessions tab, so once the wizard was finished the bonus could no longer be
+  // corrected. The Details tab now carries the panel for a type without that tab.
+  it('keeps the ritual reachable in the editor, where a grog has no Possessions tab', async () => {
+    // Still on the Details tab of the reloaded grog from the test above, and the
+    // tab that used to own the ritual is not even in this character's tab bar.
+    expect(await $('[data-testid="tab-possessions"]').isExisting()).toBe(false);
+    await browser.waitUntil(async () => (await $(LONGEVITY_BONUS).getValue()) === '1', {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'the editor should show the +1 ritual the guided step entered',
+    });
+    // The suggestion stays magus-only, exactly as it does on the guided step.
+    expect(await $(LONGEVITY_HINT).isExisting()).toBe(false);
   });
 });
