@@ -108,6 +108,17 @@ export interface EquipmentFilterState {
  * state, plus the Derived-Totals Technique/Form picker selection (`derivedArtPicker`,
  * a non-filter choice). Language-neutral (search text + ids), so it is never
  * reset on a ruleset reload and never enters the saved entity.
+ *
+ * **Keyed by panel, deliberately not by view** — settled in slice 6b8c, having been
+ * frozen in 6b1b when the wizard arrived and left open until now. The wizard and the
+ * editor mount the very same picker components over the very same character, and
+ * `store.view` puts exactly one of them on screen at a time, so a per-view split
+ * could only ever double the state and then have to decide which copy a filter
+ * *survives* into: a player who narrowed the Virtue list to Minor Hermetic in the
+ * wizard and pressed Finish would land on the editor's Virtues tab with the filter
+ * silently reset, mid-task. Carrying it across is the behaviour worth having, and it
+ * is what "keyed by panel identity" already gives. Do not "fix" this by adding a
+ * view dimension.
  */
 export interface PickerFilters {
   vf: Record<'virtue' | 'flaw', VfFilterState>;
