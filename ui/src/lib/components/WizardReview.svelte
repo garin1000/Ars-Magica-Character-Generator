@@ -3,6 +3,7 @@
   import ValidationPanel from './ValidationPanel.svelte';
 
   const clean = $derived((store.result?.issues ?? []).length === 0);
+  const outstanding = $derived(store.wizardIncompletePhases);
 </script>
 
 <!-- The wizard's closing step. Its validation panel is deliberately UNFILTERED:
@@ -19,8 +20,21 @@
     <ValidationPanel />
   {/if}
 
-  <p class="hint" data-testid="wizard-review-incomplete">
-    {store.t('wizard-review-incomplete')}
-  </p>
+  <!-- Legal is not finished. The steps gate on errors only, so anything merely
+       left empty walked through — this names which ones, without asking for any
+       of them: Finish is not held on this list. -->
+  {#if outstanding.length > 0}
+    <p class="hint" data-testid="wizard-review-incomplete">
+      {store.t('wizard-review-incomplete')}
+    </p>
+    <ul class="wizard-review-outstanding">
+      {#each outstanding as phase (phase)}
+        <li data-testid="wizard-review-incomplete-{phase}">{store.t(`phase-${phase}`)}</li>
+      {/each}
+    </ul>
+  {:else}
+    <p class="hint" data-testid="wizard-review-complete">{store.t('wizard-review-complete')}</p>
+  {/if}
+
   <p class="hint" data-testid="wizard-review-hint">{store.t('wizard-review-hint')}</p>
 </section>

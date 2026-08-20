@@ -82,9 +82,30 @@ describe('WizardReview', () => {
   });
 
   // Legal is not complete: the gate only catches errors, so an empty-but-legal
-  // phase walks through. Saying so here is the honest version of that gap.
-  it('warns that a legal character may still be incomplete', () => {
-    expect(render(WizardReview).body).toContain('data-testid="wizard-review-incomplete"');
+  // phase walks through. The closing step names the ones that did.
+  it('lists the steps nothing was recorded for', () => {
+    store.result = {
+      issues: [],
+      completeness: { incomplete_phases: ['house_specialisation', 'aging'] },
+    };
+    const body = render(WizardReview).body;
+    expect(body).toContain('data-testid="wizard-review-incomplete"');
+    expect(body).toContain('data-testid="wizard-review-incomplete-house_specialisation"');
+    expect(body).toContain('data-testid="wizard-review-incomplete-aging"');
+  });
+
+  it('names each one through its phase key, never the raw slug', () => {
+    store.result = { issues: [], completeness: { incomplete_phases: ['virtues_flaws'] } };
+    const body = render(WizardReview).body;
+    expect(body).toContain('Virtues');
+    expect(body).not.toMatch(/>\s*virtues_flaws\s*</);
+  });
+
+  it('says so plainly when every step has choices recorded', () => {
+    store.result = { issues: [], completeness: { incomplete_phases: [] } };
+    const body = render(WizardReview).body;
+    expect(body).toContain('data-testid="wizard-review-complete"');
+    expect(body).not.toContain('data-testid="wizard-review-incomplete"');
   });
 
   it('points out that the editor holds the surfaces the flow never visits', () => {

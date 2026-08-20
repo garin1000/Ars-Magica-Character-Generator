@@ -85,8 +85,11 @@ phase-type-gift-optional = Dieser Typ darf Die Gabe wählen.
 wizard-review-title = Überprüfung
 wizard-review-clean = Keine Fehler oder Hinweise — dieser Charakter ist regelkonform.
 # Ehrlich darüber, was die Sperren prüfen und was nicht: die Schritte blockieren nur
-# bei Fehlern, ein regelkonformer Charakter kann also unfertig sein.
-wizard-review-incomplete = Ein regelkonformer Charakter ist nicht zwangsläufig ein fertiger: Schritte blockieren nur bei Fehlern, alles bloß Leergelassene ist also durchgelaufen.
+# bei Fehlern, ein regelkonformer Charakter kann also unfertig sein. Leitet die Liste
+# der leer gebliebenen Schritte ein; nichts davon hält „Fertigstellen" auf.
+wizard-review-incomplete = Ein regelkonformer Charakter ist nicht zwangsläufig ein fertiger: Schritte blockieren nur bei Fehlern, diese hier blieben also leer. Du kannst trotzdem fertigstellen.
+# Wird anstelle dieser Liste angezeigt, sobald jeder Schritt eine Eintragung enthält.
+wizard-review-complete = Für jeden Schritt dieser Erstellung sind Eintragungen vorhanden.
 wizard-review-hint = Ausrüstung, magische Gegenstände, Macht und Verzerrung sind nicht Teil der geführten Erstellung — sie werden nach dem Fertigstellen bearbeitet.
 
 available-title = Verfügbar
