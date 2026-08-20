@@ -68,7 +68,7 @@ apprenticeship's own 240 may buy them freely (`:2435`).
 
 ```bash
 cargo test --workspace
-cargo clippy --workspace -- -D warnings
+cargo clippy --workspace --all-targets -- -D warnings   # test targets included (6b8d)
 cargo fmt --check
 cd ui && npm run test:unit && npm run lint && npm run format:check && cd ..
 cargo tauri build --no-bundle          # authoritative: type-checks UI + builds release

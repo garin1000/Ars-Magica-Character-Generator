@@ -5168,7 +5168,7 @@ mod tests {
     }
 
     /// The later-life pool of a guided magus, or `None` when it has none.
-    fn later_life_pool<'a>(allocation: &'a XpAllocation) -> Option<&'a RestrictedXpPool> {
+    fn later_life_pool(allocation: &XpAllocation) -> Option<&RestrictedXpPool> {
         allocation.restricted.iter().find(|pool| {
             pool.origin
                 == XpPoolOrigin::LifeStage {

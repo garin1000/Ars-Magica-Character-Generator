@@ -2175,7 +2175,7 @@ fn shipped_parameter_keys() -> Vec<String> {
         serde_json::from_str(&json).unwrap()
     };
     let mut keys: Vec<String> = Vec::new();
-    let mut collect = |items: Option<&Vec<serde_json::Value>>, keys: &mut Vec<String>| {
+    let collect = |items: Option<&Vec<serde_json::Value>>, keys: &mut Vec<String>| {
         for item in items.into_iter().flatten() {
             for parameter in item["parameters"].as_array().into_iter().flatten() {
                 keys.push(parameter["key"].as_str().unwrap().to_string());
