@@ -81,16 +81,30 @@ async function raiseCharacteristic(characteristic, score) {
   );
 }
 
-/** Take one catalogue item (Virtue, Flaw, Ability, spell) off the Available list. */
-async function take(itemId) {
+/**
+ * Take one catalogue item off the Available list and wait for it to appear on the
+ * Selected one.
+ *
+ * Every picker adds through `add-<id>` (`SourcePicker`), but the Selected side is
+ * each tab's own markup: Virtues and Flaws remove through `remove-<id>-<i>` while
+ * a spell removes through `spell-remove-<id>-<i>`, so the row's test-id prefix is
+ * the caller's to name.
+ *
+ * @param {string} itemId the item's rules id
+ * @param {string} [rowPrefix] test-id prefix of its Selected row
+ */
+async function take(itemId, rowPrefix = 'remove-') {
   const add = await $(`[data-testid="add-${itemId}"]`);
   await add.waitForExist({ timeout: STEP_TIMEOUT });
   // `click` scrolls the button into view; the Available list is a scrolling box.
   await add.click();
-  await browser.waitUntil(async () => (await $$(`[data-testid^="remove-${itemId}"]`)).length > 0, {
-    timeout: STEP_TIMEOUT,
-    timeoutMsg: `taking '${itemId}' did not put it on the Selected list`,
-  });
+  await browser.waitUntil(
+    async () => (await $$(`[data-testid^="${rowPrefix}${itemId}"]`)).length > 0,
+    {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: `taking '${itemId}' did not put it on the Selected list`,
+    },
+  );
 }
 
 /** Add one Ability row at `index`, name its instance where parameterized, buy score 1. */
@@ -177,7 +191,7 @@ const FILLERS = {
   },
 
   spells: async (plan) => {
-    for (const spell of plan.spells) await take(spell);
+    for (const spell of plan.spells) await take(spell, 'spell-remove-');
   },
 
   house_specialisation: async (plan) => {
