@@ -67,12 +67,36 @@ describe('guided creation wizard', () => {
     // The wizard appends its own closing step, which no profile declares.
     expect(phases.at(-1)).toBe('review');
 
+    // A brand-new character has recorded nothing, so the opening step reads as
+    // untouched — in the rail and on the step itself — while Next stays live: the
+    // mark is information, never a gate.
+    const conceptStep = await $('[data-testid="wizard-step-concept"]');
+    expect(await conceptStep.getAttribute('data-incomplete')).toBe('true');
+    await expect($('[data-testid="wizard-incomplete-concept"]')).toExist();
+    await expect($('[data-testid="wizard-incomplete-hint"]')).toExist();
+    expect(await $(NEXT).isEnabled()).toBe(true);
+
+    // Filling the step in clears the mark. The name is also what proves, at the
+    // end, that Finish carries the wizard's character over untouched.
+    await $(NAME_INPUT).setValue('Marcus of Bonisagus');
+    await browser.waitUntil(async () => !(await conceptStep.getAttribute('data-incomplete')), {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'naming the character did not clear the untouched mark on the Concept step',
+    });
+    expect(await $('[data-testid="wizard-incomplete-hint"]').isExisting()).toBe(false);
+
     // Back is dead on the first step; Next advances and the rail follows.
     expect(await $(BACK).isEnabled()).toBe(false);
     expect(await currentWizardPhase()).toBe('concept');
     await advanceWizardTo('type');
     expect(await currentWizardPhase()).toBe('type');
     expect(await $(BACK).isEnabled()).toBe(true);
+
+    // The Characteristics step behind it was never opened, and Next carried the
+    // flow straight over it all the same.
+    expect(
+      await $('[data-testid="wizard-step-characteristics"]').getAttribute('data-incomplete'),
+    ).toBe('true');
 
     // Walk to Virtues & Flaws and break it: a Minor Virtue with no Flaws to fund
     // it is `unbalanced_virtues`, an error.
@@ -114,9 +138,6 @@ describe('guided creation wizard', () => {
       timeoutMsg: 'removing the unfunded Virtue did not unblock the step',
     });
 
-    // Type a name here, to prove Finish carries the character over untouched.
-    await $(NAME_INPUT).setValue('Marcus of Bonisagus');
-
     // Walk back two steps, then jump forward through the rail to a step already
     // visited — the two halves of the flow's navigation.
     await $(BACK).click();
@@ -139,6 +160,11 @@ describe('guided creation wizard', () => {
     await advanceWizardTo('review');
     expect(await $(NEXT).isExisting()).toBe(false);
     await $(FINISH).waitForExist({ timeout: STEP_TIMEOUT });
+
+    // The closing step names what was walked past — this magus never opened its
+    // Arts — and Finish is live regardless: legal, if unfinished.
+    await expect($('[data-testid="wizard-review-incomplete-arts"]')).toExist();
+    expect(await $(FINISH).isEnabled()).toBe(true);
 
     await $(FINISH).click();
 

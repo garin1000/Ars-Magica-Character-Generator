@@ -67,6 +67,7 @@ import type {
   PointItem,
   Spell,
   ValidationIssue,
+  ValidationResult,
 } from './types';
 
 // --- Fixtures ---------------------------------------------------------------
