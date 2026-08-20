@@ -140,11 +140,14 @@ support is new data plus thin UI — never an engine rewrite.
 
 ## Status
 
-Active development. The engine, Tauri integration, and a direct-entry UI are in
-place and tested end to end (engine unit tests, webview-free command integration
-tests, and a real-binary `tauri-driver` E2E). Any core-rules character is fully
-enterable **and** fully computable in direct entry — milestone M5 complete, with
-Markdown export added in M5.6.
+Active development. The engine, Tauri integration, and both input surfaces — the
+direct-entry editor and the guided wizard — are in place and tested end to end
+(engine unit tests, webview-free command integration tests, and a real-binary
+`tauri-driver` E2E). Any core-rules character is fully enterable **and** fully
+computable in direct entry (M5, with Markdown export in M5.6), **and** buildable
+step by step in the guided flow: milestone **M6 is complete**, closed by an
+end-to-end walk for each of the four character types — start screen to finish, every
+phase of that type's flow filled in, on the shipped binary.
 
 ### What works today
 
@@ -239,6 +242,19 @@ Markdown export added in M5.6.
   enforces the gate is still the validation-mode control: Advisory and Silent stop
   it gating at all.
 
+  Each step opens with a few sentences on what is decided there and what the rules
+  say about it — with the numbers in them read from the loaded rules, so the copy
+  cannot drift from the data. And because the rules only say what is *forbidden*, a
+  second reading says what is still *empty*: a step nobody has filled in is marked
+  as untouched in the rail and on the step itself, and the closing Review lists
+  every one still outstanding. That mark never blocks anything — legal and finished
+  are different questions, and the wizard answers both instead of confusing them.
+
+  All four character types are walked from the startup screen to Finish on the real
+  binary, one end-to-end test each, every phase of the type's flow filled in — the
+  test asserts the finished character is complete as well as legal, and that it
+  survives a save and a reload.
+
 - **Life-stage experience.** A character can earn its Abilities the way the rules
   grant them — 75 points of native language and a restricted 45-point spread in
   early childhood, then 15 a year (20 with Wealthy, 10 with Poor) to its age —
@@ -305,11 +321,11 @@ Markdown export added in M5.6.
 
 ### Next
 
-Closing the guided wizard: completeness indicators, so a legal-but-empty step is visibly
-unfinished even though it does not block; per-step guidance sourced from the rulebook;
-and an end-to-end pass for each of the four character types. See [PLAN.md](PLAN.md) for
-the milestone breakdown and [M6B-IMPLEMENTATION.md](M6B-IMPLEMENTATION.md) for the
-slice-by-slice plan.
+A **character-sheet window**: an optional, read-only second window that renders a
+formatted sheet and recomputes live as the character is edited in the main one. Which
+sections it shows will be driven by the character-type profile rather than a per-type
+ladder, and every value on it is already computed by the engine — the window only lays
+them out. See [PLAN.md](PLAN.md) for the milestone breakdown.
 
 ## Getting started
 

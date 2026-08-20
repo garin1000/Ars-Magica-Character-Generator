@@ -185,6 +185,24 @@ relevant surface MUST preserve them and keep their tests green.
   the permission system (so they force an approval prompt that the Edit/Write path
   avoids) and bypass the harness's file-state tracking. Use the shell only for
   running commands (build, test, git), not for producing file content.
+- **Read files with the Read tool, never `cat`/`head`/`tail`/`sed -n`.** To look at
+  a file's content — source, data, docs, a log, a JSON report — use Read (with
+  `offset`/`limit` for a slice of a big file) or Grep/Glob to search it. Shelling
+  out to `cat file`, `cat file | tail -50`, `head -n 100 file`, or `sed -n '1,40p'
+  file` is the wrong tool: it wastes a Bash round-trip, drops the harness's
+  file-state tracking (so a later Edit can fail or clobber), and `cat | tail`
+  additionally discards everything above the tail so the next question needs
+  another call. `cat`/`head`/`tail` are legitimate only for trimming a **command's
+  stdout** in a pipeline (`cargo tarpaulin … | tail -3`), never for reading a path.
+- **Scratch and log artifacts live in the project-local `tmp/`, never `/tmp`.**
+  `tmp/` is gitignored and is the single home for anything a run produces that is
+  not committed: coverage reports, review findings, staged portable builds, test
+  logs. Writing to the system `/tmp` scatters a run's artifacts outside the repo
+  where they are invisible to `git status`, unreachable by the read-path
+  containment check (so every read of them prompts), and shared with every other
+  project on the machine. The one sanctioned exception is the e2e save/load
+  fixture: the specs resolve it through `os.tmpdir()` (`ui/e2e/wdio.conf.js`)
+  because the app's own file dialogs must write somewhere OS-native.
 - **Negative signs are ASCII hyphens.** Every displayed negative sign (and the
   minus glyph on decrement/stepper buttons) uses the ASCII hyphen-minus `-`
   (U+002D), never the mathematical minus `−` (U+2212) — ASCII stays copy-paste

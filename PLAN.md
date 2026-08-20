@@ -554,7 +554,7 @@ here (pulled forward from M10's export item, which retains the PDF/Scribus path)
 - Deferred: a per-Form **Magic Resistance** section (excluded with the other derived
       read-outs; one section to add if wanted), and the PDF/Scribus path (M10/M11).
 
-## Milestone 6 — Guided creation wizard
+## Milestone 6 — Guided creation wizard ✅
 
 Scope: wrap the full phase list for every character type in a guided flow,
 reusing the direct-entry components from M2–M5. All input surfaces already exist;
@@ -590,15 +590,16 @@ screen** rather than an already-instantiated blank character, and a character's
       between specs — plus `app-entry.e2e.js`, named to sort first because only
       the first spec to run can observe the boot state.
 
-### 6b. Guided wizard flow
+### 6b. Guided wizard flow ✅
 
-Slices 6b1a (phase vocabulary + issue attribution), 6b1b (the wizard shell), 6b2 (with
-its 6b2b/6b2c tails), 6b3 (6b3a's Sample Childhood engine, data and command, then
-6b3b's guided Abilities step that offers them), 6b4 (the magus's apprenticeship), 6b5
-(both halves — the years after the Gauntlet), 6b6 (all three sub-slices — the aging
-engine, its phase and its step) and 6b7 (the Crisis, its table and the survival
-read-out) are **done**; next is 6b8, which closes the milestone. Detail:
-`M6B-IMPLEMENTATION.md`.
+**6b is done, and with it milestone 6.** Slices 6b1a (phase vocabulary + issue
+attribution), 6b1b (the wizard shell), 6b2 (with its 6b2b/6b2c tails), 6b3 (6b3a's
+Sample Childhood engine, data and command, then 6b3b's guided Abilities step that
+offers them), 6b4 (the magus's apprenticeship), 6b5 (both halves — the years after
+the Gauntlet), 6b6 (all three sub-slices — the aging engine, its phase and its step),
+6b7 (the Crisis, its table and the survival read-out) and 6b8 (in four sub-slices:
+completeness indicators, the guided step copy, the deferrals the earlier slices froze,
+and the milestone gate) are all complete. Detail: `M6B-IMPLEMENTATION.md`.
 
 - [x] Wizard component driven by the character type's `creation_phases` list
       (`WizardShell` + `WizardStep`; the phases are now a typed `CreationPhase`, so
@@ -612,8 +613,15 @@ read-out) are **done**; next is 6b8, which closes the milestone. Detail:
       abilities, Arts, spells, House+specialisation), reusing them as they are;
       `concept` and `personality_reputations` got extractions out of
       `CharacterDetails`, and `type` a read-only confirmation step
-- [ ] Completeness indicators: the gate catches errors only, so a legal-but-empty
-      phase currently walks through (e.g. `house_unset` is a warning) — 6b8
+- [x] Completeness indicators, **6b8a**: the gate catches errors only, so a
+      legal-but-empty phase walked through (e.g. `house_unset` is a warning). A
+      `CompletenessReport` now rides on the validation payload beside the issues,
+      built from an exhaustive match over `CreationPhase` and scoped to the phases
+      the character's own profile declares; the rail marks an untouched step, the
+      step repeats the mark, and the Review step lists what is still empty. It is a
+      report and not an issue of some third severity, so it can never start gating,
+      and it survives all three validation modes — which steps are filled in is not
+      a rules question
 - [x] Abilities phase offers two modes: simple flat allocation, and a
       "sophisticated" guided life-stage flow — early childhood (Native Language
       + the 45-xp restricted spread, with an optional Sample Childhood prefab),
@@ -686,12 +694,35 @@ read-out) are **done**; next is 6b8, which closes the milestone. Detail:
       because the log entry's `year` became optional. The Crisis is flagged, not yet
       resolved — that is 6b7. Source: Core Rules.md:16563-16617, :2232, :5036, :5189,
       :5743, :3488, :10662, :10672
-- [ ] Guided House+specialisation step and guided Arts allocation step (auto-grant
-      logic already in M4)
-- [ ] Grog wizard flow (subset of phases)
-- [ ] Companion wizard flow complete
-- [ ] Mythic companion wizard flow
-- [ ] Magus wizard flow
+- [x] The Crisis — **6b7**: a roll bad enough to be a Crisis raises Decrepitude
+      first, totals the Crisis against the score that year itself raised, lands it on
+      the Crisis Table (shipped here for the first time) and reports what surviving it
+      would take — the Stamina Ease Factor, the Momentary Creo Corpus level, every
+      modifier this character brings, and the attending doctor the rules allow. A
+      Longevity Ritual spent on a Crisis is reported, never deleted. Survival itself
+      stays out: the engine never throws the Stamina die and never kills.
+      Source: Core Rules.md:474, :16617-16640, :16573, :6340, :10844
+- [x] Guided step copy — **6b8b**: two or three sentences per phase saying what is
+      decided there and what the rules say about it, `wizard-guidance-<phase>` in both
+      locales. Every number in them is interpolated from loaded data (the
+      Characteristic allowance, the type's Virtue/Flaw budget), never written into a
+      translation
+- [x] Guided House+specialisation step and guided Arts allocation step (auto-grant
+      logic already in M4) — both mount the editor's own surfaces as wizard steps
+      (`HouseSelector`, `ArtGrid` + `XpBar`), so the two flows cannot drift apart
+- [x] Grog wizard flow (subset of phases) — **6b8d**, `grog-wizard.e2e.js`
+- [x] Companion wizard flow complete — **6b8d**, `companion-wizard.e2e.js`
+- [x] Mythic companion wizard flow — **6b8d**, `mythic-companion-wizard.e2e.js`
+- [x] Magus wizard flow — **6b8d**, `magus-wizard.e2e.js`. All four walk the real
+      release binary from the startup screen through every phase their profile
+      declares to Finish, and assert the character that comes out is complete (no
+      phase left marked untouched) as well as legal (no error-severity finding), and
+      that it survives a save and a reload. The phase list is read from
+      `rules/core/character_types.json`, never written into a spec
+- [x] Portable-layout smoke check — **6b8d**: `npm run test:e2e:portable` stages the
+      release binary with `rules/` beside it outside `target/` and proves the app
+      boots and finds its rules there, which is the only way to exercise
+      `load_ruleset`'s exe-dir fallback
 
 ## Milestone 7 — Character sheet window
 
@@ -794,7 +825,7 @@ Full detail, field inventory, and quirks: **`docs/scribus-character-sheet.md`**.
 
 ---
 
-## Current focus: Milestone 6 (guided creation wizard)
+## Current focus: Milestone 7 (character-sheet window) — Milestone 6 complete
 
 Milestones 0–5.6 complete: the direct-entry gate is closed — every core-rules
 character is fully enterable and its combat/Soak/casting/lab totals computed
@@ -877,9 +908,25 @@ is reported, never silently deleted. Then it stops: no Stamina die is thrown, no
 pronounced dead, and the engine still has no `rand`. The save shape widened additively,
 so the schema stays 15. 31 specs.
 
-Next: **6b8** closes the milestone — per-type flow completion, the completeness
-indicator deferred from 6b1b, guided per-step copy, and the end-to-end specs for all
-four character types. Slice-by-slice plan: `M6B-IMPLEMENTATION.md`.
+**6b8 is done, in four sub-slices, and closes the milestone.** 6b8a added the
+completeness indicator deferred from 6b1b — a `CompletenessReport` beside the
+validation issues, so a legal-but-empty step is visibly unfinished without ever being
+held shut. 6b8b gave every phase two or three sentences of guided copy in both locales,
+with the numbers in them interpolated from loaded data. 6b8c settled the six deferrals
+the earlier slices had frozen: four fixes (the spell budget bar's ownership, a
+non-magus's route to its Longevity Ritual, the export's restricted-pool labels, an XP
+bar that was silently overspending a Skilled Parens bonus) and two decisions recorded
+at the declaration. 6b8d is the gate: one end-to-end walk per character type on the
+real binary — start screen to Finish, every declared phase filled, the finished
+character complete as well as legal and surviving a save and a reload — plus a
+portable-layout smoke check for the rules-resolution path the standard suite cannot
+reach, and `cargo clippy --all-targets` fixed and added to the required gate. 35 specs.
+
+**Next: Milestone 7 — the character-sheet window.** A read-only second Tauri window
+that renders a formatted sheet and re-renders live as the character is edited in the
+main window, with which sections appear driven by the character-type profile rather
+than a per-type ladder. The derived values it shows are already computed in M5; M7 only
+lays them out. Detail: the M7 section above.
 
 ---
 

@@ -1382,13 +1382,14 @@ entry) before the guided wizard in M6. Accordingly:
   modifier), restricted XP-grant pools (Educated/Warrior/Privileged Upbringing),
   Improved Characteristics (+3 point-buy pool), and `ability_score_grant`
   starting-score effects. See the effect-layer subsections above.
-- **M6 (guided wizard):** the life-stage XP acquisition (early childhood 75+45 xp
-  `:2378`; later life 15/20/10 xp/yr `:2390-2394`; age→max-score cap
-  `:2368-2374`), the Sample Childhood packages (`:2380-2388` — catalogue, engine
-  and picker landed in M6/6b3, see **Sample Childhood packages** below), the magus
-  apprenticeship/post-apprenticeship Art-XP flow (`:2433-2471`), and the aging
-  engine for characters over 35 (`:16563-16617` — **landed in M6/6b6**, see
-  **Aging (M6/6b6)** below; the Crisis of `:16619-16640` is not part of it). The
+- **M6 (guided wizard):** *done* — the life-stage XP acquisition (early childhood
+  75+45 xp `:2378`; later life 15/20/10 xp/yr `:2390-2394`; age→max-score cap
+  `:2368-2374`) in **6b2**, the Sample Childhood packages (`:2380-2388` —
+  catalogue, engine and picker, see **Sample Childhood packages** below) in
+  **6b3**, the magus apprenticeship and post-apprenticeship Art-XP flow
+  (`:2433-2471`) in **6b4**/**6b5**, the aging engine for characters over 35
+  (`:16563-16617`, see **Aging (M6/6b6)** below) in **6b6**, and the Crisis of
+  `:16619-16640` — which this bullet once excluded — in **6b7**. The
   age→max-score *cap* itself is enforced as direct-entry validation in M4/4e; only
   the XP *acquisition* and aging *rolls* are M6.
 
@@ -3844,7 +3845,13 @@ resolved conditions *modifier* is deliberately not printed — it is derived fro
 ids plus the character's Virtues and Flaws, and the sheet records choices.
 
 #### Recorded gaps — deliberately not implemented in 6b6
-Each is findable here so it is not rediscovered later as a bug.
+Each is findable here so it is not rediscovered later as a bug. Several were closed by
+6b7 and say so in place, rather than being deleted: a closed gap is worth more as a
+record of *how* it closed than as a blank. As of the end of milestone 6 the ones still
+genuinely open are **Strong Faerie Blood's start-at-fifty**, **Might-holders' immunity
+to aging**, **Age Quickly / Baneful Circumstances' schedule rules**, **`:16575`'s
+discretionary closing clause**, and **crisis survival itself** — the Stamina roll, the
+doctor's Medicine roll and death, all out of scope by design.
 
 - **Strong Faerie Blood's start-at-fifty** (`:5036`). "You start making aging rolls
   at the age of **fifty**, rather than the normal 35" — the **-3 ships**, the altered
@@ -3958,11 +3965,12 @@ Each is findable here so it is not rediscovered later as a bug.
 > "| Crisis Roll | Result |" … "| 8 or less | Bedridden for a week |"
 > — Ars Magica - Definitive Edition (Core Rules).md:16624-16632
 
-**Placeholder — the full `### The Crisis` section (the CRISIS TOTAL of `:16621`, the
-look-up, the survival read-out, the refusals) lands with the steps that implement
-them.** This subsection records only where the *numbers* now in
-`rules/core/aging.json` come from, because JSON carries no comments — plus the two
-items below, which are provenance the load gates deliberately do **not** encode.
+This subsection records where the *numbers* in `rules/core/aging.json` come from,
+because JSON carries no comments — plus the two items below, which are provenance the
+load gates deliberately do **not** encode. The mechanics that read them — the CRISIS
+TOTAL of `:16621`, the table look-up, the survival read-out and the refusals — are the
+`#####` subsections that follow, all delivered in 6b7. (This paragraph promised them as
+a placeholder until 6b8d noticed they had arrived.)
 
 | Datum | Value | Source line |
 |---|---|---|
@@ -4168,9 +4176,13 @@ crisis rule is implemented twice.
   five Aging Points to Decrepitude 1, a Simple Die of 10 and so a CRISIS TOTAL of 15 —
   the shipped minor illness with its Ease Factor 3, CrCo20 and the `:16634` doctor,
   which only the real `rules/core/aging.json` ships — and then back off byte for byte.
-- App/UI: `ruleset_io::aging_apply_loaded` passes `crisis_die: None` — a mechanical
-  pass-through, since the command edge does not yet ask for the die. Threading it
-  through `aging_apply` is the IPC/UI step's work.
+- App/UI: **the die reaches the engine from the command edge.** This bullet
+  described a stopgap — `ruleset_io::aging_apply_loaded` passing `crisis_die: None`
+  — that 6b7c removed in the same slice; both `aging_apply_loaded` and
+  `aging_preview_loaded` now take `crisis_die: Option<i32>` from the
+  `aging_apply` / `aging_preview` commands and hand it to `resolve_year`. A die
+  given for a year the table sent to no Crisis is simply unused: whether a Crisis
+  happened is `:16602`/`:16611`'s call, never the player's.
 
 ##### The Longevity Ritual a Crisis spends — reported, never deleted
 
@@ -4508,17 +4520,27 @@ still does not require it.
 
 ---
 
-## Other available books — no implemented mechanics yet
+## Other available books
 
-The following English sources are present in `rules/source/en/` but no mechanics
-from them are implemented yet. Add a section above (mirroring the Core Rules
-layout) when mechanics from a book are implemented.
+The following English sources are present in `rules/source/en/`. Add a section
+above (mirroring the Core Rules layout) when mechanics from a book are implemented.
+
+**Nothing implemented yet:**
 
 - Ars Magica 5e - Houses of Hermes - Mystery Cults.md
 - Ars Magica 5e - Houses of Hermes - Societates.md
 - Ars Magica 5e - Houses of Hermes - True Lineages.md
 - Ars Magica 5e - Magic - Hedge Magic (Revised).md
-- Ars Magica 5e - Realms of Power - Faerie.md
-- Ars Magica 5e - Realms of Power - Magic.md
-- Ars Magica 5e - Realms of Power - The Divine (Revised).md
-- Ars Magica 5e - Realms of Power - The Infernal.md
+
+**Cited already, all four through the Mythic Companion types of M4/4d** — this
+list used to name them as untouched, which stopped being true when those types
+shipped. Each supplies one type's package (its free grants, its required Virtues
+and Flaws, its Might grant and power levels) and, for two of them, the bonus
+points that type adds to the Virtue/Flaw budget. See **Mythic Companion types
+(M4/4d)** above for the per-item line ranges:
+
+- Ars Magica 5e - Realms of Power - Faerie.md — Faerie Doctor
+- Ars Magica 5e - Realms of Power - Magic.md — Spirit Votary (and its +7 Flaw
+  points, `:5486`)
+- Ars Magica 5e - Realms of Power - The Divine (Revised).md — Nephilim
+- Ars Magica 5e - Realms of Power - The Infernal.md — Devil Child

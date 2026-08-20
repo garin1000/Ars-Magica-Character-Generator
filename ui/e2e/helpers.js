@@ -3,11 +3,16 @@
 //
 // WHY THIS EXISTS. The app boots on the startup choice screen and a character's
 // type is fixed at creation, so there is no type selector to switch: the only way
-// to a character of a given type is to create one. And the suite runs serially
-// against one shared app instance (`wdio.conf.js`), where creating a character
-// discards whatever came before — so no spec may inherit a character from an
-// earlier `it` or an earlier file. Every spec therefore builds its own subject
-// through `startCharacter`, from whatever state its predecessor left behind.
+// to a character of a given type is to create one. And creating one discards
+// whatever came before, so no spec may inherit a character from an earlier `it`.
+// Every spec therefore builds its own subject through `startCharacter`, from
+// whatever state it finds itself in.
+//
+// (This comment used to add "the suite runs serially against one shared app
+// instance". Serially, yes — `maxInstances: 1`. One instance, no: wdio spawns a
+// worker per spec FILE and each opens its own WebDriver session, so every file
+// gets a freshly launched app. Measured in M6/6b8d; see `e2e/README.md`. The
+// advice above is unaffected, and is if anything stronger for it.)
 //
 // NAMING: this file must never be renamed to `*.test.js`. `ui/vitest.config.ts`
 // includes `e2e/**/*.test.js` in `npm run test:unit` (it excludes only
