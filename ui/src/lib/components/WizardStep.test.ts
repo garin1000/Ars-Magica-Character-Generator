@@ -194,7 +194,7 @@ describe('WizardStep', () => {
 
   it('takes the Characteristic allowance from the ruleset rather than stating it', () => {
     expect(guidance('characteristics')).toContain('7');
-    store.ruleset!.ruleset.characteristic_rules.start_points = 9;
+    store.ruleset!.ruleset.characteristic_rules!.start_points = 9;
     expect(guidance('characteristics')).toContain('9');
   });
 

@@ -27,6 +27,8 @@ const NEXT = '[data-testid="wizard-next"]';
 const FINISH = '[data-testid="wizard-finish"]';
 const NAME_INPUT = '[data-testid="identity-name"]';
 const MODE_SELECT = '[data-testid="mode-select"]';
+const GUIDANCE = '[data-testid="wizard-guidance"]';
+const TYPE_BUDGET = '[data-testid="type-step-budget"]';
 // A Minor Virtue with no prerequisites and no Flaws to fund it, so the V/F step
 // carries exactly one deterministic error: `unbalanced_virtues`.
 const ADD_VIRTUE = '[data-testid="add-virtue.keen_vision"]';
@@ -76,6 +78,12 @@ describe('guided creation wizard', () => {
     await expect($('[data-testid="wizard-incomplete-hint"]')).toExist();
     expect(await $(NEXT).isEnabled()).toBe(true);
 
+    // The step also says what is decided on it, in the rules' own terms — real
+    // prose from the locale, never the Fluent key echoed back.
+    const conceptGuidance = clean(await $(GUIDANCE).getText());
+    expect(conceptGuidance.length).toBeGreaterThan(0);
+    expect(conceptGuidance).not.toContain('wizard-guidance');
+
     // Filling the step in clears the mark. The name is also what proves, at the
     // end, that Finish carries the wizard's character over untouched.
     await $(NAME_INPUT).setValue('Marcus of Bonisagus');
@@ -98,9 +106,22 @@ describe('guided creation wizard', () => {
       await $('[data-testid="wizard-step-characteristics"]').getAttribute('data-incomplete'),
     ).toBe('true');
 
+    // This step reads the magus profile's Flaw budget straight out of the ruleset;
+    // hold on to the number, because the Virtues & Flaws guidance further down has
+    // to state that very same value rather than one frozen into the translation.
+    const flawPoints = clean(await $(TYPE_BUDGET).getText()).match(/\d+/)[0];
+
     // Walk to Virtues & Flaws and break it: a Minor Virtue with no Flaws to fund
     // it is `unbalanced_virtues`, an error.
     await advanceWizardTo('virtues_flaws');
+
+    // Guidance is per step, not one banner reused: this step's note is its own,
+    // and the budget in it is the profile's, not a number written into the copy.
+    const vfGuidance = clean(await $(GUIDANCE).getText());
+    expect(vfGuidance).not.toBe(conceptGuidance);
+    expect(vfGuidance).not.toContain('wizard-guidance');
+    expect(vfGuidance).toContain(flawPoints);
+
     const addVirtue = await $(ADD_VIRTUE);
     await addVirtue.waitForExist({ timeout: STEP_TIMEOUT });
     await addVirtue.click();
