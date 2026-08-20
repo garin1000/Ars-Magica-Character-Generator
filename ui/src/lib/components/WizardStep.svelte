@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { Component } from 'svelte';
   import type { CreationPhase } from '../types';
+  import { store } from '../state.svelte';
+  import { wizardGuidance } from '../derive';
 
   import AbilityTab from './AbilityTab.svelte';
   import AgingStep from './AgingStep.svelte';
@@ -54,6 +56,15 @@
   const step = $derived<StepDef>(STEPS[phase]);
   const Body = $derived(step.component);
   const Bar = $derived(step.bar);
+
+  // What this stage of character creation is, in the rules' own terms. Its
+  // numbers come from the loaded ruleset, so nothing here restates a rule value.
+  const guidance = $derived(
+    wizardGuidance(phase, {
+      profile: store.ruleset?.ruleset.type_profiles[store.entity.type_id],
+      characteristicRules: store.ruleset?.ruleset.characteristic_rules,
+    }),
+  );
 </script>
 
 <!-- Reproduces the editor's height chain verbatim — `.tab-content > .vf-tab
@@ -62,6 +73,13 @@
      each region component already ships its own "Available"/"Selected" headings,
      and a second heading above them would nest. -->
 <div class="vf-tab">
+  <!-- A note, not a heading: it sits where the step's bar sits, inside the same
+       flex column, so it costs the input surface below only its own height. -->
+  {#if guidance}
+    <p class="hint wizard-guidance" data-testid="wizard-guidance">
+      {store.t(guidance.key, guidance.args)}
+    </p>
+  {/if}
   {#if Bar}
     <Bar {...step.barProps ?? {}} />
   {/if}

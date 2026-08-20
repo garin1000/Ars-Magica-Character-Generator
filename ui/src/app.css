@@ -471,6 +471,18 @@ button:disabled {
   font-size: 0.85rem;
 }
 
+/* The step's guidance note. It sits inside the step's own `.vf-tab` column, above
+   the budget bar, so it is a plain flex item: no `flex: 1`, or it would take the
+   height the input surface below needs. Muted and capped in width, because it is
+   read once per step and then ignored. */
+.wizard-guidance {
+  margin: 0;
+  color: #b9b6d6;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  max-width: 60rem;
+}
+
 .wizard-progress {
   margin: 0;
   padding: 0.4rem 1.5rem 0;
