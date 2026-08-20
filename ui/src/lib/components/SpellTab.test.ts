@@ -141,3 +141,24 @@ describe('SpellTab selected-row layout', () => {
     );
   });
 });
+
+// --- 6b8c: who owns the budget bar ------------------------------------------
+
+// Every other input surface takes its budget bar from whoever mounts it — the
+// editor's tab in `App.svelte`, the wizard's step through `WizardStep`'s phase
+// table. The Spells surface used to be the one exception, mounting
+// `SpellBudgetBar` itself, which made the step table's `bar` column read "—" for
+// `spells` alone and hid a whole-character budget inside the picker.
+describe('SpellTab budget-bar ownership (slice 6b8c)', () => {
+  it('mounts no budget bar of its own', () => {
+    const body = html();
+    expect(body).not.toContain('data-testid="spell-levels-used"');
+    expect(body).not.toContain('data-testid="spell-levels-available"');
+  });
+
+  it('still renders both picker regions', () => {
+    const body = html();
+    expect(body).toContain('data-testid="available-title"');
+    expect(body).toContain('data-testid="spell-list"');
+  });
+});
