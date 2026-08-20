@@ -25,6 +25,7 @@ import { hasXvfbRun, preflightDisplay } from './display.js';
 import { portableApp, stagePortableApp } from './stage-portable.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(dirname, '../..');
 
 export const config = {
   runner: 'local',
@@ -48,6 +49,11 @@ export const config = {
   framework: 'mocha',
   mochaOpts: { ui: 'bdd', timeout: 120000 },
   logLevel: 'info',
+
+  // Same repo-local log destination as the standard suite, for the same reason
+  // the staged app itself lives under `tmp/`: nothing a run produces belongs
+  // outside the repository.
+  outputDir: path.resolve(repoRoot, 'tmp/e2e-logs'),
 
   // Build the production binary, then stage it — with `rules/` beside it — where
   // Tauri cannot mistake it for a dev build. The display check runs first and runs
