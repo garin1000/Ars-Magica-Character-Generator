@@ -59,6 +59,11 @@ wizard-finish = Finish
 wizard-blocked-hint = Fix this step's errors to continue, or switch the validation mode to Advisory.
 # Marks a step in the rail that still holds an error.
 wizard-step-blocked-label = has errors
+# Marks a step in the rail nothing has been recorded for yet. Legal is not the
+# same as finished: an empty step is marked, never blocked.
+wizard-step-incomplete-label = not started
+# The same reading, said on the step itself.
+wizard-step-incomplete-hint = Nothing has been recorded on this step yet. It does not block: you can continue and come back to it.
 # Shown while the validation mode is Advisory or Silent: nothing is enforced, so
 # no step gates and Finish is always available.
 wizard-unchecked-hint = Validation is not enforced, so no step blocks progress.

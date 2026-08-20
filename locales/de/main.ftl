@@ -62,6 +62,12 @@ wizard-finish = Fertigstellen
 wizard-blocked-hint = Behebe die Fehler dieses Schritts, um fortzufahren, oder wechsle den Prüfmodus auf „Beratend".
 # Kennzeichnet einen Schritt in der Leiste, der noch einen Fehler enthält.
 wizard-step-blocked-label = enthält Fehler
+# Kennzeichnet einen Schritt in der Leiste, für den noch nichts eingetragen wurde.
+# Regelkonform ist nicht dasselbe wie fertig: ein leerer Schritt wird gekennzeichnet,
+# aber nie blockiert.
+wizard-step-incomplete-label = nicht begonnen
+# Dieselbe Aussage, auf dem Schritt selbst.
+wizard-step-incomplete-hint = Für diesen Schritt wurde noch nichts eingetragen. Das blockiert nicht: du kannst fortfahren und später zurückkehren.
 # Wird angezeigt, solange der Prüfmodus „Beratend" oder „Stumm" ist: es wird nichts
 # erzwungen, also blockiert kein Schritt und „Fertigstellen" ist immer möglich.
 wizard-unchecked-hint = Die Prüfung wird nicht erzwungen, daher blockiert kein Schritt.
