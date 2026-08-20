@@ -18,7 +18,6 @@
   import type { Art, Spell, SpellMasteryAbility, SpellSelection } from '../types';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
-  import SpellBudgetBar from './SpellBudgetBar.svelte';
 
   // Technique/Form/text/level-range filters live on the store, so they survive the
   // tab switch that unmounts this component (same split ArtGrid uses for the Arts).
@@ -266,10 +265,10 @@
 </script>
 
 {#if store.ruleset}
-  <!-- The spell-levels budget + Mastery read-out as a status line ABOVE both
-       lists (it is a whole-character budget, so it does not belong inside the
-       selected list) — the same placement the XP bar has on Abilities/Arts. -->
-  <SpellBudgetBar />
+  <!-- The spell-levels budget + Mastery read-out (`SpellBudgetBar`) is NOT mounted
+       here: like `BalanceBar` and `XpBar` it is a whole-character budget, so it
+       belongs to whoever mounts this surface — `App.svelte`'s Spells tab and
+       `WizardStep`'s phase table — as a sibling status line above both lists. -->
   <div class="region-row">
     <section class="region region-source">
       <h2 class="region-title" data-testid="available-title">{store.t('available-title')}</h2>

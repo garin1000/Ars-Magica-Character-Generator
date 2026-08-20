@@ -13,6 +13,7 @@
   import XpBar from './lib/components/XpBar.svelte';
   import ArtGrid from './lib/components/ArtGrid.svelte';
   import SpellTab from './lib/components/SpellTab.svelte';
+  import SpellBudgetBar from './lib/components/SpellBudgetBar.svelte';
   import MagicPossessions from './lib/components/MagicPossessions.svelte';
   import SupernaturalBeing from './lib/components/SupernaturalBeing.svelte';
   import EquipmentTab from './lib/components/EquipmentTab.svelte';
@@ -236,6 +237,7 @@
         </div>
       {:else if tab === 'spells'}
         <div class="vf-tab">
+          <SpellBudgetBar />
           <SpellTab />
         </div>
       {:else if tab === 'possessions'}

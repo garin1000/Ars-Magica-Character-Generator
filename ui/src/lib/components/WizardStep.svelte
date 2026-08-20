@@ -13,6 +13,7 @@
   import IdentityFields from './IdentityFields.svelte';
   import MythicCompanionTypeSelector from './MythicCompanionTypeSelector.svelte';
   import PersonalityReputationsStep from './PersonalityReputationsStep.svelte';
+  import SpellBudgetBar from './SpellBudgetBar.svelte';
   import SpellTab from './SpellTab.svelte';
   import TypeStep from './TypeStep.svelte';
   import VirtueFlawTab from './VirtueFlawTab.svelte';
@@ -36,8 +37,10 @@
   // is a type error here until it has a step, rather than a silently blank one.
   //
   // The wizard reuses the direct-entry components as they are, so its steps and
-  // the editor's tabs can never drift apart. SpellTab mounts its own budget bar,
-  // which is why `spells` declares none.
+  // the editor's tabs can never drift apart. Every budget bar is declared here
+  // rather than mounted by the input surface below it, `spells` included: a
+  // budget belongs to the whole character, so the step (and, in the editor, the
+  // tab) owns it and the picker stays a picker.
   const STEPS = {
     concept: { component: IdentityFields, scroll: true },
     type: { component: TypeStep, scroll: true },
@@ -45,7 +48,7 @@
     virtues_flaws: { component: VirtueFlawTab, bar: BalanceBar },
     abilities: { component: AbilityTab, bar: XpBar },
     arts: { component: ArtGrid, bar: XpBar, barProps: { prefix: 'art-' } },
-    spells: { component: SpellTab },
+    spells: { component: SpellTab, bar: SpellBudgetBar },
     house_specialisation: { component: HouseSelector, scroll: true },
     mythic_type: { component: MythicCompanionTypeSelector },
     personality_reputations: { component: PersonalityReputationsStep, scroll: true },
