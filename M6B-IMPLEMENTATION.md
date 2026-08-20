@@ -1706,7 +1706,9 @@ a route that did not exist for half the character types, and two are decisions.
 The last slice of the milestone, and the first one that walks the thing the milestone
 was for. 6b1b through 6b8c built the flow a phase at a time and tested it a phase at a
 time; nothing had ever taken a character of any type from the startup screen to Finish.
-Six commits, `71ed277..<this one>`.
+Six code and documentation commits, from `71ed277` (the clippy tightening) through the
+four per-type walks and the portable check to `dbe6e2f` (the document reconciliation),
+plus this one recording them.
 
 ### What shipped
 
