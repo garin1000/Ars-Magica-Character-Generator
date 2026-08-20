@@ -2873,10 +2873,10 @@ mod tests {
         assert!(doc.contains("- **Martial**: 0 / 50\n"), "{doc}");
     }
 
-    /// An Ability the character *has* purely because a Virtue seeded it (Second Sight
-    /// 1) is stored nowhere in `ability_scores`, so iterating the bought instances
-    /// alone drops it from the sheet — even though the character can use it. The floor
-    /// row shows a bought 0 against its effective score.
+    /// An Ability the character *has* purely because a Virtue seeded it (Second
+    /// Sight 1) is stored nowhere in `ability_scores`, so iterating the bought
+    /// instances alone drops it from the sheet — even though the character can use
+    /// it. The floor row shows a bought 0 against its effective score.
     #[test]
     fn a_granted_but_unbought_ability_gets_its_own_row() {
         let mut e = magus();

@@ -2373,6 +2373,13 @@ fn shipped_aging_table_carries_the_16583_to_16611_rows() {
     );
 }
 
+/// One row of the Crisis Table as the transcription below compares it: the row
+/// id, its inclusive total range, the outcome it names, and the source line it
+/// was taken from. Named rather than written inline because the tuple is what the
+/// whole transcription is asserted against, and an anonymous five-field tuple in
+/// the assertion says nothing about which field is which.
+type CrisisTableRow<'a> = (&'a str, Option<i32>, Option<i32>, &'a CrisisOutcome, u32);
+
 /// The Crisis Table transcribed row by row (`:16626-16632`), together with the
 /// Simple Die it is rolled on (`:474`), the attending doctor (`:16634`) and the
 /// two Decrepitude thresholds of `:16617`.
@@ -2443,7 +2450,7 @@ fn shipped_crisis_table_carries_the_16626_to_16632_rows() {
         ease_factor,
         ritual_level,
     };
-    let rows: Vec<(&str, Option<i32>, Option<i32>, &CrisisOutcome, u32)> = crisis
+    let rows: Vec<CrisisTableRow<'_>> = crisis
         .rows
         .iter()
         .map(|row| {

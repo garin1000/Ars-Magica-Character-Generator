@@ -246,8 +246,8 @@ cargo test -p arm-rules
 # Rust workspace (all crates)
 cargo test --workspace
 
-# Clippy (warnings as errors)
-cargo clippy --workspace -- -D warnings
+# Clippy (warnings as errors) — `--all-targets` so tests and benches are linted too
+cargo clippy --workspace --all-targets -- -D warnings
 
 # Format check
 cargo fmt --check
@@ -288,7 +288,12 @@ shipped production code path.
 
 ```bash
 cargo test --workspace
-cargo clippy --workspace -- -D warnings
+# `--all-targets` lints the test and integration-test crates as well as the
+# libraries. Without it test code goes unlinted, which is exactly where rot hides:
+# the flag's introduction (M6/6b8d) turned up a `#[cfg(test)] mod` sitting in the
+# middle of a source file, silently swallowing the doc comment of the function
+# below it.
+cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --check
 cd ui && npm run test:unit && npm run lint && npm run format:check && cd ..
 

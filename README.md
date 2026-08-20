@@ -335,8 +335,9 @@ cargo test -p arm-rules
 # Entire Rust workspace
 cargo test --workspace
 
-# Lint (warnings treated as errors) and format check
-cargo clippy --workspace -- -D warnings
+# Lint (warnings treated as errors) and format check. `--all-targets` lints the
+# test crates too, so test code is held to the same bar as shipped code.
+cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --check
 
 # Frontend
