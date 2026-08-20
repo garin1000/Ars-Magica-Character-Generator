@@ -590,17 +590,92 @@ describe('XpBar flat mode is untouched by the guided branch (slice 6b3b)', () =>
     expect(has(body, 'life-stage-no-budget')).toBe(false);
   });
 
-  it('charges the typed pool, not xp_general_pool, when the two differ', () => {
+  it('keeps the editable total on the typed pool, whatever the engine funds from', () => {
     resetEntity(200);
     setEffective(0, []);
-    // In flat mode the editable total IS `entity.xp_pool`: the engine's own
-    // `base_general` there. Reading `xp_general_pool` unconditionally would be the
-    // tempting over-simplification — and would silently shift the figure whenever a
-    // Skilled Parens bonus is folded in, breaking the exact arithmetic
-    // `arts.e2e.js` drives against this very input.
-    store.effective!.xp_general_pool = 999;
+    // The bracketed field is the number the player typed — `entity.xp_pool`, the
+    // engine's own `base_general`. It is never overwritten by the pool the solve
+    // funds from, which is that base plus any V/F contribution; the two are
+    // reconciled by the bonus entry below, not by moving the field.
+    store.effective!.xp_general_pool = 260;
+    store.effective!.xp_general_bonus = 60;
     const body = html();
     expect(element(body, 'xp-pool').open).toMatch(/value="200"/);
-    expect(element(body, 'xp-available').text).toContain('200');
+  });
+});
+
+// A flat magus with Skilled Parens ("You gain an additional 60 experience points …
+// during apprenticeship", Core Rules.md:4966) may spend 300 against a typed 240,
+// and the engine grants exactly that. The bar used to charge the spend against the
+// typed total alone, so the character read a negative Available with no error
+// anywhere — a silently wrong read-out of a perfectly legal character.
+describe('XpBar and the Virtue/Flaw pool bonus (slice 6b8c)', () => {
+  /** A typed pool of `typed` raised by a signed V/F contribution, `used` spent. */
+  function withBonus(typed: number, bonus: number, used: number): void {
+    resetEntity(typed);
+    setEffective(used, []);
+    store.effective!.xp_general_pool = Math.max(typed + bonus, 0);
+    store.effective!.xp_general_bonus = bonus;
+    // The engine funds up to the pool and reports the rest as unfunded demand.
+    store.effective!.xp_general_used = Math.min(used, store.effective!.xp_general_pool);
+    store.effective!.xp_max_flow = store.effective!.xp_general_used;
+  }
+
+  it('spends the whole raised pool without reporting an overspend', () => {
+    withBonus(240, 60, 300);
+    const body = html();
+    expect(element(body, 'xp-available').text).toContain('0');
+    expect(element(body, 'xp-available').open).not.toContain('over');
+  });
+
+  it('lists the bonus as a pool of its own, spent before the base', () => {
+    withBonus(240, 60, 50);
+    const bonus = element(html(), 'xp-bonus');
+    // Drawn from the bonus first, exactly as a restricted pool is: 50 of 60.
+    expect(bonus.text).toContain('50');
+    expect(bonus.text).toContain('60');
+    // ...so the base is untouched and fully available.
+    expect(element(html(), 'xp-spent').text).toBe('0');
+    expect(element(html(), 'xp-available').text).toContain('240');
+  });
+
+  it('still reports an overspend once the raised pool is exceeded', () => {
+    withBonus(240, 60, 310);
+    const body = html();
+    expect(element(body, 'xp-available').text).toContain('-10');
+    expect(element(body, 'xp-available').open).toContain('over');
+  });
+
+  it('charges a Weak Parens penalty to the base and shows it signed', () => {
+    withBonus(240, -60, 60);
+    const body = html();
+    // 240 - (60 spent + 60 penalty) = 120, which is also pool (180) - used (60).
+    expect(element(body, 'xp-spent').text).toBe('120');
+    expect(element(body, 'xp-available').text).toContain('120');
+    // ASCII hyphen, never U+2212 (formatSigned is the single source of truth).
+    expect(element(body, 'xp-bonus').text).toContain('-60');
+    expect(element(body, 'xp-bonus').text).not.toContain('−');
+  });
+
+  it('shows no bonus entry at all when no Virtue touches the pool', () => {
+    resetEntity(200);
+    setEffective(30, []);
+    expect(has(html(), 'xp-bonus')).toBe(false);
+  });
+
+  it('raises the guided pool the same way, without a magus branch', () => {
+    // Guided funding: the bracketed total is the life-stage block's own base, and
+    // the bonus is listed beside it rather than folded into an unexplained number.
+    resetEntity(0);
+    installPlan();
+    setEffective(0, [], magusBudget());
+    store.effective!.xp_general_pool = 300;
+    store.effective!.xp_general_bonus = 60;
+    const body = html();
+    expect(element(body, 'xp-pool-total').text).toBe('240');
+    expect(element(body, 'xp-bonus').text).toContain('60');
+    // Available is the BASE remainder: the unspent 60 stays in the bonus entry
+    // rather than inflating it, exactly as unspent restricted XP does.
+    expect(element(body, 'xp-available').text).toContain('240');
   });
 });

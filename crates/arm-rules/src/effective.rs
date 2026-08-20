@@ -954,8 +954,13 @@ pub struct XpAllocation {
     pub total_demand: u32,
     /// Maximum demand that can be funded. Equals `total_demand` iff legal.
     pub max_flow: u32,
-    /// The general pool size (`Entity::xp_pool`).
+    /// The general pool size: the block's base (`Entity::xp_pool`, or the life-stage
+    /// block that may fund anything) **plus** [`XpAllocation::general_bonus`].
     pub general_pool: u32,
+    /// The signed [`Effect::GeneralXp`] contribution folded into `general_pool`
+    /// (Skilled Parens +60, Weak Parens -60), reported on its own so a bar can name
+    /// it beside the base rather than leaving the two numbers unexplained.
+    pub general_bonus: i64,
     /// Points drawn from the general pool by the allocation.
     pub general_used: u32,
     /// The restricted pools with their consumed amounts.
@@ -1369,7 +1374,8 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
         Some((_, budget)) => budget.later_life_xp,
         None => entity.xp_pool,
     };
-    let general_pool = clamp_to_u32(i64::from(base_general) + general_xp_bonus(entity, ruleset));
+    let general_bonus = general_xp_bonus(entity, ruleset);
+    let general_pool = clamp_to_u32(i64::from(base_general) + general_bonus);
 
     // Flow graph: source(0) → sink(1); general(2) and restricted pools
     // (3..3+R) are pool nodes; spends follow. cap is the residual matrix.
@@ -1433,6 +1439,7 @@ pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
         total_demand,
         max_flow,
         general_pool,
+        general_bonus,
         general_used,
         restricted,
     }
@@ -4841,6 +4848,28 @@ mod tests {
         // Skilled Parens contributes its +30 as a standalone signed figure.
         let e = entity(vec![Selection::new(Id::new("virtue.skilled_parens"))]);
         assert_eq!(spell_levels_bonus(&e, &rs), 30);
+    }
+
+    /// The general pool's V/F contribution is surfaced on its own for the same
+    /// reason the spell-levels one is: the pool the solve funds from is `typed +
+    /// bonus`, and a bar that shows only the total cannot say why the two differ.
+    /// Skilled Parens: "You gain an additional 60 experience points … during
+    /// apprenticeship" (Ars Magica - Definitive Edition (Core Rules).md:4966).
+    #[test]
+    fn the_general_xp_bonus_is_reported_beside_the_pool_it_raises() {
+        let rs = ruleset();
+        let mut plain = entity(vec![]);
+        plain.xp_pool = 240;
+        let allocation = xp_allocation(&plain, &rs);
+        assert_eq!(allocation.general_bonus, 0);
+        assert_eq!(allocation.general_pool, 240);
+
+        let mut skilled = plain.clone();
+        skilled.selections = vec![Selection::new(Id::new("virtue.skilled_parens"))];
+        let allocation = xp_allocation(&skilled, &rs);
+        assert_eq!(allocation.general_bonus, 60);
+        // The identity the bar's split closes against: pool = typed + bonus.
+        assert_eq!(allocation.general_pool, 300);
     }
 
     // --- life-stage pools (M6b2) ---------------------------------------------

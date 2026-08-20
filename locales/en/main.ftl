@@ -206,6 +206,14 @@ tab-details = Details
 # restricted sub-budgets. `xp-pool` labels the whole general-pool group.
 xp-pool = XP pool
 xp-available = Available: { $available }
+# The Virtue/Flaw contribution to the general pool: Skilled Parens grants "an
+# additional 60 experience points … during apprenticeship" (Core Rules.md:4966),
+# Weak Parens takes 60 away. A POSITIVE one is a pool of its own, spent before the
+# base exactly as a restricted pool is; a NEGATIVE one has nothing to spend and is
+# charged to the base, so it is reported as the signed modifier that explains the
+# charge. Same split, same wording as the spell-levels bar's own bonus lines.
+xp-bonus-pool = Virtues/Flaws: { $used } / { $amount }
+xp-bonus = Virtues/Flaws: { $bonus }
 # Restricted experience pools (Educated/Warrior/Privileged): extra XP spendable
 # only on the listed Abilities/categories. `$eligibility` is a localized list.
 restricted-xp-pool = { $eligibility }: { $used } / { $amount }

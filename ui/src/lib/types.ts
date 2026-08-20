@@ -454,6 +454,10 @@ export interface EffectiveScores {
   // anyone else — plus the Skilled/Weak
   // Parens adjustment. Engine-authoritative, because no stored field holds it.
   xp_general_pool: number;
+  // The signed Virtue/Flaw contribution folded into `xp_general_pool` (Skilled
+  // Parens +60, Weak Parens -60), reported on its own so the bar can name it
+  // beside the base the player typed instead of leaving the two unexplained.
+  xp_general_bonus: number;
   restricted_xp_pools: RestrictedXpPool[];
   // The life-stage experience blocks, or null for a directly-entered character
   // (where `xp_pool` is the authority).

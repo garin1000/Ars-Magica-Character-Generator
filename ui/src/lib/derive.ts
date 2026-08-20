@@ -995,6 +995,56 @@ export function spellLevelAllocation(
   };
 }
 
+/** How the experience drawn from the general pool splits between its base and a V/F modifier. */
+export interface GeneralXpAllocation {
+  /** The base the player typed, or the life-stage block behind the pool: `pool - bonusAmount`. */
+  base: number;
+  /** Experience charged to the base, including a negative modifier's penalty. */
+  baseUsed: number;
+  /** The V/F modifier itself, signed (Skilled Parens +60, Weak Parens -60, else 0). */
+  bonusAmount: number;
+  /** Experience drawn from a POSITIVE modifier (always 0 for a penalty). */
+  bonusUsed: number;
+  /** Base experience still free: `base - baseUsed`. Negative when the pool is overspent. */
+  available: number;
+}
+
+/**
+ * The XP twin of {@link spellLevelAllocation}, and it follows the identical
+ * policy for the identical reason — the two bars report the two halves of one
+ * Virtue. Skilled Parens grants "an additional 60 experience points and 30 spell
+ * levels during apprenticeship"
+ * (Ars Magica - Definitive Edition (Core Rules).md:4966), so whatever the spell
+ * bar does with the 30 the XP bar must do with the 60.
+ *
+ * A **positive** modifier is spent first and the base covers the rest, mirroring
+ * the engine's allocator draining restricted pools before the general one; a
+ * **negative** one has no pool to draw on and is charged to the base, so
+ * `base - baseUsed` closes against `pool - used` either way. Unspent bonus
+ * experience stays in the bonus entry rather than inflating Available.
+ *
+ * There is deliberately **no life-stage term** here, which is the one place the
+ * two differ: a magus's post-Gauntlet levels are additive to a spell budget it
+ * already had, whereas its life-stage experience IS the general pool
+ * (`base_general` in `effective.rs`), so it is already inside `pool`.
+ *
+ * `pool` is `EffectiveScores.xp_general_pool` and `bonus`
+ * `EffectiveScores.xp_general_bonus` — both engine-authoritative, so this is
+ * display attribution and never a second rule.
+ */
+export function generalXpAllocation(
+  used: number,
+  pool: number,
+  bonus: number,
+): GeneralXpAllocation {
+  const base = pool - bonus;
+  const bonusUsed = bonus > 0 ? Math.min(used, bonus) : 0;
+  // A penalty (negative bonus) is charged to the base on top of the real spend.
+  const penalty = bonus < 0 ? -bonus : 0;
+  const baseUsed = used - bonusUsed + penalty;
+  return { base, baseUsed, bonusAmount: bonus, bonusUsed, available: base - baseUsed };
+}
+
 /**
  * The ids of items an **error**-severity validation issue points at — the rows a
  * selected list marks as illegal (red), so a selection that became invalid after

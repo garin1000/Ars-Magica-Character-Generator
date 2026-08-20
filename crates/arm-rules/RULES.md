@@ -1752,6 +1752,18 @@ the apprenticeship grant, each via *two* `Effect`s
 (Skilled → *Erfahrener Parens*; Weak → *Schwacher Parens*, the Latin *Parens*
 kept per the Latin-term convention).
 
+**Both contributions are also surfaced on their own** (M6/6b8c for the experience
+half; 6b5a already did the spell-levels half): `XpAllocation::general_bonus` beside
+`general_pool`, exactly as `spell_levels_bonus` sits beside `spell_levels_budget`.
+The bars need it because the *editable* figure is the base — the typed pool, or the
+life-stage block — while the pool the solve funds from is base + bonus, and a bar
+showing only the total cannot say why the two differ. Until 6b8c the XP bar charged
+the spend against the typed base under flat funding, so a magus with Skilled Parens
+spent the 60 the engine granted and reported an overspend nothing had raised; it now
+reads the engine's pool in both funding modes and lists the bonus as its own entry,
+spent before the base the way a restricted pool is (`generalXpAllocation` in
+`ui/src/lib/derive.ts`, the twin of `spellLevelAllocation`).
+
 **Full core spell catalogue (5d-data).** The catalogue is the complete Core Rules
 spell list, extracted from the **Spells chapter** (`:12385-15941`, from
 `## Animal Spells` to the line before `# Chapter 10: Long Term Events`) by the
