@@ -9,10 +9,13 @@ here and the matching `PLAN.md` box in the same commit as green code.
 type is fixed at creation via `store.createCharacter(typeId)`. 6b1b replaced that
 screen's hardcoded-disabled wizard button with one guided entry per character type.
 
-**Status: 6b1a, 6b1b, 6b2, 6b3 (both halves), 6b4, 6b5 (both halves) and 6b6 (all
-three sub-slices) are done.**
-Next is **6b7** — the Crisis, the Decrepitude levels it reaches, and the crisis table.
-It is **smaller than the sketch below**, because 6b6 already took the per-year
+**Status: 6b1a through 6b7 are done.** The milestone's closing slice, **6b8**, runs as
+four sub-slices: **6b8a — completeness indicators is done**; the per-step guided copy,
+the ownership inconsistencies 6b1b froze, and the milestone gate (per-type e2e specs,
+the portable smoke check, doc reconciliation) remain.
+
+6b7 — the Crisis, the Decrepitude levels it reaches, and the crisis table — was
+**smaller than the sketch below**, because 6b6 already took the per-year
 write-back that sketch scoped to 6b7: `resolve_year` exists, is the only writer, and
 `revert_year` undoes it exactly, so 6b7 adds the crisis roll and its table on top of
 machinery that is already in place rather than building the write-back first.
@@ -100,7 +103,7 @@ canonical key/array sorting. German labels must match
 | **6b5** ✅ | Post-Gauntlet accrual (30 pts/year, lab-season deduction, xp↔spell-level split) | 6b4 |
 | **6b6** ✅ | Aging tables + aging total + outcome resolution **+ the per-year write-back**, as a creation phase of its own | 6b1a |
 | **6b7** ✅ | Crisis, Decrepitude levels, the crisis table — the write-back landed in 6b6, so this is smaller than the sketch below | 6b6 |
-| **6b8** | Per-type flow completion, completeness indicators, guided copy, milestone gate | 6b2-6b7 |
+| **6b8** 🔄 | Per-type flow completion, completeness indicators, guided copy, milestone gate — run as four sub-slices; **6b8a ✅** | 6b2-6b7 |
 
 6b1 was one slice until review: ~24 TDD steps spanning 85 emit sites, a contract-table
 rewrite, two new scanner tests, three extractions, five new components and a new e2e
@@ -247,8 +250,10 @@ Silent mode nothing is gated and Finish is unconditional.
 **Known limitation, stated here and not hidden until 6b8: legal ≠ complete.** The gate
 catches only *errors*, so a merely empty phase sails through — `house_unset` is a
 **warning**, so a magus can Next past `house_specialisation` and Finish with no House,
-and a character with zero Abilities bought is perfectly legal. The Review step's copy
-says so; the completeness indicator that fixes it is 6b8.
+and a character with zero Abilities bought is perfectly legal. **Closed by 6b8a**, which
+leaves the gate exactly as it is and adds a reading beside it: an untouched phase is
+*marked* in the rail and on the step, and named on the Review step, while Next and
+Finish stay as open as they were. See `## Slice 6b8a — Completeness indicators` below.
 
 **Store shape** (`ui/src/lib/state.svelte.ts`):
 
@@ -1321,6 +1326,111 @@ named; apply → log entry, note and save fields; revert → gone.
 
 ---
 
+## Slice 6b8a — Completeness indicators ✅
+
+6b1b shipped the gate and named its gap in the same breath: *legal ≠ complete*. The
+flow blocks on errors only, so a phase nobody opened walks through — a magus Nexts
+past `house_specialisation` with no House (`house_unset` is a **warning**) and
+Finishes with zero Abilities bought, perfectly legally. This slice closes that gap
+**without touching the gate**: the rules decide what is *forbidden*, and a second,
+weaker reading of the same character decides what is *empty*. Six commits,
+`3fc0300..c4930a5`.
+
+### What shipped
+
+- **`crates/arm-rules/src/completeness.rs`** — `CompletenessReport
+  { incomplete_phases: Vec<CreationPhase> }` and `completeness(entity, ruleset)`,
+  built on an exhaustive `match` over `CreationPhase`, so a thirteenth phase is a
+  compile error until its criterion is written. Scoped to the phases the entity's
+  own profile declares, in that declared order — a grog is never told its `arts`
+  step is empty, and the wizard's synthetic `review` step is not in the report at
+  all. An unresolved `type_id` reports nothing (that is `unknown_type`'s job).
+- **`ValidationResult.completeness`** — the report rides on the payload the frontend
+  already receives, `#[serde(default)]` so an older payload and every
+  `ValidationResult::new` caller (the childhood rejections) still parse.
+  `apply_mode` was rewritten to mutate in place and now passes the report through
+  **all three modes untouched**.
+- **The frontend mirror** — `CompletenessReport` in `types.ts` (pinned by a new
+  `the_completeness_report_is_mirrored_in_the_frontend_types`, a sibling of the
+  aging/life-stage mirror tests), `incompletePhases` / `phaseIsIncomplete` in
+  `derive.ts`, and `wizardIncompletePhases` / `wizardPhaseIncomplete` on the store.
+- **The surfaces** — the rail marks an untouched step with `data-incomplete="true"`
+  **and** the words `wizard-step-incomplete-label` inside the button (so the mark is
+  part of the button's accessible name, not styling alone); the step in hand repeats
+  it above its body; and `WizardReview` lists every outstanding phase by its
+  `phase-<slug>` key, or says that all of them hold choices. Five Fluent keys in
+  both locales.
+- **E2E** — `wizard.e2e.js` follows the mark end to end: marked on entry, Next
+  carries the flow over it, naming the character clears it, and the closing step
+  names the Arts step this magus never opened while Finish stays live.
+
+### Per-phase criteria (the whole table is in `RULES.md`)
+
+| Phase | Complete when |
+|---|---|
+| `concept` | any identity field is set (name, description, concept, gender, birth year, sigil, covenant, parens) |
+| `type` | always — read-only, the type is fixed before the wizard opens |
+| `characteristics` | some Characteristic is non-zero |
+| `virtues_flaws` | a selection the profile did not force |
+| `abilities` / `arts` / `spells` | a score bought / a score bought / a spell known |
+| `house_specialisation` | the House is recorded (`:2859`) |
+| `mythic_type` | the type is recorded |
+| `personality_reputations` | a Personality Trait or a Reputation is recorded |
+| `aging` | the age is recorded |
+| `review` | always — it holds no choices of its own |
+
+### Design decisions of record
+
+- **A report, not an issue of some third severity.** Every gate in the wizard is
+  phrased over `ValidationIssue.severity` (`phaseHasBlockingIssue`,
+  `wizardCanFinish`), so a completeness *issue* would sit one severity change away
+  from blocking, and `apply_mode` would have mangled it in Advisory and cleared it
+  in Silent. A separate type on the same payload can only ever be read as
+  information. Three tests pin the non-gating claim — one in the engine (a grog is
+  legal and incomplete at once), one in the store (an untouched flow can be advanced
+  through and finished on), and the e2e walk.
+- **One payload, not a second command.** The wizard shows a step's findings and its
+  emptiness side by side about the same character at the same instant; a second
+  round trip could only let them disagree.
+- **Completeness survives every `ValidationMode`.** The mode says how hard the
+  *rules* are enforced, and which steps the player has filled in is not a rules
+  question — an unchecked character still has empty steps. Pinned for all three
+  modes.
+- **The criteria cite nothing, on purpose.** No passage says an untouched phase is
+  incomplete, so inventing citations would be exactly the prohibited move. The lone
+  exception is `house_specialisation`, whose stored choice the rules do give every
+  magus (`:2859`, verified — the same choice `house_unset` is about). `RULES.md`
+  files the table under *Engine framework (book-agnostic)* for that reason.
+- **Mandatory traits do not count as engagement.** A magus is seeded with The Gift
+  and Hermetic Magus at creation, so `virtues_flaws` asks for a selection the
+  profile did **not** force — mirroring the frontend's `mandatoryTraitRefs`.
+- **An all-zero Characteristic spread is untouched.** Spending none of the seven
+  points is legal, and it is also exactly what a step nobody opened looks like.
+  (`characteristic_points_unspent` already says the rules-side half of this, as a
+  warning.)
+- **`type` and `review` have no criterion**, and say so rather than being quietly
+  omitted: one is a read-only confirmation, the other the closing look at the whole
+  character. Both are `true` arms of the match, commented.
+- **`SCHEMA_VERSION` stays 15.** Nothing is stored: the report is derived on every
+  validation, exactly like `DerivedTotals`.
+
+### Deliberate non-changes
+
+- **The gate is byte-for-byte what 6b1b shipped.** Next still blocks iff the current
+  phase holds an `error`; Finish iff any error remains. No "finish anyway" button
+  was needed, because nothing new blocks.
+- **No phase is *required* to be complete, and none is marked optional.** "Skip
+  where allowed" still waits for data that marks a phase optional; nothing does.
+- **The report is not shown outside the wizard.** The editor is not a flow with
+  steps, and marking its tabs "not started" would be noise.
+- **Granularity is per phase, not per field.** `concept` is finished by any single
+  identity field, `abilities` by one bought score. A stricter reading ("enough
+  Abilities") would be the engine inventing rules the sources do not carry.
+- **`cargo clippy --all-targets` is still not part of the gate** (the three
+  pre-existing failures 6b7 recorded) — still 6b8's call, not taken here.
+
+---
+
 ## Slices 6b2-6b8 — design notes
 
 ### What already exists (verified in code — these engines add less than PLAN.md implies)
@@ -1571,7 +1681,8 @@ crisis roll and its severity.
 **6b8 — Per-type flow completion and the milestone gate.** Walk grog, companion, mythic
 companion and magus end to end and close what the composed flow reveals — above all the
 **completeness indicator** deferred from 6b1b, so a legal-but-empty phase is visibly
-incomplete even though it does not block. Plus per-step guided copy sourced from the
+incomplete even though it does not block (**shipped as 6b8a**; see its section above).
+Plus per-step guided copy sourced from the
 rules passage, and the small ownership inconsistencies 6b1b deliberately froze (pull
 `SpellBudgetBar` out of `SpellTab`; decide whether `store.filters.vf` should be
 per-view). "Skip where allowed" happens here **only if** the data by then marks a phase

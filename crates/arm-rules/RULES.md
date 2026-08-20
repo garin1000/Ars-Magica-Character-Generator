@@ -4402,6 +4402,40 @@ carry no source citation:
 - Entity-kind applicability, parameter validation, duplicate-selection detection
   (`validation.rs`)
 
+### Creation-phase completeness (M6/6b8a) — `completeness.rs`
+
+Which creation phases the player has not engaged with yet. **Product behaviour,
+not a rule**: no passage says an untouched phase is incomplete, so no criterion
+below is cited, and none may be invented later. It is deliberately not a
+`ValidationIssue` of any severity — every wizard gate is phrased over issues, so an
+issue-shaped verdict would be one severity change away from blocking. It rides on
+`ValidationResult.completeness` and `apply_mode` passes it through all three modes
+untouched (how hard the rules are enforced says nothing about what has been filled
+in).
+
+Each criterion reads a stored choice off the entity, scoped to the phases the
+character's own type profile declares, in that declared order:
+
+| Phase | Complete when | Rules source |
+|---|---|---|
+| `concept` | any identity field is set (name, description, concept, gender, birth year, sigil, covenant, parens) | — |
+| `type` | always — a read-only step, the type is fixed before the wizard opens | — |
+| `characteristics` | some Characteristic is non-zero (an all-zero spread is an untouched point-buy) | — |
+| `virtues_flaws` | a selection the profile did not force (`required_traits`, plus The Gift where `gift_policy` requires it) | — |
+| `abilities` | an Ability score is bought | — |
+| `arts` | an Art score is bought | — |
+| `spells` | a spell is known | — |
+| `house_specialisation` | the House is recorded | `:2859` "You receive one free Minor Virtue from your choice of House" |
+| `mythic_type` | the Mythic Companion type is recorded | — |
+| `personality_reputations` | a Personality Trait or a Reputation is recorded | — |
+| `aging` | the age is recorded (every other reading on the step is taken against it) | — |
+| `review` | always — the closing look at the whole character holds no choices of its own | — |
+
+The House row is the only one resting on a rule, and it is the same choice the
+`house_unset` warning is about (see *`validate_house` — specialisation
+resolution*); the report merely observes that the choice has not been made, and
+still does not require it.
+
 ---
 
 ## Other available books — no implemented mechanics yet
