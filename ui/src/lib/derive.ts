@@ -1108,7 +1108,7 @@ export function firstBlockedPhaseIndex(
 /** What a step's guidance may draw a number from: only loaded ruleset data. */
 export interface GuidanceContext {
   profile: EntityTypeProfile | undefined;
-  characteristicRules: CharacteristicRules | undefined;
+  characteristicRules: CharacteristicRules | null | undefined;
 }
 
 /** A step's guidance note: the Fluent key, plus the values its sentence needs. */
