@@ -93,9 +93,19 @@
     </fieldset>
 
     {#if guided}
-      <!-- Age is edited here as well as on the Details tab. Both surfaces read and
-           write the one `entity.age`, so they cannot diverge — and the guided flow
-           needs it, because later life's experience is (age - childhood years) × rate. -->
+      <!-- Age is edited here as well as on the Details tab (and, since 6b6, on the
+           guided aging step through `AgeFields`). Both surfaces read and write the one
+           `entity.age`, so they cannot diverge — and the guided flow needs it here,
+           because later life's experience is (age - childhood years) × rate.
+
+           Slice 6b8c settled whether to consolidate them: no. There is one input
+           conceptually, rendered wherever the age is load-bearing, and the two places
+           it is load-bearing are far apart — this panel prices the years, the aging
+           surface schedules the rolls. They are never on screen together (different
+           tabs in the editor, different steps in the wizard), and removing either
+           would take the age away from a surface that cannot work without it: without
+           this one the guided funding panel could not be priced, and without
+           `AgeFields` a flat-funded character has no age input anywhere at all. -->
       {#if isMagus}
         <!-- Announced, and placed above the two age inputs it explains: a magus has an
              age AND a Gauntlet age, and neither field can say for itself which is
