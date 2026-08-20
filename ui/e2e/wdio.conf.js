@@ -66,6 +66,14 @@ export const config = {
   mochaOpts: { ui: 'bdd', timeout: 120000 },
   logLevel: 'info',
 
+  // Keep the full launcher + worker logs of a run. A suite this expensive should
+  // never have to be re-run just to re-read output that scrolled past, so wdio
+  // writes them here instead of only to the terminal — no shell redirect needed,
+  // which is what makes this usable from an agent. Repo-local and gitignored
+  // (`tmp/`), deliberately NOT the system temp dir: an artifact under `/tmp` is
+  // invisible to `git status` and shared with every other project on the box.
+  outputDir: path.resolve(repoRoot, 'tmp/e2e-logs'),
+
   // Build the PRODUCTION binary (embedded frontend assets, no dev server), then
   // stage the rules resources beside it. `cargo tauri build` runs in production
   // mode and skips installers with --no-bundle; a plain `cargo build` would run

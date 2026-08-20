@@ -161,6 +161,29 @@ which bypass this machinery completely. To stay inside it, every agent MUST:
   Write/Edit tools (they work in-repo and under `tmp/` without approval). This includes
   parking a large diff in the scratchpad: `git diff … > …/derived.diff` is denied — pipe
   it through `head`/`grep`, or read the file with the Read tool instead.
+- **Keep the output of an expensive run — via the tool's own log option, in `tmp/`.**
+  Never throw away a full e2e or release-build log and re-run the suite to recover a
+  line. Redirects are denied for you, so do not reach for `>`; use the option the tool
+  already provides. For e2e that is wdio's `outputDir`, wired to `tmp/e2e-logs/` in
+  `ui/e2e/wdio.conf.js` — a plain `cd <repo>/ui && npm run test:e2e` leaves the
+  complete launcher/worker logs there, which you then inspect with the **Read** tool.
+  If a tool offers no log option and the output is too long to keep in context, trim it
+  in the same pipeline (`… | tail -40`) rather than re-running later.
+- **All scratch output goes under the repo-local `tmp/`, never the system `/tmp`.**
+  `tmp/` is gitignored and is where coverage reports, findings JSON, and staged builds
+  belong. A `/tmp/...` path fails the argument-containment check, so every subsequent
+  read of it is denied — you would be creating a file you cannot then look at. (The e2e
+  specs' own `os.tmpdir()` fixture is a deliberate exception in committed code; do not
+  imitate it for your own artifacts.)
+- **To read a file, use the Read tool — not `cat`, `head`, `tail`, or `sed -n`.** Those
+  are allowlisted as *pipeline filters for a command's stdout* (`cargo tarpaulin … |
+  tail -3`), and that is the only thing they are for here. Pointing them at a path is a
+  denial risk for no benefit: `Read` (with `offset`/`limit` for a slice) and
+  `Grep`/`Glob` need no approval anywhere in the repo or under `tmp/`, return line
+  numbers you can cite in a finding, and keep the harness's file-state tracking intact
+  so a later Edit cannot silently clobber. `cat <file> | tail -50` is the specific
+  anti-pattern: it burns a Bash call and throws away the 90% of the file you will ask
+  for next.
 - **Never prepend environment setup.** Do NOT add `source ~/.cargo/env`, `export PATH=…`,
   or `nvm use` — `PATH` is already configured via the settings `env`, so `cargo`, `npm`,
   and `node` resolve directly. (This supersedes any "source cargo/nvm first" note in older
@@ -175,8 +198,9 @@ which bypass this machinery completely. To stay inside it, every agent MUST:
   it independent of the current working directory. Do NOT rely on a bare `cd ui` from an
   earlier call persisting, and do NOT use `npm --prefix ui run …` (not allowlisted). Run
   `npm run check`, `npm run test:unit`, `npm run lint`, `npm run format:check` this way.
-- File reads inside the repo and under the session scratchpad/`tmp/` need no approval; do
-  not read unrelated out-of-repo paths.
+- File reads inside the repo and under the session scratchpad/`tmp/` need no approval —
+  use the **Read** tool for them (see the `cat`/`head`/`tail` rule above); do not read
+  unrelated out-of-repo paths.
 
 ### Phase 1: Setup
 
