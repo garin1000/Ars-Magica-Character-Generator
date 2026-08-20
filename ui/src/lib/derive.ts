@@ -1105,6 +1105,68 @@ export function firstBlockedPhaseIndex(
   return null;
 }
 
+/** What a step's guidance may draw a number from: only loaded ruleset data. */
+export interface GuidanceContext {
+  profile: EntityTypeProfile | undefined;
+  characteristicRules: CharacteristicRules | undefined;
+}
+
+/** A step's guidance note: the Fluent key, plus the values its sentence needs. */
+export interface WizardGuidance {
+  key: string;
+  args: Record<string, string>;
+}
+
+/**
+ * The arguments each phase's guidance needs, or `null` when the ruleset has not
+ * supplied them.
+ *
+ * Exhaustive by `satisfies`: a new `CreationPhase` is a type error here until it
+ * has an entry, which — together with the locale-parity test over
+ * `wizard-guidance-<slug>` — is what keeps a phase from reaching the screen with
+ * no copy. Every number a sentence states is looked up here, so no rules value is
+ * ever frozen into a translated string: change the budget in
+ * `rules/core/character_types.json` and both locales say the new number.
+ */
+const GUIDANCE_ARGS = {
+  concept: () => ({}),
+  type: () => ({}),
+  characteristics: ({ characteristicRules }: GuidanceContext) =>
+    characteristicRules ? { points: String(characteristicRules.start_points) } : null,
+  virtues_flaws: ({ profile }: GuidanceContext) =>
+    profile
+      ? {
+          virtues: String(profile.budget.virtue_points),
+          flaws: String(profile.budget.flaw_points),
+        }
+      : null,
+  abilities: () => ({}),
+  arts: () => ({}),
+  spells: () => ({}),
+  house_specialisation: () => ({}),
+  mythic_type: () => ({}),
+  personality_reputations: () => ({}),
+  aging: () => ({}),
+  review: () => ({}),
+} satisfies Record<CreationPhase, (context: GuidanceContext) => Record<string, string> | null>;
+
+/**
+ * The guidance shown on one wizard step: what the player decides here, and what
+ * the rules say about it.
+ *
+ * `null` when a sentence's number is not loaded — an unresolved placeable would
+ * state a budget of zero, a rules claim the data does not make, so the step says
+ * nothing instead. Display only: guidance never validates, never gates, and never
+ * touches the entity.
+ */
+export function wizardGuidance(
+  phase: CreationPhase,
+  context: GuidanceContext,
+): WizardGuidance | null {
+  const args = GUIDANCE_ARGS[phase](context);
+  return args ? { key: `wizard-guidance-${phase}`, args } : null;
+}
+
 export interface AbilityGroup {
   category: AbilityCategory;
   abilities: Ability[];
