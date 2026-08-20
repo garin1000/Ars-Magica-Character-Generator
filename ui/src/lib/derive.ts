@@ -1049,10 +1049,38 @@ export function issuesForPhase(issues: ValidationIssue[], phase: CreationPhase):
  * Errors only: a warning is an advisory, not an illegal state, so it never gates.
  * That is deliberate but it does mean legal is not the same as complete — a magus
  * can walk past the House step with no House, because `house_unset` is a warning.
- * The completeness indicator that surfaces such gaps is 6b8.
+ * Such a step is *marked* untouched instead, by {@link phaseIsIncomplete}, which
+ * gates nothing.
  */
 export function phaseHasBlockingIssue(issues: ValidationIssue[], phase: CreationPhase): boolean {
   return issues.some((issue) => issue.phase === phase && issue.severity === 'error');
+}
+
+/**
+ * The creation phases the player has recorded nothing for yet, as the engine
+ * reports them — in the character type's own declared order.
+ *
+ * Empty before the first validation result arrives, and empty for a payload that
+ * carries no report at all: "nothing to report" is the only safe reading, since a
+ * missing report must never make a filled-in step look untouched.
+ */
+export function incompletePhases(result: ValidationResult | null | undefined): CreationPhase[] {
+  return result?.completeness?.incomplete_phases ?? [];
+}
+
+/**
+ * Whether a phase is one the engine reports as untouched.
+ *
+ * Purely informational: incompleteness has no severity, so no gate can read it.
+ * That separation is the point — the wizard blocks on errors and merely *marks*
+ * an empty step, so a legal-but-empty phase can still be walked past and finished
+ * on (`phaseHasBlockingIssue` is the gate; this is the label).
+ */
+export function phaseIsIncomplete(
+  result: ValidationResult | null | undefined,
+  phase: CreationPhase,
+): boolean {
+  return incompletePhases(result).includes(phase);
 }
 
 /**

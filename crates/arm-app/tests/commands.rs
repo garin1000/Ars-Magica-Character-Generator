@@ -294,6 +294,60 @@ fn sample_entity_with_characteristics_and_abilities_validates() {
     assert!(result.is_valid(), "unexpected issues: {:?}", result.issues);
 }
 
+/// The payload the wizard reads is the one this command returns, and it must carry
+/// the completeness report against the **shipped** profiles — the phase lists no
+/// test fixture can stand in for. A brand-new magus has touched nothing, so every
+/// declared step but the read-only `type` one is outstanding.
+#[test]
+fn validating_a_fresh_character_reports_its_untouched_phases() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let entity = arm_rules::Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("magus"),
+        arm_rules::RulesetRef::new(ruleset.id.clone(), ruleset.version.clone()),
+    );
+
+    let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
+    let profile = ruleset.profile(&Id::new("magus")).unwrap();
+    let expected: Vec<arm_rules::CreationPhase> = profile
+        .creation_phases
+        .iter()
+        .copied()
+        .filter(|phase| *phase != arm_rules::CreationPhase::Type)
+        .collect();
+    assert_eq!(result.completeness.incomplete_phases, expected);
+}
+
+/// The completeness report crosses the Tauri boundary on the validation payload and
+/// `ui/src/lib/types.ts` mirrors it **by hand** — a sibling of
+/// [`every_aging_field_is_mirrored_in_the_frontend_types`], for the same reason: a
+/// renamed Rust field would leave the mirror compiling and the rail silently
+/// reading `undefined`, i.e. nothing ever marked incomplete.
+#[test]
+fn the_completeness_report_is_mirrored_in_the_frontend_types() {
+    let result = arm_rules::ValidationResult {
+        issues: vec![],
+        completeness: arm_rules::CompletenessReport {
+            incomplete_phases: vec![arm_rules::CreationPhase::Abilities],
+        },
+    };
+
+    let mut keys = std::collections::BTreeSet::new();
+    mirrored_keys(&serde_json::to_value(&result).unwrap(), &mut keys);
+    assert!(
+        keys.contains("completeness") && keys.contains("incomplete_phases"),
+        "expected the validation payload to carry the completeness field names, got {keys:?}"
+    );
+
+    let types = fs::read_to_string(repo_root().join("ui/src/lib/types.ts")).unwrap();
+    for key in keys.iter().map(String::as_str) {
+        assert!(
+            types.contains(&format!("{key}:")) || types.contains(&format!("{key}?:")),
+            "ui/src/lib/types.ts declares no '{key}' property"
+        );
+    }
+}
+
 #[test]
 fn load_ruleset_missing_language_is_io_error() {
     let err = load_ruleset_from_dir(&rules_dir(), "xx").unwrap_err();
