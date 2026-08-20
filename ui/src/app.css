@@ -454,6 +454,23 @@ button:disabled {
   font-weight: 700;
 }
 
+/* A step nothing has been recorded for. Unlike the blocked marker this says
+   nothing about legality, so it is quiet: no colour of warning, and the words come
+   from the marker itself rather than from a glyph. */
+.wizard-rail-incomplete {
+  color: #8f8bb0;
+  font-size: 0.75rem;
+  font-style: italic;
+  margin-left: 0.3rem;
+}
+
+.wizard-incomplete-hint {
+  margin: 0;
+  padding: 0.2rem 1.5rem 0;
+  color: #b9b6d6;
+  font-size: 0.85rem;
+}
+
 .wizard-progress {
   margin: 0;
   padding: 0.4rem 1.5rem 0;

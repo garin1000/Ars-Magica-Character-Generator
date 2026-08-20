@@ -229,6 +229,40 @@ describe('WizardShell', () => {
     expect(tag(html(), 'wizard-finish')).toContain('disabled');
   });
 
+  // Legal is not finished: `type` is the only step of this flow with nothing to
+  // record, so an untouched character leaves the other three marked.
+  it('marks a step the player has recorded nothing for', () => {
+    store.result = { issues: [], completeness: { incomplete_phases: ['characteristics'] } };
+    const body = html();
+    expect(tag(body, 'wizard-step-characteristics')).toContain('data-incomplete="true"');
+    expect(tag(body, 'wizard-step-concept')).not.toContain('data-incomplete');
+  });
+
+  // `data-incomplete` is a CSS hook; a screen reader needs the marker in words.
+  it('says in words that a step is untouched, not only in styling', () => {
+    store.result = { issues: [], completeness: { incomplete_phases: ['concept'] } };
+    const label = text(html(), 'wizard-incomplete-concept');
+    expect(label).not.toBe('');
+    expect(label).not.toContain('wizard-step-incomplete');
+    expect(label).not.toContain('concept');
+  });
+
+  // The mark says nothing about legality, so it must not touch the gate.
+  it('leaves Next enabled over an untouched step', () => {
+    store.result = { issues: [], completeness: { incomplete_phases: ['concept'] } };
+    expect(tag(html(), 'wizard-next')).not.toContain('disabled');
+  });
+
+  it('tells the current step it is still empty', () => {
+    store.result = { issues: [], completeness: { incomplete_phases: ['concept'] } };
+    expect(html()).toContain('data-testid="wizard-incomplete-hint"');
+  });
+
+  it('says nothing about a step that has choices recorded', () => {
+    store.result = { issues: [], completeness: { incomplete_phases: ['characteristics'] } };
+    expect(html()).not.toContain('data-testid="wizard-incomplete-hint"');
+  });
+
   it('shows the current step body', () => {
     store.wizardStep = 1;
     expect(html()).toContain('data-testid="type-step-name"');

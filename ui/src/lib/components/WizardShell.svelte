@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { phaseHasBlockingIssue } from '../derive';
+  import { phaseHasBlockingIssue, phaseIsIncomplete } from '../derive';
   import ValidationPanel from './ValidationPanel.svelte';
   import WizardStep from './WizardStep.svelte';
 
@@ -16,6 +16,13 @@
 
   function blocked(phase: (typeof phases)[number]): boolean {
     return phaseHasBlockingIssue(store.result?.issues ?? [], phase);
+  }
+
+  // A step the player has recorded nothing for. Deliberately unrelated to
+  // `blocked`: the gate is about what the rules forbid, this is about what is
+  // still empty, and an empty step is marked but never held shut.
+  function incomplete(phase: (typeof phases)[number]): boolean {
+    return phaseIsIncomplete(store.result, phase);
   }
 </script>
 
@@ -36,11 +43,20 @@
             aria-current={i === store.wizardStep ? 'step' : undefined}
             aria-describedby={blocked(phase) ? blockedHintId : undefined}
             data-blocked={blocked(phase) ? 'true' : undefined}
+            data-incomplete={incomplete(phase) ? 'true' : undefined}
             disabled={i > store.wizardFurthest}
             onclick={() => store.wizardGoTo(i)}
             data-testid="wizard-step-{phase}"
           >
             {store.t(`phase-${phase}`)}
+            <!-- Inside the button, so the marker is part of its accessible name:
+                 `data-incomplete` alone would be styling only. The test id avoids
+                 the `wizard-step-` prefix, which names the rail's steps. -->
+            {#if incomplete(phase)}
+              <span class="wizard-rail-incomplete" data-testid="wizard-incomplete-{phase}">
+                {store.t('wizard-step-incomplete-label')}
+              </span>
+            {/if}
           </button>
         </li>
       {/each}
@@ -55,6 +71,15 @@
       total: String(phases.length),
     })}
   </p>
+
+  <!-- Said on the step as well as in the rail, because the rail's mark is easy to
+       miss on the step you are standing on. It is a statement, never a gate: Next
+       stays exactly as enabled as the findings leave it. -->
+  {#if store.wizardPhaseIncomplete}
+    <p class="hint wizard-incomplete-hint" data-testid="wizard-incomplete-hint">
+      {store.t('wizard-step-incomplete-hint')}
+    </p>
+  {/if}
 
   <main class="tab-content wizard-body">
     <WizardStep phase={store.wizardPhase} />

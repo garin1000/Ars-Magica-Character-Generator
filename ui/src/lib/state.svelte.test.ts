@@ -462,6 +462,51 @@ describe('the guided wizard', () => {
     });
   });
 
+  describe('completeness', () => {
+    /** Install an engine report of the phases nothing has been recorded for. */
+    function untouched(...phases: CreationPhase[]): void {
+      store.result = { issues: [], completeness: { incomplete_phases: phases } };
+    }
+
+    beforeEach(async () => {
+      await store.startWizard('magus');
+    });
+
+    it('says whether the step in hand is one nobody has filled in', () => {
+      untouched('concept', 'abilities');
+      expect(store.wizardPhaseIncomplete).toBe(true);
+
+      untouched('abilities');
+      expect(store.wizardPhaseIncomplete).toBe(false);
+    });
+
+    it('follows the rail from step to step', () => {
+      untouched('type');
+      expect(store.wizardPhaseIncomplete).toBe(false);
+      store.wizardNext();
+      expect(store.wizardPhaseIncomplete).toBe(true);
+    });
+
+    // The whole promise of the indicator: it says a step is empty, and changes
+    // nothing about what the flow lets the player do.
+    it('never gates: an untouched step can still be advanced past and finished on', () => {
+      untouched('concept', 'type', 'characteristics', 'house_specialisation');
+      expect(store.wizardPhaseIncomplete).toBe(true);
+      expect(store.wizardCanAdvance).toBe(true);
+
+      while (store.wizardPhase !== 'review') store.wizardNext();
+      expect(store.wizardCanFinish).toBe(true);
+      store.finishWizard();
+      expect(store.view).toBe('editor');
+    });
+
+    it('reports nothing before the first validation result arrives', () => {
+      store.result = null;
+      expect(store.wizardIncompletePhases).toEqual([]);
+      expect(store.wizardPhaseIncomplete).toBe(false);
+    });
+  });
+
   describe('finishing', () => {
     beforeEach(async () => {
       await store.startWizard('magus');

@@ -5,6 +5,7 @@
 
 import {
   firstBlockedPhaseIndex,
+  incompletePhases,
   mandatoryTraitRefs,
   phaseHasBlockingIssue,
   sameSelection,
@@ -440,6 +441,19 @@ class AppStore {
    * have to be answered.
    */
   wizardCanFinish = $derived(!(this.result?.issues ?? []).some((i) => i.severity === 'error'));
+
+  /**
+   * The steps of this flow the player has recorded nothing for, in rail order, as
+   * the engine reports them.
+   *
+   * Purely informational, and deliberately kept out of {@link wizardCanAdvance}
+   * and {@link wizardCanFinish}: legal is not the same as finished, so an empty
+   * step is marked, never blocked.
+   */
+  wizardIncompletePhases = $derived(incompletePhases(this.result));
+
+  /** Whether the step currently on screen is one of those. */
+  wizardPhaseIncomplete = $derived(this.wizardIncompletePhases.includes(this.wizardPhase));
 
   // Absolute path of the document's current file (from the last Open or the last
   // Save As / first Save). `null` for a never-saved document, so Save behaves as
