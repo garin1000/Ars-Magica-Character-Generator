@@ -72,6 +72,29 @@ wizard-step-incomplete-hint = Für diesen Schritt wurde noch nichts eingetragen.
 # erzwungen, also blockiert kein Schritt und „Fertigstellen" ist immer möglich.
 wizard-unchecked-hint = Die Prüfung wird nicht erzwungen, daher blockiert kein Schritt.
 
+# Erläuterung je Schritt: was hier entschieden wird und was die Regeln dazu sagen.
+# Geschlüsselt nach dem `CreationPhase`-Slug der Engine, eine Zeile je Phase.
+# Anleitung zum Ablauf, kein Katalogtext mit Item-ID — daher Fluent und nicht
+# `rules/i18n/`. Jede Sachaussage stammt aus
+# `Ars Magica Definitive Edition Basisregeln.md`, zeilengleich zur englischen
+# Quelle; die Zeilenbereiche stehen in `crates/arm-rules/RULES.md`. Zahlen, die
+# das Regelwerk bereits trägt, werden eingesetzt ({ $points }, { $flaws },
+# { $virtues }) und nie ausgeschrieben.
+wizard-guidance-concept = Beginne mit einem Konzept: wer dieser Charakter ist und welche Rolle er in der Saga spielt. Ein Magus könnte ein Feuerzauberer sein, ein Gefährte ein Gelehrter fern der Heimat, ein Grog jede Art Krieger oder ein Mitglied des Konventspersonals.
+wizard-guidance-type = Ein Charakter mit der Gabe, ausgebildet in hermetischer Magie, ist ein Magus. Ein Nicht-Magus als Hauptfigur ist ein Gefährte, als Nebenrolle ein Grog — und nach dem hier festgelegten Typ richten sich alle weiteren Schritte.
+wizard-guidance-characteristics = Eigenschaften sind die angeborenen Wesenszüge deines Charakters und lassen sich später mit normalen Mitteln nicht steigern. Du hast { $points } Punkte zu vergeben, und ein Wert unter null gibt Punkte zurück.
+wizard-guidance-virtues_flaws = Fehler bezahlen Tugenden: Bis zu { $flaws } Punkte an Fehlern finanzieren bis zu { $virtues } Punkte an Tugenden. Du musst das Maximum nicht ausschöpfen, und jeder Charakter nimmt einen Sozialen Status.
+wizard-guidance-abilities = Fertigkeiten sind erlernte Fähigkeiten und werden in Blöcken gekauft: zuerst die ersten fünf Jahre der Kindheit, dann das spätere Leben Jahr für Jahr. Das Alter deines Charakters bestimmt den Höchstwert, den eine Fertigkeit bei der Erschaffung erreichen darf.
+wizard-guidance-arts = Techniken und Formen sind die Magie des Magus: Jeder Zauber verbindet eine Technik mit einer Form. Dieselben Erfahrungspunkte der Lehrlingszeit kaufen Künste und Fertigkeiten, sodass hier Ausgegebenes dort fehlt.
+wizard-guidance-spells = Die Lehrlingszeit gewährt Stufen Zauber statt Erfahrungspunkte, die hier ausgegeben werden. Kein Zauber darf eine höhere Stufe haben, als Technik, Form, Intelligenz und Magietheorie des Magus zulassen.
+wizard-guidance-house_specialisation = Jeder hermetische Magus gehört genau einem Haus an, das ihm bei der Erschaffung einen Vorteil gewährt. Das Haus steht vor den Tugenden und Fehlern, weil dieser Vorteil eine kostenlose Kleine Tugend ist, die kein Fehler ausgleichen muss.
+wizard-guidance-mythic_type = Der Typ eines Mythischen Gefährten ist eine kostenlose Tugend, die seinen Status festlegt. Die Typen sind untereinander und mit der Gabe unvereinbar, und einer bringt normalerweise eine kostenlose Kleine Tugend mit sich.
+wizard-guidance-personality_reputations = Wähle einige Worte für die Persönlichkeit des Charakters und gib jedem einen Wert zwischen +3 und -3. Grogs sollten einen Wert in Loyal haben, Krieger einen in Tapfer. Eine Reputation gehört nur hierher, wenn eine Tugend oder ein Fehler sie gewährt.
+wizard-guidance-aging = Ein Charakter über 35 legt vor Spielbeginn für jedes Jahr einen Alterungswurf ab, der scheinbares Alter oder Eigenschaftspunkte kosten kann. Alterungspunkte sammeln sich in einer Eigenschaft, bis sie deren Wert übersteigen — dann sinkt die Eigenschaft um einen Punkt.
+# Keine Regelstelle beschreibt einen Überprüfungsschritt — er gehört allein dieser
+# Anwendung, daher trifft diese Zeile keine Regelaussage.
+wizard-guidance-review = Hier wird nichts Neues gewählt — dies ist der letzte Blick, bevor der Charakter die geführte Erstellung verlässt. Nach dem Fertigstellen bleibt alles bearbeitbar.
+
 # Der Schritt „Charaktertyp": eine schreibgeschützte Darstellung dessen, worauf der
 # gewählte Typ diesen Charakter festlegt. Der Typ selbst wurde bei der Erstellung
 # des Charakters festgelegt.

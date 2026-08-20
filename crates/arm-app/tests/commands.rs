@@ -1758,19 +1758,22 @@ fn every_export_label_key_has_a_fluent_key_in_each_locale() {
     }
 }
 
-/// The wizard's step rail labels each creation phase through `phase-<slug>`, so a
-/// phase with no key would render as its raw slug — the one thing a label may never
-/// do. `CreationPhase::ALL` is the source of the set, so adding a phase fails this
-/// test until both locales carry it.
+/// The wizard's step rail labels each creation phase through `phase-<slug>`, and
+/// each step carries a note saying what is decided there through
+/// `wizard-guidance-<slug>`, so a phase with either key missing would render as its
+/// raw slug — the one thing a label may never do. `CreationPhase::ALL` is the source
+/// of the set, so adding a phase fails this test until both locales carry both keys.
 #[test]
 fn every_creation_phase_has_a_fluent_key_in_each_locale() {
     for lang in ["en", "de"] {
         let ftl = fs::read_to_string(repo_root().join(format!("locales/{lang}/main.ftl"))).unwrap();
         for phase in arm_rules::CreationPhase::ALL {
-            assert!(
-                ftl.contains(&format!("phase-{phase} =")),
-                "locale '{lang}' is missing key 'phase-{phase}'"
-            );
+            for key in [format!("phase-{phase}"), format!("wizard-guidance-{phase}")] {
+                assert!(
+                    ftl.contains(&format!("{key} =")),
+                    "locale '{lang}' is missing key '{key}'"
+                );
+            }
         }
     }
 }

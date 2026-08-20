@@ -68,6 +68,29 @@ wizard-step-incomplete-hint = Nothing has been recorded on this step yet. It doe
 # no step gates and Finish is always available.
 wizard-unchecked-hint = Validation is not enforced, so no step blocks progress.
 
+# Per-step guidance: what the player decides on this step, and what the rules say
+# about it. Keyed by the engine's `CreationPhase` slug, one line per phase, so a
+# new phase without copy fails the locale-parity test. Instructional chrome about
+# the flow, not catalogue text keyed by item ID — hence Fluent, not
+# `rules/i18n/`. Every factual claim is sourced from
+# `Ars Magica - Definitive Edition (Core Rules).md`; the line ranges are recorded
+# in `crates/arm-rules/RULES.md`. Numbers the ruleset already carries are
+# interpolated ({ $points }, { $flaws }, { $virtues }) and never written out.
+wizard-guidance-concept = Start from a concept: who this character is, and what they are in the saga. A magus might be a fire wizard, a companion a scholar far from home, a grog any sort of warrior or member of the covenant staff.
+wizard-guidance-type = A character with The Gift, trained in Hermetic magic, is a magus. A non-magus meant as a central character is a companion, one meant for a bit part a grog — and the type, fixed here, is what the remaining steps follow.
+wizard-guidance-characteristics = Characteristics are your character's inborn attributes, and normal means never raise them later. You have { $points } points to spend, and a score below zero gives points back.
+wizard-guidance-virtues_flaws = Flaws pay for Virtues: up to { $flaws } points of Flaws fund up to { $virtues } points of Virtues. You need not take the maximum, and every character takes a Social Status.
+wizard-guidance-abilities = Abilities are learned skills, bought in blocks: the first five years of childhood, then later life a year at a time. Your character's age sets the highest score any Ability may reach at creation.
+wizard-guidance-arts = Techniques and Forms are the magus's magic: every spell combines one of each. The same apprenticeship experience buys Arts and Abilities, so what is spent here is not spent there.
+wizard-guidance-spells = Apprenticeship grants levels of spells rather than experience points, and they are spent here. No spell may be of a higher level than the magus's Technique, Form, Intelligence and Magic Theory allow.
+wizard-guidance-house_specialisation = Every Hermetic magus belongs to exactly one House, which grants a benefit at creation. It comes before Virtues and Flaws because that benefit is a free Minor Virtue, which needs no Flaw to fund it.
+wizard-guidance-mythic_type = A Mythic Companion's type is a free Virtue saying what he is. The types are incompatible with one another and with The Gift, and one normally brings a free Minor Virtue with it.
+wizard-guidance-personality_reputations = Pick a few words for the character's personality and give each a score from +3 to -3. Grogs should have a score in Loyal, and warriors one in Brave. A Reputation belongs here only if a Virtue or Flaw granted one.
+wizard-guidance-aging = A character over 35 makes an aging roll for every year before play begins, which may cost apparent age or Characteristic points. Aging Points build up in a Characteristic until they exceed it, and it then drops by one.
+# No rules passage describes a review step — it is this application's own closing
+# step, so this line makes no rules claim.
+wizard-guidance-review = Nothing new is chosen here — this is the last look before the character leaves the guided flow. Everything stays editable after finishing.
+
 # The Character type step: a read-only account of what the chosen type commits
 # this character to. The type itself was fixed when the character was created.
 phase-type-explainer = The character type is fixed for this character. It sets the Virtue and Flaw budget, which categories may be taken, and which creation steps follow.
