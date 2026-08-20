@@ -4389,6 +4389,52 @@ catalogue data, never a list in code.
 
 ---
 
+## Guided wizard step copy (M6/6b8b) — `locales/<lang>/main.ftl`
+
+Each wizard step opens with two or three sentences saying what is decided there.
+This is **UI copy, not a mechanic**: nothing reads it, nothing validates against
+it, and no engine value is derived from it. It is filed here anyway, because
+every factual claim it makes is a rules claim and therefore owes a source — the
+one thing that separates guidance from invention.
+
+It lives in Fluent (`wizard-guidance-<phase>`, one line per `CreationPhase`) and
+not in `rules/i18n/`, because it is instructional chrome about this application's
+flow, keyed by a phase of *our* wizard rather than by a catalogue item's ID.
+`rules/i18n/` holds the text of items the ruleset names; no item is named here.
+
+**No rules number is written into the copy.** Where a sentence needs one it is a
+Fluent placeable filled from loaded data (`ui/src/lib/derive.ts` —
+`wizardGuidance`), so the numbers below live in `rules/core/*.json` alone and a
+translation can never freeze a stale one:
+
+| Placeable | Filled from | Value today |
+|---|---|---|
+| `{ $points }` (characteristics) | `characteristic_rules.start_points` | 7 (`:2342`) |
+| `{ $flaws }` / `{ $virtues }` (virtues_flaws) | the type profile's `budget.flaw_points` / `budget.virtue_points` | 3/3 grog, 10/10 companion and magus, 10/20 Mythic Companion (`:2210-2211`, `:2295`, `:2303`, `:2844`) |
+
+Every other sentence is deliberately worded without a number — including the
+spell-level cap, which names its terms (Technique, Form, Intelligence, Magic
+Theory) but not the `+3` of `:2465`, since that constant is nowhere in the data.
+
+Source per phase, all in `Ars Magica - Definitive Edition (Core Rules).md`:
+
+| Phase | Claim made | Source |
+|---|---|---|
+| `concept` | creation starts from a concept; the examples (fire wizard / scholar / warrior or covenant staff) | `:2203` |
+| `type` | a magus has The Gift and Hermetic training; a central non-magus is a companion, a bit part a grog; the rules differ by type | `:2224`, `:2226` |
+| `characteristics` | Characteristics are inborn and normal means never raise them; the point buy; a negative score gives points back | `:1025`, `:1027`, `:2342`, `:2346-2354` |
+| `virtues_flaws` | Flaws fund Virtues up to the budget; the maximum need not be taken; every character takes a Social Status | `:2209-2211`, `:2295-2303`, `:2309`, `:2816`, `:2844` |
+| `abilities` | Abilities are bought in blocks — the first five years of childhood, then later life a year at a time; age caps the creation score | `:2364`, `:2366`, `:2378`, `:2392` |
+| `arts` | every spell combines one Technique and one Form; apprenticeship's experience buys Arts and Abilities from the same total | `:8835`, `:2435` |
+| `spells` | apprenticeship grants levels of spells; the highest level learnable is set by Technique, Form, Intelligence and Magic Theory | `:2215`, `:2435`, `:2465` |
+| `house_specialisation` | a magus belongs to exactly one House, whose benefit at creation is a free Minor Virtue needing no Flaw to fund it | `:2264`, `:2859` |
+| `mythic_type` | the type is a Free Virtue fixing the character's status; the types are incompatible with each other and with The Gift; one normally brings a free Minor Virtue | `:2637-2638`, `:2846-2847` |
+| `personality_reputations` | a few words scored +3 to -3; Loyal for grogs, Brave for warriors; a Reputation only where a Virtue or Flaw grants one | `:2502`, `:2504`, `:2514` |
+| `aging` | over 35 an aging roll per year before play; apparent age and Characteristic points are what it costs; Aging Points drop a Characteristic once they exceed it | `:2232`, `:16565`, `:16577`, `:16579` |
+| `review` | **no rules claim** — the review step is this application's own, so its line describes the flow and nothing else | — |
+
+---
+
 ## Engine framework (book-agnostic, no rulebook source)
 
 These checks are structural integrity, not Ars Magica rules, and intentionally
