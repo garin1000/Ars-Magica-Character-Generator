@@ -10,9 +10,10 @@ type is fixed at creation via `store.createCharacter(typeId)`. 6b1b replaced tha
 screen's hardcoded-disabled wizard button with one guided entry per character type.
 
 **Status: 6b1a through 6b7 are done.** The milestone's closing slice, **6b8**, runs as
-four sub-slices: **6b8a — completeness indicators** and **6b8b — the per-step guided
-copy** are done; the ownership inconsistencies 6b1b froze (6b8c) and the milestone gate
-(per-type e2e specs, the portable smoke check, doc reconciliation — 6b8d) remain.
+four sub-slices: **6b8a — completeness indicators**, **6b8b — the per-step guided copy**
+and **6b8c — the deferrals 6b1b-6b7 froze** are done; the milestone gate (per-type e2e
+specs, the portable smoke check, `cargo clippy --all-targets`, doc reconciliation —
+6b8d) remains.
 
 6b7 — the Crisis, the Decrepitude levels it reaches, and the crisis table — was
 **smaller than the sketch below**, because 6b6 already took the per-year
@@ -103,7 +104,7 @@ canonical key/array sorting. German labels must match
 | **6b5** ✅ | Post-Gauntlet accrual (30 pts/year, lab-season deduction, xp↔spell-level split) | 6b4 |
 | **6b6** ✅ | Aging tables + aging total + outcome resolution **+ the per-year write-back**, as a creation phase of its own | 6b1a |
 | **6b7** ✅ | Crisis, Decrepitude levels, the crisis table — the write-back landed in 6b6, so this is smaller than the sketch below | 6b6 |
-| **6b8** 🔄 | Per-type flow completion, completeness indicators, guided copy, milestone gate — run as four sub-slices; **6b8a ✅** | 6b2-6b7 |
+| **6b8** 🔄 | Per-type flow completion, completeness indicators, guided copy, milestone gate — run as four sub-slices; **6b8a ✅ 6b8b ✅ 6b8c ✅** | 6b2-6b7 |
 
 6b1 was one slice until review: ~24 TDD steps spanning 85 emit sites, a contract-table
 rewrite, two new scanner tests, three extractions, five new components and a new e2e
@@ -335,7 +336,7 @@ new phase is a `svelte-check` error:
 | `virtues_flaws` | `VirtueFlawTab` | `BalanceBar` | no |
 | `abilities` | `AbilityTab` | `XpBar` | no |
 | `arts` | `ArtGrid` | `XpBar prefix="art-"` | no |
-| `spells` | `SpellTab` | — (owns `SpellBudgetBar`) | no |
+| `spells` | `SpellTab` | `SpellBudgetBar` | no |
 | `house_specialisation` | `HouseSelector` | — | yes |
 | `mythic_type` | `MythicCompanionTypeSelector` | — | no |
 | `personality_reputations` | `PersonalityReputationsStep` (new, composes two extractions) | — | yes |
@@ -364,6 +365,13 @@ confidence blocks; `EquipmentTab`, `MagicPossessions`, `SupernaturalBeing`,
 `DerivedTotalsPanel` (no phase maps to them; Review announces they live in the editor);
 `SpellTab`'s self-owned budget bar; and `store.filters.vf` being shared between views
 (same character, never on screen at once — document it so nobody "fixes" it).
+
+**Both of those last two were settled in 6b8c.** `SpellTab` no longer owns a bar: the
+step and the editor's tab mount `SpellBudgetBar` the way they mount every other one,
+which is why the table above now names it. `store.filters.vf` **stays shared**, and the
+reasoning is now a comment on `PickerFilters` in `ui/src/lib/state.svelte.ts` — a
+per-view split would double the state and then have to decide which copy a filter
+survives Finish into, losing it mid-task.
 
 ### Tasks
 
@@ -779,13 +787,17 @@ there is no wizard left to advance.
   `crates/arm-rules/src/export.rs:704-743` renders `xp.general_pool` — so a guided magus's
   sheet correctly reads `used / 240` — but labels every restricted pool by what it may
   buy, never by where it came from, so later life prints as a long category enumeration.
-  Numbers right, label poor. Labelling by origin (the XP bar already does it, through
-  `xp-pool-<block>`) is a **6b8** follow-up.
+  Numbers right, label poor. **Fixed in 6b8c**: `Doc::restricted_pool_label` prints
+  `xp-pool-<block>` for a life-stage pool and keeps the eligibility list for a Virtue's
+  grant, which is the rule the XP bar already followed.
 - **Flat mode ignores `general_xp_bonus`.** Without a plan the bar's pool is
   `entity.xp_pool`, so a flat magus with Skilled Parens spends the extra 60 the engine
   grants and shows a negative Available with no error. Pre-existing (the bonus predates
   this slice) and deliberately not folded in here, because the flat pool is the number
-  the player typed and the e2e suite drives exact arithmetic against it — also **6b8**.
+  the player typed and the e2e suite drives exact arithmetic against it. **Fixed in
+  6b8c**: the bar reads `xp_general_pool` in both modes and lists the bonus as an entry
+  of its own, so the typed number keeps the editable field and the two still close. No
+  e2e arithmetic needed changing — every driven character has a zero bonus.
 
 ---
 
@@ -951,8 +963,11 @@ life-stage provenance describes all four periods rather than two.
   the pool as one `used / total`, so a post-Gauntlet magus's sheet reads `used / 890` —
   right numbers, no breakdown of which block contributed what. This is the same labelling
   gap 6b4 recorded (restricted pools named by their eligibility list rather than their
-  origin) and it stays a **6b8** follow-up; the XP bar already labels by origin, the sheet
-  does not.
+  origin); the *labelling* half was **fixed in 6b8c**, so a restricted pool now names its
+  origin on the sheet as it does in the bar. The general pool is still one total: the
+  blocks behind it (apprenticeship + the post-Gauntlet years) are not restricted pools and
+  have nowhere on the sheet to be listed separately, which is a **presentation** question
+  for whoever next revisits the export, not a labelling one.
 - **`spell_levels_override` and the split coexist.** The override still replaces the
   **profile base** alone, with the V/F bonus and the post-Gauntlet levels additive on top.
   Deliberately *not* made exclusive with a plan the way `xp_pool` is
@@ -1154,8 +1169,10 @@ while `AGING_ROLLS_START_AGE` was deleted in favour of the data.
 - **The guided aging step is the only place a grog can enter a Longevity Ritual bonus.**
   `:10672` lets anyone hold an externally-made ritual, but the editor's only home for it is
   the Possessions tab, which is magus-gated. The panel degrades correctly on its own (only
-  the Creo Corpus suggestion is magus-gated), so the step simply mounts it; making the
-  ritual reachable in the *editor* for a non-magus is recorded for **6b8**.
+  the Creo Corpus suggestion is magus-gated), so the step simply mounts it. **Closed in
+  6b8c**: `CharacterDetails` mounts the panel too, gated on the profile *not* being
+  `is_magus` — so the type without a Possessions tab gains the ritual and no character ever
+  has two homes for one in the same view.
 
 ### Deliberate non-changes
 
@@ -1179,7 +1196,10 @@ while `AGING_ROLLS_START_AGE` was deleted in favour of the data.
 - **No consolidation of the two age inputs.** `AgeFields` closed a real gap (under flat
   funding there was no age input anywhere in the wizard, because `life-stage-age-input`
   renders only for life-stage funding), but the editor's own documented duplication stays
-  as it is — **6b8**'s call. Covenant-derived Living Conditions remain **M8**.
+  as it is. **6b8c made that permanent**: they stay two, with the reasoning at
+  `LifeStagePanel.svelte`'s own comment — one input conceptually, rendered wherever the age
+  is load-bearing, and the two places (pricing the years, scheduling the rolls) never share
+  a screen. Covenant-derived Living Conditions remain **M8**.
 
 ---
 
@@ -1321,8 +1341,8 @@ named; apply → log entry, note and save fields; revert → gone.
   the mirrored rulebook lines.
 - **`cargo clippy --all-targets` is still not part of the gate**, and three pre-existing
   failures live under it (`type_complexity` in `data_integrity.rs`, `needless_lifetimes`
-  in `effective.rs`, `doc_lazy_continuation` in `export.rs`). Untouched here; **6b8**'s
-  call whether to fix them and tighten the gate.
+  in `effective.rs`, `doc_lazy_continuation` in `export.rs`). Untouched here; **6b8d**'s
+  call whether to fix them and tighten the gate (6b8c left them alone too).
 
 ---
 
@@ -1427,7 +1447,7 @@ weaker reading of the same character decides what is *empty*. Six commits,
   identity field, `abilities` by one bought score. A stricter reading ("enough
   Abilities") would be the engine inventing rules the sources do not carry.
 - **`cargo clippy --all-targets` is still not part of the gate** (the three
-  pre-existing failures 6b7 recorded) — still 6b8's call, not taken here.
+  pre-existing failures 6b7 recorded) — still **6b8d**'s call, not taken here.
 
 ---
 
@@ -1535,6 +1555,130 @@ step, saying what is decided there and what the rules say about it. Four code co
 - **`cargo clippy --all-targets` still is not part of the gate** (the pre-existing
   failures 6b7 recorded, plus an `unused_mut` warning in `commands.rs` this slice did not
   introduce) — 6b8d's call.
+
+---
+
+## Slice 6b8c — the deferrals 6b1b-6b7 froze ✅
+
+Six items, each recorded across the earlier slices as "**6b8**'s call". Four were fixed
+and two were settled as they stood; none was left in silence, and every stale sentence
+above now says which. Five code commits, `aaae4f1..4eedd3a`, plus this documentation one.
+Nothing here is a new feature — three are read-outs that were wrong or unreadable, one is
+a route that did not exist for half the character types, and two are decisions.
+
+### What shipped
+
+- **The spell budget bar belongs to the step, not the picker** (`aaae4f1`). `SpellTab`
+  mounted `SpellBudgetBar` itself, so the phase→component table's `bar` column read a dash
+  for `spells` alone and a whole-character budget lived inside one of the two lists it
+  summarises. Both mount sites now declare it — `App.svelte`'s Spells tab and
+  `WizardStep`'s table — exactly as `BalanceBar` and `XpBar` are already declared for
+  Virtues/Flaws, Abilities and Arts. The editor cost one extra line and gained the same
+  shape as its three sibling tabs.
+- **A non-magus can reach its Longevity Ritual in the editor** (`6858ee3`). "You can
+  perform Longevity Rituals for others, even for non-magi"
+  (`Ars Magica - Definitive Edition (Core Rules).md:10672`, verified), and the bonus is a
+  term of every aging total the character rolls — but the editor's only home for a ritual
+  was the magus-gated Possessions tab, so a grog could enter the bonus on the guided aging
+  step and never correct it again. `CharacterDetails` now mounts `LongevityPanel` beside
+  its aging cluster, gated on the profile *not* being `is_magus`: the type that has the
+  Possessions tab keeps its single home, the type that does not gains one. New
+  `CharacterDetails.test.ts` (three cases, including the magus negative), and
+  `aging.e2e.js` follows the grog's +1 ritual across the save into the reloaded editor.
+- **A restricted XP pool says where its experience came from** (`8439798`).
+  `Doc::restricted_pool_label` in `export.rs` now prints `xp-pool-<block>` for a
+  life-stage pool and keeps the eligibility list for a Virtue's grant — the rule
+  `restrictedPoolLabel` has followed in the UI since 6b2. The three block keys join
+  `LABEL_KEYS` and `LifeStageBlock` joins the taxonomy walk, so a fourth block is a
+  failing test until both locales name it.
+- **The XP bar counts the experience Skilled Parens grants** (`97a455c`). The bar now
+  reads `xp_general_pool` in both funding modes and splits the spend the way its
+  spell-levels twin does. `XpAllocation` gains `general_bonus`, the payload
+  `xp_general_bonus`, `derive.ts` `generalXpAllocation`, and both locales an
+  `xp-bonus-pool` / `xp-bonus` pair. `spells.e2e.js` drives the arithmetic on the real
+  binary: the magus it has already given Skilled Parens reads 186 charged to the base and
+  814 available of a typed 1000 raised to 1060.
+- **Two frozen questions settled where a maintainer will read them** (`4eedd3a`). No
+  behaviour changed; both are comments at the declaration, so silence can no longer be
+  mistaken for an open question. See *Decisions of record*.
+
+### Decisions of record
+
+- **`store.filters.vf` stays shared between the views.** 6b1b's freeze was right, and the
+  reason is stronger than "never on screen at once": the two views mount the *same* picker
+  components over the *same* character, so a per-view split would double the state and then
+  have to decide which copy a filter survives `Finish` into. A player who narrowed the
+  Virtue list in the wizard would land in the editor with the filter silently reset,
+  mid-task. Recorded on `PickerFilters` in `ui/src/lib/state.svelte.ts`, worded to stop a
+  future "fix".
+- **The two age inputs stay two.** It is one input conceptually, rendered wherever the age
+  is load-bearing, and the two places are far apart: `LifeStagePanel` prices the years
+  (later life is `(age − childhood) × rate`), the aging surface schedules the rolls. They
+  never share a screen — different tabs in the editor, different steps in the wizard — and
+  dropping either takes the age away from a surface that cannot work without it: no age in
+  the funding panel means nothing to price, and no `AgeFields` means a flat-funded
+  character has no age input anywhere at all. Recorded at `LifeStagePanel.svelte`.
+- **`SpellBudgetBar` moved rather than being justified as an exception.** The constraint
+  named in the deferral — the editor mounts `SpellTab` directly, with no `WizardStep`
+  around it — turns out to argue *for* the move: the editor's other three budget bars are
+  already mounted by `App.svelte`, so the exception was the editor's too, not just the
+  wizard's. Consistency improved in both places for one line of markup.
+- **The export labels by origin only where origin is a name.** A Virtue's grant keeps its
+  eligibility list, because the item's own name says nothing about what its points may
+  buy — which is exactly where Educated and Warrior differ. Both halves of the rule match
+  the XP bar's, so one budget reads the same on screen and on the sheet.
+- **The bonus is spent before the base, like a restricted pool.** `generalXpAllocation`
+  applies the policy `spellLevelAllocation` already documents, for the identical reason:
+  the engine drains restricted pools before the general one, and an unrestricted bonus
+  degenerates to `min(used, bonus)`. It is the same Virtue's two halves — 60 experience
+  points and 30 spell levels — so they had to read alike. There is deliberately **no**
+  life-stage term in the XP twin: a magus's life-stage experience *is* the general pool,
+  already inside `xp_general_pool`, whereas its post-Gauntlet spell levels are additive to
+  a budget it already had.
+- **The editable field keeps the number the player typed.** `xp_general_pool` is the pool
+  the solve funds from, not what was entered; moving it into the input would have made the
+  field disagree with the save. The bonus entry is what reconciles the two.
+- **`SCHEMA_VERSION` stays 15.** Nothing new is stored: `general_bonus` is derived on
+  every allocation and the panel mounts are pure markup.
+
+### Findings
+
+- **The native-language pool printed a blank label on the sheet.** Worse than the deferral
+  recorded, and only visible once a guided character was exported: that block is restricted
+  to one *instance*, so it carries no ability and no category and its eligibility list
+  joined to the empty string — `- ****: 0 / 75`. The origin label closes it along with the
+  unreadable ones.
+- **The export's test ruleset shipped `life_stages: None`,** so no export test could reach
+  a life-stage pool at all. Adding the block is inert for every existing test (the pools
+  only appear once the *entity* carries a plan) and it caught its own transcription gate on
+  the way in: `recommended_xp: 90` against an empty recommended list fails
+  `validate_life_stage_rules`, which is the loader doing its job.
+- **Available now arrives on the same round trip as the used figure beside it.** Reading
+  the engine's pool costs the flat bar its instant response to typing: both numbers are
+  now 150 ms behind the keystroke instead of one being a frame ahead. That is a small
+  improvement rather than a regression — the pair can no longer disagree mid-flight — but
+  it is a behaviour change and a spec that asserted `Available` without a `waitUntil`
+  would flake. None does.
+- **`XpBar.test.ts` carried a test that pinned the bug.** *"charges the typed pool, not
+  `xp_general_pool`, when the two differ"* was written in 6b3b to keep the guided branch
+  out of flat mode, and it named this exact hazard — "would silently shift the figure
+  whenever a Skilled Parens bonus is folded in". It has been rewritten to the claim that
+  survives: the editable **field** stays on the typed pool, whatever the engine funds from.
+
+### Deliberate non-changes
+
+- **The Markdown sheet still shows the general pool as one total.** Origin labelling was
+  the recorded gap and it is closed; breaking `used / 890` into apprenticeship + the
+  post-Gauntlet years would need new *rows*, not a new label, and the blocks behind the
+  general pool are not restricted pools with anywhere to go. A presentation question for
+  whoever next revisits the export.
+- **`restrictedPoolLabel` in the UI was not touched.** The export moved to match it, not
+  the other way round; the bar was already right.
+- **No new e2e spec file.** Both real-binary proofs extend an existing spec — the grog's
+  ritual in `aging.e2e.js`, the magus's raised pool in `spells.e2e.js`, both riding
+  characters those specs had already built. 6b8d owns the per-type specs.
+- **`cargo clippy --all-targets` is still not part of the gate**, and the `unused_mut` in
+  `crates/arm-app/tests/commands.rs:2178` is still there — 6b8d's, as recorded.
 
 ---
 
