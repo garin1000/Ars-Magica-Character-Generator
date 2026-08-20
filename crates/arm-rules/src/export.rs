@@ -47,9 +47,10 @@ use crate::art::ArtType;
 use crate::characteristics::Characteristic;
 use crate::derived::{CombatLine, combat_totals, encumbrance, fatigue_levels, soak, wound_ranges};
 use crate::effective::{
-    ability_score_floors, confidence, decrepitude_score, effective_ability_score,
-    effective_art_score, effective_characteristic_after_aging, effective_might,
-    effective_spell_mastery, entity_grants, resolved_spell_level, warping, xp_allocation,
+    RestrictedXpPool, XpPoolOrigin, ability_score_floors, confidence, decrepitude_score,
+    effective_ability_score, effective_art_score, effective_characteristic_after_aging,
+    effective_might, effective_spell_mastery, entity_grants, resolved_spell_level, warping,
+    xp_allocation,
 };
 use crate::ruleset::{LocalizedRuleset, Ruleset};
 use crate::types::{
@@ -229,6 +230,9 @@ pub const LABEL_KEYS: &[&str] = &[
     "warping-label",
     "warping-points-label",
     "xp-pool",
+    "xp-pool-childhood_native_language",
+    "xp-pool-childhood_spread",
+    "xp-pool-later_life",
 ];
 
 /// Renders `entity` as a Markdown document.
@@ -735,23 +739,44 @@ impl<'a> Doc<'a> {
         }
         self.section(out, 3, "export-xp-restricted");
         for pool in &xp.restricted {
-            // An eligible Ability may be parameterized (Dead Language is "{language}
-            // (Dead Language)"): the pool names the Ability, not one instance of it, so
-            // the placeholder keeps its slot label instead of reaching the reader raw.
-            let mut eligibility: Vec<String> = pool
-                .abilities
-                .iter()
-                .map(|id| self.parameterized_name(id, &BTreeMap::new()))
-                .collect();
-            eligibility.extend(
-                pool.categories
-                    .iter()
-                    .map(|c| self.label(&format!("ability-category-{c}"))),
-            );
             let drawn = format!("{} / {}", pool.used, pool.amount);
-            field(out, &eligibility.join(&self.list_separator()), &drawn);
+            field(out, &self.restricted_pool_label(pool), &drawn);
         }
         out.push('\n');
+    }
+
+    /// What to call one restricted pool — the same rule the in-app XP bar follows
+    /// (`restrictedPoolLabel` in `ui/src/lib/derive.ts`), so a budget reads the same
+    /// on screen and on the sheet.
+    ///
+    /// A **life-stage block** is named for where the experience came from, never for
+    /// what it may buy: both childhood blocks share the childhood Ability list, so
+    /// eligibility cannot even tell them apart, and the native-language block is
+    /// restricted to one *instance* — it lists no Ability and no category at all, so
+    /// an eligibility label for it is the empty string. Its `xp-pool-<block>` key is
+    /// declared in [`LABEL_KEYS`], the block enum being a fixed taxonomy.
+    ///
+    /// A **Virtue's grant** keeps its eligibility list: the item's own name says
+    /// nothing about what its points buy, which is exactly where Educated and
+    /// Warrior differ. An eligible Ability may be parameterized (Dead Language is
+    /// "{language} (Dead Language)"), and the pool names the Ability rather than one
+    /// instance of it, so the placeholder keeps its slot label instead of reaching
+    /// the reader raw.
+    fn restricted_pool_label(&self, pool: &RestrictedXpPool) -> String {
+        if let XpPoolOrigin::LifeStage { block } = &pool.origin {
+            return self.label(&format!("xp-pool-{block}"));
+        }
+        let mut eligibility: Vec<String> = pool
+            .abilities
+            .iter()
+            .map(|id| self.parameterized_name(id, &BTreeMap::new()))
+            .collect();
+        eligibility.extend(
+            pool.categories
+                .iter()
+                .map(|c| self.label(&format!("ability-category-{c}"))),
+        );
+        eligibility.join(&self.list_separator())
     }
 
     /// A row for every Ability a Virtue seeded with a free starting score
@@ -1737,8 +1762,32 @@ mod tests {
             { "id": "ability.dead_language", "category": "academic", "parameter": "language" },
             { "id": "ability.second_sight", "category": "supernatural" },
             { "id": "ability.single_weapon", "category": "martial" },
+            { "id": "ability.living_language", "category": "general", "parameter": "language" },
             { "id": "ability.brawl", "category": "general", "combat_ability": true }
           ]
+        }"#;
+        // Inert unless the entity carries a `life_stages` plan — no existing test's
+        // document changes — but present so the sheet can be driven for a guided
+        // character, whose experience arrives in named blocks rather than one pool.
+        let life_stages = r#"{
+          "apprenticeship": {
+            "years": 15, "xp": 240, "recommended_xp": 0,
+            "minimum_abilities": [{ "ability": "ability.parma_magica", "min_score": 1 }],
+            "recommended_abilities": []
+          },
+          "childhood": {
+            "years": 5,
+            "native_language_ability": "ability.living_language",
+            "native_language_xp": 75,
+            "spread_xp": 45,
+            "spread_abilities": ["ability.awareness", "ability.brawl"]
+          },
+          "later_life": { "xp_per_year": 15 },
+          "post_apprenticeship": {
+            "lab_season_cost": 10,
+            "max_charged_lab_seasons_per_year": 3,
+            "points_per_year": 30
+          }
         }"#;
         let arts = r#"{
           "advancement": [
@@ -1806,7 +1855,7 @@ mod tests {
             spell_mastery_abilities: Some(mastery),
             equipment: Some(equipment),
             characteristics: None,
-            life_stages: None,
+            life_stages: Some(life_stages),
             childhoods: None,
             aging: None,
         })
@@ -2904,6 +2953,58 @@ mod tests {
         assert!(!doc.contains("{language}"), "no raw placeholder: {doc}");
     }
 
+    /// A life-stage block is named for **where the experience came from**, never for
+    /// what it may buy: the childhood spread lists the entire childhood Ability
+    /// catalogue, both childhood blocks share that list, and later life's is longer
+    /// still — so an eligibility enumeration is both unreadable and unable to tell
+    /// the blocks apart. The in-app XP bar has always labelled them by origin
+    /// (`xp-pool-<block>`); the sheet now says the same thing.
+    #[test]
+    fn a_life_stage_pool_is_labelled_by_its_origin_not_its_eligibility() {
+        let mut e = magus();
+        // Fifteen years of apprenticeship after a childhood of five leaves five
+        // years of later life, at 15 experience points a year.
+        e.age = Some(25);
+        e.life_stages = Some(crate::life_stage::LifeStagePlan {
+            native_language: Some("German".into()),
+            ..crate::life_stage::LifeStagePlan::default()
+        });
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("export-xp-restricted", "Restricted experience"),
+                ("restricted-xp-list-separator", ","),
+                ("xp-pool-childhood_native_language", "Native language"),
+                ("xp-pool-childhood_spread", "Early childhood"),
+                ("xp-pool-later_life", "Later life"),
+            ]),
+        );
+        assert!(doc.contains("- **Native language**: 0 / 75\n"), "{doc}");
+        assert!(doc.contains("- **Early childhood**: 0 / 45\n"), "{doc}");
+        assert!(doc.contains("- **Later life**: 0 / 75\n"), "{doc}");
+        // The eligibility enumeration these three replace.
+        assert!(!doc.contains("Awareness, Brawl"), "{doc}");
+    }
+
+    /// A Virtue's grant keeps its eligibility list: the item's own name says nothing
+    /// about what the 50 points may buy, and Educated and Warrior differ precisely
+    /// there. Same rule the XP bar follows.
+    #[test]
+    fn a_virtue_granted_pool_still_names_what_it_may_buy() {
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.warrior"))];
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[
+                ("export-xp-restricted", "Restricted experience"),
+                ("ability-category-martial", "Martial"),
+            ]),
+        );
+        assert!(doc.contains("- **Martial**: 0 / 50\n"), "{doc}");
+    }
+
     #[test]
     fn the_abilities_section_is_omitted_when_nothing_is_bought_and_no_xp_is_banked() {
         let doc = character_markdown(
@@ -3992,6 +4093,9 @@ mod tests {
         }
         for severity in CrisisSeverity::ALL {
             assert_declared(&format!("crisis-severity-{severity}"));
+        }
+        for block in crate::effective::LifeStageBlock::ALL {
+            assert_declared(&format!("xp-pool-{block}"));
         }
     }
 
