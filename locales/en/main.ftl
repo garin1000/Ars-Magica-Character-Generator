@@ -933,7 +933,6 @@ equipment-group-shields = Shields
 equipment-group-armor = Armor
 equipment-equipped-label = Equipped
 equipment-specialization-label = Specialization applies (+1)
-equipment-remove = Remove equipment
 equipment-empty = No equipment.
 
 # AppError kinds returned by Tauri commands.

@@ -113,12 +113,21 @@
             min={auraMin}
             max={auraMax}
             value={aura}
+            aria-describedby={auraOutOfRange ? 'derived-aura-out-of-range' : undefined}
             oninput={onAura}
             data-testid="derived-aura-input"
           />
         </label>
         {#if auraOutOfRange}
-          <p class="hint" data-testid="derived-aura-out-of-range">
+          <!-- role="status" (polite): announced once the value goes out of range
+               without interrupting the keystroke the player is mid-typing, the
+               same politeness BalanceBar/XpBar use for their own live totals. -->
+          <p
+            class="hint"
+            id="derived-aura-out-of-range"
+            role="status"
+            data-testid="derived-aura-out-of-range"
+          >
             {store.t('derived-aura-out-of-range', { min: String(auraMin), max: String(auraMax) })}
           </p>
         {/if}

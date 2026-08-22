@@ -11,7 +11,6 @@ import type {
   ChildhoodEntry,
   ChildhoodPackage,
   CreationPhase,
-  Entity,
   EntityTypeProfile,
   EquipmentSlot,
   Grant,
@@ -558,34 +557,6 @@ export function grantedSelectionsForSide(
     const item = localized.ruleset.point_items[sel.ref];
     return item ? kinds.includes(item.kind) : false;
   });
-}
-
-export interface Balance {
-  virtuePoints: number;
-  flawPoints: number;
-  virtueBudget: number;
-  flawBudget: number;
-}
-
-/** Sum selected virtue/flaw points against the active type profile's budget. */
-export function balance(localized: LocalizedRuleset, entity: Entity): Balance {
-  const profile = localized.ruleset.type_profiles[entity.type_id];
-  const magnitudePoints = localized.ruleset.magnitude_points;
-  let virtuePoints = 0;
-  let flawPoints = 0;
-  for (const selection of entity.selections ?? []) {
-    const item = localized.ruleset.point_items[selection.ref];
-    if (!item) continue;
-    const points = magnitudePoints[item.magnitude] ?? 0;
-    if (item.kind === 'virtue' || item.kind === 'boon') virtuePoints += points;
-    else flawPoints += points;
-  }
-  return {
-    virtuePoints,
-    flawPoints,
-    virtueBudget: profile?.budget.virtue_points ?? 0,
-    flawBudget: profile?.budget.flaw_points ?? 0,
-  };
 }
 
 /**

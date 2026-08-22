@@ -1108,6 +1108,41 @@ fn effective_scores_surface_house_grants_read_only() {
 }
 
 #[test]
+fn effective_scores_surface_virtue_flaw_balance() {
+    // The balance bar must read the engine's own spent Virtue/Flaw points
+    // (`validation::compute_balance` — the same function `export.rs`'s Markdown
+    // export and the over-budget/unbalanced-Virtues validation issues already
+    // read) rather than re-deriving them a third time in TypeScript. Audit
+    // finding G1 (round 4): the same defect class already fixed once for
+    // `characteristic_points_used` (VA1/GF1/GD4).
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut companion = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("companion"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+
+    let bare = effective_scores_loaded(&companion, &ruleset);
+    assert_eq!(
+        (bare.virtue_points, bare.flaw_points),
+        (0, 0),
+        "no selections means no spent points"
+    );
+
+    // Self-Confident is a shipped Minor Virtue (1 point); Infamous is a shipped
+    // Minor Flaw (1 point) — rules/core/virtues_flaws.json.
+    companion
+        .selections
+        .push(Selection::new(Id::new("virtue.self_confident")));
+    companion
+        .selections
+        .push(Selection::new(Id::new("flaw.infamous")));
+    let effective = effective_scores_loaded(&companion, &ruleset);
+    assert_eq!(effective.virtue_points, 1, "one minor virtue = 1 point");
+    assert_eq!(effective.flaw_points, 1, "one minor flaw = 1 point");
+}
+
+#[test]
 fn load_entity_from_missing_path_is_io_error() {
     let err = load_entity_from_path(&repo_root().join("does/not/exist.json")).unwrap_err();
     assert!(matches!(err, AppError::Io { .. }), "got {err:?}");

@@ -489,6 +489,12 @@ export interface EffectiveScores {
   // bonus), so the balance bar shows the true budget (Devil Child 37/17).
   virtue_budget: number;
   flaw_budget: number;
+  // The virtue/flaw points actually spent — the engine's own compute_balance
+  // figure (the same one the Markdown export and the over-budget/unbalanced-
+  // Virtues validation issues already read), so the balance bar never
+  // re-derives it. Engine-authoritative; never recomputed here.
+  virtue_points: number;
+  flaw_points: number;
   // The magus's effective spell-levels budget (base + Skilled/Weak Parens + the
   // levels its post-Gauntlet years bought) and how many levels the chosen spells
   // consume — the spell bar. The base is the per-character spell_levels_override
@@ -537,11 +543,6 @@ export interface EffectiveScores {
   // 2). 0/0 when there is no Warping. Engine-authoritative; never recomputed here.
   warping_score: number;
   warping_points: number;
-  // The off-budget Virtues/Flaws a non-magus owes from its Warping Score
-  // ("Effects of Warping", Core:16547-16561): per-kind owed counts for the
-  // read-out. All zero for magi (exempt — Twilight instead) and characters owing
-  // nothing. Engine-authoritative.
-  warping_owed: WarpingOwed;
   // One OPEN grant per owed warping slot (stable choice_key + the constraint its
   // fill must satisfy), so the UI renders one picker per slot. Empty for magi and
   // characters owing nothing.
@@ -1180,14 +1181,6 @@ export interface GrantConstraint {
   magnitude?: Magnitude;
   require_categories?: string[];
   forbid_categories?: string[];
-}
-
-// The off-budget Virtues/Flaws a non-magus character owes from its Warping Score
-// ("Effects of Warping", Core:16547-16561). Mirrors the engine's `WarpingOwed`.
-export interface WarpingOwed {
-  minor_flaws: number;
-  minor_supernatural_virtues: number;
-  major_flaws: number;
 }
 
 // One thing a type-linked profile (House or Mythic Companion type) grants at

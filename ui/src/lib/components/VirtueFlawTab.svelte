@@ -16,9 +16,10 @@
   import SelectionList from './SelectionList.svelte';
   import ParameterPicker from './ParameterPicker.svelte';
 
-  // The two sides: Virtues (virtue/boon) beside Flaws (flaw/hook), mirroring
-  // balance(). Both the source pickers and the selected columns render one per
-  // side through the same generic components.
+  // The two sides: Virtues (virtue/boon) beside Flaws (flaw/hook), mirroring the
+  // engine's own split (`ItemKind::is_positive`, validation/balance.rs). Both the
+  // source pickers and the selected columns render one per side through the same
+  // generic components.
   const SIDES = ['virtue', 'flaw'] as const;
   type Side = (typeof SIDES)[number];
 

@@ -16,17 +16,17 @@ use arm_rules::{
     EntityTypeProfile, Grant, Id, LifeStageBudget, LocalizedRuleset, MagusMinimumAbility,
     MightScore, PointCeilings, ReputationType, RestrictedXpPool, Ruleset, RulesetSources,
     Selection, SpellLevelCap, SupernaturalFreeSlots, ValidationIssue, ValidationMode,
-    ValidationResult, WarpingOwed, ability_bonuses, ability_score_floors, age_ability_cap,
-    aging_schedule, aging_total, apply_childhood_package, art_bonuses, characteristic_aging_drops,
+    ValidationResult, ability_bonuses, ability_score_floors, age_ability_cap, aging_schedule,
+    aging_total, apply_childhood_package, art_bonuses, characteristic_aging_drops,
     characteristic_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, checked_xp_allocation, confidence, decrepitude_score,
-    effective_characteristics, effective_might, effective_point_ceilings, entity_grants,
-    item_level_budget, item_level_used, life_stage_spell_levels, longevity_bonus,
+    characteristic_points_granted, checked_xp_allocation, compute_balance, confidence,
+    decrepitude_score, effective_characteristics, effective_might, effective_point_ceilings,
+    entity_grants, item_level_budget, item_level_used, life_stage_spell_levels, longevity_bonus,
     magus_minimum_abilities, power_levels_budget, powers_used, reputation_grants, resolve_outcome,
     resolve_year, revert_year, size, spell_level_caps, spell_levels_base, spell_levels_bonus,
     spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
     spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, validate, warping,
-    warping_owed, warping_owed_grants,
+    warping_owed_grants,
 };
 use serde::Serialize;
 
@@ -129,6 +129,17 @@ pub struct EffectiveScores {
     /// not the base 20/10). Budget numbers stay engine-authoritative.
     pub virtue_budget: u32,
     pub flaw_budget: u32,
+    /// The virtue/flaw points actually spent — `validation::compute_balance`'s own
+    /// figure, the same one `export.rs`'s Markdown export and the
+    /// over-budget/unbalanced-Virtues validation issues already read.
+    ///
+    /// Surfaced so the balance bar stops re-deriving this a third time in
+    /// TypeScript (audit finding G1, round 4): a second, independent
+    /// implementation of a rule the engine already owns, free to drift from
+    /// `compute_balance` with nothing to catch it — the same defect class as
+    /// [`Self::characteristic_points_used`] above (VA1/GF1/GD4).
+    pub virtue_points: i32,
+    pub flaw_points: i32,
     /// The magus's effective spell-levels budget (base + Skilled/Weak Parens
     /// modifiers + the levels its post-Gauntlet years bought) — the "available" side
     /// of the spell-levels bar. The base is the per-character
@@ -195,11 +206,6 @@ pub struct EffectiveScores {
     /// 0/0 when there is no Warping. Engine-authoritative; never recomputed in JS.
     pub warping_score: u8,
     pub warping_points: u32,
-    /// The off-budget Virtues/Flaws a non-magus character owes from its Warping
-    /// Score ("Effects of Warping", Core:16547-16561): the per-kind owed counts
-    /// (for the "you gain N …" read-out). All zero for magi (exempt — Twilight
-    /// instead) and any character owing nothing. Engine-authoritative.
-    pub warping_owed: WarpingOwed,
     /// One OPEN grant per owed warping slot (stable `choice_key` + the constraint
     /// its fill must satisfy), so the UI renders one picker per slot filtered to
     /// eligible items. Empty for magi and characters owing nothing.
@@ -446,7 +452,6 @@ fn spell_fields(
 struct WarpingFields {
     score: u8,
     points: u32,
-    owed: WarpingOwed,
     owed_grants: Vec<Grant>,
 }
 
@@ -455,7 +460,6 @@ fn warping_fields(entity: &Entity, ruleset: &Ruleset) -> WarpingFields {
     WarpingFields {
         score: totals.score,
         points: totals.points,
-        owed: warping_owed(entity, ruleset),
         owed_grants: warping_owed_grants(entity, ruleset),
     }
 }
@@ -551,11 +555,16 @@ fn confidence_fields(
     }
 }
 
-/// The granted-selections / Virtue-Flaw-budget slice of [`EffectiveScores`].
+/// The granted-selections / Virtue-Flaw-balance slice of [`EffectiveScores`]:
+/// the effective budget ceilings plus the points actually spent, so the
+/// balance bar's two halves come off one call each to the same engine module
+/// (`validation::balance`).
 struct GrantBudgetFields {
     granted_selections: Vec<Selection>,
     virtue_budget: u32,
     flaw_budget: u32,
+    virtue_points: i32,
+    flaw_points: i32,
 }
 
 fn grant_budget_fields(entity: &Entity, ruleset: &Ruleset) -> GrantBudgetFields {
@@ -563,10 +572,13 @@ fn grant_budget_fields(entity: &Entity, ruleset: &Ruleset) -> GrantBudgetFields 
         virtue_ceiling: 0,
         flaw_ceiling: 0,
     });
+    let balance = compute_balance(entity, ruleset);
     GrantBudgetFields {
         granted_selections: entity_grants(entity, ruleset),
         virtue_budget: ceilings.virtue_ceiling,
         flaw_budget: ceilings.flaw_ceiling,
+        virtue_points: balance.virtue_points,
+        flaw_points: balance.flaw_points,
     }
 }
 
@@ -669,6 +681,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         granted_selections: grants.granted_selections,
         virtue_budget: grants.virtue_budget,
         flaw_budget: grants.flaw_budget,
+        virtue_points: grants.virtue_points,
+        flaw_points: grants.flaw_points,
 
         spell_levels_budget: spell.budget,
         spell_levels_profile_base: spell.profile_base,
@@ -688,7 +702,6 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
 
         warping_score: warping.score,
         warping_points: warping.points,
-        warping_owed: warping.owed,
         warping_owed_grants: warping.owed_grants,
 
         decrepitude_score: legacy_totals.decrepitude_score,

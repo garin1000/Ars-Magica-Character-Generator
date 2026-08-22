@@ -166,7 +166,7 @@
               <button
                 type="button"
                 class="icon-btn"
-                aria-label={store.t('equipment-remove')}
+                aria-label={store.t('remove-item', { name: nameOf(slot.item) })}
                 onclick={() => store.removeEquipmentAt(i)}
                 data-testid="equipment-remove-{i}"
               >
