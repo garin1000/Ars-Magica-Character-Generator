@@ -69,7 +69,7 @@
             <button
               type="button"
               class="icon-btn"
-              aria-label={store.t('spell-remove')}
+              aria-label={store.t('remove-item', { name: device.name })}
               onclick={() => store.removeDeviceAt(i)}
               data-testid="device-remove-{i}"
             >

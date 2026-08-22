@@ -240,6 +240,47 @@ describe('SpellBudgetBar overspend styling (same behavior as the XP pool)', () =
   });
 });
 
+// GF2 (tmp/review/review-round-2-gerda-frontend.md): XpBar.svelte gained a
+// semantic `data-overspent` attribute in round 1 specifically so e2e specs
+// stop coupling to a CSS class name (see XpBar.test.ts). SpellBudgetBar has
+// the identical overspend concept on the identical shape (derive.ts documents
+// spellLevelAllocation/generalXpAllocation as deliberate "twins") but never
+// received it — this closes that gap so the two bars are consistent.
+describe('SpellBudgetBar semantic overspend attribute (mirrors XpBar, GF2)', () => {
+  it('marks Available with a semantic data-overspent attribute when overspent', () => {
+    setEffective(130, 120); // available = -10
+    const { open } = element(html(), 'spell-levels-available');
+    expect(open).toMatch(/data-overspent="true"/);
+  });
+
+  it('marks the used figure with a semantic data-overspent attribute when overspent', () => {
+    setEffective(130, 120);
+    const { open } = element(html(), 'spell-levels-used');
+    expect(open).toMatch(/data-overspent="true"/);
+  });
+
+  it('reports data-overspent="false" on both figures when within budget', () => {
+    setEffective(30, 120);
+    expect(element(html(), 'spell-levels-used').open).toMatch(/data-overspent="false"/);
+    expect(element(html(), 'spell-levels-available').open).toMatch(/data-overspent="false"/);
+  });
+
+  it('marks the mastery read-out with a semantic data-overspent attribute when mastery XP is overspent', () => {
+    // Mastery score 2 costs table(2) = 15 against a 10-point pool.
+    setEffective(30, 120, { spell_mastery_xp: 10 } as Partial<EffectiveScores>);
+    store.entity.spells = [{ spell: 'spell.a', mastery: 2 }];
+    const { open } = element(html(), 'spell-mastery-info');
+    expect(open).toMatch(/data-overspent="true"/);
+  });
+
+  it('reports data-overspent="false" on the mastery read-out when within its pool', () => {
+    setEffective(30, 120, { spell_mastery_xp: 50 } as Partial<EffectiveScores>);
+    store.entity.spells = [{ spell: 'spell.a', mastery: 2 }];
+    const { open } = element(html(), 'spell-mastery-info');
+    expect(open).toMatch(/data-overspent="false"/);
+  });
+});
+
 describe('SpellBudgetBar mastery read-out', () => {
   it('shows the mastery pool when the character has mastery XP', () => {
     setEffective(30, 120, { spell_mastery_xp: 20 } as Partial<EffectiveScores>);

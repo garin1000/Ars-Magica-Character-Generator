@@ -1,7 +1,19 @@
 <script lang="ts">
   import { store } from '../state.svelte';
 
-  const errorText = $derived(store.error ? store.t(`error-${store.error.kind}`) : null);
+  // The export error carries the specific missing Fluent/catalogue keys
+  // (`AppError.missing`, mirroring `AppError::Export` in
+  // `crates/arm-app/src/error.rs`) — pass them through so `error-export` can
+  // name them, instead of a passive "some text is missing" with no way to act
+  // on it or file a useful bug report.
+  const errorText = $derived.by(() => {
+    const error = store.error;
+    if (!error) return null;
+    if (error.kind === 'export') {
+      return store.t('error-export', { missing: error.missing.join(', ') });
+    }
+    return store.t(`error-${error.kind}`);
+  });
 </script>
 
 <div class="saveload">

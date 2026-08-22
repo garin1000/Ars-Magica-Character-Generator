@@ -153,7 +153,7 @@
           <button
             type="button"
             class="icon-btn"
-            aria-label={store.t('spell-remove')}
+            aria-label={store.t('remove-item', { name: entry.effect })}
             onclick={() => store.removeAgingLogEntryAt(i)}
             data-testid="aging-log-remove-{i}"
           >

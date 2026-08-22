@@ -86,7 +86,7 @@
           <button
             type="button"
             class="icon-btn"
-            aria-label={store.t('spell-remove')}
+            aria-label={store.t('remove-item', { name: attunement.description })}
             onclick={() => store.removeTalismanAttunementAt(i)}
             data-testid="talisman-remove-{i}"
           >
@@ -131,7 +131,7 @@
           <button
             type="button"
             class="icon-btn"
-            aria-label={store.t('spell-remove')}
+            aria-label={store.t('remove-item', { name: effect.name })}
             onclick={() => store.removeTalismanEffectAt(i)}
             data-testid="talisman-effect-remove-{i}"
           >

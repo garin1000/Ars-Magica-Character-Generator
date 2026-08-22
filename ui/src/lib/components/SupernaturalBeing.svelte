@@ -105,7 +105,7 @@
             <button
               type="button"
               class="icon-btn"
-              aria-label={store.t('spell-remove')}
+              aria-label={store.t('remove-item', { name: power.name })}
               onclick={() => store.removePowerAt(i)}
               data-testid="power-remove-{i}"
             >

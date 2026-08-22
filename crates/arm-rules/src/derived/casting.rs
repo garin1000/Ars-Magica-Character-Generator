@@ -156,7 +156,6 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                 let formulaic = post(
                     common + focus_add + mods.casting_mod_for(CastType::Formulaic),
                     deficient,
-                    false,
                 );
                 let ritual = post(
                     common
@@ -164,18 +163,32 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                         + sum(&ritual_addends)
                         + mods.casting_mod_for(CastType::Ritual),
                     deficient,
-                    false,
                 );
                 let spont_base = post(
                     common + focus_add + mods.casting_mod_for(CastType::Spontaneous),
                     deficient,
-                    weak_spont,
                 );
+                let spontaneous_non_fatiguing = spont_base / 5;
                 CastingScores {
                     formulaic,
                     ritual,
-                    spontaneous_fatiguing: halve(spont_base),
-                    spontaneous_non_fatiguing: spont_base / 5,
+                    // Weak Spontaneous Magic (Ars Magica - Definitive Edition
+                    // (Core Rules).md:7084-7086): "You may not exert yourself
+                    // when casting spontaneous magic, so you always divide
+                    // your Casting Score by five." This does not add a second
+                    // halving on top of the normal ÷2 fatiguing rate (that
+                    // would produce ÷4, a rate the rules never state) — it
+                    // removes the fatiguing (exert-yourself) option outright,
+                    // leaving only the ÷5 rate. `CastingScores` has no "this
+                    // option does not exist" representation, so the fatiguing
+                    // slot reports the same figure as the non-fatiguing one
+                    // rather than a distinct, made-up divisor.
+                    spontaneous_fatiguing: if weak_spont {
+                        spontaneous_non_fatiguing
+                    } else {
+                        halve(spont_base)
+                    },
+                    spontaneous_non_fatiguing,
                 }
             };
 
@@ -219,18 +232,13 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
     out
 }
 
-/// Applies the Deficient-Art halving and (for spontaneous) the Weak-Spontaneous
-/// halving to a casting score, in that order. Source: Ars Magica - Definitive
-/// Edition (Core Rules).md:5909-5915, :7060-7063.
-fn post(score: i32, deficient: bool, weak_spont: bool) -> i32 {
-    let mut s = score;
-    if deficient {
-        s = halve(s);
-    }
-    if weak_spont {
-        s = halve(s);
-    }
-    s
+/// Applies the Deficient-Art halving to a casting score. Weak Spontaneous
+/// Magic is handled separately (it fixes the spontaneous *divisor* to 5
+/// rather than halving an already-computed score — see the `spontaneous_fatiguing`
+/// field comment in [`casting_totals`]'s `variant` closure). Source: Ars
+/// Magica - Definitive Edition (Core Rules).md:5909-5915.
+fn post(score: i32, deficient: bool) -> i32 {
+    if deficient { halve(score) } else { score }
 }
 
 struct CastingScores {

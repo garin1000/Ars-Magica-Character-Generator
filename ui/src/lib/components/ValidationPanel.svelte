@@ -48,9 +48,11 @@
       {#each issues as issue (`${issue.code}|${issue.context ?? ''}|${JSON.stringify(issue.args)}`)}
         {@const rawArgs = { ...issue.args, ...(issue.context ? { context: issue.context } : {}) }}
         <li class="issue {issue.severity}" data-severity={issue.severity} data-code={issue.code}>
-          <!-- Severity must not be color-only (WCAG 1.4.1): the border/tint carries
-               it visually, this carries it to assistive tech. -->
-          <span class="sr-only">{store.t(`issue-severity-${issue.severity}`)}: </span>
+          <!-- Severity must not be color-only (WCAG 1.4.1). The border/tint carries
+               it for sighted users who can see colour; this visible badge carries
+               it for everyone else too (colourblind sighted users included), and
+               doubles as the label assistive tech announces. -->
+          <span class="issue-severity">{store.t(`issue-severity-${issue.severity}`)}: </span>
           {store.t(
             `issue-${issue.code}`,
             store.ruleset ? resolveIssueArgs(store.ruleset, rawArgs, store.t) : rawArgs,

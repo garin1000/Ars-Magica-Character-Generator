@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { store } from './lib/state.svelte';
   import { updateCloseGuard } from './lib/ipc';
   import type { AppError } from './lib/types';
@@ -86,6 +86,36 @@
     if (!tabs.some((t) => t.id === tab)) tab = 'details';
   });
 
+  // WAI-ARIA Tabs keyboard pattern: Left/Right (and Home/End) move among tabs
+  // and activate the one they land on ("automatic activation"), and only the
+  // active tab sits in the page's Tab order (`tabindex="0"`; the rest are
+  // `-1`) — a screen-reader or keyboard user tabbing into the bar lands once,
+  // then arrows across it, rather than tabbing through every tab button.
+  async function focusTab(index: number): Promise<void> {
+    if (tabs.length === 0) return;
+    const wrapped = ((index % tabs.length) + tabs.length) % tabs.length;
+    tab = tabs[wrapped].id;
+    await tick();
+    document.getElementById(`tab-${tabs[wrapped].id}`)?.focus();
+  }
+  function onTabsKeydown(event: KeyboardEvent): void {
+    const current = tabs.findIndex((t) => t.id === tab);
+    if (current === -1) return;
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      void focusTab(current + 1);
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      void focusTab(current - 1);
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      void focusTab(0);
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      void focusTab(tabs.length - 1);
+    }
+  }
+
   onMount(() => {
     void store.init();
   });
@@ -152,9 +182,35 @@
       store.error = e as AppError;
     });
   });
+
+  // Focus restoration for the New/Open discard-changes prompt (the WAI-ARIA
+  // dialog pattern: "when it closes, focus returns to the element that
+  // triggered it"). `DiscardPrompt` itself moves focus onto Cancel the instant
+  // it opens, so capturing `document.activeElement` reactively off
+  // `discardPromptOpen` would race that effect. Tracking real `focusin` events
+  // instead sidesteps the race entirely: while the prompt is open every focus
+  // move happens *inside* it (the rest of the shell is `inert`), so those
+  // events are ignored and `lastFocusOutsideDialog` keeps whatever had focus
+  // just before New/Open (or Ctrl+N/Ctrl+O) opened it — the button clicked, or
+  // wherever the keyboard shortcut left focus.
+  let lastFocusOutsideDialog: HTMLElement | null = null;
+  function trackFocus(event: FocusEvent): void {
+    if (store.discardPromptOpen) return;
+    if (event.target instanceof HTMLElement) lastFocusOutsideDialog = event.target;
+  }
+  $effect(() => {
+    if (store.discardPromptOpen) return;
+    const toFocus = lastFocusOutsideDialog;
+    // Cancel leaves the document exactly as it was, so the trigger is still
+    // there; Discard/confirm may have navigated away (e.g. New resets to the
+    // startup screen), in which case the old element is disconnected and
+    // `.focus()` is skipped — the sensible fallback is to leave focus alone
+    // rather than force it onto an arbitrary substitute.
+    if (toFocus?.isConnected) toFocus.focus();
+  });
 </script>
 
-<svelte:window onkeydown={handleShortcut} />
+<svelte:window onkeydown={handleShortcut} onfocusin={trackFocus} />
 
 <!-- Everything interactive lives in the shell so a single `inert` can switch the
      whole app off while a native file dialog is open. The dialogs are parented to
@@ -216,14 +272,17 @@
   {:else}
     <CharacterBanner />
 
-    <div class="tabbar" role="tablist">
+    <div class="tabbar" role="tablist" tabindex="-1" onkeydown={onTabsKeydown}>
       {#each tabs as t (t.id)}
         <button
           type="button"
           role="tab"
+          id="tab-{t.id}"
           class="tab"
           class:active={tab === t.id}
           aria-selected={tab === t.id}
+          aria-controls="tabpanel-{t.id}"
+          tabindex={tab === t.id ? 0 : -1}
           onclick={() => (tab = t.id)}
           data-testid="tab-{t.id}"
         >
@@ -232,66 +291,78 @@
       {/each}
     </div>
 
+    <!-- `role="tabpanel"` lives on the inner div, not `<main>`: `<main>` is a
+         non-interactive landmark element, and the linter (rightly) rejects
+         assigning an interactive/widget role to one — the div carries the
+         ARIA semantics, `<main>` keeps its plain landmark role. -->
     <main class="tab-content">
-      {#if tab === 'characteristics'}
-        <CharacteristicPicker />
-      {:else if tab === 'virtues_flaws'}
-        <div class="vf-tab">
-          <BalanceBar />
-          <VirtueFlawTab />
-        </div>
-      {:else if tab === 'abilities'}
-        <div class="vf-tab">
-          <XpBar />
-          <AbilityTab />
-        </div>
-      {:else if tab === 'arts'}
-        <div class="vf-tab">
-          <XpBar prefix="art-" />
-          <ArtGrid />
-        </div>
-      {:else if tab === 'spells'}
-        <div class="vf-tab">
-          <SpellBudgetBar />
-          <SpellTab />
-        </div>
-      {:else if tab === 'possessions'}
-        <div class="vf-tab">
-          <div class="tab-scroll">
-            <MagicPossessions />
+      <div
+        class="tab-panel"
+        role="tabpanel"
+        id="tabpanel-{tab}"
+        aria-labelledby="tab-{tab}"
+        tabindex="0"
+      >
+        {#if tab === 'characteristics'}
+          <CharacteristicPicker />
+        {:else if tab === 'virtues_flaws'}
+          <div class="vf-tab">
+            <BalanceBar />
+            <VirtueFlawTab />
           </div>
-        </div>
-      {:else if tab === 'equipment'}
-        <div class="vf-tab">
-          <EquipmentTab />
-        </div>
-      {:else if tab === 'details'}
-        <div class="vf-tab">
-          <div class="tab-scroll">
-            <CharacterDetails />
+        {:else if tab === 'abilities'}
+          <div class="vf-tab">
+            <XpBar />
+            <AbilityTab />
           </div>
-        </div>
-      {:else if tab === 'totals'}
-        <div class="vf-tab">
-          <div class="tab-scroll">
-            <DerivedTotalsPanel />
+        {:else if tab === 'arts'}
+          <div class="vf-tab">
+            <XpBar prefix="art-" />
+            <ArtGrid />
           </div>
-        </div>
-      {:else if tab === 'mythic_type'}
-        <div class="vf-tab">
-          <MythicCompanionTypeSelector />
-        </div>
-      {:else if tab === 'supernatural'}
-        <div class="vf-tab">
-          <SupernaturalBeing />
-        </div>
-      {:else}
-        <div class="vf-tab">
-          <div class="tab-scroll">
-            <HouseSelector />
+        {:else if tab === 'spells'}
+          <div class="vf-tab">
+            <SpellBudgetBar />
+            <SpellTab />
           </div>
-        </div>
-      {/if}
+        {:else if tab === 'possessions'}
+          <div class="vf-tab">
+            <div class="tab-scroll">
+              <MagicPossessions />
+            </div>
+          </div>
+        {:else if tab === 'equipment'}
+          <div class="vf-tab">
+            <EquipmentTab />
+          </div>
+        {:else if tab === 'details'}
+          <div class="vf-tab">
+            <div class="tab-scroll">
+              <CharacterDetails />
+            </div>
+          </div>
+        {:else if tab === 'totals'}
+          <div class="vf-tab">
+            <div class="tab-scroll">
+              <DerivedTotalsPanel />
+            </div>
+          </div>
+        {:else if tab === 'mythic_type'}
+          <div class="vf-tab">
+            <MythicCompanionTypeSelector />
+          </div>
+        {:else if tab === 'supernatural'}
+          <div class="vf-tab">
+            <SupernaturalBeing />
+          </div>
+        {:else}
+          <div class="vf-tab">
+            <div class="tab-scroll">
+              <HouseSelector />
+            </div>
+          </div>
+        {/if}
+      </div>
     </main>
 
     <!-- One shared issues panel for the whole character, pinned below the tabs. -->

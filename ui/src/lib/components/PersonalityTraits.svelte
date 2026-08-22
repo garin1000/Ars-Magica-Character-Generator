@@ -48,7 +48,7 @@
         <button
           type="button"
           class="icon-btn"
-          aria-label={store.t('spell-remove')}
+          aria-label={store.t('remove-item', { name: trait.name })}
           onclick={() => store.removePersonalityTraitAt(i)}
           data-testid="personality-remove-{i}"
         >

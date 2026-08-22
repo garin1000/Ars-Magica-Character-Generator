@@ -23,10 +23,6 @@
   // tab switch that unmounts this component (same split ArtGrid uses for the Arts).
   const filter = $derived(store.filters.spells);
 
-  // A General spell (no fixed catalogue level) is added at this default level;
-  // the level is then edited inline on its row in the selected list.
-  const GENERAL_DEFAULT_LEVEL = 5;
-
   const techniques = $derived.by((): Art[] => {
     if (!store.ruleset) return [];
     return groupArtsByType(store.ruleset).find((g) => g.artType === 'technique')?.arts ?? [];
@@ -204,6 +200,16 @@
     return store.ruleset?.ruleset.ritual_min_level ?? RITUAL_MINIMUM_LEVEL_FALLBACK;
   }
 
+  // The same floor, looked up from a chosen (selected-list) row's id rather
+  // than a source-list Spell object — used by the inline level spinner so it
+  // can never be scrubbed down into a Ritual's illegal range (S3). Falls back
+  // to the ordinary floor for an id absent from the catalogue (defensive; a
+  // selection always names a real spell in practice).
+  function minLevelForChosen(spellId: string): number {
+    const cat = store.ruleset?.ruleset.spells?.[spellId];
+    return cat ? minLearnableLevel(cat) : ORDINARY_MINIMUM_LEVEL;
+  }
+
   // Why a source spell's add control is greyed, or null when it is takeable. A
   // fixed-level spell is tested at its catalogue level; a General spell (no fixed
   // level) is tested at its minimum learnable level — never at a nonexistent
@@ -227,10 +233,14 @@
   }
 
   // Clicking a source row adds the spell. A General spell (no fixed level) is
-  // added at the default level and edited inline afterwards; a fixed-level spell
-  // ignores the level.
+  // added at its minimum learnable level (edited inline afterwards): the
+  // ordinary floor (1) for a plain spell, but the engine's ritual_min_level
+  // for a General Ritual (S3, tmp/review/review-round-2-sabine.md) — a flat
+  // literal used to be applied to every General spell regardless, which put a
+  // fresh Ritual pick straight into a blocking CODE_SPELL_RITUAL_LEGALITY
+  // error through ordinary use. A fixed-level spell ignores the level.
   function add(spell: Spell) {
-    store.addSpell(spell.id, spell.level == null ? GENERAL_DEFAULT_LEVEL : undefined);
+    store.addSpell(spell.id, spell.level == null ? minLearnableLevel(spell) : undefined);
   }
 
   // A chosen row is General (level editable inline) when its catalogue entry has
@@ -399,11 +409,11 @@
                 {#if isGeneral(chosen.spell)}
                   <input
                     type="number"
-                    min="1"
+                    min={minLevelForChosen(chosen.spell)}
                     max="255"
                     step="1"
                     aria-label={store.t('spell-general-level-label')}
-                    value={chosen.level ?? GENERAL_DEFAULT_LEVEL}
+                    value={chosen.level ?? minLevelForChosen(chosen.spell)}
                     oninput={(e) =>
                       store.setSpellLevelAt(i, Number((e.currentTarget as HTMLInputElement).value))}
                     data-testid="spell-level-input-{chosen.spell}-{i}"

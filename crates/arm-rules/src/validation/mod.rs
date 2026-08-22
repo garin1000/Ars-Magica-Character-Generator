@@ -6702,6 +6702,50 @@ mod tests {
         assert!(!all_codes(&validate(&e, &rs)).contains(&"spell_ritual_legality".to_string()));
     }
 
+    /// E3 (round-2 test-verification finding): the ritual/non-ritual level
+    /// bounds already had three of the classic four boundary cases covered
+    /// (`ritual_spell_learned_below_20_is_flagged`,
+    /// `non_ritual_spell_learned_above_50_is_flagged`,
+    /// `ritual_spell_learned_at_20_is_clean` above) — Erika's finding grepped
+    /// for the `CODE_SPELL_RITUAL_LEGALITY` constant name and missed them,
+    /// since they assert on the issue code's string value
+    /// (`"spell_ritual_legality"`) via `all_codes`, not the constant. The one
+    /// real gap is the fourth case (non-ritual at exactly the ceiling is
+    /// legal) plus the precise one-below/one-above the exact boundary, rather
+    /// than the well-clear-of-it 15/55 the existing tests use. These three
+    /// close that out.
+    ///
+    /// Ars Magica - Definitive Edition (Core Rules).md:12293 ("Ritual spells
+    /// are always at least level 20 ...").
+    #[test]
+    fn ritual_spell_learned_at_19_is_flagged() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![spell("spell.aegis_of_the_hearth", Some(19))];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"spell_ritual_legality".to_string()));
+    }
+
+    /// A General non-ritual spell learned at exactly level 50 is legal — the
+    /// fourth boundary case E3 found untested.
+    /// Ars Magica - Definitive Edition (Core Rules).md:12285 ("Formulaic and
+    /// Spontaneous spells may not have a level greater than 50").
+    #[test]
+    fn non_ritual_spell_learned_at_50_is_clean() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![spell("spell.general_ward", Some(50))];
+        assert!(!all_codes(&validate(&e, &rs)).contains(&"spell_ritual_legality".to_string()));
+    }
+
+    /// One level past the non-ritual ceiling is flagged.
+    #[test]
+    fn non_ritual_spell_learned_at_51_is_flagged() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![spell("spell.general_ward", Some(51))];
+        assert!(all_codes(&validate(&e, &rs)).contains(&"spell_ritual_legality".to_string()));
+    }
+
     /// An unknown spell id is an error.
     #[test]
     fn unknown_spell_is_flagged() {

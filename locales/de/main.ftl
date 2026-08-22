@@ -396,6 +396,13 @@ spell-mastery-abilities-label = Besondere Fähigkeiten
 spell-mastery-ability-add = Besondere Fähigkeit hinzufügen
 spell-mastery-ability-remove = Besondere Fähigkeit entfernen
 spell-remove = Entfernen
+# Generischer Entfernen-Regler für die Listenzeilen (Fertigkeiten, Tugenden &
+# Fehler, Alterungsprotokoll, Persönlichkeitsmerkmale, Dämmerungsnarben,
+# Vertrauten-Eigenschaften/-Kräfte, Magische Gegenstände, Talisman-Bindungen/
+# -Effekte, Reputationen): nennt den Inhalt der jeweiligen Zeile, damit eine
+# Sprachausgabe nicht in jeder Zeile derselben langen Liste dasselbe bloße
+# "Entfernen" vorliest. `spell-remove` bleibt für den Zauber-Reiter in Gebrauch.
+remove-item = { $name } entfernen
 # Details-Reiter: Alter, Selbstvertrauen (abgeleitet, schreibgeschützt), Persönlichkeit, Reputation.
 age-label = Alter
 apparent-age-label = Scheinbares Alter
@@ -934,7 +941,7 @@ error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.
 error-ruleset = Das Regelwerk konnte nicht geladen werden.
 error-not_loaded = Es ist noch kein Regelwerk geladen.
 error-serialize = Die Charakterdatei konnte nicht verarbeitet werden.
-error-export = Das Charakterblatt konnte nicht exportiert werden: In der aktuellen Sprache fehlt Text.
+error-export = Das Charakterblatt konnte nicht exportiert werden: In der aktuellen Sprache fehlt Text für { $missing }. Versuchen Sie es mit Englisch als Sprache erneut, oder melden Sie dies als Fehler.
 
 # Abgeleitete Spielwerte (M5/5i). Schreibgeschützte, von der Engine berechnete
 # Werte; das Panel zeigt diese Zahlen nur an und berechnet keine Mechanik selbst.

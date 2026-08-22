@@ -207,7 +207,7 @@
             <button
               type="button"
               class="icon-btn"
-              aria-label={store.t('spell-remove')}
+              aria-label={store.t('remove-item', { name: scar.description })}
               onclick={() => store.removeTwilightScarAt(i)}
               data-testid="twilight-scar-remove-{i}"
             >

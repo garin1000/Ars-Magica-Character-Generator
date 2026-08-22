@@ -115,7 +115,8 @@ fn sum(addends: &[Addend]) -> i32 {
 /// number of `i32` terms, so this is exact for every legal input and merely
 /// clamps the display value for an illegal one — mirroring the
 /// `saturating_add`/`i64`-widening pattern already used by
-/// `effective.rs::warping_points_total` and `effective.rs::charged_cost`.
+/// `effective/warping.rs::warping_points_total` and
+/// `effective/xp.rs::charged_cost`.
 fn saturating_i32_sum(terms: impl IntoIterator<Item = i32>) -> i32 {
     let total: i64 = terms.into_iter().map(i64::from).sum();
     i32::try_from(total).unwrap_or(if total > 0 { i32::MAX } else { i32::MIN })
@@ -701,6 +702,9 @@ mod tests {
           { "id": "flaw.difficult_longevity_ritual", "kind": "flaw", "classification": "in_play_effect",
             "magnitude": "major", "category": "hermetic", "entity_kinds": ["character"],
             "effects": [{ "type": "magic_total_halving", "total": "lab_longevity" }] },
+          { "id": "flaw.weak_enchanter", "kind": "flaw", "classification": "in_play_effect",
+            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "effects": [{ "type": "magic_total_halving", "total": "lab_enchanting" }] },
           { "id": "virtue.tough", "kind": "virtue", "classification": "in_play_effect",
             "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
             "effects": [{ "type": "soak_mod", "amount": 3 }] },
@@ -2565,6 +2569,98 @@ mod tests {
         assert_eq!(cell.total, 3);
     }
 
+    /// Weak Enchanter (GD3, round 2): "Halve your Lab Total whenever you
+    /// create or investigate an enchanted item. If you have a Deficiency that
+    /// counts as part of the Lab Total, apply the Deficiency first and then
+    /// halve the remaining total" (Ars Magica - Definitive Edition (Core
+    /// Rules).md:7060-7063). `HalvableTotal::LabEnchanting` was asserted by
+    /// ruleset data and folded into `InPlayMods.halvings` but nothing ever
+    /// consumed it, so the Flaw had no mechanical effect at all. `LabTotal`
+    /// gains an `enchanting` field: the ordinary (Deficient-halved) `total`,
+    /// halved again for a Weak Enchanter — the specified order.
+    #[test]
+    fn weak_enchanter_halves_the_lab_total_for_enchanting_only() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("flaw.weak_enchanter"))];
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.corpus"),
+                score: 6,
+            },
+        ];
+        let totals = lab_totals(&e, &rs);
+        let cell = totals
+            .iter()
+            .find(|t| t.technique.as_str() == "art.creo" && t.form.as_str() == "art.corpus")
+            .expect("lab cell present");
+        // total = Cr10 + Co6 = 16, not deficient; enchanting = halve(16) = 8.
+        assert_eq!(cell.total, 16);
+        assert_eq!(cell.enchanting, 8);
+    }
+
+    /// The Deficiency applies first, then Weak Enchanter halves what remains
+    /// — composing rather than being independent of each other.
+    #[test]
+    fn weak_enchanter_and_deficient_art_compose_deficiency_first() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.selections = vec![
+            Selection::new(Id::new("flaw.weak_enchanter")),
+            Selection::with_params(
+                Id::new("flaw.deficient_technique"),
+                BTreeMap::from([("art".into(), Id::new("art.creo"))]),
+            ),
+        ];
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.corpus"),
+                score: 6,
+            },
+        ];
+        let totals = lab_totals(&e, &rs);
+        let cell = totals
+            .iter()
+            .find(|t| t.technique.as_str() == "art.creo" && t.form.as_str() == "art.corpus")
+            .expect("lab cell present");
+        assert!(cell.deficient);
+        // Deficient first: halve(16) = 8; Weak Enchanter then halves that: 4.
+        assert_eq!(cell.total, 8);
+        assert_eq!(cell.enchanting, 4);
+    }
+
+    /// A cell the Flaw does not touch (no Weak Enchanter selected) reports the
+    /// ordinary total unchanged at both fields.
+    #[test]
+    fn enchanting_equals_total_without_weak_enchanter() {
+        let rs = ruleset();
+        let mut e = magus();
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.corpus"),
+                score: 6,
+            },
+        ];
+        let totals = lab_totals(&e, &rs);
+        let cell = totals
+            .iter()
+            .find(|t| t.technique.as_str() == "art.creo" && t.form.as_str() == "art.corpus")
+            .expect("lab cell present");
+        assert_eq!(cell.enchanting, cell.total);
+    }
+
     /// A CombatMod (Lame, −3 Initiative) folds into the Initiative combat total.
     #[test]
     fn combat_mod_adjusts_initiative() {
@@ -2675,10 +2771,17 @@ mod tests {
             && m.amount == 3));
     }
 
-    /// Weak Spontaneous Magic halves the spontaneous totals only; the formulaic
-    /// total is untouched (Ars Magica - Definitive Edition (Core Rules).md:7060-7063).
+    /// Weak Spontaneous Magic (GD2, round 2): "You may not exert yourself when
+    /// casting spontaneous magic, so you always divide your Casting Score by
+    /// five" (Ars Magica - Definitive Edition (Core Rules).md:7084-7086, not
+    /// `:7060-7063` — that range is Weak Enchanter, a different Flaw
+    /// entirely). The Flaw does not add a second halving on top of the normal
+    /// ÷2 fatiguing rate (that would silently produce ÷4, a rate that appears
+    /// nowhere in the rules) — it removes the fatiguing (exert-yourself)
+    /// option outright, leaving only the ÷5 rate. The formulaic total is
+    /// untouched either way.
     #[test]
-    fn weak_spontaneous_magic_halves_spontaneous_totals() {
+    fn weak_spontaneous_magic_locks_both_spontaneous_figures_to_the_divide_by_five_rate() {
         let rs = ruleset();
         let mut e = magus();
         set_char(&mut e, Characteristic::Sta, 2);
@@ -2695,16 +2798,19 @@ mod tests {
         e.selections = vec![Selection::new(Id::new("flaw.weak_spontaneous"))];
         let totals = casting_totals(&e, &rs);
         let cell = find_casting(&totals, "art.creo", "art.ignem");
-        // spont base = halve(Cr10 + Ig5 + Sta2) = halve(17) = 8; fatiguing = 4,
-        // non-fatiguing = 8/5 = 1.
-        assert_eq!(cell.spontaneous_fatiguing, 4);
-        assert_eq!(cell.spontaneous_non_fatiguing, 1);
+        // base = Cr10 + Ig5 + Sta2 = 17; the only rate available is ÷5 = 3,
+        // reported at both the fatiguing and non-fatiguing slots since the
+        // Flaw leaves no other option to report.
+        assert_eq!(cell.spontaneous_fatiguing, 3);
+        assert_eq!(cell.spontaneous_non_fatiguing, 3);
         // Formulaic is not a spontaneous total and is not halved.
         assert_eq!(cell.formulaic, 17);
     }
 
-    /// Deficient Art and Weak Spontaneous stack on spontaneous totals: halved
-    /// twice; the formulaic total is halved once (Deficient only).
+    /// Deficient Art still halves the base once before the Weak-Spontaneous
+    /// ÷5 rate applies (the two Flaws address different totals — Deficient
+    /// halves the underlying score, Weak Spontaneous fixes the *divisor* —
+    /// so they compose rather than double-halve).
     #[test]
     fn deficient_art_and_weak_spontaneous_combine() {
         let rs = ruleset();
@@ -2732,10 +2838,10 @@ mod tests {
         assert!(cell.deficient);
         // Formulaic: Deficient only → halve(17) = 8.
         assert_eq!(cell.formulaic, 8);
-        // Spontaneous base = halve(halve(17)) = halve(8) = 4; fatiguing = 2,
-        // non-fatiguing = 4/5 = 0.
-        assert_eq!(cell.spontaneous_fatiguing, 2);
-        assert_eq!(cell.spontaneous_non_fatiguing, 0);
+        // Spontaneous base = halve(17) = 8 (Deficient); ÷5 = 1, reported at
+        // both slots (Weak Spontaneous removes the fatiguing option).
+        assert_eq!(cell.spontaneous_fatiguing, 1);
+        assert_eq!(cell.spontaneous_non_fatiguing, 1);
     }
 
     /// The per-spell penetration path halves the casting score for a Deficient Art

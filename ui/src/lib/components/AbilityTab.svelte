@@ -307,7 +307,9 @@
               <button
                 type="button"
                 class="icon-btn"
-                aria-label={store.t('spell-remove')}
+                aria-label={store.t('remove-item', {
+                  name: selectedName(entry.ability, entry.parameter),
+                })}
                 onclick={() => store.removeAbilityAt(i)}
                 data-testid="remove-{entry.ability}-{i}"
               >

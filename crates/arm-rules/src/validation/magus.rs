@@ -577,41 +577,40 @@ pub(crate) fn validate_xp_pool(
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    // K3 layer 1: this is `xp_allocation`'s only call site anywhere in
-    // `validate`, so gating it here — right where the unsafe matrix build
-    // happens — is both necessary and sufficient to keep a hostile save's
-    // oversized `ability_scores`/`art_scores`/`spells`/`selections` arrays from
-    // ever reaching it, rather than duplicating the node-count formula in a
-    // separate early pass that this call site would still have to guard
-    // independently anyway. This is a malformed-input rejection, not a rules
-    // judgment, but it stays paired with the computation it protects rather
-    // than living beside the referential-integrity checks at the top of
-    // `validate` (`validate_known_refs` and friends): those check that the
-    // entity's own references resolve, a property every other validator can
-    // then assume, whereas this one exists solely to gate `xp_allocation`
-    // itself and has no meaning apart from it. The solver's `assert!` in
-    // `effective.rs` remains as layer 2, the unbypassable backstop for any
-    // caller that skips validation.
-    let scale = crate::effective::xp_solve_scale(entity, ruleset);
-    let node_count = scale.nodes();
-    if node_count > crate::effective::MAX_XP_SOLVE_NODES {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_XP_SOLVE_BOUND_EXCEEDED,
-            // The pool spans Abilities and Arts, but the Abilities step is where
-            // the XP bar lives, matching `not_enough_xp` above.
-            CreationPhase::Abilities,
-            args([
-                ("nodes", node_count.to_string()),
-                ("limit", crate::effective::MAX_XP_SOLVE_NODES.to_string()),
-                ("spends", scale.spends.to_string()),
-                ("pools", scale.flow_pools.to_string()),
-            ]),
-            None,
-        ));
-        return;
-    }
-
-    let allocation = crate::effective::xp_allocation(entity, ruleset);
+    // This is a malformed-input rejection, not a rules judgment, but it stays
+    // paired with the computation it protects rather than living beside the
+    // referential-integrity checks at the top of `validate`
+    // (`validate_known_refs` and friends): those check that the entity's own
+    // references resolve, a property every other validator can then assume,
+    // whereas this one exists solely to gate the flow solve itself and has no
+    // meaning apart from it.
+    //
+    // `checked_xp_allocation` (audit finding K1, round 2) is the single place
+    // the node-count bound is checked; this used to recompute
+    // `xp_solve_scale`/`MAX_XP_SOLVE_NODES` independently right before calling
+    // the (then-`pub`) `xp_allocation` — two places asserting the same bound
+    // with nothing keeping them in sync, which is exactly how K1 happened
+    // (two *other* callers grew directly against the unguarded function).
+    // Folding both steps into one call removes that duplication.
+    let allocation = match crate::effective::checked_xp_allocation(entity, ruleset) {
+        Ok(allocation) => allocation,
+        Err(bound) => {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_XP_SOLVE_BOUND_EXCEEDED,
+                // The pool spans Abilities and Arts, but the Abilities step is
+                // where the XP bar lives, matching `not_enough_xp` below.
+                CreationPhase::Abilities,
+                args([
+                    ("nodes", bound.nodes.to_string()),
+                    ("limit", bound.limit.to_string()),
+                    ("spends", bound.spends.to_string()),
+                    ("pools", bound.flow_pools.to_string()),
+                ]),
+                None,
+            ));
+            return;
+        }
+    };
     if allocation.total_demand > allocation.max_flow {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_NOT_ENOUGH_XP,
@@ -673,7 +672,7 @@ fn origin_args(origin: &XpPoolOrigin) -> (&'static str, String) {
 
 #[cfg(test)]
 mod tests {
-    use crate::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef};
+    use crate::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef, Selection};
     use crate::validation::{IssueSeverity, ValidationIssue, ValidationResult, validate};
     use crate::{CreationPhase, Ruleset, RulesetSources};
 
@@ -920,5 +919,89 @@ mod tests {
         let result = validate(&entity, &rs);
 
         assert!(issues_with(&result, ValidationIssue::CODE_XP_SOLVE_BOUND_EXCEEDED).is_empty());
+    }
+
+    /// A ruleset carrying `pool_count` distinct restricted-XP-granting virtues
+    /// eligible for the fixture's one real ability — puts node mass on
+    /// `flow_pools` rather than `spends` so the exact-boundary tests below stay
+    /// fast. The flow solve's cost is dominated by the number of augmenting
+    /// BFS calls, which tracks `spends` (the sink-side bottleneck) and not
+    /// `flow_pools`; a spends-heavy fixture at `n` near 2048 measurably takes
+    /// on the order of a minute in a debug build (see
+    /// `effective/xp.rs`'s `assert!` comment), which a boundary test must
+    /// avoid.
+    fn rs_with_dead_pools(pool_count: usize) -> Ruleset {
+        let mut items = String::from(ITEMS.trim_end().trim_end_matches(']'));
+        for i in 0..pool_count {
+            items.push(',');
+            items.push_str(&format!(
+                r#"{{"id":"virtue.dead_pool_{i}","kind":"virtue","classification":"narrative","magnitude":"minor","category":"general","effects":[{{"type":"restricted_ability_xp","amount":10,"abilities":["ability.artes_liberales"]}}]}}"#
+            ));
+        }
+        items.push(']');
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: &items,
+            type_profiles: TYPES,
+            abilities: Some(ABILITIES),
+            life_stages: Some(LIFE_STAGES),
+            ..RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    /// A companion holding one selection per dead pool plus a few bought
+    /// scores — paired with [`rs_with_dead_pools`].
+    fn character_with_pools_and_scores(pool_count: usize, score_count: usize) -> Entity {
+        let mut entity = character(
+            "companion",
+            vec![("ability.artes_liberales", None, 1); score_count],
+        );
+        entity.xp_pool = 1_000_000;
+        entity.selections = (0..pool_count)
+            .map(|i| Selection::new(Id::new(format!("virtue.dead_pool_{i}"))))
+            .collect();
+        entity
+    }
+
+    /// E4 (round-2 test-verification finding): `MAX_XP_SOLVE_NODES`'s exact
+    /// boundary was untested — the two tests above use node counts far from
+    /// the limit (3003 and 503), so an off-by-one in `node_count >
+    /// MAX_XP_SOLVE_NODES` (e.g. `>=` instead of `>`) would silently reject a
+    /// legal character at exactly the bound. Exactly at the bound must
+    /// validate clean.
+    #[test]
+    fn exactly_at_the_solve_bound_is_not_rejected() {
+        let pools = crate::effective::MAX_XP_SOLVE_NODES - 3 - 5;
+        let rs = rs_with_dead_pools(pools);
+        let entity = character_with_pools_and_scores(pools, 5);
+
+        let result = validate(&entity, &rs);
+
+        assert!(issues_with(&result, ValidationIssue::CODE_XP_SOLVE_BOUND_EXCEEDED).is_empty());
+    }
+
+    /// The mirror of the above: one node past the bound must still be
+    /// rejected, naming the exact counts.
+    #[test]
+    fn one_node_past_the_solve_bound_is_rejected() {
+        let rs = rs();
+        let scores: Vec<(&str, Option<&str>, u8)> =
+            vec![("ability.artes_liberales", None, 1); 2046];
+        let entity = character("companion", scores);
+
+        let result = validate(&entity, &rs);
+
+        let errors = issues_with(&result, ValidationIssue::CODE_XP_SOLVE_BOUND_EXCEEDED);
+        assert_eq!(errors.len(), 1, "{:?}", result.issues);
+        assert_eq!(
+            errors[0].args.get("nodes").cloned(),
+            Some("2049".to_string())
+        );
+        assert_eq!(
+            errors[0].args.get("limit").cloned(),
+            Some("2048".to_string())
+        );
     }
 }

@@ -313,7 +313,17 @@
                     <button
                       type="button"
                       class="icon-btn"
-                      aria-label={store.t('spell-remove')}
+                      aria-label={store.t('remove-item', {
+                        name: store.ruleset
+                          ? displayName(
+                              store.ruleset,
+                              selection.ref,
+                              selection.params,
+                              hint,
+                              (_key, value) => resolveParamValue(selection.params, value),
+                            )
+                          : selection.ref,
+                      })}
                       onclick={() => store.removeSelectionAt(index)}
                       data-testid="remove-{selection.ref}-{index}"
                     >

@@ -396,6 +396,12 @@ spell-mastery-abilities-label = Special abilities
 spell-mastery-ability-add = Add special ability
 spell-mastery-ability-remove = Remove special ability
 spell-remove = Remove
+# Generic per-row remove control across the item lists (Abilities, Virtues &
+# Flaws, aging log, Personality Traits, Twilight Scars, Familiar traits/powers,
+# Magic Devices, Talisman attunements/effects, Reputations): names the row's own
+# content so a screen reader does not hear the same bare "Remove" repeated on
+# every row of a long list. `spell-remove` remains in use by the Spells tab.
+remove-item = Remove { $name }
 # Details tab: age, Confidence (read-only, derived), Personality Traits, Reputations.
 age-label = Age
 apparent-age-label = Apparent age
@@ -925,7 +931,7 @@ error-io = A file could not be read or written.
 error-ruleset = The ruleset could not be loaded.
 error-not_loaded = No ruleset is loaded yet.
 error-serialize = The character file could not be processed.
-error-export = The character sheet could not be exported: some text is missing from the current language.
+error-export = The character sheet could not be exported: the current language is missing text for { $missing }. Try switching to English and exporting again, or report this as a bug.
 
 # Derived play-stat read-out (M5/5i). Read-only totals computed by the engine;
 # the panel renders these numbers and computes no mechanics itself.

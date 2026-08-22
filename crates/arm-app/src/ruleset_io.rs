@@ -19,14 +19,14 @@ use arm_rules::{
     ValidationResult, WarpingOwed, ability_bonuses, ability_score_floors, age_ability_cap,
     aging_schedule, aging_total, apply_childhood_package, art_bonuses, characteristic_aging_drops,
     characteristic_bonuses, characteristic_caps, characteristic_floors,
-    characteristic_points_granted, confidence, decrepitude_score, effective_characteristics,
-    effective_might, effective_point_ceilings, entity_grants, item_level_budget, item_level_used,
-    life_stage_spell_levels, longevity_bonus, magus_minimum_abilities, power_levels_budget,
-    powers_used, reputation_grants, resolve_outcome, resolve_year, revert_year, size,
-    spell_level_caps, spell_levels_base, spell_levels_bonus, spell_levels_budget,
-    spell_levels_used, spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
-    supernatural_free_slots, true_faith, validate, warping, warping_owed, warping_owed_grants,
-    xp_allocation,
+    characteristic_points_granted, checked_xp_allocation, confidence, decrepitude_score,
+    effective_characteristics, effective_might, effective_point_ceilings, entity_grants,
+    item_level_budget, item_level_used, life_stage_spell_levels, longevity_bonus,
+    magus_minimum_abilities, power_levels_budget, powers_used, reputation_grants, resolve_outcome,
+    resolve_year, revert_year, size, spell_level_caps, spell_levels_base, spell_levels_bonus,
+    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
+    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, validate, warping,
+    warping_owed, warping_owed_grants,
 };
 use serde::Serialize;
 
@@ -48,6 +48,14 @@ pub struct EffectiveScores {
     pub characteristic_caps: BTreeMap<Characteristic, i32>,
     /// Characteristic → lowest buyable score (Poor Characteristic lowers it).
     pub characteristic_floors: BTreeMap<Characteristic, i32>,
+    /// The point-buy cost of the entity's Characteristics, netting gains against
+    /// spends — engine-authoritative, so the frontend never recomputes it.
+    ///
+    /// It exists because `ui/src/lib/derive.ts` used to hold its own copy of the
+    /// point-buy table (audit findings VA1/GF1/GD4, raised independently by three
+    /// reviewers): a second implementation of a rule the engine already owns, free
+    /// to drift from `CharacteristicRules::total_cost` with nothing to catch it.
+    pub characteristic_points_used: i32,
     /// Total experience the entity's Ability+Art spends demand, after Affinity
     /// reductions — the authoritative "spent" the UI shows (it must not recompute
     /// it without Affinity).
@@ -345,7 +353,8 @@ pub struct ReputationGrant {
 /// The XP-bar slice of [`EffectiveScores`]: the max-flow allocation's
 /// demand/used/pool/bonus/restricted-pools, plus the life-stage budget the
 /// guided flow substitutes for an editable pool. Grouped because all of it
-/// reads off one call to [`xp_allocation`] plus one sibling life-stage lookup.
+/// reads off one call to [`checked_xp_allocation`] plus one sibling
+/// life-stage lookup.
 struct XpFields {
     total_demand: u32,
     general_used: u32,
@@ -356,18 +365,41 @@ struct XpFields {
     life_stage: Option<LifeStageBudget>,
 }
 
+/// Audit finding K1 (round 2): this used to call the raw, now-`pub(crate)`
+/// `xp_allocation` directly, with no check that the entity's selections fit
+/// the flow-solve node bound. A crafted `.armc` with an oversized
+/// `ability_scores`/`art_scores`/`spells` array reached the solver's internal
+/// `assert!` on a plain File → Open (`effective_scores` is one of the calls
+/// `revalidate()` fires alongside `validateEntity`, so the panic could win the
+/// race against the friendly `CODE_XP_SOLVE_BOUND_EXCEEDED` rejection). An
+/// over-bound entity now degrades to all-zero/empty XP fields instead: the
+/// concurrent `validate_entity` call (which runs the identical check via
+/// `checked_xp_allocation`) is what actually tells the user why, so this
+/// command staying silent about the specific reason is not a regression —
+/// what matters is that it returns a value instead of unwinding.
 fn xp_fields(entity: &Entity, ruleset: &Ruleset) -> XpFields {
-    let allocation = xp_allocation(entity, ruleset);
-    XpFields {
-        total_demand: allocation.total_demand,
-        general_used: allocation.general_used,
-        general_pool: allocation.general_pool,
-        general_bonus: allocation.general_bonus,
-        max_flow: allocation.max_flow,
-        restricted: allocation.restricted,
-        life_stage: ruleset
-            .life_stages()
-            .and_then(|rules| rules.budget(entity, ruleset)),
+    let life_stage = ruleset
+        .life_stages()
+        .and_then(|rules| rules.budget(entity, ruleset));
+    match checked_xp_allocation(entity, ruleset) {
+        Ok(allocation) => XpFields {
+            total_demand: allocation.total_demand,
+            general_used: allocation.general_used,
+            general_pool: allocation.general_pool,
+            general_bonus: allocation.general_bonus,
+            max_flow: allocation.max_flow,
+            restricted: allocation.restricted,
+            life_stage,
+        },
+        Err(_) => XpFields {
+            total_demand: 0,
+            general_used: 0,
+            general_pool: 0,
+            general_bonus: 0,
+            max_flow: 0,
+            restricted: Vec::new(),
+            life_stage,
+        },
     }
 }
 
@@ -611,6 +643,11 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         art_bonuses: characteristics.art_bonuses,
         characteristic_caps: characteristics.caps,
         characteristic_floors: characteristics.floors,
+        // A ruleset that declares no Characteristic table prices nothing, so zero
+        // is the honest answer rather than a panic.
+        characteristic_points_used: ruleset
+            .characteristic_rules()
+            .map_or(0, |rules| rules.total_cost(&entity.characteristics)),
 
         xp_total_demand: xp.total_demand,
         xp_general_used: xp.general_used,
@@ -1295,5 +1332,68 @@ mod tests {
             ensure_extension(PathBuf::from("/tmp/testchar.json"), "armc"),
             PathBuf::from("/tmp/testchar.json")
         );
+    }
+
+    /// K1 (round-2 CRITICAL): `xp_fields` (behind `effective_scores_loaded`,
+    /// which the `effective_scores` Tauri command calls on every File → Open)
+    /// used to call the raw `xp_allocation` directly with no flow-solve
+    /// node-count check, reaching its internal `assert!` for a save whose
+    /// `ability_scores` exceeds `MAX_XP_SOLVE_NODES` — a panic on a plain
+    /// File → Open of a hostile save, racing the friendly
+    /// `CODE_XP_SOLVE_BOUND_EXCEEDED` the concurrent `validate_entity` call
+    /// would otherwise produce. Must degrade to all-zero/empty XP fields
+    /// instead.
+    #[test]
+    fn effective_scores_loaded_degrades_the_xp_fields_over_the_solve_bound() {
+        use arm_rules::{AbilityScore, EntityKind, RulesetRef};
+
+        // The engine requires at least one V/F category-tagged "personality"
+        // item once a catalogue is shipped at all.
+        const ITEMS: &str = r#"[
+          { "id": "flaw.filler", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] }
+        ]"#;
+        const TYPES: &str = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"], "creation_phases": [] }
+        ]"#;
+        const ABILITIES: &str = r#"{
+          "advancement": [{ "score": 1, "total_xp": 5 }],
+          "abilities": [{ "id": "ability.artes_liberales", "category": "general" }]
+        }"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: TYPES,
+            abilities: Some(ABILITIES),
+            ..RulesetSources::default()
+        })
+        .unwrap();
+
+        let mut e = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        e.xp_pool = 1_000_000;
+        // One node past MAX_XP_SOLVE_NODES: rejected before the solve runs, so
+        // this stays fast regardless of count.
+        e.ability_scores = (0..2049)
+            .map(|_| AbilityScore {
+                ability: Id::new("ability.artes_liberales"),
+                parameter: None,
+                score: 1,
+                specialty: None,
+            })
+            .collect();
+
+        let scores = effective_scores_loaded(&e, &rs);
+        assert_eq!(scores.xp_total_demand, 0);
+        assert_eq!(scores.xp_general_used, 0);
+        assert_eq!(scores.xp_general_pool, 0);
+        assert_eq!(scores.xp_general_bonus, 0);
+        assert_eq!(scores.xp_max_flow, 0);
+        assert!(scores.restricted_xp_pools.is_empty());
     }
 }

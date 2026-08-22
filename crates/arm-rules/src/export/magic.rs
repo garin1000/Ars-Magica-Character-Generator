@@ -76,6 +76,12 @@ impl<'a> Doc<'a> {
     /// Longevity Ritual as stored, the talisman, and the familiar's statblock.
     pub(super) fn write_magic_items(&self, out: &mut String) {
         let e = self.entity;
+        // K2 (audit finding, round 2): `Entity::normalize()` clamps `aura` to
+        // `AURA_MODIFIER_MIN..=AURA_MODIFIER_MAX`, but only the save path calls
+        // it before writing — this export path renders the entity as loaded,
+        // so a hand-edited out-of-range `aura` is clamped here for display,
+        // consistent with the ceiling every other consumer treats it as.
+        let aura = e.aura.clamp(AURA_MODIFIER_MIN, AURA_MODIFIER_MAX);
         let devices = self.leveled_rows(&e.devices, "device-level-label");
         let mut body = String::new();
         if !devices.is_empty() {
@@ -85,12 +91,12 @@ impl<'a> Doc<'a> {
         self.write_longevity(&mut body);
         self.write_talisman(&mut body);
         self.write_familiar(&mut body);
-        if e.aura == 0 && body.is_empty() {
+        if aura == 0 && body.is_empty() {
             return;
         }
         self.section(out, 2, "tab-possessions");
-        if e.aura != 0 {
-            self.labelled(out, "aura-label", &signed(e.aura));
+        if aura != 0 {
+            self.labelled(out, "aura-label", &signed(aura));
             out.push('\n');
         }
         out.push_str(&body);

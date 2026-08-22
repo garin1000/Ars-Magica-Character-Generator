@@ -162,7 +162,7 @@
           <button
             type="button"
             class="icon-btn"
-            aria-label={store.t('spell-remove')}
+            aria-label={store.t('remove-item', { name: trait.name })}
             onclick={() => store.removeFamiliarPersonalityTraitAt(i)}
             data-testid="familiar-personality-remove-{i}"
           >
@@ -230,7 +230,7 @@
           <button
             type="button"
             class="icon-btn"
-            aria-label={store.t('spell-remove')}
+            aria-label={store.t('remove-item', { name: power.name })}
             onclick={() => store.removeFamiliarPowerAt(i)}
             data-testid="familiar-power-remove-{i}"
           >

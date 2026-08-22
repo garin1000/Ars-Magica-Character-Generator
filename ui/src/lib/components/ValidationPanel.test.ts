@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
@@ -135,30 +137,49 @@ describe('ValidationPanel', () => {
     expect(body).toMatch(/Tugend|Fehler/);
   });
 
-  // Severity must not be color-only (WCAG 1.4.1): a screen-reader-only prefix
-  // names it explicitly, since `class="issue {severity}"` / `data-severity` are
-  // both invisible to assistive tech.
-  it('prefixes each issue with a screen-reader-only severity label', () => {
+  // S2 (tmp/review/review-round-2-sabine.md): round 1's fix made the severity
+  // prefix `sr-only`, which is invisible to SIGHTED users — so a colourblind
+  // sighted user still had only the border/background hue swap to go on,
+  // still color-only in practice. The real fix (verified against
+  // ValidationPanel.svelte + app.css) renders the severity word VISIBLY via
+  // the `issue-severity` class (bold, uppercase, non-`sr-only`) — a different
+  // WORD, not just a different hue — and app.css additionally gives the Error
+  // row a non-colour `::after { content: ' !' }` glyph mirroring the wizard
+  // rail's own blocked-step marker. CSS `::after` content is invisible to
+  // `render()`'s string output, so only the visible text itself is asserted
+  // here; the glyph rule is read directly from app.css instead.
+  it('renders each issue with a visible (not screen-reader-only) severity label', () => {
     const body = render(ValidationPanel).body;
-    // Svelte's SSR renderer hoists the trailing space in `{expr}: </span>` to
-    // just outside the closing tag; the announced text ("Error: Virtue
-    // points…") is unaffected either way.
     expect(issueMarkup(body, 'unbalanced_virtues')).toMatch(
-      /<span class="sr-only">Error:<\/span> /,
+      /<span class="issue-severity">Error:<\/span> /,
     );
     expect(issueMarkup(body, 'characteristic_points_unspent')).toMatch(
-      /<span class="sr-only">Warning:<\/span> /,
+      /<span class="issue-severity">Warning:<\/span> /,
     );
+    // Not screen-reader-only: `sr-only` visually hides content, which would
+    // reintroduce the exact colour-only failure this fix closes.
+    expect(issueMarkup(body, 'unbalanced_virtues')).not.toContain('sr-only');
+    expect(issueMarkup(body, 'characteristic_points_unspent')).not.toContain('sr-only');
   });
 
-  it('localizes the severity prefix to German', () => {
+  it('gives the blocking Error severity a non-colour marker beyond the visible word', () => {
+    // Verified directly against app.css rather than rendered markup: `::after`
+    // pseudo-element content never appears in server-rendered HTML, so this is
+    // the only way to pin the rule without a client-mounted computed-style
+    // check, which would be disproportionate for a static CSS selector.
+    const appCssPath = fileURLToPath(new URL('../../app.css', import.meta.url));
+    const css = readFileSync(appCssPath, 'utf-8');
+    expect(css).toMatch(/\.issue\.error\s+\.issue-severity::after\s*{\s*content:\s*' !';?\s*}/);
+  });
+
+  it('localizes the visible severity label to German', () => {
     store.lang = 'de';
     const body = render(ValidationPanel).body;
     expect(issueMarkup(body, 'unbalanced_virtues')).toMatch(
-      /<span class="sr-only">Fehler:<\/span> /,
+      /<span class="issue-severity">Fehler:<\/span> /,
     );
     expect(issueMarkup(body, 'characteristic_points_unspent')).toMatch(
-      /<span class="sr-only">Warnung:<\/span> /,
+      /<span class="issue-severity">Warnung:<\/span> /,
     );
   });
 });
