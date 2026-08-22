@@ -1,7 +1,7 @@
 //! Thin `#[tauri::command]` shims. They resolve the rules directory and managed
 //! state, then delegate to the webview-free logic in [`crate::ruleset_io`].
 
-use std::sync::{Mutex, RwLock};
+use std::sync::{Mutex, RwLock, RwLockReadGuard};
 
 use arm_rules::{Characteristic, Entity, Id, LocalizedRuleset, ValidationMode, ValidationResult};
 use tauri::path::BaseDirectory;
@@ -87,6 +87,28 @@ pub fn update_close_guard(dirty: bool, labels: CloseGuardLabels, state: State<'_
     guard.report_dirty_state(dirty, labels);
 }
 
+/// Locks the cached ruleset for reading. Every command that needs a loaded
+/// ruleset starts here, one line before [`require_loaded`].
+///
+/// Split into two helpers rather than one "give me the `&LocalizedRuleset`"
+/// function: `RwLockReadGuard` has no stable `.map()` on this toolchain, so a
+/// single helper cannot hand back a reference into a guard it dropped on
+/// return. Naming the guard at the call site keeps it alive exactly as long as
+/// the reference [`require_loaded`] derives from it — the same lifetime shape
+/// the old, duplicated two-liner had, just written once.
+fn ruleset_guard<'a>(
+    state: &'a State<'_, AppState>,
+) -> RwLockReadGuard<'a, Option<LocalizedRuleset>> {
+    state.ruleset.read().expect("ruleset lock poisoned")
+}
+
+/// The other half of the pair `ruleset_guard` starts: turns "no ruleset
+/// loaded yet" into the one [`AppError::NotLoaded`] every command reports it
+/// with, so that mapping can only be expressed in one place.
+fn require_loaded(ruleset: Option<&LocalizedRuleset>) -> Result<&LocalizedRuleset, AppError> {
+    ruleset.ok_or(AppError::NotLoaded)
+}
+
 /// Loads the ruleset for `lang`, caches it in managed state, and returns the
 /// localized snapshot (mechanics + display text) for the frontend.
 #[tauri::command]
@@ -136,8 +158,8 @@ pub fn validate_entity(
     mode: ValidationMode,
     state: State<'_, AppState>,
 ) -> Result<ValidationResult, AppError> {
-    let guard = state.ruleset.read().expect("ruleset lock poisoned");
-    let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
+    let guard = ruleset_guard(&state);
+    let ruleset = require_loaded(guard.as_ref())?;
     Ok(ruleset_io::validate_loaded(&entity, &ruleset.ruleset, mode))
 }
 
@@ -149,8 +171,8 @@ pub fn effective_scores(
     entity: Entity,
     state: State<'_, AppState>,
 ) -> Result<EffectiveScores, AppError> {
-    let guard = state.ruleset.read().expect("ruleset lock poisoned");
-    let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
+    let guard = ruleset_guard(&state);
+    let ruleset = require_loaded(guard.as_ref())?;
     Ok(ruleset_io::effective_scores_loaded(
         &entity,
         &ruleset.ruleset,
@@ -171,8 +193,8 @@ pub fn apply_childhood_package(
     slot_values: std::collections::BTreeMap<String, String>,
     state: State<'_, AppState>,
 ) -> Result<ChildhoodApplication, AppError> {
-    let guard = state.ruleset.read().expect("ruleset lock poisoned");
-    let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
+    let guard = ruleset_guard(&state);
+    let ruleset = require_loaded(guard.as_ref())?;
     Ok(ruleset_io::apply_childhood_package_loaded(
         &entity,
         &Id::new(package_id),
@@ -202,8 +224,8 @@ pub fn aging_preview(
     crisis_die: Option<i32>,
     state: State<'_, AppState>,
 ) -> Result<AgingProjection, AppError> {
-    let guard = state.ruleset.read().expect("ruleset lock poisoned");
-    let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
+    let guard = ruleset_guard(&state);
+    let ruleset = require_loaded(guard.as_ref())?;
     Ok(ruleset_io::aging_preview_loaded(
         &entity,
         &ruleset.ruleset,
@@ -233,8 +255,8 @@ pub fn aging_apply(
     crisis_die: Option<i32>,
     state: State<'_, AppState>,
 ) -> Result<AgingApplication, AppError> {
-    let guard = state.ruleset.read().expect("ruleset lock poisoned");
-    let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
+    let guard = ruleset_guard(&state);
+    let ruleset = require_loaded(guard.as_ref())?;
     Ok(ruleset_io::aging_apply_loaded(
         &entity,
         &ruleset.ruleset,
@@ -253,8 +275,8 @@ pub fn aging_revert(
     age: u32,
     state: State<'_, AppState>,
 ) -> Result<AgingReversion, AppError> {
-    let guard = state.ruleset.read().expect("ruleset lock poisoned");
-    let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
+    let guard = ruleset_guard(&state);
+    let ruleset = require_loaded(guard.as_ref())?;
     Ok(ruleset_io::aging_revert_loaded(
         &entity,
         &ruleset.ruleset,
@@ -272,8 +294,8 @@ pub fn derived_totals(
     entity: Entity,
     state: State<'_, AppState>,
 ) -> Result<DerivedTotals, AppError> {
-    let guard = state.ruleset.read().expect("ruleset lock poisoned");
-    let ruleset = guard.as_ref().ok_or(AppError::NotLoaded)?;
+    let guard = ruleset_guard(&state);
+    let ruleset = require_loaded(guard.as_ref())?;
     Ok(arm_rules::derived_totals(&entity, &ruleset.ruleset))
 }
 
@@ -452,7 +474,10 @@ pub async fn export_markdown(
         },
     };
 
-    let guard = state.ruleset.read().expect("ruleset lock poisoned");
+    // `export_markdown_to_path` (owned by `ruleset_io.rs`) does its own
+    // `NotLoaded` check on the `Option`, so only the lock-acquisition half of
+    // the pair applies here.
+    let guard = ruleset_guard(&state);
     ruleset_io::export_markdown_to_path(&entity, guard.as_ref(), &labels, &target)?;
     Ok(Some(target.to_string_lossy().into_owned()))
 }

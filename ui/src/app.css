@@ -353,6 +353,23 @@ button:disabled {
   align-items: center;
 }
 
+/* The `role="tabpanel"` wrapper inside `.tab-content` carries ARIA only — `<main>`
+   is a landmark and a linter rightly refuses a widget role on it. Layout-wise the
+   wrapper must be INVISIBLE: it repeats its parent's flex column so the panels
+   inside still size against the tab area rather than against an unconstrained box.
+   Without this the inner scrollports have nothing to shrink against and the tab
+   area overflows at the default window size — caught by `tab-area.e2e.js`
+   ("restores the full-height layout when the window grows back"), which measured
+   a `mainScrollHeight` of ~12000px against the client height. */
+.tab-panel {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 /* V/F and Abilities tab bodies fill width + height: a bar (balance / XP) above a
    source-beside-selected row that takes the rest. */
 .vf-tab {
@@ -1517,6 +1534,24 @@ ul {
 .issue.warning {
   border-left-color: var(--warning);
   background: rgba(216, 166, 87, 0.12);
+}
+
+/* Visible severity badge (WCAG 1.4.1): the bold, uppercase word itself ("ERROR"
+   vs "WARNING") is the non-colour channel — different text, not just a hue swap
+   on the border/background above. The Error row also gets the same trailing
+   "!" glyph the wizard rail already uses for a blocking step, so the two
+   surfaces read consistently at a glance without inventing a second, less
+   legible symbol for Warning. */
+.issue-severity {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  margin-right: 0.3rem;
+}
+
+.issue.error .issue-severity::after {
+  content: ' !';
 }
 
 /* Validation summary below the selected frame (outside the gold border),

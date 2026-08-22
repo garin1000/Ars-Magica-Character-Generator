@@ -33,7 +33,7 @@
         <button
           type="button"
           class="icon-btn"
-          aria-label={store.t('spell-remove')}
+          aria-label={store.t('remove-item', { name: reputation.content })}
           onclick={() => store.removeReputationAt(i)}
           data-testid="reputation-remove-{i}"
         >

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { characteristicPointsUsed, formatSigned } from '../derive';
+  import { formatSigned } from '../derive';
   import { tooltip } from '../actions';
   import { CHARACTERISTICS, type Characteristic } from '../types';
 
@@ -9,7 +9,10 @@
   // characteristic is the base cap/floor, widened by Great/Poor Characteristic.
   const tableMax = $derived(rules ? Math.max(...rules.costs.map((c) => c.score)) : 3);
   const tableMin = $derived(rules ? Math.min(...rules.costs.map((c) => c.score)) : -3);
-  const used = $derived(characteristicPointsUsed(rules, store.entity.characteristics));
+  // Engine-authoritative: the point-buy cost comes from the effective-scores
+  // payload rather than a second copy of the table here (audit finding VA1). Zero
+  // until that call returns, matching how `budget` treats its own grant below.
+  const used = $derived(store.effective?.characteristic_points_used ?? 0);
   // Improved Characteristics raises the buy budget above the ruleset base; the
   // engine reports the grant (0 until the effective-scores call returns).
   const budget = $derived(

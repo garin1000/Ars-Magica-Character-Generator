@@ -441,6 +441,11 @@ export interface EffectiveScores {
   art_bonuses: ArtBonus[];
   characteristic_caps: Partial<Record<Characteristic, number>>;
   characteristic_floors: Partial<Record<Characteristic, number>>;
+  /** Engine-authoritative point-buy cost of the Characteristics, gains netted
+   *  against spends. Never recompute this here — a second copy of the point-buy
+   *  table in `derive.ts` was audit finding VA1. Optional only because the payload
+   *  is absent until the first `effectiveScores` call returns. */
+  characteristic_points_used?: number;
   xp_total_demand: number;
   xp_general_used: number;
   // The most demand the pools can fund; equals xp_total_demand iff legal, so

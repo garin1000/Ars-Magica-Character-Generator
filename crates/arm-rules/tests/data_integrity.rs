@@ -1064,7 +1064,12 @@ fn shipped_skilled_parens_raises_both_budgets() {
     );
     e.xp_pool = 240;
     assert_eq!(arm_rules::spell_levels_budget(120, &e, &rs), 150);
-    assert_eq!(arm_rules::xp_allocation(&e, &rs).general_pool, 300);
+    assert_eq!(
+        arm_rules::checked_xp_allocation(&e, &rs)
+            .unwrap()
+            .general_pool,
+        300
+    );
 }
 
 /// The shipped Elemental Magic (Ars Magica - Definitive Edition (Core Rules).md:3731-3737) redistributes Art-XP over the four
@@ -1105,7 +1110,12 @@ fn shipped_weak_parens_lowers_both_budgets() {
     let mut e = entity("magus", vec![Selection::new(Id::new("flaw.weak_parens"))]);
     e.xp_pool = 240;
     assert_eq!(arm_rules::spell_levels_budget(120, &e, &rs), 90);
-    assert_eq!(arm_rules::xp_allocation(&e, &rs).general_pool, 180);
+    assert_eq!(
+        arm_rules::checked_xp_allocation(&e, &rs)
+            .unwrap()
+            .general_pool,
+        180
+    );
 }
 
 #[test]
@@ -1501,7 +1511,7 @@ fn deficient_technique_cannot_target_a_form() {
 /// dictates, computed elsewhere.
 #[test]
 fn in_play_effects_do_not_perturb_creation_totals() {
-    use arm_rules::{characteristic_cap, effective_ability_score, xp_allocation};
+    use arm_rules::{characteristic_cap, checked_xp_allocation, effective_ability_score};
     let rs = load_ruleset_with_spells();
 
     let mut base = entity("magus", vec![]);
@@ -1530,8 +1540,10 @@ fn in_play_effects_do_not_perturb_creation_totals() {
     ];
 
     assert_eq!(
-        xp_allocation(&base, &rs).total_demand,
-        xp_allocation(&with_effects, &rs).total_demand,
+        checked_xp_allocation(&base, &rs).unwrap().total_demand,
+        checked_xp_allocation(&with_effects, &rs)
+            .unwrap()
+            .total_demand,
         "in-play effects must not change XP demand"
     );
     assert_eq!(

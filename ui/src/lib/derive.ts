@@ -7,7 +7,6 @@ import type {
   AbilityScore,
   Art,
   ArtType,
-  Characteristic,
   CharacteristicRules,
   ChildhoodEntry,
   ChildhoodPackage,
@@ -590,40 +589,6 @@ export function balance(localized: LocalizedRuleset, entity: Entity): Balance {
 }
 
 /**
- * Total Characteristic points spent for the given scores against the cost table.
- * Positive cost rows spend points, negative ("Gain N") rows refund them; a score
- * with no table row contributes 0 (it is reported separately as out-of-range).
- *
- * KNOWN DRIFT RISK: this duplicates `CharacteristicRules::total_cost`
- * (`crates/arm-rules/src/characteristics.rs`) as a second, independent
- * implementation, which the project's "engine is the single evaluation path"
- * rule normally forbids. It exists only because the engine does not yet surface
- * a combined total on `EffectiveScores`. The two are pinned to the same
- * rulebook worked example in `derive.test.ts` (`characteristicPointsUsed`
- * describe block) and `characteristics.rs`'s
- * `total_cost_nets_gains_against_spends` test, so a future change to either
- * cost algorithm without updating the other fails at least one of those tests.
- * The correct long-term fix is to add a computed field (e.g.
- * `characteristic_points_used`) to `EffectiveScores` in
- * `crates/arm-app/src/ruleset_io.rs`, wired through `effective_scores_loaded`,
- * and have `CharacteristicPicker.svelte` read it from `store.effective` instead
- * of calling this function — at which point this function and its test should
- * be deleted.
- */
-export function characteristicPointsUsed(
-  rules: CharacteristicRules | null | undefined,
-  characteristics: Partial<Record<Characteristic, number>> | undefined,
-): number {
-  if (!rules || !characteristics) return 0;
-  let total = 0;
-  for (const score of Object.values(characteristics)) {
-    const row = rules.costs.find((c) => c.score === score);
-    if (row) total += row.cost;
-  }
-  return total;
-}
-
-/**
  * Total XP committed to per-spell Spell Mastery Abilities. A spell's Mastery rises
  * like an Ability, so it is priced from the same advancement table; unmastered
  * spells (0/null) cost nothing. Two Flawless-Magic reductions mirror the engine's
@@ -631,6 +596,31 @@ export function characteristicPointsUsed(
  * the table cost *above* the floor is charged; and when advancement is `doubled`
  * that remainder is halved (rounded up). Spent from the Mastered-Spells pool plus
  * the general pool. Source: Core Rules.md:3887-3889, :4471-4474.
+ *
+ * KNOWN DRIFT RISK (GD4, tmp/review/review-round-2-gerda-derived.md): this
+ * duplicates the mastery-spend leg of `crates/arm-rules/src/effective/xp.rs`'s
+ * `build_spends` as a second, independent implementation — the same class of
+ * problem `characteristicPointsUsed` above documents, pending an engine-surfaced
+ * mastery-pool `used` figure on `EffectiveScores` (the value is already computed
+ * inside `xp_allocation` but deliberately not surfaced, per the "the mastery
+ * pool is flow-only" comment at `effective/xp.rs:568-570`). The `doubled`
+ * boolean below is ALSO NOT a general Affinity reduction: the engine's
+ * `charged_cost(payable, affinity)` handles any `(num, den)` ratio, but this
+ * collapses it to `Math.ceil(payable / 2)`, correct only for a 2/1 ratio.
+ * Verified against the shipped ruleset (2026-08 round 2): exactly one item
+ * grants Spell Mastery (`rules/core/virtues_flaws.json`'s Flawless Magic entry,
+ * `advancement_num: 2, advancement_den: 1`), so no live call site can hit a
+ * different ratio today — but the engine's `Effect::GrantsSpellMastery` already
+ * supports an arbitrary ratio (`effective/spell.rs:311-326`), so a future
+ * Virtue/Flaw with a different one would silently diverge here while the
+ * engine-computed (validated/exported) total updated correctly. The test below
+ * is pinned to the exact same worked example as
+ * `effective.rs::flawless_magic_floors_first_mastery_free_and_halves_the_rest`,
+ * so a change to either side's arithmetic without the other fails a test on
+ * both. The correct long-term fix is the same shape as
+ * `characteristicPointsUsed`'s: surface the mastery pool's `used` amount on
+ * `EffectiveScores` and have `SpellBudgetBar.svelte` read it from
+ * `store.effective` instead of calling this function.
  */
 export function spellMasteryXpSpent(
   advancement: { score: number; total_xp: number }[] | undefined,
@@ -1613,32 +1603,4 @@ export function groupArtsByType(localized: LocalizedRuleset): ArtGroup[] {
 /** Highest whole Art score the advancement table can price (the spinner ceiling). */
 export function maxArtScore(artAdvancement: { score: number }[] | undefined): number {
   return maxAbilityScore(artAdvancement);
-}
-
-/**
- * First-frame placeholder for total XP committed, used only until the engine's
- * authoritative `XpAllocation` (`store.effective.xp_total_demand`) arrives.
- *
- * It deliberately does NOT re-derive the allocation in TS: pricing here would
- * fork the engine's single evaluation path and ignore Affinity (½× cost) and the
- * restricted/general split, so it could momentarily flash a wrong figure. A
- * neutral `0` placeholder is shown for the one frame before `store.effective`
- * replaces it. Parameters are kept for the call sites; they are intentionally
- * unused.
- *
- * Note on the post-edit transient: this stub is reached ONLY while
- * `store.effective` is nullish (the very first frame). During the 150 ms
- * validate debounce after an edit, `store.effective` is present-but-stale, so the
- * bars briefly show the PREVIOUS engine total (which, right after lowering a
- * value, reads as slightly-too-much spent) until revalidation lands. That
- * transient self-corrects within the debounce window; it is not fixed here
- * because a correct optimistic figure would require re-running the engine's
- * max-flow XP allocation in TS, forking the single evaluation path.
- */
-export function totalXpSpent(localized: LocalizedRuleset, entity: Entity): number {
-  // Params retained for the call sites but intentionally unused: pricing here is
-  // deliberately avoided (see doc comment above).
-  void localized;
-  void entity;
-  return 0;
 }

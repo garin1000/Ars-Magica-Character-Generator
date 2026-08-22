@@ -1273,7 +1273,7 @@ impl Ruleset {
     /// which is the combat Ability for unarmed and improvised weapons); and its
     /// source line range (if any) must be well-formed. This is the load-time trust
     /// gate that a weapon can only ship once its combat Ability exists. Source: Ars
-    /// Magica - Definitive Edition (Core Rules).md:16988 (the "Ability" column names
+    /// Magica - Definitive Edition (Core Rules).md:16992 (the "Ability" column names
     /// the Weapon Ability needed to use the weapon).
     fn validate_weapon_refs(&self, weapon: &Weapon, errors: &mut Vec<String>) {
         let id = &weapon.id;

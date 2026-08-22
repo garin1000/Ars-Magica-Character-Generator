@@ -30,6 +30,16 @@ pub struct LabTotal {
     pub within_focus: Option<i32>,
     /// Whether a Deficient Art halved this cell.
     pub deficient: bool,
+    /// `total`, halved again for Weak Enchanter (Ars Magica - Definitive
+    /// Edition (Core Rules).md:7060-7063: "Halve your Lab Total whenever you
+    /// create or investigate an enchanted item. If you have a Deficiency that
+    /// counts as part of the Lab Total, apply the Deficiency first and then
+    /// halve the remaining total"). Equal to `total` for anyone without the
+    /// Flaw. This is the figure to use when creating or investigating an
+    /// enchanted item; `total`/`within_focus` remain the ordinary Lab Total
+    /// for every other lab activity (spell invention, etc.), which Weak
+    /// Enchanter does not touch.
+    pub enchanting: i32,
 }
 
 /// Lab Totals for every `(Technique, Form)` pair — the 5×10 grid. Source:
@@ -59,6 +69,13 @@ pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
                 let focused = base + te.min(fo);
                 if deficient { halve(focused) } else { focused }
             });
+            // Weak Enchanter: Deficiency (already folded into `total`) first,
+            // then this halving on top — the order the Flaw's text specifies.
+            let enchanting = if mods.halvings.contains(&HalvableTotal::LabEnchanting) {
+                halve(total)
+            } else {
+                total
+            };
             out.push(LabTotal {
                 technique: technique.clone(),
                 form: form.clone(),
@@ -66,6 +83,7 @@ pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
                 total,
                 within_focus,
                 deficient,
+                enchanting,
             });
         }
     }

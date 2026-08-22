@@ -244,8 +244,22 @@ impl<'a> Doc<'a> {
             ]);
         }
         rows.extend(self.granted_ability_rows());
-        let xp = xp_allocation(e, self.rules());
-        let has_xp = xp.general_pool > 0 || xp.general_used > 0 || !xp.restricted.is_empty();
+        // Audit finding K1 (round 2): this used to call the raw, now-`pub(crate)`
+        // `xp_allocation` directly, with no check that the entity's selections
+        // fit the flow-solve node bound — a crafted `.armc` with an oversized
+        // `ability_scores`/`art_scores`/`spells` array reached the solver's
+        // internal `assert!` on a plain File → Export Markdown. An over-bound
+        // entity now degrades to a table with no XP figures instead of
+        // panicking: the concurrent `validate_entity` call (which runs the
+        // identical check via `checked_xp_allocation`) is what actually tells
+        // the user why, so the exported sheet staying silent about the
+        // specific reason is not a regression.
+        let xp = checked_xp_allocation(e, self.rules()).ok();
+        let general_pool = xp.as_ref().map_or(0, |a| a.general_pool);
+        let general_used = xp.as_ref().map_or(0, |a| a.general_used);
+        let has_xp = general_pool > 0
+            || general_used > 0
+            || xp.as_ref().is_some_and(|a| !a.restricted.is_empty());
         if rows.is_empty() && !has_xp {
             return;
         }
@@ -257,11 +271,14 @@ impl<'a> Doc<'a> {
             self.label("export-col-effective"),
         ];
         table(out, &headers, &rows);
-        if xp.general_pool > 0 || xp.general_used > 0 {
-            let spent = format!("{} / {}", xp.general_used, xp.general_pool);
+        if general_pool > 0 || general_used > 0 {
+            let spent = format!("{general_used} / {general_pool}");
             self.labelled(out, "xp-pool", &spent);
             out.push('\n');
         }
+        let Some(xp) = &xp else {
+            return;
+        };
         if xp.restricted.is_empty() {
             return;
         }

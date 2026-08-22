@@ -43,7 +43,10 @@
 //! value is empty, so a **covenant** — which has selections (Boons/Hooks) and
 //! free-text identity but no Characteristics, Abilities, Arts, spells, equipment or
 //! magic — renders exactly the sections it has, with the character-only ones absent.
-//! No section is gated on [`crate::types::EntityKind`]; emptiness does the work.
+//! No section is gated on [`crate::types::EntityKind`] except
+//! `write_health_tracks` (Fatigue/Wounds are fixed-size constants of a body,
+//! never naturally empty, so emptiness cannot govern them — see that
+//! function's own doc comment); every other section relies on emptiness alone.
 //!
 //! # Determinism
 //!
@@ -60,15 +63,16 @@ use crate::art::ArtType;
 use crate::characteristics::Characteristic;
 use crate::derived::{CombatLine, combat_totals, encumbrance, fatigue_levels, soak, wound_ranges};
 use crate::effective::{
-    RestrictedXpPool, XpPoolOrigin, ability_score_floors, confidence, decrepitude_score,
-    effective_ability_score, effective_art_score, effective_characteristic_after_aging,
-    effective_might, effective_spell_mastery, entity_grants, resolved_spell_level, warping,
-    xp_allocation,
+    RestrictedXpPool, XpPoolOrigin, ability_score_floors, checked_xp_allocation, confidence,
+    decrepitude_score, effective_ability_score, effective_art_score,
+    effective_characteristic_after_aging, effective_might, effective_spell_mastery, entity_grants,
+    resolved_spell_level, warping,
 };
 use crate::ruleset::{LocalizedRuleset, Ruleset};
 use crate::types::{
-    AgingLogEntry, EnchantedDevice, Entity, EntityKind, Id, ItemKind, MightScore, PersonalityTrait,
-    Selection, SpellSelection, SupernaturalPower, TalismanEffect,
+    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AgingLogEntry, EnchantedDevice, Entity, EntityKind, Id,
+    ItemKind, MightScore, PersonalityTrait, Selection, SpellSelection, SupernaturalPower,
+    TalismanEffect,
 };
 use crate::validation::{compute_balance, effective_point_ceilings};
 
@@ -1834,6 +1838,35 @@ mod tests {
         assert!(doc.contains("- **Martial**: 0 / 50\n"), "{doc}");
     }
 
+    /// K1 (round-2 CRITICAL): `write_abilities` used to call the raw
+    /// `xp_allocation` directly with no flow-solve node-count check, reaching
+    /// its internal `assert!` (a panic) for a save whose `ability_scores`
+    /// exceeds `MAX_XP_SOLVE_NODES` — reachable from a plain File → Export
+    /// Markdown of a hostile save. It must now degrade instead: the document
+    /// still renders (the bought-ability rows are still known; only the
+    /// XP-pool figures are unavailable), with no `xp-pool` line.
+    #[test]
+    fn an_entity_over_the_solve_bound_exports_without_xp_figures_instead_of_panicking() {
+        let mut e = magus();
+        e.xp_pool = 1_000_000;
+        e.ability_scores = (0..crate::effective::MAX_XP_SOLVE_NODES)
+            .map(|_| AbilityScore {
+                ability: Id::new("ability.awareness"),
+                score: 1,
+                specialty: None,
+                parameter: None,
+            })
+            .collect();
+        let doc = super::character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[("abilities-title", "Abilities"), ("xp-pool", "XP pool")]),
+        )
+        .expect("an over-bound entity still renders, just without XP figures");
+        assert!(doc.contains("## Abilities\n"), "{doc}");
+        assert!(!doc.contains("XP pool"), "{doc}");
+    }
+
     /// An Ability the character *has* purely because a Virtue seeded it (Second
     /// Sight 1) is stored nowhere in `ability_scores`, so iterating the bought
     /// instances alone drops it from the sheet — even though the character can use
@@ -2436,6 +2469,45 @@ mod tests {
         assert!(doc.contains("| to ward off flame | +3 |"), "{doc}");
         assert!(doc.contains("#### Instilled Effects\n"), "{doc}");
         assert!(doc.contains("| Lamp Without Flame | 10 |"), "{doc}");
+    }
+
+    /// K2 (round-2 LOW): a hand-edited save can carry an `aura` outside
+    /// `AURA_MODIFIER_MIN..=AURA_MODIFIER_MAX` — `Entity::normalize()` clamps
+    /// it, but only `save_entity_to_path` calls `normalize()` before writing,
+    /// not the export path. The exported figure must be clamped for display
+    /// consistency with everything else the engine treats as the ceiling,
+    /// rather than printing the raw out-of-range number verbatim.
+    #[test]
+    fn an_out_of_range_aura_is_clamped_for_display() {
+        let mut e = magus();
+        e.aura = 999;
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[("tab-possessions", "Magic Items"), ("aura-label", "Aura")]),
+        );
+        assert!(
+            doc.contains(&format!(
+                "- **Aura**: +{}\n",
+                crate::types::AURA_MODIFIER_MAX
+            )),
+            "{doc}"
+        );
+
+        let mut e = magus();
+        e.aura = -999;
+        let doc = character_markdown(
+            &e,
+            &ruleset(),
+            &labels(&[("tab-possessions", "Magic Items"), ("aura-label", "Aura")]),
+        );
+        assert!(
+            doc.contains(&format!(
+                "- **Aura**: {}\n",
+                crate::types::AURA_MODIFIER_MIN
+            )),
+            "{doc}"
+        );
     }
 
     #[test]

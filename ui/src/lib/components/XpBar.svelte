@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { formatSigned, generalXpAllocation, restrictedPoolLabel, totalXpSpent } from '../derive';
+  import { formatSigned, generalXpAllocation, restrictedPoolLabel } from '../derive';
 
   // One XP summary shared by the Abilities and Arts tabs: both spend from the
   // SAME `entity.xp_pool`, so this single component drives both, differing only
@@ -35,13 +35,15 @@
   const bonus = $derived(store.effective?.xp_general_bonus ?? 0);
   const clearHintId = $derived(`${prefix}xp-pool-clear-hint`);
   // The engine's authoritative slice of the spend FUNDED from the general pool.
-  // `restricted_xp_pools` cover the rest and are reported separately. The local
-  // `totalXpSpent` fallback only covers the first frame before the effective-
-  // scores call returns (no restricted grant is assumed then).
-  const generalFunded = $derived(
-    store.effective?.xp_general_used ??
-      (store.ruleset ? totalXpSpent(store.ruleset, store.entity) : 0),
-  );
+  // `restricted_xp_pools` cover the rest and are reported separately. The `0`
+  // fallback covers only the very first frame before `store.effective` arrives
+  // (no restricted grant is assumed then) — it is a placeholder, not a
+  // computation: pricing here would fork the engine's single evaluation path
+  // and ignore Affinity and the restricted/general split, so a real figure is
+  // never re-derived in TS (formerly the `totalXpSpent` helper, deleted as
+  // dead weight — GF3, tmp/review/review-round-2-gerda-frontend.md — since it
+  // always returned this same literal).
+  const generalFunded = $derived(store.effective?.xp_general_used ?? 0);
   // Demand the pools cannot fund at all — the engine's overspend, the same figure
   // the `not_enough_xp` issue reports as its shortfall.
   //

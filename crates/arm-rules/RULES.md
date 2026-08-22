@@ -661,7 +661,7 @@ approximation of "Latin").
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:7019-7021`.
 - Data: `flaw.warped_by_magic` — `effects: [{ warping_grant, score: 1, points: 5 }]`.
-- Implementation: `Effect::WarpingGrant { score, points }` → `effective/might_warping.rs::warping`
+- Implementation: `Effect::WarpingGrant { score, points }` → `effective/warping.rs::warping`
   (derived `(score, points)`, base 0 each, summed across grants — never stored, like
   Confidence). Surfaced as `EffectiveScores.warping_{score,points}` and shown on the
   sheet via Fluent `warping-label`/`warping-readout` (DE "Verzerrung", per the
@@ -822,14 +822,14 @@ approximation of "Latin").
 - Data: `virtue.magic_items` — `item_level_budget: 25` + `prerequisites: Has
   virtue.redcap` ("You must be a Redcap"); `virtue.redcap` — `item_level_budget: 50`.
 - Implementation: `Effect::ItemLevelBudget { amount: u16 }` →
-  `effective/might_warping.rs::item_level_budget` (derived, base 0 + Σ). Surfaced as
+  `effective/gift_confidence.rs::item_level_budget` (derived, base 0 + Σ). Surfaced as
   `EffectiveScores.item_level_budget` and shown on the sheet (Fluent
   `item-levels-label/readout`; DE "Zauberartefakte"). The device-crafting subsystem
   is out of scope; the granted budget is tracked (full scope of the *Virtue*).
 - **M5/5e — starting enchanted devices stored & charged.** `Entity.devices:
   Vec<EnchantedDevice { name, level: u16 }>` records the player's chosen starting
   devices; the total `level` is charged against `item_level_budget()`.
-  `effective/might_warping.rs::item_level_used` sums the device levels (surfaced as
+  `effective/gift_confidence.rs::item_level_used` sums the device levels (surfaced as
   `EffectiveScores.item_level_used`), and `validation/might.rs::validate_devices` (:85) emits
   `over_item_level` (Fluent `issue-over_item_level`) when `used > budget`. A device
   therefore requires a granting Virtue, exactly as a starting Reputation does.
@@ -1190,7 +1190,7 @@ migration code; `load_entity_migrating` is untouched). Bumped `SCHEMA_VERSION`
 > the character gains a Major Flaw…" (16561)
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:16551-16561`.
-- Implementation: `effective/might_warping.rs::warping_owed(entity, ruleset) -> WarpingOwed`
+- Implementation: `effective/warping.rs::warping_owed(entity, ruleset) -> WarpingOwed`
   (`{ minor_flaws, minor_supernatural_virtues, major_flaws }`), driven by the pure
   threshold `WarpingOwed::from_score`: Minor Flaw at Score 1, a second at 3
   (`minor_flaws` cap 2); a supernatural Minor Virtue at 5; `major_flaws =
@@ -1259,7 +1259,7 @@ drift from the engine version (the frontend `SCHEMA_VERSION` constant in
 `ui/src/lib/state.svelte.ts` was likewise reconciled to 11). The four fields are
 entered in `CharacterDetails.svelte`; every label is a Fluent key.
 
-**Derived-score formulas** (in `effective/might_warping.rs`; slice 5i's `derived.rs` re-exports /
+**Derived-score formulas** (in `effective/warping.rs`; slice 5i's `derived.rs` re-exports /
 consumes them). Both invert the **Ability** advancement table via the new
 `AdvancementTable::score_for_xp(xp)` (the highest score whose cumulative `total_xp
 ≤ xp`) — the ×5 curve is never hand-rolled:
@@ -1278,7 +1278,7 @@ consumes them). Both invert the **Ability** advancement table via the new
   `:16464-16475`; grant at `:7019-7021`.
 
 **Aging lowers derived, not creation.** The drops are DERIVED from the accrued
-points by `effective/might_warping.rs::aging_drops(entity, char)`: once the points **exceed** the
+points by `effective/warping.rs::aging_drops(entity, char)`: once the points **exceed** the
 absolute value of the (already aged-down) score the Characteristic drops by one and
 the points reset, so the simulation consumes `|score| + 1` points per drop over the
 lifetime total. Worked examples encoded as tests (`:16613`): a Communication of +2
@@ -1331,7 +1331,7 @@ recomputed in JS). Fluent keys en/de: identity + aging block (`identity-*`,
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:5169-5171`.
 - Data: `virtue.true_faith` — `effects: [{ true_faith_grant, score: 1 }]`.
-- Implementation: `Effect::TrueFaithGrant { score }` → `effective/might_warping.rs::true_faith`
+- Implementation: `Effect::TrueFaithGrant { score }` → `effective/might.rs::true_faith`
   (derived, base 0 + Σ, like Warping). True Faith is a special score with its own
   rules (Core p.419), **not** a Supernatural Ability, so it is not modelled via
   `ability_score_grant`. Surfaced as `EffectiveScores.true_faith_score` and shown on
@@ -1919,7 +1919,7 @@ these numbers.** The `derived_totals` Tauri command mirrors `effective_scores`.
 | Encumbrance | `:17103-17123` | Burden from Load table `[0,1,3,6,10,15,21,28,36,45,55]→[0..10]`; Enc = `max(0, Burden − max(0,Str))` |
 | Fatigue | `:17127-17129` | Winded/Weary −1, Tired −3, Dazed −5, adjusted by HealthMod fatigue delta |
 | Wounds | `:17167-17191` | Size unit `u = max(1, Size+5)`; Light 1..u, Medium u+1..2u, Heavy 2u+1..3u, Incap 3u+1..4u, Dead 4u+1.. ; penalties −1/−3/−5 adjusted by HealthMod wound delta |
-| Decrepitude / Warping | `:16617`, `:16464-16475` | **reused** from `effective/might_warping.rs` (`decrepitude_score`, `warping_score`), not reimplemented |
+| Decrepitude / Warping | `:16617`, `:16464-16475` | **reused** from `effective/warping.rs` (`decrepitude_score`, `warping_score`), not reimplemented |
 
 **Order of operations** (pinned + unit-tested): base casting/lab score → + flat
 CastingTotalMod/LabTotalMod → within-focus adds the lower Art → **halve** (Deficient
@@ -2285,7 +2285,7 @@ E2E: `ui/e2e/specs/vf-incompatible.e2e.js`.
 | `CastingTotalMod { amount, scope }` | Flat casting bonus/penalty — method_caster (+3 formulaic_ritual), poor_formulaic_magic (−5 formulaic), afflicted_tongue, cyclic_magic ±3, special_circumstances, ways_of_the_land, potent_magic | Ars Magica - Definitive Edition (Core Rules).md:4524-4527, 6610-6613, 5655-5658, 3635-3638, 5893-5896, 4998-5001, 5231-5234, 4740-4781 | computed (conditional ones toggled) |
 | `LabTotalMod { amount }` | Flat lab bonus/penalty — adept_laboratory_student (+6), inventive_genius (+3), aristotelian_training (+1), creative_block (−3), weak_scholar (−6), the_constant_expression (−3), cyclic_magic, potent_magic | Ars Magica - Definitive Edition (Core Rules).md:3368-3371, 4151-4154, 3440-3443, 5873-5876, 7080-7083, 5821-5838, 4740-4781 | computed |
 | `DeficientArt { param(Technique\|Form) }` | Art-halving — deficient_technique, deficient_form | Ars Magica - Definitive Edition (Core Rules).md:5913-5915, 5909-5912 | computed |
-| `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration / MR — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic, flawed_parma_magica, weak_magic_resistance | Ars Magica - Definitive Edition (Core Rules).md:7084-7089, 7060-7063, 5962-5964, 7064-7067, 6142-6145, 7068-7071 | **partly** computed: `spontaneous_casting`, `penetration`, `magic_resistance` and (since M5.5a) `lab_longevity` move numbers; **`lab_enchanting` is collected but still unread** — `flaw.weak_enchanter` moves no number, because the app models no lab enchantment project |
+| `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration / MR — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic, flawed_parma_magica, weak_magic_resistance | Ars Magica - Definitive Edition (Core Rules).md:7084-7089, 7060-7063, 5962-5964, 7064-7067, 6142-6145, 7068-7071 | **computed** (round-2 audit finding GD3 closed the last gap): `spontaneous_casting`, `penetration`, `magic_resistance`, `lab_longevity` (since M5.5a), and now `lab_enchanting` too — folded into the new `LabTotal.enchanting` field in `derived/lab.rs::lab_totals` (Deficiency first, then this halving, per `:7060-7063`'s own stated order) |
 | `SoakMod { amount }` | Flat Soak — tough (+3), frail (−3), berserk (+2) | Ars Magica - Definitive Edition (Core Rules).md:5145-5147, 6190-6193, 3500-3503 | computed |
 | `CombatMod { amount, target }` | Combat init/atk/def — berserk, hobbled, lame, missing_hand, missing_eye, poor_eyesight, palsied_hands, slow_reflexes, lightning_reflexes, fast_caster | Ars Magica - Definitive Edition (Core Rules).md:3500-3503, 6260-6263, 6330-6333, 6438-6441, 6434-6437, 6606-6609, 6578-6581, 6763-6766, 4311-4314, 3865-3868 | computed (conditional ones labelled) |
 | `HealthMod { track, amount }` | Wound/fatigue penalty (enduring_constitution, low_tolerance), fatigue rolls (obese, short_of_breath, long_winded), casting-fatigue (painful_magic, vulnerable_casting, withstand_casting), recovery (fragile_constitution, rapid_convalescence) | Ars Magica - Definitive Edition (Core Rules).md:3751-3754, 6366-6369, 6516-6519, 6733-6736, 4327-4330, 6574-6577, 6993-7004, 5261-5282, 6186-6189, 4834-4837 | wound/fatigue computed; fatigue-roll/casting-fatigue/recovery surfaced |
@@ -2297,8 +2297,16 @@ E2E: `ui/e2e/specs/vf-incompatible.e2e.js`.
 
 **Modeling notes / accepted approximations** (each surfaced in 5i's labelled
 read-out, so precision is not lost to the player): `weak_spontaneous_magic` maps
-to `MagicTotalHalving { spontaneous_casting }` though the book rule is "always
-÷5" (5i implements the exact spont rate). Rank-dependent `commanding_aura` (MR
+to `MagicTotalHalving { spontaneous_casting }`; the book rule is "you always
+divide your Casting Score by five" (`:7084-7086`) — the Flaw removes the
+fatiguing (exert-yourself, ÷2) option entirely rather than halving it a second
+time. **Corrected in the round-2 audit (finding GD2)**: `derived/casting.rs`'s
+`post()` previously applied a second `halve()` on top of the normal ÷2/÷5
+split whenever this halving was present, silently producing ÷4/÷10 — neither
+of which the rules state anywhere. It now reports the one rate the Flaw
+actually leaves (÷5) at both the `spontaneous_fatiguing` and
+`spontaneous_non_fatiguing` fields, since `CastingScores` has no "this option
+does not exist" representation. Rank-dependent `commanding_aura` (MR
 25/soak +5 … MR 10/soak +2) is wired as `MagicResistanceMod { aura_bonus }` only;
 the rank-specific numbers are surfaced. `mythic_blood`'s bundled formulaic/ritual
 fatigue benefits beyond its Minor Focus are surfaced in the item text.
@@ -3329,7 +3337,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `locality_ability_cap_fraction { num: 1, den: 2 }`; `rules/core/abilities.json`
   flags `locality_dependent` on `ability.living_language`, `ability.dead_language`,
   `ability.area_lore` and `ability.organization_lore`.
-- Implementation: `effective/might_warping.rs` — `ability_age_cap` (per-ability, ceiling division),
+- Implementation: `effective/reputation_and_caps.rs` — `ability_age_cap` (per-ability, ceiling division),
   consumed by `validate_abilities`'s `ability_above_age_cap` check.
 - **Deliberately incomplete, per the source:** the passage's trailing "as well as
   some social Abilities" names no Abilities, so none are flagged — the engine
@@ -3789,7 +3797,7 @@ to a user.
   only. Guarded by `the_three_aging_immunities_ship_their_two_facts_separately`
   (`data_integrity.rs`).
 - Implementation, one reader each:
-  - `effective/might_warping.rs::aging_drops` (and the surfaced `characteristic_aging_drops`
+  - `effective/warping.rs::aging_drops` (and the surfaced `characteristic_aging_drops`
     in `effective/characteristic.rs`,
     which wraps it) return 0 for a `no_aging` carrier, so no Characteristic ever
     drops and `effective_characteristic_after_aging` leaves the bought score alone.

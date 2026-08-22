@@ -1288,6 +1288,44 @@ fn effective_scores_surface_max_flow_so_the_ui_can_show_an_overspent_pool() {
     assert_eq!(legal.xp_total_demand, legal.xp_max_flow);
 }
 
+/// The Characteristic point cost is surfaced by the engine rather than recomputed
+/// in the frontend. `ui/src/lib/derive.ts` carried its own copy of the point-buy
+/// table (audit findings VA1/GF1/GD4, raised by three separate reviewers), which
+/// could drift from `CharacteristicRules::total_cost` silently. The payload now
+/// carries the authoritative figure so the UI has nothing to recompute.
+///
+/// Uses the rulebook's own worked example so the assertion is anchored to the
+/// source, not to whatever the code happens to return:
+/// Ars Magica - Definitive Edition (Core Rules).md:2358 — Int +3 (6), Per +1 (1),
+/// Pre -3 (-6), Com -1 (-1), Sta 0 (0), Qik +2 (3), Str +2 (3), Dex +1 (1) => 7.
+#[test]
+fn effective_scores_surface_the_characteristic_points_used() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut entity = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("companion"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+
+    use arm_rules::Characteristic;
+    entity.characteristics = std::collections::BTreeMap::from([
+        (Characteristic::Int, 3),
+        (Characteristic::Per, 1),
+        (Characteristic::Pre, -3),
+        (Characteristic::Com, -1),
+        (Characteristic::Sta, 0),
+        (Characteristic::Qik, 2),
+        (Characteristic::Str, 2),
+        (Characteristic::Dex, 1),
+    ]);
+
+    let effective = effective_scores_loaded(&entity, &ruleset);
+    assert_eq!(
+        effective.characteristic_points_used, 7,
+        "the rulebook's worked example nets gains against spends"
+    );
+}
+
 /// The V/F spell-levels contribution is surfaced as its OWN payload figure, not
 /// only folded into the effective budget, so the spell-levels bar can show the
 /// editable base beside a labelled bonus — the way the XP bar lists extra pools

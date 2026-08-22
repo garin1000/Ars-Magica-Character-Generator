@@ -14,7 +14,6 @@ import {
   artAbbreviation,
   artLabel,
   balance,
-  characteristicPointsUsed,
   childhoodEntryPreview,
   childhoodSlotFault,
   childhoodSlots,
@@ -887,60 +886,23 @@ describe('groupByCategory', () => {
   });
 });
 
-// --- characteristicPointsUsed() ---------------------------------------------
-
-describe('characteristicPointsUsed', () => {
-  const rules: CharacteristicRules = {
-    start_points: 7,
-    costs: [
-      { score: 3, cost: 6 },
-      { score: 2, cost: 3 },
-      { score: 1, cost: 1 },
-      { score: 0, cost: 0 },
-      { score: -1, cost: -1 },
-      { score: -2, cost: -3 },
-      { score: -3, cost: -6 },
-    ],
-  };
-
-  // GF1 (round-1 audit): characteristicPointsUsed() re-implements the engine's
-  // CharacteristicRules::total_cost (crates/arm-rules/src/characteristics.rs)
-  // as a second, independent table lookup. Pending an engine-surfaced combined
-  // total on EffectiveScores (see the function's doc comment), both cases below
-  // are pinned to the exact same rulebook worked examples the Rust test
-  // `total_cost_nets_gains_against_spends` / `cost_for_known_and_unknown_scores`
-  // use, so a change to one algorithm without the other fails a test on both
-  // sides rather than drifting silently.
-
-  it('nets spends against gains (mirrors characteristics.rs::total_cost_nets_gains_against_spends)', () => {
-    // Darius's example, Core Rules 2358: Int +3 (6) + Per +1 (1) + Pre -3 (-6) +
-    // Com -1 (-1) + Sta 0 (0) + Qik +2 (3) + Str +2 (3) + Dex +1 (1) = 7.
-    expect(
-      characteristicPointsUsed(rules, {
-        int: 3,
-        per: 1,
-        pre: -3,
-        com: -1,
-        sta: 0,
-        qik: 2,
-        str: 2,
-        dex: 1,
-      }),
-    ).toBe(7);
-  });
-
-  it('ignores out-of-range scores (contributes 0, mirrors characteristics.rs::cost_for_known_and_unknown_scores)', () => {
-    expect(characteristicPointsUsed(rules, { str: 4 })).toBe(0);
-  });
-
-  it('returns 0 without rules or scores', () => {
-    expect(characteristicPointsUsed(undefined, { int: 3 })).toBe(0);
-    expect(characteristicPointsUsed(rules, undefined)).toBe(0);
-  });
-});
+// `characteristicPointsUsed` and its tests were deleted once the engine began
+// surfacing `EffectiveScores.characteristic_points_used` (audit VA1). The
+// rulebook worked example it pinned (Core Rules 2358) now lives on the Rust side
+// only, in `characteristics.rs::total_cost_nets_gains_against_spends` and
+// `commands.rs::effective_scores_surface_the_characteristic_points_used` — one
+// implementation, so there is nothing left to drift.
 
 // --- spellMasteryXpSpent() / effectiveSpellMastery() ------------------------
 
+// GD4 (round-2 audit): spellMasteryXpSpent() re-implements the mastery-spend
+// leg of the engine's crates/arm-rules/src/effective/xp.rs::build_spends as a
+// second, independent implementation (see the function's own "KNOWN DRIFT
+// RISK" doc comment above its definition in derive.ts). The advancement table
+// below (1->5, 2->15, 3->30) is the EXACT fixture
+// crates/arm-rules/src/effective.rs's xp_ruleset() test helper uses, so the
+// "mirrors effective.rs::..." test names below are literal, checkable claims,
+// not just prose.
 describe('spellMasteryXpSpent', () => {
   const advancement = [
     { score: 1, total_xp: 5 },
@@ -973,6 +935,15 @@ describe('spellMasteryXpSpent', () => {
     expect(spellMasteryXpSpent(advancement, [{ mastery: 1 }, { mastery: 3 }], 1, true)).toBe(13);
     // Doubling with no floor: ceil(30/2) = 15.
     expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, true)).toBe(15);
+  });
+
+  it('mirrors effective.rs::flawless_magic_floors_first_mastery_free_and_halves_the_rest', () => {
+    // The Rust test's own worked example, verbatim: Flawless Magic (floor 1,
+    // doubled advancement) on two spells mastered at 1 and 3. Mastery 1 ==
+    // the floor is free; mastery 3 costs table(3) - table(1) = 25, doubled ->
+    // ceil(25/2) = 13. The Rust test asserts `alloc.total_demand == 13` for
+    // this exact input; this is the TS side of the same claim.
+    expect(spellMasteryXpSpent(advancement, [{ mastery: 1 }, { mastery: 3 }], 1, true)).toBe(13);
   });
 });
 

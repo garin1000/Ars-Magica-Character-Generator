@@ -93,26 +93,48 @@ fn main() {
 /// `ui/node_modules/@tauri-apps/api/core.js`), not the convenience
 /// `window.__TAURI__` global this app does not inject.
 ///
-/// Not unit-testable the way the validation-layer fixes are: this is
-/// window/webview-level Tauri glue with no library-crate seam (`main.rs` is a
-/// binary, and `guard_blocks_quit` below has the same gap) — Tauri's mock
-/// runtime needs the `test` feature, not enabled in this crate, and adding it
-/// is a larger step than this fix. Needs an e2e spec (`ui/e2e/`, not owned by
-/// this change) driving the real release binary — dirty an entity, run
-/// `browser.execute(() => window.close())` as wave-1b agent C's now-deleted
-/// probe did, and assert the app is still alive with the edit intact — to
-/// close the loop this reasoning cannot close on its own.
+/// GA2/round-2: the runtime claim here — that the shadowed `window.close()`
+/// actually reaches `WindowEvent::CloseRequested` and is blocked while dirty —
+/// still has no unit seam: this is window/webview-level Tauri glue with no
+/// library-crate hook (`main.rs` is a binary, and `guard_blocks_quit` below has
+/// the same gap), and exercising it for real needs a live window, which needs
+/// Tauri's mock runtime (the `test` feature, not enabled in this crate — adding
+/// it is a larger step than this fix). That half is closed by an e2e spec
+/// instead: `ui/e2e/specs/window-close-bridge-dirty.e2e.js` and
+/// `window-close-bridge-clean.e2e.js` drive the real release binary through
+/// `browser.execute(() => window.close())`, the same call the shadow below
+/// intercepts, against both a dirty and a clean document.
+///
+/// The one part of this glue that IS plain data — that the injected script
+/// invokes the command that is actually registered — is unit-tested in this
+/// file's own `tests` module: [`REQUEST_CLOSE_COMMAND`] is the single name both
+/// [`window_close_shadow_script`] and `request_close`'s own `stringify!` check
+/// read, so a rename of one without the other fails a fast test instead of
+/// silently reopening the bypass.
 fn window_close_bridge_plugin<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
     tauri::plugin::Builder::new("window-close-bridge")
-        .js_init_script(
-            "window.close = function () { \
-               if (window.__TAURI_INTERNALS__) { \
-                 window.__TAURI_INTERNALS__.invoke('request_close'); \
-               } \
-             };"
-            .to_string(),
-        )
+        .js_init_script(window_close_shadow_script())
         .build()
+}
+
+/// The Tauri command name the shadow script below invokes. Named once so
+/// [`window_close_shadow_script`] and `request_close`'s registration can never
+/// drift apart without a test noticing (see
+/// `the_shadow_script_invokes_the_registered_request_close_command`).
+const REQUEST_CLOSE_COMMAND: &str = "request_close";
+
+/// The JS that shadows the DOM's built-in `window.close()` (see
+/// [`window_close_bridge_plugin`]'s doc comment for why this exists and how it
+/// is installed). Broken out of the plugin builder so it can be inspected
+/// directly by a unit test with no Tauri runtime involved.
+fn window_close_shadow_script() -> String {
+    format!(
+        "window.close = function () {{ \
+           if (window.__TAURI_INTERNALS__) {{ \
+             window.__TAURI_INTERNALS__.invoke('{REQUEST_CLOSE_COMMAND}'); \
+           }} \
+         }};"
+    )
 }
 
 /// Bridges a webview-initiated `window.close()` (shadowed by
@@ -176,4 +198,29 @@ where
         });
     }
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // GA2/E2 (round 2): the JS-visible shadow and the registered Tauri command it
+    // invokes are two independently-typed literals with nothing tying them
+    // together. A rename of `request_close` with a missed edit to the JS string
+    // would silently reopen the N1 bypass — the shadow would install fine and
+    // invoke a command that no longer exists, and nothing but an e2e run (or a
+    // user hitting Alt+F4) would notice. This is the one part of the bridge that
+    // is pure data and testable without Tauri's mock runtime (see the doc comment
+    // on `window_close_bridge_plugin` for why the rest is not); it does not, and
+    // cannot, verify that the real `window.close()` call actually reaches
+    // `WindowEvent::CloseRequested` — that is the e2e spec's job.
+    #[test]
+    fn the_shadow_script_invokes_the_registered_request_close_command() {
+        assert_eq!(REQUEST_CLOSE_COMMAND, stringify!(request_close));
+
+        let script = window_close_shadow_script();
+        assert!(script.contains("window.close = function"));
+        assert!(script.contains("__TAURI_INTERNALS__"));
+        assert!(script.contains(&format!("invoke('{REQUEST_CLOSE_COMMAND}')")));
+    }
 }

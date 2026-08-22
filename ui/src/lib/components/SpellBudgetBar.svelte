@@ -65,8 +65,11 @@
     <!-- The levels charged to the BASE (a positive V/F bonus is spent first and
          reported in its own entry; a penalty is charged here), so this figure and
          Available always close against the bracketed base. -->
-    <span class="xp-pool-used" class:over-value={available < 0} data-testid="spell-levels-used"
-      >{alloc.baseUsed}</span
+    <span
+      class="xp-pool-used"
+      class:over-value={available < 0}
+      data-overspent={available < 0}
+      data-testid="spell-levels-used">{alloc.baseUsed}</span
     >
     <!-- The bracketed, editable BASE — the direct counterpart of the XP pool's
          editable total. Empty falls back to the type profile's base (the
@@ -86,7 +89,12 @@
       />
     </span>
   </span>
-  <span class="xp-available" class:over={available < 0} data-testid="spell-levels-available">
+  <span
+    class="xp-available"
+    class:over={available < 0}
+    data-overspent={available < 0}
+    data-testid="spell-levels-available"
+  >
     {store.t('spell-levels-available', { available: String(available) })}
   </span>
   {#if bonus > 0}
@@ -120,6 +128,7 @@
     <span
       class="xp-restricted"
       class:over={masteryUsed > masteryXp}
+      data-overspent={masteryUsed > masteryXp}
       data-testid="spell-mastery-info"
     >
       {#if masteryXp > 0}{store.t('spell-mastery-pool', {

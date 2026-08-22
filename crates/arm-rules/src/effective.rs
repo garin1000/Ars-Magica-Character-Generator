@@ -39,8 +39,14 @@ mod xp;
 pub use xp::*;
 mod spell;
 pub use spell::*;
-mod might_warping;
-pub use might_warping::*;
+mod gift_confidence;
+pub use gift_confidence::*;
+mod might;
+pub use might::*;
+mod warping;
+pub use warping::*;
+mod reputation_and_caps;
+pub use reputation_and_caps::*;
 
 /// The selection list every effect / score computation iterates: the entity's
 /// bought selections plus any Virtue rows its Hermetic House grants (see
