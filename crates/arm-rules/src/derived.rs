@@ -1157,6 +1157,47 @@ mod tests {
         assert!(derived_totals(&e, &rs).masterpiece.is_none());
     }
 
+    /// A Weak Enchanter designing his Masterpiece item is still "creating" an
+    /// enchanted item (Ars Magica - Definitive Edition (Core Rules).md:4476-4479:
+    /// the item is designed "following the regular rules for construction of such
+    /// a device"), so the cap must derive from the halved `enchanting` figure
+    /// (:7060-7063), not the un-halved `total` — otherwise the cap is double what
+    /// the rules allow. Same figures as `masterpiece_cap_is_best_lab_total_halved`
+    /// (total 35) but with Weak Enchanter added: enchanting = halve(35) = 17, so
+    /// the reported lab_total is 17 and the cap is halve(17) = 8, not 35 / 17.
+    #[test]
+    fn masterpiece_cap_halves_for_weak_enchanter() {
+        let rs = ruleset();
+        let mut e = magus();
+        set_char(&mut e, Characteristic::Int, 3);
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.magic_theory"),
+            parameter: None,
+            specialty: None,
+            score: 4,
+        }];
+        e.art_scores = vec![
+            ArtScore {
+                art: Id::new("art.creo"),
+                score: 10,
+            },
+            ArtScore {
+                art: Id::new("art.corpus"),
+                score: 13,
+            },
+        ];
+        e.aura = 5;
+        e.selections = vec![
+            Selection::new(Id::new("virtue.masterpiece")),
+            Selection::new(Id::new("flaw.weak_enchanter")),
+        ];
+        let cap = masterpiece_item_cap(&e, &rs).expect("has masterpiece");
+        assert_eq!(cap.lab_total, 17);
+        assert_eq!(cap.cap, 8);
+        assert_eq!(cap.technique.as_str(), "art.creo");
+        assert_eq!(cap.form.as_str(), "art.corpus");
+    }
+
     /// A magus with a talisman: its capacity in pawns of Vim vis is his highest
     /// Technique + his highest Form (Ars Magica - Definitive Edition (Core Rules).md:10619). Creo 10 / Perdo 4 and Corpus 12 /
     /// Ignem 8 → Creo + Corpus = 22, with both contributing scores surfaced so the

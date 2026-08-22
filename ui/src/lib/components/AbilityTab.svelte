@@ -263,7 +263,9 @@
                 <button
                   type="button"
                   class="icon-btn"
-                  aria-label={store.t('ability-decrement')}
+                  aria-label={store.t('ability-decrement', {
+                    name: selectedName(entry.ability, entry.parameter),
+                  })}
                   disabled={entry.score <= 0}
                   onclick={() => store.adjustAbilityAt(i, -1, max)}
                   data-testid="ability-dec-{entry.ability}-{i}"
@@ -276,7 +278,9 @@
                 <button
                   type="button"
                   class="icon-btn"
-                  aria-label={store.t('ability-increment')}
+                  aria-label={store.t('ability-increment', {
+                    name: selectedName(entry.ability, entry.parameter),
+                  })}
                   disabled={entry.score >= max}
                   onclick={() => store.adjustAbilityAt(i, 1, max)}
                   data-testid="ability-inc-{entry.ability}-{i}"

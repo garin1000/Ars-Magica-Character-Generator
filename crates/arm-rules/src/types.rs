@@ -5043,6 +5043,33 @@ mod tests {
         entity.aura = -3;
         entity.normalize();
         assert_eq!(entity.aura, -3, "a rules-legal aura is left untouched");
+
+        // Exact boundary values pass through unchanged (Klaus, round 3, K1) —
+        // the prior assertions above only prove the clamp saturates somewhere in
+        // the right direction, not that the boundary is exactly
+        // AURA_MODIFIER_MIN..=AURA_MODIFIER_MAX rather than off by one.
+        entity.aura = AURA_MODIFIER_MAX;
+        entity.normalize();
+        assert_eq!(
+            entity.aura, AURA_MODIFIER_MAX,
+            "the max is legal, not clamped"
+        );
+
+        entity.aura = AURA_MODIFIER_MIN;
+        entity.normalize();
+        assert_eq!(
+            entity.aura, AURA_MODIFIER_MIN,
+            "the min is legal, not clamped"
+        );
+
+        // One step past each boundary clamps to the boundary, not one past it.
+        entity.aura = AURA_MODIFIER_MAX + 1;
+        entity.normalize();
+        assert_eq!(entity.aura, AURA_MODIFIER_MAX);
+
+        entity.aura = AURA_MODIFIER_MIN - 1;
+        entity.normalize();
+        assert_eq!(entity.aura, AURA_MODIFIER_MIN);
     }
 
     /// The character-only aging/warping annotation fields (apparent age, warping

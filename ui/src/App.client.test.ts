@@ -1,7 +1,7 @@
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Entity, LocalizedRuleset } from './lib/types';
+import type { DerivedTotals, Entity, LocalizedRuleset } from './lib/types';
 
 // The unsaved-changes guard is a MANDATORY product behavior (CLAUDE.md): closing
 // or quitting with unsaved edits must prompt before discarding, on every
@@ -187,5 +187,180 @@ describe('the unsaved-changes guard is mirrored to the backend', () => {
 
     await mountApp();
     await vi.waitFor(() => expect(store.error).toEqual(failure));
+  });
+});
+
+// S1 (round 2), S4 (round 3, tmp/review/review-round-3-sabine.md): the discard
+// prompt's focus-restoration `$effect` (App.svelte:196-210) shipped with zero
+// coverage anywhere in the suite. `App.test.ts` renders through `svelte/server`
+// and never runs an `$effect`, so this file is the only place that can. A loaded
+// entity here only needs to satisfy the shapes `open()`/`revalidate()` touch, not
+// a real ruleset's full schema.
+function loadableEntity(): Entity {
+  return {
+    schema_version: SCHEMA_VERSION,
+    ruleset: { id: 'test', version: '1' },
+    entity_kind: 'character',
+    type_id: 'companion',
+    selections: [],
+    characteristics: {} as Entity['characteristics'],
+    characteristic_descriptions: {},
+    ability_scores: [],
+    xp_pool: 0,
+    art_scores: [],
+    personality_traits: [],
+    reputations: [],
+  };
+}
+
+describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
+  it('returns focus to the New button once a cancelled prompt closes', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+
+    const newButton = document.querySelector('[data-testid="new-button"]') as HTMLElement;
+    expect(newButton).toBeTruthy();
+    newButton.focus();
+    expect(document.activeElement).toBe(newButton);
+
+    store.entity.name = 'a dirtying edit';
+    flushSync();
+
+    void store.newDocument();
+    flushSync();
+    expect(store.discardPromptOpen).toBe(true);
+
+    store.resolveDiscardPrompt(false);
+    flushSync();
+
+    expect(document.activeElement).toBe(newButton);
+  });
+
+  it('returns focus to the Open button once a confirmed load lands back in the editor', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/example.armc.json',
+      entity: loadableEntity(),
+    });
+
+    const openButton = document.querySelector('[data-testid="open-button"]') as HTMLElement;
+    expect(openButton).toBeTruthy();
+    openButton.focus();
+    expect(document.activeElement).toBe(openButton);
+
+    store.entity.name = 'a dirtying edit';
+    flushSync();
+
+    void store.open();
+    flushSync();
+    expect(store.discardPromptOpen).toBe(true);
+
+    store.resolveDiscardPrompt(true);
+    flushSync();
+
+    // open() sets view = 'editor', which it already was, so the Open button is
+    // never unmounted — this is the "trigger survives" half of the fix.
+    expect(document.activeElement).toBe(openButton);
+  });
+
+  it('does not force focus onto a trigger that is no longer in the document', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+
+    const newButton = document.querySelector('[data-testid="new-button"]') as HTMLElement;
+    expect(newButton).toBeTruthy();
+    newButton.focus();
+    const focusSpy = vi.spyOn(newButton, 'focus');
+
+    store.entity.name = 'a dirtying edit';
+    flushSync();
+
+    void store.newDocument();
+    flushSync();
+    expect(store.discardPromptOpen).toBe(true);
+
+    // Simulate the trigger having left the document by the time the prompt
+    // resolves — App.svelte's own comment describes exactly this case: "the
+    // old element is disconnected and .focus() is skipped".
+    newButton.remove();
+
+    store.resolveDiscardPrompt(false);
+    flushSync();
+
+    expect(focusSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('tablist keyboard navigation (S7/S4)', () => {
+  function pressTabKey(key: string): void {
+    const tablist = document.querySelector('[role="tablist"]') as HTMLElement;
+    tablist.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    flushSync();
+  }
+
+  it('moves the active tab and DOM focus with ArrowRight/ArrowLeft', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+
+    const details = document.getElementById('tab-details') as HTMLElement;
+    const characteristics = document.getElementById('tab-characteristics') as HTMLElement;
+    expect(details.getAttribute('aria-selected')).toBe('true');
+    expect(details.tabIndex).toBe(0);
+    expect(characteristics.tabIndex).toBe(-1);
+
+    pressTabKey('ArrowRight');
+    expect(characteristics.getAttribute('aria-selected')).toBe('true');
+    expect(characteristics.tabIndex).toBe(0);
+    expect(details.getAttribute('aria-selected')).toBe('false');
+    // Roving tabindex: only the active tab stays in the page's Tab order.
+    expect(details.tabIndex).toBe(-1);
+    await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-characteristics'));
+
+    pressTabKey('ArrowLeft');
+    expect(details.getAttribute('aria-selected')).toBe('true');
+    await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-details'));
+  });
+
+  it('jumps to the first/last tab with Home/End', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+    // The last tab is Totals (DerivedTotalsPanel), which reads store.derived
+    // unconditionally — give it a minimal, complete fixture so navigating
+    // there does not throw on an untested field.
+    store.derived = {
+      is_magus: false,
+      lab_totals: [],
+      casting_totals: [],
+      penetration: [],
+      magic_resistance: [],
+      combat: [],
+      soak: { addends: [], total: 0 },
+      encumbrance: { load: 0, burden: 0, total: 0 },
+      fatigue: [],
+      wounds: [],
+      size: 0,
+      decrepitude_score: 0,
+      warping_score: 0,
+      warping_points: 0,
+      surfaced_modifiers: [],
+    } as DerivedTotals;
+    flushSync();
+
+    pressTabKey('ArrowRight');
+    await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-characteristics'));
+
+    pressTabKey('End');
+    expect(document.getElementById('tab-totals')?.getAttribute('aria-selected')).toBe('true');
+    await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-totals'));
+
+    pressTabKey('Home');
+    expect(document.getElementById('tab-details')?.getAttribute('aria-selected')).toBe('true');
+    await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-details'));
   });
 });

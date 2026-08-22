@@ -26,7 +26,7 @@
           <button
             type="button"
             class="icon-btn"
-            aria-label={store.t('characteristic-decrement')}
+            aria-label={store.t('characteristic-decrement', { name: trait.name })}
             onclick={() => store.setPersonalityTraitValue(i, trait.value - 1)}
             data-testid="personality-dec-{i}"
           >
@@ -38,7 +38,7 @@
           <button
             type="button"
             class="icon-btn"
-            aria-label={store.t('characteristic-increment')}
+            aria-label={store.t('characteristic-increment', { name: trait.name })}
             onclick={() => store.setPersonalityTraitValue(i, trait.value + 1)}
             data-testid="personality-inc-{i}"
           >

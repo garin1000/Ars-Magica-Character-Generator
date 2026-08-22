@@ -5,6 +5,19 @@
   import LongevityPanel from './LongevityPanel.svelte';
 
   const aura = $derived(store.entity.aura ?? 0);
+  // The aura's rules-legal range comes from the engine (`Ruleset.aura_modifier_min/
+  // max`, round 3 Task 3), never a hardcoded -50/10 — this input and the Derived
+  // Totals tab's read the same engine-surfaced bound so the two entry points
+  // cannot disagree. The i32-extreme fallback is a defensive "no constraint"
+  // sentinel for a ruleset payload predating this field (this input only renders
+  // once `store.ruleset` is loaded), not a restatement of the rule itself.
+  const auraMin = $derived(store.ruleset?.ruleset.aura_modifier_min ?? -2147483648);
+  const auraMax = $derived(store.ruleset?.ruleset.aura_modifier_max ?? 2147483647);
+  // A value outside the engine's bound is not rejected here — `Entity.normalize()`
+  // silently clamps it on save (Ars Magica - Definitive Edition (Core Rules).md:17390,
+  // :17404-17409) — so this warns the player instead of letting the number change
+  // out from under them with no explanation.
+  const auraOutOfRange = $derived(aura < auraMin || aura > auraMax);
   const devices = $derived(store.entity.devices ?? []);
   // Item-level budget used/remaining is engine-authoritative, never recomputed here.
   const itemBudget = $derived(store.effective?.item_level_budget ?? 0);
@@ -25,18 +38,23 @@
     <div class="detail-field">
       <label class="field">
         <span>{store.t('aura-label')}</span>
-        <!-- The aura is signed (a Divine aura is a penalty for Hermetic magic) and
-             stored in an i32; the bounds keep an out-of-range entry from making
-             serde reject the whole payload. -->
+        <!-- The aura is signed (a Divine aura is a penalty for Hermetic magic); the
+             bounds come from the engine (Ruleset.aura_modifier_min/max) so this
+             input cannot disagree with the Derived Totals tab's. -->
         <input
           type="number"
-          min="-2147483648"
-          max="2147483647"
+          min={auraMin}
+          max={auraMax}
           value={aura}
           oninput={onAura}
           data-testid="aura-input"
         />
       </label>
+      {#if auraOutOfRange}
+        <p class="hint" data-testid="aura-out-of-range">
+          {store.t('aura-out-of-range', { min: String(auraMin), max: String(auraMax) })}
+        </p>
+      {/if}
     </div>
 
     <div class="detail-section">
@@ -155,5 +173,13 @@
 
   .empty {
     color: var(--muted);
+  }
+
+  /* Mirrors DerivedTotalsPanel's `.hint` (Svelte styles are component-scoped, so
+     each carries its own copy) — the out-of-range aura notice below the input. */
+  .hint {
+    opacity: 0.7;
+    font-size: 0.85em;
+    font-style: italic;
   }
 </style>
