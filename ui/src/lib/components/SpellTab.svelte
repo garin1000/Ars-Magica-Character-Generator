@@ -436,7 +436,7 @@
                       <button
                         type="button"
                         class="icon-btn"
-                        aria-label={store.t('spell-mastery-decrement')}
+                        aria-label={store.t('spell-mastery-decrement', { name: rowLabel(chosen) })}
                         disabled={(chosen.mastery ?? 0) <= 0}
                         onclick={() => store.adjustSpellMasteryAt(i, -1, masteryMax)}
                         data-testid="spell-mastery-dec-{chosen.spell}-{i}"
@@ -452,7 +452,7 @@
                       <button
                         type="button"
                         class="icon-btn"
-                        aria-label={store.t('spell-mastery-increment')}
+                        aria-label={store.t('spell-mastery-increment', { name: rowLabel(chosen) })}
                         disabled={(chosen.mastery ?? 0) >= masteryMax}
                         onclick={() => store.adjustSpellMasteryAt(i, 1, masteryMax)}
                         data-testid="spell-mastery-inc-{chosen.spell}-{i}"
@@ -496,7 +496,9 @@
                             <button
                               type="button"
                               class="icon-btn"
-                              aria-label={store.t('spell-mastery-ability-remove')}
+                              aria-label={store.t('remove-item', {
+                                name: masteryAbilityName(abilityId),
+                              })}
                               onclick={() => store.removeMasteryAbilityAt(i, ai)}
                               data-testid="spell-mastery-ability-remove-{chosen.spell}-{i}-{ai}"
                             >
@@ -535,7 +537,7 @@
                 <button
                   type="button"
                   class="icon-btn"
-                  aria-label={store.t('spell-remove')}
+                  aria-label={store.t('remove-item', { name: rowLabel(chosen) })}
                   onclick={() => store.removeSpellAt(i)}
                   data-testid="spell-remove-{chosen.spell}-{i}"
                 >

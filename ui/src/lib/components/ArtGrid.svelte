@@ -60,7 +60,7 @@
                 <button
                   type="button"
                   class="icon-btn"
-                  aria-label={store.t('art-decrement')}
+                  aria-label={store.t('art-decrement', { name: name(art.id) })}
                   disabled={score <= 0}
                   onclick={() => store.adjustArt(art.id, -1, max)}
                   data-testid="art-dec-{art.id}"
@@ -71,7 +71,7 @@
                 <button
                   type="button"
                   class="icon-btn"
-                  aria-label={store.t('art-increment')}
+                  aria-label={store.t('art-increment', { name: name(art.id) })}
                   disabled={score >= max}
                   onclick={() => store.adjustArt(art.id, 1, max)}
                   data-testid="art-inc-{art.id}"

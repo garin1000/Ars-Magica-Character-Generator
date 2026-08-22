@@ -109,7 +109,9 @@
           <button
             type="button"
             class="icon-btn"
-            aria-label={store.t('characteristic-decrement')}
+            aria-label={store.t('characteristic-decrement', {
+              name: store.t(`characteristic-${characteristic}`),
+            })}
             disabled={scoreOf(characteristic) <= floorOf(characteristic)}
             onclick={() => adjust(characteristic, -1)}
             data-testid="char-dec-{characteristic}"
@@ -128,7 +130,9 @@
           <button
             type="button"
             class="icon-btn"
-            aria-label={store.t('characteristic-increment')}
+            aria-label={store.t('characteristic-increment', {
+              name: store.t(`characteristic-${characteristic}`),
+            })}
             disabled={scoreOf(characteristic) >= capOf(characteristic)}
             onclick={() => adjust(characteristic, 1)}
             data-testid="char-inc-{characteristic}"

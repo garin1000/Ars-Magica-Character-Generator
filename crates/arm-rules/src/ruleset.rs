@@ -26,8 +26,8 @@ use crate::mythic_companion::{MythicCompanionType, MythicCompanionTypesFile};
 use crate::spell::{RITUAL_MIN_LEVEL, Spell, SpellDuration, SpellTarget, SpellsFile};
 use crate::spell_mastery::{SpellMasteryAbilitiesFile, SpellMasteryAbility};
 use crate::types::{
-    CreationPhase, Effect, EntityTypeProfile, I18nEntry, Id, ItemKind, Magnitude, ParameterDomain,
-    PointItem, Prereq, RulesetRef, SourceRef, SpecialCasting,
+    AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, CreationPhase, Effect, EntityTypeProfile, I18nEntry, Id,
+    ItemKind, Magnitude, ParameterDomain, PointItem, Prereq, RulesetRef, SourceRef, SpecialCasting,
 };
 
 mod accessors;
@@ -69,6 +69,8 @@ mod parse;
 ///   "art_advancement": [ { "score": 1, "total_xp": 1 } ],
 ///   "art_type_order": [ "technique", "form" ],
 ///   "ritual_min_level": 20,
+///   "aura_modifier_min": -50,
+///   "aura_modifier_max": 10,
 ///   "houses": { "house.bonisagus": { /* House */ } },
 ///   "childhoods": { "childhood.athletic": { /* ChildhoodPackage */ } },
 ///   "aging": { /* AgingRules */ },
@@ -190,6 +192,20 @@ pub struct Ruleset {
     /// `ritual_min_level` field name is a stable public contract.
     #[serde(default)]
     pub(crate) ritual_min_level: u8,
+    /// The lowest rules-legal [`crate::types::Entity::aura`] modifier, mirrored
+    /// from [`crate::types::AURA_MODIFIER_MIN`]. Serialized to the frontend so
+    /// the aura number inputs (`DerivedTotalsPanel`, `MagicPossessions`) bound
+    /// themselves from engine data instead of re-hardcoding the rules range.
+    /// Derived data, not authored (see `magnitude_points`). The
+    /// `aura_modifier_min` field name is a stable public contract.
+    #[serde(default)]
+    pub(crate) aura_modifier_min: i32,
+    /// The highest rules-legal [`crate::types::Entity::aura`] modifier, mirrored
+    /// from [`crate::types::AURA_MODIFIER_MAX`]. See `aura_modifier_min`.
+    /// Derived data, not authored (see `magnitude_points`). The
+    /// `aura_modifier_max` field name is a stable public contract.
+    #[serde(default)]
+    pub(crate) aura_modifier_max: i32,
     /// All Hermetic Houses keyed by their id. Defaulted so older serialized
     /// rulesets (no houses) still deserialize. Serialized whole to the frontend;
     /// the `houses` field name is a stable public contract.
@@ -4281,6 +4297,8 @@ mod tests {
                 "art_advancement",
                 "art_type_order",
                 "arts",
+                "aura_modifier_max",
+                "aura_modifier_min",
                 "categories_requiring_virtue",
                 "characteristic_rules",
                 // Always present, like `houses`: the frontend's record of Sample
@@ -4320,6 +4338,12 @@ mod tests {
         // Derived rule constant (VA2): the Ritual spell-level floor, mirrored from
         // `spell::RITUAL_MIN_LEVEL` so the UI never re-hardcodes it.
         assert_eq!(obj["ritual_min_level"], 20);
+        // Derived rule constants (round 3, Task 3): the aura modifier's legal
+        // range, mirrored from `types::AURA_MODIFIER_MIN`/`MAX` so the aura
+        // number inputs (DerivedTotalsPanel, MagicPossessions) read the bound
+        // from the engine instead of re-hardcoding -50/10.
+        assert_eq!(obj["aura_modifier_min"], -50);
+        assert_eq!(obj["aura_modifier_max"], 10);
 
         // And the whole thing round-trips back through the validating loader.
         let restored = Ruleset::from_serialized(&serde_json::to_string(&rs).unwrap()).unwrap();

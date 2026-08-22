@@ -341,15 +341,20 @@ ability-specialty-label = Spezialisierung
 # Überschrift für die im Auswahlbereich gezeigten Beispiel-Spezialisierungen.
 ability-specialties-label = Spezialisierungen
 ability-add = Fertigkeit hinzufügen
-ability-increment = Erhöhen
-ability-decrement = Verringern
+# Je Zeile benannt ($name ist der Anzeigename der Fertigkeit), damit eine
+# Sprachausgabe in einer langen Fertigkeiten-Liste nicht auf jeder Zeile
+# dasselbe bloße "Erhöhen"/"Verringern" vorliest.
+ability-increment = { $name } erhöhen
+ability-decrement = { $name } verringern
 # Hermetische Künste: die beiden Klassen und die Bedienelemente. Künste teilen
 # sich den EP-Vorrat der Fertigkeiten (Schlüssel `xp-pool`).
 art-type-technique = Techniken
 art-type-form = Formen
 art-add = Kunst hinzufügen
-art-increment = Erhöhen
-art-decrement = Verringern
+# Je Zeile benannt ($name ist der Anzeigename der Kunst) — dieselbe Begründung
+# wie bei ability-increment/-decrement oben.
+art-increment = { $name } erhöhen
+art-decrement = { $name } verringern
 # Zauberauswahl (nur Magi). Die Zaubernamen stammen aus den Regel-i18n (nach
 # Zauber-ID), nicht aus diesen Oberflächen-Schlüsseln. Filtere einen Zauber nach
 # Technik + Form; ein Gen-Zauber fragt nach der erlernten Stufe.
@@ -390,18 +395,18 @@ spell-mastery-xp = Meisterschafts-EP: { $xp }
 spell-mastery-pool = Meisterschafts-EP: { $used } / { $pool }
 spell-mastery-floor = Alle Zauber gemeistert auf { $score }
 spell-mastery-label = Meisterschaft
-spell-mastery-increment = Zauber-Meisterschaft erhöhen
-spell-mastery-decrement = Zauber-Meisterschaft verringern
+# Je Zeile benannt ($name ist der Anzeigename des Zaubers) — dieselbe
+# Begründung wie bei ability-increment/-decrement oben.
+spell-mastery-increment = Zauber-Meisterschaft für { $name } erhöhen
+spell-mastery-decrement = Zauber-Meisterschaft für { $name } verringern
 spell-mastery-abilities-label = Besondere Fähigkeiten
 spell-mastery-ability-add = Besondere Fähigkeit hinzufügen
-spell-mastery-ability-remove = Besondere Fähigkeit entfernen
-spell-remove = Entfernen
 # Generischer Entfernen-Regler für die Listenzeilen (Fertigkeiten, Tugenden &
 # Fehler, Alterungsprotokoll, Persönlichkeitsmerkmale, Dämmerungsnarben,
 # Vertrauten-Eigenschaften/-Kräfte, Magische Gegenstände, Talisman-Bindungen/
-# -Effekte, Reputationen): nennt den Inhalt der jeweiligen Zeile, damit eine
-# Sprachausgabe nicht in jeder Zeile derselben langen Liste dasselbe bloße
-# "Entfernen" vorliest. `spell-remove` bleibt für den Zauber-Reiter in Gebrauch.
+# -Effekte, Reputationen, Zauber und deren Meisterschafts-Sonderfähigkeiten):
+# nennt den Inhalt der jeweiligen Zeile, damit eine Sprachausgabe nicht in
+# jeder Zeile derselben langen Liste dasselbe bloße "Entfernen" vorliest.
 remove-item = { $name } entfernen
 # Details-Reiter: Alter, Selbstvertrauen (abgeleitet, schreibgeschützt), Persönlichkeit, Reputation.
 age-label = Alter
@@ -594,6 +599,7 @@ reputation-type-academic = Akademisch
 # und das Langlebigkeitsritual. Das genutzte/verbleibende Artefaktbudget stammt aus
 # der Engine, wird hier nie neu berechnet.
 aura-label = Angenommene Labor-/Konventaura
+aura-out-of-range = Außerhalb des Regelbereichs ({ $min } bis { $max }); wird beim Speichern auf den nächstgültigen Wert begrenzt.
 possessions-devices-label = Artefakte
 device-name-placeholder = Name des Artefakts
 device-level-label = Stufe
@@ -691,8 +697,13 @@ longevity-focus-placeholder = Worin das Ritual gipfelt
 longevity-sterility-note = Der Anker des Rituals verhindert, dass der Magus seine Lebenskraft auf normale menschliche Weise verausgabt; der Magus wird dadurch dauerhaft unfruchtbar.
 # Grund, warum eine übernatürliche Fähigkeit im Auswähler ausgegraut ist.
 ability-requires-virtue = Erfordert eine verleihende Tugend (oder die eine freie Fähigkeit der Gabe)
-characteristic-increment = Erhöhen
-characteristic-decrement = Verringern
+# Je Zeile benannt ($name ist der Anzeigename der Eigenschaft bzw. des
+# Persönlichkeitsmerkmals — dieser Schlüssel wird von CharacteristicPicker, dem
+# Persönlichkeitsmerkmal-Regler in FamiliarPanel und von PersonalityTraits
+# gemeinsam genutzt) — dieselbe Begründung wie bei ability-increment/-decrement
+# oben.
+characteristic-increment = { $name } erhöhen
+characteristic-decrement = { $name } verringern
 characteristic-description-label = Beschreibung
 
 # Auswahl des hermetischen Hauses + Spezialisierungs-Auswahl je Gewährung. Die
@@ -964,6 +975,9 @@ derived-section-decrepitude = Gebrechlichkeit
 derived-section-warping = Verzerrung
 derived-size = Größe
 derived-aura-label = Angenommene Labor-/Konventaura
+derived-aura-out-of-range = Außerhalb des Regelbereichs ({ $min } bis { $max }); wird beim Speichern auf den nächstgültigen Wert begrenzt.
+derived-lab-enchanting = Für Verzauberung
+derived-lab-enchanting-hint = Von der obigen Laborsumme wegen Schwacher Verzauberer halbiert — für das Erschaffen oder Untersuchen verzauberter Gegenstände verwenden.
 derived-within-focus = Im Fokus
 derived-deficient = (defizitär, halbiert)
 derived-weak-magic = (Schwache Magie, halbiert)

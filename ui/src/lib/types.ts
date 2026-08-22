@@ -594,6 +594,11 @@ export interface LabTotal {
   total: number;
   within_focus?: number | null;
   deficient: boolean;
+  // `total` (Deficient-halved), halved again for Weak Enchanter — the figure
+  // to use when creating or investigating an enchanted item. Equal to `total`
+  // for anyone without the Flaw. Mirrored from the Rust `LabTotal.enchanting`
+  // field (`crates/arm-rules/src/derived/lab.rs`).
+  enchanting: number;
 }
 
 // The within-focus counterparts of a CastingTotal's four cast types.
@@ -1386,6 +1391,14 @@ export interface Ruleset {
   // existing hand-built `Ruleset` test fixture across the tree to add a field
   // unrelated to what each of those tests exercises.
   ritual_min_level?: number;
+  // The rules-legal range for `Entity.aura`, mirrored from the Rust
+  // `types::AURA_MODIFIER_MIN`/`MAX` constants (populated at construction and
+  // re-derived on every deserialize, never trusted from input JSON), so the
+  // aura number inputs (DerivedTotalsPanel, MagicPossessions) bound themselves
+  // from engine data instead of re-hardcoding -50/10 (round 3, Task 3).
+  // Optional like `ritual_min_level` above, for the same reason.
+  aura_modifier_min?: number;
+  aura_modifier_max?: number;
 }
 
 export interface LocalizedRuleset {

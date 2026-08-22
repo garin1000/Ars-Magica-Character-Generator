@@ -23,7 +23,7 @@ vi.mock('../ipc', () => ({
 import { store } from '../state.svelte';
 import DerivedTotalsPanel from './DerivedTotalsPanel.svelte';
 
-function installRuleset(): void {
+function installRuleset(overrides: Partial<LocalizedRuleset['ruleset']> = {}): void {
   store.ruleset = {
     ruleset: {
       id: 'test',
@@ -33,6 +33,11 @@ function installRuleset(): void {
       magnitude_points: { free: 0, minor: 1, major: 3 },
       ability_category_order: ['general'],
       art_type_order: ['technique', 'form'],
+      // Round 3, Task 3: the engine-surfaced aura bound the input reads instead
+      // of a hardcoded -50/10.
+      aura_modifier_min: -50,
+      aura_modifier_max: 10,
+      ...overrides,
     },
     i18n: {},
   } as unknown as LocalizedRuleset;
@@ -135,5 +140,106 @@ describe('DerivedTotalsPanel loading state', () => {
     store.derived = null;
     const body = html();
     expect(body).toContain(store.t('loading'));
+  });
+});
+
+describe('DerivedTotalsPanel aura bound (round 3, Task 3)', () => {
+  function auraInputTag(): string {
+    const body = html();
+    const match = /<[^>]*data-testid="derived-aura-input"[^>]*>/i.exec(body);
+    if (!match) throw new Error('no element with data-testid="derived-aura-input"');
+    return match[0];
+  }
+
+  // The input used to carry min="-2147483648" max="2147483647" — the full i32
+  // range — instead of the engine's actual rules bound, so the browser never
+  // hinted at the real range and an out-of-range entry was silently rewritten
+  // only later, at save.
+  it('bounds the aura input to the engine-surfaced rules range, not the raw i32 range', () => {
+    store.derived = derivedFixture({ is_magus: true });
+    const input = auraInputTag();
+    expect(input).toContain('min="-50"');
+    expect(input).toContain('max="10"');
+    expect(input).not.toContain('-2147483648');
+    expect(input).not.toContain('2147483647');
+  });
+
+  it('reads the bound from whatever the ruleset payload carries, not a hardcoded pair', () => {
+    installRuleset({ aura_modifier_min: -7, aura_modifier_max: 4 });
+    store.derived = derivedFixture({ is_magus: true });
+    const input = auraInputTag();
+    expect(input).toContain('min="-7"');
+    expect(input).toContain('max="4"');
+  });
+
+  it('shows no out-of-range hint for a legal aura value', () => {
+    store.entity.aura = 3;
+    store.derived = derivedFixture({ is_magus: true });
+    const body = html();
+    expect(body).not.toContain('data-testid="derived-aura-out-of-range"');
+  });
+
+  it('shows an out-of-range hint when the stored aura is beyond the engine bound', () => {
+    // A hand-edited or stale save can carry an out-of-range aura before the next
+    // save re-normalizes it (Entity::normalize is not called on load).
+    store.entity.aura = 999;
+    store.derived = derivedFixture({ is_magus: true });
+    const body = html();
+    expect(body).toContain('data-testid="derived-aura-out-of-range"');
+  });
+});
+
+describe('DerivedTotalsPanel Weak Enchanter lab-total read-out (round 3, G2)', () => {
+  /**
+   * `textOf` stops at the FIRST nested closing tag, so it only captures the
+   * `<dl data-testid="derived-lab-total">`'s first child (the `<dt>` label) —
+   * fine for the single-child longevity paragraph it was written for, wrong
+   * here where the `dl` has several `<dt>`/`<dd>` children. Pull the whole
+   * `dl`'s inner markup instead (safe: this `dl` never nests another `dl`).
+   */
+  function labTotalDl(body: string): string {
+    const match = /<dl[^>]*data-testid="derived-lab-total"[^>]*>([\s\S]*?)<\/dl>/i.exec(body);
+    if (!match) throw new Error('no derived-lab-total dl found');
+    return match[1];
+  }
+
+  // G2: LabTotal.enchanting was computed engine-side but never reached the
+  // frontend at all — the TS type omitted it and the panel never read it, so a
+  // Weak Enchanter magus saw no mechanical effect of the Flaw anywhere.
+  it('shows the enchanting figure only when it differs from the plain total', () => {
+    store.derived = derivedFixture({
+      is_magus: true,
+      lab_totals: [
+        {
+          technique: 'art.creo',
+          form: 'art.corpus',
+          addends: [],
+          total: 16,
+          deficient: false,
+          enchanting: 8,
+        },
+      ],
+    });
+    const dl = labTotalDl(html());
+    expect(dl).toContain('>16<');
+    expect(dl).toContain('>8<');
+  });
+
+  it('hides the enchanting row for a magus without Weak Enchanter (enchanting === total)', () => {
+    store.derived = derivedFixture({
+      is_magus: true,
+      lab_totals: [
+        {
+          technique: 'art.creo',
+          form: 'art.corpus',
+          addends: [],
+          total: 16,
+          deficient: false,
+          enchanting: 16,
+        },
+      ],
+    });
+    const body = html();
+    expect(body).not.toContain('derived-lab-enchanting');
   });
 });

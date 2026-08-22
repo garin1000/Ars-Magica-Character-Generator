@@ -146,6 +146,8 @@ impl Ruleset {
         ruleset.ability_category_order = AbilityCategory::ALL.to_vec();
         ruleset.art_type_order = ArtType::ALL.to_vec();
         ruleset.ritual_min_level = RITUAL_MIN_LEVEL;
+        ruleset.aura_modifier_min = AURA_MODIFIER_MIN;
+        ruleset.aura_modifier_max = AURA_MODIFIER_MAX;
         ruleset.validate_integrity()?;
         Ok(ruleset)
     }
@@ -433,6 +435,8 @@ fn assemble_ruleset(id: &str, version: &str, parsed: ParsedSources) -> Ruleset {
         art_advancement: arts_file.advancement,
         art_type_order: ArtType::ALL.to_vec(),
         ritual_min_level: RITUAL_MIN_LEVEL,
+        aura_modifier_min: AURA_MODIFIER_MIN,
+        aura_modifier_max: AURA_MODIFIER_MAX,
         houses: index_by_id(houses_file.houses, |h| h.id.clone()),
         mythic_companion_types: index_by_id(mythic_types_file.types, |t| t.id.clone()),
         spells: index_by_id(spells_file.spells, |s| s.id.clone()),

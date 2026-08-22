@@ -236,9 +236,15 @@ fn suggested_longevity_bonus(lab_total: i32) -> i32 {
 /// `Lab Total ≥ 2 × effect level`, i.e. the effect level may not exceed
 /// `Lab Total ÷ 2` (Ars Magica - Definitive Edition (Core Rules).md:10410). Vis costs are ignored (the parens provided
 /// them), so the only bound the engine can honestly compute is that Lab-Total
-/// cap. The best base `(Technique, Form)` Lab Total is used — the magus is free
-/// to pick the Technique/Form that maximises it — without any Magical-Focus
-/// doubling (a focus applies only to items within its narrow field).
+/// cap. Designing this item *is* creating an enchanted item, so a Weak
+/// Enchanter's halved `enchanting` figure (Ars Magica - Definitive Edition
+/// (Core Rules).md:7060-7063) is "the regular rules for construction of such a
+/// device" for that magus — this cap is built from `enchanting`, not the plain
+/// `total`, and the two are equal for anyone without the Flaw. The best base
+/// `(Technique, Form)` cell is used — the magus is free to pick the
+/// Technique/Form that maximises the figure that actually applies — without
+/// any Magical-Focus doubling (a focus applies only to items within its narrow
+/// field).
 ///
 /// This is **read-only guidance**: the engine does not auto-create a device or
 /// spend an item-level budget. The player still enters the actual item under
@@ -249,7 +255,9 @@ pub struct MasterpieceCap {
     pub technique: Id,
     /// The Form Art of the best Lab Total.
     pub form: Id,
-    /// The best base `(Technique, Form)` Lab Total (no focus doubling).
+    /// The best base `(Technique, Form)` Lab Total used for enchanting (no focus
+    /// doubling) — Weak Enchanter-halved when that Flaw applies, equal to the
+    /// plain Lab Total otherwise.
     pub lab_total: i32,
     /// The maximum lesser-enchantment effect level: `lab_total ÷ 2` (Ars Magica -
     /// Definitive Edition (Core Rules).md:10410).
@@ -258,19 +266,21 @@ pub struct MasterpieceCap {
 
 /// The Masterpiece lesser-item cap, or `None` when the magus lacks the Virtue.
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:4476-4479 (Virtue),
-/// :10410 (lesser-enchantment cap).
+/// :10410 (lesser-enchantment cap), :7060-7063 (Weak Enchanter halving applies
+/// here too, since designing the item is creating an enchanted item).
 pub fn masterpiece_item_cap(entity: &Entity, ruleset: &Ruleset) -> Option<MasterpieceCap> {
     if !in_play_mods(entity, ruleset).has_masterpiece {
         return None;
     }
-    // Best base Lab Total across the grid; the magus picks the Te/Fo that maxes it.
+    // Best enchanting Lab Total across the grid; the magus picks the Te/Fo that
+    // maxes the figure that actually applies to building the item.
     lab_totals(entity, ruleset)
         .into_iter()
-        .max_by_key(|lt| lt.total)
+        .max_by_key(|lt| lt.enchanting)
         .map(|lt| MasterpieceCap {
             technique: lt.technique,
             form: lt.form,
-            lab_total: lt.total,
-            cap: halve(lt.total),
+            lab_total: lt.enchanting,
+            cap: halve(lt.enchanting),
         })
 }

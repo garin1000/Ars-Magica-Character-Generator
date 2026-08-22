@@ -324,15 +324,20 @@ ability-specialty-label = Specialty
 # Heading for the rulebook's list of example specialties shown in the picker.
 ability-specialties-label = Specialties
 ability-add = Add ability
-ability-increment = Raise
-ability-decrement = Lower
+# Named per row ($name is the ability's own display name), so a screen reader
+# tabbing a long Abilities list hears which score each stepper adjusts instead
+# of an identical bare "Raise"/"Lower" on every row.
+ability-increment = Raise { $name }
+ability-decrement = Lower { $name }
 # Hermetic Arts: the two classes and the spinner controls. Arts share the
 # Abilities XP pool (the `xp-pool` key), so no Art-specific pool label.
 art-type-technique = Techniques
 art-type-form = Forms
 art-add = Add Art
-art-increment = Raise
-art-decrement = Lower
+# Named per row ($name is the Art's own display name) — same reasoning as
+# ability-increment/-decrement above.
+art-increment = Raise { $name }
+art-decrement = Lower { $name }
 # Spell picker (magi only). Spell display names come from the rules i18n (keyed
 # by spell id), not from these chrome keys. Filter a spell by Technique + Form,
 # then add it; a General spell prompts for its learned level.
@@ -390,17 +395,17 @@ spell-mastery-pool = Mastery XP: { $used } / { $pool }
 spell-mastery-floor = All spells mastered at { $score }
 # The per-spell Spell-Mastery stepper.
 spell-mastery-label = Mastery
-spell-mastery-increment = Increase spell mastery
-spell-mastery-decrement = Decrease spell mastery
+# Named per row ($name is the spell's own display name) — same reasoning as
+# ability-increment/-decrement above.
+spell-mastery-increment = Increase spell mastery for { $name }
+spell-mastery-decrement = Decrease spell mastery for { $name }
 spell-mastery-abilities-label = Special abilities
 spell-mastery-ability-add = Add special ability
-spell-mastery-ability-remove = Remove special ability
-spell-remove = Remove
 # Generic per-row remove control across the item lists (Abilities, Virtues &
 # Flaws, aging log, Personality Traits, Twilight Scars, Familiar traits/powers,
-# Magic Devices, Talisman attunements/effects, Reputations): names the row's own
-# content so a screen reader does not hear the same bare "Remove" repeated on
-# every row of a long list. `spell-remove` remains in use by the Spells tab.
+# Magic Devices, Talisman attunements/effects, Reputations, Spells and their
+# Mastery special abilities): names the row's own content so a screen reader
+# does not hear the same bare "Remove" repeated on every row of a long list.
 remove-item = Remove { $name }
 # Details tab: age, Confidence (read-only, derived), Personality Traits, Reputations.
 age-label = Age
@@ -590,6 +595,7 @@ reputation-type-academic = Academic
 # talisman and the Longevity Ritual. The item-level budget used/remaining comes
 # from the engine, never recomputed here.
 aura-label = Assumed lab/covenant aura
+aura-out-of-range = Outside the rules range ({ $min } to { $max }); will be clamped to the nearest legal value when saved.
 possessions-devices-label = Enchanted Devices
 device-name-placeholder = Device name
 device-level-label = Level
@@ -686,8 +692,12 @@ longevity-focus-placeholder = How the ritual culminates
 longevity-sterility-note = The ritual's anchor stops the magus expending his life force in normal human fashion, so he becomes permanently sterile.
 # Shown as the reason a Supernatural Ability is greyed in the picker.
 ability-requires-virtue = Requires a granting Virtue (or the Gift's one free Ability)
-characteristic-increment = Raise
-characteristic-decrement = Lower
+# Named per row ($name is the characteristic's, or personality trait's, own
+# display name — this key is shared by CharacteristicPicker, FamiliarPanel's
+# personality-trait spinner, and PersonalityTraits) — same reasoning as
+# ability-increment/-decrement above.
+characteristic-increment = Raise { $name }
+characteristic-decrement = Lower { $name }
 characteristic-description-label = Description
 
 # Hermetic House selector + per-grant specialisation pickers. House display
@@ -954,6 +964,9 @@ derived-section-decrepitude = Decrepitude
 derived-section-warping = Warping
 derived-size = Size
 derived-aura-label = Assumed lab/covenant aura
+derived-aura-out-of-range = Outside the rules range ({ $min } to { $max }); will be clamped to the nearest legal value when saved.
+derived-lab-enchanting = For enchanting
+derived-lab-enchanting-hint = Halved from the Lab Total above for Weak Enchanter — use this figure when creating or investigating an enchanted item.
 derived-within-focus = Within focus
 derived-deficient = (deficient, halved)
 derived-weak-magic = (Weak Magic, halved)

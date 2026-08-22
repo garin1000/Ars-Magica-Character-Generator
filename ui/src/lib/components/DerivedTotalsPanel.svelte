@@ -10,6 +10,21 @@
   const d = $derived(store.derived);
   const aura = $derived(store.entity.aura ?? 0);
 
+  // The aura's rules-legal range comes from the engine (`Ruleset.aura_modifier_min/
+  // max`, round 3 Task 3), never a hardcoded -50/10 — this panel and the Magic
+  // Items tab's input read the same engine-surfaced bound so the two entry points
+  // cannot disagree. The i32-extreme fallback below is a defensive "no constraint"
+  // sentinel for a ruleset payload predating this field, not a restatement of the
+  // rule itself (this input only renders once `store.ruleset` is loaded, so the
+  // fallback is not expected to be exercised in practice).
+  const auraMin = $derived(store.ruleset?.ruleset.aura_modifier_min ?? -2147483648);
+  const auraMax = $derived(store.ruleset?.ruleset.aura_modifier_max ?? 2147483647);
+  // A value outside the engine's bound is not rejected here — `Entity.normalize()`
+  // silently clamps it on save (Ars Magica - Definitive Edition (Core Rules).md:17390,
+  // :17404-17409) — so this warns the player instead of letting the number change
+  // out from under them with no explanation.
+  const auraOutOfRange = $derived(aura < auraMin || aura > auraMax);
+
   // Lab/Casting Total picker. The Technique and Form option lists are derived
   // from the engine's own combination tables (never a hardcoded Art list), so
   // the picker stays in sync with whatever Arts the ruleset defines. The user's
@@ -90,17 +105,23 @@
       <div class="detail-section">
         <label class="field">
           <span>{store.t('derived-aura-label')}</span>
-          <!-- Same signed i32 field as the Magic Items tab's aura input; the bounds
-               match so the two entry points cannot disagree. -->
+          <!-- Same signed field as the Magic Items tab's aura input; the bounds
+               come from the engine (Ruleset.aura_modifier_min/max) so the two entry
+               points cannot disagree. -->
           <input
             type="number"
-            min="-2147483648"
-            max="2147483647"
+            min={auraMin}
+            max={auraMax}
             value={aura}
             oninput={onAura}
             data-testid="derived-aura-input"
           />
         </label>
+        {#if auraOutOfRange}
+          <p class="hint" data-testid="derived-aura-out-of-range">
+            {store.t('derived-aura-out-of-range', { min: String(auraMin), max: String(auraMax) })}
+          </p>
+        {/if}
       </div>
 
       <!-- Lab & Casting Totals: on-demand for one chosen Technique × Form. The
@@ -146,6 +167,20 @@
             {#if labCell.within_focus != null}
               <dt class="focus">{store.t('derived-within-focus')}</dt>
               <dd class="focus">{labCell.within_focus}</dd>
+            {/if}
+            {#if labCell.enchanting !== labCell.total}
+              <!-- Only shown when Weak Enchanter halves this cell's total for
+                   enchanting; equal to `total` (and hidden) for everyone else, so
+                   the Flaw's effect is visible instead of a silently-unused number. -->
+              <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+              <dt
+                class="focus"
+                tabindex="0"
+                use:tooltip={{ text: store.t('derived-lab-enchanting-hint') }}
+              >
+                {store.t('derived-lab-enchanting')}
+              </dt>
+              <dd class="focus">{labCell.enchanting}</dd>
             {/if}
           </dl>
         {/if}
