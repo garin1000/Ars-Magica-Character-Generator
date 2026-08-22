@@ -2,7 +2,8 @@
 //! options a magus may take for a mastered spell.
 //!
 //! For every level in a spell's Mastery Ability, the maga may choose one special
-//! ability, applying only to that mastered spell (Core Rules.md:9524-9526). The
+//! ability, applying only to that mastered spell
+//! (Ars Magica - Definitive Edition (Core Rules).md:9524-9526). The
 //! per-spell chosen abilities live on the [`SpellSelection`](crate::types::SpellSelection);
 //! the catalogue here is language-neutral mechanics, with names/descriptions in
 //! `rules/i18n`, keyed by `id`.
@@ -27,7 +28,8 @@ pub struct SpellMasteryAbility {
     pub id: Id,
     /// Whether this ability may be taken multiple times for the same spell.
     /// `true` only for Precise, Quick, and Quiet Casting
-    /// (Core Rules.md:9572, :9576, :9580); `false` (the default) for the rest,
+    /// (Ars Magica - Definitive Edition (Core Rules).md:9572, :9576, :9580);
+    /// `false` (the default) for the rest,
     /// which are once-per-spell.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub repeatable: bool,

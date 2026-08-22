@@ -89,8 +89,11 @@
     <!-- The experience charged to the BASE (a positive V/F bonus is spent first and
          reported in its own entry; a penalty is charged here), so this figure and
          Available always close against the bracketed total beside them. -->
-    <span class="xp-pool-used" class:over-value={available < 0} data-testid="{prefix}xp-spent"
-      >{alloc.baseUsed}</span
+    <span
+      class="xp-pool-used"
+      class:over-value={available < 0}
+      data-overspent={available < 0}
+      data-testid="{prefix}xp-spent">{alloc.baseUsed}</span
     >
     <span class="xp-pool-total">
       {#if guided}
@@ -111,7 +114,16 @@
       {/if}
     </span>
   </span>
-  <span class="xp-available" class:over={available < 0} data-testid="{prefix}xp-available">
+  <!-- Announced on crossing into overspend, matching the role="status" pattern
+       used one line below (life-stage-no-budget): a screen reader user would
+       otherwise have to re-read this bar after every purchase to notice. -->
+  <span
+    class="xp-available"
+    class:over={available < 0}
+    data-overspent={available < 0}
+    role="status"
+    data-testid="{prefix}xp-available"
+  >
     {store.t('xp-available', { available: String(available) })}
   </span>
   {#if bonus > 0}

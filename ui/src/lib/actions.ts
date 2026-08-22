@@ -66,12 +66,14 @@ export const tooltip: Action<HTMLElement, TooltipContent | undefined> = (node, c
     if (current?.reason) {
       const r = document.createElement('p');
       r.className = 'tooltip-reason';
+      r.dataset.testid = 'tooltip-reason';
       r.textContent = current.reason;
       pop.appendChild(r);
     }
     if (current?.text) {
       const p = document.createElement('p');
       p.className = 'tooltip-text';
+      p.dataset.testid = 'tooltip-text';
       p.textContent = current.text;
       pop.appendChild(p);
     }

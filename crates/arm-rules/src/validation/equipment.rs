@@ -10,7 +10,7 @@ use super::*;
 /// **equipped** weapon or shield whose minimum-Strength requirement exceeds the
 /// character's (aged) Strength, an advisory `equipment_min_strength` warning is
 /// raised — never blocking, since carrying/wielding an over-heavy weapon is a
-/// storyguide call, not an illegal creation state (Core:16997). Armor carries no
+/// storyguide call, not an illegal creation state (Ars Magica - Definitive Edition (Core Rules).md:16997). Armor carries no
 /// minimum-Strength requirement. Combat totals, Soak, and Encumbrance are computed
 /// downstream (slice 5i), not here.
 pub(crate) fn validate_equipment(
@@ -65,10 +65,10 @@ pub(crate) fn validate_equipment(
 
 /// Advisory: a shield equipped alongside **only** two-handed weapon(s) has its
 /// combat modifiers silently dropped (a two-handed weapon cannot be paired with a
-/// shield, Core:7494), which looks like a bug. Raised only when at least one
+/// shield, Ars Magica - Definitive Edition (Core Rules).md:7494), which looks like a bug. Raised only when at least one
 /// shield and at least one weapon are equipped and **no** equipped weapon is
 /// one-handed — a one-handed weapon makes the shield usable, so no advisory.
-/// Non-blocking: the shield still counts toward Load (Core:17063, :16975).
+/// Non-blocking: the shield still counts toward Load (Ars Magica - Definitive Edition (Core Rules).md:17063, :16975).
 fn warn_shield_with_two_handed_weapon(
     entity: &Entity,
     ruleset: &Ruleset,

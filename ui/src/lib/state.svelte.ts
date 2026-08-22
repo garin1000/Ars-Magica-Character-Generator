@@ -4,20 +4,35 @@
 // validation loop with debouncing plus a sequence guard against stale results.
 
 import {
-  firstBlockedPhaseIndex,
-  incompletePhases,
-  mandatoryTraitRefs,
-  phaseHasBlockingIssue,
-  sameSelection,
-  wizardPhases,
-} from './derive';
+  AgingWorkflow,
+  defaultAgingDraft,
+  type AgingDraft,
+  type AgingPreview,
+} from './aging-workflow.svelte';
+import {
+  CORD_MAX,
+  I32_MAX,
+  I32_MIN,
+  I8_MAX,
+  I8_MIN,
+  U16_MAX,
+  U32_MAX,
+  U8_MAX,
+  clampInt,
+} from './clamp';
+import {
+  ChildhoodWorkflow,
+  defaultChildhoodDraft,
+  type ChildhoodDraft,
+} from './childhood-workflow.svelte';
+import { mandatoryTraitRefs, sameSelection } from './derive';
+import { FileOperations } from './file-operations.svelte';
 import { buildBundle, translate, type Lang, type TranslateArgs } from './i18n';
 import * as ipc from './ipc';
-import type { AgingNote, AgingOutcome, AgingTotal, CloseGuardLabels, CrisisPreview } from './ipc';
+import type { AgingNote, CloseGuardLabels } from './ipc';
 import type {
   AppError,
   Characteristic,
-  CreationPhase,
   DerivedTotals,
   EffectiveScores,
   Entity,
@@ -30,8 +45,23 @@ import type {
   ValidationMode,
   ValidationResult,
 } from './types';
+import { WizardNavigation } from './wizard-navigation.svelte';
+
+// Re-exported so existing importers of `AgingDraft`/`defaultAgingDraft` (e.g.
+// `AgingRollCalculator.test.ts`) keep working unchanged after the aging
+// workflow moved to its own module (VA6) — the type/factory's home changed,
+// not its shape or its public import path.
+export { defaultAgingDraft };
+export type { AgingDraft };
+// Likewise for the childhood-draft workflow (extracted to
+// `childhood-workflow.svelte.ts`).
+export { defaultChildhoodDraft };
+export type { ChildhoodDraft };
 
 const VALIDATE_DEBOUNCE_MS = 150;
+// Numeric clamp helpers (I8_MIN/I8_MAX/…/clampInt/CORD_MAX) live in `./clamp` —
+// shared with `aging-workflow.svelte.ts`, which needs the same rules-vs-serde
+// bounds for the aging calculator's die/points fields.
 
 /**
  * Save-format schema version written into every new entity. Exported so test
@@ -41,34 +71,6 @@ const VALIDATE_DEBOUNCE_MS = 150;
  * and `the_frontend_mirrors_the_engine_schema_version` pins the two together.
  */
 export const SCHEMA_VERSION = 15;
-
-// Inclusive ranges of the fixed-width Rust integer fields the entity's numbers
-// land in. A value outside its field's range makes serde reject the whole payload
-// at the Tauri boundary, which fails `validate`, `effective_scores` and
-// `derived_totals` at once — leaving every read-out frozen on stale numbers that
-// still look current. Mutators clamp instead, so the engine always gets a
-// representable value and the panel inputs carry the matching min/max.
-const I8_MIN = -128;
-const I8_MAX = 127;
-const U8_MAX = 255;
-const U16_MAX = 65535;
-const I32_MIN = -2147483648;
-const I32_MAX = 2147483647;
-const U32_MAX = 4294967295;
-
-// A few fields are bounded by the RULES more tightly than by their serde width,
-// and the rule is the bound that belongs at the point of entry — a value the
-// engine's consumers disagree about is worse than one it rejects outright.
-/** "The strength of each of these cords is rated from 0 to +5 … a score of +5
- * (the maximum)" — Source: Ars Magica - Definitive Edition (Core Rules).md:10836. */
-const CORD_MAX = 5;
-
-/** Truncate to an integer inside an inclusive range; a non-finite value becomes 0
- * (itself clamped into range), the same fallback the field's default carries. */
-function clampInt(value: number, min: number, max: number): number {
-  if (!Number.isFinite(value)) return Math.min(Math.max(0, min), max);
-  return Math.min(max, Math.max(min, Math.trunc(value)));
-}
 
 /** Live filter/search state of the Virtue/Flaw picker (one per side). */
 export interface VfFilterState {
@@ -129,12 +131,6 @@ export interface PickerFilters {
   derivedArtPicker: { technique: string; form: string };
 }
 
-/** File-name portion of a save path (handles both `/` and `\` separators). */
-function fileNameOf(path: string): string {
-  const parts = path.split(/[\\/]/);
-  return parts[parts.length - 1] || path;
-}
-
 /** A fresh, all-empty set of picker filters (the initial/reset state). */
 export function defaultPickerFilters(): PickerFilters {
   return {
@@ -176,127 +172,10 @@ function newEntity(rulesetId: string, version: string, typeId: string): Entity {
 }
 
 /**
- * The export label keys the engine composes from catalogue *data* and therefore
- * cannot list in `LABEL_KEYS` (see `crates/arm-rules/src/export.rs`): the
- * character-type subtitle `type-<profile id>`, the slot label
- * `param-label-<parameter key>` printed where a parameterized item has no chosen
- * value, and `category-<item category>` — the Type cell of an exported Virtue/Flaw
- * row, the same key the in-app badge renders. All three are read off the loaded
- * ruleset, so a new profile, parameterized item or category ships its label with
- * zero code changes.
- */
-function composedExportLabelKeys(localized: LocalizedRuleset | null): string[] {
-  if (!localized) return [];
-  const keys = Object.keys(localized.ruleset.type_profiles ?? {}).map((id) => `type-${id}`);
-  for (const key of parameterKeys(localized)) keys.push(`param-label-${key}`);
-  for (const category of itemCategories(localized)) keys.push(`category-${category}`);
-  return keys;
-}
-
-/**
- * Every distinct `category` the point-item catalogue uses. Names the
- * `category-<id>` label the exported Virtue/Flaw tables print in their Type column,
- * so the set follows the catalogue rather than a hardcoded list of categories.
- */
-function itemCategories(localized: LocalizedRuleset): Set<string> {
-  const categories = new Set<string>();
-  for (const item of Object.values(localized.ruleset.point_items ?? {})) {
-    if (item.category) categories.add(item.category);
-  }
-  return categories;
-}
-
-/**
- * Every parameter key the ruleset declares, across the three parameterized
- * catalogues (Virtues/Flaws, Abilities, spells). A key names both the
- * `{placeholder}` in the item's localized name and its `param-label-<key>` label,
- * which is what the exporter prints for an unfilled slot.
- */
-function parameterKeys(localized: LocalizedRuleset): Set<string> {
-  const rules = localized.ruleset;
-  const keys = new Set<string>();
-  for (const item of Object.values(rules.point_items ?? {})) {
-    for (const param of item.parameters ?? []) keys.add(param.key);
-  }
-  for (const ability of Object.values(rules.abilities ?? {})) {
-    if (ability.parameter) keys.add(ability.parameter);
-  }
-  for (const spell of Object.values(rules.spells ?? {})) {
-    for (const param of spell.parameters ?? []) keys.add(param.key);
-  }
-  return keys;
-}
-
-/**
  * Where a character's Ability/Art experience comes from: a typed `xp_pool`
  * (direct entry) or the blocks its life stages earn (the guided flow).
  */
 export type AbilityFunding = 'pool' | 'life_stages';
-
-/**
- * The Sample Childhood package the player is *considering*, plus the values typed
- * into its parameter slots — the in-progress form, before it is applied.
- *
- * Deliberately UI state and never part of the entity. The entity records only the
- * package actually taken (`life_stages.childhood_package`) and the Ability rows the
- * application writes, whose `parameter` values *are* these slot values; keeping a
- * parallel draft on the entity would give one decision two representations that can
- * diverge — and would dirty the document for merely opening a picker. Held on the
- * store rather than in the component so it survives a tab switch, exactly like
- * {@link PickerFilters}.
- */
-export interface ChildhoodDraft {
-  /** The package the picker has selected; `null` while none is chosen. */
-  packageId: string | null;
-  /** Slot key (`area_a`, `language`, …) -> the player's value. Blanks are absent. */
-  slots: Record<string, string>;
-}
-
-/** A fresh, empty childhood draft (the initial/reset state). */
-export function defaultChildhoodDraft(): ChildhoodDraft {
-  return { packageId: null, slots: {} };
-}
-
-/**
- * The aging roll the player is working on: which owed year it is for, the stress
- * die they typed, and where they are placing the Aging Points the table left to
- * them.
- *
- * UI-only state, exactly like {@link ChildhoodDraft} and for the same reason —
- * only more strictly. The die is not a choice the character records: the engine
- * carries no `rand` dependency, so the player rolls a stress die at the table and
- * types it in, and what the character keeps is the *result* the year applied
- * (`Entity.aging_log`), never the input. Since `dirty` is a snapshot compare of
- * the entity, holding the die here is what makes "the calculator does not persist"
- * mechanically true rather than merely intended.
- *
- * The distribution rides along because it is one form with the die: "Gain
- * sufficient Aging Points (in any Characteristic**s**)"
- * (Core Rules.md:16602/:16611) is plural, so the player may spread the points,
- * and the map is only meaningful against the award the current die produced.
- */
-export interface AgingDraft {
-  /** The age of the owed year being rolled for; `null` while none is picked. */
-  age: number | null;
-  /** The stress die the player typed; `null` while the field is blank. */
-  die: number | null;
-  /** Characteristic -> Aging Points placed there. Zeroes are absent. */
-  distribution: Partial<Record<Characteristic, number>>;
-  /**
-   * The **Simple Die** thrown at the Crisis Table (Core Rules.md:16621), for a
-   * year the aging row sent there; `null` while the field is blank, which the
-   * engine records as a Crisis owed and unrolled rather than refusing.
-   *
-   * Draft state for the same reason the stress die is: the engine rolls neither,
-   * and what the character keeps is the year's result, never its inputs.
-   */
-  crisisDie: number | null;
-}
-
-/** A fresh, empty aging draft (the initial/reset state). */
-export function defaultAgingDraft(): AgingDraft {
-  return { age: null, die: null, distribution: {}, crisisDie: null };
-}
 
 class AppStore {
   lang = $state<Lang>('en');
@@ -314,87 +193,95 @@ class AppStore {
   // {@link PickerFilters}). Not part of the entity, so it is never saved.
   filters = $state<PickerFilters>(defaultPickerFilters());
 
-  // The in-progress Sample Childhood choice (see {@link ChildhoodDraft}). Like
-  // {@link filters} it is UI state: never part of the entity, so it is never saved
-  // and drafting never dirties the document.
-  childhoodDraft = $state<ChildhoodDraft>(defaultChildhoodDraft());
+  /**
+   * The Sample Childhood draft workflow, extracted to {@link ChildhoodWorkflow}
+   * (VA6). It owns the draft/rejections state and `apply()`, which DOES replace
+   * the whole `entity` on acceptance, routed through this `host` so `AppStore`
+   * stays the sole owner of `entity`/`error`.
+   */
+  #childhoodWorkflow = new ChildhoodWorkflow({
+    ruleset: () => this.ruleset,
+    entity: () => this.entity,
+    setEntity: (entity) => {
+      this.entity = entity;
+    },
+    revalidate: () => this.revalidate(),
+    setError: (error) => {
+      this.error = error;
+    },
+  });
+
+  /** @see ChildhoodWorkflow.draft */
+  get childhoodDraft(): ChildhoodDraft {
+    return this.#childhoodWorkflow.draft;
+  }
+  set childhoodDraft(draft: ChildhoodDraft) {
+    this.#childhoodWorkflow.draft = draft;
+  }
+
+  /** @see ChildhoodWorkflow.rejections */
+  get childhoodRejections(): ValidationIssue[] {
+    return this.#childhoodWorkflow.rejections;
+  }
+  set childhoodRejections(rejections: ValidationIssue[]) {
+    this.#childhoodWorkflow.rejections = rejections;
+  }
 
   /**
-   * Why the last attempt to take a Sample Childhood package was refused, for the
-   * picker to render beside the offending slots. Empty when there is nothing to say.
-   *
-   * Deliberately its own field rather than part of {@link result}: these findings
-   * describe the *command input* the player just submitted, not the state of the
-   * entity — which is unchanged by a rejection — so mixing them into the validation
-   * results `revalidate()` owns would put issues about a rejected form on a
-   * character sheet that never took it. Cleared on the next apply and by every draft
-   * edit, since a rejection pointing at a field the user has just corrected is worse
-   * than none at all.
+   * The aging roll draft/preview/apply/revert workflow, extracted to
+   * {@link AgingWorkflow} (VA6). It owns the draft/preview/notes/rejections
+   * state and every method that touches them; `apply`/`revert` DO replace the
+   * whole `entity` (the engine's own single writer for aging), routed back
+   * through this `host` so `AppStore` stays the sole owner of `entity`/`error`.
    */
-  childhoodRejections = $state<ValidationIssue[]>([]);
+  #agingWorkflow = new AgingWorkflow({
+    entity: () => this.entity,
+    setEntity: (entity) => {
+      this.entity = entity;
+    },
+    agingSchedule: () => this.effective?.aging?.schedule ?? [],
+    revalidate: () => this.revalidate(),
+    setError: (error) => {
+      this.error = error;
+    },
+  });
 
-  /**
-   * The in-progress aging roll (see {@link AgingDraft}). UI state like
-   * {@link childhoodDraft}: never part of the entity, so it is never saved and
-   * typing a die never dirties the document.
-   */
-  agingDraft = $state<AgingDraft>(defaultAgingDraft());
+  /** @see AgingWorkflow.draft */
+  get agingDraft(): AgingDraft {
+    return this.#agingWorkflow.draft;
+  }
+  set agingDraft(draft: AgingDraft) {
+    this.#agingWorkflow.draft = draft;
+  }
 
-  /**
-   * The engine's answer for the drafted roll: the AGING TOTAL with every term
-   * that made it, and the row it lands on. `null` until a year and a die are both
-   * given (and while the debounced round trip is still out).
-   *
-   * Held rather than derived because it is the *engine's* reading — a stress die
-   * explodes, so no bounded lookup table in JS could stand in for it, and
-   * re-deriving the outcome here would be a second implementation of the table.
-   */
-  agingPreview = $state<{
-    total: AgingTotal;
-    outcome: AgingOutcome;
-    /**
-     * The Crisis the year would send the character to, once the row demands one,
-     * the Simple Die is typed and the Aging Points are placed — the engine reads
-     * it off the year it would apply, so what is shown is what Apply writes.
-     */
-    crisis?: CrisisPreview | null;
-  } | null>(null);
+  /** @see AgingWorkflow.preview */
+  get agingPreview(): AgingPreview {
+    return this.#agingWorkflow.preview;
+  }
+  set agingPreview(preview: AgingPreview) {
+    this.#agingWorkflow.preview = preview;
+  }
 
-  /**
-   * What the year just applied had to TELL the player, as opposed to what it
-   * wrote — today only the Longevity Ritual a Crisis spends (`:16573`), which the
-   * entity cannot show because it deliberately keeps the stored choice.
-   *
-   * Cleared whenever the draft is, and by the next apply or revert: a note about
-   * a year the player has since taken back would be a lie about the character in
-   * front of them.
-   */
-  agingNotes = $state<AgingNote[]>([]);
+  /** @see AgingWorkflow.notes */
+  get agingNotes(): AgingNote[] {
+    return this.#agingWorkflow.notes;
+  }
+  set agingNotes(notes: AgingNote[]) {
+    this.#agingWorkflow.notes = notes;
+  }
 
-  /**
-   * Why the last preview, apply or revert was refused, for the calculator to
-   * render. Empty when there is nothing to say.
-   *
-   * Its own field rather than part of {@link result}, on the
-   * {@link childhoodRejections} precedent: these findings are about the form the
-   * player just submitted, not about the character — which a refusal leaves
-   * untouched.
-   */
-  agingRejections = $state<ValidationIssue[]>([]);
+  /** @see AgingWorkflow.rejections */
+  get agingRejections(): ValidationIssue[] {
+    return this.#agingWorkflow.rejections;
+  }
+  set agingRejections(rejections: ValidationIssue[]) {
+    this.#agingWorkflow.rejections = rejections;
+  }
 
-  /**
-   * The owed year the calculator is on: the player's own pick, or the first year
-   * the aging log does not yet record.
-   *
-   * Defaulted here rather than in the component so the store and the screen can
-   * never disagree about which year a typed die belongs to — the component only
-   * renders what this says.
-   */
-  agingYear = $derived<number | null>(
-    this.agingDraft.age ??
-      (this.effective?.aging?.schedule ?? []).find((year) => !year.recorded)?.age ??
-      null,
-  );
+  /** @see AgingWorkflow.year */
+  get agingYear(): number | null {
+    return this.#agingWorkflow.year;
+  }
 
   /**
    * Which screen the app is on: the startup choice screen, the guided wizard, or
@@ -408,83 +295,105 @@ class AppStore {
   view = $state<'start' | 'editor' | 'wizard'>('start');
 
   /**
-   * Index of the wizard's current step within {@link wizardPhases}.
-   *
-   * Navigation state, deliberately not part of the entity: moving through the
-   * flow is not an edit, so it never dirties the document and a save records no
-   * progress through it.
+   * Guided-wizard step navigation, extracted to {@link WizardNavigation}
+   * (VA6) — it owns the step/furthest counters and every derived reading of
+   * them, and only ever reads the entity/ruleset/result through this `host`.
+   * `AppStore` stays the sole owner of `entity`/`ruleset`/`result` themselves.
    */
-  wizardStep = $state(0);
+  #wizardNav = new WizardNavigation({
+    ruleset: () => this.ruleset,
+    entityTypeId: () => this.entity.type_id,
+    result: () => this.result,
+  });
+
+  /** @see WizardNavigation.step */
+  get wizardStep(): number {
+    return this.#wizardNav.step;
+  }
+  set wizardStep(step: number) {
+    this.#wizardNav.step = step;
+  }
+
+  /** @see WizardNavigation.furthest */
+  get wizardFurthest(): number {
+    return this.#wizardNav.furthest;
+  }
+  set wizardFurthest(furthest: number) {
+    this.#wizardNav.furthest = furthest;
+  }
+
+  /** @see WizardNavigation.phases */
+  get wizardPhases() {
+    return this.#wizardNav.phases;
+  }
+
+  /** @see WizardNavigation.phase */
+  get wizardPhase() {
+    return this.#wizardNav.phase;
+  }
+
+  /** @see WizardNavigation.canAdvance */
+  get wizardCanAdvance() {
+    return this.#wizardNav.canAdvance;
+  }
+
+  /** @see WizardNavigation.canFinish */
+  get wizardCanFinish() {
+    return this.#wizardNav.canFinish;
+  }
+
+  /** @see WizardNavigation.incompletePhases */
+  get wizardIncompletePhases() {
+    return this.#wizardNav.incompletePhases;
+  }
+
+  /** @see WizardNavigation.phaseIncomplete */
+  get wizardPhaseIncomplete() {
+    return this.#wizardNav.phaseIncomplete;
+  }
 
   /**
-   * The furthest step reached by advancing. Raised only by {@link wizardNext},
-   * never lowered by going back, so the rail can offer every step the user has
-   * already seen while still refusing to skip ahead into unseen ones.
+   * Save/Save As/Export-Markdown and the discard-confirmation prompt,
+   * extracted to {@link FileOperations} (VA6). `markSaved` is the only path
+   * that writes {@link #savedSnapshot} from outside `AppStore`'s own body —
+   * the callback closure is defined here, so the baseline keeps exactly one
+   * owner even though a successful save is what triggers it.
    */
-  wizardFurthest = $state(0);
+  #fileOps = new FileOperations({
+    entity: () => this.entity,
+    snapshot: () => this.#snapshot(),
+    markSaved: (snapshot) => {
+      this.#savedSnapshot = snapshot;
+    },
+    setError: (error) => {
+      this.error = error;
+    },
+    ruleset: () => this.ruleset,
+    t: (key, args) => this.t(key, args),
+  });
 
-  /**
-   * The wizard's steps for the current character: the type profile's own ordered
-   * phases, then the terminal `review` step. Empty when no profile is loaded.
-   */
-  wizardPhases = $derived(wizardPhases(this.ruleset?.ruleset.type_profiles[this.entity.type_id]));
+  /** @see FileOperations.currentPath */
+  get currentPath(): string | null {
+    return this.#fileOps.currentPath;
+  }
+  set currentPath(path: string | null) {
+    this.#fileOps.currentPath = path;
+  }
 
-  /** The phase the wizard is currently on. */
-  wizardPhase = $derived<CreationPhase>(this.wizardPhases[this.wizardStep] ?? 'review');
-
-  /**
-   * Whether the wizard may advance: the current phase carries no error.
-   *
-   * Errors only, so a warning never gates — which means a phase can be legal but
-   * empty (a magus may pass the House step with no House, since `house_unset` is
-   * an advisory). In Advisory mode the engine downgrades every error to a warning
-   * and in Silent mode it reports none, so in both the wizard stops gating
-   * entirely; the validation-mode control is the intended escape hatch.
-   */
-  wizardCanAdvance = $derived(!phaseHasBlockingIssue(this.result?.issues ?? [], this.wizardPhase));
-
-  /**
-   * Whether the wizard may finish: no error remains anywhere in the character.
-   *
-   * Deliberately wider than {@link wizardCanAdvance}: the findings no creation
-   * phase owns (equipment, Might, Warping) gate no single step, and a phase the
-   * character type never declares has no step at all — Finish is where both still
-   * have to be answered.
-   */
-  wizardCanFinish = $derived(!(this.result?.issues ?? []).some((i) => i.severity === 'error'));
-
-  /**
-   * The steps of this flow the player has recorded nothing for, in rail order, as
-   * the engine reports them.
-   *
-   * Purely informational, and deliberately kept out of {@link wizardCanAdvance}
-   * and {@link wizardCanFinish}: legal is not the same as finished, so an empty
-   * step is marked, never blocked.
-   */
-  wizardIncompletePhases = $derived(incompletePhases(this.result));
-
-  /** Whether the step currently on screen is one of those. */
-  wizardPhaseIncomplete = $derived(this.wizardIncompletePhases.includes(this.wizardPhase));
-
-  // Absolute path of the document's current file (from the last Open or the last
-  // Save As / first Save). `null` for a never-saved document, so Save behaves as
-  // Save As. Drives the window title too.
-  currentPath = $state<string | null>(null);
-
-  /** File name of the current document, or `null` when it has never been saved. */
-  currentFileName = $derived(this.currentPath ? fileNameOf(this.currentPath) : null);
-
-  // A Save/Save As/Open is running. A second one is a no-op until it finishes, so
-  // a stray double click or shortcut can't stack native dialogs or races.
-  #opInFlight = $state(false);
+  /** @see FileOperations.currentFileName */
+  get currentFileName(): string | null {
+    return this.#fileOps.currentFileName;
+  }
 
   /** Whether a file operation (Save/Save As/Open) is running; disables the toolbar. */
-  busy = $derived(this.#opInFlight);
+  get busy(): boolean {
+    return this.#fileOps.busy;
+  }
 
   /** Whether the New/Open discard-confirmation prompt is currently shown. */
-  discardPromptOpen = $state(false);
-  // Resolver for the in-flight discard prompt (`true` = discard and proceed).
-  #discardResolve: ((discard: boolean) => void) | null = null;
+  get discardPromptOpen(): boolean {
+    return this.#fileOps.discardPromptOpen;
+  }
 
   // Serialized snapshot of the entity as of the last save/load — the baseline
   // the close/quit guard compares against. Seeded from the initial entity so
@@ -513,12 +422,9 @@ class AppStore {
   #bundle = $derived(buildBundle(this.lang));
   #timer: ReturnType<typeof setTimeout> | undefined;
   #seq = 0;
-  // The aging preview's own debounce and sequence guard. Deliberately separate
-  // from the validation pair above: the die is not an entity edit, so it must not
-  // ride on `#scheduleValidate` — and a keystroke in the die field must not cancel
-  // a pending validation of the character (or the other way round).
-  #agingTimer: ReturnType<typeof setTimeout> | undefined;
-  #agingSeq = 0;
+  // The aging preview's own debounce and sequence guard lives on
+  // `AgingWorkflow` now (VA6) — deliberately separate from the validation pair
+  // above, since the die is not an entity edit.
   // The exact error object the last rejected validate published to `error`, so a
   // later succeeding validate can tell its own banner apart from a file-operation
   // failure that landed in the same shared field. Not reactive: it never renders.
@@ -946,62 +852,15 @@ class AppStore {
    * consideration with `null`. Draft state only (see {@link ChildhoodDraft}):
    * nothing is written to the entity until {@link applyChildhoodPackage}.
    *
-   * Switching packages drops the slot values the new package does not declare, so a
-   * stale answer from the previous one can never be submitted — the
-   * {@link #prunedHouseChoices} precedent. Slots both packages ask for survive, so
-   * comparing two childhoods does not mean re-typing the shared answers. Clearing
-   * drops the selection and every slot.
-   *
-   * Not validated and not debounced: a draft is a form the engine has not been shown
-   * yet, so there is nothing to check until it is submitted. Editing the draft does
-   * retire the last rejection ({@link childhoodRejections}), which was about the form
-   * as it stood before the edit.
+   * @see ChildhoodWorkflow.setDraftPackage
    */
   setChildhoodDraftPackage(packageId: string | null): void {
-    this.childhoodRejections = [];
-    if (packageId === null) {
-      this.childhoodDraft = defaultChildhoodDraft();
-      return;
-    }
-    this.childhoodDraft = { packageId, slots: this.#prunedChildhoodSlots(packageId) };
+    this.#childhoodWorkflow.setDraftPackage(packageId);
   }
 
-  /**
-   * Answer one of the drafted package's parameter slots (the Area Lore region, the
-   * language, …). A blank or whitespace-only value deletes the key rather than
-   * storing an empty string: an unanswered slot is absent, which is what the
-   * engine's "slot unanswered" rejection is about. Draft state only, like
-   * {@link setChildhoodDraftPackage}.
-   */
+  /** @see ChildhoodWorkflow.setDraftSlot */
   setChildhoodDraftSlot(slot: string, value: string): void {
-    this.childhoodRejections = [];
-    const answer = value.trim();
-    const slots = { ...this.childhoodDraft.slots };
-    if (answer) {
-      slots[slot] = answer;
-    } else {
-      delete slots[slot];
-    }
-    this.childhoodDraft.slots = slots;
-  }
-
-  /** The parameter slot keys the given package's entries declare. */
-  #childhoodSlotKeys(packageId: string): Set<string> {
-    const keys = new Set<string>();
-    for (const entry of this.ruleset?.ruleset.childhoods?.[packageId]?.entries ?? []) {
-      if (entry.slot) keys.add(entry.slot);
-    }
-    return keys;
-  }
-
-  /** Drafted slot answers kept only where the target package still asks for them. */
-  #prunedChildhoodSlots(packageId: string): Record<string, string> {
-    const asked = this.#childhoodSlotKeys(packageId);
-    const kept: Record<string, string> = {};
-    for (const [slot, answer] of Object.entries(this.childhoodDraft.slots)) {
-      if (asked.has(slot)) kept[slot] = answer;
-    }
-    return kept;
+    this.#childhoodWorkflow.setDraftSlot(slot, value);
   }
 
   /**
@@ -1009,163 +868,51 @@ class AppStore {
    * keep whatever the engine decides. A no-op while no package is drafted — there is
    * nothing to submit.
    *
-   * The engine owns the whole mechanic, so this only routes its two outcomes. On
-   * `applied` the returned entity replaces the current one wholesale (the Ability
-   * rows the package writes and the record of the package taken arrive together);
-   * `dirty` needs no help, since it derives from the entity snapshot. On `rejected`
-   * the entity is left exactly as it was and the findings land in
-   * {@link childhoodRejections} for the picker to show against the offending slots.
+   * @see ChildhoodWorkflow.apply
    */
   async applyChildhoodPackage(): Promise<void> {
-    const packageId = this.childhoodDraft.packageId;
-    if (!packageId) return;
-    this.childhoodRejections = [];
-    try {
-      const outcome = await ipc.applyChildhoodPackage(
-        $state.snapshot(this.entity),
-        packageId,
-        $state.snapshot(this.childhoodDraft.slots),
-      );
-      if (outcome.status === 'rejected') {
-        this.childhoodRejections = outcome.issues;
-        return;
-      }
-      this.entity = outcome.entity;
-      await this.revalidate();
-    } catch (e) {
-      this.error = e as AppError;
-    }
+    await this.#childhoodWorkflow.apply();
   }
 
   /**
    * Pick which owed year the calculator is rolling for, or fall back to the
    * default with `null`. Draft state only (see {@link AgingDraft}).
    *
-   * Drops the point distribution: it was placed against the award the *other*
-   * year's roll produced, and carrying it over would let a player apply points
-   * they never re-confirmed. The typed die survives, since it is the number the
-   * player has in front of them either way.
+   * @see AgingWorkflow.setYear
    */
   setAgingYear(age: number | null): void {
-    this.agingRejections = [];
-    this.agingDraft = { ...this.agingDraft, age, distribution: {} };
-    this.#scheduleAgingPreview();
+    this.#agingWorkflow.setYear(age);
   }
 
-  /**
-   * Record the stress die the player rolled, or clear it with `null`.
-   *
-   * "AGING TOTAL: Stress die (no botch) + age/10 (round up) …"
-   * Source: Ars Magica - Definitive Edition (Core Rules).md:16567
-   *
-   * A stress die explodes, so the value has a floor of 0 and no ceiling; it is
-   * clamped only to what the command's `i32` can carry. Debounced through
-   * {@link #scheduleAgingPreview} and NOT through `#scheduleValidate` — the die is
-   * not an edit of the character, so it must never be sent as one.
-   */
+  /** @see AgingWorkflow.setDie */
   setAgingDie(die: number | null): void {
-    this.agingRejections = [];
-    const value = die != null && Number.isFinite(die) ? clampInt(die, 0, I32_MAX) : null;
-    this.agingDraft = { ...this.agingDraft, die: value, distribution: {} };
-    this.#scheduleAgingPreview();
+    this.#agingWorkflow.setDie(die);
   }
 
-  /**
-   * Place (or, with 0, un-place) Aging Points in one Characteristic.
-   *
-   * "If an Aging Point 'in any Characteristic' is gained, the player may choose
-   * the Characteristic." Source: Ars Magica - Definitive Edition (Core
-   * Rules).md:16615 — and `:16602`/`:16611` say "in any Characteristic**s**",
-   * plural, so this is a map and not a single pick.
-   *
-   * The engine is the authority on whether the map is legal; this only records
-   * it, and the calculator refuses to submit one that does not sum to the award.
-   */
+  /** @see AgingWorkflow.setDistribution */
   setAgingDistribution(characteristic: Characteristic, points: number | null): void {
-    this.agingRejections = [];
-    const distribution = { ...this.agingDraft.distribution };
-    if (points != null && Number.isFinite(points) && points > 0) {
-      distribution[characteristic] = clampInt(points, 1, U8_MAX);
-    } else {
-      delete distribution[characteristic];
-    }
-    this.agingDraft = { ...this.agingDraft, distribution };
-    // Placing the points moves the CRISIS TOTAL, because those points ARE the
-    // Decrepitude increase `:16619` puts first — so the reading is asked for
-    // again rather than left standing at a number the year will not write.
-    this.#scheduleAgingPreview();
+    this.#agingWorkflow.setDistribution(characteristic, points);
   }
 
-  /**
-   * Record the Simple Die the player threw at the Crisis Table, or clear it with
-   * `null`.
-   *
-   * "CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score"
-   * Source: Ars Magica - Definitive Edition (Core Rules).md:16621
-   *
-   * Draft state and a preview, never a validate: like the stress die this is
-   * player input the character must not hold, so typing it cannot dirty the
-   * document.
-   */
+  /** @see AgingWorkflow.setCrisisDie */
   setAgingCrisisDie(die: number | null): void {
-    this.agingRejections = [];
-    const value = die != null && Number.isFinite(die) ? clampInt(die, 0, I32_MAX) : null;
-    this.agingDraft = { ...this.agingDraft, crisisDie: value };
-    this.#scheduleAgingPreview();
+    this.#agingWorkflow.setCrisisDie(die);
   }
 
   /** Abandon the drafted roll: the year, both dice, the points, the last refusal
-   *  and whatever the last applied year had to say. */
+   *  and whatever the last applied year had to say. @see AgingWorkflow.clear */
   clearAgingDraft(): void {
-    clearTimeout(this.#agingTimer);
-    this.#agingTimer = undefined;
-    this.#agingSeq++;
-    this.agingDraft = defaultAgingDraft();
-    this.agingPreview = null;
-    this.agingRejections = [];
-    this.agingNotes = [];
+    this.#agingWorkflow.clear();
   }
 
   /**
    * Ask the engine what the drafted die makes of the drafted year, and keep the
    * answer in {@link agingPreview}. Writes nothing to the character.
    *
-   * Guarded by its own sequence counter, the {@link revalidate} idiom: the die
-   * field is typed into, so several previews can be in flight and they may finish
-   * out of order — a stale answer must never overwrite a newer one, or the player
-   * sees an outcome for a die they have already changed.
+   * @see AgingWorkflow.runPreview
    */
   async previewAgingRoll(): Promise<void> {
-    const seq = ++this.#agingSeq;
-    const { age, die, distribution, crisisDie } = this.agingDraft;
-    const year = age ?? this.agingYear;
-    if (year == null || die == null) {
-      this.agingPreview = null;
-      return;
-    }
-    try {
-      const projection = await ipc.agingPreview(
-        $state.snapshot(this.entity),
-        year,
-        die,
-        $state.snapshot(distribution),
-        crisisDie,
-      );
-      if (seq !== this.#agingSeq) return;
-      if (projection.status === 'rejected') {
-        this.agingPreview = null;
-        this.agingRejections = projection.issues;
-        return;
-      }
-      this.agingPreview = {
-        total: projection.total,
-        outcome: projection.outcome,
-        crisis: projection.crisis ?? null,
-      };
-      this.agingRejections = [];
-    } catch (e) {
-      if (seq === this.#agingSeq) this.error = e as AppError;
-    }
+    await this.#agingWorkflow.runPreview();
   }
 
   /**
@@ -1173,66 +920,21 @@ class AppStore {
    * advances the apparent age and appends the log entry, all in one move
    * (`resolve_year` is the aging subsystem's single writer).
    *
-   * On acceptance the returned character replaces the current one wholesale and
-   * the draft is spent, so the calculator moves on to the next owed year; `dirty`
-   * needs no help, since it derives from the entity snapshot. On refusal the
-   * character is untouched and the findings land in {@link agingRejections}.
+   * @see AgingWorkflow.apply
    */
   async applyAgingRoll(): Promise<void> {
-    const { die, distribution, crisisDie } = this.agingDraft;
-    const year = this.agingYear;
-    if (year == null || die == null) return;
-    this.agingRejections = [];
-    this.agingNotes = [];
-    try {
-      const application = await ipc.agingApply(
-        $state.snapshot(this.entity),
-        year,
-        die,
-        $state.snapshot(distribution),
-        crisisDie,
-      );
-      if (application.status === 'rejected') {
-        this.agingRejections = application.issues;
-        return;
-      }
-      this.entity = application.entity;
-      this.agingDraft = defaultAgingDraft();
-      this.agingPreview = null;
-      // Kept past the draft it came from: the note is about the character now on
-      // screen, not about the form that has just been spent.
-      this.agingNotes = application.notes ?? [];
-      await this.revalidate();
-    } catch (e) {
-      this.error = e as AppError;
-    }
+    await this.#agingWorkflow.apply();
   }
 
   /**
    * Take one recorded year back off, exactly — a pre-play catch-up of 25 rolls
    * with no undo would not be shippable. The engine subtracts precisely the points
    * the log entry recorded and removes the entry.
+   *
+   * @see AgingWorkflow.revert
    */
   async revertAgingRoll(age: number): Promise<void> {
-    this.agingRejections = [];
-    // The year is going away, so what it had to say goes with it.
-    this.agingNotes = [];
-    try {
-      const reversion = await ipc.agingRevert($state.snapshot(this.entity), age);
-      if (reversion.status === 'rejected') {
-        this.agingRejections = reversion.issues;
-        return;
-      }
-      this.entity = reversion.entity;
-      await this.revalidate();
-    } catch (e) {
-      this.error = e as AppError;
-    }
-  }
-
-  #scheduleAgingPreview(): void {
-    clearTimeout(this.#agingTimer);
-    this.#agingTimer = setTimeout(() => void this.previewAgingRoll(), VALIDATE_DEBOUNCE_MS);
+    await this.#agingWorkflow.revert(age);
   }
 
   /**
@@ -2061,48 +1763,22 @@ class AppStore {
    * falls back to {@link saveAs} so the user picks a destination; otherwise it
    * writes straight to the tracked file with no prompt (standard document-app
    * behavior). No-op while another file operation is in flight.
+   *
+   * @see FileOperations.save
    */
   async save(): Promise<void> {
-    if (this.#opInFlight) return;
-    if (this.currentPath === null) {
-      await this.saveAs();
-      return;
-    }
-    await this.#writeTo(this.currentPath);
+    await this.#fileOps.save();
   }
 
   /**
    * Always prompt for a destination and, on success, adopt it as the current
    * file. A cancelled prompt (null path) leaves the current file untouched and
    * the document dirty. No-op while another file operation is in flight.
+   *
+   * @see FileOperations.saveAs
    */
   async saveAs(): Promise<void> {
-    if (this.#opInFlight) return;
-    await this.#writeTo(null);
-  }
-
-  /**
-   * Shared write path. `path === null` prompts (Save As / first Save); a concrete
-   * path writes directly. On success clears dirty and records the written path as
-   * the current file. The baseline is captured BEFORE awaiting, so edits made
-   * while a dialog is open stay marked dirty.
-   */
-  async #writeTo(path: string | null): Promise<void> {
-    this.#opInFlight = true;
-    this.error = null;
-    const snapshot = this.#snapshot();
-    try {
-      const written = await ipc.saveEntity($state.snapshot(this.entity), path);
-      // A null return means the dialog was cancelled — nothing was written.
-      if (written !== null) {
-        this.currentPath = written;
-        this.#savedSnapshot = snapshot;
-      }
-    } catch (e) {
-      this.error = e as AppError;
-    } finally {
-      this.#opInFlight = false;
-    }
+    await this.#fileOps.saveAs();
   }
 
   /**
@@ -2115,38 +1791,11 @@ class AppStore {
    * the unsaved-changes guard nor retargets the next Save. It shares the
    * in-flight guard with the file operations so a stray second click cannot stack
    * two native dialogs.
+   *
+   * @see FileOperations.exportMarkdown
    */
   async exportMarkdown(): Promise<void> {
-    if (this.#opInFlight) return;
-    this.#opInFlight = true;
-    this.error = null;
-    try {
-      await ipc.exportMarkdown(
-        $state.snapshot(this.entity),
-        await this.#exportLabels(),
-        null,
-        this.currentPath,
-      );
-    } catch (e) {
-      this.error = e as AppError;
-    } finally {
-      this.#opInFlight = false;
-    }
-  }
-
-  /**
-   * The localized document chrome the exporter prints: every key the engine names,
-   * plus the families it composes from catalogue data (see
-   * {@link composedExportLabelKeys}), each resolved against the active bundle. The
-   * engine hardcodes no user-facing string, so a key it never receives would print
-   * as its own slug.
-   */
-  async #exportLabels(): Promise<Record<string, string>> {
-    const keys = new Set(await ipc.exportLabelKeys());
-    for (const key of composedExportLabelKeys(this.ruleset)) keys.add(key);
-    const labels: Record<string, string> = {};
-    for (const key of keys) labels[key] = this.t(key);
-    return labels;
+    await this.#fileOps.exportMarkdown();
   }
 
   /**
@@ -2154,11 +1803,17 @@ class AppStore {
    * document has unsaved edits; a cancelled prompt aborts without loading. On
    * success the opened file becomes the current file. No-op while another file
    * operation is in flight.
+   *
+   * Stays on `AppStore` rather than moving into {@link FileOperations}: unlike
+   * Save/Export it resets several axes at once (entity, wizard rail, childhood
+   * and aging drafts, view) that belong to other modules or to `AppStore`
+   * itself, so it borrows only the busy flag and the discard prompt from
+   * `#fileOps` rather than folding those resets into that module.
    */
   async open(): Promise<void> {
-    if (this.#opInFlight || this.discardPromptOpen) return;
-    if (this.dirty && !(await this.#confirmDiscard())) return;
-    this.#opInFlight = true;
+    if (this.#fileOps.busy || this.discardPromptOpen) return;
+    if (this.dirty && !(await this.#fileOps.confirmDiscard())) return;
+    this.#fileOps.busy = true;
     this.error = null;
     try {
       const loaded = await ipc.loadEntity();
@@ -2186,7 +1841,7 @@ class AppStore {
     } catch (e) {
       this.error = e as AppError;
     } finally {
-      this.#opInFlight = false;
+      this.#fileOps.busy = false;
     }
   }
 
@@ -2199,8 +1854,8 @@ class AppStore {
    * again, so no type may be implied).
    */
   async newDocument(): Promise<void> {
-    if (this.#opInFlight || this.discardPromptOpen) return;
-    if (this.dirty && !(await this.#confirmDiscard())) return;
+    if (this.#fileOps.busy || this.discardPromptOpen) return;
+    if (this.dirty && !(await this.#fileOps.confirmDiscard())) return;
     const { id, version } = this.ruleset?.ruleset ?? this.entity.ruleset;
     this.entity = newEntity(id, version, '');
     this.view = 'start';
@@ -2275,10 +1930,7 @@ class AppStore {
 
   /** Advance one step, unless the current phase holds an error. */
   wizardNext(): void {
-    if (!this.wizardCanAdvance) return;
-    if (this.wizardStep >= this.wizardPhases.length - 1) return;
-    this.wizardStep += 1;
-    this.wizardFurthest = Math.max(this.wizardFurthest, this.wizardStep);
+    this.#wizardNav.next();
   }
 
   /**
@@ -2286,7 +1938,7 @@ class AppStore {
    * that needs fixing, including the one they have just broken.
    */
   wizardBack(): void {
-    this.wizardStep = Math.max(this.wizardStep - 1, 0);
+    this.#wizardNav.back();
   }
 
   /**
@@ -2298,18 +1950,7 @@ class AppStore {
    * Backward jumps are free, like {@link wizardBack}.
    */
   wizardGoTo(step: number): void {
-    if (step < 0 || step > this.wizardFurthest) return;
-    if (step <= this.wizardStep) {
-      this.wizardStep = step;
-      return;
-    }
-    const blocked = firstBlockedPhaseIndex(
-      this.wizardPhases,
-      this.result?.issues ?? [],
-      this.wizardStep,
-      step,
-    );
-    this.wizardStep = blocked ?? step;
+    this.#wizardNav.goTo(step);
   }
 
   /**
@@ -2327,28 +1968,13 @@ class AppStore {
 
   /** Send the rail back to the first step. */
   #resetWizardNav(): void {
-    this.wizardStep = 0;
-    this.wizardFurthest = 0;
+    this.#wizardNav.reset();
   }
 
-  /**
-   * Show the discard-changes prompt and resolve once the user answers via
-   * {@link resolveDiscardPrompt}. Resolves `true` to discard and proceed, `false`
-   * to cancel. The UI renders a modal keyed off {@link discardPromptOpen}.
-   */
-  #confirmDiscard(): Promise<boolean> {
-    return new Promise((resolve) => {
-      this.#discardResolve = resolve;
-      this.discardPromptOpen = true;
-    });
-  }
-
-  /** Answer the open discard prompt (called by the modal's buttons). */
+  /** Answer the open discard prompt (called by the modal's buttons).
+   *  @see FileOperations.resolveDiscardPrompt */
   resolveDiscardPrompt(discard: boolean): void {
-    this.discardPromptOpen = false;
-    const resolve = this.#discardResolve;
-    this.#discardResolve = null;
-    resolve?.(discard);
+    this.#fileOps.resolveDiscardPrompt(discard);
   }
 
   /** Validate now, ignoring any in-flight response that finishes out of order. */

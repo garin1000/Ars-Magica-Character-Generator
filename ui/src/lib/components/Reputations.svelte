@@ -24,6 +24,7 @@
         <input
           class="reputation-content"
           placeholder={store.t('reputation-content-placeholder')}
+          aria-label={store.t('reputation-content-placeholder')}
           value={reputation.content}
           oninput={(e) =>
             store.setReputationContent(i, (e.currentTarget as HTMLInputElement).value)}

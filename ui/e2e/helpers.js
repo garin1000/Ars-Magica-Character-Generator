@@ -254,3 +254,21 @@ export async function returnToStartScreen() {
     await $(START_SCREEN).waitForExist({ timeout: STEP_TIMEOUT });
   }
 }
+
+/**
+ * Whether a `SourcePicker` row (an `add-*` button — V/F, Abilities, Spells,
+ * Equipment) is greyed out. These rows stay natively enabled and signal
+ * "blocked" through `aria-disabled` instead of the `disabled` attribute, so
+ * that a screen-reader/keyboard user can still reach the row and its tooltip
+ * explaining why (see `SourcePicker.svelte`). WebDriver's own `isEnabled()`
+ * only ever reflects the native `disabled` attribute — never `aria-disabled`
+ * — so it always reports `true` for these rows regardless of their real
+ * state; use this helper instead everywhere a spec needs to know whether an
+ * `add-*` row is currently takeable.
+ *
+ * @param {WebdriverIO.Element} element the row's button element
+ * @returns {Promise<boolean>}
+ */
+export async function isRowBlocked(element) {
+  return (await element.getAttribute('aria-disabled')) === 'true';
+}

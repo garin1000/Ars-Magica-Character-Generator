@@ -21,7 +21,7 @@ use super::*;
 use crate::aging::AgingError;
 
 /// Validates a directly-entered aged character's aging state (advisory). Aging
-/// drops are DERIVED from [`Entity::aging_points`] (Core Rules.md:16579); this
+/// drops are DERIVED from [`Entity::aging_points`] (Ars Magica - Definitive Edition (Core Rules).md:16579); this
 /// only surfaces informational notes, never blocking errors:
 ///
 /// - `excessive_aging_reduction`: the derived drops would push a Characteristic's
@@ -48,7 +48,7 @@ use crate::aging::AgingError;
 ///
 /// Reads the un-aged bought score plus the derived drops; it never touches the
 /// point-buy budget check (which is what keeps aging from perturbing creation
-/// legality). Source: Core Rules.md:16579.
+/// legality). Source: Ars Magica - Definitive Edition (Core Rules).md:16579.
 pub(crate) fn validate_aging(
     entity: &Entity,
     ruleset: &Ruleset,

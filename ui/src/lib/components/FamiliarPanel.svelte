@@ -17,13 +17,16 @@
 <div class="detail-section">
   <h3 class="detail-label">{store.t('familiar-label')}</h3>
   {#if familiar}
-    <input
-      class="familiar-name"
-      placeholder={store.t('familiar-name-placeholder')}
-      value={familiar.name}
-      oninput={(e) => store.setFamiliarName((e.currentTarget as HTMLInputElement).value)}
-      data-testid="familiar-name"
-    />
+    <label class="field inline">
+      <span>{store.t('familiar-name-placeholder')}</span>
+      <input
+        class="familiar-name"
+        placeholder={store.t('familiar-name-placeholder')}
+        value={familiar.name}
+        oninput={(e) => store.setFamiliarName((e.currentTarget as HTMLInputElement).value)}
+        data-testid="familiar-name"
+      />
+    </label>
     <label class="field inline">
       <span>{store.t('familiar-animal-label')}</span>
       <input
@@ -127,6 +130,7 @@
           <input
             class="trait-name"
             placeholder={store.t('personality-name-placeholder')}
+            aria-label={store.t('personality-name-placeholder')}
             value={trait.name}
             oninput={(e) =>
               store.setFamiliarPersonalityTraitName(i, (e.currentTarget as HTMLInputElement).value)}
@@ -206,6 +210,7 @@
           <input
             class="power-name"
             placeholder={store.t('power-name-placeholder')}
+            aria-label={store.t('power-name-placeholder')}
             value={power.name}
             oninput={(e) =>
               store.setFamiliarPowerName(i, (e.currentTarget as HTMLInputElement).value)}

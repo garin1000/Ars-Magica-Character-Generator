@@ -4,6 +4,7 @@
   // Fluent `derived-*` key; catalogue ids resolve to their localized display name.
   import { store } from '../state.svelte';
   import { combatRowLabel, formatSigned, spellDisplayName } from '../derive';
+  import { tooltip } from '../actions';
   import type { Addend, PenetrationLine } from '../types';
 
   const d = $derived(store.derived);
@@ -134,7 +135,13 @@
 
         {#if labCell}
           <dl class="derived-grid" data-testid="derived-lab-total">
-            <dt title={breakdown(labCell.addends)}>{store.t('derived-lab-total')}</dt>
+            <!-- Deliberately focusable: the only way a keyboard/screen-reader user can
+                 reach this breakdown tooltip (see S7 in the a11y review — a bare `title`
+                 attribute is mouse-only and unreachable otherwise). -->
+            <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+            <dt tabindex="0" use:tooltip={{ text: breakdown(labCell.addends) }}>
+              {store.t('derived-lab-total')}
+            </dt>
             <dd>{labCell.total}{labCell.deficient ? ' ' + store.t('derived-deficient') : ''}</dd>
             {#if labCell.within_focus != null}
               <dt class="focus">{store.t('derived-within-focus')}</dt>
@@ -157,7 +164,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <th title={breakdown(castCell.addends)}
+                  <th tabindex="0" use:tooltip={{ text: breakdown(castCell.addends) }}
                     >{store.t('derived-section-casting')}{castCell.deficient
                       ? ' ' + store.t('derived-deficient')
                       : ''}</th
@@ -228,7 +235,10 @@
           {#each d.magic_resistance as mr (mr.form)}
             <li>
               <span>{name(mr.form)}</span>
-              <span class="value" title={breakdown(mr.addends)}>{mr.total}</span>
+              <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+              <span class="value" tabindex="0" use:tooltip={{ text: breakdown(mr.addends) }}
+                >{mr.total}</span
+              >
             </li>
           {/each}
         </ul>
@@ -372,7 +382,10 @@
     <!-- Soak & Encumbrance -->
     <div class="detail-section">
       <dl class="derived-grid">
-        <dt title={breakdown(d.soak.addends)}>{store.t('derived-section-soak')}</dt>
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+        <dt tabindex="0" use:tooltip={{ text: breakdown(d.soak.addends) }}>
+          {store.t('derived-section-soak')}
+        </dt>
         <dd data-testid="derived-soak">{d.soak.total}</dd>
         <dt>{store.t('derived-section-encumbrance')}</dt>
         <dd data-testid="derived-encumbrance">

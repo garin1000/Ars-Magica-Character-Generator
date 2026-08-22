@@ -184,11 +184,24 @@
     return `${spellDisplayName(rs, chosen.spell, chosen.parameter, paramLabel)} (${tf} ${lvl})`;
   }
 
-  // The minimum level a spell can be learned at: a Ritual must be learned at 20,
-  // an ordinary spell at 1 (Core Rules.md:12279-12295). Used to decide whether a
-  // General spell (no fixed catalogue level) is takeable at all.
+  // The minimum level a spell can be learned at: a Ritual must be learned at
+  // the engine's `ritual_min_level` (Ars Magica - Definitive Edition (Core
+  // Rules).md:12293, "Ritual spells are always at least level 20"), an
+  // ordinary spell at 1 — the latter is not a book-stated floor, just the
+  // lowest level a spell can exist at, so it stays a local constant.
+  //
+  // VA2 (tmp/review/review-round-1-viktor-app.md), CLOSED: the Ritual floor
+  // used to be a bare literal duplicating the engine's own check
+  // (`crates/arm-rules/src/ruleset.rs`'s `validate_spell`, and
+  // `crates/arm-rules/src/validation/magus.rs`). It now reads
+  // `ruleset.ritual_min_level`, derived from `spell::RITUAL_MIN_LEVEL` — see
+  // `crates/arm-rules/src/spell.rs`. The fallback below only covers the moment
+  // before a ruleset has loaded, when no spell exists to disable anyway.
+  const ORDINARY_MINIMUM_LEVEL = 1;
+  const RITUAL_MINIMUM_LEVEL_FALLBACK = 20;
   function minLearnableLevel(spell: Spell): number {
-    return spell.ritual ? 20 : 1;
+    if (!spell.ritual) return ORDINARY_MINIMUM_LEVEL;
+    return store.ruleset?.ruleset.ritual_min_level ?? RITUAL_MINIMUM_LEVEL_FALLBACK;
   }
 
   // Why a source spell's add control is greyed, or null when it is takeable. A
@@ -477,7 +490,7 @@
                               onclick={() => store.removeMasteryAbilityAt(i, ai)}
                               data-testid="spell-mastery-ability-remove-{chosen.spell}-{i}-{ai}"
                             >
-                              -
+                              ×
                             </button>
                           </span>
                         {/each}
@@ -516,7 +529,7 @@
                   onclick={() => store.removeSpellAt(i)}
                   data-testid="spell-remove-{chosen.spell}-{i}"
                 >
-                  -
+                  ×
                 </button>
               </li>
             {/snippet}

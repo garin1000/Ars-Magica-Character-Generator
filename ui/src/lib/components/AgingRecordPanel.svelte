@@ -144,6 +144,7 @@
           <input
             class="twilight-desc"
             placeholder={store.t('aging-log-effect-placeholder')}
+            aria-label={store.t('aging-log-effect-placeholder')}
             value={entry.effect}
             oninput={(e) =>
               store.setAgingLogEntryEffect(i, (e.currentTarget as HTMLInputElement).value)}

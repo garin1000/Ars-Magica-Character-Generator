@@ -13,7 +13,8 @@
 //!   Weapon, Thrown Weapon, Bows) and carries its Init/Atk/Def/Dam modifiers, a
 //!   minimum-Strength requirement, a Load, and (missiles only) a Range.
 //! - [`Shield`] — shields are their own table because a shield's modifiers **add
-//!   to** the wielded weapon's line (Core Rules.md:16656); 5i pairs a wielded
+//!   to** the wielded weapon's line
+//!   (Ars Magica - Definitive Edition (Core Rules).md:16656); 5i pairs a wielded
 //!   weapon with a wielded shield and sums them.
 //! - [`Armor`] — the Armor table, split into one row per material *and coverage*
 //!   (partial / full), each with a Protection (Soak) bonus and a Load.
@@ -124,7 +125,8 @@ pub struct Weapon {
 /// `id`.
 ///
 /// A shield is modeled separately from weapons because a shield's modifiers **add
-/// to** the wielded weapon's combat line (Core Rules.md:16656): 5i combines the
+/// to** the wielded weapon's combat line
+/// (Ars Magica - Definitive Edition (Core Rules).md:16656): 5i combines the
 /// wielded weapon and shield rows. Shields carry their own minimum-Strength
 /// requirement, checked independently of the weapon's.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -140,7 +142,7 @@ pub struct Shield {
     /// The shield's contribution to Encumbrance Load.
     pub load: u8,
     /// The minimum Strength score needed to use the shield (met separately from
-    /// the weapon's requirement, Core Rules.md:16997).
+    /// the weapon's requirement, Ars Magica - Definitive Edition (Core Rules).md:16997).
     pub min_strength: i8,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -244,7 +246,8 @@ mod tests {
     }
 
     /// `two_handed` defaults to false and is skipped when false; a two-handed
-    /// weapon (Great Weapon / bow) serializes it. Source: Core:7494, :17008-17013.
+    /// weapon (Great Weapon / bow) serializes it. Source: Ars Magica -
+    /// Definitive Edition (Core Rules).md:7494, :17008-17013.
     #[test]
     fn two_handed_defaults_false_and_skips_when_false() {
         let json = r#"{

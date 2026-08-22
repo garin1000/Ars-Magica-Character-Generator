@@ -279,7 +279,7 @@ cd ui && npm run check
 # Frontend lint/format
 cd ui && npm run lint && npm run format:check
 
-# Frontend unit tests
+# Frontend unit tests (both projects — see "Frontend test environments" below)
 cd ui && npm run test:unit
 
 # Full Tauri dev build
@@ -293,6 +293,54 @@ cd ui && npm run test:e2e
 # suite above (it needs the staging step first).
 cd ui && npm run test:e2e:portable
 ```
+
+### Frontend test environments — pick the right one
+
+`npm run test:unit` runs **two vitest projects**, declared in
+`ui/vitest.workspace.ts`. Output lines are tagged `|ssr|` or `|client|` so you can
+see which project a test ran under. `ui/vitest.config.ts` holds only the shared
+Svelte plugin setup — it deliberately sets no `environment`, `include` or
+`exclude`, because `extends` deep-merges that block into *both* projects.
+
+| Project | Environment | Matches | Use it for |
+|---|---|---|---|
+| `ssr` | `node` | `src/**/*.test.ts`, `e2e/**/*.test.js` | **The default.** Pure logic, and components rendered with `render` from `svelte/server`. Fast, no DOM. |
+| `client` | `happy-dom` | `src/**/*.client.test.ts` | Only when you must observe something that needs a **live component instance**. |
+
+**Default to `ssr`.** Name a file `*.client.test.ts` only when the thing under
+test cannot be observed without a mounted component:
+
+- an **`$effect` body running** — SSR never executes one
+- lifecycle hooks, focus management, event listeners, `bind:` two-way updates
+- anything asserting on live DOM state rather than rendered markup
+
+**Why this is two projects and not one flag.** SSR rendering and client mounting
+need *different module resolution*, not just a different environment. `mount()`
+exists only in Svelte's client build, which requires the `browser` resolve
+condition — and that condition cannot be set globally: it resolves the whole
+`svelte` package to its client build, after which every component calling
+`onMount` fails under the SSR renderer with `lifecycle_outside_component`. So the
+condition is scoped to the `client` project alone. A per-file *environment* switch
+(`environmentMatchGlobs`) is not enough on its own; it changes the DOM, not the
+resolution. Both failure modes were hit and confirmed while setting this up, so
+please do not "simplify" the split back into one config.
+
+**Why the `client` project exists at all.** Before it, the entire frontend suite
+was SSR-only, so **no `$effect` in the codebase was executed by any test**. That
+is a silent gap, not a loud one: an assertion placed after an effect that never
+fires still reports green. It hid the fact that the unsaved-changes guard's
+`update_close_guard` IPC mirror — an `$effect` keyed on `store.dirty`, and a
+mandatory product behavior — had zero coverage.
+
+`ui/src/lib/client-env.client.test.ts` guards the mechanism itself: it asserts a
+real `document` exists and that `$effect` actually runs on a mounted component
+(via the `EffectProbe.svelte` fixture, which is test-only and imported by nothing
+in the app). If the resolution or environment mapping regresses, that file fails
+loudly instead of effects silently never running. Keep it.
+
+Writing a client test: `mount()` from `svelte`, then `flushSync()` to run the
+scheduled effects before asserting, and `unmount()` afterwards. `happy-dom` is a
+devDependency; it ships in nothing.
 
 E2E tests drive the **real release binary** — the only layer that exercises the
 shipped production binary through real IPC + bundled rules resources, so run it

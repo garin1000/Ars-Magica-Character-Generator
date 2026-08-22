@@ -922,6 +922,16 @@ character complete as well as legal and surviving a save and a reload — plus a
 portable-layout smoke check for the rules-resolution path the standard suite cannot
 reach, and `cargo clippy --all-targets` fixed and added to the required gate. 35 specs.
 
+**A full-codebase audit ran after M6 closed** — nine reviewers, 57 findings, all worked
+through, with the required gate plus the 35-spec e2e suite green at completion. It hardened
+the untrusted-save path (a crafted `.armc` could abort the process on File → Open), closed
+the unsaved-changes guard's zero test coverage by adding a client test environment (SSR
+never runs an `$effect`, so that whole class was untested), removed two engine computations
+that had been reimplemented in TypeScript, normalised ~470 rule citations and corrected four
+wrong line ranges, and split the four largest engine modules plus `AppStore` into submodules.
+Detail, the items deliberately left open, and the operational traps worth knowing:
+`docs/audit-2026-08.md`.
+
 **Next: Milestone 7 — the character-sheet window.** A read-only second Tauri window
 that renders a formatted sheet and re-renders live as the character is edited in the
 main window, with which sections appear driven by the character-type profile rather

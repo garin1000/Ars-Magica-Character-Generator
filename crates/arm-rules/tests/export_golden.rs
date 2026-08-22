@@ -59,13 +59,35 @@ fn shipped_ruleset() -> LocalizedRuleset {
     .expect("the shipped English rules text loads")
 }
 
-/// Every declared chrome key resolved to itself — see the module docs for why the
-/// fixture is deliberately not localized.
+/// Every declared chrome key resolved to itself, plus the three catalogue-derived
+/// families `export.rs`'s own docs name as deliberately excluded from
+/// [`LABEL_KEYS`] (`type-`, `param-label-`, `category-`) — mirroring the
+/// frontend's `composedExportLabelKeys` (`ui/src/lib/state.svelte.ts`), which
+/// assembles this exact union before every real export. See the module docs for
+/// why the fixture is deliberately not localized.
 fn synthetic_labels() -> BTreeMap<String, String> {
-    LABEL_KEYS
-        .iter()
-        .map(|key| ((*key).to_string(), (*key).to_string()))
-        .collect()
+    let rs = shipped_ruleset();
+    let mut keys: BTreeSet<String> = LABEL_KEYS.iter().map(|k| k.to_string()).collect();
+    for profile in rs.ruleset.profiles() {
+        keys.insert(format!("type-{}", profile.id));
+    }
+    for item in rs.ruleset.items() {
+        keys.insert(format!("category-{}", item.category));
+        for param in &item.parameters {
+            keys.insert(format!("param-label-{}", param.key));
+        }
+    }
+    for ability in rs.ruleset.abilities() {
+        if let Some(parameter) = &ability.parameter {
+            keys.insert(format!("param-label-{parameter}"));
+        }
+    }
+    for spell in rs.ruleset.spells() {
+        for param in &spell.parameters {
+            keys.insert(format!("param-label-{}", param.key));
+        }
+    }
+    keys.into_iter().map(|k| (k.clone(), k)).collect()
 }
 
 /// A magus built entirely from **real** catalogue ids, touching every section the
@@ -286,7 +308,7 @@ fn golden_magus() -> Entity {
     // One hand-written year and two the engine resolved, so the fixture covers the
     // free-text entry, the widened one carrying its die and total, and both states a
     // Crisis can be in: demanded and unrolled (1229), and resolved against the
-    // Crisis Table (1230, Core Rules.md:16621-16632).
+    // Crisis Table (1230, Ars Magica - Definitive Edition (Core Rules).md:16621-16632).
     e.aging_log = vec![
         AgingLogEntry {
             year: Some(1220),
@@ -323,7 +345,8 @@ fn golden_magus() -> Entity {
 
 #[test]
 fn a_fully_populated_magus_matches_the_golden_document() {
-    let rendered = character_markdown(&golden_magus(), &shipped_ruleset(), &synthetic_labels());
+    let rendered = character_markdown(&golden_magus(), &shipped_ruleset(), &synthetic_labels())
+        .expect("synthetic_labels resolves every chrome key and every id is real");
     let expected = include_str!("fixtures/magus_export.md");
     assert_eq!(
         rendered, expected,

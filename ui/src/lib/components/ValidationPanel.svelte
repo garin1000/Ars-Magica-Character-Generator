@@ -35,12 +35,22 @@
 <section class={docked ? 'validation-docked' : 'panel'}>
   <h2>{store.t('validation-title')}</h2>
   {#if issues.length === 0}
-    <p class="muted" data-testid="no-issues">{store.t('no-issues')}</p>
+    <!-- Announced (role="status" implies aria-live="polite"): clearing the last
+         issue is a state change worth telling a screen reader about, matching
+         the app's own convention for "figure changes as you type" content
+         (AgingRollCalculator.svelte, XpBar.svelte's life-stage-no-budget). -->
+    <p class="muted" role="status" data-testid="no-issues">{store.t('no-issues')}</p>
   {:else}
-    <ul class="issue-list" data-testid="issue-list">
+    <!-- role="status" is polite, not assertive: a keystroke-driven revalidation
+         must never interrupt the screen reader mid-sentence the way
+         role="alert" would. -->
+    <ul class="issue-list" role="status" data-testid="issue-list">
       {#each issues as issue (`${issue.code}|${issue.context ?? ''}|${JSON.stringify(issue.args)}`)}
         {@const rawArgs = { ...issue.args, ...(issue.context ? { context: issue.context } : {}) }}
         <li class="issue {issue.severity}" data-severity={issue.severity} data-code={issue.code}>
+          <!-- Severity must not be color-only (WCAG 1.4.1): the border/tint carries
+               it visually, this carries it to assistive tech. -->
+          <span class="sr-only">{store.t(`issue-severity-${issue.severity}`)}: </span>
           {store.t(
             `issue-${issue.code}`,
             store.ruleset ? resolveIssueArgs(store.ruleset, rawArgs, store.t) : rawArgs,

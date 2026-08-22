@@ -18,10 +18,9 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 
 import { advanceWizardTo, startWizard } from '../helpers.js';
+import { e2eFile } from '../wdio.conf.js';
 
 const PANEL = '[data-testid="life-stage-panel"]';
 const FUNDING_POOL = '[data-testid="ability-funding-pool"]';
@@ -53,8 +52,6 @@ const AREA_LORE_SCORES = '[data-testid^="ability-score-ability.area_lore-"]';
 
 const STEP_TIMEOUT = 10000;
 const BOOT_TIMEOUT = 30000;
-
-const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
 
 /** Fluent wraps interpolated values in Unicode bidi isolation marks; strip them. */
 function clean(text) {

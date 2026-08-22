@@ -86,6 +86,7 @@
             <input
               class="power-name"
               placeholder={store.t('power-name-placeholder')}
+              aria-label={store.t('power-name-placeholder')}
               value={power.name}
               oninput={(e) => store.setPowerName(i, (e.currentTarget as HTMLInputElement).value)}
               data-testid="power-name-{i}"

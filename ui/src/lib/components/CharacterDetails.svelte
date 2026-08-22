@@ -198,6 +198,7 @@
             <input
               class="twilight-desc"
               placeholder={store.t('twilight-scar-placeholder')}
+              aria-label={store.t('twilight-scar-placeholder')}
               value={scar.description}
               oninput={(e) =>
                 store.setTwilightScarDescription(i, (e.currentTarget as HTMLInputElement).value)}

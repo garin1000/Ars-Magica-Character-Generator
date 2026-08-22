@@ -337,6 +337,31 @@ describe('XpBar negative-available regression (Issue G(a))', () => {
     expect(text).toContain('15');
   });
 
+  // A pure CSS-class rename must not break a spec that only cares about the
+  // overspend STATE, not its presentation — so the state is also exposed
+  // through a semantic `data-overspent` attribute (arts.e2e.js reads this
+  // instead of the `over-value`/`over` classes, finding E7).
+  it('marks Available with a semantic data-overspent attribute when overspent', () => {
+    resetEntity(20);
+    setEffective(30, []); // available = -10
+    const { open } = element(html(), 'xp-available');
+    expect(open).toMatch(/data-overspent="true"/);
+  });
+
+  it('marks the used figure with a semantic data-overspent attribute when overspent', () => {
+    resetEntity(10);
+    setEffective(15, []); // available = -5
+    const { open } = element(html(), 'xp-spent');
+    expect(open).toMatch(/data-overspent="true"/);
+  });
+
+  it('reports data-overspent="false" on both figures when the pool covers the spend', () => {
+    resetEntity(50);
+    setEffective(30, []);
+    expect(element(html(), 'xp-available').open).toMatch(/data-overspent="false"/);
+    expect(element(html(), 'xp-spent').open).toMatch(/data-overspent="false"/);
+  });
+
   it('does not mark the used figure as over-value when the pool covers the spend', () => {
     resetEntity(50);
     setEffective(30, []);
@@ -625,7 +650,11 @@ describe('XpBar and the Virtue/Flaw pool bonus (slice 6b8c)', () => {
     withBonus(240, 60, 300);
     const body = html();
     expect(element(body, 'xp-available').text).toContain('0');
-    expect(element(body, 'xp-available').open).not.toContain('over');
+    // Precise word-boundary match, not a bare substring: `data-overspent="false"`
+    // itself contains the substring "over", so a plain `.not.toContain('over')`
+    // would false-fail here.
+    expect(element(body, 'xp-available').open).not.toMatch(/\bover\b/);
+    expect(element(body, 'xp-available').open).toMatch(/data-overspent="false"/);
   });
 
   it('lists the bonus as a pool of its own, spent before the base', () => {

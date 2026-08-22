@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { store } from './lib/state.svelte';
   import { updateCloseGuard } from './lib/ipc';
+  import type { AppError } from './lib/types';
   import LanguageSelector from './lib/components/LanguageSelector.svelte';
   import ModeToggle from './lib/components/ModeToggle.svelte';
   import StartScreen from './lib/components/StartScreen.svelte';
@@ -141,10 +142,15 @@
 
   // Mirror the unsaved-changes flag (and the localized dialog strings) to the
   // backend close/quit guard. Re-runs whenever dirty flips or the language
-  // changes, so Rust can prompt before discarding on any quit path.
+  // changes, so Rust can prompt before discarding on any quit path. A rejection
+  // here (IPC hiccup) must not vanish silently: it would leave the backend's
+  // belief about the dirty state stale on a load-bearing guard, with no
+  // diagnostic — so surface it the same way every other IPC failure does.
   $effect(() => {
     const { dirty, labels } = store.closeGuardPayload();
-    void updateCloseGuard(dirty, labels);
+    void updateCloseGuard(dirty, labels).catch((e: unknown) => {
+      store.error = e as AppError;
+    });
   });
 </script>
 
@@ -155,8 +161,17 @@
      the window but are NOT input-modal on Linux (rfd has no modal flag, and tao's
      cross-platform Window has no `set_enabled`), so without this the user could
      keep editing the character behind an open Save/Open/Export dialog. `inert`
-     drops focus and assistive-tech access; the overlay below swallows the clicks. -->
-<div class="app-shell" inert={store.busy} aria-busy={store.busy} data-testid="app-shell">
+     drops focus and assistive-tech access; the overlay below swallows the clicks.
+     Also inert while the discard-changes prompt is open (a plain HTML dialog with
+     no native modality of its own): otherwise a keyboard user tabbing forward
+     would walk through the whole live, visually-obscured app before ever
+     reaching the prompt's own Cancel/Discard buttons. -->
+<div
+  class="app-shell"
+  inert={store.busy || store.discardPromptOpen}
+  aria-busy={store.busy}
+  data-testid="app-shell"
+>
   <header class="app-header">
     <div class="brand">
       <img class="app-logo" src={logoUrl} alt={store.t('app-logo-alt')} />

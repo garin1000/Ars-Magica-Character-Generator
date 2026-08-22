@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { eligibleForConstraint, grantItemLabel } from '../derive';
+  import { eligibleForConstraint, grantItemLabel, sameSelection } from '../derive';
   import ParameterPicker from './ParameterPicker.svelte';
   import { tooltip, type TooltipContent } from '../actions';
   import type { GrantConstraint, House, PointItem, Selection } from '../types';
@@ -43,15 +43,6 @@
   function eligibleForOpen(c: GrantConstraint): PointItem[] {
     const rs = store.ruleset;
     return rs ? eligibleForConstraint(rs, c) : [];
-  }
-
-  // Two Selections are the same pick when their ref and every param agree.
-  function sameSelection(a: Selection, b: Selection): boolean {
-    if (a.ref !== b.ref) return false;
-    const pa = a.params ?? {};
-    const pb = b.params ?? {};
-    const keys = Object.keys(pa);
-    return keys.length === Object.keys(pb).length && keys.every((k) => pa[k] === pb[k]);
   }
 
   // Index of the currently-picked option for a choice grant (−1 if none), so the

@@ -116,22 +116,26 @@ pub struct CharacteristicRules {
     /// The cost table, one row per legal score, sorted ascending by `score`.
     pub costs: Vec<CharacteristicCost>,
     /// The highest base score buyable with no limit-shifting virtue (the "+3"
-    /// cap). `None` falls back to the table maximum. Source: Core Rules.md:4105.
+    /// cap). `None` falls back to the table maximum. Source: Ars Magica -
+    /// Definitive Edition (Core Rules).md:4105.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_max: Option<i8>,
     /// The lowest base score buyable with no limit-shifting flaw (the "−3"
-    /// floor). `None` falls back to the table minimum. Source: Core
-    /// Rules.md:6598-6600.
+    /// floor). `None` falls back to the table minimum. Source: Ars Magica -
+    /// Definitive Edition (Core Rules).md:2340-2354 (the "−3" row of the
+    /// point-buy table — corrected from a copy-paste of Poor (Characteristic)'s
+    /// citation below, which is the −5 *effective* floor, not this −3 *base*
+    /// floor).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_min: Option<i8>,
     /// The highest base score reachable once Great (Characteristic) raises the
     /// cap (the "+5" ceiling). `None` falls back to the table maximum. Source:
-    /// Core Rules.md:3987-3989.
+    /// Ars Magica - Definitive Edition (Core Rules).md:3987-3989.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub effective_max: Option<i8>,
     /// The lowest base score reachable once Poor (Characteristic) lowers the
     /// floor (the "−5" floor). `None` falls back to the table minimum. Source:
-    /// Core Rules.md:6598-6600.
+    /// Ars Magica - Definitive Edition (Core Rules).md:6598-6600.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub effective_min: Option<i8>,
 }

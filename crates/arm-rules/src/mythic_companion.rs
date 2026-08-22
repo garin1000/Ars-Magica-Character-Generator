@@ -66,11 +66,13 @@ pub struct MythicCompanionType {
     pub required_flaws: Vec<RequiredFlaw>,
     /// Extra Flaw points this type may take beyond the base ceiling (Devil Child
     /// and Spirit Votary get +7). Each still funds virtue points at the type's
-    /// rate. Source: Core Rules.md:2664; Realms of Power - Magic.md:5486.
+    /// rate. Source: Ars Magica - Definitive Edition (Core Rules).md:2664;
+    /// Ars Magica 5e - Realms of Power - Magic.md:5486.
     #[serde(default, skip_serializing_if = "is_zero_u8")]
     pub bonus_flaw_points: u8,
     /// Extra virtue points at no flaw cost (Devil Child gets +3, to balance the
-    /// compulsory Major Flaw). Source: Core Rules.md:2664.
+    /// compulsory Major Flaw). Source: Ars Magica - Definitive Edition
+    /// (Core Rules).md:2664.
     #[serde(default, skip_serializing_if = "is_zero_u8")]
     pub bonus_free_virtue_points: u8,
     /// Provenance into the Markdown rules source.

@@ -206,7 +206,7 @@ impl AdvancementTable {
     /// inverse of [`xp_for_score`]. Score 0 is always free, so an `xp` below the
     /// first row yields 0; an `xp` at or above the top row yields the top score
     /// (the curve is clamped, never extrapolated). Decrepitude and Warping rise
-    /// "like an Ability" up this same table (Core:16464-16475, :16617), so this is
+    /// "like an Ability" up this same table (Ars Magica - Definitive Edition (Core Rules).md:16464-16475, :16617), so this is
     /// how a bank of accrued points becomes a score.
     ///
     /// Rows are score-sorted ascending at construction, so the last row not
@@ -340,7 +340,7 @@ impl AgeAbilityCaps {
     }
 
     /// The maximum Ability score a character of `age` may buy at creation, per the
-    /// age band table (Core:2366-2374), or `None` if the ruleset ships no age caps
+    /// age band table (Ars Magica - Definitive Edition (Core Rules).md:2366-2374), or `None` if the ruleset ships no age caps
     /// (the cap is then unknowable and not enforced). The bands are age-ascending
     /// with the open-ended band last, so the first band whose `max_age` covers
     /// `age` — or the open-ended band — gives the cap. Some Virtues raise this
@@ -449,7 +449,7 @@ mod tests {
         assert_eq!(t.score_for_xp(5), 1); // exactly score 1
         assert_eq!(t.score_for_xp(14), 1); // between 5 and 15
         assert_eq!(t.score_for_xp(15), 2); // exactly score 2 (warping worked value)
-        assert_eq!(t.score_for_xp(17), 2); // 17 aging points → Decrepitude 2 (Core:16617)
+        assert_eq!(t.score_for_xp(17), 2); // 17 aging points → Decrepitude 2 (Ars Magica - Definitive Edition (Core Rules).md:16617)
         assert_eq!(t.score_for_xp(30), 3);
         assert_eq!(t.score_for_xp(275), 10);
         assert_eq!(t.score_for_xp(10_000), 10); // clamps at the table's top row
@@ -579,7 +579,7 @@ mod tests {
         );
     }
 
-    /// The shipped age → max-Ability-score bands (Core:2366-2374), authored out of
+    /// The shipped age → max-Ability-score bands (Ars Magica - Definitive Edition (Core Rules).md:2366-2374), authored out of
     /// order so the sort-on-load is exercised.
     fn age_caps() -> AgeAbilityCaps {
         serde_json::from_str(

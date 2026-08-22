@@ -12,7 +12,7 @@
 //!
 //! Each package spends exactly the childhood block it is a shortcut for: 75
 //! experience points in the native language plus 45 across the closed spread
-//! list (Core Rules.md:2378). This module therefore *prices* a package but never
+//! list (Ars Magica - Definitive Edition (Core Rules).md:2378). This module therefore *prices* a package but never
 //! charges anything — the restricted 45/75 pools in
 //! [`crate::effective::xp_allocation`] already do the funding.
 
@@ -34,7 +34,7 @@ pub struct ChildhoodEntry {
     /// parameter — `area_a`, `area_b`, `language`. Two entries naming the same
     /// Ability are told apart by this key alone, which is how the Traveling
     /// package grants two different Area Lores ("Area A Lore 1, Area B Lore 1",
-    /// Core Rules.md:2388). `None` for an entry that needs nothing asked.
+    /// Ars Magica - Definitive Edition (Core Rules).md:2388). `None` for an entry that needs nothing asked.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub slot: Option<String>,
     /// Whether this entry is the package's native language — the one the
@@ -92,16 +92,16 @@ impl ChildhoodPackage {
     /// Every entry the 45-point spread funds: all but the native language, in
     /// file order. The spread may itself include a *second* Living Language —
     /// "Living Language (other than the character's native language)"
-    /// (Core Rules.md:2378), which the Traveling package takes up — so
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2378), which the Traveling package takes up — so
     /// membership is decided by the `native` flag, never by the Ability id.
     pub fn spread_entries(&self) -> impl Iterator<Item = &ChildhoodEntry> {
         self.entries.iter().filter(|entry| !entry.native)
     }
 
     /// What the package's spread costs off the Ability advancement table
-    /// ("ABILITY To Buy", Core Rules.md:2406-2427). Every package in the
+    /// ("ABILITY To Buy", Ars Magica - Definitive Edition (Core Rules).md:2406-2427). Every package in the
     /// rulebook prices to exactly the 45 points early childhood grants
-    /// (Core Rules.md:2378), so taking one can never smuggle in experience the
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2378), so taking one can never smuggle in experience the
     /// block does not fund — which is what makes this figure worth computing
     /// rather than assuming.
     ///
@@ -114,7 +114,7 @@ impl ChildhoodPackage {
     }
 
     /// What the package's native language costs off the same table: 75 points
-    /// for the score of 5 every package grants (Core Rules.md:2378, :2384-2388).
+    /// for the score of 5 every package grants (Ars Magica - Definitive Edition (Core Rules).md:2378, :2384-2388).
     ///
     /// `None` when the package has no native entry, or its score is off-table.
     pub fn native_xp(&self, advancement: &AdvancementTable) -> Option<u32> {
@@ -382,7 +382,7 @@ mod tests {
     use crate::types::{AbilityScore, Entity, EntityKind, RulesetRef};
 
     /// "Athletic Childhood: Athletics 2, Brawl 2, Native Language 5, Swim 2"
-    /// (Core Rules.md:2384) as the shipped file will carry it — entries in
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2384) as the shipped file will carry it — entries in
     /// `(ability, slot)` order, no slots to fill.
     const ATHLETIC: &str = r#"{ "id": "childhood.athletic",
       "entries": [
@@ -394,7 +394,7 @@ mod tests {
       "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2384, 2384] } }"#;
 
     /// "Traveling Childhood: Area A Lore 1, Area B Lore 1, Folk Ken 2, Living
-    /// Language 1, Native Language 5, Survival 2" (Core Rules.md:2388) — the
+    /// Language 1, Native Language 5, Survival 2" (Ars Magica - Definitive Edition (Core Rules).md:2388) — the
     /// package that exercises every shape at once: two instances of one
     /// parameterized Ability, and a spread Living Language beside the native one.
     const TRAVELING: &str = r#"{ "id": "childhood.traveling",
@@ -537,7 +537,7 @@ mod tests {
     }
 
     /// The canonical "ABILITY To Buy" column, scores 1-10
-    /// (Core Rules.md:2408-2417).
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2408-2417).
     fn table() -> AdvancementTable {
         serde_json::from_str(
             r#"[
@@ -558,7 +558,7 @@ mod tests {
 
     /// A package is a shortcut for spending the childhood's 45 points, so its
     /// spread must price to exactly 45 — Athletic 15+15+15, Traveling
-    /// 5+5+15+5+15 (Core Rules.md:2378, :2406-2427).
+    /// 5+5+15+5+15 (Ars Magica - Definitive Edition (Core Rules).md:2378, :2406-2427).
     #[test]
     fn every_package_spreads_exactly_45_experience_points() {
         let table = table();
@@ -658,7 +658,7 @@ mod tests {
     // --- Applying a package ------------------------------------------------
 
     /// The abilities the two fixtures name, priced by the canonical "ABILITY To
-    /// Buy" column for scores 1-5 (Core Rules.md:2406-2427).
+    /// Buy" column for scores 1-5 (Ars Magica - Definitive Edition (Core Rules).md:2406-2427).
     const APPLY_ABILITIES: &str = r#"{
       "advancement": [
         { "score": 1, "total_xp": 5 },
@@ -679,7 +679,7 @@ mod tests {
       ]
     }"#;
 
-    /// The two childhood blocks a package is a shortcut for (Core Rules.md:2378).
+    /// The two childhood blocks a package is a shortcut for (Ars Magica - Definitive Edition (Core Rules).md:2378).
     const APPLY_LIFE_STAGES: &str = r#"{
       "childhood": {
         "years": 5,
@@ -854,7 +854,7 @@ mod tests {
 
     /// A slot value is nothing more than the row's `parameter`, so Traveling's two
     /// Area Lore slots become two distinct rows and its spread language sits
-    /// beside the native one (Core Rules.md:2388). Surrounding whitespace is the
+    /// beside the native one (Ars Magica - Definitive Edition (Core Rules).md:2388). Surrounding whitespace is the
     /// player's typing, not part of the answer, so it is trimmed off.
     #[test]
     fn slot_values_become_ordinary_ability_parameters() {
@@ -990,7 +990,7 @@ mod tests {
     }
 
     /// The childhood spread buys "Living Language (other than the character's
-    /// native language)" (Core Rules.md:2378), so a language slot answered with
+    /// native language)" (Ars Magica - Definitive Edition (Core Rules).md:2378), so a language slot answered with
     /// the native language is illegal — while an Area Lore that happens to be
     /// named after it is perfectly ordinary.
     #[test]

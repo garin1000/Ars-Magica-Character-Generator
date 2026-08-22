@@ -2993,6 +2993,28 @@ describe('unsaved-changes tracking', () => {
     expect(store.dirty).toBe(true);
   });
 
+  // E3 (round-1 audit): every other case in this block passes equally well under
+  // a naive one-way `dirty` boolean that latches true on the first edit and never
+  // reconsiders. Only a genuine snapshot-compare (CLAUDE.md: "a snapshot-compare
+  // against the last save/load baseline") clears `dirty` again once the edited
+  // field is set BACK to its original, saved value — this is the case that tells
+  // the two implementations apart.
+  it('is a true snapshot compare: editing a field back to its saved baseline clears dirty again', async () => {
+    const original = cleanEntity();
+    original.name = 'Original Name';
+    vi.mocked(ipc.loadEntity).mockResolvedValue({ path: '/tmp/marcus.armc', entity: original });
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+    expect(store.dirty).toBe(false);
+
+    store.setIdentity('name', 'Changed Name');
+    expect(store.dirty).toBe(true);
+
+    store.setIdentity('name', 'Original Name');
+    expect(store.dirty).toBe(false);
+  });
+
   it('becomes dirty after an aging/warping annotation edit', async () => {
     await loadClean();
     store.setWarpingEffect('A stigmatic scar');

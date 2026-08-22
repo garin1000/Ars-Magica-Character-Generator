@@ -13,16 +13,14 @@
 
 import { $, $$, expect, browser } from '@wdio/globals';
 import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 
-import { startCharacter } from '../helpers.js';
+import { isRowBlocked, startCharacter } from '../helpers.js';
+import { e2eFile } from '../wdio.conf.js';
 
 const DETAILS_TAB = '[data-testid="tab-details"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const ABILITIES_TAB = '[data-testid="tab-abilities"]';
 const CONFIDENCE = '[data-testid="confidence-readout"]';
-const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
 
 function clean(text) {
   return text.replace(/[⁦-⁩]/g, '');
@@ -90,14 +88,14 @@ describe('character details', () => {
     const secondSight = await $('[data-testid="add-ability.second_sight"]');
     await secondSight.waitForExist({ timeout: 10000 });
     // No Gift, no granting Virtue → locked.
-    expect(await secondSight.isEnabled()).toBe(false);
+    expect(await isRowBlocked(secondSight)).toBe(true);
 
     // Taking The Gift opens the one free Supernatural slot for a companion.
     await $(VF_TAB).click();
     await $('[data-testid="add-virtue.the_gift"]').click();
     await $(ABILITIES_TAB).click();
     await browser.waitUntil(
-      async () => await $('[data-testid="add-ability.second_sight"]').isEnabled(),
+      async () => !(await isRowBlocked(await $('[data-testid="add-ability.second_sight"]'))),
       { timeout: 5000, timeoutMsg: 'The Gift should unlock one free Supernatural Ability' },
     );
   });

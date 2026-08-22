@@ -1,5 +1,5 @@
 //! Warping: the off-budget Virtues/Flaws a non-magus character owes from its
-//! Warping Score ("Effects of Warping", Core Rules.md:16547-16561).
+//! Warping Score ("Effects of Warping", Ars Magica - Definitive Edition (Core Rules).md:16547-16561).
 //!
 //! Split out of `validation`; see `validation/mod.rs` for the public API and the
 //! `ValidationIssue` issue-code contract.
@@ -16,7 +16,7 @@ use crate::effective::{
 /// `entity.warping_choices`, resolved off the creation V/F budget.
 ///
 /// - Hermetic magi are exempt (Warping gives them Wizard's Twilight instead,
-///   Core Rules.md:16551) → the section is skipped entirely, owing zero.
+///   Ars Magica - Definitive Edition (Core Rules).md:16551) → the section is skipped entirely, owing zero.
 /// - An unfilled owed slot → a non-blocking advisory per kind
 ///   (`warping_owed_minor_flaws` / `_supernatural_virtues` / `_major_flaws`) so a
 ///   still-incomplete build is flagged, never hard-blocked.

@@ -36,6 +36,13 @@ function renderedCodes(body: string): string[] {
   return [...body.matchAll(/data-code="([^"]+)"/g)].map((m) => m[1]);
 }
 
+/** The rendered `<li>` markup for one issue code, so a test can inspect its content. */
+function issueMarkup(body: string, code: string): string {
+  const match = new RegExp(`<li[^>]*data-code="${code}"[^>]*>([\\s\\S]*?)</li>`).exec(body);
+  if (!match) throw new Error(`no <li> for code ${code}`);
+  return match[1];
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   store.lang = 'en';
@@ -126,5 +133,32 @@ describe('ValidationPanel', () => {
     const body = render(ValidationPanel, { props: { phase: 'virtues_flaws' } }).body;
     expect(body).not.toContain('issue-unbalanced_virtues<');
     expect(body).toMatch(/Tugend|Fehler/);
+  });
+
+  // Severity must not be color-only (WCAG 1.4.1): a screen-reader-only prefix
+  // names it explicitly, since `class="issue {severity}"` / `data-severity` are
+  // both invisible to assistive tech.
+  it('prefixes each issue with a screen-reader-only severity label', () => {
+    const body = render(ValidationPanel).body;
+    // Svelte's SSR renderer hoists the trailing space in `{expr}: </span>` to
+    // just outside the closing tag; the announced text ("Error: Virtue
+    // points…") is unaffected either way.
+    expect(issueMarkup(body, 'unbalanced_virtues')).toMatch(
+      /<span class="sr-only">Error:<\/span> /,
+    );
+    expect(issueMarkup(body, 'characteristic_points_unspent')).toMatch(
+      /<span class="sr-only">Warning:<\/span> /,
+    );
+  });
+
+  it('localizes the severity prefix to German', () => {
+    store.lang = 'de';
+    const body = render(ValidationPanel).body;
+    expect(issueMarkup(body, 'unbalanced_virtues')).toMatch(
+      /<span class="sr-only">Fehler:<\/span> /,
+    );
+    expect(issueMarkup(body, 'characteristic_points_unspent')).toMatch(
+      /<span class="sr-only">Warnung:<\/span> /,
+    );
   });
 });

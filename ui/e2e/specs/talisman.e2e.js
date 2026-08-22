@@ -12,12 +12,9 @@
 
 import { $, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 
 import { startCharacter } from '../helpers.js';
-
-const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
+import { e2eFile } from '../wdio.conf.js';
 
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const ARTS_TAB = '[data-testid="tab-arts"]';

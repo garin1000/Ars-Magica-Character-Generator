@@ -593,6 +593,22 @@ export function balance(localized: LocalizedRuleset, entity: Entity): Balance {
  * Total Characteristic points spent for the given scores against the cost table.
  * Positive cost rows spend points, negative ("Gain N") rows refund them; a score
  * with no table row contributes 0 (it is reported separately as out-of-range).
+ *
+ * KNOWN DRIFT RISK: this duplicates `CharacteristicRules::total_cost`
+ * (`crates/arm-rules/src/characteristics.rs`) as a second, independent
+ * implementation, which the project's "engine is the single evaluation path"
+ * rule normally forbids. It exists only because the engine does not yet surface
+ * a combined total on `EffectiveScores`. The two are pinned to the same
+ * rulebook worked example in `derive.test.ts` (`characteristicPointsUsed`
+ * describe block) and `characteristics.rs`'s
+ * `total_cost_nets_gains_against_spends` test, so a future change to either
+ * cost algorithm without updating the other fails at least one of those tests.
+ * The correct long-term fix is to add a computed field (e.g.
+ * `characteristic_points_used`) to `EffectiveScores` in
+ * `crates/arm-app/src/ruleset_io.rs`, wired through `effective_scores_loaded`,
+ * and have `CharacteristicPicker.svelte` read it from `store.effective` instead
+ * of calling this function — at which point this function and its test should
+ * be deleted.
  */
 export function characteristicPointsUsed(
   rules: CharacteristicRules | null | undefined,
@@ -603,21 +619,6 @@ export function characteristicPointsUsed(
   for (const score of Object.values(characteristics)) {
     const row = rules.costs.find((c) => c.score === score);
     if (row) total += row.cost;
-  }
-  return total;
-}
-
-/** Total XP committed across whole bought ability scores (Σ xp_for_score). */
-export function abilityXpSpent(
-  advancement: { score: number; total_xp: number }[] | undefined,
-  scores: { score: number }[] | undefined,
-): number {
-  if (!advancement || !scores) return 0;
-  let total = 0;
-  for (const { score } of scores) {
-    if (score <= 0) continue;
-    const row = advancement.find((r) => r.score === score);
-    if (row) total += row.total_xp;
   }
   return total;
 }
@@ -954,9 +955,12 @@ export interface SpellLevelAllocation {
  * bonus entry rather than inflating Available, mirroring unspent restricted XP.
  *
  * A **negative** modifier (Weak Parens -30) has no pool to draw from, so the
- * penalty is charged to the base first instead. Either way the V/F modifier
- * settles before the base, so `base + lifeStage - baseUsed` always equals
- * `budget - used` and the base line's arithmetic closes.
+ * penalty is charged to the base first instead. `base + lifeStage - baseUsed`
+ * equals `budget - used` once a positive bonus is fully drained (`used >= bonus`)
+ * or the modifier is zero/negative. While a positive bonus is only partially
+ * spent, Available is deliberately smaller than `budget - used` by the unspent
+ * bonus amount — the unspent levels stay parked in the bonus entry rather than
+ * inflating Available, exactly as an unspent restricted XP pool does.
  *
  * `lifeStage` — the slice of a magus's 30-points-a-year taken as levels of spells
  * rather than experience — is **not** a third pool. Those levels are already
@@ -1019,9 +1023,12 @@ export interface GeneralXpAllocation {
  *
  * A **positive** modifier is spent first and the base covers the rest, mirroring
  * the engine's allocator draining restricted pools before the general one; a
- * **negative** one has no pool to draw on and is charged to the base, so
- * `base - baseUsed` closes against `pool - used` either way. Unspent bonus
- * experience stays in the bonus entry rather than inflating Available.
+ * **negative** one has no pool to draw on and is charged to the base. `base -
+ * baseUsed` closes against `pool - used` once a positive bonus is fully drained
+ * (`used >= bonus`) or the modifier is zero/negative; while a positive bonus is
+ * only partially spent, Available is deliberately smaller than `pool - used` by
+ * the unspent bonus amount, which stays parked in the bonus entry rather than
+ * inflating Available.
  *
  * There is deliberately **no life-stage term** here, which is the one place the
  * two differ: a magus's post-Gauntlet levels are additive to a spell budget it
@@ -1368,7 +1375,7 @@ export function groupSpellsByTechniqueForm(
   localized: LocalizedRuleset,
   spells: Spell[],
 ): SpellGroup[] {
-  const keyOf = (technique: string, form: string) => `${technique} ${form}`;
+  const keyOf = (technique: string, form: string) => `${technique}\0${form}`;
   const buckets = new Map<string, Spell[]>();
   for (const spell of spells) {
     const key = keyOf(spell.technique, spell.form);
@@ -1394,7 +1401,7 @@ export function groupSpellsByTechniqueForm(
   }
   // Defensive: any leftover pair whose Arts are missing from the catalogue order.
   for (const [key, list] of buckets) {
-    const [technique, form] = key.split(' ');
+    const [technique, form] = key.split('\0');
     result.push({ technique, form, spells: list.sort(compare) });
   }
   return result;
@@ -1601,14 +1608,6 @@ export function groupArtsByType(localized: LocalizedRuleset): ArtGroup[] {
           localizedSortKey(localized, a.id).localeCompare(localizedSortKey(localized, b.id)),
         ),
     }));
-}
-
-/** Total XP committed across whole bought Art scores (Σ xp_for_score). */
-export function artXpSpent(
-  artAdvancement: { score: number; total_xp: number }[] | undefined,
-  scores: { score: number }[] | undefined,
-): number {
-  return abilityXpSpent(artAdvancement, scores);
 }
 
 /** Highest whole Art score the advancement table can price (the spinner ceiling). */

@@ -83,7 +83,7 @@ pub(crate) fn validate_life_stage_plan(
     }
 
     // The later-life block is "15 experience points per year" up to the character's
-    // age (Core Rules.md:2392), so an unset age leaves it uncountable — said plainly
+    // age (Ars Magica - Definitive Edition (Core Rules).md:2392), so an unset age leaves it uncountable — said plainly
     // here rather than left to surface as a shortfall on rows the guided flow may
     // itself have written before an age was typed.
     if entity.age.is_none() {
@@ -150,7 +150,7 @@ pub(crate) fn validate_life_stage_plan(
     }
 
     // "**Hermetic Magi Only (Optional):** Years after apprenticeship"
-    // (Core Rules.md:2216), so the three post-Gauntlet choices are checked for a
+    // (Ars Magica - Definitive Edition (Core Rules).md:2216), so the three post-Gauntlet choices are checked for a
     // magus and nobody else: on any other plan `budget()` ignores them outright, and
     // a finding about a value that changes nothing is noise a player cannot act on.
     // An unset age is its own finding (`life_stage_age_unset`) and leaves nothing to
@@ -169,7 +169,7 @@ pub(crate) fn validate_life_stage_plan(
         // Suppressed while the language is set but unspent — that is the warning
         // below, not this error.
         Some(language) => {
-            // "75 experience points in their native language" (Core Rules.md:2378)
+            // "75 experience points in their native language" (Ars Magica - Definitive Edition (Core Rules).md:2378)
             // names one Ability — `childhood.native_language_ability` — at one
             // instance, so "bought" is a row for exactly that id whose parameter is
             // this language, scoring above 0. Testing the parameter alone would let
@@ -195,7 +195,7 @@ pub(crate) fn validate_life_stage_plan(
     // so a save can name one the loaded ruleset does not ship — a dangling
     // reference like any other, reported rather than quietly ignored. What the
     // package granted is not re-checked: the Abilities are ordinary bought rows
-    // (Core Rules.md:2382 keeps a taken package open to adjustment).
+    // (Ars Magica - Definitive Edition (Core Rules).md:2382 keeps a taken package open to adjustment).
     if let Some(package) = &plan.childhood_package
         && ruleset.childhood(package).is_none()
     {
@@ -475,7 +475,7 @@ mod tests {
       }
     }"#;
     /// One shipped package, priced to the blocks above: spread 30 + 15 = 45,
-    /// native language 75 (Core Rules.md:2378).
+    /// native language 75 (Ars Magica - Definitive Edition (Core Rules).md:2378).
     const CHILDHOODS: &str = r#"{ "packages": [
       { "id": "childhood.shipped",
         "entries": [
@@ -560,7 +560,7 @@ mod tests {
     }
 
     /// The earliest a magus can have been gauntleted is childhood plus the fifteen
-    /// years of apprenticeship (Core Rules.md:2435) — twenty — and this magus carries
+    /// years of apprenticeship (Ars Magica - Definitive Edition (Core Rules).md:2435) — twenty — and this magus carries
     /// no `gauntlet_age`, so it stands at its Gauntlet and its own age is the one
     /// measured. A younger one is one wrong age, so it gets **one** finding, and a
     /// magus-specific one: "your age is inside childhood" would be plain wrong about a
@@ -601,7 +601,7 @@ mod tests {
         assert!(!issues.contains(&ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET.into()));
     }
 
-    /// Later life is counted in years up to an age (Core Rules.md:2392), so a plan
+    /// Later life is counted in years up to an age (Ars Magica - Definitive Edition (Core Rules).md:2392), so a plan
     /// with no age has no later-life block to earn. That is worth saying out loud:
     /// the guided flow can write childhood rows before an age is typed, and without
     /// this the only symptom would be a shortfall the player did not cause.
@@ -652,7 +652,7 @@ mod tests {
 
     /// The Gauntlet-age floor is a floor on the **Gauntlet age**, not on the
     /// character's own age. The years after the Gauntlet run forward from it
-    /// (Core Rules.md:2216), so a magus of 60 gauntleted at 12 never served its
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2216), so a magus of 60 gauntleted at 12 never served its
     /// fifteen years of apprenticeship either — and reading the character's age
     /// instead would call that plan perfectly legal.
     #[test]
@@ -749,7 +749,7 @@ mod tests {
 
     /// More charged lab seasons than the years can hold. Only three seasons a year
     /// are ever charged — "to a minimum of 0 if three or four seasons are spent on
-    /// lab work" (Core Rules.md:2482) — so 35 years hold 105, and `budget()` caps
+    /// lab work" (Ars Magica - Definitive Edition (Core Rules).md:2482) — so 35 years hold 105, and `budget()` caps
     /// the stored total there. Beyond the cap the extra seasons cost nothing, which
     /// reads as a bargain rather than a mistake unless it is said out loud.
     #[test]
@@ -787,7 +787,7 @@ mod tests {
 
     /// More of the yearly points taken as levels of spells than the years granted.
     /// "Each point can be an experience point in an Art or Ability or one level of
-    /// spell" (Core Rules.md:2471) is a split of points that exist, so `budget()`
+    /// spell" (Ars Magica - Definitive Edition (Core Rules).md:2471) is a split of points that exist, so `budget()`
     /// holds the stored figure to them — silently turning an over-large split into
     /// "all of them", which is a different character from the one that was asked for.
     ///
@@ -846,7 +846,7 @@ mod tests {
         );
     }
 
-    /// "75 experience points in their native language" (Core Rules.md:2378) names
+    /// "75 experience points in their native language" (Ars Magica - Definitive Edition (Core Rules).md:2378) names
     /// **one** Ability: the childhood's `native_language_ability`. An Area Lore
     /// whose area happens to be spelled like the language is a different Ability,
     /// and the 75-point pool — which keys on that id — cannot fund a point of it, so
@@ -963,7 +963,7 @@ mod tests {
         );
     }
 
-    /// Childhood grants two separately-restricted blocks (Core Rules.md:2378), so a
+    /// Childhood grants two separately-restricted blocks (Ars Magica - Definitive Edition (Core Rules).md:2378), so a
     /// life-stage character can leave both unspent and would otherwise receive two
     /// warnings a reader cannot tell apart. Each names its own block, and the
     /// unspent-45 case — the common one, since the 75 buys one language — says
