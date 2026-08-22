@@ -128,4 +128,30 @@ describe('MagicPossessions aura bound (round 3, Task 3)', () => {
     const body = html();
     expect(hasElement(body, 'aura-out-of-range')).toBe(true);
   });
+
+  // Round 4, S2: the hint used to be visually adjacent to the aura input with no
+  // programmatic association, so a screen-reader user tabbing to the input never
+  // learned their value was out of range.
+  it('associates the out-of-range hint with the aura input via aria-describedby', () => {
+    store.entity.aura = 999;
+    const body = html();
+    const input = element(body, 'aura-input').open;
+    expect(input).toContain('aria-describedby="aura-out-of-range"');
+  });
+
+  it('does not describe the input when the aura is in range', () => {
+    store.entity.aura = 3;
+    const body = html();
+    const input = element(body, 'aura-input').open;
+    expect(input).not.toContain('aria-describedby');
+  });
+
+  it('announces the hint as a polite live region, not an interrupting one', () => {
+    // role="status" is implicitly aria-live="polite" — the hint fires while the
+    // player is still typing, so an assertive region would talk over them.
+    store.entity.aura = 999;
+    const body = html();
+    const hint = element(body, 'aura-out-of-range').open;
+    expect(hint).toContain('role="status"');
+  });
 });

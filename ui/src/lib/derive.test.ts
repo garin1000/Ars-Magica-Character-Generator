@@ -13,7 +13,6 @@ import {
   spellMasteryXpSpent,
   artAbbreviation,
   artLabel,
-  balance,
   childhoodEntryPreview,
   childhoodSlotFault,
   childhoodSlots,
@@ -58,7 +57,6 @@ import type {
   CharacteristicRules,
   ChildhoodPackage,
   CreationPhase,
-  Entity,
   EntityTypeProfile,
   Grant,
   GrantConstraint,
@@ -107,16 +105,6 @@ function makeRuleset(
       ...DERIVED_TAXONOMY,
     },
     i18n: opts.i18n ?? {},
-  };
-}
-
-function entity(refs: string[], typeId = 'companion'): Entity {
-  return {
-    schema_version: 1,
-    ruleset: { id: 'test', version: '1' },
-    entity_kind: 'character',
-    type_id: typeId,
-    selections: refs.map((ref) => ({ ref })),
   };
 }
 
@@ -517,81 +505,12 @@ describe('usedSpellForms', () => {
   });
 });
 
-// --- balance() --------------------------------------------------------------
-
-describe('balance', () => {
-  const profiles = {
-    companion: {
-      id: 'companion',
-      budget: { virtue_points: 10, flaw_points: 10 },
-      permitted_categories: [],
-      forbidden_categories: [],
-      creation_phases: [],
-    },
-  };
-
-  it('sums virtue, flaw and boon points by magnitude', () => {
-    const ruleset = makeRuleset(
-      [
-        item({ id: 'v.minor', kind: 'virtue', magnitude: 'minor' }),
-        item({ id: 'v.major', kind: 'virtue', magnitude: 'major' }),
-        item({ id: 'f.major', kind: 'flaw', magnitude: 'major' }),
-        item({ id: 'f.free', kind: 'flaw', magnitude: 'free' }),
-        item({ id: 'b.boon', kind: 'boon', magnitude: 'minor' }),
-      ],
-      { profiles },
-    );
-    // virtue side: 1 (minor v) + 3 (major v) + 1 (minor boon) = 5
-    // flaw side: 3 (major f) + 0 (free f) = 3
-    const result = balance(ruleset, entity(['v.minor', 'v.major', 'f.major', 'f.free', 'b.boon']));
-    expect(result.virtuePoints).toBe(5);
-    expect(result.flawPoints).toBe(3);
-    expect(result.virtueBudget).toBe(10);
-    expect(result.flawBudget).toBe(10);
-  });
-
-  it('counts a hook on the flaw side (mirrors engine is_positive)', () => {
-    const ruleset = makeRuleset([item({ id: 'h.minor', kind: 'hook', magnitude: 'minor' })], {
-      profiles,
-    });
-    const result = balance(ruleset, entity(['h.minor']));
-    expect(result.virtuePoints).toBe(0);
-    expect(result.flawPoints).toBe(1);
-  });
-
-  it('skips selections whose item ref is unknown', () => {
-    const ruleset = makeRuleset([item({ id: 'v.minor', kind: 'virtue', magnitude: 'minor' })], {
-      profiles,
-    });
-    const result = balance(ruleset, entity(['v.minor', 'does.not.exist']));
-    expect(result.virtuePoints).toBe(1);
-    expect(result.flawPoints).toBe(0);
-  });
-
-  // The engine's canonical JSON omits `selections` when it is empty, exactly as
-  // it omits every other empty collection, so a saved character with no Virtues
-  // or Flaws at all — a bare grog — arrives with the key absent. balance() runs
-  // on every editor render, so an unguarded read throws mid-mount.
-  it('treats an omitted selections key as no selections', () => {
-    const ruleset = makeRuleset([item({ id: 'v.minor', magnitude: 'minor' })], { profiles });
-    const sparse = entity([]);
-    delete sparse.selections;
-    const result = balance(ruleset, sparse);
-    expect(result.virtuePoints).toBe(0);
-    expect(result.flawPoints).toBe(0);
-    expect(result.virtueBudget).toBe(10);
-    expect(result.flawBudget).toBe(10);
-  });
-
-  it('reports a zero budget when the type profile is missing', () => {
-    const ruleset = makeRuleset([item({ id: 'v.minor', magnitude: 'minor' })]);
-    const result = balance(ruleset, entity(['v.minor'], 'unknown_type'));
-    expect(result.virtueBudget).toBe(0);
-    expect(result.flawBudget).toBe(0);
-    // points are still summed even without a profile
-    expect(result.virtuePoints).toBe(1);
-  });
-});
+// `balance()` and its tests were deleted once the engine began surfacing
+// `EffectiveScores.virtue_points`/`flaw_points` (audit G1, round 4). The rulebook
+// worked example it pinned now lives on the Rust side only, in
+// `validation/mod.rs::balance_computation` and
+// `commands.rs::effective_scores_surface_virtue_flaw_balance` — one
+// implementation, so there is nothing left to drift.
 
 // --- mandatoryTraitRefs() ---------------------------------------------------
 

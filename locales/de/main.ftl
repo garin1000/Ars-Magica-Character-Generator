@@ -944,7 +944,6 @@ equipment-group-shields = Schilde
 equipment-group-armor = Rüstungen
 equipment-equipped-label = Ausgerüstet
 equipment-specialization-label = Spezialisierung greift (+1)
-equipment-remove = Ausrüstung entfernen
 equipment-empty = Keine Ausrüstung.
 
 # AppError-Arten der Tauri-Befehle.
