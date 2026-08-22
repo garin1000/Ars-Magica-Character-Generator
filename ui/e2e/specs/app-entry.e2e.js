@@ -18,14 +18,11 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 
 import { returnToStartScreen, startCharacter } from '../helpers.js';
-
 // The app's save/load dialog seam (ARM_E2E_FILE) points at this fixed path, so
 // Save and Open never raise a native dialog.
-const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
+import { e2eFile } from '../wdio.conf.js';
 
 const START_SCREEN = '[data-testid="start-screen"]';
 const START_OPEN = '[data-testid="start-open"]';

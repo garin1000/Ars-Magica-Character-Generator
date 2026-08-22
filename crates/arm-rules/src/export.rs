@@ -12,14 +12,25 @@
 //! different places:
 //!
 //! - **Item names** (Virtues, Abilities, Arts, spells, Houses, equipment) come from
-//!   the rules i18n via [`LocalizedRuleset::display_name`]. An id with no entry
-//!   falls back to the raw slug — reachable only for a foreign or hand-edited id,
-//!   and better than dropping the row.
+//!   the rules i18n via [`LocalizedRuleset::display_name`].
 //! - **Document chrome** (section headings, field labels, column headers, yes/no
 //!   markers) is **passed in** by the caller as a `key → text` map keyed by Fluent
-//!   message name, so the engine hardcodes no user-facing string. A key missing from
-//!   the map degrades to printing the key itself, mirroring the frontend's own
-//!   fallback in `ui/src/lib/i18n.ts`.
+//!   message name, so the engine hardcodes no user-facing string.
+//!
+//! Per CLAUDE.md's "never render a raw ID or enum value as a user-facing label",
+//! **neither** kind of text is allowed to reach the document unresolved:
+//! [`character_markdown`] returns [`ExportError`] instead, naming every offending
+//! chrome key and catalogue id it found in one pass — not just the first — the
+//! same "list every offending id, not just the first" contract
+//! [`Ruleset::from_sources`](crate::ruleset::Ruleset::from_sources) already keeps
+//! for referential integrity, so a stale locale or a foreign save file is fixed in
+//! one round trip rather than one failure at a time.
+//!
+//! A **parameter value**, in contrast, is deliberately exempt: it is free text the
+//! majority of the time (Area Lore's region, a Magical Focus's field), and the same
+//! slot may instead carry a nested catalogue reference — the formatter cannot tell
+//! which without an unresolvable id being the normal case, not a defect, so an
+//! unresolved parameter value passes through verbatim (see [`Doc::param_value`]).
 //!
 //! [`LABEL_KEYS`] declares every chrome key the formatter can ask for, so the
 //! caller can assemble the map without reading this source. Only **argument-free**
@@ -41,7 +52,9 @@
 //! ([`Characteristic::ALL`], [`ArtType::ALL`]). Two consecutive renders of the same
 //! entity are byte-identical.
 
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt;
 
 use crate::art::ArtType;
 use crate::characteristics::Characteristic;
@@ -58,6 +71,10 @@ use crate::types::{
     Selection, SpellSelection, SupernaturalPower, TalismanEffect,
 };
 use crate::validation::{compute_balance, effective_point_ceilings};
+
+mod magic;
+mod resolve;
+mod sections;
 
 /// Every document-chrome label key [`character_markdown`] can ask for, sorted and
 /// duplicate-free. The caller resolves these against its own Fluent bundle and
@@ -235,7 +252,54 @@ pub const LABEL_KEYS: &[&str] = &[
     "xp-pool-later_life",
 ];
 
-/// Renders `entity` as a Markdown document.
+/// A document-chrome key or catalogue id [`character_markdown`] could not resolve
+/// to display text — see the module docs' "localization split" for why each kind
+/// is an error rather than a degraded render.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum MissingLabel {
+    /// A [`LABEL_KEYS`] chrome key absent from the caller's label map.
+    Key(String),
+    /// A catalogue id ([`crate::types::Id`], stringified) with no entry in the
+    /// loaded ruleset's i18n.
+    CatalogueId(String),
+}
+
+impl fmt::Display for MissingLabel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            MissingLabel::Key(key) => write!(f, "chrome key '{key}'"),
+            MissingLabel::CatalogueId(id) => write!(f, "catalogue id '{id}'"),
+        }
+    }
+}
+
+/// Returned by [`character_markdown`] when the document would otherwise have
+/// rendered a raw Fluent key or catalogue slug as user-facing text. Carries every
+/// offense found while rendering the whole document, sorted and deduplicated, so
+/// one failed export names everything that needs fixing rather than one key at a
+/// time.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct ExportError {
+    pub missing: Vec<MissingLabel>,
+}
+
+impl fmt::Display for ExportError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "export could not resolve: ")?;
+        for (i, item) in self.missing.iter().enumerate() {
+            if i > 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{item}")?;
+        }
+        Ok(())
+    }
+}
+
+impl std::error::Error for ExportError {}
+
+/// Renders `entity` as a Markdown document, or [`ExportError`] naming every
+/// document-chrome key or catalogue id the document could not resolve.
 ///
 /// `ruleset` supplies localized **item names**; `labels` supplies localized
 /// **document chrome** keyed by the names in [`LABEL_KEYS`]. See the module docs for
@@ -244,11 +308,12 @@ pub fn character_markdown(
     entity: &Entity,
     ruleset: &LocalizedRuleset,
     labels: &BTreeMap<String, String>,
-) -> String {
+) -> Result<String, ExportError> {
     let doc = Doc {
         entity,
         ruleset,
         labels,
+        missing: RefCell::new(BTreeSet::new()),
     };
     let mut out = String::new();
     doc.write_title(&mut out);
@@ -269,7 +334,13 @@ pub fn character_markdown(
     doc.write_supernatural(&mut out);
     doc.write_magic_items(&mut out);
     doc.write_annotations(&mut out);
-    out
+    let missing = doc.missing.into_inner();
+    if !missing.is_empty() {
+        return Err(ExportError {
+            missing: missing.into_iter().collect(),
+        });
+    }
+    Ok(out)
 }
 
 /// Which catalogue a carried [`EquipmentSlot`] belongs to. The slot stores only an
@@ -306,1222 +377,18 @@ const ITEM_KIND_HEADINGS: [(ItemKind, &str); 4] = [
 const UNKNOWN_PARAM_KEY: &str = "parameter";
 
 /// The formatter's inputs, bundled so each section reads as one small method.
+///
+/// `missing` accumulates every chrome key or catalogue id [`Doc::label`] /
+/// [`Doc::name`] could not resolve while writing the document. A `RefCell` rather
+/// than threading a `Result` through every section method: sections stay simple
+/// string-appenders, and [`character_markdown`] turns an empty accumulator into
+/// `Ok` or a non-empty one into [`ExportError`] once the whole document — not just
+/// the first offending call — has been walked.
 struct Doc<'a> {
     entity: &'a Entity,
     ruleset: &'a LocalizedRuleset,
     labels: &'a BTreeMap<String, String>,
-}
-
-impl<'a> Doc<'a> {
-    /// The language-neutral ruleset behind the localized one.
-    fn rules(&self) -> &'a Ruleset {
-        &self.ruleset.ruleset
-    }
-
-    /// The localized chrome text for `key`, or the key itself when the caller did
-    /// not supply it (the frontend's own fallback behavior).
-    fn label(&self, key: &str) -> String {
-        self.labels
-            .get(key)
-            .cloned()
-            .unwrap_or_else(|| key.to_string())
-    }
-
-    /// The localized display name for a catalogue id, falling back to the raw slug
-    /// so a foreign id costs a readable label rather than a whole row.
-    fn name(&self, id: &Id) -> String {
-        self.ruleset
-            .display_name(id)
-            .unwrap_or_else(|| id.as_str())
-            .to_string()
-    }
-
-    /// The localized short abbreviation of an Art (`Cr`, `Ig`) — the notation the
-    /// rulebook and the app both use for a spell's Arts. It is rules i18n data, never
-    /// composed here; an Art whose entry ships none falls back to its display name,
-    /// which is long but still readable, rather than leaving the code half-written.
-    fn art_code(&self, id: &Id) -> String {
-        match self.ruleset.abbreviation(id) {
-            Some(abbreviation) => escape_cell(abbreviation),
-            None => escape_cell(&self.name(id)),
-        }
-    }
-
-    /// Appends an ATX heading whose text is the chrome label for `key`.
-    fn section(&self, out: &mut String, level: usize, key: &str) {
-        heading(out, level, &self.label(key));
-    }
-
-    /// Appends a `- **<label for key>**: value` bullet.
-    fn labelled(&self, out: &mut String, key: &str, value: &str) {
-        field(out, &self.label(key), value);
-    }
-
-    /// A Might Score as `<localized realm> <score>`. Shared by the being's own Might
-    /// and the familiar's, which are separate scores with the same shape.
-    fn realm_score(&self, might: &MightScore) -> String {
-        format!(
-            "{} {}",
-            self.label(&format!("realm-{}", might.realm)),
-            might.score
-        )
-    }
-
-    /// The localized separator for an inline list, mirroring the frontend's
-    /// `restrictedPoolLabel` (`"<sep> "`).
-    fn list_separator(&self) -> String {
-        format!("{} ", self.label("restricted-xp-list-separator"))
-    }
-
-    /// One parameter *value* rendered for display: a value that happens to be a
-    /// catalogue id resolves to its localized name, and free text (an Area Lore's
-    /// region, a Magical Focus's field) passes through as typed.
-    fn param_value(&self, raw: &str) -> String {
-        escape_cell(&self.name(&Id::new(raw)))
-    }
-
-    /// The display values for one selection's parameters, keyed as its name template
-    /// expects them.
-    ///
-    /// A value may itself be a *parameterized* catalogue item: Puissant Ability aimed
-    /// at the character's Provence Lore stores `{ability: ability.area_lore, area:
-    /// "Provence"}`, where `area` is the target instance's own discriminator rather
-    /// than a parameter of Puissant Ability (this is exactly what the frontend's
-    /// `onSelectAbility` writes). So each value is rendered as a full instance name
-    /// with the sibling discriminators folded in ("Provence Lore"), and the keys a
-    /// value swallowed are dropped from the map — otherwise the row would both leak the
-    /// raw template and repeat the discriminator ("Puissant {area} Lore (Provence)").
-    fn param_display_values(&self, params: &BTreeMap<String, Id>) -> BTreeMap<String, String> {
-        let mut swallowed: BTreeSet<String> = BTreeSet::new();
-        let mut rendered: BTreeMap<String, String> = BTreeMap::new();
-        for (key, value) in params {
-            // Only the value's own placeholders that a sibling parameter can fill; an
-            // unfillable one keeps its slot label, as everywhere else.
-            let fills: BTreeMap<String, String> = self
-                .placeholder_keys(value)
-                .into_iter()
-                .filter_map(|placeholder| {
-                    let sibling = params.get(&placeholder)?;
-                    Some((placeholder, self.param_value(sibling.as_str())))
-                })
-                .collect();
-            swallowed.extend(fills.keys().cloned());
-            rendered.insert(key.clone(), self.parameterized_name(value, &fills));
-        }
-        rendered.retain(|key, _| !swallowed.contains(key));
-        rendered
-    }
-
-    /// The `{placeholder}` keys a catalogue item's localized name mentions, in the
-    /// order-free set [`param_display_values`] needs. An unterminated brace is literal
-    /// text and names no key, matching [`parameterized_name`].
-    fn placeholder_keys(&self, id: &Id) -> BTreeSet<String> {
-        let name = self.name(id);
-        let mut keys = BTreeSet::new();
-        let mut rest = name.as_str();
-        while let Some(open) = rest.find('{') {
-            let after = &rest[open + 1..];
-            let Some(close) = after.find('}') else {
-                return keys;
-            };
-            keys.insert(after[..close].to_string());
-            rest = &after[close + 1..];
-        }
-        keys
-    }
-
-    /// A localized item name with its chosen parameters folded in.
-    ///
-    /// `{key}` placeholders in the name template are replaced by the matching value
-    /// ("Puissant {ability}" → "Puissant Awareness"); a placeholder with no value
-    /// shows the localized slot label instead ("Puissant (Ability)"), and a value the
-    /// template never mentions is appended in parentheses ("Minor Magical Focus
-    /// (fire)") so a chosen parameter can never be silently dropped.
-    fn parameterized_name(&self, id: &Id, values: &BTreeMap<String, String>) -> String {
-        let template = escape_cell(&self.name(id));
-        let mut filled = String::new();
-        let mut consumed: BTreeSet<&str> = BTreeSet::new();
-        let mut rest = template.as_str();
-        while let Some(open) = rest.find('{') {
-            filled.push_str(&rest[..open]);
-            let after = &rest[open + 1..];
-            let Some(close) = after.find('}') else {
-                // An unterminated brace is literal text, not a placeholder.
-                filled.push('{');
-                rest = after;
-                continue;
-            };
-            let key = &after[..close];
-            match values.get(key) {
-                Some(value) => {
-                    filled.push_str(value);
-                    consumed.insert(key);
-                }
-                None => {
-                    filled.push('(');
-                    filled.push_str(&self.label(&format!("param-label-{key}")));
-                    filled.push(')');
-                }
-            }
-            rest = &after[close + 1..];
-        }
-        filled.push_str(rest);
-        let extras: Vec<&str> = values
-            .iter()
-            .filter(|(key, _)| !consumed.contains(key.as_str()))
-            .map(|(_, value)| value.as_str())
-            .collect();
-        if extras.is_empty() {
-            return filled;
-        }
-        format!("{filled} ({})", extras.join(&self.list_separator()))
-    }
-
-    // --- Sections ----------------------------------------------------------
-
-    /// The `# ` title and the subtitle line (character type, House, ages).
-    fn write_title(&self, out: &mut String) {
-        let title = if self.entity.name.trim().is_empty() {
-            self.label("export-untitled")
-        } else {
-            escape_cell(&self.entity.name)
-        };
-        out.push_str("# ");
-        out.push_str(&title);
-        out.push_str("\n\n");
-
-        let mut parts: Vec<String> = Vec::new();
-        // The type label is composed from the profile id — catalogue data, so it is
-        // the one key family LABEL_KEYS does not enumerate (see its docs).
-        parts.push(self.label(&format!("type-{}", self.entity.type_id)));
-        if let Some(house) = &self.entity.house {
-            parts.push(pair(&self.label("house-label"), &self.name(house)));
-        }
-        if let Some(age) = self.entity.age {
-            parts.push(pair(&self.label("age-label"), &age.to_string()));
-        }
-        if let Some(age) = self.entity.apparent_age {
-            parts.push(pair(&self.label("apparent-age-label"), &age.to_string()));
-        }
-        out.push('*');
-        out.push_str(&parts.join(SUBTITLE_SEPARATOR));
-        out.push_str("*\n\n");
-    }
-
-    /// The free-text identity fields, each omitted when empty.
-    fn write_identity(&self, out: &mut String) {
-        let e = self.entity;
-        let mut body = String::new();
-        for (key, value) in [
-            ("identity-description", e.description.as_str()),
-            ("identity-concept", e.concept.as_str()),
-            ("identity-gender", e.gender.as_str()),
-            ("identity-sigil", e.sigil.as_str()),
-            ("identity-covenant", e.covenant_name.as_str()),
-            ("identity-parens", e.parens.as_str()),
-        ] {
-            if !value.trim().is_empty() {
-                self.labelled(&mut body, key, &escape_cell(value));
-            }
-        }
-        if let Some(year) = e.birth_year {
-            self.labelled(&mut body, "identity-birth-year", &year.to_string());
-        }
-        if body.is_empty() {
-            return;
-        }
-        self.section(out, 2, "identity-label");
-        out.push_str(&body);
-        out.push('\n');
-    }
-
-    /// The bought Characteristic scores, their effective values where aging or a
-    /// Virtue moves them, and the sheet's free-text descriptions.
-    ///
-    /// The Effective cell is [`effective_characteristic_after_aging`] — the same
-    /// single source of truth every derived total reads, so an aged character's sheet
-    /// cannot show a score its own Soak and Combat lines contradict. It is printed
-    /// only when it differs from the bought score.
-    ///
-    /// Every Characteristic in the taxonomy gets a row: a score of 0 is stored as an
-    /// *absent* key, so skipping the unstored ones would silently drop a
-    /// Characteristic the user did set — to 0 — from the sheet. Whether the section
-    /// exists at all is still pure emptiness (no score and no description anywhere),
-    /// which is what keeps a covenant's sheet free of it without an `EntityKind` gate.
-    fn write_characteristics(&self, out: &mut String) {
-        let e = self.entity;
-        let described = e
-            .characteristic_descriptions
-            .values()
-            .any(|text| !text.trim().is_empty());
-        if e.characteristics.is_empty() && !described {
-            return;
-        }
-        let mut rows: Vec<Vec<String>> = Vec::new();
-        for c in Characteristic::ALL {
-            let description = e
-                .characteristic_descriptions
-                .get(&c)
-                .map(String::as_str)
-                .unwrap_or_default();
-            let bought = i32::from(e.characteristics.get(&c).copied().unwrap_or(0));
-            let effective = effective_characteristic_after_aging(e, self.rules(), c);
-            rows.push(vec![
-                self.label(&format!("characteristic-{c}")),
-                signed(bought),
-                if effective == bought {
-                    String::new()
-                } else {
-                    signed(effective)
-                },
-                escape_cell(description),
-            ]);
-        }
-        self.section(out, 2, "characteristics-title");
-        table(
-            out,
-            &[
-                self.label("identity-name"),
-                self.label("ability-score-label"),
-                self.label("export-col-effective"),
-                self.label("characteristic-description-label"),
-            ],
-            &rows,
-        );
-    }
-
-    /// The Virtues/Flaws (Boons/Hooks for a covenant) the entity holds, grouped by
-    /// the catalogue item's kind, plus the point-balance read-out.
-    ///
-    /// Each kind section holds two tables: the **point-bought** rows from
-    /// `entity.selections`, then — under a marked sub-heading, and only when there
-    /// are any — the **granted** rows from [`entity_grants`] (a magus's free House
-    /// Virtue, a mythic-companion type's grants, an owed Warping pick, a Virtue that
-    /// grants another). Both belong on the sheet, but only the bought rows are
-    /// budgeted, so the balance line stays on [`compute_balance`], which counts
-    /// `selections` alone — the two tables are what keeps the granted items visible
-    /// without letting them move a number.
-    ///
-    /// A selection whose id is absent from the catalogue has no kind to file it under
-    /// and is not printed; [`crate::validation::validate`] reports it as
-    /// `unknown_ref`.
-    fn write_virtues_flaws(&self, out: &mut String) {
-        let granted = entity_grants(self.entity, self.rules());
-        let mut body = String::new();
-        for (kind, heading_key) in ITEM_KIND_HEADINGS {
-            let bought = self.item_rows(&self.entity.selections, kind);
-            let granted_rows = self.item_rows(&granted, kind);
-            if bought.is_empty() && granted_rows.is_empty() {
-                continue;
-            }
-            self.section(&mut body, 3, heading_key);
-            let headers = [
-                self.label("identity-name"),
-                self.label("export-col-type"),
-                self.label("export-col-magnitude"),
-            ];
-            table(&mut body, &headers, &bought);
-            if granted_rows.is_empty() {
-                continue;
-            }
-            self.section(&mut body, 4, "export-granted");
-            table(&mut body, &headers, &granted_rows);
-        }
-        if body.is_empty() {
-            return;
-        }
-        self.section(out, 2, "tab-virtues-flaws");
-        out.push_str(&body);
-        let balance = compute_balance(self.entity, self.rules());
-        let ceilings = effective_point_ceilings(self.entity, self.rules());
-        for (key, used, ceiling) in [
-            (
-                "items-virtues-title",
-                balance.virtue_points,
-                ceilings.as_ref().map(|c| c.virtue_ceiling),
-            ),
-            (
-                "items-flaws-title",
-                balance.flaw_points,
-                ceilings.as_ref().map(|c| c.flaw_ceiling),
-            ),
-        ] {
-            let value = match ceiling {
-                Some(max) => format!("{used} / {max}"),
-                None => used.to_string(),
-            };
-            self.labelled(out, key, &value);
-        }
-        out.push('\n');
-    }
-
-    /// The name, type and magnitude rows for those `selections` whose catalogue item
-    /// is of `kind`, in the list's own order. Shared by the bought and the granted
-    /// table so a granted item is rendered exactly like a bought one — only its table
-    /// differs.
-    ///
-    /// The "type" cell is the item's `category`, localized through `category-<id>` —
-    /// the same key the in-app badge uses. Categories are catalogue *data*, so that
-    /// family is not enumerated in [`LABEL_KEYS`] (see its docs).
-    fn item_rows(&self, selections: &[Selection], kind: ItemKind) -> Vec<Vec<String>> {
-        selections
-            .iter()
-            .filter_map(|selection| {
-                let item = self.rules().item(&selection.item_ref)?;
-                if item.kind != kind {
-                    return None;
-                }
-                let values = self.param_display_values(&selection.params);
-                Some(vec![
-                    self.parameterized_name(&selection.item_ref, &values),
-                    self.label(&format!("category-{}", item.category)),
-                    self.label(&format!("magnitude-{}", item.magnitude)),
-                ])
-            })
-            .collect()
-    }
-
-    /// The bought Abilities — each instance a row of its own — then the Abilities a
-    /// Virtue granted without any purchase, and the experience pools that funded the
-    /// bought ones (shared with the Arts, as the rules give one pool).
-    fn write_abilities(&self, out: &mut String) {
-        let e = self.entity;
-        let mut rows: Vec<Vec<String>> = Vec::new();
-        for bought in &e.ability_scores {
-            let mut values: BTreeMap<String, String> = BTreeMap::new();
-            if let Some(parameter) = &bought.parameter {
-                let key = self
-                    .rules()
-                    .ability(&bought.ability)
-                    .and_then(|a| a.parameter.clone())
-                    .unwrap_or_else(|| UNKNOWN_PARAM_KEY.to_string());
-                values.insert(key, self.param_value(parameter));
-            }
-            let score = i32::from(bought.score);
-            let effective = effective_ability_score(
-                e,
-                self.rules(),
-                &bought.ability,
-                bought.parameter.as_deref(),
-            );
-            rows.push(vec![
-                self.parameterized_name(&bought.ability, &values),
-                escape_cell(bought.specialty.as_deref().unwrap_or_default()),
-                score.to_string(),
-                if effective == score {
-                    String::new()
-                } else {
-                    effective.to_string()
-                },
-            ]);
-        }
-        rows.extend(self.granted_ability_rows());
-        let xp = xp_allocation(e, self.rules());
-        let has_xp = xp.general_pool > 0 || xp.general_used > 0 || !xp.restricted.is_empty();
-        if rows.is_empty() && !has_xp {
-            return;
-        }
-        self.section(out, 2, "abilities-title");
-        let headers = [
-            self.label("identity-name"),
-            self.label("ability-specialty-label"),
-            self.label("ability-score-label"),
-            self.label("export-col-effective"),
-        ];
-        table(out, &headers, &rows);
-        if xp.general_pool > 0 || xp.general_used > 0 {
-            let spent = format!("{} / {}", xp.general_used, xp.general_pool);
-            self.labelled(out, "xp-pool", &spent);
-            out.push('\n');
-        }
-        if xp.restricted.is_empty() {
-            return;
-        }
-        self.section(out, 3, "export-xp-restricted");
-        for pool in &xp.restricted {
-            let drawn = format!("{} / {}", pool.used, pool.amount);
-            field(out, &self.restricted_pool_label(pool), &drawn);
-        }
-        out.push('\n');
-    }
-
-    /// What to call one restricted pool — the same rule the in-app XP bar follows
-    /// (`restrictedPoolLabel` in `ui/src/lib/derive.ts`), so a budget reads the same
-    /// on screen and on the sheet.
-    ///
-    /// A **life-stage block** is named for where the experience came from, never for
-    /// what it may buy: both childhood blocks share the childhood Ability list, so
-    /// eligibility cannot even tell them apart, and the native-language block is
-    /// restricted to one *instance* — it lists no Ability and no category at all, so
-    /// an eligibility label for it is the empty string. Its `xp-pool-<block>` key is
-    /// declared in [`LABEL_KEYS`], the block enum being a fixed taxonomy.
-    ///
-    /// A **Virtue's grant** keeps its eligibility list: the item's own name says
-    /// nothing about what its points buy, which is exactly where Educated and
-    /// Warrior differ. An eligible Ability may be parameterized (Dead Language is
-    /// "{language} (Dead Language)"), and the pool names the Ability rather than one
-    /// instance of it, so the placeholder keeps its slot label instead of reaching
-    /// the reader raw.
-    fn restricted_pool_label(&self, pool: &RestrictedXpPool) -> String {
-        if let XpPoolOrigin::LifeStage { block } = &pool.origin {
-            return self.label(&format!("xp-pool-{block}"));
-        }
-        let mut eligibility: Vec<String> = pool
-            .abilities
-            .iter()
-            .map(|id| self.parameterized_name(id, &BTreeMap::new()))
-            .collect();
-        eligibility.extend(
-            pool.categories
-                .iter()
-                .map(|c| self.label(&format!("ability-category-{c}"))),
-        );
-        eligibility.join(&self.list_separator())
-    }
-
-    /// A row for every Ability a Virtue seeded with a free starting score
-    /// ([`ability_score_floors`], e.g. Second Sight 1) that the character has *not*
-    /// also bought. Without these the sheet omits an Ability the character can use,
-    /// since a granted score is stored nowhere in `ability_scores`.
-    ///
-    /// A grant fixes its target by id and reaches only the parameter-less instance
-    /// (see [`crate::effective::granted_ability_floor`]), so a bought row cancels the
-    /// floor row exactly when it names the same Ability with no parameter — the same
-    /// instance match [`effective_ability_score`] makes. The bought column reads 0,
-    /// the convention every unbought score uses, and the effective column comes from
-    /// [`effective_ability_score`], so a Puissant bonus on a granted Ability shows.
-    /// Order is the floors' own (ability id), after the bought rows.
-    fn granted_ability_rows(&self) -> Vec<Vec<String>> {
-        let e = self.entity;
-        ability_score_floors(e, self.rules())
-            .into_iter()
-            .filter(|floor| {
-                !e.ability_scores
-                    .iter()
-                    .any(|bought| bought.ability == floor.ability && bought.parameter.is_none())
-            })
-            .map(|floor| {
-                let effective = effective_ability_score(e, self.rules(), &floor.ability, None);
-                vec![
-                    self.parameterized_name(&floor.ability, &BTreeMap::new()),
-                    String::new(),
-                    "0".to_string(),
-                    if effective == 0 {
-                        String::new()
-                    } else {
-                        effective.to_string()
-                    },
-                ]
-            })
-            .collect()
-    }
-
-    /// The Hermetic Arts, split into Techniques and Forms.
-    ///
-    /// The **catalogue** is the row set, in id order within each class: an Art scored
-    /// 0 is stored as no score at all, so listing only the stored Arts would drop
-    /// every unscored Art — and, for a magus who scored no Form, the entire Forms
-    /// table — from a sheet whose reader needs the whole grid. Which Arts exist is
-    /// data, so the section's size follows `arts.json` with no code change.
-    ///
-    /// The section itself is still gated on emptiness: it appears once the entity
-    /// scores an Art the catalogue holds. An Art id absent from the catalogue has no
-    /// Technique/Form class to file it under and can be scored by no engine read-out
-    /// either ([`crate::validation::validate`] reports it as `unknown_art`), so it
-    /// neither prints nor opens the section.
-    fn write_arts(&self, out: &mut String) {
-        let e = self.entity;
-        let scores_a_known_art = e
-            .art_scores
-            .iter()
-            .any(|score| self.rules().art(&score.art).is_some());
-        if !scores_a_known_art {
-            return;
-        }
-        self.section(out, 2, "tab-arts");
-        for art_type in ArtType::ALL {
-            let rows: Vec<Vec<String>> = self
-                .rules()
-                .art_ids_of(art_type)
-                .iter()
-                .map(|art| {
-                    let score = e
-                        .art_scores
-                        .iter()
-                        .find(|stored| &stored.art == art)
-                        .map(|stored| i32::from(stored.score))
-                        .unwrap_or(0);
-                    let effective = effective_art_score(e, self.rules(), art);
-                    vec![
-                        escape_cell(&self.name(art)),
-                        score.to_string(),
-                        if effective == score {
-                            String::new()
-                        } else {
-                            effective.to_string()
-                        },
-                    ]
-                })
-                .collect();
-            if rows.is_empty() {
-                continue;
-            }
-            self.section(out, 3, &format!("art-type-{art_type}"));
-            let headers = [
-                self.label("identity-name"),
-                self.label("ability-score-label"),
-                self.label("export-col-effective"),
-            ];
-            table(out, &headers, &rows);
-        }
-    }
-
-    /// The spells the character knows, each with its short Art-and-level code and its
-    /// Spell Mastery.
-    fn write_spells(&self, out: &mut String) {
-        let e = self.entity;
-        let mut rows: Vec<Vec<String>> = Vec::new();
-        for chosen in &e.spells {
-            let catalogue = self.rules().spell(&chosen.spell);
-            let mut values: BTreeMap<String, String> = BTreeMap::new();
-            if let Some(parameter) = &chosen.parameter {
-                let key = catalogue
-                    .and_then(|s| s.parameters.first())
-                    .map(|p| p.key.clone())
-                    .unwrap_or_else(|| UNKNOWN_PARAM_KEY.to_string());
-                values.insert(key, self.param_value(parameter));
-            }
-            let mastery = effective_spell_mastery(chosen, e, self.rules());
-            let abilities: Vec<String> = chosen
-                .mastery_abilities
-                .iter()
-                .map(|id| escape_cell(&self.name(id)))
-                .collect();
-            rows.push(vec![
-                self.parameterized_name(&chosen.spell, &values),
-                self.spell_code(chosen),
-                if mastery == 0 {
-                    String::new()
-                } else {
-                    mastery.to_string()
-                },
-                abilities.join(&self.list_separator()),
-            ]);
-        }
-        if rows.is_empty() {
-            return;
-        }
-        self.section(out, 2, "tab-spells");
-        let headers = [
-            self.label("identity-name"),
-            self.label("export-col-spell-code"),
-            self.label("spell-mastery-label"),
-            self.label("spell-mastery-abilities-label"),
-        ];
-        table(out, &headers, &rows);
-    }
-
-    /// A spell's Arts and level as the one short cell the rulebook and the app both
-    /// use: the Technique and Form abbreviations followed by the resolved level, with
-    /// no separator (`CrIg20`).
-    ///
-    /// An unresolved General level keeps its localized marker a space apart, since
-    /// `CrIgGeneral` would not read as one figure. A spell no catalogue holds has no
-    /// Arts to abbreviate, and a bare level would read as a code, so its cell is empty
-    /// — the row still names the spell the character claims.
-    fn spell_code(&self, chosen: &SpellSelection) -> String {
-        let Some(spell) = self.rules().spell(&chosen.spell) else {
-            return String::new();
-        };
-        let level = match resolved_spell_level(chosen, self.rules()) {
-            Some(level) => level.to_string(),
-            None => format!(" {}", self.label("spell-level-general")),
-        };
-        format!(
-            "{}{}{level}",
-            self.art_code(&spell.technique),
-            self.art_code(&spell.form)
-        )
-    }
-
-    /// Which catalogue holds `id`, or `None` when no catalogue does.
-    fn carried_class(&self, id: &Id) -> Option<Carried> {
-        if self.rules().weapon(id).is_some() {
-            Some(Carried::Weapon)
-        } else if self.rules().shield(id).is_some() {
-            Some(Carried::Shield)
-        } else if self.rules().armor_item(id).is_some() {
-            Some(Carried::Armor)
-        } else {
-            None
-        }
-    }
-
-    /// The carried equipment, grouped weapons / shields / armor with the equipped
-    /// marker. An id no catalogue holds is not printed;
-    /// [`crate::validation::validate`] reports it as `unknown_equipment`.
-    fn write_equipment(&self, out: &mut String) {
-        let mut body = String::new();
-        for (class, heading_key) in EQUIPMENT_GROUPS {
-            let rows: Vec<Vec<String>> = self
-                .entity
-                .equipment
-                .iter()
-                .filter(|slot| self.carried_class(&slot.item) == Some(class))
-                .map(|slot| {
-                    vec![
-                        escape_cell(&self.name(&slot.item)),
-                        self.label(if slot.equipped {
-                            "export-yes"
-                        } else {
-                            "export-no"
-                        }),
-                    ]
-                })
-                .collect();
-            if rows.is_empty() {
-                continue;
-            }
-            self.section(&mut body, 3, heading_key);
-            let headers = [
-                self.label("identity-name"),
-                self.label("equipment-equipped-label"),
-            ];
-            table(&mut body, &headers, &rows);
-        }
-        if body.is_empty() {
-            return;
-        }
-        self.section(out, 2, "tab-equipment");
-        out.push_str(&body);
-    }
-
-    /// One or two combat lines per equipped weapon — a line carrying shield modifiers
-    /// names the shields alongside the weapon. Attack, Damage and Range are blank for
-    /// a weapon that has none (Dodge is attack- and damage-less; melee has no Range).
-    fn write_combat(&self, out: &mut String) {
-        let lines = combat_totals(self.entity, self.rules());
-        if lines.is_empty() {
-            return;
-        }
-        let rows: Vec<Vec<String>> = lines
-            .iter()
-            .map(|line| {
-                vec![
-                    escape_cell(&self.combat_line_name(line)),
-                    escape_cell(&self.name(&line.ability)),
-                    line.initiative.to_string(),
-                    optional_number(line.attack),
-                    line.defense.to_string(),
-                    optional_number(line.damage),
-                    line.range.map(|r| r.to_string()).unwrap_or_default(),
-                ]
-            })
-            .collect();
-        self.section(out, 2, "derived-section-combat");
-        let headers = [
-            self.label("identity-name"),
-            self.label("param-label-ability"),
-            self.label("derived-combat-init"),
-            self.label("derived-combat-attack"),
-            self.label("derived-combat-defense"),
-            self.label("derived-combat-damage"),
-            self.label("derived-range"),
-        ];
-        table(out, &headers, &rows);
-    }
-
-    /// A combat line's name: the weapon alone on a bare line, or the weapon joined to
-    /// every shield whose modifiers it folded in ("Long Sword & Round Shield"). The
-    /// joiner is a localized label; the spaces around it are composed here, since a
-    /// Fluent value cannot begin or end with one.
-    fn combat_line_name(&self, line: &CombatLine) -> String {
-        if line.shields.is_empty() {
-            return self.name(&line.weapon);
-        }
-        let joiner = format!(" {} ", self.label("derived-combat-shield-joiner"));
-        let mut parts = vec![self.name(&line.weapon)];
-        parts.extend(line.shields.iter().map(|shield| self.name(shield)));
-        parts.join(&joiner)
-    }
-
-    /// The Soak breakdown: every labelled addend, then the total.
-    fn write_soak(&self, out: &mut String) {
-        let soak_total = soak(self.entity, self.rules());
-        if soak_total.total == 0 && soak_total.addends.iter().all(|a| a.value == 0) {
-            return;
-        }
-        self.section(out, 2, "derived-section-soak");
-        for addend in &soak_total.addends {
-            let key = format!("derived-addend-{}", addend.label);
-            self.labelled(out, &key, &signed(addend.value));
-        }
-        self.labelled(out, "export-col-total", &signed(soak_total.total));
-        out.push('\n');
-    }
-
-    /// Carried Load, the Burden it produces, and the Encumbrance penalty.
-    fn write_encumbrance(&self, out: &mut String) {
-        let enc = encumbrance(self.entity, self.rules());
-        if enc.load == 0 && enc.burden == 0 && enc.total == 0 {
-            return;
-        }
-        self.section(out, 2, "derived-section-encumbrance");
-        self.labelled(out, "derived-load", &enc.load.to_string());
-        self.labelled(out, "derived-burden", &enc.burden.to_string());
-        self.labelled(out, "export-col-total", &enc.total.to_string());
-        out.push('\n');
-    }
-
-    /// The Fatigue and Wound tracks.
-    ///
-    /// The one pair of sections that emptiness cannot govern: both are constants of a
-    /// creature's body (five Fatigue levels, five wound bands widened by Size), never
-    /// a collection that can be empty. They are therefore gated on the entity being a
-    /// character — a covenant has no body to fatigue or wound.
-    fn write_health_tracks(&self, out: &mut String) {
-        if self.entity.entity_kind != EntityKind::Character {
-            return;
-        }
-        let fatigue: Vec<Vec<String>> = fatigue_levels(self.entity, self.rules())
-            .iter()
-            .map(|level| {
-                vec![
-                    self.label(&format!("derived-fatigue-{}", level.level)),
-                    level.penalty.to_string(),
-                ]
-            })
-            .collect();
-        self.section(out, 2, "derived-section-fatigue");
-        let fatigue_headers = [
-            self.label("identity-name"),
-            self.label("export-col-penalty"),
-        ];
-        table(out, &fatigue_headers, &fatigue);
-
-        let wounds: Vec<Vec<String>> = wound_ranges(self.entity, self.rules())
-            .iter()
-            .map(|band| {
-                let span = match band.max {
-                    Some(max) => format!("{}{RANGE_DASH}{max}", band.min),
-                    None => format!("{}+", band.min),
-                };
-                vec![
-                    self.label(&format!("derived-wound-{}", band.level)),
-                    span,
-                    band.penalty.map(|p| p.to_string()).unwrap_or_default(),
-                ]
-            })
-            .collect();
-        self.section(out, 2, "derived-section-wounds");
-        let wound_headers = [
-            self.label("identity-name"),
-            self.label("derived-range"),
-            self.label("export-col-penalty"),
-        ];
-        table(out, &wound_headers, &wounds);
-    }
-
-    /// The named Personality Traits and their signed values.
-    fn write_personality_traits(&self, out: &mut String) {
-        if self.entity.personality_traits.is_empty() {
-            return;
-        }
-        self.section(out, 2, "personality-label");
-        write_traits(out, &self.entity.personality_traits);
-    }
-
-    /// The starting Reputations: audience, level, and what the Reputation is for.
-    fn write_reputations(&self, out: &mut String) {
-        if self.entity.reputations.is_empty() {
-            return;
-        }
-        self.section(out, 2, "reputations-label");
-        for reputation in &self.entity.reputations {
-            let audience = self.label(&format!("reputation-type-{}", reputation.kind));
-            let heading = format!("{audience} {}", reputation.score);
-            field(out, &heading, &escape_cell(&reputation.content));
-        }
-        out.push('\n');
-    }
-
-    /// The derived Confidence Score and Points (a grog has neither, so the section
-    /// disappears for one).
-    fn write_confidence(&self, out: &mut String) {
-        let Some(profile) = self.rules().profile(&self.entity.type_id) else {
-            return;
-        };
-        let confidence = confidence(
-            profile.confidence_score,
-            profile.confidence_points,
-            self.entity,
-            self.rules(),
-        );
-        if confidence.score == 0 && confidence.points == 0 {
-            return;
-        }
-        self.section(out, 2, "confidence-label");
-        self.labelled(out, "ability-score-label", &confidence.score.to_string());
-        self.labelled(out, "export-col-points", &confidence.points.to_string());
-        out.push('\n');
-    }
-
-    /// A supernatural being's effective Might and the powers it holds.
-    fn write_supernatural(&self, out: &mut String) {
-        let might = effective_might(self.entity, self.rules());
-        let powers = self.leveled_rows(&self.entity.powers, "power-level-label");
-        if might.is_none() && powers.is_empty() {
-            return;
-        }
-        self.section(out, 2, "tab-supernatural");
-        if let Some(might) = might {
-            self.labelled(out, "supernatural-might-label", &self.realm_score(&might));
-            out.push('\n');
-        }
-        if powers.is_empty() {
-            return;
-        }
-        self.section(out, 3, "supernatural-powers-label");
-        table(out, &powers.headers, &powers.rows);
-    }
-
-    /// The magus's magical possessions: the assumed aura, enchanted devices, the
-    /// Longevity Ritual as stored, the talisman, and the familiar's statblock.
-    fn write_magic_items(&self, out: &mut String) {
-        let e = self.entity;
-        let devices = self.leveled_rows(&e.devices, "device-level-label");
-        let mut body = String::new();
-        if !devices.is_empty() {
-            self.section(&mut body, 3, "possessions-devices-label");
-            table(&mut body, &devices.headers, &devices.rows);
-        }
-        self.write_longevity(&mut body);
-        self.write_talisman(&mut body);
-        self.write_familiar(&mut body);
-        if e.aura == 0 && body.is_empty() {
-            return;
-        }
-        self.section(out, 2, "tab-possessions");
-        if e.aura != 0 {
-            self.labelled(out, "aura-label", &signed(e.aura));
-            out.push('\n');
-        }
-        out.push_str(&body);
-    }
-
-    /// The stored Longevity Ritual: where it came from, the entered aging bonus (or a
-    /// marker when it was never entered), and its culminating focus.
-    fn write_longevity(&self, out: &mut String) {
-        let Some(ritual) = &self.entity.longevity_ritual else {
-            return;
-        };
-        self.section(out, 3, "longevity-label");
-        let source = self.label(&format!("longevity-source-{}", ritual.source));
-        self.labelled(out, "longevity-source-label", &source);
-        let bonus = match ritual.bonus {
-            Some(bonus) => signed(i32::from(bonus)),
-            None => self.label("longevity-not-entered"),
-        };
-        self.labelled(out, "longevity-bonus-label", &bonus);
-        if !ritual.focus.trim().is_empty() {
-            self.labelled(out, "longevity-focus-label", &escape_cell(&ritual.focus));
-        }
-        out.push('\n');
-    }
-
-    /// The talisman: its shape-and-material identity, its attunements, and the
-    /// effects instilled in it.
-    fn write_talisman(&self, out: &mut String) {
-        let Some(talisman) = &self.entity.talisman else {
-            return;
-        };
-        let attunements: Vec<Vec<String>> = talisman
-            .attunements
-            .iter()
-            .map(|a| vec![escape_cell(&a.description), signed(i32::from(a.bonus))])
-            .collect();
-        let effects = self.leveled_rows(&talisman.effects, "talisman-effect-level-label");
-        if talisman.description.trim().is_empty() && attunements.is_empty() && effects.is_empty() {
-            return;
-        }
-        self.section(out, 3, "talisman-label");
-        if !talisman.description.trim().is_empty() {
-            let identity = escape_cell(&talisman.description);
-            self.labelled(out, "talisman-description-label", &identity);
-            out.push('\n');
-        }
-        if !attunements.is_empty() {
-            self.section(out, 4, "talisman-attunements-label");
-            let headers = [
-                self.label("identity-name"),
-                self.label("talisman-bonus-label"),
-            ];
-            table(out, &headers, &attunements);
-        }
-        if !effects.is_empty() {
-            self.section(out, 4, "talisman-effects-label");
-            table(out, &effects.headers, &effects.rows);
-        }
-    }
-
-    /// The familiar's own statblock, in the rulebook's Creature Format order: the
-    /// beast, its Magic Might, Characteristics, Size, Personality Traits, the three
-    /// bond cords, and the powers invested in the bond. Everything here is the
-    /// familiar's own, never the magus's.
-    fn write_familiar(&self, out: &mut String) {
-        let Some(familiar) = &self.entity.familiar else {
-            return;
-        };
-        self.section(out, 3, "familiar-label");
-        if !familiar.name.trim().is_empty() {
-            self.labelled(out, "identity-name", &escape_cell(&familiar.name));
-        }
-        if !familiar.animal.trim().is_empty() {
-            self.labelled(out, "familiar-animal-label", &escape_cell(&familiar.animal));
-        }
-        if let Some(might) = familiar.might {
-            self.labelled(out, "familiar-might-label", &self.realm_score(&might));
-        }
-        if familiar.size != 0 {
-            let size = signed(i32::from(familiar.size));
-            self.labelled(out, "familiar-size-label", &size);
-        }
-        for (key, score) in [
-            ("familiar-cord-gold", familiar.cord_gold),
-            ("familiar-cord-silver", familiar.cord_silver),
-            ("familiar-cord-bronze", familiar.cord_bronze),
-        ] {
-            if score != 0 {
-                self.labelled(out, key, &signed(i32::from(score)));
-            }
-        }
-        out.push('\n');
-        let characteristics: Vec<Vec<String>> = Characteristic::ALL
-            .into_iter()
-            .filter_map(|c| {
-                let score = familiar.characteristics.get(&c)?;
-                Some(vec![
-                    self.label(&format!("characteristic-{c}")),
-                    signed(i32::from(*score)),
-                ])
-            })
-            .collect();
-        if !characteristics.is_empty() {
-            self.section(out, 4, "characteristics-title");
-            let headers = [
-                self.label("identity-name"),
-                self.label("ability-score-label"),
-            ];
-            table(out, &headers, &characteristics);
-        }
-        if !familiar.personality_traits.is_empty() {
-            self.section(out, 4, "personality-label");
-            write_traits(out, &familiar.personality_traits);
-        }
-        let powers = self.leveled_rows(&familiar.powers, "power-level-label");
-        if !powers.is_empty() {
-            self.section(out, 4, "familiar-powers-label");
-            table(out, &powers.headers, &powers.rows);
-        }
-    }
-
-    /// The annotation block: Warping, Twilight Scars, Decrepitude, the chosen Living
-    /// Conditions, the accrued aging points, and the aging log. It reads from the
-    /// standing choice through the accrued state to the year-by-year history.
-    fn write_annotations(&self, out: &mut String) {
-        let e = self.entity;
-        let warping = warping(e, self.rules());
-        let decrepitude = decrepitude_score(e, self.rules());
-        let mut body = String::new();
-        // Ahead of the subsections, because it is the standing choice the rest of
-        // the block is the consequence of — and because a bullet sitting after a
-        // `###` heading would read as part of that subsection.
-        self.write_living_conditions(&mut body);
-        if warping.score != 0 || warping.points != 0 || !e.warping_effect.trim().is_empty() {
-            self.section(&mut body, 3, "warping-label");
-            self.labelled(&mut body, "ability-score-label", &warping.score.to_string());
-            let points = warping.points.to_string();
-            self.labelled(&mut body, "warping-points-label", &points);
-            if !e.warping_effect.trim().is_empty() {
-                let effect = escape_cell(&e.warping_effect);
-                self.labelled(&mut body, "warping-effect-label", &effect);
-            }
-            body.push('\n');
-        }
-        if !e.twilight_scars.is_empty() {
-            self.section(&mut body, 3, "twilight-scars-label");
-            for scar in &e.twilight_scars {
-                body.push_str("- ");
-                body.push_str(&escape_cell(&scar.description));
-                body.push('\n');
-            }
-            body.push('\n');
-        }
-        if decrepitude != 0 || !e.decrepitude_effect.trim().is_empty() {
-            self.section(&mut body, 3, "decrepitude-label");
-            self.labelled(&mut body, "ability-score-label", &decrepitude.to_string());
-            if !e.decrepitude_effect.trim().is_empty() {
-                let effect = escape_cell(&e.decrepitude_effect);
-                self.labelled(&mut body, "decrepitude-effect-label", &effect);
-            }
-            body.push('\n');
-        }
-        self.write_aging_points(&mut body);
-        if !e.aging_log.is_empty() {
-            self.section(&mut body, 3, "aging-log-heading");
-            for entry in &e.aging_log {
-                let recorded = self.aging_log_entry(entry);
-                // A character with no birth year has no calendar year to label the
-                // entry with (see `AgingLogEntry::year`), so it prints as a plain
-                // bullet rather than an empty bold label.
-                match entry.year {
-                    Some(year) => field(&mut body, &year.to_string(), &recorded),
-                    None => {
-                        body.push_str("- ");
-                        body.push_str(&recorded);
-                        body.push('\n');
-                    }
-                }
-            }
-            body.push('\n');
-        }
-        if body.is_empty() {
-            return;
-        }
-        self.section(out, 2, "aging-label");
-        out.push_str(&body);
-    }
-
-    /// The chosen Living Conditions, one inline list of localized names.
-    ///
-    /// They are a **stored choice** ([`Entity::living_conditions`]) and a standing
-    /// term of every future aging total — "AGING TOTAL: Stress die (no botch) +
-    /// age/10 (round up) - Living Conditions modifier"
-    /// (Ars Magica - Definitive Edition (Core Rules).md:16567-16569, table at
-    /// :16581-16594) — so a sheet that dropped them would read as data loss. The
-    /// resolved modifier is deliberately *not* printed: it is derived from these ids
-    /// and the character's Virtues and Flaws, and the sheet records choices.
-    fn write_living_conditions(&self, out: &mut String) {
-        let chosen = &self.entity.living_conditions;
-        if chosen.is_empty() {
-            return;
-        }
-        let names: Vec<String> = chosen
-            .iter()
-            .map(|id| escape_cell(&self.name(id)))
-            .collect();
-        self.labelled(
-            out,
-            "living-conditions-label",
-            &names.join(&self.list_separator()),
-        );
-        out.push('\n');
-    }
-
-    /// One logged year's recorded detail: its free text, then the stress die the
-    /// player typed and the AGING TOTAL it produced, then the Crisis the year sent
-    /// the character to — where the entry carries them.
-    ///
-    /// A resolved year may leave the free text empty and let the structured fields
-    /// speak, and a hand-written entry carries no die at all, so each part is
-    /// included only when it is there.
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16567-16569, :16621.
-    fn aging_log_entry(&self, entry: &AgingLogEntry) -> String {
-        let mut parts: Vec<String> = Vec::new();
-        let effect = escape_cell(&entry.effect);
-        if !effect.is_empty() {
-            parts.push(effect);
-        }
-        if let Some(die) = entry.die {
-            parts.push(pair(&self.label("aging-die-label"), &die.to_string()));
-        }
-        if let Some(total) = entry.total {
-            parts.push(pair(&self.label("export-col-total"), &total.to_string()));
-        }
-        parts.extend(self.aging_log_crisis(entry));
-        parts.join(SUBTITLE_SEPARATOR)
-    }
-
-    /// What the Crisis Table was asked of one logged year and what it answered, or
-    /// that it has not been asked yet.
-    ///
-    /// Three states, and the sheet has to tell them apart: a year with no Crisis
-    /// says nothing, a Crisis the aging row demanded that nobody has rolled says so
-    /// (`crisis` set with no row — the aging roll happened whether or not the second
-    /// die was thrown), and a resolved one prints its row, its severity and the
-    /// Simple Die that found it beside the CRISIS TOTAL they made.
-    ///
-    /// The row travels as an [`Id`], so its text comes from the rules i18n and never
-    /// reaches the sheet as a slug; the severity is a Rust taxonomy and goes through
-    /// `crisis-severity-<slug>`, which [`LABEL_KEYS`] declares.
-    ///
-    /// Source: Ars Magica - Definitive Edition (Core Rules).md:16619-16632.
-    fn aging_log_crisis(&self, entry: &AgingLogEntry) -> Vec<String> {
-        if !entry.crisis {
-            return Vec::new();
-        }
-        let Some(row) = &entry.crisis_row else {
-            return vec![self.label("aging-log-crisis-unrolled")];
-        };
-
-        let named = match entry.crisis_severity {
-            Some(severity) => format!(
-                "{} ({})",
-                self.name(row),
-                self.label(&format!("crisis-severity-{severity}"))
-            ),
-            // A bedridden row carries no severity: a week in bed is time, not an
-            // illness, so there is no rank to print.
-            None => self.name(row),
-        };
-        let mut parts = vec![pair(&self.label("crisis-label"), &named)];
-        if let Some(die) = entry.crisis_die {
-            parts.push(pair(&self.label("crisis-die-label"), &die.to_string()));
-        }
-        if let Some(total) = entry.crisis_total {
-            parts.push(pair(&self.label("crisis-total-label"), &total.to_string()));
-        }
-        parts
-    }
-
-    /// The accrued aging points, one bullet per Characteristic that carries any.
-    ///
-    /// These are the recorded state the Decrepitude Score and the Characteristic drops
-    /// are both derived from ([`crate::effective::decrepitude_score`],
-    /// [`effective_characteristic_after_aging`]), so the sheet shows them: a reader who
-    /// sees only the dropped score cannot tell how close the next drop is. A
-    /// Characteristic with no points contributes nothing and is skipped, which also
-    /// keeps the whole `aging-label` block out of an unaged character's sheet.
-    fn write_aging_points(&self, out: &mut String) {
-        let accrued: Vec<(Characteristic, u8)> = Characteristic::ALL
-            .into_iter()
-            .filter_map(|c| {
-                let points = self.entity.aging_points.get(&c).copied().unwrap_or(0);
-                (points != 0).then_some((c, points))
-            })
-            .collect();
-        if accrued.is_empty() {
-            return;
-        }
-        self.section(out, 3, "aging-points-heading");
-        for (c, points) in accrued {
-            self.labelled(out, &format!("characteristic-{c}"), &points.to_string());
-        }
-        out.push('\n');
-    }
-
-    /// A name-and-level table for the three list types that share that shape:
-    /// enchanted devices, supernatural powers, and instilled talisman effects. Each
-    /// names its own "Level" key, since each is a different quantity.
-    fn leveled_rows<T: Leveled>(&self, items: &[T], level_key: &str) -> LeveledTable {
-        LeveledTable {
-            headers: [self.label("identity-name"), self.label(level_key)],
-            rows: items
-                .iter()
-                .map(|item| vec![escape_cell(item.leveled_name()), item.level().to_string()])
-                .collect(),
-        }
-    }
+    missing: RefCell<BTreeSet<MissingLabel>>,
 }
 
 /// A name-and-level table, built by [`Doc::leveled_rows`].
@@ -1866,6 +733,8 @@ mod tests {
           "virtue.puissant_art": { "name": "Puissant {art}" },
           "virtue.minor_magical_focus": { "name": "Minor Magical Focus" },
           "virtue.warrior": { "name": "Warrior" },
+          "virtue.second_sight": { "name": "Second Sight" },
+          "virtue.educated": { "name": "Educated" },
           "virtue.malformed_name": { "name": "Malformed {template" },
           "flaw.optimistic": { "name": "Optimistic" },
           "boon.rich_vis_source": { "name": "Rich Vis Source" },
@@ -1875,6 +744,8 @@ mod tests {
           "ability.dead_language": { "name": "{language} (Dead Language)" },
           "ability.second_sight": { "name": "Second Sight" },
           "ability.single_weapon": { "name": "Single Weapon" },
+          "ability.magic_theory": { "name": "Magic Theory" },
+          "ability.parma_magica": { "name": "Parma Magica" },
           "ability.brawl": { "name": "Brawl" },
           "weapon.dodge": { "name": "Dodge" },
           "art.creo": { "name": "Creo", "abbreviation": "Cr" },
@@ -1898,17 +769,82 @@ mod tests {
         LocalizedRuleset::new(rs, i18n).unwrap()
     }
 
+    /// Every key `character_markdown` can request against the shared `ruleset()`
+    /// fixture, resolved to itself: [`LABEL_KEYS`] plus the three catalogue-derived
+    /// families its own docs name as deliberately excluded (`type-`,
+    /// `param-label-`, `category-`) — mirroring the frontend's own
+    /// `composedExportLabelKeys` (`ui/src/lib/state.svelte.ts`), which assembles
+    /// the same union before every real export. The baseline for `labels()` /
+    /// `no_labels()`, so a test exercising content unrelated to chrome never has
+    /// to enumerate the whole key set just to avoid tripping the fail-loud path —
+    /// see `labels_without` for a test that specifically wants a key absent.
+    fn full_label_baseline() -> BTreeMap<String, String> {
+        let rs = ruleset();
+        let mut keys: BTreeSet<String> = LABEL_KEYS.iter().map(|k| k.to_string()).collect();
+        for id in rs.ruleset.type_profiles.keys() {
+            keys.insert(format!("type-{id}"));
+        }
+        for item in rs.ruleset.point_items.values() {
+            keys.insert(format!("category-{}", item.category));
+            for param in &item.parameters {
+                keys.insert(format!("param-label-{}", param.key));
+            }
+        }
+        for ability in rs.ruleset.abilities.values() {
+            if let Some(parameter) = &ability.parameter {
+                keys.insert(format!("param-label-{parameter}"));
+            }
+        }
+        for spell in rs.ruleset.spells.values() {
+            for param in &spell.parameters {
+                keys.insert(format!("param-label-{}", param.key));
+            }
+        }
+        keys.into_iter().map(|k| (k.clone(), k)).collect()
+    }
+
     /// A label map that resolves every key to itself plus a marker, so a test can
-    /// tell "the formatter asked for this key" from "this text came from the data".
+    /// tell "the formatter asked for this key" from "this text came from the
+    /// data". Starts from [`full_label_baseline`] so every other chrome key
+    /// resolves too — a test that does not care about labels never fails the
+    /// export just for omitting them.
     fn labels(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
-        pairs
-            .iter()
-            .map(|(k, v)| ((*k).to_string(), (*v).to_string()))
-            .collect()
+        let mut map = full_label_baseline();
+        for (k, v) in pairs {
+            map.insert((*k).to_string(), (*v).to_string());
+        }
+        map
     }
 
     fn no_labels() -> BTreeMap<String, String> {
-        BTreeMap::new()
+        labels(&[])
+    }
+
+    /// [`full_label_baseline`] with `keys` removed — for a test exercising the
+    /// fail-loud path itself, where exactly the named keys must be missing and
+    /// nothing else.
+    fn labels_without(keys: &[&str]) -> BTreeMap<String, String> {
+        let mut map = full_label_baseline();
+        for key in keys {
+            map.remove(*key);
+        }
+        map
+    }
+
+    /// Test-only convenience shadowing [`super::character_markdown`]: every test
+    /// below but the ones in the "labels" section supplies a complete label map
+    /// (`labels()` / `no_labels()`, both built from [`full_label_baseline`]) and
+    /// only cares about the rendered content, so this unwraps for them rather
+    /// than making every call site spell out `.unwrap()`. A test that exercises
+    /// the fail-loud path itself calls `super::character_markdown` directly and
+    /// asserts on the `Err`.
+    fn character_markdown(
+        entity: &Entity,
+        ruleset: &LocalizedRuleset,
+        labels: &BTreeMap<String, String>,
+    ) -> String {
+        super::character_markdown(entity, ruleset, labels)
+            .expect("test label maps are built from the complete baseline")
     }
 
     fn magus() -> Entity {
@@ -2193,13 +1129,34 @@ mod tests {
     // --- labels -----------------------------------------------------------
 
     #[test]
-    fn a_missing_label_key_degrades_to_the_key_itself() {
+    fn a_missing_label_key_fails_the_export_naming_the_key() {
         let mut e = magus();
         e.name = "Marcus".to_string();
-        let doc = character_markdown(&e, &ruleset(), &no_labels());
-        assert!(
-            doc.contains("type-magus"),
-            "the unresolved key prints verbatim: {doc}"
+        let err = super::character_markdown(&e, &ruleset(), &labels_without(&["type-magus"]))
+            .expect_err("a missing chrome key must fail the export, not degrade to it");
+        assert_eq!(
+            err.missing,
+            vec![MissingLabel::Key("type-magus".to_string())]
+        );
+    }
+
+    #[test]
+    fn an_export_collects_every_missing_key_in_one_pass() {
+        let mut e = magus();
+        e.house = Some(Id::new("house.diedne"));
+        let err = super::character_markdown(
+            &e,
+            &ruleset(),
+            &labels_without(&["type-magus", "house-label"]),
+        )
+        .expect_err("multiple omissions must still fail the export");
+        assert_eq!(
+            err.missing,
+            vec![
+                MissingLabel::Key("house-label".to_string()),
+                MissingLabel::Key("type-magus".to_string()),
+                MissingLabel::CatalogueId("house.diedne".to_string()),
+            ]
         );
     }
 
@@ -2264,11 +1221,15 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_house_id_falls_back_to_its_slug() {
+    fn an_unknown_house_id_fails_the_export_naming_it() {
         let mut e = magus();
         e.house = Some(Id::new("house.diedne"));
-        let doc = character_markdown(&e, &ruleset(), &no_labels());
-        assert!(doc.contains("house.diedne"), "expected the slug: {doc}");
+        let err = super::character_markdown(&e, &ruleset(), &no_labels())
+            .expect_err("a House id the ruleset has no name for must fail the export");
+        assert_eq!(
+            err.missing,
+            vec![MissingLabel::CatalogueId("house.diedne".to_string())]
+        );
     }
 
     // --- identity ---------------------------------------------------------
@@ -2903,8 +1864,11 @@ mod tests {
             parameter: None,
         }];
         let doc = character_markdown(&e, &ruleset(), &no_labels());
+        // The catalogue names the Virtue and the Ability it grants identically (the
+        // real rulebook does too), so the count is scoped to the Ability row's own
+        // shape rather than the bare name, which the Virtues/Flaws table also prints.
         assert_eq!(
-            doc.matches("| Second Sight |").count(),
+            doc.matches("| Second Sight | visions |").count(),
             1,
             "one row per Ability: {doc}"
         );
@@ -2924,8 +1888,14 @@ mod tests {
             parameter: None,
         }];
         let doc = character_markdown(&e, &ruleset(), &no_labels());
-        let bought = doc.find("| Awareness |").expect("the bought row");
-        let granted = doc.find("| Second Sight |").expect("the granted row");
+        // Scoped to the Abilities table: the catalogue names the Virtue and the
+        // Ability it grants identically (the real rulebook does too), and the
+        // Virtues/Flaws table — which prints first — has its own "Second Sight" row.
+        let abilities = &doc[doc
+            .find("## abilities-title")
+            .expect("the abilities section")..];
+        let bought = abilities.find("| Awareness |").expect("the bought row");
+        let granted = abilities.find("| Second Sight |").expect("the granted row");
         assert!(bought < granted, "unexpected row order: {doc}");
     }
 
@@ -3238,8 +2208,8 @@ mod tests {
     }
 
     /// With a shield equipped, a one-handed weapon prints twice: the with-shield row
-    /// first, named `<weapon> <joiner> <shield>`, then the bare row (Core:16656;
-    /// ordering Core:1467-1472). The joiner is a localized label, never hardcoded.
+    /// first, named `<weapon> <joiner> <shield>`, then the bare row (Ars Magica - Definitive Edition (Core Rules).md:16656;
+    /// ordering Ars Magica - Definitive Edition (Core Rules).md:1467-1472). The joiner is a localized label, never hardcoded.
     #[test]
     fn combat_with_a_shield_emits_with_shield_then_bare_rows() {
         let mut e = fully_populated_magus();
@@ -3663,7 +2633,7 @@ mod tests {
     }
 
     /// The Living Conditions are a stored choice and a standing term of every aging
-    /// total (Core Rules.md:16567-16569, :16581-16594), so the sheet has to carry
+    /// total (Ars Magica - Definitive Edition (Core Rules).md:16567-16569, :16581-16594), so the sheet has to carry
     /// them — a sheet that dropped them would read as data loss. They are catalogue
     /// ids, so they print through the rules i18n and never as the slug. Each logged
     /// year prints the stress die and the total it produced alongside its free text,
@@ -3876,12 +2846,11 @@ mod tests {
         assert!(!doc.contains("## Equipment"), "{doc}");
     }
 
-    /// A spell the catalogue does not hold keeps its row — the reader still learns the
-    /// character claims it — but its Art-and-level cell stays blank rather than
-    /// guessing: there are no Arts to abbreviate, and a bare level would read as a
-    /// code.
+    /// A spell the catalogue does not hold has no name to resolve, so it now fails
+    /// the export by the same rule as an unknown House ([`Doc::name`]) rather than
+    /// keeping its row with a raw slug.
     #[test]
-    fn an_unknown_spell_keeps_its_row_with_a_blank_art_code() {
+    fn an_unknown_spell_fails_the_export_naming_it() {
         let mut e = magus();
         e.spells = vec![SpellSelection {
             spell: Id::new("spell.from_another_ruleset"),
@@ -3890,12 +2859,15 @@ mod tests {
             parameter: Some("free text".to_string()),
             mastery_abilities: Vec::new(),
         }];
-        let doc = character_markdown(&e, &ruleset(), &labels(&[("spell-level-general", "Gen")]));
-        assert!(
-            doc.contains("| spell.from_another_ruleset (free text) |  |  |  |"),
-            "{doc}"
+        let err =
+            super::character_markdown(&e, &ruleset(), &labels(&[("spell-level-general", "Gen")]))
+                .expect_err("a spell id the ruleset has no name for must fail the export");
+        assert_eq!(
+            err.missing,
+            vec![MissingLabel::CatalogueId(
+                "spell.from_another_ruleset".to_string()
+            )]
         );
-        assert!(!doc.contains("Gen"), "no half-written code: {doc}");
     }
 
     /// An entity whose type profile is unknown still renders: Confidence has no base
@@ -3915,6 +2887,7 @@ mod tests {
             &labels(&[
                 ("items-flaws-title", "Flaws"),
                 ("confidence-label", "Confidence"),
+                ("type-hedge_wizard", "Hedge Wizard"),
             ]),
         );
         assert!(doc.contains("- **Flaws**: 1\n"), "no ceiling: {doc}");
@@ -4029,11 +3002,10 @@ mod tests {
 
     #[test]
     fn the_document_excludes_the_per_line_derived_readouts() {
-        let excluded: BTreeMap<String, String> = EXCLUDED_READOUT_KEYS
-            .iter()
-            .enumerate()
-            .map(|(i, key)| ((*key).to_string(), format!("EXCLUDEDMARKER{i}")))
-            .collect();
+        let mut excluded = full_label_baseline();
+        for (i, key) in EXCLUDED_READOUT_KEYS.iter().enumerate() {
+            excluded.insert((*key).to_string(), format!("EXCLUDEDMARKER{i}"));
+        }
         let doc = character_markdown(&fully_populated_magus(), &ruleset(), &excluded);
         assert!(
             !doc.contains("EXCLUDEDMARKER"),

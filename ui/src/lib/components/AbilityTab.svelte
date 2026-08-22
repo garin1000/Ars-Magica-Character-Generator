@@ -307,7 +307,7 @@
               <button
                 type="button"
                 class="icon-btn"
-                aria-label={store.t('ability-decrement')}
+                aria-label={store.t('spell-remove')}
                 onclick={() => store.removeAbilityAt(i)}
                 data-testid="remove-{entry.ability}-{i}"
               >

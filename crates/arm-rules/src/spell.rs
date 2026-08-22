@@ -5,13 +5,15 @@
 //! its Level, and any Art requisites. Level is either a fixed multiple of five or
 //! **General** — a General spell is learned at a per-character chosen level, and
 //! two General versions at different levels are different spells
-//! (Core Rules.md:12349-12353). The character's chosen spells and (for General
+//! (Ars Magica - Definitive Edition (Core Rules).md:12349-12353). The character's
+//! chosen spells and (for General
 //! spells) their learned levels live on the [`Entity`](crate::types::Entity) as
 //! [`SpellSelection`](crate::types::SpellSelection)s; the catalogue here is
 //! language-neutral mechanics, with names/descriptions in `rules/i18n`.
 //!
 //! Spells consume the magus's *spell-levels budget* (120 out of apprenticeship,
-//! Core Rules.md:2215-2216, 2435, plus whatever the magus took as levels out of its
+//! Ars Magica - Definitive Edition (Core Rules).md:2215-2216, 2435, plus whatever
+//! the magus took as levels out of its
 //! years past the Gauntlet, `:2471`), a currency distinct from the shared
 //! Ability/Art XP pool. Enforcement lives in [`crate::validation`].
 
@@ -57,7 +59,7 @@ impl fmt::Display for SpellRange {
 }
 
 /// A spell's Duration — how long the effect lasts. Year Duration forces a Ritual
-/// (Core Rules.md:12055).
+/// (Ars Magica - Definitive Edition (Core Rules).md:12055).
 ///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:12001-12055.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -96,8 +98,9 @@ impl fmt::Display for SpellDuration {
 /// A spell's Target — what the effect can affect: objects (Individual, Part,
 /// Group), containers (Circle, Room, Structure, Boundary), and magical senses
 /// (Taste, Touch, Smell, Hearing, Vision). Boundary forces a Ritual
-/// (Core Rules.md:12077); Vision, though equally difficult, does not
-/// (Core Rules.md:12099).
+/// (Ars Magica - Definitive Edition (Core Rules).md:12077); Vision, though
+/// equally difficult, does not
+/// (Ars Magica - Definitive Edition (Core Rules).md:12099).
 ///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:12001-12099.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -148,6 +151,17 @@ impl fmt::Display for SpellTarget {
     }
 }
 
+/// Minimum level a Ritual spell may be learned/cast at, even if the guideline
+/// calculation would produce a lower level. Surfaced to the frontend through
+/// [`crate::ruleset::Ruleset`]'s `ritual_min_level` field (see
+/// `derived_magnitude_points` in `ruleset.rs` for the sibling pattern this
+/// follows) so the UI never re-hardcodes the floor.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:12293 ("Ritual
+/// spells are always at least level 20, even if the level calculation would
+/// make them lower.").
+pub const RITUAL_MIN_LEVEL: u8 = 20;
+
 /// A single spell in the catalogue. Its display name and description live in
 /// `rules/i18n`, keyed by `id`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -167,7 +181,8 @@ pub struct Spell {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub requisites: Vec<Id>,
     /// Whether this spell is a Ritual: longer to cast, requires vis, floored at
-    /// level 20 (Core Rules.md:12279-12295).
+    /// [`RITUAL_MIN_LEVEL`]
+    /// (Ars Magica - Definitive Edition (Core Rules).md:12293).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub ritual: bool,
     /// The spell's Range. `None` in the seed data until the full catalogue (5d)
@@ -181,7 +196,8 @@ pub struct Spell {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub target: Option<SpellTarget>,
     /// True when a Momentary Creo spell creates a lasting thing — which, per
-    /// Core Rules.md:12039/:12115, forces the spell to be a Ritual.
+    /// Ars Magica - Definitive Edition (Core Rules).md:12039/:12115, forces the
+    /// spell to be a Ritual.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub creates_lasting: bool,
     /// Selection parameters this spell requires — mirrors [`ParameterDef`] on a
@@ -288,7 +304,7 @@ mod tests {
     }
 
     /// A spell carrying full Range/Duration/Target + ritual flag round-trips.
-    /// Source (RDT chart): Core Rules.md:12001-12009.
+    /// Source (RDT chart): Ars Magica - Definitive Edition (Core Rules).md:12001-12009.
     #[test]
     fn spell_with_rdt_and_ritual_roundtrips() {
         let json = r#"{

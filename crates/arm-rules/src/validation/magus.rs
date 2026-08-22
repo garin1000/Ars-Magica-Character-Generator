@@ -325,11 +325,11 @@ pub(crate) fn validate_mythic_type(
 
 /// Validates a magus's spell list: every referenced spell must resolve; the same
 /// spell at the same level may not appear twice (different General levels are
-/// different spells, Core:12353); a General spell with no chosen level is excluded
+/// different spells, Ars Magica - Definitive Edition (Core Rules).md:12353); a General spell with no chosen level is excluded
 /// from the budget and warned; the sum of chosen levels must not exceed the
-/// effective spell-levels budget (Core:2215-2216, 2435, and the levels bought out of
+/// effective spell-levels budget (Ars Magica - Definitive Edition (Core Rules).md:2215-2216, 2435, and the levels bought out of
 /// the years past the Gauntlet, `:2471`); and no spell's level may
-/// exceed Technique + Form + Intelligence + Magic Theory + 3 (Core:2465).
+/// exceed Technique + Form + Intelligence + Magic Theory + 3 (Ars Magica - Definitive Edition (Core Rules).md:2465).
 ///
 /// The budget and per-spell cap apply only to magi (`profile.is_magus`); a stray
 /// spell on a non-magus is ref- and dedup-checked only (spells are magus-only).
@@ -341,8 +341,8 @@ pub(crate) fn validate_spells(
 ) {
     let is_magus = type_profile.is_some_and(|p| p.is_magus);
     // Identity is (spell, resolved level, parameter): a parameterized meta-magic
-    // Vim spell may be taken once per distinct target (Form) (Core:12353,
-    // Core Rules.md:15791-15794).
+    // Vim spell may be taken once per distinct target (Form) (Ars Magica - Definitive Edition (Core Rules).md:12353,
+    // Ars Magica - Definitive Edition (Core Rules).md:15791-15794).
     let mut seen: BTreeMap<(&Id, Option<u32>, Option<&String>), u32> = BTreeMap::new();
 
     for sel in &entity.spells {
@@ -370,7 +370,7 @@ pub(crate) fn validate_spells(
         // A parameterized spell (meta-magic Vim spell whose target (Form) is a
         // selection) requires a chosen value that resolves to the declared
         // domain. Display + identity only — it does NOT change the spell's own
-        // Technique/Form (Core Rules.md:15791-15794). Mirrors the virtue/flaw
+        // Technique/Form (Ars Magica - Definitive Edition (Core Rules).md:15791-15794). Mirrors the virtue/flaw
         // parameter checks in `validation::selections`.
         if let Some(def) = spell.parameters.first() {
             match &sel.parameter {
@@ -404,12 +404,28 @@ pub(crate) fn validate_spells(
             .or_insert(0) += 1;
 
         // Ritual level bounds apply to the resolved learned level regardless of
-        // budget: a ritual must be learned at level >= 20, a non-ritual at <= 50
-        // (Core Rules.md:12279-12295, :12283). For fixed-level spells this is
-        // already enforced at load; it bites here for General spells whose chosen
-        // level is illegal.
+        // budget: a ritual must be learned at level >= `RITUAL_MIN_LEVEL`, a
+        // non-ritual at <= 50. For fixed-level spells this is already enforced at
+        // load; it bites here for General spells whose chosen level is illegal.
+        //
+        // The floor comes from the shared constant rather than a literal: the UI
+        // used to restate it too (audit finding VA2), and one number in two places
+        // is one number that can drift.
+        //
+        // Source: Ars Magica - Definitive Edition (Core Rules).md:12279-12295,
+        // :12285 ("Formulaic and Spontaneous spells may not have a level greater
+        // than 50" — the exact non-Ritual ceiling this checks). An earlier
+        // version of this comment cited :12283 (the Year-duration restriction,
+        // unrelated), then a later pass "corrected" it to :12291 (a discretionary
+        // note that spectacular effects "will normally be over level 50, and thus
+        // Rituals anyway" — a design rationale, not the numeric rule itself).
+        // :12285 is the line that actually states the "> 50" ceiling.
         if let Some(level) = resolved {
-            let ritual_too_low = spell.ritual && level < 20;
+            // `RITUAL_MIN_LEVEL` is `u8` (it also feeds the ruleset surface the UI
+            // reads); resolved spell levels are `u32`. Widen explicitly rather
+            // than cast.
+            let ritual_min = u32::from(crate::spell::RITUAL_MIN_LEVEL);
+            let ritual_too_low = spell.ritual && level < ritual_min;
             let non_ritual_too_high = !spell.ritual && level > 50;
             if ritual_too_low || non_ritual_too_high {
                 issues.push(ValidationIssue::error(
@@ -480,9 +496,9 @@ pub(crate) fn validate_spells(
 ///   (referential integrity — an unknown id fails loudly, CLAUDE.md).
 /// - The count of chosen abilities may not exceed the spell's *effective* mastery
 ///   score: for every level in the Mastery Ability the maga may choose one
-///   special ability (Core:9524-9526).
+///   special ability (Ars Magica - Definitive Edition (Core Rules).md:9524-9526).
 /// - A non-repeatable ability may be chosen only once for the same spell; only
-///   Precise, Quick, and Quiet Casting may repeat (Core:9572, :9576, :9580).
+///   Precise, Quick, and Quiet Casting may repeat (Ars Magica - Definitive Edition (Core Rules).md:9572, :9576, :9580).
 ///
 /// Source: Ars Magica - Definitive Edition (Core Rules).md:9524-9592.
 fn validate_spell_mastery_abilities(
@@ -495,7 +511,7 @@ fn validate_spell_mastery_abilities(
         return;
     }
 
-    // One special ability per effective mastery level (Core:9524-9526).
+    // One special ability per effective mastery level (Ars Magica - Definitive Edition (Core Rules).md:9524-9526).
     let effective = crate::effective::effective_spell_mastery(sel, entity, ruleset);
     if sel.mastery_abilities.len() > usize::from(effective) {
         issues.push(ValidationIssue::error(
@@ -561,6 +577,40 @@ pub(crate) fn validate_xp_pool(
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
 ) {
+    // K3 layer 1: this is `xp_allocation`'s only call site anywhere in
+    // `validate`, so gating it here — right where the unsafe matrix build
+    // happens — is both necessary and sufficient to keep a hostile save's
+    // oversized `ability_scores`/`art_scores`/`spells`/`selections` arrays from
+    // ever reaching it, rather than duplicating the node-count formula in a
+    // separate early pass that this call site would still have to guard
+    // independently anyway. This is a malformed-input rejection, not a rules
+    // judgment, but it stays paired with the computation it protects rather
+    // than living beside the referential-integrity checks at the top of
+    // `validate` (`validate_known_refs` and friends): those check that the
+    // entity's own references resolve, a property every other validator can
+    // then assume, whereas this one exists solely to gate `xp_allocation`
+    // itself and has no meaning apart from it. The solver's `assert!` in
+    // `effective.rs` remains as layer 2, the unbypassable backstop for any
+    // caller that skips validation.
+    let scale = crate::effective::xp_solve_scale(entity, ruleset);
+    let node_count = scale.nodes();
+    if node_count > crate::effective::MAX_XP_SOLVE_NODES {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_XP_SOLVE_BOUND_EXCEEDED,
+            // The pool spans Abilities and Arts, but the Abilities step is where
+            // the XP bar lives, matching `not_enough_xp` above.
+            CreationPhase::Abilities,
+            args([
+                ("nodes", node_count.to_string()),
+                ("limit", crate::effective::MAX_XP_SOLVE_NODES.to_string()),
+                ("spends", scale.spends.to_string()),
+                ("pools", scale.flow_pools.to_string()),
+            ]),
+            None,
+        ));
+        return;
+    }
+
     let allocation = crate::effective::xp_allocation(entity, ruleset);
     if allocation.total_demand > allocation.max_flow {
         issues.push(ValidationIssue::error(
@@ -655,7 +705,7 @@ mod tests {
         { "id": "ability.swim", "category": "general" }
       ]
     }"#;
-    /// The shipped Hermetic requirements: the three minimums of Core Rules.md:2437 and
+    /// The shipped Hermetic requirements: the three minimums of Ars Magica - Definitive Edition (Core Rules).md:2437 and
     /// the four recommendations of `:2451-2461`, priced to 90 (5 + 50 + 30 + 5).
     const LIFE_STAGES: &str = r#"{
       "apprenticeship": {
@@ -824,5 +874,51 @@ mod tests {
         let result = validate(&character("magus", vec![]), &rs_without_life_stages());
         assert!(issues_with(&result, ValidationIssue::CODE_MAGUS_MINIMUM_ABILITY).is_empty());
         assert!(issues_with(&result, ValidationIssue::CODE_MAGUS_RECOMMENDED_ABILITY).is_empty());
+    }
+
+    /// K3 layer 1: a hostile save can carry an unbounded `ability_scores` array
+    /// (deserialized straight off disk, no length cap in `types.rs`), which
+    /// would otherwise force `xp_allocation` to build a multi-hundred-MB `n x n`
+    /// matrix. `validate_xp_pool` must refuse before ever calling it, with a
+    /// structured issue naming the counts — not the solver's `assert!`, which
+    /// stays only as the unbypassable backstop (layer 2) for any caller that
+    /// skips validation.
+    #[test]
+    fn a_pathological_number_of_ability_scores_is_rejected_before_the_solver_runs() {
+        let rs = rs();
+        let scores: Vec<(&str, Option<&str>, u8)> =
+            vec![("ability.artes_liberales", None, 1); 3000];
+        let entity = character("companion", scores);
+
+        let result = validate(&entity, &rs);
+
+        let errors = issues_with(&result, ValidationIssue::CODE_XP_SOLVE_BOUND_EXCEEDED);
+        assert_eq!(errors.len(), 1, "{:?}", result.issues);
+        let issue = &errors[0];
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.args.get("nodes").cloned(), Some("3003".to_string()));
+        assert_eq!(issue.args.get("limit").cloned(), Some("2048".to_string()));
+        assert_eq!(issue.args.get("spends").cloned(), Some("3000".to_string()));
+        assert_eq!(issue.args.get("pools").cloned(), Some("0".to_string()));
+
+        // The ordinary xp-pool feasibility check must not have run at all — no
+        // `not_enough_xp` noise stacked on top of an entity refused outright.
+        assert!(issues_with(&result, ValidationIssue::CODE_NOT_ENOUGH_XP).is_empty());
+    }
+
+    /// The bound guards a hostile save's array sizes, never a legal character's:
+    /// an implausibly long-lived archmage with hundreds of bought scores — an
+    /// order of magnitude below the solve bound — must still validate normally.
+    #[test]
+    fn a_legal_but_extreme_character_is_not_rejected_by_the_solve_bound() {
+        let rs = rs();
+        let scores: Vec<(&str, Option<&str>, u8)> = vec![("ability.artes_liberales", None, 1); 500];
+        let mut entity = character("companion", scores);
+        entity.xp_pool = 100_000;
+
+        let result = validate(&entity, &rs);
+
+        assert!(issues_with(&result, ValidationIssue::CODE_XP_SOLVE_BOUND_EXCEEDED).is_empty());
     }
 }

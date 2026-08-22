@@ -25,6 +25,12 @@ pub enum AppError {
     NotLoaded,
     /// (De)serialization of an entity or save file failed.
     Serialize { message: String },
+    /// A Markdown export could not resolve a document-chrome key or catalogue id
+    /// to display text (see [`arm_rules::export::ExportError`]) — a stale locale
+    /// bundle or a foreign/renamed id in the entity being exported. `missing`
+    /// carries one message per offense, so the frontend can report every fix
+    /// needed in one round trip rather than one failure at a time.
+    Export { missing: Vec<String> },
 }
 
 impl std::fmt::Display for AppError {
@@ -37,6 +43,9 @@ impl std::fmt::Display for AppError {
             } => write!(f, "ruleset error ({ruleset_kind}): {}", errors.join("; ")),
             AppError::NotLoaded => f.write_str("no ruleset loaded"),
             AppError::Serialize { message } => write!(f, "serialize error: {message}"),
+            AppError::Export { missing } => {
+                write!(f, "export error: {}", missing.join("; "))
+            }
         }
     }
 }
@@ -69,6 +78,14 @@ impl From<serde_json::Error> for AppError {
     fn from(e: serde_json::Error) -> Self {
         AppError::Serialize {
             message: e.to_string(),
+        }
+    }
+}
+
+impl From<arm_rules::export::ExportError> for AppError {
+    fn from(e: arm_rules::export::ExportError) -> Self {
+        AppError::Export {
+            missing: e.missing.iter().map(|m| m.to_string()).collect(),
         }
     }
 }

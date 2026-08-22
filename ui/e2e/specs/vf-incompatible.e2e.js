@@ -10,7 +10,7 @@
 
 import { $, browser, expect } from '@wdio/globals';
 
-import { startCharacter } from '../helpers.js';
+import { isRowBlocked, startCharacter } from '../helpers.js';
 
 const MODE_SELECT = '[data-testid="mode-select"]';
 const INCOMPATIBLE_ISSUE = '[data-testid="issue-list"] li[data-code="incompatible"]';
@@ -23,7 +23,7 @@ async function addButton(ref) {
 
 async function waitForEnabled(ref, enabled) {
   const button = await addButton(ref);
-  await browser.waitUntil(async () => (await button.isEnabled()) === enabled, {
+  await browser.waitUntil(async () => (await isRowBlocked(button)) === !enabled, {
     timeout: 5000,
     timeoutMsg: `expected add-${ref} to be ${enabled ? 'enabled' : 'greyed out'}`,
   });
@@ -42,7 +42,7 @@ describe('mutually exclusive Virtues/Flaws', () => {
   it('greys out an excluded counterpart in Enforced mode, but not in Advisory', async () => {
     // Gentle Gift and Blatant Gift exclude each other via `incompatible_with`.
     const blatant = await addButton('flaw.blatant_gift');
-    expect(await blatant.isEnabled()).toBe(true);
+    expect(await isRowBlocked(blatant)).toBe(false);
     await blatant.click();
 
     // Enforced (default): the counterpart is no longer takeable, so the illegal

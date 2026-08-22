@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   abilityDisplayName,
   abilityLabel,
-  abilityXpSpent,
   firstBlockedPhaseIndex,
   incompletePhases,
   issuesForPhase,
@@ -14,7 +13,6 @@ import {
   spellMasteryXpSpent,
   artAbbreviation,
   artLabel,
-  artXpSpent,
   balance,
   characteristicPointsUsed,
   childhoodEntryPreview,
@@ -374,6 +372,20 @@ describe('groupSpellsByTechniqueForm', () => {
 
   it('is empty when there are no spells', () => {
     expect(groupSpellsByTechniqueForm(withSpellsRuleset(), [])).toEqual([]);
+  });
+
+  it('appends a leftover pair whose Arts are missing from the catalogue order, with the correct technique/form (not undefined)', () => {
+    // Neither art.unknown_tech nor art.unknown_form is in the `arts` fixture, so
+    // the Form-major x Technique double loop never visits this pair and it must
+    // fall through to the defensive leftover branch.
+    const spells = [
+      { id: 'spell.mystery', technique: 'art.unknown_tech', form: 'art.unknown_form', level: 5 },
+    ];
+    const groups = groupSpellsByTechniqueForm(withSpellsRuleset(), spells);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].technique).toBe('art.unknown_tech');
+    expect(groups[0].form).toBe('art.unknown_form');
+    expect(groups[0].spells.map((s) => s.id)).toEqual(['spell.mystery']);
   });
 });
 
@@ -891,14 +903,25 @@ describe('characteristicPointsUsed', () => {
     ],
   };
 
-  it('nets spends against gains', () => {
-    // Int +3 (6) + Per +1 (1) + Pre -3 (-6) + Com -1 (-1) + Qik +2 (3) + Str +2 (3) + Dex +1 (1) = 7
+  // GF1 (round-1 audit): characteristicPointsUsed() re-implements the engine's
+  // CharacteristicRules::total_cost (crates/arm-rules/src/characteristics.rs)
+  // as a second, independent table lookup. Pending an engine-surfaced combined
+  // total on EffectiveScores (see the function's doc comment), both cases below
+  // are pinned to the exact same rulebook worked examples the Rust test
+  // `total_cost_nets_gains_against_spends` / `cost_for_known_and_unknown_scores`
+  // use, so a change to one algorithm without the other fails a test on both
+  // sides rather than drifting silently.
+
+  it('nets spends against gains (mirrors characteristics.rs::total_cost_nets_gains_against_spends)', () => {
+    // Darius's example, Core Rules 2358: Int +3 (6) + Per +1 (1) + Pre -3 (-6) +
+    // Com -1 (-1) + Sta 0 (0) + Qik +2 (3) + Str +2 (3) + Dex +1 (1) = 7.
     expect(
       characteristicPointsUsed(rules, {
         int: 3,
         per: 1,
         pre: -3,
         com: -1,
+        sta: 0,
         qik: 2,
         str: 2,
         dex: 1,
@@ -906,31 +929,13 @@ describe('characteristicPointsUsed', () => {
     ).toBe(7);
   });
 
-  it('ignores out-of-range scores (contributes 0)', () => {
+  it('ignores out-of-range scores (contributes 0, mirrors characteristics.rs::cost_for_known_and_unknown_scores)', () => {
     expect(characteristicPointsUsed(rules, { str: 4 })).toBe(0);
   });
 
   it('returns 0 without rules or scores', () => {
     expect(characteristicPointsUsed(undefined, { int: 3 })).toBe(0);
     expect(characteristicPointsUsed(rules, undefined)).toBe(0);
-  });
-});
-
-// --- abilityXpSpent() -------------------------------------------------------
-
-describe('abilityXpSpent', () => {
-  const advancement = [
-    { score: 1, total_xp: 5 },
-    { score: 2, total_xp: 15 },
-    { score: 3, total_xp: 30 },
-  ];
-
-  it('sums total XP per whole bought score', () => {
-    expect(abilityXpSpent(advancement, [{ score: 3 }, { score: 2 }])).toBe(45);
-  });
-
-  it('treats score 0 as no XP and skips unknown scores', () => {
-    expect(abilityXpSpent(advancement, [{ score: 0 }, { score: 9 }])).toBe(0);
   });
 });
 
@@ -1298,12 +1303,9 @@ describe('art helpers', () => {
     expect(artLabel(rs, 'art.unknown')).toBe('art.unknown');
   });
 
-  it('prices Art XP from the (triangular) Art table and reports the ceiling', () => {
+  it('reports the highest whole score the Art advancement table can price', () => {
     const rs = withArts([]);
-    const adv = rs.ruleset.art_advancement;
-    // Creo 5 (15) + Ignem 3 (6) = 21; score 0 is free.
-    expect(artXpSpent(adv, [{ score: 5 }, { score: 3 }, { score: 0 }])).toBe(21);
-    expect(maxArtScore(adv)).toBe(5);
+    expect(maxArtScore(rs.ruleset.art_advancement)).toBe(5);
   });
 });
 
@@ -2157,6 +2159,13 @@ describe('formatSigned', () => {
 
   it('renders zero plain, without a sign', () => {
     expect(formatSigned(0)).toBe('0');
+  });
+
+  // E4 (round-1 audit): DerivedTotalsPanel.svelte negates a stored bonus
+  // (`formatSigned(-d.longevity.bonus)`) and documents that a zero bonus must
+  // read "0", never "-0" — a real production input, not an academic edge case.
+  it('renders negative zero plain, without a sign (a bonus of 0 negated must never read "-0")', () => {
+    expect(formatSigned(-0)).toBe('0');
   });
 
   it('uses an ASCII hyphen-minus (U+002D) for negatives, not the math minus U+2212', () => {

@@ -1738,6 +1738,29 @@ fn exporting_without_a_loaded_ruleset_is_not_loaded_error() {
     );
 }
 
+/// A label map missing even one chrome key fails the whole export rather than
+/// letting the raw key reach the document (`arm_rules::export::ExportError`,
+/// CLAUDE.md: "never render a raw ID or enum value as a user-facing label").
+/// `AppError::Export` carries the engine's own list of everything unresolved, and
+/// nothing is written.
+#[test]
+fn exporting_with_an_incomplete_label_map_is_export_error() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("companion.md");
+    let localized = load_ruleset_from_dir(&rules_dir(), "en").unwrap();
+
+    let err = export_markdown_to_path(&sample_entity(), Some(&localized), &BTreeMap::new(), &path)
+        .unwrap_err();
+    let AppError::Export { missing } = err else {
+        panic!("expected AppError::Export, got {err:?}");
+    };
+    assert!(!missing.is_empty(), "expected at least one missing key");
+    assert!(
+        !path.exists(),
+        "a failed export must not leave a file behind"
+    );
+}
+
 /// The command that tells the frontend which labels to send must hand back the
 /// engine's own list, never a hand-maintained copy of it.
 #[test]
@@ -2251,6 +2274,32 @@ fn attribution_notice_ships_with_the_bundled_rules_data() {
     );
 }
 
+/// K1/VA4: `app.security.csp` must never regress to `null` (which disables
+/// Tauri's CSP injection into the webview entirely). No injection sink exists
+/// today (no `{@html}`/`innerHTML` anywhere in the frontend), but the CSP is
+/// the defence-in-depth backstop for the day one is introduced by accident —
+/// and in a Tauri webview that backstop matters more than in an ordinary
+/// browser tab, because script running there sits behind the same origin the
+/// `invoke()` IPC bridge trusts.
+#[test]
+fn csp_is_set_and_restrictive() {
+    let config: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(repo_root().join("crates/arm-app/tauri.conf.json")).unwrap(),
+    )
+    .unwrap();
+    let csp = config["app"]["security"]["csp"]
+        .as_str()
+        .expect("app.security.csp must be a restrictive policy string, not null");
+    assert!(
+        csp.contains("default-src 'self'"),
+        "csp must default-deny to the app's own origin, got: {csp}"
+    );
+    assert!(
+        !csp.contains("unsafe-eval"),
+        "csp must not permit unsafe-eval, got: {csp}"
+    );
+}
+
 /// Each rules directory states its own licensing, because the two are not the
 /// same: `rules/core/` is MIT throughout, while `rules/i18n/` is MIT in form and
 /// CC-BY-SA 4.0 in the rules text it carries. Both ride into the installers with
@@ -2265,6 +2314,116 @@ fn each_rules_directory_carries_its_own_license_file() {
              which license covers it"
         );
     }
+}
+
+/// GA1: a confirmed discard latches `CloseGuardState::confirmed = true` (see
+/// `main.rs`'s `guard_blocks_quit`) so a re-issued close/quit belonging to the
+/// SAME confirmed action passes through without a second dialog. That latch
+/// must not survive into the NEXT dirty-state report: `update_close_guard`
+/// fires on every dirty-state transition the frontend reports (whenever the
+/// entity's snapshot-compared `dirty` flag changes — see
+/// `AppStore.closeGuardPayload` / the `$effect` in `App.svelte`), and a stale
+/// `confirmed == true` there would let a LATER close/quit skip the
+/// discard-confirmation dialog for edits the user never actually confirmed
+/// discarding. Dormant today (no window-reactivation path exists in
+/// `main.rs` yet — closing the window force-closes it via `destroy()`), but a
+/// real one-way latch with no reset otherwise, on exactly the surface
+/// CLAUDE.md's "Unsaved-changes guard" section calls load-bearing on macOS,
+/// where `RunEvent::ExitRequested` (Cmd+Q) is independent of the window-close
+/// path and does not itself clear anything.
+#[test]
+fn a_fresh_dirty_state_report_clears_the_confirmed_discard_latch() {
+    use arm_app::commands::{CloseGuardLabels, CloseGuardState};
+
+    let mut guard = CloseGuardState {
+        dirty: true,
+        // As main.rs's dialog callback leaves it once the user confirms
+        // discarding: `guard.confirmed = true;` right before `on_discard` runs.
+        confirmed: true,
+        ..CloseGuardState::default()
+    };
+
+    // The frontend reports a fresh dirty state — e.g. the character was edited
+    // again after the window that showed the dialog was destroyed but the
+    // process (macOS) lived on.
+    guard.report_dirty_state(true, CloseGuardLabels::default());
+
+    assert!(
+        !guard.confirmed,
+        "a fresh dirty-state report must clear the one-shot discard latch, or a \
+         later close/quit could silently skip the confirmation dialog for edits \
+         the user never confirmed discarding"
+    );
+}
+
+/// K5/VA5: `ARM_E2E_FILE` must be inert unless the crate is built with the
+/// `e2e-testing` Cargo feature. Without that gate this override compiled
+/// unconditionally into the exact release binary end users install, letting
+/// anything that can set an env var before launch silently redirect
+/// Save/Open away from the native dialog with no user-facing confirmation.
+/// This test runs under the plain `cargo test -p arm-app` gate (no features
+/// enabled), which is exactly the build users receive.
+#[cfg(not(feature = "e2e-testing"))]
+#[test]
+fn e2e_file_override_is_compiled_out_of_the_default_build() {
+    // SAFETY: no other test in this binary reads or writes ARM_E2E_FILE, so
+    // there is no cross-test race on this process-global.
+    unsafe { std::env::set_var("ARM_E2E_FILE", "/nonexistent/should-not-be-honored") };
+    let result = arm_app::commands::e2e_file_override();
+    unsafe { std::env::remove_var("ARM_E2E_FILE") };
+    assert!(
+        result.is_none(),
+        "ARM_E2E_FILE must not be honored unless the `e2e-testing` feature is \
+         enabled at compile time; this test builds without it, matching the \
+         binary shipped to users"
+    );
+}
+
+/// Sibling of the above for the Markdown-export seam.
+#[cfg(not(feature = "e2e-testing"))]
+#[test]
+fn e2e_export_file_override_is_compiled_out_of_the_default_build() {
+    // SAFETY: no other test in this binary reads or writes ARM_E2E_EXPORT_FILE.
+    unsafe {
+        std::env::set_var(
+            "ARM_E2E_EXPORT_FILE",
+            "/nonexistent/should-not-be-honored.md",
+        )
+    };
+    let result = arm_app::commands::e2e_export_file_override();
+    unsafe { std::env::remove_var("ARM_E2E_EXPORT_FILE") };
+    assert!(
+        result.is_none(),
+        "ARM_E2E_EXPORT_FILE must not be honored unless the `e2e-testing` \
+         feature is enabled at compile time"
+    );
+}
+
+/// Mirror of the two tests above, proving the gate actually opens rather than
+/// just staying permanently shut: compiled WITH the `e2e-testing` feature
+/// (exactly what `ui/e2e/wdio.conf.js` / `wdio.portable.conf.js` pass to
+/// `cargo tauri build --no-bundle --features e2e-testing`), the overrides
+/// must still work, or the e2e suite's 35 specs plus the portable-layout run
+/// lose their save/load/export seam entirely.
+#[cfg(feature = "e2e-testing")]
+#[test]
+fn e2e_file_override_is_honored_when_the_feature_is_enabled() {
+    unsafe { std::env::set_var("ARM_E2E_FILE", "/nonexistent/honored-path.json") };
+    let result = arm_app::commands::e2e_file_override();
+    unsafe { std::env::remove_var("ARM_E2E_FILE") };
+    assert_eq!(
+        result,
+        Some(PathBuf::from("/nonexistent/honored-path.json"))
+    );
+}
+
+#[cfg(feature = "e2e-testing")]
+#[test]
+fn e2e_export_file_override_is_honored_when_the_feature_is_enabled() {
+    unsafe { std::env::set_var("ARM_E2E_EXPORT_FILE", "/nonexistent/honored-path.md") };
+    let result = arm_app::commands::e2e_export_file_override();
+    unsafe { std::env::remove_var("ARM_E2E_EXPORT_FILE") };
+    assert_eq!(result, Some(PathBuf::from("/nonexistent/honored-path.md")));
 }
 
 #[test]

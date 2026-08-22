@@ -6,7 +6,7 @@
 use super::*;
 
 /// Sanity-checks a being's Might: its entered base Realm must agree with the Realm
-/// its Might Virtues grant (a being belongs to exactly one Realm; Core:2623-2625).
+/// its Might Virtues grant (a being belongs to exactly one Realm; Ars Magica - Definitive Edition (Core Rules).md:2623-2625).
 /// A warning, never a block — the troupe may be modelling an unusual creature.
 pub(crate) fn validate_might(
     entity: &Entity,
@@ -54,7 +54,8 @@ fn ruleset_might_grant_realm(entity: &Entity, ruleset: &Ruleset) -> Option<crate
 /// Validates a supernatural being's powers: the total power level may not exceed
 /// the power-levels budget its Might Virtues grant (Demonic Blood 30, Demonic
 /// Powers +20). A power on a being with no granting Virtue (budget 0) is flagged,
-/// mirroring [`validate_devices`]. Source: RoP:Infernal:4122, :4142.
+/// mirroring [`validate_devices`]. Source: Ars Magica 5e - Realms of Power -
+/// The Infernal.md:4122, :4142.
 pub(crate) fn validate_powers(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -80,8 +81,8 @@ pub(crate) fn validate_powers(
 /// not exceed the item-level budget the character's Virtues grant (Magic Items
 /// +25, Redcap 50). A device requires budget, so a device on a character with no
 /// granting Virtue (budget 0) is flagged — consistent with how a starting
-/// Reputation requires a granting Virtue. Source: Core Rules.md:4347-4349,
-/// :4842-4846.
+/// Reputation requires a granting Virtue. Source: Ars Magica - Definitive
+/// Edition (Core Rules).md:4347-4349, :4842-4846.
 pub(crate) fn validate_devices(
     entity: &Entity,
     ruleset: &Ruleset,

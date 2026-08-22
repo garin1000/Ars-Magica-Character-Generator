@@ -1985,7 +1985,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     /// The two tables of `## Aging` in miniature: a Living Conditions row of each
-    /// kind (Core Rules.md:16581-16594) and one row of every outcome shape the
+    /// kind (Ars Magica - Definitive Edition (Core Rules).md:16581-16594) and one row of every outcome shape the
     /// Aging Roll table has (`:16597-16611`), plus the longevity clamp of
     /// `:16575`.
     const AGING: &str = r#"{

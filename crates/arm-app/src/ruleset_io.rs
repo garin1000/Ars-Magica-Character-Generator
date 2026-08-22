@@ -13,19 +13,20 @@ use arm_rules::validation::{aging_error_issue, childhood_rejection_issues};
 use arm_rules::{
     AbilityBonus, AbilityFloor, AgingError, AgingNote, AgingOutcome, AgingTotal, AgingYearRequest,
     ArtBonus, Characteristic, CharacteristicBonus, Confidence, CrisisPreview, Entity, EntityKind,
-    Grant, Id, LifeStageBudget, LocalizedRuleset, MagusMinimumAbility, MightScore, PointCeilings,
-    ReputationType, RestrictedXpPool, Ruleset, RulesetSources, Selection, SpellLevelCap,
-    SupernaturalFreeSlots, ValidationIssue, ValidationMode, ValidationResult, WarpingOwed,
-    ability_bonuses, ability_score_floors, age_ability_cap, aging_schedule, aging_total,
-    apply_childhood_package, art_bonuses, characteristic_aging_drops, characteristic_bonuses,
-    characteristic_caps, characteristic_floors, characteristic_points_granted, confidence,
-    decrepitude_score, effective_characteristics, effective_might, effective_point_ceilings,
-    entity_grants, item_level_budget, item_level_used, life_stage_spell_levels, longevity_bonus,
-    magus_minimum_abilities, power_levels_budget, powers_used, reputation_grants, resolve_outcome,
-    resolve_year, revert_year, size, spell_level_caps, spell_levels_base, spell_levels_bonus,
-    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
-    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, validate, warping,
-    warping_owed, warping_owed_grants, xp_allocation,
+    EntityTypeProfile, Grant, Id, LifeStageBudget, LocalizedRuleset, MagusMinimumAbility,
+    MightScore, PointCeilings, ReputationType, RestrictedXpPool, Ruleset, RulesetSources,
+    Selection, SpellLevelCap, SupernaturalFreeSlots, ValidationIssue, ValidationMode,
+    ValidationResult, WarpingOwed, ability_bonuses, ability_score_floors, age_ability_cap,
+    aging_schedule, aging_total, apply_childhood_package, art_bonuses, characteristic_aging_drops,
+    characteristic_bonuses, characteristic_caps, characteristic_floors,
+    characteristic_points_granted, confidence, decrepitude_score, effective_characteristics,
+    effective_might, effective_point_ceilings, entity_grants, item_level_budget, item_level_used,
+    life_stage_spell_levels, longevity_bonus, magus_minimum_abilities, power_levels_budget,
+    powers_used, reputation_grants, resolve_outcome, resolve_year, revert_year, size,
+    spell_level_caps, spell_levels_base, spell_levels_bonus, spell_levels_budget,
+    spell_levels_used, spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
+    supernatural_free_slots, true_faith, validate, warping, warping_owed, warping_owed_grants,
+    xp_allocation,
 };
 use serde::Serialize;
 
@@ -341,17 +342,166 @@ pub struct ReputationGrant {
     pub score: u8,
 }
 
-/// Computes the score effects for `entity` against a loaded ruleset.
-pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveScores {
+/// The XP-bar slice of [`EffectiveScores`]: the max-flow allocation's
+/// demand/used/pool/bonus/restricted-pools, plus the life-stage budget the
+/// guided flow substitutes for an editable pool. Grouped because all of it
+/// reads off one call to [`xp_allocation`] plus one sibling life-stage lookup.
+struct XpFields {
+    total_demand: u32,
+    general_used: u32,
+    general_pool: u32,
+    general_bonus: i64,
+    max_flow: u32,
+    restricted: Vec<RestrictedXpPool>,
+    life_stage: Option<LifeStageBudget>,
+}
+
+fn xp_fields(entity: &Entity, ruleset: &Ruleset) -> XpFields {
     let allocation = xp_allocation(entity, ruleset);
-    let ceilings = effective_point_ceilings(entity, ruleset).unwrap_or(PointCeilings {
-        virtue_ceiling: 0,
-        flaw_ceiling: 0,
-    });
-    let profile = ruleset.profile(&entity.type_id);
-    let spell_base = spell_levels_base(entity, profile);
+    XpFields {
+        total_demand: allocation.total_demand,
+        general_used: allocation.general_used,
+        general_pool: allocation.general_pool,
+        general_bonus: allocation.general_bonus,
+        max_flow: allocation.max_flow,
+        restricted: allocation.restricted,
+        life_stage: ruleset
+            .life_stages()
+            .and_then(|rules| rules.budget(entity, ruleset)),
+    }
+}
+
+/// The spell-levels-bar slice of [`EffectiveScores`]: budget, its three named
+/// components, the used side, and the two magus-only checklists that ride on
+/// the same "does this character even have Spells" gate.
+struct SpellFields {
+    budget: u32,
+    profile_base: u32,
+    bonus: i64,
+    life_stage: u32,
+    used: u32,
+    level_caps: Vec<SpellLevelCap>,
+    minimum_abilities: Vec<MagusMinimumAbility>,
+}
+
+fn spell_fields(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    profile: Option<&EntityTypeProfile>,
+) -> SpellFields {
+    let base = spell_levels_base(entity, profile);
+    SpellFields {
+        budget: spell_levels_budget(base, entity, ruleset),
+        profile_base: profile.map(|p| p.spell_levels).unwrap_or(0),
+        bonus: spell_levels_bonus(entity, ruleset),
+        life_stage: life_stage_spell_levels(entity, ruleset),
+        used: spell_levels_used(entity, ruleset),
+        // The per-Te/Fo cap only matters on the (magus-only) Spells tab, so it is
+        // computed only for a magus — other types ship an empty list.
+        level_caps: if profile.is_some_and(|p| p.is_magus) {
+            spell_level_caps(entity, ruleset)
+        } else {
+            Vec::new()
+        },
+        // Magus-gated inside the engine already (the checklist is empty for anyone
+        // the Order does not admit), so this needs no `is_magus` test of its own.
+        minimum_abilities: magus_minimum_abilities(entity, ruleset),
+    }
+}
+
+/// The Warping slice of [`EffectiveScores`]: the unified score/points plus the
+/// off-budget grants a non-magus owes from them.
+struct WarpingFields {
+    score: u8,
+    points: u32,
+    owed: WarpingOwed,
+    owed_grants: Vec<Grant>,
+}
+
+fn warping_fields(entity: &Entity, ruleset: &Ruleset) -> WarpingFields {
+    let totals = warping(entity, ruleset);
+    WarpingFields {
+        score: totals.score,
+        points: totals.points,
+        owed: warping_owed(entity, ruleset),
+        owed_grants: warping_owed_grants(entity, ruleset),
+    }
+}
+
+/// Flattens the engine's Reputation grants into one [`ReputationGrant`] per
+/// concrete type: a player-chosen-kind grant (`kind == None`, e.g. Famous)
+/// authorizes any type, so it becomes one add-control per Reputation type;
+/// concrete-kind grants pass through unchanged. Validation still enforces the
+/// single-slot count (see `validate_reputations`).
+fn reputation_grants_for_ui(entity: &Entity, ruleset: &Ruleset) -> Vec<ReputationGrant> {
+    reputation_grants(entity, ruleset)
+        .into_iter()
+        .flat_map(|grant| match grant.reputation_type {
+            Some(kind) => vec![ReputationGrant {
+                kind,
+                score: grant.score,
+            }],
+            None => ReputationType::ALL
+                .into_iter()
+                .map(|kind| ReputationGrant {
+                    kind,
+                    score: grant.score,
+                })
+                .collect(),
+        })
+        .collect()
+}
+
+/// The Ability/Art/Characteristic slice of [`EffectiveScores`]: every bonus,
+/// cap, floor, and derived readout that comes off the character's
+/// Characteristics and their Virtue/Flaw modifiers, with no XP or spell
+/// involvement.
+struct CharacteristicFields {
+    ability_bonuses: Vec<AbilityBonus>,
+    art_bonuses: Vec<ArtBonus>,
+    caps: BTreeMap<Characteristic, i32>,
+    floors: BTreeMap<Characteristic, i32>,
+    points_granted: i32,
+    ability_score_floors: Vec<AbilityFloor>,
+    size: i32,
+    bonuses: Vec<CharacteristicBonus>,
+    effective: BTreeMap<Characteristic, i32>,
+    aging_drops: BTreeMap<Characteristic, u32>,
+}
+
+fn characteristic_fields(entity: &Entity, ruleset: &Ruleset) -> CharacteristicFields {
+    CharacteristicFields {
+        ability_bonuses: ability_bonuses(entity, ruleset),
+        art_bonuses: art_bonuses(entity, ruleset),
+        caps: characteristic_caps(entity, ruleset),
+        floors: characteristic_floors(entity, ruleset),
+        points_granted: characteristic_points_granted(entity, ruleset),
+        ability_score_floors: ability_score_floors(entity, ruleset),
+        size: size(entity, ruleset),
+        bonuses: characteristic_bonuses(entity, ruleset),
+        effective: effective_characteristics(entity, ruleset),
+        aging_drops: characteristic_aging_drops(entity, ruleset),
+    }
+}
+
+/// The Confidence / Gift-slot / age-cap slice of [`EffectiveScores`]. Grouped
+/// because Confidence and the Gift's free Supernatural-Ability slots share the
+/// same "type default, or zero with no profile" shape.
+struct ConfidenceFields {
+    confidence_score: u8,
+    confidence_points: u8,
+    supernatural_free_total: u8,
+    supernatural_free_used: u8,
+    age_ability_cap: Option<u8>,
+}
+
+fn confidence_fields(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    profile: Option<&EntityTypeProfile>,
+) -> ConfidenceFields {
     // Confidence is derived (type default + V/F); 0/0 when there is no profile.
-    let confidence = profile
+    let derived_confidence = profile
         .map(|p| confidence(p.confidence_score, p.confidence_points, entity, ruleset))
         .unwrap_or(Confidence {
             score: 0,
@@ -360,86 +510,162 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
     let supernatural_free = profile
         .map(|p| supernatural_free_slots(entity, ruleset, p))
         .unwrap_or(SupernaturalFreeSlots { total: 0, used: 0 });
-    let warping = warping(entity, ruleset);
-    EffectiveScores {
-        ability_bonuses: ability_bonuses(entity, ruleset),
-        art_bonuses: art_bonuses(entity, ruleset),
-        characteristic_caps: characteristic_caps(entity, ruleset),
-        characteristic_floors: characteristic_floors(entity, ruleset),
-        xp_total_demand: allocation.total_demand,
-        xp_general_used: allocation.general_used,
-        xp_general_pool: allocation.general_pool,
-        xp_general_bonus: allocation.general_bonus,
-        xp_max_flow: allocation.max_flow,
-        restricted_xp_pools: allocation.restricted,
-        life_stage: ruleset
-            .life_stages()
-            .and_then(|rules| rules.budget(entity, ruleset)),
-        aging: aging_readout(entity, ruleset),
-        characteristic_points_granted: characteristic_points_granted(entity, ruleset),
-        ability_score_floors: ability_score_floors(entity, ruleset),
-        size: size(entity, ruleset),
-        characteristic_bonuses: characteristic_bonuses(entity, ruleset),
-        characteristic_effective: effective_characteristics(entity, ruleset),
-        characteristic_aging_drops: characteristic_aging_drops(entity, ruleset),
-        granted_selections: entity_grants(entity, ruleset),
-        virtue_budget: ceilings.virtue_ceiling,
-        flaw_budget: ceilings.flaw_ceiling,
-        spell_levels_budget: spell_levels_budget(spell_base, entity, ruleset),
-        spell_levels_profile_base: profile.map(|p| p.spell_levels).unwrap_or(0),
-        spell_levels_bonus: spell_levels_bonus(entity, ruleset),
-        spell_levels_life_stage: life_stage_spell_levels(entity, ruleset),
-        spell_levels_used: spell_levels_used(entity, ruleset),
-        // The per-Te/Fo cap only matters on the (magus-only) Spells tab, so it is
-        // computed only for a magus — other types ship an empty list.
-        spell_level_caps: if profile.is_some_and(|p| p.is_magus) {
-            spell_level_caps(entity, ruleset)
-        } else {
-            Vec::new()
-        },
-        // Magus-gated inside the engine already (the checklist is empty for anyone
-        // the Order does not admit), so this needs no `is_magus` test of its own.
-        magus_minimum_abilities: magus_minimum_abilities(entity, ruleset),
-        confidence_score: confidence.score,
-        confidence_points: confidence.points,
+    ConfidenceFields {
+        confidence_score: derived_confidence.score,
+        confidence_points: derived_confidence.points,
         supernatural_free_total: supernatural_free.total,
         supernatural_free_used: supernatural_free.used,
         age_ability_cap: age_ability_cap(entity, ruleset),
-        // A player-chosen-kind grant (`kind == None`, e.g. Famous) authorizes any
-        // type, so it is surfaced to the UI as one add-control per Reputation
-        // type; concrete-kind grants pass through unchanged. Validation still
-        // enforces the single-slot count (see `validate_reputations`).
-        reputation_grants: reputation_grants(entity, ruleset)
-            .into_iter()
-            .flat_map(|grant| match grant.reputation_type {
-                Some(kind) => vec![ReputationGrant {
-                    kind,
-                    score: grant.score,
-                }],
-                None => ReputationType::ALL
-                    .into_iter()
-                    .map(|kind| ReputationGrant {
-                        kind,
-                        score: grant.score,
-                    })
-                    .collect(),
-            })
-            .collect(),
-        warping_score: warping.score,
-        warping_points: warping.points,
-        warping_owed: warping_owed(entity, ruleset),
-        warping_owed_grants: warping_owed_grants(entity, ruleset),
+    }
+}
+
+/// The granted-selections / Virtue-Flaw-budget slice of [`EffectiveScores`].
+struct GrantBudgetFields {
+    granted_selections: Vec<Selection>,
+    virtue_budget: u32,
+    flaw_budget: u32,
+}
+
+fn grant_budget_fields(entity: &Entity, ruleset: &Ruleset) -> GrantBudgetFields {
+    let ceilings = effective_point_ceilings(entity, ruleset).unwrap_or(PointCeilings {
+        virtue_ceiling: 0,
+        flaw_ceiling: 0,
+    });
+    GrantBudgetFields {
+        granted_selections: entity_grants(entity, ruleset),
+        virtue_budget: ceilings.virtue_ceiling,
+        flaw_budget: ceilings.flaw_ceiling,
+    }
+}
+
+/// The Decrepitude / True Faith / enchanted-item-level slice of
+/// [`EffectiveScores`] — three unrelated single-number derived totals grouped
+/// only because none has enough surface area to justify its own function.
+struct DecrepitudeFaithItemFields {
+    decrepitude_score: u8,
+    true_faith_score: u8,
+    item_level_budget: u32,
+    item_level_used: u32,
+}
+
+fn decrepitude_faith_item_fields(entity: &Entity, ruleset: &Ruleset) -> DecrepitudeFaithItemFields {
+    DecrepitudeFaithItemFields {
         decrepitude_score: decrepitude_score(entity, ruleset),
         true_faith_score: true_faith(entity, ruleset),
         item_level_budget: item_level_budget(entity, ruleset),
         item_level_used: item_level_used(entity),
-        spell_mastery_xp: spell_mastery_xp(entity, ruleset),
-        spell_mastery_floor: spell_mastery_floor(entity, ruleset),
-        spell_mastery_advancement_doubled: spell_mastery_advancement_affinity(entity, ruleset)
-            .is_some(),
+    }
+}
+
+/// The Spell Mastery slice of [`EffectiveScores`].
+struct SpellMasteryFields {
+    xp: u32,
+    floor: u8,
+    advancement_doubled: bool,
+}
+
+fn spell_mastery_fields(entity: &Entity, ruleset: &Ruleset) -> SpellMasteryFields {
+    SpellMasteryFields {
+        xp: spell_mastery_xp(entity, ruleset),
+        floor: spell_mastery_floor(entity, ruleset),
+        advancement_doubled: spell_mastery_advancement_affinity(entity, ruleset).is_some(),
+    }
+}
+
+/// The supernatural-being Might/power-level slice of [`EffectiveScores`].
+struct MightPowerFields {
+    might: Option<MightScore>,
+    power_levels_budget: u32,
+    power_levels_used: u32,
+}
+
+fn might_power_fields(entity: &Entity, ruleset: &Ruleset) -> MightPowerFields {
+    MightPowerFields {
         might: effective_might(entity, ruleset),
         power_levels_budget: power_levels_budget(entity, ruleset),
         power_levels_used: powers_used(entity),
+    }
+}
+
+/// Computes the score effects for `entity` against a loaded ruleset.
+///
+/// Pure field-by-field assembly: every group of related fields is computed by
+/// its own helper above (mirroring [`EffectiveScores`]'s own doc-comment
+/// groups), so this function does no branching of its own — it only wires
+/// each group's output to the DTO's fields.
+pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveScores {
+    let profile = ruleset.profile(&entity.type_id);
+
+    let characteristics = characteristic_fields(entity, ruleset);
+    let xp = xp_fields(entity, ruleset);
+    let spell = spell_fields(entity, ruleset, profile);
+    let confidence = confidence_fields(entity, ruleset, profile);
+    let grants = grant_budget_fields(entity, ruleset);
+    let warping = warping_fields(entity, ruleset);
+    let legacy_totals = decrepitude_faith_item_fields(entity, ruleset);
+    let mastery = spell_mastery_fields(entity, ruleset);
+    let might_power = might_power_fields(entity, ruleset);
+
+    EffectiveScores {
+        ability_bonuses: characteristics.ability_bonuses,
+        art_bonuses: characteristics.art_bonuses,
+        characteristic_caps: characteristics.caps,
+        characteristic_floors: characteristics.floors,
+
+        xp_total_demand: xp.total_demand,
+        xp_general_used: xp.general_used,
+        xp_general_pool: xp.general_pool,
+        xp_general_bonus: xp.general_bonus,
+        xp_max_flow: xp.max_flow,
+        restricted_xp_pools: xp.restricted,
+        life_stage: xp.life_stage,
+
+        aging: aging_readout(entity, ruleset),
+
+        characteristic_points_granted: characteristics.points_granted,
+        ability_score_floors: characteristics.ability_score_floors,
+        size: characteristics.size,
+        characteristic_bonuses: characteristics.bonuses,
+        characteristic_effective: characteristics.effective,
+        characteristic_aging_drops: characteristics.aging_drops,
+
+        granted_selections: grants.granted_selections,
+        virtue_budget: grants.virtue_budget,
+        flaw_budget: grants.flaw_budget,
+
+        spell_levels_budget: spell.budget,
+        spell_levels_profile_base: spell.profile_base,
+        spell_levels_bonus: spell.bonus,
+        spell_levels_life_stage: spell.life_stage,
+        spell_levels_used: spell.used,
+        spell_level_caps: spell.level_caps,
+        magus_minimum_abilities: spell.minimum_abilities,
+
+        confidence_score: confidence.confidence_score,
+        confidence_points: confidence.confidence_points,
+        supernatural_free_total: confidence.supernatural_free_total,
+        supernatural_free_used: confidence.supernatural_free_used,
+        age_ability_cap: confidence.age_ability_cap,
+
+        reputation_grants: reputation_grants_for_ui(entity, ruleset),
+
+        warping_score: warping.score,
+        warping_points: warping.points,
+        warping_owed: warping.owed,
+        warping_owed_grants: warping.owed_grants,
+
+        decrepitude_score: legacy_totals.decrepitude_score,
+        true_faith_score: legacy_totals.true_faith_score,
+        item_level_budget: legacy_totals.item_level_budget,
+        item_level_used: legacy_totals.item_level_used,
+
+        spell_mastery_xp: mastery.xp,
+        spell_mastery_floor: mastery.floor,
+        spell_mastery_advancement_doubled: mastery.advancement_doubled,
+
+        might: might_power.might,
+        power_levels_budget: might_power.power_levels_budget,
+        power_levels_used: might_power.power_levels_used,
     }
 }
 
@@ -941,7 +1167,8 @@ pub fn export_markdown_to_path(
     path: &Path,
 ) -> Result<(), AppError> {
     let ruleset = ruleset.ok_or(AppError::NotLoaded)?;
-    fs::write(path, arm_rules::character_markdown(entity, ruleset, labels))?;
+    let markdown = arm_rules::character_markdown(entity, ruleset, labels)?;
+    fs::write(path, markdown)?;
     Ok(())
 }
 

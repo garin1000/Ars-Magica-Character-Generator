@@ -91,10 +91,19 @@ export const config = {
     const problem = preflightDisplay(process.env, { xvfbRunAvailable: hasXvfbRun() });
     if (problem) throw new Error(problem);
 
-    const build = spawnSync('cargo', ['tauri', 'build', '--no-bundle'], {
-      cwd: path.resolve(repoRoot, 'crates/arm-app'),
-      stdio: 'inherit',
-    });
+    // `--features e2e-testing` is what compiles in the ARM_E2E_FILE /
+    // ARM_E2E_EXPORT_FILE seams this same suite relies on below (see
+    // beforeSession). They are off by default (crates/arm-app/Cargo.toml,
+    // K5/VA5 security review fix) so a plain release build never carries
+    // them — this is the one build step allowed to turn them on.
+    const build = spawnSync(
+      'cargo',
+      ['tauri', 'build', '--no-bundle', '--features', 'e2e-testing'],
+      {
+        cwd: path.resolve(repoRoot, 'crates/arm-app'),
+        stdio: 'inherit',
+      },
+    );
     if (build.status !== 0) throw new Error('cargo tauri build failed');
 
     const destRules = path.resolve(repoRoot, 'target/release/rules');

@@ -186,7 +186,7 @@ pub(crate) fn validate_forbidden_traits(
 /// Whether a parameter `value` resolves against its `domain`'s registry: `Item`
 /// → point items, `Ability` → the ability catalogue, `Art` → the art catalogue,
 /// `Technique`/`Form` → the art catalogue *and* the required art class (so
-/// Deficient Technique cannot target a Form; Core Rules.md:5909-5915),
+/// Deficient Technique cannot target a Form; Ars Magica - Definitive Edition (Core Rules).md:5909-5915),
 /// `Characteristic` → [`Characteristic::from_id`], `Text` → always (no registry).
 /// Shared by virtue/flaw parameter validation and spell parameter validation.
 pub(crate) fn param_value_resolves(ruleset: &Ruleset, domain: ParameterDomain, value: &Id) -> bool {
@@ -416,7 +416,7 @@ pub(crate) fn validate_ability_bonus_targets(
     }
 }
 
-/// Enforces the "one Magical Focus per magus" limit (Core Rules.md:4542) by
+/// Enforces the "one Magical Focus per magus" limit (Ars Magica - Definitive Edition (Core Rules).md:4542) by
 /// counting [`Effect::MagicalFocus`] across everything that feeds the effective
 /// layer (bought selections plus House / Mythic-type grants, e.g. Mythic Blood's
 /// bundled Minor Focus). More than one Focus is illegal. This counts the *effect*

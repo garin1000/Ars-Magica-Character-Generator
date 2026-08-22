@@ -67,6 +67,7 @@
           <input
             class="talisman-desc"
             placeholder={store.t('talisman-desc-placeholder')}
+            aria-label={store.t('talisman-desc-placeholder')}
             value={attunement.description}
             oninput={(e) => store.setTalismanAttunementDescription(i, text(e))}
             data-testid="talisman-desc-{i}"
@@ -111,6 +112,7 @@
           <input
             class="talisman-desc"
             placeholder={store.t('talisman-effect-name-placeholder')}
+            aria-label={store.t('talisman-effect-name-placeholder')}
             value={effect.name}
             oninput={(e) => store.setTalismanEffectName(i, text(e))}
             data-testid="talisman-effect-name-{i}"

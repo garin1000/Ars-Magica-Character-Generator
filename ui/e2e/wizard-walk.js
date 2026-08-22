@@ -27,7 +27,6 @@
 // resolve outside a WebdriverIO worker.
 
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -39,11 +38,14 @@ import {
   startWizard,
   wizardRailPhases,
 } from './helpers.js';
+import { e2eFile } from './wdio.conf.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
-/** The app's save/load dialog seam (`ARM_E2E_FILE`) points at this fixed path. */
-export const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
+// Re-exported so any importer of this module can still reach the fixture path
+// through it, but `wdio.conf.js` is the single declaration (E11): every other
+// consumer imports the same binding rather than re-declaring the literal.
+export { e2eFile };
 
 const NEXT = '[data-testid="wizard-next"]';
 const FINISH = '[data-testid="wizard-finish"]';

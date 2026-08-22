@@ -236,7 +236,7 @@ mod tests {
     }
 
     /// "a character must have a Virtue to buy Academic, Arcane, Martial … Abilities"
-    /// (Core Rules.md:2315).
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2315).
     #[test]
     fn a_martial_ability_without_a_virtue_is_an_error() {
         let entity = character("companion", vec![], vec![("ability.single_weapon", 3)]);

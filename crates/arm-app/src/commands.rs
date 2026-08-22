@@ -56,13 +56,35 @@ pub struct CloseGuardLabels {
     pub cancel: String,
 }
 
+impl CloseGuardState {
+    /// Mirrors a fresh dirty-state report from the frontend, clearing the
+    /// one-shot discard-confirmation latch (`confirmed`).
+    ///
+    /// `confirmed` exists only to let a close/quit re-issued as part of the
+    /// SAME confirmed discard pass straight through `guard_blocks_quit`
+    /// (`main.rs`) without a second dialog. It must not outlive that one
+    /// action: `update_close_guard` fires on every dirty-state transition the
+    /// frontend reports, so clearing it here means a stale `true` can never
+    /// reach a LATER, unrelated close/quit — the only path back to an
+    /// interactive window (dock reactivation, a future "new document" flow)
+    /// necessarily reports a fresh dirty state first, and that report is
+    /// exactly this call. Nothing re-arms `confirmed` in between: after
+    /// `w.destroy()`/`app.exit(0)` runs, that window's webview is gone and can
+    /// issue no further IPC, so this reset can never race the very
+    /// close/quit it is meant to let through.
+    pub fn report_dirty_state(&mut self, dirty: bool, labels: CloseGuardLabels) {
+        self.dirty = dirty;
+        self.labels = labels;
+        self.confirmed = false;
+    }
+}
+
 /// Mirrors the frontend's dirty flag and dialog strings into managed state for
 /// the close/quit guard (see `main.rs`).
 #[tauri::command]
 pub fn update_close_guard(dirty: bool, labels: CloseGuardLabels, state: State<'_, AppState>) {
     let mut guard = state.close_guard.lock().expect("close guard lock poisoned");
-    guard.dirty = dirty;
-    guard.labels = labels;
+    guard.report_dirty_state(dirty, labels);
 }
 
 /// Loads the ruleset for `lang`, caches it in managed state, and returns the
@@ -258,10 +280,40 @@ pub fn derived_totals(
 /// E2E seam: when set, save/load use this fixed path instead of opening a
 /// native dialog. Native GTK dialogs can't be driven by WebDriver, so the
 /// real-binary e2e sets this so the flow is deterministic and headless.
+///
+/// **Fixed (K5/VA5, security review wave 1).** This override used to be read
+/// unconditionally, with no `#[cfg(debug_assertions)]` or Cargo feature gate,
+/// so the exact binary shipped to end users honored it: anything able to set
+/// this process's environment before launch (a modified shortcut, a wrapper
+/// script) could silently redirect Save/Open to an attacker-chosen path with
+/// no dialog and no user-facing confirmation.
+///
+/// A `#[cfg(debug_assertions)]` gate was not an option: `ui/e2e/README.md` is
+/// explicit that the suite deliberately drives the real **release**-profile
+/// binary end users run (`cargo tauri build --no-bundle`), where
+/// `debug_assertions` is always `false` — that gate would silently break e2e
+/// rather than close the gap. Instead this is gated behind the Cargo feature
+/// `e2e-testing` (declared in `crates/arm-app/Cargo.toml`, off by default), so
+/// [`e2e_file_override`] always returns `None` in the binary a plain
+/// `cargo build --release` / `cargo tauri build` produces. Only
+/// `ui/e2e/wdio.conf.js` and `ui/e2e/wdio.portable.conf.js` pass
+/// `--features e2e-testing` to `cargo tauri build --no-bundle` before driving
+/// the resulting binary, so the e2e suite keeps its deterministic seam
+/// without it existing in the shipped artifact. See
+/// `e2e_file_override_is_compiled_out_of_the_default_build` /
+/// `e2e_file_override_is_honored_when_the_feature_is_enabled` in
+/// `tests/commands.rs` for both halves of the gate.
+#[cfg(feature = "e2e-testing")]
 const E2E_FILE_ENV: &str = "ARM_E2E_FILE";
 
-fn e2e_file_override() -> Option<std::path::PathBuf> {
+#[cfg(feature = "e2e-testing")]
+pub fn e2e_file_override() -> Option<std::path::PathBuf> {
     std::env::var_os(E2E_FILE_ENV).map(std::path::PathBuf::from)
+}
+
+#[cfg(not(feature = "e2e-testing"))]
+pub fn e2e_file_override() -> Option<std::path::PathBuf> {
+    None
 }
 
 /// Ties a file dialog to the app's main window, so it opens centred on the app and
@@ -331,10 +383,19 @@ pub async fn save_entity(
 /// E2E seam for the Markdown export, deliberately separate from [`E2E_FILE_ENV`]:
 /// that one is a fixed `.json` path shared by save and open, so writing Markdown
 /// through it would clobber the save file the same spec round-trips.
+#[cfg(feature = "e2e-testing")]
 const E2E_EXPORT_FILE_ENV: &str = "ARM_E2E_EXPORT_FILE";
 
-fn e2e_export_file_override() -> Option<std::path::PathBuf> {
+/// Fixed (K5/VA5, see [`e2e_file_override`]): gated behind the same
+/// `e2e-testing` Cargo feature, so it too is inert in the shipped binary.
+#[cfg(feature = "e2e-testing")]
+pub fn e2e_export_file_override() -> Option<std::path::PathBuf> {
     std::env::var_os(E2E_EXPORT_FILE_ENV).map(std::path::PathBuf::from)
+}
+
+#[cfg(not(feature = "e2e-testing"))]
+pub fn e2e_export_file_override() -> Option<std::path::PathBuf> {
+    None
 }
 
 /// Writes the entity as a Markdown character sheet. When `path` is `Some`, writes

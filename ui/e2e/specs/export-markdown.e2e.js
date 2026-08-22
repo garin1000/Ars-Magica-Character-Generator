@@ -11,13 +11,9 @@
 
 import { $, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 
-import { startCharacter } from '../helpers.js';
-
-const exportFile = path.resolve(os.tmpdir(), 'arm-e2e-character.md');
-const saveFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
+import { isRowBlocked, startCharacter } from '../helpers.js';
+import { e2eExportFile as exportFile, e2eFile as saveFile } from '../wdio.conf.js';
 
 const LANG_SELECT = '[data-testid="language-select"]';
 const STATUS = '[data-testid="doc-status"]';
@@ -125,7 +121,7 @@ describe('markdown export', () => {
     await clickTab('spells');
     const addSpell = await $('[data-testid="add-spell.pilum_of_fire"]');
     await addSpell.waitForExist({ timeout: 10000 });
-    await browser.waitUntil(async () => await addSpell.isEnabled(), {
+    await browser.waitUntil(async () => !(await isRowBlocked(addSpell)), {
       timeout: 5000,
       timeoutMsg: 'Creo 5 / Ignem 12 should clear the cap on Pilum of Fire',
     });

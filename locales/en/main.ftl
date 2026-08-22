@@ -777,6 +777,12 @@ empty-selections-side = None yet.
 no-issues = No issues.
 loading = Loading…
 
+# Screen-reader-only severity prefix on each validation issue
+# (ValidationPanel.svelte): color/border alone must not be the only signal
+# (WCAG 1.4.1).
+issue-severity-error = Error
+issue-severity-warning = Warning
+
 # One key per validation issue code emitted by the engine. Each message
 # interpolates the engine's `args` (see crates/arm-rules/src/validation.rs):
 # arg names are stable per code and passed through verbatim by the UI.
@@ -819,6 +825,7 @@ issue-characteristic_min_base_too_high = { $item } requires { $characteristic } 
 issue-unknown_ability = Unknown ability: { $ability }.
 issue-duplicate_ability = { $ability } is listed { $count } times with the same specialty.
 issue-not_enough_xp = Abilities cost { $spent } XP, more than the { $pool } in the pool.
+issue-xp_solve_bound_exceeded = This character has too many Ability and Art scores and mastered spells ({ $spends } bought scores across { $pools } experience pools, { $nodes } in total) for experience to be allocated — the limit is { $limit }. This usually means the save file is damaged.
 issue-restricted_xp_unspent = { $origin }: { $unspent } of { $amount } restricted experience points are unspent and will be wasted.
 issue-ability_category_requires_virtue = { $ability } is { $category }, which needs a Virtue granting access at character creation.
 issue-academic_ability_without_scholarly_language = An Academic Ability normally requires { $ability } at { $min } or better.
@@ -918,6 +925,7 @@ error-io = A file could not be read or written.
 error-ruleset = The ruleset could not be loaded.
 error-not_loaded = No ruleset is loaded yet.
 error-serialize = The character file could not be processed.
+error-export = The character sheet could not be exported: some text is missing from the current language.
 
 # Derived play-stat read-out (M5/5i). Read-only totals computed by the engine;
 # the panel renders these numbers and computes no mechanics itself.

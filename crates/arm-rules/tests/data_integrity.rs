@@ -189,7 +189,7 @@ fn wealthy_and_poor_ship_with_their_rates_and_eligibility() {
         for id in ["virtue.wealthy", "flaw.poor"] {
             assert!(
                 profile.forbidden_traits.contains(&Id::new(id)),
-                "{type_id} must forbid {id} (Core Rules.md:2394)"
+                "{type_id} must forbid {id} (Ars Magica - Definitive Edition (Core Rules).md:2394)"
             );
         }
     }
@@ -238,7 +238,7 @@ fn foreign_upbringing_halves_the_locality_dependent_abilities() {
             rs.ability(&Id::new(id))
                 .expect("ability ships")
                 .locality_dependent,
-            "{id} is locality-dependent (Core Rules.md:6160)"
+            "{id} is locality-dependent (Ars Magica - Definitive Edition (Core Rules).md:6160)"
         );
     }
     // A plainly non-local Ability is not flagged, so the fraction has a real edge.
@@ -293,7 +293,8 @@ fn shipped_abilities_and_characteristics_load() {
 
     // The `*` marker is the per-ability `requires_training` flag (cannot be used
     // untrained), NOT the supernatural category: it spans General/Academic/Arcane
-    // too. Source: Core Rules :4157 (Jack of All Trades) — heading asterisks set it.
+    // too. Source: Ars Magica - Definitive Edition (Core Rules).md:4157
+    // (Jack of All Trades) — heading asterisks set it.
     for (id, expected) in [
         ("ability.artes_liberales", true), // Academic, asterisked
         ("ability.magic_theory", true),    // Arcane, asterisked
@@ -487,7 +488,7 @@ fn known_childhood_packages_ship_with_their_entries_and_provenance() {
             ("ability.living_language", None, 5, true),
             ("ability.swim", None, 2, false),
         ],
-        "Athletics 2, Brawl 2, Native Language 5, Swim 2 (Core Rules.md:2384)"
+        "Athletics 2, Brawl 2, Native Language 5, Swim 2 (Ars Magica - Definitive Edition (Core Rules).md:2384)"
     );
     let source = athletic
         .source
@@ -514,7 +515,7 @@ fn known_childhood_packages_ship_with_their_entries_and_provenance() {
             ("language", "ability.living_language"),
         ],
         "Area A Lore, Area B Lore and the spread Living Language are asked for \
-         (Core Rules.md:2388)"
+         (Ars Magica - Definitive Edition (Core Rules).md:2388)"
     );
     // The native language is never a slot: it is chosen once per character.
     let native = traveling.native_entry().expect("a native-language entry");
@@ -893,7 +894,7 @@ fn validate_equipment_unknown_ref_and_min_strength() {
 /// whose min-Strength exceeds the wielder's Strength raises the same advisory
 /// `equipment_min_strength` warning as a weapon (shield arm), while armor — which
 /// carries no min-Strength requirement — never warns however weak the wearer (armor
-/// arm's `None`). Core:16997.
+/// arm's `None`). Ars Magica - Definitive Edition (Core Rules).md:16997.
 #[test]
 fn validate_equipment_shield_warns_and_armor_never_warns() {
     let rs = load_ruleset_with_equipment();
@@ -954,7 +955,7 @@ fn validate_equipment_shield_warns_and_armor_never_warns() {
 /// advisory `shield_with_two_handed_weapon` warning (the shield's modifiers are
 /// dropped, which looks like a bug otherwise). A one-handed weapon in the mix
 /// clears the advisory, since the shield is usable with it. Non-blocking.
-/// Core:7494, :17063, :16975.
+/// Ars Magica - Definitive Edition (Core Rules).md:7494, :17063, :16975.
 #[test]
 fn shield_with_only_two_handed_weapons_warns() {
     let rs = load_ruleset_with_equipment();
@@ -1053,7 +1054,7 @@ fn normalize_sorts_equipment() {
 
 /// The shipped Skilled Parens raises *both* the spell-levels budget (+30) and the
 /// general apprenticeship XP pool (+60), proving its two-effect package is wired
-/// end-to-end against real data (Core:4964-4966).
+/// end-to-end against real data (Ars Magica - Definitive Edition (Core Rules).md:4964-4966).
 #[test]
 fn shipped_skilled_parens_raises_both_budgets() {
     let rs = load_ruleset_with_spells();
@@ -1066,7 +1067,7 @@ fn shipped_skilled_parens_raises_both_budgets() {
     assert_eq!(arm_rules::xp_allocation(&e, &rs).general_pool, 300);
 }
 
-/// The shipped Elemental Magic (Core:3731-3737) redistributes Art-XP over the four
+/// The shipped Elemental Magic (Ars Magica - Definitive Edition (Core Rules).md:3731-3737) redistributes Art-XP over the four
 /// elemental Forms against the real Arts catalogue: each Form gains half (rounded
 /// up) of every other Form's table-XP. With Ignem/Auram/Terram at score 6 (21 XP)
 /// and Aquam at score 4 (10 XP), the boosted effective scores are 9/9/9 and 8,
@@ -1097,7 +1098,7 @@ fn shipped_elemental_magic_redistributes_art_xp() {
     assert_eq!(effective_art_score(&e, &rs, &Id::new("art.corpus")), 6);
 }
 
-/// The shipped Weak Parens lowers both budgets (Core:7072-7074).
+/// The shipped Weak Parens lowers both budgets (Ars Magica - Definitive Edition (Core Rules).md:7072-7074).
 #[test]
 fn shipped_weak_parens_lowers_both_budgets() {
     let rs = load_ruleset_with_spells();
@@ -1391,7 +1392,7 @@ fn issue_codes(entity: &Entity, rs: &Ruleset) -> Vec<String> {
         .collect()
 }
 
-/// A magus may hold at most one Magical Focus (Core Rules.md:4542): two Minor
+/// A magus may hold at most one Magical Focus (Ars Magica - Definitive Edition (Core Rules).md:4542): two Minor
 /// Foci (distinct descriptors, so not a duplicate selection) trip the
 /// `multiple_magical_foci` rule, which counts the `MagicalFocus` effect rather
 /// than relying on pairwise incompatibility (which cannot catch two Minors).
@@ -1567,13 +1568,13 @@ fn companion_with_reputation(item: &str, kind: ReputationType, score: u8) -> Ent
 #[test]
 fn shipped_reputation_granters_authorize_their_kind() {
     let rs = load_ruleset();
-    // Hermetic Prestige → a Hermetic Reputation at 4 (Core:4071-4073).
+    // Hermetic Prestige → a Hermetic Reputation at 4 (Ars Magica - Definitive Edition (Core Rules).md:4071-4073).
     let hp = companion_with_reputation("virtue.hermetic_prestige", ReputationType::Hermetic, 4);
     assert!(
         !reputation_ungranted(&hp, &rs),
         "Hermetic Prestige grants Hermetic"
     );
-    // Baccalaureus → an Academic Reputation (Core:3472).
+    // Baccalaureus → an Academic Reputation (Ars Magica - Definitive Edition (Core Rules).md:3472).
     let bac = companion_with_reputation("virtue.baccalaureus", ReputationType::Academic, 1);
     assert!(
         !reputation_ungranted(&bac, &rs),
@@ -1590,7 +1591,7 @@ fn shipped_reputation_granters_authorize_their_kind() {
 #[test]
 fn shipped_famous_authorizes_any_reputation_kind() {
     let rs = load_ruleset();
-    // Famous (Core:3861-3863): player chooses the type — any single type is legal.
+    // Famous (Ars Magica - Definitive Edition (Core Rules).md:3861-3863): player chooses the type — any single type is legal.
     for kind in ReputationType::ALL {
         let e = companion_with_reputation("virtue.famous", kind, 4);
         assert!(
@@ -1628,7 +1629,7 @@ fn shipped_supernatural_virtues_grant_starting_score() {
             "{item} grants {ability} at 1",
         );
     }
-    // Strong Faerie Blood grants the Second Sight *Virtue* for free (Core:5038),
+    // Strong Faerie Blood grants the Second Sight *Virtue* for free (Ars Magica - Definitive Edition (Core Rules).md:5038),
     // which in turn floors Second Sight at 1.
     let sfb = entity(
         "companion",
@@ -1645,7 +1646,7 @@ fn shipped_supernatural_virtues_grant_starting_score() {
 fn shipped_xp_granters_add_restricted_pool() {
     use arm_rules::restricted_xp_pools;
     let rs = load_ruleset();
-    // Arcane Lore → +50 XP restricted to Arcane abilities (Core:3432).
+    // Arcane Lore → +50 XP restricted to Arcane abilities (Ars Magica - Definitive Edition (Core Rules).md:3432).
     let e = entity(
         "companion",
         vec![Selection::new(Id::new("virtue.arcane_lore"))],
@@ -1657,7 +1658,7 @@ fn shipped_xp_granters_add_restricted_pool() {
             .any(|p| p.amount == 50 && p.categories.contains(&AbilityCategory::Arcane)),
         "Arcane Lore grants a 50-xp Arcane-restricted pool",
     );
-    // Feral Upbringing → 120 XP on a fixed ability list (Core:6112).
+    // Feral Upbringing → 120 XP on a fixed ability list (Ars Magica - Definitive Edition (Core Rules).md:6112).
     let fu = entity(
         "companion",
         vec![Selection::new(Id::new("flaw.feral_upbringing"))],
@@ -1674,7 +1675,7 @@ fn shipped_xp_granters_add_restricted_pool() {
 fn shipped_confidence_true_faith_and_size_granters() {
     use arm_rules::{Confidence, confidence, size, true_faith};
     let rs = load_ruleset();
-    // Ferocity → +1 Confidence Score / +3 Points (Core:3875) over the base.
+    // Ferocity → +1 Confidence Score / +3 Points (Ars Magica - Definitive Edition (Core Rules).md:3875) over the base.
     let fer = entity(
         "companion",
         vec![Selection::new(Id::new("virtue.ferocity"))],
@@ -1687,7 +1688,7 @@ fn shipped_confidence_true_faith_and_size_granters() {
         },
         "Ferocity adds 1/3"
     );
-    // Low Self-Esteem → removes the standard 1/3 Confidence (Core:6364).
+    // Low Self-Esteem → removes the standard 1/3 Confidence (Ars Magica - Definitive Edition (Core Rules).md:6364).
     let lse = entity(
         "companion",
         vec![Selection::new(Id::new("flaw.low_self_esteem"))],
@@ -1700,7 +1701,7 @@ fn shipped_confidence_true_faith_and_size_granters() {
         },
         "Low Self-Esteem zeroes Confidence"
     );
-    // Relic → True Faith 1 (Core:4854); Powerful Relic → 3 (Core:4783).
+    // Relic → True Faith 1 (Ars Magica - Definitive Edition (Core Rules).md:4854); Powerful Relic → 3 (Ars Magica - Definitive Edition (Core Rules).md:4783).
     let relic = entity("companion", vec![Selection::new(Id::new("virtue.relic"))]);
     assert_eq!(true_faith(&relic, &rs), 1);
     let prelic = entity(
@@ -1834,8 +1835,8 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
             specialization_applies: false,
         },
     ];
-    // A full familiar statblock: a raven (Size -4, Core:17829-17856) with Magic
-    // Might 10, human intelligence at Int -3 (Core:10854), the bond's Loyal
+    // A full familiar statblock: a raven (Size -4, Ars Magica - Definitive Edition (Core Rules).md:17829-17856) with Magic
+    // Might 10, human intelligence at Int -3 (Ars Magica - Definitive Edition (Core Rules).md:10854), the bond's Loyal
     // (partner) +3 entered by hand, and one power invested in the bond.
     e.familiar = Some(Familiar {
         name: "Corvus".to_string(),
@@ -1974,7 +1975,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     assert!(!hint.halved);
 
     // Talisman capacity on the real ruleset = highest Technique (Creo 10) + highest
-    // Form (Corpus 12) = 22 pawns of Vim vis (Core:10619). Ignem 8 loses to Corpus.
+    // Form (Corpus 12) = 22 pawns of Vim vis (Ars Magica - Definitive Edition (Core Rules).md:10619). Ignem 8 loses to Corpus.
     let capacity = d
         .talisman_capacity
         .expect("capacity present for a magus with a talisman");
@@ -1985,7 +1986,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     assert_eq!(capacity.pawns, 22);
 
     // Non-goal guard: the level-15 instilled effect is charged against NOTHING. The
-    // item-level budget belongs to the Redcap-only Virtues (Core:4347-4349,
+    // item-level budget belongs to the Redcap-only Virtues (Ars Magica - Definitive Edition (Core Rules).md:4347-4349,
     // :4842-4850), and a Redcap "may not take The Gift" (:4850), so it can never
     // fund a magus's talisman. This magus has no such Virtue, so both figures are 0
     // even though he owns a talisman holding 15 levels of effect.
@@ -2004,7 +2005,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     );
 
     // Familiar bonding read-out on the real ruleset. Binding level = Magic Might 10
-    // + 25 + 5 × Size(-4) = 15 (Core:10824, :10828) — the negative Size takes 20
+    // + 25 + 5 × Size(-4) = 15 (Ars Magica - Definitive Edition (Core Rules).md:10824, :10828) — the negative Size takes 20
     // points off. Cords 1/1/2 cost 5 + 5 + 15 = 25 off the curve (:10836), which
     // fits inside the best bonding Lab Total. Invested powers total 20 levels and
     // are charged against nothing (:10866).
@@ -2099,7 +2100,7 @@ fn longevity_hint_reproduces_the_books_lab_total_35_example() {
     assert_eq!(hint.suggested_bonus, 7);
 
     // A zero aura does not suppress the suggestion — the Aura Modifier is a plain
-    // addend, and no aura simply means no hindrance (Core:10276-10278, :17658).
+    // addend, and no aura simply means no hindrance (Ars Magica - Definitive Edition (Core Rules).md:10276-10278, :17658).
     // The removed `aura != 0` gate, guarded on the real ruleset.
     e.aura = 0;
     let hint = arm_rules::derived_totals(&e, &rs)
@@ -2111,7 +2112,7 @@ fn longevity_hint_reproduces_the_books_lab_total_35_example() {
     assert_eq!(hint.suggested_bonus, 6, "ceil(30/5), not 0");
 
     // Difficult Longevity Ritual halves it on the shipped catalogue too
-    // (Core:5962-5964): 30 → 15 → ceil(15/5) = 3.
+    // (Ars Magica - Definitive Edition (Core Rules).md:5962-5964): 30 → 15 → ceil(15/5) = 3.
     e.selections
         .push(Selection::new(Id::new("flaw.difficult_longevity_ritual")));
     let hint = arm_rules::derived_totals(&e, &rs)
@@ -2590,7 +2591,7 @@ fn shipped_aging_total(items: &[&str]) -> AgingTotal {
 }
 
 /// Faerie Blood: "You are resistant to aging, and get -1 to all aging rolls."
-/// (Core:3801) — the shipped `aging_roll -1` is ADDED with its stored sign, so
+/// (Ars Magica - Definitive Edition (Core Rules).md:3801) — the shipped `aging_roll -1` is ADDED with its stored sign, so
 /// the total drops by one.
 #[test]
 fn faerie_blood_lowers_the_aging_total_by_one() {
@@ -2607,7 +2608,7 @@ fn faerie_blood_lowers_the_aging_total_by_one() {
 
 /// Strong Faerie Blood: "You start making aging rolls at the age of fifty, rather
 /// than the normal 35, and get -3 to Aging Rolls, cumulative with any other
-/// bonuses." (Core:5036)
+/// bonuses." (Ars Magica - Definitive Edition (Core Rules).md:5036)
 ///
 /// Only the -3 half is implemented. The start-at-fifty half needs a per-trait
 /// override of [`arm_rules::AgingRules::start_age`] — machinery no other shipped
@@ -2645,7 +2646,7 @@ fn aging_kinds(id: &str) -> Vec<(AgingEffect, i8)> {
 /// > "The character's aging rolls benefit from a +1 bonus to the Living
 /// > Conditions Modifier, in addition to whatever his social standing normally
 /// > offers him. Furthermore, he receives a +3 bonus to rolls to survive an aging
-/// > crisis." (Core:4530)
+/// > crisis." (Ars Magica - Definitive Edition (Core Rules).md:4530)
 ///
 /// The +1 is a Living Conditions term of the AGING TOTAL; the +3 belongs to the
 /// crisis *survival* roll, which `:16636` otherwise walls off from aging-roll
@@ -2697,7 +2698,7 @@ fn shipped_crisis_survival(items: &[&str]) -> CrisisSurvival {
 }
 
 /// **"Virtues that affect aging rolls do not affect crisis survival rolls."**
-/// (Core:16636) — the single load-bearing sentence of the survival read-out,
+/// (Ars Magica - Definitive Edition (Core Rules).md:16636) — the single load-bearing sentence of the survival read-out,
 /// locked against the shipped catalogue rather than a fixture.
 ///
 /// Three shipped items carry the two kinds the aging roll takes, and all three
@@ -2760,7 +2761,7 @@ fn virtues_that_modify_aging_rolls_do_not_affect_crisis_survival_rolls() {
     assert_eq!(shipped_aging_total(&with_mild).living_conditions.total, 0);
 }
 
-/// "19+ — **Terminal illness**. CrCo40 required to survive." (Core:16632) — the
+/// "19+ — **Terminal illness**. CrCo40 required to survive." (Ars Magica - Definitive Edition (Core Rules).md:16632) — the
 /// one row that offers no Stamina roll at all. The read-out reports the Ritual
 /// that resolves it (`:16638`) and **no** Ease Factor, rather than an unbeatable
 /// one; and the Minor row beside it shows the ordinary shape, Ease Factor 3 and
@@ -2794,7 +2795,7 @@ fn the_terminal_row_reports_a_ritual_level_and_no_ease_factor() {
 /// "An Int + Medicine roll against an Ease Factor of 6 allows the character to
 /// add the attendant's Medicine score to the roll to survive the crisis. Only
 /// one doctor may usefully attend a patient, and if the doctor botches the
-/// character must subtract 3 from the survival roll." (Core:16634)
+/// character must subtract 3 from the survival roll." (Ars Magica - Definitive Edition (Core Rules).md:16634)
 ///
 /// The doctor is reported as an **allowance** — what the rules permit — and not
 /// as a modifier, because the app has no attendant to score: the Medicine score
@@ -2821,7 +2822,7 @@ fn the_attending_doctor_is_reported_as_an_allowance() {
 
 /// One Crisis walked end to end against the **shipped** table, through the
 /// crate's public surface: a die and a year in, and the CRISIS TOTAL
-/// (Core:16621), the row it lands on (`:16624-16632`), what that row costs and
+/// (Ars Magica - Definitive Edition (Core Rules).md:16621), the row it lands on (`:16624-16632`), what that row costs and
 /// what surviving it would take (`:16628-16638`) out.
 ///
 /// The fixture tests in `aging.rs` prove the composition; this proves it against
@@ -2977,7 +2978,7 @@ fn a_shipped_crisis_year_is_written_into_the_character_and_reverts_exactly() {
 ///
 /// > "A leper has a permanent -2 modifier to her Living Condition …, and whenever
 /// > she undergoes an Aging Crisis (page 392) the leper sustains a Heavy Wound in
-/// > addition to any other result." (Core:6340)
+/// > addition to any other result." (Ars Magica - Definitive Edition (Core Rules).md:6340)
 ///
 /// The Heavy Wound is a *consequence*, not a number, so it ships as a marker with
 /// amount 0 — the `crisis_heavy_wound` kind exists precisely so the shipped 0 is
@@ -2996,7 +2997,7 @@ fn leprosy_carries_its_crisis_wound_beside_its_living_conditions_penalty() {
 }
 
 /// > "Virtues that affect aging rolls do not affect crisis survival rolls."
-/// > (Core:16636)
+/// > (Ars Magica - Definitive Edition (Core Rules).md:16636)
 ///
 /// This is that sentence's **converse**, which Mild Aging is the first shipped
 /// item to make expressible: a modifier granted specifically to the crisis
@@ -3054,9 +3055,9 @@ fn a_crisis_survival_modifier_never_reaches_the_aging_total() {
 /// be "fixed" into a number.
 ///
 /// Age Quickly doubles the *rate*: "your effective age … increases two years for
-/// every year that passes, and you make two aging rolls each year" (Core:5661).
+/// every year that passes, and you make two aging rolls each year" (Ars Magica - Definitive Edition (Core Rules).md:5661).
 /// Baneful Circumstances adds a *conditional extra roll*: "he must make an
-/// additional Aging roll even if he is normally immune to aging" (Core:5689).
+/// additional Aging roll even if he is normally immune to aging" (Ars Magica - Definitive Edition (Core Rules).md:5689).
 /// Both are schedule rules — how many rolls, at what effective age — and neither
 /// shifts the total of any one roll. The engine does not implement either
 /// schedule yet, so each Flaw contributes nothing to the arithmetic while staying
@@ -3094,7 +3095,7 @@ fn age_quickly_contributes_nothing_to_the_total_and_stays_surfaced() {
 
 /// The shipped table's own reading of `total`, for a companion who has already
 /// accrued `accrued` Aging Points (parked in Str — Decrepitude counts the
-/// character's whole bank, whichever Characteristics hold it, Core:16617).
+/// character's whole bank, whichever Characteristics hold it, Ars Magica - Definitive Edition (Core Rules).md:16617).
 fn shipped_aging_outcome(total: i32, accrued: u8) -> AgingOutcome {
     let rs = load_full_ruleset();
     let mut e = entity("companion", vec![]);
@@ -3259,13 +3260,13 @@ fn english_and_german_i18n_cover_all_crisis_rows() {
 ///
 /// - Unaging — "your aging points do not decrease your Characteristics, only
 ///   building up to give you Decrepitude points … You may choose your apparent
-///   age freely" (Core:5189): both facts.
+///   age freely" (Ars Magica - Definitive Edition (Core Rules).md:5189): both facts.
 /// - Bound to (Role) — "This Flaw also includes the effects of the Unaging
 ///   Virtue, **but** the character's apparent age advances in line with their
-///   physical age" (Core:5743): the Characteristic immunity only. That *but* is
+///   physical age" (Ars Magica - Definitive Edition (Core Rules).md:5743): the Characteristic immunity only. That *but* is
 ///   what proves the two are separable at all.
 /// - Bee King — "Bee Kings do not appear to age after reaching maturity"
-///   (Core:3488): the appearance only, and nothing about Characteristics.
+///   (Ars Magica - Definitive Edition (Core Rules).md:3488): the appearance only, and nothing about Characteristics.
 ///
 /// All three shipped `no_aging` alone before the tags came apart, which made the
 /// Bee King's entry simply wrong. This test is the outside witness that keeps the
@@ -3293,17 +3294,17 @@ fn the_three_aging_immunities_ship_their_two_facts_separately() {
     assert_eq!(
         tagged("virtue.unaging"),
         vec![AgingEffect::NoAging, AgingEffect::NoApparentAging],
-        "Unaging states both facts (Core:5189)"
+        "Unaging states both facts (Ars Magica - Definitive Edition (Core Rules).md:5189)"
     );
     assert_eq!(
         tagged("flaw.bound_to_role_role"),
         vec![AgingEffect::NoAging],
-        "Bound to (Role) keeps ageing in appearance (Core:5743)"
+        "Bound to (Role) keeps ageing in appearance (Ars Magica - Definitive Edition (Core Rules).md:5743)"
     );
     assert_eq!(
         tagged("virtue.bee_king"),
         vec![AgingEffect::NoApparentAging],
-        "a Bee King only stops looking older (Core:3488)"
+        "a Bee King only stops looking older (Ars Magica - Definitive Edition (Core Rules).md:3488)"
     );
 }
 

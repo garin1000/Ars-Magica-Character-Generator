@@ -4,12 +4,9 @@
 
 import { browser, $, expect } from '@wdio/globals';
 import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 
-import { startCharacter } from '../helpers.js';
-
-const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
+import { isRowBlocked, startCharacter } from '../helpers.js';
+import { e2eFile } from '../wdio.conf.js';
 
 describe('character editor', () => {
   it('edits across tabs, validates, and round-trips a save', async () => {
@@ -84,7 +81,7 @@ describe('character editor', () => {
     await $('[data-testid="tab-abilities"]').click();
     const row = await $('[data-testid="add-ability.second_sight"]');
     await row.waitForExist({ timeout: 10000 });
-    await browser.waitUntil(async () => !(await row.isEnabled()), {
+    await browser.waitUntil(async () => await isRowBlocked(row), {
       timeout: 5000,
       timeoutMsg: 'Second Sight should be greyed for a companion',
     });
@@ -93,10 +90,10 @@ describe('character editor', () => {
     await browser.execute((el) => {
       el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
     }, row);
-    const reason = await $('.tooltip-pop .tooltip-reason');
+    const reason = await $('[data-testid="tooltip-reason"]');
     await reason.waitForExist({ timeout: 5000 });
     expect((await reason.getText()).trim().length).toBeGreaterThan(0);
-    const desc = await $('.tooltip-pop .tooltip-text');
+    const desc = await $('[data-testid="tooltip-text"]');
     await desc.waitForExist({ timeout: 5000 });
     expect((await desc.getText()).trim().length).toBeGreaterThan(0);
     // Dismiss the popup so it does not linger into later specs.

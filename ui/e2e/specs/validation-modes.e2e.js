@@ -7,7 +7,7 @@
 // (see e2e/README.md). The wdio `onPrepare` hook builds
 // `target/release/arm-app`, so this cannot run without that build step.
 
-import { $, $$, expect } from '@wdio/globals';
+import { $, $$, browser, expect } from '@wdio/globals';
 
 import { startCharacter } from '../helpers.js';
 
@@ -72,6 +72,5 @@ describe('validation modes', () => {
 // Small polling helper (validation is debounced + async, so the DOM settles a
 // tick after the mode change).
 async function browserWaitFor(predicate, timeout = 5000) {
-  const { browser } = await import('@wdio/globals');
   await browser.waitUntil(predicate, { timeout, timeoutMsg: 'condition not met in time' });
 }

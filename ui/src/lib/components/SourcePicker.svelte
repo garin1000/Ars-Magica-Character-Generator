@@ -61,12 +61,15 @@
         <h3 class="category" data-testid={group.headerTestid}>{group.header}</h3>
         <ul class="item-list">
           {#each group.items as item (getId(item))}
+            {@const blocked = disabled?.(item) ?? false}
             <li>
               <button
                 type="button"
                 class="pick-row"
-                disabled={disabled?.(item)}
-                onclick={() => onAdd(item)}
+                aria-disabled={blocked}
+                onclick={() => {
+                  if (!blocked) onAdd(item);
+                }}
                 use:tooltip={tip?.(item)}
                 data-testid="add-{getId(item)}"
               >
@@ -82,3 +85,23 @@
     <p>{store.t('loading')}</p>
   {/if}
 </section>
+
+<style>
+  /* The "why is this greyed out" tooltip must stay reachable by keyboard and
+     screen-reader users, so a blocked row uses `aria-disabled` (button stays
+     focusable and keeps firing `focusin`) rather than native `disabled` — see
+     `actions.ts`'s `tooltip` action, which shows on `mouseenter`/`focusin`.
+     These rules mirror app.css's `.pick-row:disabled` look for the
+     `aria-disabled="true"` state, using `:global()` so they apply regardless of
+     Svelte's per-component style scoping (app.css itself is out of this
+     component's scope, so the equivalent selector lives here instead). */
+  :global(.pick-row[aria-disabled='true']) {
+    cursor: default;
+  }
+  :global(.pick-row[aria-disabled='true']:hover) {
+    background: transparent;
+  }
+  :global(.pick-row[aria-disabled='true'] .pick-plus) {
+    color: var(--muted);
+  }
+</style>

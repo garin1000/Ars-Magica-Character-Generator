@@ -23,12 +23,13 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 
-import { startCharacter } from '../helpers.js';
+import { isRowBlocked, startCharacter } from '../helpers.js';
 
 // The frame and the tab area carry no data-testid: they ARE layout elements, and
 // what this spec asserts is precisely the geometry of `.selected-frame` inside
-// `main.tab-content` (ui/src/app.css). So both are addressed by class, the way the
-// tooltip specs address `.tooltip-pop`.
+// `main.tab-content` (ui/src/app.css). So both are addressed by class here —
+// unlike a state/content assertion, the class itself is the subject under test,
+// so there is no more-stable alternative to key on.
 const FRAME = '.region-selected > .selected-frame';
 const TAB_CONTENT = 'main.tab-content';
 
@@ -129,12 +130,17 @@ async function clickTab(id) {
  * The `data-testid`s of the first `count` ENABLED add controls in the active
  * source list, read in one round trip. Ids are never hardcoded: catalogue size and
  * contents are data, so the spec asks the rendered list what it can add.
+ *
+ * `SourcePicker` rows stay natively enabled and signal "blocked" through
+ * `aria-disabled` rather than the `disabled` attribute (see `isRowBlocked` in
+ * `helpers.js`), so the filter below reads that attribute directly rather than
+ * the DOM `disabled` property, which these rows never set.
  */
 async function enabledAddIds(prefix, count) {
   const ids = await browser.execute(
     (testidPrefix, limit) =>
       Array.from(document.querySelectorAll(`[data-testid^="${testidPrefix}"]`))
-        .filter((button) => !button.disabled)
+        .filter((button) => button.getAttribute('aria-disabled') !== 'true')
         .slice(0, limit)
         .map((button) => button.getAttribute('data-testid')),
     prefix,
@@ -163,7 +169,7 @@ describe('selected frame', () => {
     for (const id of await enabledAddIds('add-virtue.', VF_ROWS + 8)) {
       if ((await $$('[data-testid^="remove-virtue."]')).length >= VF_ROWS) break;
       const add = await $(`[data-testid="${id}"]`);
-      if (await add.isEnabled()) await add.click();
+      if (!(await isRowBlocked(add))) await add.click();
     }
     await browser.waitUntil(
       async () => (await $$('[data-testid^="remove-virtue."]')).length >= VF_ROWS,

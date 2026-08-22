@@ -54,6 +54,7 @@ function installRuleset(): void {
       magnitude_points: { free: 0, minor: 1, major: 3 },
       ability_category_order: ['general'],
       art_type_order: ['technique', 'form'],
+      ritual_min_level: 20,
     },
     i18n: {
       'art.creo': { name: 'Creo', abbreviation: 'Cr' },
@@ -160,5 +161,74 @@ describe('SpellTab budget-bar ownership (slice 6b8c)', () => {
     const body = html();
     expect(body).toContain('data-testid="available-title"');
     expect(body).toContain('data-testid="spell-list"');
+  });
+});
+
+// VA2 (tmp/review/review-round-1-viktor-app.md): the Ritual level floor is read
+// from the engine-surfaced `ruleset.ritual_min_level` (mirrors
+// `crates/arm-rules/src/spell.rs`'s `RITUAL_MIN_LEVEL` constant), not a local
+// literal. The fixture's `ritual_min_level: 20` above matches the shipped
+// engine value, so most of these pin the real threshold; the dedicated
+// "sources the ritual floor from the engine" test below sets a
+// non-canonical value (25) specifically to prove the component tracks the
+// engine's number rather than a hardcoded 20 that would happen to agree with
+// it.
+describe('SpellTab ritual minimum learnable level (VA2)', () => {
+  const RITUAL = 'spell.test_general_ritual';
+  const ORDINARY = 'spell.test_general_ordinary';
+
+  function installGeneralSpells(): void {
+    store.ruleset!.ruleset.spells = {
+      ...store.ruleset!.ruleset.spells,
+      [RITUAL]: { id: RITUAL, technique: 'art.creo', form: 'art.animal', ritual: true },
+      [ORDINARY]: { id: ORDINARY, technique: 'art.creo', form: 'art.animal' },
+    };
+    store.ruleset!.i18n[RITUAL] = { name: 'Test General Ritual' };
+    store.ruleset!.i18n[ORDINARY] = { name: 'Test General Ordinary' };
+  }
+
+  it('blocks a General Ritual when fewer than 20 levels remain', () => {
+    installGeneralSpells();
+    store.effective!.spell_levels_used = 100;
+    store.effective!.spell_levels_budget = 119; // remaining = 19
+    const body = html();
+    expect(outer(body, `add-${RITUAL}`)).toMatch(/aria-disabled="true"/);
+  });
+
+  it('allows a General Ritual once exactly 20 levels remain', () => {
+    installGeneralSpells();
+    store.effective!.spell_levels_used = 100;
+    store.effective!.spell_levels_budget = 120; // remaining = 20
+    const body = html();
+    expect(outer(body, `add-${RITUAL}`)).toMatch(/aria-disabled="false"/);
+  });
+
+  it('allows an ordinary General spell with only 1 level remaining', () => {
+    installGeneralSpells();
+    store.effective!.spell_levels_used = 119;
+    store.effective!.spell_levels_budget = 120; // remaining = 1
+    const body = html();
+    expect(outer(body, `add-${ORDINARY}`)).toMatch(/aria-disabled="false"/);
+  });
+
+  it('blocks an ordinary General spell with 0 levels remaining', () => {
+    installGeneralSpells();
+    store.effective!.spell_levels_used = 120;
+    store.effective!.spell_levels_budget = 120; // remaining = 0
+    const body = html();
+    expect(outer(body, `add-${ORDINARY}`)).toMatch(/aria-disabled="true"/);
+  });
+
+  it('sources the ritual floor from the engine, not a local constant', () => {
+    installGeneralSpells();
+    // A non-canonical floor: if the component still hardcoded 20, 24
+    // remaining levels would satisfy it and this would render enabled.
+    store.ruleset!.ruleset.ritual_min_level = 25;
+    store.effective!.spell_levels_used = 100;
+    store.effective!.spell_levels_budget = 124; // remaining = 24, below the engine's 25
+    expect(outer(html(), `add-${RITUAL}`)).toMatch(/aria-disabled="true"/);
+
+    store.effective!.spell_levels_budget = 125; // remaining = 25, meets the engine's floor
+    expect(outer(html(), `add-${RITUAL}`)).toMatch(/aria-disabled="false"/);
   });
 });

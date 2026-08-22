@@ -782,6 +782,12 @@ empty-selections-side = Noch keine.
 no-issues = Keine Probleme.
 loading = Wird geladen…
 
+# Nur für Screenreader: Schweregrad-Präfix vor jedem Prüfhinweis
+# (ValidationPanel.svelte) — Farbe/Rahmen allein dürfen nicht das einzige
+# Signal sein (WCAG 1.4.1).
+issue-severity-error = Fehler
+issue-severity-warning = Warnung
+
 # Ein Schlüssel je Prüfcode der Engine. Jede Nachricht interpoliert die `args`
 # der Engine (siehe crates/arm-rules/src/validation.rs); die Argumentnamen sind
 # je Code stabil und werden von der UI unverändert weitergereicht.
@@ -824,6 +830,7 @@ issue-characteristic_min_base_too_high = { $item } erfordert { $characteristic }
 issue-unknown_ability = Unbekannte Fertigkeit: { $ability }.
 issue-duplicate_ability = { $ability } ist { $count }-mal mit derselben Spezialisierung aufgeführt.
 issue-not_enough_xp = Fertigkeiten kosten { $spent } EP, mehr als die { $pool } im Vorrat.
+issue-xp_solve_bound_exceeded = Dieser Charakter hat zu viele Fertigkeits- und Künste-Werte sowie gemeisterte Zaubersprüche ({ $spends } gekaufte Werte über { $pools } Erfahrungspunkte-Vorräte, { $nodes } insgesamt), um die Erfahrungspunkte zuzuteilen — die Grenze liegt bei { $limit }. Das deutet meist auf eine beschädigte Spielstand-Datei hin.
 issue-restricted_xp_unspent = { $origin }: { $unspent } von { $amount } eingeschränkten Erfahrungspunkten sind nicht ausgegeben und verfallen.
 issue-ability_category_requires_virtue = { $ability } ist { $category } und benötigt eine Tugend, die den Zugang bei der Charaktererschaffung gewährt.
 issue-academic_ability_without_scholarly_language = Eine akademische Fertigkeit erfordert normalerweise { $ability } auf { $min } oder höher.
@@ -927,6 +934,7 @@ error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.
 error-ruleset = Das Regelwerk konnte nicht geladen werden.
 error-not_loaded = Es ist noch kein Regelwerk geladen.
 error-serialize = Die Charakterdatei konnte nicht verarbeitet werden.
+error-export = Das Charakterblatt konnte nicht exportiert werden: In der aktuellen Sprache fehlt Text.
 
 # Abgeleitete Spielwerte (M5/5i). Schreibgeschützte, von der Engine berechnete
 # Werte; das Panel zeigt diese Zahlen nur an und berechnet keine Mechanik selbst.

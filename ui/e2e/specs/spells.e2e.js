@@ -15,10 +15,9 @@
 
 import { $, $$, expect, browser } from '@wdio/globals';
 import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 
-import { startCharacter } from '../helpers.js';
+import { isRowBlocked, startCharacter } from '../helpers.js';
+import { e2eFile } from '../wdio.conf.js';
 
 const SPELLS_TAB = '[data-testid="tab-spells"]';
 const ARTS_TAB = '[data-testid="tab-arts"]';
@@ -30,9 +29,6 @@ const BAR_USED = '[data-testid="spell-levels-used"]';
 const BAR_BASE = '[data-testid="spell-levels-base"]';
 const BAR_AVAILABLE = '[data-testid="spell-levels-available"]';
 const BAR_BONUS = '[data-testid="spell-levels-bonus"]';
-
-// The app's save/load dialog seam (ARM_E2E_FILE) points at this fixed path.
-const e2eFile = path.resolve(os.tmpdir(), 'arm-e2e-character.json');
 
 // Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
 function clean(text) {
@@ -119,7 +115,7 @@ describe('spells', () => {
     await $('[data-testid="spell-form-filter"]').selectByAttribute('value', 'art.ignem');
     const pilum = await $('[data-testid="add-spell.pilum_of_fire"]');
     await pilum.waitForExist({ timeout: 5000 });
-    await browser.waitUntil(async () => !(await pilum.isEnabled()), {
+    await browser.waitUntil(async () => await isRowBlocked(pilum), {
       timeout: 5000,
       timeoutMsg: 'Pilum should be greyed while the cap is 3',
     });
@@ -131,16 +127,16 @@ describe('spells', () => {
     // spell's normal description — reason first, not instead of the description.
     const row = await $('[data-testid="add-spell.pilum_of_fire"]');
     await row.waitForExist({ timeout: 5000 });
-    expect(await row.isEnabled()).toBe(false);
+    expect(await isRowBlocked(row)).toBe(true);
     // Dispatch mouseenter directly (same rationale as the description-tooltip
     // test below: synthetic events are focus-independent under parallel wdio).
     await browser.execute((el) => {
       el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
     }, row);
-    const reason = await $('.tooltip-pop .tooltip-reason');
+    const reason = await $('[data-testid="tooltip-reason"]');
     await reason.waitForExist({ timeout: 5000 });
     expect((await reason.getText()).trim().length).toBeGreaterThan(0);
-    const desc = await $('.tooltip-pop .tooltip-text');
+    const desc = await $('[data-testid="tooltip-text"]');
     await desc.waitForExist({ timeout: 5000 });
     expect((await desc.getText()).trim().length).toBeGreaterThan(0);
     // Dismiss the popup so it does not linger into the next step, which raises
@@ -162,7 +158,7 @@ describe('spells', () => {
     // CrIg cap is now 12 + 12 + 3 = 27 ≥ 20, so Pilum is takeable again.
     await $(SPELLS_TAB).click();
     const pilum = await $('[data-testid="add-spell.pilum_of_fire"]');
-    await browser.waitUntil(async () => await pilum.isEnabled(), {
+    await browser.waitUntil(async () => !(await isRowBlocked(pilum)), {
       timeout: 5000,
       timeoutMsg: 'raising Creo/Ignem should re-enable Pilum',
     });
@@ -197,7 +193,7 @@ describe('spells', () => {
     await browser.execute((el) => {
       el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
     }, row);
-    const pop = await $('.tooltip-pop .tooltip-text');
+    const pop = await $('[data-testid="tooltip-text"]');
     await pop.waitForExist({ timeout: 5000 });
     expect((await pop.getText()).trim().length).toBeGreaterThan(0);
   });
@@ -295,7 +291,7 @@ describe('spells', () => {
     await $('[data-testid="spell-form-filter"]').selectByAttribute('value', '');
     const add = await $('[data-testid="add-spell.wizards_boost_form"]');
     await add.waitForExist({ timeout: 5000 });
-    await browser.waitUntil(async () => await add.isEnabled(), {
+    await browser.waitUntil(async () => !(await isRowBlocked(add)), {
       timeout: 5000,
       timeoutMsg: "Wizard's Boost should be takeable (MuVi cap 12, budget has room)",
     });
@@ -370,7 +366,7 @@ describe('spells', () => {
     // = 21 clears its cap, so its add control is enabled.
     const aegis = await $('[data-testid="add-spell.aegis_of_the_hearth"]');
     await aegis.waitForExist({ timeout: 5000 });
-    await browser.waitUntil(async () => await aegis.isEnabled(), {
+    await browser.waitUntil(async () => !(await isRowBlocked(aegis)), {
       timeout: 5000,
       timeoutMsg: 'Aegis should be takeable once Rego/Vim clear its ritual cap',
     });

@@ -1371,6 +1371,16 @@ export interface Ruleset {
   magnitude_points: Record<Magnitude, number>;
   ability_category_order: AbilityCategory[];
   art_type_order?: ArtType[];
+  // The minimum level a Ritual spell may be learned at, derived from the Rust
+  // `spell::RITUAL_MIN_LEVEL` constant (populated at construction and
+  // re-derived on every deserialize, never trusted from input JSON), so the UI
+  // reads the Ritual floor from engine data instead of re-hardcoding it (VA2).
+  // Optional like `art_type_order` above (not `magnitude_points`/
+  // `ability_category_order`, present since the type's introduction): a live
+  // engine payload always sends it, but typing it required would force every
+  // existing hand-built `Ruleset` test fixture across the tree to add a field
+  // unrelated to what each of those tests exercises.
+  ritual_min_level?: number;
 }
 
 export interface LocalizedRuleset {
@@ -1559,4 +1569,10 @@ export type AppError =
   | { kind: 'io'; message: string }
   | { kind: 'ruleset'; ruleset_kind: 'parse' | 'integrity'; errors: string[] }
   | { kind: 'not_loaded' }
-  | { kind: 'serialize'; message: string };
+  | { kind: 'serialize'; message: string }
+  // A Markdown export could not resolve a chrome key or catalogue id to display
+  // text. `missing` carries one entry per offense, so every fix needed is
+  // reported in one round trip. Mirrors `AppError::Export` in
+  // `crates/arm-app/src/error.rs`; the banner localizes it through
+  // `error-export`, never by rendering the kind or the ids themselves.
+  | { kind: 'export'; missing: string[] };

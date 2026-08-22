@@ -4,6 +4,25 @@
   // Discard-changes confirmation for New/Open (window close/quit uses the native
   // Rust dialog instead). A single, non-stacking modal driven by the store's
   // `discardPromptOpen` flag; the buttons resolve the pending promise.
+
+  // Initial focus on the non-destructive default (Cancel), mirroring
+  // StartScreen.svelte's `openButton?.focus()` effect — the a11y lint rejects
+  // `autofocus`, so this is the sanctioned way to move focus on open. Guarded on
+  // `discardPromptOpen` since the button only exists (and `bind:this` only
+  // fires) while the modal is rendered.
+  let cancelButton = $state<HTMLButtonElement | null>(null);
+  $effect(() => {
+    if (store.discardPromptOpen) cancelButton?.focus();
+  });
+
+  // Escape always cancels, never discards — the destructive choice must never
+  // be reachable as a side effect of dismissing the dialog.
+  function onKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      store.resolveDiscardPrompt(false);
+    }
+  }
 </script>
 
 {#if store.discardPromptOpen}
@@ -14,12 +33,15 @@
       aria-modal="true"
       aria-labelledby="discard-title"
       aria-describedby="discard-message"
+      tabindex="-1"
+      onkeydown={onKeydown}
     >
       <h2 id="discard-title">{store.t('discard-changes-title')}</h2>
       <p id="discard-message">{store.t('discard-changes-message')}</p>
       <div class="modal-actions">
         <button
           type="button"
+          bind:this={cancelButton}
           onclick={() => store.resolveDiscardPrompt(false)}
           data-testid="discard-cancel"
         >

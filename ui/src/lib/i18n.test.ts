@@ -76,6 +76,16 @@ describe('German UI bundle', () => {
     expect({ missingInDe, missingInEn }).toEqual({ missingInDe: [], missingInEn: [] });
   });
 
+  // E6 (round-1 audit): the "never render a raw slug as a user-facing label"
+  // invariant depends on translate() falling back to the key itself when the
+  // message is missing, but every other test here exercises that fallback only
+  // indirectly (through call sites that happen to resolve). Pin the branch
+  // directly.
+  it('falls back to the key itself for a message the bundle does not have', () => {
+    const en = buildBundle('en');
+    expect(translate(en, 'totally-bogus-key-xyz')).toBe('totally-bogus-key-xyz');
+  });
+
   // One Rust enum value, two render sites: the editor radio
   // (`longevity-source-<v>`) and the Totals read-out (`derived-longevity-<v>`).
   // English renders both identically, so a divergence shows up only in German —

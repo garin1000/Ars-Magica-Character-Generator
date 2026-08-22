@@ -50,6 +50,7 @@
             <input
               class="device-name"
               placeholder={store.t('device-name-placeholder')}
+              aria-label={store.t('device-name-placeholder')}
               value={device.name}
               oninput={(e) => store.setDeviceName(i, (e.currentTarget as HTMLInputElement).value)}
               data-testid="device-name-{i}"

@@ -82,10 +82,10 @@ describe('hermetic arts', () => {
       },
     );
 
-    // Both figures carry their overspend styling: the used total red (`over-value`),
-    // the negative Available bold red (`over`).
-    expect(await spent.getAttribute('class')).toContain('over-value');
-    expect(await available.getAttribute('class')).toContain('over');
+    // Both figures carry the stable semantic signal (styling classes can change
+    // freely without breaking this assertion).
+    expect(await spent.getAttribute('data-overspent')).toBe('true');
+    expect(await available.getAttribute('data-overspent')).toBe('true');
 
     // Restore a legal pool so later specs start from a funded state.
     const pool = await $('[data-testid="art-xp-pool"]');

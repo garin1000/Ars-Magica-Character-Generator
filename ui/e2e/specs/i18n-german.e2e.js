@@ -49,7 +49,7 @@ describe('German localization', () => {
     await browser.execute((el) => {
       el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
     }, row);
-    const pop = await $('.tooltip-pop .tooltip-text');
+    const pop = await $('[data-testid="tooltip-text"]');
     await pop.waitForExist({ timeout: 5000 });
     expect((await pop.getText()).trim().length).toBeGreaterThan(0);
   });

@@ -57,8 +57,8 @@ introduced `rules/core/aging.json`, so it is now a data value — see
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2774`, `:2297`
   (companions), `:2303` (magi).
-- Implementation: `crates/arm-rules/src/validation.rs` — `validate_balance`,
-  `compute_balance`. Emits `unbalanced_virtues` (error) when spent virtue points
+- Implementation: `crates/arm-rules/src/validation/balance.rs` — `validate_balance`
+  (:23), `compute_balance` (:168). Emits `unbalanced_virtues` (error) when spent virtue points
   exceed flaw points granted, plus the `over_budget_*` totals. (Per-type point
   totals are data; see below.)
 
@@ -66,7 +66,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
 > "You may not take Major Virtues or Flaws" (grogs).
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2824-2830` (grogs).
-- Implementation: `crates/arm-rules/src/validation.rs` — `validate_caps`
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_caps` (:22)
   (counts items with `magnitude == Major`; cap value is data via
   `max_major_virtues` / `max_major_flaws`).
 - The magus rule "You may not have more than one Major Hermetic Virtue" (`:2857`)
@@ -81,7 +81,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2774`; companion
   `:2835`, magus `:2856`; grogs "no more than three Minor Flaws" `:1009`.
-- Implementation: `crates/arm-rules/src/validation.rs` — `validate_caps`, error
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_caps` (:22), error
   `too_many_minor_flaws` (counts `magnitude == Minor` flaws; cap value is data,
   `max_minor_flaws`).
 
@@ -94,7 +94,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2820` (Major
   Personality, hard; restated per type at companion `:2838`, magus `:2851`),
   `:2976` (Personality total), `:2818`/`:2982` (Story), grogs `:1009`/`:2826`.
-- Implementation: `crates/arm-rules/src/validation.rs` — `validate_caps`. These
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_caps` (:22). These
   caps are **fully data-driven**: each entry of the profile's
   `flaw_category_caps` (`PointBudget.flaw_category_caps`, type
   `FlawCategoryCap { category, max, major_only, hard }`) names the flaw
@@ -116,7 +116,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2998-3002`.
 - Data: the descriptor's optional "Type" token maps to `PointItem.tainted`
   (`bool`, default false) in `rules/core/virtues_flaws.json`.
-- Implementation: `crates/arm-rules/src/validation.rs` — `validate_tainted_cap`.
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:146).
   The book frames the limit as a "should", so it is a **non-blocking warning**,
   measured against the points **actually taken** (not the type budget): a side
   warns when `2·tainted_points > total_points` for that side (Virtue / Flaw).
@@ -169,9 +169,9 @@ domains and a **free-text input** for `domain: "text"` (its `{:else}` branch).
   `<id>_minor` and `<id>_major`, marked mutually `incompatible_with` (so exactly
   one magnitude is chosen), disambiguated in i18n as "Name (Minor/Major)" /
   "Name (Klein/Groß)". This mutual exclusion is enforced at load by
-  `ruleset.rs` `validate_magnitude_variant_exclusivity` (see the Magical Focus
+  `ruleset/integrity.rs` `validate_magnitude_variant_exclusivity` (see the Magical Focus
   section), which also covers the sole prefix-form pair
-  `virtue.major_magical_focus` / `virtue.minor_magical_focus` (Core:4405).
+  `virtue.major_magical_focus` / `virtue.minor_magical_focus` (Ars Magica - Definitive Edition (Core Rules).md:4405).
 - **German provenance.** DE names/summaries come from the line-mirrored German
   source (`Ars Magica Definitive Edition Basisregeln.md`, same line positions),
   cross-checked against `rules/source/de/translation-tables/tugenden-fehler.md`
@@ -187,13 +187,13 @@ domains and a **free-text input** for `domain: "text"` (its `{:else}` branch).
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2868-2877` (The Gift),
   `:2858` (magi must take The Gift + Hermetic Magus status), `:2293` and
   `:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation.rs` — `validate_gift_policy`.
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:459).
   The Gift policy is independent of the `is_magus` flag (an unGifted Redcap is a
   companion; a Gifted hedge wizard is not a magus).
 
 #### Prerequisite evaluation (meta-mechanic)
-- The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation.rs` —
-  `evaluate_prereq`) is engine infrastructure, not a single rulebook passage. It
+- The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
+  `evaluate_prereq`, :137) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`:2293`), encoded as a `Prereq` on the relevant
   items.
@@ -231,9 +231,9 @@ the `virtue_points: 20` ceiling here is the balanced maximum without it.
 #### Virtue/Flaw funding rate — `virtue_points_per_flaw_point`
 Each Flaw point funds one Virtue point by default; Mythic Companions fund two.
 Modelled as the data-driven `PointBudget.virtue_points_per_flaw_point` (default
-1), applied in `validation.rs::validate_balance` (the `unbalanced_virtues` check
+1), applied in `validation/balance.rs::validate_balance` (the `unbalanced_virtues` check
 compares virtue points against `flaw_points * virtue_points_per_flaw_point`).
-Source: Core Rules.md:2638.
+Source: Ars Magica - Definitive Edition (Core Rules).md:2638.
 
 #### Resolved: companion `max_major_virtues`
 Earlier data set companion `max_major_virtues: 1`. The book's "no more than one
@@ -272,8 +272,8 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/characteristics.rs` —
   `CharacteristicRules` (`cost_for`, `total_cost`, `min_score`, `max_score`,
   `base_max_score`, `base_min_score`, `effective_max_score`,
-  `effective_min_score`); enforced in `validation.rs` —
-  `validate_characteristics` (off-table out-of-range error, above-cap /
+  `effective_min_score`); enforced in `validation/scores.rs` —
+  `validate_characteristics` (:31) (off-table out-of-range error, above-cap /
   below-floor errors against the per-characteristic buy range, overspent error,
   points-unspent warning). See the Great/Poor (Characteristic) layer below.
 
@@ -360,7 +360,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `LocalizedRuleset::specialties` exposes it.
 - Implementation: `crates/arm-rules/src/ability.rs` — `Ability`,
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
-  resolve against it) in `ruleset.rs`; `validate_abilities` in `validation.rs`.
+  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:252).
 
 ### Arts
 
@@ -408,7 +408,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset.rs`; `validate_arts` in `validation.rs`.
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:366).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -423,8 +423,9 @@ engine hardcodes no Virtue/Flaw IDs):
   amount raises the cap (Great Characteristic), a negative one lowers the floor
   (Poor Characteristic).
 
-Computed in `crates/arm-rules/src/effective.rs` (`ability_bonus`,
-`effective_ability_score`, `ability_bonuses`; `characteristic_cap`,
+Computed in `crates/arm-rules/src/effective/ability.rs` (`ability_bonus`,
+`effective_ability_score`, `ability_bonuses`) and
+`crates/arm-rules/src/effective/characteristic.rs` (`characteristic_cap`,
 `characteristic_floor`, and the all-eight `characteristic_caps` /
 `characteristic_floors` maps for the UI). Ability bonuses are **per instance**
 `(ability, parameter)`, not per id, so a Puissant on one (Area) Lore does not
@@ -445,11 +446,11 @@ bleed onto the character's other areas.
   `params: { ability: "ability.area_lore", area: "Brandenburg" }`. Each (Area)
   Lore is a distinct Ability (`:4816`), so "Puissant Brandenburg Lore" boosts
   that row alone, not "Berlin Lore".
-- Implementation: `effective.rs::ability_bonus(.., parameter)` matches
+- Implementation: `effective/ability.rs::ability_bonus(.., parameter)` matches
   `(ability, parameter)` — a plain ability by id, a parameterized one only when
   the selection names the same instance; a selection missing the instance key
   matches nothing. `ability_bonuses` returns a per-instance `Vec<AbilityBonus>`
-  (serialized directly to the frontend by `arm-app::ruleset_io`). `validation.rs`
+  (serialized directly to the frontend by `arm-app::ruleset_io`). `validation/scores.rs`
   folds the per-instance bonus into the score map so `AbilityMin` is met by the
   strongest instance.
 - Validation: `validate_parameters` makes the expected param-key set
@@ -472,8 +473,8 @@ bleed onto the character's other areas.
   parameterized-item rule). Being Hermetic, only magus profiles permit it.
 - The `art_bonus` effect adds to an Art's *effective* score (Arts are not
   parameterized, so the target is matched by id alone). Implementation:
-  `effective.rs::art_bonus`, `effective_art_score`, `art_bonuses` (serialized to
-  the frontend by `arm-app::ruleset_io`). `validation.rs` folds the bonus into the
+  `effective/art.rs::art_bonus`, `effective_art_score`, `art_bonuses` (serialized to
+  the frontend by `arm-app::ruleset_io`). `validation/scores.rs` folds the bonus into the
   Art score map so `ArtMin` is met by the boosted score.
 - `art_bonuses` iterates the **full Art catalogue** (not just bought
   `art_scores`), emitting any nonzero effective-over-bought delta. A Puissant Art
@@ -497,9 +498,9 @@ and the score is still bought against the cost table.
   `characteristic`-domain param; `effects: [{ characteristic_limit, param:
   "characteristic", amount: 1 }]`; `max_per_target: 2`. The base cap (+3) and the
   +5 ceiling are `base_max` / `effective_max` in `rules/core/characteristics.json`.
-- Implementation: `effective.rs::characteristic_cap` =
+- Implementation: `effective/characteristic.rs::characteristic_cap` =
   `min(base_max + Σ positive amounts, effective_max)`;
-  `validation.rs::validate_characteristics` flags a bought score above the cap
+  `validation/scores.rs::validate_characteristics` (:31) flags a bought score above the cap
   (`characteristic_above_cap`); `validate_characteristic_limit_preconditions`
   flags a target base below the base cap (`characteristic_max_base_too_low`) —
   the "≥ +3" precondition is parameter-relative, derived from `base_max` by the
@@ -518,7 +519,7 @@ The exact sign-mirror of Great: a `flaw`, `amount: -1`, lowering the buy *floor*
   `characteristic`-domain param; `effects: [{ characteristic_limit, param:
   "characteristic", amount: -1 }]`; `max_per_target: 2`. The base floor (−3) and
   the −5 floor are `base_min` / `effective_min` in `characteristics.json`.
-- Implementation: `effective.rs::characteristic_floor` =
+- Implementation: `effective/characteristic.rs::characteristic_floor` =
   `max(base_min + Σ negative amounts, effective_min)`;
   `validate_characteristics` flags a bought score below the floor
   (`characteristic_below_floor`); `validate_characteristic_limit_preconditions`
@@ -526,11 +527,11 @@ The exact sign-mirror of Great: a `flaw`, `amount: -1`, lowering the buy *floor*
 
 #### Selection multiplicity — `max_per_target`
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation.rs`) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :107) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`:4816`) and "Great twice per Characteristic" (`:3989`). Effect
-integrity (`ruleset.rs::validate_effect_refs`) rejects at load any effect whose
+integrity (`ruleset/integrity.rs::validate_effect_refs`) rejects at load any effect whose
 `param` is undeclared or whose domain mismatches the effect kind.
 
 #### Affinity with (Ability) — creation XP counts for half again
@@ -548,9 +549,9 @@ i.e. `charged = ceil(T·2/3)`. The cap exemption is read off the effect's presen
 - Data: `rules/core/virtues_flaws.json` `virtue.affinity_ability` —
   `category: general`, `ability`-domain param, `effects: [{ affinity_ability_cost,
   param: "ability", counts_as_num: 3, counts_as_den: 2 }]`.
-- Implementation: `effective.rs::charged_cost` (the `ceil(T·den/num)` arithmetic,
+- Implementation: `effective/xp.rs::charged_cost` (the `ceil(T·den/num)` arithmetic,
   verified against the worked example below) + `ability_affinity`, folded into
-  `effective.rs::xp_allocation` and so into `validation.rs::validate_xp_pool`.
+  `effective/xp.rs::xp_allocation` and so into `validation/magus.rs::validate_xp_pool` (:559).
 
 #### Affinity with (Art) — creation XP counts for half again
 > "Your Advancement Totals for one Hermetic Art are increased by one half, rounded
@@ -568,7 +569,7 @@ identical rule applies to Abilities but against the 5×-larger Ability table.)
 - Data: `rules/core/virtues_flaws.json` `virtue.affinity_art` — `category:
   hermetic`, `art`-domain param, `effects: [{ affinity_art_cost, param: "art",
   counts_as_num: 3, counts_as_den: 2 }]`.
-- Implementation: `effective.rs::charged_cost` + `art_affinity`, via
+- Implementation: `effective/xp.rs::charged_cost` + `art_affinity`, via
   `xp_allocation`.
 
 #### Educated / Warrior / Privileged Upbringing — restricted XP pools
@@ -590,11 +591,11 @@ approximation of "Latin").
 - Data: `rules/core/virtues_flaws.json` `virtue.educated` /`virtue.warrior` /
   `virtue.privileged_upbringing` — `effects: [{ restricted_ability_xp, amount: 50,
   abilities | categories }]`. The `50` lives here.
-- Implementation: `effective.rs::xp_allocation` builds a bipartite **max-flow**
+- Implementation: `effective/xp.rs::xp_allocation` builds a bipartite **max-flow**
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation.rs::validate_xp_pool` reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:559) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
   be named).
@@ -618,8 +619,8 @@ approximation of "Latin").
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:4103-4105`.
 - Data: `rules/core/virtues_flaws.json` `virtue.improved_characteristics` —
   `effects: [{ characteristic_points, amount: 3 }]`. The `3` lives here.
-- Implementation: `effective.rs::characteristic_points_granted` sums the grants;
-  `validation.rs::validate_characteristics` budget = `start_points + granted`. The
+- Implementation: `effective/characteristic.rs::characteristic_points_granted` sums the grants;
+  `validation/scores.rs::validate_characteristics` (:31) budget = `start_points + granted`. The
   per-characteristic +3 *cap* is unchanged (only Great Characteristic widens it).
 
 #### Weak Characteristics — −3 Characteristic-buy points (`characteristic_points`, signed)
@@ -644,14 +645,14 @@ approximation of "Latin").
   each with a `size_delta` effect (and Giant Blood/Dwarf a `characteristic_score_delta`
   for Str and Sta), plus a symmetric `incompatible_with` clique across all four.
 - Implementation: two new effects. `Effect::SizeDelta { amount }` →
-  `effective.rs::size` (base 0 + Σ, no cost/cap; surfaced as `EffectiveScores.size`).
+  `effective/characteristic.rs::size` (base 0 + Σ, no cost/cap; surfaced as `EffectiveScores.size`).
   `Effect::CharacteristicScoreDelta { characteristic, amount }` →
   `characteristic_score_bonus` / `effective_characteristic_score` — a **free**
   effective-score bonus (separate from the bought score, no buy-budget cost) that
   may push the effective score past ±5 to ±6. Surfaced as
   `EffectiveScores.characteristic_bonuses` and shown in the sheet next to the bought
   score; Size shows via Fluent `characteristic-size`. The stored `characteristic`
-  id is validated to resolve in `ruleset.rs::validate_effect_refs`.
+  id is validated to resolve in `ruleset/integrity.rs::validate_effect_refs`.
 
 #### Warped by Magic — Warping Score + Points (`warping_grant`)
 > "He has five Warping Points and a Warping Score of 1, including a Minor Flaw
@@ -660,7 +661,7 @@ approximation of "Latin").
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:7019-7021`.
 - Data: `flaw.warped_by_magic` — `effects: [{ warping_grant, score: 1, points: 5 }]`.
-- Implementation: `Effect::WarpingGrant { score, points }` → `effective.rs::warping`
+- Implementation: `Effect::WarpingGrant { score, points }` → `effective/might_warping.rs::warping`
   (derived `(score, points)`, base 0 each, summed across grants — never stored, like
   Confidence). Surfaced as `EffectiveScores.warping_{score,points}` and shown on the
   sheet via Fluent `warping-label`/`warping-readout` (DE "Verzerrung", per the
@@ -678,9 +679,9 @@ approximation of "Latin").
 - Implementation: `Effect::GroupAffinityCost { abilities, counts_as_num,
   counts_as_den }` — an Affinity auto-applied to a fixed set of ability ids (any
   instance), vs. `AffinityAbilityCost`'s single player-chosen target. Handled in
-  `effective.rs::ability_affinity`, so it feeds the XP-cost reduction
+  `effective/xp.rs::ability_affinity`, so it feeds the XP-cost reduction
   (`charged_cost`) and the +2 age-cap exemption exactly like a normal Affinity. The
-  ability ids are validated to resolve in `ruleset.rs::validate_effect_refs`.
+  ability ids are validated to resolve in `ruleset/integrity.rs::validate_effect_refs`.
 
 #### Elemental Magic — `Effect::ElementalMagic { forms }` (XP-space Art boost, slice 5c)
 > "During character creation, assign all your experience points in Arts. Then
@@ -694,9 +695,9 @@ approximation of "Latin").
   `{ "type": "elemental_magic", "forms": ["art.aquam","art.auram","art.ignem","art.terram"] }`
   — the four elemental Form ids are **data**, never hardcoded in the engine. The
   `forms` set is validated to resolve to known Arts in
-  `ruleset.rs::validate_effect_refs` (only when the Arts catalogue is loaded, like
+  `ruleset/integrity.rs::validate_effect_refs` (only when the Arts catalogue is loaded, like
   `validate_spell_refs`).
-- Implementation: `effective.rs::elemental_form_bonus` (folded into
+- Implementation: `effective/art.rs::elemental_form_bonus` (folded into
   `effective_art_score`; surfaced via `art_bonuses`). For each listed Form `F`,
   reconstruct its table-XP from its bought score via
   `art_advancement.xp_for_score`, add `bonus_xp(F) = Σ_{G≠F} ceil(xp(G)/2)`, and
@@ -736,7 +737,7 @@ approximation of "Latin").
   (the doubling stored as an Affinity "counts as 2/1", halving the charge).
   `SpellSelection.mastery` is the bought Spell Mastery score (serialized shape
   unchanged).
-- Implementation: `effective.rs::xp_allocation` now prices each `SpellSelection`'s
+- Implementation: `effective/xp.rs::xp_allocation` now prices each `SpellSelection`'s
   bought `mastery` from `ruleset.advancement.xp_for_score` and adds it to the
   max-flow demand as a `SpendKind::Mastery`. The **free floor** (Flawless Magic
   auto-mastery 1) subtracts the floor's table cost before the charge — a bought
@@ -805,7 +806,7 @@ approximation of "Latin").
   `effective.rs::vf_granted_selections`, folded into `entity_grants` alongside House
   and Mythic grants (budget-exempt, one level of nesting — a granted item's own
   `grants_selection` is not re-applied). Each granted id is validated to resolve in
-  `ruleset.rs::validate_effect_refs`. The granted rows now surface through
+  `ruleset/integrity.rs::validate_effect_refs`. The granted rows now surface through
   `EffectiveScores.granted_selections` (switched from House-only to `entity_grants`)
   so the UI shows them read-only, and their own effects apply. This is the source's
   **fixed** nested grant; the Definitive Edition's Mythic Blood does not grant a
@@ -821,15 +822,15 @@ approximation of "Latin").
 - Data: `virtue.magic_items` — `item_level_budget: 25` + `prerequisites: Has
   virtue.redcap` ("You must be a Redcap"); `virtue.redcap` — `item_level_budget: 50`.
 - Implementation: `Effect::ItemLevelBudget { amount: u16 }` →
-  `effective.rs::item_level_budget` (derived, base 0 + Σ). Surfaced as
+  `effective/might_warping.rs::item_level_budget` (derived, base 0 + Σ). Surfaced as
   `EffectiveScores.item_level_budget` and shown on the sheet (Fluent
   `item-levels-label/readout`; DE "Zauberartefakte"). The device-crafting subsystem
   is out of scope; the granted budget is tracked (full scope of the *Virtue*).
 - **M5/5e — starting enchanted devices stored & charged.** `Entity.devices:
   Vec<EnchantedDevice { name, level: u16 }>` records the player's chosen starting
   devices; the total `level` is charged against `item_level_budget()`.
-  `effective.rs::item_level_used` sums the device levels (surfaced as
-  `EffectiveScores.item_level_used`), and `validation.rs::validate_devices` emits
+  `effective/might_warping.rs::item_level_used` sums the device levels (surfaced as
+  `EffectiveScores.item_level_used`), and `validation/might.rs::validate_devices` (:85) emits
   `over_item_level` (Fluent `issue-over_item_level`) when `used > budget`. A device
   therefore requires a granting Virtue, exactly as a starting Reputation does.
 
@@ -842,9 +843,9 @@ precedent as `SpellSelection.mastery`'s 7 → 8 bump). Nothing is derived here
 
 - **Aura** — `Entity.aura: i32` (signed; a Divine aura can be a penalty).
   Persisted so 5i's Longevity hint / lab totals are reproducible. Casting Score
-  adds the aura (Core:9089); every Lab Total takes it as a plain addend — "your
+  adds the aura (Ars Magica - Definitive Edition (Core Rules).md:9089); every Lab Total takes it as a plain addend — "your
   basic Lab Total is: Technique + Form + Intelligence + Magic Theory + Aura
-  Modifier" (Core:10276-10278) — with no gate on a nonzero aura (see M5.5a).
+  Modifier" (Ars Magica - Definitive Edition (Core Rules).md:10276-10278) — with no gate on a nonzero aura (see M5.5a).
 - **Familiar cords** — `Entity.familiar: Option<Familiar { name, cord_gold,
   cord_silver, cord_bronze: u8 }>`. Gold = −botch dice; Silver = +Personality /
   mental resistance; **Bronze = +Soak & aging-resistance** (feeds 5i Soak /
@@ -979,7 +980,7 @@ talisman, which is why it is an `Option`, not a `Vec`.
   glossary does not cover.
 - **`Ruleset::art_ids_of(ArtType) -> Vec<Id>`** replaces the open-coded
   Technique/Form catalogue split that had accumulated in three places
-  (`derived.rs::arts_of`, deleted, plus `effective.rs::spell_level_caps`'s own
+  (`derived.rs::arts_of`, deleted, plus `effective/spell.rs::spell_level_caps`'s own
   pair of filters). It returns the ids **sorted**, which makes the canonical
   `(technique, form)` ordering `spell_level_caps` documents a property of the
   helper rather than an accident of how a ruleset's `arts.json` lists its entries
@@ -1189,7 +1190,7 @@ migration code; `load_entity_migrating` is untouched). Bumped `SCHEMA_VERSION`
 > the character gains a Major Flaw…" (16561)
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:16551-16561`.
-- Implementation: `effective.rs::warping_owed(entity, ruleset) -> WarpingOwed`
+- Implementation: `effective/might_warping.rs::warping_owed(entity, ruleset) -> WarpingOwed`
   (`{ minor_flaws, minor_supernatural_virtues, major_flaws }`), driven by the pure
   threshold `WarpingOwed::from_score`: Minor Flaw at Score 1, a second at 3
   (`minor_flaws` cap 2); a supernatural Minor Virtue at 5; `major_flaws =
@@ -1258,7 +1259,7 @@ drift from the engine version (the frontend `SCHEMA_VERSION` constant in
 `ui/src/lib/state.svelte.ts` was likewise reconciled to 11). The four fields are
 entered in `CharacterDetails.svelte`; every label is a Fluent key.
 
-**Derived-score formulas** (in `effective.rs`; slice 5i's `derived.rs` re-exports /
+**Derived-score formulas** (in `effective/might_warping.rs`; slice 5i's `derived.rs` re-exports /
 consumes them). Both invert the **Ability** advancement table via the new
 `AdvancementTable::score_for_xp(xp)` (the highest score whose cumulative `total_xp
 ≤ xp`) — the ×5 curve is never hand-rolled:
@@ -1277,7 +1278,7 @@ consumes them). Both invert the **Ability** advancement table via the new
   `:16464-16475`; grant at `:7019-7021`.
 
 **Aging lowers derived, not creation.** The drops are DERIVED from the accrued
-points by `effective.rs::aging_drops(entity, char)`: once the points **exceed** the
+points by `effective/might_warping.rs::aging_drops(entity, char)`: once the points **exceed** the
 absolute value of the (already aged-down) score the Characteristic drops by one and
 the points reset, so the simulation consumes `|score| + 1` points per drop over the
 lifetime total. Worked examples encoded as tests (`:16613`): a Communication of +2
@@ -1292,7 +1293,7 @@ creation-legality validators keep reading the **un-aged bought score** from
 `entity.characteristics`, so entering an aged-down character can never
 retroactively make its point-buy illegal. Source: `:16579`, `:16613`.
 
-**Validation (advisory, single path).** `validation.rs::validate_aging` emits one
+**Validation (advisory, single path).** `validation/aging.rs::validate_aging` (:52) emits one
 **warning** (never blocking), per Characteristic whose accrued points force a drop:
 `excessive_aging_reduction` — when the derived drops would push the score below the
 −5 floor (it is clamped regardless; args `characteristic`, `reduction`, `min`).
@@ -1330,7 +1331,7 @@ recomputed in JS). Fluent keys en/de: identity + aging block (`identity-*`,
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:5169-5171`.
 - Data: `virtue.true_faith` — `effects: [{ true_faith_grant, score: 1 }]`.
-- Implementation: `Effect::TrueFaithGrant { score }` → `effective.rs::true_faith`
+- Implementation: `Effect::TrueFaithGrant { score }` → `effective/might_warping.rs::true_faith`
   (derived, base 0 + Σ, like Warping). True Faith is a special score with its own
   rules (Core p.419), **not** a Supernatural Ability, so it is not modelled via
   `ability_score_grant`. Surfaced as `EffectiveScores.true_faith_score` and shown on
@@ -1350,8 +1351,8 @@ effect stores the ability id directly (`ability`), not a selection parameter.
 - Data: `rules/core/virtues_flaws.json` `virtue.second_sight` /
   `virtue.premonitions` — `category: supernatural`, `effects: [{ ability_score_grant,
   ability: "ability.second_sight" | "ability.premonitions", amount: 1 }]`.
-- Implementation: `effective.rs::granted_ability_floor`, folded into
-  `effective_ability_score`; `ruleset.rs::validate_effect_refs` checks the
+- Implementation: `effective/ability.rs::granted_ability_floor`, folded into
+  `effective_ability_score`; `ruleset/integrity.rs::validate_effect_refs` checks the
   ability id resolves against the catalogue.
 - **First granted point is free (XP charge).** A granted Supernatural Ability's
   first point costs no experience: "the character gets an initial score of 1 from
@@ -1424,8 +1425,8 @@ resolved values); the free Virtue is **derived** at eval by
   `HouseGrant`, `GrantConstraint`, `HousesFile`, and `granted_selections`.
   Registry `Ruleset::houses` + integrity `validate_house_refs` (every `Fixed.item`
   / `Choice.options[].ref` resolves against `point_items`; `House.source` range is
-  valid) in `ruleset.rs`; `Prereq::House` evaluation and the `validate_house` pass
-  in `validation.rs`. `Bonisagus`/`Mercere`/`Flambeau` reuse the generic
+  valid) in `ruleset/integrity.rs`; `Prereq::House` evaluation and the `validate_house` pass
+  in `validation/magus.rs` (:31). `Bonisagus`/`Mercere`/`Flambeau` reuse the generic
   `virtue.puissant_ability` / `virtue.puissant_art` (target via param) — no new
   Puissant items.
 
@@ -1454,7 +1455,7 @@ resolved values); the free Virtue is **derived** at eval by
 - Data: magus profile in `rules/core/character_types.json` —
   `virtue_category_caps: [{ "category": "hermetic", "max": 1, "major_only": true,
   "hard": true }]`. The cap *value* lives here.
-- Implementation: `validation.rs::validate_caps` gains a virtue loop mirroring the
+- Implementation: `validation/caps.rs::validate_caps` (:22) gains a virtue loop mirroring the
   flaw loop, counting `entity.selections` only (granted Hermetic Virtues exempt),
   emitting `too_many_major_hermetic_virtues` (code derived as
   `too_many_[major_]<category>_virtues`). Fluent key `issue-too_many_major_hermetic_virtues`
@@ -1464,7 +1465,7 @@ resolved values); the free Virtue is **derived** at eval by
 > "You should take at least one Hermetic Flaw."
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2860`.
-- A "should", so a **soft warning** — `validation.rs::validate_house` emits
+- A "should", so a **soft warning** — `validation/magus.rs::validate_house` (:31) emits
   `missing_hermetic_flaw` when a magus has no selected Flaw whose category is in
   the profile's Gift categories (data-driven, not a hardcoded `"hermetic"`).
 
@@ -1481,7 +1482,7 @@ The named Virtues a House grants, and the Mystery Abilities their
 (this edition folds the House virtues into the core V/F list). Each new
 `rules/core/virtues_flaws.json` item and `rules/core/abilities.json` entry cites:
 
-| Item | Kind | Source (Core Rules.md) |
+| Item | Kind | Source (Ars Magica - Definitive Edition (Core Rules).md) |
 |------|------|------------------------|
 | `virtue.the_enigma` (grants `ability.enigmatic_wisdom` 1) | Minor, Hermetic | `:3759-3761` |
 | `virtue.faerie_magic` (grants `ability.faerie_magic` 1) | Minor, Hermetic | `:3825-3827` |
@@ -1529,22 +1530,22 @@ The four status Virtues carry a symmetric `incompatible_with` web (each other +
 `virtue.the_gift`). The free status Virtue's category is `social_status` (a
 "status" Virtue); the free Minor and required Virtues keep their own book
 categories. Per-type bonus points fold into the balance ceilings via
-`EffectiveBudget` (`validation.rs`): `flaw_ceiling = base + bonus_flaw`,
+`EffectiveBudget` (`validation/balance.rs`, :89): `flaw_ceiling = base + bonus_flaw`,
 `virtue_ceiling = base + bonus_flaw·rate + bonus_free_virtue`,
 `funded = flaw·rate + bonus_free_virtue` (rate = 2). Zero for a non-mythic type,
 so the check reduces exactly to the base budget.
 
 | Type | free status | free Minor | required Virtues (budgeted) | required Flaw (default) | bonus | Source |
 |------|-------------|-----------|------------------------------|--------------------------|-------|--------|
-| Devil Child | `virtue.devil_child` | Demonic Might **or** Powers | Demonic Blood, Puissant (Guile) | Tragic Life | +7 F, **+3 free V** | Core `:2643-2666` |
-| Faerie Doctor | `virtue.faerie_doctor` | Dowsing | Wise One, Curse-Throwing | Faerie Friend, Dutybound | none | Core `:2668-2704` |
-| Nephilim | `virtue.nephilim` | Strong Angelic Heritage | Blood of the Nephilim, Greater Immunity, Great Sta, Great Str, Improved Characteristics, Sense Holiness | — (5 F fund the +10 V) | none | Core `:2714-2739` |
-| Spirit Votary | `virtue.spirit_votary` | Second Sight | Spiritual Pact (+ 1 Major/3 Minor Supernatural, **advisory**) | Pagan | +7 F | Core `:2741-2764` |
+| Devil Child | `virtue.devil_child` | Demonic Might **or** Powers | Demonic Blood, Puissant (Guile) | Tragic Life | +7 F, **+3 free V** | Ars Magica - Definitive Edition (Core Rules).md `:2643-2666` |
+| Faerie Doctor | `virtue.faerie_doctor` | Dowsing | Wise One, Curse-Throwing | Faerie Friend, Dutybound | none | Ars Magica - Definitive Edition (Core Rules).md `:2668-2704` |
+| Nephilim | `virtue.nephilim` | Strong Angelic Heritage | Blood of the Nephilim, Greater Immunity, Great Sta, Great Str, Improved Characteristics, Sense Holiness | — (5 F fund the +10 V) | none | Ars Magica - Definitive Edition (Core Rules).md `:2714-2739` |
+| Spirit Votary | `virtue.spirit_votary` | Second Sight | Spiritual Pact (+ 1 Major/3 Minor Supernatural, **advisory**) | Pagan | +7 F | Ars Magica - Definitive Edition (Core Rules).md `:2741-2764` |
 
-- Devil Child's **+3 free V / +7 F**: Core `:2664` ("three more points of Virtues
+- Devil Child's **+3 free V / +7 F**: Ars Magica - Definitive Edition (Core Rules).md `:2664` ("three more points of Virtues
   at no cost… and an additional seven points of Flaws"). Verified maxed budget:
   flaw 17, virtue `20 + 14 + 3 = 37`.
-- Spirit Votary's **+7 F**: *Realms of Power — Magic.md*`:5486` ("may take up to 7
+- Spirit Votary's **+7 F**: *Ars Magica 5e - Realms of Power - Magic.md*`:5486` ("may take up to 7
   more points of Flaws, each point granting 2 points"). The Core mythic section
   is silent on this bonus — RoP Magic is the authority; the discrepancy is noted
   here.
@@ -1579,24 +1580,24 @@ Immunity target) are M5/5b.
 | `virtue.demonic_blood` | Major, Supernatural (Tainted) | *Infernal*`:4116-4131` |
 | `virtue.demonic_might` (req. Demonic Blood) | Minor, Supernatural | *Infernal*`:4132-4137` |
 | `virtue.demonic_powers` (req. Demonic Blood) | Minor, Supernatural | *Infernal*`:4138-4143` |
-| `flaw.tragic_life` | **Major, Story** (Tainted) | Core `:6855-6870` |
+| `flaw.tragic_life` | **Major, Story** (Tainted) | Ars Magica - Definitive Edition (Core Rules).md `:6855-6870` |
 | `virtue.faerie_doctor` | Special/Free, Social Status | *Faerie*`:6394-6399` |
-| `virtue.dowsing` (grants `ability.dowsing` 1) | Minor, Supernatural | Core `:3703-3706` |
+| `virtue.dowsing` (grants `ability.dowsing` 1) | Minor, Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:3703-3706` |
 | `virtue.curse_throwing` (grants `ability.curse_throwing` 1) | Major, Supernatural | *Faerie*`:6342-6347` |
-| `virtue.wise_one` | Minor, Social Status | Core `:5257-5260` |
-| `flaw.faerie_friend` | Minor, Story | Core `:6052-6055` |
-| `flaw.dutybound` | Minor, Personality | Core `:5992-5995` |
+| `virtue.wise_one` | Minor, Social Status | Ars Magica - Definitive Edition (Core Rules).md `:5257-5260` |
+| `flaw.faerie_friend` | Minor, Story | Ars Magica - Definitive Edition (Core Rules).md `:6052-6055` |
+| `flaw.dutybound` | Minor, Personality | Ars Magica - Definitive Edition (Core Rules).md `:5992-5995` |
 | `virtue.nephilim` | Free, Social Status | *Divine*`:3485-3513` |
 | `virtue.blood_of_the_nephilim` | Major, Supernatural | *Divine*`:1941-1954` |
 | `virtue.strong_angelic_heritage` (req. Blood of the Nephilim) | Minor, Supernatural | *Divine*`:1969-1980` |
-| `virtue.greater_immunity` (plain; "Disease" is an in-play target, no param) | Major, Supernatural | Core `:4009-4016` |
-| `virtue.sense_holiness_and_unholiness` (grants `ability.sense_holiness_and_unholiness` 1) | Minor, Supernatural | Core `:4926-4929` |
+| `virtue.greater_immunity` (plain; "Disease" is an in-play target, no param) | Major, Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:4009-4016` |
+| `virtue.sense_holiness_and_unholiness` (grants `ability.sense_holiness_and_unholiness` 1) | Minor, Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:4926-4929` |
 | `virtue.spirit_votary` | Free, Supernatural (→ Social Status) | *Magic*`:5480-5486` |
 | `virtue.spiritual_pact` | Major, Supernatural | *Magic*`:5488-5502` |
-| `flaw.pagan` (Major or Minor; seeded Major) | Major, Personality | Core `:6570-6573` |
-| `ability.curse_throwing` (requires_training) | Supernatural | Core `:7396-7430` |
-| `ability.dowsing` (requires_training) | Supernatural | Core `:7439-7442` |
-| `ability.sense_holiness_and_unholiness` (requires_training) | Supernatural | Core `:7720-7723` |
+| `flaw.pagan` (Major or Minor; seeded Major) | Major, Personality | Ars Magica - Definitive Edition (Core Rules).md `:6570-6573` |
+| `ability.curse_throwing` (requires_training) | Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:7396-7430` |
+| `ability.dowsing` (requires_training) | Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:7439-7442` |
+| `ability.sense_holiness_and_unholiness` (requires_training) | Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:7720-7723` |
 
 Reused existing items: `virtue.great_characteristic` (Great Sta/Str),
 `virtue.improved_characteristics`, `virtue.second_sight`,
@@ -1655,7 +1656,7 @@ per year (M6/6b5)** below. So 120 is the budget *at the Gauntlet*, not a ceiling
 > Intelligence + Magic Theory +3 … If the spell has requisites … they apply to
 > this total as well."
 
-`spell_level_cap(entity, ruleset, technique, form)` (`effective.rs`) computes it
+`spell_level_cap(entity, ruleset, technique, form)` (`effective/spell.rs`) computes it
 from the effective Art scores, the Intelligence characteristic, and effective
 Magic Theory → a spell above it emits `spell_level_exceeds_cap` (validation, in
 `validation/magus.rs`). The same function is surfaced per-Te/Fo combination as
@@ -1689,7 +1690,7 @@ spell's Form into their name. The `(Form)` is modelled as a `ParameterDef`
 (`spell.rs`), chosen per selection via `SpellSelection.parameter` (an `art.*`
 id). It is **display + identity only**: the spell's own `technique`/`form` stay
 the catalogue Vim Arts (`art.muto`/`art.perdo` + `art.vim`), so casting totals,
-penetration (`derived.rs::penetration`), and the per-spell cap
+penetration (`derived/casting.rs::penetration`), and the per-spell cap
 (`spell_level_cap`) keep using Vim — the parameter never resolves an "effective
 Te/Fo". `validate_spells` (`validation/magus.rs`) requires the parameter
 (`missing_param` if absent) and resolves it to the Form domain
@@ -1721,11 +1722,11 @@ A spell carries a `ritual: bool` plus optional RDT (`SpellRange`/`SpellDuration`
 
 Two-level enforcement:
 
-- **Load-time** (`Ruleset::validate_spell_refs`, `ruleset.rs`): for a fixed
+- **Load-time** (`Ruleset::validate_spell_refs`, `ruleset/integrity.rs`): for a fixed
   `level`, ritual ⇒ `level ≥ 20`, non-ritual ⇒ `level ≤ 50`; a non-ritual spell
   may not have `duration = Year` or `target = Boundary`, nor be a Momentary Creo
   spell with `creates_lasting`. Vision target is exempt from the Boundary rule.
-- **Per-entity** (`validate_spells`, `validation.rs`): the *resolved* learned
+- **Per-entity** (`validate_spells`, `validation/magus.rs`, :336): the *resolved* learned
   level (General chosen level or fixed) must obey the same ≥20 / ≤50 bounds — a
   violation emits `spell_ritual_legality` (`CODE_SPELL_RITUAL_LEGALITY`). This
   bites for General spells whose chosen level is illegal; fixed-level spells are
@@ -1823,7 +1824,7 @@ rows in this table but modeled as their own `Shield` type):
 > Great | 0 | +6 | 0 | +12 | +2 | 3 |"
 
 `:16988` names the "Ability" column ("The Weapon Ability needed to use this
-weapon"). `validate_weapon_refs` (in `ruleset.rs`) requires each weapon's
+weapon"). `validate_weapon_refs` (in `ruleset/integrity.rs`) requires each weapon's
 `ability` to resolve to a Martial Ability, or an Ability flagged
 `combat_ability` in data — Brawl (the combat Ability for unarmed/improvised
 weapons, which the rules class as General). 25 melee weapons + 3 shields.
@@ -1861,7 +1862,7 @@ is defined at `:17103-17123` and **computed in 5i**, not here:
 
 > `:17109-17123` "| Total Load | Burden | | 0 | 0 | | 1 | 1 | … | 55 | 10 |"
 
-`validate_equipment` (in `validation.rs`) emits `unknown_equipment` (error) for a
+`validate_equipment` (in `validation/equipment.rs`, :16) emits `unknown_equipment` (error) for a
 slot whose id resolves to no catalogue row, and `equipment_min_strength` (advisory
 warning) when an equipped weapon/shield's min-Strength exceeds the character's
 (aged) Strength — never blocking, since wielding an over-heavy weapon is a
@@ -1901,24 +1902,24 @@ these numbers.** The `derived_totals` Tauri command mirrors `effective_scores`.
 | Weak Magic | `:7064-7067` | halves Penetration **after** subtracting level (not the casting total) |
 | Magic Resistance | `:9390-9398` | per Form: Form + 5 × Parma Magica (Form-base rule `:9390`, Parma "five times" `:9398`); Limited MR drops the Form bonus, Flawed Parma halves |
 | Longevity (stored) | `:10662`, `:10668`, `:10670` | the aging bonus is the **player-entered** `LongevityRitual.bonus`, passed through for **both** sources; `entered: false` marks an unfilled field so a placeholder 0 is never read as a claim. Bronze cord noted for aging-resistance (`:10840-10844`), via `cord_score` so it respects the +5 maximum (`:10836`) and matches the Soak and cord-cost figures |
-| Longevity hint | `:10662`, `:10276-10278`, `:17658`, `:5909-5915`, `:5962-5964` | self-made only: `LongevityHint { lab_total, suggested_bonus, halved }` — Creo Corpus Lab Total (Int + Magic Theory + Creo + Corpus + Aura + flat LabTotalMod), halved by a Deficient Creo/Corpus and again by Difficult Longevity Ritual, then `suggested_bonus = ceil(lab_total / 5)` floored at 0. **Read-only guidance** — never written into the entity. `derived.rs::suggested_longevity_bonus` / `creo_corpus_lab_total` |
+| Longevity hint | `:10662`, `:10276-10278`, `:17658`, `:5909-5915`, `:5962-5964` | self-made only: `LongevityHint { lab_total, suggested_bonus, halved }` — Creo Corpus Lab Total (Int + Magic Theory + Creo + Corpus + Aura + flat LabTotalMod), halved by a Deficient Creo/Corpus and again by Difficult Longevity Ritual, then `suggested_bonus = ceil(lab_total / 5)` floored at 0. **Read-only guidance** — never written into the entity. `derived/lab.rs::suggested_longevity_bonus` / `creo_corpus_lab_total` |
 | Masterpiece | `:4476-4479`, `:10410` | magus with the Masterpiece Virtue (`Effect::MasterpieceItem` marker) surfaces a **read-only** lesser-enchanted-item cap = **best base `(Te,Fo)` Lab Total ÷ 2** (the lesser-enchantment rule caps single-season instillation at Lab Total ≥ 2×effect level, `:10410`; vis costs ignored per the Virtue). The best Lab Total is used (magus picks the Te/Fo), no focus doubling. The engine does **not** create the device or spend an item-level budget — the player still enters the actual lesser enchanted item by hand under Magic Items; this is guidance only. `masterpiece_item_cap` / `DerivedTotals.masterpiece` |
-| Talisman capacity | `:10619`, `:4347-4349`, `:4842-4850` | magus **with a talisman** surfaces a **read-only** enchantment capacity in pawns of Vim vis: "The maximum number of pawns of Vim vis that may be used to prepare a talisman is equal to the sum of the magus's highest Technique and highest Form" (`:10619`). Taken from the per-Art maxima of **effective** scores (`effective_art_score`, so Puissant Art folds in), **not** the best `lab_totals` pair — a Deficient Art halves *totals*, never the score, and a discriminating test pins that. Ties go to the alphabetically first Art (`Ruleset::art_ids_of` is sorted); a magus with no bought Arts still reads out, at 0 pawns. **Non-goal**: instilled `TalismanEffect` levels are charged against **no** budget — `item_level_budget` comes only from the Redcap-only Virtues (Magic Items "You must be a Redcap to take this Virtue", `:4347-4349`; Redcap's fifty starting levels `:4842-4850`, which also states "You may not take The Gift", `:4850`), so it can never fund a magus's talisman, and the talisman's real limit is this vis capacity, which the model cannot enforce (it holds no vis stock). `derived.rs::talisman_capacity` / `DerivedTotals.talisman_capacity` |
-| Familiar bonding level | `:10824`, `:10828` | magus **with a familiar** surfaces a **read-only** bonding level = **Magic Might + 25 + 5 × Size**: "The level for the enchantment is equal to 25 plus the familiar's Magic Might plus 5 times its Size. If the familiar has negative Size, this reduces the level for the enchantment" (`:10824`), restated as "**FAMILIAR BONDING LEVEL: Familiar's Magic Might + 25 + (5 x Size)**" (`:10828`). Size is signed and commonly negative, so the level routinely drops *below* 25 — the book's own worked example (Size -2, Might 10 → level 25) is a named test. A familiar with **no entered Might** contributes 0 rather than suppressing the read-out; the panel says "no Magic Might entered" instead. `derived.rs::familiar_binding_level` |
-| Familiar bonding Lab Total | `:10818`, `:10822`, `:10826`, `:10824` | the **ordinary Lab Total shape** — "any appropriate Technique + any appropriate Form + Int + Magic Theory + Aura Modifier" (`:10818`), restated as "**FAMILIAR BONDING LAB TOTAL**" (`:10826`) — so `lab_totals()` is **reused** and the best `(Te,Fo)` cell taken with `max_by_key`, the same max-over-grid reuse as Masterpiece. Which Arts are *appropriate* to a given beast is prose the engine cannot evaluate, and "Any magus should be able to find an animal that he can bind with his best Technique and Form" (`:10822`), so the best cell is the honest figure. **Unlike Masterpiece, a focus applies here**: "Puissant Arts and foci may apply to this" (`:10818`) — so `lab_total_within_focus` is surfaced as a **separate conditional** figure the UI labels as such (whether *this* familiar falls inside the focus's narrow field is a troupe judgment); Puissant Arts need no separate figure, `effective_art_score` folds them in. `lab_total_reaches_level` reports "A magus can only bind a familiar if his Lab Total equals or exceeds this level" (`:10824`). `derived.rs::familiar_readout` / `FamiliarBinding` |
-| Familiar cord cost | `:10836` | cord scores 0…+5 cost **0 / 5 / 15 / 30 / 50 / 75** points: "a strength of +1 requires 5 points, a score of +2 requires 15 points, a score of +3 requires 30 points, a score of +4 requires 50 points, and a score of +5 (the maximum) requires 75 points" (`:10836`). The curve is a fixed 5-entry rule constant, so it is a Rust `const CORD_COST_TABLE` (precedent: `LOAD_TABLE` for Encumbrance) with this row as its provenance home. The same line also fixes the **+5 maximum** ("rated from 0 to +5 … a score of +5 (the maximum)"), which is stated in **one** place in the engine: `pub const MAX_CORD_SCORE: u8 = 5` in `types.rs`, beside the `Familiar` type whose fields it bounds. Two clamps read it and neither restates the number. (1) **On read** — `derived.rs::cord_score(raw)`, which **every** cord consumer routes through: `cord_points_spent` (the table index), `soak`'s `bronze_cord` addend, and `longevity_bonus`'s `bronze_cord` note. Cord fields are plain `u8`, so a hand-edited or legacy save can carry any value up to 255; unclamped, one entered number produced three contradictory figures (75 points spent / +255 Soak / +255 aging-resistance) and a raw table index would panic inside the `derived_totals` command and kill the read-out panel. (2) **On store** — `Familiar::normalize` clamps the three fields, so an out-of-range value **self-heals on the next save**, exactly as a zero Characteristic is pruned there and for the same canonical-serialization reason: since every consumer clamps, `cord_bronze: 255` and `cord_bronze: 5` are the same statement to the engine, yet they serialize differently and *display* differently (the panel renders the raw 255 in an input declaring `max="5"`, beside read-outs computed from 5) — a disagreement the user cannot resolve and that saving would otherwise perpetuate forever. UI input bounds are a separate, non-durable layer and do not replace either clamp. Tests: `cord_points_spent_clamps_a_score_above_the_curve`, `an_out_of_range_bronze_cord_reads_the_same_for_every_consumer`, `entity_normalize_clamps_out_of_range_familiar_cords`. `cord_points_within_lab_total` reports "The total cost of the cords you buy cannot exceed the magus's Lab Total" (`:10836`). `types.rs::MAX_CORD_SCORE` + `Familiar::normalize` / `derived.rs::cord_score` / `cord_points_spent` |
-| Familiar invested powers | `:10866`, `:10862-10884` | the total level of the powers invested in the bond, summed **for information only**: "there is no limit to the number of powers which may be invested in a familiar" (`:10866`). So — unlike a being's own `Entity.powers`, which `power_levels_budget` bounds — there is **no budget bar** and no issue to raise, and the UI must not render one. Vis costs (`:10882`, one pawn per ten levels) are out of scope: the model holds no vis stock. `derived.rs::familiar_invested_power_levels` |
+| Talisman capacity | `:10619`, `:4347-4349`, `:4842-4850` | magus **with a talisman** surfaces a **read-only** enchantment capacity in pawns of Vim vis: "The maximum number of pawns of Vim vis that may be used to prepare a talisman is equal to the sum of the magus's highest Technique and highest Form" (`:10619`). Taken from the per-Art maxima of **effective** scores (`effective_art_score`, so Puissant Art folds in), **not** the best `lab_totals` pair — a Deficient Art halves *totals*, never the score, and a discriminating test pins that. Ties go to the alphabetically first Art (`Ruleset::art_ids_of` is sorted); a magus with no bought Arts still reads out, at 0 pawns. **Non-goal**: instilled `TalismanEffect` levels are charged against **no** budget — `item_level_budget` comes only from the Redcap-only Virtues (Magic Items "You must be a Redcap to take this Virtue", `:4347-4349`; Redcap's fifty starting levels `:4842-4850`, which also states "You may not take The Gift", `:4850`), so it can never fund a magus's talisman, and the talisman's real limit is this vis capacity, which the model cannot enforce (it holds no vis stock). `derived/familiar.rs::talisman_capacity` / `DerivedTotals.talisman_capacity` |
+| Familiar bonding level | `:10824`, `:10828` | magus **with a familiar** surfaces a **read-only** bonding level = **Magic Might + 25 + 5 × Size**: "The level for the enchantment is equal to 25 plus the familiar's Magic Might plus 5 times its Size. If the familiar has negative Size, this reduces the level for the enchantment" (`:10824`), restated as "**FAMILIAR BONDING LEVEL: Familiar's Magic Might + 25 + (5 x Size)**" (`:10828`). Size is signed and commonly negative, so the level routinely drops *below* 25 — the book's own worked example (Size -2, Might 10 → level 25) is a named test. A familiar with **no entered Might** contributes 0 rather than suppressing the read-out; the panel says "no Magic Might entered" instead. `derived/familiar.rs::familiar_binding_level` |
+| Familiar bonding Lab Total | `:10818`, `:10822`, `:10826`, `:10824` | the **ordinary Lab Total shape** — "any appropriate Technique + any appropriate Form + Int + Magic Theory + Aura Modifier" (`:10818`), restated as "**FAMILIAR BONDING LAB TOTAL**" (`:10826`) — so `lab_totals()` is **reused** and the best `(Te,Fo)` cell taken with `max_by_key`, the same max-over-grid reuse as Masterpiece. Which Arts are *appropriate* to a given beast is prose the engine cannot evaluate, and "Any magus should be able to find an animal that he can bind with his best Technique and Form" (`:10822`), so the best cell is the honest figure. **Unlike Masterpiece, a focus applies here**: "Puissant Arts and foci may apply to this" (`:10818`) — so `lab_total_within_focus` is surfaced as a **separate conditional** figure the UI labels as such (whether *this* familiar falls inside the focus's narrow field is a troupe judgment); Puissant Arts need no separate figure, `effective_art_score` folds them in. `lab_total_reaches_level` reports "A magus can only bind a familiar if his Lab Total equals or exceeds this level" (`:10824`). `derived/familiar.rs::familiar_readout` / `FamiliarBinding` |
+| Familiar cord cost | `:10836` | cord scores 0…+5 cost **0 / 5 / 15 / 30 / 50 / 75** points: "a strength of +1 requires 5 points, a score of +2 requires 15 points, a score of +3 requires 30 points, a score of +4 requires 50 points, and a score of +5 (the maximum) requires 75 points" (`:10836`). The curve is a fixed 5-entry rule constant, so it is a Rust `const CORD_COST_TABLE` (precedent: `LOAD_TABLE` for Encumbrance) with this row as its provenance home. The same line also fixes the **+5 maximum** ("rated from 0 to +5 … a score of +5 (the maximum)"), which is stated in **one** place in the engine: `pub const MAX_CORD_SCORE: u8 = 5` in `types.rs`, beside the `Familiar` type whose fields it bounds. Two clamps read it and neither restates the number. (1) **On read** — `derived.rs::cord_score(raw)`, which **every** cord consumer routes through: `cord_points_spent` (the table index), `soak`'s `bronze_cord` addend, and `longevity_bonus`'s `bronze_cord` note. Cord fields are plain `u8`, so a hand-edited or legacy save can carry any value up to 255; unclamped, one entered number produced three contradictory figures (75 points spent / +255 Soak / +255 aging-resistance) and a raw table index would panic inside the `derived_totals` command and kill the read-out panel. (2) **On store** — `Familiar::normalize` clamps the three fields, so an out-of-range value **self-heals on the next save**, exactly as a zero Characteristic is pruned there and for the same canonical-serialization reason: since every consumer clamps, `cord_bronze: 255` and `cord_bronze: 5` are the same statement to the engine, yet they serialize differently and *display* differently (the panel renders the raw 255 in an input declaring `max="5"`, beside read-outs computed from 5) — a disagreement the user cannot resolve and that saving would otherwise perpetuate forever. UI input bounds are a separate, non-durable layer and do not replace either clamp. Tests: `cord_points_spent_clamps_a_score_above_the_curve`, `an_out_of_range_bronze_cord_reads_the_same_for_every_consumer`, `entity_normalize_clamps_out_of_range_familiar_cords`. `cord_points_within_lab_total` reports "The total cost of the cords you buy cannot exceed the magus's Lab Total" (`:10836`). `types.rs::MAX_CORD_SCORE` + `Familiar::normalize` / `derived.rs::cord_score` / `derived/familiar.rs::cord_points_spent` |
+| Familiar invested powers | `:10866`, `:10862-10884` | the total level of the powers invested in the bond, summed **for information only**: "there is no limit to the number of powers which may be invested in a familiar" (`:10866`). So — unlike a being's own `Entity.powers`, which `power_levels_budget` bounds — there is **no budget bar** and no issue to raise, and the UI must not render one. Vis costs (`:10882`, one pawn per ten levels) are out of scope: the model holds no vis stock. `derived/familiar.rs::familiar_invested_power_levels` |
 | Combat | `:16658-16670` | Init = Qik + WpnInit − Enc + CombatMod; Attack = Dex + Ability + WpnAtk + CombatMod; Defense = Qik + Ability + WpnDef + CombatMod; Damage = Str + WpnDam + CombatMod |
-| Weapon+shield | `:16656`, `:7746`, `:1317`, `:1467-1472` | "If the character is using a weapon and a shield, add together the modifiers of the weapon and the shield to get the final modifier" (`:16656`). A shield is raised and dropped at will, so **each equipped one-handed weapon emits TWO `CombatLine`s** while any shield is equipped: the with-shield line first (every equipped shield's Init/Atk/Def mods added; all their ids listed in `CombatLine.shields`, since multiple shields stay **summed** into one pseudo-shield), then the bare line (`shields` empty, shield mods zeroed). The two differ **only** by the shield modifiers — Encumbrance and the specialization bonus are shield-independent, the latter explicitly so (`:7746`, see below). With-shield-first mirrors the book's own statblocks, which print the weapon-and-shield lines ahead of the rest (`:1467-1472` "- Long sword and heater shield (mounted): … - Great sword (mounted): …"). The renderers label the with-shield line `<weapon> <joiner> <shield>`; the joiner is the **translatable** `derived-combat-shield-joiner` Fluent key, not a hardcoded `&`, because the book alternates `&` (`:1317` "- Axe & Heater Shield: Init +1, Attack +17, Defense +15, Damage +8") with "and" (`:1468`) and the German rulebook writes `&` too. With no shield equipped the output is unchanged: one bare line per weapon. `derived.rs::combat_totals` / `export.rs::combat_line_name` / `derive.ts::combatRowLabel` |
-| Two-handed weapon | `:7494`, `:17008-17013` | a two-handed weapon (`Weapon.two_handed`) cannot be paired with a shield, so it receives **no** shield Init/Atk/Def mods (the shield still counts toward Load, `:17107`) and therefore emits exactly **one** line — there is no second way to wield it. The 9 Great-Weapon melee weapons ("Fighting with a weapon which requires two hands to use", `:7494`) + both bows are flagged in `rules/core/equipment.json`. The bows come from the missile table's asterisked rows and its footnote (`:17008-17013`, i.e. `| Sling* …` through `:17013` "\* Requires two free hands to load and fire."), **not** from the Bows Ability entry at `:7333-7334` or the `Bow, Long:` flavor note at `:17099`, neither of which says anything about two hands. The **Sling** shares that asterisk but stays unflagged: it is a thrown weapon and keeps the status-quo shield handling. (`:17017` is the missile table's "Atk:" column legend — not a citation for this rule.) `derived.rs::combat_totals` |
+| Weapon+shield | `:16656`, `:7746`, `:1317`, `:1467-1472` | "If the character is using a weapon and a shield, add together the modifiers of the weapon and the shield to get the final modifier" (`:16656`). A shield is raised and dropped at will, so **each equipped one-handed weapon emits TWO `CombatLine`s** while any shield is equipped: the with-shield line first (every equipped shield's Init/Atk/Def mods added; all their ids listed in `CombatLine.shields`, since multiple shields stay **summed** into one pseudo-shield), then the bare line (`shields` empty, shield mods zeroed). The two differ **only** by the shield modifiers — Encumbrance and the specialization bonus are shield-independent, the latter explicitly so (`:7746`, see below). With-shield-first mirrors the book's own statblocks, which print the weapon-and-shield lines ahead of the rest (`:1467-1472` "- Long sword and heater shield (mounted): … - Great sword (mounted): …"). The renderers label the with-shield line `<weapon> <joiner> <shield>`; the joiner is the **translatable** `derived-combat-shield-joiner` Fluent key, not a hardcoded `&`, because the book alternates `&` (`:1317` "- Axe & Heater Shield: Init +1, Attack +17, Defense +15, Damage +8") with "and" (`:1468`) and the German rulebook writes `&` too. With no shield equipped the output is unchanged: one bare line per weapon. `derived/combat.rs::combat_totals` / `export/sections.rs::combat_line_name` / `derive.ts::combatRowLabel` |
+| Two-handed weapon | `:7494`, `:17008-17013` | a two-handed weapon (`Weapon.two_handed`) cannot be paired with a shield, so it receives **no** shield Init/Atk/Def mods (the shield still counts toward Load, `:17107`) and therefore emits exactly **one** line — there is no second way to wield it. The 9 Great-Weapon melee weapons ("Fighting with a weapon which requires two hands to use", `:7494`) + both bows are flagged in `rules/core/equipment.json`. The bows come from the missile table's asterisked rows and its footnote (`:17008-17013`, i.e. `| Sling* …` through `:17013` "\* Requires two free hands to load and fire."), **not** from the Bows Ability entry at `:7333-7334` or the `Bow, Long:` flavor note at `:17099`, neither of which says anything about two hands. The **Sling** shares that asterisk but stays unflagged: it is a thrown weapon and keeps the status-quo shield handling. (`:17017` is the missile table's "Atk:" column legend — not a citation for this rule.) `derived/combat.rs::combat_totals` |
 | Shield + two-handed advisory | `:7494`, `:17063`, `:16975` | advisory `shield_with_two_handed_weapon` warning when an equipped shield accompanies **only** two-handed weapon(s) — its dropped modifiers otherwise look like a bug (buckler prose `:17063`; shield table "Single" Ability column `:16975`). Non-blocking. `validation/equipment.rs` |
-| Specialization +1 | `:7122`, `:7139`, `:7746` | when `EquipmentSlot.specialization_applies` is set AND the weapon's combat Ability carries a non-empty specialty, the Ability acts "as if your score were one level higher" (`:7122`, Single Weapon longsword example) for **Attack and Defense only** (Damage/Init do not use the Ability); "Add +1 when using an Ability's specialization" (`:7139`). The bonus is **shield-independent** and so applies identically to the with-shield and the bare line: a Single Weapon specialty is "any one weapon or shield, which covers using that weapon with any shield or none, and that shield with any weapon" (`:7746`). `derived.rs::specialization_bonus` |
-| Enc-exempt (conditional) | `:17105`, `:17107` | Attack/Defense are Encumbrance-penalized **only** when the Encumbrance is *not* largely weapons + armor; Init is **always** penalized (`:16658`). "Largely due to weapons and armor" is read as **combat-gear Load ≥ half of total Load** (majority) — an explicit interpretation assumption, since the rules give no numeric threshold. Combat gear = every carried weapon/shield/armor (equipped or not, `:17107` counts all Load). `derived.rs::combat_encumbrance_applies` |
+| Specialization +1 | `:7122`, `:7139`, `:7746` | when `EquipmentSlot.specialization_applies` is set AND the weapon's combat Ability carries a non-empty specialty, the Ability acts "as if your score were one level higher" (`:7122`, Single Weapon longsword example) for **Attack and Defense only** (Damage/Init do not use the Ability); "Add +1 when using an Ability's specialization" (`:7139`). The bonus is **shield-independent** and so applies identically to the with-shield and the bare line: a Single Weapon specialty is "any one weapon or shield, which covers using that weapon with any shield or none, and that shield with any weapon" (`:7746`). `derived/combat.rs::specialization_bonus` |
+| Enc-exempt (conditional) | `:17105`, `:17107` | Attack/Defense are Encumbrance-penalized **only** when the Encumbrance is *not* largely weapons + armor; Init is **always** penalized (`:16658`). "Largely due to weapons and armor" is read as **combat-gear Load ≥ half of total Load** (majority) — an explicit interpretation assumption, since the rules give no numeric threshold. Combat gear = every carried weapon/shield/armor (equipped or not, `:17107` counts all Load). `derived/combat.rs::combat_encumbrance_applies` |
 | Soak | `:16667` | Stamina + Armor Protection + SoakMod (Tough +3) + Bronze cord; Form bonus situational (entered 0). The Bronze-cord addend goes through `cord_score` (the +5 maximum, `:10836`) so it cannot disagree with the cord-cost or Longevity read-outs |
 | Encumbrance | `:17103-17123` | Burden from Load table `[0,1,3,6,10,15,21,28,36,45,55]→[0..10]`; Enc = `max(0, Burden − max(0,Str))` |
 | Fatigue | `:17127-17129` | Winded/Weary −1, Tired −3, Dazed −5, adjusted by HealthMod fatigue delta |
 | Wounds | `:17167-17191` | Size unit `u = max(1, Size+5)`; Light 1..u, Medium u+1..2u, Heavy 2u+1..3u, Incap 3u+1..4u, Dead 4u+1.. ; penalties −1/−3/−5 adjusted by HealthMod wound delta |
-| Decrepitude / Warping | `:16617`, `:16464-16475` | **reused** from `effective.rs` (`decrepitude_score`, `warping_score`), not reimplemented |
+| Decrepitude / Warping | `:16617`, `:16464-16475` | **reused** from `effective/might_warping.rs` (`decrepitude_score`, `warping_score`), not reimplemented |
 
 **Order of operations** (pinned + unit-tested): base casting/lab score → + flat
 CastingTotalMod/LabTotalMod → within-focus adds the lower Art → **halve** (Deficient
@@ -2042,7 +2043,7 @@ accurate inclusive range is **`:5962-5964`**, which is what this section and the
 Four numbers, all **read-only guidance** in the `masterpiece_item_cap` mould — see
 the *Familiar bonding level* / *bonding Lab Total* / *cord cost* / *invested powers*
 rows in the formula table above. They are aggregated by
-`derived.rs::familiar_readout` into `FamiliarReadout { binding_level,
+`derived/familiar.rs::familiar_readout` into `FamiliarReadout { binding_level,
 cord_points_spent, invested_power_levels, binding: FamiliarBinding }`, exposed as
 `DerivedTotals.familiar` and **magus-gated** exactly like `talisman_capacity`.
 
@@ -2192,34 +2193,34 @@ see the 5a-wire section for the itemized deferrals),
   effects for them (`:5235-5237`, `:6594-6596`); there is no creation XP-per-year
   figure, so no invented creation effect is assigned (the season effect is an M6
   life-stage concern).
-- **Hermetic Prestige `creation_effect`** — Core `:4071-4073`, a Hermetic
+- **Hermetic Prestige `creation_effect`** — Ars Magica - Definitive Edition (Core Rules).md `:4071-4073`, a Hermetic
   Reputation at level **4** (the `:2518` Darius example's 3 is an errata slip; the
   Virtue text's 4 is authoritative). The stale "not in Core / Local-only" claim in
   the Reputations section above is corrected.
-- **Famous `creation_effect`** — Core `:3861-3863`, a **player-chosen-type**
+- **Famous `creation_effect`** — Ars Magica - Definitive Edition (Core Rules).md `:3861-3863`, a **player-chosen-type**
   Reputation at level 4 (5a-wire may add a player-selected `kind` param to
   `GrantsReputation`).
 
 ### In-play effect families (definitive input to slice 4 / 5b)
 
-- **Magical Focus (major/minor)** — `virtue.major_magical_focus` (Core:4399-4422), `virtue.minor_magical_focus` (Core:4536-4538), `virtue.mythic_blood` (Core:4573-4589)
-- **Flat casting-total bonus/penalty** — `virtue.method_caster` (Core:4524-4527), `flaw.poor_formulaic_magic` (Core:6610-6613), `flaw.afflicted_tongue` (Core:5655-5658), `virtue.life_boost` (Core:4295-4298), `virtue.leper_magus` (Core:4249-4252), `virtue.cyclic_magic_positive` (Core:3635-3638), `flaw.cyclic_magic_negative` (Core:5893-5896), `virtue.special_circumstances` (Core:4998-5001), `virtue.ways_of_the_land` (Core:5231-5234), `flaw.corrupted_spells` (Core:5859-5864), `flaw.susceptibility_to_divine_power` (Core:6815-6818)
-- **Spontaneous-magic casting modifier** — `flaw.weak_spontaneous_magic` (Core:7084-7089), `virtue.diedne_magic` (Core:3675-3682), `virtue.faerie_raised_magic` (Core:3829-3842), `virtue.spell_improvisation` (Core:5002-5005), `virtue.life_linked_spontaneous_magic` (Core:4299-4306)
-- **Art-halving (Technique / Form)** — `flaw.deficient_technique` (Core:5913-5915), `flaw.deficient_form` (Core:5909-5912)
-- **Circumstantial casting/lab halving** — `flaw.deleterious_circumstances` (Core:5917-5920), `flaw.environmental_magic_condition` (Core:6020-6023), `flaw.short_ranged_magic` (Core:6737-6740)
-- **Flat lab-total bonus/penalty** — `virtue.adept_laboratory_student` (Core:3368-3371), `virtue.aristotelian_training` (Core:3440-3443), `virtue.inventive_genius` (Core:4151-4154), `flaw.creative_block` (Core:5873-5876), `flaw.weak_scholar` (Core:7080-7083), `flaw.disjointed_magic` (Core:5972-5975), `flaw.the_constant_expression` (Core:5821-5838), `virtue.potent_magic_major` (Core:4740-4781), `virtue.potent_magic_minor` (Core:4740-4781)
-- **Lab-total halving** — `flaw.weak_enchanter` (Core:7060-7063), `flaw.difficult_longevity_ritual` (Core:5962-5965)
-- **Ritual effective-level bonus** — `virtue.mercurian_magic` (Core:4514-4523)
-- **Penetration-total modifier** — `flaw.weak_magic` (Core:7064-7067)
-- **Magic-resistance modifier** — `flaw.flawed_parma_magica` (Core:6142-6145), `flaw.limited_magic_resistance` (Core:6346-6349), `flaw.weak_magic_resistance` (Core:7068-7071), `flaw.susceptibility_to_faerie_power` (Core:6819-6822), `flaw.susceptibility_to_infernal_power` (Core:6823-6826), `virtue.commanding_aura` (Core:3579-3596)
-- **Flat Soak bonus/penalty** — `virtue.tough` (Core:5145-5147), `flaw.frail` (Core:6190-6193)
-- **Wound/fatigue penalty delta** — `virtue.enduring_constitution` (Core:3751-3754), `flaw.low_tolerance` (Core:6366-6369), `flaw.painful_magic` (Core:6574-6577), `flaw.vulnerable_casting` (Core:6993-7004), `virtue.withstand_casting` (Core:5261-5282), `flaw.obese` (Core:6516-6519), `flaw.short_of_breath` (Core:6733-6736), `virtue.long_winded` (Core:4327-4330)
-- **Wound-recovery modifier** — `flaw.fragile_constitution` (Core:6186-6189), `virtue.rapid_convalescence` (Core:4834-4837)
-- **Combat total modifier (atk/def/init/dam)** — `virtue.berserk` (Core:3500-3503), `flaw.hobbled` (Core:6260-6263), `flaw.lame` (Core:6330-6333), `flaw.missing_hand` (Core:6438-6441), `flaw.missing_eye` (Core:6434-6437), `flaw.poor_eyesight` (Core:6606-6609), `flaw.palsied_hands` (Core:6578-6581), `flaw.slow_reflexes` (Core:6763-6766), `virtue.lightning_reflexes` (Core:4311-4314), `virtue.fast_caster` (Core:3865-3868)
-- **Study source-quality / advancement modifier** — `virtue.apt_student` (Core:3422-3425), `virtue.book_learner` (Core:3519-3522), `virtue.free_study` (Core:3937-3940), `virtue.good_teacher` (Core:3971-3974), `virtue.independent_study` (Core:4115-4118), `virtue.study_bonus` (Core:5056-5072), `flaw.unimaginative_learner` (Core:6915-6918), `flaw.poor_student` (Core:6626-6628), `flaw.incomprehensible` (Core:6294-6297), `virtue.secondary_insight` (Core:4892-4895), `flaw.loose_magic` (Core:6354-6357)
-- **Aging / longevity modifier** — `flaw.age_quickly` (Core:5659-5662), `flaw.baneful_circumstances` (Core:5687-5690), `flaw.monstrous_blood` (Core:6454-6467), `virtue.bee_king` (Core:3484-3499), `virtue.faerie_blood` (Core:3797-3820), `virtue.magical_blood` (Core:4359-4372), `virtue.unaging` (Core:5187-5190), `flaw.bound_to_role_role` (Core:5735-5748), `flaw.leprosy` (Core:6338-6341), `flaw.poor_living_conditions` (Core:6618-6621), `virtue.mild_aging` (Core:4528-4531), `virtue.magian_lineage_major` (Core:4339-4346), `virtue.magian_lineage_minor` (Core:4339-4346)
-- **Non-standard-casting penalty removal (Deft/Quiet/Subtle)** — **computed** into per-cell `NonStandardCasting` variants (`derived.rs`), not surfaced-only. Base Words/Gestures penalties `:9236-9245` (no voice −10, no gestures −5). `virtue.quiet_magic` (Core:4822-4826, +5 voice per casting, second casting eliminates), `virtue.subtle_magic` (Core:5073-5076, +5 gesture), `virtue.deft_form` (Core:3645-3648, Form-parameterized, waives both for that Form). Residuals clamp at 0.
-- **Flat ability-total bonus (Concentration)** — `virtue.academic_concentration_subject` (Core:3362-3367)
+- **Magical Focus (major/minor)** — `virtue.major_magical_focus` (Ars Magica - Definitive Edition (Core Rules).md:4399-4422), `virtue.minor_magical_focus` (Ars Magica - Definitive Edition (Core Rules).md:4536-4538), `virtue.mythic_blood` (Ars Magica - Definitive Edition (Core Rules).md:4573-4589)
+- **Flat casting-total bonus/penalty** — `virtue.method_caster` (Ars Magica - Definitive Edition (Core Rules).md:4524-4527), `flaw.poor_formulaic_magic` (Ars Magica - Definitive Edition (Core Rules).md:6610-6613), `flaw.afflicted_tongue` (Ars Magica - Definitive Edition (Core Rules).md:5655-5658), `virtue.life_boost` (Ars Magica - Definitive Edition (Core Rules).md:4295-4298), `virtue.leper_magus` (Ars Magica - Definitive Edition (Core Rules).md:4249-4252), `virtue.cyclic_magic_positive` (Ars Magica - Definitive Edition (Core Rules).md:3635-3638), `flaw.cyclic_magic_negative` (Ars Magica - Definitive Edition (Core Rules).md:5893-5896), `virtue.special_circumstances` (Ars Magica - Definitive Edition (Core Rules).md:4998-5001), `virtue.ways_of_the_land` (Ars Magica - Definitive Edition (Core Rules).md:5231-5234), `flaw.corrupted_spells` (Ars Magica - Definitive Edition (Core Rules).md:5859-5864), `flaw.susceptibility_to_divine_power` (Ars Magica - Definitive Edition (Core Rules).md:6815-6818)
+- **Spontaneous-magic casting modifier** — `flaw.weak_spontaneous_magic` (Ars Magica - Definitive Edition (Core Rules).md:7084-7089), `virtue.diedne_magic` (Ars Magica - Definitive Edition (Core Rules).md:3675-3682), `virtue.faerie_raised_magic` (Ars Magica - Definitive Edition (Core Rules).md:3829-3842), `virtue.spell_improvisation` (Ars Magica - Definitive Edition (Core Rules).md:5002-5005), `virtue.life_linked_spontaneous_magic` (Ars Magica - Definitive Edition (Core Rules).md:4299-4306)
+- **Art-halving (Technique / Form)** — `flaw.deficient_technique` (Ars Magica - Definitive Edition (Core Rules).md:5913-5915), `flaw.deficient_form` (Ars Magica - Definitive Edition (Core Rules).md:5909-5912)
+- **Circumstantial casting/lab halving** — `flaw.deleterious_circumstances` (Ars Magica - Definitive Edition (Core Rules).md:5917-5920), `flaw.environmental_magic_condition` (Ars Magica - Definitive Edition (Core Rules).md:6020-6023), `flaw.short_ranged_magic` (Ars Magica - Definitive Edition (Core Rules).md:6737-6740)
+- **Flat lab-total bonus/penalty** — `virtue.adept_laboratory_student` (Ars Magica - Definitive Edition (Core Rules).md:3368-3371), `virtue.aristotelian_training` (Ars Magica - Definitive Edition (Core Rules).md:3440-3443), `virtue.inventive_genius` (Ars Magica - Definitive Edition (Core Rules).md:4151-4154), `flaw.creative_block` (Ars Magica - Definitive Edition (Core Rules).md:5873-5876), `flaw.weak_scholar` (Ars Magica - Definitive Edition (Core Rules).md:7080-7083), `flaw.disjointed_magic` (Ars Magica - Definitive Edition (Core Rules).md:5972-5975), `flaw.the_constant_expression` (Ars Magica - Definitive Edition (Core Rules).md:5821-5838), `virtue.potent_magic_major` (Ars Magica - Definitive Edition (Core Rules).md:4740-4781), `virtue.potent_magic_minor` (Ars Magica - Definitive Edition (Core Rules).md:4740-4781)
+- **Lab-total halving** — `flaw.weak_enchanter` (Ars Magica - Definitive Edition (Core Rules).md:7060-7063), `flaw.difficult_longevity_ritual` (Ars Magica - Definitive Edition (Core Rules).md:5962-5965)
+- **Ritual effective-level bonus** — `virtue.mercurian_magic` (Ars Magica - Definitive Edition (Core Rules).md:4514-4523)
+- **Penetration-total modifier** — `flaw.weak_magic` (Ars Magica - Definitive Edition (Core Rules).md:7064-7067)
+- **Magic-resistance modifier** — `flaw.flawed_parma_magica` (Ars Magica - Definitive Edition (Core Rules).md:6142-6145), `flaw.limited_magic_resistance` (Ars Magica - Definitive Edition (Core Rules).md:6346-6349), `flaw.weak_magic_resistance` (Ars Magica - Definitive Edition (Core Rules).md:7068-7071), `flaw.susceptibility_to_faerie_power` (Ars Magica - Definitive Edition (Core Rules).md:6819-6822), `flaw.susceptibility_to_infernal_power` (Ars Magica - Definitive Edition (Core Rules).md:6823-6826), `virtue.commanding_aura` (Ars Magica - Definitive Edition (Core Rules).md:3579-3596)
+- **Flat Soak bonus/penalty** — `virtue.tough` (Ars Magica - Definitive Edition (Core Rules).md:5145-5147), `flaw.frail` (Ars Magica - Definitive Edition (Core Rules).md:6190-6193)
+- **Wound/fatigue penalty delta** — `virtue.enduring_constitution` (Ars Magica - Definitive Edition (Core Rules).md:3751-3754), `flaw.low_tolerance` (Ars Magica - Definitive Edition (Core Rules).md:6366-6369), `flaw.painful_magic` (Ars Magica - Definitive Edition (Core Rules).md:6574-6577), `flaw.vulnerable_casting` (Ars Magica - Definitive Edition (Core Rules).md:6993-7004), `virtue.withstand_casting` (Ars Magica - Definitive Edition (Core Rules).md:5261-5282), `flaw.obese` (Ars Magica - Definitive Edition (Core Rules).md:6516-6519), `flaw.short_of_breath` (Ars Magica - Definitive Edition (Core Rules).md:6733-6736), `virtue.long_winded` (Ars Magica - Definitive Edition (Core Rules).md:4327-4330)
+- **Wound-recovery modifier** — `flaw.fragile_constitution` (Ars Magica - Definitive Edition (Core Rules).md:6186-6189), `virtue.rapid_convalescence` (Ars Magica - Definitive Edition (Core Rules).md:4834-4837)
+- **Combat total modifier (atk/def/init/dam)** — `virtue.berserk` (Ars Magica - Definitive Edition (Core Rules).md:3500-3503), `flaw.hobbled` (Ars Magica - Definitive Edition (Core Rules).md:6260-6263), `flaw.lame` (Ars Magica - Definitive Edition (Core Rules).md:6330-6333), `flaw.missing_hand` (Ars Magica - Definitive Edition (Core Rules).md:6438-6441), `flaw.missing_eye` (Ars Magica - Definitive Edition (Core Rules).md:6434-6437), `flaw.poor_eyesight` (Ars Magica - Definitive Edition (Core Rules).md:6606-6609), `flaw.palsied_hands` (Ars Magica - Definitive Edition (Core Rules).md:6578-6581), `flaw.slow_reflexes` (Ars Magica - Definitive Edition (Core Rules).md:6763-6766), `virtue.lightning_reflexes` (Ars Magica - Definitive Edition (Core Rules).md:4311-4314), `virtue.fast_caster` (Ars Magica - Definitive Edition (Core Rules).md:3865-3868)
+- **Study source-quality / advancement modifier** — `virtue.apt_student` (Ars Magica - Definitive Edition (Core Rules).md:3422-3425), `virtue.book_learner` (Ars Magica - Definitive Edition (Core Rules).md:3519-3522), `virtue.free_study` (Ars Magica - Definitive Edition (Core Rules).md:3937-3940), `virtue.good_teacher` (Ars Magica - Definitive Edition (Core Rules).md:3971-3974), `virtue.independent_study` (Ars Magica - Definitive Edition (Core Rules).md:4115-4118), `virtue.study_bonus` (Ars Magica - Definitive Edition (Core Rules).md:5056-5072), `flaw.unimaginative_learner` (Ars Magica - Definitive Edition (Core Rules).md:6915-6918), `flaw.poor_student` (Ars Magica - Definitive Edition (Core Rules).md:6626-6628), `flaw.incomprehensible` (Ars Magica - Definitive Edition (Core Rules).md:6294-6297), `virtue.secondary_insight` (Ars Magica - Definitive Edition (Core Rules).md:4892-4895), `flaw.loose_magic` (Ars Magica - Definitive Edition (Core Rules).md:6354-6357)
+- **Aging / longevity modifier** — `flaw.age_quickly` (Ars Magica - Definitive Edition (Core Rules).md:5659-5662), `flaw.baneful_circumstances` (Ars Magica - Definitive Edition (Core Rules).md:5687-5690), `flaw.monstrous_blood` (Ars Magica - Definitive Edition (Core Rules).md:6454-6467), `virtue.bee_king` (Ars Magica - Definitive Edition (Core Rules).md:3484-3499), `virtue.faerie_blood` (Ars Magica - Definitive Edition (Core Rules).md:3797-3820), `virtue.magical_blood` (Ars Magica - Definitive Edition (Core Rules).md:4359-4372), `virtue.unaging` (Ars Magica - Definitive Edition (Core Rules).md:5187-5190), `flaw.bound_to_role_role` (Ars Magica - Definitive Edition (Core Rules).md:5735-5748), `flaw.leprosy` (Ars Magica - Definitive Edition (Core Rules).md:6338-6341), `flaw.poor_living_conditions` (Ars Magica - Definitive Edition (Core Rules).md:6618-6621), `virtue.mild_aging` (Ars Magica - Definitive Edition (Core Rules).md:4528-4531), `virtue.magian_lineage_major` (Ars Magica - Definitive Edition (Core Rules).md:4339-4346), `virtue.magian_lineage_minor` (Ars Magica - Definitive Edition (Core Rules).md:4339-4346)
+- **Non-standard-casting penalty removal (Deft/Quiet/Subtle)** — **computed** into per-cell `NonStandardCasting` variants (`derived.rs`), not surfaced-only. Base Words/Gestures penalties `:9236-9245` (no voice −10, no gestures −5). `virtue.quiet_magic` (Ars Magica - Definitive Edition (Core Rules).md:4822-4826, +5 voice per casting, second casting eliminates), `virtue.subtle_magic` (Ars Magica - Definitive Edition (Core Rules).md:5073-5076, +5 gesture), `virtue.deft_form` (Ars Magica - Definitive Edition (Core Rules).md:3645-3648, Form-parameterized, waives both for that Form). Residuals clamp at 0.
+- **Flat ability-total bonus (Concentration)** — `virtue.academic_concentration_subject` (Ars Magica - Definitive Edition (Core Rules).md:3362-3367)
 
 
 ### In-play effect variants (M5/5b) — implemented
@@ -2227,7 +2228,7 @@ see the 5a-wire section for the itemized deferrals),
 Slice 5b adds 13 `Effect` variants (`types.rs`) representing all 18 in-play
 families at full scope, and wires **all 93** `in_play_effect` V/F in
 `rules/core/virtues_flaws.json` to them. Every variant is a **no-op** in
-`effective.rs`/`validation.rs`/`ruleset.rs` (asserted by
+`effective.rs`/`validation/mod.rs`/`ruleset/integrity.rs` (asserted by
 `in_play_effects_do_not_perturb_creation_totals`); the exhaustive `match` (no
 `_`) forces slice 5i (`derived.rs`) to consume each. "Computed by 5i" = folded
 into a simulated derived total; "surfaced-only" = the app does not simulate that
@@ -2240,7 +2241,7 @@ New scalar enums (all `Display` == snake_case serde, guarded by
 (`Technique`, `Form`) resolve against the Art catalogue *and* enforce `ArtType`,
 so Deficient Technique cannot target a Form (and vice-versa) — the art-class
 restriction, checked in `validation::validate_parameters` and, statically, in
-`ruleset::validate_effect_refs`. The **one-focus-per-magus** limit (Core:4542) is
+`ruleset::validate_effect_refs`. The **one-focus-per-magus** limit (Ars Magica - Definitive Edition (Core Rules).md:4542) is
 a validation rule `validate_magical_focus` (issue code `multiple_magical_foci`,
 Fluent `issue-multiple_magical_foci` in en/de) that **counts** the `MagicalFocus`
 effect across selections + grants — so it also catches two Minor Foci with
@@ -2251,9 +2252,9 @@ distinct descriptors, which pairwise `incompatible_with` could not.
 
 Because a magus may hold only one Magical Focus of **either** magnitude,
 `virtue.major_magical_focus` and `virtue.minor_magical_focus` are marked mutually
-`incompatible_with` in `rules/core/virtues_flaws.json` (Core:4405) — the same
+`incompatible_with` in `rules/core/virtues_flaws.json` (Ars Magica - Definitive Edition (Core Rules).md:4405) — the same
 dual-magnitude convention every `*_major`/`*_minor` V/F pair follows. That
-convention is now enforced at load by `ruleset.rs`
+convention is now enforced at load by `ruleset/integrity.rs`
 `validate_magnitude_variant_exclusivity`: it detects variant pairs by shared stem
 under both the `<stem>_major`/`<stem>_minor` **suffix** and the
 `major_<stem>`/`minor_<stem>` **prefix** conventions (Magical Focus is the sole
@@ -2280,19 +2281,19 @@ E2E: `ui/e2e/specs/vf-incompatible.e2e.js`.
 
 | Variant | Family / representative V/F | Source | 5i |
 |---|---|---|---|
-| `MagicalFocus { param(Text), major }` | Magical Focus — major/minor/mythic_blood | Core:4399-4422, 4536-4542, 4573-4589 | computed |
-| `CastingTotalMod { amount, scope }` | Flat casting bonus/penalty — method_caster (+3 formulaic_ritual), poor_formulaic_magic (−5 formulaic), afflicted_tongue, cyclic_magic ±3, special_circumstances, ways_of_the_land, potent_magic | Core:4524-4527, 6610-6613, 5655-5658, 3635-3638, 5893-5896, 4998-5001, 5231-5234, 4740-4781 | computed (conditional ones toggled) |
-| `LabTotalMod { amount }` | Flat lab bonus/penalty — adept_laboratory_student (+6), inventive_genius (+3), aristotelian_training (+1), creative_block (−3), weak_scholar (−6), the_constant_expression (−3), cyclic_magic, potent_magic | Core:3368-3371, 4151-4154, 3440-3443, 5873-5876, 7080-7083, 5821-5838, 4740-4781 | computed |
-| `DeficientArt { param(Technique\|Form) }` | Art-halving — deficient_technique, deficient_form | Core:5913-5915, 5909-5912 | computed |
-| `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration / MR — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic, flawed_parma_magica, weak_magic_resistance | Core:7084-7089, 7060-7063, 5962-5964, 7064-7067, 6142-6145, 7068-7071 | **partly** computed: `spontaneous_casting`, `penetration`, `magic_resistance` and (since M5.5a) `lab_longevity` move numbers; **`lab_enchanting` is collected but still unread** — `flaw.weak_enchanter` moves no number, because the app models no lab enchantment project |
-| `SoakMod { amount }` | Flat Soak — tough (+3), frail (−3), berserk (+2) | Core:5145-5147, 6190-6193, 3500-3503 | computed |
-| `CombatMod { amount, target }` | Combat init/atk/def — berserk, hobbled, lame, missing_hand, missing_eye, poor_eyesight, palsied_hands, slow_reflexes, lightning_reflexes, fast_caster | Core:3500-3503, 6260-6263, 6330-6333, 6438-6441, 6434-6437, 6606-6609, 6578-6581, 6763-6766, 4311-4314, 3865-3868 | computed (conditional ones labelled) |
-| `HealthMod { track, amount }` | Wound/fatigue penalty (enduring_constitution, low_tolerance), fatigue rolls (obese, short_of_breath, long_winded), casting-fatigue (painful_magic, vulnerable_casting, withstand_casting), recovery (fragile_constitution, rapid_convalescence) | Core:3751-3754, 6366-6369, 6516-6519, 6733-6736, 4327-4330, 6574-6577, 6993-7004, 5261-5282, 6186-6189, 4834-4837 | wound/fatigue computed; fatigue-roll/casting-fatigue/recovery surfaced |
-| `MagicResistanceMod { kind }` | Non-halving MR — limited_magic_resistance (no_form_bonus), susceptibility faerie/infernal/divine, commanding_aura & special_circumstances (aura_bonus) | Core:6346-6349, 6819-6826, 6815-6818, 3579-3596 | **no_form_bonus computed** (folded into the flat per-Form MR number in `magic_resistance`); the four realm-conditional/situational kinds (aura_bonus, susceptible_divine/faerie/infernal) are surfaced as `ModifierFamily::MagicResistance` (amount 0) — they cannot be folded into the flat per-Form figure, so listing them keeps them from being silently dropped |
-| `AgingMod { kind, amount }` | Aging/longevity — age_quickly, baneful_circumstances, monstrous_blood (−1), bee_king, faerie_blood (−1), magical_blood (−1), strong_faerie_blood (−3), unaging, bound_to_role, leprosy, poor_living_conditions, mild_aging, magian_lineage major/minor | Core:5659-5662, 5687-5690, 6454-6467, 3484-3499, 3797-3820, 4359-4372, 5032-5047, 5187-5190, 5735-5748, 6338-6341, 6618-6621, 4528-4531, 4339-4346 | **computed since M6/6b6**: `aging_roll` and `longevity_bonus` move the AGING TOTAL, `living_conditions` moves the modifier it subtracts, `no_apparent_aging` gates the apparent age and `no_aging` gates the Characteristic drop. Three items stay surfaced-only, each for a stated reason — age_quickly and baneful_circumstances (amount 0; schedule rules, not modifiers) and any `decrepitude` amount (no shipped item carries one). **The two immunities are separate tags**: bee_king carries `no_apparent_aging` alone, bound_to_role `no_aging` alone, unaging both — see **Aging (M6/6b6)** |
-| `AdvancementMod { source, amount }` | Study/teaching — apt_student (+5 taught), book_learner (+3 book), free_study (+3 vis), good_teacher, independent_study, study_bonus, secondary_insight, unimaginative_learner, poor_student, incomprehensible, loose_magic | Core:3422-3425, 3519-3522, 3937-3940, 3971-3974, 4115-4118, 5056-5072, 4892-4895, 6915-6918, 6626-6628, 6294-6297, 6354-6357 | surfaced (app does not simulate advancement) |
-| `SpecialCastingMod { kind, param? }` | Casting-style quirks — deft_form (Form-parameterized), quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, and circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, corrupted_spells, disjointed_magic) | Core:3645-3648, 4822-4826, 5073-5076, 9236-9245, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5859-5864, 5972-5975 | **deft_form/quiet_magic/subtle_magic computed** into per-cell `NonStandardCasting` (silent/still/silent_and_still); all other kinds surfaced (conditional penalties). `deft_form`'s `param` names the affected Form and is load-validated (`validate_effect_refs`, `ParameterDomain::Form` required) exactly as `DeficientArt`'s param, so a missing/wrong-domain key fails loudly instead of silently voiding the waiver in `in_play_mods` |
-| `AbilityRollMod { param(Text), amount }` | Ability-roll bonus in a subject — academic_concentration_subject (+3) | Core:3362-3367 | surfaced |
+| `MagicalFocus { param(Text), major }` | Magical Focus — major/minor/mythic_blood | Ars Magica - Definitive Edition (Core Rules).md:4399-4422, 4536-4542, 4573-4589 | computed |
+| `CastingTotalMod { amount, scope }` | Flat casting bonus/penalty — method_caster (+3 formulaic_ritual), poor_formulaic_magic (−5 formulaic), afflicted_tongue, cyclic_magic ±3, special_circumstances, ways_of_the_land, potent_magic | Ars Magica - Definitive Edition (Core Rules).md:4524-4527, 6610-6613, 5655-5658, 3635-3638, 5893-5896, 4998-5001, 5231-5234, 4740-4781 | computed (conditional ones toggled) |
+| `LabTotalMod { amount }` | Flat lab bonus/penalty — adept_laboratory_student (+6), inventive_genius (+3), aristotelian_training (+1), creative_block (−3), weak_scholar (−6), the_constant_expression (−3), cyclic_magic, potent_magic | Ars Magica - Definitive Edition (Core Rules).md:3368-3371, 4151-4154, 3440-3443, 5873-5876, 7080-7083, 5821-5838, 4740-4781 | computed |
+| `DeficientArt { param(Technique\|Form) }` | Art-halving — deficient_technique, deficient_form | Ars Magica - Definitive Edition (Core Rules).md:5913-5915, 5909-5912 | computed |
+| `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration / MR — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic, flawed_parma_magica, weak_magic_resistance | Ars Magica - Definitive Edition (Core Rules).md:7084-7089, 7060-7063, 5962-5964, 7064-7067, 6142-6145, 7068-7071 | **partly** computed: `spontaneous_casting`, `penetration`, `magic_resistance` and (since M5.5a) `lab_longevity` move numbers; **`lab_enchanting` is collected but still unread** — `flaw.weak_enchanter` moves no number, because the app models no lab enchantment project |
+| `SoakMod { amount }` | Flat Soak — tough (+3), frail (−3), berserk (+2) | Ars Magica - Definitive Edition (Core Rules).md:5145-5147, 6190-6193, 3500-3503 | computed |
+| `CombatMod { amount, target }` | Combat init/atk/def — berserk, hobbled, lame, missing_hand, missing_eye, poor_eyesight, palsied_hands, slow_reflexes, lightning_reflexes, fast_caster | Ars Magica - Definitive Edition (Core Rules).md:3500-3503, 6260-6263, 6330-6333, 6438-6441, 6434-6437, 6606-6609, 6578-6581, 6763-6766, 4311-4314, 3865-3868 | computed (conditional ones labelled) |
+| `HealthMod { track, amount }` | Wound/fatigue penalty (enduring_constitution, low_tolerance), fatigue rolls (obese, short_of_breath, long_winded), casting-fatigue (painful_magic, vulnerable_casting, withstand_casting), recovery (fragile_constitution, rapid_convalescence) | Ars Magica - Definitive Edition (Core Rules).md:3751-3754, 6366-6369, 6516-6519, 6733-6736, 4327-4330, 6574-6577, 6993-7004, 5261-5282, 6186-6189, 4834-4837 | wound/fatigue computed; fatigue-roll/casting-fatigue/recovery surfaced |
+| `MagicResistanceMod { kind }` | Non-halving MR — limited_magic_resistance (no_form_bonus), susceptibility faerie/infernal/divine, commanding_aura & special_circumstances (aura_bonus) | Ars Magica - Definitive Edition (Core Rules).md:6346-6349, 6819-6826, 6815-6818, 3579-3596 | **no_form_bonus computed** (folded into the flat per-Form MR number in `magic_resistance`); the four realm-conditional/situational kinds (aura_bonus, susceptible_divine/faerie/infernal) are surfaced as `ModifierFamily::MagicResistance` (amount 0) — they cannot be folded into the flat per-Form figure, so listing them keeps them from being silently dropped |
+| `AgingMod { kind, amount }` | Aging/longevity — age_quickly, baneful_circumstances, monstrous_blood (−1), bee_king, faerie_blood (−1), magical_blood (−1), strong_faerie_blood (−3), unaging, bound_to_role, leprosy, poor_living_conditions, mild_aging, magian_lineage major/minor | Ars Magica - Definitive Edition (Core Rules).md:5659-5662, 5687-5690, 6454-6467, 3484-3499, 3797-3820, 4359-4372, 5032-5047, 5187-5190, 5735-5748, 6338-6341, 6618-6621, 4528-4531, 4339-4346 | **computed since M6/6b6**: `aging_roll` and `longevity_bonus` move the AGING TOTAL, `living_conditions` moves the modifier it subtracts, `no_apparent_aging` gates the apparent age and `no_aging` gates the Characteristic drop. Three items stay surfaced-only, each for a stated reason — age_quickly and baneful_circumstances (amount 0; schedule rules, not modifiers) and any `decrepitude` amount (no shipped item carries one). **The two immunities are separate tags**: bee_king carries `no_apparent_aging` alone, bound_to_role `no_aging` alone, unaging both — see **Aging (M6/6b6)** |
+| `AdvancementMod { source, amount }` | Study/teaching — apt_student (+5 taught), book_learner (+3 book), free_study (+3 vis), good_teacher, independent_study, study_bonus, secondary_insight, unimaginative_learner, poor_student, incomprehensible, loose_magic | Ars Magica - Definitive Edition (Core Rules).md:3422-3425, 3519-3522, 3937-3940, 3971-3974, 4115-4118, 5056-5072, 4892-4895, 6915-6918, 6626-6628, 6294-6297, 6354-6357 | surfaced (app does not simulate advancement) |
+| `SpecialCastingMod { kind, param? }` | Casting-style quirks — deft_form (Form-parameterized), quiet_magic, subtle_magic, diedne_magic, faerie_raised_magic, life_linked_spontaneous_magic, spell_improvisation, mercurian_magic, life_boost, leper_magus, and circumstantial halvings (deleterious_circumstances, environmental_magic_condition, short_ranged_magic, corrupted_spells, disjointed_magic) | Ars Magica - Definitive Edition (Core Rules).md:3645-3648, 4822-4826, 5073-5076, 9236-9245, 3675-3682, 3829-3842, 4299-4306, 5002-5005, 4514-4523, 4295-4298, 4249-4252, 5917-5920, 6020-6023, 6737-6740, 5859-5864, 5972-5975 | **deft_form/quiet_magic/subtle_magic computed** into per-cell `NonStandardCasting` (silent/still/silent_and_still); all other kinds surfaced (conditional penalties). `deft_form`'s `param` names the affected Form and is load-validated (`validate_effect_refs`, `ParameterDomain::Form` required) exactly as `DeficientArt`'s param, so a missing/wrong-domain key fails loudly instead of silently voiding the waiver in `in_play_mods` |
+| `AbilityRollMod { param(Text), amount }` | Ability-roll bonus in a subject — academic_concentration_subject (+3) | Ars Magica - Definitive Edition (Core Rules).md:3362-3367 | surfaced |
 
 **Modeling notes / accepted approximations** (each surfaced in 5i's labelled
 read-out, so precision is not lost to the player): `weak_spontaneous_magic` maps
@@ -2356,7 +2357,7 @@ Infernal Might + power-levels budget (tested in `arm-app`'s
   creation XP figure (its ±3 casting swing / ±5 Art xp are in-play). (Elemental
   Magic, :3731, is now implemented in slice 5c — see its section above.)
 
-#### Supernatural Might & Magic Resistance (RoP: Magic / Infernal / Divine)
+#### Supernatural Might & Magic Resistance (Realms of Power: Magic / The Infernal / The Divine)
 
 A supernatural being has a **Might Score** aligned to one **Realm** (`Realm::{Magic,
 Faerie, Divine, Infernal}`). The general rule:
@@ -2364,7 +2365,7 @@ Faerie, Divine, Infernal}`). The general rule:
 > "Magic Might gives the character innate Magic Resistance equal to its Might
 > Score, and this does not stack with other forms of resistance … they must use
 > either their Parma or their Might for their base Magic Resistance."
-> — *Realms of Power: Magic.md:1472* (general; also Core:2623-2631, :2627 "these
+> — *Ars Magica 5e - Realms of Power - Magic.md:1472* (general; also Ars Magica - Definitive Edition (Core Rules).md:2623-2631, :2627 "these
 > totals do not stack … use the higher total").
 
 **MR-from-Might formula** (`derived::magic_resistance`): per Form, `total = Form
@@ -2404,101 +2405,101 @@ granted Realm → `might_realm_mismatch` warning).
 The per-item audit that fed this wiring follows (source line-ranges retained).
 
 **Confidence:**
-- `flaw.low_self_esteem` (Core:6362-6365) — Confidence (no score/points)
-- `virtue.ferocity` (Core:3873-3876) — Confidence score 1 points 3
+- `flaw.low_self_esteem` (Ars Magica - Definitive Edition (Core Rules).md:6362-6365) — Confidence (no score/points)
+- `virtue.ferocity` (Ars Magica - Definitive Edition (Core Rules).md:3873-3876) — Confidence score 1 points 3
 
 **Free nested V/F grant:**
-- `virtue.devil_child` (Realms of Power - The Infernal:4144-4149) — grants free Minor Virtue
-- `virtue.faerie_doctor` (Realms of Power - Faerie:6394-6399) — grants free Virtue (Dowsing)
-- `virtue.nephilim` (Realms of Power - The Divine (Revised):3485-3513) — grants free Virtue
+- `virtue.devil_child` (Ars Magica 5e - Realms of Power - The Infernal.md:4144-4149) — grants free Minor Virtue
+- `virtue.faerie_doctor` (Ars Magica 5e - Realms of Power - Faerie.md:6394-6399) — grants free Virtue (Dowsing)
+- `virtue.nephilim` (Ars Magica 5e - Realms of Power - The Divine (Revised).md:3485-3513) — grants free Virtue
 
 **Free starting Supernatural Ability score:**
-- `virtue.animal_ken` (Core:3414-3417) — free starting Supernatural Ability score
-- `virtue.corpse_magic` (Core:3605-3608) — free starting Supernatural Ability score
-- `virtue.crafters_healing` (Core:3617-3620) — free starting Supernatural Ability score
-- `virtue.embitterment` (Core:3739-3742) — free starting Supernatural Ability score
-- `virtue.enchanting_ability` (Core:3747-3750) — free starting Supernatural Ability score
-- `virtue.entrancement` (Core:3767-3770) — free starting Supernatural Ability score
-- `virtue.font_of_knowledge` (Core:3921-3924) — free starting Supernatural Ability score
-- `virtue.hex` (Core:4075-4078) — free starting Supernatural Ability score
-- `virtue.induction` (Core:4119-4122) — free starting Supernatural Ability score
-- `virtue.magic_sensitivity` (Core:4351-4354) — free starting Supernatural Ability score
-- `virtue.persona` (Core:4710-4713) — free starting Supernatural Ability score
-- `virtue.sense_passions` (Core:4930-4933) — free starting Supernatural Ability score
-- `virtue.shapeshifter` (Core:4946-4949) — free starting Supernatural Ability score
-- `virtue.spirit_votary` (Realms of Power - Magic:5480-5486) — grants free Virtue (Second Sight)
-- `virtue.strong_faerie_blood` (Core:5032-5047) — free starting Second Sight ability
-- `virtue.summon_animals` (Core:5085-5088) — free starting Supernatural Ability score
-- `virtue.whistle_up_the_wind` (Core:5243-5246) — free starting Supernatural Ability score
-- `virtue.wilderness_sense` (Core:5247-5250) — free starting Supernatural Ability score
+- `virtue.animal_ken` (Ars Magica - Definitive Edition (Core Rules).md:3414-3417) — free starting Supernatural Ability score
+- `virtue.corpse_magic` (Ars Magica - Definitive Edition (Core Rules).md:3605-3608) — free starting Supernatural Ability score
+- `virtue.crafters_healing` (Ars Magica - Definitive Edition (Core Rules).md:3617-3620) — free starting Supernatural Ability score
+- `virtue.embitterment` (Ars Magica - Definitive Edition (Core Rules).md:3739-3742) — free starting Supernatural Ability score
+- `virtue.enchanting_ability` (Ars Magica - Definitive Edition (Core Rules).md:3747-3750) — free starting Supernatural Ability score
+- `virtue.entrancement` (Ars Magica - Definitive Edition (Core Rules).md:3767-3770) — free starting Supernatural Ability score
+- `virtue.font_of_knowledge` (Ars Magica - Definitive Edition (Core Rules).md:3921-3924) — free starting Supernatural Ability score
+- `virtue.hex` (Ars Magica - Definitive Edition (Core Rules).md:4075-4078) — free starting Supernatural Ability score
+- `virtue.induction` (Ars Magica - Definitive Edition (Core Rules).md:4119-4122) — free starting Supernatural Ability score
+- `virtue.magic_sensitivity` (Ars Magica - Definitive Edition (Core Rules).md:4351-4354) — free starting Supernatural Ability score
+- `virtue.persona` (Ars Magica - Definitive Edition (Core Rules).md:4710-4713) — free starting Supernatural Ability score
+- `virtue.sense_passions` (Ars Magica - Definitive Edition (Core Rules).md:4930-4933) — free starting Supernatural Ability score
+- `virtue.shapeshifter` (Ars Magica - Definitive Edition (Core Rules).md:4946-4949) — free starting Supernatural Ability score
+- `virtue.spirit_votary` (Ars Magica 5e - Realms of Power - Magic.md:5480-5486) — grants free Virtue (Second Sight)
+- `virtue.strong_faerie_blood` (Ars Magica - Definitive Edition (Core Rules).md:5032-5047) — free starting Second Sight ability
+- `virtue.summon_animals` (Ars Magica - Definitive Edition (Core Rules).md:5085-5088) — free starting Supernatural Ability score
+- `virtue.whistle_up_the_wind` (Ars Magica - Definitive Edition (Core Rules).md:5243-5246) — free starting Supernatural Ability score
+- `virtue.wilderness_sense` (Ars Magica - Definitive Edition (Core Rules).md:5247-5250) — free starting Supernatural Ability score
 
 **Item-level budget:**
 - (Magic Items / Redcap wire `item_level_budget`; see slice 5e.)
 
 **Might / power budget (wired, this slice):**
-- `virtue.demonic_blood` (Realms of Power - The Infernal:4120, :4122) — `might_grant{infernal,5}` + `power_levels{30}`
-- `virtue.demonic_might` (Realms of Power - The Infernal:4136) — `might_grant{infernal,2}` (adds +2)
-- `virtue.demonic_powers` (Realms of Power - The Infernal:4142) — `power_levels{20}`
-- `virtue.strong_angelic_heritage` (Realms of Power - The Divine (Revised):1975, :1977) — `might_grant{divine,0}` + `power_levels{30}` (Divine Might = age÷20 entered by hand; grant establishes Realm)
+- `virtue.demonic_blood` (Ars Magica 5e - Realms of Power - The Infernal.md:4120, :4122) — `might_grant{infernal,5}` + `power_levels{30}`
+- `virtue.demonic_might` (Ars Magica 5e - Realms of Power - The Infernal.md:4136) — `might_grant{infernal,2}` (adds +2)
+- `virtue.demonic_powers` (Ars Magica 5e - Realms of Power - The Infernal.md:4142) — `power_levels{20}`
+- `virtue.strong_angelic_heritage` (Ars Magica 5e - Realms of Power - The Divine (Revised).md:1975, :1977) — `might_grant{divine,0}` + `power_levels{30}` (Divine Might = age÷20 entered by hand; grant establishes Realm)
 
 **Reputation grant:**
-- `flaw.apostate` (Core:5675-5678) — reputation grant bad score 4
-- `flaw.failed_journeyman` (Core:6060-6063) — reputation grant bad score 2
-- `flaw.failed_master` (Core:6064-6067) — reputation grant bad score 4
-- `flaw.failed_monk` (Core:6068-6071) — reputation grant poor score 2
-- `flaw.failed_student` (Core:6072-6075) — reputation grant academic score 2
-- `flaw.feral_scent` (Core:6106-6109) — reputation grant negative score 2
-- `flaw.gabai` (Core:6198-6201) — reputation grant negative score 2
-- `flaw.hedge_wizard` (Core:6240-6243) — reputation grant hermetic score 3
-- `flaw.infamous_master` (Core:6314-6317) — reputation grant hermetic score 3
-- `flaw.outlaw` (Core:6542-6545) — reputation grant score 2
-- `flaw.outlaw_leader` (Core:6546-6549) — reputation grant score 3
-- `flaw.outsider_major` (Core:6550-6561) — reputation grant bad score 1-3
-- `flaw.outsider_minor` (Core:6550-6561) — reputation grant bad score 1-3
-- `flaw.usurer` (Core:6951-6954) — reputation grant poor score 4
-- `virtue.baccalaureus` (Core:3470-3475) — XP grant 90 + reputation grant academic score 1
-- `virtue.cathedral_school_master` (Core:3549-3554) — XP grant 240 + reputation grant academic score 2
-- `virtue.doctor_in_faculty` (Core:3683-3698) — XP grant 300 + reputation grant academic score 3
-- `virtue.famous` (Core:3861-3864) — reputation grant player-chosen score 4
-- `virtue.hermetic_prestige` (Core:4071-4073) — reputation grant hermetic score 4
-- `virtue.lone_redcap` (Core:4319-4326) — XP grant 300 + grants Virtue + reputation grant poor score 2
-- `virtue.magister_in_artibus` (Core:4385-4394) — XP grant 240 + reputation grant academic score 2
-- `virtue.magister_in_medicina` (Core:4395-4398) — XP grant 300 + reputation grant academic score 3
-- `virtue.master_bard` (Core:4457-4462) — XP grant 240 + reputation grant local score 3
-- `virtue.physician_of_salerno` (Core:4732-4735) — XP grant 50 + reputation 2
-- `virtue.rard` (Core:3476-3479) — reputation grant local score 1
-- `virtue.rosh_beth_din` (Core:4878-4883) — XP grant 50 + reputation grant good score 2 + grants Virtue
-- `virtue.senior_bard` (Core:4904-4909) — XP grant 90 + reputation grant local score 2
-- `virtue.senior_clergy` (Core:4910-4921) — reputation grant score 4
-- `virtue.templar_office_holder` (Core:5121-5124) — reputation grant score 2
+- `flaw.apostate` (Ars Magica - Definitive Edition (Core Rules).md:5675-5678) — reputation grant bad score 4
+- `flaw.failed_journeyman` (Ars Magica - Definitive Edition (Core Rules).md:6060-6063) — reputation grant bad score 2
+- `flaw.failed_master` (Ars Magica - Definitive Edition (Core Rules).md:6064-6067) — reputation grant bad score 4
+- `flaw.failed_monk` (Ars Magica - Definitive Edition (Core Rules).md:6068-6071) — reputation grant poor score 2
+- `flaw.failed_student` (Ars Magica - Definitive Edition (Core Rules).md:6072-6075) — reputation grant academic score 2
+- `flaw.feral_scent` (Ars Magica - Definitive Edition (Core Rules).md:6106-6109) — reputation grant negative score 2
+- `flaw.gabai` (Ars Magica - Definitive Edition (Core Rules).md:6198-6201) — reputation grant negative score 2
+- `flaw.hedge_wizard` (Ars Magica - Definitive Edition (Core Rules).md:6240-6243) — reputation grant hermetic score 3
+- `flaw.infamous_master` (Ars Magica - Definitive Edition (Core Rules).md:6314-6317) — reputation grant hermetic score 3
+- `flaw.outlaw` (Ars Magica - Definitive Edition (Core Rules).md:6542-6545) — reputation grant score 2
+- `flaw.outlaw_leader` (Ars Magica - Definitive Edition (Core Rules).md:6546-6549) — reputation grant score 3
+- `flaw.outsider_major` (Ars Magica - Definitive Edition (Core Rules).md:6550-6561) — reputation grant bad score 1-3
+- `flaw.outsider_minor` (Ars Magica - Definitive Edition (Core Rules).md:6550-6561) — reputation grant bad score 1-3
+- `flaw.usurer` (Ars Magica - Definitive Edition (Core Rules).md:6951-6954) — reputation grant poor score 4
+- `virtue.baccalaureus` (Ars Magica - Definitive Edition (Core Rules).md:3470-3475) — XP grant 90 + reputation grant academic score 1
+- `virtue.cathedral_school_master` (Ars Magica - Definitive Edition (Core Rules).md:3549-3554) — XP grant 240 + reputation grant academic score 2
+- `virtue.doctor_in_faculty` (Ars Magica - Definitive Edition (Core Rules).md:3683-3698) — XP grant 300 + reputation grant academic score 3
+- `virtue.famous` (Ars Magica - Definitive Edition (Core Rules).md:3861-3864) — reputation grant player-chosen score 4
+- `virtue.hermetic_prestige` (Ars Magica - Definitive Edition (Core Rules).md:4071-4073) — reputation grant hermetic score 4
+- `virtue.lone_redcap` (Ars Magica - Definitive Edition (Core Rules).md:4319-4326) — XP grant 300 + grants Virtue + reputation grant poor score 2
+- `virtue.magister_in_artibus` (Ars Magica - Definitive Edition (Core Rules).md:4385-4394) — XP grant 240 + reputation grant academic score 2
+- `virtue.magister_in_medicina` (Ars Magica - Definitive Edition (Core Rules).md:4395-4398) — XP grant 300 + reputation grant academic score 3
+- `virtue.master_bard` (Ars Magica - Definitive Edition (Core Rules).md:4457-4462) — XP grant 240 + reputation grant local score 3
+- `virtue.physician_of_salerno` (Ars Magica - Definitive Edition (Core Rules).md:4732-4735) — XP grant 50 + reputation 2
+- `virtue.rard` (Ars Magica - Definitive Edition (Core Rules).md:3476-3479) — reputation grant local score 1
+- `virtue.rosh_beth_din` (Ars Magica - Definitive Edition (Core Rules).md:4878-4883) — XP grant 50 + reputation grant good score 2 + grants Virtue
+- `virtue.senior_bard` (Ars Magica - Definitive Edition (Core Rules).md:4904-4909) — XP grant 90 + reputation grant local score 2
+- `virtue.senior_clergy` (Ars Magica - Definitive Edition (Core Rules).md:4910-4921) — reputation grant score 4
+- `virtue.templar_office_holder` (Ars Magica - Definitive Edition (Core Rules).md:5121-5124) — reputation grant score 2
 
 **Size/characteristic delta:**
-- `virtue.blood_of_the_nephilim` (Realms of Power - The Divine (Revised):1941-1954) — size delta + Dominion Lore
+- `virtue.blood_of_the_nephilim` (Ars Magica 5e - Realms of Power - The Divine (Revised).md:1941-1954) — size delta + Dominion Lore
 
 **True Faith score:**
-- `virtue.powerful_relic` (Core:4782-4787) — True Faith score 3
-- `virtue.relic` (Core:4852-4855) — True Faith score 1
+- `virtue.powerful_relic` (Ars Magica - Definitive Edition (Core Rules).md:4782-4787) — True Faith score 3
+- `virtue.relic` (Ars Magica - Definitive Edition (Core Rules).md:4852-4855) — True Faith score 1
 
 **XP grant:**
-- `flaw.corrupted_arts` (Core:5853-5858) — grants XP swing at creation + situational casting
-- `flaw.feral_upbringing` (Core:6110-6113) — XP grant 120
-- `flaw.savantism` (Core:6703-6708) — halves starting XP
-- `virtue.arcane_lore` (Core:3430-3435) — XP grant 50
-- `virtue.clan_ilfetu` (Core:3563-3566) — XP grant 50
-- `virtue.craft_guild_training` (Core:3613-3616) — XP grant 50
-- `virtue.elemental_magic` (Core:3731-3738) — Art XP distribution at creation (implemented, slice 5c: `Effect::ElementalMagic` XP-space Art boost — see section above)
-- `virtue.falconer` (Core:3847-3852) — XP grant 50
-- `virtue.forge_companion` (Core:3925-3928) — XP grant 50
-- `virtue.hermetic_experience` (Core:4063-4066) — XP grant 50
-- `virtue.ineslemen` (Core:4123-4126) — XP grant 50 + grants Minor Flaw
-- `virtue.marshal` (Core:4449-4456) — XP grant 50
-- `virtue.master_of_kennels` (Core:4467-4470) — XP grant 50
-- `virtue.mentored_by_demons` (Core:4496-4499) — XP grant 50
-- `virtue.schooled_in_crime` (Core:4884-4887) — XP grant 50
-- `virtue.shadchan` (Core:4934-4939) — XP grant 50
-- `virtue.simple_student` (Core:4958-4963) — XP grant 30/yr
-- `virtue.trained_assassin` (Core:5153-5156) — XP grant 50
-- `virtue.venditor` (Core:5207-5210) — XP grant 50
+- `flaw.corrupted_arts` (Ars Magica - Definitive Edition (Core Rules).md:5853-5858) — grants XP swing at creation + situational casting
+- `flaw.feral_upbringing` (Ars Magica - Definitive Edition (Core Rules).md:6110-6113) — XP grant 120
+- `flaw.savantism` (Ars Magica - Definitive Edition (Core Rules).md:6703-6708) — halves starting XP
+- `virtue.arcane_lore` (Ars Magica - Definitive Edition (Core Rules).md:3430-3435) — XP grant 50
+- `virtue.clan_ilfetu` (Ars Magica - Definitive Edition (Core Rules).md:3563-3566) — XP grant 50
+- `virtue.craft_guild_training` (Ars Magica - Definitive Edition (Core Rules).md:3613-3616) — XP grant 50
+- `virtue.elemental_magic` (Ars Magica - Definitive Edition (Core Rules).md:3731-3738) — Art XP distribution at creation (implemented, slice 5c: `Effect::ElementalMagic` XP-space Art boost — see section above)
+- `virtue.falconer` (Ars Magica - Definitive Edition (Core Rules).md:3847-3852) — XP grant 50
+- `virtue.forge_companion` (Ars Magica - Definitive Edition (Core Rules).md:3925-3928) — XP grant 50
+- `virtue.hermetic_experience` (Ars Magica - Definitive Edition (Core Rules).md:4063-4066) — XP grant 50
+- `virtue.ineslemen` (Ars Magica - Definitive Edition (Core Rules).md:4123-4126) — XP grant 50 + grants Minor Flaw
+- `virtue.marshal` (Ars Magica - Definitive Edition (Core Rules).md:4449-4456) — XP grant 50
+- `virtue.master_of_kennels` (Ars Magica - Definitive Edition (Core Rules).md:4467-4470) — XP grant 50
+- `virtue.mentored_by_demons` (Ars Magica - Definitive Edition (Core Rules).md:4496-4499) — XP grant 50
+- `virtue.schooled_in_crime` (Ars Magica - Definitive Edition (Core Rules).md:4884-4887) — XP grant 50
+- `virtue.shadchan` (Ars Magica - Definitive Edition (Core Rules).md:4934-4939) — XP grant 50
+- `virtue.simple_student` (Ars Magica - Definitive Edition (Core Rules).md:4958-4963) — XP grant 30/yr
+- `virtue.trained_assassin` (Ars Magica - Definitive Edition (Core Rules).md:5153-5156) — XP grant 50
+- `virtue.venditor` (Ars Magica - Definitive Edition (Core Rules).md:5207-5210) — XP grant 50
 
 
 ## Life-stage experience (M6/6b2) — `life_stage.rs`
@@ -2548,7 +2549,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
 - Implementation: `life_stage.rs` — `ChildhoodRules`, and
   `LifeStageRules::budget`, which reports the two blocks separately because they
   fund different things. They become two **restricted pools** in the existing
-  allocation solve (`effective.rs` — `xp_allocation`): the native block funds one
+  allocation solve (`effective/xp.rs` — `xp_allocation`): the native block funds one
   ability *instance* (the chosen language), the spread funds the eleven-ability list
   **excluding** that instance — the passage's "Living Language (other than the
   character's native language)". Unspent childhood experience is wasted, which the
@@ -2574,7 +2575,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
 - Load-time referential integrity (not a sourced rule): every `spread_abilities` id
   and the `native_language_ability` must resolve, and the latter must be a
   *parameterized* ability — one language among many cannot be named otherwise.
-  Checked by `Ruleset::validate_childhood_refs` (`ruleset.rs`), called from
+  Checked by `Ruleset::validate_childhood_refs` (`ruleset/integrity.rs`), called from
   `validate_integrity` beside `validate_childhood_packages` — so it also runs on
   `from_serialized`, and a cached ruleset is trusted no further than a freshly
   parsed one.
@@ -2632,9 +2633,9 @@ Abilities are bought with experience earned in blocks, not from one bank:
   needs no budget of its own — it is one way of spending the two childhood blocks
   `:2378` already grants, so `spread_xp`/`native_xp` exist to *check* the shipped
   data against the blocks rather than to fund anything. Funding stays with the
-  restricted 45/75 pools in `effective.rs` (`xp_allocation`).
+  restricted 45/75 pools in `effective/xp.rs` (`xp_allocation`).
 - **The 45/75 arithmetic is enforced at load, as the transcription trust gate.**
-  `Ruleset::validate_childhood_packages` (`ruleset.rs`, called from
+  `Ruleset::validate_childhood_packages` (`ruleset/integrity.rs`, called from
   `validate_integrity`, so it also runs on `from_serialized`) re-prices every
   shipped package off the advancement table and rejects the ruleset unless the
   spread equals `childhood.spread_xp` and the native entry equals
@@ -2695,7 +2696,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   list — rather than restricting it to the abilities the package names. No passage
   forbids the other eight once a package is taken, and `:2382` invites precisely
   that adjustment, so narrowing would be a rule the rulebook does not state.
-  `effective.rs::xp_allocation` therefore never reads
+  `effective/xp.rs::xp_allocation` therefore never reads
   `LifeStagePlan::childhood_package`; the pool it builds is identical whether a
   package was taken or the 45 points were divided by hand.
 - **Applying a package is a monotone raise.** `childhood::apply_package`
@@ -2711,7 +2712,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   why nothing downstream needs to know a package was involved; the id is recorded in
   `LifeStagePlan::childhood_package` purely as the annotation described above.
   **Funding is deliberately not checked at application time** — the restricted 45/75
-  pools in `effective.rs` (`xp_allocation`) already price the rows against the
+  pools in `effective/xp.rs` (`xp_allocation`) already price the rows against the
   blocks, so an overspend surfaces as `not_enough_xp` exactly as a hand-typed one
   would, and charging here as well would double-count.
 - **A slot value is just the row's `parameter`.** The player's answer for an entry's
@@ -2837,7 +2838,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
 - **Apprenticeship is the general pool.** Two independent facts force it. (a) `:2435`
   lets this experience buy "Arts or Abilities", and only the general pool may fund an
   Art — `pool_covers` returns false for every `(Ability pool, Art spend)` pair
-  (`effective.rs`). (b) `Effect::GeneralXp` **already means apprenticeship
+  (`effective/xp.rs`). (b) `Effect::GeneralXp` **already means apprenticeship
   experience**: Skilled Parens grants "an additional 60 experience points … during
   apprenticeship" (`:4966`) and Weak Parens "60 fewer … from apprenticeship"
   (`:7074`), and `general_xp_bonus` is applied to the general pool alone. Assigning
@@ -2966,7 +2967,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   sixteen seasons actually worked cost 0 points across four years but 30 across five, so
   a single total of worked seasons could not tell those apart.
 - **The post-Gauntlet experience joins the *general* pool — it is not a block of its
-  own.** `effective.rs`'s `xp_allocation` selects `base_general` as
+  own.** `effective/xp.rs`'s `xp_allocation` selects `base_general` as
   `apprenticeship_xp + post_gauntlet_xp` for a magus (saturating), leaving the
   non-magus arm and the plan-less `xp_pool` arm untouched. Three sourced facts force
   the general pool rather than a restricted one:
@@ -2988,7 +2989,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
     `:2435`'s "before apprenticeship" clause however many years the magus has lived
     since (`post_gauntlet_years_leave_later_life_restricted`).
 - **The spell levels are *additive* to the profile's 120 — not a second budget.**
-  `effective.rs`'s `life_stage_spell_levels(entity, ruleset)` (the budget's
+  `effective/spell.rs`'s `life_stage_spell_levels(entity, ruleset)` (the budget's
   `post_gauntlet_spell_levels`; 0 without a plan or without the block) is folded into
   `spell_levels_budget`, which is `base + spell_levels_bonus +
   life_stage_spell_levels`, clamped as before. Apprenticeship's "120 levels of spells"
@@ -3076,7 +3077,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   creation sequence, and the decisive statement of *which* period may buy Arts: step 6
   (`:2214`) says "any **Abilities**", step 7 (`:2215`) "between Hermetic **Arts** and
   … Abilities". Restated for the block itself at `:2392`.
-- Implementation: `effective.rs` — `xp_allocation` pushes later life as a
+- Implementation: `effective/xp.rs` — `xp_allocation` pushes later life as a
   **restricted** `PoolEligibility::Ability` pool for a magus (`is_magus &&
   budget.later_life_xp > 0`, the same shape of guard the mastery pool uses), so Arts
   fall out for free: an Ability pool never covers an Art spend. `LifeStageBlock` gains
@@ -3107,7 +3108,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   magus has the relevant Virtue)" for apprenticeship itself. The Darius example
   reasons exactly this way about a pre-apprenticeship purchase: Order of Hermes Lore
   "It's a **general** Ability, so he can" (`:2402`).
-- Implementation: the later-life pool's eligibility (`effective.rs`,
+- Implementation: the later-life pool's eligibility (`effective/xp.rs`,
   `xp_allocation`) — `categories` is `AbilityCategory::ALL` minus
   `ruleset.categories_requiring_virtue()` plus whatever the character's Virtues
   authorize, and `abilities` is the authorized ids. Both come from
@@ -3328,7 +3329,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `locality_ability_cap_fraction { num: 1, den: 2 }`; `rules/core/abilities.json`
   flags `locality_dependent` on `ability.living_language`, `ability.dead_language`,
   `ability.area_lore` and `ability.organization_lore`.
-- Implementation: `effective.rs` — `ability_age_cap` (per-ability, ceiling division),
+- Implementation: `effective/might_warping.rs` — `ability_age_cap` (per-ability, ceiling division),
   consumed by `validate_abilities`'s `ability_above_age_cap` check.
 - **Deliberately incomplete, per the source:** the passage's trailing "as well as
   some social Abilities" names no Abilities, so none are flagged — the engine
@@ -3353,7 +3354,7 @@ exists because the app offers two ways in.
 The unspent-block warning and the 75-point pool read `:2378` the same way, which is
 a requirement rather than a coincidence: both key on
 `childhood.native_language_ability` at the chosen instance, scoring above 0
-(`validate_life_stage_plan` and `native_language_instance` in `effective.rs`). A
+(`validate_life_stage_plan` and `native_language_instance` in `effective/xp.rs`). A
 looser test — any parameterized Ability whose parameter equals the language — would
 let an `Area Lore (German)` declare the block spent while the pool, which funds one
 instance of one id, paid for nothing of it.
@@ -3364,7 +3365,7 @@ The yearly roll of `## Aging` (`:16563-16617`), from the threshold that owes it 
 the write-back that applies it. `rules/core/aging.json` carries every number,
 `crates/arm-rules/src/aging.rs` the arithmetic,
 `crates/arm-rules/src/validation/aging.rs` the findings, and
-`Ruleset::validate_aging_rules` (`ruleset.rs`) the load-time gates that make the
+`Ruleset::validate_aging_rules` (`ruleset/integrity.rs`) the load-time gates that make the
 data checkable rather than merely transcribed.
 
 **The engine never rolls.** `arm-rules` has no `rand` dependency and never will:
@@ -3788,7 +3789,8 @@ to a user.
   only. Guarded by `the_three_aging_immunities_ship_their_two_facts_separately`
   (`data_integrity.rs`).
 - Implementation, one reader each:
-  - `effective.rs::aging_drops` (and the surfaced `characteristic_aging_drops`,
+  - `effective/might_warping.rs::aging_drops` (and the surfaced `characteristic_aging_drops`
+    in `effective/characteristic.rs`,
     which wraps it) return 0 for a `no_aging` carrier, so no Characteristic ever
     drops and `effective_characteristic_after_aging` leaves the bought score alone.
     **This is new in 6b6**: `aging_drops` ignored `:5189` until the engine started
@@ -4026,7 +4028,7 @@ is an inference rather than a sentence the rulebook states, so
 
 ##### Gates deliberately not written on the Crisis Table
 
-`validate_crisis_rules` (`ruleset.rs`) carries the full list in its doc comment;
+`validate_crisis_rules` (`ruleset/integrity.rs`) carries the full list in its doc comment;
 the two that touch *rules numbers* are recorded here as well, because this file is
 where a reader looks for why a shipped number is not enforced.
 
@@ -4476,13 +4478,14 @@ Source per phase, all in `Ars Magica - Definitive Edition (Core Rules).md`:
 These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
-- Incompatibility symmetry (`ruleset.rs` — `validate_incompatibility_symmetry`)
-- Category permit/forbid (`validation.rs` — `validate_permitted_categories`,
-  `validate_forbidden_categories`)
-- Required/forbidden traits (`validation.rs` — `validate_required_traits`,
-  `validate_forbidden_traits`)
+- Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
+- Category permit/forbid (`validation/selections.rs` — `validate_permitted_categories` (:8),
+  `validate_forbidden_categories` (:50))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:144),
+  `validate_forbidden_traits` (:165))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation.rs`)
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:83),
+  `validate_parameters` (:216), `validate_duplicate_selections` (:107))
 
 ### Creation-phase completeness (M6/6b8a) — `completeness.rs`
 

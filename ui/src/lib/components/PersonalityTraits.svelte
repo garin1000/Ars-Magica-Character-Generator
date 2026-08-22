@@ -16,6 +16,7 @@
         <input
           class="trait-name"
           placeholder={store.t('personality-name-placeholder')}
+          aria-label={store.t('personality-name-placeholder')}
           value={trait.name}
           oninput={(e) =>
             store.setPersonalityTraitName(i, (e.currentTarget as HTMLInputElement).value)}

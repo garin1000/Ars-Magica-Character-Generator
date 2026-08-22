@@ -29,6 +29,19 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fmt;
 
+mod ability;
+pub use ability::*;
+mod art;
+pub use art::*;
+mod characteristic;
+pub use characteristic::*;
+mod xp;
+pub use xp::*;
+mod spell;
+pub use spell::*;
+mod might_warping;
+pub use might_warping::*;
+
 /// The selection list every effect / score computation iterates: the entity's
 /// bought selections plus any Virtue rows its Hermetic House grants (see
 /// [`crate::house::granted_selections`]). Borrows `entity.selections` untouched
@@ -99,1582 +112,27 @@ fn vf_granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
     out
 }
 
-/// A non-zero ability-score bonus targeting one ability *instance*. For a
-/// parameterized ability ((Area) Lore) the instance is identified by
-/// `(ability, parameter)`; a plain ability has `parameter: None`.
+/// The [`Effect`] variants that never contribute to a score-space bonus, a
+/// characteristic-limit shift, or an Affinity cost reduction — the fixed
+/// "everything else is a no-op" tail every fold in this section needs, because
+/// the match must stay exhaustive (a new `Effect` variant is a compile error
+/// here, not a silently-ignored bonus/shift/reduction). Defined once so
+/// [`ability_bonus`], [`art_bonus`], `characteristic_limit_shift`,
+/// [`ability_affinity`] and `art_affinity` — five folds that each need this same
+/// ~40-variant list — do not hand-maintain five near-identical copies of it.
 ///
-/// Serializes for the frontend as `{ "ability": "<id>", "bonus": N }`, with
-/// `parameter` added only when present (`None` is omitted, never `null`).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct AbilityBonus {
-    /// The slug id of the boosted ability (e.g. `ability.area_lore`).
-    pub ability: Id,
-    /// The instance discriminator for a parameterized ability ((Area) Lore →
-    /// the area name); `None` for a plain ability, which has a single instance.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub parameter: Option<String>,
-    /// The summed bonus for this instance: all matching ability-bonus effects
-    /// (e.g. Puissant Ability +2) added together, so stacking virtues combine.
-    pub bonus: i32,
-}
-
-/// Sum of all ability-bonus effects (e.g. Puissant Ability) targeting one
-/// ability instance. The instance is `(ability, parameter)`: a parameterized
-/// ability ((Area) Lore) needs the selection to name the same instance under the
-/// ability's own param key, so Puissant "Brandenburg Lore" boosts only that area
-/// and not "Berlin Lore". A plain ability matches by id alone. Two virtues
-/// boosting the same instance stack.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:4814-4816 ("You may
-/// only take this Virtue once for a given Ability"; each (Area) Lore is a
-/// distinct Ability).
-pub fn ability_bonus(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    ability: &Id,
-    parameter: Option<&str>,
-) -> i32 {
-    // The instance-discriminator key for a parameterized ability ((Area) Lore →
-    // "area"); `None` for a plain ability (a single instance, matched by id).
-    let instance_key = ruleset
-        .abilities
-        .get(ability)
-        .and_then(|a| a.parameter.as_deref());
-    let mut bonus = 0;
-    let selections = selections_for_effects(entity, ruleset);
-    for selection in selections.iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            // Exhaustive match so adding an Effect variant is a compile error
-            // here, not a silently-ignored bonus.
-            match effect {
-                Effect::AbilityBonus { param, amount }
-                    if selection.params.get(param) == Some(ability) =>
-                {
-                    let matches = match instance_key {
-                        None => true,
-                        // The selection must name this instance; one that omits
-                        // the instance key targets no parameterized instance at
-                        // all.
-                        Some(key) => match selection.params.get(key) {
-                            Some(named) => Some(named.as_str()) == parameter,
-                            None => false,
-                        },
-                    };
-                    if matches {
-                        bonus += i32::from(*amount);
-                    }
-                }
-                // Not an ability bonus for this target; contributes nothing here.
-                // AbilityScoreGrant is a free *floor*, applied in
-                // effective_ability_score, not an additive bonus.
-                Effect::AbilityBonus { .. }
-                | Effect::CharacteristicLimit { .. }
-                | Effect::ArtBonus { .. }
-                | Effect::AffinityAbilityCost { .. }
-                | Effect::AffinityArtCost { .. }
-                | Effect::RestrictedAbilityXp { .. }
-                | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. }
-                | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. }
-                | Effect::LaterLifeXpRate { .. }
-                | Effect::AbilityAuthorization { .. }
-                | Effect::LocalityAbilityCapFraction { .. }
-                | Effect::ConfidenceBonus { .. }
-                | Effect::SpellMasteryXp { .. }
-                | Effect::GrantsSpellMastery { .. }
-                | Effect::GrantsSelection { .. }
-                | Effect::ItemLevelBudget { .. }
-                | Effect::MasterpieceItem
-                | Effect::TrueFaithGrant { .. }
-                | Effect::WarpingGrant { .. }
-                | Effect::SizeDelta { .. }
-                | Effect::CharacteristicScoreDelta { .. }
-                | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. }
-                | Effect::MightGrant { .. }
-                | Effect::PowerLevels { .. }
-                // M5/5b in-play effects: consumed by derived.rs (5i); they never
-                // alter a creation-legality total, so they are no-ops here.
-                | Effect::MagicalFocus { .. }
-                | Effect::CastingTotalMod { .. }
-                | Effect::LabTotalMod { .. }
-                | Effect::DeficientArt { .. }
-                | Effect::MagicTotalHalving { .. }
-                | Effect::SoakMod { .. }
-                | Effect::CombatMod { .. }
-                | Effect::HealthMod { .. }
-                | Effect::MagicResistanceMod { .. }
-                | Effect::AgingMod { .. }
-                | Effect::AdvancementMod { .. }
-                | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. }
-                // Elemental Magic is an XP-space Art boost applied in
-                // effective_art_score, not a flat per-effect bonus; no-op here.
-                | Effect::ElementalMagic { .. } => {}
-            }
-        }
-    }
-    bonus
-}
-
-/// The effective score of the `(ability, parameter)` instance: the highest bought
-/// score the entity holds for that exact instance plus its bonus. An instance the
-/// entity has not bought counts as 0.
-pub fn effective_ability_score(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    ability: &Id,
-    parameter: Option<&str>,
-) -> i32 {
-    let bought = entity
-        .ability_scores
-        .iter()
-        .filter(|a| &a.ability == ability && a.parameter.as_deref() == parameter)
-        .map(|a| i32::from(a.score))
-        .max()
-        .unwrap_or(0);
-    let floor = granted_ability_floor(entity, ruleset, ability, parameter);
-    bought.max(floor) + ability_bonus(entity, ruleset, ability, parameter)
-}
-
-/// The highest free starting score granted to `ability` by any
-/// [`Effect::AbilityScoreGrant`] (e.g. Second Sight seeding Second Sight 1). The
-/// target is fixed by the granting virtue, so it matches by ability id. Granted
-/// abilities are plain (single-instance), so only the parameter-less instance
-/// receives the floor. Grants do not stack — a higher grant wins — so this is a
-/// `max`, not a sum, and it costs no experience (see [`crate::validation`]).
-pub(crate) fn granted_ability_floor(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    ability: &Id,
-    parameter: Option<&str>,
-) -> i32 {
-    if parameter.is_some() {
-        return 0;
-    }
-    let mut floor = 0;
-    let selections = selections_for_effects(entity, ruleset);
-    for selection in selections.iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::AbilityScoreGrant {
-                ability: granted,
-                amount,
-            } = effect
-                && granted == ability
-            {
-                floor = floor.max(i32::from(*amount));
-            }
-        }
-    }
-    floor
-}
-
-/// A non-zero score bonus targeting one Art. Serializes for the frontend as
-/// `{ "art": "<id>", "bonus": N }`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ArtBonus {
-    /// The slug id of the boosted Art (e.g. `art.ignem`).
-    pub art: Id,
-    /// The summed bonus: all matching art-bonus effects (e.g. Puissant Art +3)
-    /// added together, so stacking virtues combine.
-    pub bonus: i32,
-}
-
-/// A non-zero free effective-score bonus targeting one Characteristic (Giant
-/// Blood +1 Str/Sta, Dwarf −1). Serializes for the frontend as
-/// `{ "characteristic": "str", "bonus": N }`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct CharacteristicBonus {
-    /// The affected Characteristic.
-    pub characteristic: Characteristic,
-    /// The summed free bonus (may be negative).
-    pub bonus: i32,
-}
-
-/// Sum of all art-bonus effects (e.g. Puissant Art) targeting one Art. Arts are
-/// not parameterized, so the target is matched by id alone. Two virtues boosting
-/// the same Art stack.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:4818-4820 (Puissant
-/// Art, +3; may be taken twice, for two different Arts).
-pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
-    let mut bonus = 0;
-    let selections = selections_for_effects(entity, ruleset);
-    for selection in selections.iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            // Exhaustive match so adding an Effect variant is a compile error
-            // here, not a silently-ignored bonus.
-            match effect {
-                Effect::ArtBonus { param, amount } if selection.params.get(param) == Some(art) => {
-                    bonus += i32::from(*amount);
-                }
-                // Not an art bonus for this target; contributes nothing here.
-                Effect::ArtBonus { .. }
-                | Effect::AbilityBonus { .. }
-                | Effect::CharacteristicLimit { .. }
-                | Effect::AffinityAbilityCost { .. }
-                | Effect::AffinityArtCost { .. }
-                | Effect::RestrictedAbilityXp { .. }
-                | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. }
-                | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. }
-                | Effect::LaterLifeXpRate { .. }
-                | Effect::AbilityAuthorization { .. }
-                | Effect::LocalityAbilityCapFraction { .. }
-                | Effect::ConfidenceBonus { .. }
-                | Effect::SpellMasteryXp { .. }
-                | Effect::GrantsSpellMastery { .. }
-                | Effect::GrantsSelection { .. }
-                | Effect::ItemLevelBudget { .. }
-                | Effect::MasterpieceItem
-                | Effect::TrueFaithGrant { .. }
-                | Effect::WarpingGrant { .. }
-                | Effect::SizeDelta { .. }
-                | Effect::CharacteristicScoreDelta { .. }
-                | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. }
-                | Effect::MightGrant { .. }
-                | Effect::PowerLevels { .. }
-                // M5/5b in-play effects: consumed by derived.rs (5i); they never
-                // alter a creation-legality total, so they are no-ops here.
-                | Effect::MagicalFocus { .. }
-                | Effect::CastingTotalMod { .. }
-                | Effect::LabTotalMod { .. }
-                | Effect::DeficientArt { .. }
-                | Effect::MagicTotalHalving { .. }
-                | Effect::SoakMod { .. }
-                | Effect::CombatMod { .. }
-                | Effect::HealthMod { .. }
-                | Effect::MagicResistanceMod { .. }
-                | Effect::AgingMod { .. }
-                | Effect::AdvancementMod { .. }
-                | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. }
-                // Elemental Magic is an XP-space Art boost applied in
-                // effective_art_score, not a flat per-effect bonus; no-op here.
-                | Effect::ElementalMagic { .. } => {}
-            }
-        }
-    }
-    bonus
-}
-
-/// The highest whole bought score the entity holds for `art` (0 if unbought).
-fn bought_art_score(entity: &Entity, art: &Id) -> u8 {
-    entity
-        .art_scores
-        .iter()
-        .filter(|a| &a.art == art)
-        .map(|a| a.score)
-        .max()
-        .unwrap_or(0)
-}
-
-/// The set of elemental Form ids the entity's Elemental Magic marker pools over,
-/// if it carries one ([`Effect::ElementalMagic`]). `None` for a character without
-/// the Virtue — the overwhelmingly common case, so the redistribution path is
-/// skipped entirely.
-fn elemental_magic_forms(entity: &Entity, ruleset: &Ruleset) -> Option<BTreeSet<Id>> {
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::ElementalMagic { forms } = effect {
-                return Some(forms.clone());
-            }
-        }
-    }
-    None
-}
-
-/// The **score-space** boost Elemental Magic confers on one elemental Form: 0 for
-/// a non-elemental Art or an entity without the marker. Reconstructs each pooled
-/// Form's table-XP from its bought score, gives `art` half (rounded up) of every
-/// *other* pooled Form's XP, and inverts the sum back to a score — the delta over
-/// the bought score is the boost.
-///
-/// This is an XP-space bonus, nonlinear in the bought score, so unlike every flat
-/// [`Effect::ArtBonus`] it cannot be a single stored amount. Redistribution
-/// operates on the table-XP of the *whole bought score* (storage keeps no raw
-/// assigned XP), so leftover XP between score thresholds is not represented — see
-/// RULES.md.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3731-3737 (21 XP → 11
-/// bonus each: `ceil(21/2)`, so rounding is **up**).
-fn elemental_form_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
-    let Some(forms) = elemental_magic_forms(entity, ruleset) else {
-        return 0;
-    };
-    if !forms.contains(art) {
-        return 0;
-    }
-    let table = &ruleset.art_advancement;
-    let own_score = bought_art_score(entity, art);
-    let own_xp = table.xp_for_score(own_score).unwrap_or(0);
-    let mut bonus_xp = 0u32;
-    for other in &forms {
-        if other == art {
-            continue;
-        }
-        let other_xp = table
-            .xp_for_score(bought_art_score(entity, other))
-            .unwrap_or(0);
-        // Half, rounded up (Core:3731 worked example: 21 → 11).
-        bonus_xp += other_xp.div_ceil(2);
-    }
-    let boosted = table.score_for_xp(own_xp + bonus_xp);
-    i32::from(boosted) - i32::from(own_score)
-}
-
-/// The effective score of `art`: the highest bought score the entity holds for
-/// it, plus any flat bonus (Puissant Art) and any Elemental Magic XP-space boost.
-/// An Art the entity has not bought counts as 0.
-pub fn effective_art_score(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
-    let bought = i32::from(bought_art_score(entity, art));
-    bought + art_bonus(entity, ruleset, art) + elemental_form_bonus(entity, ruleset, art)
-}
-
-/// Non-zero art bonuses, one per Art, for the UI to add onto each displayed
-/// bought score. Each is the full effective-over-bought delta — flat Puissant Art
-/// *and* any Elemental Magic XP-space boost — so the UI surfaces the elemental
-/// redistribution exactly like a Puissant bonus. Arts with no bonus are omitted.
-///
-/// Iterates the full Art catalogue, not just bought `art_scores`: a Puissant Art
-/// (or an Elemental Magic form boost) applies even at 0 bought points, but the UI
-/// drops an Art's row when its bought score hits 0, so gating on `art_scores`
-/// would hide the badge until the first point is bought (Issue 13). Iterating the
-/// catalogue also naturally dedupes any duplicate bought rows. Order follows the
-/// ruleset's Art order.
-pub fn art_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<ArtBonus> {
-    let mut out = Vec::new();
-    for art in ruleset.arts() {
-        let bonus = effective_art_score(entity, ruleset, &art.id)
-            - i32::from(bought_art_score(entity, &art.id));
-        if bonus != 0 {
-            out.push(ArtBonus {
-                art: art.id.clone(),
-                bonus,
-            });
-        }
-    }
-    out
-}
-
-/// Net limit shift for `characteristic` from `CharacteristicLimit` effects whose
-/// sign matches `raising`: the sum of positive amounts when `raising` is true
-/// (Great Characteristic) or of negative amounts when false (Poor). Two Greats
-/// for the same characteristic sum to +2; two Poors to −2.
-fn characteristic_limit_shift(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    characteristic: Characteristic,
-    raising: bool,
-) -> i32 {
-    let mut shift = 0;
-    let selections = selections_for_effects(entity, ruleset);
-    for selection in selections.iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            // Exhaustive match so adding an Effect variant is a compile error
-            // here, not a silently-ignored shift.
-            match effect {
-                Effect::CharacteristicLimit { param, amount }
-                    if (*amount > 0) == raising && *amount != 0 =>
-                {
-                    let target = selection
-                        .params
-                        .get(param)
-                        .and_then(Characteristic::from_id);
-                    if target == Some(characteristic) {
-                        shift += i32::from(*amount);
-                    }
-                }
-                // Wrong sign, or not a limit shift; contributes nothing here.
-                // CharacteristicPoints grants budget, not a range shift, and is
-                // read by characteristic_points_granted.
-                Effect::CharacteristicLimit { .. }
-                | Effect::AbilityBonus { .. }
-                | Effect::ArtBonus { .. }
-                | Effect::AffinityAbilityCost { .. }
-                | Effect::AffinityArtCost { .. }
-                | Effect::RestrictedAbilityXp { .. }
-                | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. }
-                | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. }
-                | Effect::LaterLifeXpRate { .. }
-                | Effect::AbilityAuthorization { .. }
-                | Effect::LocalityAbilityCapFraction { .. }
-                | Effect::ConfidenceBonus { .. }
-                | Effect::SpellMasteryXp { .. }
-                | Effect::GrantsSpellMastery { .. }
-                | Effect::GrantsSelection { .. }
-                | Effect::ItemLevelBudget { .. }
-                | Effect::MasterpieceItem
-                | Effect::TrueFaithGrant { .. }
-                | Effect::WarpingGrant { .. }
-                | Effect::SizeDelta { .. }
-                | Effect::CharacteristicScoreDelta { .. }
-                | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. }
-                | Effect::MightGrant { .. }
-                | Effect::PowerLevels { .. }
-                // M5/5b in-play effects: consumed by derived.rs (5i); they never
-                // alter a creation-legality total, so they are no-ops here.
-                | Effect::MagicalFocus { .. }
-                | Effect::CastingTotalMod { .. }
-                | Effect::LabTotalMod { .. }
-                | Effect::DeficientArt { .. }
-                | Effect::MagicTotalHalving { .. }
-                | Effect::SoakMod { .. }
-                | Effect::CombatMod { .. }
-                | Effect::HealthMod { .. }
-                | Effect::MagicResistanceMod { .. }
-                | Effect::AgingMod { .. }
-                | Effect::AdvancementMod { .. }
-                | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. }
-                // Elemental Magic is an XP-space Art boost applied in
-                // effective_art_score, not a flat per-effect bonus; no-op here.
-                | Effect::ElementalMagic { .. } => {}
-            }
-        }
-    }
-    shift
-}
-
-/// The highest base score `characteristic` may be bought to: the ruleset's base
-/// cap (+3) raised by each Great (Characteristic) targeting it (+1 apiece),
-/// clamped at the absolute effective ceiling (+5). Great Characteristic grants no
-/// points — it only opens this headroom; the score must still be bought.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3987-3989.
-pub fn characteristic_cap(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    characteristic: Characteristic,
-) -> i32 {
-    let Some(rules) = ruleset.characteristic_rules() else {
-        return 0;
-    };
-    let base_max = i32::from(rules.base_max_score().unwrap_or(0));
-    let ceiling = i32::from(rules.effective_max_score().unwrap_or(0));
-    (base_max + characteristic_limit_shift(entity, ruleset, characteristic, true)).min(ceiling)
-}
-
-/// The lowest base score `characteristic` may be bought to: the ruleset's base
-/// floor (−3) lowered by each Poor (Characteristic) targeting it (−1 apiece),
-/// clamped at the absolute effective floor (−5). Poor Characteristic grants no
-/// points — it only opens this headroom; the score must still be sold down.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:6598-6600.
-pub fn characteristic_floor(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    characteristic: Characteristic,
-) -> i32 {
-    let Some(rules) = ruleset.characteristic_rules() else {
-        return 0;
-    };
-    let base_min = i32::from(rules.base_min_score().unwrap_or(0));
-    let floor = i32::from(rules.effective_min_score().unwrap_or(0));
-    (base_min + characteristic_limit_shift(entity, ruleset, characteristic, false)).max(floor)
-}
-
-/// Non-zero ability bonuses, one per bought ability *instance*, for the UI to add
-/// onto each displayed bought score. A parameterized ability ((Area) Lore) yields
-/// one entry per instance so a Puissant bonus attaches to exactly the targeted
-/// row. Instances with no bonus are omitted. Order follows `ability_scores`.
-pub fn ability_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<AbilityBonus> {
-    let mut out = Vec::new();
-    for a in &entity.ability_scores {
-        let bonus = ability_bonus(entity, ruleset, &a.ability, a.parameter.as_deref());
-        if bonus != 0 {
-            out.push(AbilityBonus {
-                ability: a.ability.clone(),
-                parameter: a.parameter.clone(),
-                bonus,
-            });
-        }
-    }
-    out
-}
-
-/// The per-characteristic buy cap for all eight characteristics, keyed by
-/// characteristic — the spinner ceiling the UI enforces (Great Characteristic
-/// raises individual entries). Every characteristic has a cap, so none is
-/// omitted.
-pub fn characteristic_caps(entity: &Entity, ruleset: &Ruleset) -> BTreeMap<Characteristic, i32> {
-    Characteristic::ALL
-        .into_iter()
-        .map(|c| (c, characteristic_cap(entity, ruleset, c)))
-        .collect()
-}
-
-/// The per-characteristic buy floor for all eight characteristics, keyed by
-/// characteristic — the spinner floor the UI enforces (Poor Characteristic
-/// lowers individual entries). Every characteristic has a floor, so none is
-/// omitted.
-pub fn characteristic_floors(entity: &Entity, ruleset: &Ruleset) -> BTreeMap<Characteristic, i32> {
-    Characteristic::ALL
-        .into_iter()
-        .map(|c| (c, characteristic_floor(entity, ruleset, c)))
-        .collect()
-}
-
-/// The experience charged against a pool for a bought score whose advancement
-/// table cost is `table_xp`, under an optional Affinity multiplier.
-///
-/// Affinity (Ability/Art) says creation XP "counts as" `num/den` of itself
-/// (3/2, rounded up): so the points actually charged to reach a fixed table cost
-/// `T` are the smallest `c` with `ceil(c·num/den) ≥ T`, which is
-/// `ceil(T·den/num)`. The worked example (Perdo 10, Art table T=55, 3/2):
-/// `ceil(55·2/3) = ceil(36.67) = 37`, which the rules say counts as 56 ≥ 55.
-/// Integer-only so the engine stays exact.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3372-3378, worked
-/// example `:2443`.
-pub(crate) fn charged_cost(table_xp: u32, affinity: Option<(u8, u8)>) -> u32 {
-    match affinity {
-        Some((num, den)) if num != 0 => table_xp
-            .saturating_mul(u32::from(den))
-            .div_ceil(u32::from(num)),
-        _ => table_xp,
-    }
-}
-
-/// Of several Affinity multipliers on one target, the one giving the greatest
-/// cost reduction. Affinities do not stack, so the single most generous wins.
-/// A score "counts as `num/den` of itself", charged `table·den/num`, so a larger
-/// `num/den` is cheaper — the most generous is `max(num/den)`. Compares
-/// `n1/d1` vs `n2/d2` as `n1·d2` vs `n2·d1` to stay in integer arithmetic.
-fn best_affinity(multipliers: impl Iterator<Item = (u8, u8)>) -> Option<(u8, u8)> {
-    multipliers.reduce(|a, b| {
-        let (an, ad) = (u32::from(a.0), u32::from(a.1));
-        let (bn, bd) = (u32::from(b.0), u32::from(b.1));
-        if an * bd >= bn * ad { a } else { b }
-    })
-}
-
-/// The Affinity multiplier applying to one ability instance, if any
-/// ([`Effect::AffinityAbilityCost`] targeting it). Matches the instance exactly,
-/// like [`ability_bonus`]. `pub(crate)` so the age-cap validator can read whether
-/// an Ability carries an Affinity (which raises its age cap by +2, Core:3374).
-pub(crate) fn ability_affinity(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    ability: &Id,
-    parameter: Option<&str>,
-) -> Option<(u8, u8)> {
-    let instance_key = ruleset
-        .abilities
-        .get(ability)
-        .and_then(|a| a.parameter.as_deref());
-    let selections = selections_for_effects(entity, ruleset);
-    let found = selections.iter().flat_map(|selection| {
-        let item = ruleset.point_items.get(&selection.item_ref);
-        item.into_iter()
-            .flat_map(|item| &item.effects)
-            // Exhaustive match so adding an Effect variant is a compile error
-            // here, not a silently-ignored cost reduction.
-            .filter_map(move |effect| match effect {
-                Effect::AffinityAbilityCost {
-                    param,
-                    counts_as_num,
-                    counts_as_den,
-                } if selection.params.get(param) == Some(ability) => {
-                    let matches = match instance_key {
-                        None => true,
-                        Some(key) => selection.params.get(key).map(Id::as_str) == parameter,
-                    };
-                    matches.then_some((*counts_as_num, *counts_as_den))
-                }
-                // A group Affinity (Linguist) covers a fixed set of ability ids,
-                // any instance — so it matches by id regardless of `parameter`.
-                Effect::GroupAffinityCost {
-                    abilities,
-                    counts_as_num,
-                    counts_as_den,
-                } if abilities.contains(ability) => Some((*counts_as_num, *counts_as_den)),
-                // Not an Affinity for this ability instance; no reduction here.
-                Effect::AffinityAbilityCost { .. }
-                | Effect::AbilityBonus { .. }
-                | Effect::CharacteristicLimit { .. }
-                | Effect::ArtBonus { .. }
-                | Effect::AffinityArtCost { .. }
-                | Effect::RestrictedAbilityXp { .. }
-                | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. }
-                | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. }
-                | Effect::LaterLifeXpRate { .. }
-                | Effect::AbilityAuthorization { .. }
-                | Effect::LocalityAbilityCapFraction { .. }
-                | Effect::ConfidenceBonus { .. }
-                | Effect::SpellMasteryXp { .. }
-                | Effect::GrantsSpellMastery { .. }
-                | Effect::GrantsSelection { .. }
-                | Effect::ItemLevelBudget { .. }
-                | Effect::MasterpieceItem
-                | Effect::TrueFaithGrant { .. }
-                | Effect::WarpingGrant { .. }
-                | Effect::SizeDelta { .. }
-                | Effect::CharacteristicScoreDelta { .. }
-                | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. }
-                | Effect::MightGrant { .. }
-                | Effect::PowerLevels { .. }
-                // M5/5b in-play effects: consumed by derived.rs (5i); not an
-                // Affinity, so no cost reduction here.
-                | Effect::MagicalFocus { .. }
-                | Effect::CastingTotalMod { .. }
-                | Effect::LabTotalMod { .. }
-                | Effect::DeficientArt { .. }
-                | Effect::MagicTotalHalving { .. }
-                | Effect::SoakMod { .. }
-                | Effect::CombatMod { .. }
-                | Effect::HealthMod { .. }
-                | Effect::MagicResistanceMod { .. }
-                | Effect::AgingMod { .. }
-                | Effect::AdvancementMod { .. }
-                | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. }
-                // Elemental Magic is an XP-space Art boost, not an Affinity/cost
-                // reduction; no-op here.
-                | Effect::ElementalMagic { .. } => None,
-            })
-    });
-    best_affinity(found)
-}
-
-/// The Affinity multiplier applying to one Art, if any
-/// ([`Effect::AffinityArtCost`] targeting it). Arts are matched by id alone.
-fn art_affinity(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Option<(u8, u8)> {
-    let selections = selections_for_effects(entity, ruleset);
-    let found = selections.iter().flat_map(|selection| {
-        let item = ruleset.point_items.get(&selection.item_ref);
-        item.into_iter()
-            .flat_map(|item| &item.effects)
-            // Exhaustive match so adding an Effect variant is a compile error
-            // here, not a silently-ignored cost reduction.
-            .filter_map(move |effect| match effect {
-                Effect::AffinityArtCost {
-                    param,
-                    counts_as_num,
-                    counts_as_den,
-                } if selection.params.get(param) == Some(art) => {
-                    Some((*counts_as_num, *counts_as_den))
-                }
-                // Not an Affinity for this Art; no reduction here.
-                Effect::AffinityArtCost { .. }
-                | Effect::AbilityBonus { .. }
-                | Effect::CharacteristicLimit { .. }
-                | Effect::ArtBonus { .. }
-                | Effect::AffinityAbilityCost { .. }
-                | Effect::RestrictedAbilityXp { .. }
-                | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. }
-                | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. }
-                | Effect::LaterLifeXpRate { .. }
-                | Effect::AbilityAuthorization { .. }
-                | Effect::LocalityAbilityCapFraction { .. }
-                | Effect::ConfidenceBonus { .. }
-                | Effect::SpellMasteryXp { .. }
-                | Effect::GrantsSpellMastery { .. }
-                | Effect::GrantsSelection { .. }
-                | Effect::ItemLevelBudget { .. }
-                | Effect::MasterpieceItem
-                | Effect::TrueFaithGrant { .. }
-                | Effect::WarpingGrant { .. }
-                | Effect::SizeDelta { .. }
-                | Effect::CharacteristicScoreDelta { .. }
-                | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. }
-                | Effect::MightGrant { .. }
-                | Effect::PowerLevels { .. }
-                // M5/5b in-play effects: consumed by derived.rs (5i); not an
-                // Affinity, so no cost reduction here.
-                | Effect::MagicalFocus { .. }
-                | Effect::CastingTotalMod { .. }
-                | Effect::LabTotalMod { .. }
-                | Effect::DeficientArt { .. }
-                | Effect::MagicTotalHalving { .. }
-                | Effect::SoakMod { .. }
-                | Effect::CombatMod { .. }
-                | Effect::HealthMod { .. }
-                | Effect::MagicResistanceMod { .. }
-                | Effect::AgingMod { .. }
-                | Effect::AdvancementMod { .. }
-                | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. }
-                // Elemental Magic is an XP-space Art boost, not an Affinity/cost
-                // reduction; no-op here.
-                | Effect::ElementalMagic { .. } => None,
-            })
-    });
-    best_affinity(found)
-}
-
-/// A restricted experience pool granted by a virtue, with how much of it the
-/// character's eligible spends actually consume (from the allocation). Serializes
-/// for the frontend so the XP bar can show each pool's `used`/`amount`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct RestrictedXpPool {
-    /// Points granted to this pool.
-    pub amount: u32,
-    /// Points the allocation draws from this pool (≤ `amount`; remainder wasted).
-    pub used: u32,
-    /// Eligible ability ids (empty when eligibility is purely by category).
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub abilities: Vec<Id>,
-    /// Eligible ability categories (empty when eligibility is purely by id).
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub categories: Vec<AbilityCategory>,
-    /// Where the pool came from, so the UI can label it. Without this the XP bar
-    /// would have to infer a name from the ability list, which cannot distinguish
-    /// childhood's two blocks (both list childhood Abilities) and would read as a
-    /// V/F grant.
-    pub origin: XpPoolOrigin,
-}
-
-/// Where a restricted XP pool came from.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case", tag = "kind")]
-pub enum XpPoolOrigin {
-    /// A Virtue/Flaw grant (Educated, Warrior, Privileged Upbringing, …). The UI
-    /// labels it with the item's own localized name.
-    Item {
-        /// The granting item.
-        item: Id,
-    },
-    /// A block of life-stage experience. Labelled through a Fluent key on the
-    /// block, since a life stage is not an item and has no i18n entry.
-    LifeStage {
-        /// Which block.
-        block: LifeStageBlock,
-    },
-}
-
-/// A block of life-stage experience that funds purchases on its own terms.
-///
-/// A fixed taxonomy (the rules grant exactly these), so an enum: adding a block is
-/// a compile error until the UI labels it.
-///
-/// **Apprenticeship is absent, and later life is present.** Whichever block funds
-/// anything the character may learn is the *general* pool and needs no slug: for a
-/// magus that is apprenticeship, whose experience "can be spent on Arts or
-/// Abilities" (Core Rules.md:2435). Later life buys "any **Abilities**" (`:2214`,
-/// `:2392`) and, for a magus, ends where apprenticeship begins — so it is a
-/// restricted pool of its own, listed here. For a grog or companion later life is
-/// still the general pool; the enum names the blocks that *can* be restricted, and
-/// which pools a character actually gets is decided in [`xp_allocation`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum LifeStageBlock {
-    /// Childhood's native-language experience: spendable only on the native
-    /// language instance (Core Rules.md:2378).
-    ChildhoodNativeLanguage,
-    /// Childhood's restricted spread: spendable only on the childhood Ability list,
-    /// and never on the native language (`:2378`).
-    ChildhoodSpread,
-    /// Later life: for a magus, the years before apprenticeship, spendable on
-    /// Abilities alone and never on an Art (`:2214`, `:2392`).
-    LaterLife,
-}
-
-impl LifeStageBlock {
-    /// Every block, the single source of the set (the UI's labels are checked
-    /// against it).
-    pub const ALL: [LifeStageBlock; 3] = [
-        LifeStageBlock::ChildhoodNativeLanguage,
-        LifeStageBlock::ChildhoodSpread,
-        LifeStageBlock::LaterLife,
-    ];
-}
-
-impl fmt::Display for LifeStageBlock {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(match self {
-            LifeStageBlock::ChildhoodNativeLanguage => "childhood_native_language",
-            LifeStageBlock::ChildhoodSpread => "childhood_spread",
-            LifeStageBlock::LaterLife => "later_life",
-        })
-    }
-}
-
-/// One instance of an ability: the id plus, for a parameterized ability, the
-/// instance value ("Living Language (German)"). Childhood's blocks need this
-/// granularity — the 75 points buy the native language and the 45 may buy any
-/// OTHER Living Language — which an id alone cannot express.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct AbilityInstanceRef {
-    /// The ability.
-    pub ability: Id,
-    /// The instance value, for a parameterized ability. `None` matches the ability
-    /// whatever its instance.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub parameter: Option<String>,
-}
-
-impl AbilityInstanceRef {
-    /// Whether this ref names the given bought instance.
-    fn matches(&self, ability: &Id, parameter: Option<&str>) -> bool {
-        self.ability == *ability
-            && (self.parameter.is_none() || self.parameter.as_deref() == parameter)
-    }
-}
-
-/// The result of allocating Ability + Art spends across the general experience
-/// pool and any restricted pools (Educated/Warrior/Privileged). Computed by a
-/// max-flow feasibility solve; `total_demand > max_flow` means the spends cannot
-/// all be funded (overspend by `total_demand - max_flow`).
-///
-/// Serializes like its sibling result types (`RestrictedXpPool`, `AbilityBonus`,
-/// `Balance`, …) so a Tauri command can hand the full allocation to the frontend
-/// directly — including `max_flow`/`general_pool`, which let the UI surface the
-/// overspend delta — rather than reshaping a subset of fields at the IPC edge.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct XpAllocation {
-    /// Sum of every spend's charged cost (post-Affinity).
-    pub total_demand: u32,
-    /// Maximum demand that can be funded. Equals `total_demand` iff legal.
-    pub max_flow: u32,
-    /// The general pool size: the block's base (`Entity::xp_pool`, or the life-stage
-    /// block that may fund anything) **plus** [`XpAllocation::general_bonus`].
-    pub general_pool: u32,
-    /// The signed [`Effect::GeneralXp`] contribution folded into `general_pool`
-    /// (Skilled Parens +60, Weak Parens -60), reported on its own so a bar can name
-    /// it beside the base rather than leaving the two numbers unexplained.
-    pub general_bonus: i64,
-    /// Points drawn from the general pool by the allocation.
-    pub general_used: u32,
-    /// The restricted pools with their consumed amounts.
-    pub restricted: Vec<RestrictedXpPool>,
-}
-
-/// One bought score's funding demand for the flow solve, tagged with what it buys
-/// so the kind-specific restricted pools know whether they may fund it.
-struct Spend {
-    cost: u32,
-    kind: SpendKind,
-}
-
-/// What a [`Spend`] buys — decides which restricted pools may fund it (the general
-/// pool always can). Ability spends draw RestrictedAbilityXp pools; Mastery spends
-/// draw SpellMasteryXp pools; the two never cross, and Arts have no restricted pool.
-enum SpendKind {
-    /// An Ability score, eligible for RestrictedAbilityXp and life-stage pools. The
-    /// instance value travels with it because childhood's blocks are
-    /// instance-restricted (the native language against every other one).
-    Ability {
-        ability: Id,
-        category: AbilityCategory,
-        parameter: Option<String>,
-    },
-    /// An Art score — funded from the general pool only.
-    Art,
-    /// A per-spell Spell Mastery Ability, eligible for SpellMasteryXp pools only.
-    Mastery,
-}
-
-/// A restricted pool's funding scope for the flow solve.
-enum PoolEligibility {
-    /// An ability-XP grant (Educated/Warrior/Privileged) or a life-stage block:
-    /// funds an Ability whose id, category or instance is listed, minus anything
-    /// `exclude` names. Never Arts, never Mastery.
-    Ability {
-        abilities: Vec<Id>,
-        categories: Vec<AbilityCategory>,
-        /// Specific instances this pool funds. When non-empty it is the ONLY test —
-        /// childhood's native-language block funds one instance and nothing else,
-        /// which `abilities` (id-only) cannot express.
-        instances: Vec<AbilityInstanceRef>,
-        /// Instances this pool never funds, even when `abilities`/`categories`
-        /// would cover them: childhood's spread excludes the native language.
-        exclude: Vec<AbilityInstanceRef>,
-    },
-    /// A Spell-Mastery grant (Mastered Spells): funds only Spell Mastery spends.
-    Mastery,
-}
-
-/// One restricted pool in the flow graph: its capacity, what it may fund, and
-/// where it came from (carried through to the surfaced pool so the UI can name it).
-struct FlowPool {
-    amount: u32,
-    eligibility: PoolEligibility,
-    origin: XpPoolOrigin,
-}
-
-/// The instance childhood's native-language experience may be spent on: the
-/// ability the rules data names for it, at the language the plan chose. `None`
-/// when either is unset — the validator reports an unset language
-/// (`life_stage_native_language_unset`), and no pool is created for a language
-/// nobody picked.
-fn native_language_instance(
-    entity: &Entity,
-    rules: &crate::life_stage::LifeStageRules,
-) -> Option<AbilityInstanceRef> {
-    let language = entity.life_stages.as_ref()?.native_language.clone()?;
-    Some(AbilityInstanceRef {
-        ability: rules.childhood.native_language_ability.clone(),
-        parameter: Some(language),
-    })
-}
-
-/// The Abilities and categories the character's selections permit.
-///
-/// A Virtue grants access two ways, and both count: an explicit
-/// [`Effect::AbilityAuthorization`], or any [`Effect::RestrictedAbilityXp`] pool —
-/// experience earmarked for a category is evidence the category is permitted, which
-/// is what makes Warrior (Martial XP) and Arcane Lore (Arcane XP) work without
-/// further data.
-///
-/// It lives here rather than in `validation/` because both readers need it and the
-/// layering only runs one way: `validation` already depends on `effective`
-/// ([`validate_ability_authorization`](crate::validation) calls
-/// [`selections_for_effects`]), so `effective` calling back into `validation` would
-/// invert it. The two readers are that validator, which gates *owning* a gated
-/// Ability, and [`xp_allocation`], which decides which of a magus's blocks may
-/// *fund* one.
-pub(crate) fn ability_authorizations(
-    entity: &Entity,
-    ruleset: &Ruleset,
-) -> (BTreeSet<Id>, BTreeSet<AbilityCategory>) {
-    let mut abilities = BTreeSet::new();
-    let mut categories = BTreeSet::new();
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            match effect {
-                // Experience earmarked for a category or Ability is itself
-                // permission to learn it — otherwise the grant could never be spent.
-                Effect::RestrictedAbilityXp {
-                    abilities: ids,
-                    categories: cats,
-                    ..
-                }
-                | Effect::AbilityAuthorization {
-                    abilities: ids,
-                    categories: cats,
-                } => {
-                    abilities.extend(ids.iter().cloned());
-                    categories.extend(cats.iter().copied());
-                }
-                // A free score in an Ability is permission to have it, since the
-                // Virtue confers the Ability outright.
-                Effect::AbilityScoreGrant { ability, .. } => {
-                    abilities.insert(ability.clone());
-                }
-                _ => {}
-            }
-        }
-    }
-    (abilities, categories)
-}
-
-/// Whether a restricted pool may fund a spend. Ability pools cover only Ability
-/// spends they list (by id or category); Mastery pools cover only Mastery spends.
-/// No pool covers an Art (general pool only), and the two pool kinds never cross.
-fn pool_covers(eligibility: &PoolEligibility, spend: &Spend) -> bool {
-    match (eligibility, &spend.kind) {
-        (
-            PoolEligibility::Ability {
-                abilities,
-                categories,
-                instances,
-                exclude,
-            },
-            SpendKind::Ability {
-                ability,
-                category,
-                parameter,
-            },
-        ) => {
-            let parameter = parameter.as_deref();
-            if exclude.iter().any(|e| e.matches(ability, parameter)) {
-                return false;
-            }
-            if !instances.is_empty() {
-                // An instance list is exhaustive for this pool, not additive: the
-                // native-language block funds exactly its one instance.
-                return instances.iter().any(|i| i.matches(ability, parameter));
-            }
-            abilities.contains(ability) || categories.contains(category)
-        }
-        (PoolEligibility::Mastery, SpendKind::Mastery) => true,
-        // Every remaining combination is explicitly uncovered, so a new
-        // PoolEligibility or SpendKind variant forces a decision here rather than
-        // silently defaulting to false: Ability pools never fund Arts or Mastery,
-        // and Mastery pools never fund Abilities or Arts.
-        (PoolEligibility::Ability { .. }, SpendKind::Art)
-        | (PoolEligibility::Ability { .. }, SpendKind::Mastery)
-        | (PoolEligibility::Mastery, SpendKind::Ability { .. })
-        | (PoolEligibility::Mastery, SpendKind::Art) => false,
-    }
-}
-
-/// Allocates the entity's Ability + Art spends across the general pool and every
-/// restricted pool, by max-flow feasibility. The general pool funds any spend;
-/// each restricted pool funds only its eligible Abilities; overlapping
-/// eligibility is resolved globally (greedy assignment would strand capacity).
-/// A score the advancement table cannot price contributes 0 (already flagged by
-/// `validate_abilities`/`validate_arts`).
-pub fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
-    // Spends: abilities (Affinity-reduced, with category for eligibility) + arts +
-    // per-spell Spell Mastery Abilities.
-    let mut spends: Vec<Spend> = Vec::new();
-    for a in &entity.ability_scores {
-        let Some(table) = ruleset.advancement.xp_for_score(a.score) else {
-            continue;
-        };
-        // A Virtue-granted Supernatural-Ability floor (e.g. Second Sight 1) is
-        // free: the player "will not need to spend experience points for the
-        // first point". So only the score above the granted floor is charged —
-        // the floor's own table cost is subtracted before Affinity is applied.
-        // Source: Ars Magica - Definitive Edition (Core Rules).md:2639.
-        let floor = granted_ability_floor(entity, ruleset, &a.ability, a.parameter.as_deref());
-        let floor_table = u8::try_from(floor)
-            .ok()
-            .filter(|f| *f > 0)
-            .and_then(|f| ruleset.advancement.xp_for_score(f))
-            .unwrap_or(0);
-        let payable = table.saturating_sub(floor_table);
-        let cost = charged_cost(
-            payable,
-            ability_affinity(entity, ruleset, &a.ability, a.parameter.as_deref()),
-        );
-        // A catalogue-known ability carries its category (for restricted-pool
-        // eligibility); an unknown one funds from the general pool only, like an Art.
-        let kind = ruleset
-            .abilities
-            .get(&a.ability)
-            .map(|def| SpendKind::Ability {
-                ability: a.ability.clone(),
-                category: def.category,
-                parameter: a.parameter.clone(),
-            })
-            .unwrap_or(SpendKind::Art);
-        spends.push(Spend { cost, kind });
-    }
-    for a in &entity.art_scores {
-        let Some(table) = ruleset.art_advancement.xp_for_score(a.score) else {
-            continue;
-        };
-        let cost = charged_cost(table, art_affinity(entity, ruleset, &a.art));
-        spends.push(Spend {
-            cost,
-            kind: SpendKind::Art,
-        });
-    }
-    // Spell Mastery is an Ability (Core Rules.md:9516, :7143) bought from the
-    // Ability advancement table (:15952, :15956-15979). Flawless Magic auto-masters
-    // every spell at a free floor (charge only above it, like a granted Supernatural
-    // floor) AND doubles all mastery Advancement Totals (an Affinity that halves the
-    // charge). The mastery pool (Mastered Spells) — not the ability-restricted pools
-    // — plus the general pool fund it.
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:3887-3889, :4471-4474.
-    let mastery_floor = spell_mastery_floor(entity, ruleset);
-    let mastery_floor_table = if mastery_floor > 0 {
-        ruleset.advancement.xp_for_score(mastery_floor).unwrap_or(0)
-    } else {
-        0
-    };
-    let mastery_affinity = spell_mastery_advancement_affinity(entity, ruleset);
-    for spell in &entity.spells {
-        let bought = spell.mastery.unwrap_or(0);
-        if bought == 0 {
-            continue;
-        }
-        let Some(table) = ruleset.advancement.xp_for_score(bought) else {
-            continue;
-        };
-        let payable = table.saturating_sub(mastery_floor_table);
-        let cost = charged_cost(payable, mastery_affinity);
-        if cost == 0 {
-            continue;
-        }
-        spends.push(Spend {
-            cost,
-            kind: SpendKind::Mastery,
-        });
-    }
-
-    // Restricted pools: one per RestrictedAbilityXp effect (Educated/Warrior/…),
-    // plus a single Spell-Mastery pool (Mastered Spells, summed). The mastery pool
-    // is flow-only — it is not surfaced in `restricted`, which the UI reserves for
-    // ability-XP grants.
-    let mut flow_pools: Vec<FlowPool> = Vec::new();
-    let selections = selections_for_effects(entity, ruleset);
-    for selection in selections.iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::RestrictedAbilityXp {
-                amount,
-                abilities,
-                categories,
-            } = effect
-            {
-                flow_pools.push(FlowPool {
-                    amount: *amount,
-                    eligibility: PoolEligibility::Ability {
-                        abilities: abilities.clone(),
-                        categories: categories.clone(),
-                        // A V/F grant is id/category-scoped, never instance-scoped.
-                        instances: Vec::new(),
-                        exclude: Vec::new(),
-                    },
-                    origin: XpPoolOrigin::Item {
-                        item: selection.item_ref.clone(),
-                    },
-                });
-            }
-        }
-    }
-    // Childhood's two blocks, for a character built through its life stages. Both
-    // are restricted pools rather than budget added to the general one, because
-    // each may buy only its own things: the 75 the native language, the 45 the
-    // childhood list minus that language.
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:2378.
-    // Which block is the general pool depends on whether the character serves an
-    // apprenticeship, so the flag is read once here — off the profile, never a type id.
-    let is_magus = ruleset
-        .profile(&entity.type_id)
-        .is_some_and(|profile| profile.is_magus);
-    let life_stage_budget = ruleset
-        .life_stages()
-        .and_then(|rules| rules.budget(entity, ruleset).map(|budget| (rules, budget)));
-    if let Some((rules, budget)) = &life_stage_budget {
-        let native = native_language_instance(entity, rules);
-        if let Some(native) = &native {
-            flow_pools.push(FlowPool {
-                amount: budget.childhood_native_xp,
-                eligibility: PoolEligibility::Ability {
-                    abilities: Vec::new(),
-                    categories: Vec::new(),
-                    instances: vec![native.clone()],
-                    exclude: Vec::new(),
-                },
-                origin: XpPoolOrigin::LifeStage {
-                    block: LifeStageBlock::ChildhoodNativeLanguage,
-                },
-            });
-        }
-        flow_pools.push(FlowPool {
-            amount: budget.childhood_spread_xp,
-            eligibility: PoolEligibility::Ability {
-                abilities: rules.childhood.spread_abilities.iter().cloned().collect(),
-                categories: Vec::new(),
-                instances: Vec::new(),
-                // "Living Language (other than the character's native language)":
-                // the spread may buy a second language, never the native one.
-                exclude: native.into_iter().collect(),
-            },
-            origin: XpPoolOrigin::LifeStage {
-                block: LifeStageBlock::ChildhoodSpread,
-            },
-        });
-        // A magus's later life is a restricted pool of its own: the years between
-        // childhood and being taken as an apprentice, which buy "any Abilities"
-        // (`:2214`) and never an Art, and not an Arcane, Academic or Martial Ability
-        // either — "magi can only spend experience points on Arcane, Academic and
-        // Martial Abilities before apprenticeship if they have a Virtue which allows
-        // them to do so" (`:2435`). A Virtue that does allow it (Covenant Upbringing,
-        // Educated, Warrior) widens the pool through the same authorizations the
-        // ownership check reads, so the two cannot disagree.
-        //
-        // Supernatural stays in the set and legalizes nothing: access to each
-        // Supernatural Ability is granted per Ability, which
-        // `validate_supernatural_abilities` enforces for magi too — so an
-        // unauthorized one is already an error and funding it here changes nothing.
-        //
-        // For a grog or companion no such pool is pushed: later life is their general
-        // pool (`:2392`), and the categories are gated by an error on the character
-        // instead. A magus's category gate is waived whole-character (`:7151`), so the
-        // pool is the only place the "before apprenticeship" half can live.
-        if is_magus && budget.later_life_xp > 0 {
-            let (abilities, authorized_categories) = ability_authorizations(entity, ruleset);
-            let gated = ruleset.categories_requiring_virtue();
-            flow_pools.push(FlowPool {
-                amount: budget.later_life_xp,
-                eligibility: PoolEligibility::Ability {
-                    abilities: abilities.into_iter().collect(),
-                    categories: AbilityCategory::ALL
-                        .into_iter()
-                        .filter(|category| {
-                            !gated.contains(category) || authorized_categories.contains(category)
-                        })
-                        .collect(),
-                    instances: Vec::new(),
-                    exclude: Vec::new(),
-                },
-                origin: XpPoolOrigin::LifeStage {
-                    block: LifeStageBlock::LaterLife,
-                },
-            });
-        }
-    }
-    let mastery_pool = spell_mastery_xp(entity, ruleset);
-    if mastery_pool > 0 {
-        flow_pools.push(FlowPool {
-            amount: mastery_pool,
-            eligibility: PoolEligibility::Mastery,
-            // Never surfaced (see `restricted` below), so its origin is nominal.
-            origin: XpPoolOrigin::LifeStage {
-                block: LifeStageBlock::ChildhoodSpread,
-            },
-        });
-    }
-
-    let total_demand: u32 = spends.iter().map(|s| s.cost).sum();
-    // The general pool funds anything, so it is the block whose experience the rules
-    // let buy Arts as well as Abilities. For a **magus** that is apprenticeship —
-    // "These experience points can be spent on Arts or Abilities" (`:2435`) — with
-    // later life a restricted, Abilities-only pool above. For a grog or companion
-    // there is no apprenticeship and later life is itself unrestricted (`:2392`), so
-    // it is the general pool. A directly-entered character uses the typed `xp_pool`.
-    // Decided here, once: Skilled/Weak Parens (and any GeneralXp effect) then adjust
-    // it — "an additional 60 experience points … during apprenticeship" (`:4966`) —
-    // and a net-negative grant clamps at 0 rather than underflowing.
-    //
-    // A magus's years past its Gauntlet join that same general pool rather than
-    // forming a block of their own: "Divide 30 points per year between experience
-    // points in Arts, experience points in Abilities, and levels of spells"
-    // (`:2216`), "Each point can be an experience point in an Art or Ability or one
-    // level of spell" (`:2471`) — Arts included, which is precisely what makes a pool
-    // general. The Academic/Arcane/Martial gate does not narrow them either: `:2435`
-    // restricts only what a magus may buy "**before** apprenticeship", and "Magi
-    // without a specific Virtue may only buy Academic Abilities during or after
-    // apprenticeship" (`:7151`) says the years after it are on the permitted side.
-    // So there is no restricted pool and no life-stage block to add — the block that
-    // funds anything is the general pool and needs no slug.
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2435, :2471, :7151.
-    let base_general = match &life_stage_budget {
-        Some((_, budget)) if is_magus => budget
-            .apprenticeship_xp
-            .saturating_add(budget.post_gauntlet_xp),
-        Some((_, budget)) => budget.later_life_xp,
-        None => entity.xp_pool,
-    };
-    let general_bonus = general_xp_bonus(entity, ruleset);
-    let general_pool = clamp_to_u32(i64::from(base_general) + general_bonus);
-
-    // Flow graph: source(0) → sink(1); general(2) and restricted pools
-    // (3..3+R) are pool nodes; spends follow. cap is the residual matrix.
-    let r = flow_pools.len();
-    let s = spends.len();
-    let n = 3 + r + s;
-    let general_node = 2;
-    let pool_node = |i: usize| 3 + i;
-    let spend_node = |j: usize| 3 + r + j;
-    let (source, sink) = (0usize, 1usize);
-
-    let mut cap = vec![vec![0u32; n]; n];
-    for (i, pool) in flow_pools.iter().enumerate() {
-        cap[source][pool_node(i)] = pool.amount;
-    }
-    for (j, spend) in spends.iter().enumerate() {
-        cap[spend_node(j)][sink] = spend.cost;
-        // The general pool can fund any spend.
-        cap[general_node][spend_node(j)] = spend.cost;
-        for (i, pool) in flow_pools.iter().enumerate() {
-            if pool_covers(&pool.eligibility, spend) {
-                cap[pool_node(i)][spend_node(j)] = spend.cost;
-            }
-        }
-    }
-
-    // Two-phase fill on the shared residual matrix, so a spend the restricted
-    // pools *can* cover drains them before the general pool (Educated/Warrior/
-    // Privileged and Mastered-Spells XP is free-but-earmarked; the general pool
-    // must stay available and no restricted XP wasted while eligible spends exist).
-    // Phase 1: restricted-only max flow — the source→general edge stays closed.
-    let restricted_flow = max_flow(n, source, sink, &mut cap);
-    // Phase 2: open the source→general edge and continue Edmonds-Karp on the
-    // same residuals. The sum is the true max flow with restricted usage
-    // maximized, i.e. minimum general used.
-    cap[source][general_node] = general_pool;
-    let max_flow = restricted_flow + max_flow(n, source, sink, &mut cap);
-
-    // Residual on source→pool tells how much each pool funded.
-    let general_used = general_pool - cap[source][general_node];
-    // Surface only the ability-XP pools (the mastery pool is accounted separately).
-    let mut restricted: Vec<RestrictedXpPool> = Vec::new();
-    for (i, pool) in flow_pools.iter().enumerate() {
-        if let PoolEligibility::Ability {
-            abilities,
-            categories,
-            ..
-        } = &pool.eligibility
-        {
-            restricted.push(RestrictedXpPool {
-                amount: pool.amount,
-                used: pool.amount - cap[source][pool_node(i)],
-                origin: pool.origin.clone(),
-                abilities: abilities.clone(),
-                categories: categories.clone(),
-            });
-        }
-    }
-
-    XpAllocation {
-        total_demand,
-        max_flow,
-        general_pool,
-        general_bonus,
-        general_used,
-        restricted,
-    }
-}
-
-/// Edmonds-Karp max flow on a residual capacity matrix (BFS augmenting paths).
-/// The graph is tiny (a few pools + a few dozen spends), so the simple matrix
-/// form is more than fast enough.
-fn max_flow(n: usize, source: usize, sink: usize, cap: &mut [Vec<u32>]) -> u32 {
-    let mut total = 0;
-    loop {
-        let mut parent = vec![usize::MAX; n];
-        parent[source] = source;
-        let mut queue = VecDeque::new();
-        queue.push_back(source);
-        while let Some(u) = queue.pop_front() {
-            for v in 0..n {
-                if parent[v] == usize::MAX && cap[u][v] > 0 {
-                    parent[v] = u;
-                    queue.push_back(v);
-                }
-            }
-        }
-        if parent[sink] == usize::MAX {
-            return total;
-        }
-        // Bottleneck along the found path.
-        let mut bottleneck = u32::MAX;
-        let mut v = sink;
-        while v != source {
-            let u = parent[v];
-            bottleneck = bottleneck.min(cap[u][v]);
-            v = u;
-        }
-        // Augment.
-        let mut v = sink;
-        while v != source {
-            let u = parent[v];
-            cap[u][v] -= bottleneck;
-            cap[v][u] += bottleneck;
-            v = u;
-        }
-        total += bottleneck;
-    }
-}
-
-/// A free starting-score floor a virtue grants to one ability (e.g. Second Sight
-/// → Second Sight 1), for the frontend to show as the ability's effective score.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct AbilityFloor {
-    /// The granted ability's id.
-    pub ability: Id,
-    /// The free bought-score floor (the highest grant, if several apply).
-    pub floor: i32,
-}
-
-/// Every ability granted a free starting score by an [`Effect::AbilityScoreGrant`],
-/// each at its highest grant. Ordered by ability id (deduped), so the frontend can
-/// show the floor as the ability's effective score without recomputing it.
-pub fn ability_score_floors(entity: &Entity, ruleset: &Ruleset) -> Vec<AbilityFloor> {
-    let mut floors: BTreeMap<Id, i32> = BTreeMap::new();
-    let selections = selections_for_effects(entity, ruleset);
-    for selection in selections.iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::AbilityScoreGrant { ability, amount } = effect {
-                let floor = floors.entry(ability.clone()).or_insert(0);
-                *floor = (*floor).max(i32::from(*amount));
-            }
-        }
-    }
-    floors
-        .into_iter()
-        .map(|(ability, floor)| AbilityFloor { ability, floor })
-        .collect()
-}
-
-/// Net Characteristic-buy points granted by [`Effect::CharacteristicPoints`],
-/// summed across selections. Signed: Improved Characteristics adds +3 each, Weak
-/// Characteristics subtracts 3 each; both stack, so the net may be negative.
-pub fn characteristic_points_granted(entity: &Entity, ruleset: &Ruleset) -> i32 {
-    let mut total = 0;
-    let selections = selections_for_effects(entity, ruleset);
-    for selection in selections.iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::CharacteristicPoints { amount } = effect {
-                total += i32::from(*amount);
-            }
-        }
-    }
-    total
-}
-
-/// The character's derived Size: base 0 plus every [`Effect::SizeDelta`]
-/// (Large +1, Giant Blood +2, Small Frame −1, Dwarf −2), summed across
-/// selections. Size is not a bought Characteristic — it has no cost and no buy
-/// cap. Source: Core Rules.md:3975-3978, :4229-4231, :5996-5998, :6767-6769.
-pub fn size(entity: &Entity, ruleset: &Ruleset) -> i32 {
-    let mut total = 0;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::SizeDelta { amount } = effect {
-                total += i32::from(*amount);
-            }
-        }
-    }
-    total
-}
-
-/// The free effective-score bonus a virtue/flaw grants to `characteristic`
-/// ([`Effect::CharacteristicScoreDelta`], e.g. Giant Blood +1 Str/Sta), summed
-/// across selections. Costs no buy points and stacks on top of the bought score.
-pub fn characteristic_score_bonus(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    characteristic: Characteristic,
-) -> i32 {
-    let mut bonus = 0;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::CharacteristicScoreDelta {
-                characteristic: target,
-                amount,
-            } = effect
-                && Characteristic::from_id(target) == Some(characteristic)
-            {
-                bonus += i32::from(*amount);
-            }
-        }
-    }
-    bonus
-}
-
-/// The effective score of `characteristic`: the bought score plus any free
-/// [`Effect::CharacteristicScoreDelta`] bonus. The bonus may push the effective
-/// score beyond the normal ±5 ceiling (Giant Blood's +1 reaches +6).
-pub fn effective_characteristic_score(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    characteristic: Characteristic,
-) -> i32 {
-    let bought = entity
-        .characteristics
-        .get(&characteristic)
-        .copied()
-        .map_or(0, i32::from);
-    bought + characteristic_score_bonus(entity, ruleset, characteristic)
-}
-
-/// Non-zero characteristic bonuses, one per affected Characteristic (canonical
-/// order), for the UI to show alongside the bought score. Characteristics with
-/// no bonus are omitted.
-pub fn characteristic_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<CharacteristicBonus> {
-    Characteristic::ALL
-        .into_iter()
-        .filter_map(|c| {
-            let bonus = characteristic_score_bonus(entity, ruleset, c);
-            (bonus != 0).then_some(CharacteristicBonus {
-                characteristic: c,
-                bonus,
-            })
-        })
-        .collect()
-}
-
-/// Effective Characteristic scores after aging drops AND free virtue deltas, one
-/// entry per Characteristic whose effective value differs from its bought score
-/// (canonical order). Characteristics unchanged from the bought score are omitted;
-/// the UI falls back to the bought score for those. Surfacing this keeps the floor
-/// clamp in [`effective_characteristic_after_aging`] as the single source of truth
-/// (the UI never re-implements it).
-pub fn effective_characteristics(
-    entity: &Entity,
-    ruleset: &Ruleset,
-) -> BTreeMap<Characteristic, i32> {
-    Characteristic::ALL
-        .into_iter()
-        .filter_map(|c| {
-            let bought = entity.characteristics.get(&c).copied().map_or(0, i32::from);
-            let effective = effective_characteristic_after_aging(entity, ruleset, c);
-            (effective != bought).then_some((c, effective))
-        })
-        .collect()
-}
-
-/// Aging-drop counts per Characteristic (from [`aging_drops`]), only the non-zero
-/// entries (canonical order), for the effective-score tooltip breakdown. Empty for
-/// a character whose Virtues exempt him from Characteristic aging (`:5189`).
-pub fn characteristic_aging_drops(
-    entity: &Entity,
-    ruleset: &Ruleset,
-) -> BTreeMap<Characteristic, u32> {
-    Characteristic::ALL
-        .into_iter()
-        .filter_map(|c| {
-            let drops = aging_drops(entity, ruleset, c);
-            (drops != 0).then_some((c, drops))
-        })
-        .collect()
-}
-
-/// The restricted XP pools an entity holds, with their consumed amounts (for the
-/// frontend XP bar). Convenience wrapper over [`xp_allocation`].
-pub fn restricted_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<RestrictedXpPool> {
-    xp_allocation(entity, ruleset).restricted
-}
-
-/// Clamps a signed budget total to a non-negative `u32` (a net-negative grant
-/// floors at 0 rather than underflowing).
-fn clamp_to_u32(n: i64) -> u32 {
-    u32::try_from(n.max(0)).unwrap_or(u32::MAX)
-}
-
-/// Sums the [`Effect::SpellLevels`] amounts across the entity's selections (may
-/// be negative; Skilled Parens +30, Weak Parens −30).
-///
-/// Surfaced on its own (not only folded into [`spell_levels_budget`]) so the
-/// spell-levels bar can show the editable base beside a labelled V/F bonus,
-/// mirroring how the XP bar lists extra pools beside the general one.
-pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
-    sum_signed_effect(entity, ruleset, |e| match e {
-        Effect::SpellLevels { amount } => Some(*amount),
-        // Exhaustive so adding an Effect variant is a compile error here, not a
-        // silently-ignored contribution to the spell-levels budget.
+/// Only sound for a fold whose "interesting" arm(s) are **guarded** (`if ...`):
+/// a guard can fail, so the variant must also appear here to catch that case,
+/// which is why every variant any of the five call sites treats as interesting
+/// is still listed. An unconditional (unguarded) interesting arm must NOT reuse
+/// this macro — the variant would then be matched twice (once unconditionally,
+/// once again inside this list) and `rustc`'s `unreachable_patterns` lint would
+/// turn `cargo clippy -D warnings` into a build failure. `spell_levels_bonus`,
+/// `general_xp_bonus`, and `spell_mastery_advancement_affinity` each match their
+/// one interesting variant unconditionally, so each keeps its own shorter,
+/// hand-written tail (excluding just that one variant) instead.
+macro_rules! irrelevant_effect_variants {
+    () => {
         Effect::AbilityBonus { .. }
         | Effect::CharacteristicLimit { .. }
         | Effect::ArtBonus { .. }
@@ -1683,6 +141,7 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::RestrictedAbilityXp { .. }
         | Effect::CharacteristicPoints { .. }
         | Effect::AbilityScoreGrant { .. }
+        | Effect::SpellLevels { .. }
         | Effect::GeneralXp { .. }
         | Effect::LaterLifeXpRate { .. }
         | Effect::AbilityAuthorization { .. }
@@ -1701,6 +160,9 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::GrantsReputation { .. }
         | Effect::MightGrant { .. }
         | Effect::PowerLevels { .. }
+        // M5/5b in-play effects: consumed by derived.rs (5i); they never affect a
+        // creation-legality score bonus, characteristic-limit shift, or Affinity
+        // cost reduction, so they are no-ops in every fold that shares this tail.
         | Effect::MagicalFocus { .. }
         | Effect::CastingTotalMod { .. }
         | Effect::LabTotalMod { .. }
@@ -1714,1019 +176,23 @@ pub fn spell_levels_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
         | Effect::AdvancementMod { .. }
         | Effect::SpecialCastingMod { .. }
         | Effect::AbilityRollMod { .. }
-        | Effect::ElementalMagic { .. } => None,
-    })
-}
-
-/// Sums the [`Effect::GeneralXp`] amounts across the entity's selections (may be
-/// negative; Skilled Parens +60, Weak Parens −60).
-fn general_xp_bonus(entity: &Entity, ruleset: &Ruleset) -> i64 {
-    sum_signed_effect(entity, ruleset, |e| match e {
-        Effect::GeneralXp { amount } => Some(*amount),
-        // Exhaustive so adding an Effect variant is a compile error here, not a
-        // silently-ignored contribution to the general XP pool.
-        Effect::AbilityBonus { .. }
-        | Effect::CharacteristicLimit { .. }
-        | Effect::ArtBonus { .. }
-        | Effect::AffinityAbilityCost { .. }
-        | Effect::AffinityArtCost { .. }
-        | Effect::RestrictedAbilityXp { .. }
-        | Effect::CharacteristicPoints { .. }
-        | Effect::AbilityScoreGrant { .. }
-        | Effect::SpellLevels { .. }
-        // The later-life RATE is not a pool bonus: it multiplies out into the
-        // life-stage budget (see `life_stage::LifeStageRules::later_life_budget`),
-        // which then becomes the general pool. Adding it here would double-count.
-        | Effect::LaterLifeXpRate { .. }
-        | Effect::AbilityAuthorization { .. }
-        | Effect::LocalityAbilityCapFraction { .. }
-        | Effect::ConfidenceBonus { .. }
-        | Effect::SpellMasteryXp { .. }
-        | Effect::GrantsSpellMastery { .. }
-        | Effect::GrantsSelection { .. }
-        | Effect::ItemLevelBudget { .. }
-        | Effect::MasterpieceItem
-        | Effect::TrueFaithGrant { .. }
-        | Effect::WarpingGrant { .. }
-        | Effect::SizeDelta { .. }
-        | Effect::CharacteristicScoreDelta { .. }
-        | Effect::GroupAffinityCost { .. }
-        | Effect::GrantsReputation { .. }
-        | Effect::MightGrant { .. }
-        | Effect::PowerLevels { .. }
-        | Effect::MagicalFocus { .. }
-        | Effect::CastingTotalMod { .. }
-        | Effect::LabTotalMod { .. }
-        | Effect::DeficientArt { .. }
-        | Effect::MagicTotalHalving { .. }
-        | Effect::SoakMod { .. }
-        | Effect::CombatMod { .. }
-        | Effect::HealthMod { .. }
-        | Effect::MagicResistanceMod { .. }
-        | Effect::AgingMod { .. }
-        | Effect::AdvancementMod { .. }
-        | Effect::SpecialCastingMod { .. }
-        | Effect::AbilityRollMod { .. }
-        | Effect::ElementalMagic { .. } => None,
-    })
-}
-
-/// Sums a signed per-selection effect amount across everything that feeds the
-/// effective layer (selections + derived grants).
-fn sum_signed_effect(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    pick: impl Fn(&Effect) -> Option<i16>,
-) -> i64 {
-    let mut total: i64 = 0;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Some(amount) = pick(effect) {
-                total += i64::from(amount);
-            }
-        }
-    }
-    total
-}
-
-/// The base spell-levels budget BEFORE Skilled/Weak Parens modifiers: the
-/// per-character [`Entity::spell_levels_override`] when set, otherwise the type
-/// profile's `spell_levels` (120 for a magus; 0 for a type with no profile).
-/// Factored so the effective payload and the validator select the base
-/// identically and can never diverge (Issue 11).
-// Source: Ars Magica - Definitive Edition (Core Rules).md:2215-2216, :2435
-pub fn spell_levels_base(entity: &Entity, profile: Option<&EntityTypeProfile>) -> u32 {
-    entity
-        .spell_levels_override
-        .unwrap_or_else(|| profile.map(|p| p.spell_levels).unwrap_or(0))
-}
-
-/// The levels of spells a magus took out of its years past the Gauntlet — the
-/// player's chosen slice of "30 points per year", where "Each point can be an
-/// experience point in an Art or Ability or **one level of spell**" (`:2471`).
-///
-/// 0 for a character with no life-stage plan, and for a ruleset shipping no
-/// `post_apprenticeship` block — the rate is data, so with no block there is
-/// nothing to grant.
-// Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2471.
-pub fn life_stage_spell_levels(entity: &Entity, ruleset: &Ruleset) -> u32 {
-    ruleset
-        .life_stages()
-        .and_then(|rules| rules.budget(entity, ruleset))
-        .map_or(0, |budget| budget.post_gauntlet_spell_levels)
-}
-
-/// The magus's effective spell-levels budget: the base ([`spell_levels_base`])
-/// plus any [`Effect::SpellLevels`] modifiers and the levels its post-Gauntlet
-/// years bought ([`life_stage_spell_levels`]), clamped at 0.
-///
-/// The post-Gauntlet term is **additive, not a second budget.** Apprenticeship's
-/// "120 levels of spells" (`:2435`) are the type profile's `spell_levels` and are
-/// what `base` selects; these are the player's chosen slice of the fungible "30
-/// points per year" (`:2471`), which is also why `post_gauntlet_xp` and
-/// `post_gauntlet_spell_levels` always sum to `post_gauntlet_points`.
-///
-/// Folded in **here**, in the one selector both `validate_spells` and the
-/// `EffectiveScores` payload call, so the `over_spell_levels` finding and the
-/// spell-levels bar can never disagree about what the budget is.
-///
-/// [`Entity::spell_levels_override`] still replaces the *profile base* only, and
-/// the post-Gauntlet levels stay on top of it. Deliberate: the override is the flat
-/// flow's escape hatch, and it is not made exclusive with a life-stage plan the way
-/// [`Entity::xp_pool`] is.
-// Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2435, :2471.
-pub fn spell_levels_budget(base: u32, entity: &Entity, ruleset: &Ruleset) -> u32 {
-    clamp_to_u32(
-        i64::from(base)
-            + spell_levels_bonus(entity, ruleset)
-            + i64::from(life_stage_spell_levels(entity, ruleset)),
-    )
-}
-
-/// The maximum level a magus may learn of a spell of the given Technique/Form:
-/// the sum of Technique, Form, Intelligence, Magic Theory and 3 (Core:2465),
-/// using effective Art/Ability scores. Returns an `i64` (small or negative for a
-/// beginning magus). Requisite-Art reduction is a lab-total nuance out of scope.
-/// Single source of truth: both the validation cap and the UI-surfaced cap read
-/// this, so the two can never diverge.
-// Source: Ars Magica - Definitive Edition (Core Rules).md:2465
-pub fn spell_level_cap(entity: &Entity, ruleset: &Ruleset, technique: &Id, form: &Id) -> i64 {
-    let tech = i64::from(effective_art_score(entity, ruleset, technique));
-    let form = i64::from(effective_art_score(entity, ruleset, form));
-    let int = i64::from(
-        entity
-            .characteristics
-            .get(&Characteristic::Int)
-            .copied()
-            .unwrap_or(0),
-    );
-    let magic_theory = i64::from(effective_ability_score(
-        entity,
-        ruleset,
-        &Id::new(crate::ruleset::ID_MAGIC_THEORY),
-        None,
-    ));
-    tech + form + int + magic_theory + 3
-}
-
-/// A per-Technique/Form spell-level cap, surfaced to the frontend so the spell
-/// picker can grey a spell whose level exceeds the magus's cap without
-/// recomputing the derivation in JS. Serializes as
-/// `{ "technique": "<id>", "form": "<id>", "cap": N }`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct SpellLevelCap {
-    /// The Technique-class Art id (e.g. `art.creo`).
-    pub technique: Id,
-    /// The Form-class Art id (e.g. `art.ignem`).
-    pub form: Id,
-    /// The maximum learnable level for this Te/Fo combination (may be negative
-    /// for a beginning magus).
-    pub cap: i64,
-}
-
-/// The [`spell_level_cap`] for every Technique × Form combination in the Art
-/// catalogue, sorted canonically by `(technique, form)`. The picker keys these
-/// by the pair to look up a candidate spell's cap. One entry per combo (a spell's
-/// cap depends only on its Te/Fo, never its level).
-pub fn spell_level_caps(entity: &Entity, ruleset: &Ruleset) -> Vec<SpellLevelCap> {
-    // `art_ids_of` guarantees the sort the canonical (technique, form) order needs.
-    let techniques = ruleset.art_ids_of(crate::art::ArtType::Technique);
-    let forms = ruleset.art_ids_of(crate::art::ArtType::Form);
-    let mut caps = Vec::with_capacity(techniques.len() * forms.len());
-    for technique in &techniques {
-        for form in &forms {
-            caps.push(SpellLevelCap {
-                technique: technique.clone(),
-                form: form.clone(),
-                cap: spell_level_cap(entity, ruleset, technique, form),
-            });
-        }
-    }
-    caps
-}
-
-/// The learned level of a chosen spell: the catalogue's fixed level, or — for a
-/// **General** spell — the per-character chosen level. `None` if the spell is
-/// unknown to the catalogue, or a General spell has no chosen level yet.
-pub fn resolved_spell_level(sel: &SpellSelection, ruleset: &Ruleset) -> Option<u32> {
-    let spell = ruleset.spell(&sel.spell)?;
-    match spell.level {
-        Some(fixed) => Some(u32::from(fixed)),
-        None => sel.level.map(u32::from),
-    }
-}
-
-/// The character's Spell-Mastery XP pool: the sum of every
-/// [`Effect::SpellMasteryXp`] (Mastered Spells +50, stackable). A restricted pool
-/// spent only on per-spell Spell Mastery Abilities. Source: Core Rules.md:4471-4474.
-pub fn spell_mastery_xp(entity: &Entity, ruleset: &Ruleset) -> u32 {
-    let mut total = 0u32;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::SpellMasteryXp { amount } = effect {
-                total += u32::from(*amount);
-            }
-        }
-    }
-    total
-}
-
-/// The mastery-score floor every known spell receives from
-/// [`Effect::GrantsSpellMastery`] (Flawless Magic → 1). The highest floor wins.
-/// Source: Core Rules.md:3887-3889.
-pub fn spell_mastery_floor(entity: &Entity, ruleset: &Ruleset) -> u8 {
-    let mut floor = 0u8;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::GrantsSpellMastery { score, .. } = effect {
-                floor = floor.max(*score);
-            }
-        }
-    }
-    floor
-}
-
-/// The Advancement-Total multiplier applying to *every* Spell Mastery Ability, as
-/// an Affinity "counts as num/den of itself" ([`Effect::GrantsSpellMastery`]'s
-/// doubling: Flawless Magic → `(2, 1)`, halving the XP charged). `None` when no
-/// grant reduces the cost. The most generous multiplier wins, like any Affinity.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:3889.
-pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) -> Option<(u8, u8)> {
-    let selections = selections_for_effects(entity, ruleset);
-    let found = selections.iter().flat_map(|selection| {
-        let item = ruleset.point_items.get(&selection.item_ref);
-        item.into_iter()
-            .flat_map(|item| &item.effects)
-            .filter_map(|effect| match effect {
-                Effect::GrantsSpellMastery {
-                    advancement_num,
-                    advancement_den,
-                    ..
-                    // A larger num/den is a genuine reduction; the identity 1/1
-                    // (a plain floor grant) contributes no Affinity.
-                } if u32::from(*advancement_num) > u32::from(*advancement_den) => {
-                    Some((*advancement_num, *advancement_den))
-                }
-                // A plain floor grant (identity multiplier) or any other effect
-                // contributes no advancement Affinity. Enumerated so a new Effect
-                // variant is a compile error here until it is classified.
-                Effect::GrantsSpellMastery { .. }
-                | Effect::AffinityAbilityCost { .. }
-                | Effect::AbilityBonus { .. }
-                | Effect::CharacteristicLimit { .. }
-                | Effect::ArtBonus { .. }
-                | Effect::AffinityArtCost { .. }
-                | Effect::RestrictedAbilityXp { .. }
-                | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. }
-                | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. }
-                | Effect::LaterLifeXpRate { .. }
-                | Effect::AbilityAuthorization { .. }
-                | Effect::LocalityAbilityCapFraction { .. }
-                | Effect::ConfidenceBonus { .. }
-                | Effect::SpellMasteryXp { .. }
-                | Effect::GrantsSelection { .. }
-                | Effect::ItemLevelBudget { .. }
-                | Effect::MasterpieceItem
-                | Effect::TrueFaithGrant { .. }
-                | Effect::WarpingGrant { .. }
-                | Effect::SizeDelta { .. }
-                | Effect::CharacteristicScoreDelta { .. }
-                | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. }
-                | Effect::MightGrant { .. }
-                | Effect::PowerLevels { .. }
-                | Effect::MagicalFocus { .. }
-                | Effect::CastingTotalMod { .. }
-                | Effect::LabTotalMod { .. }
-                | Effect::DeficientArt { .. }
-                | Effect::MagicTotalHalving { .. }
-                | Effect::SoakMod { .. }
-                | Effect::CombatMod { .. }
-                | Effect::HealthMod { .. }
-                | Effect::MagicResistanceMod { .. }
-                | Effect::AgingMod { .. }
-                | Effect::AdvancementMod { .. }
-                | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. }
-                | Effect::ElementalMagic { .. } => None,
-            })
-    });
-    best_affinity(found)
-}
-
-/// The effective Spell Mastery score of one chosen spell: the higher of its
-/// bought mastery and the granted floor (Flawless Magic auto-masters at 1).
-pub fn effective_spell_mastery(sel: &SpellSelection, entity: &Entity, ruleset: &Ruleset) -> u8 {
-    sel.mastery
-        .unwrap_or(0)
-        .max(spell_mastery_floor(entity, ruleset))
-}
-
-/// Total spell levels the entity's chosen spells consume. Unresolved General
-/// spells (no chosen level) and unknown spells contribute 0.
-pub fn spell_levels_used(entity: &Entity, ruleset: &Ruleset) -> u32 {
-    entity
-        .spells
-        .iter()
-        .filter_map(|s| resolved_spell_level(s, ruleset))
-        .sum()
-}
-
-// --- Phase 7: Gift/Supernatural, Confidence, Reputations, age cap ---
-
-/// Whether the entity "has The Gift" per its type profile: a selection matching
-/// the profile's `gift_id`, or one whose item category is in `gift_categories`.
-/// Shared with `validate_gift_policy` so both use one definition.
-pub(crate) fn has_the_gift(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    profile: &EntityTypeProfile,
-) -> bool {
-    let by_id = profile
-        .gift_id
-        .as_ref()
-        .is_some_and(|gid| entity.selections.iter().any(|s| &s.item_ref == gid));
-    let by_category = !profile.gift_categories.is_empty()
-        && entity.selections.iter().any(|s| {
-            ruleset
-                .point_items
-                .get(&s.item_ref)
-                .is_some_and(|item| profile.gift_categories.contains(&item.category))
-        });
-    by_id || by_category
-}
-
-/// A character's effective Confidence: the derived Confidence Score and the
-/// Confidence Points backing it. Serializes like its sibling result types
-/// (`Balance`, `AbilityBonus`) as `{ "score": N, "points": N }`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Confidence {
-    /// The Confidence Score (spent per die roll).
-    pub score: u8,
-    /// The Confidence Points available to refresh the score.
-    pub points: u8,
-}
-
-/// The character's effective Confidence: the type profile's base plus every
-/// [`Effect::ConfidenceBonus`], clamped at 0. Confidence is derived, never
-/// stored. Source: Core Rules.md:2520-2526, 4900-4902.
-pub fn confidence(
-    base_score: u8,
-    base_points: u8,
-    entity: &Entity,
-    ruleset: &Ruleset,
-) -> Confidence {
-    let mut score = i32::from(base_score);
-    let mut points = i32::from(base_points);
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::ConfidenceBonus {
-                score: s,
-                points: p,
-            } = effect
-            {
-                score += i32::from(*s);
-                points += i32::from(*p);
-            }
-        }
-    }
-    let clamp = |n: i32| u8::try_from(n.max(0)).unwrap_or(u8::MAX);
-    Confidence {
-        score: clamp(score),
-        points: clamp(points),
-    }
-}
-
-/// The character's derived enchanted-device level budget: base 0 plus every
-/// [`Effect::ItemLevelBudget`] (Magic Items +25, Redcap 50), summed. Source:
-/// Core Rules.md:4347-4349, :4842-4846.
-pub fn item_level_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
-    let mut total = 0u32;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::ItemLevelBudget { amount } = effect {
-                total += u32::from(*amount);
-            }
-        }
-    }
-    total
-}
-
-/// The total enchanted-device level the entity's `devices` consume — the "used"
-/// side of the item-level budget bar. Summed across every device. Source: Core
-/// Rules.md:4347-4349.
-pub fn item_level_used(entity: &Entity) -> u32 {
-    entity.devices.iter().map(|d| u32::from(d.level)).sum()
-}
-
-/// The character's derived power-levels budget: base 0 plus every
-/// [`Effect::PowerLevels`] grant (Demonic Blood 30, Demonic Powers +20, Strong
-/// Angelic Heritage 30), summed. The being's `powers` are charged against it,
-/// mirroring [`item_level_budget`]. Source: Realms of Power - The Infernal.md:4122,
-/// :4142; The Divine (Revised).md:1977.
-pub fn power_levels_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
-    let mut total = 0u32;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::PowerLevels { amount } = effect {
-                total += u32::from(*amount);
-            }
-        }
-    }
-    total
-}
-
-/// The total power level the being's `powers` consume — the "used" side of the
-/// power-levels budget bar. Source: Realms of Power - The Infernal.md:4122.
-pub fn powers_used(entity: &Entity) -> u32 {
-    entity.powers.iter().map(|p| u32::from(p.level)).sum()
-}
-
-/// Every [`Effect::MightGrant`] a being's Virtues confer, as `(realm, score)`
-/// pairs (selections + derived grants).
-fn might_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<(Realm, u8)> {
-    let mut grants = Vec::new();
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::MightGrant { realm, score } = effect {
-                grants.push((*realm, *score));
-            }
-        }
-    }
-    grants
-}
-
-/// The being's **effective Might Score**, or `None` if it is not a supernatural
-/// being (no base Might and no [`Effect::MightGrant`]). The Realm comes from the
-/// entity's base Might if entered, else from its Might Virtue grants; the score is
-/// the entered base (may be 0) plus every same-Realm grant. Demonic Blood grants
-/// Infernal Might 5, Demonic Might +2 → effective 7. Source: Realms of Power -
-/// Magic.md:1470-1472; The Infernal.md:4120, :4136.
-pub fn effective_might(entity: &Entity, ruleset: &Ruleset) -> Option<MightScore> {
-    let grants = might_grants(entity, ruleset);
-    let realm = entity
-        .might
-        .map(|m| m.realm)
-        .or_else(|| grants.first().map(|(realm, _)| *realm))?;
-    let base = entity.might.map(|m| m.score).unwrap_or(0);
-    let granted: u32 = grants
-        .iter()
-        .filter(|(r, _)| *r == realm)
-        .map(|(_, s)| u32::from(*s))
-        .sum();
-    let score = u8::try_from(u32::from(base) + granted).unwrap_or(u8::MAX);
-    Some(MightScore { realm, score })
-}
-
-/// The character's derived True Faith Score: base 0 plus every
-/// [`Effect::TrueFaithGrant`] (True Faith Virtue → 1), summed and clamped to
-/// `u8`. Derived, never stored. Source: Core Rules.md:5169-5171.
-pub fn true_faith(entity: &Entity, ruleset: &Ruleset) -> u8 {
-    let mut score = 0u32;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::TrueFaithGrant { score: s } = effect {
-                score += u32::from(*s);
-            }
-        }
-    }
-    u8::try_from(score).unwrap_or(u8::MAX)
-}
-
-/// The Warping Points granted by [`Effect::WarpingGrant`] (Warped by Magic → 5),
-/// summed across selections and derived grants. The grant's declared *score* field
-/// is **not** read here — the Warping Score is derived by inverting the advancement
-/// curve over the point total (see [`warping_score`]), so the score is computed
-/// from points alone and the two can never disagree.
-fn warping_grant_points_in(selections: &[Selection], ruleset: &Ruleset) -> u32 {
-    let mut points = 0u32;
-    for selection in selections {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::WarpingGrant {
-                score: _,
-                points: p,
-            } = effect
-            {
-                points += u32::from(*p);
-            }
-        }
-    }
-    points
-}
-
-/// The character's total Warping Points: the stored [`Entity::warping_points`] plus
-/// every grant-derived point across the full effect selection list. The single
-/// point total the Warping Score is derived from, so stored and granted points can
-/// never be double-counted or diverge. Owed warping fills carrying
-/// [`Effect::WarpingGrant`] are filtered out of the folded grants (see
-/// [`warping_granted_selections`]), so they never contribute here either.
-/// Source: Core Rules.md:16464-16475.
-pub fn warping_points_total(entity: &Entity, ruleset: &Ruleset) -> u32 {
-    entity
-        .warping_points
-        .saturating_add(warping_grant_points_in(
-            selections_for_effects(entity, ruleset).as_ref(),
-            ruleset,
-        ))
-}
-
-/// The Warping Points that DETERMINE how many V/F are owed from Warping: the
-/// stored points plus grant points from bought selections and non-warping grants
-/// ([`entity_grants_base`]) ONLY. The owed warping fills are deliberately excluded
-/// so a fill can never raise the score that decides how many fills are owed — the
-/// recursion guard against the self-amplifying `warped_by_magic` feedback loop.
-/// Source: Core Rules.md:16553-16561.
-fn warping_points_for_owed(entity: &Entity, ruleset: &Ruleset) -> u32 {
-    let mut base = entity.selections.clone();
-    base.extend(entity_grants_base(entity, ruleset));
-    entity
-        .warping_points
-        .saturating_add(warping_grant_points_in(&base, ruleset))
-}
-
-/// The Warping Score used to decide the owed warping V/F: [`warping_points_for_owed`]
-/// inverted through the advancement curve (owed fills excluded — the recursion
-/// guard). Source: Core Rules.md:16553-16561.
-fn warping_score_for_owed(entity: &Entity, ruleset: &Ruleset) -> u8 {
-    ruleset
-        .advancement
-        .score_for_xp(warping_points_for_owed(entity, ruleset))
-}
-
-/// The character's derived Warping Score: [`warping_points_total`] inverted through
-/// the (Ability) advancement curve (Warping rises "like an Ability": cumulative
-/// 5/15/30/50/75, so 15 points → Warping Score 2). Source: Core Rules.md:16464-16475.
-pub fn warping_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
-    ruleset
-        .advancement
-        .score_for_xp(warping_points_total(entity, ruleset))
-}
-
-/// A character's derived Warping: the Warping Score and the Warping Points it is
-/// derived from. Serializes like its sibling result types as
-/// `{ "score": N, "points": N }`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Warping {
-    /// The Warping Score (advancement curve inverted over the point total).
-    pub score: u8,
-    /// The total accrued Warping Points (stored plus V/F grants).
-    pub points: u32,
-}
-
-/// The character's derived Warping — the unified readout: the score from
-/// [`warping_score`], the points from [`warping_points_total`]. Derived, never
-/// stored on the entity as a resolved value. Source: Core Rules.md:7019-7021,
-/// :16464-16475.
-pub fn warping(entity: &Entity, ruleset: &Ruleset) -> Warping {
-    Warping {
-        score: warping_score(entity, ruleset),
-        points: warping_points_total(entity, ruleset),
-    }
-}
-
-/// The category slug a warping-owed supernatural Minor Virtue must belong to
-/// (Core Rules.md:16559, "a supernatural Minor Virtue"). The category taxonomy is
-/// data; this names the slug the rule's "supernatural" wording maps to.
-const WARPING_SUPERNATURAL_CATEGORY: &str = "supernatural";
-
-/// Stable `choice_key` prefix for each owed Minor Flaw slot (`…0`, `…1`).
-pub(crate) const WARPING_MINOR_FLAW_KEY: &str = "warping.minor_flaw.";
-/// Stable `choice_key` prefix for the owed supernatural Minor Virtue slot.
-pub(crate) const WARPING_SUPERNATURAL_VIRTUE_KEY: &str = "warping.supernatural_virtue.";
-/// Stable `choice_key` prefix for each owed Major Flaw slot.
-pub(crate) const WARPING_MAJOR_FLAW_KEY: &str = "warping.major_flaw.";
-
-/// The Virtues and Flaws a character owes from its Warping Score, per "Effects of
-/// Warping" (Core Rules.md:16547-16561). These are auto-granted, off-budget V/F
-/// (never counted against the creation Virtue/Flaw budget), filled by the player
-/// choosing specific items (stored in [`Entity::warping_choices`]). Derived, never
-/// stored as a resolved value.
-///
-/// Hermetic magi are exempt: Warping makes them prone to Wizard's Twilight
-/// instead ("This replaces the normal effects", :16551), which this slice does
-/// NOT model — a magus always owes zero.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
-pub struct WarpingOwed {
-    /// Owed Minor Flaws: 1 at Warping Score 1 (:16553), 2 at Score 3 (:16557).
-    pub minor_flaws: u8,
-    /// Owed supernatural Minor Virtues: 1 at Warping Score 5 (:16559), else 0.
-    pub minor_supernatural_virtues: u8,
-    /// Owed Major Flaws: 1 at Warping Score 6 and every point thereafter (:16561).
-    pub major_flaws: u8,
-}
-
-impl WarpingOwed {
-    /// The owed V/F for a non-magus at Warping Score `score` — the pure threshold
-    /// curve of "Effects of Warping". Source: Core Rules.md:16553-16561.
-    pub fn from_score(score: u8) -> Self {
-        WarpingOwed {
-            // A Minor Flaw at Warping Score 1 (:16553); a second at Score 3 (:16557).
-            minor_flaws: if score >= 3 {
-                2
-            } else if score >= 1 {
-                1
-            } else {
-                0
-            },
-            // A supernatural Minor Virtue at Warping Score 5 (:16559).
-            minor_supernatural_virtues: u8::from(score >= 5),
-            // A Major Flaw at Warping Score 6, and every point thereafter (:16561).
-            major_flaws: score.saturating_sub(5),
-        }
-    }
-}
-
-/// The Virtues/Flaws `entity` owes from Warping. Non-magi owe per the score
-/// (derived via the recursion-guarded [`warping_score_for_owed`], so owed fills
-/// never inflate the count); Hermetic magi (`profile.is_magus`) are exempt and
-/// owe zero — Warping gives them Wizard's Twilight instead (Core Rules.md:16551).
-pub fn warping_owed(entity: &Entity, ruleset: &Ruleset) -> WarpingOwed {
-    if ruleset
-        .profile(&entity.type_id)
-        .is_some_and(|profile| profile.is_magus)
-    {
-        return WarpingOwed::default();
-    }
-    WarpingOwed::from_score(warping_score_for_owed(entity, ruleset))
-}
-
-/// Whether `item_ref` carries an [`Effect::WarpingGrant`]. Such an item is
-/// INELIGIBLE as a warping-owed fill: folding its granted Warping Points back
-/// into the score would self-amplify the owed count. The recursion guard rejects
-/// it in validation and drops it in [`warping_granted_selections`].
-pub(crate) fn item_carries_warping_grant(item_ref: &Id, ruleset: &Ruleset) -> bool {
-    ruleset.point_items.get(item_ref).is_some_and(|item| {
-        item.effects
-            .iter()
-            .any(|effect| matches!(effect, Effect::WarpingGrant { .. }))
-    })
-}
-
-/// The owed warping V/F expressed as OPEN [`Grant`]s — one grant per owed slot,
-/// each with a stable `choice_key` and the [`GrantConstraint`] its fill must
-/// satisfy (a Minor Flaw, a supernatural Minor Virtue, or a Major Flaw). The list
-/// length tracks the recursion-guarded Warping Score via [`warping_owed`]. The
-/// frontend renders one picker per grant; validation resolves each pick against
-/// its constraint. Source: Core Rules.md:16553-16561.
-pub fn warping_owed_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<Grant> {
-    let owed = warping_owed(entity, ruleset);
-    let mut grants = Vec::new();
-    for i in 0..owed.minor_flaws {
-        grants.push(warping_open_grant(
-            format!("{WARPING_MINOR_FLAW_KEY}{i}"),
-            ItemKind::Flaw,
-            Magnitude::Minor,
-            false,
-        ));
-    }
-    for i in 0..owed.minor_supernatural_virtues {
-        grants.push(warping_open_grant(
-            format!("{WARPING_SUPERNATURAL_VIRTUE_KEY}{i}"),
-            ItemKind::Virtue,
-            Magnitude::Minor,
-            true,
-        ));
-    }
-    for i in 0..owed.major_flaws {
-        grants.push(warping_open_grant(
-            format!("{WARPING_MAJOR_FLAW_KEY}{i}"),
-            ItemKind::Flaw,
-            Magnitude::Major,
-            false,
-        ));
-    }
-    grants
-}
-
-/// Builds one owed-warping OPEN grant with the given key/kind/magnitude, adding
-/// the supernatural category requirement for the Minor Virtue slot.
-fn warping_open_grant(
-    choice_key: String,
-    kind: ItemKind,
-    magnitude: Magnitude,
-    supernatural: bool,
-) -> Grant {
-    let mut require_categories = BTreeSet::new();
-    if supernatural {
-        require_categories.insert(WARPING_SUPERNATURAL_CATEGORY.to_string());
-    }
-    Grant::Open {
-        choice_key,
-        constraint: GrantConstraint {
-            kind,
-            magnitude: Some(magnitude),
-            require_categories,
-            forbid_categories: BTreeSet::new(),
-        },
-    }
-}
-
-/// The off-budget owed warping V/F fills the player has chosen, resolved to real
-/// [`Selection`]s so they fold through [`entity_grants`] for prereq/effect
-/// purposes. Budget- and cap-exempt, exactly like House grants. A pick carrying
-/// [`Effect::WarpingGrant`] is dropped (ineligible — the recursion guard), so a
-/// warping fill can never feed Warping Points back into the owed count.
-/// Source: Core Rules.md:16553-16561.
-pub fn warping_granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
-    resolve_grants(
-        &warping_owed_grants(entity, ruleset),
-        &entity.warping_choices,
-    )
-    .into_iter()
-    .filter(|selection| !item_carries_warping_grant(&selection.item_ref, ruleset))
-    .collect()
-}
-
-/// The character's total accrued aging points across every Characteristic — the
-/// character's Decrepitude XP (every aging point is 1 XP toward Decrepitude).
-/// Source: Core Rules.md:16617.
-pub fn decrepitude_points_total(entity: &Entity) -> u32 {
-    entity.aging_points.values().map(|p| u32::from(*p)).sum()
-}
-
-/// The character's derived Decrepitude Score: [`decrepitude_points_total`] inverted
-/// through the (Ability) advancement curve (Decrepitude rises "like an Ability",
-/// 5×new score, so 17 aging points → Decrepitude 2). Source: Core Rules.md:16617.
-pub fn decrepitude_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
-    ruleset
-        .advancement
-        .score_for_xp(decrepitude_points_total(entity))
-}
-
-/// The number of Characteristic drops the accrued aging points force, DERIVED
-/// from [`Entity::aging_points`] (never stored). Per the rule, once a
-/// Characteristic's accrued points *exceed* the absolute value of its (already
-/// aged-down) score it drops by one and its aging points reset. Simulated over
-/// the lifetime point total: each drop consumes `|score| + 1` points and lowers
-/// the score by one, so the threshold shrinks toward 0 and then grows again.
-/// Worked examples: a Communication of +2 drops on its 3rd aging point; a
-/// Stamina of −3 on its 4th.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16579, :16613.
-///
-/// Crate-internal primitive: the frontend consumes the surfaced
-/// [`characteristic_aging_drops`] map (which wraps this per-Characteristic), so
-/// this single-Characteristic query is not part of the curated public API.
-///
-/// # Unaging drops nothing
-///
-/// Returns 0 for a character carrying an [`AgingEffect::NoAging`] item: "In game
-/// terms, your aging points do not decrease your Characteristics, only building up
-/// to give you Decrepitude points" (`:5189`; Bound to (Role) "also includes the
-/// effects of the Unaging Virtue" at `:5743`). The second half of that sentence is
-/// why [`decrepitude_points_total`] and [`decrepitude_score`] are deliberately
-/// **not** gated the same way — the points still accrue and still build
-/// Decrepitude, at everybody else's rate. The *appearance* is a separate exemption
-/// ([`AgingEffect::NoApparentAging`]), applied in `aging.rs`.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:5189, :5743.
-pub(crate) fn aging_drops(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    characteristic: Characteristic,
-) -> u32 {
-    if suppresses_characteristic_aging(entity, ruleset) {
-        return 0;
-    }
-    let bought = entity
-        .characteristics
-        .get(&characteristic)
-        .copied()
-        .map_or(0i64, i64::from);
-    let mut remaining = entity
-        .aging_points
-        .get(&characteristic)
-        .copied()
-        .map_or(0u32, u32::from);
-    let mut drops = 0u32;
-    loop {
-        let aged = bought - i64::from(drops);
-        let threshold = u32::try_from(aged.unsigned_abs()).unwrap_or(u32::MAX);
-        if remaining > threshold {
-            remaining -= threshold + 1;
-            drops += 1;
-        } else {
-            return drops;
-        }
-    }
-}
-
-/// Whether the character's Characteristics are exempt from aging drops — i.e.
-/// whether he carries an [`AgingEffect::NoAging`] item.
-///
-/// It gates the Characteristic drop **only**. Unaging carries this tag alongside
-/// `no_apparent_aging`, Bound to (Role) carries it alone (`:5743` advances the
-/// apparent age "in line with their physical age"), and a Bee King carries neither
-/// — "do not appear to age" (`:3488`) is about the appearance and nothing else.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:5189, :5743, :3488.
-fn suppresses_characteristic_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
-    selections_for_effects(entity, ruleset)
-        .iter()
-        .filter_map(|selection| ruleset.point_items.get(&selection.item_ref))
-        .flat_map(|item| &item.effects)
-        .any(|effect| {
-            matches!(
-                effect,
-                Effect::AgingMod {
-                    kind: AgingEffect::NoAging,
-                    ..
-                }
-            )
-        })
-}
-
-/// The effective value of `characteristic` after aging: the bought score lowered
-/// by the DERIVED aging drops ([`aging_drops`]) and floored at the rules effective
-/// minimum (−5), with any free [`Effect::CharacteristicScoreDelta`] bonus (Giant
-/// Blood +1 Str/Sta, Dwarf −1) then added on top — so an aged Giant-Blood score
-/// can still reach ±6. The aging drop lowers the *bought* score (its threshold is
-/// the bought score); the free delta is a separate additive layer. This is what
-/// DERIVED / play stats consume; it is deliberately **not** what creation-legality
-/// reads (the point-buy budget check in `validation.rs` reads the un-aged bought
-/// score from `entity.characteristics`), so entering an already-aged character
-/// cannot retroactively make its point-buy illegal.
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:16579.
-pub fn effective_characteristic_after_aging(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    characteristic: Characteristic,
-) -> i32 {
-    let bought = entity
-        .characteristics
-        .get(&characteristic)
-        .copied()
-        .map_or(0, i32::from);
-    let drops = i32::try_from(aging_drops(entity, ruleset, characteristic)).unwrap_or(i32::MAX);
-    let floor = ruleset
-        .characteristic_rules()
-        .and_then(|r| r.effective_min_score())
-        .map_or(i32::MIN, i32::from);
-    let aged = bought.saturating_sub(drops).max(floor);
-    aged + characteristic_score_bonus(entity, ruleset, characteristic)
-}
-
-/// A Reputation a character's Virtue/Flaw authorizes them to start with. A
-/// `reputation_type` of `None` means the grant leaves the type to the player
-/// (e.g. Famous). Serializes as `{ "reputation_type": <type>|null, "score": N }`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ReputationGrant {
-    /// The Reputation type the grant fixes, or `None` when player-chosen.
-    pub reputation_type: Option<ReputationType>,
-    /// The starting Reputation score the grant confers.
-    pub score: u8,
-}
-
-/// The Reputation grants a character holds (one per [`Effect::GrantsReputation`]),
-/// authorizing starting Reputations. Source: Core Rules.md:2512-2514.
-pub fn reputation_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<ReputationGrant> {
-    let mut grants = Vec::new();
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::GrantsReputation { kind, score } = effect {
-                grants.push(ReputationGrant {
-                    reputation_type: *kind,
-                    score: *score,
-                });
-            }
-        }
-    }
-    grants
-}
-
-/// A character's Gift-granted free Supernatural-Ability slots: how many the Gift
-/// confers and how many the entity currently consumes. Serializes like its
-/// sibling result types as `{ "total": N, "used": N }`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub struct SupernaturalFreeSlots {
-    /// The number of free Supernatural-Ability slots the Gift confers.
-    pub total: u8,
-    /// The Supernatural abilities the entity holds that no granting Virtue covers.
-    pub used: u8,
-}
-
-/// The Gift's free Supernatural-Ability slots. A Gifted non-magus gets one free
-/// slot; a magus gets none (his free ability is Hermetic magic itself). `used`
-/// counts the Supernatural abilities the entity holds that no granting Virtue
-/// covers (a granting Virtue seeds an `ability_score_grant` floor).
-/// Source: Core Rules.md:2874.
-pub fn supernatural_free_slots(
-    entity: &Entity,
-    ruleset: &Ruleset,
-    profile: &EntityTypeProfile,
-) -> SupernaturalFreeSlots {
-    let total = if has_the_gift(entity, ruleset, profile) && !profile.is_magus {
-        1
-    } else {
-        0
+        // Elemental Magic is an XP-space Art boost applied in
+        // effective_art_score, not a flat bonus, shift, or Affinity reduction;
+        // no-op in every fold that shares this tail.
+        | Effect::ElementalMagic { .. }
     };
-    let covered: BTreeSet<Id> = ability_score_floors(entity, ruleset)
-        .into_iter()
-        .map(|f| f.ability)
-        .collect();
-    let used = entity
-        .ability_scores
-        .iter()
-        .filter(|a| {
-            ruleset
-                .ability(&a.ability)
-                .is_some_and(|ab| ab.category == AbilityCategory::Supernatural)
-        })
-        .filter(|a| !covered.contains(&a.ability))
-        .count();
-    SupernaturalFreeSlots {
-        total,
-        used: u8::try_from(used).unwrap_or(u8::MAX),
-    }
 }
+// Re-exported (rather than left textually scoped) so the domain submodules
+// below can invoke it by name via their `use super::*;` — a `macro_rules!`
+// item follows normal item privacy, but only a path-based `use` makes it
+// resolvable from a module that isn't textually after this point in the same
+// file.
+pub(crate) use irrelevant_effect_variants;
 
-/// The base age → maximum-Ability-score cap for `age`, read from the ruleset's
-/// age band table (Core Rules.md:2366-2374). Data, not hardcoded: the bands live
-/// in `rules/core/abilities.json` (`age_ability_caps`) and are surfaced via
-/// `EffectiveScores` so the UI never re-hardcodes the table. `None` when the
-/// ruleset ships no age caps. An Ability with an Affinity may exceed this by +2
-/// (applied in validation).
-pub fn age_max_ability_score(ruleset: &Ruleset, age: u32) -> Option<u8> {
-    ruleset.age_ability_caps().max_ability_score(age)
-}
-
-/// The character's base age → Ability-score cap, if `age` is set and the ruleset
-/// ships an age band table.
-pub fn age_ability_cap(entity: &Entity, ruleset: &Ruleset) -> Option<u8> {
-    age_max_ability_score(ruleset, entity.age?)
-}
-
-/// The age cap for ONE ability, after any Virtue/Flaw that narrows it for
-/// locality-dependent Abilities.
-///
-/// > The maximum scores at character creation for locality-dependent Abilities like
-/// > Language, Area Lore, or Organization Lore, as well as some social Abilities,
-/// > are half (round up) that which his age normally allows.
-///
-/// Source: Ars Magica - Definitive Edition (Core Rules).md:6160 (Foreign
-/// Upbringing). Which Abilities count as locality-dependent is catalogue data
-/// (`locality_dependent`), because the passage's "as well as some social Abilities"
-/// is deliberately open — the engine enforces the flag it is given rather than
-/// guessing which social Abilities a saga counts.
-///
-/// The fraction rounds **up**, per the passage. Several such flaws would compose by
-/// applying the smallest resulting cap, though no shipped Flaw pairs with another.
-pub fn ability_age_cap(entity: &Entity, ruleset: &Ruleset, ability: &Id) -> Option<u8> {
-    let base = age_ability_cap(entity, ruleset)?;
-    if !ruleset
-        .ability(ability)
-        .is_some_and(|def| def.locality_dependent)
-    {
-        return Some(base);
-    }
-    let mut cap = base;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::LocalityAbilityCapFraction { num, den } = effect
-                && *den > 0
-            {
-                // Ceiling division: "half (round up)".
-                let numerator = u32::from(base) * u32::from(*num) + u32::from(*den) - 1;
-                let fractioned = u8::try_from(numerator / u32::from(*den)).unwrap_or(base);
-                cap = cap.min(fractioned);
-            }
-        }
-    }
-    Some(cap)
+/// Clamps a signed budget total to a non-negative `u32` (a net-negative grant
+/// floors at 0 rather than underflowing).
+fn clamp_to_u32(n: i64) -> u32 {
+    u32::try_from(n.max(0)).unwrap_or(u32::MAX)
 }
 
 #[cfg(test)]
@@ -3288,7 +754,8 @@ mod tests {
 
     /// charged_cost is the inverse of "counts as num/den, rounded up". The book's
     /// worked example: Perdo 10 needs 55 on the Art table; with Affinity 3/2 you
-    /// pay 37 (which counts as ceil(37·3/2)=56 ≥ 55). Source: Core Rules :2443.
+    /// pay 37 (which counts as ceil(37·3/2)=56 ≥ 55). Source: Ars Magica -
+    /// Definitive Edition (Core Rules).md:2443.
     #[test]
     fn affinity_charged_cost_matches_perdo_example() {
         assert_eq!(charged_cost(55, Some((3, 2))), 37); // Affinity with Art
@@ -3555,6 +1022,26 @@ mod tests {
         assert_eq!(alloc.total_demand, 50); // ceil(75·2/3) = 50
     }
 
+    // A crafted save can carry an unbounded `ability_scores`/`art_scores`/`spells`
+    // array (deserialized straight off disk, no length cap in `types.rs`). Each
+    // entry becomes one `Spend`, and the flow solve allocates a dense
+    // `n x n` `u32` matrix where `n` grows 1:1 with that count — a few thousand
+    // entries already force a multi-hundred-MB allocation, and a real attack
+    // payload (tens of thousands of entries) forces multiple GB, aborting the
+    // process on a plain File -> Open with no dialog and no diagnostic
+    // (CWE-400/789). `xp_allocation` must refuse a pathological entity instead
+    // of building the matrix at all.
+    #[test]
+    #[should_panic(expected = "exceed the safety bound")]
+    fn xp_allocation_refuses_a_pathological_number_of_spends() {
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![]);
+        // Comfortably above MAX_XP_SOLVE_NODES, comfortably below anything that
+        // would allocate more than a few MB if the guard did not fire first.
+        e.ability_scores = vec![plain("ability.awareness", 1); 3000];
+        let _ = xp_allocation(&e, &rs);
+    }
+
     #[test]
     fn best_affinity_keeps_the_most_generous_multiplier() {
         // Affinities do not stack; the single most generous wins. A score
@@ -3746,7 +1233,7 @@ mod tests {
     #[test]
     fn linguist_group_affinity_applies_to_every_language_instance() {
         // Linguist gives a 5/4 Affinity to any Language, matched by id for every
-        // instance (Core:4315-4317), unlike a param-chosen single-target Affinity.
+        // instance (Ars Magica - Definitive Edition (Core Rules).md:4315-4317), unlike a param-chosen single-target Affinity.
         let rs = xp_ruleset();
         let e = xp_entity(vec![sel("virtue.linguist")]);
         let lang = Id::new("ability.living_language");
@@ -3767,8 +1254,8 @@ mod tests {
 
     #[test]
     fn spell_mastery_pool_and_floor() {
-        // Mastered Spells grants 50 mastery XP (stackable, Core:4471-4474);
-        // Flawless Magic floors every spell's mastery at 1 (Core:3887-3889).
+        // Mastered Spells grants 50 mastery XP (stackable, Ars Magica - Definitive Edition (Core Rules).md:4471-4474);
+        // Flawless Magic floors every spell's mastery at 1 (Ars Magica - Definitive Edition (Core Rules).md:3887-3889).
         let rs = xp_ruleset();
         let masters = xp_entity(vec![
             sel("virtue.mastered_spells"),
@@ -3812,7 +1299,7 @@ mod tests {
     #[test]
     fn bought_mastery_is_charged_from_the_general_pool() {
         // Spell Mastery is an Ability bought from the Ability advancement table
-        // (Core:9518, :15952). With no mastery Virtue it draws the general pool.
+        // (Ars Magica - Definitive Edition (Core Rules).md:9518, :15952). With no mastery Virtue it draws the general pool.
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![]);
         e.xp_pool = 20;
@@ -3831,7 +1318,7 @@ mod tests {
 
     #[test]
     fn mastered_spells_pool_funds_mastery_but_not_abilities() {
-        // Mastered Spells' +50 pool (Core:4471-4474) is spendable only on Spell
+        // Mastered Spells' +50 pool (Ars Magica - Definitive Edition (Core Rules).md:4471-4474) is spendable only on Spell
         // Mastery, never on ordinary Abilities/Arts, and the general pool is 0.
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![sel("virtue.mastered_spells")]);
@@ -3863,7 +1350,7 @@ mod tests {
     #[test]
     fn flawless_magic_floors_first_mastery_free_and_halves_the_rest() {
         // Flawless Magic auto-masters every spell at 1 (free floor) AND doubles all
-        // Spell-Mastery Advancement Totals, halving the XP charged. Core:3887-3889.
+        // Spell-Mastery Advancement Totals, halving the XP charged. Ars Magica - Definitive Edition (Core Rules).md:3887-3889.
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![sel("virtue.flawless_magic")]);
         e.xp_pool = 100;
@@ -3877,7 +1364,7 @@ mod tests {
     #[test]
     fn grants_selection_folds_free_items_into_grants() {
         // A Virtue that grants another Virtue for free (Templar Commander →
-        // Brother-Knight + Temporal Influence; Core:5113-5116) folds the granted
+        // Brother-Knight + Temporal Influence; Ars Magica - Definitive Edition (Core Rules).md:5113-5116) folds the granted
         // items into entity_grants (budget-exempt), and their effects apply.
         let rs = xp_ruleset();
         let e = xp_entity(vec![sel("virtue.granter")]);
@@ -3898,7 +1385,7 @@ mod tests {
     #[test]
     fn item_level_budget_sums_grants() {
         // Magic Items grants +25 starting levels of enchanted devices, stackable
-        // (Core:4347-4349); Redcap 50 (Core:4842-4846).
+        // (Ars Magica - Definitive Edition (Core Rules).md:4347-4349); Redcap 50 (Ars Magica - Definitive Edition (Core Rules).md:4842-4846).
         let rs = xp_ruleset();
         assert_eq!(item_level_budget(&xp_entity(vec![]), &rs), 0);
         assert_eq!(
@@ -3912,8 +1399,8 @@ mod tests {
 
     #[test]
     fn demonic_blood_grants_infernal_might_5_and_30_power_levels() {
-        // Demonic Blood confers Infernal Might (Corpus) 5 (RoP:Infernal:4120) and
-        // up to 30 levels of Infernal Powers (RoP:Infernal:4122). Effective Might =
+        // Demonic Blood confers Infernal Might (Corpus) 5 (Ars Magica 5e - Realms of Power - The Infernal.md:4120) and
+        // up to 30 levels of Infernal Powers (Ars Magica 5e - Realms of Power - The Infernal.md:4122). Effective Might =
         // entity base (0 here) + Σ MightGrant of the same realm.
         let rs = xp_ruleset();
         let e = xp_entity(vec![sel("virtue.demonic_blood")]);
@@ -3925,8 +1412,8 @@ mod tests {
 
     #[test]
     fn demonic_might_adds_two_and_powers_add_twenty() {
-        // Demonic Might: Infernal Might +2 (RoP:Infernal:4136). Demonic Powers:
-        // +20 power levels (RoP:Infernal:4142). Both stack on Demonic Blood.
+        // Demonic Might: Infernal Might +2 (Ars Magica 5e - Realms of Power - The Infernal.md:4136). Demonic Powers:
+        // +20 power levels (Ars Magica 5e - Realms of Power - The Infernal.md:4142). Both stack on Demonic Blood.
         let rs = xp_ruleset();
         let e = xp_entity(vec![
             sel("virtue.demonic_blood"),
@@ -3960,7 +1447,7 @@ mod tests {
 
     #[test]
     fn true_faith_grant_sums_score() {
-        // True Faith grants a derived True Faith Score of 1 (Core:5169-5171),
+        // True Faith grants a derived True Faith Score of 1 (Ars Magica - Definitive Edition (Core Rules).md:5169-5171),
         // base 0, summed across grants.
         let rs = xp_ruleset();
         assert_eq!(true_faith(&xp_entity(vec![]), &rs), 0);
@@ -3974,7 +1461,7 @@ mod tests {
     fn warping_grant_sums_score_and_points() {
         // Warped by Magic grants 5 Warping Points; the score is DERIVED by
         // inverting the advancement curve (5 points → Warping Score 1), not read
-        // from the grant's declared score. Core:7019-7021, :16464-16475.
+        // from the grant's declared score. Ars Magica - Definitive Edition (Core Rules).md:7019-7021, :16464-16475.
         let rs = xp_ruleset();
         assert_eq!(
             warping(&xp_entity(vec![]), &rs),
@@ -3994,7 +1481,7 @@ mod tests {
 
     /// `warping_score`/`warping_points_total` UNIFY stored + grant-derived points
     /// through one path, then invert the advancement curve. Stored 10 + Warped by
-    /// Magic's 5 = 15 points → Warping Score 2 (Core:16464-16475: cumulative
+    /// Magic's 5 = 15 points → Warping Score 2 (Ars Magica - Definitive Edition (Core Rules).md:16464-16475: cumulative
     /// 5/15/30/50/75).
     #[test]
     fn warping_sums_stored_and_granted_points_then_inverts() {
@@ -4018,12 +1505,14 @@ mod tests {
         assert_eq!(warping_score(&only_stored, &rs), 2);
     }
 
-    // --- Issue E: warping-owed V/F (Core:16547-16561) ------------------------
+    // --- Issue E: warping-owed V/F (Ars Magica - Definitive Edition (Core
+    // Rules).md:16547-16561) --------------------------------------------------
 
     /// The owed-V/F threshold curve, tested on the pure `from_score` at the rule's
     /// boundary scores so the assertion is independent of the advancement table:
     /// 0 → none; 1 → 1 Minor Flaw; 3 → 2 Minor Flaws; 5 → +supernatural Minor
-    /// Virtue; 6 → +1 Major Flaw; 7 → 2 Major Flaws. Source: Core:16553-16561.
+    /// Virtue; 6 → +1 Major Flaw; 7 → 2 Major Flaws. Source: Ars Magica -
+    /// Definitive Edition (Core Rules).md:16553-16561.
     #[test]
     fn warping_owed_thresholds_follow_the_score_curve() {
         let owed = |score| WarpingOwed::from_score(score);
@@ -4126,7 +1615,7 @@ mod tests {
 
     /// A non-magus with a Warping Score of 2 (15 stored points → curve score 2)
     /// owes one Minor Flaw; a magus at the SAME high score owes nothing — Warping
-    /// gives magi Wizard's Twilight instead (Core:16551).
+    /// gives magi Wizard's Twilight instead (Ars Magica - Definitive Edition (Core Rules).md:16551).
     #[test]
     fn magus_is_exempt_from_owed_warping_vf() {
         let rs = magus_owed_ruleset();
@@ -4197,7 +1686,7 @@ mod tests {
 
     /// Decrepitude XP is the sum of aging points across every Characteristic,
     /// inverted through the (Ability) advancement curve: 17 points → Decrepitude 2
-    /// (15 ≤ 17 < 30). Core:16617.
+    /// (15 ≤ 17 < 30). Ars Magica - Definitive Edition (Core Rules).md:16617.
     #[test]
     fn decrepitude_score_sums_aging_points_and_inverts() {
         let rs = xp_ruleset();
@@ -4240,7 +1729,7 @@ mod tests {
 
     #[test]
     fn aging_drops_match_the_worked_examples() {
-        // Core Rules.md:16613: a Communication of +2 drops to +1 in the year it
+        // Ars Magica - Definitive Edition (Core Rules).md:16613: a Communication of +2 drops to +1 in the year it
         // gains its THIRD aging point; a Stamina of −3 drops to −4 on its FOURTH.
         let rs = xp_ruleset();
         let mut com = xp_entity(vec![]);
@@ -4273,7 +1762,7 @@ mod tests {
     #[test]
     fn aging_drop_applies_to_bought_score_then_free_delta_stacks_on_top() {
         // Decision: the aging drop lowers the *bought* score (its threshold uses
-        // the bought score per Core Rules.md:16579/:16613); the free
+        // the bought score per Ars Magica - Definitive Edition (Core Rules).md:16579/:16613); the free
         // CharacteristicScoreDelta bonus (Giant Blood +1 Str) is then added on
         // top, so an aged Giant-Blood Strength can still reach +6.
         let rs = xp_ruleset();
@@ -4294,7 +1783,7 @@ mod tests {
 
     #[test]
     fn effective_summary_maps_report_aged_value_and_drops() {
-        // Core Rules.md:16613 worked example: Communication +2 with 3 aging points
+        // Ars Magica - Definitive Edition (Core Rules).md:16613 worked example: Communication +2 with 3 aging points
         // drops once → effective +1. The summary maps must surface both the aged
         // effective value and the drop count, and omit unchanged Characteristics.
         let rs = xp_ruleset();
@@ -4329,7 +1818,7 @@ mod tests {
     #[test]
     fn size_delta_sums_from_virtues_and_flaws() {
         // Size is a derived stat (base 0) modified by SizeDelta effects
-        // (Giant Blood +2, Dwarf -2). Core:3975-3978, :5996-5998.
+        // (Giant Blood +2, Dwarf -2). Ars Magica - Definitive Edition (Core Rules).md:3975-3978, :5996-5998.
         let rs = xp_ruleset();
         assert_eq!(size(&xp_entity(vec![]), &rs), 0);
         assert_eq!(size(&xp_entity(vec![sel("virtue.giant_blood")]), &rs), 2);
@@ -4339,7 +1828,7 @@ mod tests {
     #[test]
     fn giant_blood_grants_free_characteristic_bonus_reaching_six() {
         // Giant Blood adds a free +1 to Str and Sta that may raise the effective
-        // score as high as +6 (Core:3975-3978). The bought score is untouched.
+        // score as high as +6 (Ars Magica - Definitive Edition (Core Rules).md:3975-3978). The bought score is untouched.
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![sel("virtue.giant_blood")]);
         e.characteristics = BTreeMap::from([(Characteristic::Str, 5)]);
@@ -4353,7 +1842,7 @@ mod tests {
 
     #[test]
     fn characteristic_bonuses_lists_each_nonzero_free_delta_in_canonical_order() {
-        // Giant Blood grants a free +1 to Str and +1 to Sta (Core:3975-3978). The
+        // Giant Blood grants a free +1 to Str and +1 to Sta (Ars Magica - Definitive Edition (Core Rules).md:3975-3978). The
         // accessor surfaces exactly those two nonzero bonuses in canonical
         // Characteristic order, omitting the untouched ones.
         let rs = xp_ruleset();
@@ -4377,7 +1866,7 @@ mod tests {
 
     #[test]
     fn weak_characteristics_grants_negative_points_and_nets_with_improved() {
-        // Weak Characteristics removes 3 budget points (Core:7056-7058); the grant
+        // Weak Characteristics removes 3 budget points (Ars Magica - Definitive Edition (Core Rules).md:7056-7058); the grant
         // is signed and nets against Improved Characteristics (+3).
         let rs = xp_ruleset();
         let weak = xp_entity(vec![sel("flaw.weak_characteristics")]);
@@ -4650,7 +2139,7 @@ mod tests {
 
     /// Three elemental Forms bought at score 6 (21 table-XP each) and one at score 4
     /// (10 table-XP): the boosted effective scores match the ceil-rounded
-    /// redistribution hand-computed from the worked example (Core:3731-3737).
+    /// redistribution hand-computed from the worked example (Ars Magica - Definitive Edition (Core Rules).md:3731-3737).
     ///
     /// bonus_xp(F) = Σ_{G≠F} ceil(xp(G)/2):
     ///   Aquam/Auram/Ignem (own 21): 11 + 11 + 5 = 27 → 48 XP → score 9.
@@ -4784,7 +2273,7 @@ mod tests {
     }
 
     /// The per-Technique/Form spell-level caps surfaced to the UI equal
-    /// Te + Fo + Int + Magic Theory + 3 (Core:2465), one entry per Te×Fo combo.
+    /// Te + Fo + Int + Magic Theory + 3 (Ars Magica - Definitive Edition (Core Rules).md:2465), one entry per Te×Fo combo.
     #[test]
     fn spell_level_caps_expose_te_fo_int_mt_plus_three() {
         let rs = ruleset();
@@ -5014,7 +2503,7 @@ mod tests {
 
     /// A guided magus's **general** pool is its apprenticeship experience, not its
     /// later life: "These experience points can be spent on Arts or Abilities"
-    /// (Core Rules.md:2435), and the general pool is the only one that may fund an
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2435), and the general pool is the only one that may fund an
     /// Art. Later life buys "any Abilities" (`:2214`) and becomes a restricted pool
     /// of its own.
     #[test]
@@ -5180,7 +2669,7 @@ mod tests {
     /// A magus's pre-apprenticeship experience may not buy an Arcane, Academic or
     /// Martial Ability: "Note that magi can only spend experience points on Arcane,
     /// Academic and Martial Abilities **before** apprenticeship if they have a Virtue
-    /// which allows them to do so." (Core Rules.md:2435.) The Darius example reasons
+    /// which allows them to do so." (Ars Magica - Definitive Edition (Core Rules).md:2435.) The Darius example reasons
     /// the same way about a pre-apprenticeship purchase — "It's a **general** Ability,
     /// so he can" (`:2402`).
     ///
@@ -5221,7 +2710,7 @@ mod tests {
     }
 
     /// …unless a Virtue says otherwise: "if they have a Virtue which allows them to do
-    /// so" (Core Rules.md:2435). Covenant Upbringing authorizes the dead language
+    /// so" (Ars Magica - Definitive Edition (Core Rules).md:2435). Covenant Upbringing authorizes the dead language
     /// ("You may take Latin at character creation", `:5867`), so those points may come
     /// from before apprenticeship after all.
     ///
@@ -5264,7 +2753,7 @@ mod tests {
     }
 
     /// A magus gauntleted at 25 and now 60: thirty-five years of "30 points per
-    /// year" (Core Rules.md:2471) behind it, none of them spent in the lab.
+    /// year" (Ars Magica - Definitive Edition (Core Rules).md:2471) behind it, none of them spent in the lab.
     fn experienced_magus() -> Entity {
         let mut magus = planned_magus();
         magus.age = Some(60);
@@ -5280,7 +2769,7 @@ mod tests {
 
     /// The years after the Gauntlet fund the **general** pool: "Divide 30 points per
     /// year between experience points in Arts, experience points in Abilities, and
-    /// levels of spells" (Core Rules.md:2216) — Arts included, which no restricted
+    /// levels of spells" (Ars Magica - Definitive Edition (Core Rules).md:2216) — Arts included, which no restricted
     /// pool may ever fund.
     ///
     /// Proved through the allocation rather than by reading the budget: two Arts at
@@ -5447,7 +2936,7 @@ mod tests {
     }
 
     /// Later life is a life-stage block like the childhood ones, because for a magus
-    /// it is a **restricted** pool: it buys "any Abilities" (Core Rules.md:2214,
+    /// it is a **restricted** pool: it buys "any Abilities" (Ars Magica - Definitive Edition (Core Rules).md:2214,
     /// `:2392`) and never an Art, which only apprenticeship's experience may. So it
     /// needs a slug of its own, and a Fluent label — a block the UI cannot name would
     /// print its own slug.

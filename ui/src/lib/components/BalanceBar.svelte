@@ -11,7 +11,9 @@
 </script>
 
 {#if b}
-  <div class="balance" data-testid="balance">
+  <!-- Announced when either side crosses over budget, matching XpBar's
+       role="status" treatment of its own over-budget state. -->
+  <div class="balance" role="status" data-testid="balance">
     <span class:over={b.virtuePoints > virtueBudget} data-testid="balance-virtues">
       {store.t('balance-virtues', { used: b.virtuePoints, budget: virtueBudget })}
     </span>

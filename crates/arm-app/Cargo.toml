@@ -29,3 +29,15 @@ tauri-plugin-dialog = "2"
 [dev-dependencies]
 pretty_assertions = "1"
 tempfile = "3"
+
+# Off by default, so a plain `cargo build --release` — the exact command that
+# produces the binary users install — never compiles in the ARM_E2E_FILE /
+# ARM_E2E_EXPORT_FILE env-var overrides (K5/VA5, security review wave 1).
+# `ui/e2e/wdio.conf.js` is the only caller that passes `--features e2e-testing`
+# to `cargo tauri build` — the standard suite needs the seam to drive save/
+# load/export without native dialogs. The portable-layout smoke check
+# (`ui/e2e/wdio.portable.conf.js` / `stage-portable.js`) never saves or loads,
+# so it deliberately builds without this feature, matching the exact artifact
+# `build-linux.sh`/`build-win.sh` ship.
+[features]
+e2e-testing = []
