@@ -28,7 +28,10 @@ const FINISH = '[data-testid="wizard-finish"]';
 const NAME_INPUT = '[data-testid="identity-name"]';
 const MODE_SELECT = '[data-testid="mode-select"]';
 const GUIDANCE = '[data-testid="wizard-guidance"]';
-const TYPE_BUDGET = '[data-testid="type-step-budget"]';
+// The Virtue/Flaw budget the character's type commits it to. Slice 2 deleted the
+// read-only `type` step it used to be read from; it lives in the always-visible
+// character banner now, so it is readable from any step.
+const BANNER_BUDGET = '[data-testid="character-type-budget"]';
 // A Minor Virtue with no prerequisites and no Flaws to fund it, so the V/F step
 // carries exactly one deterministic error: `unbalanced_virtues`.
 const ADD_VIRTUE = '[data-testid="add-virtue.keen_vision"]';
@@ -59,6 +62,17 @@ describe('guided creation wizard', () => {
     expect(label).not.toContain('type-magus');
     await expect($('[data-testid="save-button"]')).toExist();
     await expect($(MODE_SELECT)).toExist();
+
+    // Slice 2 (#1) deleted the read-only `type` step and relocated its two surviving
+    // facts to that banner, so they are readable from EVERY step instead of from one
+    // step nobody could act on: what the type commits the character to, its
+    // Virtue/Flaw budget, and — this profile has The Gift by rule — the Gift policy
+    // line. Read here, on the first step, which is the proof they are no longer
+    // gated on standing somewhere in particular.
+    await expect($('[data-testid="character-type-explainer"]')).toExist();
+    await expect($(BANNER_BUDGET)).toExist();
+    await expect($('[data-testid="character-type-gift-required"]')).toExist();
+    expect(await $('[data-testid="wizard-step-type"]').isExisting()).toBe(false);
 
     // The rail follows the ruleset, and the magus profile deliberately places the
     // House step BEFORE Virtues & Flaws — its free Virtue lands in that budget.
@@ -96,8 +110,8 @@ describe('guided creation wizard', () => {
     // Back is dead on the first step; Next advances and the rail follows.
     expect(await $(BACK).isEnabled()).toBe(false);
     expect(await currentWizardPhase()).toBe('concept');
-    await advanceWizardTo('type');
-    expect(await currentWizardPhase()).toBe('type');
+    await advanceWizardTo('house_specialisation');
+    expect(await currentWizardPhase()).toBe('house_specialisation');
     expect(await $(BACK).isEnabled()).toBe(true);
 
     // The Characteristics step behind it was never opened, and Next carried the
@@ -106,10 +120,10 @@ describe('guided creation wizard', () => {
       await $('[data-testid="wizard-step-characteristics"]').getAttribute('data-incomplete'),
     ).toBe('true');
 
-    // This step reads the magus profile's Flaw budget straight out of the ruleset;
+    // The banner reads the magus profile's Flaw budget straight out of the ruleset;
     // hold on to the number, because the Virtues & Flaws guidance further down has
     // to state that very same value rather than one frozen into the translation.
-    const flawPoints = clean(await $(TYPE_BUDGET).getText()).match(/\d+/)[0];
+    const flawPoints = clean(await $(BANNER_BUDGET).getText()).match(/\d+/)[0];
 
     // Walk to Virtues & Flaws and break it: a Minor Virtue with no Flaws to fund
     // it is `unbalanced_virtues`, an error.

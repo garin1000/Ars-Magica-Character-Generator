@@ -138,24 +138,24 @@ impl fmt::Display for IssueSeverity {
 /// | `duplicate_ability` | error | abilities | `ability`, `count` |
 /// | `not_enough_xp` | error | abilities | `spent`, `pool`, `shortfall` |
 /// | `xp_solve_bound_exceeded` | error | abilities | `nodes`, `limit`, `spends`, `pools` |
-/// | `restricted_xp_unspent` | warning | abilities | `amount`, `used`, `unspent`, `origin_kind`, `origin` |
+/// | `restricted_xp_unspent` | warning | experience | `amount`, `used`, `unspent`, `origin_kind`, `origin` |
 /// | `ability_category_requires_virtue` | error | abilities | `ability`, `category` |
 /// | `academic_ability_without_scholarly_language` | warning | abilities | `ability`, `min` |
-/// | `life_stage_xp_pool_conflict` | error | abilities | `xp_pool` |
-/// | `life_stage_age_unset` | error | abilities | (none) |
-/// | `life_stage_age_before_childhood` | error | abilities | `age`, `min` |
-/// | `life_stage_age_before_gauntlet` | error | abilities | `age`, `min` |
-/// | `life_stage_gauntlet_age_after_age` | error | abilities | `gauntlet_age`, `age` |
-/// | `life_stage_lab_seasons_out_of_range` | error | abilities | `seasons`, `max`, `years` |
-/// | `life_stage_spell_level_split_exceeds_points` | error | abilities | `levels`, `points` |
-/// | `life_stage_native_language_unset` | error | abilities | (none) |
-/// | `life_stage_native_language_missing_score` | warning | abilities | `language` |
+/// | `life_stage_xp_pool_conflict` | error | experience | `xp_pool` |
+/// | `life_stage_age_unset` | error | experience | (none) |
+/// | `life_stage_age_before_childhood` | error | experience | `age`, `min` |
+/// | `life_stage_age_before_gauntlet` | error | experience | `age`, `min` |
+/// | `life_stage_gauntlet_age_after_age` | error | experience | `gauntlet_age`, `age` |
+/// | `life_stage_lab_seasons_out_of_range` | error | experience | `seasons`, `max`, `years` |
+/// | `life_stage_spell_level_split_exceeds_points` | error | experience | `levels`, `points` |
+/// | `life_stage_native_language_unset` | error | experience | (none) |
+/// | `life_stage_native_language_missing_score` | warning | experience | `language` |
 /// | `magus_minimum_ability` | error | abilities | `ability`, `min`, `score` |
 /// | `magus_recommended_ability` | warning | abilities | `ability`, `min`, `score` |
-/// | `childhood_package_unknown` | error | abilities | `package` |
-/// | `childhood_slot_unfilled` | error | abilities | `ability`, `key`, `slot` |
-/// | `childhood_slot_is_native_language` | error | abilities | `ability`, `key`, `slot`, `language` |
-/// | `childhood_slot_duplicate_value` | error | abilities | `ability`, `key`, `slot`, `other_slot`, `value` |
+/// | `childhood_package_unknown` | error | experience | `package` |
+/// | `childhood_slot_unfilled` | error | experience | `ability`, `key`, `slot` |
+/// | `childhood_slot_is_native_language` | error | experience | `ability`, `key`, `slot`, `language` |
+/// | `childhood_slot_duplicate_value` | error | experience | `ability`, `key`, `slot`, `other_slot`, `value` |
 /// | `ability_parameter_required` | error | abilities | `ability` |
 /// | `ability_score_out_of_range` | error | abilities | `ability`, `score`, `max` |
 /// | `ability_bonus_dangling_target` | error | virtues_flaws | `item`, `ability`, `parameter` |
@@ -2784,11 +2784,12 @@ mod tests {
             .collect()
     }
 
-    /// Phases no issue code can name, because they hold no rule the engine
-    /// checks: the concept is free text and the type is fixed at creation (a bad
-    /// type is `unknown_type`, which is a `review` finding). Asserted below, so
-    /// the first code filed under either forces this note to be updated.
-    const PHASES_WITH_NO_CODES: [CreationPhase; 2] = [CreationPhase::Concept, CreationPhase::Type];
+    /// Phases no issue code can name, because they hold no rule the engine checks:
+    /// the concept step is free text throughout. (A character type the ruleset has
+    /// no profile for is `unknown_type`, a `review` finding — the type is fixed
+    /// before creation starts and has no step of its own.) Asserted below, so the
+    /// first code filed under it forces this note to be updated.
+    const PHASES_WITH_NO_CODES: [CreationPhase; 1] = [CreationPhase::Concept];
 
     /// The contract table's phase column is a real part of the frontend contract —
     /// the wizard filters steps on it — so it may not drift from the emit sites or

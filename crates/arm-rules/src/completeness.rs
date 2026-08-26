@@ -77,9 +77,6 @@ fn phase_is_engaged(phase: CreationPhase, entity: &Entity, profile: &EntityTypeP
         // Any identity field at all: the step's inputs are all free text and the
         // rules ask for none of them, so filling in a single one is engagement.
         CreationPhase::Concept => has_identity_text(entity),
-        // Nothing to fill in. The type is fixed before the wizard opens, and the
-        // step only reads back what it commits the character to.
-        CreationPhase::Type => true,
         // A score actually distributed. An all-zero spread is what an untouched
         // point-buy looks like, and spending nothing is legal but not a choice.
         CreationPhase::Characteristics => entity.characteristics.values().any(|&score| score != 0),
@@ -90,6 +87,19 @@ fn phase_is_engaged(phase: CreationPhase, entity: &Entity, profile: &EntityTypeP
             .selections
             .iter()
             .any(|selection| !is_mandatory_trait(&selection.item_ref, profile)),
+        // Either funding mode, recorded with substance. The step's whole job is to
+        // say where a character's experience comes from, and it can be answered two
+        // ways: a life-stage plan (the age the years are priced from, the native
+        // language, the childhood package) or a typed flat pool.
+        //
+        // Both have to count. The mode itself is not stored — it is inferred from
+        // the plan's *absence* (`abilityFunding`, `state.svelte.ts`), and absence is
+        // also what an untouched character looks like — so keying only on the plan
+        // would report the step untouched forever for every pool-funded character,
+        // which is the default. `xp_pool` defaults to 0, so a nonzero pool is a
+        // deliberate entry rather than a leftover. #29 replaces the inference with a
+        // stored discriminator; this stays correct either way.
+        CreationPhase::Experience => entity.life_stages.is_some() || entity.xp_pool > 0,
         CreationPhase::Abilities => !entity.ability_scores.is_empty(),
         CreationPhase::Arts => !entity.art_scores.is_empty(),
         CreationPhase::Spells => !entity.spells.is_empty(),
@@ -139,6 +149,7 @@ fn is_mandatory_trait(item_ref: &Id, profile: &EntityTypeProfile) -> bool {
 mod tests {
     use super::*;
     use crate::characteristics::Characteristic;
+    use crate::life_stage::LifeStagePlan;
     use crate::types::{
         AbilityScore, ArtScore, EntityKind, PersonalityTrait, Reputation, ReputationType,
         RulesetRef, Selection, SpellSelection,
@@ -160,14 +171,14 @@ mod tests {
     const TYPES: &str = r#"[
       { "id": "grog", "budget": { "virtue_points": 3, "flaw_points": 3 },
         "permitted_categories": ["general", "personality", "social_status", "special"],
-        "creation_phases": ["concept", "type", "characteristics", "virtues_flaws",
-                            "abilities", "aging"] },
+        "creation_phases": ["concept", "characteristics", "virtues_flaws",
+                            "experience", "abilities", "aging"] },
       { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
         "permitted_categories": ["general", "personality", "social_status", "special"],
         "is_magus": true, "gift_policy": "required", "gift_id": "virtue.the_gift",
         "required_traits": ["virtue.hermetic_magus"],
-        "creation_phases": ["concept", "type", "characteristics", "house_specialisation",
-                            "virtues_flaws", "abilities", "arts", "spells",
+        "creation_phases": ["concept", "characteristics", "house_specialisation",
+                            "virtues_flaws", "experience", "abilities", "arts", "spells",
                             "personality_reputations", "aging"] },
       { "id": "mythic_companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
         "creation_phases": ["mythic_type"] }
@@ -213,11 +224,34 @@ mod tests {
                 CreationPhase::Concept,
                 CreationPhase::Characteristics,
                 CreationPhase::VirtuesFlaws,
+                CreationPhase::Experience,
                 CreationPhase::Abilities,
                 CreationPhase::Aging,
             ],
-            "only the read-only `type` step should be exempt"
+            "every declared step of a fresh character still takes a choice"
         );
+    }
+
+    #[test]
+    fn a_stored_life_stage_plan_finishes_the_experience_step() {
+        let mut entity = character("grog");
+        assert!(incomplete(&entity).contains(&CreationPhase::Experience));
+        entity.life_stages = Some(LifeStagePlan::default());
+        assert!(!incomplete(&entity).contains(&CreationPhase::Experience));
+    }
+
+    /// The other funding mode counts too. A plan is not the only thing this step
+    /// records: under flat funding the choice is a typed [`Entity::xp_pool`], and
+    /// a character with one has engaged the step just as much as one with a plan.
+    /// Without this, every pool-funded character — the default, since the mode is
+    /// inferred from the plan's *absence* — would report the step untouched
+    /// forever, which is both wrong and noise on the rail.
+    #[test]
+    fn a_typed_experience_pool_finishes_the_experience_step() {
+        let mut entity = character("grog");
+        assert!(incomplete(&entity).contains(&CreationPhase::Experience));
+        entity.xp_pool = 45;
+        assert!(!incomplete(&entity).contains(&CreationPhase::Experience));
     }
 
     #[test]

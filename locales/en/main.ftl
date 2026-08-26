@@ -35,9 +35,9 @@ start-wizard-hint = Step by step through this type's creation phases, in order. 
 # never reaches the screen. `review` is the wizard's own terminal step, appended
 # after whatever phases the character type declares.
 phase-concept = Concept
-phase-type = Character type
 phase-characteristics = Characteristics
 phase-virtues_flaws = Virtues & Flaws
+phase-experience = Experience
 phase-abilities = Abilities
 phase-arts = Arts
 phase-spells = Spells
@@ -77,10 +77,10 @@ wizard-unchecked-hint = Validation is not enforced, so no step blocks progress.
 # in `crates/arm-rules/RULES.md`. Numbers the ruleset already carries are
 # interpolated ({ $points }, { $flaws }, { $virtues }) and never written out.
 wizard-guidance-concept = Start from a concept: who this character is, and what they are in the saga. A magus might be a fire wizard, a companion a scholar far from home, a grog any sort of warrior or member of the covenant staff.
-wizard-guidance-type = A character with The Gift, trained in Hermetic magic, is a magus. A non-magus meant as a central character is a companion, one meant for a bit part a grog — and the type, fixed here, is what the remaining steps follow.
 wizard-guidance-characteristics = Characteristics are your character's inborn attributes, and normal means never raise them later. You have { $points } points to spend, and a score below zero gives points back.
 wizard-guidance-virtues_flaws = Flaws pay for Virtues: up to { $flaws } points of Flaws fund up to { $virtues } points of Virtues. You need not take the maximum, and every character takes a Social Status.
-wizard-guidance-abilities = Abilities are learned skills, bought in blocks: the first five years of childhood, then later life a year at a time. Your character's age sets the highest score any Ability may reach at creation.
+wizard-guidance-experience = Experience is acquired in blocks: the first five years of childhood, then later life a year at a time — for a magus, apprenticeship and the years after it as well. Enter one total yourself, or let those life stages earn it from the character's age.
+wizard-guidance-abilities = Abilities are learned skills, bought with the experience the previous step supplies. Your character's age sets the highest score any Ability may reach at creation.
 wizard-guidance-arts = Techniques and Forms are the magus's magic: every spell combines one of each. The same apprenticeship experience buys Arts and Abilities, so what is spent here is not spent there.
 wizard-guidance-spells = Apprenticeship grants levels of spells rather than experience points, and they are spent here. No spell may be of a higher level than the magus's Technique, Form, Intelligence and Magic Theory allow.
 wizard-guidance-house_specialisation = Every Hermetic magus belongs to exactly one House, which grants a benefit at creation. It comes before Virtues and Flaws because that benefit is a free Minor Virtue, which needs no Flaw to fund it.
@@ -91,13 +91,16 @@ wizard-guidance-aging = A character over 35 makes an aging roll for every year b
 # step, so this line makes no rules claim.
 wizard-guidance-review = Nothing new is chosen here — this is the last look before the character leaves the guided flow. Everything stays editable after finishing.
 
-# The Character type step: a read-only account of what the chosen type commits
-# this character to. The type itself was fixed when the character was created.
-phase-type-explainer = The character type is fixed for this character. It sets the Virtue and Flaw budget, which categories may be taken, and which creation steps follow.
-phase-type-budget = Up to { $flaws } points of Flaws, funding up to { $virtues } points of Virtues.
-phase-type-gift-required = This type has The Gift, granted automatically.
-phase-type-gift-forbidden = This type cannot have The Gift.
-phase-type-gift-optional = This type may take The Gift.
+# What the chosen character type commits this character to, stated on the banner
+# above both the editor and the guided wizard. Relocated from the deleted
+# `type` creation step (guided-creation review #1), which asked for nothing: the
+# type is fixed when the character is created and can never change. Re-keyed to
+# `character-type-*` so no key names a creation phase that no longer exists.
+character-type-explainer = The character type is fixed for this character. It sets the Virtue and Flaw budget, which categories may be taken, and which creation steps follow.
+character-type-budget = Up to { $flaws } points of Flaws, funding up to { $virtues } points of Virtues.
+character-type-gift-required = This type has The Gift, granted automatically.
+character-type-gift-forbidden = This type cannot have The Gift.
+character-type-gift-optional = This type may take The Gift.
 
 # The wizard's closing step.
 wizard-review-title = Review

@@ -11,6 +11,8 @@
   import VirtueFlawTab from './lib/components/VirtueFlawTab.svelte';
   import CharacteristicPicker from './lib/components/CharacteristicPicker.svelte';
   import AbilityTab from './lib/components/AbilityTab.svelte';
+  // TEMPORARY — Slice 3 removes this import along with the mount below.
+  import LifeStagePanel from './lib/components/LifeStagePanel.svelte';
   import XpBar from './lib/components/XpBar.svelte';
   import ArtGrid from './lib/components/ArtGrid.svelte';
   import SpellTab from './lib/components/SpellTab.svelte';
@@ -313,6 +315,24 @@
         {:else if tab === 'abilities'}
           <div class="vf-tab">
             <XpBar />
+            <!-- TEMPORARY BRIDGE — Slice 3 relocates this to the editor's new
+                 Experience tab, which mirrors the wizard's `experience` phase, and
+                 this mount goes away with it.
+
+                 Slice 2 moved `LifeStagePanel` out of `AbilityTab` onto the wizard's
+                 `experience` step. `AbilityTab` is also the editor's Abilities tab,
+                 so that move took away the editor's ONLY surface for choosing the
+                 funding mode and editing the life-stage plan (age, Gauntlet age, lab
+                 seasons, native language, childhood package) — and the editor does
+                 not get its replacement tab until Slice 3. Since a slice may not be
+                 batched with the next one, mounting the panel here keeps direct-entry
+                 mode able to edit all of it in the meantime.
+
+                 An auto-height SIBLING above `AbilityTab`'s own root-level children,
+                 never a wrapper: `.region-row` must stay the only `flex: 1` child of
+                 `.vf-tab` or both ability lists collapse. Covered by
+                 `App.client.test.ts` — "the editor still exposes the funding panel". -->
+            <LifeStagePanel />
             <AbilityTab />
           </div>
         {:else if tab === 'arts'}

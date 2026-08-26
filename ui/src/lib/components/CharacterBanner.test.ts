@@ -4,8 +4,7 @@ import { render } from 'svelte/server';
 import type { Entity, EntityTypeProfile, LocalizedRuleset } from '../types';
 
 // Reads the store singleton only (ruleset profile + Fluent bundle); the store's
-// actions cross the Tauri bridge, so mock it away. Harness mirrors
-// StartScreen.test.ts.
+// actions cross the Tauri bridge, so mock it away.
 vi.mock('../ipc', () => ({
   loadRuleset: vi.fn(),
   validateEntity: vi.fn().mockResolvedValue({ issues: [] }),
@@ -20,7 +19,7 @@ vi.mock('../ipc', () => ({
 }));
 
 import { SCHEMA_VERSION, store } from '../state.svelte';
-import TypeStep from './TypeStep.svelte';
+import CharacterBanner from './CharacterBanner.svelte';
 
 function installProfile(profile: EntityTypeProfile): void {
   store.ruleset = {
@@ -58,17 +57,20 @@ function magus(): EntityTypeProfile {
     is_magus: true,
     gift_policy: 'required',
     gift_id: 'virtue.the_gift',
-    creation_phases: ['type'],
+    creation_phases: ['experience'],
   };
 }
 
 function text(body: string, testid: string): string {
-  const whole = new RegExp(`<[^>]*data-testid="${testid}"[^>]*>([\\s\\S]*?)</`, 'i').exec(body);
+  const whole = new RegExp(`<(\\w+)[^>]*data-testid="${testid}"[^>]*>([\\s\\S]*?)</\\1>`, 'i').exec(
+    body,
+  );
   if (!whole) throw new Error(`no element with data-testid="${testid}"`);
   // Fluent wraps interpolated values in bidi isolation marks; strip them.
-  return whole[1]
-    .replace(/<[^>]*>/g, '')
+  return whole[2]
+    .replace(/<[^>]*>/g, ' ')
     .replace(/[⁨⁩]/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -83,54 +85,69 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('TypeStep', () => {
+// Slice 2 (#1) deleted the read-only `type` wizard step. Its two facts that live
+// nowhere else — the Virtue/Flaw budget numbers and the Gift policy line — moved
+// here, to the banner both the editor and the wizard already show above every
+// screen, so they stay reachable throughout the whole flow. These assertions are
+// TypeStep.test.ts's, followed to the content's new home.
+describe('CharacterBanner states what the character type commits the character to', () => {
   it('names the type through its Fluent key, never the raw slug', () => {
-    const label = text(render(TypeStep).body, 'type-step-name');
-    expect(label).toBe('Magus');
-    expect(label).not.toBe('magus');
-    expect(label).not.toBe('type-magus');
+    const label = text(render(CharacterBanner).body, 'character-type');
+    expect(label).toContain('Magus');
+    expect(label).not.toContain('type-magus');
   });
 
   it("states the profile's Virtue and Flaw budget", () => {
-    const budget = text(render(TypeStep).body, 'type-step-budget');
-    expect(budget).toContain('10');
+    expect(text(render(CharacterBanner).body, 'character-type-budget')).toContain('10');
   });
 
   it('reads the budget from the profile rather than assuming the magus numbers', () => {
     installProfile({ ...magus(), id: 'grog', budget: { virtue_points: 3, flaw_points: 3 } });
-    expect(text(render(TypeStep).body, 'type-step-budget')).toContain('3');
+    const budget = text(render(CharacterBanner).body, 'character-type-budget');
+    expect(budget).toContain('3');
+    expect(budget).not.toContain('10');
   });
 
   // Gated on the profile's Gift policy, never on the type id — a new Gifted type
   // gets the right line with no code change.
   it('states that this type requires The Gift', () => {
-    const body = render(TypeStep).body;
-    expect(body).toContain('data-testid="type-step-gift-required"');
-    expect(body).not.toContain('data-testid="type-step-gift-forbidden"');
+    const body = render(CharacterBanner).body;
+    expect(body).toContain('data-testid="character-type-gift-required"');
+    expect(body).not.toContain('data-testid="character-type-gift-forbidden"');
   });
 
   it('states that a companion may not have The Gift', () => {
     installProfile({ ...magus(), id: 'companion', is_magus: false, gift_policy: 'forbidden' });
-    const body = render(TypeStep).body;
-    expect(body).toContain('data-testid="type-step-gift-forbidden"');
-    expect(body).not.toContain('data-testid="type-step-gift-required"');
+    const body = render(CharacterBanner).body;
+    expect(body).toContain('data-testid="character-type-gift-forbidden"');
+    expect(body).not.toContain('data-testid="character-type-gift-required"');
   });
 
   it('says nothing about The Gift when the profile has no policy', () => {
     const profile = magus();
     delete profile.gift_policy;
     installProfile(profile);
-    const body = render(TypeStep).body;
-    expect(body).not.toContain('data-testid="type-step-gift-required"');
-    expect(body).not.toContain('data-testid="type-step-gift-forbidden"');
-    expect(body).not.toContain('data-testid="type-step-gift-optional"');
+    const body = render(CharacterBanner).body;
+    expect(body).not.toContain('data-testid="character-type-gift-required"');
+    expect(body).not.toContain('data-testid="character-type-gift-forbidden"');
+    expect(body).not.toContain('data-testid="character-type-gift-optional"');
   });
 
-  it('localizes to German', () => {
+  it('says the type is fixed, and says nothing at all without a profile', () => {
+    expect(render(CharacterBanner).body).toContain('data-testid="character-type-explainer"');
+    installProfile({ ...magus(), id: 'grog' });
+    store.entity.type_id = 'sorcerer';
+    const body = render(CharacterBanner).body;
+    // No profile, no budget and no Gift claim: the numbers would be invented.
+    expect(body).not.toContain('data-testid="character-type-budget"');
+    expect(body).not.toContain('data-testid="character-type-gift-required"');
+  });
+
+  it('localizes to German, rendering prose rather than an echoed key', () => {
     store.lang = 'de';
-    const body = render(TypeStep).body;
-    expect(text(body, 'type-step-name')).toBe('Magus');
-    // The explainer is real German prose, not an echoed key.
-    expect(body).not.toContain('phase-type-explainer');
+    const body = render(CharacterBanner).body;
+    expect(text(body, 'character-type')).toContain('Magus');
+    expect(body).not.toContain('character-type-explainer =');
+    expect(text(body, 'character-type-explainer')).not.toContain('banner-type-explainer');
   });
 });

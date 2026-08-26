@@ -21,6 +21,15 @@
 // character's age, is what apprenticeship ends at, so living on must not lengthen the
 // span behind it.
 //
+// TWO STEPS, NOT ONE (Slice 2 of the guided-creation plan). Every field of the plan —
+// age, Gauntlet age, lab seasons, the spell-level split, the native language — is
+// typed on the wizard's `experience` step, which mounts `LifeStagePanel` alone, and
+// every one of its findings is an `experience`-phase finding, so that step's Next is
+// the gate they trip. The XP bar those numbers feed (the general pool's total, the
+// post-Gauntlet row) is mounted on the `abilities` step, so the bar is read there,
+// once, with the plan settled — deliberately after it rather than beside it, since
+// leaving `experience` requires the plan to be legal anyway.
+//
 // NOTE: requires the production binary; the display comes from your desktop session
 // or, when DISPLAY is unset, the Xvfb one WebdriverIO starts (see e2e/README.md). The
 // wdio `onPrepare` hook builds `target/release/arm-app`, so this cannot run without
@@ -86,14 +95,13 @@ async function issue(code) {
 describe('a magus past its Gauntlet', () => {
   it('explains the years after the Gauntlet instead of sending them elsewhere', async () => {
     await startWizard('magus');
-    await advanceWizardTo('abilities');
+    await advanceWizardTo('experience');
     await $(PANEL).waitForExist({ timeout: BOOT_TIMEOUT });
 
     await $(FUNDING_LIFE_STAGES).click();
-    await browser.waitUntil(async () => !(await $(XP_POOL_INPUT).isExisting()), {
-      timeout: STEP_TIMEOUT,
-      timeoutMsg: 'guided funding must retire the editable experience pool',
-    });
+    // The plan's fields arrive with it; that it also retires the typed pool is read off
+    // the XP bar, on the step that mounts it (see the Abilities step below).
+    await $(AGE_INPUT).waitForExist({ timeout: STEP_TIMEOUT });
 
     // Until 6b5 the note ended "an older magus should use the experience pool
     // instead" — the guided flow disowning the very years this slice models. It must
@@ -119,26 +127,8 @@ describe('a magus past its Gauntlet', () => {
       timeoutMsg: 'a magus of 60 gauntleted at 25 has lived 35 years as a magus',
     });
     expect(await textOf(SUMMARY)).toContain('1050 points');
-
-    // THE 6b4 REGRESSION LOCK. Later life stops where apprenticeship begins (`:2214`),
-    // and apprenticeship is the fifteen years ending at the GAUNTLET — so this magus
-    // lived (25 - 5 - 15) = 5 later-life years worth 75, exactly as it did standing at
-    // its Gauntlet. Reading its own age instead would grant 40 years and 600.
-    expect(await textOf(LATER_LIFE)).toContain('75');
-    // Apprenticeship is a fixed block, untouched by the years that followed it.
-    expect(await textOf(APPRENTICESHIP)).toContain('240');
-  });
-
-  it('buys the Hermetic minimums, so the gate is about the post-Gauntlet numbers alone', async () => {
-    // Parma Magica, Magic Theory and Latin at 1 (`:2437`). Bought here rather than at
-    // the end, because every "Next is disabled" below has to mean the post-Gauntlet
-    // finding blocked the step — not these three, which block it from the outset.
-    await satisfyMagusMinimums('Latin');
-
-    await browser.waitUntil(async () => await $(NEXT).isEnabled(), {
-      timeout: STEP_TIMEOUT,
-      timeoutMsg: 'the three minimum Abilities should leave the Abilities step unblocked',
-    });
+    // (Later life and apprenticeship are BLOCKS OF THE POOL, so the XP bar shows them
+    // and the Abilities step is where they are read — see below.)
   });
 
   it('charges lab seasons against the yearly points, and refuses more than the years hold', async () => {
@@ -149,11 +139,9 @@ describe('a magus past its Gauntlet', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'ten charged lab seasons should take 100 off the 1050',
     });
-    // The XP bar shows the deduction itself, derived from the engine's points rather
-    // than recomputed from the season count.
-    const bar = await textOf(POST_GAUNTLET);
-    expect(bar).toContain('100');
-    expect(bar).toContain('950');
+    // (The XP bar shows the deduction itself, derived from the engine's points rather
+    // than recomputed from the season count — read on the Abilities step, which is
+    // where the bar is mounted.)
 
     // Only three seasons a year are ever charged (`:2482`), so 35 years hold 105 and
     // 200 is not a plan — past the cap the extra seasons are simply free, which reads
@@ -173,7 +161,7 @@ describe('a magus past its Gauntlet', () => {
     expect(refusal.severity).toBe('error');
     await browser.waitUntil(async () => !(await $(NEXT).isEnabled()), {
       timeout: STEP_TIMEOUT,
-      timeoutMsg: 'lab seasons beyond the cap must block the Abilities step',
+      timeoutMsg: 'lab seasons beyond the cap must block the Experience step',
     });
 
     await $(LAB_SEASONS_INPUT).setValue('10');
@@ -199,24 +187,21 @@ describe('a magus past its Gauntlet', () => {
       timeoutMsg: 'taking 300 levels of spells should leave 650 experience',
     });
     expect(await textOf(SUMMARY)).toContain('300 levels');
-    // Those 650 join the general pool — the block that may buy Arts as well as
-    // Abilities (`:2435`, `:2471`) — so the pool is 240 + 650.
-    await browser.waitUntil(async () => (await textOf(XP_POOL_TOTAL)) === '890', {
-      timeout: STEP_TIMEOUT,
-      timeoutMsg: 'the post-Gauntlet experience should join apprenticeship in the general pool',
-    });
+    // (Those 650 join the general pool — the block that may buy Arts as well as
+    // Abilities, `:2435`, `:2471` — which the XP bar reads as 240 + 650 on the
+    // Abilities step below.)
 
     // A split larger than the points there are to divide. Reported on THIS step, which
     // is the deliberate part: the number is typed here, and the magus phase order is
-    // abilities, arts, spells — filing it under `spells` would send the wizard forward
-    // past the only surface that can correct it. The docked panel is scoped to the
-    // current phase, so seeing it here IS the phase attribution.
+    // experience, abilities, arts, spells — filing it under `spells` would send the
+    // wizard forward past the only surface that can correct it. The docked panel is
+    // scoped to the current phase, so seeing it here IS the phase attribution.
     await $(SPELL_LEVELS_INPUT).setValue('5000');
     await browser.waitUntil(
       async () => (await issueCount('life_stage_spell_level_split_exceeds_points')) === 1,
       {
         timeout: STEP_TIMEOUT,
-        timeoutMsg: 'a split beyond the points should be refused on the Abilities step',
+        timeoutMsg: 'a split beyond the points should be refused on the Experience step',
       },
     );
     const refusal = await issue('life_stage_spell_level_split_exceeds_points');
@@ -225,7 +210,7 @@ describe('a magus past its Gauntlet', () => {
     expect(refusal.severity).toBe('error');
     await browser.waitUntil(async () => !(await $(NEXT).isEnabled()), {
       timeout: STEP_TIMEOUT,
-      timeoutMsg: 'an over-large split must block the Abilities step',
+      timeoutMsg: 'an over-large split must block the Experience step',
     });
 
     await $(SPELL_LEVELS_INPUT).setValue('300');
@@ -259,12 +244,55 @@ describe('a magus past its Gauntlet', () => {
     await browser.waitUntil(
       async () =>
         (await issueCount('life_stage_gauntlet_age_after_age')) === 0 &&
-        (await textOf(XP_POOL_TOTAL)) === '890',
+        (await textOf(SUMMARY)).includes('35 years'),
       {
         timeout: STEP_TIMEOUT,
-        timeoutMsg: 'restoring the Gauntlet age should clear the refusal and the pool with it',
+        timeoutMsg: 'restoring the Gauntlet age should clear the refusal and the years with it',
       },
     );
+  });
+
+  it('hands the settled plan to the Abilities step as one pool', async () => {
+    // The XP bar is the `abilities` step's (Slice 2), so everything the plan above
+    // priced is read here, in one place, with the plan final. Reaching this step at all
+    // is itself the proof that no life-stage error is left standing: Next and a rail
+    // jump alike clamp at a blocking phase.
+    await advanceWizardTo('abilities');
+    await $(XP_POOL_TOTAL).waitForExist({ timeout: STEP_TIMEOUT });
+
+    // A plan and a typed pool are mutually exclusive, so the editable field is gone.
+    expect(await $(XP_POOL_INPUT).isExisting()).toBe(false);
+    // 240 of apprenticeship plus the 650 the split left as experience (`:2435`, `:2471`).
+    await browser.waitUntil(async () => (await textOf(XP_POOL_TOTAL)) === '890', {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'the post-Gauntlet experience should join apprenticeship in the general pool',
+    });
+    // And the bar carries the lab-season deduction itself, derived from the engine's
+    // points rather than recomputed from the season count: 1050 - 100 = 950.
+    const bar = await textOf(POST_GAUNTLET);
+    expect(bar).toContain('100');
+    expect(bar).toContain('950');
+
+    // THE 6b4 REGRESSION LOCK, read off the bar's own blocks. Later life stops where
+    // apprenticeship begins (`:2214`), and apprenticeship is the fifteen years ending
+    // at the GAUNTLET — so this magus lived (25 - 5 - 15) = 5 later-life years worth
+    // 75, exactly as it did standing at its Gauntlet. Reading its own age instead
+    // would grant 40 years and 600.
+    expect(await textOf(LATER_LIFE)).toContain('75');
+    // Apprenticeship is a fixed block, untouched by the years that followed it.
+    expect(await textOf(APPRENTICESHIP)).toContain('240');
+
+    // Parma Magica, Magic Theory and Latin at 1 (`:2437`) are errors on THIS step for
+    // every magus, so they are bought here — both because the flow cannot leave the
+    // step until they are and because the steps beyond it are what the tests below are
+    // about. (Before Slice 2 they had to be bought early, so that a "Next is disabled"
+    // over the plan's numbers could not be theirs; the gate is per phase, and the plan
+    // now has a step of its own, so that is no longer a concern.)
+    await satisfyMagusMinimums('Latin');
+    await browser.waitUntil(async () => await $(NEXT).isEnabled(), {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'the three minimum Abilities should leave the Abilities step unblocked',
+    });
   });
 
   it('lets the Arts step spend the very same pool', async () => {
@@ -278,16 +306,16 @@ describe('a magus past its Gauntlet', () => {
     expect(await textOf(ART_POST_GAUNTLET)).toContain('650');
   });
 
-  it('shows the Spells step the levels the Abilities step gave it', async () => {
+  it('shows the Spells step the levels the Experience step gave it', async () => {
     await advanceWizardTo('spells');
     await $(SPELL_LEVELS_AVAILABLE).waitForExist({ timeout: STEP_TIMEOUT });
 
     // 120 from the type profile plus the 300 the split bought.
     expect(await textOf(SPELL_LEVELS_POST_GAUNTLET)).toContain('300');
     expect(await textOf(SPELL_LEVELS_AVAILABLE)).toContain('420');
-    // Read-only here on purpose: the split defines the experience pool two steps back,
-    // so editing it from the Spells step would retroactively shrink a pool already
-    // spent. The Abilities step owns the choice; this step shows what it did.
+    // Read-only here on purpose: the split defines the experience pool three steps
+    // back, so editing it from the Spells step would retroactively shrink a pool
+    // already spent. The Experience step owns the choice; this step shows what it did.
     expect(await $(SPELL_LEVELS_INPUT).isExisting()).toBe(false);
   });
 

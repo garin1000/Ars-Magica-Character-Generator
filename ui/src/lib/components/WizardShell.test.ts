@@ -19,7 +19,7 @@ vi.mock('../ipc', () => ({
 import { SCHEMA_VERSION, store } from '../state.svelte';
 import WizardShell from './WizardShell.svelte';
 
-const PHASES: CreationPhase[] = ['concept', 'type', 'characteristics', 'virtues_flaws'];
+const PHASES: CreationPhase[] = ['concept', 'experience', 'characteristics', 'virtues_flaws'];
 
 function installFlow(phases: CreationPhase[] = PHASES): void {
   store.ruleset = {
@@ -115,7 +115,7 @@ describe('WizardShell', () => {
   it("lists the profile's phases in their declared order, then Review", () => {
     expect(railSteps(html())).toEqual([
       'wizard-step-concept',
-      'wizard-step-type',
+      'wizard-step-experience',
       'wizard-step-characteristics',
       'wizard-step-virtues_flaws',
       'wizard-step-review',
@@ -141,7 +141,7 @@ describe('WizardShell', () => {
 
   it('marks the current step for assistive tech', () => {
     store.wizardStep = 1;
-    expect(tag(html(), 'wizard-step-type')).toContain('aria-current="step"');
+    expect(tag(html(), 'wizard-step-experience')).toContain('aria-current="step"');
   });
 
   it('gives the rail an accessible name', () => {
@@ -229,8 +229,8 @@ describe('WizardShell', () => {
     expect(tag(html(), 'wizard-finish')).toContain('disabled');
   });
 
-  // Legal is not finished: `type` is the only step of this flow with nothing to
-  // record, so an untouched character leaves the other three marked.
+  // Legal is not finished: every step of this flow takes a choice, so an untouched
+  // character leaves all of them marked — the engine reports which.
   it('marks a step the player has recorded nothing for', () => {
     store.result = { issues: [], completeness: { incomplete_phases: ['characteristics'] } };
     const body = html();
@@ -264,8 +264,8 @@ describe('WizardShell', () => {
   });
 
   it('shows the current step body', () => {
-    store.wizardStep = 1;
-    expect(html()).toContain('data-testid="type-step-name"');
+    store.wizardStep = 2;
+    expect(html()).toContain('data-testid="characteristic-points"');
   });
 
   it("docks a validation panel showing only this step's findings", () => {

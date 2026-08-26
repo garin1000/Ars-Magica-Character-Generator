@@ -311,10 +311,10 @@ describe('the guided wizard', () => {
       ...magusProfiles.magus,
       creation_phases: [
         'concept',
-        'type',
         'characteristics',
         'house_specialisation',
         'virtues_flaws',
+        'experience',
         'abilities',
       ] as CreationPhase[],
     },
@@ -371,10 +371,10 @@ describe('the guided wizard', () => {
       await store.startWizard('magus');
       expect(store.wizardPhases).toEqual([
         'concept',
-        'type',
         'characteristics',
         'house_specialisation',
         'virtues_flaws',
+        'experience',
         'abilities',
         'review',
       ]);
@@ -407,7 +407,7 @@ describe('the guided wizard', () => {
 
     it('goes back freely, even when the phase left behind is broken', () => {
       store.wizardNext();
-      issues({ phase: 'type' });
+      issues({ phase: 'characteristics' });
       store.wizardBack();
       expect(store.wizardStep).toBe(0);
     });
@@ -445,7 +445,7 @@ describe('the guided wizard', () => {
       store.wizardBack();
       store.wizardBack();
       store.wizardBack();
-      issues({ phase: 'type' }); // step 1, between 0 and 3
+      issues({ phase: 'characteristics' }); // step 1, between 0 and 3
       store.wizardGoTo(3);
       expect(store.wizardStep).toBe(1);
     });
@@ -456,7 +456,7 @@ describe('the guided wizard', () => {
       store.wizardNext();
       store.wizardNext();
       store.wizardBack();
-      issues({ phase: 'type' }); // the step the user is standing on
+      issues({ phase: 'characteristics' }); // the step the user is standing on
       store.wizardGoTo(2);
       expect(store.wizardStep).toBe(1);
     });
@@ -481,7 +481,7 @@ describe('the guided wizard', () => {
     });
 
     it('follows the rail from step to step', () => {
-      untouched('type');
+      untouched('characteristics');
       expect(store.wizardPhaseIncomplete).toBe(false);
       store.wizardNext();
       expect(store.wizardPhaseIncomplete).toBe(true);
@@ -490,7 +490,7 @@ describe('the guided wizard', () => {
     // The whole promise of the indicator: it says a step is empty, and changes
     // nothing about what the flow lets the player do.
     it('never gates: an untouched step can still be advanced past and finished on', () => {
-      untouched('concept', 'type', 'characteristics', 'house_specialisation');
+      untouched('concept', 'characteristics', 'house_specialisation', 'experience');
       expect(store.wizardPhaseIncomplete).toBe(true);
       expect(store.wizardCanAdvance).toBe(true);
 

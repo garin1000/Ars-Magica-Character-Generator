@@ -76,7 +76,7 @@ pub(crate) fn validate_life_stage_plan(
     if entity.xp_pool > 0 {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_LIFE_STAGE_XP_POOL_CONFLICT,
-            CreationPhase::Abilities,
+            CreationPhase::Experience,
             args([("xp_pool", entity.xp_pool.to_string())]),
             None,
         ));
@@ -89,7 +89,7 @@ pub(crate) fn validate_life_stage_plan(
     if entity.age.is_none() {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_LIFE_STAGE_AGE_UNSET,
-            CreationPhase::Abilities,
+            CreationPhase::Experience,
             args([]),
             None,
         ));
@@ -134,14 +134,14 @@ pub(crate) fn validate_life_stage_plan(
             issues.push(if magus {
                 ValidationIssue::error(
                     ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET,
-                    CreationPhase::Abilities,
+                    CreationPhase::Experience,
                     issue_args,
                     None,
                 )
             } else {
                 ValidationIssue::error(
                     ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD,
-                    CreationPhase::Abilities,
+                    CreationPhase::Experience,
                     issue_args,
                     None,
                 )
@@ -162,7 +162,7 @@ pub(crate) fn validate_life_stage_plan(
     match &plan.native_language {
         None => issues.push(ValidationIssue::error(
             ValidationIssue::CODE_LIFE_STAGE_NATIVE_LANGUAGE_UNSET,
-            CreationPhase::Abilities,
+            CreationPhase::Experience,
             args([]),
             None,
         )),
@@ -183,7 +183,7 @@ pub(crate) fn validate_life_stage_plan(
             if !bought {
                 issues.push(ValidationIssue::warning(
                     ValidationIssue::CODE_LIFE_STAGE_NATIVE_LANGUAGE_MISSING_SCORE,
-                    CreationPhase::Abilities,
+                    CreationPhase::Experience,
                     args([("language", language.clone())]),
                     None,
                 ));
@@ -201,7 +201,7 @@ pub(crate) fn validate_life_stage_plan(
     {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_CHILDHOOD_PACKAGE_UNKNOWN,
-            CreationPhase::Abilities,
+            CreationPhase::Experience,
             args([("package", package.to_string())]),
             Some(package.clone()),
         ));
@@ -235,7 +235,7 @@ fn validate_post_gauntlet_choices(
     {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_LIFE_STAGE_GAUNTLET_AGE_AFTER_AGE,
-            CreationPhase::Abilities,
+            CreationPhase::Experience,
             args([
                 ("age", age.to_string()),
                 ("gauntlet_age", gauntlet_age.to_string()),
@@ -260,7 +260,7 @@ fn validate_post_gauntlet_choices(
         if plan.post_gauntlet_lab_seasons > max {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE,
-                CreationPhase::Abilities,
+                CreationPhase::Experience,
                 args([
                     ("max", max.to_string()),
                     ("seasons", plan.post_gauntlet_lab_seasons.to_string()),
@@ -286,7 +286,7 @@ fn validate_post_gauntlet_choices(
     if plan.post_gauntlet_spell_levels > budget.post_gauntlet_points {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_LIFE_STAGE_SPELL_LEVEL_SPLIT_EXCEEDS_POINTS,
-            CreationPhase::Abilities,
+            CreationPhase::Experience,
             args([
                 ("levels", plan.post_gauntlet_spell_levels.to_string()),
                 ("points", budget.post_gauntlet_points.to_string()),
@@ -338,19 +338,19 @@ fn childhood_rejection_issue(rejection: &ChildhoodRejection, ruleset: &Ruleset) 
     match rejection {
         ChildhoodRejection::UnknownPackage { package } => ValidationIssue::error(
             ValidationIssue::CODE_CHILDHOOD_PACKAGE_UNKNOWN,
-            CreationPhase::Abilities,
+            CreationPhase::Experience,
             args([("package", package.to_string())]),
             Some(package.clone()),
         ),
         ChildhoodRejection::NativeLanguageUnset => ValidationIssue::error(
             ValidationIssue::CODE_LIFE_STAGE_NATIVE_LANGUAGE_UNSET,
-            CreationPhase::Abilities,
+            CreationPhase::Experience,
             args([]),
             None,
         ),
         ChildhoodRejection::SlotUnfilled { slot, ability } => ValidationIssue::error(
             ValidationIssue::CODE_CHILDHOOD_SLOT_UNFILLED,
-            CreationPhase::Abilities,
+            CreationPhase::Experience,
             args([
                 ("ability", ability.to_string()),
                 ("key", parameter_key(ability, ruleset)),
@@ -364,7 +364,7 @@ fn childhood_rejection_issue(rejection: &ChildhoodRejection, ruleset: &Ruleset) 
             language,
         } => ValidationIssue::error(
             ValidationIssue::CODE_CHILDHOOD_SLOT_IS_NATIVE_LANGUAGE,
-            CreationPhase::Abilities,
+            CreationPhase::Experience,
             args([
                 ("ability", ability.to_string()),
                 ("key", parameter_key(ability, ruleset)),
@@ -380,7 +380,7 @@ fn childhood_rejection_issue(rejection: &ChildhoodRejection, ruleset: &Ruleset) 
             value,
         } => ValidationIssue::error(
             ValidationIssue::CODE_CHILDHOOD_SLOT_DUPLICATE_VALUE,
-            CreationPhase::Abilities,
+            CreationPhase::Experience,
             args([
                 ("ability", ability.to_string()),
                 ("key", parameter_key(ability, ruleset)),
@@ -546,7 +546,7 @@ mod tests {
             .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_XP_POOL_CONFLICT)
             .expect("the conflict is reported");
         assert_eq!(issue.args.get("xp_pool").map(String::as_str), Some("120"));
-        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.phase, CreationPhase::Experience);
     }
 
     #[test]
@@ -576,7 +576,7 @@ mod tests {
             .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET)
             .expect("a magus below the Gauntlet age is reported");
         assert_eq!(issue.severity, IssueSeverity::Error);
-        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.phase, CreationPhase::Experience);
         assert_eq!(issue.args.get("age").map(String::as_str), Some("19"));
         assert_eq!(issue.args.get("min").map(String::as_str), Some("20"));
         assert!(
@@ -616,7 +616,7 @@ mod tests {
             .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_AGE_UNSET)
             .expect("the missing age is reported");
         assert_eq!(issue.severity, IssueSeverity::Error);
-        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.phase, CreationPhase::Experience);
         assert!(issue.args.is_empty(), "args: {:?}", issue.args);
 
         // With an age it is silent, and a direct-entry character never sees it.
@@ -672,7 +672,7 @@ mod tests {
             .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET)
             .expect("a Gauntlet below the minimum age is reported");
         assert_eq!(issue.severity, IssueSeverity::Error);
-        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.phase, CreationPhase::Experience);
         assert_eq!(issue.args.get("age").map(String::as_str), Some("12"));
         assert_eq!(issue.args.get("min").map(String::as_str), Some("20"));
 
@@ -726,7 +726,7 @@ mod tests {
             .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_GAUNTLET_AGE_AFTER_AGE)
             .expect("a Gauntlet after the character's age is reported");
         assert_eq!(issue.severity, IssueSeverity::Error);
-        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.phase, CreationPhase::Experience);
         assert_eq!(
             issue.args.get("gauntlet_age").map(String::as_str),
             Some("40")
@@ -761,7 +761,7 @@ mod tests {
             .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE)
             .expect("lab seasons beyond the span are reported");
         assert_eq!(issue.severity, IssueSeverity::Error);
-        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.phase, CreationPhase::Experience);
         assert_eq!(issue.args.get("seasons").map(String::as_str), Some("200"));
         assert_eq!(issue.args.get("max").map(String::as_str), Some("105"));
         assert_eq!(issue.args.get("years").map(String::as_str), Some("35"));
@@ -802,7 +802,7 @@ mod tests {
             .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_SPELL_LEVEL_SPLIT_EXCEEDS_POINTS)
             .expect("a split beyond the points is reported");
         assert_eq!(issue.severity, IssueSeverity::Error);
-        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.phase, CreationPhase::Experience);
         assert_eq!(issue.args.get("levels").map(String::as_str), Some("5000"));
         // 35 years × 30 points, less 10 charged lab seasons × 10.
         assert_eq!(issue.args.get("points").map(String::as_str), Some("950"));
@@ -911,7 +911,7 @@ mod tests {
             .find(|i| i.code == ValidationIssue::CODE_CHILDHOOD_PACKAGE_UNKNOWN)
             .expect("the unknown package is reported");
         assert_eq!(issue.severity, IssueSeverity::Error);
-        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.phase, CreationPhase::Experience);
         assert_eq!(
             issue.args.get("package").map(String::as_str),
             Some("childhood.nonesuch")
@@ -1092,8 +1092,8 @@ mod tests {
         assert!(
             issues
                 .iter()
-                .all(|i| i.severity == IssueSeverity::Error && i.phase == CreationPhase::Abilities),
-            "every rejection is a blocking abilities-phase error: {issues:?}"
+                .all(|i| i.severity == IssueSeverity::Error && i.phase == CreationPhase::Experience),
+            "every rejection is a blocking experience-phase error: {issues:?}"
         );
 
         let keys =

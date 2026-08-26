@@ -1313,7 +1313,8 @@ returns early without a plan). The **log**, never `aging_points`, settles it: a
 roll can legitimately produce no points. Fluent key
 `issue-aging_rolls_pending` (en/de) — the `life_stage_` prefix it shipped under in
 6b5a was dropped in M6/6b6, because the finding fires for every character over the
-threshold and the `life_stage_*` codes are all filed under `abilities`. Filed under
+threshold and the `life_stage_*` codes are all filed under `experience` (they were
+`abilities` until the Slice 2 phase split below). Filed under
 `review` only because
 no aging phase exists yet — 6b6 adds `CreationPhase::Aging` and moves it there.
 
@@ -2575,7 +2576,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   only later life is counted in years up to an age (`:2392`). `budget` therefore
   returns both childhood blocks with `later_life_years: 0` for a plan whose age is
   not yet set, and returns `None` only when there is no plan at all. The missing age
-  is a finding in its own right — `life_stage_age_unset` (error, `abilities`, no
+  is a finding in its own right — `life_stage_age_unset` (error, `experience`, no
   args) from `validate_life_stage_plan` — rather than the silent absence of a
   budget: with no budget the two childhood pools would stand at 0 and every
   childhood row would be reported as unfunded, which blames the player for rows the
@@ -2753,7 +2754,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
 - **The slot codes are command-input findings, not `validate()` findings.**
   `validation::childhood_rejection_issues` (`validation/life_stage.rs`) turns the
   rejections into `childhood_slot_unfilled`, `childhood_slot_is_native_language`
-  and `childhood_slot_duplicate_value` (all error / `abilities`). They are emitted
+  and `childhood_slot_duplicate_value` (all error / `experience`). They are emitted
   only there, never by `validate()`: applying a package is all-or-nothing, so a
   stored character cannot *hold* an unanswered or colliding slot — the rejection
   describes the form the player just submitted and is gone once it is corrected.
@@ -2766,7 +2767,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   same fact.
 - **A stored package id is a reference, so `validate()` checks it resolves.**
   `validate_life_stage_plan` reports `childhood_package_unknown` (error,
-  `abilities`, arg `package`) when `LifeStagePlan::childhood_package` names an id
+  `experience`, arg `package`) when `LifeStagePlan::childhood_package` names an id
   the loaded ruleset does not ship — which a save written against another ruleset
   can. This is the *only* thing checked about the recorded package: what it granted
   stays uncross-checked, per `:2382` above.
@@ -3028,7 +3029,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
     them are **M6/6b5b**.
 - **Four findings, and the reason the clamps stay.** The first three are
   `validate_post_gauntlet_choices` in `validation/life_stage.rs`, all
-  `error`/`abilities`, all magus-gated because `:2216` is "**Hermetic Magi Only
+  `error`/`experience`, all magus-gated because `:2216` is "**Hermetic Magi Only
   (Optional)**" and on any other plan the values are ignored outright:
   - `life_stage_gauntlet_age_after_age` (`gauntlet_age`, `age`) — a Gauntlet in the
     character's future.
@@ -3062,12 +3063,14 @@ Abilities are bought with experience earned in blocks, not from one bank:
   gauntleted at 12 never served its fifteen years either, and only the Gauntlet age
   sees that; with no `gauntlet_age` stored the two numbers are identical, which is what
   keeps every pre-6b5 plan reading as it did.
-- **`life_stage_spell_level_split_exceeds_points` is filed under `abilities`, not
+- **`life_stage_spell_level_split_exceeds_points` is filed under `experience`, not
   `spells`**, although it feeds `spell_levels_budget`. M6/6b1a's rule is that a finding
   belongs to the phase whose *input surface* owns the offending value: the number is
-  typed into the life-stage panel on the Abilities step, and the magus phase order is
-  `… abilities, arts, spells`, so filing it under `spells` would let the guided wizard
-  walk past the only step that can correct it.
+  typed into the life-stage panel, and the magus phase order is
+  `… experience, abilities, arts, spells`, so filing it under `spells` would let the
+  guided wizard walk past the only step that can correct it. (It was `abilities` until
+  the Slice 2 phase split moved the panel — and with it every code it reports — onto
+  the new `experience` step; the rule that decided it is unchanged.)
 
 #### Pre-apprenticeship experience buys Abilities only — never Arts (M6/6b4)
 
@@ -3185,7 +3188,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `puissant_parma_magica_does_not_admit_a_magus_to_the_order`.
 - **A minimum age of 20 follows** from the same block: childhood (5) plus
   apprenticeship (15), `LifeStageRules::minimum_gauntlet_age`. A younger magus with a
-  life-stage plan gets `life_stage_age_before_gauntlet` (error, `abilities`, args
+  life-stage plan gets `life_stage_age_before_gauntlet` (error, `experience`, args
   `age`/`min`) **instead of** `life_stage_age_before_childhood` — one wrong age, one
   finding, under the code that describes it truthfully.
 - **The minimum set is deliberately not re-priced** the way the recommended one is:
@@ -4467,10 +4470,10 @@ Source per phase, all in `Ars Magica - Definitive Edition (Core Rules).md`:
 | Phase | Claim made | Source |
 |---|---|---|
 | `concept` | creation starts from a concept; the examples (fire wizard / scholar / warrior or covenant staff) | `:2203` |
-| `type` | a magus has The Gift and Hermetic training; a central non-magus is a companion, a bit part a grog; the rules differ by type | `:2224`, `:2226` |
 | `characteristics` | Characteristics are inborn and normal means never raise them; the point buy; a negative score gives points back | `:1025`, `:1027`, `:2342`, `:2346-2354` |
 | `virtues_flaws` | Flaws fund Virtues up to the budget; the maximum need not be taken; every character takes a Social Status | `:2209-2211`, `:2295-2303`, `:2309`, `:2816`, `:2844` |
-| `abilities` | Abilities are bought in blocks — the first five years of childhood, then later life a year at a time; age caps the creation score | `:2364`, `:2366`, `:2378`, `:2392` |
+| `experience` | experience is acquired in blocks — the first five years of childhood, then later life a year at a time, plus apprenticeship and the years after it for a magus; a total may be entered instead, or the life stages earn it from the age | `:2364`, `:2378`, `:2392`, `:2213-2216` |
+| `abilities` | Abilities are learned skills, bought with that experience; age caps the creation score | `:2364`, `:2366` |
 | `arts` | every spell combines one Technique and one Form; apprenticeship's experience buys Arts and Abilities from the same total | `:8835`, `:2435` |
 | `spells` | apprenticeship grants levels of spells; the highest level learnable is set by Technique, Form, Intelligence and Magic Theory | `:2215`, `:2435`, `:2465` |
 | `house_specialisation` | a magus belongs to exactly one House, whose benefit at creation is a free Minor Virtue needing no Flaw to fund it | `:2264`, `:2859` |
@@ -4478,6 +4481,36 @@ Source per phase, all in `Ars Magica - Definitive Edition (Core Rules).md`:
 | `personality_reputations` | a few words scored +3 to -3; Loyal for grogs, Brave for warriors; a Reputation only where a Virtue or Flaw grants one | `:2502`, `:2504`, `:2514` |
 | `aging` | over 35 an aging roll per year before play; apparent age and Characteristic points are what it costs; Aging Points drop a Characteristic once they exceed it | `:2232`, `:16565`, `:16577`, `:16579` |
 | `review` | **no rules claim** — the review step is this application's own, so its line describes the flow and nothing else | — |
+
+#### The phase list after the guided-creation review (Slice 2 — #1, #11)
+
+Two changes to the closed `CreationPhase` enum (`crates/arm-rules/src/types.rs`) and
+to every profile's `creation_phases` in `rules/core/character_types.json`. **Neither
+is a rules change** — the rules' own creation order is untouched; what changed is
+which input surface owns which step:
+
+- **`type` removed.** It asked for nothing: the character type is fixed when the
+  character is created (`StartScreen` enters the wizard per type) and is immutable
+  afterwards, so the step only read back what the profile already commits the
+  character to. Its two facts that live nowhere else — the Virtue/Flaw budget numbers
+  (`:2209-2211`, `:2295`, `:2303`, `:2844`) and the Gift policy line (`:2224`) — moved
+  to the character banner shown above both the editor and the wizard
+  (`ui/src/lib/components/CharacterBanner.svelte`), keyed `character-type-explainer`,
+  `character-type-budget` and `character-type-gift-required|forbidden|optional`. Both
+  numbers stay Fluent placeables filled from the loaded profile, so no rules value is
+  written into a translated string.
+- **`experience` added, immediately before `abilities`.** The blocks that fund a
+  character — early childhood, later life, and for a magus apprenticeship and the
+  years after it (`:2364`, `:2213-2216`) — are chosen and priced on their own step
+  now, instead of as a ~620px preamble on the step that spends them. Every
+  `life_stage_*` and `childhood_*` code, plus `restricted_xp_unspent`, is filed under
+  `experience` for the M6/6b1a reason: a finding belongs to the phase whose *input
+  surface* owns the offending value. `magus_minimum_ability`,
+  `magus_recommended_ability`, `not_enough_xp`, `xp_solve_bound_exceeded`,
+  `duplicate_ability` and the `ability_*` codes stay on `abilities`.
+
+`CreationPhase::ALL` therefore still has twelve members; the magus flow is ten
+declared phases plus the wizard's synthetic `review`.
 
 ---
 
@@ -4512,9 +4545,9 @@ character's own type profile declares, in that declared order:
 | Phase | Complete when | Rules source |
 |---|---|---|
 | `concept` | any identity field is set (name, description, concept, gender, birth year, sigil, covenant, parens) | — |
-| `type` | always — a read-only step, the type is fixed before the wizard opens | — |
 | `characteristics` | some Characteristic is non-zero (an all-zero spread is an untouched point-buy) | — |
 | `virtues_flaws` | a selection the profile did not force (`required_traits`, plus The Gift where `gift_policy` requires it) | — |
+| `experience` | a life-stage plan is stored (flat-pool funding is recorded by the plan's *absence*, so it stays marked untouched until #29 stores the mode explicitly) | — |
 | `abilities` | an Ability score is bought | — |
 | `arts` | an Art score is bought | — |
 | `spells` | a spell is known | — |

@@ -100,9 +100,9 @@ describe('WizardStep', () => {
   // wizard adds orchestration, not a second set of inputs.
   const expected: [CreationPhase, string][] = [
     ['concept', 'identity-concept'],
-    ['type', 'type-step-name'],
     ['characteristics', 'characteristic-points'],
     ['virtues_flaws', 'balance'],
+    ['experience', 'life-stage-panel'],
     ['abilities', 'xp-spent'],
     ['arts', 'art-xp-spent'],
     ['spells', 'spell-levels-used'],
@@ -119,11 +119,36 @@ describe('WizardStep', () => {
     });
   }
 
-  // AbilityTab carries the life-stage funding panel, so mounting it in the wizard
-  // puts the choice in both flows at once: a save made in the wizard stays editable
-  // in the editor because they are one surface, not two.
-  it('offers the life-stage funding panel on the abilities step', () => {
-    expect(body('abilities')).toContain('data-testid="life-stage-panel"');
+  // Slice 2 (#11): the funding panel is the `experience` step's own surface, and the
+  // `abilities` step is the Available/Selected lists alone — three concerns in one
+  // bounded flex column is what collapsed both lists in an 800px window.
+  it('mounts the ExperienceStep for the experience phase', () => {
+    const markup = body('experience');
+    expect(markup).toContain('data-testid="life-stage-panel"');
+    expect(markup).toContain('data-testid="ability-funding-life_stages"');
+  });
+
+  it('keeps the funding panel off the abilities step', () => {
+    expect(body('abilities')).not.toContain('data-testid="life-stage-panel"');
+  });
+
+  // The step has to offer the funding choice it asks for. Under flat (pool) funding
+  // the panel renders only the two radios — the total itself is `XpBar`'s input — so
+  // without a bar here `wizard-guidance-experience` promises "enter one total
+  // yourself" beside no field to enter it in, and the step can never record
+  // anything for a pool-funded character. #14's life-stage chips land on this step
+  // too, so the bar belongs here for both funding modes.
+  it('mounts the experience budget bar so the pool total can be entered', () => {
+    // The editable field, not the read-only `xp-pool-total` span beside it: the
+    // point is that a pool-funded character can answer this step at all.
+    expect(body('experience')).toContain('data-testid="xp-pool"');
+  });
+
+  // #1: the read-only `type` step is gone. The step table is exhaustive over
+  // `CreationPhase` by `satisfies`, so the only way to show the entry is absent is to
+  // ask for it — which now finds nothing to mount rather than a blank step.
+  it('has no step for a removed type phase', () => {
+    expect(() => body('type' as CreationPhase)).toThrow();
   });
 
   // And the Hermetic minimums beside it, from the same mount: the wizard's magus has

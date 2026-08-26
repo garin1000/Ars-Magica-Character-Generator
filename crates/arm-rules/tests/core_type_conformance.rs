@@ -75,6 +75,44 @@ fn assert_valid(label: &str, entity: &Entity, ruleset: &Ruleset) {
     );
 }
 
+/// The shipped phase lists after the guided-creation review's #1 and #11: no
+/// profile still declares the read-only `type` step, and every one of them offers
+/// the `experience` step before the `abilities` step it funds — the funding choice
+/// applies to every character type, so a profile without it would leave that type
+/// no way to choose how its Abilities are paid for.
+///
+/// Structural only: which phases a profile declares, never how many.
+#[test]
+fn every_shipped_profile_declares_experience_before_abilities_and_no_type_phase() {
+    let ruleset = full_ruleset();
+    assert!(
+        ruleset.profiles().next().is_some(),
+        "the shipped ruleset declares no character types"
+    );
+
+    for profile in ruleset.profiles() {
+        let id = &profile.id;
+        let phases = &profile.creation_phases;
+        assert!(
+            !phases.iter().any(|phase| phase.to_string() == "type"),
+            "profile '{id}' still declares the removed `type` phase: {phases:?}"
+        );
+
+        let experience = phases.iter().position(|p| *p == CreationPhase::Experience);
+        let abilities = phases.iter().position(|p| *p == CreationPhase::Abilities);
+        assert!(
+            experience.is_some(),
+            "profile '{id}' declares no `experience` phase, so it cannot choose its funding mode"
+        );
+        if let (Some(experience), Some(abilities)) = (experience, abilities) {
+            assert!(
+                experience < abilities,
+                "profile '{id}' funds Abilities after buying them: {phases:?}"
+            );
+        }
+    }
+}
+
 #[test]
 fn grog_full_build_validates() {
     // 3/3 V/F, no majors; categories general/personality/social_status only.

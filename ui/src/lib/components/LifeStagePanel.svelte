@@ -134,10 +134,13 @@
           </span>
         {/if}
         {#if showPostGauntlet}
-          <!-- In the same wrapping row as the age, deliberately: the panel is an
-               auto-height sibling of the `flex: 1` region row below it, so every
-               full-width row added here comes straight out of the Available/Selected
-               lists' height (see `.region-row` in app.css). -->
+          <!-- In the same wrapping row as the age, deliberately. On the wizard's own
+               `experience` step (Slice 2) the panel has the step to itself, but it is
+               still mounted above the editor's Abilities tab until Slice 3 gives that
+               tab its own Experience sibling — and there it is an auto-height sibling
+               of the `flex: 1` region row, so every full-width row added here comes
+               straight out of the Available/Selected lists' height (see `.region-row`
+               in app.css). -->
           <label class="field inline">
             <span>{store.t('life-stage-gauntlet-age-label')}</span>
             <input

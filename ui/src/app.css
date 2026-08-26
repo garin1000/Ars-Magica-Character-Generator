@@ -266,7 +266,12 @@ button:disabled {
    stated here rather than offered as a control. */
 .char-type {
   display: flex;
-  gap: 0.4rem;
+  /* Wraps rather than adding a second row: the type's own facts (V/F budget, Gift
+     policy) ride along here, and this banner is above every tab and every wizard
+     step, so a permanent extra line is taken straight out of the height those
+     surfaces need. At any normal width it stays one line. */
+  flex-wrap: wrap;
+  gap: 0.15rem 0.4rem;
   margin: 0 0 0.1rem;
   padding: 0 0.4rem;
   font-size: 0.8rem;

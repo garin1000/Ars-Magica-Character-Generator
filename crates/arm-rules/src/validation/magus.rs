@@ -637,7 +637,11 @@ pub(crate) fn validate_xp_pool(
             let (origin_kind, origin) = origin_args(&pool.origin);
             issues.push(ValidationIssue::warning(
                 ValidationIssue::CODE_RESTRICTED_XP_UNSPENT,
-                CreationPhase::Abilities,
+                // A restricted pool comes from the funding plan (a life-stage block
+                // or a Virtue's grant), so the step that can change what it is worth
+                // is the `experience` one — the Abilities step spends it but cannot
+                // resize it.
+                CreationPhase::Experience,
                 args([
                     ("amount", pool.amount.to_string()),
                     ("used", pool.used.to_string()),

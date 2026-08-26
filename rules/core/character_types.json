@@ -25,9 +25,9 @@
     "gift_categories": ["hermetic"],
     "creation_phases": [
       "concept",
-      "type",
       "characteristics",
       "virtues_flaws",
+      "experience",
       "abilities",
       "personality_reputations",
       "aging"
@@ -57,9 +57,9 @@
     "gift_categories": ["hermetic"],
     "creation_phases": [
       "concept",
-      "type",
       "characteristics",
       "virtues_flaws",
+      "experience",
       "abilities",
       "aging"
     ]
@@ -94,10 +94,10 @@
     "gift_categories": ["hermetic"],
     "creation_phases": [
       "concept",
-      "type",
       "characteristics",
       "house_specialisation",
       "virtues_flaws",
+      "experience",
       "abilities",
       "arts",
       "spells",
@@ -133,10 +133,10 @@
     "gift_categories": ["hermetic"],
     "creation_phases": [
       "concept",
-      "type",
       "mythic_type",
       "characteristics",
       "virtues_flaws",
+      "experience",
       "abilities",
       "personality_reputations",
       "aging"

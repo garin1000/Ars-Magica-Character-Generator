@@ -297,7 +297,7 @@ fn sample_entity_with_characteristics_and_abilities_validates() {
 /// The payload the wizard reads is the one this command returns, and it must carry
 /// the completeness report against the **shipped** profiles — the phase lists no
 /// test fixture can stand in for. A brand-new magus has touched nothing, so every
-/// declared step but the read-only `type` one is outstanding.
+/// declared step is outstanding.
 #[test]
 fn validating_a_fresh_character_reports_its_untouched_phases() {
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
@@ -309,12 +309,9 @@ fn validating_a_fresh_character_reports_its_untouched_phases() {
 
     let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
     let profile = ruleset.profile(&Id::new("magus")).unwrap();
-    let expected: Vec<arm_rules::CreationPhase> = profile
-        .creation_phases
-        .iter()
-        .copied()
-        .filter(|phase| *phase != arm_rules::CreationPhase::Type)
-        .collect();
+    // Every declared step of a brand-new character is untouched: the read-only
+    // `type` step that used to be the one exemption is gone (review #1).
+    let expected: Vec<arm_rules::CreationPhase> = profile.creation_phases.clone();
     assert_eq!(result.completeness.incomplete_phases, expected);
 }
 

@@ -9,13 +9,13 @@
   import ArtGrid from './ArtGrid.svelte';
   import BalanceBar from './BalanceBar.svelte';
   import CharacteristicPicker from './CharacteristicPicker.svelte';
+  import ExperienceStep from './ExperienceStep.svelte';
   import HouseSelector from './HouseSelector.svelte';
   import IdentityFields from './IdentityFields.svelte';
   import MythicCompanionTypeSelector from './MythicCompanionTypeSelector.svelte';
   import PersonalityReputationsStep from './PersonalityReputationsStep.svelte';
   import SpellBudgetBar from './SpellBudgetBar.svelte';
   import SpellTab from './SpellTab.svelte';
-  import TypeStep from './TypeStep.svelte';
   import VirtueFlawTab from './VirtueFlawTab.svelte';
   import WizardReview from './WizardReview.svelte';
   import XpBar from './XpBar.svelte';
@@ -41,11 +41,21 @@
   // rather than mounted by the input surface below it, `spells` included: a
   // budget belongs to the whole character, so the step (and, in the editor, the
   // tab) owns it and the picker stays a picker.
+  //
+  // The `experience` step is the one wrapper of its own (`ExperienceStep`): the
+  // panel it mounts is the editor's, but the editor has no matching tab until
+  // Slice 3 splits its tab list the same way, so until then `App.svelte` mounts
+  // the panel directly. The reuse rule is unchanged — one component, two mounts.
   const STEPS = {
     concept: { component: IdentityFields, scroll: true },
-    type: { component: TypeStep, scroll: true },
     characteristics: { component: CharacteristicPicker },
     virtues_flaws: { component: VirtueFlawTab, bar: BalanceBar },
+    // The bar is the step's own input, not just a read-out: under flat funding the
+    // pool total lives in `XpBar`, so without it the step asks where a character's
+    // experience comes from while offering no way to answer for one of the two
+    // modes. It stays on `abilities` as well — there you spend against the total,
+    // here you set it — and #14's life-stage chips belong on this step too.
+    experience: { component: ExperienceStep, scroll: true, bar: XpBar },
     abilities: { component: AbilityTab, bar: XpBar },
     arts: { component: ArtGrid, bar: XpBar, barProps: { prefix: 'art-' } },
     spells: { component: SpellTab, bar: SpellBudgetBar },
