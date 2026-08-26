@@ -747,12 +747,23 @@ the per-slice gate is the real pacing mechanism.
      element/class (e.g. `data-testid="validation-body"`) is present in **both**
      branches. This fails because no such wrapper exists today. Then make it pass.
   2. **RED** — a CSS-contract test. `app.css` is not unit-testable by rendering, so
-     assert on the stylesheet text: add to `ui/src/lib/derive.test.ts` (or a new
-     `ui/src/app.css.test.ts`, project **`ssr`**) a test
-     `app.css declares a base margin reset for p and headings` that reads
-     `src/app.css` via `?raw` import and asserts a base `p,` selector block setting
-     `margin: 0`. It fails now. This is the only mechanical guard against the reset
-     being deleted by a later "cleanup".
+     assert on the stylesheet text: add a new `ui/src/app.css.test.ts` (project
+     **`ssr`**) with a test `app.css declares a base margin reset for p and headings`
+     asserting a base `p,` selector block setting `margin: 0`. It fails now. This is the
+     only mechanical guard against the reset being deleted by a later "cleanup".
+     **Read the file with `readFileSync`, NOT an `import … from './app.css?raw'`.**
+     This plan originally said `?raw` and that was **wrong**: vitest stubs CSS modules
+     to an empty string and its check keys on the `.css` **extension regardless of the
+     query**, so `?raw` yields `''` and every assertion passes vacuously — the exact
+     failure mode the test exists to prevent. `ValidationPanel.test.ts` already used
+     `readFileSync` for the same reason; follow it:
+     `readFileSync(fileURLToPath(new URL('./app.css', import.meta.url)), 'utf-8')`.
+     **Anchor element-level selectors at start-of-line** (`/^p,\s*h1,…/m`) so a
+     descendant variant like `.panel p` cannot satisfy the assertion.
+     **This applies to every later slice that extends this test** — S6 (grid, not
+     multi-column; the aging log spanning the row), S9 (`.mastery-abilities`
+     `flex-basis`, `.char-panel` centering) and S10 (`.issue` typography, the scoped
+     `.error` rule). Verified in practice while implementing S1.
   3. Green: add the reset, then delete the now-redundant compensating rules **one at
      a time**, re-running `npm run test:unit` after each.
 - **i18n** none.
