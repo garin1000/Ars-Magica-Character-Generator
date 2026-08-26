@@ -867,14 +867,27 @@ the per-slice gate is the real pacing mechanism.
     so a forgotten filler fails loudly.
   - `ui/e2e/helpers.js` (`wizardRailPhases`, `currentWizardPhase`) and the four
     per-type wizard specs' rail assertions.
-- **Open sub-question inside this slice (decide from data, no user input needed)**
-  Whether every profile gets an `experience` phase or only those where life-stage
-  funding applies. `LifeStagePanel` is gated on the ruleset shipping life-stage rules
-  *and* on guided funding, so a profile whose panel would always be empty must not get
-  an empty step. Resolve by reading the gate in `LifeStagePanel.svelte` and the
-  profiles' data before editing `character_types.json`; record the reasoning in the
-  commit message. The magus step count goes 11 → 10 (#1) → 11 (#11 split), where 11 =
-  10 declared phases + the wizard's synthetic `review`.
+- **Sub-question — RESOLVED from data: all four profiles get `experience`.**
+  The question was whether every profile gets the phase or only those where life-stage
+  funding applies. Verified in the source:
+  - `LifeStagePanel.svelte:66` gates the whole panel on `{#if rules}` —
+    `store.ruleset?.ruleset.life_stages` (`:15`), i.e. **the ruleset shipping
+    life-stage rules**. It does *not* gate on character type.
+  - The funding-mode chooser (`pool` / `life_stages`, `:48-50`, `:68-93`) therefore
+    renders for **every** character type. Only the detailed plan fields are behind
+    `{#if guided}` (`:95`), and only gauntlet age / lab seasons / spell levels are
+    behind `isMagus` (`:109`, `:136`, `:190`).
+  - Childhood and later life apply to every character, not just magi — apprenticeship
+    is the magus-only block.
+
+  So a profile's `experience` step is **never empty**: at minimum it carries the
+  funding choice, which today lives on the `abilities` step for all four types.
+  Omitting the phase for non-magi would leave a grog with **no way to choose its
+  funding mode at all** — a functional regression, not a tidier flow. Give all four
+  profiles the phase.
+
+  The magus step count goes 11 → 10 (#1) → 11 (#11 split), where 11 = 10 declared
+  phases + the wizard's synthetic `review`.
 - **TDD steps (strict red→green)**
   1. **RED (Rust)** — `crates/arm-rules/src/types.rs` tests: `creation_phase_all_has_no_type_phase` and
      `creation_phase_experience_serializes_as_experience` asserting

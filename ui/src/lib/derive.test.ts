@@ -2080,8 +2080,8 @@ describe('wizardPhases', () => {
     // Virtues & Flaws, because the House grants a free Virtue that the V/F
     // budget then has to account for.
     expect(
-      wizardPhases(profile(['concept', 'type', 'house_specialisation', 'virtues_flaws'])),
-    ).toEqual(['concept', 'type', 'house_specialisation', 'virtues_flaws', 'review']);
+      wizardPhases(profile(['concept', 'house_specialisation', 'virtues_flaws', 'experience'])),
+    ).toEqual(['concept', 'house_specialisation', 'virtues_flaws', 'experience', 'review']);
   });
 
   it('appends Review exactly once, and never a second one', () => {
@@ -2119,6 +2119,20 @@ describe('issuesForPhase', () => {
 
   it('is empty for a phase nothing was filed under', () => {
     expect(issuesForPhase([issue('unknown_type', 'review')], 'arts')).toEqual([]);
+  });
+
+  // Slice 2 (#11): the life-stage and childhood findings follow their input surface
+  // onto the new `experience` step. Filing them under `abilities` would let the
+  // wizard gate the Abilities step on a value that step no longer has an input for.
+  it('routes a life-stage finding to the experience step, not to abilities', () => {
+    const findings = [
+      issue('life_stage_age_unset', 'experience'),
+      issue('not_enough_xp', 'abilities'),
+    ];
+    expect(issuesForPhase(findings, 'experience').map((i) => i.code)).toEqual([
+      'life_stage_age_unset',
+    ]);
+    expect(issuesForPhase(findings, 'abilities').map((i) => i.code)).toEqual(['not_enough_xp']);
   });
 });
 
@@ -2256,9 +2270,9 @@ describe('wizardGuidance', () => {
   // the `satisfies` on the map itself.
   const ALL_PHASES: CreationPhase[] = [
     'concept',
-    'type',
     'characteristics',
     'virtues_flaws',
+    'experience',
     'abilities',
     'arts',
     'spells',

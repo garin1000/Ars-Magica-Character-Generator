@@ -154,24 +154,23 @@ beforeEach(() => {
   resetEntity();
 });
 
-describe('AbilityTab mounts the life-stage panel (slice 6b3b)', () => {
-  it('renders the panel above the Available/Selected row', () => {
-    const body = html();
-    const panel = body.indexOf('data-testid="life-stage-panel"');
-    const row = body.indexOf('class="region-row"');
-    expect(panel).toBeGreaterThanOrEqual(0);
-    expect(row).toBeGreaterThanOrEqual(0);
-    // The funding choice is read before the lists it funds, in DOM order — which is
-    // also the reading order for a screen reader and the keyboard tab order.
-    expect(panel).toBeLessThan(row);
+// Slice 2 (#11): the funding model and the whole life-stage plan moved to the new
+// `experience` step (`ExperienceStep.svelte`), so this tab is only the lists again.
+// The mirror image of `ExperienceStep.test.ts`: what left here has to arrive there.
+describe('AbilityTab leaves the funding choice to the experience step (Slice 2)', () => {
+  it('no longer renders the life-stage panel', () => {
+    expect(html()).not.toContain('data-testid="life-stage-panel"');
   });
 
-  it('keeps the region row a root-level sibling of the panel', () => {
+  it('still renders the Available and Selected regions, with the row at root level', () => {
     const body = html();
-    // `.region-row` must stay the only `flex: 1` child of `.vf-tab`: nesting it
-    // inside the panel would collapse the Available and Selected lists.
+    // `.region-row` must stay the only `flex: 1` child of `.vf-tab`, which is the
+    // whole point of the split: with no preamble above it, it now gets the height.
+    expect(body).toContain('class="region-row"');
     expect(depthOf(body, 'class="region-row"')).toBe(0);
-    expect(depthOf(body, 'data-testid="life-stage-panel"')).toBe(0);
+    expect(body).toContain('data-testid="ability-search"');
+    expect(body).toContain('class="region region-source"');
+    expect(body).toContain('class="region region-selected"');
   });
 
   it('still renders the region row for a ruleset with no life-stage rules', () => {
@@ -184,14 +183,13 @@ describe('AbilityTab mounts the life-stage panel (slice 6b3b)', () => {
 });
 
 describe('AbilityTab mounts the magus minimums checklist (slice 6b4)', () => {
-  it('renders it between the funding panel and the Available/Selected row', () => {
+  it('renders it above the Available/Selected row', () => {
     setChecklist();
     const body = html();
-    const panel = body.indexOf('data-testid="life-stage-panel"');
     const checklist = body.indexOf('data-testid="magus-minimums"');
     const row = body.indexOf('class="region-row"');
-    // How Abilities are funded, then what the Order demands of them, then the lists.
-    expect(panel).toBeLessThan(checklist);
+    // What the Order demands of a magus's Abilities, then the lists it is about.
+    expect(checklist).toBeGreaterThanOrEqual(0);
     expect(checklist).toBeLessThan(row);
   });
 

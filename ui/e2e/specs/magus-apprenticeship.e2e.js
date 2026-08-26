@@ -1,7 +1,16 @@
 // End-to-end: building a MAGUS through its life stages (slice 6b4). Slice 6b3
 // shipped guided funding but refused it for a magus, because apprenticeship was not
-// modelled; now it is, so this spec drives the whole magus narrative on the wizard's
-// `abilities` step and the two after it.
+// modelled; now it is, so this spec drives the whole magus narrative from the
+// wizard's `experience` step onward.
+//
+// TWO STEPS, NOT ONE (Slice 2 of the guided-creation plan). The life-stage plan is
+// entered on the `experience` step, which mounts `LifeStagePanel` alone, while the XP
+// bar it prices — the general pool's total and the restricted blocks — belongs to the
+// `abilities` step. The plan's findings are `experience`-phase findings, so the gate
+// they trip is that step's Next; the bar figures are therefore read once, from the
+// step that owns them, after the plan below is complete. The walk is forward-only:
+// leaving `experience` needs the plan legal anyway (`goTo` clamps at the first
+// blocking phase exactly as Next does).
 //
 // The arithmetic is the rulebook's: "The fifteen years of apprenticeship give the
 // character 240 experience points … These experience points can be spent on Arts or
@@ -82,19 +91,18 @@ async function checklistRow(testid) {
 describe('magus apprenticeship through the life stages', () => {
   it('offers guided funding to a fresh wizard magus', async () => {
     await startWizard('magus');
-    await advanceWizardTo('abilities');
+    await advanceWizardTo('experience');
     await $(PANEL).waitForExist({ timeout: BOOT_TIMEOUT });
 
     // 6b3 disabled this option for a magus; 6b4 models the period it was missing.
     expect(await $(FUNDING_LIFE_STAGES).isEnabled()).toBe(true);
     await $(FUNDING_LIFE_STAGES).click();
 
-    // The plan retires the typed pool (the engine forbids both at once) and the note
-    // explains what the age about to be asked for means.
-    await browser.waitUntil(async () => !(await $(XP_POOL_INPUT).isExisting()), {
-      timeout: STEP_TIMEOUT,
-      timeoutMsg: 'guided funding must retire the editable experience pool',
-    });
+    // The plan's own fields arrive with it — the age the years are priced from is the
+    // first of them — and the note explains what that age means for a magus. (That the
+    // plan also retires the typed pool is read off the XP bar, on the step that mounts
+    // it; see the abilities step below.)
+    await $(AGE_INPUT).waitForExist({ timeout: STEP_TIMEOUT });
     expect(clean(await $(GAUNTLET_NOTE).getText()).length).toBeGreaterThan(0);
   });
 
@@ -129,19 +137,31 @@ describe('magus apprenticeship through the life stages', () => {
   it('funds the magus from its apprenticeship, with later life restricted', async () => {
     await $(NATIVE_LANGUAGE).setValue('German');
 
-    // Wait on the pool the LANGUAGE forms — the 75-point childhood block is restricted
-    // to that one instance, so it does not exist until the language is named. Waiting
-    // on later life instead would race the engine round-trip: its 75 follows from the
-    // age, which the previous test already typed.
-    await browser.waitUntil(async () => (await restrictedRows()).length === 3, {
-      timeout: STEP_TIMEOUT,
-      timeoutMsg: 'naming the native language should form the third restricted pool',
-    });
-    // Later life stops at the Gauntlet: (25 - 5 - 15) x 15 = 75, not a companion's 300.
-    expect(await textOf(LATER_LIFE)).toContain('75');
-    // The pool the spend is charged against is apprenticeship's 240 (`:2435`).
+    // Wait on the engine's answer to the language rather than on a figure the previous
+    // test already settled: an unnamed native language is an error on this step, so its
+    // going is what says the round trip landed — and what lets the step be left at all.
+    await browser.waitUntil(
+      async () => (await issueCount('life_stage_native_language_unset')) === 0,
+      {
+        timeout: STEP_TIMEOUT,
+        timeoutMsg: 'naming the native language should clear its refusal',
+      },
+    );
+
+    // Every figure the plan earns is a BLOCK OF THE POOL, and the pool's bar belongs to
+    // the `abilities` step (Slice 2), so they are all read there — one step on, with the
+    // plan complete, which is also what allows the step to be left in the first place.
+    await advanceWizardTo('abilities');
+    await $(XP_POOL_TOTAL).waitForExist({ timeout: STEP_TIMEOUT });
+
+    // A plan and a typed pool are mutually exclusive (the engine forbids both at once),
+    // so the editable field is gone and the total is read-only: apprenticeship's 240,
+    // the pool the spend is charged against (`:2435`).
+    expect(await $(XP_POOL_INPUT).isExisting()).toBe(false);
     expect(await textOf(XP_POOL_TOTAL)).toBe('240');
     expect(await textOf(APPRENTICESHIP)).toContain('240');
+    // Later life stops at the Gauntlet: (25 - 5 - 15) x 15 = 75, not a companion's 300.
+    expect(await textOf(LATER_LIFE)).toContain('75');
 
     // Three restricted pools now, in the order the engine pushes them: childhood's
     // native-language block (which only forms once the language is named), childhood's
@@ -149,6 +169,10 @@ describe('magus apprenticeship through the life stages', () => {
     // is therefore `restricted-xp-2` for this character; the indices are read off the
     // DOM rather than assumed, since a V/F granting extra Ability experience would
     // shift them.
+    await browser.waitUntil(async () => (await restrictedRows()).length === 3, {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'the plan should have formed three restricted pools by the Abilities step',
+    });
     const rows = await restrictedRows();
     expect(rows.map((row) => row.testid)).toEqual([
       'restricted-xp-0',

@@ -150,6 +150,36 @@ export async function advanceWizardTo(phase) {
 }
 
 /**
+ * Stand on the wizard's `phase`, whichever side of the current step it is on.
+ *
+ * A rail click rather than Next, because it is the only navigation that goes both
+ * ways: {@link advanceWizardTo} can only move forward. Needed since Slice 2 split
+ * the funding plan (`experience`) from the experience it prices (`abilities`), so a
+ * spec about the two together has to move between the steps that own them.
+ *
+ * A no-op when the wizard is already there. Fails loudly rather than spinning: an
+ * undeclared or unvisited phase is reported at once (its rail entry is disabled
+ * until reached), and a forward jump over a phase holding an error clamps there —
+ * `wizardGoTo` gates exactly as Next does — so the wait reports where it stopped.
+ *
+ * @param {string} phase creation-phase id
+ */
+export async function standOnWizardStep(phase) {
+  if ((await currentWizardPhase()) === phase) return;
+
+  const entry = await $(`${WIZARD_RAIL} [data-testid="wizard-step-${phase}"]`);
+  await entry.waitForExist({ timeout: STEP_TIMEOUT });
+  if (!(await entry.isEnabled())) {
+    throw new Error(`the wizard rail has not reached '${phase}' yet, so it cannot be jumped to`);
+  }
+  await entry.click();
+  await browser.waitUntil(async () => (await currentWizardPhase()) === phase, {
+    timeout: STEP_TIMEOUT,
+    timeoutMsg: `a rail jump to '${phase}' did not land there — a step in between is blocked`,
+  });
+}
+
+/**
  * Add one Ability row at `index` (its position in the character's Ability array),
  * name its instance where the Ability is parameterized, and raise it to 1.
  *
@@ -202,8 +232,16 @@ async function addAbilityAtScoreOne(ability, index, parameter) {
 export async function satisfyMagusMinimums(language = 'Latin') {
   const pool = await $('[data-testid="xp-pool"]');
   if (await pool.isExisting()) {
-    // Five experience points each off the advancement table; 30 leaves headroom.
-    await pool.setValue('30');
+    // Seed a pool only if the caller has not already set one. Five experience
+    // points each off the advancement table, so 30 covers the three minimums with
+    // headroom — but it must never CLOBBER a larger total: the guided walk sets its
+    // own pool on the experience step, which now runs before this helper, and
+    // overwriting it there silently starved the rest of the character and surfaced
+    // as an unexplained `not_enough_xp` on the Review step.
+    // Under life-stage funding the field is a read-only span, so `isExisting()`
+    // already makes the whole block a no-op.
+    const existing = await pool.getValue();
+    if (existing === '' || existing === '0') await pool.setValue('30');
   }
 
   await addAbilityAtScoreOne('ability.parma_magica', 0);

@@ -51,6 +51,21 @@ function localizedRuleset(): LocalizedRuleset {
           creation_phases: [],
         },
       },
+      abilities: {},
+      advancement: [],
+      // Shipped life-stage rules are what makes the funding panel render at all
+      // (`LifeStagePanel.svelte` gates on them, not on the character type), so the
+      // Slice 2 bridge test below needs them here.
+      life_stages: {
+        childhood: {
+          years: 5,
+          native_language_ability: 'ability.living_language',
+          native_language_xp: 75,
+          spread_xp: 45,
+          spread_abilities: [],
+        },
+        later_life: { xp_per_year: 15 },
+      },
       magnitude_points: { free: 0, minor: 1, major: 3 },
       ability_category_order: ['general'],
       art_type_order: ['technique', 'form'],
@@ -292,6 +307,48 @@ describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
     flushSync();
 
     expect(focusSpy).not.toHaveBeenCalled();
+  });
+});
+
+// Slice 2 (#11) moved the funding panel and the life-stage plan off `AbilityTab`
+// onto the wizard's new `experience` step. The editor does not get its own
+// Experience tab until Slice 3, so `App.svelte` mounts `LifeStagePanel` on the
+// editor's Abilities tab as an explicitly temporary bridge. Without it this slice
+// would ship an editor with no surface at all for the funding mode, the age, the
+// native language or the childhood package — and no e2e spec would catch it, since
+// `life-stage-childhood.e2e.js` and `magus-apprenticeship.e2e.js` drive the wizard.
+//
+// A `client` test, not `ssr`: the active tab is component-local `$state` defaulting
+// to `details` (`App.svelte:81`), so a `svelte/server` render can never reach the
+// Abilities panel. Switching it needs a mounted instance.
+describe('the editor still exposes the funding panel (Slice 2 bridge)', () => {
+  it('mounts the life-stage panel on the editor Abilities tab', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+
+    (document.getElementById('tab-abilities') as HTMLElement).click();
+    flushSync();
+
+    expect(document.querySelector('[data-testid="life-stage-panel"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="ability-funding-pool"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="ability-funding-life_stages"]')).not.toBeNull();
+  });
+
+  it('keeps the Available/Selected row a root-level sibling of the panel', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+
+    (document.getElementById('tab-abilities') as HTMLElement).click();
+    flushSync();
+
+    // `.region-row` must stay the only `flex: 1` child of `.vf-tab` or both ability
+    // lists collapse; the bridge mount is a sibling above it, never a wrapper.
+    const panel = document.querySelector('[data-testid="life-stage-panel"]')!;
+    const row = document.querySelector('.region-row')!;
+    expect(row).not.toBeNull();
+    expect(panel.parentElement).toBe(row.parentElement);
   });
 });
 

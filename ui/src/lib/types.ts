@@ -17,9 +17,9 @@ export type IssueSeverity = 'error' | 'warning';
 // pins this union against `CreationPhase::ALL`.
 export type CreationPhase =
   | 'concept'
-  | 'type'
   | 'characteristics'
   | 'virtues_flaws'
+  | 'experience'
   | 'abilities'
   | 'arts'
   | 'spells'

@@ -12,7 +12,6 @@
   } from '../derive';
   import { tooltip, withReason, type TooltipContent } from '../actions';
   import type { Ability, AbilityCategory } from '../types';
-  import LifeStagePanel from './LifeStagePanel.svelte';
   import MagusMinimumAbilities from './MagusMinimumAbilities.svelte';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
@@ -198,20 +197,16 @@
   }
 </script>
 
-<!-- How Abilities are funded, chosen above the lists it funds — a SIBLING of
-     `.region-row`, never a wrapper: the row must stay the only `flex: 1` child of
-     `.vf-tab`, or the Available/Selected lists collapse. This tab is mounted both as
-     the editor's Abilities tab and as the wizard's `abilities` step, so one mount
-     puts the panel in both flows; that is the point, since a character built in the
-     wizard has to stay editable in the editor. -->
-<LifeStagePanel />
+<!-- What the Order demands of a magus (Core Rules.md:2437), read before the lists it
+     is about — an auto-height SIBLING of `.region-row`, never a wrapper: the row must
+     stay the only `flex: 1` child of `.vf-tab`, or the Available/Selected lists
+     collapse.
 
-<!-- What the Order demands of a magus (Core Rules.md:2437), read after the funding
-     choice and before the lists it is about — another auto-height SIBLING, for the same
-     reason. Not inside the panel: the panel is gated on the ruleset shipping life-stage
-     rules and on guided funding, while `:2437` is unconditional, and "what a magus must
-     know" is a different concern from "how Abilities are funded". Empty for every other
-     type, so nothing gates it here. -->
+     How Abilities are *funded* is no longer here. Slice 2 (guided-creation review
+     #11) moved `LifeStagePanel` to the wizard's own `experience` step
+     (`ExperienceStep.svelte`), because this tab was carrying three concerns in one
+     bounded column and only the third needed height. Empty for every type but a
+     magus, so nothing gates the checklist here. -->
 <MagusMinimumAbilities />
 
 <div class="region-row">

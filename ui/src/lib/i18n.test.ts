@@ -65,6 +65,23 @@ describe('German UI bundle', () => {
     expect(translate(de, 'magus-minimum-unmet', row)).toContain('nicht erfüllt');
   });
 
+  // Slice 2 (#1, #11): the read-only `type` step is gone and the `experience` step
+  // took the funding choice off the Abilities step. The Rust side already asserts
+  // `phase-<slug>`/`wizard-guidance-<slug>` exist for every `CreationPhase`; this
+  // pins the other half — that the removed phase's keys left with it, so no key
+  // names a phase the engine no longer has.
+  it('keys the experience phase and no longer keys the removed type phase', () => {
+    for (const lang of ['en', 'de']) {
+      const keys = messageKeys(sourceForLang(lang));
+      expect(keys).toContain('phase-experience');
+      expect(keys).toContain('wizard-guidance-experience');
+      expect(keys).not.toContain('phase-type');
+      expect(keys).not.toContain('wizard-guidance-type');
+      // #1's two surviving facts were re-keyed to their new home, never deleted.
+      expect([...keys].filter((key) => key.startsWith('phase-type-'))).toEqual([]);
+    }
+  });
+
   it('has full message-key parity between English and German', () => {
     // A missing German key silently falls back to English (or the key) at
     // runtime, so drift is invisible without this check — the same class of gap

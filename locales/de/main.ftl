@@ -37,9 +37,9 @@ start-wizard-hint = Schritt für Schritt durch die Erstellungsphasen dieses Typs
 # Bildschirm. `review` ist der eigene Abschlussschritt des Assistenten, angefügt
 # nach den Phasen, die der Charaktertyp deklariert.
 phase-concept = Konzept
-phase-type = Charaktertyp
 phase-characteristics = Eigenschaften
 phase-virtues_flaws = Tugenden & Fehler
+phase-experience = Erfahrung
 phase-abilities = Fertigkeiten
 phase-arts = Künste
 phase-spells = Zauber
@@ -81,10 +81,10 @@ wizard-unchecked-hint = Die Prüfung wird nicht erzwungen, daher blockiert kein 
 # das Regelwerk bereits trägt, werden eingesetzt ({ $points }, { $flaws },
 # { $virtues }) und nie ausgeschrieben.
 wizard-guidance-concept = Beginne mit einem Konzept: wer dieser Charakter ist und welche Rolle er in der Saga spielt. Ein Magus könnte ein Feuerzauberer sein, ein Gefährte ein Gelehrter fern der Heimat, ein Grog jede Art Krieger oder ein Mitglied des Konventspersonals.
-wizard-guidance-type = Ein Charakter mit der Gabe, ausgebildet in hermetischer Magie, ist ein Magus. Ein Nicht-Magus als Hauptfigur ist ein Gefährte, als Nebenrolle ein Grog — und nach dem hier festgelegten Typ richten sich alle weiteren Schritte.
 wizard-guidance-characteristics = Eigenschaften sind die angeborenen Wesenszüge deines Charakters und lassen sich später mit normalen Mitteln nicht steigern. Du hast { $points } Punkte zu vergeben, und ein Wert unter null gibt Punkte zurück.
 wizard-guidance-virtues_flaws = Fehler bezahlen Tugenden: Bis zu { $flaws } Punkte an Fehlern finanzieren bis zu { $virtues } Punkte an Tugenden. Du musst das Maximum nicht ausschöpfen, und jeder Charakter nimmt einen Sozialen Status.
-wizard-guidance-abilities = Fertigkeiten sind erlernte Fähigkeiten und werden in Blöcken gekauft: zuerst die ersten fünf Jahre der Kindheit, dann das spätere Leben Jahr für Jahr. Das Alter deines Charakters bestimmt den Höchstwert, den eine Fertigkeit bei der Erschaffung erreichen darf.
+wizard-guidance-experience = Erfahrung wird in Blöcken erworben: zuerst die ersten fünf Jahre der Kindheit, dann das spätere Leben Jahr für Jahr — bei einem Magus zusätzlich die Lehrlingszeit und die Jahre danach. Trage eine Gesamtsumme selbst ein, oder lass diese Lebensabschnitte sie aus dem Alter des Charakters erbringen.
+wizard-guidance-abilities = Fertigkeiten sind erlernte Fähigkeiten und werden mit der Erfahrung des vorigen Schritts gekauft. Das Alter deines Charakters bestimmt den Höchstwert, den eine Fertigkeit bei der Erschaffung erreichen darf.
 wizard-guidance-arts = Techniken und Formen sind die Magie des Magus: Jeder Zauber verbindet eine Technik mit einer Form. Dieselben Erfahrungspunkte der Lehrlingszeit kaufen Künste und Fertigkeiten, sodass hier Ausgegebenes dort fehlt.
 wizard-guidance-spells = Die Lehrlingszeit gewährt Stufen Zauber statt Erfahrungspunkte, die hier ausgegeben werden. Kein Zauber darf eine höhere Stufe haben, als Technik, Form, Intelligenz und Magietheorie des Magus zulassen.
 wizard-guidance-house_specialisation = Jeder hermetische Magus gehört genau einem Haus an, das ihm bei der Erschaffung einen Vorteil gewährt. Das Haus steht vor den Tugenden und Fehlern, weil dieser Vorteil eine kostenlose Kleine Tugend ist, die kein Fehler ausgleichen muss.
@@ -95,14 +95,17 @@ wizard-guidance-aging = Ein Charakter über 35 legt vor Spielbeginn für jedes J
 # Anwendung, daher trifft diese Zeile keine Regelaussage.
 wizard-guidance-review = Hier wird nichts Neues gewählt — dies ist der letzte Blick, bevor der Charakter die geführte Erstellung verlässt. Nach dem Fertigstellen bleibt alles bearbeitbar.
 
-# Der Schritt „Charaktertyp": eine schreibgeschützte Darstellung dessen, worauf der
-# gewählte Typ diesen Charakter festlegt. Der Typ selbst wurde bei der Erstellung
-# des Charakters festgelegt.
-phase-type-explainer = Der Charaktertyp ist für diesen Charakter festgelegt. Er bestimmt das Budget für Tugenden und Fehler, welche Kategorien gewählt werden dürfen und welche Erstellungsschritte folgen.
-phase-type-budget = Bis zu { $flaws } Punkte an Fehlern, die bis zu { $virtues } Punkte an Tugenden finanzieren.
-phase-type-gift-required = Dieser Typ besitzt Die Gabe; sie wird automatisch gewährt.
-phase-type-gift-forbidden = Dieser Typ kann Die Gabe nicht besitzen.
-phase-type-gift-optional = Dieser Typ darf Die Gabe wählen.
+# Worauf der gewählte Charaktertyp diesen Charakter festlegt, angezeigt im Banner
+# über Editor und geführter Erstellung. Verlagert aus dem entfallenen Schritt
+# „Charaktertyp" (Prüfung der geführten Erstellung, #1), der nichts abfragte: der
+# Typ wird bei der Erstellung des Charakters festgelegt und ist danach unveränderlich.
+# Neu geschlüsselt als `character-type-*`, damit kein Schlüssel eine Erstellungsphase
+# benennt, die es nicht mehr gibt.
+character-type-explainer = Der Charaktertyp ist für diesen Charakter festgelegt. Er bestimmt das Budget für Tugenden und Fehler, welche Kategorien gewählt werden dürfen und welche Erstellungsschritte folgen.
+character-type-budget = Bis zu { $flaws } Punkte an Fehlern, die bis zu { $virtues } Punkte an Tugenden finanzieren.
+character-type-gift-required = Dieser Typ besitzt Die Gabe; sie wird automatisch gewährt.
+character-type-gift-forbidden = Dieser Typ kann Die Gabe nicht besitzen.
+character-type-gift-optional = Dieser Typ darf Die Gabe wählen.
 
 # Der Abschlussschritt des Assistenten.
 wizard-review-title = Überprüfung

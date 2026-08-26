@@ -150,12 +150,6 @@ const FILLERS = {
     await name.setValue(plan.name);
   },
 
-  // Read-only: the type was fixed before the wizard opened, so this step confirms
-  // rather than asks. Its budget read-out is what proves the step rendered.
-  type: async () => {
-    await $('[data-testid="type-step-budget"]').waitForExist({ timeout: STEP_TIMEOUT });
-  },
-
   characteristics: async (plan) => {
     for (const [characteristic, score] of Object.entries(plan.characteristics)) {
       await raiseCharacteristic(characteristic, score);
@@ -169,11 +163,58 @@ const FILLERS = {
     for (const virtue of plan.virtues) await take(virtue);
   },
 
-  abilities: async (plan) => {
-    if (plan.magusMinimums) await satisfyMagusMinimums();
+  // Where the character's experience comes from (Slice 2 split this off the
+  // `abilities` step). The walk keeps the DEFAULT flat funding: the pool total is
+  // typed on the `abilities` step's XP bar below, and a life-stage plan would retire
+  // that input and re-price every later step, so the mode is what this step decides
+  // and the funding fieldset with `pool` standing selected is what proves it
+  // rendered and holds a choice.
+  //
+  // Read-only for the same reason the deleted `type` filler was: the step's default
+  // IS the walk's answer. Unlike that one, though, this phase reports itself ENGAGED
+  // only once something is stored for it — `completeness.rs`:
+  // `life_stages.is_some() || xp_pool > 0` — and under flat funding the one control
+  // that can store either, the XP bar's pool input, is mounted on the NEXT step. So
+  // the walk cannot clear this step's untouched mark while standing on it, and
+  // `expectPhaseComplete` below says so out loud rather than the walk skipping it:
+  // a step that asks for a number it does not offer a field for is the defect, not
+  // the assertion.
+  // Where the character's experience comes from. The walk keeps the default flat
+  // funding, so the answer is the pool total — typed here, on the step that asks the
+  // question, not on the step that spends it. That split is the point of the phase:
+  // `abilities` now only buys against a total this step already set.
+  experience: async (plan) => {
+    await $('[data-testid="life-stage-panel"]').waitForExist({ timeout: STEP_TIMEOUT });
+    const funding = await $('[data-testid="ability-funding-pool"]');
+    await funding.waitForExist({ timeout: STEP_TIMEOUT });
+    expect(await funding.isSelected()).toBe(true);
     const pool = await $('[data-testid="xp-pool"]');
     await pool.waitForExist({ timeout: STEP_TIMEOUT });
     await pool.setValue(plan.xpPool);
+    // Confirm the total reached the STORE, not merely the input. `value={typedPool}`
+    // is not a `bind:`, so the DOM keeps whatever was typed even if the change never
+    // committed — reading the field back proves nothing. `Available` is derived from
+    // the engine, so it moves only if the total actually landed. Nothing is spent
+    // yet on this step, so it equals the total.
+    await browser.waitUntil(
+      async () => (await $('[data-testid="xp-available"]').getText()).includes(plan.xpPool),
+      {
+        timeout: STEP_TIMEOUT,
+        timeoutMsg: `the experience pool total ${plan.xpPool} never reached the store`,
+      },
+    );
+  },
+
+  abilities: async (plan) => {
+    // The total set on the experience step must still be here — this step spends
+    // against it, and the same `xp-pool` field is mounted on both.
+    const pool = await $('[data-testid="xp-pool"]');
+    await pool.waitForExist({ timeout: STEP_TIMEOUT });
+    await browser.waitUntil(async () => (await pool.getValue()) === String(plan.xpPool), {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: `the abilities step lost the experience pool: expected ${plan.xpPool}`,
+    });
+    if (plan.magusMinimums) await satisfyMagusMinimums();
     // Rows are appended, so a row's index is its position in the plan — after the
     // three the Order demands of a magus, where those were bought.
     let index = plan.magusMinimums ? 3 : 0;
@@ -308,10 +349,25 @@ export async function walkEveryPhase(typeId, plan) {
 export async function expectCompleteAndErrorFree() {
   // Findings arrive on a round trip, so wait for the panel to settle rather than
   // reading it a frame early.
-  await browser.waitUntil(async () => (await $$('[data-severity="error"]')).length === 0, {
-    timeout: STEP_TIMEOUT,
-    timeoutMsg: 'the finished character still holds error-severity findings',
-  });
+  // Name the offenders on failure. "still holds error-severity findings" alone sends
+  // the next reader back into a ten-minute run just to learn which ones, and the
+  // codes are already in the DOM.
+  let errorCodes = [];
+  try {
+    await browser.waitUntil(
+      async () => {
+        const rows = await $$('[data-severity="error"]');
+        errorCodes = [];
+        for (const row of Array.from(rows)) errorCodes.push(await row.getText());
+        return errorCodes.length === 0;
+      },
+      { timeout: STEP_TIMEOUT, timeoutMsg: 'still holds error-severity findings' },
+    );
+  } catch {
+    throw new Error(
+      `the finished character still holds error-severity findings: ${errorCodes.join(', ')}`,
+    );
+  }
   await expect($('[data-testid="wizard-review-complete"]')).toExist();
   expect(await $('[data-testid="wizard-review-incomplete"]').isExisting()).toBe(false);
   expect(await $(FINISH).isEnabled()).toBe(true);

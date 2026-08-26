@@ -1148,7 +1148,6 @@ export interface WizardGuidance {
  */
 const GUIDANCE_ARGS = {
   concept: () => ({}),
-  type: () => ({}),
   characteristics: ({ characteristicRules }: GuidanceContext) =>
     characteristicRules ? { points: String(characteristicRules.start_points) } : null,
   virtues_flaws: ({ profile }: GuidanceContext) =>
@@ -1158,6 +1157,7 @@ const GUIDANCE_ARGS = {
           flaws: String(profile.budget.flaw_points),
         }
       : null,
+  experience: () => ({}),
   abilities: () => ({}),
   arts: () => ({}),
   spells: () => ({}),

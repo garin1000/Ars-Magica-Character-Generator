@@ -1367,14 +1367,18 @@ impl std::fmt::Display for ReputationType {
 pub enum CreationPhase {
     /// The character concept and identity: name, description, gender, birth year.
     Concept,
-    /// The character type itself — fixed at creation, so the step only confirms
-    /// what the chosen profile commits the character to.
-    Type,
     /// Characteristics.
     Characteristics,
     /// Virtues and Flaws, including their point balance and category caps.
     VirtuesFlaws,
-    /// Abilities and the experience they are bought with.
+    /// Where the character's experience comes from: one total the player enters, or
+    /// the life stages that earn it — and, in that case, the plan those stages are
+    /// priced from (the age, a magus's Gauntlet age and post-Gauntlet seasons, the
+    /// native language, and the sample childhood)
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2364, :2213-2216).
+    /// Declared before [`Abilities`](Self::Abilities), because it is what funds it.
+    Experience,
+    /// Abilities, bought with the experience the previous phase supplies.
     Abilities,
     /// Hermetic Arts.
     Arts,
@@ -1406,9 +1410,9 @@ impl CreationPhase {
     /// it rather than against a second hardcoded list.
     pub const ALL: [CreationPhase; 12] = [
         CreationPhase::Concept,
-        CreationPhase::Type,
         CreationPhase::Characteristics,
         CreationPhase::VirtuesFlaws,
+        CreationPhase::Experience,
         CreationPhase::Abilities,
         CreationPhase::Arts,
         CreationPhase::Spells,
@@ -1424,9 +1428,9 @@ impl fmt::Display for CreationPhase {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             CreationPhase::Concept => "concept",
-            CreationPhase::Type => "type",
             CreationPhase::Characteristics => "characteristics",
             CreationPhase::VirtuesFlaws => "virtues_flaws",
+            CreationPhase::Experience => "experience",
             CreationPhase::Abilities => "abilities",
             CreationPhase::Arts => "arts",
             CreationPhase::Spells => "spells",
@@ -3548,7 +3552,7 @@ mod tests {
                   { "category": "personality", "max": 2 }
                 ]
               },
-              "creation_phases": ["type", "concept"]
+              "creation_phases": ["experience", "concept"]
             }"#,
         )
         .unwrap();
@@ -3565,7 +3569,7 @@ mod tests {
         // leaves the phase order alone, which a single-phase list could not show.
         assert_eq!(
             profile.creation_phases,
-            vec![CreationPhase::Type, CreationPhase::Concept]
+            vec![CreationPhase::Experience, CreationPhase::Concept]
         );
     }
 
@@ -3654,7 +3658,7 @@ mod tests {
           "forbidden_traits": ["virtue.the_gift"],
           "gift_policy": "forbidden",
           "creation_phases": [
-            "concept", "type", "characteristics", "virtues_flaws",
+            "concept", "characteristics", "virtues_flaws", "experience",
             "abilities", "personality_reputations"
           ]
         }"#;
@@ -3878,6 +3882,36 @@ mod tests {
             serde_json::to_string(&CreationPhase::HouseSpecialisation).unwrap(),
             r#""house_specialisation""#
         );
+    }
+
+    /// The read-only `type` step is gone (guided-creation review #1): it asked for
+    /// nothing, because the type is fixed before the wizard opens. Asserted over the
+    /// slugs rather than the variant, so the check keeps meaning something once the
+    /// variant no longer exists to name.
+    #[test]
+    fn creation_phase_all_has_no_type_phase() {
+        let slugs: Vec<String> = CreationPhase::ALL.iter().map(|p| p.to_string()).collect();
+        assert!(
+            !slugs.iter().any(|slug| slug == "type"),
+            "the read-only `type` phase was removed; found it in {slugs:?}"
+        );
+    }
+
+    /// The `experience` step (review #11) carries the funding choice and the
+    /// life-stage plan, and it is declared before the `abilities` step it funds.
+    #[test]
+    fn creation_phase_experience_serializes_as_experience() {
+        assert_eq!(
+            serde_json::to_string(&CreationPhase::Experience).unwrap(),
+            r#""experience""#
+        );
+        let position = |wanted: CreationPhase| {
+            CreationPhase::ALL
+                .iter()
+                .position(|phase| *phase == wanted)
+                .unwrap_or_else(|| panic!("{wanted} is missing from CreationPhase::ALL"))
+        };
+        assert!(position(CreationPhase::Experience) < position(CreationPhase::Abilities));
     }
 
     /// A profile's phases are typed, so a phase string the engine has no phase for
