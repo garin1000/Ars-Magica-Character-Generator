@@ -34,31 +34,38 @@
 
 <section class={docked ? 'validation-docked' : 'panel'}>
   <h2>{store.t('validation-title')}</h2>
-  {#if issues.length === 0}
-    <!-- Announced (role="status" implies aria-live="polite"): clearing the last
-         issue is a state change worth telling a screen reader about, matching
-         the app's own convention for "figure changes as you type" content
-         (AgingRollCalculator.svelte, XpBar.svelte's life-stage-no-budget). -->
-    <p class="muted" role="status" data-testid="no-issues">{store.t('no-issues')}</p>
-  {:else}
-    <!-- role="status" is polite, not assertive: a keystroke-driven revalidation
-         must never interrupt the screen reader mid-sentence the way
-         role="alert" would. -->
-    <ul class="issue-list" role="status" data-testid="issue-list">
-      {#each issues as issue (`${issue.code}|${issue.context ?? ''}|${JSON.stringify(issue.args)}`)}
-        {@const rawArgs = { ...issue.args, ...(issue.context ? { context: issue.context } : {}) }}
-        <li class="issue {issue.severity}" data-severity={issue.severity} data-code={issue.code}>
-          <!-- Severity must not be color-only (WCAG 1.4.1). The border/tint carries
-               it for sighted users who can see colour; this visible badge carries
-               it for everyone else too (colourblind sighted users included), and
-               doubles as the label assistive tech announces. -->
-          <span class="issue-severity">{store.t(`issue-severity-${issue.severity}`)}: </span>
-          {store.t(
-            `issue-${issue.code}`,
-            store.ruleset ? resolveIssueArgs(store.ruleset, rawArgs, store.t) : rawArgs,
-          )}
-        </li>
-      {/each}
-    </ul>
-  {/if}
+  <!-- One box for both branches, so the panel does not JUMP when the last issue
+       clears. The empty state and the issue list are different elements of
+       different natural heights; giving them a shared parent means app.css can
+       floor that parent once (`.validation-body`, min-height = one issue row)
+       instead of trying to keep two unrelated boxes in agreement. -->
+  <div class="validation-body" data-testid="validation-body">
+    {#if issues.length === 0}
+      <!-- Announced (role="status" implies aria-live="polite"): clearing the last
+           issue is a state change worth telling a screen reader about, matching
+           the app's own convention for "figure changes as you type" content
+           (AgingRollCalculator.svelte, XpBar.svelte's life-stage-no-budget). -->
+      <p class="muted" role="status" data-testid="no-issues">{store.t('no-issues')}</p>
+    {:else}
+      <!-- role="status" is polite, not assertive: a keystroke-driven revalidation
+           must never interrupt the screen reader mid-sentence the way
+           role="alert" would. -->
+      <ul class="issue-list" role="status" data-testid="issue-list">
+        {#each issues as issue (`${issue.code}|${issue.context ?? ''}|${JSON.stringify(issue.args)}`)}
+          {@const rawArgs = { ...issue.args, ...(issue.context ? { context: issue.context } : {}) }}
+          <li class="issue {issue.severity}" data-severity={issue.severity} data-code={issue.code}>
+            <!-- Severity must not be color-only (WCAG 1.4.1). The border/tint carries
+                 it for sighted users who can see colour; this visible badge carries
+                 it for everyone else too (colourblind sighted users included), and
+                 doubles as the label assistive tech announces. -->
+            <span class="issue-severity">{store.t(`issue-severity-${issue.severity}`)}: </span>
+            {store.t(
+              `issue-${issue.code}`,
+              store.ruleset ? resolveIssueArgs(store.ruleset, rawArgs, store.t) : rawArgs,
+            )}
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </div>
 </section>

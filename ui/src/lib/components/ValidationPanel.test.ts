@@ -45,6 +45,19 @@ function issueMarkup(body: string, code: string): string {
   return match[1];
 }
 
+/**
+ * The markup inside the panel's stable, height-carrying wrapper — the one box
+ * both the empty state and the issue list render into.
+ */
+function validationBody(body: string): string {
+  const match = /<div[^>]*data-testid="validation-body"[^>]*>([\s\S]*?)<\/div>/.exec(body);
+  if (!match) throw new Error('no validation-body wrapper');
+  return match[1];
+}
+
+/** `app.css` as text, for the rules no server-rendered markup can reveal. */
+const appCss = readFileSync(fileURLToPath(new URL('../../app.css', import.meta.url)), 'utf-8');
+
 beforeEach(() => {
   vi.useFakeTimers();
   store.lang = 'en';
@@ -167,9 +180,27 @@ describe('ValidationPanel', () => {
     // pseudo-element content never appears in server-rendered HTML, so this is
     // the only way to pin the rule without a client-mounted computed-style
     // check, which would be disproportionate for a static CSS selector.
-    const appCssPath = fileURLToPath(new URL('../../app.css', import.meta.url));
-    const css = readFileSync(appCssPath, 'utf-8');
-    expect(css).toMatch(/\.issue\.error\s+\.issue-severity::after\s*{\s*content:\s*' !';?\s*}/);
+    expect(appCss).toMatch(/\.issue\.error\s+\.issue-severity::after\s*{\s*content:\s*' !';?\s*}/);
+  });
+
+  // #3 (guided-creation-review-2026-08): the footer was TALLER when empty than
+  // when showing a violation. The empty-state `<p class="muted">` kept the UA
+  // `margin: 1em 0` (≈3em of box) while one `.issue` `<li>` inside the globally
+  // margin-reset `ul` was ≈1.75rem — so clearing the last issue made the panel
+  // JUMP taller. CSS height is not observable in SSR, so what is asserted here
+  // is the structural invariant that makes equal height possible: both branches
+  // render inside the *same* wrapper, and that wrapper is the element app.css
+  // gives the `min-height` to.
+  it('renders the empty state and a single issue in a box of the same height', () => {
+    const empty = render(ValidationPanel, { props: { phase: 'arts' } }).body;
+    const oneIssue = render(ValidationPanel, { props: { phase: 'virtues_flaws' } }).body;
+
+    expect(validationBody(empty)).toContain('data-testid="no-issues"');
+    expect(validationBody(oneIssue)).toContain('data-testid="issue-list"');
+
+    // Without the `min-height` the shared wrapper is only structural: the box
+    // must be floored to one issue row so the empty state fills it too.
+    expect(appCss).toMatch(/\.validation-body\s*{[^}]*min-height:/);
   });
 
   it('localizes the visible severity label to German', () => {

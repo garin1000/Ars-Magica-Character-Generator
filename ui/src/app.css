@@ -38,6 +38,29 @@ body {
   color: var(--ink);
 }
 
+/* Base typography reset. Without it, every `<p>` and heading the app does not
+   style explicitly keeps the UA `margin: 1em 0` — and margins do NOT collapse
+   inside a flex or grid container, so that margin ADDS to the container's `gap`
+   rather than being absorbed by it. Two single-line paragraphs in a
+   `.detail-section` (flex column, `gap: 0.4rem`) therefore sat
+   1em + 0.4rem + 1em ≈ 2.4rem apart where 0.4rem was intended — ~6× the
+   spacing, repeated for every paragraph and heading, and the reason the empty
+   validation footer was TALLER than one showing a violation
+   (guided-creation-review-2026-08 #23 and #3).
+   Vertical spacing is now the container's job (`gap`) or an explicit rule on the
+   block itself — never the UA default. Guarded by `src/app.css.test.ts`, because
+   an app-wide reset with no visible owner is exactly what a later "cleanup"
+   deletes. */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+}
+
 /* Fill the whole window exactly: header at its natural height, layout takes the
    rest. Bounding to the viewport (not min-height) lets the scrollable regions
    scroll internally instead of growing the page. */
@@ -94,7 +117,6 @@ body {
 
 .app-header h1 {
   font-size: 1.25rem;
-  margin: 0;
 }
 
 /* Active save's file name (with an ASCII dirty marker) shown at the right of the
@@ -204,10 +226,6 @@ button:disabled {
   align-items: flex-start;
 }
 
-.start-screen h2 {
-  margin: 0;
-}
-
 .start-screen h3 {
   margin: 0 0 0.35rem;
   font-size: 1rem;
@@ -229,7 +247,6 @@ button:disabled {
 }
 
 .start-screen .hint {
-  margin: 0;
   color: var(--muted);
   font-size: 0.85rem;
   max-width: 40rem;
@@ -482,7 +499,6 @@ button:disabled {
 }
 
 .wizard-incomplete-hint {
-  margin: 0;
   padding: 0.2rem 1.5rem 0;
   color: #b9b6d6;
   font-size: 0.85rem;
@@ -493,7 +509,6 @@ button:disabled {
    height the input surface below needs. Muted and capped in width, because it is
    read once per step and then ignored. */
 .wizard-guidance {
-  margin: 0;
   color: #b9b6d6;
   font-size: 0.85rem;
   line-height: 1.4;
@@ -501,7 +516,6 @@ button:disabled {
 }
 
 .wizard-progress {
-  margin: 0;
   padding: 0.4rem 1.5rem 0;
   color: #b9b6d6;
   font-size: 0.9rem;
@@ -519,11 +533,27 @@ button:disabled {
    stay at the ends of the bar whether or not it is shown. */
 .wizard-nav .hint {
   flex: 1;
-  margin: 0;
 }
 
 .wizard-nav .primary {
   margin-left: auto;
+}
+
+/* Three panels whose blocks were spaced ONLY by the UA paragraph/heading margins
+   the base reset at the top of this file removes — a stack of bare `<p>`s and one
+   heading, with no container spacing of its own — so each states its spacing the
+   way every other stacked block here does: a flex column with a `gap`. Without
+   this the reset would leave their lines touching.
+   `.wizard-review` — title, verdict/validation panel, outstanding list, hint.
+   `.type-step` — the type's name plus its explainer/budget/Gift paragraphs.
+   `.mythic-type-selector` — the type select, its description, its grant lists;
+   shared by the wizard step AND the editor's Mythic tab, so it is styled here. */
+.wizard-review,
+.type-step,
+.mythic-type-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 /* The closing step's list of steps left empty. Informational, like the rail's
@@ -553,7 +583,6 @@ button:disabled {
 }
 
 .region-title {
-  margin: 0;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -811,6 +840,13 @@ ul {
 
 .char-description {
   width: 100%;
+}
+
+/* The Size read-out below the grid. `.char-panel` is plain flow with no spacing of
+   its own, so this paragraph was held off the grid only by its UA top margin,
+   which the base reset removes. */
+.size-readout {
+  margin-top: 0.5rem;
 }
 
 .spinner {
@@ -1086,6 +1122,31 @@ ul {
   gap: 0.4rem;
 }
 
+/* Two sections in a row (the Totals panel stacks half a dozen; SupernaturalBeing
+   and the Warping/Twilight pair do it too) used to be held apart ONLY by the
+   leading heading's UA top margin, which the base reset at the top of this file
+   removes. Inside a section the `gap` above governs the spacing; between two of
+   them, this does. 0.75rem matches `.warping-owed-group`, which separates
+   sibling groups for the same reason. The `.detail-field` variant is the same
+   case one element up: the Magic Items panel opens with an aura row before its
+   first section, and the editor's Details tab puts read-out rows before the
+   Warping/Twilight sections. */
+.detail-section + .detail-section,
+.detail-field + .detail-section {
+  margin-top: 0.75rem;
+}
+
+/* …except inside `.character-details` (the editor's Details tab, the guided aging
+   step, the personality step), which already states its own block spacing:
+   `margin-bottom: 1rem` on every column item, restated for the `display: contents`
+   aging wrappers. Stacking the fallback on top of that would space those blocks
+   1.75rem apart — MORE than the 1rem the multi-column flow is designed around,
+   and the aging step's whitespace is the very thing #23 is about. */
+.character-details .detail-section + .detail-section,
+.character-details .detail-field + .detail-section {
+  margin-top: 0;
+}
+
 .detail-label {
   font-weight: 600;
 }
@@ -1291,7 +1352,6 @@ ul {
 /* What a guided magus's age means: read before the age field it qualifies, so it
    keeps the muted hint voice rather than shouting like an error. */
 .gauntlet-note {
-  margin: 0;
   max-width: 44rem;
   color: var(--muted, #6b7280);
   font-size: 0.85rem;
@@ -1333,7 +1393,6 @@ ul {
 }
 
 .magus-minimums h3 {
-  margin: 0;
   font-size: 0.95rem;
 }
 
@@ -1350,7 +1409,6 @@ ul {
 
 .magus-minimums-summary,
 .magus-recommended-hint {
-  margin: 0;
   color: var(--muted);
   font-size: 0.85rem;
 }
@@ -1554,6 +1612,17 @@ ul {
   content: ' !';
 }
 
+/* The one box both panel states render into (ValidationPanel.svelte), floored so
+   the footer keeps its height when the last issue clears instead of jumping.
+   The floor is one `.issue` row: 0.35rem padding-top + ~1.2rem line box
+   (`line-height: normal` at the 15px root size) + 0.35rem padding-bottom +
+   0.35rem margin-bottom ≈ 2.25rem. The empty "No issues" line is a single
+   ~1.2rem line box, so without the floor the two states differ by ~1rem
+   (guided-creation-review-2026-08 #3). */
+.validation-body {
+  min-height: 2.25rem;
+}
+
 /* Validation summary below the selected frame (outside the gold border),
    same width as the frame: fixed height sized for ~2-3 issues, scrolls when
    it overflows. */
@@ -1618,7 +1687,6 @@ ul {
 }
 
 .tooltip-pop .tooltip-text {
-  margin: 0;
   /* Rules descriptions carry `\n` paragraph breaks — honor them instead of
      collapsing to a run-on line, and cap the height so a long spell description
      scrolls inside the popup rather than overflowing the viewport. */
