@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
@@ -55,6 +57,27 @@ function installRuleset(...typeIds: string[]): void {
   } as unknown as LocalizedRuleset;
 }
 
+/**
+ * Give the installed ruleset life-stage rules.
+ *
+ * This is the flag the funding surface itself keys off — `LifeStagePanel.svelte`
+ * gates on `ruleset.life_stages`, never on the character type — so the editor's
+ * Experience tab must read the same one. Without it the panel renders nothing,
+ * which is exactly the empty tab #28's fix must not produce.
+ */
+function installLifeStageRules(): void {
+  (store.ruleset!.ruleset as { life_stages?: unknown }).life_stages = {
+    childhood: {
+      years: 5,
+      native_language_ability: 'ability.living_language',
+      native_language_xp: 75,
+      spread_xp: 45,
+      spread_abilities: [],
+    },
+    later_life: { xp_per_year: 15 },
+  };
+}
+
 function resetEntity(): void {
   store.entity = {
     schema_version: SCHEMA_VERSION,
@@ -70,6 +93,10 @@ function resetEntity(): void {
     personality_traits: [],
     reputations: [],
   };
+  // The Supernatural tab appears once the engine reports an effective Might, so
+  // the tab list is only deterministic with the engine read-outs cleared.
+  store.effective = null;
+  store.derived = null;
 }
 
 /** Render the app root to an HTML string (node env, no DOM). */
@@ -236,6 +263,197 @@ describe('App and the guided wizard', () => {
     expect(count(wizard)).toBe(1);
     expect(count(editor)).toBe(1);
   });
+});
+
+// --- the editor's tab list mirrors the wizard's phase list (Slice 3, #28) -----
+
+/** Every tab id in the rendered tab strip, in the order the strip shows them. */
+function tabIdsInOrder(body: string): string[] {
+  return [...body.matchAll(/data-testid="tab-([^"]+)"/g)].map((match) => match[1]);
+}
+
+describe('editor tabs for the phases split out in Slice 3', () => {
+  it('exposes an Experience tab when the ruleset ships life-stage rules', () => {
+    installLifeStageRules();
+    const tag = openTag(html(), 'tab-experience');
+
+    expect(tag).not.toBeNull();
+    expect(tag).toContain('id="tab-experience"');
+    expect(tag).toContain('aria-controls="tabpanel-experience"');
+  });
+
+  it('offers no Experience tab for a ruleset shipping no life-stage rules', () => {
+    // The default fixture has none. The panel self-gates to nothing there, and a
+    // tab whose panel is empty is the failure mode this slice must not create —
+    // so tab and content read the very same flag.
+    expect(openTag(html(), 'tab-experience')).toBeNull();
+  });
+
+  it('exposes separate Personality & Reputations and Aging tabs', () => {
+    const body = html();
+
+    const personality = openTag(body, 'tab-personality_reputations');
+    expect(personality).not.toBeNull();
+    expect(personality).toContain('aria-controls="tabpanel-personality_reputations"');
+
+    const aging = openTag(body, 'tab-aging');
+    expect(aging).not.toBeNull();
+    expect(aging).toContain('aria-controls="tabpanel-aging"');
+  });
+
+  it('labels every new tab through Fluent, never rendering the slug', () => {
+    installLifeStageRules();
+    const body = html();
+
+    // The Fluent keys HYPHENATE where the phase slug and the tab id use
+    // underscores, so neither spelling can be generated from the other.
+    for (const [testid, key] of [
+      ['tab-experience', 'tab-experience'],
+      ['tab-personality_reputations', 'tab-personality-reputations'],
+      ['tab-aging', 'tab-aging'],
+    ] as const) {
+      // A missing key makes `t()` return the key itself, which would let the
+      // comparison below pass vacuously.
+      expect(store.t(key)).not.toBe(key);
+      // Svelte escapes the ampersand in "Personality & Reputations" on the way
+      // out; the label is the Fluent string, escaping aside.
+      expect(textOf(body, testid).replace(/&amp;/g, '&')).toBe(store.t(key));
+    }
+  });
+
+  it('moves Personality, Reputations and the aging cluster off the Details tab', () => {
+    // `details` is the default tab, so a server render reaches its panel body.
+    const body = html();
+
+    expect(openTag(body, 'personality-add')).toBeNull();
+    expect(openTag(body, 'reputation-empty')).toBeNull();
+    expect(openTag(body, 'aging-panel')).toBeNull();
+    expect(openTag(body, 'longevity-add')).toBeNull();
+  });
+
+  it('keeps identity, age and the Warping/Twilight cluster on Details', () => {
+    // Those three have no wizard phase of their own (or belong to `concept`), so
+    // Details is still their home — the split must not carry them off with the
+    // sections that do have one.
+    const body = html();
+
+    expect(openTag(body, 'identity-concept')).not.toBeNull();
+    expect(openTag(body, 'age-input')).not.toBeNull();
+    expect(openTag(body, 'warping-points-input')).not.toBeNull();
+    expect(openTag(body, 'twilight-scars-list')).not.toBeNull();
+  });
+
+  it('names each tab and its panel from the same id, so no reference dangles', () => {
+    installLifeStageRules();
+    const body = html();
+
+    const tabs = [...body.matchAll(/<button[^>]*role="tab"[^>]*>/g)].map((match) => match[0]);
+    expect(tabs.length).toBeGreaterThan(0);
+    for (const tag of tabs) {
+      const id = /\bid="tab-([^"]+)"/.exec(tag)?.[1];
+      expect(id).toBeDefined();
+      expect(tag).toContain(`aria-controls="tabpanel-${id}"`);
+    }
+
+    // Only the active tab's panel is rendered, so that is the one reference which
+    // must resolve in this markup: it does, and it points back at the active tab.
+    const panels = [...body.matchAll(/role="tabpanel"[^>]*/g)].map((match) => match[0]);
+    expect(panels.length).toBe(1);
+    const active = tabs.find((tag) => tag.includes('aria-selected="true"'))!;
+    const activeId = /\bid="tab-([^"]+)"/.exec(active)![1];
+    expect(panels[0]).toContain(`id="tabpanel-${activeId}"`);
+    expect(panels[0]).toContain(`aria-labelledby="tab-${activeId}"`);
+  });
+});
+
+// The mapping #28 decided, as data. The phase list comes from the SHIPPED
+// ruleset file — the same `creation_phases` the wizard's rail and the editor's
+// gating read — rather than a list retyped here, so a phase added there without
+// an editor counterpart fails this test instead of drifting silently. Read as
+// text for the reason app.css.test.ts states: it is data, not a module.
+const shippedTypeProfiles = JSON.parse(
+  readFileSync(
+    fileURLToPath(new URL('../../rules/core/character_types.json', import.meta.url)),
+    'utf-8',
+  ),
+) as {
+  id: string;
+  is_magus?: boolean;
+  has_mythic_type?: boolean;
+  creation_phases: string[];
+}[];
+
+// Phase slug → editor tab id, or null for a phase with no tab. `review` has
+// none: finishing the wizard lands in the editor, which IS the review surface.
+const TAB_FOR_PHASE: Record<string, string | null> = {
+  concept: 'details',
+  characteristics: 'characteristics',
+  virtues_flaws: 'virtues_flaws',
+  experience: 'experience',
+  abilities: 'abilities',
+  arts: 'arts',
+  spells: 'spells',
+  house_specialisation: 'house_specialisation',
+  mythic_type: 'mythic_type',
+  personality_reputations: 'personality_reputations',
+  aging: 'aging',
+  review: null,
+};
+
+// The two phases whose tab position is NOT asserted. Both are type markers whose
+// editor slot predates this slice (House sits with the other magus-only tabs,
+// Type with the mythic-companion one) and no issue asks to move them; and the
+// profiles disagree about where they belong anyway — the magus puts
+// `house_specialisation` third, the mythic companion puts `mythic_type` second,
+// so no single static strip can match both orders. Membership IS asserted for
+// them; only the position is exempt.
+const POSITION_EXEMPT = new Set(['house_specialisation', 'mythic_type']);
+
+describe('the editor tab list mirrors the shipped creation phases (#28)', () => {
+  /** Install one shipped profile, with life-stage rules, and render the editor. */
+  function renderFor(profile: (typeof shippedTypeProfiles)[number]): string[] {
+    installRuleset(profile.id);
+    (store.ruleset!.ruleset.type_profiles as Record<string, unknown>)[profile.id] = profile;
+    installLifeStageRules();
+    resetEntity();
+    store.entity.type_id = profile.id;
+    return tabIdsInOrder(html());
+  }
+
+  it('knows a tab (or a deliberate absence) for every shipped phase', () => {
+    for (const profile of shippedTypeProfiles) {
+      for (const phase of profile.creation_phases) {
+        expect(Object.keys(TAB_FOR_PHASE)).toContain(phase);
+      }
+    }
+  });
+
+  it.each(shippedTypeProfiles.map((p) => [p.id, p] as const))(
+    'gives %s exactly one tab per mapped phase',
+    (_id, profile) => {
+      const tabs = renderFor(profile);
+      for (const phase of profile.creation_phases) {
+        const tab = TAB_FOR_PHASE[phase];
+        if (tab === null) {
+          expect(tabs).not.toContain(phase);
+          continue;
+        }
+        expect(tabs.filter((candidate) => candidate === tab)).toEqual([tab]);
+      }
+    },
+  );
+
+  it.each(shippedTypeProfiles.map((p) => [p.id, p] as const))(
+    'shows %s its mapped tabs in phase order',
+    (_id, profile) => {
+      const tabs = renderFor(profile);
+      const expected = profile.creation_phases
+        .filter((phase) => !POSITION_EXEMPT.has(phase))
+        .map((phase) => TAB_FOR_PHASE[phase])
+        .filter((tab): tab is string => tab !== null);
+      expect(tabs.filter((tab) => expected.includes(tab))).toEqual(expected);
+    },
+  );
 });
 
 describe('App dialog modality', () => {

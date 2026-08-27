@@ -34,7 +34,8 @@ function tabAreaMetrics() {
     const main = document.querySelector('main.tab-content');
     const list = document.querySelector('.region-source .list-scroll');
     const panel = document.querySelector('.region-source .panel');
-    if (!main || !list || !panel) return null;
+    const tabbar = document.querySelector('.tabbar');
+    if (!main || !list || !panel || !tabbar) return null;
     return {
       mainScrollHeight: main.scrollHeight,
       mainClientHeight: main.clientHeight,
@@ -44,6 +45,20 @@ function tabAreaMetrics() {
       listClientHeight: list.clientHeight,
       panelClientHeight: panel.clientHeight,
       panelScrollHeight: panel.scrollHeight,
+      // The strip sits above every panel, so its height is subtracted from theirs.
+      tabbarScrollHeight: tabbar.scrollHeight,
+      tabbarClientHeight: tabbar.clientHeight,
+      tabbarRight: tabbar.getBoundingClientRect().right,
+      // Whether each tab's own centre hit-tests to that tab: the property a click
+      // depends on, and the one an overflow scrollbar's hit area destroys.
+      tabsHittableAtCentre: [...tabbar.querySelectorAll('[role="tab"]')].map((tab) => {
+        const rect = tab.getBoundingClientRect();
+        const hit = document.elementFromPoint(
+          rect.left + rect.width / 2,
+          rect.top + rect.height / 2,
+        );
+        return [tab.id, rect.right, hit ? tab.contains(hit) || hit === tab : false];
+      }),
     };
   });
 }
@@ -89,6 +104,35 @@ describe('tab area at a short window height', () => {
     if (m.mainScrollHeight > m.mainClientHeight) {
       expect(m.mainOverflowY).not.toBe('hidden');
     }
+  });
+
+  // Slice 3 (#28) took the magus tab count to thirteen, whose labels are ~1350px of
+  // text against ~1050px of room. Two failure modes were measured here at the
+  // default window, and this test rejects both:
+  //
+  //  1. Left to the flex defaults the buttons shrink below their text width and the
+  //     text wraps INSIDE them, so the strip gains a second line and every panel
+  //     below it loses that height — which is what broke the full-height assertion
+  //     below by 25px.
+  //  2. Making the strip scroll sideways instead fixes the height and breaks the
+  //     controls: WebKitGTK's overlay horizontal scrollbar claims the hit area
+  //     across the bottom of the scroll container while taking no layout height, so
+  //     on a 40px strip everything below ~19px stopped hit-testing to the button and
+  //     the lower half of every tab became unclickable.
+  //
+  // Both invariants are structural — no vertical overflow, every tab hit-testable at
+  // its own centre and inside the strip — never a pixel count.
+  it('keeps the tab strip one line tall with every tab clickable', async () => {
+    await setWindowHeight(DEFAULT_SIZE.height);
+    const m = await tabAreaMetrics();
+
+    expect(m.tabbarScrollHeight).toBeLessThanOrEqual(m.tabbarClientHeight + 1);
+    // The offenders are collected rather than asserted one by one, so a failure
+    // names the tabs instead of stopping at the first.
+    expect(m.tabsHittableAtCentre.filter(([, , hit]) => !hit).map(([id]) => id)).toEqual([]);
+    expect(
+      m.tabsHittableAtCentre.filter(([, right]) => right > m.tabbarRight + 1).map(([id]) => id),
+    ).toEqual([]);
   });
 
   it('restores the full-height layout when the window grows back', async () => {

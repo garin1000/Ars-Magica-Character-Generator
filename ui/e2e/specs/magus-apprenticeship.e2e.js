@@ -46,6 +46,11 @@ const SUMMARY = '[data-testid="magus-minimums-summary"]';
 const NEXT = '[data-testid="wizard-next"]';
 const FINISH = '[data-testid="wizard-finish"]';
 const TAB_BAR = '[role="tablist"]';
+// The editor's Experience tab is where the funding panel and the plan live —
+// mirroring the wizard's `experience` step (guided-creation review #28).
+const EXPERIENCE_TAB = '[data-testid="tab-experience"]';
+// The Hermetic-minimums checklist rides above the ability lists, so it is on the
+// Abilities tab, not the Experience one the plan lives on.
 const ABILITIES_TAB = '[data-testid="tab-abilities"]';
 // The docked step panel, scoped: other surfaces render `data-code` nodes too.
 const DOCKED_ISSUES = '[data-testid="issue-list"]';
@@ -292,7 +297,7 @@ describe('magus apprenticeship through the life stages', () => {
 
     // Finishing lands in the ordinary editor with the character the wizard built.
     await $(TAB_BAR).waitForExist({ timeout: STEP_TIMEOUT });
-    await $(ABILITIES_TAB).click();
+    await $(EXPERIENCE_TAB).click();
     await $(PANEL).waitForExist({ timeout: STEP_TIMEOUT });
     expect(await textOf(XP_POOL_TOTAL)).toBe('240');
 
@@ -313,7 +318,7 @@ describe('magus apprenticeship through the life stages', () => {
     if (await discard.isExisting()) await discard.click();
 
     await $(TAB_BAR).waitForExist({ timeout: STEP_TIMEOUT });
-    await $(ABILITIES_TAB).click();
+    await $(EXPERIENCE_TAB).click();
     await $(PANEL).waitForExist({ timeout: STEP_TIMEOUT });
 
     // Guided funding is derived from the loaded plan, apprenticeship and all.
@@ -325,7 +330,12 @@ describe('magus apprenticeship through the life stages', () => {
     expect(await textOf(XP_POOL_TOTAL)).toBe('240');
     expect(await textOf(APPRENTICESHIP)).toContain('240');
     expect(await textOf(LATER_LIFE)).toContain('75');
-    // The checklist rides along, still met.
+    // The checklist rides along, still met — on the Abilities tab, where it sits
+    // above the lists it is about.
+    await $(ABILITIES_TAB).click();
+    await $('[data-testid="magus-minimum-ability.parma_magica"]').waitForExist({
+      timeout: STEP_TIMEOUT,
+    });
     expect((await checklistRow('magus-minimum-ability.parma_magica')).met).toBe('true');
   });
 });

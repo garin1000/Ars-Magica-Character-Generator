@@ -42,10 +42,10 @@
   // budget belongs to the whole character, so the step (and, in the editor, the
   // tab) owns it and the picker stays a picker.
   //
-  // The `experience` step is the one wrapper of its own (`ExperienceStep`): the
-  // panel it mounts is the editor's, but the editor has no matching tab until
-  // Slice 3 splits its tab list the same way, so until then `App.svelte` mounts
-  // the panel directly. The reuse rule is unchanged — one component, two mounts.
+  // Three steps are compositions of their own (`ExperienceStep`, `AgingStep`,
+  // `PersonalityReputationsStep`) rather than a single editor leaf. The editor's
+  // tab list now mirrors this phase list (#28), so `App.svelte` mounts the very
+  // same compositions — one component, two mounts, nothing to drift.
   const STEPS = {
     concept: { component: IdentityFields, scroll: true },
     characteristics: { component: CharacteristicPicker },

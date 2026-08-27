@@ -1319,9 +1319,11 @@ threshold and the `life_stage_*` codes are all filed under `experience` (they we
 no aging phase exists yet — 6b6 adds `CreationPhase::Aging` and moves it there.
 
 App/UI: `EffectiveScores` gains `decrepitude_score: u8` and widens `warping_points`
-to `u32`; the Details tab (`CharacterDetails.svelte`) enters identity fields, aging
-points per Characteristic (with an `aging-points-note` explaining drops are
-auto-derived), Warping Points, and twilight scars, and shows the engine-computed
+to `u32`; the Details tab (`CharacterDetails.svelte`) enters identity fields,
+Warping Points and twilight scars, while the aging points per Characteristic (with
+an `aging-points-note` explaining drops are auto-derived) sit on the Aging tab
+(`AgingPanel.svelte` → `AgingRecordPanel.svelte`; they were on Details until the
+Slice 3 tab split). Between them they show the engine-computed
 Decrepitude / Warping **scores** and the aging-lowered Characteristics (never
 recomputed in JS). Fluent keys en/de: identity + aging block (`identity-*`,
 `aging-*` incl. `aging-points-note`, `warping-points-label`, `twilight-*`,
@@ -3723,7 +3725,8 @@ modelled on `apply_childhood_package`. The outcome resolution **cannot** live in
 JS: the die is player input the entity must not store, and a stress die explodes,
 so no bounded lookup table could stand in for the engine.
 `ui/src/lib/components/AgingRollCalculator.svelte` is the surface over them (mounted
-in `AgingPanel.svelte`, so the Details tab and the guided aging step share it): the
+in `AgingPanel.svelte`, so the editor's Aging tab and the guided aging step share
+it): the
 die input carries `min="0"` and deliberately **no `max`** (`:16567`'s exploding
 stress die), the total is shown broken into the terms `AgingTotal` already reports,
 and the distributor renders one number input per Characteristic and refuses to

@@ -25,11 +25,12 @@
 // jump clamps at a blocking phase exactly as Next does — which is why the pool figures
 // are read after the native language is named rather than before it.
 //
-// (The editor's Abilities tab mounts all three together even now, through Slice 2's
-// temporary `App.svelte` bridge, but it cannot drive this: the panel is an auto-height
-// sibling of the lists there, so at the default window the childhood Apply button is
-// clipped by `.tab-content`'s `overflow: hidden` and WebDriver reports it as not
-// interactable. The reload half below only reads that surface, which works.)
+// (Slice 3 gave the editor the same split: the panel is its own Experience tab with
+// its own scrollport, rather than the auto-height sibling above the ability lists
+// that Slice 2's temporary bridge made of it. On that bridge the childhood Apply
+// button was clipped away by `.tab-content`'s `overflow: hidden` at the default
+// window and WebDriver reported it as not interactable; the reload half below now
+// asserts it is reachable on the Experience tab.)
 //
 // NOTE: requires the production binary; the display comes from your desktop
 // session or, when DISPLAY is unset, the Xvfb one WebdriverIO starts
@@ -59,7 +60,7 @@ const PACKAGE_PREVIEW = '[data-testid="childhood-package-preview"]';
 const APPLY = '[data-testid="childhood-apply"]';
 const TAKEN = '[data-testid="childhood-taken"]';
 const NEXT = '[data-testid="wizard-next"]';
-const ABILITIES_TAB = '[data-testid="tab-abilities"]';
+const EXPERIENCE_TAB = '[data-testid="tab-experience"]';
 const TAB_BAR = '[role="tablist"]';
 // The docked findings panel — scoped, because the childhood picker renders the
 // engine's package rejections with `data-code` too.
@@ -442,9 +443,9 @@ describe('life-stage funding and Sample Childhoods', () => {
     const discard = await $('[data-testid="discard-confirm"]');
     if (await discard.isExisting()) await discard.click();
 
-    // A load lands in the editor, so the panel is reached through the Abilities tab.
+    // A load lands in the editor, so the panel is reached through the Experience tab.
     await $(TAB_BAR).waitForExist({ timeout: STEP_TIMEOUT });
-    await $(ABILITIES_TAB).click();
+    await $(EXPERIENCE_TAB).click();
     await $(PANEL).waitForExist({ timeout: STEP_TIMEOUT });
 
     // Guided funding is derived from the loaded plan, with no reconciliation step.
@@ -462,6 +463,22 @@ describe('life-stage funding and Sample Childhoods', () => {
     expect(await $(PACKAGE_SELECT).getValue()).toBe('');
     expect(await $(PACKAGE_PREVIEW).isExisting()).toBe(false);
     expect(await countOf('[data-testid^="childhood-slot-"][data-testid$="-reason"]')).toBe(0);
+
+    // Slice 3 (#28): the whole picker is DRIVEABLE in the editor, which it was not
+    // while the panel rode above the ability lists — the Apply button sat outside
+    // `.tab-content`'s clipped box with no scrollport to bring it back, and WebDriver
+    // refused to interact with it. Only reachability is asserted: the package this
+    // character already took is history and is not re-applied here.
+    await (await reach(PACKAGE_SELECT)).selectByAttribute('value', TRAVELING);
+    await (await reach('[data-testid="childhood-slot-area_a"]')).setValue('Rhine');
+    await (await reach('[data-testid="childhood-slot-area_b"]')).setValue('Provence');
+    await (await reach('[data-testid="childhood-slot-language"]')).setValue('Italian');
+    const apply = await reach(APPLY);
+    await browser.waitUntil(async () => await apply.isEnabled(), {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'a fully filled package should be takeable on the editor Experience tab',
+    });
+    expect(await apply.isClickable()).toBe(true);
   });
 
   it('offers guided funding to a magus, funded by its apprenticeship', async () => {

@@ -172,11 +172,26 @@ export async function standOnWizardStep(phase) {
   if (!(await entry.isEnabled())) {
     throw new Error(`the wizard rail has not reached '${phase}' yet, so it cannot be jumped to`);
   }
-  await entry.click();
-  await browser.waitUntil(async () => (await currentWizardPhase()) === phase, {
-    timeout: STEP_TIMEOUT,
-    timeoutMsg: `a rail jump to '${phase}' did not land there — a step in between is blocked`,
-  });
+  // Re-click inside the wait, rather than clicking once and then waiting. A forward
+  // rail jump is CLAMPED at the first blocking phase (`firstBlockedPhaseIndex`), and
+  // validation settles on a round trip to Rust — so a jump issued in the frame after
+  // an edit can be clamped short by a finding that is about to clear, and that single
+  // click is then spent. Waiting alone would spin to the timeout while the rail sat
+  // one step short. Clicking again each poll lets the jump land as soon as the
+  // transient block lifts, and rail navigation is idempotent so a repeat is free.
+  // (Observed twice on `life-stage-childhood`'s funding-switch test, both times
+  // passing on the spec retry — a flake that was really a missing settle.)
+  await browser.waitUntil(
+    async () => {
+      if ((await currentWizardPhase()) === phase) return true;
+      await entry.click();
+      return (await currentWizardPhase()) === phase;
+    },
+    {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: `a rail jump to '${phase}' did not land there — a step in between stayed blocked`,
+    },
+  );
 }
 
 /**

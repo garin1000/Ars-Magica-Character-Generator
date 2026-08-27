@@ -1,7 +1,9 @@
 // End-to-end: per-character fields (Phase 7). A "Details" tab (always present)
-// holds age, a read-only Confidence readout, Personality Traits, and Reputations;
-// the age → Ability cap, the Personality ±3/±6 range, the Reputation grant gate,
-// and the Supernatural-Ability greying are all exercised against the real binary.
+// holds identity, age and a read-only Confidence readout, and a "Personality &
+// Reputations" tab beside it holds those two — split out in Slice 3 so the editor's
+// tabs mirror the wizard's phases (guided-creation review #28). The age → Ability
+// cap, the Personality ±3/±6 range, the Reputation grant gate, and the
+// Supernatural-Ability greying are all exercised against the real binary.
 //
 // The wdio session is shared, so the `it` blocks run as one ordered narrative:
 // the first creates the companion the rest go on editing, right through to the
@@ -18,6 +20,7 @@ import { isRowBlocked, startCharacter } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const DETAILS_TAB = '[data-testid="tab-details"]';
+const PERSONALITY_TAB = '[data-testid="tab-personality_reputations"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const ABILITIES_TAB = '[data-testid="tab-abilities"]';
 const CONFIDENCE = '[data-testid="confidence-readout"]';
@@ -65,7 +68,7 @@ describe('character details', () => {
   });
 
   it('enforces the Personality Trait range, widened by a Major Personality Flaw', async () => {
-    await $(DETAILS_TAB).click();
+    await $(PERSONALITY_TAB).click();
     await $('[data-testid="personality-add"]').click();
     const inc = await $('[data-testid="personality-inc-0"]');
     for (let i = 0; i < 4; i++) await inc.click(); // +4, beyond the ±3 default
@@ -101,13 +104,13 @@ describe('character details', () => {
   });
 
   it('offers Reputation input only once a granting Flaw is taken', async () => {
-    await $(DETAILS_TAB).click();
+    await $(PERSONALITY_TAB).click();
     await expect($('[data-testid="reputation-empty"]')).toExist();
 
     // Infamous grants a Local Reputation.
     await $(VF_TAB).click();
     await $('[data-testid="add-flaw.infamous"]').click();
-    await $(DETAILS_TAB).click();
+    await $(PERSONALITY_TAB).click();
     const add = await $('[data-testid="reputation-add-local"]');
     await add.waitForExist({ timeout: 5000 });
     await add.click();

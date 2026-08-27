@@ -192,10 +192,15 @@ characteristic-effective-tooltip-summary = Bought { $bought }, effective { $effe
 characteristic-effective-tooltip-breakdown-label = Includes
 characteristic-effective-tooltip-aging = aging -{ $drops }
 characteristic-effective-tooltip-virtue = Virtue { $bonus }
-# Tab labels for the editor's main area.
+# Tab labels for the editor's main area. Each tab mirroring a wizard phase reads
+# the same as that phase's rail entry; the keys hyphenate where the phase slug
+# uses an underscore (tab-personality-reputations vs phase-personality_reputations).
 tab-characteristics = Characteristics
 tab-virtues-flaws = Virtues & Flaws
+tab-experience = Experience
 tab-abilities = Abilities
+tab-personality-reputations = Personality & Reputations
+tab-aging = Aging
 tab-arts = Arts
 tab-house-specialisation = House
 tab-mythic-type = Type

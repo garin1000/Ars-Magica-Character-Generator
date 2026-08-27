@@ -155,3 +155,32 @@ describe('MagicPossessions aura bound (round 3, Task 3)', () => {
     expect(hint).toContain('role="status"');
   });
 });
+
+// Slice 3 (#28). This tab was the magus's editor home for a Longevity Ritual only
+// because the editor had no aging tab: the ritual's bonus is a term of the AGING
+// TOTAL (Ars Magica - Definitive Edition (Core Rules).md:16567-16569), not a
+// possession. With a real Aging tab the panel moves into `AgingPanel`, and it must
+// leave here — two on-screen homes for one ritual is the trap the special case was
+// invented to dodge in the first place.
+describe('MagicPossessions after the Aging tab took the ritual (Slice 3)', () => {
+  it('no longer renders the Longevity panel', () => {
+    const body = html();
+    expect(hasElement(body, 'longevity-add')).toBe(false);
+    expect(hasElement(body, 'longevity-bonus')).toBe(false);
+  });
+
+  it('still renders an existing ritual nowhere on this tab', () => {
+    // A stored ritual is what would betray a leftover mount: the empty state's Add
+    // button is easy to lose sight of, the populated editor is not.
+    store.entity.longevity_ritual = { source: 'self_made', bonus: 6, focus: '' };
+    const body = html();
+    expect(hasElement(body, 'longevity-bonus')).toBe(false);
+    expect(hasElement(body, 'longevity-source-self_made')).toBe(false);
+  });
+
+  it('keeps the possessions that really are possessions', () => {
+    const body = html();
+    expect(hasElement(body, 'aura-input')).toBe(true);
+    expect(hasElement(body, 'device-add')).toBe(true);
+  });
+});
