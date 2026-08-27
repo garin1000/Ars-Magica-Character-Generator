@@ -18,7 +18,12 @@ import { e2eFile } from '../wdio.conf.js';
 
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const ARTS_TAB = '[data-testid="tab-arts"]';
+// The aura is a possession; the ritual is a term of the aging total, so since
+// Slice 3 (#28) it lives on the Aging tab — for every character type, not just a
+// magus. The two tabs are therefore both in play here, and the hint's inputs
+// (Creo/Corpus and the aura) sit on neither of them.
 const POSSESSIONS_TAB = '[data-testid="tab-possessions"]';
+const AGING_TAB = '[data-testid="tab-aging"]';
 const TOTALS_TAB = '[data-testid="tab-totals"]';
 
 const HINT = '[data-testid="longevity-hint"]';
@@ -38,6 +43,22 @@ function clean(text) {
 
 async function hintText() {
   return clean(await $(HINT).getText());
+}
+
+/**
+ * Bring one element into the tab's scrollport, then hand it back.
+ *
+ * The ritual sits at the far end of the aging surface, and that tab scrolls, so
+ * landing on it can leave the panel below the fold — where WebKitWebDriver refuses
+ * to drive it ("element not interactable"). `click()` scrolls the element into view
+ * itself; `setValue`/`addValue` do not, so anything driven through those is scrolled
+ * to first. Mirrors `reach()` in life-stage-childhood.e2e.js.
+ */
+async function reach(selector) {
+  const element = await $(selector);
+  await element.waitForExist({ timeout: 10000 });
+  await element.scrollIntoView();
+  return element;
 }
 
 /** Wait for the engine's (debounced) read-out to contain every fragment. */
@@ -71,11 +92,13 @@ describe('longevity ritual', () => {
     const corpusInc = await $('[data-testid="art-inc-art.corpus"]');
     for (let i = 0; i < 5; i++) await corpusInc.click();
 
-    // Magic Items tab: aura 5, then add a self-made ritual.
+    // Magic Items tab: aura 5. Then the Aging tab, which owns the ritual.
     await $(POSSESSIONS_TAB).click();
     const auraInput = await $('[data-testid="aura-input"]');
     await auraInput.waitForExist({ timeout: 10000 });
     await auraInput.setValue('5');
+    await $(AGING_TAB).click();
+    await $('[data-testid="longevity-add"]').waitForExist({ timeout: 10000 });
     await $('[data-testid="longevity-add"]').click();
 
     // The entered-bonus input exists for a SELF-MADE ritual (it used to be
@@ -100,8 +123,8 @@ describe('longevity ritual', () => {
 
     // Enter a bonus of 9 — a value no hint in this spec ever suggests, so the two
     // numbers can never be confused.
-    await $(POSSESSIONS_TAB).click();
-    await $(BONUS).setValue('9');
+    await $(AGING_TAB).click();
+    await (await reach(BONUS)).setValue('9');
     await browser.waitUntil(
       async () => !(await $('[data-testid="longevity-not-entered"]').isExisting()),
       {
@@ -125,13 +148,13 @@ describe('longevity ritual', () => {
     // `addValue`/`setValue` use) delivers real key events, which the webview turns
     // into a genuine `input`. The stored bonus is one digit, so one Backspace empties
     // it.
-    await $(BONUS).addValue(BACKSPACE);
+    await (await reach(BONUS)).addValue(BACKSPACE);
     expect(await $(BONUS).getValue()).toBe('');
     await $('[data-testid="longevity-not-entered"]').waitForExist({ timeout: 5000 });
 
     // A typed 0, by contrast, IS a claim ("this ritual grants nothing"), so the
     // marker must stay gone — the 0-vs-empty distinction, pinned at both ends.
-    await $(BONUS).setValue('0');
+    await (await reach(BONUS)).setValue('0');
     await browser.waitUntil(
       async () => !(await $('[data-testid="longevity-not-entered"]').isExisting()),
       {
@@ -142,7 +165,7 @@ describe('longevity ritual', () => {
     expect(await $(BONUS).getValue()).toBe('0');
 
     // Back to the 9 the rest of the spec asserts on.
-    await $(BONUS).setValue('9');
+    await (await reach(BONUS)).setValue('9');
     await browser.waitUntil(async () => (await $(BONUS).getValue()) === '9', {
       timeout: 5000,
       timeoutMsg: 'the bonus should read 9 again',
@@ -159,20 +182,21 @@ describe('longevity ritual', () => {
     const derivedText = clean(await derived.getText());
     expect(derivedText).not.toContain('--');
     expect(derivedText).not.toContain('−');
-    await $(POSSESSIONS_TAB).click();
 
     // Raise Creo by 1: THE HINT MOVES, THE ENTERED BONUS DOES NOT. This is the
     // whole reason the slice exists.
     await $(ARTS_TAB).click();
     await $('[data-testid="art-inc-art.creo"]').click();
-    await $(POSSESSIONS_TAB).click();
+    await $(AGING_TAB).click();
     // Creo 6 + Corpus 5 + Aura 5 = 16 → ceil(16/5) = +4.
     await waitForHint('16', '+4');
     expect(await $(BONUS).getValue()).toBe('9');
 
     // Aura 0 still suggests a bonus — the removed `aura != 0` gate. The Aura
     // Modifier is a plain addend: 6 + 5 = 11 → ceil(11/5) = +3.
-    await $('[data-testid="aura-input"]').setValue('0');
+    await $(POSSESSIONS_TAB).click();
+    await (await reach('[data-testid="aura-input"]')).setValue('0');
+    await $(AGING_TAB).click();
     await waitForHint('11', '+3');
     expect(await $(BONUS).getValue()).toBe('9');
 
@@ -182,13 +206,13 @@ describe('longevity ritual', () => {
     const addFlaw = await $('[data-testid="add-flaw.difficult_longevity_ritual"]');
     await addFlaw.waitForExist({ timeout: 10000 });
     await addFlaw.click();
-    await $(POSSESSIONS_TAB).click();
+    await $(AGING_TAB).click();
     await waitForHint('5', '+1');
     await $(HALVED).waitForExist({ timeout: 5000 });
     expect(await $(BONUS).getValue()).toBe('9');
 
     // The focus, plus the sterility consequence the rules attach to it.
-    await $(FOCUS).setValue('A draught of quicksilver at midwinter');
+    await (await reach(FOCUS)).setValue('A draught of quicksilver at midwinter');
     await $('[data-testid="longevity-sterility-note"]').waitForExist({ timeout: 5000 });
 
     // Switching source keeps the entered bonus and the focus: who made the ritual

@@ -62,7 +62,9 @@ const SPELL_LEVELS_POST_GAUNTLET = '[data-testid="spell-levels-post-gauntlet"]';
 const NEXT = '[data-testid="wizard-next"]';
 const FINISH = '[data-testid="wizard-finish"]';
 const TAB_BAR = '[role="tablist"]';
-const ABILITIES_TAB = '[data-testid="tab-abilities"]';
+// The editor's Experience tab is where the funding panel and the plan live —
+// mirroring the wizard's `experience` step (guided-creation review #28).
+const EXPERIENCE_TAB = '[data-testid="tab-experience"]';
 const SPELLS_TAB = '[data-testid="tab-spells"]';
 // The docked step panel, scoped: other surfaces render `data-code` nodes too.
 const DOCKED_ISSUES = '[data-testid="issue-list"]';
@@ -360,7 +362,7 @@ describe('a magus past its Gauntlet', () => {
 
     // Finishing lands in the ordinary editor with the character the wizard built.
     await $(TAB_BAR).waitForExist({ timeout: STEP_TIMEOUT });
-    await $(ABILITIES_TAB).click();
+    await $(EXPERIENCE_TAB).click();
     await $(PANEL).waitForExist({ timeout: STEP_TIMEOUT });
     expect(await textOf(XP_POOL_TOTAL)).toBe('890');
 
@@ -391,7 +393,7 @@ describe('a magus past its Gauntlet', () => {
     if (await discard.isExisting()) await discard.click();
 
     await $(TAB_BAR).waitForExist({ timeout: STEP_TIMEOUT });
-    await $(ABILITIES_TAB).click();
+    await $(EXPERIENCE_TAB).click();
     await $(PANEL).waitForExist({ timeout: STEP_TIMEOUT });
 
     // Everything is re-derived from the loaded plan, with no reconciliation step.

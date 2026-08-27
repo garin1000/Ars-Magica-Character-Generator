@@ -3,10 +3,9 @@
 // ruleset declares (concept, type, characteristics, virtues & flaws, abilities,
 // aging), so nothing between the start screen and the step under test can colour
 // the result. It is also the type that proves the step stands on its own for a
-// non-magus: the Longevity Ritual's other home, the Possessions tab, is
-// magus-gated, so this step is where a grog first reaches it. Since 6b8c the
-// editor's Details tab carries the panel for a non-magus too, and the closing
-// `it` follows the ritual across the save into it.
+// non-magus: it is where a grog first reaches the Longevity Ritual. Since Slice 3
+// the ritual is part of `AgingPanel` itself, so the editor's Aging tab carries it
+// for every type, and the closing `it` follows the ritual across the save into it.
 //
 // The arithmetic is the rulebook's:
 //
@@ -67,7 +66,8 @@ const LOG_EFFECT_0 = '[data-testid="aging-log-effect-0"]';
 const NEXT = '[data-testid="wizard-next"]';
 const FINISH = '[data-testid="wizard-finish"]';
 const TAB_BAR = '[role="tablist"]';
-const DETAILS_TAB = '[data-testid="tab-details"]';
+// The editor's own aging tab, mirroring the wizard's `aging` phase (#28).
+const AGING_TAB = '[data-testid="tab-aging"]';
 const DOC_STATUS = '[data-testid="doc-status"]';
 // The docked step panel, scoped: other surfaces render `data-code` nodes too.
 const DOCKED_ISSUES = '[data-testid="issue-list"]';
@@ -330,10 +330,10 @@ describe('the guided aging step', () => {
     await $(FINISH).waitForExist({ timeout: STEP_TIMEOUT });
     await $(FINISH).click();
 
-    // ONE SURFACE, TWO FLOWS: the editor's Details tab mounts the very components
-    // the guided step did, so the choices are simply there.
+    // ONE SURFACE, TWO FLOWS: the editor's Aging tab mounts the very component the
+    // guided step did (`AgingPanel`), so the choices are simply there.
     await $(TAB_BAR).waitForExist({ timeout: STEP_TIMEOUT });
-    await $(DETAILS_TAB).click();
+    await $(AGING_TAB).click();
     await $(CONDITIONS).waitForExist({ timeout: STEP_TIMEOUT });
     expect(await $(condition(LEPER_COLONY)).isSelected()).toBe(true);
     expect(await $(condition(POOR_LOCATION)).isSelected()).toBe(true);
@@ -382,7 +382,7 @@ describe('the guided aging step', () => {
     if (await discard.isExisting()) await discard.click();
 
     await $(TAB_BAR).waitForExist({ timeout: STEP_TIMEOUT });
-    await $(DETAILS_TAB).click();
+    await $(AGING_TAB).click();
     await $(CONDITIONS).waitForExist({ timeout: STEP_TIMEOUT });
     expect(await $(condition(LEPER_COLONY)).isSelected()).toBe(true);
     expect(await $(condition(POOR_LOCATION)).isSelected()).toBe(true);
@@ -391,14 +391,15 @@ describe('the guided aging step', () => {
     expect((await agingPoints()).qik).toBe('1');
   });
 
-  // Slice 6b8c. "You can perform Longevity Rituals for others, even for non-magi"
-  // (`:10672`), and the ritual this grog holds is a term of every aging total it
-  // will ever roll — but the editor's only home for one was the magus-gated
-  // Possessions tab, so once the wizard was finished the bonus could no longer be
-  // corrected. The Details tab now carries the panel for a type without that tab.
-  it('keeps the ritual reachable in the editor, where a grog has no Possessions tab', async () => {
-    // Still on the Details tab of the reloaded grog from the test above, and the
-    // tab that used to own the ritual is not even in this character's tab bar.
+  // Slice 6b8c, re-homed in Slice 3. "You can perform Longevity Rituals for others,
+  // even for non-magi" (`:10672`), and the ritual this grog holds is a term of every
+  // aging total it will ever roll — but the editor's only home for one was the
+  // magus-gated Possessions tab, so once the wizard was finished the bonus could no
+  // longer be corrected. The ritual now lives inside `AgingPanel`, so the Aging tab
+  // carries it for every type and the old `!is_magus` special case is gone.
+  it('keeps the ritual reachable on the editor Aging tab, which every type has', async () => {
+    // Still on the Aging tab of the reloaded grog from the test above, and the tab
+    // that used to own the ritual is not even in this character's tab bar.
     expect(await $('[data-testid="tab-possessions"]').isExisting()).toBe(false);
     await browser.waitUntil(async () => (await $(LONGEVITY_BONUS).getValue()) === '1', {
       timeout: STEP_TIMEOUT,

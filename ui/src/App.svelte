@@ -11,8 +11,7 @@
   import VirtueFlawTab from './lib/components/VirtueFlawTab.svelte';
   import CharacteristicPicker from './lib/components/CharacteristicPicker.svelte';
   import AbilityTab from './lib/components/AbilityTab.svelte';
-  // TEMPORARY — Slice 3 removes this import along with the mount below.
-  import LifeStagePanel from './lib/components/LifeStagePanel.svelte';
+  import ExperienceStep from './lib/components/ExperienceStep.svelte';
   import XpBar from './lib/components/XpBar.svelte';
   import ArtGrid from './lib/components/ArtGrid.svelte';
   import SpellTab from './lib/components/SpellTab.svelte';
@@ -21,6 +20,8 @@
   import SupernaturalBeing from './lib/components/SupernaturalBeing.svelte';
   import EquipmentTab from './lib/components/EquipmentTab.svelte';
   import CharacterDetails from './lib/components/CharacterDetails.svelte';
+  import PersonalityReputationsStep from './lib/components/PersonalityReputationsStep.svelte';
+  import AgingPanel from './lib/components/AgingPanel.svelte';
   import DerivedTotalsPanel from './lib/components/DerivedTotalsPanel.svelte';
   import HouseSelector from './lib/components/HouseSelector.svelte';
   import MythicCompanionTypeSelector from './lib/components/MythicCompanionTypeSelector.svelte';
@@ -33,6 +34,7 @@
   type Tab =
     | 'characteristics'
     | 'virtues_flaws'
+    | 'experience'
     | 'abilities'
     | 'arts'
     | 'spells'
@@ -40,13 +42,22 @@
     | 'house_specialisation'
     | 'mythic_type'
     | 'supernatural'
+    | 'personality_reputations'
+    | 'aging'
     | 'equipment'
     | 'details'
     | 'totals';
-  // Left-to-right: Characteristics, Virtues & Flaws, Abilities, then the two
-  // magus-only tabs (Arts, House) and the mythic-companion-only Type tab — each
-  // gated on the profile's capability flag (never the type id), so any future
-  // capable type gets them automatically.
+  // The tab list mirrors the wizard's phase list (guided-creation review #28):
+  // every phase with an editor counterpart is exactly one tab, in phase order, and
+  // each tab mounts the very component its step does. The tabs with no phase
+  // (Magic Items, Equipment, Totals) follow at the end.
+  //
+  // Left-to-right: Details (`concept`), Characteristics, Virtues & Flaws,
+  // Experience, Abilities, the magus-only Arts and Spells, Personality &
+  // Reputations, Aging, then the magus-only Magic Items/House, the
+  // mythic-companion-only Type tab, Equipment and Totals — each gated on the
+  // profile's capability flag (never the type id), so any future capable type gets
+  // them automatically.
   const isMagus = $derived(
     store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.is_magus ?? false,
   );
@@ -59,23 +70,39 @@
   const hasMight = $derived(
     !isMagus && (hasMythicType || (store.effective?.might ?? null) !== null),
   );
+  // The Experience tab is gated on the RULESET shipping life-stage rules, not on
+  // the character type: `LifeStagePanel` gates on exactly this, so every type can
+  // choose where its experience comes from, and reading the same flag in both
+  // places is what stops the tab and its content from ever disagreeing. A ruleset
+  // with no life-stage rules leaves the typed pool the only funding source, and
+  // that lives on the Abilities tab's XP bar.
+  const hasLifeStageRules = $derived((store.ruleset?.ruleset.life_stages ?? null) !== null);
   const tabs = $derived<{ id: Tab; key: string }[]>([
     { id: 'details', key: 'tab-details' },
     { id: 'characteristics', key: 'tab-characteristics' },
     { id: 'virtues_flaws', key: 'tab-virtues-flaws' },
+    ...(hasLifeStageRules ? [{ id: 'experience' as Tab, key: 'tab-experience' }] : []),
     { id: 'abilities', key: 'tab-abilities' },
     ...(isMagus
       ? [
           { id: 'arts' as Tab, key: 'tab-arts' },
           { id: 'spells' as Tab, key: 'tab-spells' },
+        ]
+      : []),
+    // Personality Traits, Reputations and the aging surface apply to every type,
+    // ungated: a grog ages and has traits like anyone else, and a loaded character
+    // carrying either must have somewhere to edit it.
+    { id: 'personality_reputations', key: 'tab-personality-reputations' },
+    { id: 'aging', key: 'tab-aging' },
+    ...(isMagus
+      ? [
           { id: 'possessions' as Tab, key: 'tab-possessions' },
           { id: 'house_specialisation' as Tab, key: 'tab-house-specialisation' },
         ]
       : []),
     ...(hasMythicType ? [{ id: 'mythic_type' as Tab, key: 'tab-mythic-type' }] : []),
     ...(hasMight ? [{ id: 'supernatural' as Tab, key: 'tab-supernatural' }] : []),
-    // Equipment, Age, Confidence, Personality Traits and Reputations apply to
-    // every type (grogs especially carry weapons and armor).
+    // Equipment applies to every type (grogs especially carry weapons and armor).
     { id: 'equipment', key: 'tab-equipment' },
     // The derived play-stat read-out applies to every type (read-only totals).
     { id: 'totals', key: 'tab-totals' },
@@ -274,6 +301,9 @@
   {:else}
     <CharacterBanner />
 
+    <!-- The strip is one line and ellipsizes a label too long for the room it has
+         (app.css), so each tab carries its full label in `title` as well — the same
+         Fluent string as the visible text, never a second wording. -->
     <div class="tabbar" role="tablist" tabindex="-1" onkeydown={onTabsKeydown}>
       {#each tabs as t (t.id)}
         <button
@@ -287,6 +317,7 @@
           tabindex={tab === t.id ? 0 : -1}
           onclick={() => (tab = t.id)}
           data-testid="tab-{t.id}"
+          title={store.t(t.key)}
         >
           {store.t(t.key)}
         </button>
@@ -312,27 +343,22 @@
             <BalanceBar />
             <VirtueFlawTab />
           </div>
+        {:else if tab === 'experience'}
+          <!-- The same component the wizard's `experience` step mounts, so the two
+               surfaces cannot drift (#28). It scrolls for the same reason the step
+               does (`WizardStep`'s `scroll: true`): the panel is long, and it used to
+               ride above the ability lists as an auto-height sibling, where the
+               childhood Apply button was clipped away by `.tab-content`'s overflow
+               with no scrollport to recover it. -->
+          <div class="vf-tab">
+            <XpBar />
+            <div class="tab-scroll">
+              <ExperienceStep />
+            </div>
+          </div>
         {:else if tab === 'abilities'}
           <div class="vf-tab">
             <XpBar />
-            <!-- TEMPORARY BRIDGE — Slice 3 relocates this to the editor's new
-                 Experience tab, which mirrors the wizard's `experience` phase, and
-                 this mount goes away with it.
-
-                 Slice 2 moved `LifeStagePanel` out of `AbilityTab` onto the wizard's
-                 `experience` step. `AbilityTab` is also the editor's Abilities tab,
-                 so that move took away the editor's ONLY surface for choosing the
-                 funding mode and editing the life-stage plan (age, Gauntlet age, lab
-                 seasons, native language, childhood package) — and the editor does
-                 not get its replacement tab until Slice 3. Since a slice may not be
-                 batched with the next one, mounting the panel here keeps direct-entry
-                 mode able to edit all of it in the meantime.
-
-                 An auto-height SIBLING above `AbilityTab`'s own root-level children,
-                 never a wrapper: `.region-row` must stay the only `flex: 1` child of
-                 `.vf-tab` or both ability lists collapse. Covered by
-                 `App.client.test.ts` — "the editor still exposes the funding panel". -->
-            <LifeStagePanel />
             <AbilityTab />
           </div>
         {:else if tab === 'arts'}
@@ -359,6 +385,30 @@
           <div class="vf-tab">
             <div class="tab-scroll">
               <CharacterDetails />
+            </div>
+          </div>
+        {:else if tab === 'personality_reputations'}
+          <!-- The wizard's `personality_reputations` step is exactly these two
+               sections in a `.character-details` panel, so the tab mounts the step's
+               own composition rather than restating it. -->
+          <div class="vf-tab">
+            <div class="tab-scroll">
+              <PersonalityReputationsStep />
+            </div>
+          </div>
+        {:else if tab === 'aging'}
+          <!-- `AgingPanel` is the whole aging surface, Longevity Ritual included, and
+               is what the wizard's aging step mounts too. The step adds the age above
+               it because no other guided surface offers one under flat funding; here
+               the age stays on Details, beside the identity it belongs with. The
+               `.character-details` wrapper is the multi-column flow the panel's
+               `display: contents` children are laid out by (app.css), the same one
+               the step provides. -->
+          <div class="vf-tab">
+            <div class="tab-scroll">
+              <section class="panel character-details">
+                <AgingPanel />
+              </section>
             </div>
           </div>
         {:else if tab === 'totals'}

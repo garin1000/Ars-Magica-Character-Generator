@@ -161,14 +161,17 @@ phase of that type's flow filled in, on the shipped binary.
   Arts drawing from one shared experience pool, all validated live. The Arts,
   Spells, and Magic Items tabs appear only for magus-capable types.
 
-- **Magic Items: devices and the Longevity Ritual.** The Magic Items tab stores a
-  magus's starting possessions — aura, enchanted devices (charged against the
-  item-level budget their Virtues grant), a familiar, a talisman, and a self-made
-  or external Longevity Ritual with its aging bonus, its focus, and the permanent
-  sterility it causes. Because the ritual's bonus was fixed by the Lab Total of
-  the season it was made, it is entered and stored rather than derived; beside the
-  input the engine suggests what a ritual made now would be worth, from the live
-  Creo Corpus Lab Total, halvings included.
+- **Magic Items.** The Magic Items tab stores a magus's starting possessions —
+  aura, enchanted devices (charged against the item-level budget their Virtues
+  grant), a familiar and a talisman.
+
+- **The Longevity Ritual.** Self-made or external, with its aging bonus, its focus,
+  and the permanent sterility it causes. It lives on the Aging tab, where its bonus
+  is a term of the aging total, and is offered to every character type — a ritual
+  can be performed for anyone, magus or not. Because the bonus was fixed by the Lab
+  Total of the season the ritual was made, it is entered and stored rather than
+  derived; beside the input the engine suggests what a ritual made now would be
+  worth, from the live Creo Corpus Lab Total, halvings included.
 
 - **Talisman.** The magus's personal enchanted item: its shape and material, its
   shape-and-material attunements, and the effects instilled in it, with a
@@ -207,15 +210,16 @@ phase of that type's flow filled in, on the shipped binary.
   Premonitions) confer their Ability at a free floor.
 
 - **Details, aging and Warping.** The Details tab captures identity/flavor fields
-  (name, gender, birth year, Wizard's sigil, covenant, parens) and an already-aged
-  / already-warped character's raw state — aging points per Characteristic, the
-  apparent age, Warping Points, and free-text Twilight Scars — from which the
-  engine derives the Decrepitude and Warping scores and the Characteristic drops
-  the accumulated points force (those drops lower derived/play stats but never the
-  point-buy the creation checks read). It also mounts the whole aging surface the
-  guided step uses — the schedule of rolls owed, the Living Conditions, the roll
-  calculator and the year-by-year log — so a character can be aged here as well,
-  not merely described as aged.
+  (name, gender, birth year, Wizard's sigil, covenant, parens), the age, and an
+  already-warped character's raw state — Warping Points and free-text Twilight
+  Scars — from which the engine derives the Warping score. The Aging tab carries
+  the whole aging surface the guided step uses: an already-aged character's raw
+  state (aging points per Characteristic and the apparent age, from which the
+  engine derives the Decrepitude score and the Characteristic drops the accumulated
+  points force — those drops lower derived/play stats but never the point-buy the
+  creation checks read), the schedule of rolls owed, the Living Conditions, the roll
+  calculator, the year-by-year log and the Longevity Ritual. So a character can be
+  aged here as well, not merely described as aged.
 
 - **In-play effects and the totals read-out.** Every in-play Virtue/Flaw effect
   (Magical Focus, Method Caster, Deficient Technique/Form, Tough, and the rest of
@@ -234,7 +238,8 @@ phase of that type's flow filled in, on the shipped binary.
 
 - **Guided creation wizard.** The third input mode walks a character through its
   type's creation phases in the order the ruleset declares them, mounting the same
-  input surfaces the editor's tabs use — so the two can never drift apart. Each
+  input surfaces the editor's tabs use — the editor's tab list mirrors the phase
+  list one-for-one, so the two can never drift apart. Each
   step shows only its own validation findings and refuses to advance while it holds
   an error; Back and the step rail move freely through everything already visited.
   A closing Review step reports what no step could (equipment, Might, Warping)

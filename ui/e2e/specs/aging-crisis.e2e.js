@@ -89,8 +89,9 @@ describe('the aging crisis', () => {
     await $(AGE_INPUT).setValue('40');
 
     // A ritual worth 0 leaves the AGING TOTAL alone and is still a ritual the Crisis
-    // spends (`:16573`). This guided step is the only surface a grog can enter one
-    // from, so it is also the only place this note can be provoked for a non-magus.
+    // spends (`:16573`). The ritual is part of `AgingPanel`, so this guided step and
+    // the editor's Aging tab both reach it; the step is where the Crisis is resolved,
+    // so this is where the note can be provoked.
     await $(LONGEVITY_ADD).waitForExist({ timeout: STEP_TIMEOUT });
     await $(LONGEVITY_ADD).click();
     await $(LONGEVITY_BONUS).waitForExist({ timeout: STEP_TIMEOUT });

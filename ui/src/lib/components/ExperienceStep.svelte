@@ -15,8 +15,9 @@
      auto-height siblings, so in an 800px window the row measured 0 and both ability
      lists disappeared. Splitting the phase gives each concern its own height.
 
-     A thin wrapper on purpose: the panel is the same component the editor mounts,
-     so the wizard's step and the editor's surface can never drift apart. The
+     A thin wrapper on purpose: the editor's Experience tab mounts this very
+     component (App.svelte), so the wizard's step and the editor's surface can never
+     drift apart — anything added to the step is on the tab by construction. The
      childhood picker is mounted by the panel itself, after the native language it
      is measured against. -->
 <LifeStagePanel />

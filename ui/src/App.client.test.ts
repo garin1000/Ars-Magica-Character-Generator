@@ -310,45 +310,113 @@ describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
   });
 });
 
-// Slice 2 (#11) moved the funding panel and the life-stage plan off `AbilityTab`
-// onto the wizard's new `experience` step. The editor does not get its own
-// Experience tab until Slice 3, so `App.svelte` mounts `LifeStagePanel` on the
-// editor's Abilities tab as an explicitly temporary bridge. Without it this slice
-// would ship an editor with no surface at all for the funding mode, the age, the
-// native language or the childhood package — and no e2e spec would catch it, since
-// `life-stage-childhood.e2e.js` and `magus-apprenticeship.e2e.js` drive the wizard.
-//
-// A `client` test, not `ssr`: the active tab is component-local `$state` defaulting
-// to `details` (`App.svelte:81`), so a `svelte/server` render can never reach the
-// Abilities panel. Switching it needs a mounted instance.
-describe('the editor still exposes the funding panel (Slice 2 bridge)', () => {
-  it('mounts the life-stage panel on the editor Abilities tab', async () => {
+// Slice 3 (#28) gives the editor the tabs its wizard phases already had, and
+// retires the Slice 2 bridge that kept the funding panel on the Abilities tab in
+// the meantime. Everything below asserts on a PANEL BODY rather than the tab
+// strip, which is why it is a `client` test: the active tab is component-local
+// `$state` defaulting to `details` (`App.svelte`), with no store mirror, so a
+// `svelte/server` render can never reach any other panel. Switching tabs needs a
+// mounted instance.
+function clickTab(id: string): void {
+  (document.getElementById(`tab-${id}`) as HTMLElement).click();
+  flushSync();
+}
+
+describe('the editor tabs Slice 3 splits out', () => {
+  it('mounts the life-stage panel on the Experience tab', async () => {
     await mountApp();
     store.view = 'editor';
     flushSync();
 
-    (document.getElementById('tab-abilities') as HTMLElement).click();
-    flushSync();
+    clickTab('experience');
 
     expect(document.querySelector('[data-testid="life-stage-panel"]')).not.toBeNull();
     expect(document.querySelector('[data-testid="ability-funding-pool"]')).not.toBeNull();
     expect(document.querySelector('[data-testid="ability-funding-life_stages"]')).not.toBeNull();
   });
 
-  it('keeps the Available/Selected row a root-level sibling of the panel', async () => {
+  it('leaves the Abilities tab to the Available/Selected lists alone', async () => {
     await mountApp();
     store.view = 'editor';
     flushSync();
 
-    (document.getElementById('tab-abilities') as HTMLElement).click();
+    clickTab('abilities');
+
+    // The bridge is gone: `.region-row` is the tab's only content below the XP bar,
+    // which is the arrangement #11 asked for and Slice 2 could only half-deliver.
+    expect(document.querySelector('[data-testid="life-stage-panel"]')).toBeNull();
+    expect(document.querySelector('.region-row')).not.toBeNull();
+  });
+
+  it('mounts Personality Traits and Reputations on their own tab', async () => {
+    await mountApp();
+    store.view = 'editor';
     flushSync();
 
-    // `.region-row` must stay the only `flex: 1` child of `.vf-tab` or both ability
-    // lists collapse; the bridge mount is a sibling above it, never a wrapper.
-    const panel = document.querySelector('[data-testid="life-stage-panel"]')!;
-    const row = document.querySelector('.region-row')!;
-    expect(row).not.toBeNull();
-    expect(panel.parentElement).toBe(row.parentElement);
+    clickTab('personality_reputations');
+
+    expect(document.querySelector('[data-testid="personality-add"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="reputation-empty"]')).not.toBeNull();
+  });
+
+  it('mounts the aging surface and the Longevity Ritual on the Aging tab', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+
+    clickTab('aging');
+
+    expect(document.querySelector('[data-testid="aging-panel"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="aging-record"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="longevity-add"]')).not.toBeNull();
+  });
+
+  // The acceptance criterion #28 asks to be asserted rather than eyeballed: every
+  // tab's `aria-controls` must name a panel that actually exists once that tab is
+  // active, and the panel must point back at it. Only the active panel is
+  // rendered, so this can only be checked by activating each tab in turn.
+  it('resolves every tab aria-controls to the panel it labels', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+    // The Totals tab reads `store.derived` unconditionally, so walking onto it
+    // needs a complete fixture.
+    store.derived = {
+      is_magus: false,
+      lab_totals: [],
+      casting_totals: [],
+      penetration: [],
+      magic_resistance: [],
+      combat: [],
+      soak: { addends: [], total: 0 },
+      encumbrance: { load: 0, burden: 0, total: 0 },
+      fatigue: [],
+      wounds: [],
+      size: 0,
+      decrepitude_score: 0,
+      warping_score: 0,
+      warping_points: 0,
+      surfaced_modifiers: [],
+    } as DerivedTotals;
+    flushSync();
+
+    const ids = [...document.querySelectorAll('[role="tab"]')].map((tab) => tab.id);
+    expect(ids.length).toBeGreaterThan(0);
+
+    for (const id of ids) {
+      const tab = document.getElementById(id)!;
+      const controls = tab.getAttribute('aria-controls')!;
+      tab.click();
+      flushSync();
+
+      const panel = document.getElementById(controls);
+      expect(panel, `tab ${id} controls a missing panel ${controls}`).not.toBeNull();
+      expect(panel!.getAttribute('role')).toBe('tabpanel');
+      expect(panel!.getAttribute('aria-labelledby')).toBe(id);
+      // A tab whose panel gates itself to nothing is the failure #28's fix must
+      // not introduce, so every panel has to carry something.
+      expect(panel!.querySelector('*'), `panel ${controls} is empty`).not.toBeNull();
+    }
   });
 });
 

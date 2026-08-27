@@ -190,12 +190,29 @@ button:disabled {
   font-weight: 600;
 }
 
-/* Tab bar between the header and the tabbed main area. */
+/* Tab bar between the header and the tabbed main area. It must stay exactly ONE
+   line tall and hold every tab on screen at once.
+   ONE LINE, because it sits above every panel, so any height it takes comes straight
+   out of the surface below — and at 800px that surface has none to give (Slice 2
+   measured a single extra banner line clipping the Virtues & Flaws picker by ~16px).
+   Once the tab list mirrors the phase list (#28) a magus has thirteen tabs, whose
+   labels are ~1350px of text against 1050px of room, so something has to give. Left
+   to the flex defaults the buttons shrink below their text width and the text wraps
+   INSIDE them: a second line, and the panels below pay for it. So each button keeps
+   its text on one line and ellipsizes what will not fit.
+   NOT a sideways-scrolling strip, which was tried and rejected against the shipped
+   webview: WebKitGTK's overlay horizontal scrollbar claims the hit area across the
+   bottom of the scroll container without taking any layout height, so on a 40px
+   strip everything below ~19px stopped hit-testing to the button — the lower half of
+   every tab became unclickable (measured; WebDriver reported the tabs as not
+   interactable). Truncation costs a few characters; that cost half a control.
+   Pinned by `tab-area.e2e.js`. */
 .tabbar {
   display: flex;
   gap: 0.25rem;
   padding: 0 1.5rem;
   border-bottom: 1px solid #38355a;
+  flex: 0 0 auto;
 }
 
 .tab {
@@ -203,8 +220,22 @@ button:disabled {
   border: none;
   border-bottom: 2px solid transparent;
   border-radius: 0;
-  padding: 0.6rem 1rem;
+  /* Tighter than the 1rem it was: the horizontal padding of thirteen tabs is
+     ~200px of the room the labels need, and padding truncates labels for nothing.
+     Measured at 1100px with a magus's thirteen tabs, this leaves the labels ~40px
+     short overall — so the longest one or two lose a few characters to the ellipsis
+     and the rest are untouched. Trimming further buys single-digit pixels and costs
+     click-target width, so it stops here. */
+  padding: 0.6rem 0.75rem;
   color: var(--muted);
+  /* Shrink (never grow) and ellipsize. `min-width: 0` is what lets a flex item
+     shrink below its content width at all; without it the text wraps instead. The
+     full label stays available through the button's `title` (App.svelte). */
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tab.active {
@@ -1070,7 +1101,10 @@ ul {
   margin-left: auto;
 }
 
-/* Details tab: age, Confidence readout, Personality Traits, Reputations.
+/* The detail-panel layout: the editor's Details tab (identity, age, the Confidence
+   and Warping read-outs, Twilight), its Personality & Reputations and Aging tabs,
+   and the guided steps those two mirror — each of which is a
+   `.panel.character-details` section.
    Two importance-ordered columns via multi-column flow: the blocks stay in DOM
    order (most important first — Identity, Age, key readouts), filling the left
    column top-to-bottom before the right, so the important info sits at the top.
@@ -1086,14 +1120,16 @@ ul {
 }
 
 /* The aging cluster is composed from child components (AgingPanel →
-   AgingSchedulePanel + AgingRecordPanel), so on the Details tab its blocks sit one
-   or two levels below `.character-details`. A real wrapper box there would become
+   AgingSchedulePanel + AgingRecordPanel), so on the Aging tab and the guided aging
+   step its blocks sit one or two levels below the `.character-details` section
+   wrapping them. A real wrapper box there would become
    ONE unbreakable column item and drag the whole cluster into a single column, so
    the wrappers generate no box at all and each block inside stays its own column
    item — exactly as it was before the extraction. `.character-details > *` cannot
-   reach through a `display: contents` box, so the spacing is restated here.
-   Outside `.character-details` (the guided aging step) the wrappers keep their own
-   flex stack below. */
+   reach through a `display: contents` box, so the spacing is restated here. Every
+   surface mounting the cluster provides that section wrapper, so both selectors
+   below always apply; a mount outside one would get the wrappers' own plain block
+   stack instead. */
 .character-details .aging-panel,
 .character-details .aging-record {
   display: contents;

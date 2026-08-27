@@ -88,35 +88,38 @@ beforeEach(() => {
   resetEntity('grog');
 });
 
-// "You can perform Longevity Rituals for others, even for non-magi."
-// Source: Ars Magica - Definitive Edition (Core Rules).md:10672.
-//
-// The editor's only home for a ritual was the Possessions tab, which is
-// magus-gated (App.svelte), so a grog or companion holding an externally-made
-// ritual could enter its bonus in the guided aging step and then never see it
-// again in the editor — while the bonus is a term of its aging total.
-describe('CharacterDetails and the Longevity Ritual (slice 6b8c)', () => {
-  it('offers a non-magus the ritual beside its aging surface', () => {
+// Slice 3 (#28). The tab used to carry everything that had no other home: the
+// aging cluster, the Longevity Ritual for a type with no Possessions tab, the
+// Personality Traits and the Reputations. Each of those mirrors a wizard phase and
+// now has its own tab, so Details keeps what does NOT — identity, the age the
+// concept states, and the Warping/Twilight cluster no `CreationPhase` maps to.
+describe('CharacterDetails after the tab split', () => {
+  it('no longer carries the aging cluster or the Longevity Ritual', () => {
     const body = html();
-    expect(has(body, 'aging-panel')).toBe(true);
-    expect(has(body, 'longevity-add')).toBe(true);
+    expect(has(body, 'aging-panel')).toBe(false);
+    expect(has(body, 'aging-record')).toBe(false);
+    expect(has(body, 'longevity-add')).toBe(false);
   });
 
-  it('takes the bonus and the source of a ritual made for a grog', () => {
-    store.entity.longevity_ritual = { source: 'external', bonus: 4, focus: '' };
+  it('no longer carries Personality Traits or Reputations', () => {
     const body = html();
-    expect(has(body, 'longevity-bonus')).toBe(true);
-    expect(has(body, 'longevity-source-external')).toBe(true);
-    // Only the Creo Corpus SUGGESTION is magus-gated (derived.rs); a grog gets
-    // no hint, and none is invented here.
-    expect(has(body, 'longevity-hint')).toBe(false);
+    expect(has(body, 'personality-add')).toBe(false);
+    expect(has(body, 'reputation-empty')).toBe(false);
   });
 
-  it('leaves a magus its one existing home on the Possessions tab', () => {
-    // Two on-screen homes for one ritual in the same view is the trap the guided
-    // step's own comment names; a magus keeps the Possessions tab and this tab
-    // stays out of it.
+  it('keeps a magus out of it just the same', () => {
+    // The old arrangement gated the ritual on `!is_magus` so a magus would not get
+    // two homes for one. With the panel gone from here the gate goes too, and
+    // neither type sees a ritual on this tab.
     resetEntity('magus');
     expect(has(html(), 'longevity-add')).toBe(false);
+  });
+
+  it('keeps identity, age and the Warping/Twilight cluster', () => {
+    const body = html();
+    expect(has(body, 'identity-concept')).toBe(true);
+    expect(has(body, 'age-input')).toBe(true);
+    expect(has(body, 'warping-points-input')).toBe(true);
+    expect(has(body, 'twilight-scars-list')).toBe(true);
   });
 });

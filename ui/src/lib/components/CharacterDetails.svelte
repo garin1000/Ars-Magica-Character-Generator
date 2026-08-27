@@ -3,11 +3,7 @@
   import { eligibleForConstraint, grantItemLabel, groupWarpingOwedGrants } from '../derive';
   import ParameterPicker from './ParameterPicker.svelte';
   import AgeFields from './AgeFields.svelte';
-  import AgingPanel from './AgingPanel.svelte';
   import IdentityFields from './IdentityFields.svelte';
-  import LongevityPanel from './LongevityPanel.svelte';
-  import PersonalityTraits from './PersonalityTraits.svelte';
-  import Reputations from './Reputations.svelte';
   import { type GrantConstraint, type PointItem, type Selection } from '../types';
 
   // Confidence is derived (type default + V/F); grogs have none (0/0) → hidden.
@@ -25,17 +21,6 @@
   // Starting enchanted-device level budget (Magic Items/Redcap); hidden when 0.
   const itemLevels = $derived(store.effective?.item_level_budget ?? 0);
   const twilightScars = $derived(store.entity.twilight_scars ?? []);
-  // "You can perform Longevity Rituals for others, even for non-magi."
-  // Source: Ars Magica - Definitive Edition (Core Rules).md:10672.
-  // The Possessions tab is the magus's home for a ritual and is magus-gated
-  // (App.svelte), so a non-magus had nowhere in the EDITOR to record one the
-  // guided aging step let it enter. It joins the aging cluster here instead —
-  // where its bonus is a term of the aging total — and only for a type without
-  // that tab, so no character ever has two on-screen homes for one ritual.
-  // Keyed on the profile's capability flag, never the type id.
-  const showLongevity = $derived(
-    !(store.ruleset?.ruleset.type_profiles[store.entity.type_id]?.is_magus ?? false),
-  );
   const warpingEffect = $derived(store.entity.warping_effect ?? '');
 
   // Off-budget Virtues/Flaws owed from the Warping Score (Core:16547-16561). The
@@ -240,18 +225,6 @@
         </span>
       </div>
     {/if}
-
-    <!-- The aging cluster, kept consecutive in source order for the same reason the
-         Warping one is: source order governs the multi-column flow. Composed in
-         AgingPanel so the guided aging step mounts exactly this surface. -->
-    <AgingPanel />
-
-    {#if showLongevity}
-      <LongevityPanel />
-    {/if}
-
-    <PersonalityTraits />
-    <Reputations />
   {:else}
     <p>{store.t('loading')}</p>
   {/if}

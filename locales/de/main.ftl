@@ -200,10 +200,14 @@ characteristic-effective-tooltip-summary = Basiswert { $bought }, effektiv { $ef
 characteristic-effective-tooltip-breakdown-label = Enthält
 characteristic-effective-tooltip-aging = Alterung -{ $drops }
 characteristic-effective-tooltip-virtue = Tugend { $bonus }
-# Reiter-Bezeichnungen für den Hauptbereich des Editors.
+# Reiter-Bezeichnungen für den Hauptbereich des Editors. Jeder Reiter, der einer
+# Phase des Assistenten entspricht, trägt denselben Text wie diese Phase.
 tab-characteristics = Eigenschaften
 tab-virtues-flaws = Tugenden & Fehler
+tab-experience = Erfahrung
 tab-abilities = Fertigkeiten
+tab-personality-reputations = Persönlichkeit & Reputationen
+tab-aging = Alterung
 tab-arts = Künste
 tab-house-specialisation = Haus
 tab-mythic-type = Typ

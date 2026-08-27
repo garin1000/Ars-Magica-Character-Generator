@@ -2,7 +2,6 @@
   import { store } from '../state.svelte';
   import FamiliarPanel from './FamiliarPanel.svelte';
   import TalismanPanel from './TalismanPanel.svelte';
-  import LongevityPanel from './LongevityPanel.svelte';
 
   const aura = $derived(store.entity.aura ?? 0);
   // The aura's rules-legal range comes from the engine (`Ruleset.aura_modifier_min/
@@ -110,8 +109,6 @@
     <FamiliarPanel />
 
     <TalismanPanel />
-
-    <LongevityPanel />
   {:else}
     <p>{store.t('loading')}</p>
   {/if}
