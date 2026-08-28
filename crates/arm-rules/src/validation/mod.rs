@@ -98,6 +98,11 @@ impl fmt::Display for IssueSeverity {
 /// application writes nothing. They are listed here all the same: the UI localizes
 /// them through the same `issue-<code>` catalogue.
 ///
+/// An arg marked **(opt)** is present only when the rules data states it. The
+/// `issue-<code>` Fluent message must therefore not interpolate it directly (Fluent
+/// reports a missing variable): `exemplar` is folded into the `ability` label by the
+/// UI's `resolveIssueArgs` and never reaches the message as a variable of its own.
+///
 /// | `code` | severity | phase | `args` keys |
 /// |--------|----------|-------|-------------|
 /// | `unknown_type` | error | review | `type_id` |
@@ -141,7 +146,7 @@ impl fmt::Display for IssueSeverity {
 /// | `xp_solve_bound_exceeded` | error | abilities | `nodes`, `limit`, `spends`, `pools` |
 /// | `restricted_xp_unspent` | warning | experience | `amount`, `used`, `unspent`, `origin_kind`, `origin` |
 /// | `ability_category_requires_virtue` | error | abilities | `ability`, `category` |
-/// | `academic_ability_without_scholarly_language` | warning | abilities | `ability`, `min` |
+/// | `academic_ability_without_scholarly_language` | warning | abilities | `ability`, `min`, `exemplar`&nbsp;(opt) |
 /// | `life_stage_age_unset` | error | experience | (none) |
 /// | `life_stage_age_before_childhood` | error | experience | `age`, `min` |
 /// | `life_stage_age_before_gauntlet` | error | experience | `age`, `min` |
@@ -150,8 +155,8 @@ impl fmt::Display for IssueSeverity {
 /// | `life_stage_spell_level_split_exceeds_points` | error | experience | `levels`, `points` |
 /// | `life_stage_native_language_unset` | error | experience | (none) |
 /// | `life_stage_native_language_missing_score` | warning | experience | `language` |
-/// | `magus_minimum_ability` | error | abilities | `ability`, `min`, `score` |
-/// | `magus_recommended_ability` | warning | abilities | `ability`, `min`, `score` |
+/// | `magus_minimum_ability` | error | abilities | `ability`, `min`, `score`, `exemplar`&nbsp;(opt) |
+/// | `magus_recommended_ability` | warning | abilities | `ability`, `min`, `score`, `exemplar`&nbsp;(opt) |
 /// | `childhood_package_unknown` | error | experience | `package` |
 /// | `childhood_slot_unfilled` | error | experience | `ability`, `key`, `slot` |
 /// | `childhood_slot_is_native_language` | error | experience | `ability`, `key`, `slot`, `language` |

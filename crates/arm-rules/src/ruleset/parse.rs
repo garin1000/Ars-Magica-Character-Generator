@@ -341,6 +341,10 @@ fn check_duplicate_ids(parsed: &ParsedSources) -> Vec<String> {
 
 /// The scholarly-language expectation names an ability, which must resolve and
 /// be parameterized (a scholarly language is one instance of a dead language).
+///
+/// Its `exemplar` is **not** checked, and must not be: it is a label key pointing at
+/// `exemplar.<slug>` in the i18n layer, not a `ref` into any catalogue. See
+/// [`crate::AbilityRequirement::exemplar`] and `RULES.md`.
 fn check_scholarly_language(abilities_file: &AbilitiesFile) -> Vec<String> {
     let mut errors = Vec::new();
     if let Some(requirement) = &abilities_file.scholarly_language {

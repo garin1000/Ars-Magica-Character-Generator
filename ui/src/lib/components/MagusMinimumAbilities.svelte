@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { abilityDisplayName, paramHint } from '../derive';
+  import { requirementAbilityLabel } from '../derive';
   import type { MagusMinimumAbility } from '../types';
 
   // What the Order demands of every magus, as a checklist.
@@ -45,11 +45,25 @@
     return best?.parameter ?? null;
   }
 
-  /** The row as a whole sentence: which Ability, at what score, met or not. */
+  /**
+   * The row as a whole sentence: which Ability, at what score, met or not.
+   *
+   * The Ability label goes through `requirementAbilityLabel`, the same path the
+   * `issue-magus_minimum_ability` message takes, so the checklist and the finding
+   * word the demand identically. That is also where the rules' own exemplar is
+   * named — `:2437` says "Latin 1" while the enforced check is "any Dead
+   * Language 1", so a magus is told what the rules mean by it.
+   */
   function statusOf(row: MagusMinimumAbility): string {
     if (!localized) return '';
     return store.t(row.met ? 'magus-minimum-met' : 'magus-minimum-unmet', {
-      ability: abilityDisplayName(localized, row.ability, instanceOf(row), paramHint(store.t)),
+      ability: requirementAbilityLabel(
+        localized,
+        row.ability,
+        instanceOf(row),
+        row.exemplar,
+        store.t,
+      ),
       min: String(row.min_score),
       score: String(row.score),
     });

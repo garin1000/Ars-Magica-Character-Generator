@@ -2076,13 +2076,15 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
         apprenticeship: Some(arm_rules::ApprenticeshipRules {
             minimum_abilities: vec![arm_rules::AbilityRequirement {
                 ability: Id::new("ability.parma_magica"),
+                exemplar: None,
                 min_score: 1,
                 parameter: None,
             }],
             recommended_abilities: vec![arm_rules::AbilityRequirement {
                 ability: Id::new("ability.dead_language"),
-                min_score: 4,
                 // Populated on purpose, like every other optional field here.
+                exemplar: Some("latin".to_string()),
+                min_score: 4,
                 parameter: Some("Latin".to_string()),
             }],
             recommended_xp: 90,
@@ -2114,6 +2116,7 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
     let minimum = arm_rules::MagusMinimumAbility {
         ability: Id::new("ability.dead_language"),
         // Populated on purpose, like every other optional field here.
+        exemplar: Some("latin".to_string()),
         parameter: Some("Latin".to_string()),
         min_score: 1,
         score: 0,

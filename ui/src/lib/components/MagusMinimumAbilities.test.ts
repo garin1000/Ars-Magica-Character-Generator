@@ -29,6 +29,7 @@ vi.mock('../ipc', () => ({
 
 import { SCHEMA_VERSION, store } from '../state.svelte';
 import MagusMinimumAbilities from './MagusMinimumAbilities.svelte';
+import ValidationPanel from './ValidationPanel.svelte';
 
 /** The apprenticeship block, so the recommended package can be priced from data. */
 function lifeStageRules(): LifeStageRules {
@@ -78,9 +79,16 @@ function installRuleset(): void {
       art_type_order: ['technique', 'form'],
     },
     i18n: {
-      'ability.dead_language': { name: '{language} (Dead Language)' },
+      // The one shape whose hint substitution doubles: a `{token}` plus a
+      // parenthetical literal. `name_unfilled` is its opt-out (#13, option d).
+      'ability.dead_language': {
+        name: '{language} (Dead Language)',
+        name_unfilled: 'Dead Language',
+      },
       'ability.magic_theory': { name: 'Magic Theory' },
       'ability.parma_magica': { name: 'Parma Magica' },
+      // The rules' own exemplar for the widened dead-language check (#32).
+      'exemplar.latin': { name: 'Latin' },
     },
   } as unknown as LocalizedRuleset;
 }
@@ -110,18 +118,19 @@ function row(
   min_score: number,
   score: number,
   requirement: MagusMinimumAbility['requirement'],
+  exemplar?: string,
 ): MagusMinimumAbility {
-  return { ability, min_score, score, met: score >= min_score, requirement };
+  return { ability, min_score, score, met: score >= min_score, requirement, exemplar };
 }
 
 /** The shipped checklist: three minimums of `:2437`, four recommendations of `:2451`. */
 function shippedChecklist(scores: Record<string, number> = {}): MagusMinimumAbility[] {
   const at = (ability: string) => scores[ability] ?? 0;
   return [
-    row('ability.dead_language', 1, at('ability.dead_language'), 'required'),
+    row('ability.dead_language', 1, at('ability.dead_language'), 'required', 'latin'),
     row('ability.magic_theory', 1, at('ability.magic_theory'), 'required'),
     row('ability.parma_magica', 1, at('ability.parma_magica'), 'required'),
-    row('ability.dead_language', 4, at('ability.dead_language'), 'recommended'),
+    row('ability.dead_language', 4, at('ability.dead_language'), 'recommended', 'latin'),
     row('ability.magic_theory', 3, at('ability.magic_theory'), 'recommended'),
     row('ability.parma_magica', 1, at('ability.parma_magica'), 'recommended'),
   ];
@@ -246,11 +255,71 @@ describe('MagusMinimumAbilities checklist (slice 6b4)', () => {
     expect(body).not.toContain('{language}');
   });
 
-  it('falls back to the localized parameter hint when nothing is bought yet', () => {
+  it('names the Ability without a doubled placeholder when nothing is bought yet', () => {
+    // #13: with no instance held, the generic "(Language)" hint used to be stacked on
+    // the template's own "(Dead Language)" literal, reading
+    // "(Language) (Dead Language) 1 is not met". The entry's `name_unfilled` is the
+    // opt-out; the token must still never appear.
     setChecklist(shippedChecklist());
     const latin = element(html(), 'magus-minimum-ability.dead_language');
-    // No instance to name yet, so the hint stands in for it — still never the token.
-    expect(clean(latin.text)).toContain('(Dead Language)');
+    expect(clean(latin.text)).toContain('Dead Language');
+    expect(clean(latin.text)).not.toContain('(Language)');
     expect(clean(latin.text)).not.toContain('{language}');
+  });
+});
+
+describe('MagusMinimumAbilities and its validation message (slice 7, #13 + #32)', () => {
+  /** The one `<li>` of a ValidationPanel showing the magus-minimum error. */
+  function issueText(): string {
+    store.result = {
+      issues: [
+        {
+          severity: 'error',
+          code: 'magus_minimum_ability',
+          phase: 'abilities',
+          // Exactly what the engine emits: the Ability id, the rules' exemplar slug,
+          // and the two scores.
+          args: { ability: 'ability.dead_language', exemplar: 'latin', min: '1', score: '0' },
+        },
+      ],
+    } as unknown as NonNullable<typeof store.result>;
+    const body = render(ValidationPanel, { props: { phase: 'abilities' } }).body;
+    const match = /<li[^>]*data-code="magus_minimum_ability"[^>]*>([\s\S]*?)<\/li>/.exec(body);
+    if (!match) throw new Error('no <li> for magus_minimum_ability');
+    return clean(match[1].replace(/<[^>]*>/g, '')).trim();
+  }
+
+  it('names the rules exemplar beside the widened requirement, in both surfaces', () => {
+    // `:2437` says "Latin 1"; the engine can only enforce "any Dead Language 1", so
+    // the exemplar is shown as a label. Shared label path -> both surfaces agree.
+    setChecklist(shippedChecklist());
+    const rowText = clean(element(html(), 'magus-minimum-ability.dead_language').text);
+    expect(rowText).toContain('Dead Language (e.g. Latin)');
+    expect(issueText()).toContain('Dead Language (e.g. Latin)');
+    // Never the slug, in either surface.
+    expect(rowText).not.toContain('latin"');
+    expect(issueText()).not.toContain('exemplar.latin');
+  });
+
+  it('reads the requirement identically in the row and the message', () => {
+    setChecklist(shippedChecklist());
+    const rowText = clean(element(html(), 'magus-minimum-ability.dead_language').text);
+    // One shared label path, so the phrase naming the requirement is byte-identical.
+    const phrase = 'Dead Language (e.g. Latin) 1';
+    expect(rowText.startsWith(phrase)).toBe(true);
+    expect(issueText()).toContain(phrase);
+  });
+
+  it('names the exemplar in German too', () => {
+    store.lang = 'de';
+    store.ruleset!.i18n['exemplar.latin'] = { name: 'Latein' };
+    store.ruleset!.i18n['ability.dead_language'] = {
+      name: '{language} (Tote Sprache)',
+      name_unfilled: 'Tote Sprache',
+    };
+    setChecklist(shippedChecklist());
+    const rowText = clean(element(html(), 'magus-minimum-ability.dead_language').text);
+    expect(rowText).toContain('Tote Sprache (z. B. Latein)');
+    expect(issueText()).toContain('Tote Sprache (z. B. Latein)');
   });
 });

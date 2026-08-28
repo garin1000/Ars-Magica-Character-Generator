@@ -560,7 +560,7 @@ mod tests {
     use crate::aging::CrisisSeverity;
     use crate::ruleset::RulesetSources;
     use crate::types::{
-        AbilityScore, AgingLogEntry, ArtScore, EquipmentSlot, Familiar, LongevityRitual,
+        AbilityScore, AgingLogEntry, ArtScore, EquipmentSlot, Familiar, I18nEntry, LongevityRitual,
         LongevitySource, Magnitude, MightScore, PersonalityTrait, Realm, Reputation,
         ReputationType, RulesetRef, Selection, SpellSelection, Talisman, TalismanAttunement,
         TwilightScar,
@@ -1954,6 +1954,45 @@ mod tests {
             "{doc}"
         );
         assert!(!doc.contains("{language}"), "no raw placeholder: {doc}");
+    }
+
+    /// An entry that declares `name_unfilled` uses it instead of the slot hint when
+    /// **no** placeholder is filled — the same rule the in-app label path applies, so
+    /// an exported sheet and the screen word the Ability identically rather than the
+    /// sheet alone printing the doubled "(Language) (Dead Language)".
+    ///
+    /// The test above is the other half of the contract: an entry WITHOUT the field
+    /// keeps the hint, which is right for almost every template.
+    #[test]
+    fn pool_eligibility_prefers_an_explicit_unfilled_name() {
+        let mut rs = ruleset();
+        rs.i18n.insert(
+            Id::new("ability.dead_language"),
+            I18nEntry {
+                name: "{language} (Dead Language)".to_string(),
+                name_unfilled: Some("Dead Language".to_string()),
+                summary: None,
+                description: None,
+                abbreviation: None,
+                specialties: Vec::new(),
+            },
+        );
+        let mut e = magus();
+        e.selections = vec![Selection::new(Id::new("virtue.educated"))];
+        let doc = character_markdown(
+            &e,
+            &rs,
+            &labels(&[
+                ("export-xp-restricted", "Restricted experience"),
+                ("restricted-xp-list-separator", ","),
+                ("param-label-language", "Language"),
+            ]),
+        );
+        assert!(
+            doc.contains("- **Artes Liberales, Dead Language**: 0 / 50\n"),
+            "{doc}"
+        );
+        assert!(!doc.contains("(Language)"), "no doubled hint: {doc}");
     }
 
     /// A life-stage block is named for **where the experience came from**, never for

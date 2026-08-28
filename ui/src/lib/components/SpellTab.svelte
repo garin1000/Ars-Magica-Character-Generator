@@ -3,9 +3,9 @@
   import {
     artAbbreviation,
     artLabel,
+    artsOfType,
     effectiveSpellMastery,
     filterSpells,
-    groupArtsByType,
     groupSelectedSpellsByTechniqueForm,
     groupSpellsByTechniqueForm,
     invalidSelectionIds,
@@ -23,14 +23,12 @@
   // tab switch that unmounts this component (same split ArtGrid uses for the Arts).
   const filter = $derived(store.filters.spells);
 
-  const techniques = $derived.by((): Art[] => {
-    if (!store.ruleset) return [];
-    return groupArtsByType(store.ruleset).find((g) => g.artType === 'technique')?.arts ?? [];
-  });
-  const forms = $derived.by((): Art[] => {
-    if (!store.ruleset) return [];
-    return groupArtsByType(store.ruleset).find((g) => g.artType === 'form')?.arts ?? [];
-  });
+  // Shared with ParameterPicker's `technique` / `form` domains, so the Forms-only
+  // menu this tab already got right is the same one the V/F pickers now use.
+  const techniques = $derived.by((): Art[] =>
+    store.ruleset ? artsOfType(store.ruleset, 'technique') : [],
+  );
+  const forms = $derived.by((): Art[] => (store.ruleset ? artsOfType(store.ruleset, 'form') : []));
 
   // Catalogue spells matching the Technique/Form (separate and combined), text
   // search, and inclusive level range, grouped by Technique+Form and sorted by
@@ -379,7 +377,8 @@
                 {#if isParametrized(chosen.spell)}
                   <!-- The target Form of a meta-magic Vim spell — display + identity
                      only, so the same spell can be taken once per distinct Form.
-                     Mirrors the ParameterPicker Art <select> (groupArtsByType).
+                     Same Forms-only menu ParameterPicker's `form` domain shows —
+                     both read the shared `artsOfType(ruleset, 'form')`.
                      Forms already used by this spell at this level are greyed so
                      each (spell, level, Form) is takeable only once. -->
                   {@const usedForms = usedSpellForms(

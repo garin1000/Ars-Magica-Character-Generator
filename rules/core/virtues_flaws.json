@@ -1144,7 +1144,7 @@
     "category": "supernatural",
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "form", "type": "ref", "domain": "art" }],
+    "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6162, 6185] }
   },
   {
@@ -1406,7 +1406,7 @@
     "category": "supernatural",
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "form", "type": "ref", "domain": "art" }],
+    "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6276, 6279] }
   },
   {
@@ -3967,7 +3967,7 @@
     "category": "hermetic",
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "form", "type": "ref", "domain": "art" }],
+    "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3779, 3782] }
   },
   {
@@ -4478,7 +4478,7 @@
     "category": "hermetic",
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "form", "type": "ref", "domain": "art" }],
+    "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4085, 4094] }
   },
   {
@@ -5089,7 +5089,7 @@
     "category": "supernatural",
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "form", "type": "ref", "domain": "art" }],
+    "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4463, 4466] }
   },
   {

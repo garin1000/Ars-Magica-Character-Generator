@@ -19,6 +19,7 @@ import {
   combatRowLabel,
   displayName,
   eligibleForConstraint,
+  exemplarLabel,
   filterAbilities,
   filterEquipment,
   filterItems,
@@ -44,6 +45,7 @@ import {
   maxAbilityScore,
   maxArtScore,
   paramValueUsage,
+  requirementAbilityLabel,
   resolveIssueArgValue,
   resolveIssueArgs,
   restrictedPoolLabel,
@@ -712,6 +714,167 @@ describe('displayName', () => {
     expect(displayName(ruleset, 'virtue.great', {}, (key) => `(${key})`, resolve)).toBe(
       'Great (characteristic)',
     );
+  });
+});
+
+// --- displayName() and the optional unfilled form (slice 7, #13) -------------
+
+describe('displayName with name_unfilled', () => {
+  // Two catalogue entries — and only two — carry BOTH a `{token}` and a
+  // parenthetical literal, which is the one shape whose hint substitution doubles:
+  // "{language} (Dead Language)" + the "(Language)" hint reads
+  // "(Language) (Dead Language)". They opt out by naming their unfilled form.
+  const abilities = makeRuleset([], {
+    i18n: {
+      'ability.dead_language': {
+        name: '{language} (Dead Language)',
+        name_unfilled: 'Dead Language',
+      },
+      'ability.living_language': {
+        name: '{language} (Living Language)',
+        name_unfilled: 'Living Language',
+      },
+    },
+  });
+  const de = makeRuleset([], {
+    i18n: {
+      'ability.dead_language': {
+        name: '{language} (Tote Sprache)',
+        name_unfilled: 'Tote Sprache',
+      },
+    },
+  });
+  const hint = (key: string) => `(${key})`;
+
+  it('an unfilled dead language renders its name_unfilled form', () => {
+    expect(displayName(abilities, 'ability.dead_language', undefined, hint)).toBe('Dead Language');
+    expect(displayName(abilities, 'ability.dead_language', {}, hint)).toBe('Dead Language');
+    expect(displayName(abilities, 'ability.living_language', undefined, hint)).toBe(
+      'Living Language',
+    );
+  });
+
+  it('an unfilled dead language renders its German unfilled form', () => {
+    expect(displayName(de, 'ability.dead_language', undefined, hint)).toBe('Tote Sprache');
+  });
+
+  it('a filled instance still uses the full template, not name_unfilled', () => {
+    // The filled form is why the parenthetical stays in the template at all: "Latin"
+    // alone would not say which Ability it is.
+    expect(displayName(abilities, 'ability.dead_language', { language: 'Latin' }, hint)).toBe(
+      'Latin (Dead Language)',
+    );
+  });
+
+  // THIS GUARD MATTERS MORE THAN THE FIX ABOVE. The tempting "simplification" is to
+  // suppress the placeholder for every unfilled template. That would break the ~36
+  // templates where the token is the head of the name or sits mid-phrase — "Puissant
+  // {ability}" would render as a bare "Puissant", "Affinity with {ability}" as
+  // "Affinity with", and German worse still (a dangling inflected adjective with no
+  // noun to agree with). These pass today; they are written down so that they keep
+  // passing after option (d) lands, and so nobody re-proposes blanket suppression.
+  it('an unfilled template without name_unfilled still renders the param hint', () => {
+    const ruleset = makeRuleset([], {
+      i18n: {
+        'virtue.puissant_ability': { name: 'Puissant {ability}' },
+        'virtue.affinity_ability': { name: 'Affinity with {ability}' },
+        'virtue.great_characteristic': { name: 'Great {characteristic}' },
+        'virtue.ways_of_the_land': { name: 'Ways Of The {land}' },
+      },
+    });
+    const label = (key: string) => `(${key.charAt(0).toUpperCase()}${key.slice(1)})`;
+    expect(displayName(ruleset, 'virtue.puissant_ability', undefined, label)).toBe(
+      'Puissant (Ability)',
+    );
+    expect(displayName(ruleset, 'virtue.affinity_ability', undefined, label)).toBe(
+      'Affinity with (Ability)',
+    );
+    expect(displayName(ruleset, 'virtue.great_characteristic', undefined, label)).toBe(
+      'Great (Characteristic)',
+    );
+    expect(displayName(ruleset, 'virtue.ways_of_the_land', undefined, label)).toBe(
+      'Ways Of The (Land)',
+    );
+  });
+});
+
+// --- exemplarLabel() / requirementAbilityLabel() (slice 7, #32) --------------
+
+describe('exemplarLabel / requirementAbilityLabel', () => {
+  // "Magi must have the following minimum Abilities: Parma Magica 1, Magic Theory 1,
+  // Latin 1" (Core Rules :2437) names Latin, but the engine can only enforce "any
+  // Dead Language", so the rules' own exemplar is surfaced as a label beside it.
+  const rs = makeRuleset([], {
+    i18n: {
+      'ability.dead_language': {
+        name: '{language} (Dead Language)',
+        name_unfilled: 'Dead Language',
+      },
+      'ability.parma_magica': { name: 'Parma Magica' },
+      'exemplar.latin': { name: 'Latin' },
+    },
+  });
+  const t = (key: string, args?: Record<string, string>) => {
+    if (key === 'requirement-exemplar') return `${args?.ability} (e.g. ${args?.exemplar})`;
+    if (key === 'param-hint') return `(${args?.label})`;
+    return key;
+  };
+
+  it('maps the exemplar slug to its localized name, never rendering the slug', () => {
+    expect(exemplarLabel(rs, 'latin')).toBe('Latin');
+    // An exemplar the i18n layer does not know must be dropped, not printed raw.
+    expect(exemplarLabel(rs, 'greek')).toBeNull();
+    expect(exemplarLabel(rs, undefined)).toBeNull();
+  });
+
+  it('names the exemplar beside the widened requirement', () => {
+    expect(requirementAbilityLabel(rs, 'ability.dead_language', null, 'latin', t)).toBe(
+      'Dead Language (e.g. Latin)',
+    );
+  });
+
+  it('leaves a requirement with no exemplar exactly as it was', () => {
+    expect(requirementAbilityLabel(rs, 'ability.parma_magica', null, undefined, t)).toBe(
+      'Parma Magica',
+    );
+    // An unresolvable exemplar likewise falls back rather than leaking a slug.
+    expect(requirementAbilityLabel(rs, 'ability.parma_magica', null, 'greek', t)).toBe(
+      'Parma Magica',
+    );
+  });
+
+  it('keeps the bought instance when the character holds one', () => {
+    // Interpolating the instance needs the Ability's own param key from the
+    // catalogue, so this case wants an `abilities` map the bare fixture omits.
+    const withCatalogue = {
+      ...rs,
+      ruleset: {
+        ...rs.ruleset,
+        abilities: {
+          'ability.dead_language': { id: 'ability.dead_language', parameter: 'language' },
+        },
+      },
+    } as unknown as LocalizedRuleset;
+    expect(
+      requirementAbilityLabel(withCatalogue, 'ability.dead_language', 'Latin', 'latin', t),
+    ).toBe('Latin (Dead Language) (e.g. Latin)');
+  });
+
+  it('composes the exemplar into the ability arg of a validation issue', () => {
+    // The Fluent message stays `{ $ability } { $min }`: an `exemplar` arg qualifies
+    // the ability rather than standing on its own, so the two are folded into one
+    // label and `exemplar` never reaches the message. That is what makes the
+    // minimums row and `issue-magus_minimum_ability` read identically.
+    expect(
+      resolveIssueArgs(rs, { ability: 'ability.dead_language', exemplar: 'latin', min: '1' }, t),
+    ).toEqual({ ability: 'Dead Language (e.g. Latin)', min: '1' });
+  });
+
+  it('leaves an issue with no exemplar arg untouched', () => {
+    expect(resolveIssueArgs(rs, { ability: 'ability.parma_magica', min: '1' }, t)).toEqual({
+      ability: 'Parma Magica',
+      min: '1',
+    });
   });
 });
 

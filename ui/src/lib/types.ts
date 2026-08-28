@@ -231,6 +231,12 @@ export type AbilityRequirementKind = 'required' | 'recommended';
 // instance, unset throughout the shipped data.
 export interface MagusMinimumAbility {
   ability: string;
+  // One example instance the rules themselves name ("latin"), as a language-neutral
+  // slug labelled through `exemplar.<slug>` in the rules i18n. Present because the
+  // enforced check is deliberately wider than the rules' letter — the rules say
+  // "Latin 1", the engine can only demand any Dead Language. See
+  // `requirementAbilityLabel` in derive.ts.
+  exemplar?: string;
   parameter?: string;
   min_score: number;
   score: number;
@@ -851,6 +857,12 @@ export interface EntityTypeProfile {
 
 export interface I18nEntry {
   name: string;
+  // The name to show when a `{token}` template holds no instance yet. Opt-in and
+  // normally absent: the generic "(Ability)" hint is right for almost every
+  // template. Only a name carrying BOTH a token and a parenthetical literal doubles
+  // ("{language} (Dead Language)" + "(Language)"), and those two entries name their
+  // unfilled form here. See `displayName` in derive.ts.
+  name_unfilled?: string | null;
   summary?: string | null;
   description?: string | null;
   // Two-letter Art abbreviation (e.g. "Cr"); present only for Arts.
@@ -1271,6 +1283,9 @@ export interface ApprenticeshipRules {
 // unset throughout the shipped data (the match is by Ability id).
 export interface AbilityRequirement {
   ability: string;
+  // A label key, not a ref: one example the rules name in prose, resolved through
+  // `exemplar.<slug>` in the rules i18n. See `MagusMinimumAbility.exemplar`.
+  exemplar?: string;
   min_score: number;
   parameter?: string;
 }
