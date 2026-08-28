@@ -110,6 +110,7 @@ function setModifier(modifier: number | null): void {
           age_modifier: 0,
           living_conditions_modifier: modifier,
           longevity_modifier: 0,
+          trait_modifier: 0,
           longevity_clamp_active: false,
           fixed_total: -modifier,
         } as AgingReadout);
@@ -207,10 +208,19 @@ describe('LivingConditionsPicker (slice 6b6c)', () => {
     expect(has(body, 'living-conditions-none')).toBe(false);
   });
 
-  it('says so when the character lives under none of them', () => {
-    // An empty set IS the table's own "Average peasant 0", so this is a complete
-    // answer and not a missing one.
-    expect(has(html(), 'living-conditions-none')).toBe(true);
+  // guided-creation-review-2026-08 #21: the two blocks were never alternatives, so
+  // with nothing ticked the picker said "No Living Conditions chosen: the character
+  // counts as an average peasant (0)" and then, immediately beneath it, "Living
+  // Conditions modifier: +0" — the same fact twice. The total alone states it, and
+  // one stable line in place of two-then-one also removes a height change from the
+  // grid. The "average peasant" framing lives on in the always-present hint.
+  it('renders exactly one summary line when nothing is chosen', () => {
+    const body = html();
+    expect(has(body, 'living-conditions-none')).toBe(false);
+    expect(has(body, 'living-conditions-total')).toBe(true);
+    // An empty set IS the table's own "Average peasant 0" — a complete answer, not
+    // a missing one — so the framing is still on screen, just not as a second line.
+    expect(visibleText(body)).toContain('average peasant');
   });
 
   it("shows the engine's resolved modifier, not a sum of its own", () => {

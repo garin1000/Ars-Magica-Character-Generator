@@ -349,10 +349,13 @@ button:disabled {
   opacity: 0.7;
 }
 
-/* Multi-line free-text fields in the Details tab (character concept, and the
-   warping effect description which can run to several sentences). */
+/* Multi-line free-text fields (character concept and the warping effect on the
+   Details tab, the overall decrepitude narrative on the Aging one) — each of them
+   free text that can run to several sentences and grow over a character's life, so
+   they share one control and one look. */
 .concept-input,
-.warping-effect {
+.warping-effect,
+.decrepitude-effect {
   font: inherit;
   padding: 0.35rem 0.5rem;
   border-radius: 6px;
@@ -1104,47 +1107,96 @@ ul {
 /* The detail-panel layout: the editor's Details tab (identity, age, the Confidence
    and Warping read-outs, Twilight), its Personality & Reputations and Aging tabs,
    and the guided steps those two mirror — each of which is a
-   `.panel.character-details` section.
-   Two importance-ordered columns via multi-column flow: the blocks stay in DOM
-   order (most important first — Identity, Age, key readouts), filling the left
-   column top-to-bottom before the right, so the important info sits at the top.
-   Collapses to a single column on narrow widths (matches `.art-grid`). */
-.character-details {
-  columns: 2;
-  column-gap: 1.5rem;
-}
+   `.panel.character-details` section. All four surfaces share this one layout, on
+   purpose: order-stability is a win on every one of them.
 
-.character-details > * {
-  break-inside: avoid;
-  margin-bottom: 1rem;
+   A GRID, deliberately not multi-column (`columns: 2`, which this replaces —
+   guided-creation-review-2026-08 #20). Multi-column *flows* content between
+   columns, so any height change moved the column break and blocks MIGRATED to
+   another column: ticking one Living Condition relaid the whole panel out, and
+   AgingRecordPanel was permanently split across the break. Grid auto-placement is
+   order-stable under height changes — each item owns its cell, so a block growing
+   changes only row heights. Source order still governs placement order, so the
+   blocks are still read most-important-first, left to right and then down.
+
+   `auto-fit` gives the whole 1/2/3-column response with no breakpoint list, which
+   is why the old `@media (max-width: 720px) { columns: 1 }` is gone rather than
+   kept — the two would fight over what "narrow" means.
+
+   THE 24rem FLOOR was chosen from the CONTENT, not measured in a running window:
+   nobody has viewed these surfaces since the layout changed, so this is the
+   intended place to nudge once someone does. Root font-size is 15px (see `:root`),
+   so 24rem is 360px. It is deliberately erring WIDE — fewer, wider columns — because
+   the review's actual complaint was a column too narrow to show a field, and a tight
+   floor recreates exactly that. What has to stay readable at 360px: the aging
+   formula's wrapped terms, whose longest single unbreakable token is German's
+   "(Langlebigkeitsritual)"; a Living Conditions row (its longest localized name plus
+   the checkbox and the signed modifier column); and a `.detail-field`'s label beside
+   its control. 360px holds all three with room to wrap rather than clip. It also
+   keeps the two-column layout the old `columns: 2` gave at the 1100px default window
+   (2 × 360 + 24 gap = 744px of content) and reaches three columns past ~1130px,
+   which the previous fixed two never did.
+
+   `align-items: start` so a short block keeps its own height instead of stretching
+   to the tallest in its row. The `gap` replaces the `margin-bottom: 1rem` and
+   `break-inside: avoid` this rule used to put on every column item: `break-inside`
+   is meaningless in a grid, and spacing between grid items is the container's job. */
+.character-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
+  align-items: start;
+  gap: 1rem 1.5rem;
 }
 
 /* The aging cluster is composed from child components (AgingPanel →
    AgingSchedulePanel + AgingRecordPanel), so on the Aging tab and the guided aging
    step its blocks sit one or two levels below the `.character-details` section
-   wrapping them. A real wrapper box there would become
-   ONE unbreakable column item and drag the whole cluster into a single column, so
-   the wrappers generate no box at all and each block inside stays its own column
-   item — exactly as it was before the extraction. `.character-details > *` cannot
-   reach through a `display: contents` box, so the spacing is restated here. Every
-   surface mounting the cluster provides that section wrapper, so both selectors
-   below always apply; a mount outside one would get the wrappers' own plain block
-   stack instead. */
+   wrapping them. A real wrapper box there would become ONE grid item, stacking the
+   whole cluster into a single cell, so the wrappers generate no box at all and each
+   block inside is a grid item of the section — exactly as it was before the
+   extraction, and the reason the switch from multi-column to grid needed no change
+   here. The container's `gap` reaches these items too, so no spacing needs
+   restating. Every surface mounting the cluster provides that section wrapper, so
+   both selectors below always apply; a mount outside one would get the wrappers'
+   own plain block stack instead. */
 .character-details .aging-panel,
 .character-details .aging-record {
   display: contents;
 }
 
-.character-details .aging-panel > *,
-.character-details .aging-record > * {
-  break-inside: avoid;
-  margin-bottom: 1rem;
+/* The aging log takes a full-width row of its own. It is the only block here that
+   grows without bound — one row per aging roll, and a pre-play catch-up can owe 25
+   (Core Rules.md:2232) — so in a column it both pushed its neighbours down and was
+   too narrow for its own fields ("Describe the aging roll's e…"). Full width fixes
+   the second; the bounded scrollport below fixes the first. */
+.character-details .aging-log-block {
+  grid-column: 1 / -1;
 }
 
-@media (max-width: 720px) {
-  .character-details {
-    columns: 1;
-  }
+/* About six rows before it scrolls: enough that a typical log is visible whole,
+   little enough that a long one cannot dominate the surface.
+   VERTICAL OVERFLOW ONLY, and deliberately no `overflow-x`: WebKitGTK's overlay
+   horizontal scrollbar claims hit area without taking layout height, which has
+   already made the lower half of a control unclickable in this app. The rows wrap
+   instead (see AgingRecordPanel's own styles). */
+.character-details .aging-log-scroll {
+  max-height: 14rem;
+  overflow-y: auto;
+  /* Reserve the scrollbar's width instead of letting it overlay the rows, exactly as
+     `.tab-scroll`, `.list-scroll` and `.selected-scroll` already do — every vertical
+     scrollport in this file pairs the two, and this one is not an exception.
+     It is load-bearing, not tidiness: WebKitGTK's overlay scrollbar claims hit area
+     without taking layout width, and a log row is `year, effect, remove` in a flex
+     row, so the remove `×` is the rightmost thing in it and sat directly under the
+     scrollbar. Without the gutter the button is unclickable once the log scrolls —
+     WebDriver reported it as never becoming interactable, and a real user would have
+     found the same. Same failure mode the tab strip hit horizontally in Slice 3,
+     rotated 90 degrees.
+     BOTH declarations, as `.list-scroll` has: `scrollbar-gutter` is the modern form
+     and the padding is what actually holds the row clear in the shipped WebKitGTK,
+     which is the only renderer that matters here. */
+  scrollbar-gutter: stable;
+  padding-right: 1.1rem;
 }
 
 .detail-field {
@@ -1177,12 +1229,12 @@ ul {
   margin-top: 0.75rem;
 }
 
-/* …except inside `.character-details` (the editor's Details tab, the guided aging
-   step, the personality step), which already states its own block spacing:
-   `margin-bottom: 1rem` on every column item, restated for the `display: contents`
-   aging wrappers. Stacking the fallback on top of that would space those blocks
-   1.75rem apart — MORE than the 1rem the multi-column flow is designed around,
-   and the aging step's whitespace is the very thing #23 is about. */
+/* …except inside `.character-details` (the editor's Details, Personality and Aging
+   tabs and the guided steps mirroring them), where these blocks are grid items and
+   the grid's own `gap: 1rem` already holds them apart. A margin on a grid item ADDS
+   to the gap, so leaving the fallback in place would space them 1.75rem — more than
+   the 1rem the layout is designed around, and the aging step's whitespace is the
+   very thing #23 was about. */
 .character-details .detail-section + .detail-section,
 .character-details .detail-field + .detail-section {
   margin-top: 0;

@@ -504,15 +504,18 @@ aging-rolls-recorded = { $recorded } of { $owed } recorded
 # AGING TOTAL = stress die (no botch) + age/10 (round up) - Living Conditions
 # modifier - Longevity Ritual modifier (Core Rules.md:16567-16569), so a high
 # modifier means a longer life. Each term arrives already signed.
-aging-total-formula = Stress die { $age } (age) { $conditions } (living conditions) { $longevity } (Longevity Ritual) = stress die { $fixed }
+# The fourth term is the Virtue/Flaw aging-roll modifier (Faerie Blood's -1,
+# Core Rules.md:3801), which those three lines do not name but which the total on
+# the right of the `=` includes — without it the sentence did not add up. Worded
+# exactly as `aging-total-parts` below words it, so the two read-outs agree.
+aging-total-formula = Stress die { $age } (age) { $conditions } (living conditions) { $longevity } (Longevity Ritual) { $traits } (Virtues and Flaws) = stress die { $fixed }
 aging-longevity-clamp = A Longevity Ritual is in force: while it lasts, no total reaches the aging table's first result, so these rolls cannot age the character.
 # The Living Conditions checklist (Core Rules.md:16581-16594). The total shown is
 # the engine's own resolved modifier — it also carries the Virtue/Flaw
 # contributions, which are not rows in this list.
 living-conditions-label = Living Conditions
-living-conditions-hint = The aging total subtracts this modifier, so a higher modifier means a longer life.
+living-conditions-hint = The aging total subtracts this modifier, so a higher modifier means a longer life. With nothing chosen the character counts as an average peasant (0).
 living-conditions-total = Living Conditions modifier: { $modifier }
-living-conditions-none = No Living Conditions chosen: the character counts as an average peasant (0).
 living-conditions-cumulative-note = Conditions marked cumulative stack with each other; the rest are alternatives, so take at most one of those.
 living-conditions-cumulative-label = cumulative
 # The aging roll calculator (Core Rules.md:16567-16615). The player rolls a stress

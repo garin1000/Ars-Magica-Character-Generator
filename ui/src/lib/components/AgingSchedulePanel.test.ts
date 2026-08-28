@@ -60,6 +60,7 @@ function readout(overrides: Partial<AgingReadout> = {}): AgingReadout {
     age_modifier: 0,
     living_conditions_modifier: 0,
     longevity_modifier: 0,
+    trait_modifier: 0,
     longevity_clamp_active: false,
     fixed_total: 0,
     ...overrides,
@@ -189,6 +190,28 @@ describe('AgingSchedulePanel (slice 6b6b)', () => {
     expect(html()).not.toContain('−');
   });
 
+  // guided-creation-review-2026-08 #22: the sentence named exactly the book's three
+  // terms while `fixed_total` is the engine's sum of ALL of them, so a character with
+  // an aging-roll Virtue or Flaw read "+4 (age) 0 (living conditions) 0 (Longevity
+  // Ritual) = stress die +3" — a rules read-out that does not add up. The check is
+  // the arithmetic itself, not the mere presence of a fourth placeholder.
+  it('names the Virtue/Flaw term, and its terms sum to the stated total', () => {
+    // A character of 40 with Faerie Blood: ceil(40/10) = +4 for the age, and the
+    // Flaw's -1 aging-roll modifier, which the book's three lines do not name.
+    setAging(readout({ age_modifier: 4, trait_modifier: -1, fixed_total: 3 }));
+    const formula = element(html(), 'aging-total-formula').text;
+    expect(formula).toContain('Virtues and Flaws');
+    // Every signed figure in the sentence, in order: the four named terms, then the
+    // total they are claimed to make.
+    const figures = [...formula.matchAll(/[+-]?\d+/g)].map((match) => Number(match[0]));
+    expect(figures).toHaveLength(5);
+    const total = figures.pop();
+    expect(figures.reduce((sum, term) => sum + term, 0)).toBe(total);
+    expect(total).toBe(3);
+    // ASCII hyphen-minus, never U+2212.
+    expect(formula).not.toContain('−');
+  });
+
   it('names the standing Longevity Ritual clamp only while it stands', () => {
     setAging(readout({ longevity_modifier: 7 }));
     expect(has(html(), 'aging-longevity-clamp')).toBe(false);
@@ -207,6 +230,7 @@ describe('AgingSchedulePanel (slice 6b6b)', () => {
       'age_modifier',
       'living_conditions_modifier',
       'longevity_modifier',
+      'trait_modifier',
       'longevity_clamp_active',
       'fixed_total',
       'aging-rolls-owed',

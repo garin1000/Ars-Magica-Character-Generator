@@ -133,6 +133,23 @@ describe('AgingRecordPanel (slice 6b6b)', () => {
     expect(has(body, 'aging-log-add')).toBe(true);
   });
 
+  // guided-creation-review-2026-08 #26: `decrepitude_effect` is the cumulative
+  // overall aging/decrepitude narrative (RULES.md, Core Rules.md:16563-16577), so it
+  // grows over a character's life — its analogue `warping_effect` has always been a
+  // `<textarea rows="3">` (CharacterDetails.svelte). A single-line input was simply
+  // the wrong control for the data.
+  it('renders the decrepitude effect as a textarea, like the warping effect', () => {
+    store.entity.decrepitude_effect = 'Stooped, and slow to rise on cold mornings.';
+    const body = html();
+    const opening = /<([a-z]+)[^>]*data-testid="decrepitude-effect-input"[^>]*>/i.exec(body);
+    expect(opening).not.toBeNull();
+    expect(opening![1]).toBe('textarea');
+    // Three rows, matching the warping field it is the analogue of.
+    expect(opening![0]).toMatch(/rows="3"/);
+    // The stored narrative is what the control shows.
+    expect(text(body, 'decrepitude-effect-input')).toContain('cold mornings');
+  });
+
   it('says the log is empty when no year is recorded', () => {
     const body = html();
     expect(has(body, 'aging-log-empty')).toBe(true);

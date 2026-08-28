@@ -59,6 +59,11 @@
 {#if rows.length > 0}
   <div class="detail-section living-conditions" data-testid="living-conditions">
     <h3 class="detail-label">{store.t('living-conditions-label')}</h3>
+    <!-- The hint also carries the table's own "Average peasant 0" framing for an
+         empty set. There is deliberately no separate "nothing chosen" line: the
+         total below the list already states the figure, so an empty set was
+         announced twice over, and a line that comes and goes is a height change
+         the grid would rather not absorb. -->
     <p class="hint">{store.t('living-conditions-hint')}</p>
 
     <ul class="living-conditions-list">
@@ -91,10 +96,6 @@
       <p class="hint" data-testid="living-conditions-cumulative-note">
         {store.t('living-conditions-cumulative-note')}
       </p>
-    {/if}
-
-    {#if chosen.size === 0}
-      <p class="empty" data-testid="living-conditions-none">{store.t('living-conditions-none')}</p>
     {/if}
 
     {#if total != null}

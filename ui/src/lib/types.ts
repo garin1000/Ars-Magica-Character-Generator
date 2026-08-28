@@ -428,6 +428,10 @@ export interface AgingReadout {
   // The two modifiers the AGING TOTAL subtracts (a high one means a longer life).
   living_conditions_modifier: number;
   longevity_modifier: number;
+  // The Virtue/Flaw aging-roll modifier, ADDED with its stored sign. The book's
+  // three-line formula does not name it; `fixed_total` has always included it, so
+  // the formula read-out needs it to add up (#22).
+  trait_modifier: number;
   // Whether a Longevity Ritual's under-35 clamp stands over this character — a
   // standing predicate, unlike AgingTotal.capped_by_longevity, which says a
   // particular roll was cut down.

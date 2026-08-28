@@ -1305,7 +1305,10 @@ migration code; `load_entity_migrating` is untouched). Bumped `SCHEMA_VERSION`
   in-play effect and is **NOT** modeled.
 - **Decrepitude effect** — `Entity.decrepitude_effect: String` (skip-if-empty):
   free-text overall aging/decrepitude narrative. Pure annotation — Decrepitude
-  itself is DERIVED from `aging_points` (see above). Source:
+  itself is DERIVED from `aging_points` (see above). It is the **cumulative** account
+  of what age has done to the character, distinct from the aging log's per-year
+  one-liners below, so the UI renders it as a multi-line field like its analogue
+  `Entity.warping_effect` (guided-creation-review-2026-08 #26). Source:
   `Ars Magica - Definitive Edition (Core Rules).md:16563-16577` (## Aging).
 - **Aging log** — `Entity.aging_log: Vec<AgingLogEntry>` (skip-if-empty). `year`
   is the **first** field so the derived `Ord` sorts the log chronologically via
@@ -3668,15 +3671,24 @@ App/UI: `EffectiveScores` (`arm-app/src/ruleset_io.rs`) gains
 `aging: Option<AgingReadout>` — the **die-independent** half of all of the above
 (`first_roll_age`, `begins_after_age`, the `schedule`, `rolls_owed`,
 `rolls_recorded`, `age_modifier`, `living_conditions_modifier`,
-`longevity_modifier`, `longevity_clamp_active`, `fixed_total`), so the surface that
-shows the schedule and explains the total never re-derives a rules number in JS.
+`longevity_modifier`, `trait_modifier`, `longevity_clamp_active`, `fixed_total`), so
+the surface that shows the schedule and explains the total never re-derives a rules
+number in JS.
 Every field is a pure function of `(entity, ruleset)`, which is why it rides on the
 always-recomputed payload; the die stays out of the entity entirely. Its terms come
 from one probe of `aging_total` at a die of **zero**, so the read-out and the roll
 the player actually makes are arithmetically identical by construction — sign
 conventions included — and `fixed_total` is that probe's `uncapped_total`, i.e. the
 three-term formula above *plus* the `aging_roll` trait modifiers, which the book's
-formula block does not name but which are just as die-independent.
+formula block does not name but which are just as die-independent. **`trait_modifier`
+surfaces that fourth term on its own** (`terms.trait_modifier`, added by
+guided-creation-review-2026-08 #22) precisely because `fixed_total` includes it: the
+`aging-total-formula` read-out named only the book's three, so for a character
+holding Faerie Blood (`:3801`) it printed "+4 (age) 0 (living conditions) 0
+(Longevity Ritual) = stress die +3" — a rules readout that did not add up. Displayed
+by `ui/src/lib/components/AgingSchedulePanel.svelte`, whose sibling
+`aging-total-parts` in `AgingRollCalculator.svelte` has always carried the term (off
+`AgingTotal::trait_modifier`); both strings now word it identically.
 `longevity_clamp_active` is deliberately **not** `AgingTotal::capped_by_longevity`:
 that one says a particular roll was cut down, this one that the `:16575` clamp
 stands over the character at all.

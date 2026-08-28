@@ -780,10 +780,14 @@ fn effective_scores_report_the_aging_rolls_a_character_of_forty_owes() {
     // No ritual, so no bonus and no `:16575` clamp standing over this character.
     assert_eq!(aging.longevity_modifier, 0);
     assert!(!aging.longevity_clamp_active);
-    // The whole non-die half, so the UI adds only the number the player typed.
+    // The whole non-die half, so the UI adds only the number the player typed — and
+    // it is exactly the sum of the terms the read-out names, the Virtue/Flaw one
+    // included. Naming three of four is what made the displayed formula contradict
+    // itself (guided-creation-review-2026-08 #22).
     assert_eq!(
         aging.fixed_total,
         aging.age_modifier - aging.living_conditions_modifier - aging.longevity_modifier
+            + aging.trait_modifier
     );
 }
 
@@ -2210,10 +2214,15 @@ fn every_aging_field_is_mirrored_in_the_frontend_types() {
         age_modifier: 4,
         living_conditions_modifier: -3,
         longevity_modifier: 5,
+        // Faerie Blood's -1 (`:3801`): the term the book's three-line formula does
+        // not name, which the read-out must still surface for its own arithmetic to
+        // add up (guided-creation-review-2026-08 #22).
+        trait_modifier: -1,
         // Populated on purpose: `true` is the standing `:16575` predicate, and the
         // field is the one thing that tells it apart from the per-roll cap flag.
         longevity_clamp_active: true,
-        fixed_total: 2,
+        // 4 - (-3) - 5 + (-1): the terms above, as the engine sums them.
+        fixed_total: 1,
     };
     let entry = arm_rules::AgingLogEntry {
         year: Some(1220),

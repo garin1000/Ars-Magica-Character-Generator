@@ -14,9 +14,10 @@
      Details tab, beside the identity it belongs with, so it is the one thing this
      step adds around `AgingPanel`.
 
-     `.character-details` is a CSS multi-column flow in which source order governs
-     placement (see app.css), so the age stays first and the aging cluster
-     contiguous. -->
+     `.character-details` is an auto-placed CSS grid (see app.css) in which source
+     order is placement order, so the age keeps the first cell — read first because
+     it is what the whole schedule below it hangs on. Under grid each block owns its
+     cell, so nothing here moves when one of them changes height. -->
 <section class="panel character-details" data-testid="aging-step">
   <AgeFields />
   <AgingPanel />

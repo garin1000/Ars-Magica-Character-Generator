@@ -67,8 +67,8 @@
      CharacterDetails so the editor and the guided aging step mount the one
      surface and can never drift apart.
      `display: contents` inside `.character-details` (see app.css) keeps each block
-     below its own item in that multi-column flow — a wrapper box would drag the
-     whole cluster into a single unbreakable column. -->
+     below its own item of that grid — a wrapper box would make the whole cluster
+     one grid item, stacked in a single cell. -->
 <div class="aging-record" data-testid="aging-record">
   <div class="detail-field">
     <label class="field">
@@ -93,15 +93,21 @@
     </div>
   {/if}
 
+  <!-- The cumulative overall aging/decrepitude narrative, which grows over a
+       character's life (Core Rules.md:16563-16577) — distinct from the aging log's
+       per-year one-liners below. A textarea for the same reason `warping_effect` is
+       one in CharacterDetails: it is the same kind of field, and the two must not
+       offer different controls for the same kind of writing. -->
   <div class="detail-field">
     <label class="field">
       <span>{store.t('decrepitude-effect-label')}</span>
-      <input
-        type="text"
+      <textarea
+        class="decrepitude-effect"
+        rows="3"
         value={decrepitudeEffect}
-        oninput={(e) => store.setDecrepitudeEffect((e.currentTarget as HTMLInputElement).value)}
+        oninput={(e) => store.setDecrepitudeEffect((e.currentTarget as HTMLTextAreaElement).value)}
         data-testid="decrepitude-effect-input"
-      />
+      ></textarea>
     </label>
   </div>
 
@@ -126,9 +132,17 @@
     <p class="detail-label" data-testid="aging-points-note">
       {store.t('aging-points-note')}
     </p>
+  </div>
 
-    <p class="detail-label">{store.t('aging-log-heading')}</p>
-    <ul class="twilight-list" data-testid="aging-log-list">
+  <!-- The log is a block of its own, and not part of the Aging section above,
+       because it is the one block on this surface that grows without bound — one row
+       per aging roll, and a pre-play catch-up can owe 25 (Core Rules.md:2232). As its
+       own block it takes the grid's full-width row and a bounded scrollport
+       (app.css), so adding a year scrolls in place instead of pushing every
+       neighbouring block down. -->
+  <div class="detail-section aging-log-block" data-testid="aging-log-block">
+    <h3 class="detail-label">{store.t('aging-log-heading')}</h3>
+    <ul class="twilight-list aging-log-scroll" data-testid="aging-log-list">
       {#each agingLog as entry, i (i)}
         <li>
           <input
@@ -179,6 +193,25 @@
 </div>
 
 <style>
+  /* A log row: year, effect, remove — and the Crisis read-out on its own line
+     beneath them. The row must be a flex line for that `flex-basis: 100%` to mean
+     anything, and it is what lets the effect field claim the rest of the row instead
+     of keeping an `<input>`'s ~20-character default width, which was clipping the
+     placeholder to "Describe the aging roll's e…". `min-width: 0` because a flex
+     item's automatic minimum size is its content, which an input resists shrinking
+     below. */
+  .aging-log-block li {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .aging-log-block .twilight-desc {
+    flex: 1;
+    min-width: 0;
+  }
+
   /* The engine's record of a resolved Crisis, sitting under its year's row rather
      than beside the editable fields — it is a read-out, not a control. */
   .aging-log-crisis {
