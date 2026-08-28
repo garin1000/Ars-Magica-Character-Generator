@@ -36,6 +36,12 @@ const PLAN = {
   virtues: ['virtue.keen_vision'],
   xpPool: '75',
   abilities: ['ability.awareness', 'ability.athletics'],
+  // #33 gave grogs the `personality_reputations` phase, which their profile had been
+  // missing. 'Loyal' is the rules' own example for the type: "'Loyal' is a
+  // particularly important Trait, as it reflects the grog's attachment to the
+  // covenant" (Core Rules.md:1075) — the same passage that says a grog's traits
+  // matter more than a magus's, which is why leaving the phase out was backwards.
+  personalityTrait: 'Loyal',
   age: '25',
 };
 

@@ -4569,6 +4569,32 @@ Source per phase, all in `Ars Magica - Definitive Edition (Core Rules).md`:
 | `aging` | over 35 an aging roll per year before play; apparent age and Characteristic points are what it costs; Aging Points drop a Characteristic once they exceed it | `:2232`, `:16565`, `:16577`, `:16579` |
 | `review` | **no rules claim** — the review step is this application's own, so its line describes the flow and nothing else | — |
 
+#### A grog's Personality Traits (#33)
+
+`rules/core/character_types.json` gave every profile the `personality_reputations`
+phase **except `grog`**, so a grog built in the guided wizard could never record
+Personality Traits. The editor always offered the tab, so the gap was in the wizard
+alone — and it was exactly backwards, because the rules single out that type as the one
+where the traits carry mechanical weight:
+
+> "Personality Traits are a short description of important features of your character's
+> personality. For major characters, such as magi and companions, they are normally
+> nothing more than an aide memoire … **For grogs, they are more significant.** As grogs
+> are often shared between players, or at least played rarely, the numbers attached to
+> Personality Traits can be used as a concrete guide to playing the character. …
+> 'Loyal' is a particularly important Trait, as it reflects the grog's attachment to the
+> covenant, while 'Brave' is just as important for warrior grogs. A third Trait should
+> be something distinctive about that grog."
+>
+> — Ars Magica - Definitive Edition (Core Rules).md:1073-1075
+
+The character-sheet listing at `:1165` names Personality Traits unconditionally as
+well. No passage restricts them by character type, so the phase belongs to every
+profile. Pinned by
+`every_shipped_profile_declares_the_personality_reputations_phase`
+(`crates/arm-rules/tests/core_type_conformance.rs`), which asserts the phase is
+declared per profile — structurally, never as a count.
+
 #### The phase list after the guided-creation review (Slice 2 — #1, #11)
 
 Two changes to the closed `CreationPhase` enum (`crates/arm-rules/src/types.rs`) and
