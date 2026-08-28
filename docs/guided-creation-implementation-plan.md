@@ -1376,9 +1376,14 @@ the per-slice gate is the real pacing mechanism.
     `break-inside: avoid; margin-bottom` rules at `:1042-1045` and `:1061-1065` to
     grid semantics (`break-inside` is meaningless in grid; the margin may be replaced
     by `gap`).
-    **`.character-details` is carried by THREE components, not one.** Verified:
-    `AgingStep.svelte:30`, `CharacterDetails.svelte:83` (the **editor's Details tab**)
-    and `PersonalityReputationsStep.svelte:9`. #20 was reported against the aging step
+    **`.character-details` is carried by FOUR mount sites, not one.** Re-verified
+    2026-08-28, after Slice 3 added the fourth: `AgingStep.svelte:20` (wizard aging
+    step), `CharacterDetails.svelte:68` (**editor Details tab**),
+    `PersonalityReputationsStep.svelte:10` (wizard personality step *and* the editor's
+    Personality tab, same component), and **`App.svelte:409`** (the editor's new
+    **Aging** tab, which wraps `AgingPanel` in its own
+    `section.panel.character-details` because the panel's `display: contents` children
+    need that context). #20 was reported against the aging step
     only, but the class is shared, so this change restyles all three. That is almost
     certainly *desirable* — order-stability is a win everywhere, and cross-cutting
     theme 1 argues for it — but it must be **deliberate and verified**, not a silent

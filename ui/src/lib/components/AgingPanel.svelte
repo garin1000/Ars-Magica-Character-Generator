@@ -27,7 +27,7 @@
      Rituals for others, even for non-magi" (Core Rules.md:10672).
 
      `display: contents` inside `.character-details` (see app.css) keeps each block
-     its own item in that multi-column flow. -->
+     its own item of that grid. -->
 <div class="aging-panel" data-testid="aging-panel">
   <AgingSchedulePanel />
   <LivingConditionsPicker />

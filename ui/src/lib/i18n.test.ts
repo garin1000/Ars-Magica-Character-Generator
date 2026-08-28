@@ -103,6 +103,33 @@ describe('German UI bundle', () => {
     expect(translate(en, 'totally-bogus-key-xyz')).toBe('totally-bogus-key-xyz');
   });
 
+  // guided-creation-review-2026-08 #22: `aging-total-formula` named exactly the
+  // book's three terms while the total it states is the engine's sum of all of them,
+  // so a character with an aging-roll Virtue or Flaw read a sentence that did not add
+  // up. The sibling `aging-total-parts` already carried the term, which is what makes
+  // it an oversight — so this pins BOTH halves: the argument reaches the sentence, and
+  // it is worded exactly as the sibling words it rather than diverging from it.
+  it.each(['en', 'de'])('names the Virtue/Flaw term in the aging total formula (%s)', (lang) => {
+    const bundle = buildBundle(lang as 'en' | 'de');
+    // Fluent wraps interpolated values in bidi isolation marks; strip them.
+    const clean = (s: string) => s.replace(/[⁦-⁩]/g, '');
+    const args = {
+      die: '+8',
+      age: '+4',
+      conditions: '0',
+      longevity: '0',
+      traits: '-1',
+      fixed: '+3',
+    };
+    const formula = clean(translate(bundle, 'aging-total-formula', args));
+    const parts = clean(translate(bundle, 'aging-total-parts', args));
+
+    // The sibling's own wording for the term, read out of the sibling itself.
+    const sibling = /-1\s*\(([^)]+)\)/.exec(parts);
+    expect(sibling).not.toBeNull();
+    expect(formula).toContain(`-1 (${sibling![1]})`);
+  });
+
   // One Rust enum value, two render sites: the editor radio
   // (`longevity-source-<v>`) and the Totals read-out (`derived-longevity-<v>`).
   // English renders both identically, so a divergence shows up only in German —

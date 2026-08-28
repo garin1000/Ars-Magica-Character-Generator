@@ -129,6 +129,7 @@ function setSchedule(years: AgingScheduleYear[]): void {
     age_modifier: 4,
     living_conditions_modifier: 0,
     longevity_modifier: 0,
+    trait_modifier: 0,
     longevity_clamp_active: false,
     fixed_total: 4,
   };

@@ -106,6 +106,70 @@ async function agingPoints() {
   return entries;
 }
 
+/**
+ * Geometry of one `.character-details` surface: how it is laid out, where each of
+ * its blocks sits, and whether any of them overflows the cell it was given.
+ *
+ * The blocks are not the section's DOM children. `AgingPanel` and `AgingRecordPanel`
+ * are `display: contents` (app.css), so their children are the grid's items — which
+ * is why this walks through any `contents` box rather than reading `.children` once.
+ */
+function detailsMetrics(selector) {
+  return browser.execute((sel) => {
+    const panel = document.querySelector(sel);
+    if (!panel) return null;
+    const blocks = [];
+    const collect = (element) => {
+      for (const child of element.children) {
+        if (getComputedStyle(child).display === 'contents') collect(child);
+        else blocks.push(child);
+      }
+    };
+    collect(panel);
+    const style = getComputedStyle(panel);
+    // Positions are measured RELATIVE TO THE PANEL, not the viewport: clicking a
+    // control scrolls the tab area, which moves every viewport rect by the same
+    // amount and would read as "everything shifted" when nothing was relaid out.
+    const origin = panel.getBoundingClientRect();
+    const log = panel.querySelector('[data-testid="aging-log-list"]');
+    const effect = panel.querySelector('[data-testid="aging-log-effect-0"]');
+    const logBlock = panel.querySelector('[data-testid="aging-log-block"]');
+    return {
+      display: style.display,
+      // Resolved track sizes, so both the count and each width are real px.
+      tracks: style.gridTemplateColumns.split(' ').map((track) => parseFloat(track)),
+      // The grid's own content box: `clientWidth` includes the `.panel` padding the
+      // tracks are laid out inside, so a full-width row is narrower than it.
+      contentWidth:
+        panel.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+      blocks: blocks.map((block) => ({
+        id: block.dataset.testid ?? block.className,
+        // Relative to `origin`, per the note above: these are compared across an
+        // interaction that can scroll the tab area, and an absolute `top` would then
+        // shift for every block at once and read as a whole-panel reflow when
+        // nothing moved relative to the panel — the very false positive this
+        // measurement exists to rule out.
+        top: Math.round(block.getBoundingClientRect().top - origin.top),
+        left: Math.round(block.getBoundingClientRect().left - origin.left),
+        width: Math.round(block.getBoundingClientRect().width),
+        // Wider content than cell = something is cut off with no way to reach it.
+        overflowX: block.scrollWidth - block.clientWidth,
+      })),
+      logWidth: logBlock ? Math.round(logBlock.getBoundingClientRect().width) : null,
+      logClientHeight: log ? log.clientHeight : null,
+      logScrollHeight: log ? log.scrollHeight : null,
+      logOverflowY: log ? getComputedStyle(log).overflowY : null,
+      // WebKitGTK's horizontal overlay scrollbar claims hit area without taking
+      // layout height, so nothing here may overflow sideways. Measured, not read off
+      // the computed style: CSS turns a `visible` overflow-x into `auto` whenever the
+      // other axis is not visible, so `overflow-y: auto` alone reports `auto` on both
+      // — the guarantee has to be that there is nothing to scroll.
+      logOverflowX: log ? log.scrollWidth - log.clientWidth : null,
+      effectWidth: effect ? Math.round(effect.getBoundingClientRect().width) : null,
+    };
+  }, selector);
+}
+
 /** Type a stress die and wait for the engine's answer to come back. */
 async function rollDie(die, expectedTotal) {
   await $(DIE_INPUT).setValue(String(die));
@@ -212,6 +276,91 @@ describe('the guided aging step', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'age +4 and a subtracted -3 make a standing total of +7',
     });
+
+    // AND THE SENTENCE ADDS UP. It used to name exactly the book's three terms while
+    // stating a total that also included the Virtue/Flaw aging-roll modifiers, so a
+    // character holding one read a contradiction (review #22). Every figure in the
+    // sentence is checked as arithmetic, not merely as present: the named terms, then
+    // the total they make.
+    const formula = await textOf(TOTAL_FORMULA);
+    expect(formula).toContain('Virtues and Flaws');
+    const figures = [...formula.matchAll(/[+-]?\d+/g)].map((match) => Number(match[0]));
+    expect(figures).toHaveLength(5);
+    const stated = figures.pop();
+    expect(figures.reduce((sum, term) => sum + term, 0)).toBe(stated);
+    expect(stated).toBe(7);
+  });
+
+  // guided-creation-review-2026-08 #20. The surface was a CSS multi-column flow, in
+  // which content FLOWS between columns: every height change moved the column break
+  // and blocks migrated to another column, so ticking one checkbox relaid the whole
+  // panel out and `AgingRecordPanel` sat permanently split across the break. Grid
+  // auto-placement is order-stable — each block owns its cell. Geometry is the
+  // subject, so only a real layout engine can check it.
+  it('keeps every block in place when the aging log grows, and clips nothing', async () => {
+    const before = await detailsMetrics('[data-testid="aging-step"]');
+    expect(before).not.toBe(null);
+
+    // 1. A grid, responding by available width rather than by a breakpoint list. The
+    //    window is the configured default of 1100px, where the 24rem (360px) floor
+    //    admits two columns.
+    expect(before.display).toBe('grid');
+    expect(before.tracks.length).toBeGreaterThanOrEqual(2);
+    for (const track of before.tracks) expect(track).toBeGreaterThanOrEqual(360);
+
+    // 2. Nothing is cut off: no block's content is wider than the cell it was given.
+    //    A too-tight `minmax` floor shows up here, which is what bounds the judgement
+    //    call behind it — the review's own complaint was a column too narrow to show
+    //    a field.
+    for (const block of before.blocks) {
+      expect(block.overflowX).toBeLessThanOrEqual(1);
+    }
+
+    // 3. The log has a full-width row of its own and a bounded scrollport, scrolling
+    //    vertically only.
+    expect(before.logWidth).toBeGreaterThanOrEqual(before.contentWidth - 2);
+    expect(before.logOverflowY).toBe('auto');
+    expect(before.logOverflowX).toBeLessThanOrEqual(1);
+
+    // 4. THE LOAD-BEARING ASSERTION. Ten rows is a real height change of the kind
+    //    that used to move blocks between columns — and past what the scrollport
+    //    shows, so the log is now at its ceiling.
+    for (let i = 0; i < 10; i += 1) await $('[data-testid="aging-log-add"]').click();
+    await $('[data-testid="aging-log-year-9"]').waitForExist({ timeout: STEP_TIMEOUT });
+    const grown = await detailsMetrics('[data-testid="aging-step"]');
+
+    // NOTHING MIGRATED: every block is in the same column it started in. This is the
+    // whole of #20 — under multi-column a height change moved blocks sideways.
+    expect(grown.blocks.map((b) => [b.id, b.left])).toEqual(
+      before.blocks.map((b) => [b.id, b.left]),
+    );
+    // And every block ABOVE the log is exactly where it was, to the pixel. Those
+    // below it move down once, by the row's growth, and only until the ceiling — a
+    // row height change, which is all grid allows.
+    const logRow = grown.blocks.findIndex((b) => b.id === 'aging-log-block');
+    expect(logRow).toBeGreaterThan(0);
+    expect(grown.blocks.slice(0, logRow)).toEqual(before.blocks.slice(0, logRow));
+
+    // 5. The log scrolls in place rather than pushing anything further: it is at its
+    //    bounded height, so six more rows move NOTHING at all.
+    expect(grown.logScrollHeight).toBeGreaterThan(grown.logClientHeight);
+    // Vertically, and only vertically: the rows wrap rather than scroll sideways,
+    // even once the vertical scrollbar has taken its width out of the row.
+    expect(grown.logOverflowX).toBeLessThanOrEqual(1);
+    for (let i = 0; i < 6; i += 1) await $('[data-testid="aging-log-add"]').click();
+    await $('[data-testid="aging-log-year-15"]').waitForExist({ timeout: STEP_TIMEOUT });
+    const after = await detailsMetrics('[data-testid="aging-step"]');
+    expect(after.logClientHeight).toBe(grown.logClientHeight);
+    expect(after.blocks).toEqual(grown.blocks);
+
+    // The effect field is wide enough for its own placeholder ("Describe the aging
+    // roll's effect"), which the narrow column used to truncate to "…roll's e…".
+    expect(after.effectWidth).toBeGreaterThan(300);
+
+    // Put the log back as it was: every added row is blank and identical, so
+    // removing the first one sixteen times empties it again.
+    for (let i = 0; i < 16; i += 1) await $('[data-testid="aging-log-remove-0"]').click();
+    await $(LOG_EMPTY).waitForExist({ timeout: STEP_TIMEOUT });
   });
 
   it('takes a Longevity Ritual bonus a grog did not make himself', async () => {
@@ -407,5 +556,39 @@ describe('the guided aging step', () => {
     });
     // The suggestion stays magus-only, exactly as it does on the guided step.
     expect(await $(LONGEVITY_HINT).isExisting()).toBe(false);
+  });
+
+  // `.character-details` is carried by FOUR mount sites: the wizard's aging step
+  // (checked above), the editor's Aging tab, the editor's Details tab, and the
+  // Personality & Reputations component that is both the wizard's step and the
+  // editor's tab. #20 was reported against the aging step alone, but the class is
+  // shared, so Slice 6 relays out all four — which is a win everywhere, and is
+  // therefore verified everywhere rather than assumed.
+  it('lays out every character-details surface as the same grid, clipping nothing', async () => {
+    // Collected rather than asserted per tab, so a failure names the surface and the
+    // block instead of just the first number that went wrong.
+    const problems = [];
+    for (const tab of ['tab-aging', 'tab-details', 'tab-personality_reputations']) {
+      await $(`[data-testid="${tab}"]`).click();
+      await $('.character-details').waitForExist({ timeout: STEP_TIMEOUT });
+      const m = await detailsMetrics('.character-details');
+      if (m == null) {
+        problems.push(`${tab}: no .character-details surface`);
+        continue;
+      }
+      if (m.display !== 'grid') problems.push(`${tab}: display is ${m.display}, not grid`);
+      // No breakpoint list: `auto-fit` against the 24rem (360px) floor decides the
+      // column count, so no track may come out under the floor.
+      for (const track of m.tracks) {
+        if (track < 360) problems.push(`${tab}: a ${track}px track is under the floor`);
+      }
+      // Nothing overlapping, orphaned or wider than the cell it was given.
+      for (const block of m.blocks) {
+        if (block.overflowX > 1) {
+          problems.push(`${tab}: ${block.id} overflows its cell by ${block.overflowX}px`);
+        }
+      }
+    }
+    expect(problems).toEqual([]);
   });
 });

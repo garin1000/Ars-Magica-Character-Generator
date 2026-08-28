@@ -276,6 +276,14 @@ pub struct AgingReadout {
     /// The Longevity Ritual modifier the total SUBTRACTS (`:16569`); 0 with no
     /// ritual, or with one whose bonus the player has not entered.
     pub longevity_modifier: i32,
+    /// Σ of the Virtue/Flaw aging-ROLL modifiers — ADDED with their stored sign
+    /// (Faerie Blood's -1, `:3801`). The book's three-line formula does not name
+    /// this term, but [`AgingReadout::fixed_total`] has always included it, so the
+    /// read-out cannot state its own arithmetic without it: a character with an
+    /// aging-roll Flaw read "+4 (age) 0 (living conditions) 0 (Longevity Ritual) =
+    /// stress die +3". Surfaced rather than derived in the UI, so the sentence's
+    /// terms and its total come from the one engine computation.
+    pub trait_modifier: i32,
     /// Whether the `:16575` clamp stands over this character — he holds a
     /// Longevity Ritual and has not yet reached the clamp's age.
     ///
@@ -338,6 +346,7 @@ fn aging_readout(entity: &Entity, ruleset: &Ruleset) -> Option<AgingReadout> {
         age_modifier: terms.age_modifier,
         living_conditions_modifier: terms.living_conditions.total,
         longevity_modifier: terms.longevity_bonus,
+        trait_modifier: terms.trait_modifier,
         longevity_clamp_active: rules
             .longevity_clamp
             .as_ref()

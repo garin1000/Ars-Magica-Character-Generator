@@ -80,10 +80,15 @@
       </div>
     {/if}
 
-    <!-- Warping & Twilight cluster: kept consecutive in source order so the
-         .character-details multi-column flow lands them together. Source order
-         governs column flow; CSS `order` has no effect on multi-column children,
-         so adjacency is achieved by ordering the DOM, not by styling. -->
+    <!-- Warping & Twilight cluster: kept consecutive in source order, which is
+         still the right ordering under `.character-details`'s grid (app.css) —
+         auto-placement fills cells in source order, so consecutive blocks stay
+         adjacent in the reading order and land in neighbouring cells. What has
+         changed is that they no longer necessarily share a column, and that grid
+         items DO honour CSS `order` where multi-column children did not. Adjacency
+         is still achieved by ordering the DOM rather than by `order`, because DOM
+         order is also the order a screen reader and the keyboard follow, and the
+         two must not disagree. -->
     {#if showWarping}
       <div class="detail-field">
         <span class="detail-label">{store.t('warping-label')}</span>

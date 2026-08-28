@@ -401,7 +401,7 @@
                is what the wizard's aging step mounts too. The step adds the age above
                it because no other guided surface offers one under flat funding; here
                the age stays on Details, beside the identity it belongs with. The
-               `.character-details` wrapper is the multi-column flow the panel's
+               `.character-details` wrapper is the grid the panel's
                `display: contents` children are laid out by (app.css), the same one
                the step provides. -->
           <div class="vf-tab">

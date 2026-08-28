@@ -20,15 +20,25 @@
   //
   // Both modifiers are SUBTRACTED, so a stored +7 ritual bonus lowers the total by
   // 7 — the formula shows each term as it acts on the total, which is what the
-  // player adds the die to. `fixed_total` is the engine's own sum of all of them
-  // (including the Virtue/Flaw aging-roll modifiers the book's three lines do not
-  // name), so nothing is re-derived here.
+  // player adds the die to. `fixed_total` is the engine's own sum of all of them,
+  // so nothing is re-derived here.
+  //
+  // FOUR terms, not the book's three. The Virtue/Flaw aging-roll modifiers are a
+  // separate quantity, ADDED with their stored sign — "You are resistant to aging,
+  // and get -1 to all aging rolls" (Faerie Blood).
+  // Source: Ars Magica - Definitive Edition (Core Rules).md:3801
+  // — and `fixed_total` has always counted them. Naming only the book's three left
+  // a read-out that contradicted itself for any character holding such a Virtue or
+  // Flaw ("+4 (age) 0 (living conditions) 0 (Longevity Ritual) = stress die +3"),
+  // so the term is named too, shown as 0 like the others when it is zero. The
+  // sibling `aging-total-parts` in AgingRollCalculator has always carried it.
   const formula = $derived(
     aging
       ? {
           age: formatSigned(aging.age_modifier),
           conditions: formatSigned(-aging.living_conditions_modifier),
           longevity: formatSigned(-aging.longevity_modifier),
+          traits: formatSigned(aging.trait_modifier),
           fixed: formatSigned(aging.fixed_total),
         }
       : null,
