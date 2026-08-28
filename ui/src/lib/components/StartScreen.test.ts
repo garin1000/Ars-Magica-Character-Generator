@@ -149,6 +149,26 @@ describe('StartScreen', () => {
     expect(text).toBe('Open');
   });
 
+  // Slice 5 (#31): the second way into the wizard — an existing file rather than a
+  // new character. It sits beside Open because it IS an open, differing only in
+  // which screen the loaded character lands on.
+  it('offers opening an existing character straight into the guided flow', () => {
+    const { open, text } = element(html(), 'start-open-wizard');
+    expect(open).toMatch(/<button/i);
+    expect(text).toBe(store.t('action-open-into-wizard'));
+    expect(text).not.toBe('action-open-into-wizard');
+  });
+
+  it('explains the guided open in real prose, not an echoed key', () => {
+    expect(html()).toContain(store.t('start-open-wizard-hint'));
+    expect(store.t('start-open-wizard-hint')).not.toBe('start-open-wizard-hint');
+  });
+
+  it('disables the guided open with every other action while the ruleset is loading', () => {
+    store.loading = true;
+    expect(element(html(), 'start-open-wizard').open).toMatch(/disabled/);
+  });
+
   // The wizard is entered per character type, exactly like direct creation: the
   // type is fixed at creation, so it must be chosen before the flow starts.
   it('offers one guided-wizard button per type profile in the ruleset', () => {

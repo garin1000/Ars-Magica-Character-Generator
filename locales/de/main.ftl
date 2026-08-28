@@ -26,6 +26,10 @@ type-unknown = Unbekannter Charaktertyp
 # Charaktertyp wird einmalig gewählt, indem ein Charakter dieses Typs angelegt wird.
 start-title = Charakter anlegen oder öffnen
 start-open-title = Vorhandenen Charakter öffnen
+# Der zweite Weg über eine Datei: dasselbe Öffnen, das aber in der geführten
+# Erstellung landet statt im Editor.
+action-open-into-wizard = In geführter Erstellung öffnen
+start-open-wizard-hint = Ein Charakter, der mitten in der geführten Erstellung gespeichert wurde, wird bei dem Schritt fortgesetzt, auf dem er verlassen wurde. Ein im Editor angelegter Charakter wird mit allen erreichbaren Schritten geöffnet.
 start-create-title = Neuen Charakter anlegen
 start-create-hint = Der Charaktertyp wird hier einmalig gewählt — er lässt sich später nicht mehr ändern.
 start-wizard-title = Geführte Erstellung
@@ -745,6 +749,10 @@ action-open = Öffnen
 action-save = Speichern
 action-save-as = Speichern unter
 action-export = Exportieren
+# Übernimmt den bereits angezeigten Charakter in die geführte Erstellung und setzt
+# beim weitesten Schritt fort, den seine Datei festgehalten hat. Wird nur dort
+# angeboten, wo diese Erstellung durchlaufen werden kann.
+action-continue-in-wizard = In geführter Erstellung fortsetzen
 
 # Bestätigung beim Schließen oder Beenden der Anwendung mit ungespeicherten Änderungen.
 close-unsaved-title = Ungespeicherte Änderungen

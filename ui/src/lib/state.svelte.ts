@@ -310,6 +310,12 @@ class AppStore {
     ruleset: () => this.ruleset,
     entityTypeId: () => this.entity.type_id,
     result: () => this.result,
+    // The one write the rail makes to the document (#31), and the reason a Next
+    // dirties it. A slug, never the index it was resolved from: `creation_phases`
+    // is ruleset data, so a position means nothing across builds.
+    recordFurthestPhase: (phase) => {
+      this.entity.wizard_furthest_phase = phase;
+    },
   });
 
   /** @see WizardNavigation.step */
@@ -1838,10 +1844,14 @@ class AppStore {
    * and aging drafts, view) that belong to other modules or to `AppStore`
    * itself, so it borrows only the busy flag and the discard prompt from
    * `#fileOps` rather than folding those resets into that module.
+   *
+   * Returns whether a document was actually loaded, so {@link openIntoWizard} can
+   * tell a cancelled dialog (or a failed read) from a successful open instead of
+   * entering the wizard on the character that was already there.
    */
-  async open(): Promise<void> {
-    if (this.#fileOps.busy || this.discardPromptOpen) return;
-    if (this.dirty && !(await this.#fileOps.confirmDiscard())) return;
+  async open(): Promise<boolean> {
+    if (this.#fileOps.busy || this.discardPromptOpen) return false;
+    if (this.dirty && !(await this.#fileOps.confirmDiscard())) return false;
     this.#fileOps.busy = true;
     this.error = null;
     try {
@@ -1866,12 +1876,14 @@ class AppStore {
         this.view = 'editor';
         this.#resetWizardNav();
         await this.revalidate();
+        return true;
       }
     } catch (e) {
       this.error = e as AppError;
     } finally {
       this.#fileOps.busy = false;
     }
+    return false;
   }
 
   /**
@@ -1957,6 +1969,47 @@ class AppStore {
     await this.revalidate();
   }
 
+  /**
+   * Whether the character in hand can be walked through the guided flow at all
+   * (#31): the loaded ruleset must declare a profile for its type, because the
+   * profile's `creation_phases` ARE the wizard's steps. A save from another
+   * ruleset may name a type this build knows nothing about, and a wizard with no
+   * rail is not a screen to enter — so the action is not offered rather than
+   * offered and then broken.
+   */
+  get canEnterWizard(): boolean {
+    return this.ruleset?.ruleset.type_profiles[this.entity.type_id] !== undefined;
+  }
+
+  /**
+   * Walk the character already in hand through the guided flow, resuming from the
+   * furthest phase its document recorded — the second entry point (#31), and the
+   * one that skips instantiation: nothing about the character changes, only which
+   * screen it is edited on.
+   *
+   * A no-op when {@link canEnterWizard} is false, which is what keeps a save from
+   * an unknown type out of a wizard with no steps.
+   */
+  enterWizard(): void {
+    if (!this.canEnterWizard) return;
+    this.view = 'wizard';
+    this.#wizardNav.restore(this.entity.wizard_furthest_phase);
+  }
+
+  /**
+   * Open a document from a file and land it in the guided flow rather than the
+   * editor — {@link open} followed by {@link enterWizard}.
+   *
+   * Composed rather than a second load path, so the discard prompt, the draft
+   * resets and the immediate revalidation all stay in one place. A cancelled
+   * dialog loads nothing and therefore enters nothing, and a file naming a type
+   * this ruleset has no profile for stays in the editor `open` left it in.
+   */
+  async openIntoWizard(): Promise<void> {
+    if (!(await this.open())) return;
+    this.enterWizard();
+  }
+
   /** Advance one step, unless the current phase holds an error. */
   wizardNext(): void {
     this.#wizardNav.next();
@@ -1992,6 +2045,15 @@ class AppStore {
   finishWizard(): void {
     if (!this.wizardCanFinish) return;
     this.view = 'editor';
+    // The guided run is over, so the record of how far it got stops being true and
+    // goes with it (#31). Leaving it would gate a *completed* character on reopen:
+    // it would take the restored branch, and if the player had since introduced an
+    // error in the editor the clamp would lock them out of the steps past the break
+    // — exactly the steps they would be reopening the wizard to fix. The ungated
+    // branch is for a character that is not mid-run, and a finished one is not.
+    // Nothing is lost: the clamp only stops skipping ahead, and `wizardCanFinish`
+    // guarantees this character already reached every step with no error anywhere.
+    delete this.entity.wizard_furthest_phase;
     this.#resetWizardNav();
   }
 

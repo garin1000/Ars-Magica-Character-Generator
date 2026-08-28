@@ -152,9 +152,10 @@ phase of that type's flow filled in, on the shipped binary.
 ### What works today
 
 - **Character creation.** The app opens on a startup screen offering three ways in:
-  open an existing character, create a new one directly, or walk one through the
-  guided wizard — the latter two with one button per character type the ruleset
-  declares (grog, companion, mythic companion, magus). The type is chosen once, at
+  open an existing character — into the editor, or straight into the guided flow —
+  create a new one directly, or walk a new one through the guided wizard; the latter
+  two with one button per character type the ruleset declares (grog, companion,
+  mythic companion, magus). The type is chosen once, at
   creation, and is shown read-only in the editor afterwards. Characters are then
   built with virtues/flaws, point-buy Characteristics, whole bought Ability
   scores, and — for magi — whole bought Hermetic Art scores, with Abilities and
@@ -246,6 +247,15 @@ phase of that type's flow filled in, on the shipped binary.
   and hands the finished character to the ordinary editor. Which mode
   enforces the gate is still the validation-mode control: Advisory and Silent stop
   it gating at all.
+
+  An **existing** character can be walked through it too, not only a brand-new one:
+  from the startup screen a file can be opened straight into the flow, and the
+  editor's toolbar offers the same for the character already on screen. A file saved
+  part-way through resumes on the step it was left on, still refusing to jump past
+  it; a character built in the editor opens with every step reachable and nothing
+  gating, since it never passed those gates in the first place. Only a Next onto a
+  step never reached before records progress, so browsing the rail never marks the
+  document as changed.
 
   Each step opens with a few sentences on what is decided there and what the rules
   say about it — with the numbers in them read from the loaded rules, so the copy

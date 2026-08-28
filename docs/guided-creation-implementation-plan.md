@@ -1256,6 +1256,19 @@ the per-slice gate is the real pacing mechanism.
   data and which S2 just changed twice. A slug survives both and matches the project
   rule that saves store choices, not resolved values, with slug-style non-positional
   IDs.
+- **"Ungated" needs TWO mechanisms, not one** — easy to half-implement. `goTo` refuses
+  anything past `furthest` (`if (step < 0 || step > this.furthest) return`,
+  `wizard-navigation.svelte.ts:136`) **and separately** clamps at
+  `firstBlockedPhaseIndex` (`:141`). So the absent-slug branch must both
+  (a) set `furthest` to the last declared phase index, or every step stays unreachable
+  with `furthest` at 0, **and** (b) bypass the blocking clamp, or a manually-built
+  character with any error becomes unable to reach the steps past it. Implementing only
+  (a) yields a rail that looks reachable and still refuses to move; only (b) yields the
+  reverse. Test both directions separately.
+- **Anchor drift (verified 2026-08-28)** Slices 2-4 moved these: `startWizard` is
+  `state.svelte.ts:1953-1956` (not `:1924-1929`); `step`/`furthest` are
+  `wizard-navigation.svelte.ts:41-45`; `next()` is `:113-116`; `goTo`'s guard `:136` and
+  its clamp `:141`. Re-verify before citing any of them.
 - **Files to touch**
   - `ui/src/lib/wizard-navigation.svelte.ts:38-45` (`step`, `furthest`), `:112-117`
     (`next()` — the **only** place `furthest` rises; `back()` and `goTo()` never touch

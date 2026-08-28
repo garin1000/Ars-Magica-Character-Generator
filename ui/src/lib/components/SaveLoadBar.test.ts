@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { Entity, LocalizedRuleset } from '../types';
+import type { Entity, EntityTypeProfile, LocalizedRuleset } from '../types';
 
 // The toolbar reads the shared store singleton (busy flag, error banner) and the
 // Fluent bundle, and every button delegates to a store action that goes over the
@@ -56,6 +56,18 @@ function resetEntity(): void {
     personality_traits: [],
     reputations: [],
   };
+}
+
+/** Give the installed ruleset a profile for the current character's type. */
+function installProfileForCurrentType(): void {
+  const profile: EntityTypeProfile = {
+    id: store.entity.type_id,
+    budget: { virtue_points: 10, flaw_points: 10 },
+    permitted_categories: [],
+    forbidden_categories: [],
+    creation_phases: ['concept'],
+  };
+  store.ruleset!.ruleset.type_profiles[store.entity.type_id] = profile;
 }
 
 /** Render the toolbar to an HTML string (node env, no DOM). */
@@ -135,5 +147,43 @@ describe('SaveLoadBar Export action', () => {
 
     expect(ipc.exportMarkdown).toHaveBeenCalledTimes(1);
     expect(ipc.saveEntity).not.toHaveBeenCalled();
+  });
+});
+
+// Slice 5 (#31): the character on screen can be walked through the guided flow,
+// not only a brand-new one. The action is OFFERED conditionally — a save from
+// another ruleset may name a type this build has no profile for, and a wizard with
+// no rail is not a screen to enter.
+describe('SaveLoadBar guided-creation action', () => {
+  beforeEach(() => {
+    store.view = 'editor';
+  });
+
+  it('offers continuing the loaded character in the guided flow', () => {
+    installProfileForCurrentType();
+    const { open, text } = element(html(), 'wizard-continue-button');
+    expect(open).toMatch(/<button/i);
+    expect(text).toBe(store.t('action-continue-in-wizard'));
+    expect(text).not.toBe('action-continue-in-wizard');
+  });
+
+  it('localizes the label to German', () => {
+    installProfileForCurrentType();
+    store.lang = 'de';
+    expect(element(html(), 'wizard-continue-button').text).toBe(
+      store.t('action-continue-in-wizard'),
+    );
+    store.lang = 'en';
+  });
+
+  it('is not offered for a type_id the loaded ruleset has no profile for', () => {
+    expect(store.ruleset!.ruleset.type_profiles[store.entity.type_id]).toBeUndefined();
+    expect(html()).not.toContain('data-testid="wizard-continue-button"');
+  });
+
+  it('is not offered while the wizard is already on screen', () => {
+    installProfileForCurrentType();
+    store.view = 'wizard';
+    expect(html()).not.toContain('data-testid="wizard-continue-button"');
   });
 });

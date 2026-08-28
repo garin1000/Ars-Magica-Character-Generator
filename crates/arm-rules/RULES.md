@@ -3425,6 +3425,29 @@ every future phase rename. The slug is therefore kept verbatim and resolved
 unresolvable is treated exactly like absent. `None` writes no key at all, so a
 character built in the editor round-trips byte-identically.
 
+**Who writes it, and what "leniently" means (Slice 5).** The frontend owns both ends;
+the engine still never looks at it.
+
+- *Written* by the wizard's `next()` only — `WizardNavigation.next` in
+  `ui/src/lib/wizard-navigation.svelte.ts`, through the host callback
+  `recordFurthestPhase` so the entity stays `AppStore`'s to mutate. `back()` and
+  `goTo()` leave it alone, which is what keeps rail browsing off the unsaved-changes
+  guard while a deliberate Next marks the document changed (even on a step left
+  empty — a step can be legally empty, since the flow gates on errors only).
+- *Read* by `WizardNavigation.restore`, called from `AppStore.enterWizard`. Two
+  branches: a slug that names a step of this rail restores as both the current and
+  the furthest step, so the run resumes clamped exactly as it was left; a slug that
+  does not, or an absent one, opens the whole rail and sets `ungated`, which lifts
+  the blocking clamp on forward jumps as well as the Next/Finish gates. **Both halves
+  are required** — the ceiling alone leaves every step refused by `goTo`'s own
+  `step > furthest` guard, and the flag alone leaves them all locked at step 0. The
+  ungated branch is the editor-built (or migrated) character: it never passed these
+  gates, so holding it to them would lock the very steps it must reach to be fixed.
+  Findings are still displayed throughout; only enforcement is lifted.
+- Resolved against the wizard's rail (`wizardPhases` = the profile's
+  `creation_phases` plus the wizard's own terminal `review`) rather than
+  `creation_phases` alone, so a run that reached Review round-trips too.
+
 The unspent-block warning and the 75-point pool read `:2378` the same way, which is
 a requirement rather than a coincidence: both key on
 `childhood.native_language_ability` at the chosen instance, scoring above 0
