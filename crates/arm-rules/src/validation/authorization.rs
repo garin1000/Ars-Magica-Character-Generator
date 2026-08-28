@@ -126,13 +126,19 @@ pub(crate) fn validate_academic_language(
         .iter()
         .any(|entry| entry.ability == requirement.ability && entry.score >= requirement.min_score);
     if !satisfied {
+        let mut args = args([
+            ("ability", requirement.ability.to_string()),
+            ("min", requirement.min_score.to_string()),
+        ]);
+        // "For most characters, Latin 3 is required" (`:7151`): the check stays any
+        // instance of the dead language, but the finding names the rules' exemplar.
+        if let Some(exemplar) = &requirement.exemplar {
+            args.insert("exemplar".to_string(), exemplar.clone());
+        }
         issues.push(ValidationIssue::warning(
             ValidationIssue::CODE_ACADEMIC_ABILITY_WITHOUT_SCHOLARLY_LANGUAGE,
             CreationPhase::Abilities,
-            args([
-                ("ability", requirement.ability.to_string()),
-                ("min", requirement.min_score.to_string()),
-            ]),
+            args,
             None,
         ));
     }

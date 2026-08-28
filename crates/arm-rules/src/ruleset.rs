@@ -582,6 +582,13 @@ struct AbilitiesFile {
 pub struct ScholarlyLanguageRequirement {
     /// The ability a scholarly language is an instance of.
     pub ability: Id,
+    /// One example the rules themselves name — "For most characters, Latin 3 is
+    /// required" (`:7151`) — as a language-neutral slug, so a UI can say which
+    /// language the passage means beside the wider check the engine enforces.
+    ///
+    /// A **label key, not a `ref`**: see [`crate::AbilityRequirement::exemplar`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exemplar: Option<String>,
     /// The score it is normally expected to reach.
     pub min_score: u8,
 }

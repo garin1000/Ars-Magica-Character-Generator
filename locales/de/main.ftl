@@ -782,6 +782,11 @@ app-document-unsaved-dirty = *Ungespeichertes Dokument
 
 # Hinweis für einen nicht ausgefüllten Parameter-Platzhalter im Namen, z. B. „Begabung in (Fertigkeit)“.
 param-hint = ({ $label })
+# Eine Forderung, die die Engine weiter prüft, als die Regeln sie formulieren, gezeigt
+# mit dem einen Beispiel, das die Regeln selbst nennen: „Tote Sprache (z. B. Latein) 1“.
+# Das Beispiel stammt aus den Regeldaten, nie aus dieser Datei — nur die verbindende
+# Formulierung ist UI-Text.
+requirement-exemplar = { $ability } (z. B. { $exemplar })
 # Lokalisierte Parameter-Bezeichnungen, je Parameter-Schlüssel der Engine. Dienen auch
 # als typbezogener Platzhalter/Hinweis für ein leeres Parameter-Eingabefeld.
 param-label-ability = Fertigkeit
@@ -796,6 +801,12 @@ param-label-mystery_cult = Mysterienkult
 param-label-craft = Handwerk
 param-label-profession = Beruf
 param-label-form = Form
+# Für die Domäne `item`: noch kein ausgelieferter Katalogeintrag deklariert eine, aber
+# die Domäne gehört zum geschlossenen Enum der Engine, und ihr Auswahlfeld benennt sich
+# hier, statt auf den rohen Schlüssel zurückzufallen. Begriff aus
+# rules/source/de/translation-tables/sphären-mächte.md:199 („Awakened Item“ →
+# „Erwachter Gegenstand“).
+param-label-item = Gegenstand
 param-label-realm = Sphäre
 param-label-land = Land
 param-label-being = Wesen

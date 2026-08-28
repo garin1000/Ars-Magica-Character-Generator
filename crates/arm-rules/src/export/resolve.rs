@@ -174,7 +174,29 @@ impl<'a> Doc<'a> {
     /// tracking. See [`Doc::parameterized_value`] for the sibling case, a
     /// parameter *value* that may not be a catalogue id at all.
     pub(super) fn parameterized_name(&self, id: &Id, values: &BTreeMap<String, String>) -> String {
+        if let Some(unfilled) = self.unfilled_name(id, values) {
+            return unfilled;
+        }
         self.fill_template(&self.name(id), values)
+    }
+
+    /// The entry's own [`I18nEntry::name_unfilled`], when it declares one and **no**
+    /// placeholder in its template is filled.
+    ///
+    /// The sheet honours the same opt-out the in-app label path does
+    /// (`displayName` in `ui/src/lib/derive.ts`), so an exported Ability and the one on
+    /// screen are worded identically. Without this the sheet alone would print the
+    /// doubled *"(Language) (Dead Language)"* the field exists to remove. Returns
+    /// `None` for every entry that declares no unfilled form — which is almost all of
+    /// them, and they keep the slot hint, since "Puissant (Ability)" is right and a
+    /// bare "Puissant" would not be.
+    fn unfilled_name(&self, id: &Id, values: &BTreeMap<String, String>) -> Option<String> {
+        let unfilled = self.ruleset.entry(id)?.name_unfilled.as_deref()?;
+        let keys = self.placeholder_keys(id);
+        if keys.is_empty() || keys.iter().any(|key| values.contains_key(key)) {
+            return None;
+        }
+        Some(escape_cell(unfilled).to_string())
     }
 
     /// A parameter value's own localized template, with its chosen (sibling)
@@ -183,6 +205,9 @@ impl<'a> Doc<'a> {
     /// resolution goes through the tolerant [`Doc::value_template`] rather than
     /// [`Doc::name`].
     pub(super) fn parameterized_value(&self, id: &Id, values: &BTreeMap<String, String>) -> String {
+        if let Some(unfilled) = self.unfilled_name(id, values) {
+            return unfilled;
+        }
         self.fill_template(&self.value_template(id), values)
     }
 

@@ -3222,8 +3222,21 @@ impl RulesetRef {
 /// CLAUDE.md keeps rules text out of the UI-string layer and vice versa.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct I18nEntry {
-    /// Human-readable display name.
+    /// Human-readable display name. May be a template carrying `{param}` tokens
+    /// (`"{area} Lore"`), which the caller fills with the chosen instance or with a
+    /// localized hint like `"(Area)"`.
     pub name: String,
+    /// The name to show when the template's instance is **unfilled**, for the rare
+    /// entry whose literal already carries the qualifier the generic hint supplies.
+    ///
+    /// Opt-in and normally absent: for the great majority of templates the hint is
+    /// exactly right ("Puissant (Ability)", "Ways Of The (Land)"), and suppressing it
+    /// would leave a dangling head word. Only a name holding **both** a `{token}` and
+    /// a parenthetical literal doubles — `"{language} (Dead Language)"` plus the
+    /// `"(Language)"` hint reads *"(Language) (Dead Language)"* — and those entries
+    /// name their unfilled form here instead (`"Dead Language"`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name_unfilled: Option<String>,
     /// Optional short summary.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub summary: Option<String>,
@@ -4173,6 +4186,35 @@ mod tests {
         let entry: I18nEntry = serde_json::from_str(json).unwrap();
         assert_eq!(entry.name, "Gentle Gift");
         assert_eq!(entry.summary, None);
+    }
+
+    /// `name_unfilled` is **opt-in**: the overwhelming majority of templated names
+    /// read correctly with the generic param hint ("Puissant (Ability)"), so an entry
+    /// that omits the field must keep parsing exactly as before.
+    #[test]
+    fn i18n_entry_without_name_unfilled_still_parses() {
+        let json = r#"{ "name": "Puissant {ability}" }"#;
+        let entry: I18nEntry = serde_json::from_str(json).unwrap();
+        assert_eq!(entry.name, "Puissant {ability}");
+        assert_eq!(entry.name_unfilled, None);
+        // Absent stays absent on the way out, so no locale file gains a null field.
+        assert_eq!(
+            serde_json::to_string(&entry).unwrap(),
+            r#"{"name":"Puissant {ability}"}"#
+        );
+    }
+
+    /// The two entries that need it — a `{token}` plus a parenthetical literal, the
+    /// one shape whose hint substitution doubles — carry an explicit unfilled form.
+    #[test]
+    fn i18n_entry_name_unfilled_roundtrips() {
+        let json = r#"{ "name": "{language} (Dead Language)", "name_unfilled": "Dead Language" }"#;
+        let entry: I18nEntry = serde_json::from_str(json).unwrap();
+        assert_eq!(entry.name, "{language} (Dead Language)");
+        assert_eq!(entry.name_unfilled.as_deref(), Some("Dead Language"));
+        let back: I18nEntry =
+            serde_json::from_str(&serde_json::to_string(&entry).unwrap()).unwrap();
+        assert_eq!(back, entry);
     }
 
     #[test]

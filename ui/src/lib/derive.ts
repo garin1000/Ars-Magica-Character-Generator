@@ -233,6 +233,16 @@ export function filterEquipment(
  * A present value is a raw ref slug (e.g. `characteristic.per`); pass
  * `resolveValue` to turn it into a display label ("Perception") so the result
  * reads "Great Perception" rather than "Great characteristic.per".
+ *
+ * An entry may **opt out** of the hint for the wholly-unfilled case by declaring
+ * `name_unfilled` (see `I18nEntry`). That is for the one template shape whose hint
+ * doubles: a `{token}` next to a parenthetical literal, where "{language} (Dead
+ * Language)" plus the "(Language)" hint reads "(Language) (Dead Language)". It is
+ * deliberately opt-in per entry and NOT blanket suppression of the hint — the
+ * ~36 templates whose token is the head of the name or sits mid-phrase would
+ * degrade to "Puissant", "Affinity with" or "Ways Of The" (and to dangling
+ * inflected adjectives in German), so they keep the hint. See the guard test
+ * `an unfilled template without name_unfilled still renders the param hint`.
  */
 export function displayName(
   localized: LocalizedRuleset,
@@ -241,11 +251,20 @@ export function displayName(
   placeholderLabel?: (key: string) => string,
   resolveValue?: (key: string, value: string) => string,
 ): string {
-  const raw = localized.i18n[ref]?.name ?? ref;
+  const entry = localized.i18n[ref];
+  const raw = entry?.name ?? ref;
+  const filled = (key: string) => {
+    const value = params?.[key];
+    return value !== undefined && value !== '';
+  };
+  const tokens = [...raw.matchAll(/\{(\w+)\}/g)].map((m) => m[1]);
+  if (entry?.name_unfilled && tokens.length > 0 && !tokens.some(filled)) {
+    return entry.name_unfilled;
+  }
   return raw.replace(/\{(\w+)\}/g, (_match, key: string) => {
     const value = params?.[key];
-    if (value !== undefined && value !== '') {
-      return resolveValue ? resolveValue(key, value) : value;
+    if (filled(key)) {
+      return resolveValue ? resolveValue(key, value!) : value!;
     }
     return placeholderLabel?.(key) ?? `{${key}}`;
   });
@@ -648,6 +667,59 @@ export function abilityDisplayName(
 }
 
 /**
+ * The i18n key prefix a requirement's `exemplar` slug resolves through.
+ *
+ * The mechanics files may carry no translatable string, so `rules/core/` states only
+ * the language-neutral slug (`"exemplar": "latin"`) and the text lives in
+ * `rules/i18n/<lang>/` under `exemplar.<slug>`. Prefixed rather than used bare so the
+ * slug can never collide with — or be mistaken for — a catalogue id.
+ */
+const EXEMPLAR_I18N_PREFIX = 'exemplar.';
+
+/**
+ * The localized name of a requirement's exemplar, or `null` when there is none.
+ *
+ * `null` for an absent slug **and** for one the i18n layer does not know: an
+ * unresolvable exemplar is dropped rather than printed, because rendering the slug
+ * would put a raw id on screen. Callers therefore fall back to the plain requirement.
+ */
+export function exemplarLabel(
+  localized: LocalizedRuleset,
+  exemplar: string | null | undefined,
+): string | null {
+  if (!exemplar) return null;
+  return localized.i18n[`${EXEMPLAR_I18N_PREFIX}${exemplar}`]?.name ?? null;
+}
+
+/**
+ * An Ability requirement's label, naming the one example the rules themselves name.
+ *
+ * The Core Rules demand "Latin 1" of every magus (Core Rules `:2437`), but
+ * `ability.dead_language` takes a **free-text** instance — a troupe decides which
+ * languages exist and which are dead — so the engine can only enforce "any Dead
+ * Language ≥ N". That widening is permanent (see `crates/arm-rules/RULES.md`), so the
+ * honest presentation is to enforce the wide check and *say* what the rules mean:
+ * "Dead Language (e.g. Latin) 1".
+ *
+ * The single label path for both surfaces that show such a requirement — the magus
+ * minimums checklist and the `issue-magus_minimum_ability` /
+ * `issue-academic_ability_without_scholarly_language` messages — so the two can never
+ * word the same demand differently.
+ */
+export function requirementAbilityLabel(
+  localized: LocalizedRuleset,
+  abilityId: string,
+  instance: string | null | undefined,
+  exemplar: string | null | undefined,
+  t: Translate,
+): string {
+  const ability = abilityDisplayName(localized, abilityId, instance, paramHint(t));
+  const example = exemplarLabel(localized, exemplar);
+  if (!example) return ability;
+  return t('requirement-exemplar', { ability, exemplar: example });
+}
+
+/**
  * Localized ability name with a trailing marker (the rulebook's `*`) appended
  * for "asterisked" abilities — those that cannot be used without at least one
  * experience point in it (the ability's `requires_training` flag). This spans
@@ -865,7 +937,19 @@ export function resolveIssueArgValue(
   return value;
 }
 
-/** Every value in a validation-issue arg map, localized via `resolveIssueArgValue`. */
+/**
+ * Every value in a validation-issue arg map, localized via `resolveIssueArgValue`.
+ *
+ * One arg is not independent of the others: an `exemplar` **qualifies** the `ability`
+ * it accompanies ("Dead Language (e.g. Latin)") rather than standing alone, so the
+ * pair is folded into a single `ability` label and `exemplar` is dropped from the
+ * result. Two consequences worth keeping in mind:
+ *  - the `issue-<code>` Fluent message stays `{ $ability } { $min }` and must NOT
+ *    interpolate `$exemplar` — the arg is optional in the engine's output (only where
+ *    the rules data states one), and Fluent reports a missing variable;
+ *  - the message and the magus-minimums checklist go through the one
+ *    `requirementAbilityLabel`, which is what makes them read identically.
+ */
 export function resolveIssueArgs(
   localized: LocalizedRuleset,
   args: Record<string, string>,
@@ -873,7 +957,11 @@ export function resolveIssueArgs(
 ): Record<string, string> {
   const resolved: Record<string, string> = {};
   for (const [key, value] of Object.entries(args)) {
+    if (key === 'exemplar') continue;
     resolved[key] = resolveIssueArgValue(localized, key, value, t);
+  }
+  if (args.exemplar && args.ability) {
+    resolved.ability = requirementAbilityLabel(localized, args.ability, null, args.exemplar, t);
   }
   return resolved;
 }
@@ -1569,6 +1657,19 @@ export function groupArtsByType(localized: LocalizedRuleset): ArtGroup[] {
           localizedSortKey(localized, a.id).localeCompare(localizedSortKey(localized, b.id)),
         ),
     }));
+}
+
+/**
+ * The catalogue Arts of one class (Techniques or Forms), sorted by localized name.
+ *
+ * The single source of the Technique-only / Form-only option list: the spell filters,
+ * the meta-magic Vim spells' target Form, and `ParameterPicker`'s `technique` /
+ * `form` domains all read it, so there is exactly one Art picker rather than three
+ * that can drift. Built on `groupArtsByType`, so the class order and the within-class
+ * sort still come from the engine payload.
+ */
+export function artsOfType(localized: LocalizedRuleset, artType: ArtType): Art[] {
+  return groupArtsByType(localized).find((group) => group.artType === artType)?.arts ?? [];
 }
 
 /** Highest whole Art score the advancement table can price (the spinner ceiling). */

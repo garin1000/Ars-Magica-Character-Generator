@@ -300,6 +300,15 @@ impl Ruleset {
             }
             return;
         };
+        // Each requirement's `ability` IS a ref and is resolved below. Its
+        // `exemplar` deliberately is NOT: it is a **label key**, one example the
+        // rules name in prose ("Latin 1", `:2437`), pointing at
+        // `exemplar.<slug>` in `rules/i18n/<lang>/` and at no catalogue entry.
+        // There is no language catalogue to resolve against and there never will
+        // be — the rules publish no language list and dead-vs-living is a troupe's
+        // decision, so authoring one would mean inventing rules data (RULES.md
+        // records this). Resolving the exemplar as a ref would therefore reject
+        // every valid ruleset.
         let requirements = apprenticeship
             .minimum_abilities
             .iter()

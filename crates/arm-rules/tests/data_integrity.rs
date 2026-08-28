@@ -3354,3 +3354,226 @@ fn both_magical_focus_variants_are_incompatible() {
         result.issues
     );
 }
+
+// --- Slice 7 (#5): parameters the rules restrict to a Form ------------------
+
+/// The single parameter definition of a shipped V/F, by id.
+fn only_parameter(rs: &Ruleset, id: &str) -> ParameterDef {
+    let item = rs
+        .item(&Id::new(id))
+        .unwrap_or_else(|| panic!("{id} present in the shipped catalogue"));
+    assert_eq!(item.parameters.len(), 1, "{id} declares one parameter");
+    item.parameters[0].clone()
+}
+
+/// Deft (Form) — the reported case of #4. Its data was already right; the bug was
+/// entirely in the picker, so this pins the data so a "fix" cannot move it.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:3645-3648.
+#[test]
+fn virtue_deft_form_declares_the_form_domain() {
+    let rs = load_ruleset();
+    let def = only_parameter(&rs, "virtue.deft_form");
+    assert_eq!(def.key, "form");
+    assert_eq!(def.domain, ParameterDomain::Form);
+}
+
+/// Deficient Form / Deficient Technique were already correct too — one per Art
+/// class, and each is the reason the two narrow domains exist at all.
+#[test]
+fn the_deficient_art_flaws_declare_their_own_art_class() {
+    let rs = load_ruleset();
+    let form = only_parameter(&rs, "flaw.deficient_form");
+    assert_eq!(
+        (form.key.as_str(), form.domain),
+        ("form", ParameterDomain::Form)
+    );
+    let technique = only_parameter(&rs, "flaw.deficient_technique");
+    assert_eq!(
+        (technique.key.as_str(), technique.domain),
+        ("technique", ParameterDomain::Technique)
+    );
+}
+
+/// #5: five V/F whose source restricts the parameter to a **Form** declared the
+/// wider `art` domain, which the engine cannot catch because `art` accepts either
+/// Art class. Verified against each item's own cited range:
+///
+/// - `flaw.form_monstrosity` — "a monstrous feature, or mutation, which corresponds
+///   to a magical Form", with an examples table headed `Form` listing only Forms
+///   (Ars Magica - Definitive Edition (Core Rules).md:6162-6185).
+/// - `flaw.hunger_for_form_magic` — "1 pawn of vis each season, corresponding to the
+///   Form that it has been mostly exposed to" (`:6276-6279`).
+/// - `virtue.extractor_of_form_vis` — "only if the features of the aura exemplify the
+///   Form … This Virtue may be taken multiple times (once for each Form)"
+///   (`:3779-3782`).
+/// - `virtue.imbued_with_the_spirit_of_form` — "any being with a Magic Might
+///   associated with the Form of this Virtue" (`:4085-4094`).
+/// - `virtue.master_of_form_creatures` — "beings whose Magic Might is aligned with a
+///   particular Form … once for each Form" (`:4463-4466`).
+#[test]
+fn form_restricted_virtues_flaws_declare_the_form_domain() {
+    let rs = load_ruleset();
+    for id in [
+        "flaw.form_monstrosity",
+        "flaw.hunger_for_form_magic",
+        "virtue.extractor_of_form_vis",
+        "virtue.imbued_with_the_spirit_of_form",
+        "virtue.master_of_form_creatures",
+    ] {
+        let def = only_parameter(&rs, id);
+        assert_eq!(def.key, "form", "{id} parameter key is 'form'");
+        assert_eq!(
+            def.domain,
+            ParameterDomain::Form,
+            "{id} restricts its parameter to a Form"
+        );
+    }
+}
+
+/// The counter-case, so #5 is not over-applied: Affinity with (Art) and Puissant
+/// (Art) name **either** Art class, so their `art` domain is correct by design.
+#[test]
+fn items_legal_for_either_art_class_keep_the_art_domain() {
+    let rs = load_ruleset();
+    for id in ["virtue.affinity_art", "virtue.puissant_art"] {
+        let def = only_parameter(&rs, id);
+        assert_eq!(def.key, "art", "{id} parameter key is 'art'");
+        assert_eq!(
+            def.domain,
+            ParameterDomain::Art,
+            "{id} accepts either Art class"
+        );
+    }
+}
+
+// --- Slice 7 (#32): the rules' exemplar for a widened requirement -----------
+
+/// The i18n label key a requirement's `exemplar` slug resolves through.
+fn exemplar_id(slug: &str) -> Id {
+    Id::new(format!("exemplar.{slug}"))
+}
+
+/// #32: `:2437` names **Latin** three times, but `ability.dead_language` takes a
+/// free-text instance, so the engine can only enforce "any Dead Language ≥ N". The
+/// widening is permanent (see RULES.md); the honesty fix is to carry the rules' own
+/// exemplar as a language-neutral slug and label it per locale.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2437 (Latin 1), `:2455`
+/// (the recommended Latin 4), `:7151` ("For most characters, Latin 3 is required").
+#[test]
+fn the_magus_minimum_dead_language_requirement_names_its_exemplar() {
+    let rs = load_full_ruleset();
+    let apprenticeship = rs
+        .life_stages()
+        .and_then(|rules| rules.apprenticeship.as_ref())
+        .expect("the shipped life stages declare an apprenticeship");
+
+    let minimum = apprenticeship
+        .minimum_abilities
+        .iter()
+        .find(|r| r.ability == Id::new("ability.dead_language"))
+        .expect("the minimums demand a dead language");
+    assert_eq!(minimum.exemplar.as_deref(), Some("latin"), ":2437 Latin 1");
+
+    let recommended = apprenticeship
+        .recommended_abilities
+        .iter()
+        .find(|r| r.ability == Id::new("ability.dead_language"))
+        .expect("the recommendations demand a dead language");
+    assert_eq!(
+        recommended.exemplar.as_deref(),
+        Some("latin"),
+        ":2455 Latin 4"
+    );
+
+    let scholarly = rs
+        .scholarly_language_requirement()
+        .expect("the shipped abilities declare a scholarly language");
+    assert_eq!(
+        scholarly.exemplar.as_deref(),
+        Some("latin"),
+        ":7151 Latin 3 for most characters"
+    );
+}
+
+/// The exemplar slug must resolve to translatable text in **both** shipped locales,
+/// because `rules/core/` may carry no translatable string.
+#[test]
+fn the_exemplar_slug_resolves_in_both_locales() {
+    let rs = load_full_ruleset();
+    let en = LocalizedRuleset::new(
+        rs.clone(),
+        include_str!("../../../rules/i18n/en/abilities.json"),
+    )
+    .unwrap();
+    let de = LocalizedRuleset::new(
+        rs.clone(),
+        include_str!("../../../rules/i18n/de/abilities.json"),
+    )
+    .unwrap();
+    assert_eq!(en.display_name(&exemplar_id("latin")), Some("Latin"));
+    assert_eq!(de.display_name(&exemplar_id("latin")), Some("Latein"));
+}
+
+/// The exemplar is a **label key, not a `ref`**: it names one example the rules
+/// themselves name, not an entry in any catalogue (there is no language catalogue and
+/// there never will be — see RULES.md). So the loader must not try to resolve it, and
+/// a ruleset whose exemplar matches no id at all still loads.
+#[test]
+fn an_exemplar_slug_is_not_treated_as_a_referential_integrity_ref() {
+    let life_stages = r#"{
+      "apprenticeship": {
+        "minimum_abilities": [
+          { "ability": "ability.dead_language", "exemplar": "no_such_catalogue_entry",
+            "min_score": 1 }
+        ],
+        "recommended_abilities": [],
+        "recommended_xp": 0,
+        "xp": 240,
+        "years": 15
+      },
+      "childhood": {
+        "years": 5,
+        "native_language_ability": "ability.living_language",
+        "native_language_xp": 75,
+        "spread_xp": 45,
+        "spread_abilities": ["ability.athletics"]
+      },
+      "later_life": { "xp_per_year": 15 },
+      "post_apprenticeship": {
+        "lab_season_cost": 10,
+        "max_charged_lab_seasons_per_year": 3,
+        "points_per_year": 30
+      }
+    }"#;
+    let load = |life_stages: &str| {
+        Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: include_str!("../../../rules/core/virtues_flaws.json"),
+            type_profiles: include_str!("../../../rules/core/character_types.json"),
+            abilities: Some(include_str!("../../../rules/core/abilities.json")),
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: None,
+            characteristics: Some(include_str!("../../../rules/core/characteristics.json")),
+            life_stages: Some(life_stages),
+            childhoods: None,
+            aging: None,
+        })
+    };
+    if let Err(err) = load(life_stages) {
+        panic!("an exemplar slug naming no catalogue id must still load, got: {err}");
+    }
+    // Not vacuous: the requirement's `ability` IS a ref, and a bogus one still fails.
+    let bogus_ability = life_stages.replace("ability.dead_language", "ability.nonesuch");
+    let err = load(&bogus_ability).unwrap_err();
+    assert!(
+        err.to_string().contains("unknown ability"),
+        "the ability ref must still be resolved, got: {err}"
+    );
+}

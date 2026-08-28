@@ -1,6 +1,14 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { abilityDisplayName, artLabel, groupArtsByType, paramValueUsage } from '../derive';
+  import {
+    abilityDisplayName,
+    artLabel,
+    artsOfType,
+    displayName,
+    groupArtsByType,
+    localizedSortKey,
+    paramValueUsage,
+  } from '../derive';
   import { CHARACTERISTICS, type ParameterDef, type Selection } from '../types';
 
   // Two callers, two write paths. A *bought* selection lives at `index` in
@@ -111,6 +119,50 @@
     );
   }
 
+  // The `technique` and `form` domains are the `art` domain narrowed to one Art
+  // class: the engine validates the value as an Art id AND as that class
+  // (`ParameterDomain::Technique` / `Form`), so offering the other class would only
+  // produce `unknown_param_value`. Options come from the shared `artsOfType`, the
+  // same helper the Spells tab's Technique/Form filters and the meta-magic Vim
+  // spells' target Form read — one Art picker, not three that can drift.
+  const techniqueOptions = $derived(
+    store.ruleset
+      ? artsOfType(store.ruleset, 'technique').map((art) => ({
+          value: art.id,
+          label: artLabel(store.ruleset!, art.id),
+        }))
+      : [],
+  );
+  const formOptions = $derived(
+    store.ruleset
+      ? artsOfType(store.ruleset, 'form').map((art) => ({
+          value: art.id,
+          label: artLabel(store.ruleset!, art.id),
+        }))
+      : [],
+  );
+
+  // The `item` domain resolves against the point-item registry, so a typed string
+  // could only ever be an internal slug. No shipped catalogue entry declares it
+  // today — the branch exists because the domain enum is exhaustive, and the whole
+  // registry is the only menu the data supports (nothing narrows it further).
+  const itemOptions = $derived(
+    store.ruleset
+      ? Object.keys(store.ruleset.ruleset.point_items)
+          .map((id) => ({
+            value: id,
+            label: displayName(store.ruleset!, id, undefined, (key) =>
+              store.t('param-hint', { label: store.t(`param-label-${key}`) }),
+            ),
+          }))
+          .sort((a, b) =>
+            localizedSortKey(store.ruleset!, a.value).localeCompare(
+              localizedSortKey(store.ruleset!, b.value),
+            ),
+          )
+      : [],
+  );
+
   // How many other selections of this same item already claim each target, so a
   // target at max_per_target is offered no further (e.g. a Characteristic already
   // taken twice by Great Characteristic, or an ability instance already Puissant).
@@ -188,10 +240,21 @@
           </option>
         {/each}
       </select>
-    {:else if param.domain === 'art'}
-      <!-- Targets a Hermetic Art. Any catalogue Art is a legal target;
-           max_per_target keeps the same Art from being picked twice. The key need
-           not be "art" — Master of (Form) Creatures declares `form` here. -->
+    {:else if param.domain === 'art' || param.domain === 'technique' || param.domain === 'form'}
+      <!-- Targets a Hermetic Art. `art` accepts either class; `technique` and `form`
+           are the same control narrowed to one, because the engine validates those
+           two as an Art id PLUS the right ArtType and raises unknown_param_value
+           otherwise. One branch for all three, so the narrowed domains cannot fall
+           through to a text input where only an internal slug would ever pass.
+           `max_per_target` keeps the same Art from being picked twice. The param key
+           is unrelated to the domain — Affinity with (Art) keys on `art`, Deft (Form)
+           on `form`. -->
+      {@const artChoices =
+        param.domain === 'technique'
+          ? techniqueOptions
+          : param.domain === 'form'
+            ? formOptions
+            : artOptions}
       <select
         aria-label={typeLabel}
         value={selection.params?.[param.key] ?? ''}
@@ -199,13 +262,36 @@
         data-testid="param-{selection.ref}-{param.key}-{suffix}"
       >
         <option value="" disabled>{typeLabel}</option>
-        {#each artOptions as art (art.value)}
+        {#each artChoices as art (art.value)}
           <option value={art.value} disabled={full(used, art.value)}>
             {art.label}
           </option>
         {/each}
       </select>
+    {:else if param.domain === 'item'}
+      <!-- Targets another catalogue item by id. Latent: no shipped entry declares
+           this domain, so the menu is the whole point-item registry — nothing in the
+           data narrows it. The branch exists because the domain enum is exhaustive
+           and a slug must never be typed by hand. -->
+      <select
+        aria-label={typeLabel}
+        value={selection.params?.[param.key] ?? ''}
+        onchange={(e) => onSelect(param.key, e)}
+        data-testid="param-{selection.ref}-{param.key}-{suffix}"
+      >
+        <option value="" disabled>{typeLabel}</option>
+        {#each itemOptions as option (option.value)}
+          <option value={option.value} disabled={full(used, option.value)}>
+            {option.label}
+          </option>
+        {/each}
+      </select>
     {:else}
+      <!-- `text` alone, and only `text`: the domain references no registry, so any
+           non-empty value is legal and free text is the correct control. Every other
+           variant has its own select above — the engine's `ParameterDomain` doc
+           comment says as much, and #4 was exactly this fall-through catching four
+           of them. -->
       <input
         type="text"
         aria-label={typeLabel}

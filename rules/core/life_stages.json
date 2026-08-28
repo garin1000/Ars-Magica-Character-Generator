@@ -1,13 +1,13 @@
 {
   "apprenticeship": {
     "minimum_abilities": [
-      { "ability": "ability.dead_language", "min_score": 1 },
+      { "ability": "ability.dead_language", "exemplar": "latin", "min_score": 1 },
       { "ability": "ability.magic_theory", "min_score": 1 },
       { "ability": "ability.parma_magica", "min_score": 1 }
     ],
     "recommended_abilities": [
       { "ability": "ability.artes_liberales", "min_score": 1 },
-      { "ability": "ability.dead_language", "min_score": 4 },
+      { "ability": "ability.dead_language", "exemplar": "latin", "min_score": 4 },
       { "ability": "ability.magic_theory", "min_score": 3 },
       { "ability": "ability.parma_magica", "min_score": 1 }
     ],

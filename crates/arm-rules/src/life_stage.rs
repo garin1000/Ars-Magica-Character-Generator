@@ -111,13 +111,29 @@ pub struct PostApprenticeshipRules {
 ///
 /// `parameter` is `None` throughout the shipped data — "Latin 1" is matched by
 /// Ability id, since an instance value is free-text player input with no
-/// localization path (a German player types "Latein"). The field exists so a future
-/// language registry can tighten the match by filling one JSON field rather than
-/// changing code; see `RULES.md` for the consequence (a magus with Greek 1 passes).
+/// localization path (a German player types "Latein"). The match therefore stays
+/// **deliberately wider than the rules' letter**, permanently: languages are
+/// troupe-defined free text and the rulebook publishes no language list, so there is
+/// no catalogue for a requirement to point at and never will be. See `RULES.md`.
+/// [`Self::exemplar`] is the honesty fix for that widening.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AbilityRequirement {
     /// The Ability the requirement is about.
     pub ability: Id,
+    /// One example instance the **rules themselves name**, as a language-neutral
+    /// slug (`"latin"`), so a UI can show what the passage actually demands beside
+    /// the wider check the engine enforces.
+    ///
+    /// A **label key, not a `ref`**: it names no catalogue entry, so the loader's
+    /// referential-integrity pass deliberately does not resolve it (see
+    /// `ruleset::integrity`). Its translated text lives in `rules/i18n/<lang>/` under
+    /// `exemplar.<slug>`, keeping `rules/core/` free of translatable strings. It is
+    /// one named example, never an enumeration.
+    ///
+    /// Source: Ars Magica - Definitive Edition (Core Rules).md:2437 (Latin 1),
+    /// `:2455` (the recommended Latin 4).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exemplar: Option<String>,
     /// The score it must reach.
     pub min_score: u8,
     /// The instance it must be, for a parameterized Ability. `None` accepts any.
@@ -188,6 +204,11 @@ pub enum AbilityRequirementKind {
 pub struct MagusMinimumAbility {
     /// The Ability demanded.
     pub ability: Id,
+    /// One example instance the rules name for this requirement, carried straight
+    /// through from [`AbilityRequirement::exemplar`] so the checklist and the
+    /// validation finding can show the same "(e.g. Latin)" beside the same demand.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exemplar: Option<String>,
     /// The instance demanded, when the requirement names one (`None` throughout the
     /// shipped data — see [`AbilityRequirement::parameter`]).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -259,6 +280,7 @@ pub fn magus_minimum_abilities(entity: &Entity, ruleset: &Ruleset) -> Vec<MagusM
                 .unwrap_or(0);
             rows.push(MagusMinimumAbility {
                 ability: requirement.ability.clone(),
+                exemplar: requirement.exemplar.clone(),
                 parameter: requirement.parameter.clone(),
                 min_score: requirement.min_score,
                 score,
@@ -723,16 +745,19 @@ mod tests {
             vec![
                 AbilityRequirement {
                     ability: Id::new("ability.dead_language"),
+                    exemplar: None,
                     min_score: 1,
                     parameter: None,
                 },
                 AbilityRequirement {
                     ability: Id::new("ability.magic_theory"),
+                    exemplar: None,
                     min_score: 1,
                     parameter: None,
                 },
                 AbilityRequirement {
                     ability: Id::new("ability.parma_magica"),
+                    exemplar: None,
                     min_score: 1,
                     parameter: None,
                 },
@@ -796,6 +821,7 @@ mod tests {
     fn an_ability_requirement_omits_an_unset_parameter() {
         let requirement = AbilityRequirement {
             ability: Id::new("ability.dead_language"),
+            exemplar: None,
             min_score: 1,
             parameter: None,
         };
@@ -811,6 +837,35 @@ mod tests {
         assert_eq!(
             serde_json::from_str::<AbilityRequirement>(&json).unwrap(),
             named
+        );
+    }
+
+    /// The exemplar is the same shape as `parameter` — optional, omitted when unset —
+    /// but a very different thing: `parameter` NARROWS what satisfies the requirement,
+    /// while `exemplar` only labels what the rules named, changing nothing the engine
+    /// enforces. Both are on the same struct, so pin the difference.
+    #[test]
+    fn an_ability_requirement_carries_an_optional_exemplar() {
+        let plain = AbilityRequirement {
+            ability: Id::new("ability.magic_theory"),
+            exemplar: None,
+            min_score: 1,
+            parameter: None,
+        };
+        assert!(
+            !serde_json::to_string(&plain).unwrap().contains("exemplar"),
+            "a requirement without an exemplar writes no key"
+        );
+
+        let json = r#"{"ability":"ability.dead_language","exemplar":"latin","min_score":1}"#;
+        let parsed: AbilityRequirement = serde_json::from_str(json).unwrap();
+        assert_eq!(parsed.exemplar.as_deref(), Some("latin"));
+        // Purely a label: what satisfies the requirement is untouched.
+        assert_eq!(parsed.parameter, None);
+        assert_eq!(
+            serde_json::from_str::<AbilityRequirement>(&serde_json::to_string(&parsed).unwrap())
+                .unwrap(),
+            parsed
         );
     }
 

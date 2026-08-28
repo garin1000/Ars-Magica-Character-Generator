@@ -170,11 +170,18 @@ pub(crate) fn validate_magus_minimum_abilities(
         if row.met {
             continue;
         }
-        let args = args([
+        let mut args = args([
             ("ability", row.ability.to_string()),
             ("min", row.min_score.to_string()),
             ("score", row.score.to_string()),
         ]);
+        // The rules say "Latin 1" while the check is "any Dead Language 1", so the
+        // finding carries the rules' own exemplar and the UI names it beside the
+        // Ability. Emitted only where the data states one, so a requirement without
+        // an exemplar reads exactly as before.
+        if let Some(exemplar) = &row.exemplar {
+            args.insert("exemplar".to_string(), exemplar.clone());
+        }
         let context = Some(row.ability.clone());
         issues.push(match row.requirement {
             AbilityRequirementKind::Required => ValidationIssue::error(

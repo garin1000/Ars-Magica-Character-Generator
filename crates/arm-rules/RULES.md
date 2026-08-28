@@ -130,15 +130,52 @@ introduced `rules/core/aging.json`, so it is now a data value — see
 #### Parameterized Virtues/Flaws — `{param}` slots
 The picker binds a value for items whose name carries a `{param}` placeholder
 (resolved by `displayName`), via a `parameters` entry (`{ key, type: "ref",
-domain }`). `ParameterPicker.svelte` renders a **dropdown** for registry-resolved
-domains and a **free-text input** for `domain: "text"` (its `{:else}` branch).
+domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain except
+`text`, which alone gets a free-text input (its `{:else}` branch).
 
-- **Catalogue-ref domains** (`ability`, `art`, `characteristic`, `item`): the value
-  must resolve; e.g. the `(Ability)` items (`flaw.careless_with_ability`, …) and the
-  `(Form)` items (`(Form)`→`art`: `flaw.form_monstrosity`,
-  `virtue.imbued_with_the_spirit_of_form`, …). Puissant/Affinity/Great/Poor already
-  used this. (`art` for a `(Form)` is a Form-only subset of Arts; the dropdown offers
-  all 15 Arts — the one remaining imprecision.)
+- **Catalogue-ref domains** (`ability`, `art`, `technique`, `form`, `characteristic`,
+  `item`): the value must resolve; e.g. the `(Ability)` items
+  (`flaw.careless_with_ability`, …) and the `(Form)` items. Puissant/Affinity/Great/Poor
+  already used this.
+- **`technique` / `form` are `art` narrowed to one Art class.** The engine validates
+  such a value as an Art id **and** as that `ArtType`, raising `unknown_param_value`
+  otherwise, so the two share one `<select>` branch with `art` and differ only in the
+  option list — built by the shared `artsOfType(ruleset, artType)` in `derive.ts`, the
+  same helper the Spells tab's Technique/Form filters and the meta-magic Vim spells'
+  target Form read. One Art picker, not three.
+- **Five items had the wrong domain (guided-creation review #5, fixed in Slice 7).**
+  Their source restricts the parameter to a **Form**, but they declared the wider
+  `art`, which the engine cannot catch because `art` accepts either class. Now
+  `domain: "form"`, each verified against its own cited range:
+  - `flaw.form_monstrosity` — "a monstrous feature, or mutation, which corresponds to
+    a magical Form", plus an examples table headed `Form` listing Forms only
+    (`Ars Magica - Definitive Edition (Core Rules).md:6162-6185`)
+  - `flaw.hunger_for_form_magic` — "1 pawn of vis each season, corresponding to the
+    Form that it has been mostly exposed to" (`:6276-6279`)
+  - `virtue.extractor_of_form_vis` — "only if the features of the aura exemplify the
+    Form … (once for each Form)" (`:3779-3782`)
+  - `virtue.imbued_with_the_spirit_of_form` — "any being with a Magic Might associated
+    with the Form of this Virtue" (`:4085-4094`)
+  - `virtue.master_of_form_creatures` — "beings whose Magic Might is aligned with a
+    particular Form … once for each Form" (`:4463-4466`)
+
+  Already correct and deliberately untouched: `virtue.deft_form` (`:3645-3648`),
+  `flaw.deficient_form` (`:5909-5912`), `flaw.deficient_technique` (`:5913-5915`).
+  Correct by design as `art`: `virtue.affinity_art` and `virtue.puissant_art`, where
+  **either** Art class is legal. Pinned by `tests/data_integrity.rs`
+  (`form_restricted_virtues_flaws_declare_the_form_domain`,
+  `virtue_deft_form_declares_the_form_domain`,
+  `the_deficient_art_flaws_declare_their_own_art_class`,
+  `items_legal_for_either_art_class_keep_the_art_domain`).
+  A `domain` narrowing is a **ruleset** change, not an entity one: a save storing a
+  Form under one of these five stays valid, while one storing a Technique now reports
+  `unknown_param_value` — the correct, visible outcome rather than a silent
+  re-interpretation.
+- **`item`** is in the closed domain enum but declared by **no** shipped catalogue
+  entry. The picker carries its branch anyway (the enum is exhaustive, and a
+  point-item id must never be typed by hand); its menu is the whole point-item
+  registry, because nothing in the data narrows it. No catalogue data was invented
+  for it.
 - **Free-text domain** (`ParameterDomain::Text`, serde `"text"`): the parenthetical
   is a free choice with no registry — `(Realm)`, `(Land)`, `(Subject)`, `(Sin)`,
   `(Beings)`, `(Terrain)`, `(Commodity)`, `(Faculty)`, `(Role)`, plus the mixed
@@ -148,6 +185,32 @@ domains and a **free-text input** for `domain: "text"` (its `{:else}` branch).
 - **Name-qualifiers — not params, stay literal by design:** `(Dove)`, `(the Wolf)`,
   `(Muq-Ta')`, `(Hermetic)`, `(PC)`, and the `(positive)`/`(negative)` Cyclic Magic
   disambiguators.
+- **`name_unfilled` — the opt-out for a doubled hint (guided-creation review #13,
+  Slice 7).** With no instance chosen, `displayName` fills a `{token}` with the
+  localized hint `param-hint` = `({ $label })`, which is right for the overwhelming
+  majority of templates: `Puissant (Ability)`, `Affinity with (Ability)`,
+  `Great (Characteristic)`, `Ways Of The (Land)`. It **doubles** for the one shape that
+  carries both a `{token}` and a parenthetical literal — `"{language} (Dead Language)"`
+  plus `"(Language)"` read *"(Language) (Dead Language) 1 is not met"*. Grepping every
+  i18n name template for that shape returns exactly **two** entries, both Abilities:
+  `ability.dead_language` and `ability.living_language`. Each now declares an optional
+  `name_unfilled` in `rules/i18n/<lang>/abilities.json` (`Dead Language` /
+  `Tote Sprache`, `Living Language` / `Lebende Sprache` — lifted from the existing
+  German templates, not re-translated), which `displayName` uses when **no** token in
+  the template is filled; a filled instance still renders the full template
+  (`Latin (Dead Language)`), which is why the parenthetical stays in `name` at all.
+  Blanket suppression of the hint was **considered and rejected**: it would degrade the
+  ~36 templates whose token is the head or sits mid-phrase to `Puissant`,
+  `Affinity with`, `Ways Of The` — worse in German, where an inflected adjective would
+  dangle with no noun to agree with. The guard test
+  `an unfilled template without name_unfilled still renders the param hint`
+  (`ui/src/lib/derive.test.ts`) exists solely to stop that "simplification" returning.
+  The field is `Option<String>` on `I18nEntry`, `#[serde(default,
+  skip_serializing_if = "Option::is_none")]`, so every other entry is untouched.
+  **Both renderers honour it**: `displayName` in the UI and
+  `export/resolve.rs::unfilled_name` (consulted by `parameterized_name` /
+  `parameterized_value`) in the Markdown exporter, so a sheet and the screen word the
+  Ability identically instead of the sheet alone printing the doubled form.
 
 #### Full core Virtue/Flaw catalogue — `rules/core/virtues_flaws.json`
 > Virtues: `## Virtues` detailed entries `:3360-5282`; Flaws: `## Flaws`
@@ -3162,8 +3225,8 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `MagusMinimumAbility` row per requirement (`AbilityRequirementKind::Required` here,
   `Recommended` below). **One function, two consumers:**
   `validation/magus.rs::validate_magus_minimum_abilities` emits
-  `magus_minimum_ability` (error, `abilities`, args `ability`/`min`/`score`, context =
-  the Ability), and `EffectiveScores.magus_minimum_abilities`
+  `magus_minimum_ability` (error, `abilities`, args `ability`/`min`/`score` plus an
+  optional `exemplar`, context = the Ability), and `EffectiveScores.magus_minimum_abilities`
   (`arm-app/ruleset_io.rs`) hands the whole checklist to the frontend — so a finding
   and the checklist a UI shows cannot disagree.
 - **An error, and unconditional.** "Would not be admitted to the Order" is a hard bar,
@@ -3183,6 +3246,47 @@ Abilities are bought with experience earned in blocks, not from one bank:
   a future language registry tightens this by filling one JSON field, with no code
   change; the test `latin_is_matched_by_ability_id_not_by_instance` pins the current
   behaviour so it can never become accidental.
+- **The widening is PERMANENT, and a `language.*` catalogue is rejected — not
+  deferred (guided-creation review #32, Slice 7).** The obvious way to make "Latin 1"
+  enforceable is a language catalogue so the requirement can name Latin by id. **It
+  cannot be built.** The rules publish no comprehensive list of languages, and whether
+  a given language exists — and whether it is dead or living — is a **troupe's
+  decision**. Authoring one would mean inventing rules data, which `CLAUDE.md`'s
+  provenance rule prohibits outright. So free text is the **correct** model for the
+  `language` parameter, not a shortcoming, and the paragraph above about
+  `AbilityRequirement::parameter` awaiting "a future language registry" describes a
+  registry that will never exist. It also follows that the check can never be narrowed
+  to Latin mechanically: string-matching a user-typed value against a localized name
+  would be locale-dependent and would break on `latin`, `Lateinisch`, or a troupe's own
+  spelling. **Do not propose a language catalogue as an improvement.**
+- **The honesty fix instead: the requirement carries the rules' own exemplar as a
+  label.** `AbilityRequirement::exemplar` (and `ScholarlyLanguageRequirement::exemplar`)
+  hold a **language-neutral slug** — `"exemplar": "latin"` — on the three sites where
+  the rules name Latin: `rules/core/life_stages.json` `minimum_abilities`
+  (`dead_language ≥ 1`, `:2437`) and `recommended_abilities` (`≥ 4`, `:2455`), plus
+  `rules/core/abilities.json` `scholarly_language` (`≥ 3`, `:7151` — "For most
+  characters, Latin 3 is required"). Its **translated text lives in
+  `rules/i18n/<lang>/abilities.json`** under `exemplar.latin` (`Latin` / `Latein`, the
+  latter as the German rulebook uses it at the mirrored `:2437`), so no translatable
+  string enters the mechanics file. `MagusMinimumAbility` carries it through to the
+  frontend and both validators emit it as an **optional** `exemplar` arg, so the
+  minimums row and the `issue-magus_minimum_ability` /
+  `issue-academic_ability_without_scholarly_language` messages read identically:
+  *"Dead Language (e.g. Latin) 1 is not met"*. The one shared label path is
+  `requirementAbilityLabel` in `ui/src/lib/derive.ts`. **The enforced check is
+  unchanged** — still any Dead Language ≥ N. The exemplar is one *named example*, never
+  an enumeration of languages.
+- **The exemplar slug is a LABEL KEY, not a referential-integrity `ref`.** It resolves
+  against no catalogue — there is none to resolve against — so the loader deliberately
+  does not check it (documented at both check sites,
+  `ruleset/integrity.rs::validate_apprenticeship_refs` and
+  `ruleset/parse.rs::check_scholarly_language`) while the requirement's `ability` **is**
+  a ref and still fails loudly. Pinned by
+  `an_exemplar_slug_is_not_treated_as_a_referential_integrity_ref`, which also proves
+  the test is not vacuous by showing a bogus `ability` still rejected. Its i18n
+  coverage in both locales is pinned by `the_exemplar_slug_resolves_in_both_locales`,
+  and its presence on the three sites by
+  `the_magus_minimum_dead_language_requirement_names_its_exemplar`.
 - **The score tested is the BOUGHT one**, not the effective one:
   `effective_ability_score` returns 2 for a magus with a Puissant Parma Magica and no
   Parma row at all, and `:2437`'s "scores" cannot mean a Virtue's +2 to *use*. The same
@@ -3222,7 +3326,8 @@ Abilities are bought with experience earned in blocks, not from one bank:
 - Implementation: the same `magus_minimum_abilities` rows, tagged
   `AbilityRequirementKind::Recommended`, reported by
   `validate_magus_minimum_abilities` as `magus_recommended_ability` (**warning**,
-  `abilities`, args `ability`/`min`/`score`).
+  `abilities`, args `ability`/`min`/`score` plus an optional `exemplar` — the Latin 4
+  row states one, `:2455`).
 - **A warning, not an error**, because `:2451` calls the list *recommended* and the
   consequences `:2437` spells out describe a weak magus, not an illegal one — unlike
   `:2437`'s own three, which decide admission.
@@ -3323,14 +3428,20 @@ Abilities are bought with experience earned in blocks, not from one bank:
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:7151`.
 - Data: `rules/core/abilities.json` → `scholarly_language`
-  (`{ ability: ability.dead_language, min_score: 3 }`).
+  (`{ ability: ability.dead_language, exemplar: "latin", min_score: 3 }`).
 - Implementation: `validation/authorization.rs` — `validate_academic_language`,
-  emitting `academic_ability_without_scholarly_language`.
+  emitting `academic_ability_without_scholarly_language` (args `ability`/`min` plus an
+  optional `exemplar`).
 - A **warning**, not an error, because the passage hedges twice ("normally",
   "depending on the region of Europe"). Engine reading: the data names the
   parameterized dead-language ability and the minimum score rather than enumerating
   Latin/Greek/Hebrew/Arabic, and any instance at that score satisfies it — the engine
   cannot know a saga's region, and the four names are examples of one Ability.
+- The `exemplar` slug surfaces the passage's own "For most characters, Latin 3 is
+  required" as a label (`Latin` / `Latein` from `rules/i18n/<lang>/abilities.json`
+  under `exemplar.latin`) without narrowing the check. See the widening note under
+  **Hermetic minimum Abilities** for why it can never be narrowed, and why the slug is
+  a label key rather than a `ref`.
 
 #### Foreign Upbringing halves locality-dependent caps (M6/6b2c)
 

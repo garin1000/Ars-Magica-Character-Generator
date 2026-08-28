@@ -775,6 +775,11 @@ app-document-unsaved-dirty = *Unsaved document
 
 # Hint shown for an unfilled parameter slot in an item name, e.g. "Puissant (Ability)".
 param-hint = ({ $label })
+# A requirement the engine enforces more widely than the rules word it, shown with
+# the one example the rules themselves name: "Dead Language (e.g. Latin) 1". The
+# exemplar comes from the rules data, never from this file — only the joining
+# wording is UI chrome.
+requirement-exemplar = { $ability } (e.g. { $exemplar })
 # Localized parameter labels, keyed by the engine's parameter key. Also used as the
 # type-aware placeholder/prompt for an empty parameter input.
 param-label-ability = Ability
@@ -789,6 +794,10 @@ param-label-mystery_cult = Mystery Cult
 param-label-craft = Craft
 param-label-profession = Profession
 param-label-form = Form
+# For the `item` domain: no shipped catalogue entry declares one yet, but the domain
+# is part of the engine's closed enum and its picker branch names its control here
+# rather than falling back to the raw key.
+param-label-item = Item
 param-label-realm = Realm
 param-label-land = Land
 param-label-being = Beings
