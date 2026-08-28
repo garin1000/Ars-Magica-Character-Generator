@@ -139,6 +139,10 @@ function resetEntity(): void {
     characteristic_descriptions: {},
     ability_scores: [],
     xp_pool: 0,
+    // Present even on this deliberately old-schema fixture: the engine's load-time
+    // migration folds the key onto every pre-16 save, so an entity that reaches the
+    // store without it is a shape the app never produces.
+    ability_funding: 'pool',
     art_scores: [],
     personality_traits: [],
     reputations: [],
@@ -597,6 +601,7 @@ describe('the guided wizard', () => {
           characteristic_descriptions: {},
           ability_scores: [],
           xp_pool: 0,
+          ability_funding: 'pool',
           art_scores: [],
           personality_traits: [],
           reputations: [],
@@ -625,6 +630,7 @@ describe('open() and the startup view', () => {
       entity_kind: 'character',
       type_id: 'companion',
       name: 'Marcus of Bonisagus',
+      ability_funding: 'pool',
       selections: [],
       characteristics: {} as Entity['characteristics'],
       characteristic_descriptions: {},
@@ -1910,6 +1916,9 @@ describe('ability funding mode', () => {
       art_scores: [],
       personality_traits: [],
       reputations: [],
+      // Since schema 16 the mode is STORED, not inferred from the plan: a save the
+      // engine's migration folded carries both.
+      ability_funding: 'life_stages',
       life_stages: { native_language: 'German' },
     };
   }
@@ -1922,13 +1931,39 @@ describe('ability funding mode', () => {
     expect(store.abilityFunding).toBe('pool');
   });
 
-  it('creates an empty plan and zeroes the typed pool when switching to life stages', async () => {
+  it('reads the stored field, not the presence of a plan', () => {
+    // The case that could not exist before schema 16, and the whole point of it: a
+    // pool-funded character that still carries the plan it typed earlier. While the
+    // mode was inferred from the plan, DELETING the plan was how "pool" got
+    // recorded — so nothing could stop the destruction until the field was stored.
+    store.entity.ability_funding = 'pool';
+    store.entity.life_stages = { native_language: 'German', gauntlet_age: 25 };
+    expect(store.abilityFunding).toBe('pool');
+
+    // And the other direction: the field alone flips the mode, plan or no plan.
+    store.entity.ability_funding = 'life_stages';
+    expect(store.abilityFunding).toBe('life_stages');
+  });
+
+  it('preserves a typed xp_pool when switching to life stages', async () => {
     store.setXpPool(45);
     await store.setAbilityFunding('life_stages');
-    // The engine forbids a plan and a typed pool at once (life_stage_xp_pool_conflict).
+    // A hand-typed total is the player's work: the two funding sides now coexist on
+    // the entity and the inactive one is merely inert, so nothing is zeroed.
+    expect(store.entity.xp_pool).toBe(45);
     expect(store.entity.life_stages).toEqual({});
-    expect(store.entity.xp_pool).toBe(0);
     expect(store.abilityFunding).toBe('life_stages');
+  });
+
+  it('records the mode on the entity, so the value Rust receives is never inferred', async () => {
+    // Tauri commands take an entity through plain serde, NOT through
+    // `load_entity_migrating`, so the load-time fold never runs on an IPC payload.
+    // An omitted key would default to `Pool` and every life-stage pool would
+    // silently vanish (`LifeStageRules::budget` returns `None`).
+    await store.setAbilityFunding('life_stages');
+    expect(store.entity.ability_funding).toBe('life_stages');
+    await store.setAbilityFunding('pool');
+    expect(store.entity.ability_funding).toBe('pool');
   });
 
   it('validates immediately rather than through the debounce', async () => {
@@ -1950,25 +1985,58 @@ describe('ability funding mode', () => {
     expect(store.entity.ability_scores).toEqual([{ ability: 'ability.awareness', score: 3 }]);
   });
 
-  it('removes the plan key entirely when switching back to the typed pool', async () => {
-    store.entity.life_stages = {
+  it('preserves the life-stage plan when switching to pool', async () => {
+    const plan = {
       native_language: 'German',
       childhood_package: 'childhood.traveling',
+      gauntlet_age: 25,
+      post_gauntlet_lab_seasons: 6,
+      post_gauntlet_spell_levels: 120,
     };
+    store.entity.ability_funding = 'life_stages';
+    store.entity.life_stages = { ...plan };
+
     await store.setAbilityFunding('pool');
-    // Sparse save: the key is gone, not present-but-empty.
-    expect('life_stages' in store.entity).toBe(false);
+
+    // A deliberate departure from the sparse-save principle: the save now keeps data
+    // the active mode ignores, because discarding it silently destroyed a native
+    // language, a Gauntlet age, lab seasons, spell levels and a childhood package.
+    expect(store.entity.life_stages).toEqual(plan);
     expect(store.abilityFunding).toBe('pool');
   });
 
-  it('starts a new plan empty instead of resurrecting the dropped one', async () => {
-    store.entity.life_stages = {
-      native_language: 'German',
-      childhood_package: 'childhood.traveling',
-    };
-    await store.setAbilityFunding('pool');
+  it('leaves both the typed pool and the plan intact across a pool → life stages → pool round trip', async () => {
+    store.setXpPool(240);
     await store.setAbilityFunding('life_stages');
-    expect(store.entity.life_stages).toEqual({});
+    store.setNativeLanguage('German');
+    store.setGauntletAge(25);
+
+    await store.setAbilityFunding('pool');
+
+    expect(store.entity.xp_pool).toBe(240);
+    expect(store.entity.life_stages).toEqual({ native_language: 'German', gauntlet_age: 25 });
+    expect(store.abilityFunding).toBe('pool');
+
+    // And back again: the plan is picked up where it was left, not restarted empty.
+    await store.setAbilityFunding('life_stages');
+    expect(store.entity.xp_pool).toBe(240);
+    expect(store.entity.life_stages).toEqual({ native_language: 'German', gauntlet_age: 25 });
+  });
+
+  it('still clears the childhood draft when leaving life stages', async () => {
+    await store.setAbilityFunding('life_stages');
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.childhoodRejections = [
+      { severity: 'error', code: 'childhood_slot_unfilled', phase: 'abilities', args: {} },
+    ];
+
+    await store.setAbilityFunding('pool');
+
+    // The plan and the pool stop being destroyed; the DRAFTS do not. One blanket
+    // rule: an un-submitted draft never outlives a change to how the document is
+    // built.
+    expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
+    expect(store.childhoodRejections).toEqual([]);
   });
 
   it('reports life stages for a loaded save that already carries a plan', async () => {
@@ -1997,6 +2065,43 @@ describe('ability funding mode', () => {
     expect(store.dirty).toBe(false);
     await store.setAbilityFunding('life_stages');
     expect(store.dirty).toBe(true);
+  });
+
+  it('is carried by a freshly instantiated character', async () => {
+    await store.createCharacter('companion');
+    // The key must be PRESENT, not merely defaulted on the Rust side: a Tauri
+    // command deserializes the payload with plain serde, so an absent key silently
+    // reads as `Pool`.
+    expect('ability_funding' in store.entity).toBe(true);
+    expect(store.entity.ability_funding).toBe('pool');
+
+    await store.startWizard('companion');
+    expect(store.entity.ability_funding).toBe('pool');
+  });
+
+  it('still carries life_stages after a save/load round trip through the store', async () => {
+    await store.createCharacter('companion');
+    await store.setAbilityFunding('life_stages');
+    store.setNativeLanguage('German');
+    vi.advanceTimersByTime(200);
+
+    vi.mocked(ipc.saveEntity).mockResolvedValue('/tmp/marcus.armc');
+    await store.saveAs();
+    const written = vi.mocked(ipc.saveEntity).mock.calls[0][0];
+    expect(written.ability_funding).toBe('life_stages');
+
+    // Reload exactly the bytes that were handed to Rust — the mode must survive,
+    // or every life-stage pool evaporates on the next validate.
+    vi.mocked(ipc.loadEntity).mockResolvedValue({ path: '/tmp/marcus.armc', entity: written });
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+
+    expect(store.entity.ability_funding).toBe('life_stages');
+    expect(store.abilityFunding).toBe('life_stages');
+    expect(store.entity.life_stages).toEqual({ native_language: 'German' });
+    vi.mocked(ipc.saveEntity).mockReset();
+    vi.mocked(ipc.loadEntity).mockReset();
   });
 });
 
@@ -2036,8 +2141,12 @@ describe('setNativeLanguage', () => {
     });
   });
 
-  it('is a no-op without a plan, so a flat-mode surface cannot conjure one', async () => {
+  it('is a no-op when no plan exists, so no surface can conjure one', async () => {
+    // The guard is the plan's PRESENCE, not the funding mode: since schema 16 a
+    // switch to pool funding preserves the plan, so this case has to be built by
+    // removing the plan rather than by switching mode.
     await store.setAbilityFunding('pool');
+    delete store.entity.life_stages;
     vi.mocked(ipc.validateEntity).mockClear();
 
     store.setNativeLanguage('German');
@@ -2089,8 +2198,10 @@ describe('the post-Gauntlet plan fields', () => {
       expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
     });
 
-    it('is a no-op without a plan, so a flat-mode surface cannot conjure one', async () => {
+    it('is a no-op when no plan exists, so no surface can conjure one', async () => {
+      // Built by removing the plan, not by switching mode: a switch preserves it.
       await store.setAbilityFunding('pool');
+      delete store.entity.life_stages;
       vi.mocked(ipc.validateEntity).mockClear();
 
       store.setGauntletAge(25);
@@ -2128,8 +2239,9 @@ describe('the post-Gauntlet plan fields', () => {
       expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
     });
 
-    it('is a no-op without a plan', async () => {
+    it('is a no-op when no plan exists', async () => {
       await store.setAbilityFunding('pool');
+      delete store.entity.life_stages;
       vi.mocked(ipc.validateEntity).mockClear();
 
       store.setPostGauntletLabSeasons(6);
@@ -2167,8 +2279,9 @@ describe('the post-Gauntlet plan fields', () => {
       expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
     });
 
-    it('is a no-op without a plan', async () => {
+    it('is a no-op when no plan exists', async () => {
       await store.setAbilityFunding('pool');
+      delete store.entity.life_stages;
       vi.mocked(ipc.validateEntity).mockClear();
 
       store.setPostGauntletSpellLevels(120);
@@ -2179,14 +2292,20 @@ describe('the post-Gauntlet plan fields', () => {
     });
   });
 
-  it('drops all three with the plan when guided funding is left', async () => {
+  it('keeps all three when guided funding is left, plan and all', async () => {
     store.setGauntletAge(40);
     store.setPostGauntletLabSeasons(6);
     store.setPostGauntletSpellLevels(120);
 
     await store.setAbilityFunding('pool');
 
-    expect('life_stages' in store.entity).toBe(false);
+    // They used to go with the plan the switch deleted. Three typed numbers is
+    // exactly the kind of work #29 was about losing: the plan is now inert, not gone.
+    expect(store.entity.life_stages).toEqual({
+      gauntlet_age: 40,
+      post_gauntlet_lab_seasons: 6,
+      post_gauntlet_spell_levels: 120,
+    });
   });
 });
 
@@ -2348,8 +2467,9 @@ describe('the childhood package draft', () => {
 
     await store.setAbilityFunding('pool');
 
-    // Leaving guided mode deletes the plan, and the plan is what a draft is for:
-    // a survivor would show stale slot faults for a decision nobody has made.
+    // The plan itself survives the switch now (schema 16), but the DRAFT does not:
+    // an un-submitted draft never outlives a change to how the document is built,
+    // and a survivor would show stale slot faults for a decision nobody has made.
     expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
     expect(store.childhoodRejections).toEqual([]);
   });
@@ -2966,6 +3086,7 @@ describe('unsaved-changes tracking', () => {
       characteristic_descriptions: {},
       ability_scores: [],
       xp_pool: 0,
+      ability_funding: 'pool',
       art_scores: [],
       personality_traits: [],
       reputations: [],
@@ -3104,6 +3225,7 @@ describe('document file model', () => {
       characteristic_descriptions: {},
       ability_scores: [],
       xp_pool: 0,
+      ability_funding: 'pool',
       art_scores: [],
       personality_traits: [],
       reputations: [],

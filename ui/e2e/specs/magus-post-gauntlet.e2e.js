@@ -262,7 +262,7 @@ describe('a magus past its Gauntlet', () => {
     await advanceWizardTo('abilities');
     await $(XP_POOL_TOTAL).waitForExist({ timeout: STEP_TIMEOUT });
 
-    // A plan and a typed pool are mutually exclusive, so the editable field is gone.
+    // Under life-stage funding the pools are derived, so the editable field is gone.
     expect(await $(XP_POOL_INPUT).isExisting()).toBe(false);
     // 240 of apprenticeship plus the 650 the split left as experience (`:2435`, `:2471`).
     await browser.waitUntil(async () => (await textOf(XP_POOL_TOTAL)) === '890', {
@@ -377,6 +377,8 @@ describe('a magus past its Gauntlet', () => {
     // every figure above is derived from these four and the age. Asserted exactly, so
     // a stray derived field cannot creep into the save.
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
+    // Plus the stored funding mode, which since schema 16 is a choice of its own.
+    expect(saved.ability_funding).toBe('life_stages');
     expect(saved.life_stages).toEqual({
       native_language: 'German',
       gauntlet_age: 25,
@@ -396,7 +398,8 @@ describe('a magus past its Gauntlet', () => {
     await $(EXPERIENCE_TAB).click();
     await $(PANEL).waitForExist({ timeout: STEP_TIMEOUT });
 
-    // Everything is re-derived from the loaded plan, with no reconciliation step.
+    // Everything is re-derived from the loaded plan and its stored mode, with no
+    // reconciliation step.
     await browser.waitUntil(async () => await $(XP_POOL_TOTAL).isExisting(), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'a loaded magus plan should restore guided funding',

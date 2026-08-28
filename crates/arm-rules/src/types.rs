@@ -2454,6 +2454,33 @@ fn is_zero_i8(n: &i8) -> bool {
     *n == 0
 }
 
+/// Where a character's Ability/Art experience comes from — the funding mode, stored
+/// explicitly on the entity.
+///
+/// **Why this is a stored field and not an inference.** Until schema 16 the mode
+/// *was* the presence of [`Entity::life_stages`]: a plan meant life-stage funding,
+/// no plan meant the typed [`Entity::xp_pool`]. That made switching mode destructive
+/// by construction — discarding the plan was how "pool" got recorded — so a round
+/// trip through the two modes lost everything typed on either side. With the mode
+/// stored, the two sides coexist and the inactive one is merely inert.
+///
+/// A **closed** enum: every reader `match`es it, so a third funding mode is a
+/// compile error until it is handled everywhere.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Serialize, Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum AbilityFunding {
+    /// [`Entity::xp_pool`] is the authority: one typed total, spent on Abilities and
+    /// Arts. The default, and what every directly-entered character uses.
+    #[default]
+    Pool,
+    /// [`Entity::life_stages`] is the authority: the pools are derived from the
+    /// stages the character lived through
+    /// ([`crate::life_stage::LifeStageRules::budget`]).
+    LifeStages,
+}
+
 /// The save format for a character or covenant under construction.
 ///
 /// Saves store choices, not resolved values; `selections` and `ability_scores`
@@ -2503,21 +2530,61 @@ pub struct Entity {
     /// more than the pool is an error (surfaced in Advisory/Enforced modes); the
     /// M4 life-stage flow sets this pool and blocks overspending up front.
     ///
-    /// Mutually exclusive with [`Entity::life_stages`]: a character built through
-    /// the life stages derives its pools from them, so carrying a raw pool as well
-    /// would double-count (`life_stage_xp_pool_conflict`).
+    /// Read only under [`AbilityFunding::Pool`]; inert (but preserved) under
+    /// [`AbilityFunding::LifeStages`], where the pools are derived from the plan
+    /// instead. The two are **no longer mutually exclusive** — see
+    /// [`Entity::ability_funding`] for why they legitimately coexist.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub xp_pool: u32,
-    /// The character's life-stage choices, when it is being built through them
-    /// (childhood + later life) rather than by typing [`Entity::xp_pool`] directly.
-    /// `None` for a directly-entered character — including every save written
-    /// before the life stages existed, which is why this is additive and needs no
-    /// schema bump.
+    /// The character's life-stage choices (childhood + later life), read only under
+    /// [`AbilityFunding::LifeStages`]. `None` when no plan has ever been recorded —
+    /// including every save written before the life stages existed, which is why the
+    /// field itself is additive and needed no schema bump of its own.
+    ///
+    /// **Presence is not the funding mode.** It was until schema 16; it is not now.
+    /// A plan kept beside [`AbilityFunding::Pool`] is inert data the player typed and
+    /// may come back to, and every site asking "is this character funded by its
+    /// stages?" reads [`Entity::ability_funding`] rather than this `Option`.
     ///
     /// Choices only: every figure the stages grant is derived from these plus
     /// [`Entity::age`] (see [`crate::life_stage::LifeStageRules::budget`]).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub life_stages: Option<LifeStagePlan>,
+    /// Which of [`Entity::xp_pool`] / [`Entity::life_stages`] funds this character's
+    /// Abilities and Arts. See [`AbilityFunding`] for why the mode is stored rather
+    /// than inferred from the plan's presence.
+    ///
+    /// **Written even when it holds its default**, which departs from this struct's
+    /// standing "omit the default" convention. It must be: [`load_entity_migrating`]
+    /// dispatches on the key's *absence* to fold a pre-16 save, so omitting `Pool`
+    /// would make a pool-funded character that still carries a stored plan reload as
+    /// life-stage funded. Absence is meaningful, so presence is mandatory.
+    ///
+    /// `serde(default)` all the same, so a pre-16 save parses without the key; the
+    /// fold then decides its value.
+    #[serde(default)]
+    pub ability_funding: AbilityFunding,
+    /// The furthest guided-wizard phase this character reached, as a **raw slug**.
+    ///
+    /// **UI/document state on an engine-defined entity, with no validation wired to
+    /// it.** It records where the player got to, never anything about the character's
+    /// rules legality: no validator reads it, nothing derives from it, and it may
+    /// hold a slug this build does not recognise. It lives here rather than in the
+    /// frontend store only because it has to survive a save.
+    ///
+    /// **Deliberately `Option<String>`, not `Option<CreationPhase>`.**
+    /// [`CreationPhase`] is a closed `Deserialize` enum, so an unrecognised slug
+    /// would be a serde error — and a serde error fails the *whole* load, which would
+    /// turn a save carrying a since-removed phase slug into an unopenable file. Saves
+    /// carrying the removed `"type"` slug exist, and every future phase rename would
+    /// add more. The slug is therefore stored verbatim and resolved **leniently** by
+    /// the caller against the loaded profile's `creation_phases`; unresolvable is
+    /// treated exactly like absent.
+    ///
+    /// `None` — no key at all — means "no wizard progress recorded", which is what a
+    /// character built in the editor looks like.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wizard_furthest_phase: Option<String>,
     /// Whole bought Hermetic Art scores (magi only). Kept sorted via
     /// [`Entity::normalize`]. Defaults to empty. Priced from the Art advancement
     /// table against the shared [`Entity::xp_pool`].
@@ -2809,7 +2876,23 @@ pub struct Entity {
 /// `year` entirely (a character with no `birth_year` has no calendar year to
 /// write), which a schema-14 reader rejects — and a version number is exactly how
 /// an older build learns not to try.
-pub const SCHEMA_VERSION: u32 = 15;
+///
+/// Bumped 15 → 16 for **two** fields at once — [`Entity::ability_funding`] (the
+/// explicit funding discriminator) and [`Entity::wizard_furthest_phase`] (the
+/// guided-wizard progress slug). Batching them is deliberate: two sequential bumps
+/// would mean two migrations, two round-trip-test updates, and a window in which a
+/// save written at 16 is unreadable by a build at 17.
+///
+/// `ability_funding` earns the bump on its own. It is the **only** field on `Entity`
+/// that is written even when it holds its default, because
+/// [`load_entity_migrating`] dispatches on its absence to infer the mode a pre-16
+/// save recorded only implicitly (a `life_stages` plan meant life-stage funding). So
+/// the forward direction breaks in the way a bump exists to announce: a schema-16
+/// save may carry both a plan and a nonzero `xp_pool`, a combination a schema-15
+/// reader reports as `life_stage_xp_pool_conflict` — a finding this bump retires.
+/// `wizard_furthest_phase` alone would have been purely additive
+/// (`skip_serializing_if`, so byte-identical when unset) and earned nothing.
+pub const SCHEMA_VERSION: u32 = 16;
 
 /// The lowest rules-legal [`Entity::aura`] modifier: a Divine aura acting on
 /// Infernal-realm powers, "– (5 x aura)", at the highest aura rating the rules
@@ -2851,6 +2934,8 @@ impl Entity {
             ability_scores: Vec::new(),
             xp_pool: 0,
             life_stages: None,
+            ability_funding: AbilityFunding::Pool,
+            wizard_furthest_phase: None,
             art_scores: Vec::new(),
             spells: Vec::new(),
             spell_levels_override: None,
@@ -3026,6 +3111,14 @@ fn fold_legacy_talisman(
 /// into `talisman.attunements`. See [`fold_legacy_talisman`] for the ambiguous
 /// shapes it has to decide.
 ///
+/// Saves at schema ≤ 15 carried no `ability_funding` key, because the funding mode
+/// was not stored at all — it *was* the presence of `life_stages`. That inference is
+/// applied here, **once at load** rather than on every read: a plan present means
+/// [`AbilityFunding::LifeStages`], no plan means [`AbilityFunding::Pool`]. From 16 on
+/// the key is always written (see [`Entity::ability_funding`]), so its absence is
+/// exactly the pre-16 signal and nothing else. `wizard_furthest_phase` needs no fold:
+/// absent stays `None`, which its reader treats as "no wizard progress recorded".
+///
 /// Dispatch is on legacy-key *presence*, never on the recorded version: a
 /// hand-edited save may carry any `schema_version` alongside either shape. Plain
 /// `serde` deserialization still works for current saves; this wrapper only adds
@@ -3043,10 +3136,29 @@ pub fn load_entity_migrating(json: &str) -> Result<LoadedEntity, serde_json::Err
     let legacy_attunements = value
         .as_object_mut()
         .and_then(|obj| obj.remove("talisman_attunements"));
+    // Dispatch on the key's absence, never on the recorded `schema_version`: a
+    // hand-edited save may carry any version alongside either shape. Read before the
+    // deserialization below, because `serde(default)` would make the two
+    // indistinguishable afterwards.
+    let funding_absent = !value
+        .as_object()
+        .is_some_and(|obj| obj.contains_key("ability_funding"));
     let mut entity: Entity = serde_json::from_value(value)?;
 
     if let Some(legacy_attunements) = legacy_attunements {
         fold_legacy_talisman(&mut entity, legacy_attunements)?;
+        entity.schema_version = SCHEMA_VERSION;
+    }
+
+    if funding_absent {
+        // The pre-16 rule, applied once: the plan's presence WAS the mode. A value
+        // that will not deserialize has already failed the whole load above, so this
+        // fold cannot silently yield nothing while the version gets stamped.
+        entity.ability_funding = if entity.life_stages.is_some() {
+            AbilityFunding::LifeStages
+        } else {
+            AbilityFunding::Pool
+        };
         entity.schema_version = SCHEMA_VERSION;
     }
 
@@ -3753,6 +3865,8 @@ mod tests {
             }],
             xp_pool: 30,
             life_stages: None,
+            ability_funding: AbilityFunding::Pool,
+            wizard_furthest_phase: Some("abilities".into()),
             art_scores: vec![ArtScore {
                 art: Id::new("art.creo"),
                 score: 5,
@@ -3806,7 +3920,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 15"#));
+        assert!(json.contains(r#""schema_version": 16"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -3985,6 +4099,8 @@ mod tests {
             ability_scores: Vec::new(),
             xp_pool: 0,
             life_stages: None,
+            ability_funding: AbilityFunding::Pool,
+            wizard_furthest_phase: None,
             art_scores: Vec::new(),
             spells: Vec::new(),
             spell_levels_override: None,
@@ -4233,7 +4349,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 15"#));
+        assert!(json.contains(r#""schema_version": 16"#));
         assert!(json.contains(r#""aura": -3"#));
         assert!(json.contains(r#""source": "external""#));
     }
@@ -4593,7 +4709,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 15"#));
+        assert!(json.contains(r#""schema_version": 16"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
         assert!(json.contains(r#""description": "Knight of the Teutonic Order, Crusader""#));
@@ -5289,8 +5405,10 @@ mod tests {
     /// Source: Ars Magica - Definitive Edition (Core Rules).md:16621, :16624-16632.
     #[test]
     fn a_resolved_crisis_round_trips_and_needs_no_schema_bump() {
+        // 16 is schema 16's own bump (the funding discriminator plus the wizard
+        // progress slug); the Crisis widening contributed nothing to it.
         assert_eq!(
-            SCHEMA_VERSION, 15,
+            SCHEMA_VERSION, 16,
             "a purely additive widening earns no bump"
         );
 
@@ -5356,14 +5474,20 @@ mod tests {
         assert_eq!(log, vec![undated, dated]);
     }
 
-    /// The 14 → 15 bump ships **no migration code**: a schema-14 save is already a
-    /// valid schema-15 document, because serde reads a bare `year` number into
-    /// `Some` and every widened field defaults. Only the *forward* direction broke
-    /// — a schema-15 save may omit `year` entirely, which a schema-14 reader
-    /// rejects — and that is what earns the bump.
+    /// The 14 → 15 bump shipped **no migration code** of its own: a schema-14 save is
+    /// already a valid schema-15 document, because serde reads a bare `year` number
+    /// into `Some` and every widened field defaults. Only the *forward* direction
+    /// broke — a schema-15 save may omit `year` entirely, which a schema-14 reader
+    /// rejects — and that is what earned the bump. This test pins that the aging log
+    /// still loads verbatim.
+    ///
+    /// **Schema 16 does have a fold**, and it is what now stamps this save: the file
+    /// carries no `ability_funding` key, so the funding mode is inferred (no plan →
+    /// `Pool`) and the version is stamped, exactly as the `aging_reductions` and
+    /// talisman folds do. The aging log itself is still untouched.
     #[test]
     fn a_schema_fourteen_save_loads_without_migration() {
-        assert_eq!(SCHEMA_VERSION, 15);
+        assert_eq!(SCHEMA_VERSION, 16);
         let schema_14 = r#"{
           "schema_version": 14,
           "ruleset": { "id": "arm5-core", "version": "2024.1" },
@@ -5382,10 +5506,140 @@ mod tests {
         assert_eq!(loaded.entity.aging_log[0].effect, "Lost a point of Stamina");
         assert_eq!(loaded.entity.aging_log[0].age, None);
         assert_eq!(loaded.entity.apparent_age, Some(45));
-        // The load is faithful, not rewriting: with nothing to migrate the stamped
-        // version is left alone, and the *writer* stamps the current one
-        // (`arm-app`'s `save_entity`). So a 14 stays a 14 until it is saved.
-        assert_eq!(loaded.entity.schema_version, 14);
+        // Nothing in the aging log was migrated, but the missing `ability_funding` key
+        // is schema 16's fold, so the version IS stamped. The mode it infers is `Pool`:
+        // no `life_stages` plan means the typed pool was the authority.
+        assert_eq!(loaded.entity.ability_funding, AbilityFunding::Pool);
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+    }
+
+    /// The 15 → 16 bump, pinned. Two fields arrive together (see
+    /// [`SCHEMA_VERSION`]'s doc): the explicit funding discriminator
+    /// [`Entity::ability_funding`] and the wizard-progress slug
+    /// [`Entity::wizard_furthest_phase`]. Batching them means one migration and one
+    /// window instead of two.
+    #[test]
+    fn schema_version_is_16() {
+        assert_eq!(SCHEMA_VERSION, 16);
+    }
+
+    /// A save written before the funding discriminator existed carries a
+    /// `life_stages` plan and no `ability_funding` key. The mode used to *be* the
+    /// plan's presence, so the fold applies that rule once at load: a plan means
+    /// life-stage funding.
+    #[test]
+    fn entity_without_ability_funding_migrates_from_life_stages_presence() {
+        let old = r#"{
+          "schema_version": 15,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "age": 25,
+          "life_stages": { "native_language": "German" }
+        }"#;
+        let loaded = load_entity_migrating(old).unwrap();
+        assert_eq!(loaded.entity.ability_funding, AbilityFunding::LifeStages);
+        assert!(loaded.entity.life_stages.is_some(), "the plan is kept");
+        // A fold happened, so the version is stamped.
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+    }
+
+    /// The other half of the same rule: no plan means the typed pool was the
+    /// authority, so the mode folds to `Pool`.
+    #[test]
+    fn entity_without_ability_funding_or_plan_migrates_to_pool() {
+        let old = r#"{
+          "schema_version": 15,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "xp_pool": 240
+        }"#;
+        let loaded = load_entity_migrating(old).unwrap();
+        assert_eq!(loaded.entity.ability_funding, AbilityFunding::Pool);
+        assert_eq!(loaded.entity.xp_pool, 240, "the typed pool is kept");
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+    }
+
+    /// `ability_funding` is written **even when it holds its default**, which departs
+    /// from this file's standing omit-the-default convention (`is_zero`, `is_false`,
+    /// `Option::is_none`). It has to: the migration dispatches on the key's *absence*,
+    /// so omitting `Pool` would make a pool-funded character that still carries a
+    /// stored plan — the shape schema 16 exists to allow — silently reload as
+    /// life-stage funded. Absence is meaningful, so presence is mandatory.
+    #[test]
+    fn ability_funding_is_written_even_when_it_holds_its_default() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        assert_eq!(entity.ability_funding, AbilityFunding::Pool, "the default");
+        let json = serde_json::to_string(&entity).unwrap();
+        assert!(json.contains(r#""ability_funding":"pool""#), "{json}");
+
+        // And a pool-funded character keeping a plan round-trips as pool-funded.
+        entity.life_stages = Some(crate::life_stage::LifeStagePlan::default());
+        let json = serde_json::to_string(&entity).unwrap();
+        let back = load_entity_migrating(&json).unwrap().entity;
+        assert_eq!(back.ability_funding, AbilityFunding::Pool);
+        assert!(
+            back.life_stages.is_some(),
+            "the plan survives the round trip"
+        );
+    }
+
+    /// A character that never entered the wizard writes **no** key, so the field is
+    /// byte-invisible on every save the editor produces.
+    #[test]
+    fn wizard_furthest_phase_is_omitted_when_none() {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+        );
+        assert_eq!(entity.wizard_furthest_phase, None);
+        let json = serde_json::to_string(&entity).unwrap();
+        assert!(!json.contains("wizard_furthest_phase"), "{json}");
+
+        entity.wizard_furthest_phase = Some("abilities".to_string());
+        let json = serde_json::to_string(&entity).unwrap();
+        assert!(
+            json.contains(r#""wizard_furthest_phase":"abilities""#),
+            "{json}"
+        );
+        let back: Entity = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.wizard_furthest_phase, Some("abilities".to_string()));
+    }
+
+    /// **The test that pins `Option<String>`.** [`CreationPhase`] is a closed
+    /// `Deserialize` enum, so with `Option<CreationPhase>` an unrecognised slug would
+    /// be a serde error — and a serde error fails the *whole* load, making the file
+    /// unopenable. Two slugs prove it is not hypothetical: `"type"` is a phase this
+    /// plan **removed**, so saves carrying it exist, and `"not_a_phase"` stands for
+    /// every future rename. Both load; resolving the slug is the caller's job, done
+    /// leniently against the loaded profile's `creation_phases`.
+    #[test]
+    fn a_save_with_an_unknown_wizard_phase_slug_still_loads() {
+        for slug in ["type", "not_a_phase"] {
+            let save = format!(
+                r#"{{
+                  "schema_version": 16,
+                  "ruleset": {{ "id": "arm5-core", "version": "2024.1" }},
+                  "entity_kind": "character",
+                  "type_id": "magus",
+                  "ability_funding": "pool",
+                  "wizard_furthest_phase": "{slug}"
+                }}"#
+            );
+            let loaded = load_entity_migrating(&save)
+                .unwrap_or_else(|e| panic!("a save carrying '{slug}' must still load: {e}"));
+            assert_eq!(
+                loaded.entity.wizard_furthest_phase,
+                Some(slug.to_string()),
+                "the raw slug is kept verbatim, not resolved or dropped"
+            );
+        }
     }
 
     /// `warping_choices` round-trips canonically, bumps no schema version of its
@@ -5409,7 +5663,7 @@ mod tests {
         entity.normalize();
         let json = serde_json::to_string_pretty(&entity).unwrap();
         assert!(json.contains(r#""warping_choices""#), "{json}");
-        assert!(json.contains(r#""schema_version": 15"#), "{json}");
+        assert!(json.contains(r#""schema_version": 16"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);

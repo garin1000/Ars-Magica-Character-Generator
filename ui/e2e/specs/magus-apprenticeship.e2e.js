@@ -159,8 +159,8 @@ describe('magus apprenticeship through the life stages', () => {
     await advanceWizardTo('abilities');
     await $(XP_POOL_TOTAL).waitForExist({ timeout: STEP_TIMEOUT });
 
-    // A plan and a typed pool are mutually exclusive (the engine forbids both at once),
-    // so the editable field is gone and the total is read-only: apprenticeship's 240,
+    // Under life-stage funding the pools are derived from the stages, so the editable
+    // field is gone and the total is read-only: apprenticeship's 240,
     // the pool the spend is charged against (`:2435`).
     expect(await $(XP_POOL_INPUT).isExisting()).toBe(false);
     expect(await textOf(XP_POOL_TOTAL)).toBe('240');
@@ -307,8 +307,10 @@ describe('magus apprenticeship through the life stages', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'save did not write the file',
     });
-    // The plan carries the guided mode; there is no separate flag, and no typed pool.
+    // The funding mode is a stored field since schema 16, written always; the plan's
+    // presence no longer carries it. Nothing was typed into the pool here.
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
+    expect(saved.ability_funding).toBe('life_stages');
     expect(saved.life_stages).toEqual({ native_language: 'German' });
     expect(saved.xp_pool ?? 0).toBe(0);
     expect(saved.age).toBe(25);
@@ -321,7 +323,7 @@ describe('magus apprenticeship through the life stages', () => {
     await $(EXPERIENCE_TAB).click();
     await $(PANEL).waitForExist({ timeout: STEP_TIMEOUT });
 
-    // Guided funding is derived from the loaded plan, apprenticeship and all.
+    // Guided funding is read off the loaded entity's stored mode, apprenticeship and all.
     await browser.waitUntil(async () => await $(XP_POOL_TOTAL).isExisting(), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'a loaded magus plan should restore guided funding',

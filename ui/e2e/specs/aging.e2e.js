@@ -351,7 +351,7 @@ describe('the guided aging step', () => {
     // Canonical serialization: the chosen conditions are ids, sorted.
     expect(saved.living_conditions).toEqual([LEPER_COLONY, POOR_LOCATION]);
     expect(saved.age).toBe(40);
-    expect(saved.schema_version).toBe(15);
+    expect(saved.schema_version).toBe(16);
     // The widened log entry is the whole record of the year: what was rolled, what
     // it totalled, the conditions in force and the points it awarded. `year` is
     // absent because a grog with no birth year has no calendar year to write.

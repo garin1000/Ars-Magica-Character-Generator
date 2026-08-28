@@ -97,6 +97,7 @@ function resetEntity(): void {
     characteristic_descriptions: {},
     ability_scores: [],
     xp_pool: 0,
+    ability_funding: 'pool',
     art_scores: [],
     personality_traits: [],
     reputations: [],
@@ -206,7 +207,9 @@ describe('AbilityTab mounts the magus minimums checklist (slice 6b4)', () => {
     setChecklist();
     // Flat pool: `:2437` is unconditional, so a magus owes the minimums either way …
     expect(html()).toContain('data-testid="magus-minimums"');
-    // … and under a life-stage plan just the same.
+    // … and under life-stage funding just the same. The mode is stored since schema
+    // 16, so it is set alongside the plan.
+    store.entity.ability_funding = 'life_stages';
     store.entity.life_stages = {};
     expect(html()).toContain('data-testid="magus-minimums"');
   });

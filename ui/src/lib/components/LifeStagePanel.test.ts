@@ -102,6 +102,7 @@ function resetEntity(typeId = 'companion'): void {
     characteristic_descriptions: {},
     ability_scores: [],
     xp_pool: 0,
+    ability_funding: 'pool',
     art_scores: [],
     personality_traits: [],
     reputations: [],
@@ -110,8 +111,13 @@ function resetEntity(typeId = 'companion'): void {
   store.effective = null;
 }
 
-/** Put the entity in guided funding: a plan present IS the switch. */
+/**
+ * Put the entity in guided funding. Since schema 16 that takes BOTH the stored mode
+ * and the plan: the panel reads `store.abilityFunding`, and a plan on its own is
+ * inert data a pool-funded character may legitimately carry.
+ */
 function installPlan(plan: LifeStagePlan = {}): void {
+  store.entity.ability_funding = 'life_stages';
   store.entity.life_stages = plan;
 }
 

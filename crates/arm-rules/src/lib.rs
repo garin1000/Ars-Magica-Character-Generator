@@ -95,15 +95,15 @@ pub use ruleset::{IntegrityError, LocalizedRuleset, Ruleset, RulesetError, Rules
 pub use spell::{Spell, SpellDuration, SpellRange, SpellTarget};
 pub use spell_mastery::SpellMasteryAbility;
 pub use types::{
-    AbilityScore, AdvancementSource, AgingEffect, AgingLogEntry, ArtScore, CastingScope,
-    CategoryCap, Classification, CombatStat, CreationPhase, Effect, EnchantedDevice, Entity,
-    EntityKind, EntityTypeProfile, EquipmentSlot, Familiar, GiftPolicy, HalvableTotal, HealthTrack,
-    I18nEntry, Id, ItemKind, LineRange, LoadedEntity, LongevityRitual, LongevitySource,
-    MagicResistanceEffect, Magnitude, MightScore, ParamType, ParameterDef, ParameterDomain,
-    PersonalityTrait, PointBudget, PointItem, Prereq, Realm, Reputation, ReputationType,
-    RulesetRef, SCHEMA_VERSION, Selection, SourceRef, SpecialCasting, SpellSelection,
-    SupernaturalPower, Talisman, TalismanAttunement, TalismanEffect, TwilightScar, ValidationMode,
-    load_entity_migrating,
+    AbilityFunding, AbilityScore, AdvancementSource, AgingEffect, AgingLogEntry, ArtScore,
+    CastingScope, CategoryCap, Classification, CombatStat, CreationPhase, Effect, EnchantedDevice,
+    Entity, EntityKind, EntityTypeProfile, EquipmentSlot, Familiar, GiftPolicy, HalvableTotal,
+    HealthTrack, I18nEntry, Id, ItemKind, LineRange, LoadedEntity, LongevityRitual,
+    LongevitySource, MagicResistanceEffect, Magnitude, MightScore, ParamType, ParameterDef,
+    ParameterDomain, PersonalityTrait, PointBudget, PointItem, Prereq, Realm, Reputation,
+    ReputationType, RulesetRef, SCHEMA_VERSION, Selection, SourceRef, SpecialCasting,
+    SpellSelection, SupernaturalPower, Talisman, TalismanAttunement, TalismanEffect, TwilightScar,
+    ValidationMode, load_entity_migrating,
 };
 pub use validation::{
     Balance, IssueSeverity, PointCeilings, ValidationIssue, ValidationResult, compute_balance,

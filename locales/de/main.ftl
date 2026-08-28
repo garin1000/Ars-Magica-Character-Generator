@@ -300,8 +300,6 @@ life-stage-post-gauntlet-summary = { $years } Jahre als Magus: { $points } Punkt
 # Notausgang für eine von Hand bearbeitete Datei: ein Charakter, der über seine
 # Lebensabschnitte finanziert wird, darf keinen eingetragenen Vorrat führen, und die
 # geführte Erstellung bietet kein Feld, um ihn zu berichtigen — dies leert ihn.
-xp-pool-clear = Vorrat leeren
-xp-pool-clear-hint = Die Erfahrung stammt hier aus den Lebensabschnitten, ein von Hand eingetragener Vorrat muss daher zurück auf 0.
 # Die Muttersprache: der erste Block der Kindheit kauft diese Fertigkeit und nichts
 # anderes, ohne sie gibt es kein Budget der Kindheit.
 native-language-label = Muttersprache
@@ -859,7 +857,6 @@ issue-xp_solve_bound_exceeded = Dieser Charakter hat zu viele Fertigkeits- und K
 issue-restricted_xp_unspent = { $origin }: { $unspent } von { $amount } eingeschränkten Erfahrungspunkten sind nicht ausgegeben und verfallen.
 issue-ability_category_requires_virtue = { $ability } ist { $category } und benötigt eine Tugend, die den Zugang bei der Charaktererschaffung gewährt.
 issue-academic_ability_without_scholarly_language = Eine akademische Fertigkeit erfordert normalerweise { $ability } auf { $min } oder höher.
-issue-life_stage_xp_pool_conflict =Dieser Charakter erhält seine Erfahrung über seine Lebensabschnitte, daher muss der direkt eingetragene Vorrat von { $xp_pool } 0 sein.
 issue-life_stage_age_unset = Trage das Alter des Charakters ein: das spätere Leben erbringt Erfahrungspunkte pro Jahr, ohne Alter zählen daher nur die Blöcke der Kindheit.
 issue-life_stage_age_before_childhood = Alter { $age } liegt innerhalb der Kindheit, die { $min } Jahre dauert — es gibt keine späteren Lebensjahre, in denen Erfahrung erworben wird.
 issue-life_stage_age_before_gauntlet = Kein Magus legt die Lehrlingsprüfung mit { $age } Jahren ab: Sie kommt frühestens mit { $min } — Kindheit plus fünfzehn Jahre Lehrlingszeit.

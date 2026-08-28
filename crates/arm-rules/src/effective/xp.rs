@@ -322,6 +322,12 @@ struct FlowPool {
 /// when either is unset — the validator reports an unset language
 /// (`life_stage_native_language_unset`), and no pool is created for a language
 /// nobody picked.
+///
+/// The `life_stages` check here genuinely asks "is there a plan to read a language
+/// off", **not** "is this character life-stage funded". The funding mode is decided
+/// once, upstream: this is only called inside the `if let Some((rules, budget))`
+/// branch below, and `LifeStageRules::budget` already returns `None` under
+/// [`crate::AbilityFunding::Pool`].
 fn native_language_instance(
     entity: &Entity,
     rules: &crate::life_stage::LifeStageRules,

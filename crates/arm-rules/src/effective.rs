@@ -2478,13 +2478,16 @@ mod tests {
         .unwrap()
     }
 
-    /// A 25-year-old companion whose childhood bought Native Language (German) 5.
+    /// A 25-year-old companion whose childhood bought Native Language (German) 5,
+    /// **funded from its life stages**. The mode is stored since schema 16, so it is
+    /// set alongside the plan: a plan alone is inert and earns no pools.
     fn planned_companion() -> Entity {
         let mut entity = Entity::new(
             EntityKind::Character,
             Id::new("companion"),
             RulesetRef::new(Id::new("test"), "1"),
         );
+        entity.ability_funding = crate::types::AbilityFunding::LifeStages;
         entity.age = Some(25);
         entity.life_stages = Some(crate::life_stage::LifeStagePlan {
             native_language: Some("German".into()),
@@ -2527,6 +2530,41 @@ mod tests {
 
         // A companion's general pool is still its later life.
         assert_eq!(xp_allocation(&planned_companion(), &rs).general_pool, 300);
+    }
+
+    /// **The sweep, at the allocation.** Every pool this function builds used to be
+    /// keyed on the plan's *presence*; since schema 16 they are keyed on
+    /// [`crate::AbilityFunding`]. A pool-funded character that still carries a plan —
+    /// the shape schema 16 exists to allow — therefore draws its typed
+    /// [`Entity::xp_pool`] and gets **no** life-stage pool at all: no childhood
+    /// blocks, no later life, nothing to leave unspent. Reading the plan instead
+    /// would fund such a character twice over.
+    #[test]
+    fn pool_funding_with_a_stored_plan_draws_the_typed_pool_not_the_stages() {
+        let rs = life_stage_ruleset();
+        let mut entity = planned_companion();
+        entity.ability_funding = crate::types::AbilityFunding::Pool;
+        entity.xp_pool = 90;
+
+        let allocation = xp_allocation(&entity, &rs);
+        assert_eq!(
+            allocation.general_pool, 90,
+            "the typed pool, not later life"
+        );
+        assert!(
+            allocation.restricted.is_empty(),
+            "no childhood block is granted: {:?}",
+            allocation.restricted
+        );
+        // Native Language 5 costs 75, which the typed 90 covers on its own.
+        assert_eq!(allocation.total_demand, 75);
+        assert_eq!(allocation.general_used, 75);
+
+        // The very same entity, funded from its stages, is the pre-existing case.
+        entity.ability_funding = crate::types::AbilityFunding::LifeStages;
+        let allocation = xp_allocation(&entity, &rs);
+        assert_eq!(allocation.general_pool, 300, "20 years at 15 a year");
+        assert!(!allocation.restricted.is_empty());
     }
 
     /// The native-language block funds the native instance and nothing else, so a
@@ -2889,6 +2927,25 @@ mod tests {
         let base = spell_levels_base(&magus, profile);
         assert_eq!(base, 120, "the profile's apprenticeship levels, untouched");
         assert_eq!(spell_levels_budget(base, &magus, &rs), 420, "120 + 300");
+    }
+
+    /// **The sweep, at the spell-level budget.** Levels of spells taken out of the
+    /// post-Gauntlet points are a life-stage figure, so under pool funding a stored
+    /// plan grants none of them and the budget falls back to the profile's — even
+    /// with a plan on file naming 300.
+    #[test]
+    fn post_gauntlet_spell_levels_are_not_granted_under_pool_funding() {
+        let rs = life_stage_ruleset();
+        let profile = rs.profile(&Id::new("magus"));
+        let mut magus = experienced_magus();
+        magus.life_stages = Some(crate::life_stage::LifeStagePlan {
+            post_gauntlet_spell_levels: 300,
+            ..magus.life_stages.clone().expect("a plan")
+        });
+        magus.ability_funding = crate::types::AbilityFunding::Pool;
+        assert_eq!(life_stage_spell_levels(&magus, &rs), 0);
+        let base = spell_levels_base(&magus, profile);
+        assert_eq!(spell_levels_budget(base, &magus, &rs), 120, "the profile's");
     }
 
     /// A magus standing at its Gauntlet has no post-Gauntlet points to slice, so its

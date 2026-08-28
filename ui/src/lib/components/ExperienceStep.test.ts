@@ -82,6 +82,7 @@ function resetEntity(): void {
     characteristic_descriptions: {},
     ability_scores: [],
     xp_pool: 0,
+    ability_funding: 'pool',
     art_scores: [],
     personality_traits: [],
     reputations: [],
@@ -114,8 +115,10 @@ describe('ExperienceStep (Slice 2, #11)', () => {
   });
 
   it('renders the childhood picker once the character is funded by life stages', () => {
-    // `abilityFunding` is derived from plan presence, so a stored plan is what
-    // selects the guided mode the detailed fields sit behind.
+    // `abilityFunding` reads the entity's stored mode (schema 16), so the mode is
+    // what selects the guided branch the detailed fields sit behind — not the plan,
+    // which a pool-funded character may carry inertly.
+    store.entity.ability_funding = 'life_stages';
     store.entity.life_stages = {};
     const body = html();
     expect(body).toContain('data-testid="childhood-package-select"');

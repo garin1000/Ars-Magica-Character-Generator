@@ -1327,11 +1327,6 @@ ul {
   color: var(--muted, #6b7280);
 }
 
-.xp-summary .xp-pool-clear-hint {
-  color: var(--muted, #6b7280);
-  font-size: 0.85rem;
-}
-
 .xp-summary .over {
   color: var(--error);
   font-weight: 600;

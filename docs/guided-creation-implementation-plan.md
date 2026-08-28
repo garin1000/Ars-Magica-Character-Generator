@@ -1170,8 +1170,15 @@ the per-slice gate is the real pacing mechanism.
     sorted serialization.
 - **TDD steps (strict red→green)**
   1. **RED (Rust)** — `crates/arm-rules/src/types.rs` tests:
-     `schema_version_is_16` (there is an existing `assert_eq!(SCHEMA_VERSION, 15)` at
-     `life_stage.rs:1515` — it must fail, then be updated); 
+     `schema_version_is_16`. **There are TWO existing `assert_eq!(SCHEMA_VERSION, 15)`
+     guards, not one** — `crates/arm-rules/src/life_stage.rs:1515` **and**
+     `crates/arm-rules/src/types.rs:5366` (verified 2026-08-28; the plan originally
+     named only the first). Both must fail, then both be updated deliberately. Grep for
+     `SCHEMA_VERSION` before assuming the set is complete; a guard left at 15 that
+     someone "fixes" by weakening the assertion is worse than no guard.
+     Note also that the anchors in this slice have drifted a few lines as Slices 2-3
+     landed: `SCHEMA_VERSION` is now `types.rs:2812` (not `:2808`) and
+     `load_entity_migrating` is `types.rs:3038` (not `:3034`). Re-verify before citing. 
      `entity_without_ability_funding_migrates_from_life_stages_presence` (a save with
      `life_stages` and no `ability_funding` loads as life-stage funding);
      `entity_without_ability_funding_or_plan_migrates_to_pool`;

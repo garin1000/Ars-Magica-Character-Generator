@@ -4,8 +4,9 @@
 //! canonical (input-order-independent) output.
 
 use arm_rules::{
-    Characteristic, Entity, EntityKind, Familiar, Id, MightScore, PersonalityTrait, Prereq, Realm,
-    RulesetRef, Selection, SupernaturalPower, Talisman, TalismanAttunement, TalismanEffect,
+    AbilityFunding, Characteristic, Entity, EntityKind, Familiar, Id, MightScore, PersonalityTrait,
+    Prereq, Realm, RulesetRef, Selection, SupernaturalPower, Talisman, TalismanAttunement,
+    TalismanEffect,
 };
 use proptest::prelude::*;
 
@@ -133,6 +134,19 @@ fn arb_familiar() -> impl Strategy<Value = Familiar> {
         )
 }
 
+/// A wizard-progress slug, deliberately **not** drawn from `CreationPhase::ALL`:
+/// the field stores a raw slug precisely so a vocabulary the build no longer speaks
+/// still round-trips (see `a_save_with_an_unknown_wizard_phase_slug_still_loads`).
+/// `None` is generated too, which is the shape that must add no key at all.
+fn arb_wizard_phase() -> impl Strategy<Value = Option<String>> {
+    prop::option::of(prop_oneof![
+        Just("abilities".to_string()),
+        Just("review".to_string()),
+        Just("type".to_string()),
+        Just("not_a_phase".to_string()),
+    ])
+}
+
 fn arb_entity() -> impl Strategy<Value = Entity> {
     (
         any::<u32>(),
@@ -142,14 +156,28 @@ fn arb_entity() -> impl Strategy<Value = Entity> {
         prop::collection::vec(arb_selection(), 0..6),
         prop::option::of(arb_talisman()),
         prop::option::of(arb_familiar()),
+        prop_oneof![Just(AbilityFunding::Pool), Just(AbilityFunding::LifeStages)],
+        arb_wizard_phase(),
     )
         .prop_map(
-            |(schema_version, rs_id, entity_kind, type_id, selections, talisman, familiar)| {
+            |(
+                schema_version,
+                rs_id,
+                entity_kind,
+                type_id,
+                selections,
+                talisman,
+                familiar,
+                ability_funding,
+                wizard_furthest_phase,
+            )| {
                 let mut entity = Entity::new(entity_kind, type_id, RulesetRef::new(rs_id, "1"));
                 entity.schema_version = schema_version;
                 entity.selections = selections;
                 entity.talisman = talisman;
                 entity.familiar = familiar;
+                entity.ability_funding = ability_funding;
+                entity.wizard_furthest_phase = wizard_furthest_phase;
                 entity.normalize();
                 entity
             },
@@ -191,6 +219,18 @@ proptest! {
         let json = serde_json::to_string(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         prop_assert_eq!(&entity, &back);
+
+        // Schema 16's two fields, byte-level. `ability_funding` is always written —
+        // absence is what the migration dispatches on, so omitting the default would
+        // flip a pool-funded character that keeps a plan back to life-stage funding.
+        // `wizard_furthest_phase` is the opposite: skip-if-none, so a character that
+        // never entered the wizard adds no key.
+        prop_assert!(json.contains(r#""ability_funding":"#), "{}", json);
+        prop_assert_eq!(
+            json.contains("wizard_furthest_phase"),
+            entity.wizard_furthest_phase.is_some(),
+            "{}", json
+        );
 
         let mut permuted = entity.clone();
         reverse_every_sorted_list(&mut permuted);

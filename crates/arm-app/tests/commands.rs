@@ -287,7 +287,7 @@ fn sample_entity_with_characteristics_and_abilities_validates() {
     // The shipped sample now carries characteristics, ability scores, and a bank,
     // and is kept at the current schema version so a save/load round trip on it is
     // an identity (see `save_then_load_round_trips_with_byte_stable_canonical_json`).
-    assert_eq!(entity.schema_version, 15);
+    assert_eq!(entity.schema_version, 16);
     assert!(!entity.characteristics.is_empty());
     assert!(!entity.ability_scores.is_empty());
     let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
@@ -613,7 +613,7 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
 
     let migrated = load_entity_from_path(&path).unwrap();
     assert_eq!(
-        migrated.schema_version, 15,
+        migrated.schema_version, 16,
         "the field move bumps the schema"
     );
     let talisman = migrated
@@ -631,7 +631,7 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
     let written = fs::read_to_string(&path).unwrap();
     assert!(!written.contains("talisman_attunements"), "got: {written}");
     assert!(written.contains("\"talisman\""), "got: {written}");
-    assert!(written.contains("\"schema_version\": 15"), "got: {written}");
+    assert!(written.contains("\"schema_version\": 16"), "got: {written}");
 }
 
 #[test]
@@ -644,7 +644,7 @@ fn save_stamps_current_schema_version() {
     save_entity_to_path(&entity, &path).unwrap();
     let written = fs::read_to_string(&path).unwrap();
     assert!(
-        written.contains("\"schema_version\": 15"),
+        written.contains("\"schema_version\": 16"),
         "save must stamp the current schema version, got: {written}"
     );
 }
@@ -708,7 +708,7 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
     let path = tmp.path().join("magus.json");
     save_entity_to_path(&entity, &path).unwrap();
     let reloaded = load_entity_from_path(&path).unwrap();
-    assert_eq!(reloaded.schema_version, 15);
+    assert_eq!(reloaded.schema_version, 16);
     assert_eq!(reloaded.art_scores, entity.art_scores);
 }
 
@@ -1414,6 +1414,8 @@ fn effective_scores_surface_the_post_gauntlet_spell_levels_separately() {
     // A magus of 60 gauntleted at 25: 35 years at 30 points each, 300 of them taken
     // as levels of spells.
     magus.age = Some(60);
+    // The funding mode is stored since schema 16, so a plan needs it to be live.
+    magus.ability_funding = arm_rules::AbilityFunding::LifeStages;
     magus.life_stages = Some(arm_rules::LifeStagePlan {
         gauntlet_age: Some(25),
         post_gauntlet_spell_levels: 300,
@@ -1446,6 +1448,8 @@ fn life_stage_companion(native_language: &str) -> Entity {
         arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
     );
     entity.age = Some(25);
+    // The funding mode is stored since schema 16, so a plan needs it to be live.
+    entity.ability_funding = arm_rules::AbilityFunding::LifeStages;
     entity.life_stages = Some(arm_rules::LifeStagePlan {
         native_language: Some(native_language.to_string()),
         ..arm_rules::LifeStagePlan::default()

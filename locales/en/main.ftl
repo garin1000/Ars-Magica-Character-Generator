@@ -286,8 +286,6 @@ life-stage-post-gauntlet-summary = { $years } years as a magus: { $points } poin
 # Escape hatch for a hand-edited save: a character funded by its life stages must
 # not also carry an entered pool, and guided mode offers no field to correct one,
 # so this empties it.
-xp-pool-clear = Clear pool
-xp-pool-clear-hint = Experience comes from the life stages here, so a pool entered by hand has to go back to 0.
 # The native language: childhood's first block buys this Ability and nothing else,
 # so there is no childhood budget until it is named.
 native-language-label = Native language
@@ -853,7 +851,6 @@ issue-xp_solve_bound_exceeded = This character has too many Ability and Art scor
 issue-restricted_xp_unspent = { $origin }: { $unspent } of { $amount } restricted experience points are unspent and will be wasted.
 issue-ability_category_requires_virtue = { $ability } is { $category }, which needs a Virtue granting access at character creation.
 issue-academic_ability_without_scholarly_language = An Academic Ability normally requires { $ability } at { $min } or better.
-issue-life_stage_xp_pool_conflict =This character earns its experience through its life stages, so the directly entered pool of { $xp_pool } must be 0.
 issue-life_stage_age_unset = Enter the character's age: later life earns experience per year, so with no age only childhood's blocks can be counted.
 issue-life_stage_age_before_childhood = Age { $age } falls inside childhood, which lasts { $min } years — there are no later-life years to earn experience in.
 issue-life_stage_age_before_gauntlet = No magus is gauntleted at { $age }: the Gauntlet comes no earlier than { $min } — childhood plus fifteen years of apprenticeship.

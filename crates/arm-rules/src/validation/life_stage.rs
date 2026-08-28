@@ -11,13 +11,15 @@ use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
 
 /// Validates a character built through its life stages.
 ///
-/// Nothing here applies to a directly-entered character (no
-/// [`Entity::life_stages`]), which keeps buying Abilities from
-/// [`Entity::xp_pool`] exactly as before. With a plan:
+/// Nothing here applies to a character funded from [`Entity::xp_pool`], which keeps
+/// buying Abilities from that pool exactly as before. **The gate is
+/// [`Entity::ability_funding`], not the plan's presence**: since schema 16 a
+/// pool-funded character may keep an inert plan on file, and every finding below
+/// prices a plan against what its stages grant — nothing, under pool funding — so
+/// reporting them would blame the player for data the app deliberately preserves.
 ///
-/// - `life_stage_xp_pool_conflict`: a raw pool alongside the plan. The two are
-///   alternative ways of funding the same purchases, so carrying both would let a
-///   character spend the derived budget *and* a typed pool.
+/// With life-stage funding and a plan:
+///
 /// - `life_stage_age_unset`: no age at all, so the later-life block — the one
 ///   counted in years — cannot be earned. Childhood is granted regardless
 ///   ([`crate::life_stage::LifeStageRules::budget`]), so this is a finding of its
@@ -63,6 +65,10 @@ pub(crate) fn validate_life_stage_plan(
     type_profile: Option<&EntityTypeProfile>,
     issues: &mut Vec<ValidationIssue>,
 ) {
+    match entity.ability_funding {
+        AbilityFunding::Pool => return,
+        AbilityFunding::LifeStages => {}
+    }
     let Some(plan) = &entity.life_stages else {
         return;
     };
@@ -72,15 +78,6 @@ pub(crate) fn validate_life_stage_plan(
         // check it against.
         return;
     };
-
-    if entity.xp_pool > 0 {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_LIFE_STAGE_XP_POOL_CONFLICT,
-            CreationPhase::Experience,
-            args([("xp_pool", entity.xp_pool.to_string())]),
-            None,
-        ));
-    }
 
     // The later-life block is "15 experience points per year" up to the character's
     // age (Ars Magica - Definitive Edition (Core Rules).md:2392), so an unset age leaves it uncountable — said plainly
@@ -412,7 +409,7 @@ fn parameter_key(ability: &Id, ruleset: &Ruleset) -> String {
 mod tests {
     use crate::childhood::ChildhoodRejection;
     use crate::life_stage::LifeStagePlan;
-    use crate::types::{AbilityScore, Entity, EntityKind, Id, RulesetRef};
+    use crate::types::{AbilityFunding, AbilityScore, Entity, EntityKind, Id, RulesetRef};
     use crate::validation::{
         IssueSeverity, ValidationIssue, ValidationResult, childhood_rejection_issues, validate,
     };
@@ -500,12 +497,18 @@ mod tests {
     }
 
     /// A companion built through its life stages, with a native language bought.
+    ///
+    /// Sets `ability_funding` as well as the plan: since schema 16 the mode is stored
+    /// rather than inferred from the plan's presence, so a fixture assigning only
+    /// `life_stages` would be a pool-funded character whose plan is inert and whose
+    /// findings are all suppressed.
     fn planned(age: u32) -> Entity {
         let mut entity = Entity::new(
             EntityKind::Character,
             Id::new("companion"),
             RulesetRef::new(Id::new("test"), "1"),
         );
+        entity.ability_funding = AbilityFunding::LifeStages;
         entity.age = Some(age);
         entity.life_stages = Some(LifeStagePlan {
             native_language: Some("German".into()),
@@ -533,20 +536,39 @@ mod tests {
         );
     }
 
-    /// The two funding models are alternatives, so both at once is an error rather
-    /// than a silent double budget.
+    /// **The retired invariant.** The engine used to make a plan and a typed pool
+    /// mutually exclusive and report `life_stage_xp_pool_conflict` when it saw both.
+    /// Schema 16 stores the funding mode explicitly, so the two legitimately coexist:
+    /// switching funding mode no longer destroys the side you switched away from, and
+    /// the inactive side is simply inert. There is nothing left to conflict about, so
+    /// the finding is gone — not merely silenced — and no finding at all is raised.
     #[test]
-    fn a_plan_beside_a_typed_pool_conflicts() {
+    fn no_conflict_finding_when_a_plan_and_a_typed_pool_coexist() {
         let mut entity = planned(25);
         entity.xp_pool = 120;
-        let result = validate(&entity, &rs());
-        let issue = result
-            .issues
-            .iter()
-            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_XP_POOL_CONFLICT)
-            .expect("the conflict is reported");
-        assert_eq!(issue.args.get("xp_pool").map(String::as_str), Some("120"));
-        assert_eq!(issue.phase, CreationPhase::Experience);
+        let issues = codes(&validate(&entity, &rs()));
+        assert!(
+            !issues.iter().any(|code| code.contains("xp_pool_conflict")),
+            "issues: {issues:?}"
+        );
+    }
+
+    /// A plan the character is not funded by earns nothing, so it is judged by
+    /// nothing either. Every finding here prices a plan against what its stages
+    /// grant; under pool funding the stages grant nothing, so reporting an unset age
+    /// or a missing native language would blame the player for a shape the app itself
+    /// keeps on file (schema 16 stops discarding it).
+    #[test]
+    fn an_inert_plan_under_pool_funding_raises_no_life_stage_findings() {
+        let mut entity = planned(25);
+        entity.ability_funding = AbilityFunding::Pool;
+        entity.age = None;
+        entity.life_stages = Some(LifeStagePlan::default());
+        let issues = codes(&validate(&entity, &rs()));
+        assert!(
+            !issues.iter().any(|c| c.starts_with("life_stage_")),
+            "issues: {issues:?}"
+        );
     }
 
     #[test]
@@ -1004,6 +1026,40 @@ mod tests {
                 ("life_stage".to_string(), "childhood_spread".to_string()),
             ]
         );
+    }
+
+    /// **The sweep, at the two experience findings.** `restricted_xp_unspent` and
+    /// `not_enough_xp` are both read off [`crate::effective::xp_allocation`], which
+    /// now keys its pools on [`AbilityFunding`] rather than on the plan's presence. So
+    /// a pool-funded character carrying a plan gets no restricted block to leave
+    /// unspent, and its shortfall is measured against the typed pool — not against
+    /// stages that fund nothing.
+    #[test]
+    fn the_experience_findings_follow_the_funding_mode_not_the_stored_plan() {
+        let mut entity = planned(25);
+        entity.ability_funding = AbilityFunding::Pool;
+        // 75 covers the bought German 5 exactly, so a funded pool-mode character is
+        // silent on both codes.
+        entity.xp_pool = 75;
+        let issues = codes(&validate(&entity, &rs()));
+        assert!(
+            !issues.contains(&ValidationIssue::CODE_RESTRICTED_XP_UNSPENT.into()),
+            "no restricted block exists to be unspent: {issues:?}"
+        );
+        assert!(
+            !issues.contains(&ValidationIssue::CODE_NOT_ENOUGH_XP.into()),
+            "issues: {issues:?}"
+        );
+
+        // One point short of the same spend, and the shortfall is the typed pool's.
+        entity.xp_pool = 74;
+        let result = validate(&entity, &rs());
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_NOT_ENOUGH_XP)
+            .expect("the typed pool is what falls short");
+        assert_eq!(issue.args.get("pool").map(String::as_str), Some("74"));
     }
 
     /// A magus's pre-apprenticeship experience is a pool of its own, so leaving it

@@ -120,7 +120,7 @@ describe('talisman', () => {
       timeoutMsg: 'save did not write the file',
     });
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.schema_version).toBe(15);
+    expect(saved.schema_version).toBe(16);
     expect(saved.talisman_attunements).toBeUndefined();
     expect(saved.talisman.description).toBe('An ash staff shod with silver');
     expect(saved.talisman.attunements).toEqual([

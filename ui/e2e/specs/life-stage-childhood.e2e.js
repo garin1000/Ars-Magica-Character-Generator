@@ -217,8 +217,8 @@ describe('life-stage funding and Sample Childhoods', () => {
     // The pool and every block it is made of belong to the XP bar, one step on.
     await standOnWizardStep('abilities');
     await $(XP_POOL_TOTAL).waitForExist({ timeout: STEP_TIMEOUT });
-    // Under a plan the engine forbids a typed pool, so the input gives way to a
-    // read-only total. Later life is (age - childhood years) x 15 = (25 - 5) x 15 = 300.
+    // Under life-stage funding the pools are derived, so the editable input gives way
+    // to a read-only total. Later life is (age - childhood years) x 15 = (25 - 5) x 15 = 300.
     await browser.waitUntil(async () => (await textOf(XP_POOL_TOTAL)) === '300', {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'age 25 should earn a companion 300 later-life experience',
@@ -355,10 +355,12 @@ describe('life-stage funding and Sample Childhoods', () => {
     expect(await textOf(RESTRICTED_0)).toContain('75 / 75');
   });
 
-  it('keeps the bought rows when the funding source is switched back and forth', async () => {
+  it('keeps the bought rows AND the plan when the funding source is switched back and forth', async () => {
     await standOnWizardStep('experience');
     await $(FUNDING_POOL).click();
-    // The plan is gone, so its fields go with it.
+    // The plan is no longer read, so its fields leave the step — but the plan itself
+    // stays on the character (schema 16 stores the funding mode instead of inferring
+    // it from the plan's presence, so switching mode destroys nothing).
     await browser.waitUntil(async () => !(await $(AGE_INPUT).isExisting()), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'leaving guided funding should retire the plan fields',
@@ -385,34 +387,39 @@ describe('life-stage funding and Sample Childhoods', () => {
     await standOnWizardStep('experience');
     await $(FUNDING_LIFE_STAGES).click();
     await $(AGE_INPUT).waitForExist({ timeout: STEP_TIMEOUT });
-    // A new plan starts empty rather than resurrecting the dropped one, so the
-    // native language has to be named again — and no drafted slot shows a fault.
-    expect(await $(NATIVE_LANGUAGE).getValue()).toBe('');
+    // THE POINT OF THE ROUND TRIP: the plan is picked up exactly where it was left.
+    // The native language typed before the switch is still there — it used to be
+    // destroyed, unprompted and unrecoverably, along with the Gauntlet age, the lab
+    // seasons, the spell levels and the childhood package (review issue #29).
+    expect(await $(AGE_INPUT).getValue()).toBe('25');
+    await browser.waitUntil(async () => (await $(NATIVE_LANGUAGE).getValue()) === 'German', {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'the typed native language must survive a funding round trip',
+    });
+    // The recorded package survives with it, named in words.
+    expect(await textOf(TAKEN)).toContain('Traveling Childhood');
+    // The un-submitted DRAFT is still pruned, though: the select is back on its
+    // prompt option and no drafted slot shows a fault, so nothing prefills a
+    // half-answered package or blames the player for a decision nobody made.
     expect(await countOf('[data-testid^="childhood-slot-"][data-testid$="-reason"]')).toBe(0);
-    // The draft went with the plan it belonged to: the select is back on its prompt
-    // option, so nothing prefills a package for a plan that starts from nothing.
     expect(await $(PACKAGE_SELECT).getValue()).toBe('');
     expect(await $(PACKAGE_PREVIEW).isExisting()).toBe(false);
 
-    // Put the plan back the way the save below should record it.
-    await $(AGE_INPUT).setValue('25');
-    await $(NATIVE_LANGUAGE).setValue('German');
-
-    // The rows still stand through the second switch, and the restored plan funds them
-    // again — the childhood block is spent by the scores that are already there.
+    // The rows still stand through the second switch, and the plan funds them again
+    // with nothing re-typed — the childhood block is spent by the scores already there.
     await standOnWizardStep('abilities');
     await $(RESTRICTED_0).waitForExist({ timeout: STEP_TIMEOUT });
     await browser.waitUntil(async () => (await textOf(RESTRICTED_0)).includes('75 / 75'), {
       timeout: STEP_TIMEOUT,
-      timeoutMsg: 'restoring the native language did not re-fund the childhood block',
+      timeoutMsg: 'the surviving plan did not re-fund the childhood block',
     });
     expect(await countOf(AREA_LORE_SCORES)).toBe(2);
   });
 
   it('restores guided funding and the recorded package from a save', async () => {
-    // Leaving the guided mode dropped the plan, and both the recorded package (the
-    // plan IS the record) and the draft went with it, so re-take it from the select
-    // and the slots.
+    // The round trip above kept the plan and the recorded package, so re-taking the
+    // package here is idempotent bookkeeping rather than a repair: it re-fills the
+    // pruned DRAFT so the Apply path is exercised once more before the save.
     await standOnWizardStep('experience');
     await (await reach(PACKAGE_SELECT)).selectByAttribute('value', TRAVELING);
     await (await reach('[data-testid="childhood-slot-area_a"]')).setValue('Rhine');
@@ -431,8 +438,10 @@ describe('life-stage funding and Sample Childhoods', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'save did not write the file',
     });
-    // The plan is what carries the guided mode — there is no separate flag.
+    // The funding mode is a STORED field since schema 16, written even when it holds
+    // its default — the plan's presence no longer carries it.
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
+    expect(saved.ability_funding).toBe('life_stages');
     expect(saved.life_stages).toEqual({
       childhood_package: TRAVELING,
       native_language: 'German',
@@ -448,7 +457,8 @@ describe('life-stage funding and Sample Childhoods', () => {
     await $(EXPERIENCE_TAB).click();
     await $(PANEL).waitForExist({ timeout: STEP_TIMEOUT });
 
-    // Guided funding is derived from the loaded plan, with no reconciliation step.
+    // Guided funding is read off the loaded entity's stored mode, with no
+    // reconciliation step.
     await browser.waitUntil(async () => await $(XP_POOL_TOTAL).isExisting(), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'a loaded plan should restore guided funding',
