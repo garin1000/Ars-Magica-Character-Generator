@@ -61,6 +61,7 @@
       "virtues_flaws",
       "experience",
       "abilities",
+      "personality_reputations",
       "aging"
     ]
   },

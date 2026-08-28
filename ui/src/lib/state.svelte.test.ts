@@ -670,6 +670,29 @@ describe('the guided wizard', () => {
       expect(store.closeGuardPayload().dirty).toBe(false);
     });
 
+    // The case that distinguishes the rule from "every Next dirties". Next earns a
+    // dirty flag by ACTIVATING a step that was not reachable before — that is a real
+    // change to the document, because the rail's reach is now stored on it. Stepping
+    // forward over ground already covered activates nothing and so changes nothing.
+    // Without this, the two tests above are equally satisfied by a cruder rule that
+    // dirties on any Next at all, and a player browsing back and forth with Next
+    // would be told they had unsaved work they never did.
+    it('does not dirty the document when Next re-treads an already-reached step', async () => {
+      await openIntoWizardWith({ wizard_furthest_phase: 'experience' });
+      expect(store.dirty).toBe(false);
+
+      const furthest = store.wizardFurthest;
+      store.wizardGoTo(0);
+      store.wizardNext();
+      store.wizardNext();
+
+      // Moved, but only within ground already reached — so nothing was activated.
+      expect(store.wizardStep).toBeGreaterThan(0);
+      expect(store.wizardFurthest).toBe(furthest);
+      expect(store.dirty).toBe(false);
+      expect(store.closeGuardPayload().dirty).toBe(false);
+    });
+
     it('dirties the document on a real edit, and mirrors that to the close guard', () => {
       store.setIdentity('name', 'Marcus');
       expect(store.dirty).toBe(true);

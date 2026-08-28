@@ -113,6 +113,43 @@ fn every_shipped_profile_declares_experience_before_abilities_and_no_type_phase(
     }
 }
 
+/// Every shipped profile lets its type record Personality Traits.
+///
+/// The rules put no type outside this, and single out the one the guided flow used to
+/// omit: "For major characters, such as magi and companions, they are normally nothing
+/// more than an aide memoire … For grogs, they are more significant. As grogs are often
+/// shared between players, or at least played rarely, the numbers attached to
+/// Personality Traits can be used as a concrete guide to playing the character. …
+/// 'Loyal' is a particularly important Trait, as it reflects the grog's attachment to
+/// the covenant, while 'Brave' is just as important for warrior grogs. A third Trait
+/// should be something distinctive about that grog."
+/// (Ars Magica - Definitive Edition (Core Rules).md:1073-1075; the character-sheet
+/// listing at :1165 names Personality Traits unconditionally.)
+///
+/// So the type whose traits the rules treat as mechanically load-bearing was the one
+/// type whose guided flow could not record them (#33) — exactly backwards. The editor
+/// always offered the tab, so this was a gap in the wizard alone.
+///
+/// Structural only: which phases a profile declares, never how many.
+#[test]
+fn every_shipped_profile_declares_the_personality_reputations_phase() {
+    let ruleset = full_ruleset();
+    assert!(
+        ruleset.profiles().next().is_some(),
+        "the shipped ruleset declares no character types"
+    );
+
+    for profile in ruleset.profiles() {
+        let id = &profile.id;
+        let phases = &profile.creation_phases;
+        assert!(
+            phases.contains(&CreationPhase::PersonalityReputations),
+            "profile '{id}' declares no `personality_reputations` phase, so a character \
+             of this type cannot record Personality Traits in the guided flow: {phases:?}"
+        );
+    }
+}
+
 #[test]
 fn grog_full_build_validates() {
     // 3/3 V/F, no majors; categories general/personality/social_status only.
