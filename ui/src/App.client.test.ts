@@ -491,3 +491,57 @@ describe('tablist keyboard navigation (S7/S4)', () => {
     await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-details'));
   });
 });
+
+// Slice 5 (#31) gave the guard a NEW source of dirtiness: advancing a wizard step
+// records the furthest phase on the entity, so a Next marks the document changed
+// even on a step left empty. The guard is a mandatory product behavior (CLAUDE.md),
+// so the `$effect` mirror has to fire for that source too — and only a mounted
+// component runs an `$effect` body, which is why this case cannot live in the ssr
+// suite: an assertion placed after an effect that never runs still reports green.
+describe('the unsaved-changes guard mirrors wizard progress (S5/#31)', () => {
+  it('re-mirrors as dirty when the wizard advances a step', async () => {
+    await mountApp();
+    store.view = 'editor';
+    // A rail to move along — the fixture profile declares no phases — and a loaded
+    // character, whose clean baseline leaves the Next below as the only thing that
+    // can dirty the document. The ruleset is rebuilt per test, so this leaks nowhere.
+    store.ruleset!.ruleset.type_profiles.companion.creation_phases = ['concept', 'characteristics'];
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/example.armc.json',
+      entity: loadableEntity(),
+    });
+    await store.open();
+    flushSync();
+    expect(store.dirty).toBe(false);
+
+    const before = vi.mocked(ipc.updateCloseGuard).mock.calls.length;
+    store.wizardNext();
+    flushSync();
+
+    expect(vi.mocked(ipc.updateCloseGuard).mock.calls.length).toBeGreaterThan(before);
+    expect(lastMirroredDirty()).toBe(true);
+  });
+
+  it('does not re-mirror as dirty for rail navigation', async () => {
+    await mountApp();
+    store.view = 'editor';
+    store.ruleset!.ruleset.type_profiles.companion.creation_phases = ['concept', 'characteristics'];
+    // A file that already recorded progress: its rail opens as far as the stored
+    // phase with no edit, so every move below is pure browsing.
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/example.armc.json',
+      entity: { ...loadableEntity(), wizard_furthest_phase: 'characteristics' },
+    });
+    await store.openIntoWizard();
+    flushSync();
+    expect(store.view).toBe('wizard');
+    expect(store.wizardFurthest).toBeGreaterThan(0);
+    expect(store.dirty).toBe(false);
+
+    store.wizardGoTo(0);
+    store.wizardGoTo(store.wizardFurthest);
+    flushSync();
+
+    expect(lastMirroredDirty()).toBe(false);
+  });
+});

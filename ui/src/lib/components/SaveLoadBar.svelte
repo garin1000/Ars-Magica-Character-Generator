@@ -57,6 +57,19 @@
   >
     {store.t('action-export')}
   </button>
+  <!-- Take the character on screen into the guided flow (#31). Offered only from
+       the editor — the wizard is where it leads — and only for a type the loaded
+       ruleset declares a profile for, since the profile's phases ARE the rail. -->
+  {#if store.view === 'editor' && store.canEnterWizard}
+    <button
+      type="button"
+      onclick={() => store.enterWizard()}
+      disabled={store.busy}
+      data-testid="wizard-continue-button"
+    >
+      {store.t('action-continue-in-wizard')}
+    </button>
+  {/if}
   {#if errorText}
     <span class="error" role="alert" data-testid="error">{errorText}</span>
   {/if}

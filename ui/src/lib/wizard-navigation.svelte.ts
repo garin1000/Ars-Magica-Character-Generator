@@ -19,6 +19,12 @@ export interface WizardNavigationHost {
   ruleset: () => LocalizedRuleset | null;
   entityTypeId: () => string;
   result: () => ValidationResult | null;
+  /**
+   * Record the furthest phase reached, so a save carries the flow's progress
+   * (#31). A callback rather than a write from here: the entity stays the host's
+   * to own, which is what keeps this module free of it.
+   */
+  recordFurthestPhase: (phase: CreationPhase) => void;
 }
 
 export class WizardNavigation {
@@ -43,6 +49,18 @@ export class WizardNavigation {
    * already seen while still refusing to skip ahead into unseen ones.
    */
   furthest = $state(0);
+
+  /**
+   * Whether this run is exempt from the flow's gates: every step reachable, no
+   * forward jump clamped, no Next or Finish held shut, findings still shown.
+   *
+   * Set only by {@link restore}, and only for a character the wizard never built —
+   * one with no stored phase slug, or one whose slug this build no longer declares
+   * (#31). Such a character was assembled in the editor and never passed these
+   * gates in the first place, so holding it to them would lock the very steps it
+   * needs to reach in order to be fixed.
+   */
+  ungated = $state(false);
 
   /**
    * The wizard's steps for the current character: the type profile's own
@@ -76,6 +94,7 @@ export class WizardNavigation {
    * entirely; the validation-mode control is the intended escape hatch.
    */
   get canAdvance(): boolean {
+    if (this.ungated) return true;
     return !phaseHasBlockingIssue(this.#host.result()?.issues ?? [], this.phase);
   }
 
@@ -88,6 +107,7 @@ export class WizardNavigation {
    * still have to be answered.
    */
   get canFinish(): boolean {
+    if (this.ungated) return true;
     return !(this.#host.result()?.issues ?? []).some((i) => i.severity === 'error');
   }
 
@@ -108,12 +128,23 @@ export class WizardNavigation {
     return this.incompletePhases.includes(this.phase);
   }
 
-  /** Advance one step, unless the current phase holds an error. */
+  /**
+   * Advance one step, unless the current phase holds an error.
+   *
+   * The only place {@link furthest} rises, and therefore the only place the
+   * progress written onto the entity changes (#31). That is deliberate: `back()`
+   * and {@link goTo} leave both alone, so browsing the rail costs nothing, and a
+   * document is marked changed only by a step deliberately advanced past — even
+   * one left empty, since a step can be legally empty.
+   */
   next(): void {
     if (!this.canAdvance) return;
     if (this.step >= this.phases.length - 1) return;
     this.step += 1;
-    this.furthest = Math.max(this.furthest, this.step);
+    if (this.step <= this.furthest) return;
+    this.furthest = this.step;
+    const reached = this.phases[this.furthest];
+    if (reached) this.#host.recordFurthestPhase(reached);
   }
 
   /**
@@ -134,7 +165,7 @@ export class WizardNavigation {
    */
   goTo(step: number): void {
     if (step < 0 || step > this.furthest) return;
-    if (step <= this.step) {
+    if (step <= this.step || this.ungated) {
       this.step = step;
       return;
     }
@@ -147,9 +178,45 @@ export class WizardNavigation {
     this.step = blocked ?? step;
   }
 
-  /** Send the rail back to the first step. */
+  /** Send the rail back to the first step, gates on. */
   reset(): void {
     this.step = 0;
     this.furthest = 0;
+    this.ungated = false;
+  }
+
+  /**
+   * Open the rail for a character that already exists, from the furthest phase its
+   * document recorded (#31).
+   *
+   * Two outcomes, and the branch is decided by whether `storedPhase` names a step
+   * of THIS rail:
+   *
+   * - **It does** — the character was built by the wizard. Land on that phase and
+   *   make it the ceiling, so the run resumes exactly as it was left: nothing past
+   *   it was ever reached, and a forward jump clamps at the first blocking phase
+   *   just as it did the first time through.
+   * - **It does not, or there is none** — the character was built in the editor, or
+   *   comes from a build whose phase list differed (Slice 2 removed `type`, so saves
+   *   carrying it exist). It never passed these gates, so it is not held to them:
+   *   the whole rail is open and {@link ungated} lifts the clamp. Both halves are
+   *   needed — `furthest` alone leaves every step refused by `goTo`'s own guard,
+   *   and the flag alone leaves them all locked at step 0.
+   *
+   * Resolved against {@link phases} rather than the profile's `creation_phases`
+   * alone, so the wizard's own terminal `review` step round-trips too.
+   */
+  restore(storedPhase: string | undefined): void {
+    const phases = this.phases;
+    const stored = storedPhase === undefined ? -1 : phases.indexOf(storedPhase as CreationPhase);
+    if (stored < 0) {
+      this.step = 0;
+      this.furthest = Math.max(phases.length - 1, 0);
+      this.ungated = true;
+      return;
+    }
+    this.step = stored;
+    this.furthest = stored;
+    this.ungated = false;
   }
 }

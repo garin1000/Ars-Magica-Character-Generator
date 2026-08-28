@@ -336,6 +336,38 @@ describe('the guided wizard', () => {
     };
   }
 
+  /** A saved magus on disk, standing in for a file the user picks. */
+  function savedMagus(overrides: Partial<Entity> = {}): Entity {
+    return {
+      schema_version: SCHEMA_VERSION,
+      ruleset: { id: 'test', version: '1' },
+      entity_kind: 'character',
+      type_id: 'magus',
+      name: 'Marcus of Bonisagus',
+      selections: [],
+      characteristics: {} as Entity['characteristics'],
+      characteristic_descriptions: {},
+      ability_scores: [],
+      xp_pool: 0,
+      ability_funding: 'pool',
+      art_scores: [],
+      personality_traits: [],
+      reputations: [],
+      ...overrides,
+    };
+  }
+
+  /** Drive the open-into-wizard entry point with `entity` waiting on disk. */
+  async function openIntoWizardWith(overrides: Partial<Entity> = {}): Promise<void> {
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/marcus.armc',
+      entity: savedMagus(overrides),
+    });
+    const opening = store.openIntoWizard();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+  }
+
   beforeEach(() => {
     installRuleset([gift(), hermeticMagus()], [], wizardProfiles);
     store.result = null;
@@ -454,6 +486,29 @@ describe('the guided wizard', () => {
       expect(store.wizardStep).toBe(1);
     });
 
+    // Slice 5 (#31): the counter is now mirrored onto the entity as a phase slug,
+    // and `back()` must leave BOTH standing — that pairing is what keeps rail
+    // browsing off the dirty flag while a deliberate Next records progress.
+    it('next() raises furthest and back() does not lower it', () => {
+      store.wizardNext();
+      store.wizardNext();
+      expect(store.wizardFurthest).toBe(2);
+      store.wizardBack();
+      expect(store.wizardStep).toBe(1);
+      expect(store.wizardFurthest).toBe(2);
+      expect(store.entity.wizard_furthest_phase).toBe(store.wizardPhases[2]);
+    });
+
+    // A slug, never an index: an index resolves against `creation_phases`, which is
+    // ruleset data and has already changed twice in this review's slices.
+    it('next() records the furthest phase as a slug on the entity', () => {
+      expect(store.entity.wizard_furthest_phase).toBeUndefined();
+      store.wizardNext();
+      expect(store.entity.wizard_furthest_phase).toBe('characteristics');
+      store.wizardNext();
+      expect(store.entity.wizard_furthest_phase).toBe('house_specialisation');
+    });
+
     // The departure step counts too: Next is blocked when the current phase is
     // broken, so a rail jump must not be a way around that same gate.
     it('clamps a forward jump at the step being left, when that step is broken', () => {
@@ -521,13 +576,39 @@ describe('the guided wizard', () => {
       while (store.wizardPhase !== 'review') store.wizardNext();
     }
 
-    it('lands in the editor with the character untouched', () => {
+    it('lands in the editor changing nothing but the progress record', () => {
       store.setIdentity('name', 'Marcus');
-      const before = JSON.stringify(store.entity);
       reachReview();
+      // Snapshot AFTER the walk, not before it: since Slice 5 the walk itself
+      // records the furthest phase reached (#31), so this is a claim about Finish
+      // and never about the steps that led to it.
+      //
+      // And Finish clears that record, which is the one change it does make — see
+      // the test below for why. So the comparison is against the snapshot with the
+      // record removed, rather than a blanket "nothing changed": asserting the
+      // weaker claim would stop this test noticing if Finish ever started editing
+      // the character itself.
+      const before = JSON.stringify(store.entity);
+      const expected = JSON.stringify({ ...store.entity, wizard_furthest_phase: undefined });
       store.finishWizard();
       expect(store.view).toBe('editor');
-      expect(JSON.stringify(store.entity)).toBe(before);
+      expect(JSON.stringify(store.entity)).toBe(expected);
+      expect(JSON.stringify(store.entity)).not.toBe(before);
+    });
+
+    // Finishing ends the guided run, so the record of how far it got stops being
+    // true and is cleared. Keeping it would gate a *completed* character: reopened
+    // later it would take the restored branch, and if the player had meanwhile
+    // introduced an error in the editor the clamp would lock them out of the very
+    // steps past the break they needed to reach. The ungated branch exists for a
+    // character that is not mid-run, and a finished one is not. Nothing is lost —
+    // the clamp only stops skipping ahead, and a finished character has already been
+    // everywhere (`canFinish` requires no errors anywhere).
+    it('clears the recorded wizard progress, because the run is over', () => {
+      reachReview();
+      expect(store.entity.wizard_furthest_phase).toBeDefined();
+      store.finishWizard();
+      expect(store.entity.wizard_furthest_phase).toBeUndefined();
     });
 
     it('refuses to finish while any error remains, in any phase', () => {
@@ -562,10 +643,31 @@ describe('the guided wizard', () => {
       await store.startWizard('magus');
     });
 
-    it('does not dirty the document by navigating', () => {
-      store.wizardNext();
-      store.wizardBack();
+    // Slice 5 (#31) changed this deliberately: Next now records the furthest phase
+    // on the entity, so it dirties the document even on a step the user left empty
+    // (`canAdvance` gates on errors only). That is the DECIDED trade — progress is
+    // only persisted if it can be saved — and it is the reason the two cases below
+    // exist as their own tests.
+    it('advancing a wizard step dirties the document', () => {
       expect(store.dirty).toBe(false);
+      store.wizardNext();
+      expect(store.dirty).toBe(true);
+      expect(store.closeGuardPayload().dirty).toBe(true);
+    });
+
+    it('rail navigation does not dirty the document', async () => {
+      // A rail with steps already unlocked, reached WITHOUT an edit: a wizard-saved
+      // character restores its furthest step from the file, so the clean baseline is
+      // the file's own and every move below is pure browsing.
+      await openIntoWizardWith({ wizard_furthest_phase: 'experience' });
+      expect(store.dirty).toBe(false);
+
+      store.wizardGoTo(0);
+      store.wizardBack();
+      store.wizardGoTo(store.wizardFurthest);
+
+      expect(store.dirty).toBe(false);
+      expect(store.closeGuardPayload().dirty).toBe(false);
     });
 
     it('dirties the document on a real edit, and mirrors that to the close guard', () => {
@@ -612,6 +714,107 @@ describe('the guided wizard', () => {
       await opening;
       expect(store.view).toBe('editor');
       expect(store.wizardStep).toBe(0);
+    });
+  });
+
+  // Slice 5 (#31): the second entry point. A saved character is walked through the
+  // guided flow without instantiating a blank one, and how far its rail opens is
+  // decided by the phase slug the file carries (or does not).
+  describe('opening a saved character into the wizard', () => {
+    it('restores furthest from a stored phase slug', async () => {
+      await openIntoWizardWith({ wizard_furthest_phase: 'experience' });
+
+      expect(store.view).toBe('wizard');
+      // It lands on the stored phase, and that phase is where the rail stops.
+      expect(store.wizardPhase).toBe('experience');
+      expect(store.wizardPhases[store.wizardFurthest]).toBe('experience');
+
+      // Still clamped exactly as during the original run: nothing past the stored
+      // phase was ever reached, so nothing past it may be jumped to.
+      store.wizardGoTo(store.wizardFurthest + 1);
+      expect(store.wizardPhase).toBe('experience');
+    });
+
+    // Slice 2 removed the `type` phase, so saves carrying it exist; an unknown slug
+    // must degrade to the ungated branch rather than erroring or locking the rail.
+    it('ignores a stored slug the profile does not declare', async () => {
+      await openIntoWizardWith({ wizard_furthest_phase: 'type' });
+
+      expect(store.view).toBe('wizard');
+      expect(store.wizardPhase).toBe('concept');
+      expect(store.wizardPhases[store.wizardFurthest]).toBe('review');
+    });
+
+    // Mechanism (a) of "ungated". Without it `furthest` stays at 0 and `goTo`'s own
+    // guard (`step > furthest`) refuses every step, however unblocked they are.
+    it('an absent slug leaves every step reachable', async () => {
+      await openIntoWizardWith();
+
+      const last = store.wizardPhases.length - 1;
+      expect(store.wizardFurthest).toBe(last);
+      store.wizardGoTo(last);
+      expect(store.wizardPhase).toBe('review');
+    });
+
+    // Mechanism (b), and deliberately a SEPARATE test: (a) alone yields a rail that
+    // looks reachable and still refuses to move, because a forward jump clamps at
+    // the first blocking phase. A character built in the editor never passed those
+    // gates, so it must not be held to them.
+    it('an absent slug is exempt from the blocking clamp', async () => {
+      await openIntoWizardWith();
+      issues({ phase: 'characteristics' }); // a step in between, holding an error
+
+      store.wizardGoTo(store.wizardPhases.length - 1);
+      expect(store.wizardPhase).toBe('review');
+      // Nor does that error gate the flow's own controls.
+      expect(store.wizardCanAdvance).toBe(true);
+      expect(store.wizardCanFinish).toBe(true);
+    });
+
+    // The complement of the two above: a wizard-saved character IS still clamped, so
+    // the exemption is the absent-slug branch's and not a hole in the gate.
+    it('keeps the clamp for a character whose slug restores', async () => {
+      await openIntoWizardWith({ wizard_furthest_phase: 'abilities' });
+      issues({ phase: 'characteristics' });
+
+      store.wizardGoTo(0);
+      store.wizardGoTo(store.wizardFurthest);
+      expect(store.wizardPhase).toBe('characteristics');
+    });
+
+    it('opening a saved character into the wizard does not instantiate a blank one', async () => {
+      await openIntoWizardWith({ wizard_furthest_phase: 'characteristics' });
+
+      expect(store.view).toBe('wizard');
+      expect(store.entity.name).toBe('Marcus of Bonisagus');
+      expect(store.currentPath).toBe('/tmp/marcus.armc');
+      // A just-loaded document is the saved one, so it is not dirty — an
+      // instantiation would have replaced it and re-seeded a different baseline.
+      expect(store.dirty).toBe(false);
+    });
+
+    it('does not offer the wizard for a type_id with no profile in the loaded ruleset', async () => {
+      await openIntoWizardWith({ type_id: 'faerie_noble' });
+
+      // No profile means no phases: a wizard with no rail is not a screen to enter.
+      expect(store.canEnterWizard).toBe(false);
+      expect(store.view).toBe('editor');
+      store.enterWizard();
+      expect(store.view).toBe('editor');
+    });
+
+    it('offers the wizard for a type the loaded ruleset does have a profile for', async () => {
+      await openIntoWizardWith();
+      expect(store.canEnterWizard).toBe(true);
+    });
+
+    it('stands down when the file dialog is cancelled', async () => {
+      vi.mocked(ipc.loadEntity).mockResolvedValue(null);
+      store.view = 'editor';
+      const opening = store.openIntoWizard();
+      if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+      await opening;
+      expect(store.view).toBe('editor');
     });
   });
 });

@@ -25,6 +25,10 @@ type-unknown = Unknown character type
 # type is picked once, by creating a character of that type.
 start-title = Create or open a character
 start-open-title = Open an existing character
+# The second way in through a file: the same open, landing on the guided flow
+# instead of the editor.
+action-open-into-wizard = Open in guided creation
+start-open-wizard-hint = A character saved part-way through guided creation resumes at the step it was left on. One built in the editor opens with every step reachable.
 start-create-title = Create a new character
 start-create-hint = The character type is chosen here, once — it cannot be changed later.
 start-wizard-title = Guided creation
@@ -739,6 +743,9 @@ action-open = Open
 action-save = Save
 action-save-as = Save As
 action-export = Export
+# Takes the character already on screen into the guided flow, resuming from the
+# furthest step its file recorded. Offered only where that flow can be walked.
+action-continue-in-wizard = Continue in guided creation
 
 # Confirmation shown when closing or quitting the app with unsaved changes.
 close-unsaved-title = Unsaved changes

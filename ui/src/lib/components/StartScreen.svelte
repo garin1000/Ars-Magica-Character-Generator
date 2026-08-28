@@ -36,15 +36,29 @@
 
   <section class="start-choice" aria-labelledby="start-open-heading">
     <h3 id="start-open-heading">{store.t('start-open-title')}</h3>
-    <button
-      bind:this={openButton}
-      type="button"
-      onclick={() => store.open()}
-      disabled={blocked}
-      data-testid="start-open"
-    >
-      {store.t('action-open')}
-    </button>
+    <div class="start-types">
+      <button
+        bind:this={openButton}
+        type="button"
+        onclick={() => store.open()}
+        disabled={blocked}
+        data-testid="start-open"
+      >
+        {store.t('action-open')}
+      </button>
+      <!-- The same open, landing on the guided flow instead of the editor. A file
+           saved mid-flow resumes where it was left; one built in the editor opens
+           with every step reachable. -->
+      <button
+        type="button"
+        onclick={() => store.openIntoWizard()}
+        disabled={blocked}
+        data-testid="start-open-wizard"
+      >
+        {store.t('action-open-into-wizard')}
+      </button>
+    </div>
+    <p class="hint">{store.t('start-open-wizard-hint')}</p>
   </section>
 
   <section class="start-choice" aria-labelledby="start-create-heading">
