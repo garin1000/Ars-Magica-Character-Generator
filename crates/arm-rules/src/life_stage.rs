@@ -16,7 +16,7 @@ use std::collections::BTreeSet;
 
 use crate::effective::selections_for_effects;
 use crate::ruleset::Ruleset;
-use crate::types::{Effect, Entity, Id, is_zero};
+use crate::types::{AbilityFunding, Effect, Entity, Id, is_zero};
 
 /// The life-stage experience rules, loaded from `rules/core/life_stages.json`.
 // No `Default`: every field is authored data with no meaningful zero (a childhood
@@ -283,10 +283,12 @@ pub fn magus_minimum_abilities(entity: &Entity, ruleset: &Ruleset) -> Vec<MagusM
 /// where the engine reads them, so keeping a second copy would only let the two
 /// representations diverge.
 ///
-/// Its presence is also the switch between the two ways of buying Abilities: with
-/// a plan the budget below is authoritative and [`Entity::xp_pool`] must be 0
-/// (`life_stage_xp_pool_conflict`); without one, `xp_pool` is the authority and
-/// nothing here applies.
+/// Its presence is **not** the switch between the two ways of buying Abilities — it
+/// was until schema 16, and is not now. [`Entity::ability_funding`] is: under
+/// [`crate::AbilityFunding::LifeStages`] the budget below is authoritative, and under
+/// `Pool` this whole plan is inert while [`Entity::xp_pool`] pays. A plan may sit
+/// beside a nonzero pool, and nothing double-counts, because [`LifeStageRules::budget`]
+/// reads the mode.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct LifeStagePlan {
     /// The language the character grew up speaking — the one the childhood's
@@ -433,8 +435,20 @@ impl LifeStageBudget {
 
 impl LifeStageRules {
     /// The experience this character has earned through its life stages, or `None`
-    /// when it has no life-stage plan — direct entry, where [`Entity::xp_pool`] is
-    /// the authority.
+    /// when it is not funded by them — where [`Entity::xp_pool`] is the authority.
+    ///
+    /// **The mode is read off [`Entity::ability_funding`], not off the plan's
+    /// presence.** Since schema 16 a pool-funded character may keep a life-stage plan
+    /// on file (switching funding mode no longer destroys the side switched away
+    /// from), and such a plan is inert: it earns nothing. Reading its presence as the
+    /// mode — which is what every reader did before 16 — would fund that character
+    /// twice. `None` therefore covers two shapes: pool funding, and life-stage funding
+    /// with no plan recorded yet.
+    ///
+    /// This is the single funnel the mode-sensitive engine paths go through — the XP
+    /// allocation's restricted pools and general pool
+    /// ([`crate::effective::xp_allocation`]), the spell-level budget, and the
+    /// life-stage validators all ask this function rather than the entity's `Option`.
     ///
     /// An **unset age** still yields a budget: childhood is granted "in the first
     /// five years of life" with no further condition
@@ -451,6 +465,10 @@ impl LifeStageRules {
     /// age when it stands at its Gauntlet — and raising a magus's age lengthens its
     /// life as a magus, never the childhood-to-apprenticeship span behind it.
     pub fn budget(&self, entity: &Entity, ruleset: &Ruleset) -> Option<LifeStageBudget> {
+        match entity.ability_funding {
+            AbilityFunding::Pool => return None,
+            AbilityFunding::LifeStages => {}
+        }
         let plan = entity.life_stages.as_ref()?;
         let apprenticeship = self.apprenticeship_of(entity, ruleset);
         let apprenticeship_years = apprenticeship.map_or(0, |block| block.years);
@@ -621,7 +639,9 @@ impl LifeStageRules {
 mod tests {
     use super::*;
     use crate::ruleset::Ruleset;
-    use crate::types::{Entity, EntityKind, Id, RulesetRef, SCHEMA_VERSION, Selection};
+    use crate::types::{
+        AbilityFunding, Entity, EntityKind, Id, RulesetRef, SCHEMA_VERSION, Selection,
+    };
 
     /// The shipped file's shape, so a rename or a retype fails here.
     const SHIPPED: &str = r#"{
@@ -849,12 +869,19 @@ mod tests {
         Ruleset::from_json("test", "1", items, types).unwrap()
     }
 
+    /// A companion **funded from its life stages** — the mode every budget assertion
+    /// in this module needs. Since schema 16 the mode is stored
+    /// ([`AbilityFunding`]) rather than inferred from the plan's presence, so setting
+    /// it here once is what keeps a fixture's plan live; a fixture that only assigned
+    /// `life_stages` would build a pool-funded character whose plan earns nothing.
+    /// The tests that pin the pool side set `ability_funding` themselves.
     fn companion(selections: Vec<&str>) -> Entity {
         let mut entity = Entity::new(
             EntityKind::Character,
             Id::new("companion"),
             RulesetRef::new(Id::new("test"), "1"),
         );
+        entity.ability_funding = AbilityFunding::LifeStages;
         entity.selections = selections
             .into_iter()
             .map(|r| Selection::new(Id::new(r)))
@@ -1455,7 +1482,7 @@ mod tests {
             json.contains(r#""childhood_package": "childhood.athletic""#),
             "{json}"
         );
-        assert!(json.contains(r#""schema_version": 15"#), "{json}");
+        assert!(json.contains(r#""schema_version": 16"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
@@ -1511,9 +1538,10 @@ mod tests {
         );
         // The post-Gauntlet fields are additive and bumped nothing of their own;
         // the literal is here so a bump has to be a conscious edit (15 came from
-        // the widened aging log, not from this plan).
-        assert_eq!(SCHEMA_VERSION, 15);
-        assert!(json.contains(r#""schema_version": 15"#), "{json}");
+        // the widened aging log and 16 from the funding discriminator, not from
+        // this plan).
+        assert_eq!(SCHEMA_VERSION, 16);
+        assert!(json.contains(r#""schema_version": 16"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(back.life_stages, Some(out_of_apprenticeship));
@@ -1540,6 +1568,35 @@ mod tests {
         let mut entity = companion(vec![]);
         entity.age = Some(25);
         assert!(rules().budget(&entity, &rs).is_none(), "no plan");
+    }
+
+    /// **The shape schema 16 exists to allow.** Before the funding mode was stored,
+    /// a plan's presence *was* the mode, so this case could not be constructed: a
+    /// character funded from its typed [`Entity::xp_pool`] that nonetheless keeps a
+    /// life-stage plan on file. The plan is inert — it earns nothing — and the pool
+    /// is the authority, so no budget is derived from it.
+    ///
+    /// Reading the plan here instead would double-fund the character the moment the
+    /// player switched to pool funding without discarding the work already typed
+    /// into the stages, which is precisely what #29's fix stopped destroying.
+    #[test]
+    fn budget_is_none_for_pool_funding_even_with_a_stored_plan() {
+        let rs = rate_ruleset();
+        let mut entity = companion(vec![]);
+        entity.age = Some(25);
+        entity.life_stages = Some(LifeStagePlan {
+            native_language: Some("German".into()),
+            ..LifeStagePlan::default()
+        });
+        entity.ability_funding = AbilityFunding::Pool;
+        assert!(
+            rules().budget(&entity, &rs).is_none(),
+            "a pool-funded character earns nothing from a plan it is not funded by"
+        );
+
+        // The very same plan, funded from the stages, does earn its budget.
+        entity.ability_funding = AbilityFunding::LifeStages;
+        assert!(rules().budget(&entity, &rs).is_some());
     }
 
     /// Childhood is granted "in the first five years of life" unconditionally

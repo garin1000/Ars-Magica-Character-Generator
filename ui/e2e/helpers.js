@@ -239,8 +239,9 @@ async function addAbilityAtScoreOne(ability, index, parameter) {
  *
  * Expects an Abilities surface on screen (the wizard's `abilities` step or the editor
  * tab) and a character with no Ability rows yet, so the three added take rows 0-2. The
- * experience pool is only filled where it is editable: under a life-stage plan the
- * engine forbids a typed pool, and apprenticeship funds these three many times over.
+ * experience pool is only filled where it is editable: under life-stage funding the
+ * pools are derived and no input is offered, and apprenticeship funds these three
+ * many times over anyway.
  *
  * @param {string} language the dead language to name (any dead language satisfies `:2437`)
  */

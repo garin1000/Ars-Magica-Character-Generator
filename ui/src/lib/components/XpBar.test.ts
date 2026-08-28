@@ -64,6 +64,7 @@ function resetEntity(pool: number): void {
     characteristic_descriptions: {},
     ability_scores: [],
     xp_pool: pool,
+    ability_funding: 'pool',
     art_scores: [],
     personality_traits: [],
     reputations: [],
@@ -208,8 +209,13 @@ function laterLifePool(amount: number, used = 0): EffectiveScores['restricted_xp
   ];
 }
 
-/** Put the entity in guided funding: a plan present IS the switch. */
+/**
+ * Put the entity in guided funding. Since schema 16 that takes BOTH the stored mode
+ * and the plan: a plan alone is inert data a pool-funded character may legitimately
+ * carry, so setting only `life_stages` would leave the bar in its flat shape.
+ */
 function installPlan(plan: LifeStagePlan = {}): void {
+  store.entity.ability_funding = 'life_stages';
   store.entity.life_stages = plan;
 }
 
@@ -376,9 +382,10 @@ describe('XpBar under a life-stage plan (slice 6b3b)', () => {
     installPlan();
     setEffective(0, [], budget(10, 15));
     const body = html();
-    // The engine forbids a plan AND a typed pool (life_stage_xp_pool_conflict), so
-    // the input must be gone entirely — and a read-only span, not a disabled input,
-    // so assistive tech does not announce an unusable control.
+    // Under life-stage funding the pools are derived from the stages, so an editable
+    // total would offer a figure the engine never reads: the input must be gone
+    // entirely — and a read-only span, not a disabled input, so assistive tech does
+    // not announce an unusable control.
     expect(has(body, 'xp-pool')).toBe(false);
     const { open, text } = element(body, 'xp-pool-total');
     expect(open).toMatch(/<span/i);
@@ -420,20 +427,28 @@ describe('XpBar under a life-stage plan (slice 6b3b)', () => {
     expect(has(body, 'life-stage-later-life')).toBe(false);
   });
 
-  it('offers the clear button only when a plan coexists with a typed pool', () => {
-    resetEntity(40); // a hand-edited save carrying both
+  it('offers no way to destroy a typed pool that a life-stage plan is not using', () => {
+    // There used to be a "Clear pool" button here, and schema 16 removed its whole
+    // reason to exist. It was added because the engine reported a plan beside a typed
+    // pool as `life_stage_xp_pool_conflict`, an error the guided bar showed no field to
+    // correct — so the button was the only escape. Schema 16 stores the funding mode
+    // explicitly (#29) and RETIRED that finding: the pair is now the ORDINARY shape of
+    // a character who typed a pool and then switched to the stages, and the pool is
+    // merely inert rather than illegal.
+    //
+    // Keeping the button would have left a one-click destroyer of exactly the data
+    // this slice exists to preserve, under a hint that asserted the retired rule
+    // ("a pool entered by hand has to go back to 0"). The typed total is editable on
+    // the flat side whenever the player switches back, so nothing is unreachable.
+    resetEntity(40);
     installPlan();
     setEffective(0, [], budget(10, 15));
     const body = html();
-    const { open, text } = element(body, 'xp-pool-clear');
-    expect(open).toMatch(/<button/i);
-    expect(text).toContain('Clear pool');
-    // The hint explaining why the pool must go back to 0 is wired for assistive tech.
-    expect(open).toMatch(/aria-describedby="xp-pool-clear-hint"/);
-    expect(element(body, 'xp-pool-clear-hint').open).toMatch(/id="xp-pool-clear-hint"/);
+    expect(has(body, 'xp-pool-clear')).toBe(false);
+    expect(has(body, 'xp-pool-clear-hint')).toBe(false);
   });
 
-  it('omits the clear button when the plan carries no typed pool', () => {
+  it('still offers no clear button when the plan carries no typed pool', () => {
     resetEntity(0);
     installPlan();
     setEffective(0, [], budget(10, 15));
@@ -465,7 +480,9 @@ describe('XpBar under a life-stage plan (slice 6b3b)', () => {
     expect(has(body, 'art-xp-pool')).toBe(false);
     expect(element(body, 'art-xp-pool-total').text).toBe('150');
     expect(() => element(body, 'art-life-stage-later-life')).not.toThrow();
-    expect(() => element(body, 'art-xp-pool-clear')).not.toThrow();
+    // And no clear button on this instance either — it is gone from both (schema 16
+    // retired the finding it existed to escape).
+    expect(has(body, 'art-xp-pool-clear')).toBe(false);
   });
 });
 

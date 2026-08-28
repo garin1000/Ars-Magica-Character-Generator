@@ -31,6 +31,7 @@ import { buildBundle, translate, type Lang, type TranslateArgs } from './i18n';
 import * as ipc from './ipc';
 import type { AgingNote, CloseGuardLabels } from './ipc';
 import type {
+  AbilityFunding,
   AppError,
   Characteristic,
   DerivedTotals,
@@ -70,7 +71,7 @@ const VALIDATE_DEBOUNCE_MS = 150;
  * Mirrors `arm_rules::SCHEMA_VERSION` by hand; the Rust constant is the source
  * and `the_frontend_mirrors_the_engine_schema_version` pins the two together.
  */
-export const SCHEMA_VERSION = 15;
+export const SCHEMA_VERSION = 16;
 
 /** Live filter/search state of the Virtue/Flaw picker (one per side). */
 export interface VfFilterState {
@@ -161,6 +162,11 @@ function newEntity(rulesetId: string, version: string, typeId: string): Entity {
     characteristic_descriptions: {},
     ability_scores: [],
     xp_pool: 0,
+    // Written explicitly, never left to a default. A Tauri command deserializes the
+    // payload with plain serde — `load_entity_migrating` does not run on an IPC
+    // payload — so an absent key would read as `Pool` in Rust and quietly strip
+    // every life-stage pool off a life-stage-funded character.
+    ability_funding: 'pool',
     art_scores: [],
     spells: [],
     house: null,
@@ -171,11 +177,11 @@ function newEntity(rulesetId: string, version: string, typeId: string): Entity {
   };
 }
 
-/**
- * Where a character's Ability/Art experience comes from: a typed `xp_pool`
- * (direct entry) or the blocks its life stages earn (the guided flow).
- */
-export type AbilityFunding = 'pool' | 'life_stages';
+// Where a character's Ability/Art experience comes from. Defined in `./types`
+// alongside the `Entity` field that carries it (a store-side definition would make
+// `types.ts` import the store), and re-exported here so the existing import path
+// `import { type AbilityFunding } from '../state.svelte'` keeps working.
+export type { AbilityFunding };
 
 class AppStore {
   lang = $state<Lang>('en');
@@ -411,13 +417,24 @@ class AppStore {
    * How the character's Abilities (and Arts) are funded: by a typed `xp_pool`, or
    * by the experience its life stages earn.
    *
-   * Read off the entity rather than held in its own `$state`, because the presence
-   * of `life_stages` already *is* the switch everywhere in the engine
-   * (`LifeStageRules::budget`, `validate_life_stage_plan`, `EffectiveScores.life_stage`).
-   * A second flag could disagree with a loaded save; a derivation cannot, so a save
-   * carrying a plan lands in the guided mode with no reconciliation code at all.
+   * Read off the entity's own stored `ability_funding` (schema 16) rather than held
+   * in a separate `$state`, so a loaded save lands in its recorded mode with no
+   * reconciliation code — and so the value the frontend sends to Rust is the value
+   * Rust reads.
+   *
+   * It is **not** derived from `entity.life_stages` any more. It was until schema
+   * 16, and that inference was the structural cause of #29: while a plan's presence
+   * *is* the mode, discarding the plan is the only way to record "pool", so
+   * switching mode had to destroy the side switched away from. With the mode stored,
+   * both sides coexist and the inactive one is merely inert
+   * (`LifeStageRules::budget` returns `None` under `Pool`, so nothing double-counts).
+   *
+   * The `?? 'pool'` fallback is not slack in the type — the field is required, and
+   * every entity the store builds or loads carries it — it mirrors the engine's
+   * `#[serde(default)]`, so a hand-edited file missing the key reads the same mode
+   * on both sides of the IPC boundary instead of two different ones.
    */
-  abilityFunding = $derived<AbilityFunding>(this.entity.life_stages ? 'life_stages' : 'pool');
+  abilityFunding = $derived<AbilityFunding>(this.entity.ability_funding ?? 'pool');
 
   #bundle = $derived(buildBundle(this.lang));
   #timer: ReturnType<typeof setTimeout> | undefined;
@@ -737,34 +754,43 @@ class AppStore {
    * Switch how Abilities are funded (see {@link abilityFunding}). A discrete
    * action, so it validates immediately like {@link setHouse}.
    *
-   * Entering the guided mode adds an empty plan and zeroes `xp_pool`, since the
-   * engine makes a plan and a typed pool mutually exclusive; leaving it deletes
-   * the plan key outright, which keeps the save sparse and *is* the pruning of the
-   * plan's now-stale contents (the {@link #prunedHouseChoices} precedent).
+   * **A pure mode set: it destroys no entity data in either direction.** It used to
+   * destroy plenty — entering the guided mode zeroed a hand-typed `xp_pool`, and
+   * leaving it deleted the whole `life_stages` plan (native language, Gauntlet age,
+   * lab seasons, spell levels, childhood package) — so a round trip lost everything
+   * typed on either side, unprompted and unrecoverable. That was not a policy but a
+   * consequence of the mode being *inferred* from the plan's presence: discarding
+   * the plan was the only way to record "pool". Schema 16 stores the mode, so both
+   * sides now coexist on the entity and the inactive one is simply inert.
    *
-   * Bought `ability_scores` survive either switch untouched: funding less
-   * experience than the rows demand is reported as `not_enough_xp` — visible and
-   * fixable — which is strictly better than silently discarding the player's work.
+   * That is a deliberate departure from this file's sparse-save habit: the save
+   * keeps data the active mode ignores. Do not "fix" it back. Nothing double-counts
+   * — `LifeStageRules::budget` returns `None` under pool funding, and the engine's
+   * `life_stage_xp_pool_conflict` finding was retired with the invariant it asserted.
    *
-   * Leaving guided mode also prunes the {@link childhoodDraft} and its
-   * {@link childhoodRejections}: the plan is what a draft is *for*, so a surviving
-   * one would prefill a package for a future plan that starts from nothing, showing
-   * stale slot faults for a decision nobody has made yet. Deliberately asymmetric —
-   * *entering* guided mode keeps an in-progress draft, since toggling the radio back
-   * and forth without ever leaving would otherwise destroy typed slot values.
+   * Entering the guided mode still *creates* a plan when none exists, because the
+   * plan is where every life-stage field is written ({@link setNativeLanguage} and
+   * friends are no-ops without one). `??=`, never `=`: an existing plan is picked up
+   * where it was left rather than restarted empty.
    *
-   * The {@link agingDraft} goes with it, on one blanket rule: an un-submitted draft
-   * never outlives a change to how the document is built. One rule covering every
-   * draft keeps their lifetimes auditable in a single place, which is worth more
-   * than sparing a typed die across a funding switch.
+   * Bought `ability_scores` survive either switch untouched, as they always did:
+   * funding less experience than the rows demand is reported as `not_enough_xp` —
+   * visible and fixable — which is strictly better than silently discarding work.
+   *
+   * **The drafts are still pruned on the way out**, on one blanket rule that
+   * predates this change and outlives it: an un-submitted draft never outlives a
+   * change to how the document is built. So leaving the guided mode clears the
+   * {@link childhoodDraft}, its {@link childhoodRejections} and the
+   * {@link agingDraft}. Deliberately asymmetric — *entering* guided mode keeps an
+   * in-progress draft, since toggling the radio back and forth without ever leaving
+   * would otherwise destroy typed slot values.
    */
   async setAbilityFunding(funding: AbilityFunding): Promise<void> {
     if (this.abilityFunding === funding) return;
+    this.entity.ability_funding = funding;
     if (funding === 'life_stages') {
-      this.entity.life_stages = {};
-      this.entity.xp_pool = 0;
+      this.entity.life_stages ??= {};
     } else {
-      delete this.entity.life_stages;
       this.childhoodDraft = defaultChildhoodDraft();
       this.childhoodRejections = [];
       this.clearAgingDraft();
@@ -777,9 +803,12 @@ class AppStore {
    * experience is spent on. Debounced like the other typed fields.
    *
    * A blank value deletes the key rather than storing an empty string: the engine
-   * reads blank as unset, and a sparse save is the canonical one. A no-op without a
-   * plan, so a surface shown in the flat mode can never conjure one into being;
-   * {@link setAbilityFunding} is the only way into the guided mode.
+   * reads blank as unset, and a sparse save is the canonical one. A no-op when no
+   * plan exists, so no surface can conjure one into being; {@link setAbilityFunding}
+   * is the only thing that creates a plan. Note the guard is the plan's *presence*,
+   * not the funding mode — since schema 16 a pool-funded character may legitimately
+   * carry one, and writing into an inert plan is how its contents survive a mode
+   * switch rather than a bug.
    */
   setNativeLanguage(value: string): void {
     const plan = this.entity.life_stages;
@@ -802,8 +831,8 @@ class AppStore {
    * as the Gauntlet age, exactly how a magus was built before the field existed. So
    * a magus at its Gauntlet still saves nothing but its native language.
    *
-   * A no-op without a plan, like {@link setNativeLanguage}: a surface shown in the
-   * flat mode can never conjure one into being.
+   * A no-op when no plan exists, like {@link setNativeLanguage}: no surface can
+   * conjure one into being.
    */
   setGauntletAge(age: number | null): void {
     this.#setPlanCount('gauntlet_age', age);

@@ -3017,8 +3017,9 @@ Abilities are bought with experience earned in blocks, not from one bank:
     wrong place.
   - `Entity::spell_levels_override` still replaces the **profile base** only; the
     post-Gauntlet levels stay additive on top. Deliberate: the override is the flat
-    flow's escape hatch and is *not* made exclusive with a plan the way `xp_pool` is
-    (`life_stage_xp_pool_conflict`).
+    flow's escape hatch and was never made exclusive with a plan the way `xp_pool`
+    once was — and since schema 16 `xp_pool` is not exclusive with one either (see
+    *Plan vs. pool*).
   - **App payload:** `EffectiveScores` (`arm-app/ruleset_io.rs`) carries the three
     parts of the budget separately — `spell_levels_profile_base`,
     `spell_levels_bonus` and `spell_levels_life_stage`, whose identity is
@@ -3352,17 +3353,77 @@ Abilities are bought with experience earned in blocks, not from one bank:
   price, just not as high. Composition rule (no shipped Flaw pairs with another): the
   smallest resulting cap applies.
 
-#### Plan vs. pool — an engine invariant, not a sourced rule
+#### Plan vs. pool — the funding mode is stored (schema 16), not inferred
 
-A character built through its life stages derives its funding from them, so
-carrying a directly-entered `xp_pool` as well would fund the same purchases twice.
-`validation/life_stage.rs` reports that as `life_stage_xp_pool_conflict`, alongside
-an unset age, an age below the character's first possible one — childhood for a grog
-or companion (`life_stage_age_before_childhood`), childhood plus apprenticeship for a
-magus standing at its Gauntlet (`life_stage_age_before_gauntlet`, `:2435`) — an
-unchosen native language, and a chosen one with no bought score (a warning — the
-points are merely unspent). Only the two age bars are sourced; the pool conflict
-exists because the app offers two ways in.
+**Retired invariant.** The engine used to make a life-stage plan and a typed
+`xp_pool` **mutually exclusive** and report `life_stage_xp_pool_conflict` when a
+character carried both. **That invariant no longer holds, and the finding no longer
+exists** — code, contract table and both locales. It was removed deliberately in
+Slice 4 of `docs/guided-creation-implementation-plan.md` (review issue #29); do not
+reinstate it.
+
+Why it was an invariant at all: the funding mode was not stored anywhere, so the
+plan's *presence* **was** the mode. Recording "pool" therefore meant deleting the
+plan, and recording "life stages" meant zeroing the pool — an unconfirmed,
+unrecoverable loss of everything the player had typed on the side switched away
+from. Two funding sources visible at once really did mean a character could spend
+twice, so the finding was correct given the representation.
+
+What replaces it: `Entity::ability_funding` (`AbilityFunding::Pool` /
+`LifeStages`, `types.rs`), a closed enum stored on the entity. The inactive side is
+now kept and simply **inert**, and nothing can double-count because
+`LifeStageRules::budget` (`life_stage.rs`) returns `None` under `Pool` — the single
+funnel every mode-sensitive path goes through (`effective::xp_allocation`'s
+restricted and general pools, `life_stage_spell_levels`, and
+`validate_life_stage_plan`, which returns early under `Pool` so an inert plan raises
+no finding).
+
+**Deliberate departure from the sparse-save principle.** Everywhere else a save
+omits what it does not need, and every other defaulted `Entity` field is
+`skip_serializing_if`. Here the save deliberately **keeps data the active mode
+ignores** — a full life-stage plan beside a nonzero `xp_pool` — because discarding
+it is precisely the destruction #29 fixed. Two consequences that must not be
+"tidied" back:
+
+- `ability_funding` is the **one** `Entity` field written even when it holds its
+  default. `load_entity_migrating` dispatches on the key's *absence* to fold a
+  pre-16 save (no key → infer `LifeStages` if `life_stages` is present, else
+  `Pool` — the pre-16 rule, applied once at load), so omitting `Pool` would make a
+  pool-funded character that keeps a plan silently reload as life-stage funded.
+- A save may legitimately carry both a plan and a pool. Neither is redundant data
+  to be pruned; each is the player's typed work on one of the two modes.
+
+Sites that still read the plan's `Option` rather than the mode, deliberately:
+`completeness.rs`'s `experience` row (it asks "has anything been recorded", and
+`ability_funding` has a default every untouched character carries),
+`childhood::apply_package` (it reads the native language off the plan and records the
+package on it), and `native_language_instance` (`effective/xp.rs`, called only inside
+the already mode-gated budget branch).
+
+The remaining life-stage findings are unaffected: an unset age, an age below the
+character's first possible one — childhood for a grog or companion
+(`life_stage_age_before_childhood`), childhood plus apprenticeship for a magus
+standing at its Gauntlet (`life_stage_age_before_gauntlet`, `:2435`) — an unchosen
+native language, and a chosen one with no bought score (a warning — the points are
+merely unspent). Only the two age bars are sourced.
+
+#### `Entity::wizard_furthest_phase` — UI/document state, no rule
+
+The furthest guided-wizard phase the player reached, added alongside
+`ability_funding` in the same schema-16 bump (review issue #31). **Not a rule and not
+rules data**: no rulebook passage is cited or citable for it, no validator reads it,
+nothing derives from it, and no finding may ever be attached to it. It is UI state
+that happens to live on an engine-defined entity because it has to survive a save.
+
+Stored as a **raw slug (`Option<String>`), deliberately not `Option<CreationPhase>`**.
+`CreationPhase` is a closed `Deserialize` enum, so an unrecognised slug would be a
+serde error — and by this crate's migration rule a value that will not deserialize
+fails the *whole* load, which would turn a save carrying a since-removed phase slug
+(`"type"`, dropped in Slice 2) into an unopenable file, and would do the same for
+every future phase rename. The slug is therefore kept verbatim and resolved
+**leniently** by the caller against the loaded profile's `creation_phases`;
+unresolvable is treated exactly like absent. `None` writes no key at all, so a
+character built in the editor round-trips byte-identically.
 
 The unspent-block warning and the 75-point pool read `:2378` the same way, which is
 a requirement rather than a coincidence: both key on
@@ -4550,7 +4611,7 @@ character's own type profile declares, in that declared order:
 | `concept` | any identity field is set (name, description, concept, gender, birth year, sigil, covenant, parens) | — |
 | `characteristics` | some Characteristic is non-zero (an all-zero spread is an untouched point-buy) | — |
 | `virtues_flaws` | a selection the profile did not force (`required_traits`, plus The Gift where `gift_policy` requires it) | — |
-| `experience` | a life-stage plan is stored (flat-pool funding is recorded by the plan's *absence*, so it stays marked untouched until #29 stores the mode explicitly) | — |
+| `experience` | a life-stage plan is stored **or** a nonzero `xp_pool` is typed — either funding mode counts. Deliberately reads the two stored *substances*, not schema 16's `ability_funding`, which has a default every untouched character carries and so cannot tell a visited step from a fresh one | — |
 | `abilities` | an Ability score is bought | — |
 | `arts` | an Art score is bought | — |
 | `spells` | a spell is known | — |

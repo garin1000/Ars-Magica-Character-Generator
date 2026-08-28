@@ -53,7 +53,7 @@ describe('character editor', () => {
       timeoutMsg: 'save did not write the file',
     });
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
-    expect(saved.schema_version).toBe(15);
+    expect(saved.schema_version).toBe(16);
     expect(saved.selections.some((s) => s.ref === 'virtue.keen_vision')).toBe(true);
     expect(saved.characteristics.int).toBe(2);
     expect(

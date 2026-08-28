@@ -1968,6 +1968,8 @@ mod tests {
         // Fifteen years of apprenticeship after a childhood of five leaves five
         // years of later life, at 15 experience points a year.
         e.age = Some(25);
+        // The mode is stored since schema 16, so the plan needs it to be live.
+        e.ability_funding = crate::types::AbilityFunding::LifeStages;
         e.life_stages = Some(crate::life_stage::LifeStagePlan {
             native_language: Some("German".into()),
             ..crate::life_stage::LifeStagePlan::default()

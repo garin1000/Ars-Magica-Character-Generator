@@ -92,13 +92,15 @@ fn phase_is_engaged(phase: CreationPhase, entity: &Entity, profile: &EntityTypeP
         // ways: a life-stage plan (the age the years are priced from, the native
         // language, the childhood package) or a typed flat pool.
         //
-        // Both have to count. The mode itself is not stored — it is inferred from
-        // the plan's *absence* (`abilityFunding`, `state.svelte.ts`), and absence is
-        // also what an untouched character looks like — so keying only on the plan
-        // would report the step untouched forever for every pool-funded character,
-        // which is the default. `xp_pool` defaults to 0, so a nonzero pool is a
-        // deliberate entry rather than a leftover. #29 replaces the inference with a
-        // stored discriminator; this stays correct either way.
+        // Both have to count, and this is one of the few places that deliberately
+        // does NOT read `Entity::ability_funding` (schema 16's stored discriminator).
+        // The question here is "has the player recorded anything", not "which mode is
+        // active": `ability_funding` has a default every untouched character carries,
+        // so it can never distinguish a visited step from a fresh one. The two stored
+        // *substances* can — a plan (the age its years are priced from, the native
+        // language, the childhood package) or a nonzero typed pool, which defaults to
+        // 0 and so is always a deliberate entry. A plan kept beside pool funding
+        // still counts: the player typed it, whichever side currently funds them.
         CreationPhase::Experience => entity.life_stages.is_some() || entity.xp_pool > 0,
         CreationPhase::Abilities => !entity.ability_scores.is_empty(),
         CreationPhase::Arts => !entity.art_scores.is_empty(),

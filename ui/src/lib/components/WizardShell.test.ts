@@ -61,6 +61,7 @@ function installFlow(phases: CreationPhase[] = PHASES): void {
     characteristic_descriptions: {},
     ability_scores: [],
     xp_pool: 0,
+    ability_funding: 'pool',
     art_scores: [],
     personality_traits: [],
     reputations: [],

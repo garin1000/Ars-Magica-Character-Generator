@@ -1,4 +1,5 @@
 {
+  "ability_funding": "pool",
   "ability_scores": [
     {
       "ability": "ability.awareness",
@@ -20,7 +21,7 @@
     "id": "arm5-core",
     "version": "2024.1"
   },
-  "schema_version": 15,
+  "schema_version": 16,
   "selections": [
     {
       "ref": "flaw.poor_student"

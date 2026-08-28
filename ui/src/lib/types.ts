@@ -1427,6 +1427,18 @@ export interface ArtScore {
   score: number;
 }
 
+/**
+ * Where a character's Ability/Art experience comes from: a typed `xp_pool` (direct
+ * entry) or the blocks its life stages earn (the guided flow). The slugs mirror
+ * `arm_rules::AbilityFunding`'s snake_case serde names exactly.
+ *
+ * Lives here rather than in `state.svelte.ts` because `Entity` carries it, and
+ * `types.ts` must not import from the store (that would be a cycle). The store
+ * re-exports it, so `import { type AbilityFunding } from '../state.svelte'` keeps
+ * working.
+ */
+export type AbilityFunding = 'pool' | 'life_stages';
+
 export interface Entity {
   schema_version: number;
   ruleset: RulesetRef;
@@ -1444,10 +1456,33 @@ export interface Entity {
   // Total XP available to spend on Abilities AND Arts — one shared bank. Spent
   // is derived (ability + art cost), leftover is the banked XP. Omitted when zero.
   xp_pool?: number;
-  // The character's life-stage choices, when it is built through them (childhood +
-  // later life) rather than by typing `xp_pool` directly. Mutually exclusive with a
-  // non-zero `xp_pool`. Omitted for a directly-entered character.
+  // The character's life-stage choices (childhood + later life), read only under
+  // `ability_funding: 'life_stages'`. Omitted when no plan has ever been recorded.
+  //
+  // Presence is NOT the funding mode — it was until schema 16, and is not now. A
+  // plan kept beside pool funding is inert data the player typed and may come back
+  // to, so ask `store.abilityFunding` for the mode and this key only for a plan's
+  // contents.
   life_stages?: LifeStagePlan;
+  // Which of `xp_pool` / `life_stages` funds this character's Abilities and Arts.
+  //
+  // REQUIRED, deliberately, unlike almost every other field here. Tauri commands
+  // receive an entity through plain serde, never through `load_entity_migrating`,
+  // so the load-time migration does not run on an IPC payload: an omitted key
+  // defaults to `Pool` on the Rust side, `LifeStageRules::budget` returns `None`,
+  // and every life-stage pool silently disappears — no error, no finding, just a
+  // character whose experience evaporated. The engine writes the key even when it
+  // holds its default for the same reason (absence is the pre-16 signal), so the
+  // frontend must always send it too.
+  ability_funding: AbilityFunding;
+  // The furthest guided-wizard phase this character reached, as a raw phase slug.
+  // UI/document state that happens to live on the entity because it has to survive
+  // a save: nothing validates it and nothing derives from it, and it may hold a
+  // slug this build no longer declares (resolve it leniently against the profile's
+  // `creation_phases`; unresolvable is treated exactly like absent). Omitted when
+  // no wizard progress has been recorded, which is what an editor-built character
+  // looks like.
+  wizard_furthest_phase?: string;
   // Whole bought Art scores (magi only). Priced against the shared xp_pool.
   // Omitted when empty.
   art_scores?: ArtScore[];

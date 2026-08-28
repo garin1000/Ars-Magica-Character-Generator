@@ -262,8 +262,14 @@ pub fn apply_package(
 ) -> Result<Entity, Vec<ChildhoodRejection>> {
     let mut rejections = Vec::new();
 
-    // Childhood exists only in life-stage mode, and the taken package is
-    // recorded on the plan, so there is no character to apply one to without it.
+    // The plan is what this function reads and writes — the native language the
+    // package's native entry needs, and the slot the taken package is recorded in —
+    // so its absence, not the funding mode, is what leaves nothing to apply to. This
+    // is deliberately a plan-presence check and NOT a
+    // [`crate::AbilityFunding`] check: the caller decides when to offer a package
+    // (the guided flow does so only in life-stage mode), and a package applied to a
+    // plan the character is not currently funded by still writes exactly the Ability
+    // rows the player asked for, funded from whichever pool is active.
     // A blank language is no language, exactly as a blank slot value is no value.
     let native_language = entity
         .life_stages

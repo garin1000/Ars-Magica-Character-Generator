@@ -15,8 +15,9 @@ use crate::completeness::{CompletenessReport, completeness};
 use crate::grant::{Grant, open_pick_satisfies};
 use crate::ruleset::Ruleset;
 use crate::types::{
-    CategoryCap, CreationPhase, Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id,
-    ItemKind, Magnitude, ParameterDomain, PointItem, Prereq, Selection, ValidationMode,
+    AbilityFunding, CategoryCap, CreationPhase, Effect, Entity, EntityKind, EntityTypeProfile,
+    GiftPolicy, Id, ItemKind, Magnitude, ParameterDomain, PointItem, Prereq, Selection,
+    ValidationMode,
 };
 
 mod aging;
@@ -141,7 +142,6 @@ impl fmt::Display for IssueSeverity {
 /// | `restricted_xp_unspent` | warning | experience | `amount`, `used`, `unspent`, `origin_kind`, `origin` |
 /// | `ability_category_requires_virtue` | error | abilities | `ability`, `category` |
 /// | `academic_ability_without_scholarly_language` | warning | abilities | `ability`, `min` |
-/// | `life_stage_xp_pool_conflict` | error | experience | `xp_pool` |
 /// | `life_stage_age_unset` | error | experience | (none) |
 /// | `life_stage_age_before_childhood` | error | experience | `age`, `min` |
 /// | `life_stage_age_before_gauntlet` | error | experience | `age`, `min` |
@@ -369,11 +369,13 @@ impl ValidationIssue {
     /// bought without a scholarly language at 3+, which the rules normally require.
     pub const CODE_ACADEMIC_ABILITY_WITHOUT_SCHOLARLY_LANGUAGE: &'static str =
         "academic_ability_without_scholarly_language";
-    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the character carries both
-    /// a life-stage plan and a directly-entered experience pool. They are
-    /// alternative ways of funding the same purchases, so both together would let
-    /// the character spend twice.
-    pub const CODE_LIFE_STAGE_XP_POOL_CONFLICT: &'static str = "life_stage_xp_pool_conflict";
+    // `CODE_LIFE_STAGE_XP_POOL_CONFLICT` ("the character carries both a life-stage
+    // plan and a typed pool") was RETIRED at schema 16. It asserted a mutual
+    // exclusivity that no longer holds: the funding mode is now stored on the entity
+    // (`Entity::ability_funding`), so the inactive side is kept rather than destroyed
+    // and the two legitimately coexist. Nothing can double-count, because
+    // `LifeStageRules::budget` returns `None` under pool funding. Do not reinstate it
+    // — see `crates/arm-rules/RULES.md` ("Retired invariant").
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the character's age falls
     /// inside the childhood block, so it cannot have lived a year of later life.
     pub const CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD: &'static str =
@@ -6438,6 +6440,8 @@ mod tests {
         let rs = spell_rs();
         let mut e = make_entity("magus", vec![]);
         e.age = Some(60);
+        // The mode is stored since schema 16, so the plan needs it to be live.
+        e.ability_funding = AbilityFunding::LifeStages;
         e.life_stages = Some(crate::life_stage::LifeStagePlan {
             gauntlet_age: Some(25),
             post_gauntlet_spell_levels: 370,

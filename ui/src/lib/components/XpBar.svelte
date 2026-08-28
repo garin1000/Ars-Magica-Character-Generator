@@ -9,17 +9,21 @@
   // across the two instances.
   let { prefix = '' }: { prefix?: string } = $props();
 
-  // A life-stage plan IS the guided-funding switch (there is no stored flag), and
-  // the engine makes a plan and a typed pool mutually exclusive
-  // (`life_stage_xp_pool_conflict`). So under a plan the editable total must go:
-  // offering it would offer a value the engine rejects. Both instances read the
-  // same `entity.xp_pool`, so the Arts bar takes the identical guided shape —
-  // correct, since Arts spend that very pool.
-  const guided = $derived(store.entity.life_stages != null);
+  // Whether the character is FUNDED by its life stages — the stored mode (schema
+  // 16), not the presence of a plan. Under life-stage funding the editable total
+  // must go: the pools are derived from the stages, so offering a typed figure would
+  // offer one the engine never reads. Under pool funding the field belongs on screen
+  // even when a plan is on file, because a preserved plan is inert and `xp_pool` is
+  // the authority — reading the plan's presence here would hide the very control
+  // that funds the character. Both instances read the same `entity.xp_pool`, so the
+  // Arts bar takes the identical shape — correct, since Arts spend that very pool.
+  const guided = $derived(store.abilityFunding === 'life_stages');
   // The engine's life-stage budget, or null when the plan yields none yet (no age
   // typed, or a ruleset without life-stage rules).
   const lifeStage = $derived(store.effective?.life_stage ?? null);
-  // What the player typed, which under a plan should be nothing at all.
+  // What the player typed. Under life-stage funding it is inert rather than
+  // necessarily zero: schema 16 preserves it across a mode switch instead of zeroing
+  // it, so the fallback below only ever matters before `store.effective` arrives.
   const typedPool = $derived(store.entity.xp_pool ?? 0);
   // The general pool the `used` figure is charged against: the engine's own resolved
   // pool, in BOTH funding modes. It is the base — whichever block may fund anything
@@ -33,7 +37,6 @@
   // The signed Virtue/Flaw contribution inside that pool (Skilled Parens +60, Weak
   // Parens -60), so the bar can name it rather than show an unexplained total.
   const bonus = $derived(store.effective?.xp_general_bonus ?? 0);
-  const clearHintId = $derived(`${prefix}xp-pool-clear-hint`);
   // The engine's authoritative slice of the spend FUNDED from the general pool.
   // `restricted_xp_pools` cover the rest and are reported separately. The `0`
   // fallback covers only the very first frame before `store.effective` arrives
@@ -204,21 +207,16 @@
         : ''}
     </span>
   {/each}
-  {#if guided && typedPool > 0}
-    <!-- Escape hatch for a hand-edited save that carries both a plan and a typed
-         pool: guided mode shows no field to correct one, so without this the
-         engine's conflict error would be inescapable from the UI. -->
-    <button
-      type="button"
-      class="xp-pool-clear"
-      aria-describedby={clearHintId}
-      onclick={() => store.setXpPool(0)}
-      data-testid="{prefix}xp-pool-clear"
-    >
-      {store.t('xp-pool-clear')}
-    </button>
-    <span class="xp-pool-clear-hint" id={clearHintId} data-testid="{prefix}xp-pool-clear-hint">
-      {store.t('xp-pool-clear-hint')}
-    </span>
-  {/if}
+  <!-- There is deliberately NO "clear the typed pool" control here. One existed, and
+       schema 16 (#29) removed its entire reason to exist: it was added because the
+       engine reported a plan beside a typed pool as `life_stage_xp_pool_conflict`, an
+       error this bar offered no field to correct, so the button was the only escape.
+       That finding is retired — the funding mode is now stored explicitly instead of
+       inferred from the plan's presence, so the pair is the ordinary shape of a
+       character who typed a pool and then switched to the stages, and the pool is
+       merely inert rather than illegal. Re-adding the button would put a one-click
+       destroyer of the player's typed total next to the slice that exists to stop
+       exactly that, and its old hint asserted the retired rule outright ("a pool
+       entered by hand has to go back to 0"). The total stays editable on the flat
+       side, so nothing is unreachable. -->
 </div>
