@@ -17,6 +17,7 @@ vi.mock('../ipc', () => ({
 }));
 
 import { SCHEMA_VERSION, store } from '../state.svelte';
+import CharacteristicPicker from './CharacteristicPicker.svelte';
 import WizardStep from './WizardStep.svelte';
 
 beforeEach(() => {
@@ -241,6 +242,36 @@ describe('WizardStep', () => {
     const note = guidance('virtues_flaws');
     expect(note).toContain('20');
     expect(note).toContain('10');
+  });
+
+  // --- Slice 9 (#27): one panel, two mounts, one centring ------------------
+
+  // The editor mounts `CharacteristicPicker` as a direct child of `.tab-panel`,
+  // which centres its children; the wizard always wraps a step body in `.vf-tab`,
+  // which is `width: 100%` and stretches them. So the panel was centred in one
+  // surface and left-aligned in the other. The fix is that the panel centres
+  // ITSELF (`.char-panel`'s auto inline margins, pinned in `app.css.test.ts`), and
+  // this is the guard that both mounts really carry that one class rather than one
+  // of them growing a centring wrapper of its own.
+  it('carries the self-centring characteristics panel in both mounts', () => {
+    const panelTag = (markup: string): string => {
+      const open = /<[^>]*data-testid="char-panel"[^>]*>/.exec(markup);
+      if (!open) throw new Error('no element with data-testid="char-panel"');
+      return open[0];
+    };
+
+    const wizardMount = body('characteristics');
+    const editorMount = render(CharacteristicPicker).body;
+
+    expect(panelTag(wizardMount)).toContain('char-panel');
+    // Byte-identical opening tags: the centring cannot depend on which surface
+    // mounted the picker, because there is only one element to carry it.
+    expect(panelTag(wizardMount)).toBe(panelTag(editorMount));
+
+    // And the wizard mount really is the stretching wrapper the editor has not
+    // got — the divergence the shared class has to overcome.
+    expect(wizardMount).toContain('class="vf-tab"');
+    expect(editorMount).not.toContain('class="vf-tab"');
   });
 
   it('localizes the note to German', () => {

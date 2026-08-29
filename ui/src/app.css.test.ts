@@ -126,4 +126,51 @@ describe('app.css', () => {
     // `.list-scroll`. The box must stay shrinkable and scroll instead.
     expect(block![1]).toMatch(/min-height:\s*0;/);
   });
+
+  // guided-creation-review-2026-08, cross-cutting theme 1: an element that enters or
+  // leaves the FLOW on first interaction moves the control the user is mid-click on.
+  // The house rule is to reserve the space instead, and this is the one utility that
+  // does it. `display: none` and unmounting both fail the rule; `.sr-only` is the
+  // opposite trade (announced, no space), so neither may be substituted here.
+  it('hides an element without taking its space out of the flow', () => {
+    const block = /^\.hidden-reserved\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block).not.toBeNull();
+    expect(block![1]).toMatch(/visibility:\s*hidden;/);
+    // The whole point is that the box survives, so nothing here may remove it.
+    expect(block![1]).not.toMatch(/display:\s*none/);
+    expect(block![1]).not.toMatch(/position:\s*absolute/);
+  });
+
+  // guided-creation-review-2026-08 #17: the mastery abilities picker is much wider
+  // than the score spinner, and as the spinner's sibling inside a content-width
+  // column it widened that column the moment mastery reached 1 — the elastic
+  // `.item-name` gave ground and the spinner slid sideways on a repeated-click
+  // control. `.spell-list li` is a wrap flex container, so a 100% basis puts the
+  // picker on a line of its own without touching the controls line's widths.
+  it('gives the mastery abilities a full-width wrap line of their own', () => {
+    const block = /^\.mastery-abilities\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block).not.toBeNull();
+    expect(block![1]).toMatch(/flex-basis:\s*100%;/);
+
+    // The rejected fix, and the reason this is a contract test: a `min-width` floor
+    // on the controls column would have stopped the shift by indenting EVERY
+    // unmastered row permanently. The column wrapper it would sit on is gone
+    // altogether, so the stylesheet must not name it again.
+    expect(appCss).not.toContain('spell-mastery-block');
+  });
+
+  // guided-creation-review-2026-08 #27: the panel is mounted as a direct child of the
+  // editor's `.tab-panel` (which centres its children) and, in the wizard, inside
+  // `.vf-tab` (which is `width: 100%` and stretches them). Centring the panel ITSELF
+  // makes the two mounts agree by construction, rather than by what happens to wrap
+  // it. Auto inline margins centre it in both a flex column and ordinary flow.
+  it('centres the characteristics panel itself, in either mount', () => {
+    const block = /^\.char-panel\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block).not.toBeNull();
+    expect(block![1]).toMatch(/margin-inline:\s*auto;/);
+    // Auto margins only centre a box narrower than its container, so the intrinsic
+    // width is half the mechanism and not decoration.
+    expect(block![1]).toMatch(/width:\s*fit-content;/);
+    expect(block![1]).toMatch(/max-width:\s*100%;/);
+  });
 });
