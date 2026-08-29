@@ -185,6 +185,40 @@ button:disabled {
   font-variant-numeric: tabular-nums;
 }
 
+/* EVERY BUDGET BAR STAYS ON SCREEN WHILE YOU SPEND AGAINST IT
+   (guided-creation-review-2026-08 #16 — the user had to "change them blindfold").
+   `.xp-summary` is XpBar and SpellBudgetBar, `.balance` is BalanceBar; between them
+   that is all ten mounts — the wizard's five (`WizardStep`'s `STEPS`: virtues_flaws,
+   experience, abilities, arts, spells) and the editor's five (`App.svelte`'s matching
+   tabs). ONE rule rather than five, so a bar cannot be added half-pinned and the two
+   surfaces cannot drift.
+
+   WHICH SCROLLPORT IT PINS TO — and why this rule alone is not enough. Every bar is a
+   flow child of `.vf-tab`, which is BOTH the bar's containing block and (see its own
+   rule below) the box that owns the step's vertical overflow. Those two being the same
+   box is the whole reason sticky works here: a sticky child is confined to its
+   containing block, so while the overflow belonged to the ancestor `.tab-content`,
+   `.vf-tab` was flex-shrunk to the tab area's height and the bar had no travel — this
+   rule was a measured no-op. `.vf-tab`'s comment carries that measurement; do not
+   change one of the two rules without reading the other.
+
+   It is NOT `.tab-scroll`, the separate inner scrollport: in both mounts the bar is
+   declared as `.tab-scroll`'s SIBLING (`WizardStep.svelte`, `App.svelte`'s `experience`
+   tab), never inside it — a bar stuck to the wrong one would scroll off exactly as
+   before.
+
+   `top: 0` pins to `.vf-tab`'s padding-box top edge, so rows scrolling up pass behind
+   the bar with no sliver showing above it. The background is what makes that readable,
+   and `z-index` is what makes it happen at all: a positioned element with `auto`
+   z-index still paints beneath later siblings, which is precisely the rows. */
+.xp-summary,
+.balance {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg);
+}
+
 .balance .over {
   color: var(--error);
   font-weight: 600;
@@ -435,6 +469,38 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  /* THIS BOX OWNS THE STEP'S VERTICAL OVERFLOW, and that is what makes the sticky
+     budget bar above work (guided-creation-review-2026-08 #16).
+
+     A sticky box is confined to its CONTAINING BLOCK, which for every bar is this
+     one. While the overflow belonged to the ancestor `.tab-content`, this box was
+     flex-shrunk to the tab area's height — measured at literally **0px** against
+     538px of content on the wizard's Abilities step in a 600px window, because
+     `.tab-content`'s 2 × 1rem padding consumed the whole 30px it had — and a
+     zero-height containing block gives a sticky child zero travel, so
+     `position: sticky` was a silent no-op and the bar scrolled away exactly as
+     before. Even at the default window height the travel was only the tab area's
+     height, so the bar was still pushed off over the last part of a long scroll.
+
+     Scrolling HERE instead makes this box both the scrollport and the containing
+     block, whose constraint rectangle is then the whole scrollable area — so the bar
+     stays pinned for the entire scroll. `.tab-content` keeps its own `overflow-y:
+     auto` as the outer safety net for the surfaces that are not `.vf-tab`.
+
+     `min-height: min-content` was tried first and is WRONG: `.region-row` is a
+     stretch grid whose min-content height is the full un-scrolled Available list, so
+     the box grew to 2743px, the inner `.list-scroll` scrollports stopped bounding
+     anything and the whole tab became one 2773px scroll. Measured, not guessed.
+
+     Both parts of the scrollport pair, per `.list-scroll`: the gutter alone is a
+     no-op in the shipped WebKitGTK, whose overlay scrollbar takes hit area without
+     taking layout width — which has already cost this project an unclickable
+     control. Vertical only, since a horizontal overlay bar costs hit area at the
+     bottom edge the same way. */
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding-right: 1.1rem;
 }
 
 /* Internal scroll container for the single-panel tabs (Details, Equipment,

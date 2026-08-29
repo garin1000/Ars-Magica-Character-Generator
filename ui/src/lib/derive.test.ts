@@ -1928,6 +1928,36 @@ describe('spellLevelAllocation', () => {
     expect(a.baseUsed).toBe(430);
     expect(a.available).toBe(-10);
   });
+
+  // guided-creation-review-2026-08 #18, D2 answer (a). `baseUsed` charges the
+  // post-Gauntlet levels to the unconditional side, so the figure the bar shows
+  // beside it must be that whole side — `base + lifeStage` — not the editable base
+  // alone. With the base alone the bar read "150 / [120]  Available: 0": a primary
+  // budget read-out claiming an overspend while reporting nothing left, on a
+  // character the engine considers exactly balanced.
+  it('closes the displayed pair when post-Gauntlet levels fund the spend', () => {
+    // Base 120 + 30 levels bought past the Gauntlet = the engine's 150 budget,
+    // every one of them spent.
+    const a = spellLevelAllocation(150, 150, 0, 30);
+    expect(a.base).toBe(120);
+    expect(a.lifeStage).toBe(30);
+    // The pair the bar displays: 150 / 150, and nothing left.
+    expect(a.baseUsed).toBe(150);
+    expect(a.denominator).toBe(150);
+    expect(a.available).toBe(0);
+    // The invariant the display rests on, stated once: the pair always closes.
+    expect(a.denominator - a.baseUsed).toBe(a.available);
+  });
+
+  it('makes the denominator the base itself when no post-Gauntlet levels are funded', () => {
+    // The other direction of option (a): with nothing earned past the Gauntlet the
+    // denominator IS the editable base, so the overwhelming case reads as before.
+    const a = spellLevelAllocation(120, 120, 0, 0);
+    expect(a.base).toBe(120);
+    expect(a.denominator).toBe(120);
+    expect(a.baseUsed).toBe(120);
+    expect(a.available).toBe(0);
+  });
 });
 
 describe('generalXpAllocation', () => {

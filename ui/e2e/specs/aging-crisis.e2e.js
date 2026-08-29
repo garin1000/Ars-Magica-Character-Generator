@@ -94,7 +94,12 @@ describe('the aging crisis', () => {
     // so this is where the note can be provoked.
     await $(LONGEVITY_ADD).waitForExist({ timeout: STEP_TIMEOUT });
     await $(LONGEVITY_ADD).click();
-    await $(LONGEVITY_BONUS).waitForExist({ timeout: STEP_TIMEOUT });
+    // Clickable, not merely existing: the field appears the moment the ritual is
+    // added above, so the aging grid is still relaying out around it and for a frame
+    // the input is in the DOM but not yet interactable. `waitForExist` alone let
+    // `setValue` race that frame — the whole spec failed on its first attempt and
+    // passed on the retry, which is the shape a real defect hides in.
+    await $(LONGEVITY_BONUS).waitForClickable({ timeout: STEP_TIMEOUT });
     await $(LONGEVITY_BONUS).setValue('0');
 
     // 9 + 4 = 13, which is the first Crisis row (`:16602`).

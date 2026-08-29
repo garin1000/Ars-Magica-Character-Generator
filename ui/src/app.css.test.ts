@@ -71,4 +71,59 @@ describe('app.css', () => {
     expect(scroll![1]).toMatch(/overflow-y:\s*auto;/);
     expect(scroll![1]).not.toMatch(/overflow-x:/);
   });
+
+  // guided-creation-review-2026-08 #16 (HIGH — the user had to "change them
+  // blindfold"): every budget bar is mounted as an ordinary flow child of `.vf-tab`,
+  // whose scrolling ancestor is `.tab-content`. So a step tall enough to scroll — the
+  // ordinary case, since `.region-row` and `.list-scroll` carry min-height FLOORS
+  // that no shrinking removes — carried the bar off the top of the screen while the
+  // player spent against it.
+  //
+  // Sticky BEHAVIOUR cannot be asserted here: `render` from `svelte/server` attaches
+  // no stylesheet, and happy-dom does no layout, so no computed position or scroll
+  // offset exists to read. The stylesheet contract is the honest unit-level guard;
+  // the behaviour is verified by the e2e scroll assertion in `abilities.e2e.js`.
+  it('pins every budget bar to the top of its scrollport with an opaque background', () => {
+    // ONE rule for all three bars (`.xp-summary` is XpBar and SpellBudgetBar,
+    // `.balance` is BalanceBar), so a fourth bar cannot be added half-fixed and the
+    // wizard's five mounts cannot drift from the editor's five.
+    const block = /^\.xp-summary,\s*\n\.balance\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block).not.toBeNull();
+    expect(block![1]).toMatch(/position:\s*sticky;/);
+    expect(block![1]).toMatch(/top:\s*0;/);
+    // A background is not decoration: without one the rows scroll THROUGH the bar and
+    // both are unreadable. It must resolve to an opaque colour, never `transparent`.
+    const background = /background:\s*([^;]+);/.exec(block![1]);
+    expect(background).not.toBeNull();
+    expect(background![1].trim()).toBe('var(--bg)');
+    // Sticky alone does not raise the bar above its later siblings: a positioned
+    // element without a z-index still paints under content that comes after it in
+    // the DOM, which is exactly the rows this bar has to cover.
+    expect(block![1]).toMatch(/z-index:\s*[1-9]/);
+  });
+
+  // The other half of #16, and the half that actually decides whether sticky does
+  // anything: a sticky box is confined to its CONTAINING BLOCK, which for every bar
+  // is `.vf-tab`. While the overflow belonged to the ancestor `.tab-content` this box
+  // was flex-shrunk to the tab area's height — measured at 0px against 538px of
+  // content — so the bar had no travel and the sticky rule above was a silent no-op.
+  // Owning the scroll here makes the box both scrollport and containing block, whose
+  // constraint rectangle is the whole scrollable area.
+  it('gives the step body the scrollport its sticky bar needs, with the full gutter pair', () => {
+    const block = /^\.vf-tab\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block).not.toBeNull();
+    expect(block![1]).toMatch(/overflow-y:\s*auto;/);
+    // Vertical only: WebKitGTK's overlay HORIZONTAL scrollbar claims hit area along
+    // the bottom edge without taking layout height.
+    expect(block![1]).toMatch(/overflow-x:\s*hidden;/);
+    // BOTH halves of the gutter pair. `scrollbar-gutter` alone is a no-op in the
+    // shipped WebKitGTK, whose overlay scrollbar takes hit area without taking
+    // layout width — that is how an aging-log remove button became unclickable.
+    expect(block![1]).toMatch(/scrollbar-gutter:\s*stable;/);
+    expect(block![1]).toMatch(/padding-right:/);
+    // NOT `min-height: min-content`, which was tried and measured wrong: it grew the
+    // box to the full un-scrolled Available list (2743px) and collapsed every inner
+    // `.list-scroll`. The box must stay shrinkable and scroll instead.
+    expect(block![1]).toMatch(/min-height:\s*0;/);
+  });
 });

@@ -984,7 +984,20 @@ export interface SpellLevelAllocation {
   bonusUsed: number;
   /** Levels the magus's years past its Gauntlet bought; 0 at the Gauntlet. */
   lifeStage: number;
-  /** Unconditional levels still free: `base + lifeStage - baseUsed`. Negative when overspent. */
+  /**
+   * The figure `baseUsed` is charged against — the WHOLE unconditional side,
+   * `base + lifeStage`, and therefore the denominator a bar must display beside
+   * it (guided-creation-review-2026-08 #18).
+   *
+   * It is not the same number as `base` whenever a magus has lived past its
+   * Gauntlet, which is exactly the defect: `baseUsed` counts the
+   * post-Gauntlet-funded levels, so pairing it with the editable `base` alone
+   * displayed "150 / 120  Available: 0" — an apparent overspend on a character
+   * the engine considers exactly balanced. `denominator - baseUsed === available`
+   * always, which is what makes the pair readable.
+   */
+  denominator: number;
+  /** Unconditional levels still free: `denominator - baseUsed`. Negative when overspent. */
   available: number;
 }
 
@@ -1038,13 +1051,17 @@ export function spellLevelAllocation(
   // A penalty (negative bonus) is charged to the base on top of the real spend.
   const penalty = bonus < 0 ? -bonus : 0;
   const baseUsed = used - bonusUsed + penalty;
+  // What `baseUsed` is charged against, and so the only honest denominator to
+  // print beside it (#18). Equals `base` exactly when `lifeStage === 0`.
+  const denominator = base + lifeStage;
   return {
     base,
     baseUsed,
     bonusAmount: bonus,
     bonusUsed,
     lifeStage,
-    available: base + lifeStage - baseUsed,
+    denominator,
+    available: denominator - baseUsed,
   };
 }
 

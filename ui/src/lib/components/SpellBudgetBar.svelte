@@ -7,12 +7,30 @@
     spellMasteryXpSpent,
   } from '../derive';
 
+  // Whether the base is READ-ONLY at this mount. The guided wizard passes `true`;
+  // the editor leaves it editable (guided-creation-review-2026-08 #19, DECIDED).
+  //
+  // An explicit prop, and deliberately NOT a `store` lookup of which flow is
+  // running: reading the flow here would make the component's behaviour depend on
+  // global state its own caller cannot see, and every mount would have to be traced
+  // to know what it renders. The mount already declares its own differences through
+  // `WizardStep`'s `barProps` seam (which carries `XpBar`'s testid prefix the same
+  // way), so the divergence is visible at the mount site.
+  //
+  // Why the wizard may withhold it: the 120 is a fixed rules grant — "Take 120
+  // levels of spells" (Ars Magica - Definitive Edition (Core Rules).md:2215) — and
+  // every legitimate in-rules variation of the budget already arrives somewhere else
+  // on this bar: Skilled/Weak Parens as the `bonus` entry, and the levels bought past
+  // the Gauntlet as the `lifeStage` entry. The editor keeps the field because direct
+  // entry exists precisely to record a character the rules-as-written did not build.
+  let { readonlyBase = false }: { readonlyBase?: boolean } = $props();
+
   // The Spells tab's budget status line. Sits ABOVE the Available/Selected lists
   // as a sibling status bar — the same placement (and the same markup, classes and
   // overspend behavior) as the shared XP bar on the Abilities/Arts tabs, so both
-  // budgets read identically: label, used figure, bracketed editable total, then
-  // Available. It was previously rendered inside the selected list's column
-  // header, which put a whole-character budget inside one of the two lists.
+  // budgets read identically: label, used figure, total, then Available. It was
+  // previously rendered inside the selected list's column header, which put a
+  // whole-character budget inside one of the two lists.
   const budget = $derived(store.effective?.spell_levels_budget ?? 0);
   const used = $derived(store.effective?.spell_levels_used ?? 0);
   // The type profile's base budget (120 for a magus) is the base field's
@@ -31,7 +49,12 @@
   // so this bar reads exactly like the XP bar: a positive bonus is spent first (as
   // the engine drains restricted pools before the general one), a penalty is
   // charged to the base, and the already-earned post-Gauntlet levels sit on the
-  // base's side. That keeps `available === base + lifeStage - baseUsed` closed.
+  // base's side.
+  //
+  // The figures close against `alloc.denominator` — the whole unconditional side,
+  // `base + lifeStage` — and NOT against the bracketed base, which they do only
+  // while `lifeStage === 0`. Claiming otherwise here is what let #18 stand: see
+  // `spellLevelAllocation` in derive.ts for the honest statement of the invariant.
   const alloc = $derived(spellLevelAllocation(used, budget, bonus, lifeStage));
   // Not clamped: overspending shows a negative value in bold red (`over`) with the
   // used figure in plain red (`over-value`) — exactly as the XP pool does.
@@ -62,31 +85,28 @@
 <div class="xp-summary">
   <span class="xp-pool">
     <span class="xp-pool-label">{store.t('spell-levels-pool')}</span>
-    <!-- The levels charged to the BASE (a positive V/F bonus is spent first and
-         reported in its own entry; a penalty is charged here), so this figure and
-         Available always close against the bracketed base. -->
+    <!-- The levels charged to the UNCONDITIONAL side — the base plus whatever the
+         years past the Gauntlet bought. (A positive V/F bonus is spent first and
+         reported in its own entry; a penalty is charged here.) -->
     <span
       class="xp-pool-used"
       class:over-value={available < 0}
       data-overspent={available < 0}
       data-testid="spell-levels-used">{alloc.baseUsed}</span
     >
-    <!-- The bracketed, editable BASE — the direct counterpart of the XP pool's
-         editable total. Empty falls back to the type profile's base (the
-         placeholder). Any V/F contribution is listed separately, so this stays the
-         one number the player edits. -->
+    <!-- The figure that used figure is charged against, so the pair CLOSES:
+         `alloc.denominator - alloc.baseUsed === alloc.available`, always
+         (`spellLevelAllocation` in derive.ts). It is `base + lifeStage`, not the
+         base alone — pairing the used figure with the base showed "150 / 120
+         Available: 0" for a magus whose spend the engine considers exactly balanced
+         (guided-creation-review-2026-08 #18, D2 answer (a)).
+
+         READ-ONLY text, which is why the editable base is no longer here: the two
+         are different numbers whenever the magus has lived past its Gauntlet, and a
+         field showing 120 where the denominator is 150 would restate the same defect
+         as an input. The base has its own entry after Available. -->
     <span class="xp-pool-total">
-      <input
-        type="number"
-        min="1"
-        max="4294967295"
-        step="1"
-        aria-label={store.t('spell-levels-base-label')}
-        placeholder={String(profileBase)}
-        value={store.entity.spell_levels_override ?? ''}
-        oninput={onOverride}
-        data-testid="spell-levels-base"
-      />
+      <span data-testid="spell-levels-total">{alloc.denominator}</span>
     </span>
   </span>
   <span
@@ -96,6 +116,31 @@
     data-testid="spell-levels-available"
   >
     {store.t('spell-levels-available', { available: String(available) })}
+  </span>
+  <!-- The BASE as an entry of its own, beside the bonus and post-Gauntlet entries it
+       sums with. Empty falls back to the type profile's base (the placeholder), so
+       the default stays data-driven. Read-only in the wizard (#19) — and rendered as
+       plain text rather than a disabled input, so assistive tech does not announce a
+       control the player cannot use, exactly as the XP bar's guided total does. -->
+  <span class="xp-pool">
+    <span class="xp-pool-label">{store.t('spell-levels-base-entry')}</span>
+    <span class="xp-pool-total">
+      {#if readonlyBase}
+        <span data-testid="spell-levels-base">{alloc.base}</span>
+      {:else}
+        <input
+          type="number"
+          min="1"
+          max="4294967295"
+          step="1"
+          aria-label={store.t('spell-levels-base-label')}
+          placeholder={String(profileBase)}
+          value={store.entity.spell_levels_override ?? ''}
+          oninput={onOverride}
+          data-testid="spell-levels-base"
+        />
+      {/if}
+    </span>
   </span>
   {#if bonus > 0}
     <!-- A positive modifier is an extra pool of levels, spent before the base — so

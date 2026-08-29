@@ -46,10 +46,8 @@ describe('German UI bundle', () => {
     expect(translate(de, 'childhood-label')).toBe('Beispielhafte Kindheit');
     // A magus is built through its life stages too (slice 6b4), so the guided chrome
     // names apprenticeship and the Gauntlet exactly as the German rulebook does
-    // (Basisregeln.md:2433, :2449 — Lehrlingszeit, Lehrlingsprüfung).
-    expect(translate(de, 'life-stage-apprenticeship', { years: '15', xp: '240' })).toContain(
-      'Lehrlingszeit',
-    );
+    // (Basisregeln.md:2433, :2449 — Lehrlingszeit, Lehrlingsprüfung). The chip that
+    // carried this term is now `xp-pool-block-apprenticeship` (#14), asserted below.
     expect(translate(de, 'life-stage-gauntlet-note')).toContain('Lehrlingsprüfung');
     // The two checklist headings are the rulebook's own (Basisregeln.md:2437, :2451).
     expect(translate(de, 'magus-minimums-label')).toBe('Mindestfertigkeiten');
@@ -80,6 +78,81 @@ describe('German UI bundle', () => {
       // #1's two surviving facts were re-keyed to their new home, never deleted.
       expect([...keys].filter((key) => key.startsWith('phase-type-'))).toEqual([]);
     }
+  });
+
+  // guided-creation-review-2026-08 #14: the life-stage read-outs became one chip per
+  // block, keyed `xp-pool-block-*`, and the three `life-stage-*` chip keys they
+  // replaced are retired. Both halves matter — a surviving old key is a dead string
+  // that a later reader will take for a live one, and a missing new key renders as
+  // its own slug.
+  it('keys one xp-pool block chip per life stage and retires the old chip keys', () => {
+    for (const lang of ['en', 'de']) {
+      const keys = messageKeys(sourceForLang(lang));
+      for (const key of [
+        'xp-pool-block-early-childhood',
+        'xp-pool-block-early-childhood-spread-only',
+        'xp-pool-block-later-life',
+        'xp-pool-block-later-life-restricted',
+        'xp-pool-block-apprenticeship',
+        'xp-pool-block-after-gauntlet',
+      ]) {
+        expect(keys, `${lang} is missing ${key}`).toContain(key);
+      }
+      for (const retired of [
+        'life-stage-later-life',
+        'life-stage-apprenticeship',
+        'life-stage-post-gauntlet',
+      ]) {
+        expect(keys, `${lang} still carries the retired ${retired}`).not.toContain(retired);
+      }
+      // The block-slug keys STAY: `resolveIssueArgValue` names an unspent-experience
+      // warning's `origin` through them, and that is not the bar's chip.
+      for (const slugKey of [
+        'xp-pool-childhood_native_language',
+        'xp-pool-childhood_spread',
+        'xp-pool-later_life',
+      ]) {
+        expect(keys, `${lang} dropped the issue-arg key ${slugKey}`).toContain(slugKey);
+      }
+    }
+  });
+
+  // #14's fourth decision: "After the Gauntlet" replaces "As a magus" on the two
+  // LABELS that name the block, and nowhere else — the six prose strings that say
+  // "years as a magus" read correctly and keep it. The German term is the glossary's
+  // (`rules/source/de/translation-tables/grundbegriffe.md:57` — Lehrlingsprüfung).
+  it('names the post-Gauntlet block after the Gauntlet, in both bars', () => {
+    const en = buildBundle('en');
+    const de = buildBundle('de');
+    for (const key of ['xp-pool-block-after-gauntlet', 'spell-levels-post-gauntlet']) {
+      const args = { years: '10', rate: '30', lab: '0', points: '300', xp: '300', levels: '300' };
+      expect(translate(en, key, args)).toContain('After the Gauntlet');
+      expect(translate(en, key, args)).not.toContain('As a magus');
+      expect(translate(de, key, args)).toContain('Lehrlingsprüfung');
+      expect(translate(de, key, args)).not.toContain('Als Magus');
+    }
+    // The prose keeps "as a magus"/"als Magus": it is a description, not the label.
+    expect(translate(en, 'life-stage-lab-seasons-hint')).toContain('as a magus');
+    expect(translate(de, 'life-stage-lab-seasons-hint')).toContain('als Magus');
+  });
+
+  // The German block names are the rulebook's own, at the mirrored lines
+  // (Basisregeln.md:2213 Frühe Kindheit, :2214 Späteres Leben, :2215 Lehrlingszeit).
+  it('names the life-stage blocks as the German rulebook does', () => {
+    const de = buildBundle('de');
+    const span = { from: '5', to: '10', years: '5', rate: '15', xp: '75', used: '0', amount: '75' };
+    expect(
+      translate(de, 'xp-pool-block-early-childhood', {
+        nativeUsed: '0',
+        nativeAmount: '75',
+        spreadUsed: '0',
+        spreadAmount: '45',
+      }),
+    ).toContain('Frühe Kindheit');
+    expect(translate(de, 'xp-pool-block-later-life-restricted', span)).toContain('Späteres Leben');
+    expect(translate(de, 'xp-pool-block-apprenticeship', { years: '15', xp: '240' })).toContain(
+      'Lehrlingszeit',
+    );
   });
 
   it('has full message-key parity between English and German', () => {

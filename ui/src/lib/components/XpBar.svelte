@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { RestrictedXpPool } from '../types';
   import { store } from '../state.svelte';
   import { formatSigned, generalXpAllocation, restrictedPoolLabel } from '../derive';
 
@@ -72,6 +73,27 @@
   const available = $derived(alloc.available);
   const restricted = $derived(store.effective?.restricted_xp_pools ?? []);
 
+  // One restricted pool per life-stage block, looked up BY BLOCK rather than by
+  // index: the engine pushes them in a fixed order, but a V/F-granted pool can sit
+  // among them, so an index would be a guess. Undefined means the engine formed no
+  // such pool for this character — childhood's native-language block before a
+  // language is named (`effective/xp.rs`), later life for anyone whose later life IS
+  // the general pool.
+  const childhoodNative = $derived(lifeStagePool('childhood_native_language'));
+  const childhoodSpread = $derived(lifeStagePool('childhood_spread'));
+  const laterLife = $derived(lifeStagePool('later_life'));
+  // Only pools that are NOT a life-stage block keep a generic row of their own
+  // (Educated, Warrior, Privileged Upbringing). Every block now reads as ONE chip
+  // merging its derivation with its pool, so leaving the blocks in this list as well
+  // would print each block's label twice — which is the whole of #14.
+  const itemPools = $derived(restricted.filter((pool) => pool.origin?.kind !== 'life_stage'));
+
+  function lifeStagePool(block: string): RestrictedXpPool | undefined {
+    return restricted.find(
+      (pool) => pool.origin?.kind === 'life_stage' && pool.origin.block === block,
+    );
+  }
+
   // What a year past the Gauntlet is worth. DATA, never a literal: the 30 lives in
   // `rules/core/life_stages.json`, and the lab deduction below is read back out of
   // the engine's own points rather than recomputed from a season count.
@@ -81,6 +103,15 @@
   const labDeduction = $derived(
     lifeStage ? lifeStage.post_gauntlet_years * pointsPerYear - lifeStage.post_gauntlet_points : 0,
   );
+  // The ages later life spans, which is what says WHICH years these points are from:
+  // it starts where childhood ends and runs to the start of apprenticeship. Both
+  // terms are the character's own and neither is a literal — childhood's length is
+  // ruleset data (`rules/core/life_stages.json`) and `later_life_years` is the
+  // engine's own figure, already on `LifeStageBudget`.
+  // Source: Ars Magica - Definitive Edition (Core Rules).md:2214, worked through over
+  // ages 5 to 10 by the Darius example at `:2402`.
+  const childhoodYears = $derived(store.ruleset?.ruleset.life_stages?.childhood?.years ?? 0);
+  const laterLifeTo = $derived(childhoodYears + (lifeStage?.later_life_years ?? 0));
 
   function onPool(event: Event) {
     const raw = (event.currentTarget as HTMLInputElement).value;
@@ -150,25 +181,76 @@
   {/if}
   {#if guided}
     {#if lifeStage}
+      <!-- THE LIFE-STAGE BLOCKS, IN THE ORDER THE CHARACTER LIVED THEM (#14): early
+           childhood, later life, apprenticeship, the years after it. The rules state
+           them as exactly that ordered sequence — "5. Early Childhood … 6. Later
+           Life … 7. … Apprenticeship … 8. … Years after apprenticeship"
+           (Ars Magica - Definitive Edition (Core Rules).md:2213-2216) — and again as
+           a chronology of periods at `:2364`. The previous order put later life LAST,
+           where its label read as life past the Gauntlet.
+
+           ONE chip per block: each merges the block's derivation with the spent/total
+           of the restricted pool it forms, so no block's name appears twice. Every
+           chip is still gated on its own block rather than on the character type, so
+           the component needs no notion of a magus. -->
+      {#if childhoodNative || childhoodSpread}
+        <!-- Childhood's 75 for the native language and 45 for the spread are ONE
+             block under one heading (`:2378`), not two rows that read as two blocks.
+             The spread-only wording covers the state before a native language is
+             named, when the engine has formed no native-language pool to report. -->
+        <span class="xp-life-stage" data-testid="{prefix}life-stage-early-childhood">
+          {childhoodNative
+            ? store.t('xp-pool-block-early-childhood', {
+                nativeUsed: String(childhoodNative.used),
+                nativeAmount: String(childhoodNative.amount),
+                spreadUsed: String(childhoodSpread?.used ?? 0),
+                spreadAmount: String(childhoodSpread?.amount ?? 0),
+              })
+            : store.t('xp-pool-block-early-childhood-spread-only', {
+                spreadUsed: String(childhoodSpread?.used ?? 0),
+                spreadAmount: String(childhoodSpread?.amount ?? 0),
+              })}
+        </span>
+      {/if}
+      <!-- Later life, with the ages it spans. It carries its own spent/total only
+           when it IS a restricted pool — a magus, whose general pool is
+           apprenticeship instead. For everyone else later life is the general pool
+           already shown as this bar's own total, so a second spent/total for the one
+           pool would be the duplication #14 exists to remove. -->
+      <span class="xp-life-stage" data-testid="{prefix}life-stage-later-life">
+        {laterLife
+          ? store.t('xp-pool-block-later-life-restricted', {
+              from: String(childhoodYears),
+              to: String(laterLifeTo),
+              years: String(lifeStage.later_life_years),
+              rate: String(lifeStage.later_life_rate),
+              xp: String(lifeStage.later_life_xp),
+              used: String(laterLife.used),
+              amount: String(laterLife.amount),
+            })
+          : store.t('xp-pool-block-later-life', {
+              from: String(childhoodYears),
+              to: String(laterLifeTo),
+              years: String(lifeStage.later_life_years),
+              rate: String(lifeStage.later_life_rate),
+              xp: String(lifeStage.later_life_xp),
+            })}
+      </span>
       {#if lifeStage.apprenticeship_xp > 0}
         <!-- The block behind the pool total, for whoever serves an apprenticeship: its
-             fifteen years and their 240 points. Gated on the block, not on the type, so
-             the component needs no notion of a magus and the bar of a character who
-             serves none is unchanged. -->
+             fifteen years and their 240 points. -->
         <span class="xp-life-stage" data-testid="{prefix}life-stage-apprenticeship">
-          {store.t('life-stage-apprenticeship', {
+          {store.t('xp-pool-block-apprenticeship', {
             years: String(lifeStage.apprenticeship_years),
             xp: String(lifeStage.apprenticeship_xp),
           })}
         </span>
       {/if}
       {#if lifeStage.post_gauntlet_years > 0}
-        <!-- Life as a magus after the Gauntlet: 30 points a year, less the charged lab
-             seasons, split into experience and levels of spells. Gated on the years the
-             block covers, not on the type — the same reason the apprenticeship line
-             above needs no notion of a magus. -->
+        <!-- The years after apprenticeship: 30 points a year, less the charged lab
+             seasons, split into experience and levels of spells. -->
         <span class="xp-life-stage" data-testid="{prefix}life-stage-post-gauntlet">
-          {store.t('life-stage-post-gauntlet', {
+          {store.t('xp-pool-block-after-gauntlet', {
             years: String(lifeStage.post_gauntlet_years),
             rate: String(pointsPerYear),
             lab: String(labDeduction),
@@ -177,13 +259,6 @@
           })}
         </span>
       {/if}
-      <span class="xp-life-stage" data-testid="{prefix}life-stage-later-life">
-        {store.t('life-stage-later-life', {
-          years: String(lifeStage.later_life_years),
-          rate: String(lifeStage.later_life_rate),
-          xp: String(lifeStage.later_life_xp),
-        })}
-      </span>
     {:else}
       <!-- Announced: this row arrives in response to an edit elsewhere (the age),
            so its appearance must reach a screen reader. -->
@@ -192,7 +267,7 @@
       </span>
     {/if}
   {/if}
-  {#each restricted as restrictedPool, i (i)}
+  {#each itemPools as restrictedPool, i (i)}
     <span
       class="xp-restricted"
       class:over={restrictedPool.used > restrictedPool.amount}

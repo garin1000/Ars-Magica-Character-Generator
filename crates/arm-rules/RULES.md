@@ -1719,6 +1719,25 @@ a magus generated some years out of apprenticeship, the levels it took out of it
 post-Gauntlet points (`:2471`): see **Life as a magus after the Gauntlet — 30 points
 per year (M6/6b5)** below. So 120 is the budget *at the Gauntlet*, not a ceiling.
 
+**The base is offered for editing in direct entry only (Slice 8 / #19).** `:2215`'s
+"Take 120 levels of spells" is a flat grant with no in-rules variation, and every
+variation the rules *do* allow already reaches the budget elsewhere — Skilled/Weak
+Parens as `Effect::SpellLevels`, and the post-Gauntlet split as `:2471`'s levels. So
+`SpellBudgetBar` takes a `readonlyBase` prop: the guided wizard passes it (the step
+shows the grant), the editor does not (direct entry exists to record a character the
+rules-as-written did not build, and `spell_levels_override` is exactly that
+affordance). The prop is declared at the mount, in `WizardStep.svelte`'s `STEPS`
+table, so the divergence is visible where the two surfaces are wired rather than
+inferred inside the component from which flow is running.
+
+**The bar's displayed pair closes against base + post-Gauntlet levels, not the base
+(Slice 8 / #18).** `spellLevelAllocation` (`ui/src/lib/derive.ts`) charges the
+post-Gauntlet levels to the same unconditional side as the base, so the figure printed
+beside the used total is `denominator = base + lifeStage`; `denominator - baseUsed`
+is `available`, always. Printing the editable base there instead read "150 / 120,
+Available: 0" for a magus the engine considers exactly balanced, so the two figures
+are now rendered in separate slots.
+
 **Per-spell cap — Technique + Form + Intelligence + Magic Theory + 3.**
 
 > `:2465` "The highest level spell you can learn is equal to Technique + Form +
@@ -3140,6 +3159,56 @@ Abilities are bought with experience earned in blocks, not from one bank:
   guided wizard walk past the only step that can correct it. (It was `abilities` until
   the Slice 2 phase split moved the panel — and with it every code it reports — onto
   the new `experience` step; the rule that decided it is unchanged.)
+
+#### The life-stage blocks are an ordered sequence, and the XP bar reads as one (Slice 8 / #14)
+
+> 5. **Early Childhood.** 75 experience points in Native Language …, and 45 experience
+>    points spread between Area Lore …
+> 6. **Later Life.** 15 experience points per year (until apprenticeship for magi) …
+> 7. **Hermetic Magi Only: Apprenticeship.** Divide 240 experience points …
+> 8. **Hermetic Magi Only (Optional):** Years after apprenticeship. Divide 30 points
+>    per year …
+
+> Abilities represent a character's learned abilities. For grogs and companions they
+> are acquired in two blocks: early childhood, and later life. For magi, there are two
+> more periods to consider: apprenticeship, and life as a magus after that.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:2213-2216` (the numbered
+  creation summary, steps 5-8) and `:2364` (the same four blocks named as periods, in
+  the same order). Early childhood's two figures are **one** block, not two:
+  `:2378` grants "75 experience points in their native language … and 45 experience
+  points to divide between" the spread, in one sentence about "the first five years of
+  life". The span later life covers is worked through by the Darius example at
+  `:2402` — apprenticed at 10 after a childhood ending at 5, he "has 75 experience
+  points to spend from those five years", i.e. ages 5-10 at 5 × 15.
+- Data: no new value. Every figure is already on `LifeStageBudget`
+  (`life_stage.rs`, `budget`), the span's start is
+  `rules/core/life_stages.json` → `childhood.years` (5) and its length is the
+  engine's own `later_life_years`.
+- Implementation: `ui/src/lib/components/XpBar.svelte` renders **one chip per block**
+  in this order — early childhood, later life, apprenticeship, after the Gauntlet —
+  keyed `xp-pool-block-*` in both locales. Each chip merges the block's derivation
+  with the spent/total of the restricted pool it forms
+  (`XpPoolOrigin::LifeStage`, looked up by block, never by index), so no block's name
+  can appear twice. The `xp-pool-<block-slug>` keys remain, for
+  `resolveIssueArgValue`'s naming of an unspent-experience warning's `origin`.
+- **Why the ORDER is a rules fact and not styling.** The blocks are the periods of one
+  life, and `:2213-2216`/`:2364` state them in the order they are lived. Rendered with
+  later life last, its label read as the years *after* the Gauntlet — a chronology
+  asserted wrongly, which is a misstatement of `:2214`'s "until apprenticeship for
+  magi" rather than an aesthetic complaint.
+- **"After the Gauntlet", not "As a magus"** (`:2216`, "Years after apprenticeship").
+  The block is driven by `LifeStagePlan::gauntlet_age`, so naming it for the Gauntlet
+  ties the label to the field that moves it. Renamed in both bars —
+  `xp-pool-block-after-gauntlet` and `spell-levels-post-gauntlet` — and **only** on
+  those two labels: the six strings that say "years as a magus" are prose describing
+  the span, and `:2216` calls the same period "life as a magus after that" (`:2364`),
+  so they read correctly and keep it.
+- German: `Frühe Kindheit`, `Späteres Leben`, `Lehrlingszeit` and
+  `Nach der Lehrlingsprüfung`, from the mirrored German lines
+  `Ars Magica Definitive Edition Basisregeln.md:2213-2216` (heading `:2376`, `:2390`)
+  plus the glossary's `Gauntlet → Lehrlingsprüfung`
+  (`rules/source/de/translation-tables/grundbegriffe.md:57`).
 
 #### Pre-apprenticeship experience buys Abilities only — never Arts (M6/6b4)
 

@@ -230,11 +230,17 @@ xp-bonus = Virtues/Flaws: { $bonus }
 # only on the listed Abilities/categories. `$eligibility` is a localized list.
 restricted-xp-pool = { $eligibility }: { $used } / { $amount }
 restricted-xp-list-separator = ,
-# Life-stage experience blocks, keyed by the engine's `LifeStageBlock` slug. Each
-# is a restricted pool of its own: the first buys the native language and nothing
-# else, the second the childhood Abilities but never that language. Later life
-# appears for a magus, whose general pool is apprenticeship instead — its years
-# earn Abilities only, never an Art, so the label says so.
+# Life-stage experience blocks, keyed by the engine's `LifeStageBlock` slug. Each is
+# a restricted pool of its own: the first buys the native language and nothing else,
+# the second the childhood Abilities but never that language. Later life appears for
+# a magus, whose general pool is apprenticeship instead — its years earn Abilities
+# only, never an Art, so the label says so.
+#
+# These name a block INSIDE A SENTENCE, not on the bar: `resolveIssueArgValue`
+# resolves an unspent-experience warning's `origin` arg through them. The XP bar's own
+# chips are the `xp-pool-block-*` family below, which merges each block's derivation
+# with its pool — do not point the bar back at these keys, or one block gets two
+# labels again (guided-creation-review-2026-08 #14).
 xp-pool-childhood_native_language = Native language
 xp-pool-childhood_spread = Early childhood
 xp-pool-later_life = Later life (Abilities only)
@@ -247,23 +253,51 @@ ability-funding-pool = Experience pool
 ability-funding-life_stages = Life stages
 ability-funding-pool-hint = Enter one total yourself and spend it on any Ability.
 ability-funding-life_stages-hint = Early childhood and later life earn the experience: age sets the later-life total, while a native language and a sample Childhood fill the childhood blocks.
-# Life-stage read-outs in the XP bar. Later life funds anything, so it replaces the
-# editable pool total: years after childhood × experience per year. The rate is this
-# character's own — the Wealthy Virtue and the Poor Flaw change it.
-life-stage-later-life = Later life: { $years } × { $rate } = { $xp } XP
 life-stage-no-budget = No life-stage experience yet.
+# THE LIFE-STAGE BLOCK CHIPS — one chip per block, in the order the character lived
+# them (guided-creation-review-2026-08 #14). The rules state the blocks as an ordered
+# sequence — "Early Childhood … Later Life … Apprenticeship … Years after
+# apprenticeship" (Core Rules.md:2213-2216) and again as a chronology of periods
+# (`:2364`) — so the bar reads top-to-bottom as that chronology.
+#
+# Each key merges the block's DERIVATION with the spent/total of the restricted pool
+# it forms, because two chips carrying one block's name (the old
+# `life-stage-later-life` beside the old `xp-pool-later_life` row) made the same
+# label appear twice and read as two different pools.
+#
+# Childhood's 75 for the native language and 45 for the spread are one block, not two
+# (`:2378`), so they share one heading. The spread-only variant is the state before a
+# native language is named: the engine forms that pool only once it is
+# (`effective/xp.rs`), and a chip must not claim a pool that does not exist.
+xp-pool-block-early-childhood = Early childhood — Native language { $nativeUsed } / { $nativeAmount } · Other Abilities { $spreadUsed } / { $spreadAmount }
+xp-pool-block-early-childhood-spread-only = Early childhood — Other Abilities { $spreadUsed } / { $spreadAmount }
+# Later life: "15 experience points per year (until apprenticeship for magi)"
+# (`:2214`). The age span is the character's own — childhood's years to the start of
+# apprenticeship — and it is what tells the player which years these points are
+# from: the Darius example spends exactly this block over ages 5 to 10 (`:2402`).
+# The rate is this character's own too; the Wealthy Virtue and the Poor Flaw change
+# it (`:2394`). Two variants because later life is a pool of its own only for a
+# magus, whose general pool is apprenticeship; for anyone else later life IS the
+# general pool already shown as the bar's own total, so repeating it would be a
+# second spent/total for one pool.
+xp-pool-block-later-life = Later life (ages { $from }-{ $to }): { $years } × { $rate } = { $xp } XP
+xp-pool-block-later-life-restricted = Later life (ages { $from }-{ $to }): { $years } × { $rate } = { $xp } XP — { $used } / { $amount }
 # Apprenticeship, for a magus alone: fifteen fixed years whose experience "can be
 # spent on Arts or Abilities" (Core Rules.md:2435), which makes it the general pool —
-# so this line names the block the pool total comes from. Absent for anyone who
-# serves no apprenticeship, which is what keeps the non-magus bar unchanged.
-life-stage-apprenticeship = Apprenticeship: { $years } years = { $xp } XP
-# Life as a magus after the Gauntlet, for a magus that has lived any: "For every
-# year, the magus gets 30 points" (Core Rules.md:2471), less 10 for every charged
-# season of lab work (`:2482`). Each point is an experience point or one level of a
-# spell, so the points and the experience left after the spell levels are both
-# named. Gated on the years, not on the type, so a magus at its Gauntlet and every
-# non-magus show nothing.
-life-stage-post-gauntlet = As a magus: { $years } × { $rate } - { $lab } for lab work = { $points } points, { $xp } XP
+# so this chip names the block the pool total comes from and needs no spent/total of
+# its own. Absent for anyone who serves no apprenticeship, which is what keeps the
+# non-magus bar unchanged.
+xp-pool-block-apprenticeship = Apprenticeship: { $years } years = { $xp } XP
+# The years after apprenticeship: "For every year, the magus gets 30 points"
+# (Core Rules.md:2471), less 10 for every charged season of lab work (`:2482`). Each
+# point is an experience point or one level of a spell, so the points and the
+# experience left after the spell levels are both named.
+#
+# "After the Gauntlet", not "As a magus" (#14.4): the block is driven by the
+# `Gauntlet age` field, and naming it for the Gauntlet ties label to field. It also
+# stops the chip reading as a *state* the character is in — which, sitting where it
+# used to sit, made "Later life" below it look like life past the Gauntlet.
+xp-pool-block-after-gauntlet = After the Gauntlet: { $years } × { $rate } - { $lab } for lab work = { $points } points, { $xp } XP
 # Age is repeated inside the panel because later life is measured in years, so it
 # is edited here as well as on the Details tab.
 life-stage-age-label = Age
@@ -375,9 +409,17 @@ spell-general-level-label = General level
 spell-add = Add spell
 spell-none = — Select a spell —
 # The spell-levels budget bar, laid out like the XP summary: the label, the used
-# figure, the editable base (bracketed), then Available and any V/F bonus.
+# figure over the whole unconditional side, then Available, the base and any V/F
+# bonus.
 spell-levels-pool = Spell levels
 spell-levels-available = Available: { $available }
+# The base budget as its own entry, because it is NO LONGER the denominator beside
+# the used figure (guided-creation-review-2026-08 #18): a magus past its Gauntlet is
+# charged against base + post-Gauntlet levels, so pairing the used figure with the
+# base alone displayed "150 / 120  Available: 0" — an overspend the engine never
+# raised. The pair now closes as "150 / 150" and the base stands beside it, editable
+# in the editor and read-only in the wizard (#19).
+spell-levels-base-entry = Base
 # A POSITIVE Virtue/Flaw contribution: an extra pool of levels spent before the
 # base, so it reads used/amount exactly like a restricted XP pool.
 spell-levels-bonus-pool = Virtues/Flaws: { $used } / { $amount }
@@ -387,14 +429,15 @@ spell-levels-bonus = Virtues/Flaws: { $bonus }
 # The levels of spells the magus's years past its Gauntlet bought: its chosen
 # slice of the fungible 30 points a year, where each point "can be an experience
 # point in an Art or Ability or one level of spell" (Core Rules.md:2471). Named
-# the way the XP bar names the same block (`life-stage-post-gauntlet`), so one
-# block reads alike in both bars. READ-ONLY here: the split is chosen once on the
-# Abilities step, because the magus phase order runs abilities, arts, spells, so
+# the way the XP bar names the same block (`xp-pool-block-after-gauntlet`), so one
+# block reads alike in both bars — which is why this label was renamed with it
+# (guided-creation-review-2026-08 #14.4). READ-ONLY here: the split is chosen once on
+# the Abilities step, because the magus phase order runs abilities, arts, spells, so
 # moving a point back to experience here would retroactively shrink a pool spent
 # two steps earlier. Unlike the V/F modifier these levels are already earned, so
 # they raise Available instead of forming a pool of their own. Shown only when
 # there are any, which is what keeps a magus at its Gauntlet unchanged.
-spell-levels-post-gauntlet = As a magus: { $levels }
+spell-levels-post-gauntlet = After the Gauntlet: { $levels }
 # Accessible name for the editable BASE spell-levels field; empty = use the type
 # profile's default (shown as the field's placeholder). It overrides the profile
 # base ALONE — the V/F modifier and the post-Gauntlet levels stay additive on top.

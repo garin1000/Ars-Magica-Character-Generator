@@ -23,10 +23,16 @@ const SPELLS_TAB = '[data-testid="tab-spells"]';
 const ARTS_TAB = '[data-testid="tab-arts"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 // The spell-levels status bar above both lists reads like the XP bar: the used
-// figure, the editable base (bracketed), then Available and any V/F bonus. The
-// effective budget is base + bonus, so Available is what proves the total.
+// figure over the total it is charged against, then Available, the base and any V/F
+// bonus. The effective budget is base + bonus, so Available is what proves the total.
 const BAR_USED = '[data-testid="spell-levels-used"]';
+// The base is its OWN entry beside the pair since #18 — the pair closes against
+// base + post-Gauntlet levels (`spell-levels-total`), which is a different number
+// whenever a magus has lived past its Gauntlet. In the EDITOR it is still the
+// editable field (#19 makes only the wizard's mount read-only), which is what this
+// spec drives.
 const BAR_BASE = '[data-testid="spell-levels-base"]';
+const BAR_TOTAL = '[data-testid="spell-levels-total"]';
 const BAR_AVAILABLE = '[data-testid="spell-levels-available"]';
 const BAR_BONUS = '[data-testid="spell-levels-bonus"]';
 
@@ -268,6 +274,10 @@ describe('spells', () => {
       timeout: 5000,
       timeoutMsg: 'overriding the base to 80 should leave the full 80 base available',
     });
+    // #18: the field edits the BASE, and the denominator follows it. With no
+    // post-Gauntlet levels the two coincide, so the pair reads 0 / 80 — the field is
+    // still what moves the total, it simply no longer occupies its slot.
+    expect(clean(await $(BAR_TOTAL).getText())).toBe('80');
     // Reset the override (empty field -> profile base) so later specs see 150
     // again. Dispatch the input event directly: clearValue() does not reliably
     // fire the event Svelte listens to on a number input (same reason as the
