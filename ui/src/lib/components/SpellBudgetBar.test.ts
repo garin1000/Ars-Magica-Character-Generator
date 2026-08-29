@@ -78,8 +78,8 @@ function setEffective(used: number, budget: number, extra: Partial<EffectiveScor
 }
 
 /** Render the bar to an HTML string (node env, no DOM). */
-function html(): string {
-  return render(SpellBudgetBar, { props: {} }).body;
+function html(props: Record<string, unknown> = {}): string {
+  return render(SpellBudgetBar, { props }).body;
 }
 
 /** The single element carrying a given data-testid, with its class attribute. */
@@ -279,6 +279,83 @@ describe('SpellBudgetBar semantic overspend attribute (mirrors XpBar, GF2)', () 
     store.entity.spells = [{ spell: 'spell.a', mastery: 2 }];
     const { open } = element(html(), 'spell-mastery-info');
     expect(open).toMatch(/data-overspent="false"/);
+  });
+});
+
+// guided-creation-review-2026-08 #18, D2 answer (a). `baseUsed` charges the levels a
+// magus bought past its Gauntlet to the unconditional side, but the figure printed
+// beside it was the editable BASE alone — so a magus with 120 base levels and 30
+// earned past the Gauntlet, having spent all 150, read "150 / [120]  Available: 0":
+// the primary budget read-out reporting an overspend the engine never raised.
+describe('SpellBudgetBar closing pair (#18)', () => {
+  it('shows the whole unconditional side as the denominator, so the pair closes', () => {
+    // Base 120 + 30 levels earned past the Gauntlet = the engine's 150 budget, all spent.
+    setEffective(150, 150, { spell_levels_life_stage: 30 } as Partial<EffectiveScores>);
+    const body = html();
+    expect(element(body, 'spell-levels-used').text).toBe('150');
+    expect(element(body, 'spell-levels-total').text).toBe('150');
+    expect(element(body, 'spell-levels-available').text).toContain('0');
+  });
+
+  it('keeps the editable base out of the denominator slot', () => {
+    setEffective(150, 150, { spell_levels_life_stage: 30 } as Partial<EffectiveScores>);
+    const body = html();
+    // The base (120) and the denominator (150) are DIFFERENT numbers now, so the
+    // field cannot occupy the denominator's place: showing "[120]" where 150 belongs
+    // would reintroduce #18 in a new form. The denominator is plain text, and the
+    // field stands beside the pair as its own entry.
+    expect(element(body, 'spell-levels-total').open).not.toMatch(/<input/i);
+    expect(element(body, 'spell-levels-total').text).toBe('150');
+    expect(element(body, 'spell-levels-base').open).toMatch(/<input/i);
+    expect(element(body, 'spell-levels-base').open).toMatch(/placeholder="120"/);
+  });
+
+  it('makes the denominator the base itself for a magus at its Gauntlet', () => {
+    // The other direction: with nothing earned past the Gauntlet the two coincide, so
+    // the overwhelming case reads exactly as it always did.
+    setEffective(45, 120);
+    expect(element(html(), 'spell-levels-total').text).toBe('120');
+  });
+
+  it('keeps the pair closed against a negative Available when overspent', () => {
+    setEffective(160, 150, { spell_levels_life_stage: 30 } as Partial<EffectiveScores>);
+    const body = html();
+    expect(element(body, 'spell-levels-used').text).toBe('160');
+    expect(element(body, 'spell-levels-total').text).toBe('150');
+    expect(element(body, 'spell-levels-available').text).toContain('-10');
+  });
+});
+
+// guided-creation-review-2026-08 #19 (DECIDED): the base is a fixed rules grant — 120
+// levels of spells from apprenticeship (Core Rules.md:2215) — so the wizard shows it
+// and does not offer it for editing, while the editor keeps it editable. Driven by an
+// explicit prop the mount passes, never by a store lookup of which flow is running.
+describe('SpellBudgetBar base ownership (#19)', () => {
+  it('renders the base read-only when readonlyBase is set', () => {
+    setEffective(0, 120);
+    const { open, text } = element(html({ readonlyBase: true }), 'spell-levels-base');
+    // A read-only span, not a disabled input: assistive tech must not announce a
+    // control the player cannot use — the same choice the XP bar's guided total made.
+    expect(open).toMatch(/<span/i);
+    expect(open).not.toMatch(/<input/i);
+    expect(text).toBe('120');
+  });
+
+  it('renders the base editable by default, which is the editor mount', () => {
+    setEffective(0, 120);
+    const { open } = element(html(), 'spell-levels-base');
+    expect(open).toMatch(/<input/i);
+  });
+
+  it('reads the read-only base off the engine, not the stored override', () => {
+    // Skilled Parens 30 and 300 levels past the Gauntlet on top of the profile's 120:
+    // the read-only figure is still the base alone, exactly as the input's placeholder
+    // would be, because the other two arrive as chips of their own.
+    setEffective(0, 450, {
+      spell_levels_bonus: 30,
+      spell_levels_life_stage: 300,
+    } as Partial<EffectiveScores>);
+    expect(element(html({ readonlyBase: true }), 'spell-levels-base').text).toBe('120');
   });
 });
 

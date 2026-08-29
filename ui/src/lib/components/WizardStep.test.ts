@@ -145,6 +145,18 @@ describe('WizardStep', () => {
     expect(body('experience')).toContain('data-testid="xp-pool"');
   });
 
+  // guided-creation-review-2026-08 #19: the spell-levels base is a fixed rules grant
+  // (Core Rules.md:2215), so the wizard shows it and does not offer it for editing.
+  // The divergence is carried by an explicit prop through the existing `barProps`
+  // seam — the same seam that already carries `XpBar`'s testid prefix — and never by
+  // the bar sniffing which flow mounted it.
+  it('passes readonlyBase to the spells bar', () => {
+    const open = /<[^>]*data-testid="spell-levels-base"[^>]*>/.exec(body('spells'));
+    expect(open).not.toBeNull();
+    expect(open![0]).not.toMatch(/<input/i);
+    expect(open![0]).toMatch(/<span/i);
+  });
+
   // #1: the read-only `type` step is gone. The step table is exhaustive over
   // `CreationPhase` by `satisfies`, so the only way to show the entry is absent is to
   // ask for it — which now finds nothing to mount rather than a blank step.

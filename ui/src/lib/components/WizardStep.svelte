@@ -27,8 +27,11 @@
     component: Component;
     /** A budget bar above it, where App.svelte mounts one for the matching tab. */
     bar?: Component;
-    /** Props for the bar (only XpBar's testid/label prefix needs any). */
-    barProps?: Record<string, string>;
+    /**
+     * Props for the bar: the per-mount differences this step declares out loud.
+     * `XpBar`'s testid/label prefix, and `SpellBudgetBar`'s `readonlyBase` (#19).
+     */
+    barProps?: Record<string, string | boolean>;
     /** Long, self-contained panels need the scrolling wrapper or they clip. */
     scroll?: boolean;
   }
@@ -36,11 +39,22 @@
   // Every phase has exactly one entry, checked by `satisfies`: a new CreationPhase
   // is a type error here until it has a step, rather than a silently blank one.
   //
-  // The wizard reuses the direct-entry components as they are, so its steps and
-  // the editor's tabs can never drift apart. Every budget bar is declared here
-  // rather than mounted by the input surface below it, `spells` included: a
-  // budget belongs to the whole character, so the step (and, in the editor, the
-  // tab) owns it and the picker stays a picker.
+  // The wizard reuses the direct-entry components THEMSELVES, so its steps and the
+  // editor's tabs cannot drift apart as separate implementations. Every budget bar is
+  // declared here rather than mounted by the input surface below it, `spells`
+  // included: a budget belongs to the whole character, so the step (and, in the
+  // editor, the tab) owns it and the picker stays a picker.
+  //
+  // Where a step must behave differently from the matching tab, the difference is a
+  // PROP passed through `barProps`, declared right here in the table — never a
+  // `store` lookup inside the component asking which flow is running. That is the
+  // difference between one component with a stated parameter and two behaviours
+  // hidden inside one file. `spells` is the first such divergence: the spell-levels
+  // base is read-only in the wizard because it is a fixed rules grant
+  // (guided-creation-review-2026-08 #19), and editable in the editor because direct
+  // entry exists to record characters the rules-as-written did not build. So "no
+  // drift" now means "no divergence that is not declared in this table", not "no
+  // divergence at all".
   //
   // Three steps are compositions of their own (`ExperienceStep`, `AgingStep`,
   // `PersonalityReputationsStep`) rather than a single editor leaf. The editor's
@@ -58,7 +72,7 @@
     experience: { component: ExperienceStep, scroll: true, bar: XpBar },
     abilities: { component: AbilityTab, bar: XpBar },
     arts: { component: ArtGrid, bar: XpBar, barProps: { prefix: 'art-' } },
-    spells: { component: SpellTab, bar: SpellBudgetBar },
+    spells: { component: SpellTab, bar: SpellBudgetBar, barProps: { readonlyBase: true } },
     house_specialisation: { component: HouseSelector, scroll: true },
     mythic_type: { component: MythicCompanionTypeSelector },
     personality_reputations: { component: PersonalityReputationsStep, scroll: true },

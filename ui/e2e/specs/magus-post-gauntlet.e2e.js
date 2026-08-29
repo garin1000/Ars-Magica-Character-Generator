@@ -59,6 +59,11 @@ const ART_XP_POOL_TOTAL = '[data-testid="art-xp-pool-total"]';
 const ART_POST_GAUNTLET = '[data-testid="art-life-stage-post-gauntlet"]';
 const SPELL_LEVELS_AVAILABLE = '[data-testid="spell-levels-available"]';
 const SPELL_LEVELS_POST_GAUNTLET = '[data-testid="spell-levels-post-gauntlet"]';
+// The spell-levels bar's used figure, the figure it is charged against (#18) and the
+// base (#19) — three separate slots since the pair had to be made to close.
+const SPELL_LEVELS_USED = '[data-testid="spell-levels-used"]';
+const SPELL_LEVELS_TOTAL = '[data-testid="spell-levels-total"]';
+const SPELL_LEVELS_BASE = '[data-testid="spell-levels-base"]';
 const NEXT = '[data-testid="wizard-next"]';
 const FINISH = '[data-testid="wizard-finish"]';
 const TAB_BAR = '[role="tablist"]';
@@ -313,12 +318,26 @@ describe('a magus past its Gauntlet', () => {
     await $(SPELL_LEVELS_AVAILABLE).waitForExist({ timeout: STEP_TIMEOUT });
 
     // 120 from the type profile plus the 300 the split bought.
+    expect(await textOf(SPELL_LEVELS_POST_GAUNTLET)).toContain('After the Gauntlet');
     expect(await textOf(SPELL_LEVELS_POST_GAUNTLET)).toContain('300');
     expect(await textOf(SPELL_LEVELS_AVAILABLE)).toContain('420');
     // Read-only here on purpose: the split defines the experience pool three steps
     // back, so editing it from the Spells step would retroactively shrink a pool
     // already spent. The Experience step owns the choice; this step shows what it did.
     expect(await $(SPELL_LEVELS_INPUT).isExisting()).toBe(false);
+
+    // #18: THE DISPLAYED PAIR CLOSES. This magus's spend is charged against base +
+    // post-Gauntlet levels, so the figure beside the used total is 420 — not the 120
+    // base, which read as "an overspend" the engine never raised.
+    expect(await textOf(SPELL_LEVELS_TOTAL)).toBe('420');
+    const used = Number(await textOf(SPELL_LEVELS_USED));
+    const available = Number(/-?\d+/.exec(await textOf(SPELL_LEVELS_AVAILABLE))[0]);
+    expect(420 - used).toBe(available);
+
+    // #19: and the base is READ-ONLY at this mount — a fixed rules grant (`:2215`)
+    // shown as plain text, not a disabled control assistive tech would announce.
+    expect(await textOf(SPELL_LEVELS_BASE)).toBe('120');
+    expect(await $(SPELL_LEVELS_BASE).getTagName()).toBe('span');
   });
 
   it('owes the aging rolls a character over 35 must make, on the step that owns them', async () => {
@@ -417,5 +436,14 @@ describe('a magus past its Gauntlet', () => {
     await $(SPELL_LEVELS_AVAILABLE).waitForExist({ timeout: STEP_TIMEOUT });
     expect(await textOf(SPELL_LEVELS_POST_GAUNTLET)).toContain('300');
     expect(await textOf(SPELL_LEVELS_AVAILABLE)).toContain('420');
+
+    // THE OTHER HALF OF #19, on the very same component: direct entry KEEPS the
+    // field, because it exists to record a character the rules-as-written did not
+    // build. The divergence is a prop the mount passes, so this is what proves the
+    // two mounts really differ rather than both having been made read-only — the
+    // wizard's Spells step asserted the read-only span a few tests above.
+    expect(await $(SPELL_LEVELS_BASE).getTagName()).toBe('input');
+    // And the pair still closes on this mount: the denominator is not the field.
+    expect(await textOf(SPELL_LEVELS_TOTAL)).toBe('420');
   });
 });

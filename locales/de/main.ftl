@@ -245,6 +245,13 @@ restricted-xp-list-separator = ,
 # jene Sprache. Das spätere Leben erscheint bei einem Magus, dessen allgemeiner
 # Vorrat stattdessen die Lehrlingszeit ist — seine Jahre erbringen nur
 # Fertigkeiten, niemals eine Kunst, was das Label ausdrücklich sagt.
+#
+# Diese Schlüssel benennen einen Block INNERHALB EINES SATZES, nicht in der Leiste:
+# `resolveIssueArgValue` löst damit das `origin`-Argument einer Warnung über nicht
+# ausgegebene Erfahrung auf. Die Chips der EP-Leiste sind die `xp-pool-block-*`-Familie
+# weiter unten, die die Herleitung eines Blocks mit seinem Vorrat zusammenführt — die
+# Leiste darf nicht auf diese Schlüssel zurückgreifen, sonst trägt ein Block wieder
+# zwei Labels (guided-creation-review-2026-08 #14).
 xp-pool-childhood_native_language = Muttersprache
 xp-pool-childhood_spread = Frühe Kindheit
 xp-pool-later_life = Späteres Leben (nur Fertigkeiten)
@@ -258,24 +265,55 @@ ability-funding-pool = EP-Vorrat
 ability-funding-life_stages = Lebensabschnitte
 ability-funding-pool-hint = Trage einen Gesamtwert selbst ein und gib ihn für beliebige Fertigkeiten aus.
 ability-funding-life_stages-hint = Frühe Kindheit und späteres Leben erbringen die Erfahrung: das Alter bestimmt die Erfahrung des späteren Lebens, Muttersprache und eine beispielhafte Kindheit füllen die Blöcke der Kindheit.
-# Anzeigen der Lebensabschnitte in der EP-Zeile. Das spätere Leben finanziert alles
-# und ersetzt daher den bearbeitbaren Gesamtwert: Jahre nach der Kindheit ×
-# Erfahrung pro Jahr. Die Rate ist die dieses Charakters — die Tugend Wohlhabend und
-# der Fehler Arm ändern sie.
-life-stage-later-life = Späteres Leben: { $years } × { $rate } = { $xp } EP
 life-stage-no-budget = Noch keine Erfahrung aus Lebensabschnitten.
+# DIE CHIPS DER LEBENSABSCHNITTE — ein Chip pro Block, in der Reihenfolge, in der der
+# Charakter sie gelebt hat (guided-creation-review-2026-08 #14). Die Regeln nennen die
+# Blöcke als geordnete Folge — „Frühe Kindheit … Späteres Leben … Lehrlingszeit …
+# Jahre nach der Lehrlingszeit“ (Basisregeln.md:2213-2216) und nochmals als Abfolge
+# von Perioden (`:2364`) — die Leiste liest sich von oben nach unten also als diese
+# Abfolge.
+#
+# Jeder Schlüssel führt die HERLEITUNG des Blocks mit dem Ausgegeben/Gesamt seines
+# eingeschränkten Vorrats zusammen, denn zwei Chips mit dem Namen eines Blocks (das
+# frühere `life-stage-later-life` neben der Zeile `xp-pool-later_life`) ließen dasselbe
+# Label zweimal erscheinen und wirkten wie zwei verschiedene Vorräte.
+#
+# Die 75 der Kindheit für die Muttersprache und die 45 für die Verteilung sind ein
+# Block, nicht zwei (`:2378`), und teilen daher eine Überschrift. Die Variante nur mit
+# der Verteilung ist der Zustand, bevor eine Muttersprache benannt ist: die Engine
+# bildet jenen Vorrat erst dann (`effective/xp.rs`), und ein Chip darf keinen Vorrat
+# behaupten, den es nicht gibt.
+xp-pool-block-early-childhood = Frühe Kindheit — Muttersprache { $nativeUsed } / { $nativeAmount } · Übrige Fertigkeiten { $spreadUsed } / { $spreadAmount }
+xp-pool-block-early-childhood-spread-only = Frühe Kindheit — Übrige Fertigkeiten { $spreadUsed } / { $spreadAmount }
+# Späteres Leben: „15 Erfahrungspunkte pro Jahr (bis zur Lehrlingszeit für Magi)“
+# (`:2214`). Die Altersspanne ist die dieses Charakters — von den Jahren der Kindheit
+# bis zum Beginn der Lehrlingszeit — und sagt dem Spieler, aus welchen Jahren diese
+# Punkte stammen: das Beispiel Darius gibt genau diesen Block über die Jahre 5 bis 10
+# aus (`:2402`). Die Rate ist ebenfalls die dieses Charakters; die Tugend Wohlhabend
+# und der Fehler Arm ändern sie (`:2394`). Zwei Varianten, weil das spätere Leben nur
+# bei einem Magus ein eigener Vorrat ist, dessen allgemeiner Vorrat die Lehrlingszeit
+# ist; bei allen anderen IST das spätere Leben der allgemeine Vorrat, der schon als
+# Gesamtwert der Leiste steht — ihn zu wiederholen wäre ein zweites Ausgegeben/Gesamt
+# für einen Vorrat.
+xp-pool-block-later-life = Späteres Leben (Alter { $from }-{ $to }): { $years } × { $rate } = { $xp } EP
+xp-pool-block-later-life-restricted = Späteres Leben (Alter { $from }-{ $to }): { $years } × { $rate } = { $xp } EP — { $used } / { $amount }
 # Die Lehrlingszeit, allein für einen Magus: fünfzehn feste Jahre, deren Erfahrung
 # auf Künste oder Fertigkeiten verwendet werden kann (Basisregeln.md:2435), was sie
-# zum allgemeinen Vorrat macht — diese Zeile benennt also den Block, aus dem der
-# Gesamtwert stammt. Fehlt bei jedem, der keine Lehrlingszeit dient.
-life-stage-apprenticeship = Lehrlingszeit: { $years } Jahre = { $xp } EP
-# Das Leben als Magus nach der Lehrlingsprüfung, sofern er es gelebt hat: „Für jedes
-# Jahr erhält der Magus 30 Punkte“ (Basisregeln.md:2471), abzüglich 10 für jedes
-# angerechnete Quartal Laborarbeit (`:2482`). Jeder Punkt ist ein Erfahrungspunkt
-# oder eine Zauberstufe, daher werden sowohl die Punkte als auch die nach den
-# Zauberstufen verbleibende Erfahrung genannt. Die Zeile hängt an den Jahren, nicht
-# am Typ — ein Magus zur Lehrlingsprüfung und jeder Nicht-Magus zeigen nichts.
-life-stage-post-gauntlet = Als Magus: { $years } × { $rate } - { $lab } für Laborarbeit = { $points } Punkte, { $xp } EP
+# zum allgemeinen Vorrat macht — dieser Chip benennt also den Block, aus dem der
+# Gesamtwert stammt, und braucht kein eigenes Ausgegeben/Gesamt. Fehlt bei jedem, der
+# keine Lehrlingszeit dient.
+xp-pool-block-apprenticeship = Lehrlingszeit: { $years } Jahre = { $xp } EP
+# Die Jahre nach der Lehrlingszeit: „Für jedes Jahr erhält der Magus 30 Punkte“
+# (Basisregeln.md:2471), abzüglich 10 für jedes angerechnete Quartal Laborarbeit
+# (`:2482`). Jeder Punkt ist ein Erfahrungspunkt oder eine Zauberstufe, daher werden
+# sowohl die Punkte als auch die nach den Zauberstufen verbleibende Erfahrung genannt.
+#
+# „Nach der Lehrlingsprüfung“, nicht „Als Magus“ (#14.4): Der Block hängt am Feld
+# „Alter bei der Lehrlingsprüfung“, und den Chip nach der Prüfung zu benennen bindet
+# Label an Feld. Zudem liest sich der Chip so nicht mehr als ZUSTAND des Charakters —
+# was an seiner früheren Stelle das darunter stehende „Späteres Leben“ wie das Leben
+# nach der Lehrlingsprüfung wirken ließ.
+xp-pool-block-after-gauntlet = Nach der Lehrlingsprüfung: { $years } × { $rate } - { $lab } für Laborarbeit = { $points } Punkte, { $xp } EP
 # Das Alter wird im Bereich wiederholt, weil das spätere Leben in Jahren gemessen
 # wird — es wird hier ebenso bearbeitet wie im Details-Reiter.
 life-stage-age-label = Alter
@@ -382,21 +420,30 @@ spell-add = Zauber hinzufügen
 spell-none = — Zauber wählen —
 spell-levels-pool = Zauberstufen
 spell-levels-available = Verfügbar: { $available }
+# Der Grundwert als eigener Eintrag, denn er ist NICHT MEHR der Nenner neben dem
+# ausgegebenen Wert (guided-creation-review-2026-08 #18): Ein Magus nach seiner
+# Lehrlingsprüfung wird gegen Grundwert + Stufen nach der Prüfung belastet, der
+# ausgegebene Wert neben dem Grundwert allein zeigte also „150 / 120  Verfügbar: 0“ —
+# eine Überschreitung, die die Engine nie meldete. Das Paar schließt jetzt als
+# „150 / 150“, und der Grundwert steht daneben: im Editor bearbeitbar, in der
+# geführten Erstellung nur zur Anzeige (#19).
+spell-levels-base-entry = Grundwert
 spell-levels-bonus-pool = Tugenden & Fehler: { $used } / { $amount }
 spell-levels-bonus = Tugenden & Fehler: { $bonus }
 # Die Zauberstufen, die die Jahre des Magus seit seiner Lehrlingsprüfung
 # eingebracht haben: der gewählte Anteil der 30 Punkte pro Jahr, von denen jeder
 # entweder ein Erfahrungspunkt in einer Kunst oder Fertigkeit oder eine
 # Zauberstufe sein kann (Basisregeln.md:2471). Benannt wie derselbe Block in der
-# EP-Leiste (`life-stage-post-gauntlet`), damit ein Block in beiden Leisten
-# gleich liest. Hier NUR ZUR ANZEIGE: Die Aufteilung wird einmal im Schritt
+# EP-Leiste (`xp-pool-block-after-gauntlet`), damit ein Block in beiden Leisten
+# gleich liest — deshalb wurde dieses Label mit umbenannt
+# (guided-creation-review-2026-08 #14.4). Hier NUR ZUR ANZEIGE: Die Aufteilung wird einmal im Schritt
 # Fertigkeiten gewählt, denn die Phasenfolge des Magus lautet Fertigkeiten,
 # Künste, Zauber — eine Änderung hier würde einen zwei Schritte zuvor bereits
 # ausgegebenen Vorrat nachträglich verkleinern. Anders als der Tugenden-/Fehler-
 # Modifikator sind diese Stufen bereits verdient und erhöhen daher das Verfügbar,
 # statt einen eigenen Vorrat zu bilden. Nur sichtbar, wenn es welche gibt — ein
 # Magus an seiner Lehrlingsprüfung bleibt so unverändert.
-spell-levels-post-gauntlet = Als Magus: { $levels }
+spell-levels-post-gauntlet = Nach der Lehrlingsprüfung: { $levels }
 # Überschreibt allein den Grundwert des Typprofils — der Tugenden-/Fehler-
 # Modifikator und die Zauberstufen aus den Jahren als Magus kommen obendrauf.
 spell-levels-base-label = Zauberstufen-Budget

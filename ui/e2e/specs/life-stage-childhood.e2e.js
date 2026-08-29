@@ -53,8 +53,8 @@ const XP_POOL_TOTAL = '[data-testid="xp-pool-total"]';
 const LATER_LIFE = '[data-testid="life-stage-later-life"]';
 const APPRENTICESHIP = '[data-testid="life-stage-apprenticeship"]';
 const GAUNTLET_NOTE = '[data-testid="life-stage-gauntlet-note"]';
+const EARLY_CHILDHOOD = '[data-testid="life-stage-early-childhood"]';
 const RESTRICTED_0 = '[data-testid="restricted-xp-0"]';
-const RESTRICTED_1 = '[data-testid="restricted-xp-1"]';
 const PACKAGE_SELECT = '[data-testid="childhood-package-select"]';
 const PACKAGE_PREVIEW = '[data-testid="childhood-package-preview"]';
 const APPLY = '[data-testid="childhood-apply"]';
@@ -228,26 +228,28 @@ describe('life-stage funding and Sample Childhoods', () => {
     expect(laterLife).toContain('20');
     expect(laterLife).toContain('15');
     expect(laterLife).toContain('300');
+    // The ages the block spans, so the player can see WHICH years earned it: a
+    // companion of 25 whose childhood ends at 5 lived later life over ages 5-25 (#14).
+    expect(laterLife).toContain('ages 5-25');
 
-    // A fresh companion has no restricted-pool Virtue (no Educated, Warrior or
-    // Privileged Upbringing), so the only restricted pools on screen are the two
-    // childhood blocks and their indices are deterministic: the 75-point native
-    // language block, restricted to that one Ability instance, then the 45-point
-    // spread. Both localized, never the raw block slug.
-    const native = await textOf(RESTRICTED_0);
-    expect(native).toContain('0 / 75');
-    expect(native).toContain('Native language');
-    expect(native).not.toContain('childhood_native_language');
-    const spread = await textOf(RESTRICTED_1);
-    expect(spread).toContain('0 / 45');
-    expect(spread).toContain('Early childhood');
-    expect(spread).not.toContain('childhood_spread');
+    // Childhood's two figures are ONE block under one heading (Core Rules.md:2378),
+    // so #14 merges them into a single chip rather than two rows that read as two
+    // blocks: the 75-point native-language block, restricted to that one Ability
+    // instance, and the 45-point spread. Localized, never the raw block slug.
+    const childhood = await textOf(EARLY_CHILDHOOD);
+    expect(childhood).toContain('Early childhood');
+    expect(childhood).toContain('Native language');
+    expect(childhood).toContain('0 / 75');
+    expect(childhood).toContain('0 / 45');
+    expect(childhood).not.toContain('childhood_native_language');
+    expect(childhood).not.toContain('childhood_spread');
     // REGRESSION LOCK for the 6b4 pool restructuring: a magus's later life became a
     // restricted, Abilities-only pool of its own (its general pool is apprenticeship
     // instead), and that must NOT have happened to anyone else. For a companion later
-    // life IS the general pool, so childhood's two blocks are the whole of it and there
-    // is no third restricted row.
-    expect(await $('[data-testid="restricted-xp-2"]').isExisting()).toBe(false);
+    // life IS the general pool, so it carries no spent/total of its own — and since
+    // every life-stage block now lives in its own chip, a fresh companion (no
+    // Educated, Warrior or Privileged Upbringing) has no generic restricted row at all.
+    expect(await $(RESTRICTED_0).isExisting()).toBe(false);
   });
 
   it('previews a drafted childhood through the plan and refuses an unanswered slot', async () => {
@@ -324,12 +326,13 @@ describe('life-stage funding and Sample Childhoods', () => {
     // native block, and the spread's 45 buy the two Area Lores, Folk Ken, Survival
     // and Italian.
     await standOnWizardStep('abilities');
-    await $(RESTRICTED_0).waitForExist({ timeout: STEP_TIMEOUT });
-    await browser.waitUntil(async () => (await textOf(RESTRICTED_0)).includes('75 / 75'), {
+    await $(EARLY_CHILDHOOD).waitForExist({ timeout: STEP_TIMEOUT });
+    await browser.waitUntil(async () => (await textOf(EARLY_CHILDHOOD)).includes('75 / 75'), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'the native-language block should be fully spent by the package',
     });
-    expect(await textOf(RESTRICTED_1)).toContain('45 / 45');
+    // Both sub-figures live in the one Early childhood chip now (#14).
+    expect(await textOf(EARLY_CHILDHOOD)).toContain('45 / 45');
 
     expect(await scoreOf('ability.living_language', 'German')).toBe('5');
     expect(await scoreOf('ability.living_language', 'Italian')).toBe('1');
@@ -352,7 +355,7 @@ describe('life-stage funding and Sample Childhoods', () => {
       timeoutMsg: 're-taking the package changed the Area Lore row count',
     });
     expect(await scoreOf('ability.area_lore', 'Rhine')).toBe('1');
-    expect(await textOf(RESTRICTED_0)).toContain('75 / 75');
+    expect(await textOf(EARLY_CHILDHOOD)).toContain('75 / 75');
   });
 
   it('keeps the bought rows AND the plan when the funding source is switched back and forth', async () => {
@@ -408,8 +411,8 @@ describe('life-stage funding and Sample Childhoods', () => {
     // The rows still stand through the second switch, and the plan funds them again
     // with nothing re-typed — the childhood block is spent by the scores already there.
     await standOnWizardStep('abilities');
-    await $(RESTRICTED_0).waitForExist({ timeout: STEP_TIMEOUT });
-    await browser.waitUntil(async () => (await textOf(RESTRICTED_0)).includes('75 / 75'), {
+    await $(EARLY_CHILDHOOD).waitForExist({ timeout: STEP_TIMEOUT });
+    await browser.waitUntil(async () => (await textOf(EARLY_CHILDHOOD)).includes('75 / 75'), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'the surviving plan did not re-fund the childhood block',
     });

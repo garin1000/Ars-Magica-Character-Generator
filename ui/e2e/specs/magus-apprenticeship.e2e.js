@@ -40,6 +40,9 @@ const XP_POOL_INPUT = '[data-testid="xp-pool"]';
 const XP_POOL_TOTAL = '[data-testid="xp-pool-total"]';
 const APPRENTICESHIP = '[data-testid="life-stage-apprenticeship"]';
 const LATER_LIFE = '[data-testid="life-stage-later-life"]';
+// Every life-stage chip, in DOM order — the chronology #14 asserts. Scoped to the
+// bar, because the life-stage PANEL carries `life-stage-`-prefixed testids of its own.
+const LIFE_STAGE_CHIPS = '.xp-summary [data-testid^="life-stage-"]';
 const RESTRICTED = '[data-testid^="restricted-xp-"]';
 const CHECKLIST = '[data-testid="magus-minimums"]';
 const SUMMARY = '[data-testid="magus-minimums-summary"]';
@@ -76,7 +79,12 @@ async function issueCount(code) {
 
 /** Every restricted experience pool row on screen, in DOM order. */
 async function restrictedRows() {
-  const found = await $$(RESTRICTED);
+  return await rowsOf(RESTRICTED);
+}
+
+/** Every element matching `selector`, in DOM order, as `{ testid, text }`. */
+async function rowsOf(selector) {
+  const found = await $$(selector);
   const rows = [];
   for (let i = 0; i < found.length; i++) {
     rows.push({
@@ -85,6 +93,48 @@ async function restrictedRows() {
     });
   }
   return rows;
+}
+
+/**
+ * Where the XP bar sits relative to the box that actually scrolls it, plus whether it
+ * owns its own pixels. Read in one round trip, because a geometry read taken piecemeal
+ * can straddle two different scroll states.
+ *
+ * The scrollport is DISCOVERED rather than named: the bar's nearest scrolling
+ * ancestor is the box its stickiness is measured against, and asserting against a
+ * hardcoded selector would silently start measuring the wrong box the moment the
+ * height chain moves.
+ */
+function stickyBarMetrics() {
+  return browser.execute(() => {
+    const bar = document.querySelector('.xp-summary');
+    let port = bar.parentElement;
+    while (port && port.scrollHeight <= port.clientHeight) port = port.parentElement;
+    const barRect = bar.getBoundingClientRect();
+    const portRect = port.getBoundingClientRect();
+    const hit = document.elementFromPoint(barRect.left + 4, barRect.top + barRect.height / 2);
+    return {
+      barTop: barRect.top,
+      barBottom: barRect.bottom,
+      portTop: portRect.top,
+      portBottom: portRect.bottom,
+      portClass: port.className,
+      scrollRange: port.scrollHeight - port.clientHeight,
+      barPosition: getComputedStyle(bar).position,
+      ownsItsPixels: !!hit && (bar === hit || bar.contains(hit)),
+    };
+  });
+}
+
+/** Scroll the bar's own scrollport to the very bottom; returns how far it went. */
+function scrollBarPortToBottom() {
+  return browser.execute(() => {
+    const bar = document.querySelector('.xp-summary');
+    let port = bar.parentElement;
+    while (port && port.scrollHeight <= port.clientHeight) port = port.parentElement;
+    port.scrollTop = port.scrollHeight;
+    return port.scrollTop;
+  });
 }
 
 /** One checklist row: its sentence and the `data-met` mirroring its status. */
@@ -168,33 +218,83 @@ describe('magus apprenticeship through the life stages', () => {
     // Later life stops at the Gauntlet: (25 - 5 - 15) x 15 = 75, not a companion's 300.
     expect(await textOf(LATER_LIFE)).toContain('75');
 
-    // Three restricted pools now, in the order the engine pushes them: childhood's
-    // native-language block (which only forms once the language is named), childhood's
-    // spread, and — for a magus alone — later life, Abilities only. The later-life row
-    // is therefore `restricted-xp-2` for this character; the indices are read off the
-    // DOM rather than assumed, since a V/F granting extra Ability experience would
-    // shift them.
-    await browser.waitUntil(async () => (await restrictedRows()).length === 3, {
+    // THE BLOCKS READ AS A CHRONOLOGY (#14). The engine forms three life-stage pools
+    // for this magus — childhood's native-language block (which only forms once the
+    // language is named), childhood's spread, and, for a magus alone, later life —
+    // and each is folded into the chip for its own block rather than listed a second
+    // time as a generic restricted row. So the bar shows four chips in the order the
+    // rules state the periods (`:2213-2216`, `:2364`) and NO restricted rows at all,
+    // this magus having no V/F that grants an experience pool.
+    await browser.waitUntil(async () => (await rowsOf(LIFE_STAGE_CHIPS)).length === 3, {
       timeout: STEP_TIMEOUT,
-      timeoutMsg: 'the plan should have formed three restricted pools by the Abilities step',
+      timeoutMsg: 'the plan should have formed its life-stage chips by the Abilities step',
     });
-    const rows = await restrictedRows();
-    expect(rows.map((row) => row.testid)).toEqual([
-      'restricted-xp-0',
-      'restricted-xp-1',
-      'restricted-xp-2',
+    const chips = await rowsOf(LIFE_STAGE_CHIPS);
+    // Three, not four: this magus stands at its Gauntlet, so there is no block for
+    // the years after it.
+    expect(chips.map((chip) => chip.testid)).toEqual([
+      'life-stage-early-childhood',
+      'life-stage-later-life',
+      'life-stage-apprenticeship',
     ]);
-    expect(rows[0].text).toContain('Native language');
-    expect(rows[1].text).toContain('Early childhood');
-    expect(rows[2].text).toContain('Later life');
-    // Abilities only: apprenticeship is the block that may also buy Arts.
-    expect(rows[2].text).toContain('Abilities only');
-    expect(rows[2].text).toContain('75');
-    // Every row is labelled, never printed as its block slug.
-    for (const row of rows) {
-      expect(row.text).not.toContain('childhood_native_language');
-      expect(row.text).not.toContain('childhood_spread');
-      expect(row.text).not.toContain('later_life');
+    // Childhood's two figures under the one heading (`:2378`), in one chip.
+    expect(chips[0].text).toContain('Early childhood');
+    expect(chips[0].text).toContain('Native language');
+    expect(chips[0].text).toContain('0 / 75');
+    expect(chips[0].text).toContain('0 / 45');
+    // Later life, with the ages it spans and the pool it forms merged into one line:
+    // a magus gauntleted at 25 lived ages 5-10 (`:2402`), 5 × 15 = 75.
+    expect(chips[1].text).toContain('Later life');
+    expect(chips[1].text).toContain('ages 5-10');
+    expect(chips[1].text).toContain('0 / 75');
+    // No label twice anywhere in the bar — the defect #14 names.
+    expect(await restrictedRows()).toEqual([]);
+    // Every chip is labelled, never printed as its block slug.
+    for (const chip of chips) {
+      expect(chip.text).not.toContain('childhood_native_language');
+      expect(chip.text).not.toContain('childhood_spread');
+      expect(chip.text).not.toContain('later_life');
+    }
+  });
+
+  // #16 (HIGH — the user had to "change them blindfold"): the bar you are spending
+  // against must not scroll off the top. The ability lists below it carry min-height
+  // FLOORS (`.region-row` 12rem, `.list-scroll` 6rem) that no shrinking removes, so
+  // the step body overflows at the shipped window size and a bar in ordinary flow
+  // simply leaves the screen while the player spends against it.
+  //
+  // Only a real browser with real layout can show this: `render` from `svelte/server`
+  // attaches no stylesheet and happy-dom does no layout, so the unit-level guard in
+  // `app.css.test.ts` can only assert the stylesheet's TEXT. It also cannot see the
+  // failure this test found — `position: sticky` was measured doing NOTHING, because
+  // the bar's containing block had been flex-shrunk to a height of 0 while holding
+  // 538px of content.
+  it('keeps the XP bar on screen while the abilities step scrolls', async () => {
+    try {
+      const before = await stickyBarMetrics();
+      // Sticky at all, and pinned to a box that really scrolls.
+      expect(before.barPosition).toBe('sticky');
+      const scrolled = await scrollBarPortToBottom();
+      // The premise, asserted rather than assumed: if the step stopped scrolling,
+      // THIS fails loudly instead of the test passing on a condition never reached.
+      expect(scrolled).toBeGreaterThan(0);
+      const after = await stickyBarMetrics();
+      // Still wholly inside the scrollport after scrolling to the very bottom.
+      expect(after.barTop).toBeGreaterThanOrEqual(after.portTop - 1);
+      expect(after.barBottom).toBeLessThanOrEqual(after.portBottom + 1);
+      // Pinned, not merely still painted somewhere: it stopped travelling with the
+      // content, so it moved up by strictly less than the distance scrolled.
+      expect(before.barTop - after.barTop).toBeLessThan(scrolled);
+      // The rows scroll BEHIND it rather than through it: the bar's own left-hand
+      // midpoint hit-tests to the bar, which a transparent bar would not give.
+      expect(after.ownsItsPixels).toBe(true);
+    } finally {
+      await browser.execute(() => {
+        const bar = document.querySelector('.xp-summary');
+        let port = bar && bar.parentElement;
+        while (port && port.scrollTop === 0) port = port.parentElement;
+        if (port) port.scrollTop = 0;
+      });
     }
   });
 

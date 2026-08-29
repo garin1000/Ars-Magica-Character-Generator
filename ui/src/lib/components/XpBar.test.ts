@@ -254,6 +254,32 @@ function has(body: string, testid: string): boolean {
   return new RegExp(`data-testid="${testid}"`).test(body);
 }
 
+/** Fluent isolates every interpolated value in bidi marks; strip them. */
+function clean(text: string): string {
+  return text.replace(/[⁦-⁩]/g, '');
+}
+
+/**
+ * The life-stage chips in DOCUMENT order — which is the whole point of #14: the
+ * bar's blocks must read as a chronology, and only their rendered order can say
+ * whether they do.
+ */
+function chips(body: string, prefix = ''): { testid: string; text: string }[] {
+  const re = new RegExp(
+    `<span[^>]*data-testid="${prefix}(life-stage-[a-z-]+)"[^>]*>([\\s\\S]*?)</span>`,
+    'gi',
+  );
+  return [...body.matchAll(re)].map((match) => ({
+    testid: match[1],
+    text: clean(match[2].replace(/<[^>]*>/g, '')).trim(),
+  }));
+}
+
+/** The leading label of a chip: everything before its first figure or separator. */
+function chipLabel(text: string): string {
+  return text.split(/[:—(]/)[0].trim();
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   store.lang = 'en';
@@ -457,17 +483,25 @@ describe('XpBar under a life-stage plan (slice 6b3b)', () => {
     expect(has(body, 'xp-pool-clear-hint')).toBe(false);
   });
 
-  it('localizes the childhood blocks the engine already emits, with no new code', () => {
+  it('localizes both childhood blocks under the one Early childhood chip', () => {
     resetEntity(0);
     installPlan();
     setEffective(20, childhoodPools(5, 15), budget(10, 15));
-    const body = html();
-    // Both blocks arrive as ordinary restricted pools with a life_stage origin, so
-    // the existing restricted rows name them through the xp-pool-<block> keys.
-    expect(element(body, 'restricted-xp-0').text).toContain('Native language');
-    expect(element(body, 'restricted-xp-0').text).toContain('75');
-    expect(element(body, 'restricted-xp-1').text).toContain('Early childhood');
-    expect(element(body, 'restricted-xp-1').text).toContain('45');
+    const { text } = element(html(), 'life-stage-early-childhood');
+    // Both blocks arrive as restricted pools with a life_stage origin, and #14 merges
+    // them into ONE chip: the 75 for the native language and the 45 spread are one
+    // block of the rules (Core Rules.md:2378), so they share one heading rather than
+    // reading as two blocks — which is what put "Early childhood" on the spread row
+    // while the block's real name was the heading it lacked.
+    expect(text).toContain('Early childhood');
+    expect(text).toContain('Native language');
+    expect(text).toContain('5');
+    expect(text).toContain('75');
+    expect(text).toContain('15');
+    expect(text).toContain('45');
+    // Never the raw block slug.
+    expect(text).not.toContain('childhood_native_language');
+    expect(text).not.toContain('childhood_spread');
   });
 
   it('gives the Arts instance the identical guided shape', () => {
@@ -521,21 +555,19 @@ describe('XpBar under a guided magus plan (slice 6b4)', () => {
     expect(() => element(body, 'life-stage-later-life')).not.toThrow();
   });
 
-  it('keeps the later-life row beside it, labelled and never as its slug', () => {
+  it('keeps the later-life block beside it, with its derivation and its spend in one chip', () => {
     resetEntity(0);
     installPlan();
     setEffective(20, laterLifePool(75, 20), magusBudget());
-    const body = html();
-    // The restricted row shows the spend; the `life-stage-later-life` line above says
-    // WHY (5 × 15 = 75). Both name it in words.
-    // Fluent isolates each interpolated value, so used and amount are asserted apart.
-    const later = element(body, 'restricted-xp-0');
-    expect(later.text).toContain('20');
-    expect(later.text).toContain('75');
-    expect(later.text).toContain('Later life');
-    expect(later.text).toContain('Abilities only');
-    expect(later.text).not.toContain('later_life');
-    expect(element(body, 'life-stage-later-life').text).toContain('75');
+    // Before #14 this was TWO chips: a `life-stage-later-life` line saying WHY (5 ×
+    // 15 = 75) and a separate restricted row saying how much of it was spent, both
+    // labelled "Later life". One chip now carries both.
+    // Fluent isolates each interpolated value, so the figures are asserted apart.
+    const { text } = element(html(), 'life-stage-later-life');
+    expect(text).toContain('Later life');
+    expect(text).toContain('20');
+    expect(text).toContain('75');
+    expect(text).not.toContain('later_life');
   });
 
   it('gives the Arts instance the identical guided shape', () => {
@@ -547,7 +579,7 @@ describe('XpBar under a guided magus plan (slice 6b4)', () => {
     // same 240 — the two instances differ only in their testid prefix.
     expect(element(body, 'art-xp-pool-total').text).toBe('240');
     expect(element(body, 'art-life-stage-apprenticeship').text).toContain('240');
-    expect(element(body, 'art-restricted-xp-0').text).toContain('Later life');
+    expect(element(body, 'art-life-stage-later-life').text).toContain('Later life');
   });
 });
 
@@ -614,6 +646,161 @@ describe('XpBar for a magus past its Gauntlet (slice 6b5)', () => {
     // Those points buy Arts as readily as Abilities (Core Rules.md:2471), so the Arts
     // bar carries the same row — the two instances differ only in their testid prefix.
     expect(element(body, 'art-life-stage-post-gauntlet').text).toContain('720');
+  });
+});
+
+// guided-creation-review-2026-08 #14. The bar used to show TWO chips both labelled
+// "Later life" — the derivation (`5 × 15 = 75 XP`) and, separately, the restricted
+// pool it forms (`Later life (Abilities only): 0 / 75`) — in an order that put later
+// life AFTER apprenticeship, so the label read as life past the Gauntlet. The blocks
+// are a chronology in the rules' own summary
+// (Ars Magica - Definitive Edition (Core Rules).md:2213-2216, :2364), so the bar
+// reads as one: one chip per block, in the order the character lived them.
+describe('XpBar life-stage chronology (#14)', () => {
+  /**
+   * Every block a magus can have on screen at once: childhood's two, later life
+   * (restricted for a magus), apprenticeship, and ten years past the Gauntlet.
+   * Gauntlet age 25 and a childhood of five years put later life at ages 5-10 —
+   * the very span the Darius example works through (`:2402`).
+   */
+  function installEveryBlock(): void {
+    resetEntity(0);
+    installPlan({ gauntlet_age: 25 });
+    installPostApprenticeshipRules();
+    setEffective(0, [...childhoodPools(), ...laterLifePool(75)], pastGauntletBudget(10));
+    store.effective!.xp_general_pool = 240 + 300;
+  }
+
+  it('renders the life-stage blocks in chronological order', () => {
+    installEveryBlock();
+    const rendered = chips(html());
+    expect(rendered.map((chip) => chip.testid)).toEqual([
+      'life-stage-early-childhood',
+      'life-stage-later-life',
+      'life-stage-apprenticeship',
+      'life-stage-post-gauntlet',
+    ]);
+    // And the labels the player actually reads, in that same order — the testids
+    // could be right while the wording still said "As a magus" in the wrong place.
+    expect(rendered.map((chip) => chipLabel(chip.text))).toEqual([
+      'Early childhood',
+      'Later life',
+      'Apprenticeship',
+      'After the Gauntlet',
+    ]);
+  });
+
+  it('renders exactly one chip per life-stage block', () => {
+    installEveryBlock();
+    const body = html();
+    // No label twice: the derivation and the restricted pool are now one chip, so
+    // each block's name occurs exactly once in the whole bar.
+    for (const label of ['Early childhood', 'Later life', 'Apprenticeship', 'After the Gauntlet']) {
+      expect(clean(body.replace(/<[^>]*>/g, ' ')).split(label).length - 1).toBe(1);
+    }
+    // ...and the merged pools no longer appear a second time as generic restricted
+    // rows. A life-stage block belongs to its own chip; only an ITEM-granted pool
+    // (Educated, Warrior, Privileged Upbringing) still gets a `restricted-xp-N` row.
+    expect(has(body, 'restricted-xp-0')).toBe(false);
+  });
+
+  it('merges each block figure with its restricted pool inside the one chip', () => {
+    resetEntity(0);
+    installPlan({ gauntlet_age: 25 });
+    installPostApprenticeshipRules();
+    // 20 spent out of childhood's 75, 15 of its 45, and 30 of later life's 75.
+    setEffective(65, [...childhoodPools(20, 15), ...laterLifePool(75, 30)], magusBudget());
+    const rendered = chips(html());
+    const childhood = rendered.find((c) => c.testid === 'life-stage-early-childhood')!;
+    // Both childhood sub-pools under the one Early childhood heading (`:2378`).
+    expect(childhood.text).toContain('20');
+    expect(childhood.text).toContain('75');
+    expect(childhood.text).toContain('15');
+    expect(childhood.text).toContain('45');
+    expect(childhood.text).toContain('Native language');
+    const later = rendered.find((c) => c.testid === 'life-stage-later-life')!;
+    // The derivation AND the pool it forms, in one line: 5 × 15 = 75 XP, 30 spent.
+    expect(later.text).toContain('75');
+    expect(later.text).toContain('30');
+  });
+
+  it("labels later life with the character's own age span", () => {
+    installEveryBlock();
+    const later = chips(html()).find((c) => c.testid === 'life-stage-later-life')!;
+    // Childhood runs to 5 (`life_stages.childhood.years`) and apprenticeship starts
+    // at the Gauntlet age less its fifteen years, so later life is ages 5 to 10 —
+    // exactly the Darius worked example (`:2402`).
+    expect(later.text).toContain('ages 5-10');
+    // ASCII hyphen-minus as the range separator, never U+2212.
+    expect(later.text).not.toContain('−');
+  });
+
+  it("spans a guided companion's later life from childhood to its age", () => {
+    resetEntity(0);
+    installPlan();
+    installPostApprenticeshipRules();
+    // A companion of 25: no apprenticeship, so later life runs the whole way.
+    setEffective(0, childhoodPools(), budget(20, 15));
+    const later = chips(html()).find((c) => c.testid === 'life-stage-later-life')!;
+    expect(later.text).toContain('ages 5-25');
+  });
+
+  it('drops the childhood chip when the plan has formed no childhood pool yet', () => {
+    resetEntity(0);
+    installPlan();
+    installPostApprenticeshipRules();
+    // No native language named and no spread pool: nothing to report about childhood.
+    setEffective(0, [], budget(20, 15));
+    expect(chips(html()).map((chip) => chip.testid)).toEqual(['life-stage-later-life']);
+  });
+
+  it('names childhood without its native-language pool before a language is chosen', () => {
+    resetEntity(0);
+    installPlan();
+    installPostApprenticeshipRules();
+    // The engine forms the native-language pool only once the language is named
+    // (`effective/xp.rs`), so the spread can be the only childhood pool on screen.
+    setEffective(0, [childhoodPools()[1]], budget(20, 15));
+    const childhood = chips(html()).find((c) => c.testid === 'life-stage-early-childhood')!;
+    expect(chipLabel(childhood.text)).toBe('Early childhood');
+    expect(childhood.text).toContain('45');
+    expect(childhood.text).not.toContain('Native language');
+  });
+
+  it('gives the Arts instance the identical chronology', () => {
+    installEveryBlock();
+    expect(chips(html('art-'), 'art-').map((chip) => chip.testid)).toEqual([
+      'life-stage-early-childhood',
+      'life-stage-later-life',
+      'life-stage-apprenticeship',
+      'life-stage-post-gauntlet',
+    ]);
+  });
+
+  it('still lists an item-granted restricted pool as its own row', () => {
+    resetEntity(0);
+    installPlan();
+    installPostApprenticeshipRules();
+    setEffective(
+      0,
+      [
+        ...childhoodPools(),
+        {
+          amount: 50,
+          used: 10,
+          categories: ['martial'],
+          origin: { kind: 'item', item: 'virtue.warrior' },
+        },
+      ],
+      budget(20, 15),
+    );
+    const body = html();
+    // Indexed over the rows actually RENDERED, so `restricted-xp-0` still means
+    // "the first restricted row on screen" — the life-stage blocks that used to
+    // occupy indices 0 and 1 have moved into their own chronological chips.
+    expect(has(body, 'restricted-xp-0')).toBe(true);
+    expect(element(body, 'restricted-xp-0').text).toContain('Martial');
+    expect(has(body, 'restricted-xp-1')).toBe(false);
   });
 });
 
