@@ -259,9 +259,39 @@ describe('WizardShell', () => {
     expect(html()).toContain('data-testid="wizard-incomplete-hint"');
   });
 
+  // guided-creation-review-2026-08 #2 and cross-cutting theme 1: the flag behind
+  // this note is the engine's `completeness.incomplete_phases`, which flips on the
+  // very FIRST recorded value — so mounting the note conditionally guaranteed that
+  // the first `+` click collapsed a paragraph sitting directly above the step's
+  // input surface and moved the control being clicked. The note therefore stays in
+  // the flow in both states and only its visibility changes.
+  it('keeps the incomplete hint in the flow when the phase becomes complete', () => {
+    store.result = { issues: [], completeness: { incomplete_phases: ['concept'] } };
+    const shown = tag(html(), 'wizard-incomplete-hint');
+
+    store.result = { issues: [], completeness: { incomplete_phases: ['characteristics'] } };
+    // Present in BOTH states: the element is never unmounted, so nothing below it
+    // can move when the step's completeness changes.
+    const hidden = tag(html(), 'wizard-incomplete-hint');
+
+    expect(shown).not.toContain('hidden-reserved');
+    expect(hidden).toContain('hidden-reserved');
+    // The two differ ONLY in that visibility switch, so the box they reserve is
+    // the same box.
+    expect(hidden.replace(' hidden-reserved', '').replace(' aria-hidden="true"', '')).toBe(shown);
+  });
+
+  // Hidden, not merely quiet: once something is recorded the sentence is FALSE, so
+  // it must not be announced either. The rail's own per-step marker is what stays
+  // in the accessibility tree.
   it('says nothing about a step that has choices recorded', () => {
     store.result = { issues: [], completeness: { incomplete_phases: ['characteristics'] } };
-    expect(html()).not.toContain('data-testid="wizard-incomplete-hint"');
+    expect(tag(html(), 'wizard-incomplete-hint')).toContain('aria-hidden="true"');
+  });
+
+  it('announces the hint while it is the truth about the step', () => {
+    store.result = { issues: [], completeness: { incomplete_phases: ['concept'] } };
+    expect(tag(html(), 'wizard-incomplete-hint')).not.toContain('aria-hidden');
   });
 
   it('shows the current step body', () => {

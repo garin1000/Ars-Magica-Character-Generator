@@ -126,20 +126,42 @@ beforeEach(() => {
 
 // Spell names are long ("True Rest of the Injured Brute (CrAn 20)") and the row
 // also carries a mastery spinner and a special-ability picker. Side by side the
-// three squeeze the name down to one word per line, so the two mastery controls
-// share ONE stacked column and the name keeps the rest of the row's width.
+// three squeeze the name down to one word per line, so the abilities picker takes
+// a wrap line of its own below the controls and the name keeps the row's width.
 describe('SpellTab selected-row layout', () => {
-  it('stacks the mastery score and the mastery special abilities in one block', () => {
-    const block = outer(html(), `spell-mastery-block-${SPELL}-0`);
-    expect(block).toContain(`data-testid="spell-mastery-${SPELL}-0"`);
-    expect(block).toContain(`data-testid="spell-mastery-abilities-${SPELL}-0"`);
+  it('keeps the spell name ahead of the mastery controls in the row', () => {
+    const body = html();
+    expect(outer(body, `spell-mastery-${SPELL}-0`)).not.toContain('spell-name-');
+    expect(body.indexOf(`data-testid="spell-name-${SPELL}-0"`)).toBeLessThan(
+      body.indexOf(`data-testid="spell-mastery-${SPELL}-0"`),
+    );
   });
 
-  it('keeps the spell name outside the mastery block, ahead of it in the row', () => {
+  // guided-creation-review-2026-08 #17: the abilities picker (a label plus the "Add
+  // special ability" select) used to be the score spinner's sibling inside a
+  // content-width column block, so appearing at mastery 1 widened the block, the
+  // elastic `.item-name` gave ground and the spinner — a repeated-click control —
+  // slid sideways under the pointer. It is now a wrap line of the row itself.
+  // SSR does no layout, so what is asserted here is the class hook the
+  // `flex-basis: 100%` rule keys on (pinned in `app.css.test.ts`) and the row
+  // structure that lets the line wrap below rather than beside.
+  it('gives the mastery abilities their own full-width wrap line', () => {
     const body = html();
-    expect(outer(body, `spell-mastery-block-${SPELL}-0`)).not.toContain('spell-name-');
-    expect(body.indexOf(`data-testid="spell-name-${SPELL}-0"`)).toBeLessThan(
-      body.indexOf(`data-testid="spell-mastery-block-${SPELL}-0"`),
+    const abilities = new RegExp(
+      `<[^>]*data-testid="spell-mastery-abilities-${SPELL}-0"[^>]*>`,
+    ).exec(body);
+    expect(abilities).not.toBeNull();
+    expect(abilities![0]).toContain('class="mastery-abilities"');
+
+    // No content-width column wrapper is left to widen: the spinner and the wrap
+    // line are both direct items of the row.
+    expect(body).not.toContain('spell-mastery-block');
+    expect(outer(body, `spell-mastery-${SPELL}-0`)).not.toContain('mastery-abilities');
+
+    // Last in the row, after the remove button: a 100%-basis item claims the line
+    // it starts, so anything after it would be pushed onto a third line.
+    expect(body.indexOf(`data-testid="spell-remove-${SPELL}-0"`)).toBeLessThan(
+      body.indexOf(`data-testid="spell-mastery-abilities-${SPELL}-0"`),
     );
   });
 });

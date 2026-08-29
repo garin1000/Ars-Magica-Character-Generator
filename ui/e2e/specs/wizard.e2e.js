@@ -105,7 +105,13 @@ describe('guided creation wizard', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'naming the character did not clear the untouched mark on the Concept step',
     });
-    expect(await $('[data-testid="wizard-incomplete-hint"]').isExisting()).toBe(false);
+    // The note goes quiet without leaving the flow: it keeps its box so the input
+    // surface below it cannot move on the edit that clears the mark
+    // (guided-creation-review-2026-08 #2 — `layout-stability.e2e.js` measures that).
+    // So the assertion is that it is no longer SHOWN, not that it is gone.
+    const incompleteHint = await $('[data-testid="wizard-incomplete-hint"]');
+    expect(await incompleteHint.isDisplayed()).toBe(false);
+    expect(await incompleteHint.isExisting()).toBe(true);
 
     // Back is dead on the first step; Next advances and the rail follows.
     expect(await $(BACK).isEnabled()).toBe(false);

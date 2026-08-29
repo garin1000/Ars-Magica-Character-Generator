@@ -603,6 +603,12 @@ button:disabled {
   margin-left: 0.3rem;
 }
 
+/* The same statement on the step itself. Its box is ALWAYS there — the element is
+   mounted on every step and only its visibility is toggled (`.hidden-reserved`,
+   WizardShell.svelte), because the flag behind it flips on the player's first click
+   and a collapsing line above an input surface moves the control being clicked
+   (guided-creation-review-2026-08 #2). So this padding is permanent space, spent on
+   every step, not only on untouched ones. */
 .wizard-incomplete-hint {
   padding: 0.2rem 1.5rem 0;
   color: #b9b6d6;
@@ -929,10 +935,21 @@ ul {
 
 /* Characteristics: a content-sized two-column grid (label | spinner). The label
    column sizes to the longest translated label and the block is only as wide as
-   it needs to be — never the full tab width. */
+   it needs to be — never the full tab width.
+
+   It CENTRES ITSELF (guided-creation-review-2026-08 #27). The editor mounts the
+   picker as a direct child of `.tab-panel`, which centres its children, while the
+   wizard wraps every step body in `.vf-tab`, which is `width: 100%` and stretches
+   them — so the same panel read centred in one surface and left-aligned in the
+   other. Auto inline margins absorb the free space in ordinary flow and in a flex
+   column alike, so the two mounts now agree by construction rather than by what
+   happens to wrap them. Dropping the wizard's wrapper for this one step was the
+   alternative and is more fragile: the wrapper reproduces the editor's height
+   chain and supplies the gap between guidance, bar and body. */
 .char-panel {
   width: fit-content;
   max-width: 100%;
+  margin-inline: auto;
 }
 
 .char-grid {
@@ -1104,10 +1121,11 @@ ul {
   padding: 0;
 }
 
-/* A selected spell row: the name, then the per-spell controls. Rows are top
-   aligned because the name may wrap to two lines and the mastery controls stack
-   into two — both blocks read from the row's top edge rather than drifting
-   around a vertical centre. */
+/* A selected spell row: the name, then the per-spell controls, then — on a wrap
+   line of its own — the mastery special abilities. Rows are top aligned because the
+   name may wrap to two lines while the controls beside it stay one line high, so
+   both read from the row's top edge rather than drifting around a vertical centre.
+   Wrapping is what gives `.mastery-abilities` its own line (see there). */
 .spell-list li {
   display: flex;
   align-items: flex-start;
@@ -1127,23 +1145,29 @@ ul {
   line-height: 1.6rem;
 }
 
-/* The mastery score spinner and the mastery special abilities stack vertically
-   in one column beside the name. Side by side they consume the whole row and
-   leave the name a few characters' width; stacked, each is one short line. */
-.spell-mastery-block {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.2rem;
-  flex: 0 1 auto;
-  min-width: 0;
-}
+/* The mastery special abilities take a WRAP LINE OF THEIR OWN at the end of the
+   spell row, below the name and the score spinner: side by side the two mastery
+   controls consume the whole row and leave the name a few characters' width.
 
+   `.spell-list li` is a wrap flex container, so a 100% basis claims a whole line
+   without contributing anything to the controls line's widths. That is the fix for
+   guided-creation-review-2026-08 #17: the label plus the "Add special ability"
+   select are much wider than the spinner, and while the two shared a content-width
+   column block, reaching mastery 1 widened that block, the elastic `.item-name`
+   gave ground, and the spinner — a repeated-click control — slid sideways under the
+   pointer. A `min-width` floor on the column would have stopped the shift by
+   indenting every unmastered row permanently, so the column is gone instead.
+
+   The picker follows the row's remove button in the markup, not just visually: a
+   100%-basis item claims the line it starts on, so a `×` placed after it would be
+   pushed onto a third line. Reordering visually with `order` instead would leave
+   reading and focus order disagreeing with what is on screen. */
 .mastery-abilities {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.3rem;
+  flex-basis: 100%;
   min-width: 0;
 }
 
@@ -1655,6 +1679,20 @@ ul {
   align-items: center;
   gap: 0.35rem;
   white-space: nowrap;
+}
+
+/* Hidden while KEEPING ITS SPACE in the flow — the house rule for anything whose
+   presence depends on state the user's own first click changes
+   (guided-creation-review-2026-08, cross-cutting theme 1: an element entering or
+   leaving the flow moves the control being clicked, and the first click is exactly
+   when completeness, emptiness and "nothing chosen yet" flags flip). `visibility:
+   hidden` is what reserves the box; `display: none` and unmounting are the two
+   forms that do not, so neither may be substituted here. Note this is the OPPOSITE
+   trade to `.sr-only` below (announced, no space): an element hidden this way is
+   also out of the accessibility tree, so use it only where the hidden content has
+   stopped being true, and say so with `aria-hidden` at the mount site. */
+.hidden-reserved {
+  visibility: hidden;
 }
 
 /* Visually hidden but read by assistive tech (the select's accessible name). */

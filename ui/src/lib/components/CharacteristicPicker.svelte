@@ -93,7 +93,10 @@
   const size = $derived(store.effective?.size ?? 0);
 </script>
 
-<section class="panel char-panel">
+<!-- `.char-panel` centres ITSELF (app.css), so this one component sits identically
+     in the editor's centring `.tab-panel` and in the wizard's stretching `.vf-tab`
+     (guided-creation-review-2026-08 #27). -->
+<section class="panel char-panel" data-testid="char-panel">
   {#if rules}
     <p class="points" data-testid="characteristic-points">
       {store.t('characteristic-points', { used: String(used), budget: String(budget) })}
