@@ -52,6 +52,10 @@ vi.mock('./ipc', () => ({
   agingPreview: vi.fn(),
   agingApply: vi.fn(),
   agingRevert: vi.fn(),
+  sagaYear: vi.fn().mockResolvedValue(1220),
+  setSagaYear: vi.fn().mockResolvedValue(undefined),
+  deriveAge: vi.fn().mockResolvedValue({ age: 0, issues: [] }),
+  deriveBirthYear: vi.fn().mockResolvedValue(0),
 }));
 
 // Import the singleton after the mock is registered.
@@ -1267,6 +1271,144 @@ describe('setAge', () => {
   it('clamps non-positive/non-finite to null', () => {
     store.setAge(0);
     expect(store.entity.age).toBe(null);
+  });
+});
+
+// --- Slice 12 (#25): the saga year, and age ↔ birth year as two views ------
+
+describe('the saga year and the age ↔ birth-year link', () => {
+  beforeEach(async () => {
+    vi.mocked(ipc.sagaYear).mockResolvedValue(1220);
+    vi.mocked(ipc.setSagaYear).mockResolvedValue(undefined);
+    vi.mocked(ipc.deriveAge).mockClear();
+    vi.mocked(ipc.deriveBirthYear).mockClear();
+    await store.loadSagaYear();
+  });
+
+  afterEach(() => {
+    // Put the shared singleton back to "the saga year was never read", which is the
+    // state every other block in this file was written against — with a year loaded,
+    // every `setAge`/`setBirthYear` anywhere else would fire a derivation round trip.
+    store.sagaYear = null;
+    store.sagaIssues = [];
+    vi.mocked(ipc.deriveAge).mockReset().mockResolvedValue({ age: 0, issues: [] });
+    vi.mocked(ipc.deriveBirthYear).mockReset().mockResolvedValue(0);
+  });
+
+  it('loads the persisted saga year rather than assuming one', async () => {
+    // The default lives in the engine (a rules value) and is applied by the settings
+    // reader in `arm-app`; the frontend only ever reports what it was told.
+    vi.mocked(ipc.sagaYear).mockResolvedValue(1230);
+    await store.loadSagaYear();
+    expect(store.sagaYear).toBe(1230);
+  });
+
+  it('derives the age from a typed birth year, against the saga year', async () => {
+    vi.mocked(ipc.deriveAge).mockResolvedValue({ age: 30, issues: [] });
+    store.setBirthYear(1190);
+    await vi.runAllTimersAsync();
+
+    expect(vi.mocked(ipc.deriveAge)).toHaveBeenCalledWith(1220, 1190);
+    expect(store.entity.birth_year).toBe(1190);
+    expect(store.entity.age).toBe(30);
+  });
+
+  it('derives the birth year from a typed age, against the saga year', async () => {
+    vi.mocked(ipc.deriveBirthYear).mockResolvedValue(1190);
+    store.setAge(30);
+    await vi.runAllTimersAsync();
+
+    expect(vi.mocked(ipc.deriveBirthYear)).toHaveBeenCalledWith(1220, 30);
+    expect(store.entity.age).toBe(30);
+    expect(store.entity.birth_year).toBe(1190);
+  });
+
+  it('derives nothing from an emptied field, rather than dating anything to year 0', async () => {
+    store.setBirthYear(null);
+    store.setAge(null);
+    await vi.runAllTimersAsync();
+    expect(vi.mocked(ipc.deriveAge)).not.toHaveBeenCalled();
+    expect(vi.mocked(ipc.deriveBirthYear)).not.toHaveBeenCalled();
+  });
+
+  it('clamps the age to zero and warns when the saga year precedes the birth year', async () => {
+    // The clamp and the advisory are the engine's, not the store's: `birth_year` is
+    // i32 and `age` is u32, so the subtraction has exactly one correct home.
+    vi.mocked(ipc.deriveAge).mockResolvedValue({
+      age: 0,
+      issues: [
+        {
+          severity: 'warning',
+          code: 'saga_year_before_birth_year',
+          phase: 'concept',
+          args: { saga_year: '1220', birth_year: '1250' },
+        },
+      ],
+    });
+    store.setBirthYear(1250);
+    await vi.runAllTimersAsync();
+
+    expect(store.entity.age).toBe(0);
+    expect(store.sagaIssues.map((issue) => issue.code)).toEqual(['saga_year_before_birth_year']);
+
+    // And it clears again once the pair becomes possible.
+    vi.mocked(ipc.deriveAge).mockResolvedValue({ age: 30, issues: [] });
+    store.setBirthYear(1190);
+    await vi.runAllTimersAsync();
+    expect(store.sagaIssues).toEqual([]);
+  });
+
+  it('dirties the document when either half of the stored pair is edited', async () => {
+    vi.mocked(ipc.deriveBirthYear).mockResolvedValue(1190);
+    await store.createCharacter('companion');
+    expect(store.dirty).toBe(false);
+    store.setAge(30);
+    await vi.runAllTimersAsync();
+    expect(store.dirty).toBe(true);
+
+    vi.mocked(ipc.deriveAge).mockResolvedValue({ age: 30, issues: [] });
+    await store.createCharacter('companion');
+    expect(store.dirty).toBe(false);
+    store.setBirthYear(1190);
+    await vi.runAllTimersAsync();
+    expect(store.dirty).toBe(true);
+  });
+
+  // D3.3, and the assertion most likely to be got wrong: the saga year is a
+  // reference for derivation, never a rewrite of stored values. A silent recompute
+  // would fabricate ages that skipped their aging rolls.
+  it('changes no stored value and does not dirty the document when only the saga year moves', async () => {
+    // A just-loaded document IS the saved one, which is the only way to reach a
+    // clean baseline that already carries both halves of the pair.
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/marcus.armc',
+      entity: { ...store.entity, age: 30, birth_year: 1190 },
+    });
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+    expect(store.dirty).toBe(false);
+
+    store.setSagaYear(1230);
+    await vi.runAllTimersAsync();
+
+    expect(store.sagaYear).toBe(1230);
+    expect(store.entity.age).toBe(30);
+    expect(store.entity.birth_year).toBe(1190);
+    expect(store.dirty).toBe(false);
+    expect(store.closeGuardPayload().dirty).toBe(false);
+    // It is saga state, so it is persisted — just not into the document.
+    expect(vi.mocked(ipc.setSagaYear)).toHaveBeenCalledWith(1230);
+  });
+
+  it('uses the new saga year for the next edit, and only then', async () => {
+    store.setSagaYear(1230);
+    await vi.runAllTimersAsync();
+
+    vi.mocked(ipc.deriveAge).mockResolvedValue({ age: 40, issues: [] });
+    store.setBirthYear(1190);
+    await vi.runAllTimersAsync();
+    expect(vi.mocked(ipc.deriveAge)).toHaveBeenCalledWith(1230, 1190);
   });
 });
 

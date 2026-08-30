@@ -9,9 +9,9 @@
   import ArtGrid from './ArtGrid.svelte';
   import BalanceBar from './BalanceBar.svelte';
   import CharacteristicPicker from './CharacteristicPicker.svelte';
+  import ConceptStep from './ConceptStep.svelte';
   import ExperienceStep from './ExperienceStep.svelte';
   import HouseSelector from './HouseSelector.svelte';
-  import IdentityFields from './IdentityFields.svelte';
   import MythicCompanionTypeSelector from './MythicCompanionTypeSelector.svelte';
   import PersonalityReputationsStep from './PersonalityReputationsStep.svelte';
   import SpellBudgetBar from './SpellBudgetBar.svelte';
@@ -56,12 +56,15 @@
   // drift" now means "no divergence that is not declared in this table", not "no
   // divergence at all".
   //
-  // Three steps are compositions of their own (`ExperienceStep`, `AgingStep`,
-  // `PersonalityReputationsStep`) rather than a single editor leaf. The editor's
-  // tab list now mirrors this phase list (#28), so `App.svelte` mounts the very
-  // same compositions — one component, two mounts, nothing to drift.
+  // Four steps are compositions of their own (`ConceptStep`, `ExperienceStep`,
+  // `AgingStep`, `PersonalityReputationsStep`) rather than a single editor leaf. The
+  // editor's tab list now mirrors this phase list (#28), so `App.svelte` mounts the
+  // very same compositions — one component, two mounts, nothing to drift. `concept`
+  // is the exception and says so out loud: it mounts `IdentityFields` + `AgeFields`
+  // in the editor's own order, plus the app-level saga-year setting, which the
+  // editor's Details tab deliberately does not carry (#24 leaves it unchanged).
   const STEPS = {
-    concept: { component: IdentityFields, scroll: true },
+    concept: { component: ConceptStep, scroll: true },
     characteristics: { component: CharacteristicPicker },
     virtues_flaws: { component: VirtueFlawTab, bar: BalanceBar },
     // The bar is the step's own input, not just a read-out: under flat funding the

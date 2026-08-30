@@ -38,12 +38,14 @@
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { advanceWizardTo, satisfyMagusMinimums, startWizard } from '../helpers.js';
+import { advanceWizardTo, satisfyMagusMinimums, setWizardAge, startWizard } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const PANEL = '[data-testid="life-stage-panel"]';
 const FUNDING_LIFE_STAGES = '[data-testid="ability-funding-life_stages"]';
-const AGE_INPUT = '[data-testid="life-stage-age-input"]';
+// Slice 12 (#24): the age is read-only on this panel and edited on the `concept`
+// step; the GAUNTLET age stays an input here, because it belongs to the plan.
+const AGE_READOUT = '[data-testid="age-readout"]';
 const GAUNTLET_AGE_INPUT = '[data-testid="life-stage-gauntlet-age-input"]';
 const LAB_SEASONS_INPUT = '[data-testid="life-stage-lab-seasons-input"]';
 const SPELL_LEVELS_INPUT = '[data-testid="life-stage-spell-levels-input"]';
@@ -108,7 +110,7 @@ describe('a magus past its Gauntlet', () => {
     await $(FUNDING_LIFE_STAGES).click();
     // The plan's fields arrive with it; that it also retires the typed pool is read off
     // the XP bar, on the step that mounts it (see the Abilities step below).
-    await $(AGE_INPUT).waitForExist({ timeout: STEP_TIMEOUT });
+    await $(AGE_READOUT).waitForExist({ timeout: STEP_TIMEOUT });
 
     // Until 6b5 the note ended "an older magus should use the experience pool
     // instead" — the guided flow disowning the very years this slice models. It must
@@ -124,7 +126,9 @@ describe('a magus past its Gauntlet', () => {
   });
 
   it('ends apprenticeship at the Gauntlet age, not at the age the magus reached', async () => {
-    await $(AGE_INPUT).setValue('60');
+    // A magus carries two ages, and this is the test that they are two: the age comes
+    // from the `concept` step and the Gauntlet age from the plan on this one.
+    await setWizardAge(60);
     await $(GAUNTLET_AGE_INPUT).setValue('25');
     await $(NATIVE_LANGUAGE).setValue('German');
 

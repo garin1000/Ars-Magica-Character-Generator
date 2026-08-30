@@ -38,10 +38,9 @@
 import { $, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { advanceWizardTo, currentWizardPhase, startWizard } from '../helpers.js';
+import { advanceWizardTo, currentWizardPhase, setWizardAge, startWizard } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
-const AGE_INPUT = '[data-testid="age-input"]';
 const SCHEDULE = '[data-testid="aging-schedule"]';
 const DIE_INPUT = '[data-testid="aging-die-input"]';
 const AGING_TOTAL = '[data-testid="aging-total"]';
@@ -86,7 +85,10 @@ describe('the aging crisis', () => {
     await advanceWizardTo('aging');
     expect(await currentWizardPhase()).toBe('aging');
     await $(SCHEDULE).waitForExist({ timeout: BOOT_TIMEOUT });
-    await $(AGE_INPUT).setValue('40');
+    // Slice 12 (#24): the age lives on the `concept` step now, so it is typed there
+    // and read here. `setWizardAge` walks back and returns to this step.
+    await setWizardAge(40);
+    await $(SCHEDULE).waitForExist({ timeout: STEP_TIMEOUT });
 
     // A ritual worth 0 leaves the AGING TOTAL alone and is still a ritual the Crisis
     // spends (`:16573`). The ritual is part of `AgingPanel`, so this guided step and
@@ -230,8 +232,19 @@ describe('the aging crisis', () => {
         crisis_total: 15,
         crisis_row: 'crisis.minor_illness',
         crisis_severity: 'minor',
+        // DATED, since Slice 12 (#25). The engine has always recorded a log entry's
+        // calendar year as `birth_year + age` (`aging.rs`) and always left it out for
+        // a character with no birth year — which, before the age ↔ birth-year link,
+        // was every character this suite built. Typing 40 in a 1220 saga now derives
+        // a birth year of 1180, so the roll for age 36 falls in 1216, and the log says
+        // so. The entry is dated as a consequence of the link, not as a new mechanic.
+        year: 1216,
       },
     ]);
+    // The derived half of the pair really did reach the save, which is what makes the
+    // year above meaningful rather than a magic number.
+    expect(saved.birth_year).toBe(1180);
+    expect(saved.age).toBe(40);
     // NO DRAFT STATE: both dice are the player's, and only the log entry's own
     // recorded fields may carry them.
     const withoutLog = { ...saved };

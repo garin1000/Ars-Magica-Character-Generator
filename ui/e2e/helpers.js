@@ -195,6 +195,37 @@ export async function standOnWizardStep(phase) {
 }
 
 /**
+ * Type the character's age, and come back to the step you were standing on.
+ *
+ * Slice 12 (#24) gave the age ONE home: the `concept` step, beside the birth year it
+ * is now linked to. Before that it was typed on whichever surface needed it — the
+ * aging step under flat funding, the life-stage panel under guided funding — so
+ * several specs used to reach for a field on their own step. They cannot any more,
+ * and hunting for the age is not what any of them is about, so the walk back and
+ * forth lives here once instead of in each of them.
+ *
+ * The wait is on the input reading the value back rather than on a fixed pause: the
+ * edit dirties the document and schedules a validate, so the round trip settles
+ * before the caller's own step re-renders around the new age.
+ *
+ * @param {string|number} age the age to type
+ */
+export async function setWizardAge(age) {
+  const returnTo = await currentWizardPhase();
+  await standOnWizardStep('concept');
+
+  const input = await $('[data-testid="age-input"]');
+  await input.waitForExist({ timeout: STEP_TIMEOUT });
+  await input.setValue(String(age));
+  await browser.waitUntil(async () => (await input.getValue()) === String(age), {
+    timeout: STEP_TIMEOUT,
+    timeoutMsg: `the age ${age} did not stay in the concept step's field`,
+  });
+
+  if (returnTo !== 'concept') await standOnWizardStep(returnTo);
+}
+
+/**
  * Add one Ability row at `index` (its position in the character's Ability array),
  * name its instance where the Ability is parameterized, and raise it to 1.
  *

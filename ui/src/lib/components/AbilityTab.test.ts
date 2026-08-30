@@ -230,3 +230,39 @@ describe('AbilityTab mounts the magus minimums checklist (slice 6b4)', () => {
     expect(html()).not.toContain('data-testid="magus-minimums"');
   });
 });
+
+// --- Slice 12 (#24): the age cap note's one home -----------------------------
+//
+// This component is BOTH surfaces — the editor's Abilities tab and the wizard's
+// `abilities` step mount it — so covering it here covers both, which the shared
+// components' blast radius requires. `WizardStep.test.ts` counts it across the whole
+// wizard and asserts exactly one; this is the "and it is here" half.
+describe('AbilityTab age cap note', () => {
+  /** The engine's age → max-Ability-score cap, as it arrives on the store. */
+  function setAgeCap(cap: number | null): void {
+    store.effective = { age_ability_cap: cap } as unknown as EffectiveScores;
+  }
+
+  it('reads the cap beside the lists it constrains, from the engine', () => {
+    store.entity.age = 25;
+    setAgeCap(5);
+    const body = html();
+    const note = /data-testid="age-cap-note"[^>]*>([\s\S]*?)<\//.exec(body);
+    expect(note).not.toBeNull();
+    expect(note![1]).toContain('5');
+    // Fluent, never the engine's field name.
+    expect(body).not.toContain('age_ability_cap');
+    // A sibling of the region row, like the checklist above it: the row must stay the
+    // only `flex: 1` child of `.vf-tab`, or both ability lists collapse.
+    expect(depthOf(body, 'data-testid="age-cap-note"')).toBe(0);
+    // And announced — the age it reflects is typed on another surface entirely.
+    expect(/<[^>]*data-testid="age-cap-note"[^>]*>/.exec(body)![0]).toMatch(/role="status"/);
+  });
+
+  it('renders no note when the engine reports no cap', () => {
+    // A ruleset shipping no age bands cannot cap anything, and an empty echo would be
+    // a dead line taken out of the lists' height.
+    setAgeCap(null);
+    expect(html()).not.toContain('data-testid="age-cap-note"');
+  });
+});

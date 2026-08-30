@@ -40,13 +40,16 @@
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { advanceWizardTo, standOnWizardStep, startWizard } from '../helpers.js';
+import { advanceWizardTo, setWizardAge, standOnWizardStep, startWizard } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const PANEL = '[data-testid="life-stage-panel"]';
 const FUNDING_POOL = '[data-testid="ability-funding-pool"]';
 const FUNDING_LIFE_STAGES = '[data-testid="ability-funding-life_stages"]';
-const AGE_INPUT = '[data-testid="life-stage-age-input"]';
+// Slice 12 (#24): the panel shows the age read-only; it is edited on `concept`, and
+// the age → Ability-score cap moved to the Abilities step's own note.
+const AGE_READOUT = '[data-testid="age-readout"]';
+const AGE_CAP_NOTE = '[data-testid="age-cap-note"]';
 const NATIVE_LANGUAGE = '[data-testid="native-language-input"]';
 const XP_POOL_INPUT = '[data-testid="xp-pool"]';
 const XP_POOL_TOTAL = '[data-testid="xp-pool-total"]';
@@ -149,7 +152,7 @@ describe('life-stage funding and Sample Childhoods', () => {
     // Flat funding is the default and must stay byte-identical: the chooser stands on
     // the typed pool, so the plan's own fields are not on the step at all.
     expect(await $(FUNDING_POOL).isSelected()).toBe(true);
-    expect(await $(AGE_INPUT).isExisting()).toBe(false);
+    expect(await $(AGE_READOUT).isExisting()).toBe(false);
     // Every character type may be built either way, so the guided option is live.
     expect(await $(FUNDING_LIFE_STAGES).isEnabled()).toBe(true);
 
@@ -165,13 +168,19 @@ describe('life-stage funding and Sample Childhoods', () => {
   it('takes an age and refuses a plan with no native language', async () => {
     await standOnWizardStep('experience');
     await $(FUNDING_LIFE_STAGES).click();
-    // The plan's fields arrive with it.
-    await $(AGE_INPUT).waitForExist({ timeout: STEP_TIMEOUT });
-    await $(AGE_INPUT).setValue('25');
-    // Five years of childhood, said on the step that prices them.
-    const ageCap = await $('[data-testid="life-stage-age-cap"]');
-    await ageCap.waitForExist({ timeout: STEP_TIMEOUT });
-    expect(clean(await ageCap.getText())).toContain('5');
+    // The plan's fields arrive with it, the age among them — read-only since Slice 12
+    // (#24), so it is typed on `concept` and shown here.
+    await $(AGE_READOUT).waitForExist({ timeout: STEP_TIMEOUT });
+    await setWizardAge(25);
+    await browser.waitUntil(async () => clean(await $(AGE_READOUT).getText()).includes('25'), {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'the age typed on the concept step did not reach the experience panel',
+    });
+    // The age → Ability-score cap is no longer echoed here: it has one home now, on
+    // the Abilities step, beside the lists it constrains (#24). Checked below, where
+    // this spec already walks to that step.
+    expect(await $('[data-testid="life-stage-age-cap"]').isExisting()).toBe(false);
+    expect(await $(AGE_CAP_NOTE).isExisting()).toBe(false);
 
     // An unnamed native language is an error, not a nicety: the engine needs the name
     // to instantiate the right parameterized Living Language and to enforce the
@@ -217,6 +226,14 @@ describe('life-stage funding and Sample Childhoods', () => {
     // The pool and every block it is made of belong to the XP bar, one step on.
     await standOnWizardStep('abilities');
     await $(XP_POOL_TOTAL).waitForExist({ timeout: STEP_TIMEOUT });
+
+    // And the age → Ability-score cap is read HERE now (Slice 12, #24), beside the
+    // lists it constrains, rather than on the two surfaces that used to echo it and
+    // show no Ability score between them. A companion of 25 caps at 5.
+    const ageCap = await $(AGE_CAP_NOTE);
+    await ageCap.waitForExist({ timeout: STEP_TIMEOUT });
+    expect(clean(await ageCap.getText())).toContain('5');
+    expect(clean(await ageCap.getText())).not.toContain('age_ability_cap');
     // Under life-stage funding the pools are derived, so the editable input gives way
     // to a read-only total. Later life is (age - childhood years) x 15 = (25 - 5) x 15 = 300.
     await browser.waitUntil(async () => (await textOf(XP_POOL_TOTAL)) === '300', {
@@ -364,7 +381,7 @@ describe('life-stage funding and Sample Childhoods', () => {
     // The plan is no longer read, so its fields leave the step — but the plan itself
     // stays on the character (schema 16 stores the funding mode instead of inferring
     // it from the plan's presence, so switching mode destroys nothing).
-    await browser.waitUntil(async () => !(await $(AGE_INPUT).isExisting()), {
+    await browser.waitUntil(async () => !(await $(AGE_READOUT).isExisting()), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'leaving guided funding should retire the plan fields',
     });
@@ -389,12 +406,12 @@ describe('life-stage funding and Sample Childhoods', () => {
 
     await standOnWizardStep('experience');
     await $(FUNDING_LIFE_STAGES).click();
-    await $(AGE_INPUT).waitForExist({ timeout: STEP_TIMEOUT });
+    await $(AGE_READOUT).waitForExist({ timeout: STEP_TIMEOUT });
     // THE POINT OF THE ROUND TRIP: the plan is picked up exactly where it was left.
     // The native language typed before the switch is still there — it used to be
     // destroyed, unprompted and unrecoverably, along with the Gauntlet age, the lab
     // seasons, the spell levels and the childhood package (review issue #29).
-    expect(await $(AGE_INPUT).getValue()).toBe('25');
+    expect(clean(await $(AGE_READOUT).getText())).toContain('25');
     await browser.waitUntil(async () => (await $(NATIVE_LANGUAGE).getValue()) === 'German', {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'the typed native language must survive a funding round trip',
@@ -506,16 +523,16 @@ describe('life-stage funding and Sample Childhoods', () => {
     expect(await describedByIds(FUNDING_LIFE_STAGES)).not.toContain('ability-funding-magus-reason');
 
     await $(FUNDING_LIFE_STAGES).click();
-    await $(AGE_INPUT).waitForExist({ timeout: STEP_TIMEOUT });
+    await $(AGE_READOUT).waitForExist({ timeout: STEP_TIMEOUT });
 
-    // The age a magus is asked for is its age AT the Gauntlet, which the field cannot
-    // say for itself — so the note says it, and is announced.
+    // A magus carries two ages, which neither field can say for itself — so the note
+    // says it, and is announced.
     const note = await $(GAUNTLET_NOTE);
     await note.waitForExist({ timeout: STEP_TIMEOUT });
     expect(await note.getAttribute('role')).toBe('status');
     expect(clean(await note.getText()).length).toBeGreaterThan(0);
 
-    await $(AGE_INPUT).setValue('25');
+    await setWizardAge(25);
     // A magus's plan needs its native language too, both because the engine demands it
     // and because an unnamed one shuts the step (see above), and the figures it earns
     // are read on the Abilities step, where the XP bar is. Next rather than a rail jump:

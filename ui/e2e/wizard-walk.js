@@ -137,10 +137,11 @@ async function buyAbility(ability, index, parameter) {
 // for the completeness mark to clear, so "the input was accepted" is checked once,
 // centrally, rather than in eleven different ways here.
 const FILLERS = {
-  // The step's own field is the concept text; the name lives in the banner above
-  // every view (`IdentityFields` says so), so the walk types both — the one the
-  // step offers, and the one that proves at the end that Finish carried this very
-  // character into the editor.
+  // The step's own fields are the concept text and — since Slice 12 (#24) — the
+  // AGE, which now sits beside the birth year it is linked to instead of on the
+  // aging step three phases later. The name lives in the banner above every view
+  // (`IdentityFields` says so), so the walk types that too: it is what proves at the
+  // end that Finish carried this very character into the editor.
   concept: async (plan) => {
     const concept = await $('[data-testid="identity-concept"]');
     await concept.waitForExist({ timeout: STEP_TIMEOUT });
@@ -148,6 +149,9 @@ const FILLERS = {
     const name = await $('[data-testid="identity-name"]');
     await name.waitForExist({ timeout: STEP_TIMEOUT });
     await name.setValue(plan.name);
+    const age = await $('[data-testid="age-input"]');
+    await age.waitForExist({ timeout: STEP_TIMEOUT });
+    await age.setValue(plan.age);
   },
 
   characteristics: async (plan) => {
@@ -265,10 +269,16 @@ const FILLERS = {
     );
   },
 
-  aging: async (plan) => {
-    const age = await $('[data-testid="age-input"]');
-    await age.waitForExist({ timeout: STEP_TIMEOUT });
-    await age.setValue(plan.age);
+  // Nothing to fill any more, and that IS the assertion. The age this step's whole
+  // schedule hangs on was typed on `concept` (Slice 12, #24), and the engine's own
+  // completeness rule for this phase is `entity.age.is_some()` — so the walk proving
+  // the step reads as complete here, without touching it, proves the age really
+  // travelled from the step that now owns it. Aging ROLLS are not owed at these ages
+  // and have their own spec (`aging.e2e.js`).
+  aging: async () => {
+    await $('[data-testid="aging-panel"]').waitForExist({ timeout: STEP_TIMEOUT });
+    // The copy this step used to carry is gone, not merely unused.
+    expect(await $('[data-testid="age-input"]').isExisting()).toBe(false);
   },
 };
 

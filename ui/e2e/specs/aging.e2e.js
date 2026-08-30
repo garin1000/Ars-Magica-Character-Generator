@@ -35,7 +35,7 @@
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { advanceWizardTo, currentWizardPhase, startWizard } from '../helpers.js';
+import { advanceWizardTo, currentWizardPhase, setWizardAge, startWizard } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const AGE_INPUT = '[data-testid="age-input"]';
@@ -210,11 +210,14 @@ describe('the guided aging step', () => {
   });
 
   it('owes one roll a year from 36 once an age is entered', async () => {
-    // Typed HERE, on the aging step. Under flat (pool) funding this is the only age
-    // field the wizard has — `life-stage-age-input` renders for life-stage funding
-    // alone — so without the `AgeFields` extraction a guided grog could not enter
-    // the one number the whole schedule hangs on.
-    await $(AGE_INPUT).setValue('40');
+    // Typed on the CONCEPT step, three phases back, and read here. Slice 12 (#24)
+    // gave the age one canonical home beside the birth year it is linked to, so this
+    // step no longer offers a field of its own — which is exactly what makes the
+    // assertion below worth making: the schedule this step is entirely about hangs on
+    // a number entered somewhere else, and nothing but a round trip proves it arrives.
+    expect(await $(AGE_INPUT).isExisting()).toBe(false);
+    await setWizardAge(40);
+    expect(await currentWizardPhase()).toBe('aging');
 
     await browser.waitUntil(async () => await $(ROLLS_OWED).isExisting(), {
       timeout: STEP_TIMEOUT,
@@ -515,10 +518,16 @@ describe('the guided aging step', () => {
     // Canonical serialization: the chosen conditions are ids, sorted.
     expect(saved.living_conditions).toEqual([LEPER_COLONY, POOR_LOCATION]);
     expect(saved.age).toBe(40);
+    // Derived from the age against the saga year, and NOT a schema change: both
+    // fields have always been stored (Slice 12, #25 — no `SCHEMA_VERSION` bump).
+    expect(saved.birth_year).toBe(1180);
     expect(saved.schema_version).toBe(16);
     // The widened log entry is the whole record of the year: what was rolled, what
-    // it totalled, the conditions in force and the points it awarded. `year` is
-    // absent because a grog with no birth year has no calendar year to write.
+    // it totalled, the conditions in force, the points it awarded — and now the
+    // calendar year. The engine has always written `year` as `birth_year + age`
+    // (`aging.rs`) and always omitted it for a character with no birth year, which
+    // before the age ↔ birth-year link was every character this suite built. Typing
+    // 40 in a 1220 saga puts this grog's birth at 1180, so age 36 fell in 1216.
     expect(saved.aging_log).toEqual([
       {
         age: 36,
@@ -528,6 +537,7 @@ describe('the guided aging step', () => {
         living_conditions: [LEPER_COLONY, POOR_LOCATION],
         points: { qik: 1 },
         apparent_age_increased: true,
+        year: 1216,
       },
     ]);
 

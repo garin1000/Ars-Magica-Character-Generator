@@ -99,6 +99,12 @@ yourself.
 - **Never lose work by accident.** Closing or quitting the app with unsaved
   changes — including via macOS Cmd+Q — prompts for confirmation before
   discarding, as does starting a new document or opening another file.
+- **Age and birth year are two views of one fact.** Set the year your saga is
+  played in — 1220 by default, the year the published setting stands in — and the
+  guided wizard links the two: type an age and the birth year follows, type a birth
+  year and the age follows. The saga year is remembered between launches and is
+  saga-wide rather than part of any character, so changing it never silently rewrites
+  a character you already built.
 - **Export a readable character sheet.** One click writes the whole character to a
   Markdown file of your choosing — identity, Characteristics, Virtues and Flaws
   (including the ones a House or type granted), Abilities, Arts, spells,

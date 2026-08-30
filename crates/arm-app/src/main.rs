@@ -24,6 +24,10 @@ fn main() {
             commands::export_markdown,
             commands::export_label_keys,
             commands::update_close_guard,
+            commands::saga_year,
+            commands::set_saga_year,
+            commands::derive_age,
+            commands::derive_birth_year,
             request_close,
         ])
         // Window-close gestures (title-bar X, Alt+F4, Cmd+W).

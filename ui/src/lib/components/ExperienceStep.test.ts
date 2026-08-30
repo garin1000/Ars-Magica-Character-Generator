@@ -123,7 +123,12 @@ describe('ExperienceStep (Slice 2, #11)', () => {
     const body = html();
     expect(body).toContain('data-testid="childhood-package-select"');
     expect(body).toContain('data-testid="native-language-input"');
-    expect(body).toContain('data-testid="life-stage-age-input"');
+    // Slice 12 (#24): the age is SHOWN here — the Gauntlet age below is measured
+    // against it — but it is no longer a second place to change it. The editable one
+    // lives with the identity, on the Concept step and the Details tab.
+    expect(body).toContain('data-testid="age-readout"');
+    expect(body).not.toContain('data-testid="life-stage-age-input"');
+    expect(body).not.toContain('data-testid="age-input"');
   });
 
   it('renders nothing for a ruleset shipping no life-stage rules', () => {

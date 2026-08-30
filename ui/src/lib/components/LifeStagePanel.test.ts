@@ -296,11 +296,9 @@ describe('LifeStagePanel offers both modes to a magus (slice 6b4)', () => {
     installPlan();
     const body = html();
     const note = element(body, 'life-stage-gauntlet-note');
-    // The age entered IS the Gauntlet age, which the age field cannot say for itself,
-    // so the note is read before it.
-    expect(body.indexOf('life-stage-gauntlet-note')).toBeLessThan(
-      body.indexOf('life-stage-age-input'),
-    );
+    // The age shown here is the one the Gauntlet age is measured against, which
+    // neither field can say for itself, so the note is read before both.
+    expect(body.indexOf('life-stage-gauntlet-note')).toBeLessThan(body.indexOf('age-readout'));
     // It arrives when the funding source is switched, so its appearance is announced.
     expect(note.open).toMatch(/role="status"/);
     expect(note.text).toContain('Gauntlet');
@@ -328,20 +326,26 @@ describe('LifeStagePanel guided fields (slice 6b3b)', () => {
   it('renders neither the age nor the native-language field in pool mode', () => {
     setAgeCap(5);
     const body = html();
+    expect(has(body, 'age-readout')).toBe(false);
     expect(has(body, 'life-stage-age-input')).toBe(false);
     expect(has(body, 'life-stage-age-cap')).toBe(false);
     expect(has(body, 'native-language-input')).toBe(false);
   });
 
-  it('renders the age input carrying the entity age under a plan', () => {
+  it('shows the entity age read-only under a plan, and offers no second input', () => {
     installPlan();
     store.entity.age = 25;
     const body = html();
-    const age = element(body, 'life-stage-age-input');
-    // Later life is (age - childhood years) × rate, so the guided flow needs the age.
-    expect(age.open).toMatch(/type="number"/);
-    expect(age.open).toMatch(/value="25"/);
+    // Later life is (age - childhood years) × rate, so the guided flow has to show
+    // the age it is priced from. Slice 12 (#24) made that a read-out: the one
+    // editable field lives with the identity, and this panel had been the second
+    // place the same `entity.age` could be changed from.
+    const age = element(body, 'age-readout');
+    expect(age.open).not.toMatch(/<input/i);
+    expect(age.text).toContain('25');
     expect(body).toContain('Age');
+    expect(has(body, 'life-stage-age-input')).toBe(false);
+    expect(has(body, 'age-input')).toBe(false);
   });
 
   it('renders the native-language field with its localized label and placeholder', () => {
@@ -353,22 +357,16 @@ describe('LifeStagePanel guided fields (slice 6b3b)', () => {
     expect(body).toContain('Native language');
   });
 
-  it('echoes the engine age cap with the shared age-cap wording, announced', () => {
+  it('echoes no age cap at all — it has one home, beside the Ability lists', () => {
+    // Slice 12 (#24): `age-cap-note` used to render on two surfaces at once, neither
+    // of which shows an Ability score. It renders only on the Abilities surface now
+    // (`AbilityTab`), which is the list the cap actually constrains.
     installPlan();
     store.entity.age = 25;
     setAgeCap(5);
-    const cap = element(html(), 'life-stage-age-cap');
-    // Reuses the Details tab's key — one wording for one rule, no second string.
-    expect(cap.text).toContain('Max Ability score');
-    expect(cap.text).toContain('5');
-    // It arrives in response to the age edit, so its appearance must be announced.
-    expect(cap.open).toMatch(/role="status"/);
-  });
-
-  it('omits the age-cap echo when the engine reports no cap', () => {
-    installPlan();
-    setAgeCap(null);
-    expect(has(html(), 'life-stage-age-cap')).toBe(false);
+    const body = html();
+    expect(has(body, 'life-stage-age-cap')).toBe(false);
+    expect(has(body, 'age-cap-note')).toBe(false);
   });
 });
 
@@ -418,8 +416,8 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
     // would be dead controls.
     for (const testid of inputs) expect(has(body, testid)).toBe(false);
     expect(has(body, 'life-stage-post-gauntlet-summary')).toBe(false);
-    // The rest of the guided panel is untouched.
-    expect(has(body, 'life-stage-age-input')).toBe(true);
+    // The rest of the guided panel is untouched — the age read-out included.
+    expect(has(body, 'age-readout')).toBe(true);
   });
 
   it('carries the plan values, and offers the entered age as the Gauntlet placeholder', () => {
