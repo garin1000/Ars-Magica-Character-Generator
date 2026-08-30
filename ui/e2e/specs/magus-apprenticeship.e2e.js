@@ -28,12 +28,14 @@
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { advanceWizardTo, satisfyMagusMinimums, startWizard } from '../helpers.js';
+import { advanceWizardTo, satisfyMagusMinimums, setWizardAge, startWizard } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const PANEL = '[data-testid="life-stage-panel"]';
 const FUNDING_LIFE_STAGES = '[data-testid="ability-funding-life_stages"]';
-const AGE_INPUT = '[data-testid="life-stage-age-input"]';
+// Slice 12 (#24): this panel shows the age read-only now — the Gauntlet age below is
+// measured against it — and the one editable field lives on the `concept` step.
+const AGE_READOUT = '[data-testid="age-readout"]';
 const NATIVE_LANGUAGE = '[data-testid="native-language-input"]';
 const GAUNTLET_NOTE = '[data-testid="life-stage-gauntlet-note"]';
 const XP_POOL_INPUT = '[data-testid="xp-pool"]';
@@ -153,16 +155,18 @@ describe('magus apprenticeship through the life stages', () => {
     expect(await $(FUNDING_LIFE_STAGES).isEnabled()).toBe(true);
     await $(FUNDING_LIFE_STAGES).click();
 
-    // The plan's own fields arrive with it — the age the years are priced from is the
-    // first of them — and the note explains what that age means for a magus. (That the
-    // plan also retires the typed pool is read off the XP bar, on the step that mounts
-    // it; see the abilities step below.)
-    await $(AGE_INPUT).waitForExist({ timeout: STEP_TIMEOUT });
+    // The plan's own fields arrive with it — the age the years are priced from is
+    // read out first of all — and the note explains what that age means for a magus.
+    // (That the plan also retires the typed pool is read off the XP bar, on the step
+    // that mounts it; see the abilities step below.)
+    await $(AGE_READOUT).waitForExist({ timeout: STEP_TIMEOUT });
     expect(clean(await $(GAUNTLET_NOTE).getText()).length).toBeGreaterThan(0);
   });
 
   it('refuses an age younger than the Gauntlet, and takes 25', async () => {
-    await $(AGE_INPUT).setValue('15');
+    // Typed on `concept` and priced here (Slice 12, #24): this panel is the surface
+    // the age has to REACH, and no longer the one it is entered on.
+    await setWizardAge(15);
 
     // Childhood plus the fifteen years of apprenticeship put the Gauntlet at 20, so 15
     // is not an age a magus can be generated at.
@@ -179,7 +183,9 @@ describe('magus apprenticeship through the life stages', () => {
     expect(refusal).toContain('20');
     expect(await $(NEXT).isEnabled()).toBe(false);
 
-    await $(AGE_INPUT).setValue('25');
+    await setWizardAge(25);
+    // The read-out on this step follows the value typed on the other one.
+    expect(clean(await $(AGE_READOUT).getText())).toContain('25');
     await browser.waitUntil(
       async () => (await issueCount('life_stage_age_before_gauntlet')) === 0,
       {

@@ -106,6 +106,7 @@ pub use types::{
     ValidationMode, load_entity_migrating,
 };
 pub use validation::{
-    Balance, IssueSeverity, PointCeilings, ValidationIssue, ValidationResult, compute_balance,
+    AgeInSagaYear, Balance, DEFAULT_SAGA_YEAR, IssueSeverity, PointCeilings, ValidationIssue,
+    ValidationResult, age_in_saga_year, birth_year_in_saga_year, compute_balance,
     effective_point_ceilings, validate,
 };

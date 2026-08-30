@@ -3,6 +3,7 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import type {
+  AgeInSagaYear,
   Characteristic,
   CrisisOutcome,
   DerivedTotals,
@@ -28,6 +29,41 @@ export function effectiveScores(entity: Entity): Promise<EffectiveScores> {
 
 export function derivedTotals(entity: Entity): Promise<DerivedTotals> {
   return invoke('derived_totals', { entity });
+}
+
+/**
+ * The saga year the app is set to — the year the age ↔ birth-year link is measured
+ * against (guided-creation-review-2026-08 #25).
+ *
+ * Read from an app-settings file `arm-app` owns, NOT from the character and not from
+ * the ruleset: it is a saga fact, shared by every character in one saga. Infallible
+ * on the Rust side, so a first launch with no settings file simply reports the
+ * engine's default (a rules value; see `arm_rules::DEFAULT_SAGA_YEAR`).
+ */
+export function sagaYear(): Promise<number> {
+  return invoke('saga_year');
+}
+
+/** Persist the saga year. Saga state, so it survives a relaunch. */
+export function setSagaYear(year: number): Promise<void> {
+  return invoke('set_saga_year', { year });
+}
+
+/**
+ * How old a character born in `birthYear` is in `sagaYear`, plus any advisory the
+ * pair warrants — a saga year before the birth year clamps the age to 0 rather than
+ * underflowing the entity's unsigned `age`.
+ *
+ * Asked of the engine rather than computed here: the clamp policy and the finding it
+ * emits have one home, and the frontend computes no mechanics of its own.
+ */
+export function deriveAge(sagaYear: number, birthYear: number): Promise<AgeInSagaYear> {
+  return invoke('derive_age', { sagaYear, birthYear });
+}
+
+/** Which year a character aged `age` in `sagaYear` was born in. */
+export function deriveBirthYear(sagaYear: number, age: number): Promise<number> {
+  return invoke('derive_birth_year', { sagaYear, age });
 }
 
 /**

@@ -478,9 +478,16 @@ class AppStore {
     };
   }
 
-  /** Load the ruleset for the current language and validate the initial entity. */
+  /**
+   * Load the ruleset for the current language and validate the initial entity, and
+   * read the persisted saga year.
+   *
+   * Deliberately here and not in an `$effect`: the saga year is read once at launch,
+   * and `onMount` already owns this call. The two run concurrently because neither
+   * needs the other — the saga year is an app setting, not part of the ruleset.
+   */
   async init(): Promise<void> {
-    await this.#reloadRuleset(true);
+    await Promise.all([this.#reloadRuleset(true), this.loadSagaYear()]);
   }
 
   async setLang(lang: Lang): Promise<void> {
@@ -1131,10 +1138,14 @@ class AppStore {
     this.#scheduleValidate();
   }
 
-  /** Set (or clear) the character's age; drives the age → Ability-cap check. */
+  /**
+   * Set (or clear) the character's age; drives the age → Ability-cap check, and
+   * carries the birth year with it (see {@link sagaYear}).
+   */
   setAge(age: number | null): void {
     this.entity.age =
       age != null && Number.isFinite(age) && age > 0 ? clampInt(age, 1, U32_MAX) : null;
+    this.#deriveBirthYearFromAge();
     this.#scheduleValidate();
   }
 
@@ -1790,7 +1801,124 @@ class AppStore {
   setBirthYear(year: number | null): void {
     this.entity.birth_year =
       year != null && Number.isFinite(year) ? clampInt(year, I32_MIN, I32_MAX) : null;
+    this.#deriveAgeFromBirthYear();
     this.#scheduleValidate();
+  }
+
+  // --- The saga year, and age ↔ birth year as two views of one fact ----------
+  //
+  // Three values exist and only two can be authoritative. `age` and `birth_year`
+  // are THE STORED PAIR — both already on the entity, both dirtying the document —
+  // and the saga year is a reference for derivation only. Editing either half
+  // recomputes the other; editing the saga year recomputes NOTHING and does not
+  // dirty the document, because advancing a character by N years needs aging rolls,
+  // Living Conditions and any Longevity Ritual applied per year. A silent recompute
+  // would fabricate ages that skipped their aging rolls
+  // (guided-creation-review-2026-08 #25 / D3.3).
+
+  /**
+   * The calendar year the saga stands in. App-level saga state, persisted by
+   * `arm-app` in a settings file — not on the entity (one saga-wide fact would
+   * become per-character copies that disagree) and not in the ruleset (it is a saga
+   * fact, not a rule).
+   *
+   * `null` until {@link loadSagaYear} has answered. The default is the engine's
+   * (`arm_rules::DEFAULT_SAGA_YEAR`, a rules value), applied by the settings reader,
+   * so no year is written down here.
+   */
+  sagaYear = $state<number | null>(null);
+
+  /**
+   * Advisories from the age ↔ birth-year derivation — today only "the saga year is
+   * before the birth year", which clamps the age to 0.
+   *
+   * Kept apart from {@link result} because it is not a reading of the entity: the
+   * engine cannot emit it from `validate`, since the saga year never reaches it as
+   * entity data. `ValidationPanel` shows both lists.
+   */
+  sagaIssues = $state<ValidationIssue[]>([]);
+
+  // Monotonic guard for the derivation round trips. Typing a birth year fires one
+  // per keystroke and the answers come back over IPC, so a slow early reply must
+  // not land on top of a later one. Same shape as `#seq` for validation.
+  #sagaSeq = 0;
+
+  /** Read the persisted saga year. Called from {@link init}; never fails loudly. */
+  async loadSagaYear(): Promise<void> {
+    try {
+      this.sagaYear = await ipc.sagaYear();
+    } catch {
+      // The Rust command is infallible, so this means the bridge itself is gone.
+      // The link stays inert rather than the app refusing to start over a setting.
+    }
+  }
+
+  /**
+   * Choose the saga year. Persists it as saga state and changes **no** stored
+   * value, so the document is not dirtied — it only governs what gets derived the
+   * next time the age or the birth year is typed.
+   */
+  setSagaYear(year: number): void {
+    if (!Number.isFinite(year)) return;
+    const clamped = clampInt(year, I32_MIN, I32_MAX);
+    this.sagaYear = clamped;
+    void ipc.setSagaYear(clamped).catch((e: unknown) => {
+      // A user action that silently failed to persist is worse than a banner.
+      this.error = e as AppError;
+    });
+  }
+
+  /**
+   * Fill in the age from the birth year just typed. The engine owns the arithmetic
+   * and the clamp, so the impossible-pair advisory has exactly one wording and the
+   * frontend states no policy of its own.
+   */
+  #deriveAgeFromBirthYear(): void {
+    const sagaYear = this.sagaYear;
+    const birthYear = this.entity.birth_year;
+    if (sagaYear == null || birthYear == null) {
+      // An emptied field derives nothing — the same treatment `setBirthYear` gives
+      // it, rather than dating the character to year 0.
+      this.sagaIssues = [];
+      return;
+    }
+    const seq = ++this.#sagaSeq;
+    void ipc
+      .deriveAge(sagaYear, birthYear)
+      .then((derived) => {
+        if (seq !== this.#sagaSeq) return;
+        // Assigned straight to the entity, not through `setAge`: that setter reads a
+        // non-positive number as "field cleared", while a clamped 0 here is the
+        // derived answer and has to survive.
+        this.entity.age = derived.age;
+        this.sagaIssues = derived.issues;
+        this.#scheduleValidate();
+      })
+      .catch(() => {
+        // Leave the typed birth year standing; the age simply does not follow.
+      });
+  }
+
+  /** The other direction: the birth year follows the age just typed. */
+  #deriveBirthYearFromAge(): void {
+    const sagaYear = this.sagaYear;
+    const age = this.entity.age;
+    if (sagaYear == null || age == null) {
+      this.sagaIssues = [];
+      return;
+    }
+    const seq = ++this.#sagaSeq;
+    void ipc
+      .deriveBirthYear(sagaYear, age)
+      .then((year) => {
+        if (seq !== this.#sagaSeq) return;
+        this.entity.birth_year = year;
+        // Setting the age makes the pair consistent by construction, so whatever the
+        // other direction advised no longer holds.
+        this.sagaIssues = [];
+        this.#scheduleValidate();
+      })
+      .catch(() => {});
   }
 
   /**
@@ -1869,6 +1997,10 @@ class AppStore {
         // character owed says nothing about this one, and the years it already
         // recorded arrive in its own log.
         this.clearAgingDraft();
+        // And the saga-year advisory, which was about the previous character's pair.
+        // Nothing is re-derived for this one: a character built in a 1220 saga and
+        // opened under a 1230 setting keeps both stored values (#25).
+        this.sagaIssues = [];
         // Opening is reachable from any screen, so a load always lands in the
         // editor; a cancelled dialog leaves the current screen alone. A save
         // records no wizard progress, so an opened character is a finished
@@ -1906,6 +2038,7 @@ class AppStore {
     this.childhoodDraft = defaultChildhoodDraft();
     this.clearAgingDraft();
     this.result = null;
+    this.sagaIssues = [];
     this.effective = null;
     this.derived = null;
     this.#savedSnapshot = this.#snapshot();
@@ -1948,6 +2081,7 @@ class AppStore {
     this.childhoodDraft = defaultChildhoodDraft();
     this.clearAgingDraft();
     this.result = null;
+    this.sagaIssues = [];
     this.effective = null;
     this.derived = null;
     this.#savedSnapshot = this.#snapshot();

@@ -1623,6 +1623,18 @@ export interface CompletenessReport {
   incomplete_phases: CreationPhase[];
 }
 
+/**
+ * An age the engine derived from a saga year and a birth year
+ * (`arm_rules::AgeInSagaYear`, guided-creation-review-2026-08 #25).
+ *
+ * `issues` is empty for any pair that can really happen; a saga year before the
+ * birth year clamps `age` to 0 and advises why.
+ */
+export interface AgeInSagaYear {
+  age: number;
+  issues: ValidationIssue[];
+}
+
 export interface ValidationResult {
   issues: ValidationIssue[];
   // Always present on an engine payload; optional here because a result built

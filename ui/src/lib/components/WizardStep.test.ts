@@ -280,4 +280,64 @@ describe('WizardStep', () => {
     expect(note).not.toContain('wizard-guidance-concept');
     expect(note).toContain('Konzept');
   });
+
+  // --- Slice 12 (#24): age has ONE canonical home ---------------------------
+
+  /**
+   * How many times a test-id is rendered across the whole wizard — every phase the
+   * step table declares. The point of the count is that no reader can tell from one
+   * step alone whether the age is offered twice; only the sum can.
+   */
+  function countAcrossSteps(testid: string): number {
+    let seen = 0;
+    for (const [phase] of expected) {
+      seen += [...body(phase).matchAll(new RegExp(`data-testid="${testid}"`, 'g'))].length;
+    }
+    return seen;
+  }
+
+  it('mounts the identity fields and the age together on the concept step', () => {
+    // Mirrors the editor, where `CharacterDetails` mounts `IdentityFields` and then
+    // `AgeFields` immediately after: the age belongs beside the birth year it is now
+    // linked to, not on a step three phases later.
+    const markup = body('concept');
+    expect(markup).toContain('data-testid="identity-concept"');
+    expect(markup).toContain('data-testid="identity-birth-year"');
+    expect(markup).toContain('data-testid="age-input"');
+  });
+
+  it('gives a pool-funded character exactly one age input in the whole wizard', () => {
+    store.entity.ability_funding = 'pool';
+    store.entity.age = 30;
+    // This is the assertion that makes dropping the aging step's copy safe: under
+    // flat funding no other surface offers an age at all, so if Concept ever lost
+    // its field the wizard would have none.
+    expect(countAcrossSteps('age-input')).toBe(1);
+    expect(countAcrossSteps('life-stage-age-input')).toBe(0);
+  });
+
+  it('gives a life-stage-funded character one editable age and one read-only echo', () => {
+    store.entity.ability_funding = 'life_stages';
+    store.entity.life_stages = {};
+    store.entity.age = 30;
+    // A magus carries two ages, not one: the Experience step still needs to show the
+    // age its Gauntlet age is measured against, but it is not a second place to
+    // change it.
+    expect(countAcrossSteps('age-input')).toBe(1);
+    expect(countAcrossSteps('age-readout')).toBe(1);
+    expect(countAcrossSteps('life-stage-age-input')).toBe(0);
+  });
+
+  it('renders the age cap note exactly once, beside the ability lists', () => {
+    store.effective = { age_ability_cap: 5 } as unknown as EffectiveScores;
+    store.entity.age = 30;
+    try {
+      // It used to render on two surfaces at once. Its home is the step whose lists
+      // the cap actually constrains.
+      expect(countAcrossSteps('age-cap-note')).toBe(1);
+      expect(body('abilities')).toContain('data-testid="age-cap-note"');
+    } finally {
+      store.effective = null;
+    }
+  });
 });

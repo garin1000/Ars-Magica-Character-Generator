@@ -4904,6 +4904,52 @@ carry no source citation:
   (`validation/selections.rs` — `validate_entity_kind_applicability` (:83),
   `validate_parameters` (:216), `validate_duplicate_selections` (:107))
 
+### The saga year (Slice 12, #25) — `validation/saga.rs`
+
+**One rules value, wrapped in an editing aid.** The saga year — the calendar year
+the troupe's saga stands in — is **not** a rule and **not** character state. It is a
+saga fact shared by every character in one saga, so it lives in an app-settings file
+owned by `arm-app` (`crates/arm-app/src/settings.rs`, commands `saga_year` /
+`set_saga_year`), never on the entity and never in the ruleset. `arm-rules` gains no
+filesystem dependency from it: the engine holds only the arithmetic and the one
+advisory, and receives the year as a plain argument.
+
+The **default** year, however, IS a rules value, and is the only cited thing here:
+
+> `:597` "That domination persists until the present day, 1220."
+
+Corroborated at `:364` ("much like the Europe of 1220, the middle ages") and `:440`
+("Much like medieval Europe in 1220"). Encoded as
+`arm_rules::DEFAULT_SAGA_YEAR = 1220` in `validation/saga.rs`, read by
+`settings::read_saga_year` whenever there is no stored value — so the number appears
+once, in the engine, and neither the app nor the frontend restates it.
+
+**What it derives, and what it deliberately does not.** `age` and `birth_year` are
+both already stored on the entity, so the saga year adds no state and forces **no
+`SCHEMA_VERSION` bump**. It is the reference the two are linked against while the
+user types: `age_in_saga_year(saga_year, birth_year)` and
+`birth_year_in_saga_year(saga_year, age)`, exposed as the `derive_age` /
+`derive_birth_year` commands so the frontend computes none of it itself. Editing
+either half rewrites the other and dirties the document; **editing the saga year
+rewrites nothing and does not dirty the document.** That is a deliberate refusal, not
+an omission: advancing a character by N years requires an aging roll, Living
+Conditions and any Longevity Ritual applied *per year* (see *Aging*, above), so a
+silent recompute would fabricate ages that skipped their rolls. Saga progression is a
+separate, explicit feature.
+
+The derivation shares the calendar-year approximation the aging engine already makes
+(`aging.rs`, calendar year = `birth_year + age`): birthdays within the year are
+ignored, identically in both directions.
+
+**The one finding.** `birth_year` is `i32` and `age` is `u32`, so a saga year *before*
+the birth year would underflow. It clamps the derived age to 0 and emits
+`saga_year_before_birth_year` — a **warning**, phase `concept`, args `saga_year` and
+`birth_year`, localized as `issue-saga_year_before_birth_year` in both locales. Like
+the three `childhood_slot_*` rows it is listed in the `ValidationIssue` contract table
+but is **not** emitted by `validate`: the saga year never reaches the engine as entity
+data, so only the derivation can raise it. It carries no rulebook citation — no
+passage forbids an impossible date; the clamp exists because the type does.
+
 ### Creation-phase completeness (M6/6b8a) — `completeness.rs`
 
 Which creation phases the player has not engaged with yet. **Product behaviour,
@@ -4930,7 +4976,7 @@ character's own type profile declares, in that declared order:
 | `house_specialisation` | the House is recorded | `:2859` "You receive one free Minor Virtue from your choice of House" |
 | `mythic_type` | the Mythic Companion type is recorded | — |
 | `personality_reputations` | a Personality Trait or a Reputation is recorded | — |
-| `aging` | the age is recorded (every other reading on the step is taken against it) | — |
+| `aging` | the age is recorded (every other reading on the step is taken against it). Since Slice 12 (#24) the age is *entered* on the `concept` step, so this phase reads as engaged before it is opened — which is correct: the choice it needs has been made | — |
 | `review` | always — the closing look at the whole character holds no choices of its own | — |
 
 The House row is the only one resting on a rule, and it is the same choice the

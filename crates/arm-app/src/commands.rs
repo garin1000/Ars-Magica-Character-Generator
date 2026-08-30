@@ -15,6 +15,7 @@ use crate::ruleset_io;
 use crate::ruleset_io::{
     AgingApplication, AgingProjection, AgingReversion, ChildhoodApplication, EffectiveScores,
 };
+use crate::settings;
 
 /// Holds the parsed, localized ruleset so validation does not re-read and
 /// re-check the rules files on every keystroke. `None` until `load_ruleset`
@@ -297,6 +298,52 @@ pub fn derived_totals(
     let guard = ruleset_guard(&state);
     let ruleset = require_loaded(guard.as_ref())?;
     Ok(arm_rules::derived_totals(&entity, &ruleset.ruleset))
+}
+
+/// The settings files to look for, in preference order (see [`settings`] for why
+/// the per-user config directory comes first and the executable's directory is only
+/// a fallback).
+fn settings_candidates(app: &AppHandle) -> Vec<std::path::PathBuf> {
+    let config_dir = app.path().app_config_dir().ok();
+    let exe_dir = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(std::path::Path::to_path_buf));
+    settings::settings_candidates(config_dir.as_deref(), exe_dir.as_deref())
+}
+
+/// The saga year the app is set to — the year the age ↔ birth-year link is measured
+/// against (guided-creation-review-2026-08 #25).
+///
+/// Infallible on purpose: it is read at launch, and a first launch has no settings
+/// file. Everything that could go wrong reads as [`arm_rules::DEFAULT_SAGA_YEAR`].
+#[tauri::command]
+pub fn saga_year(app: AppHandle) -> i32 {
+    let candidates = settings_candidates(&app);
+    settings::read_saga_year(settings::pick_settings_file(&candidates).as_deref())
+}
+
+/// Persists the saga year. Saga state, so it survives a relaunch — but it is not
+/// document state, so it neither touches the entity nor dirties it.
+#[tauri::command]
+pub fn set_saga_year(year: i32, app: AppHandle) -> Result<(), AppError> {
+    settings::store_saga_year(&settings_candidates(&app), year).map(|_| ())
+}
+
+/// How old a character born in `birthYear` is in `sagaYear`, plus any advisory the
+/// pair warrants (a saga year before the birth year clamps the age to 0).
+///
+/// The engine's [`arm_rules::age_in_saga_year`] does the work: the clamp policy and
+/// the finding have one home, and the frontend computes no mechanics of its own.
+#[tauri::command]
+pub fn derive_age(saga_year: i32, birth_year: i32) -> arm_rules::AgeInSagaYear {
+    arm_rules::age_in_saga_year(saga_year, birth_year)
+}
+
+/// Which year a character aged `age` in `sagaYear` was born in — the other view of
+/// the same fact as [`derive_age`].
+#[tauri::command]
+pub fn derive_birth_year(saga_year: i32, age: u32) -> i32 {
+    arm_rules::birth_year_in_saga_year(saga_year, age)
 }
 
 /// E2E seam: when set, save/load use this fixed path instead of opening a

@@ -87,10 +87,15 @@ describe('AgingStep (slice 6b6c)', () => {
     expect(has(body, 'longevity-hint')).toBe(false);
   });
 
-  it('still mounts the age and the aging surface it shares with the editor', () => {
+  it('mounts the aging surface it shares with the editor, and no age field', () => {
     // The ritual joins the step; it does not displace what was already there.
     const body = html();
-    expect(has(body, 'age-input')).toBe(true);
     expect(has(body, 'aging-panel')).toBe(true);
+    // Slice 12 (#24): the age moved to the Concept step, beside the birth year it is
+    // linked to, and this step no longer carries a second copy of it. Safe only
+    // because Concept supplies one under BOTH funding models — `WizardStep.test.ts`
+    // counts the age inputs across the whole wizard and asserts exactly one.
+    expect(has(body, 'age-input')).toBe(false);
+    expect(has(body, 'age-readout')).toBe(false);
   });
 });

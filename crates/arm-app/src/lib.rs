@@ -12,3 +12,4 @@
 pub mod commands;
 pub mod error;
 pub mod ruleset_io;
+pub mod settings;

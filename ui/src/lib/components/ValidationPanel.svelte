@@ -18,7 +18,13 @@
   // identical `missing_param`, and rendering them under one key would crash the
   // keyed list. Dedup keeps the panel correct and quiet.
   const issues = $derived.by(() => {
-    const all = store.result?.issues ?? [];
+    // `sagaIssues` rides on the same list as the engine's own findings. It is not a
+    // reading of the entity — `validate` cannot emit it, because the saga year it
+    // compares against is app state that never reaches the engine as entity data —
+    // but it is a finding about the character in front of the user, carries a phase
+    // like any other, and localizes through the same `issue-<code>` catalogue, so
+    // showing it anywhere else would just be a second findings panel.
+    const all = [...(store.result?.issues ?? []), ...store.sagaIssues];
     const scoped = phase ? issuesForPhase(all, phase) : all;
     const seen = new Set<string>();
     const unique = [];

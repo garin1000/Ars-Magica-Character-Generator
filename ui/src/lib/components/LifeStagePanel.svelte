@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store, type AbilityFunding } from '../state.svelte';
+  import AgeFields from './AgeFields.svelte';
   import ChildhoodPackagePicker from './ChildhoodPackagePicker.svelte';
 
   // Where the character's experience comes from: one total the player enters, or
@@ -20,9 +21,11 @@
   // came at. So the age means something different for a magus than for anyone else,
   // which the note below says in words.
   const isMagus = $derived(typeProfile?.is_magus ?? false);
+  // Read here only as the Gauntlet-age field's placeholder — the age itself is
+  // edited on the Details tab / Concept step and shown here read-only through
+  // `AgeFields` (Slice 12, #24). The age→Ability-score cap moved to the Abilities
+  // surface, beside the lists it constrains.
   const age = $derived(store.entity.age ?? null);
-  // The engine's age→max-Ability-score cap, echoed read-only beside the age.
-  const ageCap = $derived(store.effective?.age_ability_cap ?? null);
   const nativeLanguage = $derived(store.entity.life_stages?.native_language ?? '');
 
   // The years after the Gauntlet are worth what the DATA says (30 points a year, 10
@@ -51,11 +54,6 @@
 
   function hintId(option: AbilityFunding): string {
     return `ability-funding-${option}-hint`;
-  }
-
-  function onAge(event: Event) {
-    const raw = (event.currentTarget as HTMLInputElement).value;
-    store.setAge(raw === '' ? null : Number(raw));
   }
 
   function onNativeLanguage(event: Event) {
@@ -93,19 +91,15 @@
     </fieldset>
 
     {#if guided}
-      <!-- Age is edited here as well as on the Details tab (and, since 6b6, on the
-           guided aging step through `AgeFields`). Both surfaces read and write the one
-           `entity.age`, so they cannot diverge — and the guided flow needs it here,
-           because later life's experience is (age - childhood years) × rate.
-
-           Slice 6b8c settled whether to consolidate them: no. There is one input
-           conceptually, rendered wherever the age is load-bearing, and the two places
-           it is load-bearing are far apart — this panel prices the years, the aging
-           surface schedules the rolls. They are never on screen together (different
-           tabs in the editor, different steps in the wizard), and removing either
-           would take the age away from a surface that cannot work without it: without
-           this one the guided funding panel could not be priced, and without
-           `AgeFields` a flat-funded character has no age input anywhere at all. -->
+      <!-- Slice 12 (#24) ended the duplication this panel used to carry. It had its
+           own `life-stage-age-input`, a second editable copy of the one `entity.age`,
+           because later life's experience is (age - childhood years) × rate and the
+           panel had to be priceable. The age now has ONE canonical home — beside the
+           identity it belongs with, on the editor's Details tab and the wizard's
+           Concept step alike — so what is left here is `AgeFields` in `readonly`
+           mode: the age is still shown, because a magus carries two ages and the
+           Gauntlet age below is measured against this one, but it is no longer a
+           second place to change it. -->
       {#if isMagus}
         <!-- Announced, and placed above the two age inputs it explains: a magus has an
              age AND a Gauntlet age, and neither field can say for itself which is
@@ -115,24 +109,7 @@
         </p>
       {/if}
       <div class="life-stage-fields">
-        <label class="field inline">
-          <span>{store.t('life-stage-age-label')}</span>
-          <input
-            type="number"
-            min="1"
-            max="4294967295"
-            value={age ?? ''}
-            oninput={onAge}
-            data-testid="life-stage-age-input"
-          />
-        </label>
-        {#if ageCap != null}
-          <!-- Announced: it changes in response to the age edit beside it. Reuses the
-               Details tab's own key, so one rule keeps one wording. -->
-          <span class="age-cap" role="status" data-testid="life-stage-age-cap">
-            {store.t('age-cap-note', { cap: String(ageCap) })}
-          </span>
-        {/if}
+        <AgeFields readonly />
         {#if showPostGauntlet}
           <!-- In the same wrapping row as the age, deliberately. On the wizard's own
                `experience` step (Slice 2) the panel has the step to itself, but it is

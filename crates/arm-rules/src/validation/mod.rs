@@ -29,6 +29,7 @@ mod life_stage;
 mod magus;
 mod might;
 mod prereq;
+mod saga;
 mod scores;
 mod selections;
 mod warping;
@@ -49,6 +50,7 @@ use warping::*;
 pub use aging::aging_error_issue;
 pub use balance::{Balance, PointCeilings, compute_balance, effective_point_ceilings};
 pub use life_stage::childhood_rejection_issues;
+pub use saga::{AgeInSagaYear, DEFAULT_SAGA_YEAR, age_in_saga_year, birth_year_in_saga_year};
 
 /// Whether a validation issue blocks (`Error`) or merely advises (`Warning`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -98,6 +100,13 @@ impl fmt::Display for IssueSeverity {
 /// application writes nothing. They are listed here all the same: the UI localizes
 /// them through the same `issue-<code>` catalogue.
 ///
+/// One further row, `saga_year_before_birth_year`, describes neither: it comes only
+/// from [`age_in_saga_year`], which derives one half of the stored age/birth-year
+/// pair from the other. [`validate`] cannot emit it, because the saga year it
+/// compares against is app-level saga state that never reaches the engine as entity
+/// data (see [`saga`]). It is listed for the same reason as the three above — the UI
+/// localizes it through the same catalogue.
+///
 /// An arg marked **(opt)** is present only when the rules data states it. The
 /// `issue-<code>` Fluent message must therefore not interpolate it directly (Fluent
 /// reports a missing variable): `exemplar` is folded into the `ability` label by the
@@ -105,6 +114,7 @@ impl fmt::Display for IssueSeverity {
 ///
 /// | `code` | severity | phase | `args` keys |
 /// |--------|----------|-------|-------------|
+/// | `saga_year_before_birth_year` | warning | concept | `saga_year`, `birth_year` |
 /// | `unknown_type` | error | review | `type_id` |
 /// | `unknown_ref` | error | virtues_flaws | `item` |
 /// | `wrong_entity_kind` | error | virtues_flaws | `item`, `entity_kind` |
@@ -225,9 +235,10 @@ impl fmt::Display for IssueSeverity {
 /// virtue cap produces `too_many_major_hermetic_virtues` (error); a new category
 /// requires its matching `issue-<code>` Fluent key.
 ///
-/// Two phases appear in no row: `concept` (free text — nothing to violate) and
-/// `type` (fixed at creation; a bad one is `unknown_type`, a `review` finding).
-/// The test pins that list, so the first code filed under either must update it.
+/// Every creation phase now appears in some row. `concept` was the last exception —
+/// free text with nothing to violate — until Slice 12 linked the age to the birth
+/// year, which put an arithmetic advisory on that step. The test pins the (now
+/// empty) exception list, so removing the last `concept` code must update it again.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ValidationIssue {
     /// Error or warning.
@@ -268,6 +279,12 @@ impl ValidationIssue {
     /// derived from data at runtime and so deliberately have no const here (see
     /// the issue-code contract table above).
     pub const CODE_UNKNOWN_TYPE: &'static str = "unknown_type";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: the saga year is before
+    /// the character's birth year, so it is not yet born and the derived age clamps
+    /// to 0 rather than underflowing (`age` is `u32`). Emitted by
+    /// [`age_in_saga_year`], never by [`validate`] — the saga year is app-level saga
+    /// state, not entity data.
+    pub const CODE_SAGA_YEAR_BEFORE_BIRTH_YEAR: &'static str = "saga_year_before_birth_year";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_UNKNOWN_REF: &'static str = "unknown_ref";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
@@ -2898,12 +2915,14 @@ mod tests {
         );
     }
 
-    /// Phases no issue code can name, because they hold no rule the engine checks:
-    /// the concept step is free text throughout. (A character type the ruleset has
-    /// no profile for is `unknown_type`, a `review` finding — the type is fixed
-    /// before creation starts and has no step of its own.) Asserted below, so the
-    /// first code filed under it forces this note to be updated.
-    const PHASES_WITH_NO_CODES: [CreationPhase; 1] = [CreationPhase::Concept];
+    /// Phases no issue code can name. Empty since Slice 12: `concept` was the last
+    /// one — free text throughout, with nothing to violate — until the age was
+    /// linked to the birth year and `saga_year_before_birth_year` gave that step an
+    /// advisory of its own. (A character type the ruleset has no profile for is
+    /// `unknown_type`, a `review` finding — the type is fixed before creation starts
+    /// and has no step of its own.) Asserted below, so removing the last code filed
+    /// under a phase forces this note to be updated.
+    const PHASES_WITH_NO_CODES: [CreationPhase; 0] = [];
 
     /// The contract table's phase column is a real part of the frontend contract —
     /// the wizard filters steps on it — so it may not drift from the emit sites or
