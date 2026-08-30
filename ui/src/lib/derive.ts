@@ -461,34 +461,61 @@ export interface IndexedSelection {
   index: number;
 }
 
+/**
+ * One row of a grouped V/F list: either a selection the player bought, carrying
+ * its original `entity.selections` index for the index-addressed mutators, or a
+ * read-only engine-granted one, carrying its position in the `granted` list it
+ * was passed in (per side, since the caller splits the grants by side first).
+ *
+ * The granted position is load-bearing, not decoration: the engine concatenates
+ * House, Mythic Companion, `grants_selection` and warping grants WITHOUT dedup
+ * (`effective.rs` `entity_grants`), so the same `ref` can arrive twice and only
+ * the position tells the two rows apart.
+ */
+export type SelectionRow =
+  | { kind: 'sel'; selection: Selection; index: number }
+  | { kind: 'granted'; selection: Selection; grantIndex: number };
+
 export interface SelectionGroup {
   category: string;
-  entries: IndexedSelection[];
+  rows: SelectionRow[];
 }
 
 /**
- * Chosen Virtue/Flaw selections grouped by category and alpha-sorted within each
- * group, mirroring the source picker's grouping (`groupByCategory`). Each entry
- * keeps its original `entity.selections` index so edit/remove wiring stays
- * correct after the reorder; entries whose item ref is unknown are dropped.
- * Categories order the same way as the source list (by category id).
+ * Virtue/Flaw rows grouped by category and alpha-sorted by localized name within
+ * each group, mirroring the source picker's grouping (`groupByCategory`).
+ * Categories order the same way as the source list (by category id); rows whose
+ * item ref is unknown are dropped.
+ *
+ * Bought and `granted` rows are grouped and sorted TOGETHER, each under its own
+ * item's category (guided-creation-review-2026-08 #9). Granted rows used to be
+ * appended as a header-less group of their own, which put them under whichever
+ * category heading happened to sort last — a Hermetic granted Virtue read as
+ * Supernatural. A granted row is ordered like any other row; only its marker and
+ * the absent remove button distinguish it, exactly as for a `Required` row.
+ * Equal-name ties keep bought before granted (the sort is stable).
  */
 export function groupSelectionsByCategory(
   localized: LocalizedRuleset,
   entries: IndexedSelection[],
+  granted: Selection[] = [],
 ): SelectionGroup[] {
-  const groups = new Map<string, IndexedSelection[]>();
-  for (const entry of entries) {
-    const item = localized.ruleset.point_items[entry.selection.ref];
-    if (!item) continue;
+  const groups = new Map<string, SelectionRow[]>();
+  const add = (row: SelectionRow): void => {
+    const item = localized.ruleset.point_items[row.selection.ref];
+    if (!item) return;
     const list = groups.get(item.category) ?? [];
-    list.push(entry);
+    list.push(row);
     groups.set(item.category, list);
+  };
+  for (const entry of entries) {
+    add({ kind: 'sel', selection: entry.selection, index: entry.index });
   }
+  granted.forEach((selection, grantIndex) => add({ kind: 'granted', selection, grantIndex }));
   return [...groups.entries()]
-    .map(([category, list]) => ({
+    .map(([category, rows]) => ({
       category,
-      entries: list.sort((a, b) =>
+      rows: rows.sort((a, b) =>
         localizedSortKey(localized, a.selection.ref).localeCompare(
           localizedSortKey(localized, b.selection.ref),
         ),
@@ -562,9 +589,12 @@ export function sameSelection(a: Selection, b: Selection): boolean {
 }
 
 /**
- * House-granted selections that belong on one V/F side (virtue/boon vs
+ * Engine-granted selections that belong on one V/F side (virtue/boon vs
  * flaw/hook), by resolving each grant's kind against the ruleset. Grants whose
- * item is unknown are dropped. Rendered read-only in the selected list.
+ * item is unknown are dropped. Rendered read-only, but grouped and ordered like
+ * any other row — {@link groupSelectionsByCategory} takes these as its third
+ * argument. Order is preserved, because a grant's POSITION is what tells two
+ * grants of the same ref apart.
  */
 export function grantedSelectionsForSide(
   localized: LocalizedRuleset,

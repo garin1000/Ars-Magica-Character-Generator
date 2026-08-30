@@ -101,6 +101,85 @@ describe('hermetic houses', () => {
     expect(clean(await balance.getText())).toBe(before);
   });
 
+  // guided-creation-review-2026-08 #9: the granted rows used to be appended as a
+  // HEADER-LESS group below the chosen ones, so they appeared under whichever
+  // category heading happened to sort last — a Hermetic granted Virtue read as
+  // Supernatural. They now join the ordinary category-grouped list.
+  //
+  // The heading is compared against the row's OWN category badge rather than a
+  // hardcoded word, so the assertion holds in either locale and names no label.
+  it('lists a granted Virtue under its own category heading, inline with the bought rows', async () => {
+    await startCharacter('magus');
+    // Bjornaer grants Heartbeast, a MINOR HERMETIC Virtue.
+    await selectHouse('house.bjornaer');
+
+    await $(VF_TAB).click();
+    // Buy a Hermetic Virtue too, so the granted row has a bought neighbour inside
+    // its own group and "inline with the bought rows" is actually observable.
+    const add = await $('[data-testid="add-virtue.hermetic_prestige"]');
+    await add.waitForExist({ timeout: 10000 });
+    await add.waitForClickable({ timeout: 10000 });
+    await add.click();
+
+    const granted = await $('[data-testid^="granted-selection-virtue.heartbeast"]');
+    await granted.waitForExist({ timeout: 10000 });
+
+    // Read the group the granted row actually sits in. `closest('ul')` plus a walk
+    // back over the previous siblings is the only way to tell "under this heading"
+    // from "after this heading": the bug was precisely a row rendering in a list
+    // that had no heading of its own.
+    const group = await browser.waitUntil(
+      async () => {
+        const info = await browser.execute(() => {
+          const row = document.querySelector(
+            '[data-testid^="granted-selection-virtue.heartbeast"]',
+          );
+          if (!row) return null;
+          const list = row.closest('ul');
+          if (!list) return null;
+          let heading = null;
+          for (let node = list.previousElementSibling; node; node = node.previousElementSibling) {
+            // A preceding <ul> means this list has no heading of its own — the
+            // header-less group that #9 removed.
+            if (node.tagName === 'UL') break;
+            if (node.tagName === 'H3') {
+              heading = node.textContent.trim();
+              break;
+            }
+          }
+          const rows = [...list.children];
+          return {
+            heading,
+            category: row.querySelector('.badge.type')?.textContent.trim() ?? null,
+            marker: row.querySelector('.row-marker')?.textContent.trim() ?? '',
+            hasRemoveButton: row.querySelector('button') !== null,
+            // Rows the player bought carry a remove button; the granted one does not.
+            boughtNeighbours: rows.filter((li) => li !== row && li.querySelector('button')).length,
+            names: rows.map((li) => li.querySelector('.item-name')?.textContent.trim() ?? ''),
+          };
+        });
+        return info && info.category ? info : false;
+      },
+      {
+        timeout: 10000,
+        timeoutMsg: 'the granted Virtue row never rendered with its category badge',
+      },
+    );
+
+    // Its group's heading IS its own category — not whatever sorted last.
+    expect(clean(group.heading ?? '')).toBe(clean(group.category));
+    // Inline with the bought rows of that same category …
+    expect(group.boughtNeighbours).toBeGreaterThan(0);
+    // … and alpha-ordered among them: Heartbeast before Hermetic Prestige.
+    const names = group.names.map(clean);
+    expect(names.findIndex((n) => n.includes('Heartbeast'))).toBeLessThan(
+      names.findIndex((n) => n.includes('Hermetic Prestige')),
+    );
+    // The "Granted" marker is the row's only distinction: no remove button.
+    expect(group.marker.length).toBeGreaterThan(0);
+    expect(group.hasRemoveButton).toBe(false);
+  });
+
   it('seeds a Mystery Ability at an effective floor of 1 — Merinita → Faerie Magic', async () => {
     await startCharacter('magus');
     await selectHouse('house.merinita');

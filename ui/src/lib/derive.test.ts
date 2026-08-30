@@ -1638,6 +1638,13 @@ describe('groupSelectionsByCategory', () => {
     },
   );
 
+  /** The bought rows' entity indices, for a group. */
+  function boughtIndices(group: {
+    rows: { kind: string; index?: number }[];
+  }): (number | undefined)[] {
+    return group.rows.filter((r) => r.kind === 'sel').map((r) => r.index);
+  }
+
   it('groups selections by category and sorts each group by localized name', () => {
     // add-order: Zeal (general), Verditius (hermetic), Affinity (general).
     const entries = [
@@ -1648,13 +1655,66 @@ describe('groupSelectionsByCategory', () => {
     const groups = groupSelectionsByCategory(rs, entries);
     expect(groups.map((g) => g.category)).toEqual(['general', 'hermetic']);
     // general sorted by name: Affinity (idx 2) before Zeal (idx 0).
-    expect(groups[0].entries.map((e) => e.index)).toEqual([2, 0]);
-    expect(groups[1].entries.map((e) => e.index)).toEqual([1]);
+    expect(boughtIndices(groups[0])).toEqual([2, 0]);
+    expect(boughtIndices(groups[1])).toEqual([1]);
   });
 
   it('drops entries whose item ref is unknown', () => {
     const groups = groupSelectionsByCategory(rs, [{ selection: { ref: 'nope' }, index: 0 }]);
     expect(groups).toEqual([]);
+  });
+
+  // guided-creation-review-2026-08 #9: granted V/F used to be pushed into a
+  // header-less group of their own BELOW the chosen ones, which put them under
+  // whichever category heading happened to sort last — a Hermetic granted Virtue
+  // read as Supernatural. They belong to their OWN category, like any other row.
+  it('places a granted selection in its own category', () => {
+    const groups = groupSelectionsByCategory(
+      rs,
+      [{ selection: { ref: 'virtue.zeal' }, index: 0 }],
+      [{ ref: 'virtue.verditius' }],
+    );
+    expect(groups.map((g) => g.category)).toEqual(['general', 'hermetic']);
+    expect(groups[1].rows).toEqual([
+      { kind: 'granted', selection: { ref: 'virtue.verditius' }, grantIndex: 0 },
+    ]);
+  });
+
+  // A granted row is ordered like any other row, so the within-group sort must
+  // cover both kinds — otherwise the granted ones clump at one end of the group
+  // and the list stops being alphabetical.
+  it('sorts granted and bought rows together by localized name', () => {
+    const groups = groupSelectionsByCategory(
+      rs,
+      [{ selection: { ref: 'virtue.zeal' }, index: 0 }],
+      [{ ref: 'virtue.affinity' }],
+    );
+    expect(groups.map((g) => g.category)).toEqual(['general']);
+    // Affinity (granted) sorts before Zeal (bought) — by name, not by kind.
+    expect(groups[0].rows).toEqual([
+      { kind: 'granted', selection: { ref: 'virtue.affinity' }, grantIndex: 0 },
+      { kind: 'sel', selection: { ref: 'virtue.zeal' }, index: 0 },
+    ]);
+  });
+
+  // The engine concatenates House, Mythic Companion, `grants_selection` and
+  // warping grants without dedup (`effective.rs` `entity_grants`), so the same
+  // ref can arrive twice. Both rows must survive, each with its own position, so
+  // the caller can key them apart (a duplicate `{#each}` key throws).
+  it('keeps each granted row of a doubly-granted ref, with its own position', () => {
+    const groups = groupSelectionsByCategory(
+      rs,
+      [],
+      [{ ref: 'virtue.verditius' }, { ref: 'virtue.verditius' }],
+    );
+    expect(groups[0].rows).toEqual([
+      { kind: 'granted', selection: { ref: 'virtue.verditius' }, grantIndex: 0 },
+      { kind: 'granted', selection: { ref: 'virtue.verditius' }, grantIndex: 1 },
+    ]);
+  });
+
+  it('drops a granted row whose item ref is unknown', () => {
+    expect(groupSelectionsByCategory(rs, [], [{ ref: 'nope' }])).toEqual([]);
   });
 });
 

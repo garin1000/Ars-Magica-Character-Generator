@@ -164,6 +164,76 @@ describe('app.css', () => {
   // `.vf-tab` (which is `width: 100%` and stretches them). Centring the panel ITSELF
   // makes the two mounts agree by construction, rather than by what happens to wrap
   // it. Auto inline margins centre it in both a flex column and ordinary flow.
+  // guided-creation-review-2026-08 #6: `ValidationPanel.svelte` emits the bare
+  // severity as a class (`<li class="issue error">`), and app.css also carried a
+  // standalone one-word `.error { color; font-size }` rule written for BANNER text
+  // (StartScreen's load failure). Both matched the row, and since `.issue` set
+  // neither property, the banner rule won BY DEFAULT — error rows rendered smaller
+  // and red-tinted while warning rows, having no `.warning` twin, did not. Severity
+  // is meant to live in the left border, the background tint and the uppercase
+  // badge, all of which are per-severity by design.
+  it('gives every issue row its own typography, whatever its severity', () => {
+    const block = /^\.issue\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block).not.toBeNull();
+    // Declared HERE, so no same-specificity rule elsewhere can supply them.
+    expect(block![1]).toMatch(/font-size:/);
+    expect(block![1]).toMatch(/color:/);
+    // The per-severity rules stay colour/tint only — adding typography to either
+    // would reintroduce the size difference from the other direction.
+    const error = /^\.issue\.error\s*\{([^}]*)\}/m.exec(appCss);
+    const warning = /^\.issue\.warning\s*\{([^}]*)\}/m.exec(appCss);
+    expect(error).not.toBeNull();
+    expect(warning).not.toBeNull();
+    for (const severity of [error![1], warning![1]]) {
+      expect(severity).not.toMatch(/font-size:/);
+      // `border-left-color` is the colour channel and is expected; a plain
+      // `color:` (the text colour) is what must not differ between severities.
+      expect(severity).not.toMatch(/[^-]color:/);
+    }
+  });
+
+  // The other half of #6: a bare one-word class carrying typography will keep
+  // colliding with any severity-named class. The banner rule must be scoped to the
+  // banners it was written for (or renamed), so no `.error`/`.warning` word class
+  // can pick it up by accident again.
+  it('never carries typography on a bare one-word severity class', () => {
+    expect(appCss).not.toMatch(/^\.error\s*\{/m);
+    expect(appCss).not.toMatch(/^\.warning\s*\{/m);
+  });
+
+  // guided-creation-review-2026-08 #8: the row separator was a `border-bottom` with
+  // a `:last-child { border-bottom: none }` suppression. `:last-child` is scoped per
+  // PARENT, and `SelectionList.svelte` opens a new `<ul>` per group — so the
+  // suppression fired once per group instead of once per list. A HEADER-LESS group
+  // (Spells' unknown Te/Fo bucket, Equipment's unclassified bucket) therefore butted
+  // straight against its neighbour with no divider at all, because a header-less
+  // group has no `<h3 class="category">` to draw its own boundary.
+  //
+  // The separator is now a `border-top` on rows after the first, which needs no
+  // last-child exception, plus a boundary rule on adjacent lists — `ul + ul` matches
+  // only when nothing sits between the two lists, i.e. exactly the header-less case.
+  it('separates list rows without a per-parent last-child exception', () => {
+    // No list may suppress its separator via `:last-child` again — that selector is
+    // the bug, not the fix.
+    expect(appCss).not.toMatch(/li:last-child\s*,?\s*(\n[^{]*)?\{[^}]*border-bottom:\s*none/);
+    for (const list of ['item-list', 'selection-list', 'equipment-list']) {
+      // One selector per line, ending in a comma or opening the block.
+      const rows = new RegExp(`^\\.${list} li \\+ li(,| \\{)$`, 'm');
+      expect(appCss).toMatch(rows);
+    }
+  });
+
+  it('draws a boundary between two adjacent header-less lists', () => {
+    // One rule for every grouped list, so a fourth list class cannot be added with
+    // the boundary silently missing.
+    const block =
+      /^\.selection-list \+ \.selection-list,\n\.spell-list \+ \.spell-list,\n\.equipment-list \+ \.equipment-list\s*\{([^}]*)\}/m.exec(
+        appCss,
+      );
+    expect(block).not.toBeNull();
+    expect(block![1]).toMatch(/border-top:/);
+  });
+
   it('centres the characteristics panel itself, in either mount', () => {
     const block = /^\.char-panel\s*\{([^}]*)\}/m.exec(appCss);
     expect(block).not.toBeNull();

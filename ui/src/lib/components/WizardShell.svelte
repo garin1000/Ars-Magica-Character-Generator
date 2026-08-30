@@ -51,9 +51,17 @@
             {store.t(`phase-${phase}`)}
             <!-- Inside the button, so the marker is part of its accessible name:
                  `data-incomplete` alone would be styling only. The test id avoids
-                 the `wizard-step-` prefix, which names the rail's steps. -->
+                 the `wizard-step-` prefix, which names the rail's steps.
+
+                 SCREEN-READER-ONLY (guided-creation-review-2026-08 #10): the flag is
+                 the engine's `completeness.incomplete_phases`, not "step not opened
+                 yet", so on a fresh character EVERY step carried the words at once —
+                 noise on the surface that has to stay scannable. `.sr-only` is the
+                 right utility rather than `.hidden-reserved`: this marker must still
+                 be ANNOUNCED and must take no space, the opposite trade to the
+                 on-step hint below. The Fluent key is kept, not deleted. -->
             {#if incomplete(phase)}
-              <span class="wizard-rail-incomplete" data-testid="wizard-incomplete-{phase}">
+              <span class="sr-only" data-testid="wizard-incomplete-{phase}">
                 {store.t('wizard-step-incomplete-label')}
               </span>
             {/if}

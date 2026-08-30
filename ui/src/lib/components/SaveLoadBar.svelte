@@ -71,6 +71,6 @@
     </button>
   {/if}
   {#if errorText}
-    <span class="error" role="alert" data-testid="error">{errorText}</span>
+    <span class="error-banner" role="alert" data-testid="error">{errorText}</span>
   {/if}
 </div>

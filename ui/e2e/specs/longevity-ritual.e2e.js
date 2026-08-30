@@ -57,7 +57,18 @@ async function hintText() {
 async function reach(selector) {
   const element = await $(selector);
   await element.waitForExist({ timeout: 10000 });
-  await element.scrollIntoView();
+  // `block: 'center'`, not the default. A bare `scrollIntoView()` aligns to the
+  // NEAREST edge, which in a short scrollport can leave the element's centre still
+  // outside the visible box — and the centre is the point WebKitWebDriver hit-tests,
+  // so the interaction is refused even though the element is on screen. The aging
+  // surfaces nest three scrollports (see #34 in the plan), so the innermost is short
+  // enough for that to happen here.
+  await element.scrollIntoView({ block: 'center' });
+  // And clickable, not merely existing and scrolled: this helper's whole promise is
+  // that the caller can interact with what it returns. `longevity-bonus` failed this
+  // way in three specs across three slices — `aging-crisis`, `aging`, and this one —
+  // so the wait belongs in the shared helper rather than at each call site.
+  await element.waitForClickable({ timeout: 10000 });
   return element;
 }
 

@@ -92,6 +92,37 @@ describe('guided creation wizard', () => {
     await expect($('[data-testid="wizard-incomplete-hint"]')).toExist();
     expect(await $(NEXT).isEnabled()).toBe(true);
 
+    // guided-creation-review-2026-08 #10: the rail's per-step marker is now
+    // SCREEN-READER-ONLY. The flag is `completeness.incomplete_phases`, not "step
+    // not opened", so on a fresh character every step carried the words at once.
+    // It must still be announced — it is the marker's text, inside the button, that
+    // puts "not started" in the step's accessible name — so it is hidden by clipping
+    // it to a 1px box, never by leaving the accessibility tree.
+    const railMarker = await browser.execute(() => {
+      const marker = document.querySelector('[data-testid="wizard-incomplete-concept"]');
+      if (!marker) return null;
+      const box = marker.getBoundingClientRect();
+      const style = getComputedStyle(marker);
+      return {
+        width: box.width,
+        height: box.height,
+        text: (marker.textContent ?? '').trim(),
+        display: style.display,
+        visibility: style.visibility,
+        insideStepButton: marker.closest('button')?.dataset.testid ?? null,
+      };
+    });
+    // Takes no visible space …
+    expect(railMarker.width).toBeLessThanOrEqual(1);
+    expect(railMarker.height).toBeLessThanOrEqual(1);
+    // … but is still rendered, still worded, and still part of the step button's
+    // accessible name. `display: none` / `visibility: hidden` would drop it from the
+    // accessibility tree and leave `data-incomplete` a styling-only channel.
+    expect(railMarker.display).not.toBe('none');
+    expect(railMarker.visibility).toBe('visible');
+    expect(railMarker.text.length).toBeGreaterThan(0);
+    expect(railMarker.insideStepButton).toBe('wizard-step-concept');
+
     // The step also says what is decided on it, in the rules' own terms — real
     // prose from the locale, never the Fluent key echoed back.
     const conceptGuidance = clean(await $(GUIDANCE).getText());

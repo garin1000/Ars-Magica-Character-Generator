@@ -55,6 +55,19 @@ function validationBody(body: string): string {
   return match[1];
 }
 
+/** The `<li>` start tag for one issue code. */
+function issueTag(body: string, code: string): string {
+  const match = new RegExp(`<li[^>]*data-code="${code}"[^>]*>`).exec(body);
+  if (!match) throw new Error(`no <li> for code ${code}`);
+  return match[0];
+}
+
+/** The class tokens on a start tag. */
+function classesOf(tag: string): string[] {
+  const match = /class="([^"]*)"/.exec(tag);
+  return match ? match[1].split(/\s+/).filter(Boolean) : [];
+}
+
 /** `app.css` as text, for the rules no server-rendered markup can reveal. */
 const appCss = readFileSync(fileURLToPath(new URL('../../app.css', import.meta.url)), 'utf-8');
 
@@ -202,6 +215,45 @@ describe('ValidationPanel', () => {
     // Without the `min-height` the shared wrapper is only structural: the box
     // must be floored to one issue row so the empty state fills it too.
     expect(appCss).toMatch(/\.validation-body\s*{[^}]*min-height:/);
+  });
+
+  // guided-creation-review-2026-08 #6: the row's class list is `issue` plus the
+  // BARE severity word, and app.css also carried a standalone `.error { color;
+  // font-size }` rule written for banner text. Since `.issue` set neither, the
+  // banner rule won by default — not by specificity — so Error rows rendered
+  // smaller and red-tinted while Warning rows, having no twin, did not.
+  //
+  // The assertion is deliberately markup-AND-stylesheet: it walks the classes the
+  // component actually emits and checks that none of them (other than the shared
+  // `.issue`) carries typography anywhere in app.css. That is the invariant that
+  // was broken, and it keeps biting if a `.warning` twin is added later.
+  it('gives error and warning rows the same typographic classes', () => {
+    const body = render(ValidationPanel).body;
+    const errorClasses = classesOf(issueTag(body, 'unbalanced_virtues'));
+    const warningClasses = classesOf(issueTag(body, 'characteristic_points_unspent'));
+
+    // The two rows differ only in their severity modifier.
+    expect(errorClasses.filter((c) => c !== 'error')).toEqual(
+      warningClasses.filter((c) => c !== 'warning'),
+    );
+
+    // Typography comes from the shared class both rows carry …
+    expect(errorClasses).toContain('issue');
+    const shared = /^\.issue\s*{([^}]*)}/m.exec(appCss);
+    expect(shared).not.toBeNull();
+    expect(shared![1]).toMatch(/font-size:/);
+    expect(shared![1]).toMatch(/color:/);
+
+    // … and from nothing else either row can pick up. A bare one-word class rule
+    // matches the row at the same specificity as `.issue`, so whichever comes last
+    // wins — which is how a banner style ended up sizing a validation row.
+    for (const cls of new Set([...errorClasses, ...warningClasses])) {
+      if (cls === 'issue') continue;
+      const rule = new RegExp(`^\\.${cls}\\s*{([^}]*)}`, 'm').exec(appCss);
+      if (!rule) continue;
+      expect(rule[1]).not.toMatch(/font-size:/);
+      expect(rule[1]).not.toMatch(/[^-]color:/);
+    }
   });
 
   it('localizes the visible severity label to German', () => {
