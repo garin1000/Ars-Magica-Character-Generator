@@ -493,6 +493,26 @@ pub(crate) fn validate_spells(
                 ]),
                 None,
             ));
+        } else if used < budget {
+            // guided-creation-review-2026-08 #30, the spell-levels half. Same
+            // budget, same step, opposite direction — and read off the same
+            // `spell_levels_budget` above, so the pair cannot disagree about what
+            // the budget is.
+            //
+            // Factual, exactly as `general_xp_unspent`. "Take 120 levels of spells"
+            // (Ars Magica - Definitive Edition (Core Rules).md:2215) grants the
+            // levels; the source nowhere says unused levels are lost, so the
+            // message reports the count and asserts nothing further.
+            issues.push(ValidationIssue::warning(
+                ValidationIssue::CODE_SPELL_LEVELS_UNSPENT,
+                CreationPhase::Spells,
+                args([
+                    ("used", used.to_string()),
+                    ("budget", budget.to_string()),
+                    ("unspent", (budget - used).to_string()),
+                ]),
+                None,
+            ));
         }
     }
 }
@@ -634,6 +654,41 @@ pub(crate) fn validate_xp_pool(
                 (
                     "shortfall",
                     (allocation.total_demand - allocation.max_flow).to_string(),
+                ),
+            ]),
+            None,
+        ));
+    } else if allocation.general_used < allocation.general_pool {
+        // guided-creation-review-2026-08 #30: the underspend counterpart of the
+        // error above. Its sibling on the restricted pools has existed all along,
+        // so leaving 200 general points in hand was the one budget the engine said
+        // nothing about while a single unspent Characteristic point warned.
+        //
+        // The GENERAL remainder alone. The restricted pools are reported one by one
+        // in the loop below, and summing them in here as well would tell a
+        // life-stage character about the same points twice.
+        //
+        // `else if`, not a second `if`: an infeasible allocation's `general_used` is
+        // whatever the flow solve could place, so an overspent character would
+        // otherwise be told it has spent too much AND has points left over.
+        //
+        // The wording this feeds is deliberately just a count. The pool's own size
+        // is a rule (Ars Magica - Definitive Edition (Core Rules).md:2213-2216 —
+        // 75 + 45 in childhood, 15 a year in later life, 240 for apprenticeship, 30
+        // a year after the Gauntlet), but NOTHING in the source says unspent general
+        // experience is lost. `restricted_xp_unspent` may say "wasted" because
+        // childhood's blocks are spend-or-lose; this one may not, and must not.
+        issues.push(ValidationIssue::warning(
+            ValidationIssue::CODE_GENERAL_XP_UNSPENT,
+            // The Abilities step, where the XP bar lives — the same step
+            // `not_enough_xp` above is filed under, since it is the same budget.
+            CreationPhase::Abilities,
+            args([
+                ("pool", allocation.general_pool.to_string()),
+                ("used", allocation.general_used.to_string()),
+                (
+                    "unspent",
+                    (allocation.general_pool - allocation.general_used).to_string(),
                 ),
             ]),
             None,

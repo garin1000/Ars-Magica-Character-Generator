@@ -57,18 +57,31 @@ async function hintText() {
 async function reach(selector) {
   const element = await $(selector);
   await element.waitForExist({ timeout: 10000 });
-  // `block: 'center'`, not the default. A bare `scrollIntoView()` aligns to the
-  // NEAREST edge, which in a short scrollport can leave the element's centre still
-  // outside the visible box — and the centre is the point WebKitWebDriver hit-tests,
-  // so the interaction is refused even though the element is on screen. The aging
-  // surfaces nest three scrollports (see #34 in the plan), so the innermost is short
-  // enough for that to happen here.
-  await element.scrollIntoView({ block: 'center' });
-  // And clickable, not merely existing and scrolled: this helper's whole promise is
-  // that the caller can interact with what it returns. `longevity-bonus` failed this
-  // way in three specs across three slices — `aging-crisis`, `aging`, and this one —
-  // so the wait belongs in the shared helper rather than at each call site.
-  await element.waitForClickable({ timeout: 10000 });
+  // Scroll INSIDE the wait, re-scrolling each poll, rather than scrolling once and
+  // then waiting.
+  //
+  // `block: 'center'` because a bare `scrollIntoView()` aligns to the NEAREST edge,
+  // which in a short scrollport leaves the element's centre outside the visible box —
+  // and the centre is the point WebKitWebDriver hit-tests, so the interaction is
+  // refused even though the element is on screen. The aging surfaces nest three
+  // scrollports and the innermost measures 218px against 1340px of content (#34), so
+  // there is very little room to be wrong by.
+  //
+  // And re-scrolling matters because the step's own height is not stable at first
+  // paint: the guidance paragraph, the budget bar and the validation footer all fill
+  // in from debounced engine round trips, so the box this element sits in can grow
+  // AFTER a one-shot scroll has already centred it — which silently un-centres it.
+  // Scrolling once and waiting was still marginal for exactly that reason; this
+  // element has now failed to be interactable in three specs across four slices
+  // (`aging-crisis`, `aging`, and this one twice), so the wait belongs in the shared
+  // helper and it has to survive the layout moving under it.
+  await browser.waitUntil(
+    async () => {
+      await element.scrollIntoView({ block: 'center' });
+      return element.isClickable();
+    },
+    { timeout: 10000, timeoutMsg: `${selector} never became clickable, even re-centred` },
+  );
   return element;
 }
 

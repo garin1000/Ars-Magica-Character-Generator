@@ -95,6 +95,58 @@ wizard-guidance-aging = A character over 35 makes an aging roll for every year b
 # step, so this line makes no rules claim.
 wizard-guidance-review = Nothing new is chosen here — this is the last look before the character leaves the guided flow. Everything stays editable after finishing.
 
+# The per-type Virtue/Flaw advice appended to `wizard-guidance-virtues_flaws`
+# (guided-creation-review-2026-08 #7). One whole sentence per clause rather than one
+# nested select inside the main message, so a translator reads sentences and not
+# fragments; `derive.ts`'s `flawCapNotes` picks the key and supplies the args.
+#
+# `$cap` is the profile's own `flaw_category_caps` maximum and arrives as a NUMBER, so
+# the variants below select on it: a cap of 0 forbids the category outright ("You
+# should not take Story Flaws", Core Rules :2826), while a cap of 1 or more limits it
+# ("not more than one Story Flaw", :2818, :2837). The `[1]` variant exists for the
+# plural agreement alone — the figure itself is always interpolated, never written out.
+#
+# `$rule` is the cap's `hard` flag: the rules' own distinction between "may not"
+# (enforced, and reported as an error by the validator) and "should not" (a guideline
+# the troupe may set aside, :2818).
+#
+# There is deliberately NO "at least one Story Flaw" wording anywhere: Story Flaws
+# have a recommended ceiling and no minimum. The only "at least one" the rules state
+# is the magus's Hermetic Flaw, below.
+wizard-guidance-story-flaw-cap =
+    { $rule ->
+        [hard]
+            { $cap ->
+                [0] You may not take Story Flaws.
+                [1] You may not take more than { $cap } Story Flaw.
+               *[other] You may not take more than { $cap } Story Flaws.
+            }
+       *[soft]
+            { $cap ->
+                [0] You should not take Story Flaws.
+                [1] You should not take more than { $cap } Story Flaw.
+               *[other] You should not take more than { $cap } Story Flaws.
+            }
+    }
+wizard-guidance-personality-flaw-cap =
+    { $rule ->
+        [hard]
+            { $cap ->
+                [0] You may not take Personality Flaws.
+                [1] You may not take more than { $cap } Personality Flaw.
+               *[other] You may not take more than { $cap } Personality Flaws.
+            }
+       *[soft]
+            { $cap ->
+                [0] You should not take Personality Flaws.
+                [1] You should not take more than { $cap } Personality Flaw.
+               *[other] You should not take more than { $cap } Personality Flaws.
+            }
+    }
+# Core Rules :2860. Worded exactly as `issue-missing_hermetic_flaw`, the engine
+# warning for the same guideline, so the advice and the finding read alike.
+wizard-guidance-hermetic-flaw = A magus should take at least one Hermetic Flaw.
+
 # What the chosen character type commits this character to, stated on the banner
 # above both the editor and the guided wizard. Relocated from the deleted
 # `type` creation step (guided-creation review #1), which asked for nothing: the
@@ -358,7 +410,11 @@ childhood-slot-native-reason = A childhood language must differ from the native 
 # as a whole sentence rather than a shared template plus a "met"/"unmet" word, so
 # nothing is carried by colour and the German reads as German.
 magus-minimums-label = Minimum Abilities
-magus-minimums-summary = { $unmet } of { $total } still unmet
+# The label of the collapsed checklist (guided-creation-review-2026-08 #12), so it
+# must name its own subject: it is now the disclosure's summary rather than a line
+# under the "Minimum Abilities" heading, and { $total } counts every row it heads —
+# the demanded ones and the recommended ones alike.
+magus-minimums-summary = Ability requirements: { $unmet } of { $total } still unmet
 magus-minimum-met = { $ability } { $min } is met: this character has { $score }.
 magus-minimum-unmet = { $ability } { $min } is not met: this character has { $score }.
 magus-recommended-label = Recommended minimum Abilities
@@ -911,6 +967,12 @@ issue-duplicate_ability = { $ability } is listed { $count } times with the same 
 issue-not_enough_xp = Abilities cost { $spent } XP, more than the { $pool } in the pool.
 issue-xp_solve_bound_exceeded = This character has too many Ability and Art scores and mastered spells ({ $spends } bought scores across { $pools } experience pools, { $nodes } in total) for experience to be allocated — the limit is { $limit }. This usually means the save file is damaged.
 issue-restricted_xp_unspent = { $origin }: { $unspent } of { $amount } restricted experience points are unspent and will be wasted.
+# guided-creation-review-2026-08 #30. Purely a count, and deliberately so: the
+# restricted sibling above may say the points are wasted because childhood's blocks
+# are spend-or-lose, but no passage in the Core Rules says the same of the general
+# pool or of the 120 levels of spells. So these two state what is left and stop.
+issue-general_xp_unspent = { $unspent } of { $pool } experience points are still unspent.
+issue-spell_levels_unspent = { $unspent } of { $budget } levels of spells are still unspent.
 issue-ability_category_requires_virtue = { $ability } is { $category }, which needs a Virtue granting access at character creation.
 issue-academic_ability_without_scholarly_language = An Academic Ability normally requires { $ability } at { $min } or better.
 issue-life_stage_age_unset = Enter the character's age: later life earns experience per year, so with no age only childhood's blocks can be counted.

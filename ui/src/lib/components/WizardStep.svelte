@@ -92,6 +92,18 @@
       characteristicRules: store.ruleset?.ruleset.characteristic_rules,
     }),
   );
+
+  // The note as one paragraph: the step's own sentence, then whatever the character
+  // type's profile adds (guided-creation-review-2026-08 #7 — the per-type Virtue and
+  // Flaw advice). Joined here rather than in the markup so the sentences are
+  // separated by exactly one space, which an `{#each}` in a `<p>` cannot promise.
+  const guidanceText = $derived(
+    guidance
+      ? [{ key: guidance.key, args: guidance.args }, ...guidance.notes]
+          .map((note) => store.t(note.key, note.args))
+          .join(' ')
+      : '',
+  );
 </script>
 
 <!-- Reproduces the editor's height chain verbatim — `.tab-content > .vf-tab
@@ -104,7 +116,7 @@
        flex column, so it costs the input surface below only its own height. -->
   {#if guidance}
     <p class="hint wizard-guidance" data-testid="wizard-guidance">
-      {store.t(guidance.key, guidance.args)}
+      {guidanceText}
     </p>
   {/if}
   {#if Bar}

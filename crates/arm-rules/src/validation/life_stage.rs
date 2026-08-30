@@ -656,6 +656,12 @@ mod tests {
     /// exactly the findings it raised before life after the Gauntlet was modelled.
     /// Every check M6/6b5 adds hangs off a stored value such a plan does not carry,
     /// so the whole list has to be unchanged, not merely free of the new codes.
+    ///
+    /// Slice 11 (guided-creation-review-2026-08 #30) adds one entry deliberately:
+    /// the apprenticeship's general pool is entirely unspent on this fixture, and
+    /// that was previously the one budget the engine reported nothing about. It is
+    /// listed here rather than filtered out, so the lock keeps saying exactly what
+    /// such a magus raises.
     #[test]
     fn a_magus_at_its_gauntlet_raises_exactly_the_findings_it_always_did() {
         let mut magus = planned(25);
@@ -663,9 +669,10 @@ mod tests {
         assert_eq!(
             codes(&validate(&magus, &rs())),
             vec![
-                // No House chosen, and the two childhood blocks left partly
-                // unspent — the findings such a bare fixture always produced.
+                // No House chosen, the general pool untouched, and the two childhood
+                // blocks left partly unspent.
                 "house_unset",
+                "general_xp_unspent",
                 "restricted_xp_unspent",
                 "restricted_xp_unspent",
             ]

@@ -99,6 +99,57 @@ wizard-guidance-aging = Ein Charakter über 35 legt vor Spielbeginn für jedes J
 # Anwendung, daher trifft diese Zeile keine Regelaussage.
 wizard-guidance-review = Hier wird nichts Neues gewählt — dies ist der letzte Blick, bevor der Charakter die geführte Erstellung verlässt. Nach dem Fertigstellen bleibt alles bearbeitbar.
 
+# Der typspezifische Hinweis zu Tugenden und Fehlern, angehängt an
+# `wizard-guidance-virtues_flaws` (guided-creation-review-2026-08 #7). Wortlaut aus
+# den Basisregeln an den gespiegelten Zeilen: :2826 („Du solltest keine
+# Geschichte-Fehler wählen"), :2827/:2838 („Du solltest nicht mehr als … wählen"),
+# :2820/:2835 („Du darfst nicht mehr als …"). „Geschichte-Fehler" steht so in
+# `rules/source/de/translation-tables/tugenden-fehler.md:392`; „Persönlichkeitsfehler"
+# ist der bereits ausgelieferte Begriff aus `issue-too_many_personality_flaws` (das
+# Regelbuch schreibt an :2820 „Persönlichkeits-Fehler" mit Bindestrich).
+#
+# `$cap` ist das Maximum aus `flaw_category_caps` und kommt als ZAHL an, damit die
+# Varianten darauf auswählen können; die Zahl selbst wird immer eingesetzt und nie
+# ausgeschrieben. Anders als im Englischen braucht das Deutsche keine
+# Singular-/Pluralvariante — „Geschichte-Fehler" und „Persönlichkeitsfehler" lauten
+# in beiden Zahlformen gleich.
+#
+# `$rule` ist das `hard`-Flag: „darfst nicht" (erzwungen, vom Prüfer als Fehler
+# gemeldet) gegenüber „solltest nicht" (eine Richtlinie, :2818).
+#
+# Bewusst nirgends „mindestens ein Geschichte-Fehler": für Geschichte-Fehler nennen
+# die Regeln eine empfohlene Obergrenze und keine Untergrenze. Das einzige
+# „mindestens ein" gilt dem hermetischen Fehler des Magus, siehe unten.
+wizard-guidance-story-flaw-cap =
+    { $rule ->
+        [hard]
+            { $cap ->
+                [0] Du darfst keine Geschichte-Fehler wählen.
+               *[other] Du darfst nicht mehr als { $cap } Geschichte-Fehler wählen.
+            }
+       *[soft]
+            { $cap ->
+                [0] Du solltest keine Geschichte-Fehler wählen.
+               *[other] Du solltest nicht mehr als { $cap } Geschichte-Fehler wählen.
+            }
+    }
+wizard-guidance-personality-flaw-cap =
+    { $rule ->
+        [hard]
+            { $cap ->
+                [0] Du darfst keine Persönlichkeitsfehler wählen.
+               *[other] Du darfst nicht mehr als { $cap } Persönlichkeitsfehler wählen.
+            }
+       *[soft]
+            { $cap ->
+                [0] Du solltest keine Persönlichkeitsfehler wählen.
+               *[other] Du solltest nicht mehr als { $cap } Persönlichkeitsfehler wählen.
+            }
+    }
+# Basisregeln :2860. Wortlaut wie `issue-missing_hermetic_flaw`, die Warnung des
+# Regelwerks zur selben Richtlinie, damit Hinweis und Befund gleich klingen.
+wizard-guidance-hermetic-flaw = Ein Magus sollte mindestens einen hermetischen Fehler wählen.
+
 # Worauf der gewählte Charaktertyp diesen Charakter festlegt, angezeigt im Banner
 # über Editor und geführter Erstellung. Verlagert aus dem entfallenen Schritt
 # „Charaktertyp" (Prüfung der geführten Erstellung, #1), der nichts abfragte: der
@@ -378,7 +429,11 @@ childhood-slot-native-reason = Eine Sprache der Kindheit muss sich von der Mutte
 # Zustand als ganzen Satz, statt eine Vorlage um ein angeklebtes erfüllt/nicht erfüllt
 # zu ergänzen, damit nichts von der Farbe getragen wird und das Deutsche natürlich ist.
 magus-minimums-label = Mindestfertigkeiten
-magus-minimums-summary = { $unmet } von { $total } noch nicht erfüllt
+# Die Beschriftung der eingeklappten Liste (guided-creation-review-2026-08 #12) und
+# daher mit eigenem Bezug: sie ist jetzt die Zusammenfassung des Aufklappelements und
+# keine Zeile unter der Überschrift „Mindestfertigkeiten" mehr, und { $total } zählt
+# jede Zeile darunter — die verlangten wie die empfohlenen.
+magus-minimums-summary = Anforderungen an Fertigkeiten: { $unmet } von { $total } noch nicht erfüllt
 magus-minimum-met = { $ability } { $min } ist erfüllt: dieser Charakter hat { $score }.
 magus-minimum-unmet = { $ability } { $min } ist nicht erfüllt: dieser Charakter hat { $score }.
 magus-recommended-label = Empfohlene Mindestfertigkeiten
@@ -925,6 +980,13 @@ issue-duplicate_ability = { $ability } ist { $count }-mal mit derselben Speziali
 issue-not_enough_xp = Fertigkeiten kosten { $spent } EP, mehr als die { $pool } im Vorrat.
 issue-xp_solve_bound_exceeded = Dieser Charakter hat zu viele Fertigkeits- und Künste-Werte sowie gemeisterte Zaubersprüche ({ $spends } gekaufte Werte über { $pools } Erfahrungspunkte-Vorräte, { $nodes } insgesamt), um die Erfahrungspunkte zuzuteilen — die Grenze liegt bei { $limit }. Das deutet meist auf eine beschädigte Spielstand-Datei hin.
 issue-restricted_xp_unspent = { $origin }: { $unspent } von { $amount } eingeschränkten Erfahrungspunkten sind nicht ausgegeben und verfallen.
+# guided-creation-review-2026-08 #30. Bewusst nur eine Zählung: das eingeschränkte
+# Gegenstück oben darf vom Verfallen sprechen, weil die Blöcke der Kindheit entweder
+# ausgegeben oder verloren sind — für den allgemeinen Vorrat und die 120 Stufen Zauber
+# sagen die Basisregeln nichts Vergleichbares. Diese beiden nennen also den Rest und
+# behaupten nichts darüber hinaus.
+issue-general_xp_unspent = { $unspent } von { $pool } Erfahrungspunkten sind noch nicht ausgegeben.
+issue-spell_levels_unspent = { $unspent } von { $budget } Stufen Zauber sind noch nicht ausgegeben.
 issue-ability_category_requires_virtue = { $ability } ist { $category } und benötigt eine Tugend, die den Zugang bei der Charaktererschaffung gewährt.
 issue-academic_ability_without_scholarly_language = Eine akademische Fertigkeit erfordert normalerweise { $ability } auf { $min } oder höher.
 issue-life_stage_age_unset = Trage das Alter des Charakters ein: das spätere Leben erbringt Erfahrungspunkte pro Jahr, ohne Alter zählen daher nur die Blöcke der Kindheit.

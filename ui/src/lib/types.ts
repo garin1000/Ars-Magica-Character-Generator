@@ -854,6 +854,11 @@ export interface EntityTypeProfile {
   // The Gift policy and the id representing The Gift. Omitted when not applicable.
   gift_policy?: 'required' | 'allowed' | 'forbidden';
   gift_id?: string;
+  // The V/F categories that count as carrying The Gift (the magus profile names
+  // `hermetic`). Omitted from JSON when empty, so optional here. The wizard's
+  // Hermetic-Flaw advice keys off it rather than off the slug, exactly as the
+  // engine's `missing_hermetic_flaw` does.
+  gift_categories?: string[];
   // Ordered: the guided wizard walks these in sequence. Typed in the engine too,
   // so a phase string it has no variant for fails the ruleset load.
   creation_phases: CreationPhase[];

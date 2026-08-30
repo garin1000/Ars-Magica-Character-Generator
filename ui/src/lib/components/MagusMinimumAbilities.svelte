@@ -16,6 +16,12 @@
   // `magus_recommended_ability` findings come from, so the list and the findings can
   // never disagree — and they are empty for every type but a magus. That is the whole
   // gate: this component needs no `is_magus` test of its own.
+  //
+  // Because they ARE those findings, this surface duplicates the Validation panel
+  // (guided-creation-review-2026-08 #12), which stays the authoritative one. So it is
+  // COLLAPSED to its summary line and expands on demand — a native `<details>`, whose
+  // keyboard handling, ARIA and open state come from the platform rather than from an
+  // `aria-expanded` and a click handler of our own.
   const localized = $derived(store.ruleset);
   const rows = $derived(store.effective?.magus_minimum_abilities ?? []);
   const required = $derived(rows.filter((row) => row.requirement === 'required'));
@@ -71,14 +77,23 @@
 </script>
 
 {#if localized && rows.length > 0}
-  <!-- h3: the Available/Selected region titles own the h2 level on this tab. -->
-  <section class="magus-minimums" data-testid="magus-minimums">
-    <h3>{store.t('magus-minimums-label')}</h3>
+  <!-- Closed by default: that IS the collapse. The `<summary>` heads the WHOLE
+       checklist, which is why its total counts every row — demanded and recommended
+       alike. It used to sit under the "Minimum Abilities" heading, above a list of
+       three, and read "7 of 7" (#12). h3, not h2: the Available/Selected region
+       titles own the h2 level on this tab. -->
+  <details class="magus-minimums" data-testid="magus-minimums">
     <!-- ONE live region for the whole checklist: a row-level one would announce a
-         sentence per row on every keystroke in the Ability list. -->
-    <p class="magus-minimums-summary" role="status" data-testid="magus-minimums-summary">
-      {store.t('magus-minimums-summary', { unmet: String(unmet), total: String(rows.length) })}
-    </p>
+         sentence per row on every keystroke in the Ability list. It sits INSIDE the
+         summary — which stays visible whether the disclosure is open or shut — and
+         not on it: `<summary>` is an interactive element, and a status role on an
+         interactive element is an a11y contradiction the compiler rightly rejects. -->
+    <summary class="magus-minimums-summary">
+      <span role="status" data-testid="magus-minimums-summary">
+        {store.t('magus-minimums-summary', { unmet: String(unmet), total: String(rows.length) })}
+      </span>
+    </summary>
+    <h3>{store.t('magus-minimums-label')}</h3>
     <ul class="magus-minimum-list">
       {#each required as row (row.ability)}
         <!-- The status is in the sentence itself; `data-met` only mirrors it for
@@ -99,5 +114,5 @@
         </p>
       {/if}
     {/if}
-  </section>
+  </details>
 {/if}

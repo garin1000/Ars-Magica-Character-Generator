@@ -187,7 +187,53 @@ Referential integrity: the exemplar slug is a label key, not a `ref`, so it is e
 from the `has`/`incompatible_with` resolution rules — state that explicitly where the
 loader's integrity check is documented, or the next audit will flag it.
 
-### #34 — the guided aging step nests three scrollports, and a control ends up below the fold — **OPEN, for the S11 re-measure**
+### #35 — the Review step renders every finding twice — **OPEN, needs a decision**
+
+**Surfaced by Slice 11's e2e work, pre-existing, not fixed.** Two unfiltered validation
+panels are mounted on the terminal step at once: `WizardReview.svelte:20` renders one of
+its own, and `WizardShell.svelte:113` renders the docked one with `phase={undefined}` on
+the last step — which is *why* phase-owned findings reach Review at all (see #30). So on
+Review every finding appears **twice**, in two identical lists.
+
+It surfaced because a new e2e selector counted 4 rows for 2 codes. Slice 11's spec asserts
+on the *distinct* severities, so it is robust whichever way this is decided.
+
+**Why it needs a decision rather than a fix.** It is the same question #12 answered for
+the magus minimums — *which surface is authoritative?* — and the answer there was
+"Validation is, so do not duplicate it". Applying that consistently means Review should
+show each finding **once**: either drop `WizardReview`'s own panel and let the docked one
+carry them, or keep Review's and suppress the docked one on the terminal step. The first
+is smaller and keeps one code path; the second keeps the list inside the step's own body.
+Either way, #30's requirement that phase-owned warnings reach Review must survive.
+
+### #34 — the guided aging step nests three scrollports, and a control ends up below the fold — **MEASURED at Slice 11: `.tab-scroll` KEPT, spec workaround stands**
+
+**Answered with numbers, in the real binary at 800px, by neutralising `.tab-scroll`
+with `display: contents` (which is what deleting the wrapper does to the height
+chain):**
+
+| | `.vf-tab` client / scroll | `.tab-scroll` client / scroll |
+|---|---|---|
+| as shipped | 267 / 267 (does **not** scroll) | 218 / 1340 |
+| inner scrollport removed | 267 / 1389 | — |
+
+Three findings, all against the hoped-for fix:
+
+1. **No height is recovered.** The step is 267px either way — it is bounded by
+   `.tab-content`, not by the inner wrapper. "Collapsing it would give the step its
+   whole height back" was wrong.
+2. **`.tab-scroll` is not redundant; it is the only box that scrolls on that step.**
+   Removing it hands the identical overflow to `.vf-tab`. The height chain survives
+   (`.region-row` on the house step, whose row sits inside `.tab-scroll`, measures
+   180px both ways), so the change is *safe* — merely pointless.
+3. **The control behaves the same.** After `scrollIntoView({ block: 'center' })`,
+   `longevity-bonus` hit-tests to itself and `waitForClickable` succeeds under both
+   layouts. Unscrolled it is below the fold under both.
+
+So the scroll-then-wait in `aging.e2e.js` stays the fix, and the numbers live in
+`.tab-scroll`'s comment in `app.css` so this is not re-derived. The remaining
+complaint — a 267px step in an 800px window — is about what the rail, guidance and
+validation footer consume, not about this wrapper, and is not in this plan.
 
 **Surfaced by Slice 10's e2e run, diagnosed, worked around in the spec, not fixed in the
 product.** The wizard's aging step nests **three** scrollports:
@@ -202,15 +248,34 @@ unreachable control — unlike Slice 6's aging-log remove button, which no amoun
 scrolling could click. `aging.e2e.js` now scrolls it into view and waits for
 *clickable* before typing, which is what a user does anyway.
 
-**Why it is worth fixing rather than leaving.** Three nested scrollports on one step is
-one too many: `.vf-tab` took over the step's vertical overflow in Slice 8 (to give the
-sticky bars travel), and `.tab-scroll` predates that, so the inner one may now be
-redundant. Collapsing it would give the step its whole height back.
+**MEASURED at Slice 11 — the proposed remedy was WRONG, and nothing was changed.** The
+hypothesis above was that `.tab-scroll` had become redundant since Slice 8 gave `.vf-tab`
+the step's overflow, and that collapsing it would give the step its height back. Measured
+in the real binary on the guided aging step at 800px:
 
-**Do it at the S11 re-measure.** Slice 11 takes `MagusMinimumAbilities` off the
-Abilities surface, which is the first point the `.region-row` / `.list-scroll` floors can
-honestly be re-assessed — and this is the same question about the same height chain, so
-measure both together rather than twice.
+| | `.vf-tab` client/scroll | `.tab-scroll` client/scroll |
+|---|---|---|
+| as shipped | 267 / 267 (does **not** scroll) | 218 / 1340 |
+| inner scrollport removed | 267 / **1389** | — |
+
+1. **No height is recovered.** The step body is 267px either way — it is bounded by
+   `.tab-content`, not by the wrapper. "Collapsing it would give the step its whole
+   height back" is simply false.
+2. **`.tab-scroll` is not redundant — it is the only box that scrolls on that step.**
+   Removing it hands the identical 1340px of overflow to `.vf-tab`. The height chain does
+   survive the removal (`.region-row` measures 180px either way), so the change is
+   *safe*; it is merely pointless.
+3. **The control behaves identically under both layouts.** After
+   `scrollIntoView({ block: 'center' })`, `longevity-bonus` hit-tests to itself and
+   `waitForClickable` succeeds either way; unscrolled it is below the fold either way.
+
+Also correcting the figure this entry was filed with: the inner scrollport is **218px**,
+not ~254px.
+
+**The real substance of #34 is elsewhere, and is not in this plan:** a **267px-tall step
+body in an 800px window**, because the rail, guidance, budget bar and validation footer
+consume ~530px between them. That is a whole-flow layout budget question, not a wrapper
+to delete, and it wants its own decision rather than a slice.
 
 **History worth knowing:** it passed at Slice 9 (39/39, verified first-hand) and failed
 deterministically after Slice 10, whose changes all *increase* the room available. So
@@ -2405,13 +2470,17 @@ a build at 17.
 
 **Prior symptom-patches that must be REMOVED, not layered on:**
 
-- `ui/src/app.css:571-581` — `.region-row { min-height: 12rem }`. Its own comment
-  records the exact bug #11 fixes: *"on the magus's Abilities step — the funding panel
-  plus the Hermetic-minimums checklist — the row measured 0 in an 800px window, so both
-  lists vanished and their controls were not even clickable."* After S2's split,
-  **re-measure and remove it if it is no longer load-bearing.** Adding to it would be
-  patching a patch.
-- `ui/src/app.css:614-618` — `.list-scroll` (~3 rows). Same review, same slice.
+- ~~`.region-row { min-height: 12rem }`~~ — **RE-MEASURED at Slice 11 and KEPT.** With
+  the floor forced to 0 on the post-S2/post-S11 magus Abilities step: the row goes
+  180px → 54px at 800px and 180px → 0px at 600px, taking `.selected-scroll` from 139px
+  to 12px and 0px with it. S2's split and S11's collapse only raised the height the row
+  starts from; they did not remove the collapse. The comment in `app.css` now carries
+  these numbers instead of the superseded description, and
+  `wizard-guidance-findings.e2e.js` locks the 800px case.
+- ~~`.list-scroll` (~3 rows)~~ — **RE-MEASURED at Slice 11 and KEPT**, though only the
+  short window needs it: with `.region-row`'s floor in place the list moves 90px → 89px
+  at 800px on the Abilities step, but 90px → 0px on the Virtues & Flaws tab at 600px,
+  which is exactly the case `tab-area.e2e.js` asserts (`listClientHeight >= 60`).
 - `ui/src/app.css:1067-1070` — the 720px `columns: 1` media query. S6 **replaces** it
   with `auto-fit` response; keeping both would fight.
 - `ui/src/app.css:1577-1580` — the bare global `.error` typography rule. It is the

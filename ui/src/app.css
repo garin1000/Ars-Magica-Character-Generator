@@ -506,7 +506,27 @@ button:disabled {
 /* Internal scroll container for the single-panel tabs (Details, Equipment,
    Totals). Those panels sit directly in a `.vf-tab` whose parent `.tab-content`
    is `overflow: hidden`, so without this wrapper their long content is clipped.
-   Mirrors the `.region-source .panel` / `.selected-frame` scroll pattern. */
+   Mirrors the `.region-source .panel` / `.selected-frame` scroll pattern.
+
+   KEPT after the Slice 11 re-measure of guided-creation-review-2026-08 #34, which
+   asked whether this box had become redundant once Slice 8 gave `.vf-tab` the step's
+   vertical overflow. It has not, and collapsing it would buy nothing. Measured on the
+   guided aging step at 800px in the real binary, with this box neutralized
+   (`display: contents`, which is what deleting the wrapper does to the height chain):
+
+     as shipped  — `.vf-tab` 267px client / 267px scroll (it does NOT scroll here),
+                    this box 218px client / 1340px scroll
+     neutralized — `.vf-tab` 267px client / 1389px scroll, the height chain intact
+                   (`.region-row` on the house step: 180px either way)
+
+   So this box is currently the ONLY box that scrolls on that step, and removing it
+   merely hands the same overflow to `.vf-tab`. The step's height is 267px either way
+   — it is bounded by `.tab-content`, not by this wrapper — so #34's hoped-for "give
+   the step its whole height back" is not available here. Both layouts also behave
+   identically at the control that surfaced #34: after
+   `scrollIntoView({ block: 'center' })`, `longevity-bonus` hit-tests to itself and is
+   clickable in both. Two working configurations, no measured advantage, so the
+   shipped one stays. */
 .tab-scroll {
   flex: 1;
   min-height: 0;
@@ -709,13 +729,24 @@ button:disabled {
 .region-row {
   flex: 1;
   /* A FLOOR, not 0. `flex: 1` with `min-height: 0` lets the row give up all of its
-     height to the auto-height siblings above it, and it does: on the magus's Abilities
-     step — the funding panel plus the Hermetic-minimums checklist — the row measured 0
-     in an 800px window, so both lists vanished and their controls were not even
-     clickable. The floor turns that into a scroll instead: the enclosing
-     `.tab-content` is `overflow-y: auto` precisely so excess content stays reachable.
-     It still shrinks freely down to the floor, so every inner scrollport works as
-     before. */
+     height to the auto-height siblings above it, and it does: both lists vanish and
+     their controls stop being clickable. The floor turns that into a scroll instead:
+     the enclosing `.tab-content` is `overflow-y: auto` precisely so excess content
+     stays reachable. It still shrinks freely down to the floor, so every inner
+     scrollport works as before.
+
+     RE-MEASURED at Slice 11 and KEPT. The rule was written for the magus Abilities
+     step when it carried the funding panel AND the Hermetic-minimums checklist;
+     Slice 2 moved the panel to its own `experience` step and Slice 11 collapsed the
+     checklist to one line, so the question was whether the floor had become a patch
+     for a condition that no longer exists. It has not. On that same step, with this
+     floor forced to 0 (guided magus, real binary):
+
+       800px window — row 180px → 54px, `.selected-scroll` 139px → 12px
+       600px window — row 180px → 0px,  `.selected-scroll` 139px → 0px
+
+     So the collapse is unchanged in kind; the two removals only raised the height the
+     row starts from. `wizard-guidance-findings.e2e.js` locks the 800px case. */
   min-height: 12rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
@@ -755,7 +786,16 @@ button:disabled {
      pick anything, and as a plain `flex: 1` item it was shrunk to a height of zero
      in a short window — the panel kept its title and filters and showed no rows at
      all. The floor makes the panel taller than a short tab area can hold, which is
-     why `.tab-content` scrolls on that axis instead of clipping. */
+     why `.tab-content` scrolls on that axis instead of clipping.
+
+     RE-MEASURED at Slice 11 and KEPT, though only the short window still needs it.
+     With this floor forced to 0 and `.region-row`'s left in place: on the magus
+     Abilities step at 800px the list barely moves (90px → 89px), because the row's
+     own floor already gives it the room. On the Virtues & Flaws tab at 600px it goes
+     90px → 0px — which is exactly the case `tab-area.e2e.js` measures
+     (`listClientHeight >= 60`), and exactly the failure the paragraph above
+     describes. So it is load-bearing where it was introduced, not where it is most
+     visible. */
   min-height: 6rem;
   overflow-y: auto;
   scrollbar-gutter: stable;
@@ -1577,18 +1617,28 @@ ul {
   font-size: 0.85rem;
 }
 
-/* The Hermetic minimum Abilities a magus owes: two short lists above the Ability
-   regions. Auto-height, like the life-stage panel beside it — `.region-row` must stay
-   the only `flex: 1` child of `.vf-tab`. */
+/* The Hermetic minimum Abilities a magus owes: a `<details>` whose summary is the
+   one line the step shows by default, holding two short lists that open on demand
+   (guided-creation-review-2026-08 #12). Auto-height, like the life-stage panel beside
+   it — `.region-row` must stay the only `flex: 1` child of `.vf-tab`.
+
+   NOT `display: flex`, which it used to be as a `<section>`: a flex `<details>` is a
+   long-standing WebKit hazard (the closed state stops hiding the content), and this
+   app ships on WebKitGTK. Block flow plus margins on the children does the same job
+   with none of that risk. */
 .magus-minimums {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
   padding-block: 0.3rem;
+}
+
+/* The always-visible line, and the disclosure's control. `list-item` keeps the
+   platform's own triangle, so nothing here reinvents an expand affordance. */
+.magus-minimums-summary {
+  cursor: pointer;
 }
 
 .magus-minimums h3 {
   font-size: 0.95rem;
+  margin-block: 0.3rem 0.1rem;
 }
 
 .magus-minimum-list {

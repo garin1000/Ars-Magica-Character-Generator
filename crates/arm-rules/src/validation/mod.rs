@@ -144,6 +144,7 @@ impl fmt::Display for IssueSeverity {
 /// | `duplicate_ability` | error | abilities | `ability`, `count` |
 /// | `not_enough_xp` | error | abilities | `spent`, `pool`, `shortfall` |
 /// | `xp_solve_bound_exceeded` | error | abilities | `nodes`, `limit`, `spends`, `pools` |
+/// | `general_xp_unspent` | warning | abilities | `pool`, `used`, `unspent` |
 /// | `restricted_xp_unspent` | warning | experience | `amount`, `used`, `unspent`, `origin_kind`, `origin` |
 /// | `ability_category_requires_virtue` | error | abilities | `ability`, `category` |
 /// | `academic_ability_without_scholarly_language` | warning | abilities | `ability`, `min`, `exemplar`&nbsp;(opt) |
@@ -179,6 +180,7 @@ impl fmt::Display for IssueSeverity {
 /// | `duplicate_spell` | error | spells | `spell`, `count` |
 /// | `spell_level_unresolved` | warning | spells | `spell` |
 /// | `over_spell_levels` | error | spells | `used`, `budget`, `over` |
+/// | `spell_levels_unspent` | warning | spells | `used`, `budget`, `unspent` |
 /// | `spell_level_exceeds_cap` | error | spells | `spell`, `level`, `cap` |
 /// | `ability_above_age_cap` | error | abilities | `ability`, `score`, `cap`, `age` |
 /// | `supernatural_ability_requires_virtue` | error | abilities | `ability` |
@@ -364,6 +366,22 @@ impl ValidationIssue {
     /// `origin_kind` (`item` | `life_stage`) plus `origin` (the item id or the block
     /// slug) say *which* pool, since a life-stage character has several.
     pub const CODE_RESTRICTED_XP_UNSPENT: &'static str = "restricted_xp_unspent";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: the **general**
+    /// experience pool — the one that may buy any Ability or Art — still holds
+    /// points (guided-creation-review-2026-08 #30). The counterpart of
+    /// [`ValidationIssue::CODE_NOT_ENOUGH_XP`], which reports the same budget
+    /// overspent.
+    ///
+    /// Counts the general remainder ALONE. A restricted pool has
+    /// [`ValidationIssue::CODE_RESTRICTED_XP_UNSPENT`] of its own, and adding the
+    /// two would report one life-stage character's points twice.
+    ///
+    /// Deliberately **factual**: `restricted_xp_unspent` may say the points are
+    /// wasted because childhood's blocks are spent-or-lost, but the Core Rules make
+    /// no such statement about the general pool or the apprenticeship's 240 points
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2215). So this reports
+    /// "N of M unspent" and asserts no rule beyond the count.
+    pub const CODE_GENERAL_XP_UNSPENT: &'static str = "general_xp_unspent";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: an Ability whose category
     /// the rules gate behind a Virtue (Academic/Arcane/Martial) is bought without
     /// one. Supernatural has its own per-Ability rule
@@ -499,6 +517,21 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the sum of the chosen
     /// spells' levels exceeds the magus's spell-levels budget (Ars Magica - Definitive Edition (Core Rules).md:2215-2216).
     pub const CODE_OVER_SPELL_LEVELS: &'static str = "over_spell_levels";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: the magus's spell-levels
+    /// budget still holds levels — the underspend counterpart of
+    /// [`ValidationIssue::CODE_OVER_SPELL_LEVELS`], which used to be the only half
+    /// reported (guided-creation-review-2026-08 #30).
+    ///
+    /// Measured against the same budget the error uses
+    /// ([`crate::effective::spell_levels_budget`]), so the pair can never disagree
+    /// about what the budget is.
+    ///
+    /// Deliberately **factual**, for the same reason as
+    /// [`ValidationIssue::CODE_GENERAL_XP_UNSPENT`]: the Core Rules grant "120
+    /// levels of spells" (Ars Magica - Definitive Edition (Core Rules).md:2215)
+    /// and say nothing anywhere about unused levels being lost, so the message
+    /// counts and claims nothing.
+    pub const CODE_SPELL_LEVELS_UNSPENT: &'static str = "spell_levels_unspent";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a spell's level exceeds
     /// Technique + Form + Intelligence + Magic Theory + 3 (Ars Magica - Definitive Edition (Core Rules).md:2465).
     pub const CODE_SPELL_LEVEL_EXCEEDS_CAP: &'static str = "spell_level_exceeds_cap";
@@ -2791,6 +2824,80 @@ mod tests {
             .collect()
     }
 
+    /// The contract table as `code → the severity its row states`.
+    fn contract_table_severities(src: &str) -> BTreeMap<String, String> {
+        src.lines()
+            .filter_map(|line| {
+                let line = line.trim_start().strip_prefix("///")?.trim();
+                let cells: Vec<&str> = line
+                    .strip_prefix('|')?
+                    .split('|')
+                    .filter(|c| !c.trim().is_empty())
+                    .collect();
+                if cells.len() < 4 || cells.iter().all(|c| c.trim().starts_with('-')) {
+                    return None;
+                }
+                let code = cells[0].trim().trim_matches('`').trim_end_matches('†');
+                if code == "code" {
+                    return None;
+                }
+                Some((code.to_string(), cells[1].trim().to_string()))
+            })
+            .collect()
+    }
+
+    /// The table's **severity** column is contract too: the frontend styles a
+    /// finding by it and `canFinish` gates on errors alone, so a row calling a
+    /// warning an error misdescribes whether a character can be finished.
+    ///
+    /// Nothing read the column before Slice 11 — only the phase column was
+    /// checked — so a new code could ship documented as an error while emitting a
+    /// warning. It is scanned the same way: the constructor at the emit site names
+    /// the severity, and the code const names the row.
+    #[test]
+    fn contract_table_severity_matches_the_emit_site() {
+        let src = production_validation_source();
+        let consts = issue_code_consts(&src);
+        let severities = contract_table_severities(&src);
+
+        let mut checked = 0;
+        for (marker, severity) in [
+            ("ValidationIssue::error(", "error"),
+            ("ValidationIssue::warning(", "warning"),
+        ] {
+            for seg in src.split(marker).skip(1) {
+                let window = &seg[..seg.len().min(600)];
+                // `ValidationIssue::new(` sites build their code with `format!` and
+                // choose the severity from the cap's `hard` flag; the table's `†`
+                // footnote covers them, so only the two fixed constructors are read.
+                let Some(at) = window.find("CODE_") else {
+                    continue;
+                };
+                let name: String = window[at..]
+                    .chars()
+                    .take_while(|c| c.is_ascii_uppercase() || *c == '_' || c.is_ascii_digit())
+                    .collect();
+                let code = consts
+                    .get(&name)
+                    .unwrap_or_else(|| panic!("emit site names unknown const '{name}'"));
+                let stated = severities
+                    .get(code)
+                    .unwrap_or_else(|| panic!("code `{code}` has no contract table row"));
+                assert!(
+                    stated.contains(severity),
+                    "`{code}` is emitted as a {severity} but its table row says '{stated}'"
+                );
+                checked += 1;
+            }
+        }
+        // A floor, not an equality: adding a validator must not fail this test, but a
+        // scanner that has stopped matching must.
+        assert!(
+            checked >= 90,
+            "expected to find the fixed-code emit sites, found {checked}"
+        );
+    }
+
     /// Phases no issue code can name, because they hold no rule the engine checks:
     /// the concept step is free text throughout. (A character type the ruleset has
     /// no profile for is `unknown_type`, a `review` finding — the type is fixed
@@ -4823,6 +4930,100 @@ mod tests {
         assert!(!codes(&result).contains(&"not_enough_xp".to_string()));
     }
 
+    /// guided-creation-review-2026-08 #30. Overspending the general pool is an
+    /// error (`not_enough_xp`); leaving it unspent used to be **silence**, while a
+    /// single unspent Characteristic point warns. The asymmetry is the bug.
+    ///
+    /// Purely factual wording: the Core Rules state no waste rule for general
+    /// experience, so the finding reports "N of M unspent" and claims nothing more.
+    #[test]
+    fn warns_when_general_xp_is_left_unspent() {
+        let rs = restricted_xp_ruleset();
+        let mut e = make_entity("companion", vec![]);
+        e.xp_pool = 100;
+        let result = validate(&e, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_GENERAL_XP_UNSPENT)
+            .unwrap_or_else(|| panic!("{:?}", all_codes(&result)));
+        assert_eq!(issue.severity, IssueSeverity::Warning);
+        // The XP bar lives on the Abilities step, exactly as `not_enough_xp`.
+        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(issue.args.get("pool").map(String::as_str), Some("100"));
+        assert_eq!(issue.args.get("used").map(String::as_str), Some("0"));
+        assert_eq!(issue.args.get("unspent").map(String::as_str), Some("100"));
+
+        // Spending it all silences the finding — the overspend error takes over
+        // beyond that, so the two never both fire.
+        e.ability_scores = vec![AbilityScore {
+            ability: Id::new("ability.awareness"),
+            score: 5, // 75 xp
+            specialty: None,
+            parameter: None,
+        }];
+        e.xp_pool = 75;
+        let result = validate(&e, &rs);
+        assert!(
+            !all_codes(&result).contains(&"general_xp_unspent".to_string()),
+            "{:?}",
+            all_codes(&result)
+        );
+    }
+
+    /// #30's load-bearing design detail: the general remainder is counted **on its
+    /// own**. A restricted pool already has `restricted_xp_unspent`, so folding it
+    /// into the general figure would report the same points twice on one character.
+    #[test]
+    fn does_not_double_report_restricted_blocks_as_general_unspent() {
+        // Educated grants 50 restricted XP; the general pool holds 100. Nothing is
+        // spent, so both are unspent — and each is reported once, for its own size.
+        let rs = restricted_xp_ruleset();
+        let mut e = make_entity("companion", vec![sel("virtue.educated")]);
+        e.xp_pool = 100;
+        let result = validate(&e, &rs);
+
+        let general = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_GENERAL_XP_UNSPENT)
+            .unwrap_or_else(|| panic!("{:?}", all_codes(&result)));
+        // 100, never 150: Educated's 50 is not the general pool's to spend.
+        assert_eq!(general.args.get("unspent").map(String::as_str), Some("100"));
+        assert_eq!(general.args.get("pool").map(String::as_str), Some("100"));
+
+        let restricted: Vec<&ValidationIssue> = result
+            .issues
+            .iter()
+            .filter(|i| i.code == ValidationIssue::CODE_RESTRICTED_XP_UNSPENT)
+            .collect();
+        assert_eq!(restricted.len(), 1, "{:?}", all_codes(&result));
+        assert_eq!(
+            restricted[0].args.get("unspent").map(String::as_str),
+            Some("50")
+        );
+    }
+
+    /// #30: both new findings are **warnings**, so `canFinish` (errors only) is
+    /// untouched — a character may be finished with experience still in hand.
+    #[test]
+    fn unspent_warnings_do_not_block_finishing() {
+        let rs = restricted_xp_ruleset();
+        let mut e = make_entity("companion", vec![]);
+        e.xp_pool = 100;
+        let result = validate(&e, &rs);
+        assert!(
+            !codes(&result).contains(&"general_xp_unspent".to_string()),
+            "an unspent budget is advice, never an error: {:?}",
+            codes(&result)
+        );
+        assert!(
+            warning_codes(&result).contains(&"general_xp_unspent".to_string()),
+            "{:?}",
+            warning_codes(&result)
+        );
+    }
+
     #[test]
     fn restricted_pool_cannot_fund_an_ineligible_ability() {
         // Educated's 50 can only buy Latin/Artes Lib; Awareness (general) must come
@@ -6414,11 +6615,20 @@ mod tests {
         e.xp_pool = 1000; // cover the Art/MT costs so no not_enough_xp noise
         e.spells = vec![spell("spell.pilum_of_fire", None)];
         let codes = all_codes(&validate(&e, &rs));
+        // Slice 11 (#30): Pilum's 20 of a 50-level budget legitimately leaves 30
+        // levels in hand, so `spell_levels_unspent` is expected here and is asserted
+        // rather than merely tolerated — otherwise widening the filter would hide a
+        // real spell fault behind the same exemption.
+        assert!(
+            codes.contains(&"spell_levels_unspent".to_string()),
+            "{codes:?}"
+        );
         assert!(
             !codes
                 .iter()
-                .any(|c| c.starts_with("spell") || c.starts_with("over_spell")),
-            "expected no spell issues, got {codes:?}"
+                .any(|c| (c.starts_with("spell") || c.starts_with("over_spell"))
+                    && c != "spell_levels_unspent"),
+            "expected no spell FAULTS, got {codes:?}"
         );
     }
 
@@ -6462,6 +6672,48 @@ mod tests {
         // One level more and it fires.
         e.spells[1].level = Some(211);
         assert!(all_codes(&validate(&e, &rs)).contains(&"over_spell_levels".to_string()));
+    }
+
+    /// guided-creation-review-2026-08 #30, the spell-levels half: 120 unspent levels
+    /// used to produce **silence** while overspending by one is an error. Warning, on
+    /// the Spells step, and factual — the Core Rules state no waste rule for the
+    /// apprenticeship's levels of spells, so the message counts and stops.
+    #[test]
+    fn warns_when_spell_levels_are_left_unspent() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        // Budget 50, nothing learned: the whole grant is in hand.
+        let result = validate(&e, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_SPELL_LEVELS_UNSPENT)
+            .unwrap_or_else(|| panic!("{:?}", all_codes(&result)));
+        assert_eq!(issue.severity, IssueSeverity::Warning);
+        assert_eq!(issue.phase, CreationPhase::Spells);
+        assert_eq!(issue.args.get("budget").map(String::as_str), Some("50"));
+        assert_eq!(issue.args.get("used").map(String::as_str), Some("0"));
+        assert_eq!(issue.args.get("unspent").map(String::as_str), Some("50"));
+
+        // Learning exactly the budget silences it, and overspending swaps it for the
+        // error rather than stacking both on one character.
+        e.spells = vec![spell("spell.general_ward", Some(50))];
+        let result = validate(&e, &rs);
+        assert!(
+            !all_codes(&result).contains(&"spell_levels_unspent".to_string()),
+            "{:?}",
+            all_codes(&result)
+        );
+        e.spells = vec![spell("spell.general_ward", Some(51))];
+        let result = validate(&e, &rs);
+        assert!(all_codes(&result).contains(&"over_spell_levels".to_string()));
+        assert!(!all_codes(&result).contains(&"spell_levels_unspent".to_string()));
+
+        // A non-magus has no such budget, so nothing is left over to report.
+        let companion = make_entity("companion", vec![]);
+        assert!(
+            !all_codes(&validate(&companion, &rs)).contains(&"spell_levels_unspent".to_string())
+        );
     }
 
     /// Skilled Parens's +30 raises the budget from 50 to 80, making 55 legal.
