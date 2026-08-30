@@ -268,6 +268,75 @@ describe('MagusMinimumAbilities checklist (slice 6b4)', () => {
   });
 });
 
+// guided-creation-review-2026-08 #12 (DECIDED): the checklist duplicates the
+// Validation panel — its own comment says the rows come from the same engine
+// findings — so it collapses to the summary line, expandable on demand. Validation
+// stays the authoritative surface.
+describe('MagusMinimumAbilities collapsed to a summary (slice 11, #12)', () => {
+  /** The `<details>…</details>` slice of the rendered body. */
+  function disclosure(body: string): string {
+    const match = /<details[^>]*data-testid="magus-minimums"[\s\S]*?<\/details>/.exec(body);
+    if (!match) throw new Error('the checklist is not inside a <details> disclosure');
+    return match[0];
+  }
+
+  it('renders only the summary line by default', () => {
+    setChecklist(shippedChecklist({ 'ability.magic_theory': 1 }));
+    const body = html();
+    // A native disclosure: the summary is its own control, so keyboard and screen
+    // reader support come from the platform rather than from an aria-expanded of
+    // our own.
+    const open = /<details[^>]*data-testid="magus-minimums"[^>]*>/.exec(body);
+    expect(open).not.toBeNull();
+    // Closed by default — that IS the collapse. `open` would ship the old surface
+    // under a new element.
+    expect(open![0]).not.toMatch(/\sopen[\s>=]/);
+    // The count still announces once, from the always-visible summary.
+    expect(element(body, 'magus-minimums-summary').open).toMatch(/role="status"/);
+    expect([...body.matchAll(/role="status"/g)]).toHaveLength(1);
+  });
+
+  it('keeps the whole checklist inside the disclosure, so opening it reveals everything', () => {
+    setChecklist(shippedChecklist());
+    const inside = disclosure(html());
+    // Both groups, their headings and the price of the recommended package: nothing
+    // is withheld from the expanded view, and nothing escapes the collapsed one.
+    for (const testid of [
+      'magus-minimum-ability.parma_magica',
+      'magus-recommended-ability.parma_magica',
+      'magus-recommended-hint',
+    ]) {
+      expect(has(inside, testid), `${testid} is outside the disclosure`).toBe(true);
+    }
+    expect(inside).toContain('Minimum Abilities');
+    expect(inside).toContain('Recommended minimum Abilities');
+  });
+
+  // THE COUNTING BUG. The summary said "N of 7" while sitting under the *Minimum
+  // Abilities* heading, above a list of three: it counted every row but headed only
+  // the required ones. The fix is positional — the summary becomes the disclosure's
+  // own label, heading the whole checklist that its total actually counts.
+  it('the summary counts only the rows it heads', () => {
+    setChecklist(shippedChecklist({ 'ability.magic_theory': 1 }));
+    const body = html();
+    const summaryAt = body.indexOf('data-testid="magus-minimums-summary"');
+    const minimumsHeadingAt = body.indexOf('Minimum Abilities');
+    expect(summaryAt).toBeGreaterThanOrEqual(0);
+    // It must not sit inside the scope of the "Minimum Abilities" heading, or its
+    // total reads as that heading's list.
+    expect(summaryAt).toBeLessThan(minimumsHeadingAt);
+
+    // And the total equals the number of rows the disclosure holds.
+    const inside = disclosure(body);
+    const rows = [...inside.matchAll(/data-testid="magus-(?:minimum|recommended)-ability\./g)];
+    const total = clean(element(body, 'magus-minimums-summary').text).match(/\d+/g) ?? [];
+    expect(total).toHaveLength(2);
+    expect(Number(total[1])).toBe(rows.length);
+    // One of the six is met, so five are outstanding.
+    expect(Number(total[0])).toBe(5);
+  });
+});
+
 describe('MagusMinimumAbilities and its validation message (slice 7, #13 + #32)', () => {
   /** The one `<li>` of a ValidationPanel showing the magus-minimum error. */
   function issueText(): string {

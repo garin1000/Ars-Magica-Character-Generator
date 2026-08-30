@@ -1,6 +1,7 @@
 // Pure helpers deriving display data from the loaded ruleset + entity. Kept out
 // of components so they can be unit-tested and reused.
 
+import type { TranslateArgs } from './i18n';
 import type {
   Ability,
   AbilityCategory,
@@ -1264,10 +1265,34 @@ export interface GuidanceContext {
   characteristicRules: CharacteristicRules | null | undefined;
 }
 
+/**
+ * One sentence of a step's guidance: a Fluent key plus the values it interpolates.
+ *
+ * `TranslateArgs`, not `Record<string, string>`, because a numeric arg must reach
+ * Fluent AS a number: a `select` on a string matches variant keys by equality only,
+ * so `{ $cap -> [0] … [1] … *[other] … }` — how a cap of 0, 1 and 2 each get their
+ * own grammatical sentence — silently falls through to the default when the value
+ * arrives as `"0"`.
+ */
+export interface GuidanceNote {
+  key: string;
+  args: TranslateArgs;
+}
+
 /** A step's guidance note: the Fluent key, plus the values its sentence needs. */
 export interface WizardGuidance {
   key: string;
   args: Record<string, string>;
+  /**
+   * Extra sentences appended after the main one, in order — the per-type advice the
+   * rules state for this step (guided-creation-review-2026-08 #7).
+   *
+   * A list of keys rather than one giant `select` inside the main message: each
+   * clause is then a WHOLE sentence in the `.ftl`, which a translator can read and
+   * reorder, instead of a fragment assembled from three nested selectors. Empty for
+   * every step that has no such advice, and empty when the ruleset states none.
+   */
+  notes: GuidanceNote[];
 }
 
 /**
@@ -1304,6 +1329,69 @@ const GUIDANCE_ARGS = {
 } satisfies Record<CreationPhase, (context: GuidanceContext) => Record<string, string> | null>;
 
 /**
+ * The per-type Virtue/Flaw advice, generated from the profile's own caps
+ * (guided-creation-review-2026-08 #7).
+ *
+ * The rules state these per character type — grog: no Story Flaws, not more than one
+ * Personality Flaw; companion and Mythic Companion: at most one Story and two
+ * Personality Flaws; magus: the same plus "should take at least one Hermetic Flaw"
+ * (Ars Magica - Definitive Edition (Core Rules).md:2822-2862, with the general
+ * statements at `:2818` and `:2820`) — and the ruleset ALREADY carries every one of
+ * them as `flaw_category_caps`. So nothing here restates a rule: change a cap in
+ * `rules/core/character_types.json` and the sentence changes with it.
+ *
+ * Three decisions worth keeping:
+ *
+ * - **`hard` picks the modal verb.** The flag is exactly the difference between the
+ *   rules' "may not" and "should not", so it is passed through as `rule` and the
+ *   sentence is chosen by it. Phrasing an enforced cap as advice would misstate it.
+ * - **`major_only` caps are skipped.** They are a narrower, always-enforced rule with
+ *   a finding of their own (`too_many_major_<category>_flaws`), so restating them
+ *   here would say the same thing twice in a paragraph whose job is the advisory
+ *   total.
+ * - **Declaration order.** The caps are emitted in the order the ruleset declares
+ *   them; the UI holds no opinion about which category comes first.
+ *
+ * NOTE: virtue caps are deliberately NOT walked. Every shipped one is `major_only`
+ * and hard (the magus's single Major Hermetic Virtue), so walking them would add
+ * nothing today while risking a category with no `wizard-guidance-<category>-…` key
+ * rendering its own slug — which is worse than silence.
+ */
+function flawCapNotes(profile: EntityTypeProfile): GuidanceNote[] {
+  return (profile.budget.flaw_category_caps ?? [])
+    .filter((cap) => cap.major_only !== true)
+    .map((cap) => ({
+      key: `wizard-guidance-${cap.category}-flaw-cap`,
+      args: { cap: cap.max, rule: cap.hard === true ? 'hard' : 'soft' },
+    }));
+}
+
+/**
+ * The extra guidance clauses a step states beyond its main sentence.
+ *
+ * Only `virtues_flaws` has any: the per-type Flaw caps, then the magus's
+ * Hermetic-Flaw recommendation. The Hermetic clause's condition mirrors the engine's
+ * `missing_hermetic_flaw` exactly — a magus whose type names at least one Gift
+ * category — so the advice and the warning can never disagree about who it applies
+ * to, and no category slug is hardcoded here.
+ *
+ * Source: Ars Magica - Definitive Edition (Core Rules).md:2860 ("You should take at
+ * least one Hermetic Flaw"). There is deliberately NO Story-Flaw minimum: the rules
+ * give Story Flaws a recommended ceiling of one (`:2818`, `:2837`) and no floor.
+ */
+function guidanceNotes(
+  phase: CreationPhase,
+  profile: EntityTypeProfile | undefined,
+): GuidanceNote[] {
+  if (phase !== 'virtues_flaws' || !profile) return [];
+  const notes = flawCapNotes(profile);
+  if (profile.is_magus && (profile.gift_categories?.length ?? 0) > 0) {
+    notes.push({ key: 'wizard-guidance-hermetic-flaw', args: {} });
+  }
+  return notes;
+}
+
+/**
  * The guidance shown on one wizard step: what the player decides here, and what
  * the rules say about it.
  *
@@ -1317,7 +1405,12 @@ export function wizardGuidance(
   context: GuidanceContext,
 ): WizardGuidance | null {
   const args = GUIDANCE_ARGS[phase](context);
-  return args ? { key: `wizard-guidance-${phase}`, args } : null;
+  if (!args) return null;
+  return {
+    key: `wizard-guidance-${phase}`,
+    args,
+    notes: guidanceNotes(phase, context.profile),
+  };
 }
 
 export interface AbilityGroup {

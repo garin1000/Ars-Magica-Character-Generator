@@ -106,6 +106,32 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   `personality`/`story` caps map onto the existing Fluent keys
   (`too_many_major_personality_flaws`, `too_many_personality_flaws`,
   `too_many_story_flaws`) by convention rather than a baked-in mapping.
+- **The same caps are also the guided wizard's V/F guidance**
+  (guided-creation-review-2026-08 #7). The Virtues & Flaws step used to state only
+  the point budget; it now appends one sentence per cap, generated from the very
+  same `flaw_category_caps`, so no rules figure is frozen into a translated
+  string. `ui/src/lib/derive.ts::flawCapNotes` maps each cap that is **not**
+  `major_only` onto the Fluent key `wizard-guidance-<category>-flaw-cap`, passing
+  `cap` (the maximum, as a **number**, so Fluent's `[0]`/`[1]`/`*[other]` variants
+  can pick the grammatical form) and `rule` (`hard` | `soft`, straight off the
+  cap's `hard` flag — which is precisely the book's own "may not" vs "should
+  not"). The per-type wording it reproduces: grog `:2826-2827`, companion
+  `:2837-2838`, Mythic Companion `:2850-2851`, magus `:2861-2862`, over the
+  general statements at `:2818` (Story ceiling) and `:2820` (Personality
+  ceiling + Major cap).
+- `major_only` caps are deliberately **left out of the guidance**: they are hard
+  caps the validator already reports as errors
+  (`too_many_major_<category>_flaws`), and restating them in an advisory
+  paragraph would state the same rule twice. `virtue_category_caps` is likewise
+  not walked — every shipped entry is `major_only` and hard.
+- **There is NO "at least one Story Flaw" rule**, and no guidance string may claim
+  one. `:2818` and `:2837` give Story Flaws a recommended *ceiling* of one and no
+  minimum whatsoever. The only "at least one" the rules state is the magus's
+  **Hermetic** Flaw (`:2860`), which the guidance carries as its own separate
+  clause (`wizard-guidance-hermetic-flaw`, worded exactly as the
+  `missing_hermetic_flaw` warning) under the same condition the engine uses — a
+  magus whose profile names at least one `gift_categories` entry.
+  `ui/src/lib/i18n.test.ts` asserts the absence in both locales.
 
 #### Tainted Virtues/Flaws — the "Type" tag + half-of-taken cap
 > "Tainted Virtues and Flaws are associated with the Infernal realm ... no more
@@ -672,6 +698,30 @@ approximation of "Latin").
   that edge and continues Edmonds-Karp on the same residuals. The sum is the true
   max flow with restricted usage maximized = minimum general used; feasibility and
   `total_demand` are unchanged.
+- **Unspent GENERAL experience warns too (Slice 11 / #30), and says nothing more.**
+  Overspending the general pool has always been `not_enough_xp`; leaving it unspent
+  produced **silence**, while a single unspent Characteristic point produced
+  `characteristic_points_unspent`. `validate_xp_pool` now emits
+  `general_xp_unspent` (warning, phase `abilities` — the step the XP bar lives on,
+  the same as `not_enough_xp`; args `pool`/`used`/`unspent`) as the `else if` branch
+  of the overspend test, so an infeasible allocation is never told both that it
+  overspent and that it has points left over.
+  - It counts `general_pool - general_used` **alone**. Each restricted pool already
+    has its own `restricted_xp_unspent`, so adding them in would report one
+    life-stage character's points twice — 300 general plus a 45 childhood spread
+    reported as 345 unspent *and* 45 unspent.
+  - **Purely factual wording, and the absence of a rule is the reason.** The pool's
+    *size* is thoroughly sourced (`:2213` 75 + 45, `:2214` 15/yr, `:2215` 240 for
+    apprenticeship, `:2216` 30/yr after the Gauntlet), but **no passage in
+    `rules/source/en/` says unspent general experience is lost or wasted.** So the
+    message is "N of M experience points are still unspent" and stops. The
+    restricted sibling's "will be wasted" is backed by that pool being earmarked to
+    a named list; the general pool is earmarked to nothing, so the same claim would
+    be invented. Do not "improve" the copy into one — `ui/src/lib/i18n.test.ts`
+    asserts the bare count in both locales.
+  - A **warning**, so `canFinish` (errors only) is untouched: a character may be
+    finished with experience in hand, which is exactly the state a player who has
+    not decided yet is in.
 - Permission unlock (Academic/Martial purchasable only with such a Virtue) is
   **deferred** — not enforced in this phase.
 
@@ -1718,6 +1768,27 @@ Skilled/Weak Parens `Effect::SpellLevels` modifiers on top of that base — and,
 a magus generated some years out of apprenticeship, the levels it took out of its
 post-Gauntlet points (`:2471`): see **Life as a magus after the Gauntlet — 30 points
 per year (M6/6b5)** below. So 120 is the budget *at the Gauntlet*, not a ceiling.
+
+**Unspent levels warn, and say nothing more (Slice 11 / #30).** Overspending the
+budget was an error while leaving 60 of 120 levels unlearned produced **silence** —
+the same asymmetry the experience pool had. `validation/magus.rs::validate_spells`
+now emits `spell_levels_unspent` (warning, phase `spells`, args `used`/`budget`/
+`unspent`) as the `else if` branch of the very `used > budget` test that emits
+`over_spell_levels`, so the pair reads one budget and can never disagree about it, and
+never both fire.
+
+**Why the message is purely factual, and must stay so.** The wording is "N of M
+levels of spells are still unspent" and asserts nothing about consequence. This is
+deliberate and was searched for while reviewing: `:2215` grants the levels ("Take 120
+levels of spells") and **no passage anywhere in `rules/source/en/` states that
+unlearned levels are lost, wasted or forfeit.** Its sibling
+`restricted_xp_unspent` *may* say "will be wasted" because a restricted pool is
+earmarked to a named list and buys nothing outside it — the reading recorded under
+**Early childhood** below, off `:2378` — but that backing does not extend here.
+The **absence** of a waste rule is the whole reason for the bare count — so a later
+pass that "improves" the copy into "will be wasted" would be inventing a rule, which
+`CLAUDE.md`'s provenance rule prohibits. `ui/src/lib/i18n.test.ts` pins it in both
+locales.
 
 **The base is offered for editing in direct entry only (Slice 8 / #19).** `:2215`'s
 "Take 120 levels of spells" is a flat grant with no in-rules variation, and every

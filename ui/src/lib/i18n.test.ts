@@ -155,6 +155,114 @@ describe('German UI bundle', () => {
     );
   });
 
+  // guided-creation-review-2026-08 #30: two new warning codes. A code with no
+  // `issue-<code>` message renders as its own slug, which is the very thing
+  // CLAUDE.md forbids — and locale parity alone would not catch it, because a code
+  // missing from BOTH locales is perfectly symmetrical.
+  it('names both unspent-budget findings in both locales', () => {
+    for (const lang of ['en', 'de']) {
+      const keys = messageKeys(sourceForLang(lang));
+      expect(keys, `${lang} is missing issue-general_xp_unspent`).toContain(
+        'issue-general_xp_unspent',
+      );
+      expect(keys, `${lang} is missing issue-spell_levels_unspent`).toContain(
+        'issue-spell_levels_unspent',
+      );
+    }
+  });
+
+  // #30's wording rule: `restricted_xp_unspent` may say the points are wasted
+  // (childhood's blocks are spend-or-lose), but the Core Rules make no such
+  // statement about the general pool or the 120 levels of spells. So these two
+  // messages count and stop — asserted, because "factual" is the requirement and a
+  // later editor "improving" the copy would silently invent a rule.
+  it.each(['en', 'de'])('states the unspent budgets as a bare count (%s)', (lang) => {
+    const bundle = buildBundle(lang as 'en' | 'de');
+    const clean = (s: string) => s.replace(/[⁦-⁩]/g, '');
+    const xp = clean(
+      translate(bundle, 'issue-general_xp_unspent', { pool: '240', used: '40', unspent: '200' }),
+    );
+    const levels = clean(
+      translate(bundle, 'issue-spell_levels_unspent', {
+        budget: '120',
+        used: '60',
+        unspent: '60',
+      }),
+    );
+    for (const message of [xp, levels]) {
+      // The count reaches the sentence…
+      expect(message).toMatch(/\b(200|60)\b/);
+      // …and the wasted-points claim of the restricted sibling does not.
+      expect(message.toLowerCase()).not.toMatch(/wast|verfall|verlor|verlier/);
+    }
+    // The sibling that IS allowed to say it still does, so this is a real contrast
+    // rather than a vacuous check on strings that never mention waste anyway.
+    const restricted = clean(
+      translate(bundle, 'issue-restricted_xp_unspent', {
+        origin: 'Educated',
+        amount: '50',
+        used: '0',
+        unspent: '50',
+      }),
+    );
+    expect(restricted.toLowerCase()).toMatch(/wast|verfall/);
+  });
+
+  // guided-creation-review-2026-08 #7: the per-type V/F advice is generated from the
+  // profile's `flaw_category_caps`, so each cap category needs its own message —
+  // German compounds ("Geschichte-Fehler") do not compose from an interpolated
+  // category label. Every category the shipped profiles cap must therefore be keyed,
+  // or the guidance renders a raw slug.
+  it('keys a flaw-cap sentence for every category the shipped profiles cap', async () => {
+    const profiles = (await import('../../../rules/core/character_types.json'))
+      .default as unknown as {
+      budget: { flaw_category_caps?: { category: string; major_only?: boolean }[] };
+    }[];
+    const categories = new Set(
+      profiles.flatMap((p) =>
+        (p.budget.flaw_category_caps ?? [])
+          .filter((cap) => cap.major_only !== true)
+          .map((cap) => cap.category),
+      ),
+    );
+    expect(categories.size).toBeGreaterThan(0);
+    for (const lang of ['en', 'de']) {
+      const keys = messageKeys(sourceForLang(lang));
+      for (const category of categories) {
+        expect(keys, `${lang} is missing wizard-guidance-${category}-flaw-cap`).toContain(
+          `wizard-guidance-${category}-flaw-cap`,
+        );
+      }
+      expect(keys, `${lang} is missing the Hermetic-Flaw clause`).toContain(
+        'wizard-guidance-hermetic-flaw',
+      );
+    }
+  });
+
+  // The correction the review doc records because it is easy to get backwards: the
+  // rules give Story Flaws a recommended CEILING of one and no minimum. The only
+  // "at least one" anywhere is the magus's Hermetic Flaw. A guidance string claiming
+  // a Story Flaw minimum would be a rule the source does not make, so no guidance
+  // string may read that way in either language.
+  it.each(['en', 'de'])('claims no Story Flaw minimum anywhere in the guidance (%s)', (lang) => {
+    const src = sourceForLang(lang);
+    const bundle = buildBundle(lang as 'en' | 'de');
+    const clean = (s: string) => s.replace(/[⁦-⁩]/g, '');
+    const guidanceKeys = [...messageKeys(src)].filter((key) => key.startsWith('wizard-guidance-'));
+    expect(guidanceKeys.length).toBeGreaterThan(0);
+
+    const args = { virtues: '10', flaws: '10', points: '7', cap: 1, rule: 'soft' };
+    const storyMinimum = /(at least|mindestens)/i;
+    for (const key of guidanceKeys) {
+      const text = clean(translate(bundle, key, args));
+      if (!/story|geschichte/i.test(text)) continue;
+      expect(text, `${key} states a Story Flaw minimum`).not.toMatch(storyMinimum);
+    }
+    // The one "at least one" the rules DO state is the magus's Hermetic Flaw, and it
+    // is worded as its own clause — so the check above is discriminating, not blanket.
+    expect(clean(translate(bundle, 'wizard-guidance-hermetic-flaw'))).toMatch(storyMinimum);
+  });
+
   it('has full message-key parity between English and German', () => {
     // A missing German key silently falls back to English (or the key) at
     // runtime, so drift is invisible without this check — the same class of gap

@@ -2387,6 +2387,23 @@ describe('issuesForPhase', () => {
     ]);
     expect(issuesForPhase(findings, 'abilities').map((i) => i.code)).toEqual(['not_enough_xp']);
   });
+
+  // Slice 11 (#30): the two unspent-budget warnings are owned by the steps that
+  // hold their budgets — the XP pool on `abilities`, the spell levels on `spells`.
+  // The "and nowhere else" half is the one that bites: a budget warning surfacing on
+  // the wrong step points the player at a surface with no control for it.
+  it('routes each unspent-budget warning to the step that owns that budget', () => {
+    const findings = [
+      issue('general_xp_unspent', 'abilities'),
+      issue('spell_levels_unspent', 'spells'),
+    ];
+    expect(issuesForPhase(findings, 'abilities').map((i) => i.code)).toEqual([
+      'general_xp_unspent',
+    ]);
+    expect(issuesForPhase(findings, 'spells').map((i) => i.code)).toEqual(['spell_levels_unspent']);
+    // Neither leaks onto the other's step, nor onto the step that funds them.
+    expect(issuesForPhase(findings, 'experience')).toEqual([]);
+  });
 });
 
 describe('phaseHasBlockingIssue', () => {
@@ -2586,6 +2603,132 @@ describe('wizardGuidance', () => {
     expect(
       wizardGuidance('concept', { profile: undefined, characteristicRules: undefined })?.key,
     ).toBe('wizard-guidance-concept');
+  });
+
+  // --- Slice 11 (#7): per-type V/F advice, generated from the profile ----------
+  //
+  // The caps are already in the ruleset (`flaw_category_caps`), so the sentences are
+  // built from data exactly as the budget numbers are — nothing about Story or
+  // Personality Flaws is frozen into a locale string. These assert the ARGS rather
+  // than the rendered sentence: the args are the contract between the profile and
+  // the copy, and asserting prose would pin the wording instead of the data path.
+  describe('per-type Virtue/Flaw advice (#7)', () => {
+    /** The shipped grog caps: `rules/core/character_types.json:44-48`. */
+    const grog: EntityTypeProfile = {
+      id: 'grog',
+      budget: {
+        virtue_points: 3,
+        flaw_points: 3,
+        flaw_category_caps: [
+          { category: 'personality', max: 0, major_only: true, hard: true },
+          { category: 'personality', max: 1 },
+          { category: 'story', max: 0 },
+        ],
+      },
+      creation_phases: [],
+    };
+    /** The shipped magus caps plus its Gift categories: `:75-83`, `:85-95`. */
+    const magus: EntityTypeProfile = {
+      id: 'magus',
+      budget: {
+        virtue_points: 10,
+        flaw_points: 10,
+        flaw_category_caps: [
+          { category: 'personality', max: 1, major_only: true, hard: true },
+          { category: 'personality', max: 2 },
+          { category: 'story', max: 1 },
+        ],
+        virtue_category_caps: [{ category: 'hermetic', max: 1, major_only: true, hard: true }],
+      },
+      is_magus: true,
+      gift_categories: ['hermetic'],
+      creation_phases: [],
+    };
+
+    it("states the type's own Story and Personality Flaw caps", () => {
+      // Grog: "You should not take Story Flaws" (:2826), "not more than one
+      // Personality Flaw" (:2827) — a cap of 0 and a cap of 1, both advisory.
+      expect(wizardGuidance('virtues_flaws', { ...context, profile: grog })?.notes).toEqual([
+        { key: 'wizard-guidance-personality-flaw-cap', args: { cap: 1, rule: 'soft' } },
+        { key: 'wizard-guidance-story-flaw-cap', args: { cap: 0, rule: 'soft' } },
+      ]);
+      // Magus: one Story Flaw, two Personality Flaws (:2861-2862) — different
+      // numbers off the same code path, so nothing is hardcoded per type.
+      expect(wizardGuidance('virtues_flaws', { ...context, profile: magus })?.notes).toEqual([
+        { key: 'wizard-guidance-personality-flaw-cap', args: { cap: 2, rule: 'soft' } },
+        { key: 'wizard-guidance-story-flaw-cap', args: { cap: 1, rule: 'soft' } },
+        { key: 'wizard-guidance-hermetic-flaw', args: {} },
+      ]);
+    });
+
+    it('states the magus Hermetic Flaw recommendation, and only for a magus', () => {
+      // ":2860 — You should take at least one Hermetic Flaw". The condition mirrors
+      // the engine's `missing_hermetic_flaw`: a magus whose type names a Gift
+      // category. Nothing else earns the clause.
+      const notes = wizardGuidance('virtues_flaws', { ...context, profile: magus })?.notes ?? [];
+      expect(notes).toContainEqual({ key: 'wizard-guidance-hermetic-flaw', args: {} });
+      expect(
+        wizardGuidance('virtues_flaws', { ...context, profile: grog })?.notes,
+      ).not.toContainEqual({ key: 'wizard-guidance-hermetic-flaw', args: {} });
+      // A type declared a magus but naming no Gift category cannot say which Flaws
+      // count as Hermetic, so it says nothing — exactly as the engine skips it.
+      expect(
+        wizardGuidance('virtues_flaws', {
+          ...context,
+          profile: { ...magus, gift_categories: [] },
+        })?.notes,
+      ).not.toContainEqual({ key: 'wizard-guidance-hermetic-flaw', args: {} });
+    });
+
+    it("carries the cap's hard flag through, so may-not never reads as should-not", () => {
+      // `hard` is what separates a rule from a recommendation in the profile, and it
+      // is the whole reason the clause is generated rather than written: an enforced
+      // cap must not be phrased as advice.
+      const strict: EntityTypeProfile = {
+        ...grog,
+        budget: {
+          ...grog.budget,
+          flaw_category_caps: [{ category: 'story', max: 0, hard: true }],
+        },
+      };
+      expect(wizardGuidance('virtues_flaws', { ...context, profile: strict })?.notes).toEqual([
+        { key: 'wizard-guidance-story-flaw-cap', args: { cap: 0, rule: 'hard' } },
+      ]);
+    });
+
+    it('skips the major-only caps, which the validator reports as errors', () => {
+      // A `major_only` cap is a narrower, enforced rule with its own finding
+      // (`too_many_major_personality_flaws`); restating it here would say the same
+      // thing twice in a paragraph whose job is the advisory total.
+      const majorOnly: EntityTypeProfile = {
+        ...grog,
+        budget: {
+          ...grog.budget,
+          flaw_category_caps: [{ category: 'personality', max: 1, major_only: true, hard: true }],
+        },
+      };
+      expect(wizardGuidance('virtues_flaws', { ...context, profile: majorOnly })?.notes).toEqual(
+        [],
+      );
+    });
+
+    it('adds no clause for a profile that caps nothing', () => {
+      // The fixture profile declares no caps at all: better silent than a sentence
+      // stating a limit the ruleset does not set.
+      expect(wizardGuidance('virtues_flaws', context)?.notes).toEqual([]);
+      // …and the budget half of the sentence is untouched by any of this.
+      expect(wizardGuidance('virtues_flaws', context)?.args).toEqual({
+        virtues: '20',
+        flaws: '10',
+      });
+    });
+
+    it('leaves every other phase without extra clauses', () => {
+      for (const phase of ALL_PHASES) {
+        if (phase === 'virtues_flaws') continue;
+        expect(wizardGuidance(phase, { ...context, profile: magus })?.notes).toEqual([]);
+      }
+    });
   });
 });
 

@@ -243,6 +243,13 @@ phase of that type's flow filled in, on the shipped binary.
   list one-for-one, so the two can never drift apart. Each
   step shows only its own validation findings and refuses to advance while it holds
   an error; Back and the step rail move freely through everything already visited.
+  Each step also states what the rules say about it, with every figure read from the
+  loaded ruleset rather than written into the copy — so the Virtues & Flaws step
+  states the chosen character type's *own* Story and Personality Flaw guidance, and a
+  magus's also states that it should take at least one Hermetic Flaw. Leaving a budget
+  unspent is reported as well, not only overspending it: unspent experience and
+  unspent levels of spells each raise a non-blocking warning on the step that owns
+  them and again on Review.
   A closing Review step reports what no step could (equipment, Might, Warping)
   and hands the finished character to the ordinary editor. Which mode
   enforces the gate is still the validation-mode control: Advisory and Silent stop

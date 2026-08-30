@@ -372,10 +372,14 @@ describe('the guided aging step', () => {
     await $(LONGEVITY_BONUS).waitForExist({ timeout: STEP_TIMEOUT });
     // Scroll it in, then wait for CLICKABLE, not merely existing. The guided aging
     // step nests three scrollports (`.tab-content` > `.vf-tab` > `.tab-scroll`) and
-    // the innermost is ~254px tall for ~1340px of content in an 800px window, so this
-    // field sits below the fold: its centre falls outside the visible box, the
-    // driver's hit-test lands on an ancestor, and `setValue` reports the element as
-    // never becoming interactable. A human scrolls to it, so the spec does too.
+    // the innermost measures 218px for 1340px of content in an 800px window (measured
+    // again at Slice 11; it was ~254px when #34 was filed), so this field sits below
+    // the fold: its centre falls outside the visible box, the driver's hit-test lands
+    // on an ancestor — `MAIN.tab-content.wizard-body` — and `setValue` reports the
+    // element as never becoming interactable. A human scrolls to it, so the spec does
+    // too. This stays the fix: Slice 11 measured removing the inner scrollport and it
+    // changes nothing here (the step is 267px tall either way, and the same
+    // scroll-then-wait is needed) — see `.tab-scroll`'s comment in `app.css`.
     // `waitForExist` alone was never enough — it means "in the DOM", not "usable" —
     // and the same two lines in `aging-crisis.e2e.js` failed the same way (fixed in
     // Slice 8; this call site was missed).
