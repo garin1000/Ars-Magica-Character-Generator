@@ -370,6 +370,17 @@ describe('the guided aging step', () => {
     // one place the bonus can be entered at all.
     await $(LONGEVITY_ADD).click();
     await $(LONGEVITY_BONUS).waitForExist({ timeout: STEP_TIMEOUT });
+    // Scroll it in, then wait for CLICKABLE, not merely existing. The guided aging
+    // step nests three scrollports (`.tab-content` > `.vf-tab` > `.tab-scroll`) and
+    // the innermost is ~254px tall for ~1340px of content in an 800px window, so this
+    // field sits below the fold: its centre falls outside the visible box, the
+    // driver's hit-test lands on an ancestor, and `setValue` reports the element as
+    // never becoming interactable. A human scrolls to it, so the spec does too.
+    // `waitForExist` alone was never enough — it means "in the DOM", not "usable" —
+    // and the same two lines in `aging-crisis.e2e.js` failed the same way (fixed in
+    // Slice 8; this call site was missed).
+    await $(LONGEVITY_BONUS).scrollIntoView({ block: 'center' });
+    await $(LONGEVITY_BONUS).waitForClickable({ timeout: STEP_TIMEOUT });
     await $(LONGEVITY_BONUS).setValue('1');
 
     // Subtracted like the conditions (`:16571`: "a high Longevity Ritual modifier

@@ -593,17 +593,15 @@ button:disabled {
   font-weight: 700;
 }
 
-/* A step nothing has been recorded for. Unlike the blocked marker this says
-   nothing about legality, so it is quiet: no colour of warning, and the words come
-   from the marker itself rather than from a glyph. */
-.wizard-rail-incomplete {
-  color: #8f8bb0;
-  font-size: 0.75rem;
-  font-style: italic;
-  margin-left: 0.3rem;
-}
+/* A step nothing has been recorded for carries NO visual marker of its own
+   (guided-creation-review-2026-08 #10): the flag is the engine's
+   `completeness.incomplete_phases`, so on a fresh character every step in the rail
+   was labelled at once. The marker survives as `.sr-only` text inside the step
+   button (WizardShell.svelte), so it is still part of the accessible name, and the
+   statement stays visible for sighted users on the step itself (below) and in the
+   Review step's outstanding list. Hence no `.wizard-rail-incomplete` rule here. */
 
-/* The same statement on the step itself. Its box is ALWAYS there — the element is
+/* The statement on the step itself. Its box is ALWAYS there — the element is
    mounted on every step and only its visibility is toggled (`.hidden-reserved`,
    WizardShell.svelte), because the flag behind it flips on the player's first click
    and a collapsing line above an input surface moves the control being clicked
@@ -840,15 +838,34 @@ ul {
   padding: 0;
 }
 
-/* Minor separation between successive V/F entries in each list. */
-.item-list li,
-.selection-list li {
-  border-bottom: 1px solid var(--divider);
+/* Minor separation between successive entries of every grouped list (the V/F
+   source and selected lists, and the equipment list), drawn as a border-TOP on
+   every row after the first.
+   NOT a border-bottom with a `:last-child` exception (guided-creation-review-2026-08
+   #8): `:last-child` is scoped per PARENT, and `SelectionList.svelte` opens one
+   `<ul>` per group, so the exception fired once per GROUP instead of once per list.
+   A group carrying an `<h3 class="category">` header hid that — the header draws its
+   own boundary — but a header-less group (Spells' unknown Technique/Form bucket,
+   Equipment's unclassified bucket, and formerly the V/F granted group) lost its
+   boundary entirely. `li + li` needs no exception at all. */
+.item-list li + li,
+.selection-list li + li,
+.equipment-list li + li {
+  border-top: 1px solid var(--divider);
 }
 
-.item-list li:last-child,
-.selection-list li:last-child {
-  border-bottom: none;
+/* Two grouped lists as ADJACENT siblings. That can only happen when the second
+   group has no header, because a header sits between the two `<ul>`s and breaks the
+   adjacency — so this rule fires exactly in the header-less case and draws the
+   boundary a `.category` header would have drawn: the same 2px divider, with the
+   same space around it, so a header-less group is separated exactly like a headed
+   one. */
+.selection-list + .selection-list,
+.spell-list + .spell-list,
+.equipment-list + .equipment-list {
+  border-top: 2px solid var(--divider);
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
 }
 
 /* Holds the name with the tags overlaid on its right; positioning context for
@@ -1656,16 +1673,13 @@ ul {
   padding: 0;
 }
 
+/* The row separator itself lives with the other grouped lists' (`.item-list li +
+   li` above), so all three share one mechanism and one boundary rule. */
 .equipment-list li {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   padding: 0.3rem 0;
-  border-bottom: 1px solid var(--divider);
-}
-
-.equipment-list li:last-child {
-  border-bottom: none;
 }
 
 .equipment-name {
@@ -1769,11 +1783,21 @@ ul {
   color: var(--muted);
 }
 
+/* One issue row, of any severity. The typography is declared HERE, for both
+   severities at once (guided-creation-review-2026-08 #6): the row's class list is
+   `issue` plus the BARE severity word, and a standalone one-word `.error` rule
+   written for banner text used to match it at the same specificity. With `.issue`
+   setting neither font-size nor colour, that banner rule won by DEFAULT — so Error
+   rows rendered smaller and red-tinted while Warning rows, having no twin rule, did
+   not. Severity belongs to the left border, the background tint and the uppercase
+   badge below, all of which say it without changing the text's size or colour. */
 .issue {
   padding: 0.35rem 0.5rem;
   border-radius: 6px;
   margin-bottom: 0.35rem;
   border-left: 3px solid transparent;
+  font-size: 0.85rem;
+  color: var(--ink);
 }
 
 .issue.error {
@@ -1835,7 +1859,13 @@ ul {
   align-items: center;
 }
 
-.error {
+/* A failed-operation banner: the start screen's ruleset load failure, the
+   save/load bar's error line. NOT named `.error` (guided-creation-review-2026-08
+   #6): a bare one-word class carrying typography collides with every element that
+   names its severity in a class — it was silently restyling the validation panel's
+   Error rows, which set the same word. The name says what the element IS, so no
+   severity-named class can pick it up by accident. */
+.error-banner {
   color: var(--error);
   font-size: 0.85rem;
 }

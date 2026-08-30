@@ -187,6 +187,37 @@ Referential integrity: the exemplar slug is a label key, not a `ref`, so it is e
 from the `has`/`incompatible_with` resolution rules — state that explicitly where the
 loader's integrity check is documented, or the next audit will flag it.
 
+### #34 — the guided aging step nests three scrollports, and a control ends up below the fold — **OPEN, for the S11 re-measure**
+
+**Surfaced by Slice 10's e2e run, diagnosed, worked around in the spec, not fixed in the
+product.** The wizard's aging step nests **three** scrollports:
+`main.tab-content` → `.vf-tab` → `.tab-scroll`. In an 800px window the innermost is
+about **254px tall for ~1340px of content**, so a control partway down — measured on
+`longevity-bonus` — sits with its **centre outside the visible box**. WebKitWebDriver
+hit-tests that centre point, lands on an ancestor, and reports the element as never
+becoming interactable; `elementFromPoint` returned `MAIN.tab-content.wizard-body`.
+
+**A human can still reach it by scrolling**, so this is a usability wart rather than an
+unreachable control — unlike Slice 6's aging-log remove button, which no amount of
+scrolling could click. `aging.e2e.js` now scrolls it into view and waits for
+*clickable* before typing, which is what a user does anyway.
+
+**Why it is worth fixing rather than leaving.** Three nested scrollports on one step is
+one too many: `.vf-tab` took over the step's vertical overflow in Slice 8 (to give the
+sticky bars travel), and `.tab-scroll` predates that, so the inner one may now be
+redundant. Collapsing it would give the step its whole height back.
+
+**Do it at the S11 re-measure.** Slice 11 takes `MagusMinimumAbilities` off the
+Abilities surface, which is the first point the `.region-row` / `.list-scroll` floors can
+honestly be re-assessed — and this is the same question about the same height chain, so
+measure both together rather than twice.
+
+**History worth knowing:** it passed at Slice 9 (39/39, verified first-hand) and failed
+deterministically after Slice 10, whose changes all *increase* the room available. So
+Slice 10 did not cause it; it shifted the geometry enough to tip an already-marginal case
+over. A case this close to the edge is exactly what "passes today" looks like just before
+it does not.
+
 ### #33 — a grog cannot set Personality Traits in the wizard, and the rules say it most needs to — **NEEDS A DECISION**
 
 **Surfaced by Slice 3, verified from source, not in the review doc.** Slice 3's

@@ -248,6 +248,31 @@ describe('WizardShell', () => {
     expect(label).not.toContain('concept');
   });
 
+  // guided-creation-review-2026-08 #10 (requested change): the flag behind this
+  // marker is the engine's `completeness.incomplete_phases`, NOT "step not opened
+  // yet" — so on a fresh character EVERY rail step carried the words "not started"
+  // at once, which is noise on the one screen that has to stay scannable (and
+  // Slice 11 adds warnings of its own to the same surface).
+  //
+  // The words go, the announcement stays: deleting the span would leave
+  // `data-incomplete` as a style hook only, making the marker a colour/styling-only
+  // channel (WCAG 1.4.1). `.sr-only` is the right utility here rather than
+  // `.hidden-reserved` — this marker must be ANNOUNCED and must take no space,
+  // which is exactly the opposite trade to the on-step hint above.
+  it('keeps the incomplete marker present but visually hidden', () => {
+    store.result = { issues: [], completeness: { incomplete_phases: ['concept'] } };
+    const body = html();
+    const marker = tag(body, 'wizard-incomplete-concept');
+    // Still in the DOM, still inside the button, so it is part of the accessible
+    // name the rail step announces.
+    expect(marker).toContain('sr-only');
+    expect(text(body, 'wizard-incomplete-concept')).not.toBe('');
+    // Not hidden from assistive tech, and not hidden by a mechanism that removes
+    // it from the accessibility tree.
+    expect(marker).not.toContain('aria-hidden');
+    expect(marker).not.toContain('hidden-reserved');
+  });
+
   // The mark says nothing about legality, so it must not touch the gate.
   it('leaves Next enabled over an untouched step', () => {
     store.result = { issues: [], completeness: { incomplete_phases: ['concept'] } };

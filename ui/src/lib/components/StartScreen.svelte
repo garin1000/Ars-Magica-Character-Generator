@@ -31,7 +31,7 @@
   <h2 id="start-heading">{store.t('start-title')}</h2>
 
   {#if errorText}
-    <p class="error" role="alert" data-testid="start-error">{errorText}</p>
+    <p class="error-banner" role="alert" data-testid="start-error">{errorText}</p>
   {/if}
 
   <section class="start-choice" aria-labelledby="start-open-heading">

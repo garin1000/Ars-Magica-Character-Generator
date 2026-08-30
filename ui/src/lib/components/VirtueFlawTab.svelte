@@ -9,6 +9,7 @@
     groupSelectionsByCategory,
     incompatibleRefs,
     mandatoryTraitRefs,
+    type SelectionRow,
   } from '../derive';
   import { reserveTagSpace, tooltip, withReason, type TooltipContent } from '../actions';
   import type { ItemKind, Magnitude, PointItem, Selection } from '../types';
@@ -111,11 +112,25 @@
     mandatoryTraitRefs(store.ruleset?.ruleset.type_profiles[store.entity.type_id]),
   );
 
-  // A chosen selection with its original entity index, or a read-only
-  // House-granted row — the two row shapes a V/F column renders.
-  type VfRow =
-    | { kind: 'sel'; selection: Selection; index: number }
-    | { kind: 'granted'; grant: Selection };
+  // A chosen selection with its original entity index, or a read-only granted
+  // row — the two row shapes a V/F column renders. Both come out of the one
+  // grouping pass, so the engine's grouping and this component's rendering cannot
+  // disagree about which category a granted row belongs to.
+  type VfRow = SelectionRow;
+
+  // The `{#each}` key for one row. Kind-tagged AND position-bearing, for two
+  // independent reasons:
+  //  * bought and granted rows now share a single keyed block, so a bought entity
+  //    index must not be able to collide with a granted position;
+  //  * the engine concatenates House, Mythic Companion, `grants_selection` and
+  //    warping grants WITHOUT dedup (`effective.rs` `entity_grants`), so one ref
+  //    can be granted twice. A duplicate key throws `each_key_duplicate`, which
+  //    aborts this tab's entire render — in production, not only in tests.
+  function rowKey(row: VfRow): string {
+    return row.kind === 'sel'
+      ? `sel-${row.index}`
+      : `granted-${row.grantIndex}-${row.selection.ref}`;
+  }
 
   function selectionsFor(side: Side): { selection: Selection; index: number }[] {
     const kinds = kindsFor(side);
@@ -130,11 +145,12 @@
   const selectedColumns = $derived.by(() =>
     SIDES.map((side) => {
       const selections = selectionsFor(side);
-      const groupedSelections = store.ruleset
-        ? groupSelectionsByCategory(store.ruleset, selections)
-        : [];
-      // House-granted rows on this side (e.g. Bonisagus → Puissant Magic Theory):
-      // derived at eval, not stored, so they show read-only below the chosen ones.
+      // Granted rows on this side (e.g. Bonisagus → Puissant Magic Theory): derived
+      // at eval, not stored, so they are read-only — but they are grouped and
+      // ordered exactly like the chosen ones, under their OWN category
+      // (guided-creation-review-2026-08 #9). A header-less trailing group inherited
+      // whichever heading sorted last, so a Hermetic granted Virtue read as
+      // Supernatural.
       const granted = store.ruleset
         ? grantedSelectionsForSide(store.ruleset, store.effective?.granted_selections, side)
         : [];
@@ -142,29 +158,13 @@
         key: string;
         header?: string;
         rows: { key: string | number; item: VfRow }[];
-      }[] = groupedSelections.map((g) => ({
+      }[] = (
+        store.ruleset ? groupSelectionsByCategory(store.ruleset, selections, granted) : []
+      ).map((g) => ({
         key: g.category,
         header: store.t(`category-${g.category}`),
-        rows: g.entries.map((e) => ({
-          key: e.index,
-          item: { kind: 'sel', selection: e.selection, index: e.index } as VfRow,
-        })),
+        rows: g.rows.map((row) => ({ key: rowKey(row), item: row })),
       }));
-      if (granted.length > 0) {
-        // The granted rows sit in a header-less list below the chosen ones.
-        groups.push({
-          key: 'granted',
-          rows: granted.map((grant, i) => ({
-            // The index is part of the key because the ref is not unique: the
-            // engine concatenates House, Mythic Companion, `grants_selection` and
-            // warping grants without dedup (effective.rs `entity_grants`), so one
-            // ref can be granted twice. A duplicate key makes Svelte throw
-            // `each_key_duplicate`, which aborts this tab's render entirely.
-            key: `granted-${i}-${grant.ref}`,
-            item: { kind: 'granted', grant } as VfRow,
-          })),
-        });
-      }
       return {
         key: side,
         title: store.t(titleKey(side)),
@@ -337,9 +337,12 @@
                 {/if}
               </li>
             {:else}
-              <li data-testid="granted-selection-{item.grant.ref}">
+              <!-- The grant position is in the test id as well as in the key: the
+                   same ref can be granted twice (see `rowKey`), and a duplicated
+                   test id would make the two rows indistinguishable to a spec. -->
+              <li data-testid="granted-selection-{item.selection.ref}-{item.grantIndex}">
                 <div class="selection-row">
-                  {@render nameWrap(item.grant.ref, item.grant.params)}
+                  {@render nameWrap(item.selection.ref, item.selection.params)}
                   <span class="row-marker">{store.t('house-granted-label')}</span>
                 </div>
               </li>

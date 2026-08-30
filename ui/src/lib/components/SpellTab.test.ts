@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
@@ -100,6 +102,14 @@ function resetEntity(): void {
 function html(): string {
   return render(SpellTab, { props: {} }).body;
 }
+
+/**
+ * `app.css` as text. CSS is not observable through `render` from `svelte/server`
+ * (no stylesheet is attached), and NOT importable as `./app.css?raw` either:
+ * vitest stubs CSS modules by extension regardless of the query, so `?raw` would
+ * yield `''` and every assertion would pass vacuously.
+ */
+const appCss = readFileSync(fileURLToPath(new URL('../../app.css', import.meta.url)), 'utf-8');
 
 /** The full outer HTML of the element carrying a data-testid — nesting-aware, so
  * a container's own closing tag is not mistaken for a nested child's. */
@@ -253,5 +263,57 @@ describe('SpellTab ritual minimum learnable level (VA2)', () => {
 
     store.effective!.spell_levels_budget = 125; // remaining = 25, meets the engine's floor
     expect(outer(html(), `add-${RITUAL}`)).toMatch(/aria-disabled="false"/);
+  });
+});
+
+// guided-creation-review-2026-08 #8: `SelectionList.svelte` opens a NEW `<ul>` per
+// group, and the row separator was a `border-bottom` suppressed on `:last-child` —
+// a selector scoped per PARENT, so the suppression fired once per group. A group
+// that carries a header hides that (the next `<h3 class="category">` draws its own
+// boundary), but this tab emits a HEADER-LESS trailing group for spells missing
+// from the catalogue (no Technique/Form to label), which butted straight against
+// the group above it with no divider at all.
+describe('SpellTab separates a header-less group from the one above it (#8)', () => {
+  const UNKNOWN = 'spell.not_in_catalogue';
+
+  /** One catalogue spell (headed group) plus one absent from it (header-less). */
+  function withUnknownSpell(): void {
+    store.entity.spells = [{ spell: SPELL, mastery: 1 }, { spell: UNKNOWN }];
+  }
+
+  /** The selected side's markup, where the grouped `<ul>`s live. */
+  function selectedRegion(body: string): string {
+    const start = body.indexOf('class="region region-selected"');
+    if (start < 0) throw new Error('no selected region');
+    return body.slice(start);
+  }
+
+  it('emits the header-less group as a bare sibling list, with no heading to divide it', () => {
+    withUnknownSpell();
+    const region = selectedRegion(html());
+    const lists = [...region.matchAll(/<ul\b[^>]*>/g)];
+    expect(lists).toHaveLength(2);
+    // Nothing between the two lists but markup-level noise: no `<h3>` boundary, so
+    // the separator has to come from the list boundary itself.
+    const between = region.slice(
+      region.indexOf('</ul>'),
+      region.indexOf('<ul', region.indexOf('</ul>')),
+    );
+    expect(between).not.toContain('<h3');
+    expect(
+      between
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/<\/ul>/, '')
+        .trim(),
+    ).toBe('');
+  });
+
+  it('draws the separator at the list boundary rather than per-parent last-child', () => {
+    // The mechanism, read from the stylesheet: CSS is not observable through
+    // `render` from `svelte/server`.
+    expect(appCss).toMatch(/^\.spell-list \+ \.spell-list.*\{[^}]*border-top:/ms);
+    // And the broken selector is gone — any fix rebuilt on `:last-child` has the
+    // same per-parent scoping bug.
+    expect(appCss).not.toMatch(/^\.spell-list li:last-child/m);
   });
 });
