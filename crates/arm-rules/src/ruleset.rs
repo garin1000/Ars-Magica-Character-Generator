@@ -27,7 +27,8 @@ use crate::spell::{RITUAL_MIN_LEVEL, Spell, SpellDuration, SpellTarget, SpellsFi
 use crate::spell_mastery::{SpellMasteryAbilitiesFile, SpellMasteryAbility};
 use crate::types::{
     AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, CreationPhase, Effect, EntityTypeProfile, I18nEntry, Id,
-    ItemKind, Magnitude, ParameterDomain, PointItem, Prereq, RulesetRef, SourceRef, SpecialCasting,
+    ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDomain, PointItem, Prereq, RulesetRef,
+    SourceRef, SpecialCasting,
 };
 
 mod accessors;
@@ -249,6 +250,26 @@ fn derived_magnitude_points() -> BTreeMap<Magnitude, u8> {
         .into_iter()
         .map(|m| (m, m.points()))
         .collect()
+}
+
+impl Ruleset {
+    /// Overwrites this `Ruleset`'s six engine-derived fields — fixed
+    /// taxonomies and engineering constants that are never authored data (see
+    /// `magnitude_points`'s own doc). The single place both construction
+    /// paths call: [`parse::assemble_ruleset`] (the fresh-parse path,
+    /// `Ruleset::from_sources`) and [`Ruleset::from_serialized`] (the cached
+    /// path, which must re-derive rather than trust the incoming JSON — see
+    /// that method's doc). Before V46 each path carried its own copy of these
+    /// six assignments; drift between them was a silent possibility. Now a
+    /// change to any of the six needs one edit, and both paths pick it up.
+    fn apply_derived_fields(&mut self) {
+        self.magnitude_points = derived_magnitude_points();
+        self.ability_category_order = AbilityCategory::ALL.to_vec();
+        self.art_type_order = ArtType::ALL.to_vec();
+        self.ritual_min_level = RITUAL_MIN_LEVEL;
+        self.aura_modifier_min = AURA_MODIFIER_MIN;
+        self.aura_modifier_max = AURA_MODIFIER_MAX;
+    }
 }
 
 /// The set of language-neutral JSON source strings a [`Ruleset`] is built from.
@@ -2279,6 +2300,91 @@ mod tests {
             msg.contains("virtue.nonexistent"),
             "should find nested unknown prereq ref: {msg}"
         );
+    }
+
+    /// Wraps `IsMagus` (a leaf that needs no ref lookup, so it cannot itself
+    /// trigger an "unknown ref" error and confuse the depth assertion) in
+    /// `wraps` levels of `Prereq::All`. The leaf then sits at depth
+    /// `wraps + 1` (the top-level prerequisite is depth 1).
+    fn nested_prereq(wraps: usize) -> Prereq {
+        let mut p = Prereq::IsMagus;
+        for _ in 0..wraps {
+            p = Prereq::All(vec![p]);
+        }
+        p
+    }
+
+    /// Built via `Prereq` values directly rather than JSON: constructing a
+    /// 32+-level-deep nested JSON literal by hand is impractical, and going
+    /// through `serde_json` would additionally exercise *its* independent
+    /// recursion limit (default 128) rather than pinning ours. Mutating the
+    /// already-loaded `Ruleset`'s `point_items` map and calling
+    /// `validate_integrity()` directly isolates exactly the code under test:
+    /// `Ruleset::validate_prereq_refs`'s own depth bound (K8).
+    fn ruleset_with_prereq(prereq: Prereq) -> Ruleset {
+        // The second item satisfies validate_engine_required_categories's
+        // "the catalogue carries a personality-category item" check — an
+        // unrelated engine-required-catalogue invariant that would otherwise
+        // fail first and mask the depth assertion under test.
+        let items = r#"[
+          { "id": "virtue.tester", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "category": "general" },
+          { "id": "flaw.personality_filler", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "category": "personality" }
+        ]"#;
+        let mut rs = Ruleset::from_json("t", "1", items, "[]").unwrap();
+        rs.point_items
+            .get_mut(&Id::new("virtue.tester"))
+            .unwrap()
+            .prerequisites = Some(prereq);
+        rs
+    }
+
+    #[test]
+    fn a_prereq_nested_exactly_to_the_depth_limit_still_validates() {
+        // Leaf at depth PREREQ_MAX_DEPTH (== the limit, not past it) must be
+        // accepted — the guard must not reject a merely deep-but-legal tree.
+        let rs = ruleset_with_prereq(nested_prereq(PREREQ_MAX_DEPTH - 1));
+        assert!(
+            rs.validate_integrity().is_ok(),
+            "a prerequisite nested exactly to PREREQ_MAX_DEPTH should still validate"
+        );
+    }
+
+    #[test]
+    fn a_prereq_nested_one_level_past_the_depth_limit_is_rejected_cleanly() {
+        // Leaf at depth PREREQ_MAX_DEPTH + 1 crosses the limit and must be
+        // rejected with a clear, item-naming error — not a stack overflow.
+        let rs = ruleset_with_prereq(nested_prereq(PREREQ_MAX_DEPTH));
+        let err = rs.validate_integrity().unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.tester") && msg.contains("nests more than"),
+            "expected a clear over-depth error naming the item, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn a_pathologically_deep_prereq_is_rejected_cleanly_not_a_stack_overflow() {
+        // Far beyond anything a legitimate ruleset (or even a generous
+        // future one) could produce — the property under test is that this
+        // returns an ordinary Err, not that it aborts the process. Capped at
+        // 1,000 (not, say, 50,000): past several tens of thousands the
+        // compiler-generated `Drop` for the nested `Vec<Prereq>` chain itself
+        // recurses once per level when this function's `rs` goes out of
+        // scope, which is a *different* unbounded recursion than the one K8
+        // fixes (`Ruleset::validate_prereq_refs`'s own walk, which this test
+        // proves stops at depth 33 regardless of how deep the input goes).
+        // That Drop recursion is not reachable via the real loading path
+        // (`Ruleset::from_sources`/`from_serialized`), because entities only
+        // ever get JSON-deserialized `Prereq` trees, and `serde_json` enforces
+        // its own recursion limit (default 128) during parsing — this test's
+        // whole point is to exercise a tree built directly in Rust, bypassing
+        // that limit, precisely to prove `validate_prereq_refs`'s bound is not
+        // merely inherited from serde_json.
+        let rs = ruleset_with_prereq(nested_prereq(1_000));
+        let err = rs.validate_integrity().unwrap_err();
+        assert!(err.to_string().contains("virtue.tester"));
     }
 
     #[test]
@@ -4355,6 +4461,54 @@ mod tests {
         // And the whole thing round-trips back through the validating loader.
         let restored = Ruleset::from_serialized(&serde_json::to_string(&rs).unwrap()).unwrap();
         assert_eq!(rs, restored);
+    }
+
+    /// V46 characterization test: pins that the six engine-derived fields
+    /// (`magnitude_points`, `ability_category_order`, `art_type_order`,
+    /// `ritual_min_level`, `aura_modifier_min`, `aura_modifier_max`) come out
+    /// byte-for-byte identical whichever of the two construction paths
+    /// produced the `Ruleset` — fresh-parsed via `assemble_ruleset`
+    /// (`Ruleset::from_sources`) or reconstructed via
+    /// `Ruleset::from_serialized`. Written before the V46 dedup so it pins
+    /// current (pre-refactor) behaviour; it must stay green once both paths
+    /// route through one shared derivation instead of each carrying its own
+    /// copy of the six assignments.
+    #[test]
+    fn from_sources_and_from_serialized_derive_identical_engine_fields() {
+        let fresh = Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: Some(VALID_ABILITIES),
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: None,
+            characteristics: None,
+            life_stages: None,
+            childhoods: None,
+            aging: None,
+        })
+        .unwrap();
+
+        let restored = Ruleset::from_serialized(&serde_json::to_string(&fresh).unwrap()).unwrap();
+
+        assert_eq!(fresh.magnitude_points, restored.magnitude_points);
+        assert_eq!(
+            fresh.ability_category_order,
+            restored.ability_category_order
+        );
+        assert_eq!(fresh.art_type_order, restored.art_type_order);
+        assert_eq!(fresh.ritual_min_level, restored.ritual_min_level);
+        assert_eq!(fresh.aura_modifier_min, restored.aura_modifier_min);
+        assert_eq!(fresh.aura_modifier_max, restored.aura_modifier_max);
+        // Not a vacuous "0 == 0"/"[] == []" pass: each is genuinely non-empty.
+        assert!(!fresh.magnitude_points.is_empty());
+        assert!(!fresh.ability_category_order.is_empty());
+        assert!(!fresh.art_type_order.is_empty());
     }
 
     #[test]

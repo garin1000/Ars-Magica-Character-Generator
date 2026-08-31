@@ -4952,6 +4952,12 @@ carry no source citation:
 - Entity-kind applicability, parameter validation, duplicate-selection detection
   (`validation/selections.rs` — `validate_entity_kind_applicability` (:83),
   `validate_parameters` (:216), `validate_duplicate_selections` (:107))
+- `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
+  to the `Prereq` enum) — a robustness limit against a pathologically deep
+  boolean-expression tree from a crafted or corrupted `rules/` directory,
+  enforced at load (`ruleset/integrity.rs` — `validate_prereq_refs`) and, as
+  defense in depth, at evaluation (`validation/prereq.rs` —
+  `evaluate_prereq`)
 
 ### The saga year (Slice 12, #25) — `validation/saga.rs`
 

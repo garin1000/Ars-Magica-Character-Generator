@@ -889,7 +889,7 @@
   },
   "flaw.poor_characteristic": {
     "name": "Poor {characteristic}",
-    "summary": "Lower a Characteristic already at −3 down to −5; you still gain the points."
+    "summary": "Lower a Characteristic already at -3 down to -5; you still gain the points."
   },
   "flaw.poor_concentration": {
     "name": "Poor Concentration",

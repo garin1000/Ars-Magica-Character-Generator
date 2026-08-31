@@ -13,3 +13,14 @@ homepage = "https://github.com/garin1000/Ars-Magica-Character-Generator"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 proptest = "1"
+
+# K9: Rust defaults `overflow-checks = false` in the release profile, so an
+# integer overflow panics under `cargo test` (dev profile, checks on by
+# default) but silently wraps in the shipped binary. This codebase is
+# arithmetic-heavy (aging/crisis ladders, XP pools, Art and characteristic
+# scores) — a silent wraparound there means a wrong character, not a crash,
+# which is worse: nothing signals the corruption. Force the same checks on in
+# release so a wraparound aborts loudly (losing unsaved work, but never a
+# silently wrong character) instead of shipping a miscalculation.
+[profile.release]
+overflow-checks = true

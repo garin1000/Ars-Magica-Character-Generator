@@ -139,15 +139,11 @@ impl Ruleset {
     /// NOT validate integrity — always reconstruct via this method.
     pub fn from_serialized(json: &str) -> Result<Self, RulesetError> {
         let mut ruleset: Ruleset = serde_json::from_str(json)?;
-        // These are derived constants, not authored data: re-derive them rather
-        // than trusting the incoming JSON, so an older payload missing the fields
-        // still yields a correct, non-empty ruleset.
-        ruleset.magnitude_points = derived_magnitude_points();
-        ruleset.ability_category_order = AbilityCategory::ALL.to_vec();
-        ruleset.art_type_order = ArtType::ALL.to_vec();
-        ruleset.ritual_min_level = RITUAL_MIN_LEVEL;
-        ruleset.aura_modifier_min = AURA_MODIFIER_MIN;
-        ruleset.aura_modifier_max = AURA_MODIFIER_MAX;
+        // These are derived constants, not authored data: re-derive them (via
+        // the same `apply_derived_fields` assemble_ruleset uses, V46) rather
+        // than trusting the incoming JSON, so an older payload missing the
+        // fields still yields a correct, non-empty ruleset.
+        ruleset.apply_derived_fields();
         ruleset.validate_integrity()?;
         Ok(ruleset)
     }
@@ -419,7 +415,12 @@ fn assemble_ruleset(id: &str, version: &str, parsed: ParsedSources) -> Ruleset {
         aging_rules,
     } = parsed;
 
-    Ruleset {
+    // The six engine-derived fields below (magnitude_points through
+    // aura_modifier_max) are placeholders, immediately overwritten by
+    // `apply_derived_fields` — the same single derivation
+    // `Ruleset::from_serialized` calls (V46), so the two construction paths
+    // cannot silently diverge.
+    let mut ruleset = Ruleset {
         id: Id::new(id),
         version: version.to_string(),
         point_items: index_by_id(items, |i| i.id.clone()),
@@ -433,14 +434,14 @@ fn assemble_ruleset(id: &str, version: &str, parsed: ParsedSources) -> Ruleset {
         life_stages: life_stage_rules,
         childhoods: index_by_id(childhoods_file.packages, |p| p.id.clone()),
         aging: aging_rules,
-        magnitude_points: derived_magnitude_points(),
-        ability_category_order: AbilityCategory::ALL.to_vec(),
+        magnitude_points: BTreeMap::new(),
+        ability_category_order: Vec::new(),
         arts: index_by_id(arts_file.arts, |a| a.id.clone()),
         art_advancement: arts_file.advancement,
-        art_type_order: ArtType::ALL.to_vec(),
-        ritual_min_level: RITUAL_MIN_LEVEL,
-        aura_modifier_min: AURA_MODIFIER_MIN,
-        aura_modifier_max: AURA_MODIFIER_MAX,
+        art_type_order: Vec::new(),
+        ritual_min_level: 0,
+        aura_modifier_min: 0,
+        aura_modifier_max: 0,
         houses: index_by_id(houses_file.houses, |h| h.id.clone()),
         mythic_companion_types: index_by_id(mythic_types_file.types, |t| t.id.clone()),
         spells: index_by_id(spells_file.spells, |s| s.id.clone()),
@@ -450,5 +451,7 @@ fn assemble_ruleset(id: &str, version: &str, parsed: ParsedSources) -> Ruleset {
         weapons: index_by_id(equipment_file.weapons, |w| w.id.clone()),
         shields: index_by_id(equipment_file.shields, |s| s.id.clone()),
         armor: index_by_id(equipment_file.armor, |a| a.id.clone()),
-    }
+    };
+    ruleset.apply_derived_fields();
+    ruleset
 }

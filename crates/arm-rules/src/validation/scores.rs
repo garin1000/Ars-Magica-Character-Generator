@@ -138,10 +138,10 @@ pub(crate) fn validate_characteristic_limit_preconditions(
             continue;
         };
         for effect in &item.effects {
-            // Exhaustive match so adding an Effect variant is a compile error
-            // here, not a silently-skipped precondition check.
-            let (amount, target, base) = match effect {
-                Effect::CharacteristicLimit { param, amount } => {
+            // The exhaustive Effect match lives once, in effect_target (V71):
+            // adding a variant is a compile error there, not here.
+            let (amount, target, base) = match effect_target(effect) {
+                EffectTarget::CharacteristicLimit { param, amount } => {
                     let Some(target) = selection
                         .params
                         .get(param)
@@ -150,51 +150,9 @@ pub(crate) fn validate_characteristic_limit_preconditions(
                         continue; // unresolved param value is reported by validate_parameters
                     };
                     let base = entity.characteristics.get(&target).copied().unwrap_or(0);
-                    (*amount, target, base)
+                    (amount, target, base)
                 }
-                Effect::AbilityBonus { .. }
-                | Effect::ArtBonus { .. }
-                | Effect::AffinityAbilityCost { .. }
-                | Effect::AffinityArtCost { .. }
-                | Effect::RestrictedAbilityXp { .. }
-                | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. }
-                | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. }
-                | Effect::LaterLifeXpRate { .. }
-                | Effect::AbilityAuthorization { .. }
-                | Effect::LocalityAbilityCapFraction { .. }
-                | Effect::ConfidenceBonus { .. }
-                | Effect::SpellMasteryXp { .. }
-                | Effect::GrantsSpellMastery { .. }
-                | Effect::GrantsSelection { .. }
-                | Effect::ItemLevelBudget { .. }
-                | Effect::MasterpieceItem
-                | Effect::TrueFaithGrant { .. }
-                | Effect::WarpingGrant { .. }
-                | Effect::SizeDelta { .. }
-                | Effect::CharacteristicScoreDelta { .. }
-                | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. }
-                | Effect::MightGrant { .. }
-                | Effect::PowerLevels { .. }
-                // M5/5b in-play effects: consumed by derived.rs (5i). They carry
-                // no ability/characteristic creation target to check here.
-                | Effect::MagicalFocus { .. }
-                | Effect::CastingTotalMod { .. }
-                | Effect::LabTotalMod { .. }
-                | Effect::DeficientArt { .. }
-                | Effect::MagicTotalHalving { .. }
-                | Effect::SoakMod { .. }
-                | Effect::CombatMod { .. }
-                | Effect::HealthMod { .. }
-                | Effect::MagicResistanceMod { .. }
-                | Effect::AgingMod { .. }
-                | Effect::AdvancementMod { .. }
-                | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. }
-                // Elemental Magic carries no ability/characteristic creation target.
-                | Effect::ElementalMagic { .. } => continue,
+                EffectTarget::AbilityParam(_) | EffectTarget::Other => continue,
             };
             if amount > 0 {
                 if let Some(cap) = base_max

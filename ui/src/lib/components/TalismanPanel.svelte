@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import ConfirmPrompt from './ConfirmPrompt.svelte';
 
   const talisman = $derived(store.entity.talisman ?? null);
   const attunements = $derived(talisman?.attunements ?? []);
@@ -23,6 +24,11 @@
   function text(event: Event): string {
     return (event.currentTarget as HTMLInputElement).value;
   }
+
+  // S30: removing the talisman discards its identity, attunements and
+  // instilled effects in one click, with no undo. Gate it behind a
+  // confirmation instead of calling store.removeTalisman() directly.
+  let confirmRemoveOpen = $state(false);
 </script>
 
 <div class="detail-section">
@@ -150,9 +156,26 @@
       {store.t('talisman-effect-add')}
     </button>
 
-    <button type="button" onclick={() => store.removeTalisman()} data-testid="talisman-remove-item">
+    <button
+      type="button"
+      onclick={() => (confirmRemoveOpen = true)}
+      data-testid="talisman-remove-item"
+    >
       {store.t('talisman-remove-item')}
     </button>
+    <ConfirmPrompt
+      open={confirmRemoveOpen}
+      titleKey="talisman-remove-confirm-title"
+      messageKey="talisman-remove-confirm-message"
+      confirmKey="talisman-remove-confirm-confirm"
+      cancelKey="talisman-remove-confirm-cancel"
+      testidPrefix="talisman-remove-confirm"
+      onConfirm={() => {
+        confirmRemoveOpen = false;
+        store.removeTalisman();
+      }}
+      onCancel={() => (confirmRemoveOpen = false)}
+    />
   {:else}
     <p class="empty" data-testid="talisman-empty-item">{store.t('talisman-empty-item')}</p>
     <button type="button" onclick={() => store.addTalisman()} data-testid="talisman-add">

@@ -889,7 +889,7 @@
   },
   "flaw.poor_characteristic": {
     "name": "Schlechte {characteristic}",
-    "summary": "Senke eine Eigenschaft, die bereits bei −3 liegt, bis mindestens −5; die Punkte erhältst du weiterhin."
+    "summary": "Senke eine Eigenschaft, die bereits bei -3 liegt, bis mindestens -5; die Punkte erhältst du weiterhin."
   },
   "flaw.poor_concentration": {
     "name": "Schlechte Konzentration",

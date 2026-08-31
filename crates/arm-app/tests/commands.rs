@@ -9,8 +9,8 @@ use arm_app::error::AppError;
 use arm_app::ruleset_io::{
     AgingApplication, AgingProjection, AgingReversion, ChildhoodApplication, RULESET_ID,
     RULESET_VERSION, apply_childhood_package_loaded, effective_scores_loaded, ensure_extension,
-    export_markdown_to_path, load_entity_from_path, load_ruleset_from_dir, pick_rules_dir,
-    save_entity_to_path, validate_loaded,
+    export_markdown_to_path, load_entity_from_path, load_ruleset_from_dir, missing_core_files,
+    pick_rules_dir, save_entity_to_path, validate_loaded,
 };
 use arm_rules::{
     ArtScore, CreationPhase, Entity, Id, Ruleset, RulesetSources, Selection, ValidationMode,
@@ -365,6 +365,70 @@ fn pick_rules_dir_returns_first_candidate_that_holds_rules() {
 fn pick_rules_dir_is_none_when_no_candidate_holds_rules() {
     let empty = tempfile::tempdir().unwrap();
     assert_eq!(pick_rules_dir(&[empty.path().to_path_buf()]), None);
+}
+
+/// V9: a directory carrying only `core/character_types.json` used to pass
+/// `pick_rules_dir`'s check (a single-file presence test), get accepted as
+/// "the" rules directory, and only then fail deep inside
+/// `load_ruleset_from_dir` with a raw "file not found" for whichever of the
+/// other dozen files was missing — a confusing error that named neither the
+/// directory nor what was actually wrong with it. The picker must now reject
+/// a stale/partial directory outright and skip to the next candidate.
+#[test]
+fn pick_rules_dir_rejects_a_directory_carrying_only_one_required_file() {
+    let stale = tempfile::tempdir().unwrap();
+    fs::create_dir_all(stale.path().join("core")).unwrap();
+    fs::write(stale.path().join("core/character_types.json"), "[]").unwrap();
+
+    let picked = pick_rules_dir(&[stale.path().to_path_buf(), rules_dir()]);
+    assert_eq!(
+        picked,
+        Some(rules_dir()),
+        "a partial directory must be skipped in favor of a complete one"
+    );
+    assert_eq!(
+        pick_rules_dir(&[stale.path().to_path_buf()]),
+        None,
+        "a partial directory alone must not be picked"
+    );
+}
+
+/// [`missing_core_files`] is what lets a caller build a message naming
+/// exactly what is missing, rather than a bare "not found" (V9).
+#[test]
+fn missing_core_files_names_every_absent_file() {
+    let stale = tempfile::tempdir().unwrap();
+    fs::create_dir_all(stale.path().join("core")).unwrap();
+    fs::write(stale.path().join("core/character_types.json"), "[]").unwrap();
+    fs::write(stale.path().join("core/virtues_flaws.json"), "[]").unwrap();
+
+    let missing = missing_core_files(stale.path());
+    assert!(!missing.contains(&"core/character_types.json"));
+    assert!(!missing.contains(&"core/virtues_flaws.json"));
+    // Every other required core file is genuinely absent from this fixture.
+    assert!(missing.contains(&"core/abilities.json"));
+    assert!(missing.contains(&"core/arts.json"));
+    assert!(missing.contains(&"core/houses.json"));
+    assert!(missing.contains(&"core/mythic_companion_types.json"));
+    assert!(missing.contains(&"core/spells.json"));
+    assert!(missing.contains(&"core/spell_mastery_abilities.json"));
+    assert!(missing.contains(&"core/equipment.json"));
+    assert!(missing.contains(&"core/characteristics.json"));
+    assert!(missing.contains(&"core/life_stages.json"));
+    assert!(missing.contains(&"core/childhoods.json"));
+    assert!(missing.contains(&"core/aging.json"));
+    assert_eq!(missing.len(), 11);
+}
+
+#[test]
+fn missing_core_files_is_empty_for_the_real_shipped_rules_directory() {
+    assert_eq!(missing_core_files(&rules_dir()), Vec::<&str>::new());
+}
+
+#[test]
+fn missing_core_files_is_the_full_list_for_a_directory_that_does_not_exist() {
+    let missing = missing_core_files(&PathBuf::from("/does/not/exist/at/all"));
+    assert_eq!(missing.len(), 13);
 }
 
 #[test]

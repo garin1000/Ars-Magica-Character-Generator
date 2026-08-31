@@ -136,12 +136,12 @@ pub fn load_ruleset(
 
     let rules_dir = ruleset_io::pick_rules_dir(&candidates).ok_or_else(|| AppError::Io {
         message: format!(
-            "rules directory not found; looked in: {}",
+            "no valid rules directory found; looked in: {}",
             candidates
                 .iter()
-                .map(|c| c.display().to_string())
+                .map(|c| describe_rejected_candidate(c))
                 .collect::<Vec<_>>()
-                .join(", ")
+                .join("; ")
         ),
     })?;
 
@@ -150,6 +150,20 @@ pub fn load_ruleset(
     *state.ruleset.write().expect("ruleset lock poisoned") = Some(localized.clone());
 
     Ok(localized)
+}
+
+/// Names exactly why a candidate directory was rejected by `pick_rules_dir`
+/// (V9): either it does not exist at all, or it exists but is missing one or
+/// more of the required core rules files — named individually, via
+/// [`ruleset_io::missing_core_files`], rather than surfacing only a raw
+/// "file not found" for whichever file `load_ruleset_from_dir` happened to
+/// read first.
+fn describe_rejected_candidate(dir: &std::path::Path) -> String {
+    if !dir.is_dir() {
+        return format!("{} (directory does not exist)", dir.display());
+    }
+    let missing = ruleset_io::missing_core_files(dir);
+    format!("{} (missing: {})", dir.display(), missing.join(", "))
 }
 
 /// Validates an entity against the loaded ruleset under the given mode.

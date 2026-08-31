@@ -88,7 +88,7 @@ pub(crate) fn validate_prerequisites(
         };
 
         if let Some(ref prereq) = item.prerequisites {
-            let (outcome, depended_on_unknown) = evaluate_prereq(prereq, &ctx);
+            let (outcome, depended_on_unknown) = evaluate_prereq(prereq, &ctx, 1);
             match outcome {
                 Tri::False => {
                     issues.push(ValidationIssue::error(
@@ -134,7 +134,19 @@ struct PrereqCtx<'a> {
 /// Evaluates a prerequisite to a tri-state. Returns the outcome plus whether an
 /// unevaluable leaf actually influenced the result (so a warning is only worth
 /// emitting when the answer genuinely hinges on missing data).
-fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx) -> (Tri, bool) {
+///
+/// `depth` is 1 at the top-level prerequisite and increments once per
+/// `All`/`Any`/`Nor` nesting level. Past [`PREREQ_MAX_DEPTH`] this treats the
+/// expression as unevaluable rather than recursing further — K8 defense in
+/// depth. This should be unreachable in practice: any ruleset whose
+/// prerequisites nest that deep is rejected at load by
+/// `Ruleset::validate_prereq_refs` (see that function's doc), so this branch
+/// exists only to degrade gracefully rather than overflow the stack should a
+/// `Prereq` tree ever reach evaluation some other way.
+fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx, depth: usize) -> (Tri, bool) {
+    if depth > PREREQ_MAX_DEPTH {
+        return (Tri::Unknown, true);
+    }
     match prereq {
         // The three quantifiers share one tri-state fold over their children,
         // differing only in: which child outcome short-circuits, what the
@@ -144,9 +156,15 @@ fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx) -> (Tri, bool) {
         //   Any (OR) : trigger on True   -> short-circuit True;  all-known -> False
         //   Nor      : trigger on True   -> short-circuit False; all-known -> True
         // In every case a surviving Unknown makes the whole expression Unknown.
-        Prereq::All(children) => fold_children(children, ctx, Tri::False, Tri::False, Tri::True),
-        Prereq::Any(children) => fold_children(children, ctx, Tri::True, Tri::True, Tri::False),
-        Prereq::Nor(children) => fold_children(children, ctx, Tri::True, Tri::False, Tri::True),
+        Prereq::All(children) => {
+            fold_children(children, ctx, depth, Tri::False, Tri::False, Tri::True)
+        }
+        Prereq::Any(children) => {
+            fold_children(children, ctx, depth, Tri::True, Tri::True, Tri::False)
+        }
+        Prereq::Nor(children) => {
+            fold_children(children, ctx, depth, Tri::True, Tri::False, Tri::True)
+        }
         Prereq::Has(id) => {
             if ctx.present_ids.contains(id) {
                 (Tri::True, false)
@@ -206,6 +224,7 @@ fn evaluate_prereq(prereq: &Prereq, ctx: &PrereqCtx) -> (Tri, bool) {
 fn fold_children(
     children: &[Prereq],
     ctx: &PrereqCtx,
+    depth: usize,
     trigger: Tri,
     short_circuit: Tri,
     all_known: Tri,
@@ -213,7 +232,7 @@ fn fold_children(
     let mut depended = false;
     let mut saw_unknown = false;
     for child in children {
-        let (outcome, dep) = evaluate_prereq(child, ctx);
+        let (outcome, dep) = evaluate_prereq(child, ctx, depth + 1);
         if outcome == trigger {
             return (short_circuit, false);
         }
@@ -264,5 +283,62 @@ pub(crate) fn validate_incompatibilities(
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn empty_ctx() -> (BTreeSet<Id>, BTreeMap<Id, u8>, BTreeMap<Id, u8>) {
+        (BTreeSet::new(), BTreeMap::new(), BTreeMap::new())
+    }
+
+    /// K8 defense-in-depth, unit-tested directly against the module-private
+    /// `evaluate_prereq` (unreachable from outside `validation::prereq`,
+    /// hence this in-module test rather than one alongside the others in
+    /// `validation::tests`). The load-time guard
+    /// (`Ruleset::validate_prereq_refs`, tested in `ruleset.rs`) means a real
+    /// `Ruleset` can never carry a `Prereq` this deep, so the only way to
+    /// exercise this branch is to call `evaluate_prereq` with a `depth`
+    /// starting above the limit directly, exactly as this test does.
+    #[test]
+    fn evaluate_prereq_treats_over_depth_as_unknown_instead_of_recursing() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids: &present_ids,
+            is_magus: None,
+            house: None,
+            ability_scores: &ability_scores,
+            art_scores: &art_scores,
+        };
+
+        // A single leaf, but evaluated as though it were already past the
+        // depth limit — proves the guard fires on `depth`, not on actually
+        // walking a deep tree (which would defeat the point of testing this
+        // in isolation from the load-time guard).
+        let (outcome, depended_on_unknown) =
+            evaluate_prereq(&Prereq::IsMagus, &ctx, PREREQ_MAX_DEPTH + 1);
+        assert_eq!(outcome, Tri::Unknown);
+        assert!(depended_on_unknown);
+    }
+
+    #[test]
+    fn evaluate_prereq_at_exactly_the_depth_limit_still_evaluates_normally() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids: &present_ids,
+            is_magus: Some(true),
+            house: None,
+            ability_scores: &ability_scores,
+            art_scores: &art_scores,
+        };
+
+        let (outcome, depended_on_unknown) =
+            evaluate_prereq(&Prereq::IsMagus, &ctx, PREREQ_MAX_DEPTH);
+        assert_eq!(outcome, Tri::True);
+        assert!(!depended_on_unknown);
     }
 }

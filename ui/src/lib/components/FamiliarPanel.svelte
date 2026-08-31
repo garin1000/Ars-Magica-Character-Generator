@@ -2,6 +2,7 @@
   import { formatSigned } from '../derive';
   import { store } from '../state.svelte';
   import { CHARACTERISTICS, REALMS, type Characteristic, type Realm } from '../types';
+  import ConfirmPrompt from './ConfirmPrompt.svelte';
 
   const familiar = $derived(store.entity.familiar ?? null);
   const might = $derived(familiar?.might ?? null);
@@ -12,6 +13,12 @@
   function num(event: Event): number {
     return Number((event.currentTarget as HTMLInputElement).value);
   }
+
+  // S18: removing the familiar discards its whole statblock — name, Might,
+  // Characteristics, personality traits, cords, powers — in one click, with
+  // no undo. Gate it behind a confirmation instead of calling
+  // store.removeFamiliar() directly from the button.
+  let confirmRemoveOpen = $state(false);
 </script>
 
 <div class="detail-section">
@@ -250,9 +257,22 @@
          a familiar bond. -->
     <p class="hint" data-testid="familiar-bond-note">{store.t('familiar-bond-note')}</p>
 
-    <button type="button" onclick={() => store.removeFamiliar()} data-testid="familiar-remove">
+    <button type="button" onclick={() => (confirmRemoveOpen = true)} data-testid="familiar-remove">
       {store.t('familiar-remove')}
     </button>
+    <ConfirmPrompt
+      open={confirmRemoveOpen}
+      titleKey="familiar-remove-confirm-title"
+      messageKey="familiar-remove-confirm-message"
+      confirmKey="familiar-remove-confirm-confirm"
+      cancelKey="familiar-remove-confirm-cancel"
+      testidPrefix="familiar-remove-confirm"
+      onConfirm={() => {
+        confirmRemoveOpen = false;
+        store.removeFamiliar();
+      }}
+      onCancel={() => (confirmRemoveOpen = false)}
+    />
   {:else}
     <button type="button" onclick={() => store.addFamiliar()} data-testid="familiar-add">
       {store.t('familiar-add')}
