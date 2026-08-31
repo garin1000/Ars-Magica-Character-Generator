@@ -7,6 +7,52 @@ A locally installed, cross-platform desktop character generator for Ars Magica
 and **covenants** as first-class entity types with three input modes: guided
 wizard, direct-validated, and direct-unchecked.
 
+### This is a DESKTOP APPLICATION, not a web project — assess findings accordingly
+
+The frontend is Svelte running in an **OS webview inside a native binary the user
+installed**. It is not a website, not a hosted service, and not a multi-tenant
+application. Web technology is an *implementation detail of the UI layer*, not the
+deployment model. Every review, audit, severity rating, and design decision MUST be
+made against the actual model:
+
+- **Single local user, full trust, no privilege boundary.** There are no accounts, no
+  sessions, no roles, no tenants, no login. The person running the app already owns the
+  machine and the files. There is nothing to escalate *to*.
+- **No server, no network service, no listening socket, no remote API, no origin.** The
+  app ships no backend and makes no outbound calls in normal operation.
+- **No untrusted remote content.** Nothing is fetched from the internet and rendered.
+- **The trust boundary is the file the user opens** — a `.armc`/`.armcov` save, or a
+  `rules/` directory beside the binary. That is the realistic hostile-input surface, and
+  it is the one that deserves real scrutiny: reachable panics, unbounded recursion or
+  allocation, integer overflow, and algorithmic blowup on crafted input, plus schema
+  migration on an untrusted `schema_version`.
+
+**Consequences for severity ratings.** Web-shaped concerns are either inapplicable or
+land far lower than a web-app checklist would suggest, and must not be rated as if a
+remote attacker existed:
+
+- **Not applicable at all:** CSRF, session fixation/cookies, SQL injection, TLS/HSTS,
+  CORS, clickjacking, SSRF, rate limiting, multi-tenant isolation, authn/authz flaws.
+- **Rated by *local* impact only:** XSS-shaped findings. There is no remote injection
+  vector and no cross-origin attacker; the CSP hardening is defence-in-depth for
+  save-file-derived text, not a control against a remote adversary. A missing sanitiser
+  with no reachable hostile source is at most LOW.
+- **Availability findings cap low.** A crash or hang affects only the local user's own
+  session, and they can simply reopen the app. A DoS reachable *only* by the user opening
+  their own deliberately-corrupted file is not a HIGH — though a **panic** is still a real
+  robustness defect worth fixing (it loses unsaved work).
+- **`devDependencies` vulnerabilities are not shipped code.** They are a developer-machine
+  and build-integrity concern, not an end-user exposure. Rate accordingly, and say
+  explicitly whether a vulnerable package reaches the shipped bundle.
+
+**What genuinely IS high-severity here**, and should be rated *up* rather than down:
+data loss and silent data corruption (the unsaved-changes guard, save/load round-trip
+fidelity, schema migrations), **wrong rules output** — the app's entire purpose is
+computing correct Ars Magica characters, so a miscalculation is a product-integrity
+failure, not a cosmetic one — accessibility and localization defects (real users, every
+session, on every platform), and breaches of the invariants this file declares
+load-bearing.
+
 ## Technical stack (locked)
 
 | Concern            | Choice                                                     |
