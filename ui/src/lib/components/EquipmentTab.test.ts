@@ -101,6 +101,18 @@ beforeEach(() => {
 // group hides that (the next `<h3 class="category">` draws its own boundary), but
 // an item in none of the three catalogues lands in a HEADER-LESS trailing group,
 // which butted straight against the group above it with no divider at all.
+// S9 (full-audit a11y): the equipment-kind filter `<select>` had no accessible
+// name, same shape as AbilityTab's category filter (S6) — no visible label to
+// associate with, so a Fluent-sourced `aria-label` is the fix.
+describe('EquipmentTab kind filter (S9)', () => {
+  it('gives the kind filter select an accessible name via Fluent', () => {
+    const body = html();
+    const select = /<select[^>]*data-testid="equipment-group-filter"[^>]*>/.exec(body);
+    expect(select).not.toBeNull();
+    expect(select![0]).toContain('aria-label="Filter by equipment type"');
+  });
+});
+
 describe('EquipmentTab separates a header-less group from the one above it (#8)', () => {
   it('emits the header-less group as a bare sibling list, with no heading to divide it', () => {
     const region = selectedRegion(html());

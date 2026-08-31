@@ -9,7 +9,12 @@
     groupSelectedSpellsByTechniqueForm,
     groupSpellsByTechniqueForm,
     invalidSelectionIds,
+    isDisabled,
     maxAbilityScore,
+    minLearnableLevel,
+    nonTakeableReason,
+    ORDINARY_SPELL_MINIMUM_LEVEL,
+    RITUAL_MINIMUM_LEVEL_FALLBACK,
     usedSpellForms,
     spellDisplayName,
   } from '../derive';
@@ -116,6 +121,13 @@
       m.set(`${c.technique} ${c.form}`, c.cap);
     return m;
   });
+  // The Ritual level floor — see `minLearnableLevel` in `derive.ts` (VA2): reads
+  // the engine-surfaced `ruleset.ritual_min_level`, falling back to the fallback
+  // constant only for the moment before a ruleset has loaded, when no spell
+  // exists to disable anyway.
+  const ritualMinLevel = $derived(
+    store.ruleset?.ruleset.ritual_min_level ?? RITUAL_MINIMUM_LEVEL_FALLBACK,
+  );
   // Spell-Mastery: the auto-mastery floor (Flawless Magic) drives each row's
   // effective mastery; the pool read-out itself lives in `SpellBudgetBar`.
   const masteryFloor = $derived(store.effective?.spell_mastery_floor ?? 0);
@@ -178,56 +190,21 @@
     return `${spellDisplayName(rs, chosen.spell, chosen.parameter, paramLabel)} (${tf} ${lvl})`;
   }
 
-  // The minimum level a spell can be learned at: a Ritual must be learned at
-  // the engine's `ritual_min_level` (Ars Magica - Definitive Edition (Core
-  // Rules).md:12293, "Ritual spells are always at least level 20"), an
-  // ordinary spell at 1 — the latter is not a book-stated floor, just the
-  // lowest level a spell can exist at, so it stays a local constant.
-  //
-  // VA2 (tmp/review/review-round-1-viktor-app.md), CLOSED: the Ritual floor
-  // used to be a bare literal duplicating the engine's own check
-  // (`crates/arm-rules/src/ruleset.rs`'s `validate_spell`, and
-  // `crates/arm-rules/src/validation/magus.rs`). It now reads
-  // `ruleset.ritual_min_level`, derived from `spell::RITUAL_MIN_LEVEL` — see
-  // `crates/arm-rules/src/spell.rs`. The fallback below only covers the moment
-  // before a ruleset has loaded, when no spell exists to disable anyway.
-  const ORDINARY_MINIMUM_LEVEL = 1;
-  const RITUAL_MINIMUM_LEVEL_FALLBACK = 20;
-  function minLearnableLevel(spell: Spell): number {
-    if (!spell.ritual) return ORDINARY_MINIMUM_LEVEL;
-    return store.ruleset?.ruleset.ritual_min_level ?? RITUAL_MINIMUM_LEVEL_FALLBACK;
-  }
+  // `minLearnableLevel`, `nonTakeableReason`, and `isDisabled` are imported
+  // from `derive.ts` (V28, full-audit round): spell-eligibility business rules
+  // live there alongside every other eligibility computation
+  // (`eligibleForConstraint`, `filterSpells`, …), not inline in this component.
+  // This component only supplies the reactive state (`selectedSpellIds`,
+  // `capByTeFo`, `remaining`, `ritualMinLevel`) they need.
 
-  // The same floor, looked up from a chosen (selected-list) row's id rather
+  // The Ritual floor, looked up from a chosen (selected-list) row's id rather
   // than a source-list Spell object — used by the inline level spinner so it
   // can never be scrubbed down into a Ritual's illegal range (S3). Falls back
   // to the ordinary floor for an id absent from the catalogue (defensive; a
   // selection always names a real spell in practice).
   function minLevelForChosen(spellId: string): number {
     const cat = store.ruleset?.ruleset.spells?.[spellId];
-    return cat ? minLearnableLevel(cat) : ORDINARY_MINIMUM_LEVEL;
-  }
-
-  // Why a source spell's add control is greyed, or null when it is takeable. A
-  // fixed-level spell is tested at its catalogue level; a General spell (no fixed
-  // level) is tested at its minimum learnable level — never at a nonexistent
-  // catalogue level. Blocked when that level exceeds the per-spell cap or the
-  // remaining spell-levels budget. The cap is the engine's surfaced value.
-  function nonTakeableReason(spell: Spell): { key: string; cap: number } | null {
-    // An ordinary fixed-level spell is taken only once, so grey it once selected.
-    // General spells (multiple learnable levels) and parameterized spells (once
-    // per Form) stay re-takeable and are excluded from this test.
-    if (spell.level != null && !isParametrized(spell.id) && selectedSpellIds.has(spell.id))
-      return { key: 'spell-already-taken-reason', cap: 0 };
-    const cap = capByTeFo.get(`${spell.technique} ${spell.form}`);
-    const need = spell.level ?? minLearnableLevel(spell);
-    if (cap != null && need > cap) return { key: 'spell-cap-reason', cap };
-    if (need > remaining) return { key: 'spell-budget-reason', cap: cap ?? 0 };
-    return null;
-  }
-
-  function isDisabled(spell: Spell): boolean {
-    return nonTakeableReason(spell) != null;
+    return cat ? minLearnableLevel(cat, ritualMinLevel) : ORDINARY_SPELL_MINIMUM_LEVEL;
   }
 
   // Clicking a source row adds the spell. A General spell (no fixed level) is
@@ -238,7 +215,10 @@
   // fresh Ritual pick straight into a blocking CODE_SPELL_RITUAL_LEGALITY
   // error through ordinary use. A fixed-level spell ignores the level.
   function add(spell: Spell) {
-    store.addSpell(spell.id, spell.level == null ? minLearnableLevel(spell) : undefined);
+    store.addSpell(
+      spell.id,
+      spell.level == null ? minLearnableLevel(spell, ritualMinLevel) : undefined,
+    );
   }
 
   // A chosen row is General (level editable inline) when its catalogue entry has
@@ -252,7 +232,7 @@
   // shows WHY plus its description rather than the reason replacing it. Spells
   // carry no specialties, so the tooltip is otherwise text-only.
   function sourceTip(spell: Spell): TooltipContent {
-    const reason = nonTakeableReason(spell);
+    const reason = nonTakeableReason(spell, selectedSpellIds, capByTeFo, remaining, ritualMinLevel);
     return withReason(
       { text: store.ruleset?.i18n[spell.id]?.description ?? undefined },
       reason ? store.t(reason.key, { cap: String(reason.cap) }) : undefined,
@@ -297,7 +277,8 @@
         groups={sourceGroups}
         getId={(spell: Spell) => spell.id}
         onAdd={(spell: Spell) => add(spell)}
-        disabled={(spell: Spell) => isDisabled(spell)}
+        disabled={(spell: Spell) =>
+          isDisabled(spell, selectedSpellIds, capByTeFo, remaining, ritualMinLevel)}
         tip={(spell: Spell) => sourceTip(spell)}
       >
         {#snippet filters()}

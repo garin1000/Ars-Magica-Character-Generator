@@ -243,7 +243,11 @@
           bind:value={filter.search}
           data-testid="ability-search"
         />
-        <select bind:value={filter.category} data-testid="ability-category-filter">
+        <select
+          bind:value={filter.category}
+          aria-label={store.t('ability-category-filter-label')}
+          data-testid="ability-category-filter"
+        >
           <option value="">{store.t('filter-category-all')}</option>
           {#each categories as c (c)}
             <option value={c}>{store.t(`ability-category-${c}`)}</option>

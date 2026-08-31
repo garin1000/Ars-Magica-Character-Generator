@@ -105,6 +105,11 @@ function html(): string {
   return render(VirtueFlawTab, { props: {} }).body;
 }
 
+/** Fluent isolates interpolated values with bidi marks; strip them for text matching. */
+function clean(text: string): string {
+  return text.replace(/[⁦-⁩]/g, '');
+}
+
 /** The Virtues column's markup (the side both fixtures' items live on). */
 function virtueColumn(body: string): string {
   const start = body.indexOf('data-testid="selection-list-virtue"');
@@ -220,5 +225,51 @@ describe('VirtueFlawTab merges granted Virtues into the category list (#9)', () 
     const ids = [...column.matchAll(/data-testid="(granted-selection-[^"]+)"/g)].map((m) => m[1]);
     expect(ids).toHaveLength(2);
     expect(new Set(ids).size).toBe(2);
+  });
+});
+
+// Full-audit fix round: the category/magnitude filter `<select>`s carried no
+// accessible name at all — the same defect as S6 (AbilityTab's ability-category
+// filter) and S9 (EquipmentTab's equipment-group filter), just not caught in the
+// original a11y sweep because this tab has two sides. Each select now gets a
+// Fluent-sourced `aria-label` naming both its side (Virtues/Flaws) and what it
+// filters by, so a screen-reader user tabbing between the four selects (two
+// sides × two filters) can tell them apart.
+describe('VirtueFlawTab filter selects', () => {
+  it('gives the Virtues category filter an accessible name naming its side', () => {
+    const select = /<select[^>]*data-testid="vf-category-filter-virtue"[^>]*>/.exec(html());
+    expect(select).not.toBeNull();
+    expect(clean(select![0])).toContain('aria-label="Filter Virtues by category"');
+  });
+
+  it('gives the Flaws category filter an accessible name naming its side', () => {
+    const select = /<select[^>]*data-testid="vf-category-filter-flaw"[^>]*>/.exec(html());
+    expect(select).not.toBeNull();
+    expect(clean(select![0])).toContain('aria-label="Filter Flaws by category"');
+  });
+
+  it('gives the Virtues magnitude filter an accessible name naming its side', () => {
+    const select = /<select[^>]*data-testid="vf-magnitude-filter-virtue"[^>]*>/.exec(html());
+    expect(select).not.toBeNull();
+    expect(clean(select![0])).toContain('aria-label="Filter Virtues by magnitude"');
+  });
+
+  it('gives the Flaws magnitude filter an accessible name naming its side', () => {
+    const select = /<select[^>]*data-testid="vf-magnitude-filter-flaw"[^>]*>/.exec(html());
+    expect(select).not.toBeNull();
+    expect(clean(select![0])).toContain('aria-label="Filter Flaws by magnitude"');
+  });
+
+  it('gives all four filter selects distinct accessible names', () => {
+    const body = html();
+    const labels = ['virtue', 'flaw'].flatMap((side) =>
+      ['category', 'magnitude'].map((kind) => {
+        const select = new RegExp(`<select[^>]*data-testid="vf-${kind}-filter-${side}"[^>]*>`).exec(
+          body,
+        );
+        return /aria-label="([^"]+)"/.exec(select![0])![1];
+      }),
+    );
+    expect(new Set(labels).size).toBe(labels.length);
   });
 });

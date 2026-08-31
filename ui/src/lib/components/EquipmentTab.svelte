@@ -112,7 +112,11 @@
           bind:value={filter.search}
           data-testid="equipment-search"
         />
-        <select bind:value={filter.kind} data-testid="equipment-group-filter">
+        <select
+          bind:value={filter.kind}
+          aria-label={store.t('equipment-group-filter-label')}
+          data-testid="equipment-group-filter"
+        >
           <option value="">{store.t('filter-category-all')}</option>
           <option value="weapons">{store.t('equipment-group-weapons')}</option>
           <option value="shields">{store.t('equipment-group-shields')}</option>

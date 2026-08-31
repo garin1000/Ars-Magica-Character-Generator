@@ -642,6 +642,21 @@ export function grantedSelectionsForSide(
  * `characteristicPointsUsed`'s: surface the mastery pool's `used` amount on
  * `EffectiveScores` and have `SpellBudgetBar.svelte` read it from
  * `store.effective` instead of calling this function.
+ *
+ * V2 (full-audit round) re-confirmed this is dormant, not live: option (a)
+ * (surface the engine-computed total) needs `crates/arm-rules/src/effective/xp.rs`
+ * and `crates/arm-app/src/ruleset_io.rs` (`EffectiveScores`) changes outside this
+ * fix's file set, so it is NOT done here — flagged as the recommended follow-up,
+ * unchanged from the paragraph above. Option (b) — explicitly scoping this
+ * function to 2:1-only — is what this fix adds: the name keeps its established
+ * call-site spelling (`SpellBudgetBar.svelte`'s only caller is also outside this
+ * fix's file set, so renaming here would leave that import broken), but the
+ * 2:1-only constraint is now enforced by a **data-integrity tripwire**, not just
+ * this docstring: `derive.test.ts`'s "spellMasteryXpSpent — 2:1-only, guarded
+ * against silent drift (V2)" describe block reads the SHIPPED
+ * `rules/core/virtues_flaws.json` and fails the moment any `grants_spell_mastery`
+ * effect ships a genuine reduction ratio other than 2/1 — so a future Virtue/Flaw
+ * introducing one cannot land silently.
  */
 export function spellMasteryXpSpent(
   advancement: { score: number; total_xp: number }[] | undefined,
@@ -672,6 +687,83 @@ export function spellMasteryXpSpent(
  */
 export function effectiveSpellMastery(bought: number | null | undefined, floor: number): number {
   return Math.max(bought ?? 0, floor);
+}
+
+/**
+ * The lowest level an ORDINARY spell can be learned at — not a book-stated
+ * floor, just the lowest level a spell can exist at (a Ritual's floor is
+ * `ritual_min_level` instead; see {@link minLearnableLevel}).
+ */
+export const ORDINARY_SPELL_MINIMUM_LEVEL = 1;
+
+/**
+ * Fallback Ritual floor for the moment before a ruleset has loaded, when no
+ * spell exists yet to disable anyway. Mirrors `crates/arm-rules/src/spell.rs`'s
+ * `RITUAL_MIN_LEVEL`, which `ruleset.ritual_min_level` normally carries.
+ */
+export const RITUAL_MINIMUM_LEVEL_FALLBACK = 20;
+
+/**
+ * The minimum level a spell can be learned at: a Ritual must be learned at the
+ * ruleset's `ritual_min_level` (Ars Magica - Definitive Edition (Core
+ * Rules).md:12293, "Ritual spells are always at least level 20"), an ordinary
+ * spell at 1.
+ *
+ * VA2 (tmp/review/review-round-1-viktor-app.md): the Ritual floor used to be a
+ * bare literal duplicating the engine's own check
+ * (`crates/arm-rules/src/ruleset.rs`'s `validate_spell`, and
+ * `crates/arm-rules/src/validation/magus.rs`). It now takes the engine-surfaced
+ * `ruleset.ritual_min_level` (derived from `spell::RITUAL_MIN_LEVEL`) as an
+ * argument rather than reading it itself, so this function stays pure.
+ */
+export function minLearnableLevel(
+  spell: Spell,
+  ritualMinLevel: number = RITUAL_MINIMUM_LEVEL_FALLBACK,
+): number {
+  return spell.ritual ? ritualMinLevel : ORDINARY_SPELL_MINIMUM_LEVEL;
+}
+
+/**
+ * Why a source spell's add control is greyed, or `null` when it is takeable. A
+ * fixed-level spell is tested at its catalogue level; a General spell (no fixed
+ * level) or a parameterized spell (takeable once per Form) is tested at its
+ * minimum learnable level — never at a nonexistent catalogue level. Blocked
+ * when that level exceeds the per-spell cap or the remaining spell-levels
+ * budget. `capByTeFo` and `remaining` are engine-authoritative figures, never
+ * recomputed here.
+ *
+ * `selectedSpellIds` greys an ordinary fixed-level spell once selected; a
+ * General spell (multiple learnable levels) or a parameterized spell (once per
+ * Form) stays re-takeable and is excluded from that check — matching how
+ * Abilities/Virtues grey out.
+ */
+export function nonTakeableReason(
+  spell: Spell,
+  selectedSpellIds: Set<string>,
+  capByTeFo: Map<string, number>,
+  remaining: number,
+  ritualMinLevel: number = RITUAL_MINIMUM_LEVEL_FALLBACK,
+): { key: string; cap: number } | null {
+  const isParametrized = (spell.parameters?.length ?? 0) > 0;
+  if (spell.level != null && !isParametrized && selectedSpellIds.has(spell.id)) {
+    return { key: 'spell-already-taken-reason', cap: 0 };
+  }
+  const cap = capByTeFo.get(`${spell.technique} ${spell.form}`);
+  const need = spell.level ?? minLearnableLevel(spell, ritualMinLevel);
+  if (cap != null && need > cap) return { key: 'spell-cap-reason', cap };
+  if (need > remaining) return { key: 'spell-budget-reason', cap: cap ?? 0 };
+  return null;
+}
+
+/** Whether a source spell's add control should be greyed — {@link nonTakeableReason} != null. */
+export function isDisabled(
+  spell: Spell,
+  selectedSpellIds: Set<string>,
+  capByTeFo: Map<string, number>,
+  remaining: number,
+  ritualMinLevel: number = RITUAL_MINIMUM_LEVEL_FALLBACK,
+): boolean {
+  return nonTakeableReason(spell, selectedSpellIds, capByTeFo, remaining, ritualMinLevel) != null;
 }
 
 /** Highest whole score the advancement table can price (the spinner ceiling). */

@@ -126,10 +126,13 @@
                 {label(grant.item, grant.params)}
               </span>
             {:else if grant.kind === 'choice'}
-              <span class="mythic-granted-label">{store.t('mythic-granted-label')}</span>
+              <span class="mythic-granted-label" id="mythic-choice-label-{grant.choice_key}"
+                >{store.t('mythic-granted-label')}</span
+              >
               <select
                 value={String(pickedIndex(grant.choice_key, grant.options))}
                 onchange={(e) => onChoice(grant.choice_key, grant.options, e)}
+                aria-labelledby="mythic-choice-label-{grant.choice_key}"
                 data-testid="mythic-choice-{grant.choice_key}"
               >
                 <option value="-1">{store.t('mythic-choose-prompt')}</option>
@@ -143,10 +146,13 @@
                    a House open grant). No shipped Mythic type defines one today,
                    but the engine's Grant set does, so the UI covers it. -->
               {@const pick = openPick(grant.choice_key)}
-              <span class="mythic-granted-label">{store.t('mythic-granted-label')}</span>
+              <span class="mythic-granted-label" id="mythic-open-label-{grant.choice_key}"
+                >{store.t('mythic-granted-label')}</span
+              >
               <select
                 value={pick?.ref ?? ''}
                 onchange={(e) => onOpen(grant.choice_key, e)}
+                aria-labelledby="mythic-open-label-{grant.choice_key}"
                 data-testid="mythic-open-{grant.choice_key}"
               >
                 <option value="">{store.t('mythic-choose-prompt')}</option>
@@ -175,11 +181,15 @@
           {#each selected.required_flaws ?? [] as flaw, f (f)}
             {@const current = currentRequiredFlaw(flaw)}
             <li class="mythic-required-flaw">
-              <span class="mythic-required-flaw-label">{store.t('mythic-required-flaw-label')}</span
+              <span
+                class="mythic-required-flaw-label"
+                id="mythic-required-flaw-label-{flaw.default.ref}"
+                >{store.t('mythic-required-flaw-label')}</span
               >
               <select
                 value={current}
                 onchange={(e) => onFlawSwap(current, e)}
+                aria-labelledby="mythic-required-flaw-label-{flaw.default.ref}"
                 data-testid="mythic-required-flaw-{flaw.default.ref}"
               >
                 {#each eligibleForConstraint(flaw.constraint) as item (item.id)}

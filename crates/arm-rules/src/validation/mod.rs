@@ -1595,6 +1595,63 @@ mod tests {
         );
     }
 
+    /// V50 characterization: pins the exact args-key contract
+    /// (`validation/mod.rs`'s doc table: `house_choice_unresolved` carries
+    /// `house`, `choice_key`) so extracting the shared Grant-walk with
+    /// [`validate_mythic_type`] cannot quietly rename a key — the mythic side
+    /// already has this assertion (`unresolved_open_grant_reports_its_choice_key`);
+    /// the house side did not.
+    #[test]
+    fn unresolved_house_choice_reports_its_house_and_choice_key() {
+        let rs = rs_for_house_validation();
+        let entity = magus_with_house("house.flambeau");
+
+        let issue = validate(&entity, &rs)
+            .issues
+            .into_iter()
+            .find(|i| i.code == ValidationIssue::CODE_HOUSE_CHOICE_UNRESOLVED)
+            .expect("unresolved house choice present");
+        assert_eq!(
+            issue.args.get("house").map(String::as_str),
+            Some("house.flambeau")
+        );
+        assert_eq!(
+            issue.args.get("choice_key").map(String::as_str),
+            Some("flambeau_puissant")
+        );
+    }
+
+    /// V50 characterization: the constraint-violation twin of the test above,
+    /// mirroring `open_grant_pick_violating_its_constraint_errors_with_args` on
+    /// the mythic side — `house_grant_constraint` carries `house`, `choice_key`,
+    /// `item`.
+    #[test]
+    fn open_house_grant_pick_violating_its_constraint_errors_with_args() {
+        let rs = rs_for_house_validation();
+        let mut entity = magus_with_house("house.jerbiton");
+        entity
+            .house_choices
+            .insert("jerbiton_virtue".to_string(), sel("virtue.wealthy"));
+
+        let issue = validate(&entity, &rs)
+            .issues
+            .into_iter()
+            .find(|i| i.code == ValidationIssue::CODE_HOUSE_GRANT_CONSTRAINT)
+            .expect("house grant constraint violation present");
+        assert_eq!(
+            issue.args.get("house").map(String::as_str),
+            Some("house.jerbiton")
+        );
+        assert_eq!(
+            issue.args.get("choice_key").map(String::as_str),
+            Some("jerbiton_virtue")
+        );
+        assert_eq!(
+            issue.args.get("item").map(String::as_str),
+            Some("virtue.wealthy")
+        );
+    }
+
     #[test]
     fn an_open_grant_pick_satisfying_its_constraint_has_no_error() {
         let rs = rs_for_house_validation();
@@ -3189,6 +3246,72 @@ mod tests {
 
         let result = validate(&entity, &rs);
         assert!(codes(&result).contains(&"too_many_major_virtues".to_string()));
+    }
+
+    /// V66 characterization: pins the exact `count`/`max` args, severity, and
+    /// phase for all three hard caps (`too_many_major_virtues`,
+    /// `too_many_major_flaws`, `too_many_minor_flaws`) before collapsing their
+    /// three copy-pasted blocks in `validate_caps` into one table-driven loop.
+    #[test]
+    fn each_hard_cap_reports_its_own_count_and_max() {
+        // Ids deliberately avoid the `major_`/`minor_`/`_major`/`_minor`
+        // affix convention `minor_variant_sibling` (`ruleset.rs`) scans
+        // for — an unrelated pair of items happening to match it would
+        // demand a Magical-Focus-style mutual `incompatible_with` this
+        // fixture has no reason to declare.
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] },
+          {"id": "virtue.hefty_a", "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
+          {"id": "virtue.hefty_b", "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.hefty_a", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.hefty_b", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.slight_a", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.slight_b", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
+          {"id": "flaw.slight_c", "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]}
+        ]"#;
+        let types = r#"[{
+          "id": "capped_type",
+          "budget": { "virtue_points": 20, "flaw_points": 20,
+            "max_major_virtues": 1, "max_major_flaws": 1, "max_minor_flaws": 2 },
+          "permitted_categories": ["general", "personality"],
+          "creation_phases": []
+        }]"#;
+        let rs = Ruleset::from_json("test", "1", items, types).unwrap();
+        let entity = make_entity(
+            "capped_type",
+            vec![
+                sel("virtue.hefty_a"),
+                sel("virtue.hefty_b"),
+                sel("flaw.hefty_a"),
+                sel("flaw.hefty_b"),
+                sel("flaw.slight_a"),
+                sel("flaw.slight_b"),
+                sel("flaw.slight_c"),
+            ],
+        );
+
+        let result = validate(&entity, &rs);
+        for (code, expected_count, expected_max) in [
+            (ValidationIssue::CODE_TOO_MANY_MAJOR_VIRTUES, "2", "1"),
+            (ValidationIssue::CODE_TOO_MANY_MAJOR_FLAWS, "2", "1"),
+            (ValidationIssue::CODE_TOO_MANY_MINOR_FLAWS, "3", "2"),
+        ] {
+            let issue = result
+                .issues
+                .iter()
+                .find(|i| i.code == code)
+                .unwrap_or_else(|| panic!("expected `{code}`: {:?}", result.issues));
+            assert_eq!(
+                issue.args.get("count").map(String::as_str),
+                Some(expected_count)
+            );
+            assert_eq!(
+                issue.args.get("max").map(String::as_str),
+                Some(expected_max)
+            );
+            assert_eq!(issue.severity, IssueSeverity::Error);
+            assert_eq!(issue.phase, CreationPhase::VirtuesFlaws);
+        }
     }
 
     /// A ruleset with one minor flaw, one major personality flaw, one minor
@@ -6834,6 +6957,46 @@ mod tests {
             spell("spell.pilum_of_fire", None),
         ];
         assert!(all_codes(&validate(&e, &rs)).contains(&"duplicate_spell".to_string()));
+    }
+
+    /// V51 characterization: pins the *relative order* `validate_spells` emits
+    /// its own issues in — per-spell checks in selection order, then the
+    /// aggregate duplicate check, then the aggregate budget check — so
+    /// splitting the ~175-line function into named sub-checks cannot reorder
+    /// what the UI's validation panel shows. Two identical over-cap spells
+    /// (zero Arts/Int/MT → cap 3, Pilum's fixed level 20 exceeds it) trigger
+    /// `spell_level_exceeds_cap` once per selection, `duplicate_spell` once
+    /// after the loop, and `spell_levels_unspent` once after that (40 of a
+    /// 50-level budget).
+    #[test]
+    fn spell_issues_are_emitted_per_spell_then_duplicate_then_budget() {
+        let rs = spell_rs();
+        let mut e = make_entity("magus", vec![]);
+        e.spells = vec![
+            spell("spell.pilum_of_fire", None),
+            spell("spell.pilum_of_fire", None),
+        ];
+        let codes = all_codes(&validate(&e, &rs));
+        let spell_codes: Vec<&str> = codes
+            .iter()
+            .map(String::as_str)
+            .filter(|c| {
+                matches!(
+                    *c,
+                    "spell_level_exceeds_cap" | "duplicate_spell" | "spell_levels_unspent"
+                )
+            })
+            .collect();
+        assert_eq!(
+            spell_codes,
+            vec![
+                "spell_level_exceeds_cap",
+                "spell_level_exceeds_cap",
+                "duplicate_spell",
+                "spell_levels_unspent",
+            ],
+            "{codes:?}"
+        );
     }
 
     /// Spells on a non-magus are ref-checked but never budget/cap-checked.

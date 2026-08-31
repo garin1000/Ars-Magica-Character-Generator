@@ -201,6 +201,27 @@ describe('AgingRecordPanel (slice 6b6b)', () => {
     expect(has(body, 'aging-log-crisis-1')).toBe(false);
   });
 
+  // S13 (full-audit a11y): the eight Aging Points inputs were named only by a
+  // plain `<span class="char-name">`, with no programmatic association at all —
+  // a screen-reader user tabbing through them heard eight anonymous spinbuttons.
+  // Each span now gets an `id` and its neighbouring input an `aria-labelledby`
+  // pointing at it, so the accessible name matches the visible Characteristic
+  // name shown beside it.
+  it('associates each Aging Points input with its visible Characteristic label (S13)', () => {
+    const body = html();
+    for (const characteristic of CHARACTERISTICS) {
+      const input = new RegExp(
+        `<input[^>]*data-testid="aging-points-${characteristic}"[^>]*>`,
+      ).exec(body);
+      expect(input, `no input for ${characteristic}`).not.toBeNull();
+      const labelledby = /aria-labelledby="([^"]+)"/.exec(input![0]);
+      expect(labelledby, `${characteristic} input has no aria-labelledby`).not.toBeNull();
+      const labelTag = new RegExp(`<span[^>]*id="${labelledby![1]}"[^>]*>([^<]*)<`).exec(body);
+      expect(labelTag, `no span with id ${labelledby![1]}`).not.toBeNull();
+      expect(labelTag![1]).toBe(store.t(`characteristic-${characteristic}`));
+    }
+  });
+
   it('labels every control through Fluent, never as a raw slug', () => {
     const body = html();
     expect(body).toContain('Apparent age');

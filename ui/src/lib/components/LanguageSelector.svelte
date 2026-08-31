@@ -12,7 +12,7 @@
   <span>{store.t('language-label')}</span>
   <select value={store.lang} onchange={onChange} data-testid="language-select">
     {#each AVAILABLE_LANGS as lang (lang)}
-      <option value={lang}>{lang}</option>
+      <option value={lang}>{store.t(`language-name-${lang}`)}</option>
     {/each}
   </select>
 </label>

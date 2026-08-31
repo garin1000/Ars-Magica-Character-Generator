@@ -147,6 +147,9 @@
           type="text"
           class="char-description"
           placeholder={store.t('characteristic-description-label')}
+          aria-label={store.t('characteristic-description-for', {
+            name: store.t(`characteristic-${characteristic}`),
+          })}
           value={descriptionOf(characteristic)}
           oninput={(e) =>
             store.setCharacteristicDescription(

@@ -6,6 +6,11 @@ app-title = Ars-Magica-Charaktergenerator
 app-logo-alt = Logo „Ars Magica Open License“
 
 language-label = Sprache
+# Beschriftungen der Sprachauswahl selbst: das jeweilige Endonym der Sprache
+# (nie eine Übersetzung in die gerade aktive Sprache — eine Sprachauswahl zeigt
+# immer „Deutsch“, unabhängig davon, welche Sprache aktiv ist).
+language-name-en = English
+language-name-de = Deutsch
 mode-label = Prüfung
 
 mode-enforced = Erzwungen
@@ -211,6 +216,11 @@ vf-blocked-incompatible = Unvereinbar mit { $other }
 filter-search-placeholder = Suchen…
 filter-magnitude-all = Alle Stufen
 filter-category-all = Alle Typen
+# Barrierefreie Namen für Filterauswahlen ohne eigene sichtbare Beschriftung.
+ability-category-filter-label = Nach Fertigkeitskategorie filtern
+# { $side } ist der lokalisierte Seitentitel ("Tugenden"/"Fehler").
+vf-category-filter-label = { $side } nach Kategorie filtern
+vf-magnitude-filter-label = { $side } nach Stufe filtern
 
 # Die acht Eigenschaften, je Eigenschaftswert der Engine.
 characteristic-int = Intelligenz
@@ -825,6 +835,10 @@ ability-requires-virtue = Erfordert eine verleihende Tugend (oder die eine freie
 characteristic-increment = { $name } erhöhen
 characteristic-decrement = { $name } verringern
 characteristic-description-label = Beschreibung
+# Barrierefreier Name für ein Beschreibungsfeld: die acht Felder je Eigenschaft
+# teilen sich den Platzhalter oben, daher braucht jedes einen eigenen Namen, der
+# nennt, welche Eigenschaft es beschreibt.
+characteristic-description-for = Beschreibung von { $name }
 
 # Auswahl des hermetischen Hauses + Spezialisierungs-Auswahl je Gewährung. Die
 # Anzeigenamen der Häuser stammen aus der Regel-i18n (per Haus-ID), nicht aus
@@ -1088,6 +1102,8 @@ weapon-kind-thrown = Wurf
 equipment-group-weapons = Waffen
 equipment-group-shields = Schilde
 equipment-group-armor = Rüstungen
+# Barrierefreier Name für die Typ-Filterauswahl ohne eigene sichtbare Beschriftung.
+equipment-group-filter-label = Nach Ausrüstungstyp filtern
 equipment-equipped-label = Ausgerüstet
 equipment-specialization-label = Spezialisierung greift (+1)
 equipment-empty = Keine Ausrüstung.
