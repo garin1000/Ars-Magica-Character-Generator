@@ -246,4 +246,27 @@ describe('StartScreen', () => {
   it('renders no error banner when nothing failed', () => {
     expect(html()).not.toContain('data-testid="start-error"');
   });
+
+  // S28 (full-audit UX): this screen only surfaces guided-vs-direct. The
+  // validation-mode axis (Enforced/Advisory/Silent) — what actually
+  // distinguishes direct-validated from direct-unchecked — was invisible here,
+  // even though it is one of the app's three headline input modes. The
+  // toolbar's Validation control (`ModeToggle`, `mode-label` = "Validation")
+  // only mounts once a character exists (App.svelte: "appear only once one
+  // exists"), so the hint on THIS screen can only point ahead to it, not offer
+  // it directly.
+  it('names where validation strictness is chosen, real prose not an echoed key', () => {
+    const body = html();
+    expect(body).toContain(store.t('start-create-mode-hint'));
+    expect(store.t('start-create-mode-hint')).not.toBe('start-create-mode-hint');
+    expect(store.t('start-create-mode-hint')).toContain(store.t('mode-label'));
+  });
+
+  it('places the validation-mode hint in the Create section', () => {
+    const body = html();
+    const heading = body.indexOf('data-testid="start-create-grog"');
+    const hint = body.indexOf(store.t('start-create-mode-hint'));
+    expect(hint).toBeGreaterThan(0);
+    expect(hint).toBeLessThan(heading);
+  });
 });

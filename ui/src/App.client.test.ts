@@ -15,6 +15,17 @@ import type { DerivedTotals, Entity, LocalizedRuleset } from './lib/types';
 // have passed the whole suite. This file is the reason the `client` vitest
 // project exists (see CLAUDE.md, "Frontend test environments"); mounting the app
 // client-side is what makes the effect actually run.
+// S4 (full-audit UX): the native OS window title never reflected the open file
+// name or unsaved state — only `document.title` did (the existing `$effect`
+// just above this file's App.svelte:163), which a Tauri window does NOT mirror
+// into its own chrome automatically. `getCurrentWindow` is hoisted so the
+// SAME mock function backs every `getCurrentWindow()` call, letting tests
+// assert on it directly.
+const { setTitleMock } = vi.hoisted(() => ({ setTitleMock: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('@tauri-apps/api/window', () => ({
+  getCurrentWindow: () => ({ setTitle: setTitleMock }),
+}));
+
 vi.mock('./lib/ipc', () => ({
   // Must resolve a usable ruleset: mounting runs `onMount`, which calls
   // `store.init()` -> `#reloadRuleset(true)`. That is also what seeds the clean
@@ -129,6 +140,7 @@ function lastMirroredDirty(): boolean {
 }
 
 beforeEach(() => {
+  setTitleMock.mockReset().mockResolvedValue(undefined);
   vi.mocked(ipc.updateCloseGuard).mockReset().mockResolvedValue(undefined);
   vi.mocked(ipc.loadRuleset).mockReset().mockResolvedValue(localizedRuleset());
   store.lang = 'en';
@@ -519,6 +531,64 @@ describe('document language attribute tracks the active UI language (S3)', () =>
     flushSync();
 
     expect(document.documentElement.lang).toBe('de');
+  });
+});
+
+// S4 (full-audit UX): App.svelte already computed the right localized title
+// string into `document.title` (the `app-title-document(-dirty)` Fluent
+// keys — NOT `app-document-name(-dirty)`, which are shaped for the on-screen
+// `doc-status` chip beside the app logo and carry no " — app" suffix at all),
+// but a Tauri window's native chrome does not read `document.title` — only
+// `getCurrentWindow().setTitle(...)` reaches it. So the title bar itself never
+// showed the open file name or the unsaved marker. SSR never runs an `$effect`
+// body, so this can only be proven mounted.
+describe('the native window title reflects the open document (S4)', () => {
+  it('sets no document-specific title before a file has ever been saved', async () => {
+    await mountApp();
+    expect(setTitleMock).toHaveBeenCalledWith(store.t('app-title'));
+  });
+
+  it('sets the native title to the file name once a file is tracked', async () => {
+    await mountApp();
+    store.currentPath = '/tmp/example.armc.json';
+    flushSync();
+
+    expect(setTitleMock).toHaveBeenLastCalledWith(
+      store.t('app-title-document', { name: 'example.armc.json', app: store.t('app-title') }),
+    );
+  });
+
+  it('marks the native title dirty with the same ASCII marker as document.title', async () => {
+    await mountApp();
+    store.currentPath = '/tmp/example.armc.json';
+    flushSync();
+    setTitleMock.mockClear();
+
+    store.entity.name = 'a dirtying edit';
+    flushSync();
+
+    expect(setTitleMock).toHaveBeenLastCalledWith(
+      store.t('app-title-document-dirty', { name: 'example.armc.json', app: store.t('app-title') }),
+    );
+    expect(setTitleMock.mock.lastCall![0]).toBe(document.title);
+  });
+
+  it('drops the dirty marker once the edit is saved back to the baseline', async () => {
+    await mountApp();
+    store.currentPath = '/tmp/example.armc.json';
+    flushSync();
+
+    store.entity.name = 'a dirtying edit';
+    flushSync();
+    expect(setTitleMock).toHaveBeenLastCalledWith(
+      store.t('app-title-document-dirty', { name: 'example.armc.json', app: store.t('app-title') }),
+    );
+
+    delete store.entity.name;
+    flushSync();
+    expect(setTitleMock).toHaveBeenLastCalledWith(
+      store.t('app-title-document', { name: 'example.armc.json', app: store.t('app-title') }),
+    );
   });
 });
 

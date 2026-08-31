@@ -240,6 +240,7 @@
           type="search"
           class="filter-search"
           placeholder={store.t('filter-search-placeholder')}
+          aria-label={store.t('filter-search-placeholder')}
           bind:value={filter.search}
           data-testid="ability-search"
         />
@@ -270,7 +271,15 @@
             {@const entry = item.entry}
             {@const i = item.index}
             {@const key = paramKey(entry.ability)}
-            <li class:invalid-selection={invalidIds.has(entry.ability)}>
+            {@const invalid = invalidIds.has(entry.ability)}
+            <li class:invalid-selection={invalid}>
+              {#if invalid}
+                <!-- WCAG 1.4.1: the red tint on `.invalid-selection` is not the only
+                     signal — a visible glyph plus words for a screen reader, matching
+                     ValidationPanel's own non-colour severity marker. -->
+                <span class="invalid-glyph" aria-hidden="true">!</span>
+                <span class="sr-only">{store.t('ability-invalid-selection')}</span>
+              {/if}
               <span class="item-name" use:tooltip={selectedTip(entry.ability)}
                 >{selectedName(entry.ability, entry.parameter)}</span
               >
@@ -318,6 +327,7 @@
                 type="text"
                 class="specialty"
                 placeholder={store.t('ability-specialty-label')}
+                aria-invalid={invalid ? 'true' : undefined}
                 value={entry.specialty ?? ''}
                 oninput={(e) =>
                   store.setAbilitySpecialtyAt(i, (e.currentTarget as HTMLInputElement).value)}
@@ -339,6 +349,7 @@
                   type="text"
                   class="ability-param"
                   placeholder={store.t(`param-label-${key}`)}
+                  aria-invalid={invalid ? 'true' : undefined}
                   value={entry.parameter ?? ''}
                   oninput={(e) =>
                     store.setAbilityParameterAt(i, (e.currentTarget as HTMLInputElement).value)}

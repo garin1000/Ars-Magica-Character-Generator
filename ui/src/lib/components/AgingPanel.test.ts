@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
@@ -77,6 +79,9 @@ function has(body: string, testid: string): boolean {
   return new RegExp(`data-testid="${testid}"`).test(body);
 }
 
+/** `app.css` as text, for the grid-spanning rule server-rendered markup cannot reveal. */
+const appCss = readFileSync(fileURLToPath(new URL('../../app.css', import.meta.url)), 'utf-8');
+
 beforeEach(() => {
   vi.useFakeTimers();
   store.lang = 'en';
@@ -122,5 +127,49 @@ describe('AgingPanel and the Longevity Ritual', () => {
     // The schedule, the conditions and the roll all gate on engine read-outs this
     // fixture has none of, so the record is the surface that always stands.
     expect(has(html(), 'aging-record')).toBe(true);
+  });
+});
+
+// S17 (full-audit a11y): AgingSchedulePanel, LivingConditionsPicker,
+// AgingRollCalculator and AgingRecordPanel — every block this panel composes —
+// opened at <h3 class="detail-label"> directly under the app's single <h1>,
+// with no <h2> between (a heading hierarchy gap). This shared composition
+// mounts on BOTH the editor's Aging tab and the wizard's aging step (the
+// file's own comment: "composed once ... so the two flows can never drift"),
+// so fixing it here fixes both surfaces in one place. Reuses `tab-aging`, the
+// same label App.svelte's tab button already carries.
+//
+// This mounts inside a `.character-details` CSS GRID (provided by AgingStep /
+// App.svelte, both wrapping <AgingPanel /> in `<section class="panel
+// character-details">`) where every child is its own cell — the added <h2>
+// needs the same full-width span AgingSchedulePanel etc. never needed for
+// themselves, since `.character-details .aging-panel { display: contents }`
+// promotes THIS panel's children (including the new h2) straight into that
+// grid.
+describe('AgingPanel heading hierarchy (S17)', () => {
+  it('opens with an h2 naming the tab, ahead of every h3 subsection', () => {
+    const body = html();
+    const h2 = body.indexOf('<h2');
+    const h3 = body.indexOf('<h3');
+    expect(h2).toBeGreaterThanOrEqual(0);
+    // LongevityPanel's own h3 always renders unconditionally, so this holds
+    // even with the grog ruleset/entity fixture installed above.
+    expect(h3).toBeGreaterThan(h2);
+    expect(body).toMatch(/<h2[^>]*>Aging<\/h2>/);
+  });
+
+  it('spans the h2 across every column of the character-details grid', () => {
+    const body = html();
+    const h2Tag = /<h2[^>]*>/.exec(body)![0];
+    const cls = /class="([^"]*)"/.exec(h2Tag)?.[1] ?? '';
+    expect(cls).not.toBe('');
+    let found = false;
+    for (const token of cls.split(/\s+/)) {
+      const rule = new RegExp(
+        `\\.character-details\\s+\\.${token}\\s*\\{[^}]*grid-column:\\s*1\\s*/\\s*-1`,
+      ).exec(appCss);
+      if (rule) found = true;
+    }
+    expect(found).toBe(true);
   });
 });

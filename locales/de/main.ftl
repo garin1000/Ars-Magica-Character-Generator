@@ -37,6 +37,12 @@ action-open-into-wizard = In geführter Erstellung öffnen
 start-open-wizard-hint = Ein Charakter, der mitten in der geführten Erstellung gespeichert wurde, wird bei dem Schritt fortgesetzt, auf dem er verlassen wurde. Ein im Editor angelegter Charakter wird mit allen erreichbaren Schritten geöffnet.
 start-create-title = Neuen Charakter anlegen
 start-create-hint = Der Charaktertyp wird hier einmalig gewählt — er lässt sich später nicht mehr ändern.
+# S28 (full-audit UX): benennt die Prüfmodus-Achse (Erzwungen/Beratend/Still),
+# die direkt-geprüfte von direkt-ungeprüfter Erstellung unterscheidet — auf
+# diesem Bildschirm sonst unsichtbar. Die Prüfung-Steuerung in der Werkzeugleiste
+# erscheint erst, sobald ein Charakter existiert (App.svelte), daher kann dieser
+# Hinweis nur darauf vorausweisen.
+start-create-mode-hint = Wie streng die Regeln geprüft werden (Prüfung, in der Werkzeugleiste), lässt sich jederzeit ändern, sobald der Charakter geöffnet ist.
 start-wizard-title = Geführte Erstellung
 start-wizard-hint = Schritt für Schritt durch die Erstellungsphasen dieses Typs, in ihrer Reihenfolge. Der Charaktertyp wird auch hier einmalig gewählt — er kann später nicht geändert werden.
 
@@ -715,6 +721,10 @@ aging-calculator-clear = Diesen Wurf verwerfen
 aging-calculator-note = Nichts hiervon wird am Charakter eingetragen, bevor du diesen Wurf anwendest; der Würfelwurf selbst wird nie gespeichert.
 personality-label = Persönlichkeitseigenschaften
 personality-name-placeholder = Eigenschaft
+# Barrierefreier Name für das gebundene Werteingabefeld (S29, full-audit UX):
+# die Zeile trägt kein eigenes sichtbares Label, daher muss das Feld nennen,
+# welche Eigenschaft es bewertet — analog zu characteristic-description-for.
+personality-value-label = Wert von { $name }
 personality-add = Eigenschaft hinzufügen
 personality-empty = Noch keine Persönlichkeitseigenschaften.
 reputations-label = Reputationen
@@ -841,6 +851,11 @@ longevity-focus-placeholder = Worin das Ritual gipfelt
 longevity-sterility-note = Der Anker des Rituals verhindert, dass der Magus seine Lebenskraft auf normale menschliche Weise verausgabt; der Magus wird dadurch dauerhaft unfruchtbar.
 # Grund, warum eine übernatürliche Fähigkeit im Auswähler ausgegraut ist.
 ability-requires-virtue = Erfordert eine verleihende Tugend (oder die eine freie Fähigkeit der Gabe)
+# Nur für Screenreader: Text auf einer gewählten Fähigkeitszeile, auf die ein
+# Prüfhinweis mit Schweregrad „Fehler" zeigt (S7, full-audit a11y) — ergänzt ein
+# sichtbares Symbol, damit die Ungültigkeit nie allein über die Farbe vermittelt
+# wird (WCAG 1.4.1).
+ability-invalid-selection = Ungültige Auswahl
 # Je Zeile benannt ($name ist der Anzeigename der Eigenschaft bzw. des
 # Persönlichkeitsmerkmals — dieser Schlüssel wird von CharacteristicPicker, dem
 # Persönlichkeitsmerkmal-Regler in FamiliarPanel und von PersonalityTraits
@@ -962,6 +977,10 @@ effective-score = { $score }
 empty-selections-side = Noch keine.
 no-issues = Keine Probleme.
 loading = Wird geladen…
+# Wird von SourcePicker angezeigt, wenn Suche/Filter alle Zeilen des Katalogs
+# ausschließen (S25, full-audit UX) — sonst bleibt die Liste völlig leer, nicht
+# von einem langsam ladenden oder defekten Feld zu unterscheiden.
+filter-no-results = Keine Treffer für den aktuellen Filter.
 
 # Nur für Screenreader: Schweregrad-Präfix vor jedem Prüfhinweis
 # (ValidationPanel.svelte) — Farbe/Rahmen allein dürfen nicht das einzige
@@ -1208,6 +1227,10 @@ derived-familiar-falls-short = Laborsumme erreicht die Bindungsstufe nicht.
 derived-familiar-cords-fit = Kordelpunkte liegen innerhalb der Laborsumme.
 derived-familiar-cords-exceed = Kordelpunkte übersteigen die Laborsumme.
 derived-familiar-note = Nur ein Hinweis: Welche Künste zum Tier passen und ob ein Magischer Fokus greift, entscheidet die Spielgruppe (Vis-Kosten werden ignoriert).
+# Verbindet die Teile der Summanden-Aufschlüsselung im Tooltip (S14, full-audit
+# i18n) — gleiche Form wie restricted-xp-list-separator, über Fluent statt eines
+# fest codierten „, "-Literals, damit es für andere Sprachkonventionen anpassbar ist.
+derived-addend-list-separator = ,
 derived-addend-intelligence = Intelligenz
 derived-addend-magic_theory = Magietheorie
 derived-addend-technique = Technik

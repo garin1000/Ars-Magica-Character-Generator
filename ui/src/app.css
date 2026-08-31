@@ -1040,6 +1040,15 @@ ul {
   font-variant-numeric: tabular-nums;
 }
 
+/* PersonalityTraits' bound value input (S29): sized and centred like the
+   plain `.spinner-value` text it replaces, so swapping one for the other does
+   not reflow the row. */
+.spinner-value-input {
+  width: 3rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Read-only effective score shown when a virtue bonus applies: an important
    value, so a large plain accent number rather than a small pill. */
 .eff-badge {
@@ -1068,6 +1077,14 @@ ul {
    text (name, score, labels); the inputs/buttons keep their own styling. */
 .invalid-selection {
   color: var(--error);
+}
+
+/* The row's colour is not the only signal (WCAG 1.4.1) — this glyph is the
+   visible channel, paired with `.sr-only` text naming it in words for a screen
+   reader (AbilityTab.svelte). Mirrors ValidationPanel's own error marker. */
+.invalid-glyph {
+  color: var(--error);
+  font-weight: 700;
 }
 
 /* Ability lists: the name grows so the +/spinner/specialty/× align right. */
@@ -1317,6 +1334,19 @@ ul {
    too narrow for its own fields ("Describe the aging roll's e…"). Full width fixes
    the second; the bounded scrollport below fixes the first. */
 .character-details .aging-log-block {
+  grid-column: 1 / -1;
+}
+
+/* S17 (full-audit a11y): CharacterDetails' own <h2> and AgingPanel's shared
+   <h2> (both fixing the same heading-hierarchy gap — every subsection here
+   used to open at <h3> directly under the app's single <h1>) must read as a
+   banner over the WHOLE panel, not squeeze into one column-width grid cell
+   like every other block here. Same technique as `.aging-log-block` above,
+   and a `.character-details` DESCENDANT selector (not `>`) on purpose:
+   AgingPanel's <h2> sits one level below this section through the
+   `display: contents` wrapper at `.character-details .aging-panel` above,
+   which promotes it into this SAME grid without changing its DOM ancestry. */
+.character-details .character-details-heading {
   grid-column: 1 / -1;
 }
 

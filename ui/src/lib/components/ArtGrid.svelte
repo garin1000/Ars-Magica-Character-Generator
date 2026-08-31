@@ -43,56 +43,65 @@
   }
 </script>
 
-<section class="panel art-grid">
+<!-- S17 (full-audit a11y): the tab's own <h2> — the columns below stayed <h3>
+     directly under the app's single <h1> with no <h2> between (a heading
+     hierarchy gap) until this was added. Reuses `tab-arts`, the same label the
+     App.svelte tab button already carries, so it names nothing the user does
+     not already read on the tab strip. -->
+<section class="panel">
+  <h2>{store.t('tab-arts')}</h2>
   {#if store.ruleset}
-    {#each columns as column, c (c)}
-      <div class="art-column">
-        <h3 class="category">{store.t(column.labelKey)}</h3>
-        <ul class="art-list">
-          {#each column.arts as art (art.id)}
-            {@const score = scoreOf(art.id)}
-            {@const bonus = bonusOf(art.id)}
-            <li>
-              <span class="item-name" use:tooltip={tip(art.id)}>
-                {name(art.id)}{#if abbr(art.id)}<span class="art-abbr">({abbr(art.id)})</span>{/if}
-              </span>
-              <span class="spinner">
-                <button
-                  type="button"
-                  class="icon-btn"
-                  aria-label={store.t('art-decrement', { name: name(art.id) })}
-                  disabled={score <= 0}
-                  onclick={() => store.adjustArt(art.id, -1, max)}
-                  data-testid="art-dec-{art.id}"
-                >
-                  -
-                </button>
-                <span class="spinner-value" data-testid="art-score-{art.id}">{score}</span>
-                <button
-                  type="button"
-                  class="icon-btn"
-                  aria-label={store.t('art-increment', { name: name(art.id) })}
-                  disabled={score >= max}
-                  onclick={() => store.adjustArt(art.id, 1, max)}
-                  data-testid="art-inc-{art.id}"
-                >
-                  +
-                </button>
-              </span>
-              {#if bonus !== 0}
-                <span class="eff-slot">
-                  <span class="eff-badge" data-testid="art-eff-{art.id}">
-                    {store.t('effective-score', { score: String(score + bonus) })}
-                  </span>
+    <div class="art-grid">
+      {#each columns as column, c (c)}
+        <div class="art-column">
+          <h3 class="category">{store.t(column.labelKey)}</h3>
+          <ul class="art-list">
+            {#each column.arts as art (art.id)}
+              {@const score = scoreOf(art.id)}
+              {@const bonus = bonusOf(art.id)}
+              <li>
+                <span class="item-name" use:tooltip={tip(art.id)}>
+                  {name(art.id)}{#if abbr(art.id)}<span class="art-abbr">({abbr(art.id)})</span
+                    >{/if}
                 </span>
-              {:else}
-                <span class="eff-slot" aria-hidden="true"></span>
-              {/if}
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/each}
+                <span class="spinner">
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    aria-label={store.t('art-decrement', { name: name(art.id) })}
+                    disabled={score <= 0}
+                    onclick={() => store.adjustArt(art.id, -1, max)}
+                    data-testid="art-dec-{art.id}"
+                  >
+                    -
+                  </button>
+                  <span class="spinner-value" data-testid="art-score-{art.id}">{score}</span>
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    aria-label={store.t('art-increment', { name: name(art.id) })}
+                    disabled={score >= max}
+                    onclick={() => store.adjustArt(art.id, 1, max)}
+                    data-testid="art-inc-{art.id}"
+                  >
+                    +
+                  </button>
+                </span>
+                {#if bonus !== 0}
+                  <span class="eff-slot">
+                    <span class="eff-badge" data-testid="art-eff-{art.id}">
+                      {store.t('effective-score', { score: String(score + bonus) })}
+                    </span>
+                  </span>
+                {:else}
+                  <span class="eff-slot" aria-hidden="true"></span>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/each}
+    </div>
   {:else}
     <p>{store.t('loading')}</p>
   {/if}

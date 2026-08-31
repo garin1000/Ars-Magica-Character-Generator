@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
+  import { getCurrentWindow } from '@tauri-apps/api/window';
   import { store } from './lib/state.svelte';
   import { updateCloseGuard } from './lib/ipc';
   import type { AppError } from './lib/types';
@@ -160,14 +161,27 @@
   // Keep the document title localized rather than hardcoded in HTML. Once a file
   // is being tracked, show "name — app" (with an ASCII dirty marker for unsaved
   // edits) via a parametrized Fluent key — never string-composed here.
+  //
+  // S4 (full-audit UX): `document.title` alone never reached the native OS
+  // window's own title bar — a Tauri window's chrome does not mirror the HTML
+  // document title, only `getCurrentWindow().setTitle(...)` does. So the same
+  // computed string now goes to both. A rejection here is swallowed rather than
+  // surfaced through `store.error` like the close guard below: an OS title-bar
+  // update failing is cosmetic, not the safety-critical unsaved-changes
+  // guarantee that guard exists for.
   $effect(() => {
     const name = store.currentFileName;
-    if (name === null) {
-      document.title = store.t('app-title');
-    } else {
-      const key = store.dirty ? 'app-title-document-dirty' : 'app-title-document';
-      document.title = store.t(key, { name, app: store.t('app-title') });
-    }
+    const title =
+      name === null
+        ? store.t('app-title')
+        : store.t(store.dirty ? 'app-title-document-dirty' : 'app-title-document', {
+            name,
+            app: store.t('app-title'),
+          });
+    document.title = title;
+    void getCurrentWindow()
+      .setTitle(title)
+      .catch(() => {});
   });
 
   // Standard document-app keyboard shortcuts. Ctrl (or Cmd on macOS) + S/N/O,

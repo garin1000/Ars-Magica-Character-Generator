@@ -1,6 +1,5 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { formatSigned } from '../derive';
 
   const traits = $derived(store.entity.personality_traits ?? []);
 </script>
@@ -32,9 +31,26 @@
           >
             -
           </button>
-          <span class="spinner-value" data-testid="personality-value-{i}">
-            {formatSigned(trait.value)}
-          </span>
+          <!-- Bound number input, not just the spinner: a Personality Trait's
+               |value| can reach 6 (a Personality Flaw, Core Rules), which is up to
+               twelve clicks from 0 with no other way in — every other scored
+               control with a wide/signed range (aging points, Talisman
+               bonus/level) offers direct entry too (S29, full-audit UX). The
+               range mirrors the store's own clamp (`setPersonalityTraitValue`). -->
+          <input
+            type="number"
+            class="spinner-value-input"
+            min="-6"
+            max="6"
+            value={trait.value}
+            aria-label={store.t('personality-value-label', { name: trait.name })}
+            oninput={(e) =>
+              store.setPersonalityTraitValue(
+                i,
+                Number((e.currentTarget as HTMLInputElement).value) || 0,
+              )}
+            data-testid="personality-value-{i}"
+          />
           <button
             type="button"
             class="icon-btn"

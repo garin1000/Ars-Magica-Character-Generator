@@ -263,9 +263,14 @@ const FILLERS = {
     await name.waitForExist({ timeout: STEP_TIMEOUT });
     await name.setValue(plan.personalityTrait);
     for (let i = 0; i < 3; i++) await $('[data-testid="personality-inc-0"]').click();
+    // S29 (full-audit UX): the value is now a bound `<input type="number">`, not
+    // a plain `<span>` — WebDriver's `getText()` never sees a form control's
+    // displayed value (it has no text node), and a native number input shows
+    // the bare digits, never `formatSigned`'s leading "+". `getValue()` and the
+    // unsigned "3" are the read that actually reflects what is on screen.
     await browser.waitUntil(
-      async () => (await $('[data-testid="personality-value-0"]').getText()).includes('+3'),
-      { timeout: STEP_TIMEOUT, timeoutMsg: 'the Personality Trait did not reach +3' },
+      async () => (await $('[data-testid="personality-value-0"]').getValue()) === '3',
+      { timeout: STEP_TIMEOUT, timeoutMsg: 'the Personality Trait did not reach 3' },
     );
   },
 

@@ -272,4 +272,18 @@ describe('VirtueFlawTab filter selects', () => {
     );
     expect(new Set(labels).size).toBe(labels.length);
   });
+
+  // S23 (full-audit a11y): the free-text search box on each side carries only a
+  // placeholder, which is not an accessible name — same defect as S5/S8.
+  it('gives the Virtues search box an accessible name via Fluent', () => {
+    const input = /<input[^>]*data-testid="vf-search-virtue"[^>]*>/.exec(html());
+    expect(input).not.toBeNull();
+    expect(clean(input![0])).toContain('aria-label="Search…"');
+  });
+
+  it('gives the Flaws search box an accessible name via Fluent', () => {
+    const input = /<input[^>]*data-testid="vf-search-flaw"[^>]*>/.exec(html());
+    expect(input).not.toBeNull();
+    expect(clean(input![0])).toContain('aria-label="Search…"');
+  });
 });

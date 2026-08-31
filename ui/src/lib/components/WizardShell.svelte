@@ -14,6 +14,17 @@
 
   const blockedHintId = 'wizard-blocked-hint';
 
+  // S22 (full-audit a11y): a rail step's `aria-describedby` used to reference
+  // the SHARED `blockedHintId` above, but the element that id belongs to only
+  // renders for the CURRENT step's own block reason (the `wizard-nav` footer,
+  // below). A step other than the current one — blocked while the current step
+  // is not — pointed at an id absent from the document: a dangling reference.
+  // Each step now gets its own self-contained id and `.sr-only` hint text,
+  // mirroring the per-step incomplete marker just below it in the rail.
+  function blockedHintIdFor(phase: (typeof phases)[number]): string {
+    return `wizard-blocked-hint-${phase}`;
+  }
+
   function blocked(phase: (typeof phases)[number]): boolean {
     return phaseHasBlockingIssue(store.result?.issues ?? [], phase);
   }
@@ -41,7 +52,7 @@
             class="wizard-rail-step"
             class:active={i === store.wizardStep}
             aria-current={i === store.wizardStep ? 'step' : undefined}
-            aria-describedby={blocked(phase) ? blockedHintId : undefined}
+            aria-describedby={blocked(phase) ? blockedHintIdFor(phase) : undefined}
             data-blocked={blocked(phase) ? 'true' : undefined}
             data-incomplete={incomplete(phase) ? 'true' : undefined}
             disabled={i > store.wizardFurthest}
@@ -63,6 +74,18 @@
             {#if incomplete(phase)}
               <span class="sr-only" data-testid="wizard-incomplete-{phase}">
                 {store.t('wizard-step-incomplete-label')}
+              </span>
+            {/if}
+            {#if blocked(phase)}
+              <!-- Self-contained: this id is the one `aria-describedby` above
+                   references, so it can never dangle regardless of which step is
+                   current. Same text as the nav footer's own blocked hint. -->
+              <span
+                class="sr-only"
+                id={blockedHintIdFor(phase)}
+                data-testid="wizard-blocked-hint-{phase}"
+              >
+                {store.t('wizard-blocked-hint')}
               </span>
             {/if}
           </button>

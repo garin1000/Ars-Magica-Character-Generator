@@ -34,6 +34,12 @@
 
 <section class="panel magic-possessions">
   {#if store.ruleset}
+    <!-- S17 (full-audit a11y): the tab's own <h2> — the Devices/Familiar/
+         Talisman h3 subsections below stayed directly under the app's single
+         <h1> with no <h2> between (a heading hierarchy gap) until this was
+         added. Reuses `tab-possessions`, the same label App.svelte's tab
+         button already carries. -->
+    <h2>{store.t('tab-possessions')}</h2>
     <div class="detail-field">
       <label class="field">
         <span>{store.t('aura-label')}</span>

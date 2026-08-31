@@ -176,6 +176,17 @@ describe('LongevityPanel hint (engine-authoritative suggestion)', () => {
     expect(text).not.toContain('−');
   });
 
+  // S26 (full-audit a11y): the hint text changes reactively as the Lab Total
+  // shifts (an Art bought, a Puissant Art added), but was not announced —
+  // unlike AgingSchedulePanel's and LivingConditionsPicker's equivalent
+  // reactive figures, which both carry role="status".
+  it('announces the hint so a screen reader hears it change, matching the other reactive hints', () => {
+    store.addLongevityRitual('self_made');
+    setDerived('self_made', 0, false, { lab_total: 35, suggested_bonus: 7, halved: false });
+    const { open } = element(html(), 'longevity-hint');
+    expect(open).toContain('role="status"');
+  });
+
   it('offers no suggestion for an external ritual (another magus made it)', () => {
     store.addLongevityRitual('external');
     setDerived('external', 6, true, null);

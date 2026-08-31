@@ -201,6 +201,45 @@ describe('WizardShell', () => {
     expect(step).toMatch(/aria-describedby="[^"]+"/);
   });
 
+  // S22 (full-audit a11y): a rail step's `aria-describedby` used to reference a
+  // SHARED id (`wizard-blocked-hint`) that only rendered for the CURRENT step's
+  // own block reason — so a step other than the current one, blocked while the
+  // current step is not, pointed at an id absent from the document. Each
+  // blocked step must now carry its own self-contained hint.
+  it('never lets a blocked step reference a hint id absent from the document', () => {
+    store.wizardStep = 1;
+    store.wizardFurthest = 1;
+    // `concept` (not the current step) is blocked; `experience` (the current
+    // step) is not — so the shared nav hint (tied to the CURRENT step) never
+    // renders at all, reproducing the dangling reference.
+    store.result = {
+      issues: [{ severity: 'error', code: 'x', phase: 'concept', args: {} }],
+    };
+    const body = html();
+    expect(body).not.toContain('data-testid="wizard-blocked-hint"');
+
+    const step = tag(body, 'wizard-step-concept');
+    const described = /aria-describedby="([^"]+)"/.exec(step);
+    expect(described).not.toBeNull();
+    for (const id of described![1].split(/\s+/)) {
+      expect(body).toContain(`id="${id}"`);
+    }
+  });
+
+  it("gives each blocked step its own hint text, not just the current step's", () => {
+    store.wizardStep = 1;
+    store.wizardFurthest = 1;
+    store.result = {
+      issues: [{ severity: 'error', code: 'x', phase: 'concept', args: {} }],
+    };
+    const body = html();
+    const step = tag(body, 'wizard-step-concept');
+    const id = /aria-describedby="([^"]+)"/.exec(step)![1];
+    const hint = new RegExp(`id="${id}"[^>]*>([\\s\\S]*?)<`).exec(body);
+    expect(hint).not.toBeNull();
+    expect(hint![1].trim()).not.toBe('');
+  });
+
   it('explains why Next is blocked, and names the mode that lifts the gate', () => {
     store.result = {
       issues: [{ severity: 'error', code: 'x', phase: 'concept', args: {} }],
