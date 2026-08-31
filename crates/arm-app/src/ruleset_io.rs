@@ -1086,10 +1086,51 @@ pub const RULESET_VERSION: &str = "2024.1";
 /// executable as candidates and lets this pick whichever is real. A candidate is
 /// considered valid when it contains `core/character_types.json`, a required
 /// rules file.
+/// Every core rules file a valid `rules/` directory must carry — exactly the
+/// set [`load_ruleset_from_dir`] unconditionally reads via `fs::read_to_string`
+/// regardless of language. An empty *file* is a legitimate "this ruleset ships
+/// none of this subsystem" signal there (characteristics/life_stages/
+/// childhoods/aging may all be `""`), but the file itself must still exist —
+/// that is exactly the presence this list checks.
+const REQUIRED_CORE_FILES: [&str; 13] = [
+    "core/virtues_flaws.json",
+    "core/character_types.json",
+    "core/abilities.json",
+    "core/arts.json",
+    "core/houses.json",
+    "core/mythic_companion_types.json",
+    "core/spells.json",
+    "core/spell_mastery_abilities.json",
+    "core/equipment.json",
+    "core/characteristics.json",
+    "core/life_stages.json",
+    "core/childhoods.json",
+    "core/aging.json",
+];
+
+/// The [`REQUIRED_CORE_FILES`] that `dir` does NOT carry, in their fixed
+/// order — empty when `dir` is a complete, valid rules directory (including
+/// when `dir` does not exist at all, in which case every file is "missing").
+/// Exposed so a caller can build an error message naming exactly what is
+/// wrong with a rejected candidate (V9), rather than a bare "not found".
+pub fn missing_core_files(dir: &Path) -> Vec<&'static str> {
+    REQUIRED_CORE_FILES
+        .iter()
+        .filter(|file| !dir.join(file).is_file())
+        .copied()
+        .collect()
+}
+
+/// Picks the first candidate directory that carries every
+/// [`REQUIRED_CORE_FILES`] entry (V9). A candidate missing even one — a
+/// stale or partially-staged directory — is skipped rather than accepted on
+/// the strength of a single file and left to fail later, deep inside
+/// [`load_ruleset_from_dir`], with a raw "file not found" that names neither
+/// the directory nor what was actually missing from it.
 pub fn pick_rules_dir(candidates: &[PathBuf]) -> Option<PathBuf> {
     candidates
         .iter()
-        .find(|dir| dir.join("core/character_types.json").is_file())
+        .find(|dir| missing_core_files(dir).is_empty())
         .cloned()
 }
 

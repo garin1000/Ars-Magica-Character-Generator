@@ -327,62 +327,16 @@ pub(crate) fn validate_ability_bonus_targets(
             continue;
         };
         for effect in &item.effects {
-            // Exhaustive match so adding an Effect variant is a compile error
-            // here, not a silently-skipped target check.
-            let param = match effect {
-                // Affinity reduces the cost of buying one ability, so it too must
-                // target a held instance — the cost break attaches to nothing
-                // otherwise, exactly like a dangling Puissant.
-                Effect::AbilityBonus { param, .. } | Effect::AffinityAbilityCost { param, .. } => {
-                    param
-                }
-                // Art bonuses are not parameterized instances; their target is
-                // resolved by validate_parameters (domain check). Characteristic
-                // limits are handled elsewhere. AbilityScoreGrant *creates* the
-                // score, so it needs no pre-existing bought row. The XP-pool and
-                // characteristic-budget grants carry no target.
-                Effect::CharacteristicLimit { .. }
-                | Effect::ArtBonus { .. }
-                | Effect::AffinityArtCost { .. }
-                | Effect::RestrictedAbilityXp { .. }
-                | Effect::CharacteristicPoints { .. }
-                | Effect::AbilityScoreGrant { .. }
-                | Effect::SpellLevels { .. }
-                | Effect::GeneralXp { .. }
-                | Effect::LaterLifeXpRate { .. }
-                | Effect::AbilityAuthorization { .. }
-                | Effect::LocalityAbilityCapFraction { .. }
-                | Effect::ConfidenceBonus { .. }
-                | Effect::SpellMasteryXp { .. }
-                | Effect::GrantsSpellMastery { .. }
-                | Effect::GrantsSelection { .. }
-                | Effect::ItemLevelBudget { .. }
-                | Effect::MasterpieceItem
-                | Effect::TrueFaithGrant { .. }
-                | Effect::WarpingGrant { .. }
-                | Effect::SizeDelta { .. }
-                | Effect::CharacteristicScoreDelta { .. }
-                | Effect::GroupAffinityCost { .. }
-                | Effect::GrantsReputation { .. }
-                | Effect::MightGrant { .. }
-                | Effect::PowerLevels { .. }
-                // M5/5b in-play effects: consumed by derived.rs (5i). They carry
-                // no ability/characteristic creation target to check here.
-                | Effect::MagicalFocus { .. }
-                | Effect::CastingTotalMod { .. }
-                | Effect::LabTotalMod { .. }
-                | Effect::DeficientArt { .. }
-                | Effect::MagicTotalHalving { .. }
-                | Effect::SoakMod { .. }
-                | Effect::CombatMod { .. }
-                | Effect::HealthMod { .. }
-                | Effect::MagicResistanceMod { .. }
-                | Effect::AgingMod { .. }
-                | Effect::AdvancementMod { .. }
-                | Effect::SpecialCastingMod { .. }
-                | Effect::AbilityRollMod { .. }
-                // Elemental Magic carries no ability/characteristic creation target.
-                | Effect::ElementalMagic { .. } => continue,
+            // The exhaustive Effect match lives once, in effect_target (V71):
+            // adding a variant is a compile error there, not here. Affinity
+            // reduces the cost of buying one ability, so it too must target a
+            // held instance — the cost break attaches to nothing otherwise,
+            // exactly like a dangling Puissant — which is why both
+            // `AbilityBonus` and `AffinityAbilityCost` collapse to the same
+            // `EffectTarget::AbilityParam` arm.
+            let param = match effect_target(effect) {
+                EffectTarget::AbilityParam(param) => param,
+                EffectTarget::CharacteristicLimit { .. } | EffectTarget::Other => continue,
             };
             let Some(target) = selection.params.get(param) else {
                 continue; // missing ability key already reported by validate_parameters

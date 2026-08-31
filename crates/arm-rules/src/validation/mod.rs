@@ -16,8 +16,8 @@ use crate::grant::{Grant, open_pick_satisfies};
 use crate::ruleset::Ruleset;
 use crate::types::{
     AbilityFunding, CategoryCap, CreationPhase, Effect, Entity, EntityKind, EntityTypeProfile,
-    GiftPolicy, Id, ItemKind, Magnitude, ParameterDomain, PointItem, Prereq, Selection,
-    ValidationMode,
+    GiftPolicy, Id, ItemKind, Magnitude, PREREQ_MAX_DEPTH, ParameterDomain, PointItem, Prereq,
+    Selection, ValidationMode,
 };
 
 mod aging;
@@ -902,6 +902,85 @@ pub(crate) fn validate_known_refs(
                 Some(selection.item_ref.clone()),
             ));
         }
+    }
+}
+
+/// The build-time target (if any) that an [`Effect`] attaches to, collapsed to
+/// the handful of shapes creation-time validation needs to distinguish.
+///
+/// This is the **single** exhaustive match over every `Effect` variant behind
+/// both [`validate_characteristic_limit_preconditions`] (in `scores.rs`) and
+/// [`validate_ability_bonus_targets`] (in `selections.rs`) — V71 found those
+/// two functions each carrying their own ~28-variant copy of this match, so a
+/// new `Effect` variant was a compile error in one call site but silently
+/// unhandled in the other. Routing both through this function makes it one
+/// compile error, in one place, again.
+pub(crate) enum EffectTarget<'a> {
+    /// `Effect::CharacteristicLimit { param, amount }`: shifts the buy
+    /// cap/floor of the characteristic named by `param`.
+    CharacteristicLimit { param: &'a str, amount: i8 },
+    /// `Effect::AbilityBonus { param, .. }` or `Effect::AffinityAbilityCost {
+    /// param, .. }`: both attach to a held ability instance named by `param`
+    /// and dangle the same way if that instance is absent.
+    AbilityParam(&'a str),
+    /// Every other `Effect` variant: no ability/characteristic creation-time
+    /// target for these two checks to resolve.
+    Other,
+}
+
+/// Classifies `effect` into the [`EffectTarget`] shape shared by the
+/// characteristic-limit-precondition and ability-bonus-dangling-target
+/// checks. See [`EffectTarget`] for why this match is centralized.
+pub(crate) fn effect_target(effect: &Effect) -> EffectTarget<'_> {
+    match effect {
+        Effect::CharacteristicLimit { param, amount } => EffectTarget::CharacteristicLimit {
+            param,
+            amount: *amount,
+        },
+        Effect::AbilityBonus { param, .. } | Effect::AffinityAbilityCost { param, .. } => {
+            EffectTarget::AbilityParam(param)
+        }
+        Effect::ArtBonus { .. }
+        | Effect::AffinityArtCost { .. }
+        | Effect::RestrictedAbilityXp { .. }
+        | Effect::CharacteristicPoints { .. }
+        | Effect::AbilityScoreGrant { .. }
+        | Effect::SpellLevels { .. }
+        | Effect::GeneralXp { .. }
+        | Effect::LaterLifeXpRate { .. }
+        | Effect::AbilityAuthorization { .. }
+        | Effect::LocalityAbilityCapFraction { .. }
+        | Effect::ConfidenceBonus { .. }
+        | Effect::SpellMasteryXp { .. }
+        | Effect::GrantsSpellMastery { .. }
+        | Effect::GrantsSelection { .. }
+        | Effect::ItemLevelBudget { .. }
+        | Effect::MasterpieceItem
+        | Effect::TrueFaithGrant { .. }
+        | Effect::WarpingGrant { .. }
+        | Effect::SizeDelta { .. }
+        | Effect::CharacteristicScoreDelta { .. }
+        | Effect::GroupAffinityCost { .. }
+        | Effect::GrantsReputation { .. }
+        | Effect::MightGrant { .. }
+        | Effect::PowerLevels { .. }
+        // M5/5b in-play effects: consumed by derived.rs (5i). They carry
+        // no ability/characteristic creation target to check here.
+        | Effect::MagicalFocus { .. }
+        | Effect::CastingTotalMod { .. }
+        | Effect::LabTotalMod { .. }
+        | Effect::DeficientArt { .. }
+        | Effect::MagicTotalHalving { .. }
+        | Effect::SoakMod { .. }
+        | Effect::CombatMod { .. }
+        | Effect::HealthMod { .. }
+        | Effect::MagicResistanceMod { .. }
+        | Effect::AgingMod { .. }
+        | Effect::AdvancementMod { .. }
+        | Effect::SpecialCastingMod { .. }
+        | Effect::AbilityRollMod { .. }
+        // Elemental Magic carries no ability/characteristic creation target.
+        | Effect::ElementalMagic { .. } => EffectTarget::Other,
     }
 }
 
@@ -7323,6 +7402,28 @@ mod tests {
         over.age = Some(25);
         over.ability_scores = vec![ability("ability.awareness", 8)];
         assert!(all_codes(&validate(&over, &rs)).contains(&"ability_above_age_cap".to_string()));
+    }
+
+    /// Characterization test for V71: `AffinityAbilityCost` shares the
+    /// dangling-target check with `AbilityBonus` (both resolve through the
+    /// shared `EffectTarget::AbilityParam` arm), but until now nothing pinned
+    /// that in isolation — the existing affinity tests always hold the target
+    /// ability. Written before the V71 dedup refactor to guard against the
+    /// two call sites drifting apart.
+    #[test]
+    fn affinity_dangling_when_target_ability_not_held() {
+        let rs = p7_rs();
+        // Affinity (Awareness) but the character never bought Awareness.
+        let affinity = Selection::with_params(
+            Id::new("virtue.affinity_awareness"),
+            BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
+        );
+        let e = make_entity("companion", vec![affinity]);
+        assert!(
+            all_codes(&validate(&e, &rs)).contains(&"ability_bonus_dangling_target".to_string()),
+            "an Affinity whose target ability is absent should dangle: {:?}",
+            all_codes(&validate(&e, &rs))
+        );
     }
 
     #[test]

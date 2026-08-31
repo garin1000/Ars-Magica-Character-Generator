@@ -205,8 +205,12 @@ describe('talisman', () => {
     );
     expect(await $('[data-testid="talisman-effect-name-1"]').isExisting()).toBe(false);
 
-    // And the item itself: the empty state comes back.
+    // And the item itself: removing it now asks for confirmation first (S30
+    // — identity, attunements and instilled effects are too much to discard
+    // on one click), so confirm before the empty state comes back.
     await $('[data-testid="talisman-remove-item"]').click();
+    await $('[data-testid="talisman-remove-confirm-confirm"]').waitForExist({ timeout: 10000 });
+    await $('[data-testid="talisman-remove-confirm-confirm"]').click();
     await $('[data-testid="talisman-empty-item"]').waitForExist({ timeout: 10000 });
     expect(await $('[data-testid="talisman-description"]').isExisting()).toBe(false);
   });

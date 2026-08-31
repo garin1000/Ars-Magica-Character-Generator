@@ -280,6 +280,29 @@ pub enum Prereq {
     IsMagus,
 }
 
+/// Engineering limit (not a rules mechanic — needs no source citation) on how
+/// deeply a [`Prereq`] boolean expression may nest (K8).
+///
+/// Every prerequisite currently shipped in `rules/core/*.json` is a single
+/// flat `Has` — depth 1 — so this is generous headroom for compound
+/// `All`/`Any`/`Nor` trees the rules could reasonably grow into (a handful of
+/// nested clauses), while staying far short of anything that could threaten
+/// the stack. Without a bound, a `rules/` directory carrying a
+/// pathologically deep `Prereq` tree (crafted or corrupted — the trust
+/// boundary is the file the user opens, `CLAUDE.md` → "This is a DESKTOP
+/// APPLICATION") recurses without limit in every walker over the tree.
+///
+/// Enforced at two points, both named in each site's own doc:
+/// - `Ruleset::validate_prereq_refs` (load time, the primary guard): a
+///   ruleset whose prerequisites nest past this limit never finishes
+///   loading, via either `Ruleset::from_sources` or `Ruleset::from_serialized`
+///   — so a malformed tree can never reach evaluation at all.
+/// - `validation::prereq::evaluate_prereq` (evaluation time, defense in
+///   depth): should be unreachable for any ruleset that passed the load-time
+///   guard, but degrades to "unevaluable" rather than recursing further if it
+///   is ever reached some other way.
+pub const PREREQ_MAX_DEPTH: usize = 32;
+
 /// The kind of value a parameter slot carries.
 ///
 /// A forward-looking, single-variant discriminant. Today it carries no behavior:

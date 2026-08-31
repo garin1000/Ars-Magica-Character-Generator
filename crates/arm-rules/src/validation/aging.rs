@@ -309,3 +309,88 @@ pub fn aging_error_issue(error: &AgingError) -> ValidationIssue {
         ),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // E11: `aging_error_issue` is a 6-arm exhaustive `AgingError` ->
+    // `ValidationIssue` translator that had zero test coverage anywhere.
+    // One test per arm, each asserting the issue code (the stable Fluent
+    // message key the UI localizes), the phase attribution (every emit site
+    // here is CreationPhase::Aging per this module's own doc), and the
+    // interpolation args the code's contract table promises.
+
+    #[test]
+    fn no_aging_rules_translates_to_its_code_with_no_args() {
+        let issue = aging_error_issue(&AgingError::NoAgingRules);
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.code, ValidationIssue::CODE_AGING_RULES_MISSING);
+        assert_eq!(issue.phase, CreationPhase::Aging);
+        assert!(issue.args.is_empty());
+        assert_eq!(issue.context, None);
+    }
+
+    #[test]
+    fn year_already_recorded_carries_the_age_arg() {
+        let issue = aging_error_issue(&AgingError::YearAlreadyRecorded { age: 42 });
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(
+            issue.code,
+            ValidationIssue::CODE_AGING_YEAR_ALREADY_RECORDED
+        );
+        assert_eq!(issue.phase, CreationPhase::Aging);
+        assert_eq!(issue.args.get("age"), Some(&"42".to_string()));
+    }
+
+    #[test]
+    fn distribution_mismatch_carries_both_owed_and_distributed() {
+        let issue = aging_error_issue(&AgingError::DistributionMismatch {
+            owed: 5,
+            distributed: 3,
+        });
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(
+            issue.code,
+            ValidationIssue::CODE_AGING_DISTRIBUTION_MISMATCH
+        );
+        assert_eq!(issue.phase, CreationPhase::Aging);
+        assert_eq!(issue.args.get("owed"), Some(&"5".to_string()));
+        assert_eq!(issue.args.get("distributed"), Some(&"3".to_string()));
+    }
+
+    #[test]
+    fn distribution_not_open_carries_the_characteristic_count_not_the_list() {
+        // The arg is deliberately the *count*, not the Characteristics
+        // themselves — see this function's own doc on why the raw slugs
+        // never reach the message as interpolation values.
+        let issue = aging_error_issue(&AgingError::DistributionNotOpen {
+            characteristics: vec![Characteristic::Sta, Characteristic::Pre],
+        });
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(
+            issue.code,
+            ValidationIssue::CODE_AGING_DISTRIBUTION_NOT_OPEN
+        );
+        assert_eq!(issue.phase, CreationPhase::Aging);
+        assert_eq!(issue.args.get("count"), Some(&"2".to_string()));
+    }
+
+    #[test]
+    fn award_unpriceable_translates_to_its_code_with_no_args() {
+        let issue = aging_error_issue(&AgingError::AwardUnpriceable);
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.code, ValidationIssue::CODE_AGING_AWARD_UNPRICEABLE);
+        assert_eq!(issue.phase, CreationPhase::Aging);
+        assert!(issue.args.is_empty());
+    }
+
+    #[test]
+    fn year_not_recorded_carries_the_age_arg() {
+        let issue = aging_error_issue(&AgingError::YearNotRecorded { age: 57 });
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.code, ValidationIssue::CODE_AGING_YEAR_NOT_RECORDED);
+        assert_eq!(issue.phase, CreationPhase::Aging);
+        assert_eq!(issue.args.get("age"), Some(&"57".to_string()));
+    }
+}

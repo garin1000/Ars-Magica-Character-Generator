@@ -763,6 +763,13 @@ familiar-cord-silver = Silberne Kordel
 familiar-cord-bronze = Bronzene Kordel
 familiar-add = Vertrauten hinzufügen
 familiar-remove = Vertrauten entfernen
+# Bestätigung vor dem Entfernen des Vertrauten (S18): Der gesamte Werteblock —
+# Name, Magische Macht, Eigenschaften, Persönlichkeitseigenschaften, Kordeln,
+# investierte Kräfte — wird in einem Schritt gelöscht, ohne Rückgängig-Funktion.
+familiar-remove-confirm-title = Vertrauten entfernen?
+familiar-remove-confirm-message = Dadurch wird der gesamte Werteblock des Vertrauten gelöscht — Name, Magische Macht, Eigenschaften, Persönlichkeitseigenschaften, Kordeln und investierte Kräfte. Dies kann nicht rückgängig gemacht werden.
+familiar-remove-confirm-confirm = Vertrauten entfernen
+familiar-remove-confirm-cancel = Abbrechen
 # Der Kreaturenblock des Vertrauten selbst. Seine Eigenschaften gehören dem Tier
 # und werden nicht aus den Punkten des Magus bezahlt; sein Machtwert erhält keine
 # Tugendboni obendrauf — daher eine eigene Beschriftung statt might-score-label
@@ -785,6 +792,13 @@ familiar-bond-note = Die Bindung verleiht beiden Partnern die Kleine Tugend Wahr
 talisman-label = Talisman
 talisman-add = Talisman hinzufügen
 talisman-remove-item = Talisman entfernen
+# Bestätigung vor dem Entfernen des Talismans (S30): Identität, Abstimmungen
+# und eingebettete Effekte werden in einem Schritt gelöscht, ohne
+# Rückgängig-Funktion.
+talisman-remove-confirm-title = Talisman entfernen?
+talisman-remove-confirm-message = Dadurch werden Form und Material, die Abstimmungen und die eingebetteten Effekte des Talismans gelöscht. Dies kann nicht rückgängig gemacht werden.
+talisman-remove-confirm-confirm = Talisman entfernen
+talisman-remove-confirm-cancel = Abbrechen
 talisman-empty-item = Noch kein Talisman.
 talisman-description-label = Form und Material
 talisman-description-placeholder = z. B. ein Eschenstab mit Silberbeschlag

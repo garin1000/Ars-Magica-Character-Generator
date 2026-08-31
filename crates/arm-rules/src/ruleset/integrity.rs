@@ -94,7 +94,7 @@ impl Ruleset {
     fn validate_point_items(&self, errors: &mut Vec<String>) {
         for (id, item) in &self.point_items {
             if let Some(ref prereq) = item.prerequisites {
-                self.validate_prereq_refs(prereq, id, errors);
+                self.validate_prereq_refs(prereq, id, 1, errors);
             }
 
             for incompat_id in &item.incompatible_with {
@@ -1313,11 +1313,35 @@ impl Ruleset {
     /// ability catalogue, [`Prereq::ArtMin`] against the Art catalogue, and
     /// [`Prereq::House`] against the House registry. `IsMagus` carries no
     /// reference at all, so there is nothing to check for it.
-    fn validate_prereq_refs(&self, prereq: &Prereq, context_id: &Id, errors: &mut Vec<String>) {
+    ///
+    /// `depth` is 1 at the top-level prerequisite and increments once per
+    /// `All`/`Any`/`Nor` nesting level (K8). Past [`PREREQ_MAX_DEPTH`] this
+    /// refuses to descend further and reports the offending item instead —
+    /// see that constant's doc for why, and for why this is the single choke
+    /// point that keeps a pathologically deep tree from ever reaching
+    /// evaluation (`validate::prereq::evaluate_prereq`) at all: a ruleset
+    /// whose prerequisites fail this check never loads, via either
+    /// `Ruleset::from_sources` or `Ruleset::from_serialized` (both call
+    /// `validate_integrity`, which calls this).
+    fn validate_prereq_refs(
+        &self,
+        prereq: &Prereq,
+        context_id: &Id,
+        depth: usize,
+        errors: &mut Vec<String>,
+    ) {
+        if depth > PREREQ_MAX_DEPTH {
+            errors.push(format!(
+                "{context_id}: prerequisite nests more than {PREREQ_MAX_DEPTH} levels deep \
+                 (All/Any/Nor) — refusing to descend further; this is almost certainly a \
+                 corrupt or hostile rules file, not a legitimate prerequisite"
+            ));
+            return;
+        }
         match prereq {
             Prereq::All(children) | Prereq::Any(children) | Prereq::Nor(children) => {
                 for child in children {
-                    self.validate_prereq_refs(child, context_id, errors);
+                    self.validate_prereq_refs(child, context_id, depth + 1, errors);
                 }
             }
             Prereq::Has(ref_id) => {

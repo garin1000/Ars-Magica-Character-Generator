@@ -757,6 +757,13 @@ familiar-cord-silver = Silver cord
 familiar-cord-bronze = Bronze cord
 familiar-add = Add familiar
 familiar-remove = Remove familiar
+# Confirmation shown before removing the familiar (S18): the whole statblock —
+# name, Might, Characteristics, personality traits, cords, powers — is
+# discarded in one step, with no undo.
+familiar-remove-confirm-title = Remove familiar?
+familiar-remove-confirm-message = This deletes the familiar's entire statblock — name, Magic Might, Characteristics, Personality Traits, cords, and invested powers. This cannot be undone.
+familiar-remove-confirm-confirm = Remove familiar
+familiar-remove-confirm-cancel = Cancel
 # The familiar's own creature statblock. Its Characteristics are the beast's, not
 # bought from the magus's points, and its Might takes no Virtue grants on top —
 # which is why it has its own score label rather than reusing might-score-label
@@ -779,6 +786,12 @@ familiar-bond-note = The bond grants both partners the Minor Virtue True Friend 
 talisman-label = Talisman
 talisman-add = Add talisman
 talisman-remove-item = Remove talisman
+# Confirmation shown before removing the talisman (S30): its identity,
+# attunements, and instilled effects are discarded in one step, with no undo.
+talisman-remove-confirm-title = Remove talisman?
+talisman-remove-confirm-message = This deletes the talisman's shape and material, its attunements, and its instilled effects. This cannot be undone.
+talisman-remove-confirm-confirm = Remove talisman
+talisman-remove-confirm-cancel = Cancel
 talisman-empty-item = No talisman yet.
 talisman-description-label = Shape and material
 talisman-description-placeholder = e.g. an ash staff shod with silver

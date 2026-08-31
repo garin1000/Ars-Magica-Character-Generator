@@ -216,8 +216,12 @@ describe('familiar', () => {
     );
     expect(await $('[data-testid="familiar-power-name-1"]').isExisting()).toBe(false);
 
-    // And the familiar itself: the empty state (the Add button) comes back.
+    // And the familiar itself: removing it now asks for confirmation first
+    // (S18 — a whole statblock is too much to discard on one click), so
+    // confirm before the empty state (the Add button) comes back.
     await $('[data-testid="familiar-remove"]').click();
+    await $('[data-testid="familiar-remove-confirm-confirm"]').waitForExist({ timeout: 10000 });
+    await $('[data-testid="familiar-remove-confirm-confirm"]').click();
     await $('[data-testid="familiar-add"]').waitForExist({ timeout: 10000 });
     expect(await $('[data-testid="familiar-name"]').isExisting()).toBe(false);
   });
