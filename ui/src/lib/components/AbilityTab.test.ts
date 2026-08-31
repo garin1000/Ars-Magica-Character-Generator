@@ -244,6 +244,87 @@ describe('AbilityTab category filter (S6)', () => {
   });
 });
 
+// S7 (full-audit a11y): `.invalid-selection` (a row an error-severity issue
+// points at, e.g. a supernatural Ability whose granting Virtue was removed)
+// carried the fact by colour alone. WCAG 1.4.1 requires a non-colour channel —
+// mirrors ValidationPanel's own fix (S2 in that panel's history): a visible
+// glyph, `.sr-only` text naming it in words, and `aria-invalid="true"` on the
+// row's editable fields (specialty, parameter) so assistive tech is told too —
+// never on the spinner/remove buttons, which the ARIA spec does not permit the
+// attribute on.
+describe('AbilityTab invalid selection (S7)', () => {
+  beforeEach(() => {
+    store.entity.ability_scores = [{ ability: 'ability.athletics', score: 3 }];
+  });
+
+  it('marks an invalid row with a visible glyph, sr-only text, and aria-invalid', () => {
+    store.result = {
+      issues: [
+        {
+          severity: 'error',
+          code: 'x',
+          phase: 'abilities',
+          context: 'ability.athletics',
+          args: {},
+        },
+      ],
+    };
+    const body = html();
+    // Non-colour visible marker, not merely the CSS class.
+    expect(body).toMatch(/<span class="invalid-glyph" aria-hidden="true">[^<]+<\/span>/);
+    // Named in words for a screen reader, not just implied by the glyph.
+    expect(body).toContain('class="sr-only"');
+    // aria-invalid goes on the row's actual form fields — never on the
+    // spinner/remove buttons, which the ARIA spec does not permit it on
+    // (role="button" does not support aria-invalid; svelte-check's a11y lint
+    // flags it, and it would fail the required `npm run check` gate).
+    const specialty = /<input[^>]*data-testid="ability-specialty-ability.athletics-0"[^>]*>/.exec(
+      body,
+    );
+    expect(specialty![0]).toContain('aria-invalid="true"');
+    const dec = /<button[^>]*data-testid="ability-dec-ability.athletics-0"[^>]*>/.exec(body);
+    expect(dec![0]).not.toContain('aria-invalid');
+  });
+
+  it('leaves a valid row unmarked', () => {
+    store.result = { issues: [] };
+    const body = html();
+    expect(body).not.toContain('invalid-glyph');
+    const specialty = /<input[^>]*data-testid="ability-specialty-ability.athletics-0"[^>]*>/.exec(
+      body,
+    );
+    expect(specialty![0]).not.toContain('aria-invalid');
+  });
+
+  it('does not mark a row a WARNING-severity issue points at (advisory only)', () => {
+    store.result = {
+      issues: [
+        {
+          severity: 'warning',
+          code: 'x',
+          phase: 'abilities',
+          context: 'ability.athletics',
+          args: {},
+        },
+      ],
+    };
+    const body = html();
+    expect(body).not.toContain('invalid-glyph');
+  });
+});
+
+// S5 (full-audit a11y): the free-text search box carries only a placeholder,
+// which is not an accessible name — a screen-reader user tabbing into it hears
+// only "text box, search". Mirrors the S6 fix for the sibling <select> above.
+describe('AbilityTab search box (S5)', () => {
+  it('gives the search box an accessible name via Fluent', () => {
+    const body = html();
+    const input = /<input[^>]*data-testid="ability-search"[^>]*>/.exec(body);
+    expect(input).not.toBeNull();
+    expect(input![0]).toContain('aria-label="Search…"');
+  });
+});
+
 // --- Slice 12 (#24): the age cap note's one home -----------------------------
 //
 // This component is BOTH surfaces — the editor's Abilities tab and the wizard's

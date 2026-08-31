@@ -64,6 +64,7 @@
   <section class="start-choice" aria-labelledby="start-create-heading">
     <h3 id="start-create-heading">{store.t('start-create-title')}</h3>
     <p class="hint">{store.t('start-create-hint')}</p>
+    <p class="hint">{store.t('start-create-mode-hint')}</p>
     <div class="start-types">
       {#each typeIds as id (id)}
         <button

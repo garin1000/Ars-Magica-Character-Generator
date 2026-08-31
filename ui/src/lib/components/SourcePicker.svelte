@@ -57,6 +57,11 @@
       {@render filters()}
     </div>
     <div class="list-scroll">
+      {#if groups.length === 0}
+        <!-- Otherwise a filter matching nothing renders a completely blank list
+             area — indistinguishable from a slow-loading or broken panel. -->
+        <p class="empty" data-testid="source-no-results">{store.t('filter-no-results')}</p>
+      {/if}
       {#each groups as group (group.key)}
         <h3 class="category" data-testid={group.headerTestid}>{group.header}</h3>
         <ul class="item-list">
@@ -102,6 +107,13 @@
     background: transparent;
   }
   :global(.pick-row[aria-disabled='true'] .pick-plus) {
+    color: var(--muted);
+  }
+
+  /* Matches the `.empty` treatment other lists give their own empty state
+     (AbilityTab's Selected side, EquipmentTab, Reputations); each keeps its own
+     copy because Svelte styles are component-scoped. */
+  .empty {
     color: var(--muted);
   }
 </style>

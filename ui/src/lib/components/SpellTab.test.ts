@@ -138,6 +138,17 @@ beforeEach(() => {
 // also carries a mastery spinner and a special-ability picker. Side by side the
 // three squeeze the name down to one word per line, so the abilities picker takes
 // a wrap line of its own below the controls and the name keeps the row's width.
+// S24 (full-audit a11y): the free-text search box carries only a placeholder,
+// which is not an accessible name — the same defect as S5 (AbilityTab).
+describe('SpellTab search box (S24)', () => {
+  it('gives the search box an accessible name via Fluent', () => {
+    const body = html();
+    const input = /<input[^>]*data-testid="spell-search"[^>]*>/.exec(body);
+    expect(input).not.toBeNull();
+    expect(input![0]).toContain('aria-label="Search…"');
+  });
+});
+
 describe('SpellTab selected-row layout', () => {
   it('keeps the spell name ahead of the mastery controls in the row', () => {
     const body = html();

@@ -87,6 +87,22 @@ beforeEach(() => {
   resetEntity();
 });
 
+// S17 (full-audit a11y): FamiliarPanel (mounted here) opened at
+// `<h3 class="detail-label">` directly under the app's single `<h1>` — a
+// heading hierarchy gap. This tab now gets its own `<h2>` (reusing
+// `tab-possessions`, the same label App.svelte's tab button already carries),
+// ahead of every h3 it hosts (Devices, FamiliarPanel, TalismanPanel).
+describe('MagicPossessions heading hierarchy (S17)', () => {
+  it('opens with an h2 naming the tab, ahead of every h3 subsection', () => {
+    const body = html();
+    const h2 = body.indexOf('<h2');
+    const h3 = body.indexOf('<h3');
+    expect(h2).toBeGreaterThanOrEqual(0);
+    expect(h3).toBeGreaterThan(h2);
+    expect(body).toMatch(/<h2[^>]*>Magic Items<\/h2>/);
+  });
+});
+
 describe('MagicPossessions aura bound (round 3, Task 3)', () => {
   // G3/Task 3: the input used to carry min="-2147483648" max="2147483647" — the
   // full i32 range — instead of the engine's actual rules bound, so the browser

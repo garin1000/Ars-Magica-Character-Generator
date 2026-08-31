@@ -95,11 +95,21 @@ export const tooltip: Action<HTMLElement, TooltipContent | undefined> = (node, c
     node.removeAttribute('aria-describedby');
   };
 
+  // S2 (full-audit a11y): hover/focus opens the popup, but nothing offered a
+  // keyboard way to dismiss it short of moving focus elsewhere. Escape is the
+  // conventional dismiss key for a transient popup (menus, dialogs); a sighted
+  // keyboard user gets the same escape hatch a mouse user already had via
+  // mouseleave.
+  const onKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') hide();
+  };
+
   node.addEventListener('mouseenter', show);
   node.addEventListener('mouseleave', hide);
   node.addEventListener('focusin', show);
   node.addEventListener('focusout', hide);
   node.addEventListener('click', hide);
+  node.addEventListener('keydown', onKeydown);
   window.addEventListener('scroll', hide, true);
   window.addEventListener('resize', hide);
 
@@ -118,6 +128,7 @@ export const tooltip: Action<HTMLElement, TooltipContent | undefined> = (node, c
       node.removeEventListener('focusin', show);
       node.removeEventListener('focusout', hide);
       node.removeEventListener('click', hide);
+      node.removeEventListener('keydown', onKeydown);
       window.removeEventListener('scroll', hide, true);
       window.removeEventListener('resize', hide);
     },

@@ -68,7 +68,9 @@
   }
 
   function breakdown(addends: Addend[]): string {
-    return addends.map((a) => `${addendLabel(a)} ${formatSigned(a.value)}`).join(', ');
+    return addends
+      .map((a) => `${addendLabel(a)} ${formatSigned(a.value)}`)
+      .join(`${store.t('derived-addend-list-separator')} `);
   }
 
   function onAura(e: Event) {
@@ -88,6 +90,12 @@
   {#if !store.ruleset || !d}
     <p>{store.t('loading')}</p>
   {:else}
+    <!-- S17 (full-audit a11y): the tab's own <h2> — the ~11 subsections below
+         stayed <h3> directly under the app's single <h1> with no <h2> between
+         (a heading hierarchy gap) until this was added. Reuses `tab-totals`,
+         the same label App.svelte's tab button already carries. -->
+    <h2>{store.t('tab-totals')}</h2>
+
     <!-- Identity / summary -->
     <div class="detail-section">
       <h3 class="detail-label">{store.t('derived-section-summary')}</h3>

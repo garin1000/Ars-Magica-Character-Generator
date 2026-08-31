@@ -256,6 +256,21 @@ describe('ValidationPanel', () => {
     }
   });
 
+  // S27 (full-audit a11y): role="status" lived directly on the <ul>, overriding
+  // its native list role — assistive tech lost list navigation (item count,
+  // "list with N items"). The announcement must move to a wrapping element so
+  // the <ul> keeps its native role while the region as a whole is still polite.
+  it('keeps the issue list a real list, announcing via a wrapper instead', () => {
+    const body = render(ValidationPanel).body;
+    const ul = /<ul[^>]*data-testid="issue-list"[^>]*>/.exec(body);
+    expect(ul).not.toBeNull();
+    expect(ul![0]).not.toContain('role="status"');
+    // A `role="status"` element wraps the list so the announcement still fires.
+    const wrapperMatch =
+      /<div[^>]*role="status"[^>]*>[\s\S]*?<ul[^>]*data-testid="issue-list"/.exec(body);
+    expect(wrapperMatch).not.toBeNull();
+  });
+
   it('localizes the visible severity label to German', () => {
     store.lang = 'de';
     const body = render(ValidationPanel).body;

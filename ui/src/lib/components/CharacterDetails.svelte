@@ -66,6 +66,14 @@
 </script>
 
 <section class="panel character-details">
+  <!-- S17 (full-audit a11y): the tab's own <h2> — IdentityFields and the
+       Warping/Twilight h3 subsections below stayed directly under the app's
+       single <h1> with no <h2> between (a heading hierarchy gap) until this
+       was added. Reuses `tab-details`, the same label App.svelte's tab button
+       already carries. `.character-details-heading` (app.css) spans it across
+       every grid column, or auto-placement would squeeze it into one cell like
+       any other block here. -->
+  <h2 class="character-details-heading">{store.t('tab-details')}</h2>
   {#if store.ruleset}
     <IdentityFields />
 

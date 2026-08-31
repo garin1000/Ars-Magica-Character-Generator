@@ -246,6 +246,7 @@
               type="search"
               class="filter-search"
               placeholder={store.t('filter-search-placeholder')}
+              aria-label={store.t('filter-search-placeholder')}
               bind:value={store.filters.vf[side].search}
               data-testid="vf-search-{side}"
             />

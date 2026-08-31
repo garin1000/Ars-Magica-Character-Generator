@@ -286,6 +286,7 @@
             type="search"
             class="filter-search"
             placeholder={store.t('filter-search-placeholder')}
+            aria-label={store.t('filter-search-placeholder')}
             bind:value={filter.search}
             data-testid="spell-search"
           />

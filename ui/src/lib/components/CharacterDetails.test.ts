@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
@@ -82,6 +84,9 @@ function has(body: string, testid: string): boolean {
   return new RegExp(`data-testid="${testid}"`).test(body);
 }
 
+/** `app.css` as text, for the grid-spanning rule server-rendered markup cannot reveal. */
+const appCss = readFileSync(fileURLToPath(new URL('../../app.css', import.meta.url)), 'utf-8');
+
 beforeEach(() => {
   vi.useFakeTimers();
   store.lang = 'en';
@@ -122,5 +127,40 @@ describe('CharacterDetails after the tab split', () => {
     expect(has(body, 'age-input')).toBe(true);
     expect(has(body, 'warping-points-input')).toBe(true);
     expect(has(body, 'twilight-scars-list')).toBe(true);
+  });
+});
+
+// S17 (full-audit a11y): IdentityFields, and the Warping/Twilight h3s further
+// down, all opened directly under the app's single <h1> with no <h2> between
+// (a heading hierarchy gap). The Details tab now gets its own <h2> (reusing
+// `tab-details`, the same label App.svelte's tab button already carries).
+//
+// This section is a CSS GRID (`.character-details`, auto-fit columns) where
+// every direct child is its own cell — a plain h2 would land in a single
+// column-width cell instead of reading as a banner over the whole panel, so it
+// carries a class the grid spans full width (`grid-column: 1 / -1`), the same
+// technique `.aging-log-block` already uses for the same reason.
+describe('CharacterDetails heading hierarchy (S17)', () => {
+  it('opens with an h2 naming the tab, ahead of every h3 subsection', () => {
+    const body = html();
+    const h2 = body.indexOf('<h2');
+    const h3 = body.indexOf('<h3');
+    expect(h2).toBeGreaterThanOrEqual(0);
+    expect(h3).toBeGreaterThan(h2);
+    expect(body).toMatch(/<h2[^>]*>Details<\/h2>/);
+  });
+
+  it('spans the h2 across every column of the character-details grid', () => {
+    const body = html();
+    const h2Tag = /<h2[^>]*>/.exec(body)![0];
+    const cls = /class="([^"]*)"/.exec(h2Tag)?.[1] ?? '';
+    expect(cls).not.toBe('');
+    for (const token of cls.split(/\s+/)) {
+      const rule = new RegExp(
+        `\\.character-details\\s+\\.${token}\\s*\\{[^}]*grid-column:\\s*1\\s*/\\s*-1`,
+      ).exec(appCss);
+      if (rule) return;
+    }
+    throw new Error(`no grid-column: 1 / -1 rule found for classes "${cls}" in app.css`);
   });
 });

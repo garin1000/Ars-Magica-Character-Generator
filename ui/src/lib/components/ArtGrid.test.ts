@@ -96,6 +96,22 @@ beforeEach(() => {
 // three-column layout (the Technique/Form split this component alone computes
 // from `art_type_order`), the score spinners, and the effective-score badge
 // were exercised only via the slow e2e layer (`arts.e2e.js`).
+// S17 (full-audit a11y): every column opened at `<h3 class="category">`
+// directly under the app's single `<h1>`, skipping `<h2>` entirely — a heading
+// hierarchy gap (h1 -> h3, no h2 between). The owning Arts tab now gets its own
+// `<h2>` (reusing the `tab-arts` label App.svelte's tab button already carries),
+// with the per-column headings staying `<h3>` beneath it.
+describe('ArtGrid heading hierarchy (S17)', () => {
+  it('opens with an h2 naming the tab, ahead of the per-column h3s', () => {
+    const body = html();
+    const h2 = body.indexOf('<h2');
+    const h3 = body.indexOf('<h3');
+    expect(h2).toBeGreaterThanOrEqual(0);
+    expect(h3).toBeGreaterThan(h2);
+    expect(body).toMatch(/<h2[^>]*>Arts<\/h2>/);
+  });
+});
+
 describe('ArtGrid columns and layout', () => {
   it('splits the Forms into two columns, book order within each', () => {
     const body = html();

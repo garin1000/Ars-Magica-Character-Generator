@@ -113,6 +113,17 @@ describe('EquipmentTab kind filter (S9)', () => {
   });
 });
 
+// S8 (full-audit a11y): the free-text search box carries only a placeholder,
+// which is not an accessible name — the same defect as S5 (AbilityTab).
+describe('EquipmentTab search box (S8)', () => {
+  it('gives the search box an accessible name via Fluent', () => {
+    const body = html();
+    const input = /<input[^>]*data-testid="equipment-search"[^>]*>/.exec(body);
+    expect(input).not.toBeNull();
+    expect(input![0]).toContain('aria-label="Search…"');
+  });
+});
+
 describe('EquipmentTab separates a header-less group from the one above it (#8)', () => {
   it('emits the header-less group as a bare sibling list, with no heading to divide it', () => {
     const region = selectedRegion(html());

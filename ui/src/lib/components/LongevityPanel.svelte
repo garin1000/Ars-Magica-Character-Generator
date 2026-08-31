@@ -62,7 +62,11 @@
     {/if}
 
     {#if hint}
-      <p class="hint" data-testid="longevity-hint">
+      <!-- Announced (role="status" implies aria-live="polite"): the suggestion
+           shifts reactively as the Lab Total behind it changes (an Art bought, a
+           Puissant Art added), matching AgingSchedulePanel's and
+           LivingConditionsPicker's own reactive figures. -->
+      <p class="hint" role="status" data-testid="longevity-hint">
         {store.t('longevity-hint', {
           bonus: formatSigned(hint.suggested_bonus),
           total: hint.lab_total,

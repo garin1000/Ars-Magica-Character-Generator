@@ -36,6 +36,11 @@ action-open-into-wizard = Open in guided creation
 start-open-wizard-hint = A character saved part-way through guided creation resumes at the step it was left on. One built in the editor opens with every step reachable.
 start-create-title = Create a new character
 start-create-hint = The character type is chosen here, once — it cannot be changed later.
+# S28 (full-audit UX): names the validation-mode axis (Enforced/Advisory/Silent)
+# that distinguishes direct-validated from direct-unchecked creation — invisible
+# on this screen otherwise. The toolbar's Validation control only mounts once a
+# character exists (App.svelte), so this can only point ahead to it.
+start-create-mode-hint = How strictly the rules are checked (Validation, in the toolbar) can be changed at any time once the character is open.
 start-wizard-title = Guided creation
 start-wizard-hint = Step by step through this type's creation phases, in order. The character type is chosen here too, once — it cannot be changed later.
 
@@ -709,6 +714,10 @@ aging-calculator-clear = Clear this roll
 aging-calculator-note = Nothing shown here is recorded on the character until you press Apply; the die itself is never saved.
 personality-label = Personality Traits
 personality-name-placeholder = Trait
+# Accessible name for the bound value input (S29, full-audit UX): each row's
+# input shares no visible label of its own, so it must name which trait it
+# scores, mirroring characteristic-description-for's shape.
+personality-value-label = Value of { $name }
 personality-add = Add trait
 personality-empty = No Personality Traits yet.
 reputations-label = Reputations
@@ -833,6 +842,10 @@ longevity-focus-placeholder = How the ritual culminates
 longevity-sterility-note = The ritual's anchor stops the magus expending his life force in normal human fashion, so he becomes permanently sterile.
 # Shown as the reason a Supernatural Ability is greyed in the picker.
 ability-requires-virtue = Requires a granting Virtue (or the Gift's one free Ability)
+# Screen-reader-only text on a selected Ability row an error-severity issue
+# points at (S7, full-audit a11y) — pairs with a visible glyph so the row's
+# invalidity is never colour-only (WCAG 1.4.1).
+ability-invalid-selection = Invalid selection
 # Named per row ($name is the characteristic's, or personality trait's, own
 # display name — this key is shared by CharacteristicPicker, FamiliarPanel's
 # personality-trait spinner, and PersonalityTraits) — same reasoning as
@@ -949,6 +962,10 @@ effective-score = { $score }
 empty-selections-side = None yet.
 no-issues = No issues.
 loading = Loading…
+# Shown by SourcePicker when the search/filter combination excludes every row
+# of the catalogue (S25, full-audit UX) — otherwise the list area renders
+# completely blank, indistinguishable from a slow-loading or broken panel.
+filter-no-results = No matches for the current filter.
 
 # Screen-reader-only severity prefix on each validation issue
 # (ValidationPanel.svelte): color/border alone must not be the only signal
@@ -1189,6 +1206,10 @@ derived-familiar-falls-short = Lab Total falls short of the binding level.
 derived-familiar-cords-fit = Cord points fit within the Lab Total.
 derived-familiar-cords-exceed = Cord points exceed the Lab Total.
 derived-familiar-note = Guidance only: which Arts suit the beast, and whether a Magical Focus applies, are troupe judgments (vis costs ignored).
+# Joins the addend-breakdown tooltip's parts (S14, full-audit i18n) — same shape
+# as restricted-xp-list-separator, routed through Fluent rather than a hardcoded
+# ', ' literal so it can be retargeted for a language whose list convention differs.
+derived-addend-list-separator = ,
 derived-addend-intelligence = Intelligence
 derived-addend-magic_theory = Magic Theory
 derived-addend-technique = Technique

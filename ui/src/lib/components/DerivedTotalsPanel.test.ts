@@ -104,6 +104,23 @@ beforeEach(() => {
   resetEntity();
 });
 
+// S17 (full-audit a11y): every subsection opened at `<h3 class="detail-label">`
+// directly under the app's single `<h1>` — a heading hierarchy gap (h1 -> h3,
+// no h2 between). The Totals tab now gets its own `<h2>` (reusing `tab-totals`,
+// the same label App.svelte's tab button already carries), with the ~11
+// existing subsections staying `<h3>` beneath it.
+describe('DerivedTotalsPanel heading hierarchy (S17)', () => {
+  it('opens with an h2 naming the tab, ahead of the subsection h3s', () => {
+    store.derived = derivedFixture();
+    const body = html();
+    const h2 = body.indexOf('<h2');
+    const h3 = body.indexOf('<h3');
+    expect(h2).toBeGreaterThanOrEqual(0);
+    expect(h3).toBeGreaterThan(h2);
+    expect(body).toMatch(/<h2[^>]*>Totals<\/h2>/);
+  });
+});
+
 describe('DerivedTotalsPanel longevity read-out', () => {
   // E4 (round-1 audit): the panel negates the stored bonus into an aging-roll
   // modifier and documents that a zero bonus must read "0", never "-0" — this
