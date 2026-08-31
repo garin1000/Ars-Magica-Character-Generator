@@ -117,13 +117,16 @@
     <ul class="aging-list" data-testid="aging-points-list">
       {#each CHARACTERISTICS as characteristic (characteristic)}
         <li>
-          <span class="char-name">{charLabel(characteristic)}</span>
+          <span class="char-name" id="aging-points-label-{characteristic}"
+            >{charLabel(characteristic)}</span
+          >
           <input
             type="number"
             min="0"
             max="255"
             value={agingPoints[characteristic] ?? 0}
             oninput={(e) => store.setAgingPoints(characteristic, numValue(e))}
+            aria-labelledby="aging-points-label-{characteristic}"
             data-testid="aging-points-{characteristic}"
           />
         </li>

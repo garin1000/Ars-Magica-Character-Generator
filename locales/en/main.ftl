@@ -6,6 +6,11 @@ app-title = Ars Magica Character Generator
 app-logo-alt = Ars Magica Open License logo
 
 language-label = Language
+# Option labels for the language picker itself: each language's OWN endonym
+# (never a translation into the currently active language — a language picker
+# always shows "Deutsch", not "German", regardless of which language is active).
+language-name-en = English
+language-name-de = Deutsch
 mode-label = Validation
 
 mode-enforced = Enforced
@@ -206,6 +211,11 @@ vf-blocked-incompatible = Incompatible with { $other }
 filter-search-placeholder = Search…
 filter-magnitude-all = All levels
 filter-category-all = All types
+# Accessible names for filter selects that carry no visible label of their own.
+ability-category-filter-label = Filter by ability category
+# { $side } is the localized side title ("Virtues"/"Flaws").
+vf-category-filter-label = Filter { $side } by category
+vf-magnitude-filter-label = Filter { $side } by magnitude
 
 # The eight Characteristics, keyed by the engine's characteristic value.
 characteristic-int = Intelligence
@@ -817,6 +827,10 @@ ability-requires-virtue = Requires a granting Virtue (or the Gift's one free Abi
 characteristic-increment = Raise { $name }
 characteristic-decrement = Lower { $name }
 characteristic-description-label = Description
+# Accessible name for a description input: the eight per-Characteristic fields
+# share the placeholder above, so each needs its own name naming which
+# Characteristic it describes.
+characteristic-description-for = Description of { $name }
 
 # Hermetic House selector + per-grant specialisation pickers. House display
 # names come from the rules i18n (keyed by house id), not from these chrome keys.
@@ -1070,6 +1084,8 @@ weapon-kind-thrown = Thrown
 equipment-group-weapons = Weapons
 equipment-group-shields = Shields
 equipment-group-armor = Armor
+# Accessible name for the kind filter select, which carries no visible label.
+equipment-group-filter-label = Filter by equipment type
 equipment-equipped-label = Equipped
 equipment-specialization-label = Specialization applies (+1)
 equipment-empty = No equipment.

@@ -41,36 +41,40 @@ pub(crate) fn validate_caps(
     let count_args = |n: usize, max: u8| args([("count", n.to_string()), ("max", max.to_string())]);
 
     // --- Hard caps ("may not ...") → blocking errors ---
-
-    if let Some(max) = profile.budget.max_major_virtues {
-        let n = count(&|i| i.kind == ItemKind::Virtue && i.magnitude == Magnitude::Major);
+    //
+    // V66: the three hard caps used to be three copy-pasted blocks, differing
+    // only in which budget field, (kind, magnitude) predicate, and issue code
+    // each checked — a bug fixed in one was one bug fixed in three. One loop
+    // over this table now drives all three; each row is still a compile-time
+    // constant (the `ValidationIssue::CODE_*` referenced directly, not built
+    // by `format!` like the data-driven per-category caps below), so a typo'd
+    // code still fails to compile.
+    let hard_caps: [(Option<u8>, ItemKind, Magnitude, &str); 3] = [
+        (
+            profile.budget.max_major_virtues,
+            ItemKind::Virtue,
+            Magnitude::Major,
+            ValidationIssue::CODE_TOO_MANY_MAJOR_VIRTUES,
+        ),
+        (
+            profile.budget.max_major_flaws,
+            ItemKind::Flaw,
+            Magnitude::Major,
+            ValidationIssue::CODE_TOO_MANY_MAJOR_FLAWS,
+        ),
+        (
+            profile.budget.max_minor_flaws,
+            ItemKind::Flaw,
+            Magnitude::Minor,
+            ValidationIssue::CODE_TOO_MANY_MINOR_FLAWS,
+        ),
+    ];
+    for (max, kind, magnitude, code) in hard_caps {
+        let Some(max) = max else { continue };
+        let n = count(&|i| i.kind == kind && i.magnitude == magnitude);
         if n > max as usize {
             issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_TOO_MANY_MAJOR_VIRTUES,
-                CreationPhase::VirtuesFlaws,
-                count_args(n, max),
-                None,
-            ));
-        }
-    }
-
-    if let Some(max) = profile.budget.max_major_flaws {
-        let n = count(&|i| i.kind == ItemKind::Flaw && i.magnitude == Magnitude::Major);
-        if n > max as usize {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_TOO_MANY_MAJOR_FLAWS,
-                CreationPhase::VirtuesFlaws,
-                count_args(n, max),
-                None,
-            ));
-        }
-    }
-
-    if let Some(max) = profile.budget.max_minor_flaws {
-        let n = count(&|i| i.kind == ItemKind::Flaw && i.magnitude == Magnitude::Minor);
-        if n > max as usize {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_TOO_MANY_MINOR_FLAWS,
+                code,
                 CreationPhase::VirtuesFlaws,
                 count_args(n, max),
                 None,

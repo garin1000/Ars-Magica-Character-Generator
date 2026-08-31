@@ -142,7 +142,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2998-3002`.
 - Data: the descriptor's optional "Type" token maps to `PointItem.tainted`
   (`bool`, default false) in `rules/core/virtues_flaws.json`.
-- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:146).
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:150).
   The book frames the limit as a "should", so it is a **non-blocking warning**,
   measured against the points **actually taken** (not the type budget): a side
   warns when `2·tainted_points > total_points` for that side (Virtue / Flaw).
@@ -640,7 +640,7 @@ i.e. `charged = ceil(T·2/3)`. The cap exemption is read off the effect's presen
   param: "ability", counts_as_num: 3, counts_as_den: 2 }]`.
 - Implementation: `effective/xp.rs::charged_cost` (the `ceil(T·den/num)` arithmetic,
   verified against the worked example below) + `ability_affinity`, folded into
-  `effective/xp.rs::xp_allocation` and so into `validation/magus.rs::validate_xp_pool` (:559).
+  `effective/xp.rs::xp_allocation` and so into `validation/magus.rs::validate_xp_pool` (:731).
 
 #### Affinity with (Art) — creation XP counts for half again
 > "Your Advancement Totals for one Hermetic Art are increased by one half, rounded
@@ -684,7 +684,7 @@ approximation of "Latin").
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation/magus.rs::validate_xp_pool` (:559) reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:731) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
   be named).
@@ -1885,7 +1885,8 @@ Two-level enforcement:
   `level`, ritual ⇒ `level ≥ 20`, non-ritual ⇒ `level ≤ 50`; a non-ritual spell
   may not have `duration = Year` or `target = Boundary`, nor be a Momentary Creo
   spell with `creates_lasting`. Vision target is exempt from the Boundary rule.
-- **Per-entity** (`validate_spells`, `validation/magus.rs`, :336): the *resolved* learned
+- **Per-entity** (`validate_spell_ritual_legality`, `validation/magus.rs`, :524, called
+  from `validate_spells`, V51 split it into a named sub-check): the *resolved* learned
   level (General chosen level or fixed) must obey the same ≥20 / ≤50 bounds — a
   violation emits `spell_ritual_legality` (`CODE_SPELL_RITUAL_LEGALITY`). This
   bites for General spells whose chosen level is illegal; fixed-level spells are
@@ -2523,6 +2524,54 @@ Infernal Might + power-levels budget (tested in `arm-app`'s
   is 30 xp *per finished year* (age/life-stage, M6); Corrupted Arts (:5853) has no
   creation XP figure (its ±3 casting swing / ±5 Art xp are in-play). (Elemental
   Magic, :3731, is now implemented in slice 5c — see its section above.)
+
+#### Student of (Realm) — missed by the 5a-wire pass, fixed in the audit-fix round
+
+> You have been trained in the mystical aspects of one of the four realms of
+> power (Divine, Faerie, Infernal, or Magic) … You may take that Lore at
+> character generation even if you cannot learn other Arcane Abilities.
+
+- Source: `Ars Magica - Definitive Edition (Core Rules).md:5052-5055`.
+- **Why this was missed by 5a-wire:** the 5a-wire pass above only scanned
+  entries already tagged `creation_effect` for a missing `Effect`. This item
+  was mis-tagged `narrative` from the M5/5a classification pass, so it was
+  invisible to that scan and shipped with no `effects` at all — a magus or
+  companion taking this Virtue got no mechanical benefit whatsoever.
+- Data: `rules/core/virtues_flaws.json` `virtue.student_of_realm` — reclassified
+  `narrative` → `creation_effect` and given
+  `effects: [{ "type": "ability_authorization", "abilities":
+  ["ability.dominion_lore", "ability.faerie_lore", "ability.infernal_lore",
+  "ability.magic_lore"] }]`.
+- **Documented approximation, same shape as `flaw.covenant_upbringing`'s Latin
+  proxy (`:3543-3547` above).** The Virtue's only parameter (`realm`, domain
+  `text`) is free text — same shape as the purely-narrative `flaw.bound_to_realm`
+  / `flaw.realm_stigmatic` beside it — so it cannot be bound to one specific
+  Lore ability the way `Effect::AbilityBonus`'s `param` mechanism requires
+  (`selection.params.get(param) == Some(ability)` in `effective/ability.rs`,
+  which needs the parameter's *value* to literally equal the target ability
+  id). `Effect::AbilityAuthorization`, unlike `AbilityBonus`, is **not**
+  parameter-relative — it is a static `Vec<Id>` — so authorizing all four Lore
+  Abilities unconditionally is expressible without an engine change, at the
+  cost of over-authorizing: taking Student of (Divine) also nominally
+  authorizes buying Faerie/Infernal/Magic Lore at creation. This mirrors the
+  already-accepted "any dead language, not Latin alone" approximation.
+- **The `+2` bonus on the chosen Lore ("all uses of the appropriate Lore") is
+  NOT implemented here.** It genuinely needs the parameter-relative form
+  (`AbilityBonus`), which requires either a second `ability`-domain parameter
+  paired to `realm` (with a validator enforcing the pairing, since nothing
+  today stops selecting realm=Divine with ability=Faerie Lore) or a new
+  realm→Lore-ability resolution in the engine. Both are `crates/arm-rules/src`
+  changes, outside this task's file set (`derive.ts`, `SpellTab.svelte`,
+  `rules/core`, `rules/i18n`, `.github/workflows`, this file) — flagged here as
+  a follow-up, not silently dropped.
+- **No test added for this fix.** `crates/arm-rules/tests/**` is outside this
+  task's file set (the parallel session owns `crates/arm-app/tests/**`; no
+  `arm-rules` test path was granted). `cargo test -p arm-rules` passed
+  unchanged after this data edit (76 tests, referential integrity intact,
+  `every_vf_is_classified` still green), but there is no regression test
+  pinning that `virtue.student_of_realm` now authorizes the four Lore
+  Abilities — a follow-up task should add one alongside the `+2` bonus fix
+  above.
 
 #### Supernatural Might & Magic Resistance (Realms of Power: Magic / The Infernal / The Divine)
 

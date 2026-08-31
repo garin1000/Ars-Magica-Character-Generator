@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -38,17 +40,22 @@ import {
   groupWarpingOwedGrants,
   incompatibleRefs,
   invalidSelectionIds,
+  isDisabled,
+  minLearnableLevel,
+  nonTakeableReason,
   orderSelectedSpells,
   usedSpellForms,
   groupAbilitySelectionsByCategory,
   mandatoryTraitRefs,
   maxAbilityScore,
   maxArtScore,
+  ORDINARY_SPELL_MINIMUM_LEVEL,
   paramValueUsage,
   requirementAbilityLabel,
   resolveIssueArgValue,
   resolveIssueArgs,
   restrictedPoolLabel,
+  RITUAL_MINIMUM_LEVEL_FALLBACK,
   spellDisplayName,
   spellLevelAllocation,
   wizardGuidance,
@@ -1029,6 +1036,41 @@ describe('spellMasteryXpSpent', () => {
   });
 });
 
+describe('spellMasteryXpSpent — 2:1-only, guarded against silent drift (V2)', () => {
+  // spellMasteryXpSpent's `doubled` flag collapses ANY GrantsSpellMastery
+  // advancement ratio into `Math.ceil(payable / 2)`, which is only correct for
+  // exactly a 2/1 ratio (see the function's docstring). No live call site can
+  // hit a different ratio TODAY — this test reads the SHIPPED
+  // `rules/core/virtues_flaws.json` (not a fixture) so that claim stays true by
+  // construction rather than by memory: it fails the moment any
+  // `grants_spell_mastery` effect ships a genuine (num > den) reduction ratio
+  // other than 2/1, forcing whoever adds one to fix this function (or finally
+  // do the engine-surfaced-total fix the docstring recommends) instead of
+  // shipping a silent divergence from the engine's own arithmetic.
+  it('carries no GrantsSpellMastery reduction ratio other than 2/1', () => {
+    const catalogue = JSON.parse(
+      readFileSync(
+        fileURLToPath(new URL('../../../rules/core/virtues_flaws.json', import.meta.url)),
+        'utf-8',
+      ),
+    ) as {
+      id: string;
+      effects?: { type: string; advancement_num?: number; advancement_den?: number }[];
+    }[];
+    const reducingGrants = catalogue
+      .flatMap((item) => item.effects ?? [])
+      .filter((e) => e.type === 'grants_spell_mastery')
+      .filter((e) => (e.advancement_num ?? 1) > (e.advancement_den ?? 1));
+    // Sanity check that this test is exercising real data, not vacuously
+    // passing because the catalogue carries no such grant at all — Flawless
+    // Magic must still be there.
+    expect(reducingGrants.length).toBeGreaterThan(0);
+    for (const grant of reducingGrants) {
+      expect([grant.advancement_num, grant.advancement_den]).toEqual([2, 1]);
+    }
+  });
+});
+
 describe('effectiveSpellMastery', () => {
   it('takes the granted floor when it beats the bought mastery', () => {
     expect(effectiveSpellMastery(0, 1)).toBe(1);
@@ -1038,6 +1080,122 @@ describe('effectiveSpellMastery', () => {
   it('keeps the bought mastery when it beats the floor', () => {
     expect(effectiveSpellMastery(3, 1)).toBe(3);
     expect(effectiveSpellMastery(2, 0)).toBe(2);
+  });
+});
+
+// --- minLearnableLevel() / nonTakeableReason() / isDisabled() ---------------
+// V28 (tmp/review, full-audit round): these three moved out of SpellTab.svelte,
+// where they lived as component-local functions alongside every other
+// SpellTab-only helper (groupHeader, abbr, …), into derive.ts alongside every
+// other eligibility computation (eligibleForConstraint, filterSpells, …).
+// Characterization tests, written against the functions' NEW derive.ts home —
+// they pin the exact behaviour the inline versions had, so the move (a pure
+// code motion) cannot silently change it. `SpellTab.test.ts`'s "ritual minimum
+// learnable level (VA2)" describe block exercises the same logic end-to-end
+// through the rendered component and must stay green too.
+
+describe('minLearnableLevel', () => {
+  it('floors an ordinary spell at 1 regardless of the ritual minimum', () => {
+    expect(minLearnableLevel({ id: 's', technique: 't', form: 'f' }, 25)).toBe(
+      ORDINARY_SPELL_MINIMUM_LEVEL,
+    );
+  });
+
+  it('floors a Ritual at the given ritual minimum', () => {
+    expect(minLearnableLevel({ id: 's', technique: 't', form: 'f', ritual: true }, 25)).toBe(25);
+  });
+
+  it('falls back to the engine-mirrored default when no ritual minimum is given', () => {
+    expect(minLearnableLevel({ id: 's', technique: 't', form: 'f', ritual: true })).toBe(
+      RITUAL_MINIMUM_LEVEL_FALLBACK,
+    );
+  });
+});
+
+describe('nonTakeableReason', () => {
+  const FIXED: Spell = { id: 'spell.fixed', technique: 'art.creo', form: 'art.animal', level: 10 };
+  const GENERAL: Spell = { id: 'spell.general', technique: 'art.creo', form: 'art.animal' };
+  const PARAMETRIZED: Spell = {
+    id: 'spell.param',
+    technique: 'art.creo',
+    form: 'art.vim',
+    level: 10,
+    parameters: [{ key: 'form', type: 'ref', domain: 'form' }],
+  };
+
+  it('is null (takeable) with no cap, no budget shortfall, and not already taken', () => {
+    expect(nonTakeableReason(FIXED, new Set(), new Map(), 100)).toBeNull();
+  });
+
+  it('blocks an already-selected fixed-level spell', () => {
+    const reason = nonTakeableReason(FIXED, new Set([FIXED.id]), new Map(), 100);
+    expect(reason).toEqual({ key: 'spell-already-taken-reason', cap: 0 });
+  });
+
+  it('does not block a parameterized spell already selected once (re-takeable per Form)', () => {
+    expect(nonTakeableReason(PARAMETRIZED, new Set([PARAMETRIZED.id]), new Map(), 100)).toBeNull();
+  });
+
+  it('does not block a General spell already selected once (re-takeable)', () => {
+    expect(nonTakeableReason(GENERAL, new Set([GENERAL.id]), new Map(), 100)).toBeNull();
+  });
+
+  it('blocks when the spell level exceeds the per-Technique/Form cap', () => {
+    const cap = new Map([['art.creo art.animal', 9]]);
+    expect(nonTakeableReason(FIXED, new Set(), cap, 100)).toEqual({
+      key: 'spell-cap-reason',
+      cap: 9,
+    });
+  });
+
+  it('blocks when the spell level exceeds the remaining spell-levels budget', () => {
+    expect(nonTakeableReason(FIXED, new Set(), new Map(), 9)).toEqual({
+      key: 'spell-budget-reason',
+      cap: 0,
+    });
+  });
+
+  it('reports the cap alongside a budget-reason when a cap also applies', () => {
+    const cap = new Map([['art.creo art.animal', 20]]);
+    expect(nonTakeableReason(FIXED, new Set(), cap, 9)).toEqual({
+      key: 'spell-budget-reason',
+      cap: 20,
+    });
+  });
+
+  it('tests a General spell at its minimum learnable level, not a nonexistent catalogue level', () => {
+    // GENERAL has no fixed level; needed level is minLearnableLevel(GENERAL) = 1.
+    expect(nonTakeableReason(GENERAL, new Set(), new Map(), 0)).toEqual({
+      key: 'spell-budget-reason',
+      cap: 0,
+    });
+    expect(nonTakeableReason(GENERAL, new Set(), new Map(), 1)).toBeNull();
+  });
+
+  it('tests a General Ritual at the given ritual minimum', () => {
+    const ritual: Spell = {
+      id: 'spell.gen_ritual',
+      technique: 'art.creo',
+      form: 'art.vim',
+      ritual: true,
+    };
+    expect(nonTakeableReason(ritual, new Set(), new Map(), 19, 20)).toEqual({
+      key: 'spell-budget-reason',
+      cap: 0,
+    });
+    expect(nonTakeableReason(ritual, new Set(), new Map(), 20, 20)).toBeNull();
+  });
+});
+
+describe('isDisabled', () => {
+  const FIXED: Spell = { id: 'spell.fixed', technique: 'art.creo', form: 'art.animal', level: 10 };
+
+  it('mirrors nonTakeableReason: false when takeable', () => {
+    expect(isDisabled(FIXED, new Set(), new Map(), 100)).toBe(false);
+  });
+
+  it('mirrors nonTakeableReason: true when any reason applies', () => {
+    expect(isDisabled(FIXED, new Set([FIXED.id]), new Map(), 100)).toBe(true);
   });
 });
 

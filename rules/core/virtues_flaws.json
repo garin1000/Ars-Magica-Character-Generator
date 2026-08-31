@@ -190,7 +190,8 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.gentle_gift"],
-    "prerequisites": { "kind": "has", "value": "virtue.the_gift" }
+    "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5711, 5714] }
   },
   {
     "id": "flaw.blatant_magical_air",
@@ -4245,7 +4246,8 @@
     "classification": "narrative",
     "entity_kinds": ["character"],
     "incompatible_with": ["flaw.blatant_gift"],
-    "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" }
+    "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" },
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3955, 3958] }
   },
   {
     "id": "virtue.gentleman",
@@ -4440,7 +4442,8 @@
     "category": "social_status",
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "prerequisites": { "kind": "has", "value": "virtue.the_gift" }
+    "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4067, 4070] }
   },
   {
     "id": "virtue.hermetic_prestige",
@@ -4663,7 +4666,8 @@
     "magnitude": "minor",
     "category": "general",
     "classification": "narrative",
-    "entity_kinds": ["character"]
+    "entity_kinds": ["character"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4187, 4190] }
   },
   {
     "id": "virtue.knight",
@@ -5954,9 +5958,15 @@
     "kind": "virtue",
     "magnitude": "minor",
     "category": "general",
-    "classification": "narrative",
+    "classification": "creation_effect",
     "entity_kinds": ["character"],
     "parameters": [{ "key": "realm", "type": "ref", "domain": "text" }],
+    "effects": [
+      {
+        "type": "ability_authorization",
+        "abilities": ["ability.dominion_lore", "ability.faerie_lore", "ability.infernal_lore", "ability.magic_lore"]
+      }
+    ],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5052, 5055] }
   },
   {
@@ -6120,7 +6130,8 @@
     "category": "special",
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.nephilim", "virtue.spirit_votary"]
+    "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.nephilim", "virtue.spirit_votary"],
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3967, 3970] }
   },
   {
     "id": "virtue.tough",

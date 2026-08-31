@@ -79,46 +79,30 @@ pub(crate) fn validate_house(
         return;
     };
 
-    let unresolved = |choice_key: &str| {
-        ValidationIssue::error(
-            ValidationIssue::CODE_HOUSE_CHOICE_UNRESOLVED,
-            CreationPhase::HouseSpecialisation,
-            args([
-                ("house", house_id.to_string()),
-                ("choice_key", choice_key.to_string()),
-            ]),
-            None,
-        )
-    };
-
-    for grant in &house.grants {
-        match grant {
-            // A fixed grant carries no player choice, so nothing to validate.
-            Grant::Fixed { .. } => {}
-            Grant::Choice {
+    for outcome in grant_pick_outcomes(&house.grants, &entity.house_choices, ruleset) {
+        match outcome {
+            GrantPickOutcome::Resolved => {}
+            GrantPickOutcome::Unresolved { choice_key } => issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_HOUSE_CHOICE_UNRESOLVED,
+                CreationPhase::HouseSpecialisation,
+                args([
+                    ("house", house_id.to_string()),
+                    ("choice_key", choice_key.to_string()),
+                ]),
+                None,
+            )),
+            GrantPickOutcome::OpenPick {
                 choice_key,
-                options,
+                pick,
+                satisfies_constraint,
             } => {
-                let pick = entity.house_choices.get(choice_key);
-                if !pick.is_some_and(|p| options.contains(p)) {
-                    issues.push(unresolved(choice_key));
-                }
-            }
-            Grant::Open {
-                choice_key,
-                constraint,
-            } => {
-                let Some(pick) = entity.house_choices.get(choice_key) else {
-                    issues.push(unresolved(choice_key));
-                    continue;
-                };
-                if !open_pick_satisfies(pick, constraint, ruleset) {
+                if !satisfies_constraint {
                     issues.push(ValidationIssue::error(
                         ValidationIssue::CODE_HOUSE_GRANT_CONSTRAINT,
                         CreationPhase::HouseSpecialisation,
                         args([
                             ("house", house_id.to_string()),
-                            ("choice_key", choice_key.clone()),
+                            ("choice_key", choice_key.to_string()),
                             ("item", pick.item_ref.to_string()),
                         ]),
                         Some(pick.item_ref.clone()),
@@ -136,6 +120,73 @@ pub(crate) fn validate_house(
             }
         }
     }
+}
+
+/// One `Grant`'s outcome against the player's stored picks — everything
+/// [`grant_pick_outcomes`] can determine without knowing which issue code or
+/// `CreationPhase` the caller files it under. Deliberately carries no
+/// [`ValidationIssue`]: the emit sites stay in [`validate_house`] and
+/// [`validate_mythic_type`] with their own literal `CODE_*`/`CreationPhase`
+/// constants, which is what keeps
+/// `every_issue_emit_site_names_a_phase_the_table_lists`'s static scan (source
+/// text, not runtime values) able to verify each code/phase pair against the
+/// contract table.
+enum GrantPickOutcome<'a> {
+    /// `Fixed` (no player choice), or a `Choice` pick present and on-menu.
+    /// Nothing to report.
+    Resolved,
+    /// A `Choice` pick absent/off-menu, or an `Open` pick absent.
+    Unresolved { choice_key: &'a str },
+    /// An `Open` pick is present: the caller must run the same parameter
+    /// checks a bought selection gets, and — when `satisfies_constraint` is
+    /// `false` — also report the constraint violation.
+    OpenPick {
+        choice_key: &'a str,
+        pick: &'a Selection,
+        satisfies_constraint: bool,
+    },
+}
+
+/// Resolves one `grants` list's `Choice`/`Open` picks against `picks`, in
+/// order — the walk [`validate_house`] and [`validate_mythic_type`] used to
+/// hand-roll almost identically (V50: a bug fixed on one side had to be
+/// separately remembered on the other). Both now read this one list and
+/// report each [`GrantPickOutcome`] with their own issue code/phase, so the
+/// walk itself — which pick a `Choice`/`Open` grant resolves to, and whether
+/// an `Open` pick satisfies its constraint — exists exactly once.
+fn grant_pick_outcomes<'a>(
+    grants: &'a [Grant],
+    picks: &'a BTreeMap<String, Selection>,
+    ruleset: &Ruleset,
+) -> Vec<GrantPickOutcome<'a>> {
+    grants
+        .iter()
+        .map(|grant| match grant {
+            Grant::Fixed { .. } => GrantPickOutcome::Resolved,
+            Grant::Choice {
+                choice_key,
+                options,
+            } => {
+                let pick = picks.get(choice_key);
+                if pick.is_some_and(|p| options.contains(p)) {
+                    GrantPickOutcome::Resolved
+                } else {
+                    GrantPickOutcome::Unresolved { choice_key }
+                }
+            }
+            Grant::Open {
+                choice_key,
+                constraint,
+            } => match picks.get(choice_key) {
+                None => GrantPickOutcome::Unresolved { choice_key },
+                Some(pick) => GrantPickOutcome::OpenPick {
+                    choice_key,
+                    pick,
+                    satisfies_constraint: open_pick_satisfies(pick, constraint, ruleset),
+                },
+            },
+        })
+        .collect()
 }
 
 /// Validates the Abilities the Order demands of every magus.
@@ -251,44 +302,30 @@ pub(crate) fn validate_mythic_type(
     };
 
     // --- Free-Virtue grant picks (Choice/Open), mirroring validate_house. ---
-    let unresolved = |choice_key: &str| {
-        ValidationIssue::error(
-            ValidationIssue::CODE_MYTHIC_CHOICE_UNRESOLVED,
-            CreationPhase::MythicType,
-            args([
-                ("mythic_type", type_id.to_string()),
-                ("choice_key", choice_key.to_string()),
-            ]),
-            None,
-        )
-    };
-    for grant in &mtype.grants {
-        match grant {
-            Grant::Fixed { .. } => {}
-            Grant::Choice {
+    for outcome in grant_pick_outcomes(&mtype.grants, &entity.mythic_choices, ruleset) {
+        match outcome {
+            GrantPickOutcome::Resolved => {}
+            GrantPickOutcome::Unresolved { choice_key } => issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_MYTHIC_CHOICE_UNRESOLVED,
+                CreationPhase::MythicType,
+                args([
+                    ("mythic_type", type_id.to_string()),
+                    ("choice_key", choice_key.to_string()),
+                ]),
+                None,
+            )),
+            GrantPickOutcome::OpenPick {
                 choice_key,
-                options,
+                pick,
+                satisfies_constraint,
             } => {
-                let pick = entity.mythic_choices.get(choice_key);
-                if !pick.is_some_and(|p| options.contains(p)) {
-                    issues.push(unresolved(choice_key));
-                }
-            }
-            Grant::Open {
-                choice_key,
-                constraint,
-            } => {
-                let Some(pick) = entity.mythic_choices.get(choice_key) else {
-                    issues.push(unresolved(choice_key));
-                    continue;
-                };
-                if !open_pick_satisfies(pick, constraint, ruleset) {
+                if !satisfies_constraint {
                     issues.push(ValidationIssue::error(
                         ValidationIssue::CODE_MYTHIC_GRANT_CONSTRAINT,
                         CreationPhase::MythicType,
                         args([
                             ("mythic_type", type_id.to_string()),
-                            ("choice_key", choice_key.clone()),
+                            ("choice_key", choice_key.to_string()),
                             ("item", pick.item_ref.to_string()),
                         ]),
                         Some(pick.item_ref.clone()),
@@ -340,6 +377,17 @@ pub(crate) fn validate_mythic_type(
 ///
 /// The budget and per-spell cap apply only to magi (`profile.is_magus`); a stray
 /// spell on a non-magus is ref- and dedup-checked only (spells are magus-only).
+///
+/// V51: this used to be one ~175-line function doing all 7 checks inline.
+/// Split into named sub-checks — one per job, matching the granularity
+/// [`validate_spell_mastery_abilities`] and [`validate_xp_pool`] already use
+/// in this file — so each check reads and tests on its own; this function is
+/// now purely the orchestration (loop over selections, dispatch each
+/// per-spell check, then the two aggregate checks). Pure code motion: same
+/// issue codes, same `issues` ordering (per-spell checks in selection order,
+/// then duplicate detection, then the budget check — pinned by
+/// `spell_issues_are_emitted_per_spell_then_duplicate_then_budget` in
+/// `validation/mod.rs`).
 pub(crate) fn validate_spells(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -353,120 +401,192 @@ pub(crate) fn validate_spells(
     let mut seen: BTreeMap<(&Id, Option<u32>, Option<&String>), u32> = BTreeMap::new();
 
     for sel in &entity.spells {
-        let Some(spell) = ruleset.spell(&sel.spell) else {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_UNKNOWN_SPELL,
-                CreationPhase::Spells,
-                args([("spell", sel.spell.to_string())]),
-                Some(sel.spell.clone()),
-            ));
+        let Some(spell) = validate_spell_ref(sel, ruleset, issues) else {
             continue;
         };
         let resolved = crate::effective::resolved_spell_level(sel, ruleset);
-        // A General spell (catalogue level None) with no chosen level cannot be
-        // budgeted yet — warn, don't block.
-        if spell.level.is_none() && sel.level.is_none() {
-            issues.push(ValidationIssue::warning(
-                ValidationIssue::CODE_SPELL_LEVEL_UNRESOLVED,
-                CreationPhase::Spells,
-                args([("spell", sel.spell.to_string())]),
-                Some(sel.spell.clone()),
-            ));
-        }
 
-        // A parameterized spell (meta-magic Vim spell whose target (Form) is a
-        // selection) requires a chosen value that resolves to the declared
-        // domain. Display + identity only — it does NOT change the spell's own
-        // Technique/Form (Ars Magica - Definitive Edition (Core Rules).md:15791-15794). Mirrors the virtue/flaw
-        // parameter checks in `validation::selections`.
-        if let Some(def) = spell.parameters.first() {
-            match &sel.parameter {
-                None => issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_MISSING_PARAM,
-                    CreationPhase::Spells,
-                    args([("item", sel.spell.to_string()), ("key", def.key.clone())]),
-                    Some(sel.spell.clone()),
-                )),
-                Some(value) => {
-                    let value_id = Id::new(value.as_str());
-                    if !super::selections::param_value_resolves(ruleset, def.domain, &value_id) {
-                        issues.push(ValidationIssue::error(
-                            ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
-                            CreationPhase::Spells,
-                            args([
-                                ("item", sel.spell.to_string()),
-                                ("key", def.key.clone()),
-                                ("value", value.clone()),
-                                ("domain", def.domain.to_string()),
-                            ]),
-                            Some(sel.spell.clone()),
-                        ));
-                    }
-                }
-            }
-        }
+        validate_spell_level_unresolved(sel, spell, issues);
+        validate_spell_parameter(sel, spell, ruleset, issues);
 
         *seen
             .entry((&sel.spell, resolved, sel.parameter.as_ref()))
             .or_insert(0) += 1;
 
-        // Ritual level bounds apply to the resolved learned level regardless of
-        // budget: a ritual must be learned at level >= `RITUAL_MIN_LEVEL`, a
-        // non-ritual at <= 50. For fixed-level spells this is already enforced at
-        // load; it bites here for General spells whose chosen level is illegal.
-        //
-        // The floor comes from the shared constant rather than a literal: the UI
-        // used to restate it too (audit finding VA2), and one number in two places
-        // is one number that can drift.
-        //
-        // Source: Ars Magica - Definitive Edition (Core Rules).md:12279-12295,
-        // :12285 ("Formulaic and Spontaneous spells may not have a level greater
-        // than 50" — the exact non-Ritual ceiling this checks). An earlier
-        // version of this comment cited :12283 (the Year-duration restriction,
-        // unrelated), then a later pass "corrected" it to :12291 (a discretionary
-        // note that spectacular effects "will normally be over level 50, and thus
-        // Rituals anyway" — a design rationale, not the numeric rule itself).
-        // :12285 is the line that actually states the "> 50" ceiling.
-        if let Some(level) = resolved {
-            // `RITUAL_MIN_LEVEL` is `u8` (it also feeds the ruleset surface the UI
-            // reads); resolved spell levels are `u32`. Widen explicitly rather
-            // than cast.
-            let ritual_min = u32::from(crate::spell::RITUAL_MIN_LEVEL);
-            let ritual_too_low = spell.ritual && level < ritual_min;
-            let non_ritual_too_high = !spell.ritual && level > 50;
-            if ritual_too_low || non_ritual_too_high {
-                issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_SPELL_RITUAL_LEGALITY,
-                    CreationPhase::Spells,
-                    args([
-                        ("spell", sel.spell.to_string()),
-                        ("level", level.to_string()),
-                    ]),
-                    Some(sel.spell.clone()),
-                ));
-            }
+        validate_spell_ritual_legality(sel, spell, resolved, issues);
+        if is_magus {
+            validate_spell_level_cap(entity, ruleset, sel, spell, resolved, issues);
         }
-
-        if is_magus && let Some(level) = resolved {
-            let cap =
-                crate::effective::spell_level_cap(entity, ruleset, &spell.technique, &spell.form);
-            if i64::from(level) > cap {
-                issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_SPELL_LEVEL_EXCEEDS_CAP,
-                    CreationPhase::Spells,
-                    args([
-                        ("spell", sel.spell.to_string()),
-                        ("level", level.to_string()),
-                        ("cap", cap.max(0).to_string()),
-                    ]),
-                    Some(sel.spell.clone()),
-                ));
-            }
-        }
-
         validate_spell_mastery_abilities(sel, entity, ruleset, issues);
     }
 
+    validate_duplicate_spells(seen, issues);
+
+    if is_magus {
+        validate_spell_levels_budget(entity, ruleset, type_profile, issues);
+    }
+}
+
+/// Job 1/7: resolves `sel`'s spell against the catalogue; on failure reports
+/// `unknown_spell` and returns `None` (`validate_spells` stops there for that
+/// selection — every other check needs a resolved [`crate::spell::Spell`]).
+fn validate_spell_ref<'a>(
+    sel: &SpellSelection,
+    ruleset: &'a Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) -> Option<&'a crate::spell::Spell> {
+    let spell = ruleset.spell(&sel.spell);
+    if spell.is_none() {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_UNKNOWN_SPELL,
+            CreationPhase::Spells,
+            args([("spell", sel.spell.to_string())]),
+            Some(sel.spell.clone()),
+        ));
+    }
+    spell
+}
+
+/// Job 2/7: a General spell (catalogue level `None`) with no chosen level
+/// cannot be budgeted yet — warn, don't block.
+fn validate_spell_level_unresolved(
+    sel: &SpellSelection,
+    spell: &crate::spell::Spell,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    if spell.level.is_none() && sel.level.is_none() {
+        issues.push(ValidationIssue::warning(
+            ValidationIssue::CODE_SPELL_LEVEL_UNRESOLVED,
+            CreationPhase::Spells,
+            args([("spell", sel.spell.to_string())]),
+            Some(sel.spell.clone()),
+        ));
+    }
+}
+
+/// Job 3/7: a parameterized spell (meta-magic Vim spell whose target (Form) is
+/// a selection) requires a chosen value that resolves to the declared domain.
+/// Display + identity only — it does NOT change the spell's own
+/// Technique/Form (Ars Magica - Definitive Edition (Core Rules).md:15791-15794).
+/// Mirrors the virtue/flaw parameter checks in `validation::selections`.
+fn validate_spell_parameter(
+    sel: &SpellSelection,
+    spell: &crate::spell::Spell,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let Some(def) = spell.parameters.first() else {
+        return;
+    };
+    match &sel.parameter {
+        None => issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_MISSING_PARAM,
+            CreationPhase::Spells,
+            args([("item", sel.spell.to_string()), ("key", def.key.clone())]),
+            Some(sel.spell.clone()),
+        )),
+        Some(value) => {
+            let value_id = Id::new(value.as_str());
+            if !super::selections::param_value_resolves(ruleset, def.domain, &value_id) {
+                issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_UNKNOWN_PARAM_VALUE,
+                    CreationPhase::Spells,
+                    args([
+                        ("item", sel.spell.to_string()),
+                        ("key", def.key.clone()),
+                        ("value", value.clone()),
+                        ("domain", def.domain.to_string()),
+                    ]),
+                    Some(sel.spell.clone()),
+                ));
+            }
+        }
+    }
+}
+
+/// Job 5/7: ritual level bounds apply to the resolved learned level regardless
+/// of budget: a ritual must be learned at level >= `RITUAL_MIN_LEVEL`, a
+/// non-ritual at <= 50. For fixed-level spells this is already enforced at
+/// load; it bites here for General spells whose chosen level is illegal.
+///
+/// The floor comes from the shared constant rather than a literal: the UI
+/// used to restate it too (audit finding VA2), and one number in two places
+/// is one number that can drift.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:12279-12295,
+/// :12285 ("Formulaic and Spontaneous spells may not have a level greater
+/// than 50" — the exact non-Ritual ceiling this checks). An earlier
+/// version of this comment cited :12283 (the Year-duration restriction,
+/// unrelated), then a later pass "corrected" it to :12291 (a discretionary
+/// note that spectacular effects "will normally be over level 50, and thus
+/// Rituals anyway" — a design rationale, not the numeric rule itself).
+/// :12285 is the line that actually states the "> 50" ceiling.
+fn validate_spell_ritual_legality(
+    sel: &SpellSelection,
+    spell: &crate::spell::Spell,
+    resolved: Option<u32>,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let Some(level) = resolved else {
+        return;
+    };
+    // `RITUAL_MIN_LEVEL` is `u8` (it also feeds the ruleset surface the UI
+    // reads); resolved spell levels are `u32`. Widen explicitly rather than
+    // cast.
+    let ritual_min = u32::from(crate::spell::RITUAL_MIN_LEVEL);
+    let ritual_too_low = spell.ritual && level < ritual_min;
+    let non_ritual_too_high = !spell.ritual && level > 50;
+    if ritual_too_low || non_ritual_too_high {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_SPELL_RITUAL_LEGALITY,
+            CreationPhase::Spells,
+            args([
+                ("spell", sel.spell.to_string()),
+                ("level", level.to_string()),
+            ]),
+            Some(sel.spell.clone()),
+        ));
+    }
+}
+
+/// Job 6/7: no spell's level may exceed Technique + Form + Intelligence +
+/// Magic Theory + 3 (Ars Magica - Definitive Edition (Core Rules).md:2465).
+/// Magi only — the caller gates on `is_magus`.
+fn validate_spell_level_cap(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    sel: &SpellSelection,
+    spell: &crate::spell::Spell,
+    resolved: Option<u32>,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let Some(level) = resolved else {
+        return;
+    };
+    let cap = crate::effective::spell_level_cap(entity, ruleset, &spell.technique, &spell.form);
+    if i64::from(level) > cap {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_SPELL_LEVEL_EXCEEDS_CAP,
+            CreationPhase::Spells,
+            args([
+                ("spell", sel.spell.to_string()),
+                ("level", level.to_string()),
+                ("cap", cap.max(0).to_string()),
+            ]),
+            Some(sel.spell.clone()),
+        ));
+    }
+}
+
+/// Job 4/7: the same spell at the same resolved level (and, for a
+/// parameterized meta-magic Vim spell, the same parameter) may not appear
+/// twice — different General levels are different spells
+/// (Ars Magica - Definitive Edition (Core Rules).md:12353). Runs once, after
+/// the per-spell loop has built `seen`.
+fn validate_duplicate_spells(
+    seen: BTreeMap<(&Id, Option<u32>, Option<&String>), u32>,
+    issues: &mut Vec<ValidationIssue>,
+) {
     for ((spell, _level, _param), count) in seen {
         if count > 1 {
             issues.push(ValidationIssue::error(
@@ -477,43 +597,52 @@ pub(crate) fn validate_spells(
             ));
         }
     }
+}
 
-    if is_magus {
-        let base = crate::effective::spell_levels_base(entity, type_profile);
-        let budget = crate::effective::spell_levels_budget(base, entity, ruleset);
-        let used = crate::effective::spell_levels_used(entity, ruleset);
-        if used > budget {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_OVER_SPELL_LEVELS,
-                CreationPhase::Spells,
-                args([
-                    ("used", used.to_string()),
-                    ("budget", budget.to_string()),
-                    ("over", (used - budget).to_string()),
-                ]),
-                None,
-            ));
-        } else if used < budget {
-            // guided-creation-review-2026-08 #30, the spell-levels half. Same
-            // budget, same step, opposite direction — and read off the same
-            // `spell_levels_budget` above, so the pair cannot disagree about what
-            // the budget is.
-            //
-            // Factual, exactly as `general_xp_unspent`. "Take 120 levels of spells"
-            // (Ars Magica - Definitive Edition (Core Rules).md:2215) grants the
-            // levels; the source nowhere says unused levels are lost, so the
-            // message reports the count and asserts nothing further.
-            issues.push(ValidationIssue::warning(
-                ValidationIssue::CODE_SPELL_LEVELS_UNSPENT,
-                CreationPhase::Spells,
-                args([
-                    ("used", used.to_string()),
-                    ("budget", budget.to_string()),
-                    ("unspent", (budget - used).to_string()),
-                ]),
-                None,
-            ));
-        }
+/// Job 7/7: the sum of chosen spell levels must not exceed the effective
+/// spell-levels budget (Ars Magica - Definitive Edition (Core Rules).md:2215-2216,
+/// 2435, and the levels bought out of the years past the Gauntlet, `:2471`).
+/// Magi only — the caller gates on `is_magus`.
+fn validate_spell_levels_budget(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    type_profile: Option<&EntityTypeProfile>,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let base = crate::effective::spell_levels_base(entity, type_profile);
+    let budget = crate::effective::spell_levels_budget(base, entity, ruleset);
+    let used = crate::effective::spell_levels_used(entity, ruleset);
+    if used > budget {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_OVER_SPELL_LEVELS,
+            CreationPhase::Spells,
+            args([
+                ("used", used.to_string()),
+                ("budget", budget.to_string()),
+                ("over", (used - budget).to_string()),
+            ]),
+            None,
+        ));
+    } else if used < budget {
+        // guided-creation-review-2026-08 #30, the spell-levels half. Same
+        // budget, same step, opposite direction — and read off the same
+        // `spell_levels_budget` above, so the pair cannot disagree about what
+        // the budget is.
+        //
+        // Factual, exactly as `general_xp_unspent`. "Take 120 levels of spells"
+        // (Ars Magica - Definitive Edition (Core Rules).md:2215) grants the
+        // levels; the source nowhere says unused levels are lost, so the
+        // message reports the count and asserts nothing further.
+        issues.push(ValidationIssue::warning(
+            ValidationIssue::CODE_SPELL_LEVELS_UNSPENT,
+            CreationPhase::Spells,
+            args([
+                ("used", used.to_string()),
+                ("budget", budget.to_string()),
+                ("unspent", (budget - used).to_string()),
+            ]),
+            None,
+        ));
     }
 }
 

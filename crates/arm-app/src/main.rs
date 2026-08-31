@@ -29,6 +29,7 @@ fn main() {
             commands::derive_age,
             commands::derive_birth_year,
             request_close,
+            request_exit,
         ])
         // Window-close gestures (title-bar X, Alt+F4, Cmd+W).
         .on_window_event(|window, event| {
@@ -151,6 +152,48 @@ fn request_close(app: AppHandle) {
     }
 }
 
+/// E2E-only IPC seam for `RunEvent::ExitRequested` (macOS Cmd+Q / app-level
+/// quit, the `.run()` closure at the bottom of [`main`]). No WebDriver
+/// capability available to this project can synthesize a real OS-level quit
+/// signal: `window.close()` — the call [`request_close`] bridges — always
+/// resolves to `WindowEvent::CloseRequested`, a structurally different Tauri
+/// event (see [`window_close_bridge_plugin`]'s doc comment), so the existing
+/// bridge cannot be reused to reach this path. This command instead runs the
+/// exact same [`guard_blocks_quit`] call the `.run()` closure makes for
+/// `ExitRequested`, triggered by IPC from an e2e spec
+/// (`window.__TAURI_INTERNALS__.invoke('request_exit')`, the same low-level
+/// call [`window_close_shadow_script`] uses) instead of a real quit signal.
+///
+/// Always registered (see [`main`]'s `invoke_handler`), but its body is inert
+/// unless the crate is built with the `e2e-testing` Cargo feature —
+/// [`request_exit_enabled`] is the single switch, mirroring
+/// `ARM_E2E_FILE`/`ARM_E2E_EXPORT_FILE`'s established off-by-default gating
+/// (K5/VA5, `commands.rs`). A plain `cargo build --release` therefore ships a
+/// command that is a byte-for-byte no-op: no IPC path in the binary users
+/// install can force-quit the app. See `request_exit_is_inert_in_the_default_build`
+/// / `request_exit_acts_when_the_feature_is_enabled` below for both halves of
+/// the gate proved, matching `tests/commands.rs`'s proof of the same shape for
+/// the file-override seams.
+#[tauri::command]
+fn request_exit(app: AppHandle) {
+    if !request_exit_enabled() {
+        return;
+    }
+    if !guard_blocks_quit(&app, |app| app.exit(0)) {
+        app.exit(0);
+    }
+}
+
+#[cfg(feature = "e2e-testing")]
+fn request_exit_enabled() -> bool {
+    true
+}
+
+#[cfg(not(feature = "e2e-testing"))]
+fn request_exit_enabled() -> bool {
+    false
+}
+
 /// Shared close/quit guard. If the entity has unsaved changes, shows a
 /// discard-confirmation dialog (unless one is already open) and returns `true`
 /// so the caller blocks the pending close/quit via the matching `prevent_*`.
@@ -226,5 +269,32 @@ mod tests {
         assert!(script.contains("window.close = function"));
         assert!(script.contains("__TAURI_INTERNALS__"));
         assert!(script.contains(&format!("invoke('{REQUEST_CLOSE_COMMAND}')")));
+    }
+
+    // E5 (test-adequacy audit round 1, CRITICAL): `request_exit` must be inert
+    // unless the crate is built with the `e2e-testing` feature, exactly like
+    // `ARM_E2E_FILE`/`ARM_E2E_EXPORT_FILE` (`commands.rs`). This test runs
+    // under the plain `cargo test -p arm-app` gate (no features enabled),
+    // which is exactly the build users receive.
+    #[cfg(not(feature = "e2e-testing"))]
+    #[test]
+    fn request_exit_is_inert_in_the_default_build() {
+        assert!(
+            !request_exit_enabled(),
+            "request_exit must be inert unless built with the e2e-testing \
+             feature, or the shipped binary would expose an IPC path that \
+             can force-quit the app"
+        );
+    }
+
+    // Mirror of the above, proving the gate actually opens rather than just
+    // staying permanently shut — compiled WITH the `e2e-testing` feature
+    // (exactly what `ui/e2e/wdio.conf.js` passes to `cargo tauri build
+    // --no-bundle --features e2e-testing`), `request_exit` must act, or the
+    // new `app-quit-bridge-*.e2e.js` specs have no seam to drive.
+    #[cfg(feature = "e2e-testing")]
+    #[test]
+    fn request_exit_acts_when_the_feature_is_enabled() {
+        assert!(request_exit_enabled());
     }
 }

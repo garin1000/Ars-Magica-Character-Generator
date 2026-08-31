@@ -231,6 +231,19 @@ describe('AbilityTab mounts the magus minimums checklist (slice 6b4)', () => {
   });
 });
 
+// S6 (full-audit a11y): the ability-category filter `<select>` had no accessible
+// name — a screen-reader user tabbing into it hears only "combo box". It has no
+// visible label to associate with (the filter row is icon-less controls in a
+// row), so a Fluent-sourced `aria-label` is the right fix, never the raw slug.
+describe('AbilityTab category filter (S6)', () => {
+  it('gives the category filter select an accessible name via Fluent', () => {
+    const body = html();
+    const select = /<select[^>]*data-testid="ability-category-filter"[^>]*>/.exec(body);
+    expect(select).not.toBeNull();
+    expect(select![0]).toContain('aria-label="Filter by ability category"');
+  });
+});
+
 // --- Slice 12 (#24): the age cap note's one home -----------------------------
 //
 // This component is BOTH surfaces — the editor's Abilities tab and the wizard's

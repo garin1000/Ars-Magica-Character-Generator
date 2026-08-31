@@ -251,6 +251,7 @@
             />
             <select
               bind:value={store.filters.vf[side].category}
+              aria-label={store.t('vf-category-filter-label', { side: store.t(titleKey(side)) })}
               data-testid="vf-category-filter-{side}"
             >
               <option value="">{store.t('filter-category-all')}</option>
@@ -260,6 +261,7 @@
             </select>
             <select
               bind:value={store.filters.vf[side].magnitude}
+              aria-label={store.t('vf-magnitude-filter-label', { side: store.t(titleKey(side)) })}
               data-testid="vf-magnitude-filter-{side}"
             >
               <option value="">{store.t('filter-magnitude-all')}</option>

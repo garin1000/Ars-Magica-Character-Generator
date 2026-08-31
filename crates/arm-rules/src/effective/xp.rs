@@ -385,7 +385,62 @@ pub(crate) fn ability_authorizations(
                 Effect::AbilityScoreGrant { ability, .. } => {
                     abilities.insert(ability.clone());
                 }
-                _ => {}
+                // Exhaustive so adding an Effect variant is a compile error here,
+                // not a silently-ignored authorization gap (V55). Every listed
+                // variant is a deliberate no-op for *ownership permission*:
+                // Ability/Art/Characteristic bonuses and Affinities (including
+                // the group form) target or discount something already legally
+                // owned rather than granting the right to own it (Puissant
+                // Ability: Ars Magica - Definitive Edition (Core Rules).md:4814-4816);
+                // the XP/budget/derived-stat grants (spell levels, general XP,
+                // later-life rate, confidence, mastery, item levels, True
+                // Faith/Warping/Might/Power/Reputation, size, characteristic
+                // points) fund or size something, never authorize an Ability;
+                // `GrantsSelection` is already expanded by
+                // `selections_for_effects` before this loop runs, so its target
+                // item's own effects are picked up on their own iteration, not
+                // here; and the M5/5b in-play effects (casting/lab/combat/health/
+                // soak/magic-resistance/aging/advancement/casting-style/roll
+                // modifiers, Elemental Magic) modify a derived total computed
+                // over Abilities/Arts already owned, never ownership itself.
+                Effect::AbilityBonus { .. }
+                | Effect::CharacteristicLimit { .. }
+                | Effect::ArtBonus { .. }
+                | Effect::AffinityAbilityCost { .. }
+                | Effect::AffinityArtCost { .. }
+                | Effect::GroupAffinityCost { .. }
+                | Effect::CharacteristicPoints { .. }
+                | Effect::SpellLevels { .. }
+                | Effect::GeneralXp { .. }
+                | Effect::LaterLifeXpRate { .. }
+                | Effect::LocalityAbilityCapFraction { .. }
+                | Effect::ConfidenceBonus { .. }
+                | Effect::SpellMasteryXp { .. }
+                | Effect::GrantsSpellMastery { .. }
+                | Effect::GrantsSelection { .. }
+                | Effect::ItemLevelBudget { .. }
+                | Effect::MasterpieceItem
+                | Effect::TrueFaithGrant { .. }
+                | Effect::WarpingGrant { .. }
+                | Effect::SizeDelta { .. }
+                | Effect::CharacteristicScoreDelta { .. }
+                | Effect::GrantsReputation { .. }
+                | Effect::MightGrant { .. }
+                | Effect::PowerLevels { .. }
+                | Effect::MagicalFocus { .. }
+                | Effect::CastingTotalMod { .. }
+                | Effect::LabTotalMod { .. }
+                | Effect::DeficientArt { .. }
+                | Effect::MagicTotalHalving { .. }
+                | Effect::SoakMod { .. }
+                | Effect::CombatMod { .. }
+                | Effect::HealthMod { .. }
+                | Effect::MagicResistanceMod { .. }
+                | Effect::AgingMod { .. }
+                | Effect::AdvancementMod { .. }
+                | Effect::SpecialCastingMod { .. }
+                | Effect::AbilityRollMod { .. }
+                | Effect::ElementalMagic { .. } => {}
             }
         }
     }
@@ -1127,5 +1182,76 @@ mod tests {
         let rs = rs();
         let past_bound = companion_with_scores(MAX_XP_SOLVE_NODES - 3 + 1);
         assert_eq!(restricted_xp_pools(&past_bound, &rs), Vec::new());
+    }
+
+    /// V55: `ability_authorizations` used to end in a bare `_ => {}` wildcard —
+    /// the only non-exhaustive `Effect` match in `effective/`. Characterizes the
+    /// behaviour the explicit match must preserve: only `RestrictedAbilityXp`,
+    /// `AbilityAuthorization`, and `AbilityScoreGrant` contribute a permission;
+    /// every other effect is a no-op. `AbilityBonus` (Puissant Ability) stands in
+    /// for the rest — it names a target ability via `params[param]` but, per the
+    /// rules text (Definitive Edition Core Rules.md:4814-4816), grants no
+    /// permission to own that ability, only a bonus once it is already legally
+    /// held.
+    #[test]
+    fn ability_authorizations_reads_only_the_three_permission_granting_effects() {
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] },
+          { "id": "virtue.warrior", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }] },
+          { "id": "virtue.covenant_upbringing", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "ability_authorization", "abilities": ["ability.dead_language"] }] },
+          { "id": "virtue.second_sight", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "effects": [{ "type": "ability_score_grant", "ability": "ability.second_sight", "amount": 1 }] },
+          { "id": "virtue.puissant_ability", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
+            "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }] }
+        ]"#;
+        let abilities_json = r#"{
+          "advancement": [{ "score": 1, "total_xp": 5 }],
+          "abilities": [
+            { "id": "ability.artes_liberales", "category": "general" },
+            { "id": "ability.dead_language", "category": "academic", "parameter": "language" },
+            { "id": "ability.second_sight", "category": "supernatural" }
+          ]
+        }"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: TYPES,
+            abilities: Some(abilities_json),
+            ..RulesetSources::default()
+        })
+        .unwrap();
+
+        let mut e = companion_with_scores(0);
+        e.selections = vec![
+            Selection::new(Id::new("virtue.warrior")),
+            Selection::new(Id::new("virtue.covenant_upbringing")),
+            Selection::new(Id::new("virtue.second_sight")),
+            Selection::with_params(
+                Id::new("virtue.puissant_ability"),
+                BTreeMap::from([("ability".into(), Id::new("ability.single_weapon"))]),
+            ),
+        ];
+
+        let (abilities, categories) = ability_authorizations(&e, &rs);
+        assert_eq!(categories, BTreeSet::from([AbilityCategory::Martial]));
+        assert_eq!(
+            abilities,
+            BTreeSet::from([
+                Id::new("ability.dead_language"),
+                Id::new("ability.second_sight"),
+            ])
+        );
+        // Puissant Ability names ability.single_weapon via `params[param]` but
+        // must not appear: AbilityBonus grants no ownership permission.
+        assert!(!abilities.contains(&Id::new("ability.single_weapon")));
     }
 }

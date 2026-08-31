@@ -498,6 +498,30 @@ describe('tablist keyboard navigation (S7/S4)', () => {
 // so the `$effect` mirror has to fire for that source too — and only a mounted
 // component runs an `$effect` body, which is why this case cannot live in the ssr
 // suite: an assertion placed after an effect that never runs still reports green.
+// S3 (full-audit i18n): `<html lang="en">` in index.html is static markup that
+// never updates once the user switches the UI language at runtime, so
+// assistive tech keeps announcing German text with an English voice/
+// pronunciation. The fix is an `$effect` in App.svelte keyed on `store.lang`
+// that writes `document.documentElement.lang`. SSR never runs an `$effect`
+// body, so this has to be a mounted-component (`client`) test or the effect
+// would never actually execute and the assertion would pass vacuously.
+describe('document language attribute tracks the active UI language (S3)', () => {
+  it('sets document.documentElement.lang to the initial language on mount', async () => {
+    await mountApp();
+    expect(document.documentElement.lang).toBe('en');
+  });
+
+  it('updates document.documentElement.lang when the user switches language', async () => {
+    await mountApp();
+    expect(document.documentElement.lang).toBe('en');
+
+    store.lang = 'de';
+    flushSync();
+
+    expect(document.documentElement.lang).toBe('de');
+  });
+});
+
 describe('the unsaved-changes guard mirrors wizard progress (S5/#31)', () => {
   it('re-mirrors as dirty when the wizard advances a step', async () => {
     await mountApp();

@@ -114,9 +114,13 @@
                         {label(grant.item, grant.params)}
                       </span>
                     {:else if grant.kind === 'choice'}
+                      <span class="house-granted-label" id="house-choice-label-{grant.choice_key}"
+                        >{store.t('house-granted-label')}</span
+                      >
                       <select
                         value={String(pickedIndex(grant.choice_key, grant.options))}
                         onchange={(e) => onChoice(grant.choice_key, grant.options, e)}
+                        aria-labelledby="house-choice-label-{grant.choice_key}"
                         data-testid="house-choice-{grant.choice_key}"
                       >
                         <option value="-1">{store.t('house-choose-prompt')}</option>
@@ -126,9 +130,13 @@
                       </select>
                     {:else}
                       {@const pick = openPick(grant.choice_key)}
+                      <span class="house-granted-label" id="house-open-label-{grant.choice_key}"
+                        >{store.t('house-granted-label')}</span
+                      >
                       <select
                         value={pick?.ref ?? ''}
                         onchange={(e) => onOpen(grant.choice_key, e)}
+                        aria-labelledby="house-open-label-{grant.choice_key}"
                         data-testid="house-open-{grant.choice_key}"
                       >
                         <option value="">{store.t('house-choose-prompt')}</option>

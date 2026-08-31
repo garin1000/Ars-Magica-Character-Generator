@@ -149,6 +149,14 @@
     void store.init();
   });
 
+  // Keep `<html lang>` in sync with the active UI language: index.html's
+  // static `lang="en"` is only the pre-mount fallback, and assistive tech uses
+  // this attribute to pick pronunciation/voice rules, so it must track a
+  // runtime language switch rather than staying English forever (S3).
+  $effect(() => {
+    document.documentElement.lang = store.lang;
+  });
+
   // Keep the document title localized rather than hardcoded in HTML. Once a file
   // is being tracked, show "name — app" (with an ASCII dirty marker for unsaved
   // edits) via a parametrized Fluent key — never string-composed here.
