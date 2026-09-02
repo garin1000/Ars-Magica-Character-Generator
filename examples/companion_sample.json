@@ -1,5 +1,26 @@
 {
-  "ability_funding": "pool",
+  "schema_version": 16,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "companion",
+  "selections": [
+    {
+      "ref": "flaw.poor_student"
+    },
+    {
+      "ref": "virtue.puissant_ability",
+      "params": {
+        "ability": "ability.awareness"
+      }
+    }
+  ],
+  "characteristics": {
+    "int": 2,
+    "com": 1
+  },
   "ability_scores": [
     {
       "ability": "ability.awareness",
@@ -12,27 +33,6 @@
       "parameter": "German"
     }
   ],
-  "characteristics": {
-    "com": 1,
-    "int": 2
-  },
-  "entity_kind": "character",
-  "ruleset": {
-    "id": "arm5-core",
-    "version": "2024.1"
-  },
-  "schema_version": 16,
-  "selections": [
-    {
-      "ref": "flaw.poor_student"
-    },
-    {
-      "ref": "virtue.puissant_ability",
-      "params": {
-        "ability": "ability.awareness"
-      }
-    }
-  ],
-  "type_id": "companion",
-  "xp_pool": 120
+  "xp_pool": 120,
+  "ability_funding": "pool"
 }

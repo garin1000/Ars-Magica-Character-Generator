@@ -1,0 +1,47 @@
+{
+  "schema_version": 16,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "mythic_companion",
+  "selections": [
+    {
+      "ref": "flaw.pagan"
+    },
+    {
+      "ref": "virtue.keen_vision"
+    },
+    {
+      "ref": "virtue.spiritual_pact"
+    }
+  ],
+  "characteristics": {
+    "per": 2,
+    "pre": 2,
+    "com": 1
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.awareness",
+      "score": 2
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 3
+    }
+  ],
+  "xp_pool": 45,
+  "ability_funding": "pool",
+  "mythic_type": "mythic_type.spirit_votary",
+  "personality_traits": [
+    {
+      "name": "Watchful",
+      "value": 3
+    }
+  ],
+  "name": "Old Row",
+  "concept": "A spirit bound to serve the covenant, wearing a human shape",
+  "gender": "unknown"
+}

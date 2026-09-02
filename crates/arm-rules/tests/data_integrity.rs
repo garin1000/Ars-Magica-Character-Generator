@@ -361,6 +361,32 @@ fn german_i18n_covers_all_abilities() {
 /// of it.
 const SHIPPED_CHILDHOODS: &str = include_str!("../../../rules/core/childhoods.json");
 
+/// The shipped equipment catalogue and its two i18n counterparts, read as text so
+/// `shipped_equipment_files_are_canonically_id_ordered` can check each file's own
+/// on-disk order (`weapon.staff` sat out of canonical order in all three files —
+/// full-audit finding V42/G23 — until this guard was added).
+const SHIPPED_EQUIPMENT_CORE: &str = include_str!("../../../rules/core/equipment.json");
+const SHIPPED_EQUIPMENT_I18N_EN: &str = include_str!("../../../rules/i18n/en/equipment.json");
+const SHIPPED_EQUIPMENT_I18N_DE: &str = include_str!("../../../rules/i18n/de/equipment.json");
+
+/// Extracts the top-level object keys of a flat, one-entry-per-line JSON file
+/// (the shape every `rules/i18n/<lang>/*.json` file uses), in on-disk order.
+/// `serde_json::Value` cannot answer this: this crate does not enable
+/// `serde_json`'s `preserve_order` feature, so a parsed `Value::Object` is
+/// backed by a `BTreeMap` and always reports keys pre-sorted regardless of the
+/// file's real byte order — exactly the drift this check exists to catch.
+fn top_level_keys_in_file_order(json_text: &str) -> Vec<&str> {
+    json_text
+        .lines()
+        .filter_map(|line| {
+            let trimmed = line.trim_start();
+            let rest = trimmed.strip_prefix('"')?;
+            let end = rest.find('"')?;
+            Some(&rest[..end])
+        })
+        .collect()
+}
+
 /// Every shipped Sample Childhood package spends exactly the two childhood blocks
 /// it is a shortcut for: 45 experience points across the spread and 75 in the
 /// native language.
@@ -847,6 +873,42 @@ fn german_i18n_covers_all_equipment() {
             loc.display_name(id).is_some(),
             "German i18n missing equipment '{id}'"
         );
+    }
+}
+
+/// The shipped equipment catalogue's core file and both i18n counterparts must
+/// each list their ids in canonical (ascending, byte-order) order — CLAUDE.md's
+/// "canonical serialization" rule. This never hardcodes a catalogue size or item
+/// count: it re-derives the expected order from the ids actually present, so a
+/// future addition to the catalogue needs no test change.
+#[test]
+fn shipped_equipment_files_are_canonically_id_ordered() {
+    let core: serde_json::Value =
+        serde_json::from_str(SHIPPED_EQUIPMENT_CORE).expect("core equipment.json is valid JSON");
+    for array_key in ["weapons", "shields", "armor"] {
+        let ids: Vec<&str> = core[array_key]
+            .as_array()
+            .unwrap_or_else(|| panic!("equipment.json carries a '{array_key}' array"))
+            .iter()
+            .map(|item| item["id"].as_str().expect("every entry has an id"))
+            .collect();
+        let mut sorted = ids.clone();
+        sorted.sort_unstable();
+        assert_eq!(
+            ids, sorted,
+            "core equipment.json's '{array_key}' must be id-sorted"
+        );
+    }
+
+    for (lang, file) in [
+        ("en", SHIPPED_EQUIPMENT_I18N_EN),
+        ("de", SHIPPED_EQUIPMENT_I18N_DE),
+    ] {
+        let ids = top_level_keys_in_file_order(file);
+        assert!(!ids.is_empty(), "i18n/{lang}/equipment.json carries keys");
+        let mut sorted = ids.clone();
+        sorted.sort_unstable();
+        assert_eq!(ids, sorted, "i18n/{lang}/equipment.json must be id-sorted");
     }
 }
 
@@ -3265,6 +3327,34 @@ fn english_and_german_i18n_cover_all_crisis_rows() {
         name(&de, "crisis.major_illness", "de"),
         "Schwere Erkrankung"
     );
+}
+
+/// `crisis.rows` ships in BAND order in `rules/core/aging.json` — a deliberate
+/// exception to the project's canonical (id-sorted) serialization rule, recorded
+/// in RULES.md ("Three things a later sweep must not undo") and guarded by
+/// `shipped_crisis_table_carries_the_16626_to_16632_rows` above. Until this test
+/// was added, both i18n counterparts instead listed the same seven ids
+/// alphabetically, so core and i18n silently disagreed on the table's order
+/// (full-audit finding V43). This asserts the two i18n files mirror core's band
+/// order rather than keeping their own alphabetical one, using a line-based key
+/// reader (not `serde_json::Value`, which is backed by a `BTreeMap` here and
+/// would always report keys pre-sorted regardless of the file's real order).
+#[test]
+fn crisis_row_i18n_order_matches_core_band_order() {
+    let rules = shipped_aging_rules();
+    let crisis = rules.crisis.clone().expect("the shipped crisis table");
+    let core_order: Vec<&str> = crisis.rows.iter().map(|row| row.id.as_str()).collect();
+
+    for (lang, file) in [("en", SHIPPED_AGING_EN), ("de", SHIPPED_AGING_DE)] {
+        let i18n_order: Vec<&str> = top_level_keys_in_file_order(file)
+            .into_iter()
+            .filter(|key| key.starts_with("crisis."))
+            .collect();
+        assert_eq!(
+            i18n_order, core_order,
+            "i18n/{lang}/aging.json must list crisis rows in the same band order as core"
+        );
+    }
 }
 
 /// The three shipped items that suspend some part of aging tag the **two

@@ -4408,6 +4408,18 @@ Three things a later sweep must not undo:
    Everything else in the file — `living_conditions` above all — stays id-sorted.
    `shipped_crisis_table_carries_the_16626_to_16632_rows` (`data_integrity.rs`)
    asserts the band order so the exception has a test, not just a paragraph.
+   **`rules/i18n/en/aging.json` and `rules/i18n/de/aging.json` mirror the same BAND
+   order for their `crisis.*` keys**, not their own separate id-alphabetical order —
+   full-audit finding V43 caught the two layers disagreeing (i18n was
+   alphabetical while core was band-ordered), so a die-roll table read top to
+   bottom as "the crisis ladder" told a different story depending on which file
+   you opened. Band order was kept (not flipped to id order) because it is the
+   one a player actually reads the table in, matching the rulebook's own
+   presentation; canonical-serialization's zero-noise-diff goal does not
+   outweigh that for a table that is read as a ladder. `living_condition.*` keys
+   in both i18n files stay id-sorted, matching core.
+   `crisis_row_i18n_order_matches_core_band_order` (`data_integrity.rs`) asserts
+   the two i18n files agree with core's order.
 2. **Terminal carries no `ease_factor` at all.** `:16632` offers no Stamina roll —
    "CrCo40 required to survive" — so the field is absent rather than set to an
    unbeatable number. `Option<i32>` says "no roll"; a 99 would say "roll and lose".

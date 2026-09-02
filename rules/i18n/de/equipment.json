@@ -38,10 +38,10 @@
   "weapon.sling": { "name": "Schleuder" },
   "weapon.spear_long": { "name": "Speer, lang" },
   "weapon.spear_short": { "name": "Speer, kurz" },
+  "weapon.staff": { "name": "Stab" },
   "weapon.stone": { "name": "Stein" },
   "weapon.sword_great": { "name": "Großschwert" },
   "weapon.sword_long": { "name": "Schwert, lang" },
   "weapon.sword_short": { "name": "Schwert, kurz" },
-  "weapon.staff": { "name": "Stab" },
   "weapon.warhammer": { "name": "Kriegshammer" }
 }

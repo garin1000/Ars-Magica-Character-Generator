@@ -38,10 +38,10 @@
   "weapon.sling": { "name": "Sling" },
   "weapon.spear_long": { "name": "Long Spear" },
   "weapon.spear_short": { "name": "Short Spear" },
+  "weapon.staff": { "name": "Staff" },
   "weapon.stone": { "name": "Stone" },
   "weapon.sword_great": { "name": "Great Sword" },
   "weapon.sword_long": { "name": "Long Sword" },
   "weapon.sword_short": { "name": "Short Sword" },
-  "weapon.staff": { "name": "Staff" },
   "weapon.warhammer": { "name": "Warhammer" }
 }

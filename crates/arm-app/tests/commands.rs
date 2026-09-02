@@ -2593,3 +2593,38 @@ fn every_validation_code_has_a_fluent_key_in_each_locale() {
         }
     }
 }
+
+/// Every checked-in `examples/*.json` fixture must actually load and validate
+/// through the real production path — the same loader and validator the app
+/// uses, against the same shipped `rules/` the app ships. Scans the directory
+/// rather than naming files, so adding a future example needs no test change
+/// (full-audit finding V20).
+#[test]
+fn every_example_save_parses_and_validates() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let examples_dir = repo_root().join("examples");
+    let mut checked = 0;
+    let mut entries: Vec<PathBuf> = fs::read_dir(&examples_dir)
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("json"))
+        .collect();
+    entries.sort();
+
+    for path in entries {
+        let entity = load_entity_from_path(&path)
+            .unwrap_or_else(|e| panic!("{} failed to load: {e}", path.display()));
+        let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
+        assert!(
+            result.is_valid(),
+            "{} failed to validate: {:?}",
+            path.display(),
+            result.issues
+        );
+        checked += 1;
+    }
+    assert!(
+        checked > 0,
+        "examples/ must contain at least one *.json fixture"
+    );
+}

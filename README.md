@@ -21,9 +21,10 @@
 ## What it does
 
 This is a — fully vibe coded — native desktop application for building **Ars Magica 5th Edition**
-characters — grogs, companions, mythic companions, and magi — as well as
-**covenants**. Both characters and covenants are first-class entity types built
-on one shared rules engine.
+characters — grogs, companions, mythic companions, and magi. **Covenants** are
+architected as an equal, first-class entity type on the same shared rules
+engine, but ship no type profile or Boons/Hooks catalogue yet, so a covenant
+cannot be built end to end today — see [PLAN.md](PLAN.md) Milestone 8.
 
 Three input modes cover the spectrum from hand-holding to power-user:
 
@@ -153,7 +154,12 @@ direct-entry editor and the guided wizard — are in place and tested end to end
 computable in direct entry (M5, with Markdown export in M5.6), **and** buildable
 step by step in the guided flow: milestone **M6 is complete**, closed by an
 end-to-end walk for each of the four character types — start screen to finish, every
-phase of that type's flow filled in, on the shipped binary.
+phase of that type's flow filled in, on the shipped binary. A follow-up review of the
+guided wizard (31 numbered issues plus two more found along the way) has since been
+fixed in full, in 12 dependency-ordered slices. Work has now moved to a full-codebase
+audit: all CRITICAL and HIGH findings are closed, and the remaining backlog is being
+worked tier by tier. See [PLAN.md](PLAN.md) for the detailed history and current
+focus.
 
 ### What works today
 
@@ -349,7 +355,9 @@ phase of that type's flow filled in, on the shipped binary.
 
 ### Next
 
-A **character-sheet window**: an optional, read-only second window that renders a
+The full-codebase audit backlog is being closed out tier by tier first (see
+[PLAN.md](PLAN.md) for current status). After that, the next roadmap milestone is a
+**character-sheet window**: an optional, read-only second window that renders a
 formatted sheet and recomputes live as the character is edited in the main one. Which
 sections it shows will be driven by the character-type profile rather than a per-type
 ladder, and every value on it is already computed by the engine — the window only lays

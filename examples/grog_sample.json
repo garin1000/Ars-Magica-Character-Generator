@@ -1,0 +1,69 @@
+{
+  "schema_version": 16,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "grog",
+  "selections": [
+    {
+      "ref": "flaw.poor_student"
+    },
+    {
+      "ref": "virtue.warrior"
+    }
+  ],
+  "characteristics": {
+    "str": 2,
+    "sta": 2,
+    "qik": 1
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.athletics",
+      "score": 1
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 2,
+      "specialty": "keeping watch"
+    },
+    {
+      "ability": "ability.single_weapon",
+      "score": 4,
+      "specialty": "long sword"
+    }
+  ],
+  "xp_pool": 20,
+  "ability_funding": "pool",
+  "age": 28,
+  "personality_traits": [
+    {
+      "name": "Brave",
+      "value": 2
+    },
+    {
+      "name": "Loyal",
+      "value": 3
+    }
+  ],
+  "name": "Bertrand the Watchman",
+  "concept": "A loyal covenant guard, handy with a blade",
+  "gender": "male",
+  "equipment": [
+    {
+      "item": "armor.leather_scale_partial",
+      "equipped": true
+    },
+    {
+      "item": "shield.round",
+      "equipped": true
+    },
+    {
+      "item": "weapon.sword_long",
+      "equipped": true,
+      "specialization_applies": true
+    }
+  ]
+}

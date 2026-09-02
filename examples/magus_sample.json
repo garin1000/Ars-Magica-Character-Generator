@@ -1,0 +1,168 @@
+{
+  "schema_version": 16,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.blatant_gift"
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.minor_magical_focus",
+      "params": {
+        "focus": "fire"
+      }
+    },
+    {
+      "ref": "virtue.puissant_ability",
+      "params": {
+        "ability": "ability.magic_theory"
+      }
+    },
+    {
+      "ref": "virtue.the_gift"
+    },
+    {
+      "ref": "virtue.warrior"
+    }
+  ],
+  "characteristics": {
+    "int": 2,
+    "per": 1,
+    "sta": 1,
+    "com": 1,
+    "qik": 1
+  },
+  "characteristic_descriptions": {
+    "int": "quick-witted"
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 2,
+      "specialty": "legends",
+      "parameter": "Provence"
+    },
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 2,
+      "specialty": "searching"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "parameter": "Latin"
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 4
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 2
+    },
+    {
+      "ability": "ability.single_weapon",
+      "score": 4,
+      "specialty": "long sword"
+    }
+  ],
+  "xp_pool": 282,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.corpus",
+      "score": 5
+    },
+    {
+      "art": "art.creo",
+      "score": 8
+    },
+    {
+      "art": "art.ignem",
+      "score": 8
+    },
+    {
+      "art": "art.rego",
+      "score": 5
+    },
+    {
+      "art": "art.vim",
+      "score": 5
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.bind_wound"
+    },
+    {
+      "spell": "spell.curse_of_the_unruly_tongue"
+    },
+    {
+      "spell": "spell.pilum_of_fire",
+      "mastery": 2,
+      "mastery_abilities": [
+        "spell_mastery_ability.penetration"
+      ]
+    }
+  ],
+  "house": "house.bonisagus",
+  "house_choices": {
+    "bonisagus_puissant": {
+      "ref": "virtue.puissant_ability",
+      "params": {
+        "ability": "ability.intrigue"
+      }
+    }
+  },
+  "age": 35,
+  "apparent_age": 30,
+  "personality_traits": [
+    {
+      "name": "Brash",
+      "value": -2
+    },
+    {
+      "name": "Curious",
+      "value": 3
+    }
+  ],
+  "aura": 3,
+  "longevity_ritual": {
+    "source": "self_made",
+    "bonus": 7,
+    "focus": "a draught of gold and silver"
+  },
+  "name": "Marcus of Bonisagus",
+  "description": "A bookish theorist",
+  "concept": "Seeker after lost Hermetic lore",
+  "gender": "male",
+  "birth_year": 1194,
+  "sigil": "the smell of old parchment",
+  "covenant_name": "Semita Errabunda",
+  "parens": "Vittoria of Bonisagus",
+  "equipment": [
+    {
+      "item": "armor.leather_scale_partial"
+    },
+    {
+      "item": "shield.round",
+      "equipped": true
+    },
+    {
+      "item": "weapon.sword_long",
+      "equipped": true,
+      "specialization_applies": true
+    }
+  ]
+}
