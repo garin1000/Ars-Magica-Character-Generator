@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { I32_MAX, I32_MIN } from '../derive';
 
   function onBirthYear(event: Event) {
     const raw = (event.currentTarget as HTMLInputElement).value;
@@ -36,8 +37,8 @@
     <span>{store.t('identity-birth-year')}</span>
     <input
       type="number"
-      min="-2147483648"
-      max="2147483647"
+      min={I32_MIN}
+      max={I32_MAX}
       value={store.entity.birth_year ?? ''}
       oninput={onBirthYear}
       data-testid="identity-birth-year"

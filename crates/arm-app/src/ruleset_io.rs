@@ -1138,20 +1138,31 @@ pub fn pick_rules_dir(candidates: &[PathBuf]) -> Option<PathBuf> {
 /// `core/*.json` + `i18n/<lang>/*.json`, parsing and integrity-checking it via
 /// the engine. Returns the ruleset paired with localized display text.
 pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRuleset, AppError> {
-    let point_items_json = fs::read_to_string(rules_dir.join("core/virtues_flaws.json"))?;
-    let type_profiles_json = fs::read_to_string(rules_dir.join("core/character_types.json"))?;
-    let abilities_json = fs::read_to_string(rules_dir.join("core/abilities.json"))?;
-    let arts_json = fs::read_to_string(rules_dir.join("core/arts.json"))?;
-    let houses_json = fs::read_to_string(rules_dir.join("core/houses.json"))?;
-    let mythic_types_json = fs::read_to_string(rules_dir.join("core/mythic_companion_types.json"))?;
-    let spells_json = fs::read_to_string(rules_dir.join("core/spells.json"))?;
-    let spell_mastery_abilities_json =
-        fs::read_to_string(rules_dir.join("core/spell_mastery_abilities.json"))?;
-    let equipment_json = fs::read_to_string(rules_dir.join("core/equipment.json"))?;
-    let characteristics_json = fs::read_to_string(rules_dir.join("core/characteristics.json"))?;
-    let life_stages_json = fs::read_to_string(rules_dir.join("core/life_stages.json"))?;
-    let childhoods_json = fs::read_to_string(rules_dir.join("core/childhoods.json"))?;
-    let aging_json = fs::read_to_string(rules_dir.join("core/aging.json"))?;
+    // Array-driven, matching read_i18n_sources below: REQUIRED_CORE_FILES *is*
+    // the ordered list of files this function reads (see its doc comment), so
+    // reading it back destructures in exactly that fixed order rather than
+    // repeating the 13 filenames a second time.
+    let core: Vec<String> = REQUIRED_CORE_FILES
+        .iter()
+        .map(|file| fs::read_to_string(rules_dir.join(file)).map_err(AppError::from))
+        .collect::<Result<_, _>>()?;
+    let [
+        point_items_json,
+        type_profiles_json,
+        abilities_json,
+        arts_json,
+        houses_json,
+        mythic_types_json,
+        spells_json,
+        spell_mastery_abilities_json,
+        equipment_json,
+        characteristics_json,
+        life_stages_json,
+        childhoods_json,
+        aging_json,
+    ]: [String; 13] = core
+        .try_into()
+        .expect("REQUIRED_CORE_FILES has exactly 13 entries");
 
     let ruleset = Ruleset::from_sources(RulesetSources {
         id: RULESET_ID,

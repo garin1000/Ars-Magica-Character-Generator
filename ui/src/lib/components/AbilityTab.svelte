@@ -15,6 +15,7 @@
   import MagusMinimumAbilities from './MagusMinimumAbilities.svelte';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
+  import Spinner from './Spinner.svelte';
 
   // === Source (Available) side ===
 
@@ -283,35 +284,26 @@
               <span class="item-name" use:tooltip={selectedTip(entry.ability)}
                 >{selectedName(entry.ability, entry.parameter)}</span
               >
-              <span class="spinner">
-                <button
-                  type="button"
-                  class="icon-btn"
-                  aria-label={store.t('ability-decrement', {
-                    name: selectedName(entry.ability, entry.parameter),
-                  })}
-                  disabled={entry.score <= 0}
-                  onclick={() => store.adjustAbilityAt(i, -1, max)}
-                  data-testid="ability-dec-{entry.ability}-{i}"
-                >
-                  -
-                </button>
-                <span class="spinner-value" data-testid="ability-score-{entry.ability}-{i}">
-                  {entry.score}
-                </span>
-                <button
-                  type="button"
-                  class="icon-btn"
-                  aria-label={store.t('ability-increment', {
-                    name: selectedName(entry.ability, entry.parameter),
-                  })}
-                  disabled={entry.score >= max}
-                  onclick={() => store.adjustAbilityAt(i, 1, max)}
-                  data-testid="ability-inc-{entry.ability}-{i}"
-                >
-                  +
-                </button>
-              </span>
+              <Spinner
+                decLabel={store.t('ability-decrement', {
+                  name: selectedName(entry.ability, entry.parameter),
+                })}
+                decTestid="ability-dec-{entry.ability}-{i}"
+                decDisabled={entry.score <= 0}
+                onDec={() => store.adjustAbilityAt(i, -1, max)}
+                incLabel={store.t('ability-increment', {
+                  name: selectedName(entry.ability, entry.parameter),
+                })}
+                incTestid="ability-inc-{entry.ability}-{i}"
+                incDisabled={entry.score >= max}
+                onInc={() => store.adjustAbilityAt(i, 1, max)}
+              >
+                {#snippet children()}
+                  <span class="spinner-value" data-testid="ability-score-{entry.ability}-{i}">
+                    {entry.score}
+                  </span>
+                {/snippet}
+              </Spinner>
               {#if effectiveOf(entry.score, entry.ability, entry.parameter) !== entry.score}
                 <span class="eff-slot">
                   <span class="eff-badge" data-testid="ability-eff-{entry.ability}-{i}">

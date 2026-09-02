@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { U32_MAX } from '../derive';
 
   /**
    * Show the age as a read-out instead of an input.
@@ -41,7 +42,7 @@
       <input
         type="number"
         min="1"
-        max="4294967295"
+        max={U32_MAX}
         value={age ?? ''}
         oninput={onAge}
         data-testid="age-input"

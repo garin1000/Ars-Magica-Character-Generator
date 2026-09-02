@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { RestrictedXpPool } from '../types';
   import { store } from '../state.svelte';
-  import { formatSigned, generalXpAllocation, restrictedPoolLabel } from '../derive';
+  import { formatSigned, generalXpAllocation, restrictedPoolLabel, U32_MAX } from '../derive';
+  import BudgetBonusChip from './BudgetBonusChip.svelte';
 
   // One XP summary shared by the Abilities and Arts tabs: both spend from the
   // SAME `entity.xp_pool`, so this single component drives both, differing only
@@ -141,7 +142,7 @@
         <input
           type="number"
           min="0"
-          max="4294967295"
+          max={U32_MAX}
           placeholder="0"
           value={typedPool || ''}
           oninput={onPool}
@@ -162,23 +163,20 @@
   >
     {store.t('xp-available', { available: String(available) })}
   </span>
-  {#if bonus > 0}
-    <!-- A positive modifier is an extra pool of experience, spent before the base —
-         so it reads used/amount exactly like a restricted pool. Gated on the number
-         alone, never on the type, so no character branch enters this component. -->
-    <span class="xp-restricted" data-testid="{prefix}xp-bonus">
-      {store.t('xp-bonus-pool', {
-        used: String(alloc.bonusUsed),
-        amount: String(bonus),
-      })}
-    </span>
-  {:else if bonus < 0}
-    <!-- A penalty has no pool to draw from; it is charged to the base above, and
-         reported here as the signed modifier that explains the charge. -->
-    <span class="xp-restricted over" data-testid="{prefix}xp-bonus">
-      {store.t('xp-bonus', { bonus: formatSigned(bonus) })}
-    </span>
-  {/if}
+  <!-- A positive modifier is an extra pool of experience, spent before the base —
+       so it reads used/amount exactly like a restricted pool. Gated on the number
+       alone, never on the type, so no character branch enters this component. A
+       penalty has no pool to draw from; it is charged to the base above, and
+       reported here as the signed modifier that explains the charge. -->
+  <BudgetBonusChip
+    {bonus}
+    testid="{prefix}xp-bonus"
+    positiveText={store.t('xp-bonus-pool', {
+      used: String(alloc.bonusUsed),
+      amount: String(bonus),
+    })}
+    negativeText={store.t('xp-bonus', { bonus: formatSigned(bonus) })}
+  />
   {#if guided}
     {#if lifeStage}
       <!-- THE LIFE-STAGE BLOCKS, IN THE ORDER THE CHARACTER LIVED THEM (#14): early

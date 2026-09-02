@@ -20,7 +20,7 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 
-import { startCharacter } from '../helpers.js';
+import { clean, startCharacter } from '../helpers.js';
 
 const LANG_SELECT = '[data-testid="language-select"]';
 
@@ -38,11 +38,6 @@ const WEAPON_NAME = 'Long Sword';
 // The shield equipped afterwards, splitting each weapon's line in two.
 const SHIELD = 'shield.round';
 const SHIELD_NAME = 'Round Shield';
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 describe('totals tab', () => {
   it('renders the panel when the same weapon is carried twice', async () => {

@@ -39,7 +39,7 @@
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { standOnWizardStep, startWizard } from '../helpers.js';
+import { BOOT_TIMEOUT, clean, standOnWizardStep, startWizard, STEP_TIMEOUT } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const AGE_INPUT = '[data-testid="age-input"]';
@@ -51,16 +51,8 @@ const DOC_STATUS = '[data-testid="doc-status"]';
 const DOCKED_ISSUES = '[data-testid="issue-list"]';
 const CLAMP_CODE = 'saga_year_before_birth_year';
 
-const STEP_TIMEOUT = 10000;
-const BOOT_TIMEOUT = 30000;
-
 /** The published setting's year, and so the default a fresh installation reports. */
 const DEFAULT_SAGA_YEAR = '1220';
-
-/** Fluent wraps interpolated values in Unicode bidi isolation marks; strip them. */
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 /** Type `value` into `selector`, replacing whatever was there. */
 async function type(selector, value) {

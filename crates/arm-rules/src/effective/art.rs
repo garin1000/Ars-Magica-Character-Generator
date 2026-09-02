@@ -24,23 +24,17 @@ pub struct ArtBonus {
 /// Art, +3; may be taken twice, for two different Arts).
 pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
     let mut bonus = 0;
-    let selections = selections_for_effects(entity, ruleset);
-    for selection in selections.iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            // Exhaustive match so adding an Effect variant is a compile error
-            // here, not a silently-ignored bonus.
-            match effect {
-                Effect::ArtBonus { param, amount } if selection.params.get(param) == Some(art) => {
-                    bonus += i32::from(*amount);
-                }
-                // Not an art bonus for this target; contributes nothing here.
-                irrelevant_effect_variants!() => {}
+    for_each_effect!(entity, ruleset, |selection, effect| {
+        // Exhaustive match so adding an Effect variant is a compile error
+        // here, not a silently-ignored bonus.
+        match effect {
+            Effect::ArtBonus { param, amount } if selection.params.get(param) == Some(art) => {
+                bonus += i32::from(*amount);
             }
+            // Not an art bonus for this target; contributes nothing here.
+            irrelevant_effect_variants!() => {}
         }
-    }
+    });
     bonus
 }
 
@@ -60,16 +54,11 @@ fn bought_art_score(entity: &Entity, art: &Id) -> u8 {
 /// the Virtue — the overwhelmingly common case, so the redistribution path is
 /// skipped entirely.
 fn elemental_magic_forms(entity: &Entity, ruleset: &Ruleset) -> Option<BTreeSet<Id>> {
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::ElementalMagic { forms } = effect {
-                return Some(forms.clone());
-            }
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::ElementalMagic { forms } = effect {
+            return Some(forms.clone());
         }
-    }
+    });
     None
 }
 

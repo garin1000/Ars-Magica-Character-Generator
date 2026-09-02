@@ -15,7 +15,7 @@
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { startCharacter } from '../helpers.js';
+import { clean, startCharacter } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
@@ -25,11 +25,6 @@ const TOTALS_TAB = '[data-testid="tab-totals"]';
 const BINDING = '[data-testid="derived-familiar-binding"]';
 const CORDS = '[data-testid="derived-familiar-cords"]';
 const INVESTED = '[data-testid="derived-familiar-invested"]';
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 /** Wait for a (debounced) engine read-out to contain every fragment. */
 async function waitForText(selector, ...fragments) {

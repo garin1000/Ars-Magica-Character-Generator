@@ -10,16 +10,11 @@ use super::*;
 /// pairs (selections + derived grants).
 fn might_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<(Realm, u8)> {
     let mut grants = Vec::new();
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::MightGrant { realm, score } = effect {
-                grants.push((*realm, *score));
-            }
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::MightGrant { realm, score } = effect {
+            grants.push((*realm, *score));
         }
-    }
+    });
     grants
 }
 
@@ -52,15 +47,10 @@ pub fn effective_might(entity: &Entity, ruleset: &Ruleset) -> Option<MightScore>
 /// Rules).md:5169-5171.
 pub fn true_faith(entity: &Entity, ruleset: &Ruleset) -> u8 {
     let mut score = 0u32;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::TrueFaithGrant { score: s } = effect {
-                score += u32::from(*s);
-            }
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::TrueFaithGrant { score: s } = effect {
+            score += u32::from(*s);
         }
-    }
+    });
     u8::try_from(score).unwrap_or(u8::MAX)
 }

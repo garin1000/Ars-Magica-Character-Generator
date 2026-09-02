@@ -24,10 +24,13 @@
 
 import { $, browser, expect } from '@wdio/globals';
 
-import { advanceWizardTo, startCharacter, startWizard } from '../helpers.js';
-
-const BOOT_TIMEOUT = 30000;
-const STEP_TIMEOUT = 10000;
+import {
+  advanceWizardTo,
+  BOOT_TIMEOUT,
+  startCharacter,
+  startWizard,
+  STEP_TIMEOUT,
+} from '../helpers.js';
 
 // The wizard screen's root. It is bounded to the window and never scrolls itself, so
 // it is a fixed frame the step's content moves within — exactly what is needed to

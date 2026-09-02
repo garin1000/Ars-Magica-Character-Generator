@@ -5,7 +5,9 @@
     maxAbilityScore,
     spellLevelAllocation,
     spellMasteryXpSpent,
+    U32_MAX,
   } from '../derive';
+  import BudgetBonusChip from './BudgetBonusChip.svelte';
 
   // Whether the base is READ-ONLY at this mount. The guided wizard passes `true`;
   // the editor leaves it editable (guided-creation-review-2026-08 #19, DECIDED).
@@ -131,7 +133,7 @@
         <input
           type="number"
           min="1"
-          max="4294967295"
+          max={U32_MAX}
           step="1"
           aria-label={store.t('spell-levels-base-label')}
           placeholder={String(profileBase)}
@@ -142,22 +144,19 @@
       {/if}
     </span>
   </span>
-  {#if bonus > 0}
-    <!-- A positive modifier is an extra pool of levels, spent before the base — so
-         it reads used/amount exactly like a restricted XP pool. -->
-    <span class="xp-restricted" data-testid="spell-levels-bonus">
-      {store.t('spell-levels-bonus-pool', {
-        used: String(alloc.bonusUsed),
-        amount: String(bonus),
-      })}
-    </span>
-  {:else if bonus < 0}
-    <!-- A penalty has no pool to draw from; it is charged to the base above, and
-         reported here as the signed modifier that explains the charge. -->
-    <span class="xp-restricted over" data-testid="spell-levels-bonus">
-      {store.t('spell-levels-bonus', { bonus: formatSigned(bonus) })}
-    </span>
-  {/if}
+  <!-- A positive modifier is an extra pool of levels, spent before the base — so
+       it reads used/amount exactly like a restricted XP pool. A penalty has no
+       pool to draw from; it is charged to the base above, and reported here as
+       the signed modifier that explains the charge. -->
+  <BudgetBonusChip
+    {bonus}
+    testid="spell-levels-bonus"
+    positiveText={store.t('spell-levels-bonus-pool', {
+      used: String(alloc.bonusUsed),
+      amount: String(bonus),
+    })}
+    negativeText={store.t('spell-levels-bonus', { bonus: formatSigned(bonus) })}
+  />
   {#if lifeStage > 0}
     <!-- Read-only: levels the years past the Gauntlet already earned, listed so the
          budget is not an unexplained total. Gated on the number alone — no is_magus

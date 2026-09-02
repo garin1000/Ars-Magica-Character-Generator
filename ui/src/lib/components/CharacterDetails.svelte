@@ -1,6 +1,11 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { eligibleForConstraint, grantItemLabel, groupWarpingOwedGrants } from '../derive';
+  import {
+    eligibleForConstraint,
+    grantItemLabel,
+    groupWarpingOwedGrants,
+    U32_MAX,
+  } from '../derive';
   import ParameterPicker from './ParameterPicker.svelte';
   import AgeFields from './AgeFields.svelte';
   import IdentityFields from './IdentityFields.svelte';
@@ -112,7 +117,7 @@
         <input
           type="number"
           min="0"
-          max="4294967295"
+          max={U32_MAX}
           value={storedWarpingPoints}
           oninput={(e) => store.setWarpingPoints(numValue(e))}
           data-testid="warping-points-input"

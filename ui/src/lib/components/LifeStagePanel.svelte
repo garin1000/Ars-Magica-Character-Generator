@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store, type AbilityFunding } from '../state.svelte';
+  import { U32_MAX } from '../derive';
   import AgeFields from './AgeFields.svelte';
   import ChildhoodPackagePicker from './ChildhoodPackagePicker.svelte';
 
@@ -123,7 +124,7 @@
             <input
               type="number"
               min="1"
-              max="4294967295"
+              max={U32_MAX}
               placeholder={age == null ? '' : String(age)}
               value={fieldValue(plan?.gauntlet_age)}
               aria-describedby="life-stage-gauntlet-age-hint"
@@ -136,7 +137,7 @@
             <input
               type="number"
               min="0"
-              max="4294967295"
+              max={U32_MAX}
               value={fieldValue(plan?.post_gauntlet_lab_seasons)}
               aria-describedby="life-stage-lab-seasons-hint"
               oninput={(event) => store.setPostGauntletLabSeasons(count(event))}
@@ -148,7 +149,7 @@
             <input
               type="number"
               min="0"
-              max="4294967295"
+              max={U32_MAX}
               value={fieldValue(plan?.post_gauntlet_spell_levels)}
               aria-describedby="life-stage-spell-levels-hint"
               oninput={(event) => store.setPostGauntletSpellLevels(count(event))}

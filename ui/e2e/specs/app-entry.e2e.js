@@ -19,7 +19,7 @@
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { returnToStartScreen, startCharacter } from '../helpers.js';
+import { clean, returnToStartScreen, startCharacter } from '../helpers.js';
 // The app's save/load dialog seam (ARM_E2E_FILE) points at this fixed path, so
 // Save and Open never raise a native dialog.
 import { e2eFile } from '../wdio.conf.js';
@@ -31,11 +31,6 @@ const CHARACTER_TYPE = '[data-testid="character-type"]';
 const TAB_BAR = '[role="tablist"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const NAME_INPUT = '[data-testid="identity-name"]';
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 describe('app entry', () => {
   it('boots on the startup screen, not in the editor', async () => {

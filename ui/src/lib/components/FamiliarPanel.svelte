@@ -3,6 +3,8 @@
   import { store } from '../state.svelte';
   import { CHARACTERISTICS, REALMS, type Characteristic, type Realm } from '../types';
   import ConfirmPrompt from './ConfirmPrompt.svelte';
+  import Spinner from './Spinner.svelte';
+  import LevelRemoveField from './LevelRemoveField.svelte';
 
   const familiar = $derived(store.entity.familiar ?? null);
   const might = $derived(familiar?.might ?? null);
@@ -143,29 +145,20 @@
               store.setFamiliarPersonalityTraitName(i, (e.currentTarget as HTMLInputElement).value)}
             data-testid="familiar-personality-name-{i}"
           />
-          <span class="spinner">
-            <button
-              type="button"
-              class="icon-btn"
-              aria-label={store.t('characteristic-decrement', { name: trait.name })}
-              onclick={() => store.setFamiliarPersonalityTraitValue(i, trait.value - 1)}
-              data-testid="familiar-personality-dec-{i}"
-            >
-              -
-            </button>
-            <span class="spinner-value" data-testid="familiar-personality-value-{i}">
-              {formatSigned(trait.value)}
-            </span>
-            <button
-              type="button"
-              class="icon-btn"
-              aria-label={store.t('characteristic-increment', { name: trait.name })}
-              onclick={() => store.setFamiliarPersonalityTraitValue(i, trait.value + 1)}
-              data-testid="familiar-personality-inc-{i}"
-            >
-              +
-            </button>
-          </span>
+          <Spinner
+            decLabel={store.t('characteristic-decrement', { name: trait.name })}
+            decTestid="familiar-personality-dec-{i}"
+            onDec={() => store.setFamiliarPersonalityTraitValue(i, trait.value - 1)}
+            incLabel={store.t('characteristic-increment', { name: trait.name })}
+            incTestid="familiar-personality-inc-{i}"
+            onInc={() => store.setFamiliarPersonalityTraitValue(i, trait.value + 1)}
+          >
+            {#snippet children()}
+              <span class="spinner-value" data-testid="familiar-personality-value-{i}">
+                {formatSigned(trait.value)}
+              </span>
+            {/snippet}
+          </Spinner>
           <button
             type="button"
             class="icon-btn"
@@ -223,26 +216,17 @@
               store.setFamiliarPowerName(i, (e.currentTarget as HTMLInputElement).value)}
             data-testid="familiar-power-name-{i}"
           />
-          <label class="field inline">
-            <span>{store.t('power-level-label')}</span>
-            <input
-              type="number"
-              min="0"
-              max="65535"
-              value={power.level}
-              oninput={(e) => store.setFamiliarPowerLevel(i, num(e))}
-              data-testid="familiar-power-level-{i}"
-            />
-          </label>
-          <button
-            type="button"
-            class="icon-btn"
-            aria-label={store.t('remove-item', { name: power.name })}
-            onclick={() => store.removeFamiliarPowerAt(i)}
-            data-testid="familiar-power-remove-{i}"
-          >
-            ×
-          </button>
+          <LevelRemoveField
+            levelLabel={store.t('power-level-label')}
+            levelValue={power.level}
+            levelMin={0}
+            levelMax={65535}
+            levelTestid="familiar-power-level-{i}"
+            onLevelInput={(value) => store.setFamiliarPowerLevel(i, value)}
+            removeLabel={store.t('remove-item', { name: power.name })}
+            removeTestid="familiar-power-remove-{i}"
+            onRemove={() => store.removeFamiliarPowerAt(i)}
+          />
         </li>
       {:else}
         <li class="empty">{store.t('powers-empty')}</li>

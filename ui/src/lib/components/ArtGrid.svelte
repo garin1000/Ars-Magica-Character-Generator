@@ -3,6 +3,7 @@
   import { artAbbreviation, artLabel, groupArtsByType, maxArtScore } from '../derive';
   import { tooltip, type TooltipContent } from '../actions';
   import type { Art } from '../types';
+  import Spinner from './Spinner.svelte';
 
   const max = $derived(maxArtScore(store.ruleset?.ruleset.art_advancement ?? []));
 
@@ -64,29 +65,20 @@
                   {name(art.id)}{#if abbr(art.id)}<span class="art-abbr">({abbr(art.id)})</span
                     >{/if}
                 </span>
-                <span class="spinner">
-                  <button
-                    type="button"
-                    class="icon-btn"
-                    aria-label={store.t('art-decrement', { name: name(art.id) })}
-                    disabled={score <= 0}
-                    onclick={() => store.adjustArt(art.id, -1, max)}
-                    data-testid="art-dec-{art.id}"
-                  >
-                    -
-                  </button>
-                  <span class="spinner-value" data-testid="art-score-{art.id}">{score}</span>
-                  <button
-                    type="button"
-                    class="icon-btn"
-                    aria-label={store.t('art-increment', { name: name(art.id) })}
-                    disabled={score >= max}
-                    onclick={() => store.adjustArt(art.id, 1, max)}
-                    data-testid="art-inc-{art.id}"
-                  >
-                    +
-                  </button>
-                </span>
+                <Spinner
+                  decLabel={store.t('art-decrement', { name: name(art.id) })}
+                  decTestid="art-dec-{art.id}"
+                  decDisabled={score <= 0}
+                  onDec={() => store.adjustArt(art.id, -1, max)}
+                  incLabel={store.t('art-increment', { name: name(art.id) })}
+                  incTestid="art-inc-{art.id}"
+                  incDisabled={score >= max}
+                  onInc={() => store.adjustArt(art.id, 1, max)}
+                >
+                  {#snippet children()}
+                    <span class="spinner-value" data-testid="art-score-{art.id}">{score}</span>
+                  {/snippet}
+                </Spinner>
                 {#if bonus !== 0}
                   <span class="eff-slot">
                     <span class="eff-badge" data-testid="art-eff-{art.id}">

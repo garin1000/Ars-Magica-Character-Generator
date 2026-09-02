@@ -6,7 +6,7 @@
 
 use super::*;
 use crate::effective::{
-    WARPING_MAJOR_FLAW_KEY, WARPING_MINOR_FLAW_KEY, WARPING_SUPERNATURAL_VIRTUE_KEY,
+    WARPING_MAJOR_FLAW_KEY, WARPING_MINOR_FLAW_KEY, WARPING_SUPERNATURAL_VIRTUE_KEY, WarpingOwed,
     item_carries_warping_grant, warping_owed, warping_owed_grants,
 };
 
@@ -57,8 +57,24 @@ pub(crate) fn validate_warping(
         })
         .collect();
 
-    // A stored fill keyed to a slot the character does not owe exceeds the owed
-    // count (e.g. the score dropped after the pick was made).
+    validate_warping_fill_excess(entity, &owed_keys, issues);
+    validate_warping_fill_picks(entity, ruleset, &grants, issues);
+
+    // Advisory: still owe more than chosen, per kind. A slot counts as filled once
+    // it has any pick (constraint validity is handled by the errors above).
+    let owed = warping_owed(entity, ruleset);
+    validate_warping_owed_minor_flaws(entity, owed, issues);
+    validate_warping_owed_supernatural_virtues(entity, owed, issues);
+    validate_warping_owed_major_flaws(entity, owed, issues);
+}
+
+/// A stored fill keyed to a slot the character does not owe exceeds the owed
+/// count (e.g. the score dropped after the pick was made).
+fn validate_warping_fill_excess(
+    entity: &Entity,
+    owed_keys: &BTreeSet<&str>,
+    issues: &mut Vec<ValidationIssue>,
+) {
     for choice_key in entity.warping_choices.keys() {
         if !owed_keys.contains(choice_key.as_str()) {
             issues.push(ValidationIssue::error(
@@ -69,10 +85,18 @@ pub(crate) fn validate_warping(
             ));
         }
     }
+}
 
-    // Each owed slot with a pick: reject a WarpingGrant-carrying item (recursion
-    // guard) or a pick that violates the slot's constraint.
-    for grant in &grants {
+/// Each owed slot with a pick: reject a WarpingGrant-carrying item (recursion
+/// guard) or a pick that violates the slot's constraint, then check the pick's
+/// own parameters like a bought selection.
+fn validate_warping_fill_picks(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    grants: &[Grant],
+    issues: &mut Vec<ValidationIssue>,
+) {
+    for grant in grants {
         let Grant::Open {
             choice_key,
             constraint,
@@ -113,43 +137,68 @@ pub(crate) fn validate_warping(
         // fixable only in the finished character.
         validate_selection_parameters(pick, ruleset, CreationPhase::Review, issues);
     }
+}
 
-    // Advisory: still owe more than chosen, per kind. A slot counts as filled once
-    // it has any pick (constraint validity is handled by the errors above).
-    let owed = warping_owed(entity, ruleset);
-    let unfilled = |prefix: &str, count: u8| -> u8 {
-        (0..count)
-            .filter(|i| !entity.warping_choices.contains_key(&format!("{prefix}{i}")))
-            .count() as u8
-    };
+/// How many of the `count` owed slots under `prefix` ("warping.minor_flaw.",
+/// …) have no pick yet. A slot counts as filled once it has any pick
+/// (constraint validity is handled by [`validate_warping_fill_picks`]).
+fn unfilled_warping_slots(entity: &Entity, prefix: &str, count: u8) -> u8 {
+    (0..count)
+        .filter(|i| !entity.warping_choices.contains_key(&format!("{prefix}{i}")))
+        .count() as u8
+}
 
-    let remaining_minor_flaws = unfilled(WARPING_MINOR_FLAW_KEY, owed.minor_flaws);
-    if remaining_minor_flaws > 0 {
+/// Advisory: still owe more Minor Flaws than chosen (`warping_owed_minor_flaws`).
+fn validate_warping_owed_minor_flaws(
+    entity: &Entity,
+    owed: WarpingOwed,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let remaining = unfilled_warping_slots(entity, WARPING_MINOR_FLAW_KEY, owed.minor_flaws);
+    if remaining > 0 {
         issues.push(ValidationIssue::warning(
             ValidationIssue::CODE_WARPING_OWED_MINOR_FLAWS,
             CreationPhase::Review,
-            args([("count", remaining_minor_flaws.to_string())]),
+            args([("count", remaining.to_string())]),
             None,
         ));
     }
-    let remaining_virtues = unfilled(
+}
+
+/// Advisory: still owe more supernatural Minor Virtues than chosen
+/// (`warping_owed_supernatural_virtues`).
+fn validate_warping_owed_supernatural_virtues(
+    entity: &Entity,
+    owed: WarpingOwed,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let remaining = unfilled_warping_slots(
+        entity,
         WARPING_SUPERNATURAL_VIRTUE_KEY,
         owed.minor_supernatural_virtues,
     );
-    if remaining_virtues > 0 {
+    if remaining > 0 {
         issues.push(ValidationIssue::warning(
             ValidationIssue::CODE_WARPING_OWED_SUPERNATURAL_VIRTUES,
             CreationPhase::Review,
-            args([("count", remaining_virtues.to_string())]),
+            args([("count", remaining.to_string())]),
             None,
         ));
     }
-    let remaining_major_flaws = unfilled(WARPING_MAJOR_FLAW_KEY, owed.major_flaws);
-    if remaining_major_flaws > 0 {
+}
+
+/// Advisory: still owe more Major Flaws than chosen (`warping_owed_major_flaws`).
+fn validate_warping_owed_major_flaws(
+    entity: &Entity,
+    owed: WarpingOwed,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let remaining = unfilled_warping_slots(entity, WARPING_MAJOR_FLAW_KEY, owed.major_flaws);
+    if remaining > 0 {
         issues.push(ValidationIssue::warning(
             ValidationIssue::CODE_WARPING_OWED_MAJOR_FLAWS,
             CreationPhase::Review,
-            args([("count", remaining_major_flaws.to_string())]),
+            args([("count", remaining.to_string())]),
             None,
         ));
     }

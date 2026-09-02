@@ -12,18 +12,13 @@
 
 import { $, expect, browser } from '@wdio/globals';
 
-import { startCharacter } from '../helpers.js';
+import { clean, startCharacter } from '../helpers.js';
 
 const MYTHIC_TAB = '[data-testid="tab-mythic_type"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const MYTHIC_SELECT = '[data-testid="mythic-type-select"]';
 const VIRTUE_BUDGET = '[data-testid="balance-virtues"]';
 const FLAW_BUDGET = '[data-testid="balance-flaws"]';
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 async function selectMythicType(value) {
   await $(MYTHIC_TAB).click();

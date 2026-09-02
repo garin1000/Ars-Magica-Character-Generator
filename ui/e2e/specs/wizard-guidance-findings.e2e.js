@@ -28,21 +28,17 @@ import { $, $$, browser, expect } from '@wdio/globals';
 
 import {
   advanceWizardTo,
+  clean,
   satisfyMagusMinimums,
   standOnWizardStep,
   startWizard,
+  STEP_TIMEOUT,
 } from '../helpers.js';
 
-const STEP_TIMEOUT = 10000;
 const GUIDANCE = '[data-testid="wizard-guidance"]';
 const MINIMUMS = '[data-testid="magus-minimums"]';
 const SUMMARY = '[data-testid="magus-minimums-summary"]';
 const FINISH = '[data-testid="wizard-finish"]';
-
-/** Fluent isolates interpolated values with bidi marks; strip them for matching. */
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 /** The `data-code` of every finding the panel is currently showing. */
 async function shownCodes() {

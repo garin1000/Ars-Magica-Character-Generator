@@ -32,6 +32,9 @@ export NVM_DIR="$HOME/.nvm"
 # shellcheck disable=SC1091
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
+# shellcheck disable=SC1091
+. "$ROOT/scripts/stage-rules.sh"
+
 # cargo-xwin drives clang in its MSVC-compatible "cl" mode. Clang selects that
 # mode from the name it is invoked as, but Ubuntu's clang package ships no
 # `clang-cl` file — so provide one as a symlink on PATH (~/.cargo/bin is already
@@ -69,16 +72,14 @@ STAGE="dist-win/${NAME}"
 
 echo ">> Staging portable bundle at $STAGE..."
 rm -rf "dist-win"
-mkdir -p "$STAGE/rules"
-cp "target/$TARGET/release/arm-app.exe" "$STAGE/${APP}.exe"
 # A non-bundled binary resolves BaseDirectory::Resource to its own directory, so
 # the rules data the app loads at startup must sit next to the executable.
-cp -R "rules/core" "$STAGE/rules/core"
-cp -R "rules/i18n" "$STAGE/rules/i18n"
+stage_rules "$STAGE/rules"
+cp "target/$TARGET/release/arm-app.exe" "$STAGE/${APP}.exe"
 # Attribution has to travel with the data it describes. Bundled installers get
 # these from tauri.conf.json (bundle.resources + licenseFile), which this
 # --no-bundle path never runs, so copy them explicitly. The per-directory
-# LICENSE files ride along with the cp -R above.
+# LICENSE files ride along with the `cp -R` inside `stage_rules` above.
 cp "rules/NOTICE.md" "$STAGE/rules/NOTICE.md"
 cp "LICENSE" "$STAGE/LICENSE.txt"
 

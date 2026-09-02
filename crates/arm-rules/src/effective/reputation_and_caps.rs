@@ -24,19 +24,14 @@ pub struct ReputationGrant {
 /// (Core Rules).md:2512-2514.
 pub fn reputation_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<ReputationGrant> {
     let mut grants = Vec::new();
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::GrantsReputation { kind, score } = effect {
-                grants.push(ReputationGrant {
-                    reputation_type: *kind,
-                    score: *score,
-                });
-            }
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::GrantsReputation { kind, score } = effect {
+            grants.push(ReputationGrant {
+                reputation_type: *kind,
+                score: *score,
+            });
         }
-    }
+    });
     grants
 }
 
@@ -126,20 +121,15 @@ pub fn ability_age_cap(entity: &Entity, ruleset: &Ruleset, ability: &Id) -> Opti
         return Some(base);
     }
     let mut cap = base;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::LocalityAbilityCapFraction { num, den } = effect
-                && *den > 0
-            {
-                // Ceiling division: "half (round up)".
-                let numerator = u32::from(base) * u32::from(*num) + u32::from(*den) - 1;
-                let fractioned = u8::try_from(numerator / u32::from(*den)).unwrap_or(base);
-                cap = cap.min(fractioned);
-            }
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::LocalityAbilityCapFraction { num, den } = effect
+            && *den > 0
+        {
+            // Ceiling division: "half (round up)".
+            let numerator = u32::from(base) * u32::from(*num) + u32::from(*den) - 1;
+            let fractioned = u8::try_from(numerator / u32::from(*den)).unwrap_or(base);
+            cap = cap.min(fractioned);
         }
-    }
+    });
     Some(cap)
 }

@@ -4,7 +4,9 @@
 //! the `ValidationIssue` issue-code contract.
 
 use super::*;
+use crate::characteristics::CharacteristicRules;
 use crate::ruleset::ENGINE_REQUIRED_CATEGORY_PERSONALITY;
+use crate::types::AbilityScore;
 
 /// Validates Characteristic point-buy: each score must be a legal table value
 /// and within the characteristic's per-target buy range, and the total cost must
@@ -41,50 +43,100 @@ pub(crate) fn validate_characteristics(
     };
 
     for (&characteristic, &score) in &entity.characteristics {
-        if !rules.is_legal_score(score) {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_CHARACTERISTIC_OUT_OF_RANGE,
-                CreationPhase::Characteristics,
-                args([
-                    ("characteristic", characteristic.to_string()),
-                    ("score", score.to_string()),
-                    ("min", min.to_string()),
-                    ("max", max.to_string()),
-                ]),
-                None,
-            ));
+        if !validate_characteristic_is_legal_score(rules, characteristic, score, min, max, issues) {
             continue;
         }
         // A legal table value still has to sit within the range that this
         // character's Great/Poor (Characteristic) choices open for the target.
-        let cap = crate::effective::characteristic_cap(entity, ruleset, characteristic);
-        let floor = crate::effective::characteristic_floor(entity, ruleset, characteristic);
-        if i32::from(score) > cap {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_CHARACTERISTIC_ABOVE_CAP,
-                CreationPhase::Characteristics,
-                args([
-                    ("characteristic", characteristic.to_string()),
-                    ("score", score.to_string()),
-                    ("cap", cap.to_string()),
-                ]),
-                None,
-            ));
-        } else if i32::from(score) < floor {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_CHARACTERISTIC_BELOW_FLOOR,
-                CreationPhase::Characteristics,
-                args([
-                    ("characteristic", characteristic.to_string()),
-                    ("score", score.to_string()),
-                    ("floor", floor.to_string()),
-                ]),
-                None,
-            ));
-        }
+        validate_characteristic_within_cap_and_floor(
+            entity,
+            ruleset,
+            characteristic,
+            score,
+            issues,
+        );
     }
 
-    // Don't evaluate the point spend before the user has touched the step.
+    validate_characteristic_point_spend(entity, rules, ruleset, issues);
+}
+
+/// A bought score must be a legal table value at all — the pure ±5-range check,
+/// independent of any Great/Poor (Characteristic) shift. Pushes
+/// `characteristic_out_of_range` and returns `false` when it fails, so the
+/// caller skips the cap/floor check below (which assumes a legal value).
+fn validate_characteristic_is_legal_score(
+    rules: &CharacteristicRules,
+    characteristic: Characteristic,
+    score: i8,
+    min: i8,
+    max: i8,
+    issues: &mut Vec<ValidationIssue>,
+) -> bool {
+    if !rules.is_legal_score(score) {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_CHARACTERISTIC_OUT_OF_RANGE,
+            CreationPhase::Characteristics,
+            args([
+                ("characteristic", characteristic.to_string()),
+                ("score", score.to_string()),
+                ("min", min.to_string()),
+                ("max", max.to_string()),
+            ]),
+            None,
+        ));
+        return false;
+    }
+    true
+}
+
+/// A legal score still has to sit within the per-characteristic buy range Great
+/// (Characteristic)/Poor (Characteristic) opens: `characteristic_above_cap` /
+/// `characteristic_below_floor`.
+fn validate_characteristic_within_cap_and_floor(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    characteristic: Characteristic,
+    score: i8,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let cap = crate::effective::characteristic_cap(entity, ruleset, characteristic);
+    let floor = crate::effective::characteristic_floor(entity, ruleset, characteristic);
+    if i32::from(score) > cap {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_CHARACTERISTIC_ABOVE_CAP,
+            CreationPhase::Characteristics,
+            args([
+                ("characteristic", characteristic.to_string()),
+                ("score", score.to_string()),
+                ("cap", cap.to_string()),
+            ]),
+            None,
+        ));
+    } else if i32::from(score) < floor {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_CHARACTERISTIC_BELOW_FLOOR,
+            CreationPhase::Characteristics,
+            args([
+                ("characteristic", characteristic.to_string()),
+                ("score", score.to_string()),
+                ("floor", floor.to_string()),
+            ]),
+            None,
+        ));
+    }
+}
+
+/// The total buy cost against the starting budget (Improved Characteristics'
+/// grants included): `characteristic_overspent` when over,
+/// `characteristic_points_unspent` (a non-blocking warning) when under. Skipped
+/// entirely before the user has touched the step, so a fresh character is not
+/// nagged for being unspent.
+fn validate_characteristic_point_spend(
+    entity: &Entity,
+    rules: &CharacteristicRules,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
     if entity.characteristics.is_empty() {
         return;
     }
@@ -218,90 +270,134 @@ pub(crate) fn validate_abilities(
     // range checking is skipped.
     let max_score = ruleset.advancement.max_score();
 
+    // One pass, not one loop per check: each of the three checks below prices
+    // only `entry`, in `entity.ability_scores`'s own order, so calling all three
+    // per entry (rather than splitting into three separate loops) keeps
+    // `issues`' push order byte-identical to the original single loop — a
+    // second traversal here would interleave differently the moment two
+    // checks fire on different entries.
     for entry in &entity.ability_scores {
-        match ruleset.abilities.get(&entry.ability) {
-            None => issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_UNKNOWN_ABILITY,
-                CreationPhase::Abilities,
-                args([("ability", entry.ability.to_string())]),
-                Some(entry.ability.clone()),
-            )),
-            Some(ability) => {
-                // A parameterized ability needs its value supplied (which Area?).
-                if ability.parameter.is_some()
-                    && entry.parameter.as_deref().is_none_or(str::is_empty)
-                {
-                    issues.push(ValidationIssue::error(
-                        ValidationIssue::CODE_ABILITY_PARAMETER_REQUIRED,
-                        CreationPhase::Abilities,
-                        args([("ability", entry.ability.to_string())]),
-                        Some(entry.ability.clone()),
-                    ));
-                }
-            }
-        }
-        // The advancement table covers the legal score range. A non-zero score
-        // with no table row is off-table (illegal) — flag it rather than silently
-        // pricing it at 0 XP, so direct-entry illegal states surface here instead
-        // of relying on the UI to keep them out (mirrors characteristic range
-        // checking).
-        // A non-zero score with no table row is off-table (illegal) — flag it
-        // rather than silently pricing it at 0 XP, so direct-entry illegal states
-        // surface here (mirrors characteristic range checking).
-        if ruleset.advancement.xp_for_score(entry.score).is_none()
-            && let Some(max) = max_score
-        {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_ABILITY_SCORE_OUT_OF_RANGE,
-                CreationPhase::Abilities,
-                args([
-                    ("ability", entry.ability.to_string()),
-                    ("score", entry.score.to_string()),
-                    ("max", max.to_string()),
-                ]),
-                Some(entry.ability.clone()),
-            ));
-        }
-        // Age → max-Ability-score cap (Ars Magica - Definitive Edition (Core Rules).md:2366-2374). An Ability carrying an
-        // Affinity may exceed it by +2 (Ars Magica - Definitive Edition (Core Rules).md:3374), not without limit. The cap is
-        // read from the ruleset's age band table; a ruleset that ships none cannot
-        // enforce it, so the check is skipped.
-        // The per-ability cap, so a Flaw that halves locality-dependent Abilities
-        // (Foreign Upbringing, Ars Magica - Definitive Edition (Core Rules).md:6160) is enforced on those rows alone.
-        if let Some(age) = entity.age
-            && let Some(base_cap) =
-                crate::effective::ability_age_cap(entity, ruleset, &entry.ability)
-        {
-            let mut cap = u32::from(base_cap);
-            if crate::effective::ability_affinity(
-                entity,
-                ruleset,
-                &entry.ability,
-                entry.parameter.as_deref(),
-            )
-            .is_some()
-            {
-                cap += 2;
-            }
-            if u32::from(entry.score) > cap {
-                issues.push(ValidationIssue::error(
-                    ValidationIssue::CODE_ABILITY_ABOVE_AGE_CAP,
-                    CreationPhase::Abilities,
-                    args([
-                        ("ability", entry.ability.to_string()),
-                        ("score", entry.score.to_string()),
-                        ("cap", cap.to_string()),
-                        ("age", age.to_string()),
-                    ]),
-                    Some(entry.ability.clone()),
-                ));
-            }
-        }
+        validate_ability_known_and_parameterized(ruleset, entry, issues);
+        validate_ability_score_in_range(ruleset, entry, max_score, issues);
+        validate_ability_age_cap(entity, ruleset, entry, issues);
+
         let key = (&entry.ability, entry.parameter.as_deref());
         *seen.entry(key).or_insert(0) += 1;
     }
 
-    for ((ability, _parameter), count) in seen {
+    validate_no_duplicate_abilities(&seen, issues);
+}
+
+/// An ability must resolve against the catalogue (`unknown_ability`), and a
+/// parameterized one needs its instance value supplied
+/// (`ability_parameter_required`, e.g. which Area for `(Area) Lore`).
+fn validate_ability_known_and_parameterized(
+    ruleset: &Ruleset,
+    entry: &AbilityScore,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    match ruleset.abilities.get(&entry.ability) {
+        None => issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_UNKNOWN_ABILITY,
+            CreationPhase::Abilities,
+            args([("ability", entry.ability.to_string())]),
+            Some(entry.ability.clone()),
+        )),
+        Some(ability) => {
+            if ability.parameter.is_some() && entry.parameter.as_deref().is_none_or(str::is_empty) {
+                issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_ABILITY_PARAMETER_REQUIRED,
+                    CreationPhase::Abilities,
+                    args([("ability", entry.ability.to_string())]),
+                    Some(entry.ability.clone()),
+                ));
+            }
+        }
+    }
+}
+
+/// The advancement table covers the legal score range. A non-zero score with
+/// no table row is off-table (illegal) — flag it (`ability_score_out_of_range`)
+/// rather than silently pricing it at 0 XP, so direct-entry illegal states
+/// surface here instead of relying on the UI to keep them out (mirrors
+/// characteristic range checking).
+fn validate_ability_score_in_range(
+    ruleset: &Ruleset,
+    entry: &AbilityScore,
+    max_score: Option<u8>,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    if ruleset.advancement.xp_for_score(entry.score).is_none()
+        && let Some(max) = max_score
+    {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_ABILITY_SCORE_OUT_OF_RANGE,
+            CreationPhase::Abilities,
+            args([
+                ("ability", entry.ability.to_string()),
+                ("score", entry.score.to_string()),
+                ("max", max.to_string()),
+            ]),
+            Some(entry.ability.clone()),
+        ));
+    }
+}
+
+/// Age → max-Ability-score cap (Ars Magica - Definitive Edition (Core
+/// Rules).md:2366-2374). An Ability carrying an Affinity may exceed it by +2
+/// (Ars Magica - Definitive Edition (Core Rules).md:3374), not without limit.
+/// The cap is read from the ruleset's age band table; a ruleset that ships
+/// none cannot enforce it, so the check is skipped. The per-ability cap, so a
+/// Flaw that halves locality-dependent Abilities (Foreign Upbringing, Ars
+/// Magica - Definitive Edition (Core Rules).md:6160) is enforced on those rows
+/// alone.
+fn validate_ability_age_cap(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    entry: &AbilityScore,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    if let Some(age) = entity.age
+        && let Some(base_cap) = crate::effective::ability_age_cap(entity, ruleset, &entry.ability)
+    {
+        let mut cap = u32::from(base_cap);
+        if crate::effective::ability_affinity(
+            entity,
+            ruleset,
+            &entry.ability,
+            entry.parameter.as_deref(),
+        )
+        .is_some()
+        {
+            cap += 2;
+        }
+        if u32::from(entry.score) > cap {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_ABILITY_ABOVE_AGE_CAP,
+                CreationPhase::Abilities,
+                args([
+                    ("ability", entry.ability.to_string()),
+                    ("score", entry.score.to_string()),
+                    ("cap", cap.to_string()),
+                    ("age", age.to_string()),
+                ]),
+                Some(entry.ability.clone()),
+            ));
+        }
+    }
+}
+
+/// The second pass: every `(ability, parameter)` instance bought more than once
+/// (`duplicate_ability`). Kept as its own pass over `seen` rather than folded
+/// into the per-entry loop above — a duplicate can only be known once every
+/// entry has been counted, so this genuinely needs `entity.ability_scores` to
+/// have been fully walked first, unlike the three checks above (each of which
+/// prices a single entry in isolation).
+fn validate_no_duplicate_abilities(
+    seen: &BTreeMap<(&Id, Option<&str>), u32>,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    for (&(ability, _parameter), &count) in seen {
         if count > 1 {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_DUPLICATE_ABILITY,

@@ -16,7 +16,7 @@
 import { $, $$, expect, browser } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { isRowBlocked, startCharacter } from '../helpers.js';
+import { clean, isRowBlocked, startCharacter } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const DETAILS_TAB = '[data-testid="tab-details"]';
@@ -25,9 +25,6 @@ const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const ABILITIES_TAB = '[data-testid="tab-abilities"]';
 const CONFIDENCE = '[data-testid="confidence-readout"]';
 
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 async function codeExists(code) {
   return (await $$(`[data-code="${code}"]`).length) > 0;
 }

@@ -13,7 +13,7 @@
 import { $, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { startCharacter } from '../helpers.js';
+import { clean, startCharacter } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
@@ -35,11 +35,6 @@ const FOCUS = '[data-testid="longevity-focus"]';
 // raises a real `input` event (see the emptying step below for why `clearValue()`
 // will not do).
 const BACKSPACE = String.fromCharCode(0xe003);
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 async function hintText() {
   return clean(await $(HINT).getText());

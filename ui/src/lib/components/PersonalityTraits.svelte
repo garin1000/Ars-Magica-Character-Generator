@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import Spinner from './Spinner.svelte';
 
   const traits = $derived(store.entity.personality_traits ?? []);
 </script>
@@ -21,46 +22,37 @@
             store.setPersonalityTraitName(i, (e.currentTarget as HTMLInputElement).value)}
           data-testid="personality-name-{i}"
         />
-        <span class="spinner">
-          <button
-            type="button"
-            class="icon-btn"
-            aria-label={store.t('characteristic-decrement', { name: trait.name })}
-            onclick={() => store.setPersonalityTraitValue(i, trait.value - 1)}
-            data-testid="personality-dec-{i}"
-          >
-            -
-          </button>
-          <!-- Bound number input, not just the spinner: a Personality Trait's
-               |value| can reach 6 (a Personality Flaw, Core Rules), which is up to
-               twelve clicks from 0 with no other way in — every other scored
-               control with a wide/signed range (aging points, Talisman
-               bonus/level) offers direct entry too (S29, full-audit UX). The
-               range mirrors the store's own clamp (`setPersonalityTraitValue`). -->
-          <input
-            type="number"
-            class="spinner-value-input"
-            min="-6"
-            max="6"
-            value={trait.value}
-            aria-label={store.t('personality-value-label', { name: trait.name })}
-            oninput={(e) =>
-              store.setPersonalityTraitValue(
-                i,
-                Number((e.currentTarget as HTMLInputElement).value) || 0,
-              )}
-            data-testid="personality-value-{i}"
-          />
-          <button
-            type="button"
-            class="icon-btn"
-            aria-label={store.t('characteristic-increment', { name: trait.name })}
-            onclick={() => store.setPersonalityTraitValue(i, trait.value + 1)}
-            data-testid="personality-inc-{i}"
-          >
-            +
-          </button>
-        </span>
+        <Spinner
+          decLabel={store.t('characteristic-decrement', { name: trait.name })}
+          decTestid="personality-dec-{i}"
+          onDec={() => store.setPersonalityTraitValue(i, trait.value - 1)}
+          incLabel={store.t('characteristic-increment', { name: trait.name })}
+          incTestid="personality-inc-{i}"
+          onInc={() => store.setPersonalityTraitValue(i, trait.value + 1)}
+        >
+          {#snippet children()}
+            <!-- Bound number input, not just the spinner: a Personality Trait's
+                 |value| can reach 6 (a Personality Flaw, Core Rules), which is up to
+                 twelve clicks from 0 with no other way in — every other scored
+                 control with a wide/signed range (aging points, Talisman
+                 bonus/level) offers direct entry too (S29, full-audit UX). The
+                 range mirrors the store's own clamp (`setPersonalityTraitValue`). -->
+            <input
+              type="number"
+              class="spinner-value-input"
+              min="-6"
+              max="6"
+              value={trait.value}
+              aria-label={store.t('personality-value-label', { name: trait.name })}
+              oninput={(e) =>
+                store.setPersonalityTraitValue(
+                  i,
+                  Number((e.currentTarget as HTMLInputElement).value) || 0,
+                )}
+              data-testid="personality-value-{i}"
+            />
+          {/snippet}
+        </Spinner>
         <button
           type="button"
           class="icon-btn"

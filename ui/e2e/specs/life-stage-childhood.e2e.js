@@ -40,7 +40,16 @@
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { advanceWizardTo, setWizardAge, standOnWizardStep, startWizard } from '../helpers.js';
+import {
+  advanceWizardTo,
+  BOOT_TIMEOUT,
+  clean,
+  setWizardAge,
+  standOnWizardStep,
+  startWizard,
+  STEP_TIMEOUT,
+  textOf,
+} from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const PANEL = '[data-testid="life-stage-panel"]';
@@ -73,19 +82,6 @@ const DOCKED_ISSUES = '[data-testid="issue-list"]';
 // (`rules/core/childhoods.json`): two Area Lore regions and one language.
 const TRAVELING = 'childhood.traveling';
 const AREA_LORE_SCORES = '[data-testid^="ability-score-ability.area_lore-"]';
-
-const STEP_TIMEOUT = 10000;
-const BOOT_TIMEOUT = 30000;
-
-/** Fluent wraps interpolated values in Unicode bidi isolation marks; strip them. */
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
-
-/** The visible, bidi-stripped text of one element. */
-async function textOf(selector) {
-  return clean(await $(selector).getText());
-}
 
 async function issueExists(code) {
   const found = await $$(`${DOCKED_ISSUES} [data-code="${code}"]`);

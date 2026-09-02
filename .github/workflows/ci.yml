@@ -87,10 +87,11 @@ jobs:
         run: npm run check
         working-directory: ui
 
-      # The same CLI version release.yml installs, pinned EXACTLY rather than
-      # release.yml's `~2.11` tilde range (Klaus K6 / Gerda G29: a tilde range
-      # drifts to whatever patch is newest at run time). `=2.11.3` is the
-      # version this pin was verified against locally (`cargo tauri --version`).
+      # The same CLI version release.yml installs, both pinned EXACTLY (Klaus K6 /
+      # Gerda G29: a drifting tilde range installs whatever patch is newest at
+      # run time, which release.yml used to do until V16 matched it here).
+      # `=2.11.3` is the version this pin was verified against locally
+      # (`cargo tauri --version`).
       - name: Install Tauri CLI
         run: cargo install tauri-cli --version '=2.11.3' --locked
 
