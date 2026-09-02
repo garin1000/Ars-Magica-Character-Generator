@@ -825,7 +825,7 @@ Full detail, field inventory, and quirks: **`docs/scribus-character-sheet.md`**.
 
 ---
 
-## Current focus: Milestone 7 (character-sheet window) — Milestone 6 complete
+## Current focus: full-codebase audit backlog — Milestone 6 and the guided-creation review are both complete
 
 Milestones 0–5.6 complete: the direct-entry gate is closed — every core-rules
 character is fully enterable and its combat/Soak/casting/lab totals computed
@@ -932,11 +932,31 @@ wrong line ranges, and split the four largest engine modules plus `AppStore` int
 Detail, the items deliberately left open, and the operational traps worth knowing:
 `docs/audit-2026-08.md`.
 
-**Next: Milestone 7 — the character-sheet window.** A read-only second Tauri window
-that renders a formatted sheet and re-renders live as the character is edited in the
-main window, with which sections appear driven by the character-type profile rather
-than a per-type ladder. The derived values it shows are already computed in M5; M7 only
-lays them out. Detail: the M7 section above.
+**The guided-creation review is complete.** `docs/guided-creation-review-2026-08.md`
+recorded 31 numbered UI/UX and rules-fidelity issues in the freshly-landed guided
+wizard (M6), plus a follow-on #32; `docs/guided-creation-implementation-plan.md`
+planned the fix as 12 dependency-ordered slices (one `SCHEMA_VERSION` bump, 15 → 16)
+and all 12 landed on `main` (`08d52ec` through `25dc228`) — every numbered issue is
+either implemented as decided or recorded in the plan's §3 as explicitly out of scope
+or a confirmed non-issue. Along the way it also picked up and closed #33 (grogs
+recording Personality Traits in the wizard).
+
+**A second full-codebase audit is in progress.** Five reviewers swept the whole
+codebase after the guided-creation work landed and returned 163 findings across every
+severity — a larger, separate pass from the 57-finding audit above. All 23 CRITICAL/HIGH
+findings are closed (`07380f6`), including a real gap: the unsaved-changes guard's
+Cmd+Q path had zero test coverage despite being a mandatory product behavior. A further
+10 "quietly wrong" findings (`9d88283`: release builds shipped with overflow checks
+off; deleting a familiar or talisman had no confirmation) and 15 accessibility findings
+(`e44fc18`) are closed too. The remaining backlog is being worked tier by tier; the
+findings ledger is a working artifact under the gitignored `tmp/review/`, not committed
+to the repo. The e2e suite stands at 43 specs as of this pass.
+
+**Next, once the audit backlog closes: Milestone 7 — the character-sheet window.** A
+read-only second Tauri window that renders a formatted sheet and re-renders live as the
+character is edited in the main window, with which sections appear driven by the
+character-type profile rather than a per-type ladder. The derived values it shows are
+already computed in M5; M7 only lays them out. Detail: the M7 section above.
 
 ---
 

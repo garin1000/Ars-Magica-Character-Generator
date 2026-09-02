@@ -1,10 +1,10 @@
 {
-  "crisis.bedridden_month": { "name": "Einen Monat bettlägerig" },
   "crisis.bedridden_week": { "name": "Eine Woche bettlägerig" },
-  "crisis.critical_illness": { "name": "Kritische Erkrankung" },
-  "crisis.major_illness": { "name": "Schwere Erkrankung" },
+  "crisis.bedridden_month": { "name": "Einen Monat bettlägerig" },
   "crisis.minor_illness": { "name": "Leichte Erkrankung" },
   "crisis.serious_illness": { "name": "Ernste Erkrankung" },
+  "crisis.major_illness": { "name": "Schwere Erkrankung" },
+  "crisis.critical_illness": { "name": "Kritische Erkrankung" },
   "crisis.terminal_illness": { "name": "Tödliche Erkrankung" },
   "living_condition.average_peasant": { "name": "Durchschnittlicher Bauer" },
   "living_condition.leper": { "name": "Aussätziger" },
