@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { I32_MAX, I32_MIN } from '../derive';
 
   const sagaYear = $derived(store.sagaYear);
 
@@ -30,8 +31,8 @@
       <span>{store.t('saga-year-label')}</span>
       <input
         type="number"
-        min="-2147483648"
-        max="2147483647"
+        min={I32_MIN}
+        max={I32_MAX}
         value={sagaYear}
         aria-describedby="saga-year-hint"
         oninput={onSagaYear}

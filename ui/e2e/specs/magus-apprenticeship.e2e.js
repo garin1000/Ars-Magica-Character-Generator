@@ -28,7 +28,16 @@
 import { $, $$, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { advanceWizardTo, satisfyMagusMinimums, setWizardAge, startWizard } from '../helpers.js';
+import {
+  advanceWizardTo,
+  BOOT_TIMEOUT,
+  clean,
+  satisfyMagusMinimums,
+  setWizardAge,
+  startWizard,
+  STEP_TIMEOUT,
+  textOf,
+} from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const PANEL = '[data-testid="life-stage-panel"]';
@@ -59,19 +68,6 @@ const EXPERIENCE_TAB = '[data-testid="tab-experience"]';
 const ABILITIES_TAB = '[data-testid="tab-abilities"]';
 // The docked step panel, scoped: other surfaces render `data-code` nodes too.
 const DOCKED_ISSUES = '[data-testid="issue-list"]';
-
-const STEP_TIMEOUT = 10000;
-const BOOT_TIMEOUT = 30000;
-
-/** Fluent wraps interpolated values in Unicode bidi isolation marks; strip them. */
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
-
-/** The visible, bidi-stripped text of one element. */
-async function textOf(selector) {
-  return clean(await $(selector).getText());
-}
 
 /** How many findings of `code` the docked step panel is showing. */
 async function issueCount(code) {

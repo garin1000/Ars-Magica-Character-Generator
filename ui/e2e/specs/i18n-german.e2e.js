@@ -6,15 +6,10 @@
 
 import { $, browser, expect } from '@wdio/globals';
 
-import { startCharacter } from '../helpers.js';
+import { clean, startCharacter } from '../helpers.js';
 
 const LANG_SELECT = '[data-testid="language-select"]';
 const SPELLS_TAB = '[data-testid="tab-spells"]';
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 describe('German localization', () => {
   it('renders German chrome and a non-empty German spell tooltip', async () => {

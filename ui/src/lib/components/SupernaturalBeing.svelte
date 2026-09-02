@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import { REALMS, type Realm } from '../types';
+  import LevelRemoveField from './LevelRemoveField.svelte';
 
   const might = $derived(store.entity.might ?? null);
   const powers = $derived(store.entity.powers ?? []);
@@ -91,26 +92,17 @@
               oninput={(e) => store.setPowerName(i, (e.currentTarget as HTMLInputElement).value)}
               data-testid="power-name-{i}"
             />
-            <label class="field inline">
-              <span>{store.t('power-level-label')}</span>
-              <input
-                type="number"
-                min="0"
-                max="65535"
-                value={power.level}
-                oninput={(e) => store.setPowerLevel(i, num(e))}
-                data-testid="power-level-{i}"
-              />
-            </label>
-            <button
-              type="button"
-              class="icon-btn"
-              aria-label={store.t('remove-item', { name: power.name })}
-              onclick={() => store.removePowerAt(i)}
-              data-testid="power-remove-{i}"
-            >
-              ×
-            </button>
+            <LevelRemoveField
+              levelLabel={store.t('power-level-label')}
+              levelValue={power.level}
+              levelMin={0}
+              levelMax={65535}
+              levelTestid="power-level-{i}"
+              onLevelInput={(value) => store.setPowerLevel(i, value)}
+              removeLabel={store.t('remove-item', { name: power.name })}
+              removeTestid="power-remove-{i}"
+              onRemove={() => store.removePowerAt(i)}
+            />
           </li>
         {:else}
           <li class="empty">{store.t('powers-empty')}</li>

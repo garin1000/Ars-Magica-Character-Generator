@@ -449,7 +449,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `LocalizedRuleset::specialties` exposes it.
 - Implementation: `crates/arm-rules/src/ability.rs` — `Ability`,
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
-  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:252).
+  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:262).
 
 ### Arts
 
@@ -497,7 +497,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:366).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:420).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -589,7 +589,7 @@ and the score is still bought against the cost table.
   +5 ceiling are `base_max` / `effective_max` in `rules/core/characteristics.json`.
 - Implementation: `effective/characteristic.rs::characteristic_cap` =
   `min(base_max + Σ positive amounts, effective_max)`;
-  `validation/scores.rs::validate_characteristics` (:31) flags a bought score above the cap
+  `validation/scores.rs::validate_characteristics` (:33) flags a bought score above the cap
   (`characteristic_above_cap`); `validate_characteristic_limit_preconditions`
   flags a target base below the base cap (`characteristic_max_base_too_low`) —
   the "≥ +3" precondition is parameter-relative, derived from `base_max` by the
@@ -733,7 +733,7 @@ approximation of "Latin").
 - Data: `rules/core/virtues_flaws.json` `virtue.improved_characteristics` —
   `effects: [{ characteristic_points, amount: 3 }]`. The `3` lives here.
 - Implementation: `effective/characteristic.rs::characteristic_points_granted` sums the grants;
-  `validation/scores.rs::validate_characteristics` (:31) budget = `start_points + granted`. The
+  `validation/scores.rs::validate_characteristics` (:33) budget = `start_points + granted`. The
   per-characteristic +3 *cap* is unchanged (only Great Characteristic widens it).
 
 #### Weak Characteristics — −3 Characteristic-buy points (`characteristic_points`, signed)

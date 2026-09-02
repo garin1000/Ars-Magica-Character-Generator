@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { displayName, paramHint } from '../derive';
+  import { displayName, I32_MAX, I32_MIN, paramHint, U32_MAX } from '../derive';
   import { CHARACTERISTICS, type AgingLogEntry, type Characteristic } from '../types';
 
   const apparentAge = $derived(store.entity.apparent_age ?? null);
@@ -76,7 +76,7 @@
       <input
         type="number"
         min="1"
-        max="4294967295"
+        max={U32_MAX}
         value={apparentAge ?? ''}
         oninput={onApparentAge}
         data-testid="apparent-age-input"
@@ -151,8 +151,8 @@
           <input
             type="number"
             class="aging-log-year"
-            min="-2147483648"
-            max="2147483647"
+            min={I32_MIN}
+            max={I32_MAX}
             aria-label={store.t('aging-log-year-label')}
             value={entry.year ?? ''}
             oninput={(e) => store.setAgingLogEntryYear(i, optionalNumValue(e))}

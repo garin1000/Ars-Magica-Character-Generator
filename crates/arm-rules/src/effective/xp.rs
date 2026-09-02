@@ -621,19 +621,11 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
     spends
 }
 
-/// Builds every restricted [`FlowPool`] the entity's selections and life stages
-/// grant — the non-general supply side of [`xp_allocation`]'s flow solve.
-/// Extracted from `xp_allocation` (pure code motion, no behavior change): the
-/// general pool is computed separately (it needs [`general_xp_bonus`] and the
-/// life-stage/magus flags again, recomputed there — both are cheap, pure lookups
-/// with no side effects, so recomputing costs nothing and keeps this function
-/// independent of the graph-solve locals).
-fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
-    // Restricted pools: one per RestrictedAbilityXp effect (Educated/Warrior/…),
-    // plus a single Spell-Mastery pool (Mastered Spells, summed). The mastery pool
-    // is flow-only — it is not surfaced in `restricted`, which the UI reserves for
-    // ability-XP grants.
-    let mut flow_pools: Vec<FlowPool> = Vec::new();
+/// One [`FlowPool`] per [`Effect::RestrictedAbilityXp`] grant among the
+/// entity's selections (Educated, Warrior, Privileged Upbringing, …) — pool
+/// kind 1 of 5 [`build_flow_pools`] assembles.
+fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
+    let mut flow_pools = Vec::new();
     let selections = selections_for_effects(entity, ruleset);
     for selection in selections.iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
@@ -662,100 +654,153 @@ fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
             }
         }
     }
-    // Childhood's two blocks, for a character built through its life stages. Both
-    // are restricted pools rather than budget added to the general one, because
-    // each may buy only its own things: the 75 the native language, the 45 the
-    // childhood list minus that language.
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:2378.
-    // Which block is the general pool depends on whether the character serves an
-    // apprenticeship, so the flag is read once here — off the profile, never a type id.
-    let is_magus = ruleset
-        .profile(&entity.type_id)
-        .is_some_and(|profile| profile.is_magus);
+    flow_pools
+}
+
+/// Childhood's native-language pool — pool kind 2 of 5 [`build_flow_pools`]
+/// assembles. `None` when no native language is set (no pool is created for a
+/// language nobody picked). Source: Ars Magica - Definitive Edition (Core
+/// Rules).md:2378.
+fn childhood_native_language_pool(
+    entity: &Entity,
+    rules: &crate::life_stage::LifeStageRules,
+    budget: &crate::life_stage::LifeStageBudget,
+) -> Option<FlowPool> {
+    let native = native_language_instance(entity, rules)?;
+    Some(FlowPool {
+        amount: budget.childhood_native_xp,
+        eligibility: PoolEligibility::Ability {
+            abilities: Vec::new(),
+            categories: Vec::new(),
+            instances: vec![native],
+            exclude: Vec::new(),
+        },
+        origin: XpPoolOrigin::LifeStage {
+            block: LifeStageBlock::ChildhoodNativeLanguage,
+        },
+    })
+}
+
+/// Childhood's restricted-spread pool — pool kind 3 of 5 [`build_flow_pools`]
+/// assembles. Always present alongside a life-stage budget (unlike the native
+/// pool, which needs a language actually set). Source: Ars Magica - Definitive
+/// Edition (Core Rules).md:2378.
+fn childhood_spread_pool(
+    entity: &Entity,
+    rules: &crate::life_stage::LifeStageRules,
+    budget: &crate::life_stage::LifeStageBudget,
+) -> FlowPool {
+    let native = native_language_instance(entity, rules);
+    FlowPool {
+        amount: budget.childhood_spread_xp,
+        eligibility: PoolEligibility::Ability {
+            abilities: rules.childhood.spread_abilities.iter().cloned().collect(),
+            categories: Vec::new(),
+            instances: Vec::new(),
+            // "Living Language (other than the character's native language)":
+            // the spread may buy a second language, never the native one.
+            exclude: native.into_iter().collect(),
+        },
+        origin: XpPoolOrigin::LifeStage {
+            block: LifeStageBlock::ChildhoodSpread,
+        },
+    }
+}
+
+/// A magus's later-life pool — pool kind 4 of 5 [`build_flow_pools`] assembles:
+/// the years between childhood and being taken as an apprentice, which buy "any
+/// Abilities" (`:2214`) and never an Art, and not an Arcane, Academic or Martial
+/// Ability either — "magi can only spend experience points on Arcane, Academic
+/// and Martial Abilities before apprenticeship if they have a Virtue which
+/// allows them to do so" (`:2435`). A Virtue that does allow it (Covenant
+/// Upbringing, Educated, Warrior) widens the pool through the same
+/// authorizations the ownership check reads, so the two cannot disagree.
+///
+/// Supernatural stays in the set and legalizes nothing: access to each
+/// Supernatural Ability is granted per Ability, which
+/// `validate_supernatural_abilities` enforces for magi too — so an
+/// unauthorized one is already an error and funding it here changes nothing.
+///
+/// `None` when `budget.later_life_xp == 0` — a grog or companion never calls
+/// this at all (later life is their general pool, `:2392`, and the categories
+/// are gated by an error on the character instead; a magus's category gate is
+/// waived whole-character, `:7151`, so this pool is the only place the "before
+/// apprenticeship" half can live).
+fn magus_later_life_pool(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    budget: &crate::life_stage::LifeStageBudget,
+) -> Option<FlowPool> {
+    if budget.later_life_xp == 0 {
+        return None;
+    }
+    let (abilities, authorized_categories) = ability_authorizations(entity, ruleset);
+    let gated = ruleset.categories_requiring_virtue();
+    Some(FlowPool {
+        amount: budget.later_life_xp,
+        eligibility: PoolEligibility::Ability {
+            abilities: abilities.into_iter().collect(),
+            categories: AbilityCategory::ALL
+                .into_iter()
+                .filter(|category| {
+                    !gated.contains(category) || authorized_categories.contains(category)
+                })
+                .collect(),
+            instances: Vec::new(),
+            exclude: Vec::new(),
+        },
+        origin: XpPoolOrigin::LifeStage {
+            block: LifeStageBlock::LaterLife,
+        },
+    })
+}
+
+/// The Spell-Mastery pool (Mastered Spells, summed) — pool kind 5 of 5
+/// [`build_flow_pools`] assembles. Flow-only: never surfaced in `restricted`,
+/// which the UI reserves for ability-XP grants, so its origin is nominal.
+/// `None` when the entity holds no Spell-Mastery grant.
+fn spell_mastery_flow_pool(entity: &Entity, ruleset: &Ruleset) -> Option<FlowPool> {
+    let amount = spell_mastery_xp(entity, ruleset);
+    (amount > 0).then_some(FlowPool {
+        amount,
+        eligibility: PoolEligibility::Mastery,
+        origin: XpPoolOrigin::LifeStage {
+            block: LifeStageBlock::ChildhoodSpread,
+        },
+    })
+}
+
+/// Builds every restricted [`FlowPool`] the entity's selections and life stages
+/// grant — the non-general supply side of [`xp_allocation`]'s flow solve.
+/// Extracted from `xp_allocation` (pure code motion, no behavior change): the
+/// general pool is computed separately (it needs [`general_xp_bonus`] and the
+/// life-stage/magus flags again, recomputed there — both are cheap, pure lookups
+/// with no side effects, so recomputing costs nothing and keeps this function
+/// independent of the graph-solve locals).
+///
+/// V57: assembles the five independent pool kinds above, in the fixed order
+/// the UI's XP bar and the flow-solve node indices both depend on
+/// (`restricted_xp_pools`'s output order is observable). Which block is the
+/// general pool depends on whether the character serves an apprenticeship, so
+/// the flag is read once here — off the profile, never a type id.
+fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
+    let mut flow_pools = restricted_ability_xp_pools(entity, ruleset);
+
     let life_stage_budget = ruleset
         .life_stages()
         .and_then(|rules| rules.budget(entity, ruleset).map(|budget| (rules, budget)));
     if let Some((rules, budget)) = &life_stage_budget {
-        let native = native_language_instance(entity, rules);
-        if let Some(native) = &native {
-            flow_pools.push(FlowPool {
-                amount: budget.childhood_native_xp,
-                eligibility: PoolEligibility::Ability {
-                    abilities: Vec::new(),
-                    categories: Vec::new(),
-                    instances: vec![native.clone()],
-                    exclude: Vec::new(),
-                },
-                origin: XpPoolOrigin::LifeStage {
-                    block: LifeStageBlock::ChildhoodNativeLanguage,
-                },
-            });
-        }
-        flow_pools.push(FlowPool {
-            amount: budget.childhood_spread_xp,
-            eligibility: PoolEligibility::Ability {
-                abilities: rules.childhood.spread_abilities.iter().cloned().collect(),
-                categories: Vec::new(),
-                instances: Vec::new(),
-                // "Living Language (other than the character's native language)":
-                // the spread may buy a second language, never the native one.
-                exclude: native.into_iter().collect(),
-            },
-            origin: XpPoolOrigin::LifeStage {
-                block: LifeStageBlock::ChildhoodSpread,
-            },
-        });
-        // A magus's later life is a restricted pool of its own: the years between
-        // childhood and being taken as an apprentice, which buy "any Abilities"
-        // (`:2214`) and never an Art, and not an Arcane, Academic or Martial Ability
-        // either — "magi can only spend experience points on Arcane, Academic and
-        // Martial Abilities before apprenticeship if they have a Virtue which allows
-        // them to do so" (`:2435`). A Virtue that does allow it (Covenant Upbringing,
-        // Educated, Warrior) widens the pool through the same authorizations the
-        // ownership check reads, so the two cannot disagree.
-        //
-        // Supernatural stays in the set and legalizes nothing: access to each
-        // Supernatural Ability is granted per Ability, which
-        // `validate_supernatural_abilities` enforces for magi too — so an
-        // unauthorized one is already an error and funding it here changes nothing.
-        //
-        // For a grog or companion no such pool is pushed: later life is their general
-        // pool (`:2392`), and the categories are gated by an error on the character
-        // instead. A magus's category gate is waived whole-character (`:7151`), so the
-        // pool is the only place the "before apprenticeship" half can live.
-        if is_magus && budget.later_life_xp > 0 {
-            let (abilities, authorized_categories) = ability_authorizations(entity, ruleset);
-            let gated = ruleset.categories_requiring_virtue();
-            flow_pools.push(FlowPool {
-                amount: budget.later_life_xp,
-                eligibility: PoolEligibility::Ability {
-                    abilities: abilities.into_iter().collect(),
-                    categories: AbilityCategory::ALL
-                        .into_iter()
-                        .filter(|category| {
-                            !gated.contains(category) || authorized_categories.contains(category)
-                        })
-                        .collect(),
-                    instances: Vec::new(),
-                    exclude: Vec::new(),
-                },
-                origin: XpPoolOrigin::LifeStage {
-                    block: LifeStageBlock::LaterLife,
-                },
-            });
+        flow_pools.extend(childhood_native_language_pool(entity, rules, budget));
+        flow_pools.push(childhood_spread_pool(entity, rules, budget));
+        let is_magus = ruleset
+            .profile(&entity.type_id)
+            .is_some_and(|profile| profile.is_magus);
+        if is_magus {
+            flow_pools.extend(magus_later_life_pool(entity, ruleset, budget));
         }
     }
-    let mastery_pool = spell_mastery_xp(entity, ruleset);
-    if mastery_pool > 0 {
-        flow_pools.push(FlowPool {
-            amount: mastery_pool,
-            eligibility: PoolEligibility::Mastery,
-            // Never surfaced (see `restricted` below), so its origin is nominal.
-            origin: XpPoolOrigin::LifeStage {
-                block: LifeStageBlock::ChildhoodSpread,
-            },
-        });
-    }
+
+    flow_pools.extend(spell_mastery_flow_pool(entity, ruleset));
     flow_pools
 }
 
@@ -836,35 +881,59 @@ pub fn checked_xp_allocation(
 pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
     let spends = build_spends(entity, ruleset);
     let flow_pools = build_flow_pools(entity, ruleset);
-
     let total_demand: u32 = spends.iter().map(|s| s.cost).sum();
-    // The general pool funds anything, so it is the block whose experience the rules
-    // let buy Arts as well as Abilities. For a **magus** that is apprenticeship —
-    // "These experience points can be spent on Arts or Abilities" (`:2435`) — with
-    // later life a restricted, Abilities-only pool above. For a grog or companion
-    // there is no apprenticeship and later life is itself unrestricted (`:2392`), so
-    // it is the general pool. A directly-entered character uses the typed `xp_pool`.
-    // Decided here, once: Skilled/Weak Parens (and any GeneralXp effect) then adjust
-    // it — "an additional 60 experience points … during apprenticeship" (`:4966`) —
-    // and a net-negative grant clamps at 0 rather than underflowing.
-    //
-    // A magus's years past its Gauntlet join that same general pool rather than
-    // forming a block of their own: "Divide 30 points per year between experience
-    // points in Arts, experience points in Abilities, and levels of spells"
-    // (`:2216`), "Each point can be an experience point in an Art or Ability or one
-    // level of spell" (`:2471`) — Arts included, which is precisely what makes a pool
-    // general. The Academic/Arcane/Martial gate does not narrow them either: `:2435`
-    // restricts only what a magus may buy "**before** apprenticeship", and "Magi
-    // without a specific Virtue may only buy Academic Abilities during or after
-    // apprenticeship" (`:7151`) says the years after it are on the permitted side.
-    // So there is no restricted pool and no life-stage block to add — the block that
-    // funds anything is the general pool and needs no slug.
-    // Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2435, :2471, :7151.
-    //
-    // Recomputed here rather than threaded out of `build_flow_pools`: both are
-    // cheap, pure, side-effect-free lookups (a profile map lookup; a life-stage
-    // budget derivation), so recomputing costs nothing and keeps that function's
-    // return type a plain `Vec<FlowPool>` independent of this one's locals.
+
+    let (general_pool, general_bonus) = general_pool_and_bonus(entity, ruleset);
+
+    let (layout, mut cap) = build_capacity_matrix(&flow_pools, &spends);
+    let (max_flow, general_used) = two_phase_max_flow(&layout, general_pool, &mut cap);
+    let restricted = assemble_restricted_pools(&layout, &flow_pools, &cap);
+
+    XpAllocation {
+        total_demand,
+        max_flow,
+        general_pool,
+        general_bonus,
+        general_used,
+        restricted,
+    }
+}
+
+/// The general pool size (spendable on any Ability, Art, or Mastery) and the
+/// signed [`Effect::GeneralXp`] contribution folded into it — sub-check 1 of
+/// [`xp_allocation`], extracted (pure code motion, no behavior change) so the
+/// rules citation this needs stays with the arithmetic it explains rather than
+/// interleaved with the flow-graph sub-checks below.
+///
+/// The general pool funds anything, so it is the block whose experience the rules
+/// let buy Arts as well as Abilities. For a **magus** that is apprenticeship —
+/// "These experience points can be spent on Arts or Abilities" (`:2435`) — with
+/// later life a restricted, Abilities-only pool ([`magus_later_life_pool`]). For a
+/// grog or companion there is no apprenticeship and later life is itself
+/// unrestricted (`:2392`), so it is the general pool. A directly-entered character
+/// uses the typed `xp_pool`. Decided here, once: Skilled/Weak Parens (and any
+/// GeneralXp effect) then adjust it — "an additional 60 experience points … during
+/// apprenticeship" (`:4966`) — and a net-negative grant clamps at 0 rather than
+/// underflowing.
+///
+/// A magus's years past its Gauntlet join that same general pool rather than
+/// forming a block of their own: "Divide 30 points per year between experience
+/// points in Arts, experience points in Abilities, and levels of spells"
+/// (`:2216`), "Each point can be an experience point in an Art or Ability or one
+/// level of spell" (`:2471`) — Arts included, which is precisely what makes a pool
+/// general. The Academic/Arcane/Martial gate does not narrow them either: `:2435`
+/// restricts only what a magus may buy "**before** apprenticeship", and "Magi
+/// without a specific Virtue may only buy Academic Abilities during or after
+/// apprenticeship" (`:7151`) says the years after it are on the permitted side.
+/// So there is no restricted pool and no life-stage block to add — the block that
+/// funds anything is the general pool and needs no slug.
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2216, :2435, :2471, :7151.
+///
+/// Recomputed here rather than threaded out of `build_flow_pools`: both are
+/// cheap, pure, side-effect-free lookups (a profile map lookup; a life-stage
+/// budget derivation), so recomputing costs nothing and keeps that function's
+/// return type a plain `Vec<FlowPool>` independent of this one's locals.
+fn general_pool_and_bonus(entity: &Entity, ruleset: &Ruleset) -> (u32, i64) {
     let is_magus = ruleset
         .profile(&entity.type_id)
         .is_some_and(|profile| profile.is_magus);
@@ -880,97 +949,158 @@ pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation 
     };
     let general_bonus = general_xp_bonus(entity, ruleset);
     let general_pool = clamp_to_u32(i64::from(base_general) + general_bonus);
+    (general_pool, general_bonus)
+}
 
-    // Flow graph: source(0) → sink(1); general(2) and restricted pools
-    // (3..3+R) are pool nodes; spends follow. cap is the residual matrix.
-    let r = flow_pools.len();
-    let s = spends.len();
-    let n = 3 + r + s;
-    // `r` and `s` both grow 1:1 with save-controlled `Vec`s (`entity.selections`
-    // for `r`; `entity.ability_scores`/`art_scores`/`spells` for `s` — see
-    // `types.rs:2482` (selections), `:2492` (ability_scores), `:2521`
-    // (art_scores), `:2526` (spells)), and the matrix below is `n * n` `u32`s.
-    // With no bound, a crafted save with tens of thousands of entries forces a
-    // multi-gigabyte single allocation on a plain File → Open, aborting the whole
-    // process (`handle_alloc_error`) with no dialog and no diagnostic — an
-    // uncontrolled-resource-consumption DoS (CWE-400/789). `MAX_XP_SOLVE_NODES`
-    // bounds a character's own plausible selections, never the ruleset's
-    // catalogue size (which the engine must never assume — see CLAUDE.md's
-    // "Catalogue size is data, never code"): even an implausibly long-lived
-    // archmage buys at most a few hundred distinct Ability/Art scores and masters
-    // at most a few hundred spells, so this gives roughly an order of magnitude of
-    // headroom above that while keeping the matrix under ~64 MB.
-    //
-    // The bound protects memory, not CPU time: a legal entity whose *spends*
-    // (not `flow_pools`) make up most of `n` near the 2048 ceiling measurably
-    // takes on the order of a minute in a debug build (`max_flow`'s BFS is
-    // `O(n)` per dequeued node regardless of real edge count, and this graph's
-    // shape needs roughly one augmenting BFS per spend, i.e. `O(n)` BFS calls —
-    // `O(n^3)` overall — found empirically while writing this fix's own
-    // regression test, not previously measured). No test in this suite
-    // exercises that shape at the full bound for exactly this reason (see the
-    // `tests` module below); flagged in the round-2 K1 fix report as a
-    // follow-up rather than fixed here, since a spend-heavy save at this scale
-    // is a legal-but-slow character, not a memory-safety regression.
-    //
-    // This function is `pub(crate)`, not `pub` (audit finding K1, round 2): an
-    // earlier version of this comment claimed the check here was "unbypassable"
-    // and cited `validate_xp_pool` as this function's "only call site anywhere"
-    // — both false. `xp_allocation` had three more callers with no bound check
-    // at all (`ruleset_io::xp_fields`, `export/sections.rs`, and
-    // `restricted_xp_pools` below), each reachable from a plain File → Open or
-    // File → Export Markdown of a hostile save, and each hit this very
-    // `assert!` instead of the friendly rejection the check was supposed to
-    // guarantee. [`checked_xp_allocation`] is now the only route to this
-    // function reachable from outside this crate — the compiler enforces that,
-    // not a comment — and every in-crate caller (`validate_xp_pool`,
-    // `restricted_xp_pools`) goes through it too. The `assert!` below remains
-    // only as an internal invariant for any future in-crate caller that
-    // bypasses the checked wrapper; it can no longer be reached by an
-    // untrusted `Entity` loaded from disk.
+/// The flow graph's node-index scheme: source(0) → sink(1); general(2) and
+/// restricted pools (3..3+R) are pool nodes; spends follow. A tiny bundle so
+/// [`build_capacity_matrix`], [`two_phase_max_flow`], and
+/// [`assemble_restricted_pools`] agree on the same layout without re-deriving
+/// `pool_node`/`spend_node` three times.
+struct FlowGraphLayout {
+    r: usize,
+    s: usize,
+}
+
+impl FlowGraphLayout {
+    const SOURCE: usize = 0;
+    const SINK: usize = 1;
+    const GENERAL: usize = 2;
+
+    fn n(&self) -> usize {
+        3 + self.r + self.s
+    }
+
+    fn pool_node(&self, i: usize) -> usize {
+        3 + i
+    }
+
+    fn spend_node(&self, j: usize) -> usize {
+        3 + self.r + j
+    }
+}
+
+/// Builds the flow graph's initial residual-capacity matrix — sub-check 2 of
+/// [`xp_allocation`]. `cap[u][v]` is the capacity of edge `u → v`: every pool
+/// from the source, every spend to the sink, the general pool to every spend,
+/// and each restricted pool to the spends it [`pool_covers`].
+///
+/// # Panics
+/// Panics if the graph would need more than [`MAX_XP_SOLVE_NODES`] nodes.
+/// `r` and `s` both grow 1:1 with save-controlled `Vec`s (`entity.selections`
+/// for `r`; `entity.ability_scores`/`art_scores`/`spells` for `s` — see
+/// `types.rs:2482` (selections), `:2492` (ability_scores), `:2521`
+/// (art_scores), `:2526` (spells)), and the matrix below is `n * n` `u32`s.
+/// With no bound, a crafted save with tens of thousands of entries forces a
+/// multi-gigabyte single allocation on a plain File → Open, aborting the whole
+/// process (`handle_alloc_error`) with no dialog and no diagnostic — an
+/// uncontrolled-resource-consumption DoS (CWE-400/789). `MAX_XP_SOLVE_NODES`
+/// bounds a character's own plausible selections, never the ruleset's
+/// catalogue size (which the engine must never assume — see CLAUDE.md's
+/// "Catalogue size is data, never code"): even an implausibly long-lived
+/// archmage buys at most a few hundred distinct Ability/Art scores and masters
+/// at most a few hundred spells, so this gives roughly an order of magnitude of
+/// headroom above that while keeping the matrix under ~64 MB.
+///
+/// The bound protects memory, not CPU time: a legal entity whose *spends*
+/// (not `flow_pools`) make up most of `n` near the 2048 ceiling measurably
+/// takes on the order of a minute in a debug build (`max_flow`'s BFS is
+/// `O(n)` per dequeued node regardless of real edge count, and this graph's
+/// shape needs roughly one augmenting BFS per spend, i.e. `O(n)` BFS calls —
+/// `O(n^3)` overall — found empirically while writing this fix's own
+/// regression test, not previously measured). No test in this suite
+/// exercises that shape at the full bound for exactly this reason (see the
+/// `tests` module below); flagged in the round-2 K1 fix report as a
+/// follow-up rather than fixed here, since a spend-heavy save at this scale
+/// is a legal-but-slow character, not a memory-safety regression.
+///
+/// This function is private to the module, reachable only through
+/// [`xp_allocation`], which is itself `pub(crate)`, not `pub` (audit finding
+/// K1, round 2): an earlier version of this comment claimed the check here
+/// was "unbypassable" and cited `validate_xp_pool` as `xp_allocation`'s "only
+/// call site anywhere" — both false. `xp_allocation` had three more callers
+/// with no bound check at all (`ruleset_io::xp_fields`, `export/sections.rs`,
+/// and `restricted_xp_pools` below), each reachable from a plain File → Open
+/// or File → Export Markdown of a hostile save, and each hit this very
+/// `assert!` instead of the friendly rejection the check was supposed to
+/// guarantee. [`checked_xp_allocation`] is now the only route to this
+/// function reachable from outside this crate — the compiler enforces that,
+/// not a comment — and every in-crate caller (`validate_xp_pool`,
+/// `restricted_xp_pools`) goes through it too. The `assert!` below remains
+/// only as an internal invariant for any future in-crate caller that
+/// bypasses the checked wrapper; it can no longer be reached by an
+/// untrusted `Entity` loaded from disk.
+fn build_capacity_matrix(
+    flow_pools: &[FlowPool],
+    spends: &[Spend],
+) -> (FlowGraphLayout, Vec<Vec<u32>>) {
+    let layout = FlowGraphLayout {
+        r: flow_pools.len(),
+        s: spends.len(),
+    };
+    let n = layout.n();
     assert!(
         n <= MAX_XP_SOLVE_NODES,
         "xp_allocation: entity selections exceed the safety bound of \
-         {MAX_XP_SOLVE_NODES} flow-solve nodes ({n} needed: {s} spends + {r} flow \
+         {MAX_XP_SOLVE_NODES} flow-solve nodes ({n} needed: {} spends + {} flow \
          pools) — refusing to build the {n}x{n} matrix; this indicates a malformed \
-         or hostile save, not a legal character"
+         or hostile save, not a legal character",
+        layout.s,
+        layout.r,
     );
-    let general_node = 2;
-    let pool_node = |i: usize| 3 + i;
-    let spend_node = |j: usize| 3 + r + j;
-    let (source, sink) = (0usize, 1usize);
 
     let mut cap = vec![vec![0u32; n]; n];
     for (i, pool) in flow_pools.iter().enumerate() {
-        cap[source][pool_node(i)] = pool.amount;
+        cap[FlowGraphLayout::SOURCE][layout.pool_node(i)] = pool.amount;
     }
     for (j, spend) in spends.iter().enumerate() {
-        cap[spend_node(j)][sink] = spend.cost;
+        cap[layout.spend_node(j)][FlowGraphLayout::SINK] = spend.cost;
         // The general pool can fund any spend.
-        cap[general_node][spend_node(j)] = spend.cost;
+        cap[FlowGraphLayout::GENERAL][layout.spend_node(j)] = spend.cost;
         for (i, pool) in flow_pools.iter().enumerate() {
             if pool_covers(&pool.eligibility, spend) {
-                cap[pool_node(i)][spend_node(j)] = spend.cost;
+                cap[layout.pool_node(i)][layout.spend_node(j)] = spend.cost;
             }
         }
     }
+    (layout, cap)
+}
 
-    // Two-phase fill on the shared residual matrix, so a spend the restricted
-    // pools *can* cover drains them before the general pool (Educated/Warrior/
-    // Privileged and Mastered-Spells XP is free-but-earmarked; the general pool
-    // must stay available and no restricted XP wasted while eligible spends exist).
-    // Phase 1: restricted-only max flow — the source→general edge stays closed.
-    let restricted_flow = max_flow(n, source, sink, &mut cap);
-    // Phase 2: open the source→general edge and continue Edmonds-Karp on the
-    // same residuals. The sum is the true max flow with restricted usage
-    // maximized, i.e. minimum general used.
-    cap[source][general_node] = general_pool;
-    let max_flow = restricted_flow + max_flow(n, source, sink, &mut cap);
+/// Runs the two-phase max-flow solve on `cap` in place — sub-check 3 of
+/// [`xp_allocation`]. So a spend the restricted pools *can* cover drains them
+/// before the general pool (Educated/Warrior/Privileged and Mastered-Spells XP
+/// is free-but-earmarked; the general pool must stay available and no
+/// restricted XP wasted while eligible spends exist):
+/// - Phase 1: restricted-only max flow — the source→general edge stays closed.
+/// - Phase 2: open the source→general edge and continue Edmonds-Karp on the
+///   same residuals. The sum is the true max flow with restricted usage
+///   maximized, i.e. minimum general used.
+///
+/// Returns the total max flow and how much of `general_pool` the solve used
+/// (read off the source→general residual `cap` is left holding).
+fn two_phase_max_flow(
+    layout: &FlowGraphLayout,
+    general_pool: u32,
+    cap: &mut [Vec<u32>],
+) -> (u32, u32) {
+    let n = layout.n();
+    let restricted_flow = max_flow(n, FlowGraphLayout::SOURCE, FlowGraphLayout::SINK, cap);
+    cap[FlowGraphLayout::SOURCE][FlowGraphLayout::GENERAL] = general_pool;
+    let total = restricted_flow + max_flow(n, FlowGraphLayout::SOURCE, FlowGraphLayout::SINK, cap);
+    let general_used = general_pool - cap[FlowGraphLayout::SOURCE][FlowGraphLayout::GENERAL];
+    (total, general_used)
+}
 
-    // Residual on source→pool tells how much each pool funded.
-    let general_used = general_pool - cap[source][general_node];
-    // Surface only the ability-XP pools (the mastery pool is accounted separately).
-    let mut restricted: Vec<RestrictedXpPool> = Vec::new();
+/// Reads the solved `cap` residuals back into the per-pool `used` figures the
+/// frontend's XP bar shows — sub-check 4 of [`xp_allocation`]. Surfaces only
+/// the ability-XP pools (the mastery pool is accounted for in `max_flow`
+/// alone, never shown as its own bar).
+fn assemble_restricted_pools(
+    layout: &FlowGraphLayout,
+    flow_pools: &[FlowPool],
+    cap: &[Vec<u32>],
+) -> Vec<RestrictedXpPool> {
+    let mut restricted = Vec::new();
     for (i, pool) in flow_pools.iter().enumerate() {
         if let PoolEligibility::Ability {
             abilities,
@@ -980,22 +1110,14 @@ pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation 
         {
             restricted.push(RestrictedXpPool {
                 amount: pool.amount,
-                used: pool.amount - cap[source][pool_node(i)],
+                used: pool.amount - cap[FlowGraphLayout::SOURCE][layout.pool_node(i)],
                 origin: pool.origin.clone(),
                 abilities: abilities.clone(),
                 categories: categories.clone(),
             });
         }
     }
-
-    XpAllocation {
-        total_demand,
-        max_flow,
-        general_pool,
-        general_bonus,
-        general_used,
-        restricted,
-    }
+    restricted
 }
 
 /// Edmonds-Karp max flow on a residual capacity matrix (BFS augmenting paths).

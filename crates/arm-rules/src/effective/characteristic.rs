@@ -28,33 +28,27 @@ fn characteristic_limit_shift(
     raising: bool,
 ) -> i32 {
     let mut shift = 0;
-    let selections = selections_for_effects(entity, ruleset);
-    for selection in selections.iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            // Exhaustive match so adding an Effect variant is a compile error
-            // here, not a silently-ignored shift.
-            match effect {
-                Effect::CharacteristicLimit { param, amount }
-                    if (*amount > 0) == raising && *amount != 0 =>
-                {
-                    let target = selection
-                        .params
-                        .get(param)
-                        .and_then(Characteristic::from_id);
-                    if target == Some(characteristic) {
-                        shift += i32::from(*amount);
-                    }
+    for_each_effect!(entity, ruleset, |selection, effect| {
+        // Exhaustive match so adding an Effect variant is a compile error
+        // here, not a silently-ignored shift.
+        match effect {
+            Effect::CharacteristicLimit { param, amount }
+                if (*amount > 0) == raising && *amount != 0 =>
+            {
+                let target = selection
+                    .params
+                    .get(param)
+                    .and_then(Characteristic::from_id);
+                if target == Some(characteristic) {
+                    shift += i32::from(*amount);
                 }
-                // Wrong sign, or not a limit shift; contributes nothing here.
-                // CharacteristicPoints grants budget, not a range shift, and is
-                // read by characteristic_points_granted.
-                irrelevant_effect_variants!() => {}
             }
+            // Wrong sign, or not a limit shift; contributes nothing here.
+            // CharacteristicPoints grants budget, not a range shift, and is
+            // read by characteristic_points_granted.
+            irrelevant_effect_variants!() => {}
         }
-    }
+    });
     shift
 }
 
@@ -123,17 +117,11 @@ pub fn characteristic_floors(entity: &Entity, ruleset: &Ruleset) -> BTreeMap<Cha
 /// Characteristics subtracts 3 each; both stack, so the net may be negative.
 pub fn characteristic_points_granted(entity: &Entity, ruleset: &Ruleset) -> i32 {
     let mut total = 0;
-    let selections = selections_for_effects(entity, ruleset);
-    for selection in selections.iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::CharacteristicPoints { amount } = effect {
-                total += i32::from(*amount);
-            }
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::CharacteristicPoints { amount } = effect {
+            total += i32::from(*amount);
         }
-    }
+    });
     total
 }
 
@@ -144,16 +132,11 @@ pub fn characteristic_points_granted(entity: &Entity, ruleset: &Ruleset) -> i32 
 /// :4229-4231, :5996-5998, :6767-6769.
 pub fn size(entity: &Entity, ruleset: &Ruleset) -> i32 {
     let mut total = 0;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::SizeDelta { amount } = effect {
-                total += i32::from(*amount);
-            }
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::SizeDelta { amount } = effect {
+            total += i32::from(*amount);
         }
-    }
+    });
     total
 }
 
@@ -166,21 +149,16 @@ pub fn characteristic_score_bonus(
     characteristic: Characteristic,
 ) -> i32 {
     let mut bonus = 0;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::CharacteristicScoreDelta {
-                characteristic: target,
-                amount,
-            } = effect
-                && Characteristic::from_id(target) == Some(characteristic)
-            {
-                bonus += i32::from(*amount);
-            }
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::CharacteristicScoreDelta {
+            characteristic: target,
+            amount,
+        } = effect
+            && Characteristic::from_id(target) == Some(characteristic)
+        {
+            bonus += i32::from(*amount);
         }
-    }
+    });
     bonus
 }
 

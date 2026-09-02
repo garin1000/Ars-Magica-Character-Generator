@@ -27,6 +27,9 @@ export NVM_DIR="$HOME/.nvm"
 # shellcheck disable=SC1091
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
+# shellcheck disable=SC1091
+. "$ROOT/scripts/stage-rules.sh"
+
 # Build the production frontend + native release binary. --no-bundle yields just
 # the runnable binary (no installer); we want a portable layout, not an
 # installed one — same production code path as a shipped build.
@@ -47,19 +50,17 @@ STAGE="dist-linux/${NAME}"
 
 echo ">> Staging portable bundle at $STAGE..."
 rm -rf "dist-linux"
-mkdir -p "$STAGE/rules"
-cp "target/release/arm-app" "$STAGE/$APP"
-chmod +x "$STAGE/$APP"
 # The rules data the app loads at startup must sit next to the executable: a
 # portable Linux binary does NOT resolve BaseDirectory::Resource to its own
 # directory (Tauri falls back to /usr/lib/<name> there), so load_ruleset also
 # looks in ./rules next to the exe — which is where this stages it.
-cp -R "rules/core" "$STAGE/rules/core"
-cp -R "rules/i18n" "$STAGE/rules/i18n"
+stage_rules "$STAGE/rules"
+cp "target/release/arm-app" "$STAGE/$APP"
+chmod +x "$STAGE/$APP"
 # Attribution has to travel with the data it describes. Bundled installers get
 # these from tauri.conf.json (bundle.resources + licenseFile), which this
 # --no-bundle path never runs, so copy them explicitly. The per-directory
-# LICENSE files ride along with the cp -R above.
+# LICENSE files ride along with the `cp -R` inside `stage_rules` above.
 cp "rules/NOTICE.md" "$STAGE/rules/NOTICE.md"
 cp "LICENSE" "$STAGE/LICENSE.txt"
 

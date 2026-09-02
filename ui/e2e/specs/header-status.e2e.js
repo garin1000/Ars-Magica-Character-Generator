@@ -5,15 +5,10 @@
 import { browser, $, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { startCharacter } from '../helpers.js';
+import { clean, startCharacter } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const STATUS = '[data-testid="doc-status"]';
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 describe('header document status', () => {
   it('shows unsaved, then dirty, then the file name after save', async () => {

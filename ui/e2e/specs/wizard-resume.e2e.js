@@ -23,6 +23,8 @@ import fs from 'node:fs';
 
 import {
   advanceWizardTo,
+  BOOT_TIMEOUT,
+  clean,
   currentWizardPhase,
   returnToStartScreen,
   standOnWizardStep,
@@ -38,13 +40,11 @@ const STATUS = '[data-testid="doc-status"]';
 const FINISH = '[data-testid="wizard-finish"]';
 const NAME_INPUT = '[data-testid="identity-name"]';
 
-const BOOT_TIMEOUT = 30000;
+// Deliberately longer than the shared helpers.js STEP_TIMEOUT (10000): this spec
+// waits on save/load round trips through the real filesystem (ARM_E2E_FILE), not
+// just DOM updates, so it keeps its own local value rather than importing the
+// shared one (V36).
 const STEP_TIMEOUT = 15000;
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 /** Save through the ARM_E2E_FILE seam and hand back the JSON that landed on disk. */
 async function saveAndRead() {

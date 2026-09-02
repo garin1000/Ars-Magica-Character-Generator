@@ -20,11 +20,17 @@
 // outside a WebdriverIO worker — so that name would break the unit run.
 //
 // NO COMPANION UNIT TEST, unlike `display.js`, and that is deliberate rather than
-// an oversight: `display.js` wraps a pure decision worth testing in isolation,
-// whereas everything here is browser interaction (find, wait, click) with no pure
-// logic to extract. A unit test could only assert against a mock of WebDriver.
-// Its real coverage is every spec file in `specs/`, each of which fails loudly the
-// moment it breaks. (No count here on purpose: the suite grows every slice.)
+// an oversight for the browser-interaction helpers: `display.js` wraps a pure
+// decision worth testing in isolation, whereas startCharacter/advanceWizardTo/etc.
+// are browser interaction (find, wait, click) with no pure logic to extract — a
+// unit test could only assert against a mock of WebDriver. The one exception is
+// `clean()` (V34): a one-line regex strip with no WebDriver dependency, moved here
+// from 24 copy-pasted spec files. It stays untested on its own rather than gaining
+// a dedicated unit test for a single `String.replace`, because it already gets the
+// same "fails loudly the moment it breaks" coverage as the rest of this file: every
+// spec that calls `textOf()` or `clean()` directly exercises it. Its real coverage
+// is every spec file in `specs/`, each of which fails loudly the moment it breaks.
+// (No count here on purpose: the suite grows every slice.)
 
 import { $, $$, browser } from '@wdio/globals';
 
@@ -43,8 +49,33 @@ const WIZARD_NEXT = '[data-testid="wizard-next"]';
 // The first wait of a run also covers app start-up and the ruleset load over IPC
 // (the create buttons are the loaded profiles, so they do not exist before it);
 // every later wait is an ordinary DOM update. Same figures the specs use.
-const BOOT_TIMEOUT = 30000;
-const STEP_TIMEOUT = 10000;
+//
+// Exported (V36) so specs import these instead of redefining the same two
+// numbers locally. A spec with a genuinely different value (e.g.
+// `wizard-resume.e2e.js`'s longer `STEP_TIMEOUT`) keeps its own local const
+// instead of importing this one — see that spec for why.
+export const BOOT_TIMEOUT = 30000;
+export const STEP_TIMEOUT = 10000;
+
+// Fluent wraps interpolated values in Unicode bidi isolation marks (FSI/PDI);
+// strip them so plain substring/equality matching on rendered text works.
+// Extracted (V34) from 24 copy-pasted spec-local definitions.
+export function clean(text) {
+  return text.replace(/[⁦-⁩]/g, '');
+}
+
+/**
+ * The visible, bidi-stripped text of one element.
+ *
+ * Extracted (V35) from 5 copy-pasted spec-local definitions, all built on
+ * {@link clean}.
+ *
+ * @param {string} selector
+ * @returns {Promise<string>}
+ */
+export async function textOf(selector) {
+  return clean(await $(selector).getText());
+}
 
 /**
  * Bring the app to a freshly created character of `type` (`grog`, `companion`,

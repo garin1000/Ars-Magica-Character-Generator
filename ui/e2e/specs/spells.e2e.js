@@ -16,7 +16,7 @@
 import { $, $$, expect, browser } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { isRowBlocked, startCharacter } from '../helpers.js';
+import { clean, isRowBlocked, startCharacter } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const SPELLS_TAB = '[data-testid="tab-spells"]';
@@ -35,11 +35,6 @@ const BAR_BASE = '[data-testid="spell-levels-base"]';
 const BAR_TOTAL = '[data-testid="spell-levels-total"]';
 const BAR_AVAILABLE = '[data-testid="spell-levels-available"]';
 const BAR_BONUS = '[data-testid="spell-levels-bonus"]';
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 async function codeExists(code) {
   return (await $$(`[data-code="${code}"]`).length) > 0;

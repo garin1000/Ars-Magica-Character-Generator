@@ -47,39 +47,33 @@ pub fn ability_bonus(
         .get(ability)
         .and_then(|a| a.parameter.as_deref());
     let mut bonus = 0;
-    let selections = selections_for_effects(entity, ruleset);
-    for selection in selections.iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            // Exhaustive match so adding an Effect variant is a compile error
-            // here, not a silently-ignored bonus.
-            match effect {
-                Effect::AbilityBonus { param, amount }
-                    if selection.params.get(param) == Some(ability) =>
-                {
-                    let matches = match instance_key {
-                        None => true,
-                        // The selection must name this instance; one that omits
-                        // the instance key targets no parameterized instance at
-                        // all.
-                        Some(key) => match selection.params.get(key) {
-                            Some(named) => Some(named.as_str()) == parameter,
-                            None => false,
-                        },
-                    };
-                    if matches {
-                        bonus += i32::from(*amount);
-                    }
+    for_each_effect!(entity, ruleset, |selection, effect| {
+        // Exhaustive match so adding an Effect variant is a compile error
+        // here, not a silently-ignored bonus.
+        match effect {
+            Effect::AbilityBonus { param, amount }
+                if selection.params.get(param) == Some(ability) =>
+            {
+                let matches = match instance_key {
+                    None => true,
+                    // The selection must name this instance; one that omits
+                    // the instance key targets no parameterized instance at
+                    // all.
+                    Some(key) => match selection.params.get(key) {
+                        Some(named) => Some(named.as_str()) == parameter,
+                        None => false,
+                    },
+                };
+                if matches {
+                    bonus += i32::from(*amount);
                 }
-                // Not an ability bonus for this target; contributes nothing here.
-                // AbilityScoreGrant is a free *floor*, applied in
-                // effective_ability_score, not an additive bonus.
-                irrelevant_effect_variants!() => {}
             }
+            // Not an ability bonus for this target; contributes nothing here.
+            // AbilityScoreGrant is a free *floor*, applied in
+            // effective_ability_score, not an additive bonus.
+            irrelevant_effect_variants!() => {}
         }
-    }
+    });
     bonus
 }
 
@@ -119,22 +113,16 @@ pub(crate) fn granted_ability_floor(
         return 0;
     }
     let mut floor = 0;
-    let selections = selections_for_effects(entity, ruleset);
-    for selection in selections.iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::AbilityScoreGrant {
-                ability: granted,
-                amount,
-            } = effect
-                && granted == ability
-            {
-                floor = floor.max(i32::from(*amount));
-            }
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::AbilityScoreGrant {
+            ability: granted,
+            amount,
+        } = effect
+            && granted == ability
+        {
+            floor = floor.max(i32::from(*amount));
         }
-    }
+    });
     floor
 }
 
@@ -172,18 +160,12 @@ pub struct AbilityFloor {
 /// show the floor as the ability's effective score without recomputing it.
 pub fn ability_score_floors(entity: &Entity, ruleset: &Ruleset) -> Vec<AbilityFloor> {
     let mut floors: BTreeMap<Id, i32> = BTreeMap::new();
-    let selections = selections_for_effects(entity, ruleset);
-    for selection in selections.iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::AbilityScoreGrant { ability, amount } = effect {
-                let floor = floors.entry(ability.clone()).or_insert(0);
-                *floor = (*floor).max(i32::from(*amount));
-            }
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::AbilityScoreGrant { ability, amount } = effect {
+            let floor = floors.entry(ability.clone()).or_insert(0);
+            *floor = (*floor).max(i32::from(*amount));
         }
-    }
+    });
     floors
         .into_iter()
         .map(|(ability, floor)| AbilityFloor { ability, floor })

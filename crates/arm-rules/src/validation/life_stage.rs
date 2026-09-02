@@ -79,18 +79,7 @@ pub(crate) fn validate_life_stage_plan(
         return;
     };
 
-    // The later-life block is "15 experience points per year" up to the character's
-    // age (Ars Magica - Definitive Edition (Core Rules).md:2392), so an unset age leaves it uncountable — said plainly
-    // here rather than left to surface as a shortfall on rows the guided flow may
-    // itself have written before an age was typed.
-    if entity.age.is_none() {
-        issues.push(ValidationIssue::error(
-            ValidationIssue::CODE_LIFE_STAGE_AGE_UNSET,
-            CreationPhase::Experience,
-            args([]),
-            None,
-        ));
-    }
+    validate_life_stage_age_is_set(entity, issues);
 
     let magus = type_profile.is_some_and(|profile| profile.is_magus);
     // Every post-Gauntlet figure is read off the budget the character is actually
@@ -100,51 +89,7 @@ pub(crate) fn validate_life_stage_plan(
     // established.
     let budget = rules.budget(entity, ruleset);
 
-    // How young is too young depends on the periods the character has lived through.
-    // A grog or companion may be a child, so the bar is childhood itself; a magus has
-    // also served the fifteen years of apprenticeship (`:2435`) and cannot have been
-    // gauntleted before twenty. One wrong age gets ONE finding, under the code that
-    // describes it truthfully — telling the owner of a 19-year-old magus that its age
-    // falls inside childhood would simply be wrong.
-    //
-    // For a magus the subject is its **Gauntlet** age, not its own: the years after
-    // the Gauntlet run forward from it (`:2216`), so a magus of 60 gauntleted at 12
-    // is exactly as impossible as one aged 12 standing at its Gauntlet, and only the
-    // Gauntlet age sees both. With no Gauntlet age stored the two are the same
-    // number, which is what keeps every pre-6b5 plan reading as it always did.
-    if let Some(age) = entity.age {
-        let (subject_age, min_age) = if magus {
-            (
-                budget.map_or(age, |budget| budget.gauntlet_age),
-                rules.minimum_gauntlet_age(),
-            )
-        } else {
-            (age, rules.childhood.years)
-        };
-        if subject_age < min_age {
-            // Two emit sites rather than one with a computed code, so each names its
-            // own const and phase where the contract-table scanner can read them.
-            let issue_args = args([
-                ("age", subject_age.to_string()),
-                ("min", min_age.to_string()),
-            ]);
-            issues.push(if magus {
-                ValidationIssue::error(
-                    ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET,
-                    CreationPhase::Experience,
-                    issue_args,
-                    None,
-                )
-            } else {
-                ValidationIssue::error(
-                    ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD,
-                    CreationPhase::Experience,
-                    issue_args,
-                    None,
-                )
-            });
-        }
-    }
+    validate_life_stage_age_meets_minimum(entity, rules, magus, budget, issues);
 
     // "**Hermetic Magi Only (Optional):** Years after apprenticeship"
     // (Ars Magica - Definitive Edition (Core Rules).md:2216), so the three post-Gauntlet choices are checked for a
@@ -156,6 +101,94 @@ pub(crate) fn validate_life_stage_plan(
         validate_post_gauntlet_choices(plan, rules, age, &budget, issues);
     }
 
+    validate_life_stage_native_language(entity, rules, plan, issues);
+    validate_childhood_package_known(ruleset, plan, issues);
+}
+
+/// The later-life block is "15 experience points per year" up to the character's
+/// age (Ars Magica - Definitive Edition (Core Rules).md:2392), so an unset age
+/// leaves it uncountable — said plainly here rather than left to surface as a
+/// shortfall on rows the guided flow may itself have written before an age was
+/// typed.
+fn validate_life_stage_age_is_set(entity: &Entity, issues: &mut Vec<ValidationIssue>) {
+    if entity.age.is_none() {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_LIFE_STAGE_AGE_UNSET,
+            CreationPhase::Experience,
+            args([]),
+            None,
+        ));
+    }
+}
+
+/// How young is too young depends on the periods the character has lived through.
+/// A grog or companion may be a child, so the bar is childhood itself; a magus has
+/// also served the fifteen years of apprenticeship (`:2435`) and cannot have been
+/// gauntleted before twenty. One wrong age gets ONE finding, under the code that
+/// describes it truthfully — telling the owner of a 19-year-old magus that its age
+/// falls inside childhood would simply be wrong.
+///
+/// For a magus the subject is its **Gauntlet** age, not its own: the years after
+/// the Gauntlet run forward from it (`:2216`), so a magus of 60 gauntleted at 12
+/// is exactly as impossible as one aged 12 standing at its Gauntlet, and only the
+/// Gauntlet age sees both. With no Gauntlet age stored the two are the same
+/// number, which is what keeps every pre-6b5 plan reading as it always did.
+fn validate_life_stage_age_meets_minimum(
+    entity: &Entity,
+    rules: &LifeStageRules,
+    magus: bool,
+    budget: Option<LifeStageBudget>,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let Some(age) = entity.age else {
+        return;
+    };
+    let (subject_age, min_age) = if magus {
+        (
+            budget.map_or(age, |budget| budget.gauntlet_age),
+            rules.minimum_gauntlet_age(),
+        )
+    } else {
+        (age, rules.childhood.years)
+    };
+    if subject_age < min_age {
+        // Two emit sites rather than one with a computed code, so each names its
+        // own const and phase where the contract-table scanner can read them.
+        let issue_args = args([
+            ("age", subject_age.to_string()),
+            ("min", min_age.to_string()),
+        ]);
+        issues.push(if magus {
+            ValidationIssue::error(
+                ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_GAUNTLET,
+                CreationPhase::Experience,
+                issue_args,
+                None,
+            )
+        } else {
+            ValidationIssue::error(
+                ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD,
+                CreationPhase::Experience,
+                issue_args,
+                None,
+            )
+        });
+    }
+}
+
+/// "75 experience points in their native language" (Ars Magica - Definitive
+/// Edition (Core Rules).md:2378) names one Ability —
+/// `childhood.native_language_ability` — at one instance, so "bought" is a row
+/// for exactly that id whose parameter is this language, scoring above 0.
+/// Testing the parameter alone would let an `Area Lore (German)` pass while the
+/// 75-point pool, which keys on the id (`native_language_instance` in
+/// `effective.rs`), funds none of it.
+fn validate_life_stage_native_language(
+    entity: &Entity,
+    rules: &LifeStageRules,
+    plan: &LifeStagePlan,
+    issues: &mut Vec<ValidationIssue>,
+) {
     match &plan.native_language {
         None => issues.push(ValidationIssue::error(
             ValidationIssue::CODE_LIFE_STAGE_NATIVE_LANGUAGE_UNSET,
@@ -166,12 +199,6 @@ pub(crate) fn validate_life_stage_plan(
         // Suppressed while the language is set but unspent — that is the warning
         // below, not this error.
         Some(language) => {
-            // "75 experience points in their native language" (Ars Magica - Definitive Edition (Core Rules).md:2378)
-            // names one Ability — `childhood.native_language_ability` — at one
-            // instance, so "bought" is a row for exactly that id whose parameter is
-            // this language, scoring above 0. Testing the parameter alone would let
-            // an `Area Lore (German)` pass while the 75-point pool, which keys on the
-            // id (`native_language_instance` in `effective.rs`), funds none of it.
             let bought = entity.ability_scores.iter().any(|score| {
                 score.ability == rules.childhood.native_language_ability
                     && score.parameter.as_deref() == Some(language.as_str())
@@ -187,12 +214,19 @@ pub(crate) fn validate_life_stage_plan(
             }
         }
     }
+}
 
-    // The package a player took is *stored* (`LifeStagePlan::childhood_package`),
-    // so a save can name one the loaded ruleset does not ship — a dangling
-    // reference like any other, reported rather than quietly ignored. What the
-    // package granted is not re-checked: the Abilities are ordinary bought rows
-    // (Ars Magica - Definitive Edition (Core Rules).md:2382 keeps a taken package open to adjustment).
+/// The package a player took is *stored* (`LifeStagePlan::childhood_package`),
+/// so a save can name one the loaded ruleset does not ship — a dangling
+/// reference like any other, reported rather than quietly ignored. What the
+/// package granted is not re-checked: the Abilities are ordinary bought rows
+/// (Ars Magica - Definitive Edition (Core Rules).md:2382 keeps a taken package
+/// open to adjustment).
+fn validate_childhood_package_known(
+    ruleset: &Ruleset,
+    plan: &LifeStagePlan,
+    issues: &mut Vec<ValidationIssue>,
+) {
     if let Some(package) = &plan.childhood_package
         && ruleset.childhood(package).is_none()
     {

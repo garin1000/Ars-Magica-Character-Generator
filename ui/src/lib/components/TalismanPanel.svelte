@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import ConfirmPrompt from './ConfirmPrompt.svelte';
+  import LevelRemoveField from './LevelRemoveField.svelte';
 
   const talisman = $derived(store.entity.talisman ?? null);
   const attunements = $derived(talisman?.attunements ?? []);
@@ -15,10 +16,6 @@
   // from the rules i18n map — never the raw slug as a label.
   function name(id: string): string {
     return store.ruleset?.i18n[id]?.name ?? id;
-  }
-
-  function num(event: Event): number {
-    return Number((event.currentTarget as HTMLInputElement).value);
   }
 
   function text(event: Event): string {
@@ -78,26 +75,17 @@
             oninput={(e) => store.setTalismanAttunementDescription(i, text(e))}
             data-testid="talisman-desc-{i}"
           />
-          <label class="field inline">
-            <span>{store.t('talisman-bonus-label')}</span>
-            <input
-              type="number"
-              min="-128"
-              max="127"
-              value={attunement.bonus}
-              oninput={(e) => store.setTalismanAttunementBonus(i, num(e))}
-              data-testid="talisman-bonus-{i}"
-            />
-          </label>
-          <button
-            type="button"
-            class="icon-btn"
-            aria-label={store.t('remove-item', { name: attunement.description })}
-            onclick={() => store.removeTalismanAttunementAt(i)}
-            data-testid="talisman-remove-{i}"
-          >
-            ×
-          </button>
+          <LevelRemoveField
+            levelLabel={store.t('talisman-bonus-label')}
+            levelValue={attunement.bonus}
+            levelMin={-128}
+            levelMax={127}
+            levelTestid="talisman-bonus-{i}"
+            onLevelInput={(value) => store.setTalismanAttunementBonus(i, value)}
+            removeLabel={store.t('remove-item', { name: attunement.description })}
+            removeTestid="talisman-remove-{i}"
+            onRemove={() => store.removeTalismanAttunementAt(i)}
+          />
         </li>
       {:else}
         <li class="empty">{store.t('talisman-empty')}</li>
@@ -123,26 +111,17 @@
             oninput={(e) => store.setTalismanEffectName(i, text(e))}
             data-testid="talisman-effect-name-{i}"
           />
-          <label class="field inline">
-            <span>{store.t('talisman-effect-level-label')}</span>
-            <input
-              type="number"
-              min="0"
-              max="65535"
-              value={effect.level}
-              oninput={(e) => store.setTalismanEffectLevel(i, num(e))}
-              data-testid="talisman-effect-level-{i}"
-            />
-          </label>
-          <button
-            type="button"
-            class="icon-btn"
-            aria-label={store.t('remove-item', { name: effect.name })}
-            onclick={() => store.removeTalismanEffectAt(i)}
-            data-testid="talisman-effect-remove-{i}"
-          >
-            ×
-          </button>
+          <LevelRemoveField
+            levelLabel={store.t('talisman-effect-level-label')}
+            levelValue={effect.level}
+            levelMin={0}
+            levelMax={65535}
+            levelTestid="talisman-effect-level-{i}"
+            onLevelInput={(value) => store.setTalismanEffectLevel(i, value)}
+            removeLabel={store.t('remove-item', { name: effect.name })}
+            removeTestid="talisman-effect-remove-{i}"
+            onRemove={() => store.removeTalismanEffectAt(i)}
+          />
         </li>
       {:else}
         <li class="empty">{store.t('talisman-effects-empty')}</li>

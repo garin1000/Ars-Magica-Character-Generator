@@ -23,6 +23,8 @@
   import type { Art, Spell, SpellMasteryAbility, SpellSelection } from '../types';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
+  import Spinner from './Spinner.svelte';
+  import SpellMasteryAbilityPicker from './SpellMasteryAbilityPicker.svelte';
 
   // Technique/Form/text/level-range filters live on the store, so they survive the
   // tab switch that unmounts this component (same split ArtGrid uses for the Arts).
@@ -246,23 +248,14 @@
 
   // The Spell Mastery special-ability catalogue (id order), for the per-spell
   // "add ability" picker. Empty when the ruleset ships no mastery catalogue.
+  // Localized name/tooltip lookups for a catalogue entry live in
+  // `SpellMasteryAbilityPicker.svelte` (G21, full-audit round) alongside the
+  // rest of that picker, not here.
   const masteryAbilityCatalogue = $derived.by((): SpellMasteryAbility[] => {
     const rs = store.ruleset;
     if (!rs) return [];
     return Object.values(rs.ruleset.spell_mastery_abilities ?? {});
   });
-
-  // A mastery ability's rules-text name — always via the i18n map, never the raw
-  // id (falls back to the id only when the ruleset is not yet loaded, mirroring
-  // rowLabel's defensive fallback).
-  function masteryAbilityName(id: string): string {
-    return store.ruleset?.i18n[id]?.name ?? id;
-  }
-
-  // A mastery ability's tooltip: its rules-text description.
-  function masteryAbilityTip(id: string): TooltipContent {
-    return { text: store.ruleset?.i18n[id]?.description ?? undefined };
-  }
 </script>
 
 {#if store.ruleset}
@@ -405,44 +398,43 @@
                    advancement table can price it — not only with Mastered Spells /
                    Flawless Magic. This picker is already magus-and-Spells-tab-only. -->
                 {#if masteryMax > 0}
-                  <span class="spinner" data-testid="spell-mastery-{chosen.spell}-{i}">
-                    <span class="spinner-label">{store.t('spell-mastery-label')}</span>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      aria-label={store.t('spell-mastery-decrement', { name: rowLabel(chosen) })}
-                      disabled={(chosen.mastery ?? 0) <= 0}
-                      onclick={() => store.adjustSpellMasteryAt(i, -1, masteryMax)}
-                      data-testid="spell-mastery-dec-{chosen.spell}-{i}"
-                    >
-                      -
-                    </button>
-                    <span
-                      class="spinner-value"
-                      data-testid="spell-mastery-score-{chosen.spell}-{i}"
-                    >
-                      {chosen.mastery ?? 0}
-                    </span>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      aria-label={store.t('spell-mastery-increment', { name: rowLabel(chosen) })}
-                      disabled={(chosen.mastery ?? 0) >= masteryMax}
-                      onclick={() => store.adjustSpellMasteryAt(i, 1, masteryMax)}
-                      data-testid="spell-mastery-inc-{chosen.spell}-{i}"
-                    >
-                      +
-                    </button>
-                    {#if effectiveSpellMastery(chosen.mastery, masteryFloor) !== (chosen.mastery ?? 0)}
-                      <span class="eff-slot">
-                        <span class="eff-badge" data-testid="spell-mastery-eff-{chosen.spell}-{i}">
-                          {store.t('effective-score', {
-                            score: String(effectiveSpellMastery(chosen.mastery, masteryFloor)),
-                          })}
-                        </span>
+                  <Spinner
+                    testid="spell-mastery-{chosen.spell}-{i}"
+                    decLabel={store.t('spell-mastery-decrement', { name: rowLabel(chosen) })}
+                    decTestid="spell-mastery-dec-{chosen.spell}-{i}"
+                    decDisabled={(chosen.mastery ?? 0) <= 0}
+                    onDec={() => store.adjustSpellMasteryAt(i, -1, masteryMax)}
+                    incLabel={store.t('spell-mastery-increment', { name: rowLabel(chosen) })}
+                    incTestid="spell-mastery-inc-{chosen.spell}-{i}"
+                    incDisabled={(chosen.mastery ?? 0) >= masteryMax}
+                    onInc={() => store.adjustSpellMasteryAt(i, 1, masteryMax)}
+                  >
+                    {#snippet label()}
+                      <span class="spinner-label">{store.t('spell-mastery-label')}</span>
+                    {/snippet}
+                    {#snippet children()}
+                      <span
+                        class="spinner-value"
+                        data-testid="spell-mastery-score-{chosen.spell}-{i}"
+                      >
+                        {chosen.mastery ?? 0}
                       </span>
-                    {/if}
-                  </span>
+                    {/snippet}
+                    {#snippet after()}
+                      {#if effectiveSpellMastery(chosen.mastery, masteryFloor) !== (chosen.mastery ?? 0)}
+                        <span class="eff-slot">
+                          <span
+                            class="eff-badge"
+                            data-testid="spell-mastery-eff-{chosen.spell}-{i}"
+                          >
+                            {store.t('effective-score', {
+                              score: String(effectiveSpellMastery(chosen.mastery, masteryFloor)),
+                            })}
+                          </span>
+                        </span>
+                      {/if}
+                    {/snippet}
+                  </Spinner>
                 {/if}
                 <button
                   type="button"
@@ -471,56 +463,12 @@
                    screen. -->
                 {#if masteryMax > 0 && effectiveSpellMastery(chosen.mastery, masteryFloor) > 0 && masteryAbilityCatalogue.length > 0}
                   {@const effMastery = effectiveSpellMastery(chosen.mastery, masteryFloor)}
-                  {@const chosenAbilities = chosen.mastery_abilities ?? []}
-                  <span
-                    class="mastery-abilities"
-                    data-testid="spell-mastery-abilities-{chosen.spell}-{i}"
-                  >
-                    <span class="spinner-label">{store.t('spell-mastery-abilities-label')}</span>
-                    {#each chosenAbilities as abilityId, ai (`${abilityId}:${ai}`)}
-                      <span
-                        class="ability-chip"
-                        use:tooltip={masteryAbilityTip(abilityId)}
-                        data-testid="spell-mastery-ability-{chosen.spell}-{i}-{ai}"
-                      >
-                        <span class="chip-name">{masteryAbilityName(abilityId)}</span>
-                        <button
-                          type="button"
-                          class="icon-btn"
-                          aria-label={store.t('remove-item', {
-                            name: masteryAbilityName(abilityId),
-                          })}
-                          onclick={() => store.removeMasteryAbilityAt(i, ai)}
-                          data-testid="spell-mastery-ability-remove-{chosen.spell}-{i}-{ai}"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    {/each}
-                    {#if chosenAbilities.length < effMastery}
-                      <select
-                        aria-label={store.t('spell-mastery-ability-add')}
-                        value=""
-                        onchange={(e) => {
-                          const sel = e.currentTarget as HTMLSelectElement;
-                          if (sel.value) {
-                            store.addMasteryAbilityAt(i, sel.value);
-                            sel.value = '';
-                          }
-                        }}
-                        data-testid="spell-mastery-ability-add-{chosen.spell}-{i}"
-                      >
-                        <option value="" disabled>{store.t('spell-mastery-ability-add')}</option>
-                        {#each masteryAbilityCatalogue as ma (ma.id)}
-                          <option
-                            value={ma.id}
-                            disabled={!ma.repeatable && chosenAbilities.includes(ma.id)}
-                            >{masteryAbilityName(ma.id)}</option
-                          >
-                        {/each}
-                      </select>
-                    {/if}
-                  </span>
+                  <SpellMasteryAbilityPicker
+                    {chosen}
+                    index={i}
+                    {effMastery}
+                    {masteryAbilityCatalogue}
+                  />
                 {/if}
               </li>
             {/snippet}

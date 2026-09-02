@@ -2002,3 +2002,91 @@ ul {
   color: var(--muted);
   font-style: italic;
 }
+
+/* Derived Totals read-out primitives (V26, full-audit round). Promoted here
+   from `DerivedTotalsPanel.svelte`'s own local `<style>` when that component
+   was split into per-section children (`Derived*Section.svelte`): these
+   classes are not specific to any one section — `.derived-grid` alone is used
+   by the summary, aura-adjacent lab/casting and soak/encumbrance sections —
+   so duplicating them into every new file would re-litigate the same rules
+   several times over. `--readout-max-width`/`--readout-table-max-width`
+   (defined on `:root` above) were already global for exactly this family. */
+.derived-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  max-width: var(--readout-max-width);
+}
+.derived-grid dt {
+  font-weight: 600;
+}
+.derived-grid dd {
+  margin: 0;
+}
+/* Technique/Form picker row for the on-demand Lab & Casting Totals. */
+.art-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+.derived-table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: var(--readout-table-max-width);
+}
+.derived-table th,
+.derived-table td {
+  padding: 0.15rem 0.5rem;
+  text-align: right;
+  white-space: nowrap;
+}
+.derived-table th:first-child {
+  text-align: left;
+}
+.derived-table tr.derived-focus td,
+.derived-table tr.derived-focus th,
+.derived-focus {
+  opacity: 0.75;
+  font-style: italic;
+}
+.derived-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: var(--readout-max-width);
+}
+.derived-list li {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+.derived-list .value {
+  font-weight: 600;
+}
+/* Wound levels: a fixed three-column grid (level | number range | penalty).
+   Width comes from the shared `.derived-list` token; the grid keeps the range
+   and penalty aligned in centered columns instead of splaying apart. */
+.wound-list li {
+  display: grid;
+  grid-template-columns: 1fr 6rem 4rem;
+  align-items: baseline;
+  gap: 0.75rem;
+  justify-content: initial;
+}
+.wound-list .value,
+.wound-list .derived-focus {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.derived-inline {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+}

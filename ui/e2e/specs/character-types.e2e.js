@@ -15,7 +15,7 @@
 
 import { $, $$, expect, browser } from '@wdio/globals';
 
-import { startCharacter } from '../helpers.js';
+import { clean, startCharacter } from '../helpers.js';
 
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const VIRTUE_BUDGET = '[data-testid="balance-virtues"]';
@@ -24,12 +24,6 @@ const CHARACTER_TYPE = '[data-testid="character-type"]';
 // `flaw.blatant_gift` is in the Hermetic category: forbidden for a companion,
 // permitted for a magus. A deterministic way to observe category rules.
 const HERMETIC_FLAW = '[data-testid="add-flaw.blatant_gift"]';
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks (FSI/PDI);
-// strip them so plain substring matching on numbers works.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 async function budget(selector) {
   return clean(await $(selector).getText());

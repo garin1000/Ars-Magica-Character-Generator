@@ -23,6 +23,15 @@ tauri-build = { version = "2", features = [] }
 arm-rules = { path = "../arm-rules" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+# Caret ranges, not exact pins: `Cargo.lock` is committed, so the build is
+# already reproducible, and over-pinning here would add a second place to bump
+# on every upgrade for no gain. `Cargo.lock` currently resolves tauri 2.11.3.
+#
+# Keep that resolved version and the `tauri-cli` pin in `.github/workflows/`
+# (`=2.11.3` in both ci.yml and release.yml) on the same minor. The CLI
+# generates and validates the config this library then consumes, so letting the
+# two drift across a minor is the failure this note exists to prevent — if you
+# `cargo update` tauri past 2.11, update the workflow pins in the same change.
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 

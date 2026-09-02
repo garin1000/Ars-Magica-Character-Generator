@@ -9,16 +9,11 @@
 
 import { $, expect, browser } from '@wdio/globals';
 
-import { startCharacter } from '../helpers.js';
+import { clean, startCharacter } from '../helpers.js';
 
 const ARTS_TAB = '[data-testid="tab-arts"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const LANG_SELECT = '[data-testid="language-select"]';
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 describe('hermetic arts', () => {
   it('shows the Arts tab only for a magus', async () => {

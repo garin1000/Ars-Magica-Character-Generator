@@ -68,10 +68,13 @@ jobs:
       - name: Install frontend dependencies
         run: npm --prefix ui ci
 
-      # The same CLI the local gate uses (`cargo tauri build`). Pinned to match dev.
-      # `cargo install` compiles it (~3-5 min); swap for a prebuilt binary later if you want it faster.
+      # The same CLI the local gate uses (`cargo tauri build`), pinned EXACTLY to
+      # match ci.yml's Install Tauri CLI step rather than a drifting `~2.11` tilde
+      # range (Klaus K6 / Gerda G29: a tilde range drifts to whatever patch is
+      # newest at run time). `cargo install` compiles it (~3-5 min); swap for a
+      # prebuilt binary later if you want it faster.
       - name: Install Tauri CLI
-        run: cargo install tauri-cli --version '~2.11' --locked
+        run: cargo install tauri-cli --version '=2.11.3' --locked
 
       # Identical to the proven local invocation, minus --no-bundle so it produces
       # installers. Config lives at crates/arm-app/tauri.conf.json and the CLI finds

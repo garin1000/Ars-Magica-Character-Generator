@@ -23,6 +23,9 @@ export NVM_DIR="$HOME/.nvm"
 # shellcheck disable=SC1091
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
+# shellcheck disable=SC1091
+. "$ROOT/scripts/stage-rules.sh"
+
 echo ">> Building production frontend + binary (cargo tauri build --no-bundle)..."
 cargo tauri build --no-bundle
 
@@ -30,10 +33,7 @@ cargo tauri build --no-bundle
 # the rules data the app loads at startup must sit next to the executable. The
 # bundle/installer would place these for us; here we stage them by hand.
 echo ">> Staging rules resources next to the release binary..."
-rm -rf "target/release/rules"
-mkdir -p "target/release/rules"
-cp -R "rules/core" "target/release/rules/core"
-cp -R "rules/i18n" "target/release/rules/i18n"
+stage_rules "target/release/rules"
 
 echo ">> Launching arm-char-gen (production)..."
 exec "target/release/arm-app"

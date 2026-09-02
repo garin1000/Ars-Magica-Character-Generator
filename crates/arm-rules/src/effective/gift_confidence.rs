@@ -53,21 +53,16 @@ pub fn confidence(
 ) -> Confidence {
     let mut score = i32::from(base_score);
     let mut points = i32::from(base_points);
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::ConfidenceBonus {
-                score: s,
-                points: p,
-            } = effect
-            {
-                score += i32::from(*s);
-                points += i32::from(*p);
-            }
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::ConfidenceBonus {
+            score: s,
+            points: p,
+        } = effect
+        {
+            score += i32::from(*s);
+            points += i32::from(*p);
         }
-    }
+    });
     let clamp = |n: i32| u8::try_from(n.max(0)).unwrap_or(u8::MAX);
     Confidence {
         score: clamp(score),
@@ -80,16 +75,11 @@ pub fn confidence(
 /// Ars Magica - Definitive Edition (Core Rules).md:4347-4349, :4842-4846.
 pub fn item_level_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut total = 0u32;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::ItemLevelBudget { amount } = effect {
-                total += u32::from(*amount);
-            }
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::ItemLevelBudget { amount } = effect {
+            total += u32::from(*amount);
         }
-    }
+    });
     total
 }
 
@@ -108,16 +98,11 @@ pub fn item_level_used(entity: &Entity) -> u32 {
 /// (Revised).md:1977.
 pub fn power_levels_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut total = 0u32;
-    for selection in selections_for_effects(entity, ruleset).iter() {
-        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-            continue;
-        };
-        for effect in &item.effects {
-            if let Effect::PowerLevels { amount } = effect {
-                total += u32::from(*amount);
-            }
+    for_each_effect!(entity, ruleset, |_selection, effect| {
+        if let Effect::PowerLevels { amount } = effect {
+            total += u32::from(*amount);
         }
-    }
+    });
     total
 }
 

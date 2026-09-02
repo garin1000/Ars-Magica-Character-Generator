@@ -9,17 +9,12 @@
 
 import { $, expect, browser } from '@wdio/globals';
 
-import { startCharacter } from '../helpers.js';
+import { clean, startCharacter } from '../helpers.js';
 
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const CHARS_TAB = '[data-testid="tab-characteristics"]';
 const ABILITIES_TAB = '[data-testid="tab-abilities"]';
 const ARTS_TAB = '[data-testid="tab-arts"]';
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 async function addVirtue(id) {
   await $(VF_TAB).click();

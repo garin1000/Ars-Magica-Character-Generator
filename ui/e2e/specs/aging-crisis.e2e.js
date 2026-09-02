@@ -38,7 +38,15 @@
 import { $, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { advanceWizardTo, currentWizardPhase, setWizardAge, startWizard } from '../helpers.js';
+import {
+  advanceWizardTo,
+  BOOT_TIMEOUT,
+  currentWizardPhase,
+  setWizardAge,
+  startWizard,
+  STEP_TIMEOUT,
+  textOf,
+} from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const SCHEDULE = '[data-testid="aging-schedule"]';
@@ -65,19 +73,6 @@ const CRISIS_MODIFIER_0 = '[data-testid="crisis-modifier-0"]';
 const AGING_NOTE_0 = '[data-testid="aging-note-0"]';
 const LOG_CRISIS_0 = '[data-testid="aging-log-crisis-0"]';
 const LOG_EMPTY = '[data-testid="aging-log-empty"]';
-
-const STEP_TIMEOUT = 10000;
-const BOOT_TIMEOUT = 30000;
-
-/** Fluent wraps interpolated values in Unicode bidi isolation marks; strip them. */
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
-
-/** The visible, bidi-stripped text of one element. */
-async function textOf(selector) {
-  return clean(await $(selector).getText());
-}
 
 describe('the aging crisis', () => {
   it('sends a grog of 40 to the Crisis Table and asks for the second die', async () => {

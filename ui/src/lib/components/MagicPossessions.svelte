@@ -1,7 +1,9 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { I32_MAX, I32_MIN } from '../derive';
   import FamiliarPanel from './FamiliarPanel.svelte';
   import TalismanPanel from './TalismanPanel.svelte';
+  import LevelRemoveField from './LevelRemoveField.svelte';
 
   const aura = $derived(store.entity.aura ?? 0);
   // The aura's rules-legal range comes from the engine (`Ruleset.aura_modifier_min/
@@ -10,8 +12,8 @@
   // cannot disagree. The i32-extreme fallback is a defensive "no constraint"
   // sentinel for a ruleset payload predating this field (this input only renders
   // once `store.ruleset` is loaded), not a restatement of the rule itself.
-  const auraMin = $derived(store.ruleset?.ruleset.aura_modifier_min ?? -2147483648);
-  const auraMax = $derived(store.ruleset?.ruleset.aura_modifier_max ?? 2147483647);
+  const auraMin = $derived(store.ruleset?.ruleset.aura_modifier_min ?? I32_MIN);
+  const auraMax = $derived(store.ruleset?.ruleset.aura_modifier_max ?? I32_MAX);
   // A value outside the engine's bound is not rejected here — `Entity.normalize()`
   // silently clamps it on save (Ars Magica - Definitive Edition (Core Rules).md:17390,
   // :17404-17409) — so this warns the player instead of letting the number change
@@ -25,10 +27,6 @@
   function onAura(event: Event) {
     const raw = (event.currentTarget as HTMLInputElement).value;
     store.setAura(raw === '' ? null : Number(raw));
-  }
-
-  function num(event: Event): number {
-    return Number((event.currentTarget as HTMLInputElement).value);
   }
 </script>
 
@@ -82,26 +80,17 @@
               oninput={(e) => store.setDeviceName(i, (e.currentTarget as HTMLInputElement).value)}
               data-testid="device-name-{i}"
             />
-            <label class="field inline">
-              <span>{store.t('device-level-label')}</span>
-              <input
-                type="number"
-                min="0"
-                max="65535"
-                value={device.level}
-                oninput={(e) => store.setDeviceLevel(i, num(e))}
-                data-testid="device-level-{i}"
-              />
-            </label>
-            <button
-              type="button"
-              class="icon-btn"
-              aria-label={store.t('remove-item', { name: device.name })}
-              onclick={() => store.removeDeviceAt(i)}
-              data-testid="device-remove-{i}"
-            >
-              ×
-            </button>
+            <LevelRemoveField
+              levelLabel={store.t('device-level-label')}
+              levelValue={device.level}
+              levelMin={0}
+              levelMax={65535}
+              levelTestid="device-level-{i}"
+              onLevelInput={(value) => store.setDeviceLevel(i, value)}
+              removeLabel={store.t('remove-item', { name: device.name })}
+              removeTestid="device-remove-{i}"
+              onRemove={() => store.removeDeviceAt(i)}
+            />
           </li>
         {:else}
           <li class="empty">{store.t('devices-empty')}</li>

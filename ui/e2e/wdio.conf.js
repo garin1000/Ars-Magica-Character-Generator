@@ -19,6 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { hasXvfbRun, preflightDisplay } from './display.js';
+import { e2eLogDir, sharedWdioConfig } from './wdio.shared.conf.js';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(dirname, '../..');
@@ -35,36 +36,8 @@ export const e2eExportFile = path.resolve(os.tmpdir(), 'arm-e2e-character.md');
 let tauriDriver;
 
 export const config = {
-  runner: 'local',
+  ...sharedWdioConfig(application),
   specs: [path.resolve(dirname, 'specs/**/*.e2e.js')],
-  maxInstances: 1,
-  // Specs run serially against one shared app instance and each passes in
-  // isolation, but the shared session occasionally emits a transient
-  // interactability/timing flake that wanders between specs run-to-run. One
-  // retry cleanly absorbs those without masking a real, deterministic failure
-  // (which fails both attempts).
-  specFileRetries: 1,
-  specFileRetriesDeferred: true,
-
-  // Connect to tauri-driver (classic WebDriver) rather than auto-starting a
-  // browser driver. tauri-driver listens on 4444 and forwards to the native
-  // WebKitWebDriver.
-  hostname: '127.0.0.1',
-  port: 4444,
-  path: '/',
-
-  capabilities: [
-    {
-      maxInstances: 1,
-      // tauri-driver does not implement WebDriver BiDi.
-      'wdio:enforceWebDriverClassic': true,
-      'tauri:options': { application },
-    },
-  ],
-  reporters: ['spec'],
-  framework: 'mocha',
-  mochaOpts: { ui: 'bdd', timeout: 120000 },
-  logLevel: 'info',
 
   // Keep the full launcher + worker logs of a run. A suite this expensive should
   // never have to be re-run just to re-read output that scrolled past, so wdio
@@ -72,7 +45,7 @@ export const config = {
   // which is what makes this usable from an agent. Repo-local and gitignored
   // (`tmp/`), deliberately NOT the system temp dir: an artifact under `/tmp` is
   // invisible to `git status` and shared with every other project on the box.
-  outputDir: path.resolve(repoRoot, 'tmp/e2e-logs'),
+  outputDir: e2eLogDir(repoRoot),
 
   // Build the PRODUCTION binary (embedded frontend assets, no dev server), then
   // stage the rules resources beside it. `cargo tauri build` runs in production

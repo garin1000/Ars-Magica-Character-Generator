@@ -13,7 +13,7 @@
 import { $, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { startCharacter } from '../helpers.js';
+import { clean, startCharacter } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
@@ -23,11 +23,6 @@ const POSSESSIONS_TAB = '[data-testid="tab-possessions"]';
 const CAPACITY = '[data-testid="talisman-capacity"]';
 const CAPACITY_NOTE = '[data-testid="talisman-capacity-note"]';
 const ITEM_LEVELS = '[data-testid="item-level-used"]';
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 /** Wait for a (debounced) engine read-out to contain every fragment. */
 async function waitForText(selector, ...fragments) {

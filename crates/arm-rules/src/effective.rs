@@ -73,6 +73,39 @@ pub(crate) fn selections_for_effects<'a>(
     }
 }
 
+/// Scans every `(selection, effect)` pair the entity's effective selections
+/// ([`selections_for_effects`]) contribute — the shared "for each selection, for
+/// each of its item's effects, skip a selection whose item does not resolve"
+/// loop that every score/bonus/grant fold in this module needs (V56: this loop
+/// was previously hand-rolled ~18 times across the domain submodules).
+///
+/// A `macro_rules!` rather than a function returning an iterator or taking a
+/// closure: `$body` is spliced in textually, so a `return` inside it unwinds the
+/// *caller* (see `elemental_magic_forms`'s early `return Some(...)`), and `$body`
+/// mutates the caller's own locals directly (`bonus += ...`) with no closure
+/// capture to fight the borrow checker over. `$entity`/`$ruleset` are each
+/// evaluated exactly once.
+macro_rules! for_each_effect {
+    ($entity:expr, $ruleset:expr, |$selection:ident, $effect:ident| $body:block) => {{
+        let entity = $entity;
+        let ruleset = $ruleset;
+        let selections = selections_for_effects(entity, ruleset);
+        for $selection in selections.iter() {
+            let Some(item) = ruleset.point_items.get(&$selection.item_ref) else {
+                continue;
+            };
+            for $effect in &item.effects {
+                $body
+            }
+        }
+    }};
+}
+// Re-exported for the same reason as `irrelevant_effect_variants` above: the
+// domain submodules invoke it via their `use super::*;`, which only resolves a
+// `macro_rules!` item declared earlier in the same file through an explicit
+// path-based `use`.
+pub(crate) use for_each_effect;
+
 /// All free-Virtue [`Selection`] rows the entity's type-linked profiles grant:
 /// its Hermetic House (magi) plus its Mythic Companion type (mythic companions),
 /// in that order. A character is a magus **or** a mythic companion, never both,
@@ -205,7 +238,8 @@ fn clamp_to_u32(n: i64) -> u32 {
 mod tests {
     use super::*;
     use crate::types::{
-        AbilityScore, ArtScore, EntityKind, RulesetRef, Selection, SupernaturalPower,
+        AbilityScore, ArtScore, EntityKind, ReputationType, RulesetRef, Selection,
+        SupernaturalPower,
     };
     use pretty_assertions::assert_eq;
     use std::collections::BTreeMap;
@@ -913,6 +947,24 @@ mod tests {
             "entity_kinds": ["character"],
             "effects": [{ "type": "power_levels", "amount": 20 }]
           },
+          {
+            "id": "virtue.self_confident",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "personality",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "confidence_bonus", "score": 1, "points": 2 }]
+          },
+          {
+            "id": "virtue.famous",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "social_status",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "grants_reputation", "score": 3 }]
+          },
+          {
+            "id": "flaw.infamous",
+            "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "social_status",
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "grants_reputation", "kind": "local", "score": 4 }]
+          },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
             "magnitude": "major", "category": "personality", "entity_kinds": ["character"] }
         ]"#;
@@ -920,7 +972,7 @@ mod tests {
           {
             "id": "companion",
             "budget": { "virtue_points": 10, "flaw_points": 10 },
-            "permitted_categories": ["general", "hermetic", "supernatural"],
+            "permitted_categories": ["general", "hermetic", "supernatural", "personality", "social_status"],
             "forbidden_categories": [], "required_traits": [], "forbidden_traits": [],
             "gift_policy": "allowed", "gift_id": "virtue.the_gift",
             "gift_categories": [], "creation_phases": ["concept"]
@@ -1401,6 +1453,73 @@ mod tests {
             ),
             50
         );
+    }
+
+    // Characterization tests (V56): confidence, reputation_grants, and
+    // supernatural_free_slots had no direct coverage before the shared
+    // `for_each_effect!` scan was extracted; these pin their current output so
+    // the extraction (pure code motion) cannot silently change it.
+
+    #[test]
+    fn self_confident_adds_one_score_and_two_points_on_top_of_the_base() {
+        // Self-Confident: Confidence Score +1, Confidence Points +2 (Ars Magica -
+        // Definitive Edition (Core Rules).md:4900-4902), additive on top of the
+        // type profile's base.
+        let rs = xp_ruleset();
+        let e = xp_entity(vec![sel("virtue.self_confident")]);
+        assert_eq!(
+            confidence(1, 3, &e, &rs),
+            Confidence {
+                score: 2,
+                points: 5
+            }
+        );
+        assert_eq!(
+            confidence(1, 3, &xp_entity(vec![]), &rs),
+            Confidence {
+                score: 1,
+                points: 3
+            }
+        );
+    }
+
+    #[test]
+    fn reputation_grants_reads_one_entry_per_grants_reputation_effect() {
+        // Famous grants a player-chosen-type Reputation 3 (kind omitted =
+        // wildcard, Ars Magica - Definitive Edition (Core Rules).md:3861-3863);
+        // Infamous fixes the kind to Local (:6310-6312).
+        let rs = xp_ruleset();
+        let e = xp_entity(vec![sel("virtue.famous"), sel("flaw.infamous")]);
+        let grants = reputation_grants(&e, &rs);
+        assert_eq!(
+            grants,
+            vec![
+                ReputationGrant {
+                    reputation_type: None,
+                    score: 3,
+                },
+                ReputationGrant {
+                    reputation_type: Some(ReputationType::Local),
+                    score: 4,
+                },
+            ]
+        );
+        assert_eq!(reputation_grants(&xp_entity(vec![]), &rs), vec![]);
+    }
+
+    #[test]
+    fn supernatural_free_slots_grants_one_gifted_non_magus_slot() {
+        // A Gifted non-magus gets one free Supernatural-Ability slot (Ars Magica -
+        // Definitive Edition (Core Rules).md:2874); a magus profile gets none.
+        let rs = xp_ruleset();
+        let profile = rs.profile(&Id::new("companion")).unwrap();
+        let gifted = xp_entity(vec![sel("virtue.the_gift")]);
+        let slots = supernatural_free_slots(&gifted, &rs, profile);
+        assert_eq!(slots.total, 1);
+        assert_eq!(slots.used, 0);
+
+        let ungifted = xp_entity(vec![]);
+        assert_eq!(supernatural_free_slots(&ungifted, &rs, profile).total, 0);
     }
 
     #[test]

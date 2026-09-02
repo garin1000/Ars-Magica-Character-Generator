@@ -13,9 +13,12 @@ import { $, browser, expect } from '@wdio/globals';
 
 import {
   advanceWizardTo,
+  BOOT_TIMEOUT,
+  clean,
   currentWizardPhase,
   satisfyMagusMinimums,
   startWizard,
+  STEP_TIMEOUT,
   wizardRailPhases,
 } from '../helpers.js';
 
@@ -36,14 +39,6 @@ const BANNER_BUDGET = '[data-testid="character-type-budget"]';
 // carries exactly one deterministic error: `unbalanced_virtues`.
 const ADD_VIRTUE = '[data-testid="add-virtue.keen_vision"]';
 const REMOVE_VIRTUE = '[data-testid^="remove-virtue.keen_vision"]';
-
-const BOOT_TIMEOUT = 30000;
-const STEP_TIMEOUT = 10000;
-
-/** Fluent wraps interpolated values in Unicode bidi isolation marks; strip them. */
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 describe('guided creation wizard', () => {
   it('walks a magus through its declared phases and finishes in the editor', async () => {

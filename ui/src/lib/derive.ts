@@ -6,6 +6,7 @@ import type {
   Ability,
   AbilityCategory,
   AbilityScore,
+  Addend,
   Art,
   ArtType,
   CharacteristicRules,
@@ -51,12 +52,41 @@ export function formatSigned(n: number): string {
   return n > 0 ? `+${n}` : `${n}`;
 }
 
+/**
+ * The "no constraint" sentinel bounds for an i32/u32 rules field with no
+ * ruleset-supplied range yet (a payload predating the field, or the moment
+ * before `store.ruleset` has loaded). Single source of truth so every field's
+ * `min`/`max` fallback — and every `<input>` sharing its Rust field width —
+ * states the same bound instead of retyping the literal at each call site
+ * (G19, full-audit round).
+ */
+export const I32_MIN = -2147483648;
+export const I32_MAX = 2147483647;
+export const U32_MAX = 4294967295;
+
 /** A `store.t`-shaped translator, threaded in so search can index rendered labels. */
 export type Translate = (key: string, args?: Record<string, string>) => string;
 
 /** The standard "(Label)" placeholder hint for an unfilled `{param}` token. */
 export function paramHint(t: Translate): (key: string) => string {
   return (key) => t('param-hint', { label: t(`param-label-${key}`) });
+}
+
+/** A labelled addend's display name (stable slug → Fluent `derived-addend-<label>`). */
+function addendLabel(a: Addend, t: Translate): string {
+  return t(`derived-addend-${a.label}`);
+}
+
+/**
+ * The hover-tooltip breakdown text for a list of signed addends — e.g. a Lab
+ * Total's "Technique +5, Form +3, Intelligence +2". Shared by every Derived
+ * Totals section that carries one (Lab/Casting, Magic Resistance, Soak) rather
+ * than reimplemented per section (V26, full-audit round).
+ */
+export function addendBreakdown(addends: Addend[], t: Translate): string {
+  return addends
+    .map((a) => `${addendLabel(a, t)} ${formatSigned(a.value)}`)
+    .join(`${t('derived-addend-list-separator')} `);
 }
 
 /**

@@ -3,6 +3,7 @@
   import { formatSigned } from '../derive';
   import { tooltip } from '../actions';
   import { CHARACTERISTICS, type Characteristic } from '../types';
+  import Spinner from './Spinner.svelte';
 
   const rules = $derived(store.ruleset?.ruleset.characteristic_rules ?? null);
   // The cost table spans the absolute ±5 range; the *buyable* range per
@@ -108,41 +109,32 @@
           use:tooltip={{ text: store.t(`characteristic-desc-${characteristic}`) }}
           >{store.t(`characteristic-${characteristic}`)}</span
         >
-        <span class="spinner">
-          <button
-            type="button"
-            class="icon-btn"
-            aria-label={store.t('characteristic-decrement', {
-              name: store.t(`characteristic-${characteristic}`),
-            })}
-            disabled={scoreOf(characteristic) <= floorOf(characteristic)}
-            onclick={() => adjust(characteristic, -1)}
-            data-testid="char-dec-{characteristic}"
-          >
-            -
-          </button>
-          <span class="spinner-value" data-testid="char-value-{characteristic}">
-            {formatSigned(scoreOf(characteristic))}
-            {#if effectiveOf(characteristic) !== scoreOf(characteristic)}<span
-                class="eff-badge char-effective"
-                data-testid="char-effective-{characteristic}"
-                use:tooltip={effectiveTooltip(characteristic)}
-                >→ {formatSigned(effectiveOf(characteristic))}</span
-              >{/if}
-          </span>
-          <button
-            type="button"
-            class="icon-btn"
-            aria-label={store.t('characteristic-increment', {
-              name: store.t(`characteristic-${characteristic}`),
-            })}
-            disabled={scoreOf(characteristic) >= capOf(characteristic)}
-            onclick={() => adjust(characteristic, 1)}
-            data-testid="char-inc-{characteristic}"
-          >
-            +
-          </button>
-        </span>
+        <Spinner
+          decLabel={store.t('characteristic-decrement', {
+            name: store.t(`characteristic-${characteristic}`),
+          })}
+          decTestid="char-dec-{characteristic}"
+          decDisabled={scoreOf(characteristic) <= floorOf(characteristic)}
+          onDec={() => adjust(characteristic, -1)}
+          incLabel={store.t('characteristic-increment', {
+            name: store.t(`characteristic-${characteristic}`),
+          })}
+          incTestid="char-inc-{characteristic}"
+          incDisabled={scoreOf(characteristic) >= capOf(characteristic)}
+          onInc={() => adjust(characteristic, 1)}
+        >
+          {#snippet children()}
+            <span class="spinner-value" data-testid="char-value-{characteristic}">
+              {formatSigned(scoreOf(characteristic))}
+              {#if effectiveOf(characteristic) !== scoreOf(characteristic)}<span
+                  class="eff-badge char-effective"
+                  data-testid="char-effective-{characteristic}"
+                  use:tooltip={effectiveTooltip(characteristic)}
+                  >→ {formatSigned(effectiveOf(characteristic))}</span
+                >{/if}
+            </span>
+          {/snippet}
+        </Spinner>
         <input
           type="text"
           class="char-description"

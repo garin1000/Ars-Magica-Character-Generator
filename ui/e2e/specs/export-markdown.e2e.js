@@ -12,7 +12,7 @@
 import { $, browser, expect } from '@wdio/globals';
 import fs from 'node:fs';
 
-import { isRowBlocked, startCharacter } from '../helpers.js';
+import { clean, isRowBlocked, startCharacter } from '../helpers.js';
 import { e2eExportFile as exportFile, e2eFile as saveFile } from '../wdio.conf.js';
 
 const LANG_SELECT = '[data-testid="language-select"]';
@@ -23,11 +23,6 @@ const NAME = 'Marcus of Bonisagus';
 // means the write has fully landed rather than merely started.
 const EN_LAST_SECTION = '## Magic Items';
 const DE_LAST_SECTION = '## Magische Gegenstände';
-
-// Fluent wraps interpolated values in Unicode bidi isolation marks; strip them.
-function clean(text) {
-  return text.replace(/[⁦-⁩]/g, '');
-}
 
 async function setLang(value) {
   await $(LANG_SELECT).selectByAttribute('value', value);
