@@ -329,6 +329,13 @@ pub(crate) fn validate_selection_parameters(
 /// must have a bought Brandenburg Lore row. A dangling target (e.g. the ability was
 /// removed) means the +2 attaches to nothing, so flag it. Effect-driven — no virtue
 /// id is hardcoded.
+///
+/// Filed on [`CreationPhase::Abilities`], the step that owns the fix, even though
+/// the offending value is the Virtue's parameter. Puissant Ability is "choose one
+/// Ability" (Ars Magica - Definitive Edition (Core Rules).md:4814-4816) with no
+/// requirement that a score already exists, and abilities are bought on a later
+/// step — so filing this on `virtues_flaws` deadlocked the guided wizard, blocking
+/// a step that could not offer the fix.
 pub(crate) fn validate_ability_bonus_targets(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -366,10 +373,9 @@ pub(crate) fn validate_ability_bonus_targets(
             if !has_instance {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_ABILITY_BONUS_DANGLING_TARGET,
-                    // The offending value is the Virtue's target parameter, so the
-                    // fix is on the V/F step (retarget it) even though the missing
-                    // half is an Ability.
-                    CreationPhase::VirtuesFlaws,
+                    // The Abilities step, not the V/F step that names the target —
+                    // see this function's doc comment.
+                    CreationPhase::Abilities,
                     args([
                         ("item", selection.item_ref.to_string()),
                         ("ability", target.to_string()),

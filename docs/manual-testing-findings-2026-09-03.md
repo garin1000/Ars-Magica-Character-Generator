@@ -189,7 +189,7 @@ it.
 
 ### 5 — Puissant Ability deadlocks the wizard's Next button
 
-**Status:** open
+**Status:** done (2026-09-03)
 
 Taking Puissant Ability on the Virtues/Flaws step blocks Next until its ability
 parameter is filled, but the parameter picker offers only abilities the
@@ -207,6 +207,20 @@ is "choose one Ability" with no requirement that a score already exists.
 phase, which follows `virtues_flaws` in every profile: the wizard then flows
 forward, and the block lands on the step where the work actually is. A pending
 item is carried forward on the wizard rail so it is not silently forgotten.
+
+**Implemented as decided.** The `ability` domain now lists the whole catalogue,
+keeping the character's own instances of a parameterized ability alongside the
+generic entry — and, because the engine expects the instance discriminator
+whenever the target is parameterized, the picker grew a text input for it, so the
+generic entry is not a `missing_param` dead end of its own.
+`ability_bonus_dangling_target` is filed on `CreationPhase::Abilities`
+(`validation/selections.rs`), pinned by
+`every_shipped_profile_buys_abilities_after_virtues_flaws` in
+`crates/arm-rules/tests/core_type_conformance.rs`, and its message now names the
+work ("Add … to the character's Abilities") instead of the Virtue. The rail's
+carry-forward needed no new mechanism: the existing `data-blocked` marker plus its
+`.sr-only` hint already marks any phase holding an error, and a regression test in
+`WizardShell.test.ts` now locks that for this case.
 
 ### 4 — Characteristic-affecting Virtues give no feedback where the user is
 

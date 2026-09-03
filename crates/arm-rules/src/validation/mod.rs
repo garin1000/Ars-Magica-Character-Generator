@@ -174,7 +174,7 @@ impl fmt::Display for IssueSeverity {
 /// | `childhood_slot_duplicate_value` | error | experience | `ability`, `key`, `slot`, `other_slot`, `value` |
 /// | `ability_parameter_required` | error | abilities | `ability` |
 /// | `ability_score_out_of_range` | error | abilities | `ability`, `score`, `max` |
-/// | `ability_bonus_dangling_target` | error | virtues_flaws | `item`, `ability`, `parameter` |
+/// | `ability_bonus_dangling_target` | error | abilities | `item`, `ability`, `parameter` |
 /// | `unknown_art` | error | arts | `art` |
 /// | `duplicate_art` | error | arts | `art`, `count` |
 /// | `art_score_out_of_range` | error | arts | `art`, `score`, `max` |
@@ -4656,6 +4656,50 @@ mod tests {
             codes(&validate(&entity, &rs)).contains(&"ability_bonus_dangling_target".to_string()),
             "a Puissant whose target ability is absent should dangle: {:?}",
             codes(&validate(&entity, &rs))
+        );
+    }
+
+    /// The fix for a dangling Puissant target is to BUY the ability, which happens
+    /// on the Abilities step — Puissant Ability is "choose one Ability"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:4814-4816), with no
+    /// requirement that a score already exists. Filing the finding on
+    /// `virtues_flaws` therefore deadlocked the guided wizard: the V/F step blocked
+    /// on work that step cannot do. It stays an error, on the step that owns the fix.
+    #[test]
+    fn puissant_dangling_target_is_filed_on_the_abilities_step() {
+        let rs = effective_ruleset();
+        let entity = make_entity("companion", vec![puissant("ability.awareness")]);
+        let result = validate(&entity, &rs);
+        let dangling = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_ABILITY_BONUS_DANGLING_TARGET)
+            .expect("a Puissant whose target ability is absent should dangle");
+        assert_eq!(dangling.severity, IssueSeverity::Error);
+        assert_eq!(dangling.phase, CreationPhase::Abilities);
+    }
+
+    /// The wizard gates on the CURRENT phase only, so the V/F step must be free of
+    /// errors once the target is named — otherwise Next stays shut with nothing on
+    /// that step to fix.
+    #[test]
+    fn puissant_targeting_an_unowned_ability_leaves_the_virtues_flaws_step_clear() {
+        let rs = effective_ruleset();
+        // Balanced on purpose: an unbalanced budget is a V/F finding the V/F step
+        // genuinely owns, and would mask the one this test is about.
+        let entity = make_entity(
+            "companion",
+            vec![puissant("ability.awareness"), sel("flaw.f")],
+        );
+        let result = validate(&entity, &rs);
+        let blocking: Vec<&str> = result
+            .errors()
+            .filter(|i| i.phase == CreationPhase::VirtuesFlaws)
+            .map(|i| i.code.as_str())
+            .collect();
+        assert!(
+            blocking.is_empty(),
+            "the V/F step must not block on a target bought later: {blocking:?}"
         );
     }
 

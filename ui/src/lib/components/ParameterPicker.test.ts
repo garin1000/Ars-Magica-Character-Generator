@@ -1,7 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { Art, Entity, LocalizedRuleset, ParameterDef, PointItem, Selection } from '../types';
+import type {
+  Ability,
+  Art,
+  Entity,
+  LocalizedRuleset,
+  ParameterDef,
+  PointItem,
+  Selection,
+} from '../types';
 
 // ParameterPicker reads the shared store singleton (the ruleset's Art / point-item
 // catalogues, the entity's own rows) and the Fluent bundle. The store schedules a
@@ -33,6 +41,13 @@ const ARTS: Record<string, Art> = {
   'art.ignem': { id: 'art.ignem', art_type: 'form' } as unknown as Art,
 };
 
+/** One plain ability and one parameterized one, so instance handling is exercised. */
+const ABILITIES: Record<string, Ability> = {
+  'ability.awareness': { id: 'ability.awareness', category: 'general' },
+  'ability.stealth': { id: 'ability.stealth', category: 'general' },
+  'ability.area_lore': { id: 'ability.area_lore', category: 'general', parameter: 'area' },
+};
+
 function pointItem(id: string, parameters: ParameterDef[]): PointItem {
   return {
     id,
@@ -57,6 +72,9 @@ const ITEMS: Record<string, PointItem> = {
   'virtue.ways_of_the_land': pointItem('virtue.ways_of_the_land', [
     { key: 'land', type: 'ref', domain: 'text' },
   ]),
+  'virtue.puissant_ability': pointItem('virtue.puissant_ability', [
+    { key: 'ability', type: 'ref', domain: 'ability' },
+  ]),
 };
 
 function installRuleset(): void {
@@ -74,7 +92,7 @@ function installRuleset(): void {
           creation_phases: [],
         },
       },
-      abilities: {},
+      abilities: ABILITIES,
       arts: ARTS,
       spells: {},
       houses: {},
@@ -92,6 +110,10 @@ function installRuleset(): void {
       'flaw.deficient_technique': { name: 'Deficient {technique}' },
       'virtue.item_domain_probe': { name: 'Probe {item}' },
       'virtue.ways_of_the_land': { name: 'Ways Of The {land}' },
+      'virtue.puissant_ability': { name: 'Puissant {ability}' },
+      'ability.awareness': { name: 'Awareness' },
+      'ability.stealth': { name: 'Stealth' },
+      'ability.area_lore': { name: '{area} Lore' },
     },
   } as unknown as LocalizedRuleset;
 }
@@ -118,11 +140,24 @@ function resetEntity(): void {
 }
 
 /** Render the picker for one catalogue item's parameter list. */
-function pickerBody(ref: string, index = 0): string {
-  const selection: Selection = { ref };
+function pickerBody(ref: string, index = 0, params?: Record<string, string>): string {
+  const selection: Selection = params ? { ref, params } : { ref };
   return render(ParameterPicker, {
     props: { selection, index, params: ITEMS[ref].parameters! },
   }).body;
+}
+
+/** The `<option>` whose visible text is `label`, or null when it is not offered. */
+function optionByText(select: string, label: string): string | null {
+  return (
+    [...select.matchAll(/<option[^>]*>([\s\S]*?)<\/option>/g)].find(
+      (m) =>
+        m[1]
+          .replace(/<[^>]*>/g, '')
+          .replace(/[⁦-⁩]/g, '')
+          .trim() === label,
+    )?.[0] ?? null
+  );
 }
 
 /** The whole `<select data-testid="…">…</select>` element, or null when absent. */
@@ -223,6 +258,104 @@ describe('ParameterPicker domain branches (slice 7, #4)', () => {
       'param-virtue.item_domain_probe-item-0',
     );
     expect(ariaLabel(item!)).toBe('Gegenstand');
+  });
+});
+
+// manual-testing-findings-2026-09-03 #5: the ability domain used to offer ONLY the
+// abilities already on the sheet, while abilities are bought on a later step — so
+// Puissant Ability could not be completed where it is taken and the wizard deadlocked.
+// Puissant Ability is "choose one Ability" with no requirement that a score exists
+// (Ars Magica - Definitive Edition (Core Rules).md:4814-4816), exactly like the `art`
+// domain, which never required the Art to be on the sheet.
+describe('ParameterPicker ability domain (manual-testing-findings-2026-09-03 #5)', () => {
+  const TESTID = 'param-virtue.puissant_ability-ability-0';
+
+  it('offers the whole ability catalogue, not only the abilities the character has', () => {
+    const select = selectFor(pickerBody('virtue.puissant_ability'), TESTID);
+    expect(select).not.toBeNull();
+    // No ability_scores at all, and every catalogue ability is still offered.
+    expect(optionTexts(select!)).toContain('Awareness');
+    expect(optionTexts(select!)).toContain('Stealth');
+    expect(optionTexts(select!).join(' ')).not.toContain('ability.');
+  });
+
+  it('offers a parameterized ability before any instance of it exists', () => {
+    const select = selectFor(pickerBody('virtue.puissant_ability'), TESTID);
+    // The name template's placeholder stands in for the unfilled area.
+    expect(optionTexts(select!)).toContain('(Area) Lore');
+  });
+
+  it("still lists the character's own instances of a parameterized ability", () => {
+    store.entity.ability_scores = [
+      { ability: 'ability.area_lore', score: 2, parameter: 'Brandenburg' },
+    ] as Entity['ability_scores'];
+    const select = selectFor(pickerBody('virtue.puissant_ability'), TESTID);
+    expect(optionTexts(select!)).toContain('Brandenburg Lore');
+    // …and the generic entry stays, so a second area can still be chosen.
+    expect(optionTexts(select!)).toContain('(Area) Lore');
+  });
+
+  it('lists an owned plain ability exactly once', () => {
+    store.entity.ability_scores = [
+      { ability: 'ability.awareness', score: 2 },
+    ] as Entity['ability_scores'];
+    const select = selectFor(pickerBody('virtue.puissant_ability'), TESTID);
+    expect(optionTexts(select!).filter((t) => t === 'Awareness')).toHaveLength(1);
+  });
+
+  // max_per_target is value-keyed, so it must keep working now that the values
+  // include catalogue entries no ability row backs.
+  it('disables a target another selection of the same item already claims', () => {
+    store.entity.selections = [
+      { ref: 'virtue.puissant_ability', params: { ability: 'ability.awareness' } },
+      { ref: 'virtue.puissant_ability' },
+    ];
+    // Second row, so its test id carries index 1.
+    const select = selectFor(
+      pickerBody('virtue.puissant_ability', 1),
+      'param-virtue.puissant_ability-ability-1',
+    );
+    expect(optionByText(select!, 'Awareness')).toContain('disabled');
+    expect(optionByText(select!, 'Stealth')).not.toContain('disabled');
+  });
+
+  it('leaves a parameterized ability open once one of its instances is claimed', () => {
+    store.entity.ability_scores = [
+      { ability: 'ability.area_lore', score: 2, parameter: 'Brandenburg' },
+    ] as Entity['ability_scores'];
+    store.entity.selections = [
+      {
+        ref: 'virtue.puissant_ability',
+        params: { ability: 'ability.area_lore', area: 'Brandenburg' },
+      },
+      { ref: 'virtue.puissant_ability' },
+    ];
+    // Second row, so its test id carries index 1.
+    const select = selectFor(
+      pickerBody('virtue.puissant_ability', 1),
+      'param-virtue.puissant_ability-ability-1',
+    );
+    expect(optionByText(select!, 'Brandenburg Lore')).toContain('disabled');
+    expect(optionByText(select!, '(Area) Lore')).not.toContain('disabled');
+  });
+
+  // Choosing the generic entry leaves the instance discriminator unset, which the
+  // engine reports as `missing_param` — so the picker must offer somewhere to put it,
+  // or the catalogue entry would be a new dead end.
+  it('asks for the instance value once a parameterized target is chosen', () => {
+    const body = pickerBody('virtue.puissant_ability', 0, { ability: 'ability.area_lore' });
+    const testid = 'param-virtue.puissant_ability-area-0';
+    expect(hasInput(body, testid)).toBe(true);
+    const input = /<input[^>]*data-testid="param-virtue\.puissant_ability-area-0"[^>]*>/.exec(
+      body,
+    )![0];
+    // Named for assistive tech through the param-label key, never the raw `area` slug.
+    expect(ariaLabel(input)).toBe('Area');
+  });
+
+  it('asks for no instance value on a plain target', () => {
+    const body = pickerBody('virtue.puissant_ability', 0, { ability: 'ability.awareness' });
+    expect(body).not.toContain('param-virtue.puissant_ability-area-0');
   });
 });
 

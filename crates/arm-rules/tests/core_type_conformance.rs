@@ -113,6 +113,74 @@ fn every_shipped_profile_declares_experience_before_abilities_and_no_type_phase(
     }
 }
 
+/// The ordering the dangling-ability-target re-file rests on
+/// (manual-testing-findings-2026-09-03 #5): `ability_bonus_dangling_target` is filed
+/// on the `abilities` step, so a profile that bought Abilities BEFORE Virtues &
+/// Flaws would file the finding on a step already walked past — the wizard would
+/// carry it as an unreachable block. Structural, over whatever profiles ship.
+#[test]
+fn every_shipped_profile_buys_abilities_after_virtues_flaws() {
+    let ruleset = full_ruleset();
+    for profile in ruleset.profiles() {
+        let phases = &profile.creation_phases;
+        let virtues = phases
+            .iter()
+            .position(|p| *p == CreationPhase::VirtuesFlaws);
+        let abilities = phases.iter().position(|p| *p == CreationPhase::Abilities);
+        if let (Some(virtues), Some(abilities)) = (virtues, abilities) {
+            assert!(
+                virtues < abilities,
+                "profile '{}' buys Abilities before Virtues & Flaws: {phases:?}",
+                profile.id
+            );
+        }
+    }
+}
+
+/// End-to-end over the REAL shipped catalogue: a magus who takes Puissant Ability
+/// pointed at an Ability not yet bought must be held on the **Abilities** step, not
+/// on the Virtues & Flaws step where the Virtue is taken. Puissant Ability is
+/// "choose one Ability" with no requirement that a score exists
+/// (Ars Magica - Definitive Edition (Core Rules).md:4814-4816), and Abilities are
+/// bought later — filing it on `virtues_flaws` deadlocked the guided wizard, because
+/// that step gates on its own findings and could offer no fix.
+#[test]
+fn puissant_ability_on_an_unbought_ability_holds_the_abilities_step_not_virtues_flaws() {
+    let ruleset = full_ruleset();
+    let mut magus = base("magus");
+    magus.house = Some(Id::new("house.bonisagus"));
+    magus.selections = vec![Selection::with_params(
+        Id::new("virtue.puissant_ability"),
+        BTreeMap::from([("ability".into(), Id::new("ability.awareness"))]),
+    )];
+
+    let result = validate(&magus, &ruleset);
+    let dangling: Vec<CreationPhase> = result
+        .errors()
+        .filter(|issue| issue.code == "ability_bonus_dangling_target")
+        .map(|issue| issue.phase)
+        .collect();
+    assert_eq!(
+        dangling,
+        vec![CreationPhase::Abilities],
+        "the dangling target belongs to the step that buys the Ability"
+    );
+
+    let on_virtues_flaws: Vec<&str> = result
+        .errors()
+        .filter(|issue| issue.phase == CreationPhase::VirtuesFlaws)
+        .map(|issue| issue.code.as_str())
+        .collect();
+    assert!(
+        !on_virtues_flaws.contains(&"ability_bonus_dangling_target"),
+        "the V/F step must not block on an Ability bought later: {on_virtues_flaws:?}"
+    );
+    assert!(
+        !on_virtues_flaws.contains(&"missing_param"),
+        "a plain ability target needs no further key: {on_virtues_flaws:?}"
+    );
+}
+
 /// Every shipped profile lets its type record Personality Traits.
 ///
 /// The rules put no type outside this, and single out the one the guided flow used to

@@ -240,6 +240,33 @@ describe('WizardShell', () => {
     expect(hint![1].trim()).not.toBe('');
   });
 
+  // manual-testing-findings-2026-09-03 #5: Puissant Ability names a target that is
+  // bought on the LATER Abilities step, so its dangling-target error is filed there.
+  // The V/F step must therefore let the user through, and the pending work must stay
+  // visible on the rail — announced, not by colour alone — so it is not silently
+  // forgotten the moment the step is left.
+  it('carries a pending finding forward to the rail step that owns it', () => {
+    installFlow(['virtues_flaws', 'abilities']);
+    store.wizardStep = 0;
+    store.wizardFurthest = 0;
+    store.result = {
+      issues: [
+        {
+          severity: 'error',
+          code: 'ability_bonus_dangling_target',
+          phase: 'abilities',
+          args: { item: 'virtue.puissant_ability', ability: 'ability.awareness', parameter: '' },
+        },
+      ],
+    };
+    const body = html();
+    // Standing on virtues_flaws: nothing on this step blocks, so the flow moves on.
+    expect(tag(body, 'wizard-next')).not.toContain('disabled');
+    // And the step that owns the fix is marked, and says so in words.
+    expect(tag(body, 'wizard-step-abilities')).toContain('data-blocked="true"');
+    expect(text(body, 'wizard-blocked-hint-abilities')).not.toBe('');
+  });
+
   it('explains why Next is blocked, and names the mode that lifts the gate', () => {
     store.result = {
       issues: [{ severity: 'error', code: 'x', phase: 'concept', args: {} }],
