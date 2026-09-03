@@ -71,14 +71,48 @@
     );
   }
 
-  // The character's own ability instances — the only legal Puissant-style targets.
-  // A parameterized ability ((Area) Lore) yields one option per instance.
-  const abilityInstances = $derived(
-    (store.entity.ability_scores ?? []).map((row) => ({
-      value: row.parameter ? `${row.ability}${SEP}${row.parameter}` : row.ability,
-      label: abilityInstanceLabel(row.ability, row.parameter),
-    })),
-  );
+  // Every catalogue Ability, plus the character's own instances of the
+  // parameterized ones. Like the `art` domain below, the target need NOT already be
+  // on the sheet: Puissant Ability is "choose one Ability" with no requirement that
+  // a score exists (Ars Magica - Definitive Edition (Core Rules).md:4814-4816), and
+  // abilities are bought on a LATER step — so offering only owned rows left the
+  // parameter unfillable where the Virtue is taken and deadlocked the wizard
+  // (manual-testing-findings-2026-09-03 #5).
+  //
+  // A parameterized ability ((Area) Lore) keeps one option per owned instance AND
+  // the generic catalogue entry, so a not-yet-bought area can be named too; the
+  // instance input below then takes the area itself. An owned PLAIN ability needs no
+  // extra option — its instance value is the bare id the catalogue entry already
+  // carries, so listing it twice would only duplicate the row.
+  const abilityOptions = $derived.by(() => {
+    const localized = store.ruleset;
+    if (!localized) return [];
+    const catalogue = localized.ruleset.abilities ?? {};
+    const rows = store.entity.ability_scores ?? [];
+    return Object.keys(catalogue)
+      .sort((a, b) => localizedSortKey(localized, a).localeCompare(localizedSortKey(localized, b)))
+      .flatMap((id) => {
+        const generic = { value: id, label: abilityInstanceLabel(id, undefined) };
+        if (!catalogue[id]?.parameter) return [generic];
+        const instances = rows
+          .filter((row) => row.ability === id && row.parameter)
+          .map((row) => ({
+            value: `${id}${SEP}${row.parameter}`,
+            label: abilityInstanceLabel(id, row.parameter),
+          }));
+        return [generic, ...instances];
+      });
+  });
+
+  // The instance key the chosen target still needs a value for ((Area) Lore →
+  // `area`), or undefined for a plain target. Only meaningful once an ability is
+  // chosen — and it is what keeps the generic catalogue entry from being a dead end
+  // of its own, since the engine expects that key (`missing_param` otherwise).
+  function abilityInstanceKey(key: string): string | undefined {
+    const abilityId = selection.params?.[key];
+    if (!abilityId) return undefined;
+    return store.ruleset?.ruleset.abilities?.[abilityId]?.parameter ?? undefined;
+  }
 
   // The composite value identifying this selection's current ability target, so
   // the matching <option> shows as selected.
@@ -202,6 +236,10 @@
        prompt and the control's accessible name, so no separate label text is
        needed alongside it. -->
   {@const typeLabel = store.t(`param-label-${param.key}`)}
+  <!-- The instance key an ability target still owes a value for ((Area) Lore →
+       `area`), rendered as a control of its own below rather than inside the same
+       label, so each control keeps exactly one label. -->
+  {@const instanceKey = param.domain === 'ability' ? abilityInstanceKey(param.key) : undefined}
   <label class="param">
     {#if param.domain === 'characteristic'}
       <select
@@ -221,8 +259,10 @@
         {/each}
       </select>
     {:else if param.domain === 'ability'}
-      <!-- Targets a specific ability instance the character holds; add it on the
-           Abilities tab first. For (Area) Lore each area is its own target. -->
+      <!-- Targets an Ability from the catalogue — it need not be on the sheet yet,
+           since abilities are bought on a later step. For (Area) Lore each area is
+           its own target, so the character's own areas are listed alongside the
+           generic entry (which the instance input below completes). -->
       <select
         aria-label={typeLabel}
         value={abilityTargetValue(param.key)}
@@ -234,7 +274,7 @@
              ability whose parameter is still unset share the same bare id, and a
              duplicate key throws `each_key_duplicate` (in production too), which
              would kill this whole tab's render. -->
-        {#each abilityInstances as instance, i (`${instance.value}:${i}`)}
+        {#each abilityOptions as instance, i (`${instance.value}:${i}`)}
           <option value={instance.value} disabled={full(usedAbilityTargets, instance.value)}>
             {instance.label}
           </option>
@@ -302,4 +342,22 @@
       />
     {/if}
   </label>
+  {#if instanceKey}
+    <!-- The area/language the chosen parameterized target names. Free text, exactly
+         as on the Abilities tab: the value is the player's own, backed by no
+         registry. The engine expects this key whenever the target ability is
+         parameterized, so without this control the generic catalogue entry above
+         would leave a `missing_param` nothing on screen could clear. -->
+    {@const instanceLabel = store.t(`param-label-${instanceKey}`)}
+    <label class="param">
+      <input
+        type="text"
+        aria-label={instanceLabel}
+        placeholder={instanceLabel}
+        value={selection.params?.[instanceKey] ?? ''}
+        oninput={(e) => onTypeText(instanceKey, e)}
+        data-testid="param-{selection.ref}-{instanceKey}-{suffix}"
+      />
+    </label>
+  {/if}
 {/each}

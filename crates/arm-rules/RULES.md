@@ -616,6 +616,10 @@ bleed onto the character's other areas.
   `unexpected_param`). `validate_ability_bonus_targets` flags
   `ability_bonus_dangling_target` when the targeted `(ability, parameter)` is not
   among the character's bought abilities (e.g. the ability was later removed).
+  The rule names no precondition — "choose one Ability", not "one Ability you
+  have" (`:4814-4816`) — so the target may be picked before the score exists and
+  the finding is filed on `CreationPhase::Abilities`, the step where the ability
+  is bought, not on the Virtues/Flaws step that names it.
 
 #### Puissant (Art) — +3 to one Art
 > "You add 3 to the value of one Art whenever you use it. This means all totals in
