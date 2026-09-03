@@ -540,6 +540,45 @@ fn core_rules_virtues_cite_the_core_rules_file() {
     }
 }
 
+/// Items whose core-rules type descriptor lists `Tainted` must carry
+/// `"tainted": true`, because that flag is what feeds the half-of-taken-points
+/// Tainted cap in `validate_tainted_cap`. A missing flag makes the cap
+/// under-count and silently lets a character keep more Tainted points than the
+/// rules allow — wrong rules output, invisible to every other check.
+///
+/// Sampled structurally, never as a total (the catalogue may grow): a few
+/// descriptor lines that do carry the tag, plus `flaw.tainted_with_evil` as the
+/// control — its *name* contains "Tainted" but its descriptor is
+/// `*Minor, General*` (:6844), so it must NOT be flagged.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:2998-3000 (the cap),
+/// and the descriptor lines :3650 (Demonic Blood, "*Major, Supernatural,
+/// Tainted*"), :6856 (Tragic Life, "*Major, Story, Tainted*"), :3411, :3427,
+/// :6840, :6844.
+#[test]
+fn core_rules_tainted_virtues_carry_the_tainted_flag() {
+    let rs = load_full_ruleset();
+
+    let expected = [
+        ("virtue.demonic_blood", true),
+        ("virtue.amorphous_major", true),
+        ("virtue.aptitude_for_sin", true),
+        ("flaw.tragic_life", true),
+        ("flaw.tainted_offspring", true),
+        ("flaw.tainted_with_evil", false),
+    ];
+
+    for (id, tainted) in expected {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} ships"));
+        assert_eq!(
+            item.tainted, tainted,
+            "{id} must have tainted = {tainted}, matching its core-rules type descriptor"
+        );
+    }
+}
+
 /// Two known packages load with their entries and provenance intact — never a
 /// package total, which is data (a ruleset may ship any number of packages).
 /// Athletic is the plain shape, Traveling the one that exercises every feature at

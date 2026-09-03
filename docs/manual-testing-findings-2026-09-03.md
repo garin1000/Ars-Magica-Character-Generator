@@ -28,6 +28,7 @@ WP5 → WP6 → WP7, one finding at a time.
 |---|---|---|---|
 | 2026-09-03 | — | This findings document written; 25 findings recorded, 13 withdrawn, 10 and 14 closed with reasons | n/a (docs only) |
 | 2026-09-03 | WP1 | Finding 8 done: eleven `source` refs re-pointed at the core rules, locked by `core_rules_virtues_cite_the_core_rules_file` in `tests/data_integrity.rs`; RULES.md re-cited throughout. Finding 28 opened as a by-product. | `cargo test --workspace`, `clippy --all-targets -D warnings`, `fmt --check` — all green |
+| 2026-09-03 | WP1 | Findings 9 and 10 done: `tainted: true` added to `virtue.demonic_blood` **and** `flaw.tragic_life` (found by auditing all 21 tagged descriptors), locked by a new test; finding 10 closed with the Mythic-Companion-is-a-marker rationale recorded in RULES.md. **WP1 complete.** | `cargo test --workspace` (16 suites ok, 0 failed), `clippy`, `fmt --check` — all green |
 
 ---
 
@@ -83,12 +84,21 @@ it needs a decision, not a silent fix.
 
 ### 9 — `virtue.demonic_blood` is missing `tainted: true`
 
-**Status:** open
+**Status:** done (2026-09-03) — widened by one
 
 The core rules tag it *Major, Supernatural, **Tainted*** (:3649-3650). Without
 the flag the Tainted half-of-points cap (`validation/caps.rs`,
 `validate_tainted_cap`) under-counts it, so a character can carry more Tainted
 Virtue points than the rules allow — a wrong-rules-output defect, not cosmetic.
+
+**Resolution.** An audit of all 21 core-rules descriptor lines carrying the
+`Tainted` tag against the catalogue found a **second** entry missing it:
+`flaw.tragic_life` (:6855-6856, *Major, Story, Tainted*), which under-counted the
+Flaw side of the same cap. Both fixed. `flaw.tainted_with_evil` correctly has no
+flag — its descriptor (:6844) is *Minor, General*, so the name is a false friend.
+Locked by `core_rules_tainted_virtues_carry_the_tainted_flag` in
+`crates/arm-rules/tests/data_integrity.rs`, which samples tagged entries and
+keeps `flaw.tainted_with_evil` as a control.
 
 ### 10 — Four "Free, Mythic Companion" virtues are stored as `social_status`
 
