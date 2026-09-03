@@ -179,7 +179,12 @@ export interface PointItem {
   id: string;
   kind: ItemKind;
   magnitude: Magnitude;
-  category: string;
+  // Every grouping category the rulebook descriptor lists, in its own order, so
+  // `categories[0]` is the PRIMARY one. Mirrors the engine's `PointItem`
+  // (`crates/arm-rules/src/types.rs`), which rejects an empty list at load.
+  // Membership tests (filters, grant constraints) read the whole list; display
+  // and grouping read the primary alone.
+  categories: string[];
   classification: Classification;
   // Descriptor "Type" tag: a Tainted (Infernal-associated) V/F. Omitted when false.
   tainted?: boolean;

@@ -93,6 +93,8 @@ impl Ruleset {
     /// out of [`Self::validate_integrity`] (GC3) as its own named step.
     fn validate_point_items(&self, errors: &mut Vec<String>) {
         for (id, item) in &self.point_items {
+            self.validate_item_categories(id, item, errors);
+
             if let Some(ref prereq) = item.prerequisites {
                 self.validate_prereq_refs(prereq, id, 1, errors);
             }
@@ -111,6 +113,32 @@ impl Ruleset {
             self.validate_effect_refs(item, id, errors);
 
             validate_source_range(&item.source, &format!("{id}"), errors);
+        }
+    }
+
+    /// Checks the shape of one item's `categories` list: it must name at least one
+    /// category, and must not name the same one twice.
+    ///
+    /// An empty list is silently invisible — no permitted/forbidden test, no
+    /// category cap and no `items_by_category` lookup could ever match the item,
+    /// and its exported "type" cell would be blank — so it fails the load instead.
+    /// A repeat changes no membership answer but doubles the category in that same
+    /// cell, and is always an authoring slip. The list is order-significant
+    /// (primary first), which is why it is a `Vec` and this check exists at all
+    /// rather than a set making both cases unrepresentable.
+    fn validate_item_categories(&self, id: &Id, item: &PointItem, errors: &mut Vec<String>) {
+        if item.categories.is_empty() {
+            errors.push(format!(
+                "{id}: 'categories' is empty; every point item needs at least one \
+                 category, the primary one first"
+            ));
+            return;
+        }
+        let mut seen: BTreeSet<&str> = BTreeSet::new();
+        for category in &item.categories {
+            if !seen.insert(category.as_str()) {
+                errors.push(format!("{id}: 'categories' repeats '{category}'"));
+            }
         }
     }
 
@@ -224,7 +252,7 @@ impl Ruleset {
         let has_personality = self
             .point_items
             .values()
-            .any(|item| item.category == ENGINE_REQUIRED_CATEGORY_PERSONALITY);
+            .any(|item| item.has_category(ENGINE_REQUIRED_CATEGORY_PERSONALITY));
         if !has_personality {
             errors.push(format!(
                 "engine-required V/F category '{ENGINE_REQUIRED_CATEGORY_PERSONALITY}' \

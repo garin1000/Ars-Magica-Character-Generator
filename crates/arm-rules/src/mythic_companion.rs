@@ -128,17 +128,17 @@ mod tests {
     /// (grant items + required virtue/flaw refs) to pass at load.
     const ITEMS: &str = r#"[
         { "id": "virtue.devil_child", "kind": "virtue", "classification": "narrative", "magnitude": "free",
-          "category": "social_status", "entity_kinds": ["character"] },
+          "categories": ["social_status"], "entity_kinds": ["character"] },
         { "id": "virtue.demonic_might", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
-          "category": "supernatural", "entity_kinds": ["character"] },
+          "categories": ["supernatural"], "entity_kinds": ["character"] },
         { "id": "virtue.demonic_powers", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
-          "category": "supernatural", "entity_kinds": ["character"] },
+          "categories": ["supernatural"], "entity_kinds": ["character"] },
         { "id": "virtue.demonic_blood", "kind": "virtue", "classification": "narrative", "magnitude": "major",
-          "category": "supernatural", "entity_kinds": ["character"] },
+          "categories": ["supernatural"], "entity_kinds": ["character"] },
         { "id": "flaw.tragic_life", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-          "category": "supernatural", "entity_kinds": ["character"] },
+          "categories": ["supernatural"], "entity_kinds": ["character"] },
         { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-          "category": "personality", "entity_kinds": ["character"] }
+          "categories": ["personality"], "entity_kinds": ["character"] }
     ]"#;
 
     const TYPES: &str = r#"{ "types": [

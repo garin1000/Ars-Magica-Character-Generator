@@ -22,31 +22,41 @@ function installRuleset(): void {
       type_profiles: {},
       abilities: {},
       point_items: {
-        [VIRTUE_A]: { id: VIRTUE_A, kind: 'virtue', magnitude: 'minor', category: 'supernatural' },
-        [VIRTUE_B]: { id: VIRTUE_B, kind: 'virtue', magnitude: 'minor', category: 'supernatural' },
+        [VIRTUE_A]: {
+          id: VIRTUE_A,
+          kind: 'virtue',
+          magnitude: 'minor',
+          categories: ['supernatural'],
+        },
+        [VIRTUE_B]: {
+          id: VIRTUE_B,
+          kind: 'virtue',
+          magnitude: 'minor',
+          categories: ['supernatural'],
+        },
         [OPEN_VIRTUE]: {
           id: OPEN_VIRTUE,
           kind: 'virtue',
           magnitude: 'minor',
-          category: 'divine',
+          categories: ['divine'],
         },
         [FLAW_DEFAULT]: {
           id: FLAW_DEFAULT,
           kind: 'flaw',
           magnitude: 'minor',
-          category: 'personality',
+          categories: ['personality'],
         },
         [FLAW_SUBSTITUTE]: {
           id: FLAW_SUBSTITUTE,
           kind: 'flaw',
           magnitude: 'minor',
-          category: 'personality',
+          categories: ['personality'],
         },
         [FIXED_VIRTUE]: {
           id: FIXED_VIRTUE,
           kind: 'virtue',
           magnitude: 'minor',
-          category: 'supernatural',
+          categories: ['supernatural'],
         },
       },
       mythic_companion_types: {

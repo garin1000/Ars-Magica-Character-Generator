@@ -97,9 +97,14 @@ pub(crate) fn validate_caps(
     // Source: Ars Magica - Definitive Edition (Core Rules).md:2855-2861.
     let mut push_category_cap_issues = |caps: &[CategoryCap], kind: ItemKind, noun: &str| {
         for cap in caps {
+            // An item counts against the cap when it *carries* the capped
+            // category, primary or secondary: Suppressed Gift is "*Major,
+            // Hermetic, Story*" (Ars Magica - Definitive Edition (Core
+            // Rules).md:6803-6804), so it is a Story Flaw for the Story cap just
+            // as much as it is a Hermetic one.
             let n = count(&|i| {
                 i.kind == kind
-                    && i.category == cap.category
+                    && i.has_category(&cap.category)
                     && (!cap.major_only || i.magnitude == Magnitude::Major)
             });
             if n <= cap.max as usize {

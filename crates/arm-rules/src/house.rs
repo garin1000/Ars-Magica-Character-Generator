@@ -182,15 +182,15 @@ mod tests {
     /// to pass at load.
     const GRANT_ITEMS: &str = r#"[
         { "id": "virtue.self_confident", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
-          "category": "general", "entity_kinds": ["character"] },
+          "categories": ["general"], "entity_kinds": ["character"] },
         { "id": "virtue.puissant_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
-          "category": "hermetic", "entity_kinds": ["character"],
+          "categories": ["hermetic"], "entity_kinds": ["character"],
           "parameters": [{ "key": "art", "type": "ref", "domain": "art" }] },
         { "id": "virtue.affinity_with_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
-          "category": "hermetic", "entity_kinds": ["character"],
+          "categories": ["hermetic"], "entity_kinds": ["character"],
           "parameters": [{ "key": "art", "type": "ref", "domain": "art" }] },
         { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-          "category": "personality", "entity_kinds": ["character"] }
+          "categories": ["personality"], "entity_kinds": ["character"] }
     ]"#;
 
     /// Houses exercising each grant kind: a fixed Virtue (Tytalus), a Choice

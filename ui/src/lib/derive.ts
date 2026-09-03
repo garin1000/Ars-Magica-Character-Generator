@@ -126,7 +126,11 @@ export function filterItems(
   const text = filter.text ? normalizeSearch(filter.text) : '';
   return items.filter((it) => {
     if (text && !searchHaystack(localized, it.id, t).includes(text)) return false;
-    if (filter.categories?.length && !filter.categories.includes(it.category)) return false;
+    // Membership, not display: an item whose descriptor names two categories
+    // matches on either (virtue.sufi is "Social Status, Supernatural"), exactly
+    // as the engine's `PointItem::has_category` reads it.
+    if (filter.categories?.length && !filter.categories.some((c) => it.categories.includes(c)))
+      return false;
     if (filter.magnitudes?.length && !filter.magnitudes.includes(it.magnitude)) return false;
     if (filter.tainted && !it.tainted) return false;
     return true;
@@ -376,7 +380,10 @@ export interface EligibilityOptions {
  * Point items an open grant admits: matching kind, matching magnitude (when the
  * constraint fixes one), inside any required-category allow-list and outside the
  * forbid-list — mirroring the engine's `open_pick_satisfies`, so a picker offers
- * exactly the legal choices and nothing more. The rules name no fixed menu for a
+ * exactly the legal choices and nothing more. Both category lists are matched
+ * against EVERY category the item carries (`require_categories` needs a non-empty
+ * intersection, `forbid_categories` an empty one), so a descriptor's secondary
+ * category both admits a pick and rules one out. The rules name no fixed menu for a
  * Warping-owed slot (the pick is storyguide judgement, Core:16553-16561), so the
  * constraint is the only filter.
  *
@@ -395,8 +402,8 @@ export function eligibleForConstraint(
         it.kind === constraint.kind &&
         (!constraint.magnitude || it.magnitude === constraint.magnitude) &&
         (!constraint.require_categories?.length ||
-          constraint.require_categories.includes(it.category)) &&
-        !(constraint.forbid_categories ?? []).includes(it.category) &&
+          constraint.require_categories.some((c) => it.categories.includes(c))) &&
+        !(constraint.forbid_categories ?? []).some((c) => it.categories.includes(c)) &&
         !(opts.excludeWarpingSources && (it.effects ?? []).some((e) => e.type === 'warping_grant')),
     )
     .sort((a, b) =>
@@ -463,18 +470,33 @@ function warpingSlotKeys(constraint: GrantConstraint): { labelKey: string; count
 }
 
 /**
+ * An item's PRIMARY category: the one its rulebook descriptor lists first, which
+ * is what every single-label display and every grouping bucket uses. Mirrors the
+ * engine's `PointItem::primary_category`. The engine rejects a categoryless item
+ * at load, so the empty fallback is unreachable through a real ruleset.
+ */
+function primaryCategory(item: PointItem): string {
+  return item.categories[0] ?? '';
+}
+
+/**
  * Point items grouped by category; groups by category id, items alphabetically
  * by localized name within each group. When `kinds` is given, only items whose
  * `kind` is in it are kept (used to split the picker into separate Virtue and
  * Flaw lists).
+ *
+ * Single-bucket, keyed on the PRIMARY category: an item whose descriptor names
+ * two categories is listed once, under the first — repeating it under the second
+ * would show the same catalogue entry twice in one picker.
  */
 export function groupByCategory(localized: LocalizedRuleset, kinds?: ItemKind[]): CategoryGroup[] {
   const groups = new Map<string, PointItem[]>();
   for (const item of Object.values(localized.ruleset.point_items)) {
     if (kinds && !kinds.includes(item.kind)) continue;
-    const list = groups.get(item.category) ?? [];
+    const key = primaryCategory(item);
+    const list = groups.get(key) ?? [];
     list.push(item);
-    groups.set(item.category, list);
+    groups.set(key, list);
   }
   return [...groups.entries()]
     .map(([category, items]) => ({
@@ -525,6 +547,13 @@ export interface SelectionGroup {
  * Supernatural. A granted row is ordered like any other row; only its marker and
  * the absent remove button distinguish it, exactly as for a `Required` row.
  * Equal-name ties keep bought before granted (the sort is stable).
+ *
+ * Each row lands in exactly ONE group, keyed on its item's PRIMARY category
+ * (`categories[0]`), the same bucket the source picker uses. That single-bucket
+ * rule is load-bearing for a dual-category item, not merely tidy: a bought row
+ * carries its `entity.selections` index and `VirtueFlawTab` removes by that
+ * index, so a row repeated under a second heading would give the player two
+ * apparently independent rows that delete each other.
  */
 export function groupSelectionsByCategory(
   localized: LocalizedRuleset,
@@ -535,9 +564,10 @@ export function groupSelectionsByCategory(
   const add = (row: SelectionRow): void => {
     const item = localized.ruleset.point_items[row.selection.ref];
     if (!item) return;
-    const list = groups.get(item.category) ?? [];
+    const key = primaryCategory(item);
+    const list = groups.get(key) ?? [];
     list.push(row);
-    groups.set(item.category, list);
+    groups.set(key, list);
   };
   for (const entry of entries) {
     add({ kind: 'sel', selection: entry.selection, index: entry.index });
@@ -1050,12 +1080,19 @@ export function restrictedPoolLabel(
  * Fluent key rather than rendering the slug. `base`/`granted` are realms only in
  * the Might-realm-mismatch issue; the same `base` key is a numeric score in the
  * Characteristic issues, so numeric values are left untouched (see below).
+ *
+ * `category` is the V/F grouping category `category_not_permitted` and
+ * `forbidden_category` name (`validation/selections.rs`). It is catalogue data
+ * rather than a Rust enum, but it behaves identically here: a bare slug with no
+ * i18n entry of its own, labelled by the very `category-<id>` key the picker
+ * heading and the row badge already use.
  */
 const ENUM_ARG_FLUENT_PREFIX: Record<string, string> = {
   characteristic: 'characteristic-',
   kind: 'reputation-type-',
   base: 'realm-',
   granted: 'realm-',
+  category: 'category-',
 };
 
 /**

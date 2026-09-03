@@ -849,7 +849,7 @@ mod tests {
         "kind": "virtue",
         "classification": "narrative",
         "magnitude": "free",
-        "category": "special",
+        "categories": ["special"],
         "entity_kinds": ["character"]
       },
       {
@@ -857,7 +857,7 @@ mod tests {
         "kind": "virtue",
         "classification": "narrative",
         "magnitude": "free",
-        "category": "social_status",
+        "categories": ["social_status"],
         "entity_kinds": ["character"],
         "prerequisites": { "kind": "has", "value": "virtue.the_gift" }
       },
@@ -866,7 +866,7 @@ mod tests {
         "kind": "virtue",
         "classification": "narrative",
         "magnitude": "major",
-        "category": "hermetic",
+        "categories": ["hermetic"],
         "entity_kinds": ["character"],
         "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" },
         "incompatible_with": ["flaw.blatant_gift"]
@@ -876,7 +876,7 @@ mod tests {
         "kind": "flaw",
         "classification": "narrative",
         "magnitude": "major",
-        "category": "hermetic",
+        "categories": ["hermetic"],
         "entity_kinds": ["character"],
         "prerequisites": { "kind": "has", "value": "virtue.the_gift" },
         "incompatible_with": ["virtue.gentle_gift"]
@@ -886,7 +886,7 @@ mod tests {
         "kind": "virtue",
         "classification": "narrative",
         "magnitude": "minor",
-        "category": "general",
+        "categories": ["general"],
         "entity_kinds": ["character"],
         "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }]
       },
@@ -895,7 +895,7 @@ mod tests {
         "kind": "flaw",
         "classification": "narrative",
         "magnitude": "major",
-        "category": "personality",
+        "categories": ["personality"],
         "entity_kinds": ["character"]
       }
     ]"#;
@@ -1394,7 +1394,7 @@ mod tests {
     #[test]
     fn prereq_house_ref_to_unknown_house_is_rejected() {
         let items = r#"[
-          { "id": "virtue.tester", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
+          { "id": "virtue.tester", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"],
             "prerequisites": { "kind": "house", "value": "house.missing" } }
         ]"#;
         let err = Ruleset::from_sources(RulesetSources {
@@ -1623,7 +1623,7 @@ mod tests {
     #[test]
     fn ability_min_prereq_must_resolve() {
         let items = r#"[{
-          "id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
+          "id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"],
           "entity_kinds": ["character"],
           "prerequisites": { "kind": "ability_min", "value": { "ability": "ability.unknown", "score": 2 } }
         }]"#;
@@ -1640,11 +1640,11 @@ mod tests {
     #[test]
     fn ability_min_prereq_resolves_against_registry() {
         let items = r#"[
-          { "id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
+          { "id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"],
             "entity_kinds": ["character"],
             "prerequisites": { "kind": "ability_min", "value": { "ability": "ability.awareness", "score": 2 } } },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-            "category": "personality", "entity_kinds": ["character"] }
+            "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         let rs = Ruleset::from_json_with_abilities("t", "1", items, "[]", VALID_ABILITIES);
         assert!(rs.is_ok());
@@ -1684,7 +1684,7 @@ mod tests {
           "kind": "virtue",
           "classification": "narrative",
           "magnitude": "major",
-          "category": "hermetic",
+          "categories": ["hermetic"],
           "entity_kinds": ["character"],
           "prerequisites": { "kind": "has", "value": "virtue.nonexistent" }
         }]"#;
@@ -1705,7 +1705,7 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"],
             "incompatible_with": ["flaw.b"]
           },
@@ -1714,7 +1714,7 @@ mod tests {
             "kind": "flaw",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"],
             "incompatible_with": []
           }
@@ -1741,7 +1741,7 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "major",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"]
           },
           {
@@ -1749,7 +1749,7 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"]
           },
           {
@@ -1757,7 +1757,7 @@ mod tests {
             "kind": "flaw",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "personality",
+            "categories": ["personality"],
             "entity_kinds": ["character"]
           }
         ]"#;
@@ -1780,7 +1780,7 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "major",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"]
           },
           {
@@ -1788,7 +1788,7 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"]
           },
           {
@@ -1796,7 +1796,7 @@ mod tests {
             "kind": "flaw",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "personality",
+            "categories": ["personality"],
             "entity_kinds": ["character"]
           }
         ]"#;
@@ -1820,7 +1820,7 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "major",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"]
           },
           {
@@ -1828,7 +1828,7 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"]
           },
           {
@@ -1836,7 +1836,7 @@ mod tests {
             "kind": "flaw",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "personality",
+            "categories": ["personality"],
             "entity_kinds": ["character"]
           }
         ]"#;
@@ -1853,7 +1853,7 @@ mod tests {
           "kind": "virtue",
           "classification": "narrative",
           "magnitude": "minor",
-          "category": "general",
+          "categories": ["general"],
           "entity_kinds": ["character"],
           "incompatible_with": ["flaw.nonexistent"]
         }]"#;
@@ -1873,7 +1873,7 @@ mod tests {
           "kind": "virtue",
           "classification": "narrative",
           "magnitude": "minor",
-          "category": "general",
+          "categories": ["general"],
           "entity_kinds": ["character"],
           "source": { "file": "f.md", "lines": [50, 10] }
         }]"#;
@@ -1893,7 +1893,7 @@ mod tests {
           "kind": "virtue",
           "classification": "narrative",
           "magnitude": "minor",
-          "category": "general",
+          "categories": ["general"],
           "entity_kinds": ["character"],
           "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }]
         }]"#;
@@ -1910,7 +1910,7 @@ mod tests {
           "kind": "virtue",
           "classification": "narrative",
           "magnitude": "minor",
-          "category": "general",
+          "categories": ["general"],
           "entity_kinds": ["character"],
           "effects": [{ "type": "restricted_ability_xp", "amount": 50,
                         "abilities": ["ability.latin", "ability.does_not_exist"] }]
@@ -1935,7 +1935,7 @@ mod tests {
           "kind": "virtue",
           "classification": "narrative",
           "magnitude": "minor",
-          "category": "general",
+          "categories": ["general"],
           "entity_kinds": ["character"],
           "parameters": [{ "key": "characteristic", "type": "ref", "domain": "ability" }],
           "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }]
@@ -1957,11 +1957,11 @@ mod tests {
             "kind": "virtue",
             "classification": "in_play_effect",
             "magnitude": "minor",
-            "category": "hermetic",
+            "categories": ["hermetic"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "special_casting_mod", "kind": "deft_form", "param": "form" }] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-            "category": "personality", "entity_kinds": ["character"] }
+            "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         // No `parameters` declared, so the effect's `form` param is unknown.
         let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
@@ -1981,12 +1981,12 @@ mod tests {
             "kind": "virtue",
             "classification": "in_play_effect",
             "magnitude": "minor",
-            "category": "hermetic",
+            "categories": ["hermetic"],
             "entity_kinds": ["character"],
             "parameters": [{ "key": "form", "type": "ref", "domain": "technique" }],
             "effects": [{ "type": "special_casting_mod", "kind": "deft_form", "param": "form" }] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-            "category": "personality", "entity_kinds": ["character"] }
+            "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
         let msg = err.to_string();
@@ -2005,12 +2005,12 @@ mod tests {
             "kind": "virtue",
             "classification": "in_play_effect",
             "magnitude": "minor",
-            "category": "hermetic",
+            "categories": ["hermetic"],
             "entity_kinds": ["character"],
             "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
             "effects": [{ "type": "special_casting_mod", "kind": "deft_form", "param": "form" }] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-            "category": "personality", "entity_kinds": ["character"] }
+            "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         let rs = Ruleset::from_json("test", "1", items, "[]");
         assert!(rs.is_ok(), "{:?}", rs.err());
@@ -2026,11 +2026,11 @@ mod tests {
             "kind": "virtue",
             "classification": "in_play_effect",
             "magnitude": "minor",
-            "category": "hermetic",
+            "categories": ["hermetic"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "special_casting_mod", "kind": "deft_form" }] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-            "category": "personality", "entity_kinds": ["character"] }
+            "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
         let msg = err.to_string();
@@ -2052,12 +2052,12 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"],
             "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
             "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-            "category": "personality", "entity_kinds": ["character"] }
+            "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         let types = r#"[{
           "id": "companion",
@@ -2289,7 +2289,7 @@ mod tests {
           "kind": "virtue",
           "classification": "narrative",
           "magnitude": "minor",
-          "category": "general",
+          "categories": ["general"],
           "entity_kinds": ["character"],
           "prerequisites": {"kind": "all", "value": [{"kind": "has", "value": "virtue.nonexistent"}]}
         }]"#;
@@ -2328,9 +2328,9 @@ mod tests {
         // fail first and mask the depth assertion under test.
         let items = r#"[
           { "id": "virtue.tester", "kind": "virtue", "classification": "narrative",
-            "magnitude": "minor", "category": "general" },
+            "magnitude": "minor", "categories": ["general"] },
           { "id": "flaw.personality_filler", "kind": "flaw", "classification": "narrative",
-            "magnitude": "minor", "category": "personality" }
+            "magnitude": "minor", "categories": ["personality"] }
         ]"#;
         let mut rs = Ruleset::from_json("t", "1", items, "[]").unwrap();
         rs.point_items
@@ -2433,8 +2433,8 @@ mod tests {
     #[test]
     fn duplicate_point_item_ids() {
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"]},
-          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "general", "entity_kinds": ["character"]}
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"]},
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"]}
         ]"#;
 
         let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
@@ -4299,7 +4299,7 @@ mod tests {
         let integrity_err = Ruleset::from_json(
             "test",
             "1",
-            r#"[{"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": [], "prerequisites": {"kind": "has", "value": "virtue.missing"}}]"#,
+            r#"[{"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": [], "prerequisites": {"kind": "has", "value": "virtue.missing"}}]"#,
             "[]",
         )
         .unwrap_err();
@@ -4318,7 +4318,7 @@ mod tests {
         let integrity_err = Ruleset::from_json(
             "test",
             "1",
-            r#"[{"id":"virtue.a","kind":"virtue", "classification": "narrative","magnitude":"minor","category":"general","entity_kinds":[],"prerequisites":{"kind": "has", "value":"virtue.missing"}}]"#,
+            r#"[{"id":"virtue.a","kind":"virtue", "classification": "narrative","magnitude":"minor","categories":["general"],"entity_kinds":[],"prerequisites":{"kind": "has", "value":"virtue.missing"}}]"#,
             "[]",
         )
         .unwrap_err();
@@ -4330,9 +4330,9 @@ mod tests {
         // Carries a personality-category item so the only integrity failures are
         // the two unresolved prerequisites (not a missing-category error).
         let items = r#"[
-          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.x"}},
-          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.y"}},
-          {"id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"]}
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.x"}},
+          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.y"}},
+          {"id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"]}
         ]"#;
         let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
         match err {
@@ -4352,7 +4352,7 @@ mod tests {
         let integrity_err = Ruleset::from_json(
             "test",
             "1",
-            r#"[{"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": [], "prerequisites": {"kind": "has", "value": "virtue.missing"}}]"#,
+            r#"[{"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": [], "prerequisites": {"kind": "has", "value": "virtue.missing"}}]"#,
             "[]",
         )
         .unwrap_err();
@@ -4532,7 +4532,7 @@ mod tests {
               "kind": "virtue",
               "classification": "narrative",
               "magnitude": "minor",
-              "category": "general",
+              "categories": ["general"],
               "entity_kinds": ["character"],
               "prerequisites": { "kind": "has", "value": "virtue.missing" }
             }
@@ -4571,7 +4571,7 @@ mod tests {
         let integrity_err = Ruleset::from_json(
             "test",
             "1",
-            r#"[{"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": [], "prerequisites": {"kind": "has", "value": "virtue.missing"}}]"#,
+            r#"[{"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": [], "prerequisites": {"kind": "has", "value": "virtue.missing"}}]"#,
             "[]",
         )
         .unwrap_err();
@@ -4665,14 +4665,14 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"],
             "parameters": [
               { "key": "second", "type": "ref", "domain": "art" },
               { "key": "first", "type": "ref", "domain": "ability" }
             ] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-            "category": "personality", "entity_kinds": ["character"] }
+            "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         let mut rs = Ruleset::from_json("test", "1", items, "[]").unwrap();
         rs.normalize();
@@ -4825,7 +4825,7 @@ mod tests {
         // silently count zero and wrongly reject every ±6 trait, so load must fail.
         let items = r#"[
           { "id": "virtue.keen_vision", "kind": "virtue", "classification": "narrative",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["character"] }
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"] }
         ]"#;
         let err = Ruleset::from_json("t", "1", items, VALID_TYPES)
             .expect_err("a V/F catalogue lacking the personality category must fail integrity");
@@ -4853,6 +4853,46 @@ mod tests {
             .expect("a V/F catalogue carrying the personality category must load");
     }
 
+    // --- `categories` shape (non-empty, no repeats) ---------------------------
+
+    #[test]
+    fn empty_categories_list_fails_integrity() {
+        // Every membership rule and every rendered "type" cell reads this list;
+        // an item with none would be silently invisible to all of them.
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "virtue.keen_vision", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "categories": [], "entity_kinds": ["character"] }
+        ]"#;
+        let err = Ruleset::from_json("t", "1", items, VALID_TYPES)
+            .expect_err("a point item with no categories must fail integrity");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("virtue.keen_vision") && msg.contains("categories"),
+            "the error must name the offending item and the field, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn repeated_category_slug_fails_integrity() {
+        // A repeat is always an authoring slip — it changes no membership answer
+        // but would double a category in the rendered "type" cell.
+        let items = r#"[
+          { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "flaw.visions", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["story", "story"], "entity_kinds": ["character"] }
+        ]"#;
+        let err = Ruleset::from_json("t", "1", items, VALID_TYPES)
+            .expect_err("a point item repeating a category slug must fail integrity");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("flaw.visions") && msg.contains("story"),
+            "the error must name the offending item and the repeated slug, got: {msg}"
+        );
+    }
+
     // --- Negative "fail loudly" tests for effect / grant / source-range refs. ---
     // Each fixture is otherwise integrity-valid (a personality-category Flaw is
     // present, no magus profile / Arts) so ONLY the intended defect triggers.
@@ -4863,9 +4903,9 @@ mod tests {
     fn grants_selection_effect_referencing_unknown_item_is_rejected() {
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-            "category": "personality", "entity_kinds": ["character"] },
+            "categories": ["personality"], "entity_kinds": ["character"] },
           { "id": "virtue.templar", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
-            "category": "general", "entity_kinds": ["character"],
+            "categories": ["general"], "entity_kinds": ["character"],
             "effects": [ { "type": "grants_selection", "items": ["virtue.does_not_exist"] } ] }
         ]"#;
         let err = Ruleset::from_json("t", "1", items, VALID_TYPES).unwrap_err();
@@ -4887,9 +4927,9 @@ mod tests {
     fn characteristic_score_delta_effect_referencing_unknown_characteristic_is_rejected() {
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major",
-            "category": "personality", "entity_kinds": ["character"] },
+            "categories": ["personality"], "entity_kinds": ["character"] },
           { "id": "virtue.giant_blood", "kind": "virtue", "classification": "narrative", "magnitude": "major",
-            "category": "general", "entity_kinds": ["character"],
+            "categories": ["general"], "entity_kinds": ["character"],
             "effects": [ { "type": "characteristic_score_delta", "characteristic": "characteristic.bogus", "amount": 1 } ] }
         ]"#;
         let err = Ruleset::from_json("t", "1", items, VALID_TYPES).unwrap_err();

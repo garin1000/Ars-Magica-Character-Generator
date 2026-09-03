@@ -907,13 +907,13 @@ mod tests {
     fn rate_ruleset() -> Ruleset {
         let items = r#"[
           { "id": "virtue.wealthy", "kind": "virtue", "classification": "creation_effect",
-            "magnitude": "major", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "later_life_xp_rate", "amount": 20 }] },
           { "id": "flaw.poor", "kind": "flaw", "classification": "creation_effect",
-            "magnitude": "major", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "later_life_xp_rate", "amount": 10 }] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] }
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         let types = r#"[
           { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -1312,9 +1312,9 @@ mod tests {
     fn minimum_ruleset() -> Ruleset {
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] },
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
           { "id": "virtue.puissant_ability", "kind": "virtue", "classification": "narrative",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
             "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }] }
         ]"#;

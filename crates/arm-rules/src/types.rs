@@ -1529,6 +1529,7 @@ impl SourceRef {
 
 /// A virtue, flaw, boon, or hook with its mechanical metadata.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(try_from = "PointItemRepr")]
 pub struct PointItem {
     /// Stable slug identifier.
     pub id: Id,
@@ -1536,9 +1537,23 @@ pub struct PointItem {
     pub kind: ItemKind,
     /// Point weight (free/minor/major).
     pub magnitude: Magnitude,
-    /// Grouping category used by type-profile permit/forbid rules
-    /// (e.g. `general`, `hermetic`, `social_status`).
-    pub category: String,
+    /// Every grouping category the rulebook descriptor lists for this item, in
+    /// the order it lists them — so `categories[0]` is the **primary** one
+    /// ([`PointItem::primary_category`]).
+    ///
+    /// Most descriptors name a single category, but some name two: Suppressed
+    /// Gift is "*Major, Hermetic, Story*"
+    /// (Ars Magica - Definitive Edition (Core Rules).md:6803-6804), and a
+    /// character may legitimately reach it through either. So *membership* tests
+    /// — permitted/forbidden categories, category caps, grant constraints, Gift
+    /// categories — consider the whole list, while anything rendering one label
+    /// uses the primary.
+    ///
+    /// Order carries the descriptor's own emphasis and is therefore deliberately
+    /// exempt from canonical sorting (like [`EntityTypeProfile::creation_phases`]
+    /// and the crisis table's rows). Load-time integrity rejects an empty list or
+    /// a repeated slug.
+    pub categories: Vec<String>,
     /// How this V/F impacts a character mechanically (M5 slice 5a). Required (no
     /// serde default): an unclassified entry fails to load. See [`Classification`].
     pub classification: Classification,
@@ -1609,10 +1624,140 @@ fn is_default_virtue_points_per_flaw_point(value: &u8) -> bool {
     *value == default_virtue_points_per_flaw_point()
 }
 
+/// The on-disk shape of a [`PointItem`], deserialized before validation.
+///
+/// [`PointItem`] is `#[serde(try_from = "PointItemRepr")]` so that the two ways a
+/// catalogue can fail to state an item's categories are reported *with the
+/// offending item's id* instead of a bare `missing field` at a byte offset. The
+/// case that motivates it is a stale `rules/` directory sitting beside a newer
+/// binary (the portable layout): the removed singular `category` key must stop
+/// the load loudly, never be silently coerced into a one-element list.
+#[derive(Deserialize)]
+struct PointItemRepr {
+    id: Id,
+    kind: ItemKind,
+    magnitude: Magnitude,
+    #[serde(default)]
+    categories: Option<Vec<String>>,
+    /// The removed singular key, accepted here only so its presence can be
+    /// rejected by name. Never stored.
+    #[serde(default)]
+    category: Option<String>,
+    classification: Classification,
+    #[serde(default)]
+    tainted: bool,
+    #[serde(default)]
+    entity_kinds: BTreeSet<EntityKind>,
+    #[serde(default)]
+    prerequisites: Option<Prereq>,
+    #[serde(default)]
+    incompatible_with: BTreeSet<Id>,
+    #[serde(default)]
+    parameters: Vec<ParameterDef>,
+    #[serde(default)]
+    effects: Vec<Effect>,
+    #[serde(default = "default_max_per_target")]
+    max_per_target: u8,
+    #[serde(default)]
+    source: Option<SourceRef>,
+}
+
+impl TryFrom<PointItemRepr> for PointItem {
+    type Error = String;
+
+    fn try_from(repr: PointItemRepr) -> Result<Self, Self::Error> {
+        let PointItemRepr {
+            id,
+            kind,
+            magnitude,
+            categories,
+            category,
+            classification,
+            tainted,
+            entity_kinds,
+            prerequisites,
+            incompatible_with,
+            parameters,
+            effects,
+            max_per_target,
+            source,
+        } = repr;
+
+        if category.is_some() {
+            return Err(format!(
+                "point item '{id}' uses the removed singular 'category' key; \
+                 it takes 'categories', an array of category slugs with the \
+                 descriptor's first-listed (primary) category first"
+            ));
+        }
+        let Some(categories) = categories else {
+            return Err(format!(
+                "point item '{id}' is missing the required 'categories' field, \
+                 an array of category slugs with the primary category first"
+            ));
+        };
+
+        Ok(Self {
+            id,
+            kind,
+            magnitude,
+            categories,
+            classification,
+            tainted,
+            entity_kinds,
+            prerequisites,
+            incompatible_with,
+            parameters,
+            effects,
+            max_per_target,
+            source,
+        })
+    }
+}
+
 impl PointItem {
     /// Sorts the `parameters` vector by key for canonical serialization.
+    ///
+    /// `categories` is order-significant (the descriptor's own order, primary
+    /// first) and so is deliberately left untouched.
     pub fn normalize(&mut self) {
         self.parameters.sort_by(|a, b| a.key.cmp(&b.key));
+    }
+
+    /// The item's **primary** category: the one its rulebook descriptor lists
+    /// first. This is what a single-category *display* uses; it is never the
+    /// basis of a membership decision (see [`PointItem::has_category`]).
+    ///
+    /// Empty only for a catalogue that failed load-time integrity, which rejects
+    /// an item with no categories.
+    pub fn primary_category(&self) -> &str {
+        self.categories
+            .first()
+            .map(String::as_str)
+            .unwrap_or_default()
+    }
+
+    /// Whether the item carries `category` at all — primary or secondary. Every
+    /// membership rule (permitted/forbidden lists, caps, grant constraints, Gift
+    /// categories) is expressed with this, so a two-category item counts under
+    /// both of them.
+    pub fn has_category(&self, category: &str) -> bool {
+        self.categories.iter().any(|c| c == category)
+    }
+
+    /// The first of the item's categories that is a member of `set`, in the
+    /// item's own order — i.e. the category that actually made a membership test
+    /// succeed, which is what an issue message should name.
+    pub fn first_category_in(&self, set: &BTreeSet<String>) -> Option<&str> {
+        self.categories
+            .iter()
+            .find(|c| set.contains(*c))
+            .map(String::as_str)
+    }
+
+    /// Whether any of the item's categories is a member of `set`.
+    pub fn any_category_in(&self, set: &BTreeSet<String>) -> bool {
+        self.first_category_in(set).is_some()
     }
 }
 
@@ -3602,7 +3747,7 @@ mod tests {
           "id": "virtue.gentle_gift",
           "kind": "virtue",
           "magnitude": "major",
-          "category": "hermetic",
+          "categories": ["hermetic"],
           "classification": "narrative",
           "entity_kinds": ["character"],
           "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" },
@@ -3614,7 +3759,7 @@ mod tests {
         assert_eq!(item.id, Id::new("virtue.gentle_gift"));
         assert_eq!(item.kind, ItemKind::Virtue);
         assert_eq!(item.magnitude, Magnitude::Major);
-        assert_eq!(item.category, "hermetic");
+        assert_eq!(item.categories, vec!["hermetic"]);
         assert_eq!(item.classification, Classification::Narrative);
         assert_eq!(item.entity_kinds, BTreeSet::from([EntityKind::Character]));
         assert_eq!(
@@ -3639,6 +3784,68 @@ mod tests {
     }
 
     #[test]
+    fn point_item_keeps_every_descriptor_category_in_source_order() {
+        // Suppressed Gift's descriptor reads "Major, Hermetic, Story" — two
+        // categories, the earlier of which is the primary.
+        // Source: Ars Magica - Definitive Edition (Core Rules).md:6803-6804.
+        let json = r#"{
+          "id": "flaw.suppressed_gift",
+          "kind": "flaw",
+          "classification": "narrative",
+          "magnitude": "major",
+          "categories": ["hermetic", "story"],
+          "entity_kinds": ["character"]
+        }"#;
+
+        let item: PointItem = serde_json::from_str(json).unwrap();
+        assert_eq!(item.categories, vec!["hermetic", "story"]);
+        assert_eq!(item.primary_category(), "hermetic");
+        assert!(item.has_category("story"));
+        assert!(!item.has_category("general"));
+
+        // Order is meaningful, so a round trip must not re-sort it.
+        let reserialized = serde_json::to_string(&item).unwrap();
+        let roundtripped: PointItem = serde_json::from_str(&reserialized).unwrap();
+        assert_eq!(roundtripped.categories, vec!["hermetic", "story"]);
+    }
+
+    #[test]
+    fn point_item_rejects_the_removed_singular_category_key() {
+        // An old `rules/` directory beside a new binary (the portable layout)
+        // must fail loudly rather than load an item with no categories at all.
+        let json = r#"{
+          "id": "flaw.optimistic",
+          "kind": "flaw",
+          "classification": "narrative",
+          "magnitude": "minor",
+          "category": "personality"
+        }"#;
+
+        let err = serde_json::from_str::<PointItem>(json)
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("flaw.optimistic"), "names the item: {err}");
+        assert!(err.contains("category"), "names the removed key: {err}");
+        assert!(err.contains("categories"), "names the replacement: {err}");
+    }
+
+    #[test]
+    fn point_item_without_categories_names_the_offending_item() {
+        let json = r#"{
+          "id": "flaw.nameless",
+          "kind": "flaw",
+          "classification": "narrative",
+          "magnitude": "minor"
+        }"#;
+
+        let err = serde_json::from_str::<PointItem>(json)
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("flaw.nameless"), "names the item: {err}");
+        assert!(err.contains("categories"), "names the field: {err}");
+    }
+
+    #[test]
     fn line_range_serializes_as_array() {
         let source = SourceRef::new("file.md", LineRange::new(10, 20));
         let json = serde_json::to_string(&source).unwrap();
@@ -3652,7 +3859,7 @@ mod tests {
           "kind": "virtue",
           "classification": "narrative",
           "magnitude": "minor",
-          "category": "general",
+          "categories": ["general"],
           "entity_kinds": ["character"],
           "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
           "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [240, 251] }
@@ -3673,7 +3880,7 @@ mod tests {
               "kind": "virtue",
               "classification": "narrative",
               "magnitude": "minor",
-              "category": "general",
+              "categories": ["general"],
               "entity_kinds": ["character"],
               "parameters": [
                 { "key": "second", "type": "ref", "domain": "art" },
@@ -5781,7 +5988,7 @@ mod tests {
           "kind": "boon",
           "classification": "narrative",
           "magnitude": "minor",
-          "category": "site",
+          "categories": ["site"],
           "entity_kinds": ["covenant"]
         }"#;
         let boon: PointItem = serde_json::from_str(boon_json).unwrap();
@@ -5793,7 +6000,7 @@ mod tests {
           "kind": "hook",
           "classification": "narrative",
           "magnitude": "minor",
-          "category": "site",
+          "categories": ["site"],
           "entity_kinds": ["covenant"]
         }"#;
         let hook: PointItem = serde_json::from_str(hook_json).unwrap();
@@ -5813,7 +6020,7 @@ mod tests {
           "kind": "virtue",
           "classification": "narrative",
           "magnitude": "minor",
-          "category": "general",
+          "categories": ["general"],
           "entity_kinds": ["character"],
           "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
           "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }],
@@ -5837,7 +6044,7 @@ mod tests {
           "kind": "virtue",
           "classification": "narrative",
           "magnitude": "minor",
-          "category": "general"
+          "categories": ["general"]
         }"#;
         let item: PointItem = serde_json::from_str(json).unwrap();
         assert_eq!(item.max_per_target, 1);

@@ -20,19 +20,19 @@ function installRuleset(): void {
       type_profiles: {},
       abilities: {},
       point_items: {
-        [VIRTUE_A]: { id: VIRTUE_A, kind: 'virtue', magnitude: 'minor', category: 'social' },
-        [VIRTUE_B]: { id: VIRTUE_B, kind: 'virtue', magnitude: 'minor', category: 'social' },
+        [VIRTUE_A]: { id: VIRTUE_A, kind: 'virtue', magnitude: 'minor', categories: ['social'] },
+        [VIRTUE_B]: { id: VIRTUE_B, kind: 'virtue', magnitude: 'minor', categories: ['social'] },
         [OPEN_VIRTUE]: {
           id: OPEN_VIRTUE,
           kind: 'virtue',
           magnitude: 'minor',
-          category: 'hermetic',
+          categories: ['hermetic'],
         },
         [FIXED_VIRTUE]: {
           id: FIXED_VIRTUE,
           kind: 'virtue',
           magnitude: 'minor',
-          category: 'hermetic',
+          categories: ['hermetic'],
         },
       },
       houses: {

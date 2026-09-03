@@ -73,7 +73,7 @@ function item(overrides: Partial<PointItem> & Pick<PointItem, 'id'>): PointItem 
   return {
     kind: 'virtue',
     magnitude: 'minor',
-    category: 'general',
+    categories: ['general'],
     classification: 'narrative',
     entity_kinds: ['character'],
     ...overrides,
@@ -127,9 +127,9 @@ const magusProfiles = {
     creation_phases: [],
   },
 };
-const gift = () => item({ id: 'virtue.the_gift', magnitude: 'free', category: 'special' });
+const gift = () => item({ id: 'virtue.the_gift', magnitude: 'free', categories: ['special'] });
 const hermeticMagus = () =>
-  item({ id: 'virtue.hermetic_magus', magnitude: 'free', category: 'social_status' });
+  item({ id: 'virtue.hermetic_magus', magnitude: 'free', categories: ['social_status'] });
 
 /** Reset the shared singleton's entity to a clean character before each test. */
 function resetEntity(): void {
@@ -3039,7 +3039,7 @@ describe('art actions', () => {
     installRuleset([
       item({
         id: 'virtue.puissant_art',
-        category: 'hermetic',
+        categories: ['hermetic'],
         parameters: [{ key: 'art', type: 'ref', domain: 'art' }],
         effects: [{ type: 'art_bonus', param: 'art', amount: 3 }],
       }),
@@ -3056,7 +3056,7 @@ describe('art actions', () => {
     installRuleset([
       item({
         id: 'virtue.master_of_form_creatures',
-        category: 'supernatural',
+        categories: ['supernatural'],
         parameters: [{ key: 'form', type: 'ref', domain: 'art' }],
       }),
     ]);
@@ -3343,17 +3343,17 @@ describe('setMythicType / required package', () => {
   function installMythic(): void {
     installRuleset(
       [
-        item({ id: 'virtue.status', magnitude: 'free', category: 'social_status' }),
-        item({ id: 'virtue.min_a', category: 'supernatural' }),
-        item({ id: 'virtue.min_b', category: 'supernatural' }),
-        item({ id: 'virtue.req_major', magnitude: 'major', category: 'supernatural' }),
+        item({ id: 'virtue.status', magnitude: 'free', categories: ['social_status'] }),
+        item({ id: 'virtue.min_a', categories: ['supernatural'] }),
+        item({ id: 'virtue.min_b', categories: ['supernatural'] }),
+        item({ id: 'virtue.req_major', magnitude: 'major', categories: ['supernatural'] }),
         item({
           id: 'virtue.puissant',
-          category: 'general',
+          categories: ['general'],
           parameters: [{ key: 'ability', type: 'ref', domain: 'ability' }],
         }),
-        item({ id: 'flaw.default_major', kind: 'flaw', magnitude: 'major', category: 'story' }),
-        item({ id: 'flaw.other_major', kind: 'flaw', magnitude: 'major', category: 'story' }),
+        item({ id: 'flaw.default_major', kind: 'flaw', magnitude: 'major', categories: ['story'] }),
+        item({ id: 'flaw.other_major', kind: 'flaw', magnitude: 'major', categories: ['story'] }),
       ],
       [],
       {
@@ -3780,10 +3780,13 @@ describe('exportMarkdown', () => {
       [
         item({
           id: 'virtue.puissant_ability',
-          category: 'hermetic',
+          categories: ['hermetic'],
           parameters: [{ key: 'ability', type: 'ref', domain: 'ability' }],
         }),
-        item({ id: 'flaw.optimistic', kind: 'flaw', category: 'personality' }),
+        item({ id: 'flaw.optimistic', kind: 'flaw', categories: ['personality'] }),
+        // A dual-category item, so the composed `category-<id>` family has to
+        // cover a category that is no item's PRIMARY one.
+        item({ id: 'flaw.visions', kind: 'flaw', categories: ['story', 'supernatural'] }),
       ],
       [ability('ability.area_lore', 'area')],
       { magus: profile('magus'), grog: profile('grog') },
@@ -3844,6 +3847,17 @@ describe('exportMarkdown', () => {
     // one per distinct category the point-item catalogue uses.
     expect(labels['category-hermetic']).toBe('Hermetic');
     expect(labels['category-personality']).toBe('Personality');
+  });
+
+  // The exporter prints EVERY category of a Virtue/Flaw in its Type cell, so the
+  // label family must cover a secondary category too — collecting only the
+  // primary would ship `supernatural` as its own label in the sheet.
+  it('includes a category no item carries as its primary', async () => {
+    await store.exportMarkdown();
+
+    const labels = sentLabels();
+    expect(labels['category-story']).toBe('Story');
+    expect(labels['category-supernatural']).toBe('Supernatural');
   });
 
   it('never echoes a key back as its own label, in either language', async () => {

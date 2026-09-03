@@ -33,13 +33,21 @@ pub(crate) fn validate_permitted_categories(
             continue;
         };
 
-        if !profile.permitted_categories.contains(&item.category) {
+        // An item is permitted when *any* of its categories is: a descriptor
+        // naming two categories offers two routes to the same Virtue/Flaw, and
+        // the profile need only allow one of them. Suppressed Gift is "*Major,
+        // Hermetic, Story*", so a companion — who may take Story but not
+        // Hermetic — may take it.
+        // Source: Ars Magica - Definitive Edition (Core Rules).md:6803-6804.
+        if !item.any_category_in(&profile.permitted_categories) {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_CATEGORY_NOT_PERMITTED,
                 CreationPhase::VirtuesFlaws,
                 args([
                     ("item", selection.item_ref.to_string()),
-                    ("category", item.category.clone()),
+                    // Every category failed the test, so the primary one — the
+                    // descriptor's own first-listed — represents the item.
+                    ("category", item.primary_category().to_string()),
                 ]),
                 Some(selection.item_ref.clone()),
             ));
@@ -66,17 +74,21 @@ pub(crate) fn validate_forbidden_categories(
             continue;
         };
 
-        if profile.forbidden_categories.contains(&item.category) {
-            issues.push(ValidationIssue::error(
-                ValidationIssue::CODE_FORBIDDEN_CATEGORY,
-                CreationPhase::VirtuesFlaws,
-                args([
-                    ("item", selection.item_ref.to_string()),
-                    ("category", item.category.clone()),
-                ]),
-                Some(selection.item_ref.clone()),
-            ));
-        }
+        // Forbidding is the mirror of permitting: *any* forbidden category on the
+        // item rules it out, and the issue names the category that actually
+        // tripped — not the item's primary, which may be innocent.
+        let Some(offending) = item.first_category_in(&profile.forbidden_categories) else {
+            continue;
+        };
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_FORBIDDEN_CATEGORY,
+            CreationPhase::VirtuesFlaws,
+            args([
+                ("item", selection.item_ref.to_string()),
+                ("category", offending.to_string()),
+            ]),
+            Some(selection.item_ref.clone()),
+        ));
     }
 }
 

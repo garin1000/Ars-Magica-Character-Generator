@@ -88,7 +88,7 @@ function item(overrides: Partial<PointItem> & Pick<PointItem, 'id'>): PointItem 
   return {
     kind: 'virtue',
     magnitude: 'minor',
-    category: 'general',
+    categories: ['general'],
     classification: 'narrative',
     entity_kinds: ['character'],
     ...overrides,
@@ -121,10 +121,10 @@ function makeRuleset(
 
 describe('filterItems', () => {
   const items = [
-    item({ id: 'virtue.brave', category: 'general', magnitude: 'minor' }),
-    item({ id: 'virtue.giant', category: 'general', magnitude: 'major' }),
-    item({ id: 'virtue.corrupt', category: 'supernatural', magnitude: 'minor', tainted: true }),
-    item({ id: 'flaw.dark', kind: 'flaw', category: 'story', magnitude: 'major' }),
+    item({ id: 'virtue.brave', categories: ['general'], magnitude: 'minor' }),
+    item({ id: 'virtue.giant', categories: ['general'], magnitude: 'major' }),
+    item({ id: 'virtue.corrupt', categories: ['supernatural'], magnitude: 'minor', tainted: true }),
+    item({ id: 'flaw.dark', kind: 'flaw', categories: ['story'], magnitude: 'major' }),
   ];
   const i18n = {
     'virtue.brave': { name: 'Brave', summary: 'Fearless in danger.' },
@@ -142,6 +142,22 @@ describe('filterItems', () => {
     expect(filterItems(rs, items, { text: 'giant' }).map((i) => i.id)).toEqual(['virtue.giant']);
     // summary match
     expect(filterItems(rs, items, { text: 'demons' }).map((i) => i.id)).toEqual(['virtue.corrupt']);
+  });
+
+  // A descriptor may name two categories (virtue.sufi is "Social Status,
+  // Supernatural"). Membership tests read the WHOLE list — only display and
+  // grouping use the primary — so filtering on the secondary must find it.
+  it('matches an item through a secondary category', () => {
+    const dual = item({ id: 'virtue.sufi', categories: ['social_status', 'supernatural'] });
+    const plain = item({ id: 'virtue.plain', categories: ['general'] });
+    const list = [dual, plain];
+    const dualRs = makeRuleset(list);
+    expect(filterItems(dualRs, list, { categories: ['supernatural'] }).map((i) => i.id)).toEqual([
+      'virtue.sufi',
+    ]);
+    expect(filterItems(dualRs, list, { categories: ['social_status'] }).map((i) => i.id)).toEqual([
+      'virtue.sufi',
+    ]);
   });
 
   it('filters by category, magnitude, and tainted', () => {
@@ -922,10 +938,10 @@ describe('groupByCategory', () => {
     // name-based sort must reorder them.
     const ruleset = makeRuleset(
       [
-        item({ id: 'virtue.a_general', category: 'general' }),
-        item({ id: 'virtue.b_general', category: 'general' }),
-        item({ id: 'virtue.m_hermetic', category: 'hermetic' }),
-        item({ id: 'virtue.z_hermetic', category: 'hermetic' }),
+        item({ id: 'virtue.a_general', categories: ['general'] }),
+        item({ id: 'virtue.b_general', categories: ['general'] }),
+        item({ id: 'virtue.m_hermetic', categories: ['hermetic'] }),
+        item({ id: 'virtue.z_hermetic', categories: ['hermetic'] }),
       ],
       {
         i18n: {
@@ -946,8 +962,8 @@ describe('groupByCategory', () => {
 
   it('falls back to id ordering when names are absent', () => {
     const ruleset = makeRuleset([
-      item({ id: 'virtue.b_general', category: 'general' }),
-      item({ id: 'virtue.a_general', category: 'general' }),
+      item({ id: 'virtue.b_general', categories: ['general'] }),
+      item({ id: 'virtue.a_general', categories: ['general'] }),
     ]);
     expect(groupByCategory(ruleset)[0].items.map((i) => i.id)).toEqual([
       'virtue.a_general',
@@ -959,12 +975,27 @@ describe('groupByCategory', () => {
     expect(groupByCategory(makeRuleset([]))).toEqual([]);
   });
 
+  // Grouping is single-bucket and keyed on the PRIMARY category (`categories[0]`,
+  // the descriptor's first-listed one), so a dual-category item shows up under
+  // exactly one heading — never once per category.
+  it('groups a dual-category item under its primary category only', () => {
+    const ruleset = makeRuleset([
+      item({ id: 'virtue.sufi', categories: ['social_status', 'supernatural'] }),
+      item({ id: 'virtue.second_sight', categories: ['supernatural'] }),
+    ]);
+    const groups = groupByCategory(ruleset);
+
+    expect(groups.map((g) => g.category)).toEqual(['social_status', 'supernatural']);
+    expect(groups[0].items.map((i) => i.id)).toEqual(['virtue.sufi']);
+    expect(groups[1].items.map((i) => i.id)).toEqual(['virtue.second_sight']);
+  });
+
   it('keeps only items whose kind is in the given filter', () => {
     const ruleset = makeRuleset([
-      item({ id: 'virtue.a', kind: 'virtue', category: 'general' }),
-      item({ id: 'boon.b', kind: 'boon', category: 'general' }),
-      item({ id: 'flaw.c', kind: 'flaw', category: 'general' }),
-      item({ id: 'hook.d', kind: 'hook', category: 'general' }),
+      item({ id: 'virtue.a', kind: 'virtue', categories: ['general'] }),
+      item({ id: 'boon.b', kind: 'boon', categories: ['general'] }),
+      item({ id: 'flaw.c', kind: 'flaw', categories: ['general'] }),
+      item({ id: 'hook.d', kind: 'hook', categories: ['general'] }),
     ]);
 
     const virtues = groupByCategory(ruleset, ['virtue', 'boon']);
@@ -1703,6 +1734,7 @@ describe('resolveIssueArgValue / resolveIssueArgs', () => {
       'param-label-language': 'Language',
       'xp-pool-childhood_spread': 'Early childhood',
       'xp-pool-childhood_native_language': 'Native language',
+      'category-supernatural': 'Supernatural',
     };
     if (key === 'param-hint') return `(${args?.label})`;
     return table[key] ?? key;
@@ -1732,6 +1764,14 @@ describe('resolveIssueArgValue / resolveIssueArgs', () => {
   it('leaves a numeric enum-keyed arg (e.g. a base score) untouched', () => {
     const rs = makeRuleset([]);
     expect(resolveIssueArgValue(rs, 'base', '3', t)).toBe('3');
+  });
+
+  // `category_not_permitted` / `forbidden_category` carry the offending category
+  // as a raw slug (`validation/selections.rs`), which is not a rules id and so has
+  // no i18n entry — without its own prefix it printed straight into the message.
+  it('resolves a category arg through its category Fluent key', () => {
+    const rs = makeRuleset([]);
+    expect(resolveIssueArgValue(rs, 'category', 'supernatural', t)).toBe('Supernatural');
   });
 
   it('resolves a param key arg through its param-label', () => {
@@ -1783,9 +1823,9 @@ describe('resolveIssueArgValue / resolveIssueArgs', () => {
 describe('groupSelectionsByCategory', () => {
   const rs = makeRuleset(
     [
-      item({ id: 'virtue.zeal', category: 'general' }),
-      item({ id: 'virtue.affinity', category: 'general' }),
-      item({ id: 'virtue.verditius', category: 'hermetic' }),
+      item({ id: 'virtue.zeal', categories: ['general'] }),
+      item({ id: 'virtue.affinity', categories: ['general'] }),
+      item({ id: 'virtue.verditius', categories: ['hermetic'] }),
     ],
     {
       i18n: {
@@ -1873,6 +1913,23 @@ describe('groupSelectionsByCategory', () => {
 
   it('drops a granted row whose item ref is unknown', () => {
     expect(groupSelectionsByCategory(rs, [], [{ ref: 'nope' }])).toEqual([]);
+  });
+
+  // `VirtueFlawTab` addresses a bought row's removal by its `entity.selections`
+  // index, so a dual-category item must yield exactly ONE row — duplicating it
+  // under a second heading would give two rows the same index.
+  it('lists a bought dual-category row once, under its primary category', () => {
+    const dualRs = makeRuleset([
+      item({ id: 'virtue.sufi', categories: ['social_status', 'supernatural'] }),
+    ]);
+    const groups = groupSelectionsByCategory(dualRs, [
+      { selection: { ref: 'virtue.sufi' }, index: 0 },
+    ]);
+
+    expect(groups.map((g) => g.category)).toEqual(['social_status']);
+    expect(groups.flatMap((g) => g.rows)).toEqual([
+      { kind: 'sel', selection: { ref: 'virtue.sufi' }, index: 0 },
+    ]);
   });
 });
 
@@ -2322,20 +2379,30 @@ describe('grantItemLabel', () => {
 
 describe('eligibleForConstraint', () => {
   const items = [
-    item({ id: 'virtue.minor_general', kind: 'virtue', magnitude: 'minor', category: 'general' }),
-    item({ id: 'virtue.major_general', kind: 'virtue', magnitude: 'major', category: 'general' }),
+    item({
+      id: 'virtue.minor_general',
+      kind: 'virtue',
+      magnitude: 'minor',
+      categories: ['general'],
+    }),
+    item({
+      id: 'virtue.major_general',
+      kind: 'virtue',
+      magnitude: 'major',
+      categories: ['general'],
+    }),
     item({
       id: 'virtue.minor_super',
       kind: 'virtue',
       magnitude: 'minor',
-      category: 'supernatural',
+      categories: ['supernatural'],
     }),
-    item({ id: 'flaw.minor_general', kind: 'flaw', magnitude: 'minor', category: 'general' }),
+    item({ id: 'flaw.minor_general', kind: 'flaw', magnitude: 'minor', categories: ['general'] }),
     item({
       id: 'virtue.minor_super_warping',
       kind: 'virtue',
       magnitude: 'minor',
-      category: 'supernatural',
+      categories: ['supernatural'],
       effects: [{ type: 'warping_grant', score: 1, points: 5 }],
     }),
   ];
@@ -2375,6 +2442,41 @@ describe('eligibleForConstraint', () => {
         (it) => it.id,
       ),
     ).toEqual(['virtue.minor_super']);
+  });
+
+  // Mirrors the engine's `open_pick_satisfies`: both lists are matched against
+  // EVERY category the item carries (`require_categories` wants a non-empty
+  // intersection, `forbid_categories` an empty one), so a secondary category
+  // both admits a pick and rules one out.
+  it('matches the require- and forbid-lists against a secondary category too', () => {
+    const dualRuleset = makeRuleset([
+      item({
+        id: 'virtue.sufi',
+        kind: 'virtue',
+        magnitude: 'minor',
+        categories: ['social_status', 'supernatural'],
+      }),
+      item({
+        id: 'virtue.plain_status',
+        kind: 'virtue',
+        magnitude: 'minor',
+        categories: ['social_status'],
+      }),
+    ]);
+
+    expect(
+      eligibleForConstraint(dualRuleset, {
+        kind: 'virtue',
+        require_categories: ['supernatural'],
+      }).map((it) => it.id),
+    ).toEqual(['virtue.sufi']);
+
+    expect(
+      eligibleForConstraint(dualRuleset, {
+        kind: 'virtue',
+        forbid_categories: ['supernatural'],
+      }).map((it) => it.id),
+    ).toEqual(['virtue.plain_status']);
   });
 
   it('sorts a brace-led name by its unwrapped word, not the brace glyph', () => {

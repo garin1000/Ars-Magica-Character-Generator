@@ -1236,12 +1236,12 @@ mod tests {
         // at all; unrelated to what this fixture is testing, but needed for
         // `Ruleset::from_sources` to pass integrity.
         let mut items = String::from(
-            r#"[{"id":"flaw.filler","kind":"flaw","classification":"narrative","magnitude":"minor","category":"personality","entity_kinds":["character"]}"#,
+            r#"[{"id":"flaw.filler","kind":"flaw","classification":"narrative","magnitude":"minor","categories":["personality"],"entity_kinds":["character"]}"#,
         );
         for i in 0..pool_count {
             items.push(',');
             items.push_str(&format!(
-                r#"{{"id":"virtue.dead_pool_{i}","kind":"virtue","classification":"narrative","magnitude":"minor","category":"general","effects":[{{"type":"restricted_ability_xp","amount":10,"abilities":["ability.artes_liberales"]}}]}}"#
+                r#"{{"id":"virtue.dead_pool_{i}","kind":"virtue","classification":"narrative","magnitude":"minor","categories":["general"],"effects":[{{"type":"restricted_ability_xp","amount":10,"abilities":["ability.artes_liberales"]}}]}}"#
             ));
         }
         items.push(']');
@@ -1319,18 +1319,18 @@ mod tests {
     fn ability_authorizations_reads_only_the_three_permission_granting_effects() {
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] },
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
           { "id": "virtue.warrior", "kind": "virtue", "classification": "creation_effect",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }] },
           { "id": "virtue.covenant_upbringing", "kind": "virtue", "classification": "creation_effect",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "ability_authorization", "abilities": ["ability.dead_language"] }] },
           { "id": "virtue.second_sight", "kind": "virtue", "classification": "creation_effect",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "ability_score_grant", "ability": "ability.second_sight", "amount": 1 }] },
           { "id": "virtue.puissant_ability", "kind": "virtue", "classification": "narrative",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
             "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }] }
         ]"#;

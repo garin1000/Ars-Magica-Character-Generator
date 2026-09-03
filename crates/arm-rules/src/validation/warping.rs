@@ -217,20 +217,20 @@ mod tests {
     fn warping_ruleset() -> Ruleset {
         let items = r#"[
           { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative",
-            "magnitude": "free", "category": "special", "entity_kinds": ["character"] },
+            "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "major", "category": "personality", "entity_kinds": ["character"] },
+            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },
           { "id": "flaw.clumsy", "kind": "flaw", "classification": "narrative",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["character"] },
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"] },
           { "id": "flaw.dark_secret", "kind": "flaw", "classification": "narrative",
-            "magnitude": "major", "category": "story", "entity_kinds": ["character"] },
+            "magnitude": "major", "categories": ["story"], "entity_kinds": ["character"] },
           { "id": "virtue.second_sight", "kind": "virtue", "classification": "narrative",
-            "magnitude": "minor", "category": "supernatural", "entity_kinds": ["character"] },
+            "magnitude": "minor", "categories": ["supernatural"], "entity_kinds": ["character"] },
           { "id": "virtue.enchanting_ability", "kind": "virtue", "classification": "narrative",
-            "magnitude": "minor", "category": "supernatural", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["supernatural"], "entity_kinds": ["character"],
             "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }] },
           { "id": "flaw.warped_by_magic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "minor", "category": "supernatural", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["supernatural"], "entity_kinds": ["character"],
             "effects": [{ "type": "warping_grant", "score": 1, "points": 5 }] }
         ]"#;
         let types = r#"[

@@ -204,16 +204,32 @@
   }
 </script>
 
-<!-- Only the item's two intrinsic tags (category + magnitude) stack in the
+<!-- Only the item's intrinsic tags (its categories + its magnitude) stack in the
      right-edge overlay; a provenance marker (Required/Granted) is rendered as a
-     separate inline chip in the row (see below), so the vertical stack never
-     grows past two and bleeds into neighbouring rows. -->
+     separate inline chip in the row (see below), so nothing else ever joins the
+     vertical stack.
+
+     The stack is therefore one tag per category plus one for the magnitude. Most
+     descriptors name a single category and the stack is two tall, as it always
+     was; the four that name two (e.g. Sufi, "Minor, Social Status,
+     Supernatural") make it three, and `.tall-badges` grows the row to contain
+     that third tag instead of letting it bleed over the row border into the
+     neighbours. Category order is the descriptor's own, so the FIRST badge is
+     the primary — the same category as the group heading the row sits under,
+     which is what houses.e2e.js compares the two against. -->
 {#snippet nameWrap(ref: string, params: Record<string, string> | undefined)}
   {@const item = store.ruleset?.ruleset.point_items[ref]}
-  <span class="name-wrap" use:reserveTagSpace use:tooltip={tip(ref)}>
+  <span
+    class="name-wrap"
+    class:tall-badges={(item?.categories.length ?? 1) > 1}
+    use:reserveTagSpace
+    use:tooltip={tip(ref)}
+  >
     {#if item}
       <span class="badges">
-        <span class="badge type">{store.t(`category-${item.category}`)}</span>
+        {#each item.categories as category (category)}
+          <span class="badge type">{store.t(`category-${category}`)}</span>
+        {/each}
         <span class="badge">{store.t(`magnitude-${item.magnitude}`)}</span>
       </span>
     {/if}

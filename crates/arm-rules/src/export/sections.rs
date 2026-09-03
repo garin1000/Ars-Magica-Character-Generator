@@ -188,9 +188,12 @@ impl<'a> Doc<'a> {
     /// table so a granted item is rendered exactly like a bought one — only its table
     /// differs.
     ///
-    /// The "type" cell is the item's `category`, localized through `category-<id>` —
-    /// the same key the in-app badge uses. Categories are catalogue *data*, so that
-    /// family is not enumerated in [`LABEL_KEYS`] (see its docs).
+    /// The "type" cell lists *every* category the item's descriptor names, in the
+    /// descriptor's order (primary first), each localized through `category-<id>` —
+    /// the same key the in-app badge uses — and joined with the shared localized
+    /// list separator. Dropping the secondaries would hide, say, that Suppressed
+    /// Gift is a Story Flaw as well as a Hermetic one. Categories are catalogue
+    /// *data*, so that family is not enumerated in [`LABEL_KEYS`] (see its docs).
     fn item_rows(&self, selections: &[Selection], kind: ItemKind) -> Vec<Vec<String>> {
         selections
             .iter()
@@ -202,7 +205,11 @@ impl<'a> Doc<'a> {
                 let values = self.param_display_values(&selection.params);
                 Some(vec![
                     self.parameterized_name(&selection.item_ref, &values),
-                    self.label(&format!("category-{}", item.category)),
+                    item.categories
+                        .iter()
+                        .map(|category| self.label(&format!("category-{category}")))
+                        .collect::<Vec<_>>()
+                        .join(&self.list_separator()),
                     self.label(&format!("magnitude-{}", item.magnitude)),
                 ])
             })

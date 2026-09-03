@@ -3760,3 +3760,234 @@ fn an_exemplar_slug_is_not_treated_as_a_referential_integrity_ref() {
         "the ability ref must still be resolved, got: {err}"
     );
 }
+
+// --- Multi-category Virtues and Flaws ---------------------------------------
+//
+// A rulebook descriptor may name two categories, and `PointItem.categories` now
+// keeps both (primary first) instead of dropping all but the earliest-listed.
+// These tests assert the consequences on the SHIPPED catalogue, structurally:
+// none of them names a catalogue total, and the cap's size is read out of the
+// profile data rather than assumed.
+
+/// The shipped catalogue carries each two-category descriptor's categories in
+/// the source's order, primary first.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:5077-5078
+/// (*Minor, Social Status, Supernatural*), :6646-6647 (*Major, Story,
+/// Supernatural*), :6803-6804 (*Major, Hermetic, Story*), :6985-6986
+/// (*Minor, Story, Supernatural*).
+#[test]
+fn shipped_two_category_items_keep_the_descriptor_order() {
+    let rs = load_ruleset();
+    let expected: &[(&str, &[&str])] = &[
+        ("virtue.sufi", &["social_status", "supernatural"]),
+        ("flaw.raised_from_the_dead", &["story", "supernatural"]),
+        ("flaw.suppressed_gift", &["hermetic", "story"]),
+        ("flaw.visions", &["story", "supernatural"]),
+    ];
+    for (id, categories) in expected {
+        let item = rs
+            .item(&Id::new(*id))
+            .unwrap_or_else(|| panic!("{id} must ship in the catalogue"));
+        assert_eq!(
+            item.categories, *categories,
+            "{id} must keep its descriptor's categories in order"
+        );
+        assert_eq!(
+            item.primary_category(),
+            categories[0],
+            "{id}'s primary is the descriptor's first-listed category"
+        );
+    }
+}
+
+/// A Flaw whose descriptor names two categories counts against BOTH of their
+/// caps. Suppressed Gift is "*Major, Hermetic, Story*", so it is a Story Flaw
+/// for the Story cap — which it was invisible to while only the earliest-listed
+/// category was stored.
+#[test]
+fn a_two_category_flaw_counts_against_its_secondary_category_cap() {
+    let rs = load_ruleset();
+    let suppressed = Id::new("flaw.suppressed_gift");
+    let item = rs
+        .item(&suppressed)
+        .expect("flaw.suppressed_gift must ship in the catalogue");
+    assert!(item.has_category("hermetic"), "its primary category");
+    assert!(item.has_category("story"), "its secondary category");
+
+    // The cap's size is data. Read it, then fill it exactly with Flaws that
+    // carry Story as their ONLY category, so the cap is untripped until the
+    // two-category Flaw is added.
+    let magus = rs
+        .profile(&Id::new("magus"))
+        .expect("the magus profile must ship");
+    let cap = magus
+        .budget
+        .flaw_category_caps
+        .iter()
+        .find(|c| c.category == "story" && !c.major_only)
+        .expect("the magus profile must cap Story Flaws");
+
+    let filler: Vec<Selection> = rs
+        .items_by_category("story")
+        .filter(|i| i.kind == ItemKind::Flaw && i.categories.len() == 1 && i.parameters.is_empty())
+        .take(cap.max as usize)
+        .map(|i| Selection::new(i.id.clone()))
+        .collect();
+    assert_eq!(
+        filler.len(),
+        cap.max as usize,
+        "the catalogue must ship enough single-category Story Flaws to fill the cap"
+    );
+
+    let at_cap = validate(&entity("magus", filler.clone()), &rs);
+    assert!(
+        !at_cap
+            .issues
+            .iter()
+            .any(|i| i.code == "too_many_story_flaws"),
+        "filling the Story cap exactly must not trip it"
+    );
+
+    let mut over_cap = filler;
+    over_cap.push(Selection::new(suppressed));
+    let over_cap = validate(&entity("magus", over_cap), &rs);
+    assert!(
+        over_cap
+            .issues
+            .iter()
+            .any(|i| i.code == "too_many_story_flaws"),
+        "Suppressed Gift's secondary Story category must count against the Story cap"
+    );
+}
+
+/// Permitting is an ANY test over the item's categories: a companion may take
+/// Story Flaws, so Suppressed Gift's *secondary* Story category clears the
+/// permitted-categories check that its sole `hermetic` category used to fail.
+///
+/// It is still rejected for a companion — the profile forbids `hermetic`
+/// outright — but by the forbidden-categories rule, which is the honest reason.
+#[test]
+fn a_secondary_category_satisfies_the_permitted_category_check() {
+    let rs = load_ruleset();
+    let companion = rs
+        .profile(&Id::new("companion"))
+        .expect("the companion profile must ship");
+    assert!(
+        companion.permitted_categories.contains("story"),
+        "a companion may take Story Flaws"
+    );
+    assert!(
+        !companion.permitted_categories.contains("hermetic"),
+        "a companion may not take Hermetic Flaws"
+    );
+
+    let suppressed = Id::new("flaw.suppressed_gift");
+    let result = validate(
+        &entity("companion", vec![Selection::new(suppressed.clone())]),
+        &rs,
+    );
+    assert!(
+        !result
+            .issues
+            .iter()
+            .any(|i| i.code == "category_not_permitted" && i.context.as_ref() == Some(&suppressed)),
+        "a permitted secondary category must clear the permitted-categories check"
+    );
+    let forbidden = result
+        .issues
+        .iter()
+        .find(|i| i.code == "forbidden_category" && i.context.as_ref() == Some(&suppressed))
+        .expect("the companion profile still forbids the Hermetic category outright");
+    assert_eq!(
+        forbidden.args.get("category").map(String::as_str),
+        Some("hermetic"),
+        "the issue names the category that actually tripped"
+    );
+}
+
+/// The `category` issue argument names the category that failed, which for a
+/// forbidden-category issue may be the item's SECONDARY one. A grog forbids
+/// `supernatural` and does not permit `story`; Visions is "*Minor, Story,
+/// Supernatural*" (Ars Magica - Definitive Edition (Core Rules).md:6985-6986),
+/// so the two issues name two different categories for the same item.
+#[test]
+fn the_forbidden_category_issue_names_the_offending_category_not_the_primary() {
+    let rs = load_ruleset();
+    let grog = rs
+        .profile(&Id::new("grog"))
+        .expect("the grog profile must ship");
+    assert!(grog.forbidden_categories.contains("supernatural"));
+    assert!(!grog.permitted_categories.contains("story"));
+
+    let visions = Id::new("flaw.visions");
+    let item = rs.item(&visions).expect("flaw.visions must ship");
+    assert_eq!(item.primary_category(), "story");
+
+    let result = validate(&entity("grog", vec![Selection::new(visions.clone())]), &rs);
+    let forbidden = result
+        .issues
+        .iter()
+        .find(|i| i.code == "forbidden_category" && i.context.as_ref() == Some(&visions))
+        .expect("a grog may not take a Supernatural Flaw, secondary category or not");
+    assert_eq!(
+        forbidden.args.get("category").map(String::as_str),
+        Some("supernatural"),
+        "the forbidden-category issue names the secondary category that tripped"
+    );
+
+    let not_permitted = result
+        .issues
+        .iter()
+        .find(|i| i.code == "category_not_permitted" && i.context.as_ref() == Some(&visions))
+        .expect("neither of Visions' categories is on the grog's permitted list");
+    assert_eq!(
+        not_permitted.args.get("category").map(String::as_str),
+        Some("story"),
+        "when every category failed, the issue names the primary"
+    );
+}
+
+/// `items_by_category` is a membership query, so a two-category item is listed
+/// under both — Sufi ("*Minor, Social Status, Supernatural*") is a Supernatural
+/// Virtue as well as a Social Status one.
+#[test]
+fn items_by_category_finds_an_item_through_its_secondary_category() {
+    let rs = load_ruleset();
+    let sufi = Id::new("virtue.sufi");
+    assert!(
+        rs.items_by_category("social_status").any(|i| i.id == sufi),
+        "Sufi is listed under its primary category"
+    );
+    assert!(
+        rs.items_by_category("supernatural").any(|i| i.id == sufi),
+        "Sufi is listed under its secondary category too"
+    );
+}
+
+/// The Gift-category test is a membership query as well, so it still recognises
+/// a Flaw through the `hermetic` category it now shares with `story`: a grog
+/// forbids The Gift, and Suppressed Gift is Hermetic.
+#[test]
+fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
+    let rs = load_ruleset();
+    let grog = rs
+        .profile(&Id::new("grog"))
+        .expect("the grog profile must ship");
+    assert!(
+        grog.gift_categories.contains("hermetic"),
+        "the grog profile detects The Gift by the hermetic category"
+    );
+
+    let result = validate(
+        &entity(
+            "grog",
+            vec![Selection::new(Id::new("flaw.suppressed_gift"))],
+        ),
+        &rs,
+    );
+    assert!(
+        result.issues.iter().any(|i| i.code == "gift_forbidden"),
+        "a Hermetic Flaw must still count as having The Gift for a grog"
+    );
+}

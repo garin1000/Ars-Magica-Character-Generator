@@ -285,13 +285,15 @@ impl Ruleset {
         self.point_items.values().filter(move |i| i.kind == kind)
     }
 
-    /// Iterates over point items in the given category.
+    /// Iterates over point items in the given category — every item that *carries*
+    /// it, primary or secondary. A two-category item such as Sufi ("*Minor, Social
+    /// Status, Supernatural*") is therefore listed under both of its categories.
     pub fn items_by_category<'a>(
         &'a self,
         category: &'a str,
     ) -> impl Iterator<Item = &'a PointItem> {
         self.point_items
             .values()
-            .filter(move |i| i.category == category)
+            .filter(move |i| i.has_category(category))
     }
 }
