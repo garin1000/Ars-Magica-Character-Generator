@@ -38,7 +38,7 @@ function pointItem(id: string, parameters: ParameterDef[]): PointItem {
     id,
     kind: 'virtue',
     magnitude: 'minor',
-    category: 'hermetic',
+    categories: ['hermetic'],
     classification: 'narrative',
     entity_kinds: ['character'],
     parameters,

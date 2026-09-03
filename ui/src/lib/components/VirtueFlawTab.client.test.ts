@@ -34,7 +34,7 @@ const HEARTBEAST: PointItem = {
   id: 'virtue.heartbeast',
   kind: 'virtue',
   magnitude: 'minor',
-  category: 'hermetic',
+  categories: ['hermetic'],
   classification: 'narrative',
   entity_kinds: ['character'],
 } as PointItem;

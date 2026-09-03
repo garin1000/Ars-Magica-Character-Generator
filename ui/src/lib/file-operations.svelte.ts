@@ -38,14 +38,19 @@ function composedExportLabelKeys(localized: LocalizedRuleset | null): string[] {
 }
 
 /**
- * Every distinct `category` the point-item catalogue uses. Names the
+ * Every distinct category the point-item catalogue uses. Names the
  * `category-<id>` label the exported Virtue/Flaw tables print in their Type column,
  * so the set follows the catalogue rather than a hardcoded list of categories.
+ *
+ * EVERY category of each item, not just its primary: the exported Type cell
+ * prints them all, and a category that is only ever a secondary (as
+ * `supernatural` is for Sufi) would otherwise have no label in the map and print
+ * as its own slug.
  */
 function itemCategories(localized: LocalizedRuleset): Set<string> {
   const categories = new Set<string>();
   for (const item of Object.values(localized.ruleset.point_items ?? {})) {
-    if (item.category) categories.add(item.category);
+    for (const category of item.categories ?? []) categories.add(category);
   }
   return categories;
 }

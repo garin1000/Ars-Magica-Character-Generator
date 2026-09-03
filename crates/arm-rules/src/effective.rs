@@ -255,7 +255,7 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "free",
-            "category": "special",
+            "categories": ["special"],
             "entity_kinds": ["character"]
           },
           {
@@ -263,7 +263,7 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"],
             "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
             "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }]
@@ -273,7 +273,7 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"],
             "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
             "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": 1 }],
@@ -284,7 +284,7 @@ mod tests {
             "kind": "flaw",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"],
             "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
             "effects": [{ "type": "characteristic_limit", "param": "characteristic", "amount": -1 }],
@@ -295,7 +295,7 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"],
             "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
             "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }]
@@ -305,7 +305,7 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [
               { "type": "spell_levels", "amount": 30 },
@@ -317,7 +317,7 @@ mod tests {
             "kind": "flaw",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [
               { "type": "spell_levels", "amount": -30 },
@@ -325,7 +325,7 @@ mod tests {
             ]
           },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "major", "category": "personality", "entity_kinds": ["character"] }
+            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         let types = r#"[
           {
@@ -811,62 +811,62 @@ mod tests {
         let items = r#"[
           {
             "id": "virtue.the_gift",
-            "kind": "virtue", "classification": "narrative", "magnitude": "free", "category": "special",
+            "kind": "virtue", "classification": "narrative", "magnitude": "free", "categories": ["special"],
             "entity_kinds": ["character"]
           },
           {
             "id": "virtue.affinity_ability",
-            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"],
             "entity_kinds": ["character"],
             "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
             "effects": [{ "type": "affinity_ability_cost", "param": "ability", "counts_as_num": 3, "counts_as_den": 2 }]
           },
           {
             "id": "virtue.affinity_art",
-            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "hermetic",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["hermetic"],
             "entity_kinds": ["character"],
             "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
             "effects": [{ "type": "affinity_art_cost", "param": "art", "counts_as_num": 3, "counts_as_den": 2 }]
           },
           {
             "id": "virtue.educated",
-            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "restricted_ability_xp", "amount": 50, "abilities": ["ability.latin", "ability.artes_liberales"] }]
           },
           {
             "id": "virtue.warrior",
-            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }]
           },
           {
             "id": "virtue.privileged_upbringing",
-            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["general", "academic", "martial"] }]
           },
           {
             "id": "virtue.improved_characteristics",
-            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "characteristic_points", "amount": 3 }]
           },
           {
             "id": "flaw.weak_characteristics",
-            "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "general",
+            "kind": "flaw", "classification": "narrative", "magnitude": "minor", "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "characteristic_points", "amount": -3 }]
           },
           {
             "id": "virtue.second_sight",
-            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "supernatural",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["supernatural"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "ability_score_grant", "ability": "ability.second_sight", "amount": 1 }]
           },
           {
             "id": "virtue.giant_blood",
-            "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "major", "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [
               { "type": "size_delta", "amount": 2 },
@@ -876,7 +876,7 @@ mod tests {
           },
           {
             "id": "flaw.dwarf",
-            "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "general",
+            "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [
               { "type": "size_delta", "amount": -2 },
@@ -886,49 +886,49 @@ mod tests {
           },
           {
             "id": "flaw.warped_by_magic",
-            "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "supernatural",
+            "kind": "flaw", "classification": "narrative", "magnitude": "minor", "categories": ["supernatural"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "warping_grant", "score": 1, "points": 5 }]
           },
           {
             "id": "virtue.true_faith",
-            "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "major", "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "true_faith_grant", "score": 1 }]
           },
           {
             "id": "virtue.magic_items",
-            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "item_level_budget", "amount": 25 }]
           },
           {
             "id": "virtue.granter",
-            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "grants_selection", "items": ["virtue.second_sight"] }]
           },
           {
             "id": "virtue.mastered_spells",
-            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "hermetic",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["hermetic"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "spell_mastery_xp", "amount": 50 }]
           },
           {
             "id": "virtue.flawless_magic",
-            "kind": "virtue", "classification": "narrative", "magnitude": "major", "category": "hermetic",
+            "kind": "virtue", "classification": "narrative", "magnitude": "major", "categories": ["hermetic"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "grants_spell_mastery", "score": 1, "advancement_num": 2, "advancement_den": 1 }]
           },
           {
             "id": "virtue.linguist",
-            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "group_affinity_cost", "abilities": ["ability.living_language"], "counts_as_num": 5, "counts_as_den": 4 }]
           },
           {
             "id": "virtue.demonic_blood",
-            "kind": "virtue", "classification": "creation_effect", "magnitude": "major", "category": "supernatural",
+            "kind": "virtue", "classification": "creation_effect", "magnitude": "major", "categories": ["supernatural"],
             "entity_kinds": ["character"],
             "effects": [
               { "type": "might_grant", "realm": "infernal", "score": 5 },
@@ -937,36 +937,36 @@ mod tests {
           },
           {
             "id": "virtue.demonic_might",
-            "kind": "virtue", "classification": "creation_effect", "magnitude": "minor", "category": "supernatural",
+            "kind": "virtue", "classification": "creation_effect", "magnitude": "minor", "categories": ["supernatural"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "might_grant", "realm": "infernal", "score": 2 }]
           },
           {
             "id": "virtue.demonic_powers",
-            "kind": "virtue", "classification": "creation_effect", "magnitude": "minor", "category": "supernatural",
+            "kind": "virtue", "classification": "creation_effect", "magnitude": "minor", "categories": ["supernatural"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "power_levels", "amount": 20 }]
           },
           {
             "id": "virtue.self_confident",
-            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "personality",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["personality"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "confidence_bonus", "score": 1, "points": 2 }]
           },
           {
             "id": "virtue.famous",
-            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "social_status",
+            "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["social_status"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "grants_reputation", "score": 3 }]
           },
           {
             "id": "flaw.infamous",
-            "kind": "flaw", "classification": "narrative", "magnitude": "minor", "category": "social_status",
+            "kind": "flaw", "classification": "narrative", "magnitude": "minor", "categories": ["social_status"],
             "entity_kinds": ["character"],
             "effects": [{ "type": "grants_reputation", "kind": "local", "score": 4 }]
           },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "major", "category": "personality", "entity_kinds": ["character"] }
+            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         let types = r#"[
           {
@@ -1691,9 +1691,9 @@ mod tests {
     fn magus_owed_ruleset() -> Ruleset {
         let items = r#"[
           { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative",
-            "magnitude": "free", "category": "special", "entity_kinds": ["character"] },
+            "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "major", "category": "personality", "entity_kinds": ["character"] }
+            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         let types = r#"[
           { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -2051,16 +2051,16 @@ mod tests {
     fn house_ruleset() -> Ruleset {
         let items = r#"[
           { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative", "magnitude": "free",
-            "category": "special", "entity_kinds": ["character"] },
+            "categories": ["special"], "entity_kinds": ["character"] },
           { "id": "virtue.heartbeast", "kind": "virtue", "classification": "narrative", "magnitude": "major",
-            "category": "hermetic", "entity_kinds": ["character"],
+            "categories": ["hermetic"], "entity_kinds": ["character"],
             "effects": [{ "type": "ability_score_grant", "ability": "ability.heartbeast", "amount": 1 }] },
           { "id": "virtue.puissant_art", "kind": "virtue", "classification": "narrative", "magnitude": "minor",
-            "category": "hermetic", "entity_kinds": ["character"],
+            "categories": ["hermetic"], "entity_kinds": ["character"],
             "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
             "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "major", "category": "personality", "entity_kinds": ["character"] }
+            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         let abilities = r#"{ "abilities": [
           { "id": "ability.heartbeast", "category": "supernatural", "requires_training": true }
@@ -2178,7 +2178,7 @@ mod tests {
             "kind": "virtue",
             "classification": "creation_effect",
             "magnitude": "major",
-            "category": "hermetic",
+            "categories": ["hermetic"],
             "entity_kinds": ["character"],
             "effects": [{
               "type": "elemental_magic",
@@ -2190,13 +2190,13 @@ mod tests {
             "kind": "virtue",
             "classification": "narrative",
             "magnitude": "minor",
-            "category": "general",
+            "categories": ["general"],
             "entity_kinds": ["character"],
             "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
             "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }]
           },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "major", "category": "personality", "entity_kinds": ["character"] }
+            "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         let types = r#"[
           {
@@ -2493,21 +2493,21 @@ mod tests {
     fn life_stage_ruleset() -> Ruleset {
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] },
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
           { "id": "virtue.affinity_with_ability", "kind": "virtue", "classification": "creation_effect",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
             "effects": [{ "type": "affinity_ability_cost", "param": "ability",
                           "counts_as_num": 3, "counts_as_den": 2 }] },
           { "id": "virtue.puissant_ability", "kind": "virtue", "classification": "narrative",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
             "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }] },
           { "id": "virtue.skilled_parens", "kind": "virtue", "classification": "creation_effect",
-            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["hermetic"], "entity_kinds": ["character"],
             "effects": [{ "type": "general_xp", "amount": 60 }] },
           { "id": "flaw.covenant_upbringing", "kind": "flaw", "classification": "creation_effect",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "ability_authorization",
                           "abilities": ["ability.dead_language"] }] }
         ]"#;

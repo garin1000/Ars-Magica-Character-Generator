@@ -93,7 +93,8 @@ mod sections;
 /// from catalogue *data* and listing them would bake the catalogue's size into code:
 /// `type-<profile id>` (the character-type label in the subtitle),
 /// `param-label-<parameter key>` (the slot label shown for an unfilled parameter), and
-/// `category-<item category>` (the Type cell of a Virtue/Flaw row). The locales
+/// `category-<item category>` (the Type cell of a Virtue/Flaw row — one key per
+/// category the item carries, since a descriptor may name two). The locales
 /// already ship one key per shipped profile, parameter key and item category.
 /// Individual members the formatter names outright are still listed — hence
 /// `param-label-ability`, the Combat table's Ability column header.
@@ -571,38 +572,38 @@ mod tests {
     fn ruleset() -> LocalizedRuleset {
         let items = r#"[
           { "id": "virtue.giant_blood", "kind": "virtue", "classification": "creation_effect",
-            "magnitude": "major", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [
               { "type": "characteristic_score_delta", "characteristic": "characteristic.str", "amount": 1 }
             ] },
           { "id": "boon.rich_vis_source", "kind": "boon", "classification": "narrative",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["covenant"] },
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["covenant"] },
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-            "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] },
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
           { "id": "virtue.puissant_ability", "kind": "virtue", "classification": "creation_effect",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
             "effects": [{ "type": "ability_bonus", "param": "ability", "amount": 2 }] },
           { "id": "virtue.puissant_art", "kind": "virtue", "classification": "creation_effect",
-            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["hermetic"], "entity_kinds": ["character"],
             "parameters": [{ "key": "art", "type": "ref", "domain": "art" }],
             "effects": [{ "type": "art_bonus", "param": "art", "amount": 3 }] },
           { "id": "virtue.minor_magical_focus", "kind": "virtue", "classification": "in_play_effect",
-            "magnitude": "minor", "category": "hermetic", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["hermetic"], "entity_kinds": ["character"],
             "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
             "effects": [{ "type": "magical_focus", "param": "focus", "major": false }] },
           { "id": "virtue.warrior", "kind": "virtue", "classification": "creation_effect",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }] },
           { "id": "virtue.second_sight", "kind": "virtue", "classification": "creation_effect",
-            "magnitude": "minor", "category": "supernatural", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["supernatural"], "entity_kinds": ["character"],
             "effects": [{ "type": "ability_score_grant", "ability": "ability.second_sight", "amount": 1 }] },
           { "id": "virtue.educated", "kind": "virtue", "classification": "creation_effect",
-            "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "restricted_ability_xp", "amount": 50,
               "abilities": ["ability.artes_liberales", "ability.dead_language"] }] },
           { "id": "virtue.malformed_name", "kind": "virtue", "classification": "narrative",
-            "magnitude": "free", "category": "general", "entity_kinds": ["character"] }
+            "magnitude": "free", "categories": ["general"], "entity_kinds": ["character"] }
         ]"#;
         let types = r#"[
           { "id": "magus", "is_magus": true,
@@ -789,7 +790,9 @@ mod tests {
             keys.insert(format!("type-{id}"));
         }
         for item in rs.ruleset.point_items.values() {
-            keys.insert(format!("category-{}", item.category));
+            for category in &item.categories {
+                keys.insert(format!("category-{category}"));
+            }
             for param in &item.parameters {
                 keys.insert(format!("param-label-{}", param.key));
             }

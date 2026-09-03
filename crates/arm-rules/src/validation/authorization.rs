@@ -152,17 +152,17 @@ mod tests {
 
     const ITEMS: &str = r#"[
       { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-        "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] },
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
       { "id": "virtue.warrior", "kind": "virtue", "classification": "creation_effect",
-        "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+        "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
         "effects": [{ "type": "restricted_ability_xp", "amount": 50, "categories": ["martial"] }] },
       { "id": "virtue.covenant_upbringing", "kind": "virtue", "classification": "creation_effect",
-        "magnitude": "minor", "category": "general", "entity_kinds": ["character"],
+        "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
         "effects": [{ "type": "ability_authorization", "abilities": ["ability.dead_language"] }] },
       { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative",
-        "magnitude": "free", "category": "special", "entity_kinds": ["character"] },
+        "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
       { "id": "virtue.hermetic_magus", "kind": "virtue", "classification": "narrative",
-        "magnitude": "free", "category": "social_status", "entity_kinds": ["character"] }
+        "magnitude": "free", "categories": ["social_status"], "entity_kinds": ["character"] }
     ]"#;
     const TYPES: &str = r#"[
       { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },

@@ -48,7 +48,7 @@ pub(crate) fn validate_house(
     if !profile.gift_categories.is_empty() {
         let has_hermetic_flaw = entity.selections.iter().any(|s| {
             ruleset.point_items.get(&s.item_ref).is_some_and(|item| {
-                item.kind == ItemKind::Flaw && profile.gift_categories.contains(&item.category)
+                item.kind == ItemKind::Flaw && item.any_category_in(&profile.gift_categories)
             })
         });
         if !has_hermetic_flaw {
@@ -873,7 +873,7 @@ mod tests {
 
     const ITEMS: &str = r#"[
       { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-        "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] }
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
     ]"#;
     const TYPES: &str = r#"[
       { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -1130,7 +1130,7 @@ mod tests {
         for i in 0..pool_count {
             items.push(',');
             items.push_str(&format!(
-                r#"{{"id":"virtue.dead_pool_{i}","kind":"virtue","classification":"narrative","magnitude":"minor","category":"general","effects":[{{"type":"restricted_ability_xp","amount":10,"abilities":["ability.artes_liberales"]}}]}}"#
+                r#"{{"id":"virtue.dead_pool_{i}","kind":"virtue","classification":"narrative","magnitude":"minor","categories":["general"],"effects":[{{"type":"restricted_ability_xp","amount":10,"abilities":["ability.artes_liberales"]}}]}}"#
             ));
         }
         items.push(']');

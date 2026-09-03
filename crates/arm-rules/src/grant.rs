@@ -112,6 +112,11 @@ fn resolve_grant(grant: &Grant, choices: &BTreeMap<String, Selection>) -> Option
 /// resolve and match the required kind, the magnitude (when the constraint fixes
 /// one), and the category allow/deny lists. An unresolvable pick fails — it
 /// cannot satisfy anything.
+///
+/// Both category lists are matched against *every* category the item carries:
+/// `require_categories` needs a non-empty intersection, `forbid_categories` an
+/// empty one. So a descriptor's secondary category both admits a pick and rules
+/// one out, which is what "the item is of that category" means in the rulebook.
 pub fn open_pick_satisfies(
     pick: &Selection,
     constraint: &GrantConstraint,
@@ -129,11 +134,11 @@ pub fn open_pick_satisfies(
         return false;
     }
     if !constraint.require_categories.is_empty()
-        && !constraint.require_categories.contains(&item.category)
+        && !item.any_category_in(&constraint.require_categories)
     {
         return false;
     }
-    if constraint.forbid_categories.contains(&item.category) {
+    if item.any_category_in(&constraint.forbid_categories) {
         return false;
     }
     true

@@ -925,6 +925,16 @@ ul {
   min-height: 2.4rem;
 }
 
+/* …and three tags when the item's descriptor names two categories (Sufi is
+   "Social Status, Supernatural"), since each category gets its own badge. One
+   more badge plus its gap is ~1.1rem, so the box grows by that much — the same
+   "fully contain the stack" rule as above, applied to the taller case. Set per
+   row by `VirtueFlawTab`, so the single-category rows keep their shorter height
+   instead of every row paying for the rare one. */
+.selection-list .name-wrap.tall-badges {
+  min-height: 3.5rem;
+}
+
 /* Block so the JS-reserved padding-right forms a gutter the tags sit in; wraps
    at word boundaries, and an over-long word overflows under the tags. The
    padding-right is set per row by the reserveTagSpace action. */

@@ -29,6 +29,7 @@ WP5 → WP6 → WP7, one finding at a time.
 | 2026-09-03 | — | This findings document written; 25 findings recorded, 13 withdrawn, 10 and 14 closed with reasons | n/a (docs only) |
 | 2026-09-03 | WP1 | Finding 8 done: eleven `source` refs re-pointed at the core rules, locked by `core_rules_virtues_cite_the_core_rules_file` in `tests/data_integrity.rs`; RULES.md re-cited throughout. Finding 28 opened as a by-product. | `cargo test --workspace`, `clippy --all-targets -D warnings`, `fmt --check` — all green |
 | 2026-09-03 | WP1 | Findings 9 and 10 done: `tainted: true` added to `virtue.demonic_blood` **and** `flaw.tragic_life` (found by auditing all 21 tagged descriptors), locked by a new test; finding 10 closed with the Mythic-Companion-is-a-marker rationale recorded in RULES.md. **WP1 complete.** | `cargo test --workspace` (16 suites ok, 0 failed), `clippy`, `fmt --check` — all green |
+| 2026-09-03 | WP2 | Findings 6 and 7 done: `categories: Vec<String>` end to end — engine, rules data, export, UI grouping/filtering/badges; legacy `category:` fails loudly; `$category` no longer renders a raw slug. **WP2 complete.** | Full gate green including `cargo tauri build --no-bundle`; e2e not yet run |
 
 ---
 
@@ -118,7 +119,7 @@ inventing a category (or a flag) for it would be speculative. The
 
 ### 7 — The engine models one category per V/F; the rules give some two
 
-**Status:** open
+**Status:** done (2026-09-03)
 
 `PointItem.category` is a single `String` (`crates/arm-rules/src/types.rs:1541`),
 and every consumer assumes exactly one: category caps, type-profile
@@ -147,13 +148,36 @@ it as a category would make it compete for a category slot and give the Tainted
 cap and the category caps a shared mechanism the rules do not share.
 
 Consequences of the fix, which are the point of it: Suppressed Gift starts
-counting against the Story flaw cap and becomes permitted for companions (whose
-permitted categories include `story`), and Sufi becomes findable as a
-Supernatural virtue.
+counting against the Story flaw cap, and Sufi becomes findable as a Supernatural
+virtue.
+
+**Resolution.** `PointItem.category: String` became `categories: Vec<String>`
+with the descriptor's earliest-listed category first. Membership tests (permit,
+forbid, caps, grant constraints, gift categories, `items_by_category`) use the
+whole set; display and grouping use the primary, so a bought row still appears
+under exactly one heading and the index-addressed remove buttons stay valid. A
+legacy singular `category:` key now fails to load with an error naming the
+offending item rather than being silently coerced — an old `rules/` directory
+beside a new binary is the portable layout's real hazard. No save migration and
+no `SCHEMA_VERSION` bump: saves store `Selection { ref, params }`, never a
+category.
+
+Two corrections to the finding as written above:
+
+- Suppressed Gift does **not** become legal for a companion. The permitted check
+  now passes via `story`, but the companion profile also forbids `hermetic`, so
+  `forbidden_category` still fires — correctly, it being a Hermetic flaw.
+- The Markdown export's Type cell now lists every category, joined through the
+  localized separator, each still resolved via `category-<id>` — no raw slug.
+
+A pre-existing raw-slug bug was fixed alongside: `issue-forbidden_category`
+rendered its `$category` argument as the bare slug ("belongs to a forbidden
+category (supernatural)") because `ENUM_ARG_FLUENT_PREFIX` had no `category`
+entry.
 
 ### 6 — Visions is categorised Story only
 
-**Status:** open — subsumed by 7
+**Status:** done (2026-09-03) — subsumed by 7
 
 Reported from *Definitive Edition* p. 150 (`:6985-6986`, *Minor, Story,
 Supernatural*). A symptom of 7, not a standalone data typo; corrected as part of

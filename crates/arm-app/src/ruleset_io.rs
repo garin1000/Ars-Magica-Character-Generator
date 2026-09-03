@@ -1425,7 +1425,7 @@ mod tests {
         // item once a catalogue is shipped at all.
         const ITEMS: &str = r#"[
           { "id": "flaw.filler", "kind": "flaw", "classification": "narrative",
-            "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] }
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
         ]"#;
         const TYPES: &str = r#"[
           { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },

@@ -161,13 +161,13 @@ mod tests {
 
     const ITEMS: &str = r#"[
       { "id": "virtue.keen_vision", "kind": "virtue", "classification": "narrative",
-        "magnitude": "minor", "category": "general", "entity_kinds": ["character"] },
+        "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"] },
       { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-        "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] },
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
       { "id": "virtue.the_gift", "kind": "virtue", "classification": "narrative",
-        "magnitude": "free", "category": "special", "entity_kinds": ["character"] },
+        "magnitude": "free", "categories": ["special"], "entity_kinds": ["character"] },
       { "id": "virtue.hermetic_magus", "kind": "virtue", "classification": "narrative",
-        "magnitude": "free", "category": "social_status", "entity_kinds": ["character"] }
+        "magnitude": "free", "categories": ["social_status"], "entity_kinds": ["character"] }
     ]"#;
 
     const TYPES: &str = r#"[

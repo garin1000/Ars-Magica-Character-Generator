@@ -451,7 +451,7 @@ mod tests {
 
     const ITEMS: &str = r#"[
       { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-        "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] }
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
     ]"#;
     const TYPES: &str = r#"[
       { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },

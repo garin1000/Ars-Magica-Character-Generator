@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
@@ -26,7 +28,7 @@ function item(overrides: Partial<PointItem> & Pick<PointItem, 'id'>): PointItem 
   return {
     kind: 'virtue',
     magnitude: 'minor',
-    category: 'general',
+    categories: ['general'],
     classification: 'narrative',
     entity_kinds: ['character'],
     ...overrides,
@@ -37,10 +39,14 @@ function item(overrides: Partial<PointItem> & Pick<PointItem, 'id'>): PointItem 
 // sort AFTER the granted item's own — the arrangement that made the old
 // header-less granted group read as "Supernatural" (#9).
 const ITEMS: PointItem[] = [
-  item({ id: 'virtue.affinity', category: 'general' }),
-  item({ id: 'virtue.heartbeast', category: 'hermetic' }),
-  item({ id: 'virtue.hermetic_prestige', category: 'hermetic' }),
-  item({ id: 'virtue.second_sight', category: 'supernatural' }),
+  item({ id: 'virtue.affinity', categories: ['general'] }),
+  item({ id: 'virtue.heartbeast', categories: ['hermetic'] }),
+  item({ id: 'virtue.hermetic_prestige', categories: ['hermetic'] }),
+  item({ id: 'virtue.second_sight', categories: ['supernatural'] }),
+  // The shipped dual-category case: Sufi's descriptor reads "Minor, Social
+  // Status, Supernatural", so `social_status` is its primary and `supernatural`
+  // its secondary.
+  item({ id: 'virtue.sufi', categories: ['social_status', 'supernatural'] }),
 ];
 
 const NAMES: LocalizedRuleset['i18n'] = {
@@ -48,6 +54,7 @@ const NAMES: LocalizedRuleset['i18n'] = {
   'virtue.heartbeast': { name: 'Heartbeast' },
   'virtue.hermetic_prestige': { name: 'Hermetic Prestige' },
   'virtue.second_sight': { name: 'Second Sight' },
+  'virtue.sufi': { name: 'Sufi' },
 };
 
 function installRuleset(): void {
@@ -104,6 +111,9 @@ function grant(...granted: Selection[]): void {
 function html(): string {
   return render(VirtueFlawTab, { props: {} }).body;
 }
+
+/** `app.css` as text, for the layout rules no server-rendered markup can reveal. */
+const appCss = readFileSync(fileURLToPath(new URL('../../app.css', import.meta.url)), 'utf-8');
 
 /** Fluent isolates interpolated values with bidi marks; strip them for text matching. */
 function clean(text: string): string {
@@ -225,6 +235,69 @@ describe('VirtueFlawTab merges granted Virtues into the category list (#9)', () 
     const ids = [...column.matchAll(/data-testid="(granted-selection-[^"]+)"/g)].map((m) => m[1]);
     expect(ids).toHaveLength(2);
     expect(new Set(ids).size).toBe(2);
+  });
+});
+
+// A descriptor may name two categories, and both are mechanically real (either
+// one can make the item permitted or forbidden). The badge row therefore shows
+// one `category-<id>` badge per category, in the descriptor's own order so the
+// FIRST badge is the primary — which is also what the group heading above the row
+// says, and what `houses.e2e.js` compares that heading against.
+describe('VirtueFlawTab badges every category an item carries', () => {
+  /** The `.badge.type` texts of the Virtues selection column, in document order. */
+  function typeBadges(body: string): string[] {
+    return [...virtueColumn(body).matchAll(/<span class="badge type">([\s\S]*?)<\/span>/g)].map(
+      (m) => clean(m[1].replace(/<[^>]*>/g, '').trim()),
+    );
+  }
+
+  it('renders one localized badge per category, primary first', () => {
+    resetEntity([{ ref: 'virtue.sufi' }]);
+    expect(typeBadges(html())).toEqual(['Social Status', 'Supernatural']);
+  });
+
+  it('renders no raw category slug', () => {
+    resetEntity([{ ref: 'virtue.sufi' }]);
+    expect(virtueColumn(html())).not.toContain('social_status');
+  });
+
+  it('still renders exactly one badge for a single-category item', () => {
+    resetEntity([{ ref: 'virtue.heartbeast' }]);
+    expect(typeBadges(html())).toEqual(['Hermetic']);
+  });
+
+  // The heading a dual-category row sits under is its PRIMARY category — the same
+  // one its first badge names, which is the invariant houses.e2e.js asserts.
+  it('puts a dual-category row under the heading its first badge names', () => {
+    resetEntity([{ ref: 'virtue.sufi' }]);
+    expect(columnOutline(html())).toEqual(['# Social Status', 'Sufi']);
+  });
+
+  // The badge stack is absolutely positioned and vertically centered, so nothing
+  // in the row's own flow makes space for it — `app.css` does, via a min-height
+  // sized to the stack. A third badge needs the taller of the two rules, and the
+  // only thing linking the markup to it is this class name. Assert both ends:
+  // the component emits it exactly on the rows that need it, and the rule that
+  // gives it meaning still exists. Otherwise a stack taller than its row bleeds
+  // over the border into the neighbouring rows, and no other test would notice.
+  it('marks a three-badge row so the CSS can grow it, and no other row', () => {
+    resetEntity([{ ref: 'virtue.sufi' }, { ref: 'virtue.heartbeast' }]);
+    const nameWraps = [
+      ...virtueColumn(html()).matchAll(/<span class="([^"]*name-wrap[^"]*)"/g),
+    ].map((m) => m[1]);
+    expect(nameWraps).toHaveLength(2);
+    // Sufi (two categories -> three badges) is marked; Heartbeast (one) is not.
+    expect(nameWraps.filter((c) => c.includes('tall-badges'))).toHaveLength(1);
+  });
+
+  it('sizes the marked row to contain three badges, not two', () => {
+    const twoTall = /\.selection-list \.name-wrap \{\s*min-height:\s*([\d.]+)rem/.exec(appCss);
+    const threeTall =
+      /\.selection-list \.name-wrap\.tall-badges \{\s*min-height:\s*([\d.]+)rem/.exec(appCss);
+    expect(twoTall, 'the two-badge min-height rule is gone').not.toBeNull();
+    expect(threeTall, 'the three-badge min-height rule is gone').not.toBeNull();
+    // One more badge plus its gap, so strictly taller than the two-badge box.
+    expect(Number(threeTall![1])).toBeGreaterThan(Number(twoTall![1]));
   });
 });
 

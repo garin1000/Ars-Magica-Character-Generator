@@ -544,7 +544,7 @@ pub(crate) fn validate_personality_traits(
         .iter()
         .filter(|s| {
             ruleset.point_items.get(&s.item_ref).is_some_and(|item| {
-                item.category == ENGINE_REQUIRED_CATEGORY_PERSONALITY
+                item.has_category(ENGINE_REQUIRED_CATEGORY_PERSONALITY)
                     && item.magnitude == Magnitude::Major
             })
         })
@@ -636,9 +636,9 @@ mod locality_cap_tests {
 
     const ITEMS: &str = r#"[
       { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
-        "magnitude": "minor", "category": "personality", "entity_kinds": ["character"] },
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
       { "id": "flaw.foreign_upbringing", "kind": "flaw", "classification": "creation_effect",
-        "magnitude": "minor", "category": "personality", "entity_kinds": ["character"],
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"],
         "effects": [{ "type": "locality_ability_cap_fraction", "num": 1, "den": 2 }] }
     ]"#;
     const TYPES: &str = r#"[

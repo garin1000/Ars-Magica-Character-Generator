@@ -9,7 +9,9 @@
 use super::*;
 
 /// Whether the entity "has The Gift" per its type profile: a selection matching
-/// the profile's `gift_id`, or one whose item category is in `gift_categories`.
+/// the profile's `gift_id`, or one carrying *any* category in `gift_categories`
+/// — a descriptor's secondary category counts, so Suppressed Gift ("*Major,
+/// Hermetic, Story*") is recognised as Hermetic here.
 /// Shared with `validate_gift_policy` so both use one definition.
 pub(crate) fn has_the_gift(
     entity: &Entity,
@@ -25,7 +27,7 @@ pub(crate) fn has_the_gift(
             ruleset
                 .point_items
                 .get(&s.item_ref)
-                .is_some_and(|item| profile.gift_categories.contains(&item.category))
+                .is_some_and(|item| item.any_category_in(&profile.gift_categories))
         });
     by_id || by_category
 }

@@ -495,9 +495,9 @@ fn integrity_failure_preserves_individual_messages() {
         // Carries a personality-category item so the only integrity failures are
         // the two unresolved prerequisites (not the engine-required-category check).
         r#"[
-          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.x"}},
-          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "category": "general", "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.y"}},
-          {"id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "category": "personality", "entity_kinds": ["character"]}
+          {"id": "virtue.a", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.x"}},
+          {"id": "virtue.b", "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"], "prerequisites": {"kind": "has", "value": "virtue.y"}},
+          {"id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"]}
         ]"#,
     )
     .unwrap();

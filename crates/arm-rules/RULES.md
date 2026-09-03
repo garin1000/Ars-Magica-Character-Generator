@@ -259,10 +259,58 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   `rules/i18n/{en,de}/virtues_flaws.json`. This widens the data only — the engine,
   i18n schema, and UI already support any catalogue size (catalogue size is data).
 - Extraction conventions (structural fields; effects/prereqs authored per mechanic
-  elsewhere): magnitude/category parsed from the descriptor; category slugged
-  (`Social Status`→`social_status`, source typo `Subernatural`→`supernatural`,
-  compound labels like `General and Hermetic` take the **earliest-listed**
-  category). The optional `Type` token sets `tainted` (see the Tainted note above).
+  elsewhere): magnitude/categories parsed from the descriptor; each category slugged
+  (`Social Status`→`social_status`, source typo `Subernatural`→`supernatural`).
+  The optional `Type` token sets `tainted` (see the Tainted note above).
+- **A descriptor may name more than one category, and all of them are kept.**
+  `PointItem.categories` is a `Vec<String>` holding **every** category the
+  descriptor lists, in the descriptor's own order, so `categories[0]` is the
+  *primary*. The extraction used to keep only the earliest-listed one and drop the
+  rest, which silently made a Flaw invisible to the other category's cap and to the
+  other category's permit/forbid list. Four core items are affected — the complete
+  set of multi-category descriptors in `rules/source/en/` that are not the
+  `Tainted` marker (see the Tainted note) — and they are stored primary-first:
+
+  | id | descriptor | `categories` | source |
+  |---|---|---|---|
+  | `virtue.sufi` | *Minor, Social Status, Supernatural* | `["social_status", "supernatural"]` | `:5077-5078` |
+  | `flaw.raised_from_the_dead` | *Major, Story, Supernatural* | `["story", "supernatural"]` | `:6646-6647` |
+  | `flaw.suppressed_gift` | *Major, Hermetic, Story* | `["hermetic", "story"]` | `:6803-6804` |
+  | `flaw.visions` | *Minor, Story, Supernatural* | `["story", "supernatural"]` | `:6985-6986` |
+
+  No core descriptor names three real categories. `Tainted` is **not** a category
+  (it is `PointItem.tainted: bool`) and neither is `Mythic Companion` (see the
+  marker note below), so descriptors such as `*Minor, Story, Tainted*` stay
+  single-category.
+- **Membership uses the whole list; display uses the primary.** Every rule that asks
+  "is this item of category X" is a membership test over all of `categories`
+  (`PointItem::has_category` / `any_category_in`): permitted and forbidden
+  categories (`validation/selections.rs`), the data-driven per-category caps
+  (`validation/caps.rs`), Open-grant `require_categories`/`forbid_categories`
+  (`grant.rs`), the Gift categories (`effective/gift_confidence.rs`,
+  `validation/magus.rs`), the engine-required `personality` category
+  (`validation/scores.rs`, `ruleset/integrity.rs`), and `Ruleset::items_by_category`.
+  Anything rendering a *single* label uses `PointItem::primary_category`. The
+  Markdown export's "Type" cell is the one place that renders them all, joined with
+  the shared localized list separator, each through its own `category-<id>` Fluent
+  key (`export/sections.rs`). Consequences worth naming: Suppressed Gift now counts
+  against the **Story** Flaw cap as well as being Hermetic, and Sufi is returned by
+  `items_by_category("supernatural")` as well as by `"social_status"`.
+- **`categories` is order-significant and therefore exempt from canonical sorting** —
+  the same deliberate exception the crisis table's `crisis.rows` takes (see the
+  aging section's "Three things a later sweep must not undo"), and the reason it is
+  a `Vec` rather than a `BTreeSet`. `PointItem::normalize` sorts `parameters` and
+  leaves `categories` alone. Because a `Vec` can express what a set cannot,
+  load-time integrity (`ruleset/integrity.rs::validate_item_categories`) rejects an
+  empty list and a repeated slug, naming the offending item.
+- **The removed singular `category` key fails the load loudly.** `PointItem` is
+  `#[serde(try_from = "PointItemRepr")]` purely so that an old `rules/` directory
+  beside a newer binary — the portable layout, where the rules live next to the exe
+  — stops with `point item '<id>' uses the removed singular 'category' key …`
+  instead of being silently coerced into a one-element list. There is deliberately
+  **no serde alias**. No save migration and no `SCHEMA_VERSION` bump came with this:
+  saves store `Selection { ref, params }` (`types.rs`) and never an item's category,
+  so no save file mentions one.
 - **`Mythic Companion` is a marker, not a category.** Four Free virtues are tagged
   `*Free, Mythic Companion*` — Devil Child (`:3671`), Faerie Doctor (`:3821`),
   Nephilim (`:4594`), Spirit Votary (`:5006`). The rules define exactly six
@@ -4458,6 +4506,11 @@ Three things a later sweep must not undo:
    in both i18n files stay id-sorted, matching core.
    `crisis_row_i18n_order_matches_core_band_order` (`data_integrity.rs`) asserts
    the two i18n files agree with core's order.
+   **The other order-meaningful array in the rules data is `PointItem.categories`**
+   (`rules/core/virtues_flaws.json`), which holds a descriptor's categories in the
+   descriptor's own order so that element 0 is the primary — see the "Full core
+   Virtue/Flaw catalogue" section. Same exemption, same reasoning: sorting it
+   loses information rather than noise.
 2. **Terminal carries no `ease_factor` at all.** `:16632` offers no Stamina roll —
    "CrCo40 required to survive" — so the field is absent rather than set to an
    unbeatable number. `Option<i32>` says "no roll"; a 99 would say "roll and lose".

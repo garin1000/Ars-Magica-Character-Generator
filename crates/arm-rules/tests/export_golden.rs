@@ -72,7 +72,9 @@ fn synthetic_labels() -> BTreeMap<String, String> {
         keys.insert(format!("type-{}", profile.id));
     }
     for item in rs.ruleset.items() {
-        keys.insert(format!("category-{}", item.category));
+        for category in &item.categories {
+            keys.insert(format!("category-{category}"));
+        }
         for param in &item.parameters {
             keys.insert(format!("param-label-{}", param.key));
         }
@@ -351,6 +353,41 @@ fn a_fully_populated_magus_matches_the_golden_document() {
     assert_eq!(
         rendered, expected,
         "the rendered document drifted from tests/fixtures/magus_export.md"
+    );
+}
+
+/// A Virtue/Flaw whose descriptor names two categories renders BOTH in the
+/// "Type" cell, in the descriptor's order and joined with the same localized list
+/// separator the rest of the document uses. Rendering only the primary would hide
+/// that Visions is a Supernatural Flaw as well as a Story one.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:6985-6986
+/// (*Minor, Story, Supernatural*).
+#[test]
+fn the_type_cell_lists_every_category_the_descriptor_names() {
+    let ruleset = shipped_ruleset();
+    let mut entity = Entity::new(
+        EntityKind::Character,
+        Id::new("companion"),
+        RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+    );
+    entity.selections = vec![Selection::new(Id::new("flaw.visions"))];
+
+    // Readable stand-ins for the three keys this row composes, so the assertion
+    // reads as the sheet does. Everything else stays key-as-label.
+    let mut labels = synthetic_labels();
+    labels.insert("category-story".to_string(), "Story".to_string());
+    labels.insert(
+        "category-supernatural".to_string(),
+        "Supernatural".to_string(),
+    );
+    labels.insert("restricted-xp-list-separator".to_string(), ",".to_string());
+
+    let rendered = character_markdown(&entity, &ruleset, &labels)
+        .expect("synthetic_labels resolves every chrome key and every id is real");
+    assert!(
+        rendered.contains("| Story, Supernatural |"),
+        "the Type cell must list both categories, primary first; got:\n{rendered}"
     );
 }
 

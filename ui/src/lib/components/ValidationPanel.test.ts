@@ -157,6 +157,27 @@ describe('ValidationPanel', () => {
     expect(body).toMatch(/Virtue points.*Flaw points|funded/i);
   });
 
+  // The engine emits the offending category as a raw slug (`validation/
+  // selections.rs`), which is not a rules id and so resolves through no i18n
+  // entry. It needs its own `category-` Fluent prefix, or the sentence reads
+  // "…a forbidden category (supernatural)" — a slug rendered as a label.
+  it('renders the category arg of a category issue as a localized label', () => {
+    store.result = {
+      issues: [
+        issue('forbidden_category', 'virtues_flaws', 'error', {
+          item: 'virtue.sufi',
+          category: 'supernatural',
+        }),
+      ],
+    };
+    const text = issueMarkup(render(ValidationPanel).body, 'forbidden_category').replace(
+      /[⁦-⁩]/g,
+      '',
+    );
+    expect(text).toContain('Supernatural');
+    expect(text).not.toContain('(supernatural)');
+  });
+
   it('localizes the messages to German', () => {
     store.lang = 'de';
     const body = render(ValidationPanel, { props: { phase: 'virtues_flaws' } }).body;
