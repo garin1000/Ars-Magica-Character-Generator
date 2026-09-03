@@ -486,6 +486,60 @@ fn shipped_apprenticeship_carries_the_2435_and_2437_numbers() {
     );
 }
 
+/// Eleven Virtues that read like sourcebook material — angelic/demonic heritage,
+/// Mythic Companion gateways, spirit pacts — are in fact printed in the **core
+/// rules**, in the Virtues and Flaws chapter. English core is the source of truth,
+/// so their `source` must cite the core-rules file; citing a *Realms of Power*
+/// volume for an entry that has a real core-rules heading is simply wrong
+/// provenance, and nothing else in the suite would notice (the independent
+/// bracket check in `rules_source_provenance.rs` only proves the cited range holds
+/// *some* content in the file it names).
+///
+/// Note that `Curse-Throwing` appears twice in the core rules: the Virtue at
+/// `:3625` (*Major, Supernatural*, "confers the Supernatural Ability
+/// Curse-Throwing 1") and the Supernatural **Ability** at `:7396`, which is what
+/// `ability.curse_throwing` already cites. `virtue.curse_throwing` is the former.
+///
+/// Source: Ars Magica - Definitive Edition (Core Rules).md:3504, 3625, 3649, 3663,
+/// 3667, 3671, 3821, 4594, 5006, 5010, 5022.
+#[test]
+fn core_rules_virtues_cite_the_core_rules_file() {
+    let rs = load_full_ruleset();
+
+    let expected = [
+        ("virtue.blood_of_the_nephilim", 3504, 3518),
+        ("virtue.curse_throwing", 3625, 3628),
+        ("virtue.demonic_blood", 3649, 3662),
+        ("virtue.demonic_might", 3663, 3666),
+        ("virtue.demonic_powers", 3667, 3670),
+        ("virtue.devil_child", 3671, 3674),
+        ("virtue.faerie_doctor", 3821, 3824),
+        ("virtue.nephilim", 4594, 4597),
+        ("virtue.spirit_votary", 5006, 5009),
+        ("virtue.spiritual_pact", 5010, 5021),
+        ("virtue.strong_angelic_heritage", 5022, 5031),
+    ];
+
+    for (id, start, end) in expected {
+        let item = rs
+            .item(&Id::new(id))
+            .unwrap_or_else(|| panic!("{id} ships"));
+        let source = item
+            .source
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} carries provenance"));
+        assert_eq!(
+            source.file, "Ars Magica - Definitive Edition (Core Rules).md",
+            "{id} is printed in the core rules, not a sourcebook"
+        );
+        assert_eq!(
+            (source.lines.start, source.lines.end),
+            (start, end),
+            "{id} brackets its core-rules entry"
+        );
+    }
+}
+
 /// Two known packages load with their entries and provenance intact — never a
 /// package total, which is data (a ruleset may ship any number of packages).
 /// Athletic is the plain shape, Traveling the one that exercises every feature at

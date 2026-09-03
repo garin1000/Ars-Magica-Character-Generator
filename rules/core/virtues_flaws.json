@@ -3478,7 +3478,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "effects": [{ "type": "size_delta", "amount": 1 }],
-    "source": { "file": "Ars Magica 5e - Realms of Power - The Divine (Revised).md", "lines": [1941, 1954] }
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3504, 3518] }
   },
   {
     "id": "virtue.book_learner",
@@ -3699,7 +3699,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "effects": [{ "type": "ability_score_grant", "ability": "ability.curse_throwing", "amount": 1 }],
-    "source": { "file": "Ars Magica 5e - Realms of Power - Faerie.md", "lines": [6342, 6347] }
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3625, 3628] }
   },
   {
     "id": "virtue.custos",
@@ -3754,7 +3754,7 @@
       { "type": "might_grant", "realm": "infernal", "score": 5 },
       { "type": "power_levels", "amount": 30 }
     ],
-    "source": { "file": "Ars Magica 5e - Realms of Power - The Infernal.md", "lines": [4116, 4131] }
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3649, 3662] }
   },
   {
     "id": "virtue.demonic_might",
@@ -3765,7 +3765,7 @@
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
     "effects": [{ "type": "might_grant", "realm": "infernal", "score": 2 }],
-    "source": { "file": "Ars Magica 5e - Realms of Power - The Infernal.md", "lines": [4132, 4137] }
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3663, 3666] }
   },
   {
     "id": "virtue.demonic_powers",
@@ -3776,7 +3776,7 @@
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "has", "value": "virtue.demonic_blood" },
     "effects": [{ "type": "power_levels", "amount": 20 }],
-    "source": { "file": "Ars Magica 5e - Realms of Power - The Infernal.md", "lines": [4138, 4143] }
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3667, 3670] }
   },
   {
     "id": "virtue.devil_child",
@@ -3786,7 +3786,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.faerie_doctor", "virtue.nephilim", "virtue.spirit_votary", "virtue.the_gift"],
-    "source": { "file": "Ars Magica 5e - Realms of Power - The Infernal.md", "lines": [4144, 4149] }
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3671, 3674] }
   },
   {
     "id": "virtue.diedne_magic",
@@ -4017,7 +4017,7 @@
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.devil_child", "virtue.nephilim", "virtue.spirit_votary", "virtue.the_gift"],
     "effects": [{ "type": "grants_selection", "items": ["virtue.dowsing"] }],
-    "source": { "file": "Ars Magica 5e - Realms of Power - Faerie.md", "lines": [6394, 6399] }
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3821, 3824] }
   },
   {
     "id": "virtue.faerie_magic",
@@ -5291,7 +5291,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.spirit_votary", "virtue.the_gift"],
-    "source": { "file": "Ars Magica 5e - Realms of Power - The Divine (Revised).md", "lines": [3485, 3513] }
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4594, 4597] }
   },
   {
     "id": "virtue.notary",
@@ -5906,7 +5906,7 @@
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.nephilim", "virtue.the_gift"],
     "effects": [{ "type": "grants_selection", "items": ["virtue.second_sight"] }],
-    "source": { "file": "Ars Magica 5e - Realms of Power - Magic.md", "lines": [5480, 5486] }
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5006, 5009] }
   },
   {
     "id": "virtue.spiritual_pact",
@@ -5915,7 +5915,7 @@
     "category": "supernatural",
     "classification": "narrative",
     "entity_kinds": ["character"],
-    "source": { "file": "Ars Magica 5e - Realms of Power - Magic.md", "lines": [5488, 5502] }
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5010, 5021] }
   },
   {
     "id": "virtue.strong_angelic_heritage",
@@ -5929,7 +5929,7 @@
       { "type": "might_grant", "realm": "divine", "score": 0 },
       { "type": "power_levels", "amount": 30 }
     ],
-    "source": { "file": "Ars Magica 5e - Realms of Power - The Divine (Revised).md", "lines": [1969, 1980] }
+    "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5022, 5031] }
   },
   {
     "id": "virtue.strong_faerie_blood",

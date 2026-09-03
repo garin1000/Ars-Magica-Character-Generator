@@ -27,6 +27,7 @@ WP5 → WP6 → WP7, one finding at a time.
 | Date | Work package | What landed | Gate |
 |---|---|---|---|
 | 2026-09-03 | — | This findings document written; 25 findings recorded, 13 withdrawn, 10 and 14 closed with reasons | n/a (docs only) |
+| 2026-09-03 | WP1 | Finding 8 done: eleven `source` refs re-pointed at the core rules, locked by `core_rules_virtues_cite_the_core_rules_file` in `tests/data_integrity.rs`; RULES.md re-cited throughout. Finding 28 opened as a by-product. | `cargo test --workspace`, `clippy --all-targets -D warnings`, `fmt --check` — all green |
 
 ---
 
@@ -34,7 +35,7 @@ WP5 → WP6 → WP7, one finding at a time.
 
 ### 8 — Eleven core-rules Virtues cite sourcebooks they were not taken from
 
-**Status:** open
+**Status:** done (2026-09-03)
 
 Each of these has a real entry in *Ars Magica - Definitive Edition (Core
 Rules).md*, but `rules/core/virtues_flaws.json` cites a Realms of Power book:
@@ -57,6 +58,28 @@ Magnitudes and categories otherwise match the core tags. Every replacement range
 must be verified against the file before it is written:
 `crates/arm-rules/tests/rules_source_provenance.rs:165` checks that a citation
 brackets real content in the file it names.
+
+**Resolution.** All eleven now cite the core rules, with end lines derived from
+the file (heading through the line before the next `####`, the convention the
+neighbouring entries already use). Locked by
+`core_rules_virtues_cite_the_core_rules_file` in
+`crates/arm-rules/tests/data_integrity.rs`. Worth recording: the sourcebook
+citations were not fabricated — these Virtues really are reprinted in the Realms
+of Power books — so this was a source-of-truth violation (English core wins), not
+a dangling reference, which is why the existing provenance test never caught it.
+Curse-Throwing is the Virtue at :3625, not the Supernatural Ability at :7396.
+After the fix no file under `rules/core/` cites a Realms of Power book at all.
+
+### 28 — `virtue.spirit_votary`'s +7 Flaw points is cited to a core passage that does not state it
+
+**Status:** open — found while fixing 8, not part of the manual session
+
+`rules/core/mythic_companion_types.json` gives Spirit Votary a +7 Flaw-point
+budget and cites core `:2741-2764`. Those lines are silent on the number; only
+*Realms of Power: Magic* `:5486` states it. `crates/arm-rules/RULES.md:1667`
+already notes the discrepancy. Since English core is the source of truth for
+values as well as ids, either the citation is wrong or the value is unsourced —
+it needs a decision, not a silent fix.
 
 ### 9 — `virtue.demonic_blood` is missing `tainted: true`
 

@@ -1693,26 +1693,44 @@ Blood/Might/Powers and Strong Angelic Heritage are now **wired** (see Supernatur
 Might & Magic Resistance below); the core in-play details (e.g. the Greater
 Immunity target) are M5/5b.
 
+> **Provenance correction.** Eleven of these Virtues — Blood of the Nephilim,
+> Curse-Throwing, Demonic Blood, Demonic Might, Demonic Powers, Devil Child,
+> Faerie Doctor, Nephilim, Spirit Votary, Spiritual Pact, Strong Angelic Heritage —
+> were originally cited to a *Realms of Power* volume, where they are indeed also
+> printed. But every one of them is **reprinted in the core rules**, in the Virtues
+> and Flaws chapter, and English core is the source of truth for IDs and
+> provenance. Their `source` in `rules/core/virtues_flaws.json` and every citation
+> below now names *Ars Magica - Definitive Edition (Core Rules).md*, bracketing the
+> real core entry (heading line through the line before the next heading, the
+> convention used throughout that file). Locked by
+> `core_rules_virtues_cite_the_core_rules_file` in
+> `crates/arm-rules/tests/data_integrity.rs`. Note that **Curse-Throwing appears
+> twice** in the core rules: the Virtue at `:3625` (*Major, Supernatural*) and the
+> Supernatural **Ability** at `:7396`; `virtue.curse_throwing` cites the former,
+> `ability.curse_throwing` the latter. The one remaining *Realms of Power* citation
+> in this section is Spirit Votary's **+7 Flaw points** budget bonus, which the core
+> mythic section genuinely does not state (see above).
+
 | Item | Kind | Source |
 |------|------|--------|
-| `virtue.devil_child` | Special/Free, Social Status | *Infernal*`:4144-4149` |
-| `virtue.demonic_blood` | Major, Supernatural (Tainted) | *Infernal*`:4116-4131` |
-| `virtue.demonic_might` (req. Demonic Blood) | Minor, Supernatural | *Infernal*`:4132-4137` |
-| `virtue.demonic_powers` (req. Demonic Blood) | Minor, Supernatural | *Infernal*`:4138-4143` |
+| `virtue.devil_child` | Special/Free, Social Status | Ars Magica - Definitive Edition (Core Rules).md `:3671-3674` |
+| `virtue.demonic_blood` | Major, Supernatural (Tainted) | Ars Magica - Definitive Edition (Core Rules).md `:3649-3662` |
+| `virtue.demonic_might` (req. Demonic Blood) | Minor, Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:3663-3666` |
+| `virtue.demonic_powers` (req. Demonic Blood) | Minor, Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:3667-3670` |
 | `flaw.tragic_life` | **Major, Story** (Tainted) | Ars Magica - Definitive Edition (Core Rules).md `:6855-6870` |
-| `virtue.faerie_doctor` | Special/Free, Social Status | *Faerie*`:6394-6399` |
+| `virtue.faerie_doctor` | Special/Free, Social Status | Ars Magica - Definitive Edition (Core Rules).md `:3821-3824` |
 | `virtue.dowsing` (grants `ability.dowsing` 1) | Minor, Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:3703-3706` |
-| `virtue.curse_throwing` (grants `ability.curse_throwing` 1) | Major, Supernatural | *Faerie*`:6342-6347` |
+| `virtue.curse_throwing` (grants `ability.curse_throwing` 1) | Major, Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:3625-3628` |
 | `virtue.wise_one` | Minor, Social Status | Ars Magica - Definitive Edition (Core Rules).md `:5257-5260` |
 | `flaw.faerie_friend` | Minor, Story | Ars Magica - Definitive Edition (Core Rules).md `:6052-6055` |
 | `flaw.dutybound` | Minor, Personality | Ars Magica - Definitive Edition (Core Rules).md `:5992-5995` |
-| `virtue.nephilim` | Free, Social Status | *Divine*`:3485-3513` |
-| `virtue.blood_of_the_nephilim` | Major, Supernatural | *Divine*`:1941-1954` |
-| `virtue.strong_angelic_heritage` (req. Blood of the Nephilim) | Minor, Supernatural | *Divine*`:1969-1980` |
+| `virtue.nephilim` | Free, Social Status | Ars Magica - Definitive Edition (Core Rules).md `:4594-4597` |
+| `virtue.blood_of_the_nephilim` | Major, Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:3504-3518` |
+| `virtue.strong_angelic_heritage` (req. Blood of the Nephilim) | Minor, Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:5022-5031` |
 | `virtue.greater_immunity` (plain; "Disease" is an in-play target, no param) | Major, Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:4009-4016` |
 | `virtue.sense_holiness_and_unholiness` (grants `ability.sense_holiness_and_unholiness` 1) | Minor, Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:4926-4929` |
-| `virtue.spirit_votary` | Free, Supernatural (→ Social Status) | *Magic*`:5480-5486` |
-| `virtue.spiritual_pact` | Major, Supernatural | *Magic*`:5488-5502` |
+| `virtue.spirit_votary` | Free, Supernatural (→ Social Status) | Ars Magica - Definitive Edition (Core Rules).md `:5006-5009` |
+| `virtue.spiritual_pact` | Major, Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:5010-5021` |
 | `flaw.pagan` (Major or Minor; seeded Major) | Major, Personality | Ars Magica - Definitive Edition (Core Rules).md `:6570-6573` |
 | `ability.curse_throwing` (requires_training) | Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:7396-7430` |
 | `ability.dowsing` (requires_training) | Supernatural | Ars Magica - Definitive Edition (Core Rules).md `:7439-7442` |
@@ -2573,7 +2591,7 @@ Infernal Might + power-levels budget (tested in `arm-app`'s
   Abilities — a follow-up task should add one alongside the `+2` bonus fix
   above.
 
-#### Supernatural Might & Magic Resistance (Realms of Power: Magic / The Infernal / The Divine)
+#### Supernatural Might & Magic Resistance (Core Rules; general MR rule from Realms of Power: Magic)
 
 A supernatural being has a **Might Score** aligned to one **Realm** (`Realm::{Magic,
 Faerie, Divine, Infernal}`). The general rule:
@@ -2605,10 +2623,10 @@ variants (SCHEMA_VERSION unchanged at 9 — both `#[serde(default)]`, old saves 
 
 | Virtue | Grant | Source (file:line) |
 |--------|-------|--------------------|
-| `virtue.demonic_blood` (Major) | Infernal Might **5** + **30** power levels | *Infernal*:4120, :4122 |
-| `virtue.demonic_might` (Minor, req. Demonic Blood) | Infernal Might **+2** | *Infernal*:4136 |
-| `virtue.demonic_powers` (Minor, req. Demonic Blood) | **+20** power levels | *Infernal*:4142 |
-| `virtue.strong_angelic_heritage` (Minor, req. Blood of the Nephilim) | Divine Might = **age ÷ 20** (entered by hand) + **30** power levels | *Divine*:1975, :1977 |
+| `virtue.demonic_blood` (Major) | Infernal Might **5** + **30** power levels | Ars Magica - Definitive Edition (Core Rules).md:3651, :3653 |
+| `virtue.demonic_might` (Minor, req. Demonic Blood) | Infernal Might **+2** | Ars Magica - Definitive Edition (Core Rules).md:3665 |
+| `virtue.demonic_powers` (Minor, req. Demonic Blood) | **+20** power levels | Ars Magica - Definitive Edition (Core Rules).md:3669 |
+| `virtue.strong_angelic_heritage` (Minor, req. Blood of the Nephilim) | Divine Might = **age ÷ 20** (entered by hand) + **30** power levels | Ars Magica - Definitive Edition (Core Rules).md:5026, :5028 |
 
 Effective Might = entered base (may be 0/None) + Σ same-Realm `MightGrant` scores.
 So Demonic Blood alone → Infernal Might 5; with Demonic Might → 7. Strong Angelic
@@ -2625,9 +2643,9 @@ The per-item audit that fed this wiring follows (source line-ranges retained).
 - `virtue.ferocity` (Ars Magica - Definitive Edition (Core Rules).md:3873-3876) — Confidence score 1 points 3
 
 **Free nested V/F grant:**
-- `virtue.devil_child` (Ars Magica 5e - Realms of Power - The Infernal.md:4144-4149) — grants free Minor Virtue
-- `virtue.faerie_doctor` (Ars Magica 5e - Realms of Power - Faerie.md:6394-6399) — grants free Virtue (Dowsing)
-- `virtue.nephilim` (Ars Magica 5e - Realms of Power - The Divine (Revised).md:3485-3513) — grants free Virtue
+- `virtue.devil_child` (Ars Magica - Definitive Edition (Core Rules).md:3671-3674) — grants free Minor Virtue
+- `virtue.faerie_doctor` (Ars Magica - Definitive Edition (Core Rules).md:3821-3824) — grants free Virtue (Dowsing)
+- `virtue.nephilim` (Ars Magica - Definitive Edition (Core Rules).md:4594-4597) — grants free Virtue
 
 **Free starting Supernatural Ability score:**
 - `virtue.animal_ken` (Ars Magica - Definitive Edition (Core Rules).md:3414-3417) — free starting Supernatural Ability score
@@ -2643,7 +2661,7 @@ The per-item audit that fed this wiring follows (source line-ranges retained).
 - `virtue.persona` (Ars Magica - Definitive Edition (Core Rules).md:4710-4713) — free starting Supernatural Ability score
 - `virtue.sense_passions` (Ars Magica - Definitive Edition (Core Rules).md:4930-4933) — free starting Supernatural Ability score
 - `virtue.shapeshifter` (Ars Magica - Definitive Edition (Core Rules).md:4946-4949) — free starting Supernatural Ability score
-- `virtue.spirit_votary` (Ars Magica 5e - Realms of Power - Magic.md:5480-5486) — grants free Virtue (Second Sight)
+- `virtue.spirit_votary` (Ars Magica - Definitive Edition (Core Rules).md:5006-5009) — grants free Virtue (Second Sight)
 - `virtue.strong_faerie_blood` (Ars Magica - Definitive Edition (Core Rules).md:5032-5047) — free starting Second Sight ability
 - `virtue.summon_animals` (Ars Magica - Definitive Edition (Core Rules).md:5085-5088) — free starting Supernatural Ability score
 - `virtue.whistle_up_the_wind` (Ars Magica - Definitive Edition (Core Rules).md:5243-5246) — free starting Supernatural Ability score
@@ -2653,10 +2671,10 @@ The per-item audit that fed this wiring follows (source line-ranges retained).
 - (Magic Items / Redcap wire `item_level_budget`; see slice 5e.)
 
 **Might / power budget (wired, this slice):**
-- `virtue.demonic_blood` (Ars Magica 5e - Realms of Power - The Infernal.md:4120, :4122) — `might_grant{infernal,5}` + `power_levels{30}`
-- `virtue.demonic_might` (Ars Magica 5e - Realms of Power - The Infernal.md:4136) — `might_grant{infernal,2}` (adds +2)
-- `virtue.demonic_powers` (Ars Magica 5e - Realms of Power - The Infernal.md:4142) — `power_levels{20}`
-- `virtue.strong_angelic_heritage` (Ars Magica 5e - Realms of Power - The Divine (Revised).md:1975, :1977) — `might_grant{divine,0}` + `power_levels{30}` (Divine Might = age÷20 entered by hand; grant establishes Realm)
+- `virtue.demonic_blood` (Ars Magica - Definitive Edition (Core Rules).md:3651, :3653) — `might_grant{infernal,5}` + `power_levels{30}`
+- `virtue.demonic_might` (Ars Magica - Definitive Edition (Core Rules).md:3665) — `might_grant{infernal,2}` (adds +2)
+- `virtue.demonic_powers` (Ars Magica - Definitive Edition (Core Rules).md:3669) — `power_levels{20}`
+- `virtue.strong_angelic_heritage` (Ars Magica - Definitive Edition (Core Rules).md:5026, :5028) — `might_grant{divine,0}` + `power_levels{30}` (Divine Might = age÷20 entered by hand; grant establishes Realm)
 
 **Reputation grant:**
 - `flaw.apostate` (Ars Magica - Definitive Edition (Core Rules).md:5675-5678) — reputation grant bad score 4
@@ -2690,7 +2708,7 @@ The per-item audit that fed this wiring follows (source line-ranges retained).
 - `virtue.templar_office_holder` (Ars Magica - Definitive Edition (Core Rules).md:5121-5124) — reputation grant score 2
 
 **Size/characteristic delta:**
-- `virtue.blood_of_the_nephilim` (Ars Magica 5e - Realms of Power - The Divine (Revised).md:1941-1954) — size delta + Dominion Lore
+- `virtue.blood_of_the_nephilim` (Ars Magica - Definitive Edition (Core Rules).md:3509, :3511) — size delta + Dominion Lore
 
 **True Faith score:**
 - `virtue.powerful_relic` (Ars Magica - Definitive Edition (Core Rules).md:4782-4787) — True Faith score 3
@@ -5064,16 +5082,21 @@ above (mirroring the Core Rules layout) when mechanics from a book are implement
 - Ars Magica 5e - Houses of Hermes - Societates.md
 - Ars Magica 5e - Houses of Hermes - True Lineages.md
 - Ars Magica 5e - Magic - Hedge Magic (Revised).md
+- Ars Magica 5e - Realms of Power - Faerie.md
+- Ars Magica 5e - Realms of Power - The Divine (Revised).md
+- Ars Magica 5e - Realms of Power - The Infernal.md
 
-**Cited already, all four through the Mythic Companion types of M4/4d** — this
-list used to name them as untouched, which stopped being true when those types
-shipped. Each supplies one type's package (its free grants, its required Virtues
-and Flaws, its Might grant and power levels) and, for two of them, the bonus
-points that type adds to the Virtue/Flaw budget. See **Mythic Companion types
-(M4/4d)** above for the per-item line ranges:
+**Cited only for what the core rules do not state:**
 
-- Ars Magica 5e - Realms of Power - Faerie.md — Faerie Doctor
-- Ars Magica 5e - Realms of Power - Magic.md — Spirit Votary (and its +7 Flaw
-  points, `:5486`)
-- Ars Magica 5e - Realms of Power - The Divine (Revised).md — Nephilim
-- Ars Magica 5e - Realms of Power - The Infernal.md — Devil Child
+- Ars Magica 5e - Realms of Power - Magic.md — Spirit Votary's **+7 Flaw points**
+  budget bonus (`:5486`) and the general Might-vs-Parma Magic Resistance rule
+  (`:1472`). Nothing else.
+
+The four Mythic Companion types of M4/4d used to be listed here as the reason all
+four *Realms of Power* volumes were cited. That was wrong provenance, not a real
+dependency: the Virtues those types are built from (Devil Child, Faerie Doctor,
+Nephilim, Spirit Votary, and the Demonic/Angelic/Spirit-Pact Virtues they grant
+and require) are **reprinted in the core rules**, which is the source of truth, so
+all eleven now cite *Ars Magica - Definitive Edition (Core Rules).md*. See the
+provenance-correction note under **Mythic Companion types (M4/4d)** above for the
+per-item line ranges.
