@@ -77,6 +77,11 @@ wizard-finish = Fertigstellen
 wizard-blocked-hint = Behebe die Fehler dieses Schritts, um fortzufahren, oder wechsle den Prüfmodus auf „Beratend".
 # Kennzeichnet einen Schritt in der Leiste, der noch einen Fehler enthält.
 wizard-step-blocked-label = enthält Fehler
+# Kennzeichnet einen Schritt in der Leiste, der noch eine WARNUNG enthält — offene
+# Arbeit, die nichts blockiert; der Schritt bleibt also offen statt gesperrt.
+# Bewusst schwächer als `wizard-step-blocked-label` und nur für bereits erreichte
+# Schritte.
+wizard-step-pending-label = enthält offene Warnungen
 # Kennzeichnet einen Schritt in der Leiste, für den noch nichts eingetragen wurde.
 # Regelkonform ist nicht dasselbe wie fertig: ein leerer Schritt wird gekennzeichnet,
 # aber nie blockiert.
@@ -987,6 +992,14 @@ filter-no-results = Keine Treffer für den aktuellen Filter.
 # Signal sein (WCAG 1.4.1).
 issue-severity-error = Fehler
 issue-severity-warning = Warnung
+
+# Angehängt an einen Hinweis, den ein Schritt des Assistenten anzeigt, weil das
+# genannte Element HIER gewählt wurde, während die Engine ihn dem Schritt zuordnet,
+# dem der beanstandete Wert gehört (eine Tugend wie „Große Eigenschaft", deren Wert
+# eine Eigenschaft ist). Ein solcher Hinweis liest sich als Fehler, deaktiviert
+# „Weiter" aber nicht — er muss also sagen, wo die Behebung liegt. `$step` ist
+# immer eine `phase-<slug>`-Bezeichnung, nie der Slug selbst.
+issue-other-step = Im Schritt „{ $step }" zu beheben.
 
 # Ein Schlüssel je Prüfcode der Engine. Jede Nachricht interpoliert die `args`
 # der Engine (siehe crates/arm-rules/src/validation.rs); die Argumentnamen sind

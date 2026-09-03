@@ -344,3 +344,48 @@ fn magus_full_build_validates() {
     ];
     assert_valid("magus", &mag, &full_ruleset());
 }
+
+/// Measures the noise the guided wizard's rail would carry if it marked EVERY
+/// phase holding a warning (manual-testing-findings #4c).
+///
+/// The character here is exactly what `startWizard('magus')` produces before the
+/// user touches anything: the profile's mandatory free traits, no house, no
+/// characteristics, no abilities, no arts, no spells, no age. Warnings are
+/// advisories, so several fire on such a character at once — and they are spread
+/// across *different* creation phases, which is what makes an ungated marker
+/// light up steps the player has never opened. The frontend therefore shows the
+/// pending-warning marker only for phases already reached
+/// (`wizard_furthest_phase`); this test is the measurement that decision rests on.
+/// Measured on 2026-09-03 against the shipped catalogue: 7 warnings —
+/// `missing_hermetic_flaw`, `house_unset`, `spell_levels_unspent` and four
+/// `magus_recommended_ability` — over 4 of the magus rail's 11 steps
+/// (`virtues_flaws`, `house_specialisation`, `abilities`, `spells`), none of which
+/// the player has opened while standing on step 1.
+///
+/// Structural, never a total: it asserts the spread is wide (more than one phase
+/// beyond the first step), not how many warnings the catalogue happens to emit.
+#[test]
+fn a_fresh_wizard_magus_already_carries_warnings_on_several_unreached_phases() {
+    let ruleset = full_ruleset();
+    let mut mag = Entity::new(
+        EntityKind::Character,
+        Id::new("magus"),
+        RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+    );
+    mag.selections = vec![sel("virtue.the_gift"), sel("virtue.hermetic_magus")];
+
+    let result = validate(&mag, &ruleset);
+    let warned: std::collections::BTreeSet<CreationPhase> =
+        result.warnings().map(|issue| issue.phase).collect();
+    let codes: Vec<&str> = result.warnings().map(|issue| issue.code.as_str()).collect();
+
+    assert!(
+        warned.len() > 1,
+        "a fresh magus warns on {} phase(s): {warned:?} from {codes:?}",
+        warned.len()
+    );
+    assert!(
+        warned.iter().any(|p| *p != CreationPhase::Concept),
+        "every warning sits on the wizard's first step, so no gate would be needed: {codes:?}"
+    );
+}

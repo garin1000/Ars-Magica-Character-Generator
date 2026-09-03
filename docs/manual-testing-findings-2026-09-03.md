@@ -30,6 +30,7 @@ WP5 → WP6 → WP7, one finding at a time.
 | 2026-09-03 | WP1 | Finding 8 done: eleven `source` refs re-pointed at the core rules, locked by `core_rules_virtues_cite_the_core_rules_file` in `tests/data_integrity.rs`; RULES.md re-cited throughout. Finding 28 opened as a by-product. | `cargo test --workspace`, `clippy --all-targets -D warnings`, `fmt --check` — all green |
 | 2026-09-03 | WP1 | Findings 9 and 10 done: `tainted: true` added to `virtue.demonic_blood` **and** `flaw.tragic_life` (found by auditing all 21 tagged descriptors), locked by a new test; finding 10 closed with the Mythic-Companion-is-a-marker rationale recorded in RULES.md. **WP1 complete.** | `cargo test --workspace` (16 suites ok, 0 failed), `clippy`, `fmt --check` — all green |
 | 2026-09-03 | WP2 | Findings 6 and 7 done: `categories: Vec<String>` end to end — engine, rules data, export, UI grouping/filtering/badges; legacy `category:` fails loudly; `$category` no longer renders a raw slug. **WP2 complete.** | Full gate green including `cargo tauri build --no-bundle`; e2e not yet run |
+| 2026-09-03 | WP3 | Finding 4 done, engine untouched: `issuesForStep` + `phaseSelectedItemIds` let the docked panel show a foreign-phase finding whose `context` was chosen on this step, marked `data-elsewhere` with a dashed bar and the `issue-other-step` sentence naming the owning step (4a/4b); a `data-pending` rail marker with its own glyph and `.sr-only` label carries an open warning forward, gated to steps already reached after measuring 7 warnings over 4 of 11 unopened steps on a fresh magus (4c). | Full gate green including `cargo tauri build --no-bundle`; e2e not run |
 
 ---
 
@@ -224,7 +225,7 @@ carry-forward needed no new mechanism: the existing `data-blocked` marker plus i
 
 ### 4 — Characteristic-affecting Virtues give no feedback where the user is
 
-**Status:** open
+**Status:** done (2026-09-03)
 
 Three cases, one cause. Great Characteristic and Poor Characteristic already
 produce precondition errors, and Improved Characteristics' three extra points
@@ -246,6 +247,36 @@ whose `context` is an item selected on the current step, rendered with a distinc
 marker naming the step that owns the fix. `characteristic_points_unspent` has no
 `context`, so 4c is served by a "still to do" marker on the wizard rail, which is
 also what finding 5 needs.
+
+**Implemented as decided.** The engine is untouched.
+
+- **4a/4b.** `issuesForStep` (`ui/src/lib/derive.ts`) replaces `issuesForPhase` in
+  the docked panel: it keeps the step's own findings and admits a finding filed on
+  another phase when its `context` names an item that step holds
+  (`phaseSelectedItemIds`, which is the entity's `selections` and only on
+  `virtues_flaws`). An admitted row carries `data-elsewhere="<phase>"`, a **dashed**
+  severity bar instead of a solid one (a shape change, so it survives greyscale) and
+  the visible sentence `issue-other-step` — "Resolve on the Characteristics step",
+  built from the existing `phase-<slug>` label. That sentence is the part that
+  matters: `canAdvance` still keys strictly on the owning phase, so the row reads as
+  an error while Next stays enabled, and without it the gate would look broken.
+- **4c.** A second, lower-weight rail marker: `data-pending="true"` plus an
+  `.sr-only` `wizard-step-pending-label` ("has open warnings"), glyph `*` in the
+  warning hue against the blocked marker's bold `!`. It is **gated to steps already
+  reached** (`index <= wizardFurthest`, the same set the rail lets you click) and
+  suppressed on a blocked step, so a step says one thing and the strongest one.
+
+  The gate is not a guess. `a_fresh_wizard_magus_already_carries_warnings_on_several_unreached_phases`
+  (`crates/arm-rules/tests/core_type_conformance.rs`) measures the alternative: a
+  magus the wizard has only just created already emits 7 warnings —
+  `missing_hermetic_flaw`, `house_unset`, `spell_levels_unspent` and four
+  `magus_recommended_ability` — across 4 of its 11 steps, every one of them a step
+  never opened. An ungated marker would light over a third of the rail on step one.
+
+One side effect, judged an improvement: `ability_bonus_dangling_target` (finding 5)
+also carries an item `context` and is filed on `abilities`, so the V/F step now
+shows it too, marked "Resolve on the Abilities step". Next stays enabled exactly as
+finding 5 requires; the step simply stops being silent about it.
 
 ### 12 — "below Dead Language (e.g. Latin) 1" reads wrong
 

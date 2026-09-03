@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { phaseHasBlockingIssue, phaseIsIncomplete } from '../derive';
+  import { phaseHasBlockingIssue, phaseHasPendingWarning, phaseIsIncomplete } from '../derive';
   import ValidationPanel from './ValidationPanel.svelte';
   import WizardStep from './WizardStep.svelte';
 
@@ -29,6 +29,30 @@
     return phaseHasBlockingIssue(store.result?.issues ?? [], phase);
   }
 
+  // A step the player has already walked through that still holds an open
+  // WARNING (manual-testing-findings #4c). The case it exists for is
+  // `characteristic_points_unspent`: Improved Characteristics raises the buy
+  // budget by 3, and the warning saying those points are still unspent carries no
+  // `context`, so — unlike #4a/#4b — nothing can pull it onto the step the player
+  // is standing on. The rail is what carries it forward instead.
+  //
+  // GATED TO STEPS ALREADY REACHED, and that gate is the whole design. Measured
+  // against the shipped catalogue (`core_type_conformance.rs::a_fresh_wizard_magus_
+  // already_carries_warnings_on_several_unreached_phases`): a magus the wizard has
+  // only just created already warns on 4 of its 11 steps — Virtues & Flaws, House,
+  // Abilities, Spells — so an ungated marker would light over a third of the rail
+  // on step one, every one of them a step never opened. `index <= wizardFurthest`
+  // is exactly the set of steps the rail lets you click, so the marker never points
+  // anywhere the user cannot go.
+  //
+  // Suppressed on a blocked step: a step holding both should say the stronger
+  // thing once, not two markers at once.
+  function pending(phase: (typeof phases)[number], index: number): boolean {
+    if (index > store.wizardFurthest) return false;
+    if (blocked(phase)) return false;
+    return phaseHasPendingWarning(store.result?.issues ?? [], phase);
+  }
+
   // A step the player has recorded nothing for. Deliberately unrelated to
   // `blocked`: the gate is about what the rules forbid, this is about what is
   // still empty, and an empty step is marked but never held shut.
@@ -54,6 +78,7 @@
             aria-current={i === store.wizardStep ? 'step' : undefined}
             aria-describedby={blocked(phase) ? blockedHintIdFor(phase) : undefined}
             data-blocked={blocked(phase) ? 'true' : undefined}
+            data-pending={pending(phase, i) ? 'true' : undefined}
             data-incomplete={incomplete(phase) ? 'true' : undefined}
             disabled={i > store.wizardFurthest}
             onclick={() => store.wizardGoTo(i)}
@@ -74,6 +99,17 @@
             {#if incomplete(phase)}
               <span class="sr-only" data-testid="wizard-incomplete-{phase}">
                 {store.t('wizard-step-incomplete-label')}
+              </span>
+            {/if}
+            <!-- Inside the button like the incomplete marker, and for the same
+                 reason: `data-pending` alone is a style hook, and a marker only
+                 sighted users can perceive is a WCAG 1.4.1 failure. Its own
+                 wording — "has open warnings", not the blocked hint's "fix this to
+                 continue" — is what tells a screen-reader user that this step is
+                 outstanding rather than shut. -->
+            {#if pending(phase, i)}
+              <span class="sr-only" data-testid="wizard-pending-{phase}">
+                {store.t('wizard-step-pending-label')}
               </span>
             {/if}
             {#if blocked(phase)}

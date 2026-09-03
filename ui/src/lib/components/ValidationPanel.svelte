@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { issuesForPhase, resolveIssueArgs } from '../derive';
+  import { issuesForStep, phaseSelectedItemIds, resolveIssueArgs } from '../derive';
   import type { CreationPhase } from '../types';
 
   // `docked` drops the boxed panel chrome so the validation summary can sit at
@@ -25,14 +25,20 @@
     // like any other, and localizes through the same `issue-<code>` catalogue, so
     // showing it anywhere else would just be a second findings panel.
     const all = [...(store.result?.issues ?? []), ...store.sagaIssues];
-    const scoped = phase ? issuesForPhase(all, phase) : all;
+    // A step also shows the findings filed on ANOTHER phase whose `context` names
+    // an item chosen right here (manual-testing-findings #4a/#4b) — otherwise the
+    // step where a Great/Poor Characteristic Virtue was just taken said nothing at
+    // all about it. Each such entry carries the phase that owns the fix, which the
+    // row then names: it reads as an error while Next stays enabled, so without
+    // that sentence the gate looks broken.
+    const scoped = issuesForStep(all, phase, phaseSelectedItemIds(store.entity.selections, phase));
     const seen = new Set<string>();
     const unique = [];
-    for (const issue of scoped) {
-      const key = `${issue.code}|${issue.context ?? ''}|${JSON.stringify(issue.args)}`;
+    for (const entry of scoped) {
+      const key = `${entry.issue.code}|${entry.issue.context ?? ''}|${JSON.stringify(entry.issue.args)}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      unique.push(issue);
+      unique.push(entry);
     }
     return unique;
   });
@@ -61,15 +67,18 @@
            items"). The wrapper carries the announcement; the list stays a list. -->
       <div role="status">
         <ul class="issue-list" data-testid="issue-list">
-          {#each issues as issue (`${issue.code}|${issue.context ?? ''}|${JSON.stringify(issue.args)}`)}
+          {#each issues as entry (`${entry.issue.code}|${entry.issue.context ?? ''}|${JSON.stringify(entry.issue.args)}`)}
+            {@const issue = entry.issue}
             {@const rawArgs = {
               ...issue.args,
               ...(issue.context ? { context: issue.context } : {}),
             }}
             <li
               class="issue {issue.severity}"
+              class:issue-elsewhere={entry.elsewhere !== undefined}
               data-severity={issue.severity}
               data-code={issue.code}
+              data-elsewhere={entry.elsewhere}
             >
               <!-- Severity must not be color-only (WCAG 1.4.1). The border/tint carries
                    it for sighted users who can see colour; this visible badge carries
@@ -80,6 +89,17 @@
                 `issue-${issue.code}`,
                 store.ruleset ? resolveIssueArgs(store.ruleset, rawArgs, store.t) : rawArgs,
               )}
+              <!-- A finding this step did not cause the gate for: it is filed on
+                   another phase, so `canAdvance` ignores it and Next stays enabled.
+                   Said VISIBLY (not `.sr-only`), because a sighted user faced with an
+                   Error whose Next button still works needs the same explanation a
+                   screen-reader user gets — and said through the `phase-<slug>` key,
+                   never the slug. -->
+              {#if entry.elsewhere}
+                <span class="issue-elsewhere-note" data-testid="issue-elsewhere-{issue.code}">
+                  {store.t('issue-other-step', { step: store.t(`phase-${entry.elsewhere}`) })}
+                </span>
+              {/if}
             </li>
           {/each}
         </ul>
