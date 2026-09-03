@@ -8,8 +8,11 @@ import {
   firstBlockedPhaseIndex,
   incompletePhases,
   issuesForPhase,
+  issuesForStep,
   phaseHasBlockingIssue,
+  phaseHasPendingWarning,
   phaseIsIncomplete,
+  phaseSelectedItemIds,
   wizardPhases,
   effectiveSpellMastery,
   spellMasteryXpSpent,
@@ -2663,6 +2666,133 @@ describe('issuesForPhase', () => {
     expect(issuesForPhase(findings, 'spells').map((i) => i.code)).toEqual(['spell_levels_unspent']);
     // Neither leaks onto the other's step, nor onto the step that funds them.
     expect(issuesForPhase(findings, 'experience')).toEqual([]);
+  });
+});
+
+describe('phaseSelectedItemIds', () => {
+  const selections = [{ ref: 'virtue.great_characteristic' }, { ref: 'flaw.poor_characteristic' }];
+
+  it('names the items the Virtues & Flaws step itself holds', () => {
+    expect(phaseSelectedItemIds(selections, 'virtues_flaws')).toEqual(
+      new Set(['virtue.great_characteristic', 'flaw.poor_characteristic']),
+    );
+  });
+
+  it('names nothing on a step that holds no point-item picker', () => {
+    // The V/F selections stay on the entity while the player stands on
+    // Characteristics, but that step is not where they were chosen — so a finding
+    // about one must not be pulled onto it.
+    expect(phaseSelectedItemIds(selections, 'characteristics')).toEqual(new Set());
+    expect(phaseSelectedItemIds(selections, 'abilities')).toEqual(new Set());
+  });
+
+  it('is empty for a character with no selections at all', () => {
+    expect(phaseSelectedItemIds(undefined, 'virtues_flaws')).toEqual(new Set());
+  });
+});
+
+describe('issuesForStep', () => {
+  const issue = (
+    severity: 'error' | 'warning',
+    code: string,
+    phase: CreationPhase,
+    context?: string,
+  ): ValidationIssue => ({ severity, code, phase, args: {}, context });
+
+  const greatCharacteristic = issue(
+    'error',
+    'characteristic_max_base_too_low',
+    'characteristics',
+    'virtue.great_characteristic',
+  );
+
+  it("keeps the step's own findings unmarked", () => {
+    const [entry] = issuesForStep(
+      [issue('error', 'unbalanced_virtues', 'virtues_flaws')],
+      'virtues_flaws',
+      new Set(),
+    );
+    expect(entry.issue.code).toBe('unbalanced_virtues');
+    expect(entry.elsewhere).toBeUndefined();
+  });
+
+  // manual-testing-findings #4a/#4b: Great and Poor Characteristic are taken on
+  // the V/F step but the value they constrain is a Characteristic score, so the
+  // engine files them on `characteristics` — and the V/F step, where the user is
+  // standing, said nothing at all.
+  it("admits another phase's finding when its context names an item this step holds", () => {
+    const entries = issuesForStep(
+      [greatCharacteristic],
+      'virtues_flaws',
+      new Set(['virtue.great_characteristic']),
+    );
+    expect(entries.map((e) => e.issue.code)).toEqual(['characteristic_max_base_too_low']);
+    expect(entries[0].elsewhere).toBe('characteristics');
+  });
+
+  it('leaves a foreign finding out when this step holds no such item', () => {
+    expect(issuesForStep([greatCharacteristic], 'virtues_flaws', new Set())).toEqual([]);
+  });
+
+  it('leaves a foreign finding with no context out — it names no item to trace', () => {
+    expect(
+      issuesForStep(
+        [issue('warning', 'characteristic_points_unspent', 'characteristics')],
+        'virtues_flaws',
+        new Set(['virtue.great_characteristic']),
+      ),
+    ).toEqual([]);
+  });
+
+  it('marks nothing when the owning phase IS the current step', () => {
+    const [entry] = issuesForStep(
+      [greatCharacteristic],
+      'characteristics',
+      new Set(['virtue.great_characteristic']),
+    );
+    expect(entry.elsewhere).toBeUndefined();
+  });
+
+  it('passes every finding through unfiltered when no step is named', () => {
+    const all = [greatCharacteristic, issue('warning', 'house_unset', 'house_specialisation')];
+    const entries = issuesForStep(all, undefined, new Set());
+    expect(entries.map((e) => e.issue.code)).toEqual([
+      'characteristic_max_base_too_low',
+      'house_unset',
+    ]);
+    expect(entries.every((e) => e.elsewhere === undefined)).toBe(true);
+  });
+});
+
+describe('phaseHasPendingWarning', () => {
+  const issue = (
+    severity: 'error' | 'warning',
+    code: string,
+    phase: CreationPhase,
+  ): ValidationIssue => ({ severity, code, phase, args: {} });
+
+  it('reports a warning left open on that phase', () => {
+    expect(
+      phaseHasPendingWarning(
+        [issue('warning', 'characteristic_points_unspent', 'characteristics')],
+        'characteristics',
+      ),
+    ).toBe(true);
+  });
+
+  it('ignores an error — that is the blocked marker, not this one', () => {
+    expect(
+      phaseHasPendingWarning(
+        [issue('error', 'characteristic_overspent', 'characteristics')],
+        'characteristics',
+      ),
+    ).toBe(false);
+  });
+
+  it("ignores another phase's warning", () => {
+    expect(
+      phaseHasPendingWarning([issue('warning', 'house_unset', 'house_specialisation')], 'arts'),
+    ).toBe(false);
   });
 });
 

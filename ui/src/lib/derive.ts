@@ -1357,6 +1357,97 @@ export function issuesForPhase(issues: ValidationIssue[], phase: CreationPhase):
 }
 
 /**
+ * The point-item ids a wizard step's own input surface holds, so a finding filed
+ * on another phase can still be traced back to the step where the offending
+ * *choice* was made (manual-testing-findings #4a/#4b).
+ *
+ * Only `virtues_flaws` has such a surface: it is the one step that adds and
+ * removes `entity.selections`, and `selection.item_ref` is the only thing the
+ * engine ever puts in an issue's `context`. Every other step names nothing —
+ * deliberately, and this is the half that matters: the selections stay on the
+ * entity wherever the player stands, so a step that merely *coexists* with them
+ * must not adopt their findings.
+ *
+ * Takes the selections rather than the whole `Entity` so the rule is a pure
+ * function of what the step shows.
+ */
+export function phaseSelectedItemIds(
+  selections: Selection[] | undefined,
+  phase: CreationPhase | undefined,
+): Set<string> {
+  if (phase !== 'virtues_flaws') return new Set();
+  return new Set((selections ?? []).map((selection) => selection.ref));
+}
+
+/** A finding as one wizard step shows it: the issue, plus the phase that owns it
+ * when that is *not* the step being looked at. */
+export interface StepIssue {
+  issue: ValidationIssue;
+  /**
+   * Set only for a finding filed on another creation phase, admitted here because
+   * its `context` names an item this step holds. The step it must be resolved on —
+   * which is where its input surface is, and which is why Next stays enabled even
+   * though this reads as an error.
+   */
+  elsewhere?: CreationPhase;
+}
+
+/**
+ * What one wizard step's findings panel shows: {@link issuesForPhase}, widened by
+ * the findings whose `context` names an item chosen on this very step.
+ *
+ * The gap it closes (manual-testing-findings #4a/#4b): Great and Poor
+ * Characteristic are Virtues taken on the V/F step, but the value they constrain
+ * is a Characteristic score, so the engine files
+ * `characteristic_max_base_too_low` / `characteristic_min_base_too_high` on
+ * `characteristics` — correctly, since that is the surface that can fix them.
+ * With a strict phase filter the step where the Virtue was just taken said
+ * nothing at all, while the rail's gate silently let the player walk on.
+ *
+ * The engine's attribution is deliberately left alone: `elsewhere` reports it
+ * instead, so the panel can say which step owns the fix rather than pretend this
+ * one does. That distinction is load-bearing — `canAdvance` keys strictly on the
+ * owning phase, so an admitted finding reads as an error while Next stays
+ * enabled, and without naming the other step that gate would look broken.
+ *
+ * `phase` omitted means "the whole character" (the editor's panel, and the
+ * wizard's terminal Review step): everything passes through, nothing is marked.
+ */
+export function issuesForStep(
+  issues: ValidationIssue[],
+  phase: CreationPhase | undefined,
+  stepItemIds: ReadonlySet<string>,
+): StepIssue[] {
+  if (!phase) return issues.map((issue) => ({ issue }));
+  const entries: StepIssue[] = [];
+  for (const issue of issues) {
+    if (issue.phase === phase) {
+      entries.push({ issue });
+      continue;
+    }
+    if (issue.context && stepItemIds.has(issue.context)) {
+      entries.push({ issue, elsewhere: issue.phase });
+    }
+  }
+  return entries;
+}
+
+/**
+ * Whether a phase holds an open **warning** — work still outstanding there that
+ * gates nothing (manual-testing-findings #4c).
+ *
+ * The lower-weight twin of {@link phaseHasBlockingIssue}, and deliberately blind
+ * to errors: those are the rail's blocked marker, and a step carrying both should
+ * say the stronger thing only. Its whole point is the finding no `context` can
+ * carry forward — `characteristic_points_unspent`, which names no item, so
+ * "you still have 3 characteristic points" would otherwise be invisible from the
+ * moment the player leaves that step.
+ */
+export function phaseHasPendingWarning(issues: ValidationIssue[], phase: CreationPhase): boolean {
+  return issues.some((issue) => issue.phase === phase && issue.severity === 'warning');
+}
+
+/**
  * Whether a phase holds an error, which is what blocks advancing past it.
  *
  * Errors only: a warning is an advisory, not an illegal state, so it never gates.

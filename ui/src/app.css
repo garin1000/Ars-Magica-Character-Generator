@@ -613,6 +613,18 @@ button:disabled {
   font-weight: 700;
 }
 
+/* A step already walked through that still holds an open WARNING
+   (manual-testing-findings #4c) — the unspent characteristic points a Virtue
+   granted, which no `context` can carry onto the step the player is standing on.
+   Lower weight than the blocked marker in every channel: a different GLYPH (so it
+   survives greyscale), the warning hue rather than the error one, and no bold. It
+   never appears alongside the "!": WizardShell suppresses it on a blocked step, so
+   a step says one thing, and the strongest one. */
+.wizard-rail-step[data-pending='true']::after {
+  content: ' *';
+  color: var(--warning);
+}
+
 /* A step nothing has been recorded for carries NO visual marker of its own
    (guided-creation-review-2026-08 #10): the flag is the engine's
    `completeness.incomplete_phases`, so on a fresh character every step in the rail
@@ -1916,6 +1928,23 @@ ul {
 
 .issue.error .issue-severity::after {
   content: ' !';
+}
+
+/* A finding this step did not cause the gate for: the engine filed it on another
+   phase, so it is shown here only because the item it names was chosen here, and
+   Next is NOT disabled by it (manual-testing-findings #4a/#4b). The solid severity
+   bar becomes DASHED — a shape change, not a hue change, so it survives greyscale
+   and colourblindness — and the row carries the sentence below naming the step
+   that owns the fix. The tint stays the severity's own: the finding really is an
+   error, just not this step's to close. */
+.issue.issue-elsewhere {
+  border-left-style: dashed;
+}
+
+.issue-elsewhere-note {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
 }
 
 /* The one box both panel states render into (ValidationPanel.svelte), floored so

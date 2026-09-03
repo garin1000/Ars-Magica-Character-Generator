@@ -292,6 +292,73 @@ describe('ValidationPanel', () => {
     expect(wrapperMatch).not.toBeNull();
   });
 
+  // manual-testing-findings #4a/#4b. Great Characteristic is taken on the V/F
+  // step, but the value it constrains is a Characteristic score, so the engine
+  // files the finding on `characteristics` — correctly, since that is the surface
+  // that can fix it. The step the user is standing on therefore said NOTHING while
+  // its own Virtue was illegal. The finding is pulled in by the `context`, and
+  // told apart from this step's own errors by naming the step that owns the fix —
+  // which matters because Next stays enabled for it.
+  function greatCharacteristicOnVirtuesFlaws(): string {
+    store.entity.selections = [{ ref: 'virtue.great_characteristic' }];
+    store.result = {
+      issues: [
+        {
+          ...issue('characteristic_max_base_too_low', 'characteristics', 'error', {
+            item: 'virtue.great_characteristic',
+            characteristic: 'sta',
+            base: '1',
+            min: '3',
+          }),
+          context: 'virtue.great_characteristic',
+        },
+      ],
+    };
+    return render(ValidationPanel, { props: { phase: 'virtues_flaws' } }).body;
+  }
+
+  it('shows a foreign-phase finding on the step whose item caused it', () => {
+    expect(renderedCodes(greatCharacteristicOnVirtuesFlaws())).toEqual([
+      'characteristic_max_base_too_low',
+    ]);
+  });
+
+  it('names the step that owns the fix, through the phase label and not the slug', () => {
+    const markup = issueMarkup(
+      greatCharacteristicOnVirtuesFlaws(),
+      'characteristic_max_base_too_low',
+    ).replace(/[⁦-⁩]/g, '');
+    expect(markup).toContain('Characteristics');
+    expect(markup).not.toContain('characteristics<');
+    // Visible text, not `sr-only`: a marker only assistive tech can reach would
+    // leave a sighted user with an error whose Next button is not disabled.
+    expect(markup).not.toContain('sr-only');
+  });
+
+  it('marks the foreign row in the markup so it is not styled as this step’s error', () => {
+    const tag = issueTag(greatCharacteristicOnVirtuesFlaws(), 'characteristic_max_base_too_low');
+    expect(tag).toContain('data-elsewhere="characteristics"');
+    expect(classesOf(tag)).toContain('issue-elsewhere');
+    // Not colour alone: the row gets its own border treatment as well as the
+    // sentence naming the other step.
+    expect(appCss).toMatch(/\.issue\.issue-elsewhere\s*{[^}]*border-left-style:\s*dashed/);
+  });
+
+  it("leaves this step's own findings unmarked", () => {
+    const tag = issueTag(render(ValidationPanel).body, 'unbalanced_virtues');
+    expect(tag).not.toContain('data-elsewhere');
+    expect(classesOf(tag)).not.toContain('issue-elsewhere');
+  });
+
+  it('localizes the owning step to German', () => {
+    store.lang = 'de';
+    const markup = issueMarkup(
+      greatCharacteristicOnVirtuesFlaws(),
+      'characteristic_max_base_too_low',
+    ).replace(/[⁦-⁩]/g, '');
+    expect(markup).toContain('Eigenschaften');
+  });
+
   it('localizes the visible severity label to German', () => {
     store.lang = 'de';
     const body = render(ValidationPanel).body;

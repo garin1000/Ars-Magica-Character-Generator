@@ -73,6 +73,11 @@ wizard-finish = Finish
 wizard-blocked-hint = Fix this step's errors to continue, or switch the validation mode to Advisory.
 # Marks a step in the rail that still holds an error.
 wizard-step-blocked-label = has errors
+# Marks a step in the rail that still holds a WARNING — outstanding work that
+# gates nothing, so the step is left open rather than held shut. Deliberately a
+# weaker statement than `wizard-step-blocked-label`, and only ever shown for a
+# step already reached.
+wizard-step-pending-label = has open warnings
 # Marks a step in the rail nothing has been recorded for yet. Legal is not the
 # same as finished: an empty step is marked, never blocked.
 wizard-step-incomplete-label = not started
@@ -972,6 +977,13 @@ filter-no-results = No matches for the current filter.
 # (WCAG 1.4.1).
 issue-severity-error = Error
 issue-severity-warning = Warning
+
+# Appended to a finding a wizard step shows because the item it names was chosen
+# HERE, while the engine files it on the step that owns the offending value (a
+# Great/Poor Characteristic Virtue, whose value is a Characteristic score). Such a
+# finding reads as an error yet does not disable Next, so it must say where the
+# fix lives. `$step` is always a `phase-<slug>` label, never the slug itself.
+issue-other-step = Resolve on the { $step } step.
 
 # One key per validation issue code emitted by the engine. Each message
 # interpolates the engine's `args` (see crates/arm-rules/src/validation.rs):

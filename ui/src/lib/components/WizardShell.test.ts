@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
@@ -265,6 +267,93 @@ describe('WizardShell', () => {
     // And the step that owns the fix is marked, and says so in words.
     expect(tag(body, 'wizard-step-abilities')).toContain('data-blocked="true"');
     expect(text(body, 'wizard-blocked-hint-abilities')).not.toBe('');
+  });
+
+  // manual-testing-findings #4c: Improved Characteristics grants 3 more points, and
+  // the engine's `characteristic_points_unspent` warning carries NO context, so it
+  // cannot ride the docked panel's item trace the way #4a/#4b do. The rail is the
+  // only surface left that can keep "you still have points to spend" visible from
+  // the Virtues & Flaws step onward.
+  function unspentPointsBehind(): void {
+    store.wizardStep = 3;
+    store.wizardFurthest = 3;
+    store.result = {
+      issues: [
+        {
+          severity: 'warning',
+          code: 'characteristic_points_unspent',
+          phase: 'characteristics',
+          args: { cost: '4', points: '10' },
+        },
+      ],
+    };
+  }
+
+  it('marks a reached step still holding an open warning', () => {
+    unspentPointsBehind();
+    expect(tag(html(), 'wizard-step-characteristics')).toContain('data-pending="true"');
+  });
+
+  it('says the pending warning in words, not by styling alone', () => {
+    unspentPointsBehind();
+    const label = text(html(), 'wizard-pending-characteristics');
+    expect(label).not.toBe('');
+    expect(label).not.toContain('characteristics');
+
+    // A different statement from the blocked marker on the very same step: "still
+    // open here" must not sound like "you cannot leave until this is fixed".
+    store.result = {
+      issues: [
+        { severity: 'error', code: 'characteristic_overspent', phase: 'characteristics', args: {} },
+      ],
+    };
+    expect(label).not.toBe(text(html(), 'wizard-blocked-hint-characteristics'));
+  });
+
+  // The noise check this gate exists for. Measured against the shipped catalogue
+  // (`core_type_conformance.rs::a_fresh_wizard_magus_…`): an untouched magus already
+  // warns on 4 of its 11 steps — Virtues & Flaws, House, Abilities and Spells — so an
+  // ungated marker would light more than a third of the rail on step one, on steps
+  // the player has never opened. Only steps already reached are marked, which is
+  // exactly the set the rail lets you click.
+  it('leaves a step the flow has not reached yet unmarked, however it validates', () => {
+    unspentPointsBehind();
+    store.wizardStep = 0;
+    store.wizardFurthest = 0;
+    expect(tag(html(), 'wizard-step-characteristics')).not.toContain('data-pending');
+  });
+
+  it('says the stronger thing only when a step holds an error as well', () => {
+    unspentPointsBehind();
+    store.result = {
+      issues: [
+        ...store.result!.issues,
+        { severity: 'error', code: 'characteristic_overspent', phase: 'characteristics', args: {} },
+      ],
+    };
+    const step = tag(html(), 'wizard-step-characteristics');
+    expect(step).toContain('data-blocked="true"');
+    expect(step).not.toContain('data-pending');
+  });
+
+  it('leaves Next enabled over a pending warning elsewhere', () => {
+    unspentPointsBehind();
+    expect(tag(html(), 'wizard-next')).not.toContain('disabled');
+  });
+
+  // `::after` content never reaches server-rendered markup, so the glyphs are read
+  // from the stylesheet. Two different GLYPHS, not two hues: the pending marker has
+  // to be tellable from the blocking one in greyscale as well as in words.
+  it('gives the pending marker its own glyph, different from the blocked one', () => {
+    const appCss = readFileSync(fileURLToPath(new URL('../../app.css', import.meta.url)), 'utf-8');
+    const glyph = (attr: string): string => {
+      const rule = new RegExp(
+        `\\.wizard-rail-step\\[data-${attr}='true'\\]::after\\s*{([^}]*)}`,
+      ).exec(appCss);
+      expect(rule).not.toBeNull();
+      return /content:\s*'([^']*)'/.exec(rule![1])![1];
+    };
+    expect(glyph('pending')).not.toBe(glyph('blocked'));
   });
 
   it('explains why Next is blocked, and names the mode that lifts the gate', () => {
