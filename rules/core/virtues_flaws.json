@@ -2770,6 +2770,7 @@
     "magnitude": "major",
     "category": "story",
     "classification": "narrative",
+    "tainted": true,
     "entity_kinds": ["character"],
     "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6855, 6870] }
   },
@@ -3749,6 +3750,7 @@
     "magnitude": "major",
     "category": "supernatural",
     "classification": "creation_effect",
+    "tainted": true,
     "entity_kinds": ["character"],
     "effects": [
       { "type": "might_grant", "realm": "infernal", "score": 5 },

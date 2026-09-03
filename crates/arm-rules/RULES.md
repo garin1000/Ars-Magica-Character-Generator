@@ -141,7 +141,16 @@ introduced `rules/core/aging.json`, so it is now a data value — see
 
 - Source: `Ars Magica - Definitive Edition (Core Rules).md:2998-3002`.
 - Data: the descriptor's optional "Type" token maps to `PointItem.tainted`
-  (`bool`, default false) in `rules/core/virtues_flaws.json`.
+  (`bool`, default false) in `rules/core/virtues_flaws.json`. Every core-rules
+  entry whose descriptor line lists `Tainted` must carry the flag — the tag is
+  the *descriptor's*, never the name's: `flaw.tainted_with_evil` is named
+  "Tainted With Evil" but reads `*Minor, General*` (`:6844`) and is therefore
+  **not** flagged, while `virtue.demonic_blood` (`*Major, Supernatural,
+  Tainted*`, `:3650`) and `flaw.tragic_life` (`*Major, Story, Tainted*`,
+  `:6856`) are. Both of the latter shipped without the flag, which made the cap
+  below under-count their points; `core_rules_tainted_virtues_carry_the_tainted_flag`
+  in `crates/arm-rules/tests/data_integrity.rs` now pins a sample of tagged
+  entries plus that control.
 - Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:150).
   The book frames the limit as a "should", so it is a **non-blocking warning**,
   measured against the points **actually taken** (not the type budget): a side
@@ -254,6 +263,17 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   (`Social Status`→`social_status`, source typo `Subernatural`→`supernatural`,
   compound labels like `General and Hermetic` take the **earliest-listed**
   category). The optional `Type` token sets `tainted` (see the Tainted note above).
+- **`Mythic Companion` is a marker, not a category.** Four Free virtues are tagged
+  `*Free, Mythic Companion*` — Devil Child (`:3671`), Faerie Doctor (`:3821`),
+  Nephilim (`:4594`), Spirit Votary (`:5006`). The rules define exactly six
+  category headings (Hermetic `:2878`, Social Status `:2884`, Supernatural
+  `:2958`, Personality `:2964`, Story `:2980`, General `:2994`), and Mythic
+  Companion is not among them; it names who may take the virtue, the same way
+  `Tainted` names a realm association. These four are therefore stored as
+  `social_status` — the closest real category, matching the other
+  who-you-are virtues — and the tag itself is deliberately **not** modelled: no
+  rule keys off it, so a category or a flag for it would be speculative (YAGNI).
+  Revisit only if a rule starts depending on it.
 - **Dual-magnitude split.** A `*Major or Minor*` item becomes two entries,
   `<id>_minor` and `<id>_major`, marked mutually `incompatible_with` (so exactly
   one magnitude is chosen), disambiguated in i18n as "Name (Minor/Major)" /
