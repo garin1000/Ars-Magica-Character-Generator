@@ -81,6 +81,35 @@ function tabAreaMetrics() {
   });
 }
 
+/**
+ * The label one tab currently renders, read out of the DOM.
+ *
+ * NOT `$(...).getText()`, and that is a measured decision rather than a
+ * preference. Against the shipped WebKitGTK driver, WebDriver's Get Element Text
+ * returns the EMPTY STRING for every `.tab` — and for `.tabbar` as a whole — in
+ * English exactly as much as in German, while the same call on the header's New
+ * button returns "New" normally. The cause is `.tab`'s `overflow: hidden`
+ * (app.css, the ellipsis safety net): this driver treats an `overflow: hidden`
+ * box as hiding its own text whether or not anything is actually clipped.
+ * Isolated by mutating one property at a time on a live tab: flipping only
+ * `overflow` to `visible` made the same `getText()` return "Abilities", whereas
+ * removing `role="tab"` or the flex sizing (`min-width`/`flex`) changed nothing.
+ * So a `getText()` assertion on a tab can only ever fail, no matter what the app
+ * renders.
+ *
+ * `textContent` is unaffected — it is what `tabsTruncated` above already reads —
+ * so the German re-render is confirmed through the same channel that measures it.
+ *
+ * @param {string} id the tab button's element id (`tab-abilities`)
+ * @returns {Promise<string|null>} the trimmed label, or null if the tab is gone
+ */
+function tabLabel(id) {
+  return browser.execute((tabId) => {
+    const tab = document.getElementById(tabId);
+    return tab ? tab.textContent.trim() : null;
+  }, id);
+}
+
 async function setWindowHeight(height) {
   await browser.setWindowSize(DEFAULT_SIZE.width, height);
   await browser.waitUntil(
@@ -176,10 +205,10 @@ describe('tab area at a short window height', () => {
     });
     // Wait for a label the two locales spell differently, so the assertions below
     // cannot race the re-render and measure English boxes.
-    await browser.waitUntil(
-      async () => (await $('[data-testid="tab-abilities"]').getText()).trim() === 'Fertigkeiten',
-      { timeout: 5000, timeoutMsg: 'the tab strip should re-render in German' },
-    );
+    await browser.waitUntil(async () => (await tabLabel('tab-abilities')) === 'Fertigkeiten', {
+      timeout: 5000,
+      timeoutMsg: 'the tab strip should re-render in German',
+    });
 
     const german = await tabAreaMetrics();
     expect(german.tabsTruncated).toEqual([]);
