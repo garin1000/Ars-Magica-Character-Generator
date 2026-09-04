@@ -164,6 +164,7 @@ impl fmt::Display for IssueSeverity {
 /// | `life_stage_age_before_gauntlet` | error | experience | `age`, `min` |
 /// | `life_stage_gauntlet_age_after_age` | error | experience | `gauntlet_age`, `age` |
 /// | `life_stage_lab_seasons_out_of_range` | error | experience | `seasons`, `max`, `years` |
+/// | `life_stage_lab_seasons_without_years` | error | experience | `seasons` |
 /// | `life_stage_spell_level_split_exceeds_points` | error | experience | `levels`, `points` |
 /// | `life_stage_native_language_unset` | error | experience | (none) |
 /// | `life_stage_native_language_missing_score` | warning | experience | `language` |
@@ -441,8 +442,23 @@ impl ValidationIssue {
     /// is `max_charged_lab_seasons_per_year × post_gauntlet_years`.
     /// [`crate::life_stage::LifeStageRules::budget`] caps the total there, making the
     /// surplus free rather than an error of its own.
+    ///
+    /// Emitted only while the character HAS years as a magus; with none, the ceiling
+    /// is zero for a different reason entirely and
+    /// [`ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_WITHOUT_YEARS`] says so.
     pub const CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE: &'static str =
         "life_stage_lab_seasons_out_of_range";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: lab seasons recorded for a
+    /// character with no year as a magus to work them in — a magus standing at its
+    /// Gauntlet, whose post-Gauntlet span is empty.
+    ///
+    /// Split from [`ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE`]
+    /// because the two faults differ: over the ceiling, the player has miscounted how
+    /// many seasons a year may be charged for; with no years, the per-year rule is
+    /// beside the point and the missing span is the whole story. The same rule
+    /// (Ars Magica - Definitive Edition (Core Rules).md:2482) produces both.
+    pub const CODE_LIFE_STAGE_LAB_SEASONS_WITHOUT_YEARS: &'static str =
+        "life_stage_lab_seasons_without_years";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: more of a magus's yearly
     /// post-Gauntlet points are taken as levels of spells than those years granted.
     /// "Each point can be an experience point in an Art or Ability or one level of

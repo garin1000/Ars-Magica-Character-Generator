@@ -394,6 +394,7 @@ life-stage-lab-seasons-label = Lab seasons
 life-stage-lab-seasons-hint = Seasons of lab work, totalled over all the years as a magus: each costs 10 of that year's 30 points, and only three a year are charged — the third already takes the whole 30, so a fourth is free.
 life-stage-spell-levels-label = Levels of spells
 life-stage-spell-levels-hint = How many of the points to take as levels of spells rather than experience.
+life-stage-post-gauntlet-no-years-note = No years as a magus yet, so lab seasons and levels of spells can take nothing. Those years run from the Gauntlet age to the character's age.
 life-stage-post-gauntlet-summary = { $years } years as a magus: { $points } points = { $xp } XP + { $levels } levels of spells
 # Escape hatch for a hand-edited save: a character funded by its life stages must
 # not also carry an entered pool, and guided mode offers no field to correct one,
@@ -1045,7 +1046,8 @@ issue-life_stage_age_unset = Enter the character's age: later life earns experie
 issue-life_stage_age_before_childhood = Age { $age } falls inside childhood, which lasts { $min } years — there are no later-life years to earn experience in.
 issue-life_stage_age_before_gauntlet = No magus is gauntleted at { $age }: the Gauntlet comes no earlier than { $min } — childhood plus fifteen years of apprenticeship.
 issue-life_stage_gauntlet_age_after_age = The Gauntlet at { $gauntlet_age } is still ahead of this magus, who is { $age }; the years as a magus are counted forward from the Gauntlet.
-issue-life_stage_lab_seasons_out_of_range = { $seasons } lab seasons are charged against { $years } year(s) as a magus, more than the { $max } those years can be charged for: only three seasons a year cost anything, because the third already takes the whole 30 points that year — a fourth is free.
+issue-life_stage_lab_seasons_out_of_range = { $seasons } lab seasons is more than the { $max } that { $years } year(s) as a magus can be charged for.
+issue-life_stage_lab_seasons_without_years = { $seasons } lab seasons are recorded, but this character has no years as a magus to work them in.
 issue-life_stage_spell_level_split_exceeds_points = Taking { $levels } levels of spells out of the years as a magus is more than those years grant: they are worth { $points } points, to be divided between experience and levels of spells.
 issue-life_stage_native_language_unset = Choose a native language: childhood's largest block of experience can be spent on nothing else.
 issue-life_stage_native_language_missing_score = No { $language } score is bought, so childhood's native-language experience is unspent.

@@ -49,6 +49,30 @@
   });
   // The engine's own figures for those years; null until an age makes a budget.
   const budget = $derived(store.effective?.life_stage ?? null);
+  // A magus standing at its Gauntlet has lived no year as a magus, and BOTH the lab
+  // seasons and the levels of spells are priced per year — three charged seasons a
+  // year (`:2482`), 30 fungible points a year (`:2471`) — so with no years each
+  // ceiling is 0 and every value either field could take is already an error. The
+  // fields go read-only rather than staying open to be typed into: the state cannot
+  // be entered by hand, and the note below says why it is closed.
+  //
+  // `readonly`, not `disabled` — a disabled control leaves the tab order and takes
+  // its label out of the accessibility tree with it, so the one user who most needs
+  // the explanation never lands on the field that carries it.
+  //
+  // Gated on the ENGINE's year count, not on the points: a points total of 0 can also
+  // come from lab seasons eating the whole span, and that is a live consequence of
+  // the neighbouring field which the player fixes by editing it. Only an empty span
+  // is unfixable from either field — the Gauntlet age above ends it, and stays open.
+  // `budget == null` is "not computed yet", never "no years".
+  const noPostGauntletYears = $derived(budget != null && budget.post_gauntlet_years === 0);
+  const noYearsNoteId = 'life-stage-post-gauntlet-no-years-note';
+
+  /** A post-Gauntlet field's descriptions: its own hint, plus the read-only reason. */
+  function describedBy(field: string): string {
+    const hint = `life-stage-${field}-hint`;
+    return noPostGauntletYears ? `${hint} ${noYearsNoteId}` : hint;
+  }
 
   /** A stored optional count as an input value: absent reads as an empty field. */
   function fieldValue(count: number | undefined): string {
@@ -150,8 +174,9 @@
               type="number"
               min="0"
               max={U32_MAX}
+              readonly={noPostGauntletYears}
               value={fieldValue(plan?.post_gauntlet_lab_seasons)}
-              aria-describedby="life-stage-lab-seasons-hint"
+              aria-describedby={describedBy('lab-seasons')}
               oninput={(event) => store.setPostGauntletLabSeasons(count(event))}
               data-testid="life-stage-lab-seasons-input"
             />
@@ -162,8 +187,9 @@
               type="number"
               min="0"
               max={U32_MAX}
+              readonly={noPostGauntletYears}
               value={fieldValue(plan?.post_gauntlet_spell_levels)}
-              aria-describedby="life-stage-spell-levels-hint"
+              aria-describedby={describedBy('spell-levels')}
               oninput={(event) => store.setPostGauntletSpellLevels(count(event))}
               data-testid="life-stage-spell-levels-input"
             />
@@ -194,6 +220,14 @@
               {store.t(`life-stage-${field}-hint`)}
             </span>
           {/each}
+          {#if noPostGauntletYears}
+            <!-- Referenced by both read-only fields through `aria-describedby`, so it
+                 is deliberately NOT a `role="status"` live region: the two together
+                 would announce it twice, once on arrival and again on focus. -->
+            <span class="funding-hint" id={noYearsNoteId} data-testid={noYearsNoteId}>
+              {store.t('life-stage-post-gauntlet-no-years-note')}
+            </span>
+          {/if}
         </div>
         {#if budget}
           <!-- Announced: the numbers arrive in response to an edit above (either age,

@@ -536,6 +536,65 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
     setLifeStageBudget(null);
     expect(has(html(), 'life-stage-post-gauntlet-summary')).toBe(false);
   });
+
+  describe('with no years as a magus (guided-creation-review-2026-08 #11)', () => {
+    /** The two fields whose ceiling is a multiple of the post-Gauntlet years. */
+    const scaled = ['life-stage-lab-seasons-input', 'life-stage-spell-levels-input'];
+
+    it('takes no lab seasons or levels of spells while the span is empty', () => {
+      installGuidedMagus({ gauntlet_age: 25 });
+      store.entity.age = 25;
+      setLifeStageBudget(magusBudget(25));
+      const body = html();
+      // `readonly`, not `disabled`: the fields stay in the tab order and keep their
+      // label, so a screen-reader user reaches them and is told why they take
+      // nothing — a disabled control is skipped and explains itself to nobody.
+      for (const testid of scaled) {
+        expect(element(body, testid).open).toMatch(/readonly/);
+      }
+      // The Gauntlet age is the field that ENDS this state, so it stays editable.
+      expect(element(body, 'life-stage-gauntlet-age-input').open).not.toMatch(/readonly/);
+    });
+
+    it('says why, in words, and points both fields at the explanation', () => {
+      installGuidedMagus({ gauntlet_age: 25 });
+      store.entity.age = 25;
+      setLifeStageBudget(magusBudget(25));
+      const body = html();
+      const note = element(body, 'life-stage-post-gauntlet-no-years-note');
+      expect(note.open).toMatch(/id="life-stage-post-gauntlet-no-years-note"/);
+      // Localized prose, never the raw key.
+      expect(note.text).toContain('as a magus');
+      expect(note.text).not.toContain('life-stage-post-gauntlet-no-years-note');
+      for (const testid of scaled) {
+        expect(element(body, testid).open).toMatch(/life-stage-post-gauntlet-no-years-note/);
+      }
+    });
+
+    it('opens both fields again as soon as one year is earned', () => {
+      installGuidedMagus({ gauntlet_age: 25 });
+      store.entity.age = 26;
+      setLifeStageBudget(magusBudget(26));
+      const body = html();
+      for (const testid of scaled) {
+        expect(element(body, testid).open).not.toMatch(/readonly/);
+      }
+      expect(has(body, 'life-stage-post-gauntlet-no-years-note')).toBe(false);
+    });
+
+    it('leaves the fields editable while the engine has sent no budget yet', () => {
+      installGuidedMagus({ gauntlet_age: 25 });
+      store.entity.age = 25;
+      setLifeStageBudget(null);
+      const body = html();
+      // No budget is "not computed yet", not "no years": locking the fields on the
+      // first paint would fight the player for the round trip's duration.
+      for (const testid of scaled) {
+        expect(element(body, testid).open).not.toMatch(/readonly/);
+      }
+      expect(has(body, 'life-stage-post-gauntlet-no-years-note')).toBe(false);
+    });
+  });
 });
 
 describe('LifeStagePanel childhood picker (slice 6b3b)', () => {
